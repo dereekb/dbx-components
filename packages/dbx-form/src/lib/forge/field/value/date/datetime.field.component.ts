@@ -355,11 +355,8 @@ export class ForgeDateTimeFieldComponent {
   private readonly _isCleared$ = toObservable(this._isCleared);
   private readonly _timeDate$ = toObservable(this._timeDate);
 
-  readonly isTimeCleared$ = combineLatest([this.currentDate$, toObservable(this._timeDate).pipe(startWith(null))]).pipe(
-    switchMap(([date, time]) => {
-      const isTimeCleared = Boolean(!date && !time);
-      return this._isCleared$.pipe(startWith(isTimeCleared));
-    }),
+  readonly isTimeCleared$ = combineLatest([this.currentDate$, toObservable(this._timeDate).pipe(startWith(null)), this._isCleared$]).pipe(
+    map(([date, time, isCleared]) => isCleared || Boolean(!date && !time)),
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -396,7 +393,9 @@ export class ForgeDateTimeFieldComponent {
             startWith(0),
             map(() => {
               const val = config.fieldState.value();
-              return safeToJsDate(val as any) ?? null;
+              const date = safeToJsDate(val as any);
+              // Reject Invalid Date values (e.g. from empty string sibling fields)
+              return date instanceof Date && !isNaN(date.getTime()) ? date : null;
             }),
             distinctUntilChanged()
           );
@@ -552,7 +551,21 @@ export class ForgeDateTimeFieldComponent {
   );
 
   // MARK: Template signals via toSignal()
-  readonly dateValueSignal = toSignal(this.dateValue$);
+  /**
+   * Template signal for the date input `[value]` binding.
+   *
+   * Reads directly from the Signal Forms field value so it updates on both
+   * inbound sync (form source) and user picks. Returns null when cleared.
+   */
+  readonly dateValueSignal = computed(() => {
+    if (this._isCleared()) return null;
+    const raw = this.fieldValue();
+    if (raw == null) return null;
+    const parser = dbxDateTimeInputValueParseFactory(this.valueMode(), this.timezoneInstance());
+    const date = parser(raw as Maybe<Date | string | number>);
+    if (!date || (date instanceof Date && isNaN(date.getTime()))) return null;
+    return startOfDay(date);
+  });
   readonly displayValueSignal = toSignal(this.displayValue$);
   readonly pickerFilterSignal = toSignal(this.pickerFilter$, { initialValue: () => true as boolean });
   readonly dateInputMinSignal = toSignal(this.dateInputMin$, { initialValue: null });
@@ -841,7 +854,9 @@ export class ForgeDateTimeFieldComponent {
     this._isCleared.set(true);
     this.dateCtrl.setValue(null);
     this.timeCtrl.setValue(null);
-    this._setFieldValue(undefined);
+    // Use null (not undefined) to clear the field value — undefined can corrupt
+    // the Signal Forms field node, destroying metadata like required state.
+    this._setFieldValue(null);
     // Reset cleared state after a tick so future edits work
     setTimeout(() => this._isCleared.set(false), 0);
   }

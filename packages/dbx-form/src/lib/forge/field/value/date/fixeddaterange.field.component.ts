@@ -157,26 +157,7 @@ export interface ForgeFixedDateRangeFieldComponentProps {
       provide: MAT_DATE_RANGE_SELECTION_STRATEGY,
       useClass: forwardRef(() => ForgeFixedDateRangeFieldSelectionStrategy)
     }
-  ],
-  styles: `
-    .dbx-fixeddaterange-field {
-      .mat-calendar,
-      .dbx-fixeddaterange-field-input {
-        margin: auto;
-        min-width: 240px;
-        max-width: 320px;
-      }
-    }
-
-    .mat-mdc-form-field.dbx-fixeddaterange-field-input {
-      display: block;
-    }
-
-    .dbx-fixeddaterange-field-input-end {
-      opacity: 0.6;
-      pointer-events: none;
-    }
-  `
+  ]
 })
 export class ForgeFixedDateRangeFieldComponent {
   private readonly destroyRef = inject(DestroyRef);

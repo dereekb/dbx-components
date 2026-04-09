@@ -28,10 +28,6 @@ import type { ForgeWorkingFieldProps } from './working.field';
       display: block;
       min-height: 4px;
     }
-
-    .dbx-forge-working-bar {
-      margin-top: 4px;
-    }
   `,
   imports: [MatProgressBarModule],
   changeDetection: ChangeDetectionStrategy.OnPush,

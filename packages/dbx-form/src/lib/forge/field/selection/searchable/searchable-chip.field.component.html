@@ -11,7 +11,7 @@
         </button>
       </mat-chip-row>
     }
-    <input #textInput [formControl]="inputCtrl" [matAutocomplete]="auto" [matChipInputFor]="chipGrid" [matChipInputSeparatorKeyCodes]="separatorKeysCodes" (matChipInputTokenEnd)="addChip($event)" [placeholder]="searchInputPlaceholder()" (blur)="onBlur()" (keydown)="tabPressedOnInput($event)" />
+    <input #textInput class="dbx-forge-bare-input" [formControl]="inputCtrl" [matAutocomplete]="auto" [matChipInputFor]="chipGrid" [matChipInputSeparatorKeyCodes]="separatorKeysCodes" (matChipInputTokenEnd)="addChip($event)" [placeholder]="searchInputPlaceholder()" (blur)="onBlur()" (keydown)="tabPressedOnInput($event)" />
   </mat-chip-grid>
   @if (inputCtrl.touched && inputErrorMessage) {
     <span class="dbx-chip-input-error">{{ inputErrorMessage }}</span>

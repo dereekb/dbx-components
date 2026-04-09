@@ -7,7 +7,7 @@
       @if (filterLabelSignal()) {
         <div class="dbx-label">{{ filterLabelSignal() }}</div>
       }
-      <input [placeholder]="'Filter'" [formControl]="inputCtrl" />
+      <input class="dbx-forge-bare-input" [placeholder]="'Filter'" [formControl]="inputCtrl" />
       <mat-divider></mat-divider>
     </div>
   }

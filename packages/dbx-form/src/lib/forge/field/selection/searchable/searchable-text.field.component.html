@@ -11,7 +11,7 @@
     @if (searchLabelSignal()) {
       <div class="dbx-label">{{ searchLabelSignal() }}</div>
     }
-    <input #textInput [formControl]="inputCtrl" [matAutocomplete]="auto" [placeholder]="searchInputPlaceholder()" />
+    <input #textInput class="dbx-forge-bare-input" [formControl]="inputCtrl" [matAutocomplete]="auto" [placeholder]="searchInputPlaceholder()" />
   </div>
 </div>
 <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selected($event)">

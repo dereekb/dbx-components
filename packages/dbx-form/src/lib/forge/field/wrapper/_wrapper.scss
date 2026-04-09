@@ -51,6 +51,11 @@ $dbx-forge-form-field-slider-thumb-margin: 22px;
     line-height: normal;
     letter-spacing: normal;
   }
+
+  // Shared working bar spacing used by both the working field and working wrapper field.
+  .dbx-forge-working-bar {
+    margin-top: 4px;
+  }
 }
 
 @mixin theme($theme-config) {

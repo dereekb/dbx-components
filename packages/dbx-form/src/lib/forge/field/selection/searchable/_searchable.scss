@@ -1,5 +1,3 @@
-@use '../../../../style/theming';
-
 @mixin core() {
   dbx-forge-searchable-text-field,
   dbx-forge-searchable-chip-field {
@@ -16,47 +14,12 @@
     }
   }
 
-  // Style bare search inputs inside the forge wrapper.
-  // The forge wrapper does not provide a parent <mat-form-field>,
-  // so input styling is applied via CSS instead of the matInput directive.
-  .dbx-searchable-text-field-input {
-    input {
-      border: none;
-      outline: none;
-      width: 100%;
-      background: transparent;
-      color: var(--mat-sys-on-surface);
-      font-family: var(--mat-sys-body-large-font);
-      font-size: var(--mat-sys-body-large-size);
-      line-height: var(--mat-sys-body-large-line-height);
-      letter-spacing: var(--mat-sys-body-large-tracking);
-      padding: 4px 0;
-
-      &::placeholder {
-        color: var(--mat-sys-on-surface-variant);
-      }
-    }
-  }
-
-  .dbx-searchable-text-field-value {
-    width: 100%;
-  }
-
-  // Hide search input when a value is selected and the field is not focused.
-  // Uses the same CSS class names as the formly searchable text field.
-  .dbx-searchable-text-field-has-value.dbx-searchable-text-field-show-value {
-    cursor: pointer;
-
-    .dbx-searchable-text-field-value {
-      margin-bottom: -6px;
-    }
-
-    .dbx-searchable-text-field-input {
-      margin-top: 0;
-      height: 0;
-      opacity: 0;
-    }
-  }
+  // Bare input styling is provided by the .dbx-forge-bare-input class
+  // applied directly in the searchable templates.
+  //
+  // The show/hide pattern (.dbx-searchable-text-field-has-value) and
+  // .dbx-searchable-text-field-value width are defined in formly's _searchable.scss
+  // and apply to both formly and forge contexts (same class names).
 
   // Reveal the search input when the ancestor form-field wrapper has focus.
   // The forge wrapper uses :focus-within instead of the .mat-focused class.

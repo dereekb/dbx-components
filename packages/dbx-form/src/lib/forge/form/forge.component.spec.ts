@@ -436,6 +436,13 @@ describe('stripForgeInternalKeys()', () => {
     expect(result).toEqual({ items: [1, 2, 3] });
   });
 
+  it('should preserve Date values', () => {
+    const date = new Date('2026-04-15T05:00:00.000Z');
+    const result = stripForgeInternalKeys({ start: date, _toggle_1: false });
+    expect(result).toEqual({ start: date });
+    expect((result as any).start).toBe(date);
+  });
+
   it('should return null/undefined as-is', () => {
     expect(stripForgeInternalKeys(null)).toBe(null);
     expect(stripForgeInternalKeys(undefined)).toBe(undefined);
@@ -516,6 +523,20 @@ describe('stripEmptyForgeValues()', () => {
   it('should return primitives as-is', () => {
     expect(stripEmptyForgeValues('hello' as any)).toBe('hello');
     expect(stripEmptyForgeValues(42 as any)).toBe(42);
+  });
+
+  it('should preserve Date values', () => {
+    const date = new Date('2026-04-15T05:00:00.000Z');
+    const result = stripEmptyForgeValues({ start: date, end: '' });
+    expect(result).toEqual({ start: date });
+    expect((result as any).start).toBe(date);
+  });
+
+  it('should preserve Date values alongside other non-empty values', () => {
+    const start = new Date('2026-04-15T05:00:00.000Z');
+    const end = new Date('2026-04-20T05:00:00.000Z');
+    const result = stripEmptyForgeValues({ start, end, name: 'test' });
+    expect(result).toEqual({ start, end, name: 'test' });
   });
 
   it('should return empty object when all values are empty', () => {

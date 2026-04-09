@@ -8,7 +8,7 @@ import { BehaviorSubject, of, first, skip } from 'rxjs';
 import { startOfDay, addHours, addDays } from 'date-fns';
 import { provideDbxForgeFormFieldDeclarations } from '../../../forge.providers';
 import { provideDbxFormConfiguration } from '../../../../form.providers';
-import { forgeDateTimeField, type ForgeDateTimeFieldConfig } from './datetime.field';
+import { forgeDateTimeField, forgeDateRangeField, forgeDateTimeRangeField, type ForgeDateTimeFieldConfig, type ForgeDateRangeFieldConfig, type ForgeDateTimeRangeFieldConfig } from './datetime.field';
 import { ForgeDateTimeFieldComponent } from './datetime.field.component';
 import { DbxDateTimeFieldTimeMode } from '../../../../formly/field/value/date/datetime.field.component';
 import { DbxDateTimeValueMode } from '../../../../formly/field/value/date/date.value';
@@ -361,6 +361,25 @@ describe('ForgeDateTimeFieldComponent', () => {
       expect(comp).toBeDefined();
       // The date control should have the date value
       expect(comp!.dateCtrl.value).toBeDefined();
+      fixture.destroy();
+    });
+
+    it('should populate dateValueSignal from inbound form value', async () => {
+      const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+      const host = fixture.componentInstance;
+      const testDate = addHours(startOfDay(new Date()), 14);
+
+      host.config = createConfig({ key: 'date', required: true });
+      host.formValue.set({ date: testDate });
+      await settle(fixture);
+
+      const comp = getDateTimeComponent(fixture);
+      expect(comp).toBeDefined();
+      // dateValueSignal must reflect the inbound value so the input displays the date
+      const displayDate = comp!.dateValueSignal();
+      expect(displayDate).toBeDefined();
+      expect(displayDate).not.toBeNull();
+      expect(displayDate instanceof Date).toBe(true);
       fixture.destroy();
     });
 
@@ -892,6 +911,127 @@ describe('ForgeDateTimeFieldComponent', () => {
       fixture.destroy();
     });
 
+    it('should accept new value after clearValue() (no lock-up)', async () => {
+      const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+      const host = fixture.componentInstance;
+      const initialDate = addHours(startOfDay(new Date()), 14);
+
+      host.config = createConfig({ key: 'dt' });
+      host.formValue.set({ dt: initialDate });
+      await settle(fixture);
+
+      const comp = getDateTimeComponent(fixture);
+      expect(comp).toBeDefined();
+
+      // Clear the value
+      comp!.clearValue();
+      await settle(fixture);
+
+      // Wait past the _isCleared setTimeout reset and any sync polling
+      await delay(600);
+      fixture.detectChanges();
+
+      // Pick a new date + time after clearing
+      const newDate = addDays(startOfDay(new Date()), 7);
+      comp!.onDatePicked({ value: newDate } as any);
+      comp!.setTime('3:00PM');
+      await settle(fixture);
+
+      // The new value should propagate — field should not be locked
+      const output = host.formValue();
+      expect(output.dt).toBeDefined();
+      expect(output.dt instanceof Date).toBe(true);
+      fixture.destroy();
+    });
+
+    it('full lifecycle: set value → output → clear → re-pick → new output, required preserved (timezone day scenario)', async () => {
+      const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+      const host = fixture.componentInstance;
+      const timezone$ = new BehaviorSubject<Maybe<TimezoneString>>('America/Chicago');
+
+      // Config mirrors the demo "dateWithASchedule" field: required, observable timezone, schedule picker
+      host.config = createConfig({
+        key: 'timezoneDay',
+        required: true,
+        timezone: timezone$,
+        valueMode: DbxDateTimeValueMode.DATE_STRING,
+        pickerConfig: () => {
+          return of({
+            limits: {
+              min: startOfDay(new Date()),
+              max: addDays(new Date(), 14)
+            }
+          });
+        }
+      });
+      await settle(fixture);
+
+      const comp = getDateTimeComponent(fixture);
+      expect(comp).toBeDefined();
+
+      // --- Step 1: Required marker is visible ---
+      expect(comp!.isRequired()).toBe(true);
+
+      // --- Step 2: Pick a date + time → form outputs a value ---
+      const firstDate = addDays(startOfDay(new Date()), 3);
+      comp!.onDatePicked({ value: firstDate } as any);
+      comp!.setTime('2:00PM');
+      await settle(fixture);
+
+      const firstOutput = host.formValue();
+      expect(firstOutput.timezoneDay).toBeDefined();
+      expect(firstOutput.timezoneDay).not.toBe('');
+
+      // dateValueSignal should show the date in the input
+      expect(comp!.dateValueSignal()).toBeDefined();
+      expect(comp!.dateValueSignal()).not.toBeNull();
+
+      // Required marker still visible
+      expect(comp!.isRequired()).toBe(true);
+
+      // --- Step 3: Clear the value → output is cleared ---
+      comp!.clearValue();
+      await settle(fixture);
+
+      // Wait past _isCleared setTimeout and sync polling
+      await delay(600);
+      fixture.detectChanges();
+      await settle(fixture);
+
+      // Controls should be cleared
+      expect(comp!.dateCtrl.value).toBeNull();
+      expect(comp!.timeCtrl.value).toBeNull();
+
+      // dateValueSignal should be null (input shows empty)
+      expect(comp!.dateValueSignal()).toBeNull();
+
+      // Required marker must still be visible after clear
+      expect(comp!.isRequired()).toBe(true);
+
+      // --- Step 4: Pick a new date + time → new value is emitted ---
+      const secondDate = addDays(startOfDay(new Date()), 7);
+      comp!.onDatePicked({ value: secondDate } as any);
+      comp!.setTime('4:00PM');
+      await settle(fixture);
+      await settle(fixture);
+
+      const secondOutput = host.formValue();
+      expect(secondOutput.timezoneDay).toBeDefined();
+      expect(secondOutput.timezoneDay).not.toBe('');
+
+      // The new output should be different from the first
+      expect(secondOutput.timezoneDay).not.toEqual(firstOutput.timezoneDay);
+
+      // dateValueSignal should show the new date
+      expect(comp!.dateValueSignal()).toBeDefined();
+      expect(comp!.dateValueSignal()).not.toBeNull();
+
+      // Required marker still visible
+      expect(comp!.isRequired()).toBe(true);
+
+      fixture.destroy();
+    });
+
     it('setTime() should update the time control', async () => {
       const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
       const host = fixture.componentInstance;
@@ -1326,5 +1466,416 @@ describe('ForgeDateTimeFieldComponent', () => {
       expect(result!.getMinutes()).toBe(15); // 2:15PM
       fixture.destroy();
     });
+  });
+});
+
+// MARK: forgeDateRangeField() Integration Tests
+describe('forgeDateRangeField() integration', () => {
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [TestForgeDateTimeHostComponent],
+      providers: FORGE_DATETIME_TEST_PROVIDERS
+    });
+  });
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
+  });
+
+  function createDateRangeConfig(config: ForgeDateRangeFieldConfig = {}): FormConfig {
+    return { fields: [forgeDateRangeField(config) as any] };
+  }
+
+  function getAllDateTimeComponents(fixture: ComponentFixture<TestForgeDateTimeHostComponent>): ForgeDateTimeFieldComponent[] {
+    return fixture.debugElement.queryAll(By.directive(ForgeDateTimeFieldComponent)).map((de) => de.componentInstance as ForgeDateTimeFieldComponent);
+  }
+
+  it('should render two datetime field components', async () => {
+    const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+    const host = fixture.componentInstance;
+
+    host.config = createDateRangeConfig();
+    await settle(fixture);
+
+    const comps = getAllDateTimeComponents(fixture);
+    expect(comps.length).toBe(2);
+    fixture.destroy();
+  });
+
+  it('should output start and end dates when values are set programmatically', async () => {
+    const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+    const host = fixture.componentInstance;
+    const startDate = addHours(startOfDay(new Date()), 9);
+    const endDate = addHours(startOfDay(new Date()), 17);
+
+    host.config = createDateRangeConfig();
+    host.formValue.set({ start: startDate, end: endDate });
+    await settle(fixture);
+
+    const output = host.formValue();
+    expect(output.start).toBeDefined();
+    expect(output.end).toBeDefined();
+    expect(output.start instanceof Date).toBe(true);
+    expect(output.end instanceof Date).toBe(true);
+    fixture.destroy();
+  });
+
+  it('should output dates with custom keys', async () => {
+    const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+    const host = fixture.componentInstance;
+    const fromDate = addHours(startOfDay(new Date()), 10);
+    const toDate = addHours(startOfDay(new Date()), 18);
+
+    host.config = createDateRangeConfig({ start: { key: 'from' }, end: { key: 'to' } });
+    host.formValue.set({ from: fromDate, to: toDate });
+    await settle(fixture);
+
+    const output = host.formValue();
+    expect(output.from).toBeDefined();
+    expect(output.to).toBeDefined();
+    expect(output.from instanceof Date).toBe(true);
+    expect(output.to instanceof Date).toBe(true);
+    fixture.destroy();
+  });
+
+  it('should accept and output a single start date without end', async () => {
+    const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+    const host = fixture.componentInstance;
+    const startDate = addHours(startOfDay(new Date()), 9);
+
+    host.config = createDateRangeConfig();
+    host.formValue.set({ start: startDate });
+    await settle(fixture);
+
+    const output = host.formValue();
+    expect(output.start).toBeDefined();
+    expect(output.start instanceof Date).toBe(true);
+    fixture.destroy();
+  });
+
+  it('should stabilize after setting both start and end dates', async () => {
+    const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+    const host = fixture.componentInstance;
+    const startDate = addHours(startOfDay(new Date()), 9);
+    const endDate = addHours(startOfDay(new Date()), 17);
+
+    host.config = createDateRangeConfig();
+    host.formValue.set({ start: startDate, end: endDate });
+    await settle(fixture);
+
+    const settled = host.formValue();
+    await delay(STABILITY_CHECK_TIME);
+    fixture.detectChanges();
+
+    expect(host.formValue()).toEqual(settled);
+    fixture.destroy();
+  });
+
+  it('should populate date controls on both child components', async () => {
+    const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+    const host = fixture.componentInstance;
+    const startDate = addHours(startOfDay(new Date()), 10);
+    const endDate = addDays(addHours(startOfDay(new Date()), 14), 3);
+
+    host.config = createDateRangeConfig();
+    host.formValue.set({ start: startDate, end: endDate });
+    await settle(fixture);
+
+    const comps = getAllDateTimeComponents(fixture);
+    expect(comps.length).toBe(2);
+    expect(comps[0].dateCtrl.value).toBeDefined();
+    expect(comps[1].dateCtrl.value).toBeDefined();
+    fixture.destroy();
+  });
+
+  it('should output date when setting via child component controls', async () => {
+    const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+    const host = fixture.componentInstance;
+
+    host.config = createDateRangeConfig();
+    await settle(fixture);
+
+    const comps = getAllDateTimeComponents(fixture);
+    expect(comps.length).toBe(2);
+
+    // Set start date via the component's date control
+    const startDate = startOfDay(new Date());
+    comps[0].dateCtrl.setValue(startDate);
+    comps[0].setTime('9:00AM');
+    await settle(fixture);
+
+    // Set end date via the component's date control
+    const endDate = addDays(startOfDay(new Date()), 2);
+    comps[1].dateCtrl.setValue(endDate);
+    comps[1].setTime('5:00PM');
+    await settle(fixture);
+
+    // Wait extra for all throttle timers to fire
+    await settle(fixture);
+
+    const output = host.formValue();
+    expect(output.start).toBeDefined();
+    expect(output.start instanceof Date).toBe(true);
+    expect(output.end).toBeDefined();
+    expect(output.end instanceof Date).toBe(true);
+    fixture.destroy();
+  });
+
+  it('should configure both fields as date-only (NONE time mode)', async () => {
+    const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+    const host = fixture.componentInstance;
+
+    host.config = createDateRangeConfig();
+    await settle(fixture);
+
+    const comps = getAllDateTimeComponents(fixture);
+    expect(comps.length).toBe(2);
+    // forgeDateRangeField sets timeMode to NONE on both fields
+    expect(comps[0].timeMode()).toBe(DbxDateTimeFieldTimeMode.NONE);
+    expect(comps[1].timeMode()).toBe(DbxDateTimeFieldTimeMode.NONE);
+    expect(comps[0].isDateOnly()).toBe(true);
+    expect(comps[1].isDateOnly()).toBe(true);
+    fixture.destroy();
+  });
+
+  it('should output date when user picks from calendar via onDatePicked (date-only mode)', async () => {
+    const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+    const host = fixture.componentInstance;
+
+    host.config = createDateRangeConfig();
+    await settle(fixture);
+
+    const comps = getAllDateTimeComponents(fixture);
+    expect(comps.length).toBe(2);
+
+    // Simulate user picking a date from the calendar popup (date-only mode, no time)
+    const startDate = addDays(startOfDay(new Date()), 3);
+    comps[0].onDatePicked({ value: startDate } as any);
+    await settle(fixture);
+    await settle(fixture);
+
+    const output = host.formValue();
+    expect(output.start).toBeDefined();
+    expect(output.start instanceof Date).toBe(true);
+    fixture.destroy();
+  });
+
+  it('should not flicker when only start is set and end is empty (sync field with empty sibling)', async () => {
+    const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+    const host = fixture.componentInstance;
+
+    host.config = createDateRangeConfig();
+    await settle(fixture);
+
+    const comps = getAllDateTimeComponents(fixture);
+
+    // Pick only the start date — end remains empty
+    const startDate = addDays(startOfDay(new Date()), 5);
+    comps[0].onDatePicked({ value: startDate } as any);
+    await settle(fixture);
+    await settle(fixture);
+
+    // Verify start was set
+    const afterPick = host.formValue();
+    expect(afterPick.start).toBeDefined();
+    expect(afterPick.start instanceof Date).toBe(true);
+
+    // Wait for sync field polling cycle (500ms) and verify value remains stable
+    await delay(600);
+    fixture.detectChanges();
+
+    const afterPoll = host.formValue();
+    expect(afterPoll.start).toBeDefined();
+    expect(afterPoll.start instanceof Date).toBe(true);
+    // Value should be the same — no flickering
+    expect(afterPoll.start.getTime()).toBe(afterPick.start.getTime());
+    fixture.destroy();
+  });
+
+  it('should accept new date after clearValue in date-only mode (no lock-up)', async () => {
+    const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+    const host = fixture.componentInstance;
+
+    host.config = createDateRangeConfig();
+    await settle(fixture);
+
+    const comps = getAllDateTimeComponents(fixture);
+
+    // Pick a start date
+    const startDate = addDays(startOfDay(new Date()), 3);
+    comps[0].onDatePicked({ value: startDate } as any);
+    await settle(fixture);
+    await settle(fixture);
+
+    expect(host.formValue().start).toBeDefined();
+
+    // Clear the start field
+    comps[0].clearValue();
+    await settle(fixture);
+
+    // Wait past the _isCleared setTimeout and sync polling
+    await delay(600);
+    fixture.detectChanges();
+
+    // Pick a different date after clearing
+    const newDate = addDays(startOfDay(new Date()), 10);
+    comps[0].onDatePicked({ value: newDate } as any);
+    await settle(fixture);
+    await settle(fixture);
+
+    // The new value should propagate — field should not be locked
+    const output = host.formValue();
+    expect(output.start).toBeDefined();
+    expect(output.start instanceof Date).toBe(true);
+    expect(output.start.getTime()).toBe(startOfDay(newDate).getTime());
+    fixture.destroy();
+  });
+
+  it('should apply timezone to both fields', async () => {
+    const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+    const host = fixture.componentInstance;
+
+    host.config = createDateRangeConfig({ timezone: 'America/Chicago' });
+    await settle(fixture);
+
+    const comps = getAllDateTimeComponents(fixture);
+    expect(comps.length).toBe(2);
+    expect(comps[0].resolvedTimezone()).toBe('America/Chicago');
+    expect(comps[1].resolvedTimezone()).toBe('America/Chicago');
+    fixture.destroy();
+  });
+});
+
+// MARK: forgeDateTimeRangeField() Integration Tests
+describe('forgeDateTimeRangeField() integration', () => {
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [TestForgeDateTimeHostComponent],
+      providers: FORGE_DATETIME_TEST_PROVIDERS
+    });
+  });
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
+  });
+
+  function createDateTimeRangeConfig(config: ForgeDateTimeRangeFieldConfig = {}): FormConfig {
+    return { fields: [forgeDateTimeRangeField(config) as any] };
+  }
+
+  function getAllDateTimeComponents(fixture: ComponentFixture<TestForgeDateTimeHostComponent>): ForgeDateTimeFieldComponent[] {
+    return fixture.debugElement.queryAll(By.directive(ForgeDateTimeFieldComponent)).map((de) => de.componentInstance as ForgeDateTimeFieldComponent);
+  }
+
+  it('should render two datetime field components in time-only mode', async () => {
+    const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+    const host = fixture.componentInstance;
+
+    host.config = createDateTimeRangeConfig();
+    await settle(fixture);
+
+    const comps = getAllDateTimeComponents(fixture);
+    expect(comps.length).toBe(2);
+    expect(comps[0].isTimeOnly()).toBe(true);
+    expect(comps[1].isTimeOnly()).toBe(true);
+    fixture.destroy();
+  });
+
+  it('should configure both fields as time-only with REQUIRED time mode', async () => {
+    const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+    const host = fixture.componentInstance;
+
+    host.config = createDateTimeRangeConfig();
+    await settle(fixture);
+
+    const comps = getAllDateTimeComponents(fixture);
+    expect(comps.length).toBe(2);
+    expect(comps[0].timeMode()).toBe(DbxDateTimeFieldTimeMode.REQUIRED);
+    expect(comps[1].timeMode()).toBe(DbxDateTimeFieldTimeMode.REQUIRED);
+    fixture.destroy();
+  });
+
+  it('should output time values when set via child component controls', async () => {
+    const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+    const host = fixture.componentInstance;
+
+    host.config = createDateTimeRangeConfig();
+    await settle(fixture);
+
+    const comps = getAllDateTimeComponents(fixture);
+    expect(comps.length).toBe(2);
+
+    // Set start time
+    comps[0].setTime('9:00AM');
+    await settle(fixture);
+
+    // Set end time
+    comps[1].setTime('5:00PM');
+    await settle(fixture);
+
+    // Wait extra for throttle timers
+    await settle(fixture);
+
+    const output = host.formValue();
+    expect(output.start).toBeDefined();
+    expect(output.end).toBeDefined();
+    fixture.destroy();
+  });
+
+  it('should apply timezone to both time-only fields', async () => {
+    const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+    const host = fixture.componentInstance;
+
+    host.config = createDateTimeRangeConfig({ timezone: 'America/New_York' });
+    await settle(fixture);
+
+    const comps = getAllDateTimeComponents(fixture);
+    expect(comps.length).toBe(2);
+    expect(comps[0].resolvedTimezone()).toBe('America/New_York');
+    expect(comps[1].resolvedTimezone()).toBe('America/New_York');
+    fixture.destroy();
+  });
+
+  it('should use custom keys', async () => {
+    const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+    const host = fixture.componentInstance;
+
+    host.config = createDateTimeRangeConfig({ start: { key: 'startTime' }, end: { key: 'endTime' } });
+    await settle(fixture);
+
+    const comps = getAllDateTimeComponents(fixture);
+    expect(comps.length).toBe(2);
+
+    // Set times via controls
+    comps[0].setTime('8:00AM');
+    comps[1].setTime('4:00PM');
+    await settle(fixture);
+    await settle(fixture);
+
+    const output = host.formValue();
+    expect(output.startTime).toBeDefined();
+    expect(output.endTime).toBeDefined();
+    fixture.destroy();
+  });
+
+  it('should stabilize after setting both time values', async () => {
+    const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+    const host = fixture.componentInstance;
+
+    host.config = createDateTimeRangeConfig();
+    await settle(fixture);
+
+    const comps = getAllDateTimeComponents(fixture);
+    comps[0].setTime('10:00AM');
+    comps[1].setTime('3:00PM');
+    await settle(fixture);
+    await settle(fixture);
+
+    const settled = host.formValue();
+    await delay(STABILITY_CHECK_TIME);
+    fixture.detectChanges();
+
+    expect(host.formValue()).toEqual(settled);
+    fixture.destroy();
   });
 });

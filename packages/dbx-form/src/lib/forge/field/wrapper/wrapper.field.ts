@@ -125,28 +125,44 @@ export abstract class AbstractForgeWrapperFieldComponent<TProps extends ForgeWra
 
   private _initialized = false;
 
+  /**
+   * Tracks the last value reference synced from parent → child.
+   * Used to prevent the child → parent sync effect from re-writing a value
+   * that originated from the parent, avoiding infinite update loops.
+   */
+  private _lastParentSyncRef: unknown;
+
   constructor() {
     super();
 
-    // Initialize child value from parent field tree on first read
+    // Sync parent field tree value → child form value (continuous).
+    // Fires on initialization and whenever the parent value changes externally
+    // (e.g. via context.setValue()), ensuring the child form always reflects
+    // the current parent value and can validate it correctly.
     effect(() => {
       const fieldState = this.field()();
       const currentValue = fieldState.value();
 
-      if (!this._initialized && currentValue != null) {
-        this._initialized = true;
-        untracked(() => {
+      untracked(() => {
+        if (currentValue != null || this._initialized) {
+          this._initialized = true;
+          this._lastParentSyncRef = currentValue;
           this.childValueSignal.set(currentValue as Record<string, unknown>);
-        });
-      }
+        }
+      });
     });
 
-    // Sync child value changes back to the parent field tree
+    // Sync child form value changes → parent field tree
     effect(() => {
       const childValue = this.childValueSignal();
 
       untracked(() => {
         if (!this._initialized) {
+          return;
+        }
+
+        // Skip if this value originated from a parent → child sync
+        if (childValue === this._lastParentSyncRef) {
           return;
         }
 

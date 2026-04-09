@@ -10,7 +10,7 @@
     <doc-feature-example header="repeatArrayField() - Advanced" hint="Shows the duplicate button, per-item labels, disabled rearrange, and conditional remove.">
       <doc-feature-form-tabs formlyFn="formlyRepeatArrayField()" forgeFn="forgeArrayField()">
         <doc-form-example-form formly [dbxFormlyFields]="advancedRepeatArrayField" [dbxFormSource]="advancedRepeatArrayValue"></doc-form-example-form>
-        <doc-forge-example-form forge [config]="forgeDragArrayAdvancedConfig"></doc-forge-example-form>
+        <doc-forge-example-form forge [config]="forgeDragArrayAdvancedConfig" [dbxFormSource]="advancedRepeatArrayValue"></doc-forge-example-form>
       </doc-feature-form-tabs>
     </doc-feature-example>
   </doc-feature-layout>

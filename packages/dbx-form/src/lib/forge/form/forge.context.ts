@@ -23,7 +23,7 @@ import { type FormConfig } from '@ng-forge/dynamic-forms';
  * ```
  */
 export function stripForgeInternalKeys<T>(value: T): T {
-  if (value == null || typeof value !== 'object' || Array.isArray(value)) {
+  if (value == null || typeof value !== 'object' || Array.isArray(value) || value instanceof Date) {
     return value;
   }
 
@@ -82,7 +82,7 @@ export function stripEmptyForgeValues<T>(value: T): T {
       continue;
     }
 
-    if (typeof val === 'object' && !Array.isArray(val)) {
+    if (typeof val === 'object' && !Array.isArray(val) && !(val instanceof Date)) {
       const cleaned = stripEmptyForgeValues(val);
       if (cleaned != null && Object.keys(cleaned as object).length > 0) {
         result[key] = cleaned;

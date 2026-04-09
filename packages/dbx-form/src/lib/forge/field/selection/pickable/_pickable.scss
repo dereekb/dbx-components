@@ -1,35 +1,10 @@
-@use '../../../../style/theming';
-
 // MARK: Mixin
 @mixin core() {
-  .dbx-pickable-item-field-filter {
-    margin-bottom: 4px;
-
-    // Style the bare filter input to match Material typography.
-    // The forge wrapper does not provide a parent <mat-form-field>,
-    // so input styling is applied via CSS instead of the matInput directive.
-    input {
-      border: none;
-      outline: none;
-      width: 100%;
-      background: transparent;
-      color: var(--mat-sys-on-surface);
-      font-family: var(--mat-sys-body-large-font);
-      font-size: var(--mat-sys-body-large-size);
-      line-height: var(--mat-sys-body-large-line-height);
-      letter-spacing: var(--mat-sys-body-large-tracking);
-      padding: 4px 0;
-
-      &::placeholder {
-        color: var(--mat-sys-on-surface-variant);
-      }
-    }
-  }
-
-  .dbx-pickable-item-field-list-content {
-    max-height: 400px;
-    overflow: auto;
-  }
+  // Container margin and list max-height are defined in formly's _pickable.scss
+  // and apply to both formly and forge contexts (same class names).
+  //
+  // Bare input styling is provided by the .dbx-forge-bare-input class
+  // applied directly in the pickable templates.
 }
 
 @mixin theme($theme-config) {
