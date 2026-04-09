@@ -2,12 +2,14 @@ import type { MatDatepickerField, MatDatepickerProps } from '@ng-forge/dynamic-f
 import type { FieldDef, BaseValueField } from '@ng-forge/dynamic-forms';
 import { filterFromPOJO, type ArrayOrValue, type Maybe, type TimezoneString, type DateOrDayString } from '@dereekb/util';
 import { forgeField } from '../../field';
+import { forgeFormFieldWrapper, type ForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
 import type { ForgeDateTimeFieldComponentProps } from './datetime.field.component';
 import type { ForgeDateRangeFieldComponentProps, ForgeDateRangeValue } from './daterange.field.component';
 import type { ForgeFixedDateRangeFieldComponentProps, ForgeFixedDateRangeValue } from './fixeddaterange.field.component';
 import { type DbxDateTimePickerConfiguration, DbxDateTimeFieldTimeMode, type DbxDateTimeFieldSyncType } from '../../../../formly/field/value/date/datetime.field.component';
 import { type DbxDateTimeValueMode } from '../../../../formly/field/value/date/date.value';
 import { type DateTimePresetConfiguration } from '../../../../formly/field/value/date/datetime';
+import { type DbxFixedDateRangeDateRangeInput, type DbxFixedDateRangePickerConfiguration, type DbxFixedDateRangeSelectionMode } from '../../../../formly/field/value/date/fixeddaterange.field.component';
 import { type ObservableOrValueGetter } from '@dereekb/rxjs';
 import type { Observable } from 'rxjs';
 
@@ -437,7 +439,9 @@ export type ForgeFixedDateRangeFieldDef = BaseValueField<ForgeFixedDateRangeFiel
 };
 
 /**
- * Configuration for a forge fixed date range field using a calendar-style range picker.
+ * Configuration for a forge fixed date range field using an inline calendar-style range picker.
+ *
+ * Full parity with the formly `FixedDateRangeFieldConfig`.
  */
 export interface ForgeFixedDateRangeFieldConfig {
   readonly key: string;
@@ -445,52 +449,111 @@ export interface ForgeFixedDateRangeFieldConfig {
   readonly required?: boolean;
   readonly readonly?: boolean;
   readonly description?: string;
+
   /**
-   * Label for the start date input.
+   * Date range input configuration to build the date range from a single picked date.
+   * Required for 'single' mode and boundary-based selection modes.
    */
-  readonly startLabel?: string;
+  readonly dateRangeInput?: ObservableOrValueGetter<DbxFixedDateRangeDateRangeInput>;
   /**
-   * Label for the end date input.
+   * Selection mode to use when picking dates on the calendar.
+   *
+   * - `'single'` — Picks one date, range computed from dateRangeInput config.
+   * - `'normal'` — Standard start/end range picking with two clicks.
+   * - `'arbitrary'` — Free-form range selection within a boundary.
+   * - `'arbitrary_quick'` — Like arbitrary, but immediately sets the value on first click.
+   *
+   * Defaults to `'single'`.
    */
-  readonly endLabel?: string;
+  readonly selectionMode?: Maybe<ObservableOrValueGetter<DbxFixedDateRangeSelectionMode>>;
   /**
-   * Minimum selectable date.
+   * Value mode for the dates in the output DateRange.
+   * Defaults to DATE.
    */
-  readonly minDate?: Date | string;
+  readonly valueMode?: DbxDateTimeValueMode;
   /**
-   * Maximum selectable date.
+   * Whether to pass the date value as a UTC date, or a date in the current timezone.
    */
-  readonly maxDate?: Date | string;
+  readonly fullDayInUTC?: boolean;
+  /**
+   * Custom picker configuration (limits, schedule).
+   */
+  readonly pickerConfig?: ObservableOrValueGetter<DbxFixedDateRangePickerConfiguration>;
+  /**
+   * The input timezone to default to. Ignored if fullDayInUTC is true.
+   */
+  readonly timezone?: Maybe<ObservableOrValueGetter<Maybe<TimezoneString>>>;
+  /**
+   * Whether to display the timezone. Defaults to true.
+   */
+  readonly showTimezone?: Maybe<boolean>;
+  /**
+   * Custom presets.
+   */
+  readonly presets?: ObservableOrValueGetter<DateTimePresetConfiguration[]>;
+  /**
+   * Whether to show the range input text fields. Defaults to true.
+   */
+  readonly showRangeInput?: boolean;
 }
 
 /**
- * Creates a forge field definition for a fixed date range picker.
+ * Creates a forge field definition for a fixed date range picker wrapped in a Material-style
+ * outlined container with a notched outline and floating label.
  *
- * Uses Angular Material's mat-date-range-input for inline start/end date picking.
+ * Uses an inline `<mat-calendar>` with a custom selection strategy, matching the formly
+ * `fixedDateRangeField()` behavior. Supports multiple selection modes, timezone conversion,
+ * date range input configuration, and optional text inputs.
+ *
+ * The field is wrapped in `forgeFormFieldWrapper()` which provides the Material outlined
+ * container, equivalent to formly's `['style', 'form-field']` wrappers.
  *
  * @param config - Fixed date range field configuration
- * @returns A {@link ForgeFixedDateRangeFieldDef}
+ * @returns A {@link ForgeFormFieldWrapperFieldDef} wrapping a {@link ForgeFixedDateRangeFieldDef}
+ *
+ * @example
+ * ```typescript
+ * const field = forgeFixedDateRangeField({
+ *   key: 'dateRange',
+ *   label: 'Fixed Date Range',
+ *   required: true,
+ *   dateRangeInput: { type: DateRangeType.WEEKS_RANGE, distance: 1 },
+ *   pickerConfig: { limits: { min: 'today_start', max: addMonths(endOfMonth(new Date()), 1) } },
+ *   valueMode: DbxDateTimeValueMode.DATE_STRING
+ * });
+ * ```
  */
-export function forgeFixedDateRangeField(config: ForgeFixedDateRangeFieldConfig): ForgeFixedDateRangeFieldDef {
-  const { key, label, required, readonly: isReadonly, description, startLabel, endLabel, minDate, maxDate } = config;
+export function forgeFixedDateRangeField(config: ForgeFixedDateRangeFieldConfig): ForgeFormFieldWrapperFieldDef<ForgeFixedDateRangeFieldDef> {
+  const { key, label, required, readonly: isReadonly, description, ...rest } = config;
 
-  const props: ForgeFixedDateRangeFieldComponentProps = filterFromPOJO({
-    startLabel,
-    endLabel,
-    minDate,
-    maxDate,
-    hint: description
-  });
+  const props = filterFromPOJO({
+    dateRangeInput: rest.dateRangeInput,
+    selectionMode: rest.selectionMode,
+    valueMode: rest.valueMode,
+    fullDayInUTC: rest.fullDayInUTC,
+    pickerConfig: rest.pickerConfig,
+    timezone: rest.timezone,
+    showTimezone: rest.showTimezone,
+    presets: rest.presets,
+    showRangeInput: rest.showRangeInput
+  }) as ForgeFixedDateRangeFieldComponentProps;
 
-  return forgeField(
+  // Create the inner fixeddaterange field (label/hint handled by wrapper)
+  const innerField: ForgeFixedDateRangeFieldDef = forgeField(
     filterFromPOJO({
       key,
       type: FORGE_FIXEDDATERANGE_FIELD_TYPE,
-      label: label ?? '',
+      label: '',
       value: undefined as unknown as ForgeFixedDateRangeValue,
       required,
       readonly: isReadonly,
       props: Object.keys(props).length > 0 ? props : undefined
     }) as ForgeFixedDateRangeFieldDef
   );
+
+  return forgeFormFieldWrapper<ForgeFixedDateRangeFieldDef>({
+    label: label ?? '',
+    hint: description,
+    fields: [innerField as unknown as FieldDef<unknown>]
+  });
 }

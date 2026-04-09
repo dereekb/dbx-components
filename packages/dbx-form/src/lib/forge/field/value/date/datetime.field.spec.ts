@@ -166,9 +166,91 @@ describe('forgeDateTimeRangeField()', () => {
 });
 
 describe('forgeFixedDateRangeField()', () => {
-  it('should create a fixed date range field with correct key', () => {
+  function innerField(wrapper: ReturnType<typeof forgeFixedDateRangeField>) {
+    return (wrapper.props as any)?.fields?.[0] as any;
+  }
+
+  it('should create a wrapper with the correct type', () => {
     const field = forgeFixedDateRangeField({ key: 'fixedRange' });
-    expect(field.key).toBe('fixedRange');
-    expect(field.type).toBeDefined();
+    expect(field.type).toBe('dbx-forge-form-field');
+  });
+
+  it('should contain an inner fixeddaterange field with the correct key', () => {
+    const field = forgeFixedDateRangeField({ key: 'fixedRange' });
+    const inner = innerField(field);
+    expect(inner.key).toBe('fixedRange');
+    expect(inner.type).toBe('fixeddaterange');
+  });
+
+  it('should set required on the inner field', () => {
+    const field = forgeFixedDateRangeField({ key: 'fixedRange', required: true });
+    expect(innerField(field).required).toBe(true);
+  });
+
+  it('should set readonly on the inner field', () => {
+    const field = forgeFixedDateRangeField({ key: 'fixedRange', readonly: true });
+    expect(innerField(field).readonly).toBe(true);
+  });
+
+  it('should map description to hint on the wrapper', () => {
+    const field = forgeFixedDateRangeField({ key: 'fixedRange', description: 'Picks a 10-day range' });
+    expect(field.props?.hint).toBe('Picks a 10-day range');
+  });
+
+  it('should set label on the wrapper', () => {
+    const field = forgeFixedDateRangeField({ key: 'fixedRange', label: 'My Range' });
+    expect(field.label).toBe('My Range');
+  });
+
+  it('should set dateRangeInput in inner field props', () => {
+    const dateRangeInput = { type: 'weeks_range' as any, distance: 1 };
+    const field = forgeFixedDateRangeField({ key: 'fixedRange', dateRangeInput });
+    expect(innerField(field).props?.dateRangeInput).toBe(dateRangeInput);
+  });
+
+  it('should set selectionMode in inner field props', () => {
+    const field = forgeFixedDateRangeField({ key: 'fixedRange', selectionMode: 'normal' });
+    expect(innerField(field).props?.selectionMode).toBe('normal');
+  });
+
+  it('should set valueMode in inner field props', () => {
+    const field = forgeFixedDateRangeField({ key: 'fixedRange', valueMode: DbxDateTimeValueMode.DATE_STRING });
+    expect(innerField(field).props?.valueMode).toBe(DbxDateTimeValueMode.DATE_STRING);
+  });
+
+  it('should set fullDayInUTC in inner field props', () => {
+    const field = forgeFixedDateRangeField({ key: 'fixedRange', fullDayInUTC: true });
+    expect(innerField(field).props?.fullDayInUTC).toBe(true);
+  });
+
+  it('should set pickerConfig in inner field props', () => {
+    const pickerConfig = { limits: { min: 'today_start' as any } };
+    const field = forgeFixedDateRangeField({ key: 'fixedRange', pickerConfig });
+    expect(innerField(field).props?.pickerConfig).toBe(pickerConfig);
+  });
+
+  it('should set timezone in inner field props', () => {
+    const field = forgeFixedDateRangeField({ key: 'fixedRange', timezone: 'America/New_York' });
+    expect(innerField(field).props?.timezone).toBe('America/New_York');
+  });
+
+  it('should set showTimezone in inner field props', () => {
+    const field = forgeFixedDateRangeField({ key: 'fixedRange', showTimezone: false });
+    expect(innerField(field).props?.showTimezone).toBe(false);
+  });
+
+  it('should set showRangeInput in inner field props', () => {
+    const field = forgeFixedDateRangeField({ key: 'fixedRange', showRangeInput: false });
+    expect(innerField(field).props?.showRangeInput).toBe(false);
+  });
+
+  it('should not include inner field props when no configuration is provided', () => {
+    const field = forgeFixedDateRangeField({ key: 'fixedRange' });
+    expect(innerField(field).props).toBeUndefined();
+  });
+
+  it('should provide empty label when not specified', () => {
+    const field = forgeFixedDateRangeField({ key: 'fixedRange' });
+    expect(field.label).toBe('');
   });
 });

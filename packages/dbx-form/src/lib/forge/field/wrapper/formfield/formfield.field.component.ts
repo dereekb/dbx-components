@@ -179,4 +179,12 @@ export class ForgeFormFieldWrapperComponent extends AbstractForgeWrapperFieldCom
 
   // Props
   readonly hintSignal = computed(() => this.props()?.hint);
+
+  /**
+   * Whether any child field has `required: true`, used to show the asterisk in the label.
+   */
+  readonly isRequired = computed(() => {
+    const fields = this.props()?.fields;
+    return fields?.some((f: any) => f.required === true) ?? false;
+  });
 }

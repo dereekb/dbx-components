@@ -282,7 +282,52 @@ export class DocFormDateValueComponent implements OnDestroy {
 
   // Forge fixed date range — 1:1 parity
   readonly forgeFixedDateRangeFieldsConfig: FormConfig = {
-    fields: [forgeFixedDateRangeField({ key: 'tenDayFixedDateRange', label: 'Fixed Date Range', required: true, description: 'Required. Picks a 10-day date range.' }) as any]
+    fields: [
+      forgeFixedDateRangeField({
+        key: 'tenDayFixedDateRange',
+        label: 'Fixed Date Range',
+        required: true,
+        description: 'Required. Picks a 10-day date range. Returns the date as an ISO8601DateString.',
+        valueMode: DbxDateTimeValueMode.DATE_STRING,
+        dateRangeInput: { type: DateRangeType.WEEKS_RANGE, distance: 1 },
+        timezone: this.timezone$,
+        pickerConfig: {
+          limits: {
+            min: 'today_start',
+            max: addMonths(endOfMonth(new Date()), 1)
+          }
+        }
+      }) as any,
+      forgeFixedDateRangeField({
+        key: 'oneMonthFixedDateRange',
+        label: 'One Month Arbitrary Date Range',
+        selectionMode: 'arbitrary_quick',
+        description: 'Arbitrary end date up to 21 days. Limited to the first 18 days of the month.',
+        valueMode: DbxDateTimeValueMode.DAY_STRING,
+        dateRangeInput: { type: DateRangeType.DAYS_RANGE, distance: 21 },
+        timezone: this.timezone$,
+        pickerConfig: {
+          limits: {
+            min: startOfMonth(new Date()),
+            max: addDays(startOfMonth(new Date()), 18)
+          }
+        }
+      }) as any,
+      forgeFixedDateRangeField({
+        key: 'thisMonthNormalDateRange',
+        label: 'One Month Normal Date Range',
+        selectionMode: 'normal',
+        description: 'Normal selection. Limited to the first 18 days of the month.',
+        valueMode: DbxDateTimeValueMode.DAY_STRING,
+        timezone: this.timezone$,
+        pickerConfig: {
+          limits: {
+            min: startOfMonth(new Date()),
+            max: addDays(startOfMonth(new Date()), 18)
+          }
+        }
+      }) as any
+    ]
   };
 
   // Forge time duration — 1:1 parity with formly timeDurationFields
