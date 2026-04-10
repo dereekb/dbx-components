@@ -1,8 +1,5 @@
 <dbx-content-container>
   <doc-feature-layout header="Component Field" hint="The component field is used to inject an arbitrary component into a form.">
-    <dbx-bar>
-      <mat-slide-toggle [checked]="disabled()" (change)="disabled.set($event.checked)">Disable All Fields</mat-slide-toggle>
-    </dbx-bar>
     <!-- Examples -->
     <doc-feature-example header="Example" hint="">
       <dbx-bar>
@@ -11,13 +8,13 @@
         <button mat-raised-button (click)="showB()">Show B</button>
         <dbx-spacer></dbx-spacer>
       </dbx-bar>
-      <doc-feature-form-tabs formlyFn="formlyComponentField()" forgeFn="forgeComponentField()">
-        <doc-form-example-component-form formly [config]="config" [disabled]="disabled()"></doc-form-example-component-form>
+      <doc-feature-form-tabs #formTabs formlyFn="formlyComponentField()" forgeFn="forgeComponentField()">
+        <doc-form-example-component-form formly [config]="config" [disabled]="formTabs.disabled()"></doc-form-example-component-form>
         <div forge>
-          <doc-forge-example-component-form [config]="config" [disabled]="disabled()"></doc-forge-example-component-form>
+          <doc-forge-example-component-form [config]="config" [disabled]="formTabs.disabled()"></doc-forge-example-component-form>
           <h3>Allow Disabled Effects: false</h3>
           <div>Disabled effects are enabled by default.</div>
-          <doc-forge-example-component-form [config]="{ ...config, allowDisabledEffects: false }" [disabled]="disabled()"></doc-forge-example-component-form>
+          <doc-forge-example-component-form [config]="{ ...config, allowDisabledEffects: false }" [disabled]="formTabs.disabled()"></doc-forge-example-component-form>
         </div>
       </doc-feature-form-tabs>
     </doc-feature-example>

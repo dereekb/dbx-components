@@ -4,6 +4,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxForm, type DbxFormEvent, DbxFormState, DbxMutableForm } from '../../form/form';
 import { type BooleanStringKeyArray, BooleanStringKeyArrayUtility } from '@dereekb/util';
 import { SubscriptionObject } from '@dereekb/rxjs';
+import { skip } from 'rxjs';
 import { DbxForgeFormContext } from './forge.context';
 
 /**
@@ -31,6 +32,7 @@ import { DbxForgeFormContext } from './forge.context';
 export class DbxForgeFormComponent<T = unknown> implements OnInit, OnDestroy {
   private readonly _context = inject(DbxForgeFormContext<T>);
   private readonly _setValueSub = new SubscriptionObject();
+  private readonly _resetSub = new SubscriptionObject();
   private readonly _disabledSub = new SubscriptionObject();
 
   readonly dynamicForm = viewChild(DynamicForm);
@@ -120,13 +122,47 @@ export class DbxForgeFormComponent<T = unknown> implements OnInit, OnDestroy {
     this._context.updateFormState(state);
   }
 
+  /**
+   * The last value passed to setValue, used as the reset target.
+   * Mirrors formly's behavior where resetForm() restores the initial value
+   * rather than clearing to `{}`. This prevents ng-forge's two-way [(value)]
+   * binding from writing back empty field defaults that overwrite a
+   * subsequent dbxFormSource re-apply.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private _initialValue: any = {};
+
   ngOnInit(): void {
-    // Listen for setValue from context
+    // Listen for setValue from context.
+    // Marks the form as USED after applying the value so that dbxFormSource's
+    // distinctUntilChanged on state$ can detect subsequent resetForm() calls
+    // as USED→RESET transitions. Uses changesCount=100 to ensure the value
+    // stays above 1 even after the _formValueEffect increments from a
+    // concurrent resetForm's _resetState (which sets changesCount=0).
     this._setValueSub.subscription = this._context.setValue$.subscribe((value) => {
       if (value != null) {
+        this._initialValue = value;
+        this._changesCount.set(100);
+        this._isReset.set(false);
         this.formValue.set(value as T);
-        this._resetState();
+        this._emitFormState();
       }
+    });
+
+    // Listen for reset from context.
+    // Restores the form to the last setValue value (not {}) to match formly behavior
+    // and avoid ng-forge's two-way binding overwriting a pending dbxFormSource re-apply.
+    //
+    // NOTE: _resetState() + formValue update are done here, but _emitFormState()
+    // is NOT called. The context's stream$ uses switchMap on _reset, so when
+    // _reset fires (from context.resetForm()), the switchMap creates a new inner
+    // subscription to _formState. We update _formState via _emitFormState() in
+    // a microtask so the new inner subscription is ready to receive it.
+    this._resetSub.subscription = this._context.reset$.pipe(skip(1)).subscribe(() => {
+      this._resetState();
+      this.formValue.set(structuredClone(this._initialValue));
+      // Emit on next microtask so the switchMap in stream$ has restarted
+      Promise.resolve().then(() => this._emitFormState());
     });
 
     // Listen for disabled state changes from context
@@ -144,6 +180,7 @@ export class DbxForgeFormComponent<T = unknown> implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this._setValueSub.destroy();
+    this._resetSub.destroy();
     this._disabledSub.destroy();
   }
 }

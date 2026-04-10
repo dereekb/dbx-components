@@ -1,5 +1,5 @@
 import { Injectable, type OnDestroy, type Provider, type Signal, signal, computed } from '@angular/core';
-import { BehaviorSubject, combineLatest, type Observable, shareReplay, filter, map } from 'rxjs';
+import { BehaviorSubject, combineLatest, type Observable, shareReplay, switchMap, filter, map } from 'rxjs';
 import { type DbxMutableForm, type DbxFormEvent, type DbxFormDisabledKey, DbxFormState, DEFAULT_FORM_DISABLED_KEY, provideDbxMutableForm } from '../../form/form';
 import { type BooleanStringKeyArray, BooleanStringKeyArrayUtility, type Maybe } from '@dereekb/util';
 import { LockSet, filterMaybe } from '@dereekb/rxjs';
@@ -199,7 +199,18 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
   private readonly _reset = new BehaviorSubject<Date>(new Date());
 
   readonly config$ = this._config.pipe(filterMaybe(), shareReplay(1));
-  readonly stream$: Observable<DbxFormEvent> = this._formState.asObservable();
+
+  /**
+   * Form event stream that restarts on each reset, mirroring the formly form's
+   * switchMap-on-reset pattern. This ensures that each resetForm() produces a fresh
+   * emission sequence, so dbxFormSource's distinctUntilChanged on state can detect
+   * the RESET transition even if the previous state was also RESET.
+   */
+  readonly stream$: Observable<DbxFormEvent> = this._reset.pipe(
+    switchMap(() => this._formState.asObservable()),
+    shareReplay(1)
+  );
+
   readonly setValue$ = this._setValue.asObservable();
   readonly disabled$ = this._disabled.asObservable();
   readonly reset$ = this._reset.asObservable();

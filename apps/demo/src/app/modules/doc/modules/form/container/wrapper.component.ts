@@ -1,5 +1,5 @@
 import { MatDialog } from '@angular/material/dialog';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import {
   expandWrapper,
   flexLayoutWrapper,
@@ -43,8 +43,7 @@ import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { Validators } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
-import { DbxBarDirective, DbxContentContainerDirective } from '@dereekb/dbx-web';
-import { MatSlideToggle } from '@angular/material/slide-toggle';
+import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocFeatureFormTabsComponent } from '../../shared/component/feature.formtabs.component';
@@ -54,11 +53,10 @@ import { DocFormForgeExampleComponent } from '../component/forge.example.form.co
 @Component({
   templateUrl: './wrapper.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DbxBarDirective, MatSlideToggle, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormExampleComponent, DocFormForgeExampleComponent, DbxFormlyFieldsContextDirective, DbxFormFormlyWrapperModule, DbxFormFormlyTextFieldModule, DbxFormFormlyBooleanFieldModule, DbxFormFormlyNumberFieldModule],
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormExampleComponent, DocFormForgeExampleComponent, DbxFormlyFieldsContextDirective, DbxFormFormlyWrapperModule, DbxFormFormlyTextFieldModule, DbxFormFormlyBooleanFieldModule, DbxFormFormlyNumberFieldModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormWrapperComponent {
-  readonly disabled = signal(false);
   readonly matDialog = inject(MatDialog);
 
   readonly expandField: FormlyFieldConfig[] = [

@@ -24,9 +24,9 @@
       </dbx-two-column>
     </doc-feature-example>
     <doc-feature-example header="dateCellScheduleRangeField()" hint="A field used for building a schedule.">
-      <doc-feature-form-tabs formlyFn="dateScheduleRangeField()" forgeFn="forgeDateScheduleRangeField()">
-        <doc-form-example-form formly [dbxFormlyFields]="dateCellScheduleRangeFields" [dbxFormSource]="defaultDateCellScheduleRangeFieldValue$"></doc-form-example-form>
-        <doc-forge-example-form forge [config]="forgeDateCellScheduleRangeFieldsConfig" [dbxFormSource]="defaultDateCellScheduleRangeFieldValue$"></doc-forge-example-form>
+      <doc-feature-form-tabs #formTabs formlyFn="dateScheduleRangeField()" forgeFn="forgeDateScheduleRangeField()">
+        <doc-form-example-form formly [dbxFormlyFields]="dateCellScheduleRangeFields" [dbxFormSource]="defaultDateCellScheduleRangeFieldValue$" [disabled]="formTabs.disabled()"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeDateCellScheduleRangeFieldsConfig" [dbxFormSource]="defaultDateCellScheduleRangeFieldValue$" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
       <h3>Timezone Tester</h3>
       <p>The dateScheduleRangeField() uses the timezone to change the start and end dates of the output. It treats all input as if it is already in that timezone. Timezone values returned will be from the start of that day's timezone.</p>
@@ -35,7 +35,7 @@
         <u>do not apply the timezone offset</u>
         , as the filter's start date already describes which timezone they are in per the DateSchedule's Timing behavior. The timezone string is passed as a visual output however.
       </p>
-      <doc-forge-example-form (dbxFormValueChange)="onTimezoneChange($event)" [config]="timezoneSelectionConfig" [dbxFormSource]="{ timezone: 'America/New_York' }"></doc-forge-example-form>
+      <doc-forge-example-form (dbxFormValueChange)="onTimezoneChange($event)" [config]="timezoneSelectionConfig" [dbxFormSource]="{ timezone: 'America/New_York' }" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       <h4>Customizing Dialog Footer</h4>
       <p>
         The footer can be customized globally using the

@@ -1,9 +1,8 @@
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type FormConfig, type LogicConfig } from '@ng-forge/dynamic-forms';
-import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { nameField, textAreaField, textField, toggleField, valueSelectionField, type ValueSelectionOption, forgeToggleField, forgeNameField, forgeTextField, forgeTextAreaField, forgeValueSelectionField, DbxFormlyFieldsContextDirective } from '@dereekb/dbx-form';
-import { DbxBarDirective, DbxContentContainerDirective } from '@dereekb/dbx-web';
-import { MatSlideToggle } from '@angular/material/slide-toggle';
+import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureDerivedComponent } from '../../shared/component/feature.derived.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
@@ -25,12 +24,10 @@ export const SHOW_VALUE_SELECTION_VALUES: ValueSelectionOption<string>[] = [
 @Component({
   templateUrl: './expression.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DbxBarDirective, MatSlideToggle, DocFeatureLayoutComponent, DocFeatureDerivedComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormExampleComponent, DocFormForgeExampleComponent, DbxFormlyFieldsContextDirective],
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureDerivedComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormExampleComponent, DocFormForgeExampleComponent, DbxFormlyFieldsContextDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormExpressionComponent {
-  readonly disabled = signal(false);
-
   // Forge equivalent — uses ng-forge logic configs for conditional hide/show
   readonly forgeBasicFieldsConfig: FormConfig = {
     fields: [

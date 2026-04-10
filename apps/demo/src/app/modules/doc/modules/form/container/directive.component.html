@@ -4,9 +4,9 @@
     <doc-feature-example header="dbxFormSource" hint="Used to pass data into a form.">
       <p>By default the dbxFormSource will only set the input observable value when the form is in a reset state (occurs when the form has new values).</p>
       <p>Any changes to any form inputs will change the state and prevent dbxFormSource from applying any more values.</p>
-      <doc-feature-form-tabs>
-        <doc-form-example-form formly #a="exampleForm" [dbxFormlyFields]="testFieldsA" [dbxFormSource]="data$"></doc-form-example-form>
-        <doc-forge-example-form forge #aForge="forgeExampleForm" [config]="forgeTestFieldsConfig" [dbxFormSource]="data$"></doc-forge-example-form>
+      <doc-feature-form-tabs #formTabs>
+        <doc-form-example-form formly #a="exampleForm" [dbxFormlyFields]="testFieldsA" [dbxFormSource]="data$" [disabled]="formTabs.disabled()"></doc-form-example-form>
+        <doc-forge-example-form forge #aForge="forgeExampleForm" [config]="forgeTestFieldsConfig" [dbxFormSource]="data$" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
       <p>Resetting the form will allow dbxFormSource apply the newest emitted value.</p>
       <button mat-raised-button color="warn" (click)="a.resetForm(); aForge.resetForm()">Reset Form</button>
@@ -14,8 +14,8 @@
       <h3>dbxFormSourceMode="always"</h3>
       <p>In this mode the form will always update to match the latest data, regardless of form state.</p>
       <doc-feature-form-tabs>
-        <doc-form-example-form formly [dbxFormlyFields]="testFieldsB" [dbxFormSource]="data$" dbxFormSourceMode="always"></doc-form-example-form>
-        <doc-forge-example-form forge [config]="forgeTestFieldsConfig" [dbxFormSource]="data$" dbxFormSourceMode="always"></doc-forge-example-form>
+        <doc-form-example-form formly [dbxFormlyFields]="testFieldsB" [dbxFormSource]="data$" dbxFormSourceMode="always" [disabled]="formTabs.disabled()"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeTestFieldsConfig" [dbxFormSource]="data$" dbxFormSourceMode="always" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
     </doc-feature-example>
 
@@ -23,24 +23,24 @@
       <p>dbxFormLoadingSource behaves the same way as dbxFormSource, but only sets the value when the loading state has finished loading.</p>
       <p>If the loading state has an error, the form is set to an empty value.</p>
       <doc-feature-form-tabs>
-        <doc-form-example-form formly #b="exampleForm" [dbxFormlyFields]="testFieldsC" [dbxFormLoadingSource]="loadingData$"></doc-form-example-form>
-        <doc-forge-example-form forge #bForge="forgeExampleForm" [config]="forgeTestFieldsConfig" [dbxFormLoadingSource]="loadingData$"></doc-forge-example-form>
+        <doc-form-example-form formly #b="exampleForm" [dbxFormlyFields]="testFieldsC" [dbxFormLoadingSource]="loadingData$" [disabled]="formTabs.disabled()"></doc-form-example-form>
+        <doc-forge-example-form forge #bForge="forgeExampleForm" [config]="forgeTestFieldsConfig" [dbxFormLoadingSource]="loadingData$" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
       <button mat-raised-button color="warn" (click)="b.resetForm(); bForge.resetForm()">Reset Form</button>
 
       <h3>dbxFormLoadingSourceMode="always"</h3>
       <p>In this mode the form will always update to match the latest data, regardless of form state.</p>
       <doc-feature-form-tabs>
-        <doc-form-example-form formly [dbxFormlyFields]="testFieldsD" [dbxFormLoadingSource]="loadingData$" dbxFormLoadingSourceMode="always"></doc-form-example-form>
-        <doc-forge-example-form forge [config]="forgeTestFieldsConfig" [dbxFormLoadingSource]="loadingData$" dbxFormLoadingSourceMode="always"></doc-forge-example-form>
+        <doc-form-example-form formly [dbxFormlyFields]="testFieldsD" [dbxFormLoadingSource]="loadingData$" dbxFormLoadingSourceMode="always" [disabled]="formTabs.disabled()"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeTestFieldsConfig" [dbxFormLoadingSource]="loadingData$" dbxFormLoadingSourceMode="always" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
     </doc-feature-example>
 
     <doc-feature-example header="dbxFormValueChange" hint="Emits form value changed events.">
       <p>If the form is complete, the value of the form is emitted, otherwise emits undefined.</p>
       <doc-feature-form-tabs>
-        <doc-form-example-form formly [dbxFormlyFields]="testFieldsE" (dbxFormValueChange)="value = $event" [dbxFormSource]="data$"></doc-form-example-form>
-        <doc-forge-example-form forge [config]="forgeTestFieldsConfig" (dbxFormValueChange)="forgeValue = $event" [dbxFormSource]="data$"></doc-forge-example-form>
+        <doc-form-example-form formly [dbxFormlyFields]="testFieldsE" (dbxFormValueChange)="value = $event" [dbxFormSource]="data$" [disabled]="formTabs.disabled()"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeTestFieldsConfig" (dbxFormValueChange)="forgeValue = $event" [dbxFormSource]="data$" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
 
       <dbx-content-border>
@@ -62,18 +62,18 @@
 
       <h3>[config] + [dbxFormSource] + (dbxFormValueChange)</h3>
       <p>The forge form receives its field config via [config], initial data via [dbxFormSource], and emits changes via (dbxFormValueChange).</p>
-      <doc-forge-example-form #forgeDirective="forgeExampleForm" [config]="forgeAllInputsConfig" [dbxFormSource]="{ name: 'Test User', email: 'test@example.com', age: 25, active: true }" (dbxFormValueChange)="forgeValue = $event"></doc-forge-example-form>
+      <doc-forge-example-form #forgeDirective="forgeExampleForm" [config]="forgeExampleConfig" [dbxFormSource]="forgeExampleData" (dbxFormValueChange)="forgeDirectiveValue = $event" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       <dbx-content-border>
-        <p>Value: {{ forgeValue | json }}</p>
+        <p>Value: {{ forgeDirectiveValue | json }}</p>
       </dbx-content-border>
-
-      <h3>[disabled]</h3>
-      <p>Passing [disabled]="true" disables all fields in the form.</p>
-      <doc-forge-example-form [config]="forgeAllInputsConfig" [dbxFormSource]="{ name: 'Disabled User', email: 'disabled@example.com', age: 30, active: false }" [disabled]="true"></doc-forge-example-form>
 
       <h3>resetForm()</h3>
       <p>Calling resetForm() clears the form back to its initial state.</p>
       <button mat-raised-button color="warn" (click)="forgeDirective.resetForm()">Reset Forge Form</button>
+
+      <h3>[disabled]</h3>
+      <p>Passing [disabled]="true" disables all fields in the form.</p>
+      <doc-forge-example-form [config]="forgeExampleConfig" [dbxFormSource]="{ name: 'Disabled User', email: 'disabled@example.com', age: 30, active: false }" [disabled]="true"></doc-forge-example-form>
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

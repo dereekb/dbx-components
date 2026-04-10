@@ -166,6 +166,112 @@ describe('DbxFormSourceDirective with forge form', () => {
       fixture.destroy();
     });
 
+    it('should transition to USED state after dbxFormSource sets initial value', async () => {
+      const fixture = TestBed.createComponent(TestForgeSourceHostComponent);
+      const host = fixture.componentInstance;
+      const context = host.context;
+      context.config = createNameFieldConfig();
+
+      host.source$ = of({ name: 'Alice' });
+      fixture.detectChanges();
+
+      await settle(fixture);
+
+      const event = await firstValueFrom(context.stream$.pipe(first()));
+      // After dbxFormSource sets the value, form should be USED (not stuck in RESET)
+      expect(event.state).toBe(1); // DbxFormState.USED = 1
+
+      fixture.destroy();
+    });
+
+    it('should emit RESET on stream$ after resetForm when form was USED', async () => {
+      const fixture = TestBed.createComponent(TestForgeSourceHostComponent);
+      const host = fixture.componentInstance;
+      const context = host.context;
+      context.config = createNameFieldConfig();
+
+      host.source$ = of({ name: 'Alice' });
+      fixture.detectChanges();
+      await settle(fixture);
+
+      // Confirm USED
+      const usedEvent = await firstValueFrom(context.stream$.pipe(first()));
+      expect(usedEvent.state).toBe(1); // USED
+
+      // Collect all state emissions after this point
+      const states: number[] = [];
+      const sub = context.stream$.subscribe((e) => states.push(e.state));
+
+      context.resetForm();
+      await settle(fixture);
+
+      sub.unsubscribe();
+
+      // Should have emitted at least one RESET (0) after the resetForm call
+      expect(states).toContain(0); // DbxFormState.RESET = 0
+
+      fixture.destroy();
+    });
+
+    it('should re-apply source value after resetForm() is called', async () => {
+      const fixture = TestBed.createComponent(TestForgeSourceHostComponent);
+      const host = fixture.componentInstance;
+      const context = host.context;
+      context.config = createNameFieldConfig();
+
+      const source$ = new BehaviorSubject<Partial<TestFormValue>>({ name: 'Initial' });
+      host.source$ = source$;
+      fixture.detectChanges();
+
+      await settle(fixture);
+
+      // Initial value set
+      const initial = await tryGetValue(context);
+      expect(initial.value).toEqual({ name: 'Initial' });
+
+      // Update the source (won't apply yet — reset mode ignores while USED)
+      source$.next({ name: 'Updated' });
+      await settle(fixture);
+
+      // Reset the form — should re-apply the latest source value
+      context.resetForm();
+      await settle(fixture);
+
+      const afterReset = await tryGetValue(context);
+      expect(afterReset.received).toBe(true);
+      expect(afterReset.value).toEqual({ name: 'Updated' });
+
+      fixture.destroy();
+    });
+
+    it('should re-apply source value on multiple consecutive resets', async () => {
+      const fixture = TestBed.createComponent(TestForgeSourceHostComponent);
+      const host = fixture.componentInstance;
+      const context = host.context;
+      context.config = createNameFieldConfig();
+
+      const source$ = new BehaviorSubject<Partial<TestFormValue>>({ name: 'V1' });
+      host.source$ = source$;
+      fixture.detectChanges();
+
+      await settle(fixture);
+      expect((await tryGetValue(context)).value).toEqual({ name: 'V1' });
+
+      // First reset cycle
+      source$.next({ name: 'V2' });
+      context.resetForm();
+      await settle(fixture);
+      expect((await tryGetValue(context)).value).toEqual({ name: 'V2' });
+
+      // Second reset cycle
+      source$.next({ name: 'V3' });
+      context.resetForm();
+      await settle(fixture);
+      expect((await tryGetValue(context)).value).toEqual({ name: 'V3' });
+
+      fixture.destroy();
+    });
+
     it('should forward value again after form is reset via setValue', async () => {
       const fixture = TestBed.createComponent(TestForgeSourceHostComponent);
       const host = fixture.componentInstance;
@@ -244,6 +350,100 @@ describe('DbxFormSourceDirective with forge form', () => {
 
       const result = await tryGetValue(context);
       expect(result.value).toEqual({ name: 'C' });
+
+      fixture.destroy();
+    });
+
+    it('should continue forwarding values after resetForm()', async () => {
+      const fixture = TestBed.createComponent(TestForgeSourceHostComponent);
+      const host = fixture.componentInstance;
+      const context = host.context;
+      context.config = createNameFieldConfig();
+
+      const source$ = new BehaviorSubject<Partial<TestFormValue>>({ name: 'Before' });
+      host.source$ = source$;
+      host.sourceMode = 'always';
+      fixture.detectChanges();
+
+      await settle(fixture);
+      expect((await tryGetValue(context)).value).toEqual({ name: 'Before' });
+
+      // Reset and update source
+      context.resetForm();
+      source$.next({ name: 'After' });
+      await settle(fixture);
+
+      expect((await tryGetValue(context)).value).toEqual({ name: 'After' });
+
+      fixture.destroy();
+    });
+  });
+
+  describe('every mode', () => {
+    it('should forward values continuously like always mode', async () => {
+      const fixture = TestBed.createComponent(TestForgeSourceHostComponent);
+      const host = fixture.componentInstance;
+      const context = host.context;
+      context.config = createNameFieldConfig();
+
+      const source$ = new BehaviorSubject<Partial<TestFormValue>>({ name: 'First' });
+      host.source$ = source$;
+      host.sourceMode = 'every';
+      fixture.detectChanges();
+
+      await settle(fixture);
+      expect((await tryGetValue(context)).value).toEqual({ name: 'First' });
+
+      source$.next({ name: 'Second' });
+      await settle(fixture);
+      expect((await tryGetValue(context)).value).toEqual({ name: 'Second' });
+
+      fixture.destroy();
+    });
+
+    it('should forward multiple sequential updates', async () => {
+      const fixture = TestBed.createComponent(TestForgeSourceHostComponent);
+      const host = fixture.componentInstance;
+      const context = host.context;
+      context.config = createNameFieldConfig();
+
+      const source$ = new BehaviorSubject<Partial<TestFormValue>>({ name: 'A' });
+      host.source$ = source$;
+      host.sourceMode = 'every';
+      fixture.detectChanges();
+
+      await settle(fixture);
+
+      source$.next({ name: 'B' });
+      await settle(fixture);
+
+      source$.next({ name: 'C' });
+      await settle(fixture);
+
+      expect((await tryGetValue(context)).value).toEqual({ name: 'C' });
+
+      fixture.destroy();
+    });
+
+    it('should continue forwarding values after resetForm()', async () => {
+      const fixture = TestBed.createComponent(TestForgeSourceHostComponent);
+      const host = fixture.componentInstance;
+      const context = host.context;
+      context.config = createNameFieldConfig();
+
+      const source$ = new BehaviorSubject<Partial<TestFormValue>>({ name: 'Before' });
+      host.source$ = source$;
+      host.sourceMode = 'every';
+      fixture.detectChanges();
+
+      await settle(fixture);
+      expect((await tryGetValue(context)).value).toEqual({ name: 'Before' });
+
+      context.resetForm();
+      source$.next({ name: 'After' });
+      await settle(fixture);
+
+      expect((await tryGetValue(context)).value).toEqual({ name: 'After' });
 
       fixture.destroy();
     });

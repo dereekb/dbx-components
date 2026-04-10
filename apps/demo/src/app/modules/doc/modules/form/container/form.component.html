@@ -1,8 +1,5 @@
 <dbx-content-container>
   <doc-feature-layout header="Forms" hint="Set of pre-made form components available for use.">
-    <dbx-bar>
-      <mat-slide-toggle [checked]="disabled()" (change)="disabled.set($event.checked)">Disable All Fields</mat-slide-toggle>
-    </dbx-bar>
     <!-- Examples -->
     <doc-feature-example header="dbx-form-search-form" hint="Premade form component used for searching.">
       <dbx-form-search-form [config]="searchFormConfig" (search)="searchText = $event"></dbx-form-search-form>

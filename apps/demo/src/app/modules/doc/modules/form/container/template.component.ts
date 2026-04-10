@@ -1,9 +1,8 @@
 import { usernamePasswordLoginFields, timezoneStringField, DbxFormTimezoneStringFieldModule, DbxFormSourceDirective, websiteUrlField, forgeUsernamePasswordLoginFields, forgeWebsiteUrlField, forgeTimezoneStringField } from '@dereekb/dbx-form';
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
-import { DbxBarDirective, DbxContentContainerDirective } from '@dereekb/dbx-web';
-import { MatSlideToggle } from '@angular/material/slide-toggle';
+import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocFeatureFormTabsComponent } from '../../shared/component/feature.formtabs.component';
@@ -14,11 +13,10 @@ import { DocFeatureDerivedComponent } from '../../shared/component/feature.deriv
 @Component({
   templateUrl: './template.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DbxBarDirective, MatSlideToggle, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormExampleComponent, DocFormForgeExampleComponent, DbxFormSourceDirective, DocFeatureDerivedComponent, DbxFormTimezoneStringFieldModule],
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormExampleComponent, DocFormForgeExampleComponent, DbxFormSourceDirective, DocFeatureDerivedComponent, DbxFormTimezoneStringFieldModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormTemplateComponent {
-  readonly disabled = signal(false);
   readonly usernamePasswordLoginField: FormlyFieldConfig[] = usernamePasswordLoginFields({
     username: 'email'
   });

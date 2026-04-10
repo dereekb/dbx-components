@@ -1,10 +1,16 @@
 .doc-feature-form-tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 16px;
 
   &.mobile {
     flex-direction: column;
   }
+}
+
+.doc-feature-form-tabs-toolbar {
+  width: 100%;
+  margin-bottom: 4px;
 }
 
 .doc-feature-form-tabs-column {
