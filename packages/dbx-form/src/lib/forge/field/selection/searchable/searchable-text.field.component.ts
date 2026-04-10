@@ -1,10 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, input, type Signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, type ElementRef, input, viewChild } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule, type MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MatIconModule } from '@angular/material/icon';
 import { MatOptionModule } from '@angular/material/core';
 import { type Maybe, type PrimativeKey } from '@dereekb/util';
-import { DbxInjectionComponent } from '@dereekb/dbx-core';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { BehaviorSubject, map, shareReplay, switchMap, type Observable } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -24,7 +23,7 @@ import { toggleDisableFormControl } from '../../../../form/form';
 @Component({
   selector: 'dbx-forge-searchable-text-field',
   templateUrl: './searchable-text.field.component.html',
-  imports: [FormsModule, ReactiveFormsModule, MatAutocompleteModule, MatOptionModule, MatIconModule, DbxSearchableFieldAutocompleteItemComponent, DbxInjectionComponent],
+  imports: [FormsModule, ReactiveFormsModule, MatAutocompleteModule, MatOptionModule, MatIconModule, DbxSearchableFieldAutocompleteItemComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

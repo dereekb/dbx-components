@@ -136,9 +136,15 @@ export function formlyTextAreaField(config: TextAreaFieldConfig): FormlyFieldCon
 }
 
 // MARK: Deprecated Aliases
-/** @deprecated Use formlyTextFieldTransformParser instead. */
+/**
+ * @deprecated Use formlyTextFieldTransformParser instead.
+ */
 export const textFieldTransformParser = formlyTextFieldTransformParser;
-/** @deprecated Use formlyTextField instead. */
+/**
+ * @deprecated Use formlyTextField instead.
+ */
 export const textField = formlyTextField;
-/** @deprecated Use formlyTextAreaField instead. */
+/**
+ * @deprecated Use formlyTextAreaField instead.
+ */
 export const textAreaField = formlyTextAreaField;

@@ -156,11 +156,19 @@ export function formlyPhoneListField(repeatConfig: Partial<PhoneListFieldConfig>
 }
 
 // MARK: Deprecated Aliases
-/** @deprecated Use formlyPhoneField instead. */
+/**
+ * @deprecated Use formlyPhoneField instead.
+ */
 export const phoneField = formlyPhoneField;
-/** @deprecated Use formlyWrappedPhoneAndLabelField instead. */
+/**
+ * @deprecated Use formlyWrappedPhoneAndLabelField instead.
+ */
 export const wrappedPhoneAndLabelField = formlyWrappedPhoneAndLabelField;
-/** @deprecated Use formlyPhoneAndLabelSectionField instead. */
+/**
+ * @deprecated Use formlyPhoneAndLabelSectionField instead.
+ */
 export const phoneAndLabelSectionField = formlyPhoneAndLabelSectionField;
-/** @deprecated Use formlyPhoneListField instead. */
+/**
+ * @deprecated Use formlyPhoneListField instead.
+ */
 export const phoneListField = formlyPhoneListField;

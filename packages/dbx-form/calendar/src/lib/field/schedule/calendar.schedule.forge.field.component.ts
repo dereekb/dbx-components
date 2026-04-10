@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, type OnDestroy, computed, effect, inject, input, type InputSignal, type Signal } from '@angular/core';
 import { type ArrayOrValue, type TimezoneString, type Maybe } from '@dereekb/util';
-import { type Subscription } from 'rxjs';
+import { type Subscription, distinctUntilChanged, skip } from 'rxjs';
 import { type ObservableOrValue, SubscriptionObject, asObservable } from '@dereekb/rxjs';
 import { isSameDateCellScheduleDateRange, type DateRange, type DateCellScheduleDateFilterConfig, type DateCellScheduleDayCode, type DateOrDateRangeOrDateCellIndexOrDateCellRange } from '@dereekb/date';
 import { type CalendarScheduleSelectionState, DbxCalendarScheduleSelectionStore } from '../../calendar.schedule.selection.store';
@@ -13,7 +13,6 @@ import { DbxScheduleSelectionCalendarDateRangeComponent } from '../../calendar.s
 import type { FieldTree } from '@angular/forms/signals';
 import { type DynamicText, type FieldMeta, type ValidationMessages, DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES } from '@ng-forge/dynamic-forms';
 import { resolveValueFieldContext, buildValueFieldInputs } from '@ng-forge/dynamic-forms/integration';
-import { distinctUntilChanged, skip } from 'rxjs';
 import { CompactContextStore } from '@dereekb/dbx-web';
 
 /**
@@ -122,7 +121,7 @@ export class DbxForgeCalendarDateScheduleRangeFieldComponent implements OnDestro
       if (state?.value?.set) {
         state.value.set(value);
       }
-    } catch (e) {
+    } catch {
       // field input may not be available yet (NG0950) during early store emissions
     }
   }
@@ -205,6 +204,10 @@ export class DbxForgeCalendarDateScheduleRangeFieldComponent implements OnDestro
  *
  * Uses the standard buildValueFieldInputs to bridge the ng-forge field definition
  * to the component's input signals.
+ *
+ * @param fieldDef - Field definition configuration
+ * @param fieldDef.key - Form model key for the field
+ * @returns Signal containing a Record of input names to values for ngComponentOutlet
  */
 export function calendarDateScheduleRangeFieldMapper(fieldDef: { key: string }): Signal<Record<string, unknown>> {
   const ctx = resolveValueFieldContext();
@@ -212,7 +215,6 @@ export function calendarDateScheduleRangeFieldMapper(fieldDef: { key: string }):
   const defaultValidationMessages = inject(DEFAULT_VALIDATION_MESSAGES);
 
   return computed(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return buildValueFieldInputs(fieldDef as any, ctx, defaultProps?.(), defaultValidationMessages?.());
   });
 }

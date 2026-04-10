@@ -1,10 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, effect, input, signal, type Signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, input, signal } from '@angular/core';
 import { type CdkDragDrop, CdkDropList, CdkDrag, CdkDragHandle, CdkDragPlaceholder } from '@angular/cdk/drag-drop';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { type FieldTree } from '@angular/forms/signals';
-import type { DynamicText, FieldMeta, ValidationMessages, FormConfig } from '@ng-forge/dynamic-forms';
-import { DynamicForm } from '@ng-forge/dynamic-forms';
+import { type DynamicText, type FieldMeta, type ValidationMessages, type FormConfig, DynamicForm } from '@ng-forge/dynamic-forms';
 import { type FactoryWithRequiredInput } from '@dereekb/util';
 import { DbxButtonComponent, DbxButtonSpacerDirective, type DbxButtonStyle } from '@dereekb/dbx-web';
 import type { DbxForgeArrayFieldProps, DbxForgeArrayItemPair } from './array.field';
@@ -119,6 +118,9 @@ export class DbxForgeArrayFieldComponent<T = unknown> {
 
   /**
    * Cast item value to Partial for the DynamicForm [value] binding.
+   *
+   * @param value - The raw array item value to cast
+   * @returns The value cast as a Record for DynamicForm binding, or undefined if null/undefined
    */
   asPartial(value: unknown): Record<string, unknown> | undefined {
     return (value as Record<string, unknown>) ?? undefined;

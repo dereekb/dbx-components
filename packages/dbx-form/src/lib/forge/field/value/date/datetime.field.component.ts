@@ -12,15 +12,15 @@ import { type DynamicText, type ValidationMessages, DEFAULT_PROPS, DEFAULT_VALID
 import { resolveValueFieldContext, buildValueFieldInputs } from '@ng-forge/dynamic-forms/integration';
 import { MATERIAL_CONFIG } from '@ng-forge/dynamic-forms-material';
 import type { FieldTree } from '@angular/forms/signals';
-import { type Maybe, type Milliseconds, type TimezoneString, type ReadableTimeString, type DateOrDayString, type ArrayOrValue, asArray, filterMaybeArrayValues, type LogicalDate } from '@dereekb/util';
-import { safeToJsDate, dateTimezoneUtcNormal, type DateTimezoneUtcNormalInstance, guessCurrentTimezone, readableTimeStringToDate, toLocalReadableTimeString, getTimezoneAbbreviation, isSameDateHoursAndMinutes, isSameDateDay, DateTimeMinuteInstance, dateFromLogicalDate, utcDayForDate, dateTimeMinuteWholeDayDecisionFunction, toJsDayDate, findMinDate, findMaxDate, isSameDate } from '@dereekb/date';
-import { type ObservableOrValueGetter, asObservableFromGetter, SubscriptionObject, switchMapMaybeDefault, switchMapFilterMaybe, filterMaybe, skipAllInitialMaybe } from '@dereekb/rxjs';
-import { type Observable, of, BehaviorSubject, Subject, combineLatest, interval, Subscription } from 'rxjs';
+import { type Maybe, type Milliseconds, type TimezoneString, type ReadableTimeString, type DateOrDayString, type ArrayOrValue, asArray, filterMaybeArrayValues } from '@dereekb/util';
+import { safeToJsDate, dateTimezoneUtcNormal, type DateTimezoneUtcNormalInstance, guessCurrentTimezone, toLocalReadableTimeString, getTimezoneAbbreviation, isSameDateHoursAndMinutes, isSameDateDay, DateTimeMinuteInstance, dateFromLogicalDate, dateTimeMinuteWholeDayDecisionFunction, toJsDayDate, isSameDate } from '@dereekb/date';
+import { type ObservableOrValueGetter, asObservableFromGetter, SubscriptionObject, switchMapMaybeDefault, filterMaybe, skipAllInitialMaybe } from '@dereekb/rxjs';
+import { type Observable, of, BehaviorSubject, Subject, combineLatest, interval, type Subscription } from 'rxjs';
 import { switchMap, shareReplay, map, startWith, tap, distinctUntilChanged, debounceTime, throttleTime, combineLatestWith, filter, first, skip } from 'rxjs/operators';
-import { startOfDay, addMinutes, addDays } from 'date-fns';
+import { startOfDay } from 'date-fns';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DbxDateTimeValueMode, dbxDateTimeInputValueParseFactory, dbxDateTimeOutputValueFactory, dbxDateTimeIsSameDateTimeFieldValue } from '../../../../formly/field/value/date/date.value';
-import { DbxDateTimeFieldTimeMode, type DbxDateTimePickerConfiguration, type DbxDateTimeFieldSyncType, DBX_DATE_TIME_FIELD_DATE_NOT_IN_SCHEDULE_ERROR, DBX_DATE_TIME_FIELD_TIME_NOT_IN_RANGE_ERROR } from '../../../../formly/field/value/date/datetime.field.component';
+import { DbxDateTimeFieldTimeMode, type DbxDateTimePickerConfiguration, type DbxDateTimeFieldSyncType } from '../../../../formly/field/value/date/datetime.field.component';
 import { type DateTimePresetConfiguration, type DateTimePreset, dateTimePreset } from '../../../../formly/field/value/date/datetime';
 import { DbxDateTimeFieldMenuPresetsService } from '../../../../formly/field/value/date/datetime.field.service';
 import { DateDistancePipe, TimeDistancePipe, GetValuePipe } from '@dereekb/dbx-core';
@@ -62,7 +62,9 @@ export interface DbxForgeDateTimeFieldComponentProps {
   readonly appearance?: 'fill' | 'outline';
   readonly hint?: DynamicText;
   readonly getSyncFieldsObs?: () => Observable<ArrayOrValue<DbxForgeDateTimeSyncField>>;
-  /** @deprecated Use `timeMode` instead. */
+  /**
+   * @deprecated Use `timeMode` instead.
+   */
   readonly showTime?: boolean;
 }
 
@@ -921,6 +923,10 @@ export class DbxForgeDateTimeFieldComponent {
 /**
  * Custom mapper for the datetime field type.
  * Called by ng-forge's DynamicForm to create the inputs for the component.
+ *
+ * @param fieldDef - Field definition configuration
+ * @param fieldDef.key - Form model key for the field
+ * @returns Signal containing a Record of input names to values for ngComponentOutlet
  */
 export function dateTimeFieldMapper(fieldDef: { key: string }): Signal<Record<string, unknown>> {
   const ctx = resolveValueFieldContext();
@@ -928,7 +934,6 @@ export function dateTimeFieldMapper(fieldDef: { key: string }): Signal<Record<st
   const defaultValidationMessages = inject(DEFAULT_VALIDATION_MESSAGES);
 
   return computed(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return buildValueFieldInputs(fieldDef as any, ctx, defaultProps?.(), defaultValidationMessages?.());
   });
 }

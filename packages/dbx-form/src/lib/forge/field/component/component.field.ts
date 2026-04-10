@@ -44,10 +44,20 @@ export interface DbxForgeComponentFieldConfig<T = unknown> {
 }
 
 /**
+ * Counter for generating unique keys when no explicit key is provided.
+ *
+ * Each invocation gets a unique key so that ng-forge's field reconciliation
+ * (`reconcileFields`) treats a config change as a new field rather than
+ * preserving the stale instance whose captured `props` never update.
+ */
+let _componentFieldCounter = 0;
+
+/**
  * Creates a forge field definition that renders a custom Angular component.
  *
  * Uses {@link DbxInjectionComponent} to dynamically inject any Angular component
- * into the form. This is useful for embedding complex custom UI within a dynamic form.
+ * into the form. Generates a unique key when none is provided so that ng-forge's
+ * field reconciliation treats each config change as a new field instance.
  *
  * @param config - Component field configuration
  * @returns A validated {@link DbxForgeComponentFieldDef}
@@ -60,15 +70,6 @@ export interface DbxForgeComponentFieldConfig<T = unknown> {
  * });
  * ```
  */
-/**
- * Counter for generating unique keys when no explicit key is provided.
- *
- * Each invocation gets a unique key so that ng-forge's field reconciliation
- * (`reconcileFields`) treats a config change as a new field rather than
- * preserving the stale instance whose captured `props` never update.
- */
-let _componentFieldCounter = 0;
-
 export function forgeComponentField<T = unknown>(config: DbxForgeComponentFieldConfig<T>): DbxForgeComponentFieldDef<T> {
   const { key, label, componentField, allowDisabledEffects } = config;
 

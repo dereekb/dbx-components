@@ -1,6 +1,6 @@
 import { computed, Directive, input, type OnDestroy, type OnInit } from '@angular/core';
-import { FormControl } from '@angular/forms';
-import { type Maybe, type PrimativeKey, type Configurable } from '@dereekb/util';
+import { FormControl, type ValidatorFn } from '@angular/forms';
+import { type PrimativeKey, type Configurable } from '@dereekb/util';
 import { type DbxInjectionComponentConfig, mergeDbxInjectionComponentConfigs } from '@dereekb/dbx-core';
 import { SubscriptionObject, type LoadingState, successResult, startWithBeginLoading } from '@dereekb/rxjs';
 import { BehaviorSubject, debounceTime, distinctUntilChanged, first, map, mergeMap, of, shareReplay, startWith, switchMap, type Observable } from 'rxjs';
@@ -41,7 +41,7 @@ export interface DbxForgeSearchableTextFieldProps<T = unknown, M = unknown, H ex
   readonly searchLabel?: string;
   readonly refreshDisplayValues$?: Observable<unknown>;
   readonly hint?: string;
-  readonly textInputValidator?: import('@angular/forms').ValidatorFn | import('@angular/forms').ValidatorFn[];
+  readonly textInputValidator?: ValidatorFn | ValidatorFn[];
 }
 
 /**
@@ -162,9 +162,13 @@ export abstract class AbstractForgeSearchableFieldDirective<T = unknown, M = unk
     this._onDestroy();
   }
 
-  /** Subclass lifecycle hook called at the end of ngOnInit. */
+  /**
+   * Subclass lifecycle hook called at the end of ngOnInit.
+   */
   protected abstract _onInit(): void;
-  /** Subclass lifecycle hook called at the end of ngOnDestroy. */
+  /**
+   * Subclass lifecycle hook called at the end of ngOnDestroy.
+   */
   protected abstract _onDestroy(): void;
 
   // MARK: Protected Helpers

@@ -37,7 +37,6 @@ export class DbxForgeFormComponent<T = unknown> implements OnInit, OnDestroy {
 
   readonly dynamicForm = viewChild(DynamicForm);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly formValue = signal<any>({});
   readonly configSignal = toSignal(this._context.config$, { initialValue: undefined });
 
@@ -129,7 +128,7 @@ export class DbxForgeFormComponent<T = unknown> implements OnInit, OnDestroy {
    * binding from writing back empty field defaults that overwrite a
    * subsequent dbxFormSource re-apply.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   private _initialValue: any = {};
 
   ngOnInit(): void {
@@ -162,7 +161,7 @@ export class DbxForgeFormComponent<T = unknown> implements OnInit, OnDestroy {
       this._resetState();
       this.formValue.set(structuredClone(this._initialValue));
       // Emit on next microtask so the switchMap in stream$ has restarted
-      Promise.resolve().then(() => this._emitFormState());
+      void Promise.resolve().then(() => this._emitFormState());
     });
 
     // Listen for disabled state changes from context

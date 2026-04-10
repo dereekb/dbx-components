@@ -1,7 +1,6 @@
 import type { BaseValueField } from '@ng-forge/dynamic-forms';
-import { filterFromPOJO } from '@dereekb/util';
+import { filterFromPOJO, LAT_LNG_PATTERN, type LatLngPointFunctionConfig } from '@dereekb/util';
 import { DEFAULT_LAT_LNG_TEXT_FIELD_PATTERN_MESSAGE, DEFAULT_LAT_LNG_TEXT_FIELD_PLACEHOLDER } from '@dereekb/dbx-form';
-import { LAT_LNG_PATTERN } from '@dereekb/util';
 import type { DbxForgeMapboxLatLngFieldComponentProps } from './latlng.forge.field.component';
 
 /**
@@ -32,7 +31,7 @@ export interface DbxForgeMapboxLatLngFieldConfig {
   readonly selectLocationOnMapClick?: boolean;
   readonly zoom?: number;
   readonly recenterTime?: number;
-  readonly latLngConfig?: import('@dereekb/util').LatLngPointFunctionConfig;
+  readonly latLngConfig?: LatLngPointFunctionConfig;
   readonly markerConfig?: DbxForgeMapboxLatLngFieldComponentProps['markerConfig'];
 }
 

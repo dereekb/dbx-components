@@ -7,7 +7,7 @@ import { type ListLoadingStateContext } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { DbxListView, type DbxListSelectionMode } from './list.view';
 import { DbxRouterWebProviderConfig } from '../../router/provider/router.provider.config';
-import { provideNoopAnimations } from '@angular/platform-browser/animations';
+
 import { DbxListTitleGroupDirective } from './group/list.view.value.group.title.directive';
 import { type DbxListTitleGroupTitleDelegate, type DbxListTitleGroupData } from './group/list.view.value.group.title';
 import { AbstractDbxValueListViewItemComponent } from './list.view.value.item.directive';
@@ -205,7 +205,10 @@ describe('DbxValueListViewContentComponent', () => {
     await TestBed.configureTestingModule({
       imports: [TestListHostComponent, TestGroupedListHostComponent, TestItemComponent],
       // eslint-disable-next-line @typescript-eslint/no-deprecated
-      providers: [provideNoopAnimations(), { provide: DbxListView, useClass: MockDbxListView }, { provide: DbxRouterWebProviderConfig, useValue: MOCK_ROUTER_WEB_PROVIDER_CONFIG }]
+      providers: [
+        { provide: DbxListView, useClass: MockDbxListView },
+        { provide: DbxRouterWebProviderConfig, useValue: MOCK_ROUTER_WEB_PROVIDER_CONFIG }
+      ]
     }).compileComponents();
   });
 

@@ -192,11 +192,19 @@ export function formlyAddressListField(config: Partial<AddressListFieldConfig> =
 }
 
 // MARK: Deprecated Aliases
-/** @deprecated Use formlyAddressLineField instead. */
+/**
+ * @deprecated Use formlyAddressLineField instead.
+ */
 export const addressLineField = formlyAddressLineField;
-/** @deprecated Use formlyAddressFormlyFields instead. */
+/**
+ * @deprecated Use formlyAddressFormlyFields instead.
+ */
 export const addressFormlyFields = formlyAddressFormlyFields;
-/** @deprecated Use formlyAddressField instead. */
+/**
+ * @deprecated Use formlyAddressField instead.
+ */
 export const addressField = formlyAddressField;
-/** @deprecated Use formlyAddressListField instead. */
+/**
+ * @deprecated Use formlyAddressListField instead.
+ */
 export const addressListField = formlyAddressListField;

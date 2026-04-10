@@ -121,6 +121,9 @@ export interface DbxForgeFlexRowConfig {
 
 /**
  * Type guard to check if input is a {@link DbxForgeFlexRowFieldConfig} with a `field` property.
+ *
+ * @param input - The value to check, either a plain field definition or a flex row field config
+ * @returns True if the input is a DbxForgeFlexRowFieldConfig with a `field` property
  */
 function isFlexRowFieldConfig(input: FieldDef<unknown> | DbxForgeFlexRowFieldConfig): input is DbxForgeFlexRowFieldConfig {
   return (input as DbxForgeFlexRowFieldConfig).field != null;
@@ -257,6 +260,9 @@ export interface DbxForgeSectionGroupConfig {
  * Creates a forge section field that wraps child fields inside `<dbx-section>`.
  *
  * @deprecated Use {@link forgeDbxSectionFieldWrapper} directly instead.
+ *
+ * @param config - Section group configuration with header, fields, and optional icon/hint
+ * @returns A {@link DbxForgeSectionFieldDef} wrapping the fields in a section layout
  */
 export function forgeSectionGroup(config: DbxForgeSectionGroupConfig): DbxForgeSectionFieldDef {
   return forgeDbxSectionFieldWrapper({
@@ -290,6 +296,9 @@ export interface DbxForgeSubsectionGroupConfig {
  * Creates a forge subsection field that wraps child fields inside `<dbx-subsection>`.
  *
  * @deprecated Use {@link forgeDbxSubsectionFieldWrapper} or `forgeDbxSectionFieldWrapper({ subsection: true })` instead.
+ *
+ * @param config - Subsection group configuration with header, fields, and optional icon/hint
+ * @returns A {@link DbxForgeSectionFieldDef} wrapping the fields in a subsection layout
  */
 export function forgeSubsectionGroup(config: DbxForgeSubsectionGroupConfig): DbxForgeSectionFieldDef {
   return forgeDbxSubsectionFieldWrapper({

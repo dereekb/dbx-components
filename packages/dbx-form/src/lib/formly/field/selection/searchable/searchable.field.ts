@@ -136,11 +136,19 @@ export function formlySearchableTextField<T, M = unknown, H extends PrimativeKey
 }
 
 // MARK: Deprecated
-/** @deprecated Use formlyMakeMetaFilterSearchableFieldValueDisplayFn instead. */
+/**
+ * @deprecated Use formlyMakeMetaFilterSearchableFieldValueDisplayFn instead.
+ */
 export const makeMetaFilterSearchableFieldValueDisplayFn = formlyMakeMetaFilterSearchableFieldValueDisplayFn;
-/** @deprecated Use formlySearchableStringChipField instead. */
+/**
+ * @deprecated Use formlySearchableStringChipField instead.
+ */
 export const searchableStringChipField = formlySearchableStringChipField;
-/** @deprecated Use formlySearchableChipField instead. */
+/**
+ * @deprecated Use formlySearchableChipField instead.
+ */
 export const searchableChipField = formlySearchableChipField;
-/** @deprecated Use formlySearchableTextField instead. */
+/**
+ * @deprecated Use formlySearchableTextField instead.
+ */
 export const searchableTextField = formlySearchableTextField;

@@ -41,5 +41,7 @@ export function formlyChipTextField(config: ChipTextFieldConfig) {
 }
 
 // MARK: Deprecated
-/** @deprecated Use formlyChipTextField instead. */
+/**
+ * @deprecated Use formlyChipTextField instead.
+ */
 export const chipTextField = formlyChipTextField;

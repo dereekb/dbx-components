@@ -42,5 +42,7 @@ export function formlyTextEditorField(config: TextEditorFieldConfig): FormlyFiel
 }
 
 // MARK: Deprecated Aliases
-/** @deprecated Use formlyTextEditorField instead. */
+/**
+ * @deprecated Use formlyTextEditorField instead.
+ */
 export const textEditorField = formlyTextEditorField;

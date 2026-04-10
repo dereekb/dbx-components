@@ -29,5 +29,7 @@ export function formlyHiddenField({ key, required = false }: HiddenFieldConfig):
 }
 
 // MARK: Deprecated Aliases
-/** @deprecated Use formlyHiddenField instead. */
+/**
+ * @deprecated Use formlyHiddenField instead.
+ */
 export const hiddenField = formlyHiddenField;

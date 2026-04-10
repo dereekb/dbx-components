@@ -4,7 +4,7 @@ import { ChangeDetectionStrategy, Component, viewChild, signal } from '@angular/
 import { DbxActionConfirmDirective, type DbxActionConfirmConfig } from './action.confirm.directive';
 import { DbxButtonComponent } from '../button/button.component';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { provideNoopAnimations } from '@angular/platform-browser/animations';
+
 import { type WorkUsingObservable } from '@dereekb/rxjs';
 import { of, delay, EMPTY } from 'rxjs';
 import { DbxRouterTransitionService } from '@dereekb/dbx-core';
@@ -60,7 +60,7 @@ describe('DbxActionConfirmDirective', () => {
     TestBed.configureTestingModule({
       imports: [MatDialogModule],
       // eslint-disable-next-line @typescript-eslint/no-deprecated -- no replacement provider until Angular 23; animate.enter/leave are template-only
-      providers: [provideNoopAnimations(), { provide: DbxRouterTransitionService, useValue: { transitions$: EMPTY } }]
+      providers: [{ provide: DbxRouterTransitionService, useValue: { transitions$: EMPTY } }]
     });
   }));
 

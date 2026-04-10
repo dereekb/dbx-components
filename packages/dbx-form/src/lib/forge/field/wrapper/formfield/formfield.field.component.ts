@@ -1,6 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, type Signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, viewChild } from '@angular/core';
 import { DynamicTextPipe, type FieldWithValidation } from '@ng-forge/dynamic-forms';
-import type { FieldTree } from '@angular/forms/signals';
 import { forgeFieldDisabled } from '../../field.disabled';
 import { AsyncPipe } from '@angular/common';
 import { AbstractForgeWrapperFieldComponent, provideDbxForgeWrapperFieldDirective } from '../wrapper.field';

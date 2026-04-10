@@ -239,27 +239,49 @@ export function formlyFlexLayoutWrapper(fieldConfigs: (FormlyFieldConfig | DbxFl
 }
 
 // MARK: Deprecated Aliases
-/** @deprecated Use formlyAddWrapperToFormlyFieldConfig instead. */
+/**
+ * @deprecated Use formlyAddWrapperToFormlyFieldConfig instead.
+ */
 export const addWrapperToFormlyFieldConfig = formlyAddWrapperToFormlyFieldConfig;
-/** @deprecated Use formlyAutoTouchWrapper instead. */
+/**
+ * @deprecated Use formlyAutoTouchWrapper instead.
+ */
 export const autoTouchWrapper = formlyAutoTouchWrapper;
-/** @deprecated Use formlyExpandWrapper instead. */
+/**
+ * @deprecated Use formlyExpandWrapper instead.
+ */
 export const expandWrapper = formlyExpandWrapper;
-/** @deprecated Use formlyToggleWrapper instead. */
+/**
+ * @deprecated Use formlyToggleWrapper instead.
+ */
 export const toggleWrapper = formlyToggleWrapper;
-/** @deprecated Use formlySectionWrapper instead. */
+/**
+ * @deprecated Use formlySectionWrapper instead.
+ */
 export const sectionWrapper = formlySectionWrapper;
-/** @deprecated Use formlySubsectionWrapper instead. */
+/**
+ * @deprecated Use formlySubsectionWrapper instead.
+ */
 export const subsectionWrapper = formlySubsectionWrapper;
-/** @deprecated Use formlyInfoWrapper instead. */
+/**
+ * @deprecated Use formlyInfoWrapper instead.
+ */
 export const infoWrapper = formlyInfoWrapper;
-/** @deprecated Use formlyStyleWrapper instead. */
+/**
+ * @deprecated Use formlyStyleWrapper instead.
+ */
 export const styleWrapper = formlyStyleWrapper;
-/** @deprecated Use formlyWorkingWrapper instead. */
+/**
+ * @deprecated Use formlyWorkingWrapper instead.
+ */
 export const workingWrapper = formlyWorkingWrapper;
-/** @deprecated Use formlyFlexLayoutWrapper instead. */
+/**
+ * @deprecated Use formlyFlexLayoutWrapper instead.
+ */
 export const flexLayoutWrapper = formlyFlexLayoutWrapper;
-/** @deprecated Use formlyCheckIsFieldFlexLayoutGroupFieldConfig instead. */
+/**
+ * @deprecated Use formlyCheckIsFieldFlexLayoutGroupFieldConfig instead.
+ */
 export const checkIsFieldFlexLayoutGroupFieldConfig = formlyCheckIsFieldFlexLayoutGroupFieldConfig;
 
 // TODO: Add addon wrapper/extension from this demo:

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ChangeDetectionStrategy, signal, provideZonelessChangeDetection } from '@angular/core';
 import { By } from '@angular/platform-browser';
-import { provideNoopAnimations } from '@angular/platform-browser/animations';
+
 import { type FormConfig, type FormOptions, DynamicForm, EventDispatcher, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
 import { BehaviorSubject, of, first, skip } from 'rxjs';
 import { startOfDay, addHours, addDays } from 'date-fns';
@@ -34,7 +34,7 @@ class TestForgeDateTimeHostComponent {
 }
 
 // MARK: Test Providers (zoneless)
-const FORGE_DATETIME_TEST_PROVIDERS = [provideZonelessChangeDetection(), provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), provideNoopAnimations(), { provide: DynamicFormLogger, useClass: NoopLogger }];
+const FORGE_DATETIME_TEST_PROVIDERS = [provideZonelessChangeDetection(), provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), { provide: DynamicFormLogger, useClass: NoopLogger }];
 
 // MARK: Helpers
 
@@ -1296,7 +1296,16 @@ describe('DbxForgeDateTimeFieldComponent', () => {
   // MARK: Group F — Arrow Key Time Navigation
   describe('arrow key time navigation', () => {
     function makeKeyEvent(key: string, modifiers: Partial<{ altKey: boolean; shiftKey: boolean; ctrlKey: boolean }> = {}): KeyboardEvent {
-      return { key, ctrlKey: false, shiftKey: false, altKey: false, ...modifiers, preventDefault: () => {} } as unknown as KeyboardEvent;
+      return {
+        key,
+        ctrlKey: false,
+        shiftKey: false,
+        altKey: false,
+        ...modifiers,
+        preventDefault: () => {
+          /* noop */
+        }
+      } as unknown as KeyboardEvent;
     }
 
     /**

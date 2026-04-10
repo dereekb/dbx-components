@@ -61,5 +61,7 @@ export function formlyRepeatArrayField<T = unknown>(config: RepeatArrayFieldConf
 }
 
 // MARK: Deprecated Aliases
-/** @deprecated Use formlyRepeatArrayField instead. */
+/**
+ * @deprecated Use formlyRepeatArrayField instead.
+ */
 export const repeatArrayField = formlyRepeatArrayField;

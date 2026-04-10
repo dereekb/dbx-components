@@ -3,6 +3,7 @@ import { of } from 'rxjs';
 import { forgeListSelectionField } from './list.field';
 import { type AbstractDbxSelectionListWrapperDirective } from '@dereekb/dbx-web';
 import { successResult } from '@dereekb/rxjs';
+import type { Type } from '@angular/core';
 import type { DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
 import type { FieldDef } from '@ng-forge/dynamic-forms';
 
@@ -20,7 +21,7 @@ function getInnerField(wrapper: DbxForgeFormFieldWrapperFieldDef): FieldDef<unkn
 
 // MARK: forgeListSelectionField
 describe('forgeListSelectionField()', () => {
-  const stubListComponentClass = of(class {} as unknown as import('@angular/core').Type<AbstractDbxSelectionListWrapperDirective<unknown>>);
+  const stubListComponentClass = of(class {} as unknown as Type<AbstractDbxSelectionListWrapperDirective<unknown>>);
   const stubReadKey = (item: { id: string }) => item.id;
   const stubState$ = of(successResult([]));
 
@@ -114,7 +115,9 @@ describe('forgeListSelectionField()', () => {
     });
 
     it('should propagate loadMore through inner field props when provided', () => {
-      const loadMore = () => {};
+      const loadMore = () => {
+        // noop
+      };
       const wrapper = forgeListSelectionField({ ...minimalConfig(), loadMore }) as DbxForgeFormFieldWrapperFieldDef;
       const inner = getInnerField(wrapper);
       expect(inner.props?.loadMore).toBe(loadMore);
@@ -184,7 +187,9 @@ describe('forgeListSelectionField()', () => {
     });
 
     it('should propagate loadMore through props when provided', () => {
-      const loadMore = () => {};
+      const loadMore = () => {
+        // noop
+      };
       const field = forgeListSelectionField({ ...minimalConfig(), wrapInFormField: false, loadMore });
       expect(field.props?.loadMore).toBe(loadMore);
     });

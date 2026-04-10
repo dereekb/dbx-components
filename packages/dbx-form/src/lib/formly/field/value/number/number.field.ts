@@ -207,11 +207,19 @@ export function formlyDollarAmountField(config: DollarAmountFieldConfig) {
 }
 
 // MARK: Deprecated Aliases
-/** @deprecated Use formlyNumberFieldTransformParser instead. */
+/**
+ * @deprecated Use formlyNumberFieldTransformParser instead.
+ */
 export const numberFieldTransformParser = formlyNumberFieldTransformParser;
-/** @deprecated Use formlyNumberField instead. */
+/**
+ * @deprecated Use formlyNumberField instead.
+ */
 export const numberField = formlyNumberField;
-/** @deprecated Use formlyNumberSliderField instead. */
+/**
+ * @deprecated Use formlyNumberSliderField instead.
+ */
 export const numberSliderField = formlyNumberSliderField;
-/** @deprecated Use formlyDollarAmountField instead. */
+/**
+ * @deprecated Use formlyDollarAmountField instead.
+ */
 export const dollarAmountField = formlyDollarAmountField;

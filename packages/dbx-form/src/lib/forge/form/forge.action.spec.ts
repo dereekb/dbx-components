@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, ChangeDetectionStrategy, provideZonelessChangeDetection, viewChild } from '@angular/core';
-import { provideNoopAnimations } from '@angular/platform-browser/animations';
+import { Component, ChangeDetectionStrategy, provideZonelessChangeDetection, viewChild, inject } from '@angular/core';
+
 import { type FormConfig, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
 import { first, firstValueFrom, timeout, catchError, of, map, delay, Subject, BehaviorSubject, filter } from 'rxjs';
 import { type WorkUsingObservable } from '@dereekb/rxjs';
@@ -27,21 +27,17 @@ import { forgeTextField } from '../field/value/text/text.field';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 class TestForgeActionHostComponent {
-  readonly context: DbxForgeFormContext;
+  readonly context = inject(DbxForgeFormContext);
   readonly directive = viewChild.required(DbxActionDirective);
   readonly formDirective = viewChild.required(DbxActionFormDirective);
 
   handler: WorkUsingObservable<any, any> = () => of(true).pipe(delay(500));
   source$: any;
   disabledOnWorking: boolean | undefined;
-
-  constructor(context: DbxForgeFormContext) {
-    this.context = context;
-  }
 }
 
 // MARK: Helpers
-const TEST_PROVIDERS = [provideZonelessChangeDetection(), provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), provideNoopAnimations(), { provide: DynamicFormLogger, useClass: NoopLogger }];
+const TEST_PROVIDERS = [provideZonelessChangeDetection(), provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), { provide: DynamicFormLogger, useClass: NoopLogger }];
 /**
  * Settles the fixture by running change detection and waiting for stability.
  *

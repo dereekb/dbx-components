@@ -16,6 +16,8 @@ import type { ValidationMessages } from '@ng-forge/dynamic-forms';
  *   defaultValidationMessages: forgeDefaultValidationMessages()
  * };
  * ```
+ *
+ * @returns A ValidationMessages object with messages for required, email, minLength, maxLength, min, max, and pattern validators
  */
 export function forgeDefaultValidationMessages(): ValidationMessages {
   return {

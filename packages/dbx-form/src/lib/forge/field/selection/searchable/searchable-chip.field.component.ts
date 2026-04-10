@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, effect, input, type Signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, input } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule, type MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MatChipsModule, type MatChipInputEvent } from '@angular/material/chips';

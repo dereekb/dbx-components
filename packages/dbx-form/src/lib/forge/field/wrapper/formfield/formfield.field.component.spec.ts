@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, ChangeDetectionStrategy, provideZonelessChangeDetection } from '@angular/core';
-import { provideNoopAnimations } from '@angular/platform-browser/animations';
-import { type FormConfig, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
+import { Component, ChangeDetectionStrategy, provideZonelessChangeDetection, inject } from '@angular/core';
+
+import { DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
 import { first, firstValueFrom, timeout, catchError, of, map } from 'rxjs';
 import { provideDbxForgeFormFieldDeclarations } from '../../../forge.providers';
 import { provideDbxFormConfiguration } from '../../../../form.providers';
@@ -23,15 +23,11 @@ import { forgeTextField } from '../../value/text/text.field';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 class TestFormFieldWrapperHostComponent {
-  readonly context: DbxForgeFormContext;
-
-  constructor(context: DbxForgeFormContext) {
-    this.context = context;
-  }
+  readonly context = inject(DbxForgeFormContext);
 }
 
 // MARK: Helpers
-const TEST_PROVIDERS = [provideZonelessChangeDetection(), provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), provideNoopAnimations(), { provide: DynamicFormLogger, useClass: NoopLogger }];
+const TEST_PROVIDERS = [provideZonelessChangeDetection(), provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), { provide: DynamicFormLogger, useClass: NoopLogger }];
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -144,7 +140,7 @@ describe('DbxForgeFormFieldWrapperComponent', () => {
       );
 
       expect(result.received).toBe(true);
-      expect((result.value as Record<string, unknown>)?.rating).toBe(5);
+      expect((result.value as Record<string, unknown>)?.['rating']).toBe(5);
 
       fixture.destroy();
     });
@@ -308,7 +304,7 @@ describe('DbxForgeFormFieldWrapperComponent', () => {
       );
 
       expect(result.received).toBe(true);
-      expect((result.value as Record<string, unknown>)?.rating).toBe(75);
+      expect((result.value as Record<string, unknown>)?.['rating']).toBe(75);
 
       fixture.destroy();
     });

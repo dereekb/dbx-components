@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, ChangeDetectionStrategy, provideZonelessChangeDetection } from '@angular/core';
-import { provideNoopAnimations } from '@angular/platform-browser/animations';
+import { Component, ChangeDetectionStrategy, provideZonelessChangeDetection, inject } from '@angular/core';
+
 import { type FormConfig, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
-import { first, firstValueFrom, timeout, catchError, of, map, BehaviorSubject, Subject } from 'rxjs';
+import { first, firstValueFrom, timeout, catchError, of, map, BehaviorSubject } from 'rxjs';
 import { provideDbxForgeFormFieldDeclarations } from '../forge.providers';
 import { provideDbxFormConfiguration } from '../../form.providers';
 import { DbxForgeFormComponent } from './forge.component';
@@ -32,18 +32,14 @@ interface TestFormValue {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 class TestForgeSourceHostComponent {
-  readonly context: DbxForgeFormContext<TestFormValue>;
+  readonly context = inject(DbxForgeFormContext) as DbxForgeFormContext<TestFormValue>;
 
   source$: Maybe<ObservableOrValue<Maybe<Partial<TestFormValue>>>>;
   sourceMode: Maybe<DbxFormSourceDirectiveMode>;
-
-  constructor(context: DbxForgeFormContext<TestFormValue>) {
-    this.context = context;
-  }
 }
 
 // MARK: Helpers
-const TEST_PROVIDERS = [provideZonelessChangeDetection(), provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), provideNoopAnimations(), { provide: DynamicFormLogger, useClass: NoopLogger }];
+const TEST_PROVIDERS = [provideZonelessChangeDetection(), provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), { provide: DynamicFormLogger, useClass: NoopLogger }];
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));

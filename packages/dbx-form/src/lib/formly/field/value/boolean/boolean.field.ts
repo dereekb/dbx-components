@@ -92,7 +92,11 @@ export function acceptTermsField({ key = 'accept', label = 'Accept Terms', descr
 */
 
 // MARK: Deprecated Aliases
-/** @deprecated Use formlyToggleField instead. */
+/**
+ * @deprecated Use formlyToggleField instead.
+ */
 export const toggleField = formlyToggleField;
-/** @deprecated Use formlyCheckboxField instead. */
+/**
+ * @deprecated Use formlyCheckboxField instead.
+ */
 export const checkboxField = formlyCheckboxField;

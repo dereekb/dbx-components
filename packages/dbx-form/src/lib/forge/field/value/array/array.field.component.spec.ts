@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ChangeDetectionStrategy, signal, provideZonelessChangeDetection } from '@angular/core';
-import { provideNoopAnimations } from '@angular/platform-browser/animations';
+
 import { type CdkDragDrop } from '@angular/cdk/drag-drop';
 import { DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
 import { DbxForgeArrayFieldComponent } from './array.field.component';
@@ -44,7 +44,7 @@ class TestHostComponent {
 }
 
 // MARK: Helpers
-const TEST_PROVIDERS = [provideZonelessChangeDetection(), provideNoopAnimations(), { provide: DynamicFormLogger, useClass: NoopLogger }];
+const TEST_PROVIDERS = [provideZonelessChangeDetection(), { provide: DynamicFormLogger, useClass: NoopLogger }];
 
 async function settle(fixture: ComponentFixture<any>): Promise<void> {
   fixture.detectChanges();

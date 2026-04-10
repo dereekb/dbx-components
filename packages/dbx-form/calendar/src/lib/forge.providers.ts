@@ -23,6 +23,8 @@ export const DBX_FORGE_CALENDAR_FIELD_TYPES: FieldTypeDefinition[] = [DbxForgeCa
  * Registers ng-forge dynamic form field declarations for the calendar package.
  *
  * Add this to your app's providers alongside provideDbxForgeFormFieldDeclarations().
+ *
+ * @returns An array of providers that register the calendar forge field types with ng-forge
  */
 export function provideDbxForgeCalendarFieldDeclarations() {
   return provideDynamicForm(...DBX_FORGE_CALENDAR_FIELD_TYPES);

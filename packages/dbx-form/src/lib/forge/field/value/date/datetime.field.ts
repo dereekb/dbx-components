@@ -248,6 +248,7 @@ export interface DbxForgeDateTimeFieldConfig {
   // --- Deprecated/unsupported in forge (kept for interface parity) ---
   /**
    * Whether to include a time input alongside the date picker.
+   *
    * @deprecated Use `timeMode` instead. Kept for backward compatibility.
    */
   readonly showTime?: boolean;

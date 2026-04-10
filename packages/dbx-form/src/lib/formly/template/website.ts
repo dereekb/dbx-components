@@ -36,5 +36,7 @@ export function formlyWebsiteUrlField(config?: WebsiteUrlFieldConfig): FormlyFie
 }
 
 // MARK: Deprecated Aliases
-/** @deprecated Use formlyWebsiteUrlField instead. */
+/**
+ * @deprecated Use formlyWebsiteUrlField instead.
+ */
 export const websiteUrlField = formlyWebsiteUrlField;

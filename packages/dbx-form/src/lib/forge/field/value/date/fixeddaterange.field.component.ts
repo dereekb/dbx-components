@@ -1,6 +1,6 @@
 import { type Maybe, type DecisionFunction, type Milliseconds, type TimezoneString, type DateMonth, type DayOfMonth, type YearNumber, isMonthDaySlashDate, MS_IN_MINUTE } from '@dereekb/util';
-import { guessCurrentTimezone, type DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, type DateRangeInput, type DateRange, isSameDateDayRange, type DateRangeWithDateOrStringValue, dateRange, isDateInDateRange, clampDateRangeToDateRange, isSameDateRange, isSameDateDay, limitDateTimeInstance, dateTimeMinuteWholeDayDecisionFunction, safeToJsDate } from '@dereekb/date';
-import { switchMap, shareReplay, map, startWith, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, type Observable, Subject, of, combineLatestWith, filter, combineLatest, scan, first, timer, type Subscription } from 'rxjs';
+import { guessCurrentTimezone, type DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, type DateRangeInput, type DateRange, isSameDateDayRange, type DateRangeWithDateOrStringValue, dateRange, isDateInDateRange, clampDateRangeToDateRange, isSameDateRange, isSameDateDay, limitDateTimeInstance, dateTimeMinuteWholeDayDecisionFunction } from '@dereekb/date';
+import { switchMap, shareReplay, map, startWith, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, type Observable, Subject, of, combineLatestWith, filter, combineLatest, scan, first, timer } from 'rxjs';
 import { ChangeDetectionStrategy, Component, ElementRef, Injectable, type InputSignal, type Signal, DestroyRef, inject, signal, viewChild, computed, input, forwardRef, effect, untracked } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { type MatDateRangeSelectionStrategy, MAT_DATE_RANGE_SELECTION_STRATEGY, DateRange as DatePickerDateRange, MatCalendar, MatDatepickerModule } from '@angular/material/datepicker';
@@ -16,7 +16,6 @@ import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { NgClass } from '@angular/common';
 import { type DynamicText, type ValidationMessages, DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES } from '@ng-forge/dynamic-forms';
 import { resolveValueFieldContext, buildValueFieldInputs } from '@ng-forge/dynamic-forms/integration';
-import { MATERIAL_CONFIG } from '@ng-forge/dynamic-forms-material';
 import type { FieldTree } from '@angular/forms/signals';
 import { forgeFieldDisabled } from '../../field.disabled';
 
@@ -329,7 +328,7 @@ export class DbxForgeFixedDateRangeFieldComponent {
   readonly defaultPickerFilter: DecisionFunction<Date | null> = () => true;
 
   // MARK: Date range selection
-  // eslint-disable-next-line sonarjs/cognitive-complexity
+
   dateRangeSelectionForMode(mode: DbxFixedDateRangeSelectionMode) {
     const result: Observable<Maybe<DateRange>> = combineLatest([this.dateRangeInput$, this.limitDateTimeInstance$]).pipe(
       switchMap(([dateRangeInput, limitInstance]) => {
@@ -805,6 +804,10 @@ export class DbxForgeFixedDateRangeFieldSelectionStrategy<D> implements MatDateR
  * Custom mapper for the fixeddaterange field type.
  *
  * Uses the standard valueFieldMapper pattern from ng-forge/integration.
+ *
+ * @param fieldDef - Field definition configuration
+ * @param fieldDef.key - Form model key for the field
+ * @returns Signal containing a Record of input names to values for ngComponentOutlet
  */
 export function fixedDateRangeFieldMapper(fieldDef: { key: string }): Signal<Record<string, unknown>> {
   const ctx = resolveValueFieldContext();
@@ -812,7 +815,6 @@ export function fixedDateRangeFieldMapper(fieldDef: { key: string }): Signal<Rec
   const defaultValidationMessages = inject(DEFAULT_VALIDATION_MESSAGES);
 
   return computed(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return buildValueFieldInputs(fieldDef as any, ctx, defaultProps?.(), defaultValidationMessages?.());
   });
 }

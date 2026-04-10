@@ -159,6 +159,8 @@ export class DbxForgeSliderFieldComponent {
 
   /**
    * Sync slider value changes back to the Signal Forms field tree.
+   *
+   * @param value - The new slider value from the Material slider input event
    */
   onValueChange(value: number): void {
     const fieldState = this.field()();
@@ -174,6 +176,7 @@ export class DbxForgeSliderFieldComponent {
  * Mapper function for the dbx-slider field type.
  *
  * @param fieldDef - The slider field definition
+ * @param fieldDef.key - Form model key for the field
  * @returns Signal containing Record of input names to values for ngComponentOutlet
  */
 export function sliderFieldMapper(fieldDef: { key: string }): Signal<Record<string, unknown>> {

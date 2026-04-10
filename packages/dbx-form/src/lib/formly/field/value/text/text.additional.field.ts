@@ -258,17 +258,31 @@ export function formlyLatLngTextField({ key = 'latLng' }: Partial<TextFieldConfi
 }
 
 // MARK: Deprecated Aliases
-/** @deprecated Use formlyNameField instead. */
+/**
+ * @deprecated Use formlyNameField instead.
+ */
 export const nameField = formlyNameField;
-/** @deprecated Use formlyEmailField instead. */
+/**
+ * @deprecated Use formlyEmailField instead.
+ */
 export const emailField = formlyEmailField;
-/** @deprecated Use formlyCityField instead. */
+/**
+ * @deprecated Use formlyCityField instead.
+ */
 export const cityField = formlyCityField;
-/** @deprecated Use formlyStateField instead. */
+/**
+ * @deprecated Use formlyStateField instead.
+ */
 export const stateField = formlyStateField;
-/** @deprecated Use formlyCountryField instead. */
+/**
+ * @deprecated Use formlyCountryField instead.
+ */
 export const countryField = formlyCountryField;
-/** @deprecated Use formlyZipCodeField instead. */
+/**
+ * @deprecated Use formlyZipCodeField instead.
+ */
 export const zipCodeField = formlyZipCodeField;
-/** @deprecated Use formlyLatLngTextField instead. */
+/**
+ * @deprecated Use formlyLatLngTextField instead.
+ */
 export const latLngTextField = formlyLatLngTextField;

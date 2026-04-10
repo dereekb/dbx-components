@@ -321,6 +321,10 @@ export class DbxForgeMapboxLatLngFieldComponent implements OnDestroy {
 
 /**
  * Custom mapper for the forge mapbox lat/lng field.
+ *
+ * @param fieldDef - Field definition configuration
+ * @param fieldDef.key - Form model key for the field
+ * @returns Signal containing a Record of input names to values for ngComponentOutlet
  */
 export function mapboxLatLngFieldMapper(fieldDef: { key: string }): Signal<Record<string, unknown>> {
   const ctx = resolveValueFieldContext();
@@ -328,7 +332,6 @@ export function mapboxLatLngFieldMapper(fieldDef: { key: string }): Signal<Recor
   const defaultValidationMessages = inject(DEFAULT_VALIDATION_MESSAGES);
 
   return computed(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return buildValueFieldInputs(fieldDef as any, ctx, defaultProps?.(), defaultValidationMessages?.());
   });
 }

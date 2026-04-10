@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input, type OnDestroy, type OnInit, type Signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, type OnDestroy, type OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { Editor, NgxEditorModule } from '@bobbyquantum/ngx-editor';
-import { debounceTime, filter } from 'rxjs';
+import { debounceTime } from 'rxjs';
 import { SubscriptionObject, filterMaybe } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { CompactContextStore, mapCompactModeObs } from '@dereekb/dbx-web';

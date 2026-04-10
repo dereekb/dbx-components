@@ -476,23 +476,38 @@ describe('forgeExpandWrapper()', () => {
 // MARK: forgeInfoButtonField
 describe('forgeInfoButtonField()', () => {
   it('should create a field with the correct type', () => {
-    const field = forgeInfoButtonField({ onInfoClick: () => {} });
+    const field = forgeInfoButtonField({
+      onInfoClick: () => {
+        /* noop */
+      }
+    });
     expect(field.type).toBe(FORGE_INFO_BUTTON_FIELD_TYPE_NAME);
   });
 
   it('should auto-generate a key', () => {
-    const field = forgeInfoButtonField({ onInfoClick: () => {} });
+    const field = forgeInfoButtonField({
+      onInfoClick: () => {
+        /* noop */
+      }
+    });
     expect(field.key).toContain('_info_button_');
   });
 
   it('should pass onInfoClick through props', () => {
-    const fn = () => {};
+    const fn = () => {
+      // noop
+    };
     const field = forgeInfoButtonField({ onInfoClick: fn });
     expect(field.props?.onInfoClick).toBe(fn);
   });
 
   it('should pass ariaLabel through props', () => {
-    const field = forgeInfoButtonField({ onInfoClick: () => {}, ariaLabel: 'Help' });
+    const field = forgeInfoButtonField({
+      onInfoClick: () => {
+        /* noop */
+      },
+      ariaLabel: 'Help'
+    });
     expect(field.props?.ariaLabel).toBe('Help');
   });
 });
@@ -502,7 +517,9 @@ describe('forgeInfoWrapper()', () => {
   it('should create a row field', () => {
     const row = forgeInfoWrapper({
       field: { key: 'a', type: 'input' as const, label: 'A' },
-      onInfoClick: () => {}
+      onInfoClick: () => {
+        /* noop */
+      }
     });
     expect(row.type).toBe('row');
   });
@@ -510,7 +527,9 @@ describe('forgeInfoWrapper()', () => {
   it('should contain the field and an info button', () => {
     const row = forgeInfoWrapper({
       field: { key: 'a', type: 'input' as const, label: 'A' },
-      onInfoClick: () => {}
+      onInfoClick: () => {
+        /* noop */
+      }
     });
     expect(row.fields.length).toBe(2);
 
@@ -526,7 +545,9 @@ describe('forgeInfoWrapper()', () => {
   it('should use custom col values', () => {
     const row = forgeInfoWrapper({
       field: { key: 'a', type: 'input' as const, label: 'A' },
-      onInfoClick: () => {},
+      onInfoClick: () => {
+        /* noop */
+      },
       fieldCol: 10,
       buttonCol: 2
     });
@@ -576,39 +597,73 @@ describe('forgeWorkingWrapper()', () => {
 // MARK: forgeInfoFieldWrapper
 describe('forgeInfoFieldWrapper()', () => {
   it('should create a field with the correct type', () => {
-    const field = forgeInfoFieldWrapper({ fields: [], onInfoClick: () => {} });
+    const field = forgeInfoFieldWrapper({
+      fields: [],
+      onInfoClick: () => {
+        /* noop */
+      }
+    });
     expect(field.type).toBe(FORGE_INFO_WRAPPER_FIELD_TYPE_NAME);
   });
 
   it('should auto-generate a key with _info_wrapper_ prefix', () => {
-    const field = forgeInfoFieldWrapper({ fields: [], onInfoClick: () => {} });
+    const field = forgeInfoFieldWrapper({
+      fields: [],
+      onInfoClick: () => {
+        /* noop */
+      }
+    });
     expect(field.key).toContain('_info_wrapper_');
   });
 
   it('should use a custom key when provided', () => {
-    const field = forgeInfoFieldWrapper({ key: '_my_info', fields: [], onInfoClick: () => {} });
+    const field = forgeInfoFieldWrapper({
+      key: '_my_info',
+      fields: [],
+      onInfoClick: () => {
+        /* noop */
+      }
+    });
     expect(field.key).toBe('_my_info');
   });
 
   it('should pass onInfoClick through props', () => {
-    const fn = () => {};
+    const fn = () => {
+      // noop
+    };
     const field = forgeInfoFieldWrapper({ fields: [], onInfoClick: fn });
     expect(field.props?.onInfoClick).toBe(fn);
   });
 
   it('should pass ariaLabel through props', () => {
-    const field = forgeInfoFieldWrapper({ fields: [], onInfoClick: () => {}, ariaLabel: 'Help' });
+    const field = forgeInfoFieldWrapper({
+      fields: [],
+      onInfoClick: () => {
+        /* noop */
+      },
+      ariaLabel: 'Help'
+    });
     expect(field.props?.ariaLabel).toBe('Help');
   });
 
   it('should pass child fields through props', () => {
     const childFields = [{ key: 'a', type: 'input' as const, label: 'A' }];
-    const field = forgeInfoFieldWrapper({ fields: childFields, onInfoClick: () => {} });
+    const field = forgeInfoFieldWrapper({
+      fields: childFields,
+      onInfoClick: () => {
+        /* noop */
+      }
+    });
     expect(field.props?.fields).toBe(childFields);
   });
 
   it('should initialize value as empty object', () => {
-    const field = forgeInfoFieldWrapper({ fields: [], onInfoClick: () => {} });
+    const field = forgeInfoFieldWrapper({
+      fields: [],
+      onInfoClick: () => {
+        /* noop */
+      }
+    });
     expect(field.value).toEqual({});
   });
 });

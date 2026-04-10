@@ -9,7 +9,7 @@ import { forgeField } from '../../field';
  * Any field type accepted as a drag array template item.
  * Includes both ng-forge built-in fields and custom FieldDef types.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 export type DbxForgeArrayTemplateField = ArrayAllowedChildren | FieldDef<any>;
 
 // MARK: Field Type

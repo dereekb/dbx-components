@@ -203,13 +203,23 @@ export function formlyUsernameLoginField(username: UsernameLoginFieldUsernameCon
 }
 
 // MARK: Deprecated Aliases
-/** @deprecated Use formlyTextPasswordField instead. */
+/**
+ * @deprecated Use formlyTextPasswordField instead.
+ */
 export const textPasswordField = formlyTextPasswordField;
-/** @deprecated Use formlyTextVerifyPasswordField instead. */
+/**
+ * @deprecated Use formlyTextVerifyPasswordField instead.
+ */
 export const textVerifyPasswordField = formlyTextVerifyPasswordField;
-/** @deprecated Use formlyTextPasswordWithVerifyFieldGroup instead. */
+/**
+ * @deprecated Use formlyTextPasswordWithVerifyFieldGroup instead.
+ */
 export const textPasswordWithVerifyFieldGroup = formlyTextPasswordWithVerifyFieldGroup;
-/** @deprecated Use formlyUsernamePasswordLoginFields instead. */
+/**
+ * @deprecated Use formlyUsernamePasswordLoginFields instead.
+ */
 export const usernamePasswordLoginFields = formlyUsernamePasswordLoginFields;
-/** @deprecated Use formlyUsernameLoginField instead. */
+/**
+ * @deprecated Use formlyUsernameLoginField instead.
+ */
 export const usernameLoginField = formlyUsernameLoginField;

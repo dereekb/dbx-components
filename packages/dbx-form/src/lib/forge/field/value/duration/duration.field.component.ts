@@ -9,8 +9,7 @@ import { DynamicTextPipe, type DynamicText, type ValidationMessages, DEFAULT_PRO
 import { resolveValueFieldContext, buildValueFieldInputs, createResolvedErrorsSignal, shouldShowErrors } from '@ng-forge/dynamic-forms/integration';
 import { MATERIAL_CONFIG } from '@ng-forge/dynamic-forms-material';
 import type { FieldTree } from '@angular/forms/signals';
-import type { Maybe, TimeUnit, HoursAndMinutes } from '@dereekb/util';
-import { ALL_TIME_UNITS, hoursAndMinutesToTimeUnit, millisecondsToTimeUnit, minutesToHoursAndMinutes, timeUnitToMilliseconds } from '@dereekb/util';
+import { type TimeUnit, type HoursAndMinutes, ALL_TIME_UNITS, hoursAndMinutesToTimeUnit, millisecondsToTimeUnit, minutesToHoursAndMinutes, timeUnitToMilliseconds } from '@dereekb/util';
 import { type TimeDurationData, durationDataToMilliseconds, formatDurationString, millisecondsToDurationData, parseDurationString } from '@dereekb/date';
 import { DbxPopoverService } from '@dereekb/dbx-web';
 import { DbxDurationPickerPopoverComponent } from '../../../../formly/field/value/duration/duration.picker.popover.component';
@@ -193,6 +192,8 @@ export class DbxForgeTimeDurationFieldComponent {
 
   /**
    * Called when Enter is pressed in the text input.
+   *
+   * @param event - The keyboard event triggered by pressing Enter
    */
   onTextEnter(event: Event): void {
     event.preventDefault();
@@ -263,6 +264,8 @@ export class DbxForgeTimeDurationFieldComponent {
 
   /**
    * Converts duration data to the output value and sets it on the field.
+   *
+   * @param data - The parsed duration data containing time unit values
    */
   private _syncOutputFromDurationData(data: TimeDurationData): void {
     const ms = durationDataToMilliseconds(data);
@@ -285,6 +288,8 @@ export class DbxForgeTimeDurationFieldComponent {
 
   /**
    * Writes a value to the Signal Forms field tree.
+   *
+   * @param value - The value to set on the field, or undefined to clear it
    */
   private _setFieldValue(value: unknown): void {
     this._syncing = true;
@@ -300,6 +305,11 @@ export class DbxForgeTimeDurationFieldComponent {
 
   /**
    * Converts an output value (number, HoursAndMinutes, or TimeDurationData) to milliseconds.
+   *
+   * @param value - The output value to convert (number, HoursAndMinutes, or TimeDurationData depending on valueMode)
+   * @param outputUnit - The time unit of the numeric output value (used when valueMode is 'number')
+   * @param valueMode - The current value mode determining how to interpret the value
+   * @returns The equivalent duration in milliseconds
    */
   private _outputValueToMilliseconds(value: unknown, outputUnit: TimeUnit, valueMode: TimeDurationFieldValueMode): number {
     let result: number;
@@ -325,6 +335,7 @@ export class DbxForgeTimeDurationFieldComponent {
  * the field tree and build the standard inputs for the component.
  *
  * @param fieldDef - The time duration field definition
+ * @param fieldDef.key - Form model key for the field
  * @returns Signal containing Record of input names to values for ngComponentOutlet
  */
 export function timeDurationFieldMapper(fieldDef: { key: string }): Signal<Record<string, unknown>> {
@@ -333,7 +344,6 @@ export function timeDurationFieldMapper(fieldDef: { key: string }): Signal<Recor
   const defaultValidationMessages = inject(DEFAULT_VALIDATION_MESSAGES);
 
   return computed(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return buildValueFieldInputs(fieldDef as any, ctx, defaultProps?.(), defaultValidationMessages?.());
   });
 }

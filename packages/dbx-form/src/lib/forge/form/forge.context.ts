@@ -16,6 +16,9 @@ import { type FormConfig } from '@ng-forge/dynamic-forms';
  * - Primitive values under `_` keys (e.g. toggle booleans) are dropped entirely.
  * - Non-underscore keys are preserved, with recursive cleaning of nested objects.
  *
+ * @param value - The form value object to clean
+ * @returns A new object with internal `_`-prefixed keys stripped and their object values unwrapped
+ *
  * @example
  * ```
  * stripForgeInternalKeys({ _toggle_1: false, _section_6: { name: "Bob" } })
@@ -48,6 +51,9 @@ export function stripForgeInternalKeys<T>(value: T): T {
  *
  * Empty means: `null`, `undefined`, or empty string `""`.
  * Note: `false`, `0`, empty arrays `[]`, and other falsy values are NOT empty.
+ *
+ * @param val - The value to check for emptiness
+ * @returns True if the value is null, undefined, or an empty string
  */
 function isEmptyFormValue(val: unknown): boolean {
   return val === null || val === undefined || val === '';
@@ -69,6 +75,9 @@ function isEmptyFormValue(val: unknown): boolean {
  * stripEmptyForgeValues({ section: { a: "", b: "" } })
  * // → {}
  * ```
+ *
+ * @param value - The form value object to clean
+ * @returns A new object with empty-valued keys removed
  */
 export function stripEmptyForgeValues<T>(value: T): T {
   if (value == null || typeof value !== 'object' || Array.isArray(value)) {
@@ -284,6 +293,8 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
 
 /**
  * Provides DbxForgeFormContext and registers it as both DbxForm and DbxMutableForm.
+ *
+ * @returns An array of providers registering the forge form context for dependency injection
  */
 export function provideDbxForgeFormContext(): Provider[] {
   return [DbxForgeFormContext, ...provideDbxMutableForm(DbxForgeFormContext)];

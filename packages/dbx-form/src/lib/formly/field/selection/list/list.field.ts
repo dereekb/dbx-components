@@ -40,5 +40,7 @@ export function formlyDbxListField<T = unknown, C extends AbstractDbxSelectionLi
 }
 
 // MARK: Deprecated
-/** @deprecated Use formlyDbxListField instead. */
+/**
+ * @deprecated Use formlyDbxListField instead.
+ */
 export const dbxListField = formlyDbxListField;

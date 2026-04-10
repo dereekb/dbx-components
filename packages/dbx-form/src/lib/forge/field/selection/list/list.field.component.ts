@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, effect, input, type OnDestroy, type OnInit, type Signal, type Type } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, input, type OnDestroy, type OnInit, type Type } from '@angular/core';
 import { MatDividerModule } from '@angular/material/divider';
-import { type Maybe, type PrimativeKey, type ReadKeyFunction, readKeysFrom, convertMaybeToArray, hasDifferentValues } from '@dereekb/util';
+import { type Maybe, type PrimativeKey, type ReadKeyFunction, readKeysFrom, convertMaybeToArray, hasDifferentValues, isSelectedDecisionFunctionFactory } from '@dereekb/util';
 import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { SubscriptionObject, type ListLoadingState, switchMapFilterMaybe, distinctUntilHasDifferentValues } from '@dereekb/rxjs';
 import { type AbstractDbxSelectionListWrapperDirective, type ListSelectionState, type DbxValueListItemDecisionFunction, dbxValueListItemDecisionFunction, DbxListModifierModule } from '@dereekb/dbx-web';
@@ -8,7 +8,6 @@ import { BehaviorSubject, map, type Observable, shareReplay } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type FieldTree } from '@angular/forms/signals';
 import { type DynamicText, type FieldMeta, type ValidationMessages, type BaseValueField } from '@ng-forge/dynamic-forms';
-import { isSelectedDecisionFunctionFactory } from '@dereekb/util';
 import { forgeFieldDisabled } from '../../field.disabled';
 
 // MARK: Props

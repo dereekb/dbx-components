@@ -68,7 +68,11 @@ export function formlyPickableItemListField<T = unknown, M = unknown>(config: Pi
 }
 
 // MARK: Deprecated
-/** @deprecated Use formlyPickableItemChipField instead. */
+/**
+ * @deprecated Use formlyPickableItemChipField instead.
+ */
 export const pickableItemChipField = formlyPickableItemChipField;
-/** @deprecated Use formlyPickableItemListField instead. */
+/**
+ * @deprecated Use formlyPickableItemListField instead.
+ */
 export const pickableItemListField = formlyPickableItemListField;

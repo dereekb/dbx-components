@@ -24,8 +24,7 @@ import { DBX_FORGE_WORKING_FIELD_TYPE } from './field/wrapper/working/working.fi
 import { DBX_FORGE_WORKING_WRAPPER_FIELD_TYPE } from './field/wrapper/working/working.wrapper.field';
 import { DBX_FORGE_AUTOTOUCH_FIELD_TYPE } from './field/wrapper/autotouch/autotouch.field';
 import { DBX_FORGE_ARRAY_FIELD_TYPE } from './field/value/array/array.field';
-import { FORGE_SLIDER_FIELD_TYPE } from './field/value/number/slider.field.component';
-import { sliderFieldMapper } from './field/value/number/slider.field.component';
+import { FORGE_SLIDER_FIELD_TYPE, sliderFieldMapper } from './field/value/number/slider.field.component';
 
 /**
  * Forge phone field type definition.
@@ -149,6 +148,9 @@ export const DBX_FORGE_FIELD_TYPES: FieldTypeDefinition[] = [
  *   ...DBX_FORGE_MAPBOX_FIELD_TYPES
  * )
  * ```
+ *
+ * @param additionalFieldTypes - Extra field type definitions from extension packages to register alongside the built-in types
+ * @returns An array of providers that register all forge field types with ng-forge's dynamic form system
  */
 export function provideDbxForgeFormFieldDeclarations(...additionalFieldTypes: FieldTypeDefinition[]) {
   return provideDynamicForm(...withMaterialFields(), ...DBX_FORGE_FIELD_TYPES, ...additionalFieldTypes);

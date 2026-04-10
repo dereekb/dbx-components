@@ -42,5 +42,7 @@ export function formlyChecklistItemField<T = unknown>(config: ChecklistItemField
 }
 
 // MARK: Deprecated Aliases
-/** @deprecated Use formlyChecklistItemField instead. */
+/**
+ * @deprecated Use formlyChecklistItemField instead.
+ */
 export const checklistItemField = formlyChecklistItemField;

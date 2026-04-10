@@ -276,13 +276,23 @@ export function formlyFixedDateRangeField(config: Partial<FixedDateRangeFieldCon
 }
 
 // MARK: Deprecated Aliases
-/** @deprecated Use formlyTimeOnlyField instead. */
+/**
+ * @deprecated Use formlyTimeOnlyField instead.
+ */
 export const timeOnlyField = formlyTimeOnlyField;
-/** @deprecated Use formlyDateTimeField instead. */
+/**
+ * @deprecated Use formlyDateTimeField instead.
+ */
 export const dateTimeField = formlyDateTimeField;
-/** @deprecated Use formlyDateRangeField instead. */
+/**
+ * @deprecated Use formlyDateRangeField instead.
+ */
 export const dateRangeField = formlyDateRangeField;
-/** @deprecated Use formlyDateTimeRangeField instead. */
+/**
+ * @deprecated Use formlyDateTimeRangeField instead.
+ */
 export const dateTimeRangeField = formlyDateTimeRangeField;
-/** @deprecated Use formlyFixedDateRangeField instead. */
+/**
+ * @deprecated Use formlyFixedDateRangeField instead.
+ */
 export const fixedDateRangeField = formlyFixedDateRangeField;

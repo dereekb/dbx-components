@@ -181,6 +181,10 @@ export class DbxForgeDateRangeFieldComponent {
 
   /**
    * Sets the date and time FormControls from a source Date value without emitting events.
+   *
+   * @param dateCtrl - The date FormControl to update
+   * @param timeCtrl - The time string FormControl to update
+   * @param value - The source Date value to extract date and time from
    */
   private _setDateCtrlFromValue(dateCtrl: FormControl<Maybe<Date>>, timeCtrl: FormControl<Maybe<string>>, value: Maybe<Date>): void {
     const dateValue = value ? safeToJsDate(value) : undefined;
@@ -188,7 +192,7 @@ export class DbxForgeDateRangeFieldComponent {
     if (dateValue) {
       const currentCtrlValue = dateCtrl.value;
 
-      if (!currentCtrlValue || currentCtrlValue.getTime() !== dateValue.getTime()) {
+      if (currentCtrlValue?.getTime() !== dateValue.getTime()) {
         dateCtrl.setValue(dateValue, { emitEvent: false });
       }
 
@@ -235,6 +239,10 @@ export class DbxForgeDateRangeFieldComponent {
 
   /**
    * Combines a date and optional time string into a single Date.
+   *
+   * @param dateValue - The base date value
+   * @param timeValue - Optional time string in "HH:mm" format to apply to the date
+   * @returns A new Date with the combined date and time, or undefined if no date is provided
    */
   private _combineDateAndTime(dateValue: Maybe<Date>, timeValue: Maybe<string>): Maybe<Date> {
     let result: Maybe<Date>;
@@ -265,6 +273,7 @@ export class DbxForgeDateRangeFieldComponent {
  * the field tree and build the standard inputs for the component.
  *
  * @param fieldDef - The date range field definition
+ * @param fieldDef.key - Form model key for the field
  * @returns Signal containing Record of input names to values for ngComponentOutlet
  */
 export function dateRangeFieldMapper(fieldDef: { key: string }): Signal<Record<string, unknown>> {
@@ -273,7 +282,6 @@ export function dateRangeFieldMapper(fieldDef: { key: string }): Signal<Record<s
   const defaultValidationMessages = inject(DEFAULT_VALIDATION_MESSAGES);
 
   return computed(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return buildValueFieldInputs(fieldDef as any, ctx, defaultProps?.(), defaultValidationMessages?.());
   });
 }

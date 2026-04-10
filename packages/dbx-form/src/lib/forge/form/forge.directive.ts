@@ -1,7 +1,7 @@
 import { Directive, inject, input, type OnDestroy, type OnInit, effect } from '@angular/core';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
 import { type Maybe } from '@dereekb/util';
-import { type Observable, shareReplay } from 'rxjs';
+import { type Observable } from 'rxjs';
 import { SubscriptionObject, filterMaybe, type MaybeObservableOrValue, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
 import { DbxForgeFormContext } from './forge.context';
 import { distinctUntilChanged } from 'rxjs/operators';
@@ -13,7 +13,7 @@ import { type DbxFormDisabledKey } from '../../form/form';
  * provides utility methods for form interaction.
  */
 @Directive()
-export abstract class AbstractForgeFormDirective<T = unknown> implements OnDestroy {
+export abstract class AbstractForgeFormDirective<T = unknown> {
   readonly context = inject(DbxForgeFormContext<T>, { self: true });
   readonly disabled = input(false);
 
@@ -44,10 +44,6 @@ export abstract class AbstractForgeFormDirective<T = unknown> implements OnDestr
   setDisabled(key?: DbxFormDisabledKey, disabled?: boolean): void {
     this.context.setDisabled(key, disabled);
   }
-
-  ngOnDestroy(): void {
-    // Context handles its own cleanup
-  }
 }
 
 /**
@@ -77,8 +73,7 @@ export abstract class AbstractAsyncForgeFormDirective<T = unknown> extends Abstr
     });
   }
 
-  override ngOnDestroy(): void {
-    super.ngOnDestroy();
+  ngOnDestroy(): void {
     this._configSub.destroy();
   }
 }
@@ -92,9 +87,9 @@ export abstract class AbstractAsyncForgeFormDirective<T = unknown> extends Abstr
  */
 @Directive()
 export abstract class AbstractConfigAsyncForgeFormDirective<T = unknown, C = unknown> extends AbstractAsyncForgeFormDirective<T> {
-  readonly configInput = input<MaybeObservableOrValue<C>>(undefined, { alias: 'config' });
+  readonly config = input<MaybeObservableOrValue<C>>();
 
-  readonly currentConfig$: Observable<Maybe<C>> = toObservable(this.configInput).pipe(maybeValueFromObservableOrValue());
+  readonly currentConfig$: Observable<Maybe<C>> = toObservable(this.config).pipe(maybeValueFromObservableOrValue());
 
   /**
    * Subclasses must implement this to map C → FormConfig.

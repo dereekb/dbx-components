@@ -113,7 +113,11 @@ export function formlyAddValueSelectionOptionFunction<T>(label?: string | undefi
 }
 
 // MARK: Deprecated
-/** @deprecated Use formlyValueSelectionField instead. */
+/**
+ * @deprecated Use formlyValueSelectionField instead.
+ */
 export const valueSelectionField = formlyValueSelectionField;
-/** @deprecated Use formlyAddValueSelectionOptionFunction instead. */
+/**
+ * @deprecated Use formlyAddValueSelectionOptionFunction instead.
+ */
 export const addValueSelectionOptionFunction = formlyAddValueSelectionOptionFunction;

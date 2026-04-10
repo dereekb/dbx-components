@@ -6,14 +6,15 @@ import { type TimezoneInfo, allTimezoneInfos, timezoneInfoForSystem, searchTimez
 import { of, type Observable } from 'rxjs';
 import type { SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldStringSearchFn, SearchableValueFieldValue } from '../../formly';
 
-export type TestStringSearchFunction = (text: string) => string[]; /**
+export type TestStringSearchFunction = (text: string) => string[];
+
+/**
  * Creates a search function for timezone strings that searches across all known timezone infos.
  *
  * When the search string is empty, the system timezone is returned first, followed by all timezones.
  *
  * @returns A {@link SearchableValueFieldStringSearchFn} for searching timezone values.
  */
-
 export function timezoneStringSearchFunction(): SearchableValueFieldStringSearchFn<string, TimezoneInfo> {
   const timezoneInfos = allTimezoneInfos();
 

@@ -32,7 +32,7 @@ export interface DbxForgeFormFieldWrapperProps extends DbxForgeWrapperFieldProps
  * (e.g. `DbxForgeFormFieldWrapperFieldDef<DbxForgeSearchableTextFieldDef<T,M,H>>`)
  * instead of an opaque `FieldDef<unknown>`.
  */
-export interface DbxForgeFormFieldWrapperFieldDef<TInner extends FieldDef<any> = FieldDef<any>> extends BaseValueField<DbxForgeFormFieldWrapperProps, Record<string, unknown>> {
+export interface DbxForgeFormFieldWrapperFieldDef<_TInner extends FieldDef<any> = FieldDef<any>> extends BaseValueField<DbxForgeFormFieldWrapperProps, Record<string, unknown>> {
   readonly type: typeof FORGE_FORM_FIELD_WRAPPER_TYPE_NAME;
 }
 

@@ -1,4 +1,4 @@
-<div class="dbx-searchable-text-field" (click)="focusInput()" [class.dbx-searchable-text-field-has-value]="hasValueSignal()" [class.dbx-searchable-text-field-show-value]="showSelectedDisplayValueSignal()">
+<div class="dbx-searchable-text-field" tabindex="0" (click)="focusInput()" (keydown.enter)="focusInput()" [class.dbx-searchable-text-field-has-value]="hasValueSignal()" [class.dbx-searchable-text-field-show-value]="showSelectedDisplayValueSignal()">
   @if (showSelectedDisplayValueSignal()) {
     @let sv = selectedDisplayValueSignal();
     @if (sv) {
