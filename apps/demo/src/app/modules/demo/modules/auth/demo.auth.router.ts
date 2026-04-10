@@ -4,6 +4,7 @@ import { DemoAuthErrorComponent } from './container/error.component';
 import { DemoAuthLayoutComponent } from './container/layout.component';
 import { DemoAuthLoggedOutComponent } from './container/loggedout.component';
 import { DemoAuthLoginComponent } from './container/login.component';
+import { DemoAuthResetPasswordComponent } from './container/reset.component';
 
 export const authState: Ng2StateDeclaration = {
   url: '/auth?target',
@@ -36,4 +37,10 @@ export const authLoginAuthorizeState: Ng2StateDeclaration = {
   component: DemoAuthAuthorizeComponent
 };
 
-export const DEMO_AUTH_STATES: Ng2StateDeclaration[] = [authState, authLoginState, authLoginErrorState, authLoggedOutState, authLoginAuthorizeState];
+export const authResetPasswordState: Ng2StateDeclaration = {
+  name: 'demo.auth.reset',
+  url: '/reset?oobCode',
+  component: DemoAuthResetPasswordComponent
+};
+
+export const DEMO_AUTH_STATES: Ng2StateDeclaration[] = [authState, authLoginState, authLoginErrorState, authLoggedOutState, authLoginAuthorizeState, authResetPasswordState];

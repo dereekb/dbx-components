@@ -20,7 +20,7 @@ import { type AuthDataRef, firebaseAuthTokenFromDecodedIdToken } from './auth.co
 import { hoursToMs, toISODateString } from '@dereekb/date';
 import { getAuthUserOrUndefined } from './auth.util';
 import { type AuthUserIdentifier } from '@dereekb/dbx-core';
-import { FirebaseServerAuthNewUserSendSetupDetailsNoSetupConfigError, FirebaseServerAuthNewUserSendSetupDetailsSendOnceError, FirebaseServerAuthNewUserSendSetupDetailsThrottleError, FirebaseServerAuthUserBadInputError, FirebaseServerAuthUserExistsError } from './auth.service.error';
+import { FirebaseServerAuthNewUserSendSetupDetailsNoSetupConfigError, FirebaseServerAuthNewUserSendSetupDetailsSendOnceError, FirebaseServerAuthNewUserSendSetupDetailsThrottleError, FirebaseServerAuthPasswordResetInvalidCodeError, FirebaseServerAuthPasswordResetNoResetConfigError, FirebaseServerAuthPasswordResetSendOnceError, FirebaseServerAuthPasswordResetThrottleError, FirebaseServerAuthUserBadInputError, FirebaseServerAuthUserExistsError } from './auth.service.error';
 import { type CallableContext } from '../type';
 
 /**
@@ -978,6 +978,358 @@ export class NoSetupContentFirebaseServerNewUserService<U extends FirebaseServer
   }
 }
 
+// MARK: Password Reset
+/**
+ * Configuration for initiating a password reset flow for an existing Firebase Auth user.
+ *
+ * Supports identifying the user by UID or email, and optionally sending reset content
+ * (e.g., an email with the temporary password) immediately after initiation.
+ *
+ * @example
+ * ```typescript
+ * await passwordResetService.beginPasswordReset({
+ *   uid: 'some-uid',
+ *   sendResetContent: true,
+ *   sendResetThrowErrors: true
+ * });
+ * ```
+ */
+export interface FirebaseServerAuthInitiatePasswordReset<D = unknown> {
+  /**
+   * Specific user identifier to use.
+   */
+  readonly uid?: Maybe<FirebaseAuthUserId>;
+  /**
+   * Email for the user, if identifying by email.
+   */
+  readonly email?: Maybe<EmailAddress>;
+  /**
+   * Whether or not to send a reset email. Is false by default.
+   */
+  readonly sendResetContent?: Maybe<boolean>;
+  /**
+   * If true, and the reset content has been sent before, it will not be sent again.
+   */
+  readonly sendResetDetailsOnce?: Maybe<boolean>;
+  /**
+   * If true, will ignore throttling when sending reset content.
+   */
+  readonly sendResetIgnoreThrottle?: Maybe<boolean>;
+  /**
+   * Whether or not to throw an error if sending reset content fails. Is false by default.
+   */
+  readonly sendResetThrowErrors?: Maybe<boolean>;
+  /**
+   * Whether or not to force sending the test details.
+   */
+  readonly sendDetailsInTestEnvironment?: Maybe<boolean>;
+  /**
+   * Any additional reset context.
+   */
+  readonly data?: Maybe<D>;
+}
+
+/**
+ * Configuration options for sending password reset content (e.g., reset email) to a user.
+ *
+ * Controls throttling, send-once behavior, and error handling for the delivery process.
+ */
+export interface FirebaseServerAuthPasswordResetSendContentConfig<D = unknown> {
+  /**
+   * Whether or not to force sending the test details. Usage differs between providers.
+   */
+  readonly sendDetailsInTestEnvironment?: Maybe<boolean>;
+  /**
+   * Whether or not to skip sending again if the reset content has already been sent once.
+   */
+  readonly sendResetDetailsOnce?: Maybe<boolean>;
+  /**
+   * Whether or not to force sending again even if the send is being throttled.
+   */
+  readonly ignoreSendThrottleTime?: Maybe<boolean>;
+  /**
+   * Whether or not to throw errors if the send fails, instead of returning false.
+   *
+   * @see FirebaseServerAuthPasswordResetNoResetConfigError
+   * @see FirebaseServerAuthPasswordResetThrottleError
+   */
+  readonly throwErrors?: Maybe<boolean>;
+  /**
+   * Any additional reset context.
+   */
+  readonly data?: Maybe<D>;
+}
+
+/**
+ * Details about a user that is in the password reset phase, including their user context,
+ * reset claims data, and the send configuration that was used.
+ */
+export interface FirebaseServerAuthPasswordResetDetails<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext, D = unknown> extends FirebaseServerAuthPasswordResetSendContentConfig<D> {
+  readonly userContext: U;
+  readonly claims: FirebaseAuthResetUserPasswordClaimsData;
+}
+
+/**
+ * Input for completing a password reset, containing the temporary reset code
+ * and the desired new password.
+ */
+export interface FirebaseServerAuthCompletePasswordResetInput {
+  /**
+   * The temporary reset code from the reset email, to be verified against claims.
+   */
+  readonly resetPassword: string;
+  /**
+   * The new password to set after verification succeeds.
+   */
+  readonly newPassword: PasswordString;
+}
+
+/**
+ * Service for managing password reset flows for existing Firebase Auth users.
+ *
+ * Handles initiating password resets (generating temporary passwords), sending reset content
+ * (with throttling), loading reset state, and completing the reset by setting a new password.
+ *
+ * @example
+ * ```typescript
+ * const resetSvc = authService.passwordReset();
+ * const claims = await resetSvc.beginPasswordReset({ uid: 'some-uid', sendResetContent: true });
+ * // Later, after user verifies identity:
+ * await resetSvc.completePasswordReset('some-uid', { resetPassword: '123456', newPassword: 'newSecure' });
+ * ```
+ */
+export interface FirebaseServerUserPasswordResetService<D = unknown, U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext> {
+  /**
+   * Initiates a password reset for the identified user, generating a temporary password
+   * and storing reset claims. Optionally sends reset content (e.g., email) immediately.
+   *
+   * When `sendResetContent` is true, this method delegates to {@link sendResetContent} and
+   * may throw the same errors (throttle, send-once, no-config) depending on the configuration.
+   *
+   * @param input - Configuration for the reset, including user identification and send options.
+   * @throws Throws if neither uid nor email is provided.
+   * @throws {FirebaseServerAuthPasswordResetThrottleError} When send is throttled and `sendResetThrowErrors` is true.
+   * @throws {FirebaseServerAuthPasswordResetSendOnceError} When already sent and `sendResetDetailsOnce` + `sendResetThrowErrors` are true.
+   * @throws {FirebaseServerAuthPasswordResetNoResetConfigError} When no reset claims exist and `sendResetThrowErrors` is true.
+   */
+  beginPasswordReset(input: FirebaseServerAuthInitiatePasswordReset<D>): Promise<FirebaseServerAuthResetUserPasswordClaims>;
+  /**
+   * Sends reset content (e.g., a reset email) to the user.
+   *
+   * Respects throttling and send-once constraints from the config. Returns `true` if
+   * content was actually sent, `false` if skipped due to throttling or send-once rules.
+   *
+   * @param uid - The target user's UID.
+   * @param config - Optional delivery configuration.
+   * @throws {FirebaseServerAuthPasswordResetThrottleError} When throttled and `throwErrors` is true.
+   * @throws {FirebaseServerAuthPasswordResetSendOnceError} When already sent and `sendResetDetailsOnce` + `throwErrors` are true.
+   * @throws {FirebaseServerAuthPasswordResetNoResetConfigError} When no reset claims exist and `throwErrors` is true.
+   */
+  sendResetContent(uid: FirebaseAuthUserId, config?: FirebaseServerAuthPasswordResetSendContentConfig<D>): Promise<boolean>;
+  /**
+   * Loads the reset details for the user if they are in the reset phase.
+   *
+   * @param uid - The target user's UID.
+   * @param config - Optional config to forward to the details.
+   * @returns The reset details, or `undefined` if the user does not exist or has no reset claims.
+   */
+  loadResetDetails(uid: FirebaseAuthUserId, config?: FirebaseServerAuthPasswordResetSendContentConfig<D>): Promise<Maybe<FirebaseServerAuthPasswordResetDetails<U, D>>>;
+  /**
+   * Loads the reset details for a user context that is already resolved.
+   *
+   * @param userContext - The resolved user context.
+   * @param config - Optional config to forward to the details.
+   * @returns The reset details, or `undefined` if the user has no reset claims.
+   */
+  loadResetDetailsForUserContext(userContext: U, config?: FirebaseServerAuthPasswordResetSendContentConfig<D>): Promise<Maybe<FirebaseServerAuthPasswordResetDetails<U, D>>>;
+  /**
+   * Completes the password reset by verifying the temporary reset code against the user's
+   * claims and setting the new password. Clears reset claims on success.
+   *
+   * @param uid - The target user's UID.
+   * @param input - The reset code and new password.
+   * @throws {FirebaseServerAuthPasswordResetInvalidCodeError} When the reset code is invalid or no reset is active.
+   */
+  completePasswordReset(uid: FirebaseAuthUserId, input: FirebaseServerAuthCompletePasswordResetInput): Promise<admin.auth.UserRecord>;
+}
+
+/**
+ * Default throttle duration (1 hour) between reset content sends to prevent spam.
+ *
+ * Used by {@link AbstractFirebaseServerUserPasswordResetService.sendResetContent} to rate-limit delivery.
+ */
+export const DEFAULT_RESET_COM_THROTTLE_TIME = hoursToMs(1);
+
+/**
+ * Base implementation of {@link FirebaseServerUserPasswordResetService} that handles reset initiation,
+ * claims management, throttled reset content delivery, and reset completion.
+ *
+ * Subclasses must implement {@link sendPasswordResetContentToUser} to define how reset content
+ * (e.g., reset email, SMS) is delivered to the user.
+ *
+ * @example
+ * ```typescript
+ * export class MyPasswordResetService extends AbstractFirebaseServerUserPasswordResetService<MyUserContext> {
+ *   protected async sendPasswordResetContentToUser(details: FirebaseServerAuthPasswordResetDetails<MyUserContext>): Promise<void> {
+ *     await this.emailService.sendResetEmail(details.userContext.uid, details.claims.resetPassword);
+ *   }
+ * }
+ * ```
+ */
+export abstract class AbstractFirebaseServerUserPasswordResetService<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext, C extends FirebaseServerAuthContext = FirebaseServerAuthContext, D = unknown> implements FirebaseServerUserPasswordResetService<D, U> {
+  private readonly _authService: FirebaseServerAuthService<U, C>;
+
+  /**
+   * Minimum time between reset content sends. Defaults to {@link DEFAULT_RESET_COM_THROTTLE_TIME} (1 hour).
+   * Override in subclasses to customize the throttle window.
+   */
+  protected resetThrottleTime: Milliseconds = DEFAULT_RESET_COM_THROTTLE_TIME;
+
+  constructor(authService: FirebaseServerAuthService<U, C>) {
+    this._authService = authService;
+  }
+
+  get authService() {
+    return this._authService;
+  }
+
+  async beginPasswordReset(input: FirebaseServerAuthInitiatePasswordReset<D>): Promise<FirebaseServerAuthResetUserPasswordClaims> {
+    const { uid, email, sendResetContent, sendResetDetailsOnce, sendResetIgnoreThrottle, sendResetThrowErrors, data, sendDetailsInTestEnvironment } = input;
+
+    let resolvedUid: Maybe<FirebaseAuthUserId>;
+
+    if (uid) {
+      resolvedUid = uid;
+    } else if (email) {
+      const userRecord = await this.authService.auth.getUserByEmail(email);
+      resolvedUid = userRecord.uid;
+    } else {
+      throw new Error('uid or email is required to initiate a password reset.');
+    }
+
+    const userContext = this.authService.userContext(resolvedUid);
+    const claims = await userContext.beginResetPassword();
+
+    if (sendResetContent) {
+      await this.sendResetContent(resolvedUid, {
+        data,
+        sendResetDetailsOnce,
+        ignoreSendThrottleTime: sendResetIgnoreThrottle,
+        throwErrors: sendResetThrowErrors,
+        sendDetailsInTestEnvironment
+      });
+    }
+
+    return claims;
+  }
+
+  async sendResetContent(uid: FirebaseAuthUserId, config?: FirebaseServerAuthPasswordResetSendContentConfig<D>): Promise<boolean> {
+    const resetDetails: Maybe<FirebaseServerAuthPasswordResetDetails<U, D>> = await this.loadResetDetails(uid, config);
+    let sentContent = false;
+
+    if (resetDetails) {
+      const resetCommunicationAt = resetDetails.claims.resetCommunicationAt as string | undefined;
+      const hasSentCommunication = Boolean(resetCommunicationAt);
+
+      if (config?.sendResetDetailsOnce && hasSentCommunication) {
+        if (config.throwErrors) {
+          throw new FirebaseServerAuthPasswordResetSendOnceError();
+        }
+      } else {
+        const lastSentAt = resetCommunicationAt ? new Date(resetCommunicationAt) : undefined;
+        const sendIsThrottled = hasSentCommunication && !config?.ignoreSendThrottleTime && isThrottled(this.resetThrottleTime, lastSentAt);
+
+        if (!sendIsThrottled) {
+          await this.sendPasswordResetContentToUser(resetDetails);
+          await this.updateResetContentSentTime(resetDetails);
+          sentContent = true;
+        } else if (config?.throwErrors) {
+          throw new FirebaseServerAuthPasswordResetThrottleError(lastSentAt as Date);
+        }
+      }
+    } else if (config?.throwErrors) {
+      throw new FirebaseServerAuthPasswordResetNoResetConfigError();
+    }
+
+    return sentContent;
+  }
+
+  async loadResetDetails(uid: FirebaseAuthUserId, config?: FirebaseServerAuthPasswordResetSendContentConfig<D>): Promise<Maybe<FirebaseServerAuthPasswordResetDetails<U, D>>> {
+    const userContext: U = this.authService.userContext(uid);
+    const userExists = await userContext.exists();
+    let details: Maybe<FirebaseServerAuthPasswordResetDetails<U, D>>;
+
+    if (userExists) {
+      details = await this.loadResetDetailsForUserContext(userContext, config);
+    }
+
+    return details;
+  }
+
+  async loadResetDetailsForUserContext(userContext: U, config?: FirebaseServerAuthPasswordResetSendContentConfig<D>): Promise<Maybe<FirebaseServerAuthPasswordResetDetails<U, D>>> {
+    let details: Maybe<FirebaseServerAuthPasswordResetDetails<U, D>>;
+    const claims = await userContext.loadResetPasswordClaims();
+
+    if (claims) {
+      details = {
+        userContext,
+        claims: {
+          resetPassword: claims.resetPassword,
+          resetCommunicationAt: claims.resetCommunicationAt
+        },
+        data: config?.data,
+        sendDetailsInTestEnvironment: config?.sendDetailsInTestEnvironment
+      };
+    }
+
+    return details;
+  }
+
+  /**
+   * Records the current timestamp as the last reset content communication date in the user's claims.
+   *
+   * @param details - The user's reset details containing the user context.
+   */
+  protected async updateResetContentSentTime(details: FirebaseServerAuthPasswordResetDetails<U, D>): Promise<void> {
+    const resetCommunicationAt = toISODateString(new Date());
+
+    await details.userContext.updateClaims<FirebaseServerAuthResetUserPasswordClaims>({
+      [FIREBASE_SERVER_AUTH_CLAIMS_RESET_LAST_COM_DATE_KEY]: resetCommunicationAt
+    });
+  }
+
+  async completePasswordReset(uid: FirebaseAuthUserId, input: FirebaseServerAuthCompletePasswordResetInput): Promise<admin.auth.UserRecord> {
+    const userContext = this.authService.userContext(uid);
+    const claims = await userContext.loadResetPasswordClaims();
+
+    if (!claims || claims.resetPassword !== input.resetPassword) {
+      throw new FirebaseServerAuthPasswordResetInvalidCodeError();
+    }
+
+    return userContext.setPassword(input.newPassword);
+  }
+
+  /**
+   * Delivers reset content (e.g., reset email, SMS) to the user.
+   *
+   * Subclasses must implement this to define the actual delivery mechanism.
+   *
+   * @param details - The user's reset details, including their context and reset claims.
+   */
+  protected abstract sendPasswordResetContentToUser(details: FirebaseServerAuthPasswordResetDetails<U, D>): Promise<void>;
+}
+
+/**
+ * No-op implementation of {@link AbstractFirebaseServerUserPasswordResetService} that skips sending reset content.
+ *
+ * Used as the default {@link FirebaseServerUserPasswordResetService} when no custom delivery mechanism is configured.
+ */
+export class NoContentFirebaseServerUserPasswordResetService<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext> extends AbstractFirebaseServerUserPasswordResetService<U> {
+  protected async sendPasswordResetContentToUser(_details: FirebaseServerAuthPasswordResetDetails<U>): Promise<void> {
+    // send nothing.
+  }
+}
+
 // MARK: Service
 /**
  * Reference to a FirebaseServerAuthService
@@ -1095,6 +1447,11 @@ export abstract class FirebaseServerAuthService<U extends FirebaseServerAuthUser
   abstract newUser(): FirebaseServerNewUserService;
 
   /**
+   * Returns a {@link FirebaseServerUserPasswordResetService} for managing password reset flows.
+   */
+  abstract passwordReset(): FirebaseServerUserPasswordResetService;
+
+  /**
    * Converts a Firebase Admin {@link admin.auth.UserRecord} into a normalized {@link FirebaseAuthDetails} object.
    *
    * @param record - The user record to convert.
@@ -1172,6 +1529,10 @@ export abstract class AbstractFirebaseServerAuthService<U extends FirebaseServer
 
   newUser(): FirebaseServerNewUserService {
     return new NoSetupContentFirebaseServerNewUserService(this);
+  }
+
+  passwordReset(): FirebaseServerUserPasswordResetService {
+    return new NoContentFirebaseServerUserPasswordResetService(this);
   }
 
   authContextInfo(context: AuthDataRef): Maybe<FirebaseAuthContextInfo> {

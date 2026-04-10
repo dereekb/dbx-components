@@ -119,7 +119,7 @@ export class DbxFirebaseLoginEmailContentComponent {
   readonly handleRecoveryAction: WorkUsingContext<DbxFirebaseEmailRecoveryFormValue> = (value: DbxFirebaseEmailRecoveryFormValue, context) => {
     this._recoveryFormValueSignal.set(value);
     this._emailFormValueSignal.set({ username: value.email, password: '' });
-    context.startWorkingWithPromise(this.dbxFirebaseAuthService.sendPasswordResetEmail(value.email));
+    context.startWorkingWithPromise(this.dbxFirebaseAuthService.sendPasswordReset(value.email));
   };
 
   // MARK: Recovering

@@ -43,6 +43,14 @@
       </dbx-section>
     </dbx-content-box>
     <dbx-content-box [wide]="true">
+      <dbx-section header="Password" hint="Request a password reset email." dbxAction [dbxActionHandler]="handleResetPassword">
+        <p class="dbx-hint">Click below to receive a password reset email.</p>
+        <dbx-button dbxActionButton text="Reset Password"></dbx-button>
+        <dbx-error dbxActionError></dbx-error>
+        <div *dbxActionHasSuccess="5000" class="dbx-success">Password reset email sent.</div>
+      </dbx-section>
+    </dbx-content-box>
+    <dbx-content-box [wide]="true">
       <dbx-section header="Download Files">
         <div class="dbx-button-column">
           <dbx-firebase-storagefile-download-button [config]="avatarDownloadButtonConfig" [storageFileKey]="avatarStorageFileKeySignal()"></dbx-firebase-storagefile-download-button>

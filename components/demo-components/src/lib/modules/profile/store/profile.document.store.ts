@@ -23,5 +23,7 @@ export class ProfileDocumentStore extends AbstractDbxFirebaseDocumentStore<Profi
   readonly finishOnboarding = firebaseDocumentStoreUpdateFunction(this, this.profileFunctions.profile.updateProfile.onboard);
   readonly createTestNotification = firebaseDocumentStoreUpdateFunction(this, this.profileFunctions.profile.updateProfile.createTestNotification);
 
+  readonly resetPassword = firebaseDocumentStoreUpdateFunction(this, this.profileFunctions.profile.updateProfile.resetPassword);
+
   readonly downloadArchive = firebaseDocumentStoreReadFunction(this, this.profileFunctions.profile.readProfile.downloadArchive);
 }

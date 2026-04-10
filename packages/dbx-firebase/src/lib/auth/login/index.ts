@@ -16,6 +16,8 @@ export * from './login.google.component';
 export * from './login.list.component';
 export * from './login.microsoft.component';
 export * from './login.password';
+export * from './login.password.reset.form.component';
+export * from './login.password.reset.component';
 export * from './login.service';
 export * from './login.terms.component';
 export * from './login.terms.simple.component';

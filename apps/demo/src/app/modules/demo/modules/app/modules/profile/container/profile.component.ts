@@ -121,6 +121,10 @@ export class DemoProfileViewComponent implements OnInit {
     context.startWorkingWithLoadingStateObservable(this.profileDocumentStore.updateProfile(form));
   };
 
+  readonly handleResetPassword: WorkUsingContext = (_value, context) => {
+    context.startWorkingWithLoadingStateObservable(this.profileDocumentStore.resetPassword({ requestReset: true }));
+  };
+
   readonly handleAvatarUploadInitializationSuccess: DbxActionSuccessHandlerFunction<any> = () => {
     // example
     // console.log('Avatar uploaded and initialized successfully.');

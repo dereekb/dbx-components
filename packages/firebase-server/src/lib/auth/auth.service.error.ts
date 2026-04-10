@@ -90,3 +90,47 @@ export class FirebaseServerAuthNewUserSendSetupDetailsSendOnceError extends Base
     super(`The user has been sent details before and the sendSetupDetailsOnce configuration was true.`);
   }
 }
+
+// MARK: Password Reset Errors
+/**
+ * Thrown by {@link AbstractFirebaseServerUserPasswordResetService.sendResetContent} when the user
+ * has no active password reset claims, meaning no reset has been initiated or it has already been completed.
+ */
+export class FirebaseServerAuthPasswordResetNoResetConfigError extends BaseError {
+  constructor() {
+    super(`This user has no active password reset configuration.`);
+  }
+}
+
+/**
+ * Thrown by {@link AbstractFirebaseServerUserPasswordResetService.sendResetContent} when the user
+ * was recently sent reset content and the throttle window has not elapsed.
+ */
+export class FirebaseServerAuthPasswordResetThrottleError extends BaseError {
+  readonly lastSentAt: Date;
+
+  constructor(lastSentAt: Date) {
+    super(`This user was recently sent password reset details. Try again later.`);
+    this.lastSentAt = lastSentAt;
+  }
+}
+
+/**
+ * Thrown by {@link AbstractFirebaseServerUserPasswordResetService.sendResetContent} when the user
+ * has already been sent reset content and the `sendResetDetailsOnce` option was enabled.
+ */
+export class FirebaseServerAuthPasswordResetSendOnceError extends BaseError {
+  constructor() {
+    super(`The user has been sent password reset details before and the sendResetDetailsOnce configuration was true.`);
+  }
+}
+
+/**
+ * Thrown by {@link AbstractFirebaseServerUserPasswordResetService.completePasswordReset} when the
+ * provided reset code does not match the one stored in the user's claims, or no reset is active.
+ */
+export class FirebaseServerAuthPasswordResetInvalidCodeError extends BaseError {
+  constructor() {
+    super(`The provided reset password code is invalid or expired.`);
+  }
+}
