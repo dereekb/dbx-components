@@ -3,15 +3,15 @@ import { type FormConfig } from '@ng-forge/dynamic-forms';
 import { ChangeDetectionStrategy, Component, type OnDestroy } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {
-  dateTimeField,
+  formlyDateTimeField,
   DbxDateTimeFieldTimeMode,
   DbxDateTimeValueMode,
-  dateRangeField,
+  formlyDateRangeField,
   type DbxDateTimePickerConfiguration,
-  dateTimeRangeField,
-  timezoneStringField,
-  fixedDateRangeField,
-  timeDurationField,
+  formlyDateTimeRangeField,
+  formlyTimezoneStringField,
+  formlyFixedDateRangeField,
+  formlyTimeDurationField,
   forgeDateTimeField,
   forgeDateRangeField,
   forgeFixedDateRangeField,
@@ -79,18 +79,18 @@ export class DocFormDateValueComponent implements OnDestroy {
 
   readonly timezone$ = this._timezone.asObservable();
 
-  readonly timezoneSelectionField: FormlyFieldConfig[] = [timezoneStringField()];
+  readonly timezoneSelectionField: FormlyFieldConfig[] = [formlyTimezoneStringField()];
 
   readonly onTimezoneChange = (value: { timezone: Maybe<TimezoneString> }) => {
     this._timezone.next(value?.timezone);
   };
 
   readonly dateTimeFields: FormlyFieldConfig[] = [
-    dateTimeField({ timezone: this.timezone$, label: 'Date Picker', key: 'datePicker', allDayLabel: 'On', valueMode: DbxDateTimeValueMode.DATE, timeMode: DbxDateTimeFieldTimeMode.NONE }),
-    dateTimeField({ timezone: this.timezone$, label: 'Day Only W/ String Value', hideDateHint: true, key: 'dayOnlyAsString', valueMode: DbxDateTimeValueMode.DAY_STRING, description: 'This date field is for picking a day only and as an ISO8601DayString. The calendar picker is hidden and the allDayLabel has been customized to be "On".', hideDatePicker: true }),
-    dateTimeField({ timezone: this.timezone$, key: 'date', required: true, description: 'This is the default date field that requires the user pick a date and time.' }),
-    dateTimeField({ timezone: this.timezone$, label: 'Date With String Value', key: 'dateAsString', required: true, valueMode: DbxDateTimeValueMode.DATE_STRING, description: 'This date field returns the value as an ISO8601DateString. The date hint is also hidden.', hideDateHint: true }),
-    dateTimeField({
+    formlyDateTimeField({ timezone: this.timezone$, label: 'Date Picker', key: 'datePicker', allDayLabel: 'On', valueMode: DbxDateTimeValueMode.DATE, timeMode: DbxDateTimeFieldTimeMode.NONE }),
+    formlyDateTimeField({ timezone: this.timezone$, label: 'Day Only W/ String Value', hideDateHint: true, key: 'dayOnlyAsString', valueMode: DbxDateTimeValueMode.DAY_STRING, description: 'This date field is for picking a day only and as an ISO8601DayString. The calendar picker is hidden and the allDayLabel has been customized to be "On".', hideDatePicker: true }),
+    formlyDateTimeField({ timezone: this.timezone$, key: 'date', required: true, description: 'This is the default date field that requires the user pick a date and time.' }),
+    formlyDateTimeField({ timezone: this.timezone$, label: 'Date With String Value', key: 'dateAsString', required: true, valueMode: DbxDateTimeValueMode.DATE_STRING, description: 'This date field returns the value as an ISO8601DateString. The date hint is also hidden.', hideDateHint: true }),
+    formlyDateTimeField({
       timezone: this.timezone$,
       label: 'Time For Work Day Today (For Timezone)',
       alwaysShowDateInput: false,
@@ -105,9 +105,9 @@ export class DocFormDateValueComponent implements OnDestroy {
         }
       }
     }),
-    dateTimeField({ timezone: this.timezone$, key: 'timeOptional', timeMode: DbxDateTimeFieldTimeMode.OPTIONAL, description: 'This date field is for picking a day, with an optional time.' }),
-    dateTimeField({ timezone: this.timezone$, label: 'Day Only', key: 'dayOnly', timeMode: DbxDateTimeFieldTimeMode.NONE, description: 'This date field is for picking a day only.' }),
-    dateTimeField({
+    formlyDateTimeField({ timezone: this.timezone$, key: 'timeOptional', timeMode: DbxDateTimeFieldTimeMode.OPTIONAL, description: 'This date field is for picking a day, with an optional time.' }),
+    formlyDateTimeField({ timezone: this.timezone$, label: 'Day Only', key: 'dayOnly', timeMode: DbxDateTimeFieldTimeMode.NONE, description: 'This date field is for picking a day only.' }),
+    formlyDateTimeField({
       timezone: this.timezone$,
       label: 'Time Only',
       key: 'timeOnly',
@@ -121,7 +121,7 @@ export class DocFormDateValueComponent implements OnDestroy {
         { label: 'Now', logicalDate: 'now' }
       ]
     }),
-    dateTimeField({
+    formlyDateTimeField({
       timezone: this.timezone$,
       label: 'Time For Today (For Timezone)',
       alwaysShowDateInput: false,
@@ -136,7 +136,7 @@ export class DocFormDateValueComponent implements OnDestroy {
         }
       }
     }),
-    dateTimeField({
+    formlyDateTimeField({
       label: 'Changing Configuration',
       showClearButton: false,
       key: 'changingConfiguration',
@@ -151,15 +151,15 @@ export class DocFormDateValueComponent implements OnDestroy {
         })
       )
     }),
-    dateTimeField({ label: 'Unix Timestamp', key: 'unixTimeStamp', valueMode: DbxDateTimeValueMode.UNIX_TIMESTAMP, description: 'This date field picks a unix timestamp for the system timezone.', hideDateHint: true }),
-    dateTimeField({ label: 'Unix Timestamp In New York', key: 'unixTimeStampInNewYork', valueMode: DbxDateTimeValueMode.UNIX_TIMESTAMP, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, description: 'This date field picks a unix timestamp for a specific timezone.', hideDateHint: true, timezone: 'America/New_York' }),
-    dateTimeField({ label: 'Date Only In Tokyo', key: 'dateOnlyWithLockedTimezone', timeMode: DbxDateTimeFieldTimeMode.NONE, description: 'This date field picks a date and has a locked timezone.', timezone: 'Asia/Tokyo' }),
-    dateTimeField({ label: 'Time Only In New York', key: 'timeOnlyWithLockedTimezone', timeOnly: true, description: 'This date field picks a time and has a locked timezone.', hideDateHint: true, timezone: 'America/New_York' }),
-    dateTimeField({ label: 'Minute Of Day', key: 'minuteOfDay', valueMode: DbxDateTimeValueMode.MINUTE_OF_DAY, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, timeOnly: true, description: 'This date field picks a minute of day for the system timezone.', hideDateHint: true }),
-    dateTimeField({ label: 'Minute Of Day For New York', key: 'minuteOfDayForNewYork', valueMode: DbxDateTimeValueMode.MINUTE_OF_DAY, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, showTimezone: true, timeOnly: true, description: 'This date field picks a minute of day for America/New_York.', hideDateHint: true, timezone: 'America/New_York' }),
-    dateTimeField({ label: 'System Minute Of Day For New York', key: 'systemMinuteOfDayForNewYork', valueMode: DbxDateTimeValueMode.SYSTEM_MINUTE_OF_DAY, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, timeOnly: true, description: 'This date field picks a minute of day for the system but shows the timezone as America/New_York.', hideDateHint: true, timezone: 'America/New_York' }),
-    dateTimeField({ timezone: this.timezone$, label: 'Timezone Day', key: 'timezoneDay', valueMode: DbxDateTimeValueMode.DATE_STRING }),
-    dateTimeField({
+    formlyDateTimeField({ label: 'Unix Timestamp', key: 'unixTimeStamp', valueMode: DbxDateTimeValueMode.UNIX_TIMESTAMP, description: 'This date field picks a unix timestamp for the system timezone.', hideDateHint: true }),
+    formlyDateTimeField({ label: 'Unix Timestamp In New York', key: 'unixTimeStampInNewYork', valueMode: DbxDateTimeValueMode.UNIX_TIMESTAMP, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, description: 'This date field picks a unix timestamp for a specific timezone.', hideDateHint: true, timezone: 'America/New_York' }),
+    formlyDateTimeField({ label: 'Date Only In Tokyo', key: 'dateOnlyWithLockedTimezone', timeMode: DbxDateTimeFieldTimeMode.NONE, description: 'This date field picks a date and has a locked timezone.', timezone: 'Asia/Tokyo' }),
+    formlyDateTimeField({ label: 'Time Only In New York', key: 'timeOnlyWithLockedTimezone', timeOnly: true, description: 'This date field picks a time and has a locked timezone.', hideDateHint: true, timezone: 'America/New_York' }),
+    formlyDateTimeField({ label: 'Minute Of Day', key: 'minuteOfDay', valueMode: DbxDateTimeValueMode.MINUTE_OF_DAY, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, timeOnly: true, description: 'This date field picks a minute of day for the system timezone.', hideDateHint: true }),
+    formlyDateTimeField({ label: 'Minute Of Day For New York', key: 'minuteOfDayForNewYork', valueMode: DbxDateTimeValueMode.MINUTE_OF_DAY, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, showTimezone: true, timeOnly: true, description: 'This date field picks a minute of day for America/New_York.', hideDateHint: true, timezone: 'America/New_York' }),
+    formlyDateTimeField({ label: 'System Minute Of Day For New York', key: 'systemMinuteOfDayForNewYork', valueMode: DbxDateTimeValueMode.SYSTEM_MINUTE_OF_DAY, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, timeOnly: true, description: 'This date field picks a minute of day for the system but shows the timezone as America/New_York.', hideDateHint: true, timezone: 'America/New_York' }),
+    formlyDateTimeField({ timezone: this.timezone$, label: 'Timezone Day', key: 'timezoneDay', valueMode: DbxDateTimeValueMode.DATE_STRING }),
+    formlyDateTimeField({
       timezone: this.timezone$,
       key: 'dateWithASchedule',
       required: true,
@@ -181,7 +181,7 @@ export class DocFormDateValueComponent implements OnDestroy {
     })
   ];
 
-  // Forge date-time fields — 1:1 parity with formly dateTimeFields
+  // Forge date-time fields — 1:1 parity with formly formlyDateTimeFields
   readonly forgeDateTimeFieldsConfig: FormConfig = {
     fields: [
       forgeDateTimeField({ timezone: this.timezone$, label: 'Date Picker', key: 'datePicker', allDayLabel: 'On', valueMode: DbxDateTimeValueMode.DATE, timeMode: DbxDateTimeFieldTimeMode.NONE }) as any,
@@ -277,7 +277,7 @@ export class DocFormDateValueComponent implements OnDestroy {
     ]
   };
 
-  // Forge date range — 1:1 parity with formly dateRangeFields
+  // Forge date range — 1:1 parity with formly formlyDateRangeFields
   readonly forgeDateRangeFieldsConfig: FormConfig = {
     fields: [
       forgeDateRangeField({}) as any,
@@ -380,7 +380,7 @@ export class DocFormDateValueComponent implements OnDestroy {
     ]
   };
 
-  // Forge time duration — 1:1 parity with formly timeDurationFields
+  // Forge time duration — 1:1 parity with formly formlyTimeDurationFields
   readonly forgeTimeDurationFieldsConfig: FormConfig = {
     fields: [
       forgeTimeDurationField({ key: 'durationMs', label: 'Duration (output: milliseconds)', outputUnit: 'ms', allowedUnits: ['min', 'h', 'd'], carryOver: true, description: 'Output is in milliseconds. Type "2h30m" or use the picker. carryOver is enabled (60m → 1h).' }) as any,
@@ -404,7 +404,7 @@ export class DocFormDateValueComponent implements OnDestroy {
   }).pipe(delay(200)); // simulate a slight loading delay
 
   readonly dateTimeRangeFields: FormlyFieldConfig[] = [
-    dateTimeRangeField({
+    formlyDateTimeRangeField({
       timezone: this.timezone$,
       start: {
         key: 'sat'
@@ -413,7 +413,7 @@ export class DocFormDateValueComponent implements OnDestroy {
         key: 'eat'
       }
     }),
-    dateTimeRangeField({
+    formlyDateTimeRangeField({
       timezone: 'America/Chicago',
       timeDate: '2023-11-08',
       start: {
@@ -424,7 +424,7 @@ export class DocFormDateValueComponent implements OnDestroy {
         key: 'eatcdt'
       }
     }),
-    dateTimeRangeField({
+    formlyDateTimeRangeField({
       timezone: 'America/Chicago',
       timeDate: '2024-03-21',
       start: {
@@ -435,7 +435,7 @@ export class DocFormDateValueComponent implements OnDestroy {
         key: 'eatcst'
       }
     }),
-    dateTimeRangeField({
+    formlyDateTimeRangeField({
       timezone: 'America/Chicago',
       timeDate: '2023-11-08',
       start: {
@@ -449,7 +449,7 @@ export class DocFormDateValueComponent implements OnDestroy {
         key: 'eat2'
       }
     }),
-    dateTimeRangeField({
+    formlyDateTimeRangeField({
       timezone: this.timezone$,
       valueMode: DbxDateTimeValueMode.MINUTE_OF_DAY,
       start: {
@@ -461,7 +461,7 @@ export class DocFormDateValueComponent implements OnDestroy {
         key: 'eatm2'
       }
     }),
-    dateTimeRangeField({
+    formlyDateTimeRangeField({
       timezone: 'America/Chicago',
       timeDate: {
         path: 'timezoneDay', // use the date from timezoneDay as the output date
@@ -496,7 +496,7 @@ export function schoolInfoJobSettingsTimeFields() {
 }
 
 export function schoolInfoJobSettingsStartTimeField() {
-  return dateTimeField({
+  return formlyDateTimeField({
     key: 'sat',
     label: 'Default Start Time',
     required: false,
@@ -506,7 +506,7 @@ export function schoolInfoJobSettingsStartTimeField() {
 }
 
 export function schoolInfoJobSettingsEndTimeField() {
-  return dateTimeField({
+  return formlyDateTimeField({
     key: 'eat',
     label: 'Default End Time',
     required: false,
@@ -522,7 +522,7 @@ export function schoolInfoJobSettingsEndTimeField() {
   });
 
   readonly fixedDateRangeFields: FormlyFieldConfig[] = [
-    fixedDateRangeField({
+    formlyFixedDateRangeField({
       required: true,
       key: 'tenDayFixedDateRange',
       label: 'Fixed Date Range',
@@ -537,7 +537,7 @@ export function schoolInfoJobSettingsEndTimeField() {
         }
       }
     }),
-    fixedDateRangeField({
+    formlyFixedDateRangeField({
       key: 'oneMonthFixedDateRange',
       label: 'One Month Arbitrary Date Range',
       selectionMode: 'arbitrary_quick',
@@ -552,7 +552,7 @@ export function schoolInfoJobSettingsEndTimeField() {
         }
       }
     }),
-    fixedDateRangeField({
+    formlyFixedDateRangeField({
       key: 'thisMonthNormalDateRange',
       label: 'One Month Normal Date Range',
       selectionMode: 'normal',
@@ -566,7 +566,7 @@ export function schoolInfoJobSettingsEndTimeField() {
         }
       }
     }),
-    fixedDateRangeField({
+    formlyFixedDateRangeField({
       key: 'maxAnyMonthNormalDateRange',
       label: 'Max Any Calendar Month Long',
       selectionMode: 'normal',
@@ -584,8 +584,8 @@ export function schoolInfoJobSettingsEndTimeField() {
   ];
 
   readonly dateRangeFields: FormlyFieldConfig[] = [
-    dateRangeField({}),
-    dateRangeField({
+    formlyDateRangeField({}),
+    formlyDateRangeField({
       start: {
         key: 'startLimited',
         description: 'Must start on a M/T and no later than 14 days ago',
@@ -628,7 +628,7 @@ export function schoolInfoJobSettingsEndTimeField() {
   }
 
   readonly asyncTimeFormConfig$: Observable<FormlyFieldConfig[]> = of([
-    dateTimeField({
+    formlyDateTimeField({
       label: 'Async Configured Date',
       key: 'date',
       timezone: this.timezone$,
@@ -671,7 +671,7 @@ export function schoolInfoJobSettingsEndTimeField() {
   });
 
   readonly timeDurationFields: FormlyFieldConfig[] = [
-    timeDurationField({
+    formlyTimeDurationField({
       key: 'durationMs',
       label: 'Duration (output: milliseconds)',
       outputUnit: 'ms',
@@ -679,7 +679,7 @@ export function schoolInfoJobSettingsEndTimeField() {
       carryOver: true,
       description: 'Output is in milliseconds. Type "2h30m" or use the picker. carryOver is enabled (60m → 1h).'
     }),
-    timeDurationField({
+    formlyTimeDurationField({
       key: 'durationMinutes',
       label: 'Duration (output: minutes)',
       outputUnit: 'min',
@@ -687,7 +687,7 @@ export function schoolInfoJobSettingsEndTimeField() {
       max: 480,
       description: 'Output is in minutes with min 0 and max 480 (8 hours). All units available.'
     }),
-    timeDurationField({
+    formlyTimeDurationField({
       key: 'hoursAndMinutes',
       label: 'Duration (HoursAndMinutes output)',
       valueMode: 'hours_and_minutes',
@@ -695,7 +695,7 @@ export function schoolInfoJobSettingsEndTimeField() {
       carryOver: true,
       description: 'Output is an HoursAndMinutes object. Restricted to minutes and hours. carryOver enabled.'
     }),
-    timeDurationField({
+    formlyTimeDurationField({
       key: 'durationSeconds',
       label: 'Duration (output: seconds)',
       outputUnit: 's',
@@ -703,7 +703,7 @@ export function schoolInfoJobSettingsEndTimeField() {
       carryOver: true,
       description: 'Output is in seconds. Picker shows seconds, minutes, and hours. carryOver enabled.'
     }),
-    timeDurationField({
+    formlyTimeDurationField({
       key: 'durationData',
       label: 'Duration (TimeDurationData output)',
       valueMode: 'duration_data',

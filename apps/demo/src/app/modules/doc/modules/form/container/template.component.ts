@@ -1,4 +1,4 @@
-import { usernamePasswordLoginFields, timezoneStringField, DbxFormTimezoneStringFieldModule, DbxFormSourceDirective, websiteUrlField, forgeUsernamePasswordLoginFields, forgeWebsiteUrlField, forgeTimezoneStringField } from '@dereekb/dbx-form';
+import { formlyUsernamePasswordLoginFields, formlyTimezoneStringField, DbxFormTimezoneStringFieldModule, DbxFormSourceDirective, formlyWebsiteUrlField, forgeUsernamePasswordLoginFields, forgeWebsiteUrlField, forgeTimezoneStringField } from '@dereekb/dbx-form';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
@@ -17,7 +17,7 @@ import { DocFeatureDerivedComponent } from '../../shared/component/feature.deriv
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormTemplateComponent {
-  readonly usernamePasswordLoginField: FormlyFieldConfig[] = usernamePasswordLoginFields({
+  readonly usernamePasswordLoginField: FormlyFieldConfig[] = formlyUsernamePasswordLoginFields({
     username: 'email'
   });
 
@@ -25,29 +25,29 @@ export class DocFormTemplateComponent {
     fields: forgeUsernamePasswordLoginFields({ username: 'email' })
   };
 
-  readonly usernamePasswordLoginWithVerifyField: FormlyFieldConfig[] = usernamePasswordLoginFields({
+  readonly usernamePasswordLoginWithVerifyField: FormlyFieldConfig[] = formlyUsernamePasswordLoginFields({
     username: 'email',
     verifyPassword: true
   });
 
-  readonly timezoneSelectionField: FormlyFieldConfig[] = [timezoneStringField()];
+  readonly timezoneSelectionField: FormlyFieldConfig[] = [formlyTimezoneStringField()];
 
   readonly forgeTimezoneSelectionConfig: FormConfig = {
     fields: [forgeTimezoneStringField()]
   };
 
   readonly websiteUrlFields: FormlyFieldConfig[] = [
-    websiteUrlField({
+    formlyWebsiteUrlField({
       label: 'Custom Label',
       key: 'websiteWithPrefix',
       requirePrefix: true
     }),
-    websiteUrlField({
+    formlyWebsiteUrlField({
       key: 'websiteWithoutPrefix',
       label: 'Custom Label (Prefix Not Required)',
       requirePrefix: false
     }),
-    websiteUrlField({
+    formlyWebsiteUrlField({
       key: 'websiteWithRequiredDomain',
       label: 'Custom Label For Specific Domain (www.google.com)',
       validDomains: ['www.google.com'],

@@ -2,26 +2,26 @@ import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
-  addressField,
-  addressListField,
-  cityField,
-  countryField,
-  emailField,
-  phoneField,
-  nameField,
-  phoneAndLabelSectionField,
-  wrappedPhoneAndLabelField,
-  stateField,
-  textAreaField,
-  textField,
-  zipCodeField,
-  phoneListField,
-  toggleField,
-  checkboxField,
-  numberField,
-  latLngTextField,
-  dollarAmountField,
-  numberSliderField,
+  formlyAddressField,
+  formlyAddressListField,
+  formlyCityField,
+  formlyCountryField,
+  formlyEmailField,
+  formlyPhoneField,
+  formlyNameField,
+  formlyPhoneAndLabelSectionField,
+  formlyWrappedPhoneAndLabelField,
+  formlyStateField,
+  formlyTextAreaField,
+  formlyTextField,
+  formlyZipCodeField,
+  formlyPhoneListField,
+  formlyToggleField,
+  formlyCheckboxField,
+  formlyNumberField,
+  formlyLatLngTextField,
+  formlyDollarAmountField,
+  formlyNumberSliderField,
   forgeTextField,
   forgeTextAreaField,
   forgeNumberField,
@@ -104,15 +104,15 @@ export class DocFormValueComponent {
 
   readonly textFields: FormlyFieldConfig[] = [
     //
-    textField({ key: 'test', label: 'Text Field', description: 'A required text field.', placeholder: 'Placeholder', required: true, minLength: 4, maxLength: 15 }),
-    textField({ key: 'transform', label: 'Transformed Text Field', description: 'Text Field With String Transform Config. Adds _ between each letter as you type.', transform: { trim: true, transform: addSuffixFunction('_') } }),
-    nameField(),
-    emailField(),
-    cityField(),
-    stateField(),
-    stateField({ label: 'State With Code Input', key: 'stateAsCode', asCode: true }),
-    countryField(),
-    zipCodeField()
+    formlyTextField({ key: 'test', label: 'Text Field', description: 'A required text field.', placeholder: 'Placeholder', required: true, minLength: 4, maxLength: 15 }),
+    formlyTextField({ key: 'transform', label: 'Transformed Text Field', description: 'Text Field With String Transform Config. Adds _ between each letter as you type.', transform: { trim: true, transform: addSuffixFunction('_') } }),
+    formlyNameField(),
+    formlyEmailField(),
+    formlyCityField(),
+    formlyStateField(),
+    formlyStateField({ label: 'State With Code Input', key: 'stateAsCode', asCode: true }),
+    formlyCountryField(),
+    formlyZipCodeField()
   ];
 
   readonly forgeTextFieldsConfig: FormConfig = {
@@ -131,10 +131,10 @@ export class DocFormValueComponent {
 
   readonly numberFields: FormlyFieldConfig[] = [
     //
-    numberField({ key: 'test', label: 'Number Field', description: 'A number between 0 and 100.', placeholder: 'Placeholder', min: 0, max: 100 }),
-    numberField({ key: 'steptest', label: 'Number Field With Step', description: 'Any number, but increases in steps of 5.', step: 5 }),
-    numberField({ key: 'enforcedsteptest', label: 'Number Divisible by 5', description: 'Any number divisible by 5.', step: 5, enforceStep: true }),
-    dollarAmountField({ key: 'dollars', label: 'dollarAmountField()', description: 'Dollar amount field.' })
+    formlyNumberField({ key: 'test', label: 'Number Field', description: 'A number between 0 and 100.', placeholder: 'Placeholder', min: 0, max: 100 }),
+    formlyNumberField({ key: 'steptest', label: 'Number Field With Step', description: 'Any number, but increases in steps of 5.', step: 5 }),
+    formlyNumberField({ key: 'enforcedsteptest', label: 'Number Divisible by 5', description: 'Any number divisible by 5.', step: 5, enforceStep: true }),
+    formlyDollarAmountField({ key: 'dollars', label: 'formlyDollarAmountField()', description: 'Dollar amount field.' })
   ];
 
   readonly forgeNumberFieldsConfig: FormConfig = {
@@ -148,9 +148,9 @@ export class DocFormValueComponent {
 
   readonly numberSliderFields: FormlyFieldConfig[] = [
     //
-    numberSliderField({ key: 'test', label: 'numberSliderField()', description: 'A number between 0 and 100 picked with a slider.', placeholder: 'Placeholder', min: 0, max: 100 }),
-    numberSliderField({ key: 'steptest', label: 'numberSliderField() with Steps', description: 'A number between 0 and 100 picked with a slider with steps of 5.', placeholder: 'Placeholder', min: 0, max: 100, step: 5, displayWith: (x) => `S${x / 5}` }),
-    numberSliderField({ key: 'steptestcustomtickinterval', label: 'numberSliderField() with Steps and Custom Tick Interval', description: 'A number between 0 and 100 picked with a slider with steps of 5 and tick interval of 5.', placeholder: 'Placeholder', min: 0, max: 100, step: 5, tickInterval: 5, invertSelectionColoring: true })
+    formlyNumberSliderField({ key: 'test', label: 'formlyNumberSliderField()', description: 'A number between 0 and 100 picked with a slider.', placeholder: 'Placeholder', min: 0, max: 100 }),
+    formlyNumberSliderField({ key: 'steptest', label: 'formlyNumberSliderField() with Steps', description: 'A number between 0 and 100 picked with a slider with steps of 5.', placeholder: 'Placeholder', min: 0, max: 100, step: 5, displayWith: (x) => `S${x / 5}` }),
+    formlyNumberSliderField({ key: 'steptestcustomtickinterval', label: 'formlyNumberSliderField() with Steps and Custom Tick Interval', description: 'A number between 0 and 100 picked with a slider with steps of 5 and tick interval of 5.', placeholder: 'Placeholder', min: 0, max: 100, step: 5, tickInterval: 5, invertSelectionColoring: true })
   ];
 
   readonly forgeNumberSliderFieldsConfig: FormConfig = {
@@ -161,34 +161,34 @@ export class DocFormValueComponent {
     ]
   };
 
-  readonly textAreaField: FormlyFieldConfig[] = [textAreaField({ key: 'test', label: 'Text Area Field', description: 'A required text area field.', placeholder: 'Placeholder', required: true })];
+  readonly textAreaField: FormlyFieldConfig[] = [formlyTextAreaField({ key: 'test', label: 'Text Area Field', description: 'A required text area field.', placeholder: 'Placeholder', required: true })];
 
   readonly forgeTextAreaFieldConfig: FormConfig = {
     fields: [forgeTextAreaField({ key: 'test', label: 'Text Area Field', description: 'A required text area field.', placeholder: 'Placeholder', required: true })]
   };
 
-  readonly latLngTextField: FormlyFieldConfig[] = [latLngTextField()];
+  readonly latLngTextField: FormlyFieldConfig[] = [formlyLatLngTextField()];
 
-  readonly addressField: FormlyFieldConfig[] = [addressField()];
+  readonly addressField: FormlyFieldConfig[] = [formlyAddressField()];
 
   readonly forgeAddressFieldConfig: FormConfig = {
     fields: [forgeAddressField() as any]
   };
 
-  readonly slimAddressField: FormlyFieldConfig[] = [addressField({ key: 'slim', hint: 'Line 2 and country are omitted.', stateField: { asCode: true }, includeLine2: false, includeCountry: false })];
+  readonly slimAddressField: FormlyFieldConfig[] = [formlyAddressField({ key: 'slim', hint: 'Line 2 and country are omitted.', stateField: { asCode: true }, includeLine2: false, includeCountry: false })];
 
   readonly forgeSlimAddressFieldConfig: FormConfig = {
     fields: [forgeAddressField({ key: 'slim', hint: 'Line 2 and country are omitted.', stateField: { asCode: true }, includeLine2: false, includeCountry: false }) as any]
   };
 
-  readonly addressListFields: FormlyFieldConfig[] = [addressListField()];
+  readonly addressListFields: FormlyFieldConfig[] = [formlyAddressListField()];
 
   readonly forgeAddressListFieldConfig: FormConfig = {
     fields: [forgeAddressListField() as any]
   };
 
   readonly toggleField: FormlyFieldConfig[] = [
-    toggleField({
+    formlyToggleField({
       key: 'toggle',
       label: 'Toggle Me',
       description: 'this is a toggle field'
@@ -217,7 +217,7 @@ export class DocFormValueComponent {
   };
 
   readonly checkboxField: FormlyFieldConfig[] = [
-    checkboxField({
+    formlyCheckboxField({
       key: 'checkbox',
       label: 'Check Me',
       description: 'this is a checkbox field'
@@ -235,14 +235,14 @@ export class DocFormValueComponent {
   };
 
   readonly phoneFields: FormlyFieldConfig[] = [
-    phoneField(),
-    phoneField({ key: 'phoneWithExtension', label: 'Phone Number With Optional Extension', description: 'This field supports optional extensions.', allowExtension: true }),
-    wrappedPhoneAndLabelField({
+    formlyPhoneField(),
+    formlyPhoneField({ key: 'phoneWithExtension', label: 'Phone Number With Optional Extension', description: 'This field supports optional extensions.', allowExtension: true }),
+    formlyWrappedPhoneAndLabelField({
       phoneField: {
         key: 'labeledPhoneKey'
       }
     }),
-    phoneAndLabelSectionField({
+    formlyPhoneAndLabelSectionField({
       key: 'section'
     })
   ];
@@ -271,10 +271,10 @@ export class DocFormValueComponent {
     ]
   };
 
-  readonly phoneListField: FormlyFieldConfig[] = [phoneListField()];
+  readonly phoneListField: FormlyFieldConfig[] = [formlyPhoneListField()];
 
   // -- Phone Dirty State Demo --
-  readonly phoneDirtyStateFields: FormlyFieldConfig[] = [nameField({ required: true }), phoneField()];
+  readonly phoneDirtyStateFields: FormlyFieldConfig[] = [formlyNameField({ required: true }), formlyPhoneField()];
 
   // -- Phone Dirty State Demo --
   readonly phoneDirtyStateDefaultValue$ = of({

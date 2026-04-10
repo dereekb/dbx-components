@@ -1,7 +1,26 @@
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { repeatArrayField, nameField, emailField, phoneAndLabelSectionField, addressListField, toggleField, forgeArrayField, forgeNameField, forgeEmailField, forgePhoneAndLabelSectionField as forgePhoneAndLabelSection, forgeAddressListField, forgeToggleField, DbxFormFormlyArrayFieldModule, DbxFormFormlyTextFieldModule, DbxFormFormlyPhoneFieldModule, DbxFormFormlyBooleanFieldModule, DbxFormlyFieldsContextDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
+import {
+  formlyRepeatArrayField,
+  formlyNameField,
+  formlyEmailField,
+  formlyPhoneAndLabelSectionField,
+  formlyAddressListField,
+  formlyToggleField,
+  forgeArrayField,
+  forgeNameField,
+  forgeEmailField,
+  forgePhoneAndLabelSectionField as forgePhoneAndLabelSection,
+  forgeAddressListField,
+  forgeToggleField,
+  DbxFormFormlyArrayFieldModule,
+  DbxFormFormlyTextFieldModule,
+  DbxFormFormlyPhoneFieldModule,
+  DbxFormFormlyBooleanFieldModule,
+  DbxFormlyFieldsContextDirective,
+  DbxFormSourceDirective
+} from '@dereekb/dbx-form';
 import { randomBoolean } from '@dereekb/util';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
@@ -19,26 +38,26 @@ import { DocFormForgeExampleComponent } from '../component/forge.example.form.co
 export class DocFormArrayComponent {
   // -- Formly --
   readonly basicRepeatArrayField: FormlyFieldConfig[] = [
-    repeatArrayField({
+    formlyRepeatArrayField({
       key: 'test',
       label: 'Test Field',
       description: 'This is a generic repeat field. It is configured with custom add/remove text, and a max of 2 items.',
       addText: 'Add Test Field',
       removeText: 'Remove Test Field',
-      repeatFieldGroup: [nameField(), emailField(), phoneAndLabelSectionField(), addressListField()],
+      repeatFieldGroup: [formlyNameField(), formlyEmailField(), formlyPhoneAndLabelSectionField(), formlyAddressListField()],
       maxLength: 2
     })
   ];
 
   readonly advancedRepeatArrayField: FormlyFieldConfig[] = [
-    repeatArrayField<{ name: string; disable: boolean }>({
+    formlyRepeatArrayField<{ name: string; disable: boolean }>({
       key: 'test2',
       label: 'Field With Add and Remove Diabled Via Field',
       description: 'Shows the remove button being disabled when a value is a certain value, and shows the duplicate button.',
       duplicateText: 'Make Copy',
       repeatFieldGroup: [
-        nameField(),
-        toggleField({
+        formlyNameField(),
+        formlyToggleField({
           key: 'disable',
           label: 'Disable Remove'
         })

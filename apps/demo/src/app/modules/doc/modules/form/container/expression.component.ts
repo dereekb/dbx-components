@@ -1,7 +1,7 @@
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type FormConfig, type LogicConfig } from '@ng-forge/dynamic-forms';
 import { Component, ChangeDetectionStrategy } from '@angular/core';
-import { nameField, textAreaField, textField, toggleField, valueSelectionField, type ValueSelectionOption, forgeToggleField, forgeNameField, forgeTextField, forgeTextAreaField, forgeValueSelectionField, DbxFormlyFieldsContextDirective } from '@dereekb/dbx-form';
+import { formlyNameField, formlyTextAreaField, formlyTextField, formlyToggleField, formlyValueSelectionField, type ValueSelectionOption, forgeToggleField, forgeNameField, forgeTextField, forgeTextAreaField, forgeValueSelectionField, DbxFormlyFieldsContextDirective } from '@dereekb/dbx-form';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureDerivedComponent } from '../../shared/component/feature.derived.component';
@@ -45,30 +45,30 @@ export class DocFormExpressionComponent {
   };
 
   readonly hideExpressionField: FormlyFieldConfig[] = [
-    toggleField({
+    formlyToggleField({
       key: 'toggle',
       label: 'Hide Toggle',
       description: 'this field is watched by another field to see when this is toggled on.'
     }),
-    nameField({
+    formlyNameField({
       expressions: {
         hide: '!model.toggle'
       }
     }),
-    valueSelectionField({
+    formlyValueSelectionField({
       key: 'show',
       label: 'Select One',
       description: 'This selection is watched by the other fields to toggle showing/hiding based on the selected value.',
       addClearOption: true,
       options: SHOW_VALUE_SELECTION_VALUES
     }),
-    textField({
+    formlyTextField({
       key: 'text',
       expressions: {
         hide: (field: FormlyFieldConfig) => field.model.show !== 'text'
       }
     }),
-    textAreaField({
+    formlyTextAreaField({
       key: 'text',
       expressions: {
         hide: (field: FormlyFieldConfig) => field.model.show !== 'textarea'

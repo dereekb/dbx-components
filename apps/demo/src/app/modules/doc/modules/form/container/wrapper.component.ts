@@ -1,19 +1,19 @@
 import { MatDialog } from '@angular/material/dialog';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import {
-  expandWrapper,
-  flexLayoutWrapper,
-  infoWrapper,
-  nameField,
-  sectionWrapper,
-  subsectionWrapper,
-  toggleWrapper,
-  cityField,
-  stateField,
-  zipCodeField,
-  countryField,
-  styleWrapper,
-  toggleField,
+  formlyExpandWrapper,
+  formlyFlexLayoutWrapper,
+  formlyInfoWrapper,
+  formlyNameField,
+  formlySectionWrapper,
+  formlySubsectionWrapper,
+  formlyToggleWrapper,
+  formlyCityField,
+  formlyStateField,
+  formlyZipCodeField,
+  formlyCountryField,
+  formlyStyleWrapper,
+  formlyToggleField,
   formlyTextIsAvailableField,
   forgeRow,
   forgeDbxSectionFieldWrapper,
@@ -60,20 +60,20 @@ export class DocFormWrapperComponent {
   readonly matDialog = inject(MatDialog);
 
   readonly expandField: FormlyFieldConfig[] = [
-    expandWrapper(nameField(), {
+    formlyExpandWrapper(formlyNameField(), {
       expandLabel: 'Add Name',
       buttonType: 'button'
     })
   ];
 
-  readonly toggleField: FormlyFieldConfig[] = [toggleWrapper(nameField())];
+  readonly toggleField: FormlyFieldConfig[] = [formlyToggleWrapper(formlyNameField())];
 
   readonly sectionField: FormlyFieldConfig[] = [
-    sectionWrapper(nameField(), {
+    formlySectionWrapper(formlyNameField(), {
       header: 'Header',
       hint: 'Section Field Hint'
     }),
-    sectionWrapper(nameField(), {
+    formlySectionWrapper(formlyNameField(), {
       h: 1,
       header: 'Header with star and configured size',
       icon: 'star',
@@ -83,14 +83,14 @@ export class DocFormWrapperComponent {
   ];
 
   readonly subsectionField: FormlyFieldConfig[] = [
-    subsectionWrapper(nameField(), {
+    formlySubsectionWrapper(formlyNameField(), {
       header: 'Header',
       hint: 'Section Field Hint'
     })
   ];
 
   readonly infoField: FormlyFieldConfig[] = [
-    infoWrapper(nameField(), {
+    formlyInfoWrapper(formlyNameField(), {
       onInfoClick: () => {
         // this.matDialog.open()
       }
@@ -98,51 +98,51 @@ export class DocFormWrapperComponent {
   ];
 
   readonly styleField: FormlyFieldConfig[] = [
-    styleWrapper(nameField(), {
+    formlyStyleWrapper(formlyNameField(), {
       styleGetter: { background: 'rgba(255,0,0,0.3)', 'border-color': 'blue' },
       classGetter: 'dbx-content-border'
     })
   ];
 
   readonly flexField: FormlyFieldConfig[] = [
-    flexLayoutWrapper([
-      cityField(),
-      stateField({
+    formlyFlexLayoutWrapper([
+      formlyCityField(),
+      formlyStateField({
         description: 'State Description'
       }),
-      toggleField({ key: 'toggle', label: 'Toggle', description: 'Toggle Description' })
+      formlyToggleField({ key: 'toggle', label: 'Toggle', description: 'Toggle Description' })
     ])
   ];
 
   readonly flexThreeField: FormlyFieldConfig[] = [
-    flexLayoutWrapper(
+    formlyFlexLayoutWrapper(
       [
         {
-          field: cityField(),
+          field: formlyCityField(),
           size: 4
         },
-        stateField(),
-        zipCodeField()
+        formlyStateField(),
+        formlyZipCodeField()
       ],
       { breakpoint: 'small', size: 1 }
     )
   ];
 
   readonly flexThreeFieldBreakToColumn: FormlyFieldConfig[] = [
-    flexLayoutWrapper(
+    formlyFlexLayoutWrapper(
       [
         {
-          field: cityField(),
+          field: formlyCityField(),
           size: 4
         },
-        stateField(),
-        zipCodeField()
+        formlyStateField(),
+        formlyZipCodeField()
       ],
       { breakpoint: 'large', breakToColumn: true, size: 1 }
     )
   ];
 
-  readonly flexFiveField: FormlyFieldConfig[] = [flexLayoutWrapper([nameField(), cityField(), stateField(), zipCodeField(), countryField()], { breakpoint: 'large', size: 1, relative: true })];
+  readonly flexFiveField: FormlyFieldConfig[] = [formlyFlexLayoutWrapper([formlyNameField(), formlyCityField(), formlyStateField(), formlyZipCodeField(), formlyCountryField()], { breakpoint: 'large', size: 1, relative: true })];
 
   // Forge wrapper equivalents
   readonly forgeExpandFieldConfig: FormConfig = {
@@ -307,7 +307,7 @@ export class DocFormWrapperComponent {
 
   // Form-field wrapper demos
   readonly formFieldWrapperFields: FormlyFieldConfig[] = [
-    nameField({ required: true }),
+    formlyNameField({ required: true }),
     {
       ...formlyNumberSliderField({ key: 'rating', label: 'Rating', description: 'Must be above 50.', min: 0, max: 100 }),
       validators: { validation: [Validators.min(51)] },

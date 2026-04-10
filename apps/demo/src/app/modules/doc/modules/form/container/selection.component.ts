@@ -7,21 +7,21 @@ import {
   DbxFormFormlyPickableFieldModule,
   DbxFormFormlySearchableFieldModule,
   DbxFormFormlySourceSelectModule,
-  dbxListField,
+  formlyDbxListField,
   filterPickableItemFieldValuesByLabel,
-  pickableItemChipField,
-  pickableItemListField,
+  formlyPickableItemChipField,
+  formlyPickableItemListField,
   pickableValueFieldValuesConfigForStaticLabeledValues,
-  searchableChipField,
-  searchableStringChipField,
-  searchableTextField,
+  formlySearchableChipField,
+  formlySearchableStringChipField,
+  formlySearchableTextField,
   type SearchableValueFieldDisplayFn,
   type SearchableValueFieldDisplayValue,
   type SearchableValueFieldStringSearchFn,
   type SearchableValueFieldValue,
-  sourceSelectField,
+  formlySourceSelectField,
   type SourceSelectLoadSource,
-  valueSelectionField,
+  formlyValueSelectionField,
   type ValueSelectionOptionWithValue,
   forgeValueSelectionField,
   forgeSourceSelectField,
@@ -146,7 +146,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
   readonly searchFn$ = this._searchStrings.asObservable();
 
   readonly sourceSelectFields: FormlyFieldConfig[] = [
-    sourceSelectField<number, ValueSelectionOptionWithValue<number>>({
+    formlySourceSelectField<number, ValueSelectionOptionWithValue<number>>({
       key: 'selectOne',
       label: 'Select One',
       description: 'This is a source selection field for picking a single value from various sources.',
@@ -160,7 +160,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
         return of(sources);
       }
     }),
-    sourceSelectField({
+    formlySourceSelectField({
       key: 'selectMany',
       label: 'Select Many',
       multiple: true,
@@ -175,7 +175,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
         return of(sources);
       }
     }),
-    sourceSelectField({
+    formlySourceSelectField({
       key: 'selectManyLoading',
       label: 'Select Many Loading',
       multiple: true,
@@ -190,7 +190,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
         return of(sources);
       }
     }),
-    sourceSelectField({
+    formlySourceSelectField({
       key: 'selectManyWithSourceButton',
       label: 'Select With Source Button',
       multiple: true,
@@ -209,7 +209,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
         return of({ select: EVEN_MORE_VALUE_SELECTION_VALUES, options: MORE_VALUE_SELECTION_VALUES }).pipe(delay(2000));
       }
     }),
-    sourceSelectField({
+    formlySourceSelectField({
       key: 'selectManyFilterable',
       label: 'Select Many (Filterable)',
       multiple: true,
@@ -231,13 +231,13 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
   };
 
   readonly valueSelectionFields: FormlyFieldConfig[] = [
-    valueSelectionField({
+    formlyValueSelectionField({
       key: 'selectOne',
       label: 'Select One',
       description: 'This is a simple selection field for picking a single value.',
       options: VALUE_SELECTION_VALUES
     }),
-    valueSelectionField({
+    formlyValueSelectionField({
       key: 'materialCustomized',
       label: 'Select One Customized',
       description: 'This is a simple selection field with material form field customization.',
@@ -246,14 +246,14 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
         appearance: 'outline'
       }
     }),
-    valueSelectionField({
+    formlyValueSelectionField({
       key: 'selectOneWithClear',
       label: 'Select One With Clear',
       description: 'This is a simple selection field with a custom clear value added via the addClearOption.',
       addClearOption: '>> Custom Clear Me <<',
       options: VALUE_SELECTION_VALUES
     }),
-    valueSelectionField({
+    formlyValueSelectionField({
       key: 'selectMultiple',
       label: 'Select Multiple',
       description: 'This is a simple selection field for picking an array of values.',
@@ -261,13 +261,13 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       multiple: true,
       selectAllOption: true
     }),
-    valueSelectionField({
+    formlyValueSelectionField({
       key: 'selectWithObservable',
       label: 'Select With Observable Data Source',
       description: 'This select source uses an observable for values.',
       options: of(VALUE_SELECTION_VALUES)
     }),
-    valueSelectionField({
+    formlyValueSelectionField({
       key: 'selectOneNative',
       label: 'Select Native',
       description: 'This is a native selection field.',
@@ -662,7 +662,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
   }
 
   readonly dbxListFields: FormlyFieldConfig[] = [
-    dbxListField<DocValue & IndexRef, AbstractDbxSelectionListWrapperDirective<DocValue & IndexRef>>({
+    formlyDbxListField<DocValue & IndexRef, AbstractDbxSelectionListWrapperDirective<DocValue & IndexRef>>({
       key: 'dbxlist',
       label: 'DbxList Label',
       description: 'Uses a dbxList-related view/wrapper to display a list and select items. Selected items are keyed via a readKey function.',
@@ -692,14 +692,14 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
   });
 
   readonly pickableItemChipFields: FormlyFieldConfig[] = [
-    pickableItemChipField({
+    formlyPickableItemChipField({
       key: 'stringItemChips',
       label: 'String Item Chips',
       description: 'This is a simple string item chip picker.',
       loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
       displayForValue: DISPLAY_FOR_STRING_VALUE
     }),
-    pickableItemChipField({
+    formlyPickableItemChipField({
       key: 'stringItemChipsReadonly',
       label: 'Read Only String Item Chips',
       description: 'This is read only.',
@@ -707,7 +707,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
       displayForValue: DISPLAY_FOR_STRING_VALUE
     }),
-    pickableItemChipField({
+    formlyPickableItemChipField({
       key: 'singleStringItemChips',
       label: 'Single Selection',
       description: 'This field only allows selecting one item at a time and returns the value by itself',
@@ -716,7 +716,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
       displayForValue: DISPLAY_FOR_STRING_VALUE
     }),
-    pickableItemChipField({
+    formlyPickableItemChipField({
       key: 'stringItemChipsWithFilter',
       label: 'String Item Chips With Filter',
       filterLabel: 'Filter',
@@ -725,7 +725,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
       displayForValue: DISPLAY_FOR_STRING_VALUE
     }),
-    pickableItemChipField({
+    formlyPickableItemChipField({
       key: 'staticLabeledValuesExample',
       label: 'pickableValueFieldValuesConfigForStaticLabeledValues() Example Usage',
       filterLabel: 'Filter',
@@ -735,7 +735,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
           .map((value) => ({ label: value.toUpperCase(), value }))
       )
     }),
-    pickableItemChipField({
+    formlyPickableItemChipField({
       key: 'stringItemChipsWithFilterDelay',
       label: 'String Item Chips With Filter With Delay',
       filterLabel: 'Filter',
@@ -744,7 +744,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       loadValues: () => of(MAKE_RANDOM_STRING_VALUES()),
       displayForValue: DISPLAY_FOR_STRING_VALUE
     }),
-    pickableItemChipField({
+    formlyPickableItemChipField({
       key: 'stringItemChipsWithSelectAll',
       label: 'Chips With Select All Button',
       description: 'This chip field has a "Select All" toggle button to select or deselect all items at once.',
@@ -755,14 +755,14 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
   ];
 
   readonly pickableItemListFields: FormlyFieldConfig[] = [
-    pickableItemListField<DocFormExampleSelectionValueId>({
+    formlyPickableItemListField<DocFormExampleSelectionValueId>({
       key: 'stringItemList',
       label: 'String Item List',
       description: 'This is a simple string item list picker.',
       loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
       displayForValue: DISPLAY_FOR_STRING_VALUE
     }),
-    pickableItemListField<DocFormExampleSelectionValueId>({
+    formlyPickableItemListField<DocFormExampleSelectionValueId>({
       key: 'stringItemListReadonly',
       label: 'Read Only String Item List',
       readonly: true,
@@ -770,7 +770,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
       displayForValue: DISPLAY_FOR_STRING_VALUE
     }),
-    pickableItemListField<DocFormExampleSelectionValueId>({
+    formlyPickableItemListField<DocFormExampleSelectionValueId>({
       key: 'stringItemListSingleValue',
       label: 'String Item List With Single Value Selection',
       description: 'You can only select one value at a time. The value is returned as an array anyways.',
@@ -779,7 +779,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       multiSelect: false,
       asArrayValue: true // return as array anyways
     }),
-    pickableItemListField<DocFormExampleSelectionValueId>({
+    formlyPickableItemListField<DocFormExampleSelectionValueId>({
       key: 'stringItemListWithFilter',
       label: 'String Item List',
       filterLabel: 'Filter',
@@ -791,7 +791,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
   ];
 
   readonly searchableChipFields: FormlyFieldConfig[] = [
-    searchableStringChipField({
+    formlySearchableStringChipField({
       key: 'typeAndPickChips',
       label: 'Search And Pick Strings',
       description: 'This input can search for string, but also have an arbitrary value input.',
@@ -799,7 +799,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       search: makeSearchForStringValue(this.searchFn$),
       displayForValue: DISPLAY_FOR_STRING_VALUE
     }),
-    searchableStringChipField({
+    formlySearchableStringChipField({
       key: 'typeAndPickChipsReadonly',
       label: 'Read Only Text Field',
       description: 'This input is read-only.',
@@ -808,7 +808,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       search: makeSearchForStringValue(this.searchFn$),
       displayForValue: DISPLAY_FOR_STRING_VALUE
     }),
-    searchableChipField({
+    formlySearchableChipField({
       key: 'pickOnly',
       label: 'Only Pick Strings',
       description: 'This input does not allow arbitrary strings to be input.',
@@ -817,7 +817,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       search: makeSearchForStringValue(this.searchFn$),
       displayForValue: DISPLAY_FOR_STRING_VALUE
     }),
-    searchableChipField({
+    formlySearchableChipField({
       key: 'pickOne',
       label: 'Pick a Single Value',
       description: 'Can only pick one value at a time. Saved as a single value.',
@@ -828,7 +828,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       search: makeSearchForStringValue(this.searchFn$),
       displayForValue: DISPLAY_FOR_STRING_VALUE
     }),
-    searchableChipField({
+    formlySearchableChipField({
       key: 'nonEmptySearch',
       label: 'Search Non-Empty Strings',
       description: 'This input does not search empty string value.',
@@ -837,7 +837,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       search: makeSearchForStringValue(this.searchFn$),
       displayForValue: DISPLAY_FOR_STRING_VALUE
     }),
-    searchableChipField({
+    formlySearchableChipField({
       key: 'customView',
       label: 'Search Non-Empty Strings',
       description: 'This input has custom display configuration.',
@@ -846,7 +846,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       search: EXAMPLE_SEARCH_FOR_SELECTION_VALUE(),
       displayForValue: EXAMPLE_DISPLAY_FOR_SELECTION_VALUE_WITH_CUSTOM_DISPLAYS
     }),
-    searchableStringChipField({
+    formlySearchableStringChipField({
       key: 'validatedUrls',
       label: 'URL Chips With Validation',
       description: 'Type a URL (e.g. https://example.com) and press enter. Invalid URLs are rejected with an inline error. Port numbers like http://localhost:8080 are allowed.',
@@ -858,7 +858,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
   ];
 
   readonly searchableTextFields: FormlyFieldConfig[] = [
-    searchableTextField({
+    formlySearchableTextField({
       key: 'strings',
       label: 'Type, Search And Pick A String Value',
       description: 'Type in a string and select it, or search for string values.',
@@ -867,7 +867,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       search: makeSearchForStringValue(this.searchFn$),
       displayForValue: DISPLAY_FOR_STRING_VALUE
     }),
-    searchableTextField({
+    formlySearchableTextField({
       key: 'stringsReadonly',
       label: 'Read-only Text Field',
       description: 'View is read only.',
@@ -877,7 +877,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       search: makeSearchForStringValue(this.searchFn$),
       displayForValue: DISPLAY_FOR_STRING_VALUE
     }),
-    searchableTextField({
+    formlySearchableTextField({
       key: 'pickStrings',
       label: 'Search And Pick A String Value only.',
       description: 'Search for values only.',
@@ -886,7 +886,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       search: makeSearchForStringValue(this.searchFn$),
       displayForValue: DISPLAY_FOR_STRING_VALUE
     }),
-    searchableTextField<DocFormExampleSelectionValueId, DocFormExampleSelectionValue>({
+    formlySearchableTextField<DocFormExampleSelectionValueId, DocFormExampleSelectionValue>({
       key: 'models',
       label: 'Search And Pick A Model',
       description: 'Search for models using a string and the default display presentation.',
@@ -895,7 +895,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       search: EXAMPLE_SEARCH_FOR_SELECTION_VALUE(0),
       displayForValue: EXAMPLE_DISPLAY_FOR_SELECTION_VALUE
     }),
-    searchableTextField<DocFormExampleSelectionValueId, DocFormExampleSelectionValue>({
+    formlySearchableTextField<DocFormExampleSelectionValueId, DocFormExampleSelectionValue>({
       key: 'customDisplay',
       label: 'Search And Pick A Model (Custom Display)',
       description: 'Search for models using a string and custom display presentation set on the field.',
@@ -908,7 +908,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
         componentClass: DocFormExamplePrimarySearchableFieldDisplayComponent
       }
     }),
-    searchableTextField<DocFormExampleSelectionValueId, DocFormExampleSelectionValue>({
+    formlySearchableTextField<DocFormExampleSelectionValueId, DocFormExampleSelectionValue>({
       key: 'customDisplayItems',
       label: 'Search And Pick A Model (Custom Display)',
       description: 'Search for models using a string and custom display presentation set per item.',
@@ -1017,7 +1017,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
   };
 
   readonly searchableTextFieldsWithAnchors: FormlyFieldConfig[] = [
-    searchableTextField({
+    formlySearchableTextField({
       key: 'anchor1',
       label: 'Anchor Segue',
       description: 'Anchors are enabled and set on the field. Result is configured to not show.',
@@ -1036,7 +1036,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
         };
       }
     }),
-    searchableTextField({
+    formlySearchableTextField({
       key: 'anchor2',
       label: 'Anchor Segue',
       description: 'Anchors are set on each item. Result is configured to not show.',
@@ -1057,7 +1057,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
         ),
       displayForValue: DISPLAY_FOR_STRING_VALUE
     }),
-    searchableTextField({
+    formlySearchableTextField({
       key: 'anchor3',
       label: 'Anchor Segue For Metadata Items',
       description: `Metadata items are passed in. Note that the simple displayForValue function we used doesn't search remotely and just fills in default data if meta is missing.`,
