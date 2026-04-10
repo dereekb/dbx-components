@@ -2,9 +2,9 @@
   "name": "@dereekb/dbx-core",
   "version": "13.7.0",
   "peerDependencies": {
-    "@angular/common": "21.2.3",
-    "@angular/core": "21.2.3",
-    "@angular/router": "21.2.3",
+    "@angular/common": "21.2.4",
+    "@angular/core": "21.2.4",
+    "@angular/router": "21.2.4",
     "@dereekb/date": "13.7.0",
     "@dereekb/rxjs": "13.7.0",
     "@dereekb/util": "13.7.0",
@@ -18,7 +18,7 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@angular/platform-browser": "^21.2.3",
+    "@angular/platform-browser": "^21.2.4",
     "@ngrx/store-devtools": "^21.0.0"
   }
 }

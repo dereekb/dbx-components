@@ -5,10 +5,10 @@
     "node": ">=24.0.0"
   },
   "peerDependencies": {
-    "@angular/common": "21.2.3",
-    "@angular/core": "21.2.3",
+    "@angular/common": "21.2.4",
+    "@angular/core": "21.2.4",
     "@angular/material": "^21.2.3",
-    "@angular/platform-browser": "21.2.3",
+    "@angular/platform-browser": "21.2.4",
     "@dereekb/browser": "13.7.0",
     "@dereekb/date": "13.7.0",
     "@dereekb/dbx-analytics": "13.7.0",

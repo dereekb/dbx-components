@@ -6,8 +6,8 @@
     "@dereekb/rxjs": "13.7.0",
     "@dereekb/util": "13.7.0",
     "@nestjs/common": "^11.1.17",
-    "@nestjs/config": "^4.0.3",
-    "discord.js": "^14.25.1",
+    "@nestjs/config": "^4.0.4",
+    "discord.js": "^14.26.0",
     "express": "^5.0.0"
   }
 }
