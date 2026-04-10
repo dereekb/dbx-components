@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { AbstractSyncFormlyFormDirective, DBX_FORMLY_FORM_COMPONENT_TEMPLATE, DbxFormlyFormComponentImportsModule, dbxFormlyFormComponentProviders, textPasswordWithVerifyFieldGroup } from '@dereekb/dbx-form';
-import { type FormlyFieldConfig } from '@ngx-formly/core';
+import { AbstractSyncForgeFormDirective, provideDbxForgeFormContext, DbxForgeFormComponent, forgeTextPasswordField, forgeTextVerifyPasswordField } from '@dereekb/dbx-form';
+import type { FormConfig } from '@ng-forge/dynamic-forms';
 import { FIREBASE_AUTH_PASSWORD_MIN_LENGTH } from '@dereekb/firebase';
 
 /**
@@ -12,16 +12,35 @@ export interface DbxFirebasePasswordResetFormValue {
 }
 
 /**
- * Formly-based form component for completing a password reset, containing new password and verify password fields.
+ * Forge-based form component for completing a password reset, containing new password and verify password fields.
  */
 @Component({
   selector: 'dbx-firebase-password-reset-form',
-  template: DBX_FORMLY_FORM_COMPONENT_TEMPLATE,
-  imports: [DbxFormlyFormComponentImportsModule],
-  providers: dbxFormlyFormComponentProviders(),
+  template: `
+    <dbx-forge></dbx-forge>
+  `,
+  imports: [DbxForgeFormComponent],
+  providers: provideDbxForgeFormContext(),
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxFirebasePasswordResetFormComponent extends AbstractSyncFormlyFormDirective<DbxFirebasePasswordResetFormValue> {
-  readonly fields: FormlyFieldConfig[] = [textPasswordWithVerifyFieldGroup({ password: { minLength: FIREBASE_AUTH_PASSWORD_MIN_LENGTH } })];
+export class DbxFirebasePasswordResetFormComponent extends AbstractSyncForgeFormDirective<DbxFirebasePasswordResetFormValue> {
+  readonly config: FormConfig = {
+    fields: [
+      forgeTextPasswordField({ minLength: FIREBASE_AUTH_PASSWORD_MIN_LENGTH }),
+      {
+        ...forgeTextVerifyPasswordField(),
+        validators: [
+          {
+            type: 'custom',
+            expression: 'fieldValue === formValue.password',
+            kind: 'passwordMismatch'
+          }
+        ],
+        validationMessages: {
+          passwordMismatch: 'The passwords do not match.'
+        }
+      }
+    ]
+  };
 }
