@@ -1,9 +1,9 @@
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { formlyTextField, type TextFieldConfig } from './text.field';
 import { formlyCityField, type CityFieldConfig, formlyCountryField, type CountryFieldConfig, formlyStateField, type StateFieldConfig, formlyZipCodeField, type ZipCodeFieldConfig } from './text.additional.field';
-import { flexLayoutWrapper, sectionWrapper } from '../../wrapper/wrapper';
+import { formlyFlexLayoutWrapper, formlySectionWrapper } from '../../wrapper/wrapper';
 import { type FieldConfig } from '../../field';
-import { repeatArrayField } from '../array/array.field';
+import { formlyRepeatArrayField } from '../array/array.field';
 import { type DbxFormSectionConfig } from '../../wrapper/section.wrapper.component';
 import { ADDRESS_LINE_MAX_LENGTH } from '@dereekb/model';
 
@@ -117,7 +117,7 @@ export function formlyAddressFormlyFields(config: AddressFormlyFieldsConfig = {}
     lines = [formlyAddressLineField({ required, ...config.line1Field, line: 0 })];
   }
 
-  return [...lines, flexLayoutWrapper(singleLineFields, { size: 1, relative: true })];
+  return [...lines, formlyFlexLayoutWrapper(singleLineFields, { size: 1, relative: true })];
 }
 
 // MARK: Address
@@ -140,7 +140,7 @@ export interface AddressFieldConfig extends Readonly<FieldConfig>, DbxFormSectio
 export function formlyAddressField(config: Partial<AddressFieldConfig> = {}): FormlyFieldConfig {
   const { key = 'address', header = 'Address', hint, required = false } = config;
 
-  return sectionWrapper(
+  return formlySectionWrapper(
     {
       ...config,
       key,
@@ -179,7 +179,7 @@ export interface AddressListFieldConfig extends Readonly<FieldConfig>, AddressFo
  */
 export function formlyAddressListField(config: Partial<AddressListFieldConfig> = {}): FormlyFieldConfig {
   const { key = 'addresses', required = false, maxAddresses = 6 } = config;
-  return repeatArrayField({
+  return formlyRepeatArrayField({
     key,
     required,
     label: 'Addresses',

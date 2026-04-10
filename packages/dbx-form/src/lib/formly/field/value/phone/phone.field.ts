@@ -1,6 +1,6 @@
 import { type DbxFormSectionConfig } from '../../wrapper/section.wrapper.component';
-import { sectionWrapper, flexLayoutWrapper } from '../../wrapper/wrapper';
-import { textField, type TextFieldConfig } from '../text/text.field';
+import { formlySectionWrapper, formlyFlexLayoutWrapper } from '../../wrapper/wrapper';
+import { formlyTextField, type TextFieldConfig } from '../text/text.field';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, validatorsForFieldConfig } from '../../field';
 import { type InternationalPhoneFormlyFieldProps } from './phone.field.component';
@@ -67,14 +67,14 @@ export interface WrappedPhoneAndLabelFieldConfig {
  * ```
  */
 export function formlyWrappedPhoneAndLabelField({ phoneField: phone, labelField: label }: WrappedPhoneAndLabelFieldConfig = {}): FormlyFieldConfig {
-  return flexLayoutWrapper(
+  return formlyFlexLayoutWrapper(
     [
       {
         field: formlyPhoneField(phone),
         size: 2
       },
       {
-        field: textField({
+        field: formlyTextField({
           key: 'label',
           label: 'Label',
           autocomplete: 'phone-label',
@@ -111,7 +111,7 @@ export interface PhoneAndLabelFieldSectionConfig extends DbxFormSectionConfig, W
  * ```
  */
 export function formlyPhoneAndLabelSectionField({ key, header = 'Phone Number', hint, phoneField, labelField }: PhoneAndLabelFieldSectionConfig = {}): FormlyFieldConfig {
-  return sectionWrapper(
+  return formlySectionWrapper(
     {
       key,
       fieldGroup: [formlyWrappedPhoneAndLabelField({ phoneField, labelField })]

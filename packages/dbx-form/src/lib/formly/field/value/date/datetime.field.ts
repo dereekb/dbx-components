@@ -2,7 +2,7 @@ import { type Observable, of } from 'rxjs';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, type DescriptionFieldConfig, type MaterialFormFieldConfig } from '../../field';
 import { type DbxDateTimeFieldProps, DbxDateTimeFieldTimeMode, type DbxDateTimePickerConfiguration } from './datetime.field.component';
-import { flexLayoutWrapper } from '../../wrapper/wrapper';
+import { formlyFlexLayoutWrapper } from '../../wrapper/wrapper';
 import { type Maybe } from '@dereekb/util';
 import { type DbxFixedDateRangeFieldProps } from './fixeddaterange.field.component';
 
@@ -160,7 +160,7 @@ export function formlyDateRangeField(config: DateDateRangeFieldConfig = {}): For
 
   return {
     key: undefined,
-    fieldGroup: [flexLayoutWrapper([startField, endField], { relative: true, breakToColumn: true, breakpoint: 'large' })]
+    fieldGroup: [formlyFlexLayoutWrapper([startField, endField], { relative: true, breakToColumn: true, breakpoint: 'large' })]
   };
 }
 

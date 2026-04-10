@@ -1,5 +1,5 @@
-import { type TextFieldConfig, textField } from '../field/value/text/text.field';
-import { type EmailFieldConfig, emailField } from '../field/value/text/text.additional.field';
+import { type TextFieldConfig, formlyTextField } from '../field/value/text/text.field';
+import { type EmailFieldConfig, formlyEmailField } from '../field/value/text/text.additional.field';
 import { fieldValuesAreEqualValidator } from '../../validator/field';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { capitalizeFirstLetter, type Maybe } from '@dereekb/util';
@@ -23,7 +23,7 @@ export interface TextPasswordFieldConfig extends Omit<TextFieldConfig, 'inputTyp
  * @returns A Formly field configuration for a password input.
  */
 export function formlyTextPasswordField(config?: TextPasswordFieldConfig): FormlyFieldConfig {
-  return textField({
+  return formlyTextField({
     key: 'password',
     ...config,
     label: config?.label ?? 'Password',
@@ -194,9 +194,9 @@ export function formlyUsernameLoginField(username: UsernameLoginFieldUsernameCon
   }
 
   if (usernameFieldConfig.email) {
-    usernameField = emailField({ ...usernameFieldConfig.email, ...defaultUsernameFieldConfig });
+    usernameField = formlyEmailField({ ...usernameFieldConfig.email, ...defaultUsernameFieldConfig });
   } else {
-    usernameField = textField({ ...usernameFieldConfig.username, ...defaultUsernameFieldConfig });
+    usernameField = formlyTextField({ ...usernameFieldConfig.username, ...defaultUsernameFieldConfig });
   }
 
   return usernameField;

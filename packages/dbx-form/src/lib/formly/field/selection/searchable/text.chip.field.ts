@@ -1,7 +1,7 @@
 import { of } from 'rxjs';
 import { type LabeledFieldConfig } from '../../field';
 import { type SearchableValueFieldValue } from './searchable';
-import { searchableChipField } from './searchable.field';
+import { formlySearchableChipField } from './searchable.field';
 import { type StringValueFieldsFieldProps } from './searchable.field.directive';
 
 /**
@@ -29,7 +29,7 @@ export interface ChipTextFieldConfig extends LabeledFieldConfig, StringValueFiel
 export function formlyChipTextField(config: ChipTextFieldConfig) {
   const convertStringValue = config.caseSensitive ? (x: string) => x : (x: string) => x?.toLowerCase();
 
-  return searchableChipField({
+  return formlySearchableChipField({
     search: () => of([]), // no search by default
     ...config,
     allowStringValues: true,

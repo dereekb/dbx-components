@@ -2,7 +2,7 @@ import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, provideZoneChangeDetection, viewChild } from '@angular/core';
 import { DbxTestDbxFormComponent, FORM_TEST_PROVIDERS } from '../../../../../test';
 import { DbxFormFormlyDateFieldModule } from '../../value/date/date.field.module';
-import { timeOnlyField } from '../../value/date/datetime.field';
+import { formlyTimeOnlyField } from '../../value/date/datetime.field';
 import { first } from 'rxjs';
 import { callbackTest } from '@dereekb/util/test';
 
@@ -37,7 +37,7 @@ describe('DbxDateTimeFieldComponent', () => {
     const date = new Date();
 
     beforeEach(() => {
-      form.setFields([timeOnlyField({ key: fieldKey })]);
+      form.setFields([formlyTimeOnlyField({ key: fieldKey })]);
       fixture.detectChanges();
     });
 

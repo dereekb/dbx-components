@@ -1,5 +1,5 @@
 import { type Configurable, type KeyValueTransformMap } from '@dereekb/util';
-import { type ChecklistItemDisplayContent, ChecklistItemFieldDataSetBuilder, type ChecklistType, type ChecklistItemFieldBuilderInput, flexLayoutWrapper } from '@dereekb/dbx-form';
+import { type ChecklistItemDisplayContent, ChecklistItemFieldDataSetBuilder, type ChecklistType, type ChecklistItemFieldBuilderInput, formlyFlexLayoutWrapper } from '@dereekb/dbx-form';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type Observable } from 'rxjs';
 
@@ -103,7 +103,7 @@ export function docFormExampleChecklistFieldsSection({ key = undefined, config }
   return {
     key,
     fieldGroup: [
-      flexLayoutWrapper(fields, {
+      formlyFlexLayoutWrapper(fields, {
         // example also makes use of flexLayoutWrapper to wrap items around.
         breakpoint: 'full',
         size: 3

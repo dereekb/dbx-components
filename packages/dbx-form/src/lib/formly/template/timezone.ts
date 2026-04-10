@@ -1,7 +1,7 @@
 import { type TimezoneString } from '@dereekb/util';
 import { type TimezoneInfo } from '@dereekb/date';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
-import { searchableTextField, type SearchableTextFieldConfig } from '../field/selection/searchable/searchable.field';
+import { formlySearchableTextField, type SearchableTextFieldConfig } from '../field/selection/searchable/searchable.field';
 import { DISPLAY_FOR_TIMEZONE_STRING_VALUE, timezoneStringSearchFunction } from '../../shared/template/timezone';
 
 /**
@@ -21,7 +21,7 @@ export interface TimezoneStringFieldConfig extends Omit<SearchableTextFieldConfi
  * @returns A Formly field configuration for timezone selection.
  */
 export function formlyTimezoneStringField(config: TimezoneStringFieldConfig = {}): FormlyFieldConfig {
-  return searchableTextField({
+  return formlySearchableTextField({
     key: 'timezone',
     label: 'Timezone',
     asArrayValue: false,

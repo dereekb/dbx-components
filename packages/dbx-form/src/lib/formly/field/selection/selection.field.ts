@@ -2,7 +2,7 @@ import { asObservable, type ObservableOrValue } from '@dereekb/rxjs';
 import { convertMaybeToArray, firstValue, type LabeledValue, type Maybe } from '@dereekb/util';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { map } from 'rxjs';
-import { type DescriptionFieldConfig, formlyField, type FormlyValueParser, type LabeledFieldConfig, type MaterialFormFieldConfig, propsAndConfigForFieldConfig } from '../field';
+import { type DescriptionFieldConfig, formlyField, type FieldValueParser, type LabeledFieldConfig, type MaterialFormFieldConfig, propsAndConfigForFieldConfig } from '../field';
 
 /**
  * A selectable option with a value, label, and optional disabled state.
@@ -76,7 +76,7 @@ export function formlyValueSelectionField<T>(config: ValueSelectionFieldConfig<T
   }
 
   const options = addClearOption ? asObservable(inputOptions).pipe(map(formlyAddValueSelectionOptionFunction(typeof addClearOption === 'string' ? addClearOption : undefined))) : inputOptions;
-  let parsers: FormlyValueParser[] | undefined = undefined;
+  let parsers: FieldValueParser[] | undefined = undefined;
 
   parsers = config.multiple !== true ? [firstValue] : [convertMaybeToArray];
 

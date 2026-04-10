@@ -2,7 +2,7 @@ import { type ValidatorFn } from '@angular/forms';
 import { concatArrays, type TransformNumberFunctionConfigRef, transformNumberFunction, mapMaybeFunction, DOLLAR_AMOUNT_PRECISION } from '@dereekb/util';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { isDivisibleBy } from '../../../../validator';
-import { type AttributesFieldConfig, type LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, type DescriptionFieldConfig, validatorsForFieldConfig, type FieldConfigParsersRef, type FormlyValueParser, type MaterialFormFieldConfig } from '../../field';
+import { type AttributesFieldConfig, type LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, type DescriptionFieldConfig, validatorsForFieldConfig, type FieldConfigParsersRef, type FieldValueParser, type MaterialFormFieldConfig } from '../../field';
 
 // MARK: Number Field
 /**
@@ -50,14 +50,14 @@ export interface NumberFieldConfig extends LabeledFieldConfig, DescriptionFieldC
  */
 export function formlyNumberFieldTransformParser(config: Partial<FieldConfigParsersRef> & Partial<TransformNumberFunctionConfigRef>) {
   const { parsers: inputParsers, transform } = config;
-  let parsers: FormlyValueParser[] | undefined;
+  let parsers: FieldValueParser[] | undefined;
 
   if (inputParsers) {
     parsers = inputParsers;
   }
 
   if (transform) {
-    const transformParser: FormlyValueParser = mapMaybeFunction(transformNumberFunction(transform));
+    const transformParser: FieldValueParser = mapMaybeFunction(transformNumberFunction(transform));
     parsers = concatArrays([transformParser], parsers);
   }
 

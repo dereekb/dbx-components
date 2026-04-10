@@ -1,7 +1,7 @@
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type FieldValueIsAvailableValidatorConfig, fieldValueIsAvailableValidator } from '../../validator/available';
-import { textField, type TextFieldConfig } from '../field/value/text/text.field';
-import { workingWrapper } from '../field/wrapper/wrapper';
+import { formlyTextField, type TextFieldConfig } from '../field/value/text/text.field';
+import { formlyWorkingWrapper } from '../field/wrapper/wrapper';
 
 /**
  * Configuration for a text field that includes an async availability check.
@@ -35,7 +35,7 @@ export interface TextAvailableFieldConfig extends TextFieldConfig, Omit<FieldVal
  * ```
  */
 export function formlyTextIsAvailableField(config: TextAvailableFieldConfig): FormlyFieldConfig {
-  const field = textField(config);
+  const field = formlyTextField(config);
 
   field.asyncValidators = {
     validation: [
@@ -48,7 +48,7 @@ export function formlyTextIsAvailableField(config: TextAvailableFieldConfig): Fo
     ]
   };
 
-  return workingWrapper(field, {});
+  return formlyWorkingWrapper(field, {});
 }
 
 // MARK: Deprecated Aliases

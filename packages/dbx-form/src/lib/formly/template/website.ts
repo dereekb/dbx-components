@@ -1,5 +1,5 @@
 import { type FormlyFieldConfig } from '@ngx-formly/core';
-import { type TextFieldConfig, textField } from '../field/value/text';
+import { type TextFieldConfig, formlyTextField } from '../field/value/text';
 import { validatorsForFieldConfig } from '../field/field';
 import { type ValidatorFn } from '@angular/forms';
 import { isWebsiteUrlValidator, type IsWebsiteUrlValidatorConfig } from '../../validator/website';
@@ -23,7 +23,7 @@ export function formlyWebsiteUrlField(config?: WebsiteUrlFieldConfig): FormlyFie
   const validators: ValidatorFn[] = [isWebsiteUrlValidator(config)];
 
   return {
-    ...textField({
+    ...formlyTextField({
       key: 'website',
       ...config,
       label: config?.label ?? 'Website Url',

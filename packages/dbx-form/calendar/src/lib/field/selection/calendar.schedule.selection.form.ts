@@ -1,4 +1,4 @@
-import { flexLayoutWrapper, toggleField } from '@dereekb/dbx-form';
+import { formlyFlexLayoutWrapper, formlyToggleField } from '@dereekb/dbx-form';
 import { getDaysOfWeekNames } from '@dereekb/util';
 
 /**
@@ -10,7 +10,7 @@ import { getDaysOfWeekNames } from '@dereekb/util';
  */
 export function dbxScheduleSelectionCalendarDateDaysFormFields() {
   const fields = dbxScheduleSelectionCalendarDateDaysFormDayFields();
-  return [flexLayoutWrapper(fields, { relative: true, size: 3 })];
+  return [formlyFlexLayoutWrapper(fields, { relative: true, size: 3 })];
 }
 
 /**
@@ -21,7 +21,7 @@ export function dbxScheduleSelectionCalendarDateDaysFormFields() {
  */
 export function dbxScheduleSelectionCalendarDateDaysFormDayFields() {
   return getDaysOfWeekNames(false).map((dayOfWeekName: string) => {
-    return toggleField({
+    return formlyToggleField({
       key: dayOfWeekName.toLowerCase(),
       label: dayOfWeekName
     });
