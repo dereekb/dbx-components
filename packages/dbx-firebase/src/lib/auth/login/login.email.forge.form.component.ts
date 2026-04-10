@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { AbstractConfigAsyncForgeFormDirective, provideDbxForgeFormContext, DbxForgeFormComponent, forgeUsernameLoginField, forgeTextPasswordField, forgeTextVerifyPasswordField, type DbxForgeTextPasswordFieldConfig, type DefaultUsernameLoginFieldsValue } from '@dereekb/dbx-form';
+import { AbstractConfigAsyncForgeFormDirective, DBX_FORGE_FORM_COMPONENT_TEMPLATE, dbxForgeFormComponentProviders, DbxForgeFormComponentImportsModule, forgeUsernameLoginField, forgeTextPasswordField, forgeTextVerifyPasswordField, type DbxForgeTextPasswordFieldConfig, type DefaultUsernameLoginFieldsValue } from '@dereekb/dbx-form';
 import { type Maybe } from '@dereekb/util';
 import type { FormConfig } from '@ng-forge/dynamic-forms';
 import { map, type Observable } from 'rxjs';
@@ -25,11 +25,9 @@ export interface DbxFirebaseEmailFormConfig {
  */
 @Component({
   selector: 'dbx-firebase-email-forge-form',
-  template: `
-    <dbx-forge></dbx-forge>
-  `,
-  providers: provideDbxForgeFormContext(),
-  imports: [DbxForgeFormComponent],
+  template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
+  providers: dbxForgeFormComponentProviders(),
+  imports: [DbxForgeFormComponentImportsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

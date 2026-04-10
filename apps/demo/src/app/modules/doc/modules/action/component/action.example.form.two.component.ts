@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { provideDbxForgeFormContext, AbstractSyncForgeFormDirective, forgeTextField, DbxForgeFormComponent } from '@dereekb/dbx-form';
+import { DBX_FORGE_FORM_COMPONENT_TEMPLATE, dbxForgeFormComponentProviders, DbxForgeFormComponentImportsModule, AbstractSyncForgeFormDirective, forgeTextField } from '@dereekb/dbx-form';
 import type { FormConfig } from '@ng-forge/dynamic-forms';
 
 export interface DocActionFormExampleValue {
@@ -8,13 +8,11 @@ export interface DocActionFormExampleValue {
 }
 
 @Component({
-  template: `
-    <dbx-forge></dbx-forge>
-  `,
+  template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   selector: 'doc-action-form-example-form-two',
-  providers: [provideDbxForgeFormContext()],
+  providers: dbxForgeFormComponentProviders(),
   standalone: true,
-  imports: [DbxForgeFormComponent],
+  imports: [DbxForgeFormComponentImportsModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocActionFormExampleFormTwoComponent extends AbstractSyncForgeFormDirective<DocActionFormExampleValue> {

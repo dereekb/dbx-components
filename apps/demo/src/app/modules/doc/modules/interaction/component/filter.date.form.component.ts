@@ -1,5 +1,5 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
-import { AbstractSyncForgeFormDirective, forgeFixedDateRangeField, provideDbxForgeFormContext, DbxForgeFormComponent } from '@dereekb/dbx-form';
+import { AbstractSyncForgeFormDirective, forgeFixedDateRangeField, dbxForgeFormComponentProviders, DbxForgeFormComponentImportsModule } from '@dereekb/dbx-form';
 import type { FormConfig } from '@ng-forge/dynamic-forms';
 import { type DateRange, DateRangeType } from '@dereekb/date';
 import { type DocInteractionTestFilterFormValue } from './filter.custom.form.component';
@@ -13,9 +13,9 @@ export type DocInteractionTestDateFilterFormValue = {
     <dbx-forge class="dbx-fixeddaterange-field-full-width"></dbx-forge>
   `,
   selector: 'doc-interaction-test-date-filter-form',
-  providers: provideDbxForgeFormContext(),
+  providers: dbxForgeFormComponentProviders(),
   standalone: true,
-  imports: [DbxForgeFormComponent],
+  imports: [DbxForgeFormComponentImportsModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocInteractionTestDateFilterFormComponent extends AbstractSyncForgeFormDirective<DocInteractionTestFilterFormValue> {

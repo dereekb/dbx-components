@@ -1,18 +1,16 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { type Observable, map } from 'rxjs';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
-import { AbstractConfigAsyncForgeFormDirective, forgeComponentField, provideDbxForgeFormContext, DbxForgeFormComponent } from '@dereekb/dbx-form';
+import { AbstractConfigAsyncForgeFormDirective, forgeComponentField, DBX_FORGE_FORM_COMPONENT_TEMPLATE, dbxForgeFormComponentProviders, DbxForgeFormComponentImportsModule } from '@dereekb/dbx-form';
 import { type Maybe } from '@dereekb/util';
 import { type DocFormExampleComponentFormConfig, DOC_FORM_EXAMPLE_COMPONENT_DATA_TOKEN } from './component.example.form.component';
 
 @Component({
-  template: `
-    <dbx-forge></dbx-forge>
-  `,
+  template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   selector: 'doc-forge-example-component-form',
-  providers: [provideDbxForgeFormContext()],
+  providers: dbxForgeFormComponentProviders(),
   standalone: true,
-  imports: [DbxForgeFormComponent],
+  imports: [DbxForgeFormComponentImportsModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocForgeExampleComponentFormComponent extends AbstractConfigAsyncForgeFormDirective<unknown, DocFormExampleComponentFormConfig> {

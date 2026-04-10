@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { AbstractSyncForgeFormDirective, provideDbxForgeFormContext, DbxForgeFormComponent, forgeTextPasswordField, forgeTextVerifyPasswordField } from '@dereekb/dbx-form';
+import { AbstractSyncForgeFormDirective, DBX_FORGE_FORM_COMPONENT_TEMPLATE, dbxForgeFormComponentProviders, DbxForgeFormComponentImportsModule, forgeTextPasswordField, forgeTextVerifyPasswordField } from '@dereekb/dbx-form';
 import type { FormConfig } from '@ng-forge/dynamic-forms';
 import { FIREBASE_AUTH_PASSWORD_MIN_LENGTH } from '@dereekb/firebase';
 
@@ -16,11 +16,9 @@ export interface DbxFirebasePasswordResetFormValue {
  */
 @Component({
   selector: 'dbx-firebase-password-reset-form',
-  template: `
-    <dbx-forge></dbx-forge>
-  `,
-  imports: [DbxForgeFormComponent],
-  providers: provideDbxForgeFormContext(),
+  template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
+  imports: [DbxForgeFormComponentImportsModule],
+  providers: dbxForgeFormComponentProviders(),
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

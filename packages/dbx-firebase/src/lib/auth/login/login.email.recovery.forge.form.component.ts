@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { AbstractSyncForgeFormDirective, provideDbxForgeFormContext, DbxForgeFormComponent, forgeEmailField } from '@dereekb/dbx-form';
+import { AbstractSyncForgeFormDirective, DBX_FORGE_FORM_COMPONENT_TEMPLATE, dbxForgeFormComponentProviders, DbxForgeFormComponentImportsModule, forgeEmailField } from '@dereekb/dbx-form';
 import type { FormConfig } from '@ng-forge/dynamic-forms';
 
 /**
@@ -14,11 +14,9 @@ export interface DbxFirebaseEmailRecoveryFormValue {
  */
 @Component({
   selector: 'dbx-firebase-email-recovery-forge-form',
-  template: `
-    <dbx-forge></dbx-forge>
-  `,
-  providers: provideDbxForgeFormContext(),
-  imports: [DbxForgeFormComponent],
+  template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
+  providers: dbxForgeFormComponentProviders(),
+  imports: [DbxForgeFormComponentImportsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

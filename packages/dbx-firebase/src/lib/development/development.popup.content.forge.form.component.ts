@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { AbstractConfigAsyncForgeFormDirective, provideDbxForgeFormContext, DbxForgeFormComponent, forgePickableChipField, filterPickableItemFieldValuesByLabel, type SearchableValueFieldDisplayFn, type SearchableValueFieldDisplayValue, type SearchableValueFieldValue } from '@dereekb/dbx-form';
+import { AbstractConfigAsyncForgeFormDirective, DBX_FORGE_FORM_COMPONENT_TEMPLATE, dbxForgeFormComponentProviders, DbxForgeFormComponentImportsModule, forgePickableChipField, filterPickableItemFieldValuesByLabel, type SearchableValueFieldDisplayFn, type SearchableValueFieldDisplayValue, type SearchableValueFieldValue } from '@dereekb/dbx-form';
 import { type Maybe } from '@dereekb/util';
 import type { FormConfig } from '@ng-forge/dynamic-forms';
 import { map, type Observable, of } from 'rxjs';
@@ -24,11 +24,9 @@ const DISPLAY_FOR_DEVELOPMENT_POPUP_STRING_VALUE: SearchableValueFieldDisplayFn<
  */
 @Component({
   selector: 'dbx-firebase-development-popup-content-forge-form',
-  template: `
-    <dbx-forge></dbx-forge>
-  `,
-  imports: [DbxForgeFormComponent],
-  providers: provideDbxForgeFormContext(),
+  template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
+  imports: [DbxForgeFormComponentImportsModule],
+  providers: dbxForgeFormComponentProviders(),
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
