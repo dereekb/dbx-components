@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, effect, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, input, type Signal } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule, type MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MatChipsModule, type MatChipInputEvent } from '@angular/material/chips';
@@ -14,6 +14,8 @@ import { type FieldTree } from '@angular/forms/signals';
 import { type SearchableValueFieldDisplayValue, type ConfiguredSearchableValueFieldDisplayValue } from '../../../../formly/field/selection/searchable/searchable';
 import { DbxSearchableFieldAutocompleteItemComponent } from '../../../../formly/field/selection/searchable/searchable.field.autocomplete.item.component';
 import { AbstractForgeSearchableFieldDirective, type ForgeSearchableChipFieldProps } from './searchable.field.directive';
+import { forgeFieldDisabled } from '../../field.disabled';
+import { toggleDisableFormControl } from '../../../../form/form';
 
 /**
  * Forge ValueFieldComponent for searchable chip selection (multi-value).
@@ -32,6 +34,9 @@ export class DbxForgeSearchableChipFieldComponent<T = unknown, M = unknown, H ex
   readonly field = input.required<FieldTree<T | T[]>>();
   readonly separatorKeysCodes: number[] = [ENTER, COMMA];
 
+  // Disabled state
+  readonly isDisabled = forgeFieldDisabled();
+
   private readonly _blur = new Subject<void>();
   private readonly _blurSub = new SubscriptionObject();
   private readonly _valuesSubject = new BehaviorSubject<T[]>([]);
@@ -45,6 +50,11 @@ export class DbxForgeSearchableChipFieldComponent<T = unknown, M = unknown, H ex
   );
 
   readonly displayValuesSignal = toSignal(this.displayValues$, { initialValue: [] as ConfiguredSearchableValueFieldDisplayValue<T, M>[] });
+
+  // Disabled state propagation
+  private readonly _disabledEffect = effect(() => {
+    toggleDisableFormControl(this.inputCtrl, this.isDisabled());
+  });
 
   private readonly _syncFieldValueEffect = effect(() => {
     const fieldGetter = this.field();

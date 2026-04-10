@@ -33,7 +33,8 @@ export class DocForgeExampleComponentFormComponent extends AbstractConfigAsyncFo
                   useValue: 'example injected value'
                 }
               ]
-            }
+            },
+            allowDisabledEffects: config.allowDisabledEffects ?? true
           }) as any
         ]
       } satisfies FormConfig;

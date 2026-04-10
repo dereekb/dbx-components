@@ -4,6 +4,7 @@ import { type Observable, map } from 'rxjs';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { AbstractConfigAsyncFormlyFormDirective, componentField, provideFormlyContext, DbxFormlyComponent } from '@dereekb/dbx-form';
 import { DbxContentBoxDirective, DbxSectionComponent, DbxLinkComponent } from '@dereekb/dbx-web';
+import { Maybe } from '@dereekb/util';
 
 export const DOC_FORM_EXAMPLE_COMPONENT_DATA_TOKEN = new InjectionToken('DOC_FORM_EXAMPLE_COMPONENT_DATA_TOKEN');
 
@@ -11,6 +12,7 @@ export interface DocFormExampleComponentFormValue {}
 
 export interface DocFormExampleComponentFormConfig {
   componentClass: Type<any>;
+  readonly allowDisabledEffects?: Maybe<boolean>;
 }
 
 @Component({

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, input, type OnDestroy, type OnInit, type Type } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, input, type OnDestroy, type OnInit, type Signal, type Type } from '@angular/core';
 import { MatDividerModule } from '@angular/material/divider';
 import { type Maybe, type PrimativeKey, type ReadKeyFunction, readKeysFrom, convertMaybeToArray, hasDifferentValues } from '@dereekb/util';
 import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
@@ -9,6 +9,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { type FieldTree } from '@angular/forms/signals';
 import { type DynamicText, type FieldMeta, type ValidationMessages, type BaseValueField } from '@ng-forge/dynamic-forms';
 import { isSelectedDecisionFunctionFactory } from '@dereekb/util';
+import { forgeFieldDisabled } from '../../field.disabled';
 
 // MARK: Props
 /**
@@ -78,6 +79,9 @@ export class DbxForgeListSelectionFieldComponent<T = unknown, C extends Abstract
   readonly meta = input<FieldMeta | undefined>();
   readonly validationMessages = input<ValidationMessages | undefined>();
   readonly defaultValidationMessages = input<ValidationMessages | undefined>();
+
+  // Disabled state
+  readonly isDisabled = forgeFieldDisabled();
 
   private readonly _selectionEventSub = new SubscriptionObject();
   private readonly _loadMoreSub = new SubscriptionObject();

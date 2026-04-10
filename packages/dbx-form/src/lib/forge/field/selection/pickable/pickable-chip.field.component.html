@@ -12,8 +12,8 @@
     </div>
   }
   <div class="dbx-pickable-item-field-chips">
-    <mat-chip-listbox [multiple]="multiSelectSignal()" [selectable]="!readonlySignal()" [disabled]="readonlySignal()">
-      @if (showSelectAllButtonSignal() && multiSelectSignal() && !readonlySignal()) {
+    <mat-chip-listbox [multiple]="multiSelectSignal()" [selectable]="!isDisabledOrReadonly()" [disabled]="isDisabledOrReadonly()">
+      @if (showSelectAllButtonSignal() && multiSelectSignal() && !isDisabledOrReadonly()) {
         <mat-chip-option (click)="toggleAll()" [selected]="allSelectedSignal()">
           <span class="dbx-chip-label">All</span>
         </mat-chip-option>

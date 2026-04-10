@@ -422,6 +422,78 @@ describe('DbxForgeFormComponent', () => {
 
       fixture.destroy();
     });
+
+    it('should propagate disabled to DynamicForm via formOptions', async () => {
+      const fixture = TestBed.createComponent(TestForgeFormHostComponent);
+      const forgeComponent = fixture.debugElement.children[0].componentInstance as DbxForgeFormComponent;
+      const context = fixture.componentInstance.context;
+      context.config = createOptionalFieldConfig();
+
+      await settle(fixture);
+
+      // Initially not disabled
+      expect(forgeComponent.isDisabled()).toBe(false);
+      expect(forgeComponent.formOptionsSignal()).toBeUndefined();
+
+      // Disable via context
+      context.setDisabled(undefined, true);
+      await settle(fixture);
+
+      // formOptionsSignal should now return { disabled: true }
+      expect(forgeComponent.isDisabled()).toBe(true);
+      expect(forgeComponent.formOptionsSignal()).toEqual({ disabled: true });
+
+      // The DynamicForm should report disabled
+      const dynamicForm = forgeComponent.dynamicForm();
+      expect(dynamicForm).toBeTruthy();
+      expect(dynamicForm!.disabled()).toBe(true);
+
+      fixture.destroy();
+    });
+
+    it('should propagate disabled to DynamicForm.disabled() signal (form-level, not field-level)', async () => {
+      const fixture = TestBed.createComponent(TestForgeFormHostComponent);
+      const forgeComponent = fixture.debugElement.children[0].componentInstance as DbxForgeFormComponent;
+      const context = fixture.componentInstance.context;
+      context.config = createOptionalFieldConfig();
+
+      await settle(fixture);
+
+      // Disable
+      context.setDisabled(undefined, true);
+      await settle(fixture);
+
+      // DynamicForm exposes a form-level disabled signal
+      const dynamicForm = forgeComponent.dynamicForm();
+      expect(dynamicForm).toBeTruthy();
+      expect(dynamicForm!.disabled()).toBe(true);
+
+      // Note: FormOptions.disabled does NOT propagate to individual FieldState.disabled().
+      // Custom field components use inject(FORM_OPTIONS) to read form-level disabled instead.
+
+      fixture.destroy();
+    });
+
+    it('should re-enable DynamicForm.disabled() after un-disabling', async () => {
+      const fixture = TestBed.createComponent(TestForgeFormHostComponent);
+      const forgeComponent = fixture.debugElement.children[0].componentInstance as DbxForgeFormComponent;
+      const context = fixture.componentInstance.context;
+      context.config = createOptionalFieldConfig();
+
+      await settle(fixture);
+
+      // Disable then re-enable
+      context.setDisabled(undefined, true);
+      await settle(fixture);
+
+      context.setDisabled(undefined, false);
+      await settle(fixture);
+
+      const dynamicForm = forgeComponent.dynamicForm();
+      expect(dynamicForm!.disabled()).toBe(false);
+
+      fixture.destroy();
+    });
   });
 });
 

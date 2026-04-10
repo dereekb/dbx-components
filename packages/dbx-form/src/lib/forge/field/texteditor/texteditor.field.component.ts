@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input, type OnDestroy, type OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, type OnDestroy, type OnInit, type Signal } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { Editor, NgxEditorModule } from '@bobbyquantum/ngx-editor';
 import { debounceTime, filter } from 'rxjs';
@@ -9,6 +9,8 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { NgClass } from '@angular/common';
 import { type FieldTree } from '@angular/forms/signals';
 import { type DynamicText, type FieldMeta, type ValidationMessages, type BaseValueField } from '@ng-forge/dynamic-forms';
+import { forgeFieldDisabled } from '../field.disabled';
+import { toggleDisableFormControl } from '../../../form/form';
 
 // MARK: Forge Text Editor Field Props
 /**
@@ -78,6 +80,9 @@ export class DbxForgeTextEditorFieldComponent implements OnInit, OnDestroy {
 
   readonly editorFormControl = new FormControl<string>('', { nonNullable: true });
 
+  // Disabled state
+  readonly isDisabled = forgeFieldDisabled();
+
   readonly compactClass$ = mapCompactModeObs(this._compactContextStore?.mode$, {
     compact: 'dbx-texteditor-field-compact'
   }).pipe(filterMaybe());
@@ -99,6 +104,12 @@ export class DbxForgeTextEditorFieldComponent implements OnInit, OnDestroy {
   get editor(): Editor {
     return this._editor;
   }
+
+  // Disabled state propagation
+  private readonly _disabledEffect = effect(() => {
+    const disabled = this.isDisabled();
+    toggleDisableFormControl(this.editorFormControl, disabled);
+  });
 
   private readonly _syncFieldToEditor = effect(() => {
     const fieldSignal = this.field();

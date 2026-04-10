@@ -18,6 +18,7 @@ import { type DynamicText, type ValidationMessages, DEFAULT_PROPS, DEFAULT_VALID
 import { resolveValueFieldContext, buildValueFieldInputs } from '@ng-forge/dynamic-forms/integration';
 import { MATERIAL_CONFIG } from '@ng-forge/dynamic-forms-material';
 import type { FieldTree } from '@angular/forms/signals';
+import { forgeFieldDisabled } from '../../field.disabled';
 
 // MARK: Helper Functions
 function fixedDateRangeInputValueFactory(mode: DbxDateTimeValueMode, timezoneInstance: Maybe<DateTimezoneUtcNormalInstance>): (input: Maybe<DateRangeWithDateOrStringValue>) => Maybe<DateRange> {
@@ -218,14 +219,7 @@ export class ForgeFixedDateRangeFieldComponent {
     }
   });
 
-  readonly isDisabled = computed(() => {
-    try {
-      const state = this.field()?.() as any;
-      return (state?.disabled?.() as boolean) ?? false;
-    } catch {
-      return false;
-    }
-  });
+  readonly isDisabled = forgeFieldDisabled();
 
   readonly valueMode = computed(() => this.props()?.valueMode ?? DbxDateTimeValueMode.DATE);
   readonly showRangeInput = computed(() => this.props()?.showRangeInput ?? true);

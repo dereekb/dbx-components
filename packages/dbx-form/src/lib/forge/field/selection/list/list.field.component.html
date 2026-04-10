@@ -1,4 +1,4 @@
-<div class="dbx-list-item-field" dbxListItemModifier [dbxListItemIsSelectedModifier]="isSelectedModifierFunctionSignal()">
+<div class="dbx-list-item-field" [class.dbx-forge-disabled]="isDisabled()" dbxListItemModifier [dbxListItemIsSelectedModifier]="isSelectedModifierFunctionSignal()">
   @if (labelSignal()) {
     <span class="dbx-label dbx-label-padded">{{ labelSignal() }}</span>
   }

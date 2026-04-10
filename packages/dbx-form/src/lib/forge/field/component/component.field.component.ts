@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, type Signal } from '@angular/core';
 import { type DbxInjectionComponentConfig, DbxInjectionComponent } from '@dereekb/dbx-core';
 import { type FieldTree } from '@angular/forms/signals';
 import { type DynamicText, type FieldMeta, type ValidationMessages, type BaseValueField } from '@ng-forge/dynamic-forms';
 import { type Maybe } from '@dereekb/util';
+import { forgeFieldDisabled } from '../field.disabled';
 
 // MARK: Forge Component Field Props
 /**
@@ -21,6 +22,13 @@ export interface ForgeComponentFieldProps<T = unknown> {
    * The injection component configuration that describes which component to render.
    */
   readonly componentField: DbxInjectionComponentConfig<T>;
+  /**
+   * Whether to visually indicate the disabled state on this component.
+   *
+   * Defaults to `true`. Set to `false` for display-only components that should
+   * remain visually unchanged when the form is disabled.
+   */
+  readonly allowDisabledEffects?: boolean;
 }
 
 /**
@@ -46,7 +54,8 @@ export interface ForgeComponentFieldDef<T = unknown> extends BaseValueField<Forg
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   host: {
-    '[class]': 'className()'
+    '[class]': 'className()',
+    '[class.dbx-forge-disabled]': 'showDisabledState()'
   }
 })
 export class DbxForgeComponentFieldComponent<T = unknown> {
@@ -61,6 +70,10 @@ export class DbxForgeComponentFieldComponent<T = unknown> {
   readonly meta = input<FieldMeta | undefined>();
   readonly validationMessages = input<ValidationMessages | undefined>();
   readonly defaultValidationMessages = input<ValidationMessages | undefined>();
+
+  // Disabled state
+  readonly isDisabled = forgeFieldDisabled();
+  readonly showDisabledState = computed(() => this.isDisabled() && (this.props()?.allowDisabledEffects ?? true));
 
   readonly configSignal = computed((): Maybe<DbxInjectionComponentConfig<T>> => {
     return this.props()?.componentField;

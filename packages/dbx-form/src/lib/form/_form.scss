@@ -65,6 +65,40 @@
       }
     }
   }
+
+  // Generic forge disabled class for fields that only need CSS-based disabling.
+  .dbx-forge-disabled {
+    opacity: 0.38;
+    pointer-events: none;
+  }
+
+  // Form-level disabled state: disables all interactive elements inside a forge form.
+  // Applied to <dbx-forge> host when the form is disabled. This handles built-in ng-forge
+  // material fields (input, textarea, select, datepicker, toggle, checkbox) that don't
+  // have custom disabled propagation. Custom forge field components additionally use
+  // inject(FORM_OPTIONS) for programmatic disabled handling (e.g. disabling FormControls).
+  .dbx-forge-form-disabled {
+    // Disable pointer events on all standard interactive elements
+    input,
+    textarea,
+    select,
+    button,
+    mat-select,
+    mat-slider,
+    mat-checkbox,
+    mat-slide-toggle,
+    mat-chip-listbox,
+    mat-chip-grid,
+    .mat-mdc-form-field {
+      pointer-events: none;
+    }
+
+    // Reduce opacity on form fields to indicate disabled state
+    .mat-mdc-form-field,
+    .dbx-forge-styled-box {
+      opacity: 0.38;
+    }
+  }
 }
 
 @mixin theme($theme-config) {

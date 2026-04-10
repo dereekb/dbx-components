@@ -15,6 +15,8 @@ import { type TimeDurationData, durationDataToMilliseconds, formatDurationString
 import { DbxPopoverService } from '@dereekb/dbx-web';
 import { DbxDurationPickerPopoverComponent } from '../../../../formly/field/value/duration/duration.picker.popover.component';
 import type { TimeDurationFieldValueMode } from '../../../../formly/field/value/duration/duration.field';
+import { forgeFieldDisabled } from '../../field.disabled';
+import { toggleDisableFormControl } from '../../../../form/form';
 
 /**
  * Custom props for the forge time duration field.
@@ -134,6 +136,9 @@ export class ForgeTimeDurationFieldComponent {
     return units;
   });
 
+  // Disabled state
+  readonly isDisabled = forgeFieldDisabled();
+
   // Error handling
   readonly resolvedErrors = createResolvedErrorsSignal(this.field as Signal<FieldTree<unknown>>, this.validationMessages, this.defaultValidationMessages);
   readonly showErrors = shouldShowErrors(this.field as Signal<FieldTree<unknown>>);
@@ -145,6 +150,12 @@ export class ForgeTimeDurationFieldComponent {
   private _syncing = false;
 
   constructor() {
+    // Disabled state propagation
+    effect(() => {
+      const disabled = this.isDisabled();
+      toggleDisableFormControl(this.textCtrl, disabled);
+    });
+
     // Sync Signal Forms field -> text control (inbound)
     effect(() => {
       const fieldTree = this.field();

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, input, type OnDestroy, type OnInit, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, input, type OnDestroy, type OnInit, type Signal, viewChild } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { MatOptgroup, MatOption, MatSelect } from '@angular/material/select';
 import { type Maybe, type PrimativeKey, addToSetCopy, asArray, convertMaybeToArray, filterMaybeArrayValues, lastValue, makeValuesGroupMap, mergeArrays, separateValues, setContainsAllValues, setsAreEquivalent, sortByStringFunction } from '@dereekb/util';
@@ -9,6 +9,8 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { type FieldTree } from '@angular/forms/signals';
 import { type DynamicText, type FieldMeta, type ValidationMessages, type BaseValueField } from '@ng-forge/dynamic-forms';
 import { type SourceSelectDisplayFunction, type SourceSelectDisplayValue, type SourceSelectDisplayValueGroup, type SourceSelectLoadSource, type SourceSelectLoadSourceLoadingState, type SourceSelectMetaValueReader, type SourceSelectOpenFunction, type SourceSelectOpenSourceResult, type SourceSelectLoadSourcesFunction, type SourceSelectOptions, type SourceSelectValue, type SourceSelectValueGroup, type SourceSelectValueMetaLoader } from '../../../../formly/field/selection/sourceselect/sourceselect';
+import { forgeFieldDisabled } from '../../field.disabled';
+import { toggleDisableFormControl } from '../../../../form/form';
 
 // MARK: Props
 /**
@@ -77,6 +79,9 @@ export class DbxForgeSourceSelectFieldComponent<T extends PrimativeKey = Primati
   readonly defaultValidationMessages = input<ValidationMessages | undefined>();
 
   readonly selectCtrl = new FormControl<T | T[] | null>(null);
+
+  // Disabled state
+  readonly isDisabled = forgeFieldDisabled();
 
   private readonly _cacheMetaSub = new SubscriptionObject();
   private readonly _clearDisplayHashMapSub = new SubscriptionObject();
@@ -280,6 +285,11 @@ export class DbxForgeSourceSelectFieldComponent<T extends PrimativeKey = Primati
   readonly filteredGroupedOptionsSignal = toSignal(this.filteredOptions$.pipe(map((x) => x.groupedValues)));
 
   readonly context = loadingStateContext({ obs: this.allOptionGroupsState$ });
+
+  // Disabled state propagation
+  private readonly _disabledEffect = effect(() => {
+    toggleDisableFormControl(this.selectCtrl, this.isDisabled());
+  });
 
   // Sync field value to _valuesSubject
   private readonly _syncFieldValueEffect = effect(() => {

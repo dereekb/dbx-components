@@ -1,4 +1,5 @@
 export * from './field';
+export * from './field.disabled';
 export * from './value';
 export * from './selection';
 export * from './checklist';

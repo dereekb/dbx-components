@@ -3,7 +3,7 @@
     <mat-label>{{ label() | dynamicText | async }}</mat-label>
   }
   <input matInput type="text" [formControl]="textCtrl" (blur)="onTextBlur()" (keydown.enter)="onTextEnter($event)" placeholder="e.g. 2h30m" />
-  <button mat-icon-button matSuffix type="button" #pickerButton (click)="openPicker()" aria-label="Open duration picker">
+  <button mat-icon-button matSuffix type="button" #pickerButton (click)="openPicker()" [disabled]="isDisabled()" aria-label="Open duration picker">
     <mat-icon>schedule</mat-icon>
   </button>
   @if (errorsToDisplay()[0]; as error) {

@@ -2,7 +2,7 @@ import { incrementingNumberTimer, SubscriptionObject, successResult } from '@der
 import { type OnDestroy, Component, type OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { BehaviorSubject, map } from 'rxjs';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
-import { DbxFormFormlyTextFieldModule, DbxFormFormlyWrapperModule, type DbxFormSourceDirectiveMode, textField, forgeTextField, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormLoadingSourceDirective, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
+import { DbxFormFormlyTextFieldModule, DbxFormFormlyWrapperModule, type DbxFormSourceDirectiveMode, textField, forgeTextField, forgeEmailField, forgeToggleField, forgeNumberField, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormLoadingSourceDirective, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { DbxContentContainerDirective, DbxContentBorderDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
@@ -48,6 +48,10 @@ export class DocFormDirectiveComponent implements OnInit, OnDestroy {
         required: true
       })
     ]
+  };
+
+  readonly forgeAllInputsConfig: FormConfig = {
+    fields: [forgeTextField({ key: 'name', label: 'Name', required: true, placeholder: 'Enter a name...' }), forgeEmailField({ key: 'email' }), forgeNumberField({ key: 'age', label: 'Age', min: 0, max: 120 }), forgeToggleField({ key: 'active', label: 'Active', description: 'Toggle active state.' })]
   };
 
   readonly testFieldsA: FormlyFieldConfig[] = this.testFields();

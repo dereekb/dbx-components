@@ -1,6 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, type OnInit, type Signal, viewChild } from '@angular/core';
-import { DynamicForm } from '@ng-forge/dynamic-forms';
+import { DynamicForm, type FormOptions } from '@ng-forge/dynamic-forms';
 import type { ValidationError } from '@angular/forms/signals';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { EMPTY } from 'rxjs';
+import { BooleanStringKeyArrayUtility } from '@dereekb/util';
 import { ForgeWrapperFieldDirective } from './wrapper.field';
 import { DbxForgeFormContext } from '../../form/forge.context';
 
@@ -25,7 +28,7 @@ import { DbxForgeFormContext } from '../../form/forge.context';
   selector: 'dbx-forge-wrapper-content',
   template: `
     @if (wrapper.childConfigSignal()) {
-      <form [dynamic-form]="wrapper.childConfigSignal()!" [(value)]="wrapper.childValueSignal"></form>
+      <form [dynamic-form]="wrapper.childConfigSignal()!" [(value)]="wrapper.childValueSignal" [formOptions]="formOptionsSignal()"></form>
     }
   `,
   imports: [DynamicForm],
@@ -37,6 +40,12 @@ export class ForgeWrapperContentComponent implements OnInit {
 
   private readonly _context = inject(DbxForgeFormContext, { optional: true });
   private readonly _destroyRef = inject(DestroyRef);
+
+  private readonly _contextDisabled = toSignal(this._context?.disabled$ ?? EMPTY, { initialValue: undefined });
+
+  readonly formOptionsSignal = computed((): FormOptions | undefined => {
+    return BooleanStringKeyArrayUtility.isTrue(this._contextDisabled()) ? { disabled: true } : undefined;
+  });
 
   /**
    * Reference to the child DynamicForm instance.

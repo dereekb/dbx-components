@@ -3,7 +3,7 @@ import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ChangeDetectionStrategy, signal, provideZonelessChangeDetection } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
-import { type FormConfig, DynamicForm, EventDispatcher, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
+import { type FormConfig, type FormOptions, DynamicForm, EventDispatcher, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
 import { BehaviorSubject, of, first, skip } from 'rxjs';
 import { startOfDay, addHours, addDays } from 'date-fns';
 import { provideDbxForgeFormFieldDeclarations } from '../../../forge.providers';
@@ -19,7 +19,7 @@ import { DateCellScheduleDayCode, findMaxDate, findMinDate } from '@dereekb/date
 @Component({
   template: `
     @if (config) {
-      <form [dynamic-form]="config" [(value)]="formValue"></form>
+      <form [dynamic-form]="config" [(value)]="formValue" [formOptions]="formOptions()"></form>
     }
   `,
   standalone: true,
@@ -30,6 +30,7 @@ import { DateCellScheduleDayCode, findMaxDate, findMinDate } from '@dereekb/date
 class TestForgeDateTimeHostComponent {
   config!: FormConfig;
   readonly formValue = signal<any>({});
+  readonly formOptions = signal<FormOptions | undefined>(undefined);
 }
 
 // MARK: Test Providers (zoneless)
@@ -1877,5 +1878,73 @@ describe('forgeDateTimeRangeField() integration', () => {
 
     expect(host.formValue()).toEqual(settled);
     fixture.destroy();
+  });
+
+  // MARK: Disabled State
+  describe('disabled state via formOptions', () => {
+    it('should report isDisabled=true when formOptions.disabled is true', async () => {
+      const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+      const host = fixture.componentInstance;
+
+      host.config = createConfig({ key: 'dt', required: false });
+      host.formValue.set({ dt: addHours(startOfDay(new Date()), 10) });
+      await settle(fixture);
+
+      const dtComponent = getDateTimeComponent(fixture);
+      expect(dtComponent).toBeTruthy();
+      expect(dtComponent!.isDisabled()).toBe(false);
+
+      // Enable disabled via formOptions
+      host.formOptions.set({ disabled: true });
+      await settle(fixture);
+
+      expect(dtComponent!.isDisabled()).toBe(true);
+      fixture.destroy();
+    });
+
+    it('should disable date and time form controls when formOptions.disabled is true', async () => {
+      const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+      const host = fixture.componentInstance;
+
+      host.config = createConfig({ key: 'dt', required: false });
+      host.formValue.set({ dt: addHours(startOfDay(new Date()), 10) });
+      await settle(fixture);
+
+      const dtComponent = getDateTimeComponent(fixture);
+      expect(dtComponent).toBeTruthy();
+      expect(dtComponent!.dateCtrl.disabled).toBe(false);
+      expect(dtComponent!.timeCtrl.disabled).toBe(false);
+
+      // Disable
+      host.formOptions.set({ disabled: true });
+      await settle(fixture);
+
+      expect(dtComponent!.dateCtrl.disabled).toBe(true);
+      expect(dtComponent!.timeCtrl.disabled).toBe(true);
+      fixture.destroy();
+    });
+
+    it('should re-enable controls after formOptions.disabled is removed', async () => {
+      const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+      const host = fixture.componentInstance;
+
+      host.config = createConfig({ key: 'dt', required: false });
+      host.formValue.set({ dt: addHours(startOfDay(new Date()), 10) });
+      await settle(fixture);
+
+      const dtComponent = getDateTimeComponent(fixture);
+
+      // Disable then re-enable
+      host.formOptions.set({ disabled: true });
+      await settle(fixture);
+      expect(dtComponent!.isDisabled()).toBe(true);
+
+      host.formOptions.set(undefined);
+      await settle(fixture);
+      expect(dtComponent!.isDisabled()).toBe(false);
+      expect(dtComponent!.dateCtrl.disabled).toBe(false);
+
+      fixture.destroy();
+    });
   });
 });

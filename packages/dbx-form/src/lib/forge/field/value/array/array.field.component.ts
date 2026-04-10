@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, input, signal, type Signal } from '@angular/core';
 import { type CdkDragDrop, CdkDropList, CdkDrag, CdkDragHandle, CdkDragPlaceholder } from '@angular/cdk/drag-drop';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -8,6 +8,7 @@ import { DynamicForm } from '@ng-forge/dynamic-forms';
 import { type FactoryWithRequiredInput } from '@dereekb/util';
 import { DbxButtonComponent, DbxButtonSpacerDirective, type DbxButtonStyle } from '@dereekb/dbx-web';
 import type { ForgeArrayFieldProps, ForgeArrayItemPair } from './array.field';
+import { forgeFieldDisabled } from '../../field.disabled';
 
 /**
  * Internal state for a single array item.
@@ -64,6 +65,10 @@ export class ForgeArrayFieldComponent<T = unknown> {
     const fields = Array.isArray(template) ? template : [template];
     return { fields } as unknown as FormConfig;
   });
+
+  // Disabled state
+  readonly isDisabled = forgeFieldDisabled();
+  readonly formOptionsSignal = computed(() => (this.isDisabled() ? { disabled: true } : undefined));
 
   readonly disableRearrangeSignal = computed(() => this.props()?.disableRearrange ?? false);
   readonly allowAddSignal = computed(() => this.props()?.allowAdd ?? true);

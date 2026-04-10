@@ -1,5 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, type Signal, viewChild } from '@angular/core';
 import { DynamicTextPipe, type FieldWithValidation } from '@ng-forge/dynamic-forms';
+import type { FieldTree } from '@angular/forms/signals';
+import { forgeFieldDisabled } from '../../field.disabled';
 import { AsyncPipe } from '@angular/common';
 import { AbstractForgeWrapperFieldComponent, provideDbxForgeWrapperFieldDirective } from '../wrapper.field';
 import { ForgeWrapperContentComponent } from '../wrapper.content.component';
@@ -122,6 +124,28 @@ import type { ForgeFormFieldWrapperProps } from './formfield.field';
         box-sizing: border-box;
       }
 
+      /* --- Disabled state --- */
+      .dbx-forge-form-field-wrapper-disabled .dbx-forge-form-field-content {
+        opacity: 0.38;
+        pointer-events: none;
+      }
+
+      .dbx-forge-form-field-wrapper-disabled .dbx-forge-form-field-outline-leading,
+      .dbx-forge-form-field-wrapper-disabled .dbx-forge-form-field-outline-notch,
+      .dbx-forge-form-field-wrapper-disabled .dbx-forge-form-field-outline-trailing {
+        border-color: var(--mdc-outlined-text-field-disabled-outline-color, rgba(0, 0, 0, 0.12));
+      }
+
+      .dbx-forge-form-field-wrapper-disabled:hover .dbx-forge-form-field-outline-leading,
+      .dbx-forge-form-field-wrapper-disabled:hover .dbx-forge-form-field-outline-notch,
+      .dbx-forge-form-field-wrapper-disabled:hover .dbx-forge-form-field-outline-trailing {
+        border-color: var(--mdc-outlined-text-field-disabled-outline-color, rgba(0, 0, 0, 0.12));
+      }
+
+      .dbx-forge-form-field-wrapper-disabled .dbx-forge-form-field-outline-label {
+        color: var(--mdc-outlined-text-field-disabled-label-text-color, rgba(0, 0, 0, 0.38));
+      }
+
       /* --- Subscript area --- */
       .mat-mdc-form-field-subscript-wrapper {
         padding: 0 16px;
@@ -140,6 +164,9 @@ import type { ForgeFormFieldWrapperProps } from './formfield.field';
 })
 export class ForgeFormFieldWrapperComponent extends AbstractForgeWrapperFieldComponent<ForgeFormFieldWrapperProps> {
   readonly contentRef = viewChild(ForgeWrapperContentComponent);
+
+  // Disabled state
+  readonly isDisabled = forgeFieldDisabled();
 
   // Child form validation state via content component
   readonly childErrors = computed(() => this.contentRef()?.errors() ?? []);

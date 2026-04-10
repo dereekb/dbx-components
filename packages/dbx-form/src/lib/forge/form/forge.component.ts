@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, type OnInit, type OnDestroy, computed, inject, signal, effect, untracked, viewChild } from '@angular/core';
-import { DynamicForm, EventDispatcher } from '@ng-forge/dynamic-forms';
+import { DynamicForm, EventDispatcher, type FormOptions } from '@ng-forge/dynamic-forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxForm, type DbxFormEvent, DbxFormState, DbxMutableForm } from '../../form/form';
 import { type BooleanStringKeyArray, BooleanStringKeyArrayUtility } from '@dereekb/util';
@@ -16,10 +16,13 @@ import { DbxForgeFormContext } from './forge.context';
   selector: 'dbx-forge',
   template: `
     @if (configSignal()) {
-      <form [dynamic-form]="configSignal()!" [(value)]="formValue"></form>
+      <form [dynamic-form]="configSignal()!" [(value)]="formValue" [formOptions]="formOptionsSignal()"></form>
     }
   `,
-  host: { class: 'dbx-forge' },
+  host: {
+    class: 'dbx-forge',
+    '[class.dbx-forge-form-disabled]': 'isDisabled()'
+  },
   providers: [EventDispatcher, { provide: DbxForm, useExisting: DbxForgeFormContext }, { provide: DbxMutableForm, useExisting: DbxForgeFormContext }],
   imports: [DynamicForm],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -42,6 +45,10 @@ export class DbxForgeFormComponent<T = unknown> implements OnInit, OnDestroy {
   private readonly _disabled = signal<BooleanStringKeyArray>(undefined);
 
   readonly isDisabled = computed(() => BooleanStringKeyArrayUtility.isTrue(this._disabled()));
+
+  readonly formOptionsSignal = computed((): FormOptions | undefined => {
+    return this.isDisabled() ? { disabled: true } : undefined;
+  });
 
   /**
    * Computed validity combining the ng-forge DynamicForm's valid signal with

@@ -6,6 +6,7 @@ import { DynamicTextPipe, type DynamicText, type ValidationMessages, DEFAULT_PRO
 import { resolveValueFieldContext, buildValueFieldInputs, createResolvedErrorsSignal, shouldShowErrors } from '@ng-forge/dynamic-forms/integration';
 import { MATERIAL_CONFIG } from '@ng-forge/dynamic-forms-material';
 import type { FieldTree } from '@angular/forms/signals';
+import { forgeFieldDisabled } from '../../field.disabled';
 
 /**
  * Custom props for the forge slider field.
@@ -110,6 +111,15 @@ export type ForgeSliderFieldDef = BaseValueField<ForgeSliderFieldProps, number> 
       .dbx-forge-slider-error {
         color: var(--mat-form-field-error-text-color, var(--mat-sys-error, #f44336));
       }
+
+      .dbx-forge-slider-disabled {
+        opacity: 0.38;
+        pointer-events: none;
+      }
+
+      .dbx-forge-slider-disabled:hover {
+        border-color: var(--mdc-outlined-text-field-outline-color, var(--mat-sys-outline, rgba(0, 0, 0, 0.38)));
+      }
     `
   ]
 })
@@ -135,6 +145,9 @@ export class ForgeSliderFieldComponent {
   readonly discrete: Signal<boolean> = computed(() => this.props()?.thumbLabel ?? this.props()?.showThumbLabel ?? false);
   readonly showTickMarks: Signal<boolean> = computed(() => this.props()?.tickInterval !== undefined);
   readonly color: Signal<ThemePalette> = computed(() => this.props()?.color ?? 'primary');
+
+  // Disabled state
+  readonly isDisabled = forgeFieldDisabled();
 
   // Current value from field tree
   readonly currentValue: Signal<number> = computed(() => this.field()().value() ?? 0);

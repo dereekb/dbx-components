@@ -10,6 +10,8 @@ import { MATERIAL_CONFIG } from '@ng-forge/dynamic-forms-material';
 import type { FieldTree } from '@angular/forms/signals';
 import { type Maybe, e164PhoneNumberExtensionPair, e164PhoneNumberFromE164PhoneNumberExtensionPair, type E164PhoneNumber, type E164PhoneNumberExtensionPair } from '@dereekb/util';
 import { isPhoneExtension } from '../../../../validator/phone';
+import { forgeFieldDisabled } from '../../field.disabled';
+import { toggleDisableFormControl } from '../../../../form/form';
 
 /**
  * Custom props for the forge phone field.
@@ -109,6 +111,9 @@ export class ForgePhoneFieldComponent {
   readonly effectiveAppearance = computed(() => this.props()?.appearance ?? this.materialConfig?.appearance ?? 'outline');
   readonly effectiveAutocomplete = computed(() => this.props()?.autocomplete ?? 'off');
 
+  // Disabled state
+  readonly isDisabled = forgeFieldDisabled();
+
   // Error handling
   readonly resolvedErrors = createResolvedErrorsSignal(this.field, this.validationMessages, this.defaultValidationMessages);
   readonly showErrors = shouldShowErrors(this.field);
@@ -120,6 +125,13 @@ export class ForgePhoneFieldComponent {
   private _syncing = false;
 
   constructor() {
+    // Disabled state propagation
+    effect(() => {
+      const disabled = this.isDisabled();
+      toggleDisableFormControl(this.phoneCtrl, disabled);
+      toggleDisableFormControl(this.extensionCtrl, disabled);
+    });
+
     // Sync Signal Forms field -> FormControl (inbound)
     effect(() => {
       const fieldTree = this.field();

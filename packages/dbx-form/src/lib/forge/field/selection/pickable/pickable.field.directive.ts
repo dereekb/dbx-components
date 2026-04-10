@@ -1,4 +1,4 @@
-import { computed, Directive, effect, input, type OnDestroy, type OnInit } from '@angular/core';
+import { computed, Directive, effect, input, type OnDestroy, type OnInit, type Signal } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { type Maybe, type PrimativeKey, filterUniqueValues, convertMaybeToArray, type ArrayOrValue, type Configurable } from '@dereekb/util';
 import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
@@ -9,6 +9,8 @@ import { type FieldTree } from '@angular/forms/signals';
 import { type DynamicText, type FieldMeta, type ValidationMessages, type BaseValueField } from '@ng-forge/dynamic-forms';
 import { type PickableValueFieldDisplayFunction, type PickableValueFieldDisplayValue, type PickableValueFieldFilterFunction, type PickableValueFieldHashFunction, type PickableValueFieldLoadValuesFunction, type PickableValueFieldValue } from '../../../../formly/field/selection/pickable/pickable';
 import { type PickableItemFieldItem, type PickableItemFieldItemSortFn } from '../../../../formly/field/selection/pickable/pickable.field.directive';
+import { forgeFieldDisabled } from '../../field.disabled';
+import { toggleDisableFormControl } from '../../../../form/form';
 
 // MARK: Field Type Names
 /**
@@ -103,11 +105,13 @@ export abstract class AbstractForgePickableItemFieldDirective<T = unknown, M = u
 
   readonly hintSignal = computed(() => this.props()?.hint);
   readonly multiSelectSignal = computed(() => this.props()?.multiSelect ?? true);
+  readonly isDisabled = forgeFieldDisabled();
   readonly readonlySignal = computed(() => {
     const fieldGetter = this.field();
     const fieldState = typeof fieldGetter === 'function' ? (fieldGetter as any)() : undefined;
     return fieldState?.readonly?.() ?? false;
   });
+  readonly isDisabledOrReadonly = computed(() => this.isDisabled() || this.readonlySignal());
   readonly showSelectAllButtonSignal = computed(() => this.props()?.showSelectAllButton ?? false);
   readonly showTextFilterSignal = computed(() => this.props()?.showTextFilter ?? Boolean(this.props()?.filterValues));
   readonly filterLabelSignal = computed(() => this.props()?.filterLabel);

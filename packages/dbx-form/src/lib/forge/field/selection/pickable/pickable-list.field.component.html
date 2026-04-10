@@ -13,7 +13,7 @@
   }
   <div class="dbx-pickable-item-field-list">
     <div class="dbx-pickable-item-field-list-content">
-      <mat-chip-listbox [multiple]="multiSelectSignal()" [selectable]="!readonlySignal()" [disabled]="readonlySignal()">
+      <mat-chip-listbox [multiple]="multiSelectSignal()" [selectable]="!isDisabledOrReadonly()" [disabled]="isDisabledOrReadonly()">
         @for (item of itemsSignal(); track item.key) {
           <mat-chip-option (click)="itemClicked(item)" [selected]="item.selected" [disabled]="readonlySignal() || item.disabled">
             @if (item.itemValue.icon) {

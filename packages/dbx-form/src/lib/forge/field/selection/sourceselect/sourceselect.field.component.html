@@ -21,7 +21,7 @@
         </mat-optgroup>
       }
     </mat-select>
-    @if (showOpenSourceButtonSignal()) {
+    @if (showOpenSourceButtonSignal() && !isDisabled()) {
       <dbx-button-spacer></dbx-button-spacer>
       <dbx-action dbxActionValue [dbxActionHandler]="handleSelectOptions" class="dbx-source-select-field-button">
         <dbx-button #button dbxActionButton [fab]="true" [iconOnly]="true" [icon]="selectButtonIconSignal()"></dbx-button>

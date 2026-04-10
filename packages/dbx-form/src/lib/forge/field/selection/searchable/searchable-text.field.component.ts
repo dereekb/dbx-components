@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, input, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, input, type Signal, viewChild } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule, type MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MatIconModule } from '@angular/material/icon';
@@ -12,6 +12,8 @@ import { type FieldTree } from '@angular/forms/signals';
 import { type SearchableValueFieldDisplayValue, type ConfiguredSearchableValueFieldDisplayValue } from '../../../../formly/field/selection/searchable/searchable';
 import { DbxSearchableFieldAutocompleteItemComponent } from '../../../../formly/field/selection/searchable/searchable.field.autocomplete.item.component';
 import { AbstractForgeSearchableFieldDirective, type ForgeSearchableTextFieldProps } from './searchable.field.directive';
+import { forgeFieldDisabled } from '../../field.disabled';
+import { toggleDisableFormControl } from '../../../../form/form';
 
 /**
  * Forge ValueFieldComponent for searchable text selection (single value).
@@ -32,6 +34,9 @@ export class DbxForgeSearchableTextFieldComponent<T = unknown, M = unknown, H ex
 
   private readonly _singleValueSyncSub = new SubscriptionObject();
   private readonly _valuesSubject = new BehaviorSubject<T[]>([]);
+
+  // Disabled state
+  readonly isDisabled = forgeFieldDisabled();
 
   readonly showClearValueSignal = computed(() => this.props()?.showClearValue ?? true);
   readonly searchLabelSignal = computed(() => this.props()?.searchLabel ?? 'Search');
@@ -59,6 +64,11 @@ export class DbxForgeSearchableTextFieldComponent<T = unknown, M = unknown, H ex
     const p = this.props();
     const showSelected = p?.showSelectedValue ?? !(p?.allowStringValues ?? false);
     return showSelected && this.hasValueSignal();
+  });
+
+  // Disabled state propagation
+  private readonly _disabledEffect = effect(() => {
+    toggleDisableFormControl(this.inputCtrl, this.isDisabled());
   });
 
   private readonly _syncFieldValueEffect = effect(() => {

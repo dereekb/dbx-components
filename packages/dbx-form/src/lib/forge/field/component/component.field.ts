@@ -34,6 +34,13 @@ export interface ForgeComponentFieldConfig<T = unknown> {
    * The injection component configuration describing which component to render.
    */
   readonly componentField: DbxInjectionComponentConfig<T>;
+  /**
+   * Whether to visually indicate the disabled state on this component.
+   *
+   * Defaults to `true`. Set to `false` for display-only components that should
+   * remain visually unchanged when the form is disabled.
+   */
+  readonly allowDisabledEffects?: boolean;
 }
 
 /**
@@ -63,7 +70,7 @@ export interface ForgeComponentFieldConfig<T = unknown> {
 let _componentFieldCounter = 0;
 
 export function forgeComponentField<T = unknown>(config: ForgeComponentFieldConfig<T>): ForgeComponentFieldDef<T> {
-  const { key, label, componentField } = config;
+  const { key, label, componentField, allowDisabledEffects } = config;
 
   return forgeField(
     filterFromPOJO({
@@ -71,9 +78,10 @@ export function forgeComponentField<T = unknown>(config: ForgeComponentFieldConf
       type: FORGE_COMPONENT_FIELD_TYPE,
       label: label ?? '',
       value: undefined as unknown,
-      props: {
-        componentField
-      } as ForgeComponentFieldProps<T>
+      props: filterFromPOJO({
+        componentField,
+        allowDisabledEffects
+      }) as ForgeComponentFieldProps<T>
     }) as ForgeComponentFieldDef<T>
   );
 }

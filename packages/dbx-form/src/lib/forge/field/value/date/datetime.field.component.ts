@@ -26,6 +26,7 @@ import { DbxDateTimeFieldMenuPresetsService } from '../../../../formly/field/val
 import { DateDistancePipe, TimeDistancePipe, GetValuePipe } from '@dereekb/dbx-core';
 import { type ErrorStateMatcher } from '@angular/material/core';
 import { toggleDisableFormControl } from '../../../../form/form';
+import { forgeFieldDisabled } from '../../field.disabled';
 import { type ForgeDateTimeSyncField } from './datetime.field';
 import { buildCombinedDateTime, applyTimeOffset, mergePickerConfig, filterPresets, computeErrorMessage, computeDateKeyboardStep, computeTimeKeyboardStep, navigateDate, type DateTimeCalcInput } from './datetime.calc';
 
@@ -275,14 +276,7 @@ export class ForgeDateTimeFieldComponent {
     }
   });
 
-  readonly isDisabled = computed(() => {
-    try {
-      const state = this.field()?.() as any;
-      return (state?.disabled?.() as boolean) ?? false;
-    } catch {
-      return false;
-    }
-  });
+  readonly isDisabled = forgeFieldDisabled();
 
   // MARK: Observable pipelines
 
