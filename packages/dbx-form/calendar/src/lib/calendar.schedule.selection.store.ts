@@ -895,7 +895,11 @@ export function updateStateWithDateCellScheduleRangeValue(state: CalendarSchedul
     return state;
   } else {
     if (change != null) {
-      const nextState: CalendarScheduleSelectionState = { ...state, inputStart: change.start, inputEnd: change.end, toggledIndexes: new Set(change.ex) };
+      // The incoming ex indexes are relative to change.start, but toggledIndexes must be
+      // relative to state.start. Adjust by the offset between them.
+      const inputStartIndex = state.indexFactory(change.start);
+      const adjustedEx = inputStartIndex !== 0 && change.ex ? change.ex.map((i) => i + inputStartIndex) : (change.ex ?? []);
+      const nextState: CalendarScheduleSelectionState = { ...state, inputStart: change.start, inputEnd: change.end, toggledIndexes: new Set(adjustedEx) };
       return updateStateWithChangedScheduleDays(finalizeNewCalendarScheduleSelectionState(nextState), expandDateCellScheduleDayCodes(change.w || '89'));
     } else {
       return noSelectionCalendarScheduleSelectionState(state); // clear selection, retain disabled days
@@ -1300,7 +1304,7 @@ export function computeScheduleSelectionValue(state: CalendarScheduleSelectionSt
 
   // If computeSelectionResultRelativeToFilter is true, then we need to offset the values to be relative to that start.
   if (computeSelectionResultRelativeToFilter && filter?.start) {
-    start = filter.start; // always start at the filter's start date
+    start = filter.start; // start at the filter's start date
     let startInSystemTimezone = start;
 
     if (filter.timezone) {
@@ -1313,8 +1317,25 @@ export function computeScheduleSelectionValue(state: CalendarScheduleSelectionSt
     const rangeStartIndex = systemIndexFactory(rangeStart);
     const startIndex = systemIndexFactory(startInSystemTimezone);
     const filterStartIndexOffset = rangeStartIndex - startIndex;
-    filterOffsetExcludedRange = range(0, filterStartIndexOffset);
-    indexOffset = indexOffset - filterStartIndexOffset;
+
+    // When minMaxDateRange constrains the start to after filter.start,
+    // use rangeStart as the output start instead of filter.start.
+    // This prevents outputting a start date that violates the minMaxDateRange
+    // and avoids the round-trip corruption when the value is synced back to the store.
+    if (filterStartIndexOffset > 0 && state.minMaxDateRange?.start) {
+      // rangeStart already respects minMaxDateRange. Convert it to the filter's timezone for the output.
+      if (filter.timezone) {
+        const filterNormal = dateTimezoneUtcNormal(filter.timezone);
+        start = filterNormal.startOfDayInTargetTimezone(rangeStart);
+      } else {
+        start = rangeStart;
+      }
+      // No filter offset exclusions needed since start is at the selection start.
+      // indexOffset stays as dateCellRange.i (relative to state.start → rangeStart).
+    } else {
+      filterOffsetExcludedRange = range(0, filterStartIndexOffset);
+      indexOffset = indexOffset - filterStartIndexOffset;
+    }
   }
 
   const excluded = computeSelectionResultRelativeToFilter

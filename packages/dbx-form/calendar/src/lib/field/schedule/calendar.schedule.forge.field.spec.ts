@@ -402,6 +402,31 @@ describe('forgeDateScheduleRangeField()', () => {
         expect(roundTrippedState.currentSelectionValue?.dateScheduleRange.ex).toEqual(originalValue!.dateScheduleRange.ex);
       });
 
+      it('should preserve a toggled middle day after round-trip', () => {
+        let state = initialCalendarScheduleSelectionState();
+        state = updateStateWithFilter(state, filterConfig);
+        state = updateStateWithMinMaxDateRange(state, minMaxDateRange);
+        state = updateStateWithInitialSelectionState(state, 'all');
+
+        // Toggle a middle day (e.g., minDateOffset + 2 days from today) to exclude it
+        const middleDay = addDays(today, minDateOffset + 2);
+        state = updateStateWithChangedDates(state, { toggle: middleDay });
+
+        const valueBeforeRoundTrip = state.currentSelectionValue;
+        expect(valueBeforeRoundTrip).toBeDefined();
+
+        // The middle day should be excluded
+        expect(valueBeforeRoundTrip!.dateScheduleRange.ex?.length).toBeGreaterThan(0);
+
+        // Round-trip the value back through the store
+        const afterRoundTrip = updateStateWithDateCellScheduleRangeValue(state, valueBeforeRoundTrip!.dateScheduleRange);
+        const valueAfterRoundTrip = afterRoundTrip.currentSelectionValue;
+        expect(valueAfterRoundTrip).toBeDefined();
+
+        // The exclusion should be preserved — the toggled day must NOT "fill back up"
+        expect(valueAfterRoundTrip!.dateScheduleRange.ex).toEqual(valueBeforeRoundTrip!.dateScheduleRange.ex);
+      });
+
       it('should produce consistent values across multiple round-trips', () => {
         let state = initialCalendarScheduleSelectionState();
         state = updateStateWithFilter(state, filterConfig);
