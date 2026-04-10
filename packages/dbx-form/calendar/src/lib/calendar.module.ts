@@ -5,7 +5,7 @@ import { DbxScheduleSelectionCalendarDateDaysComponent } from './calendar.schedu
 import { DbxScheduleSelectionCalendarDatePopoverComponent } from './calendar.schedule.selection.popover.component';
 import { DbxScheduleSelectionCalendarDatePopoverContentComponent } from './calendar.schedule.selection.popover.content.component';
 import { DbxScheduleSelectionCalendarDateRangeComponent } from './calendar.schedule.selection.range.component';
-import { DbxScheduleSelectionCalendarDateDaysFormComponent } from './calendar.schedule.selection.days.form.component';
+import { DbxScheduleSelectionCalendarDateDaysFormComponent } from './field/selection/calendar.schedule.selection.days.form.component';
 import { DbxScheduleSelectionCalendarCellComponent } from './calendar.schedule.selection.cell.component';
 import { DbxCalendarScheduleSelectionStoreInjectionBlockDirective } from './calendar.schedule.selection.store.provide';
 import { DbxScheduleSelectionCalendarDateDialogComponent } from './calendar.schedule.selection.dialog.component';
