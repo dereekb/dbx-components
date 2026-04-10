@@ -22,7 +22,6 @@ import { DBX_FORGE_INFO_WRAPPER_FIELD_TYPE } from './field/wrapper/info/info.wra
 import { DBX_FORGE_STYLE_FIELD_TYPE } from './field/wrapper/style/style.field';
 import { DBX_FORGE_WORKING_FIELD_TYPE } from './field/wrapper/working/working.field';
 import { DBX_FORGE_WORKING_WRAPPER_FIELD_TYPE } from './field/wrapper/working/working.wrapper.field';
-import { DBX_FORGE_AUTOTOUCH_FIELD_TYPE } from './field/wrapper/autotouch/autotouch.field';
 import { DBX_FORGE_ARRAY_FIELD_TYPE } from './field/value/array/array.field';
 import { FORGE_SLIDER_FIELD_TYPE, sliderFieldMapper } from './field/value/number/slider.field.component';
 
@@ -125,7 +124,6 @@ export const DBX_FORGE_FIELD_TYPES: FieldTypeDefinition[] = [
   DBX_FORGE_STYLE_FIELD_TYPE,
   DBX_FORGE_WORKING_FIELD_TYPE,
   DBX_FORGE_WORKING_WRAPPER_FIELD_TYPE,
-  DBX_FORGE_AUTOTOUCH_FIELD_TYPE,
   DBX_FORGE_ARRAY_FIELD_TYPE
 ];
 

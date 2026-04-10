@@ -6,4 +6,3 @@ export * from './expand';
 export * from './info';
 export * from './style';
 export * from './working';
-export * from './autotouch';

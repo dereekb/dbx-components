@@ -244,14 +244,6 @@ export interface DbxForgeDateTimeFieldConfig {
    * based on the values of other date fields in the same form.
    */
   readonly getSyncFieldsObs?: () => Observable<ArrayOrValue<DbxForgeDateTimeSyncField>>;
-
-  // --- Deprecated/unsupported in forge (kept for interface parity) ---
-  /**
-   * Whether to include a time input alongside the date picker.
-   *
-   * @deprecated Use `timeMode` instead. Kept for backward compatibility.
-   */
-  readonly showTime?: boolean;
 }
 
 /**
@@ -278,15 +270,9 @@ export interface DbxForgeDateTimeFieldConfig {
 export function forgeDateTimeField(config: DbxForgeDateTimeFieldConfig): DbxForgeDateTimeFieldDef {
   const { key, label, required, readonly: isReadonly, description, ...rest } = config;
 
-  // Map showTime to timeMode for backward compatibility
-  let effectiveTimeMode = rest.timeMode;
-  if (effectiveTimeMode === undefined && rest.showTime === false) {
-    effectiveTimeMode = 'none' as DbxDateTimeFieldTimeMode;
-  }
-
   const props: DbxForgeDateTimeFieldComponentProps = filterFromPOJO({
     timeOnly: rest.timeOnly,
-    timeMode: effectiveTimeMode,
+    timeMode: rest.timeMode,
     valueMode: rest.valueMode,
     dateLabel: rest.dateLabel,
     timeLabel: rest.timeLabel,

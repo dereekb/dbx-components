@@ -62,10 +62,6 @@ export interface DbxForgeDateTimeFieldComponentProps {
   readonly appearance?: 'fill' | 'outline';
   readonly hint?: DynamicText;
   readonly getSyncFieldsObs?: () => Observable<ArrayOrValue<DbxForgeDateTimeSyncField>>;
-  /**
-   * @deprecated Use `timeMode` instead.
-   */
-  readonly showTime?: boolean;
 }
 
 // MARK: Time Output Constants
@@ -234,7 +230,6 @@ export class DbxForgeDateTimeFieldComponent {
     if (this.valueMode() === DbxDateTimeValueMode.DAY_STRING) return DbxDateTimeFieldTimeMode.NONE;
     if (p?.timeOnly) return DbxDateTimeFieldTimeMode.REQUIRED;
     if (p?.timeMode) return p.timeMode;
-    if (p?.showTime === false) return DbxDateTimeFieldTimeMode.NONE;
     return DbxDateTimeFieldTimeMode.REQUIRED;
   });
 

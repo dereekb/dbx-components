@@ -3,7 +3,7 @@ import { type TimezoneInfo } from '@dereekb/date';
 import { timezoneStringSearchFunction, DISPLAY_FOR_TIMEZONE_STRING_VALUE } from '../../shared/template/timezone';
 import { forgeSearchableTextField, type DbxForgeSearchableTextFieldConfig } from '../field/selection/searchable/searchable.field';
 import type { DbxForgeFormFieldWrapperFieldDef } from '../field/wrapper/formfield/formfield.field';
-import type { DbxForgeSearchableTextFieldDef } from '../field/selection/searchable/searchable.field.component';
+import type { DbxForgeSearchableTextFieldDef } from '../field/selection/searchable/searchable.field.directive';
 
 /**
  * Configuration for a forge timezone string field.

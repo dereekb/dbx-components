@@ -38,7 +38,6 @@ declare module '@ng-forge/dynamic-forms' {
     'dbx-forge-style': BaseValueField<unknown, unknown>;
     'dbx-forge-working': BaseValueField<unknown, unknown>;
     'dbx-forge-working-wrapper': BaseValueField<unknown, unknown>;
-    'dbx-forge-autotouch': BaseValueField<unknown, unknown>;
     'dbx-forge-array': BaseValueField<unknown, unknown>;
   }
 }

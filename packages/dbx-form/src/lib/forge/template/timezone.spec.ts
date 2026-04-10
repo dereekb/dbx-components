@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { firstValueFrom } from 'rxjs';
 import { forgeTimezoneStringField } from './timezone';
-import type { DbxForgeSearchableTextFieldDef } from '../field/selection/searchable/searchable.field.component';
+import type { DbxForgeSearchableTextFieldDef } from '../field/selection/searchable/searchable.field.directive';
 
 describe('forgeTimezoneStringField()', () => {
   function innerField(config?: Parameters<typeof forgeTimezoneStringField>[0]): DbxForgeSearchableTextFieldDef {

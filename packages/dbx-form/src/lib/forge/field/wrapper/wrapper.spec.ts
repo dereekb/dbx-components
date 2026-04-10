@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { forgeRow, forgeGroup, forgeSectionGroup, forgeSubsectionGroup, forgeFlexRow, flexSizeToCol, forgeWithClassName, forgeStyledGroup, forgeToggleWrapper, forgeExpandWrapper, forgeInfoWrapper, forgeWorkingWrapper, forgeAutoTouchWrapper } from './wrapper';
+import { forgeRow, forgeGroup, forgeWithClassName, forgeToggleWrapper, forgeExpandWrapper } from './wrapper';
 import { forgeDbxSectionFieldWrapper, forgeDbxSubsectionFieldWrapper, FORGE_SECTION_FIELD_TYPE_NAME } from './section/section.field';
 import { forgeFormFieldWrapper, FORGE_FORM_FIELD_WRAPPER_TYPE_NAME } from './formfield/formfield.field';
 import { forgeExpandField, FORGE_EXPAND_FIELD_TYPE_NAME } from './expand/expand.field';
@@ -8,7 +8,6 @@ import { forgeInfoFieldWrapper, FORGE_INFO_WRAPPER_FIELD_TYPE_NAME } from './inf
 import { forgeStyleWrapper, FORGE_STYLE_FIELD_TYPE_NAME } from './style/style.field';
 import { forgeWorkingField, FORGE_WORKING_FIELD_TYPE_NAME } from './working/working.field';
 import { forgeWorkingFieldWrapper, FORGE_WORKING_WRAPPER_FIELD_TYPE_NAME } from './working/working.wrapper.field';
-import { forgeAutoTouchField, FORGE_AUTOTOUCH_FIELD_TYPE_NAME } from './autotouch/autotouch.field';
 
 // MARK: forgeRow
 describe('forgeRow()', () => {
@@ -38,87 +37,12 @@ describe('forgeRow()', () => {
 
   it('should set className when provided', () => {
     const row = forgeRow({ fields: [], className: 'my-row' });
-    expect((row as unknown as Record<string, unknown>).className).toBe('my-row');
+    expect((row as unknown as Record<string, unknown>)['className']).toBe('my-row');
   });
 
   it('should not set className when not provided', () => {
     const row = forgeRow({ fields: [] });
-    expect((row as unknown as Record<string, unknown>).className).toBeUndefined();
-  });
-});
-
-// MARK: flexSizeToCol
-describe('flexSizeToCol()', () => {
-  it('should map size 1 to col 2', () => {
-    expect(flexSizeToCol(1)).toBe(2);
-  });
-
-  it('should map size 2 to col 4', () => {
-    expect(flexSizeToCol(2)).toBe(4);
-  });
-
-  it('should map size 3 to col 6', () => {
-    expect(flexSizeToCol(3)).toBe(6);
-  });
-
-  it('should map size 6 to col 12', () => {
-    expect(flexSizeToCol(6)).toBe(12);
-  });
-
-  it('should clamp to max col 12', () => {
-    expect(flexSizeToCol(7)).toBe(12);
-  });
-
-  it('should clamp to min col 1', () => {
-    expect(flexSizeToCol(0)).toBe(1);
-  });
-});
-
-// MARK: forgeFlexRow
-describe('forgeFlexRow()', () => {
-  it('should create a row field with correct type', () => {
-    const row = forgeFlexRow({ fields: [] });
-    expect(row.type).toBe('row');
-  });
-
-  it('should apply default size 2 (col 4) to plain field defs', () => {
-    const field = { key: 'test', type: 'input' as const, label: 'Test' };
-    const row = forgeFlexRow({ fields: [field] });
-    expect((row.fields[0] as Record<string, unknown>).col).toBe(4);
-  });
-
-  it('should apply explicit size from field config', () => {
-    const row = forgeFlexRow({
-      fields: [{ field: { key: 'test', type: 'input' as const, label: 'Test' }, size: 3 }]
-    });
-    expect((row.fields[0] as Record<string, unknown>).col).toBe(6);
-  });
-
-  it('should apply custom defaultSize', () => {
-    const field = { key: 'test', type: 'input' as const, label: 'Test' };
-    const row = forgeFlexRow({ fields: [field], defaultSize: 6 });
-    expect((row.fields[0] as Record<string, unknown>).col).toBe(12);
-  });
-
-  it('should set dbx-flex-group className by default', () => {
-    const row = forgeFlexRow({ fields: [] });
-    expect((row as unknown as Record<string, unknown>).className).toBe('dbx-flex-group');
-  });
-
-  it('should use custom className when provided', () => {
-    const row = forgeFlexRow({ fields: [], className: 'custom' });
-    expect((row as unknown as Record<string, unknown>).className).toBe('custom');
-  });
-
-  it('should handle mixed plain fields and field configs', () => {
-    const row = forgeFlexRow({
-      fields: [
-        { key: 'a', type: 'input' as const, label: 'A' },
-        { field: { key: 'b', type: 'input' as const, label: 'B' }, size: 4 }
-      ]
-    });
-    expect((row.fields[0] as Record<string, unknown>).col).toBe(4); // default size 2
-    expect((row.fields[1] as Record<string, unknown>).col).toBe(8); // explicit size 4
+    expect((row as unknown as Record<string, unknown>)['className']).toBeUndefined();
   });
 });
 
@@ -150,13 +74,13 @@ describe('forgeGroup()', () => {
 
   it('should set className when provided', () => {
     const group = forgeGroup({ fields: [], className: 'my-class' });
-    expect((group as unknown as Record<string, unknown>).className).toBe('my-class');
+    expect((group as unknown as Record<string, unknown>)['className']).toBe('my-class');
   });
 
   it('should set logic when provided', () => {
     const logic = [{ type: 'hidden' as const, condition: true }];
     const group = forgeGroup({ fields: [], logic });
-    expect((group as unknown as Record<string, unknown>).logic).toEqual(logic);
+    expect((group as unknown as Record<string, unknown>)['logic']).toEqual(logic);
   });
 });
 
@@ -231,64 +155,19 @@ describe('forgeDbxSubsectionFieldWrapper()', () => {
   });
 });
 
-// MARK: forgeSectionGroup (deprecated)
-describe('forgeSectionGroup()', () => {
-  it('should delegate to forgeDbxSectionFieldWrapper', () => {
-    const group = forgeSectionGroup({
-      header: 'Header',
-      hint: 'Hint',
-      fields: [{ key: 'a', type: 'input' as const, label: 'A' }]
-    });
-    expect(group.type).toBe(FORGE_SECTION_FIELD_TYPE_NAME);
-    expect(group.props?.headerConfig.header).toBe('Header');
-    expect(group.props?.headerConfig.hint).toBe('Hint');
-  });
-});
-
-// MARK: forgeSubsectionGroup (deprecated)
-describe('forgeSubsectionGroup()', () => {
-  it('should delegate to forgeDbxSubsectionFieldWrapper', () => {
-    const group = forgeSubsectionGroup({
-      header: 'Header',
-      fields: [{ key: 'a', type: 'input' as const, label: 'A' }]
-    });
-    expect(group.type).toBe(FORGE_SECTION_FIELD_TYPE_NAME);
-    expect(group.props?.subsection).toBe(true);
-  });
-});
-
 // MARK: forgeWithClassName
 describe('forgeWithClassName()', () => {
   it('should return a copy of the field with className set', () => {
     const field = { key: 'test', type: 'input' as const, label: 'Test' };
     const styled = forgeWithClassName(field, 'my-class');
-    expect(styled.className).toBe('my-class');
+    expect((styled as unknown as Record<string, unknown>)['className']).toBe('my-class');
     expect(styled.key).toBe('test');
   });
 
   it('should not mutate the original field', () => {
     const field = { key: 'test', type: 'input' as const, label: 'Test' };
     forgeWithClassName(field, 'my-class');
-    expect((field as Record<string, unknown>).className).toBeUndefined();
-  });
-});
-
-// MARK: forgeStyledGroup
-describe('forgeStyledGroup()', () => {
-  it('should create a group with the provided className', () => {
-    const group = forgeStyledGroup({ fields: [], className: 'highlight' });
-    expect((group as unknown as Record<string, unknown>).className).toBe('highlight');
-  });
-
-  it('should include the provided fields', () => {
-    const fields = [{ key: 'a', type: 'input' as const, label: 'A' }];
-    const group = forgeStyledGroup({ fields, className: 'test' });
-    expect(group.fields.length).toBe(1);
-  });
-
-  it('should use provided key', () => {
-    const group = forgeStyledGroup({ fields: [], className: 'test', key: 'myGroup' });
-    expect(group.key).toBe('myGroup');
+    expect((field as unknown as Record<string, unknown>)['className']).toBeUndefined();
   });
 });
 
@@ -306,46 +185,46 @@ describe('forgeToggleWrapper()', () => {
     expect(row.fields.length).toBe(2);
 
     const toggleField = row.fields[0] as Record<string, unknown>;
-    expect(toggleField.type).toBe('toggle');
+    expect(toggleField['type']).toBe('toggle');
 
     const contentGroup = row.fields[1] as Record<string, unknown>;
-    expect(contentGroup.type).toBe('group');
+    expect(contentGroup['type']).toBe('group');
   });
 
   it('should auto-generate a toggle key with _toggle_ prefix', () => {
     const row = forgeToggleWrapper({ fields: [] });
     const toggleField = row.fields[0] as Record<string, unknown>;
-    expect((toggleField.key as string).startsWith('_toggle_')).toBe(true);
+    expect((toggleField['key'] as string).startsWith('_toggle_')).toBe(true);
   });
 
   it('should use a custom toggle key when provided', () => {
     const row = forgeToggleWrapper({ key: 'myToggle', fields: [] });
     const toggleField = row.fields[0] as Record<string, unknown>;
-    expect(toggleField.key).toBe('myToggle');
+    expect(toggleField['key']).toBe('myToggle');
   });
 
   it('should set toggle label', () => {
     const row = forgeToggleWrapper({ label: 'Show more', fields: [] });
     const toggleField = row.fields[0] as Record<string, unknown>;
-    expect(toggleField.label).toBe('Show more');
+    expect(toggleField['label']).toBe('Show more');
   });
 
   it('should default toggle value to false', () => {
     const row = forgeToggleWrapper({ fields: [] });
     const toggleField = row.fields[0] as Record<string, unknown>;
-    expect(toggleField.value).toBe(false);
+    expect(toggleField['value']).toBe(false);
   });
 
   it('should set toggle value to true when defaultOpen is true', () => {
     const row = forgeToggleWrapper({ fields: [], defaultOpen: true });
     const toggleField = row.fields[0] as Record<string, unknown>;
-    expect(toggleField.value).toBe(true);
+    expect(toggleField['value']).toBe(true);
   });
 
   it('should set hidden logic on the content group', () => {
     const row = forgeToggleWrapper({ key: 'myToggle', fields: [] });
     const contentGroup = row.fields[1] as Record<string, unknown>;
-    const logic = contentGroup.logic as Array<{ type: string; condition: Record<string, unknown> }>;
+    const logic = contentGroup['logic'] as Array<{ type: string; condition: Record<string, unknown> }>;
 
     expect(logic).toBeDefined();
     expect(logic.length).toBe(1);
@@ -360,12 +239,12 @@ describe('forgeToggleWrapper()', () => {
 
   it('should set className on the outer row', () => {
     const row = forgeToggleWrapper({ fields: [], className: 'my-wrapper' });
-    expect((row as unknown as Record<string, unknown>).className).toBe('my-wrapper');
+    expect((row as unknown as Record<string, unknown>)['className']).toBe('my-wrapper');
   });
 
   it('should use default className when not provided', () => {
     const row = forgeToggleWrapper({ fields: [] });
-    expect((row as unknown as Record<string, unknown>).className).toBe('dbx-forge-toggle-wrapper');
+    expect((row as unknown as Record<string, unknown>)['className']).toBe('dbx-forge-toggle-wrapper');
   });
 });
 
@@ -421,28 +300,28 @@ describe('forgeExpandWrapper()', () => {
     expect(row.fields.length).toBe(2);
 
     const expandField = row.fields[0] as Record<string, unknown>;
-    expect(expandField.type).toBe(FORGE_EXPAND_FIELD_TYPE_NAME);
+    expect(expandField['type']).toBe(FORGE_EXPAND_FIELD_TYPE_NAME);
 
     const contentGroup = row.fields[1] as Record<string, unknown>;
-    expect(contentGroup.type).toBe('group');
+    expect(contentGroup['type']).toBe('group');
   });
 
   it('should auto-generate an expand key with _expand_ prefix', () => {
     const row = forgeExpandWrapper({ fields: [] });
     const expandField = row.fields[0] as Record<string, unknown>;
-    expect((expandField.key as string).startsWith('_expand_')).toBe(true);
+    expect((expandField['key'] as string).startsWith('_expand_')).toBe(true);
   });
 
   it('should use a custom expand key when provided', () => {
     const row = forgeExpandWrapper({ key: 'myExpand', fields: [] });
     const expandField = row.fields[0] as Record<string, unknown>;
-    expect(expandField.key).toBe('myExpand');
+    expect(expandField['key']).toBe('myExpand');
   });
 
   it('should set hidden logic on the content group', () => {
     const row = forgeExpandWrapper({ key: 'myExpand', fields: [] });
     const contentGroup = row.fields[1] as Record<string, unknown>;
-    const logic = contentGroup.logic as Array<{ type: string; condition: Record<string, unknown> }>;
+    const logic = contentGroup['logic'] as Array<{ type: string; condition: Record<string, unknown> }>;
 
     expect(logic).toBeDefined();
     expect(logic.length).toBe(1);
@@ -458,18 +337,18 @@ describe('forgeExpandWrapper()', () => {
   it('should pass buttonType to expand field', () => {
     const row = forgeExpandWrapper({ fields: [], buttonType: 'button' });
     const expandField = row.fields[0] as Record<string, unknown>;
-    const props = expandField.props as { buttonType: string };
+    const props = expandField['props'] as { buttonType: string };
     expect(props.buttonType).toBe('button');
   });
 
   it('should use default className when not provided', () => {
     const row = forgeExpandWrapper({ fields: [] });
-    expect((row as unknown as Record<string, unknown>).className).toBe('dbx-forge-expand-wrapper');
+    expect((row as unknown as Record<string, unknown>)['className']).toBe('dbx-forge-expand-wrapper');
   });
 
   it('should use custom className when provided', () => {
     const row = forgeExpandWrapper({ fields: [], className: 'my-expand' });
-    expect((row as unknown as Record<string, unknown>).className).toBe('my-expand');
+    expect((row as unknown as Record<string, unknown>)['className']).toBe('my-expand');
   });
 });
 
@@ -512,51 +391,6 @@ describe('forgeInfoButtonField()', () => {
   });
 });
 
-// MARK: forgeInfoWrapper
-describe('forgeInfoWrapper()', () => {
-  it('should create a row field', () => {
-    const row = forgeInfoWrapper({
-      field: { key: 'a', type: 'input' as const, label: 'A' },
-      onInfoClick: () => {
-        /* noop */
-      }
-    });
-    expect(row.type).toBe('row');
-  });
-
-  it('should contain the field and an info button', () => {
-    const row = forgeInfoWrapper({
-      field: { key: 'a', type: 'input' as const, label: 'A' },
-      onInfoClick: () => {
-        /* noop */
-      }
-    });
-    expect(row.fields.length).toBe(2);
-
-    const mainField = row.fields[0] as Record<string, unknown>;
-    expect(mainField.key).toBe('a');
-    expect(mainField.col).toBe(11);
-
-    const infoField = row.fields[1] as Record<string, unknown>;
-    expect(infoField.type).toBe(FORGE_INFO_BUTTON_FIELD_TYPE_NAME);
-    expect(infoField.col).toBe(1);
-  });
-
-  it('should use custom col values', () => {
-    const row = forgeInfoWrapper({
-      field: { key: 'a', type: 'input' as const, label: 'A' },
-      onInfoClick: () => {
-        /* noop */
-      },
-      fieldCol: 10,
-      buttonCol: 2
-    });
-
-    expect((row.fields[0] as Record<string, unknown>).col).toBe(10);
-    expect((row.fields[1] as Record<string, unknown>).col).toBe(2);
-  });
-});
-
 // MARK: forgeWorkingField
 describe('forgeWorkingField()', () => {
   it('should create a field with the correct type', () => {
@@ -572,25 +406,6 @@ describe('forgeWorkingField()', () => {
   it('should pass watchFieldKey through props', () => {
     const field = forgeWorkingField({ watchFieldKey: 'username' });
     expect(field.props?.watchFieldKey).toBe('username');
-  });
-});
-
-// MARK: forgeWorkingWrapper
-describe('forgeWorkingWrapper()', () => {
-  it('should create a group field', () => {
-    const group = forgeWorkingWrapper({ key: 'name', type: 'input' as const, label: 'Name' });
-    expect(group.type).toBe('group');
-  });
-
-  it('should contain the original field and a working indicator', () => {
-    const group = forgeWorkingWrapper({ key: 'name', type: 'input' as const, label: 'Name' });
-    expect(group.fields.length).toBe(2);
-
-    const mainField = group.fields[0] as Record<string, unknown>;
-    expect(mainField.key).toBe('name');
-
-    const workingField = group.fields[1] as Record<string, unknown>;
-    expect(workingField.type).toBe(FORGE_WORKING_FIELD_TYPE_NAME);
   });
 });
 
@@ -734,48 +549,6 @@ describe('forgeWorkingFieldWrapper()', () => {
   it('should initialize value as empty object', () => {
     const field = forgeWorkingFieldWrapper({ fields: [] });
     expect(field.value).toEqual({});
-  });
-});
-
-// MARK: forgeAutoTouchField (deprecated)
-describe('forgeAutoTouchField()', () => {
-  it('should create a field with the correct type', () => {
-    const field = forgeAutoTouchField({ watchFieldKey: 'name' });
-    expect(field.type).toBe(FORGE_AUTOTOUCH_FIELD_TYPE_NAME);
-  });
-
-  it('should auto-generate a key', () => {
-    const field = forgeAutoTouchField({ watchFieldKey: 'name' });
-    expect(field.key).toContain('_autotouch_');
-  });
-
-  it('should set hidden to true', () => {
-    const field = forgeAutoTouchField({ watchFieldKey: 'name' });
-    expect((field as Record<string, unknown>).hidden).toBe(true);
-  });
-
-  it('should pass watchFieldKey through props', () => {
-    const field = forgeAutoTouchField({ watchFieldKey: 'name' });
-    expect(field.props?.watchFieldKey).toBe('name');
-  });
-});
-
-// MARK: forgeAutoTouchWrapper (deprecated)
-describe('forgeAutoTouchWrapper()', () => {
-  it('should create a row field', () => {
-    const row = forgeAutoTouchWrapper({ key: 'name', type: 'input' as const, label: 'Name' });
-    expect(row.type).toBe('row');
-  });
-
-  it('should contain the original field and an autotouch field', () => {
-    const row = forgeAutoTouchWrapper({ key: 'name', type: 'input' as const, label: 'Name' });
-    expect(row.fields.length).toBe(2);
-
-    const mainField = row.fields[0] as Record<string, unknown>;
-    expect(mainField.key).toBe('name');
-
-    const autoTouchField = row.fields[1] as Record<string, unknown>;
-    expect(autoTouchField.type).toBe(FORGE_AUTOTOUCH_FIELD_TYPE_NAME);
   });
 });
 
