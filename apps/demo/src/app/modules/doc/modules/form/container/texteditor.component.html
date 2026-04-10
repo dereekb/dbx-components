@@ -1,9 +1,12 @@
 <dbx-content-container>
   <doc-feature-layout header="Text Editor" hint="">
-    <doc-feature-derived type="uses" from="sibiraj-s/ngx-editor" url="https://github.com/sibiraj-s/ngx-editor"></doc-feature-derived>
+    <doc-feature-derived type="uses" from="@bobbyquantum/ngx-editor" url="https://github.com/bobbyquantum/ngx-editor"></doc-feature-derived>
     <!-- Examples -->
     <doc-feature-example header="textEditorField()" hint="The text editor is a fully usable text editor that takes in and exports an HTML string.">
-      <doc-form-example-form [dbxFormlyFields]="textEditorField"></doc-form-example-form>
+      <doc-feature-form-tabs #formTabs formlyFn="formlyTextEditorField()" forgeFn="forgeTextEditorField()">
+        <doc-form-example-form formly [dbxFormlyFields]="textEditorField" [disabled]="formTabs.disabled()"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeTextEditorFieldConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
+      </doc-feature-form-tabs>
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

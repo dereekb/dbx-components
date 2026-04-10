@@ -151,7 +151,7 @@ function timeDurationMinMaxValidator(config: Partial<TimeDurationFieldConfig>): 
  * });
  * ```
  */
-export function timeDurationField(config: Partial<TimeDurationFieldConfig> = {}): FormlyFieldConfig {
+export function formlyTimeDurationField(config: Partial<TimeDurationFieldConfig> = {}): FormlyFieldConfig {
   const { key = 'duration', outputUnit, valueMode, allowedUnits, pickerUnits, min, max, carryOver, materialFormField } = config;
 
   const validators: ValidatorFn[] = [];
@@ -177,3 +177,9 @@ export function timeDurationField(config: Partial<TimeDurationFieldConfig> = {})
     ...validatorsForFieldConfig({ validators })
   });
 }
+
+// MARK: Deprecated Aliases
+/**
+ * @deprecated Use formlyTimeDurationField instead.
+ */
+export const timeDurationField = formlyTimeDurationField;

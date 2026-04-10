@@ -5,7 +5,7 @@
     "@angular/common": "21.2.3",
     "@angular/core": "21.2.3",
     "@angular/fire": "21.0.0-rc.0-canary.ac3dd7c",
-    "@angular/material": "21.2.3",
+    "@angular/material": "^21.2.3",
     "@dereekb/date": "13.7.0",
     "@dereekb/dbx-analytics": "13.7.0",
     "@dereekb/dbx-core": "13.7.0",

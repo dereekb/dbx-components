@@ -4,7 +4,7 @@
   "peerDependencies": {
     "@angular/common": "21.2.3",
     "@angular/core": "21.2.3",
-    "@angular/material": "21.2.3",
+    "@angular/material": "^21.2.3",
     "@dereekb/dbx-core": "13.7.0",
     "@dereekb/dbx-web": "13.7.0",
     "@dereekb/rxjs": "13.7.0",

@@ -1,6 +1,6 @@
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { Validators, type AbstractControl } from '@angular/forms';
-import { type TextFieldConfig, textField } from './text.field';
+import { type TextFieldConfig, formlyTextField } from './text.field';
 import { type LabeledFieldConfig, type DescriptionFieldConfig, validatorsForFieldConfig } from '../../field';
 import { LAT_LNG_PATTERN, US_STATE_CODE_STRING_REGEX, ZIP_CODE_STRING_REGEX } from '@dereekb/util';
 import { ADDRESS_CITY_MAX_LENGTH, ADDRESS_STATE_CODE_MAX_LENGTH, ADDRESS_STATE_MAX_LENGTH, ADDRESS_COUNTRY_MAX_LENGTH, ADDRESS_ZIP_MAX_LENGTH } from '@dereekb/model';
@@ -31,10 +31,10 @@ export const SEARCH_STRING_MAX_LENGTH = 100;
  * const field = nameField({ required: true });
  * ```
  */
-export function nameField(config: Partial<TextFieldConfig> = {}): FormlyFieldConfig {
+export function formlyNameField(config: Partial<TextFieldConfig> = {}): FormlyFieldConfig {
   const { key = 'name', label = 'Name', placeholder = 'John Doe', required = false, minLength, maxLength, attributes } = config;
 
-  return textField({
+  return formlyTextField({
     ...config,
     key,
     label,
@@ -65,9 +65,9 @@ export interface EmailFieldConfig extends Partial<LabeledFieldConfig>, Descripti
  * const field = emailField({ required: true });
  * ```
  */
-export function emailField(config: EmailFieldConfig = {}): FormlyFieldConfig {
+export function formlyEmailField(config: EmailFieldConfig = {}): FormlyFieldConfig {
   const { key = 'email', label = 'Email Address', placeholder = 'you@example.com' } = config;
-  const emailFieldConfig = textField({
+  const emailFieldConfig = formlyTextField({
     ...config,
     key,
     label,
@@ -102,9 +102,9 @@ export type CityFieldConfig = Partial<TextFieldConfig>;
  * const field = cityField({ required: true });
  * ```
  */
-export function cityField(config: CityFieldConfig = {}): FormlyFieldConfig {
+export function formlyCityField(config: CityFieldConfig = {}): FormlyFieldConfig {
   const { key = 'city', placeholder = '', label = 'City', autocomplete = 'city', maxLength = ADDRESS_CITY_MAX_LENGTH, required = false } = config;
-  return textField({
+  return formlyTextField({
     ...config,
     key,
     placeholder,
@@ -139,9 +139,9 @@ export interface StateFieldConfig extends Partial<TextFieldConfig> {
  * const field = stateField({ asCode: true, required: true });
  * ```
  */
-export function stateField(config: StateFieldConfig = {}): FormlyFieldConfig {
+export function formlyStateField(config: StateFieldConfig = {}): FormlyFieldConfig {
   const { asCode = false, pattern = asCode ? US_STATE_CODE_STRING_REGEX : undefined, key = 'state', placeholder = '', label = 'State', autocomplete = 'state', maxLength = asCode ? ADDRESS_STATE_CODE_MAX_LENGTH : ADDRESS_STATE_MAX_LENGTH, transform, required = false } = config;
-  return textField({
+  return formlyTextField({
     ...config,
     key,
     placeholder,
@@ -174,9 +174,9 @@ export type CountryFieldConfig = Partial<TextFieldConfig>;
  * const field = countryField({ required: true });
  * ```
  */
-export function countryField(config: CountryFieldConfig = {}): FormlyFieldConfig {
+export function formlyCountryField(config: CountryFieldConfig = {}): FormlyFieldConfig {
   const { key = 'country', placeholder = '', label = 'Country', autocomplete = 'country', maxLength = ADDRESS_COUNTRY_MAX_LENGTH, required = false } = config;
-  return textField({
+  return formlyTextField({
     ...config,
     key,
     placeholder,
@@ -204,9 +204,9 @@ export type ZipCodeFieldConfig = Partial<TextFieldConfig>;
  * const field = zipCodeField({ required: true });
  * ```
  */
-export function zipCodeField(config: ZipCodeFieldConfig = {}): FormlyFieldConfig {
+export function formlyZipCodeField(config: ZipCodeFieldConfig = {}): FormlyFieldConfig {
   const { key = 'zip', placeholder = '', label = 'Zip Code', autocomplete = 'postal-code', pattern = ZIP_CODE_STRING_REGEX, maxLength = ADDRESS_ZIP_MAX_LENGTH, required = false } = config;
-  return textField({
+  return formlyTextField({
     ...config,
     key,
     placeholder,
@@ -240,9 +240,9 @@ export const DEFAULT_LAT_LNG_TEXT_FIELD_PATTERN_MESSAGE = `Invalid/unknown coord
  * const field = latLngTextField();
  * ```
  */
-export function latLngTextField({ key = 'latLng' }: Partial<TextFieldConfig> = {}): FormlyFieldConfig {
+export function formlyLatLngTextField({ key = 'latLng' }: Partial<TextFieldConfig> = {}): FormlyFieldConfig {
   return {
-    ...textField({
+    ...formlyTextField({
       key,
       label: 'Coordinates',
       placeholder: DEFAULT_LAT_LNG_TEXT_FIELD_PLACEHOLDER,
@@ -256,3 +256,33 @@ export function latLngTextField({ key = 'latLng' }: Partial<TextFieldConfig> = {
     })
   };
 }
+
+// MARK: Deprecated Aliases
+/**
+ * @deprecated Use formlyNameField instead.
+ */
+export const nameField = formlyNameField;
+/**
+ * @deprecated Use formlyEmailField instead.
+ */
+export const emailField = formlyEmailField;
+/**
+ * @deprecated Use formlyCityField instead.
+ */
+export const cityField = formlyCityField;
+/**
+ * @deprecated Use formlyStateField instead.
+ */
+export const stateField = formlyStateField;
+/**
+ * @deprecated Use formlyCountryField instead.
+ */
+export const countryField = formlyCountryField;
+/**
+ * @deprecated Use formlyZipCodeField instead.
+ */
+export const zipCodeField = formlyZipCodeField;
+/**
+ * @deprecated Use formlyLatLngTextField instead.
+ */
+export const latLngTextField = formlyLatLngTextField;

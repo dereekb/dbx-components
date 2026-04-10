@@ -1,0 +1,62 @@
+@use '../../../style/theming';
+
+// MARK: Variables
+$dbx-forge-form-field-slider-thumb-margin: 22px;
+
+// MARK: Mixin
+@mixin core() {
+  // Forge form-field wrapper: suppress child field label/hint/error inside the wrapper.
+  // The wrapper provides its own label (notched outline), hint, and error subscript.
+  dbx-forge-form-field-wrapper {
+    .slider-label,
+    mat-error,
+    [matError],
+    .mat-hint,
+    .df-mat-error,
+    .df-mat-hint {
+      display: none !important;
+    }
+  }
+
+  // Slider margin fix for the form-field wrapper (mirrors the formly number slider fix).
+  // Adds margin so the slider thumb doesn't overlap the outlined border.
+  dbx-forge-form-field-wrapper .mat-mdc-slider {
+    margin: $dbx-forge-form-field-slider-thumb-margin $dbx-forge-form-field-slider-thumb-margin 0;
+    width: calc(100% - #{$dbx-forge-form-field-slider-thumb-margin * 2}) !important;
+  }
+
+  // List selection field inside the form-field wrapper: reduce padding so the list
+  // items render at full width within the outlined border. Uses !important to
+  // override the component's scoped inline styles (ViewEncapsulation.Emulated
+  // adds attribute selectors that raise specificity above global rules).
+  dbx-forge-form-field-wrapper .dbx-forge-form-field-content:has(dbx-forge-list-selection-field) {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  // When a child field shows an inline error (e.g. searchable chip input validation),
+  // hide the wrapper's subscript hint so the error effectively replaces it.
+  dbx-forge-form-field-wrapper:has(.dbx-chip-input-error) .mat-mdc-form-field-hint-wrapper {
+    display: none;
+  }
+
+  // The wrapper's mat-mdc-form-field host class causes Angular Material's
+  // form-field line-height (24px) and letter-spacing (0.496px) to cascade
+  // into all descendants. For list selection fields this distorts the list
+  // item layout. Reset typography on the list field element so descendant
+  // components inherit normal values instead of the form-field overrides.
+  dbx-forge-form-field-wrapper dbx-forge-list-selection-field {
+    display: block;
+    line-height: normal;
+    letter-spacing: normal;
+  }
+
+  // Shared working bar spacing used by both the working field and working wrapper field.
+  .dbx-forge-working-bar {
+    margin-top: 4px;
+  }
+}
+
+@mixin theme($theme-config) {
+}

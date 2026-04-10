@@ -19,7 +19,7 @@ export interface WebsiteUrlFieldConfig extends Omit<TextFieldConfig, 'inputType'
  * @param config - Optional configuration for the website URL field.
  * @returns A Formly field configuration with website URL validation.
  */
-export function websiteUrlField(config?: WebsiteUrlFieldConfig): FormlyFieldConfig {
+export function formlyWebsiteUrlField(config?: WebsiteUrlFieldConfig): FormlyFieldConfig {
   const validators: ValidatorFn[] = [isWebsiteUrlValidator(config)];
 
   return {
@@ -34,3 +34,9 @@ export function websiteUrlField(config?: WebsiteUrlFieldConfig): FormlyFieldConf
     })
   };
 }
+
+// MARK: Deprecated Aliases
+/**
+ * @deprecated Use formlyWebsiteUrlField instead.
+ */
+export const websiteUrlField = formlyWebsiteUrlField;

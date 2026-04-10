@@ -1,81 +1,38 @@
 import { type AsyncValidatorFn, type ValidatorFn } from '@angular/forms';
-import { mergeObjects, filterFromPOJO, mergeObjectsFunction, filterFromPOJOFunction, type FilterKeyValueTuplesInput, type GeneralFilterFromPOJOFunction, type ArrayOrValue, type Maybe, asArray, objectHasNoKeys, type MapFunction } from '@dereekb/util';
+import { mergeObjects, filterFromPOJO, mergeObjectsFunction, filterFromPOJOFunction, type FilterKeyValueTuplesInput, type GeneralFilterFromPOJOFunction, type ArrayOrValue, type Maybe, asArray, objectHasNoKeys } from '@dereekb/util';
 import { type FormlyFieldConfig, type FormlyFieldProps } from '@ngx-formly/core';
 import { type ValidationMessageOption } from '../type';
 import { type FormlyFieldProps as MaterialFormlyFormFieldProps } from '@ngx-formly/material/form-field';
 
-/**
- * A value parser function that transforms a form field's value from one type to another.
- */
-export type FormlyValueParser<I = any, O = any> = MapFunction<I, O>;
+// Re-export shared field config types for backward compatibility
+export { type FieldValueParser, type FormlyValueParser, type FieldConfigParsersRef, type FieldConfigWithParsers, type BaseFieldConfig, type DisableAutocompleteForField, type DefaultValueFieldConfig, type AttributesFieldConfig, type DescriptionFieldConfig, type BasePartialPotentialFieldConfig } from '../../field';
+import { type BaseFieldConfig, type FieldConfigParsersRef, type AttributesFieldConfig, type DescriptionFieldConfig } from '../../field';
 
 /**
- * Reference to an array of value parsers applied to a field's value.
+ * Configuration for a Formly field, extending the shared {@link BaseFieldConfig} with
+ * Formly-specific expressions and value parsers.
  */
-export interface FieldConfigParsersRef {
-  parsers: FormlyValueParser[];
-}
+export interface FieldConfig extends BaseFieldConfig, Pick<FormlyFieldConfig, 'expressions' | 'parsers'>, Partial<FieldConfigParsersRef> {}
 
 /**
- * Base configuration for a Formly field, providing the key, required/readonly flags,
- * expressions, and optional value parsers.
+ * Labeled Formly field configuration with label, placeholder, and autocomplete support.
+ *
+ * Extends the Formly-specific {@link FieldConfig} to include expressions and parsers.
  */
-export interface FieldConfig extends Pick<FormlyFieldConfig, 'expressions' | 'parsers'>, Partial<FieldConfigParsersRef> {
-  key: string;
-  required?: boolean;
-  readonly?: boolean;
-}
-
-/**
- * Optional reference to value parsers for a field.
- */
-export interface FieldConfigWithParsers {
-  parsers?: FormlyValueParser[];
-}
-
-/**
- * Sentinel type to disable autocomplete on a field. Pass `false` to the autocomplete property.
- */
-export type DisableAutocompleteForField = false;
-
 export interface LabeledFieldConfig extends FieldConfig {
-  key: string;
   label?: string;
   placeholder?: string;
-  required?: boolean;
-  readonly?: boolean;
   /**
-   * Sets the autocomplete values.
+   * Sets the autocomplete values. Pass `false` to disable autocomplete.
    */
-  autocomplete?: string | DisableAutocompleteForField;
+  autocomplete?: string | false;
 }
 
 /**
- * Configuration mixin that provides a default value for a form field.
- */
-export interface DefaultValueFieldConfig<T = unknown> {
-  defaultValue?: T;
-}
-
-/**
- * Configuration mixin for arbitrary HTML attributes on a form field element.
- */
-export interface AttributesFieldConfig {
-  attributes?: {
-    [key: string]: string | number;
-  };
-}
-
-/**
- * Configuration mixin for a field description/help text.
- */
-export interface DescriptionFieldConfig {
-  description?: string;
-}
-
-/**
- * Union of all partial field config types, used as a generic input type
+ * Union of all partial Formly field config types, used as a generic input type
  * for functions that accept any combination of field properties.
+ *
+ * This is the Formly-specific version that includes expressions and parsers.
  */
 export type PartialPotentialFieldConfig = Partial<FieldConfig> & Partial<LabeledFieldConfig> & Partial<AttributesFieldConfig> & Partial<DescriptionFieldConfig>;
 

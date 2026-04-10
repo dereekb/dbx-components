@@ -16,7 +16,7 @@ export interface PickableItemFieldConfig<T = unknown, M = unknown> extends Label
  *
  * @example
  * ```typescript
- * const field = pickableItemChipField({
+ * const field = formlyPickableItemChipField({
  *   key: 'tags',
  *   label: 'Tags',
  *   loadValues: () => tags$,
@@ -24,7 +24,7 @@ export interface PickableItemFieldConfig<T = unknown, M = unknown> extends Label
  * });
  * ```
  */
-export function pickableItemChipField<T = unknown, M = unknown>(config: PickableItemFieldConfig<T, M>): FormlyFieldConfig {
+export function formlyPickableItemChipField<T = unknown, M = unknown>(config: PickableItemFieldConfig<T, M>): FormlyFieldConfig {
   const { key, materialFormField } = config;
   return formlyField({
     key,
@@ -46,7 +46,7 @@ export function pickableItemChipField<T = unknown, M = unknown>(config: Pickable
  *
  * @example
  * ```typescript
- * const field = pickableItemListField({
+ * const field = formlyPickableItemListField({
  *   key: 'categories',
  *   label: 'Categories',
  *   loadValues: () => categories$,
@@ -54,7 +54,7 @@ export function pickableItemChipField<T = unknown, M = unknown>(config: Pickable
  * });
  * ```
  */
-export function pickableItemListField<T = unknown, M = unknown>(config: PickableItemFieldConfig<T, M>): FormlyFieldConfig {
+export function formlyPickableItemListField<T = unknown, M = unknown>(config: PickableItemFieldConfig<T, M>): FormlyFieldConfig {
   const { key, materialFormField } = config;
   return formlyField({
     key,
@@ -66,3 +66,13 @@ export function pickableItemListField<T = unknown, M = unknown>(config: Pickable
     })
   });
 }
+
+// MARK: Deprecated
+/**
+ * @deprecated Use formlyPickableItemChipField instead.
+ */
+export const pickableItemChipField = formlyPickableItemChipField;
+/**
+ * @deprecated Use formlyPickableItemListField instead.
+ */
+export const pickableItemListField = formlyPickableItemListField;

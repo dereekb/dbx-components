@@ -2,11 +2,11 @@
   "name": "@dereekb/dbx-web",
   "version": "13.7.0",
   "peerDependencies": {
-    "@angular/cdk": "21.2.3",
+    "@angular/cdk": "^21.2.3",
     "@angular/common": "21.2.3",
     "@angular/core": "21.2.3",
     "@angular/forms": "21.2.3",
-    "@angular/material": "21.2.3",
+    "@angular/material": "^21.2.3",
     "@angular/platform-browser": "21.2.3",
     "@dereekb/browser": "13.7.0",
     "@dereekb/date": "13.7.0",

@@ -36,8 +36,8 @@ export const TAKE_NEXT_UPCOMING_TIME_CONFIG_OBS: () => Observable<DbxDateTimePic
  *
  * @param config - Optional time field configuration overrides
  */
-export function timeOnlyField(config: Partial<TimeFieldConfig> = {}): FormlyFieldConfig {
-  return dateTimeField({
+export function formlyTimeOnlyField(config: Partial<TimeFieldConfig> = {}): FormlyFieldConfig {
+  return formlyDateTimeField({
     ...config,
     timeMode: DbxDateTimeFieldTimeMode.REQUIRED,
     timeOnly: true
@@ -56,7 +56,7 @@ export function timeOnlyField(config: Partial<TimeFieldConfig> = {}): FormlyFiel
  * const field = dateTimeField({ key: 'startDate', label: 'Start', required: true });
  * ```
  */
-export function dateTimeField(config: Partial<DateTimeFieldConfig> = {}) {
+export function formlyDateTimeField(config: Partial<DateTimeFieldConfig> = {}) {
   const { key = 'date', showClearButton, dateLabel, timeLabel, allDayLabel, atTimeLabel, timeDate, timezone, minuteStep, showTimezone, timeMode = DbxDateTimeFieldTimeMode.REQUIRED, valueMode, alwaysShowDateInput, autofillDateWhenTimeIsPicked, fullDayInUTC, fullDayFieldName, pickerConfig, getSyncFieldsObs, hideDatePicker, hideDateHint, timeOnly = false, presets, materialFormField } = config;
 
   const classGetter = 'dbx-mat-form-field-disable-underline dbx-mat-form-date-time-field-wrapper';
@@ -119,14 +119,14 @@ export interface DateDateRangeFieldConfig extends Pick<DateTimeFieldConfig, 'tim
  * const field = dateRangeField({ required: true, start: { key: 'from' }, end: { key: 'to' } });
  * ```
  */
-export function dateRangeField(config: DateDateRangeFieldConfig = {}): FormlyFieldConfig {
+export function formlyDateRangeField(config: DateDateRangeFieldConfig = {}): FormlyFieldConfig {
   const { required: inputRequired, start, end, timeDate, timezone, showTimezone, presets, valueMode, minuteStep } = config;
   const required = inputRequired ?? start?.required ?? false;
 
   const startFieldKey = start?.key ?? 'start';
   const endFieldKey = end?.key ?? 'end';
 
-  const startField = dateTimeField({
+  const startField = formlyDateTimeField({
     dateLabel: 'Start',
     timeMode: DbxDateTimeFieldTimeMode.NONE,
     getSyncFieldsObs: () => of([{ syncWith: endFieldKey, syncType: 'after' }]),
@@ -142,7 +142,7 @@ export function dateRangeField(config: DateDateRangeFieldConfig = {}): FormlyFie
     key: startFieldKey
   });
 
-  const endField = dateTimeField({
+  const endField = formlyDateTimeField({
     dateLabel: 'End',
     timeMode: DbxDateTimeFieldTimeMode.NONE,
     getSyncFieldsObs: () => of([{ syncWith: startFieldKey, syncType: 'before' }]),
@@ -190,7 +190,7 @@ export interface DateDateTimeRangeFieldConfig extends Pick<DateTimeFieldConfig, 
  * const field = dateTimeRangeField({ required: true });
  * ```
  */
-export function dateTimeRangeField(inputConfig: DateDateTimeRangeFieldConfig = {}): FormlyFieldConfig {
+export function formlyDateTimeRangeField(inputConfig: DateDateTimeRangeFieldConfig = {}): FormlyFieldConfig {
   const { required = false, start: inputStart, end: inputEnd, timezone, timeDate, showTimezone, presets, valueMode, minuteStep } = inputConfig;
 
   function dateTimeRangeFieldConfig(config: Maybe<Partial<DateTimeRangeFieldTimeConfig>>): Partial<DateTimeFieldConfig> {
@@ -230,7 +230,7 @@ export function dateTimeRangeField(inputConfig: DateDateTimeRangeFieldConfig = {
     end
   };
 
-  return dateRangeField(config);
+  return formlyDateRangeField(config);
 }
 
 // MARK: FixedDateRange
@@ -250,7 +250,7 @@ export interface FixedDateRangeFieldConfig extends LabeledFieldConfig, Descripti
  * const field = fixedDateRangeField({ key: 'eventDates', required: true });
  * ```
  */
-export function fixedDateRangeField(config: Partial<FixedDateRangeFieldConfig> = {}) {
+export function formlyFixedDateRangeField(config: Partial<FixedDateRangeFieldConfig> = {}) {
   const { key = 'dateRange', dateRangeInput, pickerConfig, timezone, selectionMode, showTimezone, valueMode, fullDayInUTC, presets, showRangeInput, materialFormField } = config;
 
   const classGetter = 'dbx-mat-form-field-disable-underline dbx-form-fixed-date-range-field-wrapper';
@@ -274,3 +274,25 @@ export function fixedDateRangeField(config: Partial<FixedDateRangeFieldConfig> =
 
   return fieldConfig;
 }
+
+// MARK: Deprecated Aliases
+/**
+ * @deprecated Use formlyTimeOnlyField instead.
+ */
+export const timeOnlyField = formlyTimeOnlyField;
+/**
+ * @deprecated Use formlyDateTimeField instead.
+ */
+export const dateTimeField = formlyDateTimeField;
+/**
+ * @deprecated Use formlyDateRangeField instead.
+ */
+export const dateRangeField = formlyDateRangeField;
+/**
+ * @deprecated Use formlyDateTimeRangeField instead.
+ */
+export const dateTimeRangeField = formlyDateTimeRangeField;
+/**
+ * @deprecated Use formlyFixedDateRangeField instead.
+ */
+export const fixedDateRangeField = formlyFixedDateRangeField;

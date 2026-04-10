@@ -3,21 +3,30 @@
     <!-- Examples -->
     <doc-feature-example header="usernamePasswordLoginFields()" hint="Creates field configurations pre-configured for a username and password.">
       <h4>Email and Password</h4>
-      <doc-form-example-form [config]="usernamePasswordLoginField"></doc-form-example-form>
+      <doc-feature-form-tabs #formTabs formlyFn="formlyUsernamePasswordLoginFields()" forgeFn="forgeUsernamePasswordLoginFields()">
+        <doc-form-example-form formly [config]="usernamePasswordLoginField" [disabled]="formTabs.disabled()"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeUsernamePasswordLoginConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
+      </doc-feature-form-tabs>
 
       <h4>Email and Password with verify fields.</h4>
-      <doc-form-example-form [dbxFormSource]="invalidVerifyContent" [config]="usernamePasswordLoginWithVerifyField"></doc-form-example-form>
+      <doc-form-example-form [dbxFormSource]="invalidVerifyContent" [config]="usernamePasswordLoginWithVerifyField" [disabled]="formTabs.disabled()"></doc-form-example-form>
     </doc-feature-example>
     <doc-feature-example header="timezoneStringField()" hint="Creates field configurations pre-configured for timezone selection.">
       <h4>Timezone Selection</h4>
-      <doc-form-example-form [config]="timezoneSelectionField"></doc-form-example-form>
+      <doc-feature-form-tabs formlyFn="formlyTimezoneStringField()" forgeFn="forgeTimezoneStringField()">
+        <doc-form-example-form formly [config]="timezoneSelectionField" [disabled]="formTabs.disabled()"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeTimezoneSelectionConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
+      </doc-feature-form-tabs>
       <doc-feature-derived type="uses" from="vvo/tzdb" url="https://github.com/vvo/tzdb">
         <p>Timezone strings are calculated/provided by vvo/tzdb.</p>
       </doc-feature-derived>
     </doc-feature-example>
     <doc-feature-example header="websiteUrlField()" hint="Creates field configurations pre-configured for a website url.">
       <h4>Website Url</h4>
-      <doc-form-example-form [config]="websiteUrlFields"></doc-form-example-form>
+      <doc-feature-form-tabs formlyFn="formlyWebsiteUrlField()" forgeFn="forgeWebsiteUrlField()">
+        <doc-form-example-form formly [config]="websiteUrlFields" [disabled]="formTabs.disabled()"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeWebsiteUrlFieldsConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
+      </doc-feature-form-tabs>
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

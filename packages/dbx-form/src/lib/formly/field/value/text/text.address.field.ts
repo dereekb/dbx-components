@@ -1,6 +1,6 @@
 import { type FormlyFieldConfig } from '@ngx-formly/core';
-import { textField, type TextFieldConfig } from './text.field';
-import { cityField, type CityFieldConfig, countryField, type CountryFieldConfig, stateField, type StateFieldConfig, zipCodeField, type ZipCodeFieldConfig } from './text.additional.field';
+import { formlyTextField, type TextFieldConfig } from './text.field';
+import { formlyCityField, type CityFieldConfig, formlyCountryField, type CountryFieldConfig, formlyStateField, type StateFieldConfig, formlyZipCodeField, type ZipCodeFieldConfig } from './text.additional.field';
 import { flexLayoutWrapper, sectionWrapper } from '../../wrapper/wrapper';
 import { type FieldConfig } from '../../field';
 import { repeatArrayField } from '../array/array.field';
@@ -60,12 +60,12 @@ export interface AddressLineFieldConfig extends Partial<TextFieldConfig> {
  * const line2 = addressLineField({ line: 2 });
  * ```
  */
-export function addressLineField(config: AddressLineFieldConfig = {}): FormlyFieldConfig {
+export function formlyAddressLineField(config: AddressLineFieldConfig = {}): FormlyFieldConfig {
   const { line = 1 } = config;
   const lineCode = Math.max(1, line); // minimum of line 1
 
   const { key = `line${lineCode}`, placeholder = '', label = line ? `Line ${line}` : 'Street', autocomplete = `address-line${lineCode}`, maxLength = ADDRESS_LINE_MAX_LENGTH, required = false } = config;
-  return textField({
+  return formlyTextField({
     ...config,
     key,
     placeholder,
@@ -88,33 +88,33 @@ export function addressLineField(config: AddressLineFieldConfig = {}): FormlyFie
  * const fields = addressFormlyFields({ required: true, includeCountry: false });
  * ```
  */
-export function addressFormlyFields(config: AddressFormlyFieldsConfig = {}): FormlyFieldConfig[] {
+export function formlyAddressFormlyFields(config: AddressFormlyFieldsConfig = {}): FormlyFieldConfig[] {
   const { required = true, includeLine2 = true, includeCountry = true } = config;
 
   const singleLineFields = [
     {
-      field: cityField({ required, ...config.cityField })
+      field: formlyCityField({ required, ...config.cityField })
     },
     {
-      field: stateField({ required, ...config.stateField })
+      field: formlyStateField({ required, ...config.stateField })
     },
     {
-      field: zipCodeField({ required, ...config.zipCodeField })
+      field: formlyZipCodeField({ required, ...config.zipCodeField })
     }
   ];
 
   if (includeCountry) {
     singleLineFields.push({
-      field: countryField({ required, ...config.countryField })
+      field: formlyCountryField({ required, ...config.countryField })
     });
   }
 
   let lines: FormlyFieldConfig[];
 
   if (includeLine2) {
-    lines = [addressLineField({ required, ...config.line1Field, line: 1 }), addressLineField({ ...config.line2Field, line: 2 })];
+    lines = [formlyAddressLineField({ required, ...config.line1Field, line: 1 }), formlyAddressLineField({ ...config.line2Field, line: 2 })];
   } else {
-    lines = [addressLineField({ required, ...config.line1Field, line: 0 })];
+    lines = [formlyAddressLineField({ required, ...config.line1Field, line: 0 })];
   }
 
   return [...lines, flexLayoutWrapper(singleLineFields, { size: 1, relative: true })];
@@ -137,14 +137,14 @@ export interface AddressFieldConfig extends Readonly<FieldConfig>, DbxFormSectio
  * const field = addressField({ required: true, includeCountry: true });
  * ```
  */
-export function addressField(config: Partial<AddressFieldConfig> = {}): FormlyFieldConfig {
+export function formlyAddressField(config: Partial<AddressFieldConfig> = {}): FormlyFieldConfig {
   const { key = 'address', header = 'Address', hint, required = false } = config;
 
   return sectionWrapper(
     {
       ...config,
       key,
-      fieldGroup: addressFormlyFields(config),
+      fieldGroup: formlyAddressFormlyFields(config),
       required
     },
     {
@@ -177,7 +177,7 @@ export interface AddressListFieldConfig extends Readonly<FieldConfig>, AddressFo
  * const field = addressListField({ maxAddresses: 3, required: true });
  * ```
  */
-export function addressListField(config: Partial<AddressListFieldConfig> = {}): FormlyFieldConfig {
+export function formlyAddressListField(config: Partial<AddressListFieldConfig> = {}): FormlyFieldConfig {
   const { key = 'addresses', required = false, maxAddresses = 6 } = config;
   return repeatArrayField({
     key,
@@ -187,6 +187,24 @@ export function addressListField(config: Partial<AddressListFieldConfig> = {}): 
     addText: 'Add Address',
     removeText: 'Remove Address',
     maxLength: maxAddresses,
-    repeatFieldGroup: addressFormlyFields(config)
+    repeatFieldGroup: formlyAddressFormlyFields(config)
   });
 }
+
+// MARK: Deprecated Aliases
+/**
+ * @deprecated Use formlyAddressLineField instead.
+ */
+export const addressLineField = formlyAddressLineField;
+/**
+ * @deprecated Use formlyAddressFormlyFields instead.
+ */
+export const addressFormlyFields = formlyAddressFormlyFields;
+/**
+ * @deprecated Use formlyAddressField instead.
+ */
+export const addressField = formlyAddressField;
+/**
+ * @deprecated Use formlyAddressListField instead.
+ */
+export const addressListField = formlyAddressListField;

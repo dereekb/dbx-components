@@ -17,7 +17,7 @@ export interface DbxListFieldConfig<T = unknown, C extends AbstractDbxSelectionL
  *
  * @example
  * ```typescript
- * const field = dbxListField({
+ * const field = formlyDbxListField({
  *   key: 'selectedItems',
  *   label: 'Items',
  *   listComponentClass: MyListComponent,
@@ -25,7 +25,7 @@ export interface DbxListFieldConfig<T = unknown, C extends AbstractDbxSelectionL
  * });
  * ```
  */
-export function dbxListField<T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey>(config: DbxListFieldConfig<T, C, K>): FormlyFieldConfig {
+export function formlyDbxListField<T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey>(config: DbxListFieldConfig<T, C, K>): FormlyFieldConfig {
   const { key, listComponentClass, readKey, state$, loadMore } = config;
   return formlyField({
     key,
@@ -38,3 +38,9 @@ export function dbxListField<T = unknown, C extends AbstractDbxSelectionListWrap
     })
   });
 }
+
+// MARK: Deprecated
+/**
+ * @deprecated Use formlyDbxListField instead.
+ */
+export const dbxListField = formlyDbxListField;

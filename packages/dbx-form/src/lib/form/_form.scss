@@ -4,6 +4,101 @@
 
 // MARK: Mixin
 @mixin core() {
+  // Forge flex row relative mode: override ng-forge grid column count
+  @for $i from 1 through 12 {
+    .dbx-forge-flex-#{$i} {
+      --df-grid-columns: #{$i};
+    }
+  }
+
+  // Forge styled box: outlined box around fields that don't use mat-form-field (checkbox, toggle, slider).
+  // Mirrors the Material outlined form-field appearance (border-radius, padding, min-height, hint styling).
+  .dbx-forge-styled-box {
+    mat-checkbox,
+    mat-slide-toggle {
+      border: 1px solid var(--mdc-outlined-text-field-outline-color, var(--mat-sys-outline, rgba(0, 0, 0, 0.38)));
+      border-radius: var(--mdc-outlined-text-field-container-shape, 8px);
+      padding: 0 16px;
+      display: block;
+
+      &:hover {
+        border-color: var(--mdc-outlined-text-field-hover-outline-color, var(--mat-sys-on-surface, rgba(0, 0, 0, 0.87)));
+      }
+    }
+
+    mat-checkbox,
+    mat-slide-toggle {
+      .mdc-form-field {
+        width: 100%;
+
+        .mdc-label {
+          user-select: none;
+          width: 100%;
+          min-height: 56px;
+          display: inline-flex;
+          align-items: center;
+          padding-top: 6px;
+          padding-bottom: 6px;
+        }
+      }
+    }
+
+    // Style the hint to match Material's .mat-mdc-form-field-subscript-wrapper / .mat-mdc-form-field-bottom-align / .mat-mdc-form-field-hint-wrapper.
+    // We can't add those classes directly since ng-forge renders the element, so we mirror their styles.
+    .mat-hint {
+      display: block;
+      padding: 0 16px;
+      -moz-osx-font-smoothing: grayscale;
+      -webkit-font-smoothing: antialiased;
+      font-family: var(--mat-form-field-subscript-text-font, var(--mat-sys-body-small-font));
+      line-height: var(--mat-form-field-subscript-text-line-height, var(--mat-sys-body-small-line-height));
+      font-size: var(--mat-form-field-subscript-text-size, var(--mat-sys-body-small-size));
+      letter-spacing: var(--mat-form-field-subscript-text-tracking, var(--mat-sys-body-small-tracking));
+      font-weight: var(--mat-form-field-subscript-text-weight, var(--mat-sys-body-small-weight));
+      color: var(--mat-form-field-subscript-text-color, var(--mat-sys-on-surface-variant, rgba(0, 0, 0, 0.6)));
+
+      // Matches .mat-mdc-form-field-bottom-align::before spacing
+      &::before {
+        content: '';
+        display: inline-block;
+        height: 16px;
+      }
+    }
+  }
+
+  // Generic forge disabled class for fields that only need CSS-based disabling.
+  .dbx-forge-disabled {
+    opacity: 0.38;
+    pointer-events: none;
+  }
+
+  // Form-level disabled state: disables all interactive elements inside a forge form.
+  // Applied to <dbx-forge> host when the form is disabled. This handles built-in ng-forge
+  // material fields (input, textarea, select, datepicker, toggle, checkbox) that don't
+  // have custom disabled propagation. Custom forge field components additionally use
+  // inject(FORM_OPTIONS) for programmatic disabled handling (e.g. disabling FormControls).
+  .dbx-forge-form-disabled {
+    // Disable pointer events on all standard interactive elements
+    input,
+    textarea,
+    select,
+    button,
+    mat-select,
+    mat-slider,
+    mat-checkbox,
+    mat-slide-toggle,
+    mat-chip-listbox,
+    mat-chip-grid,
+    .mat-mdc-form-field {
+      pointer-events: none;
+    }
+
+    // Reduce opacity on form fields to indicate disabled state
+    .mat-mdc-form-field,
+    .dbx-forge-styled-box {
+      opacity: 0.38;
+    }
+  }
 }
 
 @mixin theme($theme-config) {

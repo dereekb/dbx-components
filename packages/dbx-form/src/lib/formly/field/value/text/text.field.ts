@@ -51,7 +51,7 @@ export interface TextFieldConfig extends LabeledFieldConfig, DescriptionFieldCon
  * const parsers = textFieldTransformParser({ transform: { trim: true, toLowercase: true } });
  * ```
  */
-export function textFieldTransformParser(config: Partial<FieldConfigParsersRef> & Partial<TransformStringFunctionConfigRef>) {
+export function formlyTextFieldTransformParser(config: Partial<FieldConfigParsersRef> & Partial<TransformStringFunctionConfigRef>) {
   const { parsers: inputParsers, transform } = config;
   let parsers: FormlyValueParser[] | undefined;
 
@@ -78,9 +78,9 @@ export function textFieldTransformParser(config: Partial<FieldConfigParsersRef> 
  * const field = textField({ key: 'username', label: 'Username', maxLength: 50, required: true });
  * ```
  */
-export function textField(config: TextFieldConfig): FormlyFieldConfig {
+export function formlyTextField(config: TextFieldConfig): FormlyFieldConfig {
   const { transform: _transform, key, pattern, minLength, maxLength, inputType: type = 'text', materialFormField } = config;
-  const parsers = textFieldTransformParser(config);
+  const parsers = formlyTextFieldTransformParser(config);
 
   return formlyField({
     key,
@@ -117,9 +117,9 @@ export interface TextAreaFieldConfig extends LabeledFieldConfig, DescriptionFiel
  * const field = textAreaField({ key: 'bio', label: 'Biography', rows: 5, maxLength: 500 });
  * ```
  */
-export function textAreaField(config: TextAreaFieldConfig): FormlyFieldConfig {
+export function formlyTextAreaField(config: TextAreaFieldConfig): FormlyFieldConfig {
   const { key, rows = 3, pattern, minLength, maxLength, materialFormField } = config;
-  const parsers = textFieldTransformParser(config);
+  const parsers = formlyTextFieldTransformParser(config);
 
   return formlyField({
     key,
@@ -134,3 +134,17 @@ export function textAreaField(config: TextAreaFieldConfig): FormlyFieldConfig {
     parsers
   });
 }
+
+// MARK: Deprecated Aliases
+/**
+ * @deprecated Use formlyTextFieldTransformParser instead.
+ */
+export const textFieldTransformParser = formlyTextFieldTransformParser;
+/**
+ * @deprecated Use formlyTextField instead.
+ */
+export const textField = formlyTextField;
+/**
+ * @deprecated Use formlyTextAreaField instead.
+ */
+export const textAreaField = formlyTextAreaField;

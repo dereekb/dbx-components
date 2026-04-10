@@ -17,6 +17,7 @@ import { DocFormExpressionComponent } from './container/expression.component';
 
 import { DocFormFormComponent } from './container/form.component';
 import { DocFormDateValueComponent } from './container/value.date.component';
+import { DocFormArrayComponent } from './container/array.component';
 
 @NgModule({
   imports: [
@@ -30,6 +31,7 @@ import { DocFormDateValueComponent } from './container/value.date.component';
     DocFormChecklistComponent,
     DocFormValueComponent,
     DocFormDateValueComponent,
+    DocFormArrayComponent,
     DocFormSelectionComponent,
     DocFormExpressionComponent,
     DocFormFormComponent,

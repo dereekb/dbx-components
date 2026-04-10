@@ -21,9 +21,15 @@ export type HiddenFieldConfig = Pick<LabeledFieldConfig, 'key' | 'required'>;
  * const field = hiddenField({ key: 'userId', required: true });
  * ```
  */
-export function hiddenField({ key, required = false }: HiddenFieldConfig): FormlyFieldConfig {
+export function formlyHiddenField({ key, required = false }: HiddenFieldConfig): FormlyFieldConfig {
   return formlyField({
     key,
     props: { required }
   });
 }
+
+// MARK: Deprecated Aliases
+/**
+ * @deprecated Use formlyHiddenField instead.
+ */
+export const hiddenField = formlyHiddenField;

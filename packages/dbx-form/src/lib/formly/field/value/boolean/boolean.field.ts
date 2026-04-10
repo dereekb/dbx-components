@@ -20,7 +20,7 @@ export interface ToggleFieldConfig extends Omit<LabeledFieldConfig, 'placeholder
  * const field = toggleField({ key: 'active', label: 'Active', defaultValue: true });
  * ```
  */
-export function toggleField(config: ToggleFieldConfig): FormlyFieldConfig {
+export function formlyToggleField(config: ToggleFieldConfig): FormlyFieldConfig {
   const { key, defaultValue, materialFormField } = config;
 
   const classGetter = 'dbx-mat-form-toggle-field-wrapper';
@@ -54,7 +54,7 @@ export interface CheckboxFieldConfig extends LabeledFieldConfig, DefaultValueFie
  * const field = checkboxField({ key: 'agree', label: 'I agree to the terms' });
  * ```
  */
-export function checkboxField(config: CheckboxFieldConfig): FormlyFieldConfig {
+export function formlyCheckboxField(config: CheckboxFieldConfig): FormlyFieldConfig {
   const { key, defaultValue, materialFormField } = config;
 
   const classGetter = 'dbx-mat-form-checkbox-field-wrapper';
@@ -90,3 +90,13 @@ export function acceptTermsField({ key = 'accept', label = 'Accept Terms', descr
   } as FormlyFieldConfig;
 }
 */
+
+// MARK: Deprecated Aliases
+/**
+ * @deprecated Use formlyToggleField instead.
+ */
+export const toggleField = formlyToggleField;
+/**
+ * @deprecated Use formlyCheckboxField instead.
+ */
+export const checkboxField = formlyCheckboxField;
