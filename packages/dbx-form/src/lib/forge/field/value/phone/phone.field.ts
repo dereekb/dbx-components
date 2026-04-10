@@ -23,6 +23,14 @@ export type ForgePhoneFieldDef = BaseValueField<ForgePhoneFieldProps, string> & 
 /**
  * Configuration for a forge international phone number input field.
  */
+/**
+ * Autocomplete values supported by the phone field.
+ *
+ * The underlying `ngx-mat-input-tel` component only supports `'off'` and `'tel'`.
+ * Pass `false` to disable autocomplete (equivalent to `'off'`).
+ */
+export type ForgePhoneFieldAutocomplete = 'off' | 'tel' | false;
+
 export interface ForgePhoneFieldConfig {
   readonly key: string;
   readonly label?: string;
@@ -49,6 +57,12 @@ export interface ForgePhoneFieldConfig {
    * Whether or not to allow adding an extension. False by default.
    */
   readonly allowExtension?: boolean;
+  /**
+   * Sets the autocomplete attribute on the phone input.
+   *
+   * Pass `'tel'` to enable phone autofill, or `false`/`'off'` to disable.
+   */
+  readonly autocomplete?: ForgePhoneFieldAutocomplete;
 }
 
 /**
@@ -66,14 +80,15 @@ export interface ForgePhoneFieldConfig {
  * ```
  */
 export function forgePhoneField(config: ForgePhoneFieldConfig): ForgePhoneFieldDef {
-  const { key, label = 'Phone Number', required, readonly: isReadonly, description, defaultValue = '', preferredCountries, onlyCountries, enableSearch, allowExtension } = config;
+  const { key, label = 'Phone Number', required, readonly: isReadonly, description, defaultValue = '', preferredCountries, onlyCountries, enableSearch, allowExtension, autocomplete } = config;
 
   const props: Partial<ForgePhoneFieldProps> = filterFromPOJO({
     hint: description,
     preferredCountries,
     onlyCountries,
     enableSearch,
-    allowExtension
+    allowExtension,
+    autocomplete: autocomplete === false ? 'off' : autocomplete
   });
 
   return forgeField(

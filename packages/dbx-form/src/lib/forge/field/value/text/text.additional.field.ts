@@ -2,6 +2,7 @@ import type { MatInputField } from '@ng-forge/dynamic-forms-material';
 import { LAT_LNG_PATTERN, US_STATE_CODE_STRING_REGEX, ZIP_CODE_STRING_REGEX } from '@dereekb/util';
 import { ADDRESS_CITY_MAX_LENGTH, ADDRESS_STATE_CODE_MAX_LENGTH, ADDRESS_STATE_MAX_LENGTH, ADDRESS_COUNTRY_MAX_LENGTH, ADDRESS_ZIP_MAX_LENGTH } from '@dereekb/model';
 import { type ForgeTextFieldConfig, forgeTextField } from './text.field';
+import type { ForgeFieldAutocompleteConfig } from '../../field';
 
 // MARK: Name Field
 /**
@@ -40,6 +41,10 @@ export interface ForgeEmailFieldConfig {
   readonly required?: boolean;
   readonly readonly?: boolean;
   readonly description?: string;
+  /**
+   * Sets the autocomplete attribute on the input. Pass `false` to disable browser autofill.
+   */
+  readonly autocomplete?: ForgeFieldAutocompleteConfig;
 }
 
 /**
@@ -56,7 +61,7 @@ export interface ForgeEmailFieldConfig {
  * ```
  */
 export function forgeEmailField(config: ForgeEmailFieldConfig = {}): MatInputField {
-  const { key = 'email', label = 'Email Address', placeholder = 'you@example.com', required, readonly: isReadonly, description } = config;
+  const { key = 'email', label = 'Email Address', placeholder = 'you@example.com', required, readonly: isReadonly, description, autocomplete } = config;
 
   return forgeTextField({
     key,
@@ -65,6 +70,7 @@ export function forgeEmailField(config: ForgeEmailFieldConfig = {}): MatInputFie
     required,
     readonly: isReadonly,
     description,
+    autocomplete,
     inputType: 'email'
   });
 }

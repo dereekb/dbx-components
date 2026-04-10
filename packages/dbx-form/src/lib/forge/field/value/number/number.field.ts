@@ -1,7 +1,7 @@
 import type { CustomValidatorConfig, FieldDef, FieldMeta, ValidationMessages } from '@ng-forge/dynamic-forms';
 import type { MatInputField, MatInputProps, MatSliderField, MatSliderProps } from '@ng-forge/dynamic-forms-material';
 import { filterFromPOJO, DOLLAR_AMOUNT_PRECISION, type TransformNumberFunctionConfigRef } from '@dereekb/util';
-import { forgeField } from '../../field';
+import { forgeField, mergeForgeFieldMeta, type ForgeFieldAutocompleteConfig } from '../../field';
 import { forgeFormFieldWrapper, type ForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
 import { forgeDefaultValidationMessages } from '../../../validation';
 
@@ -41,6 +41,10 @@ export interface ForgeNumberFieldConfig extends ForgeNumberFieldNumberConfig, Pa
   readonly readonly?: boolean;
   readonly description?: string;
   readonly defaultValue?: number;
+  /**
+   * Sets the autocomplete attribute on the input. Pass `false` to disable browser autofill.
+   */
+  readonly autocomplete?: ForgeFieldAutocompleteConfig;
 }
 
 /**
@@ -58,7 +62,7 @@ export interface ForgeNumberFieldConfig extends ForgeNumberFieldNumberConfig, Pa
  * ```
  */
 export function forgeNumberField(config: ForgeNumberFieldConfig): MatInputField {
-  const { key, label, placeholder, required, readonly: isReadonly, description, min, max, step, enforceStep, defaultValue } = config;
+  const { key, label, placeholder, required, readonly: isReadonly, description, min, max, step, enforceStep, defaultValue, autocomplete } = config;
 
   const props: Partial<MatInputProps> = filterFromPOJO({
     type: 'number' as const,
@@ -71,12 +75,10 @@ export function forgeNumberField(config: ForgeNumberFieldConfig): MatInputField 
 
   const validationMessages: ValidationMessages = forgeDefaultValidationMessages();
   let validators: CustomValidatorConfig[] | undefined;
-  let meta: FieldMeta | undefined;
 
-  // Apply the HTML step attribute to the <input> element via meta
-  if (step != null) {
-    meta = { step };
-  }
+  // Apply the HTML step attribute to the <input> element via meta, merged with autocomplete
+  const stepMeta: FieldMeta | undefined = step != null ? { step } : undefined;
+  const meta = mergeForgeFieldMeta(stepMeta, autocomplete);
 
   // Add a divisibility validator when enforceStep is enabled
   if (step && enforceStep) {

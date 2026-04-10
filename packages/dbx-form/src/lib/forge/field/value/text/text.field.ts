@@ -2,7 +2,7 @@ import type { MatInputField, MatInputProps, MatTextareaField, MatTextareaProps }
 import type { ValidationMessages } from '@ng-forge/dynamic-forms';
 import { filterFromPOJO, transformStringFunction, mapMaybeFunction, type TransformStringFunctionConfig, type TransformStringFunctionConfigRef } from '@dereekb/util';
 import type { FieldValueParser, FieldConfigParsersRef } from '../../../../field';
-import { forgeField } from '../../field';
+import { forgeField, forgeAutocompleteFieldMeta, type ForgeFieldAutocompleteConfig } from '../../field';
 import { forgeDefaultValidationMessages } from '../../../validation';
 
 // MARK: Text Field
@@ -48,6 +48,10 @@ export interface ForgeTextFieldConfig extends ForgeTextFieldPatternConfig, Forge
    */
   readonly transform?: TransformStringFunctionConfig;
   readonly defaultValue?: string;
+  /**
+   * Sets the autocomplete attribute on the input. Pass `false` to disable browser autofill.
+   */
+  readonly autocomplete?: ForgeFieldAutocompleteConfig;
 }
 
 /**
@@ -91,7 +95,7 @@ export function forgeTextFieldTransformParser(config: Partial<FieldConfigParsers
  * ```
  */
 export function forgeTextField(config: ForgeTextFieldConfig): MatInputField {
-  const { key, label, placeholder, required, readonly: isReadonly, description, minLength, maxLength, pattern, inputType = 'text', defaultValue = '' } = config;
+  const { key, label, placeholder, required, readonly: isReadonly, description, minLength, maxLength, pattern, inputType = 'text', defaultValue = '', autocomplete } = config;
 
   const props: Partial<MatInputProps> = filterFromPOJO({
     type: inputType,
@@ -99,6 +103,7 @@ export function forgeTextField(config: ForgeTextFieldConfig): MatInputField {
   });
 
   const validationMessages: ValidationMessages = forgeDefaultValidationMessages();
+  const meta = forgeAutocompleteFieldMeta(autocomplete);
 
   return forgeField(
     filterFromPOJO({
@@ -113,6 +118,7 @@ export function forgeTextField(config: ForgeTextFieldConfig): MatInputField {
       maxLength,
       pattern: pattern != null ? (typeof pattern === 'string' ? pattern : pattern.source) : undefined,
       validationMessages,
+      meta,
       props: Object.keys(props).length > 0 ? props : undefined
     }) as MatInputField
   );
@@ -134,6 +140,10 @@ export interface ForgeTextAreaFieldConfig extends ForgeTextFieldPatternConfig, F
    */
   readonly rows?: number;
   readonly defaultValue?: string;
+  /**
+   * Sets the autocomplete attribute on the textarea. Pass `false` to disable browser autofill.
+   */
+  readonly autocomplete?: ForgeFieldAutocompleteConfig;
 }
 
 /**
@@ -148,7 +158,7 @@ export interface ForgeTextAreaFieldConfig extends ForgeTextFieldPatternConfig, F
  * ```
  */
 export function forgeTextAreaField(config: ForgeTextAreaFieldConfig): MatTextareaField {
-  const { key, label, placeholder, required, readonly: isReadonly, description, rows = 3, minLength, maxLength, pattern, defaultValue = '' } = config;
+  const { key, label, placeholder, required, readonly: isReadonly, description, rows = 3, minLength, maxLength, pattern, defaultValue = '', autocomplete } = config;
 
   const props: Partial<MatTextareaProps> = filterFromPOJO({
     hint: description,
@@ -156,6 +166,7 @@ export function forgeTextAreaField(config: ForgeTextAreaFieldConfig): MatTextare
   });
 
   const validationMessages: ValidationMessages = forgeDefaultValidationMessages();
+  const meta = forgeAutocompleteFieldMeta(autocomplete);
 
   return forgeField(
     filterFromPOJO({
@@ -170,6 +181,7 @@ export function forgeTextAreaField(config: ForgeTextAreaFieldConfig): MatTextare
       maxLength,
       pattern: pattern != null ? (typeof pattern === 'string' ? pattern : pattern.source) : undefined,
       validationMessages,
+      meta,
       props: Object.keys(props).length > 0 ? props : undefined
     }) as MatTextareaField
   );

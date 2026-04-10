@@ -39,6 +39,11 @@ export interface ForgePhoneFieldProps {
    * Hint text displayed below the field.
    */
   readonly hint?: DynamicText;
+  /**
+   * Autocomplete value for the phone input. The underlying `ngx-mat-input-tel`
+   * component supports `'off'` and `'tel'`.
+   */
+  readonly autocomplete?: 'off' | 'tel';
 }
 
 /**
@@ -102,6 +107,7 @@ export class ForgePhoneFieldComponent {
   readonly enableSearch: Signal<boolean> = computed(() => this.props()?.enableSearch ?? true);
   readonly allowExtension: Signal<boolean> = computed(() => this.props()?.allowExtension ?? false);
   readonly effectiveAppearance = computed(() => this.props()?.appearance ?? this.materialConfig?.appearance ?? 'outline');
+  readonly effectiveAutocomplete = computed(() => this.props()?.autocomplete ?? 'off');
 
   // Error handling
   readonly resolvedErrors = createResolvedErrorsSignal(this.field, this.validationMessages, this.defaultValidationMessages);
