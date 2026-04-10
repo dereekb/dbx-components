@@ -3,7 +3,7 @@ import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import type { FieldTypeDefinition } from '@ng-forge/dynamic-forms';
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { forgeField } from '../field';
-import { FORGE_COMPONENT_FIELD_TYPE, type ForgeComponentFieldProps, type ForgeComponentFieldDef } from './component.field.component';
+import { FORGE_COMPONENT_FIELD_TYPE, type DbxForgeComponentFieldProps, type DbxForgeComponentFieldDef } from './component.field.component';
 
 // MARK: Field Type Definition
 /**
@@ -11,7 +11,7 @@ import { FORGE_COMPONENT_FIELD_TYPE, type ForgeComponentFieldProps, type ForgeCo
  *
  * Register via `provideDynamicForm(DBX_COMPONENT_FIELD_TYPE)`.
  */
-export const DBX_COMPONENT_FIELD_TYPE: FieldTypeDefinition<ForgeComponentFieldDef> = {
+export const DBX_COMPONENT_FIELD_TYPE: FieldTypeDefinition<DbxForgeComponentFieldDef> = {
   name: FORGE_COMPONENT_FIELD_TYPE,
   loadComponent: () => import('./component.field.component').then((m) => m.DbxForgeComponentFieldComponent),
   mapper: valueFieldMapper
@@ -21,7 +21,7 @@ export const DBX_COMPONENT_FIELD_TYPE: FieldTypeDefinition<ForgeComponentFieldDe
 /**
  * Configuration for a forge field that renders a custom Angular component.
  */
-export interface ForgeComponentFieldConfig<T = unknown> {
+export interface DbxForgeComponentFieldConfig<T = unknown> {
   /**
    * Key for the field. Optional for display-only components.
    */
@@ -50,7 +50,7 @@ export interface ForgeComponentFieldConfig<T = unknown> {
  * into the form. This is useful for embedding complex custom UI within a dynamic form.
  *
  * @param config - Component field configuration
- * @returns A validated {@link ForgeComponentFieldDef}
+ * @returns A validated {@link DbxForgeComponentFieldDef}
  *
  * @example
  * ```typescript
@@ -69,7 +69,7 @@ export interface ForgeComponentFieldConfig<T = unknown> {
  */
 let _componentFieldCounter = 0;
 
-export function forgeComponentField<T = unknown>(config: ForgeComponentFieldConfig<T>): ForgeComponentFieldDef<T> {
+export function forgeComponentField<T = unknown>(config: DbxForgeComponentFieldConfig<T>): DbxForgeComponentFieldDef<T> {
   const { key, label, componentField, allowDisabledEffects } = config;
 
   return forgeField(
@@ -81,7 +81,7 @@ export function forgeComponentField<T = unknown>(config: ForgeComponentFieldConf
       props: filterFromPOJO({
         componentField,
         allowDisabledEffects
-      }) as ForgeComponentFieldProps<T>
-    }) as ForgeComponentFieldDef<T>
+      }) as DbxForgeComponentFieldProps<T>
+    }) as DbxForgeComponentFieldDef<T>
   );
 }

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { firstValueFrom, of } from 'rxjs';
 import { DbxDateTimeFieldTimeMode } from '../../../../formly/field/value/date/datetime.field.component';
 import { DbxDateTimeValueMode } from '../../../../formly/field/value/date/date.value';
-import { forgeDateField, forgeDateTimeField, forgeDateRangeField, forgeDateTimeRangeField, forgeFixedDateRangeField, type ForgeDateTimeSyncField, type ForgeDateTimeFieldDef } from './datetime.field';
+import { forgeDateField, forgeDateTimeField, forgeDateRangeField, forgeDateTimeRangeField, forgeFixedDateRangeField, type DbxForgeDateTimeSyncField, type DbxForgeDateTimeFieldDef } from './datetime.field';
 import type { RowField } from '@ng-forge/dynamic-forms';
 
 describe('forgeDateField()', () => {
@@ -118,7 +118,7 @@ describe('forgeDateTimeField()', () => {
   });
 
   it('should set getSyncFieldsObs in props', () => {
-    const syncFields: ForgeDateTimeSyncField[] = [{ syncWith: 'endDate', syncType: 'after' }];
+    const syncFields: DbxForgeDateTimeSyncField[] = [{ syncWith: 'endDate', syncType: 'after' }];
     const getSyncFieldsObs = () => of(syncFields);
     const field = forgeDateTimeField({ key: 'datetime', getSyncFieldsObs });
     expect(field.props?.getSyncFieldsObs).toBe(getSyncFieldsObs);
@@ -151,8 +151,8 @@ describe('forgeDateTimeField()', () => {
 });
 
 describe('forgeDateRangeField()', () => {
-  function getChildFields(row: RowField): ForgeDateTimeFieldDef[] {
-    return (row as any).fields as ForgeDateTimeFieldDef[];
+  function getChildFields(row: RowField): DbxForgeDateTimeFieldDef[] {
+    return (row as any).fields as DbxForgeDateTimeFieldDef[];
   }
 
   it('should create a row field', () => {
@@ -251,8 +251,8 @@ describe('forgeDateRangeField()', () => {
 });
 
 describe('forgeDateTimeRangeField()', () => {
-  function getChildFields(row: RowField): ForgeDateTimeFieldDef[] {
-    return (row as any).fields as ForgeDateTimeFieldDef[];
+  function getChildFields(row: RowField): DbxForgeDateTimeFieldDef[] {
+    return (row as any).fields as DbxForgeDateTimeFieldDef[];
   }
 
   it('should create a row field', () => {

@@ -4,8 +4,8 @@ import { forgeField } from '../../field';
 import { forgeRow } from '../../wrapper/wrapper';
 import { forgeDbxSectionFieldWrapper } from '../../wrapper/section/section.field';
 import { forgeTextField } from '../text/text.field';
-import { forgeArrayField, type ForgeArrayTemplateField, type ForgeArrayFieldDef } from '../array/array.field';
-import type { ForgePhoneFieldProps } from './phone.field.component';
+import { forgeArrayField, type DbxForgeArrayTemplateField, type DbxForgeArrayFieldDef } from '../array/array.field';
+import type { DbxForgePhoneFieldProps } from './phone.field.component';
 
 // MARK: Phone Field
 /**
@@ -16,7 +16,7 @@ export const FORGE_PHONE_FIELD_TYPE = 'phone' as const;
 /**
  * Field definition type for a forge phone field.
  */
-export type ForgePhoneFieldDef = BaseValueField<ForgePhoneFieldProps, string> & {
+export type DbxForgePhoneFieldDef = BaseValueField<DbxForgePhoneFieldProps, string> & {
   readonly type: typeof FORGE_PHONE_FIELD_TYPE;
 };
 
@@ -29,9 +29,9 @@ export type ForgePhoneFieldDef = BaseValueField<ForgePhoneFieldProps, string> & 
  * The underlying `ngx-mat-input-tel` component only supports `'off'` and `'tel'`.
  * Pass `false` to disable autocomplete (equivalent to `'off'`).
  */
-export type ForgePhoneFieldAutocomplete = 'off' | 'tel' | false;
+export type DbxForgePhoneFieldAutocomplete = 'off' | 'tel' | false;
 
-export interface ForgePhoneFieldConfig {
+export interface DbxForgePhoneFieldConfig {
   readonly key: string;
   readonly label?: string;
   readonly required?: boolean;
@@ -62,7 +62,7 @@ export interface ForgePhoneFieldConfig {
    *
    * Pass `'tel'` to enable phone autofill, or `false`/`'off'` to disable.
    */
-  readonly autocomplete?: ForgePhoneFieldAutocomplete;
+  readonly autocomplete?: DbxForgePhoneFieldAutocomplete;
 }
 
 /**
@@ -79,10 +79,10 @@ export interface ForgePhoneFieldConfig {
  * const field = forgePhoneField({ key: 'phone', label: 'Phone Number', required: true });
  * ```
  */
-export function forgePhoneField(config: ForgePhoneFieldConfig): ForgePhoneFieldDef {
+export function forgePhoneField(config: DbxForgePhoneFieldConfig): DbxForgePhoneFieldDef {
   const { key, label = 'Phone Number', required, readonly: isReadonly, description, defaultValue = '', preferredCountries, onlyCountries, enableSearch, allowExtension, autocomplete } = config;
 
-  const props: Partial<ForgePhoneFieldProps> = filterFromPOJO({
+  const props: Partial<DbxForgePhoneFieldProps> = filterFromPOJO({
     hint: description,
     preferredCountries,
     onlyCountries,
@@ -100,7 +100,7 @@ export function forgePhoneField(config: ForgePhoneFieldConfig): ForgePhoneFieldD
       required,
       readonly: isReadonly,
       props: Object.keys(props).length > 0 ? props : undefined
-    }) as ForgePhoneFieldDef
+    }) as DbxForgePhoneFieldDef
   );
 }
 
@@ -108,8 +108,8 @@ export function forgePhoneField(config: ForgePhoneFieldConfig): ForgePhoneFieldD
 /**
  * Configuration for a forge phone number field paired with a text label field.
  */
-export interface ForgeWrappedPhoneAndLabelFieldConfig {
-  readonly phoneField?: Partial<ForgePhoneFieldConfig>;
+export interface DbxForgeWrappedPhoneAndLabelFieldConfig {
+  readonly phoneField?: Partial<DbxForgePhoneFieldConfig>;
   readonly labelField?: {
     readonly key?: string;
     readonly label?: string;
@@ -129,7 +129,7 @@ export interface ForgeWrappedPhoneAndLabelFieldConfig {
  * const field = forgeWrappedPhoneAndLabelField({ phoneField: { required: true } });
  * ```
  */
-export function forgeWrappedPhoneAndLabelField(config: ForgeWrappedPhoneAndLabelFieldConfig = {}): FieldDef<unknown> {
+export function forgeWrappedPhoneAndLabelField(config: DbxForgeWrappedPhoneAndLabelFieldConfig = {}): FieldDef<unknown> {
   const { phoneField: phone, labelField: labelConfig } = config;
 
   return forgeRow({
@@ -151,7 +151,7 @@ export function forgeWrappedPhoneAndLabelField(config: ForgeWrappedPhoneAndLabel
 /**
  * Configuration for a forge section-wrapped phone + label field pair.
  */
-export interface ForgePhoneAndLabelSectionFieldConfig extends ForgeWrappedPhoneAndLabelFieldConfig {
+export interface DbxForgePhoneAndLabelSectionFieldConfig extends DbxForgeWrappedPhoneAndLabelFieldConfig {
   readonly key?: string;
   readonly header?: string;
   readonly hint?: string;
@@ -168,7 +168,7 @@ export interface ForgePhoneAndLabelSectionFieldConfig extends ForgeWrappedPhoneA
  * const field = forgePhoneAndLabelSectionField({ header: 'Contact Phone' });
  * ```
  */
-export function forgePhoneAndLabelSectionField(config: ForgePhoneAndLabelSectionFieldConfig = {}): FieldDef<unknown> {
+export function forgePhoneAndLabelSectionField(config: DbxForgePhoneAndLabelSectionFieldConfig = {}): FieldDef<unknown> {
   const { key, phoneField, labelField } = config;
 
   return forgeDbxSectionFieldWrapper({
@@ -181,14 +181,14 @@ export function forgePhoneAndLabelSectionField(config: ForgePhoneAndLabelSection
 /**
  * Configuration for a forge repeatable list of phone + label field pairs.
  */
-export interface ForgePhoneListFieldConfig {
+export interface DbxForgePhoneListFieldConfig {
   readonly key?: string;
   /**
    * Template fields for each phone list item.
    *
    * If not provided, defaults to the phone and label field pair.
    */
-  readonly template?: ForgeArrayTemplateField | readonly ForgeArrayTemplateField[];
+  readonly template?: DbxForgeArrayTemplateField | readonly DbxForgeArrayTemplateField[];
   readonly minLength?: number;
   readonly maxLength?: number;
   readonly addText?: string;
@@ -199,17 +199,17 @@ export interface ForgePhoneListFieldConfig {
  * Creates a forge drag array field for collecting multiple phone number entries.
  *
  * @param config - Phone list field configuration
- * @returns A {@link ForgeArrayFieldDef}
+ * @returns A {@link DbxForgeArrayFieldDef}
  *
  * @example
  * ```typescript
  * const field = forgePhoneListField({ maxLength: 3 });
  * ```
  */
-export function forgePhoneListField(config: ForgePhoneListFieldConfig = {}): ForgeArrayFieldDef {
+export function forgePhoneListField(config: DbxForgePhoneListFieldConfig = {}): DbxForgeArrayFieldDef {
   const { key = 'phones', template, minLength, maxLength, addText = 'Add Phone Number', removeText = 'Remove Phone Number' } = config;
 
-  const defaultTemplate: ForgeArrayTemplateField[] = [forgePhoneField({ key: 'phone' }), forgeTextField({ key: 'label', label: 'Label' })];
+  const defaultTemplate: DbxForgeArrayTemplateField[] = [forgePhoneField({ key: 'phone' }), forgeTextField({ key: 'label', label: 'Label' })];
 
   return forgeArrayField({
     key,

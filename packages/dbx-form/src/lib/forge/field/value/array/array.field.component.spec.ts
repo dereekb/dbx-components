@@ -4,8 +4,8 @@ import { Component, ChangeDetectionStrategy, signal, provideZonelessChangeDetect
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { type CdkDragDrop } from '@angular/cdk/drag-drop';
 import { DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
-import { ForgeArrayFieldComponent } from './array.field.component';
-import type { ForgeArrayFieldProps, ForgeArrayItemPair } from './array.field';
+import { DbxForgeArrayFieldComponent } from './array.field.component';
+import type { DbxForgeArrayFieldProps, DbxForgeArrayItemPair } from './array.field';
 
 // MARK: Mock
 /**
@@ -35,12 +35,12 @@ function createMockDragEvent(previousIndex: number, currentIndex: number): CdkDr
     <dbx-forge-array-field [field]="fieldTree" [key]="'items'" [props]="props()" />
   `,
   standalone: true,
-  imports: [ForgeArrayFieldComponent],
+  imports: [DbxForgeArrayFieldComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 class TestHostComponent {
   fieldTree: any;
-  readonly props = signal<ForgeArrayFieldProps | undefined>(undefined);
+  readonly props = signal<DbxForgeArrayFieldProps | undefined>(undefined);
 }
 
 // MARK: Helpers
@@ -52,13 +52,13 @@ async function settle(fixture: ComponentFixture<any>): Promise<void> {
   fixture.detectChanges();
 }
 
-function getDragArrayComponent(fixture: ComponentFixture<TestHostComponent>): ForgeArrayFieldComponent {
+function getDragArrayComponent(fixture: ComponentFixture<TestHostComponent>): DbxForgeArrayFieldComponent {
   const el = fixture.debugElement.children[0];
-  return el.componentInstance as ForgeArrayFieldComponent;
+  return el.componentInstance as DbxForgeArrayFieldComponent;
 }
 
 // MARK: Tests
-describe('ForgeArrayFieldComponent', () => {
+describe('DbxForgeArrayFieldComponent', () => {
   let fixture: ComponentFixture<TestHostComponent>;
   let host: TestHostComponent;
   let mock: ReturnType<typeof createMockFieldTree>;
@@ -156,7 +156,7 @@ describe('ForgeArrayFieldComponent', () => {
     });
 
     it('should add duplicate to end when addDuplicateToEnd is true', async () => {
-      host.props.set({ template: [], addDuplicateToEnd: true } as ForgeArrayFieldProps);
+      host.props.set({ template: [], addDuplicateToEnd: true } as DbxForgeArrayFieldProps);
       await settle(fixture);
 
       const comp = getDragArrayComponent(fixture);
@@ -281,7 +281,7 @@ describe('ForgeArrayFieldComponent', () => {
     });
 
     it('should use static string labelForField', async () => {
-      host.props.set({ template: [], labelForField: 'Item' } as ForgeArrayFieldProps);
+      host.props.set({ template: [], labelForField: 'Item' } as DbxForgeArrayFieldProps);
       await settle(fixture);
 
       const comp = getDragArrayComponent(fixture);
@@ -291,8 +291,8 @@ describe('ForgeArrayFieldComponent', () => {
     it('should use function labelForField', async () => {
       host.props.set({
         template: [],
-        labelForField: (pair: ForgeArrayItemPair) => (pair.value as { name: string })?.name ?? 'unnamed'
-      } as ForgeArrayFieldProps);
+        labelForField: (pair: DbxForgeArrayItemPair) => (pair.value as { name: string })?.name ?? 'unnamed'
+      } as DbxForgeArrayFieldProps);
       await settle(fixture);
 
       const comp = getDragArrayComponent(fixture);
@@ -308,7 +308,7 @@ describe('ForgeArrayFieldComponent', () => {
     });
 
     it('should be false when allowAdd is false', async () => {
-      host.props.set({ template: [], allowAdd: false } as ForgeArrayFieldProps);
+      host.props.set({ template: [], allowAdd: false } as DbxForgeArrayFieldProps);
       await settle(fixture);
 
       const comp = getDragArrayComponent(fixture);
@@ -316,7 +316,7 @@ describe('ForgeArrayFieldComponent', () => {
     });
 
     it('should be false when maxLength is reached', async () => {
-      host.props.set({ template: [], maxLength: 2 } as ForgeArrayFieldProps);
+      host.props.set({ template: [], maxLength: 2 } as DbxForgeArrayFieldProps);
       await settle(fixture);
 
       const comp = getDragArrayComponent(fixture);
@@ -326,7 +326,7 @@ describe('ForgeArrayFieldComponent', () => {
     });
 
     it('should be true when under maxLength', async () => {
-      host.props.set({ template: [], maxLength: 2 } as ForgeArrayFieldProps);
+      host.props.set({ template: [], maxLength: 2 } as DbxForgeArrayFieldProps);
       await settle(fixture);
 
       const comp = getDragArrayComponent(fixture);

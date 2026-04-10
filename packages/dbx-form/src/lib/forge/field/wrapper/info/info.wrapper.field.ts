@@ -2,7 +2,7 @@ import type { FieldTypeDefinition, BaseValueField, FieldDef } from '@ng-forge/dy
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { filterFromPOJO } from '@dereekb/util';
 import { forgeField } from '../../field';
-import type { ForgeWrapperFieldProps } from '../wrapper.field';
+import type { DbxForgeWrapperFieldProps } from '../wrapper.field';
 
 // MARK: Field Type
 export const FORGE_INFO_WRAPPER_FIELD_TYPE_NAME = 'dbx-forge-info' as const;
@@ -10,7 +10,7 @@ export const FORGE_INFO_WRAPPER_FIELD_TYPE_NAME = 'dbx-forge-info' as const;
 /**
  * Props interface for the forge info wrapper field.
  */
-export interface ForgeInfoWrapperFieldProps extends ForgeWrapperFieldProps {
+export interface DbxForgeInfoWrapperFieldProps extends DbxForgeWrapperFieldProps {
   /**
    * Callback invoked when the info button is clicked.
    */
@@ -27,16 +27,16 @@ export interface ForgeInfoWrapperFieldProps extends ForgeWrapperFieldProps {
  * Renders child fields inside a flex layout with an info icon button
  * positioned beside the content.
  */
-export interface ForgeInfoWrapperFieldDef extends BaseValueField<ForgeInfoWrapperFieldProps, Record<string, unknown>> {
+export interface DbxForgeInfoWrapperFieldDef extends BaseValueField<DbxForgeInfoWrapperFieldProps, Record<string, unknown>> {
   readonly type: typeof FORGE_INFO_WRAPPER_FIELD_TYPE_NAME;
 }
 
 /**
  * ng-forge FieldTypeDefinition for the info wrapper field.
  */
-export const DBX_FORGE_INFO_WRAPPER_FIELD_TYPE: FieldTypeDefinition<ForgeInfoWrapperFieldDef> = {
+export const DBX_FORGE_INFO_WRAPPER_FIELD_TYPE: FieldTypeDefinition<DbxForgeInfoWrapperFieldDef> = {
   name: FORGE_INFO_WRAPPER_FIELD_TYPE_NAME,
-  loadComponent: () => import('./info.wrapper.field.component').then((m) => m.ForgeInfoWrapperFieldComponent),
+  loadComponent: () => import('./info.wrapper.field.component').then((m) => m.DbxForgeInfoWrapperFieldComponent),
   mapper: valueFieldMapper
 };
 
@@ -44,7 +44,7 @@ export const DBX_FORGE_INFO_WRAPPER_FIELD_TYPE: FieldTypeDefinition<ForgeInfoWra
 /**
  * Configuration for creating a forge info wrapper field.
  */
-export interface ForgeInfoWrapperFieldConfig {
+export interface DbxForgeInfoWrapperFieldConfig {
   /**
    * Child field definitions to render inside the info wrapper.
    */
@@ -77,7 +77,7 @@ let _forgeInfoWrapperCounter = 0;
  * the parent form value.
  *
  * @param config - Info wrapper configuration
- * @returns A {@link ForgeInfoWrapperFieldDef}
+ * @returns A {@link DbxForgeInfoWrapperFieldDef}
  *
  * @example
  * ```typescript
@@ -90,7 +90,7 @@ let _forgeInfoWrapperCounter = 0;
  * });
  * ```
  */
-export function forgeInfoFieldWrapper(config: ForgeInfoWrapperFieldConfig): ForgeInfoWrapperFieldDef {
+export function forgeInfoFieldWrapper(config: DbxForgeInfoWrapperFieldConfig): DbxForgeInfoWrapperFieldDef {
   const { fields, onInfoClick, ariaLabel, key } = config;
 
   return forgeField(
@@ -103,7 +103,7 @@ export function forgeInfoFieldWrapper(config: ForgeInfoWrapperFieldConfig): Forg
         fields,
         onInfoClick,
         ariaLabel
-      }) as ForgeInfoWrapperFieldProps
-    }) as ForgeInfoWrapperFieldDef
+      }) as DbxForgeInfoWrapperFieldProps
+    }) as DbxForgeInfoWrapperFieldDef
   );
 }

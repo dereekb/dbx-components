@@ -68,7 +68,7 @@ interface SelectedDateEvent {
  * Uses the same `DateRange` shape as `@dereekb/date` — an object with `start` and `end` dates.
  * The actual stored value format depends on the configured `valueMode`.
  */
-export interface ForgeFixedDateRangeValue {
+export interface DbxForgeFixedDateRangeValue {
   readonly start?: Maybe<Date>;
   readonly end?: Maybe<Date>;
 }
@@ -79,7 +79,7 @@ export interface ForgeFixedDateRangeValue {
  *
  * Full parity with formly `DbxFixedDateRangeFieldProps`.
  */
-export interface ForgeFixedDateRangeFieldComponentProps {
+export interface DbxForgeFixedDateRangeFieldComponentProps {
   /**
    * Date range input to build the date range from a single picked date.
    * Required for 'single' mode and boundary-based selection modes.
@@ -156,11 +156,11 @@ export interface ForgeFixedDateRangeFieldComponentProps {
   providers: [
     {
       provide: MAT_DATE_RANGE_SELECTION_STRATEGY,
-      useClass: forwardRef(() => ForgeFixedDateRangeFieldSelectionStrategy)
+      useClass: forwardRef(() => DbxForgeFixedDateRangeFieldSelectionStrategy)
     }
   ]
 })
-export class ForgeFixedDateRangeFieldComponent {
+export class DbxForgeFixedDateRangeFieldComponent {
   private readonly destroyRef = inject(DestroyRef);
 
   // MARK: ng-forge ValueFieldComponent inputs
@@ -170,7 +170,7 @@ export class ForgeFixedDateRangeFieldComponent {
   readonly placeholder: InputSignal<DynamicText | undefined> = input<DynamicText | undefined>();
   readonly className: InputSignal<string> = input('');
   readonly tabIndex: InputSignal<number | undefined> = input<number | undefined>();
-  readonly props: InputSignal<ForgeFixedDateRangeFieldComponentProps | undefined> = input<ForgeFixedDateRangeFieldComponentProps | undefined>();
+  readonly props: InputSignal<DbxForgeFixedDateRangeFieldComponentProps | undefined> = input<DbxForgeFixedDateRangeFieldComponentProps | undefined>();
   readonly meta: InputSignal<Record<string, unknown> | undefined> = input<Record<string, unknown> | undefined>();
   readonly validationMessages: InputSignal<ValidationMessages | undefined> = input<ValidationMessages | undefined>();
   readonly defaultValidationMessages: InputSignal<ValidationMessages | undefined> = input<ValidationMessages | undefined>();
@@ -741,9 +741,9 @@ export class ForgeFixedDateRangeFieldComponent {
  * and boundary constraints.
  */
 @Injectable()
-export class ForgeFixedDateRangeFieldSelectionStrategy<D> implements MatDateRangeSelectionStrategy<D> {
+export class DbxForgeFixedDateRangeFieldSelectionStrategy<D> implements MatDateRangeSelectionStrategy<D> {
   private readonly _dateAdapter = inject(DateAdapter<D>);
-  readonly component = inject(ForgeFixedDateRangeFieldComponent);
+  readonly component = inject(DbxForgeFixedDateRangeFieldComponent);
 
   selectionFinished(date: D | null, currentRange: DatePickerDateRange<D>, _event: Event): DatePickerDateRange<D> {
     return currentRange;

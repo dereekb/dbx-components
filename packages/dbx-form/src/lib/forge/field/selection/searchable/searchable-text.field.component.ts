@@ -11,7 +11,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { type FieldTree } from '@angular/forms/signals';
 import { type SearchableValueFieldDisplayValue, type ConfiguredSearchableValueFieldDisplayValue } from '../../../../formly/field/selection/searchable/searchable';
 import { DbxSearchableFieldAutocompleteItemComponent } from '../../../../formly/field/selection/searchable/searchable.field.autocomplete.item.component';
-import { AbstractForgeSearchableFieldDirective, type ForgeSearchableTextFieldProps } from './searchable.field.directive';
+import { AbstractForgeSearchableFieldDirective, type DbxForgeSearchableTextFieldProps } from './searchable.field.directive';
 import { forgeFieldDisabled } from '../../field.disabled';
 import { toggleDisableFormControl } from '../../../../form/form';
 
@@ -28,7 +28,7 @@ import { toggleDisableFormControl } from '../../../../form/form';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxForgeSearchableTextFieldComponent<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends AbstractForgeSearchableFieldDirective<T, M, H, ForgeSearchableTextFieldProps<T, M, H>> {
+export class DbxForgeSearchableTextFieldComponent<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends AbstractForgeSearchableFieldDirective<T, M, H, DbxForgeSearchableTextFieldProps<T, M, H>> {
   readonly field = input.required<FieldTree<T>>();
   readonly textInputRef = viewChild<ElementRef<HTMLInputElement>>('textInput');
 

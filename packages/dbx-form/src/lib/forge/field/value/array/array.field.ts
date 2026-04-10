@@ -10,7 +10,7 @@ import { forgeField } from '../../field';
  * Includes both ng-forge built-in fields and custom FieldDef types.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ForgeArrayTemplateField = ArrayAllowedChildren | FieldDef<any>;
+export type DbxForgeArrayTemplateField = ArrayAllowedChildren | FieldDef<any>;
 
 // MARK: Field Type
 export const FORGE_ARRAY_FIELD_TYPE_NAME = 'dbx-forge-array' as const;
@@ -18,7 +18,7 @@ export const FORGE_ARRAY_FIELD_TYPE_NAME = 'dbx-forge-array' as const;
 /**
  * Pair representing an array item with its index and optional value.
  */
-export interface ForgeArrayItemPair<T = unknown> {
+export interface DbxForgeArrayItemPair<T = unknown> {
   readonly index: number;
   readonly value?: T;
 }
@@ -26,15 +26,15 @@ export interface ForgeArrayItemPair<T = unknown> {
 /**
  * Props interface for the forge drag array field.
  */
-export interface ForgeArrayFieldProps<T = unknown> {
+export interface DbxForgeArrayFieldProps<T = unknown> {
   /**
    * Template defining the structure of a single array item.
    */
-  readonly template: ForgeArrayTemplateField | readonly ForgeArrayTemplateField[];
+  readonly template: DbxForgeArrayTemplateField | readonly DbxForgeArrayTemplateField[];
   /**
    * Label for each array item. Can be a static string or a function.
    */
-  readonly labelForField?: string | FactoryWithRequiredInput<string, ForgeArrayItemPair<T>>;
+  readonly labelForField?: string | FactoryWithRequiredInput<string, DbxForgeArrayItemPair<T>>;
   /**
    * Text for the add button. Defaults to 'Add'.
    */
@@ -92,16 +92,16 @@ export interface ForgeArrayFieldProps<T = unknown> {
 /**
  * Forge field definition for a drag-and-drop array.
  */
-export interface ForgeArrayFieldDef<T = unknown> extends BaseValueField<ForgeArrayFieldProps<T>, unknown[]> {
+export interface DbxForgeArrayFieldDef<T = unknown> extends BaseValueField<DbxForgeArrayFieldProps<T>, unknown[]> {
   readonly type: typeof FORGE_ARRAY_FIELD_TYPE_NAME;
 }
 
 /**
  * ng-forge FieldTypeDefinition for the drag array field.
  */
-export const DBX_FORGE_ARRAY_FIELD_TYPE: FieldTypeDefinition<ForgeArrayFieldDef> = {
+export const DBX_FORGE_ARRAY_FIELD_TYPE: FieldTypeDefinition<DbxForgeArrayFieldDef> = {
   name: FORGE_ARRAY_FIELD_TYPE_NAME,
-  loadComponent: () => import('./array.field.component').then((m) => m.ForgeArrayFieldComponent),
+  loadComponent: () => import('./array.field.component').then((m) => m.DbxForgeArrayFieldComponent),
   mapper: valueFieldMapper
 };
 
@@ -109,7 +109,7 @@ export const DBX_FORGE_ARRAY_FIELD_TYPE: FieldTypeDefinition<ForgeArrayFieldDef>
 /**
  * Configuration for creating a forge drag array field.
  */
-export interface ForgeArrayFieldConfig<T = unknown> {
+export interface DbxForgeArrayFieldConfig<T = unknown> {
   /**
    * Key for the array field.
    */
@@ -128,7 +128,7 @@ export interface ForgeArrayFieldConfig<T = unknown> {
    * - Single field for primitive array items
    * - Array of fields for object array items
    */
-  readonly template: ForgeArrayTemplateField | readonly ForgeArrayTemplateField[];
+  readonly template: DbxForgeArrayTemplateField | readonly DbxForgeArrayTemplateField[];
   /**
    * Initial array values.
    */
@@ -136,7 +136,7 @@ export interface ForgeArrayFieldConfig<T = unknown> {
   /**
    * Label for each item. Static string or function receiving index/value.
    */
-  readonly labelForField?: string | FactoryWithRequiredInput<string, ForgeArrayItemPair<T>>;
+  readonly labelForField?: string | FactoryWithRequiredInput<string, DbxForgeArrayItemPair<T>>;
   /**
    * Add button text. Defaults to 'Add'.
    */
@@ -202,7 +202,7 @@ export interface ForgeArrayFieldConfig<T = unknown> {
  * `DbxFormRepeatArrayTypeComponent`.
  *
  * @param config - Drag array field configuration
- * @returns A {@link ForgeArrayFieldDef}
+ * @returns A {@link DbxForgeArrayFieldDef}
  *
  * @example
  * ```typescript
@@ -217,7 +217,7 @@ export interface ForgeArrayFieldConfig<T = unknown> {
  * });
  * ```
  */
-export function forgeArrayField<T = unknown>(config: ForgeArrayFieldConfig<T>): ForgeArrayFieldDef<T> {
+export function forgeArrayField<T = unknown>(config: DbxForgeArrayFieldConfig<T>): DbxForgeArrayFieldDef<T> {
   const { key, label, description, template, value, labelForField, addText, removeText, duplicateText, allowAdd, allowRemove, allowDuplicate, disableRearrange, addDuplicateToEnd, maxLength, minLength, addButtonStyle, removeButtonStyle, duplicateButtonStyle } = config;
 
   return forgeField(
@@ -243,7 +243,7 @@ export function forgeArrayField<T = unknown>(config: ForgeArrayFieldConfig<T>): 
         addButtonStyle,
         removeButtonStyle,
         duplicateButtonStyle
-      }) as ForgeArrayFieldProps<T>
-    }) as ForgeArrayFieldDef<T>
+      }) as DbxForgeArrayFieldProps<T>
+    }) as DbxForgeArrayFieldDef<T>
   );
 }

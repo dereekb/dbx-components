@@ -17,7 +17,7 @@ import { forgeFieldDisabled } from '../../field.disabled';
  *
  * Passed via the `props` property on the forge field definition.
  */
-export interface ForgeListSelectionFieldProps<T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey> {
+export interface DbxForgeListSelectionFieldProps<T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey> {
   /**
    * List component class to render items from. Can be provided as an Observable for lazy loading.
    */
@@ -48,7 +48,7 @@ export const FORGE_LIST_SELECTION_FIELD_TYPE = 'dbx-list-selection' as const;
 /**
  * Forge field definition interface for the list selection field.
  */
-export interface ForgeListSelectionFieldDef<T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey> extends BaseValueField<ForgeListSelectionFieldProps<T, C, K>, K[]> {
+export interface DbxForgeListSelectionFieldDef<T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey> extends BaseValueField<DbxForgeListSelectionFieldProps<T, C, K>, K[]> {
   readonly type: typeof FORGE_LIST_SELECTION_FIELD_TYPE;
 }
 
@@ -75,7 +75,7 @@ export class DbxForgeListSelectionFieldComponent<T = unknown, C extends Abstract
   readonly placeholder = input<DynamicText | undefined>();
   readonly className = input<string>('');
   readonly tabIndex = input<number | undefined>();
-  readonly props = input<ForgeListSelectionFieldProps<T, C, K> | undefined>();
+  readonly props = input<DbxForgeListSelectionFieldProps<T, C, K> | undefined>();
   readonly meta = input<FieldMeta | undefined>();
   readonly validationMessages = input<ValidationMessages | undefined>();
   readonly defaultValidationMessages = input<ValidationMessages | undefined>();

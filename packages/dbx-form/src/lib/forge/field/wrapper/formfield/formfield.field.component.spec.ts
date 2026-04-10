@@ -54,7 +54,7 @@ async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
 }
 
 // MARK: Tests
-describe('ForgeFormFieldWrapperComponent', () => {
+describe('DbxForgeFormFieldWrapperComponent', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [TestFormFieldWrapperHostComponent],

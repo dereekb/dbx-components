@@ -1,15 +1,15 @@
 import { ChangeDetectionStrategy, Component, computed, viewChild } from '@angular/core';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { AbstractForgeWrapperFieldComponent, provideDbxForgeWrapperFieldDirective } from '../wrapper.field';
-import { ForgeWrapperContentComponent } from '../wrapper.content.component';
-import type { ForgeWorkingWrapperFieldProps } from './working.wrapper.field';
+import { DbxForgeWrapperContentComponent } from '../wrapper.content.component';
+import type { DbxForgeWorkingWrapperFieldProps } from './working.wrapper.field';
 
 /**
  * Forge wrapper field component that renders child fields with a loading
  * indicator shown during async validation.
  *
  * This is the forge equivalent of formly's `DbxFormWorkingWrapperComponent`.
- * Monitors the child form's pending signal (via {@link ForgeWrapperContentComponent})
+ * Monitors the child form's pending signal (via {@link DbxForgeWrapperContentComponent})
  * to detect when async validators are running.
  */
 @Component({
@@ -22,16 +22,16 @@ import type { ForgeWorkingWrapperFieldProps } from './working.wrapper.field';
       }
     </div>
   `,
-  providers: provideDbxForgeWrapperFieldDirective(ForgeWorkingWrapperFieldComponent),
-  imports: [ForgeWrapperContentComponent, MatProgressBarModule],
+  providers: provideDbxForgeWrapperFieldDirective(DbxForgeWorkingWrapperFieldComponent),
+  imports: [DbxForgeWrapperContentComponent, MatProgressBarModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   host: {
     '[class]': 'className()'
   }
 })
-export class ForgeWorkingWrapperFieldComponent extends AbstractForgeWrapperFieldComponent<ForgeWorkingWrapperFieldProps> {
-  private readonly _content = viewChild(ForgeWrapperContentComponent);
+export class DbxForgeWorkingWrapperFieldComponent extends AbstractForgeWrapperFieldComponent<DbxForgeWorkingWrapperFieldProps> {
+  private readonly _content = viewChild(DbxForgeWrapperContentComponent);
 
   readonly showLoadingSignal = computed((): boolean => {
     return this._content()?.pending() ?? false;

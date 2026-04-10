@@ -4,7 +4,7 @@ import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type DbxFormMapboxLatLngComponentFieldProps } from './latlng.field.component';
 
 /**
- * @deprecated Use ForgeMapboxLatLngFieldConfig instead.
+ * @deprecated Use DbxForgeMapboxLatLngFieldConfig instead.
  */
 export interface MapboxLatLngFieldConfig extends Omit<LabeledFieldConfig, 'key'>, DescriptionFieldConfig, Partial<FieldConfig>, Pick<DbxFormMapboxLatLngComponentFieldProps, 'showMap' | 'zoom' | 'latLngConfig' | 'recenterTime' | 'setCenterOnLocationSet' | 'showCenterButton' | 'selectLocationOnMapDrag' | 'selectLocationOnMapClick' | 'markerConfig'> {}
 

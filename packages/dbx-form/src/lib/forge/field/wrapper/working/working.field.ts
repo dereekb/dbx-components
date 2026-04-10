@@ -9,7 +9,7 @@ export const FORGE_WORKING_FIELD_TYPE_NAME = 'dbx-forge-working' as const;
 /**
  * Props interface for the forge working indicator field.
  */
-export interface ForgeWorkingFieldProps {
+export interface DbxForgeWorkingFieldProps {
   /**
    * Key of the sibling field to monitor for pending validation state.
    */
@@ -19,16 +19,16 @@ export interface ForgeWorkingFieldProps {
 /**
  * Forge field definition for a working indicator.
  */
-export interface ForgeWorkingFieldDef extends BaseValueField<ForgeWorkingFieldProps, unknown> {
+export interface DbxForgeWorkingFieldDef extends BaseValueField<DbxForgeWorkingFieldProps, unknown> {
   readonly type: typeof FORGE_WORKING_FIELD_TYPE_NAME;
 }
 
 /**
  * ng-forge FieldTypeDefinition for the working indicator field.
  */
-export const DBX_FORGE_WORKING_FIELD_TYPE: FieldTypeDefinition<ForgeWorkingFieldDef> = {
+export const DBX_FORGE_WORKING_FIELD_TYPE: FieldTypeDefinition<DbxForgeWorkingFieldDef> = {
   name: FORGE_WORKING_FIELD_TYPE_NAME,
-  loadComponent: () => import('./working.field.component').then((m) => m.ForgeWorkingFieldComponent),
+  loadComponent: () => import('./working.field.component').then((m) => m.DbxForgeWorkingFieldComponent),
   mapper: valueFieldMapper
 };
 
@@ -38,7 +38,7 @@ let _forgeWorkingCounter = 0;
 /**
  * Configuration for creating a forge working indicator field.
  */
-export interface ForgeWorkingFieldConfig {
+export interface DbxForgeWorkingFieldConfig {
   /**
    * Key of the sibling field to monitor for pending validation state.
    */
@@ -54,9 +54,9 @@ export interface ForgeWorkingFieldConfig {
  * when a sibling field is in a pending validation state.
  *
  * @param config - Working indicator configuration
- * @returns A {@link ForgeWorkingFieldDef}
+ * @returns A {@link DbxForgeWorkingFieldDef}
  */
-export function forgeWorkingField(config: ForgeWorkingFieldConfig): ForgeWorkingFieldDef {
+export function forgeWorkingField(config: DbxForgeWorkingFieldConfig): DbxForgeWorkingFieldDef {
   const { watchFieldKey, key } = config;
 
   return forgeField(
@@ -65,7 +65,7 @@ export function forgeWorkingField(config: ForgeWorkingFieldConfig): ForgeWorking
       type: FORGE_WORKING_FIELD_TYPE_NAME,
       label: '',
       value: undefined as unknown,
-      props: { watchFieldKey } as ForgeWorkingFieldProps
-    }) as ForgeWorkingFieldDef
+      props: { watchFieldKey } as DbxForgeWorkingFieldProps
+    }) as DbxForgeWorkingFieldDef
   );
 }

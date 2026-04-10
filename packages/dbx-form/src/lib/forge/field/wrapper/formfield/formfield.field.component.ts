@@ -4,8 +4,8 @@ import type { FieldTree } from '@angular/forms/signals';
 import { forgeFieldDisabled } from '../../field.disabled';
 import { AsyncPipe } from '@angular/common';
 import { AbstractForgeWrapperFieldComponent, provideDbxForgeWrapperFieldDirective } from '../wrapper.field';
-import { ForgeWrapperContentComponent } from '../wrapper.content.component';
-import type { ForgeFormFieldWrapperProps } from './formfield.field';
+import { DbxForgeWrapperContentComponent } from '../wrapper.content.component';
+import type { DbxForgeFormFieldWrapperProps } from './formfield.field';
 
 /**
  * Forge wrapper field component that renders child fields inside a Material-style
@@ -153,8 +153,8 @@ import type { ForgeFormFieldWrapperProps } from './formfield.field';
       }
     `
   ],
-  providers: provideDbxForgeWrapperFieldDirective(ForgeFormFieldWrapperComponent),
-  imports: [ForgeWrapperContentComponent, DynamicTextPipe, AsyncPipe],
+  providers: provideDbxForgeWrapperFieldDirective(DbxForgeFormFieldWrapperComponent),
+  imports: [DbxForgeWrapperContentComponent, DynamicTextPipe, AsyncPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   host: {
@@ -162,8 +162,8 @@ import type { ForgeFormFieldWrapperProps } from './formfield.field';
     '[class]': 'className()'
   }
 })
-export class ForgeFormFieldWrapperComponent extends AbstractForgeWrapperFieldComponent<ForgeFormFieldWrapperProps> {
-  readonly contentRef = viewChild(ForgeWrapperContentComponent);
+export class DbxForgeFormFieldWrapperComponent extends AbstractForgeWrapperFieldComponent<DbxForgeFormFieldWrapperProps> {
+  readonly contentRef = viewChild(DbxForgeWrapperContentComponent);
 
   // Disabled state
   readonly isDisabled = forgeFieldDisabled();

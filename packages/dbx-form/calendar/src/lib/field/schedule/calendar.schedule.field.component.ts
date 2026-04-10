@@ -69,7 +69,7 @@ export interface DbxFormCalendarDateCellScheduleRangeFieldProps extends Pick<For
 }
 
 /**
- * @deprecated Use ForgeCalendarDateScheduleRangeFieldComponent instead.
+ * @deprecated Use DbxForgeCalendarDateScheduleRangeFieldComponent instead.
  */
 @Component({
   template: `

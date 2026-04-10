@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, effect, inject, input } from '@angu
 import { type FieldTree } from '@angular/forms/signals';
 import type { DynamicText, FieldMeta, ValidationMessages } from '@ng-forge/dynamic-forms';
 import { DbxForgeFormContext } from '../../../form/forge.context';
-import type { ForgeAutoTouchFieldProps } from './autotouch.field';
+import type { DbxForgeAutoTouchFieldProps } from './autotouch.field';
 
 /**
  * Forge ValueFieldComponent that implements auto-touch behavior.
@@ -15,7 +15,7 @@ import type { ForgeAutoTouchFieldProps } from './autotouch.field';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class ForgeAutoTouchFieldComponent {
+export class DbxForgeAutoTouchFieldComponent {
   private readonly _forgeContext = inject(DbxForgeFormContext, { optional: true });
 
   // ng-forge ValueFieldComponent inputs
@@ -25,7 +25,7 @@ export class ForgeAutoTouchFieldComponent {
   readonly placeholder = input<DynamicText | undefined>();
   readonly className = input<string>('');
   readonly tabIndex = input<number | undefined>();
-  readonly props = input<ForgeAutoTouchFieldProps | undefined>();
+  readonly props = input<DbxForgeAutoTouchFieldProps | undefined>();
   readonly meta = input<FieldMeta | undefined>();
   readonly validationMessages = input<ValidationMessages | undefined>();
   readonly defaultValidationMessages = input<ValidationMessages | undefined>();

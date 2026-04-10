@@ -1,8 +1,8 @@
 import type { AsyncCustomValidator } from '@ng-forge/dynamic-forms';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { type Observable, of } from 'rxjs';
-import { forgeTextField, type ForgeTextFieldConfig } from '../field/value/text/text.field';
-import { forgeWorkingFieldWrapper, type ForgeWorkingWrapperFieldDef } from '../field/wrapper/working/working.wrapper.field';
+import { forgeTextField, type DbxForgeTextFieldConfig } from '../field/value/text/text.field';
+import { forgeWorkingFieldWrapper, type DbxForgeWorkingWrapperFieldDef } from '../field/wrapper/working/working.wrapper.field';
 
 // MARK: Validator
 /**
@@ -15,16 +15,16 @@ export const FORGE_FIELD_VALUE_IS_AVAILABLE_VALIDATOR_NAME = 'fieldValueIsAvaila
  *
  * @returns An observable that emits `true` if the value is available, `false` otherwise.
  */
-export type ForgeFieldValueIsAvailableCheckFn<T> = (value: T) => Observable<boolean>;
+export type DbxForgeFieldValueIsAvailableCheckFn<T> = (value: T) => Observable<boolean>;
 
 /**
  * Configuration for the forge field-value-is-available async validator.
  */
-export interface ForgeFieldValueIsAvailableValidatorConfig<T> {
+export interface DbxForgeFieldValueIsAvailableValidatorConfig<T> {
   /**
    * Function that checks whether the entered value is available.
    */
-  readonly checkValueIsAvailable: ForgeFieldValueIsAvailableCheckFn<T>;
+  readonly checkValueIsAvailable: DbxForgeFieldValueIsAvailableCheckFn<T>;
   /**
    * Custom error message displayed when the value is not available.
    *
@@ -46,7 +46,7 @@ export interface ForgeFieldValueIsAvailableValidatorConfig<T> {
 /**
  * Internal params shape for the availability-check rxResource.
  */
-interface ForgeAvailabilityCheckParams {
+interface DbxForgeAvailabilityCheckParams {
   readonly value: unknown;
 }
 
@@ -56,7 +56,7 @@ interface ForgeAvailabilityCheckParams {
  * Contains the async validator and its validation messages, ready to be spread
  * into a FormConfig's `customFnConfig.asyncValidators` and `defaultValidationMessages`.
  */
-export interface ForgeFieldValueIsAvailableValidatorResult {
+export interface DbxForgeFieldValueIsAvailableValidatorResult {
   /**
    * The validator name used to reference this validator in field configs.
    */
@@ -79,7 +79,7 @@ export interface ForgeFieldValueIsAvailableValidatorResult {
  * check function to ng-forge's resource-based validation system.
  *
  * @param config - Configuration for the availability check.
- * @returns A {@link ForgeFieldValueIsAvailableValidatorResult} containing the validator and messages.
+ * @returns A {@link DbxForgeFieldValueIsAvailableValidatorResult} containing the validator and messages.
  *
  * @example
  * ```typescript
@@ -95,14 +95,14 @@ export interface ForgeFieldValueIsAvailableValidatorResult {
  * };
  * ```
  */
-export function forgeFieldValueIsAvailableValidator<T>(config: ForgeFieldValueIsAvailableValidatorConfig<T>): ForgeFieldValueIsAvailableValidatorResult {
+export function forgeFieldValueIsAvailableValidator<T>(config: DbxForgeFieldValueIsAvailableValidatorConfig<T>): DbxForgeFieldValueIsAvailableValidatorResult {
   const { checkValueIsAvailable, isNotAvailableErrorMessage = 'This value is not available.', validatorName = FORGE_FIELD_VALUE_IS_AVAILABLE_VALIDATOR_NAME, throttle: _throttle } = config;
 
   const asyncValidator: AsyncCustomValidator = {
-    params: (ctx): ForgeAvailabilityCheckParams => ({ value: ctx.value() }),
+    params: (ctx): DbxForgeAvailabilityCheckParams => ({ value: ctx.value() }),
     factory: (paramsSignal) => {
-      return rxResource<boolean, ForgeAvailabilityCheckParams>({
-        params: () => paramsSignal() as ForgeAvailabilityCheckParams,
+      return rxResource<boolean, DbxForgeAvailabilityCheckParams>({
+        params: () => paramsSignal() as DbxForgeAvailabilityCheckParams,
         stream: ({ params }) => {
           if (!params.value) {
             return of(true);
@@ -133,11 +133,11 @@ export function forgeFieldValueIsAvailableValidator<T>(config: ForgeFieldValueIs
 /**
  * Configuration for a forge text field that includes an async availability check.
  */
-export interface ForgeTextAvailableFieldConfig extends ForgeTextFieldConfig, Omit<ForgeFieldValueIsAvailableValidatorConfig<string>, 'checkValueIsAvailable'> {
+export interface DbxForgeTextAvailableFieldConfig extends DbxForgeTextFieldConfig, Omit<DbxForgeFieldValueIsAvailableValidatorConfig<string>, 'checkValueIsAvailable'> {
   /**
    * Function that checks whether the entered value is available.
    */
-  readonly checkValueIsAvailable: ForgeFieldValueIsAvailableCheckFn<string>;
+  readonly checkValueIsAvailable: DbxForgeFieldValueIsAvailableCheckFn<string>;
 }
 
 /**
@@ -164,11 +164,11 @@ export interface ForgeTextAvailableFieldConfig extends ForgeTextFieldConfig, Omi
  * };
  * ```
  */
-export interface ForgeTextIsAvailableFieldResult {
+export interface DbxForgeTextIsAvailableFieldResult {
   /**
    * The text field wrapped in a working wrapper, with the async validator reference attached.
    */
-  readonly field: ForgeWorkingWrapperFieldDef;
+  readonly field: DbxForgeWorkingWrapperFieldDef;
   /**
    * Async validators map to spread into `customFnConfig.asyncValidators`.
    */
@@ -191,7 +191,7 @@ export interface ForgeTextIsAvailableFieldResult {
  * added to the FormConfig.
  *
  * @param config - Configuration for the text field and availability validation.
- * @returns A {@link ForgeTextIsAvailableFieldResult} containing the field and validator config.
+ * @returns A {@link DbxForgeTextIsAvailableFieldResult} containing the field and validator config.
  *
  * @example
  * ```typescript
@@ -211,7 +211,7 @@ export interface ForgeTextIsAvailableFieldResult {
  * };
  * ```
  */
-export function forgeTextIsAvailableField(config: ForgeTextAvailableFieldConfig): ForgeTextIsAvailableFieldResult {
+export function forgeTextIsAvailableField(config: DbxForgeTextAvailableFieldConfig): DbxForgeTextIsAvailableFieldResult {
   const { checkValueIsAvailable, isNotAvailableErrorMessage, validatorName, throttle, ...textConfig } = config;
 
   const textField = forgeTextField(textConfig);

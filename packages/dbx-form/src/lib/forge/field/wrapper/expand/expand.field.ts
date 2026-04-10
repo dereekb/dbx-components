@@ -9,16 +9,16 @@ export const FORGE_EXPAND_FIELD_TYPE_NAME = 'dbx-forge-expand' as const;
 /**
  * Visual style for the expand trigger.
  */
-export type ForgeExpandButtonType = 'button' | 'text';
+export type DbxForgeExpandButtonType = 'button' | 'text';
 
 /**
  * Props interface for the forge expand field.
  */
-export interface ForgeExpandFieldProps {
+export interface DbxForgeExpandFieldProps {
   /**
    * Visual style for the expand trigger. Defaults to `'text'`.
    */
-  readonly buttonType: ForgeExpandButtonType;
+  readonly buttonType: DbxForgeExpandButtonType;
   /**
    * Label displayed on the expand trigger.
    */
@@ -32,16 +32,16 @@ export interface ForgeExpandFieldProps {
  * When toggled, it writes `true`/`false` to its FieldTree value, which
  * is used by a sibling group's `logic` to show/hide content.
  */
-export interface ForgeExpandFieldDef extends BaseValueField<ForgeExpandFieldProps, boolean> {
+export interface DbxForgeExpandFieldDef extends BaseValueField<DbxForgeExpandFieldProps, boolean> {
   readonly type: typeof FORGE_EXPAND_FIELD_TYPE_NAME;
 }
 
 /**
  * ng-forge FieldTypeDefinition for the expand control field.
  */
-export const DBX_FORGE_EXPAND_FIELD_TYPE: FieldTypeDefinition<ForgeExpandFieldDef> = {
+export const DBX_FORGE_EXPAND_FIELD_TYPE: FieldTypeDefinition<DbxForgeExpandFieldDef> = {
   name: FORGE_EXPAND_FIELD_TYPE_NAME,
-  loadComponent: () => import('./expand.field.component').then((m) => m.ForgeExpandFieldComponent),
+  loadComponent: () => import('./expand.field.component').then((m) => m.DbxForgeExpandFieldComponent),
   mapper: valueFieldMapper
 };
 
@@ -49,7 +49,7 @@ export const DBX_FORGE_EXPAND_FIELD_TYPE: FieldTypeDefinition<ForgeExpandFieldDe
 /**
  * Configuration for creating a forge expand control field.
  */
-export interface ForgeExpandFieldConfig {
+export interface DbxForgeExpandFieldConfig {
   /**
    * Key for the expand boolean field.
    */
@@ -61,7 +61,7 @@ export interface ForgeExpandFieldConfig {
   /**
    * Visual style for the expand trigger. Defaults to `'text'`.
    */
-  readonly buttonType?: ForgeExpandButtonType;
+  readonly buttonType?: DbxForgeExpandButtonType;
   /**
    * Whether the expand starts open. Defaults to false.
    */
@@ -75,9 +75,9 @@ export interface ForgeExpandFieldConfig {
  * by a sibling group's `logic` to show/hide content.
  *
  * @param config - Expand control configuration
- * @returns A {@link ForgeExpandFieldDef}
+ * @returns A {@link DbxForgeExpandFieldDef}
  */
-export function forgeExpandField(config: ForgeExpandFieldConfig): ForgeExpandFieldDef {
+export function forgeExpandField(config: DbxForgeExpandFieldConfig): DbxForgeExpandFieldDef {
   const { key, label, buttonType, defaultOpen } = config;
 
   return forgeField(
@@ -89,7 +89,7 @@ export function forgeExpandField(config: ForgeExpandFieldConfig): ForgeExpandFie
       props: {
         buttonType: buttonType ?? 'text',
         expandLabel: label ?? ''
-      } as ForgeExpandFieldProps
-    }) as ForgeExpandFieldDef
+      } as DbxForgeExpandFieldProps
+    }) as DbxForgeExpandFieldDef
   );
 }

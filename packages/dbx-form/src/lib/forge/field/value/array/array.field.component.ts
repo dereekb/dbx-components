@@ -7,13 +7,13 @@ import type { DynamicText, FieldMeta, ValidationMessages, FormConfig } from '@ng
 import { DynamicForm } from '@ng-forge/dynamic-forms';
 import { type FactoryWithRequiredInput } from '@dereekb/util';
 import { DbxButtonComponent, DbxButtonSpacerDirective, type DbxButtonStyle } from '@dereekb/dbx-web';
-import type { ForgeArrayFieldProps, ForgeArrayItemPair } from './array.field';
+import type { DbxForgeArrayFieldProps, DbxForgeArrayItemPair } from './array.field';
 import { forgeFieldDisabled } from '../../field.disabled';
 
 /**
  * Internal state for a single array item.
  */
-interface ForgeArrayItem {
+interface DbxForgeArrayItem {
   readonly trackId: number;
   value: unknown;
 }
@@ -38,7 +38,7 @@ let _forgeArrayItemTrackId = 0;
     '[class]': 'className()'
   }
 })
-export class ForgeArrayFieldComponent<T = unknown> {
+export class DbxForgeArrayFieldComponent<T = unknown> {
   // ng-forge ValueFieldComponent inputs
   readonly field = input.required<FieldTree<unknown[]>>();
   readonly key = input.required<string>();
@@ -46,12 +46,12 @@ export class ForgeArrayFieldComponent<T = unknown> {
   readonly placeholder = input<DynamicText | undefined>();
   readonly className = input<string>('');
   readonly tabIndex = input<number | undefined>();
-  readonly props = input<ForgeArrayFieldProps<T> | undefined>();
+  readonly props = input<DbxForgeArrayFieldProps<T> | undefined>();
   readonly meta = input<FieldMeta | undefined>();
   readonly validationMessages = input<ValidationMessages | undefined>();
   readonly defaultValidationMessages = input<ValidationMessages | undefined>();
 
-  readonly itemsSignal = signal<ForgeArrayItem[]>([]);
+  readonly itemsSignal = signal<DbxForgeArrayItem[]>([]);
 
   private _initialized = false;
 
@@ -82,9 +82,9 @@ export class ForgeArrayFieldComponent<T = unknown> {
   private static readonly _DEFAULT_REMOVE_BUTTON_STYLE: DbxButtonStyle = { type: 'stroked', color: 'warn' };
   private static readonly _DEFAULT_DUPLICATE_BUTTON_STYLE: DbxButtonStyle = { type: 'stroked', color: 'primary' };
 
-  readonly addButtonStyleSignal = computed(() => this.props()?.addButtonStyle ?? ForgeArrayFieldComponent._DEFAULT_ADD_BUTTON_STYLE);
-  readonly removeButtonStyleSignal = computed(() => this.props()?.removeButtonStyle ?? ForgeArrayFieldComponent._DEFAULT_REMOVE_BUTTON_STYLE);
-  readonly duplicateButtonStyleSignal = computed(() => this.props()?.duplicateButtonStyle ?? ForgeArrayFieldComponent._DEFAULT_DUPLICATE_BUTTON_STYLE);
+  readonly addButtonStyleSignal = computed(() => this.props()?.addButtonStyle ?? DbxForgeArrayFieldComponent._DEFAULT_ADD_BUTTON_STYLE);
+  readonly removeButtonStyleSignal = computed(() => this.props()?.removeButtonStyle ?? DbxForgeArrayFieldComponent._DEFAULT_REMOVE_BUTTON_STYLE);
+  readonly duplicateButtonStyleSignal = computed(() => this.props()?.duplicateButtonStyle ?? DbxForgeArrayFieldComponent._DEFAULT_DUPLICATE_BUTTON_STYLE);
 
   readonly showAddButtonSignal = computed(() => {
     if (!this.allowAddSignal()) {
@@ -135,8 +135,8 @@ export class ForgeArrayFieldComponent<T = unknown> {
       return `${index + 1}. ${labelForField}`;
     }
 
-    const pair: ForgeArrayItemPair<T> = { index, value: value as T };
-    return `${index + 1}. ${(labelForField as FactoryWithRequiredInput<string, ForgeArrayItemPair<T>>)(pair)}`;
+    const pair: DbxForgeArrayItemPair<T> = { index, value: value as T };
+    return `${index + 1}. ${(labelForField as FactoryWithRequiredInput<string, DbxForgeArrayItemPair<T>>)(pair)}`;
   }
 
   onItemValueChange(index: number, newValue: unknown): void {
@@ -171,7 +171,7 @@ export class ForgeArrayFieldComponent<T = unknown> {
       return;
     }
 
-    const duplicate: ForgeArrayItem = {
+    const duplicate: DbxForgeArrayItem = {
       trackId: _forgeArrayItemTrackId++,
       value: structuredClone(source.value)
     };

@@ -17,7 +17,7 @@ export const FORGE_COMPONENT_FIELD_TYPE = 'dbx-component' as const;
  * Passed via the `props` property on the forge field definition.
  * Contains the {@link DbxInjectionComponentConfig} for rendering an arbitrary Angular component.
  */
-export interface ForgeComponentFieldProps<T = unknown> {
+export interface DbxForgeComponentFieldProps<T = unknown> {
   /**
    * The injection component configuration that describes which component to render.
    */
@@ -34,7 +34,7 @@ export interface ForgeComponentFieldProps<T = unknown> {
 /**
  * Forge field definition interface for the component field.
  */
-export interface ForgeComponentFieldDef<T = unknown> extends BaseValueField<ForgeComponentFieldProps<T>, unknown> {
+export interface DbxForgeComponentFieldDef<T = unknown> extends BaseValueField<DbxForgeComponentFieldProps<T>, unknown> {
   readonly type: typeof FORGE_COMPONENT_FIELD_TYPE;
 }
 
@@ -66,7 +66,7 @@ export class DbxForgeComponentFieldComponent<T = unknown> {
   readonly placeholder = input<DynamicText | undefined>();
   readonly className = input<string>('');
   readonly tabIndex = input<number | undefined>();
-  readonly props = input<ForgeComponentFieldProps<T> | undefined>();
+  readonly props = input<DbxForgeComponentFieldProps<T> | undefined>();
   readonly meta = input<FieldMeta | undefined>();
   readonly validationMessages = input<ValidationMessages | undefined>();
   readonly defaultValidationMessages = input<ValidationMessages | undefined>();

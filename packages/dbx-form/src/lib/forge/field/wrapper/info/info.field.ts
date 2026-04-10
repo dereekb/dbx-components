@@ -9,7 +9,7 @@ export const FORGE_INFO_BUTTON_FIELD_TYPE_NAME = 'dbx-forge-info-button' as cons
 /**
  * Props interface for the forge info button field.
  */
-export interface ForgeInfoButtonFieldProps {
+export interface DbxForgeInfoButtonFieldProps {
   /**
    * Callback invoked when the info button is clicked.
    */
@@ -23,16 +23,16 @@ export interface ForgeInfoButtonFieldProps {
 /**
  * Forge field definition for an info button.
  */
-export interface ForgeInfoButtonFieldDef extends BaseValueField<ForgeInfoButtonFieldProps, unknown> {
+export interface DbxForgeInfoButtonFieldDef extends BaseValueField<DbxForgeInfoButtonFieldProps, unknown> {
   readonly type: typeof FORGE_INFO_BUTTON_FIELD_TYPE_NAME;
 }
 
 /**
  * ng-forge FieldTypeDefinition for the info button field.
  */
-export const DBX_FORGE_INFO_BUTTON_FIELD_TYPE: FieldTypeDefinition<ForgeInfoButtonFieldDef> = {
+export const DBX_FORGE_INFO_BUTTON_FIELD_TYPE: FieldTypeDefinition<DbxForgeInfoButtonFieldDef> = {
   name: FORGE_INFO_BUTTON_FIELD_TYPE_NAME,
-  loadComponent: () => import('./info.field.component').then((m) => m.ForgeInfoButtonFieldComponent),
+  loadComponent: () => import('./info.field.component').then((m) => m.DbxForgeInfoButtonFieldComponent),
   mapper: valueFieldMapper
 };
 
@@ -42,7 +42,7 @@ let _forgeInfoButtonCounter = 0;
 /**
  * Configuration for creating a forge info button field.
  */
-export interface ForgeInfoButtonFieldConfig {
+export interface DbxForgeInfoButtonFieldConfig {
   /**
    * Callback invoked when the info button is clicked.
    */
@@ -61,9 +61,9 @@ export interface ForgeInfoButtonFieldConfig {
  * Creates a forge info button field that renders a Material info icon button.
  *
  * @param config - Info button configuration
- * @returns A {@link ForgeInfoButtonFieldDef}
+ * @returns A {@link DbxForgeInfoButtonFieldDef}
  */
-export function forgeInfoButtonField(config: ForgeInfoButtonFieldConfig): ForgeInfoButtonFieldDef {
+export function forgeInfoButtonField(config: DbxForgeInfoButtonFieldConfig): DbxForgeInfoButtonFieldDef {
   const { onInfoClick, ariaLabel, key } = config;
 
   return forgeField(
@@ -72,7 +72,7 @@ export function forgeInfoButtonField(config: ForgeInfoButtonFieldConfig): ForgeI
       type: FORGE_INFO_BUTTON_FIELD_TYPE_NAME,
       label: '',
       value: undefined as unknown,
-      props: { onInfoClick, ariaLabel } as ForgeInfoButtonFieldProps
-    }) as ForgeInfoButtonFieldDef
+      props: { onInfoClick, ariaLabel } as DbxForgeInfoButtonFieldProps
+    }) as DbxForgeInfoButtonFieldDef
   );
 }

@@ -3,7 +3,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { type FieldTree } from '@angular/forms/signals';
 import type { DynamicText, FieldMeta, ValidationMessages } from '@ng-forge/dynamic-forms';
-import type { ForgeExpandFieldProps } from './expand.field';
+import type { DbxForgeExpandFieldProps } from './expand.field';
 
 /**
  * Forge ValueFieldComponent that renders an expand/collapse control.
@@ -47,7 +47,7 @@ import type { ForgeExpandFieldProps } from './expand.field';
     '[class]': 'className()'
   }
 })
-export class ForgeExpandFieldComponent {
+export class DbxForgeExpandFieldComponent {
   // ng-forge ValueFieldComponent inputs
   readonly field = input.required<FieldTree<boolean>>();
   readonly key = input.required<string>();
@@ -55,7 +55,7 @@ export class ForgeExpandFieldComponent {
   readonly placeholder = input<DynamicText | undefined>();
   readonly className = input<string>('');
   readonly tabIndex = input<number | undefined>();
-  readonly props = input<ForgeExpandFieldProps | undefined>();
+  readonly props = input<DbxForgeExpandFieldProps | undefined>();
   readonly meta = input<FieldMeta | undefined>();
   readonly validationMessages = input<ValidationMessages | undefined>();
   readonly defaultValidationMessages = input<ValidationMessages | undefined>();

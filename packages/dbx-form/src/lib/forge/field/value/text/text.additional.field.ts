@@ -1,8 +1,8 @@
 import type { MatInputField } from '@ng-forge/dynamic-forms-material';
 import { LAT_LNG_PATTERN, US_STATE_CODE_STRING_REGEX, ZIP_CODE_STRING_REGEX } from '@dereekb/util';
 import { ADDRESS_CITY_MAX_LENGTH, ADDRESS_STATE_CODE_MAX_LENGTH, ADDRESS_STATE_MAX_LENGTH, ADDRESS_COUNTRY_MAX_LENGTH, ADDRESS_ZIP_MAX_LENGTH } from '@dereekb/model';
-import { type ForgeTextFieldConfig, forgeTextField } from './text.field';
-import type { ForgeFieldAutocompleteConfig } from '../../field';
+import { type DbxForgeTextFieldConfig, forgeTextField } from './text.field';
+import type { DbxForgeFieldAutocompleteConfig } from '../../field';
 
 // MARK: Name Field
 /**
@@ -16,7 +16,7 @@ import type { ForgeFieldAutocompleteConfig } from '../../field';
  * const field = forgeNameField({ required: true });
  * ```
  */
-export function forgeNameField(config: Partial<ForgeTextFieldConfig> = {}): MatInputField {
+export function forgeNameField(config: Partial<DbxForgeTextFieldConfig> = {}): MatInputField {
   const { key = 'name', label = 'Name', placeholder = 'John Doe', required = false, minLength, maxLength } = config;
 
   return forgeTextField({
@@ -34,7 +34,7 @@ export function forgeNameField(config: Partial<ForgeTextFieldConfig> = {}): MatI
 /**
  * Configuration for a forge email address input field.
  */
-export interface ForgeEmailFieldConfig {
+export interface DbxForgeEmailFieldConfig {
   readonly key?: string;
   readonly label?: string;
   readonly placeholder?: string;
@@ -44,7 +44,7 @@ export interface ForgeEmailFieldConfig {
   /**
    * Sets the autocomplete attribute on the input. Pass `false` to disable browser autofill.
    */
-  readonly autocomplete?: ForgeFieldAutocompleteConfig;
+  readonly autocomplete?: DbxForgeFieldAutocompleteConfig;
 }
 
 /**
@@ -60,7 +60,7 @@ export interface ForgeEmailFieldConfig {
  * const field = forgeEmailField({ required: true });
  * ```
  */
-export function forgeEmailField(config: ForgeEmailFieldConfig = {}): MatInputField {
+export function forgeEmailField(config: DbxForgeEmailFieldConfig = {}): MatInputField {
   const { key = 'email', label = 'Email Address', placeholder = 'you@example.com', required, readonly: isReadonly, description, autocomplete } = config;
 
   return forgeTextField({
@@ -79,7 +79,7 @@ export function forgeEmailField(config: ForgeEmailFieldConfig = {}): MatInputFie
 /**
  * Configuration for a forge city input field.
  */
-export type ForgeCityFieldConfig = Partial<ForgeTextFieldConfig>;
+export type DbxForgeCityFieldConfig = Partial<DbxForgeTextFieldConfig>;
 
 /**
  * Creates a forge text field pre-configured for city name input.
@@ -92,7 +92,7 @@ export type ForgeCityFieldConfig = Partial<ForgeTextFieldConfig>;
  * const field = forgeCityField({ required: true });
  * ```
  */
-export function forgeCityField(config: ForgeCityFieldConfig = {}): MatInputField {
+export function forgeCityField(config: DbxForgeCityFieldConfig = {}): MatInputField {
   const { key = 'city', placeholder = '', label = 'City', maxLength = ADDRESS_CITY_MAX_LENGTH, required = false } = config;
 
   return forgeTextField({
@@ -109,7 +109,7 @@ export function forgeCityField(config: ForgeCityFieldConfig = {}): MatInputField
 /**
  * Configuration for a forge US state input field.
  */
-export interface ForgeStateFieldConfig extends Partial<ForgeTextFieldConfig> {
+export interface DbxForgeStateFieldConfig extends Partial<DbxForgeTextFieldConfig> {
   /**
    * When true, validates and formats as a 2-letter state code (e.g., `'CA'`).
    */
@@ -129,7 +129,7 @@ export interface ForgeStateFieldConfig extends Partial<ForgeTextFieldConfig> {
  * const field = forgeStateField({ asCode: true, required: true });
  * ```
  */
-export function forgeStateField(config: ForgeStateFieldConfig = {}): MatInputField {
+export function forgeStateField(config: DbxForgeStateFieldConfig = {}): MatInputField {
   const { asCode = false, pattern = asCode ? US_STATE_CODE_STRING_REGEX : undefined, key = 'state', placeholder = '', label = 'State', maxLength = asCode ? ADDRESS_STATE_CODE_MAX_LENGTH : ADDRESS_STATE_MAX_LENGTH, transform, required = false } = config;
 
   return forgeTextField({
@@ -151,7 +151,7 @@ export function forgeStateField(config: ForgeStateFieldConfig = {}): MatInputFie
 /**
  * Configuration for a forge country input field.
  */
-export type ForgeCountryFieldConfig = Partial<ForgeTextFieldConfig>;
+export type DbxForgeCountryFieldConfig = Partial<DbxForgeTextFieldConfig>;
 
 /**
  * Creates a forge text field pre-configured for country name input.
@@ -164,7 +164,7 @@ export type ForgeCountryFieldConfig = Partial<ForgeTextFieldConfig>;
  * const field = forgeCountryField({ required: true });
  * ```
  */
-export function forgeCountryField(config: ForgeCountryFieldConfig = {}): MatInputField {
+export function forgeCountryField(config: DbxForgeCountryFieldConfig = {}): MatInputField {
   const { key = 'country', placeholder = '', label = 'Country', maxLength = ADDRESS_COUNTRY_MAX_LENGTH, required = false } = config;
 
   return forgeTextField({
@@ -181,7 +181,7 @@ export function forgeCountryField(config: ForgeCountryFieldConfig = {}): MatInpu
 /**
  * Configuration for a forge zip/postal code input field.
  */
-export type ForgeZipCodeFieldConfig = Partial<ForgeTextFieldConfig>;
+export type DbxForgeZipCodeFieldConfig = Partial<DbxForgeTextFieldConfig>;
 
 /**
  * Creates a forge text field pre-configured for US zip code input with pattern validation.
@@ -194,7 +194,7 @@ export type ForgeZipCodeFieldConfig = Partial<ForgeTextFieldConfig>;
  * const field = forgeZipCodeField({ required: true });
  * ```
  */
-export function forgeZipCodeField(config: ForgeZipCodeFieldConfig = {}): MatInputField {
+export function forgeZipCodeField(config: DbxForgeZipCodeFieldConfig = {}): MatInputField {
   const { key = 'zip', placeholder = '', label = 'Zip Code', pattern = ZIP_CODE_STRING_REGEX, maxLength = ADDRESS_ZIP_MAX_LENGTH, required = false } = config;
 
   return forgeTextField({
@@ -225,7 +225,7 @@ export const DEFAULT_FORGE_LAT_LNG_TEXT_FIELD_PLACEHOLDER = '12.345,-67.8910';
  * const field = forgeLatLngTextField();
  * ```
  */
-export function forgeLatLngTextField(config: Partial<ForgeTextFieldConfig> = {}): MatInputField {
+export function forgeLatLngTextField(config: Partial<DbxForgeTextFieldConfig> = {}): MatInputField {
   const { key = 'latLng' } = config;
 
   return forgeTextField({

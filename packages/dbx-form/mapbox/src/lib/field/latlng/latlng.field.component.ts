@@ -84,7 +84,7 @@ export interface DbxFormMapboxLatLngComponentFieldProps extends FormlyFieldProps
  */
 
 /**
- * @deprecated Use ForgeMapboxLatLngFieldComponent instead.
+ * @deprecated Use DbxForgeMapboxLatLngFieldComponent instead.
  */
 @Component({
   template: `

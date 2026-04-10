@@ -13,7 +13,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { type FieldTree } from '@angular/forms/signals';
 import { type SearchableValueFieldDisplayValue, type ConfiguredSearchableValueFieldDisplayValue } from '../../../../formly/field/selection/searchable/searchable';
 import { DbxSearchableFieldAutocompleteItemComponent } from '../../../../formly/field/selection/searchable/searchable.field.autocomplete.item.component';
-import { AbstractForgeSearchableFieldDirective, type ForgeSearchableChipFieldProps } from './searchable.field.directive';
+import { AbstractForgeSearchableFieldDirective, type DbxForgeSearchableChipFieldProps } from './searchable.field.directive';
 import { forgeFieldDisabled } from '../../field.disabled';
 import { toggleDisableFormControl } from '../../../../form/form';
 
@@ -30,7 +30,7 @@ import { toggleDisableFormControl } from '../../../../form/form';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxForgeSearchableChipFieldComponent<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends AbstractForgeSearchableFieldDirective<T, M, H, ForgeSearchableChipFieldProps<T, M, H>> {
+export class DbxForgeSearchableChipFieldComponent<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends AbstractForgeSearchableFieldDirective<T, M, H, DbxForgeSearchableChipFieldProps<T, M, H>> {
   readonly field = input.required<FieldTree<T | T[]>>();
   readonly separatorKeysCodes: number[] = [ENTER, COMMA];
 

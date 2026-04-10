@@ -19,7 +19,7 @@ import { CompactContextStore } from '@dereekb/dbx-web';
 /**
  * Custom props for the forge calendar date schedule range field.
  */
-export interface ForgeCalendarDateScheduleRangeFieldComponentProps extends Pick<CalendarScheduleSelectionState, 'computeSelectionResultRelativeToFilter' | 'initialSelectionState'>, Partial<Pick<CalendarScheduleSelectionState, 'cellContentFactory'>> {
+export interface DbxForgeCalendarDateScheduleRangeFieldComponentProps extends Pick<CalendarScheduleSelectionState, 'computeSelectionResultRelativeToFilter' | 'initialSelectionState'>, Partial<Pick<CalendarScheduleSelectionState, 'cellContentFactory'>> {
   readonly label?: string;
   readonly description?: string;
   readonly appearance?: string;
@@ -58,7 +58,7 @@ export interface ForgeCalendarDateScheduleRangeFieldComponentProps extends Pick<
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class ForgeCalendarDateScheduleRangeFieldComponent implements OnDestroy {
+export class DbxForgeCalendarDateScheduleRangeFieldComponent implements OnDestroy {
   readonly compact = inject(CompactContextStore, { optional: true });
   readonly dbxCalendarScheduleSelectionStore = inject(DbxCalendarScheduleSelectionStore);
 
@@ -69,7 +69,7 @@ export class ForgeCalendarDateScheduleRangeFieldComponent implements OnDestroy {
   readonly placeholder: InputSignal<DynamicText | undefined> = input<DynamicText | undefined>();
   readonly className: InputSignal<string> = input('');
   readonly tabIndex: InputSignal<number | undefined> = input<number | undefined>();
-  readonly props: InputSignal<ForgeCalendarDateScheduleRangeFieldComponentProps | undefined> = input<ForgeCalendarDateScheduleRangeFieldComponentProps | undefined>();
+  readonly props: InputSignal<DbxForgeCalendarDateScheduleRangeFieldComponentProps | undefined> = input<DbxForgeCalendarDateScheduleRangeFieldComponentProps | undefined>();
   readonly meta: InputSignal<FieldMeta | undefined> = input<FieldMeta | undefined>();
   readonly validationMessages: InputSignal<ValidationMessages | undefined> = input<ValidationMessages | undefined>();
   readonly defaultValidationMessages: InputSignal<ValidationMessages | undefined> = input<ValidationMessages | undefined>();

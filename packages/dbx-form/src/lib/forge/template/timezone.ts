@@ -1,16 +1,16 @@
 import { type TimezoneString } from '@dereekb/util';
 import { type TimezoneInfo } from '@dereekb/date';
 import { timezoneStringSearchFunction, DISPLAY_FOR_TIMEZONE_STRING_VALUE } from '../../shared/template/timezone';
-import { forgeSearchableTextField, type ForgeSearchableTextFieldConfig } from '../field/selection/searchable/searchable.field';
-import type { ForgeFormFieldWrapperFieldDef } from '../field/wrapper/formfield/formfield.field';
-import type { ForgeSearchableTextFieldDef } from '../field/selection/searchable/searchable.field.component';
+import { forgeSearchableTextField, type DbxForgeSearchableTextFieldConfig } from '../field/selection/searchable/searchable.field';
+import type { DbxForgeFormFieldWrapperFieldDef } from '../field/wrapper/formfield/formfield.field';
+import type { DbxForgeSearchableTextFieldDef } from '../field/selection/searchable/searchable.field.component';
 
 /**
  * Configuration for a forge timezone string field.
  *
  * Omits search-related properties that are internally configured.
  */
-export interface ForgeTimezoneStringFieldConfig extends Omit<ForgeSearchableTextFieldConfig<TimezoneString, TimezoneInfo>, 'key' | 'search' | 'displayForValue' | 'searchOnEmptyText' | 'allowStringValues' | 'showClearValue'>, Partial<Pick<ForgeSearchableTextFieldConfig<TimezoneString, TimezoneInfo>, 'key'>> {}
+export interface DbxForgeTimezoneStringFieldConfig extends Omit<DbxForgeSearchableTextFieldConfig<TimezoneString, TimezoneInfo>, 'key' | 'search' | 'displayForValue' | 'searchOnEmptyText' | 'allowStringValues' | 'showClearValue'>, Partial<Pick<DbxForgeSearchableTextFieldConfig<TimezoneString, TimezoneInfo>, 'key'>> {}
 
 /**
  * Creates a forge searchable field for selecting a timezone.
@@ -27,7 +27,7 @@ export interface ForgeTimezoneStringFieldConfig extends Omit<ForgeSearchableText
  * const fieldWithKey = forgeTimezoneStringField({ key: 'tz', label: 'Select Timezone' });
  * ```
  */
-export function forgeTimezoneStringField(config: ForgeTimezoneStringFieldConfig = {}): ForgeFormFieldWrapperFieldDef<ForgeSearchableTextFieldDef<TimezoneString, TimezoneInfo>> {
+export function forgeTimezoneStringField(config: DbxForgeTimezoneStringFieldConfig = {}): DbxForgeFormFieldWrapperFieldDef<DbxForgeSearchableTextFieldDef<TimezoneString, TimezoneInfo>> {
   return forgeSearchableTextField<TimezoneString, TimezoneInfo>({
     key: 'timezone',
     label: 'Timezone',

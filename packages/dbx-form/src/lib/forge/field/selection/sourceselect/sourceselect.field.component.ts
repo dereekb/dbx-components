@@ -18,7 +18,7 @@ import { toggleDisableFormControl } from '../../../../form/form';
  *
  * Passed via the `props` property on the forge field definition.
  */
-export interface ForgeSourceSelectFieldProps<T extends PrimativeKey = PrimativeKey, M = unknown> {
+export interface DbxForgeSourceSelectFieldProps<T extends PrimativeKey = PrimativeKey, M = unknown> {
   readonly openSource?: SourceSelectOpenFunction<M>;
   readonly loadSources?: SourceSelectLoadSourcesFunction<M>;
   readonly valueReader: SourceSelectMetaValueReader<T, M>;
@@ -40,7 +40,7 @@ export const FORGE_SOURCE_SELECT_FIELD_TYPE = 'dbx-source-select' as const;
 /**
  * Forge field definition interface for the source select field.
  */
-export interface ForgeSourceSelectFieldDef<T extends PrimativeKey = PrimativeKey, M = unknown> extends BaseValueField<ForgeSourceSelectFieldProps<T, M>, T | T[]> {
+export interface DbxForgeSourceSelectFieldDef<T extends PrimativeKey = PrimativeKey, M = unknown> extends BaseValueField<DbxForgeSourceSelectFieldProps<T, M>, T | T[]> {
   readonly type: typeof FORGE_SOURCE_SELECT_FIELD_TYPE;
 }
 
@@ -73,7 +73,7 @@ export class DbxForgeSourceSelectFieldComponent<T extends PrimativeKey = Primati
   readonly placeholder = input<DynamicText | undefined>();
   readonly className = input<string>('');
   readonly tabIndex = input<number | undefined>();
-  readonly props = input<ForgeSourceSelectFieldProps<T, M> | undefined>();
+  readonly props = input<DbxForgeSourceSelectFieldProps<T, M> | undefined>();
   readonly meta = input<FieldMeta | undefined>();
   readonly validationMessages = input<ValidationMessages | undefined>();
   readonly defaultValidationMessages = input<ValidationMessages | undefined>();

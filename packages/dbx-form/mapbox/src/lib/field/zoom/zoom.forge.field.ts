@@ -1,6 +1,6 @@
 import type { BaseValueField } from '@ng-forge/dynamic-forms';
 import { filterFromPOJO, type LatLngPoint } from '@dereekb/util';
-import type { ForgeMapboxZoomFieldComponentProps } from './zoom.forge.field.component';
+import type { DbxForgeMapboxZoomFieldComponentProps } from './zoom.forge.field.component';
 import type { MapboxZoomLevel } from '@dereekb/dbx-web/mapbox';
 
 /**
@@ -11,14 +11,14 @@ export const FORGE_MAPBOX_ZOOM_FIELD_TYPE = 'dbx-forge-mapbox-zoom' as const;
 /**
  * Field definition type for a forge mapbox zoom picker field.
  */
-export type ForgeMapboxZoomFieldDef = BaseValueField<ForgeMapboxZoomFieldComponentProps, unknown> & {
+export type DbxForgeMapboxZoomFieldDef = BaseValueField<DbxForgeMapboxZoomFieldComponentProps, unknown> & {
   readonly type: typeof FORGE_MAPBOX_ZOOM_FIELD_TYPE;
 };
 
 /**
  * Configuration for a forge mapbox zoom picker field.
  */
-export interface ForgeMapboxZoomFieldConfig {
+export interface DbxForgeMapboxZoomFieldConfig {
   readonly key?: string;
   readonly label?: string;
   readonly description?: string;
@@ -39,10 +39,10 @@ export interface ForgeMapboxZoomFieldConfig {
  * @param config - Optional field configuration overrides
  * @returns A validated forge field definition for the Mapbox zoom picker
  */
-export function forgeMapboxZoomField(config: ForgeMapboxZoomFieldConfig = {}): ForgeMapboxZoomFieldDef {
+export function forgeMapboxZoomField(config: DbxForgeMapboxZoomFieldConfig = {}): DbxForgeMapboxZoomFieldDef {
   const { key = 'zoom', label, description, required, readonly: isReadonly, showMap, center, minZoom, maxZoom, zoomStep } = config;
 
-  const props: ForgeMapboxZoomFieldComponentProps = filterFromPOJO({
+  const props: DbxForgeMapboxZoomFieldComponentProps = filterFromPOJO({
     label: label ?? 'Zoom',
     description,
     showMap,
@@ -60,5 +60,5 @@ export function forgeMapboxZoomField(config: ForgeMapboxZoomFieldConfig = {}): F
     required,
     readonly: isReadonly,
     props: Object.keys(props).length > 0 ? props : undefined
-  }) as ForgeMapboxZoomFieldDef;
+  }) as DbxForgeMapboxZoomFieldDef;
 }

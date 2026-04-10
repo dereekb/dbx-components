@@ -21,7 +21,7 @@ import { toggleDisableFormControl } from '../../../../form/form';
 /**
  * Custom props for the forge time duration field.
  */
-export interface ForgeTimeDurationFieldComponentProps {
+export interface DbxForgeTimeDurationFieldComponentProps {
   /**
    * The unit of the output value.
    *
@@ -86,7 +86,7 @@ export interface ForgeTimeDurationFieldComponentProps {
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './duration.field.component.html'
 })
-export class ForgeTimeDurationFieldComponent {
+export class DbxForgeTimeDurationFieldComponent {
   private readonly materialConfig = inject(MATERIAL_CONFIG, { optional: true });
   private readonly popoverService = inject(DbxPopoverService);
   private readonly destroyRef = inject(DestroyRef);
@@ -98,7 +98,7 @@ export class ForgeTimeDurationFieldComponent {
   readonly placeholder: InputSignal<DynamicText | undefined> = input<DynamicText | undefined>();
   readonly className: InputSignal<string> = input('');
   readonly tabIndex: InputSignal<number | undefined> = input<number | undefined>();
-  readonly props: InputSignal<ForgeTimeDurationFieldComponentProps | undefined> = input<ForgeTimeDurationFieldComponentProps | undefined>();
+  readonly props: InputSignal<DbxForgeTimeDurationFieldComponentProps | undefined> = input<DbxForgeTimeDurationFieldComponentProps | undefined>();
   readonly meta: InputSignal<Record<string, unknown> | undefined> = input<Record<string, unknown> | undefined>();
   readonly validationMessages: InputSignal<ValidationMessages | undefined> = input<ValidationMessages | undefined>();
   readonly defaultValidationMessages: InputSignal<ValidationMessages | undefined> = input<ValidationMessages | undefined>();

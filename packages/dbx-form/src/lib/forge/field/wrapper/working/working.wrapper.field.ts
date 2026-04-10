@@ -2,7 +2,7 @@ import type { FieldTypeDefinition, BaseValueField, FieldDef } from '@ng-forge/dy
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { filterFromPOJO } from '@dereekb/util';
 import { forgeField } from '../../field';
-import type { ForgeWrapperFieldProps } from '../wrapper.field';
+import type { DbxForgeWrapperFieldProps } from '../wrapper.field';
 
 // MARK: Field Type
 export const FORGE_WORKING_WRAPPER_FIELD_TYPE_NAME = 'dbx-forge-working-wrapper' as const;
@@ -13,7 +13,7 @@ export const FORGE_WORKING_WRAPPER_FIELD_TYPE_NAME = 'dbx-forge-working-wrapper'
  * Extends base wrapper props with no additional configuration needed.
  * The wrapper monitors its own field tree's pending state automatically.
  */
-export interface ForgeWorkingWrapperFieldProps extends ForgeWrapperFieldProps {}
+export interface DbxForgeWorkingWrapperFieldProps extends DbxForgeWrapperFieldProps {}
 
 /**
  * Forge field definition for a working wrapper.
@@ -21,16 +21,16 @@ export interface ForgeWorkingWrapperFieldProps extends ForgeWrapperFieldProps {}
  * Renders child fields with a loading indicator that appears when
  * any child field has pending async validation.
  */
-export interface ForgeWorkingWrapperFieldDef extends BaseValueField<ForgeWorkingWrapperFieldProps, Record<string, unknown>> {
+export interface DbxForgeWorkingWrapperFieldDef extends BaseValueField<DbxForgeWorkingWrapperFieldProps, Record<string, unknown>> {
   readonly type: typeof FORGE_WORKING_WRAPPER_FIELD_TYPE_NAME;
 }
 
 /**
  * ng-forge FieldTypeDefinition for the working wrapper field.
  */
-export const DBX_FORGE_WORKING_WRAPPER_FIELD_TYPE: FieldTypeDefinition<ForgeWorkingWrapperFieldDef> = {
+export const DBX_FORGE_WORKING_WRAPPER_FIELD_TYPE: FieldTypeDefinition<DbxForgeWorkingWrapperFieldDef> = {
   name: FORGE_WORKING_WRAPPER_FIELD_TYPE_NAME,
-  loadComponent: () => import('./working.wrapper.field.component').then((m) => m.ForgeWorkingWrapperFieldComponent),
+  loadComponent: () => import('./working.wrapper.field.component').then((m) => m.DbxForgeWorkingWrapperFieldComponent),
   mapper: valueFieldMapper
 };
 
@@ -38,7 +38,7 @@ export const DBX_FORGE_WORKING_WRAPPER_FIELD_TYPE: FieldTypeDefinition<ForgeWork
 /**
  * Configuration for creating a forge working wrapper field.
  */
-export interface ForgeWorkingWrapperFieldConfig {
+export interface DbxForgeWorkingWrapperFieldConfig {
   /**
    * Child field definitions to render inside the working wrapper.
    */
@@ -63,7 +63,7 @@ let _forgeWorkingWrapperCounter = 0;
  * the parent form value.
  *
  * @param config - Working wrapper configuration
- * @returns A {@link ForgeWorkingWrapperFieldDef}
+ * @returns A {@link DbxForgeWorkingWrapperFieldDef}
  *
  * @example
  * ```typescript
@@ -74,7 +74,7 @@ let _forgeWorkingWrapperCounter = 0;
  * });
  * ```
  */
-export function forgeWorkingFieldWrapper(config: ForgeWorkingWrapperFieldConfig): ForgeWorkingWrapperFieldDef {
+export function forgeWorkingFieldWrapper(config: DbxForgeWorkingWrapperFieldConfig): DbxForgeWorkingWrapperFieldDef {
   const { fields, key } = config;
 
   return forgeField(
@@ -85,7 +85,7 @@ export function forgeWorkingFieldWrapper(config: ForgeWorkingWrapperFieldConfig)
       value: {} as Record<string, unknown>,
       props: {
         fields
-      } as ForgeWorkingWrapperFieldProps
-    }) as ForgeWorkingWrapperFieldDef
+      } as DbxForgeWorkingWrapperFieldProps
+    }) as DbxForgeWorkingWrapperFieldDef
   );
 }

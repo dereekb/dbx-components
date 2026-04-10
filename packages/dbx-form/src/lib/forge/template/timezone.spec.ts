@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { firstValueFrom } from 'rxjs';
 import { forgeTimezoneStringField } from './timezone';
-import type { ForgeSearchableTextFieldDef } from '../field/selection/searchable/searchable.field.component';
+import type { DbxForgeSearchableTextFieldDef } from '../field/selection/searchable/searchable.field.component';
 
 describe('forgeTimezoneStringField()', () => {
-  function innerField(config?: Parameters<typeof forgeTimezoneStringField>[0]): ForgeSearchableTextFieldDef {
+  function innerField(config?: Parameters<typeof forgeTimezoneStringField>[0]): DbxForgeSearchableTextFieldDef {
     const wrapper = forgeTimezoneStringField(config);
-    return wrapper.props!.fields[0] as unknown as ForgeSearchableTextFieldDef;
+    return wrapper.props!.fields[0] as unknown as DbxForgeSearchableTextFieldDef;
   }
 
   it('should create a wrapper field with type dbx-forge-form-field', () => {

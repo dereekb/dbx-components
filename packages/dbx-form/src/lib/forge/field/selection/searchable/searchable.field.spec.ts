@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { firstValueFrom, map, of, take } from 'rxjs';
 import { FormControl } from '@angular/forms';
 import { forgeSearchableTextField, forgeSearchableChipField, forgeSearchableStringChipField } from './searchable.field';
-import type { ForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
+import type { DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
 import type { FieldDef } from '@ng-forge/dynamic-forms';
 
 // MARK: Shared Stubs
@@ -11,10 +11,10 @@ const stubDisplayForValue = (values: { value: string }[]) => of(values.map((v) =
 
 // MARK: Helpers
 /**
- * Extracts the inner field from a ForgeFormFieldWrapperFieldDef.
+ * Extracts the inner field from a DbxForgeFormFieldWrapperFieldDef.
  * The wrapper nests the actual field inside `props.fields[0]`.
  */
-function getInnerField(wrapper: ForgeFormFieldWrapperFieldDef): FieldDef<unknown> {
+function getInnerField(wrapper: DbxForgeFormFieldWrapperFieldDef): FieldDef<unknown> {
   const fields = wrapper.props?.fields;
   expect(fields).toBeDefined();
   expect(fields!.length).toBeGreaterThan(0);

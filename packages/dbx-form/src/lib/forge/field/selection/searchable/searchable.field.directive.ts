@@ -26,7 +26,7 @@ export const FORGE_SEARCHABLE_CHIP_FIELD_TYPE = 'dbx-searchable-chip' as const;
  *
  * Passed via the `props` property on the forge field definition.
  */
-export interface ForgeSearchableTextFieldProps<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> {
+export interface DbxForgeSearchableTextFieldProps<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> {
   readonly search: SearchableValueFieldStringSearchFn<T, M>;
   readonly displayForValue: SearchableValueFieldDisplayFn<T, M>;
   readonly hashForValue?: SearchableValueFieldHashFn<T, H>;
@@ -47,7 +47,7 @@ export interface ForgeSearchableTextFieldProps<T = unknown, M = unknown, H exten
 /**
  * Props interface for the forge searchable chip field.
  */
-export interface ForgeSearchableChipFieldProps<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends ForgeSearchableTextFieldProps<T, M, H> {
+export interface DbxForgeSearchableChipFieldProps<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends DbxForgeSearchableTextFieldProps<T, M, H> {
   readonly multiSelect?: boolean;
   readonly asArrayValue?: boolean;
 }
@@ -55,14 +55,14 @@ export interface ForgeSearchableChipFieldProps<T = unknown, M = unknown, H exten
 /**
  * Forge field definition interface for the searchable text field.
  */
-export interface ForgeSearchableTextFieldDef<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends BaseValueField<ForgeSearchableTextFieldProps<T, M, H>, T> {
+export interface DbxForgeSearchableTextFieldDef<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends BaseValueField<DbxForgeSearchableTextFieldProps<T, M, H>, T> {
   readonly type: typeof FORGE_SEARCHABLE_TEXT_FIELD_TYPE;
 }
 
 /**
  * Forge field definition interface for the searchable chip field.
  */
-export interface ForgeSearchableChipFieldDef<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends BaseValueField<ForgeSearchableChipFieldProps<T, M, H>, T | T[]> {
+export interface DbxForgeSearchableChipFieldDef<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends BaseValueField<DbxForgeSearchableChipFieldProps<T, M, H>, T | T[]> {
   readonly type: typeof FORGE_SEARCHABLE_CHIP_FIELD_TYPE;
 }
 
@@ -80,7 +80,7 @@ const DEFAULT_SEARCHABLE_FIELD_DISPLAY: Partial<DbxInjectionComponentConfig> = {
  * Subclasses provide the specific value model (single-value text or multi-value chip).
  */
 @Directive()
-export abstract class AbstractForgeSearchableFieldDirective<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey, P extends ForgeSearchableTextFieldProps<T, M, H> = ForgeSearchableTextFieldProps<T, M, H>> implements OnInit, OnDestroy {
+export abstract class AbstractForgeSearchableFieldDirective<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey, P extends DbxForgeSearchableTextFieldProps<T, M, H> = DbxForgeSearchableTextFieldProps<T, M, H>> implements OnInit, OnDestroy {
   // MARK: ng-forge ValueFieldComponent Inputs
   readonly key = input.required<string>();
   readonly label = input<DynamicText | undefined>();

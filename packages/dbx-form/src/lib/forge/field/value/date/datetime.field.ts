@@ -3,9 +3,9 @@ import type { FieldDef, BaseValueField, RowField } from '@ng-forge/dynamic-forms
 import { filterFromPOJO, type ArrayOrValue, type Maybe, type TimezoneString, type DateOrDayString } from '@dereekb/util';
 import { forgeField } from '../../field';
 import { forgeRow } from '../../wrapper/wrapper';
-import { forgeFormFieldWrapper, type ForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
-import type { ForgeDateTimeFieldComponentProps } from './datetime.field.component';
-import type { ForgeFixedDateRangeFieldComponentProps, ForgeFixedDateRangeValue } from './fixeddaterange.field.component';
+import { forgeFormFieldWrapper, type DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
+import type { DbxForgeDateTimeFieldComponentProps } from './datetime.field.component';
+import type { DbxForgeFixedDateRangeFieldComponentProps, DbxForgeFixedDateRangeValue } from './fixeddaterange.field.component';
 import { type DbxDateTimePickerConfiguration, DbxDateTimeFieldTimeMode, type DbxDateTimeFieldSyncType } from '../../../../formly/field/value/date/datetime.field.component';
 import { type DbxDateTimeValueMode } from '../../../../formly/field/value/date/date.value';
 import { type DateTimePresetConfiguration } from '../../../../formly/field/value/date/datetime';
@@ -21,7 +21,7 @@ import { of, type Observable } from 'rxjs';
  * Same as formly's {@link DbxDateTimeFieldSyncField} but re-exported here so forge consumers
  * don't need to import from the formly module.
  */
-export interface ForgeDateTimeSyncField {
+export interface DbxForgeDateTimeSyncField {
   /**
    * Sibling field key/path to sync with.
    */
@@ -39,7 +39,7 @@ export interface ForgeDateTimeSyncField {
 /**
  * Configuration for a forge date picker field.
  */
-export interface ForgeDateFieldConfig {
+export interface DbxForgeDateFieldConfig {
   readonly key: string;
   readonly label?: string;
   readonly required?: boolean;
@@ -72,7 +72,7 @@ export interface ForgeDateFieldConfig {
  * const field = forgeDateField({ key: 'startDate', label: 'Start Date', required: true });
  * ```
  */
-export function forgeDateField(config: ForgeDateFieldConfig): MatDatepickerField {
+export function forgeDateField(config: DbxForgeDateFieldConfig): MatDatepickerField {
   const { key, label, required, readonly: isReadonly, description, minDate, maxDate, startAt } = config;
 
   const props: Partial<MatDatepickerProps> = filterFromPOJO({
@@ -104,7 +104,7 @@ export const FORGE_DATETIME_FIELD_TYPE = 'datetime' as const;
 /**
  * Field definition type for a forge date-time field.
  */
-export type ForgeDateTimeFieldDef = BaseValueField<ForgeDateTimeFieldComponentProps, unknown> & {
+export type DbxForgeDateTimeFieldDef = BaseValueField<DbxForgeDateTimeFieldComponentProps, unknown> & {
   readonly type: typeof FORGE_DATETIME_FIELD_TYPE;
 };
 
@@ -114,7 +114,7 @@ export type ForgeDateTimeFieldDef = BaseValueField<ForgeDateTimeFieldComponentPr
  * Full parity with the formly `DateTimeFieldConfig` — supports timezone, valueMode, timeMode,
  * pickerConfig, presets, field sync, and all other formly datetime features.
  */
-export interface ForgeDateTimeFieldConfig {
+export interface DbxForgeDateTimeFieldConfig {
   readonly key: string;
   readonly label?: string;
   readonly required?: boolean;
@@ -243,7 +243,7 @@ export interface ForgeDateTimeFieldConfig {
    * When provided, allows this datetime field to constrain its min/max date range
    * based on the values of other date fields in the same form.
    */
-  readonly getSyncFieldsObs?: () => Observable<ArrayOrValue<ForgeDateTimeSyncField>>;
+  readonly getSyncFieldsObs?: () => Observable<ArrayOrValue<DbxForgeDateTimeSyncField>>;
 
   // --- Deprecated/unsupported in forge (kept for interface parity) ---
   /**
@@ -260,7 +260,7 @@ export interface ForgeDateTimeFieldConfig {
  * pickerConfig, presets, and all other features.
  *
  * @param config - Date-time field configuration
- * @returns A {@link ForgeDateTimeFieldDef}
+ * @returns A {@link DbxForgeDateTimeFieldDef}
  *
  * @example
  * ```typescript
@@ -274,7 +274,7 @@ export interface ForgeDateTimeFieldConfig {
  * });
  * ```
  */
-export function forgeDateTimeField(config: ForgeDateTimeFieldConfig): ForgeDateTimeFieldDef {
+export function forgeDateTimeField(config: DbxForgeDateTimeFieldConfig): DbxForgeDateTimeFieldDef {
   const { key, label, required, readonly: isReadonly, description, ...rest } = config;
 
   // Map showTime to timeMode for backward compatibility
@@ -283,7 +283,7 @@ export function forgeDateTimeField(config: ForgeDateTimeFieldConfig): ForgeDateT
     effectiveTimeMode = 'none' as DbxDateTimeFieldTimeMode;
   }
 
-  const props: ForgeDateTimeFieldComponentProps = filterFromPOJO({
+  const props: DbxForgeDateTimeFieldComponentProps = filterFromPOJO({
     timeOnly: rest.timeOnly,
     timeMode: effectiveTimeMode,
     valueMode: rest.valueMode,
@@ -320,7 +320,7 @@ export function forgeDateTimeField(config: ForgeDateTimeFieldConfig): ForgeDateT
       required,
       readonly: isReadonly,
       props: Object.keys(props).length > 0 ? props : undefined
-    }) as ForgeDateTimeFieldDef
+    }) as DbxForgeDateTimeFieldDef
   );
 }
 
@@ -330,7 +330,7 @@ export function forgeDateTimeField(config: ForgeDateTimeFieldConfig): ForgeDateT
  *
  * Mirrors formly's `DateDateRangeFieldDateConfig`.
  */
-export type ForgeDateRangeFieldDateConfig = Omit<ForgeDateTimeFieldConfig, 'dateLabel' | 'timeOnly' | 'timeMode' | 'getSyncFieldsObs'>;
+export type DbxForgeDateRangeFieldDateConfig = Omit<DbxForgeDateTimeFieldConfig, 'dateLabel' | 'timeOnly' | 'timeMode' | 'getSyncFieldsObs'>;
 
 /**
  * Configuration for a forge date range field with separate start and end date pickers.
@@ -339,10 +339,10 @@ export type ForgeDateRangeFieldDateConfig = Omit<ForgeDateTimeFieldConfig, 'date
  * through to {@link forgeDateTimeField}, so all datetime features (timezone, presets,
  * pickerConfig, etc.) are available per-field.
  */
-export interface ForgeDateRangeFieldConfig extends Pick<ForgeDateTimeFieldConfig, 'timeDate' | 'timezone' | 'showTimezone' | 'presets' | 'valueMode' | 'minuteStep'> {
+export interface DbxForgeDateRangeFieldConfig extends Pick<DbxForgeDateTimeFieldConfig, 'timeDate' | 'timezone' | 'showTimezone' | 'presets' | 'valueMode' | 'minuteStep'> {
   readonly required?: boolean;
-  readonly start?: Partial<ForgeDateRangeFieldDateConfig>;
-  readonly end?: Partial<ForgeDateRangeFieldDateConfig>;
+  readonly start?: Partial<DbxForgeDateRangeFieldDateConfig>;
+  readonly end?: Partial<DbxForgeDateRangeFieldDateConfig>;
 }
 
 /**
@@ -359,7 +359,7 @@ export interface ForgeDateRangeFieldConfig extends Pick<ForgeDateTimeFieldConfig
  * const field = forgeDateRangeField({ required: true, start: { key: 'from' }, end: { key: 'to' } });
  * ```
  */
-export function forgeDateRangeField(config: ForgeDateRangeFieldConfig = {}): RowField {
+export function forgeDateRangeField(config: DbxForgeDateRangeFieldConfig = {}): RowField {
   const { required: inputRequired, start, end, timeDate, timezone, showTimezone, presets, valueMode, minuteStep } = config;
   const required = inputRequired ?? start?.required ?? false;
 
@@ -412,17 +412,17 @@ export function forgeDateRangeField(config: ForgeDateRangeFieldConfig = {}): Row
  *
  * Mirrors formly's `DateTimeRangeFieldTimeConfig`.
  */
-export type ForgeDateTimeRangeFieldTimeConfig = Omit<ForgeDateRangeFieldDateConfig, 'allDayLabel' | 'fullDayFieldName' | 'fullDayInUTC'>;
+export type DbxForgeDateTimeRangeFieldTimeConfig = Omit<DbxForgeDateRangeFieldDateConfig, 'allDayLabel' | 'fullDayFieldName' | 'fullDayInUTC'>;
 
 /**
  * Configuration for a forge date-time range field with separate start and end time pickers.
  *
  * Mirrors formly's `DateDateTimeRangeFieldConfig`.
  */
-export interface ForgeDateTimeRangeFieldConfig extends Pick<ForgeDateTimeFieldConfig, 'timeDate' | 'timezone' | 'showTimezone' | 'presets' | 'valueMode' | 'minuteStep'> {
+export interface DbxForgeDateTimeRangeFieldConfig extends Pick<DbxForgeDateTimeFieldConfig, 'timeDate' | 'timezone' | 'showTimezone' | 'presets' | 'valueMode' | 'minuteStep'> {
   readonly required?: boolean;
-  readonly start?: Partial<ForgeDateTimeRangeFieldTimeConfig>;
-  readonly end?: Partial<ForgeDateTimeRangeFieldTimeConfig>;
+  readonly start?: Partial<DbxForgeDateTimeRangeFieldTimeConfig>;
+  readonly end?: Partial<DbxForgeDateTimeRangeFieldTimeConfig>;
 }
 
 /**
@@ -439,10 +439,10 @@ export interface ForgeDateTimeRangeFieldConfig extends Pick<ForgeDateTimeFieldCo
  * const field = forgeDateTimeRangeField({ required: true });
  * ```
  */
-export function forgeDateTimeRangeField(inputConfig: ForgeDateTimeRangeFieldConfig = {}): RowField {
+export function forgeDateTimeRangeField(inputConfig: DbxForgeDateTimeRangeFieldConfig = {}): RowField {
   const { required = false, start: inputStart, end: inputEnd, timezone, timeDate, showTimezone, presets, valueMode, minuteStep } = inputConfig;
 
-  function dateTimeRangeFieldConfig(config: Maybe<Partial<ForgeDateTimeRangeFieldTimeConfig>>): Partial<ForgeDateTimeFieldConfig> {
+  function dateTimeRangeFieldConfig(config: Maybe<Partial<DbxForgeDateTimeRangeFieldTimeConfig>>): Partial<DbxForgeDateTimeFieldConfig> {
     return {
       valueMode,
       minuteStep,
@@ -458,13 +458,13 @@ export function forgeDateTimeRangeField(inputConfig: ForgeDateTimeRangeFieldConf
   const startKey = inputStart?.key ?? 'start';
   const endKey = inputEnd?.key ?? 'end';
 
-  const start: Partial<ForgeDateTimeFieldConfig> = {
+  const start: Partial<DbxForgeDateTimeFieldConfig> = {
     label: 'Start Time',
     ...dateTimeRangeFieldConfig(inputStart),
     key: startKey
   };
 
-  const end: Partial<ForgeDateTimeFieldConfig> = {
+  const end: Partial<DbxForgeDateTimeFieldConfig> = {
     label: 'End Time',
     ...dateTimeRangeFieldConfig(inputEnd),
     key: endKey
@@ -489,7 +489,7 @@ export const FORGE_FIXEDDATERANGE_FIELD_TYPE = 'fixeddaterange' as const;
 /**
  * Field definition type for a forge fixed date range field.
  */
-export type ForgeFixedDateRangeFieldDef = BaseValueField<ForgeFixedDateRangeFieldComponentProps, ForgeFixedDateRangeValue> & {
+export type DbxForgeFixedDateRangeFieldDef = BaseValueField<DbxForgeFixedDateRangeFieldComponentProps, DbxForgeFixedDateRangeValue> & {
   readonly type: typeof FORGE_FIXEDDATERANGE_FIELD_TYPE;
 };
 
@@ -498,7 +498,7 @@ export type ForgeFixedDateRangeFieldDef = BaseValueField<ForgeFixedDateRangeFiel
  *
  * Full parity with the formly `FixedDateRangeFieldConfig`.
  */
-export interface ForgeFixedDateRangeFieldConfig {
+export interface DbxForgeFixedDateRangeFieldConfig {
   readonly key: string;
   readonly label?: string;
   readonly required?: boolean;
@@ -564,7 +564,7 @@ export interface ForgeFixedDateRangeFieldConfig {
  * container, equivalent to formly's `['style', 'form-field']` wrappers.
  *
  * @param config - Fixed date range field configuration
- * @returns A {@link ForgeFormFieldWrapperFieldDef} wrapping a {@link ForgeFixedDateRangeFieldDef}
+ * @returns A {@link DbxForgeFormFieldWrapperFieldDef} wrapping a {@link DbxForgeFixedDateRangeFieldDef}
  *
  * @example
  * ```typescript
@@ -578,7 +578,7 @@ export interface ForgeFixedDateRangeFieldConfig {
  * });
  * ```
  */
-export function forgeFixedDateRangeField(config: ForgeFixedDateRangeFieldConfig): ForgeFormFieldWrapperFieldDef<ForgeFixedDateRangeFieldDef> {
+export function forgeFixedDateRangeField(config: DbxForgeFixedDateRangeFieldConfig): DbxForgeFormFieldWrapperFieldDef<DbxForgeFixedDateRangeFieldDef> {
   const { key, label, required, readonly: isReadonly, description, ...rest } = config;
 
   const props = filterFromPOJO({
@@ -591,22 +591,22 @@ export function forgeFixedDateRangeField(config: ForgeFixedDateRangeFieldConfig)
     showTimezone: rest.showTimezone,
     presets: rest.presets,
     showRangeInput: rest.showRangeInput
-  }) as ForgeFixedDateRangeFieldComponentProps;
+  }) as DbxForgeFixedDateRangeFieldComponentProps;
 
   // Create the inner fixeddaterange field (label/hint handled by wrapper)
-  const innerField: ForgeFixedDateRangeFieldDef = forgeField(
+  const innerField: DbxForgeFixedDateRangeFieldDef = forgeField(
     filterFromPOJO({
       key,
       type: FORGE_FIXEDDATERANGE_FIELD_TYPE,
       label: '',
-      value: undefined as unknown as ForgeFixedDateRangeValue,
+      value: undefined as unknown as DbxForgeFixedDateRangeValue,
       required,
       readonly: isReadonly,
       props: Object.keys(props).length > 0 ? props : undefined
-    }) as ForgeFixedDateRangeFieldDef
+    }) as DbxForgeFixedDateRangeFieldDef
   );
 
-  return forgeFormFieldWrapper<ForgeFixedDateRangeFieldDef>({
+  return forgeFormFieldWrapper<DbxForgeFixedDateRangeFieldDef>({
     label: label ?? '',
     hint: description,
     fields: [innerField as unknown as FieldDef<unknown>]

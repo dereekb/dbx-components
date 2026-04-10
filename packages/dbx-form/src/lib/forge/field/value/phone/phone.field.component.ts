@@ -16,7 +16,7 @@ import { toggleDisableFormControl } from '../../../../form/form';
 /**
  * Custom props for the forge phone field.
  */
-export interface ForgePhoneFieldProps {
+export interface DbxForgePhoneFieldProps {
   /**
    * ISO country codes for countries shown first in the dropdown.
    */
@@ -80,7 +80,7 @@ export const FORGE_DEFAULT_PREFERRED_COUNTRIES = ['us'];
     `
   ]
 })
-export class ForgePhoneFieldComponent {
+export class DbxForgePhoneFieldComponent {
   private readonly materialConfig = inject(MATERIAL_CONFIG, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
 
@@ -91,7 +91,7 @@ export class ForgePhoneFieldComponent {
   readonly placeholder: InputSignal<DynamicText | undefined> = input<DynamicText | undefined>();
   readonly className: InputSignal<string> = input('');
   readonly tabIndex: InputSignal<number | undefined> = input<number | undefined>();
-  readonly props: InputSignal<ForgePhoneFieldProps | undefined> = input<ForgePhoneFieldProps | undefined>();
+  readonly props: InputSignal<DbxForgePhoneFieldProps | undefined> = input<DbxForgePhoneFieldProps | undefined>();
   readonly meta: InputSignal<Record<string, unknown> | undefined> = input<Record<string, unknown> | undefined>();
   readonly validationMessages: InputSignal<ValidationMessages | undefined> = input<ValidationMessages | undefined>();
   readonly defaultValidationMessages: InputSignal<ValidationMessages | undefined> = input<ValidationMessages | undefined>();

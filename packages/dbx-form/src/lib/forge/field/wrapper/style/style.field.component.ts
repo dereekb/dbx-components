@@ -2,8 +2,8 @@ import { NgClass, NgStyle } from '@angular/common';
 import { ChangeDetectionStrategy, Component, effect, signal } from '@angular/core';
 import { asObservable } from '@dereekb/rxjs';
 import { AbstractForgeWrapperFieldComponent, provideDbxForgeWrapperFieldDirective } from '../wrapper.field';
-import { ForgeWrapperContentComponent } from '../wrapper.content.component';
-import type { ForgeStyleFieldProps, ForgeStyleObject } from './style.field';
+import { DbxForgeWrapperContentComponent } from '../wrapper.content.component';
+import type { DbxForgeStyleFieldProps, DbxForgeStyleObject } from './style.field';
 
 /**
  * Forge wrapper field component that applies dynamic CSS classes and
@@ -20,17 +20,17 @@ import type { ForgeStyleFieldProps, ForgeStyleObject } from './style.field';
       <dbx-forge-wrapper-content />
     </div>
   `,
-  providers: provideDbxForgeWrapperFieldDirective(ForgeStyleFieldComponent),
-  imports: [NgClass, NgStyle, ForgeWrapperContentComponent],
+  providers: provideDbxForgeWrapperFieldDirective(DbxForgeStyleFieldComponent),
+  imports: [NgClass, NgStyle, DbxForgeWrapperContentComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   host: {
     '[class]': 'className()'
   }
 })
-export class ForgeStyleFieldComponent extends AbstractForgeWrapperFieldComponent<ForgeStyleFieldProps> {
+export class DbxForgeStyleFieldComponent extends AbstractForgeWrapperFieldComponent<DbxForgeStyleFieldProps> {
   readonly classValueSignal = signal<string>('');
-  readonly styleValueSignal = signal<ForgeStyleObject>({});
+  readonly styleValueSignal = signal<DbxForgeStyleObject>({});
 
   constructor() {
     super();

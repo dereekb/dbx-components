@@ -2,7 +2,7 @@ import type { FieldTypeDefinition, BaseValueField, FieldDef } from '@ng-forge/dy
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { filterFromPOJO } from '@dereekb/util';
 import { forgeField } from '../../field';
-import type { ForgeWrapperFieldProps } from '../wrapper.field';
+import type { DbxForgeWrapperFieldProps } from '../wrapper.field';
 
 // MARK: Field Type
 export const FORGE_FORM_FIELD_WRAPPER_TYPE_NAME = 'dbx-forge-form-field' as const;
@@ -14,7 +14,7 @@ export const FORGE_FORM_FIELD_WRAPPER_TYPE_NAME = 'dbx-forge-form-field' as cons
  * hint/error subscript) around child fields that cannot use `<mat-form-field>` directly
  * (e.g. `<mat-slider>`).
  */
-export interface ForgeFormFieldWrapperProps extends ForgeWrapperFieldProps {
+export interface DbxForgeFormFieldWrapperProps extends DbxForgeWrapperFieldProps {
   /**
    * Optional hint text displayed in the subscript area below the outlined container.
    * When the child form has validation errors (and is touched), the first error message
@@ -29,19 +29,19 @@ export interface ForgeFormFieldWrapperProps extends ForgeWrapperFieldProps {
  * The phantom generic `TInner` carries the type of the wrapped inner field(s)
  * through the type system without affecting the runtime structure. This lets
  * factory functions like `forgeSearchableTextField` return a typed wrapper
- * (e.g. `ForgeFormFieldWrapperFieldDef<ForgeSearchableTextFieldDef<T,M,H>>`)
+ * (e.g. `DbxForgeFormFieldWrapperFieldDef<DbxForgeSearchableTextFieldDef<T,M,H>>`)
  * instead of an opaque `FieldDef<unknown>`.
  */
-export interface ForgeFormFieldWrapperFieldDef<TInner extends FieldDef<any> = FieldDef<any>> extends BaseValueField<ForgeFormFieldWrapperProps, Record<string, unknown>> {
+export interface DbxForgeFormFieldWrapperFieldDef<TInner extends FieldDef<any> = FieldDef<any>> extends BaseValueField<DbxForgeFormFieldWrapperProps, Record<string, unknown>> {
   readonly type: typeof FORGE_FORM_FIELD_WRAPPER_TYPE_NAME;
 }
 
 /**
  * ng-forge FieldTypeDefinition for the form-field wrapper.
  */
-export const DBX_FORGE_FORM_FIELD_WRAPPER_TYPE: FieldTypeDefinition<ForgeFormFieldWrapperFieldDef> = {
+export const DBX_FORGE_FORM_FIELD_WRAPPER_TYPE: FieldTypeDefinition<DbxForgeFormFieldWrapperFieldDef> = {
   name: FORGE_FORM_FIELD_WRAPPER_TYPE_NAME,
-  loadComponent: () => import('./formfield.field.component').then((m) => m.ForgeFormFieldWrapperComponent),
+  loadComponent: () => import('./formfield.field.component').then((m) => m.DbxForgeFormFieldWrapperComponent),
   mapper: valueFieldMapper
 };
 
@@ -49,7 +49,7 @@ export const DBX_FORGE_FORM_FIELD_WRAPPER_TYPE: FieldTypeDefinition<ForgeFormFie
 /**
  * Configuration for creating a forge form-field wrapper.
  */
-export interface ForgeFormFieldWrapperConfig {
+export interface DbxForgeFormFieldWrapperConfig {
   /**
    * Label text displayed in the notched outline.
    */
@@ -81,7 +81,7 @@ let _forgeFormFieldWrapperCounter = 0;
  * Uses `_` key prefix so `stripForgeInternalKeys` flattens child values into the parent form.
  *
  * @param config - Form-field wrapper configuration
- * @returns A {@link ForgeFormFieldWrapperFieldDef}
+ * @returns A {@link DbxForgeFormFieldWrapperFieldDef}
  *
  * @example
  * ```typescript
@@ -94,7 +94,7 @@ let _forgeFormFieldWrapperCounter = 0;
  * });
  * ```
  */
-export function forgeFormFieldWrapper<TInner extends FieldDef<any> = FieldDef<any>>(config: ForgeFormFieldWrapperConfig): ForgeFormFieldWrapperFieldDef<TInner> {
+export function forgeFormFieldWrapper<TInner extends FieldDef<any> = FieldDef<any>>(config: DbxForgeFormFieldWrapperConfig): DbxForgeFormFieldWrapperFieldDef<TInner> {
   const { label, hint, fields, key } = config;
 
   return forgeField(
@@ -106,7 +106,7 @@ export function forgeFormFieldWrapper<TInner extends FieldDef<any> = FieldDef<an
       props: filterFromPOJO({
         hint,
         fields
-      }) as ForgeFormFieldWrapperProps
-    }) as ForgeFormFieldWrapperFieldDef
+      }) as DbxForgeFormFieldWrapperProps
+    }) as DbxForgeFormFieldWrapperFieldDef
   );
 }

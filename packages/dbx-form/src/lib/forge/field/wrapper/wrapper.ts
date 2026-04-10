@@ -1,7 +1,7 @@
 import type { RowField, GroupField, FieldDef, RowAllowedChildren, GroupAllowedChildren, ConditionalExpression } from '@ng-forge/dynamic-forms';
 import type { DbxSectionHeaderHType } from '@dereekb/dbx-web';
-import { forgeDbxSectionFieldWrapper, forgeDbxSubsectionFieldWrapper, type ForgeSectionFieldDef } from './section/section.field';
-import { forgeExpandField, type ForgeExpandButtonType } from './expand/expand.field';
+import { forgeDbxSectionFieldWrapper, forgeDbxSubsectionFieldWrapper, type DbxForgeSectionFieldDef } from './section/section.field';
+import { forgeExpandField, type DbxForgeExpandButtonType } from './expand/expand.field';
 import { forgeInfoButtonField } from './info/info.field';
 import { forgeWorkingField } from './working/working.field';
 import { forgeAutoTouchField } from './autotouch/autotouch.field';
@@ -12,7 +12,7 @@ import { forgeAutoTouchField } from './autotouch/autotouch.field';
  * Containers only support `'hidden'` since they are layout containers,
  * not form controls. This mirrors ng-forge's internal `ContainerLogicConfig`.
  */
-export interface ForgeContainerLogicConfig {
+export interface DbxForgeContainerLogicConfig {
   readonly type: 'hidden';
   readonly condition: ConditionalExpression | boolean;
 }
@@ -26,7 +26,7 @@ let _forgeExpandCounter = 0;
 /**
  * Configuration for a forge row layout that arranges fields horizontally.
  */
-export interface ForgeRowConfig {
+export interface DbxForgeRowConfig {
   /**
    * Optional key for the row. Defaults to a unique auto-generated key.
    *
@@ -62,7 +62,7 @@ export interface ForgeRowConfig {
  * });
  * ```
  */
-export function forgeRow(config: ForgeRowConfig): RowField {
+export function forgeRow(config: DbxForgeRowConfig): RowField {
   return {
     type: 'row',
     key: config.key ?? `_row_${_forgeRowCounter++}`,
@@ -76,7 +76,7 @@ export function forgeRow(config: ForgeRowConfig): RowField {
  * Configuration for a single field within a flex row,
  * pairing a field with an optional flex size.
  */
-export interface ForgeFlexRowFieldConfig {
+export interface DbxForgeFlexRowFieldConfig {
   /**
    * The field definition to include in the row.
    */
@@ -94,7 +94,7 @@ export interface ForgeFlexRowFieldConfig {
  * This is the forge equivalent of formly's `formlyFlexLayoutWrapper()`,
  * accepting field/size pairs and a default size.
  */
-export interface ForgeFlexRowConfig {
+export interface DbxForgeFlexRowConfig {
   /**
    * Optional key for the row.
    */
@@ -102,7 +102,7 @@ export interface ForgeFlexRowConfig {
   /**
    * Fields to render. Can be plain field defs or field/size pairs.
    */
-  readonly fields: (FieldDef<unknown> | ForgeFlexRowFieldConfig)[];
+  readonly fields: (FieldDef<unknown> | DbxForgeFlexRowFieldConfig)[];
   /**
    * Default flex size for fields without an explicit size. Defaults to 2 (col 4).
    */
@@ -120,10 +120,10 @@ export interface ForgeFlexRowConfig {
 }
 
 /**
- * Type guard to check if input is a {@link ForgeFlexRowFieldConfig} with a `field` property.
+ * Type guard to check if input is a {@link DbxForgeFlexRowFieldConfig} with a `field` property.
  */
-function isFlexRowFieldConfig(input: FieldDef<unknown> | ForgeFlexRowFieldConfig): input is ForgeFlexRowFieldConfig {
-  return (input as ForgeFlexRowFieldConfig).field != null;
+function isFlexRowFieldConfig(input: FieldDef<unknown> | DbxForgeFlexRowFieldConfig): input is DbxForgeFlexRowFieldConfig {
+  return (input as DbxForgeFlexRowFieldConfig).field != null;
 }
 
 /**
@@ -150,7 +150,7 @@ export function flexSizeToCol(size: number): number {
  * @param config - Flex row configuration with fields, sizes, and optional className
  * @returns A {@link RowField} with type `'row'`
  */
-export function forgeFlexRow(config: ForgeFlexRowConfig): RowField {
+export function forgeFlexRow(config: DbxForgeFlexRowConfig): RowField {
   const { defaultSize = 2, relative = false } = config;
 
   if (relative) {
@@ -173,7 +173,7 @@ export function forgeFlexRow(config: ForgeFlexRowConfig): RowField {
   }
 
   const mappedFields = config.fields.map((inputConfig) => {
-    const fieldConfig: ForgeFlexRowFieldConfig = isFlexRowFieldConfig(inputConfig) ? inputConfig : { field: inputConfig };
+    const fieldConfig: DbxForgeFlexRowFieldConfig = isFlexRowFieldConfig(inputConfig) ? inputConfig : { field: inputConfig };
 
     const { field, size = defaultSize } = fieldConfig;
     const col = flexSizeToCol(size);
@@ -195,7 +195,7 @@ export function forgeFlexRow(config: ForgeFlexRowConfig): RowField {
 /**
  * Configuration for a forge group layout.
  */
-export interface ForgeGroupConfig {
+export interface DbxForgeGroupConfig {
   /**
    * Optional key for the group.
    */
@@ -211,7 +211,7 @@ export interface ForgeGroupConfig {
   /**
    * Optional conditional visibility logic for this group.
    */
-  readonly logic?: ForgeContainerLogicConfig[];
+  readonly logic?: DbxForgeContainerLogicConfig[];
 }
 
 /**
@@ -225,7 +225,7 @@ export interface ForgeGroupConfig {
  * @param config - Group configuration with fields and optional key/className
  * @returns A {@link GroupField} with type `'group'`
  */
-export function forgeGroup(config: ForgeGroupConfig): GroupField {
+export function forgeGroup(config: DbxForgeGroupConfig): GroupField {
   return {
     type: 'group',
     key: config.key ?? `_group_${_forgeGroupCounter++}`,
@@ -239,10 +239,10 @@ export function forgeGroup(config: ForgeGroupConfig): GroupField {
 /**
  * Configuration for a forge section group layout.
  *
- * @deprecated Use {@link ForgeSectionFieldConfig} with {@link forgeDbxSectionFieldWrapper} instead
+ * @deprecated Use {@link DbxForgeSectionFieldConfig} with {@link forgeDbxSectionFieldWrapper} instead
  * for proper `<dbx-section>` wrapping.
  */
-export interface ForgeSectionGroupConfig {
+export interface DbxForgeSectionGroupConfig {
   readonly key?: string;
   readonly fields: FieldDef<unknown>[];
   readonly className?: string;
@@ -250,7 +250,7 @@ export interface ForgeSectionGroupConfig {
   readonly hint?: string;
   readonly icon?: string;
   readonly h?: DbxSectionHeaderHType;
-  readonly logic?: ForgeContainerLogicConfig[];
+  readonly logic?: DbxForgeContainerLogicConfig[];
 }
 
 /**
@@ -258,7 +258,7 @@ export interface ForgeSectionGroupConfig {
  *
  * @deprecated Use {@link forgeDbxSectionFieldWrapper} directly instead.
  */
-export function forgeSectionGroup(config: ForgeSectionGroupConfig): ForgeSectionFieldDef {
+export function forgeSectionGroup(config: DbxForgeSectionGroupConfig): DbxForgeSectionFieldDef {
   return forgeDbxSectionFieldWrapper({
     key: config.key,
     header: config.header,
@@ -273,9 +273,9 @@ export function forgeSectionGroup(config: ForgeSectionGroupConfig): ForgeSection
 /**
  * Configuration for a forge subsection group layout.
  *
- * @deprecated Use {@link ForgeSectionFieldConfig} with {@link forgeDbxSectionFieldWrapper} and `subsection: true` instead.
+ * @deprecated Use {@link DbxForgeSectionFieldConfig} with {@link forgeDbxSectionFieldWrapper} and `subsection: true` instead.
  */
-export interface ForgeSubsectionGroupConfig {
+export interface DbxForgeSubsectionGroupConfig {
   readonly key?: string;
   readonly fields: FieldDef<unknown>[];
   readonly className?: string;
@@ -283,7 +283,7 @@ export interface ForgeSubsectionGroupConfig {
   readonly hint?: string;
   readonly icon?: string;
   readonly h?: DbxSectionHeaderHType;
-  readonly logic?: ForgeContainerLogicConfig[];
+  readonly logic?: DbxForgeContainerLogicConfig[];
 }
 
 /**
@@ -291,7 +291,7 @@ export interface ForgeSubsectionGroupConfig {
  *
  * @deprecated Use {@link forgeDbxSubsectionFieldWrapper} or `forgeDbxSectionFieldWrapper({ subsection: true })` instead.
  */
-export function forgeSubsectionGroup(config: ForgeSubsectionGroupConfig): ForgeSectionFieldDef {
+export function forgeSubsectionGroup(config: DbxForgeSubsectionGroupConfig): DbxForgeSectionFieldDef {
   return forgeDbxSubsectionFieldWrapper({
     key: config.key,
     header: config.header,
@@ -326,9 +326,9 @@ export function forgeWithClassName<T extends FieldDef<unknown>>(field: T, classN
 /**
  * Configuration for a styled group.
  *
- * @deprecated Use {@link ForgeStyleFieldConfig} with {@link forgeStyleWrapper} instead for dynamic class/style support.
+ * @deprecated Use {@link DbxForgeStyleFieldConfig} with {@link forgeStyleWrapper} instead for dynamic class/style support.
  */
-export interface ForgeStyledGroupConfig {
+export interface DbxForgeStyledGroupConfig {
   /**
    * Fields to wrap in the styled group.
    */
@@ -365,7 +365,7 @@ export interface ForgeStyledGroupConfig {
  * });
  * ```
  */
-export function forgeStyledGroup(config: ForgeStyledGroupConfig): GroupField {
+export function forgeStyledGroup(config: DbxForgeStyledGroupConfig): GroupField {
   return forgeGroup({
     key: config.key,
     fields: config.fields,
@@ -377,7 +377,7 @@ export function forgeStyledGroup(config: ForgeStyledGroupConfig): GroupField {
 /**
  * Configuration for a forge toggle wrapper that shows/hides content via a slide toggle.
  */
-export interface ForgeToggleWrapperConfig {
+export interface DbxForgeToggleWrapperConfig {
   /**
    * Fields to show/hide based on the toggle state.
    */
@@ -434,7 +434,7 @@ export interface ForgeToggleWrapperConfig {
  * });
  * ```
  */
-export function forgeToggleWrapper(config: ForgeToggleWrapperConfig): RowField {
+export function forgeToggleWrapper(config: DbxForgeToggleWrapperConfig): RowField {
   const toggleKey = config.key ?? `_toggle_${_forgeToggleCounter++}`;
 
   // Built-in ng-forge toggle field (renders <mat-slide-toggle>)
@@ -446,7 +446,7 @@ export function forgeToggleWrapper(config: ForgeToggleWrapperConfig): RowField {
   } as FieldDef<unknown>;
 
   // Content group with conditional visibility based on toggle value
-  const hiddenCondition: ForgeContainerLogicConfig = {
+  const hiddenCondition: DbxForgeContainerLogicConfig = {
     type: 'hidden',
     condition: {
       type: 'fieldValue',
@@ -472,7 +472,7 @@ export function forgeToggleWrapper(config: ForgeToggleWrapperConfig): RowField {
 /**
  * Configuration for a forge expand wrapper that shows/hides content via a button or text link.
  */
-export interface ForgeExpandWrapperConfig {
+export interface DbxForgeExpandWrapperConfig {
   /**
    * Fields to show/hide when the expand control is toggled.
    */
@@ -484,7 +484,7 @@ export interface ForgeExpandWrapperConfig {
   /**
    * Visual style for the expand trigger. Defaults to `'text'`.
    */
-  readonly buttonType?: ForgeExpandButtonType;
+  readonly buttonType?: DbxForgeExpandButtonType;
   /**
    * Key for the expand boolean field. Defaults to auto-generated `_expand_N`.
    */
@@ -534,7 +534,7 @@ export interface ForgeExpandWrapperConfig {
  * });
  * ```
  */
-export function forgeExpandWrapper(config: ForgeExpandWrapperConfig): RowField {
+export function forgeExpandWrapper(config: DbxForgeExpandWrapperConfig): RowField {
   const expandKey = config.key ?? `_expand_${_forgeExpandCounter++}`;
 
   const expandField = forgeExpandField({
@@ -544,7 +544,7 @@ export function forgeExpandWrapper(config: ForgeExpandWrapperConfig): RowField {
     defaultOpen: config.defaultOpen
   });
 
-  const hiddenCondition: ForgeContainerLogicConfig = {
+  const hiddenCondition: DbxForgeContainerLogicConfig = {
     type: 'hidden',
     condition: {
       type: 'fieldValue',
@@ -570,9 +570,9 @@ export function forgeExpandWrapper(config: ForgeExpandWrapperConfig): RowField {
 /**
  * Configuration for a forge info wrapper that adds an info button beside a field.
  *
- * @deprecated Use {@link ForgeInfoWrapperFieldConfig} with {@link forgeInfoFieldWrapper} instead.
+ * @deprecated Use {@link DbxForgeInfoWrapperFieldConfig} with {@link forgeInfoFieldWrapper} instead.
  */
-export interface ForgeInfoWrapperConfig {
+export interface DbxForgeInfoWrapperConfig {
   /**
    * The field to display alongside the info button.
    */
@@ -614,7 +614,7 @@ export interface ForgeInfoWrapperConfig {
  * });
  * ```
  */
-export function forgeInfoWrapper(config: ForgeInfoWrapperConfig): RowField {
+export function forgeInfoWrapper(config: DbxForgeInfoWrapperConfig): RowField {
   const { field, onInfoClick, fieldCol = 11, buttonCol = 1, ariaLabel } = config;
 
   const infoButton = forgeInfoButtonField({ onInfoClick, ariaLabel });

@@ -11,7 +11,7 @@ import { forgeFieldDisabled } from '../../field.disabled';
 /**
  * Custom props for the forge slider field.
  */
-export interface ForgeSliderFieldProps {
+export interface DbxForgeSliderFieldProps {
   readonly hint?: DynamicText;
   readonly appearance?: 'fill' | 'outline';
   readonly color?: 'primary' | 'accent' | 'warn';
@@ -31,7 +31,7 @@ export const FORGE_SLIDER_FIELD_TYPE = 'dbx-slider' as const;
 /**
  * Field definition type for a forge slider field.
  */
-export type ForgeSliderFieldDef = BaseValueField<ForgeSliderFieldProps, number> & {
+export type DbxForgeSliderFieldDef = BaseValueField<DbxForgeSliderFieldProps, number> & {
   readonly type: typeof FORGE_SLIDER_FIELD_TYPE;
 };
 
@@ -123,7 +123,7 @@ export type ForgeSliderFieldDef = BaseValueField<ForgeSliderFieldProps, number> 
     `
   ]
 })
-export class ForgeSliderFieldComponent {
+export class DbxForgeSliderFieldComponent {
   private readonly materialConfig = inject(MATERIAL_CONFIG, { optional: true });
 
   // Standard ng-forge value field inputs
@@ -133,7 +133,7 @@ export class ForgeSliderFieldComponent {
   readonly placeholder: InputSignal<DynamicText | undefined> = input<DynamicText | undefined>();
   readonly className: InputSignal<string> = input('');
   readonly tabIndex: InputSignal<number | undefined> = input<number | undefined>();
-  readonly props: InputSignal<ForgeSliderFieldProps | undefined> = input<ForgeSliderFieldProps | undefined>();
+  readonly props: InputSignal<DbxForgeSliderFieldProps | undefined> = input<DbxForgeSliderFieldProps | undefined>();
   readonly meta: InputSignal<Record<string, unknown> | undefined> = input<Record<string, unknown> | undefined>();
   readonly validationMessages: InputSignal<ValidationMessages | undefined> = input<ValidationMessages | undefined>();
   readonly defaultValidationMessages: InputSignal<ValidationMessages | undefined> = input<ValidationMessages | undefined>();

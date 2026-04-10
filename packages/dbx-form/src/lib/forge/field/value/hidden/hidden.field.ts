@@ -6,7 +6,7 @@ import { forgeField } from '../../field';
 /**
  * Configuration for a forge hidden form field that is not visible to the user.
  */
-export interface ForgeHiddenFieldConfig {
+export interface DbxForgeHiddenFieldConfig {
   readonly key: string;
   readonly required?: boolean;
   readonly defaultValue?: unknown;
@@ -25,7 +25,7 @@ export interface ForgeHiddenFieldConfig {
  * const field = forgeHiddenField({ key: 'userId', required: true });
  * ```
  */
-export function forgeHiddenField(config: ForgeHiddenFieldConfig): MatInputField {
+export function forgeHiddenField(config: DbxForgeHiddenFieldConfig): MatInputField {
   const { key, required, defaultValue = '' } = config;
 
   return forgeField(

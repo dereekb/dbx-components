@@ -3,7 +3,7 @@ import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type DbxFormMapboxZoomComponentFieldProps } from './zoom.field.component';
 
 /**
- * @deprecated Use ForgeMapboxZoomFieldConfig instead.
+ * @deprecated Use DbxForgeMapboxZoomFieldConfig instead.
  */
 export interface MapboxZoomFieldConfig extends Omit<LabeledFieldConfig, 'key'>, DescriptionFieldConfig, Partial<FieldConfig>, Pick<DbxFormMapboxZoomComponentFieldProps, 'showMap' | 'center' | 'minZoom' | 'maxZoom' | 'zoomStep'> {}
 

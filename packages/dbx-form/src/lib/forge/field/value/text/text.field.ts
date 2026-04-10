@@ -2,14 +2,14 @@ import type { MatInputField, MatInputProps, MatTextareaField, MatTextareaProps }
 import type { ValidationMessages } from '@ng-forge/dynamic-forms';
 import { filterFromPOJO, transformStringFunction, mapMaybeFunction, type TransformStringFunctionConfig, type TransformStringFunctionConfigRef } from '@dereekb/util';
 import type { FieldValueParser, FieldConfigParsersRef } from '../../../../field';
-import { forgeField, forgeAutocompleteFieldMeta, type ForgeFieldAutocompleteConfig } from '../../field';
+import { forgeField, forgeAutocompleteFieldMeta, type DbxForgeFieldAutocompleteConfig } from '../../field';
 import { forgeDefaultValidationMessages } from '../../../validation';
 
 // MARK: Text Field
 /**
  * Configuration for minimum and maximum text length constraints.
  */
-export interface ForgeTextFieldLengthConfig {
+export interface DbxForgeTextFieldLengthConfig {
   readonly minLength?: number;
   readonly maxLength?: number;
 }
@@ -17,14 +17,14 @@ export interface ForgeTextFieldLengthConfig {
 /**
  * Configuration for regex pattern validation on a text field.
  */
-export interface ForgeTextFieldPatternConfig {
+export interface DbxForgeTextFieldPatternConfig {
   readonly pattern?: string | RegExp;
 }
 
 /**
  * HTML input type for a text field.
  */
-export type ForgeTextFieldInputType = 'text' | 'password' | 'email';
+export type DbxForgeTextFieldInputType = 'text' | 'password' | 'email';
 
 /**
  * Full configuration for a single-line text input field in forge.
@@ -32,7 +32,7 @@ export type ForgeTextFieldInputType = 'text' | 'password' | 'email';
  * Combines labeling, validation (pattern, length), and string transformation
  * into one config object.
  */
-export interface ForgeTextFieldConfig extends ForgeTextFieldPatternConfig, ForgeTextFieldLengthConfig, Partial<TransformStringFunctionConfigRef> {
+export interface DbxForgeTextFieldConfig extends DbxForgeTextFieldPatternConfig, DbxForgeTextFieldLengthConfig, Partial<TransformStringFunctionConfigRef> {
   readonly key: string;
   readonly label?: string;
   readonly placeholder?: string;
@@ -42,7 +42,7 @@ export interface ForgeTextFieldConfig extends ForgeTextFieldPatternConfig, Forge
   /**
    * HTML input type. Defaults to `'text'`.
    */
-  readonly inputType?: ForgeTextFieldInputType;
+  readonly inputType?: DbxForgeTextFieldInputType;
   /**
    * String transformation applied as a value parser (e.g., trim, uppercase).
    */
@@ -51,7 +51,7 @@ export interface ForgeTextFieldConfig extends ForgeTextFieldPatternConfig, Forge
   /**
    * Sets the autocomplete attribute on the input. Pass `false` to disable browser autofill.
    */
-  readonly autocomplete?: ForgeFieldAutocompleteConfig;
+  readonly autocomplete?: DbxForgeFieldAutocompleteConfig;
 }
 
 /**
@@ -94,7 +94,7 @@ export function forgeTextFieldTransformParser(config: Partial<FieldConfigParsers
  * const field = forgeTextField({ key: 'username', label: 'Username', maxLength: 50, required: true });
  * ```
  */
-export function forgeTextField(config: ForgeTextFieldConfig): MatInputField {
+export function forgeTextField(config: DbxForgeTextFieldConfig): MatInputField {
   const { key, label, placeholder, required, readonly: isReadonly, description, minLength, maxLength, pattern, inputType = 'text', defaultValue = '', autocomplete } = config;
 
   const props: Partial<MatInputProps> = filterFromPOJO({
@@ -128,7 +128,7 @@ export function forgeTextField(config: ForgeTextFieldConfig): MatInputField {
 /**
  * Configuration for a multi-line textarea input field in forge.
  */
-export interface ForgeTextAreaFieldConfig extends ForgeTextFieldPatternConfig, ForgeTextFieldLengthConfig, Partial<TransformStringFunctionConfigRef> {
+export interface DbxForgeTextAreaFieldConfig extends DbxForgeTextFieldPatternConfig, DbxForgeTextFieldLengthConfig, Partial<TransformStringFunctionConfigRef> {
   readonly key: string;
   readonly label?: string;
   readonly placeholder?: string;
@@ -143,7 +143,7 @@ export interface ForgeTextAreaFieldConfig extends ForgeTextFieldPatternConfig, F
   /**
    * Sets the autocomplete attribute on the textarea. Pass `false` to disable browser autofill.
    */
-  readonly autocomplete?: ForgeFieldAutocompleteConfig;
+  readonly autocomplete?: DbxForgeFieldAutocompleteConfig;
 }
 
 /**
@@ -157,7 +157,7 @@ export interface ForgeTextAreaFieldConfig extends ForgeTextFieldPatternConfig, F
  * const field = forgeTextAreaField({ key: 'bio', label: 'Biography', rows: 5, maxLength: 500 });
  * ```
  */
-export function forgeTextAreaField(config: ForgeTextAreaFieldConfig): MatTextareaField {
+export function forgeTextAreaField(config: DbxForgeTextAreaFieldConfig): MatTextareaField {
   const { key, label, placeholder, required, readonly: isReadonly, description, rows = 3, minLength, maxLength, pattern, defaultValue = '', autocomplete } = config;
 
   const props: Partial<MatTextareaProps> = filterFromPOJO({

@@ -7,7 +7,7 @@ import { forgeField } from '../field';
 /**
  * Configuration for a forge select (dropdown) field.
  */
-export interface ForgeValueSelectionFieldConfig<T = unknown> {
+export interface DbxForgeValueSelectionFieldConfig<T = unknown> {
   readonly key: string;
   readonly label?: string;
   readonly required?: boolean;
@@ -52,7 +52,7 @@ export interface ForgeValueSelectionFieldConfig<T = unknown> {
  * });
  * ```
  */
-export function forgeValueSelectionField<T = unknown>(config: ForgeValueSelectionFieldConfig<T>): MatSelectField<T> {
+export function forgeValueSelectionField<T = unknown>(config: DbxForgeValueSelectionFieldConfig<T>): MatSelectField<T> {
   const { key, label, required, readonly: isReadonly, description, options, multiple, defaultValue, addClearOption } = config;
 
   const props: Partial<MatSelectProps> = filterFromPOJO({

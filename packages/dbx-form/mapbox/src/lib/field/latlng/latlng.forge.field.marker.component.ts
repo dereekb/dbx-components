@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { shareReplay, map, type Observable, combineLatest } from 'rxjs';
 import { type DbxMapboxMarker, DbxMapboxMarkerComponent } from '@dereekb/dbx-web/mapbox';
-import { ForgeMapboxLatLngFieldComponent } from './latlng.forge.field.component';
+import { DbxForgeMapboxLatLngFieldComponent } from './latlng.forge.field.component';
 import { type Maybe } from '@dereekb/util';
 import { toSignal } from '@angular/core/rxjs-interop';
 
@@ -13,8 +13,8 @@ import { toSignal } from '@angular/core/rxjs-interop';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class ForgeMapboxLatLngFieldMarkerComponent {
-  readonly fieldComponent = inject(ForgeMapboxLatLngFieldComponent);
+export class DbxForgeMapboxLatLngFieldMarkerComponent {
+  readonly fieldComponent = inject(DbxForgeMapboxLatLngFieldComponent);
 
   readonly marker$: Observable<Maybe<DbxMapboxMarker>> = combineLatest([this.fieldComponent.latLng$, this.fieldComponent.markerConfig$]).pipe(
     map(([latLng, markerConfig]) => {

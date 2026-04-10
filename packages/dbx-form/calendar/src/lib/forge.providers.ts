@@ -8,16 +8,16 @@ import { calendarDateScheduleRangeFieldMapper } from './field/schedule/calendar.
  * Registers the custom calendar date schedule range field component with ng-forge's dynamic form system.
  * Uses lazy loading for the component.
  */
-const ForgeCalendarDateScheduleRangeFieldType: FieldTypeDefinition = {
+const DbxForgeCalendarDateScheduleRangeFieldType: FieldTypeDefinition = {
   name: FORGE_CALENDAR_DATE_SCHEDULE_RANGE_FIELD_TYPE,
-  loadComponent: () => import('./field/schedule/calendar.schedule.forge.field.component').then((m) => m.ForgeCalendarDateScheduleRangeFieldComponent),
+  loadComponent: () => import('./field/schedule/calendar.schedule.forge.field.component').then((m) => m.DbxForgeCalendarDateScheduleRangeFieldComponent),
   mapper: calendarDateScheduleRangeFieldMapper
 };
 
 /**
  * All custom dbx-form/calendar forge field type definitions.
  */
-export const DBX_FORGE_CALENDAR_FIELD_TYPES: FieldTypeDefinition[] = [ForgeCalendarDateScheduleRangeFieldType];
+export const DBX_FORGE_CALENDAR_FIELD_TYPES: FieldTypeDefinition[] = [DbxForgeCalendarDateScheduleRangeFieldType];
 
 /**
  * Registers ng-forge dynamic form field declarations for the calendar package.

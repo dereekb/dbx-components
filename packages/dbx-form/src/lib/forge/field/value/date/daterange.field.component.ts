@@ -21,7 +21,7 @@ export const FORGE_DATERANGE_FIELD_TYPE = 'daterange' as const;
 /**
  * Value shape for the date range field.
  */
-export interface ForgeDateRangeValue {
+export interface DbxForgeDateRangeValue {
   readonly start?: Maybe<Date>;
   readonly end?: Maybe<Date>;
 }
@@ -29,7 +29,7 @@ export interface ForgeDateRangeValue {
 /**
  * Custom props for the forge date range field.
  */
-export interface ForgeDateRangeFieldComponentProps {
+export interface DbxForgeDateRangeFieldComponentProps {
   /**
    * Custom label for the start date input.
    */
@@ -65,7 +65,7 @@ export interface ForgeDateRangeFieldComponentProps {
 /**
  * Field definition type for a forge date range field.
  */
-export type ForgeDateRangeFieldDef = BaseValueField<ForgeDateRangeFieldComponentProps, ForgeDateRangeValue> & {
+export type DbxForgeDateRangeFieldDef = BaseValueField<DbxForgeDateRangeFieldComponentProps, DbxForgeDateRangeValue> & {
   readonly type: typeof FORGE_DATERANGE_FIELD_TYPE;
 };
 
@@ -102,7 +102,7 @@ export type ForgeDateRangeFieldDef = BaseValueField<ForgeDateRangeFieldComponent
     }
   `
 })
-export class ForgeDateRangeFieldComponent {
+export class DbxForgeDateRangeFieldComponent {
   private readonly materialConfig = inject(MATERIAL_CONFIG, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
 
@@ -113,7 +113,7 @@ export class ForgeDateRangeFieldComponent {
   readonly placeholder: InputSignal<DynamicText | undefined> = input<DynamicText | undefined>();
   readonly className: InputSignal<string> = input('');
   readonly tabIndex: InputSignal<number | undefined> = input<number | undefined>();
-  readonly props: InputSignal<ForgeDateRangeFieldComponentProps | undefined> = input<ForgeDateRangeFieldComponentProps | undefined>();
+  readonly props: InputSignal<DbxForgeDateRangeFieldComponentProps | undefined> = input<DbxForgeDateRangeFieldComponentProps | undefined>();
   readonly meta: InputSignal<Record<string, unknown> | undefined> = input<Record<string, unknown> | undefined>();
   readonly validationMessages: InputSignal<ValidationMessages | undefined> = input<ValidationMessages | undefined>();
   readonly defaultValidationMessages: InputSignal<ValidationMessages | undefined> = input<ValidationMessages | undefined>();
@@ -155,7 +155,7 @@ export class ForgeDateRangeFieldComponent {
     effect(() => {
       const fieldTree = this.field();
       const fieldState = fieldTree();
-      const signalValue = fieldState.value() as Maybe<ForgeDateRangeValue>;
+      const signalValue = fieldState.value() as Maybe<DbxForgeDateRangeValue>;
 
       if (!this._syncing) {
         this._syncing = true;
@@ -222,7 +222,7 @@ export class ForgeDateRangeFieldComponent {
     const startDate = this._combineDateAndTime(this.startDateCtrl.value, showTime ? this.startTimeCtrl.value : null);
     const endDate = this._combineDateAndTime(this.endDateCtrl.value, showTime ? this.endTimeCtrl.value : null);
 
-    const newValue: ForgeDateRangeValue = {
+    const newValue: DbxForgeDateRangeValue = {
       start: startDate,
       end: endDate
     };

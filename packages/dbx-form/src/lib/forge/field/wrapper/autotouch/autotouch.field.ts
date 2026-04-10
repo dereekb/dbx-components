@@ -14,7 +14,7 @@ export const FORGE_AUTOTOUCH_FIELD_TYPE_NAME = 'dbx-forge-autotouch' as const;
  *
  * @deprecated Auto-touch behavior is no longer needed with ng-forge signal forms.
  */
-export interface ForgeAutoTouchFieldProps {
+export interface DbxForgeAutoTouchFieldProps {
   /**
    * Key of the sibling field to auto-touch on value change.
    */
@@ -26,7 +26,7 @@ export interface ForgeAutoTouchFieldProps {
  *
  * @deprecated Auto-touch behavior is no longer needed with ng-forge signal forms.
  */
-export interface ForgeAutoTouchFieldDef extends BaseValueField<ForgeAutoTouchFieldProps, unknown> {
+export interface DbxForgeAutoTouchFieldDef extends BaseValueField<DbxForgeAutoTouchFieldProps, unknown> {
   readonly type: typeof FORGE_AUTOTOUCH_FIELD_TYPE_NAME;
 }
 
@@ -35,9 +35,9 @@ export interface ForgeAutoTouchFieldDef extends BaseValueField<ForgeAutoTouchFie
  *
  * @deprecated Auto-touch behavior is no longer needed with ng-forge signal forms.
  */
-export const DBX_FORGE_AUTOTOUCH_FIELD_TYPE: FieldTypeDefinition<ForgeAutoTouchFieldDef> = {
+export const DBX_FORGE_AUTOTOUCH_FIELD_TYPE: FieldTypeDefinition<DbxForgeAutoTouchFieldDef> = {
   name: FORGE_AUTOTOUCH_FIELD_TYPE_NAME,
-  loadComponent: () => import('./autotouch.field.component').then((m) => m.ForgeAutoTouchFieldComponent),
+  loadComponent: () => import('./autotouch.field.component').then((m) => m.DbxForgeAutoTouchFieldComponent),
   mapper: valueFieldMapper
 };
 
@@ -49,7 +49,7 @@ let _forgeAutoTouchCounter = 0;
  *
  * @deprecated Auto-touch behavior is no longer needed with ng-forge signal forms.
  */
-export interface ForgeAutoTouchFieldConfig {
+export interface DbxForgeAutoTouchFieldConfig {
   /**
    * Key of the sibling field to auto-touch on value change.
    */
@@ -67,9 +67,9 @@ export interface ForgeAutoTouchFieldConfig {
  * @deprecated Auto-touch behavior is no longer needed with ng-forge signal forms.
  *
  * @param config - AutoTouch configuration
- * @returns A {@link ForgeAutoTouchFieldDef}
+ * @returns A {@link DbxForgeAutoTouchFieldDef}
  */
-export function forgeAutoTouchField(config: ForgeAutoTouchFieldConfig): ForgeAutoTouchFieldDef {
+export function forgeAutoTouchField(config: DbxForgeAutoTouchFieldConfig): DbxForgeAutoTouchFieldDef {
   const { watchFieldKey, key } = config;
 
   return forgeField(
@@ -79,7 +79,7 @@ export function forgeAutoTouchField(config: ForgeAutoTouchFieldConfig): ForgeAut
       label: '',
       value: undefined as unknown,
       hidden: true,
-      props: { watchFieldKey } as ForgeAutoTouchFieldProps
-    }) as ForgeAutoTouchFieldDef
+      props: { watchFieldKey } as DbxForgeAutoTouchFieldProps
+    }) as DbxForgeAutoTouchFieldDef
   );
 }

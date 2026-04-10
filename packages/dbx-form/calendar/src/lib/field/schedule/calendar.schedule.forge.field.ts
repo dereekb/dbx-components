@@ -5,7 +5,7 @@ import type { DateRange, DateCellScheduleDateFilterConfig, DateCellScheduleDayCo
 import type { CalendarScheduleSelectionState } from '../../calendar.schedule.selection.store';
 import type { DbxScheduleSelectionCalendarDatePopupContentConfig } from '../../calendar.schedule.selection.dialog.component';
 import type { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import type { ForgeCalendarDateScheduleRangeFieldComponentProps } from './calendar.schedule.forge.field.component';
+import type { DbxForgeCalendarDateScheduleRangeFieldComponentProps } from './calendar.schedule.forge.field.component';
 
 /**
  * The custom forge field type name for the calendar date schedule range field.
@@ -15,14 +15,14 @@ export const FORGE_CALENDAR_DATE_SCHEDULE_RANGE_FIELD_TYPE = 'dbx-forge-calendar
 /**
  * Field definition type for a forge calendar date schedule range field.
  */
-export type ForgeCalendarDateScheduleRangeFieldDef = BaseValueField<ForgeCalendarDateScheduleRangeFieldComponentProps, unknown> & {
+export type DbxForgeCalendarDateScheduleRangeFieldDef = BaseValueField<DbxForgeCalendarDateScheduleRangeFieldComponentProps, unknown> & {
   readonly type: typeof FORGE_CALENDAR_DATE_SCHEDULE_RANGE_FIELD_TYPE;
 };
 
 /**
  * Configuration for a forge calendar date schedule range field.
  */
-export interface ForgeCalendarDateScheduleRangeFieldConfig extends Pick<CalendarScheduleSelectionState, 'computeSelectionResultRelativeToFilter' | 'initialSelectionState'>, Partial<Pick<CalendarScheduleSelectionState, 'cellContentFactory'>> {
+export interface DbxForgeCalendarDateScheduleRangeFieldConfig extends Pick<CalendarScheduleSelectionState, 'computeSelectionResultRelativeToFilter' | 'initialSelectionState'>, Partial<Pick<CalendarScheduleSelectionState, 'cellContentFactory'>> {
   readonly key?: string;
   readonly label?: string;
   readonly description?: string;
@@ -87,10 +87,10 @@ export interface ForgeCalendarDateScheduleRangeFieldConfig extends Pick<Calendar
  * @param config - Optional schedule range field configuration overrides
  * @returns A validated forge field definition for date schedule range selection
  */
-export function forgeDateScheduleRangeField(config: ForgeCalendarDateScheduleRangeFieldConfig = {}): ForgeCalendarDateScheduleRangeFieldDef {
+export function forgeDateScheduleRangeField(config: DbxForgeCalendarDateScheduleRangeFieldConfig = {}): DbxForgeCalendarDateScheduleRangeFieldDef {
   const { key = 'schedule', label, description, required, readonly: isReadonly, appearance, allowTextInput, hideCustomize, allowCustomizeWithoutDateRange, outputTimezone, defaultScheduleDays, minMaxDateRange, filter, exclusions, dialogContentConfig, computeSelectionResultRelativeToFilter, initialSelectionState, cellContentFactory, customDetailsConfig } = config;
 
-  const props: ForgeCalendarDateScheduleRangeFieldComponentProps = filterFromPOJO({
+  const props: DbxForgeCalendarDateScheduleRangeFieldComponentProps = filterFromPOJO({
     label: label ?? 'Schedule',
     description,
     appearance,
@@ -117,5 +117,5 @@ export function forgeDateScheduleRangeField(config: ForgeCalendarDateScheduleRan
     required,
     readonly: isReadonly,
     props: Object.keys(props).length > 0 ? props : undefined
-  }) as ForgeCalendarDateScheduleRangeFieldDef;
+  }) as DbxForgeCalendarDateScheduleRangeFieldDef;
 }

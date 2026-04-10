@@ -8,9 +8,9 @@
  * @see https://www.ng-forge.com/dynamic-forms/custom/building-an-adapter
  */
 import type { BaseValueField } from '@ng-forge/dynamic-forms';
-import type { ForgeSliderFieldProps } from './field/value/number/slider.field.component';
-import type { ForgeSectionFieldProps } from './field/wrapper/section/section.field';
-import type { ForgeFormFieldWrapperProps } from './field/wrapper/formfield/formfield.field';
+import type { DbxForgeSliderFieldProps } from './field/value/number/slider.field.component';
+import type { DbxForgeSectionFieldProps } from './field/wrapper/section/section.field';
+import type { DbxForgeFormFieldWrapperProps } from './field/wrapper/formfield/formfield.field';
 
 declare module '@ng-forge/dynamic-forms' {
   interface FieldRegistryLeaves {
@@ -19,7 +19,7 @@ declare module '@ng-forge/dynamic-forms' {
     datetime: BaseValueField<unknown, unknown>;
     fixeddaterange: BaseValueField<unknown, unknown>;
     timeduration: BaseValueField<unknown, unknown>;
-    'dbx-slider': BaseValueField<ForgeSliderFieldProps, number>;
+    'dbx-slider': BaseValueField<DbxForgeSliderFieldProps, number>;
     'dbx-searchable-text': BaseValueField<unknown, unknown>;
     'dbx-searchable-chip': BaseValueField<unknown, unknown>;
     'dbx-pickable-chip': BaseValueField<unknown, unknown>;
@@ -30,8 +30,8 @@ declare module '@ng-forge/dynamic-forms' {
     'dbx-component': BaseValueField<unknown, unknown>;
 
     // Wrapper fields (registered as leaves since they use valueFieldMapper)
-    'dbx-forge-form-field': BaseValueField<ForgeFormFieldWrapperProps, Record<string, unknown>>;
-    'dbx-forge-section': BaseValueField<ForgeSectionFieldProps, Record<string, unknown>>;
+    'dbx-forge-form-field': BaseValueField<DbxForgeFormFieldWrapperProps, Record<string, unknown>>;
+    'dbx-forge-section': BaseValueField<DbxForgeSectionFieldProps, Record<string, unknown>>;
     'dbx-forge-expand': BaseValueField<unknown, unknown>;
     'dbx-forge-info-button': BaseValueField<unknown, unknown>;
     'dbx-forge-info': BaseValueField<unknown, unknown>;

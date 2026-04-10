@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { type FieldTree } from '@angular/forms/signals';
 import type { DynamicText, FieldMeta, ValidationMessages } from '@ng-forge/dynamic-forms';
-import type { ForgeWorkingFieldProps } from './working.field';
+import type { DbxForgeWorkingFieldProps } from './working.field';
 
 /**
  * Forge ValueFieldComponent that renders a loading indicator.
@@ -36,7 +36,7 @@ import type { ForgeWorkingFieldProps } from './working.field';
     '[class]': 'className()'
   }
 })
-export class ForgeWorkingFieldComponent {
+export class DbxForgeWorkingFieldComponent {
   // ng-forge ValueFieldComponent inputs
   readonly field = input.required<FieldTree<unknown>>();
   readonly key = input.required<string>();
@@ -44,7 +44,7 @@ export class ForgeWorkingFieldComponent {
   readonly placeholder = input<DynamicText | undefined>();
   readonly className = input<string>('');
   readonly tabIndex = input<number | undefined>();
-  readonly props = input<ForgeWorkingFieldProps | undefined>();
+  readonly props = input<DbxForgeWorkingFieldProps | undefined>();
   readonly meta = input<FieldMeta | undefined>();
   readonly validationMessages = input<ValidationMessages | undefined>();
   readonly defaultValidationMessages = input<ValidationMessages | undefined>();

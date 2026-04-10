@@ -18,7 +18,7 @@ import { toggleDisableFormControl } from '../../../form/form';
  *
  * Passed via the `props` property on the forge field definition.
  */
-export interface ForgeTextEditorFieldProps {
+export interface DbxForgeTextEditorFieldProps {
   /**
    * Minimum text length.
    */
@@ -41,7 +41,7 @@ export const FORGE_TEXT_EDITOR_FIELD_TYPE = 'dbx-texteditor' as const;
 /**
  * Forge field definition interface for the text editor field.
  */
-export interface ForgeTextEditorFieldDef extends BaseValueField<ForgeTextEditorFieldProps, string> {
+export interface DbxForgeTextEditorFieldDef extends BaseValueField<DbxForgeTextEditorFieldProps, string> {
   readonly type: typeof FORGE_TEXT_EDITOR_FIELD_TYPE;
 }
 
@@ -69,7 +69,7 @@ export class DbxForgeTextEditorFieldComponent implements OnInit, OnDestroy {
   readonly placeholder = input<DynamicText | undefined>();
   readonly className = input<string>('');
   readonly tabIndex = input<number | undefined>();
-  readonly props = input<ForgeTextEditorFieldProps | undefined>();
+  readonly props = input<DbxForgeTextEditorFieldProps | undefined>();
   readonly meta = input<FieldMeta | undefined>();
   readonly validationMessages = input<ValidationMessages | undefined>();
   readonly defaultValidationMessages = input<ValidationMessages | undefined>();

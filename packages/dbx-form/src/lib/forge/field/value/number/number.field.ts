@@ -1,8 +1,8 @@
 import type { CustomValidatorConfig, FieldDef, FieldMeta, ValidationMessages } from '@ng-forge/dynamic-forms';
 import type { MatInputField, MatInputProps, MatSliderField, MatSliderProps } from '@ng-forge/dynamic-forms-material';
 import { filterFromPOJO, DOLLAR_AMOUNT_PRECISION, type TransformNumberFunctionConfigRef } from '@dereekb/util';
-import { forgeField, mergeForgeFieldMeta, type ForgeFieldAutocompleteConfig } from '../../field';
-import { forgeFormFieldWrapper, type ForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
+import { forgeField, mergeForgeFieldMeta, type DbxForgeFieldAutocompleteConfig } from '../../field';
+import { forgeFormFieldWrapper, type DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
 import { forgeDefaultValidationMessages } from '../../../validation';
 
 // MARK: Number Field
@@ -14,7 +14,7 @@ export const FORGE_IS_DIVISIBLE_BY_VALIDATION_KEY = 'isDivisibleBy';
 /**
  * Numeric constraint configuration for forge number fields.
  */
-export interface ForgeNumberFieldNumberConfig {
+export interface DbxForgeNumberFieldNumberConfig {
   readonly min?: number;
   readonly max?: number;
   /**
@@ -33,7 +33,7 @@ export interface ForgeNumberFieldNumberConfig {
  *
  * Combines labeling, numeric constraints (min/max/step), and number transformation.
  */
-export interface ForgeNumberFieldConfig extends ForgeNumberFieldNumberConfig, Partial<TransformNumberFunctionConfigRef> {
+export interface DbxForgeNumberFieldConfig extends DbxForgeNumberFieldNumberConfig, Partial<TransformNumberFunctionConfigRef> {
   readonly key: string;
   readonly label?: string;
   readonly placeholder?: string;
@@ -44,7 +44,7 @@ export interface ForgeNumberFieldConfig extends ForgeNumberFieldNumberConfig, Pa
   /**
    * Sets the autocomplete attribute on the input. Pass `false` to disable browser autofill.
    */
-  readonly autocomplete?: ForgeFieldAutocompleteConfig;
+  readonly autocomplete?: DbxForgeFieldAutocompleteConfig;
 }
 
 /**
@@ -61,7 +61,7 @@ export interface ForgeNumberFieldConfig extends ForgeNumberFieldNumberConfig, Pa
  * const field = forgeNumberField({ key: 'quantity', label: 'Quantity', min: 1, max: 100, step: 1 });
  * ```
  */
-export function forgeNumberField(config: ForgeNumberFieldConfig): MatInputField {
+export function forgeNumberField(config: DbxForgeNumberFieldConfig): MatInputField {
   const { key, label, placeholder, required, readonly: isReadonly, description, min, max, step, enforceStep, defaultValue, autocomplete } = config;
 
   const props: Partial<MatInputProps> = filterFromPOJO({
@@ -115,7 +115,7 @@ export function forgeNumberField(config: ForgeNumberFieldConfig): MatInputField 
 /**
  * Configuration for a forge Material slider field.
  */
-export interface ForgeNumberSliderFieldConfig extends ForgeNumberFieldConfig {
+export interface DbxForgeNumberSliderFieldConfig extends DbxForgeNumberFieldConfig {
   /**
    * Max value. Required for the slider.
    */
@@ -142,14 +142,14 @@ export interface ForgeNumberSliderFieldConfig extends ForgeNumberFieldConfig {
  * the child slider's value into the parent form.
  *
  * @param config - Slider field configuration including max (required), thumb label, and tick interval
- * @returns A {@link ForgeFormFieldWrapperFieldDef} wrapping a slider field
+ * @returns A {@link DbxForgeFormFieldWrapperFieldDef} wrapping a slider field
  *
  * @example
  * ```typescript
  * const field = forgeNumberSliderField({ key: 'rating', label: 'Rating', min: 0, max: 10, step: 1 });
  * ```
  */
-export function forgeNumberSliderField(config: ForgeNumberSliderFieldConfig): ForgeFormFieldWrapperFieldDef<MatSliderField> {
+export function forgeNumberSliderField(config: DbxForgeNumberSliderFieldConfig): DbxForgeFormFieldWrapperFieldDef<MatSliderField> {
   const { key, label, required, readonly: isReadonly, description, min, max, step, defaultValue, thumbLabel: inputThumbLabel, tickInterval: inputTickInterval } = config;
 
   let tickIntervalFromSteps: number | undefined;
@@ -195,7 +195,7 @@ export function forgeNumberSliderField(config: ForgeNumberSliderFieldConfig): Fo
 /**
  * Configuration for a forge dollar amount field, which enforces cent-level precision.
  */
-export type ForgeDollarAmountFieldConfig = Omit<ForgeNumberFieldConfig, 'roundToStep' | 'precision'>;
+export type DbxForgeDollarAmountFieldConfig = Omit<DbxForgeNumberFieldConfig, 'roundToStep' | 'precision'>;
 
 /**
  * Creates a forge number field pre-configured for dollar amount input with cent-level precision.
@@ -208,7 +208,7 @@ export type ForgeDollarAmountFieldConfig = Omit<ForgeNumberFieldConfig, 'roundTo
  * const field = forgeDollarAmountField({ key: 'price', label: 'Price', min: 0, required: true });
  * ```
  */
-export function forgeDollarAmountField(config: ForgeDollarAmountFieldConfig): MatInputField {
+export function forgeDollarAmountField(config: DbxForgeDollarAmountFieldConfig): MatInputField {
   return forgeNumberField({
     ...config,
     transform: {

@@ -2,7 +2,7 @@ import type { BaseValueField } from '@ng-forge/dynamic-forms';
 import type { TimeUnit } from '@dereekb/util';
 import { filterFromPOJO } from '@dereekb/util';
 import type { TimeDurationFieldValueMode } from '../../../../formly/field/value/duration/duration.field';
-import type { ForgeTimeDurationFieldComponentProps } from './duration.field.component';
+import type { DbxForgeTimeDurationFieldComponentProps } from './duration.field.component';
 import { forgeField } from '../../field';
 
 /**
@@ -13,7 +13,7 @@ export const FORGE_TIMEDURATION_FIELD_TYPE = 'timeduration' as const;
 /**
  * Field definition type for a forge time duration field.
  */
-export type ForgeTimeDurationFieldDef = BaseValueField<ForgeTimeDurationFieldComponentProps, unknown> & {
+export type DbxForgeTimeDurationFieldDef = BaseValueField<DbxForgeTimeDurationFieldComponentProps, unknown> & {
   readonly type: typeof FORGE_TIMEDURATION_FIELD_TYPE;
 };
 
@@ -21,7 +21,7 @@ export type ForgeTimeDurationFieldDef = BaseValueField<ForgeTimeDurationFieldCom
 /**
  * Configuration for a forge time duration input field.
  */
-export interface ForgeTimeDurationFieldConfig {
+export interface DbxForgeTimeDurationFieldConfig {
   readonly key: string;
   readonly label?: string;
   readonly required?: boolean;
@@ -70,7 +70,7 @@ export interface ForgeTimeDurationFieldConfig {
  * accepting duration strings (e.g. "2h30m") and a popover picker.
  *
  * @param config - Time duration field configuration
- * @returns A {@link ForgeTimeDurationFieldDef}
+ * @returns A {@link DbxForgeTimeDurationFieldDef}
  *
  * @example
  * ```typescript
@@ -83,10 +83,10 @@ export interface ForgeTimeDurationFieldConfig {
  * });
  * ```
  */
-export function forgeTimeDurationField(config: ForgeTimeDurationFieldConfig): ForgeTimeDurationFieldDef {
+export function forgeTimeDurationField(config: DbxForgeTimeDurationFieldConfig): DbxForgeTimeDurationFieldDef {
   const { key, label, required, readonly: isReadonly, description, outputUnit, valueMode, allowedUnits, pickerUnits, min, max, carryOver } = config;
 
-  const props: ForgeTimeDurationFieldComponentProps = filterFromPOJO({
+  const props: DbxForgeTimeDurationFieldComponentProps = filterFromPOJO({
     outputUnit,
     valueMode,
     allowedUnits,
@@ -106,6 +106,6 @@ export function forgeTimeDurationField(config: ForgeTimeDurationFieldConfig): Fo
       required,
       readonly: isReadonly,
       props: Object.keys(props).length > 0 ? props : undefined
-    }) as ForgeTimeDurationFieldDef
+    }) as DbxForgeTimeDurationFieldDef
   );
 }

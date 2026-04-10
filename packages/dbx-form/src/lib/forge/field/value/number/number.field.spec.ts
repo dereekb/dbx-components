@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { forgeNumberField, forgeNumberSliderField, forgeDollarAmountField, FORGE_IS_DIVISIBLE_BY_VALIDATION_KEY } from './number.field';
-import { FORGE_FORM_FIELD_WRAPPER_TYPE_NAME, type ForgeFormFieldWrapperProps } from '../../wrapper/formfield/formfield.field';
+import { FORGE_FORM_FIELD_WRAPPER_TYPE_NAME, type DbxForgeFormFieldWrapperProps } from '../../wrapper/formfield/formfield.field';
 
 describe('forgeNumberField()', () => {
   it('should create an input field with number type in props', () => {
@@ -127,7 +127,7 @@ describe('forgeNumberSliderField()', () => {
    * Helper to extract the inner slider field from the wrapper.
    */
   function getInnerSlider(field: ReturnType<typeof forgeNumberSliderField>) {
-    const wrapperProps = field.props as ForgeFormFieldWrapperProps;
+    const wrapperProps = field.props as DbxForgeFormFieldWrapperProps;
     return wrapperProps.fields[0] as Record<string, unknown>;
   }
 
@@ -148,7 +148,7 @@ describe('forgeNumberSliderField()', () => {
 
   it('should contain exactly one child slider field', () => {
     const field = forgeNumberSliderField({ key: 'rating', max: 10 });
-    const wrapperProps = field.props as ForgeFormFieldWrapperProps;
+    const wrapperProps = field.props as DbxForgeFormFieldWrapperProps;
     expect(wrapperProps.fields.length).toBe(1);
   });
 

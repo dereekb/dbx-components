@@ -3,7 +3,7 @@ import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type DbxFormCalendarDateCellScheduleRangeFieldProps } from './calendar.schedule.field.component';
 
 /**
- * @deprecated Use ForgeCalendarDateScheduleRangeFieldConfig instead.
+ * @deprecated Use DbxForgeCalendarDateScheduleRangeFieldConfig instead.
  */
 export interface DateScheduleRangeFieldConfig extends Omit<LabeledFieldConfig, 'key' | 'placeholder'>, DescriptionFieldConfig, Partial<FieldConfig>, DbxFormCalendarDateCellScheduleRangeFieldProps {}
 

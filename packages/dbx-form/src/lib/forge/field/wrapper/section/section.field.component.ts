@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 import { DbxSectionComponent, DbxSubSectionComponent, type DbxSectionHeaderConfig } from '@dereekb/dbx-web';
 import { AbstractForgeWrapperFieldComponent, provideDbxForgeWrapperFieldDirective } from '../wrapper.field';
-import { ForgeWrapperContentComponent } from '../wrapper.content.component';
-import type { ForgeSectionFieldProps } from './section.field';
+import { DbxForgeWrapperContentComponent } from '../wrapper.content.component';
+import type { DbxForgeSectionFieldProps } from './section.field';
 
 /**
  * Forge wrapper field component that renders child fields inside a
@@ -24,15 +24,15 @@ import type { ForgeSectionFieldProps } from './section.field';
       </dbx-section>
     }
   `,
-  providers: provideDbxForgeWrapperFieldDirective(ForgeDbxSectionFieldWrapperComponent),
-  imports: [DbxSectionComponent, DbxSubSectionComponent, ForgeWrapperContentComponent],
+  providers: provideDbxForgeWrapperFieldDirective(DbxForgeDbxSectionFieldWrapperComponent),
+  imports: [DbxSectionComponent, DbxSubSectionComponent, DbxForgeWrapperContentComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   host: {
     '[class]': 'className()'
   }
 })
-export class ForgeDbxSectionFieldWrapperComponent extends AbstractForgeWrapperFieldComponent<ForgeSectionFieldProps> {
+export class DbxForgeDbxSectionFieldWrapperComponent extends AbstractForgeWrapperFieldComponent<DbxForgeSectionFieldProps> {
   readonly headerConfigSignal = computed((): DbxSectionHeaderConfig => {
     return this.props()?.headerConfig ?? {};
   });

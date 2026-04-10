@@ -15,7 +15,7 @@ export const FORGE_STYLED_BOX_CLASS = 'dbx-forge-styled-box';
  * Pass a string for a specific autocomplete value (e.g., `'email'`, `'name'`),
  * or `false` to disable browser autofill.
  */
-export type ForgeFieldAutocompleteConfig = string | DisableAutocompleteForField;
+export type DbxForgeFieldAutocompleteConfig = string | DisableAutocompleteForField;
 
 /**
  * Builds a {@link FieldMeta} object for the given autocomplete configuration.
@@ -27,7 +27,7 @@ export type ForgeFieldAutocompleteConfig = string | DisableAutocompleteForField;
  * @param autocomplete - Autocomplete value or `false` to disable
  * @returns A meta object with autocomplete attributes, or `undefined` if not configured
  */
-export function forgeAutocompleteFieldMeta(autocomplete: Maybe<ForgeFieldAutocompleteConfig>): FieldMeta | undefined {
+export function forgeAutocompleteFieldMeta(autocomplete: Maybe<DbxForgeFieldAutocompleteConfig>): FieldMeta | undefined {
   if (autocomplete == null) {
     return undefined;
   }
@@ -52,7 +52,7 @@ export function forgeAutocompleteFieldMeta(autocomplete: Maybe<ForgeFieldAutocom
  * @param autocomplete - Autocomplete configuration to merge
  * @returns Merged meta, or `undefined` if neither input provides values
  */
-export function mergeForgeFieldMeta(baseMeta: Maybe<FieldMeta>, autocomplete: Maybe<ForgeFieldAutocompleteConfig>): FieldMeta | undefined {
+export function mergeForgeFieldMeta(baseMeta: Maybe<FieldMeta>, autocomplete: Maybe<DbxForgeFieldAutocompleteConfig>): FieldMeta | undefined {
   const autocompleteMeta = forgeAutocompleteFieldMeta(autocomplete);
 
   if (baseMeta && autocompleteMeta) {

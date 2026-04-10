@@ -9,7 +9,7 @@ import { DbxForgeFormContext } from '../../form/forge.context';
  * All wrapper field props must include a `fields` array. Concrete wrapper types
  * extend this with additional configuration (e.g. header config for sections).
  */
-export interface ForgeWrapperFieldProps {
+export interface DbxForgeWrapperFieldProps {
   /**
    * Child field definitions to render inside the wrapper.
    */
@@ -20,12 +20,12 @@ export interface ForgeWrapperFieldProps {
  * Abstract DI token for forge wrapper field directives.
  *
  * Exposes the child form config and value signals that
- * {@link ForgeWrapperContentComponent} needs to render the nested `DynamicForm`.
+ * {@link DbxForgeWrapperContentComponent} needs to render the nested `DynamicForm`.
  * Concrete wrapper components extend {@link AbstractForgeWrapperFieldComponent}
  * and register themselves via {@link provideDbxForgeWrapperFieldDirective}.
  */
 @Directive()
-export abstract class ForgeWrapperFieldDirective {
+export abstract class DbxForgeWrapperFieldDirective {
   /**
    * FormConfig derived from the wrapper's child field definitions.
    */
@@ -39,7 +39,7 @@ export abstract class ForgeWrapperFieldDirective {
 
 /**
  * Creates Angular providers that register a concrete wrapper field component
- * as a {@link ForgeWrapperFieldDirective} for DI.
+ * as a {@link DbxForgeWrapperFieldDirective} for DI.
  *
  * @param sourceType - The concrete wrapper component class to provide.
  * @returns An array of Angular providers.
@@ -47,16 +47,16 @@ export abstract class ForgeWrapperFieldDirective {
  * @example
  * ```typescript
  * @Component({
- *   providers: provideDbxForgeWrapperFieldDirective(ForgeDbxSectionFieldWrapperComponent),
+ *   providers: provideDbxForgeWrapperFieldDirective(DbxForgeDbxSectionFieldWrapperComponent),
  *   ...
  * })
- * export class ForgeDbxSectionFieldWrapperComponent extends AbstractForgeWrapperFieldComponent<ForgeSectionFieldProps> {}
+ * export class DbxForgeDbxSectionFieldWrapperComponent extends AbstractForgeWrapperFieldComponent<DbxForgeSectionFieldProps> {}
  * ```
  */
-export function provideDbxForgeWrapperFieldDirective<S extends ForgeWrapperFieldDirective>(sourceType: Type<S>): Provider[] {
+export function provideDbxForgeWrapperFieldDirective<S extends DbxForgeWrapperFieldDirective>(sourceType: Type<S>): Provider[] {
   return [
     {
-      provide: ForgeWrapperFieldDirective,
+      provide: DbxForgeWrapperFieldDirective,
       useExisting: forwardRef(() => sourceType)
     }
   ];
@@ -67,7 +67,7 @@ export function provideDbxForgeWrapperFieldDirective<S extends ForgeWrapperField
  *
  * Provides the standard ng-forge ValueFieldComponent inputs and manages
  * two-way value synchronization between the parent field tree and a nested
- * `DynamicForm` rendered by {@link ForgeWrapperContentComponent}.
+ * `DynamicForm` rendered by {@link DbxForgeWrapperContentComponent}.
  *
  * Subclasses only need to define their template, placing
  * `<dbx-forge-wrapper-content />` inside their layout component
@@ -82,14 +82,14 @@ export function provideDbxForgeWrapperFieldDirective<S extends ForgeWrapperField
  *       <dbx-forge-wrapper-content />
  *     </dbx-section>
  *   `,
- *   providers: provideDbxForgeWrapperFieldDirective(ForgeDbxSectionFieldWrapperComponent),
+ *   providers: provideDbxForgeWrapperFieldDirective(DbxForgeDbxSectionFieldWrapperComponent),
  *   ...
  * })
- * export class ForgeDbxSectionFieldWrapperComponent extends AbstractForgeWrapperFieldComponent<ForgeSectionFieldProps> { ... }
+ * export class DbxForgeDbxSectionFieldWrapperComponent extends AbstractForgeWrapperFieldComponent<DbxForgeSectionFieldProps> { ... }
  * ```
  */
 @Directive()
-export abstract class AbstractForgeWrapperFieldComponent<TProps extends ForgeWrapperFieldProps> extends ForgeWrapperFieldDirective {
+export abstract class AbstractForgeWrapperFieldComponent<TProps extends DbxForgeWrapperFieldProps> extends DbxForgeWrapperFieldDirective {
   // MARK: ng-forge ValueFieldComponent Inputs
   readonly field = input.required<FieldTree<Record<string, unknown>>>();
   readonly key = input.required<string>();

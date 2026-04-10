@@ -6,7 +6,7 @@ import { forgeField, FORGE_STYLED_BOX_CLASS } from '../../field';
 /**
  * Configuration for a forge Material toggle (slide toggle) field.
  */
-export interface ForgeToggleFieldConfig {
+export interface DbxForgeToggleFieldConfig {
   readonly key: string;
   readonly label?: string;
   readonly required?: boolean;
@@ -34,7 +34,7 @@ export interface ForgeToggleFieldConfig {
  * const field = forgeToggleField({ key: 'active', label: 'Active', defaultValue: true });
  * ```
  */
-export function forgeToggleField(config: ForgeToggleFieldConfig): MatToggleField {
+export function forgeToggleField(config: DbxForgeToggleFieldConfig): MatToggleField {
   const { key, label, required, readonly: isReadonly, description, defaultValue = false, styledBox = true } = config;
 
   const props: MatToggleProps | undefined = description ? { hint: description } : undefined;
@@ -58,7 +58,7 @@ export function forgeToggleField(config: ForgeToggleFieldConfig): MatToggleField
 /**
  * Configuration for a forge Material checkbox field.
  */
-export interface ForgeCheckboxFieldConfig {
+export interface DbxForgeCheckboxFieldConfig {
   readonly key: string;
   readonly label?: string;
   readonly placeholder?: string;
@@ -87,7 +87,7 @@ export interface ForgeCheckboxFieldConfig {
  * const field = forgeCheckboxField({ key: 'agree', label: 'I agree to the terms' });
  * ```
  */
-export function forgeCheckboxField(config: ForgeCheckboxFieldConfig): MatCheckboxField {
+export function forgeCheckboxField(config: DbxForgeCheckboxFieldConfig): MatCheckboxField {
   const { key, label, required, readonly: isReadonly, description, defaultValue = false, styledBox = true } = config;
 
   const props: MatCheckboxProps | undefined = description ? { hint: description } : undefined;

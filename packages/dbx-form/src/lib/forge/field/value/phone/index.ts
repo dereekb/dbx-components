@@ -1,2 +1,2 @@
 export * from './phone.field';
-export { ForgePhoneFieldComponent, phoneFieldMapper, type ForgePhoneFieldProps } from './phone.field.component';
+export { DbxForgePhoneFieldComponent, phoneFieldMapper, type DbxForgePhoneFieldProps } from './phone.field.component';

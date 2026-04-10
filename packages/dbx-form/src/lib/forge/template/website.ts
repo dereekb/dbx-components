@@ -1,10 +1,10 @@
 import type { MatInputField } from '@ng-forge/dynamic-forms-material';
-import { forgeTextField, type ForgeTextFieldConfig } from '../field/value/text/text.field';
+import { forgeTextField, type DbxForgeTextFieldConfig } from '../field/value/text/text.field';
 
 /**
  * Configuration for a forge website URL text field.
  */
-export interface ForgeWebsiteUrlFieldConfig extends Omit<ForgeTextFieldConfig, 'inputType' | 'key'>, Partial<Pick<ForgeTextFieldConfig, 'key'>> {}
+export interface DbxForgeWebsiteUrlFieldConfig extends Omit<DbxForgeTextFieldConfig, 'inputType' | 'key'>, Partial<Pick<DbxForgeTextFieldConfig, 'key'>> {}
 
 /**
  * Creates a forge text field configured for website URL input.
@@ -23,7 +23,7 @@ export interface ForgeWebsiteUrlFieldConfig extends Omit<ForgeTextFieldConfig, '
  * const field = forgeWebsiteUrlField();
  * ```
  */
-export function forgeWebsiteUrlField(config?: ForgeWebsiteUrlFieldConfig): MatInputField {
+export function forgeWebsiteUrlField(config?: DbxForgeWebsiteUrlFieldConfig): MatInputField {
   return forgeTextField({
     key: 'website',
     ...config,

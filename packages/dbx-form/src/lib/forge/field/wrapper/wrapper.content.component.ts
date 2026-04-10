@@ -4,15 +4,15 @@ import type { ValidationError } from '@angular/forms/signals';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { EMPTY } from 'rxjs';
 import { BooleanStringKeyArrayUtility } from '@dereekb/util';
-import { ForgeWrapperFieldDirective } from './wrapper.field';
+import { DbxForgeWrapperFieldDirective } from './wrapper.field';
 import { DbxForgeFormContext } from '../../form/forge.context';
 
 /**
  * Reusable component that renders a nested ng-forge `DynamicForm` for wrapper fields.
  *
- * Injects the parent {@link ForgeWrapperFieldDirective} to read the child form config
+ * Injects the parent {@link DbxForgeWrapperFieldDirective} to read the child form config
  * and two-way bind the form value. Wrapper field components provide themselves as
- * `ForgeWrapperFieldDirective` via {@link provideDbxForgeWrapperFieldDirective}.
+ * `DbxForgeWrapperFieldDirective` via {@link provideDbxForgeWrapperFieldDirective}.
  *
  * Exposes the child DynamicForm's validation state via public signals so parent
  * wrapper components can display errors in their own subscript area.
@@ -35,8 +35,8 @@ import { DbxForgeFormContext } from '../../form/forge.context';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class ForgeWrapperContentComponent implements OnInit {
-  readonly wrapper = inject(ForgeWrapperFieldDirective);
+export class DbxForgeWrapperContentComponent implements OnInit {
+  readonly wrapper = inject(DbxForgeWrapperFieldDirective);
 
   private readonly _context = inject(DbxForgeFormContext, { optional: true });
   private readonly _destroyRef = inject(DestroyRef);

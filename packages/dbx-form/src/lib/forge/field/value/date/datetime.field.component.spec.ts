@@ -8,8 +8,8 @@ import { BehaviorSubject, of, first, skip } from 'rxjs';
 import { startOfDay, addHours, addDays } from 'date-fns';
 import { provideDbxForgeFormFieldDeclarations } from '../../../forge.providers';
 import { provideDbxFormConfiguration } from '../../../../form.providers';
-import { forgeDateTimeField, forgeDateRangeField, forgeDateTimeRangeField, type ForgeDateTimeFieldConfig, type ForgeDateRangeFieldConfig, type ForgeDateTimeRangeFieldConfig } from './datetime.field';
-import { ForgeDateTimeFieldComponent } from './datetime.field.component';
+import { forgeDateTimeField, forgeDateRangeField, forgeDateTimeRangeField, type DbxForgeDateTimeFieldConfig, type DbxForgeDateRangeFieldConfig, type DbxForgeDateTimeRangeFieldConfig } from './datetime.field';
+import { DbxForgeDateTimeFieldComponent } from './datetime.field.component';
 import { DbxDateTimeFieldTimeMode } from '../../../../formly/field/value/date/datetime.field.component';
 import { DbxDateTimeValueMode } from '../../../../formly/field/value/date/date.value';
 import { type Maybe, type TimezoneString } from '@dereekb/util';
@@ -58,12 +58,12 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function createConfig(fieldConfig: ForgeDateTimeFieldConfig): FormConfig {
+function createConfig(fieldConfig: DbxForgeDateTimeFieldConfig): FormConfig {
   return { fields: [forgeDateTimeField(fieldConfig) as any] };
 }
 
-function getDateTimeComponent(fixture: ComponentFixture<TestForgeDateTimeHostComponent>): Maybe<ForgeDateTimeFieldComponent> {
-  return fixture.debugElement.query(By.directive(ForgeDateTimeFieldComponent))?.componentInstance as Maybe<ForgeDateTimeFieldComponent>;
+function getDateTimeComponent(fixture: ComponentFixture<TestForgeDateTimeHostComponent>): Maybe<DbxForgeDateTimeFieldComponent> {
+  return fixture.debugElement.query(By.directive(DbxForgeDateTimeFieldComponent))?.componentInstance as Maybe<DbxForgeDateTimeFieldComponent>;
 }
 
 async function settle(fixture: ComponentFixture<TestForgeDateTimeHostComponent>, ms: number = SETTLE_TIME): Promise<void> {
@@ -75,7 +75,7 @@ async function settle(fixture: ComponentFixture<TestForgeDateTimeHostComponent>,
   fixture.detectChanges();
 }
 
-describe('ForgeDateTimeFieldComponent', () => {
+describe('DbxForgeDateTimeFieldComponent', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [TestForgeDateTimeHostComponent],
@@ -1303,7 +1303,7 @@ describe('ForgeDateTimeFieldComponent', () => {
      * Helper that waits for the next NEW emission from timeOutput$ after triggering an arrow key.
      * Uses skip(1) to skip the cached shareReplay value.
      */
-    async function pressArrowAndWaitForOutput(comp: ForgeDateTimeFieldComponent, event: KeyboardEvent): Promise<Date | undefined> {
+    async function pressArrowAndWaitForOutput(comp: DbxForgeDateTimeFieldComponent, event: KeyboardEvent): Promise<Date | undefined> {
       return new Promise<Date | undefined>((resolve) => {
         const sub = comp.timeOutput$.pipe(skip(1), first()).subscribe((val) => resolve(val ?? undefined));
         comp.onTimeKeydown(event);
@@ -1483,12 +1483,12 @@ describe('forgeDateRangeField() integration', () => {
     TestBed.resetTestingModule();
   });
 
-  function createDateRangeConfig(config: ForgeDateRangeFieldConfig = {}): FormConfig {
+  function createDateRangeConfig(config: DbxForgeDateRangeFieldConfig = {}): FormConfig {
     return { fields: [forgeDateRangeField(config) as any] };
   }
 
-  function getAllDateTimeComponents(fixture: ComponentFixture<TestForgeDateTimeHostComponent>): ForgeDateTimeFieldComponent[] {
-    return fixture.debugElement.queryAll(By.directive(ForgeDateTimeFieldComponent)).map((de) => de.componentInstance as ForgeDateTimeFieldComponent);
+  function getAllDateTimeComponents(fixture: ComponentFixture<TestForgeDateTimeHostComponent>): DbxForgeDateTimeFieldComponent[] {
+    return fixture.debugElement.queryAll(By.directive(DbxForgeDateTimeFieldComponent)).map((de) => de.componentInstance as DbxForgeDateTimeFieldComponent);
   }
 
   it('should render two datetime field components', async () => {
@@ -1760,12 +1760,12 @@ describe('forgeDateTimeRangeField() integration', () => {
     TestBed.resetTestingModule();
   });
 
-  function createDateTimeRangeConfig(config: ForgeDateTimeRangeFieldConfig = {}): FormConfig {
+  function createDateTimeRangeConfig(config: DbxForgeDateTimeRangeFieldConfig = {}): FormConfig {
     return { fields: [forgeDateTimeRangeField(config) as any] };
   }
 
-  function getAllDateTimeComponents(fixture: ComponentFixture<TestForgeDateTimeHostComponent>): ForgeDateTimeFieldComponent[] {
-    return fixture.debugElement.queryAll(By.directive(ForgeDateTimeFieldComponent)).map((de) => de.componentInstance as ForgeDateTimeFieldComponent);
+  function getAllDateTimeComponents(fixture: ComponentFixture<TestForgeDateTimeHostComponent>): DbxForgeDateTimeFieldComponent[] {
+    return fixture.debugElement.queryAll(By.directive(DbxForgeDateTimeFieldComponent)).map((de) => de.componentInstance as DbxForgeDateTimeFieldComponent);
   }
 
   it('should render two datetime field components in time-only mode', async () => {

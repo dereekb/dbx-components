@@ -1,12 +1,12 @@
 import type { MatInputField } from '@ng-forge/dynamic-forms-material';
-import { forgeTextField, type ForgeTextFieldConfig } from '../field/value/text/text.field';
-import { forgeEmailField, type ForgeEmailFieldConfig } from '../field/value/text/text.additional.field';
+import { forgeTextField, type DbxForgeTextFieldConfig } from '../field/value/text/text.field';
+import { forgeEmailField, type DbxForgeEmailFieldConfig } from '../field/value/text/text.additional.field';
 
 // MARK: Password Field
 /**
  * Configuration for a forge password field.
  */
-export interface ForgeTextPasswordFieldConfig extends Omit<ForgeTextFieldConfig, 'inputType' | 'key'>, Partial<Pick<ForgeTextFieldConfig, 'key'>> {}
+export interface DbxForgeTextPasswordFieldConfig extends Omit<DbxForgeTextFieldConfig, 'inputType' | 'key'>, Partial<Pick<DbxForgeTextFieldConfig, 'key'>> {}
 
 /**
  * Creates a forge text password field with the input type set to `'password'`.
@@ -21,7 +21,7 @@ export interface ForgeTextPasswordFieldConfig extends Omit<ForgeTextFieldConfig,
  * const field = forgeTextPasswordField();
  * ```
  */
-export function forgeTextPasswordField(config?: ForgeTextPasswordFieldConfig): MatInputField {
+export function forgeTextPasswordField(config?: DbxForgeTextPasswordFieldConfig): MatInputField {
   return forgeTextField({
     key: 'password',
     ...config,
@@ -44,7 +44,7 @@ export function forgeTextPasswordField(config?: ForgeTextPasswordFieldConfig): M
  * const field = forgeTextVerifyPasswordField();
  * ```
  */
-export function forgeTextVerifyPasswordField(config?: ForgeTextPasswordFieldConfig): MatInputField {
+export function forgeTextVerifyPasswordField(config?: DbxForgeTextPasswordFieldConfig): MatInputField {
   return forgeTextPasswordField({
     key: 'verifyPassword',
     label: 'Verify Password',
@@ -57,38 +57,38 @@ export function forgeTextVerifyPasswordField(config?: ForgeTextPasswordFieldConf
 /**
  * Configuration for the username field in a forge login form.
  */
-export interface ForgeUsernameLoginFieldUsernameConfig {
+export interface DbxForgeUsernameLoginFieldUsernameConfig {
   /**
    * Configuration for an email-based username field.
    */
-  readonly email?: Omit<ForgeEmailFieldConfig, 'key'>;
+  readonly email?: Omit<DbxForgeEmailFieldConfig, 'key'>;
   /**
    * Configuration for a plain text username field.
    */
-  readonly username?: Omit<ForgeTextFieldConfig, 'key'>;
+  readonly username?: Omit<DbxForgeTextFieldConfig, 'key'>;
 }
 
 /**
  * Input type for the username field configuration.
  *
  * Can be the string `'email'` or `'username'` for quick defaults,
- * or a full {@link ForgeUsernameLoginFieldUsernameConfig} object for custom configuration.
+ * or a full {@link DbxForgeUsernameLoginFieldUsernameConfig} object for custom configuration.
  */
-export type ForgeUsernameLoginFieldUsernameConfigInput = 'email' | 'username' | ForgeUsernameLoginFieldUsernameConfig;
+export type DbxForgeUsernameLoginFieldUsernameConfigInput = 'email' | 'username' | DbxForgeUsernameLoginFieldUsernameConfig;
 
 /**
  * Configuration for forge username/password login fields.
  */
-export interface ForgeUsernameLoginFieldsConfig {
+export interface DbxForgeUsernameLoginFieldsConfig {
   /**
    * Username field configuration. Use `'email'` or `'username'` for defaults,
    * or provide a custom config.
    */
-  readonly username: ForgeUsernameLoginFieldUsernameConfigInput;
+  readonly username: DbxForgeUsernameLoginFieldUsernameConfigInput;
   /**
    * Optional configuration for the password field.
    */
-  readonly password?: ForgeTextPasswordFieldConfig;
+  readonly password?: DbxForgeTextPasswordFieldConfig;
 }
 
 /**
@@ -102,7 +102,7 @@ export interface ForgeUsernameLoginFieldsConfig {
  * const fields = forgeUsernamePasswordLoginFields({ username: 'email' });
  * ```
  */
-export function forgeUsernamePasswordLoginFields(config: ForgeUsernameLoginFieldsConfig): MatInputField[] {
+export function forgeUsernamePasswordLoginFields(config: DbxForgeUsernameLoginFieldsConfig): MatInputField[] {
   const usernameField = forgeUsernameLoginField(config.username);
   const passwordField = forgeTextPasswordField(config.password);
 
@@ -122,8 +122,8 @@ export function forgeUsernamePasswordLoginFields(config: ForgeUsernameLoginField
  * const field = forgeUsernameLoginField('email');
  * ```
  */
-export function forgeUsernameLoginField(username: ForgeUsernameLoginFieldUsernameConfigInput): MatInputField {
-  let usernameFieldConfig: ForgeUsernameLoginFieldUsernameConfig = username as ForgeUsernameLoginFieldUsernameConfig;
+export function forgeUsernameLoginField(username: DbxForgeUsernameLoginFieldUsernameConfigInput): MatInputField {
+  let usernameFieldConfig: DbxForgeUsernameLoginFieldUsernameConfig = username as DbxForgeUsernameLoginFieldUsernameConfig;
 
   if (typeof username === 'string') {
     if (username === 'email') {

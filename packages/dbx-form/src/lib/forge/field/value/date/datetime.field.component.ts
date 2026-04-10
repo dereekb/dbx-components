@@ -27,7 +27,7 @@ import { DateDistancePipe, TimeDistancePipe, GetValuePipe } from '@dereekb/dbx-c
 import { type ErrorStateMatcher } from '@angular/material/core';
 import { toggleDisableFormControl } from '../../../../form/form';
 import { forgeFieldDisabled } from '../../field.disabled';
-import { type ForgeDateTimeSyncField } from './datetime.field';
+import { type DbxForgeDateTimeSyncField } from './datetime.field';
 import { buildCombinedDateTime, applyTimeOffset, mergePickerConfig, filterPresets, computeErrorMessage, computeDateKeyboardStep, computeTimeKeyboardStep, navigateDate, type DateTimeCalcInput } from './datetime.calc';
 
 /**
@@ -35,7 +35,7 @@ import { buildCombinedDateTime, applyTimeOffset, mergePickerConfig, filterPreset
  *
  * Full parity with formly `DbxDateTimeFieldProps`.
  */
-export interface ForgeDateTimeFieldComponentProps {
+export interface DbxForgeDateTimeFieldComponentProps {
   readonly timeOnly?: boolean;
   readonly timeMode?: DbxDateTimeFieldTimeMode;
   readonly valueMode?: DbxDateTimeValueMode;
@@ -61,7 +61,7 @@ export interface ForgeDateTimeFieldComponentProps {
   readonly inputOutputDebounceTime?: Milliseconds;
   readonly appearance?: 'fill' | 'outline';
   readonly hint?: DynamicText;
-  readonly getSyncFieldsObs?: () => Observable<ArrayOrValue<ForgeDateTimeSyncField>>;
+  readonly getSyncFieldsObs?: () => Observable<ArrayOrValue<DbxForgeDateTimeSyncField>>;
   /** @deprecated Use `timeMode` instead. */
   readonly showTime?: boolean;
 }
@@ -140,7 +140,7 @@ const TIME_OUTPUT_THROTTLE_TIME: Milliseconds = 10;
     }
   `
 })
-export class ForgeDateTimeFieldComponent {
+export class DbxForgeDateTimeFieldComponent {
   private readonly materialConfig = inject(MATERIAL_CONFIG, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
   private readonly presetsService = inject(DbxDateTimeFieldMenuPresetsService, { optional: true });
@@ -153,7 +153,7 @@ export class ForgeDateTimeFieldComponent {
   readonly placeholder: InputSignal<DynamicText | undefined> = input<DynamicText | undefined>();
   readonly className: InputSignal<string> = input('');
   readonly tabIndex: InputSignal<number | undefined> = input<number | undefined>();
-  readonly props: InputSignal<ForgeDateTimeFieldComponentProps | undefined> = input<ForgeDateTimeFieldComponentProps | undefined>();
+  readonly props: InputSignal<DbxForgeDateTimeFieldComponentProps | undefined> = input<DbxForgeDateTimeFieldComponentProps | undefined>();
   readonly meta: InputSignal<Record<string, unknown> | undefined> = input<Record<string, unknown> | undefined>();
   readonly validationMessages: InputSignal<ValidationMessages | undefined> = input<ValidationMessages | undefined>();
   readonly defaultValidationMessages: InputSignal<ValidationMessages | undefined> = input<ValidationMessages | undefined>();
@@ -187,7 +187,7 @@ export class ForgeDateTimeFieldComponent {
   private readonly _offset = new BehaviorSubject<number>(0);
   private readonly _updateTime = new Subject<void>();
   private readonly _resyncTimeInput = new Subject<void>();
-  private readonly _syncConfigObs = new BehaviorSubject<Maybe<Observable<ArrayOrValue<ForgeDateTimeSyncField>>>>(undefined);
+  private readonly _syncConfigObs = new BehaviorSubject<Maybe<Observable<ArrayOrValue<DbxForgeDateTimeSyncField>>>>(undefined);
 
   // MARK: Error state matcher
   readonly timeErrorStateMatcher: ErrorStateMatcher = {

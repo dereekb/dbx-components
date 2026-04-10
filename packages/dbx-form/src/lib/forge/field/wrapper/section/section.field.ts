@@ -3,7 +3,7 @@ import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import type { DbxSectionHeaderConfig, DbxSectionHeaderHType } from '@dereekb/dbx-web';
 import { filterFromPOJO } from '@dereekb/util';
 import { forgeField } from '../../field';
-import type { ForgeWrapperFieldProps } from '../wrapper.field';
+import type { DbxForgeWrapperFieldProps } from '../wrapper.field';
 
 // MARK: Field Type
 export const FORGE_SECTION_FIELD_TYPE_NAME = 'dbx-forge-section' as const;
@@ -11,7 +11,7 @@ export const FORGE_SECTION_FIELD_TYPE_NAME = 'dbx-forge-section' as const;
 /**
  * Props interface for the forge section wrapper field.
  */
-export interface ForgeSectionFieldProps extends ForgeWrapperFieldProps {
+export interface DbxForgeSectionFieldProps extends DbxForgeWrapperFieldProps {
   /**
    * Section header configuration.
    */
@@ -32,16 +32,16 @@ export interface ForgeSectionFieldProps extends ForgeWrapperFieldProps {
  * Renders child fields inside a `<dbx-section>` component with proper
  * header, content area styling, and semantic section structure.
  */
-export interface ForgeSectionFieldDef extends BaseValueField<ForgeSectionFieldProps, Record<string, unknown>> {
+export interface DbxForgeSectionFieldDef extends BaseValueField<DbxForgeSectionFieldProps, Record<string, unknown>> {
   readonly type: typeof FORGE_SECTION_FIELD_TYPE_NAME;
 }
 
 /**
  * ng-forge FieldTypeDefinition for the section wrapper field.
  */
-export const DBX_FORGE_SECTION_FIELD_TYPE: FieldTypeDefinition<ForgeSectionFieldDef> = {
+export const DBX_FORGE_SECTION_FIELD_TYPE: FieldTypeDefinition<DbxForgeSectionFieldDef> = {
   name: FORGE_SECTION_FIELD_TYPE_NAME,
-  loadComponent: () => import('./section.field.component').then((m) => m.ForgeDbxSectionFieldWrapperComponent),
+  loadComponent: () => import('./section.field.component').then((m) => m.DbxForgeDbxSectionFieldWrapperComponent),
   mapper: valueFieldMapper
 };
 
@@ -49,7 +49,7 @@ export const DBX_FORGE_SECTION_FIELD_TYPE: FieldTypeDefinition<ForgeSectionField
 /**
  * Configuration for creating a forge section wrapper field.
  */
-export interface ForgeSectionFieldConfig {
+export interface DbxForgeSectionFieldConfig {
   /**
    * Header text to display.
    */
@@ -103,7 +103,7 @@ let _forgeDbxSectionFieldWrapperCounter = 0;
  * the parent form value.
  *
  * @param config - Section wrapper configuration
- * @returns A {@link ForgeSectionFieldDef}
+ * @returns A {@link DbxForgeSectionFieldDef}
  *
  * @example
  * ```typescript
@@ -118,7 +118,7 @@ let _forgeDbxSectionFieldWrapperCounter = 0;
  * });
  * ```
  */
-export function forgeDbxSectionFieldWrapper(config: ForgeSectionFieldConfig): ForgeSectionFieldDef {
+export function forgeDbxSectionFieldWrapper(config: DbxForgeSectionFieldConfig): DbxForgeSectionFieldDef {
   const { header, h, hint, icon, hintInline, elevate, subsection, fields, key } = config;
   const defaultH = subsection ? 4 : 3;
 
@@ -141,8 +141,8 @@ export function forgeDbxSectionFieldWrapper(config: ForgeSectionFieldConfig): Fo
         elevate,
         subsection,
         fields
-      }) as ForgeSectionFieldProps
-    }) as ForgeSectionFieldDef
+      }) as DbxForgeSectionFieldProps
+    }) as DbxForgeSectionFieldDef
   );
 }
 
@@ -151,7 +151,7 @@ export function forgeDbxSectionFieldWrapper(config: ForgeSectionFieldConfig): Fo
  * a `<dbx-subsection>` component. Defaults heading level to 4.
  *
  * @param config - Subsection wrapper configuration
- * @returns A {@link ForgeSectionFieldDef}
+ * @returns A {@link DbxForgeSectionFieldDef}
  *
  * @example
  * ```typescript
@@ -164,7 +164,7 @@ export function forgeDbxSectionFieldWrapper(config: ForgeSectionFieldConfig): Fo
  * });
  * ```
  */
-export function forgeDbxSubsectionFieldWrapper(config: ForgeSectionFieldConfig): ForgeSectionFieldDef {
+export function forgeDbxSubsectionFieldWrapper(config: DbxForgeSectionFieldConfig): DbxForgeSectionFieldDef {
   return forgeDbxSectionFieldWrapper({
     ...config,
     subsection: config.subsection ?? true

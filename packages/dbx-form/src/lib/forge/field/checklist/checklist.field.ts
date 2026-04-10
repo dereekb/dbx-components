@@ -6,7 +6,7 @@ import { forgeField } from '../field';
 /**
  * Configuration for a forge multi-checkbox (checklist) field.
  */
-export interface ForgeChecklistFieldConfig<T = unknown> {
+export interface DbxForgeChecklistFieldConfig<T = unknown> {
   readonly key: string;
   readonly label?: string;
   readonly required?: boolean;
@@ -44,7 +44,7 @@ export interface ForgeChecklistFieldConfig<T = unknown> {
  * });
  * ```
  */
-export function forgeChecklistField<T = unknown>(config: ForgeChecklistFieldConfig<T>): MatMultiCheckboxField<T> {
+export function forgeChecklistField<T = unknown>(config: DbxForgeChecklistFieldConfig<T>): MatMultiCheckboxField<T> {
   const { key, label, required, readonly: isReadonly, description, options, labelPosition, defaultValue = [] } = config;
 
   const props: Partial<MatMultiCheckboxProps> = filterFromPOJO({

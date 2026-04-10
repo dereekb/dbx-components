@@ -3,7 +3,7 @@ import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import type { ObservableOrValue } from '@dereekb/rxjs';
 import { filterFromPOJO } from '@dereekb/util';
 import { forgeField } from '../../field';
-import type { ForgeWrapperFieldProps } from '../wrapper.field';
+import type { DbxForgeWrapperFieldProps } from '../wrapper.field';
 
 // MARK: Field Type
 export const FORGE_STYLE_FIELD_TYPE_NAME = 'dbx-forge-style' as const;
@@ -11,12 +11,12 @@ export const FORGE_STYLE_FIELD_TYPE_NAME = 'dbx-forge-style' as const;
 /**
  * A map of CSS style properties to their values, used with `[ngStyle]`.
  */
-export type ForgeStyleObject = { [styleProperty: string]: unknown };
+export type DbxForgeStyleObject = { [styleProperty: string]: unknown };
 
 /**
  * Props interface for the forge style wrapper field.
  */
-export interface ForgeStyleFieldProps extends ForgeWrapperFieldProps {
+export interface DbxForgeStyleFieldProps extends DbxForgeWrapperFieldProps {
   /**
    * Observable or static value providing CSS class names via `[ngClass]`.
    */
@@ -24,7 +24,7 @@ export interface ForgeStyleFieldProps extends ForgeWrapperFieldProps {
   /**
    * Observable or static value providing inline styles via `[ngStyle]`.
    */
-  readonly styleGetter?: ObservableOrValue<ForgeStyleObject>;
+  readonly styleGetter?: ObservableOrValue<DbxForgeStyleObject>;
 }
 
 /**
@@ -33,16 +33,16 @@ export interface ForgeStyleFieldProps extends ForgeWrapperFieldProps {
  * Renders child fields inside a container with dynamic CSS classes and
  * inline styles applied.
  */
-export interface ForgeStyleFieldDef extends BaseValueField<ForgeStyleFieldProps, Record<string, unknown>> {
+export interface DbxForgeStyleFieldDef extends BaseValueField<DbxForgeStyleFieldProps, Record<string, unknown>> {
   readonly type: typeof FORGE_STYLE_FIELD_TYPE_NAME;
 }
 
 /**
  * ng-forge FieldTypeDefinition for the style wrapper field.
  */
-export const DBX_FORGE_STYLE_FIELD_TYPE: FieldTypeDefinition<ForgeStyleFieldDef> = {
+export const DBX_FORGE_STYLE_FIELD_TYPE: FieldTypeDefinition<DbxForgeStyleFieldDef> = {
   name: FORGE_STYLE_FIELD_TYPE_NAME,
-  loadComponent: () => import('./style.field.component').then((m) => m.ForgeStyleFieldComponent),
+  loadComponent: () => import('./style.field.component').then((m) => m.DbxForgeStyleFieldComponent),
   mapper: valueFieldMapper
 };
 
@@ -50,7 +50,7 @@ export const DBX_FORGE_STYLE_FIELD_TYPE: FieldTypeDefinition<ForgeStyleFieldDef>
 /**
  * Configuration for creating a forge style wrapper field.
  */
-export interface ForgeStyleFieldConfig {
+export interface DbxForgeStyleFieldConfig {
   /**
    * Child field definitions to render inside the style wrapper.
    */
@@ -62,7 +62,7 @@ export interface ForgeStyleFieldConfig {
   /**
    * Observable or static value providing inline styles via `[ngStyle]`.
    */
-  readonly styleGetter?: ObservableOrValue<ForgeStyleObject>;
+  readonly styleGetter?: ObservableOrValue<DbxForgeStyleObject>;
   /**
    * Optional key override. Defaults to auto-generated `_style_N`.
    */
@@ -82,7 +82,7 @@ let _forgeStyleFieldCounter = 0;
  * the parent form value.
  *
  * @param config - Style wrapper configuration
- * @returns A {@link ForgeStyleFieldDef}
+ * @returns A {@link DbxForgeStyleFieldDef}
  *
  * @example
  * ```typescript
@@ -95,7 +95,7 @@ let _forgeStyleFieldCounter = 0;
  * });
  * ```
  */
-export function forgeStyleWrapper(config: ForgeStyleFieldConfig): ForgeStyleFieldDef {
+export function forgeStyleWrapper(config: DbxForgeStyleFieldConfig): DbxForgeStyleFieldDef {
   const { fields, classGetter, styleGetter, key } = config;
 
   return forgeField(
@@ -108,7 +108,7 @@ export function forgeStyleWrapper(config: ForgeStyleFieldConfig): ForgeStyleFiel
         fields,
         classGetter,
         styleGetter
-      }) as ForgeStyleFieldProps
-    }) as ForgeStyleFieldDef
+      }) as DbxForgeStyleFieldProps
+    }) as DbxForgeStyleFieldDef
   );
 }

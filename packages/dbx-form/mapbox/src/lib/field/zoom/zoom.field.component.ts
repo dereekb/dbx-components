@@ -42,7 +42,7 @@ export interface DbxFormMapboxZoomComponentFieldProps extends Omit<FormlyFieldPr
 }
 
 /**
- * @deprecated Use ForgeMapboxZoomFieldComponent instead.
+ * @deprecated Use DbxForgeMapboxZoomFieldComponent instead.
  */
 @Component({
   template: `

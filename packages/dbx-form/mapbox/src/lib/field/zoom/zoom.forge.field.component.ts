@@ -16,7 +16,7 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 /**
  * Custom props for the forge mapbox zoom field.
  */
-export interface ForgeMapboxZoomFieldComponentProps {
+export interface DbxForgeMapboxZoomFieldComponentProps {
   readonly label?: string;
   readonly description?: string;
   readonly showMap?: boolean;
@@ -58,7 +58,7 @@ export interface ForgeMapboxZoomFieldComponentProps {
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class ForgeMapboxZoomFieldComponent implements OnDestroy {
+export class DbxForgeMapboxZoomFieldComponent implements OnDestroy {
   readonly compact = inject(CompactContextStore, { optional: true });
   readonly dbxMapboxService = inject(DbxMapboxService);
   readonly dbxMapboxMapStore = inject(DbxMapboxMapStore);
@@ -70,7 +70,7 @@ export class ForgeMapboxZoomFieldComponent implements OnDestroy {
   readonly placeholder: InputSignal<DynamicText | undefined> = input<DynamicText | undefined>();
   readonly className: InputSignal<string> = input('');
   readonly tabIndex: InputSignal<number | undefined> = input<number | undefined>();
-  readonly props: InputSignal<ForgeMapboxZoomFieldComponentProps | undefined> = input<ForgeMapboxZoomFieldComponentProps | undefined>();
+  readonly props: InputSignal<DbxForgeMapboxZoomFieldComponentProps | undefined> = input<DbxForgeMapboxZoomFieldComponentProps | undefined>();
   readonly meta: InputSignal<FieldMeta | undefined> = input<FieldMeta | undefined>();
   readonly validationMessages: InputSignal<ValidationMessages | undefined> = input<ValidationMessages | undefined>();
   readonly defaultValidationMessages: InputSignal<ValidationMessages | undefined> = input<ValidationMessages | undefined>();

@@ -29,7 +29,7 @@ export const FORGE_PICKABLE_LIST_FIELD_TYPE = 'dbx-pickable-list' as const;
  *
  * Passed via the `props` property on the forge field definition.
  */
-export interface ForgePickableFieldProps<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> {
+export interface DbxForgePickableFieldProps<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> {
   readonly loadValues: PickableValueFieldLoadValuesFunction<T, M>;
   readonly displayForValue: PickableValueFieldDisplayFunction<T, M>;
   readonly hashForValue?: PickableValueFieldHashFunction<T, H>;
@@ -51,14 +51,14 @@ export interface ForgePickableFieldProps<T = unknown, M = unknown, H extends Pri
 /**
  * Forge field definition interface for the pickable chip field.
  */
-export interface ForgePickableChipFieldDef<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends BaseValueField<ForgePickableFieldProps<T, M, H>, T | T[]> {
+export interface DbxForgePickableChipFieldDef<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends BaseValueField<DbxForgePickableFieldProps<T, M, H>, T | T[]> {
   readonly type: typeof FORGE_PICKABLE_CHIP_FIELD_TYPE;
 }
 
 /**
  * Forge field definition interface for the pickable list field.
  */
-export interface ForgePickableListFieldDef<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends BaseValueField<ForgePickableFieldProps<T, M, H>, T | T[]> {
+export interface DbxForgePickableListFieldDef<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends BaseValueField<DbxForgePickableFieldProps<T, M, H>, T | T[]> {
   readonly type: typeof FORGE_PICKABLE_LIST_FIELD_TYPE;
 }
 
@@ -86,7 +86,7 @@ export abstract class AbstractForgePickableItemFieldDirective<T = unknown, M = u
   readonly placeholder = input<DynamicText | undefined>();
   readonly className = input<string>('');
   readonly tabIndex = input<number | undefined>();
-  readonly props = input<ForgePickableFieldProps<T, M, H> | undefined>();
+  readonly props = input<DbxForgePickableFieldProps<T, M, H> | undefined>();
   readonly meta = input<FieldMeta | undefined>();
   readonly validationMessages = input<ValidationMessages | undefined>();
   readonly defaultValidationMessages = input<ValidationMessages | undefined>();

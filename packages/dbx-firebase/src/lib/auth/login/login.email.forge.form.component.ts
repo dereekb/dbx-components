@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { AbstractConfigAsyncForgeFormDirective, provideDbxForgeFormContext, DbxForgeFormComponent, forgeUsernameLoginField, forgeTextPasswordField, forgeTextVerifyPasswordField, type ForgeTextPasswordFieldConfig, type DefaultUsernameLoginFieldsValue } from '@dereekb/dbx-form';
+import { AbstractConfigAsyncForgeFormDirective, provideDbxForgeFormContext, DbxForgeFormComponent, forgeUsernameLoginField, forgeTextPasswordField, forgeTextVerifyPasswordField, type DbxForgeTextPasswordFieldConfig, type DefaultUsernameLoginFieldsValue } from '@dereekb/dbx-form';
 import { type Maybe } from '@dereekb/util';
 import type { FormConfig } from '@ng-forge/dynamic-forms';
 import { map, type Observable } from 'rxjs';
@@ -15,7 +15,7 @@ export type DbxFirebaseEmailFormValue = DefaultUsernameLoginFieldsValue;
  */
 export interface DbxFirebaseEmailFormConfig {
   readonly loginMode: DbxFirebaseLoginMode;
-  readonly passwordConfig?: ForgeTextPasswordFieldConfig;
+  readonly passwordConfig?: DbxForgeTextPasswordFieldConfig;
 }
 
 /**

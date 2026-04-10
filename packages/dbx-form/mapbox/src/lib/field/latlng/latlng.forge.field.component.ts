@@ -6,7 +6,7 @@ import { type Maybe, type LatLngPoint, type LatLngPointFunctionConfig, type LatL
 import { WaGeolocationService } from '@ng-web-apis/geolocation';
 import { type Marker } from 'mapbox-gl';
 import { DbxMapboxInjectionStore, DbxMapboxMapStore, type DbxMapboxMarkerDisplayConfig, DbxMapboxModule, type MapboxEaseTo, type MapboxZoomLevel, provideMapboxStoreIfParentIsUnavailable } from '@dereekb/dbx-web/mapbox';
-import { ForgeMapboxLatLngFieldMarkerComponent } from './latlng.forge.field.marker.component';
+import { DbxForgeMapboxLatLngFieldMarkerComponent } from './latlng.forge.field.marker.component';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { NgClass } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
@@ -19,7 +19,7 @@ import { type DynamicText, type FieldMeta, type ValidationMessages, DEFAULT_PROP
 import { resolveValueFieldContext, buildValueFieldInputs } from '@ng-forge/dynamic-forms/integration';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 
-export const DEFAULT_DBX_FORGE_MAPBOX_LAT_LNG_FIELD_INJECTION_KEY = 'ForgeMapboxLatLngFieldComponent';
+export const DEFAULT_DBX_FORGE_MAPBOX_LAT_LNG_FIELD_INJECTION_KEY = 'DbxForgeMapboxLatLngFieldComponent';
 
 export const DEFAULT_DBX_FORGE_MAPBOX_LAT_LNG_MARKER_CONFIG: DbxMapboxMarkerDisplayConfig = {
   icon: 'pin_drop'
@@ -28,7 +28,7 @@ export const DEFAULT_DBX_FORGE_MAPBOX_LAT_LNG_MARKER_CONFIG: DbxMapboxMarkerDisp
 /**
  * Custom props for the forge mapbox lat/lng field.
  */
-export interface ForgeMapboxLatLngFieldComponentProps {
+export interface DbxForgeMapboxLatLngFieldComponentProps {
   readonly label?: string;
   readonly description?: string;
   readonly placeholder?: string;
@@ -43,7 +43,7 @@ export interface ForgeMapboxLatLngFieldComponentProps {
   readonly recenterTime?: Milliseconds;
   readonly latLngConfig?: LatLngPointFunctionConfig;
   readonly mapInjectionKey?: Maybe<string | false>;
-  readonly markerConfig?: false | ObservableFactoryWithRequiredInput<DbxMapboxMarkerDisplayConfig | false, ForgeMapboxLatLngFieldComponent>;
+  readonly markerConfig?: false | ObservableFactoryWithRequiredInput<DbxMapboxMarkerDisplayConfig | false, DbxForgeMapboxLatLngFieldComponent>;
 }
 
 /**
@@ -87,7 +87,7 @@ export interface ForgeMapboxLatLngFieldComponentProps {
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class ForgeMapboxLatLngFieldComponent implements OnDestroy {
+export class DbxForgeMapboxLatLngFieldComponent implements OnDestroy {
   private readonly _geolocationService = inject(WaGeolocationService);
 
   readonly compact = inject(CompactContextStore, { optional: true });
@@ -101,7 +101,7 @@ export class ForgeMapboxLatLngFieldComponent implements OnDestroy {
   readonly placeholder: InputSignal<DynamicText | undefined> = input<DynamicText | undefined>();
   readonly className: InputSignal<string> = input('');
   readonly tabIndex: InputSignal<number | undefined> = input<number | undefined>();
-  readonly props: InputSignal<ForgeMapboxLatLngFieldComponentProps | undefined> = input<ForgeMapboxLatLngFieldComponentProps | undefined>();
+  readonly props: InputSignal<DbxForgeMapboxLatLngFieldComponentProps | undefined> = input<DbxForgeMapboxLatLngFieldComponentProps | undefined>();
   readonly meta: InputSignal<FieldMeta | undefined> = input<FieldMeta | undefined>();
   readonly validationMessages: InputSignal<ValidationMessages | undefined> = input<ValidationMessages | undefined>();
   readonly defaultValidationMessages: InputSignal<ValidationMessages | undefined> = input<ValidationMessages | undefined>();
@@ -244,8 +244,8 @@ export class ForgeMapboxLatLngFieldComponent implements OnDestroy {
         this.dbxMapboxInjectionStore.addInjectionConfig({
           key: p.mapInjectionKey || DEFAULT_DBX_FORGE_MAPBOX_LAT_LNG_FIELD_INJECTION_KEY,
           injectionConfig: {
-            componentClass: ForgeMapboxLatLngFieldMarkerComponent,
-            providers: [{ provide: ForgeMapboxLatLngFieldComponent, useValue: this }]
+            componentClass: DbxForgeMapboxLatLngFieldMarkerComponent,
+            providers: [{ provide: DbxForgeMapboxLatLngFieldComponent, useValue: this }]
           }
         });
       }

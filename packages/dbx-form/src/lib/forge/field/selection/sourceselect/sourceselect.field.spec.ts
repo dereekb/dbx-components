@@ -1,15 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import { of } from 'rxjs';
 import { forgeSourceSelectField } from './sourceselect.field';
-import type { ForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
-import type { ForgeSourceSelectFieldDef } from './sourceselect.field.component';
+import type { DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
+import type { DbxForgeSourceSelectFieldDef } from './sourceselect.field.component';
 
 // MARK: Helpers
 /**
  * Extracts the inner source-select field from a forge form-field wrapper.
  */
-function innerField(wrapper: ForgeFormFieldWrapperFieldDef<ForgeSourceSelectFieldDef>) {
-  return wrapper.props!.fields[0] as ForgeSourceSelectFieldDef;
+function innerField(wrapper: DbxForgeFormFieldWrapperFieldDef<DbxForgeSourceSelectFieldDef>) {
+  return wrapper.props!.fields[0] as DbxForgeSourceSelectFieldDef;
 }
 
 // MARK: forgeSourceSelectField
