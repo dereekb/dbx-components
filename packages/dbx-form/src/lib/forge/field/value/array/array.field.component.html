@@ -10,18 +10,16 @@
             <button mat-icon-button type="button" cdkDragHandle class="dbx-form-repeat-array-drag-button" aria-label="Drag to reorder">
               <mat-icon>drag_handle</mat-icon>
             </button>
+            <dbx-button-spacer></dbx-button-spacer>
           }
           <span class="dbx-form-repeat-array-label">{{ labelForItem(i, item.value) }}</span>
           <span class="spacer"></span>
           @if (allowDuplicateSignal()) {
-            <button mat-button type="button" color="primary" (click)="duplicateItem(i)">
-              {{ duplicateTextSignal() }}
-            </button>
+            <dbx-button [text]="duplicateTextSignal()" [buttonStyle]="duplicateButtonStyleSignal()" (buttonClick)="duplicateItem(i)"></dbx-button>
+            <dbx-button-spacer></dbx-button-spacer>
           }
           @if (allowRemoveSignal()) {
-            <button mat-button type="button" color="warn" (click)="removeItem(i)">
-              {{ removeTextSignal() }}
-            </button>
+            <dbx-button [text]="removeTextSignal()" [buttonStyle]="removeButtonStyleSignal()" (buttonClick)="removeItem(i)"></dbx-button>
           }
         </div>
         <div class="dbx-form-repeat-array-field-content">
@@ -32,9 +30,7 @@
   </div>
   @if (showAddButtonSignal()) {
     <div class="dbx-form-repeat-array-footer">
-      <button mat-button type="button" color="primary" (click)="addItem()">
-        {{ addTextSignal() }}
-      </button>
+      <dbx-button [text]="addTextSignal()" [buttonStyle]="addButtonStyleSignal()" (buttonClick)="addItem()"></dbx-button>
     </div>
   }
 </div>

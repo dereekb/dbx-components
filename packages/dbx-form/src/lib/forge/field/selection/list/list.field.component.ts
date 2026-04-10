@@ -40,10 +40,15 @@ export interface ForgeListSelectionFieldProps<T = unknown, C extends AbstractDbx
 }
 
 /**
+ * The custom forge field type name for the list selection field.
+ */
+export const FORGE_LIST_SELECTION_FIELD_TYPE = 'dbx-list-selection' as const;
+
+/**
  * Forge field definition interface for the list selection field.
  */
 export interface ForgeListSelectionFieldDef<T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey> extends BaseValueField<ForgeListSelectionFieldProps<T, C, K>, K[]> {
-  readonly type: 'dbx-list-selection';
+  readonly type: typeof FORGE_LIST_SELECTION_FIELD_TYPE;
 }
 
 // MARK: List Selection Field Component

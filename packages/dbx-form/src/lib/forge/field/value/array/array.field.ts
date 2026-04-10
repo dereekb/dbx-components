@@ -1,6 +1,7 @@
 import type { FieldTypeDefinition, BaseValueField, ArrayAllowedChildren, FieldDef } from '@ng-forge/dynamic-forms';
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { filterFromPOJO, type FactoryWithRequiredInput } from '@dereekb/util';
+import { type DbxButtonStyle } from '@dereekb/dbx-web';
 import { forgeField } from '../../field';
 
 // MARK: Types
@@ -74,6 +75,18 @@ export interface ForgeArrayFieldProps<T = unknown> {
    * Minimum number of items. No minimum when undefined.
    */
   readonly minLength?: number;
+  /**
+   * Style configuration for the add button. Defaults to raised primary.
+   */
+  readonly addButtonStyle?: DbxButtonStyle;
+  /**
+   * Style configuration for the remove button. Defaults to stroked warn.
+   */
+  readonly removeButtonStyle?: DbxButtonStyle;
+  /**
+   * Style configuration for the duplicate button. Defaults to stroked primary.
+   */
+  readonly duplicateButtonStyle?: DbxButtonStyle;
 }
 
 /**
@@ -164,6 +177,18 @@ export interface ForgeArrayFieldConfig<T = unknown> {
    * Minimum number of items.
    */
   readonly minLength?: number;
+  /**
+   * Style configuration for the add button. Defaults to raised primary.
+   */
+  readonly addButtonStyle?: DbxButtonStyle;
+  /**
+   * Style configuration for the remove button. Defaults to stroked warn.
+   */
+  readonly removeButtonStyle?: DbxButtonStyle;
+  /**
+   * Style configuration for the duplicate button. Defaults to stroked primary.
+   */
+  readonly duplicateButtonStyle?: DbxButtonStyle;
 }
 
 /**
@@ -193,7 +218,7 @@ export interface ForgeArrayFieldConfig<T = unknown> {
  * ```
  */
 export function forgeArrayField<T = unknown>(config: ForgeArrayFieldConfig<T>): ForgeArrayFieldDef<T> {
-  const { key, label, description, template, value, labelForField, addText, removeText, duplicateText, allowAdd, allowRemove, allowDuplicate, disableRearrange, addDuplicateToEnd, maxLength, minLength } = config;
+  const { key, label, description, template, value, labelForField, addText, removeText, duplicateText, allowAdd, allowRemove, allowDuplicate, disableRearrange, addDuplicateToEnd, maxLength, minLength, addButtonStyle, removeButtonStyle, duplicateButtonStyle } = config;
 
   return forgeField(
     filterFromPOJO({
@@ -214,7 +239,10 @@ export function forgeArrayField<T = unknown>(config: ForgeArrayFieldConfig<T>): 
         disableRearrange,
         addDuplicateToEnd,
         maxLength,
-        minLength
+        minLength,
+        addButtonStyle,
+        removeButtonStyle,
+        duplicateButtonStyle
       }) as ForgeArrayFieldProps<T>
     }) as ForgeArrayFieldDef<T>
   );

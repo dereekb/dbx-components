@@ -3,7 +3,7 @@ import type { FieldDef, FieldTypeDefinition } from '@ng-forge/dynamic-forms';
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { forgeField } from '../../field';
 import { forgeFormFieldWrapper, type ForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
-import { type ForgeSearchableTextFieldProps, type ForgeSearchableTextFieldDef, type ForgeSearchableChipFieldProps, type ForgeSearchableChipFieldDef } from './searchable.field.directive';
+import { FORGE_SEARCHABLE_TEXT_FIELD_TYPE, FORGE_SEARCHABLE_CHIP_FIELD_TYPE, type ForgeSearchableTextFieldProps, type ForgeSearchableTextFieldDef, type ForgeSearchableChipFieldProps, type ForgeSearchableChipFieldDef } from './searchable.field.directive';
 
 // MARK: Field Type Definitions
 /**
@@ -12,7 +12,7 @@ import { type ForgeSearchableTextFieldProps, type ForgeSearchableTextFieldDef, t
  * Register via `provideDynamicForm(DBX_SEARCHABLE_TEXT_FIELD_TYPE)`.
  */
 export const DBX_SEARCHABLE_TEXT_FIELD_TYPE: FieldTypeDefinition<ForgeSearchableTextFieldDef> = {
-  name: 'dbx-searchable-text',
+  name: FORGE_SEARCHABLE_TEXT_FIELD_TYPE,
   loadComponent: () => import('./searchable-text.field.component').then((m) => m.DbxForgeSearchableTextFieldComponent),
   mapper: valueFieldMapper
 };
@@ -23,7 +23,7 @@ export const DBX_SEARCHABLE_TEXT_FIELD_TYPE: FieldTypeDefinition<ForgeSearchable
  * Register via `provideDynamicForm(DBX_SEARCHABLE_CHIP_FIELD_TYPE)`.
  */
 export const DBX_SEARCHABLE_CHIP_FIELD_TYPE: FieldTypeDefinition<ForgeSearchableChipFieldDef> = {
-  name: 'dbx-searchable-chip',
+  name: FORGE_SEARCHABLE_CHIP_FIELD_TYPE,
   loadComponent: () => import('./searchable-chip.field.component').then((m) => m.DbxForgeSearchableChipFieldComponent),
   mapper: valueFieldMapper
 };
@@ -63,7 +63,7 @@ export function forgeSearchableTextField<T = unknown, M = unknown, H extends Pri
   const innerField = forgeField(
     filterFromPOJO({
       key,
-      type: 'dbx-searchable-text' as const,
+      type: FORGE_SEARCHABLE_TEXT_FIELD_TYPE,
       label: '',
       placeholder,
       value: undefined as unknown as T,
@@ -118,7 +118,7 @@ export function forgeSearchableChipField<T = unknown, M = unknown, H extends Pri
   const innerField = forgeField(
     filterFromPOJO({
       key,
-      type: 'dbx-searchable-chip' as const,
+      type: FORGE_SEARCHABLE_CHIP_FIELD_TYPE,
       label: '',
       placeholder,
       value: undefined as unknown as T | T[],

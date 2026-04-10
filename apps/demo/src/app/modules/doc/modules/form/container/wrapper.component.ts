@@ -15,7 +15,7 @@ import {
   styleWrapper,
   toggleField,
   formlyTextIsAvailableField,
-  forgeFlexRow,
+  forgeRow,
   forgeDbxSectionFieldWrapper,
   forgeDbxSubsectionFieldWrapper,
   forgeExpandWrapper,
@@ -225,26 +225,38 @@ export class DocFormWrapperComponent {
 
   readonly forgeFlexFieldConfig: FormConfig = {
     fields: [
-      forgeFlexRow({
-        fields: [forgeCityField({}), forgeStateField({ description: 'State Description' }), forgeToggleField({ key: 'toggle', label: 'Toggle', description: 'Toggle Description' })]
+      forgeRow({
+        fields: [
+          { ...forgeCityField({}), col: 4 },
+          { ...forgeStateField({ description: 'State Description' }), col: 4 },
+          { ...forgeToggleField({ key: 'toggle', label: 'Toggle', description: 'Toggle Description' }), col: 4 }
+        ]
       })
     ]
   };
 
   readonly forgeFlexThreeFieldConfig: FormConfig = {
     fields: [
-      forgeFlexRow({
-        fields: [{ field: forgeCityField({}), size: 4 }, forgeStateField({}), forgeZipCodeField({})],
-        defaultSize: 1
+      forgeRow({
+        fields: [
+          { ...forgeCityField({}), col: 8 },
+          { ...forgeStateField({}), col: 2 },
+          { ...forgeZipCodeField({}), col: 2 }
+        ]
       })
     ]
   };
 
   readonly forgeFlexFiveFieldConfig: FormConfig = {
     fields: [
-      forgeFlexRow({
-        fields: [forgeNameField({}), forgeCityField({}), forgeStateField({}), forgeZipCodeField({}), forgeCountryField({})],
-        relative: true
+      forgeRow({
+        fields: [
+          { ...forgeNameField({}), col: 2 },
+          { ...forgeCityField({}), col: 3 },
+          { ...forgeStateField({}), col: 3 },
+          { ...forgeZipCodeField({}), col: 2 },
+          { ...forgeCountryField({}), col: 2 }
+        ]
       })
     ]
   };

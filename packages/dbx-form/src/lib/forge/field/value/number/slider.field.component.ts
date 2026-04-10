@@ -2,7 +2,7 @@ import { Component, ChangeDetectionStrategy, input, computed, type Signal, type 
 import { MatSliderModule } from '@angular/material/slider';
 import { type ThemePalette } from '@angular/material/core';
 import { AsyncPipe } from '@angular/common';
-import { DynamicTextPipe, type DynamicText, type ValidationMessages, DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES } from '@ng-forge/dynamic-forms';
+import { DynamicTextPipe, type DynamicText, type ValidationMessages, DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES, type BaseValueField } from '@ng-forge/dynamic-forms';
 import { resolveValueFieldContext, buildValueFieldInputs, createResolvedErrorsSignal, shouldShowErrors } from '@ng-forge/dynamic-forms/integration';
 import { MATERIAL_CONFIG } from '@ng-forge/dynamic-forms-material';
 import type { FieldTree } from '@angular/forms/signals';
@@ -25,7 +25,14 @@ export interface ForgeSliderFieldProps {
 /**
  * Custom forge field type name for the slider wrapped in an outlined container.
  */
-export const FORGE_SLIDER_FIELD_TYPE = 'dbx-slider';
+export const FORGE_SLIDER_FIELD_TYPE = 'dbx-slider' as const;
+
+/**
+ * Field definition type for a forge slider field.
+ */
+export type ForgeSliderFieldDef = BaseValueField<ForgeSliderFieldProps, number> & {
+  readonly type: typeof FORGE_SLIDER_FIELD_TYPE;
+};
 
 /**
  * Custom ng-forge field component that wraps a Material slider inside an outlined container

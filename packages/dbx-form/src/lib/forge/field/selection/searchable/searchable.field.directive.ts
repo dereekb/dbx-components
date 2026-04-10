@@ -9,6 +9,17 @@ import { type DynamicText, type FieldMeta, type ValidationMessages, type BaseVal
 import { type SearchableValueFieldStringSearchFn, type SearchableValueFieldDisplayFn, type SearchableValueFieldDisplayValue, type SearchableValueFieldValue, type SearchableValueFieldAnchorFn, type SearchableValueFieldHashFn, type ConfiguredSearchableValueFieldDisplayValue } from '../../../../formly/field/selection/searchable/searchable';
 import { DbxDefaultSearchableFieldDisplayComponent } from '../../../../formly/field/selection/searchable/searchable.field.autocomplete.item.component';
 
+// MARK: Field Type Names
+/**
+ * The custom forge field type name for the searchable text field.
+ */
+export const FORGE_SEARCHABLE_TEXT_FIELD_TYPE = 'dbx-searchable-text' as const;
+
+/**
+ * The custom forge field type name for the searchable chip field.
+ */
+export const FORGE_SEARCHABLE_CHIP_FIELD_TYPE = 'dbx-searchable-chip' as const;
+
 // MARK: Props
 /**
  * Props interface for the forge searchable text field.
@@ -45,14 +56,14 @@ export interface ForgeSearchableChipFieldProps<T = unknown, M = unknown, H exten
  * Forge field definition interface for the searchable text field.
  */
 export interface ForgeSearchableTextFieldDef<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends BaseValueField<ForgeSearchableTextFieldProps<T, M, H>, T> {
-  readonly type: 'dbx-searchable-text';
+  readonly type: typeof FORGE_SEARCHABLE_TEXT_FIELD_TYPE;
 }
 
 /**
  * Forge field definition interface for the searchable chip field.
  */
 export interface ForgeSearchableChipFieldDef<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends BaseValueField<ForgeSearchableChipFieldProps<T, M, H>, T | T[]> {
-  readonly type: 'dbx-searchable-chip';
+  readonly type: typeof FORGE_SEARCHABLE_CHIP_FIELD_TYPE;
 }
 
 const DEFAULT_SEARCH_INPUT_PLACEHOLDER = 'Type to Search';

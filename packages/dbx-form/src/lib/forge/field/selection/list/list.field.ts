@@ -4,7 +4,7 @@ import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { type AbstractDbxSelectionListWrapperDirective } from '@dereekb/dbx-web';
 import { forgeField } from '../../field';
 import { forgeFormFieldWrapper, type ForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
-import { type ForgeListSelectionFieldProps, type ForgeListSelectionFieldDef } from './list.field.component';
+import { FORGE_LIST_SELECTION_FIELD_TYPE, type ForgeListSelectionFieldProps, type ForgeListSelectionFieldDef } from './list.field.component';
 
 // MARK: Field Type Definition
 /**
@@ -13,7 +13,7 @@ import { type ForgeListSelectionFieldProps, type ForgeListSelectionFieldDef } fr
  * Register via `provideDynamicForm(DBX_LIST_SELECTION_FIELD_TYPE)`.
  */
 export const DBX_LIST_SELECTION_FIELD_TYPE: FieldTypeDefinition<ForgeListSelectionFieldDef> = {
-  name: 'dbx-list-selection',
+  name: FORGE_LIST_SELECTION_FIELD_TYPE,
   loadComponent: () => import('./list.field.component').then((m) => m.DbxForgeListSelectionFieldComponent),
   mapper: valueFieldMapper
 };
@@ -75,7 +75,7 @@ export function forgeListSelectionField<T = unknown, C extends AbstractDbxSelect
   const innerField = forgeField(
     filterFromPOJO({
       key,
-      type: 'dbx-list-selection' as const,
+      type: FORGE_LIST_SELECTION_FIELD_TYPE,
       label: useWrapper ? '' : (label ?? ''),
       value: undefined as unknown as K[],
       required,

@@ -32,10 +32,15 @@ export interface ForgeTextEditorFieldProps {
 }
 
 /**
+ * The custom forge field type name for the text editor field.
+ */
+export const FORGE_TEXT_EDITOR_FIELD_TYPE = 'dbx-texteditor' as const;
+
+/**
  * Forge field definition interface for the text editor field.
  */
 export interface ForgeTextEditorFieldDef extends BaseValueField<ForgeTextEditorFieldProps, string> {
-  readonly type: 'dbx-texteditor';
+  readonly type: typeof FORGE_TEXT_EDITOR_FIELD_TYPE;
 }
 
 /**

@@ -2,7 +2,7 @@ import { filterFromPOJO } from '@dereekb/util';
 import type { FieldTypeDefinition } from '@ng-forge/dynamic-forms';
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { forgeField } from '../field';
-import type { ForgeTextEditorFieldProps, ForgeTextEditorFieldDef } from './texteditor.field.component';
+import { FORGE_TEXT_EDITOR_FIELD_TYPE, type ForgeTextEditorFieldProps, type ForgeTextEditorFieldDef } from './texteditor.field.component';
 import type { ForgeTextFieldLengthConfig } from '../value/text/text.field';
 
 // MARK: Field Type Definition
@@ -12,7 +12,7 @@ import type { ForgeTextFieldLengthConfig } from '../value/text/text.field';
  * Register via `provideDynamicForm(DBX_TEXT_EDITOR_FIELD_TYPE)`.
  */
 export const DBX_TEXT_EDITOR_FIELD_TYPE: FieldTypeDefinition<ForgeTextEditorFieldDef> = {
-  name: 'dbx-texteditor',
+  name: FORGE_TEXT_EDITOR_FIELD_TYPE,
   loadComponent: () => import('./texteditor.field.component').then((m) => m.DbxForgeTextEditorFieldComponent),
   mapper: valueFieldMapper
 };
@@ -49,7 +49,7 @@ export function forgeTextEditorField(config: ForgeTextEditorFieldConfig): ForgeT
   return forgeField(
     filterFromPOJO({
       key,
-      type: 'dbx-texteditor' as const,
+      type: FORGE_TEXT_EDITOR_FIELD_TYPE,
       label: label ?? '',
       value: '' as string,
       required,

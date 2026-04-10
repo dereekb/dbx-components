@@ -3,7 +3,7 @@ import type { FieldDef, FieldTypeDefinition } from '@ng-forge/dynamic-forms';
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { forgeField } from '../../field';
 import { forgeFormFieldWrapper, type ForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
-import { type ForgePickableFieldProps, type ForgePickableChipFieldDef, type ForgePickableListFieldDef } from './pickable.field.directive';
+import { FORGE_PICKABLE_CHIP_FIELD_TYPE, FORGE_PICKABLE_LIST_FIELD_TYPE, type ForgePickableFieldProps, type ForgePickableChipFieldDef, type ForgePickableListFieldDef } from './pickable.field.directive';
 
 // MARK: Field Type Definitions
 /**
@@ -12,7 +12,7 @@ import { type ForgePickableFieldProps, type ForgePickableChipFieldDef, type Forg
  * Register via `provideDynamicForm(DBX_PICKABLE_CHIP_FIELD_TYPE)`.
  */
 export const DBX_PICKABLE_CHIP_FIELD_TYPE: FieldTypeDefinition<ForgePickableChipFieldDef> = {
-  name: 'dbx-pickable-chip',
+  name: FORGE_PICKABLE_CHIP_FIELD_TYPE,
   loadComponent: () => import('./pickable-chip.field.component').then((m) => m.DbxForgePickableChipFieldComponent),
   mapper: valueFieldMapper
 };
@@ -23,7 +23,7 @@ export const DBX_PICKABLE_CHIP_FIELD_TYPE: FieldTypeDefinition<ForgePickableChip
  * Register via `provideDynamicForm(DBX_PICKABLE_LIST_FIELD_TYPE)`.
  */
 export const DBX_PICKABLE_LIST_FIELD_TYPE: FieldTypeDefinition<ForgePickableListFieldDef> = {
-  name: 'dbx-pickable-list',
+  name: FORGE_PICKABLE_LIST_FIELD_TYPE,
   loadComponent: () => import('./pickable-list.field.component').then((m) => m.DbxForgePickableListFieldComponent),
   mapper: valueFieldMapper
 };
@@ -63,7 +63,7 @@ export function forgePickableChipField<T = unknown, M = unknown, H extends Prima
   const innerField = forgeField(
     filterFromPOJO({
       key,
-      type: 'dbx-pickable-chip' as const,
+      type: FORGE_PICKABLE_CHIP_FIELD_TYPE,
       label: '',
       value: undefined as unknown as T | T[],
       required,
@@ -116,7 +116,7 @@ export function forgePickableListField<T = unknown, M = unknown, H extends Prima
   const innerField = forgeField(
     filterFromPOJO({
       key,
-      type: 'dbx-pickable-list' as const,
+      type: FORGE_PICKABLE_LIST_FIELD_TYPE,
       label: '',
       value: undefined as unknown as T | T[],
       required,

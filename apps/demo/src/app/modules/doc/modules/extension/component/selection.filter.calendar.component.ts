@@ -22,7 +22,7 @@ export const DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER: DateCellScheduleDateFi
   template: `
     <dbx-schedule-selection-calendar [config]="config"></dbx-schedule-selection-calendar>
     <dbx-content-border>
-      <div>
+      <div class="dbx-button-wrap-group">
         <dbx-button [raised]="true" icon="shuffle" text="Random Selection" (buttonClick)="setRandomSelection()"></dbx-button>
         <dbx-button-spacer></dbx-button-spacer>
         <dbx-button [raised]="true" icon="looks_two" text="Set Even Selection" (buttonClick)="setEvenSelection()"></dbx-button>

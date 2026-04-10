@@ -6,6 +6,7 @@ import { type FieldTree } from '@angular/forms/signals';
 import type { DynamicText, FieldMeta, ValidationMessages, FormConfig } from '@ng-forge/dynamic-forms';
 import { DynamicForm } from '@ng-forge/dynamic-forms';
 import { type FactoryWithRequiredInput } from '@dereekb/util';
+import { DbxButtonComponent, DbxButtonSpacerDirective, type DbxButtonStyle } from '@dereekb/dbx-web';
 import type { ForgeArrayFieldProps, ForgeArrayItemPair } from './array.field';
 
 /**
@@ -29,7 +30,7 @@ let _forgeArrayItemTrackId = 0;
 @Component({
   selector: 'dbx-forge-array-field',
   templateUrl: './array.field.component.html',
-  imports: [CdkDropList, CdkDrag, CdkDragHandle, CdkDragPlaceholder, MatIconModule, MatButtonModule, DynamicForm],
+  imports: [CdkDropList, CdkDrag, CdkDragHandle, CdkDragPlaceholder, MatIconModule, MatButtonModule, DynamicForm, DbxButtonComponent, DbxButtonSpacerDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   host: {
@@ -71,6 +72,14 @@ export class ForgeArrayFieldComponent<T = unknown> {
   readonly addTextSignal = computed(() => this.props()?.addText ?? 'Add');
   readonly removeTextSignal = computed(() => this.props()?.removeText ?? 'Remove');
   readonly duplicateTextSignal = computed(() => this.props()?.duplicateText ?? 'Duplicate');
+
+  private static readonly _DEFAULT_ADD_BUTTON_STYLE: DbxButtonStyle = { type: 'raised', color: 'primary' };
+  private static readonly _DEFAULT_REMOVE_BUTTON_STYLE: DbxButtonStyle = { type: 'stroked', color: 'warn' };
+  private static readonly _DEFAULT_DUPLICATE_BUTTON_STYLE: DbxButtonStyle = { type: 'stroked', color: 'primary' };
+
+  readonly addButtonStyleSignal = computed(() => this.props()?.addButtonStyle ?? ForgeArrayFieldComponent._DEFAULT_ADD_BUTTON_STYLE);
+  readonly removeButtonStyleSignal = computed(() => this.props()?.removeButtonStyle ?? ForgeArrayFieldComponent._DEFAULT_REMOVE_BUTTON_STYLE);
+  readonly duplicateButtonStyleSignal = computed(() => this.props()?.duplicateButtonStyle ?? ForgeArrayFieldComponent._DEFAULT_DUPLICATE_BUTTON_STYLE);
 
   readonly showAddButtonSignal = computed(() => {
     if (!this.allowAddSignal()) {

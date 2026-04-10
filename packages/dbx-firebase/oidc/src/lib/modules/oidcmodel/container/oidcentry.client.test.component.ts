@@ -7,8 +7,8 @@ import { DbxDetailBlockComponent, DbxClickToCopyTextComponent, DbxContentPitDire
 import { DbxFormSourceDirective, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
 import { type OidcEntryOAuthClientPayloadData, type OidcScopeDetails } from '@dereekb/firebase';
 import { OidcEntryDocumentStore } from '../store/oidcentry.document.store';
-import { DbxFirebaseOidcEntryClientTestFormComponent, type DbxFirebaseOidcModelClientTestFormValue } from '../component/oidcentry.client.test.form.component';
-import { type OidcEntryClientTestFormFieldsConfig } from '../component/oidcentry.form';
+import { DbxFirebaseOidcEntryClientTestForgeFormComponent, type DbxFirebaseOidcModelClientTestFormValue } from '../component/oidcentry.client.test.forge.form.component';
+import { type OidcEntryClientTestFormFieldsConfig } from '../component/oidcentry.forge.form';
 import { generatePkceCodeVerifier, generatePkceCodeChallenge } from '../util/pkce';
 import { DbxFirebaseOidcConfigService } from '../../../service/oidc.configuration.service';
 
@@ -22,7 +22,7 @@ import { DbxFirebaseOidcConfigService } from '../../../service/oidc.configuratio
   selector: 'dbx-firebase-oidc-entry-client-test',
   template: `
     @if (formConfig()) {
-      <dbx-firebase-oidc-client-test-form [dbxFormSource]="formTemplate$" dbxFormSourceMode="always" [config]="formConfig()" (dbxFormValueChange)="onFormValueChange($event)"></dbx-firebase-oidc-client-test-form>
+      <dbx-firebase-oidc-client-test-forge-form [dbxFormSource]="formTemplate$" dbxFormSourceMode="always" [config]="formConfig()" (dbxFormValueChange)="onFormValueChange($event)"></dbx-firebase-oidc-client-test-forge-form>
       <dbx-content-pit class="dbx-block dbx-mb3" [rounded]="true">
         <dbx-detail-block class="dbx-pb4" icon="link" header="Authorization URL">
           @if (authorizationUrlSignal()) {
@@ -44,7 +44,7 @@ import { DbxFirebaseOidcConfigService } from '../../../service/oidc.configuratio
     }
   `,
   standalone: true,
-  imports: [CommonModule, DbxFirebaseOidcEntryClientTestFormComponent, DbxFormSourceDirective, DbxFormValueChangeDirective, DbxContentPitDirective, DbxDetailBlockComponent, DbxClickToCopyTextComponent, DbxButtonComponent],
+  imports: [CommonModule, DbxFirebaseOidcEntryClientTestForgeFormComponent, DbxFormSourceDirective, DbxFormValueChangeDirective, DbxContentPitDirective, DbxDetailBlockComponent, DbxClickToCopyTextComponent, DbxButtonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxFirebaseOidcEntryClientTestComponent {

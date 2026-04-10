@@ -143,18 +143,12 @@ export function flexSizeToCol(size: number): number {
  * Each field can specify a flex `size` (1-6) which maps to a grid `col` (2-12)
  * via `col = size * 2`. Fields without an explicit size use `defaultSize`.
  *
+ * @deprecated Use {@link forgeRow} directly with `col` values on each field instead.
+ * For equal-width columns, use `col: N` where N = `12 / fieldCount` (rounded),
+ * or set `col: 1` on each field with `className: 'dbx-forge-flex-{fieldCount}'`.
+ *
  * @param config - Flex row configuration with fields, sizes, and optional className
  * @returns A {@link RowField} with type `'row'`
- *
- * @example
- * ```typescript
- * const row = forgeFlexRow({
- *   fields: [
- *     { field: forgeTextField({ key: 'first', label: 'First' }), size: 3 },
- *     { field: forgeTextField({ key: 'last', label: 'Last' }), size: 3 }
- *   ]
- * });
- * ```
  */
 export function forgeFlexRow(config: ForgeFlexRowConfig): RowField {
   const { defaultSize = 2, relative = false } = config;

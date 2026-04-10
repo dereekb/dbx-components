@@ -2,7 +2,7 @@ import type { MatDatepickerField, MatDatepickerProps } from '@ng-forge/dynamic-f
 import type { FieldDef, BaseValueField, RowField } from '@ng-forge/dynamic-forms';
 import { filterFromPOJO, type ArrayOrValue, type Maybe, type TimezoneString, type DateOrDayString } from '@dereekb/util';
 import { forgeField } from '../../field';
-import { forgeFlexRow } from '../../wrapper/wrapper';
+import { forgeRow } from '../../wrapper/wrapper';
 import { forgeFormFieldWrapper, type ForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
 import type { ForgeDateTimeFieldComponentProps } from './datetime.field.component';
 import type { ForgeFixedDateRangeFieldComponentProps, ForgeFixedDateRangeValue } from './fixeddaterange.field.component';
@@ -398,9 +398,11 @@ export function forgeDateRangeField(config: ForgeDateRangeFieldConfig = {}): Row
     key: endFieldKey
   });
 
-  return forgeFlexRow({
-    fields: [startField as unknown as FieldDef<unknown>, endField as unknown as FieldDef<unknown>],
-    relative: true
+  return forgeRow({
+    fields: [
+      { ...(startField as unknown as FieldDef<unknown>), col: 6 },
+      { ...(endField as unknown as FieldDef<unknown>), col: 6 }
+    ]
   });
 }
 

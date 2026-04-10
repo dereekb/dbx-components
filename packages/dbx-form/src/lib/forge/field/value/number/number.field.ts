@@ -95,6 +95,7 @@ export function forgeNumberField(config: ForgeNumberFieldConfig): MatInputField 
       key,
       type: 'input' as const,
       label: label ?? '',
+      placeholder,
       value: defaultValue,
       required,
       readonly: isReadonly,

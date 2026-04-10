@@ -23,6 +23,7 @@ import { DocExtensionCalendarScheduleSelectionComponent } from '../component/sel
 import { JsonPipe, DatePipe } from '@angular/common';
 
 export interface TestCalendarEventData extends DateCell {
+  readonly eventId?: string | number;
   value: string;
 }
 
@@ -103,6 +104,65 @@ export class DocExtensionCalendarComponent implements OnInit {
   readonly forgeDateCellScheduleRangeFieldsConfig: FormConfig = {
     fields: [
       forgeDateScheduleRangeField({
+        key: 'futureDateSchedule',
+        required: false,
+        label: 'Future Dates',
+        outputTimezone: this.timezone$,
+        defaultScheduleDays: expandDateCellScheduleDayCodes('89'),
+        minMaxDateRange: {
+          start: startOfDay(new Date())
+        },
+        description: 'Simple date schedule that requires picking dates in the future.'
+      }),
+      forgeDateScheduleRangeField({
+        key: 'dateSchedule',
+        required: true,
+        label: 'Custom Label',
+        outputTimezone: this.timezone$,
+        description: 'Input field used for picking a DateCellScheduleRange value.'
+      }),
+      forgeDateScheduleRangeField({
+        outputTimezone: this.timezone$,
+        key: 'dateScheduleWithFilter',
+        label: 'Date Schedule with Filter',
+        required: false,
+        description: 'Date schedule with a filter applied to it, and an initial selection of everything. Contains custom close config.',
+        filter: DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER,
+        computeSelectionResultRelativeToFilter: true,
+        initialSelectionState: 'all',
+        dialogContentConfig: {
+          dialogConfig: {
+            panelClass: 'dbx-schedule-selection-calendar-compact',
+            maxWidth: '540px'
+          },
+          closeConfig: {
+            closeText: 'Save Changes',
+            buttonColor: 'primary'
+          }
+        }
+      }),
+      forgeDateScheduleRangeField({
+        outputTimezone: this.timezone$,
+        key: 'dateScheduleWithMinMaxDateRange',
+        label: 'Date Schedule with Min/Max Date Range',
+        required: false,
+        description: 'Date schedule with a min and max date range applied to it and all days selected.',
+        minMaxDateRange: of({ start: addDays(new Date(), -25), end: addDays(new Date(), 25) }),
+        computeSelectionResultRelativeToFilter: true,
+        initialSelectionState: 'all'
+      }),
+      forgeDateScheduleRangeField({
+        outputTimezone: this.timezone$,
+        key: 'dateScheduleWithFilterAndExclusions',
+        label: 'Date Schedule with Filter and Exclusions',
+        required: false,
+        description: 'Date schedule with a filter applied to it and additional exclusions.',
+        filter: { ...DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER, w: '89', ex: [] },
+        computeSelectionResultRelativeToFilter: true,
+        exclusions: [0, 2, 4],
+        initialSelectionState: 'all'
+      }),
+      forgeDateScheduleRangeField({
         outputTimezone: this.timezone$,
         key: 'dateScheduleWithTimingFilterAndMinDateRange',
         label: 'Date Schedule with Timing Filter and Min Date Range',
@@ -112,6 +172,27 @@ export class DocExtensionCalendarComponent implements OnInit {
         minMaxDateRange: { start: addDays(new Date(), 4) },
         computeSelectionResultRelativeToFilter: true,
         initialSelectionState: 'all'
+      }),
+      forgeDateScheduleRangeField({
+        key: 'dateScheduleForUtcTimezone',
+        label: 'Date Schedule for UTC Timezone',
+        required: true,
+        description: 'Date schedule for the UTC timezone.',
+        outputTimezone: 'UTC'
+      }),
+      forgeDateScheduleRangeField({
+        key: 'dateScheduleForUtcTimezoneWithFilter',
+        required: true,
+        description: 'Date schedule for the timezone with filter. The timezone from the filter is ignored and overridden by the output timezone.',
+        outputTimezone: 'UTC',
+        filter: {
+          ...DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER,
+          startsAt: UTC_DATE_TIMEZONE_UTC_NORMAL_INSTANCE.startOfDayInTargetTimezone(new Date()),
+          end: addDays(UTC_DATE_TIMEZONE_UTC_NORMAL_INSTANCE.startOfDayInTargetTimezone(new Date()), 5),
+          timezone: 'UTC',
+          w: '89',
+          ex: []
+        }
       })
     ]
   } as FormConfig;
@@ -254,8 +335,10 @@ export class DocExtensionCalendarComponent implements OnInit {
 
       const timing = dateCellTiming({ startsAt, duration: minutes }, days);
       const eventData: TestCalendarEventData[] = range(0, days).map((i) => {
+        const eventId = `${name}_${i}`;
         const event: TestCalendarEventData = {
           i,
+          eventId,
           value: `${i}`
         };
 
@@ -275,7 +358,7 @@ export class DocExtensionCalendarComponent implements OnInit {
           const title = `Event ${name} ${x.i}`;
 
           return {
-            id: x.i,
+            id: x.eventId ?? `${name}_${x.i}`,
             title,
             start,
             end,

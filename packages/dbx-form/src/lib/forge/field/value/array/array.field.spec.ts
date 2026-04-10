@@ -117,6 +117,33 @@ describe('forgeArrayField()', () => {
     expect(field.props?.labelForField).toBe(labelFn);
   });
 
+  it('should pass addButtonStyle through props', () => {
+    const field = forgeArrayField({
+      key: 'items',
+      template: { key: 'name', type: 'input' as const, label: 'Name' },
+      addButtonStyle: { type: 'flat', color: 'accent' }
+    });
+    expect(field.props?.addButtonStyle).toEqual({ type: 'flat', color: 'accent' });
+  });
+
+  it('should pass removeButtonStyle through props', () => {
+    const field = forgeArrayField({
+      key: 'items',
+      template: { key: 'name', type: 'input' as const, label: 'Name' },
+      removeButtonStyle: { type: 'stroked', color: 'warn' }
+    });
+    expect(field.props?.removeButtonStyle).toEqual({ type: 'stroked', color: 'warn' });
+  });
+
+  it('should pass duplicateButtonStyle through props', () => {
+    const field = forgeArrayField({
+      key: 'items',
+      template: { key: 'name', type: 'input' as const, label: 'Name' },
+      duplicateButtonStyle: { type: 'tonal', color: 'primary' }
+    });
+    expect(field.props?.duplicateButtonStyle).toEqual({ type: 'tonal', color: 'primary' });
+  });
+
   it('should not include undefined optional props', () => {
     const field = forgeArrayField({
       key: 'items',

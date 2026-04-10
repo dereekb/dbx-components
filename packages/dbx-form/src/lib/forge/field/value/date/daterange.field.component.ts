@@ -6,12 +6,17 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { AsyncPipe } from '@angular/common';
-import { DynamicTextPipe, type DynamicText, type ValidationMessages, DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES } from '@ng-forge/dynamic-forms';
+import { DynamicTextPipe, type DynamicText, type ValidationMessages, DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES, type BaseValueField } from '@ng-forge/dynamic-forms';
 import { resolveValueFieldContext, buildValueFieldInputs, createResolvedErrorsSignal, shouldShowErrors } from '@ng-forge/dynamic-forms/integration';
 import { MATERIAL_CONFIG } from '@ng-forge/dynamic-forms-material';
 import type { FieldTree } from '@angular/forms/signals';
 import type { Maybe } from '@dereekb/util';
 import { safeToJsDate } from '@dereekb/date';
+
+/**
+ * The custom forge field type name for the date range field.
+ */
+export const FORGE_DATERANGE_FIELD_TYPE = 'daterange' as const;
 
 /**
  * Value shape for the date range field.
@@ -56,6 +61,13 @@ export interface ForgeDateRangeFieldComponentProps {
    */
   readonly maxDate?: Date | string;
 }
+
+/**
+ * Field definition type for a forge date range field.
+ */
+export type ForgeDateRangeFieldDef = BaseValueField<ForgeDateRangeFieldComponentProps, ForgeDateRangeValue> & {
+  readonly type: typeof FORGE_DATERANGE_FIELD_TYPE;
+};
 
 /**
  * Custom ng-forge field component for date range selection.

@@ -9,9 +9,16 @@ import type { ForgePhoneFieldProps } from './phone.field.component';
 
 // MARK: Phone Field
 /**
- * Type alias for the forge phone field definition.
+ * The custom forge field type name for the phone field.
  */
-export type ForgePhoneFieldDef = BaseValueField<ForgePhoneFieldProps, string>;
+export const FORGE_PHONE_FIELD_TYPE = 'phone' as const;
+
+/**
+ * Field definition type for a forge phone field.
+ */
+export type ForgePhoneFieldDef = BaseValueField<ForgePhoneFieldProps, string> & {
+  readonly type: typeof FORGE_PHONE_FIELD_TYPE;
+};
 
 /**
  * Configuration for a forge international phone number input field.
@@ -58,7 +65,7 @@ export interface ForgePhoneFieldConfig {
  * const field = forgePhoneField({ key: 'phone', label: 'Phone Number', required: true });
  * ```
  */
-export function forgePhoneField(config: ForgePhoneFieldConfig): FieldDef<ForgePhoneFieldProps> {
+export function forgePhoneField(config: ForgePhoneFieldConfig): ForgePhoneFieldDef {
   const { key, label = 'Phone Number', required, readonly: isReadonly, description, defaultValue = '', preferredCountries, onlyCountries, enableSearch, allowExtension } = config;
 
   const props: Partial<ForgePhoneFieldProps> = filterFromPOJO({
@@ -72,13 +79,13 @@ export function forgePhoneField(config: ForgePhoneFieldConfig): FieldDef<ForgePh
   return forgeField(
     filterFromPOJO({
       key,
-      type: 'phone' as const,
+      type: FORGE_PHONE_FIELD_TYPE,
       label,
       value: defaultValue,
       required,
       readonly: isReadonly,
       props: Object.keys(props).length > 0 ? props : undefined
-    }) as FieldDef<ForgePhoneFieldProps>
+    }) as ForgePhoneFieldDef
   );
 }
 

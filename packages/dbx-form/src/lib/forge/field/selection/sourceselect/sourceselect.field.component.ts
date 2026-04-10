@@ -31,10 +31,15 @@ export interface ForgeSourceSelectFieldProps<T extends PrimativeKey = PrimativeK
 }
 
 /**
+ * The custom forge field type name for the source select field.
+ */
+export const FORGE_SOURCE_SELECT_FIELD_TYPE = 'dbx-source-select' as const;
+
+/**
  * Forge field definition interface for the source select field.
  */
 export interface ForgeSourceSelectFieldDef<T extends PrimativeKey = PrimativeKey, M = unknown> extends BaseValueField<ForgeSourceSelectFieldProps<T, M>, T | T[]> {
-  readonly type: 'dbx-source-select';
+  readonly type: typeof FORGE_SOURCE_SELECT_FIELD_TYPE;
 }
 
 interface SelectFieldOpenSourceMap<T extends PrimativeKey = PrimativeKey, M = unknown> {

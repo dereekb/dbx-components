@@ -3,7 +3,7 @@ import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import type { FieldTypeDefinition } from '@ng-forge/dynamic-forms';
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { forgeField } from '../field';
-import type { ForgeComponentFieldProps, ForgeComponentFieldDef } from './component.field.component';
+import { FORGE_COMPONENT_FIELD_TYPE, type ForgeComponentFieldProps, type ForgeComponentFieldDef } from './component.field.component';
 
 // MARK: Field Type Definition
 /**
@@ -12,7 +12,7 @@ import type { ForgeComponentFieldProps, ForgeComponentFieldDef } from './compone
  * Register via `provideDynamicForm(DBX_COMPONENT_FIELD_TYPE)`.
  */
 export const DBX_COMPONENT_FIELD_TYPE: FieldTypeDefinition<ForgeComponentFieldDef> = {
-  name: 'dbx-component',
+  name: FORGE_COMPONENT_FIELD_TYPE,
   loadComponent: () => import('./component.field.component').then((m) => m.DbxForgeComponentFieldComponent),
   mapper: valueFieldMapper
 };
@@ -68,7 +68,7 @@ export function forgeComponentField<T = unknown>(config: ForgeComponentFieldConf
   return forgeField(
     filterFromPOJO({
       key: key || `_component_${++_componentFieldCounter}`,
-      type: 'dbx-component' as const,
+      type: FORGE_COMPONENT_FIELD_TYPE,
       label: label ?? '',
       value: undefined as unknown,
       props: {

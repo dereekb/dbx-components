@@ -10,6 +10,17 @@ import { type DynamicText, type FieldMeta, type ValidationMessages, type BaseVal
 import { type PickableValueFieldDisplayFunction, type PickableValueFieldDisplayValue, type PickableValueFieldFilterFunction, type PickableValueFieldHashFunction, type PickableValueFieldLoadValuesFunction, type PickableValueFieldValue } from '../../../../formly/field/selection/pickable/pickable';
 import { type PickableItemFieldItem, type PickableItemFieldItemSortFn } from '../../../../formly/field/selection/pickable/pickable.field.directive';
 
+// MARK: Field Type Names
+/**
+ * The custom forge field type name for the pickable chip field.
+ */
+export const FORGE_PICKABLE_CHIP_FIELD_TYPE = 'dbx-pickable-chip' as const;
+
+/**
+ * The custom forge field type name for the pickable list field.
+ */
+export const FORGE_PICKABLE_LIST_FIELD_TYPE = 'dbx-pickable-list' as const;
+
 // MARK: Props
 /**
  * Props interface for forge pickable fields (both chip and list variants).
@@ -39,14 +50,14 @@ export interface ForgePickableFieldProps<T = unknown, M = unknown, H extends Pri
  * Forge field definition interface for the pickable chip field.
  */
 export interface ForgePickableChipFieldDef<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends BaseValueField<ForgePickableFieldProps<T, M, H>, T | T[]> {
-  readonly type: 'dbx-pickable-chip';
+  readonly type: typeof FORGE_PICKABLE_CHIP_FIELD_TYPE;
 }
 
 /**
  * Forge field definition interface for the pickable list field.
  */
 export interface ForgePickableListFieldDef<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends BaseValueField<ForgePickableFieldProps<T, M, H>, T | T[]> {
-  readonly type: 'dbx-pickable-list';
+  readonly type: typeof FORGE_PICKABLE_LIST_FIELD_TYPE;
 }
 
 /**

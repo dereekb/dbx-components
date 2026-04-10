@@ -3,7 +3,7 @@ import type { FieldDef, FieldTypeDefinition } from '@ng-forge/dynamic-forms';
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { forgeField } from '../../field';
 import { forgeFormFieldWrapper, type ForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
-import { type ForgeSourceSelectFieldProps, type ForgeSourceSelectFieldDef } from './sourceselect.field.component';
+import { FORGE_SOURCE_SELECT_FIELD_TYPE, type ForgeSourceSelectFieldProps, type ForgeSourceSelectFieldDef } from './sourceselect.field.component';
 
 // MARK: Field Type Definition
 /**
@@ -12,7 +12,7 @@ import { type ForgeSourceSelectFieldProps, type ForgeSourceSelectFieldDef } from
  * Register via `provideDynamicForm(DBX_SOURCE_SELECT_FIELD_TYPE)`.
  */
 export const DBX_SOURCE_SELECT_FIELD_TYPE: FieldTypeDefinition<ForgeSourceSelectFieldDef> = {
-  name: 'dbx-source-select',
+  name: FORGE_SOURCE_SELECT_FIELD_TYPE,
   loadComponent: () => import('./sourceselect.field.component').then((m) => m.DbxForgeSourceSelectFieldComponent),
   mapper: valueFieldMapper
 };
@@ -52,7 +52,7 @@ export function forgeSourceSelectField<T extends PrimativeKey = PrimativeKey, M 
   const innerField = forgeField(
     filterFromPOJO({
       key,
-      type: 'dbx-source-select' as const,
+      type: FORGE_SOURCE_SELECT_FIELD_TYPE,
       label: '',
       value: undefined as unknown as T | T[],
       required,

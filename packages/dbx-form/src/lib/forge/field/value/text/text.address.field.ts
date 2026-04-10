@@ -186,7 +186,6 @@ export function forgeAddressListField(config: Partial<ForgeAddressListFieldConfi
 
   return forgeArrayField({
     key,
-    label: 'Addresses',
     labelForField: 'Address',
     template: forgeAddressFields(config),
     maxLength: maxAddresses,

@@ -6,6 +6,11 @@ import { type Maybe } from '@dereekb/util';
 
 // MARK: Forge Component Field Props
 /**
+ * The custom forge field type name for the component field.
+ */
+export const FORGE_COMPONENT_FIELD_TYPE = 'dbx-component' as const;
+
+/**
  * Props interface for the forge component field.
  *
  * Passed via the `props` property on the forge field definition.
@@ -22,7 +27,7 @@ export interface ForgeComponentFieldProps<T = unknown> {
  * Forge field definition interface for the component field.
  */
 export interface ForgeComponentFieldDef<T = unknown> extends BaseValueField<ForgeComponentFieldProps<T>, unknown> {
-  readonly type: 'dbx-component';
+  readonly type: typeof FORGE_COMPONENT_FIELD_TYPE;
 }
 
 /**
