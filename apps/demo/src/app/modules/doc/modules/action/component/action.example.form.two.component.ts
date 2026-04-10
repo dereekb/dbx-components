@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { provideFormlyContext, AbstractSyncFormlyFormDirective, textField, DbxFormlyComponent } from '@dereekb/dbx-form';
-import { type FormlyFieldConfig } from '@ngx-formly/core';
+import { provideDbxForgeFormContext, AbstractSyncForgeFormDirective, forgeTextField, DbxForgeFormComponent } from '@dereekb/dbx-form';
+import type { FormConfig } from '@ng-forge/dynamic-forms';
 
 export interface DocActionFormExampleValue {
   name: string;
@@ -9,14 +9,16 @@ export interface DocActionFormExampleValue {
 
 @Component({
   template: `
-    <dbx-formly></dbx-formly>
+    <dbx-forge></dbx-forge>
   `,
   selector: 'doc-action-form-example-form-two',
-  providers: [provideFormlyContext()],
+  providers: [provideDbxForgeFormContext()],
   standalone: true,
-  imports: [DbxFormlyComponent],
+  imports: [DbxForgeFormComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DocActionFormExampleFormTwoComponent extends AbstractSyncFormlyFormDirective<DocActionFormExampleValue> {
-  readonly fields: FormlyFieldConfig[] = [textField({ key: 'name', label: 'Name', maxLength: 30, required: true, autocomplete: false })];
+export class DocActionFormExampleFormTwoComponent extends AbstractSyncForgeFormDirective<DocActionFormExampleValue> {
+  readonly config: FormConfig = {
+    fields: [forgeTextField({ key: 'name', label: 'Name', required: true })]
+  } as FormConfig;
 }

@@ -2,7 +2,7 @@
   <doc-feature-layout header="Form Bug Tests" hint="Reproduction cases for form-related bugs.">
     <doc-feature-example header="dbxActionEnforceModified with intphone" hint="The Submit button should enable when either the name or phone is changed.">
       <div dbxAction dbxActionEnforceModified [dbxActionHandler]="handlePhoneDirtyStateAction">
-        <doc-form-example-form dbxActionForm [dbxFormlyFields]="phoneDirtyStateFields" [dbxFormSource]="phoneDirtyStateDefaultValue$"></doc-form-example-form>
+        <doc-forge-example-form dbxActionForm [config]="phoneDirtyStateConfig" [dbxFormSource]="phoneDirtyStateDefaultValue$"></doc-forge-example-form>
         <p></p>
         <dbx-button [raised]="true" text="Submit" dbxActionButton></dbx-button>
         <dbx-error dbxActionError></dbx-error>

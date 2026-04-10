@@ -9,7 +9,7 @@ import { CalendarScheduleSelectionDayState, DbxFormDateScheduleRangeFieldModule,
 import type { FormConfig } from '@ng-forge/dynamic-forms';
 import { BehaviorSubject, interval, map, of, shareReplay, startWith } from 'rxjs';
 import { DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER, DocExtensionCalendarScheduleSelectionWithFilterComponent } from '../component/selection.filter.calendar.component';
-import { DbxFormTimezoneStringFieldModule, timezoneStringField, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
+import { forgeTimezoneStringField, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { DbxContentContainerDirective, DbxTwoColumnComponent, DbxTwoColumnContextDirective, DbxTwoColumnFullLeftDirective, DbxTwoBlockComponent, DbxTwoColumnRightComponent, DbxSubSectionComponent } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
@@ -53,7 +53,6 @@ export interface TestCalendarEventData extends DateCell {
     DbxFormDateScheduleRangeFieldModule,
     JsonPipe,
     DatePipe,
-    DbxFormTimezoneStringFieldModule,
     DocFeatureFormTabsComponent,
     DocFormForgeExampleComponent
   ],
@@ -66,7 +65,9 @@ export class DocExtensionCalendarComponent implements OnInit {
 
   readonly timezone$ = this._timezone.asObservable();
 
-  readonly timezoneSelectionField: FormlyFieldConfig[] = [timezoneStringField()];
+  readonly timezoneSelectionConfig: FormConfig = {
+    fields: [forgeTimezoneStringField()]
+  } as FormConfig;
 
   readonly onTimezoneChange = (value: { timezone: Maybe<TimezoneString> }) => {
     this._timezone.next(value?.timezone);

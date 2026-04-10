@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { provideFormlyContext, AbstractSyncFormlyFormDirective, nameField, dateTimeField, DbxFormFormlyTextFieldModule, DbxFormFormlyDateFieldModule, DbxFormlyComponent } from '@dereekb/dbx-form';
-import { type FormlyFieldConfig } from '@ngx-formly/core';
+import { provideDbxForgeFormContext, AbstractSyncForgeFormDirective, forgeNameField, forgeDateTimeField, DbxForgeFormComponent } from '@dereekb/dbx-form';
+import type { FormConfig } from '@ng-forge/dynamic-forms';
 
 export interface DocActionFormExampleValue {
   name: string;
@@ -9,14 +9,16 @@ export interface DocActionFormExampleValue {
 
 @Component({
   template: `
-    <dbx-formly></dbx-formly>
+    <dbx-forge></dbx-forge>
   `,
   selector: 'doc-action-form-example-form',
-  providers: [provideFormlyContext()],
+  providers: [provideDbxForgeFormContext()],
   standalone: true,
-  imports: [DbxFormlyComponent, DbxFormFormlyTextFieldModule, DbxFormFormlyDateFieldModule],
+  imports: [DbxForgeFormComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DocActionFormExampleFormComponent extends AbstractSyncFormlyFormDirective<DocActionFormExampleValue> {
-  readonly fields: FormlyFieldConfig[] = [nameField({ required: true }), dateTimeField({ key: 'date' })];
+export class DocActionFormExampleFormComponent extends AbstractSyncForgeFormDirective<DocActionFormExampleValue> {
+  readonly config: FormConfig = {
+    fields: [forgeNameField({ required: true }), forgeDateTimeField({ key: 'date' })]
+  } as FormConfig;
 }
