@@ -10,6 +10,8 @@ import { DEMO_AUTH_CLAIMS_SERVICE, DEMO_API_AUTH_CLAIMS_ONBOARDED_TOKEN, type Gu
 import { type FirestoreContext, type FirestoreModelKey, appNotificationTemplateTypeInfoRecordService, firestoreModelId } from '@dereekb/firebase';
 import { DemoFirebaseContextService, demoSetupDevelopmentWidget } from 'demo-components';
 import { defaultValidationMessages, provideDbxFormConfiguration, provideDbxFormFormlyFieldDeclarations, provideDbxForgeFormFieldDeclarations } from '@dereekb/dbx-form';
+import { DBX_FORGE_CALENDAR_FIELD_TYPES } from '@dereekb/dbx-form/calendar';
+import { DBX_FORGE_MAPBOX_FIELD_TYPES } from '@dereekb/dbx-form/mapbox';
 import { provideDbxMapbox } from '@dereekb/dbx-web/mapbox';
 import { provideDbxFirebaseOidc } from '@dereekb/dbx-firebase/oidc';
 import { provideEffects } from '@ngrx/effects';
@@ -263,7 +265,7 @@ export const appConfig: ApplicationConfig = {
     // dbx-form, form related
     provideDbxFormConfiguration(),
     provideDbxFormFormlyFieldDeclarations(),
-    provideDbxForgeFormFieldDeclarations(),
+    provideDbxForgeFormFieldDeclarations(...DBX_FORGE_CALENDAR_FIELD_TYPES, ...DBX_FORGE_MAPBOX_FIELD_TYPES),
     // dbx-firebase
     provideDbxFirebase({
       app: {

@@ -5,7 +5,8 @@ import { type DateCell, type DateCellCollection, dateCellTiming, durationSpanToD
 import { addMonths, setHours, startOfDay, addDays } from 'date-fns';
 import { type Building, type Maybe, type TimezoneString, isEvenNumber, range } from '@dereekb/util';
 import { type CalendarEvent } from 'angular-calendar';
-import { CalendarScheduleSelectionDayState, DbxFormDateScheduleRangeFieldModule, type DbxScheduleSelectionCalendarComponentConfig, dateScheduleRangeField } from '@dereekb/dbx-form/calendar';
+import { CalendarScheduleSelectionDayState, DbxFormDateScheduleRangeFieldModule, type DbxScheduleSelectionCalendarComponentConfig, dateScheduleRangeField, forgeDateScheduleRangeField } from '@dereekb/dbx-form/calendar';
+import type { FormConfig } from '@ng-forge/dynamic-forms';
 import { BehaviorSubject, interval, map, of, shareReplay, startWith } from 'rxjs';
 import { DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER, DocExtensionCalendarScheduleSelectionWithFilterComponent } from '../component/selection.filter.calendar.component';
 import { DbxFormTimezoneStringFieldModule, timezoneStringField, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
@@ -14,6 +15,8 @@ import { DbxContentContainerDirective, DbxTwoColumnComponent, DbxTwoColumnContex
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureDerivedComponent } from '../../shared/component/feature.derived.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
+import { DocFeatureFormTabsComponent } from '../../shared/component/feature.formtabs.component';
+import { DocFormForgeExampleComponent } from '../../form/component/forge.example.form.component';
 import { MatButton } from '@angular/material/button';
 import { DocFormExampleComponent } from '../../form/component/example.form.component';
 import { DocExtensionCalendarScheduleSelectionComponent } from '../component/selection.calendar.component';
@@ -49,7 +52,9 @@ export interface TestCalendarEventData extends DateCell {
     DbxFormDateScheduleRangeFieldModule,
     JsonPipe,
     DatePipe,
-    DbxFormTimezoneStringFieldModule
+    DbxFormTimezoneStringFieldModule,
+    DocFeatureFormTabsComponent,
+    DocFormForgeExampleComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -94,6 +99,22 @@ export class DocExtensionCalendarComponent implements OnInit {
       end: addDays(UTC_DATE_TIMEZONE_UTC_NORMAL_INSTANCE.startOfDayInTargetTimezone(new Date()), 2)
     }
   });
+
+  readonly forgeDateCellScheduleRangeFieldsConfig: FormConfig = {
+    fields: [
+      forgeDateScheduleRangeField({
+        outputTimezone: this.timezone$,
+        key: 'dateScheduleWithTimingFilterAndMinDateRange',
+        label: 'Date Schedule with Timing Filter and Min Date Range',
+        required: false,
+        description: 'Date schedule with a filter and an explicit min date to be 4 days from now',
+        filter: { ...DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER, w: '89', ex: [] },
+        minMaxDateRange: { start: addDays(new Date(), 4) },
+        computeSelectionResultRelativeToFilter: true,
+        initialSelectionState: 'all'
+      })
+    ]
+  } as FormConfig;
 
   readonly dateCellScheduleRangeFields = [
     dateScheduleRangeField({

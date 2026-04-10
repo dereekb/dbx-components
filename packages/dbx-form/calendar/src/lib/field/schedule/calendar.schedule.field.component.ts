@@ -68,6 +68,9 @@ export interface DbxFormCalendarDateCellScheduleRangeFieldProps extends Pick<For
   readonly customDetailsConfig?: Maybe<DbxInjectionComponentConfig>;
 }
 
+/**
+ * @deprecated Use ForgeCalendarDateScheduleRangeFieldComponent instead.
+ */
 @Component({
   template: `
     <div class="dbx-schedule-selection-field">

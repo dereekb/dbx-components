@@ -4,6 +4,9 @@ import { FormlyModule } from '@ngx-formly/core';
 
 const importsAndExports = [DbxFormMapboxLatLngFieldComponent];
 
+/**
+ * @deprecated Use provideDbxForgeMapboxFieldDeclarations() instead.
+ */
 @NgModule({
   imports: [
     ...importsAndExports,

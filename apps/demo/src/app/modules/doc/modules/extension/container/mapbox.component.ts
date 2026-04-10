@@ -2,7 +2,10 @@ import { latLngPoint, latLngString, type LatLngTuple, type Maybe, type Pixels, r
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { Component, type OnDestroy, type OnInit, inject, ChangeDetectionStrategy, viewChild, computed, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { mapboxLatLngField, mapboxZoomField } from '@dereekb/dbx-form/mapbox';
+import { mapboxLatLngField, mapboxZoomField, forgeMapboxLatLngField, forgeMapboxZoomField } from '@dereekb/dbx-form/mapbox';
+import type { FormConfig } from '@ng-forge/dynamic-forms';
+import { DocFeatureFormTabsComponent } from '../../shared/component/feature.formtabs.component';
+import { DocFormForgeExampleComponent } from '../../form/component/forge.example.form.component';
 import { DbxMapboxMapStore } from 'packages/dbx-web/mapbox/src/lib/mapbox.store';
 import {
   type KnownMapboxStyle,
@@ -73,7 +76,9 @@ import { DbxFormlyFieldsContextDirective, DbxFormSourceDirective } from '@dereek
     DbxFormSourceDirective,
     DbxMapboxInjectionComponent,
     DbxMapboxMapStoreInjectionBlockDirective,
-    JsonPipe
+    JsonPipe,
+    DocFeatureFormTabsComponent,
+    DocFormForgeExampleComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -209,6 +214,37 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
       readonly: true
     })
   ];
+
+  readonly forgeMapboxLatLngFieldConfig: FormConfig = {
+    fields: [
+      forgeMapboxLatLngField({
+        key: 'latLng',
+        description: 'This is a coordinate picker.'
+      }),
+      forgeMapboxLatLngField({
+        key: 'latLngDisabled',
+        description: 'This is a read only coordinate picker. It will also re-center the map to the point after 3 seconds.',
+        readonly: true,
+        recenterTime: 3000
+      })
+    ]
+  } as FormConfig;
+
+  readonly forgeMapboxZoomFieldConfig: FormConfig = {
+    fields: [
+      forgeMapboxZoomField({
+        key: 'zoom',
+        description: 'This is a zoom picker.',
+        center: latLngPoint(30.5989668, -96.3831949)
+      }),
+      forgeMapboxZoomField({
+        key: 'zoomDisabled',
+        description: 'This is a read only zoom picker.',
+        center: latLngPoint(30.5989668, -96.3831949),
+        readonly: true
+      })
+    ]
+  } as FormConfig;
 
   readonly mapboxLatLngAndZoomField: FormlyFieldConfig[] = [
     mapboxLatLngField({

@@ -4,6 +4,9 @@ import { FormlyModule } from '@ngx-formly/core';
 
 const importsAndExports = [DbxFormCalendarDateScheduleRangeFieldComponent];
 
+/**
+ * @deprecated Use provideDbxForgeCalendarFieldDeclarations() instead.
+ */
 @NgModule({
   imports: [
     ...importsAndExports,

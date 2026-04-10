@@ -6,6 +6,9 @@ import { dbxScheduleSelectionCalendarDateDaysFormFields } from './calendar.sched
 
 export type DbxScheduleSelectionCalendarDateDaysFormValue = EnabledDays;
 
+/**
+ * @deprecated Use DbxScheduleSelectionCalendarDateDaysForgeFormComponent instead.
+ */
 @Component({
   selector: 'dbx-schedule-selection-calendar-date-days-form',
   template: DBX_FORMLY_FORM_COMPONENT_TEMPLATE,

@@ -30,6 +30,9 @@ const importsAndExports = [
   DbxFormFormlyWrapperModule
 ];
 
+/**
+ * @deprecated Import components directly and use provideDbxForgeCalendarFieldDeclarations().
+ */
 @NgModule({
   imports: importsAndExports,
   exports: importsAndExports

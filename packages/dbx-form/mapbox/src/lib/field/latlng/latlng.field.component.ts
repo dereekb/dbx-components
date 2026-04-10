@@ -83,6 +83,9 @@ export interface DbxFormMapboxLatLngComponentFieldProps extends FormlyFieldProps
         </button>
  */
 
+/**
+ * @deprecated Use ForgeMapboxLatLngFieldComponent instead.
+ */
 @Component({
   template: `
     <div class="dbx-mapbox-input-field" [ngClass]="compactClassSignal()" [formGroup]="formGroup">

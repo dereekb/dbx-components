@@ -15,3 +15,6 @@ export * from './calendar.schedule.selection.store.provide';
 export * from './calendar.schedule.selection.store';
 export * from './calendar.schedule.selection';
 export * from './calendar.schedule.selection.toggle.button.component';
+export * from './calendar.schedule.selection.days.forge.form.component';
+export * from './calendar.schedule.selection.forge.form';
+export * from './forge.providers';
