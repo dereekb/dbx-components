@@ -1,21 +1,24 @@
 <dbx-content-container>
   <doc-feature-layout header="" hint="">
+    <dbx-bar>
+      <mat-slide-toggle [checked]="disabled()" (change)="disabled.set($event.checked)">Disable All Fields</mat-slide-toggle>
+    </dbx-bar>
     <!-- Examples -->
     <doc-feature-example header="usernamePasswordLoginFields()" hint="Creates field configurations pre-configured for a username and password.">
       <h4>Email and Password</h4>
       <doc-feature-form-tabs formlyFn="formlyUsernamePasswordLoginFields()" forgeFn="forgeUsernamePasswordLoginFields()">
-        <doc-form-example-form formly [config]="usernamePasswordLoginField"></doc-form-example-form>
-        <doc-forge-example-form forge [config]="forgeUsernamePasswordLoginConfig"></doc-forge-example-form>
+        <doc-form-example-form formly [config]="usernamePasswordLoginField" [disabled]="disabled()"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeUsernamePasswordLoginConfig" [disabled]="disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
 
       <h4>Email and Password with verify fields.</h4>
-      <doc-form-example-form [dbxFormSource]="invalidVerifyContent" [config]="usernamePasswordLoginWithVerifyField"></doc-form-example-form>
+      <doc-form-example-form [dbxFormSource]="invalidVerifyContent" [config]="usernamePasswordLoginWithVerifyField" [disabled]="disabled()"></doc-form-example-form>
     </doc-feature-example>
     <doc-feature-example header="timezoneStringField()" hint="Creates field configurations pre-configured for timezone selection.">
       <h4>Timezone Selection</h4>
       <doc-feature-form-tabs formlyFn="formlyTimezoneStringField()" forgeFn="forgeTimezoneStringField()">
-        <doc-form-example-form formly [config]="timezoneSelectionField"></doc-form-example-form>
-        <doc-forge-example-form forge [config]="forgeTimezoneSelectionConfig"></doc-forge-example-form>
+        <doc-form-example-form formly [config]="timezoneSelectionField" [disabled]="disabled()"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeTimezoneSelectionConfig" [disabled]="disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
       <doc-feature-derived type="uses" from="vvo/tzdb" url="https://github.com/vvo/tzdb">
         <p>Timezone strings are calculated/provided by vvo/tzdb.</p>
@@ -24,8 +27,8 @@
     <doc-feature-example header="websiteUrlField()" hint="Creates field configurations pre-configured for a website url.">
       <h4>Website Url</h4>
       <doc-feature-form-tabs formlyFn="formlyWebsiteUrlField()" forgeFn="forgeWebsiteUrlField()">
-        <doc-form-example-form formly [config]="websiteUrlFields"></doc-form-example-form>
-        <doc-forge-example-form forge [config]="forgeWebsiteUrlFieldsConfig"></doc-forge-example-form>
+        <doc-form-example-form formly [config]="websiteUrlFields" [disabled]="disabled()"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeWebsiteUrlFieldsConfig" [disabled]="disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
     </doc-feature-example>
   </doc-feature-layout>

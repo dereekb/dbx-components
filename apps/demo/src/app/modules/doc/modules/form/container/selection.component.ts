@@ -1,5 +1,5 @@
 import { BehaviorSubject, map, type Observable, of, delay, startWith, switchMap, Subject } from 'rxjs';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, type OnDestroy, type Type, type OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, type OnDestroy, type Type, type OnInit, inject, signal } from '@angular/core';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
 import {
@@ -41,7 +41,8 @@ import { type DocFormExampleSelectionValue, type DocFormExampleSelectionValueId,
 import { DocFormExamplePrimarySearchableFieldDisplayComponent } from '../component/selection.example.view';
 import { type DocValue } from '../../layout/component/item.list';
 import { DocSelectionItemListComponent } from '../../layout/component/item.list.selection.component';
-import { type AbstractDbxSelectionListWrapperDirective, DbxContentContainerDirective } from '@dereekb/dbx-web';
+import { type AbstractDbxSelectionListWrapperDirective, DbxBarDirective, DbxContentContainerDirective } from '@dereekb/dbx-web';
+import { MatSlideToggle } from '@angular/material/slide-toggle';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocFeatureFormTabsComponent } from '../../shared/component/feature.formtabs.component';
@@ -136,10 +137,11 @@ const EMBEDDED_SCHOOLS_FILTER_FUNCTION = searchStringFilterFunction<ExampleSearc
 @Component({
   templateUrl: './selection.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormExampleComponent, DocFormForgeExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormFormlyDbxListFieldModule, DbxFormFormlyPickableFieldModule, DbxFormFormlySearchableFieldModule, DbxFormFormlySourceSelectModule],
+  imports: [DbxContentContainerDirective, DbxBarDirective, MatSlideToggle, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormExampleComponent, DocFormForgeExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormFormlyDbxListFieldModule, DbxFormFormlyPickableFieldModule, DbxFormFormlySearchableFieldModule, DbxFormFormlySourceSelectModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormSelectionComponent implements OnInit, OnDestroy {
+  readonly disabled = signal(false);
   readonly cdRef = inject(ChangeDetectorRef);
 
   private _searchStrings = new BehaviorSubject<TestStringSearchFunction>((search) => ['A', 'B', 'C', 'D'].map((x) => `${search} ${x}`.trim()));

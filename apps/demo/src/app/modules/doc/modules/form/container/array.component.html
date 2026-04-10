@@ -1,16 +1,19 @@
 <dbx-content-container>
   <doc-feature-layout header="Array Fields" hint="">
+    <dbx-bar>
+      <mat-slide-toggle [checked]="disabled()" (change)="disabled.set($event.checked)">Disable All Fields</mat-slide-toggle>
+    </dbx-bar>
     <!-- Examples -->
     <doc-feature-example header="repeatArrayField()" hint="Used to configure an array of a customizable field type. Configured with custom add/remove text and a max of 2 items.">
       <doc-feature-form-tabs formlyFn="formlyRepeatArrayField()" forgeFn="forgeArrayField()">
-        <doc-form-example-form formly [dbxFormlyFields]="basicRepeatArrayField"></doc-form-example-form>
-        <doc-forge-example-form forge [config]="forgeDragArrayConfig"></doc-forge-example-form>
+        <doc-form-example-form formly [dbxFormlyFields]="basicRepeatArrayField" [disabled]="disabled()"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeDragArrayConfig" [disabled]="disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
     </doc-feature-example>
     <doc-feature-example header="repeatArrayField() - Advanced" hint="Shows the duplicate button, per-item labels, disabled rearrange, and conditional remove.">
       <doc-feature-form-tabs formlyFn="formlyRepeatArrayField()" forgeFn="forgeArrayField()">
-        <doc-form-example-form formly [dbxFormlyFields]="advancedRepeatArrayField" [dbxFormSource]="advancedRepeatArrayValue"></doc-form-example-form>
-        <doc-forge-example-form forge [config]="forgeDragArrayAdvancedConfig" [dbxFormSource]="advancedRepeatArrayValue"></doc-forge-example-form>
+        <doc-form-example-form formly [dbxFormlyFields]="advancedRepeatArrayField" [dbxFormSource]="advancedRepeatArrayValue" [disabled]="disabled()"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeDragArrayAdvancedConfig" [dbxFormSource]="advancedRepeatArrayValue" [disabled]="disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
     </doc-feature-example>
   </doc-feature-layout>

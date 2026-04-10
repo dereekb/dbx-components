@@ -135,6 +135,17 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
   stripEmptyValues = true;
 
   /**
+   * When true (default), the form still reports `isComplete` based on validity even
+   * while disabled. This matches the ngx-formly behavior where disabling a form only
+   * locks inputs but does not suppress the form value.
+   *
+   * When false, `isComplete` is forced to `false` while disabled, preventing the
+   * action system from reading the form value. `false` is the native ng-forge default
+   * behavior, where a disabled form does not produce output.
+   */
+  emitValueWhenDisabled = true;
+
+  /**
    * Tracks validity signals from nested wrapper forms (e.g. forgeFormFieldWrapper,
    * forgeDbxSectionFieldWrapper). These wrappers create isolated DynamicForm instances
    * whose validity is not visible to the parent DynamicForm.valid() signal.

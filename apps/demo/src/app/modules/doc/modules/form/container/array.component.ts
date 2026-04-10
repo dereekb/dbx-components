@@ -1,9 +1,10 @@
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { repeatArrayField, nameField, emailField, phoneAndLabelSectionField, addressListField, toggleField, forgeArrayField, forgeNameField, forgeEmailField, forgePhoneAndLabelSectionField as forgePhoneAndLabelSection, forgeAddressListField, forgeToggleField, DbxFormFormlyArrayFieldModule, DbxFormFormlyTextFieldModule, DbxFormFormlyPhoneFieldModule, DbxFormFormlyBooleanFieldModule, DbxFormlyFieldsContextDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
 import { randomBoolean } from '@dereekb/util';
-import { DbxContentContainerDirective } from '@dereekb/dbx-web';
+import { DbxBarDirective, DbxContentContainerDirective } from '@dereekb/dbx-web';
+import { MatSlideToggle } from '@angular/material/slide-toggle';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocFeatureFormTabsComponent } from '../../shared/component/feature.formtabs.component';
@@ -13,10 +14,12 @@ import { DocFormForgeExampleComponent } from '../component/forge.example.form.co
 @Component({
   templateUrl: './array.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormExampleComponent, DocFormForgeExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormFormlyArrayFieldModule, DbxFormFormlyTextFieldModule, DbxFormFormlyPhoneFieldModule, DbxFormFormlyBooleanFieldModule],
+  imports: [DbxContentContainerDirective, DbxBarDirective, MatSlideToggle, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormExampleComponent, DocFormForgeExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormFormlyArrayFieldModule, DbxFormFormlyTextFieldModule, DbxFormFormlyPhoneFieldModule, DbxFormFormlyBooleanFieldModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormArrayComponent {
+  readonly disabled = signal(false);
+
   // -- Formly --
   readonly basicRepeatArrayField: FormlyFieldConfig[] = [
     repeatArrayField({

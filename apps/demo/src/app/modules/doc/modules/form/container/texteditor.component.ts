@@ -1,8 +1,9 @@
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { DbxFormFormlyTextEditorFieldModule, textEditorField, forgeTextEditorField, DbxFormlyFieldsContextDirective } from '@dereekb/dbx-form';
-import { DbxContentContainerDirective } from '@dereekb/dbx-web';
+import { DbxBarDirective, DbxContentContainerDirective } from '@dereekb/dbx-web';
+import { MatSlideToggle } from '@angular/material/slide-toggle';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureDerivedComponent } from '../../shared/component/feature.derived.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
@@ -13,10 +14,11 @@ import { DocFormForgeExampleComponent } from '../component/forge.example.form.co
 @Component({
   templateUrl: './texteditor.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureDerivedComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormExampleComponent, DocFormForgeExampleComponent, DbxFormlyFieldsContextDirective, DbxFormFormlyTextEditorFieldModule],
+  imports: [DbxContentContainerDirective, DbxBarDirective, MatSlideToggle, DocFeatureLayoutComponent, DocFeatureDerivedComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormExampleComponent, DocFormForgeExampleComponent, DbxFormlyFieldsContextDirective, DbxFormFormlyTextEditorFieldModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormTextEditorComponent {
+  readonly disabled = signal(false);
   readonly textEditorField: FormlyFieldConfig[] = [
     textEditorField({
       key: 'editor',

@@ -215,7 +215,7 @@ describe('DbxActionFormDirective with forge form', () => {
       fixture.destroy();
     });
 
-    it('should report isComplete=false while the form is disabled during working', async () => {
+    it('should report isComplete=true while disabled when emitValueWhenDisabled is true (default)', async () => {
       const workComplete$ = new Subject<boolean>();
 
       const fixture = TestBed.createComponent(TestForgeActionHostComponent);
@@ -245,7 +245,47 @@ describe('DbxActionFormDirective with forge form', () => {
       );
       await settle(fixture);
 
-      // Form should not be complete while disabled
+      // Form should still be complete while disabled (emitValueWhenDisabled defaults to true)
+      const eventDuring = await firstValueFrom(context.stream$.pipe(first()));
+      expect(eventDuring.isComplete).toBe(true);
+      expect(eventDuring.isDisabled).toBe(true);
+
+      // Cleanup
+      workComplete$.next(true);
+      workComplete$.complete();
+      await settle(fixture);
+
+      fixture.destroy();
+    });
+
+    it('should report isComplete=false while disabled when emitValueWhenDisabled is false', async () => {
+      const workComplete$ = new Subject<boolean>();
+
+      const fixture = TestBed.createComponent(TestForgeActionHostComponent);
+      const host = fixture.componentInstance;
+      const context = host.context;
+      context.config = createRequiredFieldConfig();
+      context.emitValueWhenDisabled = false;
+
+      host.handler = () => workComplete$.pipe(first());
+      host.source$ = of({ name: 'Test' });
+      fixture.detectChanges();
+
+      await settle(fixture);
+
+      const directive = host.directive();
+      directive.trigger();
+      await settle(fixture);
+
+      await firstValueFrom(
+        directive.sourceInstance.isWorking$.pipe(
+          filter((x) => x),
+          first()
+        )
+      );
+      await settle(fixture);
+
+      // Form should not be complete while disabled when emitValueWhenDisabled is false
       const eventDuring = await firstValueFrom(context.stream$.pipe(first()));
       expect(eventDuring.isComplete).toBe(false);
       expect(eventDuring.isDisabled).toBe(true);

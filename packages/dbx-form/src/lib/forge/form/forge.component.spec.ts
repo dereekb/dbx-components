@@ -298,7 +298,8 @@ describe('DbxForgeFormComponent', () => {
       const event = await firstValueFrom(context.stream$.pipe(first()));
       expect(event.isDisabled).toBe(true);
       expect(event.status).toBe('DISABLED');
-      expect(event.isComplete).toBe(false);
+      // isComplete stays true by default (emitValueWhenDisabled=true)
+      expect(event.isComplete).toBe(true);
 
       fixture.destroy();
     });
@@ -354,7 +355,7 @@ describe('DbxForgeFormComponent', () => {
       fixture.destroy();
     });
 
-    it('should report isComplete=false even when valid but disabled', async () => {
+    it('should report isComplete=true when valid and disabled with emitValueWhenDisabled=true (default)', async () => {
       const fixture = TestBed.createComponent(TestForgeFormHostComponent);
       const context = fixture.componentInstance.context;
       context.config = createRequiredFieldConfig();
@@ -370,6 +371,31 @@ describe('DbxForgeFormComponent', () => {
       expect(event.status).toBe('VALID');
 
       // Disable
+      context.setDisabled(undefined, true);
+      await settle(fixture);
+
+      event = await firstValueFrom(context.stream$.pipe(first()));
+      expect(event.isComplete).toBe(true);
+      expect(event.isDisabled).toBe(true);
+      expect(event.status).toBe('DISABLED');
+
+      fixture.destroy();
+    });
+
+    it('should report isComplete=false when valid and disabled with emitValueWhenDisabled=false', async () => {
+      const fixture = TestBed.createComponent(TestForgeFormHostComponent);
+      const context = fixture.componentInstance.context;
+      context.config = createRequiredFieldConfig();
+      context.emitValueWhenDisabled = false;
+
+      await settle(fixture);
+
+      context.setValue({ name: 'Valid' } as any);
+      await settle(fixture);
+
+      let event = await firstValueFrom(context.stream$.pipe(first()));
+      expect(event.isComplete).toBe(true);
+
       context.setDisabled(undefined, true);
       await settle(fixture);
 

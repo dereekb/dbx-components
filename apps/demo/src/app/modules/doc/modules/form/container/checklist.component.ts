@@ -1,10 +1,11 @@
 import { type Observable, of, map } from 'rxjs';
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
 import { type DocFormExampleChecklistValues, type DocFormExampleChecklistFieldsConfig } from '../component/checklist.example';
 import { successResult } from '@dereekb/rxjs';
 import { type DocFormExampleChecklistFormValue, DocFormExampleChecklistFormComponent } from '../component/checklist.example.form.component';
-import { DbxContentContainerDirective } from '@dereekb/dbx-web';
+import { DbxBarDirective, DbxContentContainerDirective } from '@dereekb/dbx-web';
+import { MatSlideToggle } from '@angular/material/slide-toggle';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocFeatureFormTabsComponent } from '../../shared/component/feature.formtabs.component';
@@ -15,10 +16,11 @@ import { JsonPipe } from '@angular/common';
 @Component({
   templateUrl: './checklist.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormExampleChecklistFormComponent, DocFormForgeExampleComponent, DbxFormLoadingSourceDirective, DbxFormValueChangeDirective, JsonPipe, DbxFormFormlyChecklistItemFieldModule],
+  imports: [DbxContentContainerDirective, DbxBarDirective, MatSlideToggle, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormExampleChecklistFormComponent, DocFormForgeExampleComponent, DbxFormLoadingSourceDirective, DbxFormValueChangeDirective, JsonPipe, DbxFormFormlyChecklistItemFieldModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormChecklistComponent {
+  readonly disabled = signal(false);
   value?: DocFormExampleChecklistFormValue;
 
   readonly data$: Observable<DocFormExampleChecklistValues> = of({

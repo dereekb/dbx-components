@@ -1,6 +1,6 @@
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import {
   addressField,
   addressListField,
@@ -55,7 +55,8 @@ import { addSuffixFunction } from '@dereekb/util';
 import { type WorkUsingObservable } from '@dereekb/rxjs';
 import { of, delay } from 'rxjs';
 import { dateTimezoneUtcNormal } from '@dereekb/date';
-import { DbxContentContainerDirective, DbxButtonComponent, DbxErrorComponent, DbxActionErrorDirective } from '@dereekb/dbx-web';
+import { DbxContentContainerDirective, DbxButtonComponent, DbxErrorComponent, DbxActionErrorDirective, DbxBarDirective } from '@dereekb/dbx-web';
+import { MatSlideToggle } from '@angular/material/slide-toggle';
 import { DbxActionDirective, DbxActionHandlerDirective, DbxActionButtonDirective, DbxActionEnforceModifiedDirective } from '@dereekb/dbx-core';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
@@ -68,6 +69,8 @@ import { DocFormForgeExampleComponent } from '../component/forge.example.form.co
   standalone: true,
   imports: [
     DbxContentContainerDirective,
+    DbxBarDirective,
+    MatSlideToggle,
     DocFeatureLayoutComponent,
     DocFeatureExampleComponent,
     DocFeatureFormTabsComponent,
@@ -93,6 +96,8 @@ import { DocFormForgeExampleComponent } from '../component/forge.example.form.co
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormValueComponent {
+  readonly disabled = signal(false);
+
   readonly dateValues$ = of({
     date: startOfDay(new Date()),
     dateAsString: addDays(new Date(), -6),
@@ -276,6 +281,7 @@ export class DocFormValueComponent {
   // -- Phone Dirty State Demo --
   readonly phoneDirtyStateFields: FormlyFieldConfig[] = [nameField({ required: true }), phoneField()];
 
+  // -- Phone Dirty State Demo --
   readonly phoneDirtyStateDefaultValue$ = of({
     name: 'Test User',
     phone: '+12025551234'

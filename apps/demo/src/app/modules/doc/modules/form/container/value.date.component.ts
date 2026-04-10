@@ -1,6 +1,6 @@
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
-import { ChangeDetectionStrategy, Component, type OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, type OnDestroy, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {
   dateTimeField,
@@ -31,7 +31,8 @@ import { addDays, addHours, addMinutes, addMonths, endOfDay, endOfMonth, startOf
 import { type Maybe, type TimezoneString } from '@dereekb/util';
 import { BehaviorSubject, type Observable, delay, interval, map, of } from 'rxjs';
 import { DateRangeType, DateCellScheduleDayCode, type DateCellScheduleEncodedWeek, dateRange, dateTimezoneUtcNormal, toJsDate, roundDownToMinute, isSameDate, findMaxDate, findMinDate } from '@dereekb/date';
-import { DbxContentContainerDirective } from '@dereekb/dbx-web';
+import { DbxBarDirective, DbxContentContainerDirective } from '@dereekb/dbx-web';
+import { MatSlideToggle } from '@angular/material/slide-toggle';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocFeatureFormTabsComponent } from '../../shared/component/feature.formtabs.component';
@@ -43,6 +44,8 @@ import { DocFormForgeExampleComponent } from '../component/forge.example.form.co
   standalone: true,
   imports: [
     DbxContentContainerDirective,
+    DbxBarDirective,
+    MatSlideToggle,
     DocFeatureLayoutComponent,
     DocFeatureExampleComponent,
     DocFeatureFormTabsComponent,
@@ -62,6 +65,8 @@ import { DocFormForgeExampleComponent } from '../component/forge.example.form.co
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormDateValueComponent implements OnDestroy {
+  readonly disabled = signal(false);
+
   readonly dateValues$ = of({
     date: startOfDay(new Date()),
     dateAsString: addDays(new Date(), -6),

@@ -96,8 +96,10 @@ export class DbxForgeFormComponent<T = unknown> implements OnInit, OnDestroy {
     const isReset = this._isReset();
     const changesCount = this._changesCount();
 
+    const suppressComplete = this.isDisabled() && !this._context.emitValueWhenDisabled;
+
     const state: DbxFormEvent = {
-      isComplete: !this.isDisabled() && isValid,
+      isComplete: suppressComplete ? false : isValid,
       status: this.isDisabled() ? 'DISABLED' : isValid ? 'VALID' : 'INVALID',
       state: isReset ? DbxFormState.RESET : DbxFormState.USED,
       pristine: isReset,

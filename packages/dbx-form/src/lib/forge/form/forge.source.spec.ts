@@ -639,7 +639,8 @@ describe('DbxFormSourceDirective with forge form', () => {
       const event = await firstValueFrom(context.stream$.pipe(first()));
       expect(event.isDisabled).toBe(true);
       expect(event.status).toBe('DISABLED');
-      expect(event.isComplete).toBe(false);
+      // isComplete stays true by default (emitValueWhenDisabled=true)
+      expect(event.isComplete).toBe(true);
 
       fixture.destroy();
     });
@@ -739,7 +740,7 @@ describe('DbxFormSourceDirective with forge form', () => {
       fixture.destroy();
     });
 
-    it('should report isComplete=false when form is disabled even with valid values', async () => {
+    it('should report isComplete=true when form is disabled with valid values (emitValueWhenDisabled=true default)', async () => {
       const fixture = TestBed.createComponent(TestForgeSourceHostComponent);
       const host = fixture.componentInstance;
       const context = host.context;
@@ -754,7 +755,32 @@ describe('DbxFormSourceDirective with forge form', () => {
       let event = await firstValueFrom(context.stream$.pipe(first()));
       expect(event.isComplete).toBe(true);
 
-      // Disable — isComplete should become false
+      // Disable — isComplete stays true with emitValueWhenDisabled=true (default)
+      context.setDisabled(undefined, true);
+      await settle(fixture);
+
+      event = await firstValueFrom(context.stream$.pipe(first()));
+      expect(event.isComplete).toBe(true);
+      expect(event.isDisabled).toBe(true);
+
+      fixture.destroy();
+    });
+
+    it('should report isComplete=false when form is disabled with emitValueWhenDisabled=false', async () => {
+      const fixture = TestBed.createComponent(TestForgeSourceHostComponent);
+      const host = fixture.componentInstance;
+      const context = host.context;
+      context.config = createNameFieldConfig(true); // required
+      context.emitValueWhenDisabled = false;
+
+      host.source$ = of({ name: 'Valid' });
+      fixture.detectChanges();
+
+      await settle(fixture);
+
+      let event = await firstValueFrom(context.stream$.pipe(first()));
+      expect(event.isComplete).toBe(true);
+
       context.setDisabled(undefined, true);
       await settle(fixture);
 
