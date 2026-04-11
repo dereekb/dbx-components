@@ -11,7 +11,7 @@
     @if (searchLabelSignal()) {
       <div class="dbx-label">{{ searchLabelSignal() }}</div>
     }
-    <input #textInput class="dbx-forge-bare-input" [formControl]="inputCtrl" [matAutocomplete]="auto" [placeholder]="searchInputPlaceholder()" />
+    <input #textInput class="dbx-forge-bare-input" [formControl]="inputCtrl" [matAutocomplete]="auto" [placeholder]="searchInputPlaceholder()" [attr.aria-invalid]="ariaInvalid()" [attr.aria-describedby]="ariaDescribedBy()" />
   </div>
 </div>
 <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selected($event)">
@@ -24,3 +24,8 @@
     </mat-option>
   }
 </mat-autocomplete>
+@if (errorsToDisplay()[0]; as error) {
+  <div class="dbx-form-description dbx-form-error" [id]="errorId()">{{ error.message }}</div>
+} @else if (hintSignal()) {
+  <div class="dbx-form-description" [id]="hintId()">{{ hintSignal() }}</div>
+}

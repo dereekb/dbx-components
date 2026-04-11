@@ -1,9 +1,9 @@
-import { Component, ChangeDetectionStrategy, input, computed, type Signal, type InputSignal, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, computed, type Signal, type InputSignal, inject, ElementRef } from '@angular/core';
 import { MatSliderModule } from '@angular/material/slider';
 import { type ThemePalette } from '@angular/material/core';
 import { AsyncPipe } from '@angular/common';
-import { DynamicTextPipe, type DynamicText, type ValidationMessages, DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES, type BaseValueField } from '@ng-forge/dynamic-forms';
-import { resolveValueFieldContext, buildValueFieldInputs, createResolvedErrorsSignal, shouldShowErrors } from '@ng-forge/dynamic-forms/integration';
+import { DynamicTextPipe, type DynamicText, type FieldMeta, type ValidationMessages, DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES, type BaseValueField } from '@ng-forge/dynamic-forms';
+import { resolveValueFieldContext, buildValueFieldInputs, createResolvedErrorsSignal, shouldShowErrors, setupMetaTracking } from '@ng-forge/dynamic-forms/integration';
 import { MATERIAL_CONFIG } from '@ng-forge/dynamic-forms-material';
 import type { FieldTree } from '@angular/forms/signals';
 import { forgeFieldDisabled } from '../../field.disabled';
@@ -125,6 +125,7 @@ export type DbxForgeSliderFieldDef = BaseValueField<DbxForgeSliderFieldProps, nu
 })
 export class DbxForgeSliderFieldComponent {
   private readonly materialConfig = inject(MATERIAL_CONFIG, { optional: true });
+  private readonly elementRef = inject(ElementRef<HTMLElement>);
 
   // Standard ng-forge value field inputs
   readonly field: InputSignal<FieldTree<number>> = input.required<FieldTree<number>>();
@@ -134,7 +135,7 @@ export class DbxForgeSliderFieldComponent {
   readonly className: InputSignal<string> = input('');
   readonly tabIndex: InputSignal<number | undefined> = input<number | undefined>();
   readonly props: InputSignal<DbxForgeSliderFieldProps | undefined> = input<DbxForgeSliderFieldProps | undefined>();
-  readonly meta: InputSignal<Record<string, unknown> | undefined> = input<Record<string, unknown> | undefined>();
+  readonly meta: InputSignal<FieldMeta | undefined> = input<FieldMeta | undefined>();
   readonly validationMessages: InputSignal<ValidationMessages | undefined> = input<ValidationMessages | undefined>();
   readonly defaultValidationMessages: InputSignal<ValidationMessages | undefined> = input<ValidationMessages | undefined>();
 
@@ -156,6 +157,21 @@ export class DbxForgeSliderFieldComponent {
   readonly resolvedErrors = createResolvedErrorsSignal(this.field, this.validationMessages, this.defaultValidationMessages);
   readonly showErrors = shouldShowErrors(this.field);
   readonly errorsToDisplay = computed(() => (this.showErrors() ? this.resolvedErrors() : []));
+
+  // ARIA
+  protected readonly hintId = computed(() => `${this.key()}-hint`);
+  protected readonly errorId = computed(() => `${this.key()}-error`);
+  protected readonly ariaInvalid = computed(() => (this.showErrors() ? 'true' : null));
+  protected readonly ariaRequired = computed(() => (this.field()().required() ? 'true' : null));
+  protected readonly ariaDescribedBy = computed(() => {
+    if (this.errorsToDisplay().length > 0) return this.errorId();
+    if (this.props()?.hint) return this.hintId();
+    return null;
+  });
+
+  constructor() {
+    setupMetaTracking(this.elementRef, this.meta as any, { selector: 'mat-slider' });
+  }
 
   /**
    * Sync slider value changes back to the Signal Forms field tree.

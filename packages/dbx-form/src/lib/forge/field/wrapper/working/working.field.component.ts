@@ -33,7 +33,9 @@ import type { DbxForgeWorkingFieldProps } from './working.field';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   host: {
-    '[class]': 'className()'
+    '[class]': 'className()',
+    '[attr.aria-busy]': 'showLoadingSignal() ? "true" : null',
+    '[attr.aria-label]': 'showLoadingSignal() ? "Loading" : null'
   }
 })
 export class DbxForgeWorkingFieldComponent {

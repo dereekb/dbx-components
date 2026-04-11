@@ -113,6 +113,10 @@ export abstract class AbstractForgeSearchableFieldDirective<T = unknown, M = unk
 
   readonly hintSignal = computed(() => this.props()?.hint);
 
+  // ARIA IDs
+  protected readonly hintId = computed(() => `${this.key()}-hint`);
+  protected readonly errorId = computed(() => `${this.key()}-error`);
+
   readonly searchInputPlaceholder = computed(() => {
     const p = this.props();
     const searchOnEmpty = p?.searchOnEmptyText ?? false;

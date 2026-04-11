@@ -1,4 +1,4 @@
-<div class="dbx-list-item-field" [class.dbx-forge-disabled]="isDisabled()" dbxListItemModifier [dbxListItemIsSelectedModifier]="isSelectedModifierFunctionSignal()">
+<div class="dbx-list-item-field" [class.dbx-forge-disabled]="isDisabled()" dbxListItemModifier [dbxListItemIsSelectedModifier]="isSelectedModifierFunctionSignal()" [attr.aria-invalid]="ariaInvalid()">
   @if (labelSignal()) {
     <span class="dbx-label dbx-label-padded">{{ labelSignal() }}</span>
   }
@@ -6,7 +6,9 @@
     <dbx-injection [config]="configSignal()"></dbx-injection>
   </div>
   <mat-divider></mat-divider>
-  @if (hintSignal()) {
-    <div class="dbx-form-description">{{ hintSignal() }}</div>
+  @if (errorsToDisplay()[0]; as error) {
+    <div class="dbx-form-description dbx-form-error" [id]="errorId()">{{ error.message }}</div>
+  } @else if (hintSignal()) {
+    <div class="dbx-form-description" [id]="hintId()">{{ hintSignal() }}</div>
   }
 </div>

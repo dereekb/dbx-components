@@ -202,6 +202,11 @@ export class DbxForgeFormFieldWrapperComponent extends AbstractForgeWrapperField
   // Props
   readonly hintSignal = computed(() => this.props()?.hint);
 
+  // ARIA IDs
+  protected readonly labelId = computed(() => `${this.key()}-label`);
+  protected readonly errorId = computed(() => `${this.key()}-error`);
+  protected readonly hintId = computed(() => `${this.key()}-hint`);
+
   /**
    * Whether any child field has `required: true`, used to show the asterisk in the label.
    */

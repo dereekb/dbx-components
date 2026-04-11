@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, input, type OnDestroy, type OnInit, type Type } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, input, type OnDestroy, type OnInit, type Type } from '@angular/core';
 import { MatDividerModule } from '@angular/material/divider';
 import { type Maybe, type PrimativeKey, type ReadKeyFunction, readKeysFrom, convertMaybeToArray, hasDifferentValues, isSelectedDecisionFunctionFactory } from '@dereekb/util';
 import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
@@ -8,6 +8,7 @@ import { BehaviorSubject, map, type Observable, shareReplay } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type FieldTree } from '@angular/forms/signals';
 import { type DynamicText, type FieldMeta, type ValidationMessages, type BaseValueField } from '@ng-forge/dynamic-forms';
+import { createResolvedErrorsSignal, setupMetaTracking, shouldShowErrors } from '@ng-forge/dynamic-forms/integration';
 import { forgeFieldDisabled } from '../../field.disabled';
 
 // MARK: Props
@@ -67,6 +68,8 @@ export interface DbxForgeListSelectionFieldDef<T = unknown, C extends AbstractDb
   standalone: true
 })
 export class DbxForgeListSelectionFieldComponent<T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey> implements OnInit, OnDestroy {
+  private readonly elementRef = inject(ElementRef<HTMLElement>);
+
   // ng-forge ValueFieldComponent inputs
   readonly field = input.required<FieldTree<K[]>>();
   readonly key = input.required<string>();
@@ -93,6 +96,21 @@ export class DbxForgeListSelectionFieldComponent<T = unknown, C extends Abstract
   });
 
   readonly hintSignal = computed(() => this.props()?.hint);
+
+  // Error handling
+  readonly resolvedErrors = createResolvedErrorsSignal(this.field as any, this.validationMessages, this.defaultValidationMessages);
+  readonly showErrors = shouldShowErrors(this.field as any);
+  readonly errorsToDisplay = computed(() => (this.showErrors() ? this.resolvedErrors() : []));
+
+  // ARIA
+  protected readonly hintId = computed(() => `${this.key()}-hint`);
+  protected readonly errorId = computed(() => `${this.key()}-error`);
+  protected readonly ariaInvalid = computed(() => (this.showErrors() ? 'true' : null));
+  protected readonly ariaDescribedBy = computed(() => {
+    if (this.errorsToDisplay().length > 0) return this.errorId();
+    if (this.props()?.hint) return this.hintId();
+    return null;
+  });
 
   readonly listComponentClass$ = this._listComponentClassObs.pipe(switchMapFilterMaybe());
 
@@ -153,6 +171,10 @@ export class DbxForgeListSelectionFieldComponent<T = unknown, C extends Abstract
     const values = fieldValue != null ? convertMaybeToArray(fieldValue) : [];
     this._valuesSubject.next(values);
   });
+
+  constructor() {
+    setupMetaTracking(this.elementRef, this.meta as any, { selector: 'dbx-injection' });
+  }
 
   ngOnInit(): void {
     const p = this.props();

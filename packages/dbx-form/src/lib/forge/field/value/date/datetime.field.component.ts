@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, input, computed, effect, type Signal, type InputSignal, DestroyRef, inject, signal, untracked } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, computed, effect, type Signal, type InputSignal, DestroyRef, ElementRef, inject, signal, untracked } from '@angular/core';
 import { type AbstractControl, FormControl, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -8,8 +8,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { DatePipe, NgTemplateOutlet } from '@angular/common';
-import { type DynamicText, type ValidationMessages, DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES, FIELD_SIGNAL_CONTEXT, type FieldSignalContext } from '@ng-forge/dynamic-forms';
-import { resolveValueFieldContext, buildValueFieldInputs } from '@ng-forge/dynamic-forms/integration';
+import { type DynamicText, type FieldMeta, type ValidationMessages, DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES, FIELD_SIGNAL_CONTEXT, type FieldSignalContext } from '@ng-forge/dynamic-forms';
+import { resolveValueFieldContext, buildValueFieldInputs, setupMetaTracking } from '@ng-forge/dynamic-forms/integration';
 import { MATERIAL_CONFIG } from '@ng-forge/dynamic-forms-material';
 import type { FieldTree } from '@angular/forms/signals';
 import { type Maybe, type Milliseconds, type TimezoneString, type ReadableTimeString, type DateOrDayString, type ArrayOrValue, asArray, filterMaybeArrayValues } from '@dereekb/util';
@@ -141,6 +141,7 @@ const TIME_OUTPUT_THROTTLE_TIME: Milliseconds = 10;
 export class DbxForgeDateTimeFieldComponent {
   private readonly materialConfig = inject(MATERIAL_CONFIG, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
+  private readonly elementRef = inject(ElementRef<HTMLElement>);
   private readonly presetsService = inject(DbxDateTimeFieldMenuPresetsService, { optional: true });
   private readonly fieldSignalContext = inject<FieldSignalContext>(FIELD_SIGNAL_CONTEXT);
 
@@ -152,7 +153,7 @@ export class DbxForgeDateTimeFieldComponent {
   readonly className: InputSignal<string> = input('');
   readonly tabIndex: InputSignal<number | undefined> = input<number | undefined>();
   readonly props: InputSignal<DbxForgeDateTimeFieldComponentProps | undefined> = input<DbxForgeDateTimeFieldComponentProps | undefined>();
-  readonly meta: InputSignal<Record<string, unknown> | undefined> = input<Record<string, unknown> | undefined>();
+  readonly meta: InputSignal<FieldMeta | undefined> = input<FieldMeta | undefined>();
   readonly validationMessages: InputSignal<ValidationMessages | undefined> = input<ValidationMessages | undefined>();
   readonly defaultValidationMessages: InputSignal<ValidationMessages | undefined> = input<ValidationMessages | undefined>();
 
@@ -573,7 +574,20 @@ export class DbxForgeDateTimeFieldComponent {
   readonly presetsSignal = toSignal(this.presets$);
   readonly isDisabledSignal = this.isDisabled;
 
+  // ARIA
+  protected readonly hintId = computed(() => `${this.key()}-hint`);
+  protected readonly errorId = computed(() => `${this.key()}-error`);
+  protected readonly ariaInvalid = computed(() => (this.hasErrorSignal() ? 'true' : null));
+  protected readonly ariaRequired = computed(() => (this.field()().required() ? 'true' : null));
+  protected readonly ariaDescribedBy = computed(() => {
+    if (this.hasErrorSignal()) return this.errorId();
+    if (this.props()?.hint) return this.hintId();
+    return null;
+  });
+
   constructor() {
+    setupMetaTracking(this.elementRef, this.meta as any, { selector: 'input' });
+
     // Initialize fullDay from timeMode
     effect(() => {
       if (this.timeMode() === DbxDateTimeFieldTimeMode.NONE) {

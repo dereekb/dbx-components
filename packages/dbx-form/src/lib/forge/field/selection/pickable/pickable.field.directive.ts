@@ -1,4 +1,4 @@
-import { computed, Directive, effect, input, type OnDestroy, type OnInit } from '@angular/core';
+import { computed, Directive, effect, input, type InputSignal, type OnDestroy, type OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { type Maybe, type PrimativeKey, filterUniqueValues, convertMaybeToArray, type ArrayOrValue, type Configurable } from '@dereekb/util';
 import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
@@ -7,6 +7,7 @@ import { BehaviorSubject, combineLatest, debounceTime, distinctUntilChanged, fir
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { type FieldTree } from '@angular/forms/signals';
 import { type DynamicText, type FieldMeta, type ValidationMessages, type BaseValueField } from '@ng-forge/dynamic-forms';
+import { createResolvedErrorsSignal, shouldShowErrors } from '@ng-forge/dynamic-forms/integration';
 import { type PickableValueFieldDisplayFunction, type PickableValueFieldDisplayValue, type PickableValueFieldFilterFunction, type PickableValueFieldHashFunction, type PickableValueFieldLoadValuesFunction, type PickableValueFieldValue } from '../../../../formly/field/selection/pickable/pickable';
 import { type PickableItemFieldItem, type PickableItemFieldItemSortFn } from '../../../../formly/field/selection/pickable/pickable.field.directive';
 import { forgeFieldDisabled } from '../../field.disabled';
@@ -115,6 +116,22 @@ export abstract class AbstractForgePickableItemFieldDirective<T = unknown, M = u
   readonly showTextFilterSignal = computed(() => this.props()?.showTextFilter ?? Boolean(this.props()?.filterValues));
   readonly filterLabelSignal = computed(() => this.props()?.filterLabel);
   readonly footerConfigSignal = computed(() => this.props()?.footerConfig);
+
+  // Error handling
+  readonly resolvedErrors = createResolvedErrorsSignal(this.field as InputSignal<any>, this.validationMessages, this.defaultValidationMessages);
+  readonly showErrors = shouldShowErrors(this.field as InputSignal<any>);
+  readonly errorsToDisplay = computed(() => (this.showErrors() ? this.resolvedErrors() : []));
+
+  // ARIA
+  protected readonly hintId = computed(() => `${this.key()}-hint`);
+  protected readonly errorId = computed(() => `${this.key()}-error`);
+  protected readonly ariaInvalid = computed(() => (this.showErrors() ? 'true' : null));
+  protected readonly ariaRequired = computed(() => (this.field()().required() ? 'true' : null));
+  protected readonly ariaDescribedBy = computed(() => {
+    if (this.errorsToDisplay().length > 0) return this.errorId();
+    if (this.props()?.hint) return this.hintId();
+    return null;
+  });
 
   private get _pickOnlyOne(): boolean {
     const p = this.props();

@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, input } from '@angular/core';
 import { type DbxInjectionComponentConfig, DbxInjectionComponent } from '@dereekb/dbx-core';
 import { type FieldTree } from '@angular/forms/signals';
 import { type DynamicText, type FieldMeta, type ValidationMessages, type BaseValueField } from '@ng-forge/dynamic-forms';
+import { setupMetaTracking } from '@ng-forge/dynamic-forms/integration';
 import { type Maybe } from '@dereekb/util';
 import { forgeFieldDisabled } from '../field.disabled';
 
@@ -59,6 +60,8 @@ export interface DbxForgeComponentFieldDef<T = unknown> extends BaseValueField<D
   }
 })
 export class DbxForgeComponentFieldComponent<T = unknown> {
+  private readonly elementRef = inject(ElementRef<HTMLElement>);
+
   // ng-forge ValueFieldComponent inputs
   readonly field = input.required<FieldTree<unknown>>();
   readonly key = input.required<string>();
@@ -74,6 +77,10 @@ export class DbxForgeComponentFieldComponent<T = unknown> {
   // Disabled state
   readonly isDisabled = forgeFieldDisabled();
   readonly showDisabledState = computed(() => this.isDisabled() && (this.props()?.allowDisabledEffects ?? true));
+
+  constructor() {
+    setupMetaTracking(this.elementRef, this.meta as any, { selector: 'dbx-injection' });
+  }
 
   readonly configSignal = computed((): Maybe<DbxInjectionComponentConfig<T>> => {
     return this.props()?.componentField;

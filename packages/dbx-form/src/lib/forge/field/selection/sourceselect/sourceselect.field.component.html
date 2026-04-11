@@ -1,6 +1,6 @@
 <div class="dbx-source-select-field">
   <div class="dbx-source-select-field-content">
-    <mat-select class="dbx-source-select-field-select" [formControl]="selectCtrl" [multiple]="multipleSignal()" [panelClass]="selectPanelClassSignal()" (openedChange)="onSelectOpenedChange($event)">
+    <mat-select class="dbx-source-select-field-select" [formControl]="selectCtrl" [multiple]="multipleSignal()" [panelClass]="selectPanelClassSignal()" (openedChange)="onSelectOpenedChange($event)" [attr.aria-invalid]="ariaInvalid()" [attr.aria-required]="ariaRequired()" [attr.aria-describedby]="ariaDescribedBy()">
       @if (filterableSignal()) {
         <div class="dbx-source-select-filter-container">
           <input #filterInput class="dbx-source-select-filter-input" type="text" placeholder="Type to filter..." (input)="onFilterInput($event)" (keydown)="onFilterKeydown($event)" />
@@ -29,4 +29,9 @@
     }
   </div>
   <dbx-loading class="dbx-source-select-field-loading" [linear]="true" [context]="context"></dbx-loading>
+  @if (errorsToDisplay()[0]; as error) {
+    <div class="dbx-form-description dbx-form-error" [id]="errorId()">{{ error.message }}</div>
+  } @else if (hintSignal()) {
+    <div class="dbx-form-description" [id]="hintId()">{{ hintSignal() }}</div>
+  }
 </div>

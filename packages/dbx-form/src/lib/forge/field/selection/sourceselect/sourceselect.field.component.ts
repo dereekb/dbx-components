@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, input, type OnDestroy, type OnInit, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, input, type OnDestroy, type OnInit, viewChild } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { MatOptgroup, MatOption, MatSelect } from '@angular/material/select';
 import { type Maybe, type PrimativeKey, addToSetCopy, asArray, convertMaybeToArray, filterMaybeArrayValues, lastValue, makeValuesGroupMap, mergeArrays, separateValues, setContainsAllValues, setsAreEquivalent, sortByStringFunction } from '@dereekb/util';
@@ -8,6 +8,7 @@ import { BehaviorSubject, combineLatest, distinctUntilChanged, first, map, merge
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type FieldTree } from '@angular/forms/signals';
 import { type DynamicText, type FieldMeta, type ValidationMessages, type BaseValueField } from '@ng-forge/dynamic-forms';
+import { createResolvedErrorsSignal, setupMetaTracking, shouldShowErrors } from '@ng-forge/dynamic-forms/integration';
 import { type SourceSelectDisplayFunction, type SourceSelectDisplayValue, type SourceSelectDisplayValueGroup, type SourceSelectLoadSource, type SourceSelectLoadSourceLoadingState, type SourceSelectMetaValueReader, type SourceSelectOpenFunction, type SourceSelectOpenSourceResult, type SourceSelectLoadSourcesFunction, type SourceSelectOptions, type SourceSelectValue, type SourceSelectValueGroup, type SourceSelectValueMetaLoader } from '../../../../formly/field/selection/sourceselect/sourceselect';
 import { forgeFieldDisabled } from '../../field.disabled';
 import { toggleDisableFormControl } from '../../../../form/form';
@@ -66,6 +67,8 @@ interface SelectFieldOpenSourceMap<T extends PrimativeKey = PrimativeKey, M = un
   standalone: true
 })
 export class DbxForgeSourceSelectFieldComponent<T extends PrimativeKey = PrimativeKey, M = unknown> implements OnInit, OnDestroy {
+  private readonly elementRef = inject(ElementRef<HTMLElement>);
+
   // ng-forge ValueFieldComponent inputs
   readonly field = input.required<FieldTree<T | T[]>>();
   readonly key = input.required<string>();
@@ -103,6 +106,23 @@ export class DbxForgeSourceSelectFieldComponent<T extends PrimativeKey = Primati
   });
 
   readonly hintSignal = computed(() => this.props()?.hint);
+
+  // Error handling
+  readonly resolvedErrors = createResolvedErrorsSignal(this.field as any, this.validationMessages, this.defaultValidationMessages);
+  readonly showErrors = shouldShowErrors(this.field as any);
+  readonly errorsToDisplay = computed(() => (this.showErrors() ? this.resolvedErrors() : []));
+
+  // ARIA
+  protected readonly hintId = computed(() => `${this.key()}-hint`);
+  protected readonly errorId = computed(() => `${this.key()}-error`);
+  protected readonly ariaInvalid = computed(() => (this.showErrors() ? 'true' : null));
+  protected readonly ariaRequired = computed(() => (this.field()().required() ? 'true' : null));
+  protected readonly ariaDescribedBy = computed(() => {
+    if (this.errorsToDisplay().length > 0) return this.errorId();
+    if (this.props()?.hint) return this.hintId();
+    return null;
+  });
+
   readonly multipleSignal = computed(() => this.props()?.multiple ?? false);
   readonly showOpenSourceButtonSignal = computed(() => Boolean(this.props()?.openSource));
   readonly selectButtonIconSignal = computed(() => this.props()?.selectButtonIcon ?? 'add');
@@ -302,6 +322,10 @@ export class DbxForgeSourceSelectFieldComponent<T extends PrimativeKey = Primati
     const values = fieldValue != null ? convertMaybeToArray(fieldValue as T | T[]) : [];
     this._valuesSubject.next(values);
   });
+
+  constructor() {
+    setupMetaTracking(this.elementRef, this.meta as any, { selector: 'mat-select' });
+  }
 
   ngOnInit(): void {
     const p = this.props();

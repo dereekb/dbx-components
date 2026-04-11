@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, inject } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
@@ -6,6 +6,7 @@ import { MatDivider } from '@angular/material/divider';
 import { DbxInjectionComponent } from '@dereekb/dbx-core';
 import { type PrimativeKey } from '@dereekb/util';
 import { AbstractForgePickableItemFieldDirective } from './pickable.field.directive';
+import { setupMetaTracking } from '@ng-forge/dynamic-forms/integration';
 
 /**
  * Forge ValueFieldComponent for pickable list selection.
@@ -20,4 +21,11 @@ import { AbstractForgePickableItemFieldDirective } from './pickable.field.direct
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxForgePickableListFieldComponent<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends AbstractForgePickableItemFieldDirective<T, M, H> {}
+export class DbxForgePickableListFieldComponent<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends AbstractForgePickableItemFieldDirective<T, M, H> {
+  private readonly elementRef = inject(ElementRef<HTMLElement>);
+
+  constructor() {
+    super();
+    setupMetaTracking(this.elementRef, this.meta as any, { selector: 'mat-chip-listbox' });
+  }
+}

@@ -13,7 +13,7 @@
   }
   <div class="dbx-pickable-item-field-list">
     <div class="dbx-pickable-item-field-list-content">
-      <mat-chip-listbox [multiple]="multiSelectSignal()" [selectable]="!isDisabledOrReadonly()" [disabled]="isDisabledOrReadonly()">
+      <mat-chip-listbox [multiple]="multiSelectSignal()" [selectable]="!isDisabledOrReadonly()" [disabled]="isDisabledOrReadonly()" [attr.aria-invalid]="ariaInvalid()" [attr.aria-describedby]="ariaDescribedBy()">
         @for (item of itemsSignal(); track item.key) {
           <mat-chip-option (click)="itemClicked(item)" [selected]="item.selected" [disabled]="readonlySignal() || item.disabled">
             @if (item.itemValue.icon) {
@@ -32,7 +32,9 @@
   @if (noItemsAvailableSignal()) {
     <p class="dbx-label" role="status">No items match this filter.</p>
   }
-  @if (hintSignal()) {
-    <div class="dbx-form-description">{{ hintSignal() }}</div>
+  @if (errorsToDisplay()[0]; as error) {
+    <div class="dbx-form-description dbx-form-error" [id]="errorId()">{{ error.message }}</div>
+  } @else if (hintSignal()) {
+    <div class="dbx-form-description" [id]="hintId()">{{ hintSignal() }}</div>
   }
 </div>

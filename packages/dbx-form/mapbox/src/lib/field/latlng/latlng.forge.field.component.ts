@@ -1,5 +1,5 @@
 import { CompactContextStore, mapCompactModeObs } from '@dereekb/dbx-web';
-import { ChangeDetectionStrategy, Component, type OnDestroy, computed, effect, inject, input, type InputSignal, type Signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, type OnDestroy, computed, effect, ElementRef, inject, input, type InputSignal, type Signal } from '@angular/core';
 import { skip, first, BehaviorSubject, filter, shareReplay, switchMap, map, type Observable, throttleTime, skipWhile, of, distinctUntilChanged } from 'rxjs';
 import { asObservableFromGetter, filterMaybe, type ObservableFactoryWithRequiredInput, SubscriptionObject } from '@dereekb/rxjs';
 import { type Maybe, type LatLngPoint, type LatLngPointFunctionConfig, type LatLngStringFunction, latLngStringFunction, type Milliseconds, latLngPointFunction, isDefaultLatLngPoint, isValidLatLngPoint, type LatLngPointFunction, isSameLatLngPoint, defaultLatLngPoint } from '@dereekb/util';
@@ -16,7 +16,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MapComponent, MarkerComponent } from 'ngx-mapbox-gl';
 import type { FieldTree } from '@angular/forms/signals';
 import { type DynamicText, type FieldMeta, type ValidationMessages, DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES } from '@ng-forge/dynamic-forms';
-import { resolveValueFieldContext, buildValueFieldInputs } from '@ng-forge/dynamic-forms/integration';
+import { resolveValueFieldContext, buildValueFieldInputs, setupMetaTracking } from '@ng-forge/dynamic-forms/integration';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 
 export const DEFAULT_DBX_FORGE_MAPBOX_LAT_LNG_FIELD_INJECTION_KEY = 'DbxForgeMapboxLatLngFieldComponent';
@@ -93,6 +93,7 @@ export class DbxForgeMapboxLatLngFieldComponent implements OnDestroy {
   readonly compact = inject(CompactContextStore, { optional: true });
   readonly dbxMapboxInjectionStore = inject(DbxMapboxInjectionStore, { optional: true });
   readonly dbxMapboxMapStore = inject(DbxMapboxMapStore);
+  private readonly elementRef = inject(ElementRef<HTMLElement>);
 
   // Standard ng-forge value field inputs
   readonly field: InputSignal<FieldTree<unknown>> = input.required<FieldTree<unknown>>();
@@ -184,6 +185,8 @@ export class DbxForgeMapboxLatLngFieldComponent implements OnDestroy {
   }
 
   constructor() {
+    setupMetaTracking(this.elementRef, this.meta as any, { selector: 'input' });
+
     // Initialize on first props emission
     effect(() => {
       const p = this.props();

@@ -1,9 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, effect, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, input, signal } from '@angular/core';
 import { type CdkDragDrop, CdkDropList, CdkDrag, CdkDragHandle, CdkDragPlaceholder } from '@angular/cdk/drag-drop';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { type FieldTree } from '@angular/forms/signals';
 import { type DynamicText, type FieldMeta, type ValidationMessages, type FormConfig, DynamicForm } from '@ng-forge/dynamic-forms';
+import { createResolvedErrorsSignal, setupMetaTracking, shouldShowErrors } from '@ng-forge/dynamic-forms/integration';
 import { type FactoryWithRequiredInput } from '@dereekb/util';
 import { DbxButtonComponent, DbxButtonSpacerDirective, type DbxButtonStyle } from '@dereekb/dbx-web';
 import type { DbxForgeArrayFieldProps, DbxForgeArrayItemPair } from './array.field';
@@ -38,6 +39,8 @@ let _forgeArrayItemTrackId = 0;
   }
 })
 export class DbxForgeArrayFieldComponent<T = unknown> {
+  private readonly elementRef = inject(ElementRef<HTMLElement>);
+
   // ng-forge ValueFieldComponent inputs
   readonly field = input.required<FieldTree<unknown[]>>();
   readonly key = input.required<string>();
@@ -99,7 +102,23 @@ export class DbxForgeArrayFieldComponent<T = unknown> {
     return true;
   });
 
+  // Error handling
+  readonly resolvedErrors = createResolvedErrorsSignal(this.field as any, this.validationMessages, this.defaultValidationMessages);
+  readonly showErrors = shouldShowErrors(this.field as any);
+  readonly errorsToDisplay = computed(() => (this.showErrors() ? this.resolvedErrors() : []));
+
+  // ARIA
+  protected readonly hintId = computed(() => `${this.key()}-hint`);
+  protected readonly errorId = computed(() => `${this.key()}-error`);
+  protected readonly ariaInvalid = computed(() => (this.showErrors() ? 'true' : null));
+  protected readonly ariaDescribedBy = computed(() => {
+    if (this.errorsToDisplay().length > 0) return this.errorId();
+    return null;
+  });
+
   constructor() {
+    setupMetaTracking(this.elementRef, this.meta as any, { selector: '.cdk-drop-list' });
+
     effect(() => {
       const fieldState = this.field()();
       const values = fieldState.value() ?? [];

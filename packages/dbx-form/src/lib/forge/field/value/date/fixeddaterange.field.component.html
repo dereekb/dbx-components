@@ -1,5 +1,5 @@
 <div class="dbx-fixeddaterange-field">
-  <mat-calendar #calendarView [selected]="calendarSelectionSignal()" [dateFilter]="pickerFilterSignal()" [minDate]="minDateSignal()" [maxDate]="maxDateSignal()" (selectedChange)="selectedChange($event)"></mat-calendar>
+  <mat-calendar #calendarView [selected]="calendarSelectionSignal()" [dateFilter]="pickerFilterSignal()" [minDate]="minDateSignal()" [maxDate]="maxDateSignal()" (selectedChange)="selectedChange($event)" [attr.aria-invalid]="ariaInvalid()" [attr.aria-describedby]="ariaDescribedBy()"></mat-calendar>
   <mat-form-field class="dbx-fixeddaterange-field-input" appearance="fill">
     @if (showRangeInput()) {
       <mat-date-range-input [formGroup]="inputRangeForm">
@@ -8,7 +8,9 @@
       </mat-date-range-input>
     }
   </mat-form-field>
-  @if (hasRequiredError()) {
-    <mat-error>Date range is required</mat-error>
+  @if (errorsToDisplay()[0]; as error) {
+    <mat-error [id]="errorId()">{{ error.message }}</mat-error>
+  } @else if (props()?.hint; as hint) {
+    <mat-hint [id]="hintId()">{{ hint }}</mat-hint>
   }
 </div>

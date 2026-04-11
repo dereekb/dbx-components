@@ -14,8 +14,8 @@ import { MatError, MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { NgClass } from '@angular/common';
-import { type DynamicText, type ValidationMessages, DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES } from '@ng-forge/dynamic-forms';
-import { resolveValueFieldContext, buildValueFieldInputs } from '@ng-forge/dynamic-forms/integration';
+import { type DynamicText, type FieldMeta, type ValidationMessages, DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES } from '@ng-forge/dynamic-forms';
+import { resolveValueFieldContext, buildValueFieldInputs, createResolvedErrorsSignal, shouldShowErrors, setupMetaTracking } from '@ng-forge/dynamic-forms/integration';
 import type { FieldTree } from '@angular/forms/signals';
 import { forgeFieldDisabled } from '../../field.disabled';
 
@@ -161,6 +161,7 @@ export interface DbxForgeFixedDateRangeFieldComponentProps {
 })
 export class DbxForgeFixedDateRangeFieldComponent {
   private readonly destroyRef = inject(DestroyRef);
+  private readonly elementRef = inject(ElementRef<HTMLElement>);
 
   // MARK: ng-forge ValueFieldComponent inputs
   readonly field: InputSignal<FieldTree<unknown>> = input.required<FieldTree<unknown>>();
@@ -170,7 +171,7 @@ export class DbxForgeFixedDateRangeFieldComponent {
   readonly className: InputSignal<string> = input('');
   readonly tabIndex: InputSignal<number | undefined> = input<number | undefined>();
   readonly props: InputSignal<DbxForgeFixedDateRangeFieldComponentProps | undefined> = input<DbxForgeFixedDateRangeFieldComponentProps | undefined>();
-  readonly meta: InputSignal<Record<string, unknown> | undefined> = input<Record<string, unknown> | undefined>();
+  readonly meta: InputSignal<FieldMeta | undefined> = input<FieldMeta | undefined>();
   readonly validationMessages: InputSignal<ValidationMessages | undefined> = input<ValidationMessages | undefined>();
   readonly defaultValidationMessages: InputSignal<ValidationMessages | undefined> = input<ValidationMessages | undefined>();
 
@@ -223,6 +224,22 @@ export class DbxForgeFixedDateRangeFieldComponent {
   readonly valueMode = computed(() => this.props()?.valueMode ?? DbxDateTimeValueMode.DATE);
   readonly showRangeInput = computed(() => this.props()?.showRangeInput ?? true);
   readonly showTimezone = computed(() => this.props()?.showTimezone ?? true);
+
+  // Error handling
+  readonly resolvedErrors = createResolvedErrorsSignal(this.field as any, this.validationMessages, this.defaultValidationMessages);
+  readonly showErrors = shouldShowErrors(this.field as any);
+  readonly errorsToDisplay = computed(() => (this.showErrors() ? this.resolvedErrors() : []));
+
+  // ARIA
+  protected readonly hintId = computed(() => `${this.key()}-hint`);
+  protected readonly errorId = computed(() => `${this.key()}-error`);
+  protected readonly ariaInvalid = computed(() => (this.showErrors() ? 'true' : null));
+  protected readonly ariaRequired = computed(() => (this.field()().required() ? 'true' : null));
+  protected readonly ariaDescribedBy = computed(() => {
+    if (this.errorsToDisplay().length > 0) return this.errorId();
+    if (this.props()?.hint) return this.hintId();
+    return null;
+  });
 
   readonly hasRequiredError = computed(() => {
     try {
@@ -519,6 +536,8 @@ export class DbxForgeFixedDateRangeFieldComponent {
   readonly pickerFilterSignal = toSignal(this.pickerFilter$, { initialValue: this.defaultPickerFilter });
 
   constructor() {
+    setupMetaTracking(this.elementRef, this.meta as any, { selector: 'mat-calendar' });
+
     // MARK: Effect — subscribe to async props
     effect(() => {
       const p = this.props();

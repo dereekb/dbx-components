@@ -1,5 +1,5 @@
 <div class="dbx-form-repeat-array">
-  <div cdkDropList [cdkDropListDisabled]="disableRearrangeSignal() || isDisabled()" (cdkDropListDropped)="drop($event)">
+  <div cdkDropList [cdkDropListDisabled]="disableRearrangeSignal() || isDisabled()" (cdkDropListDropped)="drop($event)" role="list" [attr.aria-invalid]="ariaInvalid()" [attr.aria-describedby]="ariaDescribedBy()">
     @for (item of itemsSignal(); track item.trackId; let i = $index) {
       <div class="dbx-form-repeat-array-field" cdkDrag cdkDragLockAxis="y">
         <ng-template cdkDragPlaceholder>
@@ -32,5 +32,8 @@
     <div class="dbx-form-repeat-array-footer">
       <dbx-button [text]="addTextSignal()" [buttonStyle]="addButtonStyleSignal()" [disabled]="isDisabled()" (buttonClick)="addItem()"></dbx-button>
     </div>
+  }
+  @if (errorsToDisplay()[0]; as error) {
+    <div class="dbx-form-description dbx-form-error" [id]="errorId()">{{ error.message }}</div>
   }
 </div>

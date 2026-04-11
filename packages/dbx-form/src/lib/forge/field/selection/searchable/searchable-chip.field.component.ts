@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, effect, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, input } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule, type MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MatChipsModule, type MatChipInputEvent } from '@angular/material/chips';
@@ -14,6 +14,7 @@ import { type FieldTree } from '@angular/forms/signals';
 import { type SearchableValueFieldDisplayValue, type ConfiguredSearchableValueFieldDisplayValue } from '../../../../formly/field/selection/searchable/searchable';
 import { DbxSearchableFieldAutocompleteItemComponent } from '../../../../formly/field/selection/searchable/searchable.field.autocomplete.item.component';
 import { AbstractForgeSearchableFieldDirective, type DbxForgeSearchableChipFieldProps } from './searchable.field.directive';
+import { createResolvedErrorsSignal, setupMetaTracking, shouldShowErrors } from '@ng-forge/dynamic-forms/integration';
 import { forgeFieldDisabled } from '../../field.disabled';
 import { toggleDisableFormControl } from '../../../../form/form';
 
@@ -31,11 +32,26 @@ import { toggleDisableFormControl } from '../../../../form/form';
   standalone: true
 })
 export class DbxForgeSearchableChipFieldComponent<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends AbstractForgeSearchableFieldDirective<T, M, H, DbxForgeSearchableChipFieldProps<T, M, H>> {
+  private readonly elementRef = inject(ElementRef<HTMLElement>);
+
   readonly field = input.required<FieldTree<T | T[]>>();
   readonly separatorKeysCodes: number[] = [ENTER, COMMA];
 
   // Disabled state
   readonly isDisabled = forgeFieldDisabled();
+
+  // Error handling
+  readonly resolvedErrors = createResolvedErrorsSignal(this.field as any, this.validationMessages, this.defaultValidationMessages);
+  readonly showErrors = shouldShowErrors(this.field as any);
+  readonly errorsToDisplay = computed(() => (this.showErrors() ? this.resolvedErrors() : []));
+
+  // ARIA
+  protected readonly ariaInvalid = computed(() => (this.showErrors() ? 'true' : null));
+  protected readonly ariaDescribedBy = computed(() => {
+    if (this.errorsToDisplay().length > 0) return this.errorId();
+    if (this.props()?.hint) return this.hintId();
+    return null;
+  });
 
   private readonly _blur = new Subject<void>();
   private readonly _blurSub = new SubscriptionObject();
@@ -63,6 +79,11 @@ export class DbxForgeSearchableChipFieldComponent<T = unknown, M = unknown, H ex
     const values = fieldValue != null ? convertMaybeToArray(fieldValue as ArrayOrValue<T>).filter((v) => v != null && v !== '') : [];
     this._valuesSubject.next(values);
   });
+
+  constructor() {
+    super();
+    setupMetaTracking(this.elementRef, this.meta as any, { selector: 'input' });
+  }
 
   get inputErrorMessage(): Maybe<string> {
     const errors = this.inputCtrl.errors;
