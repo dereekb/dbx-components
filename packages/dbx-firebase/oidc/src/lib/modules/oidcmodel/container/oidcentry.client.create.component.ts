@@ -3,7 +3,7 @@ import { type WorkUsingContext } from '@dereekb/rxjs';
 import { DbxActionDirective, DbxActionEnforceModifiedDirective, DbxActionHandlerDirective, DbxActionButtonDirective } from '@dereekb/dbx-core';
 import { DbxActionFormDirective } from '@dereekb/dbx-form';
 import { DbxButtonComponent, DbxActionSnackbarErrorDirective } from '@dereekb/dbx-web';
-import { DbxFirebaseOidcEntryClientFormComponent, type DbxFirebaseOidcEntryClientFormComponentConfig, type DbxFirebaseOidcModelClientFormValue } from '../component/oidcentry.client.form.component';
+import { DbxFirebaseOidcEntryClientForgeFormComponent, type DbxFirebaseOidcEntryClientFormComponentConfig, type DbxFirebaseOidcModelClientFormValue } from '../component/oidcentry.client.forge.form.component';
 import { OidcEntryDocumentStore } from '../store/oidcentry.document.store';
 import { type CreateOidcClientParams, type CreateOidcClientResult, type FirestoreModelKey } from '@dereekb/firebase';
 import { type Configurable, type Maybe } from '@dereekb/util';
@@ -19,12 +19,12 @@ import { tap } from 'rxjs';
   selector: 'dbx-firebase-oidc-entry-client-create',
   template: `
     <div dbxAction dbxActionEnforceModified [dbxActionHandler]="handleCreateClient" dbxActionSnackbarError>
-      <dbx-firebase-oidc-client-form dbxActionForm [config]="formConfig"></dbx-firebase-oidc-client-form>
+      <dbx-firebase-oidc-client-forge-form dbxActionForm [config]="formConfig"></dbx-firebase-oidc-client-forge-form>
       <dbx-button [raised]="true" dbxActionButton text="Create"></dbx-button>
     </div>
   `,
   standalone: true,
-  imports: [DbxActionSnackbarErrorDirective, DbxActionDirective, DbxActionEnforceModifiedDirective, DbxActionHandlerDirective, DbxActionFormDirective, DbxButtonComponent, DbxActionButtonDirective, DbxFirebaseOidcEntryClientFormComponent],
+  imports: [DbxActionSnackbarErrorDirective, DbxActionDirective, DbxActionEnforceModifiedDirective, DbxActionHandlerDirective, DbxActionFormDirective, DbxButtonComponent, DbxActionButtonDirective, DbxFirebaseOidcEntryClientForgeFormComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxFirebaseOidcEntryClientCreateComponent {

@@ -4,6 +4,9 @@ import { FormlyModule } from '@ngx-formly/core';
 
 const importsAndExports = [DbxFormMapboxZoomFieldComponent];
 
+/**
+ * @deprecated Use provideDbxForgeMapboxFieldDeclarations() instead.
+ */
 @NgModule({
   imports: [
     ...importsAndExports,

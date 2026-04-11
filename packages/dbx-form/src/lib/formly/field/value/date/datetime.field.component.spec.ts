@@ -1,17 +1,18 @@
-import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { Component, viewChild } from '@angular/core';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
+import { Component, provideZoneChangeDetection, viewChild } from '@angular/core';
 import { DbxTestDbxFormComponent, FORM_TEST_PROVIDERS } from '../../../../../test';
 import { DbxFormFormlyDateFieldModule } from '../../value/date/date.field.module';
-import { timeOnlyField } from '../../value/date/datetime.field';
+import { formlyTimeOnlyField } from '../../value/date/datetime.field';
 import { first } from 'rxjs';
 import { callbackTest } from '@dereekb/util/test';
 
 describe('DbxDateTimeFieldComponent', () => {
-  beforeEach(waitForAsync(() => {
-    void TestBed.configureTestingModule({
-      imports: [...FORM_TEST_PROVIDERS, DbxFormFormlyDateFieldModule]
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [...FORM_TEST_PROVIDERS, DbxFormFormlyDateFieldModule],
+      providers: [provideZoneChangeDetection()]
     }).compileComponents();
-  }));
+  });
 
   let form: DbxTestDbxFormComponent<{ date: Date }>;
 
@@ -36,7 +37,7 @@ describe('DbxDateTimeFieldComponent', () => {
     const date = new Date();
 
     beforeEach(() => {
-      form.setFields([timeOnlyField({ key: fieldKey })]);
+      form.setFields([formlyTimeOnlyField({ key: fieldKey })]);
       fixture.detectChanges();
     });
 

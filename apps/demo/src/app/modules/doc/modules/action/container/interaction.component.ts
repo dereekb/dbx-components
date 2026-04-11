@@ -11,7 +11,7 @@ import { type WorkUsingObservable, type WorkUsingContext } from '@dereekb/rxjs';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocActionExampleToolsComponent } from '../component/action.example.tool.component';
-import { DbxFormActionDialogComponent, textAreaField } from '@dereekb/dbx-form';
+import { DbxFormActionDialogComponent, formlyTextAreaField } from '@dereekb/dbx-form';
 
 @Component({
   templateUrl: './interaction.component.html',
@@ -138,7 +138,7 @@ export class DocActionInteractionComponent implements OnDestroy {
     return DbxFormActionDialogComponent.openDialogWithForm(this.matDialog, {
       header: 'Form Dialog Example',
       fields: [
-        textAreaField({
+        formlyTextAreaField({
           key: 'test',
           label: 'Test',
           placeholder: 'Enter test text',

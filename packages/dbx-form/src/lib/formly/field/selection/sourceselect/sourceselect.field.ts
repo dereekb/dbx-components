@@ -18,7 +18,7 @@ export interface SourceSelectFieldConfig<T extends PrimativeKey = PrimativeKey, 
  *
  * @example
  * ```typescript
- * const field = sourceSelectField({
+ * const field = formlySourceSelectField({
  *   key: 'source',
  *   label: 'Source',
  *   loadSources: () => sources$,
@@ -26,7 +26,7 @@ export interface SourceSelectFieldConfig<T extends PrimativeKey = PrimativeKey, 
  * });
  * ```
  */
-export function sourceSelectField<T extends PrimativeKey = PrimativeKey, M = unknown>(config: SourceSelectFieldConfig<T, M>): FormlyFieldConfig {
+export function formlySourceSelectField<T extends PrimativeKey = PrimativeKey, M = unknown>(config: SourceSelectFieldConfig<T, M>): FormlyFieldConfig {
   const { key, materialFormField } = config;
   return formlyField({
     key,
@@ -38,3 +38,9 @@ export function sourceSelectField<T extends PrimativeKey = PrimativeKey, M = unk
     })
   });
 }
+
+// MARK: Deprecated
+/**
+ * @deprecated Use formlySourceSelectField instead.
+ */
+export const sourceSelectField = formlySourceSelectField;

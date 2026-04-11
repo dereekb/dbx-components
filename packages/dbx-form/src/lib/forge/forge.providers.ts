@@ -1,0 +1,155 @@
+import { type FieldTypeDefinition, provideDynamicForm } from '@ng-forge/dynamic-forms';
+import { withMaterialFields } from '@ng-forge/dynamic-forms-material';
+import { phoneFieldMapper } from './field/value/phone/phone.field.component';
+import { FORGE_PHONE_FIELD_TYPE } from './field/value/phone/phone.field';
+import { FORGE_DATETIME_FIELD_TYPE, FORGE_FIXEDDATERANGE_FIELD_TYPE } from './field/value/date/datetime.field';
+import { FORGE_DATERANGE_FIELD_TYPE, dateRangeFieldMapper } from './field/value/date/daterange.field.component';
+import { FORGE_TIMEDURATION_FIELD_TYPE } from './field/value/duration/duration.field';
+import { dateTimeFieldMapper } from './field/value/date/datetime.field.component';
+import { fixedDateRangeFieldMapper } from './field/value/date/fixeddaterange.field.component';
+import { timeDurationFieldMapper } from './field/value/duration/duration.field.component';
+import { DBX_SEARCHABLE_TEXT_FIELD_TYPE, DBX_SEARCHABLE_CHIP_FIELD_TYPE } from './field/selection/searchable/searchable.field';
+import { DBX_PICKABLE_CHIP_FIELD_TYPE, DBX_PICKABLE_LIST_FIELD_TYPE } from './field/selection/pickable/pickable.field';
+import { DBX_LIST_SELECTION_FIELD_TYPE } from './field/selection/list/list.field';
+import { DBX_SOURCE_SELECT_FIELD_TYPE } from './field/selection/sourceselect/sourceselect.field';
+import { DBX_TEXT_EDITOR_FIELD_TYPE } from './field/texteditor/texteditor.field';
+import { DBX_COMPONENT_FIELD_TYPE } from './field/component/component.field';
+import { DBX_FORGE_FORM_FIELD_WRAPPER_TYPE } from './field/wrapper/formfield/formfield.field';
+import { DBX_FORGE_SECTION_FIELD_TYPE } from './field/wrapper/section/section.field';
+import { DBX_FORGE_EXPAND_FIELD_TYPE } from './field/wrapper/expand/expand.field';
+import { DBX_FORGE_INFO_BUTTON_FIELD_TYPE } from './field/wrapper/info/info.field';
+import { DBX_FORGE_INFO_WRAPPER_FIELD_TYPE } from './field/wrapper/info/info.wrapper.field';
+import { DBX_FORGE_STYLE_FIELD_TYPE } from './field/wrapper/style/style.field';
+import { DBX_FORGE_WORKING_FIELD_TYPE } from './field/wrapper/working/working.field';
+import { DBX_FORGE_WORKING_WRAPPER_FIELD_TYPE } from './field/wrapper/working/working.wrapper.field';
+import { DBX_FORGE_ARRAY_FIELD_TYPE } from './field/value/array/array.field';
+import { FORGE_SLIDER_FIELD_TYPE, sliderFieldMapper } from './field/value/number/slider.field.component';
+
+/**
+ * Forge phone field type definition.
+ *
+ * Registers the custom phone field component with ng-forge's dynamic form system.
+ * Uses lazy loading for the component and the custom phoneFieldMapper to bridge
+ * ngx-mat-input-tel with Signal Forms.
+ */
+const DbxForgePhoneFieldType: FieldTypeDefinition = {
+  name: FORGE_PHONE_FIELD_TYPE,
+  loadComponent: () => import('./field/value/phone/phone.field.component').then((m) => m.DbxForgePhoneFieldComponent),
+  mapper: phoneFieldMapper
+};
+
+/**
+ * Forge date-time field type definition.
+ *
+ * Registers the custom date-time field component with ng-forge's dynamic form system.
+ * Provides combined date and time selection with Material Design inputs.
+ */
+const DbxForgeDateTimeFieldType: FieldTypeDefinition = {
+  name: FORGE_DATETIME_FIELD_TYPE,
+  loadComponent: () => import('./field/value/date/datetime.field.component').then((m) => m.DbxForgeDateTimeFieldComponent),
+  mapper: dateTimeFieldMapper
+};
+
+/**
+ * Forge fixed date range field type definition.
+ *
+ * Registers the custom fixed date range field component with ng-forge's dynamic form system.
+ * Uses Angular Material's mat-date-range-input for inline start/end date picking.
+ */
+const DbxForgeFixedDateRangeFieldType: FieldTypeDefinition = {
+  name: FORGE_FIXEDDATERANGE_FIELD_TYPE,
+  loadComponent: () => import('./field/value/date/fixeddaterange.field.component').then((m) => m.DbxForgeFixedDateRangeFieldComponent),
+  mapper: fixedDateRangeFieldMapper
+};
+
+/**
+ * Forge time duration field type definition.
+ *
+ * Registers the custom time duration field component with ng-forge's dynamic form system.
+ * Provides a text input that parses duration strings and a popover picker.
+ */
+const DbxForgeTimeDurationFieldType: FieldTypeDefinition = {
+  name: FORGE_TIMEDURATION_FIELD_TYPE,
+  loadComponent: () => import('./field/value/duration/duration.field.component').then((m) => m.DbxForgeTimeDurationFieldComponent),
+  mapper: timeDurationFieldMapper
+};
+
+/**
+ * Forge slider field type definition.
+ *
+ * Registers a custom slider component that wraps `<mat-slider>` inside `<mat-form-field>`
+ * for consistent outlined appearance with label, hint, and error display.
+ */
+const DbxForgeSliderFieldType: FieldTypeDefinition = {
+  name: FORGE_SLIDER_FIELD_TYPE,
+  loadComponent: () => import('./field/value/number/slider.field.component').then((m) => m.DbxForgeSliderFieldComponent),
+  mapper: sliderFieldMapper
+};
+
+/**
+ * Forge date range field type definition.
+ *
+ * Registers the custom date range field component with ng-forge's dynamic form system.
+ * Provides start/end date pickers using Angular Material's mat-datepicker.
+ */
+const DbxForgeDateRangeFieldType: FieldTypeDefinition = {
+  name: FORGE_DATERANGE_FIELD_TYPE,
+  loadComponent: () => import('./field/value/date/daterange.field.component').then((m) => m.DbxForgeDateRangeFieldComponent),
+  mapper: dateRangeFieldMapper
+};
+
+/**
+ * All custom dbx-form forge field type definitions.
+ */
+export const DBX_FORGE_FIELD_TYPES: FieldTypeDefinition[] = [
+  DbxForgePhoneFieldType,
+  DbxForgeDateTimeFieldType,
+  DbxForgeDateRangeFieldType,
+  DbxForgeFixedDateRangeFieldType,
+  DbxForgeTimeDurationFieldType,
+  DbxForgeSliderFieldType,
+  DBX_SEARCHABLE_TEXT_FIELD_TYPE,
+  DBX_SEARCHABLE_CHIP_FIELD_TYPE,
+  DBX_PICKABLE_CHIP_FIELD_TYPE,
+  DBX_PICKABLE_LIST_FIELD_TYPE,
+  DBX_LIST_SELECTION_FIELD_TYPE,
+  DBX_SOURCE_SELECT_FIELD_TYPE,
+  DBX_TEXT_EDITOR_FIELD_TYPE,
+  DBX_COMPONENT_FIELD_TYPE,
+  DBX_FORGE_FORM_FIELD_WRAPPER_TYPE,
+  DBX_FORGE_SECTION_FIELD_TYPE,
+  DBX_FORGE_EXPAND_FIELD_TYPE,
+  DBX_FORGE_INFO_BUTTON_FIELD_TYPE,
+  DBX_FORGE_INFO_WRAPPER_FIELD_TYPE,
+  DBX_FORGE_STYLE_FIELD_TYPE,
+  DBX_FORGE_WORKING_FIELD_TYPE,
+  DBX_FORGE_WORKING_WRAPPER_FIELD_TYPE,
+  DBX_FORGE_ARRAY_FIELD_TYPE
+];
+
+/**
+ * Registers ng-forge dynamic form field declarations with Material Design field types
+ * and custom dbx field types (phone, datetime, fixeddaterange, timeduration,
+ * searchable text, searchable chip, text editor, component).
+ *
+ * Pass additional field types from extension packages (e.g. `DBX_FORGE_CALENDAR_FIELD_TYPES`,
+ * `DBX_FORGE_MAPBOX_FIELD_TYPES`) to register them in the same `provideDynamicForm()` call.
+ * Only one `provideDynamicForm()` call should exist per app — multiple calls overwrite
+ * rather than merge.
+ *
+ * Add this to your app's providers alongside provideDbxFormConfiguration().
+ *
+ * @example
+ * ```typescript
+ * provideDbxForgeFormFieldDeclarations(
+ *   ...DBX_FORGE_CALENDAR_FIELD_TYPES,
+ *   ...DBX_FORGE_MAPBOX_FIELD_TYPES
+ * )
+ * ```
+ *
+ * @param additionalFieldTypes - Extra field type definitions from extension packages to register alongside the built-in types
+ * @returns An array of providers that register all forge field types with ng-forge's dynamic form system
+ */
+export function provideDbxForgeFormFieldDeclarations(...additionalFieldTypes: FieldTypeDefinition[]) {
+  return provideDynamicForm(...withMaterialFields(), ...DBX_FORGE_FIELD_TYPES, ...additionalFieldTypes);
+}

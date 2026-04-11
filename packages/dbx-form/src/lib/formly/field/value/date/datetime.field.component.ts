@@ -320,11 +320,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
 
   readonly timeErrorStateMatcher: ErrorStateMatcher = {
     isErrorState: (control: AbstractControl | null, form) => {
-      if (control) {
-        return (control.invalid && (control.dirty || control.touched)) || this.errorStateMatcher.isErrorState(this.formControl, form);
-      } else {
-        return false;
-      }
+      return control ? (control.invalid && (control.dirty || control.touched)) || this.errorStateMatcher.isErrorState(this.formControl, form) : false;
     }
   };
 
@@ -442,11 +438,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
   get timeOnly(): Maybe<boolean> {
     const timeValuesOnly = this.valueMode === DbxDateTimeValueMode.MINUTE_OF_DAY;
 
-    if (timeValuesOnly) {
-      return true;
-    } else {
-      return this.dateTimeField.timeOnly;
-    }
+    return timeValuesOnly ? true : this.dateTimeField.timeOnly;
   }
 
   get alwaysShowDateInput(): boolean {
@@ -468,11 +460,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
   get timeMode(): DbxDateTimeFieldTimeMode {
     const dateValuesOnly = this.valueMode === DbxDateTimeValueMode.DAY_STRING;
 
-    if (dateValuesOnly) {
-      return DbxDateTimeFieldTimeMode.NONE;
-    } else {
-      return this.timeOnly ? DbxDateTimeFieldTimeMode.REQUIRED : (this.dateTimeField.timeMode ?? DbxDateTimeFieldTimeMode.REQUIRED);
-    }
+    return dateValuesOnly ? DbxDateTimeFieldTimeMode.NONE : this.timeOnly ? DbxDateTimeFieldTimeMode.REQUIRED : (this.dateTimeField.timeMode ?? DbxDateTimeFieldTimeMode.REQUIRED);
   }
 
   get isDateRequired(): boolean {
@@ -557,28 +545,24 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
 
   readonly parsedSyncConfigs$: Observable<DbxDateTimeFieldSyncParsedField[]> = this.syncConfigObs$.pipe(
     map((x) => {
-      let parsed: DbxDateTimeFieldSyncParsedField[];
-
-      if (x) {
-        parsed = filterMaybeArrayValues(
-          asArray(x).map((y) => {
-            const control = this.form.get(y.syncWith);
-
-            if (control) {
-              return {
-                control,
-                ...y
-              };
-            } else {
-              return undefined;
-            }
-          })
-        );
-      } else {
-        parsed = [];
+      if (!x) {
+        return [];
       }
 
-      return parsed;
+      return filterMaybeArrayValues(
+        asArray(x).map((y) => {
+          const control = this.form.get(y.syncWith);
+
+          if (!control) {
+            return undefined;
+          }
+
+          return {
+            control,
+            ...y
+          };
+        })
+      );
     }),
     shareReplay(1)
   );
@@ -694,12 +678,12 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
   readonly pickerFilter$: Observable<DecisionFunction<Date | null>> = this.dateTimePickerConfig$.pipe(
     distinctUntilChanged(),
     map((x) => {
-      if (x) {
-        const filter = dateTimeMinuteWholeDayDecisionFunction(x, false);
-        return (x: Date | null) => (x != null ? filter(x) : true);
-      } else {
+      if (!x) {
         return () => true;
       }
+
+      const filter = dateTimeMinuteWholeDayDecisionFunction(x, false);
+      return (x: Date | null) => (x != null ? filter(x) : true);
     }),
     shareReplay(1)
   );
@@ -761,12 +745,12 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
 
   readonly _presetsPickerFilter$ = this.dateTimePickerConfig$.pipe(
     map((config) => {
-      if (config) {
-        const filter = dateTimeMinuteDecisionFunction(config); // filter that the date must be in the given range
-        return (x: Date | null) => (x != null ? filter(x) : true);
-      } else {
+      if (!config) {
         return () => true;
       }
+
+      const filter = dateTimeMinuteDecisionFunction(config); // filter that the date must be in the given range
+      return (x: Date | null) => (x != null ? filter(x) : true);
     })
   );
 
@@ -919,16 +903,16 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
       this._autoFillDateSync.subscription = this.canAutofillDateWithOnlyAvailableDate$
         .pipe(
           switchMap((canAutofill) => {
-            if (canAutofill) {
-              // when the time updates the first time, set the current min date
-              return this._updateTime.pipe(
-                debounceTime(200),
-                switchMap((_x) => this.dateInputMin$),
-                filterMaybe()
-              );
-            } else {
+            if (!canAutofill) {
               return of(null); // don't show anything
             }
+
+            // when the time updates the first time, set the current min date
+            return this._updateTime.pipe(
+              debounceTime(200),
+              switchMap((_x) => this.dateInputMin$),
+              filterMaybe()
+            );
           })
         )
         .subscribe((autoDate) => {

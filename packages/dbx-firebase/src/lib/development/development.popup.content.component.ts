@@ -7,7 +7,7 @@ import { type Maybe } from '@dereekb/util';
 import { first, BehaviorSubject, distinctUntilChanged, map, shareReplay, combineLatest, type Observable } from 'rxjs';
 import { DbxFirebaseDevelopmentWidgetService } from './development.widget.service';
 import { DbxFirebaseDevelopmentSchedulerService } from './development.scheduler.service';
-import { DbxFirebaseDevelopmentPopupContentFormComponent, type DbxFirebaseDevelopmentPopupContentFormValue } from './development.popup.content.form.component';
+import { DbxFirebaseDevelopmentPopupContentForgeFormComponent, type DbxFirebaseDevelopmentPopupContentFormValue } from './development.popup.content.forge.form.component';
 import { msToSeconds } from '@dereekb/date';
 import { DEVELOPMENT_FIREBASE_SERVER_SCHEDULER_WIDGET_KEY } from './development.scheduler.widget.component';
 import { DbxFirebaseEmulatorService } from '../firebase/firebase.emulator.service';
@@ -19,7 +19,7 @@ import { MatButtonModule } from '@angular/material/button';
   selector: 'dbx-firebase-development-popup-content',
   templateUrl: './development.popup.content.component.html',
   styleUrls: ['./development.popup.component.scss'],
-  imports: [DbxAnchorComponent, DbxTwoColumnFullLeftDirective, DbxWidgetViewComponent, DbxTwoColumnComponent, DbxTwoBlockComponent, DbxTwoColumnRightComponent, DbxWidgetViewComponent, DbxFirebaseDevelopmentPopupContentFormComponent, DbxActionDirective, DbxActionEnforceModifiedDirective, DbxActionHandlerDirective, DbxActionFormDirective, DbxFormSourceDirective, DbxActionAutoTriggerDirective, MatButtonModule],
+  imports: [DbxAnchorComponent, DbxTwoColumnFullLeftDirective, DbxWidgetViewComponent, DbxTwoColumnComponent, DbxTwoBlockComponent, DbxTwoColumnRightComponent, DbxWidgetViewComponent, DbxFirebaseDevelopmentPopupContentForgeFormComponent, DbxActionDirective, DbxActionEnforceModifiedDirective, DbxActionHandlerDirective, DbxActionFormDirective, DbxFormSourceDirective, DbxActionAutoTriggerDirective, MatButtonModule],
   providers: [TwoColumnsContextStore],
   standalone: true
 })

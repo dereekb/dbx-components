@@ -2,7 +2,7 @@ import { type Observable, combineLatest, map, shareReplay } from 'rxjs';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type ChecklistItemDisplayContent } from './checklist.item';
 import { type Configurable, type KeyValueTransformMap, addPlusPrefixToNumber, type Maybe } from '@dereekb/util';
-import { checklistItemField, type ChecklistItemFieldBuilderInput } from './checklist.item.field';
+import { formlyChecklistItemField, type ChecklistItemFieldBuilderInput } from './checklist.item.field';
 
 /**
  * A field key from the data set type, constrained to string keys.
@@ -135,7 +135,7 @@ export class ChecklistItemFieldDataSetBuilder<D extends object, C extends Checkl
   // MARK: Build/Finish
   build(): FormlyFieldConfig[] {
     return [...this._fields.values()].map(({ field }) => {
-      return checklistItemField(field);
+      return formlyChecklistItemField(field);
     });
   }
 

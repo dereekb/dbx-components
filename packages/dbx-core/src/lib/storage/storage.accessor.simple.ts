@@ -207,17 +207,21 @@ export class SimpleStorageAccessor<T> implements StorageAccessor<T> {
     const storeKey = this.makeStorageKey(inputKey);
     return this._delegate.get(storeKey).pipe(
       map((storedData: Maybe<string>) => {
+        let result: T;
+
         if (storedData) {
           const readStoredData = this.readStoredData(storedData);
 
           if (!readStoredData.expired) {
-            return readStoredData.convertedData;
+            result = readStoredData.convertedData;
           } else {
             throw new DataIsExpiredError<T>(readStoredData);
           }
         } else {
           throw new DataDoesNotExistError();
         }
+
+        return result;
       })
     );
   }
@@ -240,12 +244,8 @@ export class SimpleStorageAccessor<T> implements StorageAccessor<T> {
         return allStoredData
           .map((storedData) => {
             const readStoredData = this.readStoredData(storedData);
-
-            if (!readStoredData.expired) {
-              return readStoredData.convertedData;
-            } else {
-              return null;
-            }
+            const result = !readStoredData.expired ? readStoredData.convertedData : null;
+            return result;
           })
           .filter(hasNonNullValue);
       })
@@ -282,15 +282,19 @@ export class SimpleStorageAccessor<T> implements StorageAccessor<T> {
 
   protected isExpiredStoredData(storeData: StoredData): boolean {
     const expiresIn = this._config.expiresIn;
+    let result: boolean;
+
     if (expiresIn) {
       if (storeData.storedAt) {
-        return isThrottled(expiresIn, storeData.storedAt);
+        result = isThrottled(expiresIn, storeData.storedAt);
+      } else {
+        result = true;
       }
-
-      return true;
     } else {
-      return false;
+      result = false;
     }
+
+    return result;
   }
 
   // MARK: Internal

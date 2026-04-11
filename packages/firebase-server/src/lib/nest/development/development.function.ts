@@ -74,9 +74,9 @@ export function onCallDevelopmentFunction<N>(map: OnCallDevelopmentFunctionMap<N
         specifier,
         data: request.data.data
       });
-    } else {
-      throw developmentUnknownSpecifierError(specifier);
     }
+
+    throw developmentUnknownSpecifierError(specifier);
   };
 }
 

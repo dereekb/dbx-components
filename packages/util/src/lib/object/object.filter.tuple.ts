@@ -83,15 +83,19 @@ export type FilterKeyValueTuplesFunction<T extends object = object, K extends ke
  * ```
  */
 export function filterKeyValueTuplesFunction<T extends object = object, K extends keyof T = keyof T>(filter?: FilterKeyValueTuplesInput<T, K>): FilterKeyValueTuplesFunction<T, K> {
+  let result: FilterKeyValueTuplesFunction<T, K>;
+
   if (filter != null) {
     const filterFn = filterKeyValueTupleFunction<T, K>(filter);
 
-    return (obj: T) => {
+    result = (obj: T) => {
       return (allKeyValueTuples(obj) as KeyValueTuple<T, K>[]).filter(filterFn);
     };
   } else {
-    return allKeyValueTuples;
+    result = allKeyValueTuples;
   }
+
+  return result;
 }
 
 /**
@@ -181,11 +185,7 @@ export interface KeyValueTupleFilter<T extends object = object, K extends keyof 
  * @returns Normalized filter object
  */
 export function filterKeyValueTuplesInputToFilter<T extends object = object, K extends keyof T = keyof T>(input: FilterKeyValueTuplesInput<T, K>): KeyValueTupleFilter<T, K> {
-  if (typeof input === 'object') {
-    return input;
-  } else {
-    return { valueFilter: input };
-  }
+  return typeof input === 'object' ? input : { valueFilter: input };
 }
 
 /**

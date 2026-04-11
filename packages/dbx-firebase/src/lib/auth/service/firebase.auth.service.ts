@@ -1,32 +1,108 @@
 import { filterMaybe, isNot, timeoutStartWith } from '@dereekb/rxjs';
 import { Injectable, inject } from '@angular/core';
 import { type AuthUserState, type DbxAuthService, loggedOutObsFromIsLoggedIn, loggedInObsFromIsLoggedIn, type AuthUserIdentifier, authUserIdentifier, type NoAuthUserIdentifier } from '@dereekb/dbx-core';
-import { reauthenticateWithPopup, Auth, authState, idToken, type User, type IdTokenResult, type ParsedToken, signInWithPopup, type AuthProvider, type PopupRedirectResolver, signInAnonymously, signInWithEmailAndPassword, type UserCredential, createUserWithEmailAndPassword, linkWithPopup, linkWithCredential, unlink, type AuthCredential } from '@angular/fire/auth';
+import { reauthenticateWithPopup, type User, type IdTokenResult, type ParsedToken, signInWithPopup, type AuthProvider, type PopupRedirectResolver, signInAnonymously, signInWithEmailAndPassword, type UserCredential, createUserWithEmailAndPassword, linkWithPopup, linkWithCredential, unlink, type AuthCredential, sendPasswordResetEmail, confirmPasswordReset } from 'firebase/auth';
+import { FIREBASE_AUTH_TOKEN } from '../../firebase/firebase.tokens';
+import { firebaseAuthState, firebaseIdToken } from './firebase.auth.rxjs.util';
 import { of, type Observable, distinctUntilChanged, shareReplay, map, switchMap, firstValueFrom, catchError, EMPTY, Subject, merge, tap } from 'rxjs';
 import { type AuthClaims, type AuthClaimsObject, type AuthRoleClaimsService, type AuthRoleSet, AUTH_ADMIN_ROLE, cachedGetter, type Maybe } from '@dereekb/util';
 import { type AuthUserInfo, authUserInfoFromAuthUser, firebaseAuthTokenFromUser } from '../auth';
-import { sendPasswordResetEmail } from 'firebase/auth';
 import { authUserStateFromFirebaseAuthServiceFunction } from './firebase.auth.rxjs';
 import { type FirebaseAuthIdToken, type FirebaseAuthContextInfo } from '@dereekb/firebase';
 
 /**
- * Returns an observable that returns the state of the
+ * Returns an observable that derives the current {@link AuthUserState} from the given auth service.
  */
 export type AuthUserStateObsFunction = (dbxFirebaseAuthService: DbxFirebaseAuthService) => Observable<AuthUserState>;
 
+/**
+ * Input for completing a password reset.
+ *
+ * In the default Firebase flow, `oobCode` is the out-of-band code from the reset email link.
+ * When overridden via the delegate (e.g., custom claims-based flow), `oobCode` can represent
+ * any verification token the backend expects.
+ *
+ * @example
+ * ```ts
+ * await authService.completePasswordReset({
+ *   oobCode: 'abc123',
+ *   newPassword: 'myNewSecurePassword'
+ * });
+ * ```
+ */
+export interface DbxFirebaseCompletePasswordResetInput {
+  /**
+   * Verification code from the password reset email. Semantics depend on the delegate implementation.
+   */
+  readonly oobCode: string;
+  /**
+   * The new password to set for the user's account.
+   */
+  readonly newPassword: string;
+}
+
 // MARK: Delegate
+/**
+ * Delegate that customizes the behavior of {@link DbxFirebaseAuthService}.
+ *
+ * Provides extension points for auth state derivation, role mapping, onboarding checks,
+ * and password reset flows. Override individual methods to integrate with custom backends
+ * (e.g., claims-based reset via a callable function) while keeping defaults for the rest.
+ *
+ * @example
+ * ```ts
+ * const delegate: DbxFirebaseAuthServiceDelegate = {
+ *   ...DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE,
+ *   sendPasswordReset: async (service, email) => {
+ *     await myCustomResetApi(email);
+ *   }
+ * };
+ * ```
+ */
 export abstract class DbxFirebaseAuthServiceDelegate {
+  /**
+   * When true, the delegate has full control over the {@link AuthUserState} observable
+   * and the service will not wrap it with its own logged-in/logged-out logic.
+   */
   readonly fullControlOfAuthUserState?: boolean = false;
   abstract authUserStateObs: AuthUserStateObsFunction;
   abstract authRolesObs(dbxFirebaseAuthService: DbxFirebaseAuthService): Observable<AuthRoleSet>;
   abstract isOnboarded(dbxFirebaseAuthService: DbxFirebaseAuthService): Observable<boolean>;
   /**
-   * Whether or not the input roles imply the admin priviledges.
+   * Whether or not the input roles imply admin privileges.
    */
   abstract isAdminInAuthRoleSet(authRoleSet: AuthRoleSet): boolean;
   abstract authRoleClaimsService?: Maybe<AuthRoleClaimsService<AuthClaimsObject>>;
+  /**
+   * Sends a password reset email to the given email address.
+   *
+   * The default implementation uses Firebase's built-in `sendPasswordResetEmail()`.
+   * Override to route through a custom backend (e.g., a callable function that triggers
+   * a claims-based reset and sends a templated email).
+   *
+   * @param dbxFirebaseAuthService - the auth service instance, providing access to `firebaseAuth`
+   * @param email - the email address to send the reset to
+   */
+  abstract sendPasswordReset(dbxFirebaseAuthService: DbxFirebaseAuthService, email: string): Promise<void>;
+  /**
+   * Completes a password reset using a verification code and new password.
+   *
+   * The default implementation uses Firebase's built-in `confirmPasswordReset()` with the oobCode.
+   * Override to route through a custom backend (e.g., a callable function that verifies
+   * a claims-based reset code and sets the new password).
+   *
+   * @param dbxFirebaseAuthService - the auth service instance, providing access to `firebaseAuth`
+   * @param input - the verification code and new password
+   */
+  abstract completePasswordReset(dbxFirebaseAuthService: DbxFirebaseAuthService, input: DbxFirebaseCompletePasswordResetInput): Promise<void>;
 }
 
+/**
+ * Default {@link DbxFirebaseAuthServiceDelegate} that uses Firebase's built-in auth methods.
+ *
+ * Password reset uses `sendPasswordResetEmail()` and `confirmPasswordReset()` from `firebase/auth`.
+ * Auth state defaults to `'user'` when logged in, `'none'` otherwise.
+ */
 export const DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE: DbxFirebaseAuthServiceDelegate = {
   authUserStateObs: authUserStateFromFirebaseAuthServiceFunction(),
   authRolesObs(dbxFirebaseAuthService: DbxFirebaseAuthService): Observable<AuthRoleSet> {
@@ -37,16 +113,22 @@ export const DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE: DbxFirebaseAuthServiceD
   },
   isAdminInAuthRoleSet(authRoleSet: AuthRoleSet): boolean {
     return authRoleSet.has(AUTH_ADMIN_ROLE);
+  },
+  sendPasswordReset(dbxFirebaseAuthService: DbxFirebaseAuthService, email: string): Promise<void> {
+    return sendPasswordResetEmail(dbxFirebaseAuthService.firebaseAuth, email);
+  },
+  completePasswordReset(dbxFirebaseAuthService: DbxFirebaseAuthService, input: DbxFirebaseCompletePasswordResetInput): Promise<void> {
+    return confirmPasswordReset(dbxFirebaseAuthService.firebaseAuth, input.oobCode, input.newPassword);
   }
 };
 
 // MARK: Service
 @Injectable()
 export class DbxFirebaseAuthService implements DbxAuthService {
-  readonly firebaseAuth = inject(Auth);
+  readonly firebaseAuth = inject(FIREBASE_AUTH_TOKEN);
   readonly delegate = inject(DbxFirebaseAuthServiceDelegate, { optional: true }) ?? DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE;
 
-  readonly _authState$: Observable<Maybe<User>> = authState(this.firebaseAuth);
+  readonly _authState$: Observable<Maybe<User>> = firebaseAuthState(this.firebaseAuth);
 
   /**
    * Subject that triggers a re-emission of the current auth user.
@@ -107,7 +189,7 @@ export class DbxFirebaseAuthService implements DbxAuthService {
    */
   readonly userIdentifier$: Observable<AuthUserIdentifier | NoAuthUserIdentifier> = this.uid$;
 
-  readonly currentIdTokenString$: Observable<Maybe<FirebaseAuthIdToken>> = idToken(this.firebaseAuth).pipe(distinctUntilChanged(), shareReplay(1));
+  readonly currentIdTokenString$: Observable<Maybe<FirebaseAuthIdToken>> = firebaseIdToken(this.firebaseAuth).pipe(distinctUntilChanged(), shareReplay(1));
   readonly idTokenString$: Observable<FirebaseAuthIdToken> = this.currentUid$.pipe(switchMap((x) => (x ? this.currentIdTokenString$.pipe(filterMaybe()) : EMPTY)));
 
   readonly currentIdTokenResult$: Observable<Maybe<IdTokenResult>> = this.currentAuthUser$.pipe(
@@ -145,11 +227,7 @@ export class DbxFirebaseAuthService implements DbxAuthService {
       obs = this._authState$.pipe(
         distinctUntilChanged(),
         switchMap((x) => {
-          if (x != null) {
-            return delegateAuthUserStateObs;
-          } else {
-            return of('none' as AuthUserState);
-          }
+          return x != null ? delegateAuthUserStateObs : of('none' as AuthUserState);
         })
       );
     }
@@ -174,16 +252,12 @@ export class DbxFirebaseAuthService implements DbxAuthService {
   }
 
   rolesForClaims<T extends AuthClaimsObject = AuthClaimsObject>(claims: AuthClaims<T>): AuthRoleSet {
-    let result: AuthRoleSet;
-
     if (this._authRoleClaimsService) {
       return this._authRoleClaimsService.toRoles(claims);
-    } else {
-      console.warn('DbxFirebaseAuthService: rolesForClaims called with no authRoleClaimsService provided. An empty set is returned.');
-      result = new Set();
     }
 
-    return result;
+    console.warn('DbxFirebaseAuthService: rolesForClaims called with no authRoleClaimsService provided. An empty set is returned.');
+    return new Set();
   }
 
   getAuthContextInfo(): Promise<Maybe<DbxFirebaseAuthContextInfo>> {
@@ -223,9 +297,8 @@ export class DbxFirebaseAuthService implements DbxAuthService {
         switchMap((x: Maybe<User>) => {
           if (x) {
             return linkWithPopup(x, provider, resolver);
-          } else {
-            throw new Error('User is not logged in currently.');
           }
+          throw new Error('User is not logged in currently.');
         }),
         tap(() => this._authUpdate$.next())
       )
@@ -250,9 +323,8 @@ export class DbxFirebaseAuthService implements DbxAuthService {
         switchMap((x: Maybe<User>) => {
           if (x) {
             return linkWithCredential(x, credential);
-          } else {
-            throw new Error('User is not logged in currently.');
           }
+          throw new Error('User is not logged in currently.');
         }),
         tap(() => this._authUpdate$.next())
       )
@@ -276,9 +348,8 @@ export class DbxFirebaseAuthService implements DbxAuthService {
         switchMap((x: Maybe<User>) => {
           if (x) {
             return unlink(x, providerId);
-          } else {
-            throw new Error('User is not logged in currently.');
           }
+          throw new Error('User is not logged in currently.');
         }),
         tap(() => this._authUpdate$.next())
       )
@@ -289,8 +360,45 @@ export class DbxFirebaseAuthService implements DbxAuthService {
     return createUserWithEmailAndPassword(this.firebaseAuth, email, password);
   }
 
+  /**
+   * Sends a password reset email to the given address via the configured delegate.
+   *
+   * @param email - the email address to send the reset to
+   * @returns A promise that resolves when the email has been sent.
+   *
+   * @example
+   * ```ts
+   * await authService.sendPasswordReset('user@example.com');
+   * ```
+   */
+  sendPasswordReset(email: string): Promise<void> {
+    return this.delegate.sendPasswordReset(this, email);
+  }
+
+  /**
+   * Completes a password reset using the verification code and new password via the configured delegate.
+   *
+   * @param input - the verification code and new password
+   * @returns A promise that resolves when the password has been reset.
+   *
+   * @example
+   * ```ts
+   * await authService.completePasswordReset({ oobCode: 'abc123', newPassword: 'newPass' });
+   * ```
+   */
+  completePasswordReset(input: DbxFirebaseCompletePasswordResetInput): Promise<void> {
+    return this.delegate.completePasswordReset(this, input);
+  }
+
+  /**
+   * @deprecated use {@link sendPasswordReset} instead, which delegates to the configured
+   * {@link DbxFirebaseAuthServiceDelegate.sendPasswordReset} implementation.
+   *
+   * @param email - the email address to send the reset to
+   * @returns A promise that resolves when the email has been sent.
+   */
   sendPasswordResetEmail(email: string): Promise<void> {
-    return sendPasswordResetEmail(this.firebaseAuth, email);
+    return this.sendPasswordReset(email);
   }
 
   logInWithEmailAndPassword(email: string, password: string): Promise<UserCredential> {
@@ -311,9 +419,8 @@ export class DbxFirebaseAuthService implements DbxAuthService {
         switchMap((x: Maybe<User>) => {
           if (x) {
             return reauthenticateWithPopup(x, provider, resolver);
-          } else {
-            throw new Error('User is not logged in currently.');
           }
+          throw new Error('User is not logged in currently.');
         })
       )
     );

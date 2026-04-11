@@ -35,11 +35,7 @@ export function filterWithSearchString<T>(config: SearchStringFilterConfig<T>): 
   return switchMap((values: T[]) => {
     return search$.pipe(
       map((search) => {
-        if (search != null) {
-          return filterFactory(search, values);
-        } else {
-          return values;
-        }
+        return search != null ? filterFactory(search, values) : values;
       })
     );
   });

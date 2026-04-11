@@ -6,10 +6,12 @@ import { environment } from './environments/environment';
 import { type AuthTransitionHookOptions, DBX_KNOWN_APP_CONTEXT_STATES, enableHasAuthRoleHook, enableHasAuthStateHook, enableIsLoggedInHook, provideDbxAppAuth, provideDbxAppContextState, provideDbxAppEnviroment, provideDbxAssetLoader, provideDbxStorage, provideDbxUIRouterService } from '@dereekb/dbx-core';
 import { DbxFirebaseAnalyticsUserSource, type DbxFirebaseAuthServiceDelegate, DbxFirebaseModelEntitiesDebugWidgetComponent, type DbxFirebaseModelEntitiesWidgetEntry, type DbxFirebaseModelEntitiesWidgetServiceConfig, type DbxFirebaseModelTypesServiceConfig, type DbxFirebaseModelTypesServiceEntry, defaultDbxFirebaseAuthServiceDelegateWithClaimsService, provideDbxFirebase, provideDbxFirebaseLogin } from '@dereekb/dbx-firebase';
 import { DBX_WEB_FILE_PREVIEW_SERVICE_ZIP_PRESET_ENTRY, provideDbxHelpServices, provideDbxLinkify, provideDbxModelService, provideDbxRouterWebUiRouterProviderConfig, provideDbxScreenMediaService, provideDbxStyleService, provideDbxWebFilePreviewServiceEntries } from '@dereekb/dbx-web';
-import { DEMO_AUTH_CLAIMS_SERVICE, DEMO_API_AUTH_CLAIMS_ONBOARDED_TOKEN, type Guestbook, guestbookIdentity, DEMO_FIREBASE_FUNCTIONS_CONFIG, DemoFirebaseFunctionsGetter, DemoFirestoreCollections, makeDemoFirebaseFunctions, makeDemoFirestoreCollections, DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD, DEMO_OIDC_AVAILABLE_SCOPES, DEMO_OIDC_TOKEN_ENDPOINT_AUTH_METHODS, DEMO_APP_OAUTH_INTERACTION_PATH } from 'demo-firebase';
+import { DEMO_AUTH_CLAIMS_SERVICE, DEMO_API_AUTH_CLAIMS_ONBOARDED_TOKEN, type Guestbook, guestbookIdentity, DEMO_FIREBASE_FUNCTIONS_CONFIG, DemoFirebaseFunctionsGetter, DemoFirestoreCollections, makeDemoFirebaseFunctions, makeDemoFirestoreCollections, DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD, DEMO_OIDC_AVAILABLE_SCOPES, DEMO_OIDC_TOKEN_ENDPOINT_AUTH_METHODS, DEMO_APP_OAUTH_INTERACTION_PATH, ProfileFunctions } from 'demo-firebase';
 import { type FirestoreContext, type FirestoreModelKey, appNotificationTemplateTypeInfoRecordService, firestoreModelId } from '@dereekb/firebase';
 import { DemoFirebaseContextService, demoSetupDevelopmentWidget } from 'demo-components';
-import { defaultValidationMessages, provideDbxFormConfiguration, provideDbxFormFormlyFieldDeclarations } from '@dereekb/dbx-form';
+import { defaultValidationMessages, provideDbxFormConfiguration, provideDbxFormFormlyFieldDeclarations, provideDbxForgeFormFieldDeclarations } from '@dereekb/dbx-form';
+import { DBX_FORGE_CALENDAR_FIELD_TYPES } from '@dereekb/dbx-form/calendar';
+import { DBX_FORGE_MAPBOX_FIELD_TYPES } from '@dereekb/dbx-form/mapbox';
 import { provideDbxMapbox } from '@dereekb/dbx-web/mapbox';
 import { provideDbxFirebaseOidc } from '@dereekb/dbx-firebase/oidc';
 import { provideEffects } from '@ngrx/effects';
@@ -97,15 +99,30 @@ export function routerConfigFn(router: UIRouter, injector: Injector, _module: St
 /**
  * Factory for the demo Firebase auth service delegate with claims-based onboarding state.
  *
+ * Overrides `sendPasswordReset` and `completePasswordReset` to use the profile CRUD API
+ * instead of Firebase's built-in methods.
+ *
+ * @param injector - Angular injector used to resolve ProfileFunctions
  * @returns Configured auth service delegate
  */
-export function demoAuthDelegateFactory(): DbxFirebaseAuthServiceDelegate {
+export function demoAuthDelegateFactory(injector: Injector): DbxFirebaseAuthServiceDelegate {
+  const profileFunctions = injector.get(ProfileFunctions);
+
   return defaultDbxFirebaseAuthServiceDelegateWithClaimsService({
     claimsService: DEMO_AUTH_CLAIMS_SERVICE,
     addAuthUserStateToRoles: true,
     stateForLoggedInUserToken: (token) => {
       const y = token.claims[DEMO_API_AUTH_CLAIMS_ONBOARDED_TOKEN];
       return y ? 'user' : 'new';
+    },
+    sendPasswordReset: async () => {
+      await profileFunctions.profile.updateProfile.resetPassword({ requestReset: true });
+    },
+    completePasswordReset: async (_service, input) => {
+      await profileFunctions.profile.updateProfile.resetPassword({
+        resetPassword: input.oobCode,
+        newPassword: input.newPassword
+      });
     }
   });
 }
@@ -248,6 +265,7 @@ export const appConfig: ApplicationConfig = {
     // dbx-form, form related
     provideDbxFormConfiguration(),
     provideDbxFormFormlyFieldDeclarations(),
+    provideDbxForgeFormFieldDeclarations(...DBX_FORGE_CALENDAR_FIELD_TYPES, ...DBX_FORGE_MAPBOX_FIELD_TYPES),
     // dbx-firebase
     provideDbxFirebase({
       app: {

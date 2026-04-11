@@ -109,11 +109,8 @@ export function redirectForIdentifierParamHook(input: RedirectForIdentifierParam
           } else if (defaultAllowedIdValue !== transitionTargetId) {
             redirectToId = canViewUser(transitionTargetId, authService, injector).pipe(
               map((x) => {
-                if (x == null || typeof x === 'boolean') {
-                  return x ? transitionTargetId : defaultAllowedIdValue;
-                } else {
-                  return x;
-                }
+                const result = x == null || typeof x === 'boolean' ? (x ? transitionTargetId : defaultAllowedIdValue) : x;
+                return result;
               })
             );
           }
@@ -122,13 +119,8 @@ export function redirectForIdentifierParamHook(input: RedirectForIdentifierParam
             result = redirectToId.pipe(
               first(),
               map((targetId) => {
-                if (targetId !== transitionTargetId) {
-                  const target = transition.targetState();
-                  const state = target.state();
-                  return $state.target(state, { ...params, [idParam]: targetId }, { location: true });
-                } else {
-                  return true;
-                }
+                const result = targetId !== transitionTargetId ? $state.target(transition.targetState().state(), { ...params, [idParam]: targetId }, { location: true }) : true;
+                return result;
               })
             );
           }

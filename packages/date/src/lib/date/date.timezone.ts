@@ -447,37 +447,36 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
 
     if (hasConversion) {
       this._getOffset = function getCurrentOffset(x: Date, from: DateTimezoneConversionTarget, to: DateTimezoneConversionTarget): number {
-        if (from === to) {
-          return 0;
-        } else {
+        let result = 0;
+
+        if (from !== to) {
           const target = `${from}-${to}`;
-          let offset: number;
 
           switch (target) {
             case 'target-base':
-              offset = -calculateOffset(x);
+              result = -calculateOffset(x);
               break;
             case 'base-target':
-              offset = calculateOffset(x);
+              result = calculateOffset(x);
               break;
             case 'target-system':
-              offset = calculateSystemNormalDifference(x);
+              result = calculateSystemNormalDifference(x);
               break;
             case 'system-target':
-              offset = -calculateSystemNormalDifference(x);
+              result = -calculateSystemNormalDifference(x);
               break;
             case 'base-system':
-              offset = getCurrentSystemOffsetInMs(x);
+              result = getCurrentSystemOffsetInMs(x);
               break;
             case 'system-base':
-              offset = -getCurrentSystemOffsetInMs(x);
+              result = -getCurrentSystemOffsetInMs(x);
               break;
             default:
               throw new Error(`unexpected offset target "${target}"`);
           }
-
-          return offset;
         }
+
+        return result;
       };
     } else {
       this._getOffset = () => 0;
@@ -503,8 +502,10 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
    */
   safeMirroredConvertDate(config: SafeMirroredConvertDateConfig): { date: Date; daylightSavingsOffset: number } {
     const { baseDate, originalContextDate, contextType, safeConvert = true } = config;
+    let result: { date: Date; daylightSavingsOffset: number };
+
     if (contextType === 'base') {
-      return { date: baseDate, daylightSavingsOffset: 0 };
+      result = { date: baseDate, daylightSavingsOffset: 0 };
     } else {
       const reverseConversion = this.convertDate(baseDate, contextType, 'base');
 
@@ -514,11 +515,13 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
       const daylightSavingsOffset = safeConvert ? differenceInHours(originalContextDate, reverseConversion) : 0;
       const date = daylightSavingsOffset ? addHours(reverseConversion, daylightSavingsOffset) : reverseConversion;
 
-      return {
+      result = {
         date,
         daylightSavingsOffset
       };
     }
+
+    return result;
   }
 
   // MARK: DateTimezoneBaseDateConverter
@@ -639,12 +642,16 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
    * @returns the start of the day as a BaseDateAsUTC
    */
   startOfDayInBaseDate(date?: Date | ISO8601DayString): BaseDateAsUTC {
+    let result: BaseDateAsUTC;
+
     if (typeof date === 'string') {
-      return parseISO8601DayStringToUTCDate(date);
+      result = parseISO8601DayStringToUTCDate(date);
     } else {
       const startOfDayForSystem = startOfDay(date ?? new Date());
-      return this.baseDateToSystemDate(startOfDayForSystem);
+      result = this.baseDateToSystemDate(startOfDayForSystem);
     }
+
+    return result;
   }
 
   /**
@@ -666,12 +673,16 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
    * @returns the start of the day in the system timezone
    */
   startOfDayInSystemDate(date?: Date | ISO8601DayString): Date {
+    let result: Date;
+
     if (typeof date === 'string') {
       const utcDate = parseISO8601DayStringToUTCDate(date);
-      return this.systemDateToBaseDate(utcDate);
+      result = this.systemDateToBaseDate(utcDate);
     } else {
-      return startOfDay(date ?? new Date());
+      result = startOfDay(date ?? new Date());
     }
+
+    return result;
   }
 
   /**

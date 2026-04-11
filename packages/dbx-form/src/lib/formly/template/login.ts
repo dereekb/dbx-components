@@ -1,5 +1,5 @@
-import { type TextFieldConfig, textField } from '../field/value/text/text.field';
-import { type EmailFieldConfig, emailField } from '../field/value/text/text.additional.field';
+import { type TextFieldConfig, formlyTextField } from '../field/value/text/text.field';
+import { type EmailFieldConfig, formlyEmailField } from '../field/value/text/text.additional.field';
 import { fieldValuesAreEqualValidator } from '../../validator/field';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { capitalizeFirstLetter, type Maybe } from '@dereekb/util';
@@ -22,8 +22,8 @@ export interface TextPasswordFieldConfig extends Omit<TextFieldConfig, 'inputTyp
  * @param config - Optional configuration for the password field.
  * @returns A Formly field configuration for a password input.
  */
-export function textPasswordField(config?: TextPasswordFieldConfig): FormlyFieldConfig {
-  return textField({
+export function formlyTextPasswordField(config?: TextPasswordFieldConfig): FormlyFieldConfig {
+  return formlyTextField({
     key: 'password',
     ...config,
     label: config?.label ?? 'Password',
@@ -40,8 +40,8 @@ export function textPasswordField(config?: TextPasswordFieldConfig): FormlyField
  * @param config - Optional configuration for the verify password field.
  * @returns A Formly field configuration for a verify password input.
  */
-export function textVerifyPasswordField(config?: TextPasswordFieldConfig): FormlyFieldConfig {
-  return textPasswordField({
+export function formlyTextVerifyPasswordField(config?: TextPasswordFieldConfig): FormlyFieldConfig {
+  return formlyTextPasswordField({
     key: 'verifyPassword',
     label: 'Verify Password',
     ...config,
@@ -70,10 +70,10 @@ export interface TextPasswordWithVerifyFieldConfig {
  * @param config - Configuration for the password and verify password fields.
  * @returns A Formly field group configuration with password matching validation.
  */
-export function textPasswordWithVerifyFieldGroup(config: TextPasswordWithVerifyFieldConfig): FormlyFieldConfig {
-  const passwordFieldConfig = textPasswordField(config.password);
+export function formlyTextPasswordWithVerifyFieldGroup(config: TextPasswordWithVerifyFieldConfig): FormlyFieldConfig {
+  const passwordFieldConfig = formlyTextPasswordField(config.password);
   const verifyPasswordFieldKey = config.verifyPassword?.key ?? `verify${capitalizeFirstLetter(String(passwordFieldConfig.key))}`;
-  const verifyPasswordField = textVerifyPasswordField({
+  const verifyPasswordField = formlyTextVerifyPasswordField({
     ...config.password,
     ...config.verifyPassword,
     label: config.verifyPassword?.label ?? `Verify ${passwordFieldConfig.props?.label}`,
@@ -154,9 +154,9 @@ export interface DefaultUsernameLoginFieldsValue extends DefaultUsernameLoginFie
  * @param param0.verifyPassword - Optional verify-password field configuration, or `true` to use defaults
  * @returns An array of Formly field configs for the login form
  */
-export function usernamePasswordLoginFields({ username, password, verifyPassword }: UsernameLoginFieldsConfig): FormlyFieldConfig[] {
-  const usernameField = usernameLoginField(username);
-  const passwordField = verifyPassword ? textPasswordWithVerifyFieldGroup({ password, verifyPassword: verifyPassword === true ? undefined : verifyPassword }) : textPasswordField(password);
+export function formlyUsernamePasswordLoginFields({ username, password, verifyPassword }: UsernameLoginFieldsConfig): FormlyFieldConfig[] {
+  const usernameField = formlyUsernameLoginField(username);
+  const passwordField = verifyPassword ? formlyTextPasswordWithVerifyFieldGroup({ password, verifyPassword: verifyPassword === true ? undefined : verifyPassword }) : formlyTextPasswordField(password);
 
   return [usernameField, passwordField];
 }
@@ -175,7 +175,7 @@ export interface DefaultUsernameLoginFieldValue {
  * @param username - Either `'email'`, `'username'`, or a full {@link UsernameLoginFieldUsernameConfig}.
  * @returns A Formly field configuration for the username input.
  */
-export function usernameLoginField(username: UsernameLoginFieldUsernameConfigInput): FormlyFieldConfig {
+export function formlyUsernameLoginField(username: UsernameLoginFieldUsernameConfigInput): FormlyFieldConfig {
   let usernameField: FormlyFieldConfig;
   let usernameFieldConfig: UsernameLoginFieldUsernameConfig = username as UsernameLoginFieldUsernameConfig;
 
@@ -194,10 +194,32 @@ export function usernameLoginField(username: UsernameLoginFieldUsernameConfigInp
   }
 
   if (usernameFieldConfig.email) {
-    usernameField = emailField({ ...usernameFieldConfig.email, ...defaultUsernameFieldConfig });
+    usernameField = formlyEmailField({ ...usernameFieldConfig.email, ...defaultUsernameFieldConfig });
   } else {
-    usernameField = textField({ ...usernameFieldConfig.username, ...defaultUsernameFieldConfig });
+    usernameField = formlyTextField({ ...usernameFieldConfig.username, ...defaultUsernameFieldConfig });
   }
 
   return usernameField;
 }
+
+// MARK: Deprecated Aliases
+/**
+ * @deprecated Use formlyTextPasswordField instead.
+ */
+export const textPasswordField = formlyTextPasswordField;
+/**
+ * @deprecated Use formlyTextVerifyPasswordField instead.
+ */
+export const textVerifyPasswordField = formlyTextVerifyPasswordField;
+/**
+ * @deprecated Use formlyTextPasswordWithVerifyFieldGroup instead.
+ */
+export const textPasswordWithVerifyFieldGroup = formlyTextPasswordWithVerifyFieldGroup;
+/**
+ * @deprecated Use formlyUsernamePasswordLoginFields instead.
+ */
+export const usernamePasswordLoginFields = formlyUsernamePasswordLoginFields;
+/**
+ * @deprecated Use formlyUsernameLoginField instead.
+ */
+export const usernameLoginField = formlyUsernameLoginField;

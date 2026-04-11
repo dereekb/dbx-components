@@ -101,11 +101,7 @@ export class DbxTableDateRangeDayDistanceInputCellInputComponent {
     const buttonFormat = this.buttonFormatSignal();
     const { start, end } = this.range.value;
 
-    if (start && end) {
-      return `${formatDate(start, buttonFormat)} - ${formatDate(end, buttonFormat)}`;
-    } else {
-      return `Select Date`;
-    }
+    return start && end ? `${formatDate(start, buttonFormat)} - ${formatDate(end, buttonFormat)}` : `Select Date`;
   });
 
   constructor() {

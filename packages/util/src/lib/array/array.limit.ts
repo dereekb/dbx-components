@@ -31,13 +31,8 @@ export function limitArray<T>(array: Maybe<T[]>, config: Maybe<Partial<LimitArra
 export function limitArray<T>(array: Maybe<T[]>, inputConfig: Maybe<Partial<LimitArrayConfig>>): Maybe<T[]> {
   if (array && inputConfig?.limit != null) {
     const { limit, limitFromEnd } = inputConfig;
-
-    if (limitFromEnd) {
-      return takeLast(array, limit);
-    } else {
-      return takeFront(array, limit);
-    }
-  } else {
-    return array;
+    return limitFromEnd ? takeLast(array, limit) : takeFront(array, limit);
   }
+
+  return array;
 }

@@ -1,0 +1,41 @@
+<div class="dbx-pickable-item-field">
+  @if (labelSignal()) {
+    <span class="dbx-label">{{ labelSignal() }}</span>
+  }
+  @if (showTextFilterSignal()) {
+    <div class="dbx-pickable-item-field-filter">
+      @if (filterLabelSignal()) {
+        <div class="dbx-label">{{ filterLabelSignal() }}</div>
+      }
+      <input class="dbx-forge-bare-input" [placeholder]="'Filter'" [formControl]="inputCtrl" />
+      <mat-divider></mat-divider>
+    </div>
+  }
+  <div class="dbx-pickable-item-field-chips">
+    <mat-chip-listbox [multiple]="multiSelectSignal()" [selectable]="!isDisabledOrReadonly()" [disabled]="isDisabledOrReadonly()">
+      @if (showSelectAllButtonSignal() && multiSelectSignal() && !isDisabledOrReadonly()) {
+        <mat-chip-option (click)="toggleAll()" [selected]="allSelectedSignal()">
+          <span class="dbx-chip-label">All</span>
+        </mat-chip-option>
+      }
+      @for (item of itemsSignal(); track item.key) {
+        <mat-chip-option (click)="itemClicked(item)" [selected]="item.selected" [disabled]="readonlySignal() || item.disabled">
+          @if (item.itemValue.icon) {
+            <mat-icon matChipAvatar>{{ item.itemValue.icon }}</mat-icon>
+          }
+          <span class="dbx-chip-label">{{ item.itemValue.label }}</span>
+          @if (item.itemValue.sublabel) {
+            <span class="dbx-chip-sublabel">{{ item.itemValue.sublabel }}</span>
+          }
+        </mat-chip-option>
+      }
+    </mat-chip-listbox>
+    <dbx-injection [config]="footerConfigSignal()"></dbx-injection>
+  </div>
+  @if (noItemsAvailableSignal()) {
+    <p class="dbx-label" role="status">No items match this filter.</p>
+  }
+  @if (hintSignal()) {
+    <div class="dbx-form-description">{{ hintSignal() }}</div>
+  }
+</div>

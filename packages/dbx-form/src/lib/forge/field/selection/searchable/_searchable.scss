@@ -1,0 +1,34 @@
+@mixin core() {
+  dbx-forge-searchable-text-field,
+  dbx-forge-searchable-chip-field {
+    display: block;
+    width: 100%;
+  }
+
+  .dbx-searchable-field {
+    width: 100%;
+
+    > .dbx-searchable-text-field-input,
+    > .dbx-searchable-chip-field-input {
+      width: 100%;
+    }
+  }
+
+  // Bare input styling is provided by the .dbx-forge-bare-input class
+  // applied directly in the searchable templates.
+  //
+  // The show/hide pattern (.dbx-searchable-text-field-has-value) and
+  // .dbx-searchable-text-field-value width are defined in formly's _searchable.scss
+  // and apply to both formly and forge contexts (same class names).
+
+  // Reveal the search input when the ancestor form-field wrapper has focus.
+  // The forge wrapper uses :focus-within instead of the .mat-focused class.
+  .dbx-forge-form-field-wrapper:focus-within .dbx-searchable-text-field-has-value.dbx-searchable-text-field-show-value .dbx-searchable-text-field-input {
+    margin-top: 8px;
+    opacity: unset;
+    height: unset;
+  }
+}
+
+@mixin theme($theme-config) {
+}

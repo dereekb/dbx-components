@@ -16,11 +16,7 @@ export type MaybeObservableOrValue<T> = Maybe<ObservableOrValue<Maybe<T>>>;
 export function asObservable<T>(valueOrObs: ObservableOrValue<T>): Observable<T>;
 export function asObservable<T>(valueOrObs: Maybe<ObservableOrValue<T>>): Observable<Maybe<T>>;
 export function asObservable<T>(valueOrObs: Maybe<ObservableOrValue<T>>): Observable<Maybe<T>> {
-  if (isObservable(valueOrObs)) {
-    return valueOrObs;
-  } else {
-    return of(valueOrObs);
-  }
+  return isObservable(valueOrObs) ? valueOrObs : of(valueOrObs);
 }
 
 /**

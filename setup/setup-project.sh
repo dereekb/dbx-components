@@ -83,14 +83,13 @@ DEP__UIROUTER_ANGULAR_VERSION=21.0.0         # @uirouter/angular
 DEP__NGBRACKET_NGX_LAYOUT_VERSION=^21.0.0    # @ngbracket/ngx-layout
 DEP__NGRX_STORE_DEVTOOLS_VERSION=^21.0.0     # @ngrx/store-devtools
 DEP__FIREBASE_RULES_UNIT_TESTING_VERSION=5.0.0  # @firebase/rules-unit-testing
-DEP__ANGULAR_FIRE_VERSION=21.0.0-rc.0-canary.ac3dd7c  # @angular/fire
 DEP__NGX_FORMLY_VERSION=^14.0.0              # @ngx-formly/* (general formly version)
 DEP__FIREBASE_TOOLS_VERSION=15.11.0          # firebase-tools
-DEP__RXFIRE_VERSION=git+https://git@github.com/dereekb/rxfire#606da27059f8fce2563d6e5a79ec4c7d0843a942  # rxfire (forked)
 DEP__ANGULAR_CALENDAR_VERSION=^0.32.1        # angular-calendar
 DEP__TYPES_SEGMENT_ANALYTICS_VERSION=^0.0.38  # @types/segment-analytics
 DEP__NX_VITEST_VERSION=$NX_VERSION           # @nx/vitest
 DEP__ANALOGJS_VITE_PLUGIN_ANGULAR_VERSION=~2.3.1  # @analogjs/vite-plugin-angular
+DEP__NG_FORGE_VERSION=^0.7.0                     # @ng-forge/dynamic-forms, @ng-forge/dynamic-forms-material
 
 # The app prefix is used in Angular and Nest classes as the prefix for classes/components
 APP_CODE_PREFIX="$(tr '[:lower:]' '[:upper:]' <<< ${INPUT_CODE_PREFIX:0:1})${INPUT_CODE_PREFIX:1}"  # AppTest
@@ -519,9 +518,8 @@ install_local_peer_deps() {
 
 # The CI environment does not seem to install any of the peer dependencies from the local @dereekb packages
 echo "Installing angular dependencies"
-npx --yes json -I -f package.json -e "this.overrides = { \"@angular/fire\": { \"rxfire\": \"$DEP__RXFIRE_VERSION\", \"firebase-tools\": \"$DEP__FIREBASE_TOOLS_VERSION\" } };"; # Set the overrides to allow angular/fire to deal
-npm install --force @angular/fire@$DEP__ANGULAR_FIRE_VERSION angular-calendar@$DEP__ANGULAR_CALENDAR_VERSION @zip.js/zip.js@$DEP__ZIP_JS_VERSION @placemarkio/geo-viewport@$DEP__PLACEMARKIO_GEO_VIEWPORT_VERSION @uirouter/rx@$DEP__UIROUTER_RX_VERSION @uirouter/core@$DEP__UIROUTER_CORE_VERSION @uirouter/angular@$DEP__UIROUTER_ANGULAR_VERSION @ngbracket/ngx-layout@$DEP__NGBRACKET_NGX_LAYOUT_VERSION @angular/animations@$ANGULAR_VERSION @angular/common@$ANGULAR_VERSION @angular/compiler@$ANGULAR_VERSION @angular/core@$ANGULAR_VERSION @angular/forms@$ANGULAR_VERSION @angular/material@$ANGULAR_VERSION @angular/cdk@$ANGULAR_VERSION @angular/platform-browser@$ANGULAR_VERSION @angular/platform-browser-dynamic@$ANGULAR_VERSION @angular/router@$ANGULAR_VERSION
-# note @angular/fire and @ngbracket/ngx-layout dependencies are installed here, as install_local ignores any @angular prefix
+npm install --force angular-calendar@$DEP__ANGULAR_CALENDAR_VERSION @zip.js/zip.js@$DEP__ZIP_JS_VERSION @placemarkio/geo-viewport@$DEP__PLACEMARKIO_GEO_VIEWPORT_VERSION @uirouter/rx@$DEP__UIROUTER_RX_VERSION @uirouter/core@$DEP__UIROUTER_CORE_VERSION @uirouter/angular@$DEP__UIROUTER_ANGULAR_VERSION @ngbracket/ngx-layout@$DEP__NGBRACKET_NGX_LAYOUT_VERSION @ng-forge/dynamic-forms@$DEP__NG_FORGE_VERSION @ng-forge/dynamic-forms-material@$DEP__NG_FORGE_VERSION @angular/animations@$ANGULAR_VERSION @angular/common@$ANGULAR_VERSION @angular/compiler@$ANGULAR_VERSION @angular/core@$ANGULAR_VERSION @angular/forms@$ANGULAR_VERSION @angular/material@$ANGULAR_VERSION @angular/cdk@$ANGULAR_VERSION @angular/platform-browser@$ANGULAR_VERSION @angular/platform-browser-dynamic@$ANGULAR_VERSION @angular/router@$ANGULAR_VERSION
+# note @ngbracket/ngx-layout dependencies are installed here, as install_local ignores any @angular prefix
 
 echo "Installing @dereekb peer dependencies for CI"
 install_local_peer_deps "$DBX_COMPONENTS_VERSION_VITEST"

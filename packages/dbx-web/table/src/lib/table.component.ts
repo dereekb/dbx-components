@@ -201,11 +201,7 @@ export class DbxTableViewComponent<I, C, T, G = unknown> {
     const trackByFunction = this.inputTrackByFunctionSignal() as TrackByFunction<T>;
 
     const fn: TrackByFunction<DbxTableViewElement<T, G>> = (index: number, element: DbxTableViewElement<T, G>) => {
-      if (element.type === 'item') {
-        return `i_${trackByFunction(index, element.item as T)}`;
-      } else {
-        return `g_${element.group.groupId}`;
-      }
+      return element.type === 'item' ? `i_${trackByFunction(index, element.item as T)}` : `g_${element.group.groupId}`;
     };
 
     return fn;

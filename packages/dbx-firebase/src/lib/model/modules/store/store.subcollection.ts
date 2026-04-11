@@ -51,24 +51,24 @@ export class AbstractDbxFirebaseCollectionWithParentStore<T, PT, D extends Fires
               this.setFirestoreCollection(collectionGroup);
             })
           );
-        } else {
-          // parent document collection
-          return this.currentParent$.pipe(
-            switchMap((parent) => {
-              if (parent) {
-                return this.collectionFactory$.pipe(
-                  tap((collectionFactory) => {
-                    const collection = collectionFactory(parent);
-                    this.setFirestoreCollection(collection);
-                  })
-                );
-              } else {
-                this.setFirestoreCollection(undefined);
-                return NEVER;
-              }
-            })
-          );
         }
+
+        // parent document collection
+        return this.currentParent$.pipe(
+          switchMap((parent) => {
+            if (parent) {
+              return this.collectionFactory$.pipe(
+                tap((collectionFactory) => {
+                  const collection = collectionFactory(parent);
+                  this.setFirestoreCollection(collection);
+                })
+              );
+            }
+
+            this.setFirestoreCollection(undefined);
+            return NEVER;
+          })
+        );
       })
     );
   });

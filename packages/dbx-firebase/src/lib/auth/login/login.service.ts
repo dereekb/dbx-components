@@ -129,9 +129,9 @@ export class DbxFirebaseAuthLoginService {
         this.updateAssetsForProvider(provider.loginMethodType, provider.assets);
       }
       return true;
-    } else {
-      return false;
     }
+
+    return false;
   }
 
   /**

@@ -215,12 +215,7 @@ export function computeNextFreeIndexFunction<T>(readIndex: ReadIndexFunction<T>,
   return (values: T[]) => {
     const minMax = findMinMax(values);
     const max = minMax?.max;
-
-    if (max != null) {
-      return readNextIndex(max);
-    } else {
-      return 0;
-    }
+    return max != null ? readNextIndex(max) : 0;
   };
 }
 
@@ -236,12 +231,7 @@ export function computeNextFreeIndexOnSortedValuesFunction<T>(readIndex: ReadInd
   const readNextIndex = nextIndex ?? ((x) => readIndex(x) + 1); //return the max index + 1 by default.
   return (sortedValues: T[]) => {
     const lastValueInSorted = lastValue(sortedValues);
-
-    if (lastValueInSorted != null) {
-      return readNextIndex(lastValueInSorted);
-    } else {
-      return 0;
-    }
+    return lastValueInSorted != null ? readNextIndex(lastValueInSorted) : 0;
   };
 }
 
@@ -269,13 +259,7 @@ export function minAndMaxIndexFunction<T>(readIndex: ReadIndexFunction<T>): MinA
   const minAndMaxItems = minAndMaxIndexItemsFunction(readIndex);
   const fn = ((values: T[]) => {
     const result = minAndMaxItems(values);
-
-    if (result != null) {
-      const { min, max } = result;
-      return { min: readIndex(min), max: readIndex(max) };
-    } else {
-      return null;
-    }
+    return result != null ? { min: readIndex(result.min), max: readIndex(result.max) } : null;
   }) as Building<MinAndMaxIndexFunction<T>>;
   fn._readIndex = readIndex;
   return fn as MinAndMaxIndexFunction<T>;
@@ -457,12 +441,7 @@ export function sortByIndexRangeAscendingCompareFunction<T>(readIndexRange: Read
     const rb = readIndexRange(b);
 
     const comp = ra.minIndex - rb.minIndex; // sort by smaller minIndexes first
-
-    if (comp === 0) {
-      return ra.maxIndex - rb.maxIndex; // sort by larger maxIndexes first
-    } else {
-      return comp;
-    }
+    return comp === 0 ? ra.maxIndex - rb.maxIndex : comp; // sort by larger maxIndexes first when equal
   };
 }
 
@@ -509,11 +488,7 @@ export type IndexRangeInput = IndexNumber | IndexRange;
  * @returns the normalized IndexRange
  */
 export function indexRange(input: IndexRangeInput): IndexRange {
-  if (typeof input === 'number') {
-    return { minIndex: input, maxIndex: input + 1 };
-  } else {
-    return input;
-  }
+  return typeof input === 'number' ? { minIndex: input, maxIndex: input + 1 } : input;
 }
 
 /**
@@ -602,13 +577,13 @@ export interface IndexRangeFunctionConfig {
 }
 
 function indexRangeCheckFunctionConfigToIndexRange({ indexRange, inclusiveMaxIndex }: IndexRangeFunctionConfig): IndexRange {
-  if (inclusiveMaxIndex) {
-    const { minIndex, maxIndex: maxIndexInput } = indexRange;
-    const maxIndex = maxIndexInput + 1;
-    return { minIndex, maxIndex };
-  } else {
+  if (!inclusiveMaxIndex) {
     return indexRange;
   }
+
+  const { minIndex, maxIndex: maxIndexInput } = indexRange;
+  const maxIndex = maxIndexInput + 1;
+  return { minIndex, maxIndex };
 }
 
 /**

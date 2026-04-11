@@ -41,6 +41,9 @@ export interface DbxFormMapboxZoomComponentFieldProps extends Omit<FormlyFieldPr
   readonly zoomStep?: number;
 }
 
+/**
+ * @deprecated Use DbxForgeMapboxZoomFieldComponent instead.
+ */
 @Component({
   template: `
     <div class="dbx-mapbox-input-field" [ngClass]="compactClassSignal()" [formGroup]="formGroup">

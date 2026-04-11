@@ -217,7 +217,7 @@ export class DbxDurationPickerPopoverComponent extends AbstractPopoverDirective<
    * When carryOver is enabled, normalizes the data by converting to total milliseconds
    * and decomposing back into the picker's units (e.g., 60s becomes 1m, 7d becomes 1w).
    *
-   * @param data - The duration data to potentially normalize.
+   * @param data - The duration data to normalize
    * @returns Normalized or original data
    */
   private _normalizeIfCarryOver(data: TimeDurationData): TimeDurationData {
@@ -272,7 +272,7 @@ export class DbxDurationPickerPopoverComponent extends AbstractPopoverDirective<
   /**
    * Returns the current step based on whether shift is held.
    *
-   * @returns 2 if shift is held, 1 otherwise.
+   * @returns 2 when shift is held for larger increments, 1 otherwise
    */
   private get _currentStep(): number {
     return this._shiftHeld ? 2 : 1;
@@ -312,16 +312,18 @@ export class DbxDurationPickerPopoverComponent extends AbstractPopoverDirective<
   /**
    * Executes an increment or decrement action if allowed.
    *
-   * @param action - Whether to increment or decrement the value.
-   * @param unit - The time unit to modify (e.g., 'h', 'min', 's').
-   * @param step - The number of units to add or subtract per action.
-   * @returns True if the action was performed.
+   * @param action - Whether to increment or decrement the value
+   * @param unit - The time unit to adjust (e.g. 'h', 'm', 's')
+   * @param step - The step multiplier for the action
+   * @returns True if the action was performed
    */
   private _doAction(action: 'increment' | 'decrement', unit: TimeUnit, step: number): boolean {
     if (action === 'increment' && this.canIncrement(unit)) {
       this.increment(unit, step);
       return true;
-    } else if (action === 'decrement' && this.canDecrement(unit)) {
+    }
+
+    if (action === 'decrement' && this.canDecrement(unit)) {
       this.decrement(unit, step);
       return true;
     }

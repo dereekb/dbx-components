@@ -143,11 +143,7 @@ export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionCo
       this._currentPromise = undefined;
     }
 
-    if (error != null) {
-      return Promise.reject(error);
-    } else {
-      return result as O;
-    }
+    return error != null ? Promise.reject(error) : (result as O);
   }
 
   /**

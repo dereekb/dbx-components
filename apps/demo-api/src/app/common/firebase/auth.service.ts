@@ -1,9 +1,9 @@
 import { DEMO_AUTH_CLAIMS_SERVICE } from 'demo-firebase';
-import { type CallableContextWithAuthData, AbstractFirebaseServerAuthContext, AbstractFirebaseServerAuthService, AbstractFirebaseServerAuthUserContext, type FirebaseServerAuthNewUserSetupDetails, type FirebaseServerNewUserService } from '@dereekb/firebase-server';
+import { type CallableContextWithAuthData, AbstractFirebaseServerAuthContext, AbstractFirebaseServerAuthService, AbstractFirebaseServerAuthUserContext, type FirebaseServerAuthNewUserSetupDetails, type FirebaseServerAuthPasswordResetDetails, type FirebaseServerNewUserService, type FirebaseServerUserPasswordResetService } from '@dereekb/firebase-server';
 import { type AuthClaims, type AuthClaimsUpdate, type AuthRoleSet } from '@dereekb/util';
 import { type MailgunService } from '@dereekb/nestjs/mailgun';
 import type * as admin from 'firebase-admin';
-import { AbstractMailgunContentFirebaseServerNewUserService, type NewUserMailgunContentRequest } from '@dereekb/firebase-server/mailgun';
+import { AbstractMailgunContentFirebaseServerNewUserService, AbstractMailgunContentFirebaseServerUserPasswordResetService, type NewUserMailgunContentRequest, type ResetPasswordMailgunContentRequest } from '@dereekb/firebase-server/mailgun';
 
 export class DemoApiFirebaseServerAuthUserContext extends AbstractFirebaseServerAuthUserContext<DemoApiAuthService> {}
 
@@ -14,6 +14,20 @@ export class DemoApiFirebaseServerNewUserService extends AbstractMailgunContentF
     const request: NewUserMailgunContentRequest = {
       subject: 'Invite to dbx-components Demo',
       template: 'invite'
+    };
+    return request;
+  }
+}
+
+export class DemoApiFirebaseServerUserPasswordResetService extends AbstractMailgunContentFirebaseServerUserPasswordResetService<DemoApiFirebaseServerAuthUserContext> {
+  protected async buildPasswordResetMailgunContentRequest(details: FirebaseServerAuthPasswordResetDetails<DemoApiFirebaseServerAuthUserContext>): Promise<ResetPasswordMailgunContentRequest> {
+    const { resetPassword } = details.claims;
+    const request: ResetPasswordMailgunContentRequest = {
+      subject: 'Password Reset - dbx-components Demo',
+      template: 'password-reset',
+      templateVariables: {
+        resetCode: resetPassword
+      }
     };
     return request;
   }
@@ -45,5 +59,9 @@ export class DemoApiAuthService extends AbstractFirebaseServerAuthService<DemoAp
 
   override newUser(): FirebaseServerNewUserService {
     return new DemoApiFirebaseServerNewUserService(this, this.mailgunService);
+  }
+
+  override passwordReset(): FirebaseServerUserPasswordResetService {
+    return new DemoApiFirebaseServerUserPasswordResetService(this, this.mailgunService);
   }
 }

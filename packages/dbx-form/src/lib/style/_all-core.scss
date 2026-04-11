@@ -3,6 +3,7 @@
 @use '../layout/layout';
 @use '../formly/field/field';
 @use '../formly/form/form' as forms;
+@use '../forge/field/field' as forge-field;
 @use '../extension/extension';
 
 // Includes all theming config
@@ -10,6 +11,7 @@
   @include form.core();
   @include formly.core();
   @include field.all-field-core();
+  @include forge-field.all-field-core();
   @include forms.core();
   @include layout.core();
   @include extension.all-extension-core($theme-config);

@@ -42,11 +42,10 @@ export function arrayContainsDuplicateValue<T>(values: T[]): boolean {
 export function findIndexOfFirstDuplicateValue<T>(values: T[]): number {
   const encountered = new Set();
   return values.findIndex((x) => {
-    if (encountered.has(x)) {
-      return true;
-    } else {
+    const isDuplicate = encountered.has(x);
+    if (!isDuplicate) {
       encountered.add(x);
-      return false;
     }
+    return isDuplicate;
   });
 }

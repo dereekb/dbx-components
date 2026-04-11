@@ -128,9 +128,9 @@ export class DbxActionFormDirective<T = object, O = T> implements OnInit {
                       switchMap((canContinue) => {
                         if (canContinue) {
                           return this.readyValue(value).pipe(first());
-                        } else {
-                          return of(doNothing);
                         }
+
+                        return of(doNothing);
                       }),
                       catchError((error) => of({ reject: error }))
                     )
@@ -248,9 +248,9 @@ export class DbxActionFormDirective<T = object, O = T> implements OnInit {
       switchMap((mapFunction) => {
         if (mapFunction) {
           return asObservable(mapFunction(value));
-        } else {
-          return of({ value: value as unknown as O });
         }
+
+        return of({ value: value as unknown as O });
       })
     );
   }

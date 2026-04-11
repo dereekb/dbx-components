@@ -11,12 +11,10 @@ export type BooleanReturnFunction = (...args: any[]) => boolean;
  * @returns The inverted function, or the original if invert is false
  */
 export function invertBooleanReturnFunction<F extends BooleanReturnFunction>(decisionFn: F, invert = true): F {
-  if (invert) {
-    return ((...args: any[]) => {
-      const result: boolean = (decisionFn as any).call(undefined, ...args);
-      return !result;
-    }) as F;
-  } else {
-    return decisionFn;
-  }
+  return invert
+    ? (((...args: any[]) => {
+        const result: boolean = (decisionFn as any).call(undefined, ...args);
+        return !result;
+      }) as F)
+    : decisionFn;
 }

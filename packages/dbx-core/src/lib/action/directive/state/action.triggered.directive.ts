@@ -32,11 +32,7 @@ export class DbxActionTriggeredDirective extends AbstractIfDirective {
 
   readonly show$ = this._store.triggered$.pipe(
     exhaustMap((triggered) => {
-      if (triggered) {
-        return emitDelayObs(true, false, this.hideAfter());
-      } else {
-        return of(false);
-      }
+      return triggered ? emitDelayObs(true, false, this.hideAfter()) : of(false);
     }),
     shareReplay(1)
   );

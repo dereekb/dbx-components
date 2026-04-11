@@ -212,56 +212,56 @@ export function makeFirestoreItemPageIteratorDelegate<T>(): FirestoreItemPageIte
           if (prevResult?.snapshot.empty === true) {
             // TODO(REMOVE): Shouldn't happen. Remove this later.
             return of<ItemPageIteratorResult<FirestoreItemPageQueryResult<T>>>({ end: true });
-          } else {
-            const constraints: FirestoreQueryConstraint[] = [];
-
-            // Add filter constraints
-            if (filterConstraints != null) {
-              mergeArraysIntoArray(constraints, filterDisallowedFirestoreItemPageIteratorInputConstraints(asArray(filterConstraints)));
-            }
-
-            // Add cursor
-            const cursorDocument = prevResult ? lastValue(prevResult.docs) : undefined;
-            const startAfterFilter = cursorDocument ? startAfter(cursorDocument) : undefined;
-
-            if (startAfterFilter) {
-              constraints.push(startAfterFilter);
-            }
-
-            // Add Limit
-            const limitCount = filterLimit ?? itemsPerPage + (startAfterFilter ? 1 : 0); // todo: may not be needed.
-            const limitConstraint = limit(limitCount);
-            const constraintsWithLimit = [...constraints, limitConstraint];
-
-            // make query
-            const batchQuery = driver.query<T>(queryLike, ...constraintsWithLimit);
-            const resultPromise: Promise<ItemPageIteratorResult<FirestoreItemPageQueryResult<T>>> = driver.getDocs(batchQuery).then((snapshot) => {
-              const time = new Date();
-              const docs = snapshot.docs;
-
-              const end = snapshot.empty || (inferEndOfResultsFromPageSize && docs.length < limitCount);
-
-              const result: ItemPageIteratorResult<FirestoreItemPageQueryResult<T>> = {
-                value: {
-                  time,
-                  docs,
-                  snapshot,
-                  reload() {
-                    return driver.getDocs(batchQuery);
-                  },
-                  stream(options?: FirestoreItemPageQueryResultStreamOptions) {
-                    // todo: consider allowing limit to be changed here to stream a subset. This will be useful for detecting collection changes.
-                    return driver.streamDocs(batchQuery, options?.options);
-                  }
-                },
-                end
-              };
-
-              return result;
-            });
-
-            return from(resultPromise);
           }
+
+          const constraints: FirestoreQueryConstraint[] = [];
+
+          // Add filter constraints
+          if (filterConstraints != null) {
+            mergeArraysIntoArray(constraints, filterDisallowedFirestoreItemPageIteratorInputConstraints(asArray(filterConstraints)));
+          }
+
+          // Add cursor
+          const cursorDocument = prevResult ? lastValue(prevResult.docs) : undefined;
+          const startAfterFilter = cursorDocument ? startAfter(cursorDocument) : undefined;
+
+          if (startAfterFilter) {
+            constraints.push(startAfterFilter);
+          }
+
+          // Add Limit
+          const limitCount = filterLimit ?? itemsPerPage + (startAfterFilter ? 1 : 0); // todo: may not be needed.
+          const limitConstraint = limit(limitCount);
+          const constraintsWithLimit = [...constraints, limitConstraint];
+
+          // make query
+          const batchQuery = driver.query<T>(queryLike, ...constraintsWithLimit);
+          const resultPromise: Promise<ItemPageIteratorResult<FirestoreItemPageQueryResult<T>>> = driver.getDocs(batchQuery).then((snapshot) => {
+            const time = new Date();
+            const docs = snapshot.docs;
+
+            const end = snapshot.empty || (inferEndOfResultsFromPageSize && docs.length < limitCount);
+
+            const result: ItemPageIteratorResult<FirestoreItemPageQueryResult<T>> = {
+              value: {
+                time,
+                docs,
+                snapshot,
+                reload() {
+                  return driver.getDocs(batchQuery);
+                },
+                stream(options?: FirestoreItemPageQueryResultStreamOptions) {
+                  // todo: consider allowing limit to be changed here to stream a subset. This will be useful for detecting collection changes.
+                  return driver.streamDocs(batchQuery, options?.options);
+                }
+              },
+              end
+            };
+
+            return result;
+          });
+
+          return from(resultPromise);
         })
       );
     }
@@ -534,76 +534,76 @@ export function firestoreFixedItemPageIteration<T>(config: FirestoreFixedItemPag
           if (prevResult?.snapshot.empty === true) {
             // TODO(REMOVE): Shouldn't happen. Remove this later.
             return of<ItemPageIteratorResult<FirestoreItemPageQueryResult<T>>>({ end: true });
+          }
+
+          const cursorDocument = prevResult ? lastValue(prevResult.docs) : undefined;
+
+          const startAtIndex = cursorDocument ? indexForId(cursorDocument.id) + 1 : 0;
+          const limitCount = filterLimit ?? itemsPerPage;
+
+          const time = new Date();
+          const itemsForThisPage: DocumentReference<T>[] = items.slice(startAtIndex, startAtIndex + limitCount);
+
+          const lastItemForThisPage = lastValue(itemsForThisPage) as Maybe<DocumentReference<T>>;
+          let end = false;
+
+          if (lastItemForThisPage) {
+            const lastItemForThisPageItemIndex = startAtIndex + (itemsForThisPage.length - 1);
+            idLookupMap.set(lastItemForThisPage.id, lastItemForThisPageItemIndex);
+            end = lastItemForThisPageItemIndex === items.length - 1;
           } else {
-            const cursorDocument = prevResult ? lastValue(prevResult.docs) : undefined;
+            end = true;
+          }
 
-            const startAtIndex = cursorDocument ? indexForId(cursorDocument.id) + 1 : 0;
-            const limitCount = filterLimit ?? itemsPerPage;
+          const documents = loadDocumentsForDocumentReferences(documentAccessor, itemsForThisPage);
 
-            const time = new Date();
-            const itemsForThisPage: DocumentReference<T>[] = items.slice(startAtIndex, startAtIndex + limitCount);
+          const _loadFakeQuerySnapshot = () => {
+            return getDocumentSnapshots(documents).then((documentSnapshots) => {
+              const documentSnapshotsWithData = documentSnapshots.filter((x) => x.data() != null) as QueryDocumentSnapshotArray<T>;
+              const docs: QueryDocumentSnapshotArray<T> = documentSnapshotsWithData;
 
-            const lastItemForThisPage = lastValue(itemsForThisPage) as Maybe<DocumentReference<T>>;
-            let end = false;
+              const query: Query<T> = {
+                withConverter: () => {
+                  throw new Error('firestoreFixedItemPageIteration(): Not a real query');
+                }
+              } as unknown as Query<T>; // TODO: No great way to implement this. Not a great way to
 
-            if (lastItemForThisPage) {
-              const lastItemForThisPageItemIndex = startAtIndex + (itemsForThisPage.length - 1);
-              idLookupMap.set(lastItemForThisPage.id, lastItemForThisPageItemIndex);
-              end = lastItemForThisPageItemIndex === items.length - 1;
-            } else {
-              end = true;
-            }
-
-            const documents = loadDocumentsForDocumentReferences(documentAccessor, itemsForThisPage);
-
-            const _loadFakeQuerySnapshot = () => {
-              return getDocumentSnapshots(documents).then((documentSnapshots) => {
-                const documentSnapshotsWithData = documentSnapshots.filter((x) => x.data() != null) as QueryDocumentSnapshotArray<T>;
-                const docs: QueryDocumentSnapshotArray<T> = documentSnapshotsWithData;
-
-                const query: Query<T> = {
-                  withConverter: () => {
-                    throw new Error('firestoreFixedItemPageIteration(): Not a real query');
-                  }
-                } as unknown as Query<T>; // TODO: No great way to implement this. Not a great way to
-
-                const snapshot: QuerySnapshot<T> = {
-                  query,
-                  docs,
-                  size: docs.length,
-                  empty: docs.length === 0,
-                  docChanges: () => {
-                    return []; // no changes to return in this fake snapshot
-                  },
-                  forEach: (result: (result: QueryDocumentSnapshot<T>) => void) => {
-                    docs.forEach(result);
-                  }
-                };
-
-                return snapshot;
-              });
-            };
-
-            return _loadFakeQuerySnapshot().then((snapshot: QuerySnapshot<T>) => {
-              const result: ItemPageIteratorResult<FirestoreItemPageQueryResult<T>> = {
-                value: {
-                  time,
-                  docs: snapshot.docs,
-                  snapshot,
-                  reload() {
-                    return _loadFakeQuerySnapshot();
-                  },
-                  stream(_options?: FirestoreItemPageQueryResultStreamOptions) {
-                    // TODO: Count potentially stream to fully implement, but might not be used anyways.
-                    return of(snapshot);
-                  }
+              const snapshot: QuerySnapshot<T> = {
+                query,
+                docs,
+                size: docs.length,
+                empty: docs.length === 0,
+                docChanges: () => {
+                  return []; // no changes to return in this fake snapshot
                 },
-                end
+                forEach: (result: (result: QueryDocumentSnapshot<T>) => void) => {
+                  docs.forEach(result);
+                }
               };
 
-              return result;
+              return snapshot;
             });
-          }
+          };
+
+          return _loadFakeQuerySnapshot().then((snapshot: QuerySnapshot<T>) => {
+            const result: ItemPageIteratorResult<FirestoreItemPageQueryResult<T>> = {
+              value: {
+                time,
+                docs: snapshot.docs,
+                snapshot,
+                reload() {
+                  return _loadFakeQuerySnapshot();
+                },
+                stream(_options?: FirestoreItemPageQueryResultStreamOptions) {
+                  // TODO: Count potentially stream to fully implement, but might not be used anyways.
+                  return of(snapshot);
+                }
+              },
+              end
+            };
+
+            return result;
+          });
         })
       );
     }

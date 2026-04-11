@@ -12,11 +12,7 @@ import { type Maybe, performTaskLoop, type GetterOrValue, asGetter, isMaybeNot, 
 export function iterationHasNextAndCanLoadMore<V>(iteration: ItemIteration<V>): Observable<boolean> {
   return iteration.canLoadMore$.pipe(
     switchMap((canLoadMore) => {
-      if (canLoadMore) {
-        return iteration.hasNext$;
-      } else {
-        return of(false);
-      }
+      return canLoadMore ? iteration.hasNext$ : of(false);
     }),
     shareReplay(1)
   );

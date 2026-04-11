@@ -1,11 +1,11 @@
-import { type DbxFirebaseEmailRecoveryFormValue, DbxFirebaseEmailRecoveryFormComponent } from './login.email.recovery.form.component';
+import { type DbxFirebaseEmailRecoveryFormValue, DbxFirebaseEmailRecoveryForgeFormComponent } from './login.email.recovery.forge.form.component';
 import { DBX_INJECTION_COMPONENT_DATA, type ClickableAnchor, type DbxActionSuccessHandlerFunction } from '@dereekb/dbx-core';
 import { type WorkUsingObservable, type WorkUsingContext } from '@dereekb/rxjs';
 import { DbxFirebaseAuthService } from './../service/firebase.auth.service';
 import { firstValueFrom, from, tap } from 'rxjs';
 import { Component, EventEmitter, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { type DbxFirebaseLoginContext } from './login.context';
-import { type DbxFirebaseEmailFormValue, type DbxFirebaseEmailFormConfig, DbxFirebaseEmailFormComponent } from './login.email.form.component';
+import { type DbxFirebaseEmailFormValue, type DbxFirebaseEmailFormConfig, DbxFirebaseEmailForgeFormComponent } from './login.email.forge.form.component';
 import { type DbxFirebaseLoginMode } from './login';
 import { firebaseAuthErrorToReadableError } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
@@ -33,7 +33,7 @@ export type DbxFirebaseLoginEmailContentMode = 'login' | 'recover' | 'recoversen
  */
 @Component({
   templateUrl: './login.email.content.component.html',
-  imports: [NgTemplateOutlet, DbxErrorComponent, DbxLinkComponent, DbxActionErrorDirective, DbxActionFormDirective, MatButtonModule, DbxActionModule, DbxButtonComponent, DbxButtonSpacerDirective, DbxFirebaseEmailFormComponent, DbxFirebaseEmailRecoveryFormComponent, DbxFormSourceDirective],
+  imports: [NgTemplateOutlet, DbxErrorComponent, DbxLinkComponent, DbxActionErrorDirective, DbxActionFormDirective, MatButtonModule, DbxActionModule, DbxButtonComponent, DbxButtonSpacerDirective, DbxFirebaseEmailForgeFormComponent, DbxFirebaseEmailRecoveryForgeFormComponent, DbxFormSourceDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
@@ -119,7 +119,7 @@ export class DbxFirebaseLoginEmailContentComponent {
   readonly handleRecoveryAction: WorkUsingContext<DbxFirebaseEmailRecoveryFormValue> = (value: DbxFirebaseEmailRecoveryFormValue, context) => {
     this._recoveryFormValueSignal.set(value);
     this._emailFormValueSignal.set({ username: value.email, password: '' });
-    context.startWorkingWithPromise(this.dbxFirebaseAuthService.sendPasswordResetEmail(value.email));
+    context.startWorkingWithPromise(this.dbxFirebaseAuthService.sendPasswordReset(value.email));
   };
 
   // MARK: Recovering

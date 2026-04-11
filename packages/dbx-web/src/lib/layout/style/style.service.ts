@@ -24,11 +24,7 @@ export class DbxStyleService implements Destroyable {
 
   readonly config$ = this._config.pipe(
     switchMap((x) => {
-      if (x == null) {
-        return this._defaultConfig;
-      } else {
-        return x;
-      }
+      return x == null ? this._defaultConfig : x;
     }),
     filterMaybe(),
     distinctUntilChanged(),

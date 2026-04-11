@@ -16,14 +16,12 @@ export type ObservableDecisionFunction<T> = (value: T) => Observable<boolean>;
  * @returns the inverted (or original) decision function
  */
 export function invertObservableDecision<F extends ObservableDecisionFunction<any>>(decisionFn: F, invert = true): F {
-  if (invert) {
-    return ((value: unknown) => {
-      const obs: Observable<boolean> = decisionFn(value);
-      return obs.pipe(map((x) => !x));
-    }) as F;
-  } else {
-    return decisionFn;
-  }
+  return invert
+    ? (((value: unknown) => {
+        const obs: Observable<boolean> = decisionFn(value);
+        return obs.pipe(map((x) => !x));
+      }) as F)
+    : decisionFn;
 }
 
 /**

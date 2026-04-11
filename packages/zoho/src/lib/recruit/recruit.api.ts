@@ -146,17 +146,21 @@ function updateRecordLikeFunction(context: ZohoRecruitContext, fetchUrlPrefix: '
       const isInputMultipleItems = Array.isArray(data);
       const result = zohoRecruitMultiRecordResult<Partial<T>, ZohoRecruitChangeObjectResponseSuccessEntry, ZohoRecruitChangeObjectResponseErrorEntry>(asArray(data), x.data);
 
+      let finalResult;
+
       if (isInputMultipleItems) {
-        return result;
+        finalResult = result;
       } else {
         const { successItems, errorItems } = result;
 
         if (errorItems[0] != null) {
           throw zohoRecruitRecordCrudError(errorItems[0].result);
-        } else {
-          return successItems[0].result.details;
         }
+
+        finalResult = successItems[0].result.details;
       }
+
+      return finalResult;
     })) as ZohoRecruitUpdateRecordLikeFunction;
 }
 
@@ -940,18 +944,22 @@ export function zohoRecruitUploadAttachmentForRecord(context: ZohoRecruitContext
 
     const url = `/v2/${input.module}/${input.id}/${ZOHO_RECRUIT_ATTACHMENTS_MODULE}?${makeUrlSearchParams(urlParams).toString()}`;
 
+    let result;
+
     if (file != null) {
       const body = new FormData();
       body.append('file', file);
 
       // Clear the base Content-Type header (empty string removes it via mergeRequestHeaders) so fetch auto-detects multipart/form-data with the correct boundary from the FormData body.
-      return context.fetch(url, { method: 'POST', headers: { 'Content-Type': '' }, body });
+      result = context.fetch(url, { method: 'POST', headers: { 'Content-Type': '' }, body });
     } else if (attachmentUrl) {
       const urlWithAttachment = `${url}&${makeUrlSearchParams({ attachment_url: attachmentUrl }).toString()}`;
-      return context.fetch(urlWithAttachment, { method: 'POST' });
+      result = context.fetch(urlWithAttachment, { method: 'POST' });
     } else {
       throw new Error('file or attachmentUrl must be provided.');
     }
+
+    return result;
   };
 }
 
@@ -1179,11 +1187,11 @@ export function zohoRecruitExecuteRestApiFunction(context: ZohoRecruitContext): 
     const url = `${baseUrl}${relativeUrl}`;
 
     return context.fetchJson<ZohoRecruitExecuteRestApiFunctionResponse>(url, zohoRecruitApiFetchJsonInput('POST')).then((x) => {
-      if (x.code === 'success') {
-        return (x as ZohoRecruitExecuteRestApiFunctionSuccessResponse).details;
-      } else {
+      if (x.code !== 'success') {
         throw new ZohoRecruitExecuteRestApiFunctionError(x);
       }
+
+      return (x as ZohoRecruitExecuteRestApiFunctionSuccessResponse).details;
     });
   };
 }

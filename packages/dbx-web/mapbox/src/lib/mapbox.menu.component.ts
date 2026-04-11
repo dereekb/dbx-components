@@ -59,11 +59,7 @@ export class DbxMapboxMenuComponent {
       this.active$
         .pipe(
           switchMap((active) => {
-            if (active) {
-              return this.dbxMapboxMapStore.rightClickEvent$;
-            } else {
-              return of();
-            }
+            return active ? this.dbxMapboxMapStore.rightClickEvent$ : of();
           }),
           filter(Boolean)
         )

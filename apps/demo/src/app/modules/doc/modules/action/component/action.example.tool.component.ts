@@ -2,7 +2,7 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { filterMaybe } from '@dereekb/rxjs';
 import { shareReplay, switchMap } from 'rxjs';
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
-import { provideFormlyContext } from '@dereekb/dbx-form';
+import { provideDbxForgeFormContext } from '@dereekb/dbx-form';
 import { DbxActionContextStoreSourceInstance, type DbxActionDirective, DbxActionSourceDirective } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 import { MatDivider } from '@angular/material/divider';
@@ -13,7 +13,7 @@ import { JsonPipe } from '@angular/common';
 @Component({
   templateUrl: './action.example.tool.component.html',
   selector: 'doc-action-example-tools',
-  providers: [provideFormlyContext()],
+  providers: [provideDbxForgeFormContext()],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [DbxActionSourceDirective, MatDivider, FlexModule, DbxErrorComponent, DbxActionErrorDirective, JsonPipe]

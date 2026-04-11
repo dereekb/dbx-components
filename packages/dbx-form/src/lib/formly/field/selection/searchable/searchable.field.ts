@@ -14,7 +14,7 @@ import { type SearchableTextValueFieldsFieldProps } from './searchable.text.fiel
  * @param param0.makeDisplayForValues - Function to convert values with metadata into display values
  * @returns A display function that lazily loads metadata before generating display values
  */
-export function makeMetaFilterSearchableFieldValueDisplayFn<T extends string | number = string | number, M = unknown>({ loadMetaForValues, makeDisplayForValues }: { loadMetaForValues: (values: SearchableValueFieldValue<T, M>[]) => Observable<SearchableValueFieldValue<T, M>[]>; makeDisplayForValues: (values: SearchableValueFieldValue<T, M>[]) => Observable<SearchableValueFieldDisplayValue<T, M>[]> }): SearchableValueFieldDisplayFn<T, M> {
+export function formlyMakeMetaFilterSearchableFieldValueDisplayFn<T extends string | number = string | number, M = unknown>({ loadMetaForValues, makeDisplayForValues }: { loadMetaForValues: (values: SearchableValueFieldValue<T, M>[]) => Observable<SearchableValueFieldValue<T, M>[]>; makeDisplayForValues: (values: SearchableValueFieldValue<T, M>[]) => Observable<SearchableValueFieldDisplayValue<T, M>[]> }): SearchableValueFieldDisplayFn<T, M> {
   return (values: SearchableValueFieldValue<T, M>[]) => {
     const { included: loaded, excluded: needLoading } = separateValues(values, (x) => Boolean(x.meta));
     let allValues: Observable<SearchableValueFieldValue<T, M>[]>;
@@ -62,11 +62,11 @@ export type StringSearchableChipFieldConfig<M = unknown> = Omit<SearchableChipFi
  *
  * @example
  * ```typescript
- * const field = searchableStringChipField({ key: 'tags', label: 'Tags', search: searchFn });
+ * const field = formlySearchableStringChipField({ key: 'tags', label: 'Tags', search: searchFn });
  * ```
  */
-export function searchableStringChipField<M = unknown>(config: StringSearchableChipFieldConfig<M>): FormlyFieldConfig {
-  return searchableChipField({
+export function formlySearchableStringChipField<M = unknown>(config: StringSearchableChipFieldConfig<M>): FormlyFieldConfig {
+  return formlySearchableChipField({
     ...config,
     allowStringValues: true
   });
@@ -87,10 +87,10 @@ export interface SearchableChipFieldConfig<T = unknown, M = unknown, H extends P
  *
  * @example
  * ```typescript
- * const field = searchableChipField({ key: 'skills', label: 'Skills', search: searchFn, hashForValue: (s) => s.id });
+ * const field = formlySearchableChipField({ key: 'skills', label: 'Skills', search: searchFn, hashForValue: (s) => s.id });
  * ```
  */
-export function searchableChipField<T, M = unknown, H extends PrimativeKey = PrimativeKey>(config: SearchableChipFieldConfig<T, M, H>): FormlyFieldConfig {
+export function formlySearchableChipField<T, M = unknown, H extends PrimativeKey = PrimativeKey>(config: SearchableChipFieldConfig<T, M, H>): FormlyFieldConfig {
   const { key, placeholder, materialFormField } = config;
   return formlyField({
     key,
@@ -119,10 +119,10 @@ export interface SearchableTextFieldConfig<T = unknown, M = unknown, H extends P
  *
  * @example
  * ```typescript
- * const field = searchableTextField({ key: 'assignee', label: 'Assignee', search: searchFn });
+ * const field = formlySearchableTextField({ key: 'assignee', label: 'Assignee', search: searchFn });
  * ```
  */
-export function searchableTextField<T, M = unknown, H extends PrimativeKey = PrimativeKey>(config: SearchableTextFieldConfig<T, M, H>): FormlyFieldConfig {
+export function formlySearchableTextField<T, M = unknown, H extends PrimativeKey = PrimativeKey>(config: SearchableTextFieldConfig<T, M, H>): FormlyFieldConfig {
   const { key, materialFormField } = config;
   return formlyField({
     key,
@@ -134,3 +134,21 @@ export function searchableTextField<T, M = unknown, H extends PrimativeKey = Pri
     })
   });
 }
+
+// MARK: Deprecated
+/**
+ * @deprecated Use formlyMakeMetaFilterSearchableFieldValueDisplayFn instead.
+ */
+export const makeMetaFilterSearchableFieldValueDisplayFn = formlyMakeMetaFilterSearchableFieldValueDisplayFn;
+/**
+ * @deprecated Use formlySearchableStringChipField instead.
+ */
+export const searchableStringChipField = formlySearchableStringChipField;
+/**
+ * @deprecated Use formlySearchableChipField instead.
+ */
+export const searchableChipField = formlySearchableChipField;
+/**
+ * @deprecated Use formlySearchableTextField instead.
+ */
+export const searchableTextField = formlySearchableTextField;

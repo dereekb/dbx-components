@@ -231,9 +231,5 @@ export function chainMapFunction<I, O, B>(a: MapFunction<I, O>, b: MaybeNot, app
 export function chainMapFunction<I, O, B>(a: MapFunction<I, O>, b: MapFunction<O, B>, apply: true): MapFunction<I, B>;
 export function chainMapFunction<I, O, B>(a: MapFunction<I, O>, b: Maybe<MapFunction<O, B>>, apply: boolean): MapFunction<I, O> | MapFunction<I, B>;
 export function chainMapFunction<I, O, B>(a: MapFunction<I, O>, b: Maybe<MapFunction<O, B>>, apply = true): MapFunction<I, O> | MapFunction<I, B> {
-  if (apply && b != null) {
-    return (x) => b(a(x));
-  } else {
-    return a;
-  }
+  return apply && b != null ? (x) => b(a(x)) : a;
 }

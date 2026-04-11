@@ -1,0 +1,44 @@
+.doc-feature-form-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+
+  &.mobile {
+    flex-direction: column;
+  }
+}
+
+.doc-feature-form-tabs-toolbar {
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+.doc-feature-form-tabs-column {
+  flex: 1;
+  min-width: 0;
+}
+
+.doc-feature-form-tabs-header {
+  font-weight: 500;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid currentColor;
+  opacity: 0.2;
+
+  .doc-feature-form-tabs-fn {
+    display: block;
+    font-family: monospace;
+    font-size: 11px;
+    text-transform: none;
+    letter-spacing: normal;
+    margin-top: 2px;
+    opacity: 0.8;
+  }
+}
+
+.doc-feature-form-tabs-content {
+  padding-top: 4px;
+}

@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
-import { type FormlyFieldConfig } from '@ngx-formly/core';
-import { AbstractSyncFormlyFormDirective, fixedDateRangeField, provideFormlyContext, DbxFormlyComponent } from '@dereekb/dbx-form';
+import { AbstractSyncForgeFormDirective, forgeFixedDateRangeField, dbxForgeFormComponentProviders, DbxForgeFormComponentImportsModule } from '@dereekb/dbx-form';
+import type { FormConfig } from '@ng-forge/dynamic-forms';
 import { type DateRange, DateRangeType } from '@dereekb/date';
 import { type DocInteractionTestFilterFormValue } from './filter.custom.form.component';
 
@@ -10,25 +10,27 @@ export type DocInteractionTestDateFilterFormValue = {
 
 @Component({
   template: `
-    <dbx-formly class="dbx-fixeddaterange-field-full-width"></dbx-formly>
+    <dbx-forge class="dbx-fixeddaterange-field-full-width"></dbx-forge>
   `,
   selector: 'doc-interaction-test-date-filter-form',
-  providers: provideFormlyContext(),
+  providers: dbxForgeFormComponentProviders(),
   standalone: true,
-  imports: [DbxFormlyComponent],
+  imports: [DbxForgeFormComponentImportsModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DocInteractionTestDateFilterFormComponent extends AbstractSyncFormlyFormDirective<DocInteractionTestFilterFormValue> {
-  readonly fields: FormlyFieldConfig[] = [
-    fixedDateRangeField({
-      key: 'range',
-      selectionMode: 'normal',
-      dateRangeInput: { type: DateRangeType.DAYS_RANGE, distance: 12 },
-      pickerConfig: {
-        limits: {
-          min: 'today_start'
+export class DocInteractionTestDateFilterFormComponent extends AbstractSyncForgeFormDirective<DocInteractionTestFilterFormValue> {
+  readonly config: FormConfig = {
+    fields: [
+      forgeFixedDateRangeField({
+        key: 'range',
+        selectionMode: 'normal',
+        dateRangeInput: { type: DateRangeType.DAYS_RANGE, distance: 12 },
+        pickerConfig: {
+          limits: {
+            min: 'today_start'
+          }
         }
-      }
-    })
-  ];
+      })
+    ]
+  } as FormConfig;
 }

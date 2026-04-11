@@ -1,0 +1,11 @@
+// MARK: Mixin
+@mixin core() {
+  // Container margin and list max-height are defined in formly's _pickable.scss
+  // and apply to both formly and forge contexts (same class names).
+  //
+  // Bare input styling is provided by the .dbx-forge-bare-input class
+  // applied directly in the pickable templates.
+}
+
+@mixin theme($theme-config) {
+}

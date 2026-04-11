@@ -1,12 +1,12 @@
 {
   "name": "@dereekb/vitest",
-  "version": "13.7.0",
+  "version": "13.8.0",
   "peerDependencies": {
     "@analogjs/vite-plugin-angular": "~2.3.1",
     "@analogjs/vitest-angular": "~2.3.1",
-    "@angular/compiler": "21.2.3",
-    "@angular/core": "21.2.3",
-    "@angular/platform-browser": "21.2.3",
+    "@angular/compiler": "21.2.4",
+    "@angular/core": "21.2.4",
+    "@angular/platform-browser": "21.2.4",
     "@nx/vite": "22.6.1",
     "@vitest/expect": "4.1.0",
     "axe-core": "^4.11.1",

@@ -455,11 +455,7 @@ export type IsWithinLatLngBoundFunction = LatLngBoundCheckFunction & { readonly 
  */
 export function isWithinLatLngBoundFunction(bound: LatLngBound): IsWithinLatLngBoundFunction {
   const fn = ((boundOrPoint: LatLngBoundOrPoint) => {
-    if (isLatLngPoint(boundOrPoint)) {
-      return isLatLngPointWithinLatLngBound(boundOrPoint, bound);
-    } else {
-      return isLatLngBoundWithinLatLngBound(boundOrPoint, bound);
-    }
+    return isLatLngPoint(boundOrPoint) ? isLatLngPointWithinLatLngBound(boundOrPoint, bound) : isLatLngBoundWithinLatLngBound(boundOrPoint, bound);
   }) as unknown as Writable<IsWithinLatLngBoundFunction>;
 
   (fn as unknown as Writable<IsWithinLatLngBoundFunction>)._bound = bound;
@@ -499,16 +495,16 @@ export function isLatLngPointWithinLatLngBound(point: LatLngPoint, within: LatLn
 
   const latIsBounded = lat >= sw.lat && lat <= ne.lat;
 
-  if (latIsBounded) {
-    if (latLngBoundStrictlyWrapsMap(within)) {
-      // included if between sw to the max possible value/bound (180), and ne to the min possible value/bound (-180)
-      return lng >= sw.lng || lng <= ne.lng;
-    } else {
-      return lng >= sw.lng && lng <= ne.lng;
-    }
+  if (!latIsBounded) {
+    return false;
   }
 
-  return false;
+  if (latLngBoundStrictlyWrapsMap(within)) {
+    // included if between sw to the max possible value/bound (180), and ne to the min possible value/bound (-180)
+    return lng >= sw.lng || lng <= ne.lng;
+  }
+
+  return lng >= sw.lng && lng <= ne.lng;
 }
 
 /**
@@ -541,11 +537,7 @@ export function overlapsLatLngBoundFunction(bound: LatLngBound): OverlapsLatLngB
   const a: Rectangle = boundToRectangle(bound);
 
   const fn = ((boundOrPoint: LatLngBoundOrPoint) => {
-    if (isLatLngPoint(boundOrPoint)) {
-      return isLatLngPointWithinLatLngBound(boundOrPoint, bound);
-    } else {
-      return rectangleOverlapsRectangle(a, boundToRectangle(boundOrPoint));
-    }
+    return isLatLngPoint(boundOrPoint) ? isLatLngPointWithinLatLngBound(boundOrPoint, bound) : rectangleOverlapsRectangle(a, boundToRectangle(boundOrPoint));
   }) as unknown as Writable<IsWithinLatLngBoundFunction>;
 
   (fn as unknown as Writable<IsWithinLatLngBoundFunction>)._bound = bound;

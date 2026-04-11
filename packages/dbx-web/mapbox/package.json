@@ -1,15 +1,15 @@
 {
   "name": "@dereekb/dbx-web/mapbox",
-  "version": "13.7.0",
+  "version": "13.8.0",
   "peerDependencies": {
-    "@angular/common": "21.2.3",
-    "@angular/core": "21.2.3",
-    "@angular/material": "21.2.3",
-    "@dereekb/dbx-core": "13.7.0",
-    "@dereekb/dbx-web": "13.7.0",
-    "@dereekb/rxjs": "13.7.0",
-    "@dereekb/util": "13.7.0",
-    "@dereekb/vitest": "13.7.0",
+    "@angular/common": "21.2.4",
+    "@angular/core": "21.2.4",
+    "@angular/material": "^21.2.3",
+    "@dereekb/dbx-core": "13.8.0",
+    "@dereekb/dbx-web": "13.8.0",
+    "@dereekb/rxjs": "13.8.0",
+    "@dereekb/util": "13.8.0",
+    "@dereekb/vitest": "13.8.0",
     "@ngrx/component-store": "^21.0.0",
     "@placemarkio/geo-viewport": "^1.0.2",
     "mapbox-gl": "^3.10.0",
@@ -17,6 +17,6 @@
     "rxjs": "^7.8.0"
   },
   "devDependencies": {
-    "@angular/platform-browser": "^21.2.3"
+    "@angular/platform-browser": "^21.2.4"
   }
 }

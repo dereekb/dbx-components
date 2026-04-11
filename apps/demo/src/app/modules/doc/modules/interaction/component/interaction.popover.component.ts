@@ -48,11 +48,7 @@ export class DocInteractionExamplePopoverComponent extends AbstractPopoverDirect
 
   ngOnInit(): void {
     this.popover.getClosingValueFn = (_, type) => {
-      if (type === 'backdropClick') {
-        return this.onCloseValue;
-      } else {
-        return undefined;
-      }
+      return type === 'backdropClick' ? this.onCloseValue : undefined;
     };
   }
 }

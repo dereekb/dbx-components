@@ -95,9 +95,9 @@ export class DbxErrorWidgetService {
         widgetComponentClass: entry.widgetComponentClass ?? entry.componentClass
       });
       return true;
-    } else {
-      return false;
     }
+
+    return false;
   }
 
   // MARK: Get

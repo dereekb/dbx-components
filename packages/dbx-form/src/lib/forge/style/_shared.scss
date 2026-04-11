@@ -1,0 +1,26 @@
+// Bare input class for forge fields rendered outside <mat-form-field>.
+// Resets the native input and applies Material body-large typography so
+// inputs inside the forge wrapper match their formly/mat-form-field counterparts.
+//
+// Apply by adding the class directly to <input> elements in forge templates.
+@mixin core() {
+  // Resets native <input> elements that render inside the forge form-field wrapper
+  // (outside a <mat-form-field>) so they match Material body-large typography.
+  // Used by pickable filter inputs and searchable text/chip field inputs.
+  .dbx-forge-bare-input {
+    border: none;
+    outline: none;
+    width: 100%;
+    background: transparent;
+    color: var(--mat-sys-on-surface);
+    font-family: var(--mat-sys-body-large-font);
+    font-size: var(--mat-sys-body-large-size);
+    line-height: var(--mat-sys-body-large-line-height);
+    letter-spacing: var(--mat-sys-body-large-tracking);
+    padding: 4px 0;
+
+    &::placeholder {
+      color: var(--mat-sys-on-surface-variant);
+    }
+  }
+}

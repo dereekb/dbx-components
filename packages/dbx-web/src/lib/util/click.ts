@@ -70,13 +70,13 @@ export function overrideClickElementEffect(config: OverrideClickElementEffectCon
         // Don't preventDefault or stopPropagation - let browser handle it naturally
         if (event.ctrlKey || event.metaKey || event.shiftKey || event.button === 1) {
           return; // Browser will open in new tab/window
-        } else {
-          // otherwise, also trigger a click on the uiSref anchor element
-          clickTargetElement?.nativeElement.click();
-          // Prevents the default behavior of the anchor element's href from being triggered
-          event.preventDefault();
-          event.stopPropagation();
         }
+
+        // otherwise, also trigger a click on the uiSref anchor element
+        clickTargetElement?.nativeElement.click();
+        // Prevents the default behavior of the anchor element's href from being triggered
+        event.preventDefault();
+        event.stopPropagation();
       };
 
       _cleanupClickOverride = () => {

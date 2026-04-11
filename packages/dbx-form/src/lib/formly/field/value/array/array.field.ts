@@ -33,7 +33,7 @@ export interface RepeatArrayFieldConfig<T = unknown> extends DbxFormRepeatArrayC
  * });
  * ```
  */
-export function repeatArrayField<T = unknown>(config: RepeatArrayFieldConfig<T>) {
+export function formlyRepeatArrayField<T = unknown>(config: RepeatArrayFieldConfig<T>) {
   const { key, label, description, repeatFieldGroup, maxLength, addText, addTemplate, removeText, duplicateText, labelForField, disableRearrange, allowAdd, allowRemove, allowDuplicate, addDuplicateToEnd } = config;
 
   return formlyField({
@@ -59,3 +59,9 @@ export function repeatArrayField<T = unknown>(config: RepeatArrayFieldConfig<T>)
     }
   });
 }
+
+// MARK: Deprecated Aliases
+/**
+ * @deprecated Use formlyRepeatArrayField instead.
+ */
+export const repeatArrayField = formlyRepeatArrayField;

@@ -57,21 +57,23 @@ export type ReadKeysFunction<T, K extends PrimativeKey = PrimativeKey> = MapFunc
  */
 export function readKeysFunction<T, K extends PrimativeKey = PrimativeKey>(readKey: ReadKeyFunction<T, K> | ReadMultipleKeysFunction<T, K>): ReadKeysFunction<T, K> {
   return (values: ArrayOrValue<T>) => {
+    let result: K[];
+
     if (Array.isArray(values)) {
-      const keys: K[] = [];
+      result = [];
 
       values.forEach((x) => {
         const key = readKey(x);
 
         if (key != null) {
-          pushItemOrArrayItemsIntoArray(keys, key);
+          pushItemOrArrayItemsIntoArray(result, key);
         }
       });
-
-      return keys;
     } else {
-      return asArray(readKey(values));
+      result = asArray(readKey(values));
     }
+
+    return result;
   };
 }
 
@@ -105,25 +107,27 @@ export type ReadKeysSetFunction<T, K extends PrimativeKey = PrimativeKey> = MapF
  */
 export function readKeysSetFunction<T, K extends PrimativeKey = PrimativeKey>(readKey: ReadKeyFunction<T, K> | ReadMultipleKeysFunction<T, K>): ReadKeysSetFunction<T, K> {
   return (values: ArrayOrValue<T>) => {
+    let result: Set<K>;
+
     if (Array.isArray(values)) {
-      const keys = new Set<K>();
+      result = new Set<K>();
 
       values.forEach((x) => {
         const key = readKey(x);
 
         if (key != null) {
           if (Array.isArray(key)) {
-            key.forEach((x) => keys.add(x));
+            key.forEach((x) => result.add(x));
           } else {
-            keys.add(key);
+            result.add(key);
           }
         }
       });
-
-      return keys;
     } else {
-      return new Set<K>(asArray(readKey(values)));
+      result = new Set<K>(asArray(readKey(values)));
     }
+
+    return result;
   };
 }
 

@@ -4,6 +4,13 @@ import { joinStringsWithSpaces } from './string';
 import { iterableToArray } from '../iterable';
 import { type PrimativeValue } from '../type';
 
+// MARK: HTML
+/**
+ * HTML heading level corresponding to `<h1>` through `<h6>`.
+ */
+export type HtmlHeaderLevel = 1 | 2 | 3 | 4 | 5 | 6;
+
+// MARK: CSS
 /**
  * Represents a single CSS Class
  */

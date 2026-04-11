@@ -1,0 +1,26 @@
+<div class="dbx-searchable-text-field" tabindex="0" (click)="focusInput()" (keydown.enter)="focusInput()" [class.dbx-searchable-text-field-has-value]="hasValueSignal()" [class.dbx-searchable-text-field-show-value]="showSelectedDisplayValueSignal()">
+  @if (showSelectedDisplayValueSignal()) {
+    @let sv = selectedDisplayValueSignal();
+    @if (sv) {
+      <div class="dbx-searchable-text-field-value">
+        <dbx-searchable-field-autocomplete-item [displayValue]="sv"></dbx-searchable-field-autocomplete-item>
+      </div>
+    }
+  }
+  <div class="dbx-searchable-text-field-input">
+    @if (searchLabelSignal()) {
+      <div class="dbx-label">{{ searchLabelSignal() }}</div>
+    }
+    <input #textInput class="dbx-forge-bare-input" [formControl]="inputCtrl" [matAutocomplete]="auto" [placeholder]="searchInputPlaceholder()" />
+  </div>
+</div>
+<mat-autocomplete #auto="matAutocomplete" (optionSelected)="selected($event)">
+  @if (showClearValueSignal() && hasValueSignal()) {
+    <mat-option [value]="{ _clear: true }">Clear</mat-option>
+  }
+  @for (result of searchResultsSignal(); track $index) {
+    <mat-option [value]="result">
+      <dbx-searchable-field-autocomplete-item [displayValue]="result"></dbx-searchable-field-autocomplete-item>
+    </mat-option>
+  }
+</mat-autocomplete>

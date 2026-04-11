@@ -192,16 +192,20 @@ export function makeAuthTransitionHook(config: AuthTransitionHookConfig): Transi
       timeoutStartWith(false as AuthTransitionDecision, timeoutTime),
       first(),
       switchMap((decision: AuthTransitionDecision): Observable<HookResult> => {
+        let result: Observable<HookResult>;
+
         if (typeof decision === 'boolean') {
           if (decision) {
-            return of(true);
+            result = of(true);
           } else {
-            return redirectOut();
+            result = redirectOut();
           }
         } else {
           const segueRef = asSegueRef(decision);
-          return of($state.target(asSegueRefString(segueRef.ref), segueRef.refParams as RawParams, segueRef.refOptions as TransitionOptions));
+          result = of($state.target(asSegueRefString(segueRef.ref), segueRef.refParams as RawParams, segueRef.refOptions as TransitionOptions));
         }
+
+        return result;
       }),
       catchError((x) => {
         console.warn(`Encountered error in auth transition hook. Attempting redirect to ${errorRedirectTarget}.`, x);

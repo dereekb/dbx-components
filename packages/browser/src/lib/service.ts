@@ -115,7 +115,7 @@ export abstract class AbstractAsyncWindowLoadedService<T> implements Destroyable
           if ((windowRef as unknown as ServiceInWindow<T>)[this._windowKey]) {
             // Not yet finished loading async. Intercept the function.
             // console.log('Window key.');
-            return resolve(this.completeLoadingService());
+            resolve(this.completeLoadingService());
           } else if (this._callbackKey && (windowRef as unknown as ServiceCallbackInWindow)[this._callbackKey]) {
             // console.log('Callback key.');
             (windowRef as unknown as ServiceCallbackInWindow)[this._callbackKey] = () => resolve(this.completeLoadingService());

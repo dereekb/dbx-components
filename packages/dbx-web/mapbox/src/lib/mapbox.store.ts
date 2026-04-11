@@ -30,7 +30,7 @@ import {
 import { ComponentStore } from '@ngrx/component-store';
 import { type MapService } from 'ngx-mapbox-gl';
 import { defaultIfEmpty, distinctUntilChanged, filter, map, shareReplay, switchMap, tap, NEVER, type Observable, of, type Subscription, startWith, interval, first, combineLatest, EMPTY, type OperatorFunction, throttleTime } from 'rxjs';
-import MapboxGl, { type MapEventType, type MapEvents, type Map } from 'mapbox-gl';
+import { LngLatBounds, type MapEventType, type MapEvents, type Map } from 'mapbox-gl';
 import { type DbxMapboxClickEvent, type KnownMapboxStyle, type MapboxBearing, type MapboxEaseTo, type MapboxEventData, type MapboxFitBounds, type MapboxFitPositions, type MapboxFlyTo, type MapboxJumpTo, type MapboxResetNorth, type MapboxResetNorthPitch, type MapboxRotateTo, type MapboxSnapToNorth, type MapboxStyleConfig, type MapboxZoomLevel, type MapboxZoomLevelRange } from './mapbox';
 import { DbxMapboxService } from './mapbox.service';
 import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
@@ -161,11 +161,10 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> {
     return input.pipe(
       switchMap((service: Maybe<MapService>) => {
         this._setMapService(service);
+        let result: Observable<any> = NEVER;
 
-        if (!service) {
-          return NEVER;
-        } else {
-          return service.mapLoaded$.pipe(
+        if (service) {
+          result = service.mapLoaded$.pipe(
             defaultIfEmpty(undefined),
             map(() => {
               this._setLifecycleState('idle');
@@ -219,8 +218,11 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> {
             })
           );
         }
+
+        return result;
       }),
-      cleanup(({ service, listenerPairs, subs }) => {
+      cleanup((state: unknown) => {
+        const { service, listenerPairs, subs } = state as { service: MapService; listenerPairs: StringMapboxListenerPair[]; subs: Subscription[] };
         const map = service.mapInstance;
 
         if (map) {
@@ -431,13 +433,14 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> {
     return input.pipe(
       switchMap((x) => {
         const boundFromInput = latLngBoundFromInput(x.positions);
+        let result: Observable<any> = EMPTY;
 
         if (boundFromInput) {
           const bound = this.latLngBound(boundFromInput);
-          return this.mapInstance$.pipe(tap((map) => map.fitBounds(new MapboxGl.LngLatBounds(bound.sw, bound.ne), x.options, x.eventData)));
-        } else {
-          return EMPTY;
+          result = this.mapInstance$.pipe(tap((map) => map.fitBounds(new LngLatBounds(bound.sw, bound.ne), x.options, x.eventData)));
         }
+
+        return result;
       })
     );
   });
@@ -446,7 +449,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> {
     return input.pipe(
       switchMap((x) => {
         const bound = this.latLngBound(x.bounds);
-        return this.mapInstance$.pipe(tap((map) => map.fitBounds(new MapboxGl.LngLatBounds(bound.sw, bound.ne), x.options, x.eventData)));
+        return this.mapInstance$.pipe(tap((map) => map.fitBounds(new LngLatBounds(bound.sw, bound.ne), x.options, x.eventData)));
       })
     );
   });
@@ -502,11 +505,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> {
   movingTimer(period = this.timerRefreshPeriod) {
     return this.moveState$.pipe(
       switchMap((x) => {
-        if (x === 'moving') {
-          return interval(period);
-        } else {
-          return of(0);
-        }
+        return x === 'moving' ? interval(period) : of(0);
       }),
       shareReplay(1)
     );
@@ -515,11 +514,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> {
   lifecycleRenderTimer(period = this.timerRefreshPeriod) {
     return this.lifecycleState$.pipe(
       switchMap((x) => {
-        if (x === 'render') {
-          return interval(period);
-        } else {
-          return of(0);
-        }
+        return x === 'render' ? interval(period) : of(0);
       }),
       shareReplay(1)
     );
@@ -602,14 +597,12 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> {
 
   readonly currentMapInstance$: Observable<Maybe<Map>> = this.currentMapService$.pipe(
     switchMap((currentMapService: Maybe<MapService>) => {
-      if (currentMapService) {
-        return currentMapService.mapLoaded$.pipe(
-          defaultIfEmpty(undefined),
-          map(() => currentMapService.mapInstance)
-        );
-      } else {
-        return of(undefined);
-      }
+      return currentMapService
+        ? currentMapService.mapLoaded$.pipe(
+            defaultIfEmpty(undefined),
+            map(() => currentMapService.mapInstance)
+          )
+        : of(undefined);
     }),
     distinctUntilChanged(),
     shareReplay(1)
@@ -648,15 +641,17 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> {
 
   readonly isInitialized$ = this.currentMapInstance$.pipe(
     switchMap((x) => {
-      if (!x) {
-        return of(false);
-      } else {
-        return combineLatest([this.moveState$.pipe(map((x) => x === 'idle')), this.lifecycleState$.pipe(map((x) => x === 'idle'))]).pipe(
+      let result: Observable<boolean> = of(false);
+
+      if (x) {
+        result = combineLatest([this.moveState$.pipe(map((x) => x === 'idle')), this.lifecycleState$.pipe(map((x) => x === 'idle'))]).pipe(
           filter(([m, l]) => m && l),
           first(),
           map(() => true)
         );
       }
+
+      return result;
     }),
     shareReplay(1)
   );
@@ -763,11 +758,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> {
    */
   readonly virtualMapCanvasSize$ = this.minimumVirtualViewportSize$.pipe(
     switchMap((minimumVirtualViewportSize) => {
-      if (minimumVirtualViewportSize) {
-        return this.minimumMapCanvasSize(minimumVirtualViewportSize);
-      } else {
-        return this.mapCanvasSize$;
-      }
+      return minimumVirtualViewportSize ? this.minimumMapCanvasSize(minimumVirtualViewportSize) : this.mapCanvasSize$;
     }),
     distinctUntilChanged<Vector>(isSameVector),
     shareReplay(1)
@@ -796,11 +787,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> {
 
   readonly viewportBoundFunction$: Observable<MapboxViewportBoundFunction> = this.minimumVirtualViewportSize$.pipe(
     switchMap((minimumVirtualViewportSize) => {
-      if (minimumVirtualViewportSize) {
-        return this.viewportBoundFunctionWithMinimumSize(minimumVirtualViewportSize);
-      } else {
-        return this.rawViewportBoundFunction$;
-      }
+      return minimumVirtualViewportSize ? this.viewportBoundFunctionWithMinimumSize(minimumVirtualViewportSize) : this.rawViewportBoundFunction$;
     }),
     shareReplay(1)
   );
@@ -847,11 +834,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> {
 
   readonly reverseMargin$ = this.margin$.pipe(
     map((x) => {
-      if (x) {
-        return { leftMargin: -x.leftMargin, rightMargin: -x.rightMargin, fullWidth: x.fullWidth };
-      } else {
-        return x;
-      }
+      return x ? { leftMargin: -x.leftMargin, rightMargin: -x.rightMargin, fullWidth: x.fullWidth } : x;
     })
   );
 
@@ -859,14 +842,12 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> {
     switchMap(() => {
       return this.reverseMargin$.pipe(
         switchMap((x) => {
-          if (x) {
-            return this.center$.pipe(switchMap((_) => this.calculateNextCenterOffsetWithScreenMarginChange(x)));
-          } else {
-            return this.isMoving$.pipe(
-              filter((x) => !x),
-              switchMap(() => this.center$)
-            );
-          }
+          return x
+            ? this.center$.pipe(switchMap((_) => this.calculateNextCenterOffsetWithScreenMarginChange(x)))
+            : this.isMoving$.pipe(
+                filter((x) => !x),
+                switchMap(() => this.center$)
+              );
         })
       );
     }),
@@ -942,11 +923,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> {
 
   readonly bound$: Observable<LatLngBound> = this.useVirtualBound$.pipe(
     switchMap((useVirtualBound) => {
-      if (useVirtualBound) {
-        return this.virtualBound$;
-      } else {
-        return this.rawBound$;
-      }
+      return useVirtualBound ? this.virtualBound$ : this.rawBound$;
     }),
     shareReplay(1)
   );

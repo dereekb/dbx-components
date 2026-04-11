@@ -18,11 +18,7 @@ export class DbxTableColumnFooterComponent<C> extends AbstractDbxTableColumnDire
     switchMap((viewDelegate) => {
       const columnFooter = viewDelegate.columnFooter;
 
-      if (columnFooter) {
-        return this.column$.pipe(map((x) => columnFooter(x)));
-      } else {
-        return of(undefined);
-      }
+      return columnFooter ? this.column$.pipe(map((x) => columnFooter(x))) : of(undefined);
     }),
     distinctUntilChanged()
   );

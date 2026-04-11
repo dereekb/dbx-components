@@ -1,4 +1,4 @@
-import { makeMetaFilterSearchableFieldValueDisplayFn, type SearchableValueFieldDisplayFn, type SearchableValueFieldDisplayValue, type SearchableValueFieldStringSearchFn, type SearchableValueFieldValue } from '@dereekb/dbx-form';
+import { formlyMakeMetaFilterSearchableFieldValueDisplayFn, type SearchableValueFieldDisplayFn, type SearchableValueFieldDisplayValue, type SearchableValueFieldStringSearchFn, type SearchableValueFieldValue } from '@dereekb/dbx-form';
 import { randomDelayWithRandomFunction } from '@dereekb/rxjs';
 import { randomArrayFactory, randomNumberFactory, pickOneRandomly, type Configurable } from '@dereekb/util';
 import { map, type Observable, of } from 'rxjs';
@@ -38,16 +38,12 @@ export function EXAMPLE_SEARCH_FOR_SELECTION_VALUE(minimumCharacters: number = 3
   const makeRandomDelay = randomNumberFactory(200); // use to show the loading bar.
 
   return (search: string = '') => {
-    if (search.length >= minimumCharacters) {
-      const result: SearchableValueFieldValue<DocFormExampleSelectionValueId>[] = MAKE_RANDOM_SELECTION_VALUES().map((x) => ({ meta: x, value: x.id }));
-      return of(result).pipe(randomDelayWithRandomFunction(makeRandomDelay));
-    } else {
-      return of([]).pipe(randomDelayWithRandomFunction(makeRandomDelay));
-    }
+    const result: SearchableValueFieldValue<DocFormExampleSelectionValueId>[] = search.length >= minimumCharacters ? MAKE_RANDOM_SELECTION_VALUES().map((x) => ({ meta: x, value: x.id })) : [];
+    return of(result).pipe(randomDelayWithRandomFunction(makeRandomDelay));
   };
 }
 
-export const EXAMPLE_DISPLAY_FOR_SELECTION_VALUE: SearchableValueFieldDisplayFn<DocFormExampleSelectionValueId, DocFormExampleSelectionValue> = makeMetaFilterSearchableFieldValueDisplayFn<DocFormExampleSelectionValueId, DocFormExampleSelectionValue>({
+export const EXAMPLE_DISPLAY_FOR_SELECTION_VALUE: SearchableValueFieldDisplayFn<DocFormExampleSelectionValueId, DocFormExampleSelectionValue> = formlyMakeMetaFilterSearchableFieldValueDisplayFn<DocFormExampleSelectionValueId, DocFormExampleSelectionValue>({
   loadMetaForValues: (values) => {
     const valuesWithMeta = values.map((x) => ({ ...x, meta: MAKE_EXAMPLE_SELECTION_VALUE(x.value) }));
     return of(valuesWithMeta);

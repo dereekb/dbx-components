@@ -41,11 +41,7 @@ export class DbxActionHasSuccessDirective extends AbstractIfDirective {
 
   readonly show$ = this._store.isSuccess$.pipe(
     exhaustMap((success) => {
-      if (success) {
-        return emitDelayObs(true, false, this.hideAfter());
-      } else {
-        return of(false);
-      }
+      return success ? emitDelayObs(true, false, this.hideAfter()) : of(false);
     }),
     shareReplay(1)
   );

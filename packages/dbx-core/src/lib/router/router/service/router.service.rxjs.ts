@@ -65,10 +65,7 @@ export function isSegueRefActive(config: IsSegueRefActiveConfig): OperatorFuncti
   const { defaultIfNull = false } = config;
 
   return switchMap((segueRef) => {
-    if (segueRef) {
-      return isSegueRefActiveOnTransitionSuccess({ ...config, segueRef });
-    } else {
-      return of(defaultIfNull);
-    }
+    const result = segueRef ? isSegueRefActiveOnTransitionSuccess({ ...config, segueRef }) : of(defaultIfNull);
+    return result;
   });
 }

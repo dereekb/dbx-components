@@ -25,10 +25,6 @@ import { getTimezoneAbbreviation } from '@dereekb/date';
 })
 export class TimezoneAbbreviationPipe implements PipeTransform {
   transform(timezone: Maybe<TimezoneString>, input?: Maybe<Date>): Maybe<string> {
-    if (timezone) {
-      return getTimezoneAbbreviation(timezone, input ?? undefined);
-    } else {
-      return undefined;
-    }
+    return timezone ? getTimezoneAbbreviation(timezone, input ?? undefined) : undefined;
   }
 }

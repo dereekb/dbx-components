@@ -161,9 +161,9 @@ export class FilterSourceInstance<F> implements FilterSource<F>, Destroyable {
               map(() => true),
               skip(1) // skip the first emission
             );
-          } else {
-            return EMPTY;
           }
+
+          return EMPTY;
         }),
         defaultIfEmpty(false)
       )

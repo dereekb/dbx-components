@@ -78,13 +78,11 @@ describe('performAsyncTasks()', () => {
       performAsyncTasks(input, (x) => {
         tasksStarted += 1;
 
-        if (x === 3) {
-          return waitForMs(10).then(() => {
-            throw testError;
-          });
-        } else {
-          return waitForMs(100);
-        }
+        return x === 3
+          ? waitForMs(10).then(() => {
+              throw testError;
+            })
+          : waitForMs(100);
       }).catch((e) => {
         expect(tasksStarted).toBe(tasksToRun);
         expect(e).toBe(testError);
@@ -106,15 +104,13 @@ describe('performAsyncTasks()', () => {
         (x) => {
           tasksStarted += 1;
 
-          if (x === 3) {
-            // fail only once. After retry it will work.
-            return waitForMs(50).then(() => {
-              encounteredFailure = true;
-              throw new Error('test error');
-            });
-          } else {
-            return waitForMs(100);
-          }
+          return x === 3
+            ? // fail only once. After retry it will work.
+              waitForMs(50).then(() => {
+                encounteredFailure = true;
+                throw new Error('test error');
+              })
+            : waitForMs(100);
         },
         {
           throwError: false,
@@ -136,13 +132,11 @@ describe('performAsyncTasks()', () => {
       const result = await performAsyncTasks(
         input,
         (x) => {
-          if (x === 3) {
-            return waitForMs(10).then(() => {
-              throw testError;
-            });
-          } else {
-            return waitForMs(20).then(() => true);
-          }
+          return x === 3
+            ? waitForMs(10).then(() => {
+                throw testError;
+              })
+            : waitForMs(20).then(() => true);
         },
         {
           throwError: false
@@ -212,13 +206,11 @@ describe('performTasksInParallelFunction()', () => {
         taskFactory: async () => {
           tasksStarted += 1;
 
-          if (tasksStarted === 3) {
-            return waitForMs(10).then(() => {
-              throw new Error('test error');
-            });
-          } else {
-            return waitForMs(200);
-          }
+          return tasksStarted === 3
+            ? waitForMs(10).then(() => {
+                throw new Error('test error');
+              })
+            : waitForMs(200);
         },
         maxParallelTasks: undefined
       }).catch((e) => {

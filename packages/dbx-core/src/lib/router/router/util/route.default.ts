@@ -40,19 +40,19 @@ export class DbxRouteParamDefaultRedirectInstance<T> implements Initialized, Des
     this._sub.subscription = this._enabled
       .pipe(
         switchMap((enabled) => {
-          if (enabled) {
-            return this.instance.paramValue$.pipe(
-              switchMapToDefault(this.instance.defaultValue$, (value) => {
-                return this._useDefaultFilter.pipe(switchMap((fn) => (DEFAULT_REDIRECT_INSTANCE_FORWARD_FACTORY as DefaultForwardFunctionFactory<SwitchMapToDefaultFilterFunction<T>>)(fn)(value)));
-              }),
-              filterMaybe(), // do not redirect on MaybeNot values
-              switchMap((defaultValue) => {
-                return this.redirectWithDefaultValue(defaultValue);
-              })
-            );
-          } else {
-            return EMPTY;
-          }
+          const result = enabled
+            ? this.instance.paramValue$.pipe(
+                switchMapToDefault(this.instance.defaultValue$, (value) => {
+                  return this._useDefaultFilter.pipe(switchMap((fn) => (DEFAULT_REDIRECT_INSTANCE_FORWARD_FACTORY as DefaultForwardFunctionFactory<SwitchMapToDefaultFilterFunction<T>>)(fn)(value)));
+                }),
+                filterMaybe(), // do not redirect on MaybeNot values
+                switchMap((defaultValue) => {
+                  return this.redirectWithDefaultValue(defaultValue);
+                })
+              )
+            : EMPTY;
+
+          return result;
         })
       )
       .subscribe();
@@ -65,13 +65,17 @@ export class DbxRouteParamDefaultRedirectInstance<T> implements Initialized, Des
   }
 
   protected redirectWithDefaultValue(value: Maybe<T>): Promise<boolean> {
+    let result: Promise<boolean>;
+
     if (value != null) {
       // perform a segue once
-      return this.redirectWithValue(value);
+      result = this.redirectWithValue(value);
     } else {
       // do nothing
-      return Promise.resolve(false);
+      result = Promise.resolve(false);
     }
+
+    return result;
   }
 
   protected redirectWithValue(value: Maybe<T>): Promise<boolean> {

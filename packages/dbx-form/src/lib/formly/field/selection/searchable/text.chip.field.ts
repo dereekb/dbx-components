@@ -1,7 +1,7 @@
 import { of } from 'rxjs';
 import { type LabeledFieldConfig } from '../../field';
 import { type SearchableValueFieldValue } from './searchable';
-import { searchableChipField } from './searchable.field';
+import { formlySearchableChipField } from './searchable.field';
 import { type StringValueFieldsFieldProps } from './searchable.field.directive';
 
 /**
@@ -23,13 +23,13 @@ export interface ChipTextFieldConfig extends LabeledFieldConfig, StringValueFiel
  *
  * @example
  * ```typescript
- * const field = chipTextField({ key: 'tags', label: 'Tags' });
+ * const field = formlyChipTextField({ key: 'tags', label: 'Tags' });
  * ```
  */
-export function chipTextField(config: ChipTextFieldConfig) {
+export function formlyChipTextField(config: ChipTextFieldConfig) {
   const convertStringValue = config.caseSensitive ? (x: string) => x : (x: string) => x?.toLowerCase();
 
-  return searchableChipField({
+  return formlySearchableChipField({
     search: () => of([]), // no search by default
     ...config,
     allowStringValues: true,
@@ -39,3 +39,9 @@ export function chipTextField(config: ChipTextFieldConfig) {
     }
   });
 }
+
+// MARK: Deprecated
+/**
+ * @deprecated Use formlyChipTextField instead.
+ */
+export const chipTextField = formlyChipTextField;

@@ -57,11 +57,7 @@ export type TransformStringsFunction = MapFunction<string[], string[]>;
 export function transformStrings(config: TransformStringFunctionConfig): TransformStringsFunction {
   const transform = transformStringFunction(config);
 
-  if (isMapIdentityFunction(transform)) {
-    return mapIdentityFunction();
-  } else {
-    return mapArrayFunction(transform);
-  }
+  return isMapIdentityFunction(transform) ? mapIdentityFunction() : mapArrayFunction(transform);
 }
 
 /**
@@ -191,11 +187,7 @@ export function filterUniqueTransform(config: FilterUniqueStringsTransformConfig
   const transform: TransformStringsFunction = transformStrings(config);
   const caseInsensitiveCompare = config.caseInsensitive && !config.toLowercase && !config.toUppercase;
 
-  if (caseInsensitiveCompare) {
-    // transform after finding unique values
-    return (input: string[]) => transform(filterUniqueCaseInsensitiveStrings(input, (x) => x, exclude));
-  } else {
-    // transform before, and then use a set to find unique values
-    return (input: string[]) => unique(transform(input), exclude);
-  }
+  // When case-insensitive compare is needed, transform after finding unique values.
+  // Otherwise, transform before and then use a set to find unique values.
+  return caseInsensitiveCompare ? (input: string[]) => transform(filterUniqueCaseInsensitiveStrings(input, (x) => x, exclude)) : (input: string[]) => unique(transform(input), exclude);
 }

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { TwitterAuthProvider } from '@angular/fire/auth';
+import { TwitterAuthProvider } from 'firebase/auth';
 import { AbstractConfiguredDbxFirebaseLoginButtonDirective, DBX_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_COMPONENT_CONFIGURATION } from './login.button.component';
 
 /**

@@ -308,13 +308,13 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
     switchMap((state) => {
       if (state?.loading) {
         return of(true);
-      } else {
-        return this.hideOnEmpty$.pipe(
-          switchMap((hide) => (hide === false ? of(false) : this.isEmpty$)),
-          distinctUntilChanged(),
-          shareReplay(1)
-        );
       }
+
+      return this.hideOnEmpty$.pipe(
+        switchMap((hide) => (hide === false ? of(false) : this.isEmpty$)),
+        distinctUntilChanged(),
+        shareReplay(1)
+      );
     }),
     distinctUntilChanged(),
     shareReplay(1)

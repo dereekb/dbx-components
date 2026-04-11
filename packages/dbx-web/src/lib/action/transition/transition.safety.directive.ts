@@ -96,18 +96,14 @@ export class DbxActionTransitionSafetyDirective<T, O> implements OnInit, OnDestr
               )
             ]).pipe(
               map(([saveSuccess, handleResult]: DbxActionTransitionSafetyRaceResult) => {
-                if (saveSuccess) {
-                  return true;
-                } else {
-                  return handleResult;
-                }
+                return saveSuccess ? true : handleResult;
               }),
               tap(() => this._closeDialog()), // Close dialog if it is still open.
               delay(10) // Delay to allow dialog to close before transition.
             );
-          } else {
-            return of(true);
           }
+
+          return of(true);
         })
       )
     ).then((x) => x); // Resolve/Flatten potential promise result.

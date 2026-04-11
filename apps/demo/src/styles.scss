@@ -34,6 +34,12 @@ mgl-map {
   width: 100%;
 }
 
+// Demo style wrapper example - matches formly styleWrapper inline styles
+.doc-style-wrapper-example {
+  background: rgba(255, 0, 0, 0.3);
+  border-color: blue;
+}
+
 // Emulator Warning
 .firebase-emulator-warning {
   font-size: 0.5em;

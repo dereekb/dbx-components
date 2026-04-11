@@ -222,11 +222,7 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
    */
   readonly currentExists$: Observable<boolean> = this.hasRef$.pipe(
     switchMap((hasRef) => {
-      if (hasRef) {
-        return this.exists$;
-      } else {
-        return of(false);
-      }
+      return hasRef ? this.exists$ : of(false);
     }),
     shareReplay(1)
   );
@@ -281,11 +277,7 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
 function injectSingleItemIdIntoState<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, C extends DbxFirebaseDocumentStoreContextState<T, D> = DbxFirebaseDocumentStoreContextState<T, D>>(state?: C | undefined): C | undefined {
   const id = (state?.firestoreCollection as RootSingleItemFirestoreCollection<T, D>)?.singleItemIdentifier;
 
-  if (state && id != null) {
-    return { ...state, id };
-  } else {
-    return state;
-  }
+  return state && id != null ? { ...state, id } : state;
 }
 
 /**
@@ -305,9 +297,8 @@ export class AbstractRootSingleItemDbxFirebaseDocument<T, D extends FirestoreDoc
 
       if (id != null) {
         return { ...state, firestoreCollection, id };
-      } else {
-        throw new Error('AbstractRootSingleItemDbxFirebaseDocument only accepts RootSingleItemFirestoreCollection values with a singleItemIdentifier set for setFirestoreCollection.');
       }
+      throw new Error('AbstractRootSingleItemDbxFirebaseDocument only accepts RootSingleItemFirestoreCollection values with a singleItemIdentifier set for setFirestoreCollection.');
     } else {
       return { ...state, firestoreCollection: null };
     }

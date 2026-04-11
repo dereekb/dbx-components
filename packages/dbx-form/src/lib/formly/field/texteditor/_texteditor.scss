@@ -56,6 +56,14 @@
       color: var(--mat-sys-on-surface);
     }
   }
+
+  .dbx-texteditor-field-disabled {
+    .dbx-texteditor-field-input,
+    .dbx-texteditor-field-menu {
+      opacity: 0.38;
+      pointer-events: none;
+    }
+  }
 }
 
 @mixin theme($theme-config) {

@@ -288,13 +288,17 @@ export function dateFromDateOrTimeMillisecondsNumber(input: DateOrUnixDateTimeMi
 export function dateFromDateOrTimeMillisecondsNumber(input: MaybeNot): MaybeNot;
 export function dateFromDateOrTimeMillisecondsNumber(input: Maybe<DateOrUnixDateTimeMillisecondsNumber>): Maybe<Date>;
 export function dateFromDateOrTimeMillisecondsNumber(input: Maybe<DateOrUnixDateTimeMillisecondsNumber>): Maybe<Date> {
+  let result: Maybe<Date>;
+
   if (input == null) {
-    return input as null | undefined;
+    result = input as null | undefined;
   } else if (isDate(input)) {
-    return input as Date;
+    result = input as Date;
   } else {
-    return unixMillisecondsNumberToDate(input as UnixDateTimeMillisecondsNumber);
+    result = unixMillisecondsNumberToDate(input as UnixDateTimeMillisecondsNumber);
   }
+
+  return result;
 }
 
 /**

@@ -215,9 +215,9 @@ export class DateTimeUtilityInstance {
 
     if (!input) {
       return { valid: false };
-    } else {
-      input = input.trim();
     }
+
+    input = input.trim();
 
     let systemParsedDateTime: Maybe<Date>;
     let valid = false;

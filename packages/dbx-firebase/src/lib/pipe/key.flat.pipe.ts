@@ -15,10 +15,6 @@ import { type Maybe } from '@dereekb/util';
 @Pipe({ name: 'flatFirestoreModelKey', standalone: true })
 export class FlatFirestoreModelKeyPipe implements PipeTransform {
   transform(input: Maybe<FirestoreModelKey>): string {
-    if (input != null) {
-      return flatFirestoreModelKey(input);
-    } else {
-      return '';
-    }
+    return input != null ? flatFirestoreModelKey(input) : '';
   }
 }

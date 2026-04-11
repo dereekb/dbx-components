@@ -1,6 +1,6 @@
 import { type Maybe } from '@dereekb/util';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
-import { type MaterialFormFieldConfig, textField } from '../field';
+import { type MaterialFormFieldConfig, formlyTextField } from '../field';
 
 export interface DbxFormSearchFormFieldsValue {
   readonly search: string;
@@ -21,7 +21,7 @@ export function dbxFormSearchFormFields(config: Maybe<DbxFormSearchFormFieldsCon
   const { label, placeholder = 'Search', materialFormField } = config || {};
 
   return [
-    textField({
+    formlyTextField({
       key: 'search',
       label,
       placeholder,

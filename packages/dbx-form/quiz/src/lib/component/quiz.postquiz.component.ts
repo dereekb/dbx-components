@@ -38,11 +38,7 @@ export class DbxQuizPostQuizComponent {
   readonly stateSignal = computed(() => {
     const submitted = this.quizSubmittedSignal();
 
-    if (submitted) {
-      return 'postsubmit';
-    } else {
-      return 'presubmit';
-    }
+    return submitted ? 'postsubmit' : 'presubmit';
   });
 
   readonly handleSubmitQuiz = input<Work<void>>();
@@ -53,9 +49,9 @@ export class DbxQuizPostQuizComponent {
 
     if (handler) {
       return handler(_, context);
-    } else {
-      context.reject();
     }
+
+    context.reject();
   };
 
   readonly handleSubmitQuizSuccess: DbxActionSuccessHandlerFunction = () => {

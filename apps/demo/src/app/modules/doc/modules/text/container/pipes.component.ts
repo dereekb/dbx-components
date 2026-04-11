@@ -1,14 +1,14 @@
 import { ChangeDetectionStrategy, Component, type OnDestroy } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type Maybe, type TimezoneString } from '@dereekb/util';
-import { dateTimeField, timezoneStringField, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormValueChangeDirective, DbxFormTimezoneStringFieldModule } from '@dereekb/dbx-form';
-import { type FormlyFieldConfig } from '@ngx-formly/core';
+import { forgeDateTimeField, forgeTimezoneStringField, DbxFormSourceDirective, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
+import type { FormConfig } from '@ng-forge/dynamic-forms';
 import { BehaviorSubject, delay, map, of, shareReplay } from 'rxjs';
 import { DateRangeType, dateRange, guessCurrentTimezone } from '@dereekb/date';
 import { DbxContentContainerDirective, DbxContentBorderDirective, DbxDetailBlockComponent } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
-import { DocFormExampleComponent } from '../../form/component/example.form.component';
+import { DocFormForgeExampleComponent } from '../../form/component/forge.example.form.component';
 import { DatePipe } from '@angular/common';
 import { DateDistancePipe, DateRangeDistancePipe, TargetDateToSystemDatePipe, SystemDateToTargetDatePipe, TimezoneAbbreviationPipe, DateDayRangePipe, DateDayTimeRangePipe, DateTimeRangeOnlyPipe, DateTimeRangePipe, DateTimeRangeOnlyDistancePipe, MinutesStringPipe, TimeDistanceCountdownPipe, TimeDistancePipe } from '@dereekb/dbx-core';
 
@@ -21,8 +21,7 @@ import { DateDistancePipe, DateRangeDistancePipe, TargetDateToSystemDatePipe, Sy
     DocFeatureExampleComponent,
     DbxContentBorderDirective,
     DbxDetailBlockComponent,
-    DocFormExampleComponent,
-    DbxFormlyFieldsContextDirective,
+    DocFormForgeExampleComponent,
     DbxFormSourceDirective,
     DbxFormValueChangeDirective,
     DatePipe,
@@ -38,8 +37,7 @@ import { DateDistancePipe, DateRangeDistancePipe, TargetDateToSystemDatePipe, Sy
     DateTimeRangeOnlyDistancePipe,
     MinutesStringPipe,
     TimeDistanceCountdownPipe,
-    TimeDistancePipe,
-    DbxFormTimezoneStringFieldModule
+    TimeDistancePipe
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -73,11 +71,9 @@ export class DocTextPipesComponent implements OnDestroy {
   readonly endSignal = toSignal(this.end$, { initialValue: undefined });
   readonly timezone$ = this._timezone.asObservable();
   readonly timezoneSignal = toSignal(this.timezone$, { initialValue: undefined });
-  readonly dateTimezoneFields: FormlyFieldConfig[] = [
-    //
-    dateTimeField({ timezone: this.timezone$, key: 'date', required: true, description: 'This is the default date field that requires the user pick a date and time.' }),
-    timezoneStringField({ required: false })
-  ];
+  readonly dateTimezoneConfig: FormConfig = {
+    fields: [forgeDateTimeField({ timezone: this.timezone$, key: 'date', required: true, description: 'This is the default date field that requires the user pick a date and time.' }), forgeTimezoneStringField({ required: false })]
+  } as FormConfig;
 
   readonly onDateTimezoneChange = (value: { date: Maybe<Date>; timezone: Maybe<TimezoneString> }) => {
     this._date.next(value?.date);

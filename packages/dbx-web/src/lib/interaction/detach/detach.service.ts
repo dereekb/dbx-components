@@ -139,6 +139,9 @@ export class DbxDetachService {
 
   /**
    * Initializes a detached component for the given key. Returns the existing instance if one already exists.
+   *
+   * @param config - The detach configuration including component class, key, and overlay settings.
+   * @returns The new or existing {@link DbxDetachInstance} for the given key.
    */
   init<T>(config: DbxDetachConfig<T>): DbxDetachInstance<T> {
     const key = config.key ?? DBX_DETACH_DEFAULT_KEY;
@@ -188,6 +191,9 @@ export class DbxDetachService {
 
   /**
    * Gets the instance for the given key, if it exists.
+   *
+   * @param key - The detach key to look up. Defaults to {@link DBX_DETACH_DEFAULT_KEY}.
+   * @returns The instance if found, otherwise `undefined`.
    */
   get<T = unknown>(key?: DbxDetachKey): Maybe<DbxDetachInstance<T>> {
     const entry = this._entries.get(key ?? DBX_DETACH_DEFAULT_KEY);
@@ -196,6 +202,9 @@ export class DbxDetachService {
 
   /**
    * Observable of whether an entry exists for the given key.
+   *
+   * @param key - The detach key to observe. Defaults to {@link DBX_DETACH_DEFAULT_KEY}.
+   * @returns An observable that emits `true` when an entry exists for the key.
    */
   has$(key?: DbxDetachKey): Observable<boolean> {
     const k = key ?? DBX_DETACH_DEFAULT_KEY;
@@ -210,6 +219,9 @@ export class DbxDetachService {
    *
    * If no outlet element is provided, falls back to the last known outlet
    * (for reattaching from the overlay to the previous location).
+   *
+   * @param key - The detach key identifying the entry.
+   * @param outletElement - The DOM element to move the component into. Falls back to the last known outlet.
    */
   attachToOutlet(key: DbxDetachKey, outletElement?: Element): void {
     const entry = this._entries.get(key);
@@ -232,6 +244,8 @@ export class DbxDetachService {
 
   /**
    * Moves the component to the floating overlay.
+   *
+   * @param key - The detach key identifying the entry.
    */
   detachToOverlay(key: DbxDetachKey): void {
     const entry = this._entries.get(key);
@@ -246,6 +260,8 @@ export class DbxDetachService {
 
   /**
    * Moves the component to the floating overlay in minimized state.
+   *
+   * @param key - The detach key identifying the entry.
    */
   minimizeToOverlay(key: DbxDetachKey): void {
     const entry = this._entries.get(key);
@@ -261,6 +277,8 @@ export class DbxDetachService {
   /**
    * Called when an outlet is destroyed.
    *
+   * @param key - The detach key identifying the entry.
+   * @param outletElement - The outlet element being destroyed.
    * @param detachToOverlay - When true, the component moves to the floating overlay.
    *   When false, the component's DOM is removed but it stays alive in the service (hidden).
    */
@@ -279,11 +297,10 @@ export class DbxDetachService {
   }
 
   /**
-   * Destroys the component and removes it from the service.
-   */
-  /**
    * If the last outlet is still in the DOM, reattaches the component there.
    * Otherwise destroys the component.
+   *
+   * @param key - The detach key identifying the entry.
    */
   closeOrReattach(key: DbxDetachKey): void {
     const entry = this._entries.get(key);
@@ -301,6 +318,8 @@ export class DbxDetachService {
 
   /**
    * Destroys the component and removes it from the service.
+   *
+   * @param key - The detach key identifying the entry to remove.
    */
   remove(key: DbxDetachKey): void {
     const entry = this._entries.get(key);

@@ -39,6 +39,9 @@ export interface DbxInjectionComponentInjectorParams<T = unknown> {
  *
  * Returns the config's injector (or parent) unchanged if no providers or data are specified.
  *
+ * @param params - The config and parent injector to build from.
+ * @returns A child {@link Injector} with the config's providers and data, or the parent injector if none are specified.
+ *
  * @example
  * ```typescript
  * const injector = createInjectorForInjectionComponentConfig({
@@ -66,6 +69,9 @@ export function createInjectorForInjectionComponentConfig<T>(params: DbxInjectio
  * Runs the init callback from a {@link DbxInjectionComponentConfig} on the given component ref,
  * executing within the component's injection context so that `inject()` is available inside the callback.
  *
+ * @param componentRef - The component reference whose instance will be passed to the init callback.
+ * @param config - The injection component config containing the optional init callback.
+ *
  * @example
  * ```typescript
  * const ref = viewContainerRef.createComponent(config.componentClass, { injector });
@@ -73,7 +79,9 @@ export function createInjectorForInjectionComponentConfig<T>(params: DbxInjectio
  * ```
  */
 export function initInjectionComponent<T>(componentRef: ComponentRef<T>, config: DbxInjectionComponentConfig<T>): void {
-  if (config.init) {
-    runInInjectionContext(componentRef.injector, () => config.init!(componentRef.instance));
+  const { init } = config;
+
+  if (init) {
+    runInInjectionContext(componentRef.injector, () => init(componentRef.instance));
   }
 }

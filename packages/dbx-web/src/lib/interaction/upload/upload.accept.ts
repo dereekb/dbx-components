@@ -165,17 +165,21 @@ export function fileAcceptFunction(accept: FileAcceptString | FileAcceptFilterTy
       fileAcceptFunction = asDecisionFunction(true);
     } else {
       const isAcceptedFunctions = acceptList.map((x) => {
+        let matchFn: (input: FileAcceptFunctionInput) => boolean;
+
         if (x[0] === SLASH_PATH_FILE_TYPE_SEPARATOR) {
           // is a SlashPathTypedFileSuffix
-          return (input: FileAcceptFunctionInput) => input.name.endsWith(x);
+          matchFn = (input) => input.name.endsWith(x);
         } else if (x.endsWith('/*')) {
           // is a MimeTypeWildcardWithoutParameters
           const mimeTypePrefix = x.slice(0, -2);
-          return (input: FileAcceptFunctionInput) => input.type.startsWith(mimeTypePrefix);
+          matchFn = (input) => input.type.startsWith(mimeTypePrefix);
         } else {
           // treat as a MimeTypeWithoutParameters
-          return (input: FileAcceptFunctionInput) => input.type === x;
+          matchFn = (input) => input.type === x;
         }
+
+        return matchFn;
       });
 
       fileAcceptFunction = (input: FileAcceptFunctionInput) => {

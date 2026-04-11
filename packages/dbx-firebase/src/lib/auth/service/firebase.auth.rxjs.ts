@@ -55,11 +55,7 @@ export function stateFromTokenForLoggedInUserFunction(stateFromToken: StateFromT
 export function readValueFromIdToken<T>(dbxFirebaseAuthService: DbxFirebaseAuthService, readValueFromIdToken: (idToken: IdTokenResult) => ObservableOrValue<T>, defaultValue: T): Observable<T> {
   return dbxFirebaseAuthService.currentAuthUserInfo$.pipe(
     switchMap((x) => {
-      if (x) {
-        return dbxFirebaseAuthService.idTokenResult$.pipe(switchMap((x) => asObservable(readValueFromIdToken(x))));
-      } else {
-        return of(defaultValue);
-      }
+      return x ? dbxFirebaseAuthService.idTokenResult$.pipe(switchMap((x) => asObservable(readValueFromIdToken(x)))) : of(defaultValue);
     })
   );
 }

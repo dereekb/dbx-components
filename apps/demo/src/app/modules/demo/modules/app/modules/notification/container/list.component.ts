@@ -30,15 +30,13 @@ export class DemoNotificationListPageComponent {
 
   readonly reachedTestLimit$ = this.notificationSummaryDocumentStore.exists$.pipe(
     switchMap((exists) => {
-      if (exists) {
-        return this.notificationSummaryDocumentStore.notificationItems$.pipe(
-          map((x) => x.length > 6),
-          distinctUntilChanged(),
-          shareReplay(1)
-        );
-      } else {
-        return of(false);
-      }
+      return exists
+        ? this.notificationSummaryDocumentStore.notificationItems$.pipe(
+            map((x) => x.length > 6),
+            distinctUntilChanged(),
+            shareReplay(1)
+          )
+        : of(false);
     }),
     distinctUntilChanged(),
     shareReplay(1)

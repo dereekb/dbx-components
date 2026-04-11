@@ -35,13 +35,8 @@ export function switchMapDbxInjectionComponentConfig<T extends DbxInjectionCompo
   return switchMapObject<T>({
     defaultGetter: () => {
       const value = defaultAsGetter();
-
-      if (typeof value === 'function') {
-        // is a component class
-        return { componentClass: value } as T;
-      } else {
-        return value;
-      }
+      // if value is a function, it is a component class
+      return typeof value === 'function' ? ({ componentClass: value } as T) : value;
     }
   });
 }

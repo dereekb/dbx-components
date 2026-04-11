@@ -264,26 +264,27 @@ export function sliceStringFunction(config: SliceStringFunctionConfig): SliceStr
   const takeFromStart = Math.abs(fromStart ?? 0);
   const takeFromEnd = Math.abs(fromEnd ?? 0);
 
+  let result: SliceStringFunction;
+
   if (fromStart && fromEnd) {
-    return (input: string) => {
+    result = (input: string) => {
       const totalTake = takeFromStart + takeFromEnd;
-      let result: string;
 
       if (totalTake >= input.length) {
-        result = input;
-      } else {
-        const startPart = input.slice(0, takeFromStart);
-        const endPart = input.slice(-takeFromEnd);
-        result = startPart + endPart;
+        return input;
       }
 
-      return result;
+      const startPart = input.slice(0, takeFromStart);
+      const endPart = input.slice(-takeFromEnd);
+      return startPart + endPart;
     };
   } else if (fromStart) {
-    return (input: string) => input.slice(0, takeFromStart);
+    result = (input: string) => input.slice(0, takeFromStart);
   } else if (fromEnd) {
-    return (input: string) => input.slice(-takeFromEnd);
+    result = (input: string) => input.slice(-takeFromEnd);
   } else {
-    return MAP_IDENTITY as SliceStringFunction;
+    result = MAP_IDENTITY as SliceStringFunction;
   }
+
+  return result;
 }

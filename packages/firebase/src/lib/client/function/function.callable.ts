@@ -61,14 +61,12 @@ export function mapHttpsCallable<I, O, A, B = unknown>(callable: HttpsCallable<A
       const resultData: Maybe<B> = result.data;
       const mappedResultData: O = await mapOutput(resultData);
 
-      if (directData) {
-        return mappedResultData;
-      } else {
-        return {
-          ...result,
-          data: mappedResultData
-        };
-      }
+      return directData
+        ? mappedResultData
+        : {
+            ...result,
+            data: mappedResultData
+          };
     } catch (e) {
       throw convertHttpsCallableErrorToReadableError(e);
     }

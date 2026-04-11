@@ -133,9 +133,9 @@ export class DbxFormRepeatArrayTypeComponent<T = unknown> extends FieldArrayType
 
     if (typeof input === 'function') {
       return input;
-    } else {
-      return makeGetter(input ?? '');
     }
+
+    return makeGetter(input ?? '');
   });
 
   private readonly _allowRemove: Getter<DecisionFunction<DbxFormRepeatArrayPair<T>>> = cachedGetter(() => {
@@ -221,9 +221,9 @@ export class DbxFormRepeatArrayTypeComponent<T = unknown> extends FieldArrayType
 
     if (max == null) {
       return true;
-    } else {
-      return this.count < max;
     }
+
+    return this.count < max;
   }
 
   /**

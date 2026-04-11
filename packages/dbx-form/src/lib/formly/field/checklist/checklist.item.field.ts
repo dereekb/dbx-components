@@ -28,7 +28,7 @@ export type ChecklistItemFieldBuilderInput<T = unknown> = Partial<ChecklistItemF
  * });
  * ```
  */
-export function checklistItemField<T = unknown>(config: ChecklistItemFieldBuilderInput<T>): FormlyFieldConfig<DbxChecklistItemFieldProps<T>> {
+export function formlyChecklistItemField<T = unknown>(config: ChecklistItemFieldBuilderInput<T>): FormlyFieldConfig<DbxChecklistItemFieldProps<T>> {
   const { key, displayContent, componentClass } = config;
 
   return formlyField({
@@ -40,3 +40,9 @@ export function checklistItemField<T = unknown>(config: ChecklistItemFieldBuilde
     })
   });
 }
+
+// MARK: Deprecated Aliases
+/**
+ * @deprecated Use formlyChecklistItemField instead.
+ */
+export const checklistItemField = formlyChecklistItemField;

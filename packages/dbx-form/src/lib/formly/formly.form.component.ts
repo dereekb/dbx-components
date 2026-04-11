@@ -120,9 +120,9 @@ export class DbxFormlyComponent<T> implements DbxForm, DbxFormlyContextDelegate<
               // send the first value immediately
               startWith(state)
             );
-          } else {
-            return of(state);
           }
+
+          return of(state);
         })
       )
     ),

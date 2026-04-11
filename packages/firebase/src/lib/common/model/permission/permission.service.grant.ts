@@ -60,11 +60,7 @@ export function grantModelRolesIfHasAuthRolesFunction<R extends string = string>
   return grantModelRolesIfFunction((context: FirebaseModelContext) => {
     const currentAuthRoles = context.auth?.getAuthRoles();
 
-    if (currentAuthRoles) {
-      return setContainsAllValues(currentAuthRoles, authRoles);
-    } else {
-      return authRoles.length === 0;
-    }
+    return currentAuthRoles ? setContainsAllValues(currentAuthRoles, authRoles) : authRoles.length === 0;
   }, rolesToGrantToAdmin);
 }
 

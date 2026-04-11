@@ -90,11 +90,7 @@ export class DemoProfileViewComponent implements OnInit {
   readonly isUsernameModified: IsModifiedFunction<DemoProfileUsernameFormValue> = (value) => {
     return this.profileDocumentStore.currentData$.pipe(
       map((profileData) => {
-        if (profileData) {
-          return profileData.username !== value.username;
-        } else {
-          return true;
-        }
+        return profileData ? profileData.username !== value.username : true;
       }),
       first()
     );
@@ -103,11 +99,7 @@ export class DemoProfileViewComponent implements OnInit {
   readonly isProfileModified: IsModifiedFunction<DemoProfileFormValue> = (value) => {
     return this.profileDocumentStore.currentData$.pipe(
       map((profileData) => {
-        if (profileData) {
-          return profileData.bio !== value.bio;
-        } else {
-          return true;
-        }
+        return profileData ? profileData.bio !== value.bio : true;
       }),
       first()
     );
@@ -119,6 +111,10 @@ export class DemoProfileViewComponent implements OnInit {
 
   readonly handleUpdateProfile: WorkUsingContext<DemoProfileFormValue> = (form, context) => {
     context.startWorkingWithLoadingStateObservable(this.profileDocumentStore.updateProfile(form));
+  };
+
+  readonly handleResetPassword: WorkUsingContext = (_value, context) => {
+    context.startWorkingWithLoadingStateObservable(this.profileDocumentStore.resetPassword({ requestReset: true }));
   };
 
   readonly handleAvatarUploadInitializationSuccess: DbxActionSuccessHandlerFunction<any> = () => {

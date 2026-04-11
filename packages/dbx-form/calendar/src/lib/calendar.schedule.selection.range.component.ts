@@ -64,11 +64,7 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnInit, O
 
   readonly errorStateMatcher: ErrorStateMatcher = {
     isErrorState: (control: AbstractControl | null, _form) => {
-      if (control) {
-        return (control.invalid && (control.dirty || control.touched)) || (control.touched && this.range.invalid);
-      } else {
-        return false;
-      }
+      return control ? (control.invalid && (control.dirty || control.touched)) || (control.touched && this.range.invalid) : false;
     }
   };
 

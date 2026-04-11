@@ -29,9 +29,9 @@ export class DbxScheduleSelectionCalendarDatePopoverButtonComponent {
         const startString = formatToMonthDayString(x.start);
         const endString = formatToMonthDayString(x.end);
         return startString === endString ? startString : `${formatToMonthDayString(x.start)} - ${formatToMonthDayString(x.end)}`;
-      } else {
-        return 'Pick a Date Range';
       }
+
+      return 'Pick a Date Range';
     }),
     shareReplay(1)
   );

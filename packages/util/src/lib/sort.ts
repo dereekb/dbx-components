@@ -214,23 +214,23 @@ export function minAndMaxFunction<T>(compareFn: SortCompareFunction<T>): MinAndM
     let min: Maybe<T> = firstValueFromIterable(values) ?? undefined;
     let max: Maybe<T> = min;
 
-    if (min != null && max != null) {
-      forEachInIterable(values, (x) => {
-        const compareMin = compareFn(x, min as T);
-        const compareMax = compareFn(x, max as T);
-
-        if (compareMin < 0) {
-          min = x;
-        }
-
-        if (compareMax > 0) {
-          max = x;
-        }
-      });
-
-      return { min, max };
-    } else {
+    if (min == null || max == null) {
       return null;
     }
+
+    forEachInIterable(values, (x) => {
+      const compareMin = compareFn(x, min as T);
+      const compareMax = compareFn(x, max as T);
+
+      if (compareMin < 0) {
+        min = x;
+      }
+
+      if (compareMax > 0) {
+        max = x;
+      }
+    });
+
+    return { min, max };
   };
 }

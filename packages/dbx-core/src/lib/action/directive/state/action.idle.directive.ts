@@ -42,11 +42,7 @@ export class DbxActionIdleDirective extends AbstractIfDirective {
 
   readonly show$ = this._store.idle$.pipe(
     exhaustMap((idle) => {
-      if (idle) {
-        return emitDelayObs(true, false, this.hideAfter());
-      } else {
-        return of(false);
-      }
+      return idle ? emitDelayObs(true, false, this.hideAfter()) : of(false);
     }),
     shareReplay(1)
   );

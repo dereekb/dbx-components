@@ -113,11 +113,7 @@ export function replaceLastCharacterIf(input: string, replacement: string, decis
  */
 // eslint-disable-next-line @typescript-eslint/max-params
 export function replaceCharacterAtIndexIf(input: string, index: number, replacement: string, decision: DecisionFunction<string>): string {
-  if (decision(input[index])) {
-    return replaceCharacterAtIndexWith(input, index, replacement);
-  } else {
-    return input;
-  }
+  return decision(input[index]) ? replaceCharacterAtIndexWith(input, index, replacement) : input;
 }
 
 /**

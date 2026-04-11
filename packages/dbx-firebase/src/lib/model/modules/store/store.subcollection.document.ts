@@ -30,13 +30,13 @@ export class AbstractDbxFirebaseDocumentWithParentStore<T, PT, D extends Firesto
               this.setFirestoreCollection(collection);
             })
           );
-        } else {
-          // clear the current collection
-          this.setFirestoreCollection(undefined);
-
-          // do nothing until a parent is returned.
-          return NEVER;
         }
+
+        // clear the current collection
+        this.setFirestoreCollection(undefined);
+
+        // do nothing until a parent is returned.
+        return NEVER;
       })
     );
   });
@@ -101,9 +101,8 @@ export class AbstractSingleItemDbxFirebaseDocument<T, PT, D extends FirestoreDoc
 
       if (id != null) {
         return { ...state, firestoreCollection, id };
-      } else {
-        throw new Error('AbstractSingleItemDbxFirebaseDocument only accepts SingleItemFirestoreCollection values with a singleItemIdentifier set for setFirestoreCollection.');
       }
+      throw new Error('AbstractSingleItemDbxFirebaseDocument only accepts SingleItemFirestoreCollection values with a singleItemIdentifier set for setFirestoreCollection.');
     } else {
       return { ...state, firestoreCollection: null };
     }

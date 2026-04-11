@@ -22,13 +22,17 @@ export type DateOrUnixDateTimeSecondsNumber = Date | UnixDateTimeSecondsNumber;
  * @returns Unix timestamp number if input is valid, null/undefined if input is null/undefined
  */
 export function unixDateTimeSecondsNumberFromDateOrTimeNumber(input: Maybe<DateOrUnixDateTimeSecondsNumber>): Maybe<UnixDateTimeSecondsNumber> {
+  let result: Maybe<UnixDateTimeSecondsNumber>;
+
   if (input == null) {
-    return input as null | undefined;
+    result = input as null | undefined;
   } else if (isDate(input)) {
-    return unixDateTimeSecondsNumberFromDate(input as Date);
+    result = unixDateTimeSecondsNumberFromDate(input as Date);
   } else {
-    return input as UnixDateTimeSecondsNumber;
+    result = input as UnixDateTimeSecondsNumber;
   }
+
+  return result;
 }
 
 /**
@@ -62,13 +66,17 @@ export function dateFromDateOrTimeSecondsNumber(input: DateOrUnixDateTimeSeconds
 export function dateFromDateOrTimeSecondsNumber(input: MaybeNot): MaybeNot;
 export function dateFromDateOrTimeSecondsNumber(input: Maybe<DateOrUnixDateTimeSecondsNumber>): Maybe<Date>;
 export function dateFromDateOrTimeSecondsNumber(input: Maybe<DateOrUnixDateTimeSecondsNumber>): Maybe<Date> {
+  let result: Maybe<Date>;
+
   if (input == null) {
-    return input as null | undefined;
+    result = input as null | undefined;
   } else if (isDate(input)) {
-    return input as Date;
+    result = input as Date;
   } else {
-    return unixDateTimeSecondsNumberToDate(input as UnixDateTimeSecondsNumber);
+    result = unixDateTimeSecondsNumberToDate(input as UnixDateTimeSecondsNumber);
   }
+
+  return result;
 }
 
 /**

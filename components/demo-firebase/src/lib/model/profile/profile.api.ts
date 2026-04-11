@@ -37,6 +37,33 @@ export type FinishOnboardingProfileParams = InferredTargetModelParams;
 
 export const finishOnboardingProfileParamsType = inferredTargetModelParamsType as Type<FinishOnboardingProfileParams>;
 
+/**
+ * Params for initiating or completing a password reset for the current user's profile.
+ *
+ * Set `requestReset: true` to initiate a new password reset (generates a temporary code and sends an email).
+ * Provide `resetPassword` and `newPassword` to complete the reset by verifying the code and setting the new password.
+ */
+export interface ResetProfilePasswordParams extends InferredTargetModelParams {
+  /**
+   * When true, initiates a new password reset and sends the reset email.
+   */
+  readonly requestReset?: Maybe<boolean>;
+  /**
+   * The temporary reset code received via email. Required to complete the reset.
+   */
+  readonly resetPassword?: Maybe<string>;
+  /**
+   * The new password to set. Required to complete the reset.
+   */
+  readonly newPassword?: Maybe<string>;
+}
+
+export const resetProfilePasswordParamsType = inferredTargetModelParamsType.merge({
+  'requestReset?': clearable('boolean'),
+  'resetPassword?': clearable('string'),
+  'newPassword?': clearable('string')
+}) as Type<ResetProfilePasswordParams>;
+
 export type DownloadProfileArchiveParams = DownloadStorageFileParams;
 
 export const downloadProfileArchiveParamsType = downloadStorageFileParamsType as Type<DownloadProfileArchiveParams>;
@@ -69,6 +96,7 @@ export type ProfileModelCrudFunctionsConfig = {
       username: SetProfileUsernameParams;
       onboard: [FinishOnboardingProfileParams, boolean];
       createTestNotification: ProfileCreateTestNotificationParams;
+      resetPassword: ResetProfilePasswordParams;
     };
     delete: UpdateProfileParams;
   };
@@ -78,7 +106,7 @@ export type ProfileModelCrudFunctionsConfig = {
 export const profileModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<ProfileModelCrudFunctionsConfig, ProfileTypes> = {
   profile: [
     'read:downloadArchive',
-    'update:_,username,onboard,createTestNotification' as any, // use "any" once typescript complains about combinations
+    'update:_,username,onboard,createTestNotification,resetPassword' as any, // use "any" once typescript complains about combinations
     'delete'
   ]
 };
@@ -103,10 +131,12 @@ export abstract class ProfileFunctions implements ModelFirebaseFunctionMap<Profi
       updateProfileUsername: ModelFirebaseCrudFunction<SetProfileUsernameParams>;
       updateProfileOnboard: ModelFirebaseCrudFunction<FinishOnboardingProfileParams, boolean>;
       createTestNotification: ModelFirebaseCrudFunction<ProfileCreateTestNotificationParams>;
+      updateProfileResetPassword: ModelFirebaseCrudFunction<ResetProfilePasswordParams>;
       // short names
       update: ModelFirebaseCrudFunction<UpdateProfileParams>;
       username: ModelFirebaseCrudFunction<SetProfileUsernameParams>;
       onboard: ModelFirebaseCrudFunction<FinishOnboardingProfileParams, boolean>;
+      resetPassword: ModelFirebaseCrudFunction<ResetProfilePasswordParams>;
     };
     deleteProfile: ModelFirebaseCrudFunction<UpdateProfileParams>;
   };

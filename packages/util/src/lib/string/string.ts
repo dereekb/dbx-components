@@ -284,11 +284,7 @@ export function caseInsensitiveString(input: Maybe<string>): Maybe<string> {
  * @returns the prefixed string, or undefined if the input is null/undefined
  */
 export function addPlusPrefixToNumber(value?: Maybe<number>, prefix = '+'): string | undefined {
-  if (value != null) {
-    return value > 0 ? `${prefix}${value}` : `${value}`;
-  } else {
-    return undefined;
-  }
+  return value != null ? (value > 0 ? `${prefix}${value}` : `${value}`) : undefined;
 }
 
 /**

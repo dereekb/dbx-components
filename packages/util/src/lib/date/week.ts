@@ -263,13 +263,17 @@ export function getDayYesterday(day: DayOfWeek): DayOfWeek {
  * @returns The resulting DayOfWeek
  */
 export function getDayOffset(day: DayOfWeek, days: number): DayOfWeek {
+  let result: DayOfWeek;
+
   if (days === 0) {
-    return day;
+    result = day;
   } else if (days < 0) {
-    return getPreviousDay(day, days);
+    result = getPreviousDay(day, days);
   } else {
-    return getNextDay(day, days);
+    result = getNextDay(day, days);
   }
+
+  return result;
 }
 
 /**

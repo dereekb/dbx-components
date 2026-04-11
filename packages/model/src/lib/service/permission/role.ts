@@ -241,21 +241,12 @@ export class GrantedRoleMapReaderInstance<R extends GrantedRole = string> implem
   }
 
   hasRoles(setIncludes: SetIncludesMode, inputRoles: IterableOrValue<R>): boolean {
-    if ((this._map as FullAccessRoleMap)[FULL_ACCESS_ROLE_KEY]) {
-      return true;
-    } else {
-      return this.containsRoles(setIncludes, inputRoles);
-    }
+    return (this._map as FullAccessRoleMap)[FULL_ACCESS_ROLE_KEY] ? true : this.containsRoles(setIncludes, inputRoles);
   }
 
   containsRoles(setIncludes: SetIncludesMode, inputRoles: IterableOrValue<R>): boolean {
     const roles = iterableToArray(inputRoles);
-
-    if (setIncludes === 'any') {
-      return this.containsAnyRole(roles);
-    } else {
-      return this.containsEachRole(roles);
-    }
+    return setIncludes === 'any' ? this.containsAnyRole(roles) : this.containsEachRole(roles);
   }
 
   containsAnyRole(roles: ArrayOrValue<R>): boolean {

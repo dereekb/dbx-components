@@ -114,12 +114,12 @@ export class DbxPhoneFieldComponent extends FieldType<FieldTypeConfig<Internatio
                 number: phone as E164PhoneNumber,
                 extension
               } as E164PhoneNumberExtensionPair);
-            } else {
-              return phone;
             }
-          } else {
-            return undefined;
+
+            return phone;
           }
+
+          return undefined;
         }),
         distinctUntilChanged()
       )

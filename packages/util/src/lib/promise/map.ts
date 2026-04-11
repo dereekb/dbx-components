@@ -13,9 +13,5 @@ export function mapPromiseOrValue<I, O>(input: Promise<I>, mapFn: (input: I) => 
 export function mapPromiseOrValue<I, O>(input: I, mapFn: (input: I) => O): O;
 export function mapPromiseOrValue<I, O>(input: PromiseOrValue<I>, mapFn: (input: I) => O): PromiseOrValue<O>;
 export function mapPromiseOrValue<I, O>(input: PromiseOrValue<I>, mapFn: (input: I) => O): unknown {
-  if (isPromise(input)) {
-    return input.then(mapFn);
-  } else {
-    return mapFn(input);
-  }
+  return isPromise(input) ? input.then(mapFn) : mapFn(input);
 }

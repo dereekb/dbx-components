@@ -127,19 +127,19 @@ export function primativeKeyDencoder<D extends PrimativeKey, E extends Primative
   const fn = ((input: ArrayOrValue<E | D>) => {
     if (Array.isArray(input)) {
       return filterMaybeArrayValues(input.map((x) => map.get(x)));
-    } else {
-      let value: Maybe<D | E> = map.get(input);
+    }
+
+    let value: Maybe<D | E> = map.get(input);
+
+    if (value == null) {
+      value = defaultValue(input);
 
       if (value == null) {
-        value = defaultValue(input);
-
-        if (value == null) {
-          throw new Error(`Encountered unknown value ${input} in primativeKeyDencoder.`);
-        }
+        throw new Error(`Encountered unknown value ${input} in primativeKeyDencoder.`);
       }
-
-      return value as any;
     }
+
+    return value as any;
   }) as Partial<PrimativeKeyDencoderFunction<D, E>>;
   (fn as Writable<typeof fn>)._map = map;
   return fn as PrimativeKeyDencoderFunction<D, E>;
@@ -206,10 +206,10 @@ export function primativeKeyStringDencoder<D extends PrimativeKey, E extends Pri
     if (typeof input === 'string') {
       const split = splitEncodedValues(input) as E[];
       return dencoder(split);
-    } else {
-      const encoded = dencoder(input as D[]);
-      return encoded.join(joiner) as any;
     }
+
+    const encoded = dencoder(input as D[]);
+    return encoded.join(joiner) as any;
   };
 }
 

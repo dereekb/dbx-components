@@ -151,9 +151,9 @@ export class ModelRelationUtility {
 
       const modifiedResults = this._modifyCollectionWithoutMask(currentModify, change, modModify, config);
       return this._mergeMaskResults(current, currentRetain, modifiedResults, readKey);
-    } else {
-      return this._modifyCollectionWithoutMask(current, change, mods, config);
     }
+
+    return this._modifyCollectionWithoutMask(current, change, mods, config);
   }
 
   /**
@@ -255,11 +255,7 @@ export class ModelRelationUtility {
    */
   // eslint-disable-next-line @typescript-eslint/max-params
   private static _modifyCollection<T extends RelationObject>(current: T[], mods: T[], modifyCollection: (subSetCurrent: T[], mods: T[]) => T[], readType?: Maybe<ReadRelationModelTypeFn<T>>): T[] {
-    if (readType) {
-      return ModelRelationUtility._modifyMultiTypeCollection(current, mods, readType, modifyCollection);
-    } else {
-      return modifyCollection(current, mods);
-    }
+    return readType ? ModelRelationUtility._modifyMultiTypeCollection(current, mods, readType, modifyCollection) : modifyCollection(current, mods);
   }
 
   // eslint-disable-next-line @typescript-eslint/max-params
@@ -275,11 +271,7 @@ export class ModelRelationUtility {
       const mods = modsMap.get(type) ?? [];
 
       // Only modify if they've got changes for their type.
-      if (mods.length === 0) {
-        return values; // No mods, no change to those types.
-      } else {
-        return modifyCollection(values, mods);
-      }
+      return mods.length === 0 ? values : modifyCollection(values, mods);
     });
 
     // Rejoin all changes.
@@ -348,27 +340,27 @@ export class ModelRelationUtility {
    */
   // eslint-disable-next-line @typescript-eslint/max-params
   static removeFromCollection<T extends RelationObject>(current: Maybe<T[]>, remove: T[], readKey: ReadRelationKeyFn<T>, shouldRemove?: (x: T) => boolean): T[] {
-    if (current?.length) {
-      if (shouldRemove) {
-        const currentKeyPairs = makeKeyPairs(current, readKey);
-        const map = new Map(currentKeyPairs);
-
-        remove.forEach((x) => {
-          const key = readKey(x);
-          const removalTarget = map.get(key);
-
-          if (removalTarget && shouldRemove(removalTarget)) {
-            map.delete(key); // Remove from the map.
-          }
-        });
-
-        return currentKeyPairs.filter((x) => map.has(x[0])).map((x) => x[1]); // Retain order, remove from map.
-      } else {
-        return ModelRelationUtility.removeKeysFromCollection(current, remove.map(readKey), readKey);
-      }
-    } else {
+    if (!current?.length) {
       return [];
     }
+
+    if (shouldRemove) {
+      const currentKeyPairs = makeKeyPairs(current, readKey);
+      const map = new Map(currentKeyPairs);
+
+      remove.forEach((x) => {
+        const key = readKey(x);
+        const removalTarget = map.get(key);
+
+        if (removalTarget && shouldRemove(removalTarget)) {
+          map.delete(key); // Remove from the map.
+        }
+      });
+
+      return currentKeyPairs.filter((x) => map.has(x[0])).map((x) => x[1]); // Retain order, remove from map.
+    }
+
+    return ModelRelationUtility.removeKeysFromCollection(current, remove.map(readKey), readKey);
   }
 
   /**

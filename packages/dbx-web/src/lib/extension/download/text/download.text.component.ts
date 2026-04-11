@@ -68,9 +68,9 @@ export class DbxDownloadTextViewComponent extends AbstractDbxClipboardDirective 
     switchMap((x) => {
       if (x) {
         return of(x).pipe(valueFromFinishedLoadingState());
-      } else {
-        return of(undefined);
       }
+
+      return of(undefined);
     })
   );
 
@@ -101,9 +101,9 @@ export class DbxDownloadTextViewComponent extends AbstractDbxClipboardDirective 
       switchMap((downloadTextContent: Maybe<DownloadTextContent>) => {
         if (downloadTextContent) {
           return this._copyToClipboard(downloadTextContent.content);
-        } else {
-          return of(false);
         }
+
+        return of(false);
       })
     );
   };

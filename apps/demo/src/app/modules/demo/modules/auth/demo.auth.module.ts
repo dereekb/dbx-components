@@ -5,6 +5,7 @@ import { DemoAuthAuthorizeComponent } from './container/authorize.component';
 import { DemoAuthLayoutComponent } from './container/layout.component';
 import { DemoAuthLoggedOutComponent } from './container/loggedout.component';
 import { DemoAuthErrorComponent } from './container/error.component';
+import { DemoAuthResetPasswordComponent } from './container/reset.component';
 import { DEMO_AUTH_STATES } from './demo.auth.router';
 import { DemoAuthLoginComponent } from './container/login.component';
 import { DemoAuthLoginViewComponent } from './container/login.view.component';
@@ -21,7 +22,8 @@ import { DemoAuthLoginViewComponent } from './container/login.view.component';
     DemoAuthErrorComponent,
     DemoAuthLoginComponent,
     DemoAuthLoggedOutComponent,
-    DemoAuthLoginViewComponent
+    DemoAuthLoginViewComponent,
+    DemoAuthResetPasswordComponent
   ]
 })
 export class DemoAuthModule {}

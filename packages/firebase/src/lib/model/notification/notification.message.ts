@@ -294,10 +294,10 @@ export function notificationMessageFunction(fn: NotificationMessageFunctionWitho
     fnWithExtras.globalRecipients = extras.globalRecipients;
     fnWithExtras.onSendAttempted = extras.onSendAttempted;
     fnWithExtras.onSendSuccess = extras.onSendSuccess;
-    return fnWithExtras as NotificationMessageFunction;
-  } else {
-    return fn;
+    fn = fnWithExtras as NotificationMessageFunction;
   }
+
+  return fn;
 }
 
 /**

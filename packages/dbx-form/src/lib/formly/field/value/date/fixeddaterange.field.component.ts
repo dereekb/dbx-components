@@ -275,147 +275,147 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
               return date ? (minMaxClamp(dateRange({ ...dateRangeInput, date } as DateRangeInput)) as DateRange) : null;
             })
           );
-        } else {
-          // take the first date, then wait unless the date is outside of the range.
-          return this.selectedDateRange$.pipe(
-            // eslint-disable-next-line sonarjs/cognitive-complexity
-            scan((acc: FixedDateRangeScan, nextDateRange: Maybe<Partial<DateRange>>) => {
-              let result: FixedDateRangeScan;
-              let pickType: Maybe<FixedDateRangeScanType> = 'start';
+        }
 
-              if (nextDateRange?.start != null) {
-                const { start: startOrNextDate, end } = nextDateRange;
-                const potentialBoundary = dateRange({ ...dateRangeInput, date: startOrNextDate } as DateRangeInput);
+        // take the first date, then wait unless the date is outside of the range.
+        return this.selectedDateRange$.pipe(
+          // eslint-disable-next-line sonarjs/cognitive-complexity
+          scan((acc: FixedDateRangeScan, nextDateRange: Maybe<Partial<DateRange>>) => {
+            let result: FixedDateRangeScan;
+            let pickType: Maybe<FixedDateRangeScanType> = 'start';
 
-                // only comes through when passed by the text inputs
-                if (startOrNextDate && end) {
-                  const range = clampDateRangeToDateRange(nextDateRange, potentialBoundary) as DateRange;
-                  result = {
-                    lastDateRange: nextDateRange,
-                    boundary: range,
-                    range
-                  };
+            if (nextDateRange?.start != null) {
+              const { start: startOrNextDate, end } = nextDateRange;
+              const potentialBoundary = dateRange({ ...dateRangeInput, date: startOrNextDate } as DateRangeInput);
 
-                  // for normal mode we want to protect against "start" being input, then the output being passed,
-                  // and then the next click being treated as another "start" instead of an "end".
-                  if (mode === 'normal' && acc.lastPickType === 'start' && isSameDateDay(startOrNextDate, end) && isSameDateDay(startOrNextDate, acc.lastDateRange?.start)) {
-                    pickType = 'startRepeat';
+              // only comes through when passed by the text inputs
+              if (startOrNextDate && end) {
+                const range = clampDateRangeToDateRange(nextDateRange, potentialBoundary) as DateRange;
+                result = {
+                  lastDateRange: nextDateRange,
+                  boundary: range,
+                  range
+                };
+
+                // for normal mode we want to protect against "start" being input, then the output being passed,
+                // and then the next click being treated as another "start" instead of an "end".
+                if (mode === 'normal' && acc.lastPickType === 'start' && isSameDateDay(startOrNextDate, end) && isSameDateDay(startOrNextDate, acc.lastDateRange?.start)) {
+                  pickType = 'startRepeat';
+                }
+              } else {
+                let range: Maybe<DateRange> = undefined;
+                let boundary: Maybe<DateRange> = potentialBoundary;
+
+                if (mode === 'normal') {
+                  if (!hasDateRangeConfiguration) {
+                    // if there is no configured range/boundary, then just set the pick type based on the last type
+                    boundary = undefined;
+                    pickType = acc.lastPickType === 'start' ? 'end' : 'start';
+                  } else if (acc.lastPickType === 'startRepeat') {
+                    pickType = 'end';
+                  } else {
+                    // if the pick is outside the boundary, then consider it a start pick type.
+                    pickType = acc.lastPickType === 'start' && acc.boundary && isDateInDateRange(startOrNextDate, acc.boundary) ? 'end' : 'start';
                   }
-                } else {
-                  let range: Maybe<DateRange> = undefined;
-                  let boundary: Maybe<DateRange> = potentialBoundary;
 
-                  if (mode === 'normal') {
-                    if (!hasDateRangeConfiguration) {
-                      // if there is no configured range/boundary, then just set the pick type based on the last type
-                      boundary = undefined;
-                      pickType = acc.lastPickType === 'start' ? 'end' : 'start';
-                    } else if (acc.lastPickType === 'startRepeat') {
-                      pickType = 'end';
-                    } else {
-                      // if the pick is outside the boundary, then consider it a start pick type.
-                      pickType = acc.lastPickType === 'start' && acc.boundary && isDateInDateRange(startOrNextDate, acc.boundary) ? 'end' : 'start';
-                    }
+                  // react based on how this
+                  switch (pickType) {
+                    case 'end': {
+                      const lastStart = acc.lastDateRange?.start as Date;
 
-                    // react based on how this
-                    switch (pickType) {
-                      case 'end': {
-                        const lastStart = acc.lastDateRange?.start as Date;
+                      let boundaryToCheck: DateRange;
+                      const selectionIsBeforePreviousSelection = !lastStart || isBefore(startOrNextDate, lastStart);
 
-                        let boundaryToCheck: DateRange;
-                        const selectionIsBeforePreviousSelection = !lastStart || isBefore(startOrNextDate, lastStart);
+                      let nextStart: Date;
+                      let nextEnd: Date;
 
-                        let nextStart: Date;
-                        let nextEnd: Date;
-
-                        if (selectionIsBeforePreviousSelection) {
-                          nextStart = startOrNextDate;
-                          nextEnd = lastStart;
-                          boundaryToCheck = potentialBoundary;
-                        } else {
-                          nextStart = lastStart;
-                          nextEnd = startOrNextDate;
-                          boundaryToCheck = dateRange({ ...dateRangeInput, date: nextStart } as DateRangeInput);
-                        }
-
-                        // Recalculate the boundary using the next start date. If it is outside the selectable range, then it becomes a "start" pick type.
-                        if (isBefore(boundaryToCheck.end, nextEnd)) {
-                          // TODO: Allow changing the behavior to fill the entire range instead of just resetting it entirely
-
-                          nextStart = startOrNextDate;
-                          nextEnd = startOrNextDate;
-                          pickType = 'start';
-                          boundary = boundaryToCheck;
-                        } else {
-                          boundary = range;
-                        }
-
-                        // if we're picking the end then set the range.
-                        range = {
-                          start: nextStart,
-                          end: nextEnd
-                        };
-                        break;
+                      if (selectionIsBeforePreviousSelection) {
+                        nextStart = startOrNextDate;
+                        nextEnd = lastStart;
+                        boundaryToCheck = potentialBoundary;
+                      } else {
+                        nextStart = lastStart;
+                        nextEnd = startOrNextDate;
+                        boundaryToCheck = dateRange({ ...dateRangeInput, date: nextStart } as DateRangeInput);
                       }
-                      case 'start':
-                        // retain the boundary as potential boundary, and set our new range from the single date.
-                        range = {
-                          start: startOrNextDate as Date,
-                          end: startOrNextDate as Date
-                        };
-                        break;
-                    }
-                  } else if (acc.boundary && isDateInDateRange(startOrNextDate, acc.boundary)) {
-                    // if in the date range, uses the pick as the last date.
-                    range = {
-                      start: acc.boundary.start,
-                      end: startOrNextDate
-                    };
 
-                    if (mode === 'arbitrary_quick') {
-                      // modify boundary to match range
-                      if (isSameDateRange(acc.range, range) && isSameDateDay(range.end, startOrNextDate)) {
-                        // if we clicked on the end range, then expand the boundary again to the full range.
-                        range = dateRange({ ...dateRangeInput, date: range.start } as DateRangeInput);
-                        boundary = range;
+                      // Recalculate the boundary using the next start date. If it is outside the selectable range, then it becomes a "start" pick type.
+                      if (isBefore(boundaryToCheck.end, nextEnd)) {
+                        // TODO: Allow changing the behavior to fill the entire range instead of just resetting it entirely
+
+                        nextStart = startOrNextDate;
+                        nextEnd = startOrNextDate;
+                        pickType = 'start';
+                        boundary = boundaryToCheck;
                       } else {
                         boundary = range;
                       }
-                    } else {
-                      // retain same boundary
-                      boundary = acc.boundary;
+
+                      // if we're picking the end then set the range.
+                      range = {
+                        start: nextStart,
+                        end: nextEnd
+                      };
+                      break;
                     }
-                  } else if (mode === 'arbitrary_quick') {
-                    range = potentialBoundary;
+                    case 'start':
+                      // retain the boundary as potential boundary, and set our new range from the single date.
+                      range = {
+                        start: startOrNextDate as Date,
+                        end: startOrNextDate as Date
+                      };
+                      break;
                   }
-
-                  result = {
-                    lastDateRange: nextDateRange,
-                    boundary,
-                    range
+                } else if (acc.boundary && isDateInDateRange(startOrNextDate, acc.boundary)) {
+                  // if in the date range, uses the pick as the last date.
+                  range = {
+                    start: acc.boundary.start,
+                    end: startOrNextDate
                   };
+
+                  if (mode === 'arbitrary_quick') {
+                    // modify boundary to match range
+                    if (isSameDateRange(acc.range, range) && isSameDateDay(range.end, startOrNextDate)) {
+                      // if we clicked on the end range, then expand the boundary again to the full range.
+                      range = dateRange({ ...dateRangeInput, date: range.start } as DateRangeInput);
+                      boundary = range;
+                    } else {
+                      boundary = range;
+                    }
+                  } else {
+                    // retain same boundary
+                    boundary = acc.boundary;
+                  }
+                } else if (mode === 'arbitrary_quick') {
+                  range = potentialBoundary;
                 }
-              } else {
+
                 result = {
-                  lastDateRange: nextDateRange
+                  lastDateRange: nextDateRange,
+                  boundary,
+                  range
                 };
               }
+            } else {
+              result = {
+                lastDateRange: nextDateRange
+              };
+            }
 
-              if (result) {
-                result = {
-                  lastPickType: pickType,
-                  lastDateRange: result.lastDateRange,
-                  boundary: result.boundary ? (minMaxClamp(result.boundary) as DateRange) : undefined,
-                  range: result.range ? (minMaxClamp(result.range) as DateRange) : undefined
-                };
-              }
+            if (result) {
+              result = {
+                lastPickType: pickType,
+                lastDateRange: result.lastDateRange,
+                boundary: result.boundary ? (minMaxClamp(result.boundary) as DateRange) : undefined,
+                range: result.range ? (minMaxClamp(result.range) as DateRange) : undefined
+              };
+            }
 
-              return result;
-            }, {}),
-            filter((x) => !x.lastDateRange || x.range != null), // pass through null/date clearings or ranges
-            map((x) => x.range ?? null) // return the range
-          );
-        }
+            return result;
+          }, {}),
+          filter((x) => !x.lastDateRange || x.range != null), // pass through null/date clearings or ranges
+          map((x) => x.range ?? null) // return the range
+        );
       })
     );
 
@@ -425,12 +425,7 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
   readonly fullBoundary$: Observable<Maybe<DateRange>> = this.dateRangeSelectionForMode('single').pipe(shareReplay(1));
   readonly latestBoundary$: Observable<Maybe<DateRange>> = this.selectionMode$.pipe(
     switchMap((mode) => {
-      if (mode === 'arbitrary_quick') {
-        // in arbitrary_quick mode, the latest value is the boundary, since we always set the value immediately.
-        return this.valueInSystemTimezone$;
-      } else {
-        return this.fullBoundary$;
-      }
+      return mode === 'arbitrary_quick' ? this.valueInSystemTimezone$ : this.fullBoundary$;
     })
   );
 
@@ -441,14 +436,14 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
     switchMap((selectionEvent) => {
       if (selectionEvent?.type === 'calendar' && selectionEvent.range?.start) {
         return of(selectionEvent.range.start);
-      } else {
-        return this.fullBoundary$.pipe(
-          first(),
-          map((fullBoundary) => {
-            return fullBoundary?.start ?? selectionEvent?.range?.start;
-          })
-        );
       }
+
+      return this.fullBoundary$.pipe(
+        first(),
+        map((fullBoundary) => {
+          return fullBoundary?.start ?? selectionEvent?.range?.start;
+        })
+      );
     }),
     filterMaybe(),
     shareReplay(1)
@@ -526,12 +521,12 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
   readonly pickerFilter$: Observable<DecisionFunction<Date | null>> = this.config$.pipe(
     distinctUntilChanged(),
     map((x) => {
-      if (x) {
-        const filter = dateTimeMinuteWholeDayDecisionFunction(x, false);
-        return (x: Date | null) => (x != null ? filter(x) : true);
-      } else {
+      if (!x) {
         return () => true;
       }
+
+      const filter = dateTimeMinuteWholeDayDecisionFunction(x, false);
+      return (x: Date | null) => (x != null ? filter(x) : true);
     }),
     shareReplay(1)
   );
@@ -770,11 +765,7 @@ export class DbxFixedDateRangeFieldSelectionStrategy<D> implements MatDateRangeS
   }
 
   private _createDateRange(input: Maybe<DateRange>): DatePickerDateRange<D> {
-    if (input) {
-      return new DatePickerDateRange<D>(this.adapterDateFromDate(input.start), this.adapterDateFromDate(input.end));
-    } else {
-      return new DatePickerDateRange<D>(null, null);
-    }
+    return input ? new DatePickerDateRange<D>(this.adapterDateFromDate(input.start), this.adapterDateFromDate(input.end)) : new DatePickerDateRange<D>(null, null);
   }
 
   dateFromAdapterDate(input: D) {

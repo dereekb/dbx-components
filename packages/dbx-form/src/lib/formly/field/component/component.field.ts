@@ -16,9 +16,15 @@ export type ComponentFieldConfig<T = unknown> = DbxFormComponentFieldConfig<T>;
  * const field = componentField({ componentClass: MyCustomFormComponent });
  * ```
  */
-export function componentField<T = unknown>(config: ComponentFieldConfig<T>): DbxFormComponentFormlyFieldConfig<T> {
+export function formlyComponentField<T = unknown>(config: ComponentFieldConfig<T>): DbxFormComponentFormlyFieldConfig<T> {
   return {
     type: 'component',
     componentField: config
   };
 }
+
+// MARK: Deprecated Aliases
+/**
+ * @deprecated Use formlyComponentField instead.
+ */
+export const componentField = formlyComponentField;

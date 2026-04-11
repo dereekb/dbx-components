@@ -189,54 +189,54 @@ export function rangedIndexedValuesArrayAccessorInfoFactory<T>(config: RangedInd
   return (values: T[]) => {
     if (values.length === 0) {
       return () => ({}); // no pairs to match on
-    } else {
-      // pairs sorted in ascending order
-      const pairs = values.map(pairFactory).sort(sortByIndexRangeAscendingCompareFunction((x) => x.range));
-
-      return (index: IndexNumber) => {
-        // find the first item that fits the
-        let matchIndex: IndexNumber = -1;
-        let i: IndexNumber;
-
-        for (i = 0; i < pairs.length; i += 1) {
-          const comparison = pairs[i];
-
-          if (comparison.range.minIndex <= index) {
-            if (comparison.range.maxIndex > index) {
-              matchIndex = i;
-              break;
-            }
-            // continue otherwise.
-          } else {
-            break; // outside the min index, is not within these values at all
-          }
-        }
-
-        let match: Maybe<T>;
-        let prev: Maybe<T>;
-        let next: Maybe<T>;
-
-        if (matchIndex === -1) {
-          // no match
-          match = undefined;
-
-          // use i otherwise
-          prev = pairs[i - 1]?.value;
-          next = pairs[i]?.value;
-        } else {
-          match = pairs[matchIndex]?.value;
-          prev = pairs[matchIndex - 1]?.value;
-          next = pairs[matchIndex + 1]?.value;
-        }
-
-        const info: RangedIndexValuesArrayAccessorInfo<T> = {
-          prev,
-          match,
-          next
-        };
-
-        return info;
-      };
     }
+
+    // pairs sorted in ascending order
+    const pairs = values.map(pairFactory).sort(sortByIndexRangeAscendingCompareFunction((x) => x.range));
+
+    return (index: IndexNumber) => {
+      // find the first item that fits the
+      let matchIndex: IndexNumber = -1;
+      let i: IndexNumber;
+
+      for (i = 0; i < pairs.length; i += 1) {
+        const comparison = pairs[i];
+
+        if (comparison.range.minIndex <= index) {
+          if (comparison.range.maxIndex > index) {
+            matchIndex = i;
+            break;
+          }
+          // continue otherwise.
+        } else {
+          break; // outside the min index, is not within these values at all
+        }
+      }
+
+      let match: Maybe<T>;
+      let prev: Maybe<T>;
+      let next: Maybe<T>;
+
+      if (matchIndex === -1) {
+        // no match
+        match = undefined;
+
+        // use i otherwise
+        prev = pairs[i - 1]?.value;
+        next = pairs[i]?.value;
+      } else {
+        match = pairs[matchIndex]?.value;
+        prev = pairs[matchIndex - 1]?.value;
+        next = pairs[matchIndex + 1]?.value;
+      }
+
+      const info: RangedIndexValuesArrayAccessorInfo<T> = {
+        prev,
+        match,
+        next
+      };
+
+      return info;
+    };
   };
 }

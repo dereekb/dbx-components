@@ -3,7 +3,7 @@ import { type WorkUsingContext } from '@dereekb/rxjs';
 import { DbxActionDirective, DbxActionEnforceModifiedDirective, DbxActionHandlerDirective, DbxActionButtonDirective } from '@dereekb/dbx-core';
 import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
 import { DbxButtonComponent, DbxActionSnackbarErrorDirective } from '@dereekb/dbx-web';
-import { DbxFirebaseOidcEntryClientFormComponent, type DbxFirebaseOidcEntryClientFormComponentConfig, type DbxFirebaseOidcModelClientUpdateFormValue } from '../component/oidcentry.client.form.component';
+import { DbxFirebaseOidcEntryClientForgeFormComponent, type DbxFirebaseOidcEntryClientFormComponentConfig, type DbxFirebaseOidcModelClientUpdateFormValue } from '../component/oidcentry.client.forge.form.component';
 import { OidcEntryDocumentStore } from '../store/oidcentry.document.store';
 import { type UpdateOidcClientParams, type OidcEntryOAuthClientPayloadData } from '@dereekb/firebase';
 import { type Configurable } from '@dereekb/util';
@@ -18,12 +18,12 @@ import { map } from 'rxjs';
   selector: 'dbx-firebase-oidc-entry-client-update',
   template: `
     <div dbxAction dbxActionEnforceModified [dbxActionHandler]="handleUpdateClient" dbxActionSnackbarError>
-      <dbx-firebase-oidc-client-form dbxActionForm [dbxFormSource]="formTemplate$" [config]="formConfig"></dbx-firebase-oidc-client-form>
+      <dbx-firebase-oidc-client-forge-form dbxActionForm [dbxFormSource]="formTemplate$" [config]="formConfig"></dbx-firebase-oidc-client-forge-form>
       <dbx-button [raised]="true" dbxActionButton text="Save"></dbx-button>
     </div>
   `,
   standalone: true,
-  imports: [DbxActionSnackbarErrorDirective, DbxActionDirective, DbxActionEnforceModifiedDirective, DbxActionHandlerDirective, DbxActionFormDirective, DbxFormSourceDirective, DbxButtonComponent, DbxActionButtonDirective, DbxFirebaseOidcEntryClientFormComponent],
+  imports: [DbxActionSnackbarErrorDirective, DbxActionDirective, DbxActionEnforceModifiedDirective, DbxActionHandlerDirective, DbxActionFormDirective, DbxFormSourceDirective, DbxButtonComponent, DbxActionButtonDirective, DbxFirebaseOidcEntryClientForgeFormComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxFirebaseOidcEntryClientUpdateComponent {

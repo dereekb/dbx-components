@@ -1,14 +1,14 @@
 {
   "name": "@dereekb/nestjs/vapiai",
-  "version": "13.7.0",
+  "version": "13.8.0",
   "peerDependencies": {
-    "@dereekb/date": "13.7.0",
-    "@dereekb/model": "13.7.0",
-    "@dereekb/nestjs": "13.7.0",
-    "@dereekb/rxjs": "13.7.0",
-    "@dereekb/util": "13.7.0",
+    "@dereekb/date": "13.8.0",
+    "@dereekb/model": "13.8.0",
+    "@dereekb/nestjs": "13.8.0",
+    "@dereekb/rxjs": "13.8.0",
+    "@dereekb/util": "13.8.0",
     "@nestjs/common": "^11.1.17",
-    "@nestjs/config": "^4.0.3",
+    "@nestjs/config": "^4.0.4",
     "@vapi-ai/server-sdk": "^0.11.0",
     "express": "^5.0.0"
   }

@@ -4,7 +4,7 @@
     <doc-feature-example header="Date Pipes" hint="Various date pipes to help format dates to text in templates.">
       <dbx-content-border>
         <dbx-detail-block icon="event" header="Example Date and Time">
-          <doc-form-example-form [dbxFormlyFields]="dateTimezoneFields" (dbxFormValueChange)="onDateTimezoneChange($event)" [dbxFormSource]="dateAndTimezoneInitial" dbxFormSourceMode="always"></doc-form-example-form>
+          <doc-forge-example-form [config]="dateTimezoneConfig" (dbxFormValueChange)="onDateTimezoneChange($event)" [dbxFormSource]="dateAndTimezoneInitial" dbxFormSourceMode="always"></doc-forge-example-form>
         </dbx-detail-block>
       </dbx-content-border>
 

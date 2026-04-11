@@ -1,0 +1,117 @@
+<div class="dbx-forge-datetime-field-wrapper">
+  <!-- Field Label -->
+  @if (fieldLabel()) {
+    <span class="dbx-forge-field-label">
+      {{ fieldLabel() }}
+      @if (isRequired()) {
+        <span class="dbx-forge-required-marker">*</span>
+      }
+    </span>
+  }
+
+  <!-- Date + Time row -->
+  <div class="dbx-forge-datetime-field dbx-forge-datetime-inputs">
+    <!-- Date Input -->
+    @if (showDateInputSignal()) {
+      <div class="dbx-forge-datetime-col" [class.dbx-forge-datetime-col-full]="isDateOnly()">
+        <mat-form-field [appearance]="appearance()" subscriptSizing="dynamic" class="dbx-forge-datetime-col-field">
+          <mat-label>{{ dateLabel() }}</mat-label>
+          <input matInput [disabled]="isDisabledSignal()" [required]="isDateRequired()" [min]="dateInputMinSignal()" [max]="dateInputMaxSignal()" [matDatepicker]="picker" [matDatepickerFilter]="pickerFilterSignal()" (dateChange)="onDatePicked($event)" [value]="dateValueSignal()" (keydown)="onDateKeydown($event)" />
+          @if (!hideDatePicker()) {
+            <button matPrefix mat-icon-button (click)="picker.open()" [disabled]="isDisabledSignal()" aria-label="Open date picker">
+              <mat-icon aria-hidden="true">calendar_today</mat-icon>
+            </button>
+          }
+          <mat-datepicker #picker></mat-datepicker>
+          @if (showClearButtonSignal()) {
+            <button matSuffix mat-icon-button aria-label="Clear date and time" [disabled]="isDisabledSignal()" (click)="clearValue()">
+              <mat-icon aria-hidden="true">clear</mat-icon>
+            </button>
+          }
+          @if (!showTimeInputSignal()) {
+            <span matTextSuffix>
+              <ng-container [ngTemplateOutlet]="tzSuffix"></ng-container>
+            </span>
+          }
+        </mat-form-field>
+      </div>
+    }
+
+    <!-- Time Input / Add Time Button -->
+    @if (showTimeInputSignal() || showAddTimeButtonSignal()) {
+      <div class="dbx-forge-datetime-col">
+        @if (showTimeInputSignal()) {
+          <mat-menu #timemenu="matMenu">
+            @if (timeMode() === 'optional') {
+              <button mat-menu-item (click)="removeTime()">
+                <span>Remove Time</span>
+              </button>
+              <mat-divider></mat-divider>
+            }
+            @for (preset of presetsSignal(); track $index) {
+              <button mat-menu-item (click)="selectPreset(preset)">{{ preset.label | getValue }}</button>
+            }
+          </mat-menu>
+          <mat-form-field [appearance]="appearance()" subscriptSizing="dynamic" class="dbx-forge-datetime-col-field">
+            <mat-label>{{ timeLabel() }}</mat-label>
+            <input matInput [errorStateMatcher]="timeErrorStateMatcher" [required]="isTimeRequired()" [formControl]="timeCtrl" (focus)="onTimeFocus()" (focusout)="onTimeBlur()" (keydown)="onTimeKeydown($event)" />
+            <button matPrefix mat-icon-button [matMenuTriggerFor]="timemenu" aria-label="Open time presets" [disabled]="isDisabledSignal()">
+              <mat-icon aria-hidden="true">timer</mat-icon>
+            </button>
+            <span matTextSuffix>
+              <ng-container [ngTemplateOutlet]="tzSuffix"></ng-container>
+            </span>
+            @if (timeCtrl.hasError('pattern')) {
+              <mat-error>The input time is not recognizable.</mat-error>
+            }
+          </mat-form-field>
+        }
+        @if (showAddTimeButtonSignal()) {
+          <div class="dbx-forge-add-time-wrapper">
+            <button mat-button (click)="addTime()">
+              <mat-icon>timer</mat-icon>
+              Add Time
+            </button>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Date Hint / Error -->
+  @if (hasErrorSignal()) {
+    @if (currentErrorMessageSignal()) {
+      <mat-error class="dbx-forge-datetime-error">{{ currentErrorMessageSignal() }}</mat-error>
+    }
+  } @else if (!hideDateHint()) {
+    <div class="dbx-forge-datetime-hint">
+      @if (!hasValueSignal()) {
+        <span class="dbx-small dbx-hint">No date/time set</span>
+      } @else if (displayValueSignal(); as dv) {
+        @if (fullDaySignal()) {
+          <small>
+            <b class="dbx-ok">{{ allDayLabel() }}</b>
+            {{ dv | date: 'fullDate' }} {{ tzAbbreviationSignal() }} ({{ dv | dateDistance }})
+          </small>
+        } @else {
+          <small>
+            <b class="dbx-ok">{{ atTimeLabel() }}</b>
+            {{ dv | date: 'medium' }} {{ tzAbbreviationSignal() }} ({{ dv | timeDistance }})
+          </small>
+        }
+      }
+    </div>
+  }
+
+  <!-- Description -->
+  @if (description()) {
+    <p class="dbx-hint dbx-forge-datetime-desc">{{ description() }}</p>
+  }
+</div>
+
+<!-- Timezone Suffix Template -->
+<ng-template #tzSuffix>
+  @if (showTimezone()) {
+    <span class="dbx-forge-datetime-timezone dbx-faint">{{ tzAbbreviationSignal() }}</span>
+  }
+</ng-template>

@@ -179,11 +179,7 @@ export function skipMaybes<T>(maxToSkip: number): MonoTypeOperatorFunction<T> {
  */
 export function switchMapMaybeDefault<T = unknown>(defaultValue: Maybe<T> = undefined): OperatorFunction<Maybe<Observable<Maybe<T>>>, Maybe<T>> {
   return switchMap((x: Maybe<Observable<Maybe<T>>>) => {
-    if (x != null) {
-      return x;
-    } else {
-      return of(defaultValue);
-    }
+    return x != null ? x : of(defaultValue);
   });
 }
 
@@ -208,11 +204,7 @@ export function switchMapToDefault<T = unknown>(defaultObs: MaybeObservableOrVal
   return switchMap((x: Maybe<T>) =>
     useDefaultFn(x).pipe(
       switchMap((useDefault) => {
-        if (useDefault) {
-          return asObservableFromGetter(defaultObs);
-        } else {
-          return of(x);
-        }
+        return useDefault ? asObservableFromGetter(defaultObs) : of(x);
       })
     )
   );
@@ -293,11 +285,7 @@ export function switchMapOnBoolean<T = unknown>(switchOnValue: boolean, obs: May
 export function switchMapOnBoolean<T = unknown>(switchOnValue: boolean, obs: MaybeObservableOrValueGetter<T>, otherwise?: MaybeObservableOrValueGetter<T>): OperatorFunction<boolean, Maybe<T>>;
 export function switchMapOnBoolean<T = unknown>(switchOnValue: boolean, obs: MaybeObservableOrValueGetter<T>, otherwise?: MaybeObservableOrValueGetter<T>): OperatorFunction<boolean, Maybe<T>> {
   return switchMap((x: boolean) => {
-    if (x === switchOnValue) {
-      return asObservableFromGetter(obs);
-    } else {
-      return otherwise != null ? asObservableFromGetter(otherwise) : EMPTY;
-    }
+    return x === switchOnValue ? asObservableFromGetter(obs) : otherwise != null ? asObservableFromGetter(otherwise) : EMPTY;
   });
 }
 

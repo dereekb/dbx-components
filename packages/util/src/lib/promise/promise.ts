@@ -232,14 +232,14 @@ async function _performAsyncTask<I, O>(value: I, taskFn: PerformAsyncTaskFn<I, O
 
     if (retriesRemaining > 0) {
       return retryWait ? waitForMs(retryWait).then(() => doNextTry()) : doNextTry();
-    } else {
-      // Error out.
-      if (throwError) {
-        throw result[0];
-      } else {
-        return [value, undefined as unknown as O, false];
-      }
     }
+
+    // Error out.
+    if (throwError) {
+      throw result[0];
+    }
+
+    return [value, undefined as unknown as O, false];
   }
 
   return iterateTask(value, 0);
@@ -317,11 +317,7 @@ export function performTasksInParallelFunction<I, K extends PrimativeKey = Perfo
     if (maxParallelTasks && !nonConcurrentTaskKeyFactory) {
       result = (input: I[]) => {
         // if there is no custom nonConcurrentTaskKeyFactory, then we can just run all tasks at once and skip the overhead of performTasksInParallel if the input has less than the maxParallelTasks
-        if (input.length <= maxParallelTasks) {
-          return performAllTasksInUnlimitedParallel(input);
-        } else {
-          return performTasksWithInput(input);
-        }
+        return input.length <= maxParallelTasks ? performAllTasksInUnlimitedParallel(input) : performTasksWithInput(input);
       };
     } else {
       result = performTasksWithInput;
@@ -455,19 +451,17 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
       async function requestMoreTasks(parallelIndex: IndexNumber): Promise<NextIncompleteTask> {
         if (isOutOfTasks) {
           return;
-        } else {
-          const promiseRef = promiseReference<NextIncompleteTask>();
-
-          if (isFulfillingTask) {
-            requestTasksQueue.push([parallelIndex, promiseRef]);
-
-            return promiseRef.promise;
-          } else {
-            void fulfillRequestMoreTasks(parallelIndex, promiseRef);
-          }
-
-          return promiseRef.promise;
         }
+
+        const promiseRef = promiseReference<NextIncompleteTask>();
+
+        if (isFulfillingTask) {
+          requestTasksQueue.push([parallelIndex, promiseRef]);
+        } else {
+          void fulfillRequestMoreTasks(parallelIndex, promiseRef);
+        }
+
+        return promiseRef.promise;
       }
 
       let currentRunIndex = 0;

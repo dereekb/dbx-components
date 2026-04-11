@@ -64,7 +64,11 @@ export default [
             }
           ]
         }
-      ]
+      ],
+      /**
+       * Helps catch "single-return" violations trivial locations
+       */
+      'no-else-return': ['error', { allowElseIf: false }]
     }
   },
   {
