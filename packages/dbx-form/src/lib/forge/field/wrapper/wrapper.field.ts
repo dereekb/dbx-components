@@ -157,19 +157,13 @@ export abstract class AbstractForgeWrapperFieldComponent<TProps extends DbxForge
       const childValue = this.childValueSignal();
 
       untracked(() => {
-        if (!this._initialized) {
-          return;
+        // Only sync when initialized and when the value didn't originate from a parent → child sync
+        if (this._initialized && childValue !== this._lastParentSyncRef) {
+          const fieldState = this.field()();
+          fieldState.value.set(childValue ?? {});
+          fieldState.markAsTouched();
+          fieldState.markAsDirty();
         }
-
-        // Skip if this value originated from a parent → child sync
-        if (childValue === this._lastParentSyncRef) {
-          return;
-        }
-
-        const fieldState = this.field()();
-        fieldState.value.set(childValue ?? {});
-        fieldState.markAsTouched();
-        fieldState.markAsDirty();
       });
     });
   }

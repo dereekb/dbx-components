@@ -55,8 +55,8 @@
       </doc-feature-form-tabs>
       <h4>Anchors</h4>
       <p>It can also be configured to display content within a dbx-anchor value, allowing for navigation as a result of searching.</p>
-      @if (valueClicked) {
-        <p class="dbx-ok">Value Clicked: {{ valueClicked }}</p>
+      @if (valueClicked()) {
+        <p class="dbx-ok">Value Clicked: {{ valueClicked() }}</p>
       }
       <doc-feature-form-tabs formlyFn="formlySearchableTextField()" forgeFn="forgeSearchableTextField()">
         <doc-form-example-form formly [dbxFormlyFields]="searchableTextFieldsWithAnchors" [dbxFormSource]="anchorFieldValue" [disabled]="formTabs.disabled()"></doc-form-example-form>

@@ -27,22 +27,22 @@ export type DbxForgeFieldAutocompleteConfig = string | DisableAutocompleteForFie
  * @param autocomplete - Autocomplete value or `false` to disable
  * @returns A meta object with autocomplete attributes, or `undefined` if not configured
  */
-export function forgeAutocompleteFieldMeta(autocomplete: Maybe<DbxForgeFieldAutocompleteConfig>): FieldMeta | undefined {
-  if (autocomplete == null) {
-    return undefined;
-  }
+export function forgeAutocompleteFieldMeta(autocomplete: Maybe<DbxForgeFieldAutocompleteConfig>): Maybe<FieldMeta> {
+  let result: Maybe<FieldMeta>;
 
   if (autocomplete === false) {
     // https://stackoverflow.com/questions/15738259/disabling-chrome-autofill
-    return {
+    result = {
       name: 'password',
       autocomplete: 'off'
     };
+  } else if (autocomplete != null) {
+    result = {
+      autocomplete
+    };
   }
 
-  return {
-    autocomplete
-  };
+  return result;
 }
 
 /**
@@ -52,14 +52,17 @@ export function forgeAutocompleteFieldMeta(autocomplete: Maybe<DbxForgeFieldAuto
  * @param autocomplete - Autocomplete configuration to merge
  * @returns Merged meta, or `undefined` if neither input provides values
  */
-export function mergeForgeFieldMeta(baseMeta: Maybe<FieldMeta>, autocomplete: Maybe<DbxForgeFieldAutocompleteConfig>): FieldMeta | undefined {
+export function mergeForgeFieldMeta(baseMeta: Maybe<FieldMeta>, autocomplete: Maybe<DbxForgeFieldAutocompleteConfig>): Maybe<FieldMeta> {
   const autocompleteMeta = forgeAutocompleteFieldMeta(autocomplete);
+  let result: Maybe<FieldMeta>;
 
   if (baseMeta && autocompleteMeta) {
-    return { ...baseMeta, ...autocompleteMeta };
+    result = { ...baseMeta, ...autocompleteMeta };
+  } else {
+    result = autocompleteMeta ?? baseMeta;
   }
 
-  return autocompleteMeta ?? baseMeta ?? undefined;
+  return result;
 }
 
 /**

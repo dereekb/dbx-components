@@ -11,6 +11,7 @@
     "@dereekb/rxjs": "13.7.0",
     "@dereekb/util": "13.7.0",
     "@dereekb/vitest": "13.7.0",
+    "@ng-forge/dynamic-forms": "^0.7.0",
     "@ng-web-apis/geolocation": "^5.1.0",
     "@ngx-formly/core": "git+https://git@github.com/dereekb/ngx-formly#996d1041c8d2afbe429985a5ad394e59327bfa1d",
     "@ngx-formly/material": "git+https://git@github.com/dereekb/ngx-formly#02e615006744374a587b5d35de3b2d137e2e05a8",

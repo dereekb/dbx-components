@@ -1,5 +1,5 @@
 import { BehaviorSubject, map, type Observable, of, delay, startWith, switchMap, Subject } from 'rxjs';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, type OnDestroy, type Type, type OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, type OnDestroy, type Type, type OnInit, signal } from '@angular/core';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
 import {
@@ -140,8 +140,6 @@ const EMBEDDED_SCHOOLS_FILTER_FUNCTION = searchStringFilterFunction<ExampleSearc
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormSelectionComponent implements OnInit, OnDestroy {
-  readonly cdRef = inject(ChangeDetectorRef);
-
   private _searchStrings = new BehaviorSubject<TestStringSearchFunction>((search) => ['A', 'B', 'C', 'D'].map((x) => `${search} ${x}`.trim()));
   readonly searchFn$ = this._searchStrings.asObservable();
 
@@ -920,7 +918,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
     })
   ];
 
-  valueClicked: any;
+  readonly valueClicked = signal<string | undefined>(undefined);
 
   readonly exampleMetadataValues: ExampleSearchableMetadata[] = [
     {
@@ -960,8 +958,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
         anchorForValue: (fieldValue) => {
           return {
             onClick: () => {
-              this.valueClicked = `Default anchor click: ${fieldValue.value}`;
-              safeDetectChanges(this.cdRef);
+              this.valueClicked.set(`Default anchor click: ${fieldValue.value}`);
             }
           };
         }
@@ -979,8 +976,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
               ...x,
               anchor: {
                 onClick: () => {
-                  this.valueClicked = `Per item value: ${x.value}`;
-                  safeDetectChanges(this.cdRef);
+                  this.valueClicked.set(`Per item value: ${x.value}`);
                 }
               }
             }))
@@ -1006,8 +1002,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
         anchorForValue: (fieldValue) => {
           return {
             onClick: () => {
-              this.valueClicked = `Meta item click: ${fieldValue.value}`;
-              safeDetectChanges(this.cdRef);
+              this.valueClicked.set(`Meta item click: ${fieldValue.value}`);
             }
           };
         },
@@ -1030,8 +1025,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       anchorForValue: (fieldValue) => {
         return {
           onClick: () => {
-            this.valueClicked = `Default anchor click: ${fieldValue.value}`;
-            this.cdRef.detectChanges();
+            this.valueClicked.set(`Default anchor click: ${fieldValue.value}`);
           }
         };
       }
@@ -1049,8 +1043,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
             ...x,
             anchor: {
               onClick: () => {
-                this.valueClicked = `Per item value: ${x.value}`;
-                this.cdRef.detectChanges();
+                this.valueClicked.set(`Per item value: ${x.value}`);
               }
             }
           }))
@@ -1076,8 +1069,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       anchorForValue: (fieldValue) => {
         return {
           onClick: () => {
-            this.valueClicked = `Meta item click: ${fieldValue.value}`;
-            this.cdRef.detectChanges();
+            this.valueClicked.set(`Meta item click: ${fieldValue.value}`);
           }
         };
       },
