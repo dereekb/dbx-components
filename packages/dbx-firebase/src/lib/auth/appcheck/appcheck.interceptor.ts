@@ -4,7 +4,7 @@ import { type HttpInterceptor, type HttpRequest, type HttpHandler, type HttpEven
 import { getToken } from 'firebase/app-check';
 import { type Observable, switchMap, first, map, from } from 'rxjs';
 import { Injectable, inject } from '@angular/core';
-import { AppCheck } from '@angular/fire/app-check';
+import { FIREBASE_APP_CHECK_TOKEN } from '../../firebase/firebase.tokens';
 
 interface EnabledAppCheckRoute {
   isWildcard: boolean;
@@ -16,7 +16,7 @@ interface EnabledAppCheckRoute {
  */
 @Injectable()
 export class DbxFirebaseAppCheckHttpInterceptor implements HttpInterceptor {
-  private appCheck = inject(AppCheck);
+  private appCheck = inject(FIREBASE_APP_CHECK_TOKEN);
 
   private _appCheckRoutes: EnabledAppCheckRoute[] = ((dbxFirebaseOptions: DbxFirebaseAppOptions) => {
     const { appCheck } = dbxFirebaseOptions;

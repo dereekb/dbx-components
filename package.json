@@ -17,7 +17,6 @@
     "@angular/common": "21.2.4",
     "@angular/compiler": "21.2.4",
     "@angular/core": "21.2.4",
-    "@angular/fire": "21.0.0-rc.0-canary.ac3dd7c",
     "@angular/forms": "21.2.4",
     "@angular/material": "^21.2.3",
     "@angular/material-date-fns-adapter": "21.2.3",
@@ -84,7 +83,6 @@
     "openai": "^6.25.0",
     "raw-body": "^3.0.0",
     "rrule": "git+https://git@github.com/dereekb/rrule#2b13b1ea881059ba2ecfec380e12ef244ef54570",
-    "rxfire": "git+https://git@github.com/dereekb/rxfire#606da27059f8fce2563d6e5a79ec4c7d0843a942",
     "rxjs": "^7.8.0",
     "sharp": "^0.34.5",
     "stripe": "^20.4.1",
@@ -208,11 +206,6 @@
   "engines": {
     "node": ">=24.0.0"
   },
-  "overrides": {
-    "@angular/fire": {
-      "rxfire": "git+https://git@github.com/dereekb/rxfire#606da27059f8fce2563d6e5a79ec4c7d0843a942",
-      "firebase-tools": "15.11.0"
-    }
-  },
+  "overrides": {},
   "generators": "./generators.json"
 }

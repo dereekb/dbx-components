@@ -1,7 +1,9 @@
 import { filterMaybe, isNot, timeoutStartWith } from '@dereekb/rxjs';
 import { Injectable, inject } from '@angular/core';
 import { type AuthUserState, type DbxAuthService, loggedOutObsFromIsLoggedIn, loggedInObsFromIsLoggedIn, type AuthUserIdentifier, authUserIdentifier, type NoAuthUserIdentifier } from '@dereekb/dbx-core';
-import { reauthenticateWithPopup, Auth, authState, idToken, type User, type IdTokenResult, type ParsedToken, signInWithPopup, type AuthProvider, type PopupRedirectResolver, signInAnonymously, signInWithEmailAndPassword, type UserCredential, createUserWithEmailAndPassword, linkWithPopup, linkWithCredential, unlink, type AuthCredential } from '@angular/fire/auth';
+import { reauthenticateWithPopup, type Auth, type User, type IdTokenResult, type ParsedToken, signInWithPopup, type AuthProvider, type PopupRedirectResolver, signInAnonymously, signInWithEmailAndPassword, type UserCredential, createUserWithEmailAndPassword, linkWithPopup, linkWithCredential, unlink, type AuthCredential } from 'firebase/auth';
+import { FIREBASE_AUTH_TOKEN } from '../../firebase/firebase.tokens';
+import { firebaseAuthState, firebaseIdToken } from './firebase.auth.rxjs.util';
 import { of, type Observable, distinctUntilChanged, shareReplay, map, switchMap, firstValueFrom, catchError, EMPTY, Subject, merge, tap } from 'rxjs';
 import { type AuthClaims, type AuthClaimsObject, type AuthRoleClaimsService, type AuthRoleSet, AUTH_ADMIN_ROLE, cachedGetter, type Maybe } from '@dereekb/util';
 import { type AuthUserInfo, authUserInfoFromAuthUser, firebaseAuthTokenFromUser } from '../auth';
@@ -124,10 +126,10 @@ export const DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE: DbxFirebaseAuthServiceD
 // MARK: Service
 @Injectable()
 export class DbxFirebaseAuthService implements DbxAuthService {
-  readonly firebaseAuth = inject(Auth);
+  readonly firebaseAuth = inject(FIREBASE_AUTH_TOKEN);
   readonly delegate = inject(DbxFirebaseAuthServiceDelegate, { optional: true }) ?? DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE;
 
-  readonly _authState$: Observable<Maybe<User>> = authState(this.firebaseAuth);
+  readonly _authState$: Observable<Maybe<User>> = firebaseAuthState(this.firebaseAuth);
 
   /**
    * Subject that triggers a re-emission of the current auth user.
@@ -188,7 +190,7 @@ export class DbxFirebaseAuthService implements DbxAuthService {
    */
   readonly userIdentifier$: Observable<AuthUserIdentifier | NoAuthUserIdentifier> = this.uid$;
 
-  readonly currentIdTokenString$: Observable<Maybe<FirebaseAuthIdToken>> = idToken(this.firebaseAuth).pipe(distinctUntilChanged(), shareReplay(1));
+  readonly currentIdTokenString$: Observable<Maybe<FirebaseAuthIdToken>> = firebaseIdToken(this.firebaseAuth).pipe(distinctUntilChanged(), shareReplay(1));
   readonly idTokenString$: Observable<FirebaseAuthIdToken> = this.currentUid$.pipe(switchMap((x) => (x ? this.currentIdTokenString$.pipe(filterMaybe()) : EMPTY)));
 
   readonly currentIdTokenResult$: Observable<Maybe<IdTokenResult>> = this.currentAuthUser$.pipe(

@@ -14,7 +14,7 @@
     "@nestjs/common": "^11.1.17",
     "@nestjs/config": "^4.0.4",
     "express": "^5.0.0",
-    "firebase-admin": "^13.0.0",
+    "firebase-admin": "^13.8.0",
     "nanoid": "^5.1.7",
     "oidc-provider": "^9.7.0"
   }
