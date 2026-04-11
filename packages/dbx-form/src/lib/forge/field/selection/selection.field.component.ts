@@ -109,28 +109,7 @@ export function resolveForgeSelectionOptions<T>(options: ValueSelectionOption<T>
  */
 @Component({
   selector: 'dbx-forge-value-selection-field',
-  template: `
-    @let f = field();
-    @let selectId = key() + '-select';
-
-    <mat-form-field class="dbx-w100" [appearance]="effectiveAppearance()" [subscriptSizing]="effectiveSubscriptSizing()">
-      @if (label(); as label) {
-        <mat-label>{{ label | dynamicText | async }}</mat-label>
-      }
-
-      <mat-select [id]="selectId" [formField]="f" [placeholder]="(placeholder() | dynamicText | async) ?? ''" [multiple]="multipleSignal()" [compareWith]="compareWithSignal()" [attr.aria-invalid]="ariaInvalid()" [attr.aria-required]="ariaRequired()" [attr.aria-describedby]="ariaDescribedBy()">
-        @for (option of resolvedOptionsSignal(); track $index) {
-          <mat-option [value]="option.value" [disabled]="option.disabled ?? false">{{ option.label }}</mat-option>
-        }
-      </mat-select>
-
-      @if (errorsToDisplay()[0]; as error) {
-        <mat-error [id]="errorId()">{{ error.message }}</mat-error>
-      } @else if (props()?.hint; as hint) {
-        <mat-hint [id]="hintId()">{{ hint | dynamicText | async }}</mat-hint>
-      }
-    </mat-form-field>
-  `,
+  templateUrl: './selection.field.component.html',
   imports: [MatFormField, MatLabel, MatSelect, MatOption, MatHint, FormField, MatError, DynamicTextPipe, AsyncPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,

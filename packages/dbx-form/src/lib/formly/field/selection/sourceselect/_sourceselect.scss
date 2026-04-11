@@ -4,13 +4,6 @@
 
 // MARK: Mixin
 @mixin core() {
-  .dbx-source-select-field-loading {
-    position: absolute;
-    bottom: 0px;
-    left: -16px;
-    right: -16px;
-  }
-
   .dbx-source-select-field-content {
     display: flex;
 

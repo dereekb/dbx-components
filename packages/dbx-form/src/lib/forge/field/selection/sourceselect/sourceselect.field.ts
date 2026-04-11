@@ -1,8 +1,7 @@
 import { type PrimativeKey, filterFromPOJO } from '@dereekb/util';
-import type { FieldDef, FieldTypeDefinition } from '@ng-forge/dynamic-forms';
+import type { FieldTypeDefinition } from '@ng-forge/dynamic-forms';
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { forgeField } from '../../field';
-import { forgeFormFieldWrapper, type DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
 import { FORGE_SOURCE_SELECT_FIELD_TYPE, type DbxForgeSourceSelectFieldProps, type DbxForgeSourceSelectFieldDef } from './sourceselect.field.component';
 import type { DbxForgeFieldConfig } from '../../field.type';
 
@@ -30,8 +29,11 @@ export interface DbxForgeSourceSelectFieldConfig<T extends PrimativeKey = Primat
 /**
  * Creates a forge field definition for a source select field.
  *
+ * The component uses `<mat-form-field>` with `[formField]` for native ng-forge value binding,
+ * proper Material rendering, and built-in logic (hidden/disabled/readonly) support.
+ *
  * @param config - Source select field configuration
- * @returns A validated {@link DbxForgeSourceSelectFieldDef}
+ * @returns A {@link DbxForgeSourceSelectFieldDef}
  *
  * @example
  * ```typescript
@@ -44,25 +46,20 @@ export interface DbxForgeSourceSelectFieldConfig<T extends PrimativeKey = Primat
  * });
  * ```
  */
-export function forgeSourceSelectField<T extends PrimativeKey = PrimativeKey, M = unknown>(config: DbxForgeSourceSelectFieldConfig<T, M>): DbxForgeFormFieldWrapperFieldDef<DbxForgeSourceSelectFieldDef<T, M>> {
+export function forgeSourceSelectField<T extends PrimativeKey = PrimativeKey, M = unknown>(config: DbxForgeSourceSelectFieldConfig<T, M>): DbxForgeSourceSelectFieldDef<T, M> {
   const { key, label, required, readonly: isReadonly, description, logic, ...selectProps } = config;
 
-  const innerField = forgeField({
+  return forgeField({
     key,
     type: FORGE_SOURCE_SELECT_FIELD_TYPE,
-    label: '',
+    label: label ?? '',
     value: undefined as unknown as T | T[],
     required,
     readonly: isReadonly,
+    logic,
     props: filterFromPOJO({
-      ...selectProps
+      ...selectProps,
+      hint: description
     }) as DbxForgeSourceSelectFieldProps<T, M>
   } as DbxForgeSourceSelectFieldDef<T, M>);
-
-  return forgeFormFieldWrapper<DbxForgeSourceSelectFieldDef<T, M>>({
-    label: label ?? '',
-    hint: description,
-    logic,
-    fields: [innerField as unknown as FieldDef<unknown>]
-  });
 }

@@ -263,7 +263,7 @@ export class DbxForgeTimeDurationFieldComponent {
 
     if (!text) {
       this._currentDurationData = {};
-      this._setFieldValue(undefined);
+      this._setFieldValue(null);
       return;
     }
 

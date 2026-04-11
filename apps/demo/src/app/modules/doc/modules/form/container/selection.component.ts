@@ -977,7 +977,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
             }
           };
         }
-      }) as any,
+      }),
       forgeSearchableTextField({
         key: 'anchor2',
         label: 'Anchor Segue',
@@ -997,7 +997,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
             }))
           ),
         displayForValue: DISPLAY_FOR_STRING_VALUE
-      }) as any,
+      }),
       forgeSearchableTextField({
         key: 'anchor3',
         label: 'Anchor Segue For Metadata Items',
@@ -1022,7 +1022,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
           };
         },
         refreshDisplayValues$: this._refreshDisplayValues
-      }) as any
+      })
     ]
   };
 

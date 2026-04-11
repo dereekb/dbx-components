@@ -118,7 +118,7 @@ export class DbxForgeSearchableTextFieldComponent<T = unknown, M = unknown, H ex
     const value = event.option.value as SearchableValueFieldDisplayValue<T> | { _ignore?: true } | { _clear?: true };
 
     if ((value as any)._clear) {
-      this._setFieldValue(undefined);
+      this._setFieldValue(null);
       this.inputCtrl.setValue('', { emitEvent: false });
     } else if (!(value as any)._ignore) {
       const displayValue = value as SearchableValueFieldDisplayValue<T>;

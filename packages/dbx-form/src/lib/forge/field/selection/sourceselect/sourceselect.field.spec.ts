@@ -1,17 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { of } from 'rxjs';
 import { forgeSourceSelectField } from './sourceselect.field';
-import type { DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
-import type { DbxForgeSourceSelectFieldDef } from './sourceselect.field.component';
 import type { LogicConfig } from '@ng-forge/dynamic-forms';
-
-// MARK: Helpers
-/**
- * Extracts the inner source-select field from a forge form-field wrapper.
- */
-function innerField(wrapper: DbxForgeFormFieldWrapperFieldDef<DbxForgeSourceSelectFieldDef>) {
-  return wrapper.props!.fields[0] as DbxForgeSourceSelectFieldDef;
-}
 
 // MARK: forgeSourceSelectField
 describe('forgeSourceSelectField()', () => {
@@ -28,109 +18,100 @@ describe('forgeSourceSelectField()', () => {
     } as Parameters<typeof forgeSourceSelectField>[0];
   }
 
-  // -- Wrapper-level properties --
+  // -- Field type and key --
 
-  it('should set the wrapper type to dbx-forge-form-field', () => {
-    const wrapper = forgeSourceSelectField(minimalConfig());
-    expect(wrapper.type).toBe('dbx-forge-form-field');
+  it('should set the field type to dbx-source-select', () => {
+    const field = forgeSourceSelectField(minimalConfig());
+    expect(field.type).toBe('dbx-source-select');
   });
 
-  it('should auto-generate a wrapper key', () => {
-    const wrapper = forgeSourceSelectField(minimalConfig());
-    expect(wrapper.key).toMatch(/^_formfield_\d+$/);
+  it('should set the field key from config', () => {
+    const field = forgeSourceSelectField(minimalConfig());
+    expect(field.key).toBe('source');
   });
 
-  it('should set the wrapper label when provided', () => {
-    const wrapper = forgeSourceSelectField({ ...minimalConfig(), label: 'Source Label' });
-    expect(wrapper.label).toBe('Source Label');
+  // -- Label and hint --
+
+  it('should set the label when provided', () => {
+    const field = forgeSourceSelectField({ ...minimalConfig(), label: 'Source Label' });
+    expect(field.label).toBe('Source Label');
   });
 
-  it('should default wrapper label to empty string when not provided', () => {
-    const wrapper = forgeSourceSelectField(minimalConfig());
-    expect(wrapper.label).toBe('');
+  it('should default label to empty string when not provided', () => {
+    const field = forgeSourceSelectField(minimalConfig());
+    expect(field.label).toBe('');
   });
 
-  it('should map description to wrapper props.hint', () => {
-    const wrapper = forgeSourceSelectField({ ...minimalConfig(), description: 'A helpful hint' });
-    expect(wrapper.props?.hint).toBe('A helpful hint');
+  it('should map description to props.hint', () => {
+    const field = forgeSourceSelectField({ ...minimalConfig(), description: 'A helpful hint' });
+    expect(field.props?.hint).toBe('A helpful hint');
   });
 
-  it('should not set wrapper hint when description is not provided', () => {
-    const wrapper = forgeSourceSelectField(minimalConfig());
-    expect(wrapper.props?.hint).toBeUndefined();
+  it('should not set hint when description is not provided', () => {
+    const field = forgeSourceSelectField(minimalConfig());
+    expect(field.props?.hint).toBeUndefined();
   });
 
-  it('should contain exactly one inner field', () => {
-    const wrapper = forgeSourceSelectField(minimalConfig());
-    expect(wrapper.props!.fields).toHaveLength(1);
+  // -- Required and readonly --
+
+  it('should set required when provided', () => {
+    const field = forgeSourceSelectField({ ...minimalConfig(), required: true });
+    expect(field.required).toBe(true);
   });
 
-  // -- Inner field properties --
-
-  it('should set the inner field type to dbx-source-select', () => {
-    const wrapper = forgeSourceSelectField(minimalConfig());
-    expect(innerField(wrapper).type).toBe('dbx-source-select');
+  it('should not set required when not provided', () => {
+    const field = forgeSourceSelectField(minimalConfig());
+    expect(field.required).toBeUndefined();
   });
 
-  it('should set the inner field key from config', () => {
-    const wrapper = forgeSourceSelectField(minimalConfig());
-    expect(innerField(wrapper).key).toBe('source');
+  it('should set readonly when provided', () => {
+    const field = forgeSourceSelectField({ ...minimalConfig(), readonly: true });
+    expect(field.readonly).toBe(true);
   });
 
-  it('should set required on the inner field when provided', () => {
-    const wrapper = forgeSourceSelectField({ ...minimalConfig(), required: true });
-    expect(innerField(wrapper).required).toBe(true);
+  // -- Props propagation --
+
+  it('should propagate valueReader through props', () => {
+    const field = forgeSourceSelectField(minimalConfig());
+    expect(field.props?.valueReader).toBe(stubValueReader);
   });
 
-  it('should not set required on the inner field when not provided', () => {
-    const wrapper = forgeSourceSelectField(minimalConfig());
-    expect(innerField(wrapper).required).toBeUndefined();
+  it('should propagate metaLoader through props', () => {
+    const field = forgeSourceSelectField(minimalConfig());
+    expect(field.props?.metaLoader).toBe(stubMetaLoader);
   });
 
-  it('should set readonly on the inner field when provided', () => {
-    const wrapper = forgeSourceSelectField({ ...minimalConfig(), readonly: true });
-    expect(innerField(wrapper).readonly).toBe(true);
+  it('should propagate displayForValue through props', () => {
+    const field = forgeSourceSelectField(minimalConfig());
+    expect(field.props?.displayForValue).toBe(stubDisplayForValue);
   });
 
-  it('should propagate valueReader through inner field props', () => {
-    const wrapper = forgeSourceSelectField(minimalConfig());
-    expect(innerField(wrapper).props?.valueReader).toBe(stubValueReader);
+  it('should propagate multiple through props when provided', () => {
+    const field = forgeSourceSelectField({ ...minimalConfig(), multiple: true });
+    expect(field.props?.multiple).toBe(true);
   });
 
-  it('should propagate metaLoader through inner field props', () => {
-    const wrapper = forgeSourceSelectField(minimalConfig());
-    expect(innerField(wrapper).props?.metaLoader).toBe(stubMetaLoader);
+  it('should not set multiple when not provided', () => {
+    const field = forgeSourceSelectField(minimalConfig());
+    expect(field.props?.multiple).toBeUndefined();
   });
 
-  it('should propagate displayForValue through inner field props', () => {
-    const wrapper = forgeSourceSelectField(minimalConfig());
-    expect(innerField(wrapper).props?.displayForValue).toBe(stubDisplayForValue);
+  it('should propagate filterable through props when provided', () => {
+    const field = forgeSourceSelectField({ ...minimalConfig(), filterable: false });
+    expect(field.props?.filterable).toBe(false);
   });
 
-  it('should propagate multiple through inner field props when provided', () => {
-    const wrapper = forgeSourceSelectField({ ...minimalConfig(), multiple: true });
-    expect(innerField(wrapper).props?.multiple).toBe(true);
-  });
-
-  it('should not set multiple on the inner field when not provided', () => {
-    const wrapper = forgeSourceSelectField(minimalConfig());
-    expect(innerField(wrapper).props?.multiple).toBeUndefined();
-  });
-
-  it('should propagate filterable through inner field props when provided', () => {
-    const wrapper = forgeSourceSelectField({ ...minimalConfig(), filterable: false });
-    expect(innerField(wrapper).props?.filterable).toBe(false);
-  });
-
-  it('should propagate openSource through inner field props when provided', () => {
+  it('should propagate openSource through props when provided', () => {
     const openSource = () => of({ select: [], options: [] });
-    const wrapper = forgeSourceSelectField({ ...minimalConfig(), openSource } as Parameters<typeof forgeSourceSelectField>[0]);
-    expect(innerField(wrapper).props?.openSource).toBe(openSource);
+    const field = forgeSourceSelectField({ ...minimalConfig(), openSource } as Parameters<typeof forgeSourceSelectField>[0]);
+    expect(field.props?.openSource).toBe(openSource);
   });
 
-  it('should pass logic through to the wrapper field definition', () => {
+  // -- Logic --
+
+  it('should pass logic through to the field definition', () => {
     const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
-    const wrapper = forgeSourceSelectField({ ...minimalConfig(), logic });
-    expect((wrapper as any).logic).toEqual(logic);
+    const field = forgeSourceSelectField({ ...minimalConfig(), logic });
+    expect((field as any).logic).toEqual(logic);
   });
 });

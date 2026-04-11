@@ -13,9 +13,15 @@ import type { DbxForgeArrayFieldProps, DbxForgeArrayItemPair } from './array.fie
  */
 function createMockFieldTree(initialValues: unknown[] = []) {
   const valueSignal = signal<unknown[]>(initialValues);
+  const invalidSignal = signal(false);
+  const touchedSignal = signal(false);
+  const errorsSignal = signal<string[]>([]);
 
   const fieldState = {
     value: valueSignal,
+    invalid: invalidSignal,
+    touched: touchedSignal,
+    errors: errorsSignal,
     markAsTouched: vi.fn(),
     markAsDirty: vi.fn()
   };

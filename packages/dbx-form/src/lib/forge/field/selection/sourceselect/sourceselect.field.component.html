@@ -1,37 +1,42 @@
-<div class="dbx-source-select-field">
-  <div class="dbx-source-select-field-content">
-    <mat-select class="dbx-source-select-field-select" [formControl]="selectCtrl" [multiple]="multipleSignal()" [panelClass]="selectPanelClassSignal()" (openedChange)="onSelectOpenedChange($event)" [attr.aria-invalid]="ariaInvalid()" [attr.aria-required]="ariaRequired()" [attr.aria-describedby]="ariaDescribedBy()">
-      @if (filterableSignal()) {
-        <div class="dbx-source-select-filter-container">
-          <input #filterInput class="dbx-source-select-filter-input" type="text" placeholder="Type to filter..." (input)="onFilterInput($event)" (keydown)="onFilterKeydown($event)" />
-        </div>
-      }
-      @for (value of filteredNonGroupedValuesSignal(); track value.value) {
-        <mat-option [value]="value.value">
-          {{ value.label }}
-        </mat-option>
-      }
-      @for (optionGroup of filteredGroupedOptionsSignal(); track optionGroup.label) {
-        <mat-optgroup [label]="optionGroup.label">
-          @for (value of optionGroup.values; track value.value) {
-            <mat-option [value]="value.value">
-              {{ value.label }}
-            </mat-option>
-          }
-        </mat-optgroup>
-      }
-    </mat-select>
-    @if (showOpenSourceButtonSignal() && !isDisabled()) {
-      <dbx-button-spacer></dbx-button-spacer>
-      <dbx-action dbxActionValue [dbxActionHandler]="handleSelectOptions" class="dbx-source-select-field-button">
+@let f = field();
+@let selectId = key() + '-select';
+
+<mat-form-field class="dbx-w100" [appearance]="effectiveAppearance()" [subscriptSizing]="effectiveSubscriptSizing()">
+  @if (label(); as label) {
+    <mat-label>{{ label | dynamicText | async }}</mat-label>
+  }
+
+  <mat-select [id]="selectId" [formField]="f" [multiple]="multipleSignal()" [panelClass]="selectPanelClassSignal()" (openedChange)="onSelectOpenedChange($event)" [attr.aria-invalid]="ariaInvalid()" [attr.aria-required]="ariaRequired()" [attr.aria-describedby]="ariaDescribedBy()">
+    @if (filterableSignal()) {
+      <div class="dbx-source-select-filter-container">
+        <input #filterInput class="dbx-source-select-filter-input" type="text" placeholder="Type to filter..." (input)="onFilterInput($event)" (keydown)="onFilterKeydown($event)" />
+      </div>
+    }
+    @for (value of filteredNonGroupedValuesSignal(); track value.value) {
+      <mat-option [value]="value.value">{{ value.label }}</mat-option>
+    }
+    @for (optionGroup of filteredGroupedOptionsSignal(); track optionGroup.label) {
+      <mat-optgroup [label]="optionGroup.label">
+        @for (value of optionGroup.values; track value.value) {
+          <mat-option [value]="value.value">{{ value.label }}</mat-option>
+        }
+      </mat-optgroup>
+    }
+  </mat-select>
+
+  @if (showOpenSourceButtonSignal() && !isDisabled()) {
+    <div matSuffix class="dbx-source-select-field-suffix">
+      <dbx-action dbxActionValue [dbxActionHandler]="handleSelectOptions">
         <dbx-button #button dbxActionButton [fab]="true" [iconOnly]="true" [icon]="selectButtonIconSignal()"></dbx-button>
       </dbx-action>
-    }
-  </div>
-  <dbx-loading class="dbx-source-select-field-loading" [linear]="true" [context]="context"></dbx-loading>
-  @if (errorsToDisplay()[0]; as error) {
-    <div class="dbx-form-description dbx-form-error" [id]="errorId()">{{ error.message }}</div>
-  } @else if (hintSignal()) {
-    <div class="dbx-form-description" [id]="hintId()">{{ hintSignal() }}</div>
+    </div>
   }
-</div>
+
+  <dbx-loading class="dbx-source-select-field-loading" [linear]="true" [context]="context"></dbx-loading>
+
+  @if (errorsToDisplay()[0]; as error) {
+    <mat-error [id]="errorId()">{{ error.message }}</mat-error>
+  } @else if (hintSignal()) {
+    <mat-hint [id]="hintId()">{{ hintSignal() }}</mat-hint>
+  }
+</mat-form-field>

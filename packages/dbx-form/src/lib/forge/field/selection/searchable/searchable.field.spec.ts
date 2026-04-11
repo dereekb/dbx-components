@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { firstValueFrom, map, of, take } from 'rxjs';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { firstValueFrom, first, map, of, Subject, take, timeout } from 'rxjs';
 import { FormControl } from '@angular/forms';
 import { forgeSearchableTextField, forgeSearchableChipField, forgeSearchableStringChipField } from './searchable.field';
 import type { DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
@@ -396,5 +396,108 @@ describe('forgeSearchableStringChipField()', () => {
   it('should propagate searchOnEmptyText through inner field props when provided', () => {
     const inner = getInnerField(forgeSearchableStringChipField({ ...minimalConfig(), searchOnEmptyText: true }));
     expect(inner.props?.searchOnEmptyText).toBe(true);
+  });
+});
+
+// MARK: Component-level tests
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
+import { Component, ChangeDetectionStrategy, inject, provideZonelessChangeDetection } from '@angular/core';
+import { type FormConfig, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
+import { provideDbxForgeFormFieldDeclarations } from '../../../../forge/forge.providers';
+import { provideDbxFormConfiguration } from '../../../../form.providers';
+import { DbxForgeFormComponent } from '../../../../forge/form/forge.component';
+import { DbxForgeFormContext, provideDbxForgeFormContext } from '../../../../forge/form/forge.context';
+
+@Component({
+  template: `
+    <dbx-forge></dbx-forge>
+  `,
+  standalone: true,
+  imports: [DbxForgeFormComponent],
+  providers: [provideDbxForgeFormContext()],
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+class SearchableTestHostComponent {
+  readonly context = inject(DbxForgeFormContext);
+}
+
+const SEARCHABLE_TEST_PROVIDERS = [provideZonelessChangeDetection(), provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), { provide: DynamicFormLogger, useClass: NoopLogger }];
+
+async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
+  fixture.detectChanges();
+  await fixture.whenStable();
+}
+
+describe('DbxForgeSearchableTextFieldComponent', () => {
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [SearchableTestHostComponent],
+      providers: SEARCHABLE_TEST_PROVIDERS
+    });
+  });
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
+  });
+
+  /**
+   * Mirrors the anchor3 "Anchor Segue For Metadata Items" demo config:
+   * - no useAnchor (only anchorForValue)
+   * - search returns items with meta
+   * - has refreshDisplayValues$
+   */
+  function createMetadataAnchorSearchableConfig(): FormConfig {
+    const refreshDisplayValues$ = new Subject<void>();
+
+    return {
+      fields: [
+        forgeSearchableTextField<string, { name: string; key: string }>({
+          key: 'pick',
+          label: 'Anchor Segue For Metadata Items',
+          allowStringValues: false,
+          searchOnEmptyText: true,
+          showSelectedValue: false,
+          search: () =>
+            of([
+              { meta: { name: 'Test A', key: '1' }, value: '1' },
+              { meta: { name: 'Test B', key: '2' }, value: '2' }
+            ]),
+          displayForValue: (values) => of(values.map((v) => ({ ...v, label: v.meta?.name ?? v.value, sublabel: 'item' }))),
+          anchorForValue: (fieldValue) => ({
+            onClick: () => {
+              // intentional no-op for test
+            }
+          }),
+          refreshDisplayValues$
+        }) as any
+      ]
+    };
+  }
+
+  it('should not throw when selecting a value then clearing it', async () => {
+    const fixture = TestBed.createComponent(SearchableTestHostComponent);
+    const context = fixture.componentInstance.context;
+    context.requireValid = false;
+    context.config = createMetadataAnchorSearchableConfig();
+
+    await settle(fixture);
+
+    // Set a value (simulates selecting "Test A" from autocomplete)
+    context.setValue({ pick: '1' } as any);
+    await settle(fixture);
+
+    // Assert the selected value came through
+    const afterSelect = await firstValueFrom(context.getValue().pipe(timeout(500), first()));
+    expect((afterSelect as any)?.pick).toBe('1');
+
+    // Clear the value (simulates selecting "Clear" from autocomplete)
+    context.setValue({ pick: null } as any);
+    await settle(fixture);
+
+    // Assert the value was cleared and no "fieldTree is not a function" error was thrown
+    const afterClear = await firstValueFrom(context.getValue().pipe(timeout(500), first()));
+    expect((afterClear as any)?.pick).toBeFalsy();
+
+    fixture.destroy();
   });
 });
