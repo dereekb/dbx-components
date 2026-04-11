@@ -125,18 +125,22 @@ export class DbxUIRouterService implements DbxRouterService, DbxRouterTransition
     const ref = segueRef.ref as string;
     const refParams = segueRef.refParams;
 
+    let result: boolean;
+
     // Slash paths (e.g., '/demo/oauth') are compared against the current URL path
     if (ref.startsWith('/')) {
       const currentPath = this.uiRouter.urlService.path();
 
       if (exactly) {
-        return currentPath === ref;
+        result = currentPath === ref;
       } else {
-        return currentPath === ref || currentPath.startsWith(ref + '/');
+        result = currentPath === ref || currentPath.startsWith(ref + '/');
       }
+    } else {
+      const targetRef = ref.startsWith('.') ? `^${ref}` : ref;
+      result = exactly ? this.state.is(targetRef, refParams) : this.state.includes(targetRef, refParams);
     }
 
-    const targetRef = ref.startsWith('.') ? `^${ref}` : ref;
-    return exactly ? this.state.is(targetRef, refParams) : this.state.includes(targetRef, refParams);
+    return result;
   }
 }

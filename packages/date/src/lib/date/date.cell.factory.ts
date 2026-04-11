@@ -691,34 +691,37 @@ export function isDateCellTimingRelativeIndexFactory<T extends DateCellTimingSta
 export function dateCellTimingRelativeIndexFactory<T extends DateCellTimingStartsAt = DateCellTimingStartsAt>(input: T | DateCellTimingRelativeIndexFactory<T>): DateCellTimingRelativeIndexFactory<T> {
   if (isDateCellTimingRelativeIndexFactory(input)) {
     return input;
-  } else {
-    const timing = input;
-    const { start, normalInstance } = dateCellTimingStartPair(input);
-    const startInUtc = normalInstance.baseDateToTargetDate(start); // takes the target date and puts in into UTC normal
-
-    const factory = ((input: DateOrDateCellIndex | ISO8601DayString) => {
-      const inputType = typeof input;
-      let diff: number;
-
-      if (inputType === 'number') {
-        return input;
-      } else if (inputType === 'string') {
-        const startOfDayInUtc = parseISO8601DayStringToUTCDate(input as string); // parse as UTC
-        diff = differenceInHours(startOfDayInUtc, startInUtc, { roundingMethod: 'floor' }); // compare the UTC times. Round down.
-        // console.log({ startOfDayInUtc, diff, startInUtc });
-      } else {
-        const dateInUtc = normalInstance.baseDateToTargetDate(input as Date); // convert to UTC normal
-        diff = differenceInHours(dateInUtc, startInUtc, { roundingMethod: 'floor' }); // compare the difference in UTC times. Round down.
-        // console.log({ input, dateInUtc, diff, startInUtc, tz: normalInstance.configuredTimezoneString, systemTargetOffset: normalInstance.targetDateToSystemDateOffset(input as Date) / MS_IN_HOUR, targetBaseOffset: normalInstance.targetDateToBaseDateOffset(input as Date) / MS_IN_HOUR });
-      }
-
-      const daysOffset = Math.floor(diff / HOURS_IN_DAY); // total number of hours difference from the original UTC date
-      return daysOffset ? daysOffset : 0; // do not return -0
-    }) as Building<DateCellTimingRelativeIndexFactory<T>>;
-    factory._timing = timing;
-    factory._normalInstance = normalInstance;
-    return factory as DateCellTimingRelativeIndexFactory<T>;
   }
+
+  const timing = input;
+  const { start, normalInstance } = dateCellTimingStartPair(input);
+  const startInUtc = normalInstance.baseDateToTargetDate(start); // takes the target date and puts in into UTC normal
+
+  const factory = ((input: DateOrDateCellIndex | ISO8601DayString) => {
+    const inputType = typeof input;
+
+    if (inputType === 'number') {
+      return input as DateCellIndex;
+    }
+
+    let diff: number;
+
+    if (inputType === 'string') {
+      const startOfDayInUtc = parseISO8601DayStringToUTCDate(input as string); // parse as UTC
+      diff = differenceInHours(startOfDayInUtc, startInUtc, { roundingMethod: 'floor' }); // compare the UTC times. Round down.
+      // console.log({ startOfDayInUtc, diff, startInUtc });
+    } else {
+      const dateInUtc = normalInstance.baseDateToTargetDate(input as Date); // convert to UTC normal
+      diff = differenceInHours(dateInUtc, startInUtc, { roundingMethod: 'floor' }); // compare the difference in UTC times. Round down.
+      // console.log({ input, dateInUtc, diff, startInUtc, tz: normalInstance.configuredTimezoneString, systemTargetOffset: normalInstance.targetDateToSystemDateOffset(input as Date) / MS_IN_HOUR, targetBaseOffset: normalInstance.targetDateToBaseDateOffset(input as Date) / MS_IN_HOUR });
+    }
+
+    const daysOffset = Math.floor(diff / HOURS_IN_DAY); // total number of hours difference from the original UTC date
+    return daysOffset ? daysOffset : 0; // do not return -0
+  }) as Building<DateCellTimingRelativeIndexFactory<T>>;
+  factory._timing = timing;
+  factory._normalInstance = normalInstance;
+  return factory as DateCellTimingRelativeIndexFactory<T>;
 }
 
 /**
@@ -837,19 +840,19 @@ export function dateCellTimingDateFactory<T extends DateCellTimingStartsAt = Dat
   const factory = ((input: DateOrDateCellIndex, inputNow?: Date) => {
     if (isDate(input)) {
       return input;
-    } else {
-      const now = inputNow ?? new Date();
-      const nowHours = now.getUTCHours();
-      const utcStartDateWithNowTime = new Date(Date.UTC(utcStartDate.getUTCFullYear(), utcStartDate.getUTCMonth(), utcStartDate.getUTCDate(), nowHours, now.getUTCMinutes(), now.getUTCSeconds(), now.getUTCMilliseconds()));
-
-      // if the current hours are less than the UTC offset hours, then bump one extra day forward to be sure we're in the correct day.
-      if (startUtcHours > nowHours) {
-        input += 1;
-      }
-
-      // add days to apply the correct offset to the target index
-      return addHours(utcStartDateWithNowTime, input * HOURS_IN_DAY);
     }
+
+    const now = inputNow ?? new Date();
+    const nowHours = now.getUTCHours();
+    const utcStartDateWithNowTime = new Date(Date.UTC(utcStartDate.getUTCFullYear(), utcStartDate.getUTCMonth(), utcStartDate.getUTCDate(), nowHours, now.getUTCMinutes(), now.getUTCSeconds(), now.getUTCMilliseconds()));
+
+    // if the current hours are less than the UTC offset hours, then bump one extra day forward to be sure we're in the correct day.
+    if (startUtcHours > nowHours) {
+      input += 1;
+    }
+
+    // add days to apply the correct offset to the target index
+    return addHours(utcStartDateWithNowTime, input * HOURS_IN_DAY);
   }) as Building<DateCellTimingDateFactory>;
   factory._timing = timing;
   return factory as DateCellTimingDateFactory<T>;

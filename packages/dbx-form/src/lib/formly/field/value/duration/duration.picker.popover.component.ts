@@ -321,7 +321,9 @@ export class DbxDurationPickerPopoverComponent extends AbstractPopoverDirective<
     if (action === 'increment' && this.canIncrement(unit)) {
       this.increment(unit, step);
       return true;
-    } else if (action === 'decrement' && this.canDecrement(unit)) {
+    }
+
+    if (action === 'decrement' && this.canDecrement(unit)) {
       this.decrement(unit, step);
       return true;
     }

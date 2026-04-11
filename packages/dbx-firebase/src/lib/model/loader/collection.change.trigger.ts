@@ -61,9 +61,8 @@ export class DbxFirebaseCollectionChangeTriggerInstance<S extends DbxFirebaseCol
               filter((triggered) => triggered),
               exhaustMap(() => asObservable(triggerFunction(this)))
             );
-          } else {
-            return EMPTY;
           }
+          return EMPTY;
         })
       )
       .subscribe();

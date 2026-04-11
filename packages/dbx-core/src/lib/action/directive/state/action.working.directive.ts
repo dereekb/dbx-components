@@ -49,12 +49,7 @@ export class DbxActionIsWorkingDirective extends AbstractIfDirective {
   readonly show$ = this._store.isWorking$.pipe(
     exhaustMap((isWorking) => {
       const hideAfter = this.hideAfterSignal();
-
-      if (isWorking && hideAfter != null) {
-        return emitDelayObs(true, false, hideAfter);
-      } else {
-        return of(isWorking);
-      }
+      return isWorking && hideAfter != null ? emitDelayObs(true, false, hideAfter) : of(isWorking);
     }),
     shareReplay(1)
   );

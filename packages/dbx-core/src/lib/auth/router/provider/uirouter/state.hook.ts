@@ -125,17 +125,21 @@ export function enableHasAuthStateHook(transitionService: TransitionService, con
 function toHasAuthStateObjectConfig(input: HasAuthStateConfig): HasAuthStateObjectConfig {
   const isString = typeof input === 'string';
 
+  let result: HasAuthStateObjectConfig;
+
   if (Array.isArray(input) || isString) {
     if (isString) {
       input = [input as AuthUserState];
     }
 
-    return {
+    result = {
       allowedStates: input as AuthUserState[]
     };
   } else {
-    return input as HasAuthStateObjectConfig;
+    result = input as HasAuthStateObjectConfig;
   }
+
+  return result;
 }
 
 type ParsedHasAuthStateConfig = AllowedSet<AuthUserState>;

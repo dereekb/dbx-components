@@ -442,12 +442,12 @@ export function optionalFirestoreField<V, D = V>(config?: unknown): FirestoreMod
       const dontStoreValue = dontStoreIf;
 
       toData = ((x: Maybe<V>) => {
-        if (x != null) {
-          const transformedValue = transformTo(x) as D | null;
-          return transformedValue != null && !dontStoreValue(transformedValue) ? transformedValue : null;
-        } else {
+        if (x == null) {
           return x;
         }
+
+        const transformedValue = transformTo(x) as D | null;
+        return transformedValue != null && !dontStoreValue(transformedValue) ? transformedValue : null;
       }) as MapFunction<Maybe<V>, Maybe<D>>;
     } else {
       toData = ((x: Maybe<V>) => (x != null ? (transformTo(x) ?? null) : x)) as MapFunction<Maybe<V>, Maybe<D>>;
@@ -458,9 +458,9 @@ export function optionalFirestoreField<V, D = V>(config?: unknown): FirestoreMod
       fromData,
       toData
     });
-  } else {
-    return FIRESTORE_PASSTHROUGH_FIELD as FirestoreModelFieldMapFunctionsConfig<Maybe<V>, Maybe<D>>;
   }
+
+  return FIRESTORE_PASSTHROUGH_FIELD as FirestoreModelFieldMapFunctionsConfig<Maybe<V>, Maybe<D>>;
 }
 
 /**

@@ -366,7 +366,7 @@ export function updateCalendarStateWithNavigationRangeLimit(state: CalendarState
   if (navigationRangeLimit && !isDateInDateRange(date, navigationRangeLimit)) {
     const clampedDate = clampDateToDateRange(date, navigationRangeLimit);
     return { ...state, date: clampedDate, navigationRangeLimit };
-  } else {
-    return { ...state, navigationRangeLimit };
   }
+
+  return { ...state, navigationRangeLimit };
 }

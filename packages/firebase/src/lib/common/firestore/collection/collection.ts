@@ -187,10 +187,12 @@ export function firestoreModelIdentity<P extends FirestoreModelIdentity<string, 
 export function firestoreModelIdentity<M extends FirestoreModelType, C extends FirestoreCollectionName = FirestoreCollectionName>(modelName: M, collectionName: C): RootFirestoreModelIdentity<M, C>;
 export function firestoreModelIdentity<P extends FirestoreModelIdentity<string, string>, M extends FirestoreModelType, C extends FirestoreCollectionName = FirestoreCollectionName>(parent: P, modelName: M, collectionName: C): FirestoreModelIdentityWithParent<P, M, C>;
 export function firestoreModelIdentity<P extends FirestoreModelIdentity<string, string>, M extends FirestoreModelType, C extends FirestoreCollectionName = FirestoreCollectionName>(parentOrModelName: P | M, collectionNameOrModelName?: M | C, inputCollectionName?: C): FirestoreModelIdentityWithParent<P, M, C> | RootFirestoreModelIdentity<M, C> {
+  let result: FirestoreModelIdentityWithParent<P, M, C> | RootFirestoreModelIdentity<M, C>;
+
   if (typeof parentOrModelName === 'object') {
     const collectionName = (inputCollectionName ?? (collectionNameOrModelName as M).toLowerCase()) as C;
     const collectionType = `${parentOrModelName.collectionType}/${collectionName}`;
-    return {
+    result = {
       type: 'nested',
       parent: parentOrModelName as P,
       collectionName,
@@ -200,13 +202,15 @@ export function firestoreModelIdentity<P extends FirestoreModelIdentity<string, 
   } else {
     const collectionName = (collectionNameOrModelName ?? parentOrModelName.toLowerCase()) as C;
     const collectionType = collectionName;
-    return {
+    result = {
       type: 'root',
       collectionName,
       modelType: parentOrModelName,
       collectionType
     };
   }
+
+  return result;
 }
 
 /**

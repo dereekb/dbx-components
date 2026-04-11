@@ -162,11 +162,7 @@ export function exponentialPromiseRateLimiter(initialConfig?: Maybe<ExponentialP
       timeOfLastExecution = new Date();
     }
 
-    if (effectiveCount >= countForMaxWaitTime) {
-      return config.maxWaitTime;
-    } else {
-      return (Math.pow(config.exponentRate, Math.max(effectiveCount, 0)) - 1) * MS_IN_SECOND;
-    }
+    return effectiveCount >= countForMaxWaitTime ? config.maxWaitTime : (Math.pow(config.exponentRate, Math.max(effectiveCount, 0)) - 1) * MS_IN_SECOND;
   }
 
   function getNextWaitTime(increase?: number): Milliseconds {

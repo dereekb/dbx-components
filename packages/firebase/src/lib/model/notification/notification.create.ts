@@ -464,9 +464,5 @@ export async function createNotificationDocument(input: CreateNotificationDocume
 export async function createNotificationDocumentIfSending(input: CreateNotificationDocumentPairInput): Promise<Maybe<CreateNotificationDocumentPairResult>> {
   const pair = await createNotificationDocument(input);
 
-  if (pair.notificationCreated) {
-    return pair;
-  } else {
-    return undefined;
-  }
+  return pair.notificationCreated ? pair : undefined;
 }

@@ -706,9 +706,5 @@ export function telUrlString(phone: PhoneNumber | E164PhoneNumberWithOptionalExt
  */
 export function telUrlStringForE164PhoneNumberPair(pair: E164PhoneNumberExtensionPair): string {
   // https://stackoverflow.com/questions/9482633/how-do-i-include-extensions-in-the-tel-uri
-  if (pair.extension) {
-    return `tel:${pair.number};${pair.extension}`;
-  } else {
-    return `tel:${pair.number}`;
-  }
+  return pair.extension ? `tel:${pair.number};${pair.extension}` : `tel:${pair.number}`;
 }

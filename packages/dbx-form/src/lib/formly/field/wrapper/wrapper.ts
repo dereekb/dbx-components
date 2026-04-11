@@ -183,11 +183,7 @@ export interface DbxFlexLayoutWrapperGroupFieldConfigDefaults extends DbxFlexWra
  * @param input - The field config or wrapper group config to check
  */
 export function formlyCheckIsFieldFlexLayoutGroupFieldConfig(input: FormlyFieldConfig | DbxFlexLayoutWrapperGroupFieldConfig): input is DbxFlexLayoutWrapperGroupFieldConfig {
-  if ((input as DbxFlexLayoutWrapperGroupFieldConfig).field != null) {
-    return true;
-  } else {
-    return false;
-  }
+  return (input as DbxFlexLayoutWrapperGroupFieldConfig).field != null;
 }
 
 /**

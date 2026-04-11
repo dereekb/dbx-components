@@ -74,11 +74,7 @@ export class DbxFirebaseModelTrackerService {
       const baseFilterItemFn: ObservableDecisionFunction<DbxFirebaseModelTrackerFilterItem> = filterItem ? invertObservableDecision(filterItem, invertFilter) : () => of(true);
 
       const filterItemFn: ObservableDecisionFunction<DbxFirebaseModelTrackerFilterItem> = (x) => {
-        if (isAllowedIdentityFn(x.identity)) {
-          return baseFilterItemFn(x);
-        } else {
-          return of(false);
-        }
+        return isAllowedIdentityFn(x.identity) ? baseFilterItemFn(x) : of(false);
       };
 
       return this.filterItemHistoryPairs$.pipe(
@@ -86,9 +82,9 @@ export class DbxFirebaseModelTrackerService {
         map((x) => x.map((y) => y.instancePair)),
         shareReplay(1)
       );
-    } else {
-      return this.historyPairs$;
     }
+
+    return this.historyPairs$;
   }
 
   loadHistoryKeys() {

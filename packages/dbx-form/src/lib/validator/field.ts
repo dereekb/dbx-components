@@ -50,10 +50,10 @@ export function fieldValuesAreEqualValidator<T extends object = object>(config: 
 
     if (isValid) {
       return null;
-    } else {
-      return {
-        [FIELD_VALUES_ARE_EQUAL_VALIDATION_KEY]: { message }
-      };
     }
+
+    return {
+      [FIELD_VALUES_ARE_EQUAL_VALIDATION_KEY]: { message }
+    };
   };
 }

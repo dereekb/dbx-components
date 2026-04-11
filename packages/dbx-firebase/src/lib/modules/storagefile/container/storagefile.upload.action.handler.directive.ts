@@ -106,11 +106,7 @@ export class DbxFirebaseStorageFileUploadActionHandlerDirective {
       sub: this.triggerOnFiles$
         .pipe(
           switchMap((triggerOnFiles) => {
-            if (triggerOnFiles) {
-              return this.files$.pipe(map((x) => x?.length));
-            } else {
-              return of(false);
-            }
+            return triggerOnFiles ? this.files$.pipe(map((x) => x?.length)) : of(false);
           })
         )
         .subscribe((canTrigger) => {

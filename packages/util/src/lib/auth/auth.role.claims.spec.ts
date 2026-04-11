@@ -159,11 +159,15 @@ describe('authRoleClaimsFactory()', () => {
       const claimsConfig = {
         type: {
           encodeValueFromRoles: (roles: AuthRoleSet) => {
+            let result: number | undefined;
+
             if (roles.has(AUTH_ADMIN_ROLE)) {
-              return 1;
+              result = 1;
             } else if (roles.has(AUTH_USER_ROLE)) {
-              return 2;
+              result = 2;
             }
+
+            return result;
           },
           decodeRolesFromValue: (value: Maybe<number>) => {
             switch (value) {

@@ -351,20 +351,20 @@ export async function iterateFirestoreDocumentSnapshotBatches<T, R>(config: Iter
   return iterateFirestoreDocumentSnapshotCheckpoints({
     ...config,
     iterateCheckpoint: async (docSnapshots) => {
-      if (docSnapshots.length > 0) {
-        const batchSizeForSnapshotsResult = batchSizeForSnapshots(docSnapshots);
-        const batches = batchSizeForSnapshotsResult === null ? [docSnapshots] : batch(docSnapshots, batchSizeForSnapshotsResult);
-        let i = 0;
-
-        const performTasksResult = await performAsyncTasks(batches, (x) => iterateSnapshotBatch(x, i++), {
-          sequential: true, // sequential by default
-          ...performTasksConfig
-        });
-
-        return performTasksResult.results.map(([snapshots, result], i) => ({ snapshots, result, i }));
-      } else {
+      if (docSnapshots.length === 0) {
         return [];
       }
+
+      const batchSizeForSnapshotsResult = batchSizeForSnapshots(docSnapshots);
+      const batches = batchSizeForSnapshotsResult === null ? [docSnapshots] : batch(docSnapshots, batchSizeForSnapshotsResult);
+      let i = 0;
+
+      const performTasksResult = await performAsyncTasks(batches, (x) => iterateSnapshotBatch(x, i++), {
+        sequential: true, // sequential by default
+        ...performTasksConfig
+      });
+
+      return performTasksResult.results.map(([snapshots, result], i) => ({ snapshots, result, i }));
     }
   });
 }

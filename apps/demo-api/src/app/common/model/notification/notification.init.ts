@@ -32,17 +32,15 @@ export function demoNotificationInitServerActionsContextConfig(context: DemoFire
       const guestbookDocument = guestbookCollection.documentAccessor().loadDocumentForKey(modelKey);
       const guestbook = await guestbookDocument.snapshotData();
 
+      let result: MakeTemplateForNotificationRelatedModelInitializationFunctionResult<any> = MAKE_TEMPLATE_FOR_NOTIFICATION_RELATED_MODEL_INITIALIZATION_FUNCTION_DELETE_RESPONSE;
+
       if (guestbook) {
         const o = guestbook.cby ? firestoreModelKey(profileIdentity, guestbook.cby) : undefined;
         const r: NotificationBoxRecipient[] = guestbook.cby ? [newNotificationBoxRecipientForUid(guestbook.cby, 0)] : [];
-
-        return {
-          o,
-          r
-        };
-      } else {
-        return MAKE_TEMPLATE_FOR_NOTIFICATION_RELATED_MODEL_INITIALIZATION_FUNCTION_DELETE_RESPONSE;
+        result = { o, r };
       }
+
+      return result;
     };
 
     switch (collectionName) {

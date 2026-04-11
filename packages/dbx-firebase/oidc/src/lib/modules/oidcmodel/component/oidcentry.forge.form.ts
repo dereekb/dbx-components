@@ -70,6 +70,8 @@ export function oidcEntryClientUpdateForgeFormFields() {
 
 /**
  * Creates a forge text field for the OAuth client display name.
+ *
+ * @returns A forge text field for the client name.
  */
 export function oidcClientNameForgeField() {
   return forgeTextField({
@@ -83,6 +85,8 @@ export function oidcClientNameForgeField() {
 
 /**
  * Creates a forge searchable chip field for entering redirect URIs.
+ *
+ * @returns A forge searchable chip field for redirect URIs.
  */
 export function oidcClientRedirectUrisForgeField() {
   return forgeSearchableStringChipField({
@@ -100,6 +104,8 @@ export function oidcClientRedirectUrisForgeField() {
 /**
  * Creates a forge group containing the JWKS URI field, conditionally hidden
  * when the token endpoint auth method is not `private_key_jwt`.
+ *
+ * @returns A forge group field with conditional visibility logic.
  */
 export function oidcClientJwksUriForgeField() {
   return forgeGroup({
@@ -127,6 +133,8 @@ export function oidcClientJwksUriForgeField() {
 
 /**
  * Creates a forge text field for the optional client logo URL.
+ *
+ * @returns A forge text field for the logo URI.
  */
 export function oidcClientLogoUriForgeField() {
   return forgeTextField({
@@ -139,6 +147,8 @@ export function oidcClientLogoUriForgeField() {
 
 /**
  * Creates a forge text field for the optional client homepage URL.
+ *
+ * @returns A forge text field for the homepage URL.
  */
 export function oidcClientHomepageUriForgeField() {
   return forgeTextField({
@@ -168,6 +178,8 @@ export function oidcEntryClientTestForgeFormFields(config: OidcEntryClientTestFo
 
 /**
  * Creates a read-only forge text field displaying the OAuth client ID.
+ *
+ * @returns A read-only forge text field for the client ID.
  */
 export function oidcClientTestClientIdForgeField() {
   return forgeTextField({
@@ -181,6 +193,7 @@ export function oidcClientTestClientIdForgeField() {
  * Creates a forge selection field for choosing one of the client's registered redirect URIs for testing.
  *
  * @param redirectUris - The registered redirect URIs to display as options.
+ * @returns A forge selection field for the redirect URI.
  */
 export function oidcClientTestRedirectUriForgeField(redirectUris: OidcRedirectUri[]) {
   const options = redirectUris.map((uri) => ({ label: uri, value: uri }));
@@ -198,6 +211,7 @@ export function oidcClientTestRedirectUriForgeField(redirectUris: OidcRedirectUr
  * Creates a forge pickable chip field for selecting scopes to request during the test flow.
  *
  * @param availableScopes - The available scopes to display as selectable options.
+ * @returns A forge pickable chip field for scope selection.
  */
 export function oidcClientTestScopesForgeField(availableScopes: OidcScopeDetails[]) {
   return forgePickableChipField({

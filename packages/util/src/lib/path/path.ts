@@ -659,11 +659,7 @@ export function isolateSlashPathFunction(config: IsolateSlashPathFunctionConfig)
       joined = joined + SLASH_PATH_SEPARATOR; // end with a slash.
     }
 
-    if (startType === 'absolute' || path.startsWith(SLASH_PATH_SEPARATOR)) {
-      return toAbsoluteSlashPathStartType(joined);
-    } else {
-      return joined;
-    }
+    return startType === 'absolute' || path.startsWith(SLASH_PATH_SEPARATOR) ? toAbsoluteSlashPathStartType(joined) : joined;
   };
 }
 

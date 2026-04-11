@@ -506,11 +506,7 @@ export function containsAnyValueFromSet<T>(values: IterableOrValue<T>, valuesToF
 export function setContainsAnyValue<T>(valuesSet: Set<T>, valuesToFind: IterableOrValue<T>, emptyValuesToFindArrayResult = false): boolean {
   const valuesToFindArray = iterableToArray(valuesToFind);
 
-  if (valuesToFindArray.length > 0) {
-    return valuesToFindArray.some((x) => valuesSet.has(x));
-  } else {
-    return emptyValuesToFindArrayResult;
-  }
+  return valuesToFindArray.length > 0 ? valuesToFindArray.some((x) => valuesSet.has(x)) : emptyValuesToFindArrayResult;
 }
 
 /**
@@ -541,11 +537,7 @@ export function containsAllValues<T>(values: Iterable<T>, valuesToFind: Iterable
 export function setContainsAllValues<T>(valuesSet: Set<T>, valuesToFind: IterableOrValue<T>, emptyValuesToFindArrayResult = true): boolean {
   const valuesToFindArray = iterableToArray(valuesToFind);
 
-  if (valuesToFindArray.length > 0) {
-    return !valuesToFindArray.some((x) => !valuesSet.has(x));
-  } else {
-    return emptyValuesToFindArrayResult;
-  }
+  return valuesToFindArray.length > 0 ? !valuesToFindArray.some((x) => !valuesSet.has(x)) : emptyValuesToFindArrayResult;
 }
 
 /**

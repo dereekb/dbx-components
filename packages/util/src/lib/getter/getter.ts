@@ -78,11 +78,7 @@ export function getValueFromGetter<T, A>(this: unknown, input: FactoryWithRequir
 export function getValueFromGetter<T, A>(this: unknown, input: GetterOrFactoryWithInput<T, A>, args?: A): T;
 export function getValueFromGetter<T extends GetterDistinctValue, A>(this: unknown, input: GetterOrValueWithInput<T, A>, args?: A): T;
 export function getValueFromGetter<T, A>(this: unknown, input: unknown, args?: A): T {
-  if (isNonClassFunction(input)) {
-    return (input as (...fnArgs: unknown[]) => T)(args);
-  } else {
-    return input as T;
-  }
+  return isNonClassFunction(input) ? (input as (...fnArgs: unknown[]) => T)(args) : (input as T);
 }
 
 /**
@@ -92,11 +88,7 @@ export function getValueFromGetter<T, A>(this: unknown, input: unknown, args?: A
  * @returns A Getter function that returns the value
  */
 export function asGetter<T>(input: GetterOrValue<T>): Getter<T> {
-  if (isNonClassFunction(input)) {
-    return input as Getter<T>;
-  } else {
-    return () => input as T;
-  }
+  return isNonClassFunction(input) ? (input as Getter<T>) : () => input as T;
 }
 
 /**
@@ -124,11 +116,7 @@ export function objectCopyFactory<T extends object>(value: T, copyFunction: Copy
  * @returns An ObjectCopyFactory for the input
  */
 export function asObjectCopyFactory<T>(input: T | ObjectCopyFactory<T>, copyFunction?: CopyObjectFunction<T>): ObjectCopyFactory<T> {
-  if (typeof input === 'object') {
-    return objectCopyFactory<any>(input, copyFunction);
-  } else {
-    return asGetter(input);
-  }
+  return typeof input === 'object' ? objectCopyFactory<any>(input, copyFunction) : asGetter(input);
 }
 
 /**

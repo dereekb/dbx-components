@@ -54,9 +54,9 @@ export class AbstractFormExpandSectionWrapperDirective<T extends object = object
     switchMap((toggleOpen: Maybe<boolean>) => {
       if (toggleOpen != null) {
         return of(toggleOpen);
-      } else {
-        return this.hasValue$;
       }
+
+      return this.hasValue$;
     }),
     distinctUntilChanged(),
     shareReplay(1)

@@ -25,11 +25,7 @@ export class DbxMapboxMarkersComponent<T> {
     const data = this.data();
     const markerFactory = this.markerFactory();
 
-    if (data?.length && markerFactory) {
-      return data.map(markerFactory);
-    } else {
-      return [];
-    }
+    return data?.length && markerFactory ? data.map(markerFactory) : [];
   });
 
   trackMarkerById(index: number, marker: DbxMapboxMarker) {

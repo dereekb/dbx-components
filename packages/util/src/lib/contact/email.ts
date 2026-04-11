@@ -62,11 +62,15 @@ export function convertEmailParticipantStringToParticipant(participantString: Em
  * @returns A combined array of EmailParticipant objects
  */
 export function coerceToEmailParticipants({ participants = [], emails = [] }: { participants?: EmailParticipant[]; emails?: EmailAddress[] }): EmailParticipant[] {
+  let result: EmailParticipant[];
+
   if (!emails.length) {
-    return participants;
+    result = participants;
   } else {
     const participantEmails = participants.map((x) => x.email);
     const emailsWithoutParticipants = excludeValuesFromArray(emails, participantEmails);
-    return [...participants, ...emailsWithoutParticipants.map((email) => ({ email }))];
+    result = [...participants, ...emailsWithoutParticipants.map((email) => ({ email }))];
   }
+
+  return result;
 }

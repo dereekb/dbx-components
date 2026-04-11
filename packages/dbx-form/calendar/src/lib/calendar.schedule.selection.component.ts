@@ -141,9 +141,9 @@ export class DbxScheduleSelectionCalendarComponent<T> implements OnInit, OnDestr
     switchMap((x) => {
       if (x) {
         return of(true);
-      } else {
-        return this.readonly$.pipe(map((x) => !x));
       }
+
+      return this.readonly$.pipe(map((x) => !x));
     }),
     distinctUntilChanged(),
     shareReplay(1)

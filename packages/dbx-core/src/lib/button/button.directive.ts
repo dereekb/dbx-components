@@ -86,13 +86,7 @@ export abstract class AbstractDbxButtonDirective implements DbxButton {
         .pipe(
           switchMap(() =>
             this._buttonInterceptor.pipe(
-              switchMap((x) => {
-                if (x) {
-                  return x.interceptButtonClick().pipe(first());
-                } else {
-                  return of(true);
-                }
-              }),
+              switchMap((x) => (x ? x.interceptButtonClick().pipe(first()) : of(true))),
               filter((x) => Boolean(x)) // Ignore false values.
             )
           )

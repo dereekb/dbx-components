@@ -73,11 +73,7 @@ export function mapCompactModeObs<T>(mode$: Maybe<Observable<CompactMode>>, conf
     map((inputMode) => {
       const isCompact = (inputMode ?? config.defaultMode) === CompactMode.COMPACT;
 
-      if (isCompact) {
-        return config.compact;
-      } else {
-        return config.full;
-      }
+      return isCompact ? config.compact : config.full;
     })
   );
 }

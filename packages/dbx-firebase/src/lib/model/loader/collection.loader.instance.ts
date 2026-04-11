@@ -116,9 +116,8 @@ export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends Firestor
           cleanupDestroyable(), // cleanup the iteration
           shareReplay(1)
         );
-      } else {
-        return NEVER; // don't emit anything until collection is provided.
       }
+      return NEVER; // don't emit anything until collection is provided.
     }),
     cleanupDestroyable(), // cleanup the iteration
     shareReplay(1)

@@ -40,11 +40,7 @@ export function convertMaybeToNonEmptyArray<T>(arrayOrValue: Maybe<ArrayOrValue<
  * @returns the input wrapped in an array, the input array itself, or an empty array if nullish
  */
 export function convertMaybeToArray<T>(arrayOrValue: Maybe<ArrayOrValue<T>>): T[] {
-  if (arrayOrValue != null) {
-    return convertToArray(arrayOrValue);
-  } else {
-    return [];
-  }
+  return arrayOrValue != null ? convertToArray(arrayOrValue) : [];
 }
 
 /**
@@ -82,11 +78,7 @@ export function firstValue<T>(input: ArrayOrValue<T>): T {
  * @returns the last element of the array, or the input value itself
  */
 export function lastValue<T>(input: ArrayOrValue<T>): T {
-  if (Array.isArray(input)) {
-    return input[input.length - 1];
-  } else {
-    return input;
-  }
+  return Array.isArray(input) ? input[input.length - 1] : input;
 }
 
 /**
@@ -111,11 +103,7 @@ export function firstAndLastValue<T>(input: ArrayOrValue<T>): [T, T] {
  * @returns the element at the specified index, or the input value itself if not an array
  */
 export function valueAtIndex<T>(input: ArrayOrValue<T>, index: number): T {
-  if (Array.isArray(input)) {
-    return input[index];
-  } else {
-    return input;
-  }
+  return Array.isArray(input) ? input[index] : input;
 }
 
 /**
@@ -215,10 +203,10 @@ export function mergeArraysIntoArray<T>(target: Maybe<T[]>, ...arrays: Maybe<T[]
 export function pushItemOrArrayItemsIntoArray<T>(target: T[], value: ArrayOrValue<T>): T[] {
   if (Array.isArray(value)) {
     return pushArrayItemsIntoArray(target, value);
-  } else {
-    target.push(value);
-    return target;
   }
+
+  target.push(value);
+  return target;
 }
 
 /**

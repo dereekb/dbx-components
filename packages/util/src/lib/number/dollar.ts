@@ -71,11 +71,7 @@ export function isDollarAmountString(value: string): boolean {
  * @returns Formatted string with two decimal places (e.g., "12.50")
  */
 export function dollarAmountString(number: Maybe<number>): string {
-  if (number) {
-    return cutToPrecision(number, DOLLAR_AMOUNT_PRECISION).toFixed(DOLLAR_AMOUNT_PRECISION);
-  } else {
-    return '0.00';
-  }
+  return number ? cutToPrecision(number, DOLLAR_AMOUNT_PRECISION).toFixed(DOLLAR_AMOUNT_PRECISION) : '0.00';
 }
 
 /**

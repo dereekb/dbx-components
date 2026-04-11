@@ -80,14 +80,7 @@ export class DbxInjectionInstance<T> implements Initialized, Destroyable {
     // We filter the first maybe here between the two items.
     const configTemplateObs = combineLatest([this.config$, this.template$]).pipe(
       map(([config, template]) => {
-        if (config || template) {
-          return {
-            config,
-            template
-          };
-        } else {
-          return undefined;
-        }
+        return config || template ? { config, template } : undefined;
       }),
       skipAllInitialMaybe()
     );

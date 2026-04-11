@@ -41,9 +41,9 @@ export class DbxWidgetService {
     if (override || !this._entries.has(entry.type)) {
       this._entries.set(entry.type, entry);
       return true;
-    } else {
-      return false;
     }
+
+    return false;
   }
 
   // MARK: Get

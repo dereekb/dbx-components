@@ -1302,7 +1302,7 @@ export abstract class AbstractFirebaseServerUserPasswordResetService<U extends F
     const userContext = this.authService.userContext(uid);
     const claims = await userContext.loadResetPasswordClaims();
 
-    if (!claims || claims.resetPassword !== input.resetPassword) {
+    if (claims?.resetPassword !== input.resetPassword) {
       throw new FirebaseServerAuthPasswordResetInvalidCodeError();
     }
 

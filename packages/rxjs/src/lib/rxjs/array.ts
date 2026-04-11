@@ -152,8 +152,8 @@ export function mapEachAsync<I, O>(mapFunction: MapFunction<I, ObservableInput<O
       }
 
       return result;
-    } else {
-      return of([]);
     }
+
+    return of([]);
   });
 }

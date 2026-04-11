@@ -235,18 +235,18 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
                     error: result.error,
                     value: result
                   };
-                } else {
-                  return successPageResult(nextPageNumber, result);
                 }
+
+                return successPageResult(nextPageNumber, result);
               }),
               startWithBeginLoading(page),
               shareReplay(1)
             );
 
             return stateObs;
-          } else {
-            return of(prevResult).pipe();
           }
+
+          return of(prevResult).pipe();
         }),
         map((inputState) => {
           let state: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>;
@@ -516,11 +516,13 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
 export function isItemPageIteratorResultEndResult<V>(result: ItemPageIteratorResult<V>) {
   if (result.error != null) {
     return false;
-  } else if (result.end != null) {
-    return result.end;
-  } else {
-    return !hasValueOrNotEmpty(result);
   }
+
+  if (result.end != null) {
+    return result.end;
+  }
+
+  return !hasValueOrNotEmpty(result);
 }
 
 function itemPageIteratorShouldLoadNextPage<V = unknown>(request: ItemIteratorNextRequest, hasNextAndCanLoadMore: boolean, prevResult: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>): boolean {

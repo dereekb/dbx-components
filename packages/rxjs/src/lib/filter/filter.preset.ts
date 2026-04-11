@@ -38,9 +38,9 @@ export function makeMapFilterWithPresetFn<F extends FilterWithPreset>(fn: MapFil
       const result = fn(filter) as F;
       delete result.preset;
       return result;
-    } else {
-      return filter;
     }
+
+    return filter;
   };
 }
 

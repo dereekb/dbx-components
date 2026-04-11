@@ -27,12 +27,16 @@ import { formatDateDistance } from '@dereekb/date';
 })
 export class DateDistancePipe implements PipeTransform {
   transform(input: Maybe<DateOrDateString>, inputTo?: Maybe<Date>, unavailable: string = 'Not Available'): string {
+    let result: string;
+
     if (input != null) {
       const to = inputTo ?? new Date();
       const from = ToJsDatePipe.toJsDate(input);
-      return formatDateDistance(to, from);
+      result = formatDateDistance(to, from);
     } else {
-      return unavailable;
+      result = unavailable;
     }
+
+    return result;
   }
 }

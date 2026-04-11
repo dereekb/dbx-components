@@ -1,13 +1,12 @@
 import { filterMaybe, isNot, timeoutStartWith } from '@dereekb/rxjs';
 import { Injectable, inject } from '@angular/core';
 import { type AuthUserState, type DbxAuthService, loggedOutObsFromIsLoggedIn, loggedInObsFromIsLoggedIn, type AuthUserIdentifier, authUserIdentifier, type NoAuthUserIdentifier } from '@dereekb/dbx-core';
-import { reauthenticateWithPopup, type Auth, type User, type IdTokenResult, type ParsedToken, signInWithPopup, type AuthProvider, type PopupRedirectResolver, signInAnonymously, signInWithEmailAndPassword, type UserCredential, createUserWithEmailAndPassword, linkWithPopup, linkWithCredential, unlink, type AuthCredential } from 'firebase/auth';
+import { reauthenticateWithPopup, type User, type IdTokenResult, type ParsedToken, signInWithPopup, type AuthProvider, type PopupRedirectResolver, signInAnonymously, signInWithEmailAndPassword, type UserCredential, createUserWithEmailAndPassword, linkWithPopup, linkWithCredential, unlink, type AuthCredential, sendPasswordResetEmail, confirmPasswordReset } from 'firebase/auth';
 import { FIREBASE_AUTH_TOKEN } from '../../firebase/firebase.tokens';
 import { firebaseAuthState, firebaseIdToken } from './firebase.auth.rxjs.util';
 import { of, type Observable, distinctUntilChanged, shareReplay, map, switchMap, firstValueFrom, catchError, EMPTY, Subject, merge, tap } from 'rxjs';
 import { type AuthClaims, type AuthClaimsObject, type AuthRoleClaimsService, type AuthRoleSet, AUTH_ADMIN_ROLE, cachedGetter, type Maybe } from '@dereekb/util';
 import { type AuthUserInfo, authUserInfoFromAuthUser, firebaseAuthTokenFromUser } from '../auth';
-import { sendPasswordResetEmail, confirmPasswordReset } from 'firebase/auth';
 import { authUserStateFromFirebaseAuthServiceFunction } from './firebase.auth.rxjs';
 import { type FirebaseAuthIdToken, type FirebaseAuthContextInfo } from '@dereekb/firebase';
 
@@ -228,11 +227,7 @@ export class DbxFirebaseAuthService implements DbxAuthService {
       obs = this._authState$.pipe(
         distinctUntilChanged(),
         switchMap((x) => {
-          if (x != null) {
-            return delegateAuthUserStateObs;
-          } else {
-            return of('none' as AuthUserState);
-          }
+          return x != null ? delegateAuthUserStateObs : of('none' as AuthUserState);
         })
       );
     }
@@ -257,16 +252,12 @@ export class DbxFirebaseAuthService implements DbxAuthService {
   }
 
   rolesForClaims<T extends AuthClaimsObject = AuthClaimsObject>(claims: AuthClaims<T>): AuthRoleSet {
-    let result: AuthRoleSet;
-
     if (this._authRoleClaimsService) {
       return this._authRoleClaimsService.toRoles(claims);
-    } else {
-      console.warn('DbxFirebaseAuthService: rolesForClaims called with no authRoleClaimsService provided. An empty set is returned.');
-      result = new Set();
     }
 
-    return result;
+    console.warn('DbxFirebaseAuthService: rolesForClaims called with no authRoleClaimsService provided. An empty set is returned.');
+    return new Set();
   }
 
   getAuthContextInfo(): Promise<Maybe<DbxFirebaseAuthContextInfo>> {
@@ -306,9 +297,8 @@ export class DbxFirebaseAuthService implements DbxAuthService {
         switchMap((x: Maybe<User>) => {
           if (x) {
             return linkWithPopup(x, provider, resolver);
-          } else {
-            throw new Error('User is not logged in currently.');
           }
+          throw new Error('User is not logged in currently.');
         }),
         tap(() => this._authUpdate$.next())
       )
@@ -333,9 +323,8 @@ export class DbxFirebaseAuthService implements DbxAuthService {
         switchMap((x: Maybe<User>) => {
           if (x) {
             return linkWithCredential(x, credential);
-          } else {
-            throw new Error('User is not logged in currently.');
           }
+          throw new Error('User is not logged in currently.');
         }),
         tap(() => this._authUpdate$.next())
       )
@@ -359,9 +348,8 @@ export class DbxFirebaseAuthService implements DbxAuthService {
         switchMap((x: Maybe<User>) => {
           if (x) {
             return unlink(x, providerId);
-          } else {
-            throw new Error('User is not logged in currently.');
           }
+          throw new Error('User is not logged in currently.');
         }),
         tap(() => this._authUpdate$.next())
       )
@@ -376,6 +364,7 @@ export class DbxFirebaseAuthService implements DbxAuthService {
    * Sends a password reset email to the given address via the configured delegate.
    *
    * @param email - the email address to send the reset to
+   * @returns A promise that resolves when the email has been sent.
    *
    * @example
    * ```ts
@@ -390,6 +379,7 @@ export class DbxFirebaseAuthService implements DbxAuthService {
    * Completes a password reset using the verification code and new password via the configured delegate.
    *
    * @param input - the verification code and new password
+   * @returns A promise that resolves when the password has been reset.
    *
    * @example
    * ```ts
@@ -403,6 +393,9 @@ export class DbxFirebaseAuthService implements DbxAuthService {
   /**
    * @deprecated use {@link sendPasswordReset} instead, which delegates to the configured
    * {@link DbxFirebaseAuthServiceDelegate.sendPasswordReset} implementation.
+   *
+   * @param email - the email address to send the reset to
+   * @returns A promise that resolves when the email has been sent.
    */
   sendPasswordResetEmail(email: string): Promise<void> {
     return this.sendPasswordReset(email);
@@ -426,9 +419,8 @@ export class DbxFirebaseAuthService implements DbxAuthService {
         switchMap((x: Maybe<User>) => {
           if (x) {
             return reauthenticateWithPopup(x, provider, resolver);
-          } else {
-            throw new Error('User is not logged in currently.');
           }
+          throw new Error('User is not logged in currently.');
         })
       )
     );

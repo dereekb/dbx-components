@@ -64,24 +64,29 @@ export class DbxForgeSearchableChipFieldComponent<T = unknown, M = unknown, H ex
     this._valuesSubject.next(values);
   });
 
-  get inputErrorMessage(): string | undefined {
+  get inputErrorMessage(): Maybe<string> {
     const errors = this.inputCtrl.errors;
+    let result: Maybe<string>;
 
     if (errors) {
       for (const key of Object.keys(errors)) {
         const error = errors[key];
 
         if (typeof error === 'string') {
-          return error;
+          result = error;
+          break;
         } else if (error?.message) {
-          return error.message;
+          result = error.message;
+          break;
         }
       }
 
-      return 'Invalid input';
+      if (result == null) {
+        result = 'Invalid input';
+      }
     }
 
-    return undefined;
+    return result;
   }
 
   protected _onInit(): void {

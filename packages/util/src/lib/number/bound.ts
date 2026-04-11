@@ -73,13 +73,17 @@ export function wrapNumberFunction<T extends number = number>(wrapNumberFunction
   const isInBound = isInNumberBoundFunction(wrapNumberFunctionConfig);
 
   const fn: Writable<WrapNumberFunction<T>> = ((input: T) => {
+    let result: number;
+
     if (isInBound(input)) {
-      return input;
+      result = input;
     } else {
       // when fencePosts is true, we're wrapping to the nearest fence post, meaning wraps are one value longer increased on that side.
       const fencePostOffset = fencePosts ? (input < min ? 1 : -1) : 0;
-      return ((((input - min) % distance) + distance) % distance) + min + fencePostOffset;
+      result = ((((input - min) % distance) + distance) % distance) + min + fencePostOffset;
     }
+
+    return result;
   }) as WrapNumberFunction<T>;
   fn._wrap = wrapNumberFunctionConfig;
   return fn as WrapNumberFunction<T>;
@@ -107,11 +111,7 @@ export type BoundNumberFunction<T extends number = number> = MapFunction<number,
 export function boundNumberFunction<T extends number = number>(boundNumberFunctionConfig: BoundNumberFunctionConfig<T>): BoundNumberFunction<T> {
   const { min, max, wrap } = boundNumberFunctionConfig;
 
-  if (wrap) {
-    return wrapNumberFunction<T>(boundNumberFunctionConfig);
-  } else {
-    return (input: number) => boundNumber<T>(input, min, max);
-  }
+  return wrap ? wrapNumberFunction<T>(boundNumberFunctionConfig) : (input: number) => boundNumber<T>(input, min, max);
 }
 
 /**

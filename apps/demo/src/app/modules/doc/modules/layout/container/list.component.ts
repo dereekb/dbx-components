@@ -203,19 +203,21 @@ export class DocLayoutListComponent implements OnInit, OnDestroy {
   readonly dbxListTitleGroupDelegate: DbxListTitleGroupTitleDelegate<CustomDocValue, 'click' | 'ref' | 'url' | 'plain' | 'none'> = {
     groupValueForItem: (item) => {
       const anchor = item.anchor;
+      let result: 'click' | 'ref' | 'url' | 'plain' | 'none' = 'none';
+
       if (anchor) {
         if (anchor.url) {
-          return 'url';
+          result = 'url';
         } else if (anchor.ref) {
-          return 'ref';
+          result = 'ref';
         } else if (anchor.onClick) {
-          return 'click';
+          result = 'click';
         } else {
-          return 'plain';
+          result = 'plain';
         }
       }
 
-      return 'none';
+      return result;
     },
     dataForGroupValue: (value, _items) => ({
       title: pascalCase(value) + ' Group',

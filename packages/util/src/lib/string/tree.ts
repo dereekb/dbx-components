@@ -216,11 +216,7 @@ export function addToSplitStringTree<M = unknown>(tree: SplitStringTree<M>, inpu
   const { value, leafMeta, nodeMeta } = inputValue;
 
   function nextMeta(node: SplitStringTree<M>, nextMeta: M): M | undefined {
-    if (mergeMeta && node.meta != null) {
-      return mergeMeta(node.meta, nextMeta);
-    } else {
-      return nextMeta;
-    }
+    return mergeMeta && node.meta != null ? mergeMeta(node.meta, nextMeta) : nextMeta;
   }
 
   const parts = value.split(separator);

@@ -633,9 +633,5 @@ export function dateTimeMinuteDecisionFunction(config: DateTimeMinuteConfig): De
 export function dateTimeMinuteWholeDayDecisionFunction(config: DateTimeMinuteConfig, startAndEndOfDayMustBeValid = false): DecisionFunction<Date> {
   const instance = new DateTimeMinuteInstance(config, null);
 
-  if (startAndEndOfDayMustBeValid) {
-    return (date: Date) => instance.isValid(startOfDay(date)) && instance.isValid(endOfDay(date));
-  } else {
-    return (date: Date) => instance.dateDayContainsValidDateValue(date);
-  }
+  return startAndEndOfDayMustBeValid ? (date: Date) => instance.isValid(startOfDay(date)) && instance.isValid(endOfDay(date)) : (date: Date) => instance.dateDayContainsValidDateValue(date);
 }

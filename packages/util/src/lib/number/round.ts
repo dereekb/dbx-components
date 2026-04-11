@@ -115,12 +115,16 @@ export type RoundToPrecisionFunctionType = NumberRounding | 'cut';
  * @returns A function that rounds numbers to the configured precision
  */
 export function roundToPrecisionFunction(precision: NumberPrecision, roundFn: RoundToPrecisionFunctionType = 'round'): RoundToPrecisionFunction {
+  let result: RoundToPrecisionFunction;
+
   if (roundFn === 'cut') {
-    return (value) => cutToPrecision(value, precision);
+    result = (value) => cutToPrecision(value, precision);
   } else {
     const rndFn = roundingFunction(roundFn);
-    return (value) => +(rndFn(Number(value + 'e+' + precision)) + 'e-' + precision);
+    result = (value) => +(rndFn(Number(value + 'e+' + precision)) + 'e-' + precision);
   }
+
+  return result;
 }
 
 /**

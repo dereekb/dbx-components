@@ -149,10 +149,6 @@ export class DbxScreenMediaService implements Destroyable {
   }
 
   private _readHeightType(): ScreenMediaHeightType {
-    if (this._tinyHeightQuery) {
-      return 'tiny';
-    } else {
-      return 'normal';
-    }
+    return this._tinyHeightQuery ? 'tiny' : 'normal';
   }
 }

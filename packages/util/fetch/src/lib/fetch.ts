@@ -193,11 +193,7 @@ export function fetchRequestFactory(config: FetchRequestFactoryInput): FetchRequ
   async function asFetchRequest(input: PromiseOrValue<RequestInfo | URL>): Promise<Request> {
     const awaitedInput: RequestInfo | URL = isPromiseLike(input) ? await input : input;
 
-    if (isFetchRequest(awaitedInput)) {
-      return awaitedInput;
-    } else {
-      return makeRequest(awaitedInput);
-    }
+    return isFetchRequest(awaitedInput) ? awaitedInput : makeRequest(awaitedInput);
   }
 
   const buildRequestWithFixedUrl = buildUrl
@@ -283,12 +279,16 @@ export function fetchRequestFactory(config: FetchRequestFactoryInput): FetchRequ
  * @returns the merged RequestInit
  */
 export function mergeRequestInits<T extends RequestInit>(base: T, requestInit?: T | undefined): T {
+  let result: T;
+
   if (requestInit) {
     const headers: [string, string][] = mergeRequestHeaders([base.headers, requestInit.headers]);
-    return { ...base, ...requestInit, headers };
+    result = { ...base, ...requestInit, headers };
   } else {
-    return base;
+    result = base;
   }
+
+  return result;
 }
 
 /**

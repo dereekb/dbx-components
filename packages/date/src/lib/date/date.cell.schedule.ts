@@ -426,11 +426,7 @@ export function isDateCellSchedule(input: object): input is DateCellSchedule {
  * @returns whether both schedules are equivalent
  */
 export function isSameDateCellSchedule(a: Maybe<DateCellSchedule>, b: Maybe<DateCellSchedule>): boolean {
-  if (a && b) {
-    return a.w === b.w && iterablesAreSetEquivalent(a.ex ?? [], b.ex ?? []) && iterablesAreSetEquivalent(a.d ?? [], b.d ?? []);
-  } else {
-    return a == b;
-  }
+  return a && b ? a.w === b.w && iterablesAreSetEquivalent(a.ex ?? [], b.ex ?? []) && iterablesAreSetEquivalent(a.d ?? [], b.d ?? []) : a == b;
 }
 
 /**
@@ -485,11 +481,7 @@ export function isDateCellScheduleStartOfDayDateRange(input: object): input is D
  * @returns whether both have identical date ranges and schedules
  */
 export function isSameDateCellScheduleDateRange(a: Maybe<DateCellScheduleDateRange>, b: Maybe<DateCellScheduleDateRange>): boolean {
-  if (a && b) {
-    return isSameDateRange(a, b) && isSameDateCellSchedule(a, b);
-  } else {
-    return a == b;
-  }
+  return a && b ? isSameDateRange(a, b) && isSameDateCellSchedule(a, b) : a == b;
 }
 
 /**
@@ -610,11 +602,7 @@ export interface DateCellScheduleEventRange extends DateCellScheduleDateRange, D
  * @returns whether both event ranges are equivalent
  */
 export function isSameDateCellScheduleEventRange(a: Maybe<DateCellScheduleEventRange>, b: Maybe<DateCellScheduleEventRange>): boolean {
-  if (a && b) {
-    return isSameDateCellScheduleDateRange(a, b) && isSameDateCellScheduleEventRange(a, b);
-  } else {
-    return a == b;
-  }
+  return a && b ? isSameDateCellScheduleDateRange(a, b) && isSameDateCellScheduleEventRange(a, b) : a == b;
 }
 
 /**
@@ -647,11 +635,7 @@ export function isFullDateCellScheduleDateRange(input: object): input is FullDat
  * @returns whether both full schedule ranges are equivalent
  */
 export function isSameFullDateCellScheduleDateRange(a: Maybe<FullDateCellScheduleRange>, b: Maybe<FullDateCellScheduleRange>): boolean {
-  if (a && b) {
-    return isSameDateCellScheduleDateRange(a, b) && isSameFullDateCellTiming(a, b);
-  } else {
-    return a == b;
-  }
+  return a && b ? isSameDateCellScheduleDateRange(a, b) && isSameFullDateCellTiming(a, b) : a == b;
 }
 
 /**

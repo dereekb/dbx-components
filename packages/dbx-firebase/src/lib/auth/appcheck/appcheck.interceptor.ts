@@ -82,11 +82,7 @@ export class DbxFirebaseAppCheckHttpInterceptor implements HttpInterceptor {
     const url = urlWithoutParameters(inputUrl);
 
     function isEnabledRouteMatch(enabledRoute: EnabledAppCheckRoute): boolean {
-      if (enabledRoute.isWildcard) {
-        return url.startsWith(enabledRoute.match);
-      } else {
-        return url === enabledRoute.match;
-      }
+      return enabledRoute.isWildcard ? url.startsWith(enabledRoute.match) : url === enabledRoute.match;
     }
 
     return from(this._appCheckRoutes).pipe(

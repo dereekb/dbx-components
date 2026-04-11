@@ -196,11 +196,7 @@ export function authRoleClaimsService<T extends AuthClaimsObject>(config: AuthRo
               return claimsValue;
             },
             decodeRolesFromValue: (value: Maybe<AuthClaimValue>) => {
-              if (value === expectedValue) {
-                return [];
-              } else {
-                return claimRoles;
-              }
+              return value === expectedValue ? [] : claimRoles;
             }
           };
         } else {
@@ -216,11 +212,7 @@ export function authRoleClaimsService<T extends AuthClaimsObject>(config: AuthRo
               return claimsValue;
             },
             decodeRolesFromValue: (value: Maybe<AuthClaimValue>) => {
-              if (value === expectedValue) {
-                return claimRoles;
-              } else {
-                return [];
-              }
+              return value === expectedValue ? claimRoles : [];
             }
           };
         }

@@ -47,11 +47,11 @@ export function fieldValueIsAvailableValidator<T>(config: FieldValueIsAvailableV
       map((isAvailable) => {
         if (isAvailable) {
           return null;
-        } else {
-          return {
-            [FIELD_VALUE_IS_AVAILABLE_VALIDATION_KEY]: { message }
-          };
         }
+
+        return {
+          [FIELD_VALUE_IS_AVAILABLE_VALIDATION_KEY]: { message }
+        };
       }),
       catchError(() =>
         of({

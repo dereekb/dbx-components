@@ -102,28 +102,28 @@ export class QuizComponent {
             return viewConfig;
           })
         );
-      } else {
-        return combineLatest([this.quiz$, this.currentQuestion$, this.quizStore.isAtEndOfQuestions$]).pipe(
-          map(([quiz, currentQuestion, isAtEndOfQuestions]) => {
-            let viewConfig: QuizComponentViewConfig;
-
-            if (isAtEndOfQuestions) {
-              viewConfig = {
-                state: 'post-quiz',
-                resultsComponent: quiz?.resultsComponentConfig
-              };
-            } else {
-              viewConfig = {
-                state: 'quiz',
-                questionComponent: currentQuestion?.questionComponentConfig,
-                answerComponent: currentQuestion?.answerComponentConfig
-              };
-            }
-
-            return viewConfig;
-          })
-        );
       }
+
+      return combineLatest([this.quiz$, this.currentQuestion$, this.quizStore.isAtEndOfQuestions$]).pipe(
+        map(([quiz, currentQuestion, isAtEndOfQuestions]) => {
+          let viewConfig: QuizComponentViewConfig;
+
+          if (isAtEndOfQuestions) {
+            viewConfig = {
+              state: 'post-quiz',
+              resultsComponent: quiz?.resultsComponentConfig
+            };
+          } else {
+            viewConfig = {
+              state: 'quiz',
+              questionComponent: currentQuestion?.questionComponentConfig,
+              answerComponent: currentQuestion?.answerComponentConfig
+            };
+          }
+
+          return viewConfig;
+        })
+      );
     })
   );
 

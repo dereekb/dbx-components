@@ -124,16 +124,6 @@ describe('forgeDateTimeField()', () => {
     expect(field.props?.getSyncFieldsObs).toBe(getSyncFieldsObs);
   });
 
-  it('should map showTime=false to timeMode=none for backward compatibility', () => {
-    const field = forgeDateTimeField({ key: 'datetime', showTime: false });
-    expect(field.props?.timeMode).toBe('none');
-  });
-
-  it('should not override explicit timeMode with showTime', () => {
-    const field = forgeDateTimeField({ key: 'datetime', timeMode: DbxDateTimeFieldTimeMode.OPTIONAL, showTime: false });
-    expect(field.props?.timeMode).toBe(DbxDateTimeFieldTimeMode.OPTIONAL);
-  });
-
   it('should set minuteStep in props', () => {
     const field = forgeDateTimeField({ key: 'datetime', minuteStep: 15 });
     expect(field.props?.minuteStep).toBe(15);

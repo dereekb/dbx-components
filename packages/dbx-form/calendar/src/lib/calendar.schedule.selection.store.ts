@@ -360,11 +360,7 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
     distinctUntilChanged((a, b) => isSameDateRange(a as DateRange, b as DateRange)),
     map((x) => ({ inputStart: x.start, inputEnd: x.end })),
     map((x) => {
-      if (x.inputStart && x.inputEnd) {
-        return x as CalendarScheduleSelectionInputDateRange;
-      } else {
-        return undefined;
-      }
+      return x.inputStart && x.inputEnd ? (x as CalendarScheduleSelectionInputDateRange) : undefined;
     }),
     shareReplay(1)
   );
@@ -844,9 +840,9 @@ export function updateStateWithTimezoneValue(state: CalendarScheduleSelectionSta
     };
 
     return updateStateWithDateCellScheduleRangeValue({ ...state, outputTimezone: timezone, outputTimezoneNormal: timezoneNormal }, newRange);
-  } else {
-    return { ...state, outputTimezone: timezone, outputTimezoneNormal: timezoneNormal }; // no change in value
   }
+
+  return { ...state, outputTimezone: timezone, outputTimezoneNormal: timezoneNormal }; // no change in value
 }
 
 /**
@@ -893,18 +889,18 @@ export function updateStateWithDateCellScheduleRangeValue(state: CalendarSchedul
 
   if (isSameValue) {
     return state;
-  } else {
-    if (change != null) {
-      // The incoming ex indexes are relative to change.start, but toggledIndexes must be
-      // relative to state.start. Adjust by the offset between them.
-      const inputStartIndex = state.indexFactory(change.start);
-      const adjustedEx = inputStartIndex !== 0 && change.ex ? change.ex.map((i) => i + inputStartIndex) : (change.ex ?? []);
-      const nextState: CalendarScheduleSelectionState = { ...state, inputStart: change.start, inputEnd: change.end, toggledIndexes: new Set(adjustedEx) };
-      return updateStateWithChangedScheduleDays(finalizeNewCalendarScheduleSelectionState(nextState), expandDateCellScheduleDayCodes(change.w || '89'));
-    } else {
-      return noSelectionCalendarScheduleSelectionState(state); // clear selection, retain disabled days
-    }
   }
+
+  if (change != null) {
+    // The incoming ex indexes are relative to change.start, but toggledIndexes must be
+    // relative to state.start. Adjust by the offset between them.
+    const inputStartIndex = state.indexFactory(change.start);
+    const adjustedEx = inputStartIndex !== 0 && change.ex ? change.ex.map((i) => i + inputStartIndex) : (change.ex ?? []);
+    const nextState: CalendarScheduleSelectionState = { ...state, inputStart: change.start, inputEnd: change.end, toggledIndexes: new Set(adjustedEx) };
+    return updateStateWithChangedScheduleDays(finalizeNewCalendarScheduleSelectionState(nextState), expandDateCellScheduleDayCodes(change.w || '89'));
+  }
+
+  return noSelectionCalendarScheduleSelectionState(state); // clear selection, retain disabled days
 }
 
 /**
@@ -920,9 +916,9 @@ export function updateStateWithChangedDefaultScheduleDays(state: CalendarSchedul
 
   if (dateCellScheduleDayCodesAreSetsEquivalent(defaultScheduleDays, currentDefaultScheduleDays)) {
     return state; // no change
-  } else {
-    return finalizeUpdateStateWithChangedScheduleDays(state, { ...state, defaultScheduleDays });
   }
+
+  return finalizeUpdateStateWithChangedScheduleDays(state, { ...state, defaultScheduleDays });
 }
 
 /**
@@ -950,9 +946,9 @@ export function updateStateWithChangedScheduleDays(state: CalendarScheduleSelect
 
   if (newScheduleDays === undefined) {
     return state;
-  } else {
-    return finalizeUpdateStateWithChangedScheduleDays(state, { ...state, scheduleDays: newScheduleDays ?? undefined });
   }
+
+  return finalizeUpdateStateWithChangedScheduleDays(state, { ...state, scheduleDays: newScheduleDays ?? undefined });
 }
 
 /**
@@ -970,13 +966,13 @@ export function updateStateWithSelectionMode(state: CalendarScheduleSelectionSta
 
     if (selectionMode === 'multiple') {
       return nextState;
-    } else {
-      const currentSelectionRange = computeCalendarScheduleSelectionDateCellRange(nextState);
-      return currentSelectionRange ? updateStateWithChangedDates(nextState, { set: [currentSelectionRange.i], invertSetBehavior: true }) : nextState;
     }
-  } else {
-    return state;
+
+    const currentSelectionRange = computeCalendarScheduleSelectionDateCellRange(nextState);
+    return currentSelectionRange ? updateStateWithChangedDates(nextState, { set: [currentSelectionRange.i], invertSetBehavior: true }) : nextState;
   }
+
+  return state;
 }
 
 /**
@@ -992,17 +988,17 @@ export function finalizeUpdateStateWithChangedScheduleDays(previousState: Calend
 
   if (dateCellScheduleDayCodesAreSetsEquivalent(nextScheduleDays, previousScheduleDays)) {
     return nextState; // the default or input schedule changed but the schedule is still the same, so no need for an update.
-  } else {
-    const effectiveScheduleDays = new Set(simplifyDateCellScheduleDayCodes(nextScheduleDays));
-    const allowedDaysOfWeek = expandDateCellScheduleDayCodesToDayOfWeekSet(nextScheduleDays);
-
-    return finalizeNewCalendarScheduleSelectionState({
-      ...nextState,
-      // update the effective schedule days and allowed days of week
-      effectiveScheduleDays,
-      allowedDaysOfWeek
-    });
   }
+
+  const effectiveScheduleDays = new Set(simplifyDateCellScheduleDayCodes(nextScheduleDays));
+  const allowedDaysOfWeek = expandDateCellScheduleDayCodesToDayOfWeekSet(nextScheduleDays);
+
+  return finalizeNewCalendarScheduleSelectionState({
+    ...nextState,
+    // update the effective schedule days and allowed days of week
+    effectiveScheduleDays,
+    allowedDaysOfWeek
+  });
 }
 
 export interface CalendarScheduleSelectionStateDatesChange {
@@ -1190,10 +1186,10 @@ export function updateStateWithChangedDates(state: CalendarScheduleSelectionStat
 
   if (rangeAndExclusion) {
     return finalizeNewCalendarScheduleSelectionState({ ...nextState, toggledIndexes: new Set(rangeAndExclusion.excluded), inputStart: rangeAndExclusion.start, inputEnd: rangeAndExclusion.end });
-  } else {
-    // no selected days
-    return noSelectionCalendarScheduleSelectionState(nextState);
   }
+
+  // no selected days
+  return noSelectionCalendarScheduleSelectionState(nextState);
 }
 
 /**
@@ -1485,9 +1481,5 @@ export function computeCalendarScheduleSelectionDateCellRange(state: CalendarSch
     }
   }
 
-  if (startRange != null && endRange != null) {
-    return { i: startRange, to: endRange };
-  } else {
-    return undefined;
-  }
+  return startRange != null && endRange != null ? { i: startRange, to: endRange } : undefined;
 }

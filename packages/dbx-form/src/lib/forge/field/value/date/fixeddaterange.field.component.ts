@@ -335,8 +335,10 @@ export class DbxForgeFixedDateRangeFieldComponent {
         const hasDateRangeConfiguration = Boolean(dateRangeInput);
         const minMaxClamp = (range: DateRange) => limitInstance.clampDateRange(range);
 
+        let modeResult: Observable<Maybe<DateRange>>;
+
         if (mode === 'single') {
-          return this.selectedDateRange$.pipe(
+          modeResult = this.selectedDateRange$.pipe(
             distinctUntilChanged(isSameDateDayRange),
             map((inputDateRange) => {
               const date = inputDateRange?.start;
@@ -344,7 +346,7 @@ export class DbxForgeFixedDateRangeFieldComponent {
             })
           );
         } else {
-          return this.selectedDateRange$.pipe(
+          modeResult = this.selectedDateRange$.pipe(
             // eslint-disable-next-line sonarjs/cognitive-complexity
             scan((acc: FixedDateRangeScan, nextDateRange: Maybe<Partial<DateRange>>) => {
               let result: FixedDateRangeScan;
@@ -468,6 +470,8 @@ export class DbxForgeFixedDateRangeFieldComponent {
             map((x) => x.range ?? null)
           );
         }
+
+        return modeResult;
       })
     );
 
@@ -476,26 +480,18 @@ export class DbxForgeFixedDateRangeFieldComponent {
 
   readonly fullBoundary$: Observable<Maybe<DateRange>> = this.dateRangeSelectionForMode('single').pipe(shareReplay(1));
 
-  readonly latestBoundary$: Observable<Maybe<DateRange>> = this.selectionMode$.pipe(
-    switchMap((mode) => {
-      if (mode === 'arbitrary_quick') {
-        return this.valueInSystemTimezone$;
-      } else {
-        return this.fullBoundary$;
-      }
-    })
-  );
+  readonly latestBoundary$: Observable<Maybe<DateRange>> = this.selectionMode$.pipe(switchMap((mode) => (mode === 'arbitrary_quick' ? this.valueInSystemTimezone$ : this.fullBoundary$)));
 
   readonly calendarFocusDate$: Observable<Date> = this._selectionEvent.pipe(startWith(null)).pipe(
     switchMap((selectionEvent) => {
-      if (selectionEvent?.type === 'calendar' && selectionEvent.range?.start) {
-        return of(selectionEvent.range.start);
-      } else {
-        return this.fullBoundary$.pipe(
-          first(),
-          map((fullBoundary) => fullBoundary?.start ?? selectionEvent?.range?.start)
-        );
-      }
+      const result =
+        selectionEvent?.type === 'calendar' && selectionEvent.range?.start
+          ? of(selectionEvent.range.start)
+          : this.fullBoundary$.pipe(
+              first(),
+              map((fullBoundary) => fullBoundary?.start ?? selectionEvent?.range?.start)
+            );
+      return result;
     }),
     filterMaybe(),
     shareReplay(1)
@@ -776,11 +772,7 @@ export class DbxForgeFixedDateRangeFieldSelectionStrategy<D> implements MatDateR
   }
 
   private _createDateRange(input: Maybe<DateRange>): DatePickerDateRange<D> {
-    if (input) {
-      return new DatePickerDateRange<D>(this.adapterDateFromDate(input.start), this.adapterDateFromDate(input.end));
-    } else {
-      return new DatePickerDateRange<D>(null, null);
-    }
+    return input ? new DatePickerDateRange<D>(this.adapterDateFromDate(input.start), this.adapterDateFromDate(input.end)) : new DatePickerDateRange<D>(null, null);
   }
 
   dateFromAdapterDate(input: D) {

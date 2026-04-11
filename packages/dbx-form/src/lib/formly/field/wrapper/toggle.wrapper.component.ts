@@ -42,9 +42,9 @@ export class DbxFormToggleWrapperComponent<T extends object = object> extends Ab
     switchMap((x) => {
       if (this.expandSection?.toggleLabelObs) {
         return this.expandSection?.toggleLabelObs(x);
-      } else {
-        return of(this.expandLabel);
       }
+
+      return of(this.expandLabel);
     }),
     shareReplay(1)
   );

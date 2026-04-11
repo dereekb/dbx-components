@@ -70,22 +70,18 @@ export function errorOnEmissionsInPeriod<T>(config: ErrorOnEmissionsInPeriodConf
             const error = errorFactory();
             onError?.(error);
             throw error;
-          } else {
-            return x;
           }
-        })
-      );
-    } else {
-      // switchToObs was provided.
-      return source.pipe(
-        switchMap((x) => {
-          if (counter() > maxEmissionsPerPeriod) {
-            return switchToObs as Observable<T>;
-          } else {
-            return of(x);
-          }
+
+          return x;
         })
       );
     }
+
+    // switchToObs was provided.
+    return source.pipe(
+      switchMap((x) => {
+        return counter() > maxEmissionsPerPeriod ? (switchToObs as Observable<T>) : of(x);
+      })
+    );
   };
 }

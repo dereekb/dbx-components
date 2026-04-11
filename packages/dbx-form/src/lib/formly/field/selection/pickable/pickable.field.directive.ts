@@ -178,9 +178,9 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
             })
           )
         );
-      } else {
-        return of(successResult(displayValues));
       }
+
+      return of(successResult(displayValues));
     })
   );
 
@@ -429,10 +429,10 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
               return mappingResult.map((x) => x[3] ?? valueIndexHashMap.get(x[1]));
             })
           );
-        } else {
-          // If all display values are hashed return that.
-          return of(hasDisplay.map((x) => x[3])) as Observable<PickableValueFieldDisplayValueWithHash<T, M, H>[]>;
         }
+
+        // If all display values are hashed return that.
+        return of(hasDisplay.map((x) => x[3])) as Observable<PickableValueFieldDisplayValueWithHash<T, M, H>[]>;
       })
     );
   }

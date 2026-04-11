@@ -131,13 +131,15 @@ export function asSegueRef<O = object>(input: Maybe<SegueRefOrSegueRefRouterLink
 export function asSegueRef<O = object>(input: Maybe<SegueRefOrSegueRefRouterLink<O>>): Maybe<SegueRef<O>> {
   const type = typeof input;
 
+  let result: Maybe<SegueRef<O>>;
+
   if (type === 'string') {
-    return refStringToSegueRef(input as string);
+    result = refStringToSegueRef(input as string);
   } else if (isSegueRef(input)) {
-    return input as SegueRef<O>;
-  } else {
-    return undefined;
+    result = input as SegueRef<O>;
   }
+
+  return result;
 }
 
 /**
@@ -155,13 +157,17 @@ export function asSegueRef<O = object>(input: Maybe<SegueRefOrSegueRefRouterLink
 export function asSegueRefString<O = object>(input: SegueRefOrSegueRefRouterLink<O> | string): string;
 export function asSegueRefString<O = object>(input: Maybe<SegueRefOrSegueRefRouterLink<O> | string>): Maybe<string>;
 export function asSegueRefString<O = object>(input: Maybe<SegueRefOrSegueRefRouterLink<O> | string>): Maybe<string> {
+  let result: Maybe<string>;
+
   if (typeof input === 'string') {
-    return input;
+    result = input;
   } else if (isSegueRef(input)) {
-    return input.ref as string;
+    result = input.ref as string;
   } else {
     throw new Error(`asSegueRefString() failed to convert the input to a string: ${input}`);
   }
+
+  return result;
 }
 
 /**

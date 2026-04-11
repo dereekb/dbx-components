@@ -130,12 +130,7 @@ export function firebaseStorageClientAccessorFile(storage: ClientFirebaseStorage
       const inputType = typeof input === 'string';
       const metadataOption: UploadMetadata | undefined = uploadMetadataFromStorageUploadOptions(options);
 
-      if (inputType) {
-        const stringFormat = assertStorageUploadOptionsStringFormat(options);
-        return uploadString(ref, input as StorageDataString, stringFormat, metadataOption);
-      } else {
-        return uploadBytes(ref, input as StorageClientUploadBytesInput, metadataOption);
-      }
+      return inputType ? uploadString(ref, input as StorageDataString, assertStorageUploadOptionsStringFormat(options), metadataOption) : uploadBytes(ref, input as StorageClientUploadBytesInput, metadataOption);
     },
     getBytes: (maxDownloadSizeBytes) => getBytes(ref, maxDownloadSizeBytes).then((x) => new Uint8Array(x)),
     getBlob: (maxDownloadSizeBytes) => getBlob(ref, maxDownloadSizeBytes),

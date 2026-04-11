@@ -136,11 +136,7 @@ export class DbxNavbarComponent extends AbstractTransitionDirective {
         content = { icon: defaultIcon ?? 'menu', text: defaultText };
       }
 
-      if (mode === 'icon') {
-        return { icon: content.icon };
-      } else {
-        return content;
-      }
+      return mode === 'icon' ? { icon: content.icon } : content;
     }),
     shareReplay(1)
   );

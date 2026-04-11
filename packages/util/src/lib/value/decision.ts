@@ -74,11 +74,7 @@ export const invertDecision: <F extends DecisionFunction<any>>(fn: F, invert?: b
 export function asDecisionFunction<T = unknown>(valueOrFunction: Maybe<boolean | DecisionFunction<T>>, defaultIfUndefined = true): DecisionFunction<T> {
   const input = valueOrFunction ?? defaultIfUndefined;
 
-  if (typeof input === 'boolean') {
-    return decisionFunction(input);
-  } else {
-    return input;
-  }
+  return typeof input === 'boolean' ? decisionFunction(input) : input;
 }
 
 /**

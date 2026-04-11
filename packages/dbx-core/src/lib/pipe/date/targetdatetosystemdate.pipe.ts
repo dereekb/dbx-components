@@ -22,10 +22,6 @@ import { dateTimezoneUtcNormal } from '@dereekb/date';
 })
 export class TargetDateToSystemDatePipe implements PipeTransform {
   transform(input: Maybe<Date>, timezone: Maybe<TimezoneString>): Maybe<Date> {
-    if (input && timezone) {
-      return dateTimezoneUtcNormal({ timezone }).targetDateToSystemDate(input);
-    } else {
-      return undefined;
-    }
+    return input && timezone ? dateTimezoneUtcNormal({ timezone }).targetDateToSystemDate(input) : undefined;
   }
 }

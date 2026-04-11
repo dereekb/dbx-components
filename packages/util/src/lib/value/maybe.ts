@@ -25,11 +25,7 @@ export function hasNonNullValue<T = unknown>(value: Maybe<T>): value is MaybeSo<
  * @returns `true` if the value is non-nullish and not empty
  */
 export function hasValueOrNotEmpty<T = unknown>(value: Maybe<T>): value is MaybeSo<T> {
-  if (isIterable(value, false)) {
-    return !isEmptyIterable(value);
-  } else {
-    return isNotNullOrEmptyString(value);
-  }
+  return isIterable(value, false) ? !isEmptyIterable(value) : isNotNullOrEmptyString(value);
 }
 
 /**
@@ -44,13 +40,17 @@ export function hasValueOrNotEmpty<T = unknown>(value: Maybe<T>): value is Maybe
  * @returns `true` if the value is non-nullish, non-empty, and not an empty object
  */
 export function hasValueOrNotEmptyObject<T = unknown>(value: Maybe<T>): value is MaybeSo<T> {
+  let result: boolean;
+
   if (isIterable(value, true)) {
-    return !isEmptyIterable(value);
+    result = !isEmptyIterable(value);
   } else if (isNotNullOrEmptyString(value)) {
-    return typeof value === 'object' ? !objectHasNoKeys(value as unknown as object) : true;
+    result = typeof value === 'object' ? !objectHasNoKeys(value as unknown as object) : true;
   } else {
-    return false;
+    result = false;
   }
+
+  return result;
 }
 
 /**

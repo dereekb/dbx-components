@@ -23,10 +23,6 @@ import { type DateRange, formatToTimeRangeString } from '@dereekb/date';
 })
 export class DateTimeRangePipe implements PipeTransform {
   transform(input: Maybe<DateRange>, unavailable: string = 'Not Available'): string {
-    if (input) {
-      return formatToTimeRangeString(input);
-    } else {
-      return unavailable;
-    }
+    return input ? formatToTimeRangeString(input) : unavailable;
   }
 }

@@ -89,11 +89,7 @@ export function bitwiseSetDencoder<D extends BitwiseEncodedSetIndex>(maxIndex?: 
   const decoder = maxIndex ? bitwiseSetDecoder<D>(maxIndex) : dencodeBitwiseSet;
 
   return ((input: BitwiseEncodedSet | Set<D>) => {
-    if (typeof input === 'number') {
-      return decoder(input);
-    } else {
-      return encodeBitwiseSet(input);
-    }
+    return typeof input === 'number' ? decoder(input) : encodeBitwiseSet(input);
   }) as BitwiseSetDencoder<D>;
 }
 
@@ -176,10 +172,6 @@ export function bitwiseObjectDencoder<T extends object, D extends BitwiseEncoded
   const decoder = bitwiseObjectdecoder(config.fromSetFunction, config.maxIndex);
 
   return ((input: BitwiseEncodedSet | T) => {
-    if (typeof input === 'number') {
-      return decoder(input);
-    } else {
-      return encoder(input);
-    }
+    return typeof input === 'number' ? decoder(input) : encoder(input);
   }) as BitwiseObjectDencoder<T>;
 }

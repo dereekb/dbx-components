@@ -106,9 +106,9 @@ export class DbxErrorComponent {
       }
 
       return state;
-    } else {
-      return { viewType: 'none' };
     }
+
+    return { viewType: 'none' };
   });
 
   readonly viewTypeSignal = computed(() => this.state().viewType);

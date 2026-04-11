@@ -38,12 +38,7 @@ export function randomPickFactory<T>(values: T[]): RandomPickFactory<T> {
  * @returns a random valid index within the array, or 0 if the array is empty
  */
 export function randomArrayIndex<T>(values: T[]): IndexNumber {
-  if (values.length === 0) {
-    return 0;
-  } else {
-    const random = Math.random();
-    return Math.round(random * (values.length - 1));
-  }
+  return values.length === 0 ? 0 : Math.round(Math.random() * (values.length - 1));
 }
 
 /**

@@ -40,6 +40,8 @@ export async function catchAndThrowPasswordResetServerErrors<T>(fn: () => Promis
 
 /**
  * Creates a permission-denied (403) server error for an invalid or expired password reset code.
+ *
+ * @returns An {@link HttpsError} with code `permission-denied`.
  */
 export function authServicePasswordResetInvalidCodeError() {
   return permissionDeniedError({
@@ -50,6 +52,8 @@ export function authServicePasswordResetInvalidCodeError() {
 
 /**
  * Creates a bad-request (400) server error when no active password reset exists for the user.
+ *
+ * @returns An {@link HttpsError} with code `invalid-argument`.
  */
 export function authServicePasswordResetNoConfigError() {
   return badRequestError({
@@ -60,6 +64,8 @@ export function authServicePasswordResetNoConfigError() {
 
 /**
  * Creates an unavailable (503) server error when password reset email sending is throttled.
+ *
+ * @returns An {@link HttpsError} with code `unavailable`.
  */
 export function authServicePasswordResetThrottleError() {
   return unavailableError({
@@ -71,6 +77,8 @@ export function authServicePasswordResetThrottleError() {
 /**
  * Creates a bad-request (400) server error when the password reset email has already been sent
  * and the send-once constraint is active.
+ *
+ * @returns An {@link HttpsError} with code `invalid-argument`.
  */
 export function authServicePasswordResetSendOnceError() {
   return badRequestError({

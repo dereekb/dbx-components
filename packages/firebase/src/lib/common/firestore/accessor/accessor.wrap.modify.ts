@@ -94,22 +94,14 @@ export class ModifyBeforeSetFirestoreDocumentDataAccessorWrapper<T extends objec
       case 'set':
         setFn = (data: PartialWithFieldValue<T> | WithFieldValue<T>, options?: SetOptions) => {
           const isSetForNewModel = Boolean(!options);
-          if (isSetForNewModel) {
-            return modifyAndSet(data);
-          } else {
-            return super.set(data, options as SetOptions);
-          }
+          return isSetForNewModel ? modifyAndSet(data) : super.set(data, options as SetOptions);
         };
         applyToCreateFunction = true;
         break;
       case 'update':
         setFn = (data: PartialWithFieldValue<T> | WithFieldValue<T>, options?: SetOptions) => {
           const isUpdateForExistingModel = options && (Boolean((options as SetOptionsMergeFields).mergeFields) || Boolean((options as SetOptionsMerge).merge));
-          if (isUpdateForExistingModel) {
-            return modifyAndSet(data);
-          } else {
-            return super.set(data, options as SetOptions);
-          }
+          return isUpdateForExistingModel ? modifyAndSet(data) : super.set(data, options as SetOptions);
         };
         break;
       case 'create':

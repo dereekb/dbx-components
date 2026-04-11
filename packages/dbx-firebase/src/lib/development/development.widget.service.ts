@@ -40,9 +40,9 @@ export class DbxFirebaseDevelopmentWidgetService {
       this._entries.set(type, provider);
       this.dbxWidgetService.register(provider.widget, override);
       return true;
-    } else {
-      return false;
     }
+
+    return false;
   }
 
   getEntryWidgetIdentifiers(): DbxWidgetType[] {

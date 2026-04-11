@@ -18,11 +18,7 @@ export class DbxTableColumnHeaderComponent<C> extends AbstractDbxTableColumnDire
     switchMap((viewDelegate) => {
       const columnHeader = viewDelegate.columnHeader;
 
-      if (columnHeader) {
-        return this.column$.pipe(map((x) => columnHeader(x)));
-      } else {
-        return of(undefined);
-      }
+      return columnHeader ? this.column$.pipe(map((x) => columnHeader(x))) : of(undefined);
     }),
     distinctUntilChanged()
   );

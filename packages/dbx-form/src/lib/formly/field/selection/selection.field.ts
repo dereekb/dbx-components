@@ -106,9 +106,9 @@ export function formlyAddValueSelectionOptionFunction<T>(label?: string | undefi
 
     if (hasClear) {
       return options;
-    } else {
-      return [{ label, clear: true }, ...options];
     }
+
+    return [{ label, clear: true }, ...options];
   };
 }
 

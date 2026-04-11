@@ -44,13 +44,15 @@ export type DateCellOrDateCellIndexOrDateCellRange = DateCellIndex | DateCell | 
 export function isValidDateCellRange(input: DateCellRange): boolean {
   const { i, to } = input;
 
+  let result = true;
+
   if (!isValidDateCellIndex(i)) {
-    return false;
+    result = false;
   } else if (to != null && (!isValidDateCellIndex(to) || to < i)) {
-    return false;
+    result = false;
   }
 
-  return true;
+  return result;
 }
 
 /**
@@ -74,16 +76,19 @@ export function isValidDateCellRangeSeries(input: DateCellRange[]): boolean {
 
   let greatestIndex = -1;
 
+  let result = true;
+
   for (const range of input) {
     if (range.i <= greatestIndex) {
-      return false;
+      result = false;
+      break;
     } else {
       const nextGreatestIndex = range.to ?? range.i; // to is greater than or equal to i in a valid date block range.
       greatestIndex = nextGreatestIndex;
     }
   }
 
-  return true;
+  return result;
 }
 
 /**
@@ -222,11 +227,7 @@ export function dateCellRangeWithRangeFromIndex(dateCellIndex: DateCellIndex): D
  * @returns a DateCellRangeWithRange with an explicit `to` value
  */
 export function dateCellRangeWithRange(input: DateCellOrDateCellIndexOrDateCellRange): DateCellRangeWithRange {
-  if (typeof input === 'number') {
-    return dateCellRangeWithRangeFromIndex(input);
-  } else {
-    return dateCellRange(input.i, (input as DateCellRange).to);
-  }
+  return typeof input === 'number' ? dateCellRangeWithRangeFromIndex(input) : dateCellRange(input.i, (input as DateCellRange).to);
 }
 
 /**
@@ -1001,11 +1002,7 @@ export function expandUniqueDateCellsFunction<B extends DateCellRange | UniqueDa
      * @returns true if the current block should be retained over the next block
      */
     function shouldRetainCurrentOverNext() {
-      if (current.priority === next.priority) {
-        return retainOnOverlap === 'current';
-      } else {
-        return current.priority === retainOnOverlap;
-      }
+      return current.priority === next.priority ? retainOnOverlap === 'current' : current.priority === retainOnOverlap;
     }
 
     while (continueLoop) {

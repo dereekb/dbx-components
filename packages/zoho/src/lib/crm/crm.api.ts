@@ -167,17 +167,21 @@ function updateRecordLikeFunction(context: ZohoCrmContext, fetchUrlPrefix: '' | 
         const isInputMultipleItems = Array.isArray(data);
         const result = zohoCrmMultiRecordResult<Partial<T>, ZohoCrmChangeObjectResponseSuccessEntry, ZohoCrmChangeObjectResponseErrorEntry>(asArray(data), x.data);
 
+        let finalResult;
+
         if (isInputMultipleItems) {
-          return result;
+          finalResult = result;
         } else {
           const { successItems, errorItems } = result;
 
           if (errorItems[0] != null) {
             throw zohoCrmRecordCrudError(errorItems[0].result);
-          } else {
-            return successItems[0].result.details;
           }
+
+          finalResult = successItems[0].result.details;
         }
+
+        return finalResult;
       })) as ZohoCrmUpdateRecordLikeFunction;
 }
 
@@ -1102,11 +1106,11 @@ export function zohoCrmExecuteRestApiFunction(context: ZohoCrmContext): ZohoCrmE
     const url = `${baseUrl}${relativeUrl}`;
 
     return context.fetchJson<ZohoCrmExecuteRestApiFunctionResponse>(url, zohoCrmApiFetchJsonInput('POST')).then((x) => {
-      if (x.code === 'success') {
-        return (x as ZohoCrmExecuteRestApiFunctionSuccessResponse).details;
-      } else {
+      if (x.code !== 'success') {
         throw new ZohoCrmExecuteRestApiFunctionError(x);
       }
+
+      return (x as ZohoCrmExecuteRestApiFunctionSuccessResponse).details;
     });
   };
 }

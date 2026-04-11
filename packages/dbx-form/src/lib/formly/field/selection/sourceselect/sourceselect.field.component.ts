@@ -141,27 +141,27 @@ export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = Primativ
 
           if (sourceObs.length === 0) {
             return of(successResult([]));
-          } else {
-            return combineLatest(sourceObs).pipe(
-              map((x) => {
-                const statesWithValues = x.filter((y) => isLoadingStateWithDefinedValue(y));
-                const loading = x.some(isLoadingStateLoading);
-                const value: SourceSelectValueGroup<T, M>[] = statesWithValues.map((y) => {
-                  const group: SourceSelectValueGroup<T, M> = {
-                    label: y.label,
-                    values: (y.value as M[]).map((meta) => ({ meta, value: valueReader(meta) }))
-                  };
-
-                  return group;
-                });
-
-                return {
-                  loading,
-                  value
-                };
-              })
-            );
           }
+
+          return combineLatest(sourceObs).pipe(
+            map((x) => {
+              const statesWithValues = x.filter((y) => isLoadingStateWithDefinedValue(y));
+              const loading = x.some(isLoadingStateLoading);
+              const value: SourceSelectValueGroup<T, M>[] = statesWithValues.map((y) => {
+                const group: SourceSelectValueGroup<T, M> = {
+                  label: y.label,
+                  values: (y.value as M[]).map((meta) => ({ meta, value: valueReader(meta) }))
+                };
+
+                return group;
+              });
+
+              return {
+                loading,
+                value
+              };
+            })
+          );
         })
       );
     })
@@ -215,9 +215,9 @@ export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = Primativ
             return result;
           })
         );
-      } else {
-        return of(beginLoading<SourceSelectValueGroup<T, M>[]>({}));
       }
+
+      return of(beginLoading<SourceSelectValueGroup<T, M>[]>({}));
     }),
     shareReplay(1)
   );

@@ -103,17 +103,10 @@ export function storagePathFactory(config: StoragePathFactoryConfig): StoragePat
   return (input: StoragePathInput) => {
     const { pathString, bucketId: inputBucketId } = typeof input === 'string' ? { pathString: input, bucketId: undefined } : (input as StoragePath);
 
-    if (replaceBucket) {
-      return {
-        pathString,
-        bucketId
-      };
-    } else {
-      return {
-        pathString,
-        bucketId: inputBucketId ?? bucketId
-      };
-    }
+    return {
+      pathString,
+      bucketId: replaceBucket ? bucketId : (inputBucketId ?? bucketId)
+    };
   };
 }
 

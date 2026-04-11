@@ -26,20 +26,24 @@ import { ToJsDatePipe } from './tojsdate.pipe';
 })
 export class TimeDistanceCountdownPipe implements PipeTransform {
   transform(input: Maybe<DateOrDateString>, soonString: string = 'Soon', unavailable: string = 'Not Available'): string {
+    let result: string;
+
     if (input) {
       const from = ToJsDatePipe.toJsDate(input);
 
       if (isPast(from)) {
-        return soonString;
+        result = soonString;
       } else {
         const to = new Date();
-        return formatDistance(from, to, {
+        result = formatDistance(from, to, {
           addSuffix: true
         });
       }
     } else {
-      return unavailable;
+      result = unavailable;
     }
+
+    return result;
   }
 }
 
@@ -68,13 +72,17 @@ export class TimeDistanceCountdownPipe implements PipeTransform {
 })
 export class TimeDistancePipe implements PipeTransform {
   transform(input: Maybe<DateOrDateString>, to?: Maybe<Date>, unavailable: string = 'Not Available'): string {
+    let result: string;
+
     if (input) {
       const from = ToJsDatePipe.toJsDate(input);
-      return formatDistance(from, to ?? new Date(), {
+      result = formatDistance(from, to ?? new Date(), {
         addSuffix: true
       });
     } else {
-      return unavailable;
+      result = unavailable;
     }
+
+    return result;
   }
 }

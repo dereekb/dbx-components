@@ -654,11 +654,7 @@ export function schoolInfoJobSettingsEndTimeField() {
     map((date) => {
       date = roundDownToMinute(date ?? new Date());
 
-      if (date) {
-        return { date };
-      } else {
-        return { date: new Date() };
-      }
+      return { date: date ?? new Date() };
     })
   );
 

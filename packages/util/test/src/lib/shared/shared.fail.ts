@@ -139,19 +139,23 @@ export function expectFail(errorFn: () => PromiseOrValue<any>, assertFailType?: 
     }
   }
 
+  let promiseResult: Promise<void>;
+
   try {
     const result = errorFn();
 
     if (isPromise(result)) {
-      return result.then(failDueToSuccess).catch(handleError) as Promise<void>;
+      promiseResult = result.then(failDueToSuccess).catch(handleError) as Promise<void>;
     } else {
       failDueToSuccess();
+      promiseResult = Promise.resolve();
     }
   } catch (e) {
     handleError(e);
+    promiseResult = Promise.resolve();
   }
 
-  return Promise.resolve();
+  return promiseResult;
 }
 
 /**
@@ -163,17 +167,23 @@ export function expectFail(errorFn: () => PromiseOrValue<any>, assertFailType?: 
 export function expectSuccessfulFail(errorFn: () => void, handleError?: (e: unknown) => void): void;
 export function expectSuccessfulFail(errorFn: () => Promise<void>, handleError?: (e: unknown) => void): Promise<void>;
 export function expectSuccessfulFail<R extends PromiseOrValue<void>>(errorFn: () => R, handleError: (e: unknown) => void = EXPECT_ERROR_DEFAULT_HANDLER): PromiseOrValue<void> {
-  try {
-    const result = errorFn();
+  let result: PromiseOrValue<void>;
 
-    if (isPromise(result)) {
-      return result.then(failDueToSuccess).catch(handleError);
+  try {
+    const fnResult = errorFn();
+
+    if (isPromise(fnResult)) {
+      result = fnResult.then(failDueToSuccess).catch(handleError);
     } else {
       failDueToSuccess();
+      result = undefined;
     }
   } catch (e) {
     handleError(e);
+    result = undefined;
   }
+
+  return result;
 }
 
 // MARK: ShouldFail

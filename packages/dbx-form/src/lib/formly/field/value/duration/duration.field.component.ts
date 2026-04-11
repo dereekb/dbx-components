@@ -254,11 +254,13 @@ export class DbxTimeDurationFieldComponent extends FieldType<FieldTypeConfig<Tim
   private _outputValueToMilliseconds(value: unknown): number {
     if (this.valueMode === 'duration_data') {
       return durationDataToMilliseconds(value as TimeDurationData);
-    } else if (this.valueMode === 'hours_and_minutes') {
+    }
+
+    if (this.valueMode === 'hours_and_minutes') {
       const hm = value as HoursAndMinutes;
       return hoursAndMinutesToTimeUnit(hm, 'ms');
-    } else {
-      return timeUnitToMilliseconds(value as number, this.outputUnit);
     }
+
+    return timeUnitToMilliseconds(value as number, this.outputUnit);
   }
 }

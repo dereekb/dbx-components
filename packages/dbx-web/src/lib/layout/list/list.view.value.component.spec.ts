@@ -204,7 +204,6 @@ describe('DbxValueListViewContentComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [TestListHostComponent, TestGroupedListHostComponent, TestItemComponent],
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
       providers: [
         { provide: DbxListView, useClass: MockDbxListView },
         { provide: DbxRouterWebProviderConfig, useValue: MOCK_ROUTER_WEB_PROVIDER_CONFIG }

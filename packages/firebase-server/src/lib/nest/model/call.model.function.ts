@@ -237,9 +237,9 @@ export function _onCallWithCallTypeFunction<N>(map: OnCallWithCallTypeModelMap<N
         specifier,
         data: request.data.data
       });
-    } else {
-      throw throwOnUnknownModelType(modelType);
     }
+
+    throw throwOnUnknownModelType(modelType);
   };
 
   // Aggregate _apiDetails from model type handlers in the map

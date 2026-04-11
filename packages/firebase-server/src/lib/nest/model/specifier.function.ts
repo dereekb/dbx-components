@@ -92,9 +92,9 @@ export function onCallSpecifierHandler<N, I = any, O = any>(config: OnCallSpecif
     if (handler != null) {
       assertRequestRequiresAuthForFunction(handler, request);
       return handler(request as any) as PromiseOrValue<O>;
-    } else {
-      throw unknownModelCrudFunctionSpecifierError(specifier);
     }
+
+    throw unknownModelCrudFunctionSpecifierError(specifier);
   };
 
   (fn as Configurable<OnCallWithAuthAwareNestRequireAuthRef>)._requireAuth = false;

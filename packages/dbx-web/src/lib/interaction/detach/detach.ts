@@ -104,6 +104,7 @@ export abstract class DbxDetachController<I = unknown> {
  * Creates Angular providers that register a {@link DbxDetachController} implementation for DI.
  *
  * @param sourceType - The concrete class to provide as the controller.
+ * @returns An array of Angular providers that bind the source type to {@link DbxDetachController}.
  *
  * @example
  * ```typescript

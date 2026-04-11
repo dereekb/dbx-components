@@ -240,42 +240,37 @@ export function filterFromIterable<T>(values: Iterable<T>, fn: DecisionFunction<
  * @throws Error if input is not an array
  */
 export function wrapTuples<T>(input: IterableOrValue<T>): T[] {
-  if (Array.isArray(input)) {
-    // check if the first item is an array. Tuples can contain arrays as the first value.
-    if (input.length > 0) {
-      const firstValueInPotentialTupleOrArray = input[0];
-
-      let inputIsSingleTuple = false;
-
-      if (Array.isArray(firstValueInPotentialTupleOrArray)) {
-        // if the first nested value is an array then the top-level value may be an array and not a tuple. Check the length of all the other values in the array to see if they have the same length.
-        const expectedLength = firstValueInPotentialTupleOrArray.length;
-
-        // if it is an array of tuples, all values should be the same length and be arrays. If not an array, then we're looking at a tuple.
-        const firstNonUniformTupleValueIndex = input.findIndex((x: unknown) => {
-          if (Array.isArray(x)) {
-            return x.length !== expectedLength;
-          } else {
-            return true; // non-array value. The input is a tuple.
-          }
-        });
-
-        inputIsSingleTuple = firstNonUniformTupleValueIndex !== -1;
-      } else {
-        inputIsSingleTuple = true;
-        return [input];
-      }
-
-      // first value of the tuple could also be an array. If it is, check the other tuples all have the same length.
-      if (inputIsSingleTuple) {
-        return [input];
-      } else {
-        return input;
-      }
-    } else {
-      return input; // is an empty array.
-    }
-  } else {
+  if (!Array.isArray(input)) {
     throw new Error('Input is not an array/tuple...');
   }
+
+  let result: T[];
+
+  // check if the first item is an array. Tuples can contain arrays as the first value.
+  if (input.length > 0) {
+    const firstValueInPotentialTupleOrArray = input[0];
+
+    let inputIsSingleTuple = false;
+
+    if (Array.isArray(firstValueInPotentialTupleOrArray)) {
+      // if the first nested value is an array then the top-level value may be an array and not a tuple. Check the length of all the other values in the array to see if they have the same length.
+      const expectedLength = firstValueInPotentialTupleOrArray.length;
+
+      // if it is an array of tuples, all values should be the same length and be arrays. If not an array, then we're looking at a tuple.
+      const firstNonUniformTupleValueIndex = input.findIndex((x: unknown) => {
+        return Array.isArray(x) ? x.length !== expectedLength : true; // non-array value means the input is a tuple.
+      });
+
+      inputIsSingleTuple = firstNonUniformTupleValueIndex !== -1;
+    } else {
+      inputIsSingleTuple = true;
+    }
+
+    // first value of the tuple could also be an array. If it is, check the other tuples all have the same length.
+    result = inputIsSingleTuple ? [input] : input;
+  } else {
+    result = input; // is an empty array.
+  }
+
+  return result;
 }

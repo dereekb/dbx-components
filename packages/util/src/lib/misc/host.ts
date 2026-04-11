@@ -15,9 +15,5 @@ export interface JoinHostAndPortConfig {
  * @returns The joined string, or null/undefined if config is null/undefined
  */
 export function joinHostAndPort(config: Maybe<JoinHostAndPortConfig>): Maybe<string> {
-  if (config) {
-    return `${config.host}:${config.port}`;
-  } else {
-    return config;
-  }
+  return config ? `${config.host}:${config.port}` : config;
 }

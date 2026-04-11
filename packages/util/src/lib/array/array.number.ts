@@ -1,3 +1,4 @@
+import { type Maybe } from '../value/maybe.type';
 import { type IndexRange } from '../value/indexed';
 
 /**
@@ -71,12 +72,8 @@ export function reduceNumbersWithAddFn(emptyArrayValue = 0): (array: number[]) =
  * @param emptyArrayValue - value to return when the array is empty
  * @returns the reduced result, or the empty array value if the array is empty
  */
-export function reduceNumbers(reduceFn: (a: number, b: number) => number, array: number[], emptyArrayValue?: number): number | undefined {
-  if (array.length === 0) {
-    return emptyArrayValue;
-  } else {
-    return reduceNumbersFn(reduceFn, emptyArrayValue)(array);
-  }
+export function reduceNumbers(reduceFn: (a: number, b: number) => number, array: number[], emptyArrayValue?: number): Maybe<number> {
+  return array.length === 0 ? emptyArrayValue : reduceNumbersFn(reduceFn, emptyArrayValue)(array);
 }
 
 /**
