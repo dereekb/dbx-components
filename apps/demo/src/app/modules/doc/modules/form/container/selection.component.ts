@@ -22,6 +22,7 @@ import {
   formlySourceSelectField,
   type SourceSelectLoadSource,
   formlyValueSelectionField,
+  type ValueSelectionOption,
   type ValueSelectionOptionWithValue,
   forgeValueSelectionField,
   forgeSourceSelectField,
@@ -96,6 +97,8 @@ export const VALUE_SELECTION_VALUES: ValueSelectionOptionWithValue<number>[] = [
     value: 300
   }
 ];
+
+export const VALUE_SELECTION_VALUES_WITH_CLEAR: ValueSelectionOption<number>[] = [{ label: 'No Selection', clear: true }, ...VALUE_SELECTION_VALUES];
 
 export const MORE_VALUE_SELECTION_VALUES: ValueSelectionOptionWithValue<number>[] = [
   {
@@ -284,10 +287,10 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
         options: VALUE_SELECTION_VALUES
       }),
       forgeValueSelectionField({
-        key: 'materialCustomized',
-        label: 'Select One Customized',
-        description: 'This is a simple selection field with material form field customization.',
-        options: VALUE_SELECTION_VALUES
+        key: 'selectOneWithClearOption',
+        label: 'Select One With Clear Option',
+        description: 'This selection includes a ValueSelectionOptionClear entry in the options array.',
+        options: VALUE_SELECTION_VALUES_WITH_CLEAR
       }),
       forgeValueSelectionField({
         key: 'selectOneWithClear',
@@ -306,8 +309,8 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       forgeValueSelectionField({
         key: 'selectWithObservable',
         label: 'Select With Observable Data Source',
-        description: 'This select source uses static values. Note: ng-forge SelectField does not support Observable options.',
-        options: VALUE_SELECTION_VALUES
+        description: 'This select uses an Observable for options, which falls back to the custom DbxForgeValueSelectionFieldComponent.',
+        options: of(VALUE_SELECTION_VALUES)
       }),
       forgeToggleField({ key: 'showLogicDemo', label: 'Show Logic Demo Field' }),
       forgeValueSelectionField({

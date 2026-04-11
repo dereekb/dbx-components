@@ -57,6 +57,24 @@
       </doc-feature-form-tabs>
     </doc-feature-example>
 
+    <doc-feature-example header="Action Dialog" hint="Opens a form inside a dialog, wired to the action system for submit handling.">
+      <p>DbxFormActionDialogComponent (formly) and DbxForgeActionDialogComponent (forge) both open a Material dialog with a dynamic form and a submit button.</p>
+      <doc-feature-form-tabs formlyFn="DbxFormActionDialogComponent.openDialogWithForm()" forgeFn="DbxForgeActionDialogComponent.openDialogWithForm()">
+        <div formly>
+          <button mat-raised-button (click)="openFormlyDialog()">Open Formly Dialog</button>
+          <dbx-content-border>
+            <p>Result: {{ formlyDialogResult | json }}</p>
+          </dbx-content-border>
+        </div>
+        <div forge>
+          <button mat-raised-button (click)="openForgeDialog()">Open Forge Dialog</button>
+          <dbx-content-border>
+            <p>Result: {{ forgeDialogResult | json }}</p>
+          </dbx-content-border>
+        </div>
+      </doc-feature-form-tabs>
+    </doc-feature-example>
+
     <doc-feature-example header="dbx-forge Directives" hint="Demonstrates all directive inputs on a forge form: [config], [disabled], [dbxFormSource], [dbxFormLoadingSource], (dbxFormValueChange), resetForm(), and setValue().">
       <p>A single dbx-forge form demonstrating the available directive inputs with multiple field types.</p>
 

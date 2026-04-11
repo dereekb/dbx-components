@@ -1,28 +1,9 @@
 import { asObservable, type ObservableOrValue } from '@dereekb/rxjs';
-import { convertMaybeToArray, firstValue, type LabeledValue, type Maybe } from '@dereekb/util';
+import { convertMaybeToArray, firstValue, type Maybe } from '@dereekb/util';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { map } from 'rxjs';
 import { type DescriptionFieldConfig, formlyField, type FieldValueParser, type LabeledFieldConfig, type MaterialFormFieldConfig, propsAndConfigForFieldConfig } from '../field';
-
-/**
- * A selectable option with a value, label, and optional disabled state.
- */
-export interface ValueSelectionOptionWithValue<T> extends LabeledValue<T> {
-  disabled?: boolean;
-}
-
-/**
- * A special "clear" option that resets the selection when chosen.
- */
-export interface ValueSelectionOptionClear {
-  label?: string;
-  clear: true;
-}
-
-/**
- * A selectable option: either a value option or a clear option.
- */
-export type ValueSelectionOption<T> = ValueSelectionOptionWithValue<T> | ValueSelectionOptionClear;
+import { ValueSelectionOption, ValueSelectionOptionClear } from '../../../field/field.selection';
 
 export interface ValueSelectionFieldConfig<T> extends LabeledFieldConfig, DescriptionFieldConfig, MaterialFormFieldConfig {
   /**

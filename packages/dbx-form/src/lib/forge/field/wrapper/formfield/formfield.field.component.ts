@@ -19,12 +19,6 @@ import type { DbxForgeFormFieldWrapperProps } from './formfield.field';
   templateUrl: './formfield.field.component.html',
   styles: [
     `
-      :host {
-        display: block;
-        width: 100%;
-        margin-bottom: 16px;
-      }
-
       .dbx-forge-form-field-wrapper {
         position: relative;
         margin-top: 8px;

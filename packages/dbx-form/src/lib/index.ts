@@ -1,5 +1,6 @@
 export * from './form';
 export * from './forge';
+export * from './field';
 export * from './formly';
 export * from './layout';
 export * from './validator';

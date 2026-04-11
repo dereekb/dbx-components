@@ -1,118 +1,173 @@
 import { describe, it, expect } from 'vitest';
+import { of } from 'rxjs';
 import { forgeValueSelectionField } from './selection.field';
+import { resolveForgeSelectionOptions } from './selection.field.component';
 import type { LogicConfig } from '@ng-forge/dynamic-forms';
+import type { ValueSelectionOption } from '../../../field/field.selection';
 
+// MARK: resolveForgeSelectionOptions
+describe('resolveForgeSelectionOptions()', () => {
+  it('should pass through value options unchanged', () => {
+    const options: ValueSelectionOption<string>[] = [
+      { label: 'Red', value: 'red' },
+      { label: 'Blue', value: 'blue' }
+    ];
+
+    const resolved = resolveForgeSelectionOptions(options, false);
+    expect(resolved).toEqual([
+      { label: 'Red', value: 'red' },
+      { label: 'Blue', value: 'blue' }
+    ]);
+  });
+
+  it('should map ValueSelectionOptionClear to { label, value: null }', () => {
+    const options: ValueSelectionOption<string>[] = [
+      { label: 'No Selection', clear: true },
+      { label: 'Red', value: 'red' }
+    ];
+
+    const resolved = resolveForgeSelectionOptions(options, false);
+    expect(resolved).toEqual([
+      { label: 'No Selection', value: null },
+      { label: 'Red', value: 'red' }
+    ]);
+  });
+
+  it('should use empty string label for clear option without label', () => {
+    const options: ValueSelectionOption<string>[] = [{ clear: true }, { label: 'Red', value: 'red' }];
+
+    const resolved = resolveForgeSelectionOptions(options, false);
+    expect(resolved[0]).toEqual({ label: '', value: null });
+  });
+
+  it('should prepend a clear option when addClearOption is true and none exists', () => {
+    const options: ValueSelectionOption<string>[] = [
+      { label: 'Red', value: 'red' },
+      { label: 'Blue', value: 'blue' }
+    ];
+
+    const resolved = resolveForgeSelectionOptions(options, true);
+    expect(resolved).toHaveLength(3);
+    expect(resolved[0]).toEqual({ label: '-- Clear --', value: null });
+  });
+
+  it('should use custom clear label when addClearOption is a string', () => {
+    const options: ValueSelectionOption<string>[] = [{ label: 'Red', value: 'red' }];
+
+    const resolved = resolveForgeSelectionOptions(options, 'Reset');
+    expect(resolved[0]).toEqual({ label: 'Reset', value: null });
+  });
+
+  it('should NOT prepend a clear option when options already contain one', () => {
+    const options: ValueSelectionOption<string>[] = [
+      { label: 'None', clear: true },
+      { label: 'Red', value: 'red' }
+    ];
+
+    const resolved = resolveForgeSelectionOptions(options, true);
+    expect(resolved).toHaveLength(2);
+    expect(resolved[0]).toEqual({ label: 'None', value: null });
+  });
+
+  it('should preserve disabled state on value options', () => {
+    const options: ValueSelectionOption<string>[] = [{ label: 'Disabled', value: 'x', disabled: true }];
+
+    const resolved = resolveForgeSelectionOptions(options, false);
+    expect(resolved[0].disabled).toBe(true);
+  });
+});
+
+// MARK: forgeValueSelectionField
 describe('forgeValueSelectionField()', () => {
-  const testOptions = [
+  const testOptions: ValueSelectionOption<string>[] = [
     { label: 'Red', value: 'red' },
     { label: 'Blue', value: 'blue' },
     { label: 'Green', value: 'green' }
   ];
 
-  it('should create a select field with correct type', () => {
-    const field = forgeValueSelectionField({ key: 'color', label: 'Color', options: testOptions });
-    expect(field.type).toBe('select');
+  it('should set the field type to dbx-value-selection', () => {
+    const field = forgeValueSelectionField({ key: 'color', options: testOptions });
+    expect(field.type).toBe('dbx-value-selection');
+  });
+
+  it('should set the field key', () => {
+    const field = forgeValueSelectionField({ key: 'color', options: testOptions });
     expect(field.key).toBe('color');
+  });
+
+  it('should set the label when provided', () => {
+    const field = forgeValueSelectionField({ key: 'color', label: 'Color', options: testOptions });
     expect(field.label).toBe('Color');
   });
 
-  it('should set options on the field', () => {
-    const field = forgeValueSelectionField({ key: 'color', options: testOptions });
-    expect(field.options).toEqual(testOptions);
-  });
-
-  it('should set required when specified', () => {
-    const field = forgeValueSelectionField({ key: 'color', options: testOptions, required: true });
-    expect(field.required).toBe(true);
-  });
-
-  it('should set readonly when specified', () => {
-    const field = forgeValueSelectionField({ key: 'color', options: testOptions, readonly: true });
-    expect(field.readonly).toBe(true);
-  });
-
-  it('should set multiple flag in props', () => {
-    const field = forgeValueSelectionField({ key: 'colors', options: testOptions, multiple: true });
-    expect(field.props?.multiple).toBe(true);
-  });
-
-  it('should not include multiple in props when not specified', () => {
-    const field = forgeValueSelectionField({ key: 'color', options: testOptions });
-    expect(field.props?.multiple).toBeUndefined();
-  });
-
-  it('should map description to hint in props', () => {
-    const field = forgeValueSelectionField({ key: 'color', options: testOptions, description: 'Choose a color' });
-    expect(field.props?.hint).toBe('Choose a color');
-  });
-
-  it('should not include props when no description or multiple is set', () => {
-    const field = forgeValueSelectionField({ key: 'color', options: testOptions });
-    expect(field.props).toBeUndefined();
-  });
-
-  it('should use defaultValue when provided', () => {
-    const field = forgeValueSelectionField({ key: 'color', options: testOptions, defaultValue: 'blue' });
-    expect(field.value).toBe('blue');
-  });
-
-  it('should not include value when defaultValue is not provided', () => {
-    const field = forgeValueSelectionField({ key: 'color', options: testOptions });
-    expect(field.value).toBeUndefined();
-  });
-
-  it('should provide empty label when not specified', () => {
+  it('should default label to empty string when not provided', () => {
     const field = forgeValueSelectionField({ key: 'color', options: testOptions });
     expect(field.label).toBe('');
   });
 
+  it('should set required on the field when provided', () => {
+    const field = forgeValueSelectionField({ key: 'color', options: testOptions, required: true });
+    expect(field.required).toBe(true);
+  });
+
+  it('should set readonly on the field when provided', () => {
+    const field = forgeValueSelectionField({ key: 'color', options: testOptions, readonly: true });
+    expect(field.readonly).toBe(true);
+  });
+
+  it('should set defaultValue as field value', () => {
+    const field = forgeValueSelectionField({ key: 'color', options: testOptions, defaultValue: 'blue' });
+    expect(field.value).toBe('blue');
+  });
+
+  it('should pass static options through props', () => {
+    const field = forgeValueSelectionField({ key: 'color', options: testOptions });
+    expect(field.props?.options).toBe(testOptions);
+  });
+
+  it('should pass Observable options through props', () => {
+    const options$ = of(testOptions);
+    const field = forgeValueSelectionField({ key: 'color', options: options$ });
+    expect(field.props?.options).toBe(options$);
+  });
+
+  it('should pass multiple through props', () => {
+    const field = forgeValueSelectionField({ key: 'colors', options: testOptions, multiple: true });
+    expect(field.props?.multiple).toBe(true);
+  });
+
+  it('should pass addClearOption through props', () => {
+    const field = forgeValueSelectionField({ key: 'color', options: testOptions, addClearOption: 'Reset' });
+    expect(field.props?.addClearOption).toBe('Reset');
+  });
+
+  it('should pass description as hint in props', () => {
+    const field = forgeValueSelectionField({ key: 'color', options: testOptions, description: 'Pick a color' });
+    expect(field.props?.hint).toBe('Pick a color');
+  });
+
+  it('should pass logic through to the field definition', () => {
+    const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
+    const field = forgeValueSelectionField({ key: 'color', options: testOptions, logic });
+    expect((field as any).logic).toEqual(logic);
+  });
+
+  it('should accept options with ValueSelectionOptionClear entries', () => {
+    const optionsWithClear: ValueSelectionOption<string>[] = [
+      { label: 'No Change', clear: true },
+      { label: 'Red', value: 'red' }
+    ];
+    const field = forgeValueSelectionField({ key: 'color', options: optionsWithClear });
+    expect(field.props?.options).toBe(optionsWithClear);
+  });
+
   it('should work with numeric option values', () => {
-    const numOptions = [
+    const numOptions: ValueSelectionOption<number>[] = [
       { label: 'One', value: 1 },
       { label: 'Two', value: 2 }
     ];
     const field = forgeValueSelectionField({ key: 'num', options: numOptions, defaultValue: 1 });
     expect(field.value).toBe(1);
-    expect(field.options).toEqual(numOptions);
-  });
-
-  describe('addClearOption', () => {
-    it('should prepend a clear option with default label when true', () => {
-      const field = forgeValueSelectionField({ key: 'color', options: testOptions, addClearOption: true });
-      expect(field.options).toHaveLength(testOptions.length + 1);
-      expect(field.options[0].label).toBe('-- Clear --');
-      expect(field.options[0].value).toBeNull();
-    });
-
-    it('should prepend a clear option with custom label when string', () => {
-      const field = forgeValueSelectionField({ key: 'color', options: testOptions, addClearOption: '>> Reset <<' });
-      expect(field.options).toHaveLength(testOptions.length + 1);
-      expect(field.options[0].label).toBe('>> Reset <<');
-      expect(field.options[0].value).toBeNull();
-    });
-
-    it('should not prepend a clear option when false or omitted', () => {
-      const field = forgeValueSelectionField({ key: 'color', options: testOptions });
-      expect(field.options).toHaveLength(testOptions.length);
-    });
-
-    it('should preserve original options after the clear option', () => {
-      const field = forgeValueSelectionField({ key: 'color', options: testOptions, addClearOption: true });
-      expect(field.options.slice(1)).toEqual(testOptions);
-    });
-  });
-
-  it('should pass logic through to the field definition', () => {
-    const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
-    const field = forgeValueSelectionField({ key: 'color', options: [{ label: 'Red', value: 'red' }], logic });
-    expect((field as any).logic).toEqual(logic);
-  });
-
-  describe('observable options', () => {
-    it('should fall back to empty array when options is an Observable', () => {
-      const { of } = require('rxjs');
-      const field = forgeValueSelectionField({ key: 'color', options: of(testOptions) });
-      expect(field.options).toEqual([]);
-    });
+    expect(field.props?.options).toEqual(numOptions);
   });
 });

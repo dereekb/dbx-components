@@ -1,11 +1,11 @@
-import { type DescriptionFieldConfig, type FieldConfig, formlyField, type LabeledFieldConfig, propsAndConfigForFieldConfig } from '@dereekb/dbx-form';
+import { type DescriptionFieldConfig, type FieldConfig, formlyField, type LabeledBaseFieldConfig, propsAndConfigForFieldConfig } from '@dereekb/dbx-form';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type DbxFormCalendarDateCellScheduleRangeFieldProps } from './calendar.schedule.field.component';
 
 /**
  * @deprecated Use DbxForgeCalendarDateScheduleRangeFieldConfig instead.
  */
-export interface DateScheduleRangeFieldConfig extends Omit<LabeledFieldConfig, 'key' | 'placeholder'>, DescriptionFieldConfig, Partial<FieldConfig>, DbxFormCalendarDateCellScheduleRangeFieldProps {}
+export interface DateScheduleRangeFieldConfig extends Omit<LabeledBaseFieldConfig, 'key' | 'placeholder'>, DescriptionFieldConfig, Partial<FieldConfig>, DbxFormCalendarDateCellScheduleRangeFieldProps {}
 
 /**
  * Creates a Formly field configuration for a date schedule range picker with calendar-based selection.

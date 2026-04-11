@@ -1,23 +1,44 @@
-import type { MatSelectField, MatSelectProps } from '@ng-forge/dynamic-forms-material';
-import type { FieldOption } from '@ng-forge/dynamic-forms';
 import { filterFromPOJO } from '@dereekb/util';
-import type { Observable } from 'rxjs';
+import type { ObservableOrValue } from '@dereekb/rxjs';
+import type { FieldTypeDefinition } from '@ng-forge/dynamic-forms';
+import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { forgeField } from '../field';
 import type { DbxForgeFieldConfig } from '../field.type';
+import { FORGE_VALUE_SELECTION_FIELD_TYPE, type DbxForgeValueSelectionFieldProps, type DbxForgeValueSelectionFieldDef } from './selection.field.component';
+import type { ValueSelectionOption } from '../../../field/field.selection';
 
+// MARK: Re-exports
+export { resolveForgeSelectionOptions, type DbxForgeResolvedSelectionOption, type DbxForgeValueSelectionFieldProps, type DbxForgeValueSelectionFieldDef, FORGE_VALUE_SELECTION_FIELD_TYPE } from './selection.field.component';
+
+// MARK: Field Type Definition
+/**
+ * ng-forge FieldTypeDefinition for the value selection field.
+ *
+ * Register via `provideDynamicForm(DBX_VALUE_SELECTION_FIELD_TYPE)`.
+ */
+export const DBX_VALUE_SELECTION_FIELD_TYPE: FieldTypeDefinition<DbxForgeValueSelectionFieldDef> = {
+  name: FORGE_VALUE_SELECTION_FIELD_TYPE,
+  loadComponent: () => import('./selection.field.component').then((m) => m.DbxForgeValueSelectionFieldComponent),
+  mapper: valueFieldMapper
+};
+
+// MARK: Config
 /**
  * Configuration for a forge select (dropdown) field.
+ *
+ * Equivalent to formly's `ValueSelectionFieldConfig` — supports static and Observable options,
+ * clear options, and multiple selection.
  */
 export interface DbxForgeValueSelectionFieldConfig<T = unknown> extends DbxForgeFieldConfig {
   readonly label?: string;
   readonly description?: string;
   /**
-   * Options to select from. Accepts any object with label and value properties.
+   * Options to select from.
    *
-   * NOTE: ng-forge SelectField only supports static arrays. If an Observable is provided,
-   * it is not supported and will be ignored — pass a static array instead.
+   * Accepts a static array or an Observable that emits option arrays.
+   * Options may include `ValueSelectionOptionClear` entries with `{ clear: true }`.
    */
-  readonly options: readonly { label: string; value: T }[] | Observable<readonly { label: string; value: T }[]>;
+  readonly options: ObservableOrValue<ValueSelectionOption<T>[]>;
   /**
    * Allow selecting multiple values and return an array.
    */
@@ -35,54 +56,52 @@ export interface DbxForgeValueSelectionFieldConfig<T = unknown> extends DbxForge
   readonly addClearOption?: boolean | string;
 }
 
+// MARK: Factory
 /**
  * Creates a forge field definition for a Material select (dropdown) field.
  *
+ * The component uses `<mat-form-field>` with `[formField]` for native ng-forge value binding,
+ * proper Material rendering, and built-in logic (hidden/disabled/readonly) support.
+ *
+ * Supports static arrays, Observable option sources, and `ValueSelectionOptionClear` entries.
+ *
  * @param config - Selection field configuration
- * @returns A validated {@link MatSelectField} with type `'select'`
+ * @returns A forge field definition for the value selection component
  *
  * @example
  * ```typescript
+ * // Static options
  * const field = forgeValueSelectionField({
  *   key: 'color',
  *   label: 'Color',
  *   options: [{ label: 'Red', value: 'red' }, { label: 'Blue', value: 'blue' }]
  * });
+ *
+ * // Observable options
+ * const field = forgeValueSelectionField({
+ *   key: 'status',
+ *   label: 'Status',
+ *   options: status$.pipe(map(statuses => statuses.map(s => ({ label: s.name, value: s.id })))),
+ *   addClearOption: 'No Selection'
+ * });
  * ```
  */
-export function forgeValueSelectionField<T = unknown>(config: DbxForgeValueSelectionFieldConfig<T>): MatSelectField<T> {
+export function forgeValueSelectionField<T = unknown>(config: DbxForgeValueSelectionFieldConfig<T>): DbxForgeValueSelectionFieldDef<T> {
   const { key, label, required, readonly: isReadonly, description, options, multiple, defaultValue, addClearOption, logic } = config;
-
-  const props: Partial<MatSelectProps> = filterFromPOJO({
-    hint: description,
-    multiple
-  });
-
-  // Build options array, prepending a clear option if configured
-  let resolvedOptions: readonly { label: string; value: T }[];
-
-  if (Array.isArray(options)) {
-    resolvedOptions = options;
-  } else {
-    // Observable options are not supported by ng-forge SelectField — fall back to empty array.
-    // The formly variant supports Observable options; forge does not.
-    resolvedOptions = [];
-  }
-
-  if (addClearOption) {
-    const clearLabel = typeof addClearOption === 'string' ? addClearOption : '-- Clear --';
-    resolvedOptions = [{ label: clearLabel, value: null as unknown as T }, ...resolvedOptions];
-  }
 
   return forgeField({
     key,
-    type: 'select' as const,
+    type: FORGE_VALUE_SELECTION_FIELD_TYPE,
     label: label ?? '',
-    value: defaultValue,
+    value: defaultValue as T,
     required,
     readonly: isReadonly,
     logic,
-    options: resolvedOptions as FieldOption<T>[],
-    props: Object.keys(props).length > 0 ? props : undefined
-  } as MatSelectField<T>);
+    props: filterFromPOJO({
+      options,
+      addClearOption,
+      multiple,
+      hint: description
+    }) as DbxForgeValueSelectionFieldProps<T>
+  } as DbxForgeValueSelectionFieldDef<T>);
 }

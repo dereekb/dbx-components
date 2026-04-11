@@ -44,7 +44,7 @@ export type DisableAutocompleteForField = false;
 /**
  * Configuration for a labeled form field with label, placeholder, and autocomplete support.
  */
-export interface LabeledFieldConfig extends BaseFieldConfig {
+export interface LabeledBaseFieldConfig extends BaseFieldConfig {
   label?: string;
   placeholder?: string;
   /**
@@ -82,4 +82,4 @@ export interface DescriptionFieldConfig {
  * This is the engine-agnostic version. Formly and forge may extend this
  * with their own engine-specific properties.
  */
-export type BasePartialPotentialFieldConfig = Partial<BaseFieldConfig> & Partial<LabeledFieldConfig> & Partial<AttributesFieldConfig> & Partial<DescriptionFieldConfig>;
+export type BasePartialPotentialFieldConfig = Partial<BaseFieldConfig> & Partial<LabeledBaseFieldConfig> & Partial<AttributesFieldConfig> & Partial<DescriptionFieldConfig>;

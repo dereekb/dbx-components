@@ -1,11 +1,11 @@
-import { type DescriptionFieldConfig, type FieldConfig, formlyField, type LabeledFieldConfig, propsAndConfigForFieldConfig } from '@dereekb/dbx-form';
+import { type DescriptionFieldConfig, type FieldConfig, formlyField, type LabeledBaseFieldConfig, propsAndConfigForFieldConfig } from '@dereekb/dbx-form';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type DbxFormMapboxZoomComponentFieldProps } from './zoom.field.component';
 
 /**
  * @deprecated Use DbxForgeMapboxZoomFieldConfig instead.
  */
-export interface MapboxZoomFieldConfig extends Omit<LabeledFieldConfig, 'key'>, DescriptionFieldConfig, Partial<FieldConfig>, Pick<DbxFormMapboxZoomComponentFieldProps, 'showMap' | 'center' | 'minZoom' | 'maxZoom' | 'zoomStep'> {}
+export interface MapboxZoomFieldConfig extends Omit<LabeledBaseFieldConfig, 'key'>, DescriptionFieldConfig, Partial<FieldConfig>, Pick<DbxFormMapboxZoomComponentFieldProps, 'showMap' | 'center' | 'minZoom' | 'maxZoom' | 'zoomStep'> {}
 
 /**
  * Creates a Formly field configuration for a Mapbox-powered zoom level picker with optional map preview.
