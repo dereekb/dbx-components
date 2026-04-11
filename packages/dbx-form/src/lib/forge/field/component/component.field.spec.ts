@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { forgeComponentField } from './component.field';
+import type { LogicConfig } from '@ng-forge/dynamic-forms';
 
 class MockComponentA {}
 class MockComponentB {}
@@ -58,6 +59,12 @@ describe('forgeComponentField()', () => {
       componentField: { componentClass: MockComponentA, providers }
     });
     expect(field.props?.componentField.providers).toBe(providers);
+  });
+
+  it('should pass logic through to the field definition', () => {
+    const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
+    const field = forgeComponentField({ key: 'custom', componentField: { componentClass: class {} as any }, logic });
+    expect((field as any).logic).toEqual(logic);
   });
 
   it('should pass different component classes', () => {

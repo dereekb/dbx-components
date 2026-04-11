@@ -3,7 +3,7 @@ import { firstValueFrom, map, of, take } from 'rxjs';
 import { FormControl } from '@angular/forms';
 import { forgeSearchableTextField, forgeSearchableChipField, forgeSearchableStringChipField } from './searchable.field';
 import type { DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
-import type { FieldDef } from '@ng-forge/dynamic-forms';
+import type { FieldDef, LogicConfig } from '@ng-forge/dynamic-forms';
 
 // MARK: Shared Stubs
 const stubSearch = (_text: string) => of([{ value: 'a' }]);
@@ -123,6 +123,12 @@ describe('forgeSearchableTextField()', () => {
   it('should propagate searchLabel through inner field props when provided', () => {
     const inner = getInnerField(forgeSearchableTextField({ ...minimalConfig(), searchLabel: 'Find...' }));
     expect(inner.props?.searchLabel).toBe('Find...');
+  });
+
+  it('should pass logic through to the wrapper field definition', () => {
+    const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
+    const wrapper = forgeSearchableTextField({ ...minimalConfig(), logic });
+    expect((wrapper as any).logic).toEqual(logic);
   });
 });
 
@@ -244,6 +250,12 @@ describe('forgeSearchableChipField()', () => {
   it('should not set textInputValidator on the inner field when not provided', () => {
     const inner = getInnerField(forgeSearchableChipField(minimalConfig()));
     expect(inner.props?.textInputValidator).toBeUndefined();
+  });
+
+  it('should pass logic through to the wrapper field definition', () => {
+    const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
+    const wrapper = forgeSearchableChipField({ ...minimalConfig(), logic });
+    expect((wrapper as any).logic).toEqual(logic);
   });
 });
 

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { of } from 'rxjs';
 import { forgePickableChipField, forgePickableListField } from './pickable.field';
 import type { DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
-import type { FieldDef } from '@ng-forge/dynamic-forms';
+import type { FieldDef, LogicConfig } from '@ng-forge/dynamic-forms';
 
 // MARK: Shared Stubs
 const stubLoadValues = () => of([{ value: 'a' }, { value: 'b' }]);
@@ -133,6 +133,12 @@ describe('forgePickableChipField()', () => {
     const inner = getInnerField(wrapper);
     expect(inner.props?.filterLabel).toBeUndefined();
   });
+
+  it('should pass logic through to the wrapper field definition', () => {
+    const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
+    const wrapper = forgePickableChipField({ ...minimalConfig(), logic });
+    expect((wrapper as any).logic).toEqual(logic);
+  });
 });
 
 // MARK: forgePickableListField
@@ -246,5 +252,11 @@ describe('forgePickableListField()', () => {
     const wrapper = forgePickableListField(minimalConfig());
     const inner = getInnerField(wrapper);
     expect(inner.props?.filterLabel).toBeUndefined();
+  });
+
+  it('should pass logic through to the wrapper field definition', () => {
+    const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
+    const wrapper = forgePickableListField({ ...minimalConfig(), logic });
+    expect((wrapper as any).logic).toEqual(logic);
   });
 });

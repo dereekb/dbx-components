@@ -4,6 +4,7 @@ import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { forgeField } from '../../field';
 import { forgeFormFieldWrapper, type DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
 import { FORGE_SEARCHABLE_TEXT_FIELD_TYPE, FORGE_SEARCHABLE_CHIP_FIELD_TYPE, type DbxForgeSearchableTextFieldProps, type DbxForgeSearchableTextFieldDef, type DbxForgeSearchableChipFieldProps, type DbxForgeSearchableChipFieldDef } from './searchable.field.directive';
+import type { DbxForgeFieldConfig } from '../../field.type';
 
 // MARK: Field Type Definitions
 /**
@@ -32,12 +33,9 @@ export const DBX_SEARCHABLE_CHIP_FIELD_TYPE: FieldTypeDefinition<DbxForgeSearcha
 /**
  * Configuration for a forge searchable text field (single-value autocomplete).
  */
-export interface DbxForgeSearchableTextFieldConfig<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends DbxForgeSearchableTextFieldProps<T, M, H> {
-  readonly key: string;
+export interface DbxForgeSearchableTextFieldConfig<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends DbxForgeFieldConfig, DbxForgeSearchableTextFieldProps<T, M, H> {
   readonly label?: string;
   readonly placeholder?: string;
-  readonly required?: boolean;
-  readonly readonly?: boolean;
   readonly description?: string;
 }
 
@@ -58,26 +56,25 @@ export interface DbxForgeSearchableTextFieldConfig<T = unknown, M = unknown, H e
  * ```
  */
 export function forgeSearchableTextField<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>(config: DbxForgeSearchableTextFieldConfig<T, M, H>): DbxForgeFormFieldWrapperFieldDef<DbxForgeSearchableTextFieldDef<T, M, H>> {
-  const { key, label, placeholder, required, readonly: isReadonly, description, ...searchProps } = config;
+  const { key, label, placeholder, required, readonly: isReadonly, description, logic, ...searchProps } = config;
 
-  const innerField = forgeField(
-    filterFromPOJO({
-      key,
-      type: FORGE_SEARCHABLE_TEXT_FIELD_TYPE,
-      label: '',
-      placeholder,
-      value: undefined as unknown as T,
-      required,
-      readonly: isReadonly,
-      props: filterFromPOJO({
-        ...searchProps
-      }) as DbxForgeSearchableTextFieldProps<T, M, H>
-    }) as DbxForgeSearchableTextFieldDef<T, M, H>
-  );
+  const innerField = forgeField({
+    key,
+    type: FORGE_SEARCHABLE_TEXT_FIELD_TYPE,
+    label: '',
+    placeholder,
+    value: undefined as unknown as T,
+    required,
+    readonly: isReadonly,
+    props: filterFromPOJO({
+      ...searchProps
+    }) as DbxForgeSearchableTextFieldProps<T, M, H>
+  } as DbxForgeSearchableTextFieldDef<T, M, H>);
 
   return forgeFormFieldWrapper<DbxForgeSearchableTextFieldDef<T, M, H>>({
     label: label ?? '',
     hint: description,
+    logic,
     fields: [innerField as unknown as FieldDef<unknown>]
   });
 }
@@ -86,12 +83,9 @@ export function forgeSearchableTextField<T = unknown, M = unknown, H extends Pri
 /**
  * Configuration for a forge searchable chip field (multi-value autocomplete with chips).
  */
-export interface DbxForgeSearchableChipFieldConfig<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends DbxForgeSearchableChipFieldProps<T, M, H> {
-  readonly key: string;
+export interface DbxForgeSearchableChipFieldConfig<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends DbxForgeFieldConfig, DbxForgeSearchableChipFieldProps<T, M, H> {
   readonly label?: string;
   readonly placeholder?: string;
-  readonly required?: boolean;
-  readonly readonly?: boolean;
   readonly description?: string;
 }
 
@@ -113,26 +107,25 @@ export interface DbxForgeSearchableChipFieldConfig<T = unknown, M = unknown, H e
  * ```
  */
 export function forgeSearchableChipField<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>(config: DbxForgeSearchableChipFieldConfig<T, M, H>): DbxForgeFormFieldWrapperFieldDef<DbxForgeSearchableChipFieldDef<T, M, H>> {
-  const { key, label, placeholder, required, readonly: isReadonly, description, ...chipProps } = config;
+  const { key, label, placeholder, required, readonly: isReadonly, description, logic, ...chipProps } = config;
 
-  const innerField = forgeField(
-    filterFromPOJO({
-      key,
-      type: FORGE_SEARCHABLE_CHIP_FIELD_TYPE,
-      label: '',
-      placeholder,
-      value: undefined as unknown as T | T[],
-      required,
-      readonly: isReadonly,
-      props: filterFromPOJO({
-        ...chipProps
-      }) as DbxForgeSearchableChipFieldProps<T, M, H>
-    }) as DbxForgeSearchableChipFieldDef<T, M, H>
-  );
+  const innerField = forgeField({
+    key,
+    type: FORGE_SEARCHABLE_CHIP_FIELD_TYPE,
+    label: '',
+    placeholder,
+    value: undefined as unknown as T | T[],
+    required,
+    readonly: isReadonly,
+    props: filterFromPOJO({
+      ...chipProps
+    }) as DbxForgeSearchableChipFieldProps<T, M, H>
+  } as DbxForgeSearchableChipFieldDef<T, M, H>);
 
   return forgeFormFieldWrapper<DbxForgeSearchableChipFieldDef<T, M, H>>({
     label: label ?? '',
     hint: description,
+    logic,
     fields: [innerField as unknown as FieldDef<unknown>]
   });
 }

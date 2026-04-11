@@ -3,7 +3,7 @@ import { firstValueFrom, of } from 'rxjs';
 import { DbxDateTimeFieldTimeMode } from '../../../../formly/field/value/date/datetime.field.component';
 import { DbxDateTimeValueMode } from '../../../../formly/field/value/date/date.value';
 import { forgeDateField, forgeDateTimeField, forgeDateRangeField, forgeDateTimeRangeField, forgeFixedDateRangeField, type DbxForgeDateTimeSyncField, type DbxForgeDateTimeFieldDef } from './datetime.field';
-import type { RowField } from '@ng-forge/dynamic-forms';
+import type { RowField, LogicConfig } from '@ng-forge/dynamic-forms';
 
 describe('forgeDateField()', () => {
   it('should create a datepicker field with correct type', () => {
@@ -60,6 +60,12 @@ describe('forgeDateField()', () => {
   it('should provide empty label when not specified', () => {
     const field = forgeDateField({ key: 'startDate' });
     expect(field.label).toBe('');
+  });
+
+  it('should pass logic through to the field definition', () => {
+    const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
+    const field = forgeDateField({ key: 'startDate', logic });
+    expect((field as any).logic).toEqual(logic);
   });
 });
 
@@ -137,6 +143,12 @@ describe('forgeDateTimeField()', () => {
   it('should provide empty label when not specified', () => {
     const field = forgeDateTimeField({ key: 'datetime' });
     expect(field.label).toBe('');
+  });
+
+  it('should pass logic through to the field definition', () => {
+    const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
+    const field = forgeDateTimeField({ key: 'datetime', logic });
+    expect((field as any).logic).toEqual(logic);
   });
 });
 
@@ -412,5 +424,11 @@ describe('forgeFixedDateRangeField()', () => {
   it('should provide empty label when not specified', () => {
     const field = forgeFixedDateRangeField({ key: 'fixedRange' });
     expect(field.label).toBe('');
+  });
+
+  it('should pass logic through to the wrapper field definition', () => {
+    const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
+    const field = forgeFixedDateRangeField({ key: 'fixedRange', logic });
+    expect((field as any).logic).toEqual(logic);
   });
 });

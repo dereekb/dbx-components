@@ -31,6 +31,7 @@ import {
   forgeSearchableChipField,
   forgeSearchableStringChipField,
   forgeSearchableTextField,
+  forgeToggleField,
   DbxFormlyFieldsContextDirective,
   DbxFormSourceDirective,
   isWebsiteUrlValidator
@@ -307,6 +308,17 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
         label: 'Select With Observable Data Source',
         description: 'This select source uses static values. Note: ng-forge SelectField does not support Observable options.',
         options: VALUE_SELECTION_VALUES
+      }),
+      forgeToggleField({ key: 'showLogicDemo', label: 'Show Logic Demo Field' }),
+      forgeValueSelectionField({
+        key: 'logicDemo',
+        label: 'Conditionally Visible Selection',
+        description: 'Hidden unless the toggle above is on.',
+        options: [
+          { label: 'Option A', value: 'a' },
+          { label: 'Option B', value: 'b' }
+        ],
+        logic: [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'showLogicDemo', operator: 'notEquals', value: true } }]
       })
     ]
   };

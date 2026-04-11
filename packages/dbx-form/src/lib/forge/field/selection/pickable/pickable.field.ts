@@ -4,6 +4,7 @@ import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { forgeField } from '../../field';
 import { forgeFormFieldWrapper, type DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
 import { FORGE_PICKABLE_CHIP_FIELD_TYPE, FORGE_PICKABLE_LIST_FIELD_TYPE, type DbxForgePickableFieldProps, type DbxForgePickableChipFieldDef, type DbxForgePickableListFieldDef } from './pickable.field.directive';
+import type { DbxForgeFieldConfig } from '../../field.type';
 
 // MARK: Field Type Definitions
 /**
@@ -32,11 +33,8 @@ export const DBX_PICKABLE_LIST_FIELD_TYPE: FieldTypeDefinition<DbxForgePickableL
 /**
  * Configuration for a forge pickable chip field.
  */
-export interface DbxForgePickableChipFieldConfig<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends DbxForgePickableFieldProps<T, M, H> {
-  readonly key: string;
+export interface DbxForgePickableChipFieldConfig<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends DbxForgeFieldConfig, DbxForgePickableFieldProps<T, M, H> {
   readonly label?: string;
-  readonly required?: boolean;
-  readonly readonly?: boolean;
   readonly description?: string;
 }
 
@@ -58,25 +56,24 @@ export interface DbxForgePickableChipFieldConfig<T = unknown, M = unknown, H ext
  * ```
  */
 export function forgePickableChipField<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>(config: DbxForgePickableChipFieldConfig<T, M, H>): DbxForgeFormFieldWrapperFieldDef<DbxForgePickableChipFieldDef<T, M, H>> {
-  const { key, label, required, readonly: isReadonly, description, ...pickableProps } = config;
+  const { key, label, required, readonly: isReadonly, description, logic, ...pickableProps } = config;
 
-  const innerField = forgeField(
-    filterFromPOJO({
-      key,
-      type: FORGE_PICKABLE_CHIP_FIELD_TYPE,
-      label: '',
-      value: undefined as unknown as T | T[],
-      required,
-      readonly: isReadonly,
-      props: filterFromPOJO({
-        ...pickableProps
-      }) as DbxForgePickableFieldProps<T, M, H>
-    }) as DbxForgePickableChipFieldDef<T, M, H>
-  );
+  const innerField = forgeField({
+    key,
+    type: FORGE_PICKABLE_CHIP_FIELD_TYPE,
+    label: '',
+    value: undefined as unknown as T | T[],
+    required,
+    readonly: isReadonly,
+    props: filterFromPOJO({
+      ...pickableProps
+    }) as DbxForgePickableFieldProps<T, M, H>
+  } as DbxForgePickableChipFieldDef<T, M, H>);
 
   return forgeFormFieldWrapper<DbxForgePickableChipFieldDef<T, M, H>>({
     label: label ?? '',
     hint: description,
+    logic,
     fields: [innerField as unknown as FieldDef<unknown>]
   });
 }
@@ -85,11 +82,8 @@ export function forgePickableChipField<T = unknown, M = unknown, H extends Prima
 /**
  * Configuration for a forge pickable list field.
  */
-export interface DbxForgePickableListFieldConfig<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends DbxForgePickableFieldProps<T, M, H> {
-  readonly key: string;
+export interface DbxForgePickableListFieldConfig<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends DbxForgeFieldConfig, DbxForgePickableFieldProps<T, M, H> {
   readonly label?: string;
-  readonly required?: boolean;
-  readonly readonly?: boolean;
   readonly description?: string;
 }
 
@@ -111,25 +105,24 @@ export interface DbxForgePickableListFieldConfig<T = unknown, M = unknown, H ext
  * ```
  */
 export function forgePickableListField<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>(config: DbxForgePickableListFieldConfig<T, M, H>): DbxForgeFormFieldWrapperFieldDef<DbxForgePickableListFieldDef<T, M, H>> {
-  const { key, label, required, readonly: isReadonly, description, ...pickableProps } = config;
+  const { key, label, required, readonly: isReadonly, description, logic, ...pickableProps } = config;
 
-  const innerField = forgeField(
-    filterFromPOJO({
-      key,
-      type: FORGE_PICKABLE_LIST_FIELD_TYPE,
-      label: '',
-      value: undefined as unknown as T | T[],
-      required,
-      readonly: isReadonly,
-      props: filterFromPOJO({
-        ...pickableProps
-      }) as DbxForgePickableFieldProps<T, M, H>
-    }) as DbxForgePickableListFieldDef<T, M, H>
-  );
+  const innerField = forgeField({
+    key,
+    type: FORGE_PICKABLE_LIST_FIELD_TYPE,
+    label: '',
+    value: undefined as unknown as T | T[],
+    required,
+    readonly: isReadonly,
+    props: filterFromPOJO({
+      ...pickableProps
+    }) as DbxForgePickableFieldProps<T, M, H>
+  } as DbxForgePickableListFieldDef<T, M, H>);
 
   return forgeFormFieldWrapper<DbxForgePickableListFieldDef<T, M, H>>({
     label: label ?? '',
     hint: description,
+    logic,
     fields: [innerField as unknown as FieldDef<unknown>]
   });
 }

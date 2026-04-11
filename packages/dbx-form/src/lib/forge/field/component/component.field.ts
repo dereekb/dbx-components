@@ -4,6 +4,7 @@ import type { FieldTypeDefinition } from '@ng-forge/dynamic-forms';
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { forgeField } from '../field';
 import { FORGE_COMPONENT_FIELD_TYPE, type DbxForgeComponentFieldProps, type DbxForgeComponentFieldDef } from './component.field.component';
+import type { DbxForgeFieldConfig } from '../field.type';
 
 // MARK: Field Type Definition
 /**
@@ -21,7 +22,7 @@ export const DBX_COMPONENT_FIELD_TYPE: FieldTypeDefinition<DbxForgeComponentFiel
 /**
  * Configuration for a forge field that renders a custom Angular component.
  */
-export interface DbxForgeComponentFieldConfig<T = unknown> {
+export interface DbxForgeComponentFieldConfig<T = unknown> extends Omit<DbxForgeFieldConfig, 'key'> {
   /**
    * Key for the field. Optional for display-only components.
    */
@@ -71,18 +72,17 @@ let _componentFieldCounter = 0;
  * ```
  */
 export function forgeComponentField<T = unknown>(config: DbxForgeComponentFieldConfig<T>): DbxForgeComponentFieldDef<T> {
-  const { key, label, componentField, allowDisabledEffects } = config;
+  const { key, label, componentField, allowDisabledEffects, logic } = config;
 
-  return forgeField(
-    filterFromPOJO({
-      key: key || `_component_${++_componentFieldCounter}`,
-      type: FORGE_COMPONENT_FIELD_TYPE,
-      label: label ?? '',
-      value: undefined as unknown,
-      props: filterFromPOJO({
-        componentField,
-        allowDisabledEffects
-      }) as DbxForgeComponentFieldProps<T>
-    }) as DbxForgeComponentFieldDef<T>
-  );
+  return forgeField({
+    key: key || `_component_${++_componentFieldCounter}`,
+    type: FORGE_COMPONENT_FIELD_TYPE,
+    label: label ?? '',
+    value: undefined as unknown,
+    logic,
+    props: filterFromPOJO({
+      componentField,
+      allowDisabledEffects
+    }) as DbxForgeComponentFieldProps<T>
+  } as DbxForgeComponentFieldDef<T>);
 }

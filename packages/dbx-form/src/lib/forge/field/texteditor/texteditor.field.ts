@@ -4,6 +4,7 @@ import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { forgeField } from '../field';
 import { FORGE_TEXT_EDITOR_FIELD_TYPE, type DbxForgeTextEditorFieldProps, type DbxForgeTextEditorFieldDef } from './texteditor.field.component';
 import type { DbxForgeTextFieldLengthConfig } from '../value/text/text.field';
+import type { DbxForgeFieldConfig } from '../field.type';
 
 // MARK: Field Type Definition
 /**
@@ -21,11 +22,8 @@ export const DBX_TEXT_EDITOR_FIELD_TYPE: FieldTypeDefinition<DbxForgeTextEditorF
 /**
  * Configuration for a forge rich text editor field.
  */
-export interface DbxForgeTextEditorFieldConfig extends DbxForgeTextFieldLengthConfig {
-  readonly key: string;
+export interface DbxForgeTextEditorFieldConfig extends DbxForgeFieldConfig, DbxForgeTextFieldLengthConfig {
   readonly label?: string;
-  readonly required?: boolean;
-  readonly readonly?: boolean;
   readonly description?: string;
 }
 
@@ -44,23 +42,22 @@ export interface DbxForgeTextEditorFieldConfig extends DbxForgeTextFieldLengthCo
  * ```
  */
 export function forgeTextEditorField(config: DbxForgeTextEditorFieldConfig): DbxForgeTextEditorFieldDef {
-  const { key, label, required, readonly: isReadonly, description, minLength, maxLength } = config;
+  const { key, label, required, readonly: isReadonly, description, minLength, maxLength, logic } = config;
 
-  return forgeField(
-    filterFromPOJO({
-      key,
-      type: FORGE_TEXT_EDITOR_FIELD_TYPE,
-      label: label ?? '',
-      value: '' as string,
-      required,
-      readonly: isReadonly,
+  return forgeField({
+    key,
+    type: FORGE_TEXT_EDITOR_FIELD_TYPE,
+    label: label ?? '',
+    value: '' as string,
+    required,
+    readonly: isReadonly,
+    logic,
+    minLength,
+    maxLength,
+    props: filterFromPOJO({
       minLength,
       maxLength,
-      props: filterFromPOJO({
-        minLength,
-        maxLength,
-        hint: description
-      }) as DbxForgeTextEditorFieldProps
-    }) as DbxForgeTextEditorFieldDef
-  );
+      hint: description
+    }) as DbxForgeTextEditorFieldProps
+  } as DbxForgeTextEditorFieldDef);
 }

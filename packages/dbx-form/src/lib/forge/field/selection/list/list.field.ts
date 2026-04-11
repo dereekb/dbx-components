@@ -5,6 +5,7 @@ import { type AbstractDbxSelectionListWrapperDirective } from '@dereekb/dbx-web'
 import { forgeField } from '../../field';
 import { forgeFormFieldWrapper, type DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
 import { FORGE_LIST_SELECTION_FIELD_TYPE, type DbxForgeListSelectionFieldProps, type DbxForgeListSelectionFieldDef } from './list.field.component';
+import type { DbxForgeFieldConfig } from '../../field.type';
 
 // MARK: Field Type Definition
 /**
@@ -22,11 +23,8 @@ export const DBX_LIST_SELECTION_FIELD_TYPE: FieldTypeDefinition<DbxForgeListSele
 /**
  * Configuration for a forge list selection field.
  */
-export interface DbxForgeListSelectionFieldConfig<T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey> extends DbxForgeListSelectionFieldProps<T, C, K> {
-  readonly key: string;
+export interface DbxForgeListSelectionFieldConfig<T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey> extends DbxForgeFieldConfig, DbxForgeListSelectionFieldProps<T, C, K> {
   readonly label?: string;
-  readonly required?: boolean;
-  readonly readonly?: boolean;
   readonly description?: string;
   /**
    * Whether to wrap this field in the Material-style outlined form-field wrapper.
@@ -69,23 +67,22 @@ export interface DbxForgeListSelectionFieldConfig<T = unknown, C extends Abstrac
  * ```
  */
 export function forgeListSelectionField<T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey>(config: DbxForgeListSelectionFieldConfig<T, C, K>): DbxForgeFormFieldWrapperFieldDef<DbxForgeListSelectionFieldDef<T, C, K>> | DbxForgeListSelectionFieldDef<T, C, K> {
-  const { key, label, required, readonly: isReadonly, description, wrapInFormField = true, ...listProps } = config;
+  const { key, label, required, readonly: isReadonly, description, wrapInFormField = true, logic, ...listProps } = config;
   const useWrapper = wrapInFormField !== false;
 
-  const innerField = forgeField(
-    filterFromPOJO({
-      key,
-      type: FORGE_LIST_SELECTION_FIELD_TYPE,
-      label: useWrapper ? '' : (label ?? ''),
-      value: undefined as unknown as K[],
-      required,
-      readonly: isReadonly,
-      props: filterFromPOJO({
-        ...listProps,
-        hint: useWrapper ? listProps.hint : (description ?? listProps.hint)
-      }) as DbxForgeListSelectionFieldProps<T, C, K>
-    }) as DbxForgeListSelectionFieldDef<T, C, K>
-  );
+  const innerField = forgeField({
+    key,
+    type: FORGE_LIST_SELECTION_FIELD_TYPE,
+    label: useWrapper ? '' : (label ?? ''),
+    value: undefined as unknown as K[],
+    required,
+    readonly: isReadonly,
+    logic: useWrapper ? undefined : logic,
+    props: filterFromPOJO({
+      ...listProps,
+      hint: useWrapper ? listProps.hint : (description ?? listProps.hint)
+    }) as DbxForgeListSelectionFieldProps<T, C, K>
+  } as DbxForgeListSelectionFieldDef<T, C, K>);
 
   if (!useWrapper) {
     return innerField;
@@ -94,6 +91,7 @@ export function forgeListSelectionField<T = unknown, C extends AbstractDbxSelect
   return forgeFormFieldWrapper<DbxForgeListSelectionFieldDef<T, C, K>>({
     label: label ?? '',
     hint: description,
+    logic,
     fields: [innerField as unknown as FieldDef<unknown>]
   });
 }

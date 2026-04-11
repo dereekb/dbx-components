@@ -5,7 +5,7 @@ import { type AbstractDbxSelectionListWrapperDirective } from '@dereekb/dbx-web'
 import { successResult } from '@dereekb/rxjs';
 import type { Type } from '@angular/core';
 import type { DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
-import type { FieldDef } from '@ng-forge/dynamic-forms';
+import type { FieldDef, LogicConfig } from '@ng-forge/dynamic-forms';
 
 // MARK: Helpers
 /**
@@ -33,6 +33,12 @@ describe('forgeListSelectionField()', () => {
       state$: stubState$
     } as Parameters<typeof forgeListSelectionField>[0];
   }
+
+  it('should pass logic through to the wrapper field definition', () => {
+    const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
+    const field = forgeListSelectionField({ ...minimalConfig(), logic });
+    expect((field as any).logic).toEqual(logic);
+  });
 
   describe('with wrapper (default)', () => {
     it('should return a wrapper with the correct type', () => {

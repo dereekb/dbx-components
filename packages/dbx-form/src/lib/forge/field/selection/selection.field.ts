@@ -3,15 +3,13 @@ import type { FieldOption } from '@ng-forge/dynamic-forms';
 import { filterFromPOJO } from '@dereekb/util';
 import type { Observable } from 'rxjs';
 import { forgeField } from '../field';
+import type { DbxForgeFieldConfig } from '../field.type';
 
 /**
  * Configuration for a forge select (dropdown) field.
  */
-export interface DbxForgeValueSelectionFieldConfig<T = unknown> {
-  readonly key: string;
+export interface DbxForgeValueSelectionFieldConfig<T = unknown> extends DbxForgeFieldConfig {
   readonly label?: string;
-  readonly required?: boolean;
-  readonly readonly?: boolean;
   readonly description?: string;
   /**
    * Options to select from. Accepts any object with label and value properties.
@@ -53,7 +51,7 @@ export interface DbxForgeValueSelectionFieldConfig<T = unknown> {
  * ```
  */
 export function forgeValueSelectionField<T = unknown>(config: DbxForgeValueSelectionFieldConfig<T>): MatSelectField<T> {
-  const { key, label, required, readonly: isReadonly, description, options, multiple, defaultValue, addClearOption } = config;
+  const { key, label, required, readonly: isReadonly, description, options, multiple, defaultValue, addClearOption, logic } = config;
 
   const props: Partial<MatSelectProps> = filterFromPOJO({
     hint: description,
@@ -76,16 +74,15 @@ export function forgeValueSelectionField<T = unknown>(config: DbxForgeValueSelec
     resolvedOptions = [{ label: clearLabel, value: null as unknown as T }, ...resolvedOptions];
   }
 
-  return forgeField(
-    filterFromPOJO({
-      key,
-      type: 'select' as const,
-      label: label ?? '',
-      value: defaultValue,
-      required,
-      readonly: isReadonly,
-      options: resolvedOptions as FieldOption<T>[],
-      props: Object.keys(props).length > 0 ? props : undefined
-    }) as MatSelectField<T>
-  );
+  return forgeField({
+    key,
+    type: 'select' as const,
+    label: label ?? '',
+    value: defaultValue,
+    required,
+    readonly: isReadonly,
+    logic,
+    options: resolvedOptions as FieldOption<T>[],
+    props: Object.keys(props).length > 0 ? props : undefined
+  } as MatSelectField<T>);
 }

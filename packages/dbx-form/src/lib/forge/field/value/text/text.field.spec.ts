@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import type { LogicConfig } from '@ng-forge/dynamic-forms';
 import { forgeTextField, forgeTextAreaField } from './text.field';
 
 describe('forgeTextField()', () => {
@@ -106,6 +107,12 @@ describe('forgeTextField()', () => {
       expect(field.validationMessages?.pattern).toBeDefined();
     });
   });
+
+  it('should pass logic through to the field definition', () => {
+    const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
+    const field = forgeTextField({ key: 'name', logic });
+    expect((field as any).logic).toEqual(logic);
+  });
 });
 
 describe('forgeTextAreaField()', () => {
@@ -192,5 +199,11 @@ describe('forgeTextAreaField()', () => {
       const field = forgeTextAreaField({ key: 'bio', maxLength: 500 });
       expect(field.validationMessages?.maxLength).toBeDefined();
     });
+  });
+
+  it('should pass logic through to the field definition', () => {
+    const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
+    const field = forgeTextAreaField({ key: 'bio', logic });
+    expect((field as any).logic).toEqual(logic);
   });
 });

@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import type { LogicConfig } from '@ng-forge/dynamic-forms';
 import { forgeToggleField, forgeCheckboxField } from './boolean.field';
 import { FORGE_STYLED_BOX_CLASS } from '../../field';
 
@@ -49,6 +50,12 @@ describe('forgeToggleField()', () => {
     const field = forgeToggleField({ key: 'active', styledBox: false });
     expect(field.className).toBeUndefined();
   });
+
+  it('should pass logic through to the field definition', () => {
+    const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
+    const field = forgeToggleField({ key: 'active', logic });
+    expect((field as any).logic).toEqual(logic);
+  });
 });
 
 describe('forgeCheckboxField()', () => {
@@ -97,5 +104,11 @@ describe('forgeCheckboxField()', () => {
   it('should not apply styled box className when styledBox is false', () => {
     const field = forgeCheckboxField({ key: 'agree', styledBox: false });
     expect(field.className).toBeUndefined();
+  });
+
+  it('should pass logic through to the field definition', () => {
+    const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
+    const field = forgeCheckboxField({ key: 'agree', logic });
+    expect((field as any).logic).toEqual(logic);
   });
 });

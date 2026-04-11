@@ -1,5 +1,5 @@
 import type { FieldDef, FieldMeta } from '@ng-forge/dynamic-forms';
-import type { Maybe } from '@dereekb/util';
+import { filterFromPOJO, type Maybe } from '@dereekb/util';
 import type { DisableAutocompleteForField } from '../../field';
 
 /**
@@ -79,10 +79,12 @@ export function mergeForgeFieldMeta(baseMeta: Maybe<FieldMeta>, autocomplete: Ma
  * ```
  */
 export function forgeField<T extends FieldDef<unknown>>(fieldDef: T): T {
-  if (!fieldDef.key) {
-    console.error(fieldDef);
+  const filtered = filterFromPOJO(fieldDef) as T;
+
+  if (!filtered.key) {
+    console.error(filtered);
     throw new Error(`Field had a null key.`);
   }
 
-  return fieldDef;
+  return filtered;
 }

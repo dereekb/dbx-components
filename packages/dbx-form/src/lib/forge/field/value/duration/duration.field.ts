@@ -3,6 +3,7 @@ import { type TimeUnit, filterFromPOJO } from '@dereekb/util';
 import type { TimeDurationFieldValueMode } from '../../../../formly/field/value/duration/duration.field';
 import type { DbxForgeTimeDurationFieldComponentProps } from './duration.field.component';
 import { forgeField } from '../../field';
+import type { DbxForgeFieldConfig } from '../../field.type';
 
 /**
  * The custom forge field type name for the time duration field.
@@ -20,11 +21,8 @@ export type DbxForgeTimeDurationFieldDef = BaseValueField<DbxForgeTimeDurationFi
 /**
  * Configuration for a forge time duration input field.
  */
-export interface DbxForgeTimeDurationFieldConfig {
-  readonly key: string;
+export interface DbxForgeTimeDurationFieldConfig extends DbxForgeFieldConfig {
   readonly label?: string;
-  readonly required?: boolean;
-  readonly readonly?: boolean;
   readonly description?: string;
   /**
    * The unit of the output value.
@@ -83,7 +81,7 @@ export interface DbxForgeTimeDurationFieldConfig {
  * ```
  */
 export function forgeTimeDurationField(config: DbxForgeTimeDurationFieldConfig): DbxForgeTimeDurationFieldDef {
-  const { key, label, required, readonly: isReadonly, description, outputUnit, valueMode, allowedUnits, pickerUnits, min, max, carryOver } = config;
+  const { key, label, required, readonly: isReadonly, description, logic, outputUnit, valueMode, allowedUnits, pickerUnits, min, max, carryOver } = config;
 
   const props: DbxForgeTimeDurationFieldComponentProps = filterFromPOJO({
     outputUnit,
@@ -96,15 +94,14 @@ export function forgeTimeDurationField(config: DbxForgeTimeDurationFieldConfig):
     hint: description
   });
 
-  return forgeField(
-    filterFromPOJO({
-      key,
-      type: FORGE_TIMEDURATION_FIELD_TYPE,
-      label: label ?? '',
-      value: undefined as unknown,
-      required,
-      readonly: isReadonly,
-      props: Object.keys(props).length > 0 ? props : undefined
-    }) as DbxForgeTimeDurationFieldDef
-  );
+  return forgeField({
+    key,
+    type: FORGE_TIMEDURATION_FIELD_TYPE,
+    label: label ?? '',
+    value: undefined as unknown,
+    required,
+    readonly: isReadonly,
+    logic,
+    props: Object.keys(props).length > 0 ? props : undefined
+  } as DbxForgeTimeDurationFieldDef);
 }

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { forgeChecklistField } from './checklist.field';
+import type { LogicConfig } from '@ng-forge/dynamic-forms';
 
 describe('forgeChecklistField()', () => {
   const testOptions = [
@@ -58,6 +59,12 @@ describe('forgeChecklistField()', () => {
   it('should provide empty label when not specified', () => {
     const field = forgeChecklistField({ key: 'tags', options: testOptions });
     expect(field.label).toBe('');
+  });
+
+  it('should pass logic through to the field definition', () => {
+    const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
+    const field = forgeChecklistField({ key: 'tags', options: [{ label: 'A', value: 'a' }], logic });
+    expect((field as any).logic).toEqual(logic);
   });
 
   it('should work with numeric option values', () => {

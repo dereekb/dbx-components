@@ -130,20 +130,18 @@ export function forgeDbxSectionFieldWrapper(config: DbxForgeSectionFieldConfig):
     hintInline
   });
 
-  return forgeField(
-    filterFromPOJO({
-      key: key ?? `_section_${_forgeDbxSectionFieldWrapperCounter++}`,
-      type: FORGE_SECTION_FIELD_TYPE_NAME,
-      label: '',
-      value: {} as Record<string, unknown>,
-      props: filterFromPOJO({
-        headerConfig,
-        elevate,
-        subsection,
-        fields
-      }) as DbxForgeSectionFieldProps
-    }) as DbxForgeSectionFieldDef
-  );
+  return forgeField({
+    key: key ?? `_section_${_forgeDbxSectionFieldWrapperCounter++}`,
+    type: FORGE_SECTION_FIELD_TYPE_NAME,
+    label: '',
+    value: {} as Record<string, unknown>,
+    props: filterFromPOJO({
+      headerConfig,
+      elevate,
+      subsection,
+      fields
+    }) as DbxForgeSectionFieldProps
+  } as DbxForgeSectionFieldDef);
 }
 
 /**

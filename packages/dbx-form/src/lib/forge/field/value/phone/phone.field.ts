@@ -2,6 +2,7 @@ import type { FieldDef, BaseValueField } from '@ng-forge/dynamic-forms';
 import { filterFromPOJO } from '@dereekb/util';
 import { forgeField } from '../../field';
 import { forgeRow } from '../../wrapper/wrapper';
+import type { DbxForgeFieldConfig } from '../../field.type';
 import { forgeDbxSectionFieldWrapper } from '../../wrapper/section/section.field';
 import { forgeTextField } from '../text/text.field';
 import { forgeArrayField, type DbxForgeArrayTemplateField, type DbxForgeArrayFieldDef } from '../array/array.field';
@@ -31,11 +32,8 @@ export type DbxForgePhoneFieldDef = BaseValueField<DbxForgePhoneFieldProps, stri
  */
 export type DbxForgePhoneFieldAutocomplete = 'off' | 'tel' | false;
 
-export interface DbxForgePhoneFieldConfig {
-  readonly key: string;
+export interface DbxForgePhoneFieldConfig extends DbxForgeFieldConfig {
   readonly label?: string;
-  readonly required?: boolean;
-  readonly readonly?: boolean;
   readonly description?: string;
   /**
    * Default value for the phone field. Defaults to empty string.
@@ -80,7 +78,7 @@ export interface DbxForgePhoneFieldConfig {
  * ```
  */
 export function forgePhoneField(config: DbxForgePhoneFieldConfig): DbxForgePhoneFieldDef {
-  const { key, label = 'Phone Number', required, readonly: isReadonly, description, defaultValue = '', preferredCountries, onlyCountries, enableSearch, allowExtension, autocomplete } = config;
+  const { key, label = 'Phone Number', required, readonly: isReadonly, description, logic, defaultValue = '', preferredCountries, onlyCountries, enableSearch, allowExtension, autocomplete } = config;
 
   const props: Partial<DbxForgePhoneFieldProps> = filterFromPOJO({
     hint: description,
@@ -91,17 +89,16 @@ export function forgePhoneField(config: DbxForgePhoneFieldConfig): DbxForgePhone
     autocomplete: autocomplete === false ? 'off' : autocomplete
   });
 
-  return forgeField(
-    filterFromPOJO({
-      key,
-      type: FORGE_PHONE_FIELD_TYPE,
-      label,
-      value: defaultValue,
-      required,
-      readonly: isReadonly,
-      props: Object.keys(props).length > 0 ? props : undefined
-    }) as DbxForgePhoneFieldDef
-  );
+  return forgeField({
+    key,
+    type: FORGE_PHONE_FIELD_TYPE,
+    label,
+    value: defaultValue,
+    required,
+    readonly: isReadonly,
+    logic,
+    props: Object.keys(props).length > 0 ? props : undefined
+  } as DbxForgePhoneFieldDef);
 }
 
 // MARK: Wrapped Phone And Label Field

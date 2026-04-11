@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { forgeTextEditorField } from './texteditor.field';
+import type { LogicConfig } from '@ng-forge/dynamic-forms';
 
 // MARK: forgeTextEditorField
 describe('forgeTextEditorField()', () => {
@@ -61,5 +62,11 @@ describe('forgeTextEditorField()', () => {
   it('should set maxLength on the field', () => {
     const field = forgeTextEditorField({ key: 'bio', maxLength: 2000 });
     expect(field.maxLength).toBe(2000);
+  });
+
+  it('should pass logic through to the field definition', () => {
+    const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
+    const field = forgeTextEditorField({ key: 'bio', logic });
+    expect((field as any).logic).toEqual(logic);
   });
 });

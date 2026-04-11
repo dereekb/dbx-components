@@ -2,6 +2,7 @@ import type { CustomValidatorConfig, FieldDef, FieldMeta, ValidationMessages } f
 import type { MatInputField, MatInputProps, MatSliderField, MatSliderProps } from '@ng-forge/dynamic-forms-material';
 import { filterFromPOJO, DOLLAR_AMOUNT_PRECISION, type TransformNumberFunctionConfigRef } from '@dereekb/util';
 import { forgeField, mergeForgeFieldMeta, type DbxForgeFieldAutocompleteConfig } from '../../field';
+import type { DbxForgeLabeledFieldConfig } from '../../field.type';
 import { forgeFormFieldWrapper, type DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
 import { forgeDefaultValidationMessages } from '../../../validation';
 
@@ -33,13 +34,7 @@ export interface DbxForgeNumberFieldNumberConfig {
  *
  * Combines labeling, numeric constraints (min/max/step), and number transformation.
  */
-export interface DbxForgeNumberFieldConfig extends DbxForgeNumberFieldNumberConfig, Partial<TransformNumberFunctionConfigRef> {
-  readonly key: string;
-  readonly label?: string;
-  readonly placeholder?: string;
-  readonly required?: boolean;
-  readonly readonly?: boolean;
-  readonly description?: string;
+export interface DbxForgeNumberFieldConfig extends DbxForgeLabeledFieldConfig, DbxForgeNumberFieldNumberConfig, Partial<TransformNumberFunctionConfigRef> {
   readonly defaultValue?: number;
   /**
    * Sets the autocomplete attribute on the input. Pass `false` to disable browser autofill.
@@ -62,7 +57,7 @@ export interface DbxForgeNumberFieldConfig extends DbxForgeNumberFieldNumberConf
  * ```
  */
 export function forgeNumberField(config: DbxForgeNumberFieldConfig): MatInputField {
-  const { key, label, placeholder, required, readonly: isReadonly, description, min, max, step, enforceStep, defaultValue, autocomplete } = config;
+  const { key, label, placeholder, required, readonly: isReadonly, description, min, max, step, enforceStep, defaultValue, autocomplete, logic } = config;
 
   const props: Partial<MatInputProps> = filterFromPOJO({
     type: 'number' as const,
@@ -92,23 +87,22 @@ export function forgeNumberField(config: DbxForgeNumberFieldConfig): MatInputFie
     validationMessages[FORGE_IS_DIVISIBLE_BY_VALIDATION_KEY] = `Number must be divisible by ${step}.`;
   }
 
-  return forgeField(
-    filterFromPOJO({
-      key,
-      type: 'input' as const,
-      label: label ?? '',
-      placeholder,
-      value: defaultValue,
-      required,
-      readonly: isReadonly,
-      min,
-      max,
-      validators,
-      validationMessages,
-      meta,
-      props: Object.keys(props).length > 0 ? props : undefined
-    }) as MatInputField
-  );
+  return forgeField({
+    key,
+    type: 'input' as const,
+    label: label ?? '',
+    placeholder,
+    value: defaultValue,
+    required,
+    readonly: isReadonly,
+    min,
+    max,
+    logic,
+    validators,
+    validationMessages,
+    meta,
+    props: Object.keys(props).length > 0 ? props : undefined
+  } as MatInputField);
 }
 
 // MARK: Number Slider Field
@@ -150,7 +144,7 @@ export interface DbxForgeNumberSliderFieldConfig extends DbxForgeNumberFieldConf
  * ```
  */
 export function forgeNumberSliderField(config: DbxForgeNumberSliderFieldConfig): DbxForgeFormFieldWrapperFieldDef<MatSliderField> {
-  const { key, label, required, readonly: isReadonly, description, min, max, step, defaultValue, thumbLabel: inputThumbLabel, tickInterval: inputTickInterval } = config;
+  const { key, label, required, readonly: isReadonly, description, min, max, step, defaultValue, thumbLabel: inputThumbLabel, tickInterval: inputTickInterval, logic } = config;
 
   let tickIntervalFromSteps: number | undefined;
 
@@ -170,23 +164,22 @@ export function forgeNumberSliderField(config: DbxForgeNumberSliderFieldConfig):
     tickInterval
   });
 
-  const sliderField: MatSliderField = forgeField(
-    filterFromPOJO({
-      key,
-      type: 'slider' as const,
-      label: '',
-      value: defaultValue,
-      required,
-      readonly: isReadonly,
-      min,
-      max,
-      props: Object.keys(sliderProps).length > 0 ? sliderProps : undefined
-    }) as MatSliderField
-  );
+  const sliderField: MatSliderField = forgeField({
+    key,
+    type: 'slider' as const,
+    label: '',
+    value: defaultValue,
+    required,
+    readonly: isReadonly,
+    min,
+    max,
+    props: Object.keys(sliderProps).length > 0 ? sliderProps : undefined
+  } as MatSliderField);
 
   return forgeFormFieldWrapper<MatSliderField>({
     label: label ?? '',
     hint: description,
+    logic,
     fields: [sliderField as unknown as FieldDef<unknown>]
   });
 }

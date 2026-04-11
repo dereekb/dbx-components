@@ -3,6 +3,7 @@ import type { ValidationMessages } from '@ng-forge/dynamic-forms';
 import { filterFromPOJO, transformStringFunction, mapMaybeFunction, type TransformStringFunctionConfig, type TransformStringFunctionConfigRef } from '@dereekb/util';
 import type { FieldValueParser, FieldConfigParsersRef } from '../../../../field';
 import { forgeField, forgeAutocompleteFieldMeta, type DbxForgeFieldAutocompleteConfig } from '../../field';
+import type { DbxForgeLabeledFieldConfig } from '../../field.type';
 import { forgeDefaultValidationMessages } from '../../../validation';
 
 // MARK: Text Field
@@ -32,13 +33,7 @@ export type DbxForgeTextFieldInputType = 'text' | 'password' | 'email';
  * Combines labeling, validation (pattern, length), and string transformation
  * into one config object.
  */
-export interface DbxForgeTextFieldConfig extends DbxForgeTextFieldPatternConfig, DbxForgeTextFieldLengthConfig, Partial<TransformStringFunctionConfigRef> {
-  readonly key: string;
-  readonly label?: string;
-  readonly placeholder?: string;
-  readonly required?: boolean;
-  readonly readonly?: boolean;
-  readonly description?: string;
+export interface DbxForgeTextFieldConfig extends DbxForgeLabeledFieldConfig, DbxForgeTextFieldPatternConfig, DbxForgeTextFieldLengthConfig, Partial<TransformStringFunctionConfigRef> {
   /**
    * HTML input type. Defaults to `'text'`.
    */
@@ -95,7 +90,7 @@ export function forgeTextFieldTransformParser(config: Partial<FieldConfigParsers
  * ```
  */
 export function forgeTextField(config: DbxForgeTextFieldConfig): MatInputField {
-  const { key, label, placeholder, required, readonly: isReadonly, description, minLength, maxLength, pattern, inputType = 'text', defaultValue = '', autocomplete } = config;
+  const { key, label, placeholder, required, readonly: isReadonly, description, minLength, maxLength, pattern, inputType = 'text', defaultValue = '', autocomplete, logic } = config;
 
   const props: Partial<MatInputProps> = filterFromPOJO({
     type: inputType,
@@ -105,36 +100,29 @@ export function forgeTextField(config: DbxForgeTextFieldConfig): MatInputField {
   const validationMessages: ValidationMessages = forgeDefaultValidationMessages();
   const meta = forgeAutocompleteFieldMeta(autocomplete);
 
-  return forgeField(
-    filterFromPOJO({
-      key,
-      type: 'input' as const,
-      label: label ?? '',
-      placeholder,
-      value: defaultValue,
-      required,
-      readonly: isReadonly,
-      minLength,
-      maxLength,
-      pattern: pattern != null ? (typeof pattern === 'string' ? pattern : pattern.source) : undefined,
-      validationMessages,
-      meta,
-      props: Object.keys(props).length > 0 ? props : undefined
-    }) as MatInputField
-  );
+  return forgeField({
+    key,
+    type: 'input' as const,
+    label: label ?? '',
+    placeholder,
+    value: defaultValue,
+    required,
+    readonly: isReadonly,
+    minLength,
+    maxLength,
+    pattern: pattern != null ? (typeof pattern === 'string' ? pattern : pattern.source) : undefined,
+    validationMessages,
+    meta,
+    logic,
+    props: Object.keys(props).length > 0 ? props : undefined
+  } as MatInputField);
 }
 
 // MARK: TextArea Field
 /**
  * Configuration for a multi-line textarea input field in forge.
  */
-export interface DbxForgeTextAreaFieldConfig extends DbxForgeTextFieldPatternConfig, DbxForgeTextFieldLengthConfig, Partial<TransformStringFunctionConfigRef> {
-  readonly key: string;
-  readonly label?: string;
-  readonly placeholder?: string;
-  readonly required?: boolean;
-  readonly readonly?: boolean;
-  readonly description?: string;
+export interface DbxForgeTextAreaFieldConfig extends DbxForgeLabeledFieldConfig, DbxForgeTextFieldPatternConfig, DbxForgeTextFieldLengthConfig, Partial<TransformStringFunctionConfigRef> {
   /**
    * Number of visible text rows. Defaults to 3.
    */
@@ -158,7 +146,7 @@ export interface DbxForgeTextAreaFieldConfig extends DbxForgeTextFieldPatternCon
  * ```
  */
 export function forgeTextAreaField(config: DbxForgeTextAreaFieldConfig): MatTextareaField {
-  const { key, label, placeholder, required, readonly: isReadonly, description, rows = 3, minLength, maxLength, pattern, defaultValue = '', autocomplete } = config;
+  const { key, label, placeholder, required, readonly: isReadonly, description, rows = 3, minLength, maxLength, pattern, defaultValue = '', autocomplete, logic } = config;
 
   const props: Partial<MatTextareaProps> = filterFromPOJO({
     hint: description,
@@ -168,21 +156,20 @@ export function forgeTextAreaField(config: DbxForgeTextAreaFieldConfig): MatText
   const validationMessages: ValidationMessages = forgeDefaultValidationMessages();
   const meta = forgeAutocompleteFieldMeta(autocomplete);
 
-  return forgeField(
-    filterFromPOJO({
-      key,
-      type: 'textarea' as const,
-      label: label ?? '',
-      placeholder,
-      value: defaultValue,
-      required,
-      readonly: isReadonly,
-      minLength,
-      maxLength,
-      pattern: pattern != null ? (typeof pattern === 'string' ? pattern : pattern.source) : undefined,
-      validationMessages,
-      meta,
-      props: Object.keys(props).length > 0 ? props : undefined
-    }) as MatTextareaField
-  );
+  return forgeField({
+    key,
+    type: 'textarea' as const,
+    label: label ?? '',
+    placeholder,
+    value: defaultValue,
+    required,
+    readonly: isReadonly,
+    minLength,
+    maxLength,
+    pattern: pattern != null ? (typeof pattern === 'string' ? pattern : pattern.source) : undefined,
+    validationMessages,
+    meta,
+    logic,
+    props: Object.keys(props).length > 0 ? props : undefined
+  } as MatTextareaField);
 }

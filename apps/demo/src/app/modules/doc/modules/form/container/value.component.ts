@@ -125,7 +125,14 @@ export class DocFormValueComponent {
       forgeStateField(),
       forgeStateField({ label: 'State With Code Input', key: 'stateAsCode', asCode: true }),
       forgeCountryField(),
-      forgeZipCodeField()
+      forgeZipCodeField(),
+      forgeToggleField({ key: 'showLogicDemo', label: 'Show Logic Demo Field' }),
+      forgeTextField({
+        key: 'logicDemo',
+        label: 'Conditionally Visible Text',
+        description: 'Hidden unless the toggle above is on. Demonstrates logic support on forge fields.',
+        logic: [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'showLogicDemo', operator: 'notEquals', value: true } }]
+      })
     ]
   };
 

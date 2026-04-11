@@ -4,6 +4,7 @@ import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { forgeField } from '../../field';
 import { forgeFormFieldWrapper, type DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
 import { FORGE_SOURCE_SELECT_FIELD_TYPE, type DbxForgeSourceSelectFieldProps, type DbxForgeSourceSelectFieldDef } from './sourceselect.field.component';
+import type { DbxForgeFieldConfig } from '../../field.type';
 
 // MARK: Field Type Definition
 /**
@@ -21,11 +22,8 @@ export const DBX_SOURCE_SELECT_FIELD_TYPE: FieldTypeDefinition<DbxForgeSourceSel
 /**
  * Configuration for a forge source select field.
  */
-export interface DbxForgeSourceSelectFieldConfig<T extends PrimativeKey = PrimativeKey, M = unknown> extends DbxForgeSourceSelectFieldProps<T, M> {
-  readonly key: string;
+export interface DbxForgeSourceSelectFieldConfig<T extends PrimativeKey = PrimativeKey, M = unknown> extends DbxForgeFieldConfig, DbxForgeSourceSelectFieldProps<T, M> {
   readonly label?: string;
-  readonly required?: boolean;
-  readonly readonly?: boolean;
   readonly description?: string;
 }
 
@@ -47,25 +45,24 @@ export interface DbxForgeSourceSelectFieldConfig<T extends PrimativeKey = Primat
  * ```
  */
 export function forgeSourceSelectField<T extends PrimativeKey = PrimativeKey, M = unknown>(config: DbxForgeSourceSelectFieldConfig<T, M>): DbxForgeFormFieldWrapperFieldDef<DbxForgeSourceSelectFieldDef<T, M>> {
-  const { key, label, required, readonly: isReadonly, description, ...selectProps } = config;
+  const { key, label, required, readonly: isReadonly, description, logic, ...selectProps } = config;
 
-  const innerField = forgeField(
-    filterFromPOJO({
-      key,
-      type: FORGE_SOURCE_SELECT_FIELD_TYPE,
-      label: '',
-      value: undefined as unknown as T | T[],
-      required,
-      readonly: isReadonly,
-      props: filterFromPOJO({
-        ...selectProps
-      }) as DbxForgeSourceSelectFieldProps<T, M>
-    }) as DbxForgeSourceSelectFieldDef<T, M>
-  );
+  const innerField = forgeField({
+    key,
+    type: FORGE_SOURCE_SELECT_FIELD_TYPE,
+    label: '',
+    value: undefined as unknown as T | T[],
+    required,
+    readonly: isReadonly,
+    props: filterFromPOJO({
+      ...selectProps
+    }) as DbxForgeSourceSelectFieldProps<T, M>
+  } as DbxForgeSourceSelectFieldDef<T, M>);
 
   return forgeFormFieldWrapper<DbxForgeSourceSelectFieldDef<T, M>>({
     label: label ?? '',
     hint: description,
+    logic,
     fields: [innerField as unknown as FieldDef<unknown>]
   });
 }

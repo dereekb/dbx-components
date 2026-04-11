@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import type { LogicConfig } from '@ng-forge/dynamic-forms';
 import { forgePhoneField, forgeWrappedPhoneAndLabelField, forgePhoneAndLabelSectionField, forgePhoneListField } from './phone.field';
 
 // MARK: forgePhoneField
@@ -85,6 +86,12 @@ describe('forgePhoneField()', () => {
     expect(field.props?.enableSearch).toBe(true);
     expect(field.props?.allowExtension).toBe(true);
     expect(field.props?.hint).toBe('Phone number');
+  });
+
+  it('should pass logic through to the field definition', () => {
+    const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
+    const field = forgePhoneField({ key: 'phone', logic });
+    expect((field as any).logic).toEqual(logic);
   });
 });
 

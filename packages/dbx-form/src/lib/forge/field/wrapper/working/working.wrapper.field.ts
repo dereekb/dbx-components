@@ -1,6 +1,6 @@
 import type { FieldTypeDefinition, BaseValueField, FieldDef } from '@ng-forge/dynamic-forms';
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
-import { filterFromPOJO } from '@dereekb/util';
+
 import { forgeField } from '../../field';
 import type { DbxForgeWrapperFieldProps } from '../wrapper.field';
 
@@ -77,15 +77,13 @@ let _forgeWorkingWrapperCounter = 0;
 export function forgeWorkingFieldWrapper(config: DbxForgeWorkingWrapperFieldConfig): DbxForgeWorkingWrapperFieldDef {
   const { fields, key } = config;
 
-  return forgeField(
-    filterFromPOJO({
-      key: key ?? `_working_wrapper_${_forgeWorkingWrapperCounter++}`,
-      type: FORGE_WORKING_WRAPPER_FIELD_TYPE_NAME,
-      label: '',
-      value: {} as Record<string, unknown>,
-      props: {
-        fields
-      } as DbxForgeWorkingWrapperFieldProps
-    }) as DbxForgeWorkingWrapperFieldDef
-  );
+  return forgeField({
+    key: key ?? `_working_wrapper_${_forgeWorkingWrapperCounter++}`,
+    type: FORGE_WORKING_WRAPPER_FIELD_TYPE_NAME,
+    label: '',
+    value: {} as Record<string, unknown>,
+    props: {
+      fields
+    } as DbxForgeWorkingWrapperFieldProps
+  } as DbxForgeWorkingWrapperFieldDef);
 }

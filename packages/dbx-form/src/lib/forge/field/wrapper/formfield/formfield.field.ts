@@ -1,4 +1,4 @@
-import type { FieldTypeDefinition, BaseValueField, FieldDef } from '@ng-forge/dynamic-forms';
+import type { FieldTypeDefinition, BaseValueField, FieldDef, LogicConfig } from '@ng-forge/dynamic-forms';
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { filterFromPOJO } from '@dereekb/util';
 import { forgeField } from '../../field';
@@ -66,6 +66,14 @@ export interface DbxForgeFormFieldWrapperConfig {
    * Child field definitions to render inside the outlined container.
    */
   readonly fields: FieldDef<unknown>[];
+  /**
+   * Logic configurations for conditional state on the wrapper.
+   *
+   * When applied to the wrapper, logic affects the entire composite field
+   * (label, border, and inner field). For example, `'hidden'` logic hides
+   * the entire form-field wrapper including its Material outline.
+   */
+  readonly logic?: LogicConfig[];
 }
 
 let _forgeFormFieldWrapperCounter = 0;
@@ -95,18 +103,17 @@ let _forgeFormFieldWrapperCounter = 0;
  * ```
  */
 export function forgeFormFieldWrapper<TInner extends FieldDef<any> = FieldDef<any>>(config: DbxForgeFormFieldWrapperConfig): DbxForgeFormFieldWrapperFieldDef<TInner> {
-  const { label, hint, fields, key } = config;
+  const { label, hint, fields, key, logic } = config;
 
-  return forgeField(
-    filterFromPOJO({
-      key: key ?? `_formfield_${_forgeFormFieldWrapperCounter++}`,
-      type: FORGE_FORM_FIELD_WRAPPER_TYPE_NAME,
-      label: label ?? '',
-      value: {} as Record<string, unknown>,
-      props: filterFromPOJO({
-        hint,
-        fields
-      }) as DbxForgeFormFieldWrapperProps
-    }) as DbxForgeFormFieldWrapperFieldDef
-  );
+  return forgeField({
+    key: key ?? `_formfield_${_forgeFormFieldWrapperCounter++}`,
+    type: FORGE_FORM_FIELD_WRAPPER_TYPE_NAME,
+    label: label ?? '',
+    value: {} as Record<string, unknown>,
+    logic,
+    props: filterFromPOJO({
+      hint,
+      fields
+    }) as DbxForgeFormFieldWrapperProps
+  } as DbxForgeFormFieldWrapperFieldDef);
 }

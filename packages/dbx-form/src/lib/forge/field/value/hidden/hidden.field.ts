@@ -1,14 +1,12 @@
 import type { MatInputField } from '@ng-forge/dynamic-forms-material';
-import { filterFromPOJO } from '@dereekb/util';
 import { forgeField } from '../../field';
+import type { DbxForgeFieldConfig } from '../../field.type';
 
 // MARK: Hidden Field
 /**
  * Configuration for a forge hidden form field that is not visible to the user.
  */
-export interface DbxForgeHiddenFieldConfig {
-  readonly key: string;
-  readonly required?: boolean;
+export interface DbxForgeHiddenFieldConfig extends DbxForgeFieldConfig {
   readonly defaultValue?: unknown;
 }
 
@@ -26,16 +24,15 @@ export interface DbxForgeHiddenFieldConfig {
  * ```
  */
 export function forgeHiddenField(config: DbxForgeHiddenFieldConfig): MatInputField {
-  const { key, required, defaultValue = '' } = config;
+  const { key, required, defaultValue = '', logic } = config;
 
-  return forgeField(
-    filterFromPOJO({
-      key,
-      type: 'input' as const,
-      label: '',
-      value: defaultValue,
-      required,
-      hidden: true
-    }) as MatInputField
-  );
+  return forgeField({
+    key,
+    type: 'input' as const,
+    label: '',
+    value: defaultValue,
+    required,
+    logic,
+    hidden: true
+  } as MatInputField);
 }

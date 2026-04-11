@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import type { LogicConfig } from '@ng-forge/dynamic-forms';
 import { forgeHiddenField } from './hidden.field';
 
 describe('forgeHiddenField()', () => {
@@ -37,5 +38,11 @@ describe('forgeHiddenField()', () => {
   it('should not include required when not specified', () => {
     const field = forgeHiddenField({ key: 'userId' });
     expect(field.required).toBeUndefined();
+  });
+
+  it('should pass logic through to the field definition', () => {
+    const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
+    const field = forgeHiddenField({ key: 'userId', logic });
+    expect((field as any).logic).toEqual(logic);
   });
 });

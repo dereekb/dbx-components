@@ -3,6 +3,7 @@ import { of } from 'rxjs';
 import { forgeSourceSelectField } from './sourceselect.field';
 import type { DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
 import type { DbxForgeSourceSelectFieldDef } from './sourceselect.field.component';
+import type { LogicConfig } from '@ng-forge/dynamic-forms';
 
 // MARK: Helpers
 /**
@@ -125,5 +126,11 @@ describe('forgeSourceSelectField()', () => {
     const openSource = () => of({ select: [], options: [] });
     const wrapper = forgeSourceSelectField({ ...minimalConfig(), openSource } as Parameters<typeof forgeSourceSelectField>[0]);
     expect(innerField(wrapper).props?.openSource).toBe(openSource);
+  });
+
+  it('should pass logic through to the wrapper field definition', () => {
+    const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
+    const wrapper = forgeSourceSelectField({ ...minimalConfig(), logic });
+    expect((wrapper as any).logic).toEqual(logic);
   });
 });

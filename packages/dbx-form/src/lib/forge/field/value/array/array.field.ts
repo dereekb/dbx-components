@@ -220,30 +220,28 @@ export interface DbxForgeArrayFieldConfig<T = unknown> {
 export function forgeArrayField<T = unknown>(config: DbxForgeArrayFieldConfig<T>): DbxForgeArrayFieldDef<T> {
   const { key, label, description, template, value, labelForField, addText, removeText, duplicateText, allowAdd, allowRemove, allowDuplicate, disableRearrange, addDuplicateToEnd, maxLength, minLength, addButtonStyle, removeButtonStyle, duplicateButtonStyle } = config;
 
-  return forgeField(
-    filterFromPOJO({
-      key,
-      type: FORGE_ARRAY_FIELD_TYPE_NAME,
-      label: label ?? '',
-      ...(description != null && { description }),
-      value: value ?? ([] as unknown[]),
-      props: filterFromPOJO({
-        template,
-        labelForField,
-        addText,
-        removeText,
-        duplicateText,
-        allowAdd,
-        allowRemove,
-        allowDuplicate,
-        disableRearrange,
-        addDuplicateToEnd,
-        maxLength,
-        minLength,
-        addButtonStyle,
-        removeButtonStyle,
-        duplicateButtonStyle
-      }) as DbxForgeArrayFieldProps<T>
-    }) as DbxForgeArrayFieldDef<T>
-  );
+  return forgeField({
+    key,
+    type: FORGE_ARRAY_FIELD_TYPE_NAME,
+    label: label ?? '',
+    ...(description != null && { description }),
+    value: value ?? ([] as unknown[]),
+    props: filterFromPOJO({
+      template,
+      labelForField,
+      addText,
+      removeText,
+      duplicateText,
+      allowAdd,
+      allowRemove,
+      allowDuplicate,
+      disableRearrange,
+      addDuplicateToEnd,
+      maxLength,
+      minLength,
+      addButtonStyle,
+      removeButtonStyle,
+      duplicateButtonStyle
+    }) as DbxForgeArrayFieldProps<T>
+  } as DbxForgeArrayFieldDef<T>);
 }

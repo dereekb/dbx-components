@@ -1,6 +1,6 @@
 import type { FieldTypeDefinition, BaseValueField } from '@ng-forge/dynamic-forms';
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
-import { filterFromPOJO } from '@dereekb/util';
+
 import { forgeField } from '../../field';
 
 // MARK: Field Type
@@ -80,16 +80,14 @@ export interface DbxForgeExpandFieldConfig {
 export function forgeExpandField(config: DbxForgeExpandFieldConfig): DbxForgeExpandFieldDef {
   const { key, label, buttonType, defaultOpen } = config;
 
-  return forgeField(
-    filterFromPOJO({
-      key,
-      type: FORGE_EXPAND_FIELD_TYPE_NAME,
-      label: '',
-      value: defaultOpen ?? false,
-      props: {
-        buttonType: buttonType ?? 'text',
-        expandLabel: label ?? ''
-      } as DbxForgeExpandFieldProps
-    }) as DbxForgeExpandFieldDef
-  );
+  return forgeField({
+    key,
+    type: FORGE_EXPAND_FIELD_TYPE_NAME,
+    label: '',
+    value: defaultOpen ?? false,
+    props: {
+      buttonType: buttonType ?? 'text',
+      expandLabel: label ?? ''
+    } as DbxForgeExpandFieldProps
+  } as DbxForgeExpandFieldDef);
 }

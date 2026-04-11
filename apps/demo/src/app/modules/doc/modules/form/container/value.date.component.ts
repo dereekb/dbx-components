@@ -16,6 +16,7 @@ import {
   forgeDateRangeField,
   forgeFixedDateRangeField,
   forgeTimeDurationField,
+  forgeToggleField,
   DbxFormFormlyDateFieldModule,
   DbxFormFormlyDbxListFieldModule,
   DbxFormFormlyDurationFieldModule,
@@ -273,6 +274,13 @@ export class DocFormDateValueComponent implements OnDestroy {
           };
           return of(config);
         }
+      }) as any,
+      forgeToggleField({ key: 'showLogicDemo', label: 'Show Logic Demo Field' }),
+      forgeDateTimeField({
+        key: 'logicDemo',
+        label: 'Conditionally Visible DateTime',
+        description: 'Hidden unless the toggle above is on. Demonstrates logic support on forge fields.',
+        logic: [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'showLogicDemo', operator: 'notEquals', value: true } }]
       }) as any
     ]
   };

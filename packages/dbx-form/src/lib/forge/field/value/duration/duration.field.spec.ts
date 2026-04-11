@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import type { LogicConfig } from '@ng-forge/dynamic-forms';
 import { forgeTimeDurationField, FORGE_TIMEDURATION_FIELD_TYPE } from './duration.field';
 
 // MARK: forgeTimeDurationField
@@ -68,5 +69,11 @@ describe('forgeTimeDurationField()', () => {
   it('should not include props when no extra config is provided', () => {
     const field = forgeTimeDurationField({ key: 'timeout' });
     expect(field.props).toBeUndefined();
+  });
+
+  it('should pass logic through to the field definition', () => {
+    const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
+    const field = forgeTimeDurationField({ key: 'timeout', logic });
+    expect((field as any).logic).toEqual(logic);
   });
 });

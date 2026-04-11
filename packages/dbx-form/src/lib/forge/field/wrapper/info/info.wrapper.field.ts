@@ -93,17 +93,15 @@ let _forgeInfoWrapperCounter = 0;
 export function forgeInfoFieldWrapper(config: DbxForgeInfoWrapperFieldConfig): DbxForgeInfoWrapperFieldDef {
   const { fields, onInfoClick, ariaLabel, key } = config;
 
-  return forgeField(
-    filterFromPOJO({
-      key: key ?? `_info_wrapper_${_forgeInfoWrapperCounter++}`,
-      type: FORGE_INFO_WRAPPER_FIELD_TYPE_NAME,
-      label: '',
-      value: {} as Record<string, unknown>,
-      props: filterFromPOJO({
-        fields,
-        onInfoClick,
-        ariaLabel
-      }) as DbxForgeInfoWrapperFieldProps
-    }) as DbxForgeInfoWrapperFieldDef
-  );
+  return forgeField({
+    key: key ?? `_info_wrapper_${_forgeInfoWrapperCounter++}`,
+    type: FORGE_INFO_WRAPPER_FIELD_TYPE_NAME,
+    label: '',
+    value: {} as Record<string, unknown>,
+    props: filterFromPOJO({
+      fields,
+      onInfoClick,
+      ariaLabel
+    }) as DbxForgeInfoWrapperFieldProps
+  } as DbxForgeInfoWrapperFieldDef);
 }

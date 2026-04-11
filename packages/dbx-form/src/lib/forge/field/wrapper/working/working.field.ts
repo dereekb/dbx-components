@@ -1,6 +1,6 @@
 import type { FieldTypeDefinition, BaseValueField } from '@ng-forge/dynamic-forms';
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
-import { filterFromPOJO } from '@dereekb/util';
+
 import { forgeField } from '../../field';
 
 // MARK: Field Type
@@ -59,13 +59,11 @@ export interface DbxForgeWorkingFieldConfig {
 export function forgeWorkingField(config: DbxForgeWorkingFieldConfig): DbxForgeWorkingFieldDef {
   const { watchFieldKey, key } = config;
 
-  return forgeField(
-    filterFromPOJO({
-      key: key ?? `_working_${_forgeWorkingCounter++}`,
-      type: FORGE_WORKING_FIELD_TYPE_NAME,
-      label: '',
-      value: undefined as unknown,
-      props: { watchFieldKey } as DbxForgeWorkingFieldProps
-    }) as DbxForgeWorkingFieldDef
-  );
+  return forgeField({
+    key: key ?? `_working_${_forgeWorkingCounter++}`,
+    type: FORGE_WORKING_FIELD_TYPE_NAME,
+    label: '',
+    value: undefined as unknown,
+    props: { watchFieldKey } as DbxForgeWorkingFieldProps
+  } as DbxForgeWorkingFieldDef);
 }

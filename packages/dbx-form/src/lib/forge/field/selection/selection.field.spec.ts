@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { forgeValueSelectionField } from './selection.field';
+import type { LogicConfig } from '@ng-forge/dynamic-forms';
 
 describe('forgeValueSelectionField()', () => {
   const testOptions = [
@@ -99,6 +100,12 @@ describe('forgeValueSelectionField()', () => {
       const field = forgeValueSelectionField({ key: 'color', options: testOptions, addClearOption: true });
       expect(field.options.slice(1)).toEqual(testOptions);
     });
+  });
+
+  it('should pass logic through to the field definition', () => {
+    const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
+    const field = forgeValueSelectionField({ key: 'color', options: [{ label: 'Red', value: 'red' }], logic });
+    expect((field as any).logic).toEqual(logic);
   });
 
   describe('observable options', () => {

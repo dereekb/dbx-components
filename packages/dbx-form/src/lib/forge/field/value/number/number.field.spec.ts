@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import type { LogicConfig } from '@ng-forge/dynamic-forms';
 import { forgeNumberField, forgeNumberSliderField, forgeDollarAmountField, FORGE_IS_DIVISIBLE_BY_VALIDATION_KEY } from './number.field';
 import { FORGE_FORM_FIELD_WRAPPER_TYPE_NAME, type DbxForgeFormFieldWrapperProps } from '../../wrapper/formfield/formfield.field';
 
@@ -119,6 +120,12 @@ describe('forgeNumberField()', () => {
       const field = forgeNumberField({ key: 'qty', enforceStep: true });
       expect((field as any).validators).toBeUndefined();
     });
+  });
+
+  it('should pass logic through to the field definition', () => {
+    const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
+    const field = forgeNumberField({ key: 'num', logic });
+    expect((field as any).logic).toEqual(logic);
   });
 });
 
@@ -252,6 +259,12 @@ describe('forgeNumberSliderField()', () => {
     const field = forgeNumberSliderField({ key: 'rating', max: 10 });
     expect(field.key).toContain('_formfield_');
   });
+
+  it('should pass logic through to the wrapper field definition', () => {
+    const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
+    const field = forgeNumberSliderField({ key: 'rating', max: 10, logic });
+    expect((field as any).logic).toEqual(logic);
+  });
 });
 
 describe('forgeDollarAmountField()', () => {
@@ -307,5 +320,11 @@ describe('forgeDollarAmountField()', () => {
   it('should default label to empty string when not provided', () => {
     const field = forgeDollarAmountField({ key: 'price' });
     expect(field.label).toBe('');
+  });
+
+  it('should pass logic through to the field definition', () => {
+    const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
+    const field = forgeDollarAmountField({ key: 'dollars', logic });
+    expect((field as any).logic).toEqual(logic);
   });
 });

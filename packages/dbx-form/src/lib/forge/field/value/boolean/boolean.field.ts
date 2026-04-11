@@ -1,16 +1,13 @@
 import type { MatToggleField, MatCheckboxField, MatToggleProps, MatCheckboxProps } from '@ng-forge/dynamic-forms-material';
-import { filterFromPOJO } from '@dereekb/util';
 import { forgeField, FORGE_STYLED_BOX_CLASS } from '../../field';
+import type { DbxForgeFieldConfig } from '../../field.type';
 
 // MARK: Toggle Field
 /**
  * Configuration for a forge Material toggle (slide toggle) field.
  */
-export interface DbxForgeToggleFieldConfig {
-  readonly key: string;
+export interface DbxForgeToggleFieldConfig extends DbxForgeFieldConfig {
   readonly label?: string;
-  readonly required?: boolean;
-  readonly readonly?: boolean;
   readonly description?: string;
   readonly defaultValue?: boolean;
   /**
@@ -35,35 +32,31 @@ export interface DbxForgeToggleFieldConfig {
  * ```
  */
 export function forgeToggleField(config: DbxForgeToggleFieldConfig): MatToggleField {
-  const { key, label, required, readonly: isReadonly, description, defaultValue = false, styledBox = true } = config;
+  const { key, label, required, readonly: isReadonly, description, defaultValue = false, styledBox = true, logic } = config;
 
   const props: MatToggleProps | undefined = description ? { hint: description } : undefined;
   const className = styledBox ? FORGE_STYLED_BOX_CLASS : undefined;
 
-  return forgeField(
-    filterFromPOJO({
-      key,
-      type: 'toggle' as const,
-      label: label ?? '',
-      value: defaultValue,
-      required,
-      readonly: isReadonly,
-      props,
-      className
-    }) as MatToggleField
-  );
+  return forgeField({
+    key,
+    type: 'toggle' as const,
+    label: label ?? '',
+    value: defaultValue,
+    required,
+    readonly: isReadonly,
+    logic,
+    props,
+    className
+  } as MatToggleField);
 }
 
 // MARK: Checkbox Field
 /**
  * Configuration for a forge Material checkbox field.
  */
-export interface DbxForgeCheckboxFieldConfig {
-  readonly key: string;
+export interface DbxForgeCheckboxFieldConfig extends DbxForgeFieldConfig {
   readonly label?: string;
   readonly placeholder?: string;
-  readonly required?: boolean;
-  readonly readonly?: boolean;
   readonly description?: string;
   readonly defaultValue?: boolean;
   /**
@@ -88,21 +81,20 @@ export interface DbxForgeCheckboxFieldConfig {
  * ```
  */
 export function forgeCheckboxField(config: DbxForgeCheckboxFieldConfig): MatCheckboxField {
-  const { key, label, required, readonly: isReadonly, description, defaultValue = false, styledBox = true } = config;
+  const { key, label, required, readonly: isReadonly, description, defaultValue = false, styledBox = true, logic } = config;
 
   const props: MatCheckboxProps | undefined = description ? { hint: description } : undefined;
   const className = styledBox ? FORGE_STYLED_BOX_CLASS : undefined;
 
-  return forgeField(
-    filterFromPOJO({
-      key,
-      type: 'checkbox' as const,
-      label: label ?? '',
-      value: defaultValue,
-      required,
-      readonly: isReadonly,
-      props,
-      className
-    }) as MatCheckboxField
-  );
+  return forgeField({
+    key,
+    type: 'checkbox' as const,
+    label: label ?? '',
+    value: defaultValue,
+    required,
+    readonly: isReadonly,
+    logic,
+    props,
+    className
+  } as MatCheckboxField);
 }

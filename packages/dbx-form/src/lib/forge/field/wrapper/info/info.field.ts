@@ -1,6 +1,6 @@
 import type { FieldTypeDefinition, BaseValueField } from '@ng-forge/dynamic-forms';
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
-import { filterFromPOJO } from '@dereekb/util';
+
 import { forgeField } from '../../field';
 
 // MARK: Field Type
@@ -66,13 +66,11 @@ export interface DbxForgeInfoButtonFieldConfig {
 export function forgeInfoButtonField(config: DbxForgeInfoButtonFieldConfig): DbxForgeInfoButtonFieldDef {
   const { onInfoClick, ariaLabel, key } = config;
 
-  return forgeField(
-    filterFromPOJO({
-      key: key ?? `_info_button_${_forgeInfoButtonCounter++}`,
-      type: FORGE_INFO_BUTTON_FIELD_TYPE_NAME,
-      label: '',
-      value: undefined as unknown,
-      props: { onInfoClick, ariaLabel } as DbxForgeInfoButtonFieldProps
-    }) as DbxForgeInfoButtonFieldDef
-  );
+  return forgeField({
+    key: key ?? `_info_button_${_forgeInfoButtonCounter++}`,
+    type: FORGE_INFO_BUTTON_FIELD_TYPE_NAME,
+    label: '',
+    value: undefined as unknown,
+    props: { onInfoClick, ariaLabel } as DbxForgeInfoButtonFieldProps
+  } as DbxForgeInfoButtonFieldDef);
 }

@@ -98,17 +98,15 @@ let _forgeStyleFieldCounter = 0;
 export function forgeStyleWrapper(config: DbxForgeStyleFieldConfig): DbxForgeStyleFieldDef {
   const { fields, classGetter, styleGetter, key } = config;
 
-  return forgeField(
-    filterFromPOJO({
-      key: key ?? `_style_${_forgeStyleFieldCounter++}`,
-      type: FORGE_STYLE_FIELD_TYPE_NAME,
-      label: '',
-      value: {} as Record<string, unknown>,
-      props: filterFromPOJO({
-        fields,
-        classGetter,
-        styleGetter
-      }) as DbxForgeStyleFieldProps
-    }) as DbxForgeStyleFieldDef
-  );
+  return forgeField({
+    key: key ?? `_style_${_forgeStyleFieldCounter++}`,
+    type: FORGE_STYLE_FIELD_TYPE_NAME,
+    label: '',
+    value: {} as Record<string, unknown>,
+    props: filterFromPOJO({
+      fields,
+      classGetter,
+      styleGetter
+    }) as DbxForgeStyleFieldProps
+  } as DbxForgeStyleFieldDef);
 }

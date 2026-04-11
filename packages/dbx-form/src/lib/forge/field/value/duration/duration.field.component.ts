@@ -88,7 +88,6 @@ export interface DbxForgeTimeDurationFieldComponentProps {
 export class DbxForgeTimeDurationFieldComponent {
   private readonly materialConfig = inject(MATERIAL_CONFIG, { optional: true });
   private readonly popoverService = inject(DbxPopoverService);
-  private readonly destroyRef = inject(DestroyRef);
 
   // Standard ng-forge value field inputs
   readonly field: InputSignal<FieldTree<unknown>> = input.required<FieldTree<unknown>>();
