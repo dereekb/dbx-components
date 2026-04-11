@@ -1,5 +1,6 @@
 import { type EnvironmentProviders, makeEnvironmentProviders, type Provider } from '@angular/core';
-import { Functions } from '@angular/fire/functions';
+import { type Functions } from 'firebase/functions';
+import { FIREBASE_FUNCTIONS_TOKEN } from '../firebase/firebase.tokens';
 import { FirebaseDevelopmentFunctions, type FirebaseFunctionsConfigMap, type FirebaseFunctionsMap, FIREBASE_DEVELOPMENT_FUNCTIONS_MAP_KEY, type LazyFirebaseFunctions } from '@dereekb/firebase';
 import { type ClassLikeType, forEachKeyValue } from '@dereekb/util';
 
@@ -47,7 +48,7 @@ export function provideDbxFirebaseFunctions<T, M extends FirebaseFunctionsMap = 
     {
       provide: config.functionsGetterToken,
       useFactory: config.functionsGetterFactory,
-      deps: [Functions]
+      deps: [FIREBASE_FUNCTIONS_TOKEN]
     }
   ];
 

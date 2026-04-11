@@ -1,9 +1,9 @@
 import { type EnvironmentProviders, Injector, makeEnvironmentProviders, type Provider } from '@angular/core';
-import { FirebaseApp } from '@angular/fire/app';
+import { type FirebaseApp } from 'firebase/app';
 import { type FirebaseStorageContextFactoryConfig, clientFirebaseStorageContextFactory } from '@dereekb/firebase';
 import { DBX_FIREBASE_STORAGE_CONTEXT_CONFIG_TOKEN, DBX_FIREBASE_STORAGE_CONTEXT_TOKEN } from './firebase.storage';
 import { DbxFirebaseStorageService } from './firebase.storage.service';
-import { Storage } from '@angular/fire/storage';
+import { FIREBASE_APP_TOKEN, FIREBASE_STORAGE_TOKEN } from '../firebase/firebase.tokens';
 
 export type DbxFirebaseStorageContextConfigFactory = (app: FirebaseApp, injector: Injector) => FirebaseStorageContextFactoryConfig;
 
@@ -49,12 +49,12 @@ export function providedDbxFirebaseStorage(config?: ProvideDbxFirebaseStorageCon
     {
       provide: DBX_FIREBASE_STORAGE_CONTEXT_CONFIG_TOKEN,
       useFactory: configFactory,
-      deps: [FirebaseApp, Injector]
+      deps: [FIREBASE_APP_TOKEN, Injector]
     },
     {
       provide: DBX_FIREBASE_STORAGE_CONTEXT_TOKEN,
       useFactory: clientFirebaseStorageContextFactory,
-      deps: [Storage, DBX_FIREBASE_STORAGE_CONTEXT_CONFIG_TOKEN]
+      deps: [FIREBASE_STORAGE_TOKEN, DBX_FIREBASE_STORAGE_CONTEXT_CONFIG_TOKEN]
     },
     DbxFirebaseStorageService
   ];
