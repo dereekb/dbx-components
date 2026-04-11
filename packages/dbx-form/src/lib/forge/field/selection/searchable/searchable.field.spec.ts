@@ -125,6 +125,34 @@ describe('forgeSearchableTextField()', () => {
     expect(inner.props?.searchLabel).toBe('Find...');
   });
 
+  it('should propagate useAnchor through inner field props when provided', () => {
+    const inner = getInnerField(forgeSearchableTextField({ ...minimalConfig(), useAnchor: true }));
+    expect(inner.props?.useAnchor).toBe(true);
+  });
+
+  it('should not set useAnchor on the inner field when not provided', () => {
+    const inner = getInnerField(forgeSearchableTextField(minimalConfig()));
+    expect(inner.props?.useAnchor).toBeUndefined();
+  });
+
+  it('should propagate anchorForValue through inner field props when provided', () => {
+    const anchorFn = () => ({ onClick: () => {} });
+    const inner = getInnerField(forgeSearchableTextField({ ...minimalConfig(), anchorForValue: anchorFn }));
+    expect(inner.props?.anchorForValue).toBe(anchorFn);
+  });
+
+  it('should not set anchorForValue on the inner field when not provided', () => {
+    const inner = getInnerField(forgeSearchableTextField(minimalConfig()));
+    expect(inner.props?.anchorForValue).toBeUndefined();
+  });
+
+  it('should propagate both useAnchor and anchorForValue together', () => {
+    const anchorFn = () => ({ onClick: () => {} });
+    const inner = getInnerField(forgeSearchableTextField({ ...minimalConfig(), useAnchor: true, anchorForValue: anchorFn }));
+    expect(inner.props?.useAnchor).toBe(true);
+    expect(inner.props?.anchorForValue).toBe(anchorFn);
+  });
+
   it('should pass logic through to the wrapper field definition', () => {
     const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
     const wrapper = forgeSearchableTextField({ ...minimalConfig(), logic });
@@ -250,6 +278,17 @@ describe('forgeSearchableChipField()', () => {
   it('should not set textInputValidator on the inner field when not provided', () => {
     const inner = getInnerField(forgeSearchableChipField(minimalConfig()));
     expect(inner.props?.textInputValidator).toBeUndefined();
+  });
+
+  it('should propagate useAnchor through inner field props when provided', () => {
+    const inner = getInnerField(forgeSearchableChipField({ ...minimalConfig(), useAnchor: true }));
+    expect(inner.props?.useAnchor).toBe(true);
+  });
+
+  it('should propagate anchorForValue through inner field props when provided', () => {
+    const anchorFn = () => ({ onClick: () => {} });
+    const inner = getInnerField(forgeSearchableChipField({ ...minimalConfig(), anchorForValue: anchorFn }));
+    expect(inner.props?.anchorForValue).toBe(anchorFn);
   });
 
   it('should pass logic through to the wrapper field definition', () => {

@@ -22,7 +22,7 @@
     <div class="dbx-form-description" [id]="hintId()">{{ hintSignal() }}</div>
   }
 </div>
-<mat-autocomplete #auto="matAutocomplete" (optionSelected)="selectedChip($event)">
+<mat-autocomplete class="dbx-searchable-text-field-autocomplete" #auto="matAutocomplete" (optionSelected)="selectedChip($event)">
   @for (result of searchResultsSignal(); track $index) {
     <mat-option [value]="result">
       <dbx-searchable-field-autocomplete-item [displayValue]="result"></dbx-searchable-field-autocomplete-item>
