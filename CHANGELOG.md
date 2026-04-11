@@ -1,3 +1,26 @@
+# [13.8.0](https://github.com/dereekb/dbx-components/compare/v13.7.0-dev...v13.8.0) (2026-04-11)
+
+
+### Bug Fixes
+
+- package.json to reduce vulnerabilities ([#44](https://github.com/dereekb/dbx-components/issues/44)) ([f1bfbad3](https://github.com/dereekb/dbx-components/commit/f1bfbad3557033da982c3a2f3f26c70ebd73f0ae)), closes [#44](https://github.com/dereekb/dbx-components/issues/44)
+
+
+### Code Refactoring
+
+- added password reset service and UI ([76e0dd36](https://github.com/dereekb/dbx-components/commit/76e0dd36c7ff8cdfa03e94fbeb9ae09c53c4c216))
+- fixes, disable snyk ([978142bf](https://github.com/dereekb/dbx-components/commit/978142bf3a50f927be8e9430734cbcd7e950342f))
+- lint fixes and no-else-return refactoring ([6b88663d](https://github.com/dereekb/dbx-components/commit/6b88663dfbd3929f509a4b337e2592fbfe7bba9d))
+- package.json fixes ([b3331056](https://github.com/dereekb/dbx-components/commit/b333105687c6bc83c7163f8dcf1766f20cb53be8))
+- remove @angular/fire ([ccf2e030](https://github.com/dereekb/dbx-components/commit/ccf2e03094bcf365f7b087b92933c9e7dd5ce024))
+- removed deprecated forge code ([971012bb](https://github.com/dereekb/dbx-components/commit/971012bbb4a6c18076c20f088c1cac8d22e65b72))
+- use formly-prefixed names in dbx-form internals ([aa78aa79](https://github.com/dereekb/dbx-components/commit/aa78aa79354f2825403fae526290de06ecc8a5f8))
+
+
+### Features
+
+- ng-forge ([#43](https://github.com/dereekb/dbx-components/issues/43)) ([66dda79b](https://github.com/dereekb/dbx-components/commit/66dda79bdedd1f0940ef2fec01b2cd0b1516a97f)), closes [#43](https://github.com/dereekb/dbx-components/issues/43)
+
 # [13.7.0](https://github.com/dereekb/dbx-components/compare/v13.6.17-dev...v13.7.0) (2026-04-09)
 
 
