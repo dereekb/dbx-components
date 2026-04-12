@@ -1,5 +1,5 @@
 import type { MatInputField } from '@ng-forge/dynamic-forms-material';
-import { forgeField } from '../../field';
+import { forgeField } from '../../field.util.meta';
 import type { DbxForgeFieldConfig } from '../../field.type';
 
 // MARK: Hidden Field

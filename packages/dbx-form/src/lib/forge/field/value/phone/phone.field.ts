@@ -1,6 +1,6 @@
 import type { FieldDef, BaseValueField } from '@ng-forge/dynamic-forms';
 import { filterFromPOJO } from '@dereekb/util';
-import { forgeField } from '../../field';
+import { forgeField } from '../../field.util.meta';
 import { forgeRow } from '../../wrapper/wrapper';
 import type { DbxForgeFieldConfig } from '../../field.type';
 import { forgeDbxSectionFieldWrapper } from '../../wrapper/section/section.field';

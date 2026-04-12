@@ -9,8 +9,8 @@ import { provideDbxFormConfiguration } from '../../../../form.providers';
 import { DbxForgeFormComponent } from '../../../form/forge.component';
 import { DbxForgeFormContext, provideDbxForgeFormContext } from '../../../form/forge.context';
 import { forgeFormFieldWrapper } from './formfield.field';
-import { forgeNumberSliderField } from '../../value/number/number.field';
 import { forgeTextField } from '../../value/text/text.field';
+import { forgeNumberSliderField } from '../../value/number/slider.field';
 
 // MARK: Test Host
 @Component({
@@ -153,13 +153,7 @@ describe('DbxForgeFormFieldWrapperComponent', () => {
       context.requireValid = false;
 
       context.config = {
-        fields: [
-          forgeFormFieldWrapper({
-            label: 'Custom Wrapper',
-            hint: 'A hint',
-            fields: [forgeTextField({ key: 'name', label: '' }) as any]
-          }) as any
-        ]
+        fields: [forgeFormFieldWrapper(forgeTextField({ key: 'name', label: '' }))]
       };
 
       await settle(fixture);
@@ -221,21 +215,15 @@ describe('DbxForgeFormFieldWrapperComponent', () => {
       return {
         fields: [
           forgeFormFieldWrapper({
-            label: 'Rating',
-            hint: 'Must be above 50.',
-            fields: [
-              {
-                key: 'rating',
-                type: 'slider',
-                label: '',
-                max: 100,
-                value: 25,
-                validators: [{ type: 'custom', expression: 'fieldValue > 50', kind: 'minRating' }],
-                validationMessages: { minRating: 'Rating must be above 50.' },
-                props: { min: 0, max: 100, thumbLabel: true }
-              } as any
-            ]
-          }) as any
+            key: 'rating',
+            type: 'slider',
+            label: '',
+            max: 100,
+            value: 25,
+            validators: [{ type: 'custom', expression: 'fieldValue > 50', kind: 'minRating' }],
+            validationMessages: { minRating: 'Rating must be above 50.' },
+            props: { min: 0, max: 100, thumbLabel: true }
+          })
         ]
       };
     }

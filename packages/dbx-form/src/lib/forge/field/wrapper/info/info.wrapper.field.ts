@@ -1,7 +1,7 @@
 import type { FieldTypeDefinition, BaseValueField, FieldDef } from '@ng-forge/dynamic-forms';
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { filterFromPOJO } from '@dereekb/util';
-import { forgeField } from '../../field';
+import { forgeField } from '../../field.util.meta';
 import type { DbxForgeWrapperFieldProps } from '../wrapper.field';
 
 // MARK: Field Type

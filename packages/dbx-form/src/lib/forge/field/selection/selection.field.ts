@@ -2,7 +2,7 @@ import { filterFromPOJO } from '@dereekb/util';
 import type { ObservableOrValue } from '@dereekb/rxjs';
 import type { FieldTypeDefinition } from '@ng-forge/dynamic-forms';
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
-import { forgeField } from '../field';
+import { forgeField } from '../field.util.meta';
 import type { DbxForgeFieldConfig } from '../field.type';
 import { FORGE_VALUE_SELECTION_FIELD_TYPE, type DbxForgeValueSelectionFieldProps, type DbxForgeValueSelectionFieldDef } from './selection.field.component';
 import type { ValueSelectionOption } from '../../../field/field.selection';

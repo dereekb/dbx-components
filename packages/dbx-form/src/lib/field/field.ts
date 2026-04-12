@@ -1,4 +1,5 @@
 import { type MapFunction } from '@dereekb/util';
+import { DisableAutocompleteForField } from './field.autocomplete';
 
 /**
  * A value parser function that transforms a form field's value from one type to another.
@@ -37,12 +38,9 @@ export interface BaseFieldConfig {
 }
 
 /**
- * Sentinel type to disable autocomplete on a field. Pass `false` to the autocomplete property.
- */
-export type DisableAutocompleteForField = false;
-
-/**
  * Configuration for a labeled form field with label, placeholder, and autocomplete support.
+ *
+ * @deprecated
  */
 export interface LabeledBaseFieldConfig extends BaseFieldConfig {
   label?: string;
@@ -55,6 +53,8 @@ export interface LabeledBaseFieldConfig extends BaseFieldConfig {
 
 /**
  * Configuration mixin that provides a default value for a form field.
+ *
+ * @deprecated
  */
 export interface DefaultValueFieldConfig<T = unknown> {
   defaultValue?: T;
@@ -62,6 +62,8 @@ export interface DefaultValueFieldConfig<T = unknown> {
 
 /**
  * Configuration mixin for arbitrary HTML attributes on a form field element.
+ *
+ * @deprecated
  */
 export interface AttributesFieldConfig {
   attributes?: {
@@ -70,10 +72,33 @@ export interface AttributesFieldConfig {
 }
 
 /**
- * Configuration mixin for a field description/help text.
+ * Configuration mixin for a field hint/description/help text.
+ *
+ * @deprecated
  */
 export interface DescriptionFieldConfig {
+  /**
+   * Description text.
+   */
   description?: string;
+}
+
+/**
+ * Configuration mixin for a field hint/help text.
+ *
+ * @deprecated
+ */
+export interface HintFieldConfig extends Partial<DescriptionFieldConfig> {
+  /**
+   * Description text. Alias for hint.
+   *
+   * @deprecated use hint instead.
+   */
+  description?: string;
+  /**
+   * Hint text.
+   */
+  hint?: string;
 }
 
 /**

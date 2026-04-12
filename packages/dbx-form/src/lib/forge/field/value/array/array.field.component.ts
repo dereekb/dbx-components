@@ -8,7 +8,7 @@ import { createResolvedErrorsSignal, setupMetaTracking, shouldShowErrors } from 
 import { type FactoryWithRequiredInput } from '@dereekb/util';
 import { DbxButtonComponent, DbxButtonSpacerDirective, type DbxButtonStyle } from '@dereekb/dbx-web';
 import type { DbxForgeArrayFieldProps, DbxForgeArrayItemPair } from './array.field';
-import { forgeFieldDisabled } from '../../field.disabled';
+import { forgeFieldDisabled } from '../../field.util';
 
 /**
  * Internal state for a single array item.

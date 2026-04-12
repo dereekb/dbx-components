@@ -24,7 +24,6 @@ import { DBX_FORGE_STYLE_FIELD_TYPE } from './field/wrapper/style/style.field';
 import { DBX_FORGE_WORKING_FIELD_TYPE } from './field/wrapper/working/working.field';
 import { DBX_FORGE_WORKING_WRAPPER_FIELD_TYPE } from './field/wrapper/working/working.wrapper.field';
 import { DBX_FORGE_ARRAY_FIELD_TYPE } from './field/value/array/array.field';
-import { FORGE_SLIDER_FIELD_TYPE, sliderFieldMapper } from './field/value/number/slider.field.component';
 
 /**
  * Forge phone field type definition.
@@ -76,18 +75,6 @@ const DbxForgeTimeDurationFieldType: FieldTypeDefinition = {
 };
 
 /**
- * Forge slider field type definition.
- *
- * Registers a custom slider component that wraps `<mat-slider>` inside `<mat-form-field>`
- * for consistent outlined appearance with label, hint, and error display.
- */
-const DbxForgeSliderFieldType: FieldTypeDefinition = {
-  name: FORGE_SLIDER_FIELD_TYPE,
-  loadComponent: () => import('./field/value/number/slider.field.component').then((m) => m.DbxForgeSliderFieldComponent),
-  mapper: sliderFieldMapper
-};
-
-/**
  * Forge date range field type definition.
  *
  * Registers the custom date range field component with ng-forge's dynamic form system.
@@ -108,7 +95,6 @@ export const DBX_FORGE_FIELD_TYPES: FieldTypeDefinition[] = [
   DbxForgeDateRangeFieldType,
   DbxForgeFixedDateRangeFieldType,
   DbxForgeTimeDurationFieldType,
-  DbxForgeSliderFieldType,
   DBX_SEARCHABLE_TEXT_FIELD_TYPE,
   DBX_SEARCHABLE_CHIP_FIELD_TYPE,
   DBX_PICKABLE_CHIP_FIELD_TYPE,

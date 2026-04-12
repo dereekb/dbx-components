@@ -1,13 +1,18 @@
-import type { BaseFieldConfig, DescriptionFieldConfig, DisableAutocompleteForField } from '../../field';
-import type { LogicConfig, StateLogicConfig } from '@ng-forge/dynamic-forms';
+import type { BaseFieldConfig } from '../../field';
+import type { FieldWithValidation, LogicConfig } from '@ng-forge/dynamic-forms';
 
-export type { LogicConfig, StateLogicConfig };
+/**
+ * Includes the validators and validation messages set on a FieldWithValidation.
+ */
+export type ForgeFieldValidation = Pick<FieldWithValidation, 'validators' | 'validationMessages'>;
 
 /**
  * Base configuration for a forge field, extending BaseFieldConfig with logic support.
  *
  * All forge field config interfaces should extend this (or {@link DbxForgeLabeledFieldConfig})
  * to inherit `key`, `required`, `readonly`, and `logic`.
+ *
+ * @deprecated remove; don't use this anymore.
  */
 export interface DbxForgeFieldConfig extends BaseFieldConfig {
   /**
@@ -26,24 +31,4 @@ export interface DbxForgeFieldConfig extends BaseFieldConfig {
    * ```
    */
   readonly logic?: LogicConfig[];
-}
-
-/**
- * Configuration for a labeled forge field with label, placeholder, description, and autocomplete.
- *
- * Extends {@link DbxForgeFieldConfig} with common UI properties used by most value fields.
- */
-export interface DbxForgeLabeledFieldConfig extends DbxForgeFieldConfig, DescriptionFieldConfig {
-  /**
-   * Field label displayed in the form.
-   */
-  readonly label?: string;
-  /**
-   * Placeholder text displayed when the field is empty.
-   */
-  readonly placeholder?: string;
-  /**
-   * Sets the autocomplete attribute. Pass `false` to disable browser autofill.
-   */
-  readonly autocomplete?: string | DisableAutocompleteForField;
 }

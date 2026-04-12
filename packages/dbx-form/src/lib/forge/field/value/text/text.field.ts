@@ -2,9 +2,9 @@ import type { MatInputField, MatInputProps, MatTextareaField, MatTextareaProps }
 import type { ValidationMessages } from '@ng-forge/dynamic-forms';
 import { filterFromPOJO, transformStringFunction, mapMaybeFunction, type TransformStringFunctionConfig, type TransformStringFunctionConfigRef } from '@dereekb/util';
 import type { FieldValueParser, FieldConfigParsersRef } from '../../../../field';
-import { forgeField, forgeAutocompleteFieldMeta, type DbxForgeFieldAutocompleteConfig } from '../../field';
+import { forgeField, forgeAutocompleteFieldMeta, type DbxForgeFieldAutocompleteConfig } from '../../field.util.meta';
 import type { DbxForgeLabeledFieldConfig } from '../../field.type';
-import { forgeDefaultValidationMessages } from '../../../validation';
+import { dbxForgeDefaultValidationMessages as dbxForgeDefaultValidationMessages } from '../../../validation';
 
 // MARK: Text Field
 /**
@@ -97,13 +97,13 @@ export function forgeTextField(config: DbxForgeTextFieldConfig): MatInputField {
     hint: description
   });
 
-  const validationMessages: ValidationMessages = forgeDefaultValidationMessages();
+  const validationMessages: ValidationMessages = dbxForgeDefaultValidationMessages();
   const meta = forgeAutocompleteFieldMeta(autocomplete);
 
   return forgeField({
     key,
     type: 'input' as const,
-    label: label ?? '',
+    label,
     placeholder,
     value: defaultValue,
     required,
@@ -153,7 +153,7 @@ export function forgeTextAreaField(config: DbxForgeTextAreaFieldConfig): MatText
     rows
   });
 
-  const validationMessages: ValidationMessages = forgeDefaultValidationMessages();
+  const validationMessages: ValidationMessages = dbxForgeDefaultValidationMessages();
   const meta = forgeAutocompleteFieldMeta(autocomplete);
 
   return forgeField({

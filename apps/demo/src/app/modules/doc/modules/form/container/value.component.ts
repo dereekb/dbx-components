@@ -162,9 +162,22 @@ export class DocFormValueComponent {
 
   readonly forgeNumberSliderFieldsConfig: FormConfig = {
     fields: [
-      forgeNumberSliderField({ key: 'test', label: 'forgeNumberSliderField()', description: 'A number between 0 and 100 picked with a slider.', min: 0, max: 100 }),
+      forgeNumberSliderField({ key: 'test', label: 'forgeNumberSliderField()', hint: 'A number between 0 and 100 picked with a slider.', min: 0, max: 100 }),
       forgeNumberSliderField({ key: 'steptest', label: 'forgeNumberSliderField() with Steps', description: 'A number between 0 and 100 picked with a slider with steps of 5.', min: 0, max: 100, step: 5 }),
-      forgeNumberSliderField({ key: 'steptestcustomtickinterval', label: 'forgeNumberSliderField() with Steps and Custom Tick Interval', description: 'A number between 0 and 100 picked with a slider with steps of 5 and tick interval of 5.', min: 0, max: 100, step: 5, tickInterval: 5 })
+      forgeNumberSliderField({ key: 'steptestcustomtickinterval', label: 'forgeNumberSliderField() with Steps and Custom Tick Interval', description: 'A number between 0 and 100 picked with a slider with steps of 5 and tick interval of 5.', min: 0, max: 100, step: 5, tickInterval: 5 }),
+      {
+        ...forgeNumberSliderField({ key: 'validated', label: 'Validated Slider (must be > first slider)', description: 'Cross-field expression validator: value must be greater than the first slider.', min: 0, max: 100 }),
+        validators: [
+          {
+            type: 'custom' as const,
+            expression: 'fieldValue > formValue.test',
+            kind: 'mustBeGreaterThanTest'
+          }
+        ],
+        validationMessages: {
+          mustBeGreaterThanTest: 'Value must be greater than the first slider'
+        }
+      }
     ]
   };
 
@@ -228,6 +241,18 @@ export class DocFormValueComponent {
       key: 'checkbox',
       label: 'Check Me',
       description: 'this is a checkbox field'
+    }),
+    formlyCheckboxField({
+      key: 'requiredCheckbox',
+      label: 'Required Check Me',
+      description: 'this is a required checkbox field',
+      required: true
+    }),
+    formlyCheckboxField({
+      key: 'readonlyCheckbox',
+      label: 'Readonly Check Me',
+      description: 'this is a readonly checkbox field',
+      readonly: true
     })
   ];
 
@@ -237,6 +262,18 @@ export class DocFormValueComponent {
         key: 'checkbox',
         label: 'Check Me',
         description: 'this is a checkbox field'
+      }),
+      forgeCheckboxField({
+        key: 'requiredCheckbox',
+        label: 'Required Check Me',
+        description: 'this is a required checkbox field',
+        required: true
+      }),
+      forgeCheckboxField({
+        key: 'readonlyCheckbox',
+        label: 'Readonly Check Me',
+        description: 'this is a readonly checkbox field',
+        readonly: true
       })
     ]
   };

@@ -428,6 +428,62 @@ async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
   await fixture.whenStable();
 }
 
+describe('DbxForgeSearchableChipFieldComponent', () => {
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [SearchableTestHostComponent],
+      providers: SEARCHABLE_TEST_PROVIDERS
+    });
+  });
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
+  });
+
+  function createSingleSelectChipConfig(): FormConfig {
+    return {
+      fields: [
+        forgeSearchableChipField<string>({
+          key: 'pickOne',
+          label: 'Pick a Single Value',
+          allowStringValues: false,
+          searchOnEmptyText: true,
+          multiSelect: false,
+          asArrayValue: false,
+          search: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
+          displayForValue: (values) => of(values.map((v) => ({ ...v, label: String(v.value) })))
+        }) as any
+      ]
+    };
+  }
+
+  it('should replace the existing value when selecting a new value in single-select mode', async () => {
+    const fixture = TestBed.createComponent(SearchableTestHostComponent);
+    const context = fixture.componentInstance.context;
+    context.requireValid = false;
+    context.config = createSingleSelectChipConfig();
+
+    await settle(fixture);
+
+    // Set initial value (simulates selecting "a")
+    context.setValue({ pickOne: 'a' } as any);
+    await settle(fixture);
+
+    const afterFirstSelect = await firstValueFrom(context.getValue().pipe(timeout(500), first()));
+    expect((afterFirstSelect as any)?.pickOne).toBe('a');
+
+    // Set a different value (simulates selecting "b")
+    context.setValue({ pickOne: 'b' } as any);
+    await settle(fixture);
+
+    // The value should be replaced, not appended
+    const afterSecondSelect = await firstValueFrom(context.getValue().pipe(timeout(500), first()));
+    expect((afterSecondSelect as any)?.pickOne).toBe('b');
+
+    fixture.destroy();
+  });
+});
+
 describe('DbxForgeSearchableTextFieldComponent', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({

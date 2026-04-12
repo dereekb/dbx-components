@@ -1,7 +1,7 @@
 import { type PrimativeKey, filterFromPOJO } from '@dereekb/util';
 import type { FieldDef, FieldTypeDefinition } from '@ng-forge/dynamic-forms';
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
-import { forgeField } from '../../field';
+import { forgeField } from '../../field.util.meta';
 import { forgeFormFieldWrapper, type DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
 import { FORGE_SEARCHABLE_TEXT_FIELD_TYPE, FORGE_SEARCHABLE_CHIP_FIELD_TYPE, type DbxForgeSearchableTextFieldProps, type DbxForgeSearchableTextFieldDef, type DbxForgeSearchableChipFieldProps, type DbxForgeSearchableChipFieldDef } from './searchable.field.directive';
 import type { DbxForgeFieldConfig } from '../../field.type';

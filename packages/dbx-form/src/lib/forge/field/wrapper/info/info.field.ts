@@ -1,7 +1,7 @@
 import type { FieldTypeDefinition, BaseValueField } from '@ng-forge/dynamic-forms';
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 
-import { forgeField } from '../../field';
+import { forgeField } from '../../field.util.meta';
 
 // MARK: Field Type
 export const FORGE_INFO_BUTTON_FIELD_TYPE_NAME = 'dbx-forge-info-button' as const;

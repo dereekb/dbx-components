@@ -1,7 +1,7 @@
 import { type PrimativeKey, filterFromPOJO } from '@dereekb/util';
 import type { FieldTypeDefinition } from '@ng-forge/dynamic-forms';
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
-import { forgeField } from '../../field';
+import { forgeField } from '../../field.util.meta';
 import { FORGE_SOURCE_SELECT_FIELD_TYPE, type DbxForgeSourceSelectFieldProps, type DbxForgeSourceSelectFieldDef } from './sourceselect.field.component';
 import type { DbxForgeFieldConfig } from '../../field.type';
 

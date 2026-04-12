@@ -14,7 +14,7 @@ import { type TimeDurationData, durationDataToMilliseconds, formatDurationString
 import { DbxPopoverService } from '@dereekb/dbx-web';
 import { DbxDurationPickerPopoverComponent } from '../../../../formly/field/value/duration/duration.picker.popover.component';
 import type { TimeDurationFieldValueMode } from '../../../../formly/field/value/duration/duration.field';
-import { forgeFieldDisabled } from '../../field.disabled';
+import { forgeFieldDisabled } from '../../field.util';
 import { toggleDisableFormControl } from '../../../../form/form';
 
 /**

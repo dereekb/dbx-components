@@ -2,6 +2,7 @@ import { computed, Directive, effect, forwardRef, inject, input, signal, untrack
 import type { FieldTree } from '@angular/forms/signals';
 import type { DynamicText, FieldDef, FieldMeta, FormConfig, ValidationMessages } from '@ng-forge/dynamic-forms';
 import { DbxForgeFormContext } from '../../form/forge.context';
+import { Maybe } from '@dereekb/util';
 
 /**
  * Base props interface for forge wrapper fields that contain child field definitions.
@@ -13,7 +14,11 @@ export interface DbxForgeWrapperFieldProps {
   /**
    * Child field definitions to render inside the wrapper.
    */
-  readonly fields: FieldDef<unknown>[];
+  readonly field?: Maybe<FieldDef<unknown>>;
+  /**
+   * Child field definitions to render inside the wrapper.
+   */
+  readonly fields?: Maybe<FieldDef<unknown>[]>;
 }
 
 /**
@@ -108,16 +113,12 @@ export abstract class AbstractForgeWrapperFieldComponent<TProps extends DbxForge
   readonly childValueSignal = signal<Record<string, unknown> | undefined>(undefined);
 
   readonly childConfigSignal: Signal<FormConfig> = computed(() => {
-    const fields = this.props()?.fields;
-
-    if (!fields || fields.length === 0) {
-      return { fields: [] } as unknown as FormConfig;
-    }
-
+    const field = this.props()?.field;
+    const fields = this.props()?.fields ?? [];
     const parentConfig = this._parentContext?.config;
 
     return {
-      fields,
+      fields: field ? [field] : fields,
       customFnConfig: parentConfig?.customFnConfig,
       defaultValidationMessages: parentConfig?.defaultValidationMessages
     } as unknown as FormConfig;

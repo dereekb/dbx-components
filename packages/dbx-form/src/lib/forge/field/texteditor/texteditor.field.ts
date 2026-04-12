@@ -1,7 +1,7 @@
 import { filterFromPOJO } from '@dereekb/util';
 import type { FieldTypeDefinition } from '@ng-forge/dynamic-forms';
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
-import { forgeField } from '../field';
+import { forgeField } from '../field.util.meta';
 import { FORGE_TEXT_EDITOR_FIELD_TYPE, type DbxForgeTextEditorFieldProps, type DbxForgeTextEditorFieldDef } from './texteditor.field.component';
 import type { DbxForgeTextFieldLengthConfig } from '../value/text/text.field';
 import type { DbxForgeFieldConfig } from '../field.type';

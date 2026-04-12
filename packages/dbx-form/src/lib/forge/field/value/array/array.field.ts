@@ -2,7 +2,7 @@ import type { FieldTypeDefinition, BaseValueField, ArrayAllowedChildren, FieldDe
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { filterFromPOJO, type FactoryWithRequiredInput } from '@dereekb/util';
 import { type DbxButtonStyle } from '@dereekb/dbx-web';
-import { forgeField } from '../../field';
+import { forgeField } from '../../field.util.meta';
 
 // MARK: Types
 /**

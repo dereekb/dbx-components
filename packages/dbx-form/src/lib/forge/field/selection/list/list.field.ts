@@ -2,7 +2,7 @@ import { type PrimativeKey, filterFromPOJO } from '@dereekb/util';
 import type { FieldDef, FieldTypeDefinition } from '@ng-forge/dynamic-forms';
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { type AbstractDbxSelectionListWrapperDirective } from '@dereekb/dbx-web';
-import { forgeField } from '../../field';
+import { forgeField } from '../../field.util.meta';
 import { forgeFormFieldWrapper, type DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
 import { FORGE_LIST_SELECTION_FIELD_TYPE, type DbxForgeListSelectionFieldProps, type DbxForgeListSelectionFieldDef } from './list.field.component';
 import type { DbxForgeFieldConfig } from '../../field.type';

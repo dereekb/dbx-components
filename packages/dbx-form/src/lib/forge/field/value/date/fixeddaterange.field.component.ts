@@ -17,7 +17,7 @@ import { NgClass } from '@angular/common';
 import { type DynamicText, type FieldMeta, type ValidationMessages, DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES } from '@ng-forge/dynamic-forms';
 import { resolveValueFieldContext, buildValueFieldInputs, createResolvedErrorsSignal, shouldShowErrors, setupMetaTracking } from '@ng-forge/dynamic-forms/integration';
 import type { FieldTree } from '@angular/forms/signals';
-import { forgeFieldDisabled } from '../../field.disabled';
+import { forgeFieldDisabled } from '../../field.util';
 
 // MARK: Helper Functions
 function fixedDateRangeInputValueFactory(mode: DbxDateTimeValueMode, timezoneInstance: Maybe<DateTimezoneUtcNormalInstance>): (input: Maybe<DateRangeWithDateOrStringValue>) => Maybe<DateRange> {

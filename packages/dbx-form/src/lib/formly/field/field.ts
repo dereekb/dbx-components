@@ -6,7 +6,7 @@ import { type FormlyFieldProps as MaterialFormlyFormFieldProps } from '@ngx-form
 
 // Re-export shared field config types for backward compatibility
 export { type FieldValueParser, type FormlyValueParser, type FieldConfigParsersRef, type FieldConfigWithParsers, type BaseFieldConfig, type DisableAutocompleteForField, type DefaultValueFieldConfig, type AttributesFieldConfig, type DescriptionFieldConfig, type BasePartialPotentialFieldConfig } from '../../field';
-import { type BaseFieldConfig, type FieldConfigParsersRef, type AttributesFieldConfig, type DescriptionFieldConfig } from '../../field';
+import { type BaseFieldConfig, type FieldConfigParsersRef, type AttributesFieldConfig, type DescriptionFieldConfig, disableAutofillAttributes } from '../../field';
 
 /**
  * Configuration for a Formly field, extending the shared {@link BaseFieldConfig} with
@@ -124,7 +124,7 @@ export function propsValueForFieldConfig<T extends FormlyFieldProps, O extends o
     if (autocomplete === false) {
       result.attributes = {
         ...result.attributes,
-        ...disableFormlyFieldAutofillAttributes()
+        ...disableAutofillAttributes()
       };
     } else {
       (
@@ -143,13 +143,7 @@ export function propsValueForFieldConfig<T extends FormlyFieldProps, O extends o
  *
  * @returns An attributes object that disables browser autofill
  */
-export function disableFormlyFieldAutofillAttributes(): { name: string; autocomplete: string } {
-  // https://stackoverflow.com/questions/15738259/disabling-chrome-autofill
-  return {
-    name: 'password',
-    autocomplete: 'off'
-  };
-}
+export const disableFormlyFieldAutofillAttributes = disableAutofillAttributes;
 
 /**
  * Map of validation message keys to their message strings or functions.

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import type { LogicConfig } from '@ng-forge/dynamic-forms';
 import { forgeToggleField, forgeCheckboxField } from './boolean.field';
-import { FORGE_STYLED_BOX_CLASS } from '../../field';
+import { FORGE_STYLED_BOX_CLASS } from '../../field.util.meta';
 
 describe('forgeToggleField()', () => {
   it('should create a toggle field with correct type', () => {

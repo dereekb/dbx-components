@@ -12,7 +12,6 @@
 import type { DbxForgePhoneFieldDef } from './field/value/phone/phone.field';
 import type { DbxForgeDateTimeFieldDef, DbxForgeFixedDateRangeFieldDef } from './field/value/date/datetime.field';
 import type { DbxForgeTimeDurationFieldDef } from './field/value/duration/duration.field';
-import type { DbxForgeSliderFieldDef } from './field/value/number/slider.field.component';
 import type { DbxForgeArrayFieldDef } from './field/value/array/array.field';
 
 // Selection field types
@@ -43,7 +42,6 @@ declare module '@ng-forge/dynamic-forms' {
     datetime: DbxForgeDateTimeFieldDef;
     fixeddaterange: DbxForgeFixedDateRangeFieldDef;
     timeduration: DbxForgeTimeDurationFieldDef;
-    'dbx-slider': DbxForgeSliderFieldDef;
     'dbx-searchable-text': DbxForgeSearchableTextFieldDef<any, any, any>;
     'dbx-searchable-chip': DbxForgeSearchableChipFieldDef<any, any, any>;
     'dbx-pickable-chip': DbxForgePickableChipFieldDef<any, any, any>;

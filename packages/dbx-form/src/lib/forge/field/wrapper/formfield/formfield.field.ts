@@ -1,11 +1,16 @@
-import type { FieldTypeDefinition, BaseValueField, FieldDef, LogicConfig } from '@ng-forge/dynamic-forms';
+import type { FieldTypeDefinition, BaseValueField, FieldDef, LogicConfig, DynamicText } from '@ng-forge/dynamic-forms';
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
-import { filterFromPOJO } from '@dereekb/util';
-import { forgeField } from '../../field';
-import type { DbxForgeWrapperFieldProps } from '../wrapper.field';
+import { forgeField } from '../../field.util.meta';
+import { DbxForgeWrapperFieldProps } from '../wrapper.field';
+import { dbxForgeFieldFunction, DbxForgeFieldFunctionConfig, DbxForgeFieldFunctionDef, ExtractDbxForgeFieldDef } from '../../field';
 
 // MARK: Field Type
 export const FORGE_FORM_FIELD_WRAPPER_TYPE_NAME = 'dbx-forge-form-field' as const;
+
+export interface DbxForgeFormFieldWrapperWrappedFieldProps {
+  // TODO: Add other visual props
+  readonly hint?: DynamicText;
+}
 
 /**
  * Props interface for the forge form-field wrapper.
@@ -14,13 +19,11 @@ export const FORGE_FORM_FIELD_WRAPPER_TYPE_NAME = 'dbx-forge-form-field' as cons
  * hint/error subscript) around child fields that cannot use `<mat-form-field>` directly
  * (e.g. `<mat-slider>`).
  */
-export interface DbxForgeFormFieldWrapperProps extends DbxForgeWrapperFieldProps {
+export interface DbxForgeFormFieldWrapperProps<F extends FieldDef<DbxForgeFormFieldWrapperWrappedFieldProps> = FieldDef<DbxForgeFormFieldWrapperWrappedFieldProps>> extends DbxForgeWrapperFieldProps {
   /**
-   * Optional hint text displayed in the subscript area below the outlined container.
-   * When the child form has validation errors (and is touched), the first error message
-   * takes precedence over the hint.
+   * Child field definitions to render inside the wrapper.
    */
-  readonly hint?: string;
+  readonly field: F;
 }
 
 /**
@@ -32,7 +35,7 @@ export interface DbxForgeFormFieldWrapperProps extends DbxForgeWrapperFieldProps
  * (e.g. `DbxForgeFormFieldWrapperFieldDef<DbxForgeSearchableTextFieldDef<T,M,H>>`)
  * instead of an opaque `FieldDef<unknown>`.
  */
-export interface DbxForgeFormFieldWrapperFieldDef<_TInner extends FieldDef<any> = FieldDef<any>> extends BaseValueField<DbxForgeFormFieldWrapperProps, Record<string, unknown>> {
+export interface DbxForgeFormFieldWrapperFieldDef<F extends FieldDef<DbxForgeFormFieldWrapperWrappedFieldProps> = FieldDef<DbxForgeFormFieldWrapperWrappedFieldProps>> extends BaseValueField<DbxForgeFormFieldWrapperProps<F>, Record<string, unknown>> {
   readonly type: typeof FORGE_FORM_FIELD_WRAPPER_TYPE_NAME;
 }
 
@@ -46,74 +49,22 @@ export const DBX_FORGE_FORM_FIELD_WRAPPER_TYPE: FieldTypeDefinition<DbxForgeForm
 };
 
 // MARK: Config
-/**
- * Configuration for creating a forge form-field wrapper.
- */
-export interface DbxForgeFormFieldWrapperConfig {
-  /**
-   * Label text displayed in the notched outline.
-   */
-  readonly label?: string;
-  /**
-   * Hint text displayed in the subscript area below the outline.
-   */
-  readonly hint?: string;
-  /**
-   * Optional key override. Defaults to auto-generated `_formfield_N`.
-   */
-  readonly key?: string;
-  /**
-   * Child field definitions to render inside the outlined container.
-   */
-  readonly fields: FieldDef<unknown>[];
-  /**
-   * Logic configurations for conditional state on the wrapper.
-   *
-   * When applied to the wrapper, logic affects the entire composite field
-   * (label, border, and inner field). For example, `'hidden'` logic hides
-   * the entire form-field wrapper including its Material outline.
-   */
-  readonly logic?: LogicConfig[];
-}
-
 let _forgeFormFieldWrapperCounter = 0;
 
-/**
- * Creates a forge form-field wrapper that renders child fields inside a Material-style
- * outlined container with a notched outline, floating label, and hint/error subscript.
- *
- * This is the forge equivalent of ngx-formly's `FormlyWrapperFormField` which wraps
- * fields in `<mat-form-field>`. Use it for fields that cannot be placed directly inside
- * `<mat-form-field>` (e.g. `<mat-slider>`).
- *
- * Uses `_` key prefix so `stripForgeInternalKeys` flattens child values into the parent form.
- *
- * @param config - Form-field wrapper configuration
- * @returns A {@link DbxForgeFormFieldWrapperFieldDef}
- *
- * @example
- * ```typescript
- * const wrappedSlider = forgeFormFieldWrapper({
- *   label: 'Rating',
- *   hint: 'Select a value between 0 and 10',
- *   fields: [
- *     { key: 'rating', type: 'slider', min: 0, max: 10 } as FieldDef<unknown>
- *   ]
- * });
- * ```
- */
-export function forgeFormFieldWrapper<TInner extends FieldDef<any> = FieldDef<any>>(config: DbxForgeFormFieldWrapperConfig): DbxForgeFormFieldWrapperFieldDef<TInner> {
-  const { label, hint, fields, key, logic } = config;
+export type DbxForgeMaterialFormFieldWrappedFieldFunction<C extends DbxForgeFieldFunctionDef<F>, F extends FieldDef<any> = ExtractDbxForgeFieldDef<C>> = (input: C) => DbxForgeFormFieldWrapperFieldDef<F>;
 
-  return forgeField({
-    key: key ?? `_formfield_${_forgeFormFieldWrapperCounter++}`,
-    type: FORGE_FORM_FIELD_WRAPPER_TYPE_NAME,
-    label: label ?? '',
-    value: {} as Record<string, unknown>,
-    logic,
-    props: filterFromPOJO({
-      hint,
-      fields
-    }) as DbxForgeFormFieldWrapperProps
-  } as DbxForgeFormFieldWrapperFieldDef);
+export function dbxForgeMaterialFormFieldWrappedFieldFunction<C extends DbxForgeFieldFunctionDef<F>, F extends FieldDef<any> = ExtractDbxForgeFieldDef<C>>(config: DbxForgeFieldFunctionConfig<C>): DbxForgeMaterialFormFieldWrappedFieldFunction<C, F> {
+  const fn = dbxForgeFieldFunction<C, F>(config);
+  return ((x: C) => {
+    // Create the wrapped field def
+    const result: DbxForgeFormFieldWrapperFieldDef<F> = {
+      key: `_form_field_${_forgeFormFieldWrapperCounter++}`,
+      type: FORGE_FORM_FIELD_WRAPPER_TYPE_NAME,
+      props: {
+        field: fn(x) as F
+      }
+    };
+
+    return result;
+  }) as unknown as DbxForgeMaterialFormFieldWrappedFieldFunction<C, F>;
 }

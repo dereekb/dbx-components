@@ -2,7 +2,7 @@ import { filterFromPOJO } from '@dereekb/util';
 import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import type { FieldTypeDefinition } from '@ng-forge/dynamic-forms';
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
-import { forgeField } from '../field';
+import { forgeField } from '../field.util.meta';
 import { FORGE_COMPONENT_FIELD_TYPE, type DbxForgeComponentFieldProps, type DbxForgeComponentFieldDef } from './component.field.component';
 import type { DbxForgeFieldConfig } from '../field.type';
 

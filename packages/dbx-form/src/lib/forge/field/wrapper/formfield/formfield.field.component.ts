@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, viewChild } from '@angular/core';
 import { DynamicTextPipe, type FieldWithValidation } from '@ng-forge/dynamic-forms';
-import { forgeFieldDisabled } from '../../field.disabled';
+import { forgeFieldDisabled } from '../../field.util';
 import { AsyncPipe } from '@angular/common';
 import { AbstractForgeWrapperFieldComponent, provideDbxForgeWrapperFieldDirective } from '../wrapper.field';
 import { DbxForgeWrapperContentComponent } from '../wrapper.content.component';
@@ -138,12 +138,6 @@ import type { DbxForgeFormFieldWrapperProps } from './formfield.field';
       .dbx-forge-form-field-wrapper-disabled .dbx-forge-form-field-outline-label {
         color: var(--mdc-outlined-text-field-disabled-label-text-color, rgba(0, 0, 0, 0.38));
       }
-
-      /* --- Subscript area --- */
-      .mat-mdc-form-field-subscript-wrapper {
-        padding: 0 16px;
-        box-sizing: border-box;
-      }
     `
   ],
   providers: provideDbxForgeWrapperFieldDirective(DbxForgeFormFieldWrapperComponent),
@@ -200,7 +194,7 @@ export class DbxForgeFormFieldWrapperComponent extends AbstractForgeWrapperField
   });
 
   // Props
-  readonly hintSignal = computed(() => this.props()?.hint);
+  readonly hintSignal = computed(() => (this.props()?.field?.props as any)?.hint);
 
   // ARIA IDs
   protected readonly labelId = computed(() => `${this.key()}-label`);

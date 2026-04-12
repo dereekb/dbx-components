@@ -1,7 +1,7 @@
 import type { MatMultiCheckboxField, MatMultiCheckboxProps } from '@ng-forge/dynamic-forms-material';
 import type { FieldOption } from '@ng-forge/dynamic-forms';
 import { filterFromPOJO } from '@dereekb/util';
-import { forgeField } from '../field';
+import { forgeField } from '../field.util.meta';
 import type { DbxForgeFieldConfig } from '../field.type';
 
 /**

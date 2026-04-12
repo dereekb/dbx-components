@@ -1,5 +1,5 @@
 import type { MatToggleField, MatCheckboxField, MatToggleProps, MatCheckboxProps } from '@ng-forge/dynamic-forms-material';
-import { forgeField, FORGE_STYLED_BOX_CLASS } from '../../field';
+import { forgeField, FORGE_STYLED_BOX_CLASS } from '../../field.util.meta';
 import type { DbxForgeFieldConfig } from '../../field.type';
 
 // MARK: Toggle Field

@@ -10,7 +10,7 @@ import { type DynamicText, type FieldMeta, type ValidationMessages, type BaseVal
 import { createResolvedErrorsSignal, shouldShowErrors } from '@ng-forge/dynamic-forms/integration';
 import { type PickableValueFieldDisplayFunction, type PickableValueFieldDisplayValue, type PickableValueFieldFilterFunction, type PickableValueFieldHashFunction, type PickableValueFieldLoadValuesFunction, type PickableValueFieldValue } from '../../../../formly/field/selection/pickable/pickable';
 import { type PickableItemFieldItem, type PickableItemFieldItemSortFn } from '../../../../formly/field/selection/pickable/pickable.field.directive';
-import { forgeFieldDisabled } from '../../field.disabled';
+import { forgeFieldDisabled } from '../../field.util';
 
 // MARK: Field Type Names
 /**

@@ -13,7 +13,7 @@ import { DbxActionModule, DbxButtonComponent, DbxButtonSpacerDirective, DbxLoadi
 import { BehaviorSubject, combineLatest, distinctUntilChanged, first, map, mergeMap, of, scan, shareReplay, switchMap, tap, type Observable } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type SourceSelectDisplayFunction, type SourceSelectDisplayValue, type SourceSelectDisplayValueGroup, type SourceSelectLoadSource, type SourceSelectLoadSourceLoadingState, type SourceSelectMetaValueReader, type SourceSelectOpenFunction, type SourceSelectOpenSourceResult, type SourceSelectLoadSourcesFunction, type SourceSelectOptions, type SourceSelectValue, type SourceSelectValueGroup, type SourceSelectValueMetaLoader } from '../../../../formly/field/selection/sourceselect/sourceselect';
-import { forgeFieldDisabled } from '../../field.disabled';
+import { forgeFieldDisabled } from '../../field.util';
 
 // MARK: Props
 /**

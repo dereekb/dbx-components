@@ -12,7 +12,7 @@ import { type SearchableValueFieldDisplayValue, type ConfiguredSearchableValueFi
 import { DbxSearchableFieldAutocompleteItemComponent } from '../../../../formly/field/selection/searchable/searchable.field.autocomplete.item.component';
 import { AbstractForgeSearchableFieldDirective, type DbxForgeSearchableTextFieldProps } from './searchable.field.directive';
 import { createResolvedErrorsSignal, setupMetaTracking, shouldShowErrors } from '@ng-forge/dynamic-forms/integration';
-import { forgeFieldDisabled } from '../../field.disabled';
+import { forgeFieldDisabled } from '../../field.util';
 import { toggleDisableFormControl } from '../../../../form/form';
 
 /**

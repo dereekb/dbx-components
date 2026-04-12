@@ -1,7 +1,7 @@
 import type { MatDatepickerField, MatDatepickerProps } from '@ng-forge/dynamic-forms-material';
 import type { FieldDef, BaseValueField, RowField } from '@ng-forge/dynamic-forms';
 import { filterFromPOJO, type ArrayOrValue, type Maybe, type TimezoneString, type DateOrDayString } from '@dereekb/util';
-import { forgeField } from '../../field';
+import { forgeField } from '../../field.util.meta';
 import { forgeRow } from '../../wrapper/wrapper';
 import { forgeFormFieldWrapper, type DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
 import type { DbxForgeFieldConfig } from '../../field.type';

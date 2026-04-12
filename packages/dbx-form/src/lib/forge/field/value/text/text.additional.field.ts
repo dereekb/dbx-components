@@ -2,7 +2,7 @@ import type { MatInputField } from '@ng-forge/dynamic-forms-material';
 import { LAT_LNG_PATTERN, US_STATE_CODE_STRING_REGEX, ZIP_CODE_STRING_REGEX } from '@dereekb/util';
 import { ADDRESS_CITY_MAX_LENGTH, ADDRESS_STATE_CODE_MAX_LENGTH, ADDRESS_STATE_MAX_LENGTH, ADDRESS_COUNTRY_MAX_LENGTH, ADDRESS_ZIP_MAX_LENGTH } from '@dereekb/model';
 import { type DbxForgeTextFieldConfig, forgeTextField } from './text.field';
-import type { DbxForgeFieldAutocompleteConfig } from '../../field';
+import type { DbxForgeFieldAutocompleteConfig } from '../../field.util.meta';
 
 // MARK: Name Field
 /**

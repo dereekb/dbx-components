@@ -4,7 +4,7 @@ import { type FieldTree } from '@angular/forms/signals';
 import { type DynamicText, type FieldMeta, type ValidationMessages, type BaseValueField } from '@ng-forge/dynamic-forms';
 import { setupMetaTracking } from '@ng-forge/dynamic-forms/integration';
 import { type Maybe } from '@dereekb/util';
-import { forgeFieldDisabled } from '../field.disabled';
+import { forgeFieldDisabled } from '../field.util';
 
 // MARK: Forge Component Field Props
 /**

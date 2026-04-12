@@ -1,7 +1,7 @@
 import { type PrimativeKey, filterFromPOJO } from '@dereekb/util';
 import type { FieldDef, FieldTypeDefinition } from '@ng-forge/dynamic-forms';
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
-import { forgeField } from '../../field';
+import { forgeField } from '../../field.util.meta';
 import { forgeFormFieldWrapper, type DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
 import { FORGE_PICKABLE_CHIP_FIELD_TYPE, FORGE_PICKABLE_LIST_FIELD_TYPE, type DbxForgePickableFieldProps, type DbxForgePickableChipFieldDef, type DbxForgePickableListFieldDef } from './pickable.field.directive';
 import type { DbxForgeFieldConfig } from '../../field.type';

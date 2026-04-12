@@ -10,7 +10,7 @@ import { NgClass } from '@angular/common';
 import { type FieldTree } from '@angular/forms/signals';
 import { type DynamicText, type FieldMeta, type ValidationMessages, type BaseValueField } from '@ng-forge/dynamic-forms';
 import { createResolvedErrorsSignal, setupMetaTracking, shouldShowErrors } from '@ng-forge/dynamic-forms/integration';
-import { forgeFieldDisabled } from '../field.disabled';
+import { forgeFieldDisabled } from '../field.util';
 import { toggleDisableFormControl } from '../../../form/form';
 
 // MARK: Forge Text Editor Field Props
