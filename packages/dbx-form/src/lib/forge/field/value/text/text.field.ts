@@ -1,12 +1,11 @@
-import type { BaseValueField, TextField } from '@ng-forge/dynamic-forms';
+import type { BaseValueField, FormConfig, TextField } from '@ng-forge/dynamic-forms';
 import type { MatInputField, MatInputProps, MatTextareaField, MatTextareaProps } from '@ng-forge/dynamic-forms-material';
 import { transformStringFunction, mapMaybeFunction, type TransformStringFunctionConfig, type TransformStringFunctionConfigRef } from '@dereekb/util';
 import type { FieldValueParser, FieldConfigParsersRef } from '../../../../field';
 import type { FieldAutocompleteAttributeOptionRef } from '../../../../field/field.autocomplete';
-import { dbxForgeFieldFunction, dbxForgeBuildFieldDef, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef, DbxForgeFieldHintValueRef } from '../../field';
+import { dbxForgeFieldFunction, dbxForgeBuildFieldDef, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef, DbxForgeFieldHintValueRef, DbxForgeFieldFunction } from '../../field';
 import { configureForgeAutocompleteFieldMeta } from '../../field.util.meta';
 import { dbxForgeDefaultValidationMessages } from '../../../validation';
-import { TextareaField } from '@ng-forge/dynamic-forms/integration';
 
 // MARK: Text Field
 /**
@@ -25,11 +24,14 @@ export interface DbxForgeTextFieldPatternConfig {
 }
 
 /**
+ * We use this for DbxForgeNumberFieldConfig since MatInputField is a union type for both string and number input.
+ */
+type DbxForgeTextFieldDef = BaseValueField<Omit<MatInputProps, 'type'> & { type?: DbxForgeTextFieldInputType }, string> & { type: 'input' };
+
+/**
  * HTML input type for a text field.
  */
 export type DbxForgeTextFieldInputType = 'text' | 'password' | 'email';
-
-type DbxForgeTextFieldDef = BaseValueField<MatInputProps, string> & { type: DbxForgeTextFieldInputType };
 
 /**
  * Full configuration for a single-line text input field in forge.
@@ -89,7 +91,7 @@ export function forgeTextFieldTransformParser(config: Partial<FieldConfigParsers
  * ```typescript
  * const field = forgeTextField({
     key: 'email',
-    label: 'Email',
+    label: 'Email',`
     required: true,
     email: true,
     props: {
@@ -100,10 +102,78 @@ export function forgeTextFieldTransformParser(config: Partial<FieldConfigParsers
  * ```
  */
 export const forgeTextField = dbxForgeFieldFunction<DbxForgeTextFieldConfig>({
-  type: 'text',
+  type: 'input',
   buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder(),
   buildFieldDef: dbxForgeBuildFieldDef((x, config) => {
     const { inputType } = config;
+
+    /*
+    config.logic = [{
+      type: 'derivation',
+      functionName: ''
+    }];
+
+    const formLogic: FormConfig = {
+      fields: [
+        {
+          key: 'tax',
+          type: 'input',
+          readonly: true,
+          logic: [{
+            type: 'derivation',
+            functionName: 'calculateTax',
+            dependsOn: ['subtotal', 'state'],
+          }],
+        },
+      ],
+      customFnConfig: {
+        derivations: {
+          calculateTax: (ctx: any) => ctx.formValue.subtotal * ctx.formValue.state
+        },
+      },
+    } as const satisfies FormConfig;
+    */
+
+    x.addLogic([
+      {
+        type: 'derivation',
+        fn: (x) => forgeTextFieldTransformParser(config), // TODO: ..
+        dependsOnSelf: true // is attaxched to _formConfig otherwise
+      },
+      {
+        type: 'derivation',
+        source: 'asyncFunction',
+        fn: async (ctx) => {
+          return Promise.resolve(100);
+        }
+      }
+      /*
+      {
+        type: 'derivation',
+        source: 'asyncFunction',
+        // asyncFunctionName: 'lookupCity',
+        fn: async (ctx) => {
+          return Promise.resolve(100);
+        }
+      },
+      */
+      /*
+      {
+        type: 'derivation',
+        source: 'http',
+        http: {
+          url: '/api/exchange-rate',
+          method: 'GET',
+          queryParams: {
+            from: 'formValue.sourceCurrency',
+            to: 'formValue.targetCurrency',
+          },
+        },
+        responseExpression: 'response.rate',
+        dependsOn: ['sourceCurrency', 'targetCurrency'],
+      }
+        */
+    ]);
 
     // configure autocomplete
     x.configure(configureForgeAutocompleteFieldMeta);
@@ -122,7 +192,7 @@ export const forgeTextField = dbxForgeFieldFunction<DbxForgeTextFieldConfig>({
       validationMessages: dbxForgeDefaultValidationMessages()
     });
   })
-}) as (input: DbxForgeTextFieldConfig) => MatInputField; // cast since MatInputField is a union type
+}) as DbxForgeFieldFunction<DbxForgeTextFieldConfig, MatInputField>;
 
 // MARK: TextArea Field
 /**

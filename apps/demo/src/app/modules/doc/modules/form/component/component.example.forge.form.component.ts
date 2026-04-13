@@ -33,9 +33,9 @@ export class DocForgeExampleComponentFormComponent extends AbstractConfigAsyncFo
               ]
             },
             allowDisabledEffects: config.allowDisabledEffects ?? true
-          }) as any
+          })
         ]
-      } satisfies FormConfig;
+      } as const satisfies FormConfig;
     })
   );
 }

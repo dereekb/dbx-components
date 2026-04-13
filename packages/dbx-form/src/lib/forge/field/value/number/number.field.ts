@@ -1,7 +1,7 @@
 import type { BaseValueField } from '@ng-forge/dynamic-forms';
 import type { MatInputField, MatInputProps } from '@ng-forge/dynamic-forms-material';
 import { DOLLAR_AMOUNT_PRECISION, type TransformNumberFunctionConfigRef } from '@dereekb/util';
-import { dbxForgeBuildFieldDef, dbxForgeFieldFunction, DbxForgeFieldFunctionDef } from '../../field';
+import { dbxForgeBuildFieldDef, DbxForgeFieldFunction, dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, DbxForgeFieldFunctionDef } from '../../field';
 import { configureForgeAutocompleteFieldMeta } from '../../field.util.meta';
 import { FieldAutocompleteAttributeOptionRef } from 'packages/dbx-form/src/lib/field/field.autocomplete';
 
@@ -28,7 +28,10 @@ export interface DbxForgeNumberFieldNumberConfig {
   readonly enforceStep?: boolean;
 }
 
-type DbxForgeNumberFieldDef = BaseValueField<MatInputProps, number> & { type: 'number' };
+/**
+ * We use this for DbxForgeNumberFieldConfig since MatInputField is a union type for both string and number input.
+ */
+type DbxForgeNumberFieldDef = BaseValueField<Omit<MatInputProps, 'type'> & { type?: 'number' }, number> & { type: 'input' };
 
 /**
  * Full configuration for a numeric input field in forge.
@@ -54,7 +57,12 @@ export interface DbxForgeNumberFieldConfig extends DbxForgeFieldFunctionDef<DbxF
  * ```
  */
 export const forgeNumberField = dbxForgeFieldFunction<DbxForgeNumberFieldConfig>({
-  type: 'number' as const,
+  type: 'input' as const,
+  buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder(() => {
+    return {
+      type: 'number' as const // set props type to number always
+    };
+  }),
   buildFieldDef: dbxForgeBuildFieldDef((x, config) => {
     const { step, enforceStep } = config;
 
@@ -82,7 +90,7 @@ export const forgeNumberField = dbxForgeFieldFunction<DbxForgeNumberFieldConfig>
       });
     }
   })
-}) as (input: DbxForgeNumberFieldConfig) => MatInputField;
+}) as DbxForgeFieldFunction<DbxForgeNumberFieldConfig, MatInputField>;
 
 // MARK: Dollar Amount Field
 /**

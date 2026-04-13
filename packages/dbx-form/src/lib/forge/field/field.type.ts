@@ -6,6 +6,7 @@ import type { FieldWithValidation, LogicConfig } from '@ng-forge/dynamic-forms';
  */
 export type ForgeFieldValidation = Pick<FieldWithValidation, 'validators' | 'validationMessages'>;
 
+// TODO(REMOVE): remove this
 /**
  * Base configuration for a forge field, extending BaseFieldConfig with logic support.
  *

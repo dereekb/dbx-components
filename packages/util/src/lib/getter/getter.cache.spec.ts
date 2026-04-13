@@ -41,5 +41,33 @@ describe('cachedGetter()', () => {
       expect(cached()).toBe('reinitialized_value');
       expect(mockGetter).toHaveBeenCalledTimes(2);
     });
+
+    describe('used()', () => {
+      it('should return false before the cache has been accessed', () => {
+        expect(cached.used()).toBe(false);
+      });
+
+      it('should return true after the cache has been accessed', () => {
+        cached();
+        expect(cached.used()).toBe(true);
+      });
+
+      it('should return true after set() is called', () => {
+        cached.set('manual_value');
+        expect(cached.used()).toBe(true);
+      });
+
+      it('should return false after reset() is called', () => {
+        cached();
+        expect(cached.used()).toBe(true);
+        cached.reset();
+        expect(cached.used()).toBe(false);
+      });
+
+      it('should return true after init() is called', () => {
+        cached.init();
+        expect(cached.used()).toBe(true);
+      });
+    });
   });
 });
