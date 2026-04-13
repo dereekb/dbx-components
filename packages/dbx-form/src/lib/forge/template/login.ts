@@ -1,4 +1,3 @@
-import type { MatInputField } from '@ng-forge/dynamic-forms-material';
 import { forgeTextField, type DbxForgeTextFieldConfig } from '../field/value/text/text.field';
 import { forgeEmailField, type DbxForgeEmailFieldConfig } from '../field/value/text/text.additional.field';
 
@@ -21,7 +20,7 @@ export interface DbxForgeTextPasswordFieldConfig extends Omit<DbxForgeTextFieldC
  * const field = forgeTextPasswordField();
  * ```
  */
-export function forgeTextPasswordField(config?: DbxForgeTextPasswordFieldConfig): MatInputField {
+export function forgeTextPasswordField(config?: DbxForgeTextPasswordFieldConfig) {
   return forgeTextField({
     key: 'password',
     ...config,
@@ -44,7 +43,7 @@ export function forgeTextPasswordField(config?: DbxForgeTextPasswordFieldConfig)
  * const field = forgeTextVerifyPasswordField();
  * ```
  */
-export function forgeTextVerifyPasswordField(config?: DbxForgeTextPasswordFieldConfig): MatInputField {
+export function forgeTextVerifyPasswordField(config?: DbxForgeTextPasswordFieldConfig) {
   return forgeTextPasswordField({
     key: 'verifyPassword',
     label: 'Verify Password',
@@ -102,7 +101,7 @@ export interface DbxForgeUsernameLoginFieldsConfig {
  * const fields = forgeUsernamePasswordLoginFields({ username: 'email' });
  * ```
  */
-export function forgeUsernamePasswordLoginFields(config: DbxForgeUsernameLoginFieldsConfig): MatInputField[] {
+export function forgeUsernamePasswordLoginFields(config: DbxForgeUsernameLoginFieldsConfig) {
   const usernameField = forgeUsernameLoginField(config.username);
   const passwordField = forgeTextPasswordField(config.password);
 
@@ -122,7 +121,7 @@ export function forgeUsernamePasswordLoginFields(config: DbxForgeUsernameLoginFi
  * const field = forgeUsernameLoginField('email');
  * ```
  */
-export function forgeUsernameLoginField(username: DbxForgeUsernameLoginFieldUsernameConfigInput): MatInputField {
+export function forgeUsernameLoginField(username: DbxForgeUsernameLoginFieldUsernameConfigInput) {
   let usernameFieldConfig: DbxForgeUsernameLoginFieldUsernameConfig = username as DbxForgeUsernameLoginFieldUsernameConfig;
 
   if (typeof username === 'string') {

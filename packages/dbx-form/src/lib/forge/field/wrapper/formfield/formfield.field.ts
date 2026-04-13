@@ -55,13 +55,16 @@ export type DbxForgeMaterialFormFieldWrappedFieldFunction<C extends DbxForgeFiel
 
 export function dbxForgeMaterialFormFieldWrappedFieldFunction<C extends DbxForgeFieldFunctionDef<F>, F extends FieldDef<any> = ExtractDbxForgeFieldDef<C>>(config: DbxForgeFieldFunctionConfig<C>): DbxForgeMaterialFormFieldWrappedFieldFunction<C, F> {
   const fn = dbxForgeFieldFunction<C, F>(config);
+
   return ((x: C) => {
+    const field = fn(x as any) as F;
+
     // Create the wrapped field def
     const result: DbxForgeFormFieldWrapperFieldDef<F> = {
       key: `_form_field_${_forgeFormFieldWrapperCounter++}`,
       type: FORGE_FORM_FIELD_WRAPPER_TYPE_NAME,
       props: {
-        field: fn(x) as F
+        field
       }
     };
 

@@ -77,7 +77,7 @@ export function oidcClientNameForgeField() {
   return forgeTextField({
     key: 'client_name',
     label: 'Client Name',
-    description: 'A human-readable name for this OAuth client.',
+    hint: 'A human-readable name for this OAuth client.',
     required: true,
     maxLength: 200
   });
@@ -92,12 +92,14 @@ export function oidcClientRedirectUrisForgeField() {
   return forgeSearchableStringChipField({
     key: 'redirect_uris',
     label: 'Redirect URIs',
-    description: 'Type a redirect URI (e.g. https://example.com/callback) and press enter to add it.',
+    hint: 'Type a redirect URI (e.g. https://example.com/callback) and press enter to add it.',
     required: true,
-    searchOnEmptyText: false,
-    textInputValidator: isWebsiteUrlValidator({ requirePrefix: true, allowPorts: true }),
-    search: () => of([]),
-    displayForValue: (values) => of(values.map((v) => ({ ...v, label: v.value })))
+    props: {
+      searchOnEmptyText: false,
+      textInputValidator: isWebsiteUrlValidator({ requirePrefix: true, allowPorts: true }),
+      search: () => of([]),
+      displayForValue: (values) => of(values.map((v) => ({ ...v, label: v.value })))
+    }
   });
 }
 
@@ -113,7 +115,7 @@ export function oidcClientJwksUriForgeField() {
       forgeTextField({
         key: 'jwks_uri',
         label: 'JWKS URI',
-        description: "URL where the client's public JSON Web Key Set can be fetched. Required for private_key_jwt authentication.",
+        hint: "URL where the client's public JSON Web Key Set can be fetched. Required for private_key_jwt authentication.",
         required: true
       })
     ],
@@ -140,7 +142,7 @@ export function oidcClientLogoUriForgeField() {
   return forgeTextField({
     key: 'logo_uri',
     label: 'Logo URI',
-    description: 'URL of the client logo image (optional).',
+    hint: 'URL of the client logo image (optional).',
     required: false
   });
 }
@@ -154,7 +156,7 @@ export function oidcClientHomepageUriForgeField() {
   return forgeTextField({
     key: 'client_uri',
     label: 'Homepage URL',
-    description: 'URL of the client homepage (optional).',
+    hint: 'URL of the client homepage (optional).',
     required: false
   });
 }
@@ -217,8 +219,10 @@ export function oidcClientTestScopesForgeField(availableScopes: OidcScopeDetails
   return forgePickableChipField({
     key: 'scopes',
     label: 'Scopes',
-    description: 'Select the scopes to request.',
-    showSelectAllButton: true,
-    ...pickableValueFieldValuesConfigForStaticLabeledValues(availableScopes)
+    hint: 'Select the scopes to request.',
+    props: {
+      showSelectAllButton: true,
+      ...pickableValueFieldValuesConfigForStaticLabeledValues(availableScopes)
+    }
   });
 }

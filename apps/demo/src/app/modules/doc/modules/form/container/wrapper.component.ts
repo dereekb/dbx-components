@@ -22,7 +22,6 @@ import {
   forgeToggleWrapper,
   forgeInfoFieldWrapper,
   forgeStyleWrapper,
-  forgeFormFieldWrapper,
   forgeNameField,
   forgeTextIsAvailableField,
   forgeNumberField,
@@ -318,6 +317,7 @@ export class DocFormWrapperComponent {
 
   readonly forgeFormFieldWrapperSliderConfig: FormConfig = {
     fields: [
+      /*
       forgeFormFieldWrapper({
         label: 'Rating',
         hint: 'Must be above 50.',
@@ -333,22 +333,14 @@ export class DocFormWrapperComponent {
           } as any
         ]
       }),
+      */
       forgeNumberSliderField({ key: 'volume', label: 'Volume', description: 'Pick a volume.', min: 0, max: 100, step: 5 })
     ]
   };
 
   readonly forgeFormFieldWrapperTextConfig: FormConfig = {
     fields: [
-      forgeFormFieldWrapper({
-        label: 'Wrapped Text Field',
-        hint: 'A text field inside a form-field wrapper.',
-        fields: [forgeNameField({ label: '' })]
-      }),
-      forgeFormFieldWrapper({
-        label: 'Wrapped Number Field',
-        hint: 'A number field inside a form-field wrapper.',
-        fields: [forgeNumberField({ key: 'count', label: '', min: 0, max: 100 }) as any]
-      })
+      // TODO: Add the
     ]
   };
 }

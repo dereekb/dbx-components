@@ -1,5 +1,4 @@
 import type { FieldDef } from '@ng-forge/dynamic-forms';
-import type { MatInputField } from '@ng-forge/dynamic-forms-material';
 import { ADDRESS_LINE_MAX_LENGTH } from '@dereekb/model';
 import { forgeTextField, type DbxForgeTextFieldConfig } from './text.field';
 import { forgeCityField, type DbxForgeCityFieldConfig, forgeCountryField, type DbxForgeCountryFieldConfig, forgeStateField, type DbxForgeStateFieldConfig, forgeZipCodeField, type DbxForgeZipCodeFieldConfig } from './text.additional.field';
@@ -60,7 +59,7 @@ export interface DbxForgeAddressLineFieldConfig extends Partial<DbxForgeTextFiel
  * const line2 = forgeAddressLineField({ line: 2 });
  * ```
  */
-export function forgeAddressLineField(config: DbxForgeAddressLineFieldConfig = {}): MatInputField {
+export function forgeAddressLineField(config: DbxForgeAddressLineFieldConfig = {}) {
   const { line = 1 } = config;
   const lineCode = Math.max(1, line); // minimum of line 1
 

@@ -1,5 +1,5 @@
 import type { BaseValueField } from '@ng-forge/dynamic-forms';
-import type { MatInputProps } from '@ng-forge/dynamic-forms-material';
+import type { MatInputField, MatInputProps } from '@ng-forge/dynamic-forms-material';
 import { DOLLAR_AMOUNT_PRECISION, type TransformNumberFunctionConfigRef } from '@dereekb/util';
 import { dbxForgeBuildFieldDef, dbxForgeFieldFunction, DbxForgeFieldFunctionDef } from '../../field';
 import { configureForgeAutocompleteFieldMeta } from '../../field.util.meta';
@@ -28,12 +28,14 @@ export interface DbxForgeNumberFieldNumberConfig {
   readonly enforceStep?: boolean;
 }
 
+type DbxForgeNumberFieldDef = BaseValueField<MatInputProps, number> & { type: 'number' };
+
 /**
  * Full configuration for a numeric input field in forge.
  *
  * Combines labeling, numeric constraints (min/max/step), and number transformation.
  */
-export interface DbxForgeNumberFieldConfig extends DbxForgeFieldFunctionDef<BaseValueField<MatInputProps, number>>, FieldAutocompleteAttributeOptionRef, DbxForgeNumberFieldNumberConfig, Partial<TransformNumberFunctionConfigRef> {
+export interface DbxForgeNumberFieldConfig extends DbxForgeFieldFunctionDef<DbxForgeNumberFieldDef>, FieldAutocompleteAttributeOptionRef, DbxForgeNumberFieldNumberConfig, Partial<TransformNumberFunctionConfigRef> {
   readonly defaultValue?: number;
 }
 
@@ -80,7 +82,7 @@ export const forgeNumberField = dbxForgeFieldFunction<DbxForgeNumberFieldConfig>
       });
     }
   })
-});
+}) as (input: DbxForgeNumberFieldConfig) => MatInputField;
 
 // MARK: Dollar Amount Field
 /**

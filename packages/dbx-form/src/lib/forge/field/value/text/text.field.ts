@@ -1,10 +1,12 @@
+import type { BaseValueField, TextField } from '@ng-forge/dynamic-forms';
 import type { MatInputField, MatInputProps, MatTextareaField, MatTextareaProps } from '@ng-forge/dynamic-forms-material';
-import type { ValidationMessages } from '@ng-forge/dynamic-forms';
-import { filterFromPOJO, transformStringFunction, mapMaybeFunction, type TransformStringFunctionConfig, type TransformStringFunctionConfigRef } from '@dereekb/util';
+import { transformStringFunction, mapMaybeFunction, type TransformStringFunctionConfig, type TransformStringFunctionConfigRef } from '@dereekb/util';
 import type { FieldValueParser, FieldConfigParsersRef } from '../../../../field';
-import { forgeField, forgeAutocompleteFieldMeta, type DbxForgeFieldAutocompleteConfig } from '../../field.util.meta';
-import type { DbxForgeLabeledFieldConfig } from '../../field.type';
-import { dbxForgeDefaultValidationMessages as dbxForgeDefaultValidationMessages } from '../../../validation';
+import type { FieldAutocompleteAttributeOptionRef } from '../../../../field/field.autocomplete';
+import { dbxForgeFieldFunction, dbxForgeBuildFieldDef, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef, DbxForgeFieldHintValueRef } from '../../field';
+import { configureForgeAutocompleteFieldMeta } from '../../field.util.meta';
+import { dbxForgeDefaultValidationMessages } from '../../../validation';
+import { TextareaField } from '@ng-forge/dynamic-forms/integration';
 
 // MARK: Text Field
 /**
@@ -27,26 +29,25 @@ export interface DbxForgeTextFieldPatternConfig {
  */
 export type DbxForgeTextFieldInputType = 'text' | 'password' | 'email';
 
+type DbxForgeTextFieldDef = BaseValueField<MatInputProps, string> & { type: DbxForgeTextFieldInputType };
+
 /**
  * Full configuration for a single-line text input field in forge.
  *
  * Combines labeling, validation (pattern, length), and string transformation
  * into one config object.
  */
-export interface DbxForgeTextFieldConfig extends DbxForgeLabeledFieldConfig, DbxForgeTextFieldPatternConfig, DbxForgeTextFieldLengthConfig, Partial<TransformStringFunctionConfigRef> {
+export interface DbxForgeTextFieldConfig extends DbxForgeFieldFunctionDef<DbxForgeTextFieldDef>, FieldAutocompleteAttributeOptionRef, Partial<TransformStringFunctionConfigRef> {
   /**
    * HTML input type. Defaults to `'text'`.
    */
   readonly inputType?: DbxForgeTextFieldInputType;
-  /**
+  /**(alias) type MatInputField = NumberInputField<MatInputProps> | StringInputField<MatInputProps>
+
    * String transformation applied as a value parser (e.g., trim, uppercase).
    */
   readonly transform?: TransformStringFunctionConfig;
   readonly defaultValue?: string;
-  /**
-   * Sets the autocomplete attribute on the input. Pass `false` to disable browser autofill.
-   */
-  readonly autocomplete?: DbxForgeFieldAutocompleteConfig;
 }
 
 /**
@@ -82,94 +83,96 @@ export function forgeTextFieldTransformParser(config: Partial<FieldConfigParsers
  * Creates a forge field definition for a single-line text input.
  *
  * @param config - Text field configuration including key, label, validation, and transform options
- * @returns A validated {@link MatInputField} with type `'input'`
+ * @returns A text input field with type `'input'`
  *
  * @example
  * ```typescript
- * const field = forgeTextField({ key: 'username', label: 'Username', maxLength: 50, required: true });
+ * const field = forgeTextField({
+    key: 'email',
+    label: 'Email',
+    required: true,
+    email: true,
+    props: {
+      type: 'email',              // 'text' | 'email' | 'password' | 'number' | 'tel' | 'url'
+      placeholder: 'user@example.com',
+    }
+  });
  * ```
  */
-export function forgeTextField(config: DbxForgeTextFieldConfig): MatInputField {
-  const { key, label, placeholder, required, readonly: isReadonly, description, minLength, maxLength, pattern, inputType = 'text', defaultValue = '', autocomplete, logic } = config;
+export const forgeTextField = dbxForgeFieldFunction<DbxForgeTextFieldConfig>({
+  type: 'text',
+  buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder(),
+  buildFieldDef: dbxForgeBuildFieldDef((x, config) => {
+    const { inputType } = config;
 
-  const props: Partial<MatInputProps> = filterFromPOJO({
-    type: inputType,
-    hint: description
-  });
+    // configure autocomplete
+    x.configure(configureForgeAutocompleteFieldMeta);
 
-  const validationMessages: ValidationMessages = dbxForgeDefaultValidationMessages();
-  const meta = forgeAutocompleteFieldMeta(autocomplete);
+    // TODO: Based on the inputType, configure the props/etc.
 
-  return forgeField({
-    key,
-    type: 'input' as const,
-    label,
-    placeholder,
-    value: defaultValue,
-    required,
-    readonly: isReadonly,
-    minLength,
-    maxLength,
-    pattern: pattern != null ? (typeof pattern === 'string' ? pattern : pattern.source) : undefined,
-    validationMessages,
-    meta,
-    logic,
-    props: Object.keys(props).length > 0 ? props : undefined
-  } as MatInputField);
-}
+    // convert RegExp pattern to string
+    /*
+    if (config.pattern instanceof RegExp) {
+      (config as any).pattern = config.pattern.source;
+    }
+    */
+
+    // add default validation messages
+    x.addValidation({
+      validationMessages: dbxForgeDefaultValidationMessages()
+    });
+  })
+}) as (input: DbxForgeTextFieldConfig) => MatInputField; // cast since MatInputField is a union type
 
 // MARK: TextArea Field
 /**
  * Configuration for a multi-line textarea input field in forge.
  */
-export interface DbxForgeTextAreaFieldConfig extends DbxForgeLabeledFieldConfig, DbxForgeTextFieldPatternConfig, DbxForgeTextFieldLengthConfig, Partial<TransformStringFunctionConfigRef> {
+export interface DbxForgeTextAreaFieldConfig extends DbxForgeFieldFunctionDef<MatTextareaField>, FieldAutocompleteAttributeOptionRef, Partial<TransformStringFunctionConfigRef> {
   /**
    * Number of visible text rows. Defaults to 3.
    */
   readonly rows?: number;
   readonly defaultValue?: string;
-  /**
-   * Sets the autocomplete attribute on the textarea. Pass `false` to disable browser autofill.
-   */
-  readonly autocomplete?: DbxForgeFieldAutocompleteConfig;
 }
 
 /**
  * Creates a forge field definition for a multi-line textarea input.
  *
  * @param config - Textarea field configuration including key, label, rows, and validation options
- * @returns A validated {@link MatTextareaField} with type `'textarea'`
+ * @returns A textarea field with type `'textarea'`
  *
  * @example
  * ```typescript
  * const field = forgeTextAreaField({ key: 'bio', label: 'Biography', rows: 5, maxLength: 500 });
  * ```
  */
-export function forgeTextAreaField(config: DbxForgeTextAreaFieldConfig): MatTextareaField {
-  const { key, label, placeholder, required, readonly: isReadonly, description, rows = 3, minLength, maxLength, pattern, defaultValue = '', autocomplete, logic } = config;
+export const forgeTextAreaField = dbxForgeFieldFunction<DbxForgeTextAreaFieldConfig>({
+  type: 'textarea' as const,
+  buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder((input) => ({
+    rows: input.rows ?? 3
+  })),
+  buildFieldDef: dbxForgeBuildFieldDef((x, config) => {
+    // configure autocomplete
+    x.configure(configureForgeAutocompleteFieldMeta);
 
-  const props: Partial<MatTextareaProps> = filterFromPOJO({
-    hint: description,
-    rows
-  });
+    // set defaults
+    if (config.label == null) {
+      (config as any).label = '';
+    }
 
-  const validationMessages: ValidationMessages = dbxForgeDefaultValidationMessages();
-  const meta = forgeAutocompleteFieldMeta(autocomplete);
+    if (config.value == null) {
+      (config as any).value = config['defaultValue'] ?? '';
+    }
 
-  return forgeField({
-    key,
-    type: 'textarea' as const,
-    label: label ?? '',
-    placeholder,
-    value: defaultValue,
-    required,
-    readonly: isReadonly,
-    minLength,
-    maxLength,
-    pattern: pattern != null ? (typeof pattern === 'string' ? pattern : pattern.source) : undefined,
-    validationMessages,
-    meta,
-    logic,
-    props: Object.keys(props).length > 0 ? props : undefined
-  } as MatTextareaField);
-}
+    // convert RegExp pattern to string
+    if (config.pattern instanceof RegExp) {
+      (config as any).pattern = config.pattern.source;
+    }
+
+    // add default validation messages
+    x.addValidation({
+      validationMessages: dbxForgeDefaultValidationMessages()
+    });
+  })
+});

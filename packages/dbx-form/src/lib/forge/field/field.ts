@@ -124,13 +124,12 @@ export function dbxForgeFieldFunction<C extends DbxForgeFieldFunctionDef<F>, F e
     const props = makeProps(input);
 
     // always copy the input before passing to makeFieldDef
-    const config = makeFieldDef(
-      {
-        ...input,
-        props
-      },
+    const _config = {
+      ...input,
       props
-    );
+    };
+
+    const config = makeFieldDef(_config, props) ?? _config;
 
     // always set type before returning
     (config as Building<F>).type = type;

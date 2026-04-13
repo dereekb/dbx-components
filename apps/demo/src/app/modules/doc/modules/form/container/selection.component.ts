@@ -147,91 +147,6 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
   private _searchStrings = new BehaviorSubject<TestStringSearchFunction>((search) => ['A', 'B', 'C', 'D'].map((x) => `${search} ${x}`.trim()));
   readonly searchFn$ = this._searchStrings.asObservable();
 
-  readonly sourceSelectFields: FormlyFieldConfig[] = [
-    formlySourceSelectField<number, ValueSelectionOptionWithValue<number>>({
-      key: 'selectOne',
-      label: 'Select One',
-      description: 'This is a source selection field for picking a single value from various sources.',
-      valueReader: (x) => x.value,
-      metaLoader: (values) => of(values.map((x) => VALUE_SELECTION_VALUES.find((y) => y.value === x) as ValueSelectionOptionWithValue<number>)),
-      displayForValue: (input) => of(input.map((y) => ({ ...y, label: String(y.meta.label) }))),
-      loadSources: () => {
-        const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
-        sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
-        sources.push({ label: 'Source B', meta: of(successResult([...VALUE_SELECTION_VALUES, ...MORE_VALUE_SELECTION_VALUES])) }); // repeat values are ignored.
-        return of(sources);
-      }
-    }),
-    formlySourceSelectField({
-      key: 'selectMany',
-      label: 'Select Many',
-      multiple: true,
-      description: 'This is a source selection field for picking a multiple values from various sources.',
-      valueReader: (x) => x.value,
-      metaLoader: (values) => of(values.map((x) => VALUE_SELECTION_VALUES.find((y) => y.value === x) as ValueSelectionOptionWithValue<number>)),
-      displayForValue: (input) => of(input.map((y) => ({ ...y, label: String(y.meta.label) }))),
-      loadSources: () => {
-        const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
-        sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
-        sources.push({ label: 'Source B', meta: of(successResult([...VALUE_SELECTION_VALUES, ...MORE_VALUE_SELECTION_VALUES])) }); // repeat values are ignored.
-        return of(sources);
-      }
-    }),
-    formlySourceSelectField({
-      key: 'selectManyLoading',
-      label: 'Select Many Loading',
-      multiple: true,
-      description: 'This source demonstrates the loading bar showing while a source is being loaded.',
-      valueReader: (x) => x.value,
-      metaLoader: (values) => of(values.map((x) => VALUE_SELECTION_VALUES.find((y) => y.value === x) as ValueSelectionOptionWithValue<number>)),
-      displayForValue: (input) => of(input.map((y) => ({ ...y, label: String(y.meta.label) }))),
-      loadSources: () => {
-        const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
-        sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
-        sources.push({ label: 'Source B', meta: of(beginLoading<ValueSelectionOptionWithValue<number>[]>()) }); // demonstrates loading from another source
-        return of(sources);
-      }
-    }),
-    formlySourceSelectField({
-      key: 'selectManyWithSourceButton',
-      label: 'Select With Source Button',
-      multiple: true,
-      description: 'This source demonstrates the source selection button. The button can be configured to return both options to select immediately or options to add to the list.',
-      selectButtonIcon: 'search',
-      valueReader: (x) => x.value,
-      metaLoader: (values) => of(values.map((x) => VALUE_SELECTION_VALUES.find((y) => y.value === x) as ValueSelectionOptionWithValue<number>)),
-      displayForValue: (input) => of(input.map((y) => ({ ...y, label: String(y.meta.label) }))),
-      loadSources: () => {
-        const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
-        sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
-        return of(sources);
-      },
-      openSource: ({ origin }) => {
-        console.log('origin: ', origin); // usable by popovers/etc.
-        return of({ select: EVEN_MORE_VALUE_SELECTION_VALUES, options: MORE_VALUE_SELECTION_VALUES }).pipe(delay(2000));
-      }
-    }),
-    formlySourceSelectField({
-      key: 'selectManyFilterable',
-      label: 'Select Many (Filterable)',
-      multiple: true,
-      description: 'This source demonstrates the type-to-filter feature (enabled by default). Open the dropdown and start typing to filter options by label.',
-      valueReader: (x) => x.value,
-      metaLoader: (values) => of(values.map((x) => VALUE_SELECTION_VALUES.find((y) => y.value === x) as ValueSelectionOptionWithValue<number>)),
-      displayForValue: (input) => of(input.map((y) => ({ ...y, label: String(y.meta.label) }))),
-      loadSources: () => {
-        const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
-        sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
-        sources.push({ label: 'Source B', meta: of(successResult([...VALUE_SELECTION_VALUES, ...MORE_VALUE_SELECTION_VALUES])) });
-        return of(sources);
-      }
-    })
-  ];
-
-  readonly sourceSelectFieldsValue = {
-    selectManyLoading: [VALUE_SELECTION_VALUES[1].value] // will have a value already selected
-  };
-
   readonly valueSelectionFields: FormlyFieldConfig[] = [
     formlyValueSelectionField({
       key: 'selectOne',
@@ -326,88 +241,184 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
     ]
   };
 
-  // MARK: Forge Source Select
+  // MARK: Source Select
+
+  readonly sourceSelectFields: FormlyFieldConfig[] = [
+    formlySourceSelectField<number, ValueSelectionOptionWithValue<number>>({
+      key: 'selectOne',
+      label: 'Select One',
+      description: 'This is a source selection field for picking a single value from various sources.',
+      valueReader: (x) => x.value,
+      metaLoader: (values) => of(values.map((x) => VALUE_SELECTION_VALUES.find((y) => y.value === x) as ValueSelectionOptionWithValue<number>)),
+      displayForValue: (input) => of(input.map((y) => ({ ...y, label: String(y.meta.label) }))),
+      loadSources: () => {
+        const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
+        sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
+        sources.push({ label: 'Source B', meta: of(successResult([...VALUE_SELECTION_VALUES, ...MORE_VALUE_SELECTION_VALUES])) }); // repeat values are ignored.
+        return of(sources);
+      }
+    }),
+    formlySourceSelectField({
+      key: 'selectMany',
+      label: 'Select Many',
+      multiple: true,
+      description: 'This is a source selection field for picking a multiple values from various sources.',
+      valueReader: (x) => x.value,
+      metaLoader: (values) => of(values.map((x) => VALUE_SELECTION_VALUES.find((y) => y.value === x) as ValueSelectionOptionWithValue<number>)),
+      displayForValue: (input) => of(input.map((y) => ({ ...y, label: String(y.meta.label) }))),
+      loadSources: () => {
+        const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
+        sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
+        sources.push({ label: 'Source B', meta: of(successResult([...VALUE_SELECTION_VALUES, ...MORE_VALUE_SELECTION_VALUES])) }); // repeat values are ignored.
+        return of(sources);
+      }
+    }),
+    formlySourceSelectField({
+      key: 'selectManyLoading',
+      label: 'Select Many Loading',
+      multiple: true,
+      description: 'This source demonstrates the loading bar showing while a source is being loaded.',
+      valueReader: (x) => x.value,
+      metaLoader: (values) => of(values.map((x) => VALUE_SELECTION_VALUES.find((y) => y.value === x) as ValueSelectionOptionWithValue<number>)),
+      displayForValue: (input) => of(input.map((y) => ({ ...y, label: String(y.meta.label) }))),
+      loadSources: () => {
+        const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
+        sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
+        sources.push({ label: 'Source B', meta: of(beginLoading<ValueSelectionOptionWithValue<number>[]>()) }); // demonstrates loading from another source
+        return of(sources);
+      }
+    }),
+    formlySourceSelectField({
+      key: 'selectManyWithSourceButton',
+      label: 'Select With Source Button',
+      multiple: true,
+      description: 'This source demonstrates the source selection button. The button can be configured to return both options to select immediately or options to add to the list.',
+      selectButtonIcon: 'search',
+      valueReader: (x) => x.value,
+      metaLoader: (values) => of(values.map((x) => VALUE_SELECTION_VALUES.find((y) => y.value === x) as ValueSelectionOptionWithValue<number>)),
+      displayForValue: (input) => of(input.map((y) => ({ ...y, label: String(y.meta.label) }))),
+      loadSources: () => {
+        const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
+        sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
+        return of(sources);
+      },
+      openSource: ({ origin }) => {
+        console.log('origin: ', origin); // usable by popovers/etc.
+        return of({ select: EVEN_MORE_VALUE_SELECTION_VALUES, options: MORE_VALUE_SELECTION_VALUES }).pipe(delay(2000));
+      }
+    }),
+    formlySourceSelectField({
+      key: 'selectManyFilterable',
+      label: 'Select Many (Filterable)',
+      multiple: true,
+      description: 'This source demonstrates the type-to-filter feature (enabled by default). Open the dropdown and start typing to filter options by label.',
+      valueReader: (x) => x.value,
+      metaLoader: (values) => of(values.map((x) => VALUE_SELECTION_VALUES.find((y) => y.value === x) as ValueSelectionOptionWithValue<number>)),
+      displayForValue: (input) => of(input.map((y) => ({ ...y, label: String(y.meta.label) }))),
+      loadSources: () => {
+        const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
+        sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
+        sources.push({ label: 'Source B', meta: of(successResult([...VALUE_SELECTION_VALUES, ...MORE_VALUE_SELECTION_VALUES])) });
+        return of(sources);
+      }
+    })
+  ];
+
   readonly forgeSourceSelectFieldConfig: FormConfig = {
     fields: [
       forgeSourceSelectField<number, ValueSelectionOptionWithValue<number>>({
         key: 'selectOne',
         label: 'Select One',
-        description: 'This is a source selection field for picking a single value from various sources.',
-        valueReader: (x) => x.value,
-        metaLoader: (values) => of(values.map((x) => VALUE_SELECTION_VALUES.find((y) => y.value === x) as ValueSelectionOptionWithValue<number>)),
-        displayForValue: (input) => of(input.map((y) => ({ ...y, label: String(y.meta.label) }))),
-        loadSources: () => {
-          const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
-          sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
-          sources.push({ label: 'Source B', meta: of(successResult([...VALUE_SELECTION_VALUES, ...MORE_VALUE_SELECTION_VALUES])) });
-          return of(sources);
+        hint: 'This is a source selection field for picking a single value from various sources.',
+        props: {
+          valueReader: (x) => x.value,
+          metaLoader: (values) => of(values.map((x) => VALUE_SELECTION_VALUES.find((y) => y.value === x) as ValueSelectionOptionWithValue<number>)),
+          displayForValue: (input) => of(input.map((y) => ({ ...y, label: String(y.meta.label) }))),
+          loadSources: () => {
+            const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
+            sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
+            sources.push({ label: 'Source B', meta: of(successResult([...VALUE_SELECTION_VALUES, ...MORE_VALUE_SELECTION_VALUES])) });
+            return of(sources);
+          }
         }
-      }) as any,
+      }),
       forgeSourceSelectField({
         key: 'selectMany',
         label: 'Select Many',
-        multiple: true,
-        description: 'This is a source selection field for picking a multiple values from various sources.',
-        valueReader: (x: any) => x.value,
-        metaLoader: (values) => of(values.map((x) => VALUE_SELECTION_VALUES.find((y) => y.value === x) as ValueSelectionOptionWithValue<number>)),
-        displayForValue: (input) => of(input.map((y: any) => ({ ...y, label: String(y.meta.label) }))),
-        loadSources: () => {
-          const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
-          sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
-          sources.push({ label: 'Source B', meta: of(successResult([...VALUE_SELECTION_VALUES, ...MORE_VALUE_SELECTION_VALUES])) });
-          return of(sources);
+        hint: 'This is a source selection field for picking a multiple values from various sources.',
+        props: {
+          multiple: true,
+          valueReader: (x: any) => x.value,
+          metaLoader: (values) => of(values.map((x) => VALUE_SELECTION_VALUES.find((y) => y.value === x) as ValueSelectionOptionWithValue<number>)),
+          displayForValue: (input) => of(input.map((y: any) => ({ ...y, label: String(y.meta.label) }))),
+          loadSources: () => {
+            const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
+            sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
+            sources.push({ label: 'Source B', meta: of(successResult([...VALUE_SELECTION_VALUES, ...MORE_VALUE_SELECTION_VALUES])) });
+            return of(sources);
+          }
         }
-      }) as any,
+      }),
       forgeSourceSelectField({
         key: 'selectManyLoading',
         label: 'Select Many Loading',
-        multiple: true,
-        description: 'This source demonstrates the loading bar showing while a source is being loaded.',
-        valueReader: (x: any) => x.value,
-        metaLoader: (values) => of(values.map((x) => VALUE_SELECTION_VALUES.find((y) => y.value === x) as ValueSelectionOptionWithValue<number>)),
-        displayForValue: (input) => of(input.map((y: any) => ({ ...y, label: String(y.meta.label) }))),
-        loadSources: () => {
-          const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
-          sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
-          sources.push({ label: 'Source B', meta: of(beginLoading<ValueSelectionOptionWithValue<number>[]>()) });
-          return of(sources);
+        hint: 'This source demonstrates the loading bar showing while a source is being loaded.',
+        props: {
+          multiple: true,
+          valueReader: (x: any) => x.value,
+          metaLoader: (values) => of(values.map((x) => VALUE_SELECTION_VALUES.find((y) => y.value === x) as ValueSelectionOptionWithValue<number>)),
+          displayForValue: (input) => of(input.map((y: any) => ({ ...y, label: String(y.meta.label) }))),
+          loadSources: () => {
+            const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
+            sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
+            sources.push({ label: 'Source B', meta: of(beginLoading<ValueSelectionOptionWithValue<number>[]>()) });
+            return of(sources);
+          }
         }
-      }) as any,
+      }),
       forgeSourceSelectField({
         key: 'selectManyWithSourceButton',
         label: 'Select With Source Button',
-        multiple: true,
-        description: 'This source demonstrates the source selection button. The button can be configured to return both options to select immediately or options to add to the list.',
-        selectButtonIcon: 'search',
-        valueReader: (x: any) => x.value,
-        metaLoader: (values) => of(values.map((x) => VALUE_SELECTION_VALUES.find((y) => y.value === x) as ValueSelectionOptionWithValue<number>)),
-        displayForValue: (input) => of(input.map((y: any) => ({ ...y, label: String(y.meta.label) }))),
-        loadSources: () => {
-          const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
-          sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
-          return of(sources);
-        },
-        openSource: ({ origin }) => {
-          console.log('origin: ', origin);
-          return of({ select: EVEN_MORE_VALUE_SELECTION_VALUES, options: MORE_VALUE_SELECTION_VALUES }).pipe(delay(2000));
+        hint: 'This source demonstrates the source selection button. The button can be configured to return both options to select immediately or options to add to the list.',
+        props: {
+          multiple: true,
+          selectButtonIcon: 'search',
+          valueReader: (x: any) => x.value,
+          metaLoader: (values) => of(values.map((x) => VALUE_SELECTION_VALUES.find((y) => y.value === x) as ValueSelectionOptionWithValue<number>)),
+          displayForValue: (input) => of(input.map((y: any) => ({ ...y, label: String(y.meta.label) }))),
+          loadSources: () => {
+            const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
+            sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
+            return of(sources);
+          },
+          openSource: ({ origin }) => {
+            console.log('origin: ', origin);
+            return of({ select: EVEN_MORE_VALUE_SELECTION_VALUES, options: MORE_VALUE_SELECTION_VALUES }).pipe(delay(2000));
+          }
         }
-      }) as any,
+      }),
       forgeSourceSelectField({
         key: 'selectManyFilterable',
         label: 'Select Many (Filterable)',
-        multiple: true,
-        description: 'This source demonstrates the type-to-filter feature (enabled by default). Open the dropdown and start typing to filter options by label.',
-        valueReader: (x: any) => x.value,
-        metaLoader: (values) => of(values.map((x) => VALUE_SELECTION_VALUES.find((y) => y.value === x) as ValueSelectionOptionWithValue<number>)),
-        displayForValue: (input) => of(input.map((y: any) => ({ ...y, label: String(y.meta.label) }))),
-        loadSources: () => {
-          const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
-          sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
-          sources.push({ label: 'Source B', meta: of(successResult([...VALUE_SELECTION_VALUES, ...MORE_VALUE_SELECTION_VALUES])) });
-          return of(sources);
+        hint: 'This source demonstrates the type-to-filter feature (enabled by default). Open the dropdown and start typing to filter options by label.',
+        props: {
+          multiple: true,
+          valueReader: (x: any) => x.value,
+          metaLoader: (values) => of(values.map((x) => VALUE_SELECTION_VALUES.find((y) => y.value === x) as ValueSelectionOptionWithValue<number>)),
+          displayForValue: (input) => of(input.map((y: any) => ({ ...y, label: String(y.meta.label) }))),
+          loadSources: () => {
+            const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
+            sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
+            sources.push({ label: 'Source B', meta: of(successResult([...VALUE_SELECTION_VALUES, ...MORE_VALUE_SELECTION_VALUES])) });
+            return of(sources);
+          }
         }
-      }) as any
+      })
     ]
+  };
+
+  readonly sourceSelectFieldsValue = {
+    selectManyLoading: [VALUE_SELECTION_VALUES[1].value] // will have a value already selected
   };
 
   // MARK: Forge Pickable Chip
@@ -416,63 +427,77 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       forgePickableChipField({
         key: 'stringItemChips',
         label: 'String Item Chips',
-        description: 'This is a simple string item chip picker.',
-        loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
-        displayForValue: DISPLAY_FOR_STRING_VALUE
-      }) as any,
+        hint: 'This is a simple string item chip picker.',
+        props: {
+          loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
+          displayForValue: DISPLAY_FOR_STRING_VALUE
+        }
+      }),
       forgePickableChipField({
         key: 'stringItemChipsReadonly',
         label: 'Read Only String Item Chips',
-        description: 'This is read only.',
+        hint: 'This is read only.',
         readonly: true,
-        loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
-        displayForValue: DISPLAY_FOR_STRING_VALUE
-      }) as any,
+        props: {
+          loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
+          displayForValue: DISPLAY_FOR_STRING_VALUE
+        }
+      }),
       forgePickableChipField({
         key: 'singleStringItemChips',
         label: 'Single Selection',
-        description: 'This field only allows selecting one item at a time and returns the value by itself',
-        multiSelect: false,
-        asArrayValue: false,
-        loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
-        displayForValue: DISPLAY_FOR_STRING_VALUE
-      }) as any,
+        hint: 'This field only allows selecting one item at a time and returns the value by itself',
+        props: {
+          multiSelect: false,
+          asArrayValue: false,
+          loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
+          displayForValue: DISPLAY_FOR_STRING_VALUE
+        }
+      }),
       forgePickableChipField({
         key: 'stringItemChipsWithFilter',
         label: 'String Item Chips With Filter',
-        filterLabel: 'Filter',
-        description: 'You can filter these items by their label.',
-        filterValues: filterPickableItemFieldValuesByLabel,
-        loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
-        displayForValue: DISPLAY_FOR_STRING_VALUE
-      }) as any,
+        hint: 'You can filter these items by their label.',
+        props: {
+          filterLabel: 'Filter',
+          filterValues: filterPickableItemFieldValuesByLabel,
+          loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
+          displayForValue: DISPLAY_FOR_STRING_VALUE
+        }
+      }),
       forgePickableChipField({
         key: 'staticLabeledValuesExample',
         label: 'pickableValueFieldValuesConfigForStaticLabeledValues() Example Usage',
-        filterLabel: 'Filter',
-        ...pickableValueFieldValuesConfigForStaticLabeledValues(
-          range(50)
-            .map((x) => String(x))
-            .map((value) => ({ label: value.toUpperCase(), value }))
-        )
-      }) as any,
+        props: {
+          filterLabel: 'Filter',
+          ...pickableValueFieldValuesConfigForStaticLabeledValues(
+            range(50)
+              .map((x) => String(x))
+              .map((value) => ({ label: value.toUpperCase(), value }))
+          )
+        }
+      }),
       forgePickableChipField({
         key: 'stringItemChipsWithFilterDelay',
         label: 'String Item Chips With Filter With Delay',
-        filterLabel: 'Filter',
-        description: 'You can filter these items by their label.',
-        filterValues: (a, b) => filterPickableItemFieldValuesByLabel(a, b).pipe(delay(300)),
-        loadValues: () => of(MAKE_RANDOM_STRING_VALUES()),
-        displayForValue: DISPLAY_FOR_STRING_VALUE
-      }) as any,
+        hint: 'You can filter these items by their label.',
+        props: {
+          filterLabel: 'Filter',
+          filterValues: (a, b) => filterPickableItemFieldValuesByLabel(a, b).pipe(delay(300)),
+          loadValues: () => of(MAKE_RANDOM_STRING_VALUES()),
+          displayForValue: DISPLAY_FOR_STRING_VALUE
+        }
+      }),
       forgePickableChipField({
         key: 'stringItemChipsWithSelectAll',
         label: 'Chips With Select All Button',
-        description: 'This chip field has a "Select All" toggle button to select or deselect all items at once.',
-        showSelectAllButton: true,
-        loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }, { value: 'd' }]),
-        displayForValue: DISPLAY_FOR_STRING_VALUE
-      }) as any
+        hint: 'This chip field has a "Select All" toggle button to select or deselect all items at once.',
+        props: {
+          showSelectAllButton: true,
+          loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }, { value: 'd' }]),
+          displayForValue: DISPLAY_FOR_STRING_VALUE
+        }
+      })
     ]
   };
 
@@ -482,36 +507,44 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       forgePickableListField({
         key: 'stringItemList',
         label: 'String Item List',
-        description: 'This is a simple string item list picker.',
-        loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
-        displayForValue: DISPLAY_FOR_STRING_VALUE
-      }) as any,
+        hint: 'This is a simple string item list picker.',
+        props: {
+          loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
+          displayForValue: DISPLAY_FOR_STRING_VALUE
+        }
+      }),
       forgePickableListField({
         key: 'stringItemListReadonly',
         label: 'Read Only String Item List',
         readonly: true,
-        description: 'This is read only.',
-        loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
-        displayForValue: DISPLAY_FOR_STRING_VALUE
-      }) as any,
+        hint: 'This is read only.',
+        props: {
+          loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
+          displayForValue: DISPLAY_FOR_STRING_VALUE
+        }
+      }),
       forgePickableListField({
         key: 'stringItemListSingleValue',
         label: 'String Item List With Single Value Selection',
-        description: 'You can only select one value at a time. The value is returned as an array anyways.',
-        loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
-        displayForValue: DISPLAY_FOR_STRING_VALUE,
-        multiSelect: false,
-        asArrayValue: true
-      }) as any,
+        hint: 'You can only select one value at a time. The value is returned as an array anyways.',
+        props: {
+          loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
+          displayForValue: DISPLAY_FOR_STRING_VALUE,
+          multiSelect: false,
+          asArrayValue: true
+        }
+      }),
       forgePickableListField({
         key: 'stringItemListWithFilter',
         label: 'String Item List',
-        filterLabel: 'Filter',
-        description: 'You can filter these items by their label.',
-        filterValues: filterPickableItemFieldValuesByLabel,
-        loadValues: () => of(MAKE_RANDOM_STRING_VALUES()),
-        displayForValue: DISPLAY_FOR_STRING_VALUE
-      }) as any
+        hint: 'You can filter these items by their label.',
+        props: {
+          filterLabel: 'Filter',
+          filterValues: filterPickableItemFieldValuesByLabel,
+          loadValues: () => of(MAKE_RANDOM_STRING_VALUES()),
+          displayForValue: DISPLAY_FOR_STRING_VALUE
+        }
+      })
     ]
   };
 
@@ -521,67 +554,81 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       forgeSearchableStringChipField({
         key: 'typeAndPickChips',
         label: 'Search And Pick Strings',
-        description: 'This input can search for string, but also have an arbitrary value input.',
-        searchOnEmptyText: true,
-        search: makeSearchForStringValue(this.searchFn$),
-        displayForValue: DISPLAY_FOR_STRING_VALUE
-      }) as any,
+        hint: 'This input can search for string, but also have an arbitrary value input.',
+        props: {
+          searchOnEmptyText: true,
+          search: makeSearchForStringValue(this.searchFn$),
+          displayForValue: DISPLAY_FOR_STRING_VALUE
+        }
+      }),
       forgeSearchableStringChipField({
         key: 'typeAndPickChipsReadonly',
         label: 'Read Only Text Field',
-        description: 'This input is read-only.',
+        hint: 'This input is read-only.',
         readonly: true,
-        searchOnEmptyText: true,
-        search: makeSearchForStringValue(this.searchFn$),
-        displayForValue: DISPLAY_FOR_STRING_VALUE
-      }) as any,
+        props: {
+          searchOnEmptyText: true,
+          search: makeSearchForStringValue(this.searchFn$),
+          displayForValue: DISPLAY_FOR_STRING_VALUE
+        }
+      }),
       forgeSearchableChipField({
         key: 'pickOnly',
         label: 'Only Pick Strings',
-        description: 'This input does not allow arbitrary strings to be input.',
-        allowStringValues: false,
-        searchOnEmptyText: true,
-        search: makeSearchForStringValue(this.searchFn$),
-        displayForValue: DISPLAY_FOR_STRING_VALUE
-      }) as any,
+        hint: 'This input does not allow arbitrary strings to be input.',
+        props: {
+          allowStringValues: false,
+          searchOnEmptyText: true,
+          search: makeSearchForStringValue(this.searchFn$),
+          displayForValue: DISPLAY_FOR_STRING_VALUE
+        }
+      }),
       forgeSearchableChipField({
         key: 'pickOne',
         label: 'Pick a Single Value',
-        description: 'Can only pick one value at a time. Saved as a single value.',
-        allowStringValues: false,
-        searchOnEmptyText: true,
-        multiSelect: false,
-        asArrayValue: false,
-        search: makeSearchForStringValue(this.searchFn$),
-        displayForValue: DISPLAY_FOR_STRING_VALUE
-      }) as any,
+        hint: 'Can only pick one value at a time. Saved as a single value.',
+        props: {
+          allowStringValues: false,
+          searchOnEmptyText: true,
+          multiSelect: false,
+          asArrayValue: false,
+          search: makeSearchForStringValue(this.searchFn$),
+          displayForValue: DISPLAY_FOR_STRING_VALUE
+        }
+      }),
       forgeSearchableChipField({
         key: 'nonEmptySearch',
         label: 'Search Non-Empty Strings',
-        description: 'This input does not search empty string value.',
-        allowStringValues: false,
-        searchOnEmptyText: false,
-        search: makeSearchForStringValue(this.searchFn$),
-        displayForValue: DISPLAY_FOR_STRING_VALUE
-      }) as any,
+        hint: 'This input does not search empty string value.',
+        props: {
+          allowStringValues: false,
+          searchOnEmptyText: false,
+          search: makeSearchForStringValue(this.searchFn$),
+          displayForValue: DISPLAY_FOR_STRING_VALUE
+        }
+      }),
       forgeSearchableChipField({
         key: 'customView',
         label: 'Search Non-Empty Strings',
-        description: 'This input has custom display configuration.',
-        allowStringValues: false,
-        searchOnEmptyText: true,
-        search: EXAMPLE_SEARCH_FOR_SELECTION_VALUE(),
-        displayForValue: EXAMPLE_DISPLAY_FOR_SELECTION_VALUE_WITH_CUSTOM_DISPLAYS
-      }) as any,
+        hint: 'This input has custom display configuration.',
+        props: {
+          allowStringValues: false,
+          searchOnEmptyText: true,
+          search: EXAMPLE_SEARCH_FOR_SELECTION_VALUE(),
+          displayForValue: EXAMPLE_DISPLAY_FOR_SELECTION_VALUE_WITH_CUSTOM_DISPLAYS
+        }
+      }),
       forgeSearchableStringChipField({
         key: 'validatedUrls',
         label: 'URL Chips With Validation',
-        description: 'Type a URL (e.g. https://example.com) and press enter. Invalid URLs are rejected with an inline error. Port numbers like http://localhost:8080 are allowed.',
-        searchOnEmptyText: false,
-        textInputValidator: isWebsiteUrlValidator({ requirePrefix: true, allowPorts: true }),
-        search: () => of([]),
-        displayForValue: (values) => of(values.map((v) => ({ ...v, label: v.value })))
-      }) as any
+        hint: 'Type a URL (e.g. https://example.com) and press enter. Invalid URLs are rejected with an inline error. Port numbers like http://localhost:8080 are allowed.',
+        props: {
+          searchOnEmptyText: false,
+          textInputValidator: isWebsiteUrlValidator({ requirePrefix: true, allowPorts: true }),
+          search: () => of([]),
+          displayForValue: (values) => of(values.map((v) => ({ ...v, label: v.value })))
+        }
+      })
     ]
   };
 
@@ -591,63 +638,75 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       forgeSearchableTextField({
         key: 'strings',
         label: 'Type, Search And Pick A String Value',
-        description: 'Type in a string and select it, or search for string values.',
-        allowStringValues: true,
-        searchOnEmptyText: true,
-        search: makeSearchForStringValue(this.searchFn$),
-        displayForValue: DISPLAY_FOR_STRING_VALUE
-      }) as any,
+        hint: 'Type in a string and select it, or search for string values.',
+        props: {
+          allowStringValues: true,
+          searchOnEmptyText: true,
+          search: makeSearchForStringValue(this.searchFn$),
+          displayForValue: DISPLAY_FOR_STRING_VALUE
+        }
+      }),
       forgeSearchableTextField({
         key: 'stringsReadonly',
         label: 'Read-only Text Field',
-        description: 'View is read only.',
+        hint: 'View is read only.',
         readonly: true,
-        allowStringValues: true,
-        searchOnEmptyText: true,
-        search: makeSearchForStringValue(this.searchFn$),
-        displayForValue: DISPLAY_FOR_STRING_VALUE
-      }) as any,
+        props: {
+          allowStringValues: true,
+          searchOnEmptyText: true,
+          search: makeSearchForStringValue(this.searchFn$),
+          displayForValue: DISPLAY_FOR_STRING_VALUE
+        }
+      }),
       forgeSearchableTextField({
         key: 'pickStrings',
         label: 'Search And Pick A String Value only.',
-        description: 'Search for values only.',
-        allowStringValues: false,
-        searchOnEmptyText: false,
-        search: makeSearchForStringValue(this.searchFn$),
-        displayForValue: DISPLAY_FOR_STRING_VALUE
-      }) as any,
+        hint: 'Search for values only.',
+        props: {
+          allowStringValues: false,
+          searchOnEmptyText: false,
+          search: makeSearchForStringValue(this.searchFn$),
+          displayForValue: DISPLAY_FOR_STRING_VALUE
+        }
+      }),
       forgeSearchableTextField<DocFormExampleSelectionValueId, DocFormExampleSelectionValue>({
         key: 'models',
         label: 'Search And Pick A Model',
-        description: 'Search for models using a string and the default display presentation.',
-        allowStringValues: false,
-        searchOnEmptyText: true,
-        search: EXAMPLE_SEARCH_FOR_SELECTION_VALUE(0),
-        displayForValue: EXAMPLE_DISPLAY_FOR_SELECTION_VALUE
-      }) as any,
+        hint: 'Search for models using a string and the default display presentation.',
+        props: {
+          allowStringValues: false,
+          searchOnEmptyText: true,
+          search: EXAMPLE_SEARCH_FOR_SELECTION_VALUE(0),
+          displayForValue: EXAMPLE_DISPLAY_FOR_SELECTION_VALUE
+        }
+      }),
       forgeSearchableTextField<DocFormExampleSelectionValueId, DocFormExampleSelectionValue>({
         key: 'customDisplay',
         label: 'Search And Pick A Model (Custom Display)',
-        description: 'Search for models using a string and custom display presentation set on the field.',
+        hint: 'Search for models using a string and custom display presentation set on the field.',
         placeholder: 'Type to search (3 characters minimum)',
-        allowStringValues: false,
-        searchOnEmptyText: true,
-        search: EXAMPLE_SEARCH_FOR_SELECTION_VALUE(),
-        displayForValue: EXAMPLE_DISPLAY_FOR_SELECTION_VALUE,
-        display: {
-          componentClass: DocFormExamplePrimarySearchableFieldDisplayComponent
+        props: {
+          allowStringValues: false,
+          searchOnEmptyText: true,
+          search: EXAMPLE_SEARCH_FOR_SELECTION_VALUE(),
+          displayForValue: EXAMPLE_DISPLAY_FOR_SELECTION_VALUE,
+          display: {
+            componentClass: DocFormExamplePrimarySearchableFieldDisplayComponent
+          }
         }
-      }) as any,
+      }),
       forgeSearchableTextField<DocFormExampleSelectionValueId, DocFormExampleSelectionValue>({
         key: 'customDisplayItems',
         label: 'Search And Pick A Model (Custom Display)',
-        description: 'Search for models using a string and custom display presentation set per item.',
+        hint: 'Search for models using a string and custom display presentation set per item.',
         placeholder: 'Type to search (3 characters minimum)',
-        allowStringValues: false,
-        searchOnEmptyText: true,
-        search: EXAMPLE_SEARCH_FOR_SELECTION_VALUE(),
-        displayForValue: EXAMPLE_DISPLAY_FOR_SELECTION_VALUE_WITH_CUSTOM_DISPLAYS
-      }) as any
+        props: {
+          allowStringValues: false,
+          searchOnEmptyText: true,
+          search: EXAMPLE_SEARCH_FOR_SELECTION_VALUE(),
+          displayForValue: EXAMPLE_DISPLAY_FOR_SELECTION_VALUE_WITH_CUSTOM_DISPLAYS
+        }
+      })
     ]
   };
 
@@ -691,12 +750,14 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       forgeListSelectionField<DocValue & IndexRef, AbstractDbxSelectionListWrapperDirective<DocValue & IndexRef>>({
         key: 'dbxlist',
         label: 'DbxList Label',
-        description: 'Uses a dbxList-related view/wrapper to display a list and select items. Selected items are keyed via a readKey function.',
-        state$: this.state$,
-        readKey: readIndexNumber,
-        loadMore: () => this.loadMore(),
-        listComponentClass: of(DocSelectionItemListComponent as unknown as Type<AbstractDbxSelectionListWrapperDirective<DocValue & IndexRef>>)
-      }) as any
+        hint: 'Uses a dbxList-related view/wrapper to display a list and select items. Selected items are keyed via a readKey function.',
+        props: {
+          state$: this.state$,
+          readKey: readIndexNumber,
+          loadMore: () => this.loadMore(),
+          listComponentClass: of(DocSelectionItemListComponent as unknown as Type<AbstractDbxSelectionListWrapperDirective<DocValue & IndexRef>>)
+        }
+      })
     ]
   };
 
@@ -963,65 +1024,71 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       forgeSearchableTextField({
         key: 'anchor1',
         label: 'Anchor Segue',
-        description: 'Anchors are enabled and set on the field. Result is configured to not show.',
-        allowStringValues: false,
-        searchOnEmptyText: true,
-        search: (_search: string) => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
-        displayForValue: DISPLAY_FOR_STRING_VALUE,
-        showSelectedValue: false,
-        useAnchor: true,
-        anchorForValue: (fieldValue) => {
-          return {
-            onClick: () => {
-              this.valueClicked.set(`Default anchor click: ${fieldValue.value}`);
-            }
-          };
+        hint: 'Anchors are enabled and set on the field. Result is configured to not show.',
+        props: {
+          allowStringValues: false,
+          searchOnEmptyText: true,
+          search: (_search: string) => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
+          displayForValue: DISPLAY_FOR_STRING_VALUE,
+          showSelectedValue: false,
+          useAnchor: true,
+          anchorForValue: (fieldValue: SearchableValueFieldValue<string>) => {
+            return {
+              onClick: () => {
+                this.valueClicked.set(`Default anchor click: ${fieldValue.value}`);
+              }
+            };
+          }
         }
       }),
       forgeSearchableTextField({
         key: 'anchor2',
         label: 'Anchor Segue',
-        description: 'Anchors are set on each item. Result is configured to not show.',
-        allowStringValues: false,
-        searchOnEmptyText: true,
-        showSelectedValue: false,
-        search: (_search: string) =>
-          of(
-            [{ value: 'a' }, { value: 'b' }, { value: 'c' }].map((x) => ({
-              ...x,
-              anchor: {
-                onClick: () => {
-                  this.valueClicked.set(`Per item value: ${x.value}`);
+        hint: 'Anchors are set on each item. Result is configured to not show.',
+        props: {
+          allowStringValues: false,
+          searchOnEmptyText: true,
+          showSelectedValue: false,
+          search: (_search: string) =>
+            of(
+              [{ value: 'a' }, { value: 'b' }, { value: 'c' }].map((x) => ({
+                ...x,
+                anchor: {
+                  onClick: () => {
+                    this.valueClicked.set(`Per item value: ${x.value}`);
+                  }
                 }
-              }
-            }))
-          ),
-        displayForValue: DISPLAY_FOR_STRING_VALUE
+              }))
+            ),
+          displayForValue: DISPLAY_FOR_STRING_VALUE
+        }
       }),
       forgeSearchableTextField({
         key: 'anchor3',
         label: 'Anchor Segue For Metadata Items',
-        description: `Metadata items are passed in. Note that the simple displayForValue function we used doesn't search remotely and just fills in default data if meta is missing.`,
-        allowStringValues: false,
-        searchOnEmptyText: true,
-        showSelectedValue: false,
-        search: (search: string) =>
-          of(this.exampleMetadataValues).pipe(
-            map((s) => {
-              const filteredSchools = EMBEDDED_SCHOOLS_FILTER_FUNCTION(search, s);
-              const result: SearchableValueFieldValue<string, ExampleSearchableMetadata>[] = filteredSchools.map((meta) => ({ meta, value: meta.key }));
-              return result;
-            })
-          ),
-        displayForValue: DISPLAY_FOR_EXAMPLE_METADATA_VALUE,
-        anchorForValue: (fieldValue) => {
-          return {
-            onClick: () => {
-              this.valueClicked.set(`Meta item click: ${fieldValue.value}`);
-            }
-          };
-        },
-        refreshDisplayValues$: this._refreshDisplayValues
+        hint: `Metadata items are passed in. Note that the simple displayForValue function we used doesn't search remotely and just fills in default data if meta is missing.`,
+        props: {
+          allowStringValues: false,
+          searchOnEmptyText: true,
+          showSelectedValue: false,
+          search: (search: string) =>
+            of(this.exampleMetadataValues).pipe(
+              map((s) => {
+                const filteredSchools = EMBEDDED_SCHOOLS_FILTER_FUNCTION(search, s);
+                const result: SearchableValueFieldValue<string, ExampleSearchableMetadata>[] = filteredSchools.map((meta) => ({ meta, value: meta.key }));
+                return result;
+              })
+            ),
+          displayForValue: DISPLAY_FOR_EXAMPLE_METADATA_VALUE,
+          anchorForValue: (fieldValue: SearchableValueFieldValue<string, ExampleSearchableMetadata>) => {
+            return {
+              onClick: () => {
+                this.valueClicked.set(`Meta item click: ${fieldValue.value}`);
+              }
+            };
+          },
+          refreshDisplayValues$: this._refreshDisplayValues
+        }
       })
     ]
   };

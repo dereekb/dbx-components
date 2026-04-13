@@ -1,9 +1,8 @@
-import { type PrimativeKey, filterFromPOJO } from '@dereekb/util';
+import { type PrimativeKey } from '@dereekb/util';
 import type { FieldTypeDefinition } from '@ng-forge/dynamic-forms';
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
-import { forgeField } from '../../field.util.meta';
-import { FORGE_SOURCE_SELECT_FIELD_TYPE, type DbxForgeSourceSelectFieldProps, type DbxForgeSourceSelectFieldDef } from './sourceselect.field.component';
-import type { DbxForgeFieldConfig } from '../../field.type';
+import { FORGE_SOURCE_SELECT_FIELD_TYPE, type DbxForgeSourceSelectFieldDef } from './sourceselect.field.component';
+import { type DbxForgeFieldFunctionDef, dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, dbxForgeBuildFieldDef } from '../../field';
 
 // MARK: Field Type Definition
 /**
@@ -21,10 +20,9 @@ export const DBX_SOURCE_SELECT_FIELD_TYPE: FieldTypeDefinition<DbxForgeSourceSel
 /**
  * Configuration for a forge source select field.
  */
-export interface DbxForgeSourceSelectFieldConfig<T extends PrimativeKey = PrimativeKey, M = unknown> extends DbxForgeFieldConfig, DbxForgeSourceSelectFieldProps<T, M> {
-  readonly label?: string;
-  readonly description?: string;
-}
+export interface DbxForgeSourceSelectFieldConfig<T extends PrimativeKey = PrimativeKey, M = unknown> extends DbxForgeFieldFunctionDef<DbxForgeSourceSelectFieldDef<T, M>> {}
+
+export type DbxForgeSourceSelectFieldFunction = <T extends PrimativeKey = PrimativeKey, M = unknown>(config: DbxForgeSourceSelectFieldConfig<T, M>) => DbxForgeSourceSelectFieldDef<T, M>;
 
 /**
  * Creates a forge field definition for a source select field.
@@ -46,20 +44,10 @@ export interface DbxForgeSourceSelectFieldConfig<T extends PrimativeKey = Primat
  * });
  * ```
  */
-export function forgeSourceSelectField<T extends PrimativeKey = PrimativeKey, M = unknown>(config: DbxForgeSourceSelectFieldConfig<T, M>): DbxForgeSourceSelectFieldDef<T, M> {
-  const { key, label, required, readonly: isReadonly, description, logic, ...selectProps } = config;
-
-  return forgeField({
-    key,
-    type: FORGE_SOURCE_SELECT_FIELD_TYPE,
-    label: label ?? '',
-    value: undefined as unknown as T | T[],
-    required,
-    readonly: isReadonly,
-    logic,
-    props: filterFromPOJO({
-      ...selectProps,
-      hint: description
-    }) as DbxForgeSourceSelectFieldProps<T, M>
-  } as DbxForgeSourceSelectFieldDef<T, M>);
-}
+export const forgeSourceSelectField = dbxForgeFieldFunction<DbxForgeSourceSelectFieldConfig>({
+  type: FORGE_SOURCE_SELECT_FIELD_TYPE,
+  buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder(),
+  buildFieldDef: dbxForgeBuildFieldDef(() => {
+    // TODO: ...
+  })
+}) as DbxForgeSourceSelectFieldFunction;

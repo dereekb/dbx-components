@@ -32,10 +32,13 @@ export function forgeTimezoneStringField(config: DbxForgeTimezoneStringFieldConf
     key: 'timezone',
     label: 'Timezone',
     ...config,
-    searchOnEmptyText: true,
-    allowStringValues: false,
-    showClearValue: true,
-    search: timezoneStringSearchFunction(),
-    displayForValue: DISPLAY_FOR_TIMEZONE_STRING_VALUE
+    props: {
+      ...config.props,
+      searchOnEmptyText: true,
+      allowStringValues: false,
+      showClearValue: true,
+      search: timezoneStringSearchFunction(),
+      displayForValue: DISPLAY_FOR_TIMEZONE_STRING_VALUE
+    }
   });
 }

@@ -8,7 +8,6 @@ import { provideDbxForgeFormFieldDeclarations } from '../../../forge.providers';
 import { provideDbxFormConfiguration } from '../../../../form.providers';
 import { DbxForgeFormComponent } from '../../../form/forge.component';
 import { DbxForgeFormContext, provideDbxForgeFormContext } from '../../../form/forge.context';
-import { forgeFormFieldWrapper } from './formfield.field';
 import { forgeTextField } from '../../value/text/text.field';
 import { forgeNumberSliderField } from '../../value/number/slider.field';
 
@@ -125,7 +124,7 @@ describe('DbxForgeFormFieldWrapperComponent', () => {
       context.requireValid = false;
 
       context.config = {
-        fields: [forgeNumberSliderField({ key: 'rating', label: 'Rating', min: 0, max: 10, defaultValue: 5 }) as any]
+        fields: [forgeNumberSliderField({ key: 'rating', label: 'Rating', min: 0, max: 10, value: 5 }) as any]
       };
 
       await settle(fixture);
@@ -146,83 +145,19 @@ describe('DbxForgeFormFieldWrapperComponent', () => {
     });
   });
 
-  describe('with forgeFormFieldWrapper() wrapping a text field', () => {
-    it('should render the wrapper and child field', async () => {
-      const fixture = TestBed.createComponent(TestFormFieldWrapperHostComponent);
-      const context = fixture.componentInstance.context;
-      context.requireValid = false;
-
-      context.config = {
-        fields: [forgeFormFieldWrapper(forgeTextField({ key: 'name', label: '' }))]
-      };
-
-      await settle(fixture);
-
-      const host = fixture.nativeElement as HTMLElement;
-      const wrapper = host.querySelector('dbx-forge-form-field-wrapper');
-      expect(wrapper).toBeTruthy();
-
-      const label = host.querySelector('.dbx-forge-form-field-outline-label');
-      expect(label?.textContent?.trim()).toBe('Custom Wrapper');
-
-      const subscript = host.querySelector('.mat-mdc-form-field-hint');
-      expect(subscript?.textContent?.trim()).toBe('A hint');
-
-      fixture.destroy();
-    });
-
-    it('should strip wrapper internal key from form output', async () => {
-      const fixture = TestBed.createComponent(TestFormFieldWrapperHostComponent);
-      const context = fixture.componentInstance.context;
-      context.requireValid = false;
-
-      context.config = {
-        fields: [
-          forgeFormFieldWrapper({
-            label: 'Wrapped',
-            fields: [forgeTextField({ key: 'name', label: '', defaultValue: 'hello' }) as any]
-          }) as any
-        ]
-      };
-
-      await settle(fixture);
-
-      context.setValue({ name: 'hello' } as any);
-      await settle(fixture);
-
-      const result = await firstValueFrom(
-        context.getValue().pipe(
-          timeout(500),
-          first(),
-          map((value) => ({ received: true, value })),
-          catchError(() => of({ received: false, value: undefined }))
-        )
-      );
-
-      expect(result.received).toBe(true);
-
-      const value = result.value as Record<string, unknown>;
-      // Should have the domain key, not the wrapper's _formfield_ key
-      const underscoreKeys = Object.keys(value).filter((k) => k.startsWith('_'));
-      expect(underscoreKeys).toEqual([]);
-
-      fixture.destroy();
-    });
-  });
-
   describe('validation gating with forgeFormFieldWrapper()', () => {
     function createSliderWithValidatorConfig() {
       return {
         fields: [
-          forgeFormFieldWrapper({
+          forgeNumberSliderField({
             key: 'rating',
-            type: 'slider',
             label: '',
+            min: 0,
             max: 100,
             value: 25,
             validators: [{ type: 'custom', expression: 'fieldValue > 50', kind: 'minRating' }],
             validationMessages: { minRating: 'Rating must be above 50.' },
-            props: { min: 0, max: 100, thumbLabel: true }
+            props: { thumbLabel: true }
           })
         ]
       };
@@ -262,21 +197,15 @@ describe('DbxForgeFormFieldWrapperComponent', () => {
       // Use a default value above 50 so the validator passes immediately
       context.config = {
         fields: [
-          forgeFormFieldWrapper({
-            label: 'Rating',
-            fields: [
-              {
-                key: 'rating',
-                type: 'slider',
-                label: '',
-                max: 100,
-                value: 75,
-                validators: [{ type: 'custom', expression: 'fieldValue > 50', kind: 'minRating' }],
-                validationMessages: { minRating: 'Rating must be above 50.' },
-                props: { min: 0, max: 100, thumbLabel: true }
-              } as any
-            ]
-          }) as any
+          forgeNumberSliderField({
+            key: 'rating',
+            label: '',
+            max: 100,
+            value: 75,
+            validators: [{ type: 'custom', expression: 'fieldValue > 50', kind: 'minRating' }],
+            validationMessages: { minRating: 'Rating must be above 50.' },
+            props: { thumbLabel: true }
+          })
         ]
       };
 

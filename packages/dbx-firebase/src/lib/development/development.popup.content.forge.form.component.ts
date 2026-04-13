@@ -41,12 +41,14 @@ export class DbxFirebaseDevelopmentPopupContentForgeFormComponent extends Abstra
         fields: [
           forgePickableChipField<string, DbxFirebaseDevelopmentWidgetEntry>({
             key: 'specifier',
-            filterLabel: 'Tools',
-            description: 'Pick a tool to get started.',
-            filterValues: filterPickableItemFieldValuesByLabel,
-            loadValues: () => of(config.entries.map((y) => ({ value: y.widget.type, meta: y }))),
-            displayForValue: DISPLAY_FOR_DEVELOPMENT_POPUP_STRING_VALUE,
-            asArrayValue: false
+            hint: 'Pick a tool to get started.',
+            props: {
+              filterLabel: 'Tools',
+              filterValues: filterPickableItemFieldValuesByLabel,
+              loadValues: () => of(config.entries.map((y) => ({ value: y.widget.type, meta: y }))),
+              displayForValue: DISPLAY_FOR_DEVELOPMENT_POPUP_STRING_VALUE,
+              asArrayValue: false
+            }
           })
         ]
       };

@@ -3,7 +3,7 @@ import { firstValueFrom, first, map, of, Subject, take, timeout } from 'rxjs';
 import { FormControl } from '@angular/forms';
 import { forgeSearchableTextField, forgeSearchableChipField, forgeSearchableStringChipField } from './searchable.field';
 import type { DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
-import type { FieldDef, LogicConfig } from '@ng-forge/dynamic-forms';
+import type { LogicConfig } from '@ng-forge/dynamic-forms';
 
 // MARK: Shared Stubs
 const stubSearch = (_text: string) => of([{ value: 'a' }]);
@@ -12,13 +12,13 @@ const stubDisplayForValue = (values: { value: string }[]) => of(values.map((v) =
 // MARK: Helpers
 /**
  * Extracts the inner field from a DbxForgeFormFieldWrapperFieldDef.
- * The wrapper nests the actual field inside `props.fields[0]`.
+ * The wrapper nests the actual field inside `props.field`.
+ * Returns `any` for convenient runtime property access in tests.
  */
-function getInnerField(wrapper: DbxForgeFormFieldWrapperFieldDef): FieldDef<unknown> {
-  const fields = wrapper.props?.fields;
-  expect(fields).toBeDefined();
-  expect(fields!.length).toBeGreaterThan(0);
-  return fields![0];
+function getInnerField(wrapper: DbxForgeFormFieldWrapperFieldDef): any {
+  const field = (wrapper.props as any)?.field;
+  expect(field).toBeDefined();
+  return field;
 }
 
 // MARK: forgeSearchableTextField
@@ -26,9 +26,15 @@ describe('forgeSearchableTextField()', () => {
   function minimalConfig() {
     return {
       key: 'assignee',
-      search: stubSearch,
-      displayForValue: stubDisplayForValue
+      props: {
+        search: stubSearch,
+        displayForValue: stubDisplayForValue
+      }
     } as Parameters<typeof forgeSearchableTextField>[0];
+  }
+
+  function withProps(extra: Record<string, unknown>) {
+    return { ...minimalConfig(), props: { ...minimalConfig().props, ...extra } } as any;
   }
 
   // -- Wrapper-level tests --
@@ -48,14 +54,15 @@ describe('forgeSearchableTextField()', () => {
     expect(wrapper.label).toBe('');
   });
 
-  it('should map description to wrapper props.hint', () => {
-    const wrapper = forgeSearchableTextField({ ...minimalConfig(), description: 'Search for a person' });
-    expect(wrapper.props?.hint).toBe('Search for a person');
+  it('should map hint to inner field props.hint', () => {
+    const wrapper = forgeSearchableTextField({ ...minimalConfig(), hint: 'Search for a person' } as any);
+    const inner = getInnerField(wrapper);
+    expect(inner.props?.hint).toBe('Search for a person');
   });
 
-  it('should not set hint on wrapper when description is not provided', () => {
-    const wrapper = forgeSearchableTextField(minimalConfig());
-    expect(wrapper.props?.hint).toBeUndefined();
+  it('should not set hint on inner field when hint is not provided', () => {
+    const inner = getInnerField(forgeSearchableTextField(minimalConfig()));
+    expect(inner.props?.hint).toBeUndefined();
   });
 
   // -- Inner field tests --
@@ -96,7 +103,7 @@ describe('forgeSearchableTextField()', () => {
   });
 
   it('should propagate allowStringValues through inner field props when provided', () => {
-    const inner = getInnerField(forgeSearchableTextField({ ...minimalConfig(), allowStringValues: true }));
+    const inner = getInnerField(forgeSearchableTextField(withProps({ allowStringValues: true })));
     expect(inner.props?.allowStringValues).toBe(true);
   });
 
@@ -106,7 +113,7 @@ describe('forgeSearchableTextField()', () => {
   });
 
   it('should propagate searchOnEmptyText through inner field props when provided', () => {
-    const inner = getInnerField(forgeSearchableTextField({ ...minimalConfig(), searchOnEmptyText: true }));
+    const inner = getInnerField(forgeSearchableTextField(withProps({ searchOnEmptyText: true })));
     expect(inner.props?.searchOnEmptyText).toBe(true);
   });
 
@@ -116,17 +123,17 @@ describe('forgeSearchableTextField()', () => {
   });
 
   it('should propagate showClearValue through inner field props when provided', () => {
-    const inner = getInnerField(forgeSearchableTextField({ ...minimalConfig(), showClearValue: false }));
+    const inner = getInnerField(forgeSearchableTextField(withProps({ showClearValue: false })));
     expect(inner.props?.showClearValue).toBe(false);
   });
 
   it('should propagate searchLabel through inner field props when provided', () => {
-    const inner = getInnerField(forgeSearchableTextField({ ...minimalConfig(), searchLabel: 'Find...' }));
+    const inner = getInnerField(forgeSearchableTextField(withProps({ searchLabel: 'Find...' })));
     expect(inner.props?.searchLabel).toBe('Find...');
   });
 
   it('should propagate useAnchor through inner field props when provided', () => {
-    const inner = getInnerField(forgeSearchableTextField({ ...minimalConfig(), useAnchor: true }));
+    const inner = getInnerField(forgeSearchableTextField(withProps({ useAnchor: true })));
     expect(inner.props?.useAnchor).toBe(true);
   });
 
@@ -137,7 +144,7 @@ describe('forgeSearchableTextField()', () => {
 
   it('should propagate anchorForValue through inner field props when provided', () => {
     const anchorFn = () => ({ onClick: () => {} });
-    const inner = getInnerField(forgeSearchableTextField({ ...minimalConfig(), anchorForValue: anchorFn }));
+    const inner = getInnerField(forgeSearchableTextField(withProps({ anchorForValue: anchorFn })));
     expect(inner.props?.anchorForValue).toBe(anchorFn);
   });
 
@@ -148,7 +155,7 @@ describe('forgeSearchableTextField()', () => {
 
   it('should propagate both useAnchor and anchorForValue together', () => {
     const anchorFn = () => ({ onClick: () => {} });
-    const inner = getInnerField(forgeSearchableTextField({ ...minimalConfig(), useAnchor: true, anchorForValue: anchorFn }));
+    const inner = getInnerField(forgeSearchableTextField(withProps({ useAnchor: true, anchorForValue: anchorFn })));
     expect(inner.props?.useAnchor).toBe(true);
     expect(inner.props?.anchorForValue).toBe(anchorFn);
   });
@@ -165,9 +172,15 @@ describe('forgeSearchableChipField()', () => {
   function minimalConfig() {
     return {
       key: 'tags',
-      search: stubSearch,
-      displayForValue: stubDisplayForValue
+      props: {
+        search: stubSearch,
+        displayForValue: stubDisplayForValue
+      }
     } as Parameters<typeof forgeSearchableChipField>[0];
+  }
+
+  function withProps(extra: Record<string, unknown>) {
+    return { ...minimalConfig(), props: { ...minimalConfig().props, ...extra } } as any;
   }
 
   // -- Wrapper-level tests --
@@ -187,14 +200,15 @@ describe('forgeSearchableChipField()', () => {
     expect(wrapper.label).toBe('');
   });
 
-  it('should map description to wrapper props.hint', () => {
-    const wrapper = forgeSearchableChipField({ ...minimalConfig(), description: 'Add tags' });
-    expect(wrapper.props?.hint).toBe('Add tags');
+  it('should map hint to inner field props.hint', () => {
+    const wrapper = forgeSearchableChipField({ ...minimalConfig(), hint: 'Add tags' } as any);
+    const inner = getInnerField(wrapper);
+    expect(inner.props?.hint).toBe('Add tags');
   });
 
-  it('should not set hint on wrapper when description is not provided', () => {
-    const wrapper = forgeSearchableChipField(minimalConfig());
-    expect(wrapper.props?.hint).toBeUndefined();
+  it('should not set hint on inner field when hint is not provided', () => {
+    const inner = getInnerField(forgeSearchableChipField(minimalConfig()));
+    expect(inner.props?.hint).toBeUndefined();
   });
 
   // -- Inner field tests --
@@ -235,7 +249,7 @@ describe('forgeSearchableChipField()', () => {
   });
 
   it('should propagate allowStringValues through inner field props when provided', () => {
-    const inner = getInnerField(forgeSearchableChipField({ ...minimalConfig(), allowStringValues: true }));
+    const inner = getInnerField(forgeSearchableChipField(withProps({ allowStringValues: true })));
     expect(inner.props?.allowStringValues).toBe(true);
   });
 
@@ -245,7 +259,7 @@ describe('forgeSearchableChipField()', () => {
   });
 
   it('should propagate searchOnEmptyText through inner field props when provided', () => {
-    const inner = getInnerField(forgeSearchableChipField({ ...minimalConfig(), searchOnEmptyText: true }));
+    const inner = getInnerField(forgeSearchableChipField(withProps({ searchOnEmptyText: true })));
     expect(inner.props?.searchOnEmptyText).toBe(true);
   });
 
@@ -255,7 +269,7 @@ describe('forgeSearchableChipField()', () => {
   });
 
   it('should propagate multiSelect through inner field props when provided', () => {
-    const inner = getInnerField(forgeSearchableChipField({ ...minimalConfig(), multiSelect: false }));
+    const inner = getInnerField(forgeSearchableChipField(withProps({ multiSelect: false })));
     expect(inner.props?.multiSelect).toBe(false);
   });
 
@@ -265,13 +279,13 @@ describe('forgeSearchableChipField()', () => {
   });
 
   it('should propagate asArrayValue through inner field props when provided', () => {
-    const inner = getInnerField(forgeSearchableChipField({ ...minimalConfig(), asArrayValue: false }));
+    const inner = getInnerField(forgeSearchableChipField(withProps({ asArrayValue: false })));
     expect(inner.props?.asArrayValue).toBe(false);
   });
 
   it('should propagate textInputValidator through inner field props when provided', () => {
     const validator = () => null;
-    const inner = getInnerField(forgeSearchableChipField({ ...minimalConfig(), textInputValidator: validator } as Parameters<typeof forgeSearchableChipField>[0]));
+    const inner = getInnerField(forgeSearchableChipField(withProps({ textInputValidator: validator })));
     expect(inner.props?.textInputValidator).toBe(validator);
   });
 
@@ -281,13 +295,13 @@ describe('forgeSearchableChipField()', () => {
   });
 
   it('should propagate useAnchor through inner field props when provided', () => {
-    const inner = getInnerField(forgeSearchableChipField({ ...minimalConfig(), useAnchor: true }));
+    const inner = getInnerField(forgeSearchableChipField(withProps({ useAnchor: true })));
     expect(inner.props?.useAnchor).toBe(true);
   });
 
   it('should propagate anchorForValue through inner field props when provided', () => {
     const anchorFn = () => ({ onClick: () => {} });
-    const inner = getInnerField(forgeSearchableChipField({ ...minimalConfig(), anchorForValue: anchorFn }));
+    const inner = getInnerField(forgeSearchableChipField(withProps({ anchorForValue: anchorFn })));
     expect(inner.props?.anchorForValue).toBe(anchorFn);
   });
 
@@ -334,8 +348,10 @@ describe('forgeSearchableStringChipField()', () => {
   function minimalConfig() {
     return {
       key: 'keywords',
-      search: stubSearch,
-      displayForValue: stubDisplayForValue
+      props: {
+        search: stubSearch,
+        displayForValue: stubDisplayForValue
+      }
     } as Parameters<typeof forgeSearchableStringChipField>[0];
   }
 
@@ -356,9 +372,10 @@ describe('forgeSearchableStringChipField()', () => {
     expect(wrapper.label).toBe('');
   });
 
-  it('should map description to wrapper props.hint', () => {
-    const wrapper = forgeSearchableStringChipField({ ...minimalConfig(), description: 'Enter keywords' });
-    expect(wrapper.props?.hint).toBe('Enter keywords');
+  it('should map hint to inner field props.hint', () => {
+    const wrapper = forgeSearchableStringChipField({ ...minimalConfig(), hint: 'Enter keywords' } as any);
+    const inner = getInnerField(wrapper);
+    expect(inner.props?.hint).toBe('Enter keywords');
   });
 
   // -- Inner field tests --
@@ -394,7 +411,7 @@ describe('forgeSearchableStringChipField()', () => {
   });
 
   it('should propagate searchOnEmptyText through inner field props when provided', () => {
-    const inner = getInnerField(forgeSearchableStringChipField({ ...minimalConfig(), searchOnEmptyText: true }));
+    const inner = getInnerField(forgeSearchableStringChipField({ ...minimalConfig(), props: { ...minimalConfig().props, searchOnEmptyText: true } } as any));
     expect(inner.props?.searchOnEmptyText).toBe(true);
   });
 });
@@ -446,12 +463,14 @@ describe('DbxForgeSearchableChipFieldComponent', () => {
         forgeSearchableChipField<string>({
           key: 'pickOne',
           label: 'Pick a Single Value',
-          allowStringValues: false,
-          searchOnEmptyText: true,
-          multiSelect: false,
-          asArrayValue: false,
-          search: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
-          displayForValue: (values) => of(values.map((v) => ({ ...v, label: String(v.value) })))
+          props: {
+            allowStringValues: false,
+            searchOnEmptyText: true,
+            multiSelect: false,
+            asArrayValue: false,
+            search: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
+            displayForValue: (values: any[]) => of(values.map((v: any) => ({ ...v, label: String(v.value) })))
+          }
         }) as any
       ]
     };
@@ -507,25 +526,27 @@ describe('DbxForgeSearchableTextFieldComponent', () => {
 
     return {
       fields: [
-        forgeSearchableTextField<string, { name: string; key: string }>({
+        forgeSearchableTextField({
           key: 'pick',
           label: 'Anchor Segue For Metadata Items',
-          allowStringValues: false,
-          searchOnEmptyText: true,
-          showSelectedValue: false,
-          search: () =>
-            of([
-              { meta: { name: 'Test A', key: '1' }, value: '1' },
-              { meta: { name: 'Test B', key: '2' }, value: '2' }
-            ]),
-          displayForValue: (values) => of(values.map((v) => ({ ...v, label: v.meta?.name ?? v.value, sublabel: 'item' }))),
-          anchorForValue: (fieldValue) => ({
-            onClick: () => {
-              // intentional no-op for test
-            }
-          }),
-          refreshDisplayValues$
-        }) as any
+          props: {
+            allowStringValues: false,
+            searchOnEmptyText: true,
+            showSelectedValue: false,
+            search: () =>
+              of([
+                { meta: { name: 'Test A', key: '1' }, value: '1' },
+                { meta: { name: 'Test B', key: '2' }, value: '2' }
+              ]),
+            displayForValue: (values: any[]) => of(values.map((v: any) => ({ ...v, label: v.meta?.name ?? v.value, sublabel: 'item' }))),
+            anchorForValue: (_fieldValue: any) => ({
+              onClick: () => {
+                // intentional no-op for test
+              }
+            }),
+            refreshDisplayValues$
+          }
+        } as any) as any
       ]
     };
   }

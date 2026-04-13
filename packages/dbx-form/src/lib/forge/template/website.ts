@@ -1,4 +1,3 @@
-import type { MatInputField } from '@ng-forge/dynamic-forms-material';
 import { forgeTextField, type DbxForgeTextFieldConfig } from '../field/value/text/text.field';
 
 /**
@@ -23,7 +22,7 @@ export interface DbxForgeWebsiteUrlFieldConfig extends Omit<DbxForgeTextFieldCon
  * const field = forgeWebsiteUrlField();
  * ```
  */
-export function forgeWebsiteUrlField(config?: DbxForgeWebsiteUrlFieldConfig): MatInputField {
+export function forgeWebsiteUrlField(config?: DbxForgeWebsiteUrlFieldConfig) {
   return forgeTextField({
     key: 'website',
     ...config,
