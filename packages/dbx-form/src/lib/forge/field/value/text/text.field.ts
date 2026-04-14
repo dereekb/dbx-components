@@ -38,13 +38,15 @@ export type DbxForgeTextFieldInputType = 'text' | 'password' | 'email';
  * Combines labeling, validation (pattern, length), and string transformation
  * into one config object.
  */
-export interface DbxForgeTextFieldConfig extends DbxForgeFieldFunctionDef<DbxForgeTextFieldDef>, FieldAutocompleteAttributeOptionRef, Partial<TransformStringFunctionConfigRef> {
+export interface DbxForgeTextFieldConfig extends DbxForgeFieldFunctionDef<DbxForgeTextFieldDef>, FieldAutocompleteAttributeOptionRef {
   /**
    * HTML input type. Defaults to `'text'`.
    */
   readonly inputType?: DbxForgeTextFieldInputType;
   /**
-   * String transformation applied as a value parser (e.g., trim, uppercase).
+   * An idempotent string transformation applied as a value parser (e.g., trim, uppercase).
+   *
+   * For non-idempotent transformations, you should directly configure the `transform` property instead.
    */
   readonly idempotentTransform?: TransformStringFunctionConfig;
   /**

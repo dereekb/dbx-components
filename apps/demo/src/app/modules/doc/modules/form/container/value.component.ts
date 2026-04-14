@@ -105,7 +105,7 @@ export class DocFormValueComponent {
   readonly textFields: FormlyFieldConfig[] = [
     //
     formlyTextField({ key: 'test', label: 'Text Field', description: 'A required text field.', placeholder: 'Placeholder', required: true, minLength: 4, maxLength: 15 }),
-    formlyTextField({ key: 'transform', label: 'Transformed Text Field', description: 'Text Field With String Transform Config. Adds _ between each letter as you type.', idempotentTransform: { trim: true, transform: addSuffixFunction('_') } }),
+    formlyTextField({ key: 'transform', label: 'Transformed Text Field', description: 'Text Field With String Transform Config. Adds _ between each letter as you type.', transform: { trim: true, transform: addSuffixFunction('_') } }),
     formlyNameField(),
     formlyEmailField(),
     formlyCityField(),
@@ -118,7 +118,7 @@ export class DocFormValueComponent {
   readonly forgeTextFieldsConfig: FormConfig = {
     fields: [
       forgeTextField({ key: 'test', label: 'Text Field', description: 'A required text field.', placeholder: 'Placeholder', required: true, minLength: 4, maxLength: 15 }),
-      forgeTextField({ key: 'transform', label: 'Transformed Text Field', description: 'Text Field With String Transform Config.', idempotentTransform: { trim: true } }),
+      forgeTextField({ key: 'transform', label: 'Transformed Text Field', description: 'Text Field With String Transform Config. Adds _ between each letter as you type.', idempotentTransform: { trim: true, transform: addSuffixFunction('_') } }),
       forgeNameField(),
       forgeEmailField(),
       forgeCityField(),
@@ -131,7 +131,17 @@ export class DocFormValueComponent {
         key: 'logicDemo',
         label: 'Conditionally Visible Text',
         description: 'Hidden unless the toggle above is on. Demonstrates logic support on forge fields.',
-        logic: [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'showLogicDemo', operator: 'notEquals', value: true } }]
+        logic: [
+          {
+            type: 'hidden',
+            condition: {
+              type: 'fieldValue',
+              fieldPath: 'showLogicDemo',
+              operator: 'notEquals',
+              value: true
+            }
+          }
+        ]
       })
     ]
   };
@@ -165,19 +175,7 @@ export class DocFormValueComponent {
       forgeNumberSliderField({ key: 'test', label: 'forgeNumberSliderField()', hint: 'A number between 0 and 100 picked with a slider.', min: 0, max: 100 }),
       forgeNumberSliderField({ key: 'steptest', label: 'forgeNumberSliderField() with Steps', description: 'A number between 0 and 100 picked with a slider with steps of 5.', min: 0, max: 100, step: 5 }),
       forgeNumberSliderField({ key: 'steptestcustomtickinterval', label: 'forgeNumberSliderField() with Steps and Custom Tick Interval', description: 'A number between 0 and 100 picked with a slider with steps of 5 and tick interval of 5.', min: 0, max: 100, step: 5, tickInterval: 5 }),
-      {
-        ...forgeNumberSliderField({ key: 'validated', label: 'Validated Slider (must be > first slider)', description: 'Cross-field expression validator: value must be greater than the first slider.', min: 0, max: 100 }),
-        validators: [
-          {
-            type: 'custom' as const,
-            expression: 'fieldValue > formValue.test',
-            kind: 'mustBeGreaterThanTest'
-          }
-        ],
-        validationMessages: {
-          mustBeGreaterThanTest: 'Value must be greater than the first slider'
-        }
-      }
+      forgeNumberSliderField({ key: 'validated', label: 'Validated Slider (must be > first slider)', description: 'Cross-field expression validator: value must be greater than the first slider.', min: 0, max: 100, validators: [{ type: 'custom' as const, expression: 'fieldValue > formValue.test', kind: 'mustBeGreaterThanTest' }], validationMessages: { mustBeGreaterThanTest: 'Value must be greater than the first slider' } })
     ]
   };
 

@@ -393,6 +393,20 @@ describe('forgeNumberSliderField()', () => {
     const slider = getFormFieldWrapperInnerField(forgeNumberSliderField({ key: 'rating', max: 10, logic }));
     expect(slider.logic).toEqual(logic);
   });
+
+  // MARK: Validators passthrough
+  it('should pass validators through to the inner field definition', () => {
+    const validators: ValidatorConfig[] = [{ type: 'custom' as const, expression: 'fieldValue > formValue.test', kind: 'mustBeGreaterThanTest' }];
+    const slider = getFormFieldWrapperInnerField(forgeNumberSliderField({ key: 'validated', max: 100, validators }));
+    expect(slider.validators).toEqual(validators);
+  });
+
+  // MARK: ValidationMessages passthrough
+  it('should pass validationMessages through to the inner field definition', () => {
+    const validationMessages: ValidationMessages = { mustBeGreaterThanTest: 'Value must be greater than the first slider' };
+    const slider = getFormFieldWrapperInnerField(forgeNumberSliderField({ key: 'validated', max: 100, validationMessages }));
+    expect(slider.validationMessages).toEqual(validationMessages);
+  });
 });
 
 // ============================================================================

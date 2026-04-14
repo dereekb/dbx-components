@@ -165,32 +165,42 @@ export class DbxForgeFormFieldWrapperComponent extends AbstractForgeWrapperField
   readonly hasError = computed(() => this.showErrors());
   readonly firstErrorMessage = computed(() => {
     const errors = this.childErrors();
+    let result = '';
 
-    if (errors.length === 0) {
-      return '';
-    }
+    if (errors.length > 0) {
+      const error = errors[0];
 
-    const error = errors[0];
+      if (error.message) {
+        // Use raw error message (set by Angular built-in validators)
+        result = error.message;
+      } else {
+        // Resolve from child field validationMessages by matching error.kind.
+        // Check both singular `field` (form-field wrapper) and plural `fields` (section wrapper).
+        const currentProps = this.props();
+        const fieldsToCheck: FieldWithValidation[] = [];
 
-    // Try raw error message first (set by Angular built-in validators)
-    if (error.message) {
-      return error.message;
-    }
+        if (currentProps?.field) {
+          fieldsToCheck.push(currentProps.field as FieldWithValidation);
+        }
 
-    // Resolve from child field validationMessages by matching error.kind
-    const fields = this.props()?.fields;
+        if (currentProps?.fields?.length) {
+          fieldsToCheck.push(...(currentProps.fields as FieldWithValidation[]));
+        }
 
-    if (fields?.length) {
-      for (const field of fields) {
-        const messages = (field as FieldWithValidation).validationMessages as Record<string, string> | undefined;
+        result = error.kind;
 
-        if (messages?.[error.kind]) {
-          return messages[error.kind];
+        for (const field of fieldsToCheck) {
+          const messages = field.validationMessages as Record<string, string> | undefined;
+
+          if (messages?.[error.kind]) {
+            result = messages[error.kind];
+            break;
+          }
         }
       }
     }
 
-    return error.kind;
+    return result;
   });
 
   // Props
@@ -205,7 +215,9 @@ export class DbxForgeFormFieldWrapperComponent extends AbstractForgeWrapperField
    * Whether any child field has `required: true`, used to show the asterisk in the label.
    */
   readonly isRequired = computed(() => {
-    const fields = this.props()?.fields;
-    return fields?.some((f: any) => f.required === true) ?? false;
+    const currentProps = this.props();
+    const singleFieldRequired = (currentProps?.field as any)?.required === true;
+    const anyFieldRequired = currentProps?.fields?.some((f: any) => f.required === true) ?? false;
+    return singleFieldRequired || anyFieldRequired;
   });
 }
