@@ -1,5 +1,5 @@
-import { ArrayOrValue, Building, MapFunction, MapSameFunction, Maybe, MaybeMap, MaybeSo, Milliseconds, NOOP_MODIFIER, PromiseOrValue, asArray, filterNullAndUndefinedValues, filterUndefinedValues, filterUniqueValues, mapMaybeFunction, mergeArrays, objectHasNoKeys } from '@dereekb/util';
-import { CustomFnConfig, EvaluationContext, field, FieldDef, FieldMeta, FieldWithValidation, LogicConfig, ValidationMessages, ValidatorConfig } from '@ng-forge/dynamic-forms';
+import { ArrayOrValue, Building, Maybe, MaybeMap, MaybeSo, Milliseconds, NOOP_MODIFIER, asArray, filterNullAndUndefinedValues, filterUndefinedValues, filterUniqueValues, mapMaybeFunction, mergeArrays, objectHasNoKeys } from '@dereekb/util';
+import { CustomFnConfig, EvaluationContext, FieldDef, FieldMeta, FieldWithValidation, LogicConfig, ValidationMessages, ValidatorConfig } from '@ng-forge/dynamic-forms';
 import { ForgeFieldValidation } from './field.type';
 import { DbxForgeField, DbxForgeFieldFormConfig, mergeDbxForgeFieldFormConfig } from '../form/forge.form';
 
@@ -72,7 +72,7 @@ export type DbxForgeFieldFunctionDefLogicValue<C extends DbxForgeFieldFunctionDe
 export type DbxForgeFieldLogicFn<O = any, I = any> = (ctx: EvaluationContext<I>) => O;
 
 interface DbxForgeFieldLogicFnFunctionRef<O = any, I = any> {
-  fn: DbxForgeFieldLogicFn<O, I>;
+  readonly fn: DbxForgeFieldLogicFn<O, I>;
 }
 
 /**
@@ -84,7 +84,7 @@ interface DbxForgeFieldLogicFnFunctionRef<O = any, I = any> {
 export type DbxForgeFieldLogicAsyncFn<O = any, I = any> = (ctx: EvaluationContext<I>) => Promise<O>;
 
 interface DbxForgeFieldLogicAsyncFnFunctionRef<O = any, I = any> {
-  fn: DbxForgeFieldLogicAsyncFn<O, I>;
+  readonly fn: DbxForgeFieldLogicAsyncFn<O, I>;
 }
 
 /**
@@ -146,12 +146,26 @@ export interface DbxForgeFieldFunctionConfig<C extends DbxForgeFieldFunctionDef<
 }
 
 /**
- * Creates a new DbxForgeFieldFunction from the input config.
+ * Creates a {@link DbxForgeFieldFunction} from a {@link DbxForgeFieldFunctionConfig}.
  *
- * @param config
- * @returns
+ * The returned function accepts a field definition config and an optional configure callback,
+ * and produces a fully-typed {@link DbxForgeField} with the correct `type` set.
+ *
+ * @param config - factory configuration containing the field type and optional builders for props and the field definition
+ * @returns a reusable field factory function
+ *
+ * @example
+ * ```ts
+ * const myTextField = dbxForgeFieldFunction<MyTextFieldDef>({
+ *   type: 'my-text',
+ *   buildProps: (input) => ({ placeholder: input.placeholder ?? 'Enter text' }),
+ *   buildFieldDef: dbxForgeBuildFieldDef((instance) => {
+ *     instance.injectDefaultValidation();
+ *   })
+ * });
+ * ```
  */
-export function dbxForgeFieldFunction<C extends DbxForgeFieldFunctionDef<F>, F extends FieldDef<any> = ExtractDbxForgeFieldDef<C>>(config: DbxForgeFieldFunctionConfig<C>): DbxForgeFieldFunction<C> {
+export function dbxForgeFieldFunction<C extends DbxForgeFieldFunctionDef<F>, F extends FieldDef<any> = ExtractDbxForgeFieldDef<C>>(config: DbxForgeFieldFunctionConfig<C>): DbxForgeFieldFunction<C, F> {
   const { type, buildFieldDef, buildProps } = config;
 
   const makeFieldDef: DbxForgeFieldFunctionFieldDefBuilder<C> = buildFieldDef ?? NOOP_MODIFIER;
@@ -188,8 +202,19 @@ export function dbxForgeFieldFunction<C extends DbxForgeFieldFunctionDef<F>, F e
 }
 
 // MARK: Utilities
+/**
+ * Input for adding validation to a field via the builder instance.
+ *
+ * Accepts validators and optional validation messages that are merged into the field's existing validation.
+ */
 export type DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceAddValidationInput = { validators?: Maybe<ArrayOrValue<ValidatorConfig>> } & MaybeMap<Pick<ForgeFieldValidation, 'validationMessages'>>;
 
+/**
+ * Builder instance provided to {@link DbxForgeBuildFieldDefFunction} callbacks.
+ *
+ * Exposes methods for reading and mutating a field definition during construction,
+ * including validation, meta, logic, and form config.
+ */
 export interface DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C extends DbxForgeFieldFunctionDef<any>, FV = any> extends DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceLogicBuilder<C, FV>, DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceFormConfigBuilder {
   /**
    * Returns the current fieldDef.
@@ -287,9 +312,22 @@ export type DbxForgeFieldTransformLogic<FV = unknown> = DbxForgeFieldIdempotentT
  */
 export type DbxForgeFieldTransformType = 'idempotent' | 'async' | 'debounced';
 
+/**
+ * Controls when a transform derivation runs.
+ *
+ * - `'defined'` — only runs when the field value is non-null/defined (default)
+ * - `'always'` — runs on every evaluation, including when the value is undefined
+ */
 export type DbxForgeFieldTransformWhen = 'defined' | 'always';
 
+/**
+ * Synchronous transform function that receives the current field value and evaluation context.
+ */
 export type DbxForgeFieldTransformFunction<I, O> = (value: I, ctx: EvaluationContext<I>) => O;
+
+/**
+ * Asynchronous variant of {@link DbxForgeFieldTransformFunction} that returns a Promise.
+ */
 export type DbxForgeFieldAsyncTransformFunction<I, O> = DbxForgeFieldTransformFunction<I, Promise<O>>;
 
 export type DbxForgeFieldIdempotentTransformLogic<FV = unknown> = DbxForgeFieldIdempotentTransformLogicWhenDefined<FV> | DbxForgeFieldIdempotentTransformLogicWhenAlways<FV>;
@@ -344,6 +382,9 @@ export interface DbxForgeFieldDebouncedTransformLogicWhenAlways<FV = unknown> {
   readonly debounceMs?: Milliseconds;
 }
 
+/**
+ * Default debounce time applied to debounced transform derivations.
+ */
 export const DEFAULT_TRANSFORM_DEBOUNCE_TIME: Milliseconds = 500;
 
 /**
@@ -354,6 +395,12 @@ export const DEFAULT_TRANSFORM_DEBOUNCE_TIME: Milliseconds = 500;
  */
 export type DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceLogicBuilderLogic<C extends DbxForgeFieldFunctionDef<any>, FV = any> = DbxForgeFieldLogicWithFn<DbxForgeFieldFunctionDefLogicValue<C>> | DbxForgeFieldTransformLogic<FV>;
 
+/**
+ * Builder methods for reading and mutating the logic configuration on a field definition.
+ *
+ * Logic entries control conditional field state (hidden, readonly, disabled, required)
+ * and value derivation (sync/async functions, transforms).
+ */
 export interface DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceLogicBuilder<C extends DbxForgeFieldFunctionDef<any>, FV = any> {
   /**
    * Returns the current logic configuration, if it exists.
@@ -369,6 +416,12 @@ export interface DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceLogicBuilde
   setLogic(logic: ArrayOrValue<DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceLogicBuilderLogic<C, FV>>): void;
 }
 
+/**
+ * Builder methods for reading and mutating the form-level config attached to a field definition.
+ *
+ * Form config includes schemas, external data, and custom function registrations
+ * that are merged into the parent {@link DbxForgeFieldFormConfig} at form construction time.
+ */
 export interface DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceFormConfigBuilder {
   /**
    * Returns the current logic configuration, if it exists.
@@ -384,14 +437,38 @@ export interface DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceFormConfigB
   setFormConfig(formConfig: Maybe<DbxForgeFieldFormConfig>): void;
 }
 
+/**
+ * Callback invoked by the builder to configure a field definition.
+ *
+ * Receives the builder {@link DbxForgeFieldFunctionFieldDefBuilderFunctionInstance} and the in-progress field config.
+ */
 export type DbxForgeBuildFieldDefFunction<C extends DbxForgeFieldFunctionDef<any>, FV = unknown> = (instance: DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C, FV>, config: Building<C>) => void;
 
+/**
+ * Configuration for {@link dbxForgeBuildFieldDef}.
+ */
 export interface DbxForgeBuildFieldDefConfig<C extends DbxForgeFieldFunctionDef<any>> {
   // TODO: ...
 }
 
 /**
- * The default DbxForgeFieldFunctionFieldDefBuilder implementation.
+ * Creates a {@link DbxForgeFieldFunctionFieldDefBuilder} that provides a builder-instance pattern
+ * for configuring field definitions.
+ *
+ * The returned builder runs the `configureFunction` first, then any per-call `inputConfigure` callback,
+ * and finally finalizes logic entries (registering custom functions, expanding transforms).
+ *
+ * @param configureFunction - primary configure callback applied to every field built by this builder
+ * @param config - reserved for future builder-level options
+ * @returns a reusable field definition builder
+ *
+ * @example
+ * ```ts
+ * const buildMyField = dbxForgeBuildFieldDef<MyFieldDef>((instance) => {
+ *   instance.injectDefaultValidation();
+ *   instance.addLogic({ type: 'transform', transformType: 'idempotent', transform: trimString });
+ * });
+ * ```
  */
 export function dbxForgeBuildFieldDef<C extends DbxForgeFieldFunctionDef<any>, FV = any>(configureFunction: DbxForgeBuildFieldDefFunction<C, FV>, config?: Maybe<DbxForgeBuildFieldDefConfig<C>>): DbxForgeFieldFunctionFieldDefBuilder<C, FV> {
   // TODO: Default ValidationMessages place, etc.
@@ -712,7 +789,7 @@ function _finalizeLogic<C extends DbxForgeFieldFunctionDef<any>, FV = any>(insta
         };
         break;
       default:
-        throw new Error(`Unexpeected transform type.`);
+        throw new Error(`Unexpected transform type.`);
     }
 
     return result;
@@ -755,12 +832,22 @@ function _finalizeLogic<C extends DbxForgeFieldFunctionDef<any>, FV = any>(insta
 }
 
 /**
- * Helper function for configs that extend DbxForgeFieldHintOrDescriptionRef that automatically pulls the hint from the input config.
+ * Creates a {@link DbxForgeFieldFunctionConfigPropsBuilder} that automatically copies `hint` (or the deprecated `description`)
+ * from the top-level field config into `props.hint`.
  *
- * Historically putting hint/description in the base config was the preferred way. In @ng-forge/dynamic-forms hint is typically put under "props"
+ * Historically hint/description lived at the base config level. In `@ng-forge/dynamic-forms` hints are
+ * expected under `props`, so this builder bridges that gap.
  *
- * @param makeProps
- * @returns
+ * @param makeProps - optional delegate that produces additional props; its result is merged before the hint is applied
+ * @returns a props builder that includes the hint value
+ *
+ * @example
+ * ```ts
+ * const myField = dbxForgeFieldFunction<MyFieldDef>({
+ *   type: 'my-field',
+ *   buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder()
+ * });
+ * ```
  */
 export function dbxForgeFieldFunctionConfigPropsWithHintBuilder<C extends DbxForgeFieldFunctionDef<any> & DbxForgeFieldHintOrDescriptionValueRef<any>>(makeProps?: DbxForgeFieldFunctionConfigPropsBuilder<C>): DbxForgeFieldFunctionConfigPropsBuilder<C> {
   return (input: C) => {

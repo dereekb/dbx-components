@@ -14,6 +14,9 @@ export interface DbxForgeTextAreaFieldConfig extends DbxForgeFieldFunctionDef<Ma
    * Number of visible text rows. Defaults to 3.
    */
   readonly rows?: number;
+  /**
+   * Initial value for the textarea. Defaults to empty string.
+   */
   readonly defaultValue?: string;
 }
 

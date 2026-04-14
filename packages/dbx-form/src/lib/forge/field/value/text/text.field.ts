@@ -1,7 +1,6 @@
 import type { BaseValueField } from '@ng-forge/dynamic-forms';
 import type { MatInputField, MatInputProps } from '@ng-forge/dynamic-forms-material';
-import { transformStringFunction, mapMaybeFunction, type TransformStringFunctionConfig, type TransformStringFunctionConfigRef } from '@dereekb/util';
-import type { FieldValueParser, FieldConfigParsersRef } from '../../../../field';
+import { transformStringFunction, type TransformStringFunctionConfig, type TransformStringFunctionConfigRef } from '@dereekb/util';
 import type { FieldAutocompleteAttributeOptionRef } from '../../../../field/field.autocomplete';
 import { dbxForgeFieldFunction, dbxForgeBuildFieldDef, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef, type DbxForgeFieldFunction } from '../../field';
 import { configureForgeAutocompleteFieldMeta } from '../../field.util.meta';
@@ -44,11 +43,13 @@ export interface DbxForgeTextFieldConfig extends DbxForgeFieldFunctionDef<DbxFor
    * HTML input type. Defaults to `'text'`.
    */
   readonly inputType?: DbxForgeTextFieldInputType;
-  /**(alias) type MatInputField = NumberInputField<MatInputProps> | StringInputField<MatInputProps>
-
+  /**
    * String transformation applied as a value parser (e.g., trim, uppercase).
    */
   readonly idempotentTransform?: TransformStringFunctionConfig;
+  /**
+   * Initial value for the text input. Defaults to empty string.
+   */
   readonly defaultValue?: string;
 }
 
@@ -61,15 +62,14 @@ export interface DbxForgeTextFieldConfig extends DbxForgeFieldFunctionDef<DbxFor
  * @example
  * ```typescript
  * const field = forgeTextField({
-    key: 'email',
-    label: 'Email',`
-    required: true,
-    email: true,
-    props: {
-      type: 'email',              // 'text' | 'email' | 'password' | 'number' | 'tel' | 'url'
-      placeholder: 'user@example.com',
-    }
-  });
+ *   key: 'email',
+ *   label: 'Email',
+ *   required: true,
+ *   props: {
+ *     type: 'email',
+ *     placeholder: 'user@example.com'
+ *   }
+ * });
  * ```
  */
 export const forgeTextField = dbxForgeFieldFunction<DbxForgeTextFieldConfig>({

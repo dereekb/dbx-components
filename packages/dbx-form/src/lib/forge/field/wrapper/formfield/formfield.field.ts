@@ -37,6 +37,7 @@ export interface DbxForgeFormFieldWrapperProps<F extends FieldDef<DbxForgeFormFi
  */
 export interface DbxForgeFormFieldWrapperFieldDef<F extends FieldDef<DbxForgeFormFieldWrapperWrappedFieldProps> = FieldDef<DbxForgeFormFieldWrapperWrappedFieldProps>> extends BaseValueField<DbxForgeFormFieldWrapperProps<F>, Record<string, unknown>> {
   readonly type: typeof FORGE_FORM_FIELD_WRAPPER_TYPE_NAME;
+  readonly props: DbxForgeFormFieldWrapperProps<F>; // always defined
 }
 
 /**
