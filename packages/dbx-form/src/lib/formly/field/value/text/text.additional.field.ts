@@ -140,7 +140,7 @@ export interface StateFieldConfig extends Partial<TextFieldConfig> {
  * ```
  */
 export function formlyStateField(config: StateFieldConfig = {}): FormlyFieldConfig {
-  const { asCode = false, pattern = asCode ? US_STATE_CODE_STRING_REGEX : undefined, key = 'state', placeholder = '', label = 'State', autocomplete = 'state', maxLength = asCode ? ADDRESS_STATE_CODE_MAX_LENGTH : ADDRESS_STATE_MAX_LENGTH, transform, required = false } = config;
+  const { asCode = false, pattern = asCode ? US_STATE_CODE_STRING_REGEX : undefined, key = 'state', placeholder = '', label = 'State', autocomplete = 'state', maxLength = asCode ? ADDRESS_STATE_CODE_MAX_LENGTH : ADDRESS_STATE_MAX_LENGTH, idempotentTransform: transform, required = false } = config;
   return formlyTextField({
     ...config,
     key,
@@ -150,7 +150,7 @@ export function formlyStateField(config: StateFieldConfig = {}): FormlyFieldConf
     autocomplete,
     required,
     maxLength,
-    transform: {
+    idempotentTransform: {
       ...transform,
       toUppercase: asCode || transform?.toUppercase
     }

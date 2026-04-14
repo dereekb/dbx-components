@@ -1,6 +1,7 @@
-import { ArrayOrValue, Building, MAP_IDENTITY, Maybe, MaybeMap, MaybeSo, NOOP_MODIFIER, asArray, cachedGetter, filterNullAndUndefinedValues, filterUndefinedValues, filterUniqueValues, mapIdentityFunction, mergeArrays, pushItemOrArrayItemsIntoArray, unique } from '@dereekb/util';
-import { CustomFnConfig, EvaluationContext, FieldDef, FieldMeta, FieldWithValidation, FormConfig, LogicConfig, ValidationMessages, ValidatorConfig } from '@ng-forge/dynamic-forms';
+import { ArrayOrValue, Building, MapFunction, MapSameFunction, Maybe, MaybeMap, MaybeSo, Milliseconds, NOOP_MODIFIER, PromiseOrValue, asArray, filterNullAndUndefinedValues, filterUndefinedValues, filterUniqueValues, mapMaybeFunction, mergeArrays, objectHasNoKeys } from '@dereekb/util';
+import { CustomFnConfig, EvaluationContext, field, FieldDef, FieldMeta, FieldWithValidation, LogicConfig, ValidationMessages, ValidatorConfig } from '@ng-forge/dynamic-forms';
 import { ForgeFieldValidation } from './field.type';
+import { DbxForgeField, DbxForgeFieldFormConfig, mergeDbxForgeFieldFormConfig } from '../form/forge.form';
 
 // MARK: Forge Field
 /**
@@ -68,10 +69,10 @@ export type DbxForgeFieldFunctionDefLogicValue<C extends DbxForgeFieldFunctionDe
  * When provided in addLogic(), the builder auto-registers this function
  * in _formConfig.customFnConfig.derivations under the given (or auto-generated) functionName.
  */
-export type DbxForgeFieldLogicFn = (ctx: EvaluationContext<any>) => any;
+export type DbxForgeFieldLogicFn<O = any, I = any> = (ctx: EvaluationContext<I>) => O;
 
-interface DbxForgeFieldLogicFnFunctionRef {
-  fn: DbxForgeFieldLogicFn;
+interface DbxForgeFieldLogicFnFunctionRef<O = any, I = any> {
+  fn: DbxForgeFieldLogicFn<O, I>;
 }
 
 /**
@@ -80,29 +81,18 @@ interface DbxForgeFieldLogicFnFunctionRef {
  * When provided in addLogic(), the builder auto-registers this function
  * in _formConfig.customFnConfig.asyncDerivations under the given (or auto-generated) asyncFunctionName.
  */
-export type DbxForgeFieldLogicAsyncFn = (ctx: EvaluationContext<any>) => Promise<any>;
+export type DbxForgeFieldLogicAsyncFn<O = any, I = any> = (ctx: EvaluationContext<I>) => Promise<O>;
 
-interface DbxForgeFieldLogicAsyncFnFunctionRef {
-  fn: DbxForgeFieldLogicAsyncFn;
+interface DbxForgeFieldLogicAsyncFnFunctionRef<O = any, I = any> {
+  fn: DbxForgeFieldLogicAsyncFn<O, I>;
 }
 
-// MARK: DbxForgeField
 /**
- * Form-level configuration that was generated at a field level.
+ * The externalData declared within a logic declaration.
+ *
+ * Is merged into the final form config later.
  */
-export interface DbxForgeFieldFormConfig extends Partial<Omit<FormConfig, 'fields'>> {}
-
-/**
- * A FieldDef that has been augmented with @dereekb/dbx-form specific properties that are passed to a dbx-forge form.
- */
-export type DbxForgeField<F extends FieldDef<any>> = F & {
-  /**
-   * Form-level configuration that was generated at a field level.
-   *
-   * This is read by dbx-forge when importing configuration and is merged into the input FormConfig.
-   */
-  readonly _formConfig?: Maybe<DbxForgeFieldFormConfig>;
-};
+export type DbxForgeFieldLogicExternalData = DbxForgeFieldFormConfig['externalData'];
 
 // MARK: DbxForgeFieldFunction
 /**
@@ -118,7 +108,7 @@ export type DbxForgeFieldFunction<C extends DbxForgeFieldFunctionDef<any>, F ext
 /**
  * Builds the FieldDef from the input config and props and optional configure function.
  */
-export type DbxForgeFieldFunctionFieldDefBuilder<C extends DbxForgeFieldFunctionDef<any>> = (input: Building<C>, props: C['props'], configure?: Maybe<DbxForgeBuildFieldDefFunction<C>>) => DbxForgeFieldFunctionResult<C> | void;
+export type DbxForgeFieldFunctionFieldDefBuilder<C extends DbxForgeFieldFunctionDef<any>, FV = any> = (input: Building<C>, props: C['props'], configure?: Maybe<DbxForgeBuildFieldDefFunction<C, FV>>) => DbxForgeFieldFunctionResult<C> | void;
 
 /**
  * Generates custom props from the input config.
@@ -200,7 +190,7 @@ export function dbxForgeFieldFunction<C extends DbxForgeFieldFunctionDef<F>, F e
 // MARK: Utilities
 export type DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceAddValidationInput = { validators?: Maybe<ArrayOrValue<ValidatorConfig>> } & MaybeMap<Pick<ForgeFieldValidation, 'validationMessages'>>;
 
-export interface DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C extends DbxForgeFieldFunctionDef<any>> extends DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceLogicBuilder<C>, DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceFormConfigBuilder {
+export interface DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C extends DbxForgeFieldFunctionDef<any>, FV = any> extends DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceLogicBuilder<C, FV>, DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceFormConfigBuilder {
   /**
    * Returns the current fieldDef.
    */
@@ -249,7 +239,12 @@ export interface DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C extends 
   /**
    * Calls another DbxForgeBuildFieldDefFunction with this instance.
    */
-  configure(fn: DbxForgeBuildFieldDefFunction<C>): void;
+  configure(fn: DbxForgeBuildFieldDefFunction<C, FV>): void;
+}
+
+interface _DbxForgeFieldLogicExtras {
+  readonly dependsOn?: string[];
+  readonly externalData?: DbxForgeFieldLogicExternalData;
 }
 
 /**
@@ -264,17 +259,92 @@ type DbxForgeFieldLogicWithFn<T> =
   // Branch 1: sync function derivation (has required functionName)
   T extends { type: 'derivation'; functionName: string }
     ? // Allow the original type with an optional fn alongside the required functionName
-        | (T & { fn?: DbxForgeFieldLogicFn })
+        | (Omit<T, 'dependsOn'> & { fn?: DbxForgeFieldLogicFn } & _DbxForgeFieldLogicExtras)
         // Or: when fn is provided, make functionName optional (builder auto-generates a name)
-        | (Omit<T, 'functionName'> & { functionName?: string; fn: DbxForgeFieldLogicFn })
+        | (Omit<T, 'functionName' | 'dependsOn'> & { functionName?: string; fn: DbxForgeFieldLogicFn } & _DbxForgeFieldLogicExtras)
     : // Branch 2: async function derivation (has source: 'asyncFunction' + required asyncFunctionName)
       T extends { type: 'derivation'; source: 'asyncFunction'; asyncFunctionName: string }
       ? // Allow the original type with an optional async fn alongside the required asyncFunctionName
-          | (T & { fn?: DbxForgeFieldLogicAsyncFn })
+          | (T & { fn?: DbxForgeFieldLogicAsyncFn } & _DbxForgeFieldLogicExtras)
           // Or: when fn is provided, make asyncFunctionName optional (builder auto-generates a name)
-          | (Omit<T, 'asyncFunctionName' | 'dependsOn'> & { asyncFunctionName?: string; dependsOn?: string[]; fn: DbxForgeFieldLogicAsyncFn })
+          | (Omit<T, 'asyncFunctionName' | 'dependsOn'> & { asyncFunctionName?: string; fn: DbxForgeFieldLogicAsyncFn } & _DbxForgeFieldLogicExtras)
       : // Branch 3: all other logic types (state, expression, value, http) — pass through unchanged
         T;
+
+/**
+ * A custom logic type for transforming values.
+ *
+ * Is transformed into a derivation by the builder instance.
+ */
+export type DbxForgeFieldTransformLogic<FV = unknown> = DbxForgeFieldIdempotentTransformLogic<FV> | DbxForgeFieldAsyncTransformLogic<FV> | DbxForgeFieldDebouncedTransformLogic<FV>;
+
+/**
+ * The three types of transforms allowed.
+ *
+ * - Idempotent: The transform is synchronous. It should return the equivalent output for the equivalent input.
+ * - Async: The transform is asynchronous and returns a Promise. Does not have to be idempotent.
+ * - Debounced: A synchronous function that has a debounce to it. Does not have to be idempotent.
+ */
+export type DbxForgeFieldTransformType = 'idempotent' | 'async' | 'debounced';
+
+export type DbxForgeFieldTransformWhen = 'defined' | 'always';
+
+export type DbxForgeFieldTransformFunction<I, O> = (value: I, ctx: EvaluationContext<I>) => O;
+export type DbxForgeFieldAsyncTransformFunction<I, O> = DbxForgeFieldTransformFunction<I, Promise<O>>;
+
+export type DbxForgeFieldIdempotentTransformLogic<FV = unknown> = DbxForgeFieldIdempotentTransformLogicWhenDefined<FV> | DbxForgeFieldIdempotentTransformLogicWhenAlways<FV>;
+
+export interface DbxForgeFieldIdempotentTransformLogicWhenDefined<FV = unknown> {
+  readonly type: 'transform';
+  readonly transformType: 'idempotent';
+  readonly when?: 'defined';
+  readonly transform: DbxForgeFieldTransformFunction<FV, FV>;
+}
+
+export interface DbxForgeFieldIdempotentTransformLogicWhenAlways<FV = unknown> {
+  readonly type: 'transform';
+  readonly transformType: 'idempotent';
+  readonly when: 'always';
+  readonly transform: DbxForgeFieldTransformFunction<Maybe<FV>, FV>;
+}
+
+export type DbxForgeFieldAsyncTransformLogic<FV = unknown> = DbxForgeFieldAsyncTransformLogicWhenDefined<FV> | DbxForgeFieldAsyncTransformLogicWhenAlways<FV>;
+
+export interface DbxForgeFieldAsyncTransformLogicWhenDefined<FV = unknown> {
+  readonly type: 'transform';
+  readonly transformType: 'async';
+  readonly when?: 'defined';
+  readonly transform: DbxForgeFieldAsyncTransformFunction<FV, FV>;
+  readonly debounceMs?: Milliseconds;
+}
+
+export interface DbxForgeFieldAsyncTransformLogicWhenAlways<FV = unknown> {
+  readonly type: 'transform';
+  readonly transformType: 'async';
+  readonly when: 'always';
+  readonly transform: DbxForgeFieldAsyncTransformFunction<Maybe<FV>, FV>;
+  readonly debounceMs?: Milliseconds;
+}
+
+export type DbxForgeFieldDebouncedTransformLogic<FV = unknown> = DbxForgeFieldDebouncedTransformLogicWhenDefined<FV> | DbxForgeFieldDebouncedTransformLogicWhenAlways<FV>;
+
+export interface DbxForgeFieldDebouncedTransformLogicWhenDefined<FV = unknown> {
+  readonly type: 'transform';
+  readonly transformType: 'debounced';
+  readonly when?: 'defined';
+  readonly transform: DbxForgeFieldTransformFunction<FV, FV>;
+  readonly debounceMs?: Milliseconds;
+}
+
+export interface DbxForgeFieldDebouncedTransformLogicWhenAlways<FV = unknown> {
+  readonly type: 'transform';
+  readonly transformType: 'debounced';
+  readonly when: 'always';
+  readonly transform: DbxForgeFieldTransformFunction<Maybe<FV>, FV>;
+  readonly debounceMs?: Milliseconds;
+}
+
+export const DEFAULT_TRANSFORM_DEBOUNCE_TIME: Milliseconds = 500;
 
 /**
  * This type allows the builder instance to automatically register a function with the dbx-forge form.
@@ -282,21 +352,21 @@ type DbxForgeFieldLogicWithFn<T> =
  * Uses distributive conditional types to preserve ng-forge's discriminated union while adding
  * `fn` support only to function-based derivation variants.
  */
-export type DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceLogicBuilderLogic<C extends DbxForgeFieldFunctionDef<any>> = DbxForgeFieldLogicWithFn<DbxForgeFieldFunctionDefLogicValue<C>>;
+export type DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceLogicBuilderLogic<C extends DbxForgeFieldFunctionDef<any>, FV = any> = DbxForgeFieldLogicWithFn<DbxForgeFieldFunctionDefLogicValue<C>> | DbxForgeFieldTransformLogic<FV>;
 
-export interface DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceLogicBuilder<C extends DbxForgeFieldFunctionDef<any>> {
+export interface DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceLogicBuilder<C extends DbxForgeFieldFunctionDef<any>, FV = any> {
   /**
    * Returns the current logic configuration, if it exists.
    */
-  getLogic(): Maybe<DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceLogicBuilderLogic<C>[]>;
+  getLogic(): Maybe<DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceLogicBuilderLogic<C, FV>[]>;
   /**
    * Adds one or more arbitrary logic value(s) to the field definition.
    */
-  addLogic(logic: ArrayOrValue<DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceLogicBuilderLogic<C>>): void;
+  addLogic(logic: ArrayOrValue<DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceLogicBuilderLogic<C, FV>>): void;
   /**
    * Replaces the logic for the field definition.
    */
-  setLogic(logic: ArrayOrValue<DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceLogicBuilderLogic<C>>): void;
+  setLogic(logic: ArrayOrValue<DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceLogicBuilderLogic<C, FV>>): void;
 }
 
 export interface DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceFormConfigBuilder {
@@ -314,7 +384,7 @@ export interface DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceFormConfigB
   setFormConfig(formConfig: Maybe<DbxForgeFieldFormConfig>): void;
 }
 
-export type DbxForgeBuildFieldDefFunction<C extends DbxForgeFieldFunctionDef<any>> = (instance: DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C>, config: Building<C>) => void;
+export type DbxForgeBuildFieldDefFunction<C extends DbxForgeFieldFunctionDef<any>, FV = unknown> = (instance: DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C, FV>, config: Building<C>) => void;
 
 export interface DbxForgeBuildFieldDefConfig<C extends DbxForgeFieldFunctionDef<any>> {
   // TODO: ...
@@ -323,10 +393,10 @@ export interface DbxForgeBuildFieldDefConfig<C extends DbxForgeFieldFunctionDef<
 /**
  * The default DbxForgeFieldFunctionFieldDefBuilder implementation.
  */
-export function dbxForgeBuildFieldDef<C extends DbxForgeFieldFunctionDef<any>>(configureFunction: DbxForgeBuildFieldDefFunction<C>, config?: Maybe<DbxForgeBuildFieldDefConfig<C>>): DbxForgeFieldFunctionFieldDefBuilder<C> {
+export function dbxForgeBuildFieldDef<C extends DbxForgeFieldFunctionDef<any>, FV = any>(configureFunction: DbxForgeBuildFieldDefFunction<C, FV>, config?: Maybe<DbxForgeBuildFieldDefConfig<C>>): DbxForgeFieldFunctionFieldDefBuilder<C, FV> {
   // TODO: Default ValidationMessages place, etc.
 
-  return ((fieldDef: C, props: C['props'], inputConfigure?: Maybe<DbxForgeBuildFieldDefFunction<C>>) => {
+  return ((fieldDef: C, props: C['props'], inputConfigure?: Maybe<DbxForgeBuildFieldDefFunction<C, FV>>) => {
     function getFieldDef(): C {
       return fieldDef;
     }
@@ -381,7 +451,7 @@ export function dbxForgeBuildFieldDef<C extends DbxForgeFieldFunctionDef<any>>(c
       (fieldDef as Building<FieldWithValidation>)['validationMessages'] = input.validationMessages;
     }
 
-    function configure(fn: DbxForgeBuildFieldDefFunction<C>): void {
+    function configure(fn: DbxForgeBuildFieldDefFunction<C, FV>): void {
       fn(instance, fieldDef);
     }
 
@@ -429,11 +499,7 @@ export function dbxForgeBuildFieldDef<C extends DbxForgeFieldFunctionDef<any>>(c
 
     function addFormConfig(formConfig: Maybe<DbxForgeFieldFormConfig>): void {
       const currentFormConfig = getFormConfig() ?? {};
-
-      // TODO: Add a merge DbxForgeFieldFormConfig function
-
-      const nextFormConfig = null; // mergeObjects([currentFormConfig, filterUndefinedValues(formConfig)]);
-
+      const nextFormConfig = mergeDbxForgeFieldFormConfig(currentFormConfig, formConfig ?? {});
       setFormConfig(nextFormConfig);
     }
 
@@ -441,7 +507,7 @@ export function dbxForgeBuildFieldDef<C extends DbxForgeFieldFunctionDef<any>>(c
       (fieldDef as Building<DbxForgeField<any>>)['_formConfig'] = formConfig;
     }
 
-    const instance: DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C> = {
+    const instance: DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C, FV> = {
       getFieldDef,
       getProps,
       getValidation,
@@ -472,7 +538,7 @@ export function dbxForgeBuildFieldDef<C extends DbxForgeFieldFunctionDef<any>>(c
     _finalizeLogic(instance);
 
     return fieldDef;
-  }) as DbxForgeFieldFunctionFieldDefBuilder<C>;
+  }) as DbxForgeFieldFunctionFieldDefBuilder<C, FV>;
 }
 
 /**
@@ -480,7 +546,7 @@ export function dbxForgeBuildFieldDef<C extends DbxForgeFieldFunctionDef<any>>(c
  *
  * @param instance - The field definition instance.
  */
-function _finalizeLogic<C extends DbxForgeFieldFunctionDef<any>>(instance: DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C>): void {
+function _finalizeLogic<C extends DbxForgeFieldFunctionDef<any>, FV = any>(instance: DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C, FV>): void {
   // finalize logic before returning
   const logic = instance.getLogic();
 
@@ -491,10 +557,20 @@ function _finalizeLogic<C extends DbxForgeFieldFunctionDef<any>>(instance: DbxFo
 
   const fieldDef = instance.getFieldDef();
 
+  let hasOneOrMoreCustomFunctions = false;
+
+  /**
+   * Used for storing custom functions that are defined within the field config.
+   */
   const customFnConfig = {
     derivations: {} as MaybeSo<Required<CustomFnConfig['derivations']>>,
     asyncDerivations: {} as MaybeSo<Required<CustomFnConfig['asyncDerivations']>>
   };
+
+  /**
+   * Used for storing external data that is defined within the field config.
+   */
+  const externalData: MaybeSo<Required<DbxForgeFieldLogicExternalData>> = {};
 
   interface RegisterCustomFunctionInput {
     isAsync: boolean;
@@ -504,6 +580,33 @@ function _finalizeLogic<C extends DbxForgeFieldFunctionDef<any>>(instance: DbxFo
 
   let customFunctionNameCount = 0;
 
+  /**
+   * Generates a default function name for the given entry, and sets it on the entry.
+   */
+  function _generateDefaultFunctionName() {
+    const functionName = `__fn__${fieldDef.key}_${(customFunctionNameCount += 1)}`;
+    return functionName;
+  }
+
+  /**
+   * Registers a custom function with the customFnConfig.
+   */
+  function _registerCustomFunction(input: RegisterCustomFunctionInput, generateFunctionName: () => string = _generateDefaultFunctionName): string {
+    const { isAsync, functionName, fn } = input;
+    const finalFunctionName = functionName ?? generateFunctionName();
+
+    if (isAsync) {
+      customFnConfig.asyncDerivations[finalFunctionName] = fn;
+    } else {
+      customFnConfig.derivations[finalFunctionName] = fn;
+    }
+
+    // flag added
+    hasOneOrMoreCustomFunctions = true;
+
+    return finalFunctionName;
+  }
+
   function finalizeDerivationEntry(derivationEntry: LogicConfig & { type: 'derivation' }) {
     if ('fn' in (derivationEntry as DbxForgeFieldLogicWithFn<typeof derivationEntry>)) {
       const { fn, functionName, source, asyncFunctionName } = derivationEntry as unknown as (DbxForgeFieldLogicFnFunctionRef | DbxForgeFieldLogicAsyncFnFunctionRef) & typeof derivationEntry;
@@ -511,8 +614,8 @@ function _finalizeLogic<C extends DbxForgeFieldFunctionDef<any>>(instance: DbxFo
       /**
        * Generates a default function name for the given entry, and sets it on the entry.
        */
-      function generateDefaultFunctionName() {
-        const functionName = `__fn__${fieldDef.key}_${(customFunctionNameCount += 1)}`;
+      function generateDefaultFunctionNameForEntry() {
+        const functionName = _generateDefaultFunctionName();
 
         // set the functionName on the entry so it is associated now
         (derivationEntry as any).functionName = functionName;
@@ -520,17 +623,8 @@ function _finalizeLogic<C extends DbxForgeFieldFunctionDef<any>>(instance: DbxFo
         return functionName;
       }
 
-      /**
-       * Registers a custom function with the customFnConfig.
-       */
       function registerCustomFunction(input: RegisterCustomFunctionInput) {
-        const { isAsync, functionName, fn } = input;
-
-        if (isAsync) {
-          customFnConfig.asyncDerivations[functionName ?? generateDefaultFunctionName()] = fn;
-        } else {
-          customFnConfig.derivations[functionName ?? generateDefaultFunctionName()] = fn;
-        }
+        _registerCustomFunction(input, generateDefaultFunctionNameForEntry);
 
         // remove fn from the entry
         delete (derivationEntry as any).fn;
@@ -553,15 +647,81 @@ function _finalizeLogic<C extends DbxForgeFieldFunctionDef<any>>(instance: DbxFo
       delete (derivationEntry as Building<DbxForgeFieldLogicFnFunctionRef>).fn;
     }
 
+    // move any external data to the form config
+    if ('externalData' in derivationEntry) {
+      Object.assign(externalData, derivationEntry.externalData);
+    }
+
     // set the default dependsOn if not set
     if (!derivationEntry.dependsOn) {
-      derivationEntry.dependsOn = [];
+      derivationEntry.dependsOn = [fieldDef.key];
     }
   }
 
+  function finalizeTransformEntry(entry: DbxForgeFieldTransformLogic<FV>): LogicConfig {
+    const { transform: inputTransformFn, when } = entry;
+
+    /**
+     * The derivation functions will try to map occasionally while the value is undefined.
+     *
+     * We wrap it unless our transform expects that by specifying "always".
+     */
+    let transformFn: DbxForgeFieldTransformFunction<Maybe<FV>, any>;
+
+    if (when !== 'always') {
+      transformFn = mapMaybeFunction(inputTransformFn as any);
+    } else {
+      transformFn = inputTransformFn as DbxForgeFieldTransformFunction<Maybe<FV>, any>;
+    }
+
+    /**
+     * Build the final derivation function.
+     *
+     * @param ctx
+     * @returns
+     */
+    const fn: DbxForgeFieldLogicFn = (ctx) => {
+      return transformFn(ctx.fieldValue, ctx);
+    };
+
+    let result: LogicConfig;
+
+    switch (entry.transformType) {
+      case 'idempotent':
+        result = {
+          type: 'derivation',
+          trigger: 'onChange',
+          functionName: _registerCustomFunction({ isAsync: false, fn }),
+          dependsOn: [fieldDef.key]
+        };
+        break;
+      case 'async':
+        result = {
+          type: 'derivation',
+          functionName: _registerCustomFunction({ isAsync: true, fn }),
+          dependsOn: [fieldDef.key]
+        };
+        break;
+      case 'debounced':
+        result = {
+          type: 'derivation',
+          trigger: 'debounced',
+          functionName: _registerCustomFunction({ isAsync: false, fn }),
+          dependsOn: [fieldDef.key],
+          debounceMs: entry.debounceMs
+        };
+        break;
+      default:
+        throw new Error(`Unexpeected transform type.`);
+    }
+
+    return result;
+  }
+
   // finalize each entry
-  logic.forEach((entry) => {
-    const derivationEntry = entry as LogicConfig;
+  const finalLogic: LogicConfig[] = logic.map((entry) => {
+    const derivationEntry = entry as LogicConfig | DbxForgeFieldTransformLogic<FV>;
+    let finalEntry: LogicConfig = entry as LogicConfig;
 
     switch (derivationEntry.type) {
       case 'hidden':
@@ -573,10 +733,25 @@ function _finalizeLogic<C extends DbxForgeFieldFunctionDef<any>>(instance: DbxFo
       case 'derivation':
         finalizeDerivationEntry(derivationEntry);
         break;
+      case 'transform':
+        finalEntry = finalizeTransformEntry(derivationEntry);
+        break;
       default:
         break;
     }
+
+    return finalEntry;
   });
+
+  instance.setLogic(finalLogic as any);
+
+  // finally add/merge the form config from the fields that was accumulated
+  if (hasOneOrMoreCustomFunctions || !objectHasNoKeys(externalData)) {
+    instance.addFormConfig({
+      customFnConfig,
+      externalData
+    });
+  }
 }
 
 /**

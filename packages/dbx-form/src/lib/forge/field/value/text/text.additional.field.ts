@@ -129,7 +129,7 @@ export interface DbxForgeStateFieldConfig extends Partial<DbxForgeTextFieldConfi
  * ```
  */
 export function forgeStateField(config: DbxForgeStateFieldConfig = {}) {
-  const { asCode = false, pattern = asCode ? US_STATE_CODE_STRING_REGEX : undefined, key = 'state', placeholder = '', label = 'State', maxLength = asCode ? ADDRESS_STATE_CODE_MAX_LENGTH : ADDRESS_STATE_MAX_LENGTH, transform, required = false } = config;
+  const { asCode = false, pattern = asCode ? US_STATE_CODE_STRING_REGEX : undefined, key = 'state', placeholder = '', label = 'State', maxLength = asCode ? ADDRESS_STATE_CODE_MAX_LENGTH : ADDRESS_STATE_MAX_LENGTH, idempotentTransform: transform, required = false } = config;
 
   return forgeTextField({
     ...config,
@@ -139,7 +139,7 @@ export function forgeStateField(config: DbxForgeStateFieldConfig = {}) {
     pattern,
     required,
     maxLength,
-    transform: {
+    idempotentTransform: {
       ...transform,
       toUppercase: asCode || transform?.toUppercase
     }

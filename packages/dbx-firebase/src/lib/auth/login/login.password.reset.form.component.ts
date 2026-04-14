@@ -23,7 +23,7 @@ export interface DbxFirebasePasswordResetFormValue {
   standalone: true
 })
 export class DbxFirebasePasswordResetFormComponent extends AbstractSyncForgeFormDirective<DbxFirebasePasswordResetFormValue> {
-  readonly config: FormConfig = {
+  readonly formConfig: FormConfig = {
     fields: [
       forgeTextPasswordField({ minLength: FIREBASE_AUTH_PASSWORD_MIN_LENGTH }),
       {

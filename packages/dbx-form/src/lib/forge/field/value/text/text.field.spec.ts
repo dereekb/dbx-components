@@ -1,6 +1,226 @@
+/**
+ * Exhaustive type and runtime tests for the text forge field.
+ */
 import { describe, it, expect } from 'vitest';
-import type { LogicConfig } from '@ng-forge/dynamic-forms';
-import { forgeTextField, forgeTextAreaField } from './text.field';
+import { expectTypeOf } from 'vitest';
+import { type DynamicText, type LogicConfig, type SchemaApplicationConfig, type ValidatorConfig, type ValidationMessages, type FormConfig, type FieldDef, withLoggerConfig } from '@ng-forge/dynamic-forms';
+import type { MatInputField } from '@ng-forge/dynamic-forms-material';
+import { waitForMs, type TransformStringFunctionConfig } from '@dereekb/util';
+import type { FieldAutocompleteAttributeOption } from '../../../../field/field.autocomplete';
+import type { DbxForgeTextFieldConfig, DbxForgeTextFieldInputType } from './text.field';
+import { forgeTextField } from './text.field';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { DBX_FORGE_TEST_PROVIDERS } from '../../../form/forge.component.spec';
+import { DbxForgeAsyncConfigFormComponent } from '../../../form';
+import { firstValueFrom } from 'rxjs';
+import { FormControlStatus } from '@angular/forms';
+
+// ============================================================================
+// DbxForgeTextFieldConfig - Exhaustive Whitelist
+// ============================================================================
+
+describe('DbxForgeTextFieldConfig - Exhaustive Whitelist', () => {
+  type ExpectedKeys =
+    // From DbxForgeFieldFunctionDef<DbxForgeTextFieldDef>
+    | 'key'
+    | 'label'
+    | 'placeholder'
+    | 'value'
+    | 'required'
+    | 'readonly'
+    | 'disabled'
+    | 'hidden'
+    | 'className'
+    | 'meta'
+    | 'logic'
+    | 'props'
+    | 'hint'
+    | 'description'
+    | 'pattern'
+    | 'minLength'
+    | 'maxLength'
+    | 'min'
+    | 'max'
+    | 'email'
+    | 'validators'
+    | 'validationMessages'
+    | 'derivation'
+    | 'schemas'
+    | 'col'
+    | 'tabIndex'
+    | 'excludeValueIfHidden'
+    | 'excludeValueIfDisabled'
+    | 'excludeValueIfReadonly'
+    | '__fieldDef'
+    // Field-specific config
+    | 'inputType'
+    | 'defaultValue'
+    // From FieldAutocompleteAttributeOptionRef
+    | 'autocomplete'
+    // From Partial<TransformStringFunctionConfigRef> + direct declaration
+    | 'idempotentTransform';
+
+  type ActualKeys = keyof DbxForgeTextFieldConfig;
+
+  it('should have exactly the expected keys', () => {
+    expectTypeOf<ActualKeys>().toEqualTypeOf<ExpectedKeys>();
+  });
+
+  describe('required keys', () => {
+    it('key is required', () => {
+      expectTypeOf<DbxForgeTextFieldConfig['key']>().toEqualTypeOf<string>();
+    });
+  });
+
+  describe('field-specific config keys', () => {
+    it('inputType', () => {
+      expectTypeOf<DbxForgeTextFieldConfig['inputType']>().toEqualTypeOf<DbxForgeTextFieldInputType | undefined>();
+    });
+
+    it('transform', () => {
+      expectTypeOf<DbxForgeTextFieldConfig['idempotentTransform']>().toEqualTypeOf<TransformStringFunctionConfig | undefined>();
+    });
+
+    it('defaultValue', () => {
+      expectTypeOf<DbxForgeTextFieldConfig['defaultValue']>().toEqualTypeOf<string | undefined>();
+    });
+
+    it('autocomplete', () => {
+      expectTypeOf<DbxForgeTextFieldConfig['autocomplete']>().toEqualTypeOf<FieldAutocompleteAttributeOption | undefined>();
+    });
+  });
+
+  describe('inherited optional keys', () => {
+    it('label', () => {
+      expectTypeOf<DbxForgeTextFieldConfig['label']>().toEqualTypeOf<DynamicText | undefined>();
+    });
+
+    it('value is string', () => {
+      expectTypeOf<DbxForgeTextFieldConfig['value']>().toEqualTypeOf<string | undefined>();
+    });
+
+    it('required', () => {
+      expectTypeOf<DbxForgeTextFieldConfig['required']>().toEqualTypeOf<boolean | undefined>();
+    });
+
+    it('hint', () => {
+      expectTypeOf<DbxForgeTextFieldConfig['hint']>().toEqualTypeOf<DynamicText | undefined>();
+    });
+
+    it('description', () => {
+      expectTypeOf<DbxForgeTextFieldConfig['description']>().toEqualTypeOf<DynamicText | undefined>();
+    });
+
+    it('validators', () => {
+      expectTypeOf<DbxForgeTextFieldConfig['validators']>().toEqualTypeOf<ValidatorConfig[] | undefined>();
+    });
+
+    it('validationMessages', () => {
+      expectTypeOf<DbxForgeTextFieldConfig['validationMessages']>().toEqualTypeOf<ValidationMessages | undefined>();
+    });
+
+    it('schemas', () => {
+      expectTypeOf<DbxForgeTextFieldConfig['schemas']>().toEqualTypeOf<SchemaApplicationConfig[] | undefined>();
+    });
+  });
+});
+
+// ============================================================================
+// MatInputField (String variant) - Exhaustive Whitelist
+// ============================================================================
+
+describe('MatInputField (String) - Exhaustive Whitelist', () => {
+  type StringInputField = Extract<MatInputField, { props?: { type?: 'text' | 'email' | 'password' | 'tel' | 'url' } }>;
+
+  type ExpectedKeys =
+    // From FieldDef
+    | 'key'
+    | 'type'
+    | 'label'
+    | 'props'
+    | 'className'
+    | 'disabled'
+    | 'readonly'
+    | 'hidden'
+    | 'tabIndex'
+    | 'col'
+    | 'meta'
+    // Value exclusion config
+    | 'excludeValueIfHidden'
+    | 'excludeValueIfDisabled'
+    | 'excludeValueIfReadonly'
+    // From FieldWithValidation
+    | 'required'
+    | 'email'
+    | 'min'
+    | 'max'
+    | 'minLength'
+    | 'maxLength'
+    | 'pattern'
+    | 'validators'
+    | 'validationMessages'
+    | 'logic'
+    | 'derivation'
+    | 'schemas'
+    // From BaseValueField
+    | 'value'
+    | 'placeholder';
+
+  type ActualKeys = keyof StringInputField;
+
+  it('should have exactly the expected keys', () => {
+    expectTypeOf<ActualKeys>().toEqualTypeOf<ExpectedKeys>();
+  });
+
+  describe('required keys', () => {
+    it('key is required', () => {
+      expectTypeOf<StringInputField['key']>().toEqualTypeOf<string>();
+    });
+
+    it('type is required and literal', () => {
+      expectTypeOf<StringInputField['type']>().toEqualTypeOf<'input'>();
+    });
+  });
+
+  describe('value type', () => {
+    it('value is string for string input', () => {
+      expectTypeOf<StringInputField['value']>().toEqualTypeOf<string | undefined>();
+    });
+  });
+});
+
+// ============================================================================
+// Usage Tests (type-level)
+// ============================================================================
+
+describe('MatInputField - Usage', () => {
+  it('should accept valid text field configuration', () => {
+    const field = {
+      type: 'input',
+      key: 'name',
+      label: 'Name',
+      value: 'hello',
+      props: { type: 'text' }
+    } as const satisfies MatInputField;
+
+    expectTypeOf(field.type).toEqualTypeOf<'input'>();
+    expectTypeOf(field.value).toEqualTypeOf<'hello'>();
+  });
+
+  it('should accept valid email field configuration', () => {
+    const field = {
+      type: 'input',
+      key: 'email',
+      props: { type: 'email', appearance: 'outline' }
+    } as const satisfies MatInputField;
+
+    expectTypeOf(field.props.type).toEqualTypeOf<'email'>();
+  });
+});
+
+// ============================================================================
+// Runtime Factory Tests - forgeTextField()
+// ============================================================================
 
 describe('forgeTextField()', () => {
   it('should create an input field with correct type', () => {
@@ -32,13 +252,16 @@ describe('forgeTextField()', () => {
   });
 
   it('should set pattern from string', () => {
-    const field = forgeTextField({ key: 'code', pattern: '^[A-Z]+$' });
-    expect(field.pattern).toBe('^[A-Z]+$');
+    const pattern = /^[A-Z]+$/;
+    const patternString = pattern.toString();
+    const field = forgeTextField({ key: 'code', pattern: patternString });
+    expect(field.pattern).toBe(patternString);
   });
 
   it('should set pattern from RegExp', () => {
-    const field = forgeTextField({ key: 'code', pattern: /^[A-Z]+$/ });
-    expect(field.pattern).toBe('^[A-Z]+$');
+    const pattern = /^[A-Z]+$/;
+    const field = forgeTextField({ key: 'code', pattern });
+    expect(field.pattern).toBe(pattern);
   });
 
   it('should not include pattern when not specified', () => {
@@ -66,46 +289,14 @@ describe('forgeTextField()', () => {
     expect((field as any).placeholder).toBe('Type here');
   });
 
-  it('should provide empty string as default value', () => {
+  it('should not set value when not specified', () => {
     const field = forgeTextField({ key: 'name' });
-    expect(field.value).toBe('');
+    expect(field.value).toBeUndefined();
   });
 
-  it('should use defaultValue when provided', () => {
-    const field = forgeTextField({ key: 'name', defaultValue: 'hello' });
-    expect(field.value).toBe('hello');
-  });
-
-  it('should provide empty label when not specified', () => {
+  it('should not set label when not specified', () => {
     const field = forgeTextField({ key: 'name' });
-    expect(field.label).toBe('');
-  });
-
-  describe('validationMessages', () => {
-    it('should include validationMessages on the field definition', () => {
-      const field = forgeTextField({ key: 'name', label: 'Name' });
-      expect(field.validationMessages).toBeDefined();
-    });
-
-    it('should include a required validation message', () => {
-      const field = forgeTextField({ key: 'name', required: true });
-      expect(field.validationMessages?.required).toBeDefined();
-    });
-
-    it('should include a minLength validation message', () => {
-      const field = forgeTextField({ key: 'name', minLength: 4 });
-      expect(field.validationMessages?.minLength).toBeDefined();
-    });
-
-    it('should include a maxLength validation message', () => {
-      const field = forgeTextField({ key: 'name', maxLength: 15 });
-      expect(field.validationMessages?.maxLength).toBeDefined();
-    });
-
-    it('should include a pattern validation message', () => {
-      const field = forgeTextField({ key: 'name', pattern: '^[A-Z]+$' });
-      expect(field.validationMessages?.pattern).toBeDefined();
-    });
+    expect(field.label).toBeUndefined();
   });
 
   it('should pass logic through to the field definition', () => {
@@ -115,95 +306,87 @@ describe('forgeTextField()', () => {
   });
 });
 
-describe('forgeTextAreaField()', () => {
-  it('should create a textarea field with correct type', () => {
-    const field = forgeTextAreaField({ key: 'bio', label: 'Biography' });
-    expect(field.type).toBe('textarea');
-    expect(field.key).toBe('bio');
-    expect(field.label).toBe('Biography');
-  });
+// ============================================================================
+// Runtime Form Scenarios - forgeTextField()
+// ============================================================================
 
-  it('should set required when specified', () => {
-    const field = forgeTextAreaField({ key: 'bio', required: true });
-    expect(field.required).toBe(true);
-  });
+describe('scenarios', () => {
+  let fixture: ComponentFixture<DbxForgeAsyncConfigFormComponent>;
 
-  it('should set readonly when specified', () => {
-    const field = forgeTextAreaField({ key: 'bio', readonly: true });
-    expect(field.readonly).toBe(true);
-  });
-
-  it('should default rows to 3 in props', () => {
-    const field = forgeTextAreaField({ key: 'bio' });
-    expect(field.props?.rows).toBe(3);
-  });
-
-  it('should set custom rows in props', () => {
-    const field = forgeTextAreaField({ key: 'bio', rows: 5 });
-    expect(field.props?.rows).toBe(5);
-  });
-
-  it('should set minLength and maxLength', () => {
-    const field = forgeTextAreaField({ key: 'bio', minLength: 10, maxLength: 500 });
-    expect(field.minLength).toBe(10);
-    expect(field.maxLength).toBe(500);
-  });
-
-  it('should set pattern from string', () => {
-    const field = forgeTextAreaField({ key: 'bio', pattern: '^[a-z]+$' });
-    expect(field.pattern).toBe('^[a-z]+$');
-  });
-
-  it('should set pattern from RegExp', () => {
-    const field = forgeTextAreaField({ key: 'bio', pattern: /^[a-z]+$/ });
-    expect(field.pattern).toBe('^[a-z]+$');
-  });
-
-  it('should map description to hint in props', () => {
-    const field = forgeTextAreaField({ key: 'bio', description: 'Tell us about yourself' });
-    expect(field.props?.hint).toBe('Tell us about yourself');
-  });
-
-  it('should set placeholder on field', () => {
-    const field = forgeTextAreaField({ key: 'bio', placeholder: 'Type here' });
-    expect((field as any).placeholder).toBe('Type here');
-  });
-
-  it('should provide empty string as default value', () => {
-    const field = forgeTextAreaField({ key: 'bio' });
-    expect(field.value).toBe('');
-  });
-
-  it('should use defaultValue when provided', () => {
-    const field = forgeTextAreaField({ key: 'bio', defaultValue: 'default text' });
-    expect(field.value).toBe('default text');
-  });
-
-  it('should provide empty label when not specified', () => {
-    const field = forgeTextAreaField({ key: 'bio' });
-    expect(field.label).toBe('');
-  });
-
-  describe('validationMessages', () => {
-    it('should include validationMessages on the field definition', () => {
-      const field = forgeTextAreaField({ key: 'bio', label: 'Bio' });
-      expect(field.validationMessages).toBeDefined();
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [...DBX_FORGE_TEST_PROVIDERS, withLoggerConfig({ derivations: 'verbose' })]
     });
 
-    it('should include a minLength validation message', () => {
-      const field = forgeTextAreaField({ key: 'bio', minLength: 10 });
-      expect(field.validationMessages?.minLength).toBeDefined();
-    });
+    fixture = TestBed.createComponent(DbxForgeAsyncConfigFormComponent);
+  });
 
-    it('should include a maxLength validation message', () => {
-      const field = forgeTextAreaField({ key: 'bio', maxLength: 500 });
-      expect(field.validationMessages?.maxLength).toBeDefined();
+  afterEach(() => {
+    TestBed.resetTestingModule();
+  });
+
+  describe('transform', () => {
+    it('should transform the value', async () => {
+      const transform = (transformValue: string) => {
+        return transformValue.toUpperCase();
+      };
+
+      const field = forgeTextField({ key: 'name', idempotentTransform: { transform } });
+
+      const formConfig = { fields: [field] };
+      fixture.componentInstance.config.set(formConfig);
+
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const fixtureFormConfig: FormConfig = await firstValueFrom(fixture.componentInstance.context.config$);
+
+      expect((fixtureFormConfig.fields[0] as any)._formConfig).toBeDefined();
+      expect((fixtureFormConfig.fields[0] as MatInputField).logic).toHaveLength(1);
+      expect((fixtureFormConfig.fields[0] as MatInputField).logic?.[0].type).toBe('derivation');
+
+      // set the value
+      const name = 'hello';
+
+      fixture.componentInstance.setValue({ name });
+
+      fixture.detectChanges();
+      await waitForMs(0); // wait for the changes to propogate. Without this wait it will stablize before the changes have completed.
+      await fixture.whenStable();
+
+      const value = await firstValueFrom(fixture.componentInstance.getValue());
+      expect(value).toEqual({ name: transform(name) });
     });
   });
 
-  it('should pass logic through to the field definition', () => {
-    const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
-    const field = forgeTextAreaField({ key: 'bio', logic });
-    expect((field as any).logic).toEqual(logic);
+  describe('validation', () => {
+    it('should validate with the pattern', async () => {
+      const pattern = /^[A-Z]+$/;
+
+      const field = forgeTextField({ key: 'name', pattern });
+
+      const formConfig = { fields: [field] };
+      fixture.componentInstance.config.set(formConfig);
+
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const fixtureFormConfig: FormConfig = await firstValueFrom(fixture.componentInstance.context.config$);
+
+      expect((fixtureFormConfig.fields[0] as MatInputField).validators).toHaveLength(1);
+
+      // set the value
+      const name = '123';
+
+      fixture.componentInstance.setValue({ name });
+
+      fixture.detectChanges();
+      await waitForMs(0); // wait for the changes to propogate. Without this wait it will stablize before the changes have completed.
+      await fixture.whenStable();
+
+      const streamEvent = await firstValueFrom(fixture.componentInstance.context.stream$);
+
+      expect(streamEvent.status).toBe('INVALID' as FormControlStatus);
+    });
   });
 });

@@ -68,7 +68,7 @@ export class DbxForgeFormComponent<T = unknown> implements OnInit, OnDestroy {
    * Only `formValue()` is tracked — all other signal reads use `untracked()`
    * to avoid infinite re-triggering from writing back to signals in this effect.
    */
-  private readonly _formValueEffect = effect(() => {
+  protected readonly _formValueEffect = effect(() => {
     const value = this.formValue();
 
     untracked(() => {
@@ -90,7 +90,7 @@ export class DbxForgeFormComponent<T = unknown> implements OnInit, OnDestroy {
    * Separated from the value effect so that validity changes (e.g. async validators resolving)
    * update isComplete and status without incrementing changesCount.
    */
-  private readonly _validityEffect = effect(() => {
+  protected readonly _validityEffect = effect(() => {
     const isValid = this.formValid();
 
     untracked(() => {
@@ -99,7 +99,7 @@ export class DbxForgeFormComponent<T = unknown> implements OnInit, OnDestroy {
     });
   });
 
-  private _emitFormState(): void {
+  protected _emitFormState(): void {
     const isValid = this.formValid();
     const isReset = this._isReset();
     const changesCount = this._changesCount();

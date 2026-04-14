@@ -36,7 +36,7 @@ export interface TextFieldConfig extends LabeledFieldConfig, DescriptionFieldCon
   /**
    * String transformation applied as a value parser (e.g., trim, uppercase).
    */
-  transform?: TransformStringFunctionConfig;
+  idempotentTransform?: TransformStringFunctionConfig;
 }
 
 /**
@@ -52,7 +52,7 @@ export interface TextFieldConfig extends LabeledFieldConfig, DescriptionFieldCon
  * ```
  */
 export function formlyTextFieldTransformParser(config: Partial<FieldConfigParsersRef> & Partial<TransformStringFunctionConfigRef>) {
-  const { parsers: inputParsers, transform } = config;
+  const { parsers: inputParsers, idempotentTransform: transform } = config;
   let parsers: FieldValueParser[] | undefined;
 
   if (inputParsers) {
@@ -79,7 +79,7 @@ export function formlyTextFieldTransformParser(config: Partial<FieldConfigParser
  * ```
  */
 export function formlyTextField(config: TextFieldConfig): FormlyFieldConfig {
-  const { transform: _transform, key, pattern, minLength, maxLength, inputType: type = 'text', materialFormField } = config;
+  const { idempotentTransform: _transform, key, pattern, minLength, maxLength, inputType: type = 'text', materialFormField } = config;
   const parsers = formlyTextFieldTransformParser(config);
 
   return formlyField({

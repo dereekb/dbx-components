@@ -19,7 +19,7 @@ export type DocInteractionTestDateFilterFormValue = {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocInteractionTestDateFilterFormComponent extends AbstractSyncForgeFormDirective<DocInteractionTestFilterFormValue> {
-  readonly config: FormConfig = {
+  readonly formConfig: FormConfig = {
     fields: [
       forgeFixedDateRangeField({
         key: 'range',

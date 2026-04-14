@@ -16,7 +16,7 @@ export interface DocActionFormExampleValue {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocActionFormExampleFormTwoComponent extends AbstractSyncForgeFormDirective<DocActionFormExampleValue> {
-  readonly config: FormConfig = {
+  readonly formConfig: FormConfig = {
     fields: [forgeTextField({ key: 'name', label: 'Name', required: true })]
   } as FormConfig;
 }

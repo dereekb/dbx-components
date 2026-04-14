@@ -1,9 +1,10 @@
 import { Injectable, type OnDestroy, type Provider, type Signal, signal, computed } from '@angular/core';
-import { BehaviorSubject, combineLatest, type Observable, shareReplay, switchMap, filter, map } from 'rxjs';
+import { BehaviorSubject, combineLatest, type Observable, shareReplay, switchMap, filter, map, scan } from 'rxjs';
 import { type DbxMutableForm, type DbxFormEvent, type DbxFormDisabledKey, DbxFormState, DEFAULT_FORM_DISABLED_KEY, provideDbxMutableForm } from '../../form/form';
 import { type BooleanStringKeyArray, BooleanStringKeyArrayUtility, type Maybe } from '@dereekb/util';
 import { LockSet, filterMaybe } from '@dereekb/rxjs';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
+import { DbxForgeFinalizeFormConfigResult, dbxForgeFinalizeFormConfig } from './forge.form';
 
 /**
  * Recursively strips keys that start with `_` from a form value object.
@@ -112,7 +113,11 @@ export function stripEmptyForgeValues<T>(value: T): T {
  */
 @Injectable()
 export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDestroy {
-  private static readonly INITIAL_STATE: DbxFormEvent = { isComplete: false, state: DbxFormState.INITIALIZING, status: 'PENDING' };
+  private static readonly INITIAL_STATE: DbxFormEvent = {
+    isComplete: false,
+    state: DbxFormState.INITIALIZING,
+    status: 'PENDING'
+  };
 
   readonly lockSet = new LockSet();
 
@@ -207,7 +212,30 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
   private readonly _setValue = new BehaviorSubject<Maybe<Partial<T>>>(undefined);
   private readonly _reset = new BehaviorSubject<Date>(new Date());
 
-  readonly config$ = this._config.pipe(filterMaybe(), shareReplay(1));
+  private readonly _internalConfig$: Observable<Maybe<DbxForgeFinalizeFormConfigResult>> = this._config.pipe(
+    scan<Maybe<FormConfig>, Maybe<DbxForgeFinalizeFormConfigResult>, Maybe<DbxForgeFinalizeFormConfigResult>>((acc, config) => {
+      let result: Maybe<DbxForgeFinalizeFormConfigResult>;
+
+      if (config) {
+        if (acc?.input !== config) {
+          result = dbxForgeFinalizeFormConfig(config);
+        } else {
+          result = acc;
+        }
+      } else {
+        result = undefined;
+      }
+
+      return result;
+    }, undefined),
+    shareReplay(1)
+  );
+
+  readonly config$: Observable<FormConfig> = this._internalConfig$.pipe(
+    filterMaybe(),
+    map(({ config }) => config),
+    shareReplay(1)
+  );
 
   /**
    * Form event stream that restarts on each reset, mirroring the formly form's
@@ -224,12 +252,12 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
   readonly disabled$ = this._disabled.asObservable();
   readonly reset$ = this._reset.asObservable();
 
-  set config(config: Maybe<FormConfig>) {
-    this._config.next(config);
-  }
-
   get config(): Maybe<FormConfig> {
     return this._config.value;
+  }
+
+  set config(config: Maybe<FormConfig>) {
+    this._config.next(config);
   }
 
   updateFormState(state: DbxFormEvent): void {

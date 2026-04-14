@@ -32,7 +32,7 @@ export interface DbxFirebaseEmailFormConfig {
   standalone: true
 })
 export class DbxFirebaseEmailForgeFormComponent extends AbstractConfigAsyncForgeFormDirective<DbxFirebaseEmailFormValue, DbxFirebaseEmailFormConfig> {
-  readonly config$: Observable<Maybe<FormConfig>> = this.currentConfig$.pipe(
+  readonly formConfig$: Observable<Maybe<FormConfig>> = this.currentConfig$.pipe(
     map((config) => {
       if (!config) {
         return undefined;

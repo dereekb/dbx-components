@@ -15,5 +15,5 @@ export type DbxScheduleSelectionCalendarDateDaysForgeFormValue = EnabledDays;
   standalone: true
 })
 export class DbxScheduleSelectionCalendarDateDaysForgeFormComponent extends AbstractSyncForgeFormDirective<DbxScheduleSelectionCalendarDateDaysForgeFormValue> {
-  readonly config: FormConfig = dbxScheduleSelectionCalendarDateDaysForgeFormFields();
+  readonly formConfig: FormConfig = dbxScheduleSelectionCalendarDateDaysForgeFormFields();
 }

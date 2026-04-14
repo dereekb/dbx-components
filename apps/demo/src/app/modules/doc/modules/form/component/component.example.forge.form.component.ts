@@ -14,7 +14,7 @@ import { type DocFormExampleComponentFormConfig, DOC_FORM_EXAMPLE_COMPONENT_DATA
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocForgeExampleComponentFormComponent extends AbstractConfigAsyncForgeFormDirective<unknown, DocFormExampleComponentFormConfig> {
-  readonly config$: Observable<Maybe<FormConfig>> = this.currentConfig$.pipe(
+  readonly formConfig$: Observable<Maybe<FormConfig>> = this.currentConfig$.pipe(
     map((config) => {
       if (!config) {
         return undefined;

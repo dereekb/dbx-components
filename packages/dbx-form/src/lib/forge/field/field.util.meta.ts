@@ -3,13 +3,6 @@ import { filterFromPOJO, type Maybe } from '@dereekb/util';
 import { DbxForgeFieldFunctionDef, DbxForgeFieldFunctionFieldDefBuilderFunctionInstance } from './field';
 import { FieldAutocompleteAttributeOptionRef, fieldAutocompleteAttributeValue } from '../../field/field.autocomplete';
 
-/**
- * CSS class applied to forge fields when `styledBox` is enabled.
- *
- * Mirrors the Material outlined form-field appearance for fields that don't use `<mat-form-field>` (checkbox, toggle, slider).
- */
-export const FORGE_STYLED_BOX_CLASS = 'dbx-forge-styled-box';
-
 export function configureForgeAutocompleteFieldMeta<C extends DbxForgeFieldFunctionDef<any> & FieldAutocompleteAttributeOptionRef>(instance: DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C>): void {
   const fieldDef = instance.getFieldDef();
 

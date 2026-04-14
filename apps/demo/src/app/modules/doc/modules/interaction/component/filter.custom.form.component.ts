@@ -14,7 +14,7 @@ export type DocInteractionTestFilterFormValue = DocInteractionTestFilter;
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocInteractionTestFilterCustomFilterFormComponent extends AbstractSyncForgeFormDirective<DocInteractionTestFilterFormValue> {
-  readonly config: FormConfig = {
+  readonly formConfig: FormConfig = {
     fields: [forgeTextField({ key: 'name', label: 'Name' }), forgeDateTimeField({ key: 'date', label: 'Time' })]
   } as FormConfig;
 }

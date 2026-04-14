@@ -10,12 +10,11 @@ import { DbxForgeFormComponent } from './forge.component';
 import { DbxForgeFormContext, provideDbxForgeFormContext, stripForgeInternalKeys, stripEmptyForgeValues } from './forge.context';
 import { forgeTextField } from '../field/value/text/text.field';
 import { forgeToggleWrapper } from '../field/wrapper/wrapper';
+import { DBX_FORGE_FORM_COMPONENT_TEMPLATE } from './forge.component.template';
 
 // MARK: Test Host
 @Component({
-  template: `
-    <dbx-forge></dbx-forge>
-  `,
+  template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   standalone: true,
   imports: [DbxForgeFormComponent],
   providers: [provideDbxForgeFormContext()],
@@ -26,7 +25,7 @@ class TestForgeFormHostComponent {
 }
 
 // MARK: Helpers
-const TEST_PROVIDERS = [provideZonelessChangeDetection(), provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), { provide: DynamicFormLogger, useClass: NoopLogger }];
+export const DBX_FORGE_TEST_PROVIDERS = [provideZonelessChangeDetection(), provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), { provide: DynamicFormLogger, useClass: NoopLogger }];
 
 /**
  * Settles the fixture by running change detection and waiting for stability.
@@ -56,7 +55,7 @@ describe('DbxForgeFormComponent', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [TestForgeFormHostComponent],
-      providers: TEST_PROVIDERS
+      providers: DBX_FORGE_TEST_PROVIDERS
     });
   });
 

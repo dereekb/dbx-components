@@ -37,7 +37,7 @@ export type DbxFirebaseOidcEntryClientFormComponentConfig = Omit<OidcEntryClient
 export class DbxFirebaseOidcEntryClientForgeFormComponent extends AbstractConfigAsyncForgeFormDirective<DbxFirebaseOidcModelClientFormValue, DbxFirebaseOidcEntryClientFormComponentConfig> {
   private readonly _oidcConfigService = inject(DbxFirebaseOidcConfigService);
 
-  readonly config$: Observable<Maybe<FormConfig>> = this.currentConfig$.pipe(
+  readonly formConfig$: Observable<Maybe<FormConfig>> = this.currentConfig$.pipe(
     map((config) => {
       if (!config) {
         return undefined;

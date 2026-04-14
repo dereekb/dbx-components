@@ -31,7 +31,7 @@ const DISPLAY_FOR_DEVELOPMENT_POPUP_STRING_VALUE: SearchableValueFieldDisplayFn<
   standalone: true
 })
 export class DbxFirebaseDevelopmentPopupContentForgeFormComponent extends AbstractConfigAsyncForgeFormDirective<DbxFirebaseDevelopmentPopupContentFormValue, DbxFirebaseDevelopmentPopupContentFormInput> {
-  readonly config$: Observable<Maybe<FormConfig>> = this.currentConfig$.pipe(
+  readonly formConfig$: Observable<Maybe<FormConfig>> = this.currentConfig$.pipe(
     map((config) => {
       if (!config) {
         return undefined;

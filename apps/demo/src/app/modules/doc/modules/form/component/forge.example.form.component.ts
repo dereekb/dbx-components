@@ -29,5 +29,5 @@ import { JsonPipe } from '@angular/common';
 })
 export class DocFormForgeExampleComponent extends AbstractConfigAsyncForgeFormDirective<any, FormConfig> {
   value: any;
-  readonly config$: Observable<Maybe<FormConfig>> = this.currentConfig$.pipe(map((config: Maybe<FormConfig>) => config ?? undefined));
+  readonly formConfig$: Observable<Maybe<FormConfig>> = this.currentConfig$.pipe(map((config: Maybe<FormConfig>) => config ?? undefined));
 }

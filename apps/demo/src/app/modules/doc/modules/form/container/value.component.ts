@@ -105,7 +105,7 @@ export class DocFormValueComponent {
   readonly textFields: FormlyFieldConfig[] = [
     //
     formlyTextField({ key: 'test', label: 'Text Field', description: 'A required text field.', placeholder: 'Placeholder', required: true, minLength: 4, maxLength: 15 }),
-    formlyTextField({ key: 'transform', label: 'Transformed Text Field', description: 'Text Field With String Transform Config. Adds _ between each letter as you type.', transform: { trim: true, transform: addSuffixFunction('_') } }),
+    formlyTextField({ key: 'transform', label: 'Transformed Text Field', description: 'Text Field With String Transform Config. Adds _ between each letter as you type.', idempotentTransform: { trim: true, transform: addSuffixFunction('_') } }),
     formlyNameField(),
     formlyEmailField(),
     formlyCityField(),
@@ -118,7 +118,7 @@ export class DocFormValueComponent {
   readonly forgeTextFieldsConfig: FormConfig = {
     fields: [
       forgeTextField({ key: 'test', label: 'Text Field', description: 'A required text field.', placeholder: 'Placeholder', required: true, minLength: 4, maxLength: 15 }),
-      forgeTextField({ key: 'transform', label: 'Transformed Text Field', description: 'Text Field With String Transform Config.', transform: { trim: true } }),
+      forgeTextField({ key: 'transform', label: 'Transformed Text Field', description: 'Text Field With String Transform Config.', idempotentTransform: { trim: true } }),
       forgeNameField(),
       forgeEmailField(),
       forgeCityField(),

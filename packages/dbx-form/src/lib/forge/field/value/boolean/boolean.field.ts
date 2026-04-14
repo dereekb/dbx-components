@@ -1,6 +1,13 @@
 import type { MatToggleField, MatCheckboxField, MatToggleProps, MatCheckboxProps } from '@ng-forge/dynamic-forms-material';
-import { forgeField, FORGE_STYLED_BOX_CLASS } from '../../field.util.meta';
+import { forgeField } from '../../field.util.meta';
 import type { DbxForgeFieldConfig } from '../../field.type';
+
+/**
+ * CSS class applied to forge fields when `styledBox` is enabled.
+ *
+ * Mirrors the Material outlined form-field appearance for fields that don't use `<mat-form-field>` (checkbox, toggle, slider).
+ */
+export const FORGE_STYLED_BOX_CLASS = 'dbx-forge-styled-box';
 
 // MARK: Toggle Field
 /**

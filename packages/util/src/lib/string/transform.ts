@@ -73,7 +73,7 @@ export interface TransformStringFunctionConfigRef<S extends string = string> {
   /**
    * The string transformation configuration.
    */
-  readonly transform: TransformStringFunctionConfig<S>;
+  readonly idempotentTransform: TransformStringFunctionConfig<S>;
 }
 
 /**

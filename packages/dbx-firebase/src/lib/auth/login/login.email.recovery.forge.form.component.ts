@@ -21,5 +21,5 @@ export interface DbxFirebaseEmailRecoveryFormValue {
   standalone: true
 })
 export class DbxFirebaseEmailRecoveryForgeFormComponent extends AbstractSyncForgeFormDirective<DbxFirebaseEmailRecoveryFormValue> {
-  readonly config: FormConfig = { fields: [forgeEmailField({ key: 'email', required: true })] };
+  readonly formConfig: FormConfig = { fields: [forgeEmailField({ key: 'email', required: true })] };
 }

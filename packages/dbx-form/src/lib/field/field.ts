@@ -3,6 +3,8 @@ import { DisableAutocompleteForField } from './field.autocomplete';
 
 /**
  * A value parser function that transforms a form field's value from one type to another.
+ *
+ * @deprecated Use MapFunction instead.
  */
 export type FieldValueParser<I = any, O = any> = MapFunction<I, O>;
 
@@ -13,6 +15,8 @@ export type FormlyValueParser<I = any, O = any> = FieldValueParser<I, O>;
 
 /**
  * Reference to an array of value parsers applied to a field's value.
+ *
+ * @deprecated
  */
 export interface FieldConfigParsersRef {
   parsers: FieldValueParser[];
@@ -20,6 +24,8 @@ export interface FieldConfigParsersRef {
 
 /**
  * Optional reference to value parsers for a field.
+ *
+ * @deprecated
  */
 export interface FieldConfigWithParsers {
   parsers?: FieldValueParser[];

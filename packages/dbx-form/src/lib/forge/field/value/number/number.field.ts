@@ -3,7 +3,7 @@ import type { MatInputField, MatInputProps } from '@ng-forge/dynamic-forms-mater
 import { DOLLAR_AMOUNT_PRECISION, type TransformNumberFunctionConfigRef } from '@dereekb/util';
 import { dbxForgeBuildFieldDef, DbxForgeFieldFunction, dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, DbxForgeFieldFunctionDef } from '../../field';
 import { configureForgeAutocompleteFieldMeta } from '../../field.util.meta';
-import { FieldAutocompleteAttributeOptionRef } from 'packages/dbx-form/src/lib/field/field.autocomplete';
+import { FieldAutocompleteAttributeOptionRef } from '../../../../field/field.autocomplete';
 
 // MARK: Number Field
 /**
