@@ -1,8 +1,8 @@
-import type { AsyncCustomValidator } from '@ng-forge/dynamic-forms';
+import type { AsyncCustomValidator, WrapperField } from '@ng-forge/dynamic-forms';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { type Observable, of } from 'rxjs';
 import { forgeTextField, type DbxForgeTextFieldConfig } from '../field/value/text/text.field';
-import { forgeWorkingFieldWrapper, type DbxForgeWorkingWrapperFieldDef } from '../field/wrapper/working/working.wrapper.field';
+import { forgeWorkingFieldWrapper } from '../field/wrapper/working/working.wrapper';
 
 // MARK: Validator
 /**
@@ -168,7 +168,7 @@ export interface DbxForgeTextIsAvailableFieldResult {
   /**
    * The text field wrapped in a working wrapper, with the async validator reference attached.
    */
-  readonly field: DbxForgeWorkingWrapperFieldDef;
+  readonly field: WrapperField;
   /**
    * Async validators map to spread into `customFnConfig.asyncValidators`.
    */

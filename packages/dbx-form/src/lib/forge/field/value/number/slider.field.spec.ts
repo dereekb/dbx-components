@@ -8,8 +8,8 @@ import type { MatSliderField, MatSliderProps } from '@ng-forge/dynamic-forms-mat
 import { waitForMs } from '@dereekb/util';
 import type { DbxForgeNumberSliderFieldConfig } from './slider.field';
 import { forgeNumberSliderField } from './slider.field';
-import { FORGE_FORM_FIELD_WRAPPER_TYPE_NAME, type DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
-import { getFormFieldWrapperInnerField } from '../../wrapper/formfield/formfield.field.util';
+import { DBX_FORGE_FORM_FIELD_WRAPPER_TYPE_NAME, DbxForgeFormFieldWrapperWrappedFieldDef, type DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.wrapper';
+import { getDbxForgeFormFieldWrapperWrappedField } from '../../wrapper/formfield/formfield.wrapper.util';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { DBX_FORGE_TEST_PROVIDERS } from '../../../form/forge.component.spec';
 import { DbxForgeAsyncConfigFormComponent } from '../../../form';
@@ -193,11 +193,11 @@ describe('MatSliderField - Exhaustive Whitelist', () => {
 });
 
 // ============================================================================
-// DbxForgeFormFieldWrapperFieldDef<MatSliderField> - Exhaustive Whitelist
+// DbxForgeFormFieldWrapperWrappedFieldDef<MatSliderField> - Exhaustive Whitelist
 // ============================================================================
 
-describe('DbxForgeFormFieldWrapperFieldDef<MatSliderField> - Exhaustive Whitelist', () => {
-  type WrapperFieldDef = DbxForgeFormFieldWrapperFieldDef<MatSliderField>;
+describe('DbxForgeFormFieldWrapperWrappedFieldDef<MatSliderField> - Exhaustive Whitelist', () => {
+  type WrapperFieldDef = DbxForgeFormFieldWrapperWrappedFieldDef<MatSliderField>;
 
   type ExpectedKeys =
     // From FieldDef
@@ -239,16 +239,8 @@ describe('DbxForgeFormFieldWrapperFieldDef<MatSliderField> - Exhaustive Whitelis
     expectTypeOf<ActualKeys>().toEqualTypeOf<ExpectedKeys>();
   });
 
-  it('type is literal dbx-forge-form-field', () => {
-    expectTypeOf<WrapperFieldDef['type']>().toEqualTypeOf<typeof FORGE_FORM_FIELD_WRAPPER_TYPE_NAME>();
-  });
-
-  it('value is Record<string, unknown>', () => {
-    expectTypeOf<WrapperFieldDef['value']>().toEqualTypeOf<Record<string, unknown> | undefined>();
-  });
-
-  it('props contains a field property typed as MatSliderField', () => {
-    expectTypeOf<WrapperFieldDef['props']>().toMatchTypeOf<{ field: MatSliderField } | undefined>();
+  it('fields[0] is typed as MatSliderField', () => {
+    expectTypeOf<WrapperFieldDef['fields'][0]>().toEqualTypeOf<MatSliderField>();
   });
 });
 
@@ -281,7 +273,7 @@ describe('forgeNumberSliderField()', () => {
   // MARK: Wrapper structure
   it('should create a form-field wrapper', () => {
     const field = forgeNumberSliderField({ key: 'rating', max: 10 });
-    expect(field.type).toBe(FORGE_FORM_FIELD_WRAPPER_TYPE_NAME);
+    expect(field.type).toBe(DBX_FORGE_FORM_FIELD_WRAPPER_TYPE_NAME);
   });
 
   it('should use auto-generated _formfield_ key for the wrapper', () => {
@@ -291,120 +283,120 @@ describe('forgeNumberSliderField()', () => {
 
   it('should contain an inner slider field in wrapper props', () => {
     const field = forgeNumberSliderField({ key: 'rating', max: 10 });
-    expect(getFormFieldWrapperInnerField(field)).toBeDefined();
+    expect(getDbxForgeFormFieldWrapperWrappedField(field)).toBeDefined();
   });
 
   // MARK: Inner slider structure
   it('should create an inner slider with built-in slider type', () => {
-    const slider = getFormFieldWrapperInnerField(forgeNumberSliderField({ key: 'rating', max: 10 }));
+    const slider = getDbxForgeFormFieldWrapperWrappedField(forgeNumberSliderField({ key: 'rating', max: 10 }));
     expect(slider.type).toBe('slider');
   });
 
   it('should set the data key on the inner slider', () => {
-    const slider = getFormFieldWrapperInnerField(forgeNumberSliderField({ key: 'rating', max: 10 }));
+    const slider = getDbxForgeFormFieldWrapperWrappedField(forgeNumberSliderField({ key: 'rating', max: 10 }));
     expect(slider.key).toBe('rating');
   });
 
   it('should set label on the inner slider', () => {
-    const slider = getFormFieldWrapperInnerField(forgeNumberSliderField({ key: 'rating', label: 'Rating', max: 10 }));
+    const slider = getDbxForgeFormFieldWrapperWrappedField(forgeNumberSliderField({ key: 'rating', label: 'Rating', max: 10 }));
     expect(slider.label).toBe('Rating');
   });
 
   // MARK: Min/max/step passthrough
   it('should set min and max on the inner slider', () => {
-    const slider = getFormFieldWrapperInnerField(forgeNumberSliderField({ key: 'rating', min: 0, max: 10 }));
+    const slider = getDbxForgeFormFieldWrapperWrappedField(forgeNumberSliderField({ key: 'rating', min: 0, max: 10 }));
     expect(slider.min).toBe(0);
     expect(slider.max).toBe(10);
   });
 
   it('should set step in inner slider props', () => {
-    const slider = getFormFieldWrapperInnerField(forgeNumberSliderField({ key: 'rating', min: 0, max: 10, step: 1 }));
+    const slider = getDbxForgeFormFieldWrapperWrappedField(forgeNumberSliderField({ key: 'rating', min: 0, max: 10, step: 1 }));
     expect(slider.props?.step).toBe(1);
   });
 
   // MARK: thumbLabel
   it('should default thumbLabel to true in inner slider props', () => {
-    const slider = getFormFieldWrapperInnerField(forgeNumberSliderField({ key: 'rating', max: 10 }));
+    const slider = getDbxForgeFormFieldWrapperWrappedField(forgeNumberSliderField({ key: 'rating', max: 10 }));
     expect(slider.props?.thumbLabel).toBe(true);
   });
 
   it('should allow disabling thumbLabel', () => {
-    const slider = getFormFieldWrapperInnerField(forgeNumberSliderField({ key: 'rating', max: 10, thumbLabel: false }));
+    const slider = getDbxForgeFormFieldWrapperWrappedField(forgeNumberSliderField({ key: 'rating', max: 10, thumbLabel: false }));
     expect(slider.props?.thumbLabel).toBe(false);
   });
 
   // MARK: tickInterval
   it('should derive tickInterval from step when step is provided', () => {
-    const slider = getFormFieldWrapperInnerField(forgeNumberSliderField({ key: 'rating', max: 10, step: 2 }));
+    const slider = getDbxForgeFormFieldWrapperWrappedField(forgeNumberSliderField({ key: 'rating', max: 10, step: 2 }));
     expect(slider.props?.tickInterval).toBe(1);
   });
 
   it('should use explicit tickInterval when provided', () => {
-    const slider = getFormFieldWrapperInnerField(forgeNumberSliderField({ key: 'rating', max: 10, step: 1, tickInterval: 5 }));
+    const slider = getDbxForgeFormFieldWrapperWrappedField(forgeNumberSliderField({ key: 'rating', max: 10, step: 1, tickInterval: 5 }));
     expect(slider.props?.tickInterval).toBe(5);
   });
 
   it('should disable ticks when tickInterval is false', () => {
-    const slider = getFormFieldWrapperInnerField(forgeNumberSliderField({ key: 'rating', max: 10, step: 1, tickInterval: false }));
+    const slider = getDbxForgeFormFieldWrapperWrappedField(forgeNumberSliderField({ key: 'rating', max: 10, step: 1, tickInterval: false }));
     expect(slider.props?.tickInterval).toBeUndefined();
   });
 
   it('should have no tickInterval when neither step nor tickInterval is provided', () => {
-    const slider = getFormFieldWrapperInnerField(forgeNumberSliderField({ key: 'rating', max: 10 }));
+    const slider = getDbxForgeFormFieldWrapperWrappedField(forgeNumberSliderField({ key: 'rating', max: 10 }));
     expect(slider.props?.tickInterval).toBeUndefined();
   });
 
   // MARK: hint/description mapping
   it('should map description to hint in inner slider props', () => {
-    const slider = getFormFieldWrapperInnerField(forgeNumberSliderField({ key: 'rating', max: 10, description: 'Pick a rating' }));
+    const slider = getDbxForgeFormFieldWrapperWrappedField(forgeNumberSliderField({ key: 'rating', max: 10, description: 'Pick a rating' }));
     expect(slider.props?.hint).toBe('Pick a rating');
   });
 
   it('should map hint to inner slider props', () => {
-    const slider = getFormFieldWrapperInnerField(forgeNumberSliderField({ key: 'rating', max: 10, hint: 'Drag to select' }));
+    const slider = getDbxForgeFormFieldWrapperWrappedField(forgeNumberSliderField({ key: 'rating', max: 10, hint: 'Drag to select' }));
     expect(slider.props?.hint).toBe('Drag to select');
   });
 
   // MARK: required/readonly passthrough
   it('should set required on the inner slider', () => {
-    const slider = getFormFieldWrapperInnerField(forgeNumberSliderField({ key: 'rating', max: 10, required: true }));
+    const slider = getDbxForgeFormFieldWrapperWrappedField(forgeNumberSliderField({ key: 'rating', max: 10, required: true }));
     expect(slider.required).toBe(true);
   });
 
   it('should set readonly on the inner slider', () => {
-    const slider = getFormFieldWrapperInnerField(forgeNumberSliderField({ key: 'rating', max: 10, readonly: true }));
+    const slider = getDbxForgeFormFieldWrapperWrappedField(forgeNumberSliderField({ key: 'rating', max: 10, readonly: true }));
     expect(slider.readonly).toBe(true);
   });
 
   // MARK: Value
   it('should set value on the inner slider when provided', () => {
-    const slider = getFormFieldWrapperInnerField(forgeNumberSliderField({ key: 'rating', max: 10, value: 5 }));
+    const slider = getDbxForgeFormFieldWrapperWrappedField(forgeNumberSliderField({ key: 'rating', max: 10, value: 5 }));
     expect(slider.value).toBe(5);
   });
 
   it('should allow value of 0', () => {
-    const slider = getFormFieldWrapperInnerField(forgeNumberSliderField({ key: 'rating', max: 10, value: 0 }));
+    const slider = getDbxForgeFormFieldWrapperWrappedField(forgeNumberSliderField({ key: 'rating', max: 10, value: 0 }));
     expect(slider.value).toBe(0);
   });
 
   // MARK: Logic passthrough
   it('should pass logic through to the inner field definition', () => {
     const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
-    const slider = getFormFieldWrapperInnerField(forgeNumberSliderField({ key: 'rating', max: 10, logic }));
+    const slider = getDbxForgeFormFieldWrapperWrappedField(forgeNumberSliderField({ key: 'rating', max: 10, logic }));
     expect(slider.logic).toEqual(logic);
   });
 
   // MARK: Validators passthrough
   it('should pass validators through to the inner field definition', () => {
     const validators: ValidatorConfig[] = [{ type: 'custom' as const, expression: 'fieldValue > formValue.test', kind: 'mustBeGreaterThanTest' }];
-    const slider = getFormFieldWrapperInnerField(forgeNumberSliderField({ key: 'validated', max: 100, validators }));
+    const slider = getDbxForgeFormFieldWrapperWrappedField(forgeNumberSliderField({ key: 'validated', max: 100, validators }));
     expect(slider.validators).toEqual(validators);
   });
 
   // MARK: ValidationMessages passthrough
   it('should pass validationMessages through to the inner field definition', () => {
     const validationMessages: ValidationMessages = { mustBeGreaterThanTest: 'Value must be greater than the first slider' };
-    const slider = getFormFieldWrapperInnerField(forgeNumberSliderField({ key: 'validated', max: 100, validationMessages }));
+    const slider = getDbxForgeFormFieldWrapperWrappedField(forgeNumberSliderField({ key: 'validated', max: 100, validationMessages }));
     expect(slider.validationMessages).toEqual(validationMessages);
   });
 });
@@ -438,7 +430,7 @@ describe('scenarios', () => {
 
       const formConfig: FormConfig = await firstValueFrom(fixture.componentInstance.context.config$);
       expect(formConfig.fields.length).toBe(1);
-      expect(formConfig.fields[0].type).toBe(FORGE_FORM_FIELD_WRAPPER_TYPE_NAME);
+      expect(formConfig.fields[0].type).toBe(DBX_FORGE_FORM_FIELD_WRAPPER_TYPE_NAME);
     });
   });
 
@@ -451,13 +443,77 @@ describe('scenarios', () => {
       await fixture.whenStable();
 
       fixture.componentInstance.setValue({ rating: 7 });
-
       fixture.detectChanges();
+
       await waitForMs(0);
       await fixture.whenStable();
 
       const value = await firstValueFrom(fixture.componentInstance.getValue());
       expect(value).toEqual({ rating: 7 });
+    });
+  });
+
+  describe('cross-field expression validation', () => {
+    /**
+     * Settles the fixture with extra time for Observable-based wrapper sync pipelines.
+     *
+     * The wrapper uses `toObservable` + `combineLatest` + `distinctUntilChanged` for
+     * parent ↔ child value sync, which adds microtask-level async delays beyond what
+     * a single `detectChanges` + `whenStable` cycle covers.
+     */
+    async function settleWithWrapperSync(fix: typeof fixture): Promise<void> {
+      fix.detectChanges();
+      await fix.whenStable();
+      await waitForMs(100);
+      fix.detectChanges();
+      await fix.whenStable();
+    }
+
+    it('should validate using formValue to reference sibling field values', async () => {
+      console.log('AAA');
+
+      const testField = forgeNumberSliderField({ key: 'test', label: 'Test', min: 0, max: 100 });
+      const validatedField = forgeNumberSliderField({
+        key: 'validated',
+        label: 'Validated',
+        min: 0,
+        max: 100,
+        validators: [{ type: 'custom' as const, expression: 'fieldValue > formValue.test', kind: 'mustBeGreaterThanTest' }],
+        validationMessages: { mustBeGreaterThanTest: 'Value must be greater than the first slider' }
+      });
+
+      fixture.componentInstance.config.set({ fields: [testField, validatedField] });
+      await settleWithWrapperSync(fixture);
+      await waitForMs(200);
+
+      console.log('BBB');
+
+      // Set test=50, validated=30 → should be INVALID (30 > 50 is false)
+      fixture.componentInstance.setValue({ test: 50, validated: 30 });
+      await settleWithWrapperSync(fixture);
+
+      console.log('CCC');
+
+      const streamAfterInvalid = await firstValueFrom(fixture.componentInstance.context.stream$);
+      console.log('STREAM AFETER INVALID: ', { streamAfterInvalid });
+
+      expect(streamAfterInvalid.status).toBe('INVALID');
+      expect(streamAfterInvalid.isComplete).toBe(false);
+
+      console.log('DDD');
+
+      // Set validated=60 → should be VALID (60 > 50 is true)
+      fixture.componentInstance.setValue({ test: 50, validated: 60 });
+      await settleWithWrapperSync(fixture);
+
+      console.log('EEE');
+
+      await settleWithWrapperSync(fixture);
+
+      const streamAfterValid = await firstValueFrom(fixture.componentInstance.context.stream$);
+
+      console.log('STREAM AFETER VALID: ', { streamAfterValid });
+      expect(streamAfterValid.isComplete).toBe(true);
     });
   });
 });

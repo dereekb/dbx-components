@@ -1,4 +1,4 @@
-import { type FieldTypeDefinition, provideDynamicForm } from '@ng-forge/dynamic-forms';
+import { type FieldTypeDefinition, provideDynamicForm, WrapperTypeDefinition } from '@ng-forge/dynamic-forms';
 import { withMaterialFields } from '@ng-forge/dynamic-forms-material';
 import { phoneFieldMapper } from './field/value/phone/phone.field.component';
 import { FORGE_PHONE_FIELD_TYPE } from './field/value/phone/phone.field';
@@ -15,14 +15,14 @@ import { DBX_VALUE_SELECTION_FIELD_TYPE } from './field/selection/selection.fiel
 import { DBX_SOURCE_SELECT_FIELD_TYPE } from './field/selection/sourceselect/sourceselect.field';
 import { DBX_TEXT_EDITOR_FIELD_TYPE } from './field/texteditor/texteditor.field';
 import { DBX_COMPONENT_FIELD_TYPE } from './field/component/component.field';
-import { DBX_FORGE_FORM_FIELD_WRAPPER_TYPE } from './field/wrapper/formfield/formfield.field';
-import { DBX_FORGE_SECTION_FIELD_TYPE } from './field/wrapper/section/section.field';
+import { DBX_FORGE_FORM_FIELD_WRAPPER_TYPE } from './field/wrapper/formfield/formfield.wrapper';
+import { DBX_FORGE_SECTION_WRAPPER_TYPE } from './field/wrapper/section/section.wrapper';
 import { DBX_FORGE_EXPAND_FIELD_TYPE } from './field/wrapper/expand/expand.field';
 import { DBX_FORGE_INFO_BUTTON_FIELD_TYPE } from './field/wrapper/info/info.field';
-import { DBX_FORGE_INFO_WRAPPER_FIELD_TYPE } from './field/wrapper/info/info.wrapper.field';
-import { DBX_FORGE_STYLE_FIELD_TYPE } from './field/wrapper/style/style.field';
+import { DBX_FORGE_INFO_WRAPPER_TYPE } from './field/wrapper/info/info.wrapper';
+import { DBX_FORGE_STYLE_WRAPPER_TYPE } from './field/wrapper/style/style.wrapper';
 import { DBX_FORGE_WORKING_FIELD_TYPE } from './field/wrapper/working/working.field';
-import { DBX_FORGE_WORKING_WRAPPER_FIELD_TYPE } from './field/wrapper/working/working.wrapper.field';
+import { DBX_FORGE_WORKING_WRAPPER_TYPE } from './field/wrapper/working/working.wrapper';
 import { DBX_FORGE_ARRAY_FIELD_TYPE } from './field/value/array/array.field';
 
 /**
@@ -104,16 +104,13 @@ export const DBX_FORGE_FIELD_TYPES: FieldTypeDefinition[] = [
   DBX_SOURCE_SELECT_FIELD_TYPE,
   DBX_TEXT_EDITOR_FIELD_TYPE,
   DBX_COMPONENT_FIELD_TYPE,
-  DBX_FORGE_FORM_FIELD_WRAPPER_TYPE,
-  DBX_FORGE_SECTION_FIELD_TYPE,
   DBX_FORGE_EXPAND_FIELD_TYPE,
   DBX_FORGE_INFO_BUTTON_FIELD_TYPE,
-  DBX_FORGE_INFO_WRAPPER_FIELD_TYPE,
-  DBX_FORGE_STYLE_FIELD_TYPE,
   DBX_FORGE_WORKING_FIELD_TYPE,
-  DBX_FORGE_WORKING_WRAPPER_FIELD_TYPE,
   DBX_FORGE_ARRAY_FIELD_TYPE
 ];
+
+export const DBX_FORGE_FIELD_WRAPPER_TYPES: WrapperTypeDefinition[] = [DBX_FORGE_FORM_FIELD_WRAPPER_TYPE, DBX_FORGE_SECTION_WRAPPER_TYPE, DBX_FORGE_STYLE_WRAPPER_TYPE, DBX_FORGE_INFO_WRAPPER_TYPE, DBX_FORGE_WORKING_WRAPPER_TYPE];
 
 /**
  * Registers ng-forge dynamic form field declarations with Material Design field types
@@ -139,5 +136,5 @@ export const DBX_FORGE_FIELD_TYPES: FieldTypeDefinition[] = [
  * @returns An array of providers that register all forge field types with ng-forge's dynamic form system
  */
 export function provideDbxForgeFormFieldDeclarations(...additionalFieldTypes: FieldTypeDefinition[]) {
-  return provideDynamicForm(...withMaterialFields(), ...DBX_FORGE_FIELD_TYPES, ...additionalFieldTypes);
+  return provideDynamicForm(...withMaterialFields(), ...DBX_FORGE_FIELD_TYPES, ...DBX_FORGE_FIELD_WRAPPER_TYPES, ...additionalFieldTypes);
 }

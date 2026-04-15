@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import type { LogicConfig } from '@ng-forge/dynamic-forms';
 import { forgeNumberField, forgeNumberSliderField, forgeDollarAmountField, FORGE_IS_DIVISIBLE_BY_VALIDATION_KEY } from './number.field';
-import { FORGE_FORM_FIELD_WRAPPER_TYPE_NAME, type DbxForgeFormFieldWrapperProps } from '../../wrapper/formfield/formfield.field';
+import { DBX_FORGE_FORM_FIELD_WRAPPER_TYPE_NAME, type DbxForgeFormFieldWrapperProps } from '../../wrapper/formfield/formfield.wrapper';
 
 describe('forgeNumberField()', () => {
   it('should create an input field with number type in props', () => {
@@ -140,7 +140,7 @@ describe('forgeNumberSliderField()', () => {
 
   it('should create a form-field wrapper', () => {
     const field = forgeNumberSliderField({ key: 'rating', label: 'Rating', max: 10 });
-    expect(field.type).toBe(FORGE_FORM_FIELD_WRAPPER_TYPE_NAME);
+    expect(field.type).toBe(DBX_FORGE_FORM_FIELD_WRAPPER_TYPE_NAME);
   });
 
   it('should set label on the wrapper', () => {

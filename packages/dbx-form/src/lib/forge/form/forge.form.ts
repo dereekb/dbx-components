@@ -1,5 +1,6 @@
-import { FieldDef, FormConfig } from '@ng-forge/dynamic-forms';
-import { filterMaybeArrayValues, filterUndefinedValues, filterUniqueValues, Maybe } from '@dereekb/util';
+import { FieldDef, FormConfig, RegisteredFieldTypes } from '@ng-forge/dynamic-forms';
+import { ArrayOrValue, asArray, filterMaybeArrayValues, filterUndefinedValues, filterUniqueValues, Maybe } from '@dereekb/util';
+import { Field } from '@angular/forms/signals';
 
 // MARK: DbxForgeField
 /**
@@ -15,9 +16,16 @@ export type DbxForgeField<F extends FieldDef<any>> = F & {
 };
 
 /**
+ * Contains a reference to hidden sister fields.
+ */
+export interface DbxForgeFieldHiddenFieldsRef {
+  readonly _hiddenFields?: (FieldDef<any> & { hidden: true })[];
+}
+
+/**
  * Form-level configuration that was generated at a field level.
  */
-export interface DbxForgeFieldFormConfig extends Partial<Pick<FormConfig, 'schemas' | 'externalData' | 'customFnConfig'>> {}
+export interface DbxForgeFieldFormConfig extends Partial<Pick<FormConfig, 'schemas' | 'externalData' | 'customFnConfig'>>, DbxForgeFieldHiddenFieldsRef {}
 
 export function mergeDbxForgeFieldFormConfig(...input: DbxForgeFieldFormConfig[]): DbxForgeFieldFormConfig {
   const schemas: NonNullable<FormConfig['schemas']> = [];
@@ -100,8 +108,20 @@ export function dbxForgeFinalizeFormConfig(input: FormConfig): DbxForgeFinalizeF
 
   const merged = mergeDbxForgeFieldFormConfig({ schemas: input.schemas, externalData: input.externalData, customFnConfig: copyFormConfigCustomFnConfig(input.customFnConfig ?? {}) }, ...extractedFieldFormConfigs);
 
+  // Extract hidden fields from field-level _hiddenFields and _formConfig._hiddenFields
+  const hiddenFields: RegisteredFieldTypes[] = [];
+
+  for (const field of fields as DbxForgeField<FieldDef<any>>[]) {
+    if (field._formConfig?._hiddenFields) {
+      field._formConfig._hiddenFields.forEach((x) => {
+        hiddenFields.push(x as RegisteredFieldTypes);
+      });
+    }
+  }
+
   const config = {
     ...input,
+    fields: hiddenFields.length > 0 ? [...fields, ...hiddenFields] : fields,
     schemas: merged.schemas ? filterUniqueValues(merged.schemas, (x) => x.name) : input.schemas,
     externalData: merged.externalData ?? input.externalData,
     customFnConfig: merged.customFnConfig ?? input.customFnConfig

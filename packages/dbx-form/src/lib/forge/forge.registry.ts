@@ -25,15 +25,12 @@ import type { DbxForgeSourceSelectFieldDef } from './field/selection/sourceselec
 import type { DbxForgeTextEditorFieldDef } from './field/texteditor/texteditor.field.component';
 import type { DbxForgeComponentFieldDef } from './field/component/component.field.component';
 
-// Wrapper field types
-import type { DbxForgeFormFieldWrapperFieldDef } from './field/wrapper/formfield/formfield.field';
-import type { DbxForgeSectionFieldDef } from './field/wrapper/section/section.field';
-import type { DbxForgeExpandFieldDef } from './field/wrapper/expand/expand.field';
-import type { DbxForgeInfoButtonFieldDef } from './field/wrapper/info/info.field';
-import type { DbxForgeInfoWrapperFieldDef } from './field/wrapper/info/info.wrapper.field';
-import type { DbxForgeStyleFieldDef } from './field/wrapper/style/style.field';
-import type { DbxForgeWorkingFieldDef } from './field/wrapper/working/working.field';
-import type { DbxForgeWorkingWrapperFieldDef } from './field/wrapper/working/working.wrapper.field';
+// Wrapper types
+import type { DBX_FORGE_FORM_FIELD_WRAPPER_TYPE_NAME, DbxForgeFormFieldWrapperFieldDef } from './field/wrapper/formfield/formfield.wrapper';
+import type { DBX_FORGE_SECTION_WRAPPER_TYPE_NAME, DbxForgeSectionWrapper } from './field/wrapper/section/section.wrapper';
+import type { DBX_FORGE_INFO_WRAPPER_TYPE_NAME, DbxForgeInfoWrapper } from './field/wrapper/info/info.wrapper';
+import type { DBX_FORGE_STYLE_WRAPPER_TYPE_NAME, DbxForgeStyleWrapper } from './field/wrapper/style/style.wrapper';
+import type { DBX_FORGE_WORKING_WRAPPER_TYPE_NAME, DbxForgeWorkingWrapper } from './field/wrapper/working/working.wrapper';
 
 declare module '@ng-forge/dynamic-forms' {
   interface FieldRegistryLeaves {
@@ -51,16 +48,12 @@ declare module '@ng-forge/dynamic-forms' {
     'dbx-source-select': DbxForgeSourceSelectFieldDef<any, any>;
     'dbx-text-editor': DbxForgeTextEditorFieldDef;
     'dbx-component': DbxForgeComponentFieldDef<any>;
-
-    // Wrapper fields (registered as leaves since they use valueFieldMapper)
-    'dbx-forge-form-field': DbxForgeFormFieldWrapperFieldDef;
-    'dbx-forge-section': DbxForgeSectionFieldDef;
-    'dbx-forge-expand': DbxForgeExpandFieldDef;
-    'dbx-forge-info-button': DbxForgeInfoButtonFieldDef;
-    'dbx-forge-info': DbxForgeInfoWrapperFieldDef;
-    'dbx-forge-style': DbxForgeStyleFieldDef;
-    'dbx-forge-working': DbxForgeWorkingFieldDef;
-    'dbx-forge-working-wrapper': DbxForgeWorkingWrapperFieldDef;
-    'dbx-forge-array': DbxForgeArrayFieldDef<any>;
+  }
+  interface FieldRegistryWrappers {
+    [DBX_FORGE_FORM_FIELD_WRAPPER_TYPE_NAME]: DbxForgeFormFieldWrapperFieldDef;
+    [DBX_FORGE_SECTION_WRAPPER_TYPE_NAME]: DbxForgeSectionWrapper;
+    [DBX_FORGE_STYLE_WRAPPER_TYPE_NAME]: DbxForgeStyleWrapper;
+    [DBX_FORGE_INFO_WRAPPER_TYPE_NAME]: DbxForgeInfoWrapper;
+    [DBX_FORGE_WORKING_WRAPPER_TYPE_NAME]: DbxForgeWorkingWrapper;
   }
 }

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { firstValueFrom, first, map, of, Subject, take, timeout } from 'rxjs';
 import { FormControl } from '@angular/forms';
 import { forgeSearchableTextField, forgeSearchableChipField, forgeSearchableStringChipField } from './searchable.field';
-import type { DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
+import type { DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.wrapper';
 import type { LogicConfig } from '@ng-forge/dynamic-forms';
 
 // MARK: Shared Stubs

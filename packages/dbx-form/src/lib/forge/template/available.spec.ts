@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { forgeTextIsAvailableField, forgeFieldValueIsAvailableValidator, FORGE_FIELD_VALUE_IS_AVAILABLE_VALIDATOR_NAME } from './available';
 import { of } from 'rxjs';
-import { FORGE_WORKING_WRAPPER_FIELD_TYPE_NAME } from '../field/wrapper/working/working.wrapper.field';
+import type { WrapperField } from '@ng-forge/dynamic-forms';
+import { DBX_FORGE_WORKING_WRAPPER_TYPE_NAME } from '../field/wrapper/working/working.wrapper';
 
 // MARK: forgeFieldValueIsAvailableValidator
 describe('forgeFieldValueIsAvailableValidator()', () => {
@@ -92,16 +93,19 @@ describe('forgeTextIsAvailableField()', () => {
 
   it('should wrap the text field in a working wrapper', () => {
     const result = forgeTextIsAvailableField(baseConfig);
-    expect(result.field.type).toBe(FORGE_WORKING_WRAPPER_FIELD_TYPE_NAME);
+    expect(result.field.type).toBe('wrapper');
+    const wrapperField = result.field as WrapperField;
+    expect(wrapperField.wrappers[0].type).toBe(DBX_FORGE_WORKING_WRAPPER_TYPE_NAME);
   });
 
   it('should contain the text field with the correct key inside the wrapper', () => {
     const result = forgeTextIsAvailableField(baseConfig);
-    const childFields = result.field.props?.fields;
+    const wrapperField = result.field as WrapperField;
+    const childFields = wrapperField.fields;
     expect(childFields).toBeDefined();
     expect(childFields).toHaveLength(1);
 
-    const textField = childFields![0];
+    const textField = childFields[0];
     expect(textField.type).toBe('input');
     expect(textField.key).toBe('username');
     expect(textField.label).toBe('Username');
@@ -109,7 +113,7 @@ describe('forgeTextIsAvailableField()', () => {
 
   it('should add async validator reference to the inner text field', () => {
     const result = forgeTextIsAvailableField(baseConfig);
-    const textField = result.field.props?.fields?.[0];
+    const textField = (result.field as WrapperField).fields?.[0];
     const validators = (textField as any).validators;
     expect(validators).toBeDefined();
     expect(validators).toContainEqual({ type: 'async', functionName: FORGE_FIELD_VALUE_IS_AVAILABLE_VALIDATOR_NAME });
@@ -143,7 +147,7 @@ describe('forgeTextIsAvailableField()', () => {
     expect(result.asyncValidators[customName]).toBeDefined();
     expect(result.validationMessages[customName]).toBeDefined();
 
-    const textField = result.field.props?.fields?.[0];
+    const textField = (result.field as WrapperField).fields?.[0];
     const validators = (textField as any).validators;
     expect(validators).toContainEqual({ type: 'async', functionName: customName });
   });
@@ -157,8 +161,8 @@ describe('forgeTextIsAvailableField()', () => {
       maxLength: 20
     });
 
-    const textField = result.field.props?.fields?.[0];
+    const textField = (result.field as WrapperField).fields?.[0] as any;
     expect(textField?.required).toBe(true);
-    expect((textField as any)?.maxLength).toBe(20);
+    expect(textField?.maxLength).toBe(20);
   });
 });

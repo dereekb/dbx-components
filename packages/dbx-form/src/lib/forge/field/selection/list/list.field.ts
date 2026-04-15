@@ -2,7 +2,7 @@ import { type PrimativeKey } from '@dereekb/util';
 import type { FieldTypeDefinition } from '@ng-forge/dynamic-forms';
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { type AbstractDbxSelectionListWrapperDirective } from '@dereekb/dbx-web';
-import { dbxForgeMaterialFormFieldWrappedFieldFunction, type DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
+import { dbxForgeMaterialFormFieldWrappedFieldFunction, type DbxForgeFormFieldWrapperWrappedFieldDef } from '../../wrapper/formfield/formfield.wrapper';
 import { FORGE_LIST_SELECTION_FIELD_TYPE, type DbxForgeListSelectionFieldDef } from './list.field.component';
 import { type DbxForgeFieldFunctionDef, dbxForgeFieldFunctionConfigPropsWithHintBuilder, dbxForgeBuildFieldDef } from '../../field';
 
@@ -24,13 +24,13 @@ export const DBX_LIST_SELECTION_FIELD_TYPE: FieldTypeDefinition<DbxForgeListSele
  */
 export interface DbxForgeListSelectionFieldConfig<T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey> extends DbxForgeFieldFunctionDef<DbxForgeListSelectionFieldDef<T, C, K>> {}
 
-export type DbxForgeListSelectionFieldFunction = <T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey>(config: DbxForgeListSelectionFieldConfig<T, C, K>) => DbxForgeFormFieldWrapperFieldDef<DbxForgeListSelectionFieldDef<T, C, K>>;
+export type DbxForgeListSelectionFieldFunction = <T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey>(config: DbxForgeListSelectionFieldConfig<T, C, K>) => DbxForgeFormFieldWrapperWrappedFieldDef<DbxForgeListSelectionFieldDef<T, C, K>>;
 
 /**
  * Creates a forge field definition for a list selection field.
  *
  * @param config - List selection field configuration
- * @returns A {@link DbxForgeFormFieldWrapperFieldDef} when wrapped (default), or a raw {@link DbxForgeListSelectionFieldDef} when `wrapInFormField` is `false`
+ * @returns A {@link DbxForgeFormFieldWrapperWrappedFieldDef} when wrapped (default), or a raw {@link DbxForgeListSelectionFieldDef} when `wrapInFormField` is `false`
  *
  * @example
  * ```typescript

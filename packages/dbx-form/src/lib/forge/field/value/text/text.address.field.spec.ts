@@ -9,7 +9,8 @@ import { provideDbxFormConfiguration } from '../../../../form.providers';
 import { DbxForgeFormComponent } from '../../../form/forge.component';
 import { DbxForgeFormContext, provideDbxForgeFormContext } from '../../../form/forge.context';
 import { forgeAddressField, forgeAddressFields, forgeAddressLineField, forgeAddressListField } from './text.address.field';
-import { FORGE_SECTION_FIELD_TYPE_NAME } from '../../wrapper/section/section.field';
+import type { WrapperField } from '@ng-forge/dynamic-forms';
+import { DBX_FORGE_SECTION_WRAPPER_TYPE_NAME, type DbxForgeSectionWrapper } from '../../wrapper/section/section.wrapper';
 
 // MARK: Test Host
 @Component({
@@ -120,10 +121,16 @@ describe('forgeAddressFields()', () => {
 });
 
 describe('forgeAddressField()', () => {
-  it('should create a section wrapper with address key', () => {
+  it('should create a wrapper field with address key', () => {
     const field = forgeAddressField();
-    expect(field.type).toBe(FORGE_SECTION_FIELD_TYPE_NAME);
+    expect(field.type).toBe('wrapper');
     expect(field.key).toBe('address');
+  });
+
+  it('should have a section wrapper config', () => {
+    const field = forgeAddressField() as WrapperField;
+    const wrapperConfig = field.wrappers[0] as DbxForgeSectionWrapper;
+    expect(wrapperConfig.type).toBe(DBX_FORGE_SECTION_WRAPPER_TYPE_NAME);
   });
 
   it('should allow overriding key', () => {
@@ -132,18 +139,20 @@ describe('forgeAddressField()', () => {
   });
 
   it('should set header to Address by default', () => {
-    const field = forgeAddressField();
-    expect(field.props?.headerConfig.header).toBe('Address');
+    const field = forgeAddressField() as WrapperField;
+    const wrapperConfig = field.wrappers[0] as DbxForgeSectionWrapper;
+    expect(wrapperConfig.headerConfig.header).toBe('Address');
   });
 
   it('should allow overriding header', () => {
-    const field = forgeAddressField({ header: 'Billing Address' });
-    expect(field.props?.headerConfig.header).toBe('Billing Address');
+    const field = forgeAddressField({ header: 'Billing Address' }) as WrapperField;
+    const wrapperConfig = field.wrappers[0] as DbxForgeSectionWrapper;
+    expect(wrapperConfig.headerConfig.header).toBe('Billing Address');
   });
 
-  it('should pass child fields through props', () => {
-    const field = forgeAddressField();
-    expect(field.props?.fields.length).toBeGreaterThan(0);
+  it('should pass child fields directly on the wrapper field', () => {
+    const field = forgeAddressField() as WrapperField;
+    expect(field.fields.length).toBeGreaterThan(0);
   });
 });
 

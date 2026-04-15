@@ -1,5 +1,5 @@
 import type { MatSliderField, MatSliderProps } from '@ng-forge/dynamic-forms-material';
-import { DbxForgeMaterialFormFieldWrappedFieldFunction, dbxForgeMaterialFormFieldWrappedFieldFunction, type DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
+import { DbxForgeMaterialFormFieldWrappedFieldFunction, dbxForgeMaterialFormFieldWrappedFieldFunction, type DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.wrapper';
 import { DbxForgeFieldFunctionDef, dbxForgeFieldFunctionConfigPropsWithHintBuilder } from '../../field';
 
 // MARK: Number Slider Field

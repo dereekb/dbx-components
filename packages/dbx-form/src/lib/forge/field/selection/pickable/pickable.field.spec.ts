@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { of } from 'rxjs';
 import { forgePickableChipField, forgePickableListField } from './pickable.field';
-import type { DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
+import type { DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.wrapper';
 import type { FieldDef, LogicConfig } from '@ng-forge/dynamic-forms';
 
 // MARK: Shared Stubs

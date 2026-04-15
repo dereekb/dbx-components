@@ -4,7 +4,7 @@ import { forgeListSelectionField } from './list.field';
 import { type AbstractDbxSelectionListWrapperDirective } from '@dereekb/dbx-web';
 import { successResult } from '@dereekb/rxjs';
 import type { Type } from '@angular/core';
-import type { DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
+import type { DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.wrapper';
 import type { FieldDef, LogicConfig } from '@ng-forge/dynamic-forms';
 
 // MARK: Helpers

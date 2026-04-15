@@ -1,22 +1,18 @@
-import { ChangeDetectionStrategy, Component, computed, viewChild } from '@angular/core';
-import { DynamicTextPipe, type FieldWithValidation } from '@ng-forge/dynamic-forms';
+import { ChangeDetectionStrategy, Component, computed, inject, viewChild, ViewContainerRef } from '@angular/core';
+import { DynamicTextPipe, FieldWrapperContract, type DynamicText, type FieldWithValidation, WRAPPER_FIELD_CONTEXT } from '@ng-forge/dynamic-forms';
 import { forgeFieldDisabled } from '../../field.util';
 import { AsyncPipe } from '@angular/common';
-import { AbstractForgeWrapperFieldComponent, provideDbxForgeWrapperFieldDirective } from '../wrapper.field';
-import { DbxForgeWrapperContentComponent } from '../wrapper.content.component';
-import type { DbxForgeFormFieldWrapperProps } from './formfield.field';
 
 /**
  * Forge wrapper field component that renders child fields inside a Material-style
  * outlined container with a notched outline, floating label, and hint/error subscript.
  *
- * This is the forge equivalent of ngx-formly's `FormlyWrapperFormField` which wraps
- * fields in `<mat-form-field>`. Uses `<dbx-forge-wrapper-content />` for the nested
- * DynamicForm rendering and reads its validation state for error display.
+ * Uses {@link WRAPPER_FIELD_CONTEXT} to read wrapper config (label, hint, className)
+ * and the parent {@link FieldSignalContext} to observe form validation state.
  */
 @Component({
   selector: 'dbx-forge-form-field-wrapper',
-  templateUrl: './formfield.field.component.html',
+  templateUrl: './formfield.wrapper.component.html',
   styles: [
     `
       .dbx-forge-form-field-wrapper {
@@ -140,84 +136,75 @@ import type { DbxForgeFormFieldWrapperProps } from './formfield.field';
       }
     `
   ],
-  providers: provideDbxForgeWrapperFieldDirective(DbxForgeFormFieldWrapperComponent),
-  imports: [DbxForgeWrapperContentComponent, DynamicTextPipe, AsyncPipe],
+  imports: [DynamicTextPipe, AsyncPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   host: {
     class: 'mat-mdc-form-field mat-form-field-animations-enabled',
-    '[class]': 'className()'
+    '[class]': 'classNameSignal()'
   }
 })
-export class DbxForgeFormFieldWrapperComponent extends AbstractForgeWrapperFieldComponent<DbxForgeFormFieldWrapperProps> {
-  readonly contentRef = viewChild(DbxForgeWrapperContentComponent);
+export class DbxForgeFormFieldWrapperComponent implements FieldWrapperContract {
+  readonly fieldComponent = viewChild.required('fieldComponent', { read: ViewContainerRef });
+
+  private readonly context = inject(WRAPPER_FIELD_CONTEXT);
+
+  // Root form state from the flattened field signal context
+  private readonly formState = computed(() => this.context.fieldSignalContext.form());
 
   // Disabled state
   readonly isDisabled = forgeFieldDisabled();
 
-  // Child form validation state via content component
-  readonly childErrors = computed(() => this.contentRef()?.errors() ?? []);
-  readonly childTouched = computed(() => this.contentRef()?.touched() ?? false);
-  readonly childDirty = computed(() => this.contentRef()?.dynamicForm()?.dirty() ?? false);
+  // Props from wrapper config
+  readonly label = computed(() => this.context.config['label'] as DynamicText | undefined);
+  readonly hintSignal = computed(() => this.context.config['hint'] as string | undefined);
+  readonly classNameSignal = computed(() => (this.context.config['className'] as string) ?? '');
 
-  // Error display: show errors when the child form has been touched OR is dirty (value changed)
+  // Key for ARIA IDs
+  private readonly keySignal = computed(() => this.context.wrapperField.key ?? '');
+
+  // Validation state from form tree
+  readonly childErrors = computed(() => this.formState().errorSummary());
+  readonly childTouched = computed(() => this.formState().touched());
+  readonly childDirty = computed(() => this.formState().dirty());
+
   readonly showErrors = computed(() => (this.childTouched() || this.childDirty()) && this.childErrors().length > 0);
   readonly hasError = computed(() => this.showErrors());
+
   readonly firstErrorMessage = computed(() => {
     const errors = this.childErrors();
-    let result = '';
 
-    if (errors.length > 0) {
-      const error = errors[0];
+    if (errors.length === 0) {
+      return '';
+    }
 
-      if (error.message) {
-        // Use raw error message (set by Angular built-in validators)
-        result = error.message;
-      } else {
-        // Resolve from child field validationMessages by matching error.kind.
-        // Check both singular `field` (form-field wrapper) and plural `fields` (section wrapper).
-        const currentProps = this.props();
-        const fieldsToCheck: FieldWithValidation[] = [];
+    const error = errors[0];
 
-        if (currentProps?.field) {
-          fieldsToCheck.push(currentProps.field as FieldWithValidation);
-        }
+    if (error.message) {
+      return error.message;
+    }
 
-        if (currentProps?.fields?.length) {
-          fieldsToCheck.push(...(currentProps.fields as FieldWithValidation[]));
-        }
+    // Resolve from child field validationMessages by matching error.kind
+    const children = this.context.wrapperField.fields;
 
-        result = error.kind;
+    for (const child of children) {
+      const messages = (child as FieldWithValidation).validationMessages as Record<string, string> | undefined;
 
-        for (const field of fieldsToCheck) {
-          const messages = field.validationMessages as Record<string, string> | undefined;
-
-          if (messages?.[error.kind]) {
-            result = messages[error.kind];
-            break;
-          }
-        }
+      if (messages?.[error.kind]) {
+        return messages[error.kind];
       }
     }
 
-    return result;
+    return error.kind;
   });
-
-  // Props
-  readonly hintSignal = computed(() => (this.props()?.field?.props as any)?.hint);
-
-  // ARIA IDs
-  protected readonly labelId = computed(() => `${this.key()}-label`);
-  protected readonly errorId = computed(() => `${this.key()}-error`);
-  protected readonly hintId = computed(() => `${this.key()}-hint`);
 
   /**
-   * Whether any child field has `required: true`, used to show the asterisk in the label.
+   * Whether any child field has `required` state, used to show the asterisk in the label.
    */
-  readonly isRequired = computed(() => {
-    const currentProps = this.props();
-    const singleFieldRequired = (currentProps?.field as any)?.required === true;
-    const anyFieldRequired = currentProps?.fields?.some((f: any) => f.required === true) ?? false;
-    return singleFieldRequired || anyFieldRequired;
-  });
+  readonly isRequired = computed(() => this.formState().required());
+
+  // ARIA IDs
+  protected readonly labelId = computed(() => `${this.keySignal()}-label`);
+  protected readonly errorId = computed(() => `${this.keySignal()}-error`);
+  protected readonly hintId = computed(() => `${this.keySignal()}-hint`);
 }

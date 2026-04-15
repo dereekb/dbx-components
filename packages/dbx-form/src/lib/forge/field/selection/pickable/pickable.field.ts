@@ -1,7 +1,7 @@
 import { type PrimativeKey } from '@dereekb/util';
 import type { FieldTypeDefinition } from '@ng-forge/dynamic-forms';
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
-import { dbxForgeMaterialFormFieldWrappedFieldFunction, type DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
+import { dbxForgeMaterialFormFieldWrappedFieldFunction, type DbxForgeFormFieldWrapperWrappedFieldDef } from '../../wrapper/formfield/formfield.wrapper';
 import { FORGE_PICKABLE_CHIP_FIELD_TYPE, FORGE_PICKABLE_LIST_FIELD_TYPE, type DbxForgePickableChipFieldDef, type DbxForgePickableListFieldDef } from './pickable.field.directive';
 import { type DbxForgeFieldFunctionDef, dbxForgeFieldFunctionConfigPropsWithHintBuilder, dbxForgeBuildFieldDef } from '../../field';
 
@@ -34,13 +34,13 @@ export const DBX_PICKABLE_LIST_FIELD_TYPE: FieldTypeDefinition<DbxForgePickableL
  */
 export interface DbxForgePickableChipFieldConfig<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends DbxForgeFieldFunctionDef<DbxForgePickableChipFieldDef<T, M, H>> {}
 
-export type DbxForgePickableChipFieldFunction = <T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>(config: DbxForgePickableChipFieldConfig<T, M, H>) => DbxForgeFormFieldWrapperFieldDef<DbxForgePickableChipFieldDef<T, M, H>>;
+export type DbxForgePickableChipFieldFunction = <T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>(config: DbxForgePickableChipFieldConfig<T, M, H>) => DbxForgeFormFieldWrapperWrappedFieldDef<DbxForgePickableChipFieldDef<T, M, H>>;
 
 /**
  * Creates a forge field definition for a pickable chip field.
  *
  * @param config - Pickable chip field configuration
- * @returns A {@link DbxForgeFormFieldWrapperFieldDef} wrapping a pickable chip field
+ * @returns A {@link DbxForgeFormFieldWrapperWrappedFieldDef} wrapping a pickable chip field
  *
  * @example
  * ```typescript
@@ -86,13 +86,13 @@ export const forgePickableChipField = dbxForgeMaterialFormFieldWrappedFieldFunct
  */
 export interface DbxForgePickableListFieldConfig<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends DbxForgeFieldFunctionDef<DbxForgePickableListFieldDef<T, M, H>> {}
 
-export type DbxForgePickableListFieldFunction = <T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>(config: DbxForgePickableListFieldConfig<T, M, H>) => DbxForgeFormFieldWrapperFieldDef<DbxForgePickableListFieldDef<T, M, H>>;
+export type DbxForgePickableListFieldFunction = <T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>(config: DbxForgePickableListFieldConfig<T, M, H>) => DbxForgeFormFieldWrapperWrappedFieldDef<DbxForgePickableListFieldDef<T, M, H>>;
 
 /**
  * Creates a forge field definition for a pickable list field.
  *
  * @param config - Pickable list field configuration
- * @returns A {@link DbxForgeFormFieldWrapperFieldDef} wrapping a pickable list field
+ * @returns A {@link DbxForgeFormFieldWrapperWrappedFieldDef} wrapping a pickable list field
  *
  * @example
  * ```typescript

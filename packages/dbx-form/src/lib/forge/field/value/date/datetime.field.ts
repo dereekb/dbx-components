@@ -3,7 +3,7 @@ import type { FieldDef, BaseValueField, RowField } from '@ng-forge/dynamic-forms
 import { filterFromPOJO, type ArrayOrValue, type Maybe, type TimezoneString, type DateOrDayString } from '@dereekb/util';
 import { forgeField } from '../../field.util.meta';
 import { forgeRow } from '../../wrapper/wrapper';
-import { dbxForgeMaterialFormFieldWrappedFieldFunction, type DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
+import { dbxForgeMaterialFormFieldWrappedFieldFunction, type DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.wrapper';
 import type { DbxForgeFieldConfig } from '../../field.type';
 import { type DbxForgeFieldFunctionDef, dbxForgeFieldFunctionConfigPropsWithHintBuilder, dbxForgeBuildFieldDef } from '../../field';
 import type { DbxForgeDateTimeFieldComponentProps } from './datetime.field.component';

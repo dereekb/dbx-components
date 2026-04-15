@@ -3,7 +3,7 @@ import { filterFromPOJO } from '@dereekb/util';
 import { forgeField } from '../../field.util.meta';
 import { forgeRow } from '../../wrapper/wrapper';
 import type { DbxForgeFieldConfig } from '../../field.type';
-import { forgeDbxSectionFieldWrapper } from '../../wrapper/section/section.field';
+import { forgeDbxSectionFieldWrapper } from '../../wrapper/section/section.wrapper';
 import { forgeTextField } from '../text/text.field';
 import { forgeArrayField, type DbxForgeArrayTemplateField, type DbxForgeArrayFieldDef } from '../array/array.field';
 import type { DbxForgePhoneFieldProps } from './phone.field.component';

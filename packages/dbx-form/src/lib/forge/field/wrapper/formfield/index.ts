@@ -1,3 +1,3 @@
-export * from './formfield.field';
-export * from './formfield.field.util';
-export * from './formfield.field.component';
+export * from './formfield.wrapper';
+export * from './formfield.wrapper.util';
+export * from './formfield.wrapper.component';

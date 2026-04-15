@@ -1,12 +1,14 @@
-import type { FieldTypeDefinition, BaseValueField, FieldDef } from '@ng-forge/dynamic-forms';
-import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
+import type { FieldDef, WrapperField, WrapperTypeDefinition } from '@ng-forge/dynamic-forms';
 import type { ObservableOrValue } from '@dereekb/rxjs';
-import { filterFromPOJO } from '@dereekb/util';
-import { forgeField } from '../../field.util.meta';
-import type { DbxForgeWrapperFieldProps } from '../wrapper.field';
 
-// MARK: Field Type
-export const FORGE_STYLE_FIELD_TYPE_NAME = 'dbx-forge-style' as const;
+// MARK: Wrapper Type
+/**
+ * Registered wrapper type name for the style wrapper.
+ *
+ * Used in {@link WrapperConfig.type} to identify this wrapper when building
+ * wrapper chains.
+ */
+export const DBX_FORGE_STYLE_WRAPPER_TYPE_NAME = 'dbx-forge-style' as const;
 
 /**
  * A map of CSS style properties to their values, used with `[ngStyle]`.
@@ -14,9 +16,22 @@ export const FORGE_STYLE_FIELD_TYPE_NAME = 'dbx-forge-style' as const;
 export type DbxForgeStyleObject = { [styleProperty: string]: unknown };
 
 /**
- * Props interface for the forge style wrapper field.
+ * Configuration for the style wrapper type.
+ *
+ * Applies dynamic CSS classes and inline styles around wrapped content.
+ * Supports both static values and reactive observables via `ObservableOrValue`.
+ *
+ * @example
+ * ```typescript
+ * const wrapper: DbxForgeStyleWrapper = {
+ *   type: 'dbx-forge-style',
+ *   classGetter: 'highlight-section',
+ *   styleGetter: { background: 'rgba(255,0,0,0.3)' },
+ * };
+ * ```
  */
-export interface DbxForgeStyleFieldProps extends DbxForgeWrapperFieldProps {
+export interface DbxForgeStyleWrapper {
+  readonly type: typeof DBX_FORGE_STYLE_WRAPPER_TYPE_NAME;
   /**
    * Observable or static value providing CSS class names via `[ngClass]`.
    */
@@ -28,22 +43,15 @@ export interface DbxForgeStyleFieldProps extends DbxForgeWrapperFieldProps {
 }
 
 /**
- * Forge field definition for a style wrapper.
+ * ng-forge {@link WrapperTypeDefinition} registration for the style wrapper.
  *
- * Renders child fields inside a container with dynamic CSS classes and
- * inline styles applied.
+ * Lazy-loads {@link DbxForgeStyleWrapperComponent} which implements
+ * {@link FieldWrapperContract} and injects {@link WRAPPER_FIELD_CONTEXT}
+ * for its classGetter and styleGetter configuration.
  */
-export interface DbxForgeStyleFieldDef extends BaseValueField<DbxForgeStyleFieldProps, Record<string, unknown>> {
-  readonly type: typeof FORGE_STYLE_FIELD_TYPE_NAME;
-}
-
-/**
- * ng-forge FieldTypeDefinition for the style wrapper field.
- */
-export const DBX_FORGE_STYLE_FIELD_TYPE: FieldTypeDefinition<DbxForgeStyleFieldDef> = {
-  name: FORGE_STYLE_FIELD_TYPE_NAME,
-  loadComponent: () => import('./style.field.component').then((m) => m.DbxForgeStyleFieldComponent),
-  mapper: valueFieldMapper
+export const DBX_FORGE_STYLE_WRAPPER_TYPE: WrapperTypeDefinition<DbxForgeStyleWrapper> = {
+  wrapperName: DBX_FORGE_STYLE_WRAPPER_TYPE_NAME,
+  loadComponent: () => import('./style.wrapper.component').then((m) => m.DbxForgeStyleWrapperComponent)
 };
 
 // MARK: Config
@@ -76,13 +84,10 @@ let _forgeStyleFieldCounter = 0;
  * inline styles to a container around child fields.
  *
  * Supports both static values and reactive observables for `classGetter`
- * and `styleGetter`, matching the formly `formlyStyleWrapper` behavior.
- *
- * Uses `_` key prefix so `stripForgeInternalKeys` flattens child values into
- * the parent form value.
+ * and `styleGetter`.
  *
  * @param config - Style wrapper configuration
- * @returns A {@link DbxForgeStyleFieldDef}
+ * @returns A {@link WrapperField}
  *
  * @example
  * ```typescript
@@ -95,18 +100,19 @@ let _forgeStyleFieldCounter = 0;
  * });
  * ```
  */
-export function forgeStyleWrapper(config: DbxForgeStyleFieldConfig): DbxForgeStyleFieldDef {
+export function forgeStyleWrapper(config: DbxForgeStyleFieldConfig): WrapperField {
   const { fields, classGetter, styleGetter, key } = config;
 
-  return forgeField({
+  const wrapperConfig: DbxForgeStyleWrapper = {
+    type: DBX_FORGE_STYLE_WRAPPER_TYPE_NAME,
+    ...(classGetter != null && { classGetter }),
+    ...(styleGetter != null && { styleGetter })
+  };
+
+  return {
+    type: 'wrapper',
     key: key ?? `_style_${_forgeStyleFieldCounter++}`,
-    type: FORGE_STYLE_FIELD_TYPE_NAME,
-    label: '',
-    value: {} as Record<string, unknown>,
-    props: filterFromPOJO({
-      fields,
-      classGetter,
-      styleGetter
-    }) as DbxForgeStyleFieldProps
-  } as DbxForgeStyleFieldDef);
+    fields,
+    wrappers: [wrapperConfig]
+  } as unknown as WrapperField;
 }

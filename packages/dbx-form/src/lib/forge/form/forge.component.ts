@@ -85,6 +85,17 @@ export class DbxForgeFormComponent<T = unknown> implements OnInit, OnDestroy {
   });
 
   /**
+   * Expose the parent DynamicForm's field tree to the context so wrapper components
+   * can write to sibling hidden fields in the parent form.
+   */
+  protected readonly _parentFormTreeEffect = effect(() => {
+    const formTree = this.dynamicForm()?.form();
+    untracked(() => {
+      this._context.setParentFormTree(formTree as any);
+    });
+  });
+
+  /**
    * Track validity changes from the DynamicForm and update the context.
    *
    * Separated from the value effect so that validity changes (e.g. async validators resolving)

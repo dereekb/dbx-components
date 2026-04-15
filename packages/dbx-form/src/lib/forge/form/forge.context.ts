@@ -4,6 +4,7 @@ import { type DbxMutableForm, type DbxFormEvent, type DbxFormDisabledKey, DbxFor
 import { type BooleanStringKeyArray, BooleanStringKeyArrayUtility, type Maybe } from '@dereekb/util';
 import { LockSet, filterMaybe } from '@dereekb/rxjs';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
+import { type FieldTree } from '@angular/forms/signals';
 import { DbxForgeFinalizeFormConfigResult, dbxForgeFinalizeFormConfig } from './forge.form';
 
 /**
@@ -202,6 +203,19 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
       this._wrapperValidSignals.delete(valid);
       this._wrapperValidSignalsVersion.update((v) => v + 1);
     };
+  }
+
+  /**
+   * The parent DynamicForm's field tree, set by DbxForgeFormComponent.
+   *
+   * Allows wrapper field components to write values to sibling hidden fields
+   * in the parent form (e.g., for the form-field wrapper's hidden field sync).
+   */
+  private readonly _parentFormTree = signal<FieldTree<Record<string, unknown>> | undefined>(undefined);
+  readonly parentFormTree = this._parentFormTree.asReadonly();
+
+  setParentFormTree(tree: FieldTree<Record<string, unknown>> | undefined): void {
+    this._parentFormTree.set(tree);
   }
 
   private readonly _config = new BehaviorSubject<Maybe<FormConfig>>(undefined);

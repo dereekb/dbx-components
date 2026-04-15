@@ -159,9 +159,9 @@ export class DocFormValueComponent {
       forgeNumberField({ key: 'test', label: 'Number Field', description: 'A number between 0 and 100.', placeholder: 'Placeholder', min: 0, max: 100 }),
       forgeNumberField({ key: 'steptest', label: 'Number Field With Step', description: 'Any number, but increases in steps of 5.', step: 5 }),
       forgeNumberField({ key: 'enforcedsteptest', label: 'Number Divisible by 5', description: 'Any number divisible by 5.', step: 5, enforceStep: true }),
-      forgeDollarAmountField({ key: 'dollars', label: 'forgeDollarAmountField()', description: 'Dollar amount field.' })
+      forgeDollarAmountField({ key: 'dollars', label: 'formlyDollarAmountField()', description: 'Dollar amount field.' })
     ]
-  };
+  } as const satisfies FormConfig;
 
   readonly numberSliderFields: FormlyFieldConfig[] = [
     //
@@ -174,8 +174,8 @@ export class DocFormValueComponent {
     fields: [
       forgeNumberSliderField({ key: 'test', label: 'forgeNumberSliderField()', hint: 'A number between 0 and 100 picked with a slider.', min: 0, max: 100 }),
       forgeNumberSliderField({ key: 'steptest', label: 'forgeNumberSliderField() with Steps', description: 'A number between 0 and 100 picked with a slider with steps of 5.', min: 0, max: 100, step: 5 }),
-      forgeNumberSliderField({ key: 'steptestcustomtickinterval', label: 'forgeNumberSliderField() with Steps and Custom Tick Interval', description: 'A number between 0 and 100 picked with a slider with steps of 5 and tick interval of 5.', min: 0, max: 100, step: 5, tickInterval: 5 }),
-      forgeNumberSliderField({ key: 'validated', label: 'Validated Slider (must be > first slider)', description: 'Cross-field expression validator: value must be greater than the first slider.', min: 0, max: 100, validators: [{ type: 'custom' as const, expression: 'fieldValue > formValue.test', kind: 'mustBeGreaterThanTest' }], validationMessages: { mustBeGreaterThanTest: 'Value must be greater than the first slider' } })
+      forgeNumberSliderField({ key: 'steptestcustomtickinterval', label: 'forgeNumberSliderField() with Steps and Custom Tick Interval', description: 'A number between 0 and 100 picked with a slider with steps of 5 and tick interval of 5.', min: 0, max: 100, step: 5, tickInterval: 5 })
+      // forgeNumberSliderField({ key: 'validated', label: 'Validated Slider (must be > first slider)', description: 'Cross-field expression validator: value must be greater than the first slider.', min: 0, max: 100, validators: [{ type: 'custom' as const, expression: 'fieldValue > formValue.test', kind: 'mustBeGreaterThanTest' }], validationMessages: { mustBeGreaterThanTest: 'Value must be greater than the first slider' } })
     ]
   };
 
