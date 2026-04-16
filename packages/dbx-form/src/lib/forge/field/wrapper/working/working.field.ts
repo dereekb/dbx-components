@@ -1,8 +1,6 @@
 import type { FieldTypeDefinition, BaseValueField } from '@ng-forge/dynamic-forms';
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 
-import { forgeField } from '../../field.util.meta';
-
 // MARK: Field Type
 export const FORGE_WORKING_FIELD_TYPE_NAME = 'dbx-forge-working' as const;
 
@@ -31,39 +29,3 @@ export const DBX_FORGE_WORKING_FIELD_TYPE: FieldTypeDefinition<DbxForgeWorkingFi
   loadComponent: () => import('./working.field.component').then((m) => m.DbxForgeWorkingFieldComponent),
   mapper: valueFieldMapper
 };
-
-let _forgeWorkingCounter = 0;
-
-// MARK: Config
-/**
- * Configuration for creating a forge working indicator field.
- */
-export interface DbxForgeWorkingFieldConfig {
-  /**
-   * Key of the sibling field to monitor for pending validation state.
-   */
-  readonly watchFieldKey: string;
-  /**
-   * Optional key. Defaults to auto-generated.
-   */
-  readonly key?: string;
-}
-
-/**
- * Creates a forge working indicator field that shows a loading bar
- * when a sibling field is in a pending validation state.
- *
- * @param config - Working indicator configuration
- * @returns A {@link DbxForgeWorkingFieldDef}
- */
-export function forgeWorkingField(config: DbxForgeWorkingFieldConfig): DbxForgeWorkingFieldDef {
-  const { watchFieldKey, key } = config;
-
-  return forgeField({
-    key: key ?? `_working_${_forgeWorkingCounter++}`,
-    type: FORGE_WORKING_FIELD_TYPE_NAME,
-    label: '',
-    value: undefined as unknown,
-    props: { watchFieldKey } as DbxForgeWorkingFieldProps
-  } as DbxForgeWorkingFieldDef);
-}

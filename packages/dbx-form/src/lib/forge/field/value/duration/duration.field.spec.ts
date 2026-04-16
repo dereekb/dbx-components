@@ -19,11 +19,6 @@ describe('forgeTimeDurationField()', () => {
     expect(field.label).toBe('Timeout');
   });
 
-  it('should default label to empty string when not provided', () => {
-    const field = forgeTimeDurationField({ key: 'timeout' });
-    expect(field.label).toBe('');
-  });
-
   it('should set required when specified', () => {
     const field = forgeTimeDurationField({ key: 'timeout', required: true });
     expect(field.required).toBe(true);
@@ -64,11 +59,6 @@ describe('forgeTimeDurationField()', () => {
   it('should pass carryOver through props', () => {
     const field = forgeTimeDurationField({ key: 'timeout', carryOver: true });
     expect(field.props?.carryOver).toBe(true);
-  });
-
-  it('should not include props when no extra config is provided', () => {
-    const field = forgeTimeDurationField({ key: 'timeout' });
-    expect(field.props).toBeUndefined();
   });
 
   it('should pass logic through to the field definition', () => {

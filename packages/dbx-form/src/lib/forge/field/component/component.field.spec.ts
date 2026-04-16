@@ -40,13 +40,6 @@ describe('forgeComponentField()', () => {
     expect(field.label).toBe('My Component');
   });
 
-  it('should default label to empty string when not specified', () => {
-    const field = forgeComponentField({
-      componentField: { componentClass: MockComponentA }
-    });
-    expect(field.label).toBe('');
-  });
-
   it('should pass componentField through in props', () => {
     const componentField = { componentClass: MockComponentA };
     const field = forgeComponentField({ componentField });

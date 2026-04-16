@@ -1,28 +1,22 @@
-import type { MatMultiCheckboxField, MatMultiCheckboxProps } from '@ng-forge/dynamic-forms-material';
-import type { FieldOption } from '@ng-forge/dynamic-forms';
+import type { MatMultiCheckboxField } from '@ng-forge/dynamic-forms-material';
 import { filterFromPOJO } from '@dereekb/util';
-import { forgeField } from '../field.util.meta';
-import type { DbxForgeFieldConfig } from '../field.type';
+import { dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef } from '../field';
+import type { DbxForgeField } from '../../form/forge.form';
 
 /**
  * Configuration for a forge multi-checkbox (checklist) field.
  */
-export interface DbxForgeChecklistFieldConfig<T = unknown> extends DbxForgeFieldConfig {
-  readonly label?: string;
-  readonly description?: string;
-  /**
-   * Checkbox options to display.
-   */
-  readonly options: readonly FieldOption<T>[];
+export interface DbxForgeChecklistFieldConfig<T = unknown> extends DbxForgeFieldFunctionDef<MatMultiCheckboxField<T>> {
   /**
    * Position of labels relative to the checkboxes.
    */
   readonly labelPosition?: 'before' | 'after';
-  /**
-   * Default selected values.
-   */
-  readonly defaultValue?: T[];
 }
+
+/**
+ * Generic function type for forgeChecklistField to preserve caller generics.
+ */
+export type ForgeChecklistFieldFunction = <T = unknown>(config: DbxForgeChecklistFieldConfig<T>) => DbxForgeField<MatMultiCheckboxField<T>>;
 
 /**
  * Creates a forge field definition for a Material multi-checkbox (checklist) field.
@@ -42,23 +36,11 @@ export interface DbxForgeChecklistFieldConfig<T = unknown> extends DbxForgeField
  * });
  * ```
  */
-export function forgeChecklistField<T = unknown>(config: DbxForgeChecklistFieldConfig<T>): MatMultiCheckboxField<T> {
-  const { key, label, required, readonly: isReadonly, description, options, labelPosition, defaultValue = [], logic } = config;
-
-  const props: Partial<MatMultiCheckboxProps> = filterFromPOJO({
-    hint: description,
-    labelPosition
-  });
-
-  return forgeField({
-    key,
-    type: 'multi-checkbox' as const,
-    label: label ?? '',
-    value: defaultValue,
-    required,
-    readonly: isReadonly,
-    logic,
-    options,
-    props: Object.keys(props).length > 0 ? props : undefined
-  } as MatMultiCheckboxField<T>);
-}
+export const forgeChecklistField = dbxForgeFieldFunction<DbxForgeChecklistFieldConfig>({
+  type: 'multi-checkbox' as const,
+  buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder((config) =>
+    filterFromPOJO({
+      labelPosition: config.labelPosition
+    })
+  )
+}) as ForgeChecklistFieldFunction;

@@ -1,26 +1,7 @@
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import {
-  formlyRepeatArrayField,
-  formlyNameField,
-  formlyEmailField,
-  formlyPhoneAndLabelSectionField,
-  formlyAddressListField,
-  formlyToggleField,
-  forgeArrayField,
-  forgeNameField,
-  forgeEmailField,
-  forgePhoneAndLabelSectionField as forgePhoneAndLabelSection,
-  forgeAddressListField,
-  forgeToggleField,
-  DbxFormFormlyArrayFieldModule,
-  DbxFormFormlyTextFieldModule,
-  DbxFormFormlyPhoneFieldModule,
-  DbxFormFormlyBooleanFieldModule,
-  DbxFormlyFieldsContextDirective,
-  DbxFormSourceDirective
-} from '@dereekb/dbx-form';
+import { formlyRepeatArrayField, formlyNameField, formlyEmailField, formlyPhoneAndLabelSectionField, formlyAddressListField, formlyToggleField, dbxForgeArrayField, forgeNameField, forgeEmailField, forgePhoneField, forgeAddressListField, forgeToggleField, DbxFormFormlyArrayFieldModule, DbxFormFormlyTextFieldModule, DbxFormFormlyPhoneFieldModule, DbxFormFormlyBooleanFieldModule, DbxFormlyFieldsContextDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
 import { randomBoolean } from '@dereekb/util';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
@@ -88,11 +69,11 @@ export class DocFormArrayComponent {
   // -- Forge --
   readonly forgeDragArrayConfig: FormConfig = {
     fields: [
-      forgeArrayField({
+      dbxForgeArrayField({
         key: 'test',
         label: 'Test Field',
         description: 'This is a generic repeat field. It is configured with custom add/remove text, and a max of 2 items.',
-        template: [forgeNameField(), forgeEmailField(), forgePhoneAndLabelSection(), forgeAddressListField()],
+        template: [forgeNameField(), forgeEmailField(), forgePhoneField({ key: 'phone' }), forgeAddressListField()],
         addText: 'Add Test Field',
         removeText: 'Remove Test Field',
         maxLength: 2
@@ -102,7 +83,7 @@ export class DocFormArrayComponent {
 
   readonly forgeDragArrayAdvancedConfig: FormConfig = {
     fields: [
-      forgeArrayField({
+      dbxForgeArrayField({
         key: 'test2',
         label: 'Field With Add and Remove',
         description: 'Shows the drag array field with duplicate, per-item labels, and rearrange disabled.',

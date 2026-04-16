@@ -251,7 +251,7 @@ describe('configure parameter', () => {
       expect(logic[0].functionName).toBe('myDerivation');
     });
 
-    it('should add function derivation with fn only (no functionName)', () => {
+    it('should add function derivation with fn only (no functionName) and auto-generate functionName', () => {
       const myFn = () => 42;
 
       const field = forgeTestField({ key: 'x' }, (x) => {
@@ -264,7 +264,9 @@ describe('configure parameter', () => {
       const logic = (field as any).logic;
       expect(logic).toHaveLength(1);
       expect(logic[0].type).toBe('derivation');
-      expect(logic[0].fn).toBe(myFn);
+      // fn is removed during finalization; a functionName is auto-generated
+      expect(logic[0].fn).toBeUndefined();
+      expect(logic[0].functionName).toBeDefined();
     });
 
     it('should add async function derivation logic via addLogic()', () => {
@@ -285,7 +287,7 @@ describe('configure parameter', () => {
       expect(logic[0].asyncFunctionName).toBe('fetchValue');
     });
 
-    it('should add async function derivation with fn only (no asyncFunctionName)', () => {
+    it('should add async function derivation with fn only (no asyncFunctionName) and auto-generate name', () => {
       const asyncFn = async () => Promise.resolve('result');
 
       const field = forgeTestField({ key: 'x' }, (x) => {
@@ -299,7 +301,9 @@ describe('configure parameter', () => {
       const logic = (field as any).logic;
       expect(logic).toHaveLength(1);
       expect(logic[0].source).toBe('asyncFunction');
-      expect(logic[0].fn).toBe(asyncFn);
+      // fn is removed during finalization; a functionName is auto-generated
+      expect(logic[0].fn).toBeUndefined();
+      expect(logic[0].functionName).toBeDefined();
     });
 
     it('should add expression derivation logic via addLogic()', () => {

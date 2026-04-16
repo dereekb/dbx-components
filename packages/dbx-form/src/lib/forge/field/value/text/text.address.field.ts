@@ -4,7 +4,7 @@ import { forgeTextField, type DbxForgeTextFieldConfig } from './text.field';
 import { forgeCityField, type DbxForgeCityFieldConfig, forgeCountryField, type DbxForgeCountryFieldConfig, forgeStateField, type DbxForgeStateFieldConfig, forgeZipCodeField, type DbxForgeZipCodeFieldConfig } from './text.additional.field';
 import { forgeRow } from '../../wrapper/wrapper';
 import { forgeDbxSectionFieldWrapper } from '../../wrapper/section/section.wrapper';
-import { forgeArrayField, type DbxForgeArrayFieldDef } from '../array/array.field';
+import { dbxForgeArrayField, type DbxForgeArrayFieldDef } from '../array/array.field';
 
 // MARK: Address Config
 /**
@@ -183,7 +183,7 @@ export interface DbxForgeAddressListFieldConfig extends DbxForgeAddressFieldsCon
 export function forgeAddressListField(config: Partial<DbxForgeAddressListFieldConfig> = {}): DbxForgeArrayFieldDef {
   const { key = 'addresses', maxAddresses = 6 } = config;
 
-  return forgeArrayField({
+  return dbxForgeArrayField({
     key,
     labelForField: 'Address',
     template: forgeAddressFields(config),

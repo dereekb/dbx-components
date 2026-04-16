@@ -2,7 +2,8 @@ import type { FieldTypeDefinition, BaseValueField, ArrayAllowedChildren, FieldDe
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { filterFromPOJO, type FactoryWithRequiredInput } from '@dereekb/util';
 import { type DbxButtonStyle } from '@dereekb/dbx-web';
-import { forgeField } from '../../field.util.meta';
+import { dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef } from '../../field';
+import type { DbxForgeField } from '../../../form/forge.form';
 
 // MARK: Types
 /**
@@ -109,19 +110,7 @@ export const DBX_FORGE_ARRAY_FIELD_TYPE: FieldTypeDefinition<DbxForgeArrayFieldD
 /**
  * Configuration for creating a forge drag array field.
  */
-export interface DbxForgeArrayFieldConfig<T = unknown> {
-  /**
-   * Key for the array field.
-   */
-  readonly key: string;
-  /**
-   * Optional label for the array section.
-   */
-  readonly label?: string;
-  /**
-   * Optional description text.
-   */
-  readonly description?: string;
+export interface DbxForgeArrayFieldConfig<T = unknown> extends DbxForgeFieldFunctionDef<DbxForgeArrayFieldDef<T>> {
   /**
    * Template defining the structure of a single array item.
    *
@@ -129,10 +118,6 @@ export interface DbxForgeArrayFieldConfig<T = unknown> {
    * - Array of fields for object array items
    */
   readonly template: DbxForgeArrayTemplateField | readonly DbxForgeArrayTemplateField[];
-  /**
-   * Initial array values.
-   */
-  readonly value?: readonly unknown[];
   /**
    * Label for each item. Static string or function receiving index/value.
    */
@@ -170,14 +155,6 @@ export interface DbxForgeArrayFieldConfig<T = unknown> {
    */
   readonly addDuplicateToEnd?: boolean;
   /**
-   * Maximum number of items.
-   */
-  readonly maxLength?: number;
-  /**
-   * Minimum number of items.
-   */
-  readonly minLength?: number;
-  /**
    * Style configuration for the add button. Defaults to raised primary.
    */
   readonly addButtonStyle?: DbxButtonStyle;
@@ -190,6 +167,11 @@ export interface DbxForgeArrayFieldConfig<T = unknown> {
    */
   readonly duplicateButtonStyle?: DbxButtonStyle;
 }
+
+/**
+ * Generic function type for forgeArrayField to preserve caller generics.
+ */
+export type DbxForgeArrayFieldFunction = <T = unknown>(config: DbxForgeArrayFieldConfig<T>) => DbxForgeField<DbxForgeArrayFieldDef<T>>;
 
 /**
  * Creates a forge drag-and-drop array field with CDK drag/drop reordering,
@@ -217,31 +199,25 @@ export interface DbxForgeArrayFieldConfig<T = unknown> {
  * });
  * ```
  */
-export function forgeArrayField<T = unknown>(config: DbxForgeArrayFieldConfig<T>): DbxForgeArrayFieldDef<T> {
-  const { key, label, description, template, value, labelForField, addText, removeText, duplicateText, allowAdd, allowRemove, allowDuplicate, disableRearrange, addDuplicateToEnd, maxLength, minLength, addButtonStyle, removeButtonStyle, duplicateButtonStyle } = config;
-
-  return forgeField({
-    key,
-    type: FORGE_ARRAY_FIELD_TYPE_NAME,
-    label: label ?? '',
-    ...(description != null && { description }),
-    value: value ?? ([] as unknown[]),
-    props: filterFromPOJO({
-      template,
-      labelForField,
-      addText,
-      removeText,
-      duplicateText,
-      allowAdd,
-      allowRemove,
-      allowDuplicate,
-      disableRearrange,
-      addDuplicateToEnd,
-      maxLength,
-      minLength,
-      addButtonStyle,
-      removeButtonStyle,
-      duplicateButtonStyle
-    }) as DbxForgeArrayFieldProps<T>
-  } as DbxForgeArrayFieldDef<T>);
-}
+export const dbxForgeArrayField = dbxForgeFieldFunction<DbxForgeArrayFieldConfig>({
+  type: FORGE_ARRAY_FIELD_TYPE_NAME,
+  buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder((config) =>
+    filterFromPOJO({
+      template: config.template,
+      labelForField: config.labelForField,
+      addText: config.addText,
+      removeText: config.removeText,
+      duplicateText: config.duplicateText,
+      allowAdd: config.allowAdd,
+      allowRemove: config.allowRemove,
+      allowDuplicate: config.allowDuplicate,
+      disableRearrange: config.disableRearrange,
+      addDuplicateToEnd: config.addDuplicateToEnd,
+      maxLength: config.maxLength,
+      minLength: config.minLength,
+      addButtonStyle: config.addButtonStyle,
+      removeButtonStyle: config.removeButtonStyle,
+      duplicateButtonStyle: config.duplicateButtonStyle
+    })
+  )
+}) as DbxForgeArrayFieldFunction;

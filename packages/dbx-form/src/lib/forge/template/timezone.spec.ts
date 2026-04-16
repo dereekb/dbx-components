@@ -1,17 +1,17 @@
 import { describe, it, expect } from 'vitest';
 import { firstValueFrom } from 'rxjs';
 import { forgeTimezoneStringField } from './timezone';
-import type { DbxForgeSearchableTextFieldDef } from '../field/selection/searchable/searchable.field.directive';
+import type { DbxForgeSearchableTextFieldDef } from '../field/selection/searchable/searchable.field';
 
 describe('forgeTimezoneStringField()', () => {
   function innerField(config?: Parameters<typeof forgeTimezoneStringField>[0]): DbxForgeSearchableTextFieldDef {
     const wrapper = forgeTimezoneStringField(config);
-    return wrapper.props!.fields[0] as unknown as DbxForgeSearchableTextFieldDef;
+    return (wrapper as any).fields[0] as DbxForgeSearchableTextFieldDef;
   }
 
-  it('should create a wrapper field with type dbx-forge-form-field', () => {
+  it('should create a wrapper field', () => {
     const wrapper = forgeTimezoneStringField();
-    expect(wrapper.type).toBe('dbx-forge-form-field');
+    expect(wrapper.type).toBe('wrapper');
   });
 
   it('should contain an inner searchable text field with type dbx-searchable-text', () => {
@@ -22,9 +22,9 @@ describe('forgeTimezoneStringField()', () => {
     expect(innerField().key).toBe('timezone');
   });
 
-  it('should default to label "Timezone" on the wrapper', () => {
-    const wrapper = forgeTimezoneStringField();
-    expect(wrapper.label).toBe('Timezone');
+  it('should default to label "Timezone" on the inner field', () => {
+    const field = innerField();
+    expect(field.label).toBe('Timezone');
   });
 
   it('should allow overriding key', () => {
@@ -32,8 +32,8 @@ describe('forgeTimezoneStringField()', () => {
   });
 
   it('should allow overriding label', () => {
-    const wrapper = forgeTimezoneStringField({ label: 'Select Timezone' });
-    expect(wrapper.label).toBe('Select Timezone');
+    const field = innerField({ label: 'Select Timezone' });
+    expect(field.label).toBe('Select Timezone');
   });
 
   it('should set required on the inner field when specified', () => {

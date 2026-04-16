@@ -1,66 +1,16 @@
 import { computed, Directive, effect, input, type InputSignal, type OnDestroy, type OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { type Maybe, type PrimativeKey, filterUniqueValues, convertMaybeToArray, type ArrayOrValue, type Configurable } from '@dereekb/util';
-import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { SubscriptionObject, type LoadingState, successResult, startWithBeginLoading, mapLoadingStateResults } from '@dereekb/rxjs';
 import { BehaviorSubject, combineLatest, debounceTime, distinctUntilChanged, first, map, mergeMap, of, shareReplay, startWith, switchMap, type Observable } from 'rxjs';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { type FieldTree } from '@angular/forms/signals';
-import { type DynamicText, type FieldMeta, type ValidationMessages, type BaseValueField } from '@ng-forge/dynamic-forms';
+import { type DynamicText, type FieldMeta, type ValidationMessages } from '@ng-forge/dynamic-forms';
 import { createResolvedErrorsSignal, shouldShowErrors } from '@ng-forge/dynamic-forms/integration';
-import { type PickableValueFieldDisplayFunction, type PickableValueFieldDisplayValue, type PickableValueFieldFilterFunction, type PickableValueFieldHashFunction, type PickableValueFieldLoadValuesFunction, type PickableValueFieldValue } from '../../../../formly/field/selection/pickable/pickable';
-import { type PickableItemFieldItem, type PickableItemFieldItemSortFn } from '../../../../formly/field/selection/pickable/pickable.field.directive';
+import { type PickableValueFieldDisplayFunction, type PickableValueFieldDisplayValue, type PickableValueFieldHashFunction, type PickableValueFieldValue } from '../../../../formly/field/selection/pickable/pickable';
+import { type PickableItemFieldItem } from '../../../../formly/field/selection/pickable/pickable.field.directive';
+import { type DbxForgePickableFieldProps } from './pickable.field';
 import { forgeFieldDisabled } from '../../field.util';
-
-// MARK: Field Type Names
-/**
- * The custom forge field type name for the pickable chip field.
- */
-export const FORGE_PICKABLE_CHIP_FIELD_TYPE = 'dbx-pickable-chip' as const;
-
-/**
- * The custom forge field type name for the pickable list field.
- */
-export const FORGE_PICKABLE_LIST_FIELD_TYPE = 'dbx-pickable-list' as const;
-
-// MARK: Props
-/**
- * Props interface for forge pickable fields (both chip and list variants).
- *
- * Passed via the `props` property on the forge field definition.
- */
-export interface DbxForgePickableFieldProps<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> {
-  readonly loadValues: PickableValueFieldLoadValuesFunction<T, M>;
-  readonly displayForValue: PickableValueFieldDisplayFunction<T, M>;
-  readonly hashForValue?: PickableValueFieldHashFunction<T, H>;
-  readonly filterValues?: PickableValueFieldFilterFunction<T, M>;
-  readonly sortItems?: PickableItemFieldItemSortFn<T, M>;
-  readonly multiSelect?: boolean;
-  readonly asArrayValue?: boolean;
-  readonly showTextFilter?: boolean;
-  readonly skipFilterFnOnEmpty?: boolean;
-  readonly filterLabel?: string;
-  readonly maxPicks?: number;
-  readonly showSelectAllButton?: boolean;
-  readonly changeSelectionModeToViewOnDisabled?: boolean;
-  readonly footerConfig?: DbxInjectionComponentConfig;
-  readonly refreshDisplayValues$?: Observable<unknown>;
-  readonly hint?: string;
-}
-
-/**
- * Forge field definition interface for the pickable chip field.
- */
-export interface DbxForgePickableChipFieldDef<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends BaseValueField<DbxForgePickableFieldProps<T, M, H>, T | T[]> {
-  readonly type: typeof FORGE_PICKABLE_CHIP_FIELD_TYPE;
-}
-
-/**
- * Forge field definition interface for the pickable list field.
- */
-export interface DbxForgePickableListFieldDef<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends BaseValueField<DbxForgePickableFieldProps<T, M, H>, T | T[]> {
-  readonly type: typeof FORGE_PICKABLE_LIST_FIELD_TYPE;
-}
 
 /**
  * Display value augmented with its computed hash for deduplication.

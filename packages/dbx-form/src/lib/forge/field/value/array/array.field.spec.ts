@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { forgeArrayField, FORGE_ARRAY_FIELD_TYPE_NAME } from './array.field';
+import { dbxForgeArrayField, FORGE_ARRAY_FIELD_TYPE_NAME } from './array.field';
 
 describe('forgeArrayField()', () => {
   it('should create a field with the correct type', () => {
-    const field = forgeArrayField({
+    const field = dbxForgeArrayField({
       key: 'items',
       template: { key: 'name', type: 'input' as const, label: 'Name' }
     });
@@ -11,24 +11,16 @@ describe('forgeArrayField()', () => {
   });
 
   it('should use the provided key', () => {
-    const field = forgeArrayField({
+    const field = dbxForgeArrayField({
       key: 'phones',
       template: { key: 'number', type: 'input' as const, label: 'Number' }
     });
     expect(field.key).toBe('phones');
   });
 
-  it('should default value to empty array', () => {
-    const field = forgeArrayField({
-      key: 'items',
-      template: { key: 'name', type: 'input' as const, label: 'Name' }
-    });
-    expect(field.value).toEqual([]);
-  });
-
   it('should use provided initial values', () => {
     const values = [{ name: 'Alice' }, { name: 'Bob' }];
-    const field = forgeArrayField({
+    const field = dbxForgeArrayField({
       key: 'items',
       template: { key: 'name', type: 'input' as const, label: 'Name' },
       value: values
@@ -41,18 +33,18 @@ describe('forgeArrayField()', () => {
       { key: 'name', type: 'input' as const, label: 'Name' },
       { key: 'age', type: 'input' as const, label: 'Age' }
     ];
-    const field = forgeArrayField({ key: 'items', template });
+    const field = dbxForgeArrayField({ key: 'items', template });
     expect(field.props?.template).toEqual(template);
   });
 
   it('should pass single-field template', () => {
     const template = { key: 'tag', type: 'input' as const, label: 'Tag' };
-    const field = forgeArrayField({ key: 'tags', template });
+    const field = dbxForgeArrayField({ key: 'tags', template });
     expect(field.props?.template).toEqual(template);
   });
 
   it('should pass addText through props', () => {
-    const field = forgeArrayField({
+    const field = dbxForgeArrayField({
       key: 'items',
       template: { key: 'name', type: 'input' as const, label: 'Name' },
       addText: 'Add Item'
@@ -61,7 +53,7 @@ describe('forgeArrayField()', () => {
   });
 
   it('should pass removeText through props', () => {
-    const field = forgeArrayField({
+    const field = dbxForgeArrayField({
       key: 'items',
       template: { key: 'name', type: 'input' as const, label: 'Name' },
       removeText: 'Delete'
@@ -70,7 +62,7 @@ describe('forgeArrayField()', () => {
   });
 
   it('should pass disableRearrange through props', () => {
-    const field = forgeArrayField({
+    const field = dbxForgeArrayField({
       key: 'items',
       template: { key: 'name', type: 'input' as const, label: 'Name' },
       disableRearrange: true
@@ -79,7 +71,7 @@ describe('forgeArrayField()', () => {
   });
 
   it('should pass maxLength through props', () => {
-    const field = forgeArrayField({
+    const field = dbxForgeArrayField({
       key: 'items',
       template: { key: 'name', type: 'input' as const, label: 'Name' },
       maxLength: 5
@@ -88,7 +80,7 @@ describe('forgeArrayField()', () => {
   });
 
   it('should pass allowDuplicate through props', () => {
-    const field = forgeArrayField({
+    const field = dbxForgeArrayField({
       key: 'items',
       template: { key: 'name', type: 'input' as const, label: 'Name' },
       allowDuplicate: true,
@@ -99,7 +91,7 @@ describe('forgeArrayField()', () => {
   });
 
   it('should pass labelForField string through props', () => {
-    const field = forgeArrayField({
+    const field = dbxForgeArrayField({
       key: 'items',
       template: { key: 'name', type: 'input' as const, label: 'Name' },
       labelForField: 'Item'
@@ -109,7 +101,7 @@ describe('forgeArrayField()', () => {
 
   it('should pass labelForField function through props', () => {
     const labelFn = (pair: { index: number }) => `Entry ${pair.index}`;
-    const field = forgeArrayField({
+    const field = dbxForgeArrayField({
       key: 'items',
       template: { key: 'name', type: 'input' as const, label: 'Name' },
       labelForField: labelFn
@@ -118,7 +110,7 @@ describe('forgeArrayField()', () => {
   });
 
   it('should pass addButtonStyle through props', () => {
-    const field = forgeArrayField({
+    const field = dbxForgeArrayField({
       key: 'items',
       template: { key: 'name', type: 'input' as const, label: 'Name' },
       addButtonStyle: { type: 'flat', color: 'accent' }
@@ -127,7 +119,7 @@ describe('forgeArrayField()', () => {
   });
 
   it('should pass removeButtonStyle through props', () => {
-    const field = forgeArrayField({
+    const field = dbxForgeArrayField({
       key: 'items',
       template: { key: 'name', type: 'input' as const, label: 'Name' },
       removeButtonStyle: { type: 'stroked', color: 'warn' }
@@ -136,7 +128,7 @@ describe('forgeArrayField()', () => {
   });
 
   it('should pass duplicateButtonStyle through props', () => {
-    const field = forgeArrayField({
+    const field = dbxForgeArrayField({
       key: 'items',
       template: { key: 'name', type: 'input' as const, label: 'Name' },
       duplicateButtonStyle: { type: 'tonal', color: 'primary' }
@@ -145,7 +137,7 @@ describe('forgeArrayField()', () => {
   });
 
   it('should not include undefined optional props', () => {
-    const field = forgeArrayField({
+    const field = dbxForgeArrayField({
       key: 'items',
       template: { key: 'name', type: 'input' as const, label: 'Name' }
     });

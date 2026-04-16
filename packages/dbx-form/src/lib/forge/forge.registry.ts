@@ -15,9 +15,9 @@ import type { DbxForgeTimeDurationFieldDef } from './field/value/duration/durati
 import type { DbxForgeArrayFieldDef } from './field/value/array/array.field';
 
 // Selection field types
-import type { DbxForgeSearchableTextFieldDef, DbxForgeSearchableChipFieldDef } from './field/selection/searchable/searchable.field.directive';
-import type { DbxForgePickableChipFieldDef, DbxForgePickableListFieldDef } from './field/selection/pickable/pickable.field.directive';
-import type { DbxForgeListSelectionFieldDef } from './field/selection/list/list.field.component';
+import type { DbxForgeSearchableTextFieldDef, DbxForgeSearchableChipFieldDef } from './field/selection/searchable/searchable.field';
+import type { DbxForgePickableChipFieldDef, DbxForgePickableListFieldDef } from './field/selection/pickable/pickable.field';
+import type { DbxForgeListSelectionFieldDef } from './field/selection/list/list.field';
 import type { DbxForgeValueSelectionFieldDef } from './field/selection/selection.field.component';
 import type { DbxForgeSourceSelectFieldDef } from './field/selection/sourceselect/sourceselect.field.component';
 

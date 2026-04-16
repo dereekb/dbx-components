@@ -8,8 +8,10 @@ import { FORGE_TIMEDURATION_FIELD_TYPE } from './field/value/duration/duration.f
 import { dateTimeFieldMapper } from './field/value/date/datetime.field.component';
 import { fixedDateRangeFieldMapper } from './field/value/date/fixeddaterange.field.component';
 import { timeDurationFieldMapper } from './field/value/duration/duration.field.component';
-import { DBX_SEARCHABLE_TEXT_FIELD_TYPE, DBX_SEARCHABLE_CHIP_FIELD_TYPE } from './field/selection/searchable/searchable.field';
-import { DBX_PICKABLE_CHIP_FIELD_TYPE, DBX_PICKABLE_LIST_FIELD_TYPE } from './field/selection/pickable/pickable.field';
+import { DBX_SEARCHABLE_TEXT_FIELD_TYPE } from './field/selection/searchable/searchable-text.field';
+import { DBX_SEARCHABLE_CHIP_FIELD_TYPE } from './field/selection/searchable/searchable-chip.field';
+import { DBX_PICKABLE_CHIP_FIELD_TYPE } from './field/selection/pickable/pickable-chip.field';
+import { DBX_PICKABLE_LIST_FIELD_TYPE } from './field/selection/pickable/pickable-list.field';
 import { DBX_LIST_SELECTION_FIELD_TYPE } from './field/selection/list/list.field';
 import { DBX_VALUE_SELECTION_FIELD_TYPE } from './field/selection/selection.field';
 import { DBX_SOURCE_SELECT_FIELD_TYPE } from './field/selection/sourceselect/sourceselect.field';

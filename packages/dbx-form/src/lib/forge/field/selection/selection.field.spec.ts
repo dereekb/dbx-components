@@ -100,11 +100,6 @@ describe('forgeValueSelectionField()', () => {
     expect(field.label).toBe('Color');
   });
 
-  it('should default label to empty string when not provided', () => {
-    const field = forgeValueSelectionField({ key: 'color', options: testOptions });
-    expect(field.label).toBe('');
-  });
-
   it('should set required on the field when provided', () => {
     const field = forgeValueSelectionField({ key: 'color', options: testOptions, required: true });
     expect(field.required).toBe(true);
@@ -113,11 +108,6 @@ describe('forgeValueSelectionField()', () => {
   it('should set readonly on the field when provided', () => {
     const field = forgeValueSelectionField({ key: 'color', options: testOptions, readonly: true });
     expect(field.readonly).toBe(true);
-  });
-
-  it('should set defaultValue as field value', () => {
-    const field = forgeValueSelectionField({ key: 'color', options: testOptions, defaultValue: 'blue' });
-    expect(field.value).toBe('blue');
   });
 
   it('should pass static options through props', () => {
@@ -166,7 +156,7 @@ describe('forgeValueSelectionField()', () => {
       { label: 'One', value: 1 },
       { label: 'Two', value: 2 }
     ];
-    const field = forgeValueSelectionField({ key: 'num', options: numOptions, defaultValue: 1 });
+    const field = forgeValueSelectionField({ key: 'num', options: numOptions, value: 1 });
     expect(field.value).toBe(1);
     expect(field.props?.options).toEqual(numOptions);
   });

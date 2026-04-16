@@ -36,8 +36,6 @@ import {
   forgeCountryField,
   forgeZipCodeField,
   forgePhoneField,
-  forgeWrappedPhoneAndLabelField,
-  forgePhoneAndLabelSectionField,
   forgeAddressField,
   forgeAddressListField,
   DbxFormFormlyTextFieldModule,
@@ -290,27 +288,7 @@ export class DocFormValueComponent {
   ];
 
   readonly forgePhoneFieldsConfig: FormConfig = {
-    fields: [
-      forgePhoneField({ key: 'phone' }) as any,
-      forgePhoneField({ key: 'phoneWithExtension', label: 'Phone Number With Optional Extension', description: 'This field supports optional extensions.', allowExtension: true }) as any,
-      forgeWrappedPhoneAndLabelField({
-        phoneField: {
-          key: 'labeledPhoneKey'
-        },
-        labelField: {
-          key: 'labeledPhoneLabel'
-        }
-      }) as any,
-      forgePhoneAndLabelSectionField({
-        key: 'section',
-        phoneField: {
-          key: 'sectionPhone'
-        },
-        labelField: {
-          key: 'sectionLabel'
-        }
-      }) as any
-    ]
+    fields: [forgePhoneField({ key: 'phone' }) as any, forgePhoneField({ key: 'phoneWithExtension', label: 'Phone Number With Optional Extension', description: 'This field supports optional extensions.', allowExtension: true }) as any, forgePhoneField({ key: 'labeledPhone', label: 'Labeled Phone' }) as any]
   };
 
   readonly phoneListField: FormlyFieldConfig[] = [formlyPhoneListField()];

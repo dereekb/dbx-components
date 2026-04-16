@@ -52,16 +52,6 @@ describe('forgeDateField()', () => {
     expect(field.props?.hint).toBe('Pick a date');
   });
 
-  it('should not include props when no description is provided', () => {
-    const field = forgeDateField({ key: 'startDate' });
-    expect(field.props).toBeUndefined();
-  });
-
-  it('should provide empty label when not specified', () => {
-    const field = forgeDateField({ key: 'startDate' });
-    expect(field.label).toBe('');
-  });
-
   it('should pass logic through to the field definition', () => {
     const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
     const field = forgeDateField({ key: 'startDate', logic });
@@ -138,11 +128,6 @@ describe('forgeDateTimeField()', () => {
   it('should set autofillDateWhenTimeIsPicked in props', () => {
     const field = forgeDateTimeField({ key: 'datetime', autofillDateWhenTimeIsPicked: true });
     expect(field.props?.autofillDateWhenTimeIsPicked).toBe(true);
-  });
-
-  it('should provide empty label when not specified', () => {
-    const field = forgeDateTimeField({ key: 'datetime' });
-    expect(field.label).toBe('');
   });
 
   it('should pass logic through to the field definition', () => {
@@ -339,12 +324,12 @@ describe('forgeDateTimeRangeField()', () => {
 
 describe('forgeFixedDateRangeField()', () => {
   function innerField(wrapper: ReturnType<typeof forgeFixedDateRangeField>) {
-    return (wrapper.props as any)?.fields?.[0] as any;
+    return (wrapper as any).fields[0] as any;
   }
 
-  it('should create a wrapper with the correct type', () => {
+  it('should create a wrapper field', () => {
     const field = forgeFixedDateRangeField({ key: 'fixedRange' });
-    expect(field.type).toBe('dbx-forge-form-field');
+    expect(field.type).toBe('wrapper');
   });
 
   it('should contain an inner fixeddaterange field with the correct key', () => {
@@ -364,71 +349,61 @@ describe('forgeFixedDateRangeField()', () => {
     expect(innerField(field).readonly).toBe(true);
   });
 
-  it('should map description to hint on the wrapper', () => {
+  it('should map description to hint on the inner field props', () => {
     const field = forgeFixedDateRangeField({ key: 'fixedRange', description: 'Picks a 10-day range' });
-    expect(field.props?.hint).toBe('Picks a 10-day range');
+    expect(innerField(field).props?.hint).toBe('Picks a 10-day range');
   });
 
-  it('should set label on the wrapper', () => {
+  it('should set label on the inner field', () => {
     const field = forgeFixedDateRangeField({ key: 'fixedRange', label: 'My Range' });
-    expect(field.label).toBe('My Range');
+    expect(innerField(field).label).toBe('My Range');
   });
 
-  it('should set dateRangeInput in inner field props', () => {
+  it('should set dateRangeInput on the inner field', () => {
     const dateRangeInput = { type: 'weeks_range' as any, distance: 1 };
     const field = forgeFixedDateRangeField({ key: 'fixedRange', dateRangeInput });
-    expect(innerField(field).props?.dateRangeInput).toBe(dateRangeInput);
+    expect(innerField(field).dateRangeInput).toBe(dateRangeInput);
   });
 
-  it('should set selectionMode in inner field props', () => {
+  it('should set selectionMode on the inner field', () => {
     const field = forgeFixedDateRangeField({ key: 'fixedRange', selectionMode: 'normal' });
-    expect(innerField(field).props?.selectionMode).toBe('normal');
+    expect(innerField(field).selectionMode).toBe('normal');
   });
 
-  it('should set valueMode in inner field props', () => {
+  it('should set valueMode on the inner field', () => {
     const field = forgeFixedDateRangeField({ key: 'fixedRange', valueMode: DbxDateTimeValueMode.DATE_STRING });
-    expect(innerField(field).props?.valueMode).toBe(DbxDateTimeValueMode.DATE_STRING);
+    expect(innerField(field).valueMode).toBe(DbxDateTimeValueMode.DATE_STRING);
   });
 
-  it('should set fullDayInUTC in inner field props', () => {
+  it('should set fullDayInUTC on the inner field', () => {
     const field = forgeFixedDateRangeField({ key: 'fixedRange', fullDayInUTC: true });
-    expect(innerField(field).props?.fullDayInUTC).toBe(true);
+    expect(innerField(field).fullDayInUTC).toBe(true);
   });
 
-  it('should set pickerConfig in inner field props', () => {
+  it('should set pickerConfig on the inner field', () => {
     const pickerConfig = { limits: { min: 'today_start' as any } };
     const field = forgeFixedDateRangeField({ key: 'fixedRange', pickerConfig });
-    expect(innerField(field).props?.pickerConfig).toBe(pickerConfig);
+    expect(innerField(field).pickerConfig).toBe(pickerConfig);
   });
 
-  it('should set timezone in inner field props', () => {
+  it('should set timezone on the inner field', () => {
     const field = forgeFixedDateRangeField({ key: 'fixedRange', timezone: 'America/New_York' });
-    expect(innerField(field).props?.timezone).toBe('America/New_York');
+    expect(innerField(field).timezone).toBe('America/New_York');
   });
 
-  it('should set showTimezone in inner field props', () => {
+  it('should set showTimezone on the inner field', () => {
     const field = forgeFixedDateRangeField({ key: 'fixedRange', showTimezone: false });
-    expect(innerField(field).props?.showTimezone).toBe(false);
+    expect(innerField(field).showTimezone).toBe(false);
   });
 
-  it('should set showRangeInput in inner field props', () => {
+  it('should set showRangeInput on the inner field', () => {
     const field = forgeFixedDateRangeField({ key: 'fixedRange', showRangeInput: false });
-    expect(innerField(field).props?.showRangeInput).toBe(false);
+    expect(innerField(field).showRangeInput).toBe(false);
   });
 
-  it('should not include inner field props when no configuration is provided', () => {
-    const field = forgeFixedDateRangeField({ key: 'fixedRange' });
-    expect(innerField(field).props).toBeUndefined();
-  });
-
-  it('should provide empty label when not specified', () => {
-    const field = forgeFixedDateRangeField({ key: 'fixedRange' });
-    expect(field.label).toBe('');
-  });
-
-  it('should pass logic through to the wrapper field definition', () => {
+  it('should pass logic through to the inner field definition', () => {
     const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
     const field = forgeFixedDateRangeField({ key: 'fixedRange', logic });
-    expect((field as any).logic).toEqual(logic);
+    expect((innerField(field) as any).logic).toEqual(logic);
   });
 });

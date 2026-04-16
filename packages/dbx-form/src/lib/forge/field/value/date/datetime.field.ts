@@ -1,11 +1,9 @@
-import type { MatDatepickerField, MatDatepickerProps } from '@ng-forge/dynamic-forms-material';
+import type { MatDatepickerField } from '@ng-forge/dynamic-forms-material';
 import type { FieldDef, BaseValueField, RowField } from '@ng-forge/dynamic-forms';
 import { filterFromPOJO, type ArrayOrValue, type Maybe, type TimezoneString, type DateOrDayString } from '@dereekb/util';
-import { forgeField } from '../../field.util.meta';
 import { forgeRow } from '../../wrapper/wrapper';
 import { dbxForgeMaterialFormFieldWrappedFieldFunction, type DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.wrapper';
-import type { DbxForgeFieldConfig } from '../../field.type';
-import { type DbxForgeFieldFunctionDef, dbxForgeFieldFunctionConfigPropsWithHintBuilder, dbxForgeBuildFieldDef } from '../../field';
+import { dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, dbxForgeBuildFieldDef, type DbxForgeFieldFunctionDef, type DbxForgeFieldFunction } from '../../field';
 import type { DbxForgeDateTimeFieldComponentProps } from './datetime.field.component';
 import type { DbxForgeFixedDateRangeFieldComponentProps, DbxForgeFixedDateRangeValue } from './fixeddaterange.field.component';
 import { type DbxDateTimePickerConfiguration, DbxDateTimeFieldTimeMode, type DbxDateTimeFieldSyncType } from '../../../../formly/field/value/date/datetime.field.component';
@@ -41,22 +39,7 @@ export interface DbxForgeDateTimeSyncField {
 /**
  * Configuration for a forge date picker field.
  */
-export interface DbxForgeDateFieldConfig extends DbxForgeFieldConfig {
-  readonly label?: string;
-  readonly description?: string;
-  /**
-   * Minimum selectable date.
-   */
-  readonly minDate?: Date | string;
-  /**
-   * Maximum selectable date.
-   */
-  readonly maxDate?: Date | string;
-  /**
-   * Date to start the calendar view at when opened.
-   */
-  readonly startAt?: Date;
-}
+export interface DbxForgeDateFieldConfig extends DbxForgeFieldFunctionDef<MatDatepickerField> {}
 
 /**
  * Creates a forge field definition for a date picker input.
@@ -71,27 +54,10 @@ export interface DbxForgeDateFieldConfig extends DbxForgeFieldConfig {
  * const field = forgeDateField({ key: 'startDate', label: 'Start Date', required: true });
  * ```
  */
-export function forgeDateField(config: DbxForgeDateFieldConfig): MatDatepickerField {
-  const { key, label, required, readonly: isReadonly, description, minDate, maxDate, startAt, logic } = config;
-
-  const props: Partial<MatDatepickerProps> = filterFromPOJO({
-    hint: description
-  });
-
-  return forgeField({
-    key,
-    type: 'datepicker' as const,
-    label: label ?? '',
-    value: undefined as unknown as Date,
-    required,
-    readonly: isReadonly,
-    logic,
-    minDate,
-    maxDate,
-    startAt,
-    props: Object.keys(props).length > 0 ? props : undefined
-  } as MatDatepickerField);
-}
+export const forgeDateField = dbxForgeFieldFunction<DbxForgeDateFieldConfig>({
+  type: 'datepicker' as const,
+  buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder()
+}) as DbxForgeFieldFunction<DbxForgeDateFieldConfig, MatDatepickerField>;
 
 // MARK: DateTime Field
 /**
@@ -112,10 +78,7 @@ export type DbxForgeDateTimeFieldDef = BaseValueField<DbxForgeDateTimeFieldCompo
  * Full parity with the formly `DateTimeFieldConfig` — supports timezone, valueMode, timeMode,
  * pickerConfig, presets, field sync, and all other formly datetime features.
  */
-export interface DbxForgeDateTimeFieldConfig extends DbxForgeFieldConfig {
-  readonly label?: string;
-  readonly description?: string;
-
+export interface DbxForgeDateTimeFieldConfig extends DbxForgeFieldFunctionDef<DbxForgeDateTimeFieldDef> {
   // --- Date/Time display modes ---
   /**
    * Whether to show only the time picker (hide the date input).
@@ -262,48 +225,37 @@ export interface DbxForgeDateTimeFieldConfig extends DbxForgeFieldConfig {
  * });
  * ```
  */
-export function forgeDateTimeField(config: DbxForgeDateTimeFieldConfig): DbxForgeDateTimeFieldDef {
-  const { key, label, required, readonly: isReadonly, description, logic, ...rest } = config;
-
-  const props: DbxForgeDateTimeFieldComponentProps = filterFromPOJO({
-    timeOnly: rest.timeOnly,
-    timeMode: rest.timeMode,
-    valueMode: rest.valueMode,
-    dateLabel: rest.dateLabel,
-    timeLabel: rest.timeLabel,
-    allDayLabel: rest.allDayLabel,
-    atTimeLabel: rest.atTimeLabel,
-    minDate: rest.minDate,
-    maxDate: rest.maxDate,
-    timezone: rest.timezone,
-    showTimezone: rest.showTimezone,
-    pickerConfig: rest.pickerConfig,
-    hideDateHint: rest.hideDateHint,
-    hideDatePicker: rest.hideDatePicker,
-    alwaysShowDateInput: rest.alwaysShowDateInput,
-    showClearButton: rest.showClearButton,
-    presets: rest.presets,
-    timeDate: rest.timeDate,
-    autofillDateWhenTimeIsPicked: rest.autofillDateWhenTimeIsPicked,
-    fullDayFieldName: rest.fullDayFieldName,
-    fullDayInUTC: rest.fullDayInUTC,
-    minuteStep: rest.minuteStep,
-    inputOutputDebounceTime: rest.inputOutputDebounceTime,
-    getSyncFieldsObs: rest.getSyncFieldsObs,
-    hint: description
-  });
-
-  return forgeField({
-    key,
-    type: FORGE_DATETIME_FIELD_TYPE,
-    label: label ?? '',
-    value: undefined as unknown,
-    required,
-    readonly: isReadonly,
-    logic,
-    props: Object.keys(props).length > 0 ? props : undefined
-  } as DbxForgeDateTimeFieldDef);
-}
+export const forgeDateTimeField = dbxForgeFieldFunction<DbxForgeDateTimeFieldConfig>({
+  type: FORGE_DATETIME_FIELD_TYPE,
+  buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder((config) =>
+    filterFromPOJO({
+      timeOnly: config.timeOnly,
+      timeMode: config.timeMode,
+      valueMode: config.valueMode,
+      dateLabel: config.dateLabel,
+      timeLabel: config.timeLabel,
+      allDayLabel: config.allDayLabel,
+      atTimeLabel: config.atTimeLabel,
+      minDate: config.minDate,
+      maxDate: config.maxDate,
+      timezone: config.timezone,
+      showTimezone: config.showTimezone,
+      pickerConfig: config.pickerConfig,
+      hideDateHint: config.hideDateHint,
+      hideDatePicker: config.hideDatePicker,
+      alwaysShowDateInput: config.alwaysShowDateInput,
+      showClearButton: config.showClearButton,
+      presets: config.presets,
+      timeDate: config.timeDate,
+      autofillDateWhenTimeIsPicked: config.autofillDateWhenTimeIsPicked,
+      fullDayFieldName: config.fullDayFieldName,
+      fullDayInUTC: config.fullDayInUTC,
+      minuteStep: config.minuteStep,
+      inputOutputDebounceTime: config.inputOutputDebounceTime,
+      getSyncFieldsObs: config.getSyncFieldsObs
+    })
+  )
+}) as DbxForgeFieldFunction<DbxForgeDateTimeFieldConfig, DbxForgeDateTimeFieldDef>;
 
 // MARK: Date Range Field
 /**

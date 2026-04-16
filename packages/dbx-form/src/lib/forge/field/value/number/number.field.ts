@@ -38,9 +38,7 @@ type DbxForgeNumberFieldDef = BaseValueField<Omit<MatInputProps, 'type'> & { typ
  *
  * Combines labeling, numeric constraints (min/max/step), and number transformation.
  */
-export interface DbxForgeNumberFieldConfig extends DbxForgeFieldFunctionDef<DbxForgeNumberFieldDef>, FieldAutocompleteAttributeOptionRef, DbxForgeNumberFieldNumberConfig, Partial<TransformNumberFunctionConfigRef> {
-  readonly defaultValue?: number;
-}
+export interface DbxForgeNumberFieldConfig extends DbxForgeFieldFunctionDef<DbxForgeNumberFieldDef>, FieldAutocompleteAttributeOptionRef, DbxForgeNumberFieldNumberConfig, Partial<TransformNumberFunctionConfigRef> {}
 
 /**
  * Creates a forge field definition for a numeric input.

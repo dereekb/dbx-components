@@ -8,7 +8,7 @@ import type { MatSliderField, MatSliderProps } from '@ng-forge/dynamic-forms-mat
 import { waitForMs } from '@dereekb/util';
 import type { DbxForgeNumberSliderFieldConfig } from './slider.field';
 import { forgeNumberSliderField } from './slider.field';
-import { DBX_FORGE_FORM_FIELD_WRAPPER_TYPE_NAME, DbxForgeFormFieldWrapperWrappedFieldDef, type DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.wrapper';
+import { DbxForgeFormFieldWrapperWrappedFieldDef } from '../../wrapper/formfield/formfield.wrapper';
 import { getDbxForgeFormFieldWrapperWrappedField } from '../../wrapper/formfield/formfield.wrapper.util';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { DBX_FORGE_TEST_PROVIDERS } from '../../../form/forge.component.spec';
@@ -193,51 +193,11 @@ describe('MatSliderField - Exhaustive Whitelist', () => {
 });
 
 // ============================================================================
-// DbxForgeFormFieldWrapperWrappedFieldDef<MatSliderField> - Exhaustive Whitelist
+// DbxForgeFormFieldWrapperWrappedFieldDef<MatSliderField>
 // ============================================================================
 
-describe('DbxForgeFormFieldWrapperWrappedFieldDef<MatSliderField> - Exhaustive Whitelist', () => {
+describe('DbxForgeFormFieldWrapperWrappedFieldDef<MatSliderField>', () => {
   type WrapperFieldDef = DbxForgeFormFieldWrapperWrappedFieldDef<MatSliderField>;
-
-  type ExpectedKeys =
-    // From FieldDef
-    | 'key'
-    | 'type'
-    | 'label'
-    | 'props'
-    | 'className'
-    | 'disabled'
-    | 'readonly'
-    | 'hidden'
-    | 'tabIndex'
-    | 'col'
-    | 'meta'
-    // Value exclusion config
-    | 'excludeValueIfHidden'
-    | 'excludeValueIfDisabled'
-    | 'excludeValueIfReadonly'
-    // From FieldWithValidation
-    | 'required'
-    | 'email'
-    | 'min'
-    | 'max'
-    | 'minLength'
-    | 'maxLength'
-    | 'pattern'
-    | 'validators'
-    | 'validationMessages'
-    | 'logic'
-    | 'derivation'
-    | 'schemas'
-    // From BaseValueField
-    | 'value'
-    | 'placeholder';
-
-  type ActualKeys = keyof WrapperFieldDef;
-
-  it('should have exactly the expected keys', () => {
-    expectTypeOf<ActualKeys>().toEqualTypeOf<ExpectedKeys>();
-  });
 
   it('fields[0] is typed as MatSliderField', () => {
     expectTypeOf<WrapperFieldDef['fields'][0]>().toEqualTypeOf<MatSliderField>();
@@ -271,14 +231,14 @@ describe('MatSliderField - Usage', () => {
 
 describe('forgeNumberSliderField()', () => {
   // MARK: Wrapper structure
-  it('should create a form-field wrapper', () => {
+  it('should create a wrapper field', () => {
     const field = forgeNumberSliderField({ key: 'rating', max: 10 });
-    expect(field.type).toBe(DBX_FORGE_FORM_FIELD_WRAPPER_TYPE_NAME);
+    expect(field.type).toBe('wrapper');
   });
 
-  it('should use auto-generated _formfield_ key for the wrapper', () => {
+  it('should use key_wrapper naming for the wrapper key', () => {
     const field = forgeNumberSliderField({ key: 'rating', max: 10 });
-    expect(field.key).toContain('_form_field_');
+    expect(field.key).toContain('_wrapper');
   });
 
   it('should contain an inner slider field in wrapper props', () => {
@@ -430,7 +390,7 @@ describe('scenarios', () => {
 
       const formConfig: FormConfig = await firstValueFrom(fixture.componentInstance.context.config$);
       expect(formConfig.fields.length).toBe(1);
-      expect(formConfig.fields[0].type).toBe(DBX_FORGE_FORM_FIELD_WRAPPER_TYPE_NAME);
+      expect(formConfig.fields[0].type).toBe('wrapper');
     });
   });
 

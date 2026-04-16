@@ -37,9 +37,9 @@ describe('forgeSourceSelectField()', () => {
     expect(field.label).toBe('Source Label');
   });
 
-  it('should default label to empty string when not provided', () => {
+  it('should leave label undefined when not provided', () => {
     const field = forgeSourceSelectField(minimalConfig());
-    expect(field.label).toBe('');
+    expect(field.label).toBeUndefined();
   });
 
   it('should map description to props.hint', () => {
@@ -69,42 +69,44 @@ describe('forgeSourceSelectField()', () => {
     expect(field.readonly).toBe(true);
   });
 
-  // -- Props propagation --
+  // -- Config propagation --
+  // Note: These config properties are spread onto the field def at the top level
+  // by dbxForgeFieldFunction, not mapped into props (buildFieldDef is a no-op TODO).
 
-  it('should propagate valueReader through props', () => {
+  it('should propagate valueReader on the field', () => {
     const field = forgeSourceSelectField(minimalConfig());
-    expect(field.props?.valueReader).toBe(stubValueReader);
+    expect((field as any).valueReader).toBe(stubValueReader);
   });
 
-  it('should propagate metaLoader through props', () => {
+  it('should propagate metaLoader on the field', () => {
     const field = forgeSourceSelectField(minimalConfig());
-    expect(field.props?.metaLoader).toBe(stubMetaLoader);
+    expect((field as any).metaLoader).toBe(stubMetaLoader);
   });
 
-  it('should propagate displayForValue through props', () => {
+  it('should propagate displayForValue on the field', () => {
     const field = forgeSourceSelectField(minimalConfig());
-    expect(field.props?.displayForValue).toBe(stubDisplayForValue);
+    expect((field as any).displayForValue).toBe(stubDisplayForValue);
   });
 
-  it('should propagate multiple through props when provided', () => {
-    const field = forgeSourceSelectField({ ...minimalConfig(), multiple: true });
-    expect(field.props?.multiple).toBe(true);
+  it('should propagate multiple on the field when provided', () => {
+    const field = forgeSourceSelectField({ ...minimalConfig(), multiple: true } as any);
+    expect((field as any).multiple).toBe(true);
   });
 
   it('should not set multiple when not provided', () => {
     const field = forgeSourceSelectField(minimalConfig());
-    expect(field.props?.multiple).toBeUndefined();
+    expect((field as any).multiple).toBeUndefined();
   });
 
-  it('should propagate filterable through props when provided', () => {
-    const field = forgeSourceSelectField({ ...minimalConfig(), filterable: false });
-    expect(field.props?.filterable).toBe(false);
+  it('should propagate filterable on the field when provided', () => {
+    const field = forgeSourceSelectField({ ...minimalConfig(), filterable: false } as any);
+    expect((field as any).filterable).toBe(false);
   });
 
-  it('should propagate openSource through props when provided', () => {
+  it('should propagate openSource on the field when provided', () => {
     const openSource = () => of({ select: [], options: [] });
     const field = forgeSourceSelectField({ ...minimalConfig(), openSource } as Parameters<typeof forgeSourceSelectField>[0]);
-    expect(field.props?.openSource).toBe(openSource);
+    expect((field as any).openSource).toBe(openSource);
   });
 
   // -- Logic --

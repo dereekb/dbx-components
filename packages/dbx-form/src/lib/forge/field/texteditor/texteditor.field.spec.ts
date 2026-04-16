@@ -19,16 +19,6 @@ describe('forgeTextEditorField()', () => {
     expect(field.label).toBe('Biography');
   });
 
-  it('should default label to empty string when not provided', () => {
-    const field = forgeTextEditorField({ key: 'bio' });
-    expect(field.label).toBe('');
-  });
-
-  it('should default value to empty string', () => {
-    const field = forgeTextEditorField({ key: 'bio' });
-    expect(field.value).toBe('');
-  });
-
   it('should set required when specified', () => {
     const field = forgeTextEditorField({ key: 'bio', required: true });
     expect(field.required).toBe(true);

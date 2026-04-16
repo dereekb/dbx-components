@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { LogicConfig } from '@ng-forge/dynamic-forms';
-import { forgeToggleField, forgeCheckboxField } from './boolean.field';
-import { FORGE_STYLED_BOX_CLASS } from '../../field.util.meta';
+import { forgeToggleField, forgeCheckboxField, FORGE_STYLED_BOX_CLASS } from './boolean.field';
 
 describe('forgeToggleField()', () => {
   it('should create a toggle field with correct type', () => {
@@ -9,16 +8,6 @@ describe('forgeToggleField()', () => {
     expect(field.type).toBe('toggle');
     expect(field.key).toBe('active');
     expect(field.label).toBe('Active');
-  });
-
-  it('should default value to false', () => {
-    const field = forgeToggleField({ key: 'active' });
-    expect(field.value).toBe(false);
-  });
-
-  it('should use defaultValue when provided', () => {
-    const field = forgeToggleField({ key: 'active', defaultValue: true });
-    expect(field.value).toBe(true);
   });
 
   it('should set required when specified', () => {
@@ -29,11 +18,6 @@ describe('forgeToggleField()', () => {
   it('should set readonly when specified', () => {
     const field = forgeToggleField({ key: 'active', readonly: true });
     expect(field.readonly).toBe(true);
-  });
-
-  it('should provide empty label when not specified', () => {
-    const field = forgeToggleField({ key: 'active' });
-    expect(field.label).toBe('');
   });
 
   it('should set description as hint in props', () => {
@@ -66,16 +50,6 @@ describe('forgeCheckboxField()', () => {
     expect(field.label).toBe('I agree');
   });
 
-  it('should default value to false', () => {
-    const field = forgeCheckboxField({ key: 'agree' });
-    expect(field.value).toBe(false);
-  });
-
-  it('should use defaultValue when provided', () => {
-    const field = forgeCheckboxField({ key: 'agree', defaultValue: true });
-    expect(field.value).toBe(true);
-  });
-
   it('should set required when specified', () => {
     const field = forgeCheckboxField({ key: 'agree', required: true });
     expect(field.required).toBe(true);
@@ -84,11 +58,6 @@ describe('forgeCheckboxField()', () => {
   it('should set readonly when specified', () => {
     const field = forgeCheckboxField({ key: 'agree', readonly: true });
     expect(field.readonly).toBe(true);
-  });
-
-  it('should provide empty label when not specified', () => {
-    const field = forgeCheckboxField({ key: 'agree' });
-    expect(field.label).toBe('');
   });
 
   it('should set description as hint in props', () => {

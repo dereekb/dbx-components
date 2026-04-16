@@ -2,10 +2,10 @@ import { filterFromPOJO } from '@dereekb/util';
 import type { ObservableOrValue } from '@dereekb/rxjs';
 import type { FieldTypeDefinition } from '@ng-forge/dynamic-forms';
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
-import { forgeField } from '../field.util.meta';
-import type { DbxForgeFieldConfig } from '../field.type';
-import { FORGE_VALUE_SELECTION_FIELD_TYPE, type DbxForgeValueSelectionFieldProps, type DbxForgeValueSelectionFieldDef } from './selection.field.component';
+import { FORGE_VALUE_SELECTION_FIELD_TYPE, type DbxForgeValueSelectionFieldDef } from './selection.field.component';
 import type { ValueSelectionOption } from '../../../field/field.selection';
+import { dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef } from '../field';
+import type { DbxForgeField } from '../../form/forge.form';
 
 // MARK: Re-exports
 export { resolveForgeSelectionOptions, type DbxForgeResolvedSelectionOption, type DbxForgeValueSelectionFieldProps, type DbxForgeValueSelectionFieldDef, FORGE_VALUE_SELECTION_FIELD_TYPE } from './selection.field.component';
@@ -29,9 +29,7 @@ export const DBX_VALUE_SELECTION_FIELD_TYPE: FieldTypeDefinition<DbxForgeValueSe
  * Equivalent to formly's `ValueSelectionFieldConfig` — supports static and Observable options,
  * clear options, and multiple selection.
  */
-export interface DbxForgeValueSelectionFieldConfig<T = unknown> extends DbxForgeFieldConfig {
-  readonly label?: string;
-  readonly description?: string;
+export interface DbxForgeValueSelectionFieldConfig<T = unknown> extends DbxForgeFieldFunctionDef<DbxForgeValueSelectionFieldDef<T>> {
   /**
    * Options to select from.
    *
@@ -44,10 +42,6 @@ export interface DbxForgeValueSelectionFieldConfig<T = unknown> extends DbxForge
    */
   readonly multiple?: boolean;
   /**
-   * Default selected value.
-   */
-  readonly defaultValue?: T;
-  /**
    * When true or a string, adds a clear/reset option at the top of the options list.
    * If a string is provided, it is used as the clear option label.
    *
@@ -55,6 +49,11 @@ export interface DbxForgeValueSelectionFieldConfig<T = unknown> extends DbxForge
    */
   readonly addClearOption?: boolean | string;
 }
+
+/**
+ * Generic function type for forgeValueSelectionField to preserve caller generics.
+ */
+export type ForgeValueSelectionFieldFunction = <T = unknown>(config: DbxForgeValueSelectionFieldConfig<T>) => DbxForgeField<DbxForgeValueSelectionFieldDef<T>>;
 
 // MARK: Factory
 /**
@@ -86,22 +85,13 @@ export interface DbxForgeValueSelectionFieldConfig<T = unknown> extends DbxForge
  * });
  * ```
  */
-export function forgeValueSelectionField<T = unknown>(config: DbxForgeValueSelectionFieldConfig<T>): DbxForgeValueSelectionFieldDef<T> {
-  const { key, label, required, readonly: isReadonly, description, options, multiple, defaultValue, addClearOption, logic } = config;
-
-  return forgeField({
-    key,
-    type: FORGE_VALUE_SELECTION_FIELD_TYPE,
-    label: label ?? '',
-    value: defaultValue as T,
-    required,
-    readonly: isReadonly,
-    logic,
-    props: filterFromPOJO({
-      options,
-      addClearOption,
-      multiple,
-      hint: description
-    }) as DbxForgeValueSelectionFieldProps<T>
-  } as DbxForgeValueSelectionFieldDef<T>);
-}
+export const forgeValueSelectionField = dbxForgeFieldFunction<DbxForgeValueSelectionFieldConfig>({
+  type: FORGE_VALUE_SELECTION_FIELD_TYPE,
+  buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder((config) =>
+    filterFromPOJO({
+      options: config.options,
+      addClearOption: config.addClearOption,
+      multiple: config.multiple
+    })
+  )
+}) as ForgeValueSelectionFieldFunction;

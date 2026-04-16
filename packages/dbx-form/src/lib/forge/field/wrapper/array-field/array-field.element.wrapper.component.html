@@ -1,0 +1,21 @@
+<div class="dbx-form-repeat-array-field" cdkDrag cdkDragLockAxis="y">
+  <ng-template cdkDragPlaceholder>
+    <div class="dbx-form-repeat-array-drag-placeholder"></div>
+  </ng-template>
+  <div class="dbx-form-repeat-array-bar dbx-flex-bar">
+    @if (!disableRearrangeSignal()) {
+      <button mat-icon-button type="button" cdkDragHandle class="dbx-form-repeat-array-drag-button" [disabled]="isDisabled()" aria-label="Drag to reorder">
+        <mat-icon>drag_handle</mat-icon>
+      </button>
+      <dbx-button-spacer></dbx-button-spacer>
+    }
+    <span class="dbx-form-repeat-array-label">{{ labelSignal() }}</span>
+    <span class="spacer"></span>
+    @if (allowRemoveSignal()) {
+      <dbx-button [text]="removeTextSignal()" [buttonStyle]="removeButtonStyleSignal()" [disabled]="isDisabled()" (buttonClick)="removeItem()"></dbx-button>
+    }
+  </div>
+  <div class="dbx-form-repeat-array-field-content">
+    <ng-container #fieldComponent></ng-container>
+  </div>
+</div>

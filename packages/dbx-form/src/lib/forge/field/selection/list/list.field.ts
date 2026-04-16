@@ -1,10 +1,55 @@
-import { type PrimativeKey } from '@dereekb/util';
-import type { FieldTypeDefinition } from '@ng-forge/dynamic-forms';
-import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
+import { type PrimativeKey, type ReadKeyFunction } from '@dereekb/util';
+import { type ListLoadingState } from '@dereekb/rxjs';
 import { type AbstractDbxSelectionListWrapperDirective } from '@dereekb/dbx-web';
+import { type Observable } from 'rxjs';
+import { type Type } from '@angular/core';
+import type { FieldTypeDefinition, BaseValueField } from '@ng-forge/dynamic-forms';
+import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { dbxForgeMaterialFormFieldWrappedFieldFunction, type DbxForgeFormFieldWrapperWrappedFieldDef } from '../../wrapper/formfield/formfield.wrapper';
-import { FORGE_LIST_SELECTION_FIELD_TYPE, type DbxForgeListSelectionFieldDef } from './list.field.component';
 import { type DbxForgeFieldFunctionDef, dbxForgeFieldFunctionConfigPropsWithHintBuilder, dbxForgeBuildFieldDef } from '../../field';
+
+// MARK: Field Type Name
+/**
+ * The custom forge field type name for the list selection field.
+ */
+export const FORGE_LIST_SELECTION_FIELD_TYPE = 'dbx-list-selection' as const;
+
+// MARK: Props
+/**
+ * Props interface for the forge list selection field.
+ *
+ * Passed via the `props` property on the forge field definition.
+ */
+export interface DbxForgeListSelectionFieldProps<T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey> {
+  /**
+   * List component class to render items from. Can be provided as an Observable for lazy loading.
+   */
+  readonly listComponentClass: Observable<Type<C>>;
+  /**
+   * Read key function to extract the identifier from each item.
+   */
+  readonly readKey: ReadKeyFunction<T, K>;
+  /**
+   * Observable that provides the items to select.
+   */
+  readonly state$: Observable<ListLoadingState<T>>;
+  /**
+   * Function that signals to load more items.
+   */
+  readonly loadMore?: () => void;
+  /**
+   * Hint text shown below the field.
+   */
+  readonly hint?: string;
+}
+
+// MARK: Field Def
+/**
+ * Forge field definition interface for the list selection field.
+ */
+export interface DbxForgeListSelectionFieldDef<T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey> extends BaseValueField<DbxForgeListSelectionFieldProps<T, C, K>, K[]> {
+  readonly type: typeof FORGE_LIST_SELECTION_FIELD_TYPE;
+}
 
 // MARK: Field Type Definition
 /**
@@ -30,55 +75,23 @@ export type DbxForgeListSelectionFieldFunction = <T = unknown, C extends Abstrac
  * Creates a forge field definition for a list selection field.
  *
  * @param config - List selection field configuration
- * @returns A {@link DbxForgeFormFieldWrapperWrappedFieldDef} when wrapped (default), or a raw {@link DbxForgeListSelectionFieldDef} when `wrapInFormField` is `false`
+ * @returns A {@link DbxForgeFormFieldWrapperWrappedFieldDef} wrapping a list selection field
  *
  * @example
  * ```typescript
- * // With form-field wrapper (default)
  * const field = forgeListSelectionField({
  *   key: 'selectedItems',
  *   label: 'Items',
- *   listComponentClass: of(MyListComponent),
- *   readKey: (item) => item.id,
- *   state$: items$
- * });
- *
- * // Without form-field wrapper
- * const unwrapped = forgeListSelectionField({
- *   key: 'selectedItems',
- *   label: 'Items',
- *   wrapInFormField: false,
- *   listComponentClass: of(MyListComponent),
- *   readKey: (item) => item.id,
- *   state$: items$
+ *   props: {
+ *     listComponentClass: of(MyListComponent),
+ *     readKey: (item) => item.id,
+ *     state$: items$
+ *   }
  * });
  * ```
  */
 export const forgeListSelectionField = dbxForgeMaterialFormFieldWrappedFieldFunction<DbxForgeListSelectionFieldConfig>({
   type: FORGE_LIST_SELECTION_FIELD_TYPE,
   buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder(),
-  buildFieldDef: () => {
-    // TODO: Ensure proper merging
-    /*
-
-  const innerField = forgeField({
-    key,
-    type: FORGE_LIST_SELECTION_FIELD_TYPE,
-    label: useWrapper ? '' : (label ?? ''),
-    value: undefined as unknown as K[],
-    required,
-    readonly: isReadonly,
-    logic: useWrapper ? undefined : logic,
-  } as DbxForgeListSelectionFieldDef<T, C, K>);
-
-  // SAFE TO REMOVE
-  /**
-   * - dbxForgeFieldFunctionConfigPropsWithHintBuilder handles this
-   * 
-    props: filterFromPOJO({
-      ...listProps,
-      hint: useWrapper ? listProps.hint : (description ?? listProps.hint)
-    }) as DbxForgeListSelectionFieldProps<T, C, K>
-   */
-  }
+  buildFieldDef: dbxForgeBuildFieldDef(() => {})
 }) as DbxForgeListSelectionFieldFunction;

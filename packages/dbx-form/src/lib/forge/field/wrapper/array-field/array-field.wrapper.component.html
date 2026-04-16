@@ -1,0 +1,15 @@
+<div class="dbx-form-repeat-array">
+  @if (label(); as labelText) {
+    <div class="dbx-form-repeat-array-header">
+      <span class="dbx-form-repeat-array-title">{{ labelText | dynamicText | async }}</span>
+    </div>
+  }
+  <div class="dbx-form-repeat-array-content">
+    <ng-container #fieldComponent></ng-container>
+  </div>
+  @if (allowAddSignal()) {
+    <div class="dbx-form-repeat-array-footer">
+      <dbx-button [text]="addTextSignal()" [buttonStyle]="addButtonStyleSignal()" [disabled]="isDisabled()" (buttonClick)="addItem()"></dbx-button>
+    </div>
+  }
+</div>
