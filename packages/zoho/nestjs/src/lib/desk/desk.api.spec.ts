@@ -1,0 +1,303 @@
+import { appZohoDeskModuleMetadata } from './desk.module';
+import { type DynamicModule, Module } from '@nestjs/common';
+import { Test, type TestingModule } from '@nestjs/testing';
+import { ZohoDeskApi } from './desk.api';
+import { fileZohoAccountsAccessTokenCacheService, ZohoAccountsAccessTokenCacheService } from '../accounts/accounts.service';
+import { type ZohoDeskTicketId, type ZohoDeskDepartmentId, type ZohoDeskContactId } from '@dereekb/zoho';
+
+const cacheService = fileZohoAccountsAccessTokenCacheService();
+
+@Module(appZohoDeskModuleMetadata({}))
+export class TestZohoDeskModule {}
+
+describe('desk.api', () => {
+  let nest: TestingModule;
+
+  beforeEach(async () => {
+    const providers = [
+      {
+        provide: ZohoAccountsAccessTokenCacheService,
+        useValue: cacheService
+      }
+    ];
+
+    const rootModule: DynamicModule = {
+      module: TestZohoDeskModule,
+      providers,
+      exports: providers,
+      global: true
+    };
+
+    const builder = Test.createTestingModule({
+      imports: [rootModule]
+    });
+
+    nest = await builder.compile();
+  });
+
+  describe('ZohoDeskApi', () => {
+    let api: ZohoDeskApi;
+
+    beforeEach(() => {
+      api = nest.get(ZohoDeskApi);
+    });
+
+    // MARK: Tickets
+    describe('tickets', () => {
+      describe('getTickets()', () => {
+        it('should return a list of tickets', async () => {
+          const result = await api.getTickets({ limit: 5 });
+
+          expect(result).toBeDefined();
+          expect(result.data).toBeDefined();
+          expect(Array.isArray(result.data)).toBe(true);
+        });
+
+        it('should respect the limit parameter', async () => {
+          const limit = 2;
+          const result = await api.getTickets({ limit });
+
+          expect(result.data.length).toBeLessThanOrEqual(limit);
+        });
+
+        it('should support include parameter', async () => {
+          const result = await api.getTickets({ limit: 1, include: 'contacts' });
+
+          expect(result).toBeDefined();
+          expect(result.data).toBeDefined();
+        });
+
+        it('should support filtering by departmentId', async () => {
+          // First get a department to filter by
+          const departments = await api.getDepartments({});
+          const departmentId = departments.data[0]?.id;
+
+          if (departmentId) {
+            const result = await api.getTickets({ limit: 5, departmentId });
+
+            expect(result).toBeDefined();
+            expect(result.data).toBeDefined();
+          }
+        });
+      });
+
+      describe('getTicketById()', () => {
+        let testTicketId: ZohoDeskTicketId;
+
+        beforeEach(async () => {
+          const tickets = await api.getTickets({ limit: 1 });
+          testTicketId = tickets.data[0]?.id;
+        });
+
+        it('should return a single ticket', async () => {
+          if (testTicketId) {
+            const result = await api.getTicketById({ ticketId: testTicketId });
+
+            expect(result).toBeDefined();
+            expect(result.id).toBe(testTicketId);
+            expect(result.ticketNumber).toBeDefined();
+            expect(result.subject).toBeDefined();
+          }
+        });
+
+        it('should support include parameter', async () => {
+          if (testTicketId) {
+            const result = await api.getTicketById({
+              ticketId: testTicketId,
+              include: ['contacts', 'departments', 'assignee']
+            });
+
+            expect(result).toBeDefined();
+            expect(result.id).toBe(testTicketId);
+          }
+        });
+      });
+
+      describe('searchTickets()', () => {
+        it('should search tickets by status', async () => {
+          const result = await api.searchTickets({ status: 'Open', limit: 5 });
+
+          expect(result).toBeDefined();
+          expect(result.data).toBeDefined();
+          expect(Array.isArray(result.data)).toBe(true);
+        });
+
+        it('should return empty results for non-matching search', async () => {
+          const result = await api.searchTickets({
+            subject: 'ThisSubjectShouldNotMatchAnyTicket_12345678901234567890',
+            limit: 5
+          });
+
+          expect(result).toBeDefined();
+          expect(result.data).toBeDefined();
+        });
+      });
+
+      describe('getTicketsForContact()', () => {
+        it('should return tickets for a contact', async () => {
+          // Get a contact that has tickets
+          const tickets = await api.getTickets({ limit: 1 });
+          const contactId = tickets.data[0]?.contactId;
+
+          if (contactId) {
+            const result = await api.getTicketsForContact({ contactId, limit: 5 });
+
+            expect(result).toBeDefined();
+            expect(result.data).toBeDefined();
+          }
+        });
+      });
+
+      describe('getTicketMetrics()', () => {
+        it('should return metrics for a ticket', async () => {
+          const tickets = await api.getTickets({ limit: 1 });
+          const ticketId = tickets.data[0]?.id;
+
+          if (ticketId) {
+            const result = await api.getTicketMetrics({ ticketId });
+            expect(result).toBeDefined();
+          }
+        });
+      });
+
+      describe('getTicketsPageFactory()', () => {
+        it('should iterate through pages of tickets', async () => {
+          const limit = 2;
+          const fetchPage = api.getTicketsPageFactory({ limit });
+
+          const firstPage = await fetchPage.fetchNext();
+          expect(firstPage.page).toBe(0);
+          expect(firstPage.result.data).toBeDefined();
+          expect(firstPage.result.data.length).toBeLessThanOrEqual(limit);
+
+          if (firstPage.result.data.length >= limit) {
+            const secondPage = await firstPage.fetchNext();
+            expect(secondPage.page).toBe(1);
+            expect(secondPage.result.data).toBeDefined();
+
+            // Ensure pages return different data
+            if (secondPage.result.data.length > 0) {
+              expect(secondPage.result.data[0].id).not.toBe(firstPage.result.data[0].id);
+            }
+          }
+        });
+      });
+    });
+
+    // MARK: Departments
+    describe('departments', () => {
+      describe('getDepartments()', () => {
+        it('should return a list of departments', async () => {
+          const result = await api.getDepartments({});
+
+          expect(result).toBeDefined();
+          expect(result.data).toBeDefined();
+          expect(Array.isArray(result.data)).toBe(true);
+          expect(result.data.length).toBeGreaterThan(0);
+        });
+
+        it('should support filtering by isEnabled', async () => {
+          const result = await api.getDepartments({ isEnabled: true });
+
+          expect(result).toBeDefined();
+          expect(result.data).toBeDefined();
+        });
+      });
+
+      describe('getDepartmentById()', () => {
+        let testDepartmentId: ZohoDeskDepartmentId;
+
+        beforeEach(async () => {
+          const departments = await api.getDepartments({});
+          testDepartmentId = departments.data[0]?.id;
+        });
+
+        it('should return a single department', async () => {
+          if (testDepartmentId) {
+            const result = await api.getDepartmentById({ departmentId: testDepartmentId });
+
+            expect(result).toBeDefined();
+            expect(result.id).toBe(testDepartmentId);
+            expect(result.name).toBeDefined();
+          }
+        });
+      });
+    });
+
+    // MARK: Contacts
+    describe('contacts', () => {
+      describe('getContacts()', () => {
+        it('should return a list of contacts', async () => {
+          const result = await api.getContacts({ limit: 5 });
+
+          expect(result).toBeDefined();
+          expect(result.data).toBeDefined();
+          expect(Array.isArray(result.data)).toBe(true);
+        });
+
+        it('should respect the limit parameter', async () => {
+          const limit = 2;
+          const result = await api.getContacts({ limit });
+
+          expect(result.data.length).toBeLessThanOrEqual(limit);
+        });
+
+        it('should support sorting', async () => {
+          const result = await api.getContacts({
+            limit: 5,
+            sortBy: 'createdTime',
+            sortOrder: 'desc'
+          });
+
+          expect(result).toBeDefined();
+          expect(result.data).toBeDefined();
+        });
+      });
+
+      describe('getContactById()', () => {
+        let testContactId: ZohoDeskContactId;
+
+        beforeEach(async () => {
+          const contacts = await api.getContacts({ limit: 1 });
+          testContactId = contacts.data[0]?.id;
+        });
+
+        it('should return a single contact', async () => {
+          if (testContactId) {
+            const result = await api.getContactById({ contactId: testContactId });
+
+            expect(result).toBeDefined();
+            expect(result.id).toBe(testContactId);
+            expect(result.lastName).toBeDefined();
+          }
+        });
+      });
+
+      describe('getContactsByIds()', () => {
+        it('should return contacts by IDs', async () => {
+          const contacts = await api.getContacts({ limit: 2 });
+          const contactIds = contacts.data.map((c) => c.id);
+
+          if (contactIds.length > 0) {
+            const result = await api.getContactsByIds({ contactIds });
+
+            expect(result).toBeDefined();
+            expect(Array.isArray(result)).toBe(true);
+          }
+        });
+      });
+
+      describe('getContactsPageFactory()', () => {
+        it('should iterate through pages of contacts', async () => {
+          const limit = 2;
+          const fetchPage = api.getContactsPageFactory({ limit });
+
+          const firstPage = await fetchPage.fetchNext();
+          expect(firstPage.page).toBe(0);
+          expect(firstPage.result.data).toBeDefined();
+          expect(firstPage.result.data.length).toBeLessThanOrEqual(limit);
+        });
+      });
+    });
+  });
+});
