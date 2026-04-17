@@ -36,7 +36,17 @@ import {
   zohoDeskPerformTicketTimerAction,
   zohoDeskGetTicketTimeEntries,
   zohoDeskGetTicketTimeEntryById,
-  zohoDeskGetTicketTimeEntrySummation
+  zohoDeskGetTicketTimeEntrySummation,
+  zohoDeskGetTicketThreads,
+  zohoDeskGetTicketThreadById,
+  zohoDeskGetTicketThreadsPageFactory,
+  zohoDeskGetTicketActivities,
+  zohoDeskGetTicketActivitiesPageFactory,
+  zohoDeskGetAgents,
+  zohoDeskGetAgentById,
+  zohoDeskGetAgentsByIds,
+  zohoDeskGetMyInfo,
+  zohoDeskGetAgentsPageFactory
 } from '@dereekb/zoho';
 import { ZohoDeskServiceConfig } from './desk.config';
 import { ZohoAccountsApi } from '../accounts/accounts.api';
@@ -333,5 +343,78 @@ export class ZohoDeskApi {
    */
   get getTicketTimeEntrySummation() {
     return zohoDeskGetTicketTimeEntrySummation(this.deskContext);
+  }
+
+  // MARK: Thread Accessors
+  /**
+   * Configured pass-through for {@link zohoDeskGetTicketThreads}.
+   */
+  get getTicketThreads() {
+    return zohoDeskGetTicketThreads(this.deskContext);
+  }
+
+  /**
+   * Configured pass-through for {@link zohoDeskGetTicketThreadById}.
+   */
+  get getTicketThreadById() {
+    return zohoDeskGetTicketThreadById(this.deskContext);
+  }
+
+  /**
+   * Configured pass-through for {@link zohoDeskGetTicketThreadsPageFactory}.
+   */
+  get getTicketThreadsPageFactory() {
+    return zohoDeskGetTicketThreadsPageFactory(this.deskContext);
+  }
+
+  // MARK: Activity Accessors
+  /**
+   * Configured pass-through for {@link zohoDeskGetTicketActivities}.
+   */
+  get getTicketActivities() {
+    return zohoDeskGetTicketActivities(this.deskContext);
+  }
+
+  /**
+   * Configured pass-through for {@link zohoDeskGetTicketActivitiesPageFactory}.
+   */
+  get getTicketActivitiesPageFactory() {
+    return zohoDeskGetTicketActivitiesPageFactory(this.deskContext);
+  }
+
+  // MARK: Agent Accessors
+  /**
+   * Configured pass-through for {@link zohoDeskGetAgents}.
+   */
+  get getAgents() {
+    return zohoDeskGetAgents(this.deskContext);
+  }
+
+  /**
+   * Configured pass-through for {@link zohoDeskGetAgentById}.
+   */
+  get getAgentById() {
+    return zohoDeskGetAgentById(this.deskContext);
+  }
+
+  /**
+   * Configured pass-through for {@link zohoDeskGetAgentsByIds}.
+   */
+  get getAgentsByIds() {
+    return zohoDeskGetAgentsByIds(this.deskContext);
+  }
+
+  /**
+   * Configured pass-through for {@link zohoDeskGetMyInfo}.
+   */
+  get getMyInfo() {
+    return zohoDeskGetMyInfo(this.deskContext);
+  }
+
+  /**
+   * Configured pass-through for {@link zohoDeskGetAgentsPageFactory}.
+   */
+  get getAgentsPageFactory() {
+    return zohoDeskGetAgentsPageFactory(this.deskContext);
   }
 }

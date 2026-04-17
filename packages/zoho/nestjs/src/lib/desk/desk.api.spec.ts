@@ -449,5 +449,183 @@ describe('desk.api', () => {
         });
       });
     });
+
+    // MARK: Threads
+    describe('threads', () => {
+      describe('getTicketThreads()', () => {
+        it('should return threads for a ticket', async () => {
+          const tickets = await api.getTickets({ limit: 1 });
+          const ticketId = tickets.data[0]?.id;
+
+          if (ticketId) {
+            const result = await api.getTicketThreads({ ticketId });
+
+            expect(result).toBeDefined();
+            expect(result.data).toBeDefined();
+            expect(Array.isArray(result.data)).toBe(true);
+          }
+        });
+
+        it('should support include parameter for plainText', async () => {
+          const tickets = await api.getTickets({ limit: 1 });
+          const ticketId = tickets.data[0]?.id;
+
+          if (ticketId) {
+            const result = await api.getTicketThreads({ ticketId, include: 'plainText' });
+
+            expect(result).toBeDefined();
+            expect(result.data).toBeDefined();
+          }
+        });
+      });
+
+      describe('getTicketThreadById()', () => {
+        it('should return a single thread', async () => {
+          const tickets = await api.getTickets({ limit: 1 });
+          const ticketId = tickets.data[0]?.id;
+
+          if (ticketId) {
+            const threads = await api.getTicketThreads({ ticketId, limit: 1 });
+            const threadId = threads.data[0]?.id;
+
+            if (threadId) {
+              const result = await api.getTicketThreadById({ ticketId, threadId });
+
+              expect(result).toBeDefined();
+              expect(result.id).toBe(threadId);
+              expect(result.content).toBeDefined();
+            }
+          }
+        });
+      });
+
+      describe('getTicketThreadsPageFactory()', () => {
+        it('should iterate through pages of threads', async () => {
+          const tickets = await api.getTickets({ limit: 1 });
+          const ticketId = tickets.data[0]?.id;
+
+          if (ticketId) {
+            const limit = 2;
+            const fetchPage = api.getTicketThreadsPageFactory({ ticketId, limit });
+
+            const firstPage = await fetchPage.fetchNext();
+            expect(firstPage.page).toBe(0);
+            expect(firstPage.result.data).toBeDefined();
+          }
+        });
+      });
+    });
+
+    // MARK: Activities
+    describe('activities', () => {
+      describe('getTicketActivities()', () => {
+        it('should return activities for a ticket', async () => {
+          const tickets = await api.getTickets({ limit: 1 });
+          const ticketId = tickets.data[0]?.id;
+
+          if (ticketId) {
+            const result = await api.getTicketActivities({ ticketId });
+
+            expect(result).toBeDefined();
+            expect(result.data).toBeDefined();
+            expect(Array.isArray(result.data)).toBe(true);
+          }
+        });
+      });
+    });
+
+    // MARK: Agents
+    describe('agents', () => {
+      describe('getAgents()', () => {
+        it('should return a list of agents', async () => {
+          const result = await api.getAgents({});
+
+          expect(result).toBeDefined();
+          expect(result.data).toBeDefined();
+          expect(Array.isArray(result.data)).toBe(true);
+          expect(result.data.length).toBeGreaterThan(0);
+        });
+
+        it('should support include parameter', async () => {
+          const result = await api.getAgents({ include: 'role', limit: 5 });
+
+          expect(result).toBeDefined();
+          expect(result.data).toBeDefined();
+        });
+
+        it('should support filtering by status', async () => {
+          const result = await api.getAgents({ status: 'ACTIVE', limit: 5 });
+
+          expect(result).toBeDefined();
+          expect(result.data).toBeDefined();
+        });
+      });
+
+      describe('getAgentById()', () => {
+        it('should return a single agent', async () => {
+          const agents = await api.getAgents({ limit: 1 });
+          const agentId = agents.data[0]?.id;
+
+          if (agentId) {
+            const result = await api.getAgentById({ agentId });
+
+            expect(result).toBeDefined();
+            expect(result.id).toBe(agentId);
+            expect(result.name).toBeDefined();
+          }
+        });
+
+        it('should support include for role and profile', async () => {
+          const agents = await api.getAgents({ limit: 1 });
+          const agentId = agents.data[0]?.id;
+
+          if (agentId) {
+            const result = await api.getAgentById({
+              agentId,
+              include: ['role', 'profile']
+            });
+
+            expect(result).toBeDefined();
+            expect(result.id).toBe(agentId);
+          }
+        });
+      });
+
+      describe('getAgentsByIds()', () => {
+        it('should return agents by IDs', async () => {
+          const agents = await api.getAgents({ limit: 2 });
+          const agentIds = agents.data.map((a) => a.id);
+
+          if (agentIds.length > 0) {
+            const result = await api.getAgentsByIds({ agentIds });
+
+            expect(result).toBeDefined();
+            expect(Array.isArray(result)).toBe(true);
+          }
+        });
+      });
+
+      describe('getMyInfo()', () => {
+        it('should return the current agent info', async () => {
+          const result = await api.getMyInfo();
+
+          expect(result).toBeDefined();
+          expect(result.id).toBeDefined();
+          expect(result.emailId).toBeDefined();
+        });
+      });
+
+      describe('getAgentsPageFactory()', () => {
+        it('should iterate through pages of agents', async () => {
+          const limit = 2;
+          const fetchPage = api.getAgentsPageFactory({ limit });
+
+          const firstPage = await fetchPage.fetchNext();
+          expect(firstPage.page).toBe(0);
+          expect(firstPage.result.data).toBeDefined();
+          expect(firstPage.result.data.length).toBeLessThanOrEqual(limit);
+        });
+      });
+    });
   });
 });

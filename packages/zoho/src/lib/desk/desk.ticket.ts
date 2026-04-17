@@ -256,3 +256,114 @@ export interface ZohoDeskTicketTimer {
   readonly timerAction?: Maybe<string>;
   readonly startedTime?: Maybe<ZohoDateTimeString>;
 }
+
+// MARK: Ticket Thread
+/**
+ * Communication channel for a thread.
+ */
+export type ZohoDeskThreadChannel = 'EMAIL' | 'PHONE' | 'WEB' | 'CUSTOMERPORTAL' | 'FORUMS' | 'FACEBOOK' | 'TWITTER' | 'TWITTER_DM' | 'ONLINE_CHAT' | 'OFFLINE_CHAT' | 'FEEDBACK' | 'FEEDBACK_WIDGET' | string;
+
+/**
+ * Direction of a thread message relative to the support team.
+ */
+export type ZohoDeskThreadDirection = 'in' | 'out';
+
+/**
+ * Visibility of a thread to end users.
+ */
+export type ZohoDeskThreadVisibility = 'public' | 'private';
+
+/**
+ * Delivery status of a thread.
+ */
+export type ZohoDeskThreadStatus = 'SUCCESS' | 'FAILED' | 'DRAFT' | 'PENDING';
+
+/**
+ * Related entities that can be expanded when fetching threads.
+ */
+export type ZohoDeskThreadInclude = 'plainText';
+
+/**
+ * A conversation thread on a Zoho Desk ticket (email, reply, note, etc.).
+ */
+export interface ZohoDeskTicketThread {
+  readonly id: string;
+  readonly content?: Maybe<string>;
+  readonly contentType?: Maybe<string>;
+  readonly direction?: Maybe<ZohoDeskThreadDirection>;
+  readonly channel?: Maybe<ZohoDeskThreadChannel>;
+  readonly visibility?: Maybe<ZohoDeskThreadVisibility>;
+  readonly status?: Maybe<ZohoDeskThreadStatus>;
+  readonly summary?: Maybe<string>;
+  readonly to?: Maybe<string>;
+  readonly cc?: Maybe<string>;
+  readonly bcc?: Maybe<string>;
+  readonly fromEmailAddress?: Maybe<string>;
+  readonly responderId?: Maybe<string>;
+  readonly replyTo?: Maybe<string>;
+  readonly fullContentURL?: Maybe<string>;
+  readonly isDescriptionThread?: Maybe<boolean>;
+  readonly isContentTruncated?: Maybe<boolean>;
+  readonly canReply?: Maybe<boolean>;
+  readonly isForward?: Maybe<boolean>;
+  readonly hasAttach?: Maybe<boolean>;
+  readonly attachmentCount?: Maybe<number>;
+  readonly createdTime?: Maybe<ZohoDateTimeString>;
+  readonly author?: Maybe<Record<string, unknown>>;
+  readonly source?: Maybe<Record<string, unknown>>;
+  readonly channelRelatedInfo?: Maybe<Record<string, unknown>>;
+  readonly plainText?: Maybe<string>;
+  readonly attachments?: Maybe<Record<string, unknown>[]>;
+}
+
+// MARK: Ticket Activity
+/**
+ * Type of activity associated with a ticket.
+ */
+export type ZohoDeskActivityType = 'Tasks' | 'Events' | 'Calls';
+
+/**
+ * Status of a ticket activity.
+ */
+export type ZohoDeskActivityStatus = 'Scheduled' | 'Completed' | 'Missed' | 'In Progress' | 'Canceled';
+
+/**
+ * Direction of a ticket activity.
+ */
+export type ZohoDeskActivityDirection = 'inbound' | 'outbound';
+
+/**
+ * Related entities that can be expanded when fetching activities.
+ */
+export type ZohoDeskActivityInclude = 'ticket' | 'contact' | 'assignee' | 'team';
+
+/**
+ * An activity (task, event, or call) associated with a Zoho Desk ticket.
+ */
+export interface ZohoDeskTicketActivity {
+  readonly id: string;
+  readonly activityType?: Maybe<ZohoDeskActivityType>;
+  readonly status?: Maybe<ZohoDeskActivityStatus>;
+  readonly direction?: Maybe<ZohoDeskActivityDirection>;
+  readonly subject?: Maybe<string>;
+  readonly description?: Maybe<string>;
+  readonly category?: Maybe<string>;
+  readonly priority?: Maybe<string>;
+  readonly ticketId?: Maybe<ZohoDeskTicketId>;
+  readonly contactId?: Maybe<ZohoDeskContactId>;
+  readonly departmentId?: Maybe<ZohoDeskDepartmentId>;
+  readonly creatorId?: Maybe<string>;
+  readonly ownerId?: Maybe<string>;
+  readonly dueDate?: Maybe<ZohoDateTimeString>;
+  readonly startTime?: Maybe<ZohoDateTimeString>;
+  readonly createdTime?: Maybe<ZohoDateTimeString>;
+  readonly completedTime?: Maybe<ZohoDateTimeString>;
+  readonly isCommented?: Maybe<boolean>;
+  readonly webUrl?: Maybe<string>;
+
+  // Include expansions
+  readonly ticket?: Maybe<Record<string, unknown>>;
+  readonly contact?: Maybe<Record<string, unknown>>;
+  readonly assignee?: Maybe<Record<string, unknown>>;
+  readonly team?: Maybe<Record<string, unknown>>;
+}
