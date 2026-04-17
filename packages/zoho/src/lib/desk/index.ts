@@ -10,3 +10,8 @@ export * from './desk.api.page';
 export * from './desk.api.tickets';
 export * from './desk.api.departments';
 export * from './desk.api.contacts';
+export * from './desk.api.tags';
+export * from './desk.api.followers';
+export * from './desk.api.attachments';
+export * from './desk.api.comments';
+export * from './desk.api.time';

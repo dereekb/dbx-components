@@ -147,3 +147,112 @@ export interface ZohoDeskAgentTicketCount {
   readonly agentId: ZohoDeskAgentId;
   readonly count: number;
 }
+
+// MARK: Ticket Tag
+/**
+ * A tag associated with a Zoho Desk ticket.
+ */
+export interface ZohoDeskTicketTag {
+  readonly id: string;
+  readonly name: string;
+  readonly createdTime?: Maybe<ZohoDateTimeString>;
+  readonly ticketCount?: Maybe<number>;
+}
+
+// MARK: Ticket Follower
+/**
+ * A follower of a Zoho Desk ticket (typically an agent).
+ */
+export interface ZohoDeskTicketFollower {
+  readonly id: string;
+  readonly name?: Maybe<string>;
+  readonly email?: Maybe<string>;
+  readonly photoURL?: Maybe<string>;
+}
+
+// MARK: Ticket Attachment
+/**
+ * Fields by which Zoho Desk ticket attachment lists can be sorted.
+ */
+export type ZohoDeskAttachmentSortBy = 'createdTime';
+
+/**
+ * Related entities that can be expanded when fetching ticket attachments.
+ */
+export type ZohoDeskAttachmentInclude = 'creator';
+
+/**
+ * A file attachment on a Zoho Desk ticket.
+ */
+export interface ZohoDeskTicketAttachment {
+  readonly id: string;
+  readonly name: string;
+  readonly size?: Maybe<string>;
+  readonly href?: Maybe<string>;
+  readonly isPublic?: Maybe<boolean>;
+  readonly creatorId?: Maybe<string>;
+  readonly createdTime?: Maybe<ZohoDateTimeString>;
+  readonly creator?: Maybe<Record<string, unknown>>;
+}
+
+// MARK: Ticket Comment
+/**
+ * Content type of a Zoho Desk ticket comment.
+ */
+export type ZohoDeskCommentContentType = 'plainText' | 'html';
+
+/**
+ * Fields by which Zoho Desk ticket comment lists can be sorted.
+ */
+export type ZohoDeskCommentSortBy = 'commentedTime';
+
+/**
+ * Related entities that can be expanded when fetching ticket comments.
+ */
+export type ZohoDeskCommentInclude = 'mentions';
+
+/**
+ * A comment on a Zoho Desk ticket.
+ */
+export interface ZohoDeskTicketComment {
+  readonly id: string;
+  readonly content: string;
+  readonly encodedContent?: Maybe<string>;
+  readonly contentType?: Maybe<ZohoDeskCommentContentType>;
+  readonly commenterId?: Maybe<string>;
+  readonly commentedTime?: Maybe<ZohoDateTimeString>;
+  readonly modifiedTime?: Maybe<ZohoDateTimeString>;
+  readonly isPublic?: Maybe<boolean>;
+  readonly attachmentIds?: Maybe<string[]>;
+  readonly commenter?: Maybe<Record<string, unknown>>;
+  readonly mentions?: Maybe<Record<string, unknown>[]>;
+}
+
+// MARK: Ticket Time Entry
+/**
+ * A time entry recorded against a Zoho Desk ticket.
+ */
+export interface ZohoDeskTicketTimeEntry {
+  readonly id: string;
+  readonly ownerId?: Maybe<string>;
+  readonly billingType?: Maybe<string>;
+  readonly description?: Maybe<string>;
+  readonly executedTime?: Maybe<ZohoDateTimeString>;
+  readonly createdTime?: Maybe<ZohoDateTimeString>;
+  readonly hh?: Maybe<string>;
+  readonly mm?: Maybe<string>;
+  readonly requestedBy?: Maybe<string>;
+  readonly agentCostPerHour?: Maybe<string>;
+  readonly additionalCost?: Maybe<string>;
+  readonly totalCost?: Maybe<string>;
+}
+
+// MARK: Ticket Timer
+/**
+ * Timer state for a Zoho Desk ticket.
+ */
+export interface ZohoDeskTicketTimer {
+  readonly isBillable?: Maybe<boolean>;
+  readonly timerAction?: Maybe<string>;
+  readonly startedTime?: Maybe<ZohoDateTimeString>;
+}

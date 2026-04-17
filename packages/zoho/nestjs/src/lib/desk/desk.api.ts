@@ -1,5 +1,43 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { type ZohoDesk, type ZohoDeskContext, zohoDeskFactory, zohoDeskGetTickets, zohoDeskGetTicketById, zohoDeskSearchTickets, zohoDeskGetTicketsForContact, zohoDeskGetTicketsForProduct, zohoDeskGetTicketMetrics, zohoDeskGetAgentsTicketsCount, zohoDeskGetTicketsPageFactory, zohoDeskSearchTicketsPageFactory, zohoDeskGetDepartments, zohoDeskGetDepartmentById, zohoDeskGetContacts, zohoDeskGetContactById, zohoDeskGetContactsByIds, zohoDeskGetContactsPageFactory } from '@dereekb/zoho';
+import {
+  type ZohoDesk,
+  type ZohoDeskContext,
+  zohoDeskFactory,
+  zohoDeskGetTickets,
+  zohoDeskGetTicketById,
+  zohoDeskSearchTickets,
+  zohoDeskGetTicketsForContact,
+  zohoDeskGetTicketsForProduct,
+  zohoDeskGetTicketMetrics,
+  zohoDeskGetAgentsTicketsCount,
+  zohoDeskGetTicketsPageFactory,
+  zohoDeskSearchTicketsPageFactory,
+  zohoDeskGetDepartments,
+  zohoDeskGetDepartmentById,
+  zohoDeskGetContacts,
+  zohoDeskGetContactById,
+  zohoDeskGetContactsByIds,
+  zohoDeskGetContactsPageFactory,
+  zohoDeskGetTicketTags,
+  zohoDeskAssociateTicketTags,
+  zohoDeskDissociateTicketTag,
+  zohoDeskSearchTags,
+  zohoDeskGetAllTags,
+  zohoDeskGetTicketFollowers,
+  zohoDeskAddTicketFollowers,
+  zohoDeskRemoveTicketFollowers,
+  zohoDeskGetTicketAttachments,
+  zohoDeskDeleteTicketAttachment,
+  zohoDeskGetTicketComments,
+  zohoDeskGetTicketCommentById,
+  zohoDeskCreateTicketComment,
+  zohoDeskDeleteTicketComment,
+  zohoDeskGetTicketTimer,
+  zohoDeskPerformTicketTimerAction,
+  zohoDeskGetTicketTimeEntries,
+  zohoDeskGetTicketTimeEntryById,
+  zohoDeskGetTicketTimeEntrySummation
+} from '@dereekb/zoho';
 import { ZohoDeskServiceConfig } from './desk.config';
 import { ZohoAccountsApi } from '../accounts/accounts.api';
 
@@ -157,5 +195,143 @@ export class ZohoDeskApi {
    */
   get getContactsPageFactory() {
     return zohoDeskGetContactsPageFactory(this.deskContext);
+  }
+
+  // MARK: Tag Accessors
+  /**
+   * Configured pass-through for {@link zohoDeskGetTicketTags}.
+   */
+  get getTicketTags() {
+    return zohoDeskGetTicketTags(this.deskContext);
+  }
+
+  /**
+   * Configured pass-through for {@link zohoDeskAssociateTicketTags}.
+   */
+  get associateTicketTags() {
+    return zohoDeskAssociateTicketTags(this.deskContext);
+  }
+
+  /**
+   * Configured pass-through for {@link zohoDeskDissociateTicketTag}.
+   */
+  get dissociateTicketTag() {
+    return zohoDeskDissociateTicketTag(this.deskContext);
+  }
+
+  /**
+   * Configured pass-through for {@link zohoDeskSearchTags}.
+   */
+  get searchTags() {
+    return zohoDeskSearchTags(this.deskContext);
+  }
+
+  /**
+   * Configured pass-through for {@link zohoDeskGetAllTags}.
+   */
+  get getAllTags() {
+    return zohoDeskGetAllTags(this.deskContext);
+  }
+
+  // MARK: Follower Accessors
+  /**
+   * Configured pass-through for {@link zohoDeskGetTicketFollowers}.
+   */
+  get getTicketFollowers() {
+    return zohoDeskGetTicketFollowers(this.deskContext);
+  }
+
+  /**
+   * Configured pass-through for {@link zohoDeskAddTicketFollowers}.
+   */
+  get addTicketFollowers() {
+    return zohoDeskAddTicketFollowers(this.deskContext);
+  }
+
+  /**
+   * Configured pass-through for {@link zohoDeskRemoveTicketFollowers}.
+   */
+  get removeTicketFollowers() {
+    return zohoDeskRemoveTicketFollowers(this.deskContext);
+  }
+
+  // MARK: Attachment Accessors
+  /**
+   * Configured pass-through for {@link zohoDeskGetTicketAttachments}.
+   */
+  get getTicketAttachments() {
+    return zohoDeskGetTicketAttachments(this.deskContext);
+  }
+
+  /**
+   * Configured pass-through for {@link zohoDeskDeleteTicketAttachment}.
+   */
+  get deleteTicketAttachment() {
+    return zohoDeskDeleteTicketAttachment(this.deskContext);
+  }
+
+  // MARK: Comment Accessors
+  /**
+   * Configured pass-through for {@link zohoDeskGetTicketComments}.
+   */
+  get getTicketComments() {
+    return zohoDeskGetTicketComments(this.deskContext);
+  }
+
+  /**
+   * Configured pass-through for {@link zohoDeskGetTicketCommentById}.
+   */
+  get getTicketCommentById() {
+    return zohoDeskGetTicketCommentById(this.deskContext);
+  }
+
+  /**
+   * Configured pass-through for {@link zohoDeskCreateTicketComment}.
+   */
+  get createTicketComment() {
+    return zohoDeskCreateTicketComment(this.deskContext);
+  }
+
+  /**
+   * Configured pass-through for {@link zohoDeskDeleteTicketComment}.
+   */
+  get deleteTicketComment() {
+    return zohoDeskDeleteTicketComment(this.deskContext);
+  }
+
+  // MARK: Time Tracking Accessors
+  /**
+   * Configured pass-through for {@link zohoDeskGetTicketTimer}.
+   */
+  get getTicketTimer() {
+    return zohoDeskGetTicketTimer(this.deskContext);
+  }
+
+  /**
+   * Configured pass-through for {@link zohoDeskPerformTicketTimerAction}.
+   */
+  get performTicketTimerAction() {
+    return zohoDeskPerformTicketTimerAction(this.deskContext);
+  }
+
+  /**
+   * Configured pass-through for {@link zohoDeskGetTicketTimeEntries}.
+   */
+  get getTicketTimeEntries() {
+    return zohoDeskGetTicketTimeEntries(this.deskContext);
+  }
+
+  /**
+   * Configured pass-through for {@link zohoDeskGetTicketTimeEntryById}.
+   */
+  get getTicketTimeEntryById() {
+    return zohoDeskGetTicketTimeEntryById(this.deskContext);
+  }
+
+  /**
+   * Configured pass-through for {@link zohoDeskGetTicketTimeEntrySummation}.
+   */
+  get getTicketTimeEntrySummation() {
+    return zohoDeskGetTicketTimeEntrySummation(this.deskContext);
   }
 }

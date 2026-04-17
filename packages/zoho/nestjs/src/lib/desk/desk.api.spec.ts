@@ -299,5 +299,155 @@ describe('desk.api', () => {
         });
       });
     });
+
+    // MARK: Tags
+    describe('tags', () => {
+      describe('getAllTags()', () => {
+        it('should return a list of tags', async () => {
+          const result = await api.getAllTags({});
+
+          expect(result).toBeDefined();
+          expect(result.data).toBeDefined();
+          expect(Array.isArray(result.data)).toBe(true);
+        });
+      });
+
+      describe('searchTags()', () => {
+        it('should search for tags by string', async () => {
+          const result = await api.searchTags({ searchStr: 'test' });
+
+          expect(result).toBeDefined();
+          expect(result.data).toBeDefined();
+        });
+      });
+
+      describe('getTicketTags()', () => {
+        it('should return tags for a ticket', async () => {
+          const tickets = await api.getTickets({ limit: 1 });
+          const ticketId = tickets.data[0]?.id;
+
+          if (ticketId) {
+            const result = await api.getTicketTags({ ticketId });
+
+            expect(result).toBeDefined();
+            expect(Array.isArray(result)).toBe(true);
+          }
+        });
+      });
+    });
+
+    // MARK: Followers
+    describe('followers', () => {
+      describe('getTicketFollowers()', () => {
+        it('should return followers for a ticket', async () => {
+          const tickets = await api.getTickets({ limit: 1 });
+          const ticketId = tickets.data[0]?.id;
+
+          if (ticketId) {
+            const result = await api.getTicketFollowers({ ticketId });
+
+            expect(result).toBeDefined();
+            expect(Array.isArray(result)).toBe(true);
+          }
+        });
+      });
+    });
+
+    // MARK: Attachments
+    describe('attachments', () => {
+      describe('getTicketAttachments()', () => {
+        it('should return attachments for a ticket', async () => {
+          const tickets = await api.getTickets({ limit: 1 });
+          const ticketId = tickets.data[0]?.id;
+
+          if (ticketId) {
+            const result = await api.getTicketAttachments({ ticketId });
+
+            expect(result).toBeDefined();
+            expect(result.data).toBeDefined();
+            expect(Array.isArray(result.data)).toBe(true);
+          }
+        });
+      });
+    });
+
+    // MARK: Comments
+    describe('comments', () => {
+      describe('getTicketComments()', () => {
+        it('should return comments for a ticket', async () => {
+          const tickets = await api.getTickets({ limit: 1 });
+          const ticketId = tickets.data[0]?.id;
+
+          if (ticketId) {
+            const result = await api.getTicketComments({ ticketId });
+
+            expect(result).toBeDefined();
+            expect(result.data).toBeDefined();
+            expect(Array.isArray(result.data)).toBe(true);
+          }
+        });
+      });
+
+      describe('getTicketCommentById()', () => {
+        it('should return a single comment', async () => {
+          const tickets = await api.getTickets({ limit: 1 });
+          const ticketId = tickets.data[0]?.id;
+
+          if (ticketId) {
+            const comments = await api.getTicketComments({ ticketId, limit: 1 });
+            const commentId = comments.data[0]?.id;
+
+            if (commentId) {
+              const result = await api.getTicketCommentById({ ticketId, commentId });
+
+              expect(result).toBeDefined();
+              expect(result.id).toBe(commentId);
+            }
+          }
+        });
+      });
+    });
+
+    // MARK: Time Tracking
+    describe('time tracking', () => {
+      describe('getTicketTimeEntries()', () => {
+        it('should return time entries for a ticket', async () => {
+          const tickets = await api.getTickets({ limit: 1 });
+          const ticketId = tickets.data[0]?.id;
+
+          if (ticketId) {
+            const result = await api.getTicketTimeEntries({ ticketId });
+
+            expect(result).toBeDefined();
+            expect(result.data).toBeDefined();
+            expect(Array.isArray(result.data)).toBe(true);
+          }
+        });
+      });
+
+      describe('getTicketTimeEntrySummation()', () => {
+        it('should return time entry summation for a ticket', async () => {
+          const tickets = await api.getTickets({ limit: 1 });
+          const ticketId = tickets.data[0]?.id;
+
+          if (ticketId) {
+            const result = await api.getTicketTimeEntrySummation({ ticketId });
+            expect(result).toBeDefined();
+          }
+        });
+      });
+
+      describe('getTicketTimer()', () => {
+        it('should return the timer state for a ticket', async () => {
+          const tickets = await api.getTickets({ limit: 1 });
+          const ticketId = tickets.data[0]?.id;
+
+          if (ticketId) {
+            const result = await api.getTicketTimer({ ticketId });
+            expect(result).toBeDefined();
+          }
+        });
+      });
+    });
   });
 });
