@@ -4,6 +4,8 @@ import { forgeTextField, type DbxForgeTextFieldConfig } from './text.field';
 import { forgeCityField, type DbxForgeCityFieldConfig, forgeCountryField, type DbxForgeCountryFieldConfig, forgeStateField, type DbxForgeStateFieldConfig, forgeZipCodeField, type DbxForgeZipCodeFieldConfig } from './text.additional.field';
 import { forgeGroup, forgeRow } from '../../wrapper/wrapper';
 import { dbxForgeArrayField } from '../array/array.field';
+import { MatInputField } from '@ng-forge/dynamic-forms-material';
+import { DbxForgeField } from '../../../form/forge.form';
 
 // MARK: Address Config
 /**
@@ -86,7 +88,7 @@ export function forgeAddressLineField(config: DbxForgeAddressLineFieldConfig = {
  * const fields = forgeAddressFields({ required: true, includeCountry: false });
  * ```
  */
-export function forgeAddressFields(config: DbxForgeAddressFieldsConfig = {}): FieldDef<unknown>[] {
+export function forgeAddressFields(config: DbxForgeAddressFieldsConfig = {}) {
   const { required = true, includeLine2 = true, includeCountry = true } = config;
 
   // City and country are full-width on their own rows since names can be long
@@ -100,7 +102,7 @@ export function forgeAddressFields(config: DbxForgeAddressFieldsConfig = {}): Fi
     ]
   });
 
-  let lines: FieldDef<unknown>[];
+  let lines: DbxForgeField<MatInputField>[];
 
   if (includeLine2) {
     lines = [forgeAddressLineField({ required, ...config.line1Field, line: 1 }), forgeAddressLineField({ ...config.line2Field, line: 2 })];
@@ -108,7 +110,7 @@ export function forgeAddressFields(config: DbxForgeAddressFieldsConfig = {}): Fi
     lines = [forgeAddressLineField({ required, ...config.line1Field, line: 0 })];
   }
 
-  const fields: FieldDef<unknown>[] = [...lines, cityField, stateZipRow];
+  const fields = [...lines, cityField, stateZipRow];
 
   if (includeCountry) {
     fields.push(forgeCountryField({ required, ...config.countryField }));

@@ -56,6 +56,16 @@ $dbx-forge-form-field-slider-thumb-margin: 22px;
   .dbx-forge-working-bar {
     margin-top: 4px;
   }
+
+  // Flex layout wrapper: ng-forge's GroupFieldComponent applies `display: grid`
+  // and `gap: var(--df-grid-row-gap)` via :host styling (scoped attribute selector).
+  // Override both when our `dbx-flex-group` class is present so the flex sizing
+  // classes work. The dbx-flex-N children use padding for spacing instead of gap.
+  .df-group.dbx-flex-group {
+    display: flex !important;
+    flex-wrap: wrap;
+    gap: 0 !important;
+  }
 }
 
 @mixin theme($theme-config) {

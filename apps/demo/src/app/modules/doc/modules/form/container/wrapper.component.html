@@ -57,24 +57,25 @@
         <doc-form-example-form formly [dbxFormlyFields]="formFieldWrapperFields" [disabled]="formTabs.disabled()"></doc-form-example-form>
         <doc-forge-example-form forge [config]="forgeFormFieldWrapperSliderConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
-      <h4>Wrapping Other Fields</h4>
-      <doc-forge-example-form [config]="forgeFormFieldWrapperTextConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
     </doc-feature-example>
 
     <doc-feature-example header="flexLayoutWrapper()" hint="Wraps one or more fields to be displayed with flex layout. The flex layout can be configured per item. A screen width breakpoints can also be set to control if/when to collapse each item to full width.">
-      <doc-feature-form-tabs formlyFn="formlyFlexLayoutWrapper()" forgeFn="forgeRow()">
+      <doc-feature-form-tabs formlyFn="formlyFlexLayoutWrapper()" forgeFn="forgeFlexLayout()">
         <doc-form-example-form formly [dbxFormlyFields]="flexField" [disabled]="formTabs.disabled()"></doc-form-example-form>
         <doc-forge-example-form forge [config]="forgeFlexFieldConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
       <h4>3 Per Row - Retain size down to small width</h4>
-      <doc-feature-form-tabs formlyFn="formlyFlexLayoutWrapper()" forgeFn="forgeRow()">
+      <doc-feature-form-tabs formlyFn="formlyFlexLayoutWrapper()" forgeFn="forgeFlexLayout()">
         <doc-form-example-form formly [dbxFormlyFields]="flexThreeField" [disabled]="formTabs.disabled()"></doc-form-example-form>
         <doc-forge-example-form forge [config]="forgeFlexThreeFieldConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
       <h4>3 Per Row and Break To Column - At small width the break will change the flex to a column</h4>
-      <doc-form-example-form [dbxFormlyFields]="flexThreeFieldBreakToColumn" [disabled]="formTabs.disabled()"></doc-form-example-form>
+      <doc-feature-form-tabs formlyFn="formlyFlexLayoutWrapper()" forgeFn="forgeFlexLayout()">
+        <doc-form-example-form formly [dbxFormlyFields]="flexThreeFieldBreakToColumn" [disabled]="formTabs.disabled()"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeFlexThreeFieldBreakToColumnConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
+      </doc-feature-form-tabs>
       <h4>5 Per Row - Retain size down to large width - with relative enabled to expand content</h4>
-      <doc-feature-form-tabs formlyFn="formlyFlexLayoutWrapper()" forgeFn="forgeRow()">
+      <doc-feature-form-tabs formlyFn="formlyFlexLayoutWrapper()" forgeFn="forgeFlexLayout()">
         <doc-form-example-form formly [dbxFormlyFields]="flexFiveField" [disabled]="formTabs.disabled()"></doc-form-example-form>
         <doc-forge-example-form forge [config]="forgeFlexFiveFieldConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>

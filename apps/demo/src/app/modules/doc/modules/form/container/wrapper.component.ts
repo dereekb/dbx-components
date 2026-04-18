@@ -15,7 +15,7 @@ import {
   formlyStyleWrapper,
   formlyToggleField,
   formlyTextIsAvailableField,
-  forgeRow,
+  forgeFlexLayout,
   forgeExpandWrapper,
   forgeToggleWrapper,
   forgeNameField,
@@ -112,6 +112,10 @@ export class DocFormWrapperComponent {
     ])
   ];
 
+  readonly forgeFlexFieldConfig: FormConfig = {
+    fields: [forgeFlexLayout([forgeCityField({}), forgeStateField({ hint: 'State Description' }), forgeToggleField({ key: 'toggle', label: 'Toggle', description: 'Toggle Description' })])]
+  };
+
   readonly flexThreeField: FormlyFieldConfig[] = [
     formlyFlexLayoutWrapper(
       [
@@ -122,9 +126,13 @@ export class DocFormWrapperComponent {
         formlyStateField(),
         formlyZipCodeField()
       ],
-      { breakpoint: 'small', size: 1 }
+      { breakpoint: 'large', size: 1 }
     )
   ];
+
+  readonly forgeFlexThreeFieldConfig: FormConfig = {
+    fields: [forgeFlexLayout([{ field: forgeCityField({}), size: 4 }, forgeStateField({}), forgeZipCodeField({})], { breakpoint: 'large', size: 1 })]
+  };
 
   readonly flexThreeFieldBreakToColumn: FormlyFieldConfig[] = [
     formlyFlexLayoutWrapper(
@@ -140,7 +148,15 @@ export class DocFormWrapperComponent {
     )
   ];
 
+  readonly forgeFlexThreeFieldBreakToColumnConfig: FormConfig = {
+    fields: [forgeFlexLayout([{ field: forgeCityField({}), size: 4 }, forgeStateField({}), forgeZipCodeField({})], { breakpoint: 'large', breakToColumn: true, size: 1 })]
+  };
+
   readonly flexFiveField: FormlyFieldConfig[] = [formlyFlexLayoutWrapper([formlyNameField(), formlyCityField(), formlyStateField(), formlyZipCodeField(), formlyCountryField()], { breakpoint: 'large', size: 1, relative: true })];
+
+  readonly forgeFlexFiveFieldConfig: FormConfig = {
+    fields: [forgeFlexLayout([forgeNameField({}), forgeCityField({}), forgeStateField({}), forgeZipCodeField({}), forgeCountryField({})], { breakpoint: 'large', size: 1, relative: true })]
+  };
 
   // Forge wrapper equivalents
   readonly forgeExpandFieldConfig: FormConfig = {
@@ -235,44 +251,6 @@ export class DocFormWrapperComponent {
     ]
   };
 
-  readonly forgeFlexFieldConfig: FormConfig = {
-    fields: [
-      forgeRow({
-        fields: [
-          { ...forgeCityField({}), col: 4 },
-          { ...forgeStateField({ hint: 'State Description' }), col: 4 },
-          { ...forgeToggleField({ key: 'toggle', label: 'Toggle', description: 'Toggle Description' }), col: 4 }
-        ]
-      })
-    ]
-  };
-
-  readonly forgeFlexThreeFieldConfig: FormConfig = {
-    fields: [
-      forgeRow({
-        fields: [
-          { ...forgeCityField({}), col: 8 },
-          { ...forgeStateField({}), col: 2 },
-          { ...forgeZipCodeField({}), col: 2 }
-        ]
-      })
-    ]
-  };
-
-  readonly forgeFlexFiveFieldConfig: FormConfig = {
-    fields: [
-      forgeRow({
-        fields: [
-          { ...forgeNameField({}), col: 2 },
-          { ...forgeCityField({}), col: 3 },
-          { ...forgeStateField({}), col: 3 },
-          { ...forgeZipCodeField({}), col: 2 },
-          { ...forgeCountryField({}), col: 2 }
-        ]
-      })
-    ]
-  };
-
   readonly workingField: FormlyFieldConfig[] = [
     formlyTextIsAvailableField({
       key: 'username',
@@ -315,7 +293,6 @@ export class DocFormWrapperComponent {
 
   // Form-field wrapper demos
   readonly formFieldWrapperFields: FormlyFieldConfig[] = [
-    formlyNameField({ required: true }),
     {
       ...formlyNumberSliderField({ key: 'rating', label: 'Rating', description: 'Must be above 50.', min: 0, max: 100 }),
       validators: { validation: [Validators.min(51)] },
@@ -337,12 +314,6 @@ export class DocFormWrapperComponent {
         props: { thumbLabel: true }
       }),
       forgeNumberSliderField({ key: 'volume', label: 'Volume', description: 'Pick a volume.', min: 0, max: 100, step: 5 })
-    ]
-  };
-
-  readonly forgeFormFieldWrapperTextConfig: FormConfig = {
-    fields: [
-      // TODO: Add the
     ]
   };
 }

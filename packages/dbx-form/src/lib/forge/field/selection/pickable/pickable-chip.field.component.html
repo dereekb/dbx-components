@@ -1,7 +1,4 @@
 <div class="dbx-pickable-item-field">
-  @if (labelSignal()) {
-    <span class="dbx-label">{{ labelSignal() }}</span>
-  }
   @if (showTextFilterSignal()) {
     <div class="dbx-pickable-item-field-filter">
       @if (filterLabelSignal()) {
@@ -34,10 +31,5 @@
   </div>
   @if (noItemsAvailableSignal()) {
     <p class="dbx-label" role="status">No items match this filter.</p>
-  }
-  @if (errorsToDisplay()[0]; as error) {
-    <div class="dbx-form-description dbx-form-error" [id]="errorId()">{{ error.message }}</div>
-  } @else if (hintSignal()) {
-    <div class="dbx-form-description" [id]="hintId()">{{ hintSignal() }}</div>
   }
 </div>

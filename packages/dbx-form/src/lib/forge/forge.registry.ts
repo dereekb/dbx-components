@@ -30,6 +30,7 @@ import type { DBX_FORGE_SECTION_WRAPPER_TYPE_NAME, DbxForgeSectionWrapper } from
 import type { DBX_FORGE_INFO_WRAPPER_TYPE_NAME, DbxForgeInfoWrapper } from './field/wrapper/info/info.wrapper';
 import type { DBX_FORGE_STYLE_WRAPPER_TYPE_NAME, DbxForgeStyleWrapper } from './field/wrapper/style/style.wrapper';
 import type { DBX_FORGE_WORKING_WRAPPER_TYPE_NAME, DbxForgeWorkingWrapper } from './field/wrapper/working/working.wrapper';
+import type { DBX_FORGE_FLEX_WRAPPER_TYPE_NAME, DbxForgeFlexWrapper } from './field/wrapper/flex/flex.wrapper';
 import { DBX_FORGE_ARRAY_FIELD_ELEMENT_WRAPPER_NAME, DbxForgeArrayFieldElementWrapperDef } from './field/wrapper/array-field/array-field.element.wrapper';
 import { DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME, DbxForgeArrayFieldWrapperDef } from './field/wrapper/array-field/array-field.wrapper';
 
@@ -58,5 +59,6 @@ declare module '@ng-forge/dynamic-forms' {
     [DBX_FORGE_STYLE_WRAPPER_TYPE_NAME]: DbxForgeStyleWrapper;
     [DBX_FORGE_INFO_WRAPPER_TYPE_NAME]: DbxForgeInfoWrapper;
     [DBX_FORGE_WORKING_WRAPPER_TYPE_NAME]: DbxForgeWorkingWrapper;
+    [DBX_FORGE_FLEX_WRAPPER_TYPE_NAME]: DbxForgeFlexWrapper;
   }
 }

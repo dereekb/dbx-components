@@ -333,8 +333,8 @@ export function forgeDateRangeField(config: DbxForgeDateRangeFieldConfig = {}): 
 
   return forgeRow({
     fields: [
-      { ...(startField as unknown as FieldDef<unknown>), col: 6 },
-      { ...(endField as unknown as FieldDef<unknown>), col: 6 }
+      { ...startField, col: 6 },
+      { ...endField, col: 6 }
     ]
   });
 }

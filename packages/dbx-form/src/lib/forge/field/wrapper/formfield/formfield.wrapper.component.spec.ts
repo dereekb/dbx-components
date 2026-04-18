@@ -248,16 +248,15 @@ describe('DbxForgeFormFieldWrapperComponent', () => {
 
       await settle(fixture);
 
-      // Set a value below 50 and trigger touch
+      // Set a value below 50 (fails the expression validator)
       context.setValue({ rating: 25 } as any);
       await settle(fixture);
 
       const host = fixture.nativeElement as HTMLElement;
       const errorEl = host.querySelector('.mat-mdc-form-field-error');
 
-      if (errorEl) {
-        expect(errorEl.textContent?.trim()).toBe('Rating must be above 50.');
-      }
+      expect(errorEl).toBeTruthy();
+      expect(errorEl?.textContent?.trim()).toBe('Rating must be above 50.');
 
       fixture.destroy();
     });

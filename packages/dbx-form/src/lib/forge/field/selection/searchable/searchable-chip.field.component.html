@@ -1,7 +1,4 @@
 <div class="dbx-searchable-field dbx-searchable-chip-field">
-  @if (labelSignal()) {
-    <span class="dbx-label">{{ labelSignal() }}</span>
-  }
   <mat-chip-grid #chipGrid>
     @for (dv of displayValuesSignal(); track $index) {
       <mat-chip-row (removed)="removeWithDisplayValue(dv)">
@@ -15,11 +12,6 @@
   </mat-chip-grid>
   @if (inputCtrl.touched && inputErrorMessage) {
     <span class="dbx-chip-input-error">{{ inputErrorMessage }}</span>
-  }
-  @if (errorsToDisplay()[0]; as error) {
-    <div class="dbx-form-description dbx-form-error" [id]="errorId()">{{ error.message }}</div>
-  } @else if (hintSignal()) {
-    <div class="dbx-form-description" [id]="hintId()">{{ hintSignal() }}</div>
   }
 </div>
 <mat-autocomplete class="dbx-searchable-text-field-autocomplete" #auto="matAutocomplete" (optionSelected)="selectedChip($event)">

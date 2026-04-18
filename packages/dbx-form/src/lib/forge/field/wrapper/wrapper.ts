@@ -19,22 +19,17 @@ let _forgeExpandCounter = 0;
 // MARK: Row
 /**
  * Configuration for a forge row layout that arranges fields horizontally.
+ *
+ * Extends {@link RowField} with `key` made optional (auto-generated if omitted)
+ * and `type` omitted (always `'row'`).
  */
-export interface DbxForgeRowConfig {
+export interface DbxForgeRowConfig extends Omit<RowField, 'type' | 'key'> {
   /**
    * Optional key for the row. Defaults to a unique auto-generated key.
    *
    * Must be unique within the form config to avoid ng-forge duplicate key errors.
    */
   readonly key?: string;
-  /**
-   * Fields to render inside this row. Each field may specify a `col` for grid sizing.
-   */
-  readonly fields: (FieldDef<unknown> & { col?: number })[];
-  /**
-   * Optional CSS class name applied to the row container.
-   */
-  readonly className?: string;
 }
 
 /**
@@ -57,35 +52,29 @@ export interface DbxForgeRowConfig {
  * ```
  */
 export function forgeRow(config: DbxForgeRowConfig): RowField {
+  const { key: inputKey, ...rest } = config;
+
   return {
+    ...rest,
     type: 'row',
-    key: config.key ?? `_row_${_forgeRowCounter++}`,
-    fields: config.fields as unknown as RowAllowedChildren[],
-    ...(config.className != null && { className: config.className })
+    key: inputKey ?? `_row_${_forgeRowCounter++}`
   } as RowField;
 }
 
 // MARK: Group
 /**
  * Configuration for a forge group layout.
+ *
+ * Extends {@link GroupField} with `key` made optional (auto-generated if omitted)
+ * and `type` omitted (always `'group'`).
  */
-export interface DbxForgeGroupConfig {
+export interface DbxForgeGroupConfig extends Omit<GroupField, 'type' | 'key'> {
   /**
-   * Optional key for the group.
+   * Optional key for the group. Defaults to a unique auto-generated key.
+   *
+   * Must be unique within the form config to avoid ng-forge duplicate key errors.
    */
   readonly key?: string;
-  /**
-   * Fields contained in this group.
-   */
-  readonly fields: FieldDef<unknown>[];
-  /**
-   * Optional CSS class name applied to the group container.
-   */
-  readonly className?: string;
-  /**
-   * Optional conditional visibility logic for this group.
-   */
-  readonly logic?: DbxForgeContainerLogicConfig[];
 }
 
 /**
@@ -100,34 +89,13 @@ export interface DbxForgeGroupConfig {
  * @returns A {@link GroupField} with type `'group'`
  */
 export function forgeGroup(config: DbxForgeGroupConfig): GroupField {
-  return {
-    type: 'group',
-    key: config.key ?? `_group_${_forgeGroupCounter++}`,
-    fields: config.fields as unknown as GroupAllowedChildren[],
-    ...(config.className != null && { className: config.className }),
-    ...(config.logic != null && { logic: config.logic })
-  } as GroupField;
-}
+  const { key: inputKey, ...rest } = config;
 
-// MARK: Style Utilities
-/**
- * Applies a CSS class name to a field definition.
- *
- * Returns a shallow copy of the field with the `className` property set.
- * This is the forge equivalent of applying the formly `formlyStyleWrapper`
- * for static class names.
- *
- * @param field - The field definition to style
- * @param className - CSS class name(s) to apply
- * @returns A copy of the field with `className` set
- *
- * @example
- * ```typescript
- * const styled = forgeWithClassName(forgeTextField({ key: 'name', label: 'Name' }), 'my-custom-class');
- * ```
- */
-export function forgeWithClassName<T extends FieldDef<unknown>>(field: T, className: string): T {
-  return { ...field, className };
+  return {
+    ...rest,
+    type: 'group',
+    key: inputKey ?? `_group_${_forgeGroupCounter++}`
+  } as GroupField;
 }
 
 // MARK: Toggle Wrapper
@@ -215,12 +183,12 @@ export function forgeToggleWrapper(config: DbxForgeToggleWrapperConfig): RowFiel
 
   const contentGroup = forgeGroup({
     key: config.contentKey,
-    fields: config.fields,
+    fields: config.fields as unknown as GroupAllowedChildren[],
     logic: [hiddenCondition]
   });
 
   return forgeRow({
-    fields: [toggleField as FieldDef<unknown> & { col?: number }, contentGroup as unknown as FieldDef<unknown> & { col?: number }],
+    fields: [toggleField as unknown as RowAllowedChildren, contentGroup as unknown as RowAllowedChildren],
     className: config.className ?? 'dbx-forge-toggle-wrapper'
   });
 }
@@ -317,12 +285,12 @@ export function forgeExpandWrapper(config: DbxForgeExpandWrapperConfig): RowFiel
 
   const contentGroup = forgeGroup({
     key: config.contentKey,
-    fields: config.fields,
+    fields: config.fields as unknown as GroupAllowedChildren[],
     logic: [hiddenCondition]
   });
 
   return forgeRow({
-    fields: [expandField as unknown as FieldDef<unknown> & { col?: number }, contentGroup as unknown as FieldDef<unknown> & { col?: number }],
+    fields: [expandField as unknown as RowAllowedChildren, contentGroup as unknown as RowAllowedChildren],
     className: config.className ?? 'dbx-forge-expand-wrapper'
   });
 }

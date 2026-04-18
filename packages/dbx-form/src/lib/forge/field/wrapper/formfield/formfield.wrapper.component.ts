@@ -1,6 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, viewChild, ViewContainerRef } from '@angular/core';
-import { DynamicTextPipe, FIELD_SIGNAL_CONTEXT, FieldSignalContext, FieldWrapperContract, WrapperFieldInputs, type DynamicText, type FieldWithValidation } from '@ng-forge/dynamic-forms';
-import { forgeFieldDisabled } from '../../field.util';
+import { ChangeDetectionStrategy, Component, computed, input, viewChild, ViewContainerRef } from '@angular/core';
+import { DynamicTextPipe, FieldWrapperContract, interpolateParams, type ValidationError, type WrapperFieldInputs } from '@ng-forge/dynamic-forms';
 import { AsyncPipe } from '@angular/common';
 
 /**
@@ -54,6 +53,7 @@ import { AsyncPipe } from '@angular/common';
       .dbx-forge-form-field-outline-label {
         display: inline-block;
         transform: translateY(-50%);
+        pointer-events: auto;
         padding: 0 4px;
         background: var(--mat-sys-surface, white);
         white-space: nowrap;
@@ -94,14 +94,18 @@ import { AsyncPipe } from '@angular/common';
         padding: 0 3px;
       }
 
-      /* --- Error state --- */
+      /* --- Error state (including when focused) --- */
       .dbx-forge-form-field-wrapper-error .dbx-forge-form-field-outline-leading,
       .dbx-forge-form-field-wrapper-error .dbx-forge-form-field-outline-notch,
-      .dbx-forge-form-field-wrapper-error .dbx-forge-form-field-outline-trailing {
+      .dbx-forge-form-field-wrapper-error .dbx-forge-form-field-outline-trailing,
+      .dbx-forge-form-field-wrapper-error:focus-within .dbx-forge-form-field-outline-leading,
+      .dbx-forge-form-field-wrapper-error:focus-within .dbx-forge-form-field-outline-notch,
+      .dbx-forge-form-field-wrapper-error:focus-within .dbx-forge-form-field-outline-trailing {
         border-color: var(--mdc-outlined-text-field-error-outline-color, var(--mat-sys-error, #f44336));
       }
 
-      .dbx-forge-form-field-wrapper-error .dbx-forge-form-field-outline-label {
+      .dbx-forge-form-field-wrapper-error .dbx-forge-form-field-outline-label,
+      .dbx-forge-form-field-wrapper-error:focus-within .dbx-forge-form-field-outline-label {
         color: var(--mdc-outlined-text-field-error-label-text-color, var(--mat-sys-error, #f44336));
       }
 
@@ -150,7 +154,7 @@ export class DbxForgeFormFieldWrapperComponent implements FieldWrapperContract {
   // Props from wrapper config
   readonly fieldInputs = input<WrapperFieldInputs>();
 
-  // Root form state from the flattened field signal context
+  // Read-only field tree from the wrapped field
   private readonly formState = computed(() => this.fieldInputs()?.field);
 
   // Disabled state
@@ -164,23 +168,41 @@ export class DbxForgeFormFieldWrapperComponent implements FieldWrapperContract {
   private readonly keySignal = computed(() => this.fieldInputs()?.key ?? '');
 
   // Validation state from form tree
-  readonly childErrors = computed(() => this.formState()?.errors());
-  readonly childTouched = computed(() => this.formState()?.touched());
-  readonly childDirty = computed(() => this.formState()?.dirty());
+  private readonly childErrors = computed(() => this.formState()?.errors() as readonly ValidationError[] | undefined);
 
+  /**
+   * Whether errors should be displayed.
+   *
+   * Shows when the field is invalid and has errors. Does not gate on touched/dirty
+   * because this wrapper targets non-standard fields (sliders, custom components)
+   * where standard blur-based touch behavior may not apply.
+   */
   readonly showErrors = computed(() => {
-    const errors = this.childErrors();
-    const touched = this.childTouched();
-    const dirty = this.childDirty();
-    return (touched || dirty) && (errors?.length ?? 0) > 0;
+    return (this.formState()?.invalid() ?? false) && (this.childErrors()?.length ?? 0) > 0;
   });
 
-  readonly hasError = computed(() => this.showErrors());
+  readonly hasError = this.showErrors;
 
+  /**
+   * Resolves the first error message using the same priority as ng-forge's
+   * `resolveErrorMessage`: field-level `validationMessages` -> form-level
+   * `defaultValidationMessages` -> `error.message` -> error kind.
+   *
+   * Uses `interpolateParams` for `{{param}}` placeholder substitution.
+   */
   readonly firstErrorMessage = computed(() => {
     const errors = this.childErrors();
     const error = errors?.[0];
-    return 'ERROR'; // TODO?
+
+    if (!error) {
+      return '';
+    }
+
+    const inputs = this.fieldInputs();
+    const fieldMessages = (inputs?.validationMessages ?? {}) as Record<string, string>;
+    const defaultMessages = (inputs?.defaultValidationMessages ?? {}) as Record<string, string>;
+    const message = fieldMessages[error.kind] ?? defaultMessages[error.kind] ?? error.message ?? error.kind;
+    return interpolateParams(message, error);
   });
 
   /**
