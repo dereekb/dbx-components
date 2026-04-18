@@ -32,8 +32,4 @@ export class DbxForgeSectionWrapperComponent implements FieldWrapperContract {
   readonly headerConfig = input<DbxSectionHeaderConfig>();
   readonly elevate = input<boolean>();
   readonly subsection = input<boolean>();
-
-  constructor() {
-    console.log('DbxForgeSectionWrapperComponent constructor');
-  }
 }

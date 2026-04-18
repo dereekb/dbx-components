@@ -26,8 +26,8 @@ export class DbxForgeStyleWrapperComponent implements FieldWrapperContract {
   readonly classGetter = input<MaybeObservableOrValue<string>>();
   readonly styleGetter = input<MaybeObservableOrValue<DbxForgeStyleObject>>();
 
-  readonly classValue$ = toObservable(this.classGetter).pipe(valueFromObservableOrValue(), tapLog('classValue'));
-  readonly styleValue$ = toObservable(this.styleGetter).pipe(valueFromObservableOrValue(), tapLog('styleValue'));
+  readonly classValue$ = toObservable(this.classGetter).pipe(valueFromObservableOrValue());
+  readonly styleValue$ = toObservable(this.styleGetter).pipe(valueFromObservableOrValue());
 
   readonly classValueSignal = toSignal(this.classValue$);
   readonly styleValueSignal = toSignal(this.styleValue$);

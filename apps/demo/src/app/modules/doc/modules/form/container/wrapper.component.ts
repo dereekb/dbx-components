@@ -297,7 +297,7 @@ export class DocFormWrapperComponent {
       forgeTextIsAvailableField({
         key: 'username',
         label: 'Username',
-        // description: 'Type a value and wait — shows loading bar during async check. Type "taken" to see a validation error.',
+        description: 'Type a value and wait — shows loading bar during async check. Type "taken" to see a validation error.',
         checkValueIsAvailable: (value: string) => {
           return new Observable<boolean>((subscriber) => {
             const timer = setTimeout(() => {
@@ -326,23 +326,16 @@ export class DocFormWrapperComponent {
 
   readonly forgeFormFieldWrapperSliderConfig: FormConfig = {
     fields: [
-      /*
-      forgeFormFieldWrapper({
+      forgeNumberSliderField({
+        key: 'rating',
         label: 'Rating',
-        hint: 'Must be above 50.',
-        fields: [
-          {
-            key: 'rating',
-            type: 'slider',
-            label: '',
-            max: 100,
-            validators: [{ type: 'custom', expression: 'fieldValue > 50', kind: 'minRating' }],
-            validationMessages: { minRating: 'Rating must be above 50.' },
-            props: { min: 0, max: 100, thumbLabel: true }
-          } as any
-        ]
+        description: 'Must be above 50.',
+        min: 0,
+        max: 100,
+        validators: [{ type: 'custom', expression: 'fieldValue > 50', kind: 'minRating' }],
+        validationMessages: { minRating: 'Rating must be above 50.' },
+        props: { thumbLabel: true }
       }),
-      */
       forgeNumberSliderField({ key: 'volume', label: 'Volume', description: 'Pick a volume.', min: 0, max: 100, step: 5 })
     ]
   };

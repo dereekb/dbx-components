@@ -4,6 +4,7 @@ import { type Observable, of } from 'rxjs';
 import { forgeTextField, type DbxForgeTextFieldConfig } from '../field/value/text/text.field';
 import type { DbxForgeField } from '../form/forge.form';
 import type { MatInputField } from '@ng-forge/dynamic-forms-material';
+import { DBX_FORGE_WORKING_WRAPPER_TYPE_NAME } from '../field';
 
 // MARK: Validator
 /**
@@ -136,8 +137,12 @@ export interface DbxForgeTextAvailableFieldConfig extends DbxForgeTextFieldConfi
 export function forgeTextIsAvailableField(config: DbxForgeTextAvailableFieldConfig): DbxForgeField<MatInputField> {
   const { checkValueIsAvailable, isNotAvailableErrorMessage = 'This value is not available.', validatorName = FORGE_FIELD_VALUE_IS_AVAILABLE_VALIDATOR_NAME, throttle: _throttle, ...textConfig } = config;
 
-  return forgeTextField(textConfig, (instance) => {
-    instance.addValidation({
+  return forgeTextField(textConfig, (x) => {
+    x.addWrappers({
+      type: DBX_FORGE_WORKING_WRAPPER_TYPE_NAME
+    });
+
+    x.addValidation({
       validators: [
         {
           type: 'async' as const,
