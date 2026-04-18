@@ -16,21 +16,21 @@
     </doc-feature-example>
 
     <doc-feature-example header="sectionWrapper()" hint="Wraps a field with a dbx-section.">
-      <doc-feature-form-tabs formlyFn="formlySectionWrapper()" forgeFn="forgeDbxSectionFieldWrapper()">
+      <doc-feature-form-tabs formlyFn="formlySectionWrapper()" forgeFn="dbxForgeSectionWrapper()">
         <doc-form-example-form formly [dbxFormlyFields]="sectionField" [disabled]="formTabs.disabled()"></doc-form-example-form>
         <doc-forge-example-form forge [config]="forgeSectionFieldConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
     </doc-feature-example>
 
     <doc-feature-example header="subsectionWrapper()" hint="Wraps a field with a dbx-subsection.">
-      <doc-feature-form-tabs formlyFn="formlySubsectionWrapper()" forgeFn="forgeDbxSubsectionFieldWrapper()">
+      <doc-feature-form-tabs formlyFn="formlySubsectionWrapper()" forgeFn="dbxForgeSubsectionWrapper()">
         <doc-form-example-form formly [dbxFormlyFields]="subsectionField" [disabled]="formTabs.disabled()"></doc-form-example-form>
         <doc-forge-example-form forge [config]="forgeSubsectionFieldConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
     </doc-feature-example>
 
     <doc-feature-example header="infoWrapper()" hint="Wraps a field with content that attaches an info button.">
-      <doc-feature-form-tabs formlyFn="formlyInfoWrapper()" forgeFn="forgeInfoFieldWrapper()">
+      <doc-feature-form-tabs formlyFn="formlyInfoWrapper()" forgeFn="dbxForgeInfoWrapper()">
         <doc-form-example-form formly [dbxFormlyFields]="infoField" [disabled]="formTabs.disabled()"></doc-form-example-form>
         <doc-forge-example-form forge [config]="forgeInfoFieldConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
@@ -46,7 +46,7 @@
     </doc-feature-example>
 
     <doc-feature-example header="workingWrapper()" hint="Wraps fields with a loading indicator that appears during async validation. Type a value and wait to see the loading bar. Type 'taken' to trigger a validation error.">
-      <doc-feature-form-tabs formlyFn="formlyWorkingWrapper()" forgeFn="forgeWorkingFieldWrapper()">
+      <doc-feature-form-tabs formlyFn="formlyWorkingWrapper()" forgeFn="forgeTextIsAvailableField()">
         <doc-form-example-form formly [dbxFormlyFields]="workingField" [disabled]="formTabs.disabled()"></doc-form-example-form>
         <doc-forge-example-form forge [config]="forgeWorkingFieldConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>

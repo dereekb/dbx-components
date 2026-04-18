@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import type { BaseValueField, LogicConfig, ValidatorConfig, ValidationMessages, FieldMeta } from '@ng-forge/dynamic-forms';
+import type { AsyncCustomValidator, BaseValueField, CustomValidator, FieldMeta, LogicConfig, ValidatorConfig, ValidationMessages } from '@ng-forge/dynamic-forms';
 import { dbxForgeFieldFunction, dbxForgeBuildFieldDef, type DbxForgeFieldFunctionDef, type DbxForgeFieldFunction, type DbxForgeBuildFieldDefFunction } from './field';
+import type { DbxForgeField } from '../form/forge.form';
 
 // MARK: Test Types
 interface TestFieldProps {
@@ -169,6 +170,164 @@ describe('configure parameter', () => {
           x.injectDefaultValidation();
         });
       }).not.toThrow();
+    });
+
+    it('should not deduplicate custom validators with different functionNames', () => {
+      const field = forgeTestField({ key: 'x' }, (x) => {
+        x.addValidation({ validators: { type: 'custom', functionName: 'validatorA' } });
+        x.addValidation({ validators: { type: 'custom', functionName: 'validatorB' } });
+      });
+
+      expect(field.validators).toHaveLength(2);
+    });
+
+    it('should not deduplicate async validators with different functionNames', () => {
+      const field = forgeTestField({ key: 'x' }, (x) => {
+        x.addValidation({ validators: { type: 'async', functionName: 'asyncA' } });
+        x.addValidation({ validators: { type: 'async', functionName: 'asyncB' } });
+      });
+
+      expect(field.validators).toHaveLength(2);
+    });
+
+    describe('inline fn validators', () => {
+      it('should register a custom validator fn and replace with auto-generated functionName', () => {
+        const myValidator: CustomValidator = () => null;
+
+        const field = forgeTestField({ key: 'x' }, (x) => {
+          x.addValidation({
+            validators: [{ type: 'custom', fn: myValidator }]
+          });
+        });
+
+        const validators = field.validators!;
+        expect(validators).toHaveLength(1);
+        expect(validators[0].type).toBe('custom');
+        expect((validators[0] as any).fn).toBeUndefined();
+        expect((validators[0] as any).functionName).toBeDefined();
+        expect((validators[0] as any).functionName).toContain('__vfn__x_');
+
+        const formConfig = (field as DbxForgeField<any>)._formConfig;
+        expect(formConfig?.customFnConfig?.validators).toBeDefined();
+        expect(Object.values(formConfig!.customFnConfig!.validators!)).toContain(myValidator);
+      });
+
+      it('should register an async validator fn and replace with auto-generated functionName', () => {
+        const myAsyncValidator: AsyncCustomValidator = {
+          params: () => ({}),
+          factory: () => ({}) as any,
+          onSuccess: () => null
+        };
+
+        const field = forgeTestField({ key: 'x' }, (x) => {
+          x.addValidation({
+            validators: [{ type: 'async', fn: myAsyncValidator }]
+          });
+        });
+
+        const validators = field.validators!;
+        expect(validators).toHaveLength(1);
+        expect(validators[0].type).toBe('async');
+        expect((validators[0] as any).fn).toBeUndefined();
+        expect((validators[0] as any).functionName).toBeDefined();
+
+        const formConfig = (field as DbxForgeField<any>)._formConfig;
+        expect(formConfig?.customFnConfig?.asyncValidators).toBeDefined();
+        expect(Object.values(formConfig!.customFnConfig!.asyncValidators!)).toContain(myAsyncValidator);
+      });
+
+      it('should preserve explicit functionName when provided alongside fn', () => {
+        const myValidator: CustomValidator = () => null;
+
+        const field = forgeTestField({ key: 'x' }, (x) => {
+          x.addValidation({
+            validators: [{ type: 'custom', functionName: 'myExplicitName', fn: myValidator }]
+          });
+        });
+
+        const validators = field.validators!;
+        expect((validators[0] as any).functionName).toBe('myExplicitName');
+
+        const formConfig = (field as DbxForgeField<any>)._formConfig;
+        expect(formConfig!.customFnConfig!.validators!['myExplicitName']).toBe(myValidator);
+      });
+
+      it('should remove fn and reusableDefinition from finalized validator entries', () => {
+        const myValidator: CustomValidator = () => null;
+
+        const field = forgeTestField({ key: 'x' }, (x) => {
+          x.addValidation({
+            validators: [{ type: 'custom', fn: myValidator, functionName: 'test', reusableDefinition: true }]
+          });
+        });
+
+        const validators = field.validators!;
+        expect((validators[0] as any).fn).toBeUndefined();
+        expect((validators[0] as any).reusableDefinition).toBeUndefined();
+        expect((validators[0] as any).functionName).toBe('test');
+      });
+
+      it('should preserve params on the finalized ValidatorConfig for reusable definitions', () => {
+        const myAsyncValidator: AsyncCustomValidator = {
+          params: () => ({}),
+          factory: () => ({}) as any
+        };
+
+        const field = forgeTestField({ key: 'x' }, (x) => {
+          x.addValidation({
+            validators: [
+              {
+                type: 'async',
+                fn: myAsyncValidator,
+                functionName: 'checkAvailable',
+                reusableDefinition: true,
+                params: { checkFn: 'someValue' }
+              }
+            ]
+          });
+        });
+
+        const validators = field.validators!;
+        expect((validators[0] as any).params).toEqual({ checkFn: 'someValue' });
+      });
+    });
+
+    describe('formValidationMessages', () => {
+      it('should merge formValidationMessages into _formConfig.defaultValidationMessages', () => {
+        const field = forgeTestField({ key: 'x' }, (x) => {
+          x.addValidation({
+            formValidationMessages: { customError: 'Custom error message' }
+          });
+        });
+
+        const formConfig = (field as DbxForgeField<any>)._formConfig;
+        expect(formConfig?.defaultValidationMessages?.['customError']).toBe('Custom error message');
+      });
+
+      it('should accumulate formValidationMessages from multiple addValidation calls', () => {
+        const field = forgeTestField({ key: 'x' }, (x) => {
+          x.addValidation({ formValidationMessages: { errorA: 'Message A' } });
+          x.addValidation({ formValidationMessages: { errorB: 'Message B' } });
+        });
+
+        const formConfig = (field as DbxForgeField<any>)._formConfig;
+        expect(formConfig?.defaultValidationMessages?.['errorA']).toBe('Message A');
+        expect(formConfig?.defaultValidationMessages?.['errorB']).toBe('Message B');
+      });
+
+      it('should keep field-level validationMessages separate from formValidationMessages', () => {
+        const field = forgeTestField({ key: 'x' }, (x) => {
+          x.addValidation({
+            validationMessages: { required: 'Field-level required' },
+            formValidationMessages: { customError: 'Form-level custom error' }
+          });
+        });
+
+        expect(field.validationMessages?.required).toBe('Field-level required');
+
+        const formConfig = (field as DbxForgeField<any>)._formConfig;
+        expect(formConfig?.defaultValidationMessages?.['customError']).toBe('Form-level custom error');
+      });
     });
   });
 

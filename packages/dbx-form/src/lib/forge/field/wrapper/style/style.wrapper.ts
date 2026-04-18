@@ -1,5 +1,4 @@
-import type { WrapperTypeDefinition } from '@ng-forge/dynamic-forms';
-import type { ObservableOrValue } from '@dereekb/rxjs';
+import type { MaybeObservableOrValue, ObservableOrValue } from '@dereekb/rxjs';
 
 // MARK: Wrapper Type
 /**
@@ -35,21 +34,23 @@ export interface DbxForgeStyleWrapper {
   /**
    * Observable or static value providing CSS class names via `[ngClass]`.
    */
-  readonly classGetter?: ObservableOrValue<string>;
+  readonly classGetter?: MaybeObservableOrValue<string>;
   /**
    * Observable or static value providing inline styles via `[ngStyle]`.
    */
-  readonly styleGetter?: ObservableOrValue<DbxForgeStyleObject>;
+  readonly styleGetter?: MaybeObservableOrValue<DbxForgeStyleObject>;
 }
 
 /**
- * ng-forge {@link WrapperTypeDefinition} registration for the style wrapper.
+ * Creates a style wrapper config for use in a field's `wrappers` array.
  *
- * Lazy-loads {@link DbxForgeStyleWrapperComponent} which implements
- * {@link FieldWrapperContract} and receives classGetter and
- * styleGetter configuration via component inputs.
+ * @example
+ * ```typescript
+ * forgeNameField({
+ *   wrappers: [dbxForgeStyleWrapper({ classGetter: 'highlight', styleGetter: { color: 'red' } })]
+ * })
+ * ```
  */
-export const DBX_FORGE_STYLE_WRAPPER_TYPE: WrapperTypeDefinition<DbxForgeStyleWrapper> = {
-  wrapperName: DBX_FORGE_STYLE_WRAPPER_TYPE_NAME,
-  loadComponent: () => import('./style.wrapper.component').then((m) => m.DbxForgeStyleWrapperComponent)
-};
+export function dbxForgeStyleWrapper(config: Omit<DbxForgeStyleWrapper, 'type'>): DbxForgeStyleWrapper {
+  return { type: DBX_FORGE_STYLE_WRAPPER_TYPE_NAME, ...config };
+}

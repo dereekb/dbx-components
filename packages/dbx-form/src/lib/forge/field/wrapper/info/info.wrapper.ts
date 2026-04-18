@@ -1,5 +1,3 @@
-import type { WrapperTypeDefinition } from '@ng-forge/dynamic-forms';
-
 // MARK: Wrapper Type
 /**
  * Registered wrapper type name for the info wrapper.
@@ -36,13 +34,15 @@ export interface DbxForgeInfoWrapper {
 }
 
 /**
- * ng-forge {@link WrapperTypeDefinition} registration for the info wrapper.
+ * Creates an info wrapper config for use in a field's `wrappers` array.
  *
- * Lazy-loads {@link DbxForgeInfoWrapperComponent} which implements
- * {@link FieldWrapperContract} and receives onInfoClick callback
- * and ariaLabel configuration via component inputs.
+ * @example
+ * ```typescript
+ * forgeNameField({
+ *   wrappers: [dbxForgeInfoWrapper({ onInfoClick: () => openHelp() })]
+ * })
+ * ```
  */
-export const DBX_FORGE_INFO_WRAPPER_TYPE: WrapperTypeDefinition<DbxForgeInfoWrapper> = {
-  wrapperName: DBX_FORGE_INFO_WRAPPER_TYPE_NAME,
-  loadComponent: () => import('./info.wrapper.component').then((m) => m.DbxForgeInfoWrapperComponent)
-};
+export function dbxForgeInfoWrapper(config: Omit<DbxForgeInfoWrapper, 'type'>): DbxForgeInfoWrapper {
+  return { type: DBX_FORGE_INFO_WRAPPER_TYPE_NAME, ...config };
+}

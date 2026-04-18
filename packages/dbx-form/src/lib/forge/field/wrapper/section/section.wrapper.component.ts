@@ -17,7 +17,7 @@ import { FieldWrapperContract } from '@ng-forge/dynamic-forms';
         <ng-container #fieldComponent></ng-container>
       </dbx-subsection>
     } @else {
-      <dbx-section [headerConfig]="headerConfig()" [elevate]="elevate()">
+      <dbx-section [headerConfig]="headerConfig()" [elevate]="elevate() ?? false">
         <ng-container #fieldComponent></ng-container>
       </dbx-section>
     }
@@ -32,4 +32,8 @@ export class DbxForgeSectionWrapperComponent implements FieldWrapperContract {
   readonly headerConfig = input<DbxSectionHeaderConfig>();
   readonly elevate = input<boolean>();
   readonly subsection = input<boolean>();
+
+  constructor() {
+    console.log('DbxForgeSectionWrapperComponent constructor');
+  }
 }

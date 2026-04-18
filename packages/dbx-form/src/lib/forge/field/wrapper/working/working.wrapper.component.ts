@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, input, viewChild, ViewContainerRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, viewChild, ViewContainerRef } from '@angular/core';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { FieldWrapperContract, type WrapperFieldInputs } from '@ng-forge/dynamic-forms';
+import { FIELD_SIGNAL_CONTEXT, FieldSignalContext, FieldWrapperContract, type WrapperFieldInputs } from '@ng-forge/dynamic-forms';
 
 /**
  * Forge wrapper component that renders child fields with a loading
@@ -26,9 +26,9 @@ import { FieldWrapperContract, type WrapperFieldInputs } from '@ng-forge/dynamic
 export class DbxForgeWorkingWrapperComponent implements FieldWrapperContract {
   readonly fieldComponent = viewChild.required('fieldComponent', { read: ViewContainerRef });
 
-  readonly fieldInputs = input<WrapperFieldInputs>();
+  private readonly fieldSignalContext = inject(FIELD_SIGNAL_CONTEXT) as FieldSignalContext;
 
   readonly showLoading = computed((): boolean => {
-    return (this.fieldInputs()?.field as any)?.pending() ?? false;
+    return this.fieldSignalContext.form().pending();
   });
 }

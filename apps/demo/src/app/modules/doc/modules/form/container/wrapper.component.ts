@@ -16,15 +16,14 @@ import {
   formlyToggleField,
   formlyTextIsAvailableField,
   forgeRow,
-  forgeDbxSectionFieldWrapper,
-  forgeDbxSubsectionFieldWrapper,
   forgeExpandWrapper,
   forgeToggleWrapper,
-  forgeInfoFieldWrapper,
-  forgeStyleWrapper,
   forgeNameField,
+  dbxForgeSectionWrapper,
+  dbxForgeSubsectionWrapper,
+  dbxForgeInfoWrapper,
+  dbxForgeStyleWrapper,
   forgeTextIsAvailableField,
-  forgeNumberField,
   forgeNumberSliderField,
   formlyNumberSliderField,
   DbxFormFormlyNumberFieldModule,
@@ -164,60 +163,74 @@ export class DocFormWrapperComponent {
 
   readonly forgeSectionFieldConfig: FormConfig = {
     fields: [
-      forgeDbxSectionFieldWrapper({
-        header: 'Header',
-        hint: 'Section Field Hint',
-        fields: [forgeNameField({})]
+      forgeNameField({
+        wrappers: [
+          dbxForgeSectionWrapper({
+            headerConfig: { header: 'Header', hint: 'Section Field Hint' }
+          })
+        ]
       }),
-      forgeDbxSectionFieldWrapper({
-        header: 'Header with star and configured size',
-        h: 1,
-        icon: 'star',
-        hint: 'Section Field Hint Inline',
-        hintInline: true,
-        fields: [forgeNameField({ key: 'name2' })]
+      forgeNameField({
+        key: 'name2',
+        wrappers: [
+          dbxForgeSectionWrapper({
+            headerConfig: { header: 'Header with star and configured size', h: 1, icon: 'star', hint: 'Section Field Hint Inline', hintInline: true }
+          })
+        ]
       })
     ]
   };
 
   readonly forgeSubsectionFieldConfig: FormConfig = {
     fields: [
-      forgeDbxSubsectionFieldWrapper({
-        header: 'Header',
-        hint: 'Section Field Hint',
-        fields: [forgeNameField({})]
+      forgeNameField({
+        wrappers: [
+          dbxForgeSubsectionWrapper({
+            headerConfig: { header: 'Header', hint: 'Section Field Hint' }
+          })
+        ]
       })
     ]
   };
 
   readonly forgeInfoFieldConfig: FormConfig = {
     fields: [
-      forgeInfoFieldWrapper({
-        onInfoClick: () => {
-          // this.matDialog.open()
-        },
-        fields: [forgeNameField({})]
+      forgeNameField({
+        wrappers: [
+          dbxForgeInfoWrapper({
+            onInfoClick: () => {
+              // this.matDialog.open()
+            }
+          })
+        ]
       })
     ]
   };
 
   readonly forgeInfoGroupFieldConfig: FormConfig = {
     fields: [
-      forgeInfoFieldWrapper({
-        onInfoClick: () => {
-          // this.matDialog.open()
-        },
-        fields: [forgeNameField({}), forgeCityField({})]
-      })
+      forgeNameField({
+        wrappers: [
+          dbxForgeInfoWrapper({
+            onInfoClick: () => {
+              // this.matDialog.open()
+            }
+          })
+        ]
+      }),
+      forgeCityField({})
     ]
   };
 
   readonly forgeStyleFieldConfig: FormConfig = {
     fields: [
-      forgeStyleWrapper({
-        classGetter: 'dbx-content-border doc-style-wrapper-example',
-        styleGetter: { background: 'rgba(255,0,0,0.3)', 'border-color': 'blue' },
-        fields: [forgeNameField({})]
+      forgeNameField({
+        wrappers: [
+          dbxForgeStyleWrapper({
+            classGetter: 'dbx-content-border doc-style-wrapper-example',
+            styleGetter: { background: 'rgba(255,0,0,0.3)', 'border-color': 'blue' }
+          })
+        ]
       })
     ]
   };
@@ -227,7 +240,7 @@ export class DocFormWrapperComponent {
       forgeRow({
         fields: [
           { ...forgeCityField({}), col: 4 },
-          { ...forgeStateField({ description: 'State Description' }), col: 4 },
+          { ...forgeStateField({ hint: 'State Description' }), col: 4 },
           { ...forgeToggleField({ key: 'toggle', label: 'Toggle', description: 'Toggle Description' }), col: 4 }
         ]
       })
@@ -279,30 +292,26 @@ export class DocFormWrapperComponent {
     })
   ];
 
-  readonly forgeWorkingFieldConfig: FormConfig = (() => {
-    const available = forgeTextIsAvailableField({
-      key: 'username',
-      label: 'Username',
-      description: 'Type a value and wait — shows loading bar during async check. Type "taken" to see a validation error.',
-      checkValueIsAvailable: (value: string) => {
-        return new Observable<boolean>((subscriber) => {
-          const timer = setTimeout(() => {
-            subscriber.next(value !== 'taken');
-            subscriber.complete();
-          }, 2000);
+  readonly forgeWorkingFieldConfig: FormConfig = {
+    fields: [
+      forgeTextIsAvailableField({
+        key: 'username',
+        label: 'Username',
+        // description: 'Type a value and wait — shows loading bar during async check. Type "taken" to see a validation error.',
+        checkValueIsAvailable: (value: string) => {
+          return new Observable<boolean>((subscriber) => {
+            const timer = setTimeout(() => {
+              subscriber.next(value !== 'taken');
+              subscriber.complete();
+            }, 2000);
 
-          return () => clearTimeout(timer);
-        });
-      },
-      isNotAvailableErrorMessage: 'This username is already taken.'
-    });
-
-    return {
-      fields: [available.field],
-      customFnConfig: { asyncValidators: available.asyncValidators },
-      defaultValidationMessages: available.validationMessages
-    };
-  })();
+            return () => clearTimeout(timer);
+          });
+        },
+        isNotAvailableErrorMessage: 'This username is already taken.'
+      })
+    ]
+  };
 
   // Form-field wrapper demos
   readonly formFieldWrapperFields: FormlyFieldConfig[] = [

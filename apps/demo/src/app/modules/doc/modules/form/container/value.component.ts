@@ -194,7 +194,7 @@ export class DocFormValueComponent {
   readonly slimAddressField: FormlyFieldConfig[] = [formlyAddressField({ key: 'slim', hint: 'Line 2 and country are omitted.', stateField: { asCode: true }, includeLine2: false, includeCountry: false })];
 
   readonly forgeSlimAddressFieldConfig: FormConfig = {
-    fields: [forgeAddressField({ key: 'slim', hint: 'Line 2 and country are omitted.', stateField: { asCode: true }, includeLine2: false, includeCountry: false }) as any]
+    fields: [forgeAddressField({ key: 'slim', stateField: { asCode: true }, includeLine2: false, includeCountry: false }) as any]
   };
 
   readonly addressListFields: FormlyFieldConfig[] = [formlyAddressListField()];

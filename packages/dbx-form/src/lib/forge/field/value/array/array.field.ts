@@ -1,4 +1,4 @@
-import type { ArrayField } from '@ng-forge/dynamic-forms';
+import type { ArrayField, DynamicText, FieldDef } from '@ng-forge/dynamic-forms';
 import { dbxForgeBuildFieldDef, dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef } from '../../field';
 import type { DbxForgeField } from '../../../form/forge.form';
 import { DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME, DbxForgeArrayFieldWrapperProps } from '../../wrapper/array-field/array-field.wrapper';
@@ -8,7 +8,29 @@ import { DBX_FORGE_ARRAY_FIELD_ELEMENT_WRAPPER_NAME, DbxForgeArrayFieldElementWr
 /**
  * Configuration for creating a forge drag array field.
  */
-export interface DbxForgeArrayFieldConfig<T = unknown> extends DbxForgeFieldFunctionDef<Omit<ArrayField, 'props'>> {
+export interface DbxForgeArrayFieldConfig<T = unknown> extends DbxForgeFieldFunctionDef<Omit<ArrayField, 'props' | 'label' | 'fields'>>, Partial<DbxForgeArrayFieldWrapperProps<T>> {
+  /**
+   * Label for the array field section.
+   *
+   * Re-declared because ArrayField sets `label?: never` which prevents string values
+   * through the DbxForgeFieldFunctionDef conditional type.
+   */
+  readonly label?: DynamicText;
+  /**
+   * Hint text displayed alongside the array field label.
+   *
+   * Re-declared because ArrayField extends FieldDef<never> which causes the
+   * conditional hint type in DbxForgeFieldFunctionDef to resolve to `never`.
+   */
+  readonly hint?: string;
+  /**
+   * Description text, converted to hint at build time.
+   */
+  readonly description?: string;
+  /**
+   * Template field definitions for each array item.
+   */
+  readonly template?: FieldDef<unknown>[];
   readonly props?: DbxForgeArrayFieldWrapperProps<T>;
   readonly elementProps?: DbxForgeArrayFieldElementWrapperProps<T>;
 }

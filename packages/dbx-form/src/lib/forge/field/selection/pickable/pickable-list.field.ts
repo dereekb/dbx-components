@@ -1,22 +1,8 @@
 import { type PrimativeKey } from '@dereekb/util';
-import type { FieldTypeDefinition } from '@ng-forge/dynamic-forms';
-import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { configureDbxForgeFormFieldWrapper } from '../../wrapper/formfield/formfield.wrapper';
 import { FORGE_PICKABLE_LIST_FIELD_TYPE, type DbxForgePickableListFieldDef } from './pickable.field';
 import { type DbxForgeFieldFunctionDef, dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, dbxForgeBuildFieldDef } from '../../field';
 import type { DbxForgeField } from '../../../form/forge.form';
-
-// MARK: Field Type Definition
-/**
- * ng-forge FieldTypeDefinition for the pickable list field.
- *
- * Register via `provideDynamicForm(DBX_PICKABLE_LIST_FIELD_TYPE)`.
- */
-export const DBX_PICKABLE_LIST_FIELD_TYPE: FieldTypeDefinition<DbxForgePickableListFieldDef> = {
-  name: FORGE_PICKABLE_LIST_FIELD_TYPE,
-  loadComponent: () => import('./pickable-list.field.component').then((m) => m.DbxForgePickableListFieldComponent),
-  mapper: valueFieldMapper
-};
 
 // MARK: Pickable List Field
 /**

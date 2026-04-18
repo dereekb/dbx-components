@@ -1,20 +1,6 @@
 import { type PrimativeKey } from '@dereekb/util';
-import type { FieldTypeDefinition } from '@ng-forge/dynamic-forms';
-import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { FORGE_SOURCE_SELECT_FIELD_TYPE, type DbxForgeSourceSelectFieldDef } from './sourceselect.field.component';
 import { type DbxForgeFieldFunctionDef, dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, dbxForgeBuildFieldDef } from '../../field';
-
-// MARK: Field Type Definition
-/**
- * ng-forge FieldTypeDefinition for the source select field.
- *
- * Register via `provideDynamicForm(DBX_SOURCE_SELECT_FIELD_TYPE)`.
- */
-export const DBX_SOURCE_SELECT_FIELD_TYPE: FieldTypeDefinition<DbxForgeSourceSelectFieldDef> = {
-  name: FORGE_SOURCE_SELECT_FIELD_TYPE,
-  loadComponent: () => import('./sourceselect.field.component').then((m) => m.DbxForgeSourceSelectFieldComponent),
-  mapper: valueFieldMapper
-};
 
 // MARK: Source Select Field
 /**

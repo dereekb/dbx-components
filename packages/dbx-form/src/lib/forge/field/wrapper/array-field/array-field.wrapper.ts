@@ -2,6 +2,8 @@ import { type DynamicText } from '@ng-forge/dynamic-forms';
 import { type FactoryWithRequiredInput } from '@dereekb/util';
 import { type DbxButtonStyle } from '@dereekb/dbx-web';
 
+export const DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME = 'dbx-forge-array-field-wrapper' as const;
+
 export interface DbxForgeArrayFieldWrapperProps<T = unknown> {
   /**
    * Label for each array item. Can be a static string or a function.
@@ -36,8 +38,6 @@ export interface DbxForgeArrayFieldWrapperProps<T = unknown> {
    */
   readonly removeButtonStyle?: DbxButtonStyle;
 }
-
-export const DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME = 'dbx-forge-array-field-wrapper' as const;
 
 export interface DbxForgeArrayFieldWrapperDef {
   readonly type: typeof DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME;

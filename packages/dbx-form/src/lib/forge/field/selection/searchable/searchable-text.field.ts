@@ -1,22 +1,8 @@
 import { type PrimativeKey } from '@dereekb/util';
-import type { FieldTypeDefinition } from '@ng-forge/dynamic-forms';
-import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { configureDbxForgeFormFieldWrapper } from '../../wrapper/formfield/formfield.wrapper';
 import { DBX_FORGE_SEARCHABLE_TEXT_FIELD_TYPE_NAME, type DbxForgeSearchableTextFieldDef } from './searchable.field';
 import { type DbxForgeFieldFunctionDef, dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, dbxForgeBuildFieldDef } from '../../field';
 import type { DbxForgeField } from '../../../form/forge.form';
-
-// MARK: Field Type Definition
-/**
- * ng-forge FieldTypeDefinition for the searchable text field.
- *
- * Register via `provideDynamicForm(DBX_SEARCHABLE_TEXT_FIELD_TYPE)`.
- */
-export const DBX_SEARCHABLE_TEXT_FIELD_TYPE: FieldTypeDefinition<DbxForgeSearchableTextFieldDef> = {
-  name: DBX_FORGE_SEARCHABLE_TEXT_FIELD_TYPE_NAME,
-  loadComponent: () => import('./searchable-text.field.component').then((m) => m.DbxForgeSearchableTextFieldComponent),
-  mapper: valueFieldMapper
-};
 
 // MARK: Searchable Text Field
 /**

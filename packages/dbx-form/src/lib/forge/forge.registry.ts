@@ -40,15 +40,15 @@ declare module '@ng-forge/dynamic-forms' {
     [FORGE_DATETIME_FIELD_TYPE]: DbxForgeDateTimeFieldDef;
     [FORGE_FIXEDDATERANGE_FIELD_TYPE]: DbxForgeFixedDateRangeFieldDef;
     [FORGE_TIMEDURATION_FIELD_TYPE]: DbxForgeTimeDurationFieldDef;
-    [DBX_FORGE_SEARCHABLE_TEXT_FIELD_TYPE_NAME]: DbxForgeSearchableTextFieldDef;
-    [DBX_FORGE_SEARCHABLE_CHIP_FIELD_TYPE_NAME]: DbxForgeSearchableChipFieldDef;
-    [FORGE_PICKABLE_CHIP_FIELD_TYPE]: DbxForgePickableChipFieldDef;
-    [FORGE_PICKABLE_LIST_FIELD_TYPE]: DbxForgePickableListFieldDef;
-    [FORGE_LIST_SELECTION_FIELD_TYPE]: DbxForgeListSelectionFieldDef;
-    [FORGE_VALUE_SELECTION_FIELD_TYPE]: DbxForgeValueSelectionFieldDef;
-    [FORGE_SOURCE_SELECT_FIELD_TYPE]: DbxForgeSourceSelectFieldDef;
+    [DBX_FORGE_SEARCHABLE_TEXT_FIELD_TYPE_NAME]: DbxForgeSearchableTextFieldDef<any, any, any>;
+    [DBX_FORGE_SEARCHABLE_CHIP_FIELD_TYPE_NAME]: DbxForgeSearchableChipFieldDef<any, any, any>;
+    [FORGE_PICKABLE_CHIP_FIELD_TYPE]: DbxForgePickableChipFieldDef<any, any, any>;
+    [FORGE_PICKABLE_LIST_FIELD_TYPE]: DbxForgePickableListFieldDef<any, any, any>;
+    [FORGE_LIST_SELECTION_FIELD_TYPE]: DbxForgeListSelectionFieldDef<any, any, any>;
+    [FORGE_VALUE_SELECTION_FIELD_TYPE]: DbxForgeValueSelectionFieldDef<any>;
+    [FORGE_SOURCE_SELECT_FIELD_TYPE]: DbxForgeSourceSelectFieldDef<any, any>;
     [FORGE_TEXT_EDITOR_FIELD_TYPE]: DbxForgeTextEditorFieldDef;
-    [FORGE_COMPONENT_FIELD_TYPE]: DbxForgeComponentFieldDef;
+    [FORGE_COMPONENT_FIELD_TYPE]: DbxForgeComponentFieldDef<any>;
   }
   interface FieldRegistryWrappers {
     [DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME]: DbxForgeArrayFieldWrapperDef;

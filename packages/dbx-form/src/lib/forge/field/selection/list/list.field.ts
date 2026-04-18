@@ -3,8 +3,7 @@ import { type ListLoadingState } from '@dereekb/rxjs';
 import { type AbstractDbxSelectionListWrapperDirective } from '@dereekb/dbx-web';
 import { type Observable } from 'rxjs';
 import { type Type } from '@angular/core';
-import type { FieldTypeDefinition, BaseValueField } from '@ng-forge/dynamic-forms';
-import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
+import type { BaseValueField } from '@ng-forge/dynamic-forms';
 import { configureDbxForgeFormFieldWrapper } from '../../wrapper/formfield/formfield.wrapper';
 import { type DbxForgeFieldFunctionDef, dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, dbxForgeBuildFieldDef } from '../../field';
 import type { DbxForgeField } from '../../../form/forge.form';
@@ -51,18 +50,6 @@ export interface DbxForgeListSelectionFieldProps<T = unknown, C extends Abstract
 export interface DbxForgeListSelectionFieldDef<T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey> extends BaseValueField<DbxForgeListSelectionFieldProps<T, C, K>, K[]> {
   readonly type: typeof FORGE_LIST_SELECTION_FIELD_TYPE;
 }
-
-// MARK: Field Type Definition
-/**
- * ng-forge FieldTypeDefinition for the list selection field.
- *
- * Register via `provideDynamicForm(DBX_LIST_SELECTION_FIELD_TYPE)`.
- */
-export const DBX_LIST_SELECTION_FIELD_TYPE: FieldTypeDefinition<DbxForgeListSelectionFieldDef> = {
-  name: FORGE_LIST_SELECTION_FIELD_TYPE,
-  loadComponent: () => import('./list.field.component').then((m) => m.DbxForgeListSelectionFieldComponent),
-  mapper: valueFieldMapper
-};
 
 // MARK: List Selection Field
 /**

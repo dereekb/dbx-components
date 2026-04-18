@@ -1,20 +1,6 @@
 import { filterFromPOJO } from '@dereekb/util';
-import type { FieldTypeDefinition } from '@ng-forge/dynamic-forms';
-import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { FORGE_TEXT_EDITOR_FIELD_TYPE, type DbxForgeTextEditorFieldDef } from './texteditor.field.component';
 import { dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef, type DbxForgeFieldFunction } from '../field';
-
-// MARK: Field Type Definition
-/**
- * ng-forge FieldTypeDefinition for the rich text editor field.
- *
- * Register via `provideDynamicForm(DBX_TEXT_EDITOR_FIELD_TYPE)`.
- */
-export const DBX_TEXT_EDITOR_FIELD_TYPE: FieldTypeDefinition<DbxForgeTextEditorFieldDef> = {
-  name: FORGE_TEXT_EDITOR_FIELD_TYPE,
-  loadComponent: () => import('./texteditor.field.component').then((m) => m.DbxForgeTextEditorFieldComponent),
-  mapper: valueFieldMapper
-};
 
 // MARK: Config
 /**

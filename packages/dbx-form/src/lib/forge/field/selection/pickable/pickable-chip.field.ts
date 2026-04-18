@@ -1,22 +1,8 @@
 import { type PrimativeKey } from '@dereekb/util';
-import type { FieldTypeDefinition } from '@ng-forge/dynamic-forms';
-import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { configureDbxForgeFormFieldWrapper } from '../../wrapper/formfield/formfield.wrapper';
 import { FORGE_PICKABLE_CHIP_FIELD_TYPE, type DbxForgePickableChipFieldDef } from './pickable.field';
 import { type DbxForgeFieldFunctionDef, dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, dbxForgeBuildFieldDef } from '../../field';
 import type { DbxForgeField } from '../../../form/forge.form';
-
-// MARK: Field Type Definition
-/**
- * ng-forge FieldTypeDefinition for the pickable chip field.
- *
- * Register via `provideDynamicForm(DBX_PICKABLE_CHIP_FIELD_TYPE)`.
- */
-export const DBX_PICKABLE_CHIP_FIELD_TYPE: FieldTypeDefinition<DbxForgePickableChipFieldDef> = {
-  name: FORGE_PICKABLE_CHIP_FIELD_TYPE,
-  loadComponent: () => import('./pickable-chip.field.component').then((m) => m.DbxForgePickableChipFieldComponent),
-  mapper: valueFieldMapper
-};
 
 // MARK: Pickable Chip Field
 /**

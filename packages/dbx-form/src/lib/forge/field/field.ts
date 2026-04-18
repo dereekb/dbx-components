@@ -1,5 +1,5 @@
 import { ArrayOrValue, Building, Maybe, MaybeMap, MaybeSo, Milliseconds, NOOP_MODIFIER, asArray, filterNullAndUndefinedValues, filterUndefinedValues, filterUniqueValues, mapMaybeFunction, mergeArrays, objectHasNoKeys } from '@dereekb/util';
-import { CustomFnConfig, EvaluationContext, FieldDef, FieldMeta, FieldWithValidation, LogicConfig, ValidationMessages, ValidatorConfig, WrapperConfig } from '@ng-forge/dynamic-forms';
+import { type AsyncCustomValidator, CustomFnConfig, type CustomValidator, EvaluationContext, FieldDef, FieldMeta, FieldWithValidation, LogicConfig, ValidationMessages, ValidatorConfig, WrapperConfig } from '@ng-forge/dynamic-forms';
 import { ForgeFieldValidation } from './field.type';
 import { DbxForgeField, DbxForgeFieldFormConfig, mergeDbxForgeFieldFormConfig } from '../form/forge.form';
 
@@ -207,7 +207,16 @@ export function dbxForgeFieldFunction<C extends DbxForgeFieldFunctionDef<F>, F e
  *
  * Accepts validators and optional validation messages that are merged into the field's existing validation.
  */
-export type DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceAddValidationInput = { validators?: Maybe<ArrayOrValue<ValidatorConfig>> } & MaybeMap<Pick<ForgeFieldValidation, 'validationMessages'>>;
+export type DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceAddValidationInput = {
+  readonly validators?: Maybe<ArrayOrValue<DbxForgeFieldValidatorInput>>;
+  /**
+   * Form-level default validation messages merged into `_formConfig.defaultValidationMessages`.
+   *
+   * Use for messages associated with inline `fn` validators whose error kinds need
+   * form-wide resolution. Separate from field-level `validationMessages`.
+   */
+  readonly formValidationMessages?: Maybe<Record<string, string>>;
+} & MaybeMap<Pick<ForgeFieldValidation, 'validationMessages'>>;
 
 /**
  * Builder instance provided to {@link DbxForgeBuildFieldDefFunction} callbacks.
@@ -386,6 +395,35 @@ export interface DbxForgeFieldDebouncedTransformLogicWhenAlways<FV = unknown> {
  */
 export const DEFAULT_TRANSFORM_DEBOUNCE_TIME: Milliseconds = 500;
 
+// MARK: Validator With Fn
+/**
+ * A custom validator config with an inline `fn` for auto-registration.
+ *
+ * When `reusableDefinition` is true, `functionName` is required -- the function is registered
+ * once and shared across fields that reference it by name with field-specific `params`.
+ *
+ * When `reusableDefinition` is false/undefined, `functionName` is optional (auto-generated).
+ */
+export type DbxForgeFieldCustomValidatorWithFn = { readonly type: 'custom'; readonly fn: CustomValidator; readonly functionName: string; readonly reusableDefinition: true; readonly params?: Record<string, unknown>; readonly kind?: string } | { readonly type: 'custom'; readonly fn: CustomValidator; readonly functionName?: string; readonly reusableDefinition?: false; readonly params?: Record<string, unknown>; readonly kind?: string };
+
+/**
+ * An async validator config with an inline `fn` for auto-registration.
+ *
+ * When `reusableDefinition` is true, `functionName` is required -- the function is registered
+ * once and shared across fields that reference it by name with field-specific `params`.
+ *
+ * When `reusableDefinition` is false/undefined, `functionName` is optional (auto-generated).
+ */
+export type DbxForgeFieldAsyncValidatorWithFn = { readonly type: 'async'; readonly fn: AsyncCustomValidator; readonly functionName: string; readonly reusableDefinition: true; readonly params?: Record<string, unknown> } | { readonly type: 'async'; readonly fn: AsyncCustomValidator; readonly functionName?: string; readonly reusableDefinition?: false; readonly params?: Record<string, unknown> };
+
+/**
+ * A validator input that can be a standard {@link ValidatorConfig} or one augmented with an inline `fn`.
+ *
+ * Supports both one-off inline validators (functionName auto-generated) and reusable definitions
+ * (functionName required, registered once, referenced by name with field-specific params).
+ */
+export type DbxForgeFieldValidatorInput = ValidatorConfig | DbxForgeFieldCustomValidatorWithFn | DbxForgeFieldAsyncValidatorWithFn;
+
 /**
  * This type allows the builder instance to automatically register a function with the dbx-forge form.
  *
@@ -515,16 +553,54 @@ export function dbxForgeBuildFieldDef<C extends DbxForgeFieldFunctionDef<any>, F
       };
     }
 
+    let _accumulatedFormValidationMessages: Record<string, string> = {};
+    let _inlineValidatorCount = 0;
+
+    /**
+     * Generates a deduplication key for a validator config.
+     *
+     * Built-in validators deduplicate by type. Custom/async/http validators use a
+     * composite key to allow multiple validators of the same type with different function names.
+     */
+    function _validatorDeduplicationKey(v: DbxForgeFieldValidatorInput): string {
+      let result: string;
+
+      switch (v.type) {
+        case 'custom':
+          if ('expression' in v && v.expression) {
+            result = `custom:expr:${v.kind ?? v.expression}`;
+          } else {
+            result = `custom:fn:${(v as any).functionName ?? `__inline_${(_inlineValidatorCount += 1)}__`}`;
+          }
+          break;
+        case 'async':
+          result = `async:${(v as any).functionName ?? `__inline_${(_inlineValidatorCount += 1)}__`}`;
+          break;
+        case 'http':
+          if ('functionName' in v) {
+            result = `http:fn:${v.functionName}`;
+          } else {
+            result = `http:decl`;
+          }
+          break;
+        default:
+          result = v.type;
+          break;
+      }
+
+      return result;
+    }
+
     function addValidation(input: DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceAddValidationInput): void {
       const currentValidation = getValidation();
 
-      let nextValidators: Maybe<ValidatorConfig[]> = currentValidation.validators;
+      let nextValidators: Maybe<DbxForgeFieldValidatorInput[]> = currentValidation.validators;
       let nextValidationMessages: Maybe<ValidationMessages> = currentValidation.validationMessages;
 
       const inputValidators = asArray(input.validators);
 
       if (inputValidators.length) {
-        nextValidators = filterUniqueValues(mergeArrays([currentValidation.validators, inputValidators]), (x) => x.type);
+        nextValidators = filterUniqueValues(mergeArrays([currentValidation.validators as Maybe<DbxForgeFieldValidatorInput[]>, inputValidators]), _validatorDeduplicationKey);
       }
 
       if (input.validationMessages) {
@@ -534,8 +610,12 @@ export function dbxForgeBuildFieldDef<C extends DbxForgeFieldFunctionDef<any>, F
         };
       }
 
+      if (input.formValidationMessages) {
+        Object.assign(_accumulatedFormValidationMessages, input.formValidationMessages);
+      }
+
       setValidation({
-        validators: nextValidators,
+        validators: nextValidators as ValidatorConfig[] | undefined,
         validationMessages: nextValidationMessages
       });
     }
@@ -647,28 +727,52 @@ export function dbxForgeBuildFieldDef<C extends DbxForgeFieldFunctionDef<any>, F
       configure(inputConfigure);
     }
 
-    // finalize the logic expansion/cleanup
-    _finalizeLogic(instance);
+    // finalize the logic and validation expansion/cleanup
+    _finalizeLogicAndValidation(instance, _accumulatedFormValidationMessages);
 
     return fieldDef;
   }) as DbxForgeFieldFunctionFieldDefBuilder<C, FV>;
 }
 
 /**
+ * Finalizes logic and validation for a field definition.
+ *
+ * For logic: registers inline `fn` derivations into `customFnConfig`, converts transforms to derivation entries.
+ * For validation: registers inline `fn` validators into `customFnConfig.validators`/`asyncValidators`,
+ * and merges accumulated form validation messages into `_formConfig.defaultValidationMessages`.
+ *
+ * @param instance - The field definition builder instance.
+ * @param accumulatedFormValidationMessages - Form-level validation messages accumulated by `addValidation()`.
+ */
+function _finalizeLogicAndValidation<C extends DbxForgeFieldFunctionDef<any>, FV = any>(instance: DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C, FV>, accumulatedFormValidationMessages?: Record<string, string>): void {
+  const fieldDef = instance.getFieldDef();
+
+  // --- Logic finalization ---
+  _finalizeLogic(instance, fieldDef);
+
+  // --- Validation finalization ---
+  _finalizeValidation(instance, fieldDef);
+
+  // Merge accumulated form validation messages
+  if (accumulatedFormValidationMessages && !objectHasNoKeys(accumulatedFormValidationMessages)) {
+    instance.addFormConfig({
+      defaultValidationMessages: accumulatedFormValidationMessages
+    });
+  }
+}
+
+/**
  * Finalizes the logic expansion/cleanup for a field definition.
  *
- * @param instance - The field definition instance.
+ * Registers inline `fn` derivation functions and converts transform entries to derivation logic.
  */
-function _finalizeLogic<C extends DbxForgeFieldFunctionDef<any>, FV = any>(instance: DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C, FV>): void {
-  // finalize logic before returning
+function _finalizeLogic<C extends DbxForgeFieldFunctionDef<any>, FV = any>(instance: DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C, FV>, fieldDef: C): void {
   const logic = instance.getLogic();
 
   // if no logic is defined, just return
   if (!logic?.length) {
     return;
   }
-
-  const fieldDef = instance.getFieldDef();
 
   let hasOneOrMoreCustomFunctions = false;
 
@@ -789,9 +893,6 @@ function _finalizeLogic<C extends DbxForgeFieldFunctionDef<any>, FV = any>(insta
 
     /**
      * Build the final derivation function.
-     *
-     * @param ctx
-     * @returns
      */
     const fn: DbxForgeFieldLogicFn = (ctx) => {
       return transformFn(ctx.fieldValue, ctx);
@@ -863,6 +964,78 @@ function _finalizeLogic<C extends DbxForgeFieldFunctionDef<any>, FV = any>(insta
     instance.addFormConfig({
       customFnConfig,
       externalData
+    });
+  }
+}
+
+/**
+ * Finalizes validation for a field definition.
+ *
+ * Scans validators for inline `fn` properties, auto-registers them in
+ * `customFnConfig.validators`/`asyncValidators`, and replaces `fn` with the generated `functionName`.
+ */
+function _finalizeValidation<C extends DbxForgeFieldFunctionDef<any>>(instance: DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C>, fieldDef: C): void {
+  const validation = instance.getValidation();
+  const validators = validation.validators;
+
+  if (!validators?.length) {
+    return;
+  }
+
+  let hasOneOrMoreValidatorFunctions = false;
+
+  const validatorCustomFnConfig: {
+    validators: Record<string, CustomValidator>;
+    asyncValidators: Record<string, AsyncCustomValidator>;
+  } = { validators: {}, asyncValidators: {} };
+
+  let validatorFnNameCount = 0;
+
+  function _generateValidatorFunctionName() {
+    const functionName = `__vfn__${fieldDef.key}_${(validatorFnNameCount += 1)}`;
+    return functionName;
+  }
+
+  const finalizedValidators: ValidatorConfig[] = validators.map((entry) => {
+    if (!('fn' in entry)) {
+      return entry as ValidatorConfig;
+    }
+
+    const { fn, reusableDefinition: _reusableDefinition, ...rest } = entry as any;
+    const functionName: string = rest.functionName ?? _generateValidatorFunctionName();
+    hasOneOrMoreValidatorFunctions = true;
+
+    switch (entry.type) {
+      case 'custom':
+        validatorCustomFnConfig.validators[functionName] = fn;
+        break;
+      case 'async':
+        validatorCustomFnConfig.asyncValidators[functionName] = fn;
+        break;
+    }
+
+    // Return a clean ValidatorConfig without fn or reusableDefinition
+    return { ...rest, functionName } as ValidatorConfig;
+  });
+
+  instance.setValidation({
+    validators: finalizedValidators,
+    validationMessages: validation.validationMessages
+  });
+
+  if (hasOneOrMoreValidatorFunctions) {
+    const validatorFormConfig: { validators?: Record<string, CustomValidator>; asyncValidators?: Record<string, AsyncCustomValidator> } = {};
+
+    if (Object.keys(validatorCustomFnConfig.validators).length > 0) {
+      validatorFormConfig.validators = validatorCustomFnConfig.validators;
+    }
+
+    if (Object.keys(validatorCustomFnConfig.asyncValidators).length > 0) {
+      validatorFormConfig.asyncValidators = validatorCustomFnConfig.asyncValidators;
+    }
+
+    instance.addFormConfig({
+      customFnConfig: validatorFormConfig
     });
   }
 }

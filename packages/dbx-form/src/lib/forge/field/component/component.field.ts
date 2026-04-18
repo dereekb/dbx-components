@@ -1,22 +1,8 @@
 import { filterFromPOJO } from '@dereekb/util';
 import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import type { FieldTypeDefinition } from '@ng-forge/dynamic-forms';
-import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { FORGE_COMPONENT_FIELD_TYPE, type DbxForgeComponentFieldDef } from './component.field.component';
 import { dbxForgeFieldFunction, type DbxForgeFieldFunctionDef, type DbxForgeFieldFunction } from '../field';
 import type { DbxForgeField } from '../../form/forge.form';
-
-// MARK: Field Type Definition
-/**
- * ng-forge FieldTypeDefinition for the dynamic component injection field.
- *
- * Register via `provideDynamicForm(DBX_COMPONENT_FIELD_TYPE)`.
- */
-export const DBX_COMPONENT_FIELD_TYPE: FieldTypeDefinition<DbxForgeComponentFieldDef> = {
-  name: FORGE_COMPONENT_FIELD_TYPE,
-  loadComponent: () => import('./component.field.component').then((m) => m.DbxForgeComponentFieldComponent),
-  mapper: valueFieldMapper
-};
 
 // MARK: Config
 /**

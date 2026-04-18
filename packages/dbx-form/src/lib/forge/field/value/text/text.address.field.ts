@@ -3,7 +3,7 @@ import { ADDRESS_LINE_MAX_LENGTH } from '@dereekb/model';
 import { forgeTextField, type DbxForgeTextFieldConfig } from './text.field';
 import { forgeCityField, type DbxForgeCityFieldConfig, forgeCountryField, type DbxForgeCountryFieldConfig, forgeStateField, type DbxForgeStateFieldConfig, forgeZipCodeField, type DbxForgeZipCodeFieldConfig } from './text.additional.field';
 import { forgeGroup, forgeRow } from '../../wrapper/wrapper';
-import { dbxForgeArrayField, type DbxForgeArrayFieldDef } from '../array/array.field';
+import { dbxForgeArrayField } from '../array/array.field';
 
 // MARK: Address Config
 /**
@@ -169,7 +169,7 @@ export interface DbxForgeAddressListFieldConfig extends DbxForgeAddressFieldsCon
  * const field = forgeAddressListField({ maxAddresses: 3, required: true });
  * ```
  */
-export function forgeAddressListField(config: Partial<DbxForgeAddressListFieldConfig> = {}): DbxForgeArrayFieldDef {
+export function forgeAddressListField(config: Partial<DbxForgeAddressListFieldConfig> = {}) {
   const { key = 'addresses', maxAddresses = 6 } = config;
 
   return dbxForgeArrayField({

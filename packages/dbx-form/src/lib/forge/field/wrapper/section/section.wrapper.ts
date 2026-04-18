@@ -1,4 +1,3 @@
-import type { WrapperTypeDefinition } from '@ng-forge/dynamic-forms';
 import type { DbxSectionHeaderConfig } from '@dereekb/dbx-web';
 
 // MARK: Wrapper Type
@@ -42,13 +41,30 @@ export interface DbxForgeSectionWrapper {
 }
 
 /**
- * ng-forge {@link WrapperTypeDefinition} registration for the section wrapper.
+ * Creates a section wrapper config for use in a field's `wrappers` array.
  *
- * Lazy-loads {@link DbxForgeSectionWrapperComponent} which implements
- * {@link FieldWrapperContract} and receives header, elevate, and
- * subsection configuration via component inputs.
+ * @example
+ * ```typescript
+ * forgeNameField({
+ *   wrappers: [dbxForgeSectionWrapper({ headerConfig: { header: 'Contact' } })]
+ * })
+ * ```
  */
-export const DBX_FORGE_SECTION_WRAPPER_TYPE: WrapperTypeDefinition<DbxForgeSectionWrapper> = {
-  wrapperName: DBX_FORGE_SECTION_WRAPPER_TYPE_NAME,
-  loadComponent: () => import('./section.wrapper.component').then((m) => m.DbxForgeSectionWrapperComponent)
-};
+export function dbxForgeSectionWrapper(config: Omit<DbxForgeSectionWrapper, 'type'>): DbxForgeSectionWrapper {
+  return { type: DBX_FORGE_SECTION_WRAPPER_TYPE_NAME, ...config };
+}
+
+/**
+ * Creates a subsection wrapper config for use in a field's `wrappers` array.
+ * Sets `subsection: true` and defaults heading level to 4.
+ *
+ * @example
+ * ```typescript
+ * forgeNameField({
+ *   wrappers: [dbxForgeSubsectionWrapper({ headerConfig: { header: 'Name' } })]
+ * })
+ * ```
+ */
+export function dbxForgeSubsectionWrapper(config: Omit<DbxForgeSectionWrapper, 'type' | 'subsection'>): DbxForgeSectionWrapper {
+  return { type: DBX_FORGE_SECTION_WRAPPER_TYPE_NAME, subsection: true, ...config };
+}

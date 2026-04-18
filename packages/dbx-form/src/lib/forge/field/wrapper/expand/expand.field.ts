@@ -1,5 +1,4 @@
-import type { FieldTypeDefinition, BaseValueField } from '@ng-forge/dynamic-forms';
-import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
+import type { BaseValueField } from '@ng-forge/dynamic-forms';
 
 // MARK: Field Type
 export const FORGE_EXPAND_FIELD_TYPE_NAME = 'dbx-forge-expand' as const;
@@ -33,12 +32,3 @@ export interface DbxForgeExpandFieldProps {
 export interface DbxForgeExpandFieldDef extends BaseValueField<DbxForgeExpandFieldProps, boolean> {
   readonly type: typeof FORGE_EXPAND_FIELD_TYPE_NAME;
 }
-
-/**
- * ng-forge FieldTypeDefinition for the expand control field.
- */
-export const DBX_FORGE_EXPAND_FIELD_TYPE: FieldTypeDefinition<DbxForgeExpandFieldDef> = {
-  name: FORGE_EXPAND_FIELD_TYPE_NAME,
-  loadComponent: () => import('./expand.field.component').then((m) => m.DbxForgeExpandFieldComponent),
-  mapper: valueFieldMapper
-};

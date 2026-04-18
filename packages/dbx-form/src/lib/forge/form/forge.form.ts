@@ -25,12 +25,13 @@ export interface DbxForgeFieldHiddenFieldsRef {
 /**
  * Form-level configuration that was generated at a field level.
  */
-export interface DbxForgeFieldFormConfig extends Partial<Pick<FormConfig, 'schemas' | 'externalData' | 'customFnConfig'>>, DbxForgeFieldHiddenFieldsRef {}
+export interface DbxForgeFieldFormConfig extends Partial<Pick<FormConfig, 'schemas' | 'externalData' | 'customFnConfig' | 'defaultValidationMessages'>>, DbxForgeFieldHiddenFieldsRef {}
 
 export function mergeDbxForgeFieldFormConfig(...input: DbxForgeFieldFormConfig[]): DbxForgeFieldFormConfig {
   const schemas: NonNullable<FormConfig['schemas']> = [];
   const externalData: NonNullable<FormConfig['externalData']> = {};
   const customFnConfig: NonNullable<FormConfig['customFnConfig']> = {};
+  const defaultValidationMessages: NonNullable<FormConfig['defaultValidationMessages']> = {};
 
   input.forEach((fieldFormConfig) => {
     if (fieldFormConfig.schemas) {
@@ -44,12 +45,17 @@ export function mergeDbxForgeFieldFormConfig(...input: DbxForgeFieldFormConfig[]
     if (fieldFormConfig.customFnConfig) {
       mergeCustomFnConfigInto(customFnConfig, fieldFormConfig.customFnConfig);
     }
+
+    if (fieldFormConfig.defaultValidationMessages) {
+      Object.assign(defaultValidationMessages, fieldFormConfig.defaultValidationMessages);
+    }
   });
 
   const result: DbxForgeFieldFormConfig = filterUndefinedValues({
     schemas: schemas.length > 0 ? schemas : undefined,
     externalData: Object.keys(externalData).length > 0 ? externalData : undefined,
-    customFnConfig: Object.keys(customFnConfig).length > 0 ? customFnConfig : undefined
+    customFnConfig: Object.keys(customFnConfig).length > 0 ? customFnConfig : undefined,
+    defaultValidationMessages: Object.keys(defaultValidationMessages).length > 0 ? defaultValidationMessages : undefined
   });
 
   return result;
@@ -106,7 +112,7 @@ export function dbxForgeFinalizeFormConfig(input: FormConfig): DbxForgeFinalizeF
    */
   const extractedFieldFormConfigs: DbxForgeFieldFormConfig[] = filterMaybeArrayValues(fields.map((x: DbxForgeField<FieldDef<any>>) => x._formConfig));
 
-  const merged = mergeDbxForgeFieldFormConfig({ schemas: input.schemas, externalData: input.externalData, customFnConfig: copyFormConfigCustomFnConfig(input.customFnConfig ?? {}) }, ...extractedFieldFormConfigs);
+  const merged = mergeDbxForgeFieldFormConfig({ schemas: input.schemas, externalData: input.externalData, customFnConfig: copyFormConfigCustomFnConfig(input.customFnConfig ?? {}), defaultValidationMessages: input.defaultValidationMessages }, ...extractedFieldFormConfigs);
 
   // Extract hidden fields from field-level _hiddenFields and _formConfig._hiddenFields
   const hiddenFields: RegisteredFieldTypes[] = [];
@@ -124,7 +130,8 @@ export function dbxForgeFinalizeFormConfig(input: FormConfig): DbxForgeFinalizeF
     fields: hiddenFields.length > 0 ? [...fields, ...hiddenFields] : fields,
     schemas: merged.schemas ? filterUniqueValues(merged.schemas, (x) => x.name) : input.schemas,
     externalData: merged.externalData ?? input.externalData,
-    customFnConfig: merged.customFnConfig ?? input.customFnConfig
+    customFnConfig: merged.customFnConfig ?? input.customFnConfig,
+    defaultValidationMessages: merged.defaultValidationMessages ?? input.defaultValidationMessages
   };
 
   return {

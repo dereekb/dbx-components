@@ -26,15 +26,3 @@ export const DBX_FORGE_WORKING_WRAPPER_TYPE_NAME = 'dbx-forge-working-wrapper' a
 export interface DbxForgeWorkingWrapper {
   readonly type: typeof DBX_FORGE_WORKING_WRAPPER_TYPE_NAME;
 }
-
-/**
- * ng-forge {@link WrapperTypeDefinition} registration for the working wrapper.
- *
- * Lazy-loads {@link DbxForgeWorkingWrapperComponent} which implements
- * {@link FieldWrapperContract} and monitors the field tree's pending state
- * to display a loading indicator.
- */
-export const DBX_FORGE_WORKING_WRAPPER_TYPE: WrapperTypeDefinition<DbxForgeWorkingWrapper> = {
-  wrapperName: DBX_FORGE_WORKING_WRAPPER_TYPE_NAME,
-  loadComponent: () => import('./working.wrapper.component').then((m) => m.DbxForgeWorkingWrapperComponent)
-};

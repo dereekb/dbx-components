@@ -86,14 +86,11 @@ export class DocFormArrayComponent {
       dbxForgeArrayField({
         key: 'test2',
         label: 'Field With Add and Remove',
-        description: 'Shows the drag array field with duplicate, per-item labels, and rearrange disabled.',
+        description: 'Shows the drag array field with per-item labels and rearrange disabled.',
         template: [forgeNameField(), forgeToggleField({ key: 'disable', label: 'Disable Remove' })],
-        duplicateText: 'Make Copy',
         disableRearrange: true,
         allowAdd: true,
-        allowDuplicate: true,
-        labelForField: ({ value }) => (value as { name: string })?.name,
-        addDuplicateToEnd: true
+        labelForField: ({ value }: { value: unknown }) => (value as { name: string })?.name
       }) as any
     ]
   };

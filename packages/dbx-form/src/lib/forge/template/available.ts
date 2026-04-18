@@ -1,7 +1,9 @@
-import type { AsyncCustomValidator, FieldDef } from '@ng-forge/dynamic-forms';
+import type { AsyncCustomValidator } from '@ng-forge/dynamic-forms';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { type Observable, of } from 'rxjs';
 import { forgeTextField, type DbxForgeTextFieldConfig } from '../field/value/text/text.field';
+import type { DbxForgeField } from '../form/forge.form';
+import type { MatInputField } from '@ng-forge/dynamic-forms-material';
 
 // MARK: Validator
 /**
@@ -44,89 +46,58 @@ export interface DbxForgeFieldValueIsAvailableValidatorConfig<T> {
 
 /**
  * Internal params shape for the availability-check rxResource.
+ *
+ * Includes the `checkValueIsAvailable` function passed via `ValidatorConfig.params`
+ * so that a single reusable validator can serve multiple fields.
  */
 interface DbxForgeAvailabilityCheckParams {
   readonly value: unknown;
+  readonly checkValueIsAvailable?: DbxForgeFieldValueIsAvailableCheckFn<unknown>;
 }
 
 /**
- * Result from {@link forgeFieldValueIsAvailableValidator}.
+ * Creates the reusable async validator for availability checks.
  *
- * Contains the async validator and its validation messages, ready to be spread
- * into a FormConfig's `customFnConfig.asyncValidators` and `defaultValidationMessages`.
+ * This validator reads the `checkValueIsAvailable` function from
+ * the `ValidatorConfig.params` at runtime, allowing a single registered function
+ * to serve multiple fields with different check functions.
  */
-export interface DbxForgeFieldValueIsAvailableValidatorResult {
-  /**
-   * The validator name used to reference this validator in field configs.
-   */
-  readonly validatorName: string;
-  /**
-   * Async validators map to spread into `customFnConfig.asyncValidators`.
-   */
-  readonly asyncValidators: Record<string, AsyncCustomValidator>;
-  /**
-   * Validation messages map to spread into `defaultValidationMessages`.
-   */
-  readonly validationMessages: Record<string, string>;
-}
-
-/**
- * Creates a forge async validator that checks whether a field value is available.
- *
- * This is the forge equivalent of {@link fieldValueIsAvailableValidator}. It creates
- * an ng-forge `AsyncCustomValidator` that uses `rxResource` to bridge the Observable-based
- * check function to ng-forge's resource-based validation system.
- *
- * @param config - Configuration for the availability check.
- * @returns A {@link DbxForgeFieldValueIsAvailableValidatorResult} containing the validator and messages.
- *
- * @example
- * ```typescript
- * const validator = forgeFieldValueIsAvailableValidator({
- *   checkValueIsAvailable: (value) => userService.isAvailable(value),
- *   isNotAvailableErrorMessage: 'Username is already taken'
- * });
- *
- * const formConfig: FormConfig = {
- *   fields: [myField],
- *   customFnConfig: { asyncValidators: validator.asyncValidators },
- *   defaultValidationMessages: validator.validationMessages
- * };
- * ```
- */
-export function forgeFieldValueIsAvailableValidator<T>(config: DbxForgeFieldValueIsAvailableValidatorConfig<T>): DbxForgeFieldValueIsAvailableValidatorResult {
-  const { checkValueIsAvailable, isNotAvailableErrorMessage = 'This value is not available.', validatorName = FORGE_FIELD_VALUE_IS_AVAILABLE_VALIDATOR_NAME, throttle: _throttle } = config;
-
-  const asyncValidator: AsyncCustomValidator = {
-    params: (ctx): DbxForgeAvailabilityCheckParams => ({ value: ctx.value() }),
+function _createReusableAvailabilityValidator(): AsyncCustomValidator {
+  return {
+    params: (ctx, config): DbxForgeAvailabilityCheckParams => ({
+      value: ctx.value(),
+      checkValueIsAvailable: config?.['checkValueIsAvailable'] as DbxForgeFieldValueIsAvailableCheckFn<unknown> | undefined
+    }),
     factory: (paramsSignal) => {
       return rxResource<boolean, DbxForgeAvailabilityCheckParams>({
         params: () => paramsSignal() as DbxForgeAvailabilityCheckParams,
         stream: ({ params }) => {
-          if (!params.value) {
+          if (!params.value || !params.checkValueIsAvailable) {
             return of(true);
           }
 
-          return checkValueIsAvailable(params.value as T);
+          return params.checkValueIsAvailable(params.value);
         }
       });
     },
     onSuccess: (result) => {
       if (result === false) {
-        return { kind: validatorName };
+        return { kind: FORGE_FIELD_VALUE_IS_AVAILABLE_VALIDATOR_NAME };
       }
 
       return null;
     },
     onError: () => null
   };
-
-  return {
-    validatorName,
-    asyncValidators: { [validatorName]: asyncValidator },
-    validationMessages: { [validatorName]: isNotAvailableErrorMessage }
-  };
 }
+
+/**
+ * Singleton reusable availability validator.
+ *
+ * Registered once per form via `reusableDefinition: true` and referenced by `functionName`.
+ * Each field passes its own `checkValueIsAvailable` via `ValidatorConfig.params`.
+ */
+const _REUSABLE_AVAILABILITY_VALIDATOR = _createReusableAvailabilityValidator();
 
 // MARK: Text Field
 /**
@@ -140,88 +111,45 @@ export interface DbxForgeTextAvailableFieldConfig extends DbxForgeTextFieldConfi
 }
 
 /**
- * Result from {@link forgeTextIsAvailableField}.
+ * Creates a forge text field with an async availability validator.
  *
- * Contains the wrapped field definition and the async validator config that must
- * be registered in the FormConfig.
- *
- * @example
- * ```typescript
- * const available = forgeTextIsAvailableField({
- *   key: 'username',
- *   label: 'Username',
- *   checkValueIsAvailable: (value) => myService.checkAvailable(value),
- *   isNotAvailableErrorMessage: 'Username is already taken'
- * });
- *
- * const formConfig: FormConfig = {
- *   fields: [available.field],
- *   customFnConfig: {
- *     asyncValidators: available.asyncValidators
- *   },
- *   defaultValidationMessages: available.validationMessages
- * };
- * ```
- */
-export interface DbxForgeTextIsAvailableFieldResult {
-  /**
-   * The text field with the async validator reference attached.
-   */
-  readonly field: FieldDef<unknown>;
-  /**
-   * Async validators map to spread into `customFnConfig.asyncValidators`.
-   */
-  readonly asyncValidators: Record<string, AsyncCustomValidator>;
-  /**
-   * Validation messages map to spread into `defaultValidationMessages`.
-   */
-  readonly validationMessages: Record<string, string>;
-}
-
-/**
- * Creates a forge text field with an async availability validator, wrapped in a working wrapper.
- *
- * This is the forge equivalent of {@link formlyTextIsAvailableField}. It:
- * 1. Creates a text field from the config
- * 2. Attaches an async availability validator via {@link forgeFieldValueIsAvailableValidator}
- *
- * The result includes the field and the validator registration that must be
- * added to the FormConfig.
+ * The validator function and validation messages are auto-registered into the field's `_formConfig`,
+ * so callers using {@link dbxForgeFinalizeFormConfig} get everything wired automatically.
  *
  * @param config - Configuration for the text field and availability validation.
- * @returns A {@link DbxForgeTextIsAvailableFieldResult} containing the field and validator config.
+ * @returns A {@link DbxForgeField} text field with the validator and messages registered in `_formConfig`.
  *
  * @example
  * ```typescript
- * const available = forgeTextIsAvailableField({
+ * const field = forgeTextIsAvailableField({
  *   key: 'username',
  *   label: 'Username',
  *   checkValueIsAvailable: (value) => userService.isAvailable(value),
  *   isNotAvailableErrorMessage: 'Username is already taken'
  * });
  *
- * const formConfig: FormConfig = {
- *   fields: [available.field, ...otherFields],
- *   customFnConfig: {
- *     asyncValidators: { ...available.asyncValidators }
- *   },
- *   defaultValidationMessages: { ...available.validationMessages }
- * };
+ * const formConfig = dbxForgeFinalizeFormConfig({
+ *   fields: [field, ...otherFields]
+ * }).config;
  * ```
  */
-export function forgeTextIsAvailableField(config: DbxForgeTextAvailableFieldConfig): DbxForgeTextIsAvailableFieldResult {
-  const { checkValueIsAvailable, isNotAvailableErrorMessage, validatorName, throttle, ...textConfig } = config;
+export function forgeTextIsAvailableField(config: DbxForgeTextAvailableFieldConfig): DbxForgeField<MatInputField> {
+  const { checkValueIsAvailable, isNotAvailableErrorMessage = 'This value is not available.', validatorName = FORGE_FIELD_VALUE_IS_AVAILABLE_VALIDATOR_NAME, throttle: _throttle, ...textConfig } = config;
 
-  const textField = forgeTextField(textConfig);
-  const validator = forgeFieldValueIsAvailableValidator({ checkValueIsAvailable, isNotAvailableErrorMessage, validatorName, throttle });
-
-  // Add the async validator reference to the field
-  const existingValidators = (textField as any).validators ?? [];
-  (textField as any).validators = [...existingValidators, { type: 'async' as const, functionName: validator.validatorName }];
-
-  return {
-    field: textField,
-    asyncValidators: validator.asyncValidators,
-    validationMessages: validator.validationMessages
-  };
+  return forgeTextField(textConfig, (instance) => {
+    instance.addValidation({
+      validators: [
+        {
+          type: 'async' as const,
+          fn: _REUSABLE_AVAILABILITY_VALIDATOR,
+          functionName: validatorName,
+          reusableDefinition: true,
+          params: {
+            checkValueIsAvailable
+          }
+        }
+      ],
+      formValidationMessages: { [validatorName]: isNotAvailableErrorMessage }
+    });
+  }) as DbxForgeField<MatInputField>;
 }

@@ -1,2 +1,2 @@
-export * from './working.field';
+export * from './working.wrapper.component';
 export * from './working.wrapper';

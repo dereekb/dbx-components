@@ -23,7 +23,6 @@ import {
   FORGE_COMPONENT_FIELD_TYPE,
   FORGE_EXPAND_FIELD_TYPE_NAME,
   FORGE_INFO_BUTTON_FIELD_TYPE_NAME,
-  FORGE_WORKING_FIELD_TYPE_NAME,
   DBX_FORGE_FORM_FIELD_WRAPPER_NAME,
   DBX_FORGE_SECTION_WRAPPER_TYPE_NAME,
   DBX_FORGE_STYLE_WRAPPER_TYPE_NAME,
@@ -117,11 +116,6 @@ export const DBX_FORGE_FIELD_TYPES: FieldTypeDefinition[] = [
   {
     name: FORGE_INFO_BUTTON_FIELD_TYPE_NAME,
     loadComponent: () => import('./field/wrapper/info/info.field.component').then((m) => m.DbxForgeInfoButtonFieldComponent),
-    mapper: valueFieldMapper
-  },
-  {
-    name: FORGE_WORKING_FIELD_TYPE_NAME,
-    loadComponent: () => import('./field/wrapper/working/working.field.component').then((m) => m.DbxForgeWorkingFieldComponent),
     mapper: valueFieldMapper
   }
 ];

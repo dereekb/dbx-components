@@ -147,14 +147,14 @@ import { AsyncPipe } from '@angular/common';
 export class DbxForgeFormFieldWrapperComponent implements FieldWrapperContract {
   readonly fieldComponent = viewChild.required('fieldComponent', { read: ViewContainerRef });
 
+  // Props from wrapper config
+  readonly fieldInputs = input<WrapperFieldInputs>();
+
   // Root form state from the flattened field signal context
   private readonly formState = computed(() => this.fieldInputs()?.field);
 
   // Disabled state
-  readonly isDisabled = computed(() => this.formState()?.disabled);
-
-  // Props from wrapper config
-  readonly fieldInputs = input<WrapperFieldInputs>();
+  readonly isDisabled = computed(() => this.formState()?.disabled());
 
   readonly label = computed(() => this.fieldInputs()?.label);
   readonly hintSignal = computed(() => (this.fieldInputs()?.props as any)?.hint);

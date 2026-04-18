@@ -1,10 +1,11 @@
-import type { BaseValueField } from '@ng-forge/dynamic-forms';
+import type { BaseValueField, DynamicForm, DynamicText } from '@ng-forge/dynamic-forms';
 import type { MatInputField, MatInputProps } from '@ng-forge/dynamic-forms-material';
 import { transformStringFunction, type TransformStringFunctionConfig, type TransformStringFunctionConfigRef } from '@dereekb/util';
 import type { FieldAutocompleteAttributeOptionRef } from '../../../../field/field.autocomplete';
-import { dbxForgeFieldFunction, dbxForgeBuildFieldDef, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef, type DbxForgeFieldFunction } from '../../field';
+import { dbxForgeFieldFunction, dbxForgeBuildFieldDef, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef, type DbxForgeFieldFunction, DbxForgeFieldHintOrDescriptionValueRef } from '../../field';
 import { configureForgeAutocompleteFieldMeta } from '../../field.util.meta';
 import { dbxForgePatternValidator } from '../../field.util.validation';
+import { HintFieldConfig } from 'packages/dbx-form/src/lib/field';
 
 // MARK: Text Field
 /**
@@ -25,7 +26,7 @@ export interface DbxForgeTextFieldPatternConfig {
 /**
  * We use this for DbxForgeNumberFieldConfig since MatInputField is a union type for both string and number input.
  */
-type DbxForgeTextFieldDef = BaseValueField<Omit<MatInputProps, 'type'> & { type?: DbxForgeTextFieldInputType }, string> & { type: 'input' };
+type DbxForgeStringInputFieldDef = BaseValueField<Omit<MatInputProps, 'type'> & { type?: DbxForgeTextFieldInputType }, string> & { type: 'input' } & DbxForgeFieldHintOrDescriptionValueRef<DynamicText>;
 
 /**
  * HTML input type for a text field.
@@ -38,7 +39,7 @@ export type DbxForgeTextFieldInputType = 'text' | 'password' | 'email';
  * Combines labeling, validation (pattern, length), and string transformation
  * into one config object.
  */
-export interface DbxForgeTextFieldConfig extends DbxForgeFieldFunctionDef<DbxForgeTextFieldDef>, FieldAutocompleteAttributeOptionRef {
+export interface DbxForgeTextFieldConfig extends DbxForgeFieldFunctionDef<DbxForgeStringInputFieldDef>, FieldAutocompleteAttributeOptionRef {
   /**
    * HTML input type. Defaults to `'text'`.
    */

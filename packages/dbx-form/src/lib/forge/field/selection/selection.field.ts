@@ -1,7 +1,5 @@
 import { filterFromPOJO } from '@dereekb/util';
 import type { ObservableOrValue } from '@dereekb/rxjs';
-import type { FieldTypeDefinition } from '@ng-forge/dynamic-forms';
-import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { FORGE_VALUE_SELECTION_FIELD_TYPE, type DbxForgeValueSelectionFieldDef } from './selection.field.component';
 import type { ValueSelectionOption } from '../../../field/field.selection';
 import { dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef } from '../field';
@@ -9,18 +7,6 @@ import type { DbxForgeField } from '../../form/forge.form';
 
 // MARK: Re-exports
 export { resolveForgeSelectionOptions, type DbxForgeResolvedSelectionOption, type DbxForgeValueSelectionFieldProps, type DbxForgeValueSelectionFieldDef, FORGE_VALUE_SELECTION_FIELD_TYPE } from './selection.field.component';
-
-// MARK: Field Type Definition
-/**
- * ng-forge FieldTypeDefinition for the value selection field.
- *
- * Register via `provideDynamicForm(DBX_VALUE_SELECTION_FIELD_TYPE)`.
- */
-export const DBX_VALUE_SELECTION_FIELD_TYPE: FieldTypeDefinition<DbxForgeValueSelectionFieldDef> = {
-  name: FORGE_VALUE_SELECTION_FIELD_TYPE,
-  loadComponent: () => import('./selection.field.component').then((m) => m.DbxForgeValueSelectionFieldComponent),
-  mapper: valueFieldMapper
-};
 
 // MARK: Config
 /**
