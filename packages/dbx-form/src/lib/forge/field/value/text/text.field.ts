@@ -75,7 +75,7 @@ export interface DbxForgeTextFieldConfig extends DbxForgeFieldFunctionDef<DbxFor
  * });
  * ```
  */
-export const forgeTextField = dbxForgeFieldFunction<DbxForgeTextFieldConfig>({
+export const dbxForgeTextField = dbxForgeFieldFunction<DbxForgeTextFieldConfig>({
   type: 'input',
   buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder((input) => ({
     type: input.inputType ?? 'text'
@@ -102,3 +102,7 @@ export const forgeTextField = dbxForgeFieldFunction<DbxForgeTextFieldConfig>({
     }
   })
 }) as DbxForgeFieldFunction<DbxForgeTextFieldConfig, MatInputField>;
+
+// MARK: Deprecated
+/** @deprecated Use {@link dbxForgeTextField} instead. */
+export const forgeTextField = dbxForgeTextField;

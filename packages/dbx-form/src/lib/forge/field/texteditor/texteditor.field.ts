@@ -22,7 +22,7 @@ export interface DbxForgeTextEditorFieldConfig extends DbxForgeFieldFunctionDef<
  * const field = forgeTextEditorField({ key: 'bio', label: 'Biography', maxLength: 2000 });
  * ```
  */
-export const forgeTextEditorField = dbxForgeFieldFunction<DbxForgeTextEditorFieldConfig>({
+export const dbxForgeTextEditorField = dbxForgeFieldFunction<DbxForgeTextEditorFieldConfig>({
   type: FORGE_TEXT_EDITOR_FIELD_TYPE,
   buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder((config) =>
     filterFromPOJO({
@@ -31,3 +31,7 @@ export const forgeTextEditorField = dbxForgeFieldFunction<DbxForgeTextEditorFiel
     })
   )
 }) as DbxForgeFieldFunction<DbxForgeTextEditorFieldConfig, DbxForgeTextEditorFieldDef>;
+
+// MARK: Deprecated
+/** @deprecated Use {@link dbxForgeTextEditorField} instead. */
+export const forgeTextEditorField = dbxForgeTextEditorField;

@@ -69,7 +69,7 @@ export interface DbxForgeTimeDurationFieldConfig extends DbxForgeFieldFunctionDe
  * });
  * ```
  */
-export const forgeTimeDurationField = dbxForgeFieldFunction<DbxForgeTimeDurationFieldConfig>({
+export const dbxForgeTimeDurationField = dbxForgeFieldFunction<DbxForgeTimeDurationFieldConfig>({
   type: FORGE_TIMEDURATION_FIELD_TYPE,
   buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder((config) =>
     filterFromPOJO({
@@ -83,3 +83,7 @@ export const forgeTimeDurationField = dbxForgeFieldFunction<DbxForgeTimeDuration
     })
   )
 }) as DbxForgeFieldFunction<DbxForgeTimeDurationFieldConfig, DbxForgeTimeDurationFieldDef>;
+
+// MARK: Deprecated
+/** @deprecated Use {@link dbxForgeTimeDurationField} instead. */
+export const forgeTimeDurationField = dbxForgeTimeDurationField;

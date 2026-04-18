@@ -31,7 +31,7 @@ export interface DbxForgeTextAreaFieldConfig extends DbxForgeFieldFunctionDef<Ma
  * const field = forgeTextAreaField({ key: 'bio', label: 'Biography', rows: 5, maxLength: 500 });
  * ```
  */
-export const forgeTextAreaField = dbxForgeFieldFunction<DbxForgeTextAreaFieldConfig>({
+export const dbxForgeTextAreaField = dbxForgeFieldFunction<DbxForgeTextAreaFieldConfig>({
   type: 'textarea' as const,
   buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder((input) => ({
     rows: input.rows ?? 3
@@ -60,3 +60,7 @@ export const forgeTextAreaField = dbxForgeFieldFunction<DbxForgeTextAreaFieldCon
     });
   })
 });
+
+// MARK: Deprecated
+/** @deprecated Use {@link dbxForgeTextAreaField} instead. */
+export const forgeTextAreaField = dbxForgeTextAreaField;

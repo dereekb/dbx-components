@@ -36,7 +36,7 @@ export interface DbxForgeNumberSliderFieldConfig extends DbxForgeFieldFunctionDe
  * const field = forgeNumberSliderField({ key: 'rating', label: 'Rating', min: 0, max: 10, step: 1 });
  * ```
  */
-export const forgeNumberSliderField = dbxForgeFieldFunction<DbxForgeNumberSliderFieldConfig>({
+export const dbxForgeNumberSliderField = dbxForgeFieldFunction<DbxForgeNumberSliderFieldConfig>({
   type: 'slider' as const,
   buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder((config) => {
     const { step, thumbLabel: inputThumbLabel, tickInterval: inputTickInterval } = config;
@@ -63,3 +63,7 @@ export const forgeNumberSliderField = dbxForgeFieldFunction<DbxForgeNumberSlider
     x.configure(configureDbxForgeFormFieldWrapper);
   })
 }) as DbxForgeFieldFunction<DbxForgeNumberSliderFieldConfig, MatSliderField>;
+
+// MARK: Deprecated
+/** @deprecated Use {@link dbxForgeNumberSliderField} instead. */
+export const forgeNumberSliderField = dbxForgeNumberSliderField;

@@ -1,8 +1,8 @@
 import type { FieldDef, GroupField } from '@ng-forge/dynamic-forms';
 import { ADDRESS_LINE_MAX_LENGTH } from '@dereekb/model';
-import { forgeTextField, type DbxForgeTextFieldConfig } from './text.field';
-import { forgeCityField, type DbxForgeCityFieldConfig, forgeCountryField, type DbxForgeCountryFieldConfig, forgeStateField, type DbxForgeStateFieldConfig, forgeZipCodeField, type DbxForgeZipCodeFieldConfig } from './text.additional.field';
-import { forgeGroup, forgeRow } from '../../wrapper/wrapper';
+import { dbxForgeTextField, type DbxForgeTextFieldConfig } from './text.field';
+import { dbxForgeCityField, type DbxForgeCityFieldConfig, dbxForgeCountryField, type DbxForgeCountryFieldConfig, dbxForgeStateField, type DbxForgeStateFieldConfig, dbxForgeZipCodeField, type DbxForgeZipCodeFieldConfig } from './text.additional.field';
+import { dbxForgeGroup, dbxForgeRow } from '../../wrapper/wrapper';
 import { dbxForgeArrayField } from '../array/array.field';
 import { MatInputField } from '@ng-forge/dynamic-forms-material';
 import { DbxForgeField } from '../../../form/forge.form';
@@ -60,13 +60,13 @@ export interface DbxForgeAddressLineFieldConfig extends Partial<DbxForgeTextFiel
  * const line2 = forgeAddressLineField({ line: 2 });
  * ```
  */
-export function forgeAddressLineField(config: DbxForgeAddressLineFieldConfig = {}) {
+export function dbxForgeAddressLineField(config: DbxForgeAddressLineFieldConfig = {}) {
   const { line = 1 } = config;
   const lineCode = Math.max(1, line); // minimum of line 1
 
   const { key = `line${lineCode}`, placeholder = '', label = line ? `Line ${line}` : 'Street', maxLength = ADDRESS_LINE_MAX_LENGTH, required = false } = config;
 
-  return forgeTextField({
+  return dbxForgeTextField({
     ...config,
     key,
     placeholder,
@@ -88,32 +88,32 @@ export function forgeAddressLineField(config: DbxForgeAddressLineFieldConfig = {
  * const fields = forgeAddressFields({ required: true, includeCountry: false });
  * ```
  */
-export function forgeAddressFields(config: DbxForgeAddressFieldsConfig = {}) {
+export function dbxForgeAddressFields(config: DbxForgeAddressFieldsConfig = {}) {
   const { required = true, includeLine2 = true, includeCountry = true } = config;
 
   // City and country are full-width on their own rows since names can be long
-  const cityField = forgeCityField({ required, ...config.cityField });
+  const cityField = dbxForgeCityField({ required, ...config.cityField });
 
   // State and zip share a row
-  const stateZipRow = forgeRow({
+  const stateZipRow = dbxForgeRow({
     fields: [
-      { ...forgeStateField({ required, ...config.stateField }), col: 6 },
-      { ...forgeZipCodeField({ required, ...config.zipCodeField }), col: 6 }
+      { ...dbxForgeStateField({ required, ...config.stateField }), col: 6 },
+      { ...dbxForgeZipCodeField({ required, ...config.zipCodeField }), col: 6 }
     ]
   });
 
   let lines: DbxForgeField<MatInputField>[];
 
   if (includeLine2) {
-    lines = [forgeAddressLineField({ required, ...config.line1Field, line: 1 }), forgeAddressLineField({ ...config.line2Field, line: 2 })];
+    lines = [dbxForgeAddressLineField({ required, ...config.line1Field, line: 1 }), dbxForgeAddressLineField({ ...config.line2Field, line: 2 })];
   } else {
-    lines = [forgeAddressLineField({ required, ...config.line1Field, line: 0 })];
+    lines = [dbxForgeAddressLineField({ required, ...config.line1Field, line: 0 })];
   }
 
   const fields = [...lines, cityField, stateZipRow];
 
   if (includeCountry) {
-    fields.push(forgeCountryField({ required, ...config.countryField }));
+    fields.push(dbxForgeCountryField({ required, ...config.countryField }));
   }
 
   return fields;
@@ -138,12 +138,12 @@ export interface DbxForgeAddressFieldConfig extends DbxForgeAddressFieldsConfig 
  * const field = forgeAddressField({ required: true, includeCountry: true });
  * ```
  */
-export function forgeAddressField(config: Partial<DbxForgeAddressFieldConfig> = {}): GroupField {
+export function dbxForgeAddressField(config: Partial<DbxForgeAddressFieldConfig> = {}): GroupField {
   const { key = 'address' } = config;
 
-  return forgeGroup({
+  return dbxForgeGroup({
     key,
-    fields: forgeAddressFields(config)
+    fields: dbxForgeAddressFields(config)
   });
 }
 
@@ -171,7 +171,7 @@ export interface DbxForgeAddressListFieldConfig extends DbxForgeAddressFieldsCon
  * const field = forgeAddressListField({ maxAddresses: 3, required: true });
  * ```
  */
-export function forgeAddressListField(config: Partial<DbxForgeAddressListFieldConfig> = {}) {
+export function dbxForgeAddressListField(config: Partial<DbxForgeAddressListFieldConfig> = {}) {
   const { key = 'addresses', maxAddresses = 6 } = config;
 
   return dbxForgeArrayField({
@@ -181,7 +181,17 @@ export function forgeAddressListField(config: Partial<DbxForgeAddressListFieldCo
       addText: 'Add Address',
       removeText: 'Remove Address'
     },
-    template: forgeAddressFields(config),
+    template: dbxForgeAddressFields(config),
     maxLength: maxAddresses
   });
 }
+
+// MARK: Deprecated
+/** @deprecated Use {@link dbxForgeAddressLineField} instead. */
+export const forgeAddressLineField = dbxForgeAddressLineField;
+/** @deprecated Use {@link dbxForgeAddressFields} instead. */
+export const forgeAddressFields = dbxForgeAddressFields;
+/** @deprecated Use {@link dbxForgeAddressField} instead. */
+export const forgeAddressField = dbxForgeAddressField;
+/** @deprecated Use {@link dbxForgeAddressListField} instead. */
+export const forgeAddressListField = dbxForgeAddressListField;

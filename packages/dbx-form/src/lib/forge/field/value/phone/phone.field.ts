@@ -66,7 +66,7 @@ export interface DbxForgePhoneFieldConfig extends DbxForgeFieldFunctionDef<DbxFo
  * const field = forgePhoneField({ key: 'phone', label: 'Phone Number', required: true });
  * ```
  */
-export const forgePhoneField = dbxForgeFieldFunction<DbxForgePhoneFieldConfig>({
+export const dbxForgePhoneField = dbxForgeFieldFunction<DbxForgePhoneFieldConfig>({
   type: FORGE_PHONE_FIELD_TYPE,
   buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder((config) =>
     filterFromPOJO({
@@ -78,3 +78,7 @@ export const forgePhoneField = dbxForgeFieldFunction<DbxForgePhoneFieldConfig>({
     })
   )
 }) as DbxForgeFieldFunction<DbxForgePhoneFieldConfig, DbxForgePhoneFieldDef>;
+
+// MARK: Deprecated
+/** @deprecated Use {@link dbxForgePhoneField} instead. */
+export const forgePhoneField = dbxForgePhoneField;

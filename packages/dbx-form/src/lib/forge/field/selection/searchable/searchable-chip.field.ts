@@ -31,7 +31,7 @@ export type DbxForgeSearchableChipFieldFunction = <T = unknown, M = unknown, H e
  * });
  * ```
  */
-export const forgeSearchableChipField = dbxForgeFieldFunction<DbxForgeSearchableChipFieldConfig>({
+export const dbxForgeSearchableChipField = dbxForgeFieldFunction<DbxForgeSearchableChipFieldConfig>({
   type: DBX_FORGE_SEARCHABLE_CHIP_FIELD_TYPE_NAME,
   buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder(),
   buildFieldDef: dbxForgeBuildFieldDef((x) => {
@@ -46,6 +46,12 @@ export const forgeSearchableChipField = dbxForgeFieldFunction<DbxForgeSearchable
  * @param config - String-specific searchable chip field configuration (omits allowStringValues)
  * @returns A {@link DbxForgeFormFieldWrapperFieldDef} wrapping a searchable chip field
  */
-export function forgeSearchableStringChipField<M = unknown>(config: DbxForgeSearchableChipFieldConfig<string, M>) {
-  return forgeSearchableChipField<string, M>(config);
+export function dbxForgeSearchableStringChipField<M = unknown>(config: DbxForgeSearchableChipFieldConfig<string, M>) {
+  return dbxForgeSearchableChipField<string, M>(config);
 }
+
+// MARK: Deprecated
+/** @deprecated Use {@link dbxForgeSearchableChipField} instead. */
+export const forgeSearchableChipField = dbxForgeSearchableChipField;
+/** @deprecated Use {@link dbxForgeSearchableStringChipField} instead. */
+export const forgeSearchableStringChipField = dbxForgeSearchableStringChipField;

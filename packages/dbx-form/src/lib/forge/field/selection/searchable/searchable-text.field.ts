@@ -30,7 +30,7 @@ export type DbxForgeSearchableTextFieldFunction = <T = unknown, M = unknown, H e
  * });
  * ```
  */
-export const forgeSearchableTextField = dbxForgeFieldFunction<DbxForgeSearchableTextFieldConfig>({
+export const dbxForgeSearchableTextField = dbxForgeFieldFunction<DbxForgeSearchableTextFieldConfig>({
   type: DBX_FORGE_SEARCHABLE_TEXT_FIELD_TYPE_NAME,
   buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder(),
   buildFieldDef: dbxForgeBuildFieldDef((x) => {
@@ -38,3 +38,7 @@ export const forgeSearchableTextField = dbxForgeFieldFunction<DbxForgeSearchable
     x.configure(configureDbxForgeFormFieldWrapper);
   })
 }) as DbxForgeSearchableTextFieldFunction;
+
+// MARK: Deprecated
+/** @deprecated Use {@link dbxForgeSearchableTextField} instead. */
+export const forgeSearchableTextField = dbxForgeSearchableTextField;

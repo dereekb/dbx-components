@@ -44,9 +44,12 @@ let _componentFieldCounter = 0;
 /**
  * Generic function type for forgeComponentField to preserve caller generics.
  */
-export type ForgeComponentFieldFunction = <T = unknown>(config: DbxForgeComponentFieldConfig<T>) => DbxForgeField<DbxForgeComponentFieldDef<T>>;
+export type DbxForgeComponentFieldFunction = <T = unknown>(config: DbxForgeComponentFieldConfig<T>) => DbxForgeField<DbxForgeComponentFieldDef<T>>;
 
-const _forgeComponentField = dbxForgeFieldFunction<_DbxForgeComponentFieldConfig>({
+/** @deprecated Use {@link DbxForgeComponentFieldFunction} instead. */
+export type ForgeComponentFieldFunction = DbxForgeComponentFieldFunction;
+
+const _dbxForgeComponentField = dbxForgeFieldFunction<_DbxForgeComponentFieldConfig>({
   type: FORGE_COMPONENT_FIELD_TYPE,
   buildProps: (config) =>
     filterFromPOJO({
@@ -73,9 +76,13 @@ const _forgeComponentField = dbxForgeFieldFunction<_DbxForgeComponentFieldConfig
  * });
  * ```
  */
-export const forgeComponentField: ForgeComponentFieldFunction = (config) => {
-  return _forgeComponentField({
+export const dbxForgeComponentField: DbxForgeComponentFieldFunction = (config) => {
+  return _dbxForgeComponentField({
     ...config,
     key: config.key || `_component_${++_componentFieldCounter}`
   } as _DbxForgeComponentFieldConfig) as any;
 };
+
+// MARK: Deprecated
+/** @deprecated Use {@link dbxForgeComponentField} instead. */
+export const forgeComponentField = dbxForgeComponentField;

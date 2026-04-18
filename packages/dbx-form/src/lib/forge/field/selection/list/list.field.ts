@@ -78,7 +78,7 @@ export type DbxForgeListSelectionFieldFunction = <T = unknown, C extends Abstrac
  * });
  * ```
  */
-export const forgeListSelectionField = dbxForgeFieldFunction<DbxForgeListSelectionFieldConfig>({
+export const dbxForgeListSelectionField = dbxForgeFieldFunction<DbxForgeListSelectionFieldConfig>({
   type: FORGE_LIST_SELECTION_FIELD_TYPE,
   buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder(),
   buildFieldDef: dbxForgeBuildFieldDef((x) => {
@@ -86,3 +86,7 @@ export const forgeListSelectionField = dbxForgeFieldFunction<DbxForgeListSelecti
     x.configure(configureDbxForgeFormFieldWrapper);
   })
 }) as DbxForgeListSelectionFieldFunction;
+
+// MARK: Deprecated
+/** @deprecated Use {@link dbxForgeListSelectionField} instead. */
+export const forgeListSelectionField = dbxForgeListSelectionField;

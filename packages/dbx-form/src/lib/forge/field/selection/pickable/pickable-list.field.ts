@@ -29,7 +29,7 @@ export type DbxForgePickableListFieldFunction = <T = unknown, M = unknown, H ext
  * });
  * ```
  */
-export const forgePickableListField = dbxForgeFieldFunction<DbxForgePickableListFieldConfig>({
+export const dbxForgePickableListField = dbxForgeFieldFunction<DbxForgePickableListFieldConfig>({
   type: FORGE_PICKABLE_LIST_FIELD_TYPE,
   buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder(),
   buildFieldDef: dbxForgeBuildFieldDef((x) => {
@@ -37,3 +37,7 @@ export const forgePickableListField = dbxForgeFieldFunction<DbxForgePickableList
     x.configure(configureDbxForgeFormFieldWrapper);
   })
 }) as DbxForgePickableListFieldFunction;
+
+// MARK: Deprecated
+/** @deprecated Use {@link dbxForgePickableListField} instead. */
+export const forgePickableListField = dbxForgePickableListField;

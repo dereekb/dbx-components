@@ -1,6 +1,6 @@
 import type { FieldDef, GroupField, GroupAllowedChildren } from '@ng-forge/dynamic-forms';
 import type { DbxFlexSize, ScreenMediaWidthType } from '@dereekb/dbx-web';
-import { forgeGroup } from '../wrapper';
+import { dbxForgeGroup } from '../wrapper';
 
 // MARK: Wrapper Type
 /**
@@ -93,7 +93,7 @@ function isFlexFieldConfig(input: FieldDef<unknown> | DbxForgeFlexLayoutFieldCon
  * forgeFlexLayout([...fields], { breakpoint: 'large', breakToColumn: true, relative: true, size: 1 })
  * ```
  */
-export function forgeFlexLayout(fieldConfigs: (FieldDef<unknown> | DbxForgeFlexLayoutFieldConfig)[], config: DbxForgeFlexLayoutConfig = {}): GroupField {
+export function dbxForgeFlexLayout(fieldConfigs: (FieldDef<unknown> | DbxForgeFlexLayoutFieldConfig)[], config: DbxForgeFlexLayoutConfig = {}): GroupField {
   const { breakpoint, relative, breakToColumn, size: defaultSize = 2 } = config;
 
   const mappedFields = fieldConfigs.map((input) => {
@@ -110,9 +110,13 @@ export function forgeFlexLayout(fieldConfigs: (FieldDef<unknown> | DbxForgeFlexL
     ...(breakToColumn != null && { breakToColumn })
   };
 
-  return forgeGroup({
+  return dbxForgeGroup({
     fields: mappedFields as unknown as GroupAllowedChildren[],
     className: 'dbx-flex-group',
     wrappers: [flexWrapper]
   });
 }
+
+// MARK: Deprecated
+/** @deprecated Use {@link dbxForgeFlexLayout} instead. */
+export const forgeFlexLayout = dbxForgeFlexLayout;

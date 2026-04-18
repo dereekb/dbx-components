@@ -11,10 +11,10 @@ export interface DbxForgeContainerLogicConfig {
   readonly condition: ConditionalExpression | boolean;
 }
 
-let _forgeRowCounter = 0;
-let _forgeGroupCounter = 0;
-let _forgeToggleCounter = 0;
-let _forgeExpandCounter = 0;
+let _dbxForgeRowCounter = 0;
+let _dbxForgeGroupCounter = 0;
+let _dbxForgeToggleCounter = 0;
+let _dbxForgeExpandCounter = 0;
 
 // MARK: Row
 /**
@@ -51,13 +51,13 @@ export interface DbxForgeRowConfig extends Omit<RowField, 'type' | 'key'> {
  * });
  * ```
  */
-export function forgeRow(config: DbxForgeRowConfig): RowField {
+export function dbxForgeRow(config: DbxForgeRowConfig): RowField {
   const { key: inputKey, ...rest } = config;
 
   return {
     ...rest,
     type: 'row',
-    key: inputKey ?? `_row_${_forgeRowCounter++}`
+    key: inputKey ?? `_row_${_dbxForgeRowCounter++}`
   } as RowField;
 }
 
@@ -88,13 +88,13 @@ export interface DbxForgeGroupConfig extends Omit<GroupField, 'type' | 'key'> {
  * @param config - Group configuration with fields and optional key/className
  * @returns A {@link GroupField} with type `'group'`
  */
-export function forgeGroup(config: DbxForgeGroupConfig): GroupField {
+export function dbxForgeGroup(config: DbxForgeGroupConfig): GroupField {
   const { key: inputKey, ...rest } = config;
 
   return {
     ...rest,
     type: 'group',
-    key: inputKey ?? `_group_${_forgeGroupCounter++}`
+    key: inputKey ?? `_group_${_dbxForgeGroupCounter++}`
   } as GroupField;
 }
 
@@ -159,8 +159,8 @@ export interface DbxForgeToggleWrapperConfig {
  * });
  * ```
  */
-export function forgeToggleWrapper(config: DbxForgeToggleWrapperConfig): RowField {
-  const toggleKey = config.key ?? `_toggle_${_forgeToggleCounter++}`;
+export function dbxForgeToggleWrapper(config: DbxForgeToggleWrapperConfig): RowField {
+  const toggleKey = config.key ?? `_toggle_${_dbxForgeToggleCounter++}`;
 
   // Built-in ng-forge toggle field (renders <mat-slide-toggle>)
   const toggleField: FieldDef<unknown> = {
@@ -181,13 +181,13 @@ export function forgeToggleWrapper(config: DbxForgeToggleWrapperConfig): RowFiel
     }
   };
 
-  const contentGroup = forgeGroup({
+  const contentGroup = dbxForgeGroup({
     key: config.contentKey,
     fields: config.fields as unknown as GroupAllowedChildren[],
     logic: [hiddenCondition]
   });
 
-  return forgeRow({
+  return dbxForgeRow({
     fields: [toggleField as unknown as RowAllowedChildren, contentGroup as unknown as RowAllowedChildren],
     className: config.className ?? 'dbx-forge-toggle-wrapper'
   });
@@ -259,8 +259,8 @@ export interface DbxForgeExpandWrapperConfig {
  * });
  * ```
  */
-export function forgeExpandWrapper(config: DbxForgeExpandWrapperConfig): RowField {
-  const expandKey = config.key ?? `_expand_${_forgeExpandCounter++}`;
+export function dbxForgeExpandWrapper(config: DbxForgeExpandWrapperConfig): RowField {
+  const expandKey = config.key ?? `_expand_${_dbxForgeExpandCounter++}`;
 
   const expandField: DbxForgeExpandFieldDef = {
     key: expandKey,
@@ -283,14 +283,24 @@ export function forgeExpandWrapper(config: DbxForgeExpandWrapperConfig): RowFiel
     }
   };
 
-  const contentGroup = forgeGroup({
+  const contentGroup = dbxForgeGroup({
     key: config.contentKey,
     fields: config.fields as unknown as GroupAllowedChildren[],
     logic: [hiddenCondition]
   });
 
-  return forgeRow({
+  return dbxForgeRow({
     fields: [expandField as unknown as RowAllowedChildren, contentGroup as unknown as RowAllowedChildren],
     className: config.className ?? 'dbx-forge-expand-wrapper'
   });
 }
+
+// MARK: Deprecated
+/** @deprecated Use {@link dbxForgeRow} instead. */
+export const forgeRow = dbxForgeRow;
+/** @deprecated Use {@link dbxForgeGroup} instead. */
+export const forgeGroup = dbxForgeGroup;
+/** @deprecated Use {@link dbxForgeToggleWrapper} instead. */
+export const forgeToggleWrapper = dbxForgeToggleWrapper;
+/** @deprecated Use {@link dbxForgeExpandWrapper} instead. */
+export const forgeExpandWrapper = dbxForgeExpandWrapper;

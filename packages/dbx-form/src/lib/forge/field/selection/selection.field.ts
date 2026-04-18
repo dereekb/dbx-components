@@ -39,7 +39,10 @@ export interface DbxForgeValueSelectionFieldConfig<T = unknown> extends DbxForge
 /**
  * Generic function type for forgeValueSelectionField to preserve caller generics.
  */
-export type ForgeValueSelectionFieldFunction = <T = unknown>(config: DbxForgeValueSelectionFieldConfig<T>) => DbxForgeField<DbxForgeValueSelectionFieldDef<T>>;
+export type DbxForgeValueSelectionFieldFunction = <T = unknown>(config: DbxForgeValueSelectionFieldConfig<T>) => DbxForgeField<DbxForgeValueSelectionFieldDef<T>>;
+
+/** @deprecated Use {@link DbxForgeValueSelectionFieldFunction} instead. */
+export type ForgeValueSelectionFieldFunction = DbxForgeValueSelectionFieldFunction;
 
 // MARK: Factory
 /**
@@ -71,7 +74,7 @@ export type ForgeValueSelectionFieldFunction = <T = unknown>(config: DbxForgeVal
  * });
  * ```
  */
-export const forgeValueSelectionField = dbxForgeFieldFunction<DbxForgeValueSelectionFieldConfig>({
+export const dbxForgeValueSelectionField = dbxForgeFieldFunction<DbxForgeValueSelectionFieldConfig>({
   type: FORGE_VALUE_SELECTION_FIELD_TYPE,
   buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder((config) =>
     filterFromPOJO({
@@ -80,4 +83,8 @@ export const forgeValueSelectionField = dbxForgeFieldFunction<DbxForgeValueSelec
       multiple: config.multiple
     })
   )
-}) as ForgeValueSelectionFieldFunction;
+}) as DbxForgeValueSelectionFieldFunction;
+
+// MARK: Deprecated
+/** @deprecated Use {@link dbxForgeValueSelectionField} instead. */
+export const forgeValueSelectionField = dbxForgeValueSelectionField;

@@ -16,7 +16,10 @@ export interface DbxForgeChecklistFieldConfig<T = unknown> extends DbxForgeField
 /**
  * Generic function type for forgeChecklistField to preserve caller generics.
  */
-export type ForgeChecklistFieldFunction = <T = unknown>(config: DbxForgeChecklistFieldConfig<T>) => DbxForgeField<MatMultiCheckboxField<T>>;
+export type DbxForgeChecklistFieldFunction = <T = unknown>(config: DbxForgeChecklistFieldConfig<T>) => DbxForgeField<MatMultiCheckboxField<T>>;
+
+/** @deprecated Use {@link DbxForgeChecklistFieldFunction} instead. */
+export type ForgeChecklistFieldFunction = DbxForgeChecklistFieldFunction;
 
 /**
  * Creates a forge field definition for a Material multi-checkbox (checklist) field.
@@ -36,11 +39,15 @@ export type ForgeChecklistFieldFunction = <T = unknown>(config: DbxForgeChecklis
  * });
  * ```
  */
-export const forgeChecklistField = dbxForgeFieldFunction<DbxForgeChecklistFieldConfig>({
+export const dbxForgeChecklistField = dbxForgeFieldFunction<DbxForgeChecklistFieldConfig>({
   type: 'multi-checkbox' as const,
   buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder((config) =>
     filterFromPOJO({
       labelPosition: config.labelPosition
     })
   )
-}) as ForgeChecklistFieldFunction;
+}) as DbxForgeChecklistFieldFunction;
+
+// MARK: Deprecated
+/** @deprecated Use {@link dbxForgeChecklistField} instead. */
+export const forgeChecklistField = dbxForgeChecklistField;

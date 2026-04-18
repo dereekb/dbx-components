@@ -30,10 +30,14 @@ export type DbxForgeSourceSelectFieldFunction = <T extends PrimativeKey = Primat
  * });
  * ```
  */
-export const forgeSourceSelectField = dbxForgeFieldFunction<DbxForgeSourceSelectFieldConfig>({
+export const dbxForgeSourceSelectField = dbxForgeFieldFunction<DbxForgeSourceSelectFieldConfig>({
   type: FORGE_SOURCE_SELECT_FIELD_TYPE,
   buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder(),
   buildFieldDef: dbxForgeBuildFieldDef(() => {
     // TODO: ...
   })
 }) as DbxForgeSourceSelectFieldFunction;
+
+// MARK: Deprecated
+/** @deprecated Use {@link dbxForgeSourceSelectField} instead. */
+export const forgeSourceSelectField = dbxForgeSourceSelectField;

@@ -29,7 +29,7 @@ export type DbxForgePickableChipFieldFunction = <T = unknown, M = unknown, H ext
  * });
  * ```
  */
-export const forgePickableChipField = dbxForgeFieldFunction<DbxForgePickableChipFieldConfig>({
+export const dbxForgePickableChipField = dbxForgeFieldFunction<DbxForgePickableChipFieldConfig>({
   type: FORGE_PICKABLE_CHIP_FIELD_TYPE,
   buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder(),
   buildFieldDef: dbxForgeBuildFieldDef((x) => {
@@ -37,3 +37,7 @@ export const forgePickableChipField = dbxForgeFieldFunction<DbxForgePickableChip
     x.configure(configureDbxForgeFormFieldWrapper);
   })
 }) as DbxForgePickableChipFieldFunction;
+
+// MARK: Deprecated
+/** @deprecated Use {@link dbxForgePickableChipField} instead. */
+export const forgePickableChipField = dbxForgePickableChipField;

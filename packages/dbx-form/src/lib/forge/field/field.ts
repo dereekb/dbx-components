@@ -1,6 +1,6 @@
 import { ArrayOrValue, Building, Maybe, MaybeMap, MaybeSo, Milliseconds, NOOP_MODIFIER, asArray, filterNullAndUndefinedValues, filterUndefinedValues, filterUniqueValues, mapMaybeFunction, mergeArrays, objectHasNoKeys } from '@dereekb/util';
 import { type AsyncCustomValidator, CustomFnConfig, type CustomValidator, EvaluationContext, FieldDef, FieldMeta, FieldWithValidation, LogicConfig, ValidationMessages, ValidatorConfig, WrapperConfig } from '@ng-forge/dynamic-forms';
-import { ForgeFieldValidation } from './field.type';
+import { DbxForgeFieldValidation } from './field.type';
 import { DbxForgeField, DbxForgeFieldFormConfig, mergeDbxForgeFieldFormConfig } from '../form/forge.form';
 
 // MARK: Forge Field
@@ -216,7 +216,7 @@ export type DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceAddValidationInp
    * form-wide resolution. Separate from field-level `validationMessages`.
    */
   readonly formValidationMessages?: Maybe<Record<string, string>>;
-} & MaybeMap<Pick<ForgeFieldValidation, 'validationMessages'>>;
+} & MaybeMap<Pick<DbxForgeFieldValidation, 'validationMessages'>>;
 
 /**
  * Builder instance provided to {@link DbxForgeBuildFieldDefFunction} callbacks.
@@ -238,7 +238,7 @@ export interface DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C extends 
    *
    * Does not modify the current config.
    */
-  getDefaultValidation(): ForgeFieldValidation;
+  getDefaultValidation(): DbxForgeFieldValidation;
   /**
    * Injects the default validators into the field definition.
    */
@@ -246,7 +246,7 @@ export interface DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C extends 
   /**
    * Loads all the current validators from the field definition.
    */
-  getValidation(): ForgeFieldValidation;
+  getValidation(): DbxForgeFieldValidation;
   /**
    * Adds/Merges the input validation into the existing field definition.
    */
@@ -254,7 +254,7 @@ export interface DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C extends 
   /**
    * Sets the validation for the field definition.
    */
-  setValidation(input: ForgeFieldValidation): void;
+  setValidation(input: DbxForgeFieldValidation): void;
   /**
    * Returns the current meta.
    */
@@ -537,7 +537,7 @@ export function dbxForgeBuildFieldDef<C extends DbxForgeFieldFunctionDef<any>, F
       return props;
     }
 
-    function getDefaultValidation(): ForgeFieldValidation {
+    function getDefaultValidation(): DbxForgeFieldValidation {
       return {};
     }
 
@@ -546,7 +546,7 @@ export function dbxForgeBuildFieldDef<C extends DbxForgeFieldFunctionDef<any>, F
       addValidation(defaultValidation);
     }
 
-    function getValidation(): ForgeFieldValidation {
+    function getValidation(): DbxForgeFieldValidation {
       return {
         validators: fieldDef['validators'],
         validationMessages: fieldDef['validationMessages']
@@ -620,7 +620,7 @@ export function dbxForgeBuildFieldDef<C extends DbxForgeFieldFunctionDef<any>, F
       });
     }
 
-    function setValidation(input: ForgeFieldValidation): void {
+    function setValidation(input: DbxForgeFieldValidation): void {
       (fieldDef as Building<FieldWithValidation>)['validators'] = input.validators;
       (fieldDef as Building<FieldWithValidation>)['validationMessages'] = input.validationMessages;
     }
