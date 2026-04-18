@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, inject, viewChild, ViewContainerRef } from '@angular/core';
-import { DynamicTextPipe, FieldWrapperContract, type DynamicText, type FieldWithValidation, WRAPPER_FIELD_CONTEXT } from '@ng-forge/dynamic-forms';
+import { ChangeDetectionStrategy, Component, computed, inject, input, viewChild, ViewContainerRef } from '@angular/core';
+import { DynamicTextPipe, FIELD_SIGNAL_CONTEXT, FieldSignalContext, FieldWrapperContract, WrapperFieldInputs, type DynamicText, type FieldWithValidation } from '@ng-forge/dynamic-forms';
 import { forgeFieldDisabled } from '../../field.util';
 import { AsyncPipe } from '@angular/common';
 
@@ -7,7 +7,7 @@ import { AsyncPipe } from '@angular/common';
  * Forge wrapper field component that renders child fields inside a Material-style
  * outlined container with a notched outline, floating label, and hint/error subscript.
  *
- * Uses {@link WRAPPER_FIELD_CONTEXT} to read wrapper config (label, hint, className)
+ * Reads wrapper config (label, hint, className) from component inputs
  * and the parent {@link FieldSignalContext} to observe form validation state.
  */
 @Component({
@@ -147,61 +147,46 @@ import { AsyncPipe } from '@angular/common';
 export class DbxForgeFormFieldWrapperComponent implements FieldWrapperContract {
   readonly fieldComponent = viewChild.required('fieldComponent', { read: ViewContainerRef });
 
-  private readonly context = inject(WRAPPER_FIELD_CONTEXT);
-
   // Root form state from the flattened field signal context
-  private readonly formState = computed(() => this.context.fieldSignalContext.form());
+  private readonly formState = computed(() => this.fieldInputs()?.field);
 
   // Disabled state
-  readonly isDisabled = forgeFieldDisabled();
+  readonly isDisabled = computed(() => this.formState()?.disabled);
 
   // Props from wrapper config
-  readonly label = computed(() => this.context.config['label'] as DynamicText | undefined);
-  readonly hintSignal = computed(() => this.context.config['hint'] as string | undefined);
-  readonly classNameSignal = computed(() => (this.context.config['className'] as string) ?? '');
+  readonly fieldInputs = input<WrapperFieldInputs>();
+
+  readonly label = computed(() => this.fieldInputs()?.label);
+  readonly hintSignal = computed(() => (this.fieldInputs()?.props as any)?.hint);
+  readonly classNameSignal = computed(() => this.fieldInputs()?.className ?? '');
 
   // Key for ARIA IDs
-  private readonly keySignal = computed(() => this.context.wrapperField.key ?? '');
+  private readonly keySignal = computed(() => this.fieldInputs()?.key ?? '');
 
   // Validation state from form tree
-  readonly childErrors = computed(() => this.formState().errorSummary());
-  readonly childTouched = computed(() => this.formState().touched());
-  readonly childDirty = computed(() => this.formState().dirty());
+  readonly childErrors = computed(() => this.formState()?.errors());
+  readonly childTouched = computed(() => this.formState()?.touched());
+  readonly childDirty = computed(() => this.formState()?.dirty());
 
-  readonly showErrors = computed(() => (this.childTouched() || this.childDirty()) && this.childErrors().length > 0);
+  readonly showErrors = computed(() => {
+    const errors = this.childErrors();
+    const touched = this.childTouched();
+    const dirty = this.childDirty();
+    return (touched || dirty) && (errors?.length ?? 0) > 0;
+  });
+
   readonly hasError = computed(() => this.showErrors());
 
   readonly firstErrorMessage = computed(() => {
     const errors = this.childErrors();
-
-    if (errors.length === 0) {
-      return '';
-    }
-
-    const error = errors[0];
-
-    if (error.message) {
-      return error.message;
-    }
-
-    // Resolve from child field validationMessages by matching error.kind
-    const children = this.context.wrapperField.fields;
-
-    for (const child of children) {
-      const messages = (child as FieldWithValidation).validationMessages as Record<string, string> | undefined;
-
-      if (messages?.[error.kind]) {
-        return messages[error.kind];
-      }
-    }
-
-    return error.kind;
+    const error = errors?.[0];
+    return 'ERROR'; // TODO?
   });
 
   /**
    * Whether any child field has `required` state, used to show the asterisk in the label.
    */
-  readonly isRequired = computed(() => this.formState().required());
+  readonly isRequired = computed(() => this.formState()?.required());
 
   // ARIA IDs
   protected readonly labelId = computed(() => `${this.keySignal()}-label`);

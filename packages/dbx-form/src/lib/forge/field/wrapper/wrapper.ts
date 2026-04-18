@@ -94,7 +94,7 @@ export interface DbxForgeGroupConfig {
  * Groups collect child field values into a nested object when a `key` is provided.
  * When used without a key, the group serves as a visual/logical grouping only.
  *
- * For sections with headers, use {@link forgeDbxSectionFieldWrapper} instead.
+ * For sections with headers, use the section wrapper type instead.
  *
  * @param config - Group configuration with fields and optional key/className
  * @returns A {@link GroupField} with type `'group'`

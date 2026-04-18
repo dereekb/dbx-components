@@ -55,7 +55,7 @@ export class DbxForgeFormComponent<T = unknown> implements OnInit, OnDestroy {
    * Computed validity combining the ng-forge DynamicForm's valid signal with
    * validity from all registered wrapper nested forms.
    *
-   * Wrapper fields (forgeFormFieldWrapper, forgeDbxSectionFieldWrapper, etc.) create
+   * Wrapper fields (forgeFormFieldWrapper, section wrapper, etc.) create
    * isolated DynamicForm instances whose validity is not visible to the parent
    * DynamicForm.valid(). They register their nested validity via
    * {@link DbxForgeFormContext.registerWrapperValidity}, and this computed combines both sources.

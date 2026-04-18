@@ -2,7 +2,7 @@ import type { MatDatepickerField } from '@ng-forge/dynamic-forms-material';
 import type { FieldDef, BaseValueField, RowField } from '@ng-forge/dynamic-forms';
 import { filterFromPOJO, type ArrayOrValue, type Maybe, type TimezoneString, type DateOrDayString } from '@dereekb/util';
 import { forgeRow } from '../../wrapper/wrapper';
-import { dbxForgeMaterialFormFieldWrappedFieldFunction, type DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.wrapper';
+import { configureDbxForgeFormFieldWrapper } from '../../wrapper/formfield/formfield.wrapper';
 import { dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, dbxForgeBuildFieldDef, type DbxForgeFieldFunctionDef, type DbxForgeFieldFunction } from '../../field';
 import type { DbxForgeDateTimeFieldComponentProps } from './datetime.field.component';
 import type { DbxForgeFixedDateRangeFieldComponentProps, DbxForgeFixedDateRangeValue } from './fixeddaterange.field.component';
@@ -505,10 +505,13 @@ export interface DbxForgeFixedDateRangeFieldConfig extends DbxForgeFieldFunction
  * });
  * ```
  */
-export const forgeFixedDateRangeField = dbxForgeMaterialFormFieldWrappedFieldFunction<DbxForgeFixedDateRangeFieldConfig>({
+export const forgeFixedDateRangeField = dbxForgeFieldFunction<DbxForgeFixedDateRangeFieldConfig>({
   type: FORGE_FIXEDDATERANGE_FIELD_TYPE,
   buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder(),
-  buildFieldDef: dbxForgeBuildFieldDef(() => {
+  buildFieldDef: dbxForgeBuildFieldDef((x) => {
+    // configure form field wrapper
+    x.configure(configureDbxForgeFormFieldWrapper);
+
     // TODO: Ensure proper merging
     /*
 

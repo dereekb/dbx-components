@@ -1,118 +1,156 @@
-import { type FieldTypeDefinition, provideDynamicForm, WrapperTypeDefinition } from '@ng-forge/dynamic-forms';
+import { type FieldTypeDefinition, provideDynamicForm, type WrapperTypeDefinition } from '@ng-forge/dynamic-forms';
+import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { withMaterialFields } from '@ng-forge/dynamic-forms-material';
 import { phoneFieldMapper } from './field/value/phone/phone.field.component';
-import { FORGE_PHONE_FIELD_TYPE } from './field/value/phone/phone.field';
-import { FORGE_DATETIME_FIELD_TYPE, FORGE_FIXEDDATERANGE_FIELD_TYPE } from './field/value/date/datetime.field';
-import { FORGE_DATERANGE_FIELD_TYPE, dateRangeFieldMapper } from './field/value/date/daterange.field.component';
-import { FORGE_TIMEDURATION_FIELD_TYPE } from './field/value/duration/duration.field';
 import { dateTimeFieldMapper } from './field/value/date/datetime.field.component';
 import { fixedDateRangeFieldMapper } from './field/value/date/fixeddaterange.field.component';
+import { dateRangeFieldMapper } from './field/value/date/daterange.field.component';
 import { timeDurationFieldMapper } from './field/value/duration/duration.field.component';
-import { DBX_SEARCHABLE_TEXT_FIELD_TYPE } from './field/selection/searchable/searchable-text.field';
-import { DBX_SEARCHABLE_CHIP_FIELD_TYPE } from './field/selection/searchable/searchable-chip.field';
-import { DBX_PICKABLE_CHIP_FIELD_TYPE } from './field/selection/pickable/pickable-chip.field';
-import { DBX_PICKABLE_LIST_FIELD_TYPE } from './field/selection/pickable/pickable-list.field';
-import { DBX_LIST_SELECTION_FIELD_TYPE } from './field/selection/list/list.field';
-import { DBX_VALUE_SELECTION_FIELD_TYPE } from './field/selection/selection.field';
-import { DBX_SOURCE_SELECT_FIELD_TYPE } from './field/selection/sourceselect/sourceselect.field';
-import { DBX_TEXT_EDITOR_FIELD_TYPE } from './field/texteditor/texteditor.field';
-import { DBX_COMPONENT_FIELD_TYPE } from './field/component/component.field';
-import { DBX_FORGE_FORM_FIELD_WRAPPER_TYPE } from './field/wrapper/formfield/formfield.wrapper';
-import { DBX_FORGE_SECTION_WRAPPER_TYPE } from './field/wrapper/section/section.wrapper';
-import { DBX_FORGE_EXPAND_FIELD_TYPE } from './field/wrapper/expand/expand.field';
-import { DBX_FORGE_INFO_BUTTON_FIELD_TYPE } from './field/wrapper/info/info.field';
-import { DBX_FORGE_INFO_WRAPPER_TYPE } from './field/wrapper/info/info.wrapper';
-import { DBX_FORGE_STYLE_WRAPPER_TYPE } from './field/wrapper/style/style.wrapper';
-import { DBX_FORGE_WORKING_FIELD_TYPE } from './field/wrapper/working/working.field';
-import { DBX_FORGE_WORKING_WRAPPER_TYPE } from './field/wrapper/working/working.wrapper';
-import { DBX_FORGE_ARRAY_FIELD_TYPE } from './field/value/array/array.field';
-
-/**
- * Forge phone field type definition.
- *
- * Registers the custom phone field component with ng-forge's dynamic form system.
- * Uses lazy loading for the component and the custom phoneFieldMapper to bridge
- * ngx-mat-input-tel with Signal Forms.
- */
-const DbxForgePhoneFieldType: FieldTypeDefinition = {
-  name: FORGE_PHONE_FIELD_TYPE,
-  loadComponent: () => import('./field/value/phone/phone.field.component').then((m) => m.DbxForgePhoneFieldComponent),
-  mapper: phoneFieldMapper
-};
-
-/**
- * Forge date-time field type definition.
- *
- * Registers the custom date-time field component with ng-forge's dynamic form system.
- * Provides combined date and time selection with Material Design inputs.
- */
-const DbxForgeDateTimeFieldType: FieldTypeDefinition = {
-  name: FORGE_DATETIME_FIELD_TYPE,
-  loadComponent: () => import('./field/value/date/datetime.field.component').then((m) => m.DbxForgeDateTimeFieldComponent),
-  mapper: dateTimeFieldMapper
-};
-
-/**
- * Forge fixed date range field type definition.
- *
- * Registers the custom fixed date range field component with ng-forge's dynamic form system.
- * Uses Angular Material's mat-date-range-input for inline start/end date picking.
- */
-const DbxForgeFixedDateRangeFieldType: FieldTypeDefinition = {
-  name: FORGE_FIXEDDATERANGE_FIELD_TYPE,
-  loadComponent: () => import('./field/value/date/fixeddaterange.field.component').then((m) => m.DbxForgeFixedDateRangeFieldComponent),
-  mapper: fixedDateRangeFieldMapper
-};
-
-/**
- * Forge time duration field type definition.
- *
- * Registers the custom time duration field component with ng-forge's dynamic form system.
- * Provides a text input that parses duration strings and a popover picker.
- */
-const DbxForgeTimeDurationFieldType: FieldTypeDefinition = {
-  name: FORGE_TIMEDURATION_FIELD_TYPE,
-  loadComponent: () => import('./field/value/duration/duration.field.component').then((m) => m.DbxForgeTimeDurationFieldComponent),
-  mapper: timeDurationFieldMapper
-};
-
-/**
- * Forge date range field type definition.
- *
- * Registers the custom date range field component with ng-forge's dynamic form system.
- * Provides start/end date pickers using Angular Material's mat-datepicker.
- */
-const DbxForgeDateRangeFieldType: FieldTypeDefinition = {
-  name: FORGE_DATERANGE_FIELD_TYPE,
-  loadComponent: () => import('./field/value/date/daterange.field.component').then((m) => m.DbxForgeDateRangeFieldComponent),
-  mapper: dateRangeFieldMapper
-};
+import {
+  FORGE_PHONE_FIELD_TYPE,
+  FORGE_DATETIME_FIELD_TYPE,
+  FORGE_FIXEDDATERANGE_FIELD_TYPE,
+  FORGE_DATERANGE_FIELD_TYPE,
+  FORGE_TIMEDURATION_FIELD_TYPE,
+  DBX_FORGE_SEARCHABLE_TEXT_FIELD_TYPE_NAME,
+  DBX_FORGE_SEARCHABLE_CHIP_FIELD_TYPE_NAME,
+  FORGE_PICKABLE_CHIP_FIELD_TYPE,
+  FORGE_PICKABLE_LIST_FIELD_TYPE,
+  FORGE_VALUE_SELECTION_FIELD_TYPE,
+  FORGE_LIST_SELECTION_FIELD_TYPE,
+  FORGE_SOURCE_SELECT_FIELD_TYPE,
+  FORGE_TEXT_EDITOR_FIELD_TYPE,
+  FORGE_COMPONENT_FIELD_TYPE,
+  FORGE_EXPAND_FIELD_TYPE_NAME,
+  FORGE_INFO_BUTTON_FIELD_TYPE_NAME,
+  FORGE_WORKING_FIELD_TYPE_NAME,
+  DBX_FORGE_FORM_FIELD_WRAPPER_NAME,
+  DBX_FORGE_SECTION_WRAPPER_TYPE_NAME,
+  DBX_FORGE_STYLE_WRAPPER_TYPE_NAME,
+  DBX_FORGE_INFO_WRAPPER_TYPE_NAME,
+  DBX_FORGE_WORKING_WRAPPER_TYPE_NAME
+} from './field';
 
 /**
  * All custom dbx-form forge field type definitions.
  */
 export const DBX_FORGE_FIELD_TYPES: FieldTypeDefinition[] = [
-  DbxForgePhoneFieldType,
-  DbxForgeDateTimeFieldType,
-  DbxForgeDateRangeFieldType,
-  DbxForgeFixedDateRangeFieldType,
-  DbxForgeTimeDurationFieldType,
-  DBX_SEARCHABLE_TEXT_FIELD_TYPE,
-  DBX_SEARCHABLE_CHIP_FIELD_TYPE,
-  DBX_PICKABLE_CHIP_FIELD_TYPE,
-  DBX_PICKABLE_LIST_FIELD_TYPE,
-  DBX_VALUE_SELECTION_FIELD_TYPE,
-  DBX_LIST_SELECTION_FIELD_TYPE,
-  DBX_SOURCE_SELECT_FIELD_TYPE,
-  DBX_TEXT_EDITOR_FIELD_TYPE,
-  DBX_COMPONENT_FIELD_TYPE,
-  DBX_FORGE_EXPAND_FIELD_TYPE,
-  DBX_FORGE_INFO_BUTTON_FIELD_TYPE,
-  DBX_FORGE_WORKING_FIELD_TYPE,
-  DBX_FORGE_ARRAY_FIELD_TYPE
+  // -- Value fields with custom mappers --
+  {
+    name: FORGE_PHONE_FIELD_TYPE,
+    loadComponent: () => import('./field/value/phone/phone.field.component').then((m) => m.DbxForgePhoneFieldComponent),
+    mapper: phoneFieldMapper
+  },
+  {
+    name: FORGE_DATETIME_FIELD_TYPE,
+    loadComponent: () => import('./field/value/date/datetime.field.component').then((m) => m.DbxForgeDateTimeFieldComponent),
+    mapper: dateTimeFieldMapper
+  },
+  {
+    name: FORGE_DATERANGE_FIELD_TYPE,
+    loadComponent: () => import('./field/value/date/daterange.field.component').then((m) => m.DbxForgeDateRangeFieldComponent),
+    mapper: dateRangeFieldMapper
+  },
+  {
+    name: FORGE_FIXEDDATERANGE_FIELD_TYPE,
+    loadComponent: () => import('./field/value/date/fixeddaterange.field.component').then((m) => m.DbxForgeFixedDateRangeFieldComponent),
+    mapper: fixedDateRangeFieldMapper
+  },
+  {
+    name: FORGE_TIMEDURATION_FIELD_TYPE,
+    loadComponent: () => import('./field/value/duration/duration.field.component').then((m) => m.DbxForgeTimeDurationFieldComponent),
+    mapper: timeDurationFieldMapper
+  },
+  // -- Selection fields --
+  {
+    name: DBX_FORGE_SEARCHABLE_TEXT_FIELD_TYPE_NAME,
+    loadComponent: () => import('./field/selection/searchable/searchable-text.field.component').then((m) => m.DbxForgeSearchableTextFieldComponent),
+    mapper: valueFieldMapper
+  },
+  {
+    name: DBX_FORGE_SEARCHABLE_CHIP_FIELD_TYPE_NAME,
+    loadComponent: () => import('./field/selection/searchable/searchable-chip.field.component').then((m) => m.DbxForgeSearchableChipFieldComponent),
+    mapper: valueFieldMapper
+  },
+  {
+    name: FORGE_PICKABLE_CHIP_FIELD_TYPE,
+    loadComponent: () => import('./field/selection/pickable/pickable-chip.field.component').then((m) => m.DbxForgePickableChipFieldComponent),
+    mapper: valueFieldMapper
+  },
+  {
+    name: FORGE_PICKABLE_LIST_FIELD_TYPE,
+    loadComponent: () => import('./field/selection/pickable/pickable-list.field.component').then((m) => m.DbxForgePickableListFieldComponent),
+    mapper: valueFieldMapper
+  },
+  {
+    name: FORGE_VALUE_SELECTION_FIELD_TYPE,
+    loadComponent: () => import('./field/selection/selection.field.component').then((m) => m.DbxForgeValueSelectionFieldComponent),
+    mapper: valueFieldMapper
+  },
+  {
+    name: FORGE_LIST_SELECTION_FIELD_TYPE,
+    loadComponent: () => import('./field/selection/list/list.field.component').then((m) => m.DbxForgeListSelectionFieldComponent),
+    mapper: valueFieldMapper
+  },
+  {
+    name: FORGE_SOURCE_SELECT_FIELD_TYPE,
+    loadComponent: () => import('./field/selection/sourceselect/sourceselect.field.component').then((m) => m.DbxForgeSourceSelectFieldComponent),
+    mapper: valueFieldMapper
+  },
+  // -- Other fields --
+  {
+    name: FORGE_TEXT_EDITOR_FIELD_TYPE,
+    loadComponent: () => import('./field/texteditor/texteditor.field.component').then((m) => m.DbxForgeTextEditorFieldComponent),
+    mapper: valueFieldMapper
+  },
+  {
+    name: FORGE_COMPONENT_FIELD_TYPE,
+    loadComponent: () => import('./field/component/component.field.component').then((m) => m.DbxForgeComponentFieldComponent),
+    mapper: valueFieldMapper
+  },
+  // -- Wrapper-related fields --
+  {
+    name: FORGE_EXPAND_FIELD_TYPE_NAME,
+    loadComponent: () => import('./field/wrapper/expand/expand.field.component').then((m) => m.DbxForgeExpandFieldComponent),
+    mapper: valueFieldMapper
+  },
+  {
+    name: FORGE_INFO_BUTTON_FIELD_TYPE_NAME,
+    loadComponent: () => import('./field/wrapper/info/info.field.component').then((m) => m.DbxForgeInfoButtonFieldComponent),
+    mapper: valueFieldMapper
+  },
+  {
+    name: FORGE_WORKING_FIELD_TYPE_NAME,
+    loadComponent: () => import('./field/wrapper/working/working.field.component').then((m) => m.DbxForgeWorkingFieldComponent),
+    mapper: valueFieldMapper
+  }
 ];
 
-export const DBX_FORGE_FIELD_WRAPPER_TYPES: WrapperTypeDefinition[] = [DBX_FORGE_FORM_FIELD_WRAPPER_TYPE, DBX_FORGE_SECTION_WRAPPER_TYPE, DBX_FORGE_STYLE_WRAPPER_TYPE, DBX_FORGE_INFO_WRAPPER_TYPE, DBX_FORGE_WORKING_WRAPPER_TYPE];
+/**
+ * All custom dbx-form forge wrapper type definitions.
+ */
+export const DBX_FORGE_FIELD_WRAPPER_TYPES: WrapperTypeDefinition[] = [
+  {
+    wrapperName: DBX_FORGE_FORM_FIELD_WRAPPER_NAME,
+    loadComponent: () => import('./field/wrapper/formfield/formfield.wrapper.component').then((m) => m.DbxForgeFormFieldWrapperComponent)
+  },
+  {
+    wrapperName: DBX_FORGE_SECTION_WRAPPER_TYPE_NAME,
+    loadComponent: () => import('./field/wrapper/section/section.wrapper.component').then((m) => m.DbxForgeSectionWrapperComponent)
+  },
+  {
+    wrapperName: DBX_FORGE_STYLE_WRAPPER_TYPE_NAME,
+    loadComponent: () => import('./field/wrapper/style/style.wrapper.component').then((m) => m.DbxForgeStyleWrapperComponent)
+  },
+  {
+    wrapperName: DBX_FORGE_INFO_WRAPPER_TYPE_NAME,
+    loadComponent: () => import('./field/wrapper/info/info.wrapper.component').then((m) => m.DbxForgeInfoWrapperComponent)
+  },
+  {
+    wrapperName: DBX_FORGE_WORKING_WRAPPER_TYPE_NAME,
+    loadComponent: () => import('./field/wrapper/working/working.wrapper.component').then((m) => m.DbxForgeWorkingWrapperComponent)
+  }
+];
 
 /**
  * Registers ng-forge dynamic form field declarations with Material Design field types

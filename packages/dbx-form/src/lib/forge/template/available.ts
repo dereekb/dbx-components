@@ -1,8 +1,7 @@
-import type { AsyncCustomValidator, WrapperField } from '@ng-forge/dynamic-forms';
+import type { AsyncCustomValidator, FieldDef } from '@ng-forge/dynamic-forms';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { type Observable, of } from 'rxjs';
 import { forgeTextField, type DbxForgeTextFieldConfig } from '../field/value/text/text.field';
-import { forgeWorkingFieldWrapper } from '../field/wrapper/working/working.wrapper';
 
 // MARK: Validator
 /**
@@ -166,9 +165,9 @@ export interface DbxForgeTextAvailableFieldConfig extends DbxForgeTextFieldConfi
  */
 export interface DbxForgeTextIsAvailableFieldResult {
   /**
-   * The text field wrapped in a working wrapper, with the async validator reference attached.
+   * The text field with the async validator reference attached.
    */
-  readonly field: WrapperField;
+  readonly field: FieldDef<unknown>;
   /**
    * Async validators map to spread into `customFnConfig.asyncValidators`.
    */
@@ -185,9 +184,8 @@ export interface DbxForgeTextIsAvailableFieldResult {
  * This is the forge equivalent of {@link formlyTextIsAvailableField}. It:
  * 1. Creates a text field from the config
  * 2. Attaches an async availability validator via {@link forgeFieldValueIsAvailableValidator}
- * 3. Wraps the field with {@link forgeWorkingFieldWrapper} to show a loading indicator
  *
- * The result includes the wrapped field and the validator registration that must be
+ * The result includes the field and the validator registration that must be
  * added to the FormConfig.
  *
  * @param config - Configuration for the text field and availability validation.
@@ -221,11 +219,8 @@ export function forgeTextIsAvailableField(config: DbxForgeTextAvailableFieldConf
   const existingValidators = (textField as any).validators ?? [];
   (textField as any).validators = [...existingValidators, { type: 'async' as const, functionName: validator.validatorName }];
 
-  // Wrap with working wrapper to show loading indicator during async check
-  const field = forgeWorkingFieldWrapper({ fields: [textField] });
-
   return {
-    field,
+    field: textField,
     asyncValidators: validator.asyncValidators,
     validationMessages: validator.validationMessages
   };

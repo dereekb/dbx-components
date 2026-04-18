@@ -9,12 +9,12 @@ import { type SearchableValueFieldStringSearchFn, type SearchableValueFieldDispl
 /**
  * The custom forge field type name for the searchable text field.
  */
-export const FORGE_SEARCHABLE_TEXT_FIELD_TYPE = 'dbx-searchable-text' as const;
+export const DBX_FORGE_SEARCHABLE_TEXT_FIELD_TYPE_NAME = 'dbx-searchable-text' as const;
 
 /**
  * The custom forge field type name for the searchable chip field.
  */
-export const FORGE_SEARCHABLE_CHIP_FIELD_TYPE = 'dbx-searchable-chip' as const;
+export const DBX_FORGE_SEARCHABLE_CHIP_FIELD_TYPE_NAME = 'dbx-searchable-chip' as const;
 
 // MARK: Props
 /**
@@ -53,12 +53,12 @@ export interface DbxForgeSearchableChipFieldProps<T = unknown, M = unknown, H ex
  * Forge field definition interface for the searchable text field.
  */
 export interface DbxForgeSearchableTextFieldDef<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends BaseValueField<DbxForgeSearchableTextFieldProps<T, M, H>, T> {
-  readonly type: typeof FORGE_SEARCHABLE_TEXT_FIELD_TYPE;
+  readonly type: typeof DBX_FORGE_SEARCHABLE_TEXT_FIELD_TYPE_NAME;
 }
 
 /**
  * Forge field definition interface for the searchable chip field.
  */
 export interface DbxForgeSearchableChipFieldDef<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends BaseValueField<DbxForgeSearchableChipFieldProps<T, M, H>, T | T[]> {
-  readonly type: typeof FORGE_SEARCHABLE_CHIP_FIELD_TYPE;
+  readonly type: typeof DBX_FORGE_SEARCHABLE_CHIP_FIELD_TYPE_NAME;
 }

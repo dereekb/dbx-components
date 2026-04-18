@@ -5,8 +5,9 @@ import { type Observable } from 'rxjs';
 import { type Type } from '@angular/core';
 import type { FieldTypeDefinition, BaseValueField } from '@ng-forge/dynamic-forms';
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
-import { dbxForgeMaterialFormFieldWrappedFieldFunction, type DbxForgeFormFieldWrapperWrappedFieldDef } from '../../wrapper/formfield/formfield.wrapper';
-import { type DbxForgeFieldFunctionDef, dbxForgeFieldFunctionConfigPropsWithHintBuilder, dbxForgeBuildFieldDef } from '../../field';
+import { configureDbxForgeFormFieldWrapper } from '../../wrapper/formfield/formfield.wrapper';
+import { type DbxForgeFieldFunctionDef, dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, dbxForgeBuildFieldDef } from '../../field';
+import type { DbxForgeField } from '../../../form/forge.form';
 
 // MARK: Field Type Name
 /**
@@ -69,13 +70,13 @@ export const DBX_LIST_SELECTION_FIELD_TYPE: FieldTypeDefinition<DbxForgeListSele
  */
 export interface DbxForgeListSelectionFieldConfig<T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey> extends DbxForgeFieldFunctionDef<DbxForgeListSelectionFieldDef<T, C, K>> {}
 
-export type DbxForgeListSelectionFieldFunction = <T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey>(config: DbxForgeListSelectionFieldConfig<T, C, K>) => DbxForgeFormFieldWrapperWrappedFieldDef<DbxForgeListSelectionFieldDef<T, C, K>>;
+export type DbxForgeListSelectionFieldFunction = <T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey>(config: DbxForgeListSelectionFieldConfig<T, C, K>) => DbxForgeField<DbxForgeListSelectionFieldDef<T, C, K>>;
 
 /**
  * Creates a forge field definition for a list selection field.
  *
  * @param config - List selection field configuration
- * @returns A {@link DbxForgeFormFieldWrapperWrappedFieldDef} wrapping a list selection field
+ * @returns A {@link DbxForgeFormFieldWrapperFieldDef} wrapping a list selection field
  *
  * @example
  * ```typescript
@@ -90,8 +91,11 @@ export type DbxForgeListSelectionFieldFunction = <T = unknown, C extends Abstrac
  * });
  * ```
  */
-export const forgeListSelectionField = dbxForgeMaterialFormFieldWrappedFieldFunction<DbxForgeListSelectionFieldConfig>({
+export const forgeListSelectionField = dbxForgeFieldFunction<DbxForgeListSelectionFieldConfig>({
   type: FORGE_LIST_SELECTION_FIELD_TYPE,
   buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder(),
-  buildFieldDef: dbxForgeBuildFieldDef(() => {})
+  buildFieldDef: dbxForgeBuildFieldDef((x) => {
+    // configure form field wrapper
+    x.configure(configureDbxForgeFormFieldWrapper);
+  })
 }) as DbxForgeListSelectionFieldFunction;

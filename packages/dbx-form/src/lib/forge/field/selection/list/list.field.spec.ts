@@ -10,18 +10,6 @@ import type { DbxForgeListSelectionFieldConfig, DbxForgeListSelectionFieldDef, D
 import { type AbstractDbxSelectionListWrapperDirective } from '@dereekb/dbx-web';
 import { successResult } from '@dereekb/rxjs';
 import type { Type } from '@angular/core';
-import type { DbxForgeFormFieldWrapperWrappedFieldDef } from '../../wrapper/formfield/formfield.wrapper';
-import { getDbxForgeFormFieldWrapperWrappedField } from '../../wrapper/formfield/formfield.wrapper.util';
-
-type ListWrapperFieldDef = DbxForgeFormFieldWrapperWrappedFieldDef<DbxForgeListSelectionFieldDef<any, any, any>>;
-
-/**
- * Extracts the inner field from a wrapper field.
- * Returns `any` for convenient runtime property access in tests.
- */
-function getInnerField(wrapper: ListWrapperFieldDef): any {
-  return getDbxForgeFormFieldWrapperWrappedField(wrapper);
-}
 
 // MARK: Shared Stubs
 const stubListComponentClass = of(class {} as unknown as Type<AbstractDbxSelectionListWrapperDirective<unknown>>);
@@ -59,6 +47,7 @@ describe('DbxForgeListSelectionFieldConfig - Exhaustive Whitelist', () => {
     | 'validationMessages'
     | 'derivation'
     | 'schemas'
+    | 'wrappers'
     | 'col'
     | 'tabIndex'
     | 'excludeValueIfHidden'
@@ -133,6 +122,7 @@ describe('DbxForgeListSelectionFieldDef - Exhaustive Whitelist', () => {
     | 'logic'
     | 'derivation'
     | 'schemas'
+    | 'wrappers'
     // From BaseValueField
     | 'value'
     | 'placeholder';
@@ -149,17 +139,6 @@ describe('DbxForgeListSelectionFieldDef - Exhaustive Whitelist', () => {
 
   it('props is DbxForgeListSelectionFieldProps', () => {
     expectTypeOf<DbxForgeListSelectionFieldDef['props']>().toEqualTypeOf<DbxForgeListSelectionFieldProps | undefined>();
-  });
-});
-
-// ============================================================================
-// DbxForgeFormFieldWrapperWrappedFieldDef<DbxForgeListSelectionFieldDef> - Structure
-// ============================================================================
-
-describe('DbxForgeFormFieldWrapperWrappedFieldDef<DbxForgeListSelectionFieldDef>', () => {
-  it('fields[0] is typed as DbxForgeListSelectionFieldDef', () => {
-    type WrapperFieldDef = DbxForgeFormFieldWrapperWrappedFieldDef<DbxForgeListSelectionFieldDef>;
-    expectTypeOf<WrapperFieldDef['fields'][0]>().toEqualTypeOf<DbxForgeListSelectionFieldDef>();
   });
 });
 
@@ -195,105 +174,95 @@ describe('forgeListSelectionField()', () => {
     } as Parameters<typeof forgeListSelectionField>[0];
   }
 
-  // MARK: Wrapper structure
-  it('should return a wrapper with type "wrapper"', () => {
-    const wrapper = forgeListSelectionField(minimalConfig());
-    expect(wrapper.type).toBe('wrapper');
+  // MARK: Field structure
+  it('should return a field with type "dbx-list-selection"', () => {
+    const field = forgeListSelectionField(minimalConfig()) as any;
+    expect(field.type).toBe('dbx-list-selection');
   });
 
-  it('should use key_wrapper naming for the wrapper key', () => {
-    const wrapper = forgeListSelectionField(minimalConfig());
-    expect(wrapper.key).toContain('_wrapper');
-  });
-
-  it('should set the inner field type to dbx-list-selection', () => {
-    const inner = getInnerField(forgeListSelectionField(minimalConfig()) as ListWrapperFieldDef);
-    expect(inner.type).toBe('dbx-list-selection');
-  });
-
-  it('should set the inner field key', () => {
-    const inner = getInnerField(forgeListSelectionField(minimalConfig()) as ListWrapperFieldDef);
-    expect(inner.key).toBe('selectedItems');
+  it('should set the field key', () => {
+    const field = forgeListSelectionField(minimalConfig()) as any;
+    expect(field.key).toBe('selectedItems');
   });
 
   // MARK: Label
-  it('should set the label on the inner field when provided', () => {
-    const inner = getInnerField(forgeListSelectionField({ ...minimalConfig(), label: 'Items' }) as ListWrapperFieldDef);
-    expect(inner.label).toBe('Items');
+  it('should set the label on the field when provided', () => {
+    const field = forgeListSelectionField({ ...minimalConfig(), label: 'Items' }) as any;
+    expect(field.label).toBe('Items');
   });
 
   // MARK: Required/readonly
-  it('should set required on the inner field when provided', () => {
-    const inner = getInnerField(forgeListSelectionField({ ...minimalConfig(), required: true }) as ListWrapperFieldDef);
-    expect(inner.required).toBe(true);
+  it('should set required on the field when provided', () => {
+    const field = forgeListSelectionField({ ...minimalConfig(), required: true }) as any;
+    expect(field.required).toBe(true);
   });
 
-  it('should not set required on the inner field when not provided', () => {
-    const inner = getInnerField(forgeListSelectionField(minimalConfig()) as ListWrapperFieldDef);
-    expect(inner.required).toBeUndefined();
+  it('should not set required on the field when not provided', () => {
+    const field = forgeListSelectionField(minimalConfig()) as any;
+    expect(field.required).toBeUndefined();
   });
 
-  it('should set readonly on the inner field when provided', () => {
-    const inner = getInnerField(forgeListSelectionField({ ...minimalConfig(), readonly: true }) as ListWrapperFieldDef);
-    expect(inner.readonly).toBe(true);
+  it('should set readonly on the field when provided', () => {
+    const field = forgeListSelectionField({ ...minimalConfig(), readonly: true }) as any;
+    expect(field.readonly).toBe(true);
   });
 
   // MARK: Hint/description
-  it('should map description to inner field props.hint', () => {
-    const inner = getInnerField(forgeListSelectionField({ ...minimalConfig(), description: 'Select items from the list' }) as ListWrapperFieldDef);
-    expect(inner.props?.hint).toBe('Select items from the list');
+  it('should map description to field props.hint', () => {
+    const field = forgeListSelectionField({ ...minimalConfig(), description: 'Select items from the list' }) as any;
+    expect(field.props?.hint).toBe('Select items from the list');
   });
 
-  it('should not set hint on inner field when description is not provided', () => {
-    const inner = getInnerField(forgeListSelectionField(minimalConfig()) as ListWrapperFieldDef);
-    expect(inner.props?.hint).toBeUndefined();
+  it('should not set hint on field when description is not provided', () => {
+    const field = forgeListSelectionField(minimalConfig()) as any;
+    expect(field.props?.hint).toBeUndefined();
   });
 
   // MARK: Props passthrough
-  it('should propagate listComponentClass through inner field props', () => {
-    const inner = getInnerField(forgeListSelectionField(minimalConfig()) as ListWrapperFieldDef);
-    expect(inner.props?.listComponentClass).toBe(stubListComponentClass);
+  it('should propagate listComponentClass through field props', () => {
+    const field = forgeListSelectionField(minimalConfig()) as any;
+    expect(field.props?.listComponentClass).toBe(stubListComponentClass);
   });
 
-  it('should propagate readKey through inner field props', () => {
-    const inner = getInnerField(forgeListSelectionField(minimalConfig()) as ListWrapperFieldDef);
-    expect(inner.props?.readKey).toBe(stubReadKey);
+  it('should propagate readKey through field props', () => {
+    const field = forgeListSelectionField(minimalConfig()) as any;
+    expect(field.props?.readKey).toBe(stubReadKey);
   });
 
-  it('should propagate state$ through inner field props', () => {
-    const inner = getInnerField(forgeListSelectionField(minimalConfig()) as ListWrapperFieldDef);
-    expect(inner.props?.state$).toBe(stubState$);
+  it('should propagate state$ through field props', () => {
+    const field = forgeListSelectionField(minimalConfig()) as any;
+    expect(field.props?.state$).toBe(stubState$);
   });
 
-  it('should propagate loadMore through inner field props when provided', () => {
+  it('should propagate loadMore through field props when provided', () => {
     const loadMore = () => {};
-    const inner = getInnerField(forgeListSelectionField({ ...minimalConfig(), props: { ...minimalConfig().props!, loadMore } }) as ListWrapperFieldDef);
-    expect(inner.props?.loadMore).toBe(loadMore);
+    const field = forgeListSelectionField({ ...minimalConfig(), props: { ...minimalConfig().props!, loadMore } }) as any;
+    expect(field.props?.loadMore).toBe(loadMore);
   });
 
-  it('should not set loadMore on the inner field when not provided', () => {
-    const inner = getInnerField(forgeListSelectionField(minimalConfig()) as ListWrapperFieldDef);
-    expect(inner.props?.loadMore).toBeUndefined();
+  it('should not set loadMore on the field when not provided', () => {
+    const field = forgeListSelectionField(minimalConfig()) as any;
+    expect(field.props?.loadMore).toBeUndefined();
   });
 
   // MARK: Logic passthrough
-  it('should pass logic through to the inner field definition', () => {
+  it('should pass logic through to the field definition', () => {
     const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
-    const inner = getInnerField(forgeListSelectionField({ ...minimalConfig(), logic }) as ListWrapperFieldDef);
-    expect(inner.logic).toEqual(logic);
+    const field = forgeListSelectionField({ ...minimalConfig(), logic }) as any;
+    expect(field.logic).toEqual(logic);
   });
 
   // MARK: Validators passthrough
-  it('should pass validators through to the inner field definition', () => {
+  it('should pass validators through to the field definition', () => {
     const validators: ValidatorConfig[] = [{ type: 'custom' as const, expression: 'fieldValue?.length > 0', kind: 'mustSelectItem' }];
-    const inner = getInnerField(forgeListSelectionField({ ...minimalConfig(), validators }) as ListWrapperFieldDef);
-    expect(inner.validators).toEqual(validators);
+    const field = forgeListSelectionField({ ...minimalConfig(), validators }) as any;
+    expect(field.validators).toEqual(validators);
   });
 
   // MARK: ValidationMessages passthrough
-  it('should pass validationMessages through to the inner field definition', () => {
+  it('should pass validationMessages through to the field definition', () => {
     const validationMessages: ValidationMessages = { mustSelectItem: 'Please select at least one item' };
-    const inner = getInnerField(forgeListSelectionField({ ...minimalConfig(), validationMessages }) as ListWrapperFieldDef);
-    expect(inner.validationMessages).toEqual(validationMessages);
+    const field = forgeListSelectionField({ ...minimalConfig(), validationMessages }) as any;
+    expect(field.validationMessages).toEqual(validationMessages);
   });
 });

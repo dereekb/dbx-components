@@ -1,15 +1,13 @@
-import { ChangeDetectionStrategy, Component, computed, inject, viewChild, ViewContainerRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, viewChild, ViewContainerRef } from '@angular/core';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { FieldWrapperContract, WRAPPER_FIELD_CONTEXT, type WrapperFieldContext } from '@ng-forge/dynamic-forms';
-import type { DbxForgeWorkingWrapper } from './working.wrapper';
+import { FieldWrapperContract, type WrapperFieldInputs } from '@ng-forge/dynamic-forms';
 
 /**
  * Forge wrapper component that renders child fields with a loading
  * indicator shown during async validation.
  *
  * Implements {@link FieldWrapperContract} and monitors the field tree's
- * pending signal via {@link WRAPPER_FIELD_CONTEXT} to detect when async
- * validators are running.
+ * pending signal to detect when async validators are running.
  */
 @Component({
   selector: 'dbx-forge-working-wrapper',
@@ -28,9 +26,9 @@ import type { DbxForgeWorkingWrapper } from './working.wrapper';
 export class DbxForgeWorkingWrapperComponent implements FieldWrapperContract {
   readonly fieldComponent = viewChild.required('fieldComponent', { read: ViewContainerRef });
 
-  private readonly context = inject<WrapperFieldContext<DbxForgeWorkingWrapper>>(WRAPPER_FIELD_CONTEXT);
+  readonly fieldInputs = input<WrapperFieldInputs>();
 
   readonly showLoading = computed((): boolean => {
-    return this.context.fieldSignalContext.form()?.pending() ?? false;
+    return (this.fieldInputs()?.field as any)?.pending() ?? false;
   });
 }

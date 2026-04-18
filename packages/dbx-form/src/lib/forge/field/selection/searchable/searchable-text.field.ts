@@ -1,9 +1,10 @@
 import { type PrimativeKey } from '@dereekb/util';
 import type { FieldTypeDefinition } from '@ng-forge/dynamic-forms';
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
-import { dbxForgeMaterialFormFieldWrappedFieldFunction, type DbxForgeFormFieldWrapperWrappedFieldDef } from '../../wrapper/formfield/formfield.wrapper';
-import { FORGE_SEARCHABLE_TEXT_FIELD_TYPE, type DbxForgeSearchableTextFieldDef } from './searchable.field';
-import { type DbxForgeFieldFunctionDef, dbxForgeFieldFunctionConfigPropsWithHintBuilder, dbxForgeBuildFieldDef } from '../../field';
+import { configureDbxForgeFormFieldWrapper } from '../../wrapper/formfield/formfield.wrapper';
+import { DBX_FORGE_SEARCHABLE_TEXT_FIELD_TYPE_NAME, type DbxForgeSearchableTextFieldDef } from './searchable.field';
+import { type DbxForgeFieldFunctionDef, dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, dbxForgeBuildFieldDef } from '../../field';
+import type { DbxForgeField } from '../../../form/forge.form';
 
 // MARK: Field Type Definition
 /**
@@ -12,7 +13,7 @@ import { type DbxForgeFieldFunctionDef, dbxForgeFieldFunctionConfigPropsWithHint
  * Register via `provideDynamicForm(DBX_SEARCHABLE_TEXT_FIELD_TYPE)`.
  */
 export const DBX_SEARCHABLE_TEXT_FIELD_TYPE: FieldTypeDefinition<DbxForgeSearchableTextFieldDef> = {
-  name: FORGE_SEARCHABLE_TEXT_FIELD_TYPE,
+  name: DBX_FORGE_SEARCHABLE_TEXT_FIELD_TYPE_NAME,
   loadComponent: () => import('./searchable-text.field.component').then((m) => m.DbxForgeSearchableTextFieldComponent),
   mapper: valueFieldMapper
 };
@@ -23,13 +24,13 @@ export const DBX_SEARCHABLE_TEXT_FIELD_TYPE: FieldTypeDefinition<DbxForgeSearcha
  */
 export interface DbxForgeSearchableTextFieldConfig<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends DbxForgeFieldFunctionDef<DbxForgeSearchableTextFieldDef<T, M, H>> {}
 
-export type DbxForgeSearchableTextFieldFunction = <T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>(config: DbxForgeSearchableTextFieldConfig<T, M, H>) => DbxForgeFormFieldWrapperWrappedFieldDef<DbxForgeSearchableTextFieldDef<T, M, H>>;
+export type DbxForgeSearchableTextFieldFunction = <T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>(config: DbxForgeSearchableTextFieldConfig<T, M, H>) => DbxForgeField<DbxForgeSearchableTextFieldDef<T, M, H>>;
 
 /**
  * Creates a forge field definition for a searchable text field with autocomplete.
  *
  * @param config - Searchable text field configuration
- * @returns A {@link DbxForgeFormFieldWrapperWrappedFieldDef} wrapping a searchable text field
+ * @returns A {@link DbxForgeFormFieldWrapperFieldDef} wrapping a searchable text field
  *
  * @example
  * ```typescript
@@ -43,8 +44,11 @@ export type DbxForgeSearchableTextFieldFunction = <T = unknown, M = unknown, H e
  * });
  * ```
  */
-export const forgeSearchableTextField = dbxForgeMaterialFormFieldWrappedFieldFunction<DbxForgeSearchableTextFieldConfig>({
-  type: FORGE_SEARCHABLE_TEXT_FIELD_TYPE,
+export const forgeSearchableTextField = dbxForgeFieldFunction<DbxForgeSearchableTextFieldConfig>({
+  type: DBX_FORGE_SEARCHABLE_TEXT_FIELD_TYPE_NAME,
   buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder(),
-  buildFieldDef: dbxForgeBuildFieldDef(() => {})
+  buildFieldDef: dbxForgeBuildFieldDef((x) => {
+    // configure form field wrapper
+    x.configure(configureDbxForgeFormFieldWrapper);
+  })
 }) as DbxForgeSearchableTextFieldFunction;

@@ -1,16 +1,13 @@
 import { NgClass, NgStyle } from '@angular/common';
-import { ChangeDetectionStrategy, Component, effect, inject, signal, viewChild, ViewContainerRef } from '@angular/core';
-import { FieldWrapperContract, WRAPPER_FIELD_CONTEXT, type WrapperFieldContext } from '@ng-forge/dynamic-forms';
-import { asObservable } from '@dereekb/rxjs';
+import { ChangeDetectionStrategy, Component, effect, inject, input, signal, viewChild, ViewContainerRef } from '@angular/core';
+import { FIELD_SIGNAL_CONTEXT, FieldSignalContext, FieldWrapperContract } from '@ng-forge/dynamic-forms';
+import { asObservable, ObservableOrValue, valueFromObservableOrValue } from '@dereekb/rxjs';
 import type { DbxForgeStyleWrapper, DbxForgeStyleObject } from './style.wrapper';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 /**
  * Forge wrapper component that applies dynamic CSS classes and
  * inline styles to a container around child fields.
- *
- * Implements {@link FieldWrapperContract} and reads configuration from
- * {@link WRAPPER_FIELD_CONTEXT}. Supports both static values and reactive
- * observables for class and style properties via `ObservableOrValue`.
  */
 @Component({
   selector: 'dbx-forge-style-wrapper',
@@ -26,34 +23,12 @@ import type { DbxForgeStyleWrapper, DbxForgeStyleObject } from './style.wrapper'
 export class DbxForgeStyleWrapperComponent implements FieldWrapperContract {
   readonly fieldComponent = viewChild.required('fieldComponent', { read: ViewContainerRef });
 
-  private readonly context = inject<WrapperFieldContext<DbxForgeStyleWrapper>>(WRAPPER_FIELD_CONTEXT);
+  readonly classValue = input<ObservableOrValue<string>>('');
+  readonly styleValue = input<ObservableOrValue<DbxForgeStyleObject>>({});
 
-  readonly classValueSignal = signal<string>('');
-  readonly styleValueSignal = signal<DbxForgeStyleObject>({});
+  readonly classValue$ = asObservable(this.classValue).pipe(valueFromObservableOrValue());
+  readonly styleValue$ = asObservable(this.styleValue).pipe(valueFromObservableOrValue());
 
-  constructor() {
-    // Bridge classGetter ObservableOrValue to signal
-    effect((onCleanup) => {
-      const classGetter = this.context.config.classGetter;
-
-      if (classGetter != null) {
-        const sub = asObservable(classGetter).subscribe((v) => this.classValueSignal.set(v));
-        onCleanup(() => sub.unsubscribe());
-      } else {
-        this.classValueSignal.set('');
-      }
-    });
-
-    // Bridge styleGetter ObservableOrValue to signal
-    effect((onCleanup) => {
-      const styleGetter = this.context.config.styleGetter;
-
-      if (styleGetter != null) {
-        const sub = asObservable(styleGetter).subscribe((v) => this.styleValueSignal.set(v));
-        onCleanup(() => sub.unsubscribe());
-      } else {
-        this.styleValueSignal.set({});
-      }
-    });
-  }
+  readonly classValueSignal = toSignal(this.classValue$);
+  readonly styleValueSignal = toSignal(this.styleValue$);
 }

@@ -1,5 +1,5 @@
 import { ArrayOrValue, Building, Maybe, MaybeMap, MaybeSo, Milliseconds, NOOP_MODIFIER, asArray, filterNullAndUndefinedValues, filterUndefinedValues, filterUniqueValues, mapMaybeFunction, mergeArrays, objectHasNoKeys } from '@dereekb/util';
-import { CustomFnConfig, EvaluationContext, FieldDef, FieldMeta, FieldWithValidation, LogicConfig, ValidationMessages, ValidatorConfig } from '@ng-forge/dynamic-forms';
+import { CustomFnConfig, EvaluationContext, FieldDef, FieldMeta, FieldWithValidation, LogicConfig, ValidationMessages, ValidatorConfig, WrapperConfig } from '@ng-forge/dynamic-forms';
 import { ForgeFieldValidation } from './field.type';
 import { DbxForgeField, DbxForgeFieldFormConfig, mergeDbxForgeFieldFormConfig } from '../form/forge.form';
 
@@ -103,12 +103,12 @@ export type DbxForgeFieldFunctionResult<C extends DbxForgeFieldFunctionDef<any>>
 /**
  * Creates the target FieldDef value from the input config and optional configure function.
  */
-export type DbxForgeFieldFunction<C extends DbxForgeFieldFunctionDef<any>, F extends FieldDef<any> = ExtractDbxForgeFieldDef<C>> = (input: C, configure?: Maybe<DbxForgeBuildFieldDefFunction<C>>) => DbxForgeField<F>;
+export type DbxForgeFieldFunction<C extends DbxForgeFieldFunctionDef<any>, F extends FieldDef<any> = ExtractDbxForgeFieldDef<C>> = (input: C, configure?: Maybe<ArrayOrValue<DbxForgeBuildFieldDefFunction<C>>>) => DbxForgeField<F>;
 
 /**
  * Builds the FieldDef from the input config and props and optional configure function.
  */
-export type DbxForgeFieldFunctionFieldDefBuilder<C extends DbxForgeFieldFunctionDef<any>, FV = any> = (input: Building<C>, props: C['props'], configure?: Maybe<DbxForgeBuildFieldDefFunction<C, FV>>) => DbxForgeFieldFunctionResult<C> | void;
+export type DbxForgeFieldFunctionFieldDefBuilder<C extends DbxForgeFieldFunctionDef<any>, FV = any> = (input: Building<C>, props: C['props'], configure?: Maybe<ArrayOrValue<DbxForgeBuildFieldDefFunction<C, FV>>>) => DbxForgeFieldFunctionResult<C> | void;
 
 /**
  * Generates custom props from the input config.
@@ -215,7 +215,7 @@ export type DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceAddValidationInp
  * Exposes methods for reading and mutating a field definition during construction,
  * including validation, meta, logic, and form config.
  */
-export interface DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C extends DbxForgeFieldFunctionDef<any>, FV = any> extends DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceLogicBuilder<C, FV>, DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceFormConfigBuilder {
+export interface DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C extends DbxForgeFieldFunctionDef<any>, FV = any> extends DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceLogicBuilder<C, FV>, DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceFormConfigBuilder, DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceWrappersBuilder {
   /**
    * Returns the current fieldDef.
    */
@@ -260,7 +260,6 @@ export interface DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C extends 
    * Sets the meta for the field definition.
    */
   setMeta(meta: FieldMeta): void;
-
   /**
    * Calls another DbxForgeBuildFieldDefFunction with this instance.
    */
@@ -417,6 +416,24 @@ export interface DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceLogicBuilde
 }
 
 /**
+ * Builder methods for reading and mutating the wrappers configuration on a field definition.
+ */
+export interface DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceWrappersBuilder {
+  /**
+   * Returns the current wrappers configuration, if it exists.
+   */
+  getWrappers(): Maybe<WrapperConfig[]>;
+  /**
+   * Merges the field wrappers into the field definition.
+   */
+  addWrappers(wrappers: ArrayOrValue<WrapperConfig>): void;
+  /**
+   * Replaces the field form config for the field definition.
+   */
+  setWrappers(wrappers: ArrayOrValue<WrapperConfig>): void;
+}
+
+/**
  * Builder methods for reading and mutating the form-level config attached to a field definition.
  *
  * Form config includes schemas, external data, and custom function registrations
@@ -569,6 +586,22 @@ export function dbxForgeBuildFieldDef<C extends DbxForgeFieldFunctionDef<any>, F
       (fieldDef as any)['logic'] = nextLogic; // set the next logic value
     }
 
+    // Wrappers
+    function getWrappers(): Maybe<WrapperConfig[]> {
+      return fieldDef['wrappers'];
+    }
+
+    function addWrappers(input: ArrayOrValue<WrapperConfig>) {
+      const currentWrappers = getWrappers() ?? [];
+      const nextWrappers = mergeArrays([currentWrappers, asArray(input)]);
+      setWrappers(nextWrappers);
+    }
+
+    function setWrappers(wrappers: ArrayOrValue<WrapperConfig>) {
+      const nextWrappers = asArray(wrappers);
+      (fieldDef as any)['wrappers'] = nextWrappers; // set the next wrappers value
+    }
+
     // FormConfig
     function getFormConfig(): Maybe<DbxForgeFieldFormConfig> {
       return fieldDef['_formConfig'];
@@ -601,6 +634,9 @@ export function dbxForgeBuildFieldDef<C extends DbxForgeFieldFunctionDef<any>, F
       getFormConfig,
       addFormConfig,
       setFormConfig,
+      getWrappers,
+      addWrappers,
+      setWrappers,
       configure
     };
 
@@ -829,6 +865,35 @@ function _finalizeLogic<C extends DbxForgeFieldFunctionDef<any>, FV = any>(insta
       externalData
     });
   }
+}
+
+// MARK: Utils
+/**
+ * Creates a single {@link DbxForgeBuildFieldDefFunction} from all the input functions.
+ *
+ * @param fns The functions to apply.
+ * @returns A function that applies all of the given functions.
+ */
+export function dbxForgeFieldFunctionConfigure<C extends DbxForgeFieldFunctionDef<any>, FV = unknown>(...fns: DbxForgeBuildFieldDefFunction<C, FV>[]): DbxForgeBuildFieldDefFunction<C, FV> {
+  let fn: DbxForgeBuildFieldDefFunction<C, FV>;
+
+  switch (fns.length) {
+    case 0:
+      fn = NOOP_MODIFIER;
+      break;
+    case 1:
+      fn = fns[0];
+      break;
+    default:
+      fn = (instance: DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C, FV>, config: Building<C>) => {
+        fns.forEach((fn) => {
+          fn(instance, config);
+        });
+      };
+      break;
+  }
+
+  return fn;
 }
 
 /**

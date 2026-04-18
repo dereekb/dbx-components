@@ -1,6 +1,6 @@
 import type { MatSliderField, MatSliderProps } from '@ng-forge/dynamic-forms-material';
-import { DbxForgeMaterialFormFieldWrappedFieldFunction, dbxForgeMaterialFormFieldWrappedFieldFunction, type DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.wrapper';
-import { DbxForgeFieldFunctionDef, dbxForgeFieldFunctionConfigPropsWithHintBuilder } from '../../field';
+import { configureDbxForgeFormFieldWrapper, type DbxForgeFormFieldWrapperDef } from '../../wrapper/formfield/formfield.wrapper';
+import { DbxForgeFieldFunction, DbxForgeFieldFunctionDef, dbxForgeBuildFieldDef, dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder } from '../../field';
 
 // MARK: Number Slider Field
 /**
@@ -29,14 +29,14 @@ export interface DbxForgeNumberSliderFieldConfig extends DbxForgeFieldFunctionDe
  * the child slider's value into the parent form.
  *
  * @param config - Slider field configuration including max (required), thumb label, and tick interval
- * @returns A {@link DbxForgeFormFieldWrapperFieldDef} wrapping a slider field
+ * @returns A {@link DbxForgeFormFieldWrapperDef} wrapping a slider field
  *
  * @example
  * ```typescript
  * const field = forgeNumberSliderField({ key: 'rating', label: 'Rating', min: 0, max: 10, step: 1 });
  * ```
  */
-export const forgeNumberSliderField = dbxForgeMaterialFormFieldWrappedFieldFunction<DbxForgeNumberSliderFieldConfig>({
+export const forgeNumberSliderField = dbxForgeFieldFunction<DbxForgeNumberSliderFieldConfig>({
   type: 'slider' as const,
   buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder((config) => {
     const { step, thumbLabel: inputThumbLabel, tickInterval: inputTickInterval } = config;
@@ -57,5 +57,9 @@ export const forgeNumberSliderField = dbxForgeMaterialFormFieldWrappedFieldFunct
     };
 
     return sliderProps;
+  }),
+  buildFieldDef: dbxForgeBuildFieldDef((x, config) => {
+    // configure form field wrapper
+    x.configure(configureDbxForgeFormFieldWrapper);
   })
-}) as DbxForgeMaterialFormFieldWrappedFieldFunction<DbxForgeNumberSliderFieldConfig, MatSliderField>;
+}) as DbxForgeFieldFunction<DbxForgeNumberSliderFieldConfig, MatSliderField>;

@@ -162,7 +162,7 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
 
   /**
    * Tracks validity signals from nested wrapper forms (e.g. forgeFormFieldWrapper,
-   * forgeDbxSectionFieldWrapper). These wrappers create isolated DynamicForm instances
+   * section wrapper). These wrappers create isolated DynamicForm instances
    * whose validity is not visible to the parent DynamicForm.valid() signal.
    *
    * Wrapper components register their nested form's validity via {@link registerWrapperValidity},

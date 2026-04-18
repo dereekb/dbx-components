@@ -1,0 +1,45 @@
+import { type DynamicText } from '@ng-forge/dynamic-forms';
+import { type FactoryWithRequiredInput } from '@dereekb/util';
+import { type DbxButtonStyle } from '@dereekb/dbx-web';
+
+export interface DbxForgeArrayFieldWrapperProps<T = unknown> {
+  /**
+   * Label for each array item. Can be a static string or a function.
+   */
+  readonly labelForField?: DynamicText | FactoryWithRequiredInput<DynamicText, T>;
+  /**
+   * Text for the add button. Defaults to 'Add'.
+   */
+  readonly addText?: DynamicText;
+  /**
+   * Text for the remove button. Defaults to 'Remove'.
+   */
+  readonly removeText?: DynamicText;
+  /**
+   * Whether the add button is shown. Defaults to true.
+   */
+  readonly allowAdd?: boolean;
+  /**
+   * Whether items can be removed. Defaults to true.
+   */
+  readonly allowRemove?: boolean;
+  /**
+   * Whether drag/drop reordering is disabled. Defaults to false.
+   */
+  readonly disableRearrange?: boolean;
+  /**
+   * Style configuration for the add button. Defaults to raised primary.
+   */
+  readonly addButtonStyle?: DbxButtonStyle;
+  /**
+   * Style configuration for the remove button. Defaults to stroked warn.
+   */
+  readonly removeButtonStyle?: DbxButtonStyle;
+}
+
+export const DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME = 'dbx-forge-array-field-wrapper' as const;
+
+export interface DbxForgeArrayFieldWrapperDef {
+  readonly type: typeof DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME;
+  readonly props?: DbxForgeArrayFieldWrapperProps;
+}

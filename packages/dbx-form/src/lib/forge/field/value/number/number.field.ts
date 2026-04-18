@@ -4,6 +4,7 @@ import { DOLLAR_AMOUNT_PRECISION, type TransformNumberFunctionConfigRef } from '
 import { dbxForgeBuildFieldDef, DbxForgeFieldFunction, dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, DbxForgeFieldFunctionDef } from '../../field';
 import { configureForgeAutocompleteFieldMeta } from '../../field.util.meta';
 import { FieldAutocompleteAttributeOptionRef } from '../../../../field/field.autocomplete';
+import { configureDbxForgeFormFieldWrapper } from '../../wrapper/formfield/formfield.wrapper';
 
 // MARK: Number Field
 /**

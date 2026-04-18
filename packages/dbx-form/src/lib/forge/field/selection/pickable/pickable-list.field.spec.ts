@@ -8,8 +8,6 @@ import { of } from 'rxjs';
 import type { DbxForgePickableListFieldConfig } from './pickable-list.field';
 import { forgePickableListField } from './pickable-list.field';
 import type { DbxForgePickableListFieldDef, DbxForgePickableFieldProps } from './pickable.field';
-import { DbxForgeFormFieldWrapperWrappedFieldDef } from '../../wrapper/formfield/formfield.wrapper';
-import { getDbxForgeFormFieldWrapperWrappedField } from '../../wrapper/formfield/formfield.wrapper.util';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { DBX_FORGE_TEST_PROVIDERS } from '../../../form/forge.component.spec';
 import { DbxForgeAsyncConfigFormComponent } from '../../../form';
@@ -51,6 +49,7 @@ describe('DbxForgePickableListFieldConfig - Exhaustive Whitelist', () => {
     | 'validationMessages'
     | 'derivation'
     | 'schemas'
+    | 'wrappers'
     | 'col'
     | 'tabIndex'
     | 'excludeValueIfHidden'
@@ -141,6 +140,7 @@ describe('DbxForgePickableListFieldDef - Exhaustive Whitelist', () => {
     | 'logic'
     | 'derivation'
     | 'schemas'
+    | 'wrappers'
     // From BaseValueField
     | 'value'
     | 'placeholder';
@@ -161,17 +161,6 @@ describe('DbxForgePickableListFieldDef - Exhaustive Whitelist', () => {
 
   it('props is DbxForgePickableFieldProps', () => {
     expectTypeOf<DbxForgePickableListFieldDef['props']>().toEqualTypeOf<DbxForgePickableFieldProps | undefined>();
-  });
-});
-
-// ============================================================================
-// DbxForgeFormFieldWrapperWrappedFieldDef<DbxForgePickableListFieldDef> - Structure
-// ============================================================================
-
-describe('DbxForgeFormFieldWrapperWrappedFieldDef<DbxForgePickableListFieldDef>', () => {
-  it('fields[0] is typed as DbxForgePickableListFieldDef', () => {
-    type WrapperFieldDef = DbxForgeFormFieldWrapperWrappedFieldDef<DbxForgePickableListFieldDef>;
-    expectTypeOf<WrapperFieldDef['fields'][0]>().toEqualTypeOf<DbxForgePickableListFieldDef>();
   });
 });
 
@@ -206,130 +195,130 @@ describe('forgePickableListField()', () => {
     } as DbxForgePickableListFieldConfig<string>;
   }
 
-  // MARK: Wrapper structure
-  it('should create a wrapper field', () => {
+  // MARK: Field structure
+  it('should create a field with dbx-pickable-list type', () => {
     const field = forgePickableListField(minimalConfig());
-    expect(field.type).toBe('wrapper');
+    expect(field.type).toBe('dbx-pickable-list');
   });
 
-  it('should use _wrapper naming for the wrapper key', () => {
+  it('should use the data key directly', () => {
     const field = forgePickableListField(minimalConfig());
-    expect(field.key).toContain('_wrapper');
+    expect(field.key).toBe('categories');
   });
 
-  it('should contain an inner field in the wrapper', () => {
+  it('should have wrappers defined on the field', () => {
     const field = forgePickableListField(minimalConfig());
-    expect(getDbxForgeFormFieldWrapperWrappedField(field)).toBeDefined();
+    expect((field as any).wrappers).toBeDefined();
   });
 
   // MARK: Inner field structure
   it('should create an inner field with dbx-pickable-list type', () => {
-    const inner = getDbxForgeFormFieldWrapperWrappedField(forgePickableListField(minimalConfig()));
+    const inner = forgePickableListField(minimalConfig());
     expect(inner.type).toBe('dbx-pickable-list');
   });
 
   it('should set the data key on the inner field', () => {
-    const inner = getDbxForgeFormFieldWrapperWrappedField(forgePickableListField(minimalConfig()));
+    const inner = forgePickableListField(minimalConfig());
     expect(inner.key).toBe('categories');
   });
 
   it('should set label on the inner field', () => {
-    const inner = getDbxForgeFormFieldWrapperWrappedField(forgePickableListField({ ...minimalConfig(), label: 'Categories' }));
+    const inner = forgePickableListField({ ...minimalConfig(), label: 'Categories' });
     expect(inner.label).toBe('Categories');
   });
 
   // MARK: Required/readonly passthrough
   it('should set required on the inner field when provided', () => {
-    const inner = getDbxForgeFormFieldWrapperWrappedField(forgePickableListField({ ...minimalConfig(), required: true }));
+    const inner = forgePickableListField({ ...minimalConfig(), required: true });
     expect(inner.required).toBe(true);
   });
 
   it('should not set required on the inner field when not provided', () => {
-    const inner = getDbxForgeFormFieldWrapperWrappedField(forgePickableListField(minimalConfig()));
+    const inner = forgePickableListField(minimalConfig());
     expect(inner.required).toBeUndefined();
   });
 
   it('should set readonly on the inner field when provided', () => {
-    const inner = getDbxForgeFormFieldWrapperWrappedField(forgePickableListField({ ...minimalConfig(), readonly: true }));
+    const inner = forgePickableListField({ ...minimalConfig(), readonly: true });
     expect(inner.readonly).toBe(true);
   });
 
   // MARK: Hint/description mapping
   it('should map description to inner field props.hint', () => {
-    const inner = getDbxForgeFormFieldWrapperWrappedField(forgePickableListField({ ...minimalConfig(), description: 'Choose categories' }));
+    const inner = forgePickableListField({ ...minimalConfig(), description: 'Choose categories' });
     expect(inner.props?.hint).toBe('Choose categories');
   });
 
   it('should map hint to inner field props.hint', () => {
-    const inner = getDbxForgeFormFieldWrapperWrappedField(forgePickableListField({ ...minimalConfig(), hint: 'Choose categories' }));
+    const inner = forgePickableListField({ ...minimalConfig(), hint: 'Choose categories' });
     expect(inner.props?.hint).toBe('Choose categories');
   });
 
   it('should not set hint on inner field when neither hint nor description is provided', () => {
-    const inner = getDbxForgeFormFieldWrapperWrappedField(forgePickableListField(minimalConfig()));
+    const inner = forgePickableListField(minimalConfig());
     expect(inner.props?.hint).toBeUndefined();
   });
 
   // MARK: Props passthrough
   it('should propagate loadValues through inner field props', () => {
-    const inner = getDbxForgeFormFieldWrapperWrappedField(forgePickableListField(minimalConfig()));
+    const inner = forgePickableListField(minimalConfig());
     expect(inner.props?.loadValues).toBe(stubLoadValues);
   });
 
   it('should propagate displayForValue through inner field props', () => {
-    const inner = getDbxForgeFormFieldWrapperWrappedField(forgePickableListField(minimalConfig()));
+    const inner = forgePickableListField(minimalConfig());
     expect(inner.props?.displayForValue).toBe(stubDisplayForValue);
   });
 
   it('should propagate multiSelect through inner field props when provided', () => {
-    const inner = getDbxForgeFormFieldWrapperWrappedField(forgePickableListField({ ...minimalConfig(), props: { ...minimalConfig().props!, multiSelect: false } }));
+    const inner = forgePickableListField({ ...minimalConfig(), props: { ...minimalConfig().props!, multiSelect: false } });
     expect(inner.props?.multiSelect).toBe(false);
   });
 
   it('should not set multiSelect on the inner field when not provided', () => {
-    const inner = getDbxForgeFormFieldWrapperWrappedField(forgePickableListField(minimalConfig()));
+    const inner = forgePickableListField(minimalConfig());
     expect(inner.props?.multiSelect).toBeUndefined();
   });
 
   it('should propagate asArrayValue through inner field props when provided', () => {
-    const inner = getDbxForgeFormFieldWrapperWrappedField(forgePickableListField({ ...minimalConfig(), props: { ...minimalConfig().props!, asArrayValue: false } }));
+    const inner = forgePickableListField({ ...minimalConfig(), props: { ...minimalConfig().props!, asArrayValue: false } });
     expect(inner.props?.asArrayValue).toBe(false);
   });
 
   it('should propagate filterValues through inner field props when provided', () => {
     const config = { ...minimalConfig(), props: { ...minimalConfig().props!, filterValues: stubFilterValues } } as DbxForgePickableListFieldConfig<string>;
-    const inner = getDbxForgeFormFieldWrapperWrappedField(forgePickableListField(config));
+    const inner = forgePickableListField(config);
     expect(inner.props?.filterValues).toBe(stubFilterValues);
   });
 
   it('should propagate filterLabel through inner field props when provided', () => {
-    const inner = getDbxForgeFormFieldWrapperWrappedField(forgePickableListField({ ...minimalConfig(), props: { ...minimalConfig().props!, filterLabel: 'Filter items' } }));
+    const inner = forgePickableListField({ ...minimalConfig(), props: { ...minimalConfig().props!, filterLabel: 'Filter items' } });
     expect(inner.props?.filterLabel).toBe('Filter items');
   });
 
   it('should not set filterLabel on the inner field when not provided', () => {
-    const inner = getDbxForgeFormFieldWrapperWrappedField(forgePickableListField(minimalConfig()));
+    const inner = forgePickableListField(minimalConfig());
     expect(inner.props?.filterLabel).toBeUndefined();
   });
 
   // MARK: Logic passthrough
   it('should pass logic through to the inner field definition', () => {
     const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
-    const inner = getDbxForgeFormFieldWrapperWrappedField(forgePickableListField({ ...minimalConfig(), logic }));
+    const inner = forgePickableListField({ ...minimalConfig(), logic });
     expect(inner.logic).toEqual(logic);
   });
 
   // MARK: Validators passthrough
   it('should pass validators through to the inner field definition', () => {
     const validators: ValidatorConfig[] = [{ type: 'custom' as const, expression: 'fieldValue != null', kind: 'mustSelectCategory' }];
-    const inner = getDbxForgeFormFieldWrapperWrappedField(forgePickableListField({ ...minimalConfig(), validators }));
+    const inner = forgePickableListField({ ...minimalConfig(), validators });
     expect(inner.validators).toEqual(validators);
   });
 
   // MARK: ValidationMessages passthrough
   it('should pass validationMessages through to the inner field definition', () => {
     const validationMessages: ValidationMessages = { mustSelectCategory: 'Please select at least one category' };
-    const inner = getDbxForgeFormFieldWrapperWrappedField(forgePickableListField({ ...minimalConfig(), validationMessages }));
+    const inner = forgePickableListField({ ...minimalConfig(), validationMessages });
     expect(inner.validationMessages).toEqual(validationMessages);
   });
 });
@@ -371,7 +360,7 @@ describe('scenarios', () => {
 
       const formConfig: FormConfig = await firstValueFrom(fixture.componentInstance.context.config$);
       expect(formConfig.fields.length).toBe(1);
-      expect(formConfig.fields[0].type).toBe('wrapper');
+      expect(formConfig.fields[0].type).toBe('dbx-pickable-list');
     });
   });
 });

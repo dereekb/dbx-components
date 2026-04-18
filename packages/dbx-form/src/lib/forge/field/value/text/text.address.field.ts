@@ -1,9 +1,8 @@
-import type { FieldDef, WrapperField } from '@ng-forge/dynamic-forms';
+import type { FieldDef, GroupField } from '@ng-forge/dynamic-forms';
 import { ADDRESS_LINE_MAX_LENGTH } from '@dereekb/model';
 import { forgeTextField, type DbxForgeTextFieldConfig } from './text.field';
 import { forgeCityField, type DbxForgeCityFieldConfig, forgeCountryField, type DbxForgeCountryFieldConfig, forgeStateField, type DbxForgeStateFieldConfig, forgeZipCodeField, type DbxForgeZipCodeFieldConfig } from './text.additional.field';
-import { forgeRow } from '../../wrapper/wrapper';
-import { forgeDbxSectionFieldWrapper } from '../../wrapper/section/section.wrapper';
+import { forgeGroup, forgeRow } from '../../wrapper/wrapper';
 import { dbxForgeArrayField, type DbxForgeArrayFieldDef } from '../array/array.field';
 
 // MARK: Address Config
@@ -120,24 +119,16 @@ export function forgeAddressFields(config: DbxForgeAddressFieldsConfig = {}): Fi
 
 // MARK: Address
 /**
- * Configuration for a complete address section field wrapped in a forge section group.
+ * Configuration for a complete address field group.
  */
 export interface DbxForgeAddressFieldConfig extends DbxForgeAddressFieldsConfig {
   readonly key?: string;
-  /**
-   * Optional section header text. Defaults to `'Address'`.
-   */
-  readonly header?: string;
-  /**
-   * Optional hint text displayed below the header.
-   */
-  readonly hint?: string;
 }
 
 /**
- * Creates a section-wrapped address field group containing all address sub-fields.
+ * Creates a grouped address field containing all address sub-fields.
  *
- * @param config - Optional overrides; defaults to key `'address'`, header `'Address'`
+ * @param config - Optional overrides; defaults to key `'address'`
  * @returns A {@link GroupField} containing address fields
  *
  * @example
@@ -145,13 +136,11 @@ export interface DbxForgeAddressFieldConfig extends DbxForgeAddressFieldsConfig 
  * const field = forgeAddressField({ required: true, includeCountry: true });
  * ```
  */
-export function forgeAddressField(config: Partial<DbxForgeAddressFieldConfig> = {}): WrapperField {
-  const { key = 'address', header = 'Address', hint } = config;
+export function forgeAddressField(config: Partial<DbxForgeAddressFieldConfig> = {}): GroupField {
+  const { key = 'address' } = config;
 
-  return forgeDbxSectionFieldWrapper({
+  return forgeGroup({
     key,
-    header,
-    hint,
     fields: forgeAddressFields(config)
   });
 }

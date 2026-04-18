@@ -1,14 +1,13 @@
-import { ChangeDetectionStrategy, Component, computed, inject, viewChild, ViewContainerRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, viewChild, ViewContainerRef } from '@angular/core';
 import { DbxSectionComponent, DbxSubSectionComponent, type DbxSectionHeaderConfig } from '@dereekb/dbx-web';
-import { FieldWrapperContract, WRAPPER_FIELD_CONTEXT, type WrapperFieldContext } from '@ng-forge/dynamic-forms';
-import type { DbxForgeSectionWrapper } from './section.wrapper';
+import { FieldWrapperContract } from '@ng-forge/dynamic-forms';
 
 /**
  * Forge wrapper component that renders child fields inside a
  * `<dbx-section>` or `<dbx-subsection>`.
  *
- * Implements {@link FieldWrapperContract} and reads configuration from
- * {@link WRAPPER_FIELD_CONTEXT}.
+ * Implements {@link FieldWrapperContract} and receives configuration
+ * via component inputs.
  */
 @Component({
   selector: 'dbx-forge-section-wrapper',
@@ -30,17 +29,7 @@ import type { DbxForgeSectionWrapper } from './section.wrapper';
 export class DbxForgeSectionWrapperComponent implements FieldWrapperContract {
   readonly fieldComponent = viewChild.required('fieldComponent', { read: ViewContainerRef });
 
-  private readonly context = inject<WrapperFieldContext<DbxForgeSectionWrapper>>(WRAPPER_FIELD_CONTEXT);
-
-  readonly headerConfig = computed((): DbxSectionHeaderConfig => {
-    return this.context.config.headerConfig ?? {};
-  });
-
-  readonly elevate = computed((): boolean => {
-    return this.context.config.elevate ?? false;
-  });
-
-  readonly subsection = computed((): boolean => {
-    return this.context.config.subsection ?? false;
-  });
+  readonly headerConfig = input<DbxSectionHeaderConfig>();
+  readonly elevate = input<boolean>();
+  readonly subsection = input<boolean>();
 }
