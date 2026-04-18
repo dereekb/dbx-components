@@ -1,58 +1,40 @@
-import type { ArrayField, DynamicText, FieldDef } from '@ng-forge/dynamic-forms';
-import { dbxForgeBuildFieldDef, dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef } from '../../field';
+import type { ArrayField, ContainerField } from '@ng-forge/dynamic-forms';
+import { dbxForgeBuildFieldDef, dbxForgeFieldFunction, type DbxForgeFieldFunctionDef } from '../../field';
 import type { DbxForgeField } from '../../../form/forge.form';
-import { DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME, DbxForgeArrayFieldWrapperProps } from '../../wrapper/array-field/array-field.wrapper';
-import { DBX_FORGE_ARRAY_FIELD_ELEMENT_WRAPPER_NAME, DbxForgeArrayFieldElementWrapperProps } from '../../wrapper/array-field/array-field.element.wrapper';
+import { DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME, type DbxForgeArrayFieldWrapperProps } from '../../wrapper/array-field/array-field.wrapper';
+import { DBX_FORGE_ARRAY_FIELD_ELEMENT_WRAPPER_NAME, type DbxForgeArrayFieldElementWrapperProps } from '../../wrapper/array-field/array-field.element.wrapper';
 
 // MARK: Config
 /**
- * Configuration for creating a forge drag array field.
+ * Configuration for creating a forge array field.
+ *
+ * The outer array wrapper provides label/hint header chrome.
+ * Each template item is wrapped in a ContainerField with the element wrapper
+ * to provide per-item drag handle, label, and remove button.
  */
-export interface DbxForgeArrayFieldConfig<T = unknown> extends DbxForgeFieldFunctionDef<Omit<ArrayField, 'props' | 'label' | 'fields'>>, Partial<DbxForgeArrayFieldWrapperProps<T>> {
-  /**
-   * Label for the array field section.
-   *
-   * Re-declared because ArrayField sets `label?: never` which prevents string values
-   * through the DbxForgeFieldFunctionDef conditional type.
-   */
-  readonly label?: DynamicText;
-  /**
-   * Hint text displayed alongside the array field label.
-   *
-   * Re-declared because ArrayField extends FieldDef<never> which causes the
-   * conditional hint type in DbxForgeFieldFunctionDef to resolve to `never`.
-   */
-  readonly hint?: string;
-  /**
-   * Description text, converted to hint at build time.
-   */
-  readonly description?: string;
-  /**
-   * Template field definitions for each array item.
-   */
-  readonly template?: FieldDef<unknown>[];
+export interface DbxForgeArrayFieldConfig<T = unknown> extends DbxForgeFieldFunctionDef<Omit<ArrayField, 'props' | 'label' | 'fields'>> {
+  readonly fields: ContainerField['fields'];
   readonly props?: DbxForgeArrayFieldWrapperProps<T>;
   readonly elementProps?: DbxForgeArrayFieldElementWrapperProps<T>;
 }
 
 export type DbxForgeArrayFieldFunction = <T = unknown>(config: DbxForgeArrayFieldConfig<T>) => DbxForgeField<ArrayField>;
 
+// MARK: Internal
 /**
- * Creates a forge drag-and-drop array field with CDK drag/drop reordering,
- * add/remove/duplicate controls, and per-item labeling.
+ * Creates a forge array field with add/remove controls and per-item rendering.
  *
- * Each array item renders as a nested mini dynamic form using the provided template.
- * Items can be reordered via drag/drop handles, added, removed, and duplicated.
+ * Wraps the array with {@link DbxForgeArrayFieldWrapperComponent} for label/hint,
+ * and wraps each template item in a ContainerField with
+ * {@link DbxForgeArrayFieldElementWrapperComponent} for per-item drag handle,
+ * label, and remove button.
  *
- * This is the forge equivalent of the formly `formlyRepeatArrayField` with
- * `DbxFormRepeatArrayTypeComponent`.
- *
- * @param config - Drag array field configuration
- * @returns A {@link DbxForgeArrayFieldDef}
+ * @param config - Array field configuration
+ * @returns A {@link DbxForgeField}
  *
  * @example
  * ```typescript
- * const field = forgeArrayField({
+ * const field = dbxForgeArrayField({
  *   key: 'phones',
  *   label: 'Phone Numbers',
  *   addText: 'Add Phone',
@@ -65,17 +47,36 @@ export type DbxForgeArrayFieldFunction = <T = unknown>(config: DbxForgeArrayFiel
  */
 export const dbxForgeArrayField = dbxForgeFieldFunction<DbxForgeArrayFieldConfig>({
   type: 'array',
-  buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder(),
   buildFieldDef: dbxForgeBuildFieldDef((x, config) => {
-    x.addWrappers([
+    const { props, elementProps, fields } = config;
+
+    // Add the outer array wrapper for label/hint chrome
+    x.addWrappers({
+      type: DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME,
+      props
+    });
+
+    // Flow per-element defaults from outer wrapper props; elementProps overrides
+    const resolvedElementProps = {
+      removeText: props?.removeText,
+      allowRemove: props?.allowRemove,
+      disableRearrange: props?.disableRearrange,
+      removeButtonStyle: props?.removeButtonStyle,
+      ...elementProps
+    };
+
+    // Wrap template fields in a ContainerField with the element wrapper
+    (config as any).fields = [
       {
-        type: DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME,
-        props: config.props
-      },
-      {
-        type: DBX_FORGE_ARRAY_FIELD_ELEMENT_WRAPPER_NAME,
-        props: config.elementProps
+        type: 'container',
+        fields,
+        wrappers: [
+          {
+            type: DBX_FORGE_ARRAY_FIELD_ELEMENT_WRAPPER_NAME,
+            props: resolvedElementProps
+          }
+        ] as ContainerField['wrappers']
       }
-    ]);
+    ] as any; // need any, as there is a back and forth typing issue otherwise
   })
 }) as DbxForgeArrayFieldFunction;

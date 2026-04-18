@@ -1,14 +1,15 @@
 import { type DynamicText } from '@ng-forge/dynamic-forms';
 import { type FactoryWithRequiredInput } from '@dereekb/util';
 import { type DbxButtonStyle } from '@dereekb/dbx-web';
+import { DbxForgeFieldHintValueRef } from '../../field';
 
 export const DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME = 'dbx-forge-array-field-wrapper' as const;
 
-export interface DbxForgeArrayFieldWrapperProps<T = unknown> {
+export interface DbxForgeArrayFieldWrapperProps<T = unknown> extends DbxForgeFieldHintValueRef<DynamicText> {
   /**
-   * Label for each array item. Can be a static string or a function.
+   * The label for the array field itself.
    */
-  readonly labelForField?: DynamicText | FactoryWithRequiredInput<DynamicText, T>;
+  readonly label?: DynamicText;
   /**
    * Text for the add button. Defaults to 'Add'.
    */

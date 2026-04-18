@@ -1,150 +1,131 @@
 import { describe, it, expect } from 'vitest';
-import { dbxForgeArrayField, FORGE_ARRAY_FIELD_TYPE_NAME } from './array.field';
+import { dbxForgeArrayField } from './array.field';
+import { DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME } from '../../wrapper/array-field/array-field.wrapper';
+import { DBX_FORGE_ARRAY_FIELD_ELEMENT_WRAPPER_NAME } from '../../wrapper/array-field/array-field.element.wrapper';
 
-describe('forgeArrayField()', () => {
-  it('should create a field with the correct type', () => {
-    const field = dbxForgeArrayField({
-      key: 'items',
-      template: { key: 'name', type: 'input' as const, label: 'Name' }
-    });
-    expect(field.type).toBe(FORGE_ARRAY_FIELD_TYPE_NAME);
+describe('dbxForgeArrayField()', () => {
+  const basicFields = [{ key: 'name', type: 'input' as const, label: 'Name' }] as any[];
+
+  it('should create a field with array type', () => {
+    const field = dbxForgeArrayField({ key: 'items', fields: basicFields });
+    expect(field.type).toBe('array');
   });
 
   it('should use the provided key', () => {
-    const field = dbxForgeArrayField({
-      key: 'phones',
-      template: { key: 'number', type: 'input' as const, label: 'Number' }
-    });
+    const field = dbxForgeArrayField({ key: 'phones', fields: basicFields });
     expect(field.key).toBe('phones');
   });
 
-  it('should use provided initial values', () => {
-    const values = [{ name: 'Alice' }, { name: 'Bob' }];
-    const field = dbxForgeArrayField({
-      key: 'items',
-      template: { key: 'name', type: 'input' as const, label: 'Name' },
-      value: values
-    });
-    expect(field.value).toEqual(values);
+  it('should pass maxLength on the field def', () => {
+    const field = dbxForgeArrayField({ key: 'items', fields: basicFields, maxLength: 5 });
+    expect(field.maxLength).toBe(5);
   });
 
-  it('should pass template through props', () => {
-    const template = [
-      { key: 'name', type: 'input' as const, label: 'Name' },
-      { key: 'age', type: 'input' as const, label: 'Age' }
-    ];
-    const field = dbxForgeArrayField({ key: 'items', template });
-    expect(field.props?.template).toEqual(template);
-  });
-
-  it('should pass single-field template', () => {
-    const template = { key: 'tag', type: 'input' as const, label: 'Tag' };
-    const field = dbxForgeArrayField({ key: 'tags', template });
-    expect(field.props?.template).toEqual(template);
-  });
-
-  it('should pass addText through props', () => {
-    const field = dbxForgeArrayField({
-      key: 'items',
-      template: { key: 'name', type: 'input' as const, label: 'Name' },
-      addText: 'Add Item'
-    });
-    expect(field.props?.addText).toBe('Add Item');
-  });
-
-  it('should pass removeText through props', () => {
-    const field = dbxForgeArrayField({
-      key: 'items',
-      template: { key: 'name', type: 'input' as const, label: 'Name' },
-      removeText: 'Delete'
-    });
-    expect(field.props?.removeText).toBe('Delete');
-  });
-
-  it('should pass disableRearrange through props', () => {
-    const field = dbxForgeArrayField({
-      key: 'items',
-      template: { key: 'name', type: 'input' as const, label: 'Name' },
-      disableRearrange: true
-    });
-    expect(field.props?.disableRearrange).toBe(true);
-  });
-
-  it('should pass maxLength through props', () => {
-    const field = dbxForgeArrayField({
-      key: 'items',
-      template: { key: 'name', type: 'input' as const, label: 'Name' },
-      maxLength: 5
-    });
-    expect(field.props?.maxLength).toBe(5);
-  });
-
-  it('should pass allowDuplicate through props', () => {
-    const field = dbxForgeArrayField({
-      key: 'items',
-      template: { key: 'name', type: 'input' as const, label: 'Name' },
-      allowDuplicate: true,
-      duplicateText: 'Copy'
-    });
-    expect(field.props?.allowDuplicate).toBe(true);
-    expect(field.props?.duplicateText).toBe('Copy');
-  });
-
-  it('should pass labelForField string through props', () => {
-    const field = dbxForgeArrayField({
-      key: 'items',
-      template: { key: 'name', type: 'input' as const, label: 'Name' },
-      labelForField: 'Item'
-    });
-    expect(field.props?.labelForField).toBe('Item');
-  });
-
-  it('should pass labelForField function through props', () => {
-    const labelFn = (pair: { index: number }) => `Entry ${pair.index}`;
-    const field = dbxForgeArrayField({
-      key: 'items',
-      template: { key: 'name', type: 'input' as const, label: 'Name' },
-      labelForField: labelFn
-    });
-    expect(field.props?.labelForField).toBe(labelFn);
-  });
-
-  it('should pass addButtonStyle through props', () => {
-    const field = dbxForgeArrayField({
-      key: 'items',
-      template: { key: 'name', type: 'input' as const, label: 'Name' },
-      addButtonStyle: { type: 'flat', color: 'accent' }
-    });
-    expect(field.props?.addButtonStyle).toEqual({ type: 'flat', color: 'accent' });
-  });
-
-  it('should pass removeButtonStyle through props', () => {
-    const field = dbxForgeArrayField({
-      key: 'items',
-      template: { key: 'name', type: 'input' as const, label: 'Name' },
-      removeButtonStyle: { type: 'stroked', color: 'warn' }
-    });
-    expect(field.props?.removeButtonStyle).toEqual({ type: 'stroked', color: 'warn' });
-  });
-
-  it('should pass duplicateButtonStyle through props', () => {
-    const field = dbxForgeArrayField({
-      key: 'items',
-      template: { key: 'name', type: 'input' as const, label: 'Name' },
-      duplicateButtonStyle: { type: 'tonal', color: 'primary' }
-    });
-    expect(field.props?.duplicateButtonStyle).toEqual({ type: 'tonal', color: 'primary' });
-  });
-
-  it('should not include undefined optional props', () => {
-    const field = dbxForgeArrayField({
-      key: 'items',
-      template: { key: 'name', type: 'input' as const, label: 'Name' }
+  describe('outer wrapper', () => {
+    it('should add the array field wrapper', () => {
+      const field = dbxForgeArrayField({ key: 'items', fields: basicFields });
+      const wrapper = (field.wrappers as any[])?.find((w) => w.type === DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME);
+      expect(wrapper).toBeDefined();
     });
 
-    // Only template should be present in props
-    expect(field.props?.template).toBeDefined();
-    expect(field.props?.addText).toBeUndefined();
-    expect(field.props?.maxLength).toBeUndefined();
+    it('should pass label to wrapper props', () => {
+      const field = dbxForgeArrayField({ key: 'items', fields: basicFields, props: { label: 'My Items' } });
+      const wrapper = (field.wrappers as any[])?.find((w) => w.type === DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME);
+      expect(wrapper.props.label).toBe('My Items');
+    });
+
+    it('should pass hint to wrapper props', () => {
+      const field = dbxForgeArrayField({ key: 'items', fields: basicFields, props: { hint: 'A list of items' } });
+      const wrapper = (field.wrappers as any[])?.find((w) => w.type === DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME);
+      expect(wrapper.props.hint).toBe('A list of items');
+    });
+
+    it('should pass addText to wrapper props', () => {
+      const field = dbxForgeArrayField({ key: 'items', fields: basicFields, props: { addText: 'Add Item' } });
+      const wrapper = (field.wrappers as any[])?.find((w) => w.type === DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME);
+      expect(wrapper.props.addText).toBe('Add Item');
+    });
+  });
+
+  describe('element wrapper', () => {
+    function getElementWrapper(field: any): any {
+      return field.fields[0].wrappers[0];
+    }
+
+    it('should wrap fields in a ContainerField with the element wrapper', () => {
+      const field = dbxForgeArrayField({ key: 'items', fields: basicFields }) as any;
+      expect(field.fields).toHaveLength(1);
+      expect(field.fields[0].type).toBe('container');
+
+      const elementWrapper = getElementWrapper(field);
+      expect(elementWrapper.type).toBe(DBX_FORGE_ARRAY_FIELD_ELEMENT_WRAPPER_NAME);
+    });
+
+    it('should contain the original fields inside the container', () => {
+      const fields = [
+        { key: 'name', type: 'input' as const, label: 'Name' },
+        { key: 'email', type: 'input' as const, label: 'Email' }
+      ] as any[];
+
+      const field = dbxForgeArrayField({ key: 'items', fields }) as any;
+      expect(field.fields[0].fields).toEqual(fields);
+    });
+
+    it('should pass elementProps to the element wrapper', () => {
+      const field = dbxForgeArrayField({
+        key: 'items',
+        fields: basicFields,
+        elementProps: { labelForEntry: 'Item', disableRearrange: true }
+      }) as any;
+
+      const elementWrapper = getElementWrapper(field);
+      expect(elementWrapper.props.labelForEntry).toBe('Item');
+      expect(elementWrapper.props.disableRearrange).toBe(true);
+    });
+
+    it('should flow removeText from outer props to element wrapper', () => {
+      const field = dbxForgeArrayField({
+        key: 'items',
+        fields: basicFields,
+        props: { removeText: 'Delete' }
+      }) as any;
+
+      const elementWrapper = getElementWrapper(field);
+      expect(elementWrapper.props.removeText).toBe('Delete');
+    });
+
+    it('should flow allowRemove from outer props to element wrapper', () => {
+      const field = dbxForgeArrayField({
+        key: 'items',
+        fields: basicFields,
+        props: { allowRemove: false }
+      }) as any;
+
+      const elementWrapper = getElementWrapper(field);
+      expect(elementWrapper.props.allowRemove).toBe(false);
+    });
+
+    it('should flow disableRearrange from outer props to element wrapper', () => {
+      const field = dbxForgeArrayField({
+        key: 'items',
+        fields: basicFields,
+        props: { disableRearrange: true }
+      }) as any;
+
+      const elementWrapper = getElementWrapper(field);
+      expect(elementWrapper.props.disableRearrange).toBe(true);
+    });
+
+    it('should allow elementProps to override flowed outer props', () => {
+      const field = dbxForgeArrayField({
+        key: 'items',
+        fields: basicFields,
+        props: { removeText: 'Delete' },
+        elementProps: { removeText: 'Custom Remove' }
+      }) as any;
+
+      const elementWrapper = getElementWrapper(field);
+      expect(elementWrapper.props.removeText).toBe('Custom Remove');
+    });
   });
 });

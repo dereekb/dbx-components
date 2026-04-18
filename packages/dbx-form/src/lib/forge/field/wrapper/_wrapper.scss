@@ -66,6 +66,26 @@ $dbx-forge-form-field-slider-thumb-margin: 22px;
     flex-wrap: wrap;
     gap: 0 !important;
   }
+
+  // Array field wrapper: section header and array field styling.
+  .dbx-form-repeat-array {
+    margin-bottom: 8px;
+
+    .dbx-form-repeat-array-header {
+      margin-bottom: 4px;
+    }
+
+    .dbx-form-repeat-array-title {
+      margin: 0;
+      font-weight: 500;
+    }
+
+    .dbx-form-repeat-array-hint {
+      margin: 2px 0 8px;
+      font-size: 0.85em;
+      color: var(--mat-sys-on-surface-variant, rgba(0, 0, 0, 0.6));
+    }
+  }
 }
 
 @mixin theme($theme-config) {

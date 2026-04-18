@@ -176,10 +176,12 @@ export function forgeAddressListField(config: Partial<DbxForgeAddressListFieldCo
 
   return dbxForgeArrayField({
     key,
-    labelForField: 'Address',
-    template: forgeAddressFields(config),
-    maxLength: maxAddresses,
-    addText: 'Add Address',
-    removeText: 'Remove Address'
+    // labelForField: 'Address',
+    props: {
+      addText: 'Add Address',
+      removeText: 'Remove Address'
+    },
+    fields: forgeAddressFields(config),
+    maxLength: maxAddresses
   });
 }

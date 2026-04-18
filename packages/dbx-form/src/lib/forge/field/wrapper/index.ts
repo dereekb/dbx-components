@@ -1,4 +1,5 @@
 export * from './wrapper';
+export * from './array-field';
 export * from './flex';
 export * from './formfield';
 export * from './section';

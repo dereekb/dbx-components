@@ -1,7 +1,9 @@
-import { DbxForgeArrayFieldWrapperProps } from './array-field.wrapper';
+import { type DynamicText } from '@ng-forge/dynamic-forms';
+import { type FactoryWithRequiredInput } from '@dereekb/util';
+import { type DbxButtonStyle } from '@dereekb/dbx-web';
 
 /**
- * Index pair passed to the {@link DbxForgeArrayFieldWrapperProps.labelForField} factory.
+ * Index pair passed to the labelForField factory.
  */
 export interface DbxForgeArrayItemPair {
   readonly index: number;
@@ -10,17 +12,30 @@ export interface DbxForgeArrayItemPair {
 /**
  * Props for the dbx-forge-array-field-element wrapper.
  *
- * Passed via the wrapper config's `props` field.
+ * Controls per-item rendering: drag handle, item label, and remove button
+ * for each array entry.
  */
-export interface DbxForgeArrayFieldElementWrapperProps<T = unknown> extends DbxForgeArrayFieldWrapperProps<T> {
+export interface DbxForgeArrayFieldElementWrapperProps<T = unknown> {
   /**
-   * Key of the parent array field. Used to dispatch array events.
+   * Label for each array item. Can be a static string or a function.
    */
-  readonly arrayKey: string;
+  readonly labelForEntry?: DynamicText | FactoryWithRequiredInput<DynamicText, T>;
   /**
-   * Index of the element within the array.
+   * Text for the remove button. Defaults to 'Remove'.
    */
-  readonly index: number;
+  readonly removeText?: DynamicText;
+  /**
+   * Whether items can be removed. Defaults to true.
+   */
+  readonly allowRemove?: boolean;
+  /**
+   * Whether drag/drop reordering is disabled. Defaults to false.
+   */
+  readonly disableRearrange?: boolean;
+  /**
+   * Style configuration for the remove button. Defaults to stroked warn.
+   */
+  readonly removeButtonStyle?: DbxButtonStyle;
 }
 
 export const DBX_FORGE_ARRAY_FIELD_ELEMENT_WRAPPER_NAME = 'dbx-forge-array-field-element-wrapper' as const;

@@ -1,7 +1,7 @@
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { formlyRepeatArrayField, formlyNameField, formlyEmailField, formlyPhoneAndLabelSectionField, formlyAddressListField, formlyToggleField, dbxForgeArrayField, forgeNameField, forgeEmailField, forgePhoneField, forgeAddressListField, forgeToggleField, DbxFormFormlyArrayFieldModule, DbxFormFormlyTextFieldModule, DbxFormFormlyPhoneFieldModule, DbxFormFormlyBooleanFieldModule, DbxFormlyFieldsContextDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
+import { formlyRepeatArrayField, formlyNameField, formlyEmailField, formlyPhoneAndLabelSectionField, formlyAddressListField, formlyToggleField, dbxForgeArrayField, forgeNameField, forgeEmailField, forgePhoneField, forgeAddressField, forgeToggleField, DbxFormFormlyArrayFieldModule, DbxFormFormlyTextFieldModule, DbxFormFormlyPhoneFieldModule, DbxFormFormlyBooleanFieldModule, DbxFormlyFieldsContextDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
 import { randomBoolean } from '@dereekb/util';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
@@ -71,13 +71,15 @@ export class DocFormArrayComponent {
     fields: [
       dbxForgeArrayField({
         key: 'test',
-        label: 'Test Field',
-        description: 'This is a generic repeat field. It is configured with custom add/remove text, and a max of 2 items.',
-        template: [forgeNameField(), forgeEmailField(), forgePhoneField({ key: 'phone' }), forgeAddressListField()],
-        addText: 'Add Test Field',
-        removeText: 'Remove Test Field',
+        props: {
+          label: 'Test Field',
+          hint: 'This is a generic repeat field. It is configured with custom add/remove text, and a max of 2 items.',
+          addText: 'Add Test Field',
+          removeText: 'Remove Test Field'
+        },
+        fields: [forgeNameField(), forgeEmailField(), forgePhoneField({ key: 'phone' }), forgeAddressField()],
         maxLength: 2
-      }) as any
+      })
     ]
   };
 
@@ -85,13 +87,17 @@ export class DocFormArrayComponent {
     fields: [
       dbxForgeArrayField({
         key: 'test2',
-        label: 'Field With Add and Remove',
-        description: 'Shows the drag array field with per-item labels and rearrange disabled.',
-        template: [forgeNameField(), forgeToggleField({ key: 'disable', label: 'Disable Remove' })],
-        disableRearrange: true,
-        allowAdd: true,
-        labelForField: ({ value }: { value: unknown }) => (value as { name: string })?.name
-      }) as any
+        props: {
+          label: 'Field With Add and Remove',
+          hint: 'Shows the drag array field with per-item labels and rearrange disabled.',
+          allowAdd: true
+        },
+        elementProps: {
+          disableRearrange: true,
+          labelForEntry: ({ value }: { value: unknown }) => (value as { name: string })?.name // TODO: ...
+        },
+        fields: [forgeNameField(), forgeToggleField({ key: 'disable', label: 'Disable Remove' })]
+      })
     ]
   };
 }

@@ -1,15 +1,13 @@
 <div class="dbx-form-repeat-array">
-  @if (label(); as labelText) {
+  @if (labelSignal(); as labelText) {
     <div class="dbx-form-repeat-array-header">
-      <span class="dbx-form-repeat-array-title">{{ labelText | dynamicText | async }}</span>
+      <h4 class="dbx-form-repeat-array-title">{{ labelText | dynamicText | async }}</h4>
     </div>
+  }
+  @if (hintSignal(); as hintText) {
+    <p class="dbx-form-repeat-array-hint">{{ hintText | dynamicText | async }}</p>
   }
   <div class="dbx-form-repeat-array-content">
     <ng-container #fieldComponent></ng-container>
   </div>
-  @if (allowAddSignal()) {
-    <div class="dbx-form-repeat-array-footer">
-      <dbx-button [text]="addTextSignal()" [buttonStyle]="addButtonStyleSignal()" [disabled]="isDisabled()" (buttonClick)="addItem()"></dbx-button>
-    </div>
-  }
 </div>

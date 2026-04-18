@@ -2,18 +2,15 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, viewChild,
 import { CdkDrag, CdkDragHandle, CdkDragPlaceholder } from '@angular/cdk/drag-drop';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { FieldWrapperContract, EventDispatcher, arrayEvent, WrapperFieldInputs } from '@ng-forge/dynamic-forms';
+import { FieldWrapperContract, EventDispatcher, arrayEvent, WrapperFieldInputs, ARRAY_CONTEXT } from '@ng-forge/dynamic-forms';
 import { type FactoryWithRequiredInput } from '@dereekb/util';
-import { DbxButtonComponent, DbxButtonSpacerDirective, type DbxButtonStyle } from '@dereekb/dbx-web';
+import { type DbxButtonStyle, DbxButtonComponent, DbxButtonSpacerDirective } from '@dereekb/dbx-web';
 import { forgeFieldDisabled } from '../../field.util';
 import { type DbxForgeArrayFieldElementWrapperProps, type DbxForgeArrayItemPair } from './array-field.element.wrapper';
 
 /**
  * Forge wrapper component that wraps a single array item with
  * a drag handle, item label, and remove button.
- *
- * Uses {@link EventDispatcher} and {@link arrayEvent} to remove
- * the item from the parent array.
  */
 @Component({
   selector: 'dbx-forge-array-field-element-wrapper',
@@ -27,6 +24,8 @@ export class DbxForgeArrayFieldElementWrapperComponent implements FieldWrapperCo
 
   private readonly dispatcher = inject(EventDispatcher);
 
+  readonly arrayContext = inject(ARRAY_CONTEXT);
+
   // Disabled state
   readonly isDisabled = forgeFieldDisabled();
 
@@ -35,20 +34,18 @@ export class DbxForgeArrayFieldElementWrapperComponent implements FieldWrapperCo
 
   private readonly wrapperProps = computed(() => (this.fieldInputs()?.props ?? {}) as unknown as DbxForgeArrayFieldElementWrapperProps);
 
-  readonly arrayKeySignal = computed(() => this.wrapperProps().arrayKey);
-  readonly indexSignal = computed(() => this.wrapperProps().index);
   readonly disableRearrangeSignal = computed(() => this.wrapperProps().disableRearrange ?? false);
   readonly allowRemoveSignal = computed(() => this.wrapperProps().allowRemove ?? true);
-  readonly removeTextSignal = computed(() => this.wrapperProps().removeText ?? 'Remove');
-
-  private static readonly _DEFAULT_REMOVE_BUTTON_STYLE: DbxButtonStyle = { type: 'stroked', color: 'warn' };
-
-  readonly removeButtonStyleSignal = computed(() => this.wrapperProps().removeButtonStyle ?? DbxForgeArrayFieldElementWrapperComponent._DEFAULT_REMOVE_BUTTON_STYLE);
+  readonly removeTextSignal = computed<string>(() => {
+    const text = this.wrapperProps().removeText;
+    return typeof text === 'string' ? text : 'Remove';
+  });
+  readonly removeButtonStyleSignal = computed<DbxButtonStyle>(() => this.wrapperProps().removeButtonStyle ?? { type: 'stroked', color: 'warn' });
 
   readonly labelSignal = computed(() => {
     const props = this.wrapperProps();
-    const index = props.index;
-    const labelForField = props.labelForField;
+    const index = this.arrayContext.index();
+    const labelForField = props.labelForEntry;
 
     if (!labelForField) {
       return `${index + 1}.`;
@@ -63,6 +60,6 @@ export class DbxForgeArrayFieldElementWrapperComponent implements FieldWrapperCo
   });
 
   removeItem(): void {
-    this.dispatcher.dispatch(arrayEvent(this.arrayKeySignal()).removeAt(this.indexSignal()));
+    this.dispatcher.dispatch(arrayEvent(this.arrayContext.arrayKey).removeAt(this.arrayContext.index()));
   }
 }

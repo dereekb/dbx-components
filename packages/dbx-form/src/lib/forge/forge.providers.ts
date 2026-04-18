@@ -28,7 +28,9 @@ import {
   DBX_FORGE_STYLE_WRAPPER_TYPE_NAME,
   DBX_FORGE_INFO_WRAPPER_TYPE_NAME,
   DBX_FORGE_WORKING_WRAPPER_TYPE_NAME,
-  DBX_FORGE_FLEX_WRAPPER_TYPE_NAME
+  DBX_FORGE_FLEX_WRAPPER_TYPE_NAME,
+  DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME,
+  DBX_FORGE_ARRAY_FIELD_ELEMENT_WRAPPER_NAME
 } from './field';
 
 /**
@@ -148,6 +150,14 @@ export const DBX_FORGE_FIELD_WRAPPER_TYPES: WrapperTypeDefinition[] = [
   {
     wrapperName: DBX_FORGE_FLEX_WRAPPER_TYPE_NAME,
     loadComponent: () => import('./field/wrapper/flex/flex.wrapper.component').then((m) => m.DbxForgeFlexWrapperComponent)
+  },
+  {
+    wrapperName: DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME,
+    loadComponent: () => import('./field/wrapper/array-field/array-field.wrapper.component').then((m) => m.DbxForgeArrayFieldWrapperComponent)
+  },
+  {
+    wrapperName: DBX_FORGE_ARRAY_FIELD_ELEMENT_WRAPPER_NAME,
+    loadComponent: () => import('./field/wrapper/array-field/array-field.element.wrapper.component').then((m) => m.DbxForgeArrayFieldElementWrapperComponent)
   }
 ];
 
