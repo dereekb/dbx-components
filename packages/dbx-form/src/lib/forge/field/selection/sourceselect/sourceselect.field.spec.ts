@@ -1,7 +1,55 @@
 import { describe, it, expect } from 'vitest';
+import { expectTypeOf } from 'vitest';
 import { of } from 'rxjs';
 import { dbxForgeSourceSelectField } from './sourceselect.field';
+import type { DbxForgeSourceSelectFieldConfig } from './sourceselect.field';
 import type { LogicConfig } from '@ng-forge/dynamic-forms';
+
+// ============================================================================
+// DbxForgeSourceSelectFieldConfig - Exhaustive Whitelist
+// ============================================================================
+
+describe('DbxForgeSourceSelectFieldConfig - Exhaustive Whitelist', () => {
+  type ExpectedKeys =
+    // From DbxForgeFieldFunctionDef<DbxForgeSourceSelectFieldDef>
+    | 'key'
+    | 'label'
+    | 'placeholder'
+    | 'value'
+    | 'required'
+    | 'readonly'
+    | 'disabled'
+    | 'hidden'
+    | 'className'
+    | 'meta'
+    | 'logic'
+    | 'props'
+    | 'hint'
+    | 'description'
+    | 'pattern'
+    | 'minLength'
+    | 'maxLength'
+    | 'min'
+    | 'max'
+    | 'email'
+    | 'validators'
+    | 'validationMessages'
+    | 'derivation'
+    | 'schemas'
+    | 'col'
+    | 'tabIndex'
+    | 'excludeValueIfHidden'
+    | 'excludeValueIfDisabled'
+    | 'excludeValueIfReadonly'
+    // Phantom brand
+    | '__fieldDef';
+
+  type ActualKeys = keyof DbxForgeSourceSelectFieldConfig;
+
+  it('should have exactly the expected keys', () => {
+    expectTypeOf<ActualKeys>().toEqualTypeOf<ExpectedKeys>();
+  });
+});
 
 // MARK: dbxForgeSourceSelectField
 describe('dbxForgeSourceSelectField()', () => {

@@ -1,6 +1,59 @@
 import { describe, it, expect } from 'vitest';
+import { expectTypeOf } from 'vitest';
 import type { LogicConfig } from '@ng-forge/dynamic-forms';
+import type { DbxForgePhoneFieldConfig } from './phone.field';
 import { dbxForgePhoneField } from './phone.field';
+
+// ============================================================================
+// DbxForgePhoneFieldConfig - Exhaustive Whitelist
+// ============================================================================
+
+describe('DbxForgePhoneFieldConfig - Exhaustive Whitelist', () => {
+  type ExpectedKeys =
+    // From DbxForgeFieldFunctionDef<DbxForgePhoneFieldDef>
+    | 'key'
+    | 'label'
+    | 'placeholder'
+    | 'value'
+    | 'required'
+    | 'readonly'
+    | 'disabled'
+    | 'hidden'
+    | 'className'
+    | 'meta'
+    | 'logic'
+    | 'props'
+    | 'hint'
+    | 'description'
+    | 'pattern'
+    | 'minLength'
+    | 'maxLength'
+    | 'min'
+    | 'max'
+    | 'email'
+    | 'validators'
+    | 'validationMessages'
+    | 'derivation'
+    | 'schemas'
+    | 'col'
+    | 'tabIndex'
+    | 'excludeValueIfHidden'
+    | 'excludeValueIfDisabled'
+    | 'excludeValueIfReadonly'
+    | '__fieldDef'
+    // Field-specific config
+    | 'preferredCountries'
+    | 'onlyCountries'
+    | 'enableSearch'
+    | 'allowExtension'
+    | 'autocomplete';
+
+  type ActualKeys = keyof DbxForgePhoneFieldConfig;
+
+  it('should have exactly the expected keys', () => {
+    expectTypeOf<ActualKeys>().toEqualTypeOf<ExpectedKeys>();
+  });
+});
 
 // ============================================================================
 // Runtime Factory Tests - dbxForgePhoneField()

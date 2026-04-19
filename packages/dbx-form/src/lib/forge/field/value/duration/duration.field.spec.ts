@@ -1,6 +1,59 @@
 import { describe, it, expect } from 'vitest';
+import { expectTypeOf } from 'vitest';
 import type { LogicConfig } from '@ng-forge/dynamic-forms';
+import type { DbxForgeTimeDurationFieldConfig } from './duration.field';
 import { dbxForgeTimeDurationField, FORGE_TIMEDURATION_FIELD_TYPE } from './duration.field';
+
+// ============================================================================
+// DbxForgeTimeDurationFieldConfig - Exhaustive Whitelist
+// ============================================================================
+
+describe('DbxForgeTimeDurationFieldConfig - Exhaustive Whitelist', () => {
+  type ExpectedKeys =
+    // From DbxForgeFieldFunctionDef<DbxForgeTimeDurationFieldDef>
+    | 'key'
+    | 'label'
+    | 'placeholder'
+    | 'value'
+    | 'required'
+    | 'readonly'
+    | 'disabled'
+    | 'hidden'
+    | 'className'
+    | 'meta'
+    | 'logic'
+    | 'props'
+    | 'hint'
+    | 'description'
+    | 'pattern'
+    | 'minLength'
+    | 'maxLength'
+    | 'min'
+    | 'max'
+    | 'email'
+    | 'validators'
+    | 'validationMessages'
+    | 'derivation'
+    | 'schemas'
+    | 'col'
+    | 'tabIndex'
+    | 'excludeValueIfHidden'
+    | 'excludeValueIfDisabled'
+    | 'excludeValueIfReadonly'
+    | '__fieldDef'
+    // Field-specific config
+    | 'outputUnit'
+    | 'valueMode'
+    | 'allowedUnits'
+    | 'pickerUnits'
+    | 'carryOver';
+
+  type ActualKeys = keyof DbxForgeTimeDurationFieldConfig;
+
+  it('should have exactly the expected keys', () => {
+    expectTypeOf<ActualKeys>().toEqualTypeOf<ExpectedKeys>();
+  });
+});
 
 // MARK: dbxForgeTimeDurationField
 describe('dbxForgeTimeDurationField()', () => {

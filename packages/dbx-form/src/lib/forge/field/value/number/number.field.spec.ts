@@ -1,6 +1,58 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, expectTypeOf } from 'vitest';
 import type { LogicConfig } from '@ng-forge/dynamic-forms';
-import { dbxForgeNumberField, dbxForgeDollarAmountField, FORGE_IS_DIVISIBLE_BY_VALIDATION_KEY } from './number.field';
+import { dbxForgeNumberField, dbxForgeDollarAmountField, FORGE_IS_DIVISIBLE_BY_VALIDATION_KEY, type DbxForgeNumberFieldConfig } from './number.field';
+
+// ============================================================================
+// DbxForgeNumberFieldConfig - Exhaustive Whitelist
+// ============================================================================
+
+describe('DbxForgeNumberFieldConfig - Exhaustive Whitelist', () => {
+  type ExpectedKeys =
+    // From DbxForgeFieldFunctionDef<DbxForgeNumberFieldDef>
+    | 'key'
+    | 'label'
+    | 'placeholder'
+    | 'value'
+    | 'required'
+    | 'readonly'
+    | 'disabled'
+    | 'hidden'
+    | 'className'
+    | 'meta'
+    | 'logic'
+    | 'props'
+    | 'hint'
+    | 'description'
+    | 'pattern'
+    | 'minLength'
+    | 'maxLength'
+    | 'min'
+    | 'max'
+    | 'email'
+    | 'validators'
+    | 'validationMessages'
+    | 'derivation'
+    | 'schemas'
+    | 'col'
+    | 'tabIndex'
+    | 'excludeValueIfHidden'
+    | 'excludeValueIfDisabled'
+    | 'excludeValueIfReadonly'
+    | '__fieldDef'
+    // From FieldAutocompleteAttributeOptionRef
+    | 'autocomplete'
+    // From DbxForgeNumberFieldNumberConfig
+    | 'step'
+    | 'enforceStep'
+    // From Partial<TransformNumberFunctionConfigRef>
+    | 'transform';
+
+  type ActualKeys = keyof DbxForgeNumberFieldConfig;
+
+  it('should have exactly the expected keys', () => {
+    expectTypeOf<ActualKeys>().toEqualTypeOf<ExpectedKeys>();
+  });
+});
 
 // ============================================================================
 // Runtime Factory Tests - dbxForgeNumberField()

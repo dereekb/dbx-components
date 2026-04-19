@@ -1,9 +1,58 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, expectTypeOf } from 'vitest';
 import { of } from 'rxjs';
-import { dbxForgeValueSelectionField } from './selection.field';
+import { dbxForgeValueSelectionField, type DbxForgeValueSelectionFieldConfig } from './selection.field';
 import { resolveForgeSelectionOptions } from './selection.field.component';
 import type { LogicConfig } from '@ng-forge/dynamic-forms';
 import type { ValueSelectionOption } from '../../../field/field.selection';
+
+// ============================================================================
+// DbxForgeValueSelectionFieldConfig - Exhaustive Whitelist
+// ============================================================================
+
+describe('DbxForgeValueSelectionFieldConfig - Exhaustive Whitelist', () => {
+  type ExpectedKeys =
+    // From DbxForgeFieldFunctionDef<DbxForgeValueSelectionFieldDef>
+    | 'key'
+    | 'label'
+    | 'placeholder'
+    | 'value'
+    | 'required'
+    | 'readonly'
+    | 'disabled'
+    | 'hidden'
+    | 'className'
+    | 'meta'
+    | 'logic'
+    | 'props'
+    | 'hint'
+    | 'description'
+    | 'pattern'
+    | 'minLength'
+    | 'maxLength'
+    | 'min'
+    | 'max'
+    | 'email'
+    | 'validators'
+    | 'validationMessages'
+    | 'derivation'
+    | 'schemas'
+    | 'col'
+    | 'tabIndex'
+    | 'excludeValueIfHidden'
+    | 'excludeValueIfDisabled'
+    | 'excludeValueIfReadonly'
+    | '__fieldDef'
+    // Field-specific config
+    | 'options'
+    | 'multiple'
+    | 'addClearOption';
+
+  type ActualKeys = keyof DbxForgeValueSelectionFieldConfig;
+
+  it('should have exactly the expected keys', () => {
+    expectTypeOf<ActualKeys>().toEqualTypeOf<ExpectedKeys>();
+  });
+});
 
 // MARK: resolveForgeSelectionOptions
 describe('resolveForgeSelectionOptions()', () => {

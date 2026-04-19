@@ -1,6 +1,54 @@
 import { describe, it, expect } from 'vitest';
+import { expectTypeOf } from 'vitest';
 import { dbxForgeTextEditorField } from './texteditor.field';
+import type { DbxForgeTextEditorFieldConfig } from './texteditor.field';
 import type { LogicConfig } from '@ng-forge/dynamic-forms';
+
+// ============================================================================
+// DbxForgeTextEditorFieldConfig - Exhaustive Whitelist
+// ============================================================================
+
+describe('DbxForgeTextEditorFieldConfig - Exhaustive Whitelist', () => {
+  type ExpectedKeys =
+    // From DbxForgeFieldFunctionDef<DbxForgeTextEditorFieldDef>
+    | 'key'
+    | 'label'
+    | 'placeholder'
+    | 'value'
+    | 'required'
+    | 'readonly'
+    | 'disabled'
+    | 'hidden'
+    | 'className'
+    | 'meta'
+    | 'logic'
+    | 'props'
+    | 'hint'
+    | 'description'
+    | 'pattern'
+    | 'minLength'
+    | 'maxLength'
+    | 'min'
+    | 'max'
+    | 'email'
+    | 'validators'
+    | 'validationMessages'
+    | 'derivation'
+    | 'schemas'
+    | 'col'
+    | 'tabIndex'
+    | 'excludeValueIfHidden'
+    | 'excludeValueIfDisabled'
+    | 'excludeValueIfReadonly'
+    // Phantom brand
+    | '__fieldDef';
+
+  type ActualKeys = keyof DbxForgeTextEditorFieldConfig;
+
+  it('should have exactly the expected keys', () => {
+    expectTypeOf<ActualKeys>().toEqualTypeOf<ExpectedKeys>();
+  });
+});
 
 // MARK: dbxForgeTextEditorField
 describe('dbxForgeTextEditorField()', () => {

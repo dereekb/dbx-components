@@ -1,6 +1,56 @@
-import { describe, it, expect } from 'vitest';
-import { dbxForgeComponentField } from './component.field';
+import { describe, it, expect, expectTypeOf } from 'vitest';
+import { dbxForgeComponentField, type DbxForgeComponentFieldConfig } from './component.field';
 import type { LogicConfig } from '@ng-forge/dynamic-forms';
+
+// ============================================================================
+// DbxForgeComponentFieldConfig - Exhaustive Whitelist
+// ============================================================================
+
+describe('DbxForgeComponentFieldConfig - Exhaustive Whitelist', () => {
+  type ExpectedKeys =
+    // From DbxForgeFieldFunctionDef<DbxForgeComponentFieldDef> (no hint/description — props lacks hint)
+    | 'key'
+    | 'label'
+    | 'placeholder'
+    | 'value'
+    | 'required'
+    | 'readonly'
+    | 'disabled'
+    | 'hidden'
+    | 'className'
+    | 'meta'
+    | 'logic'
+    | 'props'
+    | 'pattern'
+    | 'minLength'
+    | 'maxLength'
+    | 'min'
+    | 'max'
+    | 'email'
+    | 'validators'
+    | 'validationMessages'
+    | 'derivation'
+    | 'schemas'
+    | 'col'
+    | 'tabIndex'
+    | 'excludeValueIfHidden'
+    | 'excludeValueIfDisabled'
+    | 'excludeValueIfReadonly'
+    | '__fieldDef'
+    // Field-specific config
+    | 'componentField'
+    | 'allowDisabledEffects';
+
+  type ActualKeys = keyof DbxForgeComponentFieldConfig;
+
+  it('should have exactly the expected keys', () => {
+    expectTypeOf<ActualKeys>().toEqualTypeOf<ExpectedKeys>();
+  });
+});
+
+// ============================================================================
+// Runtime Factory Tests - dbxForgeComponentField()
+// ============================================================================
 
 class MockComponentA {}
 class MockComponentB {}

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, expectTypeOf } from 'vitest';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ChangeDetectionStrategy, provideZonelessChangeDetection, inject } from '@angular/core';
 
@@ -9,8 +9,127 @@ import { provideDbxFormConfiguration } from '../../../../form.providers';
 import { DbxForgeFormComponent } from '../../../form/forge.component';
 import { DbxForgeFormContext, provideDbxForgeFormContext } from '../../../form/forge.context';
 import { dbxForgeAddressField, dbxForgeAddressFields, dbxForgeAddressLineField, dbxForgeAddressListField } from './text.address.field';
+import type { DbxForgeAddressFieldsConfig, DbxForgeAddressLineFieldConfig, DbxForgeAddressFieldConfig, DbxForgeAddressListFieldConfig } from './text.address.field';
 import type { WrapperField } from '@ng-forge/dynamic-forms';
 import { DBX_FORGE_SECTION_WRAPPER_TYPE_NAME, type DbxForgeSectionWrapper } from '../../wrapper/section/section.wrapper';
+
+// ============================================================================
+// DbxForgeAddressFieldsConfig - Exhaustive Whitelist
+// ============================================================================
+
+describe('DbxForgeAddressFieldsConfig - Exhaustive Whitelist', () => {
+  type ExpectedKeys = 'line1Field' | 'line2Field' | 'cityField' | 'stateField' | 'zipCodeField' | 'countryField' | 'required' | 'includeLine2' | 'includeCountry';
+
+  type ActualKeys = keyof DbxForgeAddressFieldsConfig;
+
+  it('should have exactly the expected keys', () => {
+    expectTypeOf<ActualKeys>().toEqualTypeOf<ExpectedKeys>();
+  });
+});
+
+// ============================================================================
+// DbxForgeAddressLineFieldConfig - Exhaustive Whitelist
+// ============================================================================
+
+describe('DbxForgeAddressLineFieldConfig - Exhaustive Whitelist', () => {
+  type ExpectedKeys =
+    // From Partial<DbxForgeTextFieldConfig>
+    | 'key'
+    | 'label'
+    | 'placeholder'
+    | 'value'
+    | 'required'
+    | 'readonly'
+    | 'disabled'
+    | 'hidden'
+    | 'className'
+    | 'meta'
+    | 'logic'
+    | 'props'
+    | 'hint'
+    | 'description'
+    | 'pattern'
+    | 'minLength'
+    | 'maxLength'
+    | 'min'
+    | 'max'
+    | 'email'
+    | 'validators'
+    | 'validationMessages'
+    | 'derivation'
+    | 'schemas'
+    | 'col'
+    | 'tabIndex'
+    | 'excludeValueIfHidden'
+    | 'excludeValueIfDisabled'
+    | 'excludeValueIfReadonly'
+    | '__fieldDef'
+    | 'inputType'
+    | 'defaultValue'
+    | 'autocomplete'
+    | 'idempotentTransform'
+    // Field-specific
+    | 'line';
+
+  type ActualKeys = keyof DbxForgeAddressLineFieldConfig;
+
+  it('should have exactly the expected keys', () => {
+    expectTypeOf<ActualKeys>().toEqualTypeOf<ExpectedKeys>();
+  });
+});
+
+// ============================================================================
+// DbxForgeAddressFieldConfig - Exhaustive Whitelist
+// ============================================================================
+
+describe('DbxForgeAddressFieldConfig - Exhaustive Whitelist', () => {
+  type ExpectedKeys =
+    // From DbxForgeAddressFieldsConfig
+    | 'line1Field'
+    | 'line2Field'
+    | 'cityField'
+    | 'stateField'
+    | 'zipCodeField'
+    | 'countryField'
+    | 'required'
+    | 'includeLine2'
+    | 'includeCountry'
+    // Field-specific
+    | 'key';
+
+  type ActualKeys = keyof DbxForgeAddressFieldConfig;
+
+  it('should have exactly the expected keys', () => {
+    expectTypeOf<ActualKeys>().toEqualTypeOf<ExpectedKeys>();
+  });
+});
+
+// ============================================================================
+// DbxForgeAddressListFieldConfig - Exhaustive Whitelist
+// ============================================================================
+
+describe('DbxForgeAddressListFieldConfig - Exhaustive Whitelist', () => {
+  type ExpectedKeys =
+    // From DbxForgeAddressFieldsConfig
+    | 'line1Field'
+    | 'line2Field'
+    | 'cityField'
+    | 'stateField'
+    | 'zipCodeField'
+    | 'countryField'
+    | 'required'
+    | 'includeLine2'
+    | 'includeCountry'
+    // Field-specific
+    | 'key'
+    | 'maxAddresses';
+
+  type ActualKeys = keyof DbxForgeAddressListFieldConfig;
+
+  it('should have exactly the expected keys', () => {
+    expectTypeOf<ActualKeys>().toEqualTypeOf<ExpectedKeys>();
+  });
+});
 
 // MARK: Test Host
 @Component({

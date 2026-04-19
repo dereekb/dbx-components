@@ -1,6 +1,61 @@
 import { describe, it, expect } from 'vitest';
+import { expectTypeOf } from 'vitest';
 import { dbxForgeChecklistField } from './checklist.field';
 import type { LogicConfig } from '@ng-forge/dynamic-forms';
+import type { DbxForgeChecklistFieldConfig } from './checklist.field';
+
+// ============================================================================
+// DbxForgeChecklistFieldConfig - Exhaustive Whitelist
+// ============================================================================
+
+describe('DbxForgeChecklistFieldConfig - Exhaustive Whitelist', () => {
+  type ExpectedKeys =
+    // From DbxForgeFieldFunctionDef<MatMultiCheckboxField<T>>
+    | 'key'
+    | 'label'
+    | 'placeholder'
+    | 'value'
+    | 'required'
+    | 'readonly'
+    | 'disabled'
+    | 'hidden'
+    | 'className'
+    | 'meta'
+    | 'logic'
+    | 'props'
+    | 'hint'
+    | 'description'
+    | 'pattern'
+    | 'minLength'
+    | 'maxLength'
+    | 'min'
+    | 'max'
+    | 'email'
+    | 'validators'
+    | 'validationMessages'
+    | 'derivation'
+    | 'schemas'
+    | 'col'
+    | 'tabIndex'
+    | 'excludeValueIfHidden'
+    | 'excludeValueIfDisabled'
+    | 'excludeValueIfReadonly'
+    | '__fieldDef'
+    // From MultiCheckboxField
+    | 'options'
+    // Field-specific config
+    | 'labelPosition';
+
+  type ActualKeys = keyof DbxForgeChecklistFieldConfig;
+
+  it('should have exactly the expected keys', () => {
+    expectTypeOf<ActualKeys>().toEqualTypeOf<ExpectedKeys>();
+  });
+});
+
+// ============================================================================
+// Runtime Factory Tests - dbxForgeChecklistField()
+// ============================================================================
 
 describe('dbxForgeChecklistField()', () => {
   const testOptions = [

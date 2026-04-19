@@ -1,6 +1,106 @@
 import { describe, it, expect } from 'vitest';
+import { expectTypeOf } from 'vitest';
 import type { LogicConfig } from '@ng-forge/dynamic-forms';
+import type { DbxForgeToggleFieldConfig, DbxForgeCheckboxFieldConfig } from './boolean.field';
 import { dbxForgeToggleField, dbxForgeCheckboxField, FORGE_STYLED_BOX_CLASS } from './boolean.field';
+
+// ============================================================================
+// DbxForgeToggleFieldConfig - Exhaustive Whitelist
+// ============================================================================
+
+describe('DbxForgeToggleFieldConfig - Exhaustive Whitelist', () => {
+  type ExpectedKeys =
+    // From DbxForgeFieldFunctionDef<MatToggleField>
+    | 'key'
+    | 'label'
+    | 'placeholder'
+    | 'value'
+    | 'required'
+    | 'readonly'
+    | 'disabled'
+    | 'hidden'
+    | 'className'
+    | 'meta'
+    | 'logic'
+    | 'props'
+    | 'hint'
+    | 'description'
+    | 'pattern'
+    | 'minLength'
+    | 'maxLength'
+    | 'min'
+    | 'max'
+    | 'email'
+    | 'validators'
+    | 'validationMessages'
+    | 'derivation'
+    | 'schemas'
+    | 'col'
+    | 'tabIndex'
+    | 'excludeValueIfHidden'
+    | 'excludeValueIfDisabled'
+    | 'excludeValueIfReadonly'
+    | '__fieldDef'
+    // Field-specific config
+    | 'styledBox';
+
+  type ActualKeys = keyof DbxForgeToggleFieldConfig;
+
+  it('should have exactly the expected keys', () => {
+    expectTypeOf<ActualKeys>().toEqualTypeOf<ExpectedKeys>();
+  });
+});
+
+// ============================================================================
+// DbxForgeCheckboxFieldConfig - Exhaustive Whitelist
+// ============================================================================
+
+describe('DbxForgeCheckboxFieldConfig - Exhaustive Whitelist', () => {
+  type ExpectedKeys =
+    // From DbxForgeFieldFunctionDef<MatCheckboxField>
+    | 'key'
+    | 'label'
+    | 'placeholder'
+    | 'value'
+    | 'required'
+    | 'readonly'
+    | 'disabled'
+    | 'hidden'
+    | 'className'
+    | 'meta'
+    | 'logic'
+    | 'props'
+    | 'hint'
+    | 'description'
+    | 'pattern'
+    | 'minLength'
+    | 'maxLength'
+    | 'min'
+    | 'max'
+    | 'email'
+    | 'validators'
+    | 'validationMessages'
+    | 'derivation'
+    | 'schemas'
+    | 'col'
+    | 'tabIndex'
+    | 'excludeValueIfHidden'
+    | 'excludeValueIfDisabled'
+    | 'excludeValueIfReadonly'
+    | '__fieldDef'
+    // Field-specific config
+    | 'styledBox';
+
+  type ActualKeys = keyof DbxForgeCheckboxFieldConfig;
+
+  it('should have exactly the expected keys', () => {
+    expectTypeOf<ActualKeys>().toEqualTypeOf<ExpectedKeys>();
+  });
+});
+
+// ============================================================================
+// Runtime Factory Tests - dbxForgeToggleField()
+// ============================================================================
 
 describe('dbxForgeToggleField()', () => {
   it('should create a toggle field with correct type', () => {
