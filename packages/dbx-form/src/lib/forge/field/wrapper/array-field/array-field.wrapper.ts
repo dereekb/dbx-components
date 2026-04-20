@@ -1,11 +1,19 @@
-import { type DynamicText } from '@ng-forge/dynamic-forms';
+import { type ArrayItemDefinitionTemplate, type DynamicText } from '@ng-forge/dynamic-forms';
 import { type FactoryWithRequiredInput } from '@dereekb/util';
 import { type DbxButtonStyle } from '@dereekb/dbx-web';
 import { DbxForgeFieldHintValueRef } from '../../field';
 
 export const DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME = 'dbx-forge-array-field-wrapper' as const;
 
-export interface DbxForgeArrayFieldWrapperProps<T = unknown> extends DbxForgeFieldHintValueRef<DynamicText> {
+export interface DbxForgeArrayFieldWrapperProps extends DbxForgeFieldHintValueRef<DynamicText> {
+  /**
+   * The template used when adding new items to the array.
+   *
+   * ng-forge requires an explicit template for every dynamic add operation —
+   * there is no automatic fallback. This is typically the container field
+   * definition (with element wrappers) built by {@link dbxForgeArrayField}.
+   */
+  readonly itemTemplate: ArrayItemDefinitionTemplate;
   /**
    * The label for the array field itself.
    */
@@ -42,5 +50,5 @@ export interface DbxForgeArrayFieldWrapperProps<T = unknown> extends DbxForgeFie
 
 export interface DbxForgeArrayFieldWrapperDef {
   readonly type: typeof DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME;
-  readonly props?: DbxForgeArrayFieldWrapperProps;
+  readonly props: DbxForgeArrayFieldWrapperProps;
 }

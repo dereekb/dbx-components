@@ -7,7 +7,12 @@
   @if (hintSignal(); as hintText) {
     <p class="dbx-form-repeat-array-hint">{{ hintText | dynamicText | async }}</p>
   }
-  <div class="dbx-form-repeat-array-content">
+  <div class="dbx-form-repeat-array-content" cdkDropList [cdkDropListDisabled]="disableRearrangeSignal()" (cdkDropListDropped)="drop($event)">
     <ng-container #fieldComponent></ng-container>
   </div>
+  @if (allowAddSignal()) {
+    <div class="dbx-form-repeat-array-footer">
+      <dbx-button [text]="addTextSignal()" [buttonStyle]="addButtonStyleSignal()" [disabled]="isDisabled()" (buttonClick)="addItem()"></dbx-button>
+    </div>
+  }
 </div>

@@ -12,13 +12,20 @@ import { DBX_FORGE_ARRAY_FIELD_ELEMENT_WRAPPER_NAME, type DbxForgeArrayFieldElem
  * Each template item is wrapped in a ContainerField with the element wrapper
  * to provide per-item drag handle, label, and remove button.
  */
-export interface DbxForgeArrayFieldConfig<T = unknown> extends DbxForgeFieldFunctionDef<Omit<ArrayField, 'props' | 'label' | 'fields'>> {
-  readonly fields: ContainerField['fields'];
-  readonly props?: DbxForgeArrayFieldWrapperProps<T>;
-  readonly elementProps?: DbxForgeArrayFieldElementWrapperProps<T>;
+export interface DbxForgeArrayFieldConfig extends DbxForgeFieldFunctionDef<Omit<ArrayField, 'props' | 'label' | 'fields'>> {
+  /**
+   * Template defining the fields for each array item.
+   * Each item is wrapped in a ContainerField with the element wrapper
+   * for per-item drag handle, label, and remove button.
+   *
+   * The array starts empty — items are added via the add button.
+   */
+  readonly template: ContainerField['fields'];
+  readonly props?: Omit<DbxForgeArrayFieldWrapperProps, 'itemTemplate'>;
+  readonly elementProps?: DbxForgeArrayFieldElementWrapperProps;
 }
 
-export type DbxForgeArrayFieldFunction = <T = unknown>(config: DbxForgeArrayFieldConfig<T>) => DbxForgeField<ArrayField>;
+export type DbxForgeArrayFieldFunction = (config: DbxForgeArrayFieldConfig) => DbxForgeField<ArrayField>;
 
 // MARK: Internal
 /**
@@ -48,13 +55,7 @@ export type DbxForgeArrayFieldFunction = <T = unknown>(config: DbxForgeArrayFiel
 export const dbxForgeArrayField = dbxForgeFieldFunction<DbxForgeArrayFieldConfig>({
   type: 'array',
   buildFieldDef: dbxForgeBuildFieldDef((x, config) => {
-    const { props, elementProps, fields } = config;
-
-    // Add the outer array wrapper for label/hint chrome
-    x.addWrappers({
-      type: DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME,
-      props
-    });
+    const { props, elementProps, template } = config;
 
     // Flow per-element defaults from outer wrapper props; elementProps overrides
     const resolvedElementProps = {
@@ -65,18 +66,35 @@ export const dbxForgeArrayField = dbxForgeFieldFunction<DbxForgeArrayFieldConfig
       ...elementProps
     };
 
-    // Wrap template fields in a ContainerField with the element wrapper
-    (config as any).fields = [
-      {
-        type: 'container',
-        fields,
-        wrappers: [
-          {
-            type: DBX_FORGE_ARRAY_FIELD_ELEMENT_WRAPPER_NAME,
-            props: resolvedElementProps
-          }
-        ] as ContainerField['wrappers']
+    // Build the container field that wraps each array item with the element wrapper.
+    // The key is required by FieldDef but does not affect the value shape for containers.
+    const containerFieldItemTemplate: ContainerField = {
+      key: `${config.key}-container`,
+      type: 'container',
+      fields: template ?? [],
+      wrappers: [
+        {
+          type: DBX_FORGE_ARRAY_FIELD_ELEMENT_WRAPPER_NAME,
+          props: resolvedElementProps
+        }
+      ]
+    };
+
+    // Add the outer array wrapper for label/hint chrome + cdkDropList + state service.
+    // Passes the containerField as itemTemplate so the add button can create new items.
+    x.addWrappers({
+      type: DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME,
+      props: {
+        ...props,
+        itemTemplate: [containerFieldItemTemplate]
       }
-    ] as any; // need any, as there is a back and forth typing issue otherwise
+    });
+
+    delete (config as any).props; // clear props too
+    // delete (config as any).template;    // template should be unset
+
+    console.log({
+      config
+    });
   })
 }) as DbxForgeArrayFieldFunction;

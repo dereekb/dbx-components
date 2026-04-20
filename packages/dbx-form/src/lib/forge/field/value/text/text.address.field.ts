@@ -181,7 +181,7 @@ export function forgeAddressListField(config: Partial<DbxForgeAddressListFieldCo
       addText: 'Add Address',
       removeText: 'Remove Address'
     },
-    fields: forgeAddressFields(config),
+    template: forgeAddressFields(config),
     maxLength: maxAddresses
   });
 }
