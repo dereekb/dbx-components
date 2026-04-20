@@ -7,7 +7,7 @@ import { type DynamicText, type LogicConfig, type SchemaApplicationConfig, type 
 import { firstValueFrom, first, map, of, Subject, take, timeout } from 'rxjs';
 import { FormControl } from '@angular/forms';
 import type { DbxForgeSearchableTextFieldConfig } from './searchable-text.field';
-import { forgeSearchableTextField } from './searchable-text.field';
+import { dbxForgeSearchableTextField } from './searchable-text.field';
 import type { DbxForgeSearchableTextFieldDef, DbxForgeSearchableTextFieldProps } from './searchable.field';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ChangeDetectionStrategy, inject, provideZonelessChangeDetection } from '@angular/core';
@@ -174,10 +174,10 @@ describe('DbxForgeSearchableTextFieldDef - Usage', () => {
 });
 
 // ============================================================================
-// Runtime Factory Tests - forgeSearchableTextField()
+// Runtime Factory Tests - dbxForgeSearchableTextField()
 // ============================================================================
 
-describe('forgeSearchableTextField()', () => {
+describe('dbxForgeSearchableTextField()', () => {
   function minimalConfig() {
     return {
       key: 'assignee',
@@ -185,7 +185,7 @@ describe('forgeSearchableTextField()', () => {
         search: stubSearch,
         displayForValue: stubDisplayForValue
       }
-    } as Parameters<typeof forgeSearchableTextField>[0];
+    } as Parameters<typeof dbxForgeSearchableTextField>[0];
   }
 
   function withProps(extra: Record<string, unknown>) {
@@ -194,121 +194,121 @@ describe('forgeSearchableTextField()', () => {
 
   // MARK: Wrapper structure
   it('should return a wrapper with type "wrapper"', () => {
-    const wrapper = forgeSearchableTextField(minimalConfig());
+    const wrapper = dbxForgeSearchableTextField(minimalConfig());
     expect(wrapper.type).toBe('dbx-searchable-text');
   });
 
   it('should use key_wrapper naming for the wrapper key', () => {
-    const wrapper = forgeSearchableTextField(minimalConfig());
+    const wrapper = dbxForgeSearchableTextField(minimalConfig());
     expect(wrapper.key).toBe('assignee');
   });
 
   // MARK: Inner field structure
   it('should set the label on the inner field when provided', () => {
-    const inner = getInnerField(forgeSearchableTextField({ ...minimalConfig(), label: 'Assignee' }) as any);
+    const inner = getInnerField(dbxForgeSearchableTextField({ ...minimalConfig(), label: 'Assignee' }) as any);
     expect(inner.label).toBe('Assignee');
   });
 
   it('should map hint to inner field props.hint', () => {
-    const inner = getInnerField(forgeSearchableTextField({ ...minimalConfig(), hint: 'Search for a person' } as any) as any);
+    const inner = getInnerField(dbxForgeSearchableTextField({ ...minimalConfig(), hint: 'Search for a person' } as any) as any);
     expect(inner.props?.hint).toBe('Search for a person');
   });
 
   it('should not set hint on inner field when hint is not provided', () => {
-    const inner = getInnerField(forgeSearchableTextField(minimalConfig()) as any);
+    const inner = getInnerField(dbxForgeSearchableTextField(minimalConfig()) as any);
     expect(inner.props?.hint).toBeUndefined();
   });
 
   it('should set the correct inner field type', () => {
-    const inner = getInnerField(forgeSearchableTextField(minimalConfig()) as any);
+    const inner = getInnerField(dbxForgeSearchableTextField(minimalConfig()) as any);
     expect(inner.type).toBe('dbx-searchable-text');
   });
 
   it('should set the key on the inner field', () => {
-    const inner = getInnerField(forgeSearchableTextField(minimalConfig()) as any);
+    const inner = getInnerField(dbxForgeSearchableTextField(minimalConfig()) as any);
     expect(inner.key).toBe('assignee');
   });
 
   it('should set required on the inner field when provided', () => {
-    const inner = getInnerField(forgeSearchableTextField({ ...minimalConfig(), required: true }) as any);
+    const inner = getInnerField(dbxForgeSearchableTextField({ ...minimalConfig(), required: true }) as any);
     expect(inner.required).toBe(true);
   });
 
   it('should not set required on the inner field when not provided', () => {
-    const inner = getInnerField(forgeSearchableTextField(minimalConfig()) as any);
+    const inner = getInnerField(dbxForgeSearchableTextField(minimalConfig()) as any);
     expect(inner.required).toBeUndefined();
   });
 
   it('should set readonly on the inner field when provided', () => {
-    const inner = getInnerField(forgeSearchableTextField({ ...minimalConfig(), readonly: true }) as any);
+    const inner = getInnerField(dbxForgeSearchableTextField({ ...minimalConfig(), readonly: true }) as any);
     expect(inner.readonly).toBe(true);
   });
 
   // MARK: Props passthrough
   it('should propagate search through inner field props', () => {
-    const inner = getInnerField(forgeSearchableTextField(minimalConfig()) as any);
+    const inner = getInnerField(dbxForgeSearchableTextField(minimalConfig()) as any);
     expect(inner.props?.search).toBe(stubSearch);
   });
 
   it('should propagate displayForValue through inner field props', () => {
-    const inner = getInnerField(forgeSearchableTextField(minimalConfig()) as any);
+    const inner = getInnerField(dbxForgeSearchableTextField(minimalConfig()) as any);
     expect(inner.props?.displayForValue).toBe(stubDisplayForValue);
   });
 
   it('should propagate allowStringValues through inner field props when provided', () => {
-    const inner = getInnerField(forgeSearchableTextField(withProps({ allowStringValues: true })) as any);
+    const inner = getInnerField(dbxForgeSearchableTextField(withProps({ allowStringValues: true })) as any);
     expect(inner.props?.allowStringValues).toBe(true);
   });
 
   it('should not set allowStringValues on the inner field when not provided', () => {
-    const inner = getInnerField(forgeSearchableTextField(minimalConfig()) as any);
+    const inner = getInnerField(dbxForgeSearchableTextField(minimalConfig()) as any);
     expect(inner.props?.allowStringValues).toBeUndefined();
   });
 
   it('should propagate searchOnEmptyText through inner field props when provided', () => {
-    const inner = getInnerField(forgeSearchableTextField(withProps({ searchOnEmptyText: true })) as any);
+    const inner = getInnerField(dbxForgeSearchableTextField(withProps({ searchOnEmptyText: true })) as any);
     expect(inner.props?.searchOnEmptyText).toBe(true);
   });
 
   it('should not set searchOnEmptyText on the inner field when not provided', () => {
-    const inner = getInnerField(forgeSearchableTextField(minimalConfig()) as any);
+    const inner = getInnerField(dbxForgeSearchableTextField(minimalConfig()) as any);
     expect(inner.props?.searchOnEmptyText).toBeUndefined();
   });
 
   it('should propagate showClearValue through inner field props when provided', () => {
-    const inner = getInnerField(forgeSearchableTextField(withProps({ showClearValue: false })) as any);
+    const inner = getInnerField(dbxForgeSearchableTextField(withProps({ showClearValue: false })) as any);
     expect(inner.props?.showClearValue).toBe(false);
   });
 
   it('should propagate searchLabel through inner field props when provided', () => {
-    const inner = getInnerField(forgeSearchableTextField(withProps({ searchLabel: 'Find...' })) as any);
+    const inner = getInnerField(dbxForgeSearchableTextField(withProps({ searchLabel: 'Find...' })) as any);
     expect(inner.props?.searchLabel).toBe('Find...');
   });
 
   it('should propagate useAnchor through inner field props when provided', () => {
-    const inner = getInnerField(forgeSearchableTextField(withProps({ useAnchor: true })) as any);
+    const inner = getInnerField(dbxForgeSearchableTextField(withProps({ useAnchor: true })) as any);
     expect(inner.props?.useAnchor).toBe(true);
   });
 
   it('should not set useAnchor on the inner field when not provided', () => {
-    const inner = getInnerField(forgeSearchableTextField(minimalConfig()) as any);
+    const inner = getInnerField(dbxForgeSearchableTextField(minimalConfig()) as any);
     expect(inner.props?.useAnchor).toBeUndefined();
   });
 
   it('should propagate anchorForValue through inner field props when provided', () => {
     const anchorFn = () => ({ onClick: () => {} });
-    const inner = getInnerField(forgeSearchableTextField(withProps({ anchorForValue: anchorFn })) as any);
+    const inner = getInnerField(dbxForgeSearchableTextField(withProps({ anchorForValue: anchorFn })) as any);
     expect(inner.props?.anchorForValue).toBe(anchorFn);
   });
 
   it('should not set anchorForValue on the inner field when not provided', () => {
-    const inner = getInnerField(forgeSearchableTextField(minimalConfig()) as any);
+    const inner = getInnerField(dbxForgeSearchableTextField(minimalConfig()) as any);
     expect(inner.props?.anchorForValue).toBeUndefined();
   });
 
   it('should propagate both useAnchor and anchorForValue together', () => {
     const anchorFn = () => ({ onClick: () => {} });
-    const inner = getInnerField(forgeSearchableTextField(withProps({ useAnchor: true, anchorForValue: anchorFn })) as any);
+    const inner = getInnerField(dbxForgeSearchableTextField(withProps({ useAnchor: true, anchorForValue: anchorFn })) as any);
     expect(inner.props?.useAnchor).toBe(true);
     expect(inner.props?.anchorForValue).toBe(anchorFn);
   });
@@ -316,7 +316,7 @@ describe('forgeSearchableTextField()', () => {
   // MARK: Logic passthrough
   it('should pass logic through to the inner field definition', () => {
     const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
-    const inner = getInnerField(forgeSearchableTextField({ ...minimalConfig(), logic }) as any);
+    const inner = getInnerField(dbxForgeSearchableTextField({ ...minimalConfig(), logic }) as any);
     expect((inner as any).logic).toEqual(logic);
   });
 });
@@ -390,7 +390,7 @@ describe('DbxForgeSearchableTextFieldComponent', () => {
 
     return {
       fields: [
-        forgeSearchableTextField({
+        dbxForgeSearchableTextField({
           key: 'pick',
           label: 'Anchor Segue For Metadata Items',
           props: {

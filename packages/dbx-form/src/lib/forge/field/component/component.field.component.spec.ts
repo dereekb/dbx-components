@@ -6,7 +6,7 @@ import { type FormConfig, DynamicForm, EventDispatcher, DynamicFormLogger, NoopL
 import { type Maybe } from '@dereekb/util';
 import { provideDbxForgeFormFieldDeclarations } from '../../forge.providers';
 import { provideDbxFormConfiguration } from '../../../form.providers';
-import { forgeComponentField } from './component.field';
+import { dbxForgeComponentField } from './component.field';
 
 // MARK: Loaded Tracker
 const lastLoaded = signal<'a' | 'b' | undefined>(undefined);
@@ -81,7 +81,7 @@ async function settle(fixture: ComponentFixture<any>): Promise<void> {
 function createConfig(componentClass: Type<unknown>): FormConfig {
   return {
     fields: [
-      forgeComponentField({
+      dbxForgeComponentField({
         componentField: { componentClass }
       }) as any
     ]
@@ -89,7 +89,7 @@ function createConfig(componentClass: Type<unknown>): FormConfig {
 }
 
 // MARK: Tests
-describe('forgeComponentField rendering', () => {
+describe('dbxForgeComponentField rendering', () => {
   beforeEach(() => {
     lastLoaded.set(undefined);
     TestBed.configureTestingModule({

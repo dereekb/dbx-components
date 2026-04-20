@@ -2,153 +2,153 @@ import { describe, it, expect } from 'vitest';
 import { firstValueFrom, of } from 'rxjs';
 import { DbxDateTimeFieldTimeMode } from '../../../../formly/field/value/date/datetime.field.component';
 import { DbxDateTimeValueMode } from '../../../../formly/field/value/date/date.value';
-import { forgeDateField, forgeDateTimeField, forgeDateRangeField, forgeDateTimeRangeField, forgeFixedDateRangeField, type DbxForgeDateTimeSyncField, type DbxForgeDateTimeFieldDef } from './datetime.field';
+import { dbxForgeDateField, dbxForgeDateTimeField, dbxForgeDateRangeField, dbxForgeDateTimeRangeField, dbxForgeFixedDateRangeField, type DbxForgeDateTimeSyncField, type DbxForgeDateTimeFieldDef } from './datetime.field';
 import type { RowField, LogicConfig } from '@ng-forge/dynamic-forms';
 
-describe('forgeDateField()', () => {
+describe('dbxForgeDateField()', () => {
   it('should create a datepicker field with correct type', () => {
-    const field = forgeDateField({ key: 'startDate', label: 'Start Date' });
+    const field = dbxForgeDateField({ key: 'startDate', label: 'Start Date' });
     expect(field.type).toBe('datepicker');
     expect(field.key).toBe('startDate');
     expect(field.label).toBe('Start Date');
   });
 
   it('should set required when specified', () => {
-    const field = forgeDateField({ key: 'startDate', required: true });
+    const field = dbxForgeDateField({ key: 'startDate', required: true });
     expect(field.required).toBe(true);
   });
 
   it('should set readonly when specified', () => {
-    const field = forgeDateField({ key: 'startDate', readonly: true });
+    const field = dbxForgeDateField({ key: 'startDate', readonly: true });
     expect(field.readonly).toBe(true);
   });
 
   it('should set minDate when specified', () => {
     const minDate = new Date('2024-01-01');
-    const field = forgeDateField({ key: 'startDate', minDate });
+    const field = dbxForgeDateField({ key: 'startDate', minDate });
     expect(field.minDate).toEqual(minDate);
   });
 
   it('should set maxDate when specified', () => {
     const maxDate = new Date('2025-12-31');
-    const field = forgeDateField({ key: 'startDate', maxDate });
+    const field = dbxForgeDateField({ key: 'startDate', maxDate });
     expect(field.maxDate).toEqual(maxDate);
   });
 
   it('should accept string minDate and maxDate', () => {
-    const field = forgeDateField({ key: 'startDate', minDate: '2024-01-01', maxDate: '2025-12-31' });
+    const field = dbxForgeDateField({ key: 'startDate', minDate: '2024-01-01', maxDate: '2025-12-31' });
     expect(field.minDate).toBe('2024-01-01');
     expect(field.maxDate).toBe('2025-12-31');
   });
 
   it('should set startAt when specified', () => {
     const startAt = new Date('2024-06-15');
-    const field = forgeDateField({ key: 'startDate', startAt });
+    const field = dbxForgeDateField({ key: 'startDate', startAt });
     expect(field.startAt).toEqual(startAt);
   });
 
   it('should map description to hint in props', () => {
-    const field = forgeDateField({ key: 'startDate', description: 'Pick a date' });
+    const field = dbxForgeDateField({ key: 'startDate', description: 'Pick a date' });
     expect(field.props?.hint).toBe('Pick a date');
   });
 
   it('should pass logic through to the field definition', () => {
     const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
-    const field = forgeDateField({ key: 'startDate', logic });
+    const field = dbxForgeDateField({ key: 'startDate', logic });
     expect((field as any).logic).toEqual(logic);
   });
 });
 
-describe('forgeDateTimeField()', () => {
+describe('dbxForgeDateTimeField()', () => {
   it('should create a datetime field with correct type', () => {
-    const field = forgeDateTimeField({ key: 'datetime' });
+    const field = dbxForgeDateTimeField({ key: 'datetime' });
     expect(field.key).toBe('datetime');
     expect(field.type).toBe('datetime');
   });
 
   it('should set required when specified', () => {
-    const field = forgeDateTimeField({ key: 'datetime', required: true });
+    const field = dbxForgeDateTimeField({ key: 'datetime', required: true });
     expect(field.required).toBe(true);
   });
 
   it('should set readonly when specified', () => {
-    const field = forgeDateTimeField({ key: 'datetime', readonly: true });
+    const field = dbxForgeDateTimeField({ key: 'datetime', readonly: true });
     expect(field.readonly).toBe(true);
   });
 
   it('should map description to hint in props', () => {
-    const field = forgeDateTimeField({ key: 'datetime', description: 'Pick a date and time' });
+    const field = dbxForgeDateTimeField({ key: 'datetime', description: 'Pick a date and time' });
     expect(field.props?.hint).toBe('Pick a date and time');
   });
 
   it('should set timeMode in props', () => {
-    const field = forgeDateTimeField({ key: 'datetime', timeMode: DbxDateTimeFieldTimeMode.OPTIONAL });
+    const field = dbxForgeDateTimeField({ key: 'datetime', timeMode: DbxDateTimeFieldTimeMode.OPTIONAL });
     expect(field.props?.timeMode).toBe(DbxDateTimeFieldTimeMode.OPTIONAL);
   });
 
   it('should set valueMode in props', () => {
-    const field = forgeDateTimeField({ key: 'datetime', valueMode: DbxDateTimeValueMode.DATE_STRING });
+    const field = dbxForgeDateTimeField({ key: 'datetime', valueMode: DbxDateTimeValueMode.DATE_STRING });
     expect(field.props?.valueMode).toBe(DbxDateTimeValueMode.DATE_STRING);
   });
 
   it('should set timezone in props', () => {
-    const field = forgeDateTimeField({ key: 'datetime', timezone: 'America/New_York' });
+    const field = dbxForgeDateTimeField({ key: 'datetime', timezone: 'America/New_York' });
     expect(field.props?.timezone).toBe('America/New_York');
   });
 
   it('should set custom labels in props', () => {
-    const field = forgeDateTimeField({ key: 'datetime', dateLabel: 'Start Date', timeLabel: 'Start Time' });
+    const field = dbxForgeDateTimeField({ key: 'datetime', dateLabel: 'Start Date', timeLabel: 'Start Time' });
     expect(field.props?.dateLabel).toBe('Start Date');
     expect(field.props?.timeLabel).toBe('Start Time');
   });
 
   it('should set pickerConfig in props', () => {
     const config = { limits: { isFuture: true } };
-    const field = forgeDateTimeField({ key: 'datetime', pickerConfig: config });
+    const field = dbxForgeDateTimeField({ key: 'datetime', pickerConfig: config });
     expect(field.props?.pickerConfig).toBe(config);
   });
 
   it('should set fullDayFieldName in props', () => {
-    const field = forgeDateTimeField({ key: 'datetime', fullDayFieldName: 'isAllDay' });
+    const field = dbxForgeDateTimeField({ key: 'datetime', fullDayFieldName: 'isAllDay' });
     expect(field.props?.fullDayFieldName).toBe('isAllDay');
   });
 
   it('should set getSyncFieldsObs in props', () => {
     const syncFields: DbxForgeDateTimeSyncField[] = [{ syncWith: 'endDate', syncType: 'after' }];
     const getSyncFieldsObs = () => of(syncFields);
-    const field = forgeDateTimeField({ key: 'datetime', getSyncFieldsObs });
+    const field = dbxForgeDateTimeField({ key: 'datetime', getSyncFieldsObs });
     expect(field.props?.getSyncFieldsObs).toBe(getSyncFieldsObs);
   });
 
   it('should set minuteStep in props', () => {
-    const field = forgeDateTimeField({ key: 'datetime', minuteStep: 15 });
+    const field = dbxForgeDateTimeField({ key: 'datetime', minuteStep: 15 });
     expect(field.props?.minuteStep).toBe(15);
   });
 
   it('should set autofillDateWhenTimeIsPicked in props', () => {
-    const field = forgeDateTimeField({ key: 'datetime', autofillDateWhenTimeIsPicked: true });
+    const field = dbxForgeDateTimeField({ key: 'datetime', autofillDateWhenTimeIsPicked: true });
     expect(field.props?.autofillDateWhenTimeIsPicked).toBe(true);
   });
 
   it('should pass logic through to the field definition', () => {
     const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
-    const field = forgeDateTimeField({ key: 'datetime', logic });
+    const field = dbxForgeDateTimeField({ key: 'datetime', logic });
     expect((field as any).logic).toEqual(logic);
   });
 });
 
-describe('forgeDateRangeField()', () => {
+describe('dbxForgeDateRangeField()', () => {
   function getChildFields(row: RowField): DbxForgeDateTimeFieldDef[] {
     return (row as any).fields as DbxForgeDateTimeFieldDef[];
   }
 
   it('should create a row field', () => {
-    const field = forgeDateRangeField();
+    const field = dbxForgeDateRangeField();
     expect(field.type).toBe('row');
   });
 
   it('should contain two datetime child fields', () => {
-    const field = forgeDateRangeField();
+    const field = dbxForgeDateRangeField();
     const children = getChildFields(field);
     expect(children.length).toBe(2);
     expect(children[0].type).toBe('datetime');
@@ -156,28 +156,28 @@ describe('forgeDateRangeField()', () => {
   });
 
   it('should use default keys start and end', () => {
-    const field = forgeDateRangeField();
+    const field = dbxForgeDateRangeField();
     const children = getChildFields(field);
     expect(children[0].key).toBe('start');
     expect(children[1].key).toBe('end');
   });
 
   it('should allow custom start and end keys', () => {
-    const field = forgeDateRangeField({ start: { key: 'from' }, end: { key: 'to' } });
+    const field = dbxForgeDateRangeField({ start: { key: 'from' }, end: { key: 'to' } });
     const children = getChildFields(field);
     expect(children[0].key).toBe('from');
     expect(children[1].key).toBe('to');
   });
 
   it('should set timeMode to NONE on both fields', () => {
-    const field = forgeDateRangeField();
+    const field = dbxForgeDateRangeField();
     const children = getChildFields(field);
     expect(children[0].props?.timeMode).toBe(DbxDateTimeFieldTimeMode.NONE);
     expect(children[1].props?.timeMode).toBe(DbxDateTimeFieldTimeMode.NONE);
   });
 
   it('should set sync fields so start syncs with end and vice versa', async () => {
-    const field = forgeDateRangeField();
+    const field = dbxForgeDateRangeField();
     const children = getChildFields(field);
 
     const startSync = await firstValueFrom(children[0].props!.getSyncFieldsObs!());
@@ -188,7 +188,7 @@ describe('forgeDateRangeField()', () => {
   });
 
   it('should use custom keys in sync fields', async () => {
-    const field = forgeDateRangeField({ start: { key: 'from' }, end: { key: 'to' } });
+    const field = dbxForgeDateRangeField({ start: { key: 'from' }, end: { key: 'to' } });
     const children = getChildFields(field);
 
     const startSync = await firstValueFrom(children[0].props!.getSyncFieldsObs!());
@@ -199,14 +199,14 @@ describe('forgeDateRangeField()', () => {
   });
 
   it('should propagate required to both fields', () => {
-    const field = forgeDateRangeField({ required: true });
+    const field = dbxForgeDateRangeField({ required: true });
     const children = getChildFields(field);
     expect(children[0].required).toBe(true);
     expect(children[1].required).toBe(true);
   });
 
   it('should propagate shared config to both fields', () => {
-    const field = forgeDateRangeField({
+    const field = dbxForgeDateRangeField({
       timezone: 'America/New_York',
       valueMode: DbxDateTimeValueMode.DATE_STRING
     });
@@ -219,7 +219,7 @@ describe('forgeDateRangeField()', () => {
 
   it('should allow per-field overrides', () => {
     const pickerConfig = { limits: { isFuture: true } };
-    const field = forgeDateRangeField({
+    const field = dbxForgeDateRangeField({
       start: { key: 'startDate', description: 'Start description', pickerConfig },
       end: { key: 'endDate', description: 'End description' }
     });
@@ -230,25 +230,25 @@ describe('forgeDateRangeField()', () => {
   });
 
   it('should set dateLabel to Start and End', () => {
-    const field = forgeDateRangeField();
+    const field = dbxForgeDateRangeField();
     const children = getChildFields(field);
     expect(children[0].props?.dateLabel).toBe('Start');
     expect(children[1].props?.dateLabel).toBe('End');
   });
 });
 
-describe('forgeDateTimeRangeField()', () => {
+describe('dbxForgeDateTimeRangeField()', () => {
   function getChildFields(row: RowField): DbxForgeDateTimeFieldDef[] {
     return (row as any).fields as DbxForgeDateTimeFieldDef[];
   }
 
   it('should create a row field', () => {
-    const field = forgeDateTimeRangeField();
+    const field = dbxForgeDateTimeRangeField();
     expect(field.type).toBe('row');
   });
 
   it('should contain two datetime child fields', () => {
-    const field = forgeDateTimeRangeField();
+    const field = dbxForgeDateTimeRangeField();
     const children = getChildFields(field);
     expect(children.length).toBe(2);
     expect(children[0].type).toBe('datetime');
@@ -256,14 +256,14 @@ describe('forgeDateTimeRangeField()', () => {
   });
 
   it('should use default keys start and end', () => {
-    const field = forgeDateTimeRangeField();
+    const field = dbxForgeDateTimeRangeField();
     const children = getChildFields(field);
     expect(children[0].key).toBe('start');
     expect(children[1].key).toBe('end');
   });
 
   it('should set timeOnly and timeMode REQUIRED on both fields', () => {
-    const field = forgeDateTimeRangeField();
+    const field = dbxForgeDateTimeRangeField();
     const children = getChildFields(field);
     expect(children[0].props?.timeOnly).toBe(true);
     expect(children[0].props?.timeMode).toBe(DbxDateTimeFieldTimeMode.REQUIRED);
@@ -272,28 +272,28 @@ describe('forgeDateTimeRangeField()', () => {
   });
 
   it('should set hideDateHint on both fields', () => {
-    const field = forgeDateTimeRangeField();
+    const field = dbxForgeDateTimeRangeField();
     const children = getChildFields(field);
     expect(children[0].props?.hideDateHint).toBe(true);
     expect(children[1].props?.hideDateHint).toBe(true);
   });
 
   it('should use Start Time and End Time labels', () => {
-    const field = forgeDateTimeRangeField();
+    const field = dbxForgeDateTimeRangeField();
     const children = getChildFields(field);
     expect(children[0].label).toBe('Start Time');
     expect(children[1].label).toBe('End Time');
   });
 
   it('should propagate required to both fields', () => {
-    const field = forgeDateTimeRangeField({ required: true });
+    const field = dbxForgeDateTimeRangeField({ required: true });
     const children = getChildFields(field);
     expect(children[0].required).toBe(true);
     expect(children[1].required).toBe(true);
   });
 
   it('should propagate shared config to both fields', () => {
-    const field = forgeDateTimeRangeField({
+    const field = dbxForgeDateTimeRangeField({
       timezone: 'America/Chicago',
       valueMode: DbxDateTimeValueMode.MINUTE_OF_DAY
     });
@@ -305,14 +305,14 @@ describe('forgeDateTimeRangeField()', () => {
   });
 
   it('should allow custom start and end keys', () => {
-    const field = forgeDateTimeRangeField({ start: { key: 'sat' }, end: { key: 'eat' } });
+    const field = dbxForgeDateTimeRangeField({ start: { key: 'sat' }, end: { key: 'eat' } });
     const children = getChildFields(field);
     expect(children[0].key).toBe('sat');
     expect(children[1].key).toBe('eat');
   });
 
   it('should allow custom labels per field', () => {
-    const field = forgeDateTimeRangeField({
+    const field = dbxForgeDateTimeRangeField({
       start: { key: 'sat', label: 'Custom Start' },
       end: { key: 'eat', label: 'Custom End' }
     });
@@ -322,88 +322,88 @@ describe('forgeDateTimeRangeField()', () => {
   });
 });
 
-describe('forgeFixedDateRangeField()', () => {
-  function innerField(wrapper: ReturnType<typeof forgeFixedDateRangeField>) {
+describe('dbxForgeFixedDateRangeField()', () => {
+  function innerField(wrapper: ReturnType<typeof dbxForgeFixedDateRangeField>) {
     return (wrapper as any).fields[0] as any;
   }
 
   it('should create a wrapper field', () => {
-    const field = forgeFixedDateRangeField({ key: 'fixedRange' });
+    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange' });
     expect(field.type).toBe('wrapper');
   });
 
   it('should contain an inner fixeddaterange field with the correct key', () => {
-    const field = forgeFixedDateRangeField({ key: 'fixedRange' });
+    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange' });
     const inner = innerField(field);
     expect(inner.key).toBe('fixedRange');
     expect(inner.type).toBe('fixeddaterange');
   });
 
   it('should set required on the inner field', () => {
-    const field = forgeFixedDateRangeField({ key: 'fixedRange', required: true });
+    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', required: true });
     expect(innerField(field).required).toBe(true);
   });
 
   it('should set readonly on the inner field', () => {
-    const field = forgeFixedDateRangeField({ key: 'fixedRange', readonly: true });
+    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', readonly: true });
     expect(innerField(field).readonly).toBe(true);
   });
 
   it('should map description to hint on the inner field props', () => {
-    const field = forgeFixedDateRangeField({ key: 'fixedRange', description: 'Picks a 10-day range' });
+    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', description: 'Picks a 10-day range' });
     expect(innerField(field).props?.hint).toBe('Picks a 10-day range');
   });
 
   it('should set label on the inner field', () => {
-    const field = forgeFixedDateRangeField({ key: 'fixedRange', label: 'My Range' });
+    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', label: 'My Range' });
     expect(innerField(field).label).toBe('My Range');
   });
 
   it('should set dateRangeInput on the inner field', () => {
     const dateRangeInput = { type: 'weeks_range' as any, distance: 1 };
-    const field = forgeFixedDateRangeField({ key: 'fixedRange', dateRangeInput });
+    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', dateRangeInput });
     expect(innerField(field).dateRangeInput).toBe(dateRangeInput);
   });
 
   it('should set selectionMode on the inner field', () => {
-    const field = forgeFixedDateRangeField({ key: 'fixedRange', selectionMode: 'normal' });
+    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', selectionMode: 'normal' });
     expect(innerField(field).selectionMode).toBe('normal');
   });
 
   it('should set valueMode on the inner field', () => {
-    const field = forgeFixedDateRangeField({ key: 'fixedRange', valueMode: DbxDateTimeValueMode.DATE_STRING });
+    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', valueMode: DbxDateTimeValueMode.DATE_STRING });
     expect(innerField(field).valueMode).toBe(DbxDateTimeValueMode.DATE_STRING);
   });
 
   it('should set fullDayInUTC on the inner field', () => {
-    const field = forgeFixedDateRangeField({ key: 'fixedRange', fullDayInUTC: true });
+    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', fullDayInUTC: true });
     expect(innerField(field).fullDayInUTC).toBe(true);
   });
 
   it('should set pickerConfig on the inner field', () => {
     const pickerConfig = { limits: { min: 'today_start' as any } };
-    const field = forgeFixedDateRangeField({ key: 'fixedRange', pickerConfig });
+    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', pickerConfig });
     expect(innerField(field).pickerConfig).toBe(pickerConfig);
   });
 
   it('should set timezone on the inner field', () => {
-    const field = forgeFixedDateRangeField({ key: 'fixedRange', timezone: 'America/New_York' });
+    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', timezone: 'America/New_York' });
     expect(innerField(field).timezone).toBe('America/New_York');
   });
 
   it('should set showTimezone on the inner field', () => {
-    const field = forgeFixedDateRangeField({ key: 'fixedRange', showTimezone: false });
+    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', showTimezone: false });
     expect(innerField(field).showTimezone).toBe(false);
   });
 
   it('should set showRangeInput on the inner field', () => {
-    const field = forgeFixedDateRangeField({ key: 'fixedRange', showRangeInput: false });
+    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', showRangeInput: false });
     expect(innerField(field).showRangeInput).toBe(false);
   });
 
   it('should pass logic through to the inner field definition', () => {
     const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
-    const field = forgeFixedDateRangeField({ key: 'fixedRange', logic });
+    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', logic });
     expect((innerField(field) as any).logic).toEqual(logic);
   });
 });

@@ -8,7 +8,7 @@ import { BehaviorSubject, of, first, skip } from 'rxjs';
 import { startOfDay, addHours, addDays } from 'date-fns';
 import { provideDbxForgeFormFieldDeclarations } from '../../../forge.providers';
 import { provideDbxFormConfiguration } from '../../../../form.providers';
-import { forgeDateTimeField, forgeDateRangeField, forgeDateTimeRangeField, type DbxForgeDateTimeFieldConfig, type DbxForgeDateRangeFieldConfig, type DbxForgeDateTimeRangeFieldConfig } from './datetime.field';
+import { dbxForgeDateTimeField, dbxForgeDateRangeField, dbxForgeDateTimeRangeField, type DbxForgeDateTimeFieldConfig, type DbxForgeDateRangeFieldConfig, type DbxForgeDateTimeRangeFieldConfig } from './datetime.field';
 import { DbxForgeDateTimeFieldComponent } from './datetime.field.component';
 import { DbxDateTimeFieldTimeMode } from '../../../../formly/field/value/date/datetime.field.component';
 import { DbxDateTimeValueMode } from '../../../../formly/field/value/date/date.value';
@@ -59,7 +59,7 @@ function delay(ms: number): Promise<void> {
 }
 
 function createConfig(fieldConfig: DbxForgeDateTimeFieldConfig): FormConfig {
-  return { fields: [forgeDateTimeField(fieldConfig) as any] };
+  return { fields: [dbxForgeDateTimeField(fieldConfig) as any] };
 }
 
 function getDateTimeComponent(fixture: ComponentFixture<TestForgeDateTimeHostComponent>): Maybe<DbxForgeDateTimeFieldComponent> {
@@ -1479,8 +1479,8 @@ describe('DbxForgeDateTimeFieldComponent', () => {
   });
 });
 
-// MARK: forgeDateRangeField() Integration Tests
-describe('forgeDateRangeField() integration', () => {
+// MARK: dbxForgeDateRangeField() Integration Tests
+describe('dbxForgeDateRangeField() integration', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [TestForgeDateTimeHostComponent],
@@ -1493,7 +1493,7 @@ describe('forgeDateRangeField() integration', () => {
   });
 
   function createDateRangeConfig(config: DbxForgeDateRangeFieldConfig = {}): FormConfig {
-    return { fields: [forgeDateRangeField(config) as any] };
+    return { fields: [dbxForgeDateRangeField(config) as any] };
   }
 
   function getAllDateTimeComponents(fixture: ComponentFixture<TestForgeDateTimeHostComponent>): DbxForgeDateTimeFieldComponent[] {
@@ -1640,7 +1640,7 @@ describe('forgeDateRangeField() integration', () => {
 
     const comps = getAllDateTimeComponents(fixture);
     expect(comps.length).toBe(2);
-    // forgeDateRangeField sets timeMode to NONE on both fields
+    // dbxForgeDateRangeField sets timeMode to NONE on both fields
     expect(comps[0].timeMode()).toBe(DbxDateTimeFieldTimeMode.NONE);
     expect(comps[1].timeMode()).toBe(DbxDateTimeFieldTimeMode.NONE);
     expect(comps[0].isDateOnly()).toBe(true);
@@ -1756,8 +1756,8 @@ describe('forgeDateRangeField() integration', () => {
   });
 });
 
-// MARK: forgeDateTimeRangeField() Integration Tests
-describe('forgeDateTimeRangeField() integration', () => {
+// MARK: dbxForgeDateTimeRangeField() Integration Tests
+describe('dbxForgeDateTimeRangeField() integration', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [TestForgeDateTimeHostComponent],
@@ -1770,7 +1770,7 @@ describe('forgeDateTimeRangeField() integration', () => {
   });
 
   function createDateTimeRangeConfig(config: DbxForgeDateTimeRangeFieldConfig = {}): FormConfig {
-    return { fields: [forgeDateTimeRangeField(config) as any] };
+    return { fields: [dbxForgeDateTimeRangeField(config) as any] };
   }
 
   function getAllDateTimeComponents(fixture: ComponentFixture<TestForgeDateTimeHostComponent>): DbxForgeDateTimeFieldComponent[] {

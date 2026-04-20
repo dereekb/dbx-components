@@ -8,7 +8,7 @@ import type { MatInputField } from '@ng-forge/dynamic-forms-material';
 import { waitForMs, type TransformStringFunctionConfig } from '@dereekb/util';
 import type { FieldAutocompleteAttributeOption } from '../../../../field/field.autocomplete';
 import type { DbxForgeTextFieldConfig, DbxForgeTextFieldInputType } from './text.field';
-import { forgeTextField } from './text.field';
+import { dbxForgeTextField } from './text.field';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { DBX_FORGE_TEST_PROVIDERS } from '../../../form/forge.component.spec';
 import { DbxForgeAsyncConfigFormComponent } from '../../../form';
@@ -219,34 +219,34 @@ describe('MatInputField - Usage', () => {
 });
 
 // ============================================================================
-// Runtime Factory Tests - forgeTextField()
+// Runtime Factory Tests - dbxForgeTextField()
 // ============================================================================
 
-describe('forgeTextField()', () => {
+describe('dbxForgeTextField()', () => {
   it('should create an input field with correct type', () => {
-    const field = forgeTextField({ key: 'name', label: 'Name' });
+    const field = dbxForgeTextField({ key: 'name', label: 'Name' });
     expect(field.type).toBe('input');
     expect(field.key).toBe('name');
     expect(field.label).toBe('Name');
   });
 
   it('should set required when specified', () => {
-    const field = forgeTextField({ key: 'name', required: true });
+    const field = dbxForgeTextField({ key: 'name', required: true });
     expect(field.required).toBe(true);
   });
 
   it('should not include required when not specified', () => {
-    const field = forgeTextField({ key: 'name' });
+    const field = dbxForgeTextField({ key: 'name' });
     expect(field.required).toBeUndefined();
   });
 
   it('should set readonly when specified', () => {
-    const field = forgeTextField({ key: 'name', readonly: true });
+    const field = dbxForgeTextField({ key: 'name', readonly: true });
     expect(field.readonly).toBe(true);
   });
 
   it('should set minLength and maxLength', () => {
-    const field = forgeTextField({ key: 'name', minLength: 2, maxLength: 50 });
+    const field = dbxForgeTextField({ key: 'name', minLength: 2, maxLength: 50 });
     expect(field.minLength).toBe(2);
     expect(field.maxLength).toBe(50);
   });
@@ -254,60 +254,60 @@ describe('forgeTextField()', () => {
   it('should set pattern from string', () => {
     const pattern = /^[A-Z]+$/;
     const patternString = pattern.toString();
-    const field = forgeTextField({ key: 'code', pattern: patternString });
+    const field = dbxForgeTextField({ key: 'code', pattern: patternString });
     expect(field.pattern).toBe(patternString);
   });
 
   it('should set pattern from RegExp', () => {
     const pattern = /^[A-Z]+$/;
-    const field = forgeTextField({ key: 'code', pattern });
+    const field = dbxForgeTextField({ key: 'code', pattern });
     expect(field.pattern).toBe(pattern);
   });
 
   it('should not include pattern when not specified', () => {
-    const field = forgeTextField({ key: 'name' });
+    const field = dbxForgeTextField({ key: 'name' });
     expect(field.pattern).toBeUndefined();
   });
 
   it('should set inputType in props', () => {
-    const field = forgeTextField({ key: 'pass', inputType: 'password' });
+    const field = dbxForgeTextField({ key: 'pass', inputType: 'password' });
     expect(field.props?.type).toBe('password');
   });
 
   it('should default inputType to text', () => {
-    const field = forgeTextField({ key: 'name' });
+    const field = dbxForgeTextField({ key: 'name' });
     expect(field.props?.type).toBe('text');
   });
 
   it('should map description to hint in props', () => {
-    const field = forgeTextField({ key: 'name', description: 'Enter your name' });
+    const field = dbxForgeTextField({ key: 'name', description: 'Enter your name' });
     expect(field.props?.hint).toBe('Enter your name');
   });
 
   it('should set placeholder on field', () => {
-    const field = forgeTextField({ key: 'name', placeholder: 'Type here' });
+    const field = dbxForgeTextField({ key: 'name', placeholder: 'Type here' });
     expect((field as any).placeholder).toBe('Type here');
   });
 
   it('should not set value when not specified', () => {
-    const field = forgeTextField({ key: 'name' });
+    const field = dbxForgeTextField({ key: 'name' });
     expect(field.value).toBeUndefined();
   });
 
   it('should not set label when not specified', () => {
-    const field = forgeTextField({ key: 'name' });
+    const field = dbxForgeTextField({ key: 'name' });
     expect(field.label).toBeUndefined();
   });
 
   it('should pass logic through to the field definition', () => {
     const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
-    const field = forgeTextField({ key: 'name', logic });
+    const field = dbxForgeTextField({ key: 'name', logic });
     expect((field as any).logic).toEqual(logic);
   });
 });
 
 // ============================================================================
-// Runtime Form Scenarios - forgeTextField()
+// Runtime Form Scenarios - dbxForgeTextField()
 // ============================================================================
 
 describe('scenarios', () => {
@@ -331,7 +331,7 @@ describe('scenarios', () => {
         return transformValue.toUpperCase();
       };
 
-      const field = forgeTextField({ key: 'name', idempotentTransform: { transform } });
+      const field = dbxForgeTextField({ key: 'name', idempotentTransform: { transform } });
 
       const formConfig = { fields: [field] };
       fixture.componentInstance.config.set(formConfig);
@@ -363,7 +363,7 @@ describe('scenarios', () => {
     it('should validate with the pattern', async () => {
       const pattern = /^[A-Z]+$/;
 
-      const field = forgeTextField({ key: 'name', pattern });
+      const field = dbxForgeTextField({ key: 'name', pattern });
 
       const formConfig = { fields: [field] };
       fixture.componentInstance.config.set(formConfig);

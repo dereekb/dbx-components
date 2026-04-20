@@ -8,7 +8,7 @@ import { provideDbxForgeFormFieldDeclarations } from '../../../forge.providers';
 import { provideDbxFormConfiguration } from '../../../../form.providers';
 import { DbxForgeFormComponent } from '../../../form/forge.component';
 import { DbxForgeFormContext, provideDbxForgeFormContext } from '../../../form/forge.context';
-import { forgeAddressField, forgeAddressFields, forgeAddressLineField, forgeAddressListField } from './text.address.field';
+import { dbxForgeAddressField, dbxForgeAddressFields, dbxForgeAddressLineField, dbxForgeAddressListField } from './text.address.field';
 import type { WrapperField } from '@ng-forge/dynamic-forms';
 import { DBX_FORGE_SECTION_WRAPPER_TYPE_NAME, type DbxForgeSectionWrapper } from '../../wrapper/section/section.wrapper';
 
@@ -66,110 +66,110 @@ async function tryGetValue<T = any>(context: DbxForgeFormContext<T>, ms = 500): 
 }
 
 // MARK: Unit Tests
-describe('forgeAddressLineField()', () => {
+describe('dbxForgeAddressLineField()', () => {
   it('should create a line 1 field by default', () => {
-    const field = forgeAddressLineField();
+    const field = dbxForgeAddressLineField();
     expect(field.type).toBe('input');
     expect(field.key).toBe('line1');
     expect(field.label).toBe('Line 1');
   });
 
   it('should create a line 2 field', () => {
-    const field = forgeAddressLineField({ line: 2 });
+    const field = dbxForgeAddressLineField({ line: 2 });
     expect(field.key).toBe('line2');
     expect(field.label).toBe('Line 2');
   });
 
   it('should create a street field for line 0', () => {
-    const field = forgeAddressLineField({ line: 0 });
+    const field = dbxForgeAddressLineField({ line: 0 });
     expect(field.key).toBe('line1');
     expect(field.label).toBe('Street');
   });
 
   it('should allow overriding key and label', () => {
-    const field = forgeAddressLineField({ key: 'addr', label: 'Address', line: 1 });
+    const field = dbxForgeAddressLineField({ key: 'addr', label: 'Address', line: 1 });
     expect(field.key).toBe('addr');
     expect(field.label).toBe('Address');
   });
 
   it('should set required when specified', () => {
-    const field = forgeAddressLineField({ required: true });
+    const field = dbxForgeAddressLineField({ required: true });
     expect(field.required).toBe(true);
   });
 });
 
-describe('forgeAddressFields()', () => {
+describe('dbxForgeAddressFields()', () => {
   it('should create fields with line2 and country by default', () => {
-    const fields = forgeAddressFields();
+    const fields = dbxForgeAddressFields();
     expect(fields.length).toBe(5); // line1, line2, city, stateZipRow, country
   });
 
   it('should omit line2 when includeLine2 is false', () => {
-    const fields = forgeAddressFields({ includeLine2: false });
+    const fields = dbxForgeAddressFields({ includeLine2: false });
     expect(fields.length).toBe(4); // street, city, stateZipRow, country
   });
 
   it('should omit country when includeCountry is false', () => {
-    const fields = forgeAddressFields({ includeCountry: false });
+    const fields = dbxForgeAddressFields({ includeCountry: false });
     expect(fields.length).toBe(4); // line1, line2, city, stateZipRow
   });
 
   it('should omit both line2 and country when disabled', () => {
-    const fields = forgeAddressFields({ includeLine2: false, includeCountry: false });
+    const fields = dbxForgeAddressFields({ includeLine2: false, includeCountry: false });
     expect(fields.length).toBe(3); // street, city, stateZipRow
   });
 });
 
-describe('forgeAddressField()', () => {
+describe('dbxForgeAddressField()', () => {
   it('should create a wrapper field with address key', () => {
-    const field = forgeAddressField();
+    const field = dbxForgeAddressField();
     expect(field.type).toBe('wrapper');
     expect(field.key).toBe('address');
   });
 
   it('should have a section wrapper config', () => {
-    const field = forgeAddressField() as WrapperField;
+    const field = dbxForgeAddressField() as WrapperField;
     const wrapperConfig = field.wrappers[0] as DbxForgeSectionWrapper;
     expect(wrapperConfig.type).toBe(DBX_FORGE_SECTION_WRAPPER_TYPE_NAME);
   });
 
   it('should allow overriding key', () => {
-    const field = forgeAddressField({ key: 'home' });
+    const field = dbxForgeAddressField({ key: 'home' });
     expect(field.key).toBe('home');
   });
 
   it('should set header to Address by default', () => {
-    const field = forgeAddressField() as WrapperField;
+    const field = dbxForgeAddressField() as WrapperField;
     const wrapperConfig = field.wrappers[0] as DbxForgeSectionWrapper;
     expect(wrapperConfig.headerConfig.header).toBe('Address');
   });
 
   it('should allow overriding header', () => {
-    const field = forgeAddressField({ header: 'Billing Address' }) as WrapperField;
+    const field = dbxForgeAddressField({ header: 'Billing Address' }) as WrapperField;
     const wrapperConfig = field.wrappers[0] as DbxForgeSectionWrapper;
     expect(wrapperConfig.headerConfig.header).toBe('Billing Address');
   });
 
   it('should pass child fields directly on the wrapper field', () => {
-    const field = forgeAddressField() as WrapperField;
+    const field = dbxForgeAddressField() as WrapperField;
     expect(field.fields.length).toBeGreaterThan(0);
   });
 });
 
-describe('forgeAddressListField()', () => {
+describe('dbxForgeAddressListField()', () => {
   it('should create an array field with addresses key', () => {
-    const field = forgeAddressListField();
+    const field = dbxForgeAddressListField();
     expect(field.key).toBe('addresses');
   });
 
   it('should allow overriding key', () => {
-    const field = forgeAddressListField({ key: 'locations' });
+    const field = dbxForgeAddressListField({ key: 'locations' });
     expect(field.key).toBe('locations');
   });
 });
 
 // MARK: Integration Tests
-describe('forgeAddressField() integration', () => {
+describe('dbxForgeAddressField() integration', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [TestForgeAddressHostComponent],
@@ -181,8 +181,8 @@ describe('forgeAddressField() integration', () => {
     TestBed.resetTestingModule();
   });
 
-  function createAddressConfig(config: Parameters<typeof forgeAddressField>[0] = {}): FormConfig {
-    return { fields: [forgeAddressField(config) as any] };
+  function createAddressConfig(config: Parameters<typeof dbxForgeAddressField>[0] = {}): FormConfig {
+    return { fields: [dbxForgeAddressField(config) as any] };
   }
 
   const VALID_ADDRESS = {

@@ -6,7 +6,7 @@ import { expectTypeOf } from 'vitest';
 import { type DynamicText, type LogicConfig, type SchemaApplicationConfig, type ValidatorConfig, type ValidationMessages, type FormConfig, withLoggerConfig } from '@ng-forge/dynamic-forms';
 import { of } from 'rxjs';
 import type { DbxForgePickableChipFieldConfig } from './pickable-chip.field';
-import { forgePickableChipField } from './pickable-chip.field';
+import { dbxForgePickableChipField } from './pickable-chip.field';
 import type { DbxForgePickableChipFieldDef, DbxForgePickableFieldProps } from './pickable.field';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { DBX_FORGE_TEST_PROVIDERS } from '../../../form/forge.component.spec';
@@ -183,10 +183,10 @@ describe('DbxForgePickableChipFieldDef - Usage', () => {
 });
 
 // ============================================================================
-// Runtime Factory Tests - forgePickableChipField()
+// Runtime Factory Tests - dbxForgePickableChipField()
 // ============================================================================
 
-describe('forgePickableChipField()', () => {
+describe('dbxForgePickableChipField()', () => {
   function minimalConfig() {
     return {
       key: 'tags',
@@ -199,134 +199,134 @@ describe('forgePickableChipField()', () => {
 
   // MARK: Field structure
   it('should create a field with dbx-pickable-chip type', () => {
-    const field = forgePickableChipField(minimalConfig());
+    const field = dbxForgePickableChipField(minimalConfig());
     expect(field.type).toBe('dbx-pickable-chip');
   });
 
   it('should use the data key directly', () => {
-    const field = forgePickableChipField(minimalConfig());
+    const field = dbxForgePickableChipField(minimalConfig());
     expect(field.key).toBe('tags');
   });
 
   it('should have wrappers defined on the field', () => {
-    const field = forgePickableChipField(minimalConfig());
+    const field = dbxForgePickableChipField(minimalConfig());
     expect((field as any).wrappers).toBeDefined();
   });
 
   // MARK: Inner field structure
   it('should create an inner field with dbx-pickable-chip type', () => {
-    const inner = forgePickableChipField(minimalConfig());
+    const inner = dbxForgePickableChipField(minimalConfig());
     expect(inner.type).toBe('dbx-pickable-chip');
   });
 
   it('should set the data key on the inner field', () => {
-    const inner = forgePickableChipField(minimalConfig());
+    const inner = dbxForgePickableChipField(minimalConfig());
     expect(inner.key).toBe('tags');
   });
 
   it('should set label on the inner field', () => {
-    const inner = forgePickableChipField({ ...minimalConfig(), label: 'Tags' });
+    const inner = dbxForgePickableChipField({ ...minimalConfig(), label: 'Tags' });
     expect(inner.label).toBe('Tags');
   });
 
   // MARK: Required/readonly passthrough
   it('should set required on the inner field when provided', () => {
-    const inner = forgePickableChipField({ ...minimalConfig(), required: true });
+    const inner = dbxForgePickableChipField({ ...minimalConfig(), required: true });
     expect(inner.required).toBe(true);
   });
 
   it('should not set required on the inner field when not provided', () => {
-    const inner = forgePickableChipField(minimalConfig());
+    const inner = dbxForgePickableChipField(minimalConfig());
     expect(inner.required).toBeUndefined();
   });
 
   it('should set readonly on the inner field when provided', () => {
-    const inner = forgePickableChipField({ ...minimalConfig(), readonly: true });
+    const inner = dbxForgePickableChipField({ ...minimalConfig(), readonly: true });
     expect(inner.readonly).toBe(true);
   });
 
   // MARK: Hint/description mapping
   it('should map description to inner field props.hint', () => {
-    const inner = forgePickableChipField({ ...minimalConfig(), description: 'Pick your tags' });
+    const inner = dbxForgePickableChipField({ ...minimalConfig(), description: 'Pick your tags' });
     expect(inner.props?.hint).toBe('Pick your tags');
   });
 
   it('should map hint to inner field props.hint', () => {
-    const inner = forgePickableChipField({ ...minimalConfig(), hint: 'Pick your tags' });
+    const inner = dbxForgePickableChipField({ ...minimalConfig(), hint: 'Pick your tags' });
     expect(inner.props?.hint).toBe('Pick your tags');
   });
 
   it('should not set hint on inner field when neither hint nor description is provided', () => {
-    const inner = forgePickableChipField(minimalConfig());
+    const inner = dbxForgePickableChipField(minimalConfig());
     expect(inner.props?.hint).toBeUndefined();
   });
 
   // MARK: Props passthrough
   it('should propagate loadValues through inner field props', () => {
-    const inner = forgePickableChipField(minimalConfig());
+    const inner = dbxForgePickableChipField(minimalConfig());
     expect(inner.props?.loadValues).toBe(stubLoadValues);
   });
 
   it('should propagate displayForValue through inner field props', () => {
-    const inner = forgePickableChipField(minimalConfig());
+    const inner = dbxForgePickableChipField(minimalConfig());
     expect(inner.props?.displayForValue).toBe(stubDisplayForValue);
   });
 
   it('should propagate multiSelect through inner field props when provided', () => {
-    const inner = forgePickableChipField({ ...minimalConfig(), props: { ...minimalConfig().props!, multiSelect: false } });
+    const inner = dbxForgePickableChipField({ ...minimalConfig(), props: { ...minimalConfig().props!, multiSelect: false } });
     expect(inner.props?.multiSelect).toBe(false);
   });
 
   it('should not set multiSelect on the inner field when not provided', () => {
-    const inner = forgePickableChipField(minimalConfig());
+    const inner = dbxForgePickableChipField(minimalConfig());
     expect(inner.props?.multiSelect).toBeUndefined();
   });
 
   it('should propagate asArrayValue through inner field props when provided', () => {
-    const inner = forgePickableChipField({ ...minimalConfig(), props: { ...minimalConfig().props!, asArrayValue: false } });
+    const inner = dbxForgePickableChipField({ ...minimalConfig(), props: { ...minimalConfig().props!, asArrayValue: false } });
     expect(inner.props?.asArrayValue).toBe(false);
   });
 
   it('should propagate filterValues through inner field props when provided', () => {
     const config = { ...minimalConfig(), props: { ...minimalConfig().props!, filterValues: stubFilterValues } } as DbxForgePickableChipFieldConfig<string>;
-    const inner = forgePickableChipField(config);
+    const inner = dbxForgePickableChipField(config);
     expect(inner.props?.filterValues).toBe(stubFilterValues);
   });
 
   it('should propagate filterLabel through inner field props when provided', () => {
-    const inner = forgePickableChipField({ ...minimalConfig(), props: { ...minimalConfig().props!, filterLabel: 'Search tags' } });
+    const inner = dbxForgePickableChipField({ ...minimalConfig(), props: { ...minimalConfig().props!, filterLabel: 'Search tags' } });
     expect(inner.props?.filterLabel).toBe('Search tags');
   });
 
   it('should not set filterLabel on the inner field when not provided', () => {
-    const inner = forgePickableChipField(minimalConfig());
+    const inner = dbxForgePickableChipField(minimalConfig());
     expect(inner.props?.filterLabel).toBeUndefined();
   });
 
   // MARK: Logic passthrough
   it('should pass logic through to the inner field definition', () => {
     const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
-    const inner = forgePickableChipField({ ...minimalConfig(), logic });
+    const inner = dbxForgePickableChipField({ ...minimalConfig(), logic });
     expect(inner.logic).toEqual(logic);
   });
 
   // MARK: Validators passthrough
   it('should pass validators through to the inner field definition', () => {
     const validators: ValidatorConfig[] = [{ type: 'custom' as const, expression: 'fieldValue != null', kind: 'mustSelectTag' }];
-    const inner = forgePickableChipField({ ...minimalConfig(), validators });
+    const inner = dbxForgePickableChipField({ ...minimalConfig(), validators });
     expect(inner.validators).toEqual(validators);
   });
 
   // MARK: ValidationMessages passthrough
   it('should pass validationMessages through to the inner field definition', () => {
     const validationMessages: ValidationMessages = { mustSelectTag: 'Please select at least one tag' };
-    const inner = forgePickableChipField({ ...minimalConfig(), validationMessages });
+    const inner = dbxForgePickableChipField({ ...minimalConfig(), validationMessages });
     expect(inner.validationMessages).toEqual(validationMessages);
   });
 });
 
 // ============================================================================
-// Runtime Form Scenarios - forgePickableChipField()
+// Runtime Form Scenarios - dbxForgePickableChipField()
 // ============================================================================
 
 describe('scenarios', () => {
@@ -346,7 +346,7 @@ describe('scenarios', () => {
 
   describe('config resolution', () => {
     it('should resolve the wrapper field config containing the inner pickable chip field', async () => {
-      const field = forgePickableChipField({
+      const field = dbxForgePickableChipField({
         key: 'tags',
         label: 'Tags',
         props: {

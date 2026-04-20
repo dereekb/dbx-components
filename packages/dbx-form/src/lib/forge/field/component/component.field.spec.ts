@@ -1,23 +1,23 @@
 import { describe, it, expect } from 'vitest';
-import { forgeComponentField } from './component.field';
+import { dbxForgeComponentField } from './component.field';
 import type { LogicConfig } from '@ng-forge/dynamic-forms';
 
 class MockComponentA {}
 class MockComponentB {}
 
-describe('forgeComponentField()', () => {
+describe('dbxForgeComponentField()', () => {
   it('should create a field with type dbx-component', () => {
-    const field = forgeComponentField({
+    const field = dbxForgeComponentField({
       componentField: { componentClass: MockComponentA }
     });
     expect(field.type).toBe('dbx-component');
   });
 
   it('should generate a unique key when not specified', () => {
-    const fieldA = forgeComponentField({
+    const fieldA = dbxForgeComponentField({
       componentField: { componentClass: MockComponentA }
     });
-    const fieldB = forgeComponentField({
+    const fieldB = dbxForgeComponentField({
       componentField: { componentClass: MockComponentA }
     });
     expect(fieldA.key).toMatch(/^_component_\d+$/);
@@ -25,7 +25,7 @@ describe('forgeComponentField()', () => {
   });
 
   it('should use provided key', () => {
-    const field = forgeComponentField({
+    const field = dbxForgeComponentField({
       key: 'custom',
       componentField: { componentClass: MockComponentA }
     });
@@ -33,7 +33,7 @@ describe('forgeComponentField()', () => {
   });
 
   it('should set label when specified', () => {
-    const field = forgeComponentField({
+    const field = dbxForgeComponentField({
       label: 'My Component',
       componentField: { componentClass: MockComponentA }
     });
@@ -42,13 +42,13 @@ describe('forgeComponentField()', () => {
 
   it('should pass componentField through in props', () => {
     const componentField = { componentClass: MockComponentA };
-    const field = forgeComponentField({ componentField });
+    const field = dbxForgeComponentField({ componentField });
     expect(field.props?.componentField).toBe(componentField);
   });
 
   it('should pass providers through in componentField props', () => {
     const providers = [{ provide: 'TOKEN', useValue: 'test' }];
-    const field = forgeComponentField({
+    const field = dbxForgeComponentField({
       componentField: { componentClass: MockComponentA, providers }
     });
     expect(field.props?.componentField.providers).toBe(providers);
@@ -56,15 +56,15 @@ describe('forgeComponentField()', () => {
 
   it('should pass logic through to the field definition', () => {
     const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
-    const field = forgeComponentField({ key: 'custom', componentField: { componentClass: class {} as any }, logic });
+    const field = dbxForgeComponentField({ key: 'custom', componentField: { componentClass: class {} as any }, logic });
     expect((field as any).logic).toEqual(logic);
   });
 
   it('should pass different component classes', () => {
-    const fieldA = forgeComponentField({
+    const fieldA = dbxForgeComponentField({
       componentField: { componentClass: MockComponentA }
     });
-    const fieldB = forgeComponentField({
+    const fieldB = dbxForgeComponentField({
       componentField: { componentClass: MockComponentB }
     });
     expect(fieldA.props?.componentField.componentClass).toBe(MockComponentA);

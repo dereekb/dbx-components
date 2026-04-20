@@ -6,7 +6,7 @@ import { expectTypeOf } from 'vitest';
 import type { DynamicText, LogicConfig, SchemaApplicationConfig, ValidatorConfig, ValidationMessages } from '@ng-forge/dynamic-forms';
 import type { MatTextareaField } from '@ng-forge/dynamic-forms-material';
 import type { DbxForgeTextAreaFieldConfig } from './textarea.field';
-import { forgeTextAreaField } from './textarea.field';
+import { dbxForgeTextAreaField } from './textarea.field';
 
 // ============================================================================
 // DbxForgeTextAreaFieldConfig - Exhaustive Whitelist
@@ -164,81 +164,81 @@ describe('MatTextareaField - Usage', () => {
 });
 
 // ============================================================================
-// Runtime Factory Tests - forgeTextAreaField()
+// Runtime Factory Tests - dbxForgeTextAreaField()
 // ============================================================================
 
-describe('forgeTextAreaField()', () => {
+describe('dbxForgeTextAreaField()', () => {
   it('should create a textarea field with correct type', () => {
-    const field = forgeTextAreaField({ key: 'bio', label: 'Biography' });
+    const field = dbxForgeTextAreaField({ key: 'bio', label: 'Biography' });
     expect(field.type).toBe('textarea');
     expect(field.key).toBe('bio');
     expect(field.label).toBe('Biography');
   });
 
   it('should set required when specified', () => {
-    const field = forgeTextAreaField({ key: 'bio', required: true });
+    const field = dbxForgeTextAreaField({ key: 'bio', required: true });
     expect(field.required).toBe(true);
   });
 
   it('should set readonly when specified', () => {
-    const field = forgeTextAreaField({ key: 'bio', readonly: true });
+    const field = dbxForgeTextAreaField({ key: 'bio', readonly: true });
     expect(field.readonly).toBe(true);
   });
 
   it('should default rows to 3 in props', () => {
-    const field = forgeTextAreaField({ key: 'bio' });
+    const field = dbxForgeTextAreaField({ key: 'bio' });
     expect(field.props?.rows).toBe(3);
   });
 
   it('should set custom rows in props', () => {
-    const field = forgeTextAreaField({ key: 'bio', rows: 5 });
+    const field = dbxForgeTextAreaField({ key: 'bio', rows: 5 });
     expect(field.props?.rows).toBe(5);
   });
 
   it('should set minLength and maxLength', () => {
-    const field = forgeTextAreaField({ key: 'bio', minLength: 10, maxLength: 500 });
+    const field = dbxForgeTextAreaField({ key: 'bio', minLength: 10, maxLength: 500 });
     expect(field.minLength).toBe(10);
     expect(field.maxLength).toBe(500);
   });
 
   it('should set pattern from string', () => {
-    const field = forgeTextAreaField({ key: 'bio', pattern: '^[a-z]+$' });
+    const field = dbxForgeTextAreaField({ key: 'bio', pattern: '^[a-z]+$' });
     expect(field.pattern).toBe('^[a-z]+$');
   });
 
   it('should set pattern from RegExp', () => {
-    const field = forgeTextAreaField({ key: 'bio', pattern: /^[a-z]+$/ });
+    const field = dbxForgeTextAreaField({ key: 'bio', pattern: /^[a-z]+$/ });
     expect(field.pattern).toBe('^[a-z]+$');
   });
 
   it('should map description to hint in props', () => {
-    const field = forgeTextAreaField({ key: 'bio', description: 'Tell us about yourself' });
+    const field = dbxForgeTextAreaField({ key: 'bio', description: 'Tell us about yourself' });
     expect(field.props?.hint).toBe('Tell us about yourself');
   });
 
   it('should set placeholder on field', () => {
-    const field = forgeTextAreaField({ key: 'bio', placeholder: 'Type here' });
+    const field = dbxForgeTextAreaField({ key: 'bio', placeholder: 'Type here' });
     expect((field as any).placeholder).toBe('Type here');
   });
 
   it('should provide empty string as default value', () => {
-    const field = forgeTextAreaField({ key: 'bio' });
+    const field = dbxForgeTextAreaField({ key: 'bio' });
     expect(field.value).toBe('');
   });
 
   it('should use defaultValue when provided', () => {
-    const field = forgeTextAreaField({ key: 'bio', defaultValue: 'default text' });
+    const field = dbxForgeTextAreaField({ key: 'bio', defaultValue: 'default text' });
     expect(field.value).toBe('default text');
   });
 
   it('should provide empty label when not specified', () => {
-    const field = forgeTextAreaField({ key: 'bio' });
+    const field = dbxForgeTextAreaField({ key: 'bio' });
     expect(field.label).toBe('');
   });
 
   it('should pass logic through to the field definition', () => {
     const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
-    const field = forgeTextAreaField({ key: 'bio', logic });
+    const field = dbxForgeTextAreaField({ key: 'bio', logic });
     expect((field as any).logic).toEqual(logic);
   });
 });

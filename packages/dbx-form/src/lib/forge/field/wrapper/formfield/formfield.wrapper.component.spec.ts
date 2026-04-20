@@ -7,7 +7,7 @@ import { provideDbxForgeFormFieldDeclarations } from '../../../forge.providers';
 import { provideDbxFormConfiguration } from '../../../../form.providers';
 import { DbxForgeFormComponent } from '../../../form/forge.component';
 import { DbxForgeFormContext, provideDbxForgeFormContext } from '../../../form/forge.context';
-import { forgeNumberSliderField } from '../../value/number/slider.field';
+import { dbxForgeNumberSliderField } from '../../value/number/slider.field';
 import { DBX_FORGE_FORM_COMPONENT_TEMPLATE } from '../../../form';
 
 // MARK: Test Host
@@ -58,14 +58,14 @@ describe('DbxForgeFormFieldWrapperComponent', () => {
     TestBed.resetTestingModule();
   });
 
-  describe('with forgeNumberSliderField()', () => {
+  describe('with dbxForgeNumberSliderField()', () => {
     it('should render without errors', async () => {
       const fixture = TestBed.createComponent(TestFormFieldWrapperHostComponent);
       const context = fixture.componentInstance.context;
       context.requireValid = false;
 
       context.config = {
-        fields: [forgeNumberSliderField({ key: 'rating', label: 'Rating', min: 0, max: 10 }) as any]
+        fields: [dbxForgeNumberSliderField({ key: 'rating', label: 'Rating', min: 0, max: 10 }) as any]
       };
 
       await settle(fixture);
@@ -83,7 +83,7 @@ describe('DbxForgeFormFieldWrapperComponent', () => {
       context.requireValid = false;
 
       context.config = {
-        fields: [forgeNumberSliderField({ key: 'rating', label: 'Rating', min: 0, max: 10 }) as any]
+        fields: [dbxForgeNumberSliderField({ key: 'rating', label: 'Rating', min: 0, max: 10 }) as any]
       };
 
       await settle(fixture);
@@ -102,7 +102,7 @@ describe('DbxForgeFormFieldWrapperComponent', () => {
       context.requireValid = false;
 
       context.config = {
-        fields: [forgeNumberSliderField({ key: 'rating', label: 'Rating', description: 'Pick a rating', min: 0, max: 10 }) as any]
+        fields: [dbxForgeNumberSliderField({ key: 'rating', label: 'Rating', description: 'Pick a rating', min: 0, max: 10 }) as any]
       };
 
       await settle(fixture);
@@ -121,7 +121,7 @@ describe('DbxForgeFormFieldWrapperComponent', () => {
       context.requireValid = false;
 
       context.config = {
-        fields: [forgeNumberSliderField({ key: 'rating', label: 'Rating', min: 0, max: 10, value: 5 }) as any]
+        fields: [dbxForgeNumberSliderField({ key: 'rating', label: 'Rating', min: 0, max: 10, value: 5 }) as any]
       };
 
       await settle(fixture);
@@ -146,7 +146,7 @@ describe('DbxForgeFormFieldWrapperComponent', () => {
     function createSliderWithValidatorConfig() {
       return {
         fields: [
-          forgeNumberSliderField({
+          dbxForgeNumberSliderField({
             key: 'rating',
             label: '',
             min: 0,
@@ -194,7 +194,7 @@ describe('DbxForgeFormFieldWrapperComponent', () => {
       // Use a default value above 50 so the validator passes immediately
       context.config = {
         fields: [
-          forgeNumberSliderField({
+          dbxForgeNumberSliderField({
             key: 'rating',
             label: '',
             max: 100,
