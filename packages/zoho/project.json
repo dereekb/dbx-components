@@ -16,6 +16,9 @@
           },
           {
             "command": "npx nx run zoho-nestjs:build-base"
+          },
+          {
+            "command": "npx nx run zoho-cli:build-base"
           }
         ],
         "parallel": false
@@ -73,6 +76,10 @@
           {
             "description": "run zoho-nestjs tests",
             "command": "npx nx test zoho-nestjs"
+          },
+          {
+            "description": "run zoho-cli tests",
+            "command": "npx nx test zoho-cli"
           }
         ],
         "color": true,
