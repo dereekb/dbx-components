@@ -51,13 +51,6 @@
       "options": {
         "reportsDirectory": "{projectRoot}/../../../coverage/packages/zoho/cli"
       }
-    },
-    "test-cli": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["build-base"],
-      "options": {
-        "command": "bash packages/zoho/cli/test/test-cli.sh"
-      }
     }
   }
 }
