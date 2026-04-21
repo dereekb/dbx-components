@@ -14,6 +14,11 @@ import { provideDbxForgeFormFieldDeclarations } from '../../../../forge/forge.pr
 import { provideDbxFormConfiguration } from '../../../../form.providers';
 import { DbxForgeFormComponent } from '../../../../forge/form/forge.component';
 import { DbxForgeFormContext, provideDbxForgeFormContext } from '../../../../forge/form/forge.context';
+import { DbxForgeSearchableChipFieldComponent } from './searchable-chip.field.component';
+import { By } from '@angular/platform-browser';
+import type { MatChipInputEvent } from '@angular/material/chips';
+import { waitForMs } from '@dereekb/util';
+import { DbxRouterWebProviderConfig } from '@dereekb/dbx-web';
 
 // MARK: Shared Stubs
 const stubSearch = (_text: string) => of([{ value: 'a' }]);
@@ -368,9 +373,9 @@ describe('dbxForgeSearchableStringChipField()', () => {
     expect(inner.key).toBe('keywords');
   });
 
-  it('should not set allowStringValues by default (caller provides it when needed)', () => {
+  it('should force allowStringValues to true so Enter commits the typed value as a chip', () => {
     const inner = getInnerField(dbxForgeSearchableStringChipField(minimalConfig()) as any);
-    expect(inner.props?.allowStringValues).toBeUndefined();
+    expect(inner.props?.allowStringValues).toBe(true);
   });
 
   it('should set required on the inner field when provided', () => {
@@ -411,7 +416,7 @@ class SearchableChipTestHostComponent {
   readonly context = inject(DbxForgeFormContext);
 }
 
-const SEARCHABLE_CHIP_TEST_PROVIDERS = [provideZonelessChangeDetection(), provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), { provide: DynamicFormLogger, useClass: NoopLogger }];
+const SEARCHABLE_CHIP_TEST_PROVIDERS = [provideZonelessChangeDetection(), provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), { provide: DynamicFormLogger, useClass: NoopLogger }, { provide: DbxRouterWebProviderConfig, useValue: { anchorSegueRefComponent: { componentClass: SearchableChipTestHostComponent } } as DbxRouterWebProviderConfig }];
 
 async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
   fixture.detectChanges();
@@ -468,6 +473,114 @@ describe('DbxForgeSearchableChipFieldComponent', () => {
 
     const afterSecondSelect = await firstValueFrom(context.getValue().pipe(timeout(500), first()));
     expect((afterSecondSelect as any)?.pickOne).toBe('b');
+
+    fixture.destroy();
+  });
+
+  // MARK: Enter key commits typed value
+  function createStringChipConfig(): FormConfig {
+    return {
+      fields: [
+        dbxForgeSearchableStringChipField({
+          key: 'urls',
+          label: 'URLs',
+          props: {
+            searchOnEmptyText: false,
+            search: () => of([]),
+            displayForValue: (values) => of(values.map((v) => ({ ...v, label: String(v.value) })))
+          }
+        }) as any
+      ]
+    };
+  }
+
+  async function settleWithLazyLoad(fixture: ComponentFixture<unknown>, ms = 300): Promise<void> {
+    fixture.detectChanges();
+    await waitForMs(ms);
+    fixture.detectChanges();
+    await waitForMs(50);
+    fixture.detectChanges();
+  }
+
+  function getChipFieldComponent(fixture: ComponentFixture<unknown>): DbxForgeSearchableChipFieldComponent<string> {
+    const debugEl = fixture.debugElement.query(By.directive(DbxForgeSearchableChipFieldComponent));
+    if (!debugEl) {
+      throw new Error('DbxForgeSearchableChipFieldComponent not found');
+    }
+    return debugEl.componentInstance as DbxForgeSearchableChipFieldComponent<string>;
+  }
+
+  it('dbxForgeSearchableStringChipField: pressing Enter commits the typed value as a chip', async () => {
+    const fixture = TestBed.createComponent(SearchableChipTestHostComponent);
+    const context = fixture.componentInstance.context;
+    context.requireValid = false;
+    context.config = createStringChipConfig();
+
+    await settleWithLazyLoad(fixture);
+
+    const component = getChipFieldComponent(fixture);
+
+    // Simulate the user typing into the input.
+    component.inputCtrl.setValue('https://example.com');
+    await settle(fixture);
+
+    // Simulate Enter -> matChipInputTokenEnd dispatched by MatChipInput.
+    component.addChip({ value: 'https://example.com', chipInput: { clear: () => {} } } as unknown as MatChipInputEvent);
+    await settle(fixture);
+
+    const afterAdd = await firstValueFrom(context.getValue().pipe(timeout(500), first()));
+    expect((afterAdd as any)?.urls).toEqual(['https://example.com']);
+
+    // A second Enter should append another chip (multi-select is the default).
+    component.inputCtrl.setValue('https://other.example.com');
+    await settle(fixture);
+    component.addChip({ value: 'https://other.example.com', chipInput: { clear: () => {} } } as unknown as MatChipInputEvent);
+    await settle(fixture);
+
+    const afterSecond = await firstValueFrom(context.getValue().pipe(timeout(500), first()));
+    expect((afterSecond as any)?.urls).toEqual(['https://example.com', 'https://other.example.com']);
+
+    fixture.destroy();
+  });
+
+  it('dbxForgeSearchableStringChipField: rejects the typed value when textInputValidator fails', async () => {
+    const fixture = TestBed.createComponent(SearchableChipTestHostComponent);
+    const context = fixture.componentInstance.context;
+    context.requireValid = false;
+    context.config = {
+      fields: [
+        dbxForgeSearchableStringChipField({
+          key: 'urls',
+          label: 'URLs',
+          props: {
+            searchOnEmptyText: false,
+            textInputValidator: (ctrl) => (ctrl.value && String(ctrl.value).startsWith('https://') ? null : { invalid: { message: 'Invalid URL' } }),
+            search: () => of([]),
+            displayForValue: (values) => of(values.map((v) => ({ ...v, label: String(v.value) })))
+          }
+        }) as any
+      ]
+    };
+
+    await settleWithLazyLoad(fixture);
+
+    const component = getChipFieldComponent(fixture);
+
+    component.inputCtrl.setValue('not-a-url');
+    await settle(fixture);
+    component.addChip({ value: 'not-a-url', chipInput: { clear: () => {} } } as unknown as MatChipInputEvent);
+    await settle(fixture);
+
+    const afterInvalid = await firstValueFrom(context.getValue().pipe(timeout(500), first()));
+    expect((afterInvalid as any)?.urls ?? []).toEqual([]);
+
+    component.inputCtrl.setValue('https://valid.example.com');
+    await settle(fixture);
+    component.addChip({ value: 'https://valid.example.com', chipInput: { clear: () => {} } } as unknown as MatChipInputEvent);
+    await settle(fixture);
+
+    const afterValid = await firstValueFrom(context.getValue().pipe(timeout(500), first()));
+    expect((afterValid as any)?.urls).toEqual(['https://valid.example.com']);
 
     fixture.destroy();
   });

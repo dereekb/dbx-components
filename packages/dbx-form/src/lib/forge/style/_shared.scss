@@ -7,7 +7,7 @@
   // Resets native <input> elements that render inside the forge form-field wrapper
   // (outside a <mat-form-field>) so they match Material body-large typography.
   // Used by pickable filter inputs and searchable text/chip field inputs.
-  .dbx-forge-bare-input {
+  input.dbx-forge-bare-input {
     border: none;
     outline: none;
     width: 100%;
@@ -17,7 +17,7 @@
     font-size: var(--mat-sys-body-large-size);
     line-height: var(--mat-sys-body-large-line-height);
     letter-spacing: var(--mat-sys-body-large-tracking);
-    padding: 4px 0;
+    padding: 5px 0 3px;
 
     &::placeholder {
       color: var(--mat-sys-on-surface-variant);
