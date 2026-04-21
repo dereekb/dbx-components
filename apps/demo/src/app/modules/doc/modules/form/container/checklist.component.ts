@@ -9,7 +9,7 @@ import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocFeatureFormTabsComponent } from '../../shared/component/feature.formtabs.component';
 import { DocFormForgeExampleComponent } from '../component/forge.example.form.component';
-import { DbxFormFormlyChecklistItemFieldModule, DbxFormLoadingSourceDirective, DbxFormValueChangeDirective, forgeCheckboxField, forgeRow } from '@dereekb/dbx-form';
+import { DbxFormFormlyChecklistItemFieldModule, DbxFormLoadingSourceDirective, DbxFormValueChangeDirective, dbxForgeCheckboxField, dbxForgeRow } from '@dereekb/dbx-form';
 import { JsonPipe } from '@angular/common';
 
 @Component({
@@ -40,12 +40,12 @@ export class DocFormChecklistComponent {
 
   readonly forgeChecklistConfig: FormConfig = {
     fields: [
-      forgeRow({
+      dbxForgeRow({
         fields: [
-          { ...forgeCheckboxField({ key: 'itemA', label: 'itemA Label' }), col: 6 },
-          { ...forgeCheckboxField({ key: 'itemB', label: 'itemB Label' }), col: 6 },
-          { ...forgeCheckboxField({ key: 'itemC', label: 'itemC Label' }), col: 6 },
-          { ...forgeCheckboxField({ key: 'itemArray', label: 'itemArray Label' }), col: 6 }
+          { ...dbxForgeCheckboxField({ key: 'itemA', label: 'itemA Label' }), col: 6 },
+          { ...dbxForgeCheckboxField({ key: 'itemB', label: 'itemB Label' }), col: 6 },
+          { ...dbxForgeCheckboxField({ key: 'itemC', label: 'itemC Label' }), col: 6 },
+          { ...dbxForgeCheckboxField({ key: 'itemArray', label: 'itemArray Label' }), col: 6 }
         ]
       }) as any
     ]

@@ -56,8 +56,8 @@ export interface DbxForgeAddressLineFieldConfig extends Partial<DbxForgeTextFiel
  *
  * @example
  * ```typescript
- * const line1 = forgeAddressLineField({ line: 1, required: true });
- * const line2 = forgeAddressLineField({ line: 2 });
+ * const line1 = dbxForgeAddressLineField({ line: 1, required: true });
+ * const line2 = dbxForgeAddressLineField({ line: 2 });
  * ```
  */
 export function dbxForgeAddressLineField(config: DbxForgeAddressLineFieldConfig = {}) {
@@ -85,7 +85,7 @@ export function dbxForgeAddressLineField(config: DbxForgeAddressLineFieldConfig 
  *
  * @example
  * ```typescript
- * const fields = forgeAddressFields({ required: true, includeCountry: false });
+ * const fields = dbxForgeAddressFields({ required: true, includeCountry: false });
  * ```
  */
 export function dbxForgeAddressFields(config: DbxForgeAddressFieldsConfig = {}) {
@@ -135,7 +135,7 @@ export interface DbxForgeAddressFieldConfig extends DbxForgeAddressFieldsConfig 
  *
  * @example
  * ```typescript
- * const field = forgeAddressField({ required: true, includeCountry: true });
+ * const field = dbxForgeAddressField({ required: true, includeCountry: true });
  * ```
  */
 export function dbxForgeAddressField(config: Partial<DbxForgeAddressFieldConfig> = {}): GroupField {
@@ -168,7 +168,7 @@ export interface DbxForgeAddressListFieldConfig extends DbxForgeAddressFieldsCon
  *
  * @example
  * ```typescript
- * const field = forgeAddressListField({ maxAddresses: 3, required: true });
+ * const field = dbxForgeAddressListField({ maxAddresses: 3, required: true });
  * ```
  */
 export function dbxForgeAddressListField(config: Partial<DbxForgeAddressListFieldConfig> = {}) {
@@ -185,13 +185,3 @@ export function dbxForgeAddressListField(config: Partial<DbxForgeAddressListFiel
     maxLength: maxAddresses
   });
 }
-
-// MARK: Deprecated
-/** @deprecated Use {@link dbxForgeAddressLineField} instead. */
-export const forgeAddressLineField = dbxForgeAddressLineField;
-/** @deprecated Use {@link dbxForgeAddressFields} instead. */
-export const forgeAddressFields = dbxForgeAddressFields;
-/** @deprecated Use {@link dbxForgeAddressField} instead. */
-export const forgeAddressField = dbxForgeAddressField;
-/** @deprecated Use {@link dbxForgeAddressListField} instead. */
-export const forgeAddressListField = dbxForgeAddressListField;

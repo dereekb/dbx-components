@@ -4,13 +4,6 @@
 
 // MARK: Mixin
 @mixin core() {
-  // Forge flex row relative mode: override ng-forge grid column count
-  @for $i from 1 through 12 {
-    .dbx-forge-flex-#{$i} {
-      --df-grid-columns: #{$i};
-    }
-  }
-
   // Forge styled box: outlined box around fields that don't use mat-form-field (checkbox, toggle, slider).
   // Mirrors the Material outlined form-field appearance (border-radius, padding, min-height, hint styling).
   .dbx-forge-styled-box {

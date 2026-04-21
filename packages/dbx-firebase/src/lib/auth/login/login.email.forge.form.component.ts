@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { AbstractConfigAsyncForgeFormDirective, DBX_FORGE_FORM_COMPONENT_TEMPLATE, dbxForgeFormComponentProviders, DbxForgeFormComponentImportsModule, forgeUsernameLoginField, forgeTextPasswordField, forgeTextVerifyPasswordField, type DbxForgeTextPasswordFieldConfig, type DefaultUsernameLoginFieldsValue } from '@dereekb/dbx-form';
+import { AbstractConfigAsyncForgeFormDirective, DBX_FORGE_FORM_COMPONENT_TEMPLATE, dbxForgeFormComponentProviders, DbxForgeFormComponentImportsModule, dbxForgeUsernameLoginField, dbxForgeTextPasswordField, dbxForgeTextVerifyPasswordField, type DbxForgeTextPasswordFieldConfig, type DefaultUsernameLoginFieldsValue } from '@dereekb/dbx-form';
 import { type Maybe } from '@dereekb/util';
 import type { FormConfig } from '@ng-forge/dynamic-forms';
 import { map, type Observable } from 'rxjs';
@@ -41,7 +41,7 @@ export class DbxFirebaseEmailForgeFormComponent extends AbstractConfigAsyncForge
       const loginMode = config.loginMode ?? 'login';
       const passwordConfig = config.passwordConfig;
 
-      const fields = [forgeUsernameLoginField('email'), forgeTextPasswordField(passwordConfig), ...(loginMode === 'register' ? [forgeTextVerifyPasswordField()] : [])];
+      const fields = [dbxForgeUsernameLoginField('email'), dbxForgeTextPasswordField(passwordConfig), ...(loginMode === 'register' ? [dbxForgeTextVerifyPasswordField()] : [])];
       return { fields };
     })
   );

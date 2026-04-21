@@ -9,8 +9,8 @@ import { provideDbxFormConfiguration } from '../../form.providers';
 import { DbxForgeFormComponent } from './forge.component';
 import { DbxForgeFormContext, provideDbxForgeFormContext } from './forge.context';
 import { DbxFormSourceDirective } from '../../form/io/form.input.directive';
-import { forgeTextField } from '../field/value/text/text.field';
-import { forgeNumberField } from '../field/value/number/number.field';
+import { dbxForgeTextField } from '../field/value/text/text.field';
+import { dbxForgeNumberField } from '../field/value/number/number.field';
 import type { Maybe } from '@dereekb/util';
 import type { ObservableOrValue } from '@dereekb/rxjs';
 import type { DbxFormSourceDirectiveMode } from '../../form/io/form.input.directive';
@@ -63,13 +63,13 @@ async function settle(fixture: ComponentFixture<any>): Promise<void> {
 
 function createNameFieldConfig(required = false): FormConfig {
   return {
-    fields: [forgeTextField({ key: 'name', label: 'Name', required }) as any]
+    fields: [dbxForgeTextField({ key: 'name', label: 'Name', required }) as any]
   };
 }
 
 function createNameAndAgeFieldConfig(nameRequired = false): FormConfig {
   return {
-    fields: [forgeTextField({ key: 'name', label: 'Name', required: nameRequired }) as any, forgeNumberField({ key: 'age', label: 'Age' }) as any]
+    fields: [dbxForgeTextField({ key: 'name', label: 'Name', required: nameRequired }) as any, dbxForgeNumberField({ key: 'age', label: 'Age' }) as any]
   };
 }
 

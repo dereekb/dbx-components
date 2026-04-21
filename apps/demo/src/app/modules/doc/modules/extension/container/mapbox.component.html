@@ -152,17 +152,11 @@
       </mat-tab>
     </mat-tab-group>
     <h3>Forms</h3>
-    <doc-feature-example dbxMapboxStoreParentBlocker header="mapboxLatLngField()" hint="A latLng value picker using a Mapbox map.">
-      <doc-feature-form-tabs formlyFn="mapboxLatLngField()" forgeFn="forgeMapboxLatLngField()">
-        <doc-form-example-form formly [dbxFormlyFields]="mapboxLatLngField" [dbxFormSource]="defaultLatLngFieldValue"></doc-form-example-form>
-        <doc-forge-example-form forge [config]="forgeMapboxLatLngFieldConfig" [dbxFormSource]="defaultLatLngFieldValue"></doc-forge-example-form>
-      </doc-feature-form-tabs>
+    <doc-feature-example dbxMapboxStoreParentBlocker header="dbxForgeMapboxLatLngField()" hint="A latLng value picker using a Mapbox map.">
+      <doc-forge-example-form [config]="forgeMapboxLatLngFieldConfig" [dbxFormSource]="defaultLatLngFieldValue"></doc-forge-example-form>
     </doc-feature-example>
-    <doc-feature-example dbxMapboxStoreParentBlocker header="mapboxZoomField()" hint="A latLng value picker using a Mapbox map.">
-      <doc-feature-form-tabs formlyFn="mapboxZoomField()" forgeFn="forgeMapboxZoomField()">
-        <doc-form-example-form formly [dbxFormlyFields]="mapboxZoomField" [dbxFormSource]="defaultZoomFieldValue"></doc-form-example-form>
-        <doc-forge-example-form forge [config]="forgeMapboxZoomFieldConfig" [dbxFormSource]="defaultZoomFieldValue"></doc-forge-example-form>
-      </doc-feature-form-tabs>
+    <doc-feature-example dbxMapboxStoreParentBlocker header="dbxForgeMapboxZoomField()" hint="A latLng value picker using a Mapbox map.">
+      <doc-forge-example-form [config]="forgeMapboxZoomFieldConfig" [dbxFormSource]="defaultZoomFieldValue"></doc-forge-example-form>
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

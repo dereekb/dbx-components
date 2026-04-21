@@ -29,7 +29,7 @@ export interface DbxForgeToggleFieldConfig extends DbxForgeFieldFunctionDef<MatT
  *
  * @example
  * ```typescript
- * const field = forgeToggleField({ key: 'active', label: 'Active', value: true });
+ * const field = dbxForgeToggleField({ key: 'active', label: 'Active', value: true });
  * ```
  */
 export const dbxForgeToggleField = dbxForgeFieldFunction<DbxForgeToggleFieldConfig>({
@@ -63,7 +63,7 @@ export interface DbxForgeCheckboxFieldConfig extends DbxForgeFieldFunctionDef<Ma
  *
  * @example
  * ```typescript
- * const field = forgeCheckboxField({ key: 'agree', label: 'I agree to the terms' });
+ * const field = dbxForgeCheckboxField({ key: 'agree', label: 'I agree to the terms' });
  * ```
  */
 export const dbxForgeCheckboxField = dbxForgeFieldFunction<DbxForgeCheckboxFieldConfig>({
@@ -75,9 +75,3 @@ export const dbxForgeCheckboxField = dbxForgeFieldFunction<DbxForgeCheckboxField
     }
   })
 }) as DbxForgeFieldFunction<DbxForgeCheckboxFieldConfig, MatCheckboxField>;
-
-// MARK: Deprecated
-/** @deprecated Use {@link dbxForgeToggleField} instead. */
-export const forgeToggleField = dbxForgeToggleField;
-/** @deprecated Use {@link dbxForgeCheckboxField} instead. */
-export const forgeCheckboxField = dbxForgeCheckboxField;

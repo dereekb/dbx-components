@@ -1,7 +1,7 @@
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { DbxFormFormlyTextEditorFieldModule, formlyTextEditorField, forgeTextEditorField, DbxFormlyFieldsContextDirective } from '@dereekb/dbx-form';
+import { DbxFormFormlyTextEditorFieldModule, formlyTextEditorField, dbxForgeTextEditorField, DbxFormlyFieldsContextDirective } from '@dereekb/dbx-form';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureDerivedComponent } from '../../shared/component/feature.derived.component';
@@ -27,7 +27,7 @@ export class DocFormTextEditorComponent {
 
   readonly forgeTextEditorFieldConfig: FormConfig = {
     fields: [
-      forgeTextEditorField({
+      dbxForgeTextEditorField({
         key: 'editor',
         label: 'Text Editor',
         description: 'This is a text editor.'

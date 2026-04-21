@@ -3,15 +3,21 @@
  */
 import { describe, it, expect } from 'vitest';
 import { expectTypeOf } from 'vitest';
-import { type DynamicText, type LogicConfig, type SchemaApplicationConfig, type ValidatorConfig, type ValidationMessages, type FormConfig, withLoggerConfig } from '@ng-forge/dynamic-forms';
+import { type DynamicText, type LogicConfig, type SchemaApplicationConfig, type ValidatorConfig, type ValidationMessages, type FormConfig, DynamicForm, EventDispatcher, DynamicFormLogger, NoopLogger, withLoggerConfig } from '@ng-forge/dynamic-forms';
 import { of } from 'rxjs';
 import type { DbxForgePickableChipFieldConfig } from './pickable-chip.field';
 import { dbxForgePickableChipField } from './pickable-chip.field';
 import type { DbxForgePickableChipFieldDef, DbxForgePickableFieldProps } from './pickable.field';
+import { DbxForgePickableChipFieldComponent } from './pickable-chip.field.component';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Component, ChangeDetectionStrategy, signal, provideZonelessChangeDetection } from '@angular/core';
+import { By } from '@angular/platform-browser';
 import { DBX_FORGE_TEST_PROVIDERS } from '../../../form/forge.component.spec';
 import { DbxForgeAsyncConfigFormComponent } from '../../../form';
 import { firstValueFrom } from 'rxjs';
+import { waitForMs, type Maybe } from '@dereekb/util';
+import { provideDbxForgeFormFieldDeclarations } from '../../../forge.providers';
+import { provideDbxFormConfiguration } from '../../../../form.providers';
 
 // MARK: Shared Stubs
 const stubLoadValues = () => of([{ value: 'a' }, { value: 'b' }]);
@@ -50,6 +56,8 @@ describe('DbxForgePickableChipFieldConfig - Exhaustive Whitelist', () => {
     | 'derivation'
     | 'schemas'
     | 'wrappers'
+    | 'skipAutoWrappers'
+    | 'skipDefaultWrappers'
     | 'col'
     | 'tabIndex'
     | 'excludeValueIfHidden'
@@ -143,6 +151,8 @@ describe('DbxForgePickableChipFieldDef - Exhaustive Whitelist', () => {
     | 'derivation'
     | 'schemas'
     | 'wrappers'
+    | 'skipAutoWrappers'
+    | 'skipDefaultWrappers'
     // From BaseValueField
     | 'value'
     | 'placeholder';
@@ -364,5 +374,127 @@ describe('scenarios', () => {
       expect(formConfig.fields.length).toBe(1);
       expect(formConfig.fields[0].type).toBe('dbx-pickable-chip');
     });
+  });
+
+  describe('initial value', () => {
+    // Regression test for a bug where the demo's String Item Chips field was
+    // emitting { stringItemChips: [''] } when no items had been selected, and
+    // { stringItemChips: ['', 'a'] } after the user picked 'a'.
+    //
+    // Root cause: ng-forge defaults a string-typed field to `''` before any
+    // user interaction. AbstractForgePickableItemFieldDirective's sync effect
+    // then runs `convertMaybeToArray('')` which produces `['']` rather than
+    // `[]`, and that bogus empty-string "selection" gets persisted back into
+    // the form value the next time the user toggles a chip.
+    it('should not emit an array containing an empty string when no items are selected', async () => {
+      const field = dbxForgePickableChipField({
+        key: 'stringItemChips',
+        label: 'String Item Chips',
+        hint: 'This is a simple string item chip picker.',
+        props: {
+          loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
+          displayForValue: stubDisplayForValue
+        }
+      } as DbxForgePickableChipFieldConfig<string>);
+
+      // Inspect the raw form value so a `['']` leak through stripEmptyForgeValues is visible.
+      const context = fixture.componentInstance.context;
+      context.stripEmptyValues = false;
+      context.stripInternalKeys = false;
+      context.requireValid = false;
+
+      fixture.componentInstance.config.set({ fields: [field] });
+
+      fixture.detectChanges();
+      await fixture.whenStable();
+      // Extra settle for the lazy-loaded chip field component + its sync effect.
+      await waitForMs(200);
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const value = (await firstValueFrom(fixture.componentInstance.getValue())) as { stringItemChips?: unknown };
+      expect(value.stringItemChips).not.toEqual(['']);
+    });
+  });
+});
+
+// ============================================================================
+// DbxForgePickableChipFieldComponent — direct component interaction
+// ============================================================================
+
+@Component({
+  template: `
+    @if (config) {
+      <form [dynamic-form]="config" [(value)]="formValue"></form>
+    }
+  `,
+  standalone: true,
+  imports: [DynamicForm],
+  providers: [EventDispatcher],
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+class TestForgePickableChipHostComponent {
+  config!: FormConfig;
+  readonly formValue = signal<any>({});
+}
+
+const FORGE_PICKABLE_CHIP_TEST_PROVIDERS = [provideZonelessChangeDetection(), provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), { provide: DynamicFormLogger, useClass: NoopLogger }];
+
+function getChipComponent(fixture: ComponentFixture<TestForgePickableChipHostComponent>): Maybe<DbxForgePickableChipFieldComponent<string>> {
+  return fixture.debugElement.query(By.directive(DbxForgePickableChipFieldComponent))?.componentInstance as Maybe<DbxForgePickableChipFieldComponent<string>>;
+}
+
+async function settle(fixture: ComponentFixture<TestForgePickableChipHostComponent>, ms = 300): Promise<void> {
+  fixture.detectChanges();
+  await waitForMs(ms);
+  fixture.detectChanges();
+  await waitForMs(50);
+  fixture.detectChanges();
+}
+
+describe('DbxForgePickableChipFieldComponent', () => {
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [TestForgePickableChipHostComponent],
+      providers: FORGE_PICKABLE_CHIP_TEST_PROVIDERS
+    });
+  });
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
+  });
+
+  it('should emit ["a"] (not ["", "a"]) after picking value "a" with no prior selection', async () => {
+    const field = dbxForgePickableChipField({
+      key: 'stringItemChips',
+      label: 'String Item Chips',
+      hint: 'This is a simple string item chip picker.',
+      props: {
+        loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
+        displayForValue: stubDisplayForValue
+      }
+    } as DbxForgePickableChipFieldConfig<string>);
+
+    const fixture = TestBed.createComponent(TestForgePickableChipHostComponent);
+    fixture.componentInstance.config = { fields: [field] };
+
+    await settle(fixture);
+
+    const chip = getChipComponent(fixture);
+    expect(chip).toBeDefined();
+
+    // Load the items the directive has built from the available values and
+    // simulate the user toggling the first one ("a"). This mirrors what the
+    // chip template does when the user clicks a mat-chip.
+    const items = chip!.itemsSignal();
+    const itemA = items.find((x) => (x.itemValue as any).value === 'a');
+    expect(itemA).toBeDefined();
+    chip!.itemClicked(itemA!);
+
+    await settle(fixture);
+
+    expect(fixture.componentInstance.formValue()).toEqual({ stringItemChips: ['a'] });
+
+    fixture.destroy();
   });
 });

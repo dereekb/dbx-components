@@ -63,14 +63,24 @@ describe('dbxForgeArrayField()', () => {
   });
 
   describe('element wrapper', () => {
+    // The container + element wrapper now live on the outer array wrapper's itemTemplate,
+    // not on field.fields. The array starts empty and items are spawned from itemTemplate.
+    function getOuterWrapper(field: any): any {
+      return (field.wrappers as any[]).find((w) => w.type === DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME);
+    }
+
+    function getContainer(field: any): any {
+      return getOuterWrapper(field).props.itemTemplate[0];
+    }
+
     function getElementWrapper(field: any): any {
-      return field.fields[0].wrappers[0];
+      return getContainer(field).wrappers[0];
     }
 
     it('should wrap fields in a ContainerField with the element wrapper', () => {
       const field = dbxForgeArrayField({ key: 'items', template: basicFields }) as any;
-      expect(field.fields).toHaveLength(1);
-      expect(field.fields[0].type).toBe('container');
+      const container = getContainer(field);
+      expect(container.type).toBe('container');
 
       const elementWrapper = getElementWrapper(field);
       expect(elementWrapper.type).toBe(DBX_FORGE_ARRAY_FIELD_ELEMENT_WRAPPER_NAME);
@@ -83,7 +93,8 @@ describe('dbxForgeArrayField()', () => {
       ] as any[];
 
       const field = dbxForgeArrayField({ key: 'items', template: fields }) as any;
-      expect(field.fields).toEqual([]); // array starts empty now
+      const container = getContainer(field);
+      expect(container.fields).toEqual(fields);
     });
 
     it('should pass elementProps to the element wrapper', () => {

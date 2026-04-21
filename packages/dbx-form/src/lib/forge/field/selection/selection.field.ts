@@ -37,7 +37,7 @@ export interface DbxForgeValueSelectionFieldConfig<T = unknown> extends DbxForge
 }
 
 /**
- * Generic function type for forgeValueSelectionField to preserve caller generics.
+ * Generic function type for dbxForgeValueSelectionField to preserve caller generics.
  */
 export type DbxForgeValueSelectionFieldFunction = <T = unknown>(config: DbxForgeValueSelectionFieldConfig<T>) => DbxForgeField<DbxForgeValueSelectionFieldDef<T>>;
 
@@ -59,14 +59,14 @@ export type ForgeValueSelectionFieldFunction = DbxForgeValueSelectionFieldFuncti
  * @example
  * ```typescript
  * // Static options
- * const field = forgeValueSelectionField({
+ * const field = dbxForgeValueSelectionField({
  *   key: 'color',
  *   label: 'Color',
  *   options: [{ label: 'Red', value: 'red' }, { label: 'Blue', value: 'blue' }]
  * });
  *
  * // Observable options
- * const field = forgeValueSelectionField({
+ * const field = dbxForgeValueSelectionField({
  *   key: 'status',
  *   label: 'Status',
  *   options: status$.pipe(map(statuses => statuses.map(s => ({ label: s.name, value: s.id })))),
@@ -84,7 +84,3 @@ export const dbxForgeValueSelectionField = dbxForgeFieldFunction<DbxForgeValueSe
     })
   )
 }) as DbxForgeValueSelectionFieldFunction;
-
-// MARK: Deprecated
-/** @deprecated Use {@link dbxForgeValueSelectionField} instead. */
-export const forgeValueSelectionField = dbxForgeValueSelectionField;

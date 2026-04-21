@@ -10,7 +10,7 @@ export interface DateScheduleRangeFieldConfig extends Omit<LabeledBaseFieldConfi
 /**
  * Creates a Formly field configuration for a date schedule range picker with calendar-based selection.
  *
- * @deprecated Use forgeDateScheduleRangeField() from the forge API instead.
+ * @deprecated Use dbxForgeDateScheduleRangeField() from the forge API instead.
  * @param config - Optional schedule range field configuration overrides
  * @returns A validated Formly field configuration for date schedule range selection
  */

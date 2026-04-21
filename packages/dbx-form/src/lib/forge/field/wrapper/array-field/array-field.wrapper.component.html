@@ -12,7 +12,7 @@
   </div>
   @if (allowAddSignal()) {
     <div class="dbx-form-repeat-array-footer">
-      <dbx-button [text]="addTextSignal()" [buttonStyle]="addButtonStyleSignal()" [disabled]="isDisabled()" (buttonClick)="addItem()"></dbx-button>
+      <dbx-button [text]="addTextSignal()" [buttonStyle]="addButtonStyleSignal()" [disabled]="addButtonDisabledSignal()" (buttonClick)="addItem()"></dbx-button>
     </div>
   }
 </div>

@@ -64,7 +64,7 @@ export interface DbxForgeTextFieldConfig extends DbxForgeFieldFunctionDef<DbxFor
  *
  * @example
  * ```typescript
- * const field = forgeTextField({
+ * const field = dbxForgeTextField({
  *   key: 'email',
  *   label: 'Email',
  *   required: true,
@@ -102,7 +102,3 @@ export const dbxForgeTextField = dbxForgeFieldFunction<DbxForgeTextFieldConfig>(
     }
   })
 }) as DbxForgeFieldFunction<DbxForgeTextFieldConfig, MatInputField>;
-
-// MARK: Deprecated
-/** @deprecated Use {@link dbxForgeTextField} instead. */
-export const forgeTextField = dbxForgeTextField;

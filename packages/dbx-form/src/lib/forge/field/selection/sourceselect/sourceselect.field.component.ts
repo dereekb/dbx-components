@@ -13,7 +13,7 @@ import { DbxActionModule, DbxButtonComponent, DbxLoadingComponent } from '@deree
 import { BehaviorSubject, combineLatest, distinctUntilChanged, first, map, mergeMap, of, scan, shareReplay, switchMap, tap, type Observable } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type SourceSelectDisplayFunction, type SourceSelectDisplayValue, type SourceSelectDisplayValueGroup, type SourceSelectLoadSource, type SourceSelectLoadSourceLoadingState, type SourceSelectMetaValueReader, type SourceSelectOpenFunction, type SourceSelectOpenSourceResult, type SourceSelectLoadSourcesFunction, type SourceSelectOptions, type SourceSelectValue, type SourceSelectValueGroup, type SourceSelectValueMetaLoader } from '../../../../formly/field/selection/sourceselect/sourceselect';
-import { forgeFieldDisabled } from '../../field.util';
+import { dbxForgeFieldDisabled } from '../../field.util';
 
 // MARK: Props
 /**
@@ -94,7 +94,7 @@ export class DbxForgeSourceSelectFieldComponent<T extends PrimativeKey = Primati
   readonly defaultValidationMessages = input<ValidationMessages | undefined>();
 
   // Disabled state
-  readonly isDisabled = forgeFieldDisabled();
+  readonly isDisabled = dbxForgeFieldDisabled();
 
   private readonly _cacheMetaSub = new SubscriptionObject();
   private readonly _clearDisplayHashMapSub = new SubscriptionObject();

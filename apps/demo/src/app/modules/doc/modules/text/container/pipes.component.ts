@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, type OnDestroy } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type Maybe, type TimezoneString } from '@dereekb/util';
-import { forgeDateTimeField, forgeTimezoneStringField, DbxFormSourceDirective, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
+import { dbxForgeDateTimeField, dbxForgeTimezoneStringField, DbxFormSourceDirective, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
 import type { FormConfig } from '@ng-forge/dynamic-forms';
 import { BehaviorSubject, delay, map, of, shareReplay } from 'rxjs';
 import { DateRangeType, dateRange, guessCurrentTimezone } from '@dereekb/date';
@@ -72,7 +72,7 @@ export class DocTextPipesComponent implements OnDestroy {
   readonly timezone$ = this._timezone.asObservable();
   readonly timezoneSignal = toSignal(this.timezone$, { initialValue: undefined });
   readonly dateTimezoneConfig: FormConfig = {
-    fields: [forgeDateTimeField({ timezone: this.timezone$, key: 'date', required: true, description: 'This is the default date field that requires the user pick a date and time.' }), forgeTimezoneStringField({ required: false })]
+    fields: [dbxForgeDateTimeField({ timezone: this.timezone$, key: 'date', required: true, description: 'This is the default date field that requires the user pick a date and time.' }), dbxForgeTimezoneStringField({ required: false })]
   } as FormConfig;
 
   readonly onDateTimezoneChange = (value: { date: Maybe<Date>; timezone: Maybe<TimezoneString> }) => {

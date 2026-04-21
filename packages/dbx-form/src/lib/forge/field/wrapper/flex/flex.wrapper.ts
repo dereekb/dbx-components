@@ -80,17 +80,17 @@ function isFlexFieldConfig(input: FieldDef<unknown> | DbxForgeFlexLayoutFieldCon
  * @example
  * ```typescript
  * // Simple: all fields get default size (2)
- * forgeFlexLayout([forgeCityField({}), forgeStateField({}), forgeZipCodeField({})])
+ * dbxForgeFlexLayout([dbxForgeCityField({}), dbxForgeStateField({}), dbxForgeZipCodeField({})])
  *
  * // With per-field sizing and breakpoint
- * forgeFlexLayout([
- *   { field: forgeCityField({}), size: 4 },
- *   forgeStateField({}),
- *   forgeZipCodeField({})
+ * dbxForgeFlexLayout([
+ *   { field: dbxForgeCityField({}), size: 4 },
+ *   dbxForgeStateField({}),
+ *   dbxForgeZipCodeField({})
  * ], { breakpoint: 'small', size: 1 })
  *
  * // Full config
- * forgeFlexLayout([...fields], { breakpoint: 'large', breakToColumn: true, relative: true, size: 1 })
+ * dbxForgeFlexLayout([...fields], { breakpoint: 'large', breakToColumn: true, relative: true, size: 1 })
  * ```
  */
 export function dbxForgeFlexLayout(fieldConfigs: (FieldDef<unknown> | DbxForgeFlexLayoutFieldConfig)[], config: DbxForgeFlexLayoutConfig = {}): GroupField {
@@ -116,7 +116,3 @@ export function dbxForgeFlexLayout(fieldConfigs: (FieldDef<unknown> | DbxForgeFl
     wrappers: [flexWrapper]
   });
 }
-
-// MARK: Deprecated
-/** @deprecated Use {@link dbxForgeFlexLayout} instead. */
-export const forgeFlexLayout = dbxForgeFlexLayout;

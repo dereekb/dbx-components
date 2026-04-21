@@ -53,6 +53,26 @@ export class DbxForgeArrayFieldWrapperComponent implements FieldWrapperContract 
 
   readonly addButtonStyleSignal = computed<DbxButtonStyle>(() => this.props()?.addButtonStyle ?? { type: 'raised', color: 'primary' });
 
+  /**
+   * Current item count read reactively from the form value.
+   */
+  readonly itemCountSignal = computed(() => this._readArrayValue().length);
+
+  /**
+   * Whether the array has reached its configured `maxLength`. When true, the
+   * add button is disabled. Returns false when `maxLength` is not set.
+   */
+  readonly atMaxLengthSignal = computed(() => {
+    const maxLength = this.props()?.maxLength;
+    return typeof maxLength === 'number' && this.itemCountSignal() >= maxLength;
+  });
+
+  /**
+   * Add button disabled state — combines the standard disabled flag with the
+   * `maxLength` cap so clicking past the limit is prevented.
+   */
+  readonly addButtonDisabledSignal = computed(() => this.isDisabled() || this.atMaxLengthSignal());
+
   constructor() {
     console.log('init?');
   }
@@ -126,12 +146,14 @@ export class DbxForgeArrayFieldWrapperComponent implements FieldWrapperContract 
 
   /**
    * Appends a new item to the end of the array using the item template.
+   *
+   * No-ops when the array has reached its configured `maxLength`.
    */
   addItem(): void {
     const template = this._itemTemplate();
     const key = this._arrayKey();
 
-    if (!template || !key) {
+    if (!template || !key || this.atMaxLengthSignal()) {
       return;
     }
 

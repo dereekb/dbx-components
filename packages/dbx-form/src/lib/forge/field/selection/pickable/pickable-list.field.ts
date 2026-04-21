@@ -20,7 +20,7 @@ export type DbxForgePickableListFieldFunction = <T = unknown, M = unknown, H ext
  *
  * @example
  * ```typescript
- * const field = forgePickableListField({
+ * const field = dbxForgePickableListField({
  *   key: 'categories',
  *   label: 'Categories',
  *   loadValues: () => categories$,
@@ -37,7 +37,3 @@ export const dbxForgePickableListField = dbxForgeFieldFunction<DbxForgePickableL
     x.configure(configureDbxForgeFormFieldWrapper);
   })
 }) as DbxForgePickableListFieldFunction;
-
-// MARK: Deprecated
-/** @deprecated Use {@link dbxForgePickableListField} instead. */
-export const forgePickableListField = dbxForgePickableListField;

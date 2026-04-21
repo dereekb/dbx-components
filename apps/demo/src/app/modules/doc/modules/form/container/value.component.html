@@ -3,7 +3,7 @@
     <!-- Examples -->
     <doc-feature-example header="phoneField()" hint="Used to configure a phone input field.">
       <h4>Phone Number Only</h4>
-      <doc-feature-form-tabs #formTabs formlyFn="formlyPhoneField()" forgeFn="forgePhoneField()">
+      <doc-feature-form-tabs #formTabs formlyFn="formlyPhoneField()" forgeFn="dbxForgePhoneField()">
         <doc-form-example-form formly [dbxFormlyFields]="phoneFields" [disabled]="formTabs.disabled()"></doc-form-example-form>
         <doc-forge-example-form forge [config]="forgePhoneFieldsConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
@@ -20,25 +20,25 @@
     </doc-feature-example>
     <doc-feature-example header="textField()" hint="Used to configure a text field.">
       <p>There are also several helper builders available.</p>
-      <doc-feature-form-tabs formlyFn="formlyTextField()" forgeFn="forgeTextField()">
+      <doc-feature-form-tabs formlyFn="formlyTextField()" forgeFn="dbxForgeTextField()">
         <doc-form-example-form formly [dbxFormlyFields]="textFields" [disabled]="formTabs.disabled()"></doc-form-example-form>
         <doc-forge-example-form forge [config]="forgeTextFieldsConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
     </doc-feature-example>
     <doc-feature-example header="numberField()" hint="Used to configure a number field.">
-      <doc-feature-form-tabs formlyFn="formlyNumberField()" forgeFn="forgeNumberField()">
+      <doc-feature-form-tabs formlyFn="formlyNumberField()" forgeFn="dbxForgeNumberField()">
         <doc-form-example-form formly [dbxFormlyFields]="numberFields" [disabled]="formTabs.disabled()"></doc-form-example-form>
         <doc-forge-example-form forge [config]="forgeNumberFieldsConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
     </doc-feature-example>
     <doc-feature-example header="numberSliderField()" hint="Used to configure a number field using a slider.">
-      <doc-feature-form-tabs formlyFn="formlyNumberSliderField()" forgeFn="forgeNumberSliderField()">
+      <doc-feature-form-tabs formlyFn="formlyNumberSliderField()" forgeFn="dbxForgeNumberSliderField()">
         <doc-form-example-form formly [dbxFormlyFields]="numberSliderFields" [disabled]="formTabs.disabled()"></doc-form-example-form>
         <doc-forge-example-form forge [config]="forgeNumberSliderFieldsConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
     </doc-feature-example>
     <doc-feature-example header="textAreaField()" hint="Used to configure a text area.">
-      <doc-feature-form-tabs formlyFn="formlyTextAreaField()" forgeFn="forgeTextAreaField()">
+      <doc-feature-form-tabs formlyFn="formlyTextAreaField()" forgeFn="dbxForgeTextAreaField()">
         <doc-form-example-form formly [dbxFormlyFields]="textAreaField" [disabled]="formTabs.disabled()"></doc-form-example-form>
         <doc-forge-example-form forge [config]="forgeTextAreaFieldConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
@@ -47,7 +47,7 @@
       <doc-form-example-form [dbxFormlyFields]="latLngTextField" [disabled]="formTabs.disabled()"></doc-form-example-form>
     </doc-feature-example>
     <doc-feature-example header="toggleField()" hint="">
-      <doc-feature-form-tabs formlyFn="formlyToggleField()" forgeFn="forgeToggleField()">
+      <doc-feature-form-tabs formlyFn="formlyToggleField()" forgeFn="dbxForgeToggleField()">
         <doc-form-example-form formly [dbxFormlyFields]="toggleField" [disabled]="formTabs.disabled()"></doc-form-example-form>
         <doc-forge-example-form forge [config]="forgeToggleFieldConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
@@ -56,24 +56,24 @@
       <doc-forge-example-form [config]="forgeToggleNoBoxFieldConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
     </doc-feature-example>
     <doc-feature-example header="checkboxField()" hint="">
-      <doc-feature-form-tabs formlyFn="formlyCheckboxField()" forgeFn="forgeCheckboxField()">
+      <doc-feature-form-tabs formlyFn="formlyCheckboxField()" forgeFn="dbxForgeCheckboxField()">
         <doc-form-example-form formly [dbxFormlyFields]="checkboxField" [disabled]="formTabs.disabled()"></doc-form-example-form>
         <doc-forge-example-form forge [config]="forgeCheckboxFieldConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
     </doc-feature-example>
     <doc-feature-example header="addressField()" hint="Used to configure an address.">
       <h4>Default Address</h4>
-      <doc-feature-form-tabs formlyFn="formlyAddressField()" forgeFn="forgeAddressField()">
+      <doc-feature-form-tabs formlyFn="formlyAddressField()" forgeFn="dbxForgeAddressField()">
         <doc-form-example-form formly [dbxFormlyFields]="addressField" [disabled]="formTabs.disabled()"></doc-form-example-form>
         <doc-forge-example-form forge [config]="forgeAddressFieldConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
       <h4>Slim Address</h4>
-      <doc-feature-form-tabs formlyFn="formlyAddressField()" forgeFn="forgeAddressField()">
+      <doc-feature-form-tabs formlyFn="formlyAddressField()" forgeFn="dbxForgeAddressField()">
         <doc-form-example-form formly [dbxFormlyFields]="slimAddressField" [disabled]="formTabs.disabled()"></doc-form-example-form>
         <doc-forge-example-form forge [config]="forgeSlimAddressFieldConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
       <h4>Address List</h4>
-      <doc-feature-form-tabs formlyFn="formlyAddressListField()" forgeFn="forgeAddressListField()">
+      <doc-feature-form-tabs formlyFn="formlyAddressListField()" forgeFn="dbxForgeAddressListField()">
         <doc-form-example-form formly [dbxFormlyFields]="addressListFields" [disabled]="formTabs.disabled()"></doc-form-example-form>
         <doc-forge-example-form forge [config]="forgeAddressListFieldConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>

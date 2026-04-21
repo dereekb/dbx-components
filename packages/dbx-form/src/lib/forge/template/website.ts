@@ -1,4 +1,4 @@
-import { forgeTextField, type DbxForgeTextFieldConfig } from '../field/value/text/text.field';
+import { dbxForgeTextField, type DbxForgeTextFieldConfig } from '../field/value/text/text.field';
 
 /**
  * Configuration for a forge website URL text field.
@@ -19,11 +19,11 @@ export interface DbxForgeWebsiteUrlFieldConfig extends Omit<DbxForgeTextFieldCon
  *
  * @example
  * ```typescript
- * const field = forgeWebsiteUrlField();
+ * const field = dbxForgeWebsiteUrlField();
  * ```
  */
-export function forgeWebsiteUrlField(config?: DbxForgeWebsiteUrlFieldConfig) {
-  return forgeTextField({
+export function dbxForgeWebsiteUrlField(config?: DbxForgeWebsiteUrlFieldConfig) {
+  return dbxForgeTextField({
     key: 'website',
     ...config,
     label: config?.label ?? 'Website Url',

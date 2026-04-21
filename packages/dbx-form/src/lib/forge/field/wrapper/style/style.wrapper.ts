@@ -46,7 +46,7 @@ export interface DbxForgeStyleWrapper {
  *
  * @example
  * ```typescript
- * forgeNameField({
+ * dbxForgeNameField({
  *   wrappers: [dbxForgeStyleWrapper({ classGetter: 'highlight', styleGetter: { color: 'red' } })]
  * })
  * ```

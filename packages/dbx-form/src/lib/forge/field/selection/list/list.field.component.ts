@@ -10,7 +10,7 @@ import { type FieldTree } from '@angular/forms/signals';
 import { type DynamicText, type FieldMeta, type ValidationMessages } from '@ng-forge/dynamic-forms';
 import { createResolvedErrorsSignal, setupMetaTracking, shouldShowErrors } from '@ng-forge/dynamic-forms/integration';
 import { type DbxForgeListSelectionFieldProps } from './list.field';
-import { forgeFieldDisabled } from '../../field.util';
+import { dbxForgeFieldDisabled } from '../../field.util';
 
 // MARK: List Selection Field Component
 /**
@@ -43,7 +43,7 @@ export class DbxForgeListSelectionFieldComponent<T = unknown, C extends Abstract
   readonly defaultValidationMessages = input<ValidationMessages | undefined>();
 
   // Disabled state
-  readonly isDisabled = forgeFieldDisabled();
+  readonly isDisabled = dbxForgeFieldDisabled();
 
   private readonly _selectionEventSub = new SubscriptionObject();
   private readonly _loadMoreSub = new SubscriptionObject();

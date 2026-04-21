@@ -1,5 +1,5 @@
-import { forgeTextField, type DbxForgeTextFieldConfig } from '../field/value/text/text.field';
-import { forgeEmailField, type DbxForgeEmailFieldConfig } from '../field/value/text/text.additional.field';
+import { dbxForgeTextField, type DbxForgeTextFieldConfig } from '../field/value/text/text.field';
+import { dbxForgeEmailField, type DbxForgeEmailFieldConfig } from '../field/value/text/text.additional.field';
 
 // MARK: Password Field
 /**
@@ -17,11 +17,11 @@ export interface DbxForgeTextPasswordFieldConfig extends Omit<DbxForgeTextFieldC
  *
  * @example
  * ```typescript
- * const field = forgeTextPasswordField();
+ * const field = dbxForgeTextPasswordField();
  * ```
  */
-export function forgeTextPasswordField(config?: DbxForgeTextPasswordFieldConfig) {
-  return forgeTextField({
+export function dbxForgeTextPasswordField(config?: DbxForgeTextPasswordFieldConfig) {
+  return dbxForgeTextField({
     key: 'password',
     ...config,
     label: config?.label ?? 'Password',
@@ -40,11 +40,11 @@ export function forgeTextPasswordField(config?: DbxForgeTextPasswordFieldConfig)
  *
  * @example
  * ```typescript
- * const field = forgeTextVerifyPasswordField();
+ * const field = dbxForgeTextVerifyPasswordField();
  * ```
  */
-export function forgeTextVerifyPasswordField(config?: DbxForgeTextPasswordFieldConfig) {
-  return forgeTextPasswordField({
+export function dbxForgeTextVerifyPasswordField(config?: DbxForgeTextPasswordFieldConfig) {
+  return dbxForgeTextPasswordField({
     key: 'verifyPassword',
     label: 'Verify Password',
     ...config,
@@ -98,12 +98,12 @@ export interface DbxForgeUsernameLoginFieldsConfig {
  *
  * @example
  * ```typescript
- * const fields = forgeUsernamePasswordLoginFields({ username: 'email' });
+ * const fields = dbxForgeUsernamePasswordLoginFields({ username: 'email' });
  * ```
  */
-export function forgeUsernamePasswordLoginFields(config: DbxForgeUsernameLoginFieldsConfig) {
-  const usernameField = forgeUsernameLoginField(config.username);
-  const passwordField = forgeTextPasswordField(config.password);
+export function dbxForgeUsernamePasswordLoginFields(config: DbxForgeUsernameLoginFieldsConfig) {
+  const usernameField = dbxForgeUsernameLoginField(config.username);
+  const passwordField = dbxForgeTextPasswordField(config.password);
 
   return [usernameField, passwordField];
 }
@@ -118,10 +118,10 @@ export function forgeUsernamePasswordLoginFields(config: DbxForgeUsernameLoginFi
  *
  * @example
  * ```typescript
- * const field = forgeUsernameLoginField('email');
+ * const field = dbxForgeUsernameLoginField('email');
  * ```
  */
-export function forgeUsernameLoginField(username: DbxForgeUsernameLoginFieldUsernameConfigInput) {
+export function dbxForgeUsernameLoginField(username: DbxForgeUsernameLoginFieldUsernameConfigInput) {
   let usernameFieldConfig: DbxForgeUsernameLoginFieldUsernameConfig = username as DbxForgeUsernameLoginFieldUsernameConfig;
 
   if (typeof username === 'string') {
@@ -133,8 +133,8 @@ export function forgeUsernameLoginField(username: DbxForgeUsernameLoginFieldUser
   }
 
   if (usernameFieldConfig.email) {
-    return forgeEmailField({ ...usernameFieldConfig.email, key: 'username' });
+    return dbxForgeEmailField({ ...usernameFieldConfig.email, key: 'username' });
   }
 
-  return forgeTextField({ ...usernameFieldConfig.username, key: 'username', required: true });
+  return dbxForgeTextField({ ...usernameFieldConfig.username, key: 'username', required: true });
 }

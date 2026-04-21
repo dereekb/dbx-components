@@ -45,7 +45,7 @@ export interface DbxForgeSectionWrapper {
  *
  * @example
  * ```typescript
- * forgeNameField({
+ * dbxForgeNameField({
  *   wrappers: [dbxForgeSectionWrapper({ headerConfig: { header: 'Contact' } })]
  * })
  * ```
@@ -60,7 +60,7 @@ export function dbxForgeSectionWrapper(config: Omit<DbxForgeSectionWrapper, 'typ
  *
  * @example
  * ```typescript
- * forgeNameField({
+ * dbxForgeNameField({
  *   wrappers: [dbxForgeSubsectionWrapper({ headerConfig: { header: 'Name' } })]
  * })
  * ```

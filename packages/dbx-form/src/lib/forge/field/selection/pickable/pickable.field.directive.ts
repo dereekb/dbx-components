@@ -1,6 +1,6 @@
 import { computed, Directive, effect, input, type InputSignal, type OnDestroy, type OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { type Maybe, type PrimativeKey, filterUniqueValues, convertMaybeToArray, type ArrayOrValue, type Configurable } from '@dereekb/util';
+import { type Maybe, type PrimativeKey, filterUniqueValues, convertMaybeToArray, filterEmptyArrayValues, type ArrayOrValue, type Configurable } from '@dereekb/util';
 import { SubscriptionObject, type LoadingState, successResult, startWithBeginLoading, mapLoadingStateResults } from '@dereekb/rxjs';
 import { BehaviorSubject, combineLatest, debounceTime, distinctUntilChanged, first, map, mergeMap, of, shareReplay, startWith, switchMap, type Observable } from 'rxjs';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
@@ -10,7 +10,7 @@ import { createResolvedErrorsSignal, shouldShowErrors } from '@ng-forge/dynamic-
 import { type PickableValueFieldDisplayFunction, type PickableValueFieldDisplayValue, type PickableValueFieldHashFunction, type PickableValueFieldValue } from '../../../../formly/field/selection/pickable/pickable';
 import { type PickableItemFieldItem } from '../../../../formly/field/selection/pickable/pickable.field.directive';
 import { type DbxForgePickableFieldProps } from './pickable.field';
-import { forgeFieldDisabled } from '../../field.util';
+import { dbxForgeFieldDisabled } from '../../field.util';
 
 /**
  * Display value augmented with its computed hash for deduplication.
@@ -55,7 +55,7 @@ export abstract class AbstractForgePickableItemFieldDirective<T = unknown, M = u
 
   readonly hintSignal = computed(() => this.props()?.hint);
   readonly multiSelectSignal = computed(() => this.props()?.multiSelect ?? true);
-  readonly isDisabled = forgeFieldDisabled();
+  readonly isDisabled = dbxForgeFieldDisabled();
   readonly readonlySignal = computed(() => {
     const fieldGetter = this.field();
     const fieldState = typeof fieldGetter === 'function' ? (fieldGetter as any)() : undefined;
@@ -194,7 +194,10 @@ export abstract class AbstractForgePickableItemFieldDirective<T = unknown, M = u
     const fieldGetter = this.field();
     const fieldState = typeof fieldGetter === 'function' ? (fieldGetter as any)() : undefined;
     const fieldValue = fieldState?.value?.() as Maybe<T | T[]>;
-    const values = fieldValue != null ? convertMaybeToArray(fieldValue as ArrayOrValue<T>) : [];
+    // Drop nullish/empty-string entries — ng-forge's default string seed for a
+    // T-typed field turns into [''] through convertMaybeToArray and would
+    // otherwise show up as a phantom selection when the user picks an item.
+    const values = filterEmptyArrayValues(convertMaybeToArray(fieldValue as ArrayOrValue<T>));
     this._valuesSubject.next(values);
   });
 

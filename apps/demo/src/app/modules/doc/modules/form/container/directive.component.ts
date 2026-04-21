@@ -3,7 +3,7 @@ import { Component, type OnInit, ChangeDetectionStrategy, inject } from '@angula
 import { cleanSubscription, completeOnDestroy } from '@dereekb/dbx-core';
 import { BehaviorSubject, map } from 'rxjs';
 import { formConfig, type FormConfig } from '@ng-forge/dynamic-forms';
-import { DbxFormFormlyTextFieldModule, DbxFormFormlyWrapperModule, type DbxFormSourceDirectiveMode, formlyTextField, forgeTextField, forgeEmailField, forgeToggleField, forgeNumberField, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormLoadingSourceDirective, DbxFormValueChangeDirective, DbxFormActionDialogComponent, DbxForgeActionDialogComponent } from '@dereekb/dbx-form';
+import { DbxFormFormlyTextFieldModule, DbxFormFormlyWrapperModule, type DbxFormSourceDirectiveMode, formlyTextField, dbxForgeTextField, dbxForgeEmailField, dbxForgeToggleField, dbxForgeNumberField, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormLoadingSourceDirective, DbxFormValueChangeDirective, DbxFormActionDialogComponent, DbxForgeActionDialogComponent } from '@dereekb/dbx-form';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { DbxContentContainerDirective, DbxContentBorderDirective } from '@dereekb/dbx-web';
 import { MatDialog } from '@angular/material/dialog';
@@ -49,7 +49,7 @@ export class DocFormDirectiveComponent implements OnInit {
 
   readonly forgeTestFieldsConfig: FormConfig = {
     fields: [
-      forgeTextField({
+      dbxForgeTextField({
         key: 'test',
         props: {
           type: 'password'
@@ -59,7 +59,7 @@ export class DocFormDirectiveComponent implements OnInit {
   } as const satisfies FormConfig;
 
   readonly forgeExampleConfig: FormConfig = {
-    fields: [forgeTextField({ key: 'name', label: 'Name', required: true, placeholder: 'Enter a name...' }), forgeEmailField({ key: 'email' }), forgeNumberField({ key: 'age', label: 'Age', min: 0, max: 120 }), forgeToggleField({ key: 'active', label: 'Active', description: 'Toggle active state.' })]
+    fields: [dbxForgeTextField({ key: 'name', label: 'Name', required: true, placeholder: 'Enter a name...' }), dbxForgeEmailField({ key: 'email' }), dbxForgeNumberField({ key: 'age', label: 'Age', min: 0, max: 120 }), dbxForgeToggleField({ key: 'active', label: 'Active', description: 'Toggle active state.' })]
   };
 
   readonly forgeExampleData = { name: 'Test User', email: 'test@example.com', age: 25, active: true };

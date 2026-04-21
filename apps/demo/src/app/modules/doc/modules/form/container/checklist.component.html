@@ -1,8 +1,8 @@
 <dbx-content-container>
   <doc-feature-layout header="Checklist Field" hint="A complex form field that is used to map values from the input data to boolean values to form a checklist. The value's display can be configured to display anything.">
     <!-- Examples -->
-    <doc-feature-example header="Example" hint="The formly version uses ChecklistItemFieldDataSetBuilder to map data values to boolean checklist items. The forge version uses forgeChecklistField() with static options.">
-      <doc-feature-form-tabs #formTabs formlyFn="formlyChecklistItemField()" forgeFn="forgeChecklistField()">
+    <doc-feature-example header="Example" hint="The formly version uses ChecklistItemFieldDataSetBuilder to map data values to boolean checklist items. The forge version uses dbxForgeChecklistField() with static options.">
+      <doc-feature-form-tabs #formTabs formlyFn="formlyChecklistItemField()" forgeFn="dbxForgeChecklistField()">
         <div formly>
           <doc-form-example-checklist-form (dbxFormValueChange)="value = $event" [dbxFormLoadingSource]="dataLoadingState$" [config]="config" [disabled]="formTabs.disabled()"></doc-form-example-checklist-form>
           <p>Value: {{ value | json }}</p>

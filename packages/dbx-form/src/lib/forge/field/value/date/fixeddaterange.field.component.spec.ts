@@ -4,7 +4,7 @@ import { Component, ChangeDetectionStrategy, signal, provideZonelessChangeDetect
 import { By } from '@angular/platform-browser';
 
 import { type FormConfig, type FormOptions, DynamicForm, EventDispatcher, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
-import { firstValueFrom, take } from 'rxjs';
+import { firstValueFrom, take, toArray } from 'rxjs';
 import { addDays, startOfDay } from 'date-fns';
 import { provideDbxForgeFormFieldDeclarations } from '../../../forge.providers';
 import { provideDbxFormConfiguration } from '../../../../form.providers';
@@ -75,7 +75,7 @@ describe('DbxForgeFixedDateRangeFieldComponent integration', () => {
             key: 'range',
             selectionMode: 'normal',
             dateRangeInput: { type: DateRangeType.WEEKS_RANGE, distance: 1 }
-          }) as any
+          })
         ]
       };
       await settle(fixture);
@@ -99,7 +99,7 @@ describe('DbxForgeFixedDateRangeFieldComponent integration', () => {
           dbxForgeFixedDateRangeField({
             key: 'range',
             dateRangeInput
-          }) as any
+          })
         ]
       };
       await settle(fixture);
@@ -121,7 +121,7 @@ describe('DbxForgeFixedDateRangeFieldComponent integration', () => {
           dbxForgeFixedDateRangeField({
             key: 'range',
             dateRangeInput: { type: DateRangeType.WEEKS_RANGE, distance: 1 }
-          }) as any
+          })
         ]
       };
       await settle(fixture);
@@ -146,7 +146,7 @@ describe('DbxForgeFixedDateRangeFieldComponent integration', () => {
             selectionMode: 'single',
             dateRangeInput: { type: DateRangeType.WEEKS_RANGE, distance: 1 },
             valueMode: DbxDateTimeValueMode.DATE
-          }) as any
+          })
         ]
       };
       await settle(fixture);
@@ -183,7 +183,7 @@ describe('DbxForgeFixedDateRangeFieldComponent integration', () => {
             selectionMode: 'normal',
             dateRangeInput: { type: DateRangeType.CALENDAR_MONTH, distance: 1 },
             valueMode: DbxDateTimeValueMode.DATE
-          }) as any
+          })
         ]
       };
       await settle(fixture);
@@ -192,20 +192,20 @@ describe('DbxForgeFixedDateRangeFieldComponent integration', () => {
       const firstClickDate = addDays(startOfDay(new Date()), 2);
       const secondClickDate = addDays(startOfDay(new Date()), 5);
 
-      // First click: start = end = firstClickDate
-      const firstPromise = firstValueFrom(comp.dateRangeSelection$.pipe(take(1)));
+      // Single subscription so the scan accumulator is preserved across both clicks.
+      // _selectionEvent is a plain Subject, so each new subscription would start with an empty acc.
+      const collected = firstValueFrom(comp.dateRangeSelection$.pipe(take(2), toArray()));
       comp.setDateRange({ start: firstClickDate }, 'calendar');
-      const firstRange = (await firstPromise) as DateRange;
+      comp.setDateRange({ start: secondClickDate }, 'calendar');
 
+      const [firstRange, secondRange] = (await collected) as DateRange[];
+
+      // First click: start = end = firstClickDate
       expect(firstRange).toBeDefined();
       expect(firstRange.start.getTime()).toBe(firstClickDate.getTime());
       expect(firstRange.end.getTime()).toBe(firstClickDate.getTime());
 
-      // Second click: end should extend to secondClickDate (still starting from first)
-      const secondPromise = firstValueFrom(comp.dateRangeSelection$.pipe(take(1)));
-      comp.setDateRange({ start: secondClickDate }, 'calendar');
-      const secondRange = (await secondPromise) as DateRange;
-
+      // Second click: end extends to secondClickDate, still starting from first
       expect(secondRange).toBeDefined();
       expect(secondRange.start.getTime()).toBe(firstClickDate.getTime());
       expect(secondRange.end.getTime()).toBe(secondClickDate.getTime());
@@ -217,14 +217,18 @@ describe('DbxForgeFixedDateRangeFieldComponent integration', () => {
       const fixture = TestBed.createComponent(TestForgeFixedDateRangeHostComponent);
       const host = fixture.componentInstance;
 
+      // Use DAYS_RADIUS so the boundary extends both before and after the first click.
+      // CALENDAR_MONTH anchors on endOfWeek(date) and can exclude dates earlier in the same month,
+      // which would cause the second (earlier) click to be outside the boundary and reset to 'start'
+      // instead of flipping.
       host.config = {
         fields: [
           dbxForgeFixedDateRangeField({
             key: 'range',
             selectionMode: 'normal',
-            dateRangeInput: { type: DateRangeType.CALENDAR_MONTH, distance: 1 },
+            dateRangeInput: { type: DateRangeType.DAYS_RADIUS, distance: 10 },
             valueMode: DbxDateTimeValueMode.DATE
-          }) as any
+          })
         ]
       };
       await settle(fixture);
@@ -233,13 +237,12 @@ describe('DbxForgeFixedDateRangeFieldComponent integration', () => {
       const firstClickDate = addDays(startOfDay(new Date()), 5);
       const secondClickDate = addDays(startOfDay(new Date()), 2);
 
-      const firstPromise = firstValueFrom(comp.dateRangeSelection$.pipe(take(1)));
+      // Single subscription so the scan accumulator is preserved across both clicks.
+      const collected = firstValueFrom(comp.dateRangeSelection$.pipe(take(2), toArray()));
       comp.setDateRange({ start: firstClickDate }, 'calendar');
-      await firstPromise;
-
-      const secondPromise = firstValueFrom(comp.dateRangeSelection$.pipe(take(1)));
       comp.setDateRange({ start: secondClickDate }, 'calendar');
-      const secondRange = (await secondPromise) as DateRange;
+
+      const [, secondRange] = (await collected) as DateRange[];
 
       // Range should have secondClickDate as start and firstClickDate as end
       expect(secondRange.start.getTime()).toBe(secondClickDate.getTime());
@@ -261,7 +264,7 @@ describe('DbxForgeFixedDateRangeFieldComponent integration', () => {
             selectionMode: 'arbitrary_quick',
             dateRangeInput: { type: DateRangeType.DAYS_RANGE, distance: 5 },
             valueMode: DbxDateTimeValueMode.DATE
-          }) as any
+          })
         ]
       };
       await settle(fixture);

@@ -15,7 +15,7 @@ import { FORM_OPTIONS } from '@ng-forge/dynamic-forms';
  *
  * @example
  * ```typescript
- * readonly isDisabled = forgeFieldDisabled();
+ * readonly isDisabled = dbxForgeFieldDisabled();
  * ```
  */
 export function dbxForgeFieldDisabled(): Signal<boolean> {
@@ -29,7 +29,3 @@ export function dbxForgeFieldDisabled(): Signal<boolean> {
     }
   });
 }
-
-// MARK: Deprecated
-/** @deprecated Use {@link dbxForgeFieldDisabled} instead. */
-export const forgeFieldDisabled = dbxForgeFieldDisabled;

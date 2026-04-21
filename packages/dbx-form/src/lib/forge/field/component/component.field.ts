@@ -42,7 +42,7 @@ export type DbxForgeComponentFieldConfig<T = unknown> = Omit<_DbxForgeComponentF
 let _componentFieldCounter = 0;
 
 /**
- * Generic function type for forgeComponentField to preserve caller generics.
+ * Generic function type for dbxForgeComponentField to preserve caller generics.
  */
 export type DbxForgeComponentFieldFunction = <T = unknown>(config: DbxForgeComponentFieldConfig<T>) => DbxForgeField<DbxForgeComponentFieldDef<T>>;
 
@@ -70,7 +70,7 @@ const _dbxForgeComponentField = dbxForgeFieldFunction<_DbxForgeComponentFieldCon
  *
  * @example
  * ```typescript
- * const field = forgeComponentField({
+ * const field = dbxForgeComponentField({
  *   key: 'custom',
  *   componentField: { componentClass: MyCustomFormComponent, data: { someInput: 'value' } }
  * });
@@ -82,7 +82,3 @@ export const dbxForgeComponentField: DbxForgeComponentFieldFunction = (config) =
     key: config.key || `_component_${++_componentFieldCounter}`
   } as _DbxForgeComponentFieldConfig) as any;
 };
-
-// MARK: Deprecated
-/** @deprecated Use {@link dbxForgeComponentField} instead. */
-export const forgeComponentField = dbxForgeComponentField;

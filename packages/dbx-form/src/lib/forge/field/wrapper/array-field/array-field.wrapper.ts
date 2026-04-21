@@ -15,6 +15,21 @@ export interface DbxForgeArrayFieldWrapperProps extends DbxForgeFieldHintValueRe
    */
   readonly itemTemplate: ArrayItemDefinitionTemplate;
   /**
+   * Minimum number of items required in the array.
+   *
+   * Flowed from the array FieldDef by `dbxForgeArrayField` when not set
+   * explicitly on the wrapper props.
+   */
+  readonly minLength?: number;
+  /**
+   * Maximum number of items allowed in the array.
+   *
+   * When set, the add button is disabled once the array reaches this length.
+   * Flowed from the array FieldDef by `dbxForgeArrayField` when not set
+   * explicitly on the wrapper props.
+   */
+  readonly maxLength?: number;
+  /**
    * The label for the array field itself.
    */
   readonly label?: DynamicText;

@@ -12,7 +12,7 @@ import type { FieldAutocompleteAttributeOption } from '../../../../field/field.a
  *
  * @example
  * ```typescript
- * const field = forgeNameField({ required: true });
+ * const field = dbxForgeNameField({ required: true });
  * ```
  */
 export function dbxForgeNameField(config: Partial<DbxForgeTextFieldConfig> = {}) {
@@ -56,7 +56,7 @@ export interface DbxForgeEmailFieldConfig {
  *
  * @example
  * ```typescript
- * const field = forgeEmailField({ required: true });
+ * const field = dbxForgeEmailField({ required: true });
  * ```
  */
 export function dbxForgeEmailField(config: DbxForgeEmailFieldConfig = {}) {
@@ -88,7 +88,7 @@ export type DbxForgeCityFieldConfig = Partial<DbxForgeTextFieldConfig>;
  *
  * @example
  * ```typescript
- * const field = forgeCityField({ required: true });
+ * const field = dbxForgeCityField({ required: true });
  * ```
  */
 export function dbxForgeCityField(config: DbxForgeCityFieldConfig = {}) {
@@ -125,7 +125,7 @@ export interface DbxForgeStateFieldConfig extends Partial<DbxForgeTextFieldConfi
  *
  * @example
  * ```typescript
- * const field = forgeStateField({ asCode: true, required: true });
+ * const field = dbxForgeStateField({ asCode: true, required: true });
  * ```
  */
 export function dbxForgeStateField(config: DbxForgeStateFieldConfig = {}) {
@@ -160,7 +160,7 @@ export type DbxForgeCountryFieldConfig = Partial<DbxForgeTextFieldConfig>;
  *
  * @example
  * ```typescript
- * const field = forgeCountryField({ required: true });
+ * const field = dbxForgeCountryField({ required: true });
  * ```
  */
 export function dbxForgeCountryField(config: DbxForgeCountryFieldConfig = {}) {
@@ -190,7 +190,7 @@ export type DbxForgeZipCodeFieldConfig = Partial<DbxForgeTextFieldConfig>;
  *
  * @example
  * ```typescript
- * const field = forgeZipCodeField({ required: true });
+ * const field = dbxForgeZipCodeField({ required: true });
  * ```
  */
 export function dbxForgeZipCodeField(config: DbxForgeZipCodeFieldConfig = {}) {
@@ -221,7 +221,7 @@ export const DEFAULT_FORGE_LAT_LNG_TEXT_FIELD_PLACEHOLDER = '12.345,-67.8910';
  *
  * @example
  * ```typescript
- * const field = forgeLatLngTextField();
+ * const field = dbxForgeLatLngTextField();
  * ```
  */
 export function dbxForgeLatLngTextField(config: Partial<DbxForgeTextFieldConfig> = {}) {
@@ -234,19 +234,3 @@ export function dbxForgeLatLngTextField(config: Partial<DbxForgeTextFieldConfig>
     pattern: LAT_LNG_PATTERN
   });
 }
-
-// MARK: Deprecated
-/** @deprecated Use {@link dbxForgeNameField} instead. */
-export const forgeNameField = dbxForgeNameField;
-/** @deprecated Use {@link dbxForgeEmailField} instead. */
-export const forgeEmailField = dbxForgeEmailField;
-/** @deprecated Use {@link dbxForgeCityField} instead. */
-export const forgeCityField = dbxForgeCityField;
-/** @deprecated Use {@link dbxForgeStateField} instead. */
-export const forgeStateField = dbxForgeStateField;
-/** @deprecated Use {@link dbxForgeCountryField} instead. */
-export const forgeCountryField = dbxForgeCountryField;
-/** @deprecated Use {@link dbxForgeZipCodeField} instead. */
-export const forgeZipCodeField = dbxForgeZipCodeField;
-/** @deprecated Use {@link dbxForgeLatLngTextField} instead. */
-export const forgeLatLngTextField = dbxForgeLatLngTextField;

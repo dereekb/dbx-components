@@ -21,7 +21,7 @@ export type DbxForgeSourceSelectFieldFunction = <T extends PrimativeKey = Primat
  *
  * @example
  * ```typescript
- * const field = forgeSourceSelectField({
+ * const field = dbxForgeSourceSelectField({
  *   key: 'source',
  *   label: 'Source',
  *   valueReader: (meta) => meta.id,
@@ -37,7 +37,3 @@ export const dbxForgeSourceSelectField = dbxForgeFieldFunction<DbxForgeSourceSel
     // TODO: ...
   })
 }) as DbxForgeSourceSelectFieldFunction;
-
-// MARK: Deprecated
-/** @deprecated Use {@link dbxForgeSourceSelectField} instead. */
-export const forgeSourceSelectField = dbxForgeSourceSelectField;

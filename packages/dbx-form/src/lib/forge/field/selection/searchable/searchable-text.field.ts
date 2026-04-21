@@ -20,7 +20,7 @@ export type DbxForgeSearchableTextFieldFunction = <T = unknown, M = unknown, H e
  *
  * @example
  * ```typescript
- * const field = forgeSearchableTextField({
+ * const field = dbxForgeSearchableTextField({
  *   key: 'assignee',
  *   label: 'Assignee',
  *   props: {
@@ -38,7 +38,3 @@ export const dbxForgeSearchableTextField = dbxForgeFieldFunction<DbxForgeSearcha
     x.configure(configureDbxForgeFormFieldWrapper);
   })
 }) as DbxForgeSearchableTextFieldFunction;
-
-// MARK: Deprecated
-/** @deprecated Use {@link dbxForgeSearchableTextField} instead. */
-export const forgeSearchableTextField = dbxForgeSearchableTextField;

@@ -1,4 +1,4 @@
-import { formlyUsernamePasswordLoginFields, formlyTimezoneStringField, DbxFormTimezoneStringFieldModule, DbxFormSourceDirective, formlyWebsiteUrlField, forgeUsernamePasswordLoginFields, forgeWebsiteUrlField, forgeTimezoneStringField } from '@dereekb/dbx-form';
+import { formlyUsernamePasswordLoginFields, formlyTimezoneStringField, DbxFormTimezoneStringFieldModule, DbxFormSourceDirective, formlyWebsiteUrlField, dbxForgeUsernamePasswordLoginFields, dbxForgeWebsiteUrlField, dbxForgeTimezoneStringField } from '@dereekb/dbx-form';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
@@ -22,7 +22,7 @@ export class DocFormTemplateComponent {
   });
 
   readonly forgeUsernamePasswordLoginConfig: FormConfig = {
-    fields: forgeUsernamePasswordLoginFields({ username: 'email' })
+    fields: dbxForgeUsernamePasswordLoginFields({ username: 'email' })
   };
 
   readonly usernamePasswordLoginWithVerifyField: FormlyFieldConfig[] = formlyUsernamePasswordLoginFields({
@@ -33,7 +33,7 @@ export class DocFormTemplateComponent {
   readonly timezoneSelectionField: FormlyFieldConfig[] = [formlyTimezoneStringField()];
 
   readonly forgeTimezoneSelectionConfig: FormConfig = {
-    fields: [forgeTimezoneStringField()]
+    fields: [dbxForgeTimezoneStringField()]
   };
 
   readonly websiteUrlFields: FormlyFieldConfig[] = [
@@ -57,15 +57,15 @@ export class DocFormTemplateComponent {
 
   readonly forgeWebsiteUrlFieldsConfig: FormConfig = {
     fields: [
-      forgeWebsiteUrlField({
+      dbxForgeWebsiteUrlField({
         label: 'Custom Label',
         key: 'websiteWithPrefix'
       }),
-      forgeWebsiteUrlField({
+      dbxForgeWebsiteUrlField({
         key: 'websiteWithoutPrefix',
         label: 'Custom Label (Prefix Not Required)'
       }),
-      forgeWebsiteUrlField({
+      dbxForgeWebsiteUrlField({
         key: 'websiteWithRequiredDomain',
         label: 'Custom Label For Specific Domain (www.google.com)'
       })

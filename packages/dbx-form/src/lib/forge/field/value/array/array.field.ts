@@ -84,9 +84,13 @@ export const dbxForgeArrayField = dbxForgeFieldFunction<DbxForgeArrayFieldConfig
 
     // Add the outer array wrapper for label/hint chrome + cdkDropList + state service.
     // Passes the containerField as itemTemplate so the add button can create new items.
+    // Flows minLength/maxLength from the array FieldDef into the wrapper props so
+    // the wrapper can enforce them on the add button. Wrapper-level props win when set.
     x.addWrappers({
       type: DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME,
       props: {
+        minLength: config.minLength,
+        maxLength: config.maxLength,
         ...props,
         itemTemplate
       }

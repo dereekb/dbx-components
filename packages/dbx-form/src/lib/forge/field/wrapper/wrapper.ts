@@ -43,10 +43,10 @@ export interface DbxForgeRowConfig extends Omit<RowField, 'type' | 'key'> {
  *
  * @example
  * ```typescript
- * const row = forgeRow({
+ * const row = dbxForgeRow({
  *   fields: [
- *     { ...forgeTextField({ key: 'first', label: 'First' }), col: 6 },
- *     { ...forgeTextField({ key: 'last', label: 'Last' }), col: 6 }
+ *     { ...dbxForgeTextField({ key: 'first', label: 'First' }), col: 6 },
+ *     { ...dbxForgeTextField({ key: 'last', label: 'Last' }), col: 6 }
  *   ]
  * });
  * ```
@@ -150,11 +150,11 @@ export interface DbxForgeToggleWrapperConfig {
  *
  * @example
  * ```typescript
- * const toggle = forgeToggleWrapper({
+ * const toggle = dbxForgeToggleWrapper({
  *   label: 'Show advanced options',
  *   fields: [
- *     forgeTextField({ key: 'advanced1', label: 'Option 1' }),
- *     forgeTextField({ key: 'advanced2', label: 'Option 2' })
+ *     dbxForgeTextField({ key: 'advanced1', label: 'Option 1' }),
+ *     dbxForgeTextField({ key: 'advanced2', label: 'Option 2' })
  *   ]
  * });
  * ```
@@ -249,12 +249,12 @@ export interface DbxForgeExpandWrapperConfig {
  *
  * @example
  * ```typescript
- * const expand = forgeExpandWrapper({
+ * const expand = dbxForgeExpandWrapper({
  *   label: 'Show more options',
  *   buttonType: 'button',
  *   fields: [
- *     forgeTextField({ key: 'extra1', label: 'Extra 1' }),
- *     forgeTextField({ key: 'extra2', label: 'Extra 2' })
+ *     dbxForgeTextField({ key: 'extra1', label: 'Extra 1' }),
+ *     dbxForgeTextField({ key: 'extra2', label: 'Extra 2' })
  *   ]
  * });
  * ```
@@ -294,13 +294,3 @@ export function dbxForgeExpandWrapper(config: DbxForgeExpandWrapperConfig): RowF
     className: config.className ?? 'dbx-forge-expand-wrapper'
   });
 }
-
-// MARK: Deprecated
-/** @deprecated Use {@link dbxForgeRow} instead. */
-export const forgeRow = dbxForgeRow;
-/** @deprecated Use {@link dbxForgeGroup} instead. */
-export const forgeGroup = dbxForgeGroup;
-/** @deprecated Use {@link dbxForgeToggleWrapper} instead. */
-export const forgeToggleWrapper = dbxForgeToggleWrapper;
-/** @deprecated Use {@link dbxForgeExpandWrapper} instead. */
-export const forgeExpandWrapper = dbxForgeExpandWrapper;

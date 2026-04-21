@@ -15,23 +15,23 @@ import {
   formlyStyleWrapper,
   formlyToggleField,
   formlyTextIsAvailableField,
-  forgeFlexLayout,
-  forgeExpandWrapper,
-  forgeToggleWrapper,
-  forgeNameField,
+  dbxForgeFlexLayout,
+  dbxForgeExpandWrapper,
+  dbxForgeToggleWrapper,
+  dbxForgeNameField,
   dbxForgeSectionWrapper,
   dbxForgeSubsectionWrapper,
   dbxForgeInfoWrapper,
   dbxForgeStyleWrapper,
-  forgeTextIsAvailableField,
-  forgeNumberSliderField,
+  dbxForgeTextIsAvailableField,
+  dbxForgeNumberSliderField,
   formlyNumberSliderField,
   DbxFormFormlyNumberFieldModule,
-  forgeCityField,
-  forgeStateField,
-  forgeZipCodeField,
-  forgeCountryField,
-  forgeToggleField,
+  dbxForgeCityField,
+  dbxForgeStateField,
+  dbxForgeZipCodeField,
+  dbxForgeCountryField,
+  dbxForgeToggleField,
   DbxFormFormlyWrapperModule,
   DbxFormFormlyBooleanFieldModule,
   DbxFormlyFieldsContextDirective,
@@ -113,7 +113,7 @@ export class DocFormWrapperComponent {
   ];
 
   readonly forgeFlexFieldConfig: FormConfig = {
-    fields: [forgeFlexLayout([forgeCityField({}), forgeStateField({ hint: 'State Description' }), forgeToggleField({ key: 'toggle', label: 'Toggle', description: 'Toggle Description' })])]
+    fields: [dbxForgeFlexLayout([dbxForgeCityField({}), dbxForgeStateField({ hint: 'State Description' }), dbxForgeToggleField({ key: 'toggle', label: 'Toggle', description: 'Toggle Description' })])]
   };
 
   readonly flexThreeField: FormlyFieldConfig[] = [
@@ -131,7 +131,7 @@ export class DocFormWrapperComponent {
   ];
 
   readonly forgeFlexThreeFieldConfig: FormConfig = {
-    fields: [forgeFlexLayout([{ field: forgeCityField({}), size: 4 }, forgeStateField({}), forgeZipCodeField({})], { breakpoint: 'large', size: 1 })]
+    fields: [dbxForgeFlexLayout([{ field: dbxForgeCityField({}), size: 4 }, dbxForgeStateField({}), dbxForgeZipCodeField({})], { breakpoint: 'large', size: 1 })]
   };
 
   readonly flexThreeFieldBreakToColumn: FormlyFieldConfig[] = [
@@ -149,44 +149,44 @@ export class DocFormWrapperComponent {
   ];
 
   readonly forgeFlexThreeFieldBreakToColumnConfig: FormConfig = {
-    fields: [forgeFlexLayout([{ field: forgeCityField({}), size: 4 }, forgeStateField({}), forgeZipCodeField({})], { breakpoint: 'large', breakToColumn: true, size: 1 })]
+    fields: [dbxForgeFlexLayout([{ field: dbxForgeCityField({}), size: 4 }, dbxForgeStateField({}), dbxForgeZipCodeField({})], { breakpoint: 'large', breakToColumn: true, size: 1 })]
   };
 
   readonly flexFiveField: FormlyFieldConfig[] = [formlyFlexLayoutWrapper([formlyNameField(), formlyCityField(), formlyStateField(), formlyZipCodeField(), formlyCountryField()], { breakpoint: 'large', size: 1, relative: true })];
 
   readonly forgeFlexFiveFieldConfig: FormConfig = {
-    fields: [forgeFlexLayout([forgeNameField({}), forgeCityField({}), forgeStateField({}), forgeZipCodeField({}), forgeCountryField({})], { breakpoint: 'large', size: 1, relative: true })]
+    fields: [dbxForgeFlexLayout([dbxForgeNameField({}), dbxForgeCityField({}), dbxForgeStateField({}), dbxForgeZipCodeField({}), dbxForgeCountryField({})], { breakpoint: 'large', size: 1, relative: true })]
   };
 
   // Forge wrapper equivalents
   readonly forgeExpandFieldConfig: FormConfig = {
     fields: [
-      forgeExpandWrapper({
+      dbxForgeExpandWrapper({
         label: 'Add Name',
         buttonType: 'button',
-        fields: [forgeNameField({})]
+        fields: [dbxForgeNameField({})]
       })
     ]
   };
 
   readonly forgeToggleFieldConfig: FormConfig = {
     fields: [
-      forgeToggleWrapper({
-        fields: [forgeNameField({})]
+      dbxForgeToggleWrapper({
+        fields: [dbxForgeNameField({})]
       })
     ]
   };
 
   readonly forgeSectionFieldConfig: FormConfig = {
     fields: [
-      forgeNameField({
+      dbxForgeNameField({
         wrappers: [
           dbxForgeSectionWrapper({
             headerConfig: { header: 'Header', hint: 'Section Field Hint' }
           })
         ]
       }),
-      forgeNameField({
+      dbxForgeNameField({
         key: 'name2',
         wrappers: [
           dbxForgeSectionWrapper({
@@ -199,7 +199,7 @@ export class DocFormWrapperComponent {
 
   readonly forgeSubsectionFieldConfig: FormConfig = {
     fields: [
-      forgeNameField({
+      dbxForgeNameField({
         wrappers: [
           dbxForgeSubsectionWrapper({
             headerConfig: { header: 'Header', hint: 'Section Field Hint' }
@@ -211,7 +211,7 @@ export class DocFormWrapperComponent {
 
   readonly forgeInfoFieldConfig: FormConfig = {
     fields: [
-      forgeNameField({
+      dbxForgeNameField({
         wrappers: [
           dbxForgeInfoWrapper({
             onInfoClick: () => {
@@ -225,7 +225,7 @@ export class DocFormWrapperComponent {
 
   readonly forgeInfoGroupFieldConfig: FormConfig = {
     fields: [
-      forgeNameField({
+      dbxForgeNameField({
         wrappers: [
           dbxForgeInfoWrapper({
             onInfoClick: () => {
@@ -234,13 +234,13 @@ export class DocFormWrapperComponent {
           })
         ]
       }),
-      forgeCityField({})
+      dbxForgeCityField({})
     ]
   };
 
   readonly forgeStyleFieldConfig: FormConfig = {
     fields: [
-      forgeNameField({
+      dbxForgeNameField({
         wrappers: [
           dbxForgeStyleWrapper({
             classGetter: 'dbx-content-border doc-style-wrapper-example',
@@ -272,7 +272,7 @@ export class DocFormWrapperComponent {
 
   readonly forgeWorkingFieldConfig: FormConfig = {
     fields: [
-      forgeTextIsAvailableField({
+      dbxForgeTextIsAvailableField({
         key: 'username',
         label: 'Username',
         description: 'Type a value and wait — shows loading bar during async check. Type "taken" to see a validation error.',
@@ -303,7 +303,7 @@ export class DocFormWrapperComponent {
 
   readonly forgeFormFieldWrapperSliderConfig: FormConfig = {
     fields: [
-      forgeNumberSliderField({
+      dbxForgeNumberSliderField({
         key: 'rating',
         label: 'Rating',
         description: 'Must be above 50.',
@@ -313,7 +313,7 @@ export class DocFormWrapperComponent {
         validationMessages: { minRating: 'Rating must be above 50.' },
         props: { thumbLabel: true }
       }),
-      forgeNumberSliderField({ key: 'volume', label: 'Volume', description: 'Pick a volume.', min: 0, max: 100, step: 5 })
+      dbxForgeNumberSliderField({ key: 'volume', label: 'Volume', description: 'Pick a volume.', min: 0, max: 100, step: 5 })
     ]
   };
 }

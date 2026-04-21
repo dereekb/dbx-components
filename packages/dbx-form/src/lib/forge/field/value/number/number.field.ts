@@ -52,7 +52,7 @@ export interface DbxForgeNumberFieldConfig extends DbxForgeFieldFunctionDef<DbxF
  *
  * @example
  * ```typescript
- * const field = forgeNumberField({ key: 'quantity', label: 'Quantity', min: 1, max: 100, step: 1 });
+ * const field = dbxForgeNumberField({ key: 'quantity', label: 'Quantity', min: 1, max: 100, step: 1 });
  * ```
  */
 export const dbxForgeNumberField = dbxForgeFieldFunction<DbxForgeNumberFieldConfig>({
@@ -105,7 +105,7 @@ export type DbxForgeDollarAmountFieldConfig = Omit<DbxForgeNumberFieldConfig, 'r
  *
  * @example
  * ```typescript
- * const field = forgeDollarAmountField({ key: 'price', label: 'Price', min: 0, required: true });
+ * const field = dbxForgeDollarAmountField({ key: 'price', label: 'Price', min: 0, required: true });
  * ```
  */
 export function dbxForgeDollarAmountField(config: DbxForgeDollarAmountFieldConfig) {
@@ -117,9 +117,3 @@ export function dbxForgeDollarAmountField(config: DbxForgeDollarAmountFieldConfi
     }
   });
 }
-
-// MARK: Deprecated
-/** @deprecated Use {@link dbxForgeNumberField} instead. */
-export const forgeNumberField = dbxForgeNumberField;
-/** @deprecated Use {@link dbxForgeDollarAmountField} instead. */
-export const forgeDollarAmountField = dbxForgeDollarAmountField;

@@ -4,7 +4,7 @@ import { type FieldTree } from '@angular/forms/signals';
 import { type DynamicText, type FieldMeta, type ValidationMessages, type BaseValueField } from '@ng-forge/dynamic-forms';
 import { setupMetaTracking } from '@ng-forge/dynamic-forms/integration';
 import { type Maybe } from '@dereekb/util';
-import { forgeFieldDisabled } from '../field.util';
+import { dbxForgeFieldDisabled } from '../field.util';
 
 // MARK: Forge Component Field Props
 /**
@@ -75,7 +75,7 @@ export class DbxForgeComponentFieldComponent<T = unknown> {
   readonly defaultValidationMessages = input<ValidationMessages | undefined>();
 
   // Disabled state
-  readonly isDisabled = forgeFieldDisabled();
+  readonly isDisabled = dbxForgeFieldDisabled();
   readonly showDisabledState = computed(() => this.isDisabled() && (this.props()?.allowDisabledEffects ?? true));
 
   constructor() {

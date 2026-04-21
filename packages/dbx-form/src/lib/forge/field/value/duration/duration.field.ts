@@ -60,7 +60,7 @@ export interface DbxForgeTimeDurationFieldConfig extends DbxForgeFieldFunctionDe
  *
  * @example
  * ```typescript
- * const field = forgeTimeDurationField({
+ * const field = dbxForgeTimeDurationField({
  *   key: 'timeout',
  *   label: 'Timeout',
  *   outputUnit: 'min',
@@ -83,7 +83,3 @@ export const dbxForgeTimeDurationField = dbxForgeFieldFunction<DbxForgeTimeDurat
     })
   )
 }) as DbxForgeFieldFunction<DbxForgeTimeDurationFieldConfig, DbxForgeTimeDurationFieldDef>;
-
-// MARK: Deprecated
-/** @deprecated Use {@link dbxForgeTimeDurationField} instead. */
-export const forgeTimeDurationField = dbxForgeTimeDurationField;

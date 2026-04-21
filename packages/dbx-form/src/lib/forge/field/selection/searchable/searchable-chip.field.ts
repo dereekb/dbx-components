@@ -20,7 +20,7 @@ export type DbxForgeSearchableChipFieldFunction = <T = unknown, M = unknown, H e
  *
  * @example
  * ```typescript
- * const field = forgeSearchableChipField({
+ * const field = dbxForgeSearchableChipField({
  *   key: 'tags',
  *   label: 'Tags',
  *   props: {
@@ -49,9 +49,3 @@ export const dbxForgeSearchableChipField = dbxForgeFieldFunction<DbxForgeSearcha
 export function dbxForgeSearchableStringChipField<M = unknown>(config: DbxForgeSearchableChipFieldConfig<string, M>) {
   return dbxForgeSearchableChipField<string, M>(config);
 }
-
-// MARK: Deprecated
-/** @deprecated Use {@link dbxForgeSearchableChipField} instead. */
-export const forgeSearchableChipField = dbxForgeSearchableChipField;
-/** @deprecated Use {@link dbxForgeSearchableStringChipField} instead. */
-export const forgeSearchableStringChipField = dbxForgeSearchableStringChipField;

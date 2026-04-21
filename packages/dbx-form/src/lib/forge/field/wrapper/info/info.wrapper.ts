@@ -38,7 +38,7 @@ export interface DbxForgeInfoWrapper {
  *
  * @example
  * ```typescript
- * forgeNameField({
+ * dbxForgeNameField({
  *   wrappers: [dbxForgeInfoWrapper({ onInfoClick: () => openHelp() })]
  * })
  * ```

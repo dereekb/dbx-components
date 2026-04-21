@@ -9,7 +9,7 @@ import { type FormConfig, DynamicFormLogger, NoopLogger } from '@ng-forge/dynami
 import { DbxRouterTransitionService } from '@dereekb/dbx-core';
 import { provideDbxForgeFormFieldDeclarations } from '../../forge/forge.providers';
 import { provideDbxFormConfiguration } from '../../form.providers';
-import { forgeTextField } from '../../forge/field/value/text/text.field';
+import { dbxForgeTextField } from '../../forge/field/value/text/text.field';
 import { DbxForgeActionDialogComponent, type DbxForgeActionDialogComponentConfig } from './forge.action.dialog.component';
 
 // MARK: Mock
@@ -20,7 +20,7 @@ class MockDbxRouterTransitionService extends DbxRouterTransitionService {
 // MARK: Helpers
 function createSimpleConfig(): FormConfig {
   return {
-    fields: [forgeTextField({ key: 'name', label: 'Name', required: true }) as any]
+    fields: [dbxForgeTextField({ key: 'name', label: 'Name', required: true }) as any]
   };
 }
 

@@ -63,7 +63,7 @@ export interface DbxForgePhoneFieldConfig extends DbxForgeFieldFunctionDef<DbxFo
  *
  * @example
  * ```typescript
- * const field = forgePhoneField({ key: 'phone', label: 'Phone Number', required: true });
+ * const field = dbxForgePhoneField({ key: 'phone', label: 'Phone Number', required: true });
  * ```
  */
 export const dbxForgePhoneField = dbxForgeFieldFunction<DbxForgePhoneFieldConfig>({
@@ -78,7 +78,3 @@ export const dbxForgePhoneField = dbxForgeFieldFunction<DbxForgePhoneFieldConfig
     })
   )
 }) as DbxForgeFieldFunction<DbxForgePhoneFieldConfig, DbxForgePhoneFieldDef>;
-
-// MARK: Deprecated
-/** @deprecated Use {@link dbxForgePhoneField} instead. */
-export const forgePhoneField = dbxForgePhoneField;

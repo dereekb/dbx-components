@@ -3,6 +3,8 @@
 // MARK: Variables
 $pagebar-height-var: theming.$page-navbar-height-var;
 $pagebar-height: theming.$page-navbar-height;
+$content-navbar-height-var: theming.$content-navbar-height-var;
+$content-navbar-height: theming.$content-navbar-height;
 $bar-vertical-padding: theming.$padding-1;
 $bar-fixed-height: 40px;
 
@@ -10,6 +12,11 @@ $bar-fixed-height: 40px;
 @mixin core() {
   .dbx-pagebar.mat-toolbar {
     height: var(--dbx-pagebar-height, #{$pagebar-height});
+  }
+
+  .dbx-content-navbar {
+    height: $content-navbar-height;
+    max-height: $content-navbar-height;
   }
 
   .dbx-bar {

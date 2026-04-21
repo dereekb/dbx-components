@@ -67,7 +67,7 @@ export type DbxForgeListSelectionFieldFunction = <T = unknown, C extends Abstrac
  *
  * @example
  * ```typescript
- * const field = forgeListSelectionField({
+ * const field = dbxForgeListSelectionField({
  *   key: 'selectedItems',
  *   label: 'Items',
  *   props: {
@@ -86,7 +86,3 @@ export const dbxForgeListSelectionField = dbxForgeFieldFunction<DbxForgeListSele
     x.configure(configureDbxForgeFormFieldWrapper);
   })
 }) as DbxForgeListSelectionFieldFunction;
-
-// MARK: Deprecated
-/** @deprecated Use {@link dbxForgeListSelectionField} instead. */
-export const forgeListSelectionField = dbxForgeListSelectionField;

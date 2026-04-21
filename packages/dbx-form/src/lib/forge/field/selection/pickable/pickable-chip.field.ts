@@ -20,7 +20,7 @@ export type DbxForgePickableChipFieldFunction = <T = unknown, M = unknown, H ext
  *
  * @example
  * ```typescript
- * const field = forgePickableChipField({
+ * const field = dbxForgePickableChipField({
  *   key: 'tags',
  *   label: 'Tags',
  *   loadValues: () => tags$,
@@ -37,7 +37,3 @@ export const dbxForgePickableChipField = dbxForgeFieldFunction<DbxForgePickableC
     x.configure(configureDbxForgeFormFieldWrapper);
   })
 }) as DbxForgePickableChipFieldFunction;
-
-// MARK: Deprecated
-/** @deprecated Use {@link dbxForgePickableChipField} instead. */
-export const forgePickableChipField = dbxForgePickableChipField;

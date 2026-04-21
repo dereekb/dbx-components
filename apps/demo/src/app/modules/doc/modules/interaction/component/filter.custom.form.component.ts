@@ -1,6 +1,6 @@
 import { type DocInteractionTestFilter } from './filter';
 import { Component, ChangeDetectionStrategy } from '@angular/core';
-import { AbstractSyncForgeFormDirective, forgeDateTimeField, DBX_FORGE_FORM_COMPONENT_TEMPLATE, dbxForgeFormComponentProviders, DbxForgeFormComponentImportsModule, forgeTextField } from '@dereekb/dbx-form';
+import { AbstractSyncForgeFormDirective, dbxForgeDateTimeField, DBX_FORGE_FORM_COMPONENT_TEMPLATE, dbxForgeFormComponentProviders, DbxForgeFormComponentImportsModule, dbxForgeTextField } from '@dereekb/dbx-form';
 import type { FormConfig } from '@ng-forge/dynamic-forms';
 
 export type DocInteractionTestFilterFormValue = DocInteractionTestFilter;
@@ -15,6 +15,6 @@ export type DocInteractionTestFilterFormValue = DocInteractionTestFilter;
 })
 export class DocInteractionTestFilterCustomFilterFormComponent extends AbstractSyncForgeFormDirective<DocInteractionTestFilterFormValue> {
   readonly formConfig: FormConfig = {
-    fields: [forgeTextField({ key: 'name', label: 'Name' }), forgeDateTimeField({ key: 'date', label: 'Time' })]
+    fields: [dbxForgeTextField({ key: 'name', label: 'Name' }), dbxForgeDateTimeField({ key: 'date', label: 'Time' })]
   } as FormConfig;
 }

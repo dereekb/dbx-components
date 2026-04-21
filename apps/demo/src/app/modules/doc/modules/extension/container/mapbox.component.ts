@@ -1,10 +1,8 @@
 import { latLngPoint, latLngString, type LatLngTuple, type Maybe, type Pixels, randomLatLngFactory, range, latLngTuple, randomFromArrayFactory, isEvenNumber, randomBoolean } from '@dereekb/util';
-import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { Component, type OnDestroy, type OnInit, inject, ChangeDetectionStrategy, viewChild, computed, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { mapboxLatLngField, mapboxZoomField, forgeMapboxLatLngField, forgeMapboxZoomField } from '@dereekb/dbx-form/mapbox';
+import { dbxForgeMapboxLatLngField, dbxForgeMapboxZoomField } from '@dereekb/dbx-form/mapbox';
 import type { FormConfig } from '@ng-forge/dynamic-forms';
-import { DocFeatureFormTabsComponent } from '../../shared/component/feature.formtabs.component';
 import { DocFormForgeExampleComponent } from '../../form/component/forge.example.form.component';
 import { DbxMapboxMapStore } from 'packages/dbx-web/mapbox/src/lib/mapbox.store';
 import {
@@ -40,8 +38,7 @@ import { JsonPipe } from '@angular/common';
 import { MatMenuTrigger, MatMenu, MatMenuItem } from '@angular/material/menu';
 import { FlexModule } from '@ngbracket/ngx-layout/flex';
 import { MatButton } from '@angular/material/button';
-import { DocFormExampleComponent } from '../../form/component/example.form.component';
-import { DbxFormlyFieldsContextDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
+import { DbxFormSourceDirective } from '@dereekb/dbx-form';
 
 @Component({
   templateUrl: './mapbox.component.html',
@@ -71,13 +68,10 @@ import { DbxFormlyFieldsContextDirective, DbxFormSourceDirective } from '@dereek
     DbxDetailBlockComponent,
     MatMenu,
     MatMenuItem,
-    DocFormExampleComponent,
-    DbxFormlyFieldsContextDirective,
     DbxFormSourceDirective,
     DbxMapboxInjectionComponent,
     DbxMapboxMapStoreInjectionBlockDirective,
     JsonPipe,
-    DocFeatureFormTabsComponent,
     DocFormForgeExampleComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -188,40 +182,13 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
     zoom: 10.1234
   };
 
-  readonly mapboxLatLngField: FormlyFieldConfig[] = [
-    mapboxLatLngField({
-      key: 'latLng',
-      description: 'This is a coordinate picker.'
-    }),
-    mapboxLatLngField({
-      key: 'latLngDisabled',
-      description: 'This is a read only coordinate picker. It will also re-center the map to the point after 3 seconds.',
-      readonly: true,
-      recenterTime: 3000
-    })
-  ];
-
-  readonly mapboxZoomField: FormlyFieldConfig[] = [
-    mapboxZoomField({
-      key: 'zoom',
-      description: 'This is a zoom picker.',
-      center: latLngPoint(30.5989668, -96.3831949)
-    }),
-    mapboxZoomField({
-      key: 'zoomDisabled',
-      description: 'This is a read only zoom picker.',
-      center: latLngPoint(30.5989668, -96.3831949),
-      readonly: true
-    })
-  ];
-
   readonly forgeMapboxLatLngFieldConfig: FormConfig = {
     fields: [
-      forgeMapboxLatLngField({
+      dbxForgeMapboxLatLngField({
         key: 'latLng',
         description: 'This is a coordinate picker.'
       }),
-      forgeMapboxLatLngField({
+      dbxForgeMapboxLatLngField({
         key: 'latLngDisabled',
         description: 'This is a read only coordinate picker. It will also re-center the map to the point after 3 seconds.',
         readonly: true,
@@ -232,12 +199,12 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
 
   readonly forgeMapboxZoomFieldConfig: FormConfig = {
     fields: [
-      forgeMapboxZoomField({
+      dbxForgeMapboxZoomField({
         key: 'zoom',
         description: 'This is a zoom picker.',
         center: latLngPoint(30.5989668, -96.3831949)
       }),
-      forgeMapboxZoomField({
+      dbxForgeMapboxZoomField({
         key: 'zoomDisabled',
         description: 'This is a read only zoom picker.',
         center: latLngPoint(30.5989668, -96.3831949),
@@ -248,7 +215,7 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
 
   readonly mapboxLatLngAndZoomConfig: FormConfig = {
     fields: [
-      forgeMapboxLatLngField({
+      dbxForgeMapboxLatLngField({
         key: 'latLng',
         description: 'This is a coordinate picker synchronized with the big map. Click on the map to set a location.',
         latLngConfig: {
@@ -258,7 +225,7 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
         selectLocationOnMapClick: true,
         showMap: false
       }),
-      forgeMapboxZoomField({
+      dbxForgeMapboxZoomField({
         key: 'zoom',
         description: 'This is a zoom picker synchronized with the big map. It has a min and max zoom.',
         showMap: false,

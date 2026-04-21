@@ -10,7 +10,7 @@ export interface MapboxZoomFieldConfig extends Omit<LabeledBaseFieldConfig, 'key
 /**
  * Creates a Formly field configuration for a Mapbox-powered zoom level picker with optional map preview.
  *
- * @deprecated Use forgeMapboxZoomField() from the forge API instead.
+ * @deprecated Use dbxForgeMapboxZoomField() from the forge API instead.
  * @param config - Optional field configuration overrides
  * @returns A validated Formly field configuration for the Mapbox zoom picker
  */

@@ -39,7 +39,7 @@ export interface DbxForgeMapboxZoomFieldConfig {
  * @param config - Optional field configuration overrides
  * @returns A validated forge field definition for the Mapbox zoom picker
  */
-export function forgeMapboxZoomField(config: DbxForgeMapboxZoomFieldConfig = {}): DbxForgeMapboxZoomFieldDef {
+export function dbxForgeMapboxZoomField(config: DbxForgeMapboxZoomFieldConfig = {}): DbxForgeMapboxZoomFieldDef {
   const { key = 'zoom', label, description, required, readonly: isReadonly, showMap, center, minZoom, maxZoom, zoomStep } = config;
 
   const props: DbxForgeMapboxZoomFieldComponentProps = filterFromPOJO({

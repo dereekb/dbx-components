@@ -19,7 +19,7 @@ export interface DbxForgeTextEditorFieldConfig extends DbxForgeFieldFunctionDef<
  *
  * @example
  * ```typescript
- * const field = forgeTextEditorField({ key: 'bio', label: 'Biography', maxLength: 2000 });
+ * const field = dbxForgeTextEditorField({ key: 'bio', label: 'Biography', maxLength: 2000 });
  * ```
  */
 export const dbxForgeTextEditorField = dbxForgeFieldFunction<DbxForgeTextEditorFieldConfig>({
@@ -31,7 +31,3 @@ export const dbxForgeTextEditorField = dbxForgeFieldFunction<DbxForgeTextEditorF
     })
   )
 }) as DbxForgeFieldFunction<DbxForgeTextEditorFieldConfig, DbxForgeTextEditorFieldDef>;
-
-// MARK: Deprecated
-/** @deprecated Use {@link dbxForgeTextEditorField} instead. */
-export const forgeTextEditorField = dbxForgeTextEditorField;

@@ -14,7 +14,7 @@ export interface DbxForgeChecklistFieldConfig<T = unknown> extends DbxForgeField
 }
 
 /**
- * Generic function type for forgeChecklistField to preserve caller generics.
+ * Generic function type for dbxForgeChecklistField to preserve caller generics.
  */
 export type DbxForgeChecklistFieldFunction = <T = unknown>(config: DbxForgeChecklistFieldConfig<T>) => DbxForgeField<MatMultiCheckboxField<T>>;
 
@@ -29,7 +29,7 @@ export type ForgeChecklistFieldFunction = DbxForgeChecklistFieldFunction;
  *
  * @example
  * ```typescript
- * const field = forgeChecklistField({
+ * const field = dbxForgeChecklistField({
  *   key: 'tags',
  *   label: 'Tags',
  *   options: [
@@ -47,7 +47,3 @@ export const dbxForgeChecklistField = dbxForgeFieldFunction<DbxForgeChecklistFie
     })
   )
 }) as DbxForgeChecklistFieldFunction;
-
-// MARK: Deprecated
-/** @deprecated Use {@link dbxForgeChecklistField} instead. */
-export const forgeChecklistField = dbxForgeChecklistField;

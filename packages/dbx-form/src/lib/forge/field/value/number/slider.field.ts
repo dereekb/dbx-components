@@ -33,7 +33,7 @@ export interface DbxForgeNumberSliderFieldConfig extends DbxForgeFieldFunctionDe
  *
  * @example
  * ```typescript
- * const field = forgeNumberSliderField({ key: 'rating', label: 'Rating', min: 0, max: 10, step: 1 });
+ * const field = dbxForgeNumberSliderField({ key: 'rating', label: 'Rating', min: 0, max: 10, step: 1 });
  * ```
  */
 export const dbxForgeNumberSliderField = dbxForgeFieldFunction<DbxForgeNumberSliderFieldConfig>({
@@ -63,7 +63,3 @@ export const dbxForgeNumberSliderField = dbxForgeFieldFunction<DbxForgeNumberSli
     x.configure(configureDbxForgeFormFieldWrapper);
   })
 }) as DbxForgeFieldFunction<DbxForgeNumberSliderFieldConfig, MatSliderField>;
-
-// MARK: Deprecated
-/** @deprecated Use {@link dbxForgeNumberSliderField} instead. */
-export const forgeNumberSliderField = dbxForgeNumberSliderField;

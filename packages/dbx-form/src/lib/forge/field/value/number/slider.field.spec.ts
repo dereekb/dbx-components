@@ -50,6 +50,8 @@ describe('DbxForgeNumberSliderFieldConfig - Exhaustive Whitelist', () => {
     | 'excludeValueIfHidden'
     | 'excludeValueIfDisabled'
     | 'excludeValueIfReadonly'
+    | 'skipAutoWrappers'
+    | 'skipDefaultWrappers'
     // From SliderField (via Partial<Omit<MatSliderField, 'key' | 'type'>>)
     | 'minValue'
     | 'maxValue'
@@ -165,6 +167,8 @@ describe('MatSliderField - Exhaustive Whitelist', () => {
     | 'derivation'
     | 'schemas'
     | 'wrappers'
+    | 'skipAutoWrappers'
+    | 'skipDefaultWrappers'
     // From BaseValueField
     | 'value'
     | 'placeholder'
@@ -227,12 +231,6 @@ describe('dbxForgeNumberSliderField()', () => {
   it('should use the actual key', () => {
     const field = dbxForgeNumberSliderField({ key: 'rating', max: 10 });
     expect(field.key).toBe('rating');
-  });
-
-  it('should have a wrappers array containing the form-field wrapper', () => {
-    const field = dbxForgeNumberSliderField({ key: 'rating', max: 10 });
-    expect((field as any).wrappers).toBeDefined();
-    expect((field as any).wrappers).toContain('dbx-forge-form-field-wrapper');
   });
 
   // MARK: Slider structure

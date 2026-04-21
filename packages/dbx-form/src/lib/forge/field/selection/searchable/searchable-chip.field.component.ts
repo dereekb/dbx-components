@@ -15,7 +15,7 @@ import { type SearchableValueFieldDisplayValue, type ConfiguredSearchableValueFi
 import { DbxSearchableFieldAutocompleteItemComponent } from '../../../../formly/field/selection/searchable/searchable.field.autocomplete.item.component';
 import { AbstractForgeSearchableFieldDirective, type DbxForgeSearchableChipFieldProps } from './searchable.field.directive';
 import { createResolvedErrorsSignal, setupMetaTracking, shouldShowErrors } from '@ng-forge/dynamic-forms/integration';
-import { forgeFieldDisabled } from '../../field.util';
+import { dbxForgeFieldDisabled } from '../../field.util';
 import { toggleDisableFormControl } from '../../../../form/form';
 
 /**
@@ -38,7 +38,7 @@ export class DbxForgeSearchableChipFieldComponent<T = unknown, M = unknown, H ex
   readonly separatorKeysCodes: number[] = [ENTER, COMMA];
 
   // Disabled state
-  readonly isDisabled = forgeFieldDisabled();
+  readonly isDisabled = dbxForgeFieldDisabled();
 
   // Error handling
   readonly resolvedErrors = createResolvedErrorsSignal(this.field as any, this.validationMessages, this.defaultValidationMessages);
