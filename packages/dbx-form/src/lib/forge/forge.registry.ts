@@ -10,7 +10,8 @@
 
 // Value field types
 import { FORGE_PHONE_FIELD_TYPE, type DbxForgePhoneFieldDef } from './field/value/phone/phone.field';
-import { FORGE_DATETIME_FIELD_TYPE, FORGE_FIXEDDATERANGE_FIELD_TYPE, type DbxForgeDateTimeFieldDef, type DbxForgeFixedDateRangeFieldDef } from './field/value/date/datetime.field';
+import { FORGE_DATETIME_FIELD_TYPE, type DbxForgeDateTimeFieldDef } from './field/value/date/datetime.field';
+import { FORGE_FIXEDDATERANGE_FIELD_TYPE, type DbxForgeFixedDateRangeFieldDef } from './field/value/date/fixeddaterange.field';
 import { FORGE_TIMEDURATION_FIELD_TYPE, type DbxForgeTimeDurationFieldDef } from './field/value/duration/duration.field';
 
 // Selection field types

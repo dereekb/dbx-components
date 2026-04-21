@@ -17,7 +17,7 @@ import { NgClass } from '@angular/common';
 import { type DynamicText, type FieldMeta, type ValidationMessages, DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES } from '@ng-forge/dynamic-forms';
 import { resolveValueFieldContext, buildValueFieldInputs, createResolvedErrorsSignal, shouldShowErrors, setupMetaTracking } from '@ng-forge/dynamic-forms/integration';
 import type { FieldTree } from '@angular/forms/signals';
-import { forgeFieldDisabled } from '../../field.util';
+import { dbxForgeFieldDisabled } from '../../field.util';
 
 // MARK: Helper Functions
 function fixedDateRangeInputValueFactory(mode: DbxDateTimeValueMode, timezoneInstance: Maybe<DateTimezoneUtcNormalInstance>): (input: Maybe<DateRangeWithDateOrStringValue>) => Maybe<DateRange> {
@@ -115,7 +115,7 @@ export interface DbxForgeFixedDateRangeFieldComponentProps {
   /**
    * Whether to display the timezone. Defaults to true.
    */
-  readonly showTimezone?: boolean;
+  readonly showTimezone?: Maybe<boolean>;
   /**
    * Custom presets.
    */
@@ -219,7 +219,7 @@ export class DbxForgeFixedDateRangeFieldComponent {
     }
   });
 
-  readonly isDisabled = forgeFieldDisabled();
+  readonly isDisabled = dbxForgeFieldDisabled();
 
   readonly valueMode = computed(() => this.props()?.valueMode ?? DbxDateTimeValueMode.DATE);
   readonly showRangeInput = computed(() => this.props()?.showRangeInput ?? true);

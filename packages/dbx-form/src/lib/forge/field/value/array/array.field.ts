@@ -46,8 +46,8 @@ export type DbxForgeArrayFieldFunction = (config: DbxForgeArrayFieldConfig) => D
  *   label: 'Phone Numbers',
  *   addText: 'Add Phone',
  *   template: [
- *     forgeTextField({ key: 'number', label: 'Number' }),
- *     forgeTextField({ key: 'label', label: 'Label' })
+ *     dbxForgeTextField({ key: 'number', label: 'Number' }),
+ *     dbxForgeTextField({ key: 'label', label: 'Label' })
  *   ]
  * });
  * ```
@@ -80,21 +80,20 @@ export const dbxForgeArrayField = dbxForgeFieldFunction<DbxForgeArrayFieldConfig
       ]
     };
 
+    const itemTemplate = [containerFieldItemTemplate];
+
     // Add the outer array wrapper for label/hint chrome + cdkDropList + state service.
     // Passes the containerField as itemTemplate so the add button can create new items.
     x.addWrappers({
       type: DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME,
       props: {
         ...props,
-        itemTemplate: [containerFieldItemTemplate]
+        itemTemplate
       }
     });
 
     delete (config as any).props; // clear props too
-    // delete (config as any).template;    // template should be unset
-
-    console.log({
-      config
-    });
+    delete (config as any).template; // template should be unset, otherwise it will add the ng-forge add button
+    (config as any).restoreTemplate = itemTemplate; // set the restore template
   })
 }) as DbxForgeArrayFieldFunction;

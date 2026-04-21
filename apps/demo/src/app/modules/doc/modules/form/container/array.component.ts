@@ -101,58 +101,7 @@ export class DocFormArrayComponent {
         },
         template: [forgeNameField()],
         maxLength: 2
-      }),
-      {
-        key: 'test-array',
-        type: 'array',
-        template: [
-          {
-            key: 'testxxx',
-            type: 'container',
-            wrappers: [
-              dbxForgeStyleWrapper({
-                classGetter: 'dbx-content-border doc-style-wrapper-example',
-                styleGetter: { background: 'rgba(255,0,0,0.3)', 'border-color': 'blue' }
-              })
-            ],
-            fields: [forgeNameField()]
-          }
-        ],
-        wrappers: [
-          dbxForgeStyleWrapper({
-            classGetter: 'dbx-content-border doc-style-wrapper-example',
-            styleGetter: { background: 'rgba(0, 110, 255, 0.3)', 'border-color': 'blue' }
-          }),
-          {
-            type: DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME,
-            props: {
-              label: 'Test Field',
-              hint: 'This is a generic repeat field. It is configured with custom add/remove text, and a max of 2 items.',
-              addText: 'Add Test Field',
-              removeText: 'Remove Test Field',
-              itemTemplate: [
-                {
-                  key: 'testxxx',
-                  type: 'container',
-                  wrappers: [
-                    dbxForgeStyleWrapper({
-                      classGetter: 'dbx-content-border doc-style-wrapper-example',
-                      styleGetter: { background: 'rgba(255,0,0,0.3)', 'border-color': 'blue' }
-                    }),
-                    {
-                      type: DBX_FORGE_ARRAY_FIELD_ELEMENT_WRAPPER_NAME,
-                      props: {
-                        removeText: 'Remove Test Field'
-                      }
-                    }
-                  ],
-                  fields: [forgeNameField()]
-                }
-              ]
-            }
-          }
-        ]
-      }
+      })
     ]
   };
 
