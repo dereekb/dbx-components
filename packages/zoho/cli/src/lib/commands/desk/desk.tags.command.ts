@@ -7,11 +7,11 @@ import { withDeskPagination } from '../../util/args';
 const tagsListCommand: CommandModule = {
   command: 'list',
   describe: 'List all tags',
-  builder: (yargs: Argv) => withDeskPagination(yargs),
+  builder: (yargs: Argv) => withDeskPagination(yargs).option('department-id', { alias: 'd', type: 'string', demandOption: true, describe: 'Department ID' }),
   handler: async (argv: any) => {
     try {
       const api = getDeskApi(argv);
-      const result = await api.getAllTags({ from: argv.from, limit: argv.limit });
+      const result = await api.getAllTags({ from: argv.from, limit: argv.limit, departmentId: argv.departmentId });
       outputResult(result.data, { count: result.data?.length });
     } catch (e) {
       outputError(e);
@@ -23,11 +23,11 @@ const tagsListCommand: CommandModule = {
 const tagsSearchCommand: CommandModule = {
   command: 'search',
   describe: 'Search tags',
-  builder: (yargs: Argv) => withDeskPagination(yargs).option('query', { alias: 'q', type: 'string', demandOption: true, describe: 'Search string' }),
+  builder: (yargs: Argv) => withDeskPagination(yargs).option('department-id', { alias: 'd', type: 'string', describe: 'Department ID' }).option('query', { alias: 'q', type: 'string', demandOption: true, describe: 'Search string' }),
   handler: async (argv: any) => {
     try {
       const api = getDeskApi(argv);
-      const result = await api.searchTags({ from: argv.from, limit: argv.limit, searchVal: argv.query });
+      const result = await api.searchTags({ from: argv.from, limit: argv.limit, departmentId: argv.departmentId, searchVal: argv.query });
       outputResult(result.data, { count: result.data?.length });
     } catch (e) {
       outputError(e);

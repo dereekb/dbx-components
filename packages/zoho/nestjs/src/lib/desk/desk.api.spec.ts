@@ -301,9 +301,16 @@ describe('desk.api', () => {
 
     // MARK: Tags
     describe('tags', () => {
+      let testDepartmentId: ZohoDeskDepartmentId;
+
+      beforeEach(async () => {
+        const departments = await api.getDepartments({});
+        testDepartmentId = departments.data[0]?.id;
+      });
+
       describe('getAllTags()', () => {
         it('should return a list of tags', async () => {
-          const result = await api.getAllTags({});
+          const result = await api.getAllTags({ departmentId: testDepartmentId });
 
           expect(result).toBeDefined();
           expect(result.data).toBeDefined();
@@ -313,7 +320,7 @@ describe('desk.api', () => {
 
       describe('searchTags()', () => {
         it('should search for tags by string', async () => {
-          const result = await api.searchTags({ searchVal: 'test' });
+          const result = await api.searchTags({ departmentId: testDepartmentId, searchVal: 'test' });
 
           expect(result).toBeDefined();
           expect(result.data).toBeDefined();

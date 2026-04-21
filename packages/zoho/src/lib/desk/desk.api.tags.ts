@@ -1,7 +1,7 @@
 import { type Maybe, type ArrayOrValue, asArray } from '@dereekb/util';
 import { type FetchJsonBody, type FetchJsonInput, makeUrlSearchParams } from '@dereekb/util/fetch';
 import { type ZohoDeskContext } from './desk.config';
-import { type ZohoDeskTicketId } from './desk';
+import { type ZohoDeskTicketId, type ZohoDeskDepartmentId } from './desk';
 import { type ZohoDeskTicketTag } from './desk.ticket';
 import { type ZohoDeskPageFilter, type ZohoDeskPageResult } from './desk.api.page';
 
@@ -91,6 +91,7 @@ export function zohoDeskDissociateTicketTag(context: ZohoDeskContext): ZohoDeskD
  * Input parameters for searching tags via `GET /tags/search`.
  */
 export interface ZohoDeskSearchTagsInput extends ZohoDeskPageFilter {
+  readonly departmentId?: ZohoDeskDepartmentId;
   readonly searchVal?: string;
 }
 
@@ -115,8 +116,11 @@ export function zohoDeskSearchTags(context: ZohoDeskContext): ZohoDeskSearchTags
 // MARK: List All Tags
 /**
  * Input parameters for listing all ticket tags via `GET /ticketTags`.
+ *
+ * The Zoho Desk API requires `departmentId` for this endpoint.
  */
 export interface ZohoDeskGetAllTagsInput extends ZohoDeskPageFilter {
+  readonly departmentId: ZohoDeskDepartmentId;
   readonly sortBy?: ZohoDeskTicketTagSortBy;
 }
 
