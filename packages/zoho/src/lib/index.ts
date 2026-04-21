@@ -1,6 +1,7 @@
 export * from './recruit';
 export * from './crm';
 export * from './sign';
+export * from './desk';
 export * from './accounts';
 export * from './zoho.error.api';
 export * from './zoho.api.page';
