@@ -245,8 +245,7 @@ describe('desk.api', () => {
         it('should support sorting', async () => {
           const result = await api.getContacts({
             limit: 5,
-            sortBy: 'createdTime',
-            sortOrder: 'desc'
+            sortBy: 'createdTime'
           });
 
           expect(result).toBeDefined();
@@ -314,7 +313,7 @@ describe('desk.api', () => {
 
       describe('searchTags()', () => {
         it('should search for tags by string', async () => {
-          const result = await api.searchTags({ searchStr: 'test' });
+          const result = await api.searchTags({ searchVal: 'test' });
 
           expect(result).toBeDefined();
           expect(result.data).toBeDefined();

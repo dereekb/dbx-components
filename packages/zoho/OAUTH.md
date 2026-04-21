@@ -32,6 +32,16 @@ https://accounts.zoho.com/oauth/v2/auth?scope=`ZohoCRM.modules.ALL,ZohoCRM.setti
 
 https://accounts.zoho.com/oauth/v2/auth?scope=ZohoCRM.modules.ALL,ZohoCRM.settings.all,ZohoCRM.functions.execute.READ,ZohoCRM.functions.execute.CREATE&client_id=1000.ABCDE&response_type=code&access_type=offline&redirect_uri=http://localhost/oauth
 
+Desk Examples:
+
+https://accounts.zoho.com/oauth/v2/auth?scope=`Desk.tickets.ALL,Desk.tasks.ALL,Desk.contacts.ALL,Desk.settings.ALL,Desk.events.ALL,Desk.search.READ,Desk.articles.READ,Desk.basic.READ`&client_id=`1000.ABCDE`&response_type=code&access_type=offline&redirect_uri=`http://localhost/oauth`
+
+https://accounts.zoho.com/oauth/v2/auth?scope=Desk.tickets.ALL,Desk.tasks.ALL,Desk.contacts.ALL,Desk.settings.ALL,Desk.events.ALL,Desk.search.READ,Desk.articles.READ,Desk.basic.READ&client_id=1000.ABCDE&response_type=code&access_type=offline&redirect_uri=http://localhost/oauth
+
+Combined (Recruit + CRM + Desk) Example:
+
+https://accounts.zoho.com/oauth/v2/auth?scope=`ZohoRecruit.modules.ALL,ZohoRecruit.settings.all,ZohoRecruit.functions.execute.READ,ZohoRecruit.functions.execute.CREATE,ZohoCRM.modules.ALL,ZohoCRM.settings.ALL,ZohoCRM.functions.execute.READ,ZohoCRM.functions.execute.CREATE,Desk.tickets.ALL,Desk.tasks.ALL,Desk.contacts.ALL,Desk.settings.ALL,Desk.events.ALL,Desk.search.READ,Desk.articles.READ,Desk.basic.READ`&client_id=`1000.ABCDE`&response_type=code&access_type=offline&redirect_uri=`http://localhost/oauth`
+
 Sign Examples:
 
 https://accounts.zoho.com/oauth/v2/auth?scope=`ZohoSign.documents.ALL,ZohoSign.templates.ALL`&client_id=`1000.ABCDE`&response_type=code&access_type=offline&redirect_uri=`http://localhost/oauth`

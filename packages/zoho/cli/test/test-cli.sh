@@ -69,6 +69,25 @@ check_json_field() {
   fi
 }
 
+# Like check_json_field but also prints the error/code fields from CLI error output on failure
+check_api_ok() {
+  local description="$1"
+  local output="$2"
+  local ok
+  ok=$(echo "$output" | jq -r '.ok' 2>/dev/null)
+  if [ "$ok" = "true" ]; then
+    echo "  PASS: $description"
+    PASS=$((PASS + 1))
+  else
+    local error_msg
+    error_msg=$(echo "$output" | jq -r '.error // empty' 2>/dev/null)
+    local code
+    code=$(echo "$output" | jq -r '.code // empty' 2>/dev/null)
+    echo "  FAIL: $description (ok=$ok${code:+, code=$code}${error_msg:+, error=$error_msg})"
+    FAIL=$((FAIL + 1))
+  fi
+}
+
 echo "=== zoho-cli Integration Tests ==="
 echo ""
 
@@ -77,6 +96,9 @@ echo ""
 # ============================
 echo "Phase 1: Build verification"
 check "CLI binary exists" test -f "$ROOT_DIR/dist/packages/zoho/cli/index.js"
+
+# esbuild doesn't set the executable bit; set it here so the binary can be invoked directly
+chmod +x "$ROOT_DIR/dist/packages/zoho/cli/index.js" 2>/dev/null || true
 check "CLI binary is executable" test -x "$ROOT_DIR/dist/packages/zoho/cli/index.js"
 
 SHEBANG=$(head -1 "$ROOT_DIR/dist/packages/zoho/cli/index.js")
@@ -118,7 +140,8 @@ echo ""
 # Phase 3: Doctor (no config)
 # ============================
 echo "Phase 3: Doctor (no config)"
-DOCTOR_OUTPUT=$(HOME="$TEST_HOME" $CLI doctor 2>&1 || true)
+# Clear ZOHO env vars so loadCliConfig finds neither file config nor env config
+DOCTOR_OUTPUT=$(HOME="$TEST_HOME" ZOHO_ACCOUNTS_CLIENT_ID="" ZOHO_ACCOUNTS_CLIENT_SECRET="" ZOHO_ACCOUNTS_REFRESH_TOKEN="" ZOHO_DESK_ORG_ID="" $CLI doctor 2>&1 || true)
 check_json_valid "doctor outputs valid JSON" "$DOCTOR_OUTPUT"
 check_json_field "doctor reports config fail" "$DOCTOR_OUTPUT" ".data.checks[0].status" "fail"
 
@@ -151,19 +174,28 @@ else
   check_json_field "auth show reports configured" "$SHOW_OUTPUT" ".data.configured" "true"
 
   # Verify masking works (value should contain ***)
-  MASKED_ID=$(echo "$SHOW_OUTPUT" | jq -r '.data.accounts.clientId' 2>/dev/null)
+  MASKED_ID=$(echo "$SHOW_OUTPUT" | jq -r '.data.shared.clientId' 2>/dev/null)
   if echo "$MASKED_ID" | grep -qF '***'; then
     echo "  PASS: auth show masks client ID"
     PASS=$((PASS + 1))
   else
-    echo "  FAIL: auth show client ID not masked"
+    echo "  FAIL: auth show client ID not masked (got '$MASKED_ID')"
     FAIL=$((FAIL + 1))
   fi
 
-  # auth check
+  # auth check (output has .data.products.{product}.authenticated per product)
   CHECK_OUTPUT=$(HOME="$TEST_HOME" $CLI auth check 2>&1)
   check_json_valid "auth check outputs valid JSON" "$CHECK_OUTPUT"
-  check_json_field "auth check reports authenticated" "$CHECK_OUTPUT" ".data.authenticated" "true"
+  check_json_field "auth check has products" "$CHECK_OUTPUT" '.data.products | length > 0' "true"
+
+  AUTH_OK=$(echo "$CHECK_OUTPUT" | jq '[.data.products[].authenticated] | any' 2>/dev/null)
+  if [ "$AUTH_OK" = "true" ]; then
+    echo "  PASS: auth check reports at least one product authenticated"
+    PASS=$((PASS + 1))
+  else
+    echo "  FAIL: auth check reports no products authenticated"
+    FAIL=$((FAIL + 1))
+  fi
 
   # doctor with config
   DOCTOR_CONFIG_OUTPUT=$(HOME="$TEST_HOME" $CLI doctor 2>&1 || true)
@@ -179,20 +211,20 @@ else
 
   RECRUIT_LIST=$(HOME="$TEST_HOME" $CLI recruit list -m Candidates --per-page 1 2>&1 || true)
   check_json_valid "recruit list outputs valid JSON" "$RECRUIT_LIST"
-  check_json_field "recruit list reports ok" "$RECRUIT_LIST" ".ok" "true"
+  check_api_ok "recruit list reports ok" "$RECRUIT_LIST"
 
   CRM_LIST=$(HOME="$TEST_HOME" $CLI crm list -m Contacts --fields "First_Name,Last_Name" --per-page 1 2>&1 || true)
   check_json_valid "crm list outputs valid JSON" "$CRM_LIST"
-  check_json_field "crm list reports ok" "$CRM_LIST" ".ok" "true"
+  check_api_ok "crm list reports ok" "$CRM_LIST"
 
   if [ -n "$ZOHO_DESK_ORG_ID" ]; then
     DESK_LIST=$(HOME="$TEST_HOME" $CLI desk tickets list --limit 1 2>&1 || true)
     check_json_valid "desk tickets list outputs valid JSON" "$DESK_LIST"
-    check_json_field "desk tickets list reports ok" "$DESK_LIST" ".ok" "true"
+    check_api_ok "desk tickets list reports ok" "$DESK_LIST"
 
     DEPT_LIST=$(HOME="$TEST_HOME" $CLI desk departments list 2>&1 || true)
     check_json_valid "desk departments list outputs valid JSON" "$DEPT_LIST"
-    check_json_field "desk departments list reports ok" "$DEPT_LIST" ".ok" "true"
+    check_api_ok "desk departments list reports ok" "$DEPT_LIST"
   else
     echo "  SKIP: ZOHO_DESK_ORG_ID not set, skipping desk tests"
   fi

@@ -27,7 +27,7 @@ const tagsSearchCommand: CommandModule = {
   handler: async (argv: any) => {
     try {
       const api = getDeskApi(argv);
-      const result = await api.searchTags({ from: argv.from, limit: argv.limit, searchStr: argv.query });
+      const result = await api.searchTags({ from: argv.from, limit: argv.limit, searchVal: argv.query });
       outputResult(result.data, { count: result.data?.length });
     } catch (e) {
       outputError(e);

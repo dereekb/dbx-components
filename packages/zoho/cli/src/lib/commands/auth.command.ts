@@ -17,9 +17,40 @@ const ZOHO_ACCOUNTS_URLS: Record<string, string> = {
 const ZOHO_SCOPES: Record<string, string[]> = {
   recruit: ['ZohoRecruit.modules.ALL', 'ZohoRecruit.settings.all', 'ZohoRecruit.functions.execute.READ', 'ZohoRecruit.functions.execute.CREATE'],
   crm: ['ZohoCRM.modules.ALL', 'ZohoCRM.settings.ALL', 'ZohoCRM.functions.execute.READ', 'ZohoCRM.functions.execute.CREATE'],
-  desk: ['Desk.tickets.ALL', 'Desk.contacts.READ', 'Desk.contacts.WRITE', 'Desk.basic.READ', 'Desk.settings.READ', 'Desk.search.READ'],
+  desk: ['Desk.tickets.ALL', 'Desk.tasks.ALL', 'Desk.contacts.ALL', 'Desk.settings.ALL', 'Desk.events.ALL', 'Desk.search.READ', 'Desk.articles.READ', 'Desk.basic.READ'],
   sign: ['ZohoSign.documents.ALL', 'ZohoSign.templates.ALL']
 };
+
+/**
+ * Extracts the authorization code from a full redirect URL or returns the input as-is if it's already a code.
+ */
+function parseCodeFromInput(input: string | undefined): string | undefined {
+  if (!input) {
+    return undefined;
+  }
+
+  // If the input looks like a URL, extract the code query parameter
+  if (input.startsWith('http://') || input.startsWith('https://')) {
+    try {
+      const url = new URL(input);
+      const code = url.searchParams.get('code');
+
+      if (!code) {
+        throw new Error('No "code" parameter found in the provided URL.');
+      }
+
+      return code;
+    } catch (e) {
+      if (e instanceof TypeError) {
+        throw new Error(`Invalid URL provided for --code: ${input}`);
+      }
+
+      throw e;
+    }
+  }
+
+  return input;
+}
 
 // MARK: Setup
 const authSetupCommand: CommandModule = {
@@ -31,8 +62,8 @@ const authSetupCommand: CommandModule = {
       .option('client-secret', { type: 'string', describe: 'OAuth client secret' })
       .option('redirect-uri', { type: 'string', default: 'http://localhost/oauth', describe: 'Redirect URI (must match API console config)' })
       .option('region', { type: 'string', default: 'us', choices: ['us', 'eu', 'in', 'au', 'jp'] as const, describe: 'Zoho region' })
-      .option('scopes', { type: 'string', default: 'recruit,crm', describe: 'Comma-separated products for OAuth scopes (recruit,crm,desk,sign)' })
-      .option('code', { type: 'string', describe: 'Authorization code from the redirect URL' })
+      .option('scopes', { type: 'string', default: 'recruit,crm,desk', describe: 'Comma-separated products for OAuth scopes (recruit,crm,desk,sign)' })
+      .option('code', { type: 'string', describe: 'Authorization code or the full redirect URL (code is extracted automatically)' })
       .option('token', { type: 'string', describe: 'Set a refresh token directly (skips OAuth code exchange)' })
       .option('product', { type: 'string', choices: [...ZOHO_CLI_PRODUCTS] as const, describe: 'Store credentials for a specific product instead of shared' })
       .option('org-id', { type: 'string', describe: 'Zoho Desk organization ID' })
@@ -40,6 +71,7 @@ const authSetupCommand: CommandModule = {
       .example([
         ['$0 auth setup --client-id 1000.ABC --client-secret xyz', 'Step 1: Get OAuth URL (saves shared credentials)'],
         ['$0 auth setup --code 1000.AUTH.CODE', 'Step 2: Exchange code for refresh token'],
+        ['$0 auth setup --code "http://localhost/oauth?code=1000.AUTH.CODE&location=us"', 'Step 2: Paste the full redirect URL'],
         ['$0 auth setup --client-id 1000.ABC --client-secret xyz --token 1000.REFRESH.TOKEN', 'Set shared refresh token directly'],
         ['$0 auth setup --product crm --client-id 1000.CRM --client-secret xyz --token 1000.CRM.TOKEN', 'Set CRM-specific credentials']
       ]),
@@ -52,7 +84,7 @@ const authSetupCommand: CommandModule = {
       const redirectUri = argv.redirectUri as string;
       const region = (argv.region as string | undefined) ?? existingConfig?.shared?.region ?? 'us';
       const scopes = (argv.scopes as string).split(',').map((p: string) => p.trim());
-      const code = argv.code as string | undefined;
+      const code = parseCodeFromInput(argv.code as string | undefined);
       const token = argv.token as string | undefined;
       const accountsUrl = ZOHO_ACCOUNTS_URLS[region] ?? ZOHO_ACCOUNTS_URLS['us'];
 
@@ -127,7 +159,7 @@ const authSetupCommand: CommandModule = {
           redirectUri,
           scopes: scopeStrings,
           credentialsSaved: true,
-          nextStep: 'zoho-cli auth setup --code YOUR_AUTH_CODE'
+          nextStep: 'zoho-cli auth setup --code "PASTE_REDIRECT_URL_OR_AUTH_CODE"'
         });
       } else {
         // Step 2: Exchange code for refresh token

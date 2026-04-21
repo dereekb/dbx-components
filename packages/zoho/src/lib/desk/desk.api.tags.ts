@@ -88,10 +88,10 @@ export function zohoDeskDissociateTicketTag(context: ZohoDeskContext): ZohoDeskD
 
 // MARK: Search Tags
 /**
- * Input parameters for searching tags via `GET /tickets/tags/search`.
+ * Input parameters for searching tags via `GET /tags/search`.
  */
 export interface ZohoDeskSearchTagsInput extends ZohoDeskPageFilter {
-  readonly searchStr?: string;
+  readonly searchVal?: string;
 }
 
 /**
@@ -108,15 +108,22 @@ export type ZohoDeskSearchTagsFunction = (input: ZohoDeskSearchTagsInput) => Pro
 export function zohoDeskSearchTags(context: ZohoDeskContext): ZohoDeskSearchTagsFunction {
   return (input: ZohoDeskSearchTagsInput) => {
     const params = makeUrlSearchParams([input]);
-    return context.fetchJson<ZohoDeskPageResult<ZohoDeskTicketTag>>(`/tickets/tags/search?${params}`, zohoDeskTagApiFetchJsonInput('GET')).then((x) => x ?? { data: [] });
+    return context.fetchJson<ZohoDeskPageResult<ZohoDeskTicketTag>>(`/tags/search?${params}`, zohoDeskTagApiFetchJsonInput('GET')).then((x) => x ?? { data: [] });
   };
 }
 
 // MARK: List All Tags
 /**
- * Input parameters for listing all ticket tags via `GET /tickets/tags`.
+ * Input parameters for listing all ticket tags via `GET /ticketTags`.
  */
-export interface ZohoDeskGetAllTagsInput extends ZohoDeskPageFilter {}
+export interface ZohoDeskGetAllTagsInput extends ZohoDeskPageFilter {
+  readonly sortBy?: ZohoDeskTicketTagSortBy;
+}
+
+/**
+ * Sort keys for ticket tags.
+ */
+export type ZohoDeskTicketTagSortBy = 'createdTime' | 'count';
 
 /**
  * Function that retrieves all ticket tags.
@@ -132,6 +139,6 @@ export type ZohoDeskGetAllTagsFunction = (input: ZohoDeskGetAllTagsInput) => Pro
 export function zohoDeskGetAllTags(context: ZohoDeskContext): ZohoDeskGetAllTagsFunction {
   return (input: ZohoDeskGetAllTagsInput) => {
     const params = makeUrlSearchParams([input]);
-    return context.fetchJson<ZohoDeskPageResult<ZohoDeskTicketTag>>(`/tickets/tags?${params}`, zohoDeskTagApiFetchJsonInput('GET')).then((x) => x ?? { data: [] });
+    return context.fetchJson<ZohoDeskPageResult<ZohoDeskTicketTag>>(`/ticketTags?${params}`, zohoDeskTagApiFetchJsonInput('GET')).then((x) => x ?? { data: [] });
   };
 }

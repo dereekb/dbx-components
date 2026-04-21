@@ -1,6 +1,5 @@
 import { type Maybe, type PromiseOrValue } from '@dereekb/util';
 import { fetchPageFactory, type ReadFetchPageResultInfo, type FetchPageResult, type FetchPageFactoryInputOptions, type FetchPageFactoryConfigDefaults } from '@dereekb/util/fetch';
-import { type ZohoDeskSortOrder } from './desk';
 
 // MARK: Page Filter
 /**
@@ -32,10 +31,6 @@ export interface ZohoDeskPageFilter {
    * Defaults to {@link ZOHO_DESK_DEFAULT_PAGE_LIMIT}. Maximum is {@link ZOHO_DESK_MAX_PAGE_LIMIT}.
    */
   readonly limit?: number;
-  /**
-   * Sort direction for results.
-   */
-  readonly sortOrder?: ZohoDeskSortOrder;
 }
 
 // MARK: Page Result

@@ -108,7 +108,7 @@ export type ZohoDeskGetAgentsByIdsFunction = (input: ZohoDeskGetAgentsByIdsInput
 export function zohoDeskGetAgentsByIds(context: ZohoDeskContext): ZohoDeskGetAgentsByIdsFunction {
   return (input: ZohoDeskGetAgentsByIdsInput) => {
     const params = makeUrlSearchParams([{ agentIds: joinStringsWithCommas(asArray(input.agentIds)) }]);
-    return context.fetchJson<ZohoDeskAgent[]>(`/agentsByIds?${params}`, zohoDeskAgentApiFetchJsonInput('GET')).then((x) => x ?? []);
+    return context.fetchJson<ZohoDeskPageResult<ZohoDeskAgent>>(`/agentsByIds?${params}`, zohoDeskAgentApiFetchJsonInput('GET')).then((x) => x?.data ?? []);
   };
 }
 
