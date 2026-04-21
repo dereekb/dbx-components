@@ -6,6 +6,14 @@ import type { ZohoRecruitApi, ZohoCrmApi, ZohoDeskApi } from '@dereekb/zoho/nest
 
 const AUTH_SKIP_COMMANDS = new Set(['auth', 'doctor']);
 
+/**
+ * Module-level context set by the auth middleware.
+ *
+ * Stored here instead of on argv to avoid triggering yargs strict-mode
+ * "Unknown argument" errors.
+ */
+let _currentCliContext: ZohoCliContext | undefined;
+
 export function createAuthMiddleware(): MiddlewareFunction {
   return async (argv: any) => {
     const command = argv._?.[0];
@@ -29,7 +37,7 @@ export function createAuthMiddleware(): MiddlewareFunction {
         process.exit(4);
       }
 
-      argv._cliContext = createCliContext(config);
+      _currentCliContext = createCliContext(config);
     } catch (e) {
       outputError(e);
       process.exit(4);
@@ -37,14 +45,12 @@ export function createAuthMiddleware(): MiddlewareFunction {
   };
 }
 
-export function getCliContext(argv: any): ZohoCliContext {
-  const context = argv._cliContext as ZohoCliContext | undefined;
-
-  if (!context) {
+export function getCliContext(_argv?: any): ZohoCliContext {
+  if (!_currentCliContext) {
     throw new Error('CLI context not initialized. This is a bug.');
   }
 
-  return context;
+  return _currentCliContext;
 }
 
 export function getRecruitApi(argv: any): ZohoRecruitApi {
