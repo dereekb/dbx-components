@@ -6,6 +6,7 @@ import { type BooleanStringKeyArray, BooleanStringKeyArrayUtility } from '@deree
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { skip } from 'rxjs';
 import { DbxForgeFormContext } from './forge.context';
+import { DbxForgeDynamicFormSignalRef, DbxForgeFormContextService } from './forge.context.service';
 
 /**
  * Wraps ng-forge's DynamicForm and bridges it to the DbxForm system.
@@ -24,12 +25,12 @@ import { DbxForgeFormContext } from './forge.context';
     class: 'dbx-forge',
     '[class.dbx-forge-form-disabled]': 'isDisabled()'
   },
-  providers: [EventDispatcher, { provide: DbxForm, useExisting: DbxForgeFormContext }, { provide: DbxMutableForm, useExisting: DbxForgeFormContext }],
+  providers: [EventDispatcher, { provide: DbxForgeDynamicFormSignalRef, useExisting: DbxForgeFormComponent }, DbxForgeFormContextService, { provide: DbxForm, useExisting: DbxForgeFormContext }, { provide: DbxMutableForm, useExisting: DbxForgeFormContext }],
   imports: [DynamicForm],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxForgeFormComponent<T = unknown> implements OnInit, OnDestroy {
+export class DbxForgeFormComponent<T = unknown> implements DbxForgeDynamicFormSignalRef, OnInit, OnDestroy {
   private readonly _context = inject(DbxForgeFormContext<T>);
   private readonly _setValueSub = new SubscriptionObject();
   private readonly _resetSub = new SubscriptionObject();

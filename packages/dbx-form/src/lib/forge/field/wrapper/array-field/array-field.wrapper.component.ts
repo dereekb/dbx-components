@@ -4,8 +4,11 @@ import { DynamicTextPipe } from '@ng-forge/dynamic-forms';
 import { AsyncPipe } from '@angular/common';
 import { type CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
 import { type DbxButtonStyle, DbxButtonComponent } from '@dereekb/dbx-web';
-import { forgeFieldDisabled } from '../../field.util';
+import { type IndexNumber } from '@dereekb/util';
+import { dbxForgeFieldDisabled } from '../../field.util';
 import { DbxForgeArrayFieldWrapperProps } from './array-field.wrapper';
+import { dbxForgeArrayFieldTemplateWithItemValues } from './array-field.duplicate';
+import { DbxForgeFormContextService } from '../../../form/forge.context.service';
 
 /**
  * Forge wrapper component that wraps an ng-forge `array` field with
@@ -28,6 +31,7 @@ export class DbxForgeArrayFieldWrapperComponent implements FieldWrapperContract 
   readonly fieldInputs = input<WrapperFieldInputs>();
 
   private readonly dispatcher = inject(EventDispatcher);
+  private readonly _formContextService = inject(DbxForgeFormContextService);
 
   /**
    * Wrapper config props passed via addWrappers({ type, props }).
@@ -36,7 +40,7 @@ export class DbxForgeArrayFieldWrapperComponent implements FieldWrapperContract 
   readonly props = input<DbxForgeArrayFieldWrapperProps>();
 
   // Disabled state
-  readonly isDisabled = forgeFieldDisabled();
+  readonly isDisabled = dbxForgeFieldDisabled();
 
   readonly labelSignal = computed(() => this.props()?.label ?? '');
   readonly hintSignal = computed(() => this.props()?.hint ?? '');
@@ -80,15 +84,24 @@ export class DbxForgeArrayFieldWrapperComponent implements FieldWrapperContract 
   }
 
   // MARK: Array Value Access
+  /**
+   * Returns the current items for this array field.
+   *
+   * Reads the parent form value from {@link DbxForgeFormContextService} (which
+   * mirrors `DynamicForm.formValue()`) and indexes by the array's key. The
+   * wrapper's `fieldInputs.field.value()` is unreliable here — it reports
+   * undefined in some render phases — so we source the value from the
+   * DynamicForm signal instead.
+   */
   private _readArrayValue(): unknown[] {
-    const formValue = this.fieldInputs()?.field?.value();
     const key = this._arrayKey();
-
-    if (!formValue || !key) {
+    if (!key) {
       return [];
     }
 
-    return ((formValue as Record<string, unknown>)[key] as unknown[]) ?? [];
+    const formValue = this._formContextService.formValue();
+    const value = (formValue as Record<string, unknown>)[key];
+    return Array.isArray(value) ? value : [];
   }
 
   // MARK: Operations
@@ -104,8 +117,6 @@ export class DbxForgeArrayFieldWrapperComponent implements FieldWrapperContract 
     const template = this._itemTemplate();
     const key = this._arrayKey();
 
-    console.log('move', { fromIndex, toIndex, template, key });
-
     if (!template || !key || fromIndex === toIndex) {
       return;
     }
@@ -119,8 +130,6 @@ export class DbxForgeArrayFieldWrapperComponent implements FieldWrapperContract 
   addItem(): void {
     const template = this._itemTemplate();
     const key = this._arrayKey();
-
-    console.log('add item', { template, key });
 
     if (!template || !key) {
       return;
@@ -140,5 +149,36 @@ export class DbxForgeArrayFieldWrapperComponent implements FieldWrapperContract 
     }
 
     this.dispatcher.dispatch(arrayEvent(key).removeAt(index));
+  }
+
+  /**
+   * Duplicates the item at `fromIndex`, inserting a copy at `toIndex`.
+   *
+   * ng-forge's array slots are managed through `arrayEvent` dispatches — writing
+   * a bigger value into the form doesn't create a new slot. We read the source
+   * item from the form value, stamp its fields onto the template via
+   * {@link dbxForgeArrayFieldTemplateWithItemValues}, and dispatch `insertAt`
+   * so the slot is registered AND initialized with the duplicated values in a
+   * single event (back-to-back dispatches don't settle reliably).
+   */
+  duplicateItem(fromIndex: IndexNumber, toIndex: IndexNumber): void {
+    const template = this._itemTemplate();
+    const key = this._arrayKey();
+
+    if (!template || !key) {
+      return;
+    }
+
+    const items = this._readArrayValue();
+
+    if (fromIndex < 0 || fromIndex >= items.length) {
+      return;
+    }
+
+    const source = items[fromIndex];
+    const templateWithValues = dbxForgeArrayFieldTemplateWithItemValues(template, source);
+    const boundedTo = Math.max(0, Math.min(toIndex, items.length));
+
+    this.dispatcher.dispatch(arrayEvent(key).insertAt(boundedTo, templateWithValues));
   }
 }

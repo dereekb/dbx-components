@@ -10,11 +10,11 @@ import {
   formlyAddressListField,
   formlyToggleField,
   dbxForgeArrayField,
-  forgeNameField,
-  forgeEmailField,
-  forgePhoneField,
-  forgeAddressField,
-  forgeToggleField,
+  dbxForgeNameField,
+  dbxForgeEmailField,
+  dbxForgePhoneField,
+  dbxForgeAddressField,
+  dbxForgeToggleField,
   DbxFormFormlyArrayFieldModule,
   DbxFormFormlyTextFieldModule,
   DbxFormFormlyPhoneFieldModule,
@@ -99,7 +99,7 @@ export class DocFormArrayComponent {
           addText: 'Add Test Field',
           removeText: 'Remove Test Field'
         },
-        template: [forgeNameField()],
+        template: [dbxForgeNameField()],
         maxLength: 2
       })
     ]
@@ -110,15 +110,25 @@ export class DocFormArrayComponent {
       dbxForgeArrayField({
         key: 'test2',
         props: {
-          label: 'Field With Add and Remove',
-          hint: 'Shows the drag array field with per-item labels and rearrange disabled.',
+          label: 'Field With Add, Remove, and Duplicate',
+          hint: 'Shows the drag array field with dragging disabled, per-item labels, allowRemove driven by the item value, and a duplicate button that inserts a copy at the end of the list.',
           allowAdd: true
         },
         elementProps: {
-          disableRearrange: true
-          // labelForEntry: ({ value }: { value: unknown }) => (value as { name: string })?.name // TODO: ...
+          disableRearrange: true,
+          allowRemove: ({ fieldValue }) => !(fieldValue as { disable: boolean })?.disable,
+          labelForEntry: ({ fieldValue }) => (fieldValue as { name: string })?.name,
+          // Returning a numeric index sends the duplicate to the end of the array
+          // instead of inserting it directly after the source item.
+          allowDuplicate: ({ arrayIndex, rootFormValue, arrayPath }) => {
+            return Math.max(arrayIndex ? arrayIndex + 1 : 0, 0);
+          },
+          duplicateButton: {
+            style: { type: 'stroked', color: 'accent' },
+            display: { icon: 'content_copy', text: 'Make Copy' }
+          }
         },
-        template: [forgeNameField(), forgeToggleField({ key: 'disable', label: 'Disable Remove' })]
+        template: [dbxForgeNameField(), dbxForgeToggleField({ key: 'disable', label: 'Disable Remove' })]
       })
     ]
   };

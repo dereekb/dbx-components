@@ -1,16 +1,22 @@
-<div class="dbx-form-repeat-array-field" cdkDrag cdkDragLockAxis="y">
+<div class="dbx-form-repeat-array-field" cdkDrag cdkDragLockAxis="y" [cdkDragDisabled]="disableRearrangeSignal()">
   <ng-template cdkDragPlaceholder>
     <div class="dbx-form-repeat-array-drag-placeholder"></div>
   </ng-template>
-  <div class="dbx-form-repeat-array-bar dbx-flex-bar">
+  <div class="dbx-content-navbar dbx-form-repeat-array-bar dbx-flex-bar">
     @if (!disableRearrangeSignal()) {
       <button mat-icon-button type="button" cdkDragHandle class="dbx-form-repeat-array-drag-button" [disabled]="isDisabled()" aria-label="Drag to reorder">
         <mat-icon>drag_handle</mat-icon>
       </button>
       <dbx-button-spacer></dbx-button-spacer>
     }
+    @if (showIndexChipSignal()) {
+      <dbx-chip [display]="indexChipDisplaySignal()">{{ arrayContext.index() + 1 }}</dbx-chip>
+    }
     <span class="dbx-form-repeat-array-label">{{ labelSignal() }}</span>
     <span class="spacer"></span>
+    @if (allowDuplicateSignal()) {
+      <dbx-button class="dbx-button-spacer" [buttonDisplay]="duplicateButtonSignal().display" [buttonStyle]="duplicateButtonSignal().style" [disabled]="isDisabled()" (buttonClick)="duplicateItem()"></dbx-button>
+    }
     @if (allowRemoveSignal()) {
       <dbx-button [text]="removeTextSignal()" [buttonStyle]="removeButtonStyleSignal()" [disabled]="isDisabled()" (buttonClick)="removeItem()"></dbx-button>
     }
