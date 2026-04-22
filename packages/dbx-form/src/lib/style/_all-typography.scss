@@ -3,7 +3,7 @@
 @use '../formly/formly';
 @use '../layout/layout';
 @use '../formly/field/field';
-@use '../formly/form/form' as forms;
+@use '../forge/preset/preset' as forge-preset;
 @use '../extension/extension';
 
 // Includes all of the typographic styles.
