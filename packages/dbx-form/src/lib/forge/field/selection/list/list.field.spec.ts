@@ -1,15 +1,21 @@
 /**
  * Exhaustive type and runtime tests for the list selection forge field.
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { expectTypeOf } from 'vitest';
 import { type DynamicText, type LogicConfig, type ValidatorConfig, type ValidationMessages } from '@ng-forge/dynamic-forms';
-import { of } from 'rxjs';
+import { firstValueFrom, NEVER, of, type Observable } from 'rxjs';
 import { dbxForgeListSelectionField } from './list.field';
 import type { DbxForgeListSelectionFieldConfig, DbxForgeListSelectionFieldDef, DbxForgeListSelectionFieldProps } from './list.field';
-import { type AbstractDbxSelectionListWrapperDirective } from '@dereekb/dbx-web';
+import { DbxForgeListSelectionFieldComponent } from './list.field.component';
+import { type AbstractDbxSelectionListWrapperDirective, type ListSelectionState } from '@dereekb/dbx-web';
 import { successResult } from '@dereekb/rxjs';
+import { waitForMs, type Maybe } from '@dereekb/util';
 import type { Type } from '@angular/core';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { DBX_FORGE_TEST_PROVIDERS } from '../../../form/forge.component.spec';
+import { DbxForgeAsyncConfigFormComponent } from '../../../form';
 
 // MARK: Shared Stubs
 const stubListComponentClass = of(class {} as unknown as Type<AbstractDbxSelectionListWrapperDirective<unknown>>);
@@ -53,6 +59,8 @@ describe('DbxForgeListSelectionFieldConfig - Exhaustive Whitelist', () => {
     | 'excludeValueIfHidden'
     | 'excludeValueIfDisabled'
     | 'excludeValueIfReadonly'
+    | 'skipAutoWrappers'
+    | 'skipDefaultWrappers'
     // Phantom brand
     | '__fieldDef';
 
@@ -123,6 +131,8 @@ describe('DbxForgeListSelectionFieldDef - Exhaustive Whitelist', () => {
     | 'derivation'
     | 'schemas'
     | 'wrappers'
+    | 'skipAutoWrappers'
+    | 'skipDefaultWrappers'
     // From BaseValueField
     | 'value'
     | 'placeholder';
@@ -264,5 +274,104 @@ describe('dbxForgeListSelectionField()', () => {
     const validationMessages: ValidationMessages = { mustSelectItem: 'Please select at least one item' };
     const field = dbxForgeListSelectionField({ ...minimalConfig(), validationMessages }) as any;
     expect(field.validationMessages).toEqual(validationMessages);
+  });
+});
+
+// ============================================================================
+// Runtime Form Scenarios - dbxForgeListSelectionField()
+// ============================================================================
+
+describe('scenarios', () => {
+  let fixture: ComponentFixture<DbxForgeAsyncConfigFormComponent>;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [...DBX_FORGE_TEST_PROVIDERS]
+    });
+
+    fixture = TestBed.createComponent(DbxForgeAsyncConfigFormComponent);
+  });
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
+  });
+
+  describe('disabled state', () => {
+    type Item = { readonly id: string };
+    const items: Item[] = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
+
+    async function renderDisabledListFieldFixture() {
+      const field = dbxForgeListSelectionField<Item, AbstractDbxSelectionListWrapperDirective<Item>, string>({
+        key: 'selectedItems',
+        props: {
+          // NEVER keeps the inner dbx-injection list inert so the outer
+          // forge list selection field renders without needing a real
+          // list wrapper component in the test bed.
+          listComponentClass: NEVER as unknown as Observable<Type<AbstractDbxSelectionListWrapperDirective<Item>>>,
+          readKey: (item) => item.id,
+          state$: of(successResult(items))
+        }
+      });
+
+      const context = fixture.componentInstance.context;
+      context.stripEmptyValues = false;
+      context.requireValid = false;
+      fixture.componentInstance.config.set({ fields: [field] });
+
+      fixture.detectChanges();
+      await fixture.whenStable();
+      // Extra settle for the lazy-rendered list field component + its
+      // FORM_OPTIONS-backed dbxForgeFieldDisabled() computed signal.
+      await waitForMs(100);
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      context.setDisabled(undefined, true);
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const listComponent = fixture.debugElement.query(By.directive(DbxForgeListSelectionFieldComponent))?.componentInstance as Maybe<DbxForgeListSelectionFieldComponent<Item, AbstractDbxSelectionListWrapperDirective<Item>, string>>;
+
+      return { context, listComponent };
+    }
+
+    // Regression: the list selection view still let users toggle items and
+    // pushed those selections back into the form value even when the forge
+    // form was marked disabled. `isDisabled()` was wired up on the outer
+    // component (driving the `dbx-forge-disabled` class), but the
+    // selectionChange -> _updateForSelection -> _setFieldValue path never
+    // consulted it, so simulating a selection change while disabled still
+    // mutated the form value.
+    it('should expose isDisabled()=true on the list field component when the form is disabled', async () => {
+      const { listComponent } = await renderDisabledListFieldFixture();
+      expect(listComponent).toBeDefined();
+      expect(listComponent!.isDisabled()).toBe(true);
+    });
+
+    it('should not update the form value when a selection change fires while the form is disabled', async () => {
+      const { context, listComponent } = await renderDisabledListFieldFixture();
+      expect(listComponent).toBeDefined();
+
+      // Capture the pre-selection-change value so we can assert it is unchanged,
+      // regardless of how the form framework initializes an unset selection field.
+      const before = (await firstValueFrom(context.getValue())) as { selectedItems?: unknown };
+
+      const selection: ListSelectionState<Item> = {
+        items: items.map((itemValue, i) => ({ itemValue, selected: i === 0 }))
+      };
+
+      // Mirrors what AbstractDbxSelectionListWrapperDirective.selectionChange
+      // emits when the user toggles an item. _updateForSelection is private
+      // at the TS layer but is the documented entry point the component
+      // wires selectionChange to in its config$ init callback.
+      (listComponent as unknown as { _updateForSelection: (s: ListSelectionState<Item>) => void })._updateForSelection(selection);
+
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const after = (await firstValueFrom(context.getValue())) as { selectedItems?: unknown };
+      expect(after.selectedItems).toEqual(before.selectedItems);
+      expect(after.selectedItems).not.toEqual(['a']);
+    });
   });
 });

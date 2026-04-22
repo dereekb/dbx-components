@@ -165,7 +165,7 @@ describe('scenarios', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [...DBX_FORGE_TEST_PROVIDERS, withLoggerConfig({ derivations: 'verbose' })]
+      providers: [...DBX_FORGE_TEST_PROVIDERS]
     });
 
     fixture = TestBed.createComponent(DbxForgeAsyncConfigFormComponent);

@@ -9,7 +9,10 @@
       </doc-feature-form-tabs>
 
       <h4>Email and Password with verify fields.</h4>
-      <doc-form-example-form [dbxFormSource]="invalidVerifyContent" [config]="usernamePasswordLoginWithVerifyField" [disabled]="formTabs.disabled()"></doc-form-example-form>
+      <doc-feature-form-tabs #formTabsVerify formlyFn="formlyUsernamePasswordLoginFields({ verifyPassword: true })" forgeFn="dbxForgeUsernamePasswordLoginFields({ verifyPassword: true })">
+        <doc-form-example-form formly [dbxFormSource]="invalidVerifyContent" [config]="usernamePasswordLoginWithVerifyField" [disabled]="formTabsVerify.disabled()"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeUsernamePasswordLoginWithVerifyConfig" [disabled]="formTabsVerify.disabled()"></doc-forge-example-form>
+      </doc-feature-form-tabs>
     </doc-feature-example>
     <doc-feature-example header="timezoneStringField()" hint="Creates field configurations pre-configured for timezone selection.">
       <h4>Timezone Selection</h4>

@@ -1,5 +1,17 @@
+import { capitalizeFirstLetter, type Maybe } from '@dereekb/util';
+import type { ValidatorConfig } from '@ng-forge/dynamic-forms';
 import { dbxForgeTextField, type DbxForgeTextFieldConfig } from '../field/value/text/text.field';
 import { dbxForgeEmailField, type DbxForgeEmailFieldConfig } from '../field/value/text/text.additional.field';
+
+/**
+ * Validation kind used on the verify password field to indicate the passwords do not match.
+ */
+export const DBX_FORGE_PASSWORDS_MATCH_VALIDATION_KIND = 'passwordsMatch';
+
+/**
+ * Default validation message used when the passwords do not match.
+ */
+export const DBX_FORGE_DEFAULT_PASSWORDS_MATCH_VALIDATION_MESSAGE = 'The passwords do not match.';
 
 // MARK: Password Field
 /**
@@ -52,6 +64,66 @@ export function dbxForgeTextVerifyPasswordField(config?: DbxForgeTextPasswordFie
   });
 }
 
+// MARK: Password With Verify Field
+/**
+ * Configuration for a forge password field group that includes a verification (confirm) password field.
+ */
+export interface DbxForgeTextPasswordWithVerifyFieldConfig {
+  /**
+   * Optional configuration for the primary password field.
+   */
+  readonly password?: DbxForgeTextPasswordFieldConfig;
+  /**
+   * Optional configuration for the verify/confirm password field.
+   */
+  readonly verifyPassword?: DbxForgeTextPasswordFieldConfig;
+}
+
+/**
+ * Creates a forge password and verify password pair with a custom validator on the verify field
+ * that ensures both values match.
+ *
+ * The verify password field uses an expression-based custom validator that compares the
+ * verify field value against the primary password field's value via `formValue`.
+ *
+ * @param config - Configuration for the password and verify password fields
+ * @returns A tuple of `[passwordField, verifyPasswordField]`
+ *
+ * @example
+ * ```typescript
+ * const [passwordField, verifyPasswordField] = dbxForgeTextPasswordWithVerifyField();
+ * ```
+ */
+export function dbxForgeTextPasswordWithVerifyField(config?: DbxForgeTextPasswordWithVerifyFieldConfig) {
+  const passwordField = dbxForgeTextPasswordField(config?.password);
+  const passwordKey = passwordField.key as string;
+  const verifyPasswordKey = config?.verifyPassword?.key ?? `verify${capitalizeFirstLetter(passwordKey)}`;
+  const verifyPasswordLabel = config?.verifyPassword?.label ?? `Verify ${passwordField.label ?? 'Password'}`;
+
+  const matchValidator: ValidatorConfig = {
+    type: 'custom',
+    expression: `fieldValue === formValue.${passwordKey}`,
+    kind: DBX_FORGE_PASSWORDS_MATCH_VALIDATION_KIND
+  };
+
+  const inputValidators = (config?.verifyPassword?.validators ?? []) as ValidatorConfig[];
+  const inputValidationMessages = config?.verifyPassword?.validationMessages;
+
+  const verifyPasswordField = dbxForgeTextVerifyPasswordField({
+    ...config?.password,
+    ...config?.verifyPassword,
+    key: verifyPasswordKey,
+    label: verifyPasswordLabel,
+    validators: [...inputValidators, matchValidator],
+    validationMessages: {
+      [DBX_FORGE_PASSWORDS_MATCH_VALIDATION_KIND]: DBX_FORGE_DEFAULT_PASSWORDS_MATCH_VALIDATION_MESSAGE,
+      ...inputValidationMessages
+    }
+  });
+
+  return [passwordField, verifyPasswordField] as const;
+}
+
 // MARK: Username Login Fields
 /**
  * Configuration for the username field in a forge login form.
@@ -88,10 +160,18 @@ export interface DbxForgeUsernameLoginFieldsConfig {
    * Optional configuration for the password field.
    */
   readonly password?: DbxForgeTextPasswordFieldConfig;
+  /**
+   * Whether to include a verify password field, or a custom configuration for it.
+   * Set to `true` for defaults, `false`/`undefined` to omit, or pass a config object.
+   */
+  readonly verifyPassword?: Maybe<boolean | DbxForgeTextPasswordFieldConfig>;
 }
 
 /**
  * Creates an array of forge field definitions for a username/password login form.
+ *
+ * When `verifyPassword` is provided, a second password field is added with a custom
+ * validator that ensures both password values match.
  *
  * @param config - Login fields configuration
  * @returns An array of forge field definitions for the login form
@@ -102,9 +182,19 @@ export interface DbxForgeUsernameLoginFieldsConfig {
  * ```
  */
 export function dbxForgeUsernamePasswordLoginFields(config: DbxForgeUsernameLoginFieldsConfig) {
-  const usernameField = dbxForgeUsernameLoginField(config.username);
-  const passwordField = dbxForgeTextPasswordField(config.password);
+  const { username, password, verifyPassword } = config;
+  const usernameField = dbxForgeUsernameLoginField(username);
 
+  if (verifyPassword) {
+    const [passwordField, verifyPasswordField] = dbxForgeTextPasswordWithVerifyField({
+      password,
+      verifyPassword: verifyPassword === true ? undefined : verifyPassword
+    });
+
+    return [usernameField, passwordField, verifyPasswordField];
+  }
+
+  const passwordField = dbxForgeTextPasswordField(password);
   return [usernameField, passwordField];
 }
 

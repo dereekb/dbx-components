@@ -7,6 +7,7 @@ import type { ArrayField, GroupField, RowField } from '@ng-forge/dynamic-forms';
 import type { MatInputField } from '@ng-forge/dynamic-forms-material';
 import { dbxForgeAddressField, dbxForgeAddressFields, dbxForgeAddressLineField, dbxForgeAddressListField } from './text.address.field';
 import type { DbxForgeAddressFieldConfig, DbxForgeAddressFieldsConfig, DbxForgeAddressLineFieldConfig, DbxForgeAddressListFieldConfig } from './text.address.field';
+import { DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME } from '../../wrapper/array-field/array-field.wrapper';
 
 // Shared key set for DbxForgeTextFieldConfig (DbxForgeAddressLineFieldConfig extends Partial<DbxForgeTextFieldConfig>).
 type DbxForgeTextFieldConfigKeys =
@@ -354,9 +355,11 @@ describe('dbxForgeAddressListField()', () => {
 
   it('should propagate required to the address template fields', () => {
     const field = dbxForgeAddressListField({ required: false }) as any;
-    // The array field stores the address template on restoreTemplate after processing.
-    const template = field.restoreTemplate ?? field.fields;
-    expect(template).toBeDefined();
+    // The address template fields live inside the outer array wrapper's itemTemplate container.
+    const outerWrapper = (field.wrappers as any[]).find((w) => w.type === DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME);
+    const templateFields = outerWrapper.props.itemTemplate[0].fields as MatInputField[];
+    expect(templateFields).toBeDefined();
+    expect(templateFields[0].required).toBe(false);
   });
 });
 

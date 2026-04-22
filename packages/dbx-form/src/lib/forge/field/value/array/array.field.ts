@@ -1,8 +1,9 @@
-import type { ArrayField, ContainerField } from '@ng-forge/dynamic-forms';
+import type { ArrayField, ContainerField, SimplifiedArrayField } from '@ng-forge/dynamic-forms';
 import { dbxForgeBuildFieldDef, dbxForgeFieldFunction, type DbxForgeFieldFunctionDef } from '../../field';
 import type { DbxForgeField } from '../../../form/forge.form';
 import { DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME, type DbxForgeArrayFieldWrapperProps } from '../../wrapper/array-field/array-field.wrapper';
 import { DBX_FORGE_ARRAY_FIELD_ELEMENT_WRAPPER_NAME, type DbxForgeArrayFieldElementWrapperProps } from '../../wrapper/array-field/array-field.element.wrapper';
+import { Configurable } from '@dereekb/util';
 
 // MARK: Config
 /**
@@ -96,8 +97,11 @@ export const dbxForgeArrayField = dbxForgeFieldFunction<DbxForgeArrayFieldConfig
       }
     });
 
-    delete (config as any).props; // clear props too
-    delete (config as any).template; // template should be unset, otherwise it will add the ng-forge add button
-    (config as any).restoreTemplate = itemTemplate; // set the restore template
+    (config as Configurable<SimplifiedArrayField>).addButton = false;
+    (config as Configurable<SimplifiedArrayField>).removeButton = false;
+
+    (config as any).template = itemTemplate;
+
+    delete (config as any).props; // clear props
   })
 }) as DbxForgeArrayFieldFunction;

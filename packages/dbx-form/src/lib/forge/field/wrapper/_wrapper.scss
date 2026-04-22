@@ -35,12 +35,6 @@ $dbx-forge-form-field-slider-thumb-margin: 22px;
     padding-bottom: 0 !important;
   }
 
-  // When a child field shows an inline error (e.g. searchable chip input validation),
-  // hide the wrapper's subscript hint so the error effectively replaces it.
-  dbx-forge-form-field-wrapper:has(.dbx-chip-input-error) .mat-mdc-form-field-hint-wrapper {
-    display: none;
-  }
-
   // The wrapper's mat-mdc-form-field host class causes Angular Material's
   // form-field line-height (24px) and letter-spacing (0.496px) to cascade
   // into all descendants. For list selection fields this distorts the list

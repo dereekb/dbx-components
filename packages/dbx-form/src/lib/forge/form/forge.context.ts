@@ -114,6 +114,8 @@ export function stripEmptyForgeValues<T>(value: T): T {
  */
 @Injectable()
 export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDestroy {
+  // TODO: Add global validation config service
+
   private static readonly INITIAL_STATE: DbxFormEvent = {
     isComplete: false,
     state: DbxFormState.INITIALIZING,

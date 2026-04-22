@@ -89,6 +89,8 @@ function mergeCustomFnConfigInto(target: FormConfig['customFnConfig'], source: F
 }
 
 // MARK: Form Config
+export interface DbxForgeGlobalFormConfigDefaults extends Pick<FormConfig, 'defaultValidationMessages'> {}
+
 export interface DbxForgeFinalizeFormConfigResult {
   /**
    * The input config that was used to generate the field configs.
@@ -104,7 +106,7 @@ export interface DbxForgeFinalizeFormConfigResult {
   readonly config: FormConfig;
 }
 
-export function dbxForgeFinalizeFormConfig(input: FormConfig): DbxForgeFinalizeFormConfigResult {
+export function dbxForgeFinalizeFormConfig(input: FormConfig, globalDefaults?: DbxForgeGlobalFormConfigDefaults): DbxForgeFinalizeFormConfigResult {
   const { fields } = input;
 
   /**

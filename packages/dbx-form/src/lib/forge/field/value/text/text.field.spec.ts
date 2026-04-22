@@ -315,7 +315,7 @@ describe('scenarios', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [...DBX_FORGE_TEST_PROVIDERS, withLoggerConfig({ derivations: 'verbose' })]
+      providers: [...DBX_FORGE_TEST_PROVIDERS]
     });
 
     fixture = TestBed.createComponent(DbxForgeAsyncConfigFormComponent);
@@ -387,6 +387,78 @@ describe('scenarios', () => {
       const streamEvent = await firstValueFrom(fixture.componentInstance.context.stream$);
 
       expect(streamEvent.status).toBe('INVALID' as FormControlStatus);
+    });
+
+    describe('email inputType', () => {
+      it('should register an email validator when inputType is email', async () => {
+        const field = dbxForgeTextField({ key: 'email', inputType: 'email' });
+
+        const formConfig = { fields: [field] };
+        fixture.componentInstance.config.set(formConfig);
+
+        fixture.detectChanges();
+        await fixture.whenStable();
+
+        const fixtureFormConfig: FormConfig = await firstValueFrom(fixture.componentInstance.context.config$);
+        const configuredField = fixtureFormConfig.fields[0] as MatInputField;
+
+        expect(configuredField.validators).toEqual(expect.arrayContaining([expect.objectContaining({ type: 'email' })]));
+        expect(configuredField.validationMessages?.email).toBeDefined();
+      });
+
+      it('should mark the form as invalid when the value is not a valid email', async () => {
+        const field = dbxForgeTextField({ key: 'email', inputType: 'email' });
+
+        const formConfig = { fields: [field] };
+        fixture.componentInstance.config.set(formConfig);
+
+        fixture.detectChanges();
+        await fixture.whenStable();
+
+        fixture.componentInstance.setValue({ email: 'not-an-email' });
+
+        fixture.detectChanges();
+        await waitForMs(0);
+        await fixture.whenStable();
+
+        const streamEvent = await firstValueFrom(fixture.componentInstance.context.stream$);
+        expect(streamEvent.status).toBe('INVALID' as FormControlStatus);
+      });
+
+      it('should mark the form as valid when the value is a valid email', async () => {
+        const field = dbxForgeTextField({ key: 'email', inputType: 'email' });
+
+        const formConfig = { fields: [field] };
+        fixture.componentInstance.config.set(formConfig);
+
+        fixture.detectChanges();
+        await fixture.whenStable();
+
+        fixture.componentInstance.setValue({ email: 'user@example.com' });
+
+        fixture.detectChanges();
+        await waitForMs(0);
+        await fixture.whenStable();
+
+        const streamEvent = await firstValueFrom(fixture.componentInstance.context.stream$);
+        expect(streamEvent.status).toBe('VALID' as FormControlStatus);
+      });
+
+      it('should not register an email validator when inputType is not email', async () => {
+        const field = dbxForgeTextField({ key: 'name', inputType: 'text' });
+
+        const formConfig = { fields: [field] };
+        fixture.componentInstance.config.set(formConfig);
+
+        fixture.detectChanges();
+        await fixture.whenStable();
+
+        const fixtureFormConfig: FormConfig = await firstValueFrom(fixture.componentInstance.context.config$);
+        const configuredField = fixtureFormConfig.fields[0] as MatInputField;
+
+        const validators = configuredField.validators ?? [];
+        expect(validators.some((v) => (v as any).type === 'email')).toBe(false);
+      });
     });
   });
 });

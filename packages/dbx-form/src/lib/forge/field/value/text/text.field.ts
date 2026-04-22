@@ -4,7 +4,7 @@ import { transformStringFunction, type TransformStringFunctionConfig, type Trans
 import type { FieldAutocompleteAttributeOptionRef } from '../../../../field/field.autocomplete';
 import { dbxForgeFieldFunction, dbxForgeBuildFieldDef, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef, type DbxForgeFieldFunction, DbxForgeFieldHintOrDescriptionValueRef } from '../../field';
 import { configureForgeAutocompleteFieldMeta } from '../../field.util.meta';
-import { dbxForgePatternValidator } from '../../field.util.validation';
+import { dbxForgeEmailValidator, dbxForgePatternValidator } from '../../field.util.validation';
 import { HintFieldConfig } from 'packages/dbx-form/src/lib/field';
 
 // MARK: Text Field
@@ -91,6 +91,10 @@ export const dbxForgeTextField = dbxForgeFieldFunction<DbxForgeTextFieldConfig>(
           transform: transformStringFunction(transform)
         }
       ]);
+    }
+
+    if (config.inputType === 'email') {
+      x.addValidation(dbxForgeEmailValidator());
     }
 
     // configure autocomplete

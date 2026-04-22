@@ -8,10 +8,10 @@
         </button>
       </mat-chip-row>
     }
-    <input #textInput class="dbx-forge-bare-input" [formControl]="inputCtrl" [matAutocomplete]="auto" [matChipInputFor]="chipGrid" [matChipInputSeparatorKeyCodes]="separatorKeysCodes" (matChipInputTokenEnd)="addChip($event)" [placeholder]="searchInputPlaceholder()" (blur)="onBlur()" (keydown)="tabPressedOnInput($event)" [attr.aria-invalid]="ariaInvalid()" [attr.aria-describedby]="ariaDescribedBy()" />
+    <input #textInput class="dbx-forge-bare-input" [class.dbx-warn]="inputErrorMessage" [formControl]="inputCtrl" [matAutocomplete]="auto" [matChipInputFor]="chipGrid" [matChipInputSeparatorKeyCodes]="separatorKeysCodes" (matChipInputTokenEnd)="addChip($event)" [placeholder]="searchInputPlaceholder()" (blur)="onBlur()" (keydown)="tabPressedOnInput($event)" [attr.aria-invalid]="ariaInvalid()" [attr.aria-describedby]="ariaDescribedBy()" />
   </mat-chip-grid>
-  @if (inputCtrl.touched && inputErrorMessage) {
-    <span class="dbx-chip-input-error">{{ inputErrorMessage }}</span>
+  @if (inputCtrl.value && inputCtrl.touched && inputErrorMessage) {
+    <div class="dbx-small mat-mdc-form-field-error mat-mdc-form-field-bottom-align">{{ inputErrorMessage }}</div>
   }
 </div>
 <mat-autocomplete class="dbx-searchable-text-field-autocomplete" #auto="matAutocomplete" (optionSelected)="selectedChip($event)">

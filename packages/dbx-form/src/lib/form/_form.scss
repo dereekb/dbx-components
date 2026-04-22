@@ -63,6 +63,7 @@
   .dbx-forge-disabled {
     opacity: 0.38;
     pointer-events: none;
+    --mat-list-list-item-disabled-label-text-opacity: unset;
   }
 
   // Form-level disabled state: disables all interactive elements inside a forge form.

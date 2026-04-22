@@ -5,7 +5,7 @@ import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereek
 import { SubscriptionObject, switchMapFilterMaybe, distinctUntilHasDifferentValues } from '@dereekb/rxjs';
 import { type AbstractDbxSelectionListWrapperDirective, type ListSelectionState, type DbxValueListItemDecisionFunction, dbxValueListItemDecisionFunction, DbxListModifierModule } from '@dereekb/dbx-web';
 import { BehaviorSubject, map, type Observable, shareReplay } from 'rxjs';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { type FieldTree } from '@angular/forms/signals';
 import { type DynamicText, type FieldMeta, type ValidationMessages } from '@ng-forge/dynamic-forms';
 import { createResolvedErrorsSignal, setupMetaTracking, shouldShowErrors } from '@ng-forge/dynamic-forms/integration';
@@ -44,6 +44,7 @@ export class DbxForgeListSelectionFieldComponent<T = unknown, C extends Abstract
 
   // Disabled state
   readonly isDisabled = dbxForgeFieldDisabled();
+  readonly isDisabled$ = toObservable(this.isDisabled);
 
   private readonly _selectionEventSub = new SubscriptionObject();
   private readonly _loadMoreSub = new SubscriptionObject();
@@ -84,6 +85,7 @@ export class DbxForgeListSelectionFieldComponent<T = unknown, C extends Abstract
         componentClass,
         init: (listView) => {
           listView.setSelectionMode('select');
+          listView.setDisabled(this.isDisabled$);
 
           if (state$) {
             listView.setState(state$);
@@ -121,19 +123,19 @@ export class DbxForgeListSelectionFieldComponent<T = unknown, C extends Abstract
   readonly configSignal = toSignal(this.config$);
   readonly isSelectedModifierFunctionSignal = toSignal(this.isSelectedModifierFunction$);
 
-  // Sync field value to _valuesSubject
-  private readonly _syncFieldValueEffect = effect(() => {
-    const fieldGetter = this.field();
-    if (!fieldGetter) return;
-
-    const fieldState = typeof fieldGetter === 'function' ? (fieldGetter as any)() : undefined;
-    const fieldValue = fieldState?.value?.() as Maybe<K[]>;
-    const values = fieldValue != null ? convertMaybeToArray(fieldValue) : [];
-    this._valuesSubject.next(values);
-  });
-
   constructor() {
     setupMetaTracking(this.elementRef, this.meta as any, { selector: 'dbx-injection' });
+
+    // Sync field value to _valuesSubject
+    effect(() => {
+      const fieldGetter = this.field();
+      if (!fieldGetter) return;
+
+      const fieldState = typeof fieldGetter === 'function' ? (fieldGetter as any)() : undefined;
+      const fieldValue = fieldState?.value?.() as Maybe<K[]>;
+      const values = fieldValue != null ? convertMaybeToArray(fieldValue) : [];
+      this._valuesSubject.next(values);
+    });
   }
 
   ngOnInit(): void {
@@ -152,6 +154,8 @@ export class DbxForgeListSelectionFieldComponent<T = unknown, C extends Abstract
 
   // MARK: Internal
   private _updateForSelection(list: ListSelectionState<T>): void {
+    if (this.isDisabled()) return;
+
     const p = this.props();
     const readKey = p?.readKey;
 

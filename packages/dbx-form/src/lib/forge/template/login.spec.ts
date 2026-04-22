@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { dbxForgeTextPasswordField, dbxForgeTextVerifyPasswordField, dbxForgeUsernamePasswordLoginFields, dbxForgeUsernameLoginField } from './login';
+import { DBX_FORGE_DEFAULT_PASSWORDS_MATCH_VALIDATION_MESSAGE, DBX_FORGE_PASSWORDS_MATCH_VALIDATION_KIND, dbxForgeTextPasswordField, dbxForgeTextPasswordWithVerifyField, dbxForgeTextVerifyPasswordField, dbxForgeUsernamePasswordLoginFields, dbxForgeUsernameLoginField } from './login';
 
 // MARK: dbxForgeTextPasswordField
 describe('dbxForgeTextPasswordField()', () => {
@@ -148,5 +148,59 @@ describe('dbxForgeUsernamePasswordLoginFields()', () => {
   it('should propagate password config', () => {
     const fields = dbxForgeUsernamePasswordLoginFields({ username: 'email', password: { label: 'Secret' } });
     expect(fields[1].label).toBe('Secret');
+  });
+
+  it('should include a verify password field when verifyPassword is true', () => {
+    const fields = dbxForgeUsernamePasswordLoginFields({ username: 'email', verifyPassword: true });
+    expect(fields.length).toBe(3);
+    expect(fields[2].key).toBe('verifyPassword');
+    expect(fields[2].props?.type).toBe('password');
+  });
+
+  it('should include a verify password field when verifyPassword is an object', () => {
+    const fields = dbxForgeUsernamePasswordLoginFields({ username: 'email', verifyPassword: { label: 'Confirm' } });
+    expect(fields.length).toBe(3);
+    expect(fields[2].label).toBe('Confirm');
+  });
+
+  it('should not include a verify password field when verifyPassword is not set', () => {
+    const fields = dbxForgeUsernamePasswordLoginFields({ username: 'email' });
+    expect(fields.length).toBe(2);
+  });
+});
+
+// MARK: dbxForgeTextPasswordWithVerifyField
+describe('dbxForgeTextPasswordWithVerifyField()', () => {
+  it('should return a tuple of password and verify password fields', () => {
+    const [passwordField, verifyPasswordField] = dbxForgeTextPasswordWithVerifyField();
+    expect(passwordField.key).toBe('password');
+    expect(verifyPasswordField.key).toBe('verifyPassword');
+  });
+
+  it('should add a match validator to the verify password field', () => {
+    const [, verifyPasswordField] = dbxForgeTextPasswordWithVerifyField();
+    const validators = verifyPasswordField.validators ?? [];
+    const matchValidator = validators.find((v) => v.type === 'custom' && (v as { kind?: string }).kind === DBX_FORGE_PASSWORDS_MATCH_VALIDATION_KIND);
+    expect(matchValidator).toBeDefined();
+    expect((matchValidator as { expression?: string }).expression).toBe('fieldValue === formValue.password');
+  });
+
+  it('should reference the custom password key in the match validator expression', () => {
+    const [, verifyPasswordField] = dbxForgeTextPasswordWithVerifyField({ password: { key: 'pin' } });
+    const validators = verifyPasswordField.validators ?? [];
+    const matchValidator = validators.find((v) => v.type === 'custom' && (v as { kind?: string }).kind === DBX_FORGE_PASSWORDS_MATCH_VALIDATION_KIND);
+    expect((matchValidator as { expression?: string }).expression).toBe('fieldValue === formValue.pin');
+  });
+
+  it('should derive the verify password key and label from the password key and label', () => {
+    const [passwordField, verifyPasswordField] = dbxForgeTextPasswordWithVerifyField({ password: { key: 'pin', label: 'PIN' } });
+    expect(passwordField.key).toBe('pin');
+    expect(verifyPasswordField.key).toBe('verifyPin');
+    expect(verifyPasswordField.label).toBe('Verify PIN');
+  });
+
+  it('should register a default validation message for the match kind', () => {
+    const [, verifyPasswordField] = dbxForgeTextPasswordWithVerifyField();
+    expect(verifyPasswordField.validationMessages?.[DBX_FORGE_PASSWORDS_MATCH_VALIDATION_KIND]).toBe(DBX_FORGE_DEFAULT_PASSWORDS_MATCH_VALIDATION_MESSAGE);
   });
 });

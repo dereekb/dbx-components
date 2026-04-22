@@ -1,6 +1,5 @@
-<div class="dbx-list-item-field" [class.dbx-forge-disabled]="isDisabled()" dbxListItemModifier [dbxListItemIsSelectedModifier]="isSelectedModifierFunctionSignal()" [attr.aria-invalid]="ariaInvalid()">
-  <div class="dbx-list-item-field-content">
+<div class="dbx-forge-list-item-field" [class.dbx-forge-list-field-disabled]="isDisabled()" dbxListItemModifier [dbxListItemIsSelectedModifier]="isSelectedModifierFunctionSignal()" [attr.aria-invalid]="ariaInvalid()">
+  <div class="dbx-forge-list-item-field-content">
     <dbx-injection [config]="configSignal()"></dbx-injection>
   </div>
-  <mat-divider></mat-divider>
 </div>

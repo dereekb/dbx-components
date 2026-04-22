@@ -30,6 +30,10 @@ export class DocFormTemplateComponent {
     verifyPassword: true
   });
 
+  readonly forgeUsernamePasswordLoginWithVerifyConfig: FormConfig = {
+    fields: dbxForgeUsernamePasswordLoginFields({ username: 'email', verifyPassword: true })
+  };
+
   readonly timezoneSelectionField: FormlyFieldConfig[] = [formlyTimezoneStringField()];
 
   readonly forgeTimezoneSelectionConfig: FormConfig = {
