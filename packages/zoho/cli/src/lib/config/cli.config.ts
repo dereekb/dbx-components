@@ -25,6 +25,24 @@ export interface ZohoCliProductConfig extends Partial<ZohoCliCredentials> {
 }
 
 /**
+ * Output settings that can be applied per-command.
+ */
+export interface ZohoCliCommandOutputConfig {
+  readonly dumpDir?: string;
+  readonly pick?: string;
+}
+
+/**
+ * Output configuration with global defaults and optional per-command overrides.
+ *
+ * Command keys use dot-separated paths matching the yargs command hierarchy
+ * (e.g. `desk.tickets.list`, `recruit.list`, `crm.get`).
+ */
+export interface ZohoCliOutputConfig extends ZohoCliCommandOutputConfig {
+  readonly commands?: Record<string, ZohoCliCommandOutputConfig>;
+}
+
+/**
  * Full CLI config file structure.
  *
  * Shared credentials are used as fallback when a product doesn't have its own.
@@ -38,6 +56,7 @@ export interface ZohoCliConfig {
   readonly recruit?: ZohoCliProductConfig;
   readonly crm?: ZohoCliProductConfig;
   readonly desk?: ZohoCliProductConfig;
+  readonly output?: ZohoCliOutputConfig;
 }
 
 /**
@@ -136,7 +155,8 @@ export async function loadCliConfig(): Promise<Maybe<ZohoCliConfig>> {
     shared,
     recruit: productConfigFromEnv('recruit') ?? fileConfig?.recruit,
     crm: productConfigFromEnv('crm') ?? fileConfig?.crm,
-    desk: productConfigFromEnv('desk') ?? fileConfig?.desk
+    desk: productConfigFromEnv('desk') ?? fileConfig?.desk,
+    output: fileConfig?.output
   };
 
   return result;
@@ -192,11 +212,38 @@ export async function mergeCliConfig(updates: Partial<ZohoCliConfig>): Promise<Z
     shared: { ...existing?.shared, ...updates.shared } as ZohoCliConfig['shared'],
     recruit: updates.recruit !== undefined ? { ...existing?.recruit, ...updates.recruit } : existing?.recruit,
     crm: updates.crm !== undefined ? { ...existing?.crm, ...updates.crm } : existing?.crm,
-    desk: updates.desk !== undefined ? { ...existing?.desk, ...updates.desk } : existing?.desk
+    desk: updates.desk !== undefined ? { ...existing?.desk, ...updates.desk } : existing?.desk,
+    output: updates.output !== undefined ? mergeOutputConfig(existing?.output, updates.output) : existing?.output
   };
 
   await saveCliConfig(merged);
   return merged;
+}
+
+function mergeOutputConfig(existing: Maybe<ZohoCliOutputConfig>, updates: ZohoCliOutputConfig): ZohoCliOutputConfig {
+  return {
+    dumpDir: updates.dumpDir ?? existing?.dumpDir,
+    pick: updates.pick ?? existing?.pick,
+    commands: updates.commands !== undefined ? { ...existing?.commands, ...updates.commands } : existing?.commands
+  };
+}
+
+/**
+ * Resolves output settings for a given command path.
+ *
+ * Resolution order (highest priority first):
+ * 1. CLI flags (dumpDir, pick from argv)
+ * 2. Per-command config (output.commands["desk.tickets.list"])
+ * 3. Global output config (output.dumpDir, output.pick)
+ */
+export function resolveOutputConfig(outputConfig: Maybe<ZohoCliOutputConfig>, commandPath: string[], cliFlags: { dumpDir?: string; pick?: string }): { dumpDir?: string; pick?: string } {
+  const commandKey = commandPath.join('.');
+  const commandConfig = commandKey ? outputConfig?.commands?.[commandKey] : undefined;
+
+  return {
+    dumpDir: cliFlags.dumpDir ?? commandConfig?.dumpDir ?? outputConfig?.dumpDir,
+    pick: cliFlags.pick ?? commandConfig?.pick ?? outputConfig?.pick
+  };
 }
 
 export async function clearCliConfig(): Promise<void> {

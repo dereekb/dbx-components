@@ -4,7 +4,7 @@ import { createCliContext, type ZohoCliContext } from '../context/cli.context';
 import { outputError } from '../util/output';
 import type { ZohoRecruitApi, ZohoCrmApi, ZohoDeskApi } from '@dereekb/zoho/nestjs';
 
-const AUTH_SKIP_COMMANDS = new Set(['auth', 'doctor']);
+const AUTH_SKIP_COMMANDS = new Set(['auth', 'doctor', 'output']);
 
 /**
  * Module-level context set by the auth middleware.
