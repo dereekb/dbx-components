@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, type OnInit, type OnDestroy, comput
 import { DynamicForm, EventDispatcher, type FormOptions } from '@ng-forge/dynamic-forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxForm, type DbxFormEvent, DbxFormState, DbxMutableForm } from '../../form/form';
-import { type BooleanStringKeyArray, BooleanStringKeyArrayUtility } from '@dereekb/util';
+import { type BooleanStringKeyArray, BooleanStringKeyArrayUtility, filterUndefinedValues, type Maybe } from '@dereekb/util';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { skip } from 'rxjs';
 import { DbxForgeFormContext } from './forge.context';
@@ -46,6 +46,29 @@ export class DbxForgeFormComponent<T = unknown> implements DbxForgeDynamicFormSi
   private readonly _isReset = signal(true);
   private readonly _disabled = signal<BooleanStringKeyArray>(undefined);
 
+  /**
+   * True once ng-forge has finished its synchronous initialization: the config
+   * has arrived, the DynamicForm view child is populated, and ng-forge has
+   * performed its initial field-default writebacks via the two-way [(value)]
+   * binding. A setValue that arrives before this point would be clobbered by
+   * those writebacks, so we queue it until ready.
+   *
+   * The form is kept in RESET state while not ready so that
+   * {@link DbxFormSourceDirective} 'reset' mode still forwards an
+   * asynchronously-resolving value once it arrives.
+   */
+  private readonly _formReady = signal(false);
+
+  /**
+   * A setValue payload received while {@link _formReady} was false. Applied
+   * once ready; only the most recent pending value is retained.
+   *
+   * Wrapped in a single-element object so we can distinguish "no pending
+   * value" (undefined) from "pending value of undefined/null" (object present
+   * with a null/undefined inner value).
+   */
+  private _pendingValue: Maybe<{ value: Maybe<Partial<T>> }> = undefined;
+
   readonly isDisabled = computed(() => BooleanStringKeyArrayUtility.isTrue(this._disabled()));
 
   readonly formOptionsSignal = computed((): FormOptions | undefined => {
@@ -68,6 +91,13 @@ export class DbxForgeFormComponent<T = unknown> implements DbxForgeDynamicFormSi
    *
    * Only `formValue()` is tracked — all other signal reads use `untracked()`
    * to avoid infinite re-triggering from writing back to signals in this effect.
+   *
+   * While the form is not yet ready (see {@link _formReady}), any formValue
+   * change that arrives through ng-forge's two-way [(value)] binding is
+   * treated as an initialization artifact: the context value is still synced,
+   * but the form is held in RESET state (changesCount clamped at 1) so that
+   * {@link DbxFormSourceDirective} in 'reset' mode can still forward an
+   * async source value once it arrives.
    */
   protected readonly _formValueEffect = effect(() => {
     const value = this.formValue();
@@ -75,14 +105,47 @@ export class DbxForgeFormComponent<T = unknown> implements DbxForgeDynamicFormSi
     untracked(() => {
       this._context.updateValue(value);
 
-      const changesCount = this._changesCount() + 1;
-      this._changesCount.set(changesCount);
+      if (!this._formReady()) {
+        if (this._changesCount() === 0) {
+          this._changesCount.set(1);
+          this._isReset.set(true);
+          this._emitFormState();
+        }
+      } else {
+        const changesCount = this._changesCount() + 1;
+        this._changesCount.set(changesCount);
 
-      const isReset = changesCount <= 1;
-      this._isReset.set(isReset);
+        const isReset = changesCount <= 1;
+        this._isReset.set(isReset);
 
-      this._emitFormState();
+        this._emitFormState();
+      }
     });
+  });
+
+  /**
+   * Marks the form as ready once the ng-forge DynamicForm view child is
+   * populated. The viewChild signal updates after ng-forge has completed its
+   * synchronous initialization (including any field-default writebacks), so
+   * setting ready here is safe — the writebacks have already happened and
+   * been absorbed by the not-ready branch of {@link _formValueEffect}.
+   *
+   * Applies any queued setValue payload immediately upon becoming ready so
+   * that the user-intended value wins over ng-forge's defaults.
+   */
+  protected readonly _formReadyEffect = effect(() => {
+    const df = this.dynamicForm();
+    if (df && !untracked(() => this._formReady())) {
+      untracked(() => {
+        this._formReady.set(true);
+
+        const pending = this._pendingValue;
+        if (pending != null) {
+          this._pendingValue = undefined;
+          this._applySetValueNow(pending.value);
+        }
+      });
+    }
   });
 
   /**
@@ -150,13 +213,20 @@ export class DbxForgeFormComponent<T = unknown> implements DbxForgeDynamicFormSi
     // as USED→RESET transitions. Uses changesCount=100 to ensure the value
     // stays above 1 even after the _formValueEffect increments from a
     // concurrent resetForm's _resetState (which sets changesCount=0).
+    //
+    // If the form is not yet ready (ng-forge DynamicForm has not rendered
+    // and written its initial field defaults), the value is queued and
+    // applied by _formReadyEffect once the form becomes ready. This covers:
+    //   (a) setValue called before the config$ has emitted (form not rendered)
+    //   (b) setValue called after config but before ng-forge's init writeback
+    //       has settled (would otherwise be clobbered by the writeback)
     this._setValueSub.subscription = this._context.setValue$.subscribe((value) => {
       if (value != null) {
-        this._initialValue = value;
-        this._changesCount.set(100);
-        this._isReset.set(false);
-        this.formValue.set(value as T);
-        this._emitFormState();
+        if (this._formReady()) {
+          this._applySetValueNow(value);
+        } else {
+          this._pendingValue = { value };
+        }
       }
     });
 
@@ -187,6 +257,20 @@ export class DbxForgeFormComponent<T = unknown> implements DbxForgeDynamicFormSi
     this._changesCount.set(0);
     this._isReset.set(true);
     this._lastResetAt.set(new Date());
+  }
+
+  private _applySetValueNow(value: Maybe<Partial<T>>): void {
+    // Strip keys whose value is `undefined` before writing to the ng-forge
+    // two-way binding. @angular/forms/signals throws NG01902 "Orphan field"
+    // when a registered field's key resolves to `undefined` in the model —
+    // stripping avoids that crash while still preserving `null`, empty
+    // strings, and empty arrays (which are valid field values).
+    const sanitized = value != null && typeof value === 'object' ? (filterUndefinedValues(value as object) as Partial<T>) : value;
+    this._initialValue = sanitized;
+    this._changesCount.set(100);
+    this._isReset.set(false);
+    this.formValue.set(sanitized as T);
+    this._emitFormState();
   }
 
   ngOnDestroy(): void {

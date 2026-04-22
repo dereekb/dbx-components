@@ -3,7 +3,7 @@ import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ChangeDetectionStrategy, provideZonelessChangeDetection, inject } from '@angular/core';
 
 import { type FormConfig, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
-import { first, firstValueFrom, timeout, catchError, of, map, BehaviorSubject } from 'rxjs';
+import { first, firstValueFrom, timeout, catchError, of, map, BehaviorSubject, Subject, delay as delayOp } from 'rxjs';
 import { provideDbxForgeFormFieldDeclarations } from '../forge.providers';
 import { provideDbxFormConfiguration } from '../../form.providers';
 import { DbxForgeFormComponent } from './forge.component';
@@ -734,6 +734,111 @@ describe('DbxFormSourceDirective with forge form', () => {
       expect(result.received).toBe(true);
       // age should be stripped as empty
       expect((result.value as any)?.name).toBe('Alice');
+
+      fixture.destroy();
+    });
+  });
+
+  describe('delayed source (async formTemplate$)', () => {
+    // Reproduces the OIDC client-update page scenario:
+    //   formTemplate$ = store.data$.pipe(map(...))
+    // The value arrives asynchronously, AFTER the form has rendered and
+    // ng-forge has written its initial field defaults back through the
+    // two-way [(value)] binding.
+    //
+    // The forge form must keep itself in RESET state during init so that
+    // dbxFormSource 'reset' mode still forwards the async source value when
+    // it eventually emits. Once the value is forwarded, the form applies it
+    // over top of any ng-forge field defaults.
+    it('should apply a delayed source value that arrives after the form has settled (reset mode)', async () => {
+      const fixture = TestBed.createComponent(TestForgeSourceHostComponent);
+      const host = fixture.componentInstance;
+      const context = host.context;
+      context.config = createNameFieldConfig(true); // required — forces ng-forge defaults writeback
+
+      const source$ = new Subject<Partial<TestFormValue>>();
+      host.source$ = source$;
+      fixture.detectChanges();
+      await settle(fixture);
+
+      source$.next({ name: 'LateAsync' });
+      await settle(fixture);
+
+      const result = await tryGetValue(context);
+      expect(result.received).toBe(true);
+      expect(result.value).toEqual({ name: 'LateAsync' });
+
+      fixture.destroy();
+    });
+
+    it('should apply a delayed source value via delay() operator (reset mode)', async () => {
+      const fixture = TestBed.createComponent(TestForgeSourceHostComponent);
+      const host = fixture.componentInstance;
+      const context = host.context;
+      context.config = createNameFieldConfig(true);
+
+      host.source$ = of({ name: 'DelayedAsync' }).pipe(delayOp(100));
+      fixture.detectChanges();
+
+      await settle(fixture);
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      await settle(fixture);
+
+      const result = await tryGetValue(context);
+      expect(result.received).toBe(true);
+      expect(result.value).toEqual({ name: 'DelayedAsync' });
+
+      fixture.destroy();
+    });
+
+    it('should apply an async source value when the config is also async and arrives after the source', async () => {
+      // Reproduces the real OIDC flow where BOTH the FormConfig and the source
+      // value arrive asynchronously. In that flow the source value typically
+      // arrives AT OR BEFORE the config is loaded (Firestore prefetch), so the
+      // value is set against the forge context while the form hasn't rendered
+      // yet. ng-forge then renders, writes its defaults, and without the fix
+      // would wipe the set value.
+      const fixture = TestBed.createComponent(TestForgeSourceHostComponent);
+      const host = fixture.componentInstance;
+      const context = host.context;
+
+      // Source emits immediately
+      host.source$ = of({ name: 'AsyncConfigValue' });
+      fixture.detectChanges();
+      await settle(fixture);
+
+      // Config arrives LATER (simulating async currentConfig$ in AbstractConfigAsyncForgeFormDirective).
+      context.config = createNameFieldConfig(true);
+      await settle(fixture);
+
+      const result = await tryGetValue(context);
+      expect(result.received).toBe(true);
+      expect(result.value).toEqual({ name: 'AsyncConfigValue' });
+
+      fixture.destroy();
+    });
+
+    it('should apply a delayed source value for a multi-field form with some undefined optional fields', async () => {
+      // Models the OIDC form_value shape where logo_uri / client_uri can be
+      // undefined. ng-forge must not throw NG01902 (orphan field) when a
+      // provided key is undefined.
+      const fixture = TestBed.createComponent(TestForgeSourceHostComponent);
+      const host = fixture.componentInstance;
+      const context = host.context;
+      context.config = createNameAndAgeFieldConfig(true);
+
+      const source$ = new Subject<Partial<TestFormValue>>();
+      host.source$ = source$;
+      fixture.detectChanges();
+      await settle(fixture);
+
+      // Only `name` is defined; `age` is undefined — matching the real OIDC case.
+      source$.next({ name: 'NameOnly', age: undefined } as Partial<TestFormValue>);
+      await settle(fixture);
+
+      const result = await tryGetValue(context);
+      expect(result.received).toBe(true);
+      expect((result.value as any)?.name).toBe('NameOnly');
 
       fixture.destroy();
     });
