@@ -269,4 +269,75 @@ describe('dbxForgeFinalizeFormConfig()', () => {
 
     expect(result.extractedFieldFormConfigs).toHaveLength(1);
   });
+
+  describe('globalDefaults', () => {
+    it('should apply global defaultValidationMessages when input has none', () => {
+      const input = testFormConfig({
+        fields: [{ type: 'input', key: 'name' }]
+      });
+
+      const result = dbxForgeFinalizeFormConfig(input, {
+        defaultValidationMessages: { required: 'Global required' }
+      });
+
+      expect(result.config.defaultValidationMessages).toEqual({ required: 'Global required' });
+    });
+
+    it('should let input defaultValidationMessages override global defaults', () => {
+      const input = testFormConfig({
+        fields: [{ type: 'input', key: 'name' }],
+        defaultValidationMessages: { required: 'Input required' }
+      });
+
+      const result = dbxForgeFinalizeFormConfig(input, {
+        defaultValidationMessages: { required: 'Global required' }
+      });
+
+      expect(result.config.defaultValidationMessages?.['required']).toBe('Input required');
+    });
+
+    it('should let field-level _formConfig.defaultValidationMessages override both global and input', () => {
+      const fieldWithConfig: DbxForgeField<any> = {
+        type: 'input',
+        key: 'name',
+        _formConfig: { defaultValidationMessages: { required: 'Field required' } }
+      };
+
+      const input = testFormConfig({
+        fields: [fieldWithConfig],
+        defaultValidationMessages: { required: 'Input required' }
+      });
+
+      const result = dbxForgeFinalizeFormConfig(input, {
+        defaultValidationMessages: { required: 'Global required' }
+      });
+
+      expect(result.config.defaultValidationMessages?.['required']).toBe('Field required');
+    });
+
+    it('should preserve global keys that are not overridden', () => {
+      const input = testFormConfig({
+        fields: [{ type: 'input', key: 'name' }],
+        defaultValidationMessages: { required: 'Input required' }
+      });
+
+      const result = dbxForgeFinalizeFormConfig(input, {
+        defaultValidationMessages: { required: 'Global required', email: 'Global email' }
+      });
+
+      expect(result.config.defaultValidationMessages?.['required']).toBe('Input required');
+      expect(result.config.defaultValidationMessages?.['email']).toBe('Global email');
+    });
+
+    it('should behave identically to no globalDefaults when globalDefaults is undefined', () => {
+      const input = testFormConfig({
+        fields: [{ type: 'input', key: 'name' }],
+        defaultValidationMessages: { required: 'Input required' }
+      });
+
+      const result = dbxForgeFinalizeFormConfig(input);
+
+      expect(result.config.defaultValidationMessages).toEqual({ required: 'Input required' });
+    });
+  });
 });

@@ -5,3 +5,4 @@ export * from './forge.component.template';
 export * from './forge.directive';
 export * from './forge.form';
 export * from './forge.form.component';
+export * from './forge.global-defaults.service';

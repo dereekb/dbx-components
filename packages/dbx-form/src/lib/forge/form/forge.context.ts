@@ -1,4 +1,4 @@
-import { Injectable, type OnDestroy, type Provider, type Signal, signal, computed } from '@angular/core';
+import { Injectable, type OnDestroy, type Provider, type Signal, signal, computed, inject } from '@angular/core';
 import { BehaviorSubject, combineLatest, type Observable, shareReplay, switchMap, filter, map, scan } from 'rxjs';
 import { type DbxMutableForm, type DbxFormEvent, type DbxFormDisabledKey, DbxFormState, DEFAULT_FORM_DISABLED_KEY, provideDbxMutableForm } from '../../form/form';
 import { type BooleanStringKeyArray, BooleanStringKeyArrayUtility, type Maybe } from '@dereekb/util';
@@ -6,6 +6,7 @@ import { LockSet, filterMaybe } from '@dereekb/rxjs';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
 import { type FieldTree } from '@angular/forms/signals';
 import { DbxForgeFinalizeFormConfigResult, dbxForgeFinalizeFormConfig } from './forge.form';
+import { DbxForgeGlobalDefaultConfigService } from './forge.global-defaults.service';
 
 /**
  * Recursively strips keys that start with `_` from a form value object.
@@ -114,7 +115,7 @@ export function stripEmptyForgeValues<T>(value: T): T {
  */
 @Injectable()
 export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDestroy {
-  // TODO: Add global validation config service
+  private readonly dbxForgeGlobalDefaultsConfigService = inject(DbxForgeGlobalDefaultConfigService);
 
   private static readonly INITIAL_STATE: DbxFormEvent = {
     isComplete: false,
@@ -234,7 +235,7 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
 
       if (config) {
         if (acc?.input !== config) {
-          result = dbxForgeFinalizeFormConfig(config);
+          result = dbxForgeFinalizeFormConfig(config, this.dbxForgeGlobalDefaultsConfigService.getGlobalDefaults());
         } else {
           result = acc;
         }
