@@ -5,8 +5,8 @@ import { describe, it, expect } from 'vitest';
 import { expectTypeOf } from 'vitest';
 import type { ArrayField, GroupField, RowField } from '@ng-forge/dynamic-forms';
 import type { MatInputField } from '@ng-forge/dynamic-forms-material';
-import { dbxForgeAddressField, dbxForgeAddressFields, dbxForgeAddressLineField, dbxForgeAddressListField } from './text.address.field';
-import type { DbxForgeAddressFieldConfig, DbxForgeAddressFieldsConfig, DbxForgeAddressLineFieldConfig, DbxForgeAddressListFieldConfig } from './text.address.field';
+import { dbxForgeAddressGroup, dbxForgeAddressFields, dbxForgeAddressLineField, dbxForgeAddressListField } from './text.address.field';
+import type { DbxForgeAddressGroupConfig, DbxForgeAddressFieldsConfig, DbxForgeAddressLineFieldConfig, DbxForgeAddressListFieldConfig } from './text.address.field';
 import { DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME } from '../../wrapper/array-field/array-field.wrapper';
 
 // Shared key set for DbxForgeTextFieldConfig (DbxForgeAddressLineFieldConfig extends Partial<DbxForgeTextFieldConfig>).
@@ -44,10 +44,10 @@ type DbxForgeTextFieldConfigKeys =
   | 'wrappers'
   | 'skipAutoWrappers'
   | 'skipDefaultWrappers'
+  | 'nullable'
   | '__fieldDef'
   // Field-specific config
   | 'inputType'
-  | 'defaultValue'
   // From FieldAutocompleteAttributeOptionRef
   | 'autocomplete'
   // Direct declaration
@@ -106,10 +106,10 @@ describe('DbxForgeAddressLineFieldConfig - Exhaustive Whitelist', () => {
 });
 
 // ============================================================================
-// DbxForgeAddressFieldConfig - Exhaustive Whitelist
+// DbxForgeAddressGroupConfig - Exhaustive Whitelist
 // ============================================================================
 
-describe('DbxForgeAddressFieldConfig - Exhaustive Whitelist', () => {
+describe('DbxForgeAddressGroupConfig - Exhaustive Whitelist', () => {
   type ExpectedKeys =
     // From DbxForgeAddressFieldsConfig
     | 'line1Field'
@@ -124,14 +124,14 @@ describe('DbxForgeAddressFieldConfig - Exhaustive Whitelist', () => {
     // Field-specific
     | 'key';
 
-  type ActualKeys = keyof DbxForgeAddressFieldConfig;
+  type ActualKeys = keyof DbxForgeAddressGroupConfig;
 
   it('should have exactly the expected keys', () => {
     expectTypeOf<ActualKeys>().toEqualTypeOf<ExpectedKeys>();
   });
 
   it('key is optional string', () => {
-    expectTypeOf<DbxForgeAddressFieldConfig['key']>().toEqualTypeOf<string | undefined>();
+    expectTypeOf<DbxForgeAddressGroupConfig['key']>().toEqualTypeOf<string | undefined>();
   });
 });
 
@@ -295,33 +295,33 @@ describe('dbxForgeAddressFields()', () => {
 });
 
 // ============================================================================
-// Runtime Factory Tests - dbxForgeAddressField()
+// Runtime Factory Tests - dbxForgeAddressGroup()
 // ============================================================================
 
-describe('dbxForgeAddressField()', () => {
+describe('dbxForgeAddressGroup()', () => {
   it('should create a group field with default address key', () => {
-    const field = dbxForgeAddressField();
+    const field = dbxForgeAddressGroup();
     expect(field.type).toBe('group');
     expect(field.key).toBe('address');
   });
 
   it('should allow overriding key', () => {
-    const field = dbxForgeAddressField({ key: 'home' });
+    const field = dbxForgeAddressGroup({ key: 'home' });
     expect(field.key).toBe('home');
   });
 
   it('should include child fields directly on the group', () => {
-    const field = dbxForgeAddressField();
+    const field = dbxForgeAddressGroup();
     expect(field.fields.length).toBe(5);
   });
 
   it('should respect includeLine2 and includeCountry overrides', () => {
-    const field = dbxForgeAddressField({ includeLine2: false, includeCountry: false });
+    const field = dbxForgeAddressGroup({ includeLine2: false, includeCountry: false });
     expect(field.fields.length).toBe(3);
   });
 
   it('should propagate required to child fields', () => {
-    const field = dbxForgeAddressField({ required: false });
+    const field = dbxForgeAddressGroup({ required: false });
     const line1 = field.fields[0] as MatInputField;
     expect(line1.required).toBe(false);
   });
@@ -369,7 +369,7 @@ describe('dbxForgeAddressListField()', () => {
 
 describe('Usage', () => {
   it('address field factory returns a GroupField', () => {
-    expectTypeOf(dbxForgeAddressField).returns.toExtend<GroupField>();
+    expectTypeOf(dbxForgeAddressGroup).returns.toExtend<GroupField>();
   });
 
   it('address line factory returns a MatInputField-shaped value', () => {

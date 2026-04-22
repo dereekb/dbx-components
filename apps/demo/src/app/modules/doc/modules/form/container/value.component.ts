@@ -36,7 +36,7 @@ import {
   dbxForgeCountryField,
   dbxForgeZipCodeField,
   dbxForgePhoneField,
-  dbxForgeAddressField,
+  dbxForgeAddressGroup,
   dbxForgeAddressListField,
   DbxFormFormlyTextFieldModule,
   DbxFormFormlyWrapperModule,
@@ -46,7 +46,8 @@ import {
   DbxFormFormlyArrayFieldModule,
   DbxFormlyFieldsContextDirective,
   DbxFormSourceDirective,
-  DbxActionFormDirective
+  DbxActionFormDirective,
+  dbxForgeValueSelectionField
 } from '@dereekb/dbx-form';
 import { addDays, startOfDay } from 'date-fns';
 import { addSuffixFunction } from '@dereekb/util';
@@ -140,6 +141,19 @@ export class DocFormValueComponent {
             }
           }
         ]
+      }),
+      dbxForgeToggleField({ key: 'showSelectionLogicDemo', label: 'Show Selection Logic Demo Field' }),
+      dbxForgeValueSelectionField({
+        key: 'selectionLogicDemo',
+        label: 'Conditionally Visible Selection',
+        description: 'Hidden unless the toggle above is on.',
+        props: {
+          options: [
+            { label: 'Option A', value: 'a' },
+            { label: 'Option B', value: 'b' }
+          ]
+        },
+        logic: [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'showSelectionLogicDemo', operator: 'notEquals', value: true } }]
       })
     ]
   };
@@ -188,13 +202,13 @@ export class DocFormValueComponent {
   readonly addressField: FormlyFieldConfig[] = [formlyAddressField()];
 
   readonly forgeAddressFieldConfig: FormConfig = {
-    fields: [dbxForgeAddressField() as any]
+    fields: [dbxForgeAddressGroup() as any]
   };
 
   readonly slimAddressField: FormlyFieldConfig[] = [formlyAddressField({ key: 'slim', hint: 'Line 2 and country are omitted.', stateField: { asCode: true }, includeLine2: false, includeCountry: false })];
 
   readonly forgeSlimAddressFieldConfig: FormConfig = {
-    fields: [dbxForgeAddressField({ key: 'slim', stateField: { asCode: true }, includeLine2: false, includeCountry: false }) as any]
+    fields: [dbxForgeAddressGroup({ key: 'slim', stateField: { asCode: true }, includeLine2: false, includeCountry: false }) as any]
   };
 
   readonly addressListFields: FormlyFieldConfig[] = [formlyAddressListField()];

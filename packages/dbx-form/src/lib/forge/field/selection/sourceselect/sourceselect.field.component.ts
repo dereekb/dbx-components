@@ -3,49 +3,18 @@ import { FormField, type FieldTree } from '@angular/forms/signals';
 import { MatError, MatFormField, MatLabel, MatSuffix } from '@angular/material/form-field';
 import { MatOptgroup, MatOption, MatSelect } from '@angular/material/select';
 import { MatHint } from '@angular/material/input';
-import { DynamicTextPipe, type DynamicText, type FieldMeta, type ValidationMessages, type BaseValueField } from '@ng-forge/dynamic-forms';
+import { DynamicTextPipe, type DynamicText, type FieldMeta, type ValidationMessages } from '@ng-forge/dynamic-forms';
 import { createResolvedErrorsSignal, setupMetaTracking, shouldShowErrors } from '@ng-forge/dynamic-forms/integration';
 import { MATERIAL_CONFIG } from '@ng-forge/dynamic-forms-material';
 import { AsyncPipe } from '@angular/common';
-import { type Maybe, type PrimativeKey, addToSetCopy, asArray, convertMaybeToArray, filterMaybeArrayValues, lastValue, makeValuesGroupMap, mergeArrays, separateValues, setContainsAllValues, setsAreEquivalent, sortByStringFunction } from '@dereekb/util';
+import { type Maybe, type PrimativeKey, addToSetCopy, asArray, convertMaybeToArray, filterEmptyArrayValues, filterMaybeArrayValues, lastValue, makeValuesGroupMap, mergeArrays, separateValues, setContainsAllValues, setsAreEquivalent, sortByStringFunction } from '@dereekb/util';
 import { filterMaybe, type LoadingState, isLoadingStateWithDefinedValue, isLoadingStateLoading, type LoadingStateWithDefinedValue, startWithBeginLoading, SubscriptionObject, successResult, beginLoading, mapLoadingStateValueWithOperator, loadingStateContext, type WorkUsingContext, valueFromFinishedLoadingState } from '@dereekb/rxjs';
 import { DbxActionModule, DbxButtonComponent, DbxLoadingComponent } from '@dereekb/dbx-web';
 import { BehaviorSubject, combineLatest, distinctUntilChanged, first, map, mergeMap, of, scan, shareReplay, switchMap, tap, type Observable } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { type SourceSelectDisplayFunction, type SourceSelectDisplayValue, type SourceSelectDisplayValueGroup, type SourceSelectLoadSource, type SourceSelectLoadSourceLoadingState, type SourceSelectMetaValueReader, type SourceSelectOpenFunction, type SourceSelectOpenSourceResult, type SourceSelectLoadSourcesFunction, type SourceSelectOptions, type SourceSelectValue, type SourceSelectValueGroup, type SourceSelectValueMetaLoader } from '../../../../formly/field/selection/sourceselect/sourceselect';
+import { type SourceSelectDisplayValue, type SourceSelectDisplayValueGroup, type SourceSelectLoadSource, type SourceSelectLoadSourceLoadingState, type SourceSelectOpenSourceResult, type SourceSelectOptions, type SourceSelectValue, type SourceSelectValueGroup } from '../../../../formly/field/selection/sourceselect/sourceselect';
 import { dbxForgeFieldDisabled } from '../../field.util';
-
-// MARK: Props
-/**
- * Props interface for the forge source select field.
- *
- * Passed via the `props` property on the forge field definition.
- */
-export interface DbxForgeSourceSelectFieldProps<T extends PrimativeKey = PrimativeKey, M = unknown> {
-  readonly openSource?: SourceSelectOpenFunction<M>;
-  readonly loadSources?: SourceSelectLoadSourcesFunction<M>;
-  readonly valueReader: SourceSelectMetaValueReader<T, M>;
-  readonly metaLoader: SourceSelectValueMetaLoader<T, M>;
-  readonly displayForValue: SourceSelectDisplayFunction<T, M>;
-  readonly selectButtonIcon?: string;
-  readonly multiple?: boolean;
-  readonly refreshDisplayValues$?: Observable<unknown>;
-  readonly filterable?: boolean;
-  readonly filterableGroups?: boolean;
-  readonly hint?: string;
-}
-
-/**
- * The custom forge field type name for the source select field.
- */
-export const FORGE_SOURCE_SELECT_FIELD_TYPE = 'dbx-source-select' as const;
-
-/**
- * Forge field definition interface for the source select field.
- */
-export interface DbxForgeSourceSelectFieldDef<T extends PrimativeKey = PrimativeKey, M = unknown> extends BaseValueField<DbxForgeSourceSelectFieldProps<T, M>, T | T[]> {
-  readonly type: typeof FORGE_SOURCE_SELECT_FIELD_TYPE;
-}
+import type { DbxForgeSourceSelectFieldProps } from './sourceselect.field';
 
 interface SelectFieldOpenSourceMap<T extends PrimativeKey = PrimativeKey, M = unknown> {
   readonly values: SourceSelectValue<T, M>[];
@@ -322,7 +291,8 @@ export class DbxForgeSourceSelectFieldComponent<T extends PrimativeKey = Primati
     // FieldTree is a signal — call it to get the field state, then read .value()
     const fieldState = typeof fieldGetter === 'function' ? (fieldGetter as any)() : undefined;
     const fieldValue = fieldState?.value?.() as Maybe<T | T[]>;
-    const values = fieldValue != null ? convertMaybeToArray(fieldValue as T | T[]) : [];
+    // ng-forge can seed the field with the empty-string primitive default; treat nullish/empty as unset.
+    const values = filterEmptyArrayValues(fieldValue != null ? convertMaybeToArray(fieldValue as T | T[]) : []);
     this._valuesSubject.next(values);
   });
 
@@ -445,7 +415,8 @@ export class DbxForgeSourceSelectFieldComponent<T extends PrimativeKey = Primati
   private _setCurrentValue(newValueArray: T[]): void {
     const p = this.props();
     const multiple = p?.multiple ?? false;
-    const value = multiple ? newValueArray : lastValue(newValueArray);
+    const sanitized = filterEmptyArrayValues(newValueArray);
+    const value = multiple ? sanitized : lastValue(sanitized);
     const valuesArray = convertMaybeToArray(value as T | T[]);
     this._valuesSubject.next(valuesArray);
     this._setFieldValue(value);

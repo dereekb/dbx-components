@@ -13,7 +13,7 @@ import {
   dbxForgeNameField,
   dbxForgeEmailField,
   dbxForgePhoneField,
-  dbxForgeAddressField,
+  dbxForgeAddressGroup,
   dbxForgeToggleField,
   DbxFormFormlyArrayFieldModule,
   DbxFormFormlyTextFieldModule,

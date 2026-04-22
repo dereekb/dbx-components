@@ -63,6 +63,7 @@ describe('DbxForgePickableChipFieldConfig - Exhaustive Whitelist', () => {
     | 'excludeValueIfHidden'
     | 'excludeValueIfDisabled'
     | 'excludeValueIfReadonly'
+    | 'nullable'
     // Phantom brand
     | '__fieldDef';
 
@@ -155,7 +156,8 @@ describe('DbxForgePickableChipFieldDef - Exhaustive Whitelist', () => {
     | 'skipDefaultWrappers'
     // From BaseValueField
     | 'value'
-    | 'placeholder';
+    | 'placeholder'
+    | 'nullable';
 
   type ActualKeys = keyof DbxForgePickableChipFieldDef;
 

@@ -53,7 +53,7 @@ export function oidcClientTokenEndpointAuthMethodForgeField(config?: OidcEntryCl
     label: 'Token Endpoint Auth Method',
     description: 'How the client authenticates when exchanging tokens. Cannot be changed after creation.',
     required: true,
-    options
+    props: { options }
   });
 }
 
@@ -205,7 +205,7 @@ export function oidcClientTestRedirectUriForgeField(redirectUris: OidcRedirectUr
     label: 'Redirect URI',
     description: 'Select the redirect URI to use for the test flow.',
     required: true,
-    options
+    props: { options }
   });
 }
 

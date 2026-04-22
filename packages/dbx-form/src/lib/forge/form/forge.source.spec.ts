@@ -11,7 +11,7 @@ import { DbxForgeFormContext, provideDbxForgeFormContext } from './forge.context
 import { DbxFormSourceDirective } from '../../form/io/form.input.directive';
 import { dbxForgeTextField } from '../field/value/text/text.field';
 import { dbxForgeNumberField } from '../field/value/number/number.field';
-import type { Maybe } from '@dereekb/util';
+import { waitForMs, type Maybe } from '@dereekb/util';
 import type { ObservableOrValue } from '@dereekb/rxjs';
 import type { DbxFormSourceDirectiveMode } from '../../form/io/form.input.directive';
 
@@ -41,10 +41,6 @@ class TestForgeSourceHostComponent {
 // MARK: Helpers
 const TEST_PROVIDERS = [provideZonelessChangeDetection(), provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), { provide: DynamicFormLogger, useClass: NoopLogger }];
 
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 /**
  * Settles the fixture by running change detection and waiting for stability.
  *
@@ -56,7 +52,7 @@ function delay(ms: number): Promise<void> {
 async function settle(fixture: ComponentFixture<any>): Promise<void> {
   fixture.detectChanges();
   await fixture.whenStable();
-  await delay(50);
+  await waitForMs(50);
   fixture.detectChanges();
   await fixture.whenStable();
 }

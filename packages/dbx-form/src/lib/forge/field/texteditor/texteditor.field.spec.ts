@@ -40,6 +40,10 @@ describe('DbxForgeTextEditorFieldConfig - Exhaustive Whitelist', () => {
     | 'excludeValueIfHidden'
     | 'excludeValueIfDisabled'
     | 'excludeValueIfReadonly'
+    | 'wrappers'
+    | 'skipAutoWrappers'
+    | 'skipDefaultWrappers'
+    | 'nullable'
     // Phantom brand
     | '__fieldDef';
 

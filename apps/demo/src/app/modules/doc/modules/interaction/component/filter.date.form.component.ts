@@ -23,11 +23,13 @@ export class DocInteractionTestDateFilterFormComponent extends AbstractSyncForge
     fields: [
       dbxForgeFixedDateRangeField({
         key: 'range',
-        selectionMode: 'normal',
-        dateRangeInput: { type: DateRangeType.DAYS_RANGE, distance: 12 },
-        pickerConfig: {
-          limits: {
-            min: 'today_start'
+        props: {
+          selectionMode: 'normal',
+          dateRangeInput: { type: DateRangeType.DAYS_RANGE, distance: 12 },
+          pickerConfig: {
+            limits: {
+              min: 'today_start'
+            }
           }
         }
       })

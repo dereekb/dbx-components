@@ -40,11 +40,13 @@ describe('DbxForgeChecklistFieldConfig - Exhaustive Whitelist', () => {
     | 'excludeValueIfHidden'
     | 'excludeValueIfDisabled'
     | 'excludeValueIfReadonly'
+    | 'wrappers'
+    | 'skipAutoWrappers'
+    | 'skipDefaultWrappers'
+    | 'nullable'
     | '__fieldDef'
     // From MultiCheckboxField
-    | 'options'
-    // Field-specific config
-    | 'labelPosition';
+    | 'options';
 
   type ActualKeys = keyof DbxForgeChecklistFieldConfig;
 
@@ -92,7 +94,7 @@ describe('dbxForgeChecklistField()', () => {
   });
 
   it('should set labelPosition in props', () => {
-    const field = dbxForgeChecklistField({ key: 'tags', options: testOptions, labelPosition: 'before' });
+    const field = dbxForgeChecklistField({ key: 'tags', options: testOptions, props: { labelPosition: 'before' } });
     expect(field.props?.labelPosition).toBe('before');
   });
 

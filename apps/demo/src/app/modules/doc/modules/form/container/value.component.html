@@ -63,12 +63,12 @@
     </doc-feature-example>
     <doc-feature-example header="addressField()" hint="Used to configure an address.">
       <h4>Default Address</h4>
-      <doc-feature-form-tabs formlyFn="formlyAddressField()" forgeFn="dbxForgeAddressField()">
+      <doc-feature-form-tabs formlyFn="formlyAddressField()" forgeFn="dbxForgeAddressGroup()">
         <doc-form-example-form formly [dbxFormlyFields]="addressField" [disabled]="formTabs.disabled()"></doc-form-example-form>
         <doc-forge-example-form forge [config]="forgeAddressFieldConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
       <h4>Slim Address</h4>
-      <doc-feature-form-tabs formlyFn="formlyAddressField()" forgeFn="dbxForgeAddressField()">
+      <doc-feature-form-tabs formlyFn="formlyAddressField()" forgeFn="dbxForgeAddressGroup()">
         <doc-form-example-form formly [dbxFormlyFields]="slimAddressField" [disabled]="formTabs.disabled()"></doc-form-example-form>
         <doc-forge-example-form forge [config]="forgeSlimAddressFieldConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>

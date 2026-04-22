@@ -199,44 +199,31 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
         key: 'selectOne',
         label: 'Select One',
         description: 'This is a simple selection field for picking a single value.',
-        options: VALUE_SELECTION_VALUES
+        props: { options: VALUE_SELECTION_VALUES }
       }),
       dbxForgeValueSelectionField({
         key: 'selectOneWithClearOption',
         label: 'Select One With Clear Option',
         description: 'This selection includes a ValueSelectionOptionClear entry in the options array.',
-        options: VALUE_SELECTION_VALUES_WITH_CLEAR
+        props: { options: VALUE_SELECTION_VALUES_WITH_CLEAR }
       }),
       dbxForgeValueSelectionField({
         key: 'selectOneWithClear',
         label: 'Select One With Clear',
         description: 'This is a simple selection field with a custom clear value added via the addClearOption.',
-        addClearOption: '>> Custom Clear Me <<',
-        options: VALUE_SELECTION_VALUES
+        props: { options: VALUE_SELECTION_VALUES, addClearOption: '>> Custom Clear Me <<' }
       }),
       dbxForgeValueSelectionField({
         key: 'selectMultiple',
         label: 'Select Multiple',
         description: 'This is a simple selection field for picking an array of values.',
-        options: VALUE_SELECTION_VALUES,
-        multiple: true
+        props: { options: VALUE_SELECTION_VALUES, multiple: true }
       }),
       dbxForgeValueSelectionField({
         key: 'selectWithObservable',
         label: 'Select With Observable Data Source',
         description: 'This select uses an Observable for options, which falls back to the custom DbxForgeValueSelectionFieldComponent.',
-        options: of(VALUE_SELECTION_VALUES)
-      }),
-      dbxForgeToggleField({ key: 'showLogicDemo', label: 'Show Logic Demo Field' }),
-      dbxForgeValueSelectionField({
-        key: 'logicDemo',
-        label: 'Conditionally Visible Selection',
-        description: 'Hidden unless the toggle above is on.',
-        options: [
-          { label: 'Option A', value: 'a' },
-          { label: 'Option B', value: 'b' }
-        ],
-        logic: [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'showLogicDemo', operator: 'notEquals', value: true } }]
+        props: { options: of(VALUE_SELECTION_VALUES) }
       })
     ]
   };
@@ -395,6 +382,20 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
             console.log('origin: ', origin);
             return of({ select: EVEN_MORE_VALUE_SELECTION_VALUES, options: MORE_VALUE_SELECTION_VALUES }).pipe(delay(2000));
           }
+        }
+      }),
+      dbxForgeSourceSelectField({
+        key: 'selectManyWithSourceButtonNoInitialValue',
+        label: 'Select With Source Button (No Initial Value)',
+        hint: 'Starts with no value. Clicking the source button should set the value cleanly without prepending an empty-string placeholder.',
+        props: {
+          multiple: true,
+          selectButtonIcon: 'search',
+          valueReader: (x: any) => x.value,
+          metaLoader: (values) => of(values.map((x) => VALUE_SELECTION_VALUES.find((y) => y.value === x) as ValueSelectionOptionWithValue<number>)),
+          displayForValue: (input) => of(input.map((y: any) => ({ ...y, label: String(y.meta.label) }))),
+          loadSources: () => of([]),
+          openSource: () => of({ select: EVEN_MORE_VALUE_SELECTION_VALUES }).pipe(delay(500))
         }
       }),
       dbxForgeSourceSelectField({

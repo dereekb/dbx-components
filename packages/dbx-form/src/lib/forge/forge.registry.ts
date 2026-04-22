@@ -19,7 +19,7 @@ import type { DbxForgeSearchableTextFieldDef, DbxForgeSearchableChipFieldDef, DB
 import { FORGE_PICKABLE_CHIP_FIELD_TYPE, FORGE_PICKABLE_LIST_FIELD_TYPE, type DbxForgePickableChipFieldDef, type DbxForgePickableListFieldDef } from './field/selection/pickable/pickable.field';
 import { FORGE_LIST_SELECTION_FIELD_TYPE, type DbxForgeListSelectionFieldDef } from './field/selection/list/list.field';
 import { FORGE_VALUE_SELECTION_FIELD_TYPE, type DbxForgeValueSelectionFieldDef } from './field/selection/selection.field.component';
-import { FORGE_SOURCE_SELECT_FIELD_TYPE, type DbxForgeSourceSelectFieldDef } from './field/selection/sourceselect/sourceselect.field.component';
+import { FORGE_SOURCE_SELECT_FIELD_TYPE, type DbxForgeSourceSelectFieldDef } from './field/selection/sourceselect/sourceselect.field';
 
 // Other field types
 import { FORGE_TEXT_EDITOR_FIELD_TYPE, type DbxForgeTextEditorFieldDef } from './field/texteditor/texteditor.field.component';

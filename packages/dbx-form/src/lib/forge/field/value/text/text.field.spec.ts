@@ -5,7 +5,7 @@ import { describe, it, expect } from 'vitest';
 import { expectTypeOf } from 'vitest';
 import { type DynamicText, type LogicConfig, type SchemaApplicationConfig, type ValidatorConfig, type ValidationMessages, type FormConfig, type FieldDef, withLoggerConfig } from '@ng-forge/dynamic-forms';
 import type { MatInputField } from '@ng-forge/dynamic-forms-material';
-import { waitForMs, type TransformStringFunctionConfig } from '@dereekb/util';
+import { type Maybe, waitForMs, type TransformStringFunctionConfig } from '@dereekb/util';
 import type { FieldAutocompleteAttributeOption } from '../../../../field/field.autocomplete';
 import type { DbxForgeTextFieldConfig, DbxForgeTextFieldInputType } from './text.field';
 import { dbxForgeTextField } from './text.field';
@@ -51,10 +51,13 @@ describe('DbxForgeTextFieldConfig - Exhaustive Whitelist', () => {
     | 'excludeValueIfHidden'
     | 'excludeValueIfDisabled'
     | 'excludeValueIfReadonly'
+    | 'wrappers'
+    | 'skipAutoWrappers'
+    | 'skipDefaultWrappers'
+    | 'nullable'
     | '__fieldDef'
     // Field-specific config
     | 'inputType'
-    | 'defaultValue'
     // From FieldAutocompleteAttributeOptionRef
     | 'autocomplete'
     // From Partial<TransformStringFunctionConfigRef> + direct declaration
@@ -81,10 +84,6 @@ describe('DbxForgeTextFieldConfig - Exhaustive Whitelist', () => {
       expectTypeOf<DbxForgeTextFieldConfig['idempotentTransform']>().toEqualTypeOf<TransformStringFunctionConfig | undefined>();
     });
 
-    it('defaultValue', () => {
-      expectTypeOf<DbxForgeTextFieldConfig['defaultValue']>().toEqualTypeOf<string | undefined>();
-    });
-
     it('autocomplete', () => {
       expectTypeOf<DbxForgeTextFieldConfig['autocomplete']>().toEqualTypeOf<FieldAutocompleteAttributeOption | undefined>();
     });
@@ -104,11 +103,11 @@ describe('DbxForgeTextFieldConfig - Exhaustive Whitelist', () => {
     });
 
     it('hint', () => {
-      expectTypeOf<DbxForgeTextFieldConfig['hint']>().toEqualTypeOf<DynamicText | undefined>();
+      expectTypeOf<DbxForgeTextFieldConfig['hint']>().toExtend<DynamicText | undefined>();
     });
 
     it('description', () => {
-      expectTypeOf<DbxForgeTextFieldConfig['description']>().toEqualTypeOf<DynamicText | undefined>();
+      expectTypeOf<DbxForgeTextFieldConfig['description']>().toExtend<DynamicText | undefined>();
     });
 
     it('validators', () => {
@@ -162,9 +161,13 @@ describe('MatInputField (String) - Exhaustive Whitelist', () => {
     | 'logic'
     | 'derivation'
     | 'schemas'
+    | 'wrappers'
+    | 'skipAutoWrappers'
+    | 'skipDefaultWrappers'
     // From BaseValueField
     | 'value'
-    | 'placeholder';
+    | 'placeholder'
+    | 'nullable';
 
   type ActualKeys = keyof StringInputField;
 
@@ -184,7 +187,7 @@ describe('MatInputField (String) - Exhaustive Whitelist', () => {
 
   describe('value type', () => {
     it('value is string for string input', () => {
-      expectTypeOf<StringInputField['value']>().toEqualTypeOf<string | undefined>();
+      expectTypeOf<StringInputField['value']>().toEqualTypeOf<Maybe<string>>();
     });
   });
 });

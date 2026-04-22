@@ -69,6 +69,9 @@ describe('DbxForgeSearchableChipFieldConfig - Exhaustive Whitelist', () => {
     | 'excludeValueIfHidden'
     | 'excludeValueIfDisabled'
     | 'excludeValueIfReadonly'
+    | 'skipAutoWrappers'
+    | 'skipDefaultWrappers'
+    | 'nullable'
     // Phantom brand
     | '__fieldDef';
 
@@ -146,9 +149,12 @@ describe('DbxForgeSearchableChipFieldDef - Exhaustive Whitelist', () => {
     | 'derivation'
     | 'schemas'
     | 'wrappers'
+    | 'skipAutoWrappers'
+    | 'skipDefaultWrappers'
     // From BaseValueField
     | 'value'
-    | 'placeholder';
+    | 'placeholder'
+    | 'nullable';
 
   type ActualKeys = keyof DbxForgeSearchableChipFieldDef;
 

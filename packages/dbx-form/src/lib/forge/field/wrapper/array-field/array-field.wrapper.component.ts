@@ -73,10 +73,6 @@ export class DbxForgeArrayFieldWrapperComponent implements FieldWrapperContract 
    */
   readonly addButtonDisabledSignal = computed(() => this.isDisabled() || this.atMaxLengthSignal());
 
-  constructor() {
-    console.log('init?');
-  }
-
   drop(event: CdkDragDrop<unknown>): void {
     if (event.previousIndex === event.currentIndex) {
       return;

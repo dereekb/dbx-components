@@ -50,10 +50,6 @@ export interface DbxForgeTextFieldConfig extends DbxForgeFieldFunctionDef<DbxFor
    * For non-idempotent transformations, you should directly configure the `transform` property instead.
    */
   readonly idempotentTransform?: TransformStringFunctionConfig;
-  /**
-   * Initial value for the text input. Defaults to empty string.
-   */
-  readonly defaultValue?: string;
 }
 
 /**

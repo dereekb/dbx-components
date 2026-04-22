@@ -1,17 +1,11 @@
 import type { MatMultiCheckboxField } from '@ng-forge/dynamic-forms-material';
-import { filterFromPOJO } from '@dereekb/util';
 import { dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef } from '../field';
 import type { DbxForgeField } from '../../form/forge.form';
 
 /**
  * Configuration for a forge multi-checkbox (checklist) field.
  */
-export interface DbxForgeChecklistFieldConfig<T = unknown> extends DbxForgeFieldFunctionDef<MatMultiCheckboxField<T>> {
-  /**
-   * Position of labels relative to the checkboxes.
-   */
-  readonly labelPosition?: 'before' | 'after';
-}
+export interface DbxForgeChecklistFieldConfig<T = unknown> extends DbxForgeFieldFunctionDef<MatMultiCheckboxField<T>> {}
 
 /**
  * Generic function type for dbxForgeChecklistField to preserve caller generics.
@@ -41,9 +35,5 @@ export type ForgeChecklistFieldFunction = DbxForgeChecklistFieldFunction;
  */
 export const dbxForgeChecklistField = dbxForgeFieldFunction<DbxForgeChecklistFieldConfig>({
   type: 'multi-checkbox' as const,
-  buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder((config) =>
-    filterFromPOJO({
-      labelPosition: config.labelPosition
-    })
-  )
+  buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder()
 }) as DbxForgeChecklistFieldFunction;

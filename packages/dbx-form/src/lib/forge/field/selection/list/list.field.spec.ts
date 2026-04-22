@@ -61,6 +61,7 @@ describe('DbxForgeListSelectionFieldConfig - Exhaustive Whitelist', () => {
     | 'excludeValueIfReadonly'
     | 'skipAutoWrappers'
     | 'skipDefaultWrappers'
+    | 'nullable'
     // Phantom brand
     | '__fieldDef';
 
@@ -135,7 +136,8 @@ describe('DbxForgeListSelectionFieldDef - Exhaustive Whitelist', () => {
     | 'skipDefaultWrappers'
     // From BaseValueField
     | 'value'
-    | 'placeholder';
+    | 'placeholder'
+    | 'nullable';
 
   type ActualKeys = keyof DbxForgeListSelectionFieldDef;
 

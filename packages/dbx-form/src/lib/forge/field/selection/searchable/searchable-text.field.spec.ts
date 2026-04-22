@@ -61,6 +61,9 @@ describe('DbxForgeSearchableTextFieldConfig - Exhaustive Whitelist', () => {
     | 'excludeValueIfHidden'
     | 'excludeValueIfDisabled'
     | 'excludeValueIfReadonly'
+    | 'skipAutoWrappers'
+    | 'skipDefaultWrappers'
+    | 'nullable'
     // Phantom brand
     | '__fieldDef';
 
@@ -138,9 +141,12 @@ describe('DbxForgeSearchableTextFieldDef - Exhaustive Whitelist', () => {
     | 'derivation'
     | 'schemas'
     | 'wrappers'
+    | 'skipAutoWrappers'
+    | 'skipDefaultWrappers'
     // From BaseValueField
     | 'value'
-    | 'placeholder';
+    | 'placeholder'
+    | 'nullable';
 
   type ActualKeys = keyof DbxForgeSearchableTextFieldDef;
 

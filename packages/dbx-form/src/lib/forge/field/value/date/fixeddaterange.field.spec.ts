@@ -38,72 +38,60 @@ describe('dbxForgeFixedDateRangeField()', () => {
 
   it('should set dateRangeInput in props', () => {
     const dateRangeInput = { type: 'weeks_range' as any, distance: 1 };
-    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', dateRangeInput });
+    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', props: { dateRangeInput } });
     expect(field.props?.dateRangeInput).toBe(dateRangeInput);
   });
 
   it('should set selectionMode "normal" in props', () => {
-    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', selectionMode: 'normal' });
+    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', props: { selectionMode: 'normal' } });
     expect(field.props?.selectionMode).toBe('normal');
   });
 
   it('should set selectionMode "arbitrary" in props', () => {
-    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', selectionMode: 'arbitrary' });
+    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', props: { selectionMode: 'arbitrary' } });
     expect(field.props?.selectionMode).toBe('arbitrary');
   });
 
   it('should set selectionMode "arbitrary_quick" in props', () => {
-    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', selectionMode: 'arbitrary_quick' });
+    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', props: { selectionMode: 'arbitrary_quick' } });
     expect(field.props?.selectionMode).toBe('arbitrary_quick');
   });
 
   it('should set valueMode in props', () => {
-    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', valueMode: DbxDateTimeValueMode.DATE_STRING });
+    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', props: { valueMode: DbxDateTimeValueMode.DATE_STRING } });
     expect(field.props?.valueMode).toBe(DbxDateTimeValueMode.DATE_STRING);
   });
 
   it('should set fullDayInUTC in props', () => {
-    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', fullDayInUTC: true });
+    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', props: { fullDayInUTC: true } });
     expect(field.props?.fullDayInUTC).toBe(true);
   });
 
   it('should set pickerConfig in props', () => {
     const pickerConfig = { limits: { min: 'today_start' as any } };
-    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', pickerConfig });
+    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', props: { pickerConfig } });
     expect(field.props?.pickerConfig).toBe(pickerConfig);
   });
 
   it('should set timezone in props', () => {
-    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', timezone: 'America/New_York' });
+    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', props: { timezone: 'America/New_York' } });
     expect(field.props?.timezone).toBe('America/New_York');
   });
 
   it('should set showTimezone in props', () => {
-    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', showTimezone: false });
+    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', props: { showTimezone: false } });
     expect(field.props?.showTimezone).toBe(false);
   });
 
   it('should set showRangeInput in props', () => {
-    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', showRangeInput: false });
+    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', props: { showRangeInput: false } });
     expect(field.props?.showRangeInput).toBe(false);
   });
 
   it('should pass presets through to props', () => {
     const presets = [{ label: 'Today', logicalDate: 'now' as const }];
-    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', presets });
+    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', props: { presets } });
     expect(field.props?.presets).toBe(presets);
-  });
-
-  it('should not populate props with undefined values', () => {
-    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange' });
-    expect(field.props).toBeDefined();
-    expect('dateRangeInput' in (field.props as object)).toBe(false);
-    expect('selectionMode' in (field.props as object)).toBe(false);
-    expect('valueMode' in (field.props as object)).toBe(false);
-    expect('pickerConfig' in (field.props as object)).toBe(false);
-    expect('timezone' in (field.props as object)).toBe(false);
-    expect('showTimezone' in (field.props as object)).toBe(false);
-    expect('showRangeInput' in (field.props as object)).toBe(false);
   });
 
   it('should pass logic through to the field definition', () => {

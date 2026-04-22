@@ -23,16 +23,18 @@ export class DocForgeExampleComponentFormComponent extends AbstractConfigAsyncFo
       return {
         fields: [
           dbxForgeComponentField({
-            componentField: {
-              componentClass: config.componentClass,
-              providers: [
-                {
-                  provide: DOC_FORM_EXAMPLE_COMPONENT_DATA_TOKEN,
-                  useValue: 'example injected value'
-                }
-              ]
-            },
-            allowDisabledEffects: config.allowDisabledEffects ?? true
+            props: {
+              componentField: {
+                componentClass: config.componentClass,
+                providers: [
+                  {
+                    provide: DOC_FORM_EXAMPLE_COMPONENT_DATA_TOKEN,
+                    useValue: 'example injected value'
+                  }
+                ]
+              },
+              allowDisabledEffects: config.allowDisabledEffects ?? true
+            }
           })
         ]
       } as const satisfies FormConfig;

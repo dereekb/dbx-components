@@ -37,7 +37,9 @@ export class DocFormExpressionComponent {
         key: 'show',
         label: 'Select One',
         description: 'This selection is watched by the other fields to toggle showing/hiding based on the selected value.',
-        options: SHOW_VALUE_SELECTION_VALUES.filter((x): x is { label: string; value: string } => 'value' in x)
+        props: {
+          options: SHOW_VALUE_SELECTION_VALUES.filter((x): x is { label: string; value: string } => 'value' in x)
+        }
       }),
       dbxForgeTextField({ key: 'text', label: 'Text', logic: [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'show', operator: 'notEquals', value: 'text' } }] }),
       dbxForgeTextAreaField({ key: 'textarea', label: 'Text Area', logic: [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'show', operator: 'notEquals', value: 'textarea' } }] })

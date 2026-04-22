@@ -4,6 +4,9 @@ import { DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceAddValidationInput 
 import { IS_NOT_WEBSITE_URL_VALIDATION_KEY, IS_NOT_WEBSITE_URL_WITH_EXPECTED_DOMAIN_VALIDATION_KEY, IS_NOT_WEBSITE_URL_WITH_PREFIX_VALIDATION_KEY, type IsWebsiteUrlValidatorConfig } from '../../validator/website';
 
 // MARK: Pattern
+/**
+ * Configuration for {@link dbxForgePatternValidator}.
+ */
 export interface DbxForgePatternValidatorConfig {
   pattern: string | RegExp;
   message?: ValidationMessages['pattern'];
@@ -37,10 +40,16 @@ export function dbxForgePatternValidator(config: DbxForgePatternValidatorConfig)
 }
 
 // MARK: Email
+/**
+ * Configuration for {@link dbxForgeEmailValidator}.
+ */
 export interface DbxForgeEmailValidatorConfig {
   message?: ValidationMessages['email'];
 }
 
+/**
+ * Default message applied by {@link dbxForgeEmailValidator} when no override is supplied.
+ */
 export const DBX_FORGE_DEFAULT_EMAIL_VALIDATION_MESSAGE = 'Please enter a valid email address.';
 
 /**
@@ -72,6 +81,10 @@ export function dbxForgeEmailValidator(config?: DbxForgeEmailValidatorConfig): D
 }
 
 // MARK: Website
+/**
+ * Configuration for {@link dbxForgeWebsiteUrlValidator}. Extends
+ * {@link IsWebsiteUrlValidatorConfig} with per-error message overrides.
+ */
 export interface DbxForgeWebsiteUrlValidatorConfig extends IsWebsiteUrlValidatorConfig {
   /**
    * Optional override for the "is not a valid website url" error message.

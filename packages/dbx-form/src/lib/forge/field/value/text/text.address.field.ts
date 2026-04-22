@@ -121,24 +121,24 @@ export function dbxForgeAddressFields(config: DbxForgeAddressFieldsConfig = {}) 
 
 // MARK: Address
 /**
- * Configuration for a complete address field group.
+ * Configuration for a complete address group composite.
  */
-export interface DbxForgeAddressFieldConfig extends DbxForgeAddressFieldsConfig {
+export interface DbxForgeAddressGroupConfig extends DbxForgeAddressFieldsConfig {
   readonly key?: string;
 }
 
 /**
- * Creates a grouped address field containing all address sub-fields.
+ * Composite builder that wraps the full set of address sub-fields in a group.
  *
  * @param config - Optional overrides; defaults to key `'address'`
  * @returns A {@link GroupField} containing address fields
  *
  * @example
  * ```typescript
- * const field = dbxForgeAddressField({ required: true, includeCountry: true });
+ * const group = dbxForgeAddressGroup({ required: true, includeCountry: true });
  * ```
  */
-export function dbxForgeAddressField(config: Partial<DbxForgeAddressFieldConfig> = {}): GroupField {
+export function dbxForgeAddressGroup(config: Partial<DbxForgeAddressGroupConfig> = {}): GroupField {
   const { key = 'address' } = config;
 
   return dbxForgeGroup({

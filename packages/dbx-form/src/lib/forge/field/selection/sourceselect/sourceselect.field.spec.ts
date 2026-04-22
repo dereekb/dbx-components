@@ -41,6 +41,10 @@ describe('DbxForgeSourceSelectFieldConfig - Exhaustive Whitelist', () => {
     | 'excludeValueIfHidden'
     | 'excludeValueIfDisabled'
     | 'excludeValueIfReadonly'
+    | 'wrappers'
+    | 'skipAutoWrappers'
+    | 'skipDefaultWrappers'
+    | 'nullable'
     // Phantom brand
     | '__fieldDef';
 
@@ -60,9 +64,11 @@ describe('dbxForgeSourceSelectField()', () => {
   function minimalConfig() {
     return {
       key: 'source',
-      valueReader: stubValueReader,
-      metaLoader: stubMetaLoader,
-      displayForValue: stubDisplayForValue
+      props: {
+        valueReader: stubValueReader,
+        metaLoader: stubMetaLoader,
+        displayForValue: stubDisplayForValue
+      }
     } as Parameters<typeof dbxForgeSourceSelectField>[0];
   }
 
@@ -117,44 +123,45 @@ describe('dbxForgeSourceSelectField()', () => {
     expect(field.readonly).toBe(true);
   });
 
-  // -- Config propagation --
-  // Note: These config properties are spread onto the field def at the top level
-  // by dbxForgeFieldFunction, not mapped into props (buildFieldDef is a no-op TODO).
+  // -- Props propagation --
 
-  it('should propagate valueReader on the field', () => {
+  it('should propagate valueReader on field.props', () => {
     const field = dbxForgeSourceSelectField(minimalConfig());
-    expect((field as any).valueReader).toBe(stubValueReader);
+    expect(field.props?.valueReader).toBe(stubValueReader);
   });
 
-  it('should propagate metaLoader on the field', () => {
+  it('should propagate metaLoader on field.props', () => {
     const field = dbxForgeSourceSelectField(minimalConfig());
-    expect((field as any).metaLoader).toBe(stubMetaLoader);
+    expect(field.props?.metaLoader).toBe(stubMetaLoader);
   });
 
-  it('should propagate displayForValue on the field', () => {
+  it('should propagate displayForValue on field.props', () => {
     const field = dbxForgeSourceSelectField(minimalConfig());
-    expect((field as any).displayForValue).toBe(stubDisplayForValue);
+    expect(field.props?.displayForValue).toBe(stubDisplayForValue);
   });
 
-  it('should propagate multiple on the field when provided', () => {
-    const field = dbxForgeSourceSelectField({ ...minimalConfig(), multiple: true } as any);
-    expect((field as any).multiple).toBe(true);
+  it('should propagate multiple on field.props when provided', () => {
+    const base = minimalConfig();
+    const field = dbxForgeSourceSelectField({ ...base, props: { ...base.props!, multiple: true } });
+    expect(field.props?.multiple).toBe(true);
   });
 
   it('should not set multiple when not provided', () => {
     const field = dbxForgeSourceSelectField(minimalConfig());
-    expect((field as any).multiple).toBeUndefined();
+    expect(field.props?.multiple).toBeUndefined();
   });
 
-  it('should propagate filterable on the field when provided', () => {
-    const field = dbxForgeSourceSelectField({ ...minimalConfig(), filterable: false } as any);
-    expect((field as any).filterable).toBe(false);
+  it('should propagate filterable on field.props when provided', () => {
+    const base = minimalConfig();
+    const field = dbxForgeSourceSelectField({ ...base, props: { ...base.props!, filterable: false } });
+    expect(field.props?.filterable).toBe(false);
   });
 
-  it('should propagate openSource on the field when provided', () => {
+  it('should propagate openSource on field.props when provided', () => {
     const openSource = () => of({ select: [], options: [] });
-    const field = dbxForgeSourceSelectField({ ...minimalConfig(), openSource } as Parameters<typeof dbxForgeSourceSelectField>[0]);
-    expect((field as any).openSource).toBe(openSource);
+    const base = minimalConfig();
+    const field = dbxForgeSourceSelectField({ ...base, props: { ...base.props!, openSource } });
+    expect(field.props?.openSource).toBe(openSource);
   });
 
   // -- Logic --

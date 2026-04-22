@@ -1,6 +1,4 @@
-import { filterFromPOJO } from '@dereekb/util';
-import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { FORGE_COMPONENT_FIELD_TYPE, type DbxForgeComponentFieldDef } from './component.field.component';
+import { FORGE_COMPONENT_FIELD_TYPE, type DbxForgeComponentFieldDef, type DbxForgeComponentFieldProps } from './component.field.component';
 import { dbxForgeFieldFunction, type DbxForgeFieldFunctionDef, type DbxForgeFieldFunction } from '../field';
 import type { DbxForgeField } from '../../form/forge.form';
 
@@ -8,18 +6,8 @@ import type { DbxForgeField } from '../../form/forge.form';
 /**
  * Internal config with required key for the factory.
  */
-type _DbxForgeComponentFieldConfig<T = unknown> = DbxForgeFieldFunctionDef<DbxForgeComponentFieldDef<T>> & {
-  /**
-   * The injection component configuration describing which component to render.
-   */
-  readonly componentField: DbxInjectionComponentConfig<T>;
-  /**
-   * Whether to visually indicate the disabled state on this component.
-   *
-   * Defaults to `true`. Set to `false` for display-only components that should
-   * remain visually unchanged when the form is disabled.
-   */
-  readonly allowDisabledEffects?: boolean;
+type _DbxForgeComponentFieldConfig<T = unknown> = Omit<DbxForgeFieldFunctionDef<DbxForgeComponentFieldDef<T>>, 'props'> & {
+  readonly props: DbxForgeComponentFieldProps<T>;
 };
 
 /**
@@ -50,12 +38,7 @@ export type DbxForgeComponentFieldFunction = <T = unknown>(config: DbxForgeCompo
 export type ForgeComponentFieldFunction = DbxForgeComponentFieldFunction;
 
 const _dbxForgeComponentField = dbxForgeFieldFunction<_DbxForgeComponentFieldConfig>({
-  type: FORGE_COMPONENT_FIELD_TYPE,
-  buildProps: (config) =>
-    filterFromPOJO({
-      componentField: config.componentField,
-      allowDisabledEffects: config.allowDisabledEffects
-    })
+  type: FORGE_COMPONENT_FIELD_TYPE
 }) as DbxForgeFieldFunction<_DbxForgeComponentFieldConfig, DbxForgeComponentFieldDef>;
 
 /**
@@ -72,7 +55,7 @@ const _dbxForgeComponentField = dbxForgeFieldFunction<_DbxForgeComponentFieldCon
  * ```typescript
  * const field = dbxForgeComponentField({
  *   key: 'custom',
- *   componentField: { componentClass: MyCustomFormComponent, data: { someInput: 'value' } }
+ *   props: { componentField: { componentClass: MyCustomFormComponent, data: { someInput: 'value' } } }
  * });
  * ```
  */

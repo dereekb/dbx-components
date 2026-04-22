@@ -5,6 +5,7 @@ import { describe, it, expect } from 'vitest';
 import { expectTypeOf } from 'vitest';
 import type { DynamicText, LogicConfig, SchemaApplicationConfig, ValidatorConfig, ValidationMessages } from '@ng-forge/dynamic-forms';
 import type { MatTextareaField } from '@ng-forge/dynamic-forms-material';
+import type { Maybe } from '@dereekb/util';
 import type { DbxForgeTextAreaFieldConfig } from './textarea.field';
 import { dbxForgeTextAreaField } from './textarea.field';
 
@@ -44,6 +45,10 @@ describe('DbxForgeTextAreaFieldConfig - Exhaustive Whitelist', () => {
     | 'excludeValueIfHidden'
     | 'excludeValueIfDisabled'
     | 'excludeValueIfReadonly'
+    | 'wrappers'
+    | 'skipAutoWrappers'
+    | 'skipDefaultWrappers'
+    | 'nullable'
     | '__fieldDef'
     // Field-specific config
     | 'rows'
@@ -77,7 +82,7 @@ describe('DbxForgeTextAreaFieldConfig - Exhaustive Whitelist', () => {
 
   describe('inherited optional keys', () => {
     it('value is string', () => {
-      expectTypeOf<DbxForgeTextAreaFieldConfig['value']>().toEqualTypeOf<string | undefined>();
+      expectTypeOf<DbxForgeTextAreaFieldConfig['value']>().toEqualTypeOf<Maybe<string>>();
     });
   });
 });
@@ -117,9 +122,13 @@ describe('MatTextareaField - Exhaustive Whitelist', () => {
     | 'logic'
     | 'derivation'
     | 'schemas'
+    | 'wrappers'
+    | 'skipAutoWrappers'
+    | 'skipDefaultWrappers'
     // From BaseValueField
     | 'value'
-    | 'placeholder';
+    | 'placeholder'
+    | 'nullable';
 
   type ActualKeys = keyof MatTextareaField;
 
@@ -139,7 +148,7 @@ describe('MatTextareaField - Exhaustive Whitelist', () => {
 
   describe('value type', () => {
     it('value is string', () => {
-      expectTypeOf<MatTextareaField['value']>().toEqualTypeOf<string | undefined>();
+      expectTypeOf<MatTextareaField['value']>().toEqualTypeOf<Maybe<string>>();
     });
   });
 });

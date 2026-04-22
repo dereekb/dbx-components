@@ -40,6 +40,9 @@ describe('DbxForgeToggleFieldConfig - Exhaustive Whitelist', () => {
     | 'excludeValueIfHidden'
     | 'excludeValueIfDisabled'
     | 'excludeValueIfReadonly'
+    | 'wrappers'
+    | 'skipAutoWrappers'
+    | 'skipDefaultWrappers'
     | '__fieldDef'
     // Field-specific config
     | 'styledBox';
@@ -87,6 +90,9 @@ describe('DbxForgeCheckboxFieldConfig - Exhaustive Whitelist', () => {
     | 'excludeValueIfHidden'
     | 'excludeValueIfDisabled'
     | 'excludeValueIfReadonly'
+    | 'wrappers'
+    | 'skipAutoWrappers'
+    | 'skipDefaultWrappers'
     | '__fieldDef'
     // Field-specific config
     | 'styledBox';
