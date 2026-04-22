@@ -2,6 +2,8 @@ import { capitalizeFirstLetter, type Maybe } from '@dereekb/util';
 import type { ValidatorConfig } from '@ng-forge/dynamic-forms';
 import { dbxForgeTextField, type DbxForgeTextFieldConfig } from '../field/value/text/text.field';
 import { dbxForgeEmailField, type DbxForgeEmailFieldConfig } from '../field/value/text/text.additional.field';
+import { MatInputField } from '@ng-forge/dynamic-forms-material';
+import { DbxForgeField } from '../form';
 
 /**
  * Validation kind used on the verify password field to indicate the passwords do not match.
@@ -12,6 +14,16 @@ export const DBX_FORGE_PASSWORDS_MATCH_VALIDATION_KIND = 'passwordsMatch';
  * Default validation message used when the passwords do not match.
  */
 export const DBX_FORGE_DEFAULT_PASSWORDS_MATCH_VALIDATION_MESSAGE = 'The passwords do not match.';
+
+/**
+ * Default autocomplete value for password fields.
+ */
+export const DBX_FORGE_TEXT_PASSWORD_DEFAULT_AUTOCOMPLETE = 'current-password';
+
+/**
+ * Default autocomplete value for verify password fields.
+ */
+export const DBX_FORGE_TEXT_VERIFY_PASSWORD_DEFAULT_AUTOCOMPLETE = 'new-password';
 
 // MARK: Password Field
 /**
@@ -35,6 +47,7 @@ export interface DbxForgeTextPasswordFieldConfig extends Omit<DbxForgeTextFieldC
 export function dbxForgeTextPasswordField(config?: DbxForgeTextPasswordFieldConfig) {
   return dbxForgeTextField({
     key: 'password',
+    autocomplete: DBX_FORGE_TEXT_PASSWORD_DEFAULT_AUTOCOMPLETE,
     ...config,
     label: config?.label ?? 'Password',
     inputType: 'password',
@@ -59,6 +72,7 @@ export function dbxForgeTextVerifyPasswordField(config?: DbxForgeTextPasswordFie
   return dbxForgeTextPasswordField({
     key: 'verifyPassword',
     label: 'Verify Password',
+    autocomplete: DBX_FORGE_TEXT_VERIFY_PASSWORD_DEFAULT_AUTOCOMPLETE,
     ...config,
     required: true
   });
@@ -95,7 +109,11 @@ export interface DbxForgeTextPasswordWithVerifyFieldConfig {
  * ```
  */
 export function dbxForgeTextPasswordWithVerifyField(config?: DbxForgeTextPasswordWithVerifyFieldConfig) {
-  const passwordField = dbxForgeTextPasswordField(config?.password);
+  /**
+   * Utilize the verify password autocomplete if it is for a new password.
+   */
+  const passwordFieldAutocomplete = config?.password?.autocomplete ?? DBX_FORGE_TEXT_VERIFY_PASSWORD_DEFAULT_AUTOCOMPLETE;
+  const passwordField = dbxForgeTextPasswordField({ ...config?.password, autocomplete: passwordFieldAutocomplete });
   const passwordKey = passwordField.key as string;
   const verifyPasswordKey = config?.verifyPassword?.key ?? `verify${capitalizeFirstLetter(passwordKey)}`;
   const verifyPasswordLabel = config?.verifyPassword?.label ?? `Verify ${passwordField.label ?? 'Password'}`;
@@ -185,17 +203,21 @@ export function dbxForgeUsernamePasswordLoginFields(config: DbxForgeUsernameLogi
   const { username, password, verifyPassword } = config;
   const usernameField = dbxForgeUsernameLoginField(username);
 
+  let result: DbxForgeField<MatInputField>[];
+
   if (verifyPassword) {
     const [passwordField, verifyPasswordField] = dbxForgeTextPasswordWithVerifyField({
       password,
       verifyPassword: verifyPassword === true ? undefined : verifyPassword
     });
 
-    return [usernameField, passwordField, verifyPasswordField];
+    result = [usernameField, passwordField, verifyPasswordField];
+  } else {
+    const passwordField = dbxForgeTextPasswordField(password);
+    result = [usernameField, passwordField];
   }
 
-  const passwordField = dbxForgeTextPasswordField(password);
-  return [usernameField, passwordField];
+  return result;
 }
 
 /**
@@ -222,9 +244,13 @@ export function dbxForgeUsernameLoginField(username: DbxForgeUsernameLoginFieldU
     }
   }
 
+  let result: DbxForgeField<MatInputField>;
+
   if (usernameFieldConfig.email) {
-    return dbxForgeEmailField({ ...usernameFieldConfig.email, key: 'username' });
+    result = dbxForgeEmailField({ ...usernameFieldConfig.email, key: 'username', autocomplete: 'email' });
+  } else {
+    result = dbxForgeTextField({ ...usernameFieldConfig.username, key: 'username', autocomplete: 'username', required: true });
   }
 
-  return dbxForgeTextField({ ...usernameFieldConfig.username, key: 'username', required: true });
+  return result;
 }

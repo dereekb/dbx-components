@@ -266,12 +266,16 @@ export class DbxForgeDateTimeFieldComponent {
   // FieldTree<unknown> is callable — calling it returns FieldState which has .value, .disabled, etc.
   // We call field()() to first unwrap the InputSignal (→ FieldTree), then call the FieldTree (→ FieldState).
   readonly fieldValue = computed(() => {
+    let result: unknown = undefined;
+
     try {
       const state = this.field()?.() as any;
-      return state?.value?.() as unknown;
+      result = state?.value?.() as unknown;
     } catch {
-      return undefined;
+      // Field tree not yet initialized — fall through to undefined
     }
+
+    return result;
   });
 
   readonly isDisabled = dbxForgeFieldDisabled();
@@ -550,13 +554,22 @@ export class DbxForgeDateTimeFieldComponent {
    * inbound sync (form source) and user picks. Returns null when cleared.
    */
   readonly dateValueSignal = computed(() => {
-    if (this._isCleared()) return null;
-    const raw = this.fieldValue();
-    if (raw == null) return null;
-    const parser = dbxDateTimeInputValueParseFactory(this.valueMode(), this.timezoneInstance());
-    const date = parser(raw as Maybe<Date | string | number>);
-    if (!date || (date instanceof Date && isNaN(date.getTime()))) return null;
-    return startOfDay(date);
+    let result: Date | null = null;
+
+    if (!this._isCleared()) {
+      const raw = this.fieldValue();
+
+      if (raw != null) {
+        const parser = dbxDateTimeInputValueParseFactory(this.valueMode(), this.timezoneInstance());
+        const date = parser(raw as Maybe<Date | string | number>);
+
+        if (date && !(date instanceof Date && isNaN(date.getTime()))) {
+          result = startOfDay(date);
+        }
+      }
+    }
+
+    return result;
   });
   readonly displayValueSignal = toSignal(this.displayValue$);
   readonly pickerFilterSignal = toSignal(this.pickerFilter$, { initialValue: () => true as boolean });
@@ -580,9 +593,15 @@ export class DbxForgeDateTimeFieldComponent {
   protected readonly ariaInvalid = computed(() => (this.hasErrorSignal() ? 'true' : null));
   protected readonly ariaRequired = computed(() => (this.field()().required() ? 'true' : null));
   protected readonly ariaDescribedBy = computed(() => {
-    if (this.hasErrorSignal()) return this.errorId();
-    if (this.props()?.hint) return this.hintId();
-    return null;
+    let result: string | null = null;
+
+    if (this.hasErrorSignal()) {
+      result = this.errorId();
+    } else if (this.props()?.hint) {
+      result = this.hintId();
+    }
+
+    return result;
   });
 
   constructor() {

@@ -38,6 +38,10 @@ describe('DbxForgeNumberFieldConfig - Exhaustive Whitelist', () => {
     | 'excludeValueIfHidden'
     | 'excludeValueIfDisabled'
     | 'excludeValueIfReadonly'
+    | 'wrappers'
+    | 'skipAutoWrappers'
+    | 'skipDefaultWrappers'
+    | 'nullable'
     | '__fieldDef'
     // From FieldAutocompleteAttributeOptionRef
     | 'autocomplete'

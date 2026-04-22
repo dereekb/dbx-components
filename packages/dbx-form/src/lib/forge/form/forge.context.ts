@@ -29,24 +29,28 @@ import { DbxForgeGlobalDefaultConfigService } from './forge.global-defaults.serv
  * ```
  */
 export function stripForgeInternalKeys<T>(value: T): T {
+  let result: T;
+
   if (value == null || typeof value !== 'object' || Array.isArray(value) || value instanceof Date) {
-    return value;
-  }
+    result = value;
+  } else {
+    const stripped: Record<string, unknown> = {};
 
-  const result: Record<string, unknown> = {};
-
-  for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
-    if (key.startsWith('_')) {
-      if (val != null && typeof val === 'object' && !Array.isArray(val)) {
-        Object.assign(result, stripForgeInternalKeys(val));
+    for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
+      if (key.startsWith('_')) {
+        if (val != null && typeof val === 'object' && !Array.isArray(val)) {
+          Object.assign(stripped, stripForgeInternalKeys(val));
+        }
+        // Primitive _ keys (toggle booleans, etc.) are dropped
+      } else {
+        stripped[key] = stripForgeInternalKeys(val);
       }
-      // Primitive _ keys (toggle booleans, etc.) are dropped
-    } else {
-      result[key] = stripForgeInternalKeys(val);
     }
+
+    result = stripped as T;
   }
 
-  return result as T;
+  return result;
 }
 
 /**
@@ -83,28 +87,32 @@ function isEmptyFormValue(val: unknown): boolean {
  * @returns A new object with empty-valued keys removed
  */
 export function stripEmptyForgeValues<T>(value: T): T {
+  let result: T;
+
   if (value == null || typeof value !== 'object' || Array.isArray(value)) {
-    return value;
-  }
+    result = value;
+  } else {
+    const stripped: Record<string, unknown> = {};
 
-  const result: Record<string, unknown> = {};
-
-  for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
-    if (isEmptyFormValue(val)) {
-      continue;
-    }
-
-    if (typeof val === 'object' && !Array.isArray(val) && !(val instanceof Date)) {
-      const cleaned = stripEmptyForgeValues(val);
-      if (cleaned != null && Object.keys(cleaned as object).length > 0) {
-        result[key] = cleaned;
+    for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
+      if (isEmptyFormValue(val)) {
+        continue;
       }
-    } else {
-      result[key] = val;
+
+      if (typeof val === 'object' && !Array.isArray(val) && !(val instanceof Date)) {
+        const cleaned = stripEmptyForgeValues(val);
+        if (cleaned != null && Object.keys(cleaned as object).length > 0) {
+          stripped[key] = cleaned;
+        }
+      } else {
+        stripped[key] = val;
+      }
     }
+
+    result = stripped as T;
   }
 
-  return result as T;
+  return result;
 }
 
 /**
@@ -180,13 +188,16 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
    */
   readonly allWrappersValid = computed(() => {
     this._wrapperValidSignalsVersion(); // depend on version to retrigger when wrappers register/unregister
+    let result = true;
+
     for (const s of this._wrapperValidSignals) {
       if (!s()) {
-        return false;
+        result = false;
+        break;
       }
     }
 
-    return true;
+    return result;
   });
 
   /**
@@ -292,14 +303,18 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
   }
 
   getValue(): Observable<T> {
+    let result: Observable<T>;
+
     if (this.requireValid) {
-      return combineLatest([this._value.pipe(filterMaybe()), this._isValid]).pipe(
+      result = combineLatest([this._value.pipe(filterMaybe()), this._isValid]).pipe(
         filter(([, valid]) => valid),
         map(([value]) => value)
       );
+    } else {
+      result = this._value.pipe(filterMaybe());
     }
 
-    return this._value.pipe(filterMaybe());
+    return result;
   }
 
   getDisabled(): Observable<BooleanStringKeyArray> {

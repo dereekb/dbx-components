@@ -76,15 +76,18 @@ export abstract class AbstractForgeSearchableFieldDirective<T = unknown, M = unk
       const p = this.props();
       const searchOnEmptyText = p?.searchOnEmptyText ?? false;
       const searchFn = p?.search;
+      let result: Observable<LoadingState<ConfiguredSearchableValueFieldDisplayValue<T, M>[]>>;
 
       if (!searchFn) {
-        return of(successResult([] as ConfiguredSearchableValueFieldDisplayValue<T, M>[]));
+        result = of(successResult([] as ConfiguredSearchableValueFieldDisplayValue<T, M>[]));
+      } else {
+        result = (text || searchOnEmptyText ? searchFn(text ?? '') : of([])).pipe(
+          switchMap((x) => this._loadDisplayValuesForFieldValues(x)),
+          startWithBeginLoading()
+        );
       }
 
-      return (text || searchOnEmptyText ? searchFn(text ?? '') : of([])).pipe(
-        switchMap((x) => this._loadDisplayValuesForFieldValues(x)),
-        startWithBeginLoading()
-      );
+      return result;
     }),
     shareReplay(1)
   );

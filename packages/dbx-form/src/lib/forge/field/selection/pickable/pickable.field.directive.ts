@@ -78,9 +78,15 @@ export abstract class AbstractForgePickableItemFieldDirective<T = unknown, M = u
   protected readonly ariaInvalid = computed(() => (this.showErrors() ? 'true' : null));
   protected readonly ariaRequired = computed(() => (this.field()().required() ? 'true' : null));
   protected readonly ariaDescribedBy = computed(() => {
-    if (this.errorsToDisplay().length > 0) return this.errorId();
-    if (this.props()?.hint) return this.hintId();
-    return null;
+    let result: string | null = null;
+
+    if (this.errorsToDisplay().length > 0) {
+      result = this.errorId();
+    } else if (this.props()?.hint) {
+      result = this.hintId();
+    }
+
+    return result;
   });
 
   private get _pickOnlyOne(): boolean {
@@ -259,19 +265,20 @@ export abstract class AbstractForgePickableItemFieldDirective<T = unknown, M = u
   // MARK: Private
   private _setFieldValue(values: T[]): void {
     const fieldGetter = this.field();
-    if (!fieldGetter || typeof fieldGetter !== 'function') return;
 
-    const p = this.props();
-    const asArrayValue = p?.asArrayValue ?? true;
-    let newValue: Maybe<T | T[]> = values;
+    if (fieldGetter && typeof fieldGetter === 'function') {
+      const p = this.props();
+      const asArrayValue = p?.asArrayValue ?? true;
+      let newValue: Maybe<T | T[]> = values;
 
-    if (!asArrayValue) {
-      newValue = values[0];
-    }
+      if (!asArrayValue) {
+        newValue = values[0];
+      }
 
-    const fieldState = (fieldGetter as any)();
-    if (fieldState?.value?.set) {
-      fieldState.value.set(newValue);
+      const fieldState = (fieldGetter as any)();
+      if (fieldState?.value?.set) {
+        fieldState.value.set(newValue);
+      }
     }
   }
 
@@ -279,12 +286,9 @@ export abstract class AbstractForgePickableItemFieldDirective<T = unknown, M = u
     const p = this.props();
     const filterFn = p?.filterValues;
     const skipOnEmpty = p?.skipFilterFnOnEmpty ?? true;
+    const result = !filterFn || (skipOnEmpty && !text) ? of(values.map((x) => x.value)) : filterFn(text, values);
 
-    if (!filterFn || (skipOnEmpty && !text)) {
-      return of(values.map((x) => x.value));
-    }
-
-    return filterFn(text, values);
+    return result;
   }
 
   private _loadDisplayValuesForFieldValues(values: PickableValueFieldValue<T, M>[]): Observable<PickableDisplayValueWithHash<T, M, H>[]> {

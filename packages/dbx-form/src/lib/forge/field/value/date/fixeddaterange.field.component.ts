@@ -24,14 +24,16 @@ function fixedDateRangeInputValueFactory(mode: DbxDateTimeValueMode, timezoneIns
   const dateInputTransformer = dbxDateTimeInputValueParseFactory(mode, timezoneInstance);
 
   return (y) => {
+    let result: Maybe<DateRange> = undefined;
+
     if (y) {
-      return {
+      result = {
         start: dateInputTransformer(y.start) as Date,
         end: dateInputTransformer(y.end) as Date
       };
     }
 
-    return undefined;
+    return result;
   };
 }
 
@@ -39,14 +41,16 @@ function fixedDateRangeOutputValueFactory(mode: DbxDateTimeValueMode, timezoneIn
   const dateOutputTransformer = dbxDateTimeOutputValueFactory(mode, timezoneInstance);
 
   return (y) => {
+    let result: Maybe<DateRangeWithDateOrStringValue> = undefined;
+
     if (y) {
-      return {
+      result = {
         start: dateOutputTransformer(y.start) as Date,
         end: dateOutputTransformer(y.end) as Date
       };
     }
 
-    return undefined;
+    return result;
   };
 }
 
@@ -211,12 +215,16 @@ export class DbxForgeFixedDateRangeFieldComponent {
 
   // MARK: Computed signals from props
   readonly isRequired = computed(() => {
+    let result = false;
+
     try {
       const state = this.field()?.() as any;
-      return (state?.required?.() as boolean) ?? false;
+      result = (state?.required?.() as boolean) ?? false;
     } catch {
-      return false;
+      // Field tree not yet initialized — fall through to false
     }
+
+    return result;
   });
 
   readonly isDisabled = dbxForgeFieldDisabled();
@@ -236,33 +244,51 @@ export class DbxForgeFixedDateRangeFieldComponent {
   protected readonly ariaInvalid = computed(() => (this.showErrors() ? 'true' : null));
   protected readonly ariaRequired = computed(() => (this.field()().required() ? 'true' : null));
   protected readonly ariaDescribedBy = computed(() => {
-    if (this.errorsToDisplay().length > 0) return this.errorId();
-    if (this.props()?.hint) return this.hintId();
-    return null;
+    let result: string | null = null;
+
+    if (this.errorsToDisplay().length > 0) {
+      result = this.errorId();
+    } else if (this.props()?.hint) {
+      result = this.hintId();
+    }
+
+    return result;
   });
 
   readonly hasRequiredError = computed(() => {
+    let result = false;
+
     try {
       const state = this.field()?.() as any;
       const touched = state?.touched?.() as boolean;
-      if (!touched) return false;
-      const invalid = state?.invalid?.() as boolean;
-      if (!invalid) return false;
-      const errors = state?.errors?.() as Array<{ type?: string }> | undefined;
-      return errors?.some((e) => e.type === 'required') ?? false;
+
+      if (touched) {
+        const invalid = state?.invalid?.() as boolean;
+
+        if (invalid) {
+          const errors = state?.errors?.() as Array<{ type?: string }> | undefined;
+          result = errors?.some((e) => e.type === 'required') ?? false;
+        }
+      }
     } catch {
-      return false;
+      // Field tree not yet initialized — fall through to false
     }
+
+    return result;
   });
 
   // MARK: Field value reading
   readonly fieldValue = computed(() => {
+    let result: unknown = undefined;
+
     try {
       const state = this.field()?.() as any;
-      return state?.value?.() as unknown;
+      result = state?.value?.() as unknown;
     } catch {
-      return undefined;
+      // Field tree not yet initialized — fall through to undefined
     }
+
+    return result;
   });
 
   readonly fieldValue$ = toObservable(this.fieldValue);
@@ -766,17 +792,18 @@ export class DbxForgeFixedDateRangeFieldSelectionStrategy<D> implements MatDateR
   createPreview(activeDate: D | null, _currentRange: DatePickerDateRange<D>, _event: Event): DatePickerDateRange<D> {
     const { currentSelectionModeSignal, latestBoundarySignal } = this.component;
     const currentSelectionMode = currentSelectionModeSignal();
+    let result: DatePickerDateRange<D> | undefined;
 
     if (activeDate != null && currentSelectionMode !== 'single') {
       const latestBoundary = latestBoundarySignal();
       const date = this.dateFromAdapterDate(activeDate);
 
       if (latestBoundary && (currentSelectionMode === 'normal' || isDateInDateRange(date, latestBoundary))) {
-        return this._createDateRange(latestBoundary);
+        result = this._createDateRange(latestBoundary);
       }
     }
 
-    return this._createDateRangeWithDate(activeDate);
+    return result ?? this._createDateRangeWithDate(activeDate);
   }
 
   private _createDateRangeWithDate(input: D | null): DatePickerDateRange<D> {

@@ -73,20 +73,13 @@ function _createReusableAvailabilityValidator(): AsyncCustomValidator {
       return rxResource<boolean, DbxForgeAvailabilityCheckParams>({
         params: () => paramsSignal() as DbxForgeAvailabilityCheckParams,
         stream: ({ params }) => {
-          if (!params.value || !params.checkValueIsAvailable) {
-            return of(true);
-          }
-
-          return params.checkValueIsAvailable(params.value);
+          const result: Observable<boolean> = !params.value || !params.checkValueIsAvailable ? of(true) : params.checkValueIsAvailable(params.value);
+          return result;
         }
       });
     },
     onSuccess: (result) => {
-      if (result === false) {
-        return { kind: FORGE_FIELD_VALUE_IS_AVAILABLE_VALIDATOR_NAME };
-      }
-
-      return null;
+      return result === false ? { kind: FORGE_FIELD_VALUE_IS_AVAILABLE_VALIDATOR_NAME } : null;
     },
     onError: () => null
   };

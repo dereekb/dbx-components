@@ -769,11 +769,13 @@ function _finalizeLogicAndValidation<C extends DbxForgeFieldFunctionDef<any>, FV
 function _finalizeLogic<C extends DbxForgeFieldFunctionDef<any>, FV = any>(instance: DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C, FV>, fieldDef: C): void {
   const logic = instance.getLogic();
 
-  // if no logic is defined, just return
-  if (!logic?.length) {
-    return;
+  // if no logic is defined, just skip finalization
+  if (logic?.length) {
+    _finalizeLogicEntries(instance, fieldDef, logic);
   }
+}
 
+function _finalizeLogicEntries<C extends DbxForgeFieldFunctionDef<any>, FV = any>(instance: DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C, FV>, fieldDef: C, logic: DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceLogicBuilderLogic<C, FV>[]): void {
   let hasOneOrMoreCustomFunctions = false;
 
   /**
@@ -978,10 +980,12 @@ function _finalizeValidation<C extends DbxForgeFieldFunctionDef<any>>(instance: 
   const validation = instance.getValidation();
   const validators = validation.validators;
 
-  if (!validators?.length) {
-    return;
+  if (validators?.length) {
+    _finalizeValidators(instance, fieldDef, validation, validators);
   }
+}
 
+function _finalizeValidators<C extends DbxForgeFieldFunctionDef<any>>(instance: DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C>, fieldDef: C, validation: DbxForgeFieldValidation, validators: NonNullable<DbxForgeFieldValidation['validators']>): void {
   let hasOneOrMoreValidatorFunctions = false;
 
   const validatorCustomFnConfig: {
@@ -997,25 +1001,29 @@ function _finalizeValidation<C extends DbxForgeFieldFunctionDef<any>>(instance: 
   }
 
   const finalizedValidators: ValidatorConfig[] = validators.map((entry) => {
+    let result: ValidatorConfig;
+
     if (!('fn' in entry)) {
-      return entry as ValidatorConfig;
+      result = entry as ValidatorConfig;
+    } else {
+      const { fn, reusableDefinition: _reusableDefinition, ...rest } = entry as any;
+      const functionName: string = rest.functionName ?? _generateValidatorFunctionName();
+      hasOneOrMoreValidatorFunctions = true;
+
+      switch (entry.type) {
+        case 'custom':
+          validatorCustomFnConfig.validators[functionName] = fn;
+          break;
+        case 'async':
+          validatorCustomFnConfig.asyncValidators[functionName] = fn;
+          break;
+      }
+
+      // Return a clean ValidatorConfig without fn or reusableDefinition
+      result = { ...rest, functionName } as ValidatorConfig;
     }
 
-    const { fn, reusableDefinition: _reusableDefinition, ...rest } = entry as any;
-    const functionName: string = rest.functionName ?? _generateValidatorFunctionName();
-    hasOneOrMoreValidatorFunctions = true;
-
-    switch (entry.type) {
-      case 'custom':
-        validatorCustomFnConfig.validators[functionName] = fn;
-        break;
-      case 'async':
-        validatorCustomFnConfig.asyncValidators[functionName] = fn;
-        break;
-    }
-
-    // Return a clean ValidatorConfig without fn or reusableDefinition
-    return { ...rest, functionName } as ValidatorConfig;
+    return result;
   });
 
   instance.setValidation({

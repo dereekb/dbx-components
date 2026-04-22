@@ -16,6 +16,13 @@ export interface DbxForgeFormFieldWrapperDef {
   readonly type: typeof DBX_FORGE_FORM_FIELD_WRAPPER_NAME;
 }
 
+/**
+ * Adds the Material-style form-field wrapper ({@link DBX_FORGE_FORM_FIELD_WRAPPER_NAME}) to
+ * the builder instance's wrapper chain so the rendered field is surrounded by the shared
+ * label / hint / error chrome.
+ *
+ * @param instance - the field builder instance to mutate
+ */
 export function configureDbxForgeFormFieldWrapper<C extends DbxForgeFieldFunctionDef<any>>(instance: DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C>): void {
   instance.addWrappers({
     type: DBX_FORGE_FORM_FIELD_WRAPPER_NAME

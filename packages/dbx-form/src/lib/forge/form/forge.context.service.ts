@@ -110,27 +110,30 @@ export class DbxForgeFormContextService {
     }
 
     const fieldPath = `${arrayKey}.${index}`;
+    let result: EvaluationContext;
 
     if (!scopedFormValue) {
-      return {
+      result = {
         fieldValue: itemValue,
         formValue: rootFormValue,
         fieldPath,
         customFunctions: {},
         logger: this._logger
       };
+    } else {
+      result = {
+        fieldValue: itemValue,
+        formValue: scopedFormValue,
+        rootFormValue,
+        arrayIndex: index,
+        arrayPath: arrayKey,
+        fieldPath,
+        customFunctions: {},
+        logger: this._logger
+      };
     }
 
-    return {
-      fieldValue: itemValue,
-      formValue: scopedFormValue,
-      rootFormValue,
-      arrayIndex: index,
-      arrayPath: arrayKey,
-      fieldPath,
-      customFunctions: {},
-      logger: this._logger
-    };
+    return result;
   }
 }
 
@@ -144,14 +147,16 @@ export class DbxForgeFormContextService {
 function _getNestedValue(source: Record<string, unknown>, path: string): unknown {
   const segments = path.split('.');
   let current: unknown = source;
+  let aborted = false;
 
   for (const segment of segments) {
     if (current == null || typeof current !== 'object') {
-      return undefined;
+      aborted = true;
+      break;
     }
 
     current = (current as Record<string, unknown>)[segment];
   }
 
-  return current;
+  return aborted ? undefined : current;
 }

@@ -5,7 +5,7 @@ import { describe, it, expect } from 'vitest';
 import { expectTypeOf } from 'vitest';
 import { type DynamicText, type LogicConfig, type SchemaApplicationConfig, type ValidatorConfig, type ValidationMessages, type FormConfig, withLoggerConfig } from '@ng-forge/dynamic-forms';
 import type { MatSliderField, MatSliderProps } from '@ng-forge/dynamic-forms-material';
-import { waitForMs } from '@dereekb/util';
+import { type Maybe, waitForMs } from '@dereekb/util';
 import type { DbxForgeNumberSliderFieldConfig } from './slider.field';
 import { dbxForgeNumberSliderField } from './slider.field';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -52,6 +52,8 @@ describe('DbxForgeNumberSliderFieldConfig - Exhaustive Whitelist', () => {
     | 'excludeValueIfReadonly'
     | 'skipAutoWrappers'
     | 'skipDefaultWrappers'
+    // From BaseValueField
+    | 'nullable'
     // From SliderField (via Partial<Omit<MatSliderField, 'key' | 'type'>>)
     | 'minValue'
     | 'maxValue'
@@ -90,7 +92,7 @@ describe('DbxForgeNumberSliderFieldConfig - Exhaustive Whitelist', () => {
     });
 
     it('value is number', () => {
-      expectTypeOf<DbxForgeNumberSliderFieldConfig['value']>().toEqualTypeOf<number | undefined>();
+      expectTypeOf<DbxForgeNumberSliderFieldConfig['value']>().toEqualTypeOf<Maybe<number>>();
     });
 
     it('required', () => {
@@ -172,6 +174,7 @@ describe('MatSliderField - Exhaustive Whitelist', () => {
     // From BaseValueField
     | 'value'
     | 'placeholder'
+    | 'nullable'
     // From SliderField
     | 'minValue'
     | 'maxValue'
@@ -188,7 +191,7 @@ describe('MatSliderField - Exhaustive Whitelist', () => {
   });
 
   it('value is number', () => {
-    expectTypeOf<MatSliderField['value']>().toEqualTypeOf<number | undefined>();
+    expectTypeOf<MatSliderField['value']>().toEqualTypeOf<Maybe<number>>();
   });
 
   it('props is MatSliderProps', () => {
@@ -417,8 +420,6 @@ describe('scenarios', () => {
     }
 
     it('should validate using formValue to reference sibling field values', async () => {
-      console.log('AAA');
-
       const testField = dbxForgeNumberSliderField({ key: 'test', label: 'Test', min: 0, max: 100 });
       const validatedField = dbxForgeNumberSliderField({
         key: 'validated',
@@ -433,33 +434,22 @@ describe('scenarios', () => {
       await settleWithWrapperSync(fixture);
       await waitForMs(200);
 
-      console.log('BBB');
-
       // Set test=50, validated=30 → should be INVALID (30 > 50 is false)
       fixture.componentInstance.setValue({ test: 50, validated: 30 });
       await settleWithWrapperSync(fixture);
 
-      console.log('CCC');
-
       const streamAfterInvalid = await firstValueFrom(fixture.componentInstance.context.stream$);
-      console.log('STREAM AFETER INVALID: ', { streamAfterInvalid });
 
       expect(streamAfterInvalid.status).toBe('INVALID');
       expect(streamAfterInvalid.isComplete).toBe(false);
-
-      console.log('DDD');
 
       // Set validated=60 → should be VALID (60 > 50 is true)
       fixture.componentInstance.setValue({ test: 50, validated: 60 });
       await settleWithWrapperSync(fixture);
 
-      console.log('EEE');
-
       await settleWithWrapperSync(fixture);
 
       const streamAfterValid = await firstValueFrom(fixture.componentInstance.context.stream$);
-
-      console.log('STREAM AFETER VALID: ', { streamAfterValid });
       expect(streamAfterValid.isComplete).toBe(true);
     });
   });

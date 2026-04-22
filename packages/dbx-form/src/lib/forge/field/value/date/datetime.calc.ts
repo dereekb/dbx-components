@@ -102,39 +102,32 @@ export function dateTimeFieldCalc(): DateTimeFieldCalc {
 export function buildCombinedDateTime(input: DateTimeCalcInput): Maybe<Date> {
   const { dateValue, timeString, isFullDay, fullDayInUTC, isTimeOnly, timeMode, timeDate, isCleared } = input;
 
-  if (isCleared) {
-    return undefined;
+  let result: Maybe<Date> = undefined;
+
+  if (!isCleared) {
+    let date = dateValue;
+
+    if (!date || isTimeOnly) {
+      date = timeDate ?? new Date();
+    }
+
+    if (date) {
+      if (isFullDay) {
+        result = fullDayInUTC ? utcDayForDate(date) : startOfDay(date);
+      } else if (timeString) {
+        result =
+          readableTimeStringToDate(timeString, {
+            date,
+            useSystemTimezone: true
+          }) ?? date;
+      } else if (!isTimeOnly && timeMode !== DbxDateTimeFieldTimeMode.REQUIRED) {
+        // If time is not required and no time string, return the date as-is
+        result = date;
+      }
+    }
   }
 
-  let date = dateValue;
-
-  if (!date || isTimeOnly) {
-    date = timeDate ?? new Date();
-  }
-
-  if (!date) {
-    return undefined;
-  }
-
-  if (isFullDay) {
-    return fullDayInUTC ? utcDayForDate(date) : startOfDay(date);
-  }
-
-  if (timeString) {
-    return (
-      readableTimeStringToDate(timeString, {
-        date,
-        useSystemTimezone: true
-      }) ?? date
-    );
-  }
-
-  // If time is not required and no time string, return the date as-is
-  if (!isTimeOnly && timeMode !== DbxDateTimeFieldTimeMode.REQUIRED) {
-    return date;
-  }
-
-  return undefined;
+  return result;
 }
 
 /**
@@ -176,22 +169,24 @@ export function applyTimeOffset(date: Date, stepsOffset: number, minuteStep: num
  * @returns The merged picker configuration with updated limits, or the original config if no sync values
  */
 export function mergePickerConfig(config: Maybe<DbxDateTimePickerConfiguration>, syncBeforeValue: Date | null, syncAfterValue: Date | null): Maybe<DbxDateTimePickerConfiguration> {
-  if (syncBeforeValue == null && syncAfterValue == null) {
-    return config;
+  let result: Maybe<DbxDateTimePickerConfiguration> = config;
+
+  if (syncBeforeValue != null || syncAfterValue != null) {
+    const { min: limitMin, max: limitMax } = config?.limits ?? {};
+    const min = findMinDate([syncBeforeValue, dateFromLogicalDate(limitMin)]);
+    const max = findMaxDate([syncAfterValue, dateFromLogicalDate(limitMax)]);
+
+    result = {
+      ...config,
+      limits: {
+        ...config?.limits,
+        min,
+        max
+      }
+    };
   }
 
-  const { min: limitMin, max: limitMax } = config?.limits ?? {};
-  const min = findMinDate([syncBeforeValue, dateFromLogicalDate(limitMin)]);
-  const max = findMaxDate([syncAfterValue, dateFromLogicalDate(limitMax)]);
-
-  return {
-    ...config,
-    limits: {
-      ...config?.limits,
-      min,
-      max
-    }
-  };
+  return result;
 }
 
 /**
@@ -209,35 +204,35 @@ export function mergePickerConfig(config: Maybe<DbxDateTimePickerConfiguration>,
  * @returns The filtered array of applicable presets
  */
 export function filterPresets(presets: DateTimePreset[], selectedDate: Maybe<Date>, isFullDay: boolean, isTimeOnly: boolean, config: Maybe<DbxDateTimePickerConfiguration>): DateTimePreset[] {
+  let result: DateTimePreset[];
+
   if (isFullDay) {
-    return [];
+    result = [];
+  } else if (isTimeOnly) {
+    result = presets;
+  } else if (!selectedDate) {
+    result = [];
+  } else {
+    const isAllowedDate = config ? (x: Date | null) => (x != null ? dateTimeMinuteDecisionFunction(config)(x) : true) : () => true;
+
+    result = presets.filter((preset) => {
+      const value = preset.value();
+      let presetDate: Maybe<Date>;
+
+      if (value.logicalDate) {
+        presetDate = dateFromLogicalDate(value.logicalDate);
+      } else if (value.timeString) {
+        presetDate = readableTimeStringToDate(value.timeString, {
+          date: selectedDate,
+          useSystemTimezone: true
+        });
+      }
+
+      return presetDate ? isAllowedDate(presetDate) : false;
+    });
   }
 
-  if (isTimeOnly) {
-    return presets;
-  }
-
-  if (!selectedDate) {
-    return [];
-  }
-
-  const isAllowedDate = config ? (x: Date | null) => (x != null ? dateTimeMinuteDecisionFunction(config)(x) : true) : () => true;
-
-  return presets.filter((preset) => {
-    const value = preset.value();
-    let presetDate: Maybe<Date>;
-
-    if (value.logicalDate) {
-      presetDate = dateFromLogicalDate(value.logicalDate);
-    } else if (value.timeString) {
-      presetDate = readableTimeStringToDate(value.timeString, {
-        date: selectedDate,
-        useSystemTimezone: true
-      });
-    }
-
-    return presetDate ? isAllowedDate(presetDate) : false;
-  });
+  return result;
 }
 
 /**
@@ -250,27 +245,23 @@ export function filterPresets(presets: DateTimePreset[], selectedDate: Maybe<Dat
  * @returns A human-readable error message string, or undefined if no errors exist
  */
 export function computeErrorMessage(errors: Maybe<Record<string, unknown>>, isRequired: boolean): string | undefined {
-  if (!errors || Object.keys(errors).length === 0) {
-    return undefined;
+  let result: string | undefined;
+
+  if (errors && Object.keys(errors).length > 0) {
+    if (isRequired && errors['required']) {
+      result = 'Date is required';
+    } else if (errors[DBX_DATE_TIME_FIELD_DATE_NOT_IN_SCHEDULE_ERROR]) {
+      result = 'Date does not fall on an available dates in schedule.';
+    } else if (errors[DBX_DATE_TIME_FIELD_TIME_NOT_IN_RANGE_ERROR]) {
+      result = 'Time is not valid for the given date.';
+    } else if (errors['pattern']) {
+      result = 'The input time is not recognizable.';
+    } else {
+      result = 'The given date and time is invalid.';
+    }
   }
 
-  if (isRequired && errors['required']) {
-    return 'Date is required';
-  }
-
-  if (errors[DBX_DATE_TIME_FIELD_DATE_NOT_IN_SCHEDULE_ERROR]) {
-    return 'Date does not fall on an available dates in schedule.';
-  }
-
-  if (errors[DBX_DATE_TIME_FIELD_TIME_NOT_IN_RANGE_ERROR]) {
-    return 'Time is not valid for the given date.';
-  }
-
-  if (errors['pattern']) {
-    return 'The input time is not recognizable.';
-  }
-
-  return 'The given date and time is invalid.';
+  return result;
 }
 
 // MARK: Keyboard Step Functions
@@ -289,7 +280,8 @@ export function computeErrorMessage(errors: Maybe<Record<string, unknown>>, isRe
  * @returns A KeyboardStepResult with direction and offset, or null if the key is not an arrow key
  */
 export function computeDateKeyboardStep(event: KeyboardEvent): KeyboardStepResult | null {
-  let direction: number;
+  let result: KeyboardStepResult | null = null;
+  let direction: number | null = null;
 
   switch (event.key?.toLowerCase()) {
     case 'arrowup':
@@ -298,21 +290,23 @@ export function computeDateKeyboardStep(event: KeyboardEvent): KeyboardStepResul
     case 'arrowdown':
       direction = -1;
       break;
-    default:
-      return null;
   }
 
-  let offset = 1;
+  if (direction != null) {
+    let offset = 1;
 
-  if (event.ctrlKey && event.shiftKey) {
-    offset = 365;
-  } else if (event.ctrlKey) {
-    offset = 30;
-  } else if (event.shiftKey) {
-    offset = 7;
+    if (event.ctrlKey && event.shiftKey) {
+      offset = 365;
+    } else if (event.ctrlKey) {
+      offset = 30;
+    } else if (event.shiftKey) {
+      offset = 7;
+    }
+
+    result = { direction, offset };
   }
 
-  return { direction, offset };
+  return result;
 }
 
 /**
@@ -329,7 +323,8 @@ export function computeDateKeyboardStep(event: KeyboardEvent): KeyboardStepResul
  * @returns A KeyboardStepResult with direction and offset, or null if the key is not an arrow key
  */
 export function computeTimeKeyboardStep(event: KeyboardEvent): KeyboardStepResult | null {
-  let direction: number;
+  let result: KeyboardStepResult | null = null;
+  let direction: number | null = null;
 
   switch (event.key?.toLowerCase()) {
     case 'arrowup':
@@ -338,21 +333,23 @@ export function computeTimeKeyboardStep(event: KeyboardEvent): KeyboardStepResul
     case 'arrowdown':
       direction = -1;
       break;
-    default:
-      return null;
   }
 
-  let offset = 1;
+  if (direction != null) {
+    let offset = 1;
 
-  if (event.altKey && event.shiftKey) {
-    offset = 300;
-  } else if (event.altKey) {
-    offset = 60;
-  } else if (event.shiftKey) {
-    offset = 5;
+    if (event.altKey && event.shiftKey) {
+      offset = 300;
+    } else if (event.altKey) {
+      offset = 60;
+    } else if (event.shiftKey) {
+      offset = 5;
+    }
+
+    result = { direction, offset };
   }
 
-  return { direction, offset };
+  return result;
 }
 
 // MARK: Date Navigation Helper
@@ -373,10 +370,11 @@ export function navigateDate(currentDate: Date, step: KeyboardStepResult, config
   });
 
   const nextDate = instance.isInSchedule(newDate) ? newDate : instance.findNextAvailableDayInSchedule(newDate, step.direction === 1 ? 'future' : 'past');
+  let result: Maybe<Date> = undefined;
 
   if (nextDate != null) {
-    return instance.clampToLimit(nextDate);
+    result = instance.clampToLimit(nextDate);
   }
 
-  return undefined;
+  return result;
 }

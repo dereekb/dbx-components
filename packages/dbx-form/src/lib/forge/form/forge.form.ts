@@ -1,6 +1,5 @@
 import { FieldDef, FormConfig, RegisteredFieldTypes } from '@ng-forge/dynamic-forms';
-import { ArrayOrValue, asArray, filterMaybeArrayValues, filterUndefinedValues, filterUniqueValues, Maybe } from '@dereekb/util';
-import { Field } from '@angular/forms/signals';
+import { filterMaybeArrayValues, filterUndefinedValues, filterUniqueValues, Maybe } from '@dereekb/util';
 
 // MARK: DbxForgeField
 /**
@@ -27,6 +26,16 @@ export interface DbxForgeFieldHiddenFieldsRef {
  */
 export interface DbxForgeFieldFormConfig extends Partial<Pick<FormConfig, 'schemas' | 'externalData' | 'customFnConfig' | 'defaultValidationMessages'>>, DbxForgeFieldHiddenFieldsRef {}
 
+/**
+ * Merges multiple field-level form configs into a single config, layering later inputs on top
+ * of earlier ones for `externalData`, `customFnConfig`, and `defaultValidationMessages`, while
+ * concatenating `schemas`.
+ *
+ * Keys whose merged value is empty are dropped from the result (no empty `{}` or `[]` fields).
+ *
+ * @param input - field form configs to merge, from lowest to highest priority
+ * @returns a merged config with only populated fields retained
+ */
 export function mergeDbxForgeFieldFormConfig(...input: DbxForgeFieldFormConfig[]): DbxForgeFieldFormConfig {
   const schemas: NonNullable<FormConfig['schemas']> = [];
   const externalData: NonNullable<FormConfig['externalData']> = {};
@@ -64,6 +73,14 @@ export function mergeDbxForgeFieldFormConfig(...input: DbxForgeFieldFormConfig[]
 // MARK: CustomFnConfig
 const CUSTOM_FN_CONFIG_KEYS: (keyof NonNullable<FormConfig['customFnConfig']>)[] = ['customFunctions', 'derivations', 'asyncDerivations', 'asyncConditions', 'validators', 'asyncValidators', 'httpValidators'];
 
+/**
+ * Produces a shallow copy of a `FormConfig.customFnConfig` that clones each inner bucket
+ * (validators, derivations, etc.) so downstream merges can mutate the result without
+ * leaking writes back to the original form config.
+ *
+ * @param input - the customFnConfig to copy, or undefined
+ * @returns a new customFnConfig containing only the known buckets, each one a fresh object
+ */
 export function copyFormConfigCustomFnConfig(input: FormConfig['customFnConfig']): FormConfig['customFnConfig'] {
   const customFnConfig: FormConfig['customFnConfig'] = {};
 
@@ -106,6 +123,19 @@ export interface DbxForgeFinalizeFormConfigResult {
   readonly config: FormConfig;
 }
 
+/**
+ * Finalizes a `FormConfig` for consumption by dbx-forge by pulling field-level `_formConfig`
+ * values up to the form level and appending any `_hiddenFields` so they participate in
+ * validation and value wiring without being rendered.
+ *
+ * Layering order (lowest to highest priority): `globalDefaults`, the input form's own config,
+ * then each field's `_formConfig` in field order — so a later field can override an earlier
+ * field's default validation message.
+ *
+ * @param input - the FormConfig authored by the caller
+ * @param globalDefaults - seed values for workspace-wide defaults (e.g. validation messages)
+ * @returns the original input, the extracted field form configs, and the finalized config
+ */
 export function dbxForgeFinalizeFormConfig(input: FormConfig, globalDefaults?: DbxForgeGlobalFormConfigDefaults): DbxForgeFinalizeFormConfigResult {
   const { fields } = input;
 

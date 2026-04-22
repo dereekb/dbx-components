@@ -40,6 +40,10 @@ describe('DbxForgeTimeDurationFieldConfig - Exhaustive Whitelist', () => {
     | 'excludeValueIfHidden'
     | 'excludeValueIfDisabled'
     | 'excludeValueIfReadonly'
+    | 'wrappers'
+    | 'skipAutoWrappers'
+    | 'skipDefaultWrappers'
+    | 'nullable'
     | '__fieldDef'
     // Field-specific config
     | 'outputUnit'

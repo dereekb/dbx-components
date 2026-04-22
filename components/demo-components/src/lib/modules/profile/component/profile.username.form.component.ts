@@ -1,30 +1,30 @@
 import { Component, inject } from '@angular/core';
-import { provideFormlyContext, AbstractSyncFormlyFormDirective, DbxFormTextAvailableFieldModule, DbxFormlyComponent } from '@dereekb/dbx-form';
-import { type FormlyFieldConfig } from '@ngx-formly/core';
+import { AbstractSyncForgeFormDirective, DBX_FORGE_FORM_COMPONENT_TEMPLATE, DbxForgeFormComponentImportsModule, dbxForgeFormComponentProviders } from '@dereekb/dbx-form';
+import { type FormConfig } from '@ng-forge/dynamic-forms';
+import { of } from 'rxjs';
 import { DemoProfileService } from '../profile.service';
 import { profileUsernameFields } from './profile.form';
-import { of } from 'rxjs';
 
 export interface DemoProfileUsernameFormValue {
   username: string;
 }
 
 @Component({
-  template: `
-    <dbx-formly></dbx-formly>
-  `,
+  template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   selector: 'demo-profile-username-form',
-  providers: [provideFormlyContext()],
+  providers: dbxForgeFormComponentProviders(),
   standalone: true,
-  imports: [DbxFormlyComponent, DbxFormTextAvailableFieldModule]
+  imports: [DbxForgeFormComponentImportsModule]
 })
-export class DemoProfileUsernameFormComponent extends AbstractSyncFormlyFormDirective<DemoProfileUsernameFormValue> {
+export class DemoProfileUsernameFormComponent extends AbstractSyncForgeFormDirective<DemoProfileUsernameFormValue> {
   readonly profileService = inject(DemoProfileService);
 
-  readonly fields: FormlyFieldConfig[] = profileUsernameFields({
-    checkUsernameIsAvailable: (_username) => {
-      // not allowed to check this way, no permissions for users to list available usernames
-      return of(true); // this.profileService.isUsernameAvailable(username);
-    }
-  });
+  readonly formConfig: FormConfig = {
+    fields: profileUsernameFields({
+      checkUsernameIsAvailable: (_username) => {
+        // not allowed to check this way, no permissions for users to list available usernames
+        return of(true); // this.profileService.isUsernameAvailable(username);
+      }
+    })
+  };
 }
