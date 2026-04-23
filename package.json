@@ -31,7 +31,7 @@
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.1.18",
     "@nestjs/platform-express": "^11.1.18",
-    "@ng-forge/dynamic-forms": "0.8.0-next.1",
+    "@ng-forge/dynamic-forms": "git+https://git@github.com/dereekb/ng-forge#61c13f5adce576b3842e1dae757c267490efce9f",
     "@ng-forge/dynamic-forms-material": "0.8.0-next.1",
     "@ng-web-apis/common": "^5.1.0",
     "@ng-web-apis/geolocation": "^5.1.0",
@@ -205,6 +205,10 @@
   },
   "engines": {
     "node": ">=24.0.0"
+  },
+  "overrides": {
+    "@ng-forge/dynamic-forms": "$@ng-forge/dynamic-forms",
+    "@ng-forge/dynamic-forms-material": "$@ng-forge/dynamic-forms-material"
   },
   "generators": "./generators.json"
 }
