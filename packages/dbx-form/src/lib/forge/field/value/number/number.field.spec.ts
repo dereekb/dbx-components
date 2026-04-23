@@ -1,5 +1,11 @@
 import { describe, it, expect, expectTypeOf } from 'vitest';
-import type { LogicConfig } from '@ng-forge/dynamic-forms';
+import { type FormConfig, type LogicConfig } from '@ng-forge/dynamic-forms';
+import type { MatInputField } from '@ng-forge/dynamic-forms-material';
+import { waitForMs } from '@dereekb/util';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
+import { DBX_FORGE_TEST_PROVIDERS } from '../../../form/forge.component.spec';
+import { DbxForgeAsyncConfigFormComponent } from '../../../form';
+import { firstValueFrom } from 'rxjs';
 import { dbxForgeNumberField, dbxForgeDollarAmountField, FORGE_IS_DIVISIBLE_BY_VALIDATION_KEY, type DbxForgeNumberFieldConfig } from './number.field';
 
 // ============================================================================
@@ -49,7 +55,9 @@ describe('DbxForgeNumberFieldConfig - Exhaustive Whitelist', () => {
     | 'step'
     | 'enforceStep'
     // From Partial<TransformNumberFunctionConfigRef>
-    | 'transform';
+    | 'transform'
+    // Idempotent transform
+    | 'idempotentTransform';
 
   type ActualKeys = keyof DbxForgeNumberFieldConfig;
 
@@ -159,6 +167,19 @@ describe('dbxForgeNumberField()', () => {
     const field = dbxForgeNumberField({ key: 'num', logic });
     expect((field as any).logic).toEqual(logic);
   });
+
+  describe('idempotentTransform', () => {
+    it('should add a derivation logic entry when idempotentTransform is set', () => {
+      const field = dbxForgeNumberField({ key: 'quantity', idempotentTransform: { precision: 2 } });
+      expect((field as any).logic).toHaveLength(1);
+      expect((field as any).logic[0].type).toBe('derivation');
+    });
+
+    it('should not add logic when idempotentTransform is not set', () => {
+      const field = dbxForgeNumberField({ key: 'quantity' });
+      expect((field as any).logic).toBeUndefined();
+    });
+  });
 });
 
 // ============================================================================
@@ -222,5 +243,79 @@ describe('dbxForgeDollarAmountField()', () => {
     const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
     const field = dbxForgeDollarAmountField({ key: 'dollars', logic });
     expect((field as any).logic).toEqual(logic);
+  });
+});
+
+// ============================================================================
+// Runtime Form Scenarios - dbxForgeNumberField()
+// ============================================================================
+
+describe('scenarios', () => {
+  let fixture: ComponentFixture<DbxForgeAsyncConfigFormComponent>;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [...DBX_FORGE_TEST_PROVIDERS]
+    });
+
+    fixture = TestBed.createComponent(DbxForgeAsyncConfigFormComponent);
+  });
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
+  });
+
+  describe('idempotentTransform', () => {
+    it('should transform the value with a custom transform function', async () => {
+      const transform = (value: number) => Math.round(value);
+
+      const field = dbxForgeNumberField({ key: 'quantity', idempotentTransform: { transform } });
+
+      const formConfig = { fields: [field] };
+      fixture.componentInstance.config.set(formConfig);
+
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const fixtureFormConfig: FormConfig = await firstValueFrom(fixture.componentInstance.context.config$);
+
+      expect((fixtureFormConfig.fields[0] as any)._formConfig).toBeDefined();
+      expect((fixtureFormConfig.fields[0] as MatInputField).logic).toHaveLength(1);
+      expect((fixtureFormConfig.fields[0] as MatInputField).logic?.[0].type).toBe('derivation');
+
+      // set a value with decimal places
+      const quantity = 3.7;
+
+      fixture.componentInstance.setValue({ quantity });
+
+      fixture.detectChanges();
+      await waitForMs(0);
+      await fixture.whenStable();
+
+      const value = await firstValueFrom(fixture.componentInstance.getValue());
+      expect(value).toEqual({ quantity: transform(quantity) });
+    });
+
+    it('should truncate to the configured precision', async () => {
+      const field = dbxForgeNumberField({ key: 'price', idempotentTransform: { precision: 2 } });
+
+      const formConfig = { fields: [field] };
+      fixture.componentInstance.config.set(formConfig);
+
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      // set a value with excess decimal places
+      const price = 9.999;
+
+      fixture.componentInstance.setValue({ price });
+
+      fixture.detectChanges();
+      await waitForMs(0);
+      await fixture.whenStable();
+
+      const value = await firstValueFrom(fixture.componentInstance.getValue());
+      expect(value).toEqual({ price: 9.99 });
+    });
   });
 });

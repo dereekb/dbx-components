@@ -1,6 +1,6 @@
 import type { BaseValueField } from '@ng-forge/dynamic-forms';
 import type { MatInputField, MatInputProps } from '@ng-forge/dynamic-forms-material';
-import { DOLLAR_AMOUNT_PRECISION, type TransformNumberFunctionConfigRef } from '@dereekb/util';
+import { DOLLAR_AMOUNT_PRECISION, transformNumberFunction, type TransformNumberFunctionConfig, type TransformNumberFunctionConfigRef } from '@dereekb/util';
 import { dbxForgeBuildFieldDef, type DbxForgeFieldFunction, dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef } from '../../field';
 import { configureForgeAutocompleteFieldMeta } from '../../field.util.meta';
 import { type FieldAutocompleteAttributeOptionRef } from '../../../../field/field.autocomplete';
@@ -38,7 +38,14 @@ type DbxForgeNumberFieldDef = BaseValueField<Omit<MatInputProps, 'type'> & { typ
  *
  * Combines labeling, numeric constraints (min/max/step), and number transformation.
  */
-export interface DbxForgeNumberFieldConfig extends DbxForgeFieldFunctionDef<DbxForgeNumberFieldDef>, FieldAutocompleteAttributeOptionRef, DbxForgeNumberFieldNumberConfig, Partial<TransformNumberFunctionConfigRef> {}
+export interface DbxForgeNumberFieldConfig extends DbxForgeFieldFunctionDef<DbxForgeNumberFieldDef>, FieldAutocompleteAttributeOptionRef, DbxForgeNumberFieldNumberConfig, Partial<TransformNumberFunctionConfigRef> {
+  /**
+   * An idempotent number transformation applied as a value parser (e.g., rounding, precision, bounds).
+   *
+   * For non-idempotent transformations, you should directly configure the `transform` property instead.
+   */
+  readonly idempotentTransform?: TransformNumberFunctionConfig;
+}
 
 /**
  * Creates a forge field definition for a numeric input.
@@ -61,8 +68,18 @@ export const dbxForgeNumberField = dbxForgeFieldFunction<DbxForgeNumberFieldConf
       type: 'number' as const // set props type to number always
     };
   }),
-  buildFieldDef: dbxForgeBuildFieldDef((x, config) => {
-    const { step, enforceStep } = config;
+  buildFieldDef: dbxForgeBuildFieldDef<DbxForgeNumberFieldConfig, number>((x, config) => {
+    const { step, enforceStep, idempotentTransform: idempotentTransformConfig } = config;
+
+    if (idempotentTransformConfig) {
+      x.addLogic([
+        {
+          type: 'transform',
+          transformType: 'idempotent',
+          transform: transformNumberFunction(idempotentTransformConfig)
+        }
+      ]);
+    }
 
     // configure autocomplete
     x.configure(configureForgeAutocompleteFieldMeta);
