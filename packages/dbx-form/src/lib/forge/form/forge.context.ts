@@ -1,7 +1,7 @@
 import { Injectable, type OnDestroy, type Provider, type Signal, signal, computed, inject } from '@angular/core';
 import { BehaviorSubject, combineLatest, type Observable, shareReplay, switchMap, filter, map, scan } from 'rxjs';
 import { type DbxMutableForm, type DbxFormEvent, type DbxFormDisabledKey, DbxFormState, DEFAULT_FORM_DISABLED_KEY, provideDbxMutableForm } from '../../form/form';
-import { type BooleanStringKeyArray, BooleanStringKeyArrayUtility, type Maybe } from '@dereekb/util';
+import { type BooleanStringKeyArray, BooleanStringKeyArrayUtility, type FilterFromPOJOFunction, type Maybe } from '@dereekb/util';
 import { LockSet, filterMaybe } from '@dereekb/rxjs';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
 import { type FieldTree } from '@angular/forms/signals';
@@ -159,6 +159,16 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
    * Note: `false`, `0`, and empty arrays are NOT considered empty and are preserved.
    */
   stripEmptyValues = true;
+
+  /**
+   * Optional custom POJO filter applied during the `formValue` signal's deep-equality
+   * comparison. When set, this filter replaces the default filter that strips `_`-prefixed
+   * keys and null/undefined values.
+   *
+   * Useful for testing scenarios where `stripInternalKeys` is `false` and the `_`-prefixed
+   * keys must participate in equality checks.
+   */
+  formValuePojoFilter: Maybe<FilterFromPOJOFunction<unknown>>;
 
   /**
    * When true (default), the form still reports `isComplete` based on validity even

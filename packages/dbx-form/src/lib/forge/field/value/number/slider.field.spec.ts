@@ -370,6 +370,17 @@ describe('scenarios', () => {
     TestBed.resetTestingModule();
   });
 
+  /**
+   * Settles the fixture with extra time for Observable-based wrapper sync pipelines.
+   */
+  async function settleWithWrapperSync(fix: typeof fixture): Promise<void> {
+    fix.detectChanges();
+    await fix.whenStable();
+    await waitForMs(100);
+    fix.detectChanges();
+    await fix.whenStable();
+  }
+
   describe('config resolution', () => {
     it('should resolve the wrapper field config containing the inner slider', async () => {
       const field = dbxForgeNumberSliderField({ key: 'rating', label: 'Rating', min: 0, max: 10, step: 1 });
@@ -393,10 +404,7 @@ describe('scenarios', () => {
       await fixture.whenStable();
 
       fixture.componentInstance.setValue({ rating: 7 });
-      fixture.detectChanges();
-
-      await waitForMs(0);
-      await fixture.whenStable();
+      await settleWithWrapperSync(fixture);
 
       const value = await firstValueFrom(fixture.componentInstance.getValue());
       expect(value).toEqual({ rating: 7 });
@@ -404,21 +412,6 @@ describe('scenarios', () => {
   });
 
   describe('cross-field expression validation', () => {
-    /**
-     * Settles the fixture with extra time for Observable-based wrapper sync pipelines.
-     *
-     * The wrapper uses `toObservable` + `combineLatest` + `distinctUntilChanged` for
-     * parent ↔ child value sync, which adds microtask-level async delays beyond what
-     * a single `detectChanges` + `whenStable` cycle covers.
-     */
-    async function settleWithWrapperSync(fix: typeof fixture): Promise<void> {
-      fix.detectChanges();
-      await fix.whenStable();
-      await waitForMs(100);
-      fix.detectChanges();
-      await fix.whenStable();
-    }
-
     it('should validate using formValue to reference sibling field values', async () => {
       const testField = dbxForgeNumberSliderField({ key: 'test', label: 'Test', min: 0, max: 100 });
       const validatedField = dbxForgeNumberSliderField({

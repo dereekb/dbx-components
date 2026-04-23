@@ -740,7 +740,7 @@ export function updateStateWithFilter(currentState: CalendarScheduleSelectionSta
       }
     } else {
       enabledFilter = {
-        w: '89',
+        w: '89' as const,
         ex: exclusions as number[]
       };
     }
@@ -897,7 +897,7 @@ export function updateStateWithDateCellScheduleRangeValue(state: CalendarSchedul
     const inputStartIndex = state.indexFactory(change.start);
     const adjustedEx = inputStartIndex !== 0 && change.ex ? change.ex.map((i) => i + inputStartIndex) : (change.ex ?? []);
     const nextState: CalendarScheduleSelectionState = { ...state, inputStart: change.start, inputEnd: change.end, toggledIndexes: new Set(adjustedEx) };
-    return updateStateWithChangedScheduleDays(finalizeNewCalendarScheduleSelectionState(nextState), expandDateCellScheduleDayCodes(change.w || '89'));
+    return updateStateWithChangedScheduleDays(finalizeNewCalendarScheduleSelectionState(nextState), expandDateCellScheduleDayCodes(change.w || ('89' as const)));
   }
 
   return noSelectionCalendarScheduleSelectionState(state); // clear selection, retain disabled days

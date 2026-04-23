@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, type OnInit, type OnDestroy, comput
 import { DynamicForm, EventDispatcher, type FormOptions } from '@ng-forge/dynamic-forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxForm, type DbxFormEvent, DbxFormState, DbxMutableForm } from '../../form/form';
-import { type BooleanStringKeyArray, BooleanStringKeyArrayUtility, filterUndefinedValues, type Maybe } from '@dereekb/util';
+import { type BooleanStringKeyArray, BooleanStringKeyArrayUtility, filterUndefinedValues, type Maybe, type FilterFromPOJOFunction, areEqualPOJOValuesUsingPojoFilter } from '@dereekb/util';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { skip } from 'rxjs';
 import { DbxForgeFormContext } from './forge.context';
@@ -38,7 +38,7 @@ export class DbxForgeFormComponent<T = unknown> implements DbxForgeDynamicFormSi
 
   readonly dynamicForm = viewChild(DynamicForm);
 
-  readonly formValue = signal<any>({});
+  readonly formValue = signal<any>({}, { equal: (a, b) => _forgeFormValueEqual(a, b, this._context) });
   readonly configSignal = toSignal(this._context.config$, { initialValue: undefined });
 
   private readonly _changesCount = signal(0);
@@ -278,4 +278,70 @@ export class DbxForgeFormComponent<T = unknown> implements DbxForgeDynamicFormSi
     this._resetSub.destroy();
     this._disabledSub.destroy();
   }
+}
+
+/**
+ * Deep-equality comparator for the {@link DbxForgeFormComponent.formValue} signal.
+ *
+ * ng-forge's outward sync effect writes entity values back through the
+ * `[(value)]` two-way binding. Each write creates a new object reference even
+ * when the content is identical. Without this guard the `_formValueEffect`
+ * re-fires on every write-back, which triggers `updateValue` (stripping
+ * internal/empty keys) and `_emitFormState`, creating an infinite effect cycle
+ * that leads to OOM.
+ *
+ * The filter used depends on the context's configuration:
+ * - Custom {@link DbxForgeFormContext.formValuePojoFilter} if set
+ * - Default filter that strips `_`-prefixed keys and null/undefined values
+ *   when {@link DbxForgeFormContext.stripInternalKeys} is true (default)
+ * - Null/undefined-only filter when `stripInternalKeys` is false
+ */
+function _forgeFormValueEqual(a: unknown, b: unknown, context: DbxForgeFormContext): boolean {
+  const pojoFilter = context.formValuePojoFilter ?? (context.stripInternalKeys ? _filterForgeFormValueStripInternal : _filterForgeFormValueKeepInternal);
+  return areEqualPOJOValuesUsingPojoFilter(a, b, pojoFilter as FilterFromPOJOFunction<unknown>);
+}
+
+/**
+ * Default filter: strips `_`-prefixed keys (ng-forge internal/layout keys)
+ * and null/undefined values before deep equality comparison.
+ *
+ * The `_`-prefixed keys can reference complex, self-referencing ng-forge
+ * objects (field trees, form instances) that cause stack overflows during
+ * recursive comparison. They are layout artifacts and irrelevant for
+ * value equality.
+ */
+function _filterForgeFormValueStripInternal<T>(input: T): T {
+  if (input == null || typeof input !== 'object' || Array.isArray(input)) {
+    return input;
+  }
+
+  const comparisonObject: Record<string, unknown> = {};
+
+  for (const [key, val] of Object.entries(input as Record<string, unknown>)) {
+    if (val != null && !key.startsWith('_')) {
+      comparisonObject[key] = val;
+    }
+  }
+
+  return comparisonObject as T;
+}
+
+/**
+ * Filter used when `stripInternalKeys` is false: retains `_`-prefixed keys
+ * but still strips null/undefined values.
+ */
+function _filterForgeFormValueKeepInternal<T>(input: T): T {
+  if (input == null || typeof input !== 'object' || Array.isArray(input)) {
+    return input;
+  }
+
+  const comparisonObject: Record<string, unknown> = {};
+
+  for (const [key, val] of Object.entries(input as Record<string, unknown>)) {
+    if (val != null) {
+      comparisonObject[key] = val;
+    }
+  }
+
+  return comparisonObject as T;
 }

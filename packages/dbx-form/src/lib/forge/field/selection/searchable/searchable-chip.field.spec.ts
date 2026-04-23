@@ -455,7 +455,7 @@ describe('DbxForgeSearchableChipFieldComponent', () => {
             search: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
             displayForValue: (values: any[]) => of(values.map((v: any) => ({ ...v, label: String(v.value) })))
           }
-        }) as any
+        })
       ]
     };
   }
@@ -547,6 +547,85 @@ describe('DbxForgeSearchableChipFieldComponent', () => {
     expect((afterSecond as any)?.urls).toEqual(['https://example.com', 'https://other.example.com']);
 
     fixture.destroy();
+  });
+
+  // MARK: asArrayValue scenarios
+  describe('asArrayValue', () => {
+    it('asArrayValue: true (default) should emit an array value', async () => {
+      const fixture = TestBed.createComponent(SearchableChipTestHostComponent);
+      const context = fixture.componentInstance.context;
+      context.requireValid = false;
+      context.config = {
+        fields: [
+          dbxForgeSearchableChipField<string>({
+            key: 'tags',
+            label: 'Tags',
+            props: {
+              searchOnEmptyText: true,
+              asArrayValue: true,
+              search: () => of([{ value: 'x' }, { value: 'y' }]),
+              displayForValue: (values: any[]) => of(values.map((v: any) => ({ ...v, label: String(v.value) })))
+            }
+          })
+        ]
+      };
+
+      await settle(fixture);
+
+      // Set a single-element array value
+      context.setValue({ tags: ['x'] } as any);
+      await settle(fixture);
+
+      const afterFirst = await firstValueFrom(context.getValue().pipe(timeout(500), first()));
+      expect((afterFirst as any)?.tags).toEqual(['x']);
+
+      // Set a two-element array value
+      context.setValue({ tags: ['x', 'y'] } as any);
+      await settle(fixture);
+
+      const afterSecond = await firstValueFrom(context.getValue().pipe(timeout(500), first()));
+      expect((afterSecond as any)?.tags).toEqual(['x', 'y']);
+
+      fixture.destroy();
+    });
+
+    it('asArrayValue: false should emit a single (non-array) value', async () => {
+      const fixture = TestBed.createComponent(SearchableChipTestHostComponent);
+      const context = fixture.componentInstance.context;
+      context.requireValid = false;
+      context.config = {
+        fields: [
+          dbxForgeSearchableChipField<string>({
+            key: 'pick',
+            label: 'Pick One',
+            props: {
+              searchOnEmptyText: true,
+              asArrayValue: false,
+              search: () => of([{ value: 'a' }, { value: 'b' }]),
+              displayForValue: (values: any[]) => of(values.map((v: any) => ({ ...v, label: String(v.value) })))
+            }
+          })
+        ]
+      };
+
+      await settle(fixture);
+
+      // Set a single value (not wrapped in an array)
+      context.setValue({ pick: 'a' } as any);
+      await settle(fixture);
+
+      const afterFirst = await firstValueFrom(context.getValue().pipe(timeout(500), first()));
+      expect((afterFirst as any)?.pick).toBe('a');
+
+      // Replace with a different single value
+      context.setValue({ pick: 'b' } as any);
+      await settle(fixture);
+
+      const afterSecond = await firstValueFrom(context.getValue().pipe(timeout(500), first()));
+      expect((afterSecond as any)?.pick).toBe('b');
+
+      fixture.destroy();
+    });
   });
 
   it('dbxForgeSearchableStringChipField: rejects the typed value when textInputValidator fails', async () => {
