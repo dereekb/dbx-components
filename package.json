@@ -84,7 +84,7 @@
     "raw-body": "^3.0.0",
     "rrule": "git+https://git@github.com/dereekb/rrule#2b13b1ea881059ba2ecfec380e12ef244ef54570",
     "rxjs": "^7.8.0",
-    "sharp": "0.35.0-rc.5",
+    "sharp": "0.34.5",
     "stripe": "^20.4.1",
     "ts-essentials": "^10.0.0",
     "tslib": "^2.3.0",
@@ -191,9 +191,9 @@
     "vitest-axe": "^0.1.0"
   },
   "optionalDependencies": {
-    "@img/sharp-darwin-arm64": "0.35.0-rc.5",
-    "@img/sharp-darwin-x64": "0.35.0-rc.5",
-    "@img/sharp-linux-x64": "0.35.0-rc.5",
+    "@img/sharp-darwin-arm64": "0.34.5",
+    "@img/sharp-darwin-x64": "0.34.5",
+    "@img/sharp-linux-x64": "0.34.5",
     "@nx/nx-darwin-arm64": "22.6.1",
     "@nx/nx-darwin-x64": "22.6.1",
     "@nx/nx-linux-x64-gnu": "22.6.1",
