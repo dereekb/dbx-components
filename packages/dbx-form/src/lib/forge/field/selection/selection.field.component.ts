@@ -154,10 +154,14 @@ export class DbxForgeValueSelectionFieldComponent<T = unknown> {
   readonly showErrors = shouldShowErrors(this.field as any);
   readonly errorsToDisplay = computed(() => (this.showErrors() ? this.resolvedErrors() : []));
 
-  /** Unique ID for the hint element */
+  /**
+   * Unique ID for the hint element
+   */
   protected readonly hintId = computed(() => `${this.key()}-hint`);
 
-  /** Base ID for error elements */
+  /**
+   * Base ID for error elements
+   */
   protected readonly errorId = computed(() => `${this.key()}-error`);
 
   // Accessibility

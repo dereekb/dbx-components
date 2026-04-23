@@ -3,7 +3,7 @@ import { convertMaybeToArray, firstValue, type Maybe } from '@dereekb/util';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { map } from 'rxjs';
 import { type DescriptionFieldConfig, formlyField, type FieldValueParser, type LabeledFieldConfig, type MaterialFormFieldConfig, propsAndConfigForFieldConfig } from '../field';
-import { ValueSelectionOption, ValueSelectionOptionClear } from '../../../field/field.selection';
+import { type ValueSelectionOption, type ValueSelectionOptionClear } from '../../../field/field.selection';
 
 export interface ValueSelectionFieldConfig<T> extends LabeledFieldConfig, DescriptionFieldConfig, MaterialFormFieldConfig {
   /**

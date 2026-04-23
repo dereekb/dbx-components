@@ -1,4 +1,4 @@
-import type { MaybeObservableOrValue, ObservableOrValue } from '@dereekb/rxjs';
+import type { MaybeObservableOrValue } from '@dereekb/rxjs';
 
 // MARK: Wrapper Type
 /**
@@ -43,6 +43,9 @@ export interface DbxForgeStyleWrapper {
 
 /**
  * Creates a style wrapper config for use in a field's `wrappers` array.
+ *
+ * @param config - the style wrapper configuration without the `type` property
+ * @returns a complete {@link DbxForgeStyleWrapper} config with the type set
  *
  * @example
  * ```typescript

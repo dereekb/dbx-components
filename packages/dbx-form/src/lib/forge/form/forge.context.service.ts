@@ -1,5 +1,5 @@
-import { Injectable, Signal, computed, inject, untracked } from '@angular/core';
-import { type ArrayContext, type EvaluationContext, DynamicForm, DynamicFormLogger } from '@ng-forge/dynamic-forms';
+import { Injectable, type Signal, computed, inject, untracked } from '@angular/core';
+import { type ArrayContext, type EvaluationContext, type DynamicForm, DynamicFormLogger } from '@ng-forge/dynamic-forms';
 import type { FieldTree } from '@angular/forms/signals';
 
 /**
@@ -89,6 +89,9 @@ export class DbxForgeFormContextService {
    *
    * Falls back to the root form value as `formValue` when the array item lookup fails
    * (bad index, missing array, or non-object item).
+   *
+   * @param input - configuration specifying the array context and reactivity mode
+   * @returns an evaluation context scoped to the array item at the current index
    */
   createArrayItemEvaluationContext(input: DbxForgeArrayItemEvaluationContextInput): EvaluationContext {
     const { arrayContext, reactive = false } = input;
@@ -143,6 +146,10 @@ export class DbxForgeFormContextService {
  *
  * Mirrors ng-forge's internal `getNestedValue` (not exported from the public API) for
  * the nested array-key case.
+ *
+ * @param source - the root record to traverse
+ * @param path - a dot-separated path string (e.g. `"orders.items"`)
+ * @returns the value at the resolved path, or undefined if any segment is missing
  */
 function _getNestedValue(source: Record<string, unknown>, path: string): unknown {
   const segments = path.split('.');

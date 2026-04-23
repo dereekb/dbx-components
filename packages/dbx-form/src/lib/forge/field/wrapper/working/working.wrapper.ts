@@ -1,5 +1,3 @@
-import type { WrapperTypeDefinition } from '@ng-forge/dynamic-forms';
-
 // MARK: Wrapper Type
 /**
  * Registered wrapper type name for the working wrapper.

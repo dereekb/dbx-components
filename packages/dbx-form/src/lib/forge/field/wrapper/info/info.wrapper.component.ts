@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input, viewChild, ViewContainerRef } from '@angular/core';
 import { MatIconButton } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { FieldWrapperContract } from '@ng-forge/dynamic-forms';
+import { type FieldWrapperContract } from '@ng-forge/dynamic-forms';
 
 /**
  * Forge wrapper component that renders child fields inside a flex layout

@@ -1,17 +1,15 @@
 /**
  * Exhaustive type and runtime tests for the pickable list forge field.
  */
-import { describe, it, expect } from 'vitest';
-import { expectTypeOf } from 'vitest';
-import { type DynamicText, type LogicConfig, type SchemaApplicationConfig, type ValidatorConfig, type ValidationMessages, type FormConfig, withLoggerConfig } from '@ng-forge/dynamic-forms';
-import { of } from 'rxjs';
+import { describe, it, expect, expectTypeOf } from 'vitest';
+import { type DynamicText, type LogicConfig, type SchemaApplicationConfig, type ValidatorConfig, type ValidationMessages, type FormConfig } from '@ng-forge/dynamic-forms';
+import { of, firstValueFrom } from 'rxjs';
 import type { DbxForgePickableListFieldConfig } from './pickable-list.field';
 import { dbxForgePickableListField } from './pickable-list.field';
 import type { DbxForgePickableListFieldDef, DbxForgePickableFieldProps } from './pickable.field';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { DBX_FORGE_TEST_PROVIDERS } from '../../../form/forge.component.spec';
 import { DbxForgeAsyncConfigFormComponent } from '../../../form';
-import { firstValueFrom } from 'rxjs';
 
 // MARK: Shared Stubs
 const stubLoadValues = () => of([{ value: 'a' }, { value: 'b' }]);

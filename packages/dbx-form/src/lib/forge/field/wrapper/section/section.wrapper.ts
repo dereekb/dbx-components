@@ -43,6 +43,9 @@ export interface DbxForgeSectionWrapper {
 /**
  * Creates a section wrapper config for use in a field's `wrappers` array.
  *
+ * @param config - the section wrapper configuration without the `type` property
+ * @returns a complete {@link DbxForgeSectionWrapper} config with the type set
+ *
  * @example
  * ```typescript
  * dbxForgeNameField({
@@ -57,6 +60,9 @@ export function dbxForgeSectionWrapper(config: Omit<DbxForgeSectionWrapper, 'typ
 /**
  * Creates a subsection wrapper config for use in a field's `wrappers` array.
  * Sets `subsection: true` and defaults heading level to 4.
+ *
+ * @param config - the subsection wrapper configuration without the `type` and `subsection` properties
+ * @returns a complete {@link DbxForgeSectionWrapper} config with `type` and `subsection: true` set
  *
  * @example
  * ```typescript

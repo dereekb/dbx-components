@@ -1,8 +1,7 @@
 /**
  * Exhaustive type and runtime tests for the list selection forge field.
  */
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { expectTypeOf } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, expectTypeOf } from 'vitest';
 import { type DynamicText, type LogicConfig, type ValidatorConfig, type ValidationMessages } from '@ng-forge/dynamic-forms';
 import { firstValueFrom, NEVER, of, type Observable } from 'rxjs';
 import { dbxForgeListSelectionField } from './list.field';
@@ -247,7 +246,9 @@ describe('dbxForgeListSelectionField()', () => {
   });
 
   it('should propagate loadMore through field props when provided', () => {
-    const loadMore = () => {};
+    const loadMore = () => {
+      /* noop */
+    };
     const field = dbxForgeListSelectionField({ ...minimalConfig(), props: { ...minimalConfig().props!, loadMore } }) as any;
     expect(field.props?.loadMore).toBe(loadMore);
   });

@@ -2,12 +2,10 @@
  * Exhaustive type and runtime tests for the additional text forge preset fields.
  */
 import { describe, it, expect, expectTypeOf } from 'vitest';
-import type { MatInputField } from '@ng-forge/dynamic-forms-material';
 import { dbxForgeNameField, dbxForgeEmailField, dbxForgeCityField, dbxForgeStateField, dbxForgeCountryField, dbxForgeZipCodeField, dbxForgeLatLngTextField, DEFAULT_FORGE_LAT_LNG_TEXT_FIELD_PLACEHOLDER } from './text.additional.field';
 import type { DbxForgeEmailFieldConfig, DbxForgeStateFieldConfig } from './text.additional.field';
 import type { DbxForgeTextFieldConfig } from './text.field';
 import { ADDRESS_CITY_MAX_LENGTH, ADDRESS_STATE_CODE_MAX_LENGTH, ADDRESS_STATE_MAX_LENGTH, ADDRESS_COUNTRY_MAX_LENGTH, ADDRESS_ZIP_MAX_LENGTH } from '@dereekb/model';
-import { LAT_LNG_PATTERN, US_STATE_CODE_STRING_REGEX, ZIP_CODE_STRING_REGEX } from '@dereekb/util';
 import type { FieldAutocompleteAttributeOption } from '../../../../field/field.autocomplete';
 
 // ============================================================================

@@ -45,8 +45,10 @@ export interface DateTimeFieldCalc {
    *
    * Each step is multiplied by minuteStep to get the actual minutes delta.
    * The result is clamped via DateTimeMinuteInstance.
+   *
+   * @param input - The time offset input containing date, step offset, minute step, and optional config
    */
-  applyTimeOffset(date: Date, stepsOffset: number, minuteStep: number, config: Maybe<DbxDateTimePickerConfiguration>): Date;
+  applyTimeOffset(input: ApplyTimeOffsetInput): Date;
 
   /**
    * Merges picker config limits with min/max values from synced fields.
@@ -62,8 +64,10 @@ export interface DateTimeFieldCalc {
    * - Returns empty array when fullDay is active.
    * - Returns all presets unfiltered when timeOnly (no date-based filtering).
    * - Otherwise evaluates each preset against the selected date and config limits.
+   *
+   * @param input - The filter presets input containing presets, selected date, mode flags, and optional config
    */
-  filterPresets(presets: DateTimePreset[], selectedDate: Maybe<Date>, isFullDay: boolean, isTimeOnly: boolean, config: Maybe<DbxDateTimePickerConfiguration>): DateTimePreset[];
+  filterPresets(input: FilterPresetsInput): DateTimePreset[];
 
   /**
    * Computes a human-readable error message from a form field's error record.
@@ -131,15 +135,23 @@ export function buildCombinedDateTime(input: DateTimeCalcInput): Maybe<Date> {
 }
 
 /**
+ * Input for {@link applyTimeOffset}.
+ */
+export interface ApplyTimeOffsetInput {
+  readonly date: Date;
+  readonly stepsOffset: number;
+  readonly minuteStep: number;
+  readonly config?: Maybe<DbxDateTimePickerConfiguration>;
+}
+
+/**
  * Applies a keyboard time offset (in step increments) and clamps to picker config limits.
  *
- * @param date - The base date to offset from
- * @param stepsOffset - Number of steps to offset (positive or negative)
- * @param minuteStep - Minutes per step increment
- * @param config - Optional picker configuration providing min/max limits and schedule
+ * @param input - The time offset input containing date, step offset, minute step, and optional config
  * @returns The offset date, clamped to the picker config limits
  */
-export function applyTimeOffset(date: Date, stepsOffset: number, minuteStep: number, config: Maybe<DbxDateTimePickerConfiguration>): Date {
+export function applyTimeOffset(input: ApplyTimeOffsetInput): Date {
+  const { date, stepsOffset, minuteStep, config } = input;
   const instance = new DateTimeMinuteInstance({
     date,
     ...config,
@@ -190,20 +202,28 @@ export function mergePickerConfig(config: Maybe<DbxDateTimePickerConfiguration>,
 }
 
 /**
+ * Input for {@link filterPresets}.
+ */
+export interface FilterPresetsInput {
+  readonly presets: DateTimePreset[];
+  readonly selectedDate: Maybe<Date>;
+  readonly isFullDay: boolean;
+  readonly isTimeOnly: boolean;
+  readonly config?: Maybe<DbxDateTimePickerConfiguration>;
+}
+
+/**
  * Filters presets based on the current field state and config limits.
  *
  * Returns an empty array when fullDay is active (no time presets apply).
  * Returns all presets unfiltered when timeOnly (no date-based filtering needed).
  * Otherwise evaluates each preset against the selected date and config limits.
  *
- * @param presets - The available datetime presets to filter
- * @param selectedDate - The currently selected date, used to evaluate preset applicability
- * @param isFullDay - Whether the field is in full-day mode (suppresses all presets)
- * @param isTimeOnly - Whether the field is in time-only mode (skips date filtering)
- * @param config - Optional picker configuration providing schedule and limit constraints
+ * @param input - The filter presets input containing presets, selected date, mode flags, and optional config
  * @returns The filtered array of applicable presets
  */
-export function filterPresets(presets: DateTimePreset[], selectedDate: Maybe<Date>, isFullDay: boolean, isTimeOnly: boolean, config: Maybe<DbxDateTimePickerConfiguration>): DateTimePreset[] {
+export function filterPresets(input: FilterPresetsInput): DateTimePreset[] {
+  const { presets, selectedDate, isFullDay, isTimeOnly, config } = input;
   let result: DateTimePreset[];
 
   if (isFullDay) {

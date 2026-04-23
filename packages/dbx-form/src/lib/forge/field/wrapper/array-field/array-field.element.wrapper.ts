@@ -1,6 +1,6 @@
 import { type DynamicText, type EvaluationContext } from '@ng-forge/dynamic-forms';
 import { type IndexNumber } from '@dereekb/util';
-import { DbxChipDisplay, type DbxButtonDisplayStylePair, type DbxButtonStyle } from '@dereekb/dbx-web';
+import { type DbxChipDisplay, type DbxButtonDisplayStylePair, type DbxButtonStyle } from '@dereekb/dbx-web';
 
 /**
  * Predicate/factory that receives an {@link EvaluationContext} for the current array item.

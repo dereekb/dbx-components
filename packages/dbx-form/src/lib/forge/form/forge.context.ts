@@ -5,7 +5,7 @@ import { type BooleanStringKeyArray, BooleanStringKeyArrayUtility, type FilterFr
 import { LockSet, filterMaybe } from '@dereekb/rxjs';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
 import { type FieldTree } from '@angular/forms/signals';
-import { DbxForgeFinalizeFormConfigResult, dbxForgeFinalizeFormConfig } from './forge.form';
+import { type DbxForgeFinalizeFormConfigResult, dbxForgeFinalizeFormConfig } from './forge.form';
 import { DbxForgeGlobalDefaultConfigService } from './forge.global-defaults.service';
 
 /**

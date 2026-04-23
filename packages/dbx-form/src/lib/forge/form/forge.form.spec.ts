@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { signal } from '@angular/core';
 import { type FormConfig, type SchemaDefinition } from '@ng-forge/dynamic-forms';
-import { copyFormConfigCustomFnConfig, dbxForgeFinalizeFormConfig, type DbxForgeField, type DbxForgeFieldFormConfig, mergeDbxForgeFieldFormConfig } from './forge.form';
+import { copyFormConfigCustomFnConfig, dbxForgeFinalizeFormConfig, type DbxForgeField, mergeDbxForgeFieldFormConfig } from './forge.form';
 
 function testSchemaDefinition(name: string): SchemaDefinition {
   return { name };

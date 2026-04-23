@@ -286,9 +286,7 @@ export abstract class AbstractForgePickableItemFieldDirective<T = unknown, M = u
     const p = this.props();
     const filterFn = p?.filterValues;
     const skipOnEmpty = p?.skipFilterFnOnEmpty ?? true;
-    const result = !filterFn || (skipOnEmpty && !text) ? of(values.map((x) => x.value)) : filterFn(text, values);
-
-    return result;
+    return !filterFn || (skipOnEmpty && !text) ? of(values.map((x) => x.value)) : filterFn(text, values);
   }
 
   private _loadDisplayValuesForFieldValues(values: PickableValueFieldValue<T, M>[]): Observable<PickableDisplayValueWithHash<T, M, H>[]> {

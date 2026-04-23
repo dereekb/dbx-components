@@ -1,11 +1,10 @@
-import type { BaseValueField, DynamicForm, DynamicText } from '@ng-forge/dynamic-forms';
+import type { BaseValueField, DynamicText } from '@ng-forge/dynamic-forms';
 import type { MatInputField, MatInputProps } from '@ng-forge/dynamic-forms-material';
-import { transformStringFunction, type TransformStringFunctionConfig, type TransformStringFunctionConfigRef } from '@dereekb/util';
+import { transformStringFunction, type TransformStringFunctionConfig } from '@dereekb/util';
 import type { FieldAutocompleteAttributeOptionRef } from '../../../../field/field.autocomplete';
-import { dbxForgeFieldFunction, dbxForgeBuildFieldDef, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef, type DbxForgeFieldFunction, DbxForgeFieldHintOrDescriptionValueRef } from '../../field';
+import { dbxForgeFieldFunction, dbxForgeBuildFieldDef, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef, type DbxForgeFieldFunction, type DbxForgeFieldHintOrDescriptionValueRef } from '../../field';
 import { configureForgeAutocompleteFieldMeta } from '../../field.util.meta';
 import { dbxForgeEmailValidator, dbxForgePatternValidator } from '../../field.util.validation';
-import { HintFieldConfig } from 'packages/dbx-form/src/lib/field';
 
 // MARK: Text Field
 /**

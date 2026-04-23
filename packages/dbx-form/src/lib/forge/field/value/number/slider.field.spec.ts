@@ -1,14 +1,13 @@
 /**
  * Exhaustive type and runtime tests for the number slider forge field.
  */
-import { describe, it, expect } from 'vitest';
-import { expectTypeOf } from 'vitest';
-import { type DynamicText, type LogicConfig, type SchemaApplicationConfig, type ValidatorConfig, type ValidationMessages, type FormConfig, withLoggerConfig } from '@ng-forge/dynamic-forms';
+import { describe, it, expect, expectTypeOf } from 'vitest';
+import { type DynamicText, type LogicConfig, type SchemaApplicationConfig, type ValidatorConfig, type ValidationMessages, type FormConfig } from '@ng-forge/dynamic-forms';
 import type { MatSliderField, MatSliderProps } from '@ng-forge/dynamic-forms-material';
 import { type Maybe, waitForMs } from '@dereekb/util';
 import type { DbxForgeNumberSliderFieldConfig } from './slider.field';
 import { dbxForgeNumberSliderField } from './slider.field';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { DBX_FORGE_TEST_PROVIDERS } from '../../../form/forge.component.spec';
 import { DbxForgeAsyncConfigFormComponent } from '../../../form';
 import { firstValueFrom } from 'rxjs';

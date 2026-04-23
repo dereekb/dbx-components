@@ -34,7 +34,9 @@ let _componentFieldCounter = 0;
  */
 export type DbxForgeComponentFieldFunction = <T = unknown>(config: DbxForgeComponentFieldConfig<T>) => DbxForgeField<DbxForgeComponentFieldDef<T>>;
 
-/** @deprecated Use {@link DbxForgeComponentFieldFunction} instead. */
+/**
+ * @deprecated Use {@link DbxForgeComponentFieldFunction} instead.
+ */
 export type ForgeComponentFieldFunction = DbxForgeComponentFieldFunction;
 
 const _dbxForgeComponentField = dbxForgeFieldFunction<_DbxForgeComponentFieldConfig>({

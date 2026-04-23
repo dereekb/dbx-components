@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { type ArrayItemDefinitionTemplate, type FormConfig, withLoggerConfig } from '@ng-forge/dynamic-forms';
+import { type ArrayItemDefinitionTemplate, type FormConfig } from '@ng-forge/dynamic-forms';
 import { waitForMs } from '@dereekb/util';
 import { firstValueFrom } from 'rxjs';
 import { dbxForgeArrayField } from './array.field';

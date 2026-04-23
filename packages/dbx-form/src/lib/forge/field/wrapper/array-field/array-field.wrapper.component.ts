@@ -1,12 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, viewChild, ViewContainerRef } from '@angular/core';
-import { arrayEvent, type ArrayItemDefinitionTemplate, EventDispatcher, type FieldWrapperContract, WrapperFieldInputs } from '@ng-forge/dynamic-forms';
-import { DynamicTextPipe } from '@ng-forge/dynamic-forms';
+import { arrayEvent, type ArrayItemDefinitionTemplate, EventDispatcher, type FieldWrapperContract, type WrapperFieldInputs, DynamicTextPipe } from '@ng-forge/dynamic-forms';
 import { AsyncPipe } from '@angular/common';
 import { type CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
 import { type DbxButtonStyle, DbxButtonComponent } from '@dereekb/dbx-web';
 import { type IndexNumber } from '@dereekb/util';
 import { dbxForgeFieldDisabled } from '../../field.util';
-import { DbxForgeArrayFieldWrapperProps } from './array-field.wrapper';
+import { type DbxForgeArrayFieldWrapperProps } from './array-field.wrapper';
 import { dbxForgeArrayFieldTemplateWithItemValues } from './array-field.duplicate';
 import { DbxForgeFormContextService } from '../../../form/forge.context.service';
 
@@ -83,6 +82,8 @@ export class DbxForgeArrayFieldWrapperComponent implements FieldWrapperContract 
   // MARK: Accessors
   /**
    * Returns the array field key from the wrapper's field inputs.
+   *
+   * @returns the array field key, or an empty string if not available
    */
   private _arrayKey(): string {
     return this.fieldInputs()?.key ?? '';
@@ -94,6 +95,8 @@ export class DbxForgeArrayFieldWrapperComponent implements FieldWrapperContract 
    * ng-forge requires an explicit template for every dynamic add operation.
    * The template is the container field definition (with element wrappers)
    * built by {@link dbxForgeArrayField} and passed via wrapper props.
+   *
+   * @returns the array item definition template, or undefined if not configured
    */
   private _itemTemplate(): ArrayItemDefinitionTemplate | undefined {
     return this.props()?.itemTemplate;
@@ -108,6 +111,8 @@ export class DbxForgeArrayFieldWrapperComponent implements FieldWrapperContract 
    * wrapper's `fieldInputs.field.value()` is unreliable here — it reports
    * undefined in some render phases — so we source the value from the
    * DynamicForm signal instead.
+   *
+   * @returns the current array items, or an empty array if unavailable
    */
   private _readArrayValue(): unknown[] {
     const key = this._arrayKey();
@@ -128,6 +133,9 @@ export class DbxForgeArrayFieldWrapperComponent implements FieldWrapperContract 
    * 1. Insert a new item at toIndex (ng-forge creates a new resolved item)
    * 2. Remove the original item at fromIndex (adjusted for the insertion shift)
    * 3. Patch the form value so the moved item's data ends up at the correct position
+   *
+   * @param fromIndex - the source index of the item to move
+   * @param toIndex - the destination index for the item
    */
   move(fromIndex: number, toIndex: number): void {
     const template = this._itemTemplate();
@@ -158,6 +166,8 @@ export class DbxForgeArrayFieldWrapperComponent implements FieldWrapperContract 
 
   /**
    * Removes an item at the given index.
+   *
+   * @param index - the index of the item to remove
    */
   removeItem(index: number): void {
     const key = this._arrayKey();
@@ -178,6 +188,9 @@ export class DbxForgeArrayFieldWrapperComponent implements FieldWrapperContract 
    * {@link dbxForgeArrayFieldTemplateWithItemValues}, and dispatch `insertAt`
    * so the slot is registered AND initialized with the duplicated values in a
    * single event (back-to-back dispatches don't settle reliably).
+   *
+   * @param fromIndex - the index of the item to duplicate
+   * @param toIndex - the index at which to insert the duplicated item
    */
   duplicateItem(fromIndex: IndexNumber, toIndex: IndexNumber): void {
     const template = this._itemTemplate();

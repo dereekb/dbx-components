@@ -62,6 +62,8 @@ interface DbxForgeAvailabilityCheckParams {
  * This validator reads the `checkValueIsAvailable` function from
  * the `ValidatorConfig.params` at runtime, allowing a single registered function
  * to serve multiple fields with different check functions.
+ *
+ * @returns an {@link AsyncCustomValidator} that delegates to a per-field `checkValueIsAvailable` function
  */
 function _createReusableAvailabilityValidator(): AsyncCustomValidator {
   return {

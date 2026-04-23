@@ -1,5 +1,4 @@
-import { describe, it, expect } from 'vitest';
-import { expectTypeOf } from 'vitest';
+import { describe, it, expect, expectTypeOf } from 'vitest';
 import { FORGE_EXPAND_FIELD_TYPE_NAME, type DbxForgeExpandFieldDef, type DbxForgeExpandFieldProps, type DbxForgeExpandButtonType } from './expand.field';
 
 // ============================================================================

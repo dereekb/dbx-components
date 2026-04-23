@@ -527,14 +527,12 @@ export class DbxForgeFixedDateRangeFieldComponent {
 
   readonly calendarFocusDate$: Observable<Date> = this._selectionEvent.pipe(startWith(null)).pipe(
     switchMap((selectionEvent) => {
-      const result =
-        selectionEvent?.type === 'calendar' && selectionEvent.range?.start
-          ? of(selectionEvent.range.start)
-          : this.fullBoundary$.pipe(
-              first(),
-              map((fullBoundary) => fullBoundary?.start ?? selectionEvent?.range?.start)
-            );
-      return result;
+      return selectionEvent?.type === 'calendar' && selectionEvent.range?.start
+        ? of(selectionEvent.range.start)
+        : this.fullBoundary$.pipe(
+            first(),
+            map((fullBoundary) => fullBoundary?.start ?? selectionEvent?.range?.start)
+          );
     }),
     filterMaybe(),
     shareReplay(1)

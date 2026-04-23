@@ -1,5 +1,4 @@
-import { describe, it, expect } from 'vitest';
-import { expectTypeOf } from 'vitest';
+import { describe, it, expect, expectTypeOf } from 'vitest';
 import { of } from 'rxjs';
 import { dbxForgeSourceSelectField } from './sourceselect.field';
 import type { DbxForgeSourceSelectFieldConfig } from './sourceselect.field';

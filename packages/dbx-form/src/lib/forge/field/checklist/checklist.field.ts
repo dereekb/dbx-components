@@ -12,7 +12,9 @@ export interface DbxForgeChecklistFieldConfig<T = unknown> extends DbxForgeField
  */
 export type DbxForgeChecklistFieldFunction = <T = unknown>(config: DbxForgeChecklistFieldConfig<T>) => DbxForgeField<MatMultiCheckboxField<T>>;
 
-/** @deprecated Use {@link DbxForgeChecklistFieldFunction} instead. */
+/**
+ * @deprecated Use {@link DbxForgeChecklistFieldFunction} instead.
+ */
 export type ForgeChecklistFieldFunction = DbxForgeChecklistFieldFunction;
 
 /**

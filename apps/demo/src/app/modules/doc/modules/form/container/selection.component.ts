@@ -32,7 +32,6 @@ import {
   dbxForgeSearchableChipField,
   dbxForgeSearchableStringChipField,
   dbxForgeSearchableTextField,
-  dbxForgeToggleField,
   DbxFormlyFieldsContextDirective,
   DbxFormSourceDirective,
   isWebsiteUrlValidator

@@ -21,7 +21,9 @@ export interface DbxForgeValueSelectionFieldConfig<T = unknown> extends Omit<Dbx
  */
 export type DbxForgeValueSelectionFieldFunction = <T = unknown>(config: DbxForgeValueSelectionFieldConfig<T>) => DbxForgeField<DbxForgeValueSelectionFieldDef<T>>;
 
-/** @deprecated Use {@link DbxForgeValueSelectionFieldFunction} instead. */
+/**
+ * @deprecated Use {@link DbxForgeValueSelectionFieldFunction} instead.
+ */
 export type ForgeValueSelectionFieldFunction = DbxForgeValueSelectionFieldFunction;
 
 // MARK: Factory

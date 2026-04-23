@@ -58,6 +58,9 @@ export interface DbxForgeFlexLayoutConfig extends Omit<DbxForgeFlexWrapper, 'typ
 /**
  * Type guard that checks if the input is a {@link DbxForgeFlexLayoutFieldConfig}
  * (has a `field` property) rather than a plain {@link FieldDef}.
+ *
+ * @param input - the field definition or flex layout field config to check
+ * @returns true if the input is a {@link DbxForgeFlexLayoutFieldConfig} with a `field` property
  */
 function isFlexFieldConfig(input: FieldDef<unknown> | DbxForgeFlexLayoutFieldConfig): input is DbxForgeFlexLayoutFieldConfig {
   return (input as DbxForgeFlexLayoutFieldConfig).field != null;

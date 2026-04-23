@@ -1,20 +1,18 @@
 /**
  * Exhaustive type and runtime tests for the pickable chip forge field.
  */
-import { describe, it, expect } from 'vitest';
-import { expectTypeOf } from 'vitest';
-import { type DynamicText, type LogicConfig, type SchemaApplicationConfig, type ValidatorConfig, type ValidationMessages, type FormConfig, DynamicForm, EventDispatcher, DynamicFormLogger, NoopLogger, withLoggerConfig } from '@ng-forge/dynamic-forms';
-import { of } from 'rxjs';
+import { describe, it, expect, expectTypeOf } from 'vitest';
+import { type DynamicText, type LogicConfig, type SchemaApplicationConfig, type ValidatorConfig, type ValidationMessages, type FormConfig, DynamicForm, EventDispatcher, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
+import { of, firstValueFrom } from 'rxjs';
 import type { DbxForgePickableChipFieldConfig } from './pickable-chip.field';
 import { dbxForgePickableChipField } from './pickable-chip.field';
 import type { DbxForgePickableChipFieldDef, DbxForgePickableFieldProps } from './pickable.field';
 import { DbxForgePickableChipFieldComponent } from './pickable-chip.field.component';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ChangeDetectionStrategy, signal, provideZonelessChangeDetection } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { DBX_FORGE_TEST_PROVIDERS } from '../../../form/forge.component.spec';
 import { DbxForgeAsyncConfigFormComponent } from '../../../form';
-import { firstValueFrom } from 'rxjs';
 import { waitForMs, type Maybe } from '@dereekb/util';
 import { provideDbxForgeFormFieldDeclarations } from '../../../forge.providers';
 import { provideDbxFormConfiguration } from '../../../../form.providers';

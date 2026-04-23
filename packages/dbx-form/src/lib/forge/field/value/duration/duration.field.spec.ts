@@ -1,5 +1,4 @@
-import { describe, it, expect } from 'vitest';
-import { expectTypeOf } from 'vitest';
+import { describe, it, expect, expectTypeOf } from 'vitest';
 import type { LogicConfig } from '@ng-forge/dynamic-forms';
 import type { DbxForgeTimeDurationFieldConfig } from './duration.field';
 import { dbxForgeTimeDurationField, FORGE_TIMEDURATION_FIELD_TYPE } from './duration.field';

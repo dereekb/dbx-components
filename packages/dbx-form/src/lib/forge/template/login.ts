@@ -2,8 +2,8 @@ import { capitalizeFirstLetter, type Maybe } from '@dereekb/util';
 import type { ValidatorConfig } from '@ng-forge/dynamic-forms';
 import { dbxForgeTextField, type DbxForgeTextFieldConfig } from '../field/value/text/text.field';
 import { dbxForgeEmailField, type DbxForgeEmailFieldConfig } from '../field/value/text/text.additional.field';
-import { MatInputField } from '@ng-forge/dynamic-forms-material';
-import { DbxForgeField } from '../form';
+import { type MatInputField } from '@ng-forge/dynamic-forms-material';
+import { type DbxForgeField } from '../form';
 
 /**
  * Validation kind used on the verify password field to indicate the passwords do not match.

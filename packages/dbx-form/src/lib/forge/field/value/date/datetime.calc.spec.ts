@@ -150,32 +150,32 @@ describe('applyTimeOffset()', () => {
   const baseDate = setMinutes(setHours(new Date(2024, 5, 15), 10), 0); // 10:00AM
 
   it('should add minutes when offset is positive', () => {
-    const result = applyTimeOffset(baseDate, 1, 5, undefined);
+    const result = applyTimeOffset({ date: baseDate, stepsOffset: 1, minuteStep: 5 });
     expect(result.getHours()).toBe(10);
     expect(result.getMinutes()).toBe(5);
   });
 
   it('should subtract minutes when offset is negative', () => {
-    const result = applyTimeOffset(baseDate, -1, 5, undefined);
+    const result = applyTimeOffset({ date: baseDate, stepsOffset: -1, minuteStep: 5 });
     expect(result.getHours()).toBe(9);
     expect(result.getMinutes()).toBe(55);
   });
 
   it('should multiply offset by minuteStep', () => {
-    const result = applyTimeOffset(baseDate, 3, 15, undefined);
+    const result = applyTimeOffset({ date: baseDate, stepsOffset: 3, minuteStep: 15 });
     expect(result.getHours()).toBe(10);
     expect(result.getMinutes()).toBe(45);
   });
 
   it('should return clamped date when offset is 0', () => {
-    const result = applyTimeOffset(baseDate, 0, 5, undefined);
+    const result = applyTimeOffset({ date: baseDate, stepsOffset: 0, minuteStep: 5 });
     expect(result.getHours()).toBe(10);
     expect(result.getMinutes()).toBe(0);
   });
 
   it('should clamp to min limit from config', () => {
     const minDate = setMinutes(setHours(new Date(2024, 5, 15), 10), 30);
-    const result = applyTimeOffset(baseDate, 0, 5, { limits: { min: minDate } });
+    const result = applyTimeOffset({ date: baseDate, stepsOffset: 0, minuteStep: 5, config: { limits: { min: minDate } } });
     // After clamping, should be at or after 10:30
     expect(result.getTime()).toBeGreaterThanOrEqual(minDate.getTime());
   });
@@ -248,23 +248,23 @@ describe('filterPresets()', () => {
   const presets = [makePreset('8:00AM', 'Morning'), makePreset('12:00PM', 'Noon'), makePreset('5:00PM', 'Evening')];
 
   it('should return empty array when fullDay is true', () => {
-    const result = filterPresets(presets, new Date(), true, false, undefined);
+    const result = filterPresets({ presets, selectedDate: new Date(), isFullDay: true, isTimeOnly: false });
     expect(result).toEqual([]);
   });
 
   it('should return all presets when timeOnly is true', () => {
-    const result = filterPresets(presets, undefined, false, true, undefined);
+    const result = filterPresets({ presets, selectedDate: undefined, isFullDay: false, isTimeOnly: true });
     expect(result).toEqual(presets);
   });
 
   it('should return empty array when no selectedDate and not timeOnly', () => {
-    const result = filterPresets(presets, undefined, false, false, undefined);
+    const result = filterPresets({ presets, selectedDate: undefined, isFullDay: false, isTimeOnly: false });
     expect(result).toEqual([]);
   });
 
   it('should return all presets when selectedDate provided and no config limits', () => {
     const selectedDate = new Date(2024, 5, 15);
-    const result = filterPresets(presets, selectedDate, false, false, undefined);
+    const result = filterPresets({ presets, selectedDate, isFullDay: false, isTimeOnly: false });
     expect(result.length).toBe(3);
   });
 });

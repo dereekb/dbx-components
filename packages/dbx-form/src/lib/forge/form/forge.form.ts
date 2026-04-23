@@ -1,5 +1,5 @@
-import { FieldDef, FormConfig, RegisteredFieldTypes } from '@ng-forge/dynamic-forms';
-import { filterMaybeArrayValues, filterUndefinedValues, filterUniqueValues, Maybe } from '@dereekb/util';
+import { type FieldDef, type FormConfig, type RegisteredFieldTypes } from '@ng-forge/dynamic-forms';
+import { filterMaybeArrayValues, filterUndefinedValues, filterUniqueValues, type Maybe } from '@dereekb/util';
 
 // MARK: DbxForgeField
 /**

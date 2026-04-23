@@ -1,8 +1,7 @@
 /**
  * Exhaustive type and runtime tests for the forge address fields.
  */
-import { describe, it, expect } from 'vitest';
-import { expectTypeOf } from 'vitest';
+import { describe, it, expect, expectTypeOf } from 'vitest';
 import type { ArrayField, GroupField, RowField } from '@ng-forge/dynamic-forms';
 import type { MatInputField } from '@ng-forge/dynamic-forms-material';
 import { dbxForgeAddressGroup, dbxForgeAddressFields, dbxForgeAddressLineField, dbxForgeAddressListField } from './text.address.field';

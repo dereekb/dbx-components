@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, input, viewChild, ViewContainerRef } from '@angular/core';
 import { DbxSectionComponent, DbxSubSectionComponent, type DbxSectionHeaderConfig } from '@dereekb/dbx-web';
-import { FieldWrapperContract } from '@ng-forge/dynamic-forms';
+import { type FieldWrapperContract } from '@ng-forge/dynamic-forms';
 
 /**
  * Forge wrapper component that renders child fields inside a

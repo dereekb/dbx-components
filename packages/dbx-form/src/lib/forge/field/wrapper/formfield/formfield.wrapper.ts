@@ -1,4 +1,4 @@
-import { DbxForgeFieldFunctionDef, DbxForgeFieldFunctionFieldDefBuilderFunctionInstance } from '../../field';
+import { type DbxForgeFieldFunctionDef, type DbxForgeFieldFunctionFieldDefBuilderFunctionInstance } from '../../field';
 
 // MARK: Field Type
 /**

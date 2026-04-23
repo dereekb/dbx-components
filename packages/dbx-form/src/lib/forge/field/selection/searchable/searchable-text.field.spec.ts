@@ -1,9 +1,8 @@
 /**
  * Exhaustive type and runtime tests for the searchable text forge field.
  */
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { expectTypeOf } from 'vitest';
-import { type DynamicText, type LogicConfig, type SchemaApplicationConfig, type ValidatorConfig, type ValidationMessages, type FormConfig, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
+import { describe, it, expect, beforeEach, afterEach, expectTypeOf } from 'vitest';
+import { type DynamicText, type LogicConfig, type ValidatorConfig, type ValidationMessages, type FormConfig, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
 import { firstValueFrom, first, map, of, Subject, take, timeout } from 'rxjs';
 import { FormControl } from '@angular/forms';
 import type { DbxForgeSearchableTextFieldConfig } from './searchable-text.field';
@@ -302,7 +301,11 @@ describe('dbxForgeSearchableTextField()', () => {
   });
 
   it('should propagate anchorForValue through inner field props when provided', () => {
-    const anchorFn = () => ({ onClick: () => {} });
+    const anchorFn = () => ({
+      onClick: () => {
+        /* noop */
+      }
+    });
     const inner = getInnerField(dbxForgeSearchableTextField(withProps({ anchorForValue: anchorFn })) as any);
     expect(inner.props?.anchorForValue).toBe(anchorFn);
   });
@@ -313,7 +316,11 @@ describe('dbxForgeSearchableTextField()', () => {
   });
 
   it('should propagate both useAnchor and anchorForValue together', () => {
-    const anchorFn = () => ({ onClick: () => {} });
+    const anchorFn = () => ({
+      onClick: () => {
+        /* noop */
+      }
+    });
     const inner = getInnerField(dbxForgeSearchableTextField(withProps({ useAnchor: true, anchorForValue: anchorFn })) as any);
     expect(inner.props?.useAnchor).toBe(true);
     expect(inner.props?.anchorForValue).toBe(anchorFn);
@@ -410,7 +417,9 @@ describe('DbxForgeSearchableTextFieldComponent', () => {
               ]),
             displayForValue: (values: any[]) => of(values.map((v: any) => ({ ...v, label: v.meta?.name ?? v.value, sublabel: 'item' }))),
             anchorForValue: (_fieldValue: any) => ({
-              onClick: () => {}
+              onClick: () => {
+                /* noop */
+              }
             }),
             refreshDisplayValues$
           }

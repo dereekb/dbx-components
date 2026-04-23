@@ -11,7 +11,7 @@ import { type WorkUsingObservable, type WorkUsingContext } from '@dereekb/rxjs';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocActionExampleToolsComponent } from '../component/action.example.tool.component';
-import { DbxForgeActionDialogComponent, DbxFormActionDialogComponent, dbxForgeTextAreaField, formlyTextAreaField } from '@dereekb/dbx-form';
+import { DbxForgeActionDialogComponent, dbxForgeTextAreaField } from '@dereekb/dbx-form';
 
 @Component({
   templateUrl: './interaction.component.html',

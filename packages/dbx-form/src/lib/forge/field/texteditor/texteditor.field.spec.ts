@@ -1,5 +1,4 @@
-import { describe, it, expect } from 'vitest';
-import { expectTypeOf } from 'vitest';
+import { describe, it, expect, expectTypeOf } from 'vitest';
 import { dbxForgeTextEditorField } from './texteditor.field';
 import type { DbxForgeTextEditorFieldConfig } from './texteditor.field';
 import type { LogicConfig } from '@ng-forge/dynamic-forms';

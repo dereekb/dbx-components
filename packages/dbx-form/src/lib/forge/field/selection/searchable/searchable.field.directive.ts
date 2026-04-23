@@ -10,8 +10,6 @@ import { type SearchableValueFieldDisplayFn, type SearchableValueFieldDisplayVal
 import { DbxDefaultSearchableFieldDisplayComponent } from '../../../../formly/field/selection/searchable/searchable.field.autocomplete.item.component';
 import { type DbxForgeSearchableTextFieldProps } from './searchable.field';
 
-export type { DbxForgeSearchableTextFieldProps, DbxForgeSearchableChipFieldProps } from './searchable.field';
-
 const DEFAULT_SEARCH_INPUT_PLACEHOLDER = 'Type to Search';
 
 const DEFAULT_SEARCHABLE_FIELD_DISPLAY: Partial<DbxInjectionComponentConfig> = {

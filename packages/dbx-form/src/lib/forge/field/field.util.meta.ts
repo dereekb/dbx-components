@@ -1,6 +1,6 @@
 import type { FieldMeta } from '@ng-forge/dynamic-forms';
-import { DbxForgeFieldFunctionDef, DbxForgeFieldFunctionFieldDefBuilderFunctionInstance } from './field';
-import { FieldAutocompleteAttributeOptionRef, fieldAutocompleteAttributeValue } from '../../field/field.autocomplete';
+import { type DbxForgeFieldFunctionDef, type DbxForgeFieldFunctionFieldDefBuilderFunctionInstance } from './field';
+import { type FieldAutocompleteAttributeOptionRef, fieldAutocompleteAttributeValue } from '../../field/field.autocomplete';
 
 /**
  * Reads the `autocomplete` option from the builder's field def and, when it resolves to a

@@ -1,9 +1,8 @@
 /**
  * Exhaustive type and runtime tests for the searchable chip forge field.
  */
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { expectTypeOf } from 'vitest';
-import { type DynamicText, type LogicConfig, type SchemaApplicationConfig, type ValidatorConfig, type ValidationMessages, type FormConfig, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
+import { describe, it, expect, beforeEach, afterEach, expectTypeOf } from 'vitest';
+import { type DynamicText, type LogicConfig, type ValidatorConfig, type ValidationMessages, type FormConfig, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
 import { firstValueFrom, first, of, timeout } from 'rxjs';
 import type { DbxForgeSearchableChipFieldConfig } from './searchable-chip.field';
 import { dbxForgeSearchableChipField, dbxForgeSearchableStringChipField } from './searchable-chip.field';
@@ -321,7 +320,11 @@ describe('dbxForgeSearchableChipField()', () => {
   });
 
   it('should propagate anchorForValue through inner field props when provided', () => {
-    const anchorFn = () => ({ onClick: () => {} });
+    const anchorFn = () => ({
+      onClick: () => {
+        /* noop */
+      }
+    });
     const inner = getInnerField(dbxForgeSearchableChipField(withProps({ anchorForValue: anchorFn })) as any);
     expect(inner.props?.anchorForValue).toBe(anchorFn);
   });
@@ -531,7 +534,14 @@ describe('DbxForgeSearchableChipFieldComponent', () => {
     await settle(fixture);
 
     // Simulate Enter -> matChipInputTokenEnd dispatched by MatChipInput.
-    component.addChip({ value: 'https://example.com', chipInput: { clear: () => {} } } as unknown as MatChipInputEvent);
+    component.addChip({
+      value: 'https://example.com',
+      chipInput: {
+        clear: () => {
+          /* noop */
+        }
+      }
+    } as unknown as MatChipInputEvent);
     await settle(fixture);
 
     const afterAdd = await firstValueFrom(context.getValue().pipe(timeout(500), first()));
@@ -540,7 +550,14 @@ describe('DbxForgeSearchableChipFieldComponent', () => {
     // A second Enter should append another chip (multi-select is the default).
     component.inputCtrl.setValue('https://other.example.com');
     await settle(fixture);
-    component.addChip({ value: 'https://other.example.com', chipInput: { clear: () => {} } } as unknown as MatChipInputEvent);
+    component.addChip({
+      value: 'https://other.example.com',
+      chipInput: {
+        clear: () => {
+          /* noop */
+        }
+      }
+    } as unknown as MatChipInputEvent);
     await settle(fixture);
 
     const afterSecond = await firstValueFrom(context.getValue().pipe(timeout(500), first()));
@@ -653,7 +670,14 @@ describe('DbxForgeSearchableChipFieldComponent', () => {
 
     component.inputCtrl.setValue('not-a-url');
     await settle(fixture);
-    component.addChip({ value: 'not-a-url', chipInput: { clear: () => {} } } as unknown as MatChipInputEvent);
+    component.addChip({
+      value: 'not-a-url',
+      chipInput: {
+        clear: () => {
+          /* noop */
+        }
+      }
+    } as unknown as MatChipInputEvent);
     await settle(fixture);
 
     const afterInvalid = await firstValueFrom(context.getValue().pipe(timeout(500), first()));
@@ -661,7 +685,14 @@ describe('DbxForgeSearchableChipFieldComponent', () => {
 
     component.inputCtrl.setValue('https://valid.example.com');
     await settle(fixture);
-    component.addChip({ value: 'https://valid.example.com', chipInput: { clear: () => {} } } as unknown as MatChipInputEvent);
+    component.addChip({
+      value: 'https://valid.example.com',
+      chipInput: {
+        clear: () => {
+          /* noop */
+        }
+      }
+    } as unknown as MatChipInputEvent);
     await settle(fixture);
 
     const afterValid = await firstValueFrom(context.getValue().pipe(timeout(500), first()));

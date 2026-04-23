@@ -1,8 +1,8 @@
 import { NgClass, NgStyle } from '@angular/common';
-import { ChangeDetectionStrategy, Component, effect, inject, input, signal, viewChild, ViewContainerRef } from '@angular/core';
-import { FIELD_SIGNAL_CONTEXT, FieldSignalContext, FieldWrapperContract } from '@ng-forge/dynamic-forms';
-import { asObservable, MaybeObservableOrValue, ObservableOrValue, tapLog, valueFromObservableOrValue } from '@dereekb/rxjs';
-import type { DbxForgeStyleWrapper, DbxForgeStyleObject } from './style.wrapper';
+import { ChangeDetectionStrategy, Component, input, viewChild, ViewContainerRef } from '@angular/core';
+import { type FieldWrapperContract } from '@ng-forge/dynamic-forms';
+import { type MaybeObservableOrValue, valueFromObservableOrValue } from '@dereekb/rxjs';
+import type { DbxForgeStyleObject } from './style.wrapper';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 
 /**

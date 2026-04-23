@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, viewChild, ViewContainerRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, viewChild, ViewContainerRef } from '@angular/core';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { FIELD_SIGNAL_CONTEXT, FieldSignalContext, FieldWrapperContract, type WrapperFieldInputs } from '@ng-forge/dynamic-forms';
+import { FIELD_SIGNAL_CONTEXT, type FieldSignalContext, type FieldWrapperContract } from '@ng-forge/dynamic-forms';
 
 /**
  * Forge wrapper component that renders child fields with a loading

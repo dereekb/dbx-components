@@ -493,7 +493,7 @@ export class DbxForgeDateTimeFieldComponent {
     tap(([, stepsOffset]) => (stepsOffset ? this._offset.next(0) : 0)),
     map(([date, stepsOffset, config]) => {
       if (date != null && stepsOffset) {
-        return applyTimeOffset(date, stepsOffset, this.minuteStep(), config);
+        return applyTimeOffset({ date, stepsOffset, minuteStep: this.minuteStep(), config });
       }
       return date;
     }),
@@ -520,7 +520,7 @@ export class DbxForgeDateTimeFieldComponent {
 
       // Use currentDate$ (includes null) so the combineLatest emits even when no date is set.
       // Fall back to timeDate, then today, so presets are always available for time selection.
-      return combineLatest([this.currentDate$.pipe(throttleTime(1000, undefined, { leading: true, trailing: true })), this.dateTimePickerConfig$, this._timeDate$.pipe(startWith(undefined))]).pipe(map(([selectedDate, config, timeDate]) => filterPresets(allPresets, selectedDate ?? timeDate ?? startOfDay(new Date()), false, false, config)));
+      return combineLatest([this.currentDate$.pipe(throttleTime(1000, undefined, { leading: true, trailing: true })), this.dateTimePickerConfig$, this._timeDate$.pipe(startWith(undefined))]).pipe(map(([selectedDate, config, timeDate]) => filterPresets({ presets: allPresets, selectedDate: selectedDate ?? timeDate ?? startOfDay(new Date()), isFullDay: false, isTimeOnly: false, config })));
     }),
     shareReplay(1)
   );

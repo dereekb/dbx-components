@@ -1,29 +1,7 @@
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import {
-  dbxForgeStyleWrapper,
-  formlyRepeatArrayField,
-  formlyNameField,
-  formlyEmailField,
-  formlyPhoneAndLabelSectionField,
-  formlyAddressListField,
-  formlyToggleField,
-  dbxForgeArrayField,
-  dbxForgeNameField,
-  dbxForgeEmailField,
-  dbxForgePhoneField,
-  dbxForgeAddressGroup,
-  dbxForgeToggleField,
-  DbxFormFormlyArrayFieldModule,
-  DbxFormFormlyTextFieldModule,
-  DbxFormFormlyPhoneFieldModule,
-  DbxFormFormlyBooleanFieldModule,
-  DbxFormlyFieldsContextDirective,
-  DbxFormSourceDirective,
-  DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME,
-  DBX_FORGE_ARRAY_FIELD_ELEMENT_WRAPPER_NAME
-} from '@dereekb/dbx-form';
+import { formlyRepeatArrayField, formlyNameField, formlyEmailField, formlyPhoneAndLabelSectionField, formlyAddressListField, formlyToggleField, dbxForgeArrayField, dbxForgeNameField, dbxForgeToggleField, DbxFormFormlyArrayFieldModule, DbxFormFormlyTextFieldModule, DbxFormFormlyPhoneFieldModule, DbxFormFormlyBooleanFieldModule, DbxFormlyFieldsContextDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
 import { randomBoolean } from '@dereekb/util';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
@@ -120,7 +98,7 @@ export class DocFormArrayComponent {
           labelForEntry: ({ fieldValue }) => (fieldValue as { name: string })?.name,
           // Returning a numeric index sends the duplicate to the end of the array
           // instead of inserting it directly after the source item.
-          allowDuplicate: ({ arrayIndex, rootFormValue, arrayPath }) => {
+          allowDuplicate: ({ arrayIndex }) => {
             return Math.max(arrayIndex ? arrayIndex + 1 : 0, 0);
           },
           duplicateButton: {

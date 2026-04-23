@@ -5,7 +5,7 @@
  * types are correct at compile time.
  */
 import { expectTypeOf } from 'vitest';
-import { DBX_FORGE_WORKING_WRAPPER_TYPE_NAME, type DbxForgeWorkingWrapper } from './working.wrapper';
+import { type DBX_FORGE_WORKING_WRAPPER_TYPE_NAME, type DbxForgeWorkingWrapper } from './working.wrapper';
 
 // -- Wrapper interface --
 expectTypeOf<DbxForgeWorkingWrapper['type']>().toEqualTypeOf<typeof DBX_FORGE_WORKING_WRAPPER_TYPE_NAME>();

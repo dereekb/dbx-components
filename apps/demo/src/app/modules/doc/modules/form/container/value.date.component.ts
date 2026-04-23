@@ -17,7 +17,6 @@ import {
   dbxForgeFixedDateRangeField,
   dbxForgeTimeDurationField,
   dbxForgeTimezoneStringField,
-  dbxForgeToggleField,
   DbxFormFormlyDateFieldModule,
   DbxFormFormlyDbxListFieldModule,
   DbxFormFormlyDurationFieldModule,

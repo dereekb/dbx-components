@@ -1,6 +1,6 @@
 import type { CustomValidator, DynamicText, ValidationError, ValidationMessages } from '@ng-forge/dynamic-forms';
 import { type Maybe, type WebsiteDomain, asArray, isWebsiteUrlWithPrefix, websiteUrlDetails } from '@dereekb/util';
-import { DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceAddValidationInput } from './field';
+import { type DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceAddValidationInput } from './field';
 import { IS_NOT_WEBSITE_URL_VALIDATION_KEY, IS_NOT_WEBSITE_URL_WITH_EXPECTED_DOMAIN_VALIDATION_KEY, IS_NOT_WEBSITE_URL_WITH_PREFIX_VALIDATION_KEY, type IsWebsiteUrlValidatorConfig } from '../../validator/website';
 
 // MARK: Pattern

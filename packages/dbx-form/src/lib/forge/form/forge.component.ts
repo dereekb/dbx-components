@@ -296,6 +296,11 @@ export class DbxForgeFormComponent<T extends object = object> implements DbxForg
  * - Default filter that strips `_`-prefixed keys and null/undefined values
  *   when {@link DbxForgeFormContext.stripInternalKeys} is true (default)
  * - Null/undefined-only filter when `stripInternalKeys` is false
+ *
+ * @param a - the previous form value
+ * @param b - the next form value
+ * @param context - the forge form context providing filter configuration
+ * @returns true if the two values are considered equal after filtering
  */
 function _forgeFormValueEqual<T>(a: T, b: T, context: DbxForgeFormContext<T>): boolean {
   const pojoFilter = context.formValuePojoFilter ?? (context.stripInternalKeys ? _filterForgeFormValueStripInternal : _filterForgeFormValueKeepInternal);
@@ -310,6 +315,9 @@ function _forgeFormValueEqual<T>(a: T, b: T, context: DbxForgeFormContext<T>): b
  * objects (field trees, form instances) that cause stack overflows during
  * recursive comparison. They are layout artifacts and irrelevant for
  * value equality.
+ *
+ * @param input - the form value object to filter
+ * @returns a filtered copy with internal keys and null/undefined values removed
  */
 function _filterForgeFormValueStripInternal<T>(input: T): T {
   if (input == null || typeof input !== 'object' || Array.isArray(input)) {
@@ -330,6 +338,9 @@ function _filterForgeFormValueStripInternal<T>(input: T): T {
 /**
  * Filter used when `stripInternalKeys` is false: retains `_`-prefixed keys
  * but still strips null/undefined values.
+ *
+ * @param input - the form value object to filter
+ * @returns a filtered copy with null/undefined values removed but internal keys retained
  */
 function _filterForgeFormValueKeepInternal<T>(input: T): T {
   if (input == null || typeof input !== 'object' || Array.isArray(input)) {

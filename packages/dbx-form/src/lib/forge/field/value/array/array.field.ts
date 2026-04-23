@@ -3,7 +3,7 @@ import { dbxForgeBuildFieldDef, dbxForgeFieldFunction, type DbxForgeFieldFunctio
 import type { DbxForgeField } from '../../../form/forge.form';
 import { DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME, type DbxForgeArrayFieldWrapperProps } from '../../wrapper/array-field/array-field.wrapper';
 import { DBX_FORGE_ARRAY_FIELD_ELEMENT_WRAPPER_NAME, type DbxForgeArrayFieldElementWrapperProps } from '../../wrapper/array-field/array-field.element.wrapper';
-import { Configurable } from '@dereekb/util';
+import { type Configurable } from '@dereekb/util';
 
 // MARK: Config
 /**

@@ -2,7 +2,7 @@ import { incrementingNumberTimer, successResult } from '@dereekb/rxjs';
 import { Component, type OnInit, ChangeDetectionStrategy, inject } from '@angular/core';
 import { cleanSubscription, completeOnDestroy } from '@dereekb/dbx-core';
 import { BehaviorSubject, map } from 'rxjs';
-import { formConfig, type FormConfig } from '@ng-forge/dynamic-forms';
+import { type FormConfig } from '@ng-forge/dynamic-forms';
 import { DbxFormFormlyTextFieldModule, DbxFormFormlyWrapperModule, type DbxFormSourceDirectiveMode, formlyTextField, dbxForgeTextField, dbxForgeEmailField, dbxForgeToggleField, dbxForgeNumberField, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormLoadingSourceDirective, DbxFormValueChangeDirective, DbxFormActionDialogComponent, DbxForgeActionDialogComponent } from '@dereekb/dbx-form';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { DbxContentContainerDirective, DbxContentBorderDirective } from '@dereekb/dbx-web';

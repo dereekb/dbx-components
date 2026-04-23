@@ -2,7 +2,7 @@ import { type ThemePalette } from '@angular/material/core';
 import { type ProgressSpinnerMode } from '@angular/material/progress-spinner';
 import type { Maybe } from '@dereekb/util';
 import type { DbxThemeColor } from '../layout';
-import { DbxButtonDisplay } from '@dereekb/dbx-core';
+import { type DbxButtonDisplay } from '@dereekb/dbx-core';
 
 /**
  * Material button display variant used by dbx-button components.
