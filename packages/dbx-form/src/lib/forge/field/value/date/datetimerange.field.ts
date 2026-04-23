@@ -1,8 +1,11 @@
 import type { RowField } from '@ng-forge/dynamic-forms';
 import { type Maybe } from '@dereekb/util';
+import { of } from 'rxjs';
 import { DbxDateTimeFieldTimeMode } from '../../../../formly/field/value/date/datetime.field.component';
 import type { DbxForgeDateTimeFieldComponentProps } from './datetime.field.component';
-import { dbxForgeDateRangeRow, type DbxForgeDateRangeFieldDateConfig } from './daterange.field';
+import { type DbxForgeDateRangeFieldDateConfig } from './daterange.field';
+import { dbxForgeDateTimeField } from './datetime.field';
+import { dbxForgeRow } from '../../wrapper/wrapper';
 
 // MARK: Date-Time Range Field
 /**
@@ -46,27 +49,43 @@ export interface DbxForgeDateTimeRangeRowConfig {
 export function dbxForgeDateTimeRangeRow(inputConfig: DbxForgeDateTimeRangeRowConfig = {}): RowField {
   const { required = false, start: inputStart, end: inputEnd, props: sharedProps } = inputConfig;
 
-  function buildSide(config: Maybe<Partial<DbxForgeDateTimeRangeFieldTimeConfig>>, defaultLabel: string, defaultKey: string): Partial<DbxForgeDateRangeFieldDateConfig> {
-    const props = {
-      ...config?.props,
+  const startFieldKey = inputStart?.key ?? 'start';
+  const endFieldKey = inputEnd?.key ?? 'end';
+
+  const startField = dbxForgeDateTimeField({
+    label: inputStart?.label ?? 'Start Time',
+    ...inputStart,
+    required,
+    key: startFieldKey,
+    props: {
+      ...sharedProps,
+      ...inputStart?.props,
       timeMode: DbxDateTimeFieldTimeMode.REQUIRED,
       timeOnly: true,
-      hideDateHint: true
-    };
+      hideDateHint: true,
+      getSyncFieldsObs: () => of([{ syncWith: endFieldKey, syncType: 'after' as const }])
+    }
+  });
 
-    return {
-      label: defaultLabel,
-      ...config,
-      key: config?.key ?? defaultKey,
-      required,
-      props: props as DbxForgeDateRangeFieldDateConfig['props']
-    };
-  }
-
-  return dbxForgeDateRangeRow({
+  const endField = dbxForgeDateTimeField({
+    label: inputEnd?.label ?? 'End Time',
+    ...inputEnd,
     required,
-    props: sharedProps,
-    start: buildSide(inputStart, 'Start Time', 'start'),
-    end: buildSide(inputEnd, 'End Time', 'end')
+    key: endFieldKey,
+    props: {
+      ...sharedProps,
+      ...inputEnd?.props,
+      timeMode: DbxDateTimeFieldTimeMode.REQUIRED,
+      timeOnly: true,
+      hideDateHint: true,
+      getSyncFieldsObs: () => of([{ syncWith: startFieldKey, syncType: 'before' as const }])
+    }
+  });
+
+  return dbxForgeRow({
+    fields: [
+      { ...startField, col: 6 },
+      { ...endField, col: 6 }
+    ]
   });
 }

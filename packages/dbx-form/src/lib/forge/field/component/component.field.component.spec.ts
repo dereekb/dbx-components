@@ -82,7 +82,7 @@ function createConfig(componentClass: Type<unknown>): FormConfig {
   return {
     fields: [
       dbxForgeComponentField({
-        componentField: { componentClass }
+        props: { componentField: { componentClass } }
       }) as any
     ]
   };

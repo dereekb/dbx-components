@@ -8,8 +8,8 @@ import { BehaviorSubject, of, first, skip } from 'rxjs';
 import { startOfDay, addHours, addDays } from 'date-fns';
 import { provideDbxForgeFormFieldDeclarations } from '../../../forge.providers';
 import { provideDbxFormConfiguration } from '../../../../form.providers';
-import { dbxForgeDateTimeField, type DbxForgeDateTimeFieldConfig } from './datetime.field';
-import { DbxForgeDateTimeFieldComponent } from './datetime.field.component';
+import { dbxForgeDateTimeField } from './datetime.field';
+import { DbxForgeDateTimeFieldComponent, type DbxForgeDateTimeFieldComponentProps } from './datetime.field.component';
 import { DbxDateTimeFieldTimeMode } from '../../../../formly/field/value/date/datetime.field.component';
 import { DbxDateTimeValueMode } from '../../../../formly/field/value/date/date.value';
 import { type Maybe, type TimezoneString } from '@dereekb/util';
@@ -60,7 +60,18 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function createConfig(fieldConfig: DbxForgeDateTimeFieldConfig): FormConfig {
+/**
+ * Convenience helper that accepts component props at the top level (flat config) and
+ * restructures them into the `props` slot that the forge runtime expects.
+ */
+function createConfig(input: { key: string; label?: string; required?: boolean; hint?: any; description?: any } & Partial<DbxForgeDateTimeFieldComponentProps>): FormConfig {
+  const { key, label, required, hint, description, ...componentProps } = input;
+  const fieldConfig: any = { key };
+  if (label !== undefined) fieldConfig.label = label;
+  if (required !== undefined) fieldConfig.required = required;
+  if (hint !== undefined) fieldConfig.hint = hint;
+  if (description !== undefined) fieldConfig.description = description;
+  if (Object.keys(componentProps).length > 0) fieldConfig.props = componentProps;
   return { fields: [dbxForgeDateTimeField(fieldConfig) as any] };
 }
 
@@ -1838,7 +1849,7 @@ describe('dbxForgeDateTimeRangeRow() integration', () => {
     const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
     const host = fixture.componentInstance;
 
-    host.config = createDateTimeRangeConfig({ timezone: 'America/New_York' });
+    host.config = createDateTimeRangeConfig({ props: { timezone: 'America/New_York' } });
     await settle(fixture);
 
     const comps = getAllDateTimeComponents(fixture);

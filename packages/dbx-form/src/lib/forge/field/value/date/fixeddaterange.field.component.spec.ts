@@ -73,8 +73,10 @@ describe('DbxForgeFixedDateRangeFieldComponent integration', () => {
         fields: [
           dbxForgeFixedDateRangeField({
             key: 'range',
-            selectionMode: 'normal',
-            dateRangeInput: { type: DateRangeType.WEEKS_RANGE, distance: 1 }
+            props: {
+              selectionMode: 'normal',
+              dateRangeInput: { type: DateRangeType.WEEKS_RANGE, distance: 1 }
+            }
           })
         ]
       };
@@ -98,7 +100,7 @@ describe('DbxForgeFixedDateRangeFieldComponent integration', () => {
         fields: [
           dbxForgeFixedDateRangeField({
             key: 'range',
-            dateRangeInput
+            props: { dateRangeInput }
           })
         ]
       };
@@ -120,7 +122,7 @@ describe('DbxForgeFixedDateRangeFieldComponent integration', () => {
         fields: [
           dbxForgeFixedDateRangeField({
             key: 'range',
-            dateRangeInput: { type: DateRangeType.WEEKS_RANGE, distance: 1 }
+            props: { dateRangeInput: { type: DateRangeType.WEEKS_RANGE, distance: 1 } }
           })
         ]
       };
@@ -143,9 +145,11 @@ describe('DbxForgeFixedDateRangeFieldComponent integration', () => {
         fields: [
           dbxForgeFixedDateRangeField({
             key: 'range',
-            selectionMode: 'single',
-            dateRangeInput: { type: DateRangeType.WEEKS_RANGE, distance: 1 },
-            valueMode: DbxDateTimeValueMode.DATE
+            props: {
+              selectionMode: 'single',
+              dateRangeInput: { type: DateRangeType.WEEKS_RANGE, distance: 1 },
+              valueMode: DbxDateTimeValueMode.DATE
+            }
           })
         ]
       };
@@ -180,9 +184,11 @@ describe('DbxForgeFixedDateRangeFieldComponent integration', () => {
         fields: [
           dbxForgeFixedDateRangeField({
             key: 'range',
-            selectionMode: 'normal',
-            dateRangeInput: { type: DateRangeType.CALENDAR_MONTH, distance: 1 },
-            valueMode: DbxDateTimeValueMode.DATE
+            props: {
+              selectionMode: 'normal',
+              dateRangeInput: { type: DateRangeType.CALENDAR_MONTH, distance: 1 },
+              valueMode: DbxDateTimeValueMode.DATE
+            }
           })
         ]
       };
@@ -225,9 +231,11 @@ describe('DbxForgeFixedDateRangeFieldComponent integration', () => {
         fields: [
           dbxForgeFixedDateRangeField({
             key: 'range',
-            selectionMode: 'normal',
-            dateRangeInput: { type: DateRangeType.DAYS_RADIUS, distance: 10 },
-            valueMode: DbxDateTimeValueMode.DATE
+            props: {
+              selectionMode: 'normal',
+              dateRangeInput: { type: DateRangeType.DAYS_RADIUS, distance: 10 },
+              valueMode: DbxDateTimeValueMode.DATE
+            }
           })
         ]
       };
@@ -261,9 +269,11 @@ describe('DbxForgeFixedDateRangeFieldComponent integration', () => {
         fields: [
           dbxForgeFixedDateRangeField({
             key: 'range',
-            selectionMode: 'arbitrary_quick',
-            dateRangeInput: { type: DateRangeType.DAYS_RANGE, distance: 5 },
-            valueMode: DbxDateTimeValueMode.DATE
+            props: {
+              selectionMode: 'arbitrary_quick',
+              dateRangeInput: { type: DateRangeType.DAYS_RANGE, distance: 5 },
+              valueMode: DbxDateTimeValueMode.DATE
+            }
           })
         ]
       };
