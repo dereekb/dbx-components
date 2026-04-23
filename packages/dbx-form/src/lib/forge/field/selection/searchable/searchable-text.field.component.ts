@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, type ElementRef, input, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, input, viewChild } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule, type MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MatIconModule } from '@angular/material/icon';
@@ -10,9 +10,11 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { type FieldTree } from '@angular/forms/signals';
 import { type SearchableValueFieldDisplayValue, type ConfiguredSearchableValueFieldDisplayValue } from '../../../../formly/field/selection/searchable/searchable';
 import { DbxSearchableFieldAutocompleteItemComponent } from '../../../../formly/field/selection/searchable/searchable.field.autocomplete.item.component';
-import { AbstractForgeSearchableFieldDirective, type DbxForgeSearchableTextFieldProps } from './searchable.field.directive';
-import { forgeFieldDisabled } from '../../field.disabled';
+import { AbstractForgeSearchableFieldDirective } from './searchable.field.directive';
+import { createResolvedErrorsSignal, setupMetaTracking, shouldShowErrors } from '@ng-forge/dynamic-forms/integration';
+import { dbxForgeFieldDisabled } from '../../field.util';
 import { toggleDisableFormControl } from '../../../../form/form';
+import { type DbxForgeSearchableTextFieldProps } from './searchable-text.field';
 
 /**
  * Forge ValueFieldComponent for searchable text selection (single value).
@@ -28,6 +30,8 @@ import { toggleDisableFormControl } from '../../../../form/form';
   standalone: true
 })
 export class DbxForgeSearchableTextFieldComponent<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends AbstractForgeSearchableFieldDirective<T, M, H, DbxForgeSearchableTextFieldProps<T, M, H>> {
+  private readonly elementRef = inject(ElementRef<HTMLElement>);
+
   readonly field = input.required<FieldTree<T>>();
   readonly textInputRef = viewChild<ElementRef<HTMLInputElement>>('textInput');
 
@@ -35,7 +39,20 @@ export class DbxForgeSearchableTextFieldComponent<T = unknown, M = unknown, H ex
   private readonly _valuesSubject = new BehaviorSubject<T[]>([]);
 
   // Disabled state
-  readonly isDisabled = forgeFieldDisabled();
+  readonly isDisabled = dbxForgeFieldDisabled();
+
+  // Error handling
+  readonly resolvedErrors = createResolvedErrorsSignal(this.field as any, this.validationMessages, this.defaultValidationMessages);
+  readonly showErrors = shouldShowErrors(this.field as any);
+  readonly errorsToDisplay = computed(() => (this.showErrors() ? this.resolvedErrors() : []));
+
+  // ARIA
+  protected readonly ariaInvalid = computed(() => (this.showErrors() ? 'true' : null));
+  protected readonly ariaDescribedBy = computed(() => {
+    if (this.errorsToDisplay().length > 0) return this.errorId();
+    if (this.props()?.hint) return this.hintId();
+    return null;
+  });
 
   readonly showClearValueSignal = computed(() => this.props()?.showClearValue ?? true);
   readonly searchLabelSignal = computed(() => this.props()?.searchLabel ?? 'Search');
@@ -76,6 +93,11 @@ export class DbxForgeSearchableTextFieldComponent<T = unknown, M = unknown, H ex
     this._valuesSubject.next(values);
   });
 
+  constructor() {
+    super();
+    setupMetaTracking(this.elementRef, this.meta as any, { selector: 'input' });
+  }
+
   protected _onInit(): void {
     this._singleValueSyncSub.subscription = this.displayValues$.subscribe((x) => {
       if (x[0]) {
@@ -97,7 +119,7 @@ export class DbxForgeSearchableTextFieldComponent<T = unknown, M = unknown, H ex
     const value = event.option.value as SearchableValueFieldDisplayValue<T> | { _ignore?: true } | { _clear?: true };
 
     if ((value as any)._clear) {
-      this._setFieldValue(undefined);
+      this._setFieldValue(null);
       this.inputCtrl.setValue('', { emitEvent: false });
     } else if (!(value as any)._ignore) {
       const displayValue = value as SearchableValueFieldDisplayValue<T>;

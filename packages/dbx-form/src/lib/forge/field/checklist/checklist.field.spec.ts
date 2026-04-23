@@ -1,7 +1,64 @@
-import { describe, it, expect } from 'vitest';
-import { forgeChecklistField } from './checklist.field';
+import { describe, it, expect, expectTypeOf } from 'vitest';
+import { dbxForgeChecklistField } from './checklist.field';
+import type { LogicConfig } from '@ng-forge/dynamic-forms';
+import type { DbxForgeChecklistFieldConfig } from './checklist.field';
 
-describe('forgeChecklistField()', () => {
+// ============================================================================
+// DbxForgeChecklistFieldConfig - Exhaustive Whitelist
+// ============================================================================
+
+describe('DbxForgeChecklistFieldConfig - Exhaustive Whitelist', () => {
+  type ExpectedKeys =
+    // From DbxForgeFieldFunctionDef<MatMultiCheckboxField<T>>
+    | 'key'
+    | 'label'
+    | 'placeholder'
+    | 'value'
+    | 'required'
+    | 'readonly'
+    | 'disabled'
+    | 'hidden'
+    | 'className'
+    | 'meta'
+    | 'logic'
+    | 'props'
+    | 'hint'
+    | 'description'
+    | 'pattern'
+    | 'minLength'
+    | 'maxLength'
+    | 'min'
+    | 'max'
+    | 'email'
+    | 'validators'
+    | 'validationMessages'
+    | 'derivation'
+    | 'schemas'
+    | 'col'
+    | 'tabIndex'
+    | 'excludeValueIfHidden'
+    | 'excludeValueIfDisabled'
+    | 'excludeValueIfReadonly'
+    | 'wrappers'
+    | 'skipAutoWrappers'
+    | 'skipDefaultWrappers'
+    | 'nullable'
+    | '__fieldDef'
+    // From MultiCheckboxField
+    | 'options';
+
+  type ActualKeys = keyof DbxForgeChecklistFieldConfig;
+
+  it('should have exactly the expected keys', () => {
+    expectTypeOf<ActualKeys>().toEqualTypeOf<ExpectedKeys>();
+  });
+});
+
+// ============================================================================
+// Runtime Factory Tests - dbxForgeChecklistField()
+// ============================================================================
+
+describe('dbxForgeChecklistField()', () => {
   const testOptions = [
     { label: 'Frontend', value: 'frontend' },
     { label: 'Backend', value: 'backend' },
@@ -9,55 +66,41 @@ describe('forgeChecklistField()', () => {
   ];
 
   it('should create a multi-checkbox field with correct type', () => {
-    const field = forgeChecklistField({ key: 'tags', label: 'Tags', options: testOptions });
+    const field = dbxForgeChecklistField({ key: 'tags', label: 'Tags', options: testOptions });
     expect(field.type).toBe('multi-checkbox');
     expect(field.key).toBe('tags');
     expect(field.label).toBe('Tags');
   });
 
   it('should set options on the field', () => {
-    const field = forgeChecklistField({ key: 'tags', options: testOptions });
+    const field = dbxForgeChecklistField({ key: 'tags', options: testOptions });
     expect(field.options).toEqual(testOptions);
   });
 
   it('should set required when specified', () => {
-    const field = forgeChecklistField({ key: 'tags', options: testOptions, required: true });
+    const field = dbxForgeChecklistField({ key: 'tags', options: testOptions, required: true });
     expect(field.required).toBe(true);
   });
 
   it('should set readonly when specified', () => {
-    const field = forgeChecklistField({ key: 'tags', options: testOptions, readonly: true });
+    const field = dbxForgeChecklistField({ key: 'tags', options: testOptions, readonly: true });
     expect(field.readonly).toBe(true);
   });
 
-  it('should default value to empty array', () => {
-    const field = forgeChecklistField({ key: 'tags', options: testOptions });
-    expect(field.value).toEqual([]);
-  });
-
-  it('should use defaultValue when provided', () => {
-    const field = forgeChecklistField({ key: 'tags', options: testOptions, defaultValue: ['frontend', 'backend'] });
-    expect(field.value).toEqual(['frontend', 'backend']);
-  });
-
   it('should map description to hint in props', () => {
-    const field = forgeChecklistField({ key: 'tags', options: testOptions, description: 'Select your skills' });
+    const field = dbxForgeChecklistField({ key: 'tags', options: testOptions, description: 'Select your skills' });
     expect(field.props?.hint).toBe('Select your skills');
   });
 
   it('should set labelPosition in props', () => {
-    const field = forgeChecklistField({ key: 'tags', options: testOptions, labelPosition: 'before' });
+    const field = dbxForgeChecklistField({ key: 'tags', options: testOptions, props: { labelPosition: 'before' } });
     expect(field.props?.labelPosition).toBe('before');
   });
 
-  it('should not include props when no description or labelPosition is set', () => {
-    const field = forgeChecklistField({ key: 'tags', options: testOptions });
-    expect(field.props).toBeUndefined();
-  });
-
-  it('should provide empty label when not specified', () => {
-    const field = forgeChecklistField({ key: 'tags', options: testOptions });
-    expect(field.label).toBe('');
+  it('should pass logic through to the field definition', () => {
+    const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
+    const field = dbxForgeChecklistField({ key: 'tags', options: [{ label: 'A', value: 'a' }], logic });
+    expect((field as any).logic).toEqual(logic);
   });
 
   it('should work with numeric option values', () => {
@@ -65,7 +108,7 @@ describe('forgeChecklistField()', () => {
       { label: 'Priority 1', value: 1 },
       { label: 'Priority 2', value: 2 }
     ];
-    const field = forgeChecklistField({ key: 'priorities', options: numOptions, defaultValue: [1] });
+    const field = dbxForgeChecklistField({ key: 'priorities', options: numOptions, value: [1] });
     expect(field.value).toEqual([1]);
     expect(field.options).toEqual(numOptions);
   });

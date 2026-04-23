@@ -91,13 +91,11 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
 
   readonly mode = input<Maybe<ProgressSpinnerMode>>();
 
-  readonly typeSignal = computed(() => {
+  readonly styleTypeSignal = computed(() => {
     const style = this.buttonStyle();
     let type = this.type() ?? style?.type;
 
     if (!type) {
-      type = 'basic';
-
       if (this.iconOnly()) {
         type = 'icon';
       } else if (this.raised()) {
@@ -147,12 +145,13 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
 
     const textValue = this.textSignal();
     const hasTextContent = !!textValue || this._hasProjectedContent || this.customContent();
+
     const isIconOnlyButton = buttonIcon && !hasTextContent;
     const fab = this.fab() || buttonStyle?.fab;
 
     const mode = this.mode() ?? buttonStyle?.mode;
     const working = this.workingSignal();
-    const buttonType = this.typeSignal();
+    const buttonType = this.styleTypeSignal();
 
     const ariaLabel = this.ariaLabel();
 
@@ -164,7 +163,7 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
       customClass: 'dbx-button ' + (isIconOnlyButton ? 'dbx-button-no-text' : ''),
       text: textValue ?? '',
       hasTextContent,
-      buttonType,
+      buttonType: buttonType ?? (isIconOnlyButton ? 'icon' : 'basic'),
       buttonColor,
       barColor: 'accent',
       mode,

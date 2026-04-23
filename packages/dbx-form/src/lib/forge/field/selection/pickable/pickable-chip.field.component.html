@@ -1,7 +1,4 @@
 <div class="dbx-pickable-item-field">
-  @if (labelSignal()) {
-    <span class="dbx-label">{{ labelSignal() }}</span>
-  }
   @if (showTextFilterSignal()) {
     <div class="dbx-pickable-item-field-filter">
       @if (filterLabelSignal()) {
@@ -12,7 +9,7 @@
     </div>
   }
   <div class="dbx-pickable-item-field-chips">
-    <mat-chip-listbox [multiple]="multiSelectSignal()" [selectable]="!isDisabledOrReadonly()" [disabled]="isDisabledOrReadonly()">
+    <mat-chip-listbox [multiple]="multiSelectSignal()" [selectable]="!isDisabledOrReadonly()" [disabled]="isDisabledOrReadonly()" [attr.aria-invalid]="ariaInvalid()" [attr.aria-describedby]="ariaDescribedBy()">
       @if (showSelectAllButtonSignal() && multiSelectSignal() && !isDisabledOrReadonly()) {
         <mat-chip-option (click)="toggleAll()" [selected]="allSelectedSignal()">
           <span class="dbx-chip-label">All</span>
@@ -34,8 +31,5 @@
   </div>
   @if (noItemsAvailableSignal()) {
     <p class="dbx-label" role="status">No items match this filter.</p>
-  }
-  @if (hintSignal()) {
-    <div class="dbx-form-description">{{ hintSignal() }}</div>
   }
 </div>

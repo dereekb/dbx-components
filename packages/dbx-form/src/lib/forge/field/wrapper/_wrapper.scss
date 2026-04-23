@@ -35,12 +35,6 @@ $dbx-forge-form-field-slider-thumb-margin: 22px;
     padding-bottom: 0 !important;
   }
 
-  // When a child field shows an inline error (e.g. searchable chip input validation),
-  // hide the wrapper's subscript hint so the error effectively replaces it.
-  dbx-forge-form-field-wrapper:has(.dbx-chip-input-error) .mat-mdc-form-field-hint-wrapper {
-    display: none;
-  }
-
   // The wrapper's mat-mdc-form-field host class causes Angular Material's
   // form-field line-height (24px) and letter-spacing (0.496px) to cascade
   // into all descendants. For list selection fields this distorts the list
@@ -55,6 +49,22 @@ $dbx-forge-form-field-slider-thumb-margin: 22px;
   // Shared working bar spacing used by both the working field and working wrapper field.
   .dbx-forge-working-bar {
     margin-top: 4px;
+  }
+
+  // Flex layout wrapper: ng-forge's GroupFieldComponent applies `display: grid`
+  // and `gap: var(--df-grid-row-gap)` via :host styling (scoped attribute selector).
+  // Override both when our `dbx-flex-group` class is present so the flex sizing
+  // classes work. The dbx-flex-N children use padding for spacing instead of gap.
+  .df-group.dbx-flex-group {
+    display: flex !important;
+    flex-wrap: wrap;
+    gap: 0 !important;
+  }
+
+  .dbx-form-repeat-array-field {
+    .dbx-form-repeat-array-bar .dbx-chip {
+      margin-right: 3px;
+    }
   }
 }
 

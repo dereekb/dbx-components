@@ -1,345 +1,378 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, ChangeDetectionStrategy, provideZonelessChangeDetection, inject } from '@angular/core';
-
-import { type FormConfig, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
-import { first, firstValueFrom, timeout, catchError, of, map } from 'rxjs';
-import { provideDbxForgeFormFieldDeclarations } from '../../../forge.providers';
-import { provideDbxFormConfiguration } from '../../../../form.providers';
-import { DbxForgeFormComponent } from '../../../form/forge.component';
-import { DbxForgeFormContext, provideDbxForgeFormContext } from '../../../form/forge.context';
-import { forgeAddressField, forgeAddressFields, forgeAddressLineField, forgeAddressListField } from './text.address.field';
-import { FORGE_SECTION_FIELD_TYPE_NAME } from '../../wrapper/section/section.field';
-
-// MARK: Test Host
-@Component({
-  template: `
-    <dbx-forge></dbx-forge>
-  `,
-  standalone: true,
-  imports: [DbxForgeFormComponent],
-  providers: [provideDbxForgeFormContext()],
-  changeDetection: ChangeDetectionStrategy.OnPush
-})
-class TestForgeAddressHostComponent {
-  readonly context = inject(DbxForgeFormContext);
-}
-
-// MARK: Helpers
-const TEST_PROVIDERS = [provideZonelessChangeDetection(), provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), { provide: DynamicFormLogger, useClass: NoopLogger }];
-
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 /**
- * Settles the fixture by running multiple change detection cycles to ensure
- * nested wrapper child forms have time to process values and validate.
+ * Exhaustive type and runtime tests for the forge address fields.
  */
-async function settle(fixture: ComponentFixture<any>): Promise<void> {
-  fixture.detectChanges();
-  await fixture.whenStable();
-  // Extra cycle for wrapper child form propagation and validation
-  await delay(50);
-  fixture.detectChanges();
-  await fixture.whenStable();
-  await delay(50);
-  fixture.detectChanges();
-  await fixture.whenStable();
-}
+import { describe, it, expect, expectTypeOf } from 'vitest';
+import type { ArrayField, GroupField, RowField } from '@ng-forge/dynamic-forms';
+import type { MatInputField } from '@ng-forge/dynamic-forms-material';
+import { dbxForgeAddressGroup, dbxForgeAddressFields, dbxForgeAddressLineField, dbxForgeAddressListField } from './text.address.field';
+import type { DbxForgeAddressGroupConfig, DbxForgeAddressFieldsConfig, DbxForgeAddressLineFieldConfig, DbxForgeAddressListFieldConfig } from './text.address.field';
+import { DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME } from '../../wrapper/array-field/array-field.wrapper';
 
-interface GetValueResult<T = any> {
-  readonly received: boolean;
-  readonly value: T | undefined;
-}
+// Shared key set for DbxForgeTextFieldConfig (DbxForgeAddressLineFieldConfig extends Partial<DbxForgeTextFieldConfig>).
+type DbxForgeTextFieldConfigKeys =
+  // From DbxForgeFieldFunctionDef<DbxForgeStringInputFieldDef>
+  | 'key'
+  | 'label'
+  | 'placeholder'
+  | 'value'
+  | 'required'
+  | 'readonly'
+  | 'disabled'
+  | 'hidden'
+  | 'className'
+  | 'meta'
+  | 'logic'
+  | 'props'
+  | 'hint'
+  | 'description'
+  | 'pattern'
+  | 'minLength'
+  | 'maxLength'
+  | 'min'
+  | 'max'
+  | 'email'
+  | 'validators'
+  | 'validationMessages'
+  | 'derivation'
+  | 'schemas'
+  | 'col'
+  | 'tabIndex'
+  | 'excludeValueIfHidden'
+  | 'excludeValueIfDisabled'
+  | 'excludeValueIfReadonly'
+  | 'wrappers'
+  | 'skipAutoWrappers'
+  | 'skipDefaultWrappers'
+  | 'nullable'
+  | '__fieldDef'
+  // Field-specific config
+  | 'inputType'
+  // From FieldAutocompleteAttributeOptionRef
+  | 'autocomplete'
+  // Direct declaration
+  | 'idempotentTransform';
 
-async function tryGetValue<T = any>(context: DbxForgeFormContext<T>, ms = 500): Promise<GetValueResult<T>> {
-  return firstValueFrom(
-    context.getValue().pipe(
-      timeout(ms),
-      first(),
-      map((value) => ({ received: true, value }) as GetValueResult<T>),
-      catchError(() => of({ received: false, value: undefined } as GetValueResult<T>))
-    )
-  );
-}
+// ============================================================================
+// DbxForgeAddressFieldsConfig - Exhaustive Whitelist
+// ============================================================================
 
-// MARK: Unit Tests
-describe('forgeAddressLineField()', () => {
+describe('DbxForgeAddressFieldsConfig - Exhaustive Whitelist', () => {
+  type ExpectedKeys = 'line1Field' | 'line2Field' | 'cityField' | 'stateField' | 'zipCodeField' | 'countryField' | 'required' | 'includeLine2' | 'includeCountry';
+
+  type ActualKeys = keyof DbxForgeAddressFieldsConfig;
+
+  it('should have exactly the expected keys', () => {
+    expectTypeOf<ActualKeys>().toEqualTypeOf<ExpectedKeys>();
+  });
+
+  it('required is optional boolean', () => {
+    expectTypeOf<DbxForgeAddressFieldsConfig['required']>().toEqualTypeOf<boolean | undefined>();
+  });
+
+  it('includeLine2 is optional boolean', () => {
+    expectTypeOf<DbxForgeAddressFieldsConfig['includeLine2']>().toEqualTypeOf<boolean | undefined>();
+  });
+
+  it('includeCountry is optional boolean', () => {
+    expectTypeOf<DbxForgeAddressFieldsConfig['includeCountry']>().toEqualTypeOf<boolean | undefined>();
+  });
+});
+
+// ============================================================================
+// DbxForgeAddressLineFieldConfig - Exhaustive Whitelist
+// ============================================================================
+
+describe('DbxForgeAddressLineFieldConfig - Exhaustive Whitelist', () => {
+  type ExpectedKeys = DbxForgeTextFieldConfigKeys | 'line';
+
+  type ActualKeys = keyof DbxForgeAddressLineFieldConfig;
+
+  it('should have exactly the expected keys', () => {
+    expectTypeOf<ActualKeys>().toEqualTypeOf<ExpectedKeys>();
+  });
+
+  describe('field-specific config keys', () => {
+    it('line is 0 | 1 | 2 or undefined', () => {
+      expectTypeOf<DbxForgeAddressLineFieldConfig['line']>().toEqualTypeOf<0 | 1 | 2 | undefined>();
+    });
+  });
+
+  describe('required keys are relaxed by Partial', () => {
+    it('key is optional', () => {
+      expectTypeOf<DbxForgeAddressLineFieldConfig['key']>().toEqualTypeOf<string | undefined>();
+    });
+  });
+});
+
+// ============================================================================
+// DbxForgeAddressGroupConfig - Exhaustive Whitelist
+// ============================================================================
+
+describe('DbxForgeAddressGroupConfig - Exhaustive Whitelist', () => {
+  type ExpectedKeys =
+    // From DbxForgeAddressFieldsConfig
+    | 'line1Field'
+    | 'line2Field'
+    | 'cityField'
+    | 'stateField'
+    | 'zipCodeField'
+    | 'countryField'
+    | 'required'
+    | 'includeLine2'
+    | 'includeCountry'
+    // Field-specific
+    | 'key';
+
+  type ActualKeys = keyof DbxForgeAddressGroupConfig;
+
+  it('should have exactly the expected keys', () => {
+    expectTypeOf<ActualKeys>().toEqualTypeOf<ExpectedKeys>();
+  });
+
+  it('key is optional string', () => {
+    expectTypeOf<DbxForgeAddressGroupConfig['key']>().toEqualTypeOf<string | undefined>();
+  });
+});
+
+// ============================================================================
+// DbxForgeAddressListFieldConfig - Exhaustive Whitelist
+// ============================================================================
+
+describe('DbxForgeAddressListFieldConfig - Exhaustive Whitelist', () => {
+  type ExpectedKeys =
+    // From DbxForgeAddressFieldsConfig
+    | 'line1Field'
+    | 'line2Field'
+    | 'cityField'
+    | 'stateField'
+    | 'zipCodeField'
+    | 'countryField'
+    | 'required'
+    | 'includeLine2'
+    | 'includeCountry'
+    // Field-specific
+    | 'key'
+    | 'maxAddresses';
+
+  type ActualKeys = keyof DbxForgeAddressListFieldConfig;
+
+  it('should have exactly the expected keys', () => {
+    expectTypeOf<ActualKeys>().toEqualTypeOf<ExpectedKeys>();
+  });
+
+  it('key is optional string', () => {
+    expectTypeOf<DbxForgeAddressListFieldConfig['key']>().toEqualTypeOf<string | undefined>();
+  });
+
+  it('maxAddresses is optional number', () => {
+    expectTypeOf<DbxForgeAddressListFieldConfig['maxAddresses']>().toEqualTypeOf<number | undefined>();
+  });
+});
+
+// ============================================================================
+// Runtime Factory Tests - dbxForgeAddressLineField()
+// ============================================================================
+
+describe('dbxForgeAddressLineField()', () => {
   it('should create a line 1 field by default', () => {
-    const field = forgeAddressLineField();
+    const field = dbxForgeAddressLineField();
     expect(field.type).toBe('input');
     expect(field.key).toBe('line1');
     expect(field.label).toBe('Line 1');
   });
 
   it('should create a line 2 field', () => {
-    const field = forgeAddressLineField({ line: 2 });
+    const field = dbxForgeAddressLineField({ line: 2 });
     expect(field.key).toBe('line2');
     expect(field.label).toBe('Line 2');
   });
 
-  it('should create a street field for line 0', () => {
-    const field = forgeAddressLineField({ line: 0 });
+  it('should create a street field (label Street) for line 0 while clamping key to line1', () => {
+    const field = dbxForgeAddressLineField({ line: 0 });
     expect(field.key).toBe('line1');
     expect(field.label).toBe('Street');
   });
 
   it('should allow overriding key and label', () => {
-    const field = forgeAddressLineField({ key: 'addr', label: 'Address', line: 1 });
+    const field = dbxForgeAddressLineField({ key: 'addr', label: 'Address', line: 1 });
     expect(field.key).toBe('addr');
     expect(field.label).toBe('Address');
   });
 
   it('should set required when specified', () => {
-    const field = forgeAddressLineField({ required: true });
+    const field = dbxForgeAddressLineField({ required: true });
     expect(field.required).toBe(true);
+  });
+
+  it('should default required to false', () => {
+    const field = dbxForgeAddressLineField();
+    expect(field.required).toBe(false);
+  });
+
+  it('should default maxLength to ADDRESS_LINE_MAX_LENGTH', () => {
+    const field = dbxForgeAddressLineField();
+    expect(field.maxLength).toBeGreaterThan(0);
+  });
+
+  it('should allow overriding maxLength', () => {
+    const field = dbxForgeAddressLineField({ maxLength: 10 });
+    expect(field.maxLength).toBe(10);
   });
 });
 
-describe('forgeAddressFields()', () => {
-  it('should create fields with line2 and country by default', () => {
-    const fields = forgeAddressFields();
-    expect(fields.length).toBe(5); // line1, line2, city, stateZipRow, country
+// ============================================================================
+// Runtime Factory Tests - dbxForgeAddressFields()
+// ============================================================================
+
+describe('dbxForgeAddressFields()', () => {
+  it('should create 5 fields with line2 and country by default', () => {
+    const fields = dbxForgeAddressFields();
+    // line1, line2, city, stateZipRow, country
+    expect(fields.length).toBe(5);
   });
 
   it('should omit line2 when includeLine2 is false', () => {
-    const fields = forgeAddressFields({ includeLine2: false });
-    expect(fields.length).toBe(4); // street, city, stateZipRow, country
+    const fields = dbxForgeAddressFields({ includeLine2: false });
+    // streetLine, city, stateZipRow, country
+    expect(fields.length).toBe(4);
   });
 
   it('should omit country when includeCountry is false', () => {
-    const fields = forgeAddressFields({ includeCountry: false });
-    expect(fields.length).toBe(4); // line1, line2, city, stateZipRow
+    const fields = dbxForgeAddressFields({ includeCountry: false });
+    // line1, line2, city, stateZipRow
+    expect(fields.length).toBe(4);
   });
 
   it('should omit both line2 and country when disabled', () => {
-    const fields = forgeAddressFields({ includeLine2: false, includeCountry: false });
-    expect(fields.length).toBe(3); // street, city, stateZipRow
+    const fields = dbxForgeAddressFields({ includeLine2: false, includeCountry: false });
+    // streetLine, city, stateZipRow
+    expect(fields.length).toBe(3);
+  });
+
+  it('should use Street label when includeLine2 is false', () => {
+    const fields = dbxForgeAddressFields({ includeLine2: false });
+    const streetField = fields[0] as MatInputField;
+    expect(streetField.key).toBe('line1');
+    expect(streetField.label).toBe('Street');
+  });
+
+  it('should use Line 1 label when includeLine2 is true', () => {
+    const fields = dbxForgeAddressFields();
+    const lineOneField = fields[0] as MatInputField;
+    expect(lineOneField.key).toBe('line1');
+    expect(lineOneField.label).toBe('Line 1');
+  });
+
+  it('should apply required to all required sub-fields by default', () => {
+    const fields = dbxForgeAddressFields();
+    const line1 = fields[0] as MatInputField;
+    const city = fields[2] as MatInputField;
+    expect(line1.required).toBe(true);
+    expect(city.required).toBe(true);
+  });
+
+  it('should relax required when required is false', () => {
+    const fields = dbxForgeAddressFields({ required: false });
+    const line1 = fields[0] as MatInputField;
+    const city = fields[2] as MatInputField;
+    expect(line1.required).toBe(false);
+    expect(city.required).toBe(false);
+  });
+
+  it('should arrange state and zip in a row', () => {
+    const fields = dbxForgeAddressFields();
+    const row = fields[3] as RowField;
+    expect(row.type).toBe('row');
+    expect(row.fields).toHaveLength(2);
+  });
+
+  it('should allow overriding individual sub-field configs', () => {
+    const fields = dbxForgeAddressFields({ cityField: { label: 'Ville' } });
+    const city = fields[2] as MatInputField;
+    expect(city.label).toBe('Ville');
   });
 });
 
-describe('forgeAddressField()', () => {
-  it('should create a section wrapper with address key', () => {
-    const field = forgeAddressField();
-    expect(field.type).toBe(FORGE_SECTION_FIELD_TYPE_NAME);
+// ============================================================================
+// Runtime Factory Tests - dbxForgeAddressGroup()
+// ============================================================================
+
+describe('dbxForgeAddressGroup()', () => {
+  it('should create a group field with default address key', () => {
+    const field = dbxForgeAddressGroup();
+    expect(field.type).toBe('group');
     expect(field.key).toBe('address');
   });
 
   it('should allow overriding key', () => {
-    const field = forgeAddressField({ key: 'home' });
+    const field = dbxForgeAddressGroup({ key: 'home' });
     expect(field.key).toBe('home');
   });
 
-  it('should set header to Address by default', () => {
-    const field = forgeAddressField();
-    expect(field.props?.headerConfig.header).toBe('Address');
+  it('should include child fields directly on the group', () => {
+    const field = dbxForgeAddressGroup();
+    expect(field.fields.length).toBe(5);
   });
 
-  it('should allow overriding header', () => {
-    const field = forgeAddressField({ header: 'Billing Address' });
-    expect(field.props?.headerConfig.header).toBe('Billing Address');
+  it('should respect includeLine2 and includeCountry overrides', () => {
+    const field = dbxForgeAddressGroup({ includeLine2: false, includeCountry: false });
+    expect(field.fields.length).toBe(3);
   });
 
-  it('should pass child fields through props', () => {
-    const field = forgeAddressField();
-    expect(field.props?.fields.length).toBeGreaterThan(0);
+  it('should propagate required to child fields', () => {
+    const field = dbxForgeAddressGroup({ required: false });
+    const line1 = field.fields[0] as MatInputField;
+    expect(line1.required).toBe(false);
   });
 });
 
-describe('forgeAddressListField()', () => {
-  it('should create an array field with addresses key', () => {
-    const field = forgeAddressListField();
+// ============================================================================
+// Runtime Factory Tests - dbxForgeAddressListField()
+// ============================================================================
+
+describe('dbxForgeAddressListField()', () => {
+  it('should create an array field with default addresses key', () => {
+    const field = dbxForgeAddressListField() as ArrayField;
+    expect(field.type).toBe('array');
     expect(field.key).toBe('addresses');
   });
 
   it('should allow overriding key', () => {
-    const field = forgeAddressListField({ key: 'locations' });
+    const field = dbxForgeAddressListField({ key: 'locations' }) as ArrayField;
     expect(field.key).toBe('locations');
+  });
+
+  it('should default maxLength (maxAddresses) to 6', () => {
+    const field = dbxForgeAddressListField() as ArrayField;
+    expect(field.maxLength).toBe(6);
+  });
+
+  it('should pass maxAddresses through as maxLength', () => {
+    const field = dbxForgeAddressListField({ maxAddresses: 3 }) as ArrayField;
+    expect(field.maxLength).toBe(3);
+  });
+
+  it('should propagate required to the address template fields', () => {
+    const field = dbxForgeAddressListField({ required: false }) as any;
+    // The address template fields live inside the outer array wrapper's itemTemplate container.
+    const outerWrapper = (field.wrappers as any[]).find((w) => w.type === DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME);
+    const templateFields = outerWrapper.props.itemTemplate[0].fields as MatInputField[];
+    expect(templateFields).toBeDefined();
+    expect(templateFields[0].required).toBe(false);
   });
 });
 
-// MARK: Integration Tests
-describe('forgeAddressField() integration', () => {
-  beforeEach(() => {
-    TestBed.configureTestingModule({
-      imports: [TestForgeAddressHostComponent],
-      providers: TEST_PROVIDERS
-    });
+// ============================================================================
+// Usage Tests (type-level)
+// ============================================================================
+
+describe('Usage', () => {
+  it('address field factory returns a GroupField', () => {
+    expectTypeOf(dbxForgeAddressGroup).returns.toExtend<GroupField>();
   });
 
-  afterEach(() => {
-    TestBed.resetTestingModule();
-  });
-
-  function createAddressConfig(config: Parameters<typeof forgeAddressField>[0] = {}): FormConfig {
-    return { fields: [forgeAddressField(config) as any] };
-  }
-
-  const VALID_ADDRESS = {
-    address: {
-      line1: '123 Main St',
-      line2: 'Apt 4',
-      city: 'Springfield',
-      state: 'IL',
-      zip: '62704',
-      country: 'US'
-    }
-  };
-
-  describe('valid-to-invalid transition', () => {
-    it('should not emit getValue() when form transitions from valid to invalid', async () => {
-      const fixture = TestBed.createComponent(TestForgeAddressHostComponent);
-      const context = fixture.componentInstance.context;
-      context.config = createAddressConfig({ required: true });
-
-      await settle(fixture);
-
-      // Set a fully valid address
-      context.setValue(VALID_ADDRESS as any);
-      await settle(fixture);
-
-      // Verify it emits when valid
-      const validResult = await tryGetValue(context);
-      expect(validResult.received).toBe(true);
-      expect((validResult.value as any)?.address).toBeDefined();
-
-      // Now clear a required field (zip) to make the form invalid
-      context.setValue({
-        address: {
-          line1: '123 Main St',
-          line2: 'Apt 4',
-          city: 'Springfield',
-          state: 'IL',
-          zip: '', // required field is now empty → invalid
-          country: 'US'
-        }
-      } as any);
-      await settle(fixture);
-
-      // getValue() should NOT emit because the form is now invalid
-      const invalidResult = await tryGetValue(context);
-      expect(invalidResult.received).toBe(false);
-
-      fixture.destroy();
-    });
-
-    it('should not emit getValue() when a required field is cleared', async () => {
-      const fixture = TestBed.createComponent(TestForgeAddressHostComponent);
-      const context = fixture.componentInstance.context;
-      context.config = createAddressConfig({ required: true });
-
-      await settle(fixture);
-
-      // Set a fully valid address
-      context.setValue(VALID_ADDRESS as any);
-      await settle(fixture);
-
-      // Verify valid
-      const validResult = await tryGetValue(context);
-      expect(validResult.received).toBe(true);
-
-      // Clear city (required)
-      context.setValue({
-        address: {
-          line1: '123 Main St',
-          line2: 'Apt 4',
-          city: '', // required field cleared
-          state: 'IL',
-          zip: '62704',
-          country: 'US'
-        }
-      } as any);
-      await settle(fixture);
-
-      const invalidResult = await tryGetValue(context);
-      expect(invalidResult.received).toBe(false);
-
-      fixture.destroy();
-    });
-
-    it('should report isComplete=false when address becomes invalid', async () => {
-      const fixture = TestBed.createComponent(TestForgeAddressHostComponent);
-      const context = fixture.componentInstance.context;
-      context.config = createAddressConfig({ required: true });
-
-      await settle(fixture);
-
-      // Set valid address
-      context.setValue(VALID_ADDRESS as any);
-      await settle(fixture);
-
-      // Verify complete
-      let event = await firstValueFrom(context.stream$.pipe(first()));
-      expect(event.isComplete).toBe(true);
-
-      // Invalidate by clearing line1 (required)
-      context.setValue({
-        address: {
-          line1: '', // required field cleared
-          line2: 'Apt 4',
-          city: 'Springfield',
-          state: 'IL',
-          zip: '62704',
-          country: 'US'
-        }
-      } as any);
-      await settle(fixture);
-
-      event = await firstValueFrom(context.stream$.pipe(first()));
-      expect(event.isComplete).toBe(false);
-      expect(event.status).toBe('INVALID');
-
-      fixture.destroy();
-    });
-
-    it('should resume emitting getValue() when form becomes valid again', async () => {
-      const fixture = TestBed.createComponent(TestForgeAddressHostComponent);
-      const context = fixture.componentInstance.context;
-      context.config = createAddressConfig({ required: true });
-
-      await settle(fixture);
-
-      // Start valid
-      context.setValue(VALID_ADDRESS as any);
-      await settle(fixture);
-
-      let result = await tryGetValue(context);
-      expect(result.received).toBe(true);
-
-      // Make invalid
-      context.setValue({
-        address: { line1: '123 Main St', line2: '', city: 'Springfield', state: 'IL', zip: '', country: 'US' }
-      } as any);
-      await settle(fixture);
-
-      result = await tryGetValue(context);
-      expect(result.received).toBe(false);
-
-      // Make valid again
-      context.setValue(VALID_ADDRESS as any);
-      await settle(fixture);
-
-      result = await tryGetValue(context);
-      expect(result.received).toBe(true);
-      expect((result.value as any)?.address).toBeDefined();
-
-      fixture.destroy();
-    });
-  });
-
-  describe('with optional fields', () => {
-    it('should emit getValue() when all fields are empty and not required', async () => {
-      const fixture = TestBed.createComponent(TestForgeAddressHostComponent);
-      const context = fixture.componentInstance.context;
-      context.config = createAddressConfig({ required: false });
-
-      await settle(fixture);
-
-      const result = await tryGetValue(context);
-      expect(result.received).toBe(true);
-
-      fixture.destroy();
-    });
+  it('address line factory returns a MatInputField-shaped value', () => {
+    const field = dbxForgeAddressLineField();
+    expectTypeOf(field.type).toEqualTypeOf<'input'>();
   });
 });

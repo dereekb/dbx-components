@@ -1,47 +1,24 @@
-import { filterFromPOJO } from '@dereekb/util';
-import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import type { FieldTypeDefinition } from '@ng-forge/dynamic-forms';
-import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
-import { forgeField } from '../field';
-import { FORGE_COMPONENT_FIELD_TYPE, type DbxForgeComponentFieldProps, type DbxForgeComponentFieldDef } from './component.field.component';
-
-// MARK: Field Type Definition
-/**
- * ng-forge FieldTypeDefinition for the dynamic component injection field.
- *
- * Register via `provideDynamicForm(DBX_COMPONENT_FIELD_TYPE)`.
- */
-export const DBX_COMPONENT_FIELD_TYPE: FieldTypeDefinition<DbxForgeComponentFieldDef> = {
-  name: FORGE_COMPONENT_FIELD_TYPE,
-  loadComponent: () => import('./component.field.component').then((m) => m.DbxForgeComponentFieldComponent),
-  mapper: valueFieldMapper
-};
+import { FORGE_COMPONENT_FIELD_TYPE, type DbxForgeComponentFieldDef, type DbxForgeComponentFieldProps } from './component.field.component';
+import { dbxForgeFieldFunction, type DbxForgeFieldFunctionDef, type DbxForgeFieldFunction } from '../field';
+import type { DbxForgeField } from '../../form/forge.form';
 
 // MARK: Config
 /**
+ * Internal config with required key for the factory.
+ */
+type _DbxForgeComponentFieldConfig<T = unknown> = Omit<DbxForgeFieldFunctionDef<DbxForgeComponentFieldDef<T>>, 'props'> & {
+  readonly props: DbxForgeComponentFieldProps<T>;
+};
+
+/**
  * Configuration for a forge field that renders a custom Angular component.
  */
-export interface DbxForgeComponentFieldConfig<T = unknown> {
+export type DbxForgeComponentFieldConfig<T = unknown> = Omit<_DbxForgeComponentFieldConfig<T>, 'key'> & {
   /**
    * Key for the field. Optional for display-only components.
    */
   readonly key?: string;
-  /**
-   * Label for the field.
-   */
-  readonly label?: string;
-  /**
-   * The injection component configuration describing which component to render.
-   */
-  readonly componentField: DbxInjectionComponentConfig<T>;
-  /**
-   * Whether to visually indicate the disabled state on this component.
-   *
-   * Defaults to `true`. Set to `false` for display-only components that should
-   * remain visually unchanged when the form is disabled.
-   */
-  readonly allowDisabledEffects?: boolean;
-}
+};
 
 /**
  * Counter for generating unique keys when no explicit key is provided.
@@ -51,6 +28,20 @@ export interface DbxForgeComponentFieldConfig<T = unknown> {
  * preserving the stale instance whose captured `props` never update.
  */
 let _componentFieldCounter = 0;
+
+/**
+ * Generic function type for dbxForgeComponentField to preserve caller generics.
+ */
+export type DbxForgeComponentFieldFunction = <T = unknown>(config: DbxForgeComponentFieldConfig<T>) => DbxForgeField<DbxForgeComponentFieldDef<T>>;
+
+/**
+ * @deprecated Use {@link DbxForgeComponentFieldFunction} instead.
+ */
+export type ForgeComponentFieldFunction = DbxForgeComponentFieldFunction;
+
+const _dbxForgeComponentField = dbxForgeFieldFunction<_DbxForgeComponentFieldConfig>({
+  type: FORGE_COMPONENT_FIELD_TYPE
+}) as DbxForgeFieldFunction<_DbxForgeComponentFieldConfig, DbxForgeComponentFieldDef>;
 
 /**
  * Creates a forge field definition that renders a custom Angular component.
@@ -64,25 +55,15 @@ let _componentFieldCounter = 0;
  *
  * @example
  * ```typescript
- * const field = forgeComponentField({
+ * const field = dbxForgeComponentField({
  *   key: 'custom',
- *   componentField: { componentClass: MyCustomFormComponent, data: { someInput: 'value' } }
+ *   props: { componentField: { componentClass: MyCustomFormComponent, data: { someInput: 'value' } } }
  * });
  * ```
  */
-export function forgeComponentField<T = unknown>(config: DbxForgeComponentFieldConfig<T>): DbxForgeComponentFieldDef<T> {
-  const { key, label, componentField, allowDisabledEffects } = config;
-
-  return forgeField(
-    filterFromPOJO({
-      key: key || `_component_${++_componentFieldCounter}`,
-      type: FORGE_COMPONENT_FIELD_TYPE,
-      label: label ?? '',
-      value: undefined as unknown,
-      props: filterFromPOJO({
-        componentField,
-        allowDisabledEffects
-      }) as DbxForgeComponentFieldProps<T>
-    }) as DbxForgeComponentFieldDef<T>
-  );
-}
+export const dbxForgeComponentField: DbxForgeComponentFieldFunction = (config) => {
+  return _dbxForgeComponentField({
+    ...config,
+    key: config.key || `_component_${++_componentFieldCounter}`
+  } as _DbxForgeComponentFieldConfig) as any;
+};

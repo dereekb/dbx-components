@@ -1,9 +1,12 @@
-import { Injectable, type OnDestroy, type Provider, type Signal, signal, computed } from '@angular/core';
-import { BehaviorSubject, combineLatest, type Observable, shareReplay, switchMap, filter, map } from 'rxjs';
+import { Injectable, type OnDestroy, type Provider, type Signal, signal, computed, inject } from '@angular/core';
+import { BehaviorSubject, combineLatest, type Observable, shareReplay, switchMap, filter, map, scan } from 'rxjs';
 import { type DbxMutableForm, type DbxFormEvent, type DbxFormDisabledKey, DbxFormState, DEFAULT_FORM_DISABLED_KEY, provideDbxMutableForm } from '../../form/form';
-import { type BooleanStringKeyArray, BooleanStringKeyArrayUtility, type Maybe } from '@dereekb/util';
+import { type BooleanStringKeyArray, BooleanStringKeyArrayUtility, type FilterFromPOJOFunction, type Maybe } from '@dereekb/util';
 import { LockSet, filterMaybe } from '@dereekb/rxjs';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
+import { type FieldTree } from '@angular/forms/signals';
+import { type DbxForgeFinalizeFormConfigResult, dbxForgeFinalizeFormConfig } from './forge.form';
+import { DbxForgeGlobalDefaultConfigService } from './forge.global-defaults.service';
 
 /**
  * Recursively strips keys that start with `_` from a form value object.
@@ -26,24 +29,28 @@ import { type FormConfig } from '@ng-forge/dynamic-forms';
  * ```
  */
 export function stripForgeInternalKeys<T>(value: T): T {
+  let result: T;
+
   if (value == null || typeof value !== 'object' || Array.isArray(value) || value instanceof Date) {
-    return value;
-  }
+    result = value;
+  } else {
+    const stripped: Record<string, unknown> = {};
 
-  const result: Record<string, unknown> = {};
-
-  for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
-    if (key.startsWith('_')) {
-      if (val != null && typeof val === 'object' && !Array.isArray(val)) {
-        Object.assign(result, stripForgeInternalKeys(val));
+    for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
+      if (key.startsWith('_')) {
+        if (val != null && typeof val === 'object' && !Array.isArray(val)) {
+          Object.assign(stripped, stripForgeInternalKeys(val));
+        }
+        // Primitive _ keys (toggle booleans, etc.) are dropped
+      } else {
+        stripped[key] = stripForgeInternalKeys(val);
       }
-      // Primitive _ keys (toggle booleans, etc.) are dropped
-    } else {
-      result[key] = stripForgeInternalKeys(val);
     }
+
+    result = stripped as T;
   }
 
-  return result as T;
+  return result;
 }
 
 /**
@@ -80,28 +87,32 @@ function isEmptyFormValue(val: unknown): boolean {
  * @returns A new object with empty-valued keys removed
  */
 export function stripEmptyForgeValues<T>(value: T): T {
+  let result: T;
+
   if (value == null || typeof value !== 'object' || Array.isArray(value)) {
-    return value;
-  }
+    result = value;
+  } else {
+    const stripped: Record<string, unknown> = {};
 
-  const result: Record<string, unknown> = {};
-
-  for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
-    if (isEmptyFormValue(val)) {
-      continue;
-    }
-
-    if (typeof val === 'object' && !Array.isArray(val) && !(val instanceof Date)) {
-      const cleaned = stripEmptyForgeValues(val);
-      if (cleaned != null && Object.keys(cleaned as object).length > 0) {
-        result[key] = cleaned;
+    for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
+      if (isEmptyFormValue(val)) {
+        continue;
       }
-    } else {
-      result[key] = val;
+
+      if (typeof val === 'object' && !Array.isArray(val) && !(val instanceof Date)) {
+        const cleaned = stripEmptyForgeValues(val);
+        if (cleaned != null && Object.keys(cleaned as object).length > 0) {
+          stripped[key] = cleaned;
+        }
+      } else {
+        stripped[key] = val;
+      }
     }
+
+    result = stripped as T;
   }
 
-  return result as T;
+  return result;
 }
 
 /**
@@ -112,7 +123,13 @@ export function stripEmptyForgeValues<T>(value: T): T {
  */
 @Injectable()
 export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDestroy {
-  private static readonly INITIAL_STATE: DbxFormEvent = { isComplete: false, state: DbxFormState.INITIALIZING, status: 'PENDING' };
+  private readonly dbxForgeGlobalDefaultsConfigService = inject(DbxForgeGlobalDefaultConfigService);
+
+  private static readonly INITIAL_STATE: DbxFormEvent = {
+    isComplete: false,
+    state: DbxFormState.INITIALIZING,
+    status: 'PENDING'
+  };
 
   readonly lockSet = new LockSet();
 
@@ -144,6 +161,16 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
   stripEmptyValues = true;
 
   /**
+   * Optional custom POJO filter applied during the `formValue` signal's deep-equality
+   * comparison. When set, this filter replaces the default filter that strips `_`-prefixed
+   * keys and null/undefined values.
+   *
+   * Useful for testing scenarios where `stripInternalKeys` is `false` and the `_`-prefixed
+   * keys must participate in equality checks.
+   */
+  formValuePojoFilter: Maybe<FilterFromPOJOFunction<unknown>>;
+
+  /**
    * When true (default), the form still reports `isComplete` based on validity even
    * while disabled. This matches the ngx-formly behavior where disabling a form only
    * locks inputs but does not suppress the form value.
@@ -156,7 +183,7 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
 
   /**
    * Tracks validity signals from nested wrapper forms (e.g. forgeFormFieldWrapper,
-   * forgeDbxSectionFieldWrapper). These wrappers create isolated DynamicForm instances
+   * section wrapper). These wrappers create isolated DynamicForm instances
    * whose validity is not visible to the parent DynamicForm.valid() signal.
    *
    * Wrapper components register their nested form's validity via {@link registerWrapperValidity},
@@ -171,13 +198,16 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
    */
   readonly allWrappersValid = computed(() => {
     this._wrapperValidSignalsVersion(); // depend on version to retrigger when wrappers register/unregister
+    let result = true;
+
     for (const s of this._wrapperValidSignals) {
       if (!s()) {
-        return false;
+        result = false;
+        break;
       }
     }
 
-    return true;
+    return result;
   });
 
   /**
@@ -199,6 +229,19 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
     };
   }
 
+  /**
+   * The parent DynamicForm's field tree, set by DbxForgeFormComponent.
+   *
+   * Allows wrapper field components to write values to sibling hidden fields
+   * in the parent form (e.g., for the form-field wrapper's hidden field sync).
+   */
+  private readonly _parentFormTree = signal<FieldTree<Record<string, unknown>> | undefined>(undefined);
+  readonly parentFormTree = this._parentFormTree.asReadonly();
+
+  setParentFormTree(tree: FieldTree<Record<string, unknown>> | undefined): void {
+    this._parentFormTree.set(tree);
+  }
+
   private readonly _config = new BehaviorSubject<Maybe<FormConfig>>(undefined);
   private readonly _disabled = new BehaviorSubject<BooleanStringKeyArray>(undefined);
   private readonly _formState = new BehaviorSubject<DbxFormEvent>(DbxForgeFormContext.INITIAL_STATE);
@@ -207,7 +250,30 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
   private readonly _setValue = new BehaviorSubject<Maybe<Partial<T>>>(undefined);
   private readonly _reset = new BehaviorSubject<Date>(new Date());
 
-  readonly config$ = this._config.pipe(filterMaybe(), shareReplay(1));
+  private readonly _internalConfig$: Observable<Maybe<DbxForgeFinalizeFormConfigResult>> = this._config.pipe(
+    scan<Maybe<FormConfig>, Maybe<DbxForgeFinalizeFormConfigResult>, Maybe<DbxForgeFinalizeFormConfigResult>>((acc, config) => {
+      let result: Maybe<DbxForgeFinalizeFormConfigResult>;
+
+      if (config) {
+        if (acc?.input !== config) {
+          result = dbxForgeFinalizeFormConfig(config, this.dbxForgeGlobalDefaultsConfigService.getGlobalDefaults());
+        } else {
+          result = acc;
+        }
+      } else {
+        result = undefined;
+      }
+
+      return result;
+    }, undefined),
+    shareReplay(1)
+  );
+
+  readonly config$: Observable<FormConfig> = this._internalConfig$.pipe(
+    filterMaybe(),
+    map(({ config }) => config),
+    shareReplay(1)
+  );
 
   /**
    * Form event stream that restarts on each reset, mirroring the formly form's
@@ -224,12 +290,12 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
   readonly disabled$ = this._disabled.asObservable();
   readonly reset$ = this._reset.asObservable();
 
-  set config(config: Maybe<FormConfig>) {
-    this._config.next(config);
-  }
-
   get config(): Maybe<FormConfig> {
     return this._config.value;
+  }
+
+  set config(config: Maybe<FormConfig>) {
+    this._config.next(config);
   }
 
   updateFormState(state: DbxFormEvent): void {
@@ -247,14 +313,18 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
   }
 
   getValue(): Observable<T> {
+    let result: Observable<T>;
+
     if (this.requireValid) {
-      return combineLatest([this._value.pipe(filterMaybe()), this._isValid]).pipe(
+      result = combineLatest([this._value.pipe(filterMaybe()), this._isValid]).pipe(
         filter(([, valid]) => valid),
         map(([value]) => value)
       );
+    } else {
+      result = this._value.pipe(filterMaybe());
     }
 
-    return this._value.pipe(filterMaybe());
+    return result;
   }
 
   getDisabled(): Observable<BooleanStringKeyArray> {

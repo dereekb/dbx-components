@@ -1,55 +1,55 @@
 import { describe, it, expect } from 'vitest';
 import { addDays, startOfDay } from 'date-fns';
-import { type DateCellScheduleDateFilterConfig, dateCellTiming, type DateRange } from '@dereekb/date';
+import { type DateCellScheduleDateFilterConfig, DateCellScheduleDayCodesInput, DateCellScheduleEncodedWeek, dateCellTiming, type DateRange } from '@dereekb/date';
 import { BehaviorSubject } from 'rxjs';
 import { type Maybe, type TimezoneString } from '@dereekb/util';
 import { type CalendarScheduleSelectionState, initialCalendarScheduleSelectionState, updateStateWithChangedDates, updateStateWithChangedRange, updateStateWithComputeSelectionResultRelativeToFilter, updateStateWithDateCellScheduleRangeValue, updateStateWithFilter, updateStateWithInitialSelectionState, updateStateWithMinMaxDateRange, updateStateWithTimezoneValue } from '../../calendar.schedule.selection.store';
-import { forgeDateScheduleRangeField, FORGE_CALENDAR_DATE_SCHEDULE_RANGE_FIELD_TYPE } from './calendar.schedule.forge.field';
+import { dbxForgeDateScheduleRangeField, FORGE_CALENDAR_DATE_SCHEDULE_RANGE_FIELD_TYPE } from './calendar.schedule.forge.field';
 
-describe('forgeDateScheduleRangeField()', () => {
+describe('dbxForgeDateScheduleRangeField()', () => {
   it('should create a schedule range field with correct type', () => {
-    const field = forgeDateScheduleRangeField();
+    const field = dbxForgeDateScheduleRangeField();
     expect(field.type).toBe(FORGE_CALENDAR_DATE_SCHEDULE_RANGE_FIELD_TYPE);
     expect(field.type).toBe('dbx-forge-calendar-date-schedule-range');
   });
 
   it('should default key to schedule', () => {
-    const field = forgeDateScheduleRangeField();
+    const field = dbxForgeDateScheduleRangeField();
     expect(field.key).toBe('schedule');
   });
 
   it('should default label to Schedule', () => {
-    const field = forgeDateScheduleRangeField();
+    const field = dbxForgeDateScheduleRangeField();
     expect(field.label).toBe('Schedule');
   });
 
   it('should use custom key when specified', () => {
-    const field = forgeDateScheduleRangeField({ key: 'dateRange' });
+    const field = dbxForgeDateScheduleRangeField({ key: 'dateRange' });
     expect(field.key).toBe('dateRange');
   });
 
   it('should use custom label when specified', () => {
-    const field = forgeDateScheduleRangeField({ label: 'Date Schedule' });
+    const field = dbxForgeDateScheduleRangeField({ label: 'Date Schedule' });
     expect(field.label).toBe('Date Schedule');
   });
 
   it('should set required when specified', () => {
-    const field = forgeDateScheduleRangeField({ required: true });
+    const field = dbxForgeDateScheduleRangeField({ required: true });
     expect(field.required).toBe(true);
   });
 
   it('should not include required when not specified', () => {
-    const field = forgeDateScheduleRangeField();
+    const field = dbxForgeDateScheduleRangeField();
     expect(field.required).toBeUndefined();
   });
 
   it('should set readonly when specified', () => {
-    const field = forgeDateScheduleRangeField({ readonly: true });
+    const field = dbxForgeDateScheduleRangeField({ readonly: true });
     expect(field.readonly).toBe(true);
   });
 
   it('should not include readonly when not specified', () => {
-    const field = forgeDateScheduleRangeField();
+    const field = dbxForgeDateScheduleRangeField();
     expect(field.readonly).toBeUndefined();
   });
 
@@ -65,13 +65,13 @@ describe('forgeDateScheduleRangeField()', () => {
 
       const timezone$ = new BehaviorSubject<Maybe<TimezoneString>>(undefined);
 
-      const filterConfig = {
+      const filterConfig: DateCellScheduleDateFilterConfig = {
         ...dateCellTiming({ startsAt: today, duration: 60 }, daysInFilter, 'UTC'),
-        w: '89' as const,
+        w: '89' as DateCellScheduleEncodedWeek,
         ex: [] as number[]
       };
 
-      const field = forgeDateScheduleRangeField({
+      const field = dbxForgeDateScheduleRangeField({
         outputTimezone: timezone$,
         key: 'dateScheduleWithTimingFilterAndMinDateRange',
         label: 'Date Schedule with Timing Filter and Min Date Range',
@@ -159,7 +159,7 @@ describe('forgeDateScheduleRangeField()', () => {
 
     const filterConfig: DateCellScheduleDateFilterConfig = {
       ...dateCellTiming({ startsAt: today, duration: 60 }, daysInFilter, 'UTC'),
-      w: '89' as const,
+      w: '89' as DateCellScheduleEncodedWeek,
       ex: [] as number[]
     };
 
@@ -456,37 +456,37 @@ describe('forgeDateScheduleRangeField()', () => {
 
   describe('props', () => {
     it('should pass hideCustomize in props', () => {
-      const field = forgeDateScheduleRangeField({ hideCustomize: true });
+      const field = dbxForgeDateScheduleRangeField({ hideCustomize: true });
       expect(field.props?.hideCustomize).toBe(true);
     });
 
     it('should pass allowTextInput in props', () => {
-      const field = forgeDateScheduleRangeField({ allowTextInput: true });
+      const field = dbxForgeDateScheduleRangeField({ allowTextInput: true });
       expect(field.props?.allowTextInput).toBe(true);
     });
 
     it('should pass description in props', () => {
-      const field = forgeDateScheduleRangeField({ description: 'Pick a schedule' });
+      const field = dbxForgeDateScheduleRangeField({ description: 'Pick a schedule' });
       expect(field.props?.description).toBe('Pick a schedule');
     });
 
     it('should pass appearance in props', () => {
-      const field = forgeDateScheduleRangeField({ appearance: 'outline' });
+      const field = dbxForgeDateScheduleRangeField({ appearance: 'outline' });
       expect(field.props?.appearance).toBe('outline');
     });
 
     it('should pass allowCustomizeWithoutDateRange in props', () => {
-      const field = forgeDateScheduleRangeField({ allowCustomizeWithoutDateRange: true });
+      const field = dbxForgeDateScheduleRangeField({ allowCustomizeWithoutDateRange: true });
       expect(field.props?.allowCustomizeWithoutDateRange).toBe(true);
     });
 
     it('should pass label in props', () => {
-      const field = forgeDateScheduleRangeField({ label: 'Custom Label' });
+      const field = dbxForgeDateScheduleRangeField({ label: 'Custom Label' });
       expect(field.props?.label).toBe('Custom Label');
     });
 
     it('should include default label in props when no extra config is provided', () => {
-      const field = forgeDateScheduleRangeField();
+      const field = dbxForgeDateScheduleRangeField();
       expect(field.props).toBeDefined();
       expect(field.props?.label).toBe('Schedule');
     });

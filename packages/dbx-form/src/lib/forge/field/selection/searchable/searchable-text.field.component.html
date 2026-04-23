@@ -11,10 +11,10 @@
     @if (searchLabelSignal()) {
       <div class="dbx-label">{{ searchLabelSignal() }}</div>
     }
-    <input #textInput class="dbx-forge-bare-input" [formControl]="inputCtrl" [matAutocomplete]="auto" [placeholder]="searchInputPlaceholder()" />
+    <input #textInput class="dbx-forge-bare-input" [formControl]="inputCtrl" [matAutocomplete]="auto" [placeholder]="searchInputPlaceholder()" [attr.aria-invalid]="ariaInvalid()" [attr.aria-describedby]="ariaDescribedBy()" />
   </div>
 </div>
-<mat-autocomplete #auto="matAutocomplete" (optionSelected)="selected($event)">
+<mat-autocomplete class="dbx-searchable-text-field-autocomplete" #auto="matAutocomplete" (optionSelected)="selected($event)">
   @if (showClearValueSignal() && hasValueSignal()) {
     <mat-option [value]="{ _clear: true }">Clear</mat-option>
   }

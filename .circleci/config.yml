@@ -193,6 +193,21 @@ jobs:
             - ~/.cache/firebase
       - store_test_results:
           path: ~/code/.reports/junit/
+  # Runs integration tests for CLI packages (zoho-cli, etc.)
+  test-all-cli:
+    <<: *defaults
+    environment:
+      NX_NO_CLOUD: "true"
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/code
+      - run:
+          name: build zoho-cli
+          command: npx nx run zoho-cli:build-base
+      - run:
+          name: run zoho-cli integration tests
+          command: bash packages/zoho/cli/test/test-cli.sh
   # Runs tests for the projects that require the firebase emulators.
   test-setup-script:
     <<: *defaults
@@ -366,6 +381,9 @@ workflows:
       - test-with-node-firebase:
           requires:
             - build
+      - test-all-cli:
+          requires:
+            - build
       - test-setup-script:
           requires:
             - build
@@ -376,6 +394,7 @@ workflows:
             - test-with-node-complex
             - test-with-node-nestjs
             - test-with-node-firebase
+            - test-all-cli
             - test-setup-script
           filters:
             branches:

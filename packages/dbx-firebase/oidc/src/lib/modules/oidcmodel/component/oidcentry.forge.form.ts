@@ -1,4 +1,4 @@
-import { forgeTextField, forgeValueSelectionField, forgeSearchableStringChipField, forgePickableChipField, forgeGroup, pickableValueFieldValuesConfigForStaticLabeledValues, isWebsiteUrlValidator } from '@dereekb/dbx-form';
+import { dbxForgeTextField, dbxForgeValueSelectionField, dbxForgeSearchableStringChipField, dbxForgePickableChipField, dbxForgeGroup, pickableValueFieldValuesConfigForStaticLabeledValues, isWebsiteUrlValidator } from '@dereekb/dbx-form';
 import { ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHOD_OPTIONS, PRIVATE_KEY_JWT_TOKEN_ENDPOINT_AUTH_METHOD, type OidcRedirectUri, type OidcScopeDetails, type OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
 import type { FormConfig } from '@ng-forge/dynamic-forms';
 import { of } from 'rxjs';
@@ -48,12 +48,12 @@ export function oidcClientTokenEndpointAuthMethodForgeField(config?: OidcEntryCl
   const allowedAuthMethods = config?.tokenEndpointAuthMethods;
   const options = allowedAuthMethods?.length ? ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHOD_OPTIONS.filter((o) => allowedAuthMethods.includes(o.value)) : ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHOD_OPTIONS;
 
-  return forgeValueSelectionField({
+  return dbxForgeValueSelectionField({
     key: 'token_endpoint_auth_method',
     label: 'Token Endpoint Auth Method',
     description: 'How the client authenticates when exchanging tokens. Cannot be changed after creation.',
     required: true,
-    options
+    props: { options }
   });
 }
 
@@ -74,10 +74,10 @@ export function oidcEntryClientUpdateForgeFormFields() {
  * @returns A forge text field for the client name.
  */
 export function oidcClientNameForgeField() {
-  return forgeTextField({
+  return dbxForgeTextField({
     key: 'client_name',
     label: 'Client Name',
-    description: 'A human-readable name for this OAuth client.',
+    hint: 'A human-readable name for this OAuth client.',
     required: true,
     maxLength: 200
   });
@@ -89,15 +89,17 @@ export function oidcClientNameForgeField() {
  * @returns A forge searchable chip field for redirect URIs.
  */
 export function oidcClientRedirectUrisForgeField() {
-  return forgeSearchableStringChipField({
+  return dbxForgeSearchableStringChipField({
     key: 'redirect_uris',
     label: 'Redirect URIs',
-    description: 'Type a redirect URI (e.g. https://example.com/callback) and press enter to add it.',
+    hint: 'Type a redirect URI (e.g. https://example.com/callback) and press enter to add it.',
     required: true,
-    searchOnEmptyText: false,
-    textInputValidator: isWebsiteUrlValidator({ requirePrefix: true, allowPorts: true }),
-    search: () => of([]),
-    displayForValue: (values) => of(values.map((v) => ({ ...v, label: v.value })))
+    props: {
+      searchOnEmptyText: false,
+      textInputValidator: isWebsiteUrlValidator({ requirePrefix: true, allowPorts: true }),
+      search: () => of([]),
+      displayForValue: (values) => of(values.map((v) => ({ ...v, label: v.value })))
+    }
   });
 }
 
@@ -108,12 +110,12 @@ export function oidcClientRedirectUrisForgeField() {
  * @returns A forge group field with conditional visibility logic.
  */
 export function oidcClientJwksUriForgeField() {
-  return forgeGroup({
+  return dbxForgeGroup({
     fields: [
-      forgeTextField({
+      dbxForgeTextField({
         key: 'jwks_uri',
         label: 'JWKS URI',
-        description: "URL where the client's public JSON Web Key Set can be fetched. Required for private_key_jwt authentication.",
+        hint: "URL where the client's public JSON Web Key Set can be fetched. Required for private_key_jwt authentication.",
         required: true
       })
     ],
@@ -137,10 +139,10 @@ export function oidcClientJwksUriForgeField() {
  * @returns A forge text field for the logo URI.
  */
 export function oidcClientLogoUriForgeField() {
-  return forgeTextField({
+  return dbxForgeTextField({
     key: 'logo_uri',
     label: 'Logo URI',
-    description: 'URL of the client logo image (optional).',
+    hint: 'URL of the client logo image (optional).',
     required: false
   });
 }
@@ -151,10 +153,10 @@ export function oidcClientLogoUriForgeField() {
  * @returns A forge text field for the homepage URL.
  */
 export function oidcClientHomepageUriForgeField() {
-  return forgeTextField({
+  return dbxForgeTextField({
     key: 'client_uri',
     label: 'Homepage URL',
-    description: 'URL of the client homepage (optional).',
+    hint: 'URL of the client homepage (optional).',
     required: false
   });
 }
@@ -182,7 +184,7 @@ export function oidcEntryClientTestForgeFormFields(config: OidcEntryClientTestFo
  * @returns A read-only forge text field for the client ID.
  */
 export function oidcClientTestClientIdForgeField() {
-  return forgeTextField({
+  return dbxForgeTextField({
     key: 'client_id',
     label: 'Client ID',
     readonly: true
@@ -198,12 +200,12 @@ export function oidcClientTestClientIdForgeField() {
 export function oidcClientTestRedirectUriForgeField(redirectUris: OidcRedirectUri[]) {
   const options = redirectUris.map((uri) => ({ label: uri, value: uri }));
 
-  return forgeValueSelectionField({
+  return dbxForgeValueSelectionField({
     key: 'redirect_uri',
     label: 'Redirect URI',
     description: 'Select the redirect URI to use for the test flow.',
     required: true,
-    options
+    props: { options }
   });
 }
 
@@ -214,11 +216,13 @@ export function oidcClientTestRedirectUriForgeField(redirectUris: OidcRedirectUr
  * @returns A forge pickable chip field for scope selection.
  */
 export function oidcClientTestScopesForgeField(availableScopes: OidcScopeDetails[]) {
-  return forgePickableChipField({
+  return dbxForgePickableChipField({
     key: 'scopes',
     label: 'Scopes',
-    description: 'Select the scopes to request.',
-    showSelectAllButton: true,
-    ...pickableValueFieldValuesConfigForStaticLabeledValues(availableScopes)
+    hint: 'Select the scopes to request.',
+    props: {
+      showSelectAllButton: true,
+      ...pickableValueFieldValuesConfigForStaticLabeledValues(availableScopes)
+    }
   });
 }

@@ -1,9 +1,9 @@
-import type { CustomValidatorConfig, FieldDef, FieldMeta, ValidationMessages } from '@ng-forge/dynamic-forms';
-import type { MatInputField, MatInputProps, MatSliderField, MatSliderProps } from '@ng-forge/dynamic-forms-material';
-import { filterFromPOJO, DOLLAR_AMOUNT_PRECISION, type TransformNumberFunctionConfigRef } from '@dereekb/util';
-import { forgeField, mergeForgeFieldMeta, type DbxForgeFieldAutocompleteConfig } from '../../field';
-import { forgeFormFieldWrapper, type DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
-import { forgeDefaultValidationMessages } from '../../../validation';
+import type { BaseValueField } from '@ng-forge/dynamic-forms';
+import type { MatInputField, MatInputProps } from '@ng-forge/dynamic-forms-material';
+import { DOLLAR_AMOUNT_PRECISION, transformNumberFunction, type TransformNumberFunctionConfig, type TransformNumberFunctionConfigRef } from '@dereekb/util';
+import { dbxForgeBuildFieldDef, type DbxForgeFieldFunction, dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef } from '../../field';
+import { configureForgeAutocompleteFieldMeta } from '../../field.util.meta';
+import { type FieldAutocompleteAttributeOptionRef } from '../../../../field/field.autocomplete';
 
 // MARK: Number Field
 /**
@@ -29,22 +29,22 @@ export interface DbxForgeNumberFieldNumberConfig {
 }
 
 /**
+ * We use this for DbxForgeNumberFieldConfig since MatInputField is a union type for both string and number input.
+ */
+type DbxForgeNumberFieldDef = BaseValueField<Omit<MatInputProps, 'type'> & { type?: 'number' }, number> & { type: 'input' };
+
+/**
  * Full configuration for a numeric input field in forge.
  *
  * Combines labeling, numeric constraints (min/max/step), and number transformation.
  */
-export interface DbxForgeNumberFieldConfig extends DbxForgeNumberFieldNumberConfig, Partial<TransformNumberFunctionConfigRef> {
-  readonly key: string;
-  readonly label?: string;
-  readonly placeholder?: string;
-  readonly required?: boolean;
-  readonly readonly?: boolean;
-  readonly description?: string;
-  readonly defaultValue?: number;
+export interface DbxForgeNumberFieldConfig extends DbxForgeFieldFunctionDef<DbxForgeNumberFieldDef>, FieldAutocompleteAttributeOptionRef, DbxForgeNumberFieldNumberConfig, Partial<TransformNumberFunctionConfigRef> {
   /**
-   * Sets the autocomplete attribute on the input. Pass `false` to disable browser autofill.
+   * An idempotent number transformation applied as a value parser (e.g., rounding, precision, bounds).
+   *
+   * For non-idempotent transformations, you should directly configure the `transform` property instead.
    */
-  readonly autocomplete?: DbxForgeFieldAutocompleteConfig;
+  readonly idempotentTransform?: TransformNumberFunctionConfig;
 }
 
 /**
@@ -58,138 +58,54 @@ export interface DbxForgeNumberFieldConfig extends DbxForgeNumberFieldNumberConf
  *
  * @example
  * ```typescript
- * const field = forgeNumberField({ key: 'quantity', label: 'Quantity', min: 1, max: 100, step: 1 });
+ * const field = dbxForgeNumberField({ key: 'quantity', label: 'Quantity', min: 1, max: 100, step: 1 });
  * ```
  */
-export function forgeNumberField(config: DbxForgeNumberFieldConfig): MatInputField {
-  const { key, label, placeholder, required, readonly: isReadonly, description, min, max, step, enforceStep, defaultValue, autocomplete } = config;
+export const dbxForgeNumberField = dbxForgeFieldFunction<DbxForgeNumberFieldConfig>({
+  type: 'input' as const,
+  buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder(() => {
+    return {
+      type: 'number' as const // set props type to number always
+    };
+  }),
+  buildFieldDef: dbxForgeBuildFieldDef<DbxForgeNumberFieldConfig, number>((x, config) => {
+    const { step, enforceStep, idempotentTransform: idempotentTransformConfig } = config;
 
-  const props: Partial<MatInputProps> = filterFromPOJO({
-    type: 'number' as const,
-    hint: description,
-    placeholder,
-    min,
-    max,
-    step
-  });
+    if (idempotentTransformConfig) {
+      x.addLogic([
+        {
+          type: 'transform',
+          transformType: 'idempotent',
+          transform: transformNumberFunction(idempotentTransformConfig)
+        }
+      ]);
+    }
 
-  const validationMessages: ValidationMessages = forgeDefaultValidationMessages();
-  let validators: CustomValidatorConfig[] | undefined;
+    // configure autocomplete
+    x.configure(configureForgeAutocompleteFieldMeta);
 
-  // Apply the HTML step attribute to the <input> element via meta, merged with autocomplete
-  const stepMeta: FieldMeta | undefined = step != null ? { step } : undefined;
-  const meta = mergeForgeFieldMeta(stepMeta, autocomplete);
+    // Apply the HTML step attribute to the <input> element via meta, merged with autocomplete
+    if (step != null) {
+      x.addMeta({ step });
+    }
 
-  // Add a divisibility validator when enforceStep is enabled
-  if (step && enforceStep) {
-    validators = [
-      {
-        type: 'custom',
-        expression: `fieldValue == null || fieldValue % ${step} === 0`,
-        kind: FORGE_IS_DIVISIBLE_BY_VALIDATION_KEY
-      }
-    ];
-    validationMessages[FORGE_IS_DIVISIBLE_BY_VALIDATION_KEY] = `Number must be divisible by ${step}.`;
-  }
-
-  return forgeField(
-    filterFromPOJO({
-      key,
-      type: 'input' as const,
-      label: label ?? '',
-      placeholder,
-      value: defaultValue,
-      required,
-      readonly: isReadonly,
-      min,
-      max,
-      validators,
-      validationMessages,
-      meta,
-      props: Object.keys(props).length > 0 ? props : undefined
-    }) as MatInputField
-  );
-}
-
-// MARK: Number Slider Field
-/**
- * Configuration for a forge Material slider field.
- */
-export interface DbxForgeNumberSliderFieldConfig extends DbxForgeNumberFieldConfig {
-  /**
-   * Max value. Required for the slider.
-   */
-  readonly max: number;
-  /**
-   * Whether or not to show the thumb label while sliding.
-   *
-   * Defaults to true.
-   */
-  readonly thumbLabel?: boolean;
-  /**
-   * Tick interval. If not provided defaults to the step value, if provided.
-   * If false, the ticks are disabled.
-   */
-  readonly tickInterval?: false | number;
-}
-
-/**
- * Creates a forge field definition for a Material slider wrapped in a form-field wrapper.
- *
- * The wrapper provides the Material outlined form-field appearance (notched outline with
- * floating label, hint/error subscript). The inner slider uses the ng-forge built-in
- * `slider` type. The wrapper key uses `_` prefix so `stripForgeInternalKeys` flattens
- * the child slider's value into the parent form.
- *
- * @param config - Slider field configuration including max (required), thumb label, and tick interval
- * @returns A {@link DbxForgeFormFieldWrapperFieldDef} wrapping a slider field
- *
- * @example
- * ```typescript
- * const field = forgeNumberSliderField({ key: 'rating', label: 'Rating', min: 0, max: 10, step: 1 });
- * ```
- */
-export function forgeNumberSliderField(config: DbxForgeNumberSliderFieldConfig): DbxForgeFormFieldWrapperFieldDef<MatSliderField> {
-  const { key, label, required, readonly: isReadonly, description, min, max, step, defaultValue, thumbLabel: inputThumbLabel, tickInterval: inputTickInterval } = config;
-
-  let tickIntervalFromSteps: number | undefined;
-
-  if (step) {
-    tickIntervalFromSteps = 1;
-  }
-
-  const tickInterval: number | undefined = inputTickInterval === false ? undefined : (inputTickInterval ?? tickIntervalFromSteps ?? undefined);
-
-  // Create the inner slider using ng-forge built-in 'slider' type.
-  // Label and hint are omitted here — the wrapper provides those.
-  const sliderProps: Partial<MatSliderProps> = filterFromPOJO({
-    min,
-    max,
-    step,
-    thumbLabel: inputThumbLabel ?? true,
-    tickInterval
-  });
-
-  const sliderField: MatSliderField = forgeField(
-    filterFromPOJO({
-      key,
-      type: 'slider' as const,
-      label: '',
-      value: defaultValue,
-      required,
-      readonly: isReadonly,
-      min,
-      max,
-      props: Object.keys(sliderProps).length > 0 ? sliderProps : undefined
-    }) as MatSliderField
-  );
-
-  return forgeFormFieldWrapper<MatSliderField>({
-    label: label ?? '',
-    hint: description,
-    fields: [sliderField as unknown as FieldDef<unknown>]
-  });
-}
+    // Add a divisibility validator when enforceStep is enabled
+    if (step && enforceStep) {
+      x.addValidation({
+        validators: [
+          {
+            type: 'custom',
+            expression: `fieldValue == null || fieldValue % ${step} === 0`,
+            kind: FORGE_IS_DIVISIBLE_BY_VALIDATION_KEY
+          }
+        ],
+        validationMessages: {
+          [FORGE_IS_DIVISIBLE_BY_VALIDATION_KEY]: `Number must be divisible by ${step}.`
+        }
+      });
+    }
+  })
+}) as DbxForgeFieldFunction<DbxForgeNumberFieldConfig, MatInputField>;
 
 // MARK: Dollar Amount Field
 /**
@@ -205,11 +121,11 @@ export type DbxForgeDollarAmountFieldConfig = Omit<DbxForgeNumberFieldConfig, 'r
  *
  * @example
  * ```typescript
- * const field = forgeDollarAmountField({ key: 'price', label: 'Price', min: 0, required: true });
+ * const field = dbxForgeDollarAmountField({ key: 'price', label: 'Price', min: 0, required: true });
  * ```
  */
-export function forgeDollarAmountField(config: DbxForgeDollarAmountFieldConfig): MatInputField {
-  return forgeNumberField({
+export function dbxForgeDollarAmountField(config: DbxForgeDollarAmountFieldConfig) {
+  return dbxForgeNumberField({
     ...config,
     transform: {
       ...config.transform,

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input, type OnDestroy, type OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, input, type OnDestroy, type OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { Editor, NgxEditorModule } from '@bobbyquantum/ngx-editor';
 import { debounceTime } from 'rxjs';
@@ -9,7 +9,8 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { NgClass } from '@angular/common';
 import { type FieldTree } from '@angular/forms/signals';
 import { type DynamicText, type FieldMeta, type ValidationMessages, type BaseValueField } from '@ng-forge/dynamic-forms';
-import { forgeFieldDisabled } from '../field.disabled';
+import { createResolvedErrorsSignal, setupMetaTracking, shouldShowErrors } from '@ng-forge/dynamic-forms/integration';
+import { dbxForgeFieldDisabled } from '../field.util';
 import { toggleDisableFormControl } from '../../../form/form';
 
 // MARK: Forge Text Editor Field Props
@@ -61,6 +62,7 @@ export interface DbxForgeTextEditorFieldDef extends BaseValueField<DbxForgeTextE
 })
 export class DbxForgeTextEditorFieldComponent implements OnInit, OnDestroy {
   private readonly _compactContextStore = inject(CompactContextStore, { optional: true });
+  private readonly elementRef = inject(ElementRef<HTMLElement>);
 
   // ng-forge ValueFieldComponent inputs
   readonly field = input.required<FieldTree<string>>();
@@ -81,7 +83,7 @@ export class DbxForgeTextEditorFieldComponent implements OnInit, OnDestroy {
   readonly editorFormControl = new FormControl<string>('', { nonNullable: true });
 
   // Disabled state
-  readonly isDisabled = forgeFieldDisabled();
+  readonly isDisabled = dbxForgeFieldDisabled();
 
   readonly compactClass$ = mapCompactModeObs(this._compactContextStore?.mode$, {
     compact: 'dbx-texteditor-field-compact'
@@ -100,6 +102,25 @@ export class DbxForgeTextEditorFieldComponent implements OnInit, OnDestroy {
   });
 
   readonly descriptionSignal = computed(() => this.props()?.hint);
+
+  // Error handling
+  readonly resolvedErrors = createResolvedErrorsSignal(this.field as any, this.validationMessages, this.defaultValidationMessages);
+  readonly showErrors = shouldShowErrors(this.field as any);
+  readonly errorsToDisplay = computed(() => (this.showErrors() ? this.resolvedErrors() : []));
+
+  // ARIA
+  protected readonly hintId = computed(() => `${this.key()}-hint`);
+  protected readonly errorId = computed(() => `${this.key()}-error`);
+  protected readonly ariaInvalid = computed(() => (this.showErrors() ? 'true' : null));
+  protected readonly ariaDescribedBy = computed(() => {
+    if (this.errorsToDisplay().length > 0) return this.errorId();
+    if (this.props()?.hint) return this.hintId();
+    return null;
+  });
+
+  constructor() {
+    setupMetaTracking(this.elementRef, this.meta as any, { selector: 'ngx-editor' });
+  }
 
   get editor(): Editor {
     return this._editor;

@@ -1,9 +1,7 @@
 @use './selection/selection';
 @use './wrapper/wrapper';
-@use '../style/shared';
 
 @mixin all-field-core() {
-  @include shared.core();
   @include selection.all-selection-core();
   @include wrapper.core();
 }

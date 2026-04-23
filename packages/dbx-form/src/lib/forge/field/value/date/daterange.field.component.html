@@ -1,7 +1,7 @@
 <div class="dbx-forge-daterange-field">
   <mat-form-field [appearance]="effectiveAppearance()" subscriptSizing="dynamic" class="dbx-forge-daterange-start">
     <mat-label>{{ startLabelSignal() }}</mat-label>
-    <input matInput [matDatepicker]="startPicker" [formControl]="startDateCtrl" [min]="minDateSignal()" [max]="maxDateSignal()" />
+    <input matInput [matDatepicker]="startPicker" [formControl]="startDateCtrl" [min]="minDateSignal()" [max]="maxDateSignal()" [attr.aria-invalid]="ariaInvalid()" [attr.aria-required]="ariaRequired()" [attr.aria-describedby]="ariaDescribedBy()" />
     <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
     <mat-datepicker #startPicker></mat-datepicker>
   </mat-form-field>
@@ -24,8 +24,8 @@
     </mat-form-field>
   }
   @if (errorsToDisplay()[0]; as error) {
-    <mat-error>{{ error.message }}</mat-error>
+    <mat-error [id]="errorId()">{{ error.message }}</mat-error>
   } @else if (props()?.hint; as hint) {
-    <mat-hint>{{ hint | dynamicText | async }}</mat-hint>
+    <mat-hint [id]="hintId()">{{ hint | dynamicText | async }}</mat-hint>
   }
 </div>

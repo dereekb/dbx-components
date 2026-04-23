@@ -3,7 +3,7 @@
     <mat-label>{{ label() | dynamicText | async }}</mat-label>
   }
   <div class="dbx-form-phone-field">
-    <ngx-mat-input-tel name="phone" class="dbx-form-phone-field-phone-content" [formControl]="phoneCtrl" [autocomplete]="effectiveAutocomplete()" [enableSearch]="enableSearch()" [preferredCountries]="preferredCountries()" [onlyCountries]="onlyCountries()" [enablePlaceholder]="false" [placeholder]="(placeholder() | dynamicText | async) ?? ''"></ngx-mat-input-tel>
+    <ngx-mat-input-tel name="phone" class="dbx-form-phone-field-phone-content" [formControl]="phoneCtrl" [autocomplete]="effectiveAutocomplete()" [enableSearch]="enableSearch()" [preferredCountries]="preferredCountries()" [onlyCountries]="onlyCountries()" [enablePlaceholder]="false" [placeholder]="(placeholder() | dynamicText | async) ?? ''" [attr.aria-invalid]="ariaInvalid()" [attr.aria-required]="ariaRequired()" [attr.aria-describedby]="ariaDescribedBy()"></ngx-mat-input-tel>
     @if (allowExtension()) {
       <div class="dbx-form-phone-field-extension-content">
         <span class="dbx-hint dbx-button-spacer">Ext.</span>
@@ -12,8 +12,8 @@
     }
   </div>
   @if (errorsToDisplay()[0]; as error) {
-    <mat-error>{{ error.message }}</mat-error>
+    <mat-error [id]="errorId()">{{ error.message }}</mat-error>
   } @else if (props()?.hint; as hint) {
-    <mat-hint>{{ hint | dynamicText | async }}</mat-hint>
+    <mat-hint [id]="hintId()">{{ hint | dynamicText | async }}</mat-hint>
   }
 </mat-form-field>

@@ -1,249 +1,107 @@
-import type { FieldTypeDefinition, BaseValueField, ArrayAllowedChildren, FieldDef } from '@ng-forge/dynamic-forms';
-import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
-import { filterFromPOJO, type FactoryWithRequiredInput } from '@dereekb/util';
-import { type DbxButtonStyle } from '@dereekb/dbx-web';
-import { forgeField } from '../../field';
-
-// MARK: Types
-/**
- * Any field type accepted as a drag array template item.
- * Includes both ng-forge built-in fields and custom FieldDef types.
- */
-
-export type DbxForgeArrayTemplateField = ArrayAllowedChildren | FieldDef<any>;
-
-// MARK: Field Type
-export const FORGE_ARRAY_FIELD_TYPE_NAME = 'dbx-forge-array' as const;
-
-/**
- * Pair representing an array item with its index and optional value.
- */
-export interface DbxForgeArrayItemPair<T = unknown> {
-  readonly index: number;
-  readonly value?: T;
-}
-
-/**
- * Props interface for the forge drag array field.
- */
-export interface DbxForgeArrayFieldProps<T = unknown> {
-  /**
-   * Template defining the structure of a single array item.
-   */
-  readonly template: DbxForgeArrayTemplateField | readonly DbxForgeArrayTemplateField[];
-  /**
-   * Label for each array item. Can be a static string or a function.
-   */
-  readonly labelForField?: string | FactoryWithRequiredInput<string, DbxForgeArrayItemPair<T>>;
-  /**
-   * Text for the add button. Defaults to 'Add'.
-   */
-  readonly addText?: string;
-  /**
-   * Text for the remove button. Defaults to 'Remove'.
-   */
-  readonly removeText?: string;
-  /**
-   * Text for the duplicate button.
-   */
-  readonly duplicateText?: string;
-  /**
-   * Whether the add button is shown. Defaults to true.
-   */
-  readonly allowAdd?: boolean;
-  /**
-   * Whether items can be removed. Defaults to true.
-   */
-  readonly allowRemove?: boolean;
-  /**
-   * Whether items can be duplicated. Defaults to false.
-   */
-  readonly allowDuplicate?: boolean;
-  /**
-   * Whether drag/drop reordering is disabled. Defaults to false.
-   */
-  readonly disableRearrange?: boolean;
-  /**
-   * Whether duplicated items go to the end. Defaults to false.
-   */
-  readonly addDuplicateToEnd?: boolean;
-  /**
-   * Maximum number of items. No limit when undefined.
-   */
-  readonly maxLength?: number;
-  /**
-   * Minimum number of items. No minimum when undefined.
-   */
-  readonly minLength?: number;
-  /**
-   * Style configuration for the add button. Defaults to raised primary.
-   */
-  readonly addButtonStyle?: DbxButtonStyle;
-  /**
-   * Style configuration for the remove button. Defaults to stroked warn.
-   */
-  readonly removeButtonStyle?: DbxButtonStyle;
-  /**
-   * Style configuration for the duplicate button. Defaults to stroked primary.
-   */
-  readonly duplicateButtonStyle?: DbxButtonStyle;
-}
-
-/**
- * Forge field definition for a drag-and-drop array.
- */
-export interface DbxForgeArrayFieldDef<T = unknown> extends BaseValueField<DbxForgeArrayFieldProps<T>, unknown[]> {
-  readonly type: typeof FORGE_ARRAY_FIELD_TYPE_NAME;
-}
-
-/**
- * ng-forge FieldTypeDefinition for the drag array field.
- */
-export const DBX_FORGE_ARRAY_FIELD_TYPE: FieldTypeDefinition<DbxForgeArrayFieldDef> = {
-  name: FORGE_ARRAY_FIELD_TYPE_NAME,
-  loadComponent: () => import('./array.field.component').then((m) => m.DbxForgeArrayFieldComponent),
-  mapper: valueFieldMapper
-};
+import type { ArrayField, ContainerField, SimplifiedArrayField } from '@ng-forge/dynamic-forms';
+import { dbxForgeBuildFieldDef, dbxForgeFieldFunction, type DbxForgeFieldFunctionDef } from '../../field';
+import type { DbxForgeField } from '../../../form/forge.form';
+import { DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME, type DbxForgeArrayFieldWrapperProps } from '../../wrapper/array-field/array-field.wrapper';
+import { DBX_FORGE_ARRAY_FIELD_ELEMENT_WRAPPER_NAME, type DbxForgeArrayFieldElementWrapperProps } from '../../wrapper/array-field/array-field.element.wrapper';
+import { type Configurable } from '@dereekb/util';
 
 // MARK: Config
 /**
- * Configuration for creating a forge drag array field.
+ * Configuration for creating a forge array field.
+ *
+ * The outer array wrapper provides label/hint header chrome.
+ * Each template item is wrapped in a ContainerField with the element wrapper
+ * to provide per-item drag handle, label, and remove button.
  */
-export interface DbxForgeArrayFieldConfig<T = unknown> {
+export interface DbxForgeArrayFieldConfig extends DbxForgeFieldFunctionDef<Omit<ArrayField, 'props' | 'label' | 'fields'>> {
   /**
-   * Key for the array field.
-   */
-  readonly key: string;
-  /**
-   * Optional label for the array section.
-   */
-  readonly label?: string;
-  /**
-   * Optional description text.
-   */
-  readonly description?: string;
-  /**
-   * Template defining the structure of a single array item.
+   * Template defining the fields for each array item.
+   * Each item is wrapped in a ContainerField with the element wrapper
+   * for per-item drag handle, label, and remove button.
    *
-   * - Single field for primitive array items
-   * - Array of fields for object array items
+   * The array starts empty — items are added via the add button.
    */
-  readonly template: DbxForgeArrayTemplateField | readonly DbxForgeArrayTemplateField[];
-  /**
-   * Initial array values.
-   */
-  readonly value?: readonly unknown[];
-  /**
-   * Label for each item. Static string or function receiving index/value.
-   */
-  readonly labelForField?: string | FactoryWithRequiredInput<string, DbxForgeArrayItemPair<T>>;
-  /**
-   * Add button text. Defaults to 'Add'.
-   */
-  readonly addText?: string;
-  /**
-   * Remove button text. Defaults to 'Remove'.
-   */
-  readonly removeText?: string;
-  /**
-   * Duplicate button text.
-   */
-  readonly duplicateText?: string;
-  /**
-   * Whether the add button is shown. Defaults to true.
-   */
-  readonly allowAdd?: boolean;
-  /**
-   * Whether items can be removed. Defaults to true.
-   */
-  readonly allowRemove?: boolean;
-  /**
-   * Whether items can be duplicated. Defaults to false.
-   */
-  readonly allowDuplicate?: boolean;
-  /**
-   * Whether drag/drop reordering is disabled. Defaults to false.
-   */
-  readonly disableRearrange?: boolean;
-  /**
-   * Whether duplicated items go to the end. Defaults to false.
-   */
-  readonly addDuplicateToEnd?: boolean;
-  /**
-   * Maximum number of items.
-   */
-  readonly maxLength?: number;
-  /**
-   * Minimum number of items.
-   */
-  readonly minLength?: number;
-  /**
-   * Style configuration for the add button. Defaults to raised primary.
-   */
-  readonly addButtonStyle?: DbxButtonStyle;
-  /**
-   * Style configuration for the remove button. Defaults to stroked warn.
-   */
-  readonly removeButtonStyle?: DbxButtonStyle;
-  /**
-   * Style configuration for the duplicate button. Defaults to stroked primary.
-   */
-  readonly duplicateButtonStyle?: DbxButtonStyle;
+  readonly template: ContainerField['fields'];
+  readonly props?: Omit<DbxForgeArrayFieldWrapperProps, 'itemTemplate'>;
+  readonly elementProps?: DbxForgeArrayFieldElementWrapperProps;
 }
 
+export type DbxForgeArrayFieldFunction = (config: DbxForgeArrayFieldConfig) => DbxForgeField<ArrayField>;
+
+// MARK: Internal
 /**
- * Creates a forge drag-and-drop array field with CDK drag/drop reordering,
- * add/remove/duplicate controls, and per-item labeling.
+ * Creates a forge array field with add/remove controls and per-item rendering.
  *
- * Each array item renders as a nested mini dynamic form using the provided template.
- * Items can be reordered via drag/drop handles, added, removed, and duplicated.
+ * Wraps the array with {@link DbxForgeArrayFieldWrapperComponent} for label/hint,
+ * and wraps each template item in a ContainerField with
+ * {@link DbxForgeArrayFieldElementWrapperComponent} for per-item drag handle,
+ * label, and remove button.
  *
- * This is the forge equivalent of the formly `formlyRepeatArrayField` with
- * `DbxFormRepeatArrayTypeComponent`.
- *
- * @param config - Drag array field configuration
- * @returns A {@link DbxForgeArrayFieldDef}
+ * @param config - Array field configuration
+ * @returns A {@link DbxForgeField}
  *
  * @example
  * ```typescript
- * const field = forgeArrayField({
+ * const field = dbxForgeArrayField({
  *   key: 'phones',
  *   label: 'Phone Numbers',
  *   addText: 'Add Phone',
  *   template: [
- *     forgeTextField({ key: 'number', label: 'Number' }),
- *     forgeTextField({ key: 'label', label: 'Label' })
+ *     dbxForgeTextField({ key: 'number', label: 'Number' }),
+ *     dbxForgeTextField({ key: 'label', label: 'Label' })
  *   ]
  * });
  * ```
  */
-export function forgeArrayField<T = unknown>(config: DbxForgeArrayFieldConfig<T>): DbxForgeArrayFieldDef<T> {
-  const { key, label, description, template, value, labelForField, addText, removeText, duplicateText, allowAdd, allowRemove, allowDuplicate, disableRearrange, addDuplicateToEnd, maxLength, minLength, addButtonStyle, removeButtonStyle, duplicateButtonStyle } = config;
+export const dbxForgeArrayField = dbxForgeFieldFunction<DbxForgeArrayFieldConfig>({
+  type: 'array',
+  buildFieldDef: dbxForgeBuildFieldDef((x, config) => {
+    const { props, elementProps, template } = config;
 
-  return forgeField(
-    filterFromPOJO({
-      key,
-      type: FORGE_ARRAY_FIELD_TYPE_NAME,
-      label: label ?? '',
-      ...(description != null && { description }),
-      value: value ?? ([] as unknown[]),
-      props: filterFromPOJO({
-        template,
-        labelForField,
-        addText,
-        removeText,
-        duplicateText,
-        allowAdd,
-        allowRemove,
-        allowDuplicate,
-        disableRearrange,
-        addDuplicateToEnd,
-        maxLength,
-        minLength,
-        addButtonStyle,
-        removeButtonStyle,
-        duplicateButtonStyle
-      }) as DbxForgeArrayFieldProps<T>
-    }) as DbxForgeArrayFieldDef<T>
-  );
-}
+    // Flow per-element defaults from outer wrapper props; elementProps overrides
+    const resolvedElementProps = {
+      removeText: props?.removeText,
+      allowRemove: props?.allowRemove,
+      disableRearrange: props?.disableRearrange,
+      removeButtonStyle: props?.removeButtonStyle,
+      ...elementProps
+    };
+
+    // Build the container field that wraps each array item with the element wrapper.
+    // The key is required by FieldDef but does not affect the value shape for containers.
+    const containerFieldItemTemplate: ContainerField = {
+      key: `${config.key}-container`,
+      type: 'container',
+      fields: template ?? [],
+      wrappers: [
+        {
+          type: DBX_FORGE_ARRAY_FIELD_ELEMENT_WRAPPER_NAME,
+          props: resolvedElementProps
+        }
+      ]
+    };
+
+    const itemTemplate = [containerFieldItemTemplate];
+
+    // Add the outer array wrapper for label/hint chrome + cdkDropList + state service.
+    // Passes the containerField as itemTemplate so the add button can create new items.
+    // Flows minLength/maxLength from the array FieldDef into the wrapper props so
+    // the wrapper can enforce them on the add button. Wrapper-level props win when set.
+    x.addWrappers({
+      type: DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME,
+      props: {
+        minLength: config.minLength,
+        maxLength: config.maxLength,
+        ...props,
+        itemTemplate
+      }
+    });
+
+    (config as Configurable<SimplifiedArrayField>).addButton = false;
+    (config as Configurable<SimplifiedArrayField>).removeButton = false;
+
+    (config as any).template = itemTemplate;
+
+    delete (config as any).props; // clear props
+  })
+}) as DbxForgeArrayFieldFunction;

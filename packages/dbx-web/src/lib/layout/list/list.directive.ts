@@ -12,7 +12,7 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
  * Default HTML template for list wrapper components. Passes through state, config, and content projection slots to a child `dbx-list`.
  */
 export const DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE = `
-  <dbx-list [state]="currentState$" [config]="configSignal()" [hasMore]="hasMore()" [disabled]="disabled()" [selectionMode]="selectionModeSignal()">
+  <dbx-list [state]="currentState$" [config]="configSignal()" [hasMore]="hasMore()" [disabled]="disabledSignal()" [selectionMode]="selectionModeSignal()">
     <ng-content top select="[top]"></ng-content>
     <ng-content bottom select="[bottom]"></ng-content>
     <ng-content empty select="[empty]"></ng-content>
@@ -45,8 +45,10 @@ export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T
   private readonly _config = new BehaviorSubject<MaybeObservableOrValue<C>>(undefined);
   private readonly _stateOverride = new BehaviorSubject<MaybeObservableOrValue<S>>(undefined);
   private readonly _selectionModeOverride = new BehaviorSubject<MaybeObservableOrValue<DbxListSelectionMode>>(undefined);
+  private readonly _disabledOverride = new BehaviorSubject<MaybeObservableOrValue<boolean>>(undefined);
 
   private readonly _selectionModeOverrideSignal = toSignal(this._selectionModeOverride.pipe(maybeValueFromObservableOrValue()));
+  private readonly _disabledOverrideSignal = toSignal(this._disabledOverride.pipe(maybeValueFromObservableOrValue()));
 
   readonly hasMore = input<Maybe<boolean>>(undefined);
 
@@ -59,6 +61,10 @@ export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T
 
   readonly selectionModeSignal: Signal<Maybe<DbxListSelectionMode>> = computed(() => {
     return this._selectionModeOverrideSignal() ?? this.selectionMode();
+  });
+
+  readonly disabledSignal: Signal<Maybe<boolean>> = computed(() => {
+    return this._disabledOverrideSignal() ?? this.disabled();
   });
 
   readonly currentState$ = combineLatest([this._stateOverride, toObservable(this.state)]).pipe(
@@ -84,6 +90,7 @@ export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T
     this._config.complete();
     this._stateOverride.complete();
     this._selectionModeOverride.complete();
+    this._disabledOverride.complete();
   }
 
   setState(stateObs: MaybeObservableOrValue<S>): void {
@@ -92,6 +99,10 @@ export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T
 
   setSelectionMode(selectionMode: MaybeObservableOrValue<DbxListSelectionMode>): void {
     this._selectionModeOverride.next(selectionMode);
+  }
+
+  setDisabled(disabled: MaybeObservableOrValue<boolean>): void {
+    this._disabledOverride.next(disabled);
   }
 
   protected _buildListConfig(config: C): DbxListConfig<T, V> {

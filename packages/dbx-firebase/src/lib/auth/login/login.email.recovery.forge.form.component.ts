@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { AbstractSyncForgeFormDirective, DBX_FORGE_FORM_COMPONENT_TEMPLATE, dbxForgeFormComponentProviders, DbxForgeFormComponentImportsModule, forgeEmailField } from '@dereekb/dbx-form';
+import { AbstractSyncForgeFormDirective, DBX_FORGE_FORM_COMPONENT_TEMPLATE, dbxForgeFormComponentProviders, DbxForgeFormComponentImportsModule, dbxForgeEmailField } from '@dereekb/dbx-form';
 import type { FormConfig } from '@ng-forge/dynamic-forms';
 
 /**
@@ -21,5 +21,5 @@ export interface DbxFirebaseEmailRecoveryFormValue {
   standalone: true
 })
 export class DbxFirebaseEmailRecoveryForgeFormComponent extends AbstractSyncForgeFormDirective<DbxFirebaseEmailRecoveryFormValue> {
-  readonly config: FormConfig = { fields: [forgeEmailField({ key: 'email', required: true })] };
+  readonly formConfig: FormConfig = { fields: [dbxForgeEmailField({ key: 'email', required: true })] };
 }

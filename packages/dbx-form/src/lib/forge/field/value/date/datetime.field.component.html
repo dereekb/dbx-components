@@ -16,7 +16,7 @@
       <div class="dbx-forge-datetime-col" [class.dbx-forge-datetime-col-full]="isDateOnly()">
         <mat-form-field [appearance]="appearance()" subscriptSizing="dynamic" class="dbx-forge-datetime-col-field">
           <mat-label>{{ dateLabel() }}</mat-label>
-          <input matInput [disabled]="isDisabledSignal()" [required]="isDateRequired()" [min]="dateInputMinSignal()" [max]="dateInputMaxSignal()" [matDatepicker]="picker" [matDatepickerFilter]="pickerFilterSignal()" (dateChange)="onDatePicked($event)" [value]="dateValueSignal()" (keydown)="onDateKeydown($event)" />
+          <input matInput [disabled]="isDisabledSignal()" [required]="isDateRequired()" [min]="dateInputMinSignal()" [max]="dateInputMaxSignal()" [matDatepicker]="picker" [matDatepickerFilter]="pickerFilterSignal()" (dateChange)="onDatePicked($event)" [value]="dateValueSignal()" (click)="onDateInputClick(picker)" (keydown)="onDateKeydown($event)" [attr.aria-invalid]="ariaInvalid()" [attr.aria-required]="ariaRequired()" [attr.aria-describedby]="ariaDescribedBy()" />
           @if (!hideDatePicker()) {
             <button matPrefix mat-icon-button (click)="picker.open()" [disabled]="isDisabledSignal()" aria-label="Open date picker">
               <mat-icon aria-hidden="true">calendar_today</mat-icon>
@@ -55,7 +55,7 @@
           <mat-form-field [appearance]="appearance()" subscriptSizing="dynamic" class="dbx-forge-datetime-col-field">
             <mat-label>{{ timeLabel() }}</mat-label>
             <input matInput [errorStateMatcher]="timeErrorStateMatcher" [required]="isTimeRequired()" [formControl]="timeCtrl" (focus)="onTimeFocus()" (focusout)="onTimeBlur()" (keydown)="onTimeKeydown($event)" />
-            <button matPrefix mat-icon-button [matMenuTriggerFor]="timemenu" aria-label="Open time presets" [disabled]="isDisabledSignal()">
+            <button matPrefix mat-icon-button [matMenuTriggerFor]="timemenu" aria-label="Open time presets" [disabled]="isTimeMenuDisabledSignal()">
               <mat-icon aria-hidden="true">timer</mat-icon>
             </button>
             <span matTextSuffix>
@@ -81,10 +81,10 @@
   <!-- Date Hint / Error -->
   @if (hasErrorSignal()) {
     @if (currentErrorMessageSignal()) {
-      <mat-error class="dbx-forge-datetime-error">{{ currentErrorMessageSignal() }}</mat-error>
+      <mat-error class="dbx-forge-datetime-error" [id]="errorId()">{{ currentErrorMessageSignal() }}</mat-error>
     }
   } @else if (!hideDateHint()) {
-    <div class="dbx-forge-datetime-hint">
+    <div class="dbx-forge-datetime-hint" [id]="hintId()">
       @if (!hasValueSignal()) {
         <span class="dbx-small dbx-hint">No date/time set</span>
       } @else if (displayValueSignal(); as dv) {

@@ -21,6 +21,11 @@ export type CachedGetter<T> = Getter<T> & {
    * Re-initializes the getter and reloads the value from the source.
    */
   init(): void;
+
+  /**
+   * Returns true if the cache has been used since being reset.
+   */
+  used(): boolean;
 };
 
 /**
@@ -67,6 +72,7 @@ export function cachedGetter<T, A = unknown>(factory: FactoryWithInput<T, A>): C
   result.set = (value: T) => (loaded = { value });
   result.reset = () => (loaded = undefined);
   result.init = init;
+  result.used = () => Boolean(loaded);
 
   return result;
 }

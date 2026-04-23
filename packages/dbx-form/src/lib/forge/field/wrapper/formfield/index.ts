@@ -1,1 +1,2 @@
-export * from './formfield.field';
+export * from './formfield.wrapper';
+export * from './formfield.wrapper.component';

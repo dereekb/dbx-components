@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, type OnDestroy, computed, effect, inject, input, type InputSignal, type Signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, type OnDestroy, computed, effect, ElementRef, inject, input, type InputSignal, type Signal } from '@angular/core';
 import { type ArrayOrValue, type TimezoneString, type Maybe } from '@dereekb/util';
 import { type Subscription, distinctUntilChanged, skip } from 'rxjs';
 import { type ObservableOrValue, SubscriptionObject, asObservable } from '@dereekb/rxjs';
@@ -12,7 +12,7 @@ import { DbxScheduleSelectionCalendarDateDialogButtonComponent } from '../../cal
 import { DbxScheduleSelectionCalendarDateRangeComponent } from '../../calendar.schedule.selection.range.component';
 import type { FieldTree } from '@angular/forms/signals';
 import { type DynamicText, type FieldMeta, type ValidationMessages, DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES } from '@ng-forge/dynamic-forms';
-import { resolveValueFieldContext, buildValueFieldInputs } from '@ng-forge/dynamic-forms/integration';
+import { resolveValueFieldContext, buildValueFieldInputs, setupMetaTracking } from '@ng-forge/dynamic-forms/integration';
 import { CompactContextStore } from '@dereekb/dbx-web';
 
 /**
@@ -60,6 +60,7 @@ export interface DbxForgeCalendarDateScheduleRangeFieldComponentProps extends Pi
 export class DbxForgeCalendarDateScheduleRangeFieldComponent implements OnDestroy {
   readonly compact = inject(CompactContextStore, { optional: true });
   readonly dbxCalendarScheduleSelectionStore = inject(DbxCalendarScheduleSelectionStore);
+  private readonly elementRef = inject(ElementRef<HTMLElement>);
 
   // Standard ng-forge value field inputs
   readonly field: InputSignal<FieldTree<unknown>> = input.required<FieldTree<unknown>>();
@@ -127,6 +128,8 @@ export class DbxForgeCalendarDateScheduleRangeFieldComponent implements OnDestro
   }
 
   constructor() {
+    setupMetaTracking(this.elementRef, this.meta as any, { selector: 'dbx-schedule-selection-calendar-date-range' });
+
     // Convert field value to observable for store sync
     const fieldValue$ = toObservable(this.fieldValue);
 

@@ -1,8 +1,7 @@
-import type { MatInputField } from '@ng-forge/dynamic-forms-material';
 import { LAT_LNG_PATTERN, US_STATE_CODE_STRING_REGEX, ZIP_CODE_STRING_REGEX } from '@dereekb/util';
 import { ADDRESS_CITY_MAX_LENGTH, ADDRESS_STATE_CODE_MAX_LENGTH, ADDRESS_STATE_MAX_LENGTH, ADDRESS_COUNTRY_MAX_LENGTH, ADDRESS_ZIP_MAX_LENGTH } from '@dereekb/model';
-import { type DbxForgeTextFieldConfig, forgeTextField } from './text.field';
-import type { DbxForgeFieldAutocompleteConfig } from '../../field';
+import { type DbxForgeTextFieldConfig, dbxForgeTextField } from './text.field';
+import type { FieldAutocompleteAttributeOption } from '../../../../field/field.autocomplete';
 
 // MARK: Name Field
 /**
@@ -13,13 +12,13 @@ import type { DbxForgeFieldAutocompleteConfig } from '../../field';
  *
  * @example
  * ```typescript
- * const field = forgeNameField({ required: true });
+ * const field = dbxForgeNameField({ required: true });
  * ```
  */
-export function forgeNameField(config: Partial<DbxForgeTextFieldConfig> = {}): MatInputField {
+export function dbxForgeNameField(config: Partial<DbxForgeTextFieldConfig> = {}) {
   const { key = 'name', label = 'Name', placeholder = 'John Doe', required = false, minLength, maxLength } = config;
 
-  return forgeTextField({
+  return dbxForgeTextField({
     ...config,
     key,
     label,
@@ -44,7 +43,7 @@ export interface DbxForgeEmailFieldConfig {
   /**
    * Sets the autocomplete attribute on the input. Pass `false` to disable browser autofill.
    */
-  readonly autocomplete?: DbxForgeFieldAutocompleteConfig;
+  readonly autocomplete?: FieldAutocompleteAttributeOption;
 }
 
 /**
@@ -57,13 +56,13 @@ export interface DbxForgeEmailFieldConfig {
  *
  * @example
  * ```typescript
- * const field = forgeEmailField({ required: true });
+ * const field = dbxForgeEmailField({ required: true });
  * ```
  */
-export function forgeEmailField(config: DbxForgeEmailFieldConfig = {}): MatInputField {
+export function dbxForgeEmailField(config: DbxForgeEmailFieldConfig = {}) {
   const { key = 'email', label = 'Email Address', placeholder = 'you@example.com', required, readonly: isReadonly, description, autocomplete } = config;
 
-  return forgeTextField({
+  return dbxForgeTextField({
     key,
     label,
     placeholder,
@@ -89,13 +88,13 @@ export type DbxForgeCityFieldConfig = Partial<DbxForgeTextFieldConfig>;
  *
  * @example
  * ```typescript
- * const field = forgeCityField({ required: true });
+ * const field = dbxForgeCityField({ required: true });
  * ```
  */
-export function forgeCityField(config: DbxForgeCityFieldConfig = {}): MatInputField {
+export function dbxForgeCityField(config: DbxForgeCityFieldConfig = {}) {
   const { key = 'city', placeholder = '', label = 'City', maxLength = ADDRESS_CITY_MAX_LENGTH, required = false } = config;
 
-  return forgeTextField({
+  return dbxForgeTextField({
     ...config,
     key,
     placeholder,
@@ -126,13 +125,13 @@ export interface DbxForgeStateFieldConfig extends Partial<DbxForgeTextFieldConfi
  *
  * @example
  * ```typescript
- * const field = forgeStateField({ asCode: true, required: true });
+ * const field = dbxForgeStateField({ asCode: true, required: true });
  * ```
  */
-export function forgeStateField(config: DbxForgeStateFieldConfig = {}): MatInputField {
-  const { asCode = false, pattern = asCode ? US_STATE_CODE_STRING_REGEX : undefined, key = 'state', placeholder = '', label = 'State', maxLength = asCode ? ADDRESS_STATE_CODE_MAX_LENGTH : ADDRESS_STATE_MAX_LENGTH, transform, required = false } = config;
+export function dbxForgeStateField(config: DbxForgeStateFieldConfig = {}) {
+  const { asCode = false, pattern = asCode ? US_STATE_CODE_STRING_REGEX : undefined, key = 'state', placeholder = '', label = 'State', maxLength = asCode ? ADDRESS_STATE_CODE_MAX_LENGTH : ADDRESS_STATE_MAX_LENGTH, idempotentTransform: transform, required = false } = config;
 
-  return forgeTextField({
+  return dbxForgeTextField({
     ...config,
     key,
     placeholder,
@@ -140,7 +139,7 @@ export function forgeStateField(config: DbxForgeStateFieldConfig = {}): MatInput
     pattern,
     required,
     maxLength,
-    transform: {
+    idempotentTransform: {
       ...transform,
       toUppercase: asCode || transform?.toUppercase
     }
@@ -161,13 +160,13 @@ export type DbxForgeCountryFieldConfig = Partial<DbxForgeTextFieldConfig>;
  *
  * @example
  * ```typescript
- * const field = forgeCountryField({ required: true });
+ * const field = dbxForgeCountryField({ required: true });
  * ```
  */
-export function forgeCountryField(config: DbxForgeCountryFieldConfig = {}): MatInputField {
+export function dbxForgeCountryField(config: DbxForgeCountryFieldConfig = {}) {
   const { key = 'country', placeholder = '', label = 'Country', maxLength = ADDRESS_COUNTRY_MAX_LENGTH, required = false } = config;
 
-  return forgeTextField({
+  return dbxForgeTextField({
     ...config,
     key,
     placeholder,
@@ -191,13 +190,13 @@ export type DbxForgeZipCodeFieldConfig = Partial<DbxForgeTextFieldConfig>;
  *
  * @example
  * ```typescript
- * const field = forgeZipCodeField({ required: true });
+ * const field = dbxForgeZipCodeField({ required: true });
  * ```
  */
-export function forgeZipCodeField(config: DbxForgeZipCodeFieldConfig = {}): MatInputField {
+export function dbxForgeZipCodeField(config: DbxForgeZipCodeFieldConfig = {}) {
   const { key = 'zip', placeholder = '', label = 'Zip Code', pattern = ZIP_CODE_STRING_REGEX, maxLength = ADDRESS_ZIP_MAX_LENGTH, required = false } = config;
 
-  return forgeTextField({
+  return dbxForgeTextField({
     ...config,
     key,
     placeholder,
@@ -222,13 +221,13 @@ export const DEFAULT_FORGE_LAT_LNG_TEXT_FIELD_PLACEHOLDER = '12.345,-67.8910';
  *
  * @example
  * ```typescript
- * const field = forgeLatLngTextField();
+ * const field = dbxForgeLatLngTextField();
  * ```
  */
-export function forgeLatLngTextField(config: Partial<DbxForgeTextFieldConfig> = {}): MatInputField {
+export function dbxForgeLatLngTextField(config: Partial<DbxForgeTextFieldConfig> = {}) {
   const { key = 'latLng' } = config;
 
-  return forgeTextField({
+  return dbxForgeTextField({
     key,
     label: 'Coordinates',
     placeholder: DEFAULT_FORGE_LAT_LNG_TEXT_FIELD_PLACEHOLDER,

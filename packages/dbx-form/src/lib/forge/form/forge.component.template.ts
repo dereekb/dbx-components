@@ -5,7 +5,7 @@ import { DbxForgeFormComponent } from './forge.component';
 /**
  * Default template for a view that extends AbstractSyncForgeFormDirective or AbstractConfigAsyncForgeFormDirective.
  */
-export const DBX_FORGE_FORM_COMPONENT_TEMPLATE = `<dbx-forge></dbx-forge>`;
+export const DBX_FORGE_FORM_COMPONENT_TEMPLATE = `<dbx-forge></dbx-forge>` as const;
 
 /**
  * Default providers for a view that extends AbstractSyncForgeFormDirective or AbstractConfigAsyncForgeFormDirective.

@@ -1,0 +1,17 @@
+// MARK: Variables
+$default-dbx-forge-list-item-field-height: 300px;
+
+// MARK: Mixin
+@mixin core() {
+  .dbx-forge-list-item-field {
+    max-height: var(--dbx-forge-list-item-field-height, $default-dbx-forge-list-item-field-height);
+    overflow: auto;
+  }
+
+  .dbx-forge-list-field-disabled {
+    --mat-list-list-item-disabled-label-text-opacity: 1; // the forge disabled state already applies an opacity
+  }
+}
+
+@mixin theme($theme-config) {
+}

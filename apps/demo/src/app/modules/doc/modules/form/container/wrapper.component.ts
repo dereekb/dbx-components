@@ -15,25 +15,23 @@ import {
   formlyStyleWrapper,
   formlyToggleField,
   formlyTextIsAvailableField,
-  forgeRow,
-  forgeDbxSectionFieldWrapper,
-  forgeDbxSubsectionFieldWrapper,
-  forgeExpandWrapper,
-  forgeToggleWrapper,
-  forgeInfoFieldWrapper,
-  forgeStyleWrapper,
-  forgeFormFieldWrapper,
-  forgeNameField,
-  forgeTextIsAvailableField,
-  forgeNumberField,
-  forgeNumberSliderField,
+  dbxForgeFlexLayout,
+  dbxForgeExpandWrapper,
+  dbxForgeToggleWrapper,
+  dbxForgeNameField,
+  dbxForgeSectionWrapper,
+  dbxForgeSubsectionWrapper,
+  dbxForgeInfoWrapper,
+  dbxForgeStyleWrapper,
+  dbxForgeTextIsAvailableField,
+  dbxForgeNumberSliderField,
   formlyNumberSliderField,
   DbxFormFormlyNumberFieldModule,
-  forgeCityField,
-  forgeStateField,
-  forgeZipCodeField,
-  forgeCountryField,
-  forgeToggleField,
+  dbxForgeCityField,
+  dbxForgeStateField,
+  dbxForgeZipCodeField,
+  dbxForgeCountryField,
+  dbxForgeToggleField,
   DbxFormFormlyWrapperModule,
   DbxFormFormlyBooleanFieldModule,
   DbxFormlyFieldsContextDirective,
@@ -114,6 +112,10 @@ export class DocFormWrapperComponent {
     ])
   ];
 
+  readonly forgeFlexFieldConfig: FormConfig = {
+    fields: [dbxForgeFlexLayout([dbxForgeCityField({}), dbxForgeStateField({ hint: 'State Description' }), dbxForgeToggleField({ key: 'toggle', label: 'Toggle', description: 'Toggle Description' })])]
+  };
+
   readonly flexThreeField: FormlyFieldConfig[] = [
     formlyFlexLayoutWrapper(
       [
@@ -124,9 +126,13 @@ export class DocFormWrapperComponent {
         formlyStateField(),
         formlyZipCodeField()
       ],
-      { breakpoint: 'small', size: 1 }
+      { breakpoint: 'large', size: 1 }
     )
   ];
+
+  readonly forgeFlexThreeFieldConfig: FormConfig = {
+    fields: [dbxForgeFlexLayout([{ field: dbxForgeCityField({}), size: 4 }, dbxForgeStateField({}), dbxForgeZipCodeField({})], { breakpoint: 'large', size: 1 })]
+  };
 
   readonly flexThreeFieldBreakToColumn: FormlyFieldConfig[] = [
     formlyFlexLayoutWrapper(
@@ -142,120 +148,104 @@ export class DocFormWrapperComponent {
     )
   ];
 
+  readonly forgeFlexThreeFieldBreakToColumnConfig: FormConfig = {
+    fields: [dbxForgeFlexLayout([{ field: dbxForgeCityField({}), size: 4 }, dbxForgeStateField({}), dbxForgeZipCodeField({})], { breakpoint: 'large', breakToColumn: true, size: 1 })]
+  };
+
   readonly flexFiveField: FormlyFieldConfig[] = [formlyFlexLayoutWrapper([formlyNameField(), formlyCityField(), formlyStateField(), formlyZipCodeField(), formlyCountryField()], { breakpoint: 'large', size: 1, relative: true })];
+
+  readonly forgeFlexFiveFieldConfig: FormConfig = {
+    fields: [dbxForgeFlexLayout([dbxForgeNameField({}), dbxForgeCityField({}), dbxForgeStateField({}), dbxForgeZipCodeField({}), dbxForgeCountryField({})], { breakpoint: 'large', size: 1, relative: true })]
+  };
 
   // Forge wrapper equivalents
   readonly forgeExpandFieldConfig: FormConfig = {
     fields: [
-      forgeExpandWrapper({
+      dbxForgeExpandWrapper({
         label: 'Add Name',
         buttonType: 'button',
-        fields: [forgeNameField({})]
+        fields: [dbxForgeNameField({})]
       })
     ]
   };
 
   readonly forgeToggleFieldConfig: FormConfig = {
     fields: [
-      forgeToggleWrapper({
-        fields: [forgeNameField({})]
+      dbxForgeToggleWrapper({
+        fields: [dbxForgeNameField({})]
       })
     ]
   };
 
   readonly forgeSectionFieldConfig: FormConfig = {
     fields: [
-      forgeDbxSectionFieldWrapper({
-        header: 'Header',
-        hint: 'Section Field Hint',
-        fields: [forgeNameField({})]
+      dbxForgeNameField({
+        wrappers: [
+          dbxForgeSectionWrapper({
+            headerConfig: { header: 'Header', hint: 'Section Field Hint' }
+          })
+        ]
       }),
-      forgeDbxSectionFieldWrapper({
-        header: 'Header with star and configured size',
-        h: 1,
-        icon: 'star',
-        hint: 'Section Field Hint Inline',
-        hintInline: true,
-        fields: [forgeNameField({ key: 'name2' })]
+      dbxForgeNameField({
+        key: 'name2',
+        wrappers: [
+          dbxForgeSectionWrapper({
+            headerConfig: { header: 'Header with star and configured size', h: 1, icon: 'star', hint: 'Section Field Hint Inline', hintInline: true }
+          })
+        ]
       })
     ]
   };
 
   readonly forgeSubsectionFieldConfig: FormConfig = {
     fields: [
-      forgeDbxSubsectionFieldWrapper({
-        header: 'Header',
-        hint: 'Section Field Hint',
-        fields: [forgeNameField({})]
+      dbxForgeNameField({
+        wrappers: [
+          dbxForgeSubsectionWrapper({
+            headerConfig: { header: 'Header', hint: 'Section Field Hint' }
+          })
+        ]
       })
     ]
   };
 
   readonly forgeInfoFieldConfig: FormConfig = {
     fields: [
-      forgeInfoFieldWrapper({
-        onInfoClick: () => {
-          // this.matDialog.open()
-        },
-        fields: [forgeNameField({})]
+      dbxForgeNameField({
+        wrappers: [
+          dbxForgeInfoWrapper({
+            onInfoClick: () => {
+              // this.matDialog.open()
+            }
+          })
+        ]
       })
     ]
   };
 
   readonly forgeInfoGroupFieldConfig: FormConfig = {
     fields: [
-      forgeInfoFieldWrapper({
-        onInfoClick: () => {
-          // this.matDialog.open()
-        },
-        fields: [forgeNameField({}), forgeCityField({})]
-      })
+      dbxForgeNameField({
+        wrappers: [
+          dbxForgeInfoWrapper({
+            onInfoClick: () => {
+              // this.matDialog.open()
+            }
+          })
+        ]
+      }),
+      dbxForgeCityField({})
     ]
   };
 
   readonly forgeStyleFieldConfig: FormConfig = {
     fields: [
-      forgeStyleWrapper({
-        classGetter: 'dbx-content-border doc-style-wrapper-example',
-        styleGetter: { background: 'rgba(255,0,0,0.3)', 'border-color': 'blue' },
-        fields: [forgeNameField({})]
-      })
-    ]
-  };
-
-  readonly forgeFlexFieldConfig: FormConfig = {
-    fields: [
-      forgeRow({
-        fields: [
-          { ...forgeCityField({}), col: 4 },
-          { ...forgeStateField({ description: 'State Description' }), col: 4 },
-          { ...forgeToggleField({ key: 'toggle', label: 'Toggle', description: 'Toggle Description' }), col: 4 }
-        ]
-      })
-    ]
-  };
-
-  readonly forgeFlexThreeFieldConfig: FormConfig = {
-    fields: [
-      forgeRow({
-        fields: [
-          { ...forgeCityField({}), col: 8 },
-          { ...forgeStateField({}), col: 2 },
-          { ...forgeZipCodeField({}), col: 2 }
-        ]
-      })
-    ]
-  };
-
-  readonly forgeFlexFiveFieldConfig: FormConfig = {
-    fields: [
-      forgeRow({
-        fields: [
-          { ...forgeNameField({}), col: 2 },
-          { ...forgeCityField({}), col: 3 },
-          { ...forgeStateField({}), col: 3 },
-          { ...forgeZipCodeField({}), col: 2 },
-          { ...forgeCountryField({}), col: 2 }
+      dbxForgeNameField({
+        wrappers: [
+          dbxForgeStyleWrapper({
+            classGetter: 'dbx-content-border doc-style-wrapper-example',
+            styleGetter: { background: 'rgba(255,0,0,0.3)', 'border-color': 'blue' }
+          })
         ]
       })
     ]
@@ -280,34 +270,29 @@ export class DocFormWrapperComponent {
     })
   ];
 
-  readonly forgeWorkingFieldConfig: FormConfig = (() => {
-    const available = forgeTextIsAvailableField({
-      key: 'username',
-      label: 'Username',
-      description: 'Type a value and wait — shows loading bar during async check. Type "taken" to see a validation error.',
-      checkValueIsAvailable: (value: string) => {
-        return new Observable<boolean>((subscriber) => {
-          const timer = setTimeout(() => {
-            subscriber.next(value !== 'taken');
-            subscriber.complete();
-          }, 2000);
+  readonly forgeWorkingFieldConfig: FormConfig = {
+    fields: [
+      dbxForgeTextIsAvailableField({
+        key: 'username',
+        label: 'Username',
+        description: 'Type a value and wait — shows loading bar during async check. Type "taken" to see a validation error.',
+        checkValueIsAvailable: (value: string) => {
+          return new Observable<boolean>((subscriber) => {
+            const timer = setTimeout(() => {
+              subscriber.next(value !== 'taken');
+              subscriber.complete();
+            }, 2000);
 
-          return () => clearTimeout(timer);
-        });
-      },
-      isNotAvailableErrorMessage: 'This username is already taken.'
-    });
-
-    return {
-      fields: [available.field],
-      customFnConfig: { asyncValidators: available.asyncValidators },
-      defaultValidationMessages: available.validationMessages
-    };
-  })();
+            return () => clearTimeout(timer);
+          });
+        },
+        isNotAvailableErrorMessage: 'This username is already taken.'
+      })
+    ]
+  };
 
   // Form-field wrapper demos
   readonly formFieldWrapperFields: FormlyFieldConfig[] = [
-    formlyNameField({ required: true }),
     {
       ...formlyNumberSliderField({ key: 'rating', label: 'Rating', description: 'Must be above 50.', min: 0, max: 100 }),
       validators: { validation: [Validators.min(51)] },
@@ -318,37 +303,17 @@ export class DocFormWrapperComponent {
 
   readonly forgeFormFieldWrapperSliderConfig: FormConfig = {
     fields: [
-      forgeFormFieldWrapper({
+      dbxForgeNumberSliderField({
+        key: 'rating',
         label: 'Rating',
-        hint: 'Must be above 50.',
-        fields: [
-          {
-            key: 'rating',
-            type: 'slider',
-            label: '',
-            max: 100,
-            validators: [{ type: 'custom', expression: 'fieldValue > 50', kind: 'minRating' }],
-            validationMessages: { minRating: 'Rating must be above 50.' },
-            props: { min: 0, max: 100, thumbLabel: true }
-          } as any
-        ]
+        description: 'Must be above 50.',
+        min: 0,
+        max: 100,
+        validators: [{ type: 'custom', expression: 'fieldValue > 50', kind: 'minRating' }],
+        validationMessages: { minRating: 'Rating must be above 50.' },
+        props: { thumbLabel: true }
       }),
-      forgeNumberSliderField({ key: 'volume', label: 'Volume', description: 'Pick a volume.', min: 0, max: 100, step: 5 })
-    ]
-  };
-
-  readonly forgeFormFieldWrapperTextConfig: FormConfig = {
-    fields: [
-      forgeFormFieldWrapper({
-        label: 'Wrapped Text Field',
-        hint: 'A text field inside a form-field wrapper.',
-        fields: [forgeNameField({ label: '' })]
-      }),
-      forgeFormFieldWrapper({
-        label: 'Wrapped Number Field',
-        hint: 'A number field inside a form-field wrapper.',
-        fields: [forgeNumberField({ key: 'count', label: '', min: 0, max: 100 }) as any]
-      })
+      dbxForgeNumberSliderField({ key: 'volume', label: 'Volume', description: 'Pick a volume.', min: 0, max: 100, step: 5 })
     ]
   };
 }

@@ -11,7 +11,7 @@ import { type WorkUsingObservable, type WorkUsingContext } from '@dereekb/rxjs';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocActionExampleToolsComponent } from '../component/action.example.tool.component';
-import { DbxFormActionDialogComponent, formlyTextAreaField } from '@dereekb/dbx-form';
+import { DbxForgeActionDialogComponent, dbxForgeTextAreaField } from '@dereekb/dbx-form';
 
 @Component({
   templateUrl: './interaction.component.html',
@@ -135,16 +135,18 @@ export class DocActionInteractionComponent implements OnDestroy {
   };
 
   handleOpenFormDialog: DbxActionDialogFunction = () => {
-    return DbxFormActionDialogComponent.openDialogWithForm(this.matDialog, {
+    return DbxForgeActionDialogComponent.openDialogWithForm(this.matDialog, {
       header: 'Form Dialog Example',
-      fields: [
-        formlyTextAreaField({
-          key: 'test',
-          label: 'Test',
-          placeholder: 'Enter test text',
-          required: true
-        })
-      ],
+      config: {
+        fields: [
+          dbxForgeTextAreaField({
+            key: 'test',
+            label: 'Test',
+            placeholder: 'Enter test text',
+            required: true
+          })
+        ]
+      },
       submitButtonConfig: {
         text: 'Custom Submit Button',
         icon: 'save',

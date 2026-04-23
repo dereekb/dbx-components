@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, input, computed, effect, type Signal, type InputSignal, DestroyRef, inject, signal, untracked } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, computed, effect, type Signal, type InputSignal, DestroyRef, ElementRef, inject, signal, untracked } from '@angular/core';
 import { type AbstractControl, FormControl, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -8,8 +8,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { DatePipe, NgTemplateOutlet } from '@angular/common';
-import { type DynamicText, type ValidationMessages, DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES, FIELD_SIGNAL_CONTEXT, type FieldSignalContext } from '@ng-forge/dynamic-forms';
-import { resolveValueFieldContext, buildValueFieldInputs } from '@ng-forge/dynamic-forms/integration';
+import { type DynamicText, type FieldMeta, type ValidationMessages, DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES, FIELD_SIGNAL_CONTEXT, type FieldSignalContext } from '@ng-forge/dynamic-forms';
+import { resolveValueFieldContext, buildValueFieldInputs, setupMetaTracking } from '@ng-forge/dynamic-forms/integration';
 import { MATERIAL_CONFIG } from '@ng-forge/dynamic-forms-material';
 import type { FieldTree } from '@angular/forms/signals';
 import { type Maybe, type Milliseconds, type TimezoneString, type ReadableTimeString, type DateOrDayString, type ArrayOrValue, asArray, filterMaybeArrayValues } from '@dereekb/util';
@@ -26,7 +26,7 @@ import { DbxDateTimeFieldMenuPresetsService } from '../../../../formly/field/val
 import { DateDistancePipe, TimeDistancePipe, GetValuePipe } from '@dereekb/dbx-core';
 import { type ErrorStateMatcher } from '@angular/material/core';
 import { toggleDisableFormControl } from '../../../../form/form';
-import { forgeFieldDisabled } from '../../field.disabled';
+import { dbxForgeFieldDisabled } from '../../field.util';
 import { type DbxForgeDateTimeSyncField } from './datetime.field';
 import { buildCombinedDateTime, applyTimeOffset, mergePickerConfig, filterPresets, computeErrorMessage, computeDateKeyboardStep, computeTimeKeyboardStep, navigateDate, type DateTimeCalcInput } from './datetime.calc';
 
@@ -62,6 +62,13 @@ export interface DbxForgeDateTimeFieldComponentProps {
   readonly appearance?: 'fill' | 'outline';
   readonly hint?: DynamicText;
   readonly getSyncFieldsObs?: () => Observable<ArrayOrValue<DbxForgeDateTimeSyncField>>;
+  /**
+   * Behavior when the date input is clicked.
+   *
+   * - `'picker'` — opens the datepicker overlay (default)
+   * - `'input'` — normal text-selection / cursor-placement behavior
+   */
+  readonly openOnInputClick?: 'picker' | 'input';
 }
 
 // MARK: Time Output Constants
@@ -141,6 +148,7 @@ const TIME_OUTPUT_THROTTLE_TIME: Milliseconds = 10;
 export class DbxForgeDateTimeFieldComponent {
   private readonly materialConfig = inject(MATERIAL_CONFIG, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
+  private readonly elementRef = inject(ElementRef<HTMLElement>);
   private readonly presetsService = inject(DbxDateTimeFieldMenuPresetsService, { optional: true });
   private readonly fieldSignalContext = inject<FieldSignalContext>(FIELD_SIGNAL_CONTEXT);
 
@@ -152,7 +160,7 @@ export class DbxForgeDateTimeFieldComponent {
   readonly className: InputSignal<string> = input('');
   readonly tabIndex: InputSignal<number | undefined> = input<number | undefined>();
   readonly props: InputSignal<DbxForgeDateTimeFieldComponentProps | undefined> = input<DbxForgeDateTimeFieldComponentProps | undefined>();
-  readonly meta: InputSignal<Record<string, unknown> | undefined> = input<Record<string, unknown> | undefined>();
+  readonly meta: InputSignal<FieldMeta | undefined> = input<FieldMeta | undefined>();
   readonly validationMessages: InputSignal<ValidationMessages | undefined> = input<ValidationMessages | undefined>();
   readonly defaultValidationMessages: InputSignal<ValidationMessages | undefined> = input<ValidationMessages | undefined>();
 
@@ -252,6 +260,7 @@ export class DbxForgeDateTimeFieldComponent {
   readonly minuteStep = computed(() => this.props()?.minuteStep ?? 5);
   readonly alwaysShowDateInput = computed(() => this.props()?.alwaysShowDateInput ?? true);
   readonly autofillDateWhenTimeIsPicked = computed(() => this.props()?.autofillDateWhenTimeIsPicked ?? this.alwaysShowDateInput() === false);
+  readonly openOnInputClick = computed(() => this.props()?.openOnInputClick ?? 'picker');
 
   // MARK: Timezone signals
   readonly resolvedTimezone = computed(() => this._timezone() ?? guessCurrentTimezone());
@@ -265,15 +274,19 @@ export class DbxForgeDateTimeFieldComponent {
   // FieldTree<unknown> is callable — calling it returns FieldState which has .value, .disabled, etc.
   // We call field()() to first unwrap the InputSignal (→ FieldTree), then call the FieldTree (→ FieldState).
   readonly fieldValue = computed(() => {
+    let result: unknown = undefined;
+
     try {
       const state = this.field()?.() as any;
-      return state?.value?.() as unknown;
+      result = state?.value?.() as unknown;
     } catch {
-      return undefined;
+      // Field tree not yet initialized — fall through to undefined
     }
+
+    return result;
   });
 
-  readonly isDisabled = forgeFieldDisabled();
+  readonly isDisabled = dbxForgeFieldDisabled();
 
   // MARK: Observable pipelines
 
@@ -347,7 +360,7 @@ export class DbxForgeDateTimeFieldComponent {
   private readonly _timeDate$ = toObservable(this._timeDate);
 
   readonly isTimeCleared$ = combineLatest([this.currentDate$, toObservable(this._timeDate).pipe(startWith(null)), this._isCleared$]).pipe(
-    map(([date, time, isCleared]) => isCleared || Boolean(!date && !time)),
+    map(([date, time, isCleared]) => isCleared || (!this.isTimeOnly() && Boolean(!date && !time))),
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -446,8 +459,16 @@ export class DbxForgeDateTimeFieldComponent {
     shareReplay(1)
   );
 
+  // Reactive date source: uses of(null) for time-only fields, dateValue$ otherwise.
+  // Must be reactive (not a one-shot ternary) because isTimeOnly depends on props
+  // which aren't available during class field initialization.
+  private readonly _rawDateTimeDate$: Observable<Maybe<Date>> = toObservable(this.isTimeOnly).pipe(
+    switchMap((timeOnly) => (timeOnly ? of(null) : this.dateValue$)),
+    shareReplay(1)
+  );
+
   // Raw datetime calculation
-  readonly rawDateTime$: Observable<Maybe<Date>> = combineLatest([this.isTimeOnly() ? of(null) : this.dateValue$, this.timeInput$.pipe(startWith(null)), toObservable(this._fullDay), toObservable(this._timeDate), this.isTimeCleared$]).pipe(
+  readonly rawDateTime$: Observable<Maybe<Date>> = combineLatest([this._rawDateTimeDate$, this.timeInput$.pipe(startWith(null)), toObservable(this._fullDay), toObservable(this._timeDate), this.isTimeCleared$]).pipe(
     map(([date, timeString, fullDay, timeDate, isTimeCleared]) => {
       const input: DateTimeCalcInput = {
         dateValue: date,
@@ -472,7 +493,7 @@ export class DbxForgeDateTimeFieldComponent {
     tap(([, stepsOffset]) => (stepsOffset ? this._offset.next(0) : 0)),
     map(([date, stepsOffset, config]) => {
       if (date != null && stepsOffset) {
-        return applyTimeOffset(date, stepsOffset, this.minuteStep(), config);
+        return applyTimeOffset({ date, stepsOffset, minuteStep: this.minuteStep(), config });
       }
       return date;
     }),
@@ -499,7 +520,7 @@ export class DbxForgeDateTimeFieldComponent {
 
       // Use currentDate$ (includes null) so the combineLatest emits even when no date is set.
       // Fall back to timeDate, then today, so presets are always available for time selection.
-      return combineLatest([this.currentDate$.pipe(throttleTime(1000, undefined, { leading: true, trailing: true })), this.dateTimePickerConfig$, this._timeDate$.pipe(startWith(undefined))]).pipe(map(([selectedDate, config, timeDate]) => filterPresets(allPresets, selectedDate ?? timeDate ?? startOfDay(new Date()), false, false, config)));
+      return combineLatest([this.currentDate$.pipe(throttleTime(1000, undefined, { leading: true, trailing: true })), this.dateTimePickerConfig$, this._timeDate$.pipe(startWith(undefined))]).pipe(map(([selectedDate, config, timeDate]) => filterPresets({ presets: allPresets, selectedDate: selectedDate ?? timeDate ?? startOfDay(new Date()), isFullDay: false, isTimeOnly: false, config })));
     }),
     shareReplay(1)
   );
@@ -549,13 +570,22 @@ export class DbxForgeDateTimeFieldComponent {
    * inbound sync (form source) and user picks. Returns null when cleared.
    */
   readonly dateValueSignal = computed(() => {
-    if (this._isCleared()) return null;
-    const raw = this.fieldValue();
-    if (raw == null) return null;
-    const parser = dbxDateTimeInputValueParseFactory(this.valueMode(), this.timezoneInstance());
-    const date = parser(raw as Maybe<Date | string | number>);
-    if (!date || (date instanceof Date && isNaN(date.getTime()))) return null;
-    return startOfDay(date);
+    let result: Date | null = null;
+
+    if (!this._isCleared()) {
+      const raw = this.fieldValue();
+
+      if (raw != null) {
+        const parser = dbxDateTimeInputValueParseFactory(this.valueMode(), this.timezoneInstance());
+        const date = parser(raw as Maybe<Date | string | number>);
+
+        if (date && !(date instanceof Date && isNaN(date.getTime()))) {
+          result = startOfDay(date);
+        }
+      }
+    }
+
+    return result;
   });
   readonly displayValueSignal = toSignal(this.displayValue$);
   readonly pickerFilterSignal = toSignal(this.pickerFilter$, { initialValue: () => true as boolean });
@@ -572,8 +602,33 @@ export class DbxForgeDateTimeFieldComponent {
   readonly showClearButtonSignal = toSignal(this.showClearButton$);
   readonly presetsSignal = toSignal(this.presets$);
   readonly isDisabledSignal = this.isDisabled;
+  readonly isTimeMenuDisabledSignal = computed(() => {
+    const disabled = this.isDisabled();
+    const isOptional = this.timeMode() === DbxDateTimeFieldTimeMode.OPTIONAL;
+    const hasPresets = Boolean(this.presetsSignal()?.length);
+    return disabled || (!isOptional && !hasPresets);
+  });
+
+  // ARIA
+  protected readonly hintId = computed(() => `${this.key()}-hint`);
+  protected readonly errorId = computed(() => `${this.key()}-error`);
+  protected readonly ariaInvalid = computed(() => (this.hasErrorSignal() ? 'true' : null));
+  protected readonly ariaRequired = computed(() => (this.field()().required() ? 'true' : null));
+  protected readonly ariaDescribedBy = computed(() => {
+    let result: string | null = null;
+
+    if (this.hasErrorSignal()) {
+      result = this.errorId();
+    } else if (this.props()?.hint) {
+      result = this.hintId();
+    }
+
+    return result;
+  });
 
   constructor() {
+    setupMetaTracking(this.elementRef, this.meta as any, { selector: 'input' });
+
     // Initialize fullDay from timeMode
     effect(() => {
       if (this.timeMode() === DbxDateTimeFieldTimeMode.NONE) {
@@ -795,6 +850,12 @@ export class DbxForgeDateTimeFieldComponent {
   }
 
   // MARK: Actions
+  onDateInputClick(picker: { open(): void }): void {
+    if (this.openOnInputClick() === 'picker' && !this.isDisabled()) {
+      picker.open();
+    }
+  }
+
   onDatePicked(event: MatDatepickerInputEvent<Date>): void {
     const date = event.value;
     if (date) {
@@ -827,6 +888,16 @@ export class DbxForgeDateTimeFieldComponent {
     event.preventDefault();
     this._offset.next(this._offset.value + step.offset * step.direction);
     this._updateTime.next();
+
+    // Sync the input text from the computed time output so the user sees
+    // the change immediately while the input is still focused.
+    // Skip the current shareReplay cache and wait for the recomputed value.
+    this.timeOutput$.pipe(skip(1), first(), filterMaybe()).subscribe((date) => {
+      const timeStr = toLocalReadableTimeString(date);
+      if (timeStr !== this.timeCtrl.value) {
+        this.timeCtrl.setValue(timeStr, { emitEvent: false });
+      }
+    });
   }
 
   onTimeFocus(): void {

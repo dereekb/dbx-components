@@ -4,5 +4,6 @@ export default createVitestConfig({
   type: 'angular',
   pathFromRoot: __dirname,
   projectName: 'dbx-form',
-  projectSpecificSetupFiles: ['src/test-setup.ts']
+  projectSpecificSetupFiles: ['src/test-setup.ts'],
+  printConsoleTrace: false
 });

@@ -4,13 +4,6 @@
 
 // MARK: Mixin
 @mixin core() {
-  // Forge flex row relative mode: override ng-forge grid column count
-  @for $i from 1 through 12 {
-    .dbx-forge-flex-#{$i} {
-      --df-grid-columns: #{$i};
-    }
-  }
-
   // Forge styled box: outlined box around fields that don't use mat-form-field (checkbox, toggle, slider).
   // Mirrors the Material outlined form-field appearance (border-radius, padding, min-height, hint styling).
   .dbx-forge-styled-box {
@@ -70,6 +63,7 @@
   .dbx-forge-disabled {
     opacity: 0.38;
     pointer-events: none;
+    --mat-list-list-item-disabled-label-text-opacity: unset;
   }
 
   // Form-level disabled state: disables all interactive elements inside a forge form.
@@ -97,6 +91,26 @@
     .mat-mdc-form-field,
     .dbx-forge-styled-box {
       opacity: 0.38;
+    }
+
+    // Reduce opacity on hint/description/error elements that render outside mat-form-field.
+    // These custom forge field components render subscript text (hints, errors, descriptions)
+    // as siblings beside their mat-form-field containers, so the rule above does not reach them.
+    .dbx-forge-datetime-hint,
+    .dbx-forge-datetime-error,
+    .dbx-forge-datetime-desc,
+    .dbx-forge-daterange-field > mat-hint,
+    .dbx-forge-daterange-field > mat-error,
+    .dbx-form-repeat-array-bar,
+    .dbx-form-repeat-array-footer {
+      opacity: 0.38;
+    }
+
+    // The expand trigger has no mat-form-field wrapping and needs both visual
+    // and interaction disabling.
+    dbx-forge-expand-field {
+      opacity: 0.38;
+      pointer-events: none;
     }
   }
 }

@@ -19,7 +19,7 @@ const _disabled$ = new BehaviorSubject(false);
  *
  * @example
  * ```html
- * <doc-feature-form-tabs #formTabs formlyFn="formlyTextField()" forgeFn="forgeTextField()">
+ * <doc-feature-form-tabs #formTabs formlyFn="formlyTextField()" forgeFn="dbxForgeTextField()">
  *   <doc-form-example-form formly [disabled]="formTabs.disabled()" [dbxFormlyFields]="textFields"></doc-form-example-form>
  *   <doc-forge-example-form forge [disabled]="formTabs.disabled()" [config]="forgeTextFieldsConfig"></doc-forge-example-form>
  * </doc-feature-form-tabs>

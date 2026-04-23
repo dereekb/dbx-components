@@ -104,7 +104,7 @@ describe('iteration.rxjs', () => {
         const limitedAccumulator: ItemAccumulatorInstance<number[], number[], PageItemIteration<number[]>> = itemAccumulator(limitedIteration);
 
         // Load the first (and only allowed) page
-        limitedIteration.nextPage().then(() => {
+        void limitedIteration.nextPage().then(() => {
           const obs = flattenAccumulatorResultItemArray(limitedAccumulator);
 
           obs.pipe(first()).subscribe((valuesBeforeNext) => {

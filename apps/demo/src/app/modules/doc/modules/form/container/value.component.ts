@@ -22,24 +22,22 @@ import {
   formlyLatLngTextField,
   formlyDollarAmountField,
   formlyNumberSliderField,
-  forgeTextField,
-  forgeTextAreaField,
-  forgeNumberField,
-  forgeNumberSliderField,
-  forgeDollarAmountField,
-  forgeToggleField,
-  forgeCheckboxField,
-  forgeNameField,
-  forgeEmailField,
-  forgeCityField,
-  forgeStateField,
-  forgeCountryField,
-  forgeZipCodeField,
-  forgePhoneField,
-  forgeWrappedPhoneAndLabelField,
-  forgePhoneAndLabelSectionField,
-  forgeAddressField,
-  forgeAddressListField,
+  dbxForgeTextField,
+  dbxForgeTextAreaField,
+  dbxForgeNumberField,
+  dbxForgeNumberSliderField,
+  dbxForgeDollarAmountField,
+  dbxForgeToggleField,
+  dbxForgeCheckboxField,
+  dbxForgeNameField,
+  dbxForgeEmailField,
+  dbxForgeCityField,
+  dbxForgeStateField,
+  dbxForgeCountryField,
+  dbxForgeZipCodeField,
+  dbxForgePhoneField,
+  dbxForgeAddressGroup,
+  dbxForgeAddressListField,
   DbxFormFormlyTextFieldModule,
   DbxFormFormlyWrapperModule,
   DbxFormFormlyPhoneFieldModule,
@@ -48,7 +46,8 @@ import {
   DbxFormFormlyArrayFieldModule,
   DbxFormlyFieldsContextDirective,
   DbxFormSourceDirective,
-  DbxActionFormDirective
+  DbxActionFormDirective,
+  dbxForgeValueSelectionField
 } from '@dereekb/dbx-form';
 import { addDays, startOfDay } from 'date-fns';
 import { addSuffixFunction } from '@dereekb/util';
@@ -117,15 +116,45 @@ export class DocFormValueComponent {
 
   readonly forgeTextFieldsConfig: FormConfig = {
     fields: [
-      forgeTextField({ key: 'test', label: 'Text Field', description: 'A required text field.', placeholder: 'Placeholder', required: true, minLength: 4, maxLength: 15 }),
-      forgeTextField({ key: 'transform', label: 'Transformed Text Field', description: 'Text Field With String Transform Config.', transform: { trim: true } }),
-      forgeNameField(),
-      forgeEmailField(),
-      forgeCityField(),
-      forgeStateField(),
-      forgeStateField({ label: 'State With Code Input', key: 'stateAsCode', asCode: true }),
-      forgeCountryField(),
-      forgeZipCodeField()
+      dbxForgeTextField({ key: 'test', label: 'Text Field', description: 'A required text field.', placeholder: 'Placeholder', required: true, minLength: 4, maxLength: 15 }),
+      dbxForgeTextField({ key: 'transform', label: 'Transformed Text Field', description: 'Text Field With String Transform Config. Adds _ between each letter as you type.', idempotentTransform: { trim: true, transform: addSuffixFunction('_') } }),
+      dbxForgeNameField(),
+      dbxForgeEmailField(),
+      dbxForgeCityField(),
+      dbxForgeStateField(),
+      dbxForgeStateField({ label: 'State With Code Input', key: 'stateAsCode', asCode: true }),
+      dbxForgeCountryField(),
+      dbxForgeZipCodeField(),
+      dbxForgeToggleField({ key: 'showLogicDemo', label: 'Show Logic Demo Field' }),
+      dbxForgeTextField({
+        key: 'logicDemo',
+        label: 'Conditionally Visible Text',
+        description: 'Hidden unless the toggle above is on. Demonstrates logic support on forge fields.',
+        logic: [
+          {
+            type: 'hidden',
+            condition: {
+              type: 'fieldValue',
+              fieldPath: 'showLogicDemo',
+              operator: 'notEquals',
+              value: true
+            }
+          }
+        ]
+      }),
+      dbxForgeToggleField({ key: 'showSelectionLogicDemo', label: 'Show Selection Logic Demo Field' }),
+      dbxForgeValueSelectionField({
+        key: 'selectionLogicDemo',
+        label: 'Conditionally Visible Selection',
+        description: 'Hidden unless the toggle above is on.',
+        props: {
+          options: [
+            { label: 'Option A', value: 'a' },
+            { label: 'Option B', value: 'b' }
+          ]
+        },
+        logic: [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'showSelectionLogicDemo', operator: 'notEquals', value: true } }]
+      })
     ]
   };
 
@@ -139,12 +168,12 @@ export class DocFormValueComponent {
 
   readonly forgeNumberFieldsConfig: FormConfig = {
     fields: [
-      forgeNumberField({ key: 'test', label: 'Number Field', description: 'A number between 0 and 100.', placeholder: 'Placeholder', min: 0, max: 100 }),
-      forgeNumberField({ key: 'steptest', label: 'Number Field With Step', description: 'Any number, but increases in steps of 5.', step: 5 }),
-      forgeNumberField({ key: 'enforcedsteptest', label: 'Number Divisible by 5', description: 'Any number divisible by 5.', step: 5, enforceStep: true }),
-      forgeDollarAmountField({ key: 'dollars', label: 'forgeDollarAmountField()', description: 'Dollar amount field.' })
+      dbxForgeNumberField({ key: 'test', label: 'Number Field', description: 'A number between 0 and 100.', placeholder: 'Placeholder', min: 0, max: 100 }),
+      dbxForgeNumberField({ key: 'steptest', label: 'Number Field With Step', description: 'Any number, but increases in steps of 5.', step: 5 }),
+      dbxForgeNumberField({ key: 'enforcedsteptest', label: 'Number Divisible by 5', description: 'Any number divisible by 5.', step: 5, enforceStep: true }),
+      dbxForgeDollarAmountField({ key: 'dollars', label: 'formlyDollarAmountField()', description: 'Dollar amount field.' })
     ]
-  };
+  } as const satisfies FormConfig;
 
   readonly numberSliderFields: FormlyFieldConfig[] = [
     //
@@ -155,16 +184,17 @@ export class DocFormValueComponent {
 
   readonly forgeNumberSliderFieldsConfig: FormConfig = {
     fields: [
-      forgeNumberSliderField({ key: 'test', label: 'forgeNumberSliderField()', description: 'A number between 0 and 100 picked with a slider.', min: 0, max: 100 }),
-      forgeNumberSliderField({ key: 'steptest', label: 'forgeNumberSliderField() with Steps', description: 'A number between 0 and 100 picked with a slider with steps of 5.', min: 0, max: 100, step: 5 }),
-      forgeNumberSliderField({ key: 'steptestcustomtickinterval', label: 'forgeNumberSliderField() with Steps and Custom Tick Interval', description: 'A number between 0 and 100 picked with a slider with steps of 5 and tick interval of 5.', min: 0, max: 100, step: 5, tickInterval: 5 })
+      dbxForgeNumberSliderField({ key: 'test', label: 'dbxForgeNumberSliderField()', hint: 'A number between 0 and 100 picked with a slider.', min: 0, max: 100 }),
+      dbxForgeNumberSliderField({ key: 'steptest', label: 'dbxForgeNumberSliderField() with Steps', description: 'A number between 0 and 100 picked with a slider with steps of 5.', min: 0, max: 100, step: 5 }),
+      dbxForgeNumberSliderField({ key: 'steptestcustomtickinterval', label: 'dbxForgeNumberSliderField() with Steps and Custom Tick Interval', description: 'A number between 0 and 100 picked with a slider with steps of 5 and tick interval of 5.', min: 0, max: 100, step: 5, tickInterval: 5 })
+      // dbxForgeNumberSliderField({ key: 'validated', label: 'Validated Slider (must be > first slider)', description: 'Cross-field expression validator: value must be greater than the first slider.', min: 0, max: 100, validators: [{ type: 'custom' as const, expression: 'fieldValue > formValue.test', kind: 'mustBeGreaterThanTest' }], validationMessages: { mustBeGreaterThanTest: 'Value must be greater than the first slider' } })
     ]
   };
 
   readonly textAreaField: FormlyFieldConfig[] = [formlyTextAreaField({ key: 'test', label: 'Text Area Field', description: 'A required text area field.', placeholder: 'Placeholder', required: true })];
 
   readonly forgeTextAreaFieldConfig: FormConfig = {
-    fields: [forgeTextAreaField({ key: 'test', label: 'Text Area Field', description: 'A required text area field.', placeholder: 'Placeholder', required: true })]
+    fields: [dbxForgeTextAreaField({ key: 'test', label: 'Text Area Field', description: 'A required text area field.', placeholder: 'Placeholder', required: true })]
   };
 
   readonly latLngTextField: FormlyFieldConfig[] = [formlyLatLngTextField()];
@@ -172,19 +202,19 @@ export class DocFormValueComponent {
   readonly addressField: FormlyFieldConfig[] = [formlyAddressField()];
 
   readonly forgeAddressFieldConfig: FormConfig = {
-    fields: [forgeAddressField() as any]
+    fields: [dbxForgeAddressGroup() as any]
   };
 
   readonly slimAddressField: FormlyFieldConfig[] = [formlyAddressField({ key: 'slim', hint: 'Line 2 and country are omitted.', stateField: { asCode: true }, includeLine2: false, includeCountry: false })];
 
   readonly forgeSlimAddressFieldConfig: FormConfig = {
-    fields: [forgeAddressField({ key: 'slim', hint: 'Line 2 and country are omitted.', stateField: { asCode: true }, includeLine2: false, includeCountry: false }) as any]
+    fields: [dbxForgeAddressGroup({ key: 'slim', stateField: { asCode: true }, includeLine2: false, includeCountry: false }) as any]
   };
 
   readonly addressListFields: FormlyFieldConfig[] = [formlyAddressListField()];
 
   readonly forgeAddressListFieldConfig: FormConfig = {
-    fields: [forgeAddressListField() as any]
+    fields: [dbxForgeAddressListField() as any]
   };
 
   readonly toggleField: FormlyFieldConfig[] = [
@@ -197,7 +227,7 @@ export class DocFormValueComponent {
 
   readonly forgeToggleFieldConfig: FormConfig = {
     fields: [
-      forgeToggleField({
+      dbxForgeToggleField({
         key: 'toggle',
         label: 'Toggle Me',
         description: 'this is a toggle field'
@@ -207,7 +237,7 @@ export class DocFormValueComponent {
 
   readonly forgeToggleNoBoxFieldConfig: FormConfig = {
     fields: [
-      forgeToggleField({
+      dbxForgeToggleField({
         key: 'toggle',
         label: 'Toggle Me',
         description: 'this is a toggle field without a styled box',
@@ -221,15 +251,39 @@ export class DocFormValueComponent {
       key: 'checkbox',
       label: 'Check Me',
       description: 'this is a checkbox field'
+    }),
+    formlyCheckboxField({
+      key: 'requiredCheckbox',
+      label: 'Required Check Me',
+      description: 'this is a required checkbox field',
+      required: true
+    }),
+    formlyCheckboxField({
+      key: 'readonlyCheckbox',
+      label: 'Readonly Check Me',
+      description: 'this is a readonly checkbox field',
+      readonly: true
     })
   ];
 
   readonly forgeCheckboxFieldConfig: FormConfig = {
     fields: [
-      forgeCheckboxField({
+      dbxForgeCheckboxField({
         key: 'checkbox',
         label: 'Check Me',
         description: 'this is a checkbox field'
+      }),
+      dbxForgeCheckboxField({
+        key: 'requiredCheckbox',
+        label: 'Required Check Me',
+        description: 'this is a required checkbox field',
+        required: true
+      }),
+      dbxForgeCheckboxField({
+        key: 'readonlyCheckbox',
+        label: 'Readonly Check Me',
+        description: 'this is a readonly checkbox field',
+        readonly: true
       })
     ]
   };
@@ -248,27 +302,7 @@ export class DocFormValueComponent {
   ];
 
   readonly forgePhoneFieldsConfig: FormConfig = {
-    fields: [
-      forgePhoneField({ key: 'phone' }) as any,
-      forgePhoneField({ key: 'phoneWithExtension', label: 'Phone Number With Optional Extension', description: 'This field supports optional extensions.', allowExtension: true }) as any,
-      forgeWrappedPhoneAndLabelField({
-        phoneField: {
-          key: 'labeledPhoneKey'
-        },
-        labelField: {
-          key: 'labeledPhoneLabel'
-        }
-      }) as any,
-      forgePhoneAndLabelSectionField({
-        key: 'section',
-        phoneField: {
-          key: 'sectionPhone'
-        },
-        labelField: {
-          key: 'sectionLabel'
-        }
-      }) as any
-    ]
+    fields: [dbxForgePhoneField({ key: 'phone' }) as any, dbxForgePhoneField({ key: 'phoneWithExtension', label: 'Phone Number With Optional Extension', description: 'This field supports optional extensions.', allowExtension: true }) as any, dbxForgePhoneField({ key: 'labeledPhone', label: 'Labeled Phone' }) as any]
   };
 
   readonly phoneListField: FormlyFieldConfig[] = [formlyPhoneListField()];

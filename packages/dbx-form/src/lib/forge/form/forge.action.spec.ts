@@ -12,7 +12,7 @@ import { DbxForgeFormContext, provideDbxForgeFormContext } from './forge.context
 import { DbxActionFormDirective, APP_ACTION_FORM_DISABLED_KEY } from '../../form/action/form.action.directive';
 import { DbxFormSourceDirective } from '../../form/io/form.input.directive';
 import { DbxActionDirective, DbxCoreActionModule, DbxActionHandlerDirective } from '@dereekb/dbx-core';
-import { forgeTextField } from '../field/value/text/text.field';
+import { dbxForgeTextField } from '../field/value/text/text.field';
 
 // MARK: Test Host
 @Component({
@@ -52,13 +52,13 @@ async function settle(fixture: ComponentFixture<any>): Promise<void> {
 
 function createRequiredFieldConfig(): FormConfig {
   return {
-    fields: [forgeTextField({ key: 'name', label: 'Name', required: true }) as any]
+    fields: [dbxForgeTextField({ key: 'name', label: 'Name', required: true }) as any]
   };
 }
 
 function createOptionalFieldConfig(): FormConfig {
   return {
-    fields: [forgeTextField({ key: 'name', label: 'Name' }) as any]
+    fields: [dbxForgeTextField({ key: 'name', label: 'Name' }) as any]
   };
 }
 

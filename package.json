@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-components",
-  "version": "13.8.0",
+  "version": "13.9.0",
   "license": "MIT",
   "scripts": {
     "postinstall": "echo >> .env.local && if [ \"$IS_DOCKER_INSTALL\" = \"true\" ]; then echo skipping peer dep sync in docker; else echo syncing peer deps && node ./tools/scripts/sync-peer-deps.mjs --skip-internal 2>&1 /dev/null; fi",
@@ -31,8 +31,8 @@
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.1.18",
     "@nestjs/platform-express": "^11.1.18",
-    "@ng-forge/dynamic-forms": "^0.7.0",
-    "@ng-forge/dynamic-forms-material": "^0.7.0",
+    "@ng-forge/dynamic-forms": "0.8.0-next.2",
+    "@ng-forge/dynamic-forms-material": "0.8.0-next.2",
     "@ng-web-apis/common": "^5.1.0",
     "@ng-web-apis/geolocation": "^5.1.0",
     "@ngbracket/ngx-layout": "^21.0.0",
@@ -84,7 +84,7 @@
     "raw-body": "^3.0.0",
     "rrule": "git+https://git@github.com/dereekb/rrule#2b13b1ea881059ba2ecfec380e12ef244ef54570",
     "rxjs": "^7.8.0",
-    "sharp": "^0.34.5",
+    "sharp": "0.34.5",
     "stripe": "^20.4.1",
     "ts-essentials": "^10.0.0",
     "tslib": "^2.3.0",
@@ -114,6 +114,7 @@
     "@ngrx/store-devtools": "^21.0.0",
     "@nx/angular": "22.6.1",
     "@nx/devkit": "22.6.1",
+    "@nx/esbuild": "^22.6.1",
     "@nx/eslint": "22.6.1",
     "@nx/eslint-plugin": "22.6.1",
     "@nx/js": "22.6.1",
@@ -138,6 +139,7 @@
     "@types/segment-analytics": "^0.0.38",
     "@types/supertest": "^7.2.0",
     "@types/ungap__structured-clone": "^1.2.0",
+    "@types/yargs": "^17.0.35",
     "@typescript-eslint/eslint-plugin": "8.56.1",
     "@typescript-eslint/parser": "8.56.1",
     "@typescript-eslint/utils": "8.56.1",
@@ -188,7 +190,8 @@
     "typescript-eslint": "8.56.1",
     "vite": "7.3.1",
     "vitest": "4.1.0",
-    "vitest-axe": "^0.1.0"
+    "vitest-axe": "^0.1.0",
+    "yargs": "^18.0.0"
   },
   "optionalDependencies": {
     "@img/sharp-darwin-arm64": "0.34.5",
@@ -206,6 +209,5 @@
   "engines": {
     "node": ">=24.0.0"
   },
-  "overrides": {},
   "generators": "./generators.json"
 }

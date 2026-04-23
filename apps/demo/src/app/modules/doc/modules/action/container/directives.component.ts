@@ -23,7 +23,8 @@ import {
   DbxActionEnforceModifiedDirective,
   DbxActionIdleDirective,
   DbxActionTriggeredDirective,
-  DbxActionIsWorkingDirective
+  DbxActionIsWorkingDirective,
+  DbxActionIsModifiedDirective
 } from '@dereekb/dbx-core';
 import { MatButton } from '@angular/material/button';
 import { DocActionFormExampleFormComponent } from '../component/action.example.form.component';
@@ -59,6 +60,7 @@ import { JsonPipe } from '@angular/common';
     DbxActionFormDirective,
     DbxActionTriggeredDirective,
     DbxActionIsWorkingDirective,
+    DbxActionIsModifiedDirective,
     JsonPipe
   ],
   changeDetection: ChangeDetectionStrategy.OnPush

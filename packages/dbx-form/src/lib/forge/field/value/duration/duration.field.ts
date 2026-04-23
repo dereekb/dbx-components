@@ -2,7 +2,7 @@ import type { BaseValueField } from '@ng-forge/dynamic-forms';
 import { type TimeUnit, filterFromPOJO } from '@dereekb/util';
 import type { TimeDurationFieldValueMode } from '../../../../formly/field/value/duration/duration.field';
 import type { DbxForgeTimeDurationFieldComponentProps } from './duration.field.component';
-import { forgeField } from '../../field';
+import { dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef, type DbxForgeFieldFunction } from '../../field';
 
 /**
  * The custom forge field type name for the time duration field.
@@ -20,12 +20,7 @@ export type DbxForgeTimeDurationFieldDef = BaseValueField<DbxForgeTimeDurationFi
 /**
  * Configuration for a forge time duration input field.
  */
-export interface DbxForgeTimeDurationFieldConfig {
-  readonly key: string;
-  readonly label?: string;
-  readonly required?: boolean;
-  readonly readonly?: boolean;
-  readonly description?: string;
+export interface DbxForgeTimeDurationFieldConfig extends DbxForgeFieldFunctionDef<DbxForgeTimeDurationFieldDef> {
   /**
    * The unit of the output value.
    *
@@ -49,14 +44,6 @@ export interface DbxForgeTimeDurationFieldConfig {
    */
   readonly pickerUnits?: TimeUnit[];
   /**
-   * Minimum output value (expressed in the output unit).
-   */
-  readonly min?: number;
-  /**
-   * Maximum output value (expressed in the output unit).
-   */
-  readonly max?: number;
-  /**
    * Whether the popover picker should carry over values to the next larger unit.
    */
   readonly carryOver?: boolean;
@@ -73,7 +60,7 @@ export interface DbxForgeTimeDurationFieldConfig {
  *
  * @example
  * ```typescript
- * const field = forgeTimeDurationField({
+ * const field = dbxForgeTimeDurationField({
  *   key: 'timeout',
  *   label: 'Timeout',
  *   outputUnit: 'min',
@@ -82,29 +69,17 @@ export interface DbxForgeTimeDurationFieldConfig {
  * });
  * ```
  */
-export function forgeTimeDurationField(config: DbxForgeTimeDurationFieldConfig): DbxForgeTimeDurationFieldDef {
-  const { key, label, required, readonly: isReadonly, description, outputUnit, valueMode, allowedUnits, pickerUnits, min, max, carryOver } = config;
-
-  const props: DbxForgeTimeDurationFieldComponentProps = filterFromPOJO({
-    outputUnit,
-    valueMode,
-    allowedUnits,
-    pickerUnits,
-    min,
-    max,
-    carryOver,
-    hint: description
-  });
-
-  return forgeField(
+export const dbxForgeTimeDurationField = dbxForgeFieldFunction<DbxForgeTimeDurationFieldConfig>({
+  type: FORGE_TIMEDURATION_FIELD_TYPE,
+  buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder((config) =>
     filterFromPOJO({
-      key,
-      type: FORGE_TIMEDURATION_FIELD_TYPE,
-      label: label ?? '',
-      value: undefined as unknown,
-      required,
-      readonly: isReadonly,
-      props: Object.keys(props).length > 0 ? props : undefined
-    }) as DbxForgeTimeDurationFieldDef
-  );
-}
+      outputUnit: config.outputUnit,
+      valueMode: config.valueMode,
+      allowedUnits: config.allowedUnits,
+      pickerUnits: config.pickerUnits,
+      min: config.min,
+      max: config.max,
+      carryOver: config.carryOver
+    })
+  )
+}) as DbxForgeFieldFunction<DbxForgeTimeDurationFieldConfig, DbxForgeTimeDurationFieldDef>;

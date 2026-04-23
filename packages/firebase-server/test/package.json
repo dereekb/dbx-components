@@ -1,16 +1,16 @@
 {
   "name": "@dereekb/firebase-server/test",
-  "version": "13.8.0",
+  "version": "13.9.0",
   "peerDependencies": {
-    "@dereekb/analytics": "13.8.0",
-    "@dereekb/date": "13.8.0",
-    "@dereekb/firebase": "13.8.0",
-    "@dereekb/firebase-server": "13.8.0",
-    "@dereekb/firebase-server/oidc": "13.8.0",
-    "@dereekb/model": "13.8.0",
-    "@dereekb/nestjs": "13.8.0",
-    "@dereekb/rxjs": "13.8.0",
-    "@dereekb/util": "13.8.0",
+    "@dereekb/analytics": "13.9.0",
+    "@dereekb/date": "13.9.0",
+    "@dereekb/firebase": "13.9.0",
+    "@dereekb/firebase-server": "13.9.0",
+    "@dereekb/firebase-server/oidc": "13.9.0",
+    "@dereekb/model": "13.9.0",
+    "@dereekb/nestjs": "13.9.0",
+    "@dereekb/rxjs": "13.9.0",
+    "@dereekb/util": "13.9.0",
     "@google-cloud/firestore": "^7.11.6",
     "@google-cloud/storage": "^7.19.0",
     "@nestjs/common": "^11.1.17",
@@ -23,6 +23,6 @@
     "supertest": "^7.2.2"
   },
   "devDependencies": {
-    "@dereekb/nestjs": "13.8.0"
+    "@dereekb/nestjs": "13.9.0"
   }
 }

@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { DBX_FORGE_FORM_COMPONENT_TEMPLATE, dbxForgeFormComponentProviders, DbxForgeFormComponentImportsModule, AbstractSyncForgeFormDirective, forgeTextField } from '@dereekb/dbx-form';
+import { DBX_FORGE_FORM_COMPONENT_TEMPLATE, dbxForgeFormComponentProviders, DbxForgeFormComponentImportsModule, AbstractSyncForgeFormDirective, dbxForgeTextField } from '@dereekb/dbx-form';
 import type { FormConfig } from '@ng-forge/dynamic-forms';
 
 export interface DocActionFormExampleValue {
@@ -16,7 +16,7 @@ export interface DocActionFormExampleValue {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocActionFormExampleFormTwoComponent extends AbstractSyncForgeFormDirective<DocActionFormExampleValue> {
-  readonly config: FormConfig = {
-    fields: [forgeTextField({ key: 'name', label: 'Name', required: true })]
+  readonly formConfig: FormConfig = {
+    fields: [dbxForgeTextField({ key: 'name', label: 'Name', required: true })]
   } as FormConfig;
 }

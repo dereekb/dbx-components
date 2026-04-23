@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { DBX_FORGE_FORM_COMPONENT_TEMPLATE, dbxForgeFormComponentProviders, DbxForgeFormComponentImportsModule, AbstractSyncForgeFormDirective, forgeNameField, forgeDateTimeField } from '@dereekb/dbx-form';
+import { DBX_FORGE_FORM_COMPONENT_TEMPLATE, dbxForgeFormComponentProviders, DbxForgeFormComponentImportsModule, AbstractSyncForgeFormDirective, dbxForgeNameField, dbxForgeDateTimeField } from '@dereekb/dbx-form';
 import type { FormConfig } from '@ng-forge/dynamic-forms';
 
 export interface DocActionFormExampleValue {
@@ -16,7 +16,7 @@ export interface DocActionFormExampleValue {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocActionFormExampleFormComponent extends AbstractSyncForgeFormDirective<DocActionFormExampleValue> {
-  readonly config: FormConfig = {
-    fields: [forgeNameField({ required: true }), forgeDateTimeField({ key: 'date' })]
+  readonly formConfig: FormConfig = {
+    fields: [dbxForgeNameField({ required: true }), dbxForgeDateTimeField({ key: 'date' })]
   } as FormConfig;
 }

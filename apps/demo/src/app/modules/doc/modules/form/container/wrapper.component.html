@@ -2,35 +2,35 @@
   <doc-feature-layout header="" hint="">
     <!-- Examples -->
     <doc-feature-example header="expandWrapper()" hint="Wraps a field with content that can be expanded to reveal optional fields.">
-      <doc-feature-form-tabs #formTabs formlyFn="formlyExpandWrapper()" forgeFn="forgeExpandWrapper()">
+      <doc-feature-form-tabs #formTabs formlyFn="formlyExpandWrapper()" forgeFn="dbxForgeExpandWrapper()">
         <doc-form-example-form formly [config]="expandField" [disabled]="formTabs.disabled()"></doc-form-example-form>
         <doc-forge-example-form forge [config]="forgeExpandFieldConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
     </doc-feature-example>
 
     <doc-feature-example header="toggleWrapper()" hint="Wraps a field and adds a slider that can be toggled to hide or reveal fields.">
-      <doc-feature-form-tabs formlyFn="formlyToggleWrapper()" forgeFn="forgeToggleWrapper()">
+      <doc-feature-form-tabs formlyFn="formlyToggleWrapper()" forgeFn="dbxForgeToggleWrapper()">
         <doc-form-example-form formly [dbxFormlyFields]="toggleField" [disabled]="formTabs.disabled()"></doc-form-example-form>
         <doc-forge-example-form forge [config]="forgeToggleFieldConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
     </doc-feature-example>
 
     <doc-feature-example header="sectionWrapper()" hint="Wraps a field with a dbx-section.">
-      <doc-feature-form-tabs formlyFn="formlySectionWrapper()" forgeFn="forgeDbxSectionFieldWrapper()">
+      <doc-feature-form-tabs formlyFn="formlySectionWrapper()" forgeFn="dbxForgeSectionWrapper()">
         <doc-form-example-form formly [dbxFormlyFields]="sectionField" [disabled]="formTabs.disabled()"></doc-form-example-form>
         <doc-forge-example-form forge [config]="forgeSectionFieldConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
     </doc-feature-example>
 
     <doc-feature-example header="subsectionWrapper()" hint="Wraps a field with a dbx-subsection.">
-      <doc-feature-form-tabs formlyFn="formlySubsectionWrapper()" forgeFn="forgeDbxSubsectionFieldWrapper()">
+      <doc-feature-form-tabs formlyFn="formlySubsectionWrapper()" forgeFn="dbxForgeSubsectionWrapper()">
         <doc-form-example-form formly [dbxFormlyFields]="subsectionField" [disabled]="formTabs.disabled()"></doc-form-example-form>
         <doc-forge-example-form forge [config]="forgeSubsectionFieldConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
     </doc-feature-example>
 
     <doc-feature-example header="infoWrapper()" hint="Wraps a field with content that attaches an info button.">
-      <doc-feature-form-tabs formlyFn="formlyInfoWrapper()" forgeFn="forgeInfoFieldWrapper()">
+      <doc-feature-form-tabs formlyFn="formlyInfoWrapper()" forgeFn="dbxForgeInfoWrapper()">
         <doc-form-example-form formly [dbxFormlyFields]="infoField" [disabled]="formTabs.disabled()"></doc-form-example-form>
         <doc-forge-example-form forge [config]="forgeInfoFieldConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
@@ -46,7 +46,7 @@
     </doc-feature-example>
 
     <doc-feature-example header="workingWrapper()" hint="Wraps fields with a loading indicator that appears during async validation. Type a value and wait to see the loading bar. Type 'taken' to trigger a validation error.">
-      <doc-feature-form-tabs formlyFn="formlyWorkingWrapper()" forgeFn="forgeWorkingFieldWrapper()">
+      <doc-feature-form-tabs formlyFn="formlyWorkingWrapper()" forgeFn="dbxForgeTextIsAvailableField()">
         <doc-form-example-form formly [dbxFormlyFields]="workingField" [disabled]="formTabs.disabled()"></doc-form-example-form>
         <doc-forge-example-form forge [config]="forgeWorkingFieldConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
@@ -57,24 +57,25 @@
         <doc-form-example-form formly [dbxFormlyFields]="formFieldWrapperFields" [disabled]="formTabs.disabled()"></doc-form-example-form>
         <doc-forge-example-form forge [config]="forgeFormFieldWrapperSliderConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
-      <h4>Wrapping Other Fields</h4>
-      <doc-forge-example-form [config]="forgeFormFieldWrapperTextConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
     </doc-feature-example>
 
     <doc-feature-example header="flexLayoutWrapper()" hint="Wraps one or more fields to be displayed with flex layout. The flex layout can be configured per item. A screen width breakpoints can also be set to control if/when to collapse each item to full width.">
-      <doc-feature-form-tabs formlyFn="formlyFlexLayoutWrapper()" forgeFn="forgeRow()">
+      <doc-feature-form-tabs formlyFn="formlyFlexLayoutWrapper()" forgeFn="dbxForgeFlexLayout()">
         <doc-form-example-form formly [dbxFormlyFields]="flexField" [disabled]="formTabs.disabled()"></doc-form-example-form>
         <doc-forge-example-form forge [config]="forgeFlexFieldConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
       <h4>3 Per Row - Retain size down to small width</h4>
-      <doc-feature-form-tabs formlyFn="formlyFlexLayoutWrapper()" forgeFn="forgeRow()">
+      <doc-feature-form-tabs formlyFn="formlyFlexLayoutWrapper()" forgeFn="dbxForgeFlexLayout()">
         <doc-form-example-form formly [dbxFormlyFields]="flexThreeField" [disabled]="formTabs.disabled()"></doc-form-example-form>
         <doc-forge-example-form forge [config]="forgeFlexThreeFieldConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
       <h4>3 Per Row and Break To Column - At small width the break will change the flex to a column</h4>
-      <doc-form-example-form [dbxFormlyFields]="flexThreeFieldBreakToColumn" [disabled]="formTabs.disabled()"></doc-form-example-form>
+      <doc-feature-form-tabs formlyFn="formlyFlexLayoutWrapper()" forgeFn="dbxForgeFlexLayout()">
+        <doc-form-example-form formly [dbxFormlyFields]="flexThreeFieldBreakToColumn" [disabled]="formTabs.disabled()"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeFlexThreeFieldBreakToColumnConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
+      </doc-feature-form-tabs>
       <h4>5 Per Row - Retain size down to large width - with relative enabled to expand content</h4>
-      <doc-feature-form-tabs formlyFn="formlyFlexLayoutWrapper()" forgeFn="forgeRow()">
+      <doc-feature-form-tabs formlyFn="formlyFlexLayoutWrapper()" forgeFn="dbxForgeFlexLayout()">
         <doc-form-example-form formly [dbxFormlyFields]="flexFiveField" [disabled]="formTabs.disabled()"></doc-form-example-form>
         <doc-forge-example-form forge [config]="forgeFlexFiveFieldConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>

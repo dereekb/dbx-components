@@ -9,20 +9,20 @@ import {
   formlyDateRangeField,
   type DbxDateTimePickerConfiguration,
   formlyDateTimeRangeField,
-  formlyTimezoneStringField,
   formlyFixedDateRangeField,
   formlyTimeDurationField,
-  forgeDateTimeField,
-  forgeDateRangeField,
-  forgeFixedDateRangeField,
-  forgeTimeDurationField,
+  dbxForgeDateTimeField,
+  dbxForgeDateRangeRow,
+  dbxForgeDateTimeRangeRow,
+  dbxForgeFixedDateRangeField,
+  dbxForgeTimeDurationField,
+  dbxForgeTimezoneStringField,
   DbxFormFormlyDateFieldModule,
   DbxFormFormlyDbxListFieldModule,
   DbxFormFormlyDurationFieldModule,
   DbxFormFormlyPickableFieldModule,
   DbxFormFormlySearchableFieldModule,
   DbxFormFormlySourceSelectModule,
-  DbxFormTimezoneStringFieldModule,
   DbxFormlyFieldsContextDirective,
   DbxFormSourceDirective,
   DbxFormValueChangeDirective
@@ -41,24 +41,7 @@ import { DocFormForgeExampleComponent } from '../component/forge.example.form.co
 @Component({
   templateUrl: './value.date.component.html',
   standalone: true,
-  imports: [
-    DbxContentContainerDirective,
-    DocFeatureLayoutComponent,
-    DocFeatureExampleComponent,
-    DocFeatureFormTabsComponent,
-    DocFormExampleComponent,
-    DocFormForgeExampleComponent,
-    DbxFormlyFieldsContextDirective,
-    DbxFormSourceDirective,
-    DbxFormValueChangeDirective,
-    DbxFormFormlyDateFieldModule,
-    DbxFormFormlyDbxListFieldModule,
-    DbxFormFormlyDurationFieldModule,
-    DbxFormFormlyPickableFieldModule,
-    DbxFormFormlySearchableFieldModule,
-    DbxFormFormlySourceSelectModule,
-    DbxFormTimezoneStringFieldModule
-  ],
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormExampleComponent, DocFormForgeExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormValueChangeDirective, DbxFormFormlyDateFieldModule, DbxFormFormlyDbxListFieldModule, DbxFormFormlyDurationFieldModule, DbxFormFormlyPickableFieldModule, DbxFormFormlySearchableFieldModule, DbxFormFormlySourceSelectModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormDateValueComponent implements OnDestroy {
@@ -79,7 +62,9 @@ export class DocFormDateValueComponent implements OnDestroy {
 
   readonly timezone$ = this._timezone.asObservable();
 
-  readonly timezoneSelectionField: FormlyFieldConfig[] = [formlyTimezoneStringField()];
+  readonly timezoneSelectionFieldConfig: FormConfig = {
+    fields: [dbxForgeTimezoneStringField() as any]
+  };
 
   readonly onTimezoneChange = (value: { timezone: Maybe<TimezoneString> }) => {
     this._timezone.next(value?.timezone);
@@ -171,7 +156,7 @@ export class DocFormDateValueComponent implements OnDestroy {
             max: addDays(new Date(), 14)
           },
           schedule: {
-            w: `${DateCellScheduleDayCode.MONDAY}${DateCellScheduleDayCode.WEDNESDAY}${DateCellScheduleDayCode.FRIDAY}` as any,
+            w: `${DateCellScheduleDayCode.MONDAY}${DateCellScheduleDayCode.WEDNESDAY}${DateCellScheduleDayCode.FRIDAY}`,
             d: [0, 1, 2, 3, 4, 5, 6] // next 7 days
           }
         };
@@ -184,131 +169,145 @@ export class DocFormDateValueComponent implements OnDestroy {
   // Forge date-time fields — 1:1 parity with formly formlyDateTimeFields
   readonly forgeDateTimeFieldsConfig: FormConfig = {
     fields: [
-      forgeDateTimeField({ timezone: this.timezone$, label: 'Date Picker', key: 'datePicker', allDayLabel: 'On', valueMode: DbxDateTimeValueMode.DATE, timeMode: DbxDateTimeFieldTimeMode.NONE }) as any,
-      forgeDateTimeField({ timezone: this.timezone$, label: 'Day Only W/ String Value', hideDateHint: true, key: 'dayOnlyAsString', valueMode: DbxDateTimeValueMode.DAY_STRING, description: 'This date field is for picking a day only and as an ISO8601DayString. The calendar picker is hidden and the allDayLabel has been customized to be "On".', hideDatePicker: true }) as any,
-      forgeDateTimeField({ timezone: this.timezone$, key: 'date', required: true, description: 'This is the default date field that requires the user pick a date and time.' }) as any,
-      forgeDateTimeField({ timezone: this.timezone$, label: 'Date With String Value', key: 'dateAsString', required: true, valueMode: DbxDateTimeValueMode.DATE_STRING, description: 'This date field returns the value as an ISO8601DateString. The date hint is also hidden.', hideDateHint: true }) as any,
-      forgeDateTimeField({
-        timezone: this.timezone$,
+      dbxForgeDateTimeField({ label: 'Date Picker', key: 'datePicker', props: { timezone: this.timezone$, allDayLabel: 'On', valueMode: DbxDateTimeValueMode.DATE, timeMode: DbxDateTimeFieldTimeMode.NONE } }),
+      dbxForgeDateTimeField({ label: 'Day Only W/ String Value', key: 'dayOnlyAsString', description: 'This date field is for picking a day only and as an ISO8601DayString. The calendar picker is hidden and the allDayLabel has been customized to be "On".', props: { timezone: this.timezone$, hideDateHint: true, valueMode: DbxDateTimeValueMode.DAY_STRING, hideDatePicker: true } }),
+      dbxForgeDateTimeField({ key: 'date', required: true, description: 'This is the default date field that requires the user pick a date and time.', props: { timezone: this.timezone$ } }),
+      dbxForgeDateTimeField({ label: 'Date With String Value', key: 'dateAsString', required: true, description: 'This date field returns the value as an ISO8601DateString. The date hint is also hidden.', props: { timezone: this.timezone$, valueMode: DbxDateTimeValueMode.DATE_STRING, hideDateHint: true } }),
+      dbxForgeDateTimeField({
         label: 'Time For Work Day Today (For Timezone)',
-        alwaysShowDateInput: false,
-        timeDate: new Date(),
-        showClearButton: false,
         key: 'timeForWorkDayToday',
         description: 'This date field has a filter that only allows picking a time for todays work day (between 9AM and 5PM).',
-        pickerConfig: {
-          limits: {
-            min: addHours(startOfDay(new Date()), 9),
-            max: addHours(startOfDay(new Date()), 9 + 8)
+        props: {
+          timezone: this.timezone$,
+          alwaysShowDateInput: false,
+          timeDate: new Date(),
+          showClearButton: false,
+          pickerConfig: {
+            limits: {
+              min: addHours(startOfDay(new Date()), 9),
+              max: addHours(startOfDay(new Date()), 9 + 8)
+            }
           }
         }
-      }) as any,
-      forgeDateTimeField({ timezone: this.timezone$, key: 'timeOptional', timeMode: DbxDateTimeFieldTimeMode.OPTIONAL, description: 'This date field is for picking a day, with an optional time.' }) as any,
-      forgeDateTimeField({ timezone: this.timezone$, label: 'Day Only', key: 'dayOnly', timeMode: DbxDateTimeFieldTimeMode.NONE, description: 'This date field is for picking a day only.' }) as any,
-      forgeDateTimeField({
-        timezone: this.timezone$,
+      }),
+      dbxForgeDateTimeField({ key: 'timeOptional', description: 'This date field is for picking a day, with an optional time.', props: { timezone: this.timezone$, timeMode: DbxDateTimeFieldTimeMode.OPTIONAL } }),
+      dbxForgeDateTimeField({ label: 'Day Only', key: 'dayOnly', description: 'This date field is for picking a day only.', props: { timezone: this.timezone$, timeMode: DbxDateTimeFieldTimeMode.NONE } }),
+      dbxForgeDateTimeField({
         label: 'Time Only',
         key: 'timeOnly',
-        timeOnly: true,
         description: 'This date field is for picking a time only. The date and timezone hint is also hidden. It has custom time preset values.',
-        hideDateHint: true,
-        showTimezone: false,
-        presets: [
-          { label: '12:00 AM', timeString: '12:00AM' },
-          { label: '12:30 PM', timeString: '12:30PM' },
-          { label: 'Now', logicalDate: 'now' }
-        ]
-      }) as any,
-      forgeDateTimeField({
-        timezone: this.timezone$,
+        props: {
+          timezone: this.timezone$,
+          timeOnly: true,
+          hideDateHint: true,
+          showTimezone: false,
+          presets: [
+            { label: '12:00 AM', timeString: '12:00AM' },
+            { label: '12:30 PM', timeString: '12:30PM' },
+            { label: 'Now', logicalDate: 'now' }
+          ]
+        }
+      }),
+      dbxForgeDateTimeField({
         label: 'Time For Today (For Timezone)',
-        alwaysShowDateInput: false,
-        timeDate: new Date(),
-        showClearButton: false,
         key: 'timeForToday',
         description: 'This date field has a filter that only allows picking a time for today (that is within the last two hours and next two hours).',
-        pickerConfig: {
-          limits: {
-            min: findMaxDate([startOfDay(new Date()), addHours(new Date(), -2)]),
-            max: findMinDate([endOfDay(new Date()), addHours(new Date(), 2)])
+        props: {
+          timezone: this.timezone$,
+          alwaysShowDateInput: false,
+          timeDate: new Date(),
+          showClearButton: false,
+          pickerConfig: {
+            limits: {
+              min: findMaxDate([startOfDay(new Date()), addHours(new Date(), -2)]),
+              max: findMinDate([endOfDay(new Date()), addHours(new Date(), 2)])
+            }
           }
         }
-      }) as any,
-      forgeDateTimeField({
+      }),
+      dbxForgeDateTimeField({
         label: 'Changing Configuration',
-        showClearButton: false,
         key: 'changingConfiguration',
         description: 'This date field has a filter that changes every second to require a minute more in the future for every second that passes.',
-        pickerConfig: interval(1000).pipe(
-          map((x) => ({
-            limits: {
-              min: addMinutes(new Date(), x)
-            }
-          }))
-        )
-      }) as any,
-      forgeDateTimeField({ label: 'Unix Timestamp', key: 'unixTimeStamp', valueMode: DbxDateTimeValueMode.UNIX_TIMESTAMP, description: 'This date field picks a unix timestamp for the system timezone.', hideDateHint: true }) as any,
-      forgeDateTimeField({ label: 'Unix Timestamp In New York', key: 'unixTimeStampInNewYork', valueMode: DbxDateTimeValueMode.UNIX_TIMESTAMP, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, description: 'This date field picks a unix timestamp for a specific timezone.', hideDateHint: true, timezone: 'America/New_York' }) as any,
-      forgeDateTimeField({ label: 'Date Only In Tokyo', key: 'dateOnlyWithLockedTimezone', timeMode: DbxDateTimeFieldTimeMode.NONE, description: 'This date field picks a date and has a locked timezone.', timezone: 'Asia/Tokyo' }) as any,
-      forgeDateTimeField({ label: 'Time Only In New York', key: 'timeOnlyWithLockedTimezone', timeOnly: true, description: 'This date field picks a time and has a locked timezone.', hideDateHint: true, timezone: 'America/New_York' }) as any,
-      forgeDateTimeField({ label: 'Minute Of Day', key: 'minuteOfDay', valueMode: DbxDateTimeValueMode.MINUTE_OF_DAY, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, timeOnly: true, description: 'This date field picks a minute of day for the system timezone.', hideDateHint: true }) as any,
-      forgeDateTimeField({ label: 'Minute Of Day For New York', key: 'minuteOfDayForNewYork', valueMode: DbxDateTimeValueMode.MINUTE_OF_DAY, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, showTimezone: true, timeOnly: true, description: 'This date field picks a minute of day for America/New_York.', hideDateHint: true, timezone: 'America/New_York' }) as any,
-      forgeDateTimeField({ label: 'System Minute Of Day For New York', key: 'systemMinuteOfDayForNewYork', valueMode: DbxDateTimeValueMode.SYSTEM_MINUTE_OF_DAY, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, timeOnly: true, description: 'This date field picks a minute of day for the system but shows the timezone as America/New_York.', hideDateHint: true, timezone: 'America/New_York' }) as any,
-      forgeDateTimeField({ timezone: this.timezone$, label: 'Timezone Day', key: 'timezoneDay', valueMode: DbxDateTimeValueMode.DATE_STRING }) as any,
-      forgeDateTimeField({
-        timezone: this.timezone$,
+        props: {
+          showClearButton: false,
+          pickerConfig: interval(1000).pipe(
+            map((x) => ({
+              limits: {
+                min: addMinutes(new Date(), x)
+              }
+            }))
+          )
+        }
+      }),
+      dbxForgeDateTimeField({ label: 'Unix Timestamp', key: 'unixTimeStamp', description: 'This date field picks a unix timestamp for the system timezone.', props: { valueMode: DbxDateTimeValueMode.UNIX_TIMESTAMP, hideDateHint: true } }),
+      dbxForgeDateTimeField({ label: 'Unix Timestamp In New York', key: 'unixTimeStampInNewYork', description: 'This date field picks a unix timestamp for a specific timezone.', props: { valueMode: DbxDateTimeValueMode.UNIX_TIMESTAMP, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, hideDateHint: true, timezone: 'America/New_York' } }),
+      dbxForgeDateTimeField({ label: 'Date Only In Tokyo', key: 'dateOnlyWithLockedTimezone', description: 'This date field picks a date and has a locked timezone.', props: { timeMode: DbxDateTimeFieldTimeMode.NONE, timezone: 'Asia/Tokyo' } }),
+      dbxForgeDateTimeField({ label: 'Time Only In New York', key: 'timeOnlyWithLockedTimezone', description: 'This date field picks a time and has a locked timezone.', props: { timeOnly: true, hideDateHint: true, timezone: 'America/New_York' } }),
+      dbxForgeDateTimeField({ label: 'Minute Of Day', key: 'minuteOfDay', description: 'This date field picks a minute of day for the system timezone.', props: { valueMode: DbxDateTimeValueMode.MINUTE_OF_DAY, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, timeOnly: true, hideDateHint: true } }),
+      dbxForgeDateTimeField({ label: 'Minute Of Day For New York', key: 'minuteOfDayForNewYork', description: 'This date field picks a minute of day for America/New_York.', props: { valueMode: DbxDateTimeValueMode.MINUTE_OF_DAY, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, showTimezone: true, timeOnly: true, hideDateHint: true, timezone: 'America/New_York' } }),
+      dbxForgeDateTimeField({ label: 'System Minute Of Day For New York', key: 'systemMinuteOfDayForNewYork', description: 'This date field picks a minute of day for the system but shows the timezone as America/New_York.', props: { valueMode: DbxDateTimeValueMode.SYSTEM_MINUTE_OF_DAY, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, timeOnly: true, hideDateHint: true, timezone: 'America/New_York' } }),
+      dbxForgeDateTimeField({ label: 'Timezone Day', key: 'timezoneDay', props: { timezone: this.timezone$, valueMode: DbxDateTimeValueMode.DATE_STRING } }),
+      dbxForgeDateTimeField({
         key: 'dateWithASchedule',
         required: true,
         description: 'This date is limited to specific days specified by a schedule of M/W/F and the next 7 days from today.',
-        pickerConfig: () => {
-          const config: DbxDateTimePickerConfiguration = {
-            limits: {
-              min: startOfDay(new Date()),
-              max: addDays(new Date(), 14)
-            },
-            schedule: {
-              w: `${DateCellScheduleDayCode.MONDAY}${DateCellScheduleDayCode.WEDNESDAY}${DateCellScheduleDayCode.FRIDAY}` as any,
-              d: [0, 1, 2, 3, 4, 5, 6]
-            }
-          };
-          return of(config);
+        props: {
+          timezone: this.timezone$,
+          pickerConfig: () => {
+            const config: DbxDateTimePickerConfiguration = {
+              limits: {
+                min: startOfDay(new Date()),
+                max: addDays(new Date(), 14)
+              },
+              schedule: {
+                w: `${DateCellScheduleDayCode.MONDAY}${DateCellScheduleDayCode.WEDNESDAY}${DateCellScheduleDayCode.FRIDAY}`,
+                d: [0, 1, 2, 3, 4, 5, 6]
+              }
+            };
+            return of(config);
+          }
         }
-      }) as any
+      })
     ]
   };
 
   // Forge date range — 1:1 parity with formly formlyDateRangeFields
   readonly forgeDateRangeFieldsConfig: FormConfig = {
     fields: [
-      forgeDateRangeField({}) as any,
-      forgeDateRangeField({
+      dbxForgeDateRangeRow(),
+      dbxForgeDateRangeRow({
         start: {
           key: 'startLimited',
           description: 'Must start on a M/T and no later than 14 days ago',
-          pickerConfig: () => {
-            const config: DbxDateTimePickerConfiguration = {
-              limits: {
-                min: addDays(startOfDay(new Date()), -14)
-              },
-              schedule: {
-                w: `${DateCellScheduleDayCode.MONDAY}${DateCellScheduleDayCode.TUESDAY}` as DateCellScheduleEncodedWeek
-              }
-            };
+          props: {
+            pickerConfig: () => {
+              const config: DbxDateTimePickerConfiguration = {
+                limits: {
+                  min: addDays(startOfDay(new Date()), -14)
+                },
+                schedule: {
+                  w: `${DateCellScheduleDayCode.MONDAY}${DateCellScheduleDayCode.TUESDAY}` as DateCellScheduleEncodedWeek
+                }
+              };
 
-            return of(config);
+              return of(config);
+            }
           }
         },
         end: {
           key: 'endLimited',
           description: 'Must end on a W/T/F',
-          pickerConfig: () => {
-            const config: DbxDateTimePickerConfiguration = {
-              schedule: {
-                w: `${DateCellScheduleDayCode.WEDNESDAY}${DateCellScheduleDayCode.THURSDAY}${DateCellScheduleDayCode.FRIDAY}` as DateCellScheduleEncodedWeek
-              }
-            };
+          props: {
+            pickerConfig: () => {
+              const config: DbxDateTimePickerConfiguration = {
+                schedule: {
+                  w: `${DateCellScheduleDayCode.WEDNESDAY}${DateCellScheduleDayCode.THURSDAY}${DateCellScheduleDayCode.FRIDAY}` as DateCellScheduleEncodedWeek
+                }
+              };
 
-            return of(config);
+              return of(config);
+            }
           }
         }
       }) as any
@@ -316,64 +315,134 @@ export class DocFormDateValueComponent implements OnDestroy {
   };
 
   // Forge fixed date range — 1:1 parity
-  readonly forgeFixedDateRangeFieldsConfig: FormConfig = {
+  readonly fixedDateRangeFields: FormlyFieldConfig[] = [
+    formlyFixedDateRangeField({
+      required: true,
+      key: 'tenDayFixedDateRange',
+      label: 'Fixed Date Range',
+      description: 'Required. Picks a 10-day date range. Returns the date as an ISO8601DateString.',
+      valueMode: DbxDateTimeValueMode.DATE_STRING,
+      dateRangeInput: { type: DateRangeType.WEEKS_RANGE, distance: 1 },
+      timezone: this.timezone$,
+      pickerConfig: {
+        limits: {
+          min: 'today_start',
+          max: addMonths(endOfMonth(new Date()), 1)
+        }
+      }
+    }),
+    formlyFixedDateRangeField({
+      key: 'oneMonthFixedDateRange',
+      label: 'One Month Arbitrary Date Range',
+      selectionMode: 'arbitrary_quick',
+      description: 'Arbitrary end date up to 21 days. Limited to the first 18 days of the month. Not required. Picks all the days in the current month. Returns the date as an ISO8601DayString.',
+      valueMode: DbxDateTimeValueMode.DAY_STRING,
+      dateRangeInput: { type: DateRangeType.DAYS_RANGE, distance: 21 },
+      timezone: this.timezone$,
+      pickerConfig: {
+        limits: {
+          min: startOfMonth(new Date()),
+          max: addDays(startOfMonth(new Date()), 18)
+        }
+      }
+    }),
+    formlyFixedDateRangeField({
+      key: 'thisMonthNormalDateRange',
+      label: 'One Month Normal Date Range',
+      selectionMode: 'normal',
+      description: 'Normal selection. Limited to the first 18 days of the month. Not required. Returns the date as an ISO8601DayString.',
+      valueMode: DbxDateTimeValueMode.DAY_STRING,
+      timezone: this.timezone$,
+      pickerConfig: {
+        limits: {
+          min: startOfMonth(new Date()),
+          max: addDays(startOfMonth(new Date()), 18)
+        }
+      }
+    }),
+    formlyFixedDateRangeField({
+      key: 'maxAnyMonthNormalDateRange',
+      label: 'Max Any Calendar Month Long',
+      selectionMode: 'normal',
+      description: 'Normal selection. Limited date range. Selection range of 1 calendar month. Not required. Returns the date as an ISO8601DayString.',
+      valueMode: DbxDateTimeValueMode.DAY_STRING,
+      dateRangeInput: { type: DateRangeType.CALENDAR_MONTH, distance: 1 },
+      timezone: this.timezone$,
+      pickerConfig: {
+        limits: {
+          min: addMonths(startOfMonth(new Date()), -2),
+          max: addDays(startOfMonth(new Date()), 60)
+        }
+      }
+    })
+  ];
+
+  readonly dbxForgeFixedDateRangeFieldsConfig: FormConfig = {
     fields: [
-      forgeFixedDateRangeField({
+      dbxForgeFixedDateRangeField({
         key: 'tenDayFixedDateRange',
         label: 'Fixed Date Range',
         required: true,
         description: 'Required. Picks a 10-day date range. Returns the date as an ISO8601DateString.',
-        valueMode: DbxDateTimeValueMode.DATE_STRING,
-        dateRangeInput: { type: DateRangeType.WEEKS_RANGE, distance: 1 },
-        timezone: this.timezone$,
-        pickerConfig: {
-          limits: {
-            min: 'today_start',
-            max: addMonths(endOfMonth(new Date()), 1)
+        props: {
+          valueMode: DbxDateTimeValueMode.DATE_STRING,
+          dateRangeInput: { type: DateRangeType.WEEKS_RANGE, distance: 1 },
+          timezone: this.timezone$,
+          pickerConfig: {
+            limits: {
+              min: 'today_start',
+              max: addMonths(endOfMonth(new Date()), 1)
+            }
           }
         }
-      }) as any,
-      forgeFixedDateRangeField({
+      }),
+      dbxForgeFixedDateRangeField({
         key: 'oneMonthFixedDateRange',
         label: 'One Month Arbitrary Date Range',
-        selectionMode: 'arbitrary_quick',
         description: 'Arbitrary end date up to 21 days. Limited to the first 18 days of the month.',
-        valueMode: DbxDateTimeValueMode.DAY_STRING,
-        dateRangeInput: { type: DateRangeType.DAYS_RANGE, distance: 21 },
-        timezone: this.timezone$,
-        pickerConfig: {
-          limits: {
-            min: startOfMonth(new Date()),
-            max: addDays(startOfMonth(new Date()), 18)
+        props: {
+          selectionMode: 'arbitrary_quick',
+          valueMode: DbxDateTimeValueMode.DAY_STRING,
+          dateRangeInput: { type: DateRangeType.DAYS_RANGE, distance: 21 },
+          timezone: this.timezone$,
+          pickerConfig: {
+            limits: {
+              min: startOfMonth(new Date()),
+              max: addDays(startOfMonth(new Date()), 18)
+            }
           }
         }
-      }) as any,
-      forgeFixedDateRangeField({
+      }),
+      dbxForgeFixedDateRangeField({
         key: 'thisMonthNormalDateRange',
         label: 'One Month Normal Date Range',
-        selectionMode: 'normal',
         description: 'Normal selection. Limited to the first 18 days of the month.',
-        valueMode: DbxDateTimeValueMode.DAY_STRING,
-        timezone: this.timezone$,
-        pickerConfig: {
-          limits: {
-            min: startOfMonth(new Date()),
-            max: addDays(startOfMonth(new Date()), 18)
+        props: {
+          selectionMode: 'normal',
+          valueMode: DbxDateTimeValueMode.DAY_STRING,
+          timezone: this.timezone$,
+          pickerConfig: {
+            limits: {
+              min: startOfMonth(new Date()),
+              max: addDays(startOfMonth(new Date()), 18)
+            }
           }
         }
-      }) as any,
-      forgeFixedDateRangeField({
+      }),
+      dbxForgeFixedDateRangeField({
         key: 'maxAnyMonthNormalDateRange',
         label: 'Max Any Calendar Month Long',
-        selectionMode: 'normal',
         description: 'Normal selection. Limited date range. Selection range of 1 calendar month. Not required. Returns the date as an ISO8601DayString.',
-        valueMode: DbxDateTimeValueMode.DAY_STRING,
-        dateRangeInput: { type: DateRangeType.CALENDAR_MONTH, distance: 1 },
-        timezone: this.timezone$,
-        pickerConfig: {
-          limits: {
-            min: addMonths(startOfMonth(new Date()), -2),
-            max: addDays(startOfMonth(new Date()), 60)
+        props: {
+          selectionMode: 'normal',
+          valueMode: DbxDateTimeValueMode.DAY_STRING,
+          dateRangeInput: { type: DateRangeType.CALENDAR_MONTH, distance: 1 },
+          timezone: this.timezone$,
+          pickerConfig: {
+            limits: {
+              min: addMonths(startOfMonth(new Date()), -2),
+              max: addDays(startOfMonth(new Date()), 60)
+            }
           }
         }
       }) as any
@@ -383,11 +452,11 @@ export class DocFormDateValueComponent implements OnDestroy {
   // Forge time duration — 1:1 parity with formly formlyTimeDurationFields
   readonly forgeTimeDurationFieldsConfig: FormConfig = {
     fields: [
-      forgeTimeDurationField({ key: 'durationMs', label: 'Duration (output: milliseconds)', outputUnit: 'ms', allowedUnits: ['min', 'h', 'd'], carryOver: true, description: 'Output is in milliseconds. Type "2h30m" or use the picker. carryOver is enabled (60m → 1h).' }) as any,
-      forgeTimeDurationField({ key: 'durationMinutes', label: 'Duration (output: minutes)', outputUnit: 'min', min: 0, max: 480, description: 'Output is in minutes with min 0 and max 480 (8 hours). All units available.' }) as any,
-      forgeTimeDurationField({ key: 'hoursAndMinutes', label: 'Duration (HoursAndMinutes output)', valueMode: 'hours_and_minutes', allowedUnits: ['min', 'h'], carryOver: true, description: 'Output is an HoursAndMinutes object. Restricted to minutes and hours. carryOver enabled.' }) as any,
-      forgeTimeDurationField({ key: 'durationSeconds', label: 'Duration (output: seconds)', outputUnit: 's', allowedUnits: ['s', 'min', 'h'], carryOver: true, description: 'Output is in seconds. Picker shows seconds, minutes, and hours. carryOver enabled.' }) as any,
-      forgeTimeDurationField({ key: 'durationData', label: 'Duration (TimeDurationData output)', valueMode: 'duration_data', allowedUnits: ['s', 'min', 'h', 'd'], carryOver: true, description: 'Output is a TimeDurationData object with individual unit fields.' }) as any
+      dbxForgeTimeDurationField({ key: 'durationMs', label: 'Duration (output: milliseconds)', outputUnit: 'ms', allowedUnits: ['min', 'h', 'd'], carryOver: true, description: 'Output is in milliseconds. Type "2h30m" or use the picker. carryOver is enabled (60m → 1h).' }),
+      dbxForgeTimeDurationField({ key: 'durationMinutes', label: 'Duration (output: minutes)', outputUnit: 'min', min: 0, max: 480, description: 'Output is in minutes with min 0 and max 480 (8 hours). All units available.' }),
+      dbxForgeTimeDurationField({ key: 'hoursAndMinutes', label: 'Duration (HoursAndMinutes output)', valueMode: 'hours_and_minutes', allowedUnits: ['min', 'h'], carryOver: true, description: 'Output is an HoursAndMinutes object. Restricted to minutes and hours. carryOver enabled.' }),
+      dbxForgeTimeDurationField({ key: 'durationSeconds', label: 'Duration (output: seconds)', outputUnit: 's', allowedUnits: ['s', 'min', 'h'], carryOver: true, description: 'Output is in seconds. Picker shows seconds, minutes, and hours. carryOver enabled.' }),
+      dbxForgeTimeDurationField({ key: 'durationData', label: 'Duration (TimeDurationData output)', valueMode: 'duration_data', allowedUnits: ['s', 'min', 'h', 'd'], carryOver: true, description: 'Output is a TimeDurationData object with individual unit fields.' }) as any
     ]
   };
 
@@ -486,102 +555,41 @@ export class DocFormDateValueComponent implements OnDestroy {
     })
   ];
 
-  /*
-
-
-export function schoolInfoJobSettingsTimeFields() {
-  return flexLayoutWrapper([schoolInfoJobSettingsStartTimeField(), schoolInfoJobSettingsEndTimeField()], {
-    relative: true
-  });
-}
-
-export function schoolInfoJobSettingsStartTimeField() {
-  return formlyDateTimeField({
-    key: 'sat',
-    label: 'Default Start Time',
-    required: false,
-    timeOnly: true,
-    hideDateHint: true
-  });
-}
-
-export function schoolInfoJobSettingsEndTimeField() {
-  return formlyDateTimeField({
-    key: 'eat',
-    label: 'Default End Time',
-    required: false,
-    timeOnly: true,
-    hideDateHint: true
-  });
-}
-  */
+  // Forge date-time range — 1:1 parity with formly dateTimeRangeFields (except path-based timeDate)
+  readonly forgeDateTimeRangeFieldsConfig: FormConfig = {
+    fields: [
+      dbxForgeDateTimeRangeRow({
+        props: { timezone: this.timezone$ },
+        start: { key: 'sat' },
+        end: { key: 'eat' }
+      }),
+      dbxForgeDateTimeRangeRow({
+        props: { timezone: 'America/Chicago', timeDate: '2023-11-08' },
+        start: { label: 'Start Time on 2023-11-08 (CDT)', key: 'satcdt' },
+        end: { key: 'eatcdt' }
+      }),
+      dbxForgeDateTimeRangeRow({
+        props: { timezone: 'America/Chicago', timeDate: '2024-03-21' },
+        start: { label: 'Start Time on 2024-03-21 (CST)', key: 'satcst' },
+        end: { key: 'eatcst' }
+      }),
+      dbxForgeDateTimeRangeRow({
+        props: { timezone: 'America/Chicago', timeDate: '2023-11-08' },
+        start: { label: 'Start Time on 2023-11-08 (CDT)', key: 'sat2' },
+        end: { label: 'End Time on 2024-03-21 (CST)', key: 'eat2', props: { timeDate: '2024-03-21' } }
+      }),
+      dbxForgeDateTimeRangeRow({
+        props: { timezone: this.timezone$, valueMode: DbxDateTimeValueMode.MINUTE_OF_DAY },
+        start: { label: 'Start Minute Of Day', key: 'satm2' },
+        end: { label: 'End Minute Of Day', key: 'eatm2' }
+      }) as any
+    ]
+  };
 
   readonly fixedDateRangeValue$ = of({
     tenDayFixedDateRange: dateRange({ date: addDays(new Date(), 4), type: DateRangeType.WEEK }),
     oneMonthFixedDateRange: dateRange({ date: new Date(), type: DateRangeType.WEEK, distance: 2 })
   });
-
-  readonly fixedDateRangeFields: FormlyFieldConfig[] = [
-    formlyFixedDateRangeField({
-      required: true,
-      key: 'tenDayFixedDateRange',
-      label: 'Fixed Date Range',
-      description: 'Required. Picks a 10-day date range. Returns the date as an ISO8601DateString.',
-      valueMode: DbxDateTimeValueMode.DATE_STRING,
-      dateRangeInput: { type: DateRangeType.WEEKS_RANGE, distance: 1 },
-      timezone: this.timezone$,
-      pickerConfig: {
-        limits: {
-          min: 'today_start',
-          max: addMonths(endOfMonth(new Date()), 1)
-        }
-      }
-    }),
-    formlyFixedDateRangeField({
-      key: 'oneMonthFixedDateRange',
-      label: 'One Month Arbitrary Date Range',
-      selectionMode: 'arbitrary_quick',
-      description: 'Arbitrary end date up to 21 days. Limited to the first 18 days of the month. Not required. Picks all the days in the current month. Returns the date as an ISO8601DayString.',
-      valueMode: DbxDateTimeValueMode.DAY_STRING,
-      dateRangeInput: { type: DateRangeType.DAYS_RANGE, distance: 21 },
-      timezone: this.timezone$,
-      pickerConfig: {
-        limits: {
-          min: startOfMonth(new Date()),
-          max: addDays(startOfMonth(new Date()), 18)
-        }
-      }
-    }),
-    formlyFixedDateRangeField({
-      key: 'thisMonthNormalDateRange',
-      label: 'One Month Normal Date Range',
-      selectionMode: 'normal',
-      description: 'Normal selection. Limited to the first 18 days of the month. Not required. Returns the date as an ISO8601DayString.',
-      valueMode: DbxDateTimeValueMode.DAY_STRING,
-      timezone: this.timezone$,
-      pickerConfig: {
-        limits: {
-          min: startOfMonth(new Date()),
-          max: addDays(startOfMonth(new Date()), 18)
-        }
-      }
-    }),
-    formlyFixedDateRangeField({
-      key: 'maxAnyMonthNormalDateRange',
-      label: 'Max Any Calendar Month Long',
-      selectionMode: 'normal',
-      description: 'Normal selection. Limited date range. Selection range of 1 calendar month. Not required. Returns the date as an ISO8601DayString.',
-      valueMode: DbxDateTimeValueMode.DAY_STRING,
-      dateRangeInput: { type: DateRangeType.CALENDAR_MONTH, distance: 1 },
-      timezone: this.timezone$,
-      pickerConfig: {
-        limits: {
-          min: addMonths(startOfMonth(new Date()), -2),
-          max: addDays(startOfMonth(new Date()), 60)
-        }
-      }
-    })
-  ];
 
   readonly dateRangeFields: FormlyFieldConfig[] = [
     formlyDateRangeField({}),
@@ -649,6 +657,33 @@ export function schoolInfoJobSettingsEndTimeField() {
   ]).pipe(delay(1000)); // add an artificial delay
 
   readonly asyncTimeFormConfigSignal = toSignal(this.asyncTimeFormConfig$, { initialValue: undefined });
+
+  readonly forgeAsyncTimeFormConfig$: Observable<FormConfig> = of({
+    fields: [
+      dbxForgeDateTimeField({
+        label: 'Async Configured Date',
+        key: 'date',
+        props: {
+          timezone: this.timezone$,
+          timeDate: this.baseDate$,
+          pickerConfig: this.baseDate$.pipe(
+            map((x) => {
+              const config: DbxDateTimePickerConfiguration = {
+                limits: {
+                  min: addHours(x, -24),
+                  max: addHours(x, 24)
+                }
+              };
+
+              return config;
+            })
+          )
+        }
+      }) as any
+    ]
+  }).pipe(delay(1000)); // add an artificial delay
+
+  readonly forgeAsyncTimeFormConfigSignal = toSignal(this.forgeAsyncTimeFormConfig$, { initialValue: undefined });
 
   readonly asyncTimeFormTemplate$ = this._newDateValue.pipe(
     map((date) => {

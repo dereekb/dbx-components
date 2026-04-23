@@ -106,8 +106,7 @@ export class DbxActionAnalyticsDirective<T, O> {
               );
             }
 
-            const result = triggerObs.length ? merge(...triggerObs) : of();
-            return result;
+            return triggerObs.length ? merge(...triggerObs) : of();
           })
         )
         .subscribe()

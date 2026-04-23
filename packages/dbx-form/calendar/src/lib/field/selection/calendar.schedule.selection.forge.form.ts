@@ -1,6 +1,6 @@
-import { forgeToggleField } from '@dereekb/dbx-form';
+import { dbxForgeToggleField } from '@dereekb/dbx-form';
 import { getDaysOfWeekNames } from '@dereekb/util';
-import type { FormConfig } from '@ng-forge/dynamic-forms';
+import type { FieldDef, FormConfig } from '@ng-forge/dynamic-forms';
 
 /**
  * Creates forge form fields for selecting which days of the week are enabled in a schedule selection calendar
@@ -19,9 +19,9 @@ export function dbxScheduleSelectionCalendarDateDaysForgeFormFields(): FormConfi
  *
  * @returns An array of forge toggle field definitions for each day of the week
  */
-export function dbxScheduleSelectionCalendarDateDaysForgeFormDayFields() {
+export function dbxScheduleSelectionCalendarDateDaysForgeFormDayFields(): FieldDef<unknown>[] {
   return getDaysOfWeekNames(false).map((dayOfWeekName: string) => {
-    return forgeToggleField({
+    return dbxForgeToggleField({
       key: dayOfWeekName.toLowerCase(),
       label: dayOfWeekName,
       styledBox: false

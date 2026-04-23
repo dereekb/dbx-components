@@ -1,41 +1,25 @@
 // MARK: Mixin
 @mixin core() {
-  // The forge source select renders inside the forgeFormFieldWrapper content area.
-  // The wrapper provides padding and the outlined border. Override the shared formly
-  // styles that were designed for the mat-form-field context.
+  .dbx-source-select-field-loading {
+    position: absolute;
+    bottom: 5px;
+    left: 0px;
+    right: 0px;
+    overflow: hidden;
+    border-radius: 999px;
+  }
+
   dbx-forge-source-select-field {
-    // Position the loading bar at the very bottom of the wrapper outline
-    // by stretching the field container to fill the wrapper content area.
-    .dbx-source-select-field {
+    display: block;
+    width: 100%;
+
+    // mat-form-field needs relative positioning for the loading bar
+    .mat-mdc-form-field {
       position: relative;
-      // Negate the wrapper's content padding so the field fills edge-to-edge,
-      // allowing the loading bar to sit at the bottom of the outline.
-      margin: calc(-1 * var(--mat-form-field-container-vertical-padding, 16px)) -16px -8px;
-      padding: var(--mat-form-field-container-vertical-padding, 16px) 16px 8px;
-      overflow: hidden;
-      border-radius: var(--mdc-outlined-text-field-container-shape, 8px);
     }
 
-    .dbx-source-select-field-loading {
-      left: 1px;
-      right: 1px;
-      bottom: 1px;
-    }
-
-    // Override formly button styles that were tuned for the mat-form-field context.
-    // In the forge wrapper, the button sits inside the outline alongside the select.
-    .dbx-source-select-field-select {
-      flex: 1;
-    }
-
-    .mat-mdc-select {
-      display: inline-flex;
-    }
-
-    .dbx-source-select-field-content .dbx-source-select-field-button {
-      margin-top: 0;
-      height: auto;
-      overflow: visible;
+    // Suffix button styling inside mat-form-field
+    .dbx-source-select-field-suffix {
       display: flex;
       align-items: center;
     }

@@ -1,6 +1,6 @@
 import { concatArrays, mapMaybeFunction, transformStringFunction, type TransformStringFunctionConfig, type TransformStringFunctionConfigRef } from '@dereekb/util';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
-import { type AttributesFieldConfig, type LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, type DescriptionFieldConfig, type FieldValueParser, type FieldConfigParsersRef, type MaterialFormFieldConfig } from '../../field';
+import { type LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, type MaterialFormFieldConfig, type DescriptionFieldConfig, type AttributesFieldConfig, type FieldValueParser, type FieldConfigParsersRef } from '../../field';
 
 /**
  * Configuration for minimum and maximum text length constraints.

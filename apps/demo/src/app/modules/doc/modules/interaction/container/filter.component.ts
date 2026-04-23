@@ -1,13 +1,13 @@
 import { ChangeDetectionStrategy, Component, type OnDestroy, inject } from '@angular/core';
 import { formatToDayRangeString, formatToISO8601DayStringForSystem } from '@dereekb/date';
-import { type DbxButtonDisplay, DbxFilterMapSourceConnectorDirective, DbxFilterConnectSourceDirective } from '@dereekb/dbx-core';
+import { DbxFilterMapSourceConnectorDirective, DbxFilterConnectSourceDirective } from '@dereekb/dbx-core';
 import { FilterMap, type FilterMapKey } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { startOfDay } from 'date-fns';
 import { map, of, type Observable } from 'rxjs';
 import { type DocInteractionTestFilter, DOC_INTERACTION_TEST_PRESETS } from '../component/filter';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { DbxContentContainerDirective, DbxContentBorderDirective, DbxButtonSpacerDirective } from '@dereekb/dbx-web';
+import { DbxContentContainerDirective, DbxContentBorderDirective, DbxButtonSpacerDirective, type DbxButtonDisplayStylePair } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocInteractionTestFilterPopoverButtonComponent } from '../component/filter.popover.button.component';
@@ -37,20 +37,24 @@ export class DocInteractionFilterComponent implements OnDestroy {
   readonly menuFilter$ = this.filterMap.filterForKey(this.menuFilterKey);
   readonly listFilter$ = this.filterMap.filterForKey(this.listFilterKey);
 
-  readonly displayForFilter$: Observable<Maybe<DbxButtonDisplay>> = this.filter$.pipe(
+  readonly displayForFilter$: Observable<Maybe<DbxButtonDisplayStylePair>> = this.filter$.pipe(
     map((filter) => {
-      let result: Maybe<DbxButtonDisplay>;
+      let result: Maybe<DbxButtonDisplayStylePair>;
 
       if (filter) {
         if (filter.date) {
           result = {
-            icon: 'event',
-            text: formatToISO8601DayStringForSystem(filter.date)
+            display: {
+              icon: 'event',
+              text: formatToISO8601DayStringForSystem(filter.date)
+            }
           };
         } else {
           result = {
-            icon: 'event',
-            text: 'No Date'
+            display: {
+              icon: 'event',
+              text: 'No Date'
+            }
           };
         }
       }
@@ -59,27 +63,33 @@ export class DocInteractionFilterComponent implements OnDestroy {
     })
   );
 
-  readonly displayForDateFilter$: Observable<Maybe<DbxButtonDisplay>> = this.filter$.pipe(
+  readonly displayForDateFilter$: Observable<Maybe<DbxButtonDisplayStylePair>> = this.filter$.pipe(
     map((filter) => {
-      let result: Maybe<DbxButtonDisplay>;
+      let result: Maybe<DbxButtonDisplayStylePair>;
 
       if (filter) {
         if (filter.date) {
           if (filter.toDate) {
             result = {
-              icon: 'event',
-              text: formatToDayRangeString({ start: filter.date, end: filter.toDate })
+              display: {
+                icon: 'event',
+                text: formatToDayRangeString({ start: filter.date, end: filter.toDate })
+              }
             };
           } else {
             result = {
-              icon: 'event',
-              text: formatToISO8601DayStringForSystem(filter.date)
+              display: {
+                icon: 'event',
+                text: formatToISO8601DayStringForSystem(filter.date)
+              }
             };
           }
         } else {
           result = {
-            icon: 'event',
-            text: 'No Date'
+            display: {
+              icon: 'event',
+              text: 'No Date'
+            }
           };
         }
       }

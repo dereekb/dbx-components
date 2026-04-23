@@ -1,65 +1,16 @@
-import { computed, Directive, effect, input, type OnDestroy, type OnInit } from '@angular/core';
+import { computed, Directive, effect, input, type InputSignal, type OnDestroy, type OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { type Maybe, type PrimativeKey, filterUniqueValues, convertMaybeToArray, type ArrayOrValue, type Configurable } from '@dereekb/util';
-import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { type Maybe, type PrimativeKey, filterUniqueValues, convertMaybeToArray, filterEmptyArrayValues, type ArrayOrValue, type Configurable } from '@dereekb/util';
 import { SubscriptionObject, type LoadingState, successResult, startWithBeginLoading, mapLoadingStateResults } from '@dereekb/rxjs';
 import { BehaviorSubject, combineLatest, debounceTime, distinctUntilChanged, first, map, mergeMap, of, shareReplay, startWith, switchMap, type Observable } from 'rxjs';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { type FieldTree } from '@angular/forms/signals';
-import { type DynamicText, type FieldMeta, type ValidationMessages, type BaseValueField } from '@ng-forge/dynamic-forms';
-import { type PickableValueFieldDisplayFunction, type PickableValueFieldDisplayValue, type PickableValueFieldFilterFunction, type PickableValueFieldHashFunction, type PickableValueFieldLoadValuesFunction, type PickableValueFieldValue } from '../../../../formly/field/selection/pickable/pickable';
-import { type PickableItemFieldItem, type PickableItemFieldItemSortFn } from '../../../../formly/field/selection/pickable/pickable.field.directive';
-import { forgeFieldDisabled } from '../../field.disabled';
-
-// MARK: Field Type Names
-/**
- * The custom forge field type name for the pickable chip field.
- */
-export const FORGE_PICKABLE_CHIP_FIELD_TYPE = 'dbx-pickable-chip' as const;
-
-/**
- * The custom forge field type name for the pickable list field.
- */
-export const FORGE_PICKABLE_LIST_FIELD_TYPE = 'dbx-pickable-list' as const;
-
-// MARK: Props
-/**
- * Props interface for forge pickable fields (both chip and list variants).
- *
- * Passed via the `props` property on the forge field definition.
- */
-export interface DbxForgePickableFieldProps<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> {
-  readonly loadValues: PickableValueFieldLoadValuesFunction<T, M>;
-  readonly displayForValue: PickableValueFieldDisplayFunction<T, M>;
-  readonly hashForValue?: PickableValueFieldHashFunction<T, H>;
-  readonly filterValues?: PickableValueFieldFilterFunction<T, M>;
-  readonly sortItems?: PickableItemFieldItemSortFn<T, M>;
-  readonly multiSelect?: boolean;
-  readonly asArrayValue?: boolean;
-  readonly showTextFilter?: boolean;
-  readonly skipFilterFnOnEmpty?: boolean;
-  readonly filterLabel?: string;
-  readonly maxPicks?: number;
-  readonly showSelectAllButton?: boolean;
-  readonly changeSelectionModeToViewOnDisabled?: boolean;
-  readonly footerConfig?: DbxInjectionComponentConfig;
-  readonly refreshDisplayValues$?: Observable<unknown>;
-  readonly hint?: string;
-}
-
-/**
- * Forge field definition interface for the pickable chip field.
- */
-export interface DbxForgePickableChipFieldDef<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends BaseValueField<DbxForgePickableFieldProps<T, M, H>, T | T[]> {
-  readonly type: typeof FORGE_PICKABLE_CHIP_FIELD_TYPE;
-}
-
-/**
- * Forge field definition interface for the pickable list field.
- */
-export interface DbxForgePickableListFieldDef<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends BaseValueField<DbxForgePickableFieldProps<T, M, H>, T | T[]> {
-  readonly type: typeof FORGE_PICKABLE_LIST_FIELD_TYPE;
-}
+import { type DynamicText, type FieldMeta, type ValidationMessages } from '@ng-forge/dynamic-forms';
+import { createResolvedErrorsSignal, shouldShowErrors } from '@ng-forge/dynamic-forms/integration';
+import { type PickableValueFieldDisplayFunction, type PickableValueFieldDisplayValue, type PickableValueFieldHashFunction, type PickableValueFieldValue } from '../../../../formly/field/selection/pickable/pickable';
+import { type PickableItemFieldItem } from '../../../../formly/field/selection/pickable/pickable.field.directive';
+import { type DbxForgePickableFieldProps } from './pickable.field';
+import { dbxForgeFieldDisabled } from '../../field.util';
 
 /**
  * Display value augmented with its computed hash for deduplication.
@@ -104,7 +55,7 @@ export abstract class AbstractForgePickableItemFieldDirective<T = unknown, M = u
 
   readonly hintSignal = computed(() => this.props()?.hint);
   readonly multiSelectSignal = computed(() => this.props()?.multiSelect ?? true);
-  readonly isDisabled = forgeFieldDisabled();
+  readonly isDisabled = dbxForgeFieldDisabled();
   readonly readonlySignal = computed(() => {
     const fieldGetter = this.field();
     const fieldState = typeof fieldGetter === 'function' ? (fieldGetter as any)() : undefined;
@@ -115,6 +66,28 @@ export abstract class AbstractForgePickableItemFieldDirective<T = unknown, M = u
   readonly showTextFilterSignal = computed(() => this.props()?.showTextFilter ?? Boolean(this.props()?.filterValues));
   readonly filterLabelSignal = computed(() => this.props()?.filterLabel);
   readonly footerConfigSignal = computed(() => this.props()?.footerConfig);
+
+  // Error handling
+  readonly resolvedErrors = createResolvedErrorsSignal(this.field as InputSignal<any>, this.validationMessages, this.defaultValidationMessages);
+  readonly showErrors = shouldShowErrors(this.field as InputSignal<any>);
+  readonly errorsToDisplay = computed(() => (this.showErrors() ? this.resolvedErrors() : []));
+
+  // ARIA
+  protected readonly hintId = computed(() => `${this.key()}-hint`);
+  protected readonly errorId = computed(() => `${this.key()}-error`);
+  protected readonly ariaInvalid = computed(() => (this.showErrors() ? 'true' : null));
+  protected readonly ariaRequired = computed(() => (this.field()().required() ? 'true' : null));
+  protected readonly ariaDescribedBy = computed(() => {
+    let result: string | null = null;
+
+    if (this.errorsToDisplay().length > 0) {
+      result = this.errorId();
+    } else if (this.props()?.hint) {
+      result = this.hintId();
+    }
+
+    return result;
+  });
 
   private get _pickOnlyOne(): boolean {
     const p = this.props();
@@ -227,7 +200,10 @@ export abstract class AbstractForgePickableItemFieldDirective<T = unknown, M = u
     const fieldGetter = this.field();
     const fieldState = typeof fieldGetter === 'function' ? (fieldGetter as any)() : undefined;
     const fieldValue = fieldState?.value?.() as Maybe<T | T[]>;
-    const values = fieldValue != null ? convertMaybeToArray(fieldValue as ArrayOrValue<T>) : [];
+    // Drop nullish/empty-string entries — ng-forge's default string seed for a
+    // T-typed field turns into [''] through convertMaybeToArray and would
+    // otherwise show up as a phantom selection when the user picks an item.
+    const values = filterEmptyArrayValues(convertMaybeToArray(fieldValue as ArrayOrValue<T>));
     this._valuesSubject.next(values);
   });
 
@@ -289,19 +265,20 @@ export abstract class AbstractForgePickableItemFieldDirective<T = unknown, M = u
   // MARK: Private
   private _setFieldValue(values: T[]): void {
     const fieldGetter = this.field();
-    if (!fieldGetter || typeof fieldGetter !== 'function') return;
 
-    const p = this.props();
-    const asArrayValue = p?.asArrayValue ?? true;
-    let newValue: Maybe<T | T[]> = values;
+    if (fieldGetter && typeof fieldGetter === 'function') {
+      const p = this.props();
+      const asArrayValue = p?.asArrayValue ?? true;
+      let newValue: Maybe<T | T[]> = values;
 
-    if (!asArrayValue) {
-      newValue = values[0];
-    }
+      if (!asArrayValue) {
+        newValue = values[0];
+      }
 
-    const fieldState = (fieldGetter as any)();
-    if (fieldState?.value?.set) {
-      fieldState.value.set(newValue);
+      const fieldState = (fieldGetter as any)();
+      if (fieldState?.value?.set) {
+        fieldState.value.set(newValue);
+      }
     }
   }
 
@@ -309,12 +286,7 @@ export abstract class AbstractForgePickableItemFieldDirective<T = unknown, M = u
     const p = this.props();
     const filterFn = p?.filterValues;
     const skipOnEmpty = p?.skipFilterFnOnEmpty ?? true;
-
-    if (!filterFn || (skipOnEmpty && !text)) {
-      return of(values.map((x) => x.value));
-    }
-
-    return filterFn(text, values);
+    return !filterFn || (skipOnEmpty && !text) ? of(values.map((x) => x.value)) : filterFn(text, values);
   }
 
   private _loadDisplayValuesForFieldValues(values: PickableValueFieldValue<T, M>[]): Observable<PickableDisplayValueWithHash<T, M, H>[]> {

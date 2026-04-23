@@ -1,5 +1,5 @@
 import { CompactContextStore, mapCompactModeObs } from '@dereekb/dbx-web';
-import { ChangeDetectionStrategy, Component, type OnDestroy, computed, effect, inject, input, type InputSignal, type Signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, type OnDestroy, computed, effect, ElementRef, inject, input, type InputSignal, type Signal } from '@angular/core';
 import { skip, first, BehaviorSubject, filter, shareReplay, switchMap, map, type Observable, throttleTime, skipWhile, of, distinctUntilChanged } from 'rxjs';
 import { asObservableFromGetter, filterMaybe, type ObservableFactoryWithRequiredInput, SubscriptionObject } from '@dereekb/rxjs';
 import { type Maybe, type LatLngPoint, type LatLngPointFunctionConfig, type LatLngStringFunction, latLngStringFunction, type Milliseconds, latLngPointFunction, isDefaultLatLngPoint, isValidLatLngPoint, type LatLngPointFunction, isSameLatLngPoint, defaultLatLngPoint } from '@dereekb/util';
@@ -16,7 +16,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MapComponent, MarkerComponent } from 'ngx-mapbox-gl';
 import type { FieldTree } from '@angular/forms/signals';
 import { type DynamicText, type FieldMeta, type ValidationMessages, DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES } from '@ng-forge/dynamic-forms';
-import { resolveValueFieldContext, buildValueFieldInputs } from '@ng-forge/dynamic-forms/integration';
+import { resolveValueFieldContext, buildValueFieldInputs, setupMetaTracking } from '@ng-forge/dynamic-forms/integration';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 
 export const DEFAULT_DBX_FORGE_MAPBOX_LAT_LNG_FIELD_INJECTION_KEY = 'DbxForgeMapboxLatLngFieldComponent';
@@ -93,6 +93,7 @@ export class DbxForgeMapboxLatLngFieldComponent implements OnDestroy {
   readonly compact = inject(CompactContextStore, { optional: true });
   readonly dbxMapboxInjectionStore = inject(DbxMapboxInjectionStore, { optional: true });
   readonly dbxMapboxMapStore = inject(DbxMapboxMapStore);
+  private readonly elementRef = inject(ElementRef<HTMLElement>);
 
   // Standard ng-forge value field inputs
   readonly field: InputSignal<FieldTree<unknown>> = input.required<FieldTree<unknown>>();
@@ -118,8 +119,13 @@ export class DbxForgeMapboxLatLngFieldComponent implements OnDestroy {
   private readonly _zoom = new BehaviorSubject<MapboxZoomLevel>(12);
   private readonly _markerConfig = new BehaviorSubject<Observable<DbxMapboxMarkerDisplayConfig | false>>(of(DEFAULT_DBX_FORGE_MAPBOX_LAT_LNG_MARKER_CONFIG));
 
-  private _latLngStringFunction!: LatLngStringFunction;
-  private _latLngPointFunction!: LatLngPointFunction;
+  // Reactive lat/lng conversion functions derived from props so latLng$ recomputes when props arrive.
+  readonly latLngPointConfigSignal = computed<LatLngPointFunctionConfig>(() => {
+    const p = this.props();
+    return { ...p?.latLngConfig, wrap: p?.latLngConfig?.wrap || false, validate: p?.latLngConfig?.validate || false, precisionRounding: p?.latLngConfig?.precisionRounding ?? 'round' };
+  });
+  readonly latLngPointFunctionSignal = computed<LatLngPointFunction>(() => latLngPointFunction(this.latLngPointConfigSignal()));
+  readonly latLngStringFunctionSignal = computed<LatLngStringFunction>(() => latLngStringFunction(this.latLngPointConfigSignal()));
 
   readonly compactClass$ = mapCompactModeObs(this.compact?.mode$, {
     compact: 'dbx-mapbox-input-field-compact'
@@ -151,14 +157,13 @@ export class DbxForgeMapboxLatLngFieldComponent implements OnDestroy {
   readonly placeholderTextSignal = computed(() => this.props()?.placeholder);
 
   // Observables for map store sync
-  readonly fieldValue$ = toObservable(this.fieldValue);
+  readonly latLngValueSignal = computed<LatLngPoint>(() => {
+    const value = this.fieldValue();
+    const fn = this.latLngPointFunctionSignal();
+    return value != null ? fn(value as string) : defaultLatLngPoint();
+  });
 
-  readonly latLng$: Observable<LatLngPoint> = this.fieldValue$.pipe(
-    filterMaybe(),
-    map((x) => this._latLngPointFunction?.(x as string) ?? defaultLatLngPoint()),
-    distinctUntilChanged<LatLngPoint>(isSameLatLngPoint),
-    shareReplay(1)
-  );
+  readonly latLng$: Observable<LatLngPoint> = toObservable(this.latLngValueSignal).pipe(distinctUntilChanged<LatLngPoint>(isSameLatLngPoint), shareReplay(1));
 
   readonly nonZeroLatLng$: Observable<LatLngPoint> = this.latLng$.pipe(skipWhile<LatLngPoint>(isDefaultLatLngPoint), filter(isValidLatLngPoint));
 
@@ -170,7 +175,7 @@ export class DbxForgeMapboxLatLngFieldComponent implements OnDestroy {
 
   readonly useCurrentLocationDisabledSignal = toSignal(this._useCurrentLocationDisabled, { initialValue: false });
   readonly compactClassSignal = toSignal(this.compactClass$, { initialValue: '' });
-  readonly latLngSignal = toSignal(this.latLng$, { initialValue: defaultLatLngPoint() });
+  readonly latLngSignal = this.latLngValueSignal;
 
   private _syncing = false;
 
@@ -184,16 +189,14 @@ export class DbxForgeMapboxLatLngFieldComponent implements OnDestroy {
   }
 
   constructor() {
+    setupMetaTracking(this.elementRef, this.meta as any, { selector: 'input' });
+
     // Initialize on first props emission
     effect(() => {
       const p = this.props();
       if (!p) {
         return;
       }
-
-      const latLngPointConfig = { ...p.latLngConfig, wrap: p.latLngConfig?.wrap || false, validate: p.latLngConfig?.validate || false, precisionRounding: p.latLngConfig?.precisionRounding ?? 'round' };
-      this._latLngStringFunction = latLngStringFunction(latLngPointConfig);
-      this._latLngPointFunction = latLngPointFunction(latLngPointConfig);
 
       const zoom = Math.min(p.zoom || 12, 18) as MapboxZoomLevel;
       this._zoom.next(zoom);
@@ -311,7 +314,7 @@ export class DbxForgeMapboxLatLngFieldComponent implements OnDestroy {
   }
 
   setValue(latLng?: Maybe<LatLngPoint>) {
-    const stringValue = latLng ? this._latLngStringFunction(latLng) : null;
+    const stringValue = latLng ? this.latLngStringFunctionSignal()(latLng) : null;
     this._syncing = true;
     this.textCtrl.setValue(stringValue as string, { emitEvent: false });
     this._setFieldValue(stringValue);

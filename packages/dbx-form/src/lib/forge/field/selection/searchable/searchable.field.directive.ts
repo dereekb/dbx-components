@@ -1,70 +1,14 @@
 import { computed, Directive, input, type OnDestroy, type OnInit } from '@angular/core';
-import { FormControl, type ValidatorFn } from '@angular/forms';
+import { FormControl } from '@angular/forms';
 import { type PrimativeKey, type Configurable } from '@dereekb/util';
 import { type DbxInjectionComponentConfig, mergeDbxInjectionComponentConfigs } from '@dereekb/dbx-core';
 import { SubscriptionObject, type LoadingState, successResult, startWithBeginLoading } from '@dereekb/rxjs';
 import { BehaviorSubject, debounceTime, distinctUntilChanged, first, map, mergeMap, of, shareReplay, startWith, switchMap, type Observable } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { type DynamicText, type FieldMeta, type ValidationMessages, type BaseValueField } from '@ng-forge/dynamic-forms';
-import { type SearchableValueFieldStringSearchFn, type SearchableValueFieldDisplayFn, type SearchableValueFieldDisplayValue, type SearchableValueFieldValue, type SearchableValueFieldAnchorFn, type SearchableValueFieldHashFn, type ConfiguredSearchableValueFieldDisplayValue } from '../../../../formly/field/selection/searchable/searchable';
+import { type DynamicText, type FieldMeta, type ValidationMessages } from '@ng-forge/dynamic-forms';
+import { type SearchableValueFieldDisplayFn, type SearchableValueFieldDisplayValue, type SearchableValueFieldValue, type SearchableValueFieldAnchorFn, type SearchableValueFieldHashFn, type ConfiguredSearchableValueFieldDisplayValue } from '../../../../formly/field/selection/searchable/searchable';
 import { DbxDefaultSearchableFieldDisplayComponent } from '../../../../formly/field/selection/searchable/searchable.field.autocomplete.item.component';
-
-// MARK: Field Type Names
-/**
- * The custom forge field type name for the searchable text field.
- */
-export const FORGE_SEARCHABLE_TEXT_FIELD_TYPE = 'dbx-searchable-text' as const;
-
-/**
- * The custom forge field type name for the searchable chip field.
- */
-export const FORGE_SEARCHABLE_CHIP_FIELD_TYPE = 'dbx-searchable-chip' as const;
-
-// MARK: Props
-/**
- * Props interface for the forge searchable text field.
- *
- * Passed via the `props` property on the forge field definition.
- */
-export interface DbxForgeSearchableTextFieldProps<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> {
-  readonly search: SearchableValueFieldStringSearchFn<T, M>;
-  readonly displayForValue: SearchableValueFieldDisplayFn<T, M>;
-  readonly hashForValue?: SearchableValueFieldHashFn<T, H>;
-  readonly allowStringValues?: boolean;
-  readonly convertStringValue?: (text: string) => T;
-  readonly showSelectedValue?: boolean;
-  readonly searchOnEmptyText?: boolean;
-  readonly display?: Partial<DbxInjectionComponentConfig>;
-  readonly useAnchor?: boolean;
-  readonly anchorForValue?: SearchableValueFieldAnchorFn<T, M>;
-  readonly showClearValue?: boolean;
-  readonly searchLabel?: string;
-  readonly refreshDisplayValues$?: Observable<unknown>;
-  readonly hint?: string;
-  readonly textInputValidator?: ValidatorFn | ValidatorFn[];
-}
-
-/**
- * Props interface for the forge searchable chip field.
- */
-export interface DbxForgeSearchableChipFieldProps<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends DbxForgeSearchableTextFieldProps<T, M, H> {
-  readonly multiSelect?: boolean;
-  readonly asArrayValue?: boolean;
-}
-
-/**
- * Forge field definition interface for the searchable text field.
- */
-export interface DbxForgeSearchableTextFieldDef<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends BaseValueField<DbxForgeSearchableTextFieldProps<T, M, H>, T> {
-  readonly type: typeof FORGE_SEARCHABLE_TEXT_FIELD_TYPE;
-}
-
-/**
- * Forge field definition interface for the searchable chip field.
- */
-export interface DbxForgeSearchableChipFieldDef<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends BaseValueField<DbxForgeSearchableChipFieldProps<T, M, H>, T | T[]> {
-  readonly type: typeof FORGE_SEARCHABLE_CHIP_FIELD_TYPE;
-}
+import { type DbxForgeSearchableTextFieldProps } from './searchable-text.field';
 
 const DEFAULT_SEARCH_INPUT_PLACEHOLDER = 'Type to Search';
 
@@ -113,6 +57,10 @@ export abstract class AbstractForgeSearchableFieldDirective<T = unknown, M = unk
 
   readonly hintSignal = computed(() => this.props()?.hint);
 
+  // ARIA IDs
+  protected readonly hintId = computed(() => `${this.key()}-hint`);
+  protected readonly errorId = computed(() => `${this.key()}-error`);
+
   readonly searchInputPlaceholder = computed(() => {
     const p = this.props();
     const searchOnEmpty = p?.searchOnEmptyText ?? false;
@@ -126,15 +74,18 @@ export abstract class AbstractForgeSearchableFieldDirective<T = unknown, M = unk
       const p = this.props();
       const searchOnEmptyText = p?.searchOnEmptyText ?? false;
       const searchFn = p?.search;
+      let result: Observable<LoadingState<ConfiguredSearchableValueFieldDisplayValue<T, M>[]>>;
 
       if (!searchFn) {
-        return of(successResult([] as ConfiguredSearchableValueFieldDisplayValue<T, M>[]));
+        result = of(successResult([] as ConfiguredSearchableValueFieldDisplayValue<T, M>[]));
+      } else {
+        result = (text || searchOnEmptyText ? searchFn(text ?? '') : of([])).pipe(
+          switchMap((x) => this._loadDisplayValuesForFieldValues(x)),
+          startWithBeginLoading()
+        );
       }
 
-      return (text || searchOnEmptyText ? searchFn(text ?? '') : of([])).pipe(
-        switchMap((x) => this._loadDisplayValuesForFieldValues(x)),
-        startWithBeginLoading()
-      );
+      return result;
     }),
     shareReplay(1)
   );

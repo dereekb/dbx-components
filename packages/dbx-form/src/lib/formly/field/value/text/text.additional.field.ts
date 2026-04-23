@@ -1,7 +1,7 @@
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { Validators, type AbstractControl } from '@angular/forms';
 import { type TextFieldConfig, formlyTextField } from './text.field';
-import { type LabeledFieldConfig, type DescriptionFieldConfig, validatorsForFieldConfig } from '../../field';
+import { type LabeledFieldConfig, validatorsForFieldConfig, type DescriptionFieldConfig } from '../../field';
 import { LAT_LNG_PATTERN, US_STATE_CODE_STRING_REGEX, ZIP_CODE_STRING_REGEX } from '@dereekb/util';
 import { ADDRESS_CITY_MAX_LENGTH, ADDRESS_STATE_CODE_MAX_LENGTH, ADDRESS_STATE_MAX_LENGTH, ADDRESS_COUNTRY_MAX_LENGTH, ADDRESS_ZIP_MAX_LENGTH } from '@dereekb/model';
 
@@ -140,7 +140,7 @@ export interface StateFieldConfig extends Partial<TextFieldConfig> {
  * ```
  */
 export function formlyStateField(config: StateFieldConfig = {}): FormlyFieldConfig {
-  const { asCode = false, pattern = asCode ? US_STATE_CODE_STRING_REGEX : undefined, key = 'state', placeholder = '', label = 'State', autocomplete = 'state', maxLength = asCode ? ADDRESS_STATE_CODE_MAX_LENGTH : ADDRESS_STATE_MAX_LENGTH, transform, required = false } = config;
+  const { asCode = false, pattern = asCode ? US_STATE_CODE_STRING_REGEX : undefined, key = 'state', placeholder = '', label = 'State', autocomplete = 'state', maxLength = asCode ? ADDRESS_STATE_CODE_MAX_LENGTH : ADDRESS_STATE_MAX_LENGTH, transform: transform, required = false } = config;
   return formlyTextField({
     ...config,
     key,
