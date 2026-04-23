@@ -9,13 +9,14 @@ import {
   formlyDateRangeField,
   type DbxDateTimePickerConfiguration,
   formlyDateTimeRangeField,
-  formlyTimezoneStringField,
   formlyFixedDateRangeField,
   formlyTimeDurationField,
   dbxForgeDateTimeField,
   dbxForgeDateRangeRow,
+  dbxForgeDateTimeRangeRow,
   dbxForgeFixedDateRangeField,
   dbxForgeTimeDurationField,
+  dbxForgeTimezoneStringField,
   dbxForgeToggleField,
   DbxFormFormlyDateFieldModule,
   DbxFormFormlyDbxListFieldModule,
@@ -23,7 +24,6 @@ import {
   DbxFormFormlyPickableFieldModule,
   DbxFormFormlySearchableFieldModule,
   DbxFormFormlySourceSelectModule,
-  DbxFormTimezoneStringFieldModule,
   DbxFormlyFieldsContextDirective,
   DbxFormSourceDirective,
   DbxFormValueChangeDirective
@@ -42,24 +42,7 @@ import { DocFormForgeExampleComponent } from '../component/forge.example.form.co
 @Component({
   templateUrl: './value.date.component.html',
   standalone: true,
-  imports: [
-    DbxContentContainerDirective,
-    DocFeatureLayoutComponent,
-    DocFeatureExampleComponent,
-    DocFeatureFormTabsComponent,
-    DocFormExampleComponent,
-    DocFormForgeExampleComponent,
-    DbxFormlyFieldsContextDirective,
-    DbxFormSourceDirective,
-    DbxFormValueChangeDirective,
-    DbxFormFormlyDateFieldModule,
-    DbxFormFormlyDbxListFieldModule,
-    DbxFormFormlyDurationFieldModule,
-    DbxFormFormlyPickableFieldModule,
-    DbxFormFormlySearchableFieldModule,
-    DbxFormFormlySourceSelectModule,
-    DbxFormTimezoneStringFieldModule
-  ],
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormExampleComponent, DocFormForgeExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormValueChangeDirective, DbxFormFormlyDateFieldModule, DbxFormFormlyDbxListFieldModule, DbxFormFormlyDurationFieldModule, DbxFormFormlyPickableFieldModule, DbxFormFormlySearchableFieldModule, DbxFormFormlySourceSelectModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormDateValueComponent implements OnDestroy {
@@ -80,7 +63,9 @@ export class DocFormDateValueComponent implements OnDestroy {
 
   readonly timezone$ = this._timezone.asObservable();
 
-  readonly timezoneSelectionField: FormlyFieldConfig[] = [formlyTimezoneStringField()];
+  readonly timezoneSelectionFieldConfig: FormConfig = {
+    fields: [dbxForgeTimezoneStringField() as any]
+  };
 
   readonly onTimezoneChange = (value: { timezone: Maybe<TimezoneString> }) => {
     this._timezone.next(value?.timezone);
@@ -571,35 +556,36 @@ export class DocFormDateValueComponent implements OnDestroy {
     })
   ];
 
-  /*
-
-
-export function schoolInfoJobSettingsTimeFields() {
-  return flexLayoutWrapper([schoolInfoJobSettingsStartTimeField(), schoolInfoJobSettingsEndTimeField()], {
-    relative: true
-  });
-}
-
-export function schoolInfoJobSettingsStartTimeField() {
-  return formlyDateTimeField({
-    key: 'sat',
-    label: 'Default Start Time',
-    required: false,
-    timeOnly: true,
-    hideDateHint: true
-  });
-}
-
-export function schoolInfoJobSettingsEndTimeField() {
-  return formlyDateTimeField({
-    key: 'eat',
-    label: 'Default End Time',
-    required: false,
-    timeOnly: true,
-    hideDateHint: true
-  });
-}
-  */
+  // Forge date-time range — 1:1 parity with formly dateTimeRangeFields (except path-based timeDate)
+  readonly forgeDateTimeRangeFieldsConfig: FormConfig = {
+    fields: [
+      dbxForgeDateTimeRangeRow({
+        props: { timezone: this.timezone$ },
+        start: { key: 'sat' },
+        end: { key: 'eat' }
+      }) as any,
+      dbxForgeDateTimeRangeRow({
+        props: { timezone: 'America/Chicago', timeDate: '2023-11-08' },
+        start: { label: 'Start Time on 2023-11-08 (CDT)', key: 'satcdt' },
+        end: { key: 'eatcdt' }
+      }) as any,
+      dbxForgeDateTimeRangeRow({
+        props: { timezone: 'America/Chicago', timeDate: '2024-03-21' },
+        start: { label: 'Start Time on 2024-03-21 (CST)', key: 'satcst' },
+        end: { key: 'eatcst' }
+      }) as any,
+      dbxForgeDateTimeRangeRow({
+        props: { timezone: 'America/Chicago', timeDate: '2023-11-08' },
+        start: { label: 'Start Time on 2023-11-08 (CDT)', key: 'sat2' },
+        end: { label: 'End Time on 2024-03-21 (CST)', key: 'eat2', props: { timeDate: '2024-03-21' } }
+      }) as any,
+      dbxForgeDateTimeRangeRow({
+        props: { timezone: this.timezone$, valueMode: DbxDateTimeValueMode.MINUTE_OF_DAY },
+        start: { label: 'Start Minute Of Day', key: 'satm2' },
+        end: { label: 'End Minute Of Day', key: 'eatm2' }
+      }) as any
+    ]
+  };
 
   readonly fixedDateRangeValue$ = of({
     tenDayFixedDateRange: dateRange({ date: addDays(new Date(), 4), type: DateRangeType.WEEK }),
@@ -672,6 +658,33 @@ export function schoolInfoJobSettingsEndTimeField() {
   ]).pipe(delay(1000)); // add an artificial delay
 
   readonly asyncTimeFormConfigSignal = toSignal(this.asyncTimeFormConfig$, { initialValue: undefined });
+
+  readonly forgeAsyncTimeFormConfig$: Observable<FormConfig> = of({
+    fields: [
+      dbxForgeDateTimeField({
+        label: 'Async Configured Date',
+        key: 'date',
+        props: {
+          timezone: this.timezone$,
+          timeDate: this.baseDate$,
+          pickerConfig: this.baseDate$.pipe(
+            map((x) => {
+              const config: DbxDateTimePickerConfiguration = {
+                limits: {
+                  min: addHours(x, -24),
+                  max: addHours(x, 24)
+                }
+              };
+
+              return config;
+            })
+          )
+        }
+      }) as any
+    ]
+  }).pipe(delay(1000)); // add an artificial delay
+
+  readonly forgeAsyncTimeFormConfigSignal = toSignal(this.forgeAsyncTimeFormConfig$, { initialValue: undefined });
 
   readonly asyncTimeFormTemplate$ = this._newDateValue.pipe(
     map((date) => {

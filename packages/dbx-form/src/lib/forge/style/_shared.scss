@@ -22,4 +22,15 @@
       color: var(--mat-sys-on-surface-variant);
     }
   }
+
+  .dbx-forge {
+    // pushes icons in fields like dbxForgeDateTimeField() away from the edge
+    .mat-mdc-form-field-icon-prefix {
+      padding-left: 4px;
+    }
+
+    .mat-mdc-form-field-icon-suffix {
+      padding-right: 4px;
+    }
+  }
 }

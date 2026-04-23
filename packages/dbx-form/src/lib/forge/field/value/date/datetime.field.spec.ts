@@ -134,6 +134,11 @@ describe('dbxForgeDateTimeField()', () => {
     expect(field.props?.autofillDateWhenTimeIsPicked).toBe(true);
   });
 
+  it('should set openOnInputClick in props', () => {
+    const field = dbxForgeDateTimeField({ key: 'datetime', props: { openOnInputClick: 'input' } });
+    expect(field.props?.openOnInputClick).toBe('input');
+  });
+
   it('should pass logic through to the field definition', () => {
     const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
     const field = dbxForgeDateTimeField({ key: 'datetime', logic });

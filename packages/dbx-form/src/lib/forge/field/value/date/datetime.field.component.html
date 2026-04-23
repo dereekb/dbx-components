@@ -16,7 +16,7 @@
       <div class="dbx-forge-datetime-col" [class.dbx-forge-datetime-col-full]="isDateOnly()">
         <mat-form-field [appearance]="appearance()" subscriptSizing="dynamic" class="dbx-forge-datetime-col-field">
           <mat-label>{{ dateLabel() }}</mat-label>
-          <input matInput [disabled]="isDisabledSignal()" [required]="isDateRequired()" [min]="dateInputMinSignal()" [max]="dateInputMaxSignal()" [matDatepicker]="picker" [matDatepickerFilter]="pickerFilterSignal()" (dateChange)="onDatePicked($event)" [value]="dateValueSignal()" (keydown)="onDateKeydown($event)" [attr.aria-invalid]="ariaInvalid()" [attr.aria-required]="ariaRequired()" [attr.aria-describedby]="ariaDescribedBy()" />
+          <input matInput [disabled]="isDisabledSignal()" [required]="isDateRequired()" [min]="dateInputMinSignal()" [max]="dateInputMaxSignal()" [matDatepicker]="picker" [matDatepickerFilter]="pickerFilterSignal()" (dateChange)="onDatePicked($event)" [value]="dateValueSignal()" (click)="onDateInputClick(picker)" (keydown)="onDateKeydown($event)" [attr.aria-invalid]="ariaInvalid()" [attr.aria-required]="ariaRequired()" [attr.aria-describedby]="ariaDescribedBy()" />
           @if (!hideDatePicker()) {
             <button matPrefix mat-icon-button (click)="picker.open()" [disabled]="isDisabledSignal()" aria-label="Open date picker">
               <mat-icon aria-hidden="true">calendar_today</mat-icon>

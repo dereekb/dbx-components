@@ -62,6 +62,13 @@ export interface DbxForgeDateTimeFieldComponentProps {
   readonly appearance?: 'fill' | 'outline';
   readonly hint?: DynamicText;
   readonly getSyncFieldsObs?: () => Observable<ArrayOrValue<DbxForgeDateTimeSyncField>>;
+  /**
+   * Behavior when the date input is clicked.
+   *
+   * - `'picker'` — opens the datepicker overlay (default)
+   * - `'input'` — normal text-selection / cursor-placement behavior
+   */
+  readonly openOnInputClick?: 'picker' | 'input';
 }
 
 // MARK: Time Output Constants
@@ -253,6 +260,7 @@ export class DbxForgeDateTimeFieldComponent {
   readonly minuteStep = computed(() => this.props()?.minuteStep ?? 5);
   readonly alwaysShowDateInput = computed(() => this.props()?.alwaysShowDateInput ?? true);
   readonly autofillDateWhenTimeIsPicked = computed(() => this.props()?.autofillDateWhenTimeIsPicked ?? this.alwaysShowDateInput() === false);
+  readonly openOnInputClick = computed(() => this.props()?.openOnInputClick ?? 'picker');
 
   // MARK: Timezone signals
   readonly resolvedTimezone = computed(() => this._timezone() ?? guessCurrentTimezone());
@@ -828,6 +836,12 @@ export class DbxForgeDateTimeFieldComponent {
   }
 
   // MARK: Actions
+  onDateInputClick(picker: { open(): void }): void {
+    if (this.openOnInputClick() === 'picker' && !this.isDisabled()) {
+      picker.open();
+    }
+  }
+
   onDatePicked(event: MatDatepickerInputEvent<Date>): void {
     const date = event.value;
     if (date) {

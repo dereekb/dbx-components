@@ -30,15 +30,16 @@ import { DbxForgeDynamicFormSignalRef, DbxForgeFormContextService } from './forg
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxForgeFormComponent<T = unknown> implements DbxForgeDynamicFormSignalRef, OnInit, OnDestroy {
+export class DbxForgeFormComponent<T extends object = object> implements DbxForgeDynamicFormSignalRef, OnInit, OnDestroy {
   private readonly _context = inject(DbxForgeFormContext<T>);
+
   private readonly _setValueSub = new SubscriptionObject();
   private readonly _resetSub = new SubscriptionObject();
   private readonly _disabledSub = new SubscriptionObject();
 
   readonly dynamicForm = viewChild(DynamicForm);
 
-  readonly formValue = signal<any>({}, { equal: (a, b) => _forgeFormValueEqual(a, b, this._context) });
+  readonly formValue = signal<T>({} as T, { equal: (a, b) => _forgeFormValueEqual(a, b, this._context) });
   readonly configSignal = toSignal(this._context.config$, { initialValue: undefined });
 
   private readonly _changesCount = signal(0);
@@ -296,9 +297,9 @@ export class DbxForgeFormComponent<T = unknown> implements DbxForgeDynamicFormSi
  *   when {@link DbxForgeFormContext.stripInternalKeys} is true (default)
  * - Null/undefined-only filter when `stripInternalKeys` is false
  */
-function _forgeFormValueEqual(a: unknown, b: unknown, context: DbxForgeFormContext): boolean {
+function _forgeFormValueEqual<T>(a: T, b: T, context: DbxForgeFormContext<T>): boolean {
   const pojoFilter = context.formValuePojoFilter ?? (context.stripInternalKeys ? _filterForgeFormValueStripInternal : _filterForgeFormValueKeepInternal);
-  return areEqualPOJOValuesUsingPojoFilter(a, b, pojoFilter as FilterFromPOJOFunction<unknown>);
+  return areEqualPOJOValuesUsingPojoFilter(a, b, pojoFilter as FilterFromPOJOFunction<T>);
 }
 
 /**

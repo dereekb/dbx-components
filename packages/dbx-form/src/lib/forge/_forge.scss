@@ -1,0 +1,14 @@
+@use './style/shared';
+@use './preset/preset';
+@use './field/field';
+
+@mixin all-forge-core() {
+  @include shared.core();
+  @include preset.core();
+  @include field.all-field-core();
+}
+
+@mixin all-forge-theme($theme-config) {
+  @include preset.theme($theme-config);
+  @include field.all-field-theme($theme-config);
+}
