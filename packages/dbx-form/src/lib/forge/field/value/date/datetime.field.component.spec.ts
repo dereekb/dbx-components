@@ -1902,6 +1902,146 @@ describe('dbxForgeDateTimeRangeRow() integration', () => {
     fixture.destroy();
   });
 
+  // MARK: Value Change Scenarios
+  describe('value change scenarios', () => {
+    it('should update start output when start time is changed', async () => {
+      const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+      const host = fixture.componentInstance;
+
+      host.config = createDateTimeRangeConfig();
+      host.formValue.set({ start: addHours(startOfDay(new Date()), 9), end: addHours(startOfDay(new Date()), 17) });
+      await settle(fixture);
+
+      const initial = host.formValue();
+      expect(initial.start).toBeInstanceOf(Date);
+      expect(initial.end).toBeInstanceOf(Date);
+
+      const comps = getAllDateTimeComponents(fixture);
+      comps[0].setTime('11:00AM');
+      await settle(fixture);
+      await settle(fixture);
+
+      const updated = host.formValue();
+      expect(updated.start).toBeInstanceOf(Date);
+      expect(updated.start).not.toEqual(initial.start);
+      expect(updated.end).toEqual(initial.end);
+      fixture.destroy();
+    });
+
+    it('should update end output when end time is changed', async () => {
+      const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+      const host = fixture.componentInstance;
+
+      host.config = createDateTimeRangeConfig();
+      host.formValue.set({ start: addHours(startOfDay(new Date()), 9), end: addHours(startOfDay(new Date()), 17) });
+      await settle(fixture);
+
+      const initial = host.formValue();
+
+      const comps = getAllDateTimeComponents(fixture);
+      comps[1].setTime('6:30PM');
+      await settle(fixture);
+      await settle(fixture);
+
+      const updated = host.formValue();
+      expect(updated.end).toBeInstanceOf(Date);
+      expect(updated.end).not.toEqual(initial.end);
+      expect(updated.start).toEqual(initial.start);
+      fixture.destroy();
+    });
+
+    it('should update both outputs when both times are changed sequentially', async () => {
+      const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+      const host = fixture.componentInstance;
+
+      host.config = createDateTimeRangeConfig();
+      host.formValue.set({ start: addHours(startOfDay(new Date()), 8), end: addHours(startOfDay(new Date()), 16) });
+      await settle(fixture);
+
+      const initial = host.formValue();
+
+      const comps = getAllDateTimeComponents(fixture);
+      comps[0].setTime('10:00AM');
+      await settle(fixture);
+      comps[1].setTime('2:00PM');
+      await settle(fixture);
+      await settle(fixture);
+
+      const updated = host.formValue();
+      expect(updated.start).not.toEqual(initial.start);
+      expect(updated.end).not.toEqual(initial.end);
+      fixture.destroy();
+    });
+
+    it('should reflect value change with custom keys', async () => {
+      const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+      const host = fixture.componentInstance;
+
+      host.config = createDateTimeRangeConfig({ start: { key: 'sat' }, end: { key: 'eat' } });
+      host.formValue.set({ sat: addHours(startOfDay(new Date()), 9), eat: addHours(startOfDay(new Date()), 17) });
+      await settle(fixture);
+
+      const initial = host.formValue();
+      expect(initial.sat).toBeInstanceOf(Date);
+      expect(initial.eat).toBeInstanceOf(Date);
+
+      const comps = getAllDateTimeComponents(fixture);
+      comps[0].setTime('7:00AM');
+      await settle(fixture);
+      await settle(fixture);
+
+      const updated = host.formValue();
+      expect(updated.sat).not.toEqual(initial.sat);
+      expect(updated.eat).toEqual(initial.eat);
+      fixture.destroy();
+    });
+
+    it('should reflect value change with minute-of-day value mode', async () => {
+      const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+      const host = fixture.componentInstance;
+
+      host.config = createDateTimeRangeConfig({ props: { valueMode: DbxDateTimeValueMode.MINUTE_OF_DAY } });
+      host.formValue.set({ start: 540, end: 1020 }); // 9:00AM and 5:00PM
+      await settle(fixture);
+
+      const initial = host.formValue();
+      expect(typeof initial.start).toBe('number');
+      expect(typeof initial.end).toBe('number');
+
+      const comps = getAllDateTimeComponents(fixture);
+      comps[0].setTime('10:30AM');
+      await settle(fixture);
+      await settle(fixture);
+
+      const updated = host.formValue();
+      expect(typeof updated.start).toBe('number');
+      expect(updated.start).not.toBe(initial.start);
+      expect(updated.end).toBe(initial.end);
+      fixture.destroy();
+    });
+
+    it('should stabilize after changing a time value', async () => {
+      const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+      const host = fixture.componentInstance;
+
+      host.config = createDateTimeRangeConfig();
+      host.formValue.set({ start: addHours(startOfDay(new Date()), 9), end: addHours(startOfDay(new Date()), 17) });
+      await settle(fixture);
+
+      const comps = getAllDateTimeComponents(fixture);
+      comps[0].setTime('11:00AM');
+      await settle(fixture);
+      await settle(fixture);
+
+      const settled = host.formValue();
+      await delay(STABILITY_CHECK_TIME);
+      fixture.detectChanges();
+
+      expect(host.formValue()).toEqual(settled);
+      fixture.destroy();
+    });
+  });
+
   // MARK: Disabled State
   describe('disabled state via formOptions', () => {
     it('should report isDisabled=true when formOptions.disabled is true', async () => {

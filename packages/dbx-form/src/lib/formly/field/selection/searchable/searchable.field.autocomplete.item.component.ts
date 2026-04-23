@@ -34,6 +34,9 @@ export class DbxSearchableFieldAutocompleteItemComponent<T> {
     const displayValue = this.displayValue();
     const config: DbxInjectionComponentConfig = {
       ...displayValue.display,
+      // Set data so dbxInjectionComponentConfigIsEqual detects the change
+      // when the display value reference changes (it compares data by reference).
+      data: displayValue,
       providers: mergeArraysIntoArray(
         [
           {
