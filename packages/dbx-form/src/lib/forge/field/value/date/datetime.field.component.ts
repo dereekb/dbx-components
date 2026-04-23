@@ -360,7 +360,7 @@ export class DbxForgeDateTimeFieldComponent {
   private readonly _timeDate$ = toObservable(this._timeDate);
 
   readonly isTimeCleared$ = combineLatest([this.currentDate$, toObservable(this._timeDate).pipe(startWith(null)), this._isCleared$]).pipe(
-    map(([date, time, isCleared]) => isCleared || Boolean(!date && !time)),
+    map(([date, time, isCleared]) => isCleared || (!this.isTimeOnly() && Boolean(!date && !time))),
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -459,8 +459,16 @@ export class DbxForgeDateTimeFieldComponent {
     shareReplay(1)
   );
 
+  // Reactive date source: uses of(null) for time-only fields, dateValue$ otherwise.
+  // Must be reactive (not a one-shot ternary) because isTimeOnly depends on props
+  // which aren't available during class field initialization.
+  private readonly _rawDateTimeDate$: Observable<Maybe<Date>> = toObservable(this.isTimeOnly).pipe(
+    switchMap((timeOnly) => (timeOnly ? of(null) : this.dateValue$)),
+    shareReplay(1)
+  );
+
   // Raw datetime calculation
-  readonly rawDateTime$: Observable<Maybe<Date>> = combineLatest([this.isTimeOnly() ? of(null) : this.dateValue$, this.timeInput$.pipe(startWith(null)), toObservable(this._fullDay), toObservable(this._timeDate), this.isTimeCleared$]).pipe(
+  readonly rawDateTime$: Observable<Maybe<Date>> = combineLatest([this._rawDateTimeDate$, this.timeInput$.pipe(startWith(null)), toObservable(this._fullDay), toObservable(this._timeDate), this.isTimeCleared$]).pipe(
     map(([date, timeString, fullDay, timeDate, isTimeCleared]) => {
       const input: DateTimeCalcInput = {
         dateValue: date,
