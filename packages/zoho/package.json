@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/zoho",
-  "version": "13.8.0",
+  "version": "13.9.0",
   "bin": {
     "zoho-cli": "./cli/index.js"
   },
@@ -16,9 +16,9 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/nestjs": "13.8.0",
-    "@dereekb/rxjs": "13.8.0",
-    "@dereekb/util": "13.8.0",
+    "@dereekb/nestjs": "13.9.0",
+    "@dereekb/rxjs": "13.9.0",
+    "@dereekb/util": "13.9.0",
     "@nestjs/common": "^11.1.17",
     "@nestjs/config": "^4.0.4",
     "express": "^5.0.0",

@@ -1,3 +1,28 @@
+# [13.9.0](https://github.com/dereekb/dbx-components/compare/v13.8.0-dev...v13.9.0) (2026-04-23)
+
+
+### Bug Fixes
+
+- forge searchable field anchor click propagation ([93ac96bd](https://github.com/dereekb/dbx-components/commit/93ac96bdab6ccb12260f4519e9d4d51ab8a09cc9))
+
+
+### Code Refactoring
+
+- add ARIA accessibility to all forge field components ([5ccc72b9](https://github.com/dereekb/dbx-components/commit/5ccc72b923b114b5a17c523bb952056393f1d011))
+- add forge value-selection field and action dialog ([2ce9048c](https://github.com/dereekb/dbx-components/commit/2ce9048c5ba62382f2b6ad56227843b88dea494b))
+- add logic support to all forge field configs ([ec888712](https://github.com/dereekb/dbx-components/commit/ec8887123d60a2100e0c7deeb9559ca7c50d801e))
+- derive cli skip-command set from grouped arrays ([e9928f7e](https://github.com/dereekb/dbx-components/commit/e9928f7e96ba98b39f895c8e3d9c6aa3f20a7fda))
+- fixes ([3526e6a0](https://github.com/dereekb/dbx-components/commit/3526e6a065646960aca531bb7380b3d737afdcaf))
+- improve forge source select and pickable list fields ([b8162199](https://github.com/dereekb/dbx-components/commit/b8162199573fed6a4301c4dbe4112c5ca969451f))
+- ng-forms ([#46](https://github.com/dereekb/dbx-components/issues/46)) ([a16b8bb9](https://github.com/dereekb/dbx-components/commit/a16b8bb9c94e782f71dc9f8d515a0053013efb48)), closes [#46](https://github.com/dereekb/dbx-components/issues/46)
+- updated zoho-cli output config ([1fbcad1c](https://github.com/dereekb/dbx-components/commit/1fbcad1c90d57216702ed662e85f84b0d3c4ba56))
+- use specific field def types in forge registry ([783b8eac](https://github.com/dereekb/dbx-components/commit/783b8eac5ed31b065586e2b611a35bc1e08eae04))
+
+
+### Features
+
+- zoho desk, zoho cli ([#45](https://github.com/dereekb/dbx-components/issues/45)) ([eab5b5a7](https://github.com/dereekb/dbx-components/commit/eab5b5a7e5ab31d897ecf9454b32e55e80191517)), closes [#45](https://github.com/dereekb/dbx-components/issues/45)
+
 # [13.8.0](https://github.com/dereekb/dbx-components/compare/v13.7.0-dev...v13.8.0) (2026-04-11)
 
 
