@@ -1,30 +1,50 @@
-import { type PrimativeKey, filterFromPOJO } from '@dereekb/util';
-import type { FieldTypeDefinition } from '@ng-forge/dynamic-forms';
-import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
-import { forgeField } from '../../field';
-import { FORGE_SOURCE_SELECT_FIELD_TYPE, type DbxForgeSourceSelectFieldProps, type DbxForgeSourceSelectFieldDef } from './sourceselect.field.component';
-import type { DbxForgeFieldConfig } from '../../field.type';
+import { type Maybe, type PrimativeKey } from '@dereekb/util';
+import { type BaseValueField } from '@ng-forge/dynamic-forms';
+import { type Observable } from 'rxjs';
+import { type SourceSelectDisplayFunction, type SourceSelectLoadSourcesFunction, type SourceSelectMetaValueReader, type SourceSelectOpenFunction, type SourceSelectValueMetaLoader } from '../../../../formly/field/selection/sourceselect/sourceselect';
+import { type DbxForgeFieldFunctionDef, dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, dbxForgeBuildFieldDef } from '../../field';
 
-// MARK: Field Type Definition
+// MARK: Field Type Name
 /**
- * ng-forge FieldTypeDefinition for the source select field.
- *
- * Register via `provideDynamicForm(DBX_SOURCE_SELECT_FIELD_TYPE)`.
+ * The custom forge field type name for the source select field.
  */
-export const DBX_SOURCE_SELECT_FIELD_TYPE: FieldTypeDefinition<DbxForgeSourceSelectFieldDef> = {
-  name: FORGE_SOURCE_SELECT_FIELD_TYPE,
-  loadComponent: () => import('./sourceselect.field.component').then((m) => m.DbxForgeSourceSelectFieldComponent),
-  mapper: valueFieldMapper
-};
+export const FORGE_SOURCE_SELECT_FIELD_TYPE = 'dbx-source-select' as const;
+
+// MARK: Props
+/**
+ * Props interface for the forge source select field.
+ *
+ * Passed via the `props` property on the forge field definition.
+ */
+export interface DbxForgeSourceSelectFieldProps<T extends PrimativeKey = PrimativeKey, M = unknown> {
+  readonly openSource?: Maybe<SourceSelectOpenFunction<M>>;
+  readonly loadSources?: Maybe<SourceSelectLoadSourcesFunction<M>>;
+  readonly valueReader: SourceSelectMetaValueReader<T, M>;
+  readonly metaLoader: SourceSelectValueMetaLoader<T, M>;
+  readonly displayForValue: SourceSelectDisplayFunction<T, M>;
+  readonly selectButtonIcon?: Maybe<string>;
+  readonly multiple?: Maybe<boolean>;
+  readonly refreshDisplayValues$?: Maybe<Observable<unknown>>;
+  readonly filterable?: Maybe<boolean>;
+  readonly filterableGroups?: Maybe<boolean>;
+  readonly hint?: Maybe<string>;
+}
+
+// MARK: Field Def
+/**
+ * Forge field definition interface for the source select field.
+ */
+export interface DbxForgeSourceSelectFieldDef<T extends PrimativeKey = PrimativeKey, M = unknown> extends BaseValueField<DbxForgeSourceSelectFieldProps<T, M>, T | T[]> {
+  readonly type: typeof FORGE_SOURCE_SELECT_FIELD_TYPE;
+}
 
 // MARK: Source Select Field
 /**
  * Configuration for a forge source select field.
  */
-export interface DbxForgeSourceSelectFieldConfig<T extends PrimativeKey = PrimativeKey, M = unknown> extends DbxForgeFieldConfig, DbxForgeSourceSelectFieldProps<T, M> {
-  readonly label?: string;
-  readonly description?: string;
-}
+export interface DbxForgeSourceSelectFieldConfig<T extends PrimativeKey = PrimativeKey, M = unknown> extends DbxForgeFieldFunctionDef<DbxForgeSourceSelectFieldDef<T, M>> {}
+
+export type DbxForgeSourceSelectFieldFunction = <T extends PrimativeKey = PrimativeKey, M = unknown>(config: DbxForgeSourceSelectFieldConfig<T, M>) => DbxForgeSourceSelectFieldDef<T, M>;
 
 /**
  * Creates a forge field definition for a source select field.
@@ -37,29 +57,21 @@ export interface DbxForgeSourceSelectFieldConfig<T extends PrimativeKey = Primat
  *
  * @example
  * ```typescript
- * const field = forgeSourceSelectField({
+ * const field = dbxForgeSourceSelectField({
  *   key: 'source',
  *   label: 'Source',
- *   valueReader: (meta) => meta.id,
- *   metaLoader: (values) => myService.loadMeta(values),
- *   displayForValue: (values) => of(values.map(v => ({ ...v, label: v.meta.name })))
+ *   props: {
+ *     valueReader: (meta) => meta.id,
+ *     metaLoader: (values) => myService.loadMeta(values),
+ *     displayForValue: (values) => of(values.map(v => ({ ...v, label: v.meta.name })))
+ *   }
  * });
  * ```
  */
-export function forgeSourceSelectField<T extends PrimativeKey = PrimativeKey, M = unknown>(config: DbxForgeSourceSelectFieldConfig<T, M>): DbxForgeSourceSelectFieldDef<T, M> {
-  const { key, label, required, readonly: isReadonly, description, logic, ...selectProps } = config;
-
-  return forgeField({
-    key,
-    type: FORGE_SOURCE_SELECT_FIELD_TYPE,
-    label: label ?? '',
-    value: undefined as unknown as T | T[],
-    required,
-    readonly: isReadonly,
-    logic,
-    props: filterFromPOJO({
-      ...selectProps,
-      hint: description
-    }) as DbxForgeSourceSelectFieldProps<T, M>
-  } as DbxForgeSourceSelectFieldDef<T, M>);
-}
+export const dbxForgeSourceSelectField = dbxForgeFieldFunction<DbxForgeSourceSelectFieldConfig>({
+  type: FORGE_SOURCE_SELECT_FIELD_TYPE,
+  buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder(),
+  buildFieldDef: dbxForgeBuildFieldDef(() => {
+    // no-op
+  })
+}) as DbxForgeSourceSelectFieldFunction;

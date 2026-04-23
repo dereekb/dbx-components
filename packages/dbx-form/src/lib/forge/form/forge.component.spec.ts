@@ -8,14 +8,13 @@ import { provideDbxForgeFormFieldDeclarations } from '../forge.providers';
 import { provideDbxFormConfiguration } from '../../form.providers';
 import { DbxForgeFormComponent } from './forge.component';
 import { DbxForgeFormContext, provideDbxForgeFormContext, stripForgeInternalKeys, stripEmptyForgeValues } from './forge.context';
-import { forgeTextField } from '../field/value/text/text.field';
-import { forgeToggleWrapper } from '../field/wrapper/wrapper';
+import { dbxForgeTextField } from '../field/value/text/text.field';
+import { dbxForgeToggleWrapper } from '../field/wrapper/wrapper';
+import { DBX_FORGE_FORM_COMPONENT_TEMPLATE } from './forge.component.template';
 
 // MARK: Test Host
 @Component({
-  template: `
-    <dbx-forge></dbx-forge>
-  `,
+  template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   standalone: true,
   imports: [DbxForgeFormComponent],
   providers: [provideDbxForgeFormContext()],
@@ -26,7 +25,7 @@ class TestForgeFormHostComponent {
 }
 
 // MARK: Helpers
-const TEST_PROVIDERS = [provideZonelessChangeDetection(), provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), { provide: DynamicFormLogger, useClass: NoopLogger }];
+export const DBX_FORGE_TEST_PROVIDERS = [provideZonelessChangeDetection(), provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), { provide: DynamicFormLogger, useClass: NoopLogger }];
 
 /**
  * Settles the fixture by running change detection and waiting for stability.
@@ -41,13 +40,13 @@ async function settle(fixture: ComponentFixture<any>): Promise<void> {
 
 function createRequiredFieldConfig(): FormConfig {
   return {
-    fields: [forgeTextField({ key: 'name', label: 'Name', required: true }) as any]
+    fields: [dbxForgeTextField({ key: 'name', label: 'Name', required: true }) as any]
   };
 }
 
 function createOptionalFieldConfig(): FormConfig {
   return {
-    fields: [forgeTextField({ key: 'name', label: 'Name' }) as any]
+    fields: [dbxForgeTextField({ key: 'name', label: 'Name' }) as any]
   };
 }
 
@@ -56,7 +55,7 @@ describe('DbxForgeFormComponent', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [TestForgeFormHostComponent],
-      providers: TEST_PROVIDERS
+      providers: DBX_FORGE_TEST_PROVIDERS
     });
   });
 
@@ -205,9 +204,9 @@ describe('DbxForgeFormComponent', () => {
 
       context.config = {
         fields: [
-          forgeToggleWrapper({
+          dbxForgeToggleWrapper({
             label: 'Show details',
-            fields: [forgeTextField({ key: 'detail', label: 'Detail' }) as any]
+            fields: [dbxForgeTextField({ key: 'detail', label: 'Detail' }) as any]
           }) as any
         ]
       };
@@ -231,10 +230,10 @@ describe('DbxForgeFormComponent', () => {
 
       context.config = {
         fields: [
-          forgeToggleWrapper({
+          dbxForgeToggleWrapper({
             label: 'Show details',
             defaultOpen: true,
-            fields: [forgeTextField({ key: 'name', label: 'Name' }) as any]
+            fields: [dbxForgeTextField({ key: 'name', label: 'Name' }) as any]
           }) as any
         ]
       };
@@ -262,9 +261,9 @@ describe('DbxForgeFormComponent', () => {
 
       context.config = {
         fields: [
-          forgeToggleWrapper({
+          dbxForgeToggleWrapper({
             label: 'Show details',
-            fields: [forgeTextField({ key: 'detail', label: 'Detail' }) as any]
+            fields: [dbxForgeTextField({ key: 'detail', label: 'Detail' }) as any]
           }) as any
         ]
       };

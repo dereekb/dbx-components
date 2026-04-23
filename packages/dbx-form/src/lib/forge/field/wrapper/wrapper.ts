@@ -1,5 +1,5 @@
 import type { RowField, GroupField, FieldDef, RowAllowedChildren, GroupAllowedChildren, ConditionalExpression } from '@ng-forge/dynamic-forms';
-import { forgeExpandField, type DbxForgeExpandButtonType } from './expand/expand.field';
+import { FORGE_EXPAND_FIELD_TYPE_NAME, type DbxForgeExpandButtonType, type DbxForgeExpandFieldDef, type DbxForgeExpandFieldProps } from './expand/expand.field';
 /**
  * Logic configuration for container fields (group, row, array).
  *
@@ -11,30 +11,25 @@ export interface DbxForgeContainerLogicConfig {
   readonly condition: ConditionalExpression | boolean;
 }
 
-let _forgeRowCounter = 0;
-let _forgeGroupCounter = 0;
-let _forgeToggleCounter = 0;
-let _forgeExpandCounter = 0;
+let _dbxForgeRowCounter = 0;
+let _dbxForgeGroupCounter = 0;
+let _dbxForgeToggleCounter = 0;
+let _dbxForgeExpandCounter = 0;
 
 // MARK: Row
 /**
  * Configuration for a forge row layout that arranges fields horizontally.
+ *
+ * Extends {@link RowField} with `key` made optional (auto-generated if omitted)
+ * and `type` omitted (always `'row'`).
  */
-export interface DbxForgeRowConfig {
+export interface DbxForgeRowConfig extends Omit<RowField, 'type' | 'key'> {
   /**
    * Optional key for the row. Defaults to a unique auto-generated key.
    *
    * Must be unique within the form config to avoid ng-forge duplicate key errors.
    */
   readonly key?: string;
-  /**
-   * Fields to render inside this row. Each field may specify a `col` for grid sizing.
-   */
-  readonly fields: (FieldDef<unknown> & { col?: number })[];
-  /**
-   * Optional CSS class name applied to the row container.
-   */
-  readonly className?: string;
 }
 
 /**
@@ -48,44 +43,38 @@ export interface DbxForgeRowConfig {
  *
  * @example
  * ```typescript
- * const row = forgeRow({
+ * const row = dbxForgeRow({
  *   fields: [
- *     { ...forgeTextField({ key: 'first', label: 'First' }), col: 6 },
- *     { ...forgeTextField({ key: 'last', label: 'Last' }), col: 6 }
+ *     { ...dbxForgeTextField({ key: 'first', label: 'First' }), col: 6 },
+ *     { ...dbxForgeTextField({ key: 'last', label: 'Last' }), col: 6 }
  *   ]
  * });
  * ```
  */
-export function forgeRow(config: DbxForgeRowConfig): RowField {
+export function dbxForgeRow(config: DbxForgeRowConfig): RowField {
+  const { key: inputKey, ...rest } = config;
+
   return {
+    ...rest,
     type: 'row',
-    key: config.key ?? `_row_${_forgeRowCounter++}`,
-    fields: config.fields as unknown as RowAllowedChildren[],
-    ...(config.className != null && { className: config.className })
+    key: inputKey ?? `_row_${_dbxForgeRowCounter++}`
   } as RowField;
 }
 
 // MARK: Group
 /**
  * Configuration for a forge group layout.
+ *
+ * Extends {@link GroupField} with `key` made optional (auto-generated if omitted)
+ * and `type` omitted (always `'group'`).
  */
-export interface DbxForgeGroupConfig {
+export interface DbxForgeGroupConfig extends Omit<GroupField, 'type' | 'key'> {
   /**
-   * Optional key for the group.
+   * Optional key for the group. Defaults to a unique auto-generated key.
+   *
+   * Must be unique within the form config to avoid ng-forge duplicate key errors.
    */
   readonly key?: string;
-  /**
-   * Fields contained in this group.
-   */
-  readonly fields: FieldDef<unknown>[];
-  /**
-   * Optional CSS class name applied to the group container.
-   */
-  readonly className?: string;
-  /**
-   * Optional conditional visibility logic for this group.
-   */
-  readonly logic?: DbxForgeContainerLogicConfig[];
 }
 
 /**
@@ -94,40 +83,19 @@ export interface DbxForgeGroupConfig {
  * Groups collect child field values into a nested object when a `key` is provided.
  * When used without a key, the group serves as a visual/logical grouping only.
  *
- * For sections with headers, use {@link forgeDbxSectionFieldWrapper} instead.
+ * For sections with headers, use the section wrapper type instead.
  *
  * @param config - Group configuration with fields and optional key/className
  * @returns A {@link GroupField} with type `'group'`
  */
-export function forgeGroup(config: DbxForgeGroupConfig): GroupField {
-  return {
-    type: 'group',
-    key: config.key ?? `_group_${_forgeGroupCounter++}`,
-    fields: config.fields as unknown as GroupAllowedChildren[],
-    ...(config.className != null && { className: config.className }),
-    ...(config.logic != null && { logic: config.logic })
-  } as GroupField;
-}
+export function dbxForgeGroup(config: DbxForgeGroupConfig): GroupField {
+  const { key: inputKey, ...rest } = config;
 
-// MARK: Style Utilities
-/**
- * Applies a CSS class name to a field definition.
- *
- * Returns a shallow copy of the field with the `className` property set.
- * This is the forge equivalent of applying the formly `formlyStyleWrapper`
- * for static class names.
- *
- * @param field - The field definition to style
- * @param className - CSS class name(s) to apply
- * @returns A copy of the field with `className` set
- *
- * @example
- * ```typescript
- * const styled = forgeWithClassName(forgeTextField({ key: 'name', label: 'Name' }), 'my-custom-class');
- * ```
- */
-export function forgeWithClassName<T extends FieldDef<unknown>>(field: T, className: string): T {
-  return { ...field, className };
+  return {
+    ...rest,
+    type: 'group',
+    key: inputKey ?? `_group_${_dbxForgeGroupCounter++}`
+  } as GroupField;
 }
 
 // MARK: Toggle Wrapper
@@ -182,17 +150,17 @@ export interface DbxForgeToggleWrapperConfig {
  *
  * @example
  * ```typescript
- * const toggle = forgeToggleWrapper({
+ * const toggle = dbxForgeToggleWrapper({
  *   label: 'Show advanced options',
  *   fields: [
- *     forgeTextField({ key: 'advanced1', label: 'Option 1' }),
- *     forgeTextField({ key: 'advanced2', label: 'Option 2' })
+ *     dbxForgeTextField({ key: 'advanced1', label: 'Option 1' }),
+ *     dbxForgeTextField({ key: 'advanced2', label: 'Option 2' })
  *   ]
  * });
  * ```
  */
-export function forgeToggleWrapper(config: DbxForgeToggleWrapperConfig): RowField {
-  const toggleKey = config.key ?? `_toggle_${_forgeToggleCounter++}`;
+export function dbxForgeToggleWrapper(config: DbxForgeToggleWrapperConfig): RowField {
+  const toggleKey = config.key ?? `_toggle_${_dbxForgeToggleCounter++}`;
 
   // Built-in ng-forge toggle field (renders <mat-slide-toggle>)
   const toggleField: FieldDef<unknown> = {
@@ -213,14 +181,14 @@ export function forgeToggleWrapper(config: DbxForgeToggleWrapperConfig): RowFiel
     }
   };
 
-  const contentGroup = forgeGroup({
+  const contentGroup = dbxForgeGroup({
     key: config.contentKey,
-    fields: config.fields,
+    fields: config.fields as unknown as GroupAllowedChildren[],
     logic: [hiddenCondition]
   });
 
-  return forgeRow({
-    fields: [toggleField as FieldDef<unknown> & { col?: number }, contentGroup as unknown as FieldDef<unknown> & { col?: number }],
+  return dbxForgeRow({
+    fields: [toggleField as unknown as RowAllowedChildren, contentGroup as unknown as RowAllowedChildren],
     className: config.className ?? 'dbx-forge-toggle-wrapper'
   });
 }
@@ -281,25 +249,29 @@ export interface DbxForgeExpandWrapperConfig {
  *
  * @example
  * ```typescript
- * const expand = forgeExpandWrapper({
+ * const expand = dbxForgeExpandWrapper({
  *   label: 'Show more options',
  *   buttonType: 'button',
  *   fields: [
- *     forgeTextField({ key: 'extra1', label: 'Extra 1' }),
- *     forgeTextField({ key: 'extra2', label: 'Extra 2' })
+ *     dbxForgeTextField({ key: 'extra1', label: 'Extra 1' }),
+ *     dbxForgeTextField({ key: 'extra2', label: 'Extra 2' })
  *   ]
  * });
  * ```
  */
-export function forgeExpandWrapper(config: DbxForgeExpandWrapperConfig): RowField {
-  const expandKey = config.key ?? `_expand_${_forgeExpandCounter++}`;
+export function dbxForgeExpandWrapper(config: DbxForgeExpandWrapperConfig): RowField {
+  const expandKey = config.key ?? `_expand_${_dbxForgeExpandCounter++}`;
 
-  const expandField = forgeExpandField({
+  const expandField: DbxForgeExpandFieldDef = {
     key: expandKey,
-    label: config.label,
-    buttonType: config.buttonType,
-    defaultOpen: config.defaultOpen
-  });
+    type: FORGE_EXPAND_FIELD_TYPE_NAME,
+    label: '',
+    value: config.defaultOpen ?? false,
+    props: {
+      buttonType: config.buttonType ?? 'text',
+      expandLabel: config.label ?? ''
+    } as DbxForgeExpandFieldProps
+  } as DbxForgeExpandFieldDef;
 
   const hiddenCondition: DbxForgeContainerLogicConfig = {
     type: 'hidden',
@@ -311,14 +283,14 @@ export function forgeExpandWrapper(config: DbxForgeExpandWrapperConfig): RowFiel
     }
   };
 
-  const contentGroup = forgeGroup({
+  const contentGroup = dbxForgeGroup({
     key: config.contentKey,
-    fields: config.fields,
+    fields: config.fields as unknown as GroupAllowedChildren[],
     logic: [hiddenCondition]
   });
 
-  return forgeRow({
-    fields: [expandField as unknown as FieldDef<unknown> & { col?: number }, contentGroup as unknown as FieldDef<unknown> & { col?: number }],
+  return dbxForgeRow({
+    fields: [expandField as unknown as RowAllowedChildren, contentGroup as unknown as RowAllowedChildren],
     className: config.className ?? 'dbx-forge-expand-wrapper'
   });
 }

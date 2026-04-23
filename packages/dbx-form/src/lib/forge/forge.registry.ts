@@ -9,60 +9,57 @@
  */
 
 // Value field types
-import type { DbxForgePhoneFieldDef } from './field/value/phone/phone.field';
-import type { DbxForgeDateTimeFieldDef, DbxForgeFixedDateRangeFieldDef } from './field/value/date/datetime.field';
-import type { DbxForgeTimeDurationFieldDef } from './field/value/duration/duration.field';
-import type { DbxForgeSliderFieldDef } from './field/value/number/slider.field.component';
-import type { DbxForgeArrayFieldDef } from './field/value/array/array.field';
+import { type FORGE_PHONE_FIELD_TYPE, type DbxForgePhoneFieldDef } from './field/value/phone/phone.field';
+import { type FORGE_DATETIME_FIELD_TYPE, type DbxForgeDateTimeFieldDef } from './field/value/date/datetime.field';
+import { type FORGE_FIXEDDATERANGE_FIELD_TYPE, type DbxForgeFixedDateRangeFieldDef } from './field/value/date/fixeddaterange.field';
+import { type FORGE_TIMEDURATION_FIELD_TYPE, type DbxForgeTimeDurationFieldDef } from './field/value/duration/duration.field';
 
 // Selection field types
-import type { DbxForgeSearchableTextFieldDef, DbxForgeSearchableChipFieldDef } from './field/selection/searchable/searchable.field.directive';
-import type { DbxForgePickableChipFieldDef, DbxForgePickableListFieldDef } from './field/selection/pickable/pickable.field.directive';
-import type { DbxForgeListSelectionFieldDef } from './field/selection/list/list.field.component';
-import type { DbxForgeValueSelectionFieldDef } from './field/selection/selection.field.component';
-import type { DbxForgeSourceSelectFieldDef } from './field/selection/sourceselect/sourceselect.field.component';
+import type { DbxForgeSearchableTextFieldDef, DbxForgeSearchableChipFieldDef, DBX_FORGE_SEARCHABLE_TEXT_FIELD_TYPE_NAME, DBX_FORGE_SEARCHABLE_CHIP_FIELD_TYPE_NAME } from './field/selection/searchable/searchable.field';
+import { type FORGE_PICKABLE_CHIP_FIELD_TYPE, type FORGE_PICKABLE_LIST_FIELD_TYPE, type DbxForgePickableChipFieldDef, type DbxForgePickableListFieldDef } from './field/selection/pickable/pickable.field';
+import { type FORGE_LIST_SELECTION_FIELD_TYPE, type DbxForgeListSelectionFieldDef } from './field/selection/list/list.field';
+import { type FORGE_VALUE_SELECTION_FIELD_TYPE, type DbxForgeValueSelectionFieldDef } from './field/selection/selection.field.component';
+import { type FORGE_SOURCE_SELECT_FIELD_TYPE, type DbxForgeSourceSelectFieldDef } from './field/selection/sourceselect/sourceselect.field';
 
 // Other field types
-import type { DbxForgeTextEditorFieldDef } from './field/texteditor/texteditor.field.component';
-import type { DbxForgeComponentFieldDef } from './field/component/component.field.component';
+import { type FORGE_TEXT_EDITOR_FIELD_TYPE, type DbxForgeTextEditorFieldDef } from './field/texteditor/texteditor.field.component';
+import { type FORGE_COMPONENT_FIELD_TYPE, type DbxForgeComponentFieldDef } from './field/component/component.field.component';
 
-// Wrapper field types
-import type { DbxForgeFormFieldWrapperFieldDef } from './field/wrapper/formfield/formfield.field';
-import type { DbxForgeSectionFieldDef } from './field/wrapper/section/section.field';
-import type { DbxForgeExpandFieldDef } from './field/wrapper/expand/expand.field';
-import type { DbxForgeInfoButtonFieldDef } from './field/wrapper/info/info.field';
-import type { DbxForgeInfoWrapperFieldDef } from './field/wrapper/info/info.wrapper.field';
-import type { DbxForgeStyleFieldDef } from './field/wrapper/style/style.field';
-import type { DbxForgeWorkingFieldDef } from './field/wrapper/working/working.field';
-import type { DbxForgeWorkingWrapperFieldDef } from './field/wrapper/working/working.wrapper.field';
+// Wrapper types
+import type { DBX_FORGE_FORM_FIELD_WRAPPER_NAME, DbxForgeFormFieldWrapperDef } from './field/wrapper/formfield/formfield.wrapper';
+import type { DBX_FORGE_SECTION_WRAPPER_TYPE_NAME, DbxForgeSectionWrapper } from './field/wrapper/section/section.wrapper';
+import type { DBX_FORGE_INFO_WRAPPER_TYPE_NAME, DbxForgeInfoWrapper } from './field/wrapper/info/info.wrapper';
+import type { DBX_FORGE_STYLE_WRAPPER_TYPE_NAME, DbxForgeStyleWrapper } from './field/wrapper/style/style.wrapper';
+import type { DBX_FORGE_WORKING_WRAPPER_TYPE_NAME, DbxForgeWorkingWrapper } from './field/wrapper/working/working.wrapper';
+import type { DBX_FORGE_FLEX_WRAPPER_TYPE_NAME, DbxForgeFlexWrapper } from './field/wrapper/flex/flex.wrapper';
+import { type DBX_FORGE_ARRAY_FIELD_ELEMENT_WRAPPER_NAME, type DbxForgeArrayFieldElementWrapperDef } from './field/wrapper/array-field/array-field.element.wrapper';
+import { type DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME, type DbxForgeArrayFieldWrapperDef } from './field/wrapper/array-field/array-field.wrapper';
 
 declare module '@ng-forge/dynamic-forms' {
   interface FieldRegistryLeaves {
     // Value fields
-    phone: DbxForgePhoneFieldDef;
-    datetime: DbxForgeDateTimeFieldDef;
-    fixeddaterange: DbxForgeFixedDateRangeFieldDef;
-    timeduration: DbxForgeTimeDurationFieldDef;
-    'dbx-slider': DbxForgeSliderFieldDef;
-    'dbx-searchable-text': DbxForgeSearchableTextFieldDef<any, any, any>;
-    'dbx-searchable-chip': DbxForgeSearchableChipFieldDef<any, any, any>;
-    'dbx-pickable-chip': DbxForgePickableChipFieldDef<any, any, any>;
-    'dbx-pickable-list': DbxForgePickableListFieldDef<any, any, any>;
-    'dbx-list-selection': DbxForgeListSelectionFieldDef<any, any, any>;
-    'dbx-value-selection': DbxForgeValueSelectionFieldDef<any>;
-    'dbx-source-select': DbxForgeSourceSelectFieldDef<any, any>;
-    'dbx-text-editor': DbxForgeTextEditorFieldDef;
-    'dbx-component': DbxForgeComponentFieldDef<any>;
-
-    // Wrapper fields (registered as leaves since they use valueFieldMapper)
-    'dbx-forge-form-field': DbxForgeFormFieldWrapperFieldDef;
-    'dbx-forge-section': DbxForgeSectionFieldDef;
-    'dbx-forge-expand': DbxForgeExpandFieldDef;
-    'dbx-forge-info-button': DbxForgeInfoButtonFieldDef;
-    'dbx-forge-info': DbxForgeInfoWrapperFieldDef;
-    'dbx-forge-style': DbxForgeStyleFieldDef;
-    'dbx-forge-working': DbxForgeWorkingFieldDef;
-    'dbx-forge-working-wrapper': DbxForgeWorkingWrapperFieldDef;
-    'dbx-forge-array': DbxForgeArrayFieldDef<any>;
+    [FORGE_PHONE_FIELD_TYPE]: DbxForgePhoneFieldDef;
+    [FORGE_DATETIME_FIELD_TYPE]: DbxForgeDateTimeFieldDef;
+    [FORGE_FIXEDDATERANGE_FIELD_TYPE]: DbxForgeFixedDateRangeFieldDef;
+    [FORGE_TIMEDURATION_FIELD_TYPE]: DbxForgeTimeDurationFieldDef;
+    [DBX_FORGE_SEARCHABLE_TEXT_FIELD_TYPE_NAME]: DbxForgeSearchableTextFieldDef<any, any, any>;
+    [DBX_FORGE_SEARCHABLE_CHIP_FIELD_TYPE_NAME]: DbxForgeSearchableChipFieldDef<any, any, any>;
+    [FORGE_PICKABLE_CHIP_FIELD_TYPE]: DbxForgePickableChipFieldDef<any, any, any>;
+    [FORGE_PICKABLE_LIST_FIELD_TYPE]: DbxForgePickableListFieldDef<any, any, any>;
+    [FORGE_LIST_SELECTION_FIELD_TYPE]: DbxForgeListSelectionFieldDef<any, any, any>;
+    [FORGE_VALUE_SELECTION_FIELD_TYPE]: DbxForgeValueSelectionFieldDef<any>;
+    [FORGE_SOURCE_SELECT_FIELD_TYPE]: DbxForgeSourceSelectFieldDef<any, any>;
+    [FORGE_TEXT_EDITOR_FIELD_TYPE]: DbxForgeTextEditorFieldDef;
+    [FORGE_COMPONENT_FIELD_TYPE]: DbxForgeComponentFieldDef<any>;
+  }
+  interface FieldRegistryWrappers {
+    [DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME]: DbxForgeArrayFieldWrapperDef;
+    [DBX_FORGE_ARRAY_FIELD_ELEMENT_WRAPPER_NAME]: DbxForgeArrayFieldElementWrapperDef;
+    [DBX_FORGE_FORM_FIELD_WRAPPER_NAME]: DbxForgeFormFieldWrapperDef;
+    [DBX_FORGE_SECTION_WRAPPER_TYPE_NAME]: DbxForgeSectionWrapper;
+    [DBX_FORGE_STYLE_WRAPPER_TYPE_NAME]: DbxForgeStyleWrapper;
+    [DBX_FORGE_INFO_WRAPPER_TYPE_NAME]: DbxForgeInfoWrapper;
+    [DBX_FORGE_WORKING_WRAPPER_TYPE_NAME]: DbxForgeWorkingWrapper;
+    [DBX_FORGE_FLEX_WRAPPER_TYPE_NAME]: DbxForgeFlexWrapper;
   }
 }

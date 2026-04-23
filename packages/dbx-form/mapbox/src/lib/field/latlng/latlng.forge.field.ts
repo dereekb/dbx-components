@@ -43,7 +43,7 @@ export interface DbxForgeMapboxLatLngFieldConfig {
  * @param config - Optional field configuration overrides
  * @returns A validated forge field definition for the Mapbox lat/lng picker
  */
-export function forgeMapboxLatLngField(config: DbxForgeMapboxLatLngFieldConfig = {}): DbxForgeMapboxLatLngFieldDef {
+export function dbxForgeMapboxLatLngField(config: DbxForgeMapboxLatLngFieldConfig = {}): DbxForgeMapboxLatLngFieldDef {
   const { key = 'latLng', label, description, required, readonly: isReadonly, showMap, zoom, latLngConfig, recenterTime, showCenterButton, setCenterOnLocationSet, selectLocationOnMapDrag, selectLocationOnMapClick, markerConfig } = config;
 
   const props: DbxForgeMapboxLatLngFieldComponentProps = filterFromPOJO({

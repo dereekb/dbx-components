@@ -1,7 +1,7 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { type Observable, map } from 'rxjs';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
-import { AbstractConfigAsyncForgeFormDirective, forgeComponentField, DBX_FORGE_FORM_COMPONENT_TEMPLATE, dbxForgeFormComponentProviders, DbxForgeFormComponentImportsModule } from '@dereekb/dbx-form';
+import { AbstractConfigAsyncForgeFormDirective, dbxForgeComponentField, DBX_FORGE_FORM_COMPONENT_TEMPLATE, dbxForgeFormComponentProviders, DbxForgeFormComponentImportsModule } from '@dereekb/dbx-form';
 import { type Maybe } from '@dereekb/util';
 import { type DocFormExampleComponentFormConfig, DOC_FORM_EXAMPLE_COMPONENT_DATA_TOKEN } from './component.example.form.component';
 
@@ -14,7 +14,7 @@ import { type DocFormExampleComponentFormConfig, DOC_FORM_EXAMPLE_COMPONENT_DATA
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocForgeExampleComponentFormComponent extends AbstractConfigAsyncForgeFormDirective<unknown, DocFormExampleComponentFormConfig> {
-  readonly config$: Observable<Maybe<FormConfig>> = this.currentConfig$.pipe(
+  readonly formConfig$: Observable<Maybe<FormConfig>> = this.currentConfig$.pipe(
     map((config) => {
       if (!config) {
         return undefined;
@@ -22,20 +22,22 @@ export class DocForgeExampleComponentFormComponent extends AbstractConfigAsyncFo
 
       return {
         fields: [
-          forgeComponentField({
-            componentField: {
-              componentClass: config.componentClass,
-              providers: [
-                {
-                  provide: DOC_FORM_EXAMPLE_COMPONENT_DATA_TOKEN,
-                  useValue: 'example injected value'
-                }
-              ]
-            },
-            allowDisabledEffects: config.allowDisabledEffects ?? true
-          }) as any
+          dbxForgeComponentField({
+            props: {
+              componentField: {
+                componentClass: config.componentClass,
+                providers: [
+                  {
+                    provide: DOC_FORM_EXAMPLE_COMPONENT_DATA_TOKEN,
+                    useValue: 'example injected value'
+                  }
+                ]
+              },
+              allowDisabledEffects: config.allowDisabledEffects ?? true
+            }
+          })
         ]
-      } satisfies FormConfig;
+      } as const satisfies FormConfig;
     })
   );
 }

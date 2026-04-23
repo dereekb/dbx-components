@@ -19,7 +19,7 @@ import type { ValidationMessages } from '@ng-forge/dynamic-forms';
  *
  * @returns A ValidationMessages object with messages for required, email, minLength, maxLength, min, max, and pattern validators
  */
-export function forgeDefaultValidationMessages(): ValidationMessages {
+export function dbxForgeDefaultValidationMessages(): ValidationMessages {
   return {
     required: 'This field is required.',
     email: 'Invalid email address.',

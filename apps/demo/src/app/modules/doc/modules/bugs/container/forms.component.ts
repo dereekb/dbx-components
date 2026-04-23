@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { forgeNameField, forgePhoneField, DbxFormSourceDirective, DbxActionFormDirective } from '@dereekb/dbx-form';
+import { dbxForgeNameField, dbxForgePhoneField, DbxFormSourceDirective, DbxActionFormDirective } from '@dereekb/dbx-form';
 import type { FormConfig } from '@ng-forge/dynamic-forms';
 import { type WorkUsingObservable } from '@dereekb/rxjs';
 import { of, delay } from 'rxjs';
@@ -18,7 +18,7 @@ import { DocFormForgeExampleComponent } from '../../form/component/forge.example
 export class DocBugsFormsComponent {
   // -- Phone Dirty State --
   readonly phoneDirtyStateConfig: FormConfig = {
-    fields: [forgeNameField({ required: true }), forgePhoneField({ key: 'phone' })]
+    fields: [dbxForgeNameField({ required: true }), dbxForgePhoneField({ key: 'phone' })]
   } as FormConfig;
 
   readonly phoneDirtyStateDefaultValue$ = of({

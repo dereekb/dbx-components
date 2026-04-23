@@ -40,7 +40,7 @@ export class DbxRouteParamDefaultRedirectInstance<T> implements Initialized, Des
     this._sub.subscription = this._enabled
       .pipe(
         switchMap((enabled) => {
-          const result = enabled
+          return enabled
             ? this.instance.paramValue$.pipe(
                 switchMapToDefault(this.instance.defaultValue$, (value) => {
                   return this._useDefaultFilter.pipe(switchMap((fn) => (DEFAULT_REDIRECT_INSTANCE_FORWARD_FACTORY as DefaultForwardFunctionFactory<SwitchMapToDefaultFilterFunction<T>>)(fn)(value)));
@@ -51,8 +51,6 @@ export class DbxRouteParamDefaultRedirectInstance<T> implements Initialized, Des
                 })
               )
             : EMPTY;
-
-          return result;
         })
       )
       .subscribe();

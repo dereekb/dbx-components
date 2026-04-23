@@ -24,7 +24,7 @@
       </dbx-two-column>
     </doc-feature-example>
     <doc-feature-example header="dateCellScheduleRangeField()" hint="A field used for building a schedule.">
-      <doc-feature-form-tabs #formTabs formlyFn="dateScheduleRangeField()" forgeFn="forgeDateScheduleRangeField()">
+      <doc-feature-form-tabs #formTabs formlyFn="dateScheduleRangeField()" forgeFn="dbxForgeDateScheduleRangeField()">
         <doc-form-example-form formly [dbxFormlyFields]="dateCellScheduleRangeFields" [dbxFormSource]="defaultDateCellScheduleRangeFieldValue$" [disabled]="formTabs.disabled()"></doc-form-example-form>
         <doc-forge-example-form forge [config]="forgeDateCellScheduleRangeFieldsConfig" [dbxFormSource]="defaultDateCellScheduleRangeFieldValue$" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>

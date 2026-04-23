@@ -1,4 +1,4 @@
-import { Directive, inject, input, type OnDestroy, type OnInit, effect } from '@angular/core';
+import { Directive, inject, input, type OnDestroy, type OnInit, effect, model } from '@angular/core';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
 import { type Maybe } from '@dereekb/util';
 import { type Observable } from 'rxjs';
@@ -17,7 +17,7 @@ export abstract class AbstractForgeFormDirective<T = unknown> {
   readonly context = inject(DbxForgeFormContext<T>, { self: true });
   readonly disabled = input(false);
 
-  private readonly _disabledEffect = effect(() => {
+  protected readonly _disabledEffect = effect(() => {
     if (this.disabled()) {
       this.context.setDisabled('directive', true);
     } else {
@@ -51,10 +51,10 @@ export abstract class AbstractForgeFormDirective<T = unknown> {
  */
 @Directive()
 export abstract class AbstractSyncForgeFormDirective<T = unknown> extends AbstractForgeFormDirective<T> implements OnInit {
-  abstract readonly config: FormConfig;
+  abstract readonly formConfig: FormConfig;
 
   ngOnInit(): void {
-    this.context.config = this.config;
+    this.context.config = this.formConfig;
   }
 }
 
@@ -63,13 +63,14 @@ export abstract class AbstractSyncForgeFormDirective<T = unknown> extends Abstra
  */
 @Directive()
 export abstract class AbstractAsyncForgeFormDirective<T = unknown> extends AbstractForgeFormDirective<T> implements OnInit, OnDestroy {
-  abstract readonly config$: Observable<Maybe<FormConfig>>;
+  abstract readonly formConfig$: Observable<Maybe<FormConfig>>;
 
   private readonly _configSub = new SubscriptionObject();
 
   ngOnInit(): void {
-    this._configSub.subscription = this.config$.pipe(distinctUntilChanged(), filterMaybe()).subscribe((config) => {
-      this.context.config = config;
+    // TODO: Can probably move this to constructor().
+    this._configSub.subscription = this.formConfig$.pipe(distinctUntilChanged(), filterMaybe()).subscribe((formConfig) => {
+      this.context.config = formConfig;
     });
   }
 
@@ -87,7 +88,10 @@ export abstract class AbstractAsyncForgeFormDirective<T = unknown> extends Abstr
  */
 @Directive()
 export abstract class AbstractConfigAsyncForgeFormDirective<T = unknown, C = unknown> extends AbstractAsyncForgeFormDirective<T> {
-  readonly config = input<MaybeObservableOrValue<C>>();
+  /**
+   * The forge form config input.
+   */
+  readonly config = model<MaybeObservableOrValue<C>>();
 
   readonly currentConfig$: Observable<Maybe<C>> = toObservable(this.config).pipe(maybeValueFromObservableOrValue());
 
@@ -95,5 +99,5 @@ export abstract class AbstractConfigAsyncForgeFormDirective<T = unknown, C = unk
    * Subclasses must implement this to map C → FormConfig.
    * For simple cases where C is FormConfig, just pipe through directly.
    */
-  abstract override readonly config$: Observable<Maybe<FormConfig>>;
+  abstract override readonly formConfig$: Observable<Maybe<FormConfig>>;
 }

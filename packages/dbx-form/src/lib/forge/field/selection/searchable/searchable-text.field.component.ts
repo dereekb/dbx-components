@@ -10,10 +10,11 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { type FieldTree } from '@angular/forms/signals';
 import { type SearchableValueFieldDisplayValue, type ConfiguredSearchableValueFieldDisplayValue } from '../../../../formly/field/selection/searchable/searchable';
 import { DbxSearchableFieldAutocompleteItemComponent } from '../../../../formly/field/selection/searchable/searchable.field.autocomplete.item.component';
-import { AbstractForgeSearchableFieldDirective, type DbxForgeSearchableTextFieldProps } from './searchable.field.directive';
+import { AbstractForgeSearchableFieldDirective } from './searchable.field.directive';
 import { createResolvedErrorsSignal, setupMetaTracking, shouldShowErrors } from '@ng-forge/dynamic-forms/integration';
-import { forgeFieldDisabled } from '../../field.disabled';
+import { dbxForgeFieldDisabled } from '../../field.util';
 import { toggleDisableFormControl } from '../../../../form/form';
+import { type DbxForgeSearchableTextFieldProps } from './searchable-text.field';
 
 /**
  * Forge ValueFieldComponent for searchable text selection (single value).
@@ -38,7 +39,7 @@ export class DbxForgeSearchableTextFieldComponent<T = unknown, M = unknown, H ex
   private readonly _valuesSubject = new BehaviorSubject<T[]>([]);
 
   // Disabled state
-  readonly isDisabled = forgeFieldDisabled();
+  readonly isDisabled = dbxForgeFieldDisabled();
 
   // Error handling
   readonly resolvedErrors = createResolvedErrorsSignal(this.field as any, this.validationMessages, this.defaultValidationMessages);

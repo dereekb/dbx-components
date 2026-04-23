@@ -2,6 +2,7 @@ import { type ThemePalette } from '@angular/material/core';
 import { type ProgressSpinnerMode } from '@angular/material/progress-spinner';
 import type { Maybe } from '@dereekb/util';
 import type { DbxThemeColor } from '../layout';
+import { type DbxButtonDisplay } from '@dereekb/dbx-core';
 
 /**
  * Material button display variant used by dbx-button components.
@@ -45,4 +46,12 @@ export interface DbxButtonStyle {
    * Whether to render as a floating action button (FAB).
    */
   readonly fab?: Maybe<boolean>;
+}
+
+/**
+ * A button style and display pair.
+ */
+export interface DbxButtonDisplayStylePair {
+  readonly style?: Maybe<DbxButtonStyle>;
+  readonly display?: Maybe<DbxButtonDisplay>;
 }

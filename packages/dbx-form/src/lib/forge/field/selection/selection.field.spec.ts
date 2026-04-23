@@ -1,9 +1,25 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, expectTypeOf } from 'vitest';
 import { of } from 'rxjs';
-import { forgeValueSelectionField } from './selection.field';
+import { dbxForgeValueSelectionField, type DbxForgeValueSelectionFieldConfig } from './selection.field';
 import { resolveForgeSelectionOptions } from './selection.field.component';
 import type { LogicConfig } from '@ng-forge/dynamic-forms';
 import type { ValueSelectionOption } from '../../../field/field.selection';
+
+// ============================================================================
+// DbxForgeValueSelectionFieldConfig - Exhaustive Whitelist
+// ============================================================================
+
+describe('DbxForgeValueSelectionFieldConfig - Exhaustive Whitelist', () => {
+  type ExpectedKeys =
+    // From DbxForgeFieldFunctionDef<DbxForgeValueSelectionFieldDef>
+    'key' | 'label' | 'placeholder' | 'value' | 'required' | 'readonly' | 'disabled' | 'hidden' | 'className' | 'meta' | 'logic' | 'props' | 'hint' | 'description' | 'pattern' | 'minLength' | 'maxLength' | 'min' | 'max' | 'email' | 'validators' | 'validationMessages' | 'derivation' | 'schemas' | 'col' | 'tabIndex' | 'excludeValueIfHidden' | 'excludeValueIfDisabled' | 'excludeValueIfReadonly' | 'wrappers' | 'skipAutoWrappers' | 'skipDefaultWrappers' | 'nullable' | '__fieldDef';
+
+  type ActualKeys = keyof DbxForgeValueSelectionFieldConfig;
+
+  it('should have exactly the expected keys', () => {
+    expectTypeOf<ActualKeys>().toEqualTypeOf<ExpectedKeys>();
+  });
+});
 
 // MARK: resolveForgeSelectionOptions
 describe('resolveForgeSelectionOptions()', () => {
@@ -77,8 +93,8 @@ describe('resolveForgeSelectionOptions()', () => {
   });
 });
 
-// MARK: forgeValueSelectionField
-describe('forgeValueSelectionField()', () => {
+// MARK: dbxForgeValueSelectionField
+describe('dbxForgeValueSelectionField()', () => {
   const testOptions: ValueSelectionOption<string>[] = [
     { label: 'Red', value: 'red' },
     { label: 'Blue', value: 'blue' },
@@ -86,69 +102,59 @@ describe('forgeValueSelectionField()', () => {
   ];
 
   it('should set the field type to dbx-value-selection', () => {
-    const field = forgeValueSelectionField({ key: 'color', options: testOptions });
+    const field = dbxForgeValueSelectionField({ key: 'color', props: { options: testOptions } });
     expect(field.type).toBe('dbx-value-selection');
   });
 
   it('should set the field key', () => {
-    const field = forgeValueSelectionField({ key: 'color', options: testOptions });
+    const field = dbxForgeValueSelectionField({ key: 'color', props: { options: testOptions } });
     expect(field.key).toBe('color');
   });
 
   it('should set the label when provided', () => {
-    const field = forgeValueSelectionField({ key: 'color', label: 'Color', options: testOptions });
+    const field = dbxForgeValueSelectionField({ key: 'color', label: 'Color', props: { options: testOptions } });
     expect(field.label).toBe('Color');
   });
 
-  it('should default label to empty string when not provided', () => {
-    const field = forgeValueSelectionField({ key: 'color', options: testOptions });
-    expect(field.label).toBe('');
-  });
-
   it('should set required on the field when provided', () => {
-    const field = forgeValueSelectionField({ key: 'color', options: testOptions, required: true });
+    const field = dbxForgeValueSelectionField({ key: 'color', required: true, props: { options: testOptions } });
     expect(field.required).toBe(true);
   });
 
   it('should set readonly on the field when provided', () => {
-    const field = forgeValueSelectionField({ key: 'color', options: testOptions, readonly: true });
+    const field = dbxForgeValueSelectionField({ key: 'color', readonly: true, props: { options: testOptions } });
     expect(field.readonly).toBe(true);
   });
 
-  it('should set defaultValue as field value', () => {
-    const field = forgeValueSelectionField({ key: 'color', options: testOptions, defaultValue: 'blue' });
-    expect(field.value).toBe('blue');
-  });
-
   it('should pass static options through props', () => {
-    const field = forgeValueSelectionField({ key: 'color', options: testOptions });
+    const field = dbxForgeValueSelectionField({ key: 'color', props: { options: testOptions } });
     expect(field.props?.options).toBe(testOptions);
   });
 
   it('should pass Observable options through props', () => {
     const options$ = of(testOptions);
-    const field = forgeValueSelectionField({ key: 'color', options: options$ });
+    const field = dbxForgeValueSelectionField({ key: 'color', props: { options: options$ } });
     expect(field.props?.options).toBe(options$);
   });
 
   it('should pass multiple through props', () => {
-    const field = forgeValueSelectionField({ key: 'colors', options: testOptions, multiple: true });
+    const field = dbxForgeValueSelectionField({ key: 'colors', props: { options: testOptions, multiple: true } });
     expect(field.props?.multiple).toBe(true);
   });
 
   it('should pass addClearOption through props', () => {
-    const field = forgeValueSelectionField({ key: 'color', options: testOptions, addClearOption: 'Reset' });
+    const field = dbxForgeValueSelectionField({ key: 'color', props: { options: testOptions, addClearOption: 'Reset' } });
     expect(field.props?.addClearOption).toBe('Reset');
   });
 
   it('should pass description as hint in props', () => {
-    const field = forgeValueSelectionField({ key: 'color', options: testOptions, description: 'Pick a color' });
+    const field = dbxForgeValueSelectionField({ key: 'color', description: 'Pick a color', props: { options: testOptions } });
     expect(field.props?.hint).toBe('Pick a color');
   });
 
   it('should pass logic through to the field definition', () => {
     const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
-    const field = forgeValueSelectionField({ key: 'color', options: testOptions, logic });
+    const field = dbxForgeValueSelectionField({ key: 'color', logic, props: { options: testOptions } });
     expect((field as any).logic).toEqual(logic);
   });
 
@@ -157,7 +163,7 @@ describe('forgeValueSelectionField()', () => {
       { label: 'No Change', clear: true },
       { label: 'Red', value: 'red' }
     ];
-    const field = forgeValueSelectionField({ key: 'color', options: optionsWithClear });
+    const field = dbxForgeValueSelectionField({ key: 'color', props: { options: optionsWithClear } });
     expect(field.props?.options).toBe(optionsWithClear);
   });
 
@@ -166,7 +172,7 @@ describe('forgeValueSelectionField()', () => {
       { label: 'One', value: 1 },
       { label: 'Two', value: 2 }
     ];
-    const field = forgeValueSelectionField({ key: 'num', options: numOptions, defaultValue: 1 });
+    const field = dbxForgeValueSelectionField({ key: 'num', value: 1, props: { options: numOptions } });
     expect(field.value).toBe(1);
     expect(field.props?.options).toEqual(numOptions);
   });

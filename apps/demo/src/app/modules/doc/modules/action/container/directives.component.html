@@ -63,6 +63,15 @@
       <p>Success value: {{ successValue | json }}</p>
     </doc-feature-example>
 
+    <doc-feature-example header="dbxActionIsModified" hint="Structural directive that shows template content when the action is marked as modified.">
+      <p>dbxActionIsModified can be used just like ngIf. It shows content when the action's modified flag is true.</p>
+      <doc-action-example-tools dbxAction [dbxActionHandler]="handleAction">
+        <doc-action-form-example-form dbxActionForm></doc-action-form-example-form>
+        <dbx-button dbxActionButton text="Submit"></dbx-button>
+        <p *dbxActionIsModified>Modified!</p>
+      </doc-action-example-tools>
+    </doc-feature-example>
+
     <doc-feature-example header="dbxActionPreSuccess" hint="Structural directive that shows template content before the action has success.">
       <p>dbxActionPreSuccess can be used just like ngIf.</p>
       <doc-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValue]="valueSignal()">

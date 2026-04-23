@@ -1,2 +1,2 @@
 export * from './number.field';
-export * from './slider.field.component';
+export * from './slider.field';

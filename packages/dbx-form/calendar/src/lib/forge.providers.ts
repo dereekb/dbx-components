@@ -1,4 +1,4 @@
-import { type FieldTypeDefinition, provideDynamicForm } from '@ng-forge/dynamic-forms';
+import { type FieldTypeDefinition } from '@ng-forge/dynamic-forms';
 import { FORGE_CALENDAR_DATE_SCHEDULE_RANGE_FIELD_TYPE } from './field/schedule/calendar.schedule.forge.field';
 import { calendarDateScheduleRangeFieldMapper } from './field/schedule/calendar.schedule.forge.field.component';
 
@@ -18,14 +18,3 @@ const DbxForgeCalendarDateScheduleRangeFieldType: FieldTypeDefinition = {
  * All custom dbx-form/calendar forge field type definitions.
  */
 export const DBX_FORGE_CALENDAR_FIELD_TYPES: FieldTypeDefinition[] = [DbxForgeCalendarDateScheduleRangeFieldType];
-
-/**
- * Registers ng-forge dynamic form field declarations for the calendar package.
- *
- * Add this to your app's providers alongside provideDbxForgeFormFieldDeclarations().
- *
- * @returns An array of providers that register the calendar forge field types with ng-forge
- */
-export function provideDbxForgeCalendarFieldDeclarations() {
-  return provideDynamicForm(...DBX_FORGE_CALENDAR_FIELD_TYPES);
-}

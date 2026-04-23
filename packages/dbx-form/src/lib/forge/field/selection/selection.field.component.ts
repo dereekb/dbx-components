@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, input, type OnDestroy, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, input } from '@angular/core';
 import { FormField, type FieldTree } from '@angular/forms/signals';
 import { MatError, MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatOption, MatSelect } from '@angular/material/select';
@@ -7,12 +7,10 @@ import { DynamicTextPipe, type DynamicText, type FieldMeta, type ValidationMessa
 import { createResolvedErrorsSignal, setupMetaTracking, shouldShowErrors } from '@ng-forge/dynamic-forms/integration';
 import { MATERIAL_CONFIG, type MatSelectProps } from '@ng-forge/dynamic-forms-material';
 import { AsyncPipe } from '@angular/common';
-import { asObservable, maybeValueFromObservableOrValue, type ObservableOrValue, SubscriptionObject, switchMapMaybe } from '@dereekb/rxjs';
-import { BehaviorSubject, combineLatest, distinct, distinctUntilChanged, map, Subscription } from 'rxjs';
+import { maybeValueFromObservableOrValue, type ObservableOrValue } from '@dereekb/rxjs';
+import { combineLatest, distinctUntilChanged, map } from 'rxjs';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import type { ValueSelectionOption, ValueSelectionOptionClear } from '../../../field/field.selection';
-import { Maybe } from '@dereekb/util';
-import { cleanSubscription, completeOnDestroy } from '@dereekb/dbx-core';
 
 // MARK: Resolved Option
 /**
@@ -156,10 +154,14 @@ export class DbxForgeValueSelectionFieldComponent<T = unknown> {
   readonly showErrors = shouldShowErrors(this.field as any);
   readonly errorsToDisplay = computed(() => (this.showErrors() ? this.resolvedErrors() : []));
 
-  /** Unique ID for the hint element */
+  /**
+   * Unique ID for the hint element
+   */
   protected readonly hintId = computed(() => `${this.key()}-hint`);
 
-  /** Base ID for error elements */
+  /**
+   * Base ID for error elements
+   */
   protected readonly errorId = computed(() => `${this.key()}-error`);
 
   // Accessibility

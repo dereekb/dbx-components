@@ -1,33 +1,34 @@
-import type { MatInputField } from '@ng-forge/dynamic-forms-material';
-import { forgeTextField, type DbxForgeTextFieldConfig } from '../field/value/text/text.field';
+import { dbxForgeWebsiteUrlValidator, type DbxForgeWebsiteUrlValidatorConfig } from '../field/field.util.validation';
+import { dbxForgeTextField, type DbxForgeTextFieldConfig } from '../field/value/text/text.field';
 
 /**
  * Configuration for a forge website URL text field.
  */
-export interface DbxForgeWebsiteUrlFieldConfig extends Omit<DbxForgeTextFieldConfig, 'inputType' | 'key'>, Partial<Pick<DbxForgeTextFieldConfig, 'key'>> {}
+export interface DbxForgeWebsiteUrlFieldConfig extends Omit<DbxForgeTextFieldConfig, 'inputType' | 'key'>, Partial<Pick<DbxForgeTextFieldConfig, 'key'>>, DbxForgeWebsiteUrlValidatorConfig {}
 
 /**
- * Creates a forge text field configured for website URL input.
+ * Creates a forge text field configured for website URL input, with website URL validation.
  *
  * Defaults to the key `'website'` and label `'Website Url'` unless overridden in the config.
- *
- * Note: Unlike the formly equivalent, this does not yet include the `isWebsiteUrlValidator`
- * as @ng-forge/dynamic-forms uses a different validation system. URL pattern validation
- * should be applied through the forge form's validation configuration.
  *
  * @param config - Optional configuration for the website URL field
  * @returns A {@link MatInputField} for website URL input
  *
  * @example
  * ```typescript
- * const field = forgeWebsiteUrlField();
+ * const field = dbxForgeWebsiteUrlField();
  * ```
  */
-export function forgeWebsiteUrlField(config?: DbxForgeWebsiteUrlFieldConfig): MatInputField {
-  return forgeTextField({
-    key: 'website',
-    ...config,
-    label: config?.label ?? 'Website Url',
-    inputType: 'text'
-  });
+export function dbxForgeWebsiteUrlField(config?: DbxForgeWebsiteUrlFieldConfig) {
+  return dbxForgeTextField(
+    {
+      key: 'website',
+      ...config,
+      label: config?.label ?? 'Website Url',
+      inputType: 'text'
+    },
+    (x) => {
+      x.addValidation(dbxForgeWebsiteUrlValidator(config));
+    }
+  );
 }

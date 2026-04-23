@@ -1,144 +1,64 @@
-import { type PrimativeKey, filterFromPOJO } from '@dereekb/util';
-import type { FieldDef, FieldTypeDefinition } from '@ng-forge/dynamic-forms';
-import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
-import { forgeField } from '../../field';
-import { forgeFormFieldWrapper, type DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
-import { FORGE_SEARCHABLE_TEXT_FIELD_TYPE, FORGE_SEARCHABLE_CHIP_FIELD_TYPE, type DbxForgeSearchableTextFieldProps, type DbxForgeSearchableTextFieldDef, type DbxForgeSearchableChipFieldProps, type DbxForgeSearchableChipFieldDef } from './searchable.field.directive';
-import type { DbxForgeFieldConfig } from '../../field.type';
+import { type PrimativeKey } from '@dereekb/util';
+import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { type Observable } from 'rxjs';
+import { type ValidatorFn } from '@angular/forms';
+import { type BaseValueField } from '@ng-forge/dynamic-forms';
+import { type SearchableValueFieldStringSearchFn, type SearchableValueFieldDisplayFn, type SearchableValueFieldHashFn, type SearchableValueFieldAnchorFn } from '../../../../formly/field/selection/searchable/searchable';
 
-// MARK: Field Type Definitions
+// MARK: Field Type Names
 /**
- * ng-forge FieldTypeDefinition for the searchable text field.
+ * The custom forge field type name for the searchable text field.
+ */
+export const DBX_FORGE_SEARCHABLE_TEXT_FIELD_TYPE_NAME = 'dbx-searchable-text' as const;
+
+/**
+ * The custom forge field type name for the searchable chip field.
+ */
+export const DBX_FORGE_SEARCHABLE_CHIP_FIELD_TYPE_NAME = 'dbx-searchable-chip' as const;
+
+// MARK: Props
+/**
+ * Props interface for the forge searchable text field.
  *
- * Register via `provideDynamicForm(DBX_SEARCHABLE_TEXT_FIELD_TYPE)`.
+ * Passed via the `props` property on the forge field definition.
  */
-export const DBX_SEARCHABLE_TEXT_FIELD_TYPE: FieldTypeDefinition<DbxForgeSearchableTextFieldDef> = {
-  name: FORGE_SEARCHABLE_TEXT_FIELD_TYPE,
-  loadComponent: () => import('./searchable-text.field.component').then((m) => m.DbxForgeSearchableTextFieldComponent),
-  mapper: valueFieldMapper
-};
-
-/**
- * ng-forge FieldTypeDefinition for the searchable chip field.
- *
- * Register via `provideDynamicForm(DBX_SEARCHABLE_CHIP_FIELD_TYPE)`.
- */
-export const DBX_SEARCHABLE_CHIP_FIELD_TYPE: FieldTypeDefinition<DbxForgeSearchableChipFieldDef> = {
-  name: FORGE_SEARCHABLE_CHIP_FIELD_TYPE,
-  loadComponent: () => import('./searchable-chip.field.component').then((m) => m.DbxForgeSearchableChipFieldComponent),
-  mapper: valueFieldMapper
-};
-
-// MARK: Searchable Text Field
-/**
- * Configuration for a forge searchable text field (single-value autocomplete).
- */
-export interface DbxForgeSearchableTextFieldConfig<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends DbxForgeFieldConfig, DbxForgeSearchableTextFieldProps<T, M, H> {
-  readonly label?: string;
-  readonly placeholder?: string;
-  readonly description?: string;
+export interface DbxForgeSearchableTextFieldProps<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> {
+  readonly search: SearchableValueFieldStringSearchFn<T, M>;
+  readonly displayForValue: SearchableValueFieldDisplayFn<T, M>;
+  readonly hashForValue?: SearchableValueFieldHashFn<T, H>;
+  readonly allowStringValues?: boolean;
+  readonly convertStringValue?: (text: string) => T;
+  readonly showSelectedValue?: boolean;
+  readonly searchOnEmptyText?: boolean;
+  readonly display?: Partial<DbxInjectionComponentConfig>;
+  readonly useAnchor?: boolean;
+  readonly anchorForValue?: SearchableValueFieldAnchorFn<T, M>;
+  readonly showClearValue?: boolean;
+  readonly searchLabel?: string;
+  readonly refreshDisplayValues$?: Observable<unknown>;
+  readonly hint?: string;
+  readonly textInputValidator?: ValidatorFn | ValidatorFn[];
 }
 
 /**
- * Creates a forge field definition for a searchable text field with autocomplete.
- *
- * @param config - Searchable text field configuration
- * @returns A validated {@link DbxForgeSearchableTextFieldDef}
- *
- * @example
- * ```typescript
- * const field = forgeSearchableTextField({
- *   key: 'assignee',
- *   label: 'Assignee',
- *   search: (text) => mySearchService.search(text),
- *   displayForValue: (values) => of(values.map(v => ({ ...v, label: v.meta?.name ?? '' })))
- * });
- * ```
+ * Props interface for the forge searchable chip field.
  */
-export function forgeSearchableTextField<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>(config: DbxForgeSearchableTextFieldConfig<T, M, H>): DbxForgeFormFieldWrapperFieldDef<DbxForgeSearchableTextFieldDef<T, M, H>> {
-  const { key, label, placeholder, required, readonly: isReadonly, description, logic, ...searchProps } = config;
-
-  const innerField = forgeField({
-    key,
-    type: FORGE_SEARCHABLE_TEXT_FIELD_TYPE,
-    label: '',
-    placeholder,
-    value: undefined as unknown as T,
-    required,
-    readonly: isReadonly,
-    props: filterFromPOJO({
-      ...searchProps
-    }) as DbxForgeSearchableTextFieldProps<T, M, H>
-  } as DbxForgeSearchableTextFieldDef<T, M, H>);
-
-  return forgeFormFieldWrapper<DbxForgeSearchableTextFieldDef<T, M, H>>({
-    label: label ?? '',
-    hint: description,
-    logic,
-    fields: [innerField as unknown as FieldDef<unknown>]
-  });
+export interface DbxForgeSearchableChipFieldProps<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends DbxForgeSearchableTextFieldProps<T, M, H> {
+  readonly multiSelect?: boolean;
+  readonly asArrayValue?: boolean;
 }
 
-// MARK: Searchable Chip Field
+// MARK: Field Defs
 /**
- * Configuration for a forge searchable chip field (multi-value autocomplete with chips).
+ * Forge field definition interface for the searchable text field.
  */
-export interface DbxForgeSearchableChipFieldConfig<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends DbxForgeFieldConfig, DbxForgeSearchableChipFieldProps<T, M, H> {
-  readonly label?: string;
-  readonly placeholder?: string;
-  readonly description?: string;
+export interface DbxForgeSearchableTextFieldDef<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends BaseValueField<DbxForgeSearchableTextFieldProps<T, M, H>, T> {
+  readonly type: typeof DBX_FORGE_SEARCHABLE_TEXT_FIELD_TYPE_NAME;
 }
 
 /**
- * Creates a forge field definition for a searchable chip field with autocomplete and chips.
- *
- * @param config - Searchable chip field configuration
- * @returns A validated {@link DbxForgeSearchableChipFieldDef}
- *
- * @example
- * ```typescript
- * const field = forgeSearchableChipField({
- *   key: 'tags',
- *   label: 'Tags',
- *   search: (text) => tagService.search(text),
- *   displayForValue: (values) => of(values.map(v => ({ ...v, label: v.meta?.name ?? '' }))),
- *   allowStringValues: true
- * });
- * ```
+ * Forge field definition interface for the searchable chip field.
  */
-export function forgeSearchableChipField<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>(config: DbxForgeSearchableChipFieldConfig<T, M, H>): DbxForgeFormFieldWrapperFieldDef<DbxForgeSearchableChipFieldDef<T, M, H>> {
-  const { key, label, placeholder, required, readonly: isReadonly, description, logic, ...chipProps } = config;
-
-  const innerField = forgeField({
-    key,
-    type: FORGE_SEARCHABLE_CHIP_FIELD_TYPE,
-    label: '',
-    placeholder,
-    value: undefined as unknown as T | T[],
-    required,
-    readonly: isReadonly,
-    props: filterFromPOJO({
-      ...chipProps
-    }) as DbxForgeSearchableChipFieldProps<T, M, H>
-  } as DbxForgeSearchableChipFieldDef<T, M, H>);
-
-  return forgeFormFieldWrapper<DbxForgeSearchableChipFieldDef<T, M, H>>({
-    label: label ?? '',
-    hint: description,
-    logic,
-    fields: [innerField as unknown as FieldDef<unknown>]
-  });
-}
-
-/**
- * Creates a forge searchable chip field pre-configured for string values.
- *
- * @param config - String-specific searchable chip field configuration (omits allowStringValues)
- * @returns A validated {@link DbxForgeSearchableChipFieldDef}
- */
-export function forgeSearchableStringChipField<M = unknown>(config: Omit<DbxForgeSearchableChipFieldConfig<string, M>, 'allowStringValues'>): DbxForgeFormFieldWrapperFieldDef<DbxForgeSearchableChipFieldDef<string, M>> {
-  return forgeSearchableChipField({
-    ...config,
-    allowStringValues: true
-  });
+export interface DbxForgeSearchableChipFieldDef<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends BaseValueField<DbxForgeSearchableChipFieldProps<T, M, H>, T | T[]> {
+  readonly type: typeof DBX_FORGE_SEARCHABLE_CHIP_FIELD_TYPE_NAME;
 }

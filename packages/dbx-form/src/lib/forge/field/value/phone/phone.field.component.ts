@@ -10,7 +10,7 @@ import { MATERIAL_CONFIG } from '@ng-forge/dynamic-forms-material';
 import type { FieldTree } from '@angular/forms/signals';
 import { type Maybe, e164PhoneNumberExtensionPair, e164PhoneNumberFromE164PhoneNumberExtensionPair, type E164PhoneNumber, type E164PhoneNumberExtensionPair } from '@dereekb/util';
 import { isPhoneExtension } from '../../../../validator/phone';
-import { forgeFieldDisabled } from '../../field.disabled';
+import { dbxForgeFieldDisabled } from '../../field.util';
 import { toggleDisableFormControl } from '../../../../form/form';
 
 /**
@@ -113,7 +113,7 @@ export class DbxForgePhoneFieldComponent {
   readonly effectiveAutocomplete = computed(() => this.props()?.autocomplete ?? 'off');
 
   // Disabled state
-  readonly isDisabled = forgeFieldDisabled();
+  readonly isDisabled = dbxForgeFieldDisabled();
 
   // Error handling
   readonly resolvedErrors = createResolvedErrorsSignal(this.field, this.validationMessages, this.defaultValidationMessages);

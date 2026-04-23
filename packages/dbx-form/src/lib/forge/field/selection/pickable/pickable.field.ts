@@ -1,128 +1,57 @@
-import { type PrimativeKey, filterFromPOJO } from '@dereekb/util';
-import type { FieldDef, FieldTypeDefinition } from '@ng-forge/dynamic-forms';
-import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
-import { forgeField } from '../../field';
-import { forgeFormFieldWrapper, type DbxForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
-import { FORGE_PICKABLE_CHIP_FIELD_TYPE, FORGE_PICKABLE_LIST_FIELD_TYPE, type DbxForgePickableFieldProps, type DbxForgePickableChipFieldDef, type DbxForgePickableListFieldDef } from './pickable.field.directive';
-import type { DbxForgeFieldConfig } from '../../field.type';
+import { type PrimativeKey } from '@dereekb/util';
+import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { type Observable } from 'rxjs';
+import { type BaseValueField } from '@ng-forge/dynamic-forms';
+import { type PickableValueFieldDisplayFunction, type PickableValueFieldFilterFunction, type PickableValueFieldHashFunction, type PickableValueFieldLoadValuesFunction } from '../../../../formly/field/selection/pickable/pickable';
+import { type PickableItemFieldItemSortFn } from '../../../../formly/field/selection/pickable/pickable.field.directive';
 
-// MARK: Field Type Definitions
+// MARK: Field Type Names
 /**
- * ng-forge FieldTypeDefinition for the pickable chip field.
+ * The custom forge field type name for the pickable chip field.
+ */
+export const FORGE_PICKABLE_CHIP_FIELD_TYPE = 'dbx-pickable-chip' as const;
+
+/**
+ * The custom forge field type name for the pickable list field.
+ */
+export const FORGE_PICKABLE_LIST_FIELD_TYPE = 'dbx-pickable-list' as const;
+
+// MARK: Props
+/**
+ * Props interface for forge pickable fields (both chip and list variants).
  *
- * Register via `provideDynamicForm(DBX_PICKABLE_CHIP_FIELD_TYPE)`.
+ * Passed via the `props` property on the forge field definition.
  */
-export const DBX_PICKABLE_CHIP_FIELD_TYPE: FieldTypeDefinition<DbxForgePickableChipFieldDef> = {
-  name: FORGE_PICKABLE_CHIP_FIELD_TYPE,
-  loadComponent: () => import('./pickable-chip.field.component').then((m) => m.DbxForgePickableChipFieldComponent),
-  mapper: valueFieldMapper
-};
+export interface DbxForgePickableFieldProps<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> {
+  readonly loadValues: PickableValueFieldLoadValuesFunction<T, M>;
+  readonly displayForValue: PickableValueFieldDisplayFunction<T, M>;
+  readonly hashForValue?: PickableValueFieldHashFunction<T, H>;
+  readonly filterValues?: PickableValueFieldFilterFunction<T, M>;
+  readonly sortItems?: PickableItemFieldItemSortFn<T, M>;
+  readonly multiSelect?: boolean;
+  readonly asArrayValue?: boolean;
+  readonly showTextFilter?: boolean;
+  readonly skipFilterFnOnEmpty?: boolean;
+  readonly filterLabel?: string;
+  readonly maxPicks?: number;
+  readonly showSelectAllButton?: boolean;
+  readonly changeSelectionModeToViewOnDisabled?: boolean;
+  readonly footerConfig?: DbxInjectionComponentConfig;
+  readonly refreshDisplayValues$?: Observable<unknown>;
+  readonly hint?: string;
+}
 
+// MARK: Field Defs
 /**
- * ng-forge FieldTypeDefinition for the pickable list field.
- *
- * Register via `provideDynamicForm(DBX_PICKABLE_LIST_FIELD_TYPE)`.
+ * Forge field definition interface for the pickable chip field.
  */
-export const DBX_PICKABLE_LIST_FIELD_TYPE: FieldTypeDefinition<DbxForgePickableListFieldDef> = {
-  name: FORGE_PICKABLE_LIST_FIELD_TYPE,
-  loadComponent: () => import('./pickable-list.field.component').then((m) => m.DbxForgePickableListFieldComponent),
-  mapper: valueFieldMapper
-};
-
-// MARK: Pickable Chip Field
-/**
- * Configuration for a forge pickable chip field.
- */
-export interface DbxForgePickableChipFieldConfig<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends DbxForgeFieldConfig, DbxForgePickableFieldProps<T, M, H> {
-  readonly label?: string;
-  readonly description?: string;
+export interface DbxForgePickableChipFieldDef<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends BaseValueField<DbxForgePickableFieldProps<T, M, H>, T | T[]> {
+  readonly type: typeof FORGE_PICKABLE_CHIP_FIELD_TYPE;
 }
 
 /**
- * Creates a forge field definition for a pickable chip field.
- *
- * @param config - Pickable chip field configuration
- * @returns A validated {@link DbxForgePickableChipFieldDef}
- *
- * @example
- * ```typescript
- * const field = forgePickableChipField({
- *   key: 'tags',
- *   label: 'Tags',
- *   loadValues: () => tags$,
- *   displayForValue: (values) => of(values.map(v => ({ ...v, label: v.meta?.label ?? '' }))),
- *   hashForValue: (tag) => tag.id
- * });
- * ```
+ * Forge field definition interface for the pickable list field.
  */
-export function forgePickableChipField<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>(config: DbxForgePickableChipFieldConfig<T, M, H>): DbxForgeFormFieldWrapperFieldDef<DbxForgePickableChipFieldDef<T, M, H>> {
-  const { key, label, required, readonly: isReadonly, description, logic, ...pickableProps } = config;
-
-  const innerField = forgeField({
-    key,
-    type: FORGE_PICKABLE_CHIP_FIELD_TYPE,
-    label: '',
-    value: undefined as unknown as T | T[],
-    required,
-    readonly: isReadonly,
-    props: filterFromPOJO({
-      ...pickableProps
-    }) as DbxForgePickableFieldProps<T, M, H>
-  } as DbxForgePickableChipFieldDef<T, M, H>);
-
-  return forgeFormFieldWrapper<DbxForgePickableChipFieldDef<T, M, H>>({
-    label: label ?? '',
-    hint: description,
-    logic,
-    fields: [innerField as unknown as FieldDef<unknown>]
-  });
-}
-
-// MARK: Pickable List Field
-/**
- * Configuration for a forge pickable list field.
- */
-export interface DbxForgePickableListFieldConfig<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends DbxForgeFieldConfig, DbxForgePickableFieldProps<T, M, H> {
-  readonly label?: string;
-  readonly description?: string;
-}
-
-/**
- * Creates a forge field definition for a pickable list field.
- *
- * @param config - Pickable list field configuration
- * @returns A validated {@link DbxForgePickableListFieldDef}
- *
- * @example
- * ```typescript
- * const field = forgePickableListField({
- *   key: 'categories',
- *   label: 'Categories',
- *   loadValues: () => categories$,
- *   displayForValue: (values) => of(values.map(v => ({ ...v, label: v.meta?.label ?? '' }))),
- *   hashForValue: (cat) => cat.id
- * });
- * ```
- */
-export function forgePickableListField<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>(config: DbxForgePickableListFieldConfig<T, M, H>): DbxForgeFormFieldWrapperFieldDef<DbxForgePickableListFieldDef<T, M, H>> {
-  const { key, label, required, readonly: isReadonly, description, logic, ...pickableProps } = config;
-
-  const innerField = forgeField({
-    key,
-    type: FORGE_PICKABLE_LIST_FIELD_TYPE,
-    label: '',
-    value: undefined as unknown as T | T[],
-    required,
-    readonly: isReadonly,
-    props: filterFromPOJO({
-      ...pickableProps
-    }) as DbxForgePickableFieldProps<T, M, H>
-  } as DbxForgePickableListFieldDef<T, M, H>);
-
-  return forgeFormFieldWrapper<DbxForgePickableListFieldDef<T, M, H>>({
-    label: label ?? '',
-    hint: description,
-    logic,
-    fields: [innerField as unknown as FieldDef<unknown>]
-  });
+export interface DbxForgePickableListFieldDef<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends BaseValueField<DbxForgePickableFieldProps<T, M, H>, T | T[]> {
+  readonly type: typeof FORGE_PICKABLE_LIST_FIELD_TYPE;
 }

@@ -1,26 +1,7 @@
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import {
-  formlyRepeatArrayField,
-  formlyNameField,
-  formlyEmailField,
-  formlyPhoneAndLabelSectionField,
-  formlyAddressListField,
-  formlyToggleField,
-  forgeArrayField,
-  forgeNameField,
-  forgeEmailField,
-  forgePhoneAndLabelSectionField as forgePhoneAndLabelSection,
-  forgeAddressListField,
-  forgeToggleField,
-  DbxFormFormlyArrayFieldModule,
-  DbxFormFormlyTextFieldModule,
-  DbxFormFormlyPhoneFieldModule,
-  DbxFormFormlyBooleanFieldModule,
-  DbxFormlyFieldsContextDirective,
-  DbxFormSourceDirective
-} from '@dereekb/dbx-form';
+import { formlyRepeatArrayField, formlyNameField, formlyEmailField, formlyPhoneAndLabelSectionField, formlyAddressListField, formlyToggleField, dbxForgeArrayField, dbxForgeNameField, dbxForgeToggleField, DbxFormFormlyArrayFieldModule, DbxFormFormlyTextFieldModule, DbxFormFormlyPhoneFieldModule, DbxFormFormlyBooleanFieldModule, DbxFormlyFieldsContextDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
 import { randomBoolean } from '@dereekb/util';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
@@ -88,32 +69,45 @@ export class DocFormArrayComponent {
   // -- Forge --
   readonly forgeDragArrayConfig: FormConfig = {
     fields: [
-      forgeArrayField({
+      dbxForgeArrayField({
         key: 'test',
-        label: 'Test Field',
-        description: 'This is a generic repeat field. It is configured with custom add/remove text, and a max of 2 items.',
-        template: [forgeNameField(), forgeEmailField(), forgePhoneAndLabelSection(), forgeAddressListField()],
-        addText: 'Add Test Field',
-        removeText: 'Remove Test Field',
+        props: {
+          label: 'Test Field',
+          hint: 'This is a generic repeat field. It is configured with custom add/remove text, and a max of 2 items.',
+          addText: 'Add Test Field',
+          removeText: 'Remove Test Field'
+        },
+        template: [dbxForgeNameField()],
         maxLength: 2
-      }) as any
+      })
     ]
   };
 
   readonly forgeDragArrayAdvancedConfig: FormConfig = {
     fields: [
-      forgeArrayField({
+      dbxForgeArrayField({
         key: 'test2',
-        label: 'Field With Add and Remove',
-        description: 'Shows the drag array field with duplicate, per-item labels, and rearrange disabled.',
-        template: [forgeNameField(), forgeToggleField({ key: 'disable', label: 'Disable Remove' })],
-        duplicateText: 'Make Copy',
-        disableRearrange: true,
-        allowAdd: true,
-        allowDuplicate: true,
-        labelForField: ({ value }) => (value as { name: string })?.name,
-        addDuplicateToEnd: true
-      }) as any
+        props: {
+          label: 'Field With Add, Remove, and Duplicate',
+          hint: 'Shows the drag array field with dragging disabled, per-item labels, allowRemove driven by the item value, and a duplicate button that inserts a copy at the end of the list.',
+          allowAdd: true
+        },
+        elementProps: {
+          disableRearrange: true,
+          allowRemove: ({ fieldValue }) => !(fieldValue as { disable: boolean })?.disable,
+          labelForEntry: ({ fieldValue }) => (fieldValue as { name: string })?.name,
+          // Returning a numeric index sends the duplicate to the end of the array
+          // instead of inserting it directly after the source item.
+          allowDuplicate: ({ arrayIndex }) => {
+            return Math.max(arrayIndex ? arrayIndex + 1 : 0, 0);
+          },
+          duplicateButton: {
+            style: { type: 'stroked', color: 'accent' },
+            display: { icon: 'content_copy', text: 'Make Copy' }
+          }
+        },
+        template: [dbxForgeNameField(), dbxForgeToggleField({ key: 'disable', label: 'Disable Remove' })]
+      })
     ]
   };
 }

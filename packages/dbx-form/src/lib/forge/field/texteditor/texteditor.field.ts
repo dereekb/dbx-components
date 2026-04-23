@@ -1,31 +1,12 @@
 import { filterFromPOJO } from '@dereekb/util';
-import type { FieldTypeDefinition } from '@ng-forge/dynamic-forms';
-import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
-import { forgeField } from '../field';
-import { FORGE_TEXT_EDITOR_FIELD_TYPE, type DbxForgeTextEditorFieldProps, type DbxForgeTextEditorFieldDef } from './texteditor.field.component';
-import type { DbxForgeTextFieldLengthConfig } from '../value/text/text.field';
-import type { DbxForgeFieldConfig } from '../field.type';
-
-// MARK: Field Type Definition
-/**
- * ng-forge FieldTypeDefinition for the rich text editor field.
- *
- * Register via `provideDynamicForm(DBX_TEXT_EDITOR_FIELD_TYPE)`.
- */
-export const DBX_TEXT_EDITOR_FIELD_TYPE: FieldTypeDefinition<DbxForgeTextEditorFieldDef> = {
-  name: FORGE_TEXT_EDITOR_FIELD_TYPE,
-  loadComponent: () => import('./texteditor.field.component').then((m) => m.DbxForgeTextEditorFieldComponent),
-  mapper: valueFieldMapper
-};
+import { FORGE_TEXT_EDITOR_FIELD_TYPE, type DbxForgeTextEditorFieldDef } from './texteditor.field.component';
+import { dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef, type DbxForgeFieldFunction } from '../field';
 
 // MARK: Config
 /**
  * Configuration for a forge rich text editor field.
  */
-export interface DbxForgeTextEditorFieldConfig extends DbxForgeFieldConfig, DbxForgeTextFieldLengthConfig {
-  readonly label?: string;
-  readonly description?: string;
-}
+export interface DbxForgeTextEditorFieldConfig extends DbxForgeFieldFunctionDef<DbxForgeTextEditorFieldDef> {}
 
 /**
  * Creates a forge field definition for a rich text editor.
@@ -38,26 +19,15 @@ export interface DbxForgeTextEditorFieldConfig extends DbxForgeFieldConfig, DbxF
  *
  * @example
  * ```typescript
- * const field = forgeTextEditorField({ key: 'bio', label: 'Biography', maxLength: 2000 });
+ * const field = dbxForgeTextEditorField({ key: 'bio', label: 'Biography', maxLength: 2000 });
  * ```
  */
-export function forgeTextEditorField(config: DbxForgeTextEditorFieldConfig): DbxForgeTextEditorFieldDef {
-  const { key, label, required, readonly: isReadonly, description, minLength, maxLength, logic } = config;
-
-  return forgeField({
-    key,
-    type: FORGE_TEXT_EDITOR_FIELD_TYPE,
-    label: label ?? '',
-    value: '' as string,
-    required,
-    readonly: isReadonly,
-    logic,
-    minLength,
-    maxLength,
-    props: filterFromPOJO({
-      minLength,
-      maxLength,
-      hint: description
-    }) as DbxForgeTextEditorFieldProps
-  } as DbxForgeTextEditorFieldDef);
-}
+export const dbxForgeTextEditorField = dbxForgeFieldFunction<DbxForgeTextEditorFieldConfig>({
+  type: FORGE_TEXT_EDITOR_FIELD_TYPE,
+  buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder((config) =>
+    filterFromPOJO({
+      minLength: config.minLength,
+      maxLength: config.maxLength
+    })
+  )
+}) as DbxForgeFieldFunction<DbxForgeTextEditorFieldConfig, DbxForgeTextEditorFieldDef>;

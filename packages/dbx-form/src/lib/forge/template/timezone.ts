@@ -1,9 +1,7 @@
 import { type TimezoneString } from '@dereekb/util';
 import { type TimezoneInfo } from '@dereekb/date';
 import { timezoneStringSearchFunction, DISPLAY_FOR_TIMEZONE_STRING_VALUE } from '../../shared/template/timezone';
-import { forgeSearchableTextField, type DbxForgeSearchableTextFieldConfig } from '../field/selection/searchable/searchable.field';
-import type { DbxForgeFormFieldWrapperFieldDef } from '../field/wrapper/formfield/formfield.field';
-import type { DbxForgeSearchableTextFieldDef } from '../field/selection/searchable/searchable.field.directive';
+import { dbxForgeSearchableTextField, type DbxForgeSearchableTextFieldConfig } from '../field/selection/searchable/searchable-text.field';
 
 /**
  * Configuration for a forge timezone string field.
@@ -23,19 +21,22 @@ export interface DbxForgeTimezoneStringFieldConfig extends Omit<DbxForgeSearchab
  *
  * @example
  * ```typescript
- * const field = forgeTimezoneStringField();
- * const fieldWithKey = forgeTimezoneStringField({ key: 'tz', label: 'Select Timezone' });
+ * const field = dbxForgeTimezoneStringField();
+ * const fieldWithKey = dbxForgeTimezoneStringField({ key: 'tz', label: 'Select Timezone' });
  * ```
  */
-export function forgeTimezoneStringField(config: DbxForgeTimezoneStringFieldConfig = {}): DbxForgeFormFieldWrapperFieldDef<DbxForgeSearchableTextFieldDef<TimezoneString, TimezoneInfo>> {
-  return forgeSearchableTextField<TimezoneString, TimezoneInfo>({
+export function dbxForgeTimezoneStringField(config: DbxForgeTimezoneStringFieldConfig = {}) {
+  return dbxForgeSearchableTextField<TimezoneString, TimezoneInfo>({
     key: 'timezone',
     label: 'Timezone',
     ...config,
-    searchOnEmptyText: true,
-    allowStringValues: false,
-    showClearValue: true,
-    search: timezoneStringSearchFunction(),
-    displayForValue: DISPLAY_FOR_TIMEZONE_STRING_VALUE
+    props: {
+      ...config.props,
+      searchOnEmptyText: true,
+      allowStringValues: false,
+      showClearValue: true,
+      search: timezoneStringSearchFunction(),
+      displayForValue: DISPLAY_FOR_TIMEZONE_STRING_VALUE
+    }
   });
 }

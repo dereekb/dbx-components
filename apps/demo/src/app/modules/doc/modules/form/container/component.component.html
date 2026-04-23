@@ -8,7 +8,7 @@
         <button mat-raised-button (click)="showB()">Show B</button>
         <dbx-spacer></dbx-spacer>
       </dbx-bar>
-      <doc-feature-form-tabs #formTabs formlyFn="formlyComponentField()" forgeFn="forgeComponentField()">
+      <doc-feature-form-tabs #formTabs formlyFn="formlyComponentField()" forgeFn="dbxForgeComponentField()">
         <doc-form-example-component-form formly [config]="config" [disabled]="formTabs.disabled()"></doc-form-example-component-form>
         <div forge>
           <doc-forge-example-component-form [config]="config" [disabled]="formTabs.disabled()"></doc-forge-example-component-form>

@@ -204,6 +204,88 @@ describe('areEqualPOJOValuesUsingPojoFilter()', () => {
       expect(areEqualPOJOValuesUsingPojoFilter(a, b, pojoFilter)).toBe(true); // the same despite bba having undefined values
     });
   });
+
+  describe('date comparison', () => {
+    const pojoFilter = filterNullAndUndefinedValues;
+
+    it('should return false for two different Date values at the top level', () => {
+      const a = new Date('2026-04-23T17:00:00.000Z');
+      const b = new Date('2026-04-28T17:00:00.000Z');
+
+      expect(areEqualPOJOValuesUsingPojoFilter(a, b, pojoFilter)).toBe(false);
+    });
+
+    it('should return true for two equal Date values at the top level', () => {
+      const a = new Date('2026-04-23T17:00:00.000Z');
+      const b = new Date('2026-04-23T17:00:00.000Z');
+
+      expect(areEqualPOJOValuesUsingPojoFilter(a, b, pojoFilter)).toBe(true);
+    });
+
+    it('should return false for objects with different nested Date values', () => {
+      const a = { date: new Date('2026-04-23T17:00:00.000Z') };
+      const b = { date: new Date('2026-04-28T17:00:00.000Z') };
+
+      expect(areEqualPOJOValuesUsingPojoFilter(a, b, pojoFilter)).toBe(false);
+    });
+
+    it('should return true for objects with equal nested Date values', () => {
+      const a = { date: new Date('2026-04-23T17:00:00.000Z') };
+      const b = { date: new Date('2026-04-23T17:00:00.000Z') };
+
+      expect(areEqualPOJOValuesUsingPojoFilter(a, b, pojoFilter)).toBe(true);
+    });
+
+    it('should return false when one value is a Date and the other is null', () => {
+      const a = { date: new Date('2026-04-23T17:00:00.000Z') };
+      const b = { date: null };
+
+      expect(areEqualPOJOValuesUsingPojoFilter(a, b, pojoFilter)).toBe(false);
+    });
+
+    it('should return false when one value is a Date and the other is undefined (filtered out)', () => {
+      const a = { date: new Date('2026-04-23T17:00:00.000Z'), extra: 1 };
+      const b = { date: undefined, extra: 1 };
+
+      expect(areEqualPOJOValuesUsingPojoFilter(a, b, pojoFilter)).toBe(false);
+    });
+
+    it('should return false for deeply nested objects with different Date values', () => {
+      const a = { level1: { level2: { date: new Date('2026-04-23T17:00:00.000Z') } } };
+      const b = { level1: { level2: { date: new Date('2026-04-28T17:00:00.000Z') } } };
+
+      expect(areEqualPOJOValuesUsingPojoFilter(a, b, pojoFilter)).toBe(false);
+    });
+
+    it('should return true for deeply nested objects with equal Date values', () => {
+      const a = { level1: { level2: { date: new Date('2026-04-23T17:00:00.000Z') } } };
+      const b = { level1: { level2: { date: new Date('2026-04-23T17:00:00.000Z') } } };
+
+      expect(areEqualPOJOValuesUsingPojoFilter(a, b, pojoFilter)).toBe(true);
+    });
+
+    it('should compare Date values correctly alongside other properties with null filtering', () => {
+      const a = { name: 'test', date: new Date('2026-04-23T17:00:00.000Z'), removed: null };
+      const b = { name: 'test', date: new Date('2026-04-23T17:00:00.000Z') };
+
+      expect(areEqualPOJOValuesUsingPojoFilter(a, b, pojoFilter)).toBe(true);
+    });
+
+    it('should return false when Date differs but null-filtered properties match', () => {
+      const a = { name: 'test', date: new Date('2026-04-23T17:00:00.000Z'), removed: null };
+      const b = { name: 'test', date: new Date('2026-04-28T17:00:00.000Z') };
+
+      expect(areEqualPOJOValuesUsingPojoFilter(a, b, pojoFilter)).toBe(false);
+    });
+
+    it('should handle Date values inside arrays', () => {
+      const dateA = new Date('2026-04-23T17:00:00.000Z');
+      const dateB = new Date('2026-04-28T17:00:00.000Z');
+
+      expect(areEqualPOJOValuesUsingPojoFilter({ dates: [dateA] }, { dates: [dateA] }, pojoFilter)).toBe(true);
+      expect(areEqualPOJOValuesUsingPojoFilter({ dates: [dateA] }, { dates: [dateB] }, pojoFilter)).toBe(false);
+    });
+  });
 });
 
 interface SimpleType {
