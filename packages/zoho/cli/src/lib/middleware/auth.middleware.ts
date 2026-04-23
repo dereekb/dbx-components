@@ -4,8 +4,6 @@ import { createCliContext, type ZohoCliContext } from '../context/cli.context';
 import { outputError } from '../util/output';
 import type { ZohoRecruitApi, ZohoCrmApi, ZohoDeskApi } from '@dereekb/zoho/nestjs';
 
-const AUTH_SKIP_COMMANDS = new Set(['auth', 'doctor', 'output']);
-
 /**
  * Module-level context set by the auth middleware.
  *
@@ -14,11 +12,11 @@ const AUTH_SKIP_COMMANDS = new Set(['auth', 'doctor', 'output']);
  */
 let _currentCliContext: ZohoCliContext | undefined;
 
-export function createAuthMiddleware(): MiddlewareFunction {
+export function createAuthMiddleware(skipCommands: ReadonlySet<string>): MiddlewareFunction {
   return async (argv: any) => {
     const command = argv._?.[0];
 
-    if (typeof command === 'string' && AUTH_SKIP_COMMANDS.has(command)) {
+    if (typeof command === 'string' && skipCommands.has(command)) {
       return;
     }
 
