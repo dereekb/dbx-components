@@ -1,8 +1,32 @@
 import { type PrimativeKey } from '@dereekb/util';
+import { type BaseValueField } from '@ng-forge/dynamic-forms';
 import { configureDbxForgeFormFieldWrapper } from '../../wrapper/formfield/formfield.wrapper';
-import { DBX_FORGE_SEARCHABLE_CHIP_FIELD_TYPE_NAME, type DbxForgeSearchableChipFieldDef, type DbxForgeSearchableChipFieldProps } from './searchable.field';
+import { type DbxForgeSearchableTextFieldProps } from './searchable-text.field';
 import { type DbxForgeFieldFunctionDef, dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, dbxForgeBuildFieldDef } from '../../field';
 import type { DbxForgeField } from '../../../form/forge.form';
+
+// MARK: Field Type Name
+/**
+ * The custom forge field type name for the searchable chip field.
+ */
+export const DBX_FORGE_SEARCHABLE_CHIP_FIELD_TYPE_NAME = 'dbx-searchable-chip' as const;
+
+// MARK: Props
+/**
+ * Props interface for the forge searchable chip field.
+ */
+export interface DbxForgeSearchableChipFieldProps<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends DbxForgeSearchableTextFieldProps<T, M, H> {
+  readonly multiSelect?: boolean;
+  readonly asArrayValue?: boolean;
+}
+
+// MARK: Field Def
+/**
+ * Forge field definition interface for the searchable chip field.
+ */
+export interface DbxForgeSearchableChipFieldDef<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends BaseValueField<DbxForgeSearchableChipFieldProps<T, M, H>, T | T[]> {
+  readonly type: typeof DBX_FORGE_SEARCHABLE_CHIP_FIELD_TYPE_NAME;
+}
 
 // MARK: Searchable Chip Field
 /**

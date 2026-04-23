@@ -8,7 +8,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { type DynamicText, type FieldMeta, type ValidationMessages } from '@ng-forge/dynamic-forms';
 import { type SearchableValueFieldDisplayFn, type SearchableValueFieldDisplayValue, type SearchableValueFieldValue, type SearchableValueFieldAnchorFn, type SearchableValueFieldHashFn, type ConfiguredSearchableValueFieldDisplayValue } from '../../../../formly/field/selection/searchable/searchable';
 import { DbxDefaultSearchableFieldDisplayComponent } from '../../../../formly/field/selection/searchable/searchable.field.autocomplete.item.component';
-import { type DbxForgeSearchableTextFieldProps } from './searchable.field';
+import { type DbxForgeSearchableTextFieldProps } from './searchable-text.field';
 
 const DEFAULT_SEARCH_INPUT_PLACEHOLDER = 'Type to Search';
 

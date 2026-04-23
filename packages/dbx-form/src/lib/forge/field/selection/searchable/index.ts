@@ -1,4 +1,3 @@
-export * from './searchable.field';
 export * from './searchable.field.directive';
 export * from './searchable-text.field';
 export * from './searchable-chip.field';

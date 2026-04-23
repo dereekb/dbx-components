@@ -4,9 +4,8 @@
 import { describe, it, expect, beforeEach, afterEach, expectTypeOf } from 'vitest';
 import { type DynamicText, type LogicConfig, type ValidatorConfig, type ValidationMessages, type FormConfig, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
 import { firstValueFrom, first, of, timeout } from 'rxjs';
-import type { DbxForgeSearchableChipFieldConfig } from './searchable-chip.field';
+import type { DbxForgeSearchableChipFieldConfig, DbxForgeSearchableChipFieldDef, DbxForgeSearchableChipFieldProps } from './searchable-chip.field';
 import { dbxForgeSearchableChipField, dbxForgeSearchableStringChipField } from './searchable-chip.field';
-import type { DbxForgeSearchableChipFieldDef, DbxForgeSearchableChipFieldProps } from './searchable.field';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ChangeDetectionStrategy, inject, provideZonelessChangeDetection } from '@angular/core';
 import { provideDbxForgeFormFieldDeclarations } from '../../../../forge/forge.providers';

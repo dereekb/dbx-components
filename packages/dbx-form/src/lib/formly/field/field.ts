@@ -3,7 +3,7 @@ import { mergeObjects, filterFromPOJO, mergeObjectsFunction, filterFromPOJOFunct
 import { type FormlyFieldConfig, type FormlyFieldProps } from '@ngx-formly/core';
 import { type ValidationMessageOption } from '../type';
 import { type FormlyFieldProps as MaterialFormlyFormFieldProps } from '@ngx-formly/material/form-field';
-import { DisableAutocompleteForField, disableAutofillAttributes } from '../../field';
+import { type DisableAutocompleteForField, disableAutofillAttributes } from '../../field';
 
 /**
  * Configuration for a labeled form field with label, placeholder, and autocomplete support.

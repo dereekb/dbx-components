@@ -14,7 +14,7 @@ import { AbstractForgeSearchableFieldDirective } from './searchable.field.direct
 import { createResolvedErrorsSignal, setupMetaTracking, shouldShowErrors } from '@ng-forge/dynamic-forms/integration';
 import { dbxForgeFieldDisabled } from '../../field.util';
 import { toggleDisableFormControl } from '../../../../form/form';
-import { DbxForgeSearchableTextFieldProps } from './searchable.field';
+import { type DbxForgeSearchableTextFieldProps } from './searchable-text.field';
 
 /**
  * Forge ValueFieldComponent for searchable text selection (single value).

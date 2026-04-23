@@ -5,9 +5,8 @@ import { describe, it, expect, beforeEach, afterEach, expectTypeOf } from 'vites
 import { type DynamicText, type LogicConfig, type ValidatorConfig, type ValidationMessages, type FormConfig, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
 import { firstValueFrom, first, map, of, Subject, take, timeout } from 'rxjs';
 import { FormControl } from '@angular/forms';
-import type { DbxForgeSearchableTextFieldConfig } from './searchable-text.field';
+import type { DbxForgeSearchableTextFieldConfig, DbxForgeSearchableTextFieldDef, DbxForgeSearchableTextFieldProps } from './searchable-text.field';
 import { dbxForgeSearchableTextField } from './searchable-text.field';
-import type { DbxForgeSearchableTextFieldDef, DbxForgeSearchableTextFieldProps } from './searchable.field';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ChangeDetectionStrategy, inject, provideZonelessChangeDetection } from '@angular/core';
 import { provideDbxForgeFormFieldDeclarations } from '../../../../forge/forge.providers';
