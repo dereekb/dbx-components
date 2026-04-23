@@ -1,15 +1,14 @@
 import { FilterSource, FilterSourceConnector } from '@dereekb/rxjs';
-import { type DbxFilterButtonConfigWithPresetFilter, DbxFilterPopoverButtonComponent } from '@dereekb/dbx-web';
+import { type DbxFilterButtonConfigWithPresetFilter, type DbxButtonDisplayStylePair, DbxFilterPopoverButtonComponent } from '@dereekb/dbx-web';
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { type DocInteractionTestFilter } from './filter';
-import { type DbxButtonDisplay } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 import { DocInteractionTestDateFilterPresetFilterComponent } from './filter.date.preset.component';
 
 @Component({
   selector: 'doc-interaction-test-date-filter-popover-button',
   template: `
-    <dbx-filter-popover-button [buttonDisplay]="buttonDisplay()" [config]="config"></dbx-filter-popover-button>
+    <dbx-filter-popover-button [buttonDisplayStyle]="buttonDisplayStyle()" [config]="config"></dbx-filter-popover-button>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
@@ -19,7 +18,7 @@ export class DocInteractionTestDateFilterPopoverButtonComponent {
   readonly filterSourceConnector = inject(FilterSourceConnector);
   readonly filterSource = inject(FilterSource<DocInteractionTestFilter>);
 
-  readonly buttonDisplay = input<Maybe<DbxButtonDisplay>>();
+  readonly buttonDisplayStyle = input<Maybe<DbxButtonDisplayStylePair>>();
 
   readonly config: DbxFilterButtonConfigWithPresetFilter<DocInteractionTestFilter, DocInteractionTestDateFilterPresetFilterComponent> = {
     icon: 'calendar_today',

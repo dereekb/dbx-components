@@ -8,12 +8,12 @@
       </dbx-content-border>
       <p>The filter popup will close by default when the filter updates/changes.</p>
       <doc-interaction-test-filter-popover-button [dbxFilterMapSourceConnector]="buttonFilterKey"></doc-interaction-test-filter-popover-button>
-      <p>The button itself can be configured using the buttonDisplay property.</p>
-      <doc-interaction-test-filter-popover-button [buttonDisplay]="displayForFilterSignal()" [dbxFilterMapSourceConnector]="buttonFilterKey"></doc-interaction-test-filter-popover-button>
+      <p>The button itself can be configured using the buttonDisplayStyle property.</p>
+      <doc-interaction-test-filter-popover-button [buttonDisplayStyle]="displayForFilterSignal()" [dbxFilterMapSourceConnector]="buttonFilterKey"></doc-interaction-test-filter-popover-button>
       <dbx-button-spacer></dbx-button-spacer>
-      <doc-interaction-test-filter-popover-button [buttonDisplay]="displayForFilterSignal()" [dbxFilterMapSourceConnector]="buttonFilterKey" [disabled]="true"></doc-interaction-test-filter-popover-button>
+      <doc-interaction-test-filter-popover-button [buttonDisplayStyle]="displayForFilterSignal()" [dbxFilterMapSourceConnector]="buttonFilterKey" [disabled]="true"></doc-interaction-test-filter-popover-button>
       <p>Another example.</p>
-      <doc-interaction-test-date-filter-popover-button [buttonDisplay]="displayForDateFilterSignal()" [dbxFilterMapSourceConnector]="buttonFilterKey"></doc-interaction-test-date-filter-popover-button>
+      <doc-interaction-test-date-filter-popover-button [buttonDisplayStyle]="displayForDateFilterSignal()" [dbxFilterMapSourceConnector]="buttonFilterKey"></doc-interaction-test-date-filter-popover-button>
     </doc-feature-example>
     <doc-feature-example header="dbx-preset-filter-menu" hint="Component that displays a menu button and allows quick selection of preset filters.">
       <dbx-content-border>
