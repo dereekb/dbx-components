@@ -36,6 +36,10 @@ export function areEqualPOJOValuesUsingPojoFilter<F>(a: F, b: F, pojoFilter: Fil
   // check self
   if (a === b) {
     result = true;
+  } else if (isDate(a) || isDate(b)) {
+    // Check Date before applying the pojoFilter — the spread copy in
+    // filterFromPOJOFunction destroys Date instances (producing {}).
+    result = isDate(a) && isDate(b) && isEqualDate(a as unknown as Date, b as unknown as Date);
   } else {
     // run pojo filter before comparison
     a = pojoFilter(a, true);

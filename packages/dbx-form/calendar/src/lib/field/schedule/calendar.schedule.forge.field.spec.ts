@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { addDays, startOfDay } from 'date-fns';
-import { type DateCellScheduleDateFilterConfig, dateCellTiming, type DateRange } from '@dereekb/date';
+import { type DateCellScheduleDateFilterConfig, DateCellScheduleDayCodesInput, DateCellScheduleEncodedWeek, dateCellTiming, type DateRange } from '@dereekb/date';
 import { BehaviorSubject } from 'rxjs';
 import { type Maybe, type TimezoneString } from '@dereekb/util';
 import { type CalendarScheduleSelectionState, initialCalendarScheduleSelectionState, updateStateWithChangedDates, updateStateWithChangedRange, updateStateWithComputeSelectionResultRelativeToFilter, updateStateWithDateCellScheduleRangeValue, updateStateWithFilter, updateStateWithInitialSelectionState, updateStateWithMinMaxDateRange, updateStateWithTimezoneValue } from '../../calendar.schedule.selection.store';
@@ -65,9 +65,9 @@ describe('dbxForgeDateScheduleRangeField()', () => {
 
       const timezone$ = new BehaviorSubject<Maybe<TimezoneString>>(undefined);
 
-      const filterConfig = {
+      const filterConfig: DateCellScheduleDateFilterConfig = {
         ...dateCellTiming({ startsAt: today, duration: 60 }, daysInFilter, 'UTC'),
-        w: '89' as const,
+        w: '89' as DateCellScheduleEncodedWeek,
         ex: [] as number[]
       };
 
@@ -159,7 +159,7 @@ describe('dbxForgeDateScheduleRangeField()', () => {
 
     const filterConfig: DateCellScheduleDateFilterConfig = {
       ...dateCellTiming({ startsAt: today, duration: 60 }, daysInFilter, 'UTC'),
-      w: '89' as const,
+      w: '89' as DateCellScheduleEncodedWeek,
       ex: [] as number[]
     };
 

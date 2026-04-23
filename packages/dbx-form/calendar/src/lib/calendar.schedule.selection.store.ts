@@ -740,7 +740,7 @@ export function updateStateWithFilter(currentState: CalendarScheduleSelectionSta
       }
     } else {
       enabledFilter = {
-        w: '89' as const,
+        w: '89' as DateCellScheduleEncodedWeek,
         ex: exclusions as number[]
       };
     }

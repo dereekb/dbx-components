@@ -877,6 +877,104 @@ describe('DbxForgeDateTimeFieldComponent', () => {
 
       fixture.destroy();
     });
+
+    it('should produce form output when date picked then time typed with schedule and timezone', async () => {
+      const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+      const host = fixture.componentInstance;
+      const timezone$ = new BehaviorSubject<Maybe<TimezoneString>>('America/Chicago');
+
+      // Find the next valid M/W/F date
+      let validDate = startOfDay(new Date());
+      while (![1, 3, 5].includes(validDate.getDay())) {
+        validDate = addDays(validDate, 1);
+      }
+
+      host.config = createConfig({
+        key: 'dateWithASchedule',
+        required: true,
+        timezone: timezone$,
+        pickerConfig: () => {
+          return of({
+            limits: {
+              min: startOfDay(new Date()),
+              max: addDays(new Date(), 14)
+            },
+            schedule: {
+              w: `${DateCellScheduleDayCode.MONDAY}${DateCellScheduleDayCode.WEDNESDAY}${DateCellScheduleDayCode.FRIDAY}` as any,
+              d: [0, 1, 2, 3, 4, 5, 6]
+            }
+          });
+        }
+      });
+      await settle(fixture);
+
+      const comp = getDateTimeComponent(fixture);
+      expect(comp).toBeDefined();
+      expect(comp!.resolvedTimezone()).toBe('America/Chicago');
+
+      // Pick a valid date
+      comp!.onDatePicked({ value: validDate } as any);
+      await settle(fixture);
+
+      // Type a time
+      comp!.setTime('12:00PM');
+      await settle(fixture);
+      await settle(fixture);
+      await settle(fixture);
+
+      const formOutput = host.formValue();
+      expect(formOutput.dateWithASchedule).toBeDefined();
+      expect(formOutput.dateWithASchedule).not.toBeNull();
+      fixture.destroy();
+    });
+
+    it('should produce form output when time typed first then date picked with schedule and timezone', async () => {
+      const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+      const host = fixture.componentInstance;
+      const timezone$ = new BehaviorSubject<Maybe<TimezoneString>>('America/New_York');
+
+      let validDate = startOfDay(new Date());
+      while (![1, 3, 5].includes(validDate.getDay())) {
+        validDate = addDays(validDate, 1);
+      }
+
+      host.config = createConfig({
+        key: 'dateWithASchedule',
+        required: true,
+        timezone: timezone$,
+        pickerConfig: () => {
+          return of({
+            limits: {
+              min: startOfDay(new Date()),
+              max: addDays(new Date(), 14)
+            },
+            schedule: {
+              w: `${DateCellScheduleDayCode.MONDAY}${DateCellScheduleDayCode.WEDNESDAY}${DateCellScheduleDayCode.FRIDAY}` as any,
+              d: [0, 1, 2, 3, 4, 5, 6]
+            }
+          });
+        }
+      });
+      await settle(fixture);
+
+      const comp = getDateTimeComponent(fixture);
+      expect(comp).toBeDefined();
+
+      // Type time first (should auto-fill today as the date)
+      comp!.setTime('2:00PM');
+      await settle(fixture);
+
+      // Then pick a valid date
+      comp!.onDatePicked({ value: validDate } as any);
+      await settle(fixture);
+      await settle(fixture);
+      await settle(fixture);
+
+      const formOutput = host.formValue();
+      expect(formOutput.dateWithASchedule).toBeDefined();
+      expect(formOutput.dateWithASchedule).not.toBeNull();
+      fixture.destroy();
+    });
   });
 
   describe('changing configuration', () => {
