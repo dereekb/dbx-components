@@ -888,6 +888,16 @@ export class DbxForgeDateTimeFieldComponent {
     event.preventDefault();
     this._offset.next(this._offset.value + step.offset * step.direction);
     this._updateTime.next();
+
+    // Sync the input text from the computed time output so the user sees
+    // the change immediately while the input is still focused.
+    // Skip the current shareReplay cache and wait for the recomputed value.
+    this.timeOutput$.pipe(skip(1), first(), filterMaybe()).subscribe((date) => {
+      const timeStr = toLocalReadableTimeString(date);
+      if (timeStr !== this.timeCtrl.value) {
+        this.timeCtrl.setValue(timeStr, { emitEvent: false });
+      }
+    });
   }
 
   onTimeFocus(): void {

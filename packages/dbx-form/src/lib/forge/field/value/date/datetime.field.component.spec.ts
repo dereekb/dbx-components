@@ -14,8 +14,8 @@ import { DbxDateTimeFieldTimeMode } from '../../../../formly/field/value/date/da
 import { DbxDateTimeValueMode } from '../../../../formly/field/value/date/date.value';
 import { type Maybe, type TimezoneString } from '@dereekb/util';
 import { DateCellScheduleDayCode, findMaxDate, findMinDate } from '@dereekb/date';
-import { dbxForgeDateRangeRow, DbxForgeDateRangeRowConfig } from './daterange.field';
-import { DbxForgeDateTimeRangeRowConfig, dbxForgeDateTimeRangeRow } from './datetimerange.field';
+import { dbxForgeDateRangeRow, type DbxForgeDateRangeRowConfig } from './daterange.field';
+import { type DbxForgeDateTimeRangeRowConfig, dbxForgeDateTimeRangeRow } from './datetimerange.field';
 
 // MARK: Test Host Component
 @Component({
@@ -1487,6 +1487,36 @@ describe('DbxForgeDateTimeFieldComponent', () => {
       expect(result).toBeDefined();
       expect(result!.getHours()).toBe(14);
       expect(result!.getMinutes()).toBe(15); // 2:15PM
+      fixture.destroy();
+    });
+
+    it('should update the time input text immediately after arrow key press', async () => {
+      const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+      const host = fixture.componentInstance;
+
+      host.config = createConfig({ key: 'dt' });
+      await settle(fixture);
+
+      const comp = getDateTimeComponent(fixture);
+      expect(comp).toBeDefined();
+
+      comp!.dateCtrl.setValue(startOfDay(new Date()));
+      comp!.setTime('2:00PM');
+      await settle(fixture);
+
+      expect(comp!.timeCtrl.value).toBe('2:00PM');
+
+      // Simulate focus (as if user has the time input focused)
+      comp!.onTimeFocus();
+
+      // Press ArrowUp — should increment 5 min and update the input text
+      await pressArrowAndWaitForOutput(comp!, makeKeyEvent('ArrowUp'));
+      expect(comp!.timeCtrl.value).toBe('2:05PM');
+
+      // Press ArrowUp again — should increment another 5 min
+      await pressArrowAndWaitForOutput(comp!, makeKeyEvent('ArrowUp'));
+      expect(comp!.timeCtrl.value).toBe('2:10PM');
+
       fixture.destroy();
     });
   });
