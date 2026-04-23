@@ -1,6 +1,6 @@
 import { type Maybe, type DecisionFunction, type Milliseconds, type TimezoneString, type DateMonth, type DayOfMonth, type YearNumber, isMonthDaySlashDate, MS_IN_MINUTE } from '@dereekb/util';
 import { guessCurrentTimezone, type DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, type DateRangeInput, type DateRange, isSameDateDayRange, type DateRangeWithDateOrStringValue, dateRange, isDateInDateRange, clampDateRangeToDateRange, isSameDateRange, isSameDateDay, limitDateTimeInstance, dateTimeMinuteWholeDayDecisionFunction } from '@dereekb/date';
-import { switchMap, shareReplay, map, startWith, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, type Observable, Subject, of, combineLatestWith, filter, combineLatest, scan, first, timer } from 'rxjs';
+import { switchMap, shareReplay, map, startWith, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, type Observable, Subject, of, combineLatestWith, withLatestFrom, filter, combineLatest, scan, first, timer } from 'rxjs';
 import { ChangeDetectionStrategy, Component, ElementRef, Injectable, type InputSignal, type Signal, DestroyRef, inject, signal, viewChild, computed, input, forwardRef, effect, untracked } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { type MatDateRangeSelectionStrategy, MAT_DATE_RANGE_SELECTION_STRATEGY, DateRange as DatePickerDateRange, MatCalendar, MatDatepickerModule } from '@angular/material/datepicker';
@@ -600,28 +600,20 @@ export class DbxForgeFixedDateRangeFieldComponent {
     };
 
     // Main output subscription: dateRangeSelection → output value → field tree
-    this._sub.subscription = this.valueInSystemTimezone$
-      .pipe(
-        combineLatestWith(this.timezoneInstance$.pipe(map((timezoneInstance) => fixedDateRangeOutputValueFactory(this.valueMode(), timezoneInstance)))),
-        throttleTime(TIME_OUTPUT_THROTTLE_TIME, undefined, { leading: false, trailing: true }),
-        switchMap(([currentValue, valueFactory]) => {
-          return dateRangeSelection.pipe(
-            skipAllInitialMaybe(),
-            distinctUntilChanged<Maybe<DateRange>>(isSameDateDayRange),
-            map((x) => [x, currentValue, valueFactory] as [typeof x, typeof currentValue, typeof valueFactory])
-          );
-        })
-      )
-      .subscribe(([rawValue, currentValue, valueFactory]) => {
-        const value = rawValue ? valueFactory(rawValue) : null;
-        const isSameRange = dbxDateRangeIsSameDateRangeFieldValue(value, currentValue);
+    // Uses withLatestFrom so only new user selections drive output writes.
+    // The old switchMap pattern re-subscribed to dateRangeSelection (which has shareReplay(1))
+    // whenever the field value changed externally, causing the cached user selection to replay
+    // and overwrite the external value.
+    this._sub.subscription = dateRangeSelection.pipe(skipAllInitialMaybe(), withLatestFrom(this.valueInSystemTimezone$, this.timezoneInstance$.pipe(map((timezoneInstance) => fixedDateRangeOutputValueFactory(this.valueMode(), timezoneInstance)))), throttleTime(TIME_OUTPUT_THROTTLE_TIME, undefined, { leading: false, trailing: true })).subscribe(([rawValue, currentValue, valueFactory]) => {
+      const value = rawValue ? valueFactory(rawValue) : null;
+      const isSameRange = dbxDateRangeIsSameDateRangeFieldValue(value, currentValue);
 
-        if (!isSameRange) {
-          this._setFieldValue(value);
-        } else if (rawValue != null) {
-          setInputFormValue(rawValue);
-        }
-      });
+      if (!isSameRange) {
+        this._setFieldValue(value);
+      } else if (rawValue != null) {
+        setInputFormValue(rawValue);
+      }
+    });
 
     // Sync selection mode to signal
     this._currentSelectionModeSub.subscription = this.selectionMode$.subscribe((x) => this.currentSelectionModeSignal.set(x));

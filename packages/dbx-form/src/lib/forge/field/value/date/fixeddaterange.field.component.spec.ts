@@ -260,6 +260,59 @@ describe('DbxForgeFixedDateRangeFieldComponent integration', () => {
     });
   });
 
+  describe('external value change after user selection', () => {
+    it('should accept an externally-set value after the user has already picked a date', async () => {
+      const fixture = TestBed.createComponent(TestForgeFixedDateRangeHostComponent);
+      const host = fixture.componentInstance;
+
+      host.config = {
+        fields: [
+          dbxForgeFixedDateRangeField({
+            key: 'range',
+            props: {
+              selectionMode: 'single',
+              dateRangeInput: { type: DateRangeType.WEEKS_RANGE, distance: 1 },
+              valueMode: DbxDateTimeValueMode.DATE
+            }
+          })
+        ]
+      };
+      await settle(fixture);
+
+      const comp = getComponent(fixture)!;
+
+      // Step 1: User picks a date on the calendar
+      const userPick = addDays(startOfDay(new Date()), 1);
+      const received$ = comp.dateRangeSelection$.pipe(take(1));
+      const result = firstValueFrom(received$);
+      comp.setDateRange({ start: userPick }, 'calendar');
+      await result;
+
+      // Wait for the selection to propagate to the field value
+      await settle(fixture);
+
+      const valueAfterUserPick = host.formValue() as { range?: DateRange };
+      expect(valueAfterUserPick.range).toBeDefined();
+
+      // Step 2: Set the form value externally to a different range
+      const externalStart = addDays(startOfDay(new Date()), 10);
+      const externalEnd = addDays(externalStart, 7);
+      const externalValue = { range: { start: externalStart, end: externalEnd } };
+      host.formValue.set(externalValue);
+
+      // Wait for the external value to propagate
+      await settle(fixture);
+
+      // Step 3: Verify the external value sticks and is not overwritten by the user's prior selection
+      const valueAfterExternalSet = host.formValue() as { range?: DateRange };
+      expect(valueAfterExternalSet.range).toBeDefined();
+      expect(startOfDay(valueAfterExternalSet.range!.start).getTime()).toBe(externalStart.getTime());
+      expect(startOfDay(valueAfterExternalSet.range!.end).getTime()).toBe(externalEnd.getTime());
+
+      fixture.destroy();
+    });
+  });
+
   describe('arbitrary_quick mode selection', () => {
     it('first click sets full boundary range', async () => {
       const fixture = TestBed.createComponent(TestForgeFixedDateRangeHostComponent);

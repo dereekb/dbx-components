@@ -1,6 +1,6 @@
 import { type Maybe, type DecisionFunction, type Milliseconds, type TimezoneString, type DateMonth, type DayOfMonth, type YearNumber, isMonthDaySlashDate, MS_IN_MINUTE } from '@dereekb/util';
 import { guessCurrentTimezone, type DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, type DateRangeInput, type DateRange, isSameDateDayRange, type DateRangeWithDateOrStringValue, type DateTimeMinuteConfig, dateRange, isDateInDateRange, clampDateRangeToDateRange, isSameDateRange, isSameDateDay, limitDateTimeInstance, dateTimeMinuteWholeDayDecisionFunction } from '@dereekb/date';
-import { switchMap, shareReplay, map, startWith, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, type Observable, Subject, of, combineLatestWith, filter, combineLatest, scan, first, timer } from 'rxjs';
+import { switchMap, shareReplay, map, startWith, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, type Observable, Subject, of, combineLatestWith, withLatestFrom, filter, combineLatest, scan, first, timer } from 'rxjs';
 import { ChangeDetectionStrategy, Component, ElementRef, Injectable, type OnDestroy, type OnInit, forwardRef, inject, signal, viewChild } from '@angular/core';
 import { type AbstractControl, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FieldType } from '@ngx-formly/material';
@@ -554,31 +554,19 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
       }
     };
 
-    this._sub.subscription = this.valueInSystemTimezone$
-      .pipe(
-        combineLatestWith(this.timezoneInstance$.pipe(map((timezoneInstance) => dbxFixedDateRangeOutputValueFactory(this.valueMode, timezoneInstance)))),
-        throttleTime(TIME_OUTPUT_THROTTLE_TIME, undefined, { leading: false, trailing: true }),
-        switchMap(([currentValue, valueFactory]) => {
-          return dateRangeSelection.pipe(
-            skipAllInitialMaybe(),
-            distinctUntilChanged<Maybe<DateRange>>(isSameDateDayRange),
-            map((x) => [x, currentValue, valueFactory] as [typeof x, typeof currentValue, typeof valueFactory])
-          );
-        })
-      )
-      .subscribe(([rawValue, currentValue, valueFactory]) => {
-        const value = rawValue ? valueFactory(rawValue) : null;
-        const isSameRange = dbxDateRangeIsSameDateRangeFieldValue(value, currentValue);
+    this._sub.subscription = dateRangeSelection.pipe(skipAllInitialMaybe(), withLatestFrom(this.valueInSystemTimezone$, this.timezoneInstance$.pipe(map((timezoneInstance) => dbxFixedDateRangeOutputValueFactory(this.valueMode, timezoneInstance)))), throttleTime(TIME_OUTPUT_THROTTLE_TIME, undefined, { leading: false, trailing: true })).subscribe(([rawValue, currentValue, valueFactory]) => {
+      const value = rawValue ? valueFactory(rawValue) : null;
+      const isSameRange = dbxDateRangeIsSameDateRangeFieldValue(value, currentValue);
 
-        if (!isSameRange) {
-          this.formControl.setValue(value);
-          this.formControl.markAsDirty();
-          this.formControl.markAsTouched();
-        } else if (rawValue != null) {
-          // update the input text again
-          setInputFormValue(rawValue);
-        }
-      });
+      if (!isSameRange) {
+        this.formControl.setValue(value);
+        this.formControl.markAsDirty();
+        this.formControl.markAsTouched();
+      } else if (rawValue != null) {
+        // update the input text again
+        setInputFormValue(rawValue);
+      }
+    });
 
     if (this.selectionMode) {
       this._selectionMode.next(asObservableFromGetter(this.selectionMode));
