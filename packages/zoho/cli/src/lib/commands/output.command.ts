@@ -1,5 +1,5 @@
 import type { CommandModule, Argv } from 'yargs';
-import { loadCliConfig, mergeCliConfig, type ZohoCliOutputConfig, type ZohoCliCommandOutputConfig } from '../config/cli.config';
+import { loadCliConfig, mergeCliConfig, clearOutputConfig, type ZohoCliOutputConfig, type ZohoCliCommandOutputConfig } from '../config/cli.config';
 import { outputResult, outputError } from '../util/output';
 import { noop } from '../util/noop';
 
@@ -76,7 +76,7 @@ const outputClearCommand: CommandModule = {
         await mergeCliConfig({ output: outputUpdate });
         outputResult({ cleared: true, command: commandKey });
       } else {
-        await mergeCliConfig({ output: {} });
+        await clearOutputConfig();
         outputResult({ cleared: true });
       }
     } catch (e) {

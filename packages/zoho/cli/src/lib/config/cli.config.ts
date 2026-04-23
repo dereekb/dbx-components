@@ -222,9 +222,9 @@ export async function mergeCliConfig(updates: Partial<ZohoCliConfig>): Promise<Z
 
 function mergeOutputConfig(existing: Maybe<ZohoCliOutputConfig>, updates: ZohoCliOutputConfig): ZohoCliOutputConfig {
   return {
-    dumpDir: updates.dumpDir ?? existing?.dumpDir,
-    pick: updates.pick ?? existing?.pick,
-    commands: updates.commands !== undefined ? { ...existing?.commands, ...updates.commands } : existing?.commands
+    dumpDir: 'dumpDir' in updates ? updates.dumpDir : existing?.dumpDir,
+    pick: 'pick' in updates ? updates.pick : existing?.pick,
+    commands: 'commands' in updates ? (updates.commands ? { ...existing?.commands, ...updates.commands } : undefined) : existing?.commands
   };
 }
 
@@ -244,6 +244,17 @@ export function resolveOutputConfig(outputConfig: Maybe<ZohoCliOutputConfig>, co
     dumpDir: cliFlags.dumpDir ?? commandConfig?.dumpDir ?? outputConfig?.dumpDir,
     pick: cliFlags.pick ?? commandConfig?.pick ?? outputConfig?.pick
   };
+}
+
+/**
+ * Clears all output config (dumpDir, pick, per-command overrides).
+ *
+ * Uses explicit `undefined` values so `mergeOutputConfig` detects the keys
+ * via `'key' in updates` and overwrites rather than falling back to existing values.
+ * `JSON.stringify` then strips the undefined properties from the saved config file.
+ */
+export async function clearOutputConfig(): Promise<void> {
+  await mergeCliConfig({ output: { dumpDir: undefined, pick: undefined, commands: undefined } });
 }
 
 export async function clearCliConfig(): Promise<void> {

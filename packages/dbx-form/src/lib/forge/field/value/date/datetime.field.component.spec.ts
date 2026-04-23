@@ -48,16 +48,39 @@ const FORGE_DATETIME_TEST_PROVIDERS = [provideZonelessChangeDetection(), provide
  * - throttleTime(20) on valueInSystemTimezone$
  * - debounceTime(5) on timeInput$
  * - debounceTime(200) on resyncTimeInput$
+ *
+ * Worst-case pipeline chain: ~250ms (200 + 20 + 10 + 20).
+ * Set to 300ms to provide a safety buffer.
  */
-const SETTLE_TIME = 500;
+const SETTLE_TIME = 300;
 
 /**
  * Extra time to wait after settling to verify no additional emissions occur.
  */
-const STABILITY_CHECK_TIME = 500;
+const STABILITY_CHECK_TIME = 300;
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Polls a predicate on a short interval, running change detection each cycle.
+ * Returns as soon as the predicate passes, or throws after `timeoutMs`.
+ *
+ * Use this instead of `settle()` when the test checks a specific signal/value
+ * that may propagate faster than SETTLE_TIME (or might need longer under CI load).
+ */
+async function waitFor(fixture: ComponentFixture<TestForgeDateTimeHostComponent>, predicate: () => boolean, timeoutMs: number = 2000, intervalMs: number = 20): Promise<void> {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    fixture.detectChanges();
+    if (predicate()) return;
+    await delay(intervalMs);
+  }
+  fixture.detectChanges();
+  if (!predicate()) {
+    throw new Error(`waitFor timed out after ${timeoutMs}ms`);
+  }
 }
 
 /**
@@ -2187,7 +2210,13 @@ describe('dbxForgeDateRangeRow() integration', () => {
     const host = fixture.componentInstance;
 
     host.config = createDateRangeConfig({ timezone: 'America/Chicago' });
-    await settle(fixture);
+
+    // Use waitFor instead of settle — the timezone propagates via effect → subscription → signal,
+    // which can be faster than SETTLE_TIME but may need retries under CI load.
+    await waitFor(fixture, () => {
+      const comps = getAllDateTimeComponents(fixture);
+      return comps.length === 2 && comps[0].resolvedTimezone() === 'America/Chicago' && comps[1].resolvedTimezone() === 'America/Chicago';
+    });
 
     const comps = getAllDateTimeComponents(fixture);
     expect(comps.length).toBe(2);
