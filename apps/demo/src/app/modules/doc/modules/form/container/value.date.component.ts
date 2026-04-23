@@ -157,7 +157,7 @@ export class DocFormDateValueComponent implements OnDestroy {
             max: addDays(new Date(), 14)
           },
           schedule: {
-            w: `${DateCellScheduleDayCode.MONDAY}${DateCellScheduleDayCode.WEDNESDAY}${DateCellScheduleDayCode.FRIDAY}` as any,
+            w: `${DateCellScheduleDayCode.MONDAY}${DateCellScheduleDayCode.WEDNESDAY}${DateCellScheduleDayCode.FRIDAY}`,
             d: [0, 1, 2, 3, 4, 5, 6] // next 7 days
           }
         };
@@ -170,10 +170,10 @@ export class DocFormDateValueComponent implements OnDestroy {
   // Forge date-time fields — 1:1 parity with formly formlyDateTimeFields
   readonly forgeDateTimeFieldsConfig: FormConfig = {
     fields: [
-      dbxForgeDateTimeField({ label: 'Date Picker', key: 'datePicker', props: { timezone: this.timezone$, allDayLabel: 'On', valueMode: DbxDateTimeValueMode.DATE, timeMode: DbxDateTimeFieldTimeMode.NONE } }) as any,
-      dbxForgeDateTimeField({ label: 'Day Only W/ String Value', key: 'dayOnlyAsString', description: 'This date field is for picking a day only and as an ISO8601DayString. The calendar picker is hidden and the allDayLabel has been customized to be "On".', props: { timezone: this.timezone$, hideDateHint: true, valueMode: DbxDateTimeValueMode.DAY_STRING, hideDatePicker: true } }) as any,
-      dbxForgeDateTimeField({ key: 'date', required: true, description: 'This is the default date field that requires the user pick a date and time.', props: { timezone: this.timezone$ } }) as any,
-      dbxForgeDateTimeField({ label: 'Date With String Value', key: 'dateAsString', required: true, description: 'This date field returns the value as an ISO8601DateString. The date hint is also hidden.', props: { timezone: this.timezone$, valueMode: DbxDateTimeValueMode.DATE_STRING, hideDateHint: true } }) as any,
+      dbxForgeDateTimeField({ label: 'Date Picker', key: 'datePicker', props: { timezone: this.timezone$, allDayLabel: 'On', valueMode: DbxDateTimeValueMode.DATE, timeMode: DbxDateTimeFieldTimeMode.NONE } }),
+      dbxForgeDateTimeField({ label: 'Day Only W/ String Value', key: 'dayOnlyAsString', description: 'This date field is for picking a day only and as an ISO8601DayString. The calendar picker is hidden and the allDayLabel has been customized to be "On".', props: { timezone: this.timezone$, hideDateHint: true, valueMode: DbxDateTimeValueMode.DAY_STRING, hideDatePicker: true } }),
+      dbxForgeDateTimeField({ key: 'date', required: true, description: 'This is the default date field that requires the user pick a date and time.', props: { timezone: this.timezone$ } }),
+      dbxForgeDateTimeField({ label: 'Date With String Value', key: 'dateAsString', required: true, description: 'This date field returns the value as an ISO8601DateString. The date hint is also hidden.', props: { timezone: this.timezone$, valueMode: DbxDateTimeValueMode.DATE_STRING, hideDateHint: true } }),
       dbxForgeDateTimeField({
         label: 'Time For Work Day Today (For Timezone)',
         key: 'timeForWorkDayToday',
@@ -190,9 +190,9 @@ export class DocFormDateValueComponent implements OnDestroy {
             }
           }
         }
-      }) as any,
-      dbxForgeDateTimeField({ key: 'timeOptional', description: 'This date field is for picking a day, with an optional time.', props: { timezone: this.timezone$, timeMode: DbxDateTimeFieldTimeMode.OPTIONAL } }) as any,
-      dbxForgeDateTimeField({ label: 'Day Only', key: 'dayOnly', description: 'This date field is for picking a day only.', props: { timezone: this.timezone$, timeMode: DbxDateTimeFieldTimeMode.NONE } }) as any,
+      }),
+      dbxForgeDateTimeField({ key: 'timeOptional', description: 'This date field is for picking a day, with an optional time.', props: { timezone: this.timezone$, timeMode: DbxDateTimeFieldTimeMode.OPTIONAL } }),
+      dbxForgeDateTimeField({ label: 'Day Only', key: 'dayOnly', description: 'This date field is for picking a day only.', props: { timezone: this.timezone$, timeMode: DbxDateTimeFieldTimeMode.NONE } }),
       dbxForgeDateTimeField({
         label: 'Time Only',
         key: 'timeOnly',
@@ -208,7 +208,7 @@ export class DocFormDateValueComponent implements OnDestroy {
             { label: 'Now', logicalDate: 'now' }
           ]
         }
-      }) as any,
+      }),
       dbxForgeDateTimeField({
         label: 'Time For Today (For Timezone)',
         key: 'timeForToday',
@@ -225,7 +225,7 @@ export class DocFormDateValueComponent implements OnDestroy {
             }
           }
         }
-      }) as any,
+      }),
       dbxForgeDateTimeField({
         label: 'Changing Configuration',
         key: 'changingConfiguration',
@@ -240,15 +240,15 @@ export class DocFormDateValueComponent implements OnDestroy {
             }))
           )
         }
-      }) as any,
-      dbxForgeDateTimeField({ label: 'Unix Timestamp', key: 'unixTimeStamp', description: 'This date field picks a unix timestamp for the system timezone.', props: { valueMode: DbxDateTimeValueMode.UNIX_TIMESTAMP, hideDateHint: true } }) as any,
-      dbxForgeDateTimeField({ label: 'Unix Timestamp In New York', key: 'unixTimeStampInNewYork', description: 'This date field picks a unix timestamp for a specific timezone.', props: { valueMode: DbxDateTimeValueMode.UNIX_TIMESTAMP, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, hideDateHint: true, timezone: 'America/New_York' } }) as any,
-      dbxForgeDateTimeField({ label: 'Date Only In Tokyo', key: 'dateOnlyWithLockedTimezone', description: 'This date field picks a date and has a locked timezone.', props: { timeMode: DbxDateTimeFieldTimeMode.NONE, timezone: 'Asia/Tokyo' } }) as any,
-      dbxForgeDateTimeField({ label: 'Time Only In New York', key: 'timeOnlyWithLockedTimezone', description: 'This date field picks a time and has a locked timezone.', props: { timeOnly: true, hideDateHint: true, timezone: 'America/New_York' } }) as any,
-      dbxForgeDateTimeField({ label: 'Minute Of Day', key: 'minuteOfDay', description: 'This date field picks a minute of day for the system timezone.', props: { valueMode: DbxDateTimeValueMode.MINUTE_OF_DAY, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, timeOnly: true, hideDateHint: true } }) as any,
-      dbxForgeDateTimeField({ label: 'Minute Of Day For New York', key: 'minuteOfDayForNewYork', description: 'This date field picks a minute of day for America/New_York.', props: { valueMode: DbxDateTimeValueMode.MINUTE_OF_DAY, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, showTimezone: true, timeOnly: true, hideDateHint: true, timezone: 'America/New_York' } }) as any,
-      dbxForgeDateTimeField({ label: 'System Minute Of Day For New York', key: 'systemMinuteOfDayForNewYork', description: 'This date field picks a minute of day for the system but shows the timezone as America/New_York.', props: { valueMode: DbxDateTimeValueMode.SYSTEM_MINUTE_OF_DAY, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, timeOnly: true, hideDateHint: true, timezone: 'America/New_York' } }) as any,
-      dbxForgeDateTimeField({ label: 'Timezone Day', key: 'timezoneDay', props: { timezone: this.timezone$, valueMode: DbxDateTimeValueMode.DATE_STRING } }) as any,
+      }),
+      dbxForgeDateTimeField({ label: 'Unix Timestamp', key: 'unixTimeStamp', description: 'This date field picks a unix timestamp for the system timezone.', props: { valueMode: DbxDateTimeValueMode.UNIX_TIMESTAMP, hideDateHint: true } }),
+      dbxForgeDateTimeField({ label: 'Unix Timestamp In New York', key: 'unixTimeStampInNewYork', description: 'This date field picks a unix timestamp for a specific timezone.', props: { valueMode: DbxDateTimeValueMode.UNIX_TIMESTAMP, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, hideDateHint: true, timezone: 'America/New_York' } }),
+      dbxForgeDateTimeField({ label: 'Date Only In Tokyo', key: 'dateOnlyWithLockedTimezone', description: 'This date field picks a date and has a locked timezone.', props: { timeMode: DbxDateTimeFieldTimeMode.NONE, timezone: 'Asia/Tokyo' } }),
+      dbxForgeDateTimeField({ label: 'Time Only In New York', key: 'timeOnlyWithLockedTimezone', description: 'This date field picks a time and has a locked timezone.', props: { timeOnly: true, hideDateHint: true, timezone: 'America/New_York' } }),
+      dbxForgeDateTimeField({ label: 'Minute Of Day', key: 'minuteOfDay', description: 'This date field picks a minute of day for the system timezone.', props: { valueMode: DbxDateTimeValueMode.MINUTE_OF_DAY, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, timeOnly: true, hideDateHint: true } }),
+      dbxForgeDateTimeField({ label: 'Minute Of Day For New York', key: 'minuteOfDayForNewYork', description: 'This date field picks a minute of day for America/New_York.', props: { valueMode: DbxDateTimeValueMode.MINUTE_OF_DAY, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, showTimezone: true, timeOnly: true, hideDateHint: true, timezone: 'America/New_York' } }),
+      dbxForgeDateTimeField({ label: 'System Minute Of Day For New York', key: 'systemMinuteOfDayForNewYork', description: 'This date field picks a minute of day for the system but shows the timezone as America/New_York.', props: { valueMode: DbxDateTimeValueMode.SYSTEM_MINUTE_OF_DAY, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, timeOnly: true, hideDateHint: true, timezone: 'America/New_York' } }),
+      dbxForgeDateTimeField({ label: 'Timezone Day', key: 'timezoneDay', props: { timezone: this.timezone$, valueMode: DbxDateTimeValueMode.DATE_STRING } }),
       dbxForgeDateTimeField({
         key: 'dateWithASchedule',
         required: true,
@@ -262,7 +262,7 @@ export class DocFormDateValueComponent implements OnDestroy {
                 max: addDays(new Date(), 14)
               },
               schedule: {
-                w: `${DateCellScheduleDayCode.MONDAY}${DateCellScheduleDayCode.WEDNESDAY}${DateCellScheduleDayCode.FRIDAY}` as any,
+                w: `${DateCellScheduleDayCode.MONDAY}${DateCellScheduleDayCode.WEDNESDAY}${DateCellScheduleDayCode.FRIDAY}`,
                 d: [0, 1, 2, 3, 4, 5, 6]
               }
             };
@@ -276,7 +276,7 @@ export class DocFormDateValueComponent implements OnDestroy {
   // Forge date range — 1:1 parity with formly formlyDateRangeFields
   readonly forgeDateRangeFieldsConfig: FormConfig = {
     fields: [
-      dbxForgeDateRangeRow() as any,
+      dbxForgeDateRangeRow(),
       dbxForgeDateRangeRow({
         start: {
           key: 'startLimited',
@@ -396,7 +396,7 @@ export class DocFormDateValueComponent implements OnDestroy {
             }
           }
         }
-      }) as any,
+      }),
       dbxForgeFixedDateRangeField({
         key: 'oneMonthFixedDateRange',
         label: 'One Month Arbitrary Date Range',
@@ -413,7 +413,7 @@ export class DocFormDateValueComponent implements OnDestroy {
             }
           }
         }
-      }) as any,
+      }),
       dbxForgeFixedDateRangeField({
         key: 'thisMonthNormalDateRange',
         label: 'One Month Normal Date Range',
@@ -429,7 +429,7 @@ export class DocFormDateValueComponent implements OnDestroy {
             }
           }
         }
-      }) as any,
+      }),
       dbxForgeFixedDateRangeField({
         key: 'maxAnyMonthNormalDateRange',
         label: 'Max Any Calendar Month Long',
@@ -453,10 +453,10 @@ export class DocFormDateValueComponent implements OnDestroy {
   // Forge time duration — 1:1 parity with formly formlyTimeDurationFields
   readonly forgeTimeDurationFieldsConfig: FormConfig = {
     fields: [
-      dbxForgeTimeDurationField({ key: 'durationMs', label: 'Duration (output: milliseconds)', outputUnit: 'ms', allowedUnits: ['min', 'h', 'd'], carryOver: true, description: 'Output is in milliseconds. Type "2h30m" or use the picker. carryOver is enabled (60m → 1h).' }) as any,
-      dbxForgeTimeDurationField({ key: 'durationMinutes', label: 'Duration (output: minutes)', outputUnit: 'min', min: 0, max: 480, description: 'Output is in minutes with min 0 and max 480 (8 hours). All units available.' }) as any,
-      dbxForgeTimeDurationField({ key: 'hoursAndMinutes', label: 'Duration (HoursAndMinutes output)', valueMode: 'hours_and_minutes', allowedUnits: ['min', 'h'], carryOver: true, description: 'Output is an HoursAndMinutes object. Restricted to minutes and hours. carryOver enabled.' }) as any,
-      dbxForgeTimeDurationField({ key: 'durationSeconds', label: 'Duration (output: seconds)', outputUnit: 's', allowedUnits: ['s', 'min', 'h'], carryOver: true, description: 'Output is in seconds. Picker shows seconds, minutes, and hours. carryOver enabled.' }) as any,
+      dbxForgeTimeDurationField({ key: 'durationMs', label: 'Duration (output: milliseconds)', outputUnit: 'ms', allowedUnits: ['min', 'h', 'd'], carryOver: true, description: 'Output is in milliseconds. Type "2h30m" or use the picker. carryOver is enabled (60m → 1h).' }),
+      dbxForgeTimeDurationField({ key: 'durationMinutes', label: 'Duration (output: minutes)', outputUnit: 'min', min: 0, max: 480, description: 'Output is in minutes with min 0 and max 480 (8 hours). All units available.' }),
+      dbxForgeTimeDurationField({ key: 'hoursAndMinutes', label: 'Duration (HoursAndMinutes output)', valueMode: 'hours_and_minutes', allowedUnits: ['min', 'h'], carryOver: true, description: 'Output is an HoursAndMinutes object. Restricted to minutes and hours. carryOver enabled.' }),
+      dbxForgeTimeDurationField({ key: 'durationSeconds', label: 'Duration (output: seconds)', outputUnit: 's', allowedUnits: ['s', 'min', 'h'], carryOver: true, description: 'Output is in seconds. Picker shows seconds, minutes, and hours. carryOver enabled.' }),
       dbxForgeTimeDurationField({ key: 'durationData', label: 'Duration (TimeDurationData output)', valueMode: 'duration_data', allowedUnits: ['s', 'min', 'h', 'd'], carryOver: true, description: 'Output is a TimeDurationData object with individual unit fields.' }) as any
     ]
   };
@@ -563,22 +563,22 @@ export class DocFormDateValueComponent implements OnDestroy {
         props: { timezone: this.timezone$ },
         start: { key: 'sat' },
         end: { key: 'eat' }
-      }) as any,
+      }),
       dbxForgeDateTimeRangeRow({
         props: { timezone: 'America/Chicago', timeDate: '2023-11-08' },
         start: { label: 'Start Time on 2023-11-08 (CDT)', key: 'satcdt' },
         end: { key: 'eatcdt' }
-      }) as any,
+      }),
       dbxForgeDateTimeRangeRow({
         props: { timezone: 'America/Chicago', timeDate: '2024-03-21' },
         start: { label: 'Start Time on 2024-03-21 (CST)', key: 'satcst' },
         end: { key: 'eatcst' }
-      }) as any,
+      }),
       dbxForgeDateTimeRangeRow({
         props: { timezone: 'America/Chicago', timeDate: '2023-11-08' },
         start: { label: 'Start Time on 2023-11-08 (CDT)', key: 'sat2' },
         end: { label: 'End Time on 2024-03-21 (CST)', key: 'eat2', props: { timeDate: '2024-03-21' } }
-      }) as any,
+      }),
       dbxForgeDateTimeRangeRow({
         props: { timezone: this.timezone$, valueMode: DbxDateTimeValueMode.MINUTE_OF_DAY },
         start: { label: 'Start Minute Of Day', key: 'satm2' },

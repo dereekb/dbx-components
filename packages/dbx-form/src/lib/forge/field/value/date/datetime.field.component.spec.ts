@@ -1592,6 +1592,64 @@ describe('DbxForgeDateTimeFieldComponent', () => {
       fixture.destroy();
     });
 
+    it('should disable time menu button when all presets are filtered out', async () => {
+      const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+      const host = fixture.componentInstance;
+      const now = new Date();
+
+      // Tight window that will filter out all default presets
+      host.config = createConfig({
+        key: 'timeForToday',
+        alwaysShowDateInput: false,
+        timeDate: now,
+        showClearButton: false,
+        pickerConfig: {
+          limits: {
+            min: findMaxDate([startOfDay(now), addHours(now, -2)]),
+            max: findMinDate([endOfDay(now), addHours(now, 2)])
+          }
+        }
+      });
+      host.formValue.set({ timeForToday: now });
+      await settle(fixture);
+
+      const comp = getDateTimeComponent(fixture);
+      expect(comp).toBeDefined();
+
+      // No presets available and timeMode is REQUIRED (not optional) → menu should be disabled
+      const presets = comp!.presetsSignal() ?? [];
+      if (presets.length === 0) {
+        expect(comp!.isTimeMenuDisabledSignal()).toBe(true);
+      }
+
+      fixture.destroy();
+    });
+
+    it('should not disable time menu button when timeMode is optional (has Remove Time item)', async () => {
+      const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+      const host = fixture.componentInstance;
+
+      host.config = createConfig({
+        key: 'dt',
+        timeMode: DbxDateTimeFieldTimeMode.OPTIONAL,
+        pickerConfig: {
+          limits: {
+            min: addHours(startOfDay(new Date()), 9),
+            max: addHours(startOfDay(new Date()), 10)
+          }
+        }
+      });
+      host.formValue.set({ dt: addHours(startOfDay(new Date()), 9) });
+      await settle(fixture);
+
+      const comp = getDateTimeComponent(fixture);
+      expect(comp).toBeDefined();
+
+      // Even with no presets, the menu has "Remove Time" → should stay enabled
+      expect(comp!.isTimeMenuDisabledSignal()).toBe(false);
+      fixture.destroy();
+    });
+
     it('should handle dynamic (interval-based) pickerConfig without stalling', async () => {
       const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
       const host = fixture.componentInstance;

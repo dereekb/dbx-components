@@ -55,7 +55,7 @@
           <mat-form-field [appearance]="appearance()" subscriptSizing="dynamic" class="dbx-forge-datetime-col-field">
             <mat-label>{{ timeLabel() }}</mat-label>
             <input matInput [errorStateMatcher]="timeErrorStateMatcher" [required]="isTimeRequired()" [formControl]="timeCtrl" (focus)="onTimeFocus()" (focusout)="onTimeBlur()" (keydown)="onTimeKeydown($event)" />
-            <button matPrefix mat-icon-button [matMenuTriggerFor]="timemenu" aria-label="Open time presets" [disabled]="isDisabledSignal()">
+            <button matPrefix mat-icon-button [matMenuTriggerFor]="timemenu" aria-label="Open time presets" [disabled]="isTimeMenuDisabledSignal()">
               <mat-icon aria-hidden="true">timer</mat-icon>
             </button>
             <span matTextSuffix>

@@ -602,6 +602,12 @@ export class DbxForgeDateTimeFieldComponent {
   readonly showClearButtonSignal = toSignal(this.showClearButton$);
   readonly presetsSignal = toSignal(this.presets$);
   readonly isDisabledSignal = this.isDisabled;
+  readonly isTimeMenuDisabledSignal = computed(() => {
+    const disabled = this.isDisabled();
+    const isOptional = this.timeMode() === DbxDateTimeFieldTimeMode.OPTIONAL;
+    const hasPresets = Boolean(this.presetsSignal()?.length);
+    return disabled || (!isOptional && !hasPresets);
+  });
 
   // ARIA
   protected readonly hintId = computed(() => `${this.key()}-hint`);
