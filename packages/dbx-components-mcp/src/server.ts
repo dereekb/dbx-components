@@ -19,6 +19,12 @@ export function createServer(): McpServer {
     version: SERVER_VERSION
   });
 
+  // McpServer auto-declares capabilities when registerTool/registerResource is
+  // called. Our tools go through the low-level setRequestHandler API instead,
+  // so we advertise the `tools` capability explicitly. Resources still use
+  // McpServer.registerResource, which declares its own capability.
+  server.server.registerCapabilities({ tools: {} });
+
   registerResources(server);
   registerTools(server);
 

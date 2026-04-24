@@ -1,17 +1,22 @@
 /**
  * MCP tool registration for dbx-components.
  *
- * Schema strategy: arktype for payload validation (workspace standard), paired
- * with the MCP SDK's lower-level `server.registerTool({ inputSchema })` or
- * `server.setRequestHandler(CallToolRequestSchema, ...)` APIs that accept
- * plain JSON Schema. The high-level `server.tool(name, zodShape, cb)` API is
- * deliberately not used because it is zod-coupled.
+ * Schema strategy: tools use the low-level `server.setRequestHandler(CallToolRequestSchema, ...)`
+ * API with plain JSON Schema `inputSchema` entries (advertised via
+ * `tools/list`) and arktype for runtime payload validation inside handlers.
+ * The high-level `McpServer.registerTool` API is deliberately avoided because
+ * it is zod-coupled — arktype is the workspace standard.
  *
- * Planned tools (registered incrementally as domains come online):
+ * Registered tools:
  *
  * | Tool           | Purpose        | One-liner                              |
  * |----------------|----------------|----------------------------------------|
  * | dbx_lookup     | Documentation  | "Tell me about X"                      |
+ *
+ * Planned (later phases):
+ *
+ * | Tool           | Purpose        | One-liner                              |
+ * |----------------|----------------|----------------------------------------|
  * | dbx_decode     | Decoding       | "What does this Firestore doc mean?"   |
  * | dbx_examples   | Working code   | "Show me how to do X"                  |
  * | dbx_validate   | Verification   | "Is my model/field/action correct?"    |
@@ -20,7 +25,8 @@
  */
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { registerLookupTool } from './lookup.tool.js';
 
-export function registerTools(_server: McpServer): void {
-  // Intentionally empty — tool implementations land with their domain content.
+export function registerTools(server: McpServer): void {
+  registerLookupTool(server);
 }
