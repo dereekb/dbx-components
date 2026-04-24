@@ -1,0 +1,12 @@
+{
+  "name": "@dereekb/dbx-components-mcp",
+  "version": "13.9.0",
+  "type": "module",
+  "bin": {
+    "dbx-components-mcp": "./index.js"
+  },
+  "peerDependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "arktype": "^2.2.0"
+  }
+}

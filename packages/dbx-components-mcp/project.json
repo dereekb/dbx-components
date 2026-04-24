@@ -1,0 +1,60 @@
+{
+  "name": "dbx-components-mcp",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/dbx-components-mcp/src",
+  "projectType": "library",
+  "tags": ["scope:mcp", "type:server"],
+  "targets": {
+    "build-base": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": "dist/packages/dbx-components-mcp",
+        "main": "packages/dbx-components-mcp/bin/dbx-components-mcp.ts",
+        "tsConfig": "packages/dbx-components-mcp/tsconfig.lib.json",
+        "format": ["esm"],
+        "platform": "node",
+        "target": "node20",
+        "bundle": true,
+        "thirdParty": false,
+        "skipTypeCheck": true,
+        "declaration": false,
+        "esbuildOptions": {
+          "banner": {
+            "js": "#!/usr/bin/env node\nimport { createRequire as __createRequire } from 'node:module';\nconst require = __createRequire(import.meta.url);"
+          }
+        },
+        "assets": [
+          {
+            "glob": "packages/dbx-components-mcp/README.md",
+            "input": ".",
+            "output": "."
+          },
+          {
+            "glob": "LICENSE",
+            "input": ".",
+            "output": "."
+          }
+        ]
+      },
+      "configurations": {
+        "production": {
+          "minify": false,
+          "sourcemap": false
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "{projectRoot}/../../coverage/packages/dbx-components-mcp"
+      }
+    }
+  }
+}
