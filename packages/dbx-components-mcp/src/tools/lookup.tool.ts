@@ -13,9 +13,10 @@
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { FORGE_FIELDS, FORGE_TIER_ORDER, getForgeField, getForgeFieldsByProduces, getForgeFieldsByTier, getForgeProducesCatalog, type ForgeFieldInfo, type ForgeTier } from '../registry/index.js';
+import { FORGE_FIELDS, FORGE_TIER_ORDER, getFirebaseModel, getFirebaseModelByPrefix, getFirebaseModels, getForgeField, getForgeFieldsByProduces, getForgeFieldsByTier, getForgeProducesCatalog, type FirebaseModel, type ForgeFieldInfo, type ForgeTier } from '../registry/index.js';
 import { resolveTopicAlias } from './alias-resolver.js';
 import { formatForgeFieldEntry, formatForgeFieldGroup } from './forge-lookup.formatter.js';
+import { formatFirebaseModelCatalog, formatFirebaseModelEntry } from './firebase-lookup.formatter.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 
 // MARK: Tool registry
@@ -26,16 +27,17 @@ import { toolError, type DbxTool, type ToolResult } from './types.js';
 const DBX_LOOKUP_TOOL: Tool = {
   name: 'dbx_lookup',
   description: [
-    'Look up @dereekb/dbx-form forge entries — field factories, composite builders, and primitives.',
+    'Look up @dereekb/dbx-form forge entries OR @dereekb/firebase Firestore models.',
     '',
     'The `topic` accepts:',
-    '  • a registry slug like "text", "date-range-row", "address-group";',
-    '  • a factory name like "dbxForgeTextField";',
-    '  • an output primitive like "string", "Date", "RowField" (returns every entry that produces that primitive);',
-    "  • a tier name (`'field-factory'`, `'composite-builder'`, `'primitive'`) to list every entry in that tier;",
-    '  • the literal `"list"` to get the full catalog grouped by tier.',
+    '  • a forge registry slug like "text", "date-range-row", "address-group";',
+    '  • a forge factory name like "dbxForgeTextField";',
+    '  • an output primitive like "string", "Date", "RowField" (returns every forge entry that produces that primitive);',
+    "  • a forge tier name (`'field-factory'`, `'composite-builder'`, `'primitive'`) to list every entry in that tier;",
+    '  • a Firebase model name (`"StorageFile"`), identity const (`"storageFileIdentity"`), modelType (`"storageFile"`), or collection prefix (`"sf"`);',
+    '  • the literal `"list"` for the forge catalog, or `"models"` / `"firebase-models"` for the Firebase-model catalog.',
     '',
-    'Many common synonyms also resolve (e.g. "datepicker" → "date", "chips" → "pickable-chip", "login" → "username-password-login-fields").'
+    'Forge synonyms resolve automatically (e.g. "datepicker" → "date").'
   ].join('\n'),
   inputSchema: {
     type: 'object',
@@ -80,18 +82,21 @@ function parseLookupArgs(raw: unknown): { readonly topic: string; readonly depth
 }
 
 // MARK: Resolution
-type LookupMatch = { readonly kind: 'single'; readonly field: ForgeFieldInfo } | { readonly kind: 'group'; readonly title: string; readonly fields: readonly ForgeFieldInfo[] } | { readonly kind: 'catalog' } | { readonly kind: 'not-found'; readonly normalized: string; readonly candidates: readonly ForgeFieldInfo[] };
+type LookupMatch = { readonly kind: 'single'; readonly field: ForgeFieldInfo } | { readonly kind: 'group'; readonly title: string; readonly fields: readonly ForgeFieldInfo[] } | { readonly kind: 'catalog' } | { readonly kind: 'firebase-model'; readonly model: FirebaseModel } | { readonly kind: 'firebase-catalog' } | { readonly kind: 'not-found'; readonly normalized: string; readonly candidates: readonly ForgeFieldInfo[] };
+
+const FIREBASE_CATALOG_ALIASES = new Set(['models', 'firebase-models', 'firebase', 'firestore-models']);
 
 /**
- * Resolves a topic string into the best match against the registry.
+ * Resolves a topic string into the best match across both registries.
  *
  * Resolution order:
- *   1. `'list'` → catalog
- *   2. tier name (`'field-factory'`, etc.) → group
- *   3. exact slug or factory-name match → single entry
- *   4. alias → remap and retry slug/factory lookup
- *   5. `produces` value match → group
- *   6. fuzzy substring search over slug/factoryName/description
+ *   1. `'list'` / `'models'` → catalog modes
+ *   2. forge tier name → forge group
+ *   3. exact forge slug or factory-name match → single forge entry
+ *   4. Firebase model name / identity / modelType / prefix → firebase entry
+ *   5. forge alias → remap and retry slug/factory lookup
+ *   6. forge `produces` value match → forge group
+ *   7. fuzzy substring search over forge slug/factoryName/description
  */
 function resolveTopic(rawTopic: string): LookupMatch {
   const lowered = rawTopic.trim().toLowerCase();
@@ -99,6 +104,8 @@ function resolveTopic(rawTopic: string): LookupMatch {
 
   if (lowered === 'list' || lowered === 'catalog' || lowered === 'all') {
     result = { kind: 'catalog' };
+  } else if (FIREBASE_CATALOG_ALIASES.has(lowered)) {
+    result = { kind: 'firebase-catalog' };
   } else if (FORGE_TIER_ORDER.includes(lowered as ForgeTier)) {
     const tier = lowered as ForgeTier;
     result = { kind: 'group', title: `Forge entries: tier = ${tier}`, fields: getForgeFieldsByTier(tier) };
@@ -107,20 +114,34 @@ function resolveTopic(rawTopic: string): LookupMatch {
     if (directHit) {
       result = { kind: 'single', field: directHit };
     } else {
-      const aliased = resolveTopicAlias(rawTopic);
-      const aliasHit = aliased !== lowered ? getForgeField(aliased) : undefined;
-      if (aliasHit) {
-        result = { kind: 'single', field: aliasHit };
+      const firebaseHit = resolveFirebaseTopic(rawTopic);
+      if (firebaseHit) {
+        result = { kind: 'firebase-model', model: firebaseHit };
       } else {
-        const produces = findProducesMatch(rawTopic);
-        if (produces) {
-          result = { kind: 'group', title: `Forge entries producing \`${produces}\``, fields: getForgeFieldsByProduces(produces) };
+        const aliased = resolveTopicAlias(rawTopic);
+        const aliasHit = aliased !== lowered ? getForgeField(aliased) : undefined;
+        if (aliasHit) {
+          result = { kind: 'single', field: aliasHit };
         } else {
-          result = { kind: 'not-found', normalized: aliased, candidates: fuzzyCandidates(aliased) };
+          const produces = findProducesMatch(rawTopic);
+          if (produces) {
+            result = { kind: 'group', title: `Forge entries producing \`${produces}\``, fields: getForgeFieldsByProduces(produces) };
+          } else {
+            result = { kind: 'not-found', normalized: aliased, candidates: fuzzyCandidates(aliased) };
+          }
         }
       }
     }
   }
+  return result;
+}
+
+/**
+ * Resolves a raw topic to a Firebase model entry by interface name, identity
+ * const, modelType, or collection prefix.
+ */
+function resolveFirebaseTopic(rawTopic: string): FirebaseModel | undefined {
+  const result = getFirebaseModel(rawTopic) ?? getFirebaseModelByPrefix(rawTopic);
   return result;
 }
 
@@ -219,8 +240,14 @@ export function runLookup(rawArgs: unknown): ToolResult {
     case 'catalog':
       text = formatCatalog();
       break;
+    case 'firebase-catalog':
+      text = formatFirebaseModelCatalog(getFirebaseModels());
+      break;
     case 'single':
       text = formatForgeFieldEntry(match.field, args.depth);
+      break;
+    case 'firebase-model':
+      text = formatFirebaseModelEntry(match.model, args.depth);
       break;
     case 'group':
       text = formatForgeFieldGroup(match.fields, match.title);

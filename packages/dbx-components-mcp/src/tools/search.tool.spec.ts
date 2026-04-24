@@ -57,6 +57,23 @@ describe('dbx_search', () => {
 
   it('returns a friendly message when nothing matches', () => {
     const text = firstText(runSearch({ query: 'zzzz-nothing-here' }));
-    expect(text).toMatch(/No forge entries matched/);
+    expect(text).toMatch(/No results matched/);
+  });
+
+  it('includes Firebase models in the result set', () => {
+    const text = firstText(runSearch({ query: 'StorageFile' }));
+    expect(text).toMatch(/# Search: `StorageFile`/);
+    expect(text).toMatch(/StorageFile.*firebase model/);
+    expect(text).toMatch(/\*\*identity:\*\* `storageFileIdentity`/);
+  });
+
+  it('ranks collection prefix matches for Firebase models', () => {
+    const text = firstText(runSearch({ query: 'nb' }));
+    expect(text).toMatch(/NotificationBox.*firebase model/);
+  });
+
+  it('surfaces the decode-tool hint in Firebase results', () => {
+    const text = firstText(runSearch({ query: 'StorageFileGroup' }));
+    expect(text).toMatch(/dbx_decode/);
   });
 });

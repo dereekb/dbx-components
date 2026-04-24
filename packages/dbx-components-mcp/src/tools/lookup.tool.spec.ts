@@ -80,4 +80,26 @@ describe('dbx_lookup', () => {
     expect(text).toMatch(/No forge entry matched/);
     expect(text).toMatch(/browse the catalog/);
   });
+
+  it('resolves a Firebase model by interface name', () => {
+    const text = firstText(runLookup({ topic: 'StorageFile' }));
+    expect(text).toMatch(/# StorageFile/);
+    expect(text).toMatch(/\*\*Identity:\*\* `storageFileIdentity`/);
+    expect(text).toMatch(/prefix `sf`/);
+    expect(text).toMatch(/## Fields/);
+    expect(text).toMatch(/## Enums/);
+  });
+
+  it('resolves a Firebase model by collection prefix', () => {
+    const text = firstText(runLookup({ topic: 'nb' }));
+    expect(text).toMatch(/# NotificationBox/);
+  });
+
+  it('resolves the firebase catalog via "models" alias', () => {
+    const text = firstText(runLookup({ topic: 'models' }));
+    expect(text).toMatch(/# Firebase model catalog/);
+    expect(text).toMatch(/## Root collections/);
+    expect(text).toMatch(/## Subcollections/);
+    expect(text).toMatch(/\*\*StorageFile\*\*/);
+  });
 });

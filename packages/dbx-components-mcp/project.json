@@ -5,10 +5,20 @@
   "projectType": "library",
   "tags": ["scope:mcp", "type:server"],
   "targets": {
+    "generate-firebase-models": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/src/registry/firebase-models.generated.ts"],
+      "inputs": ["{projectRoot}/scripts/extract-firebase-models.mjs", "{workspaceRoot}/packages/firebase/src/lib/model/**/*.ts"],
+      "options": {
+        "command": "node packages/dbx-components-mcp/scripts/extract-firebase-models.mjs",
+        "cwd": "{workspaceRoot}"
+      }
+    },
     "build-base": {
       "executor": "@nx/esbuild:esbuild",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
+      "dependsOn": ["generate-firebase-models"],
       "options": {
         "outputPath": "dist/packages/dbx-components-mcp",
         "main": "packages/dbx-components-mcp/bin/dbx-components-mcp.ts",

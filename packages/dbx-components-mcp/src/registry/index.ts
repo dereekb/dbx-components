@@ -89,3 +89,56 @@ export function getForgeFieldsByTier(tier: ForgeTier): readonly ForgeFieldInfo[]
 export function getForgeFieldsByArrayOutput(arrayOutput: ForgeArrayOutput): readonly ForgeFieldInfo[] {
   return FORGE_FIELDS.filter((f) => f.arrayOutput === arrayOutput);
 }
+
+// MARK: Firebase Models
+import { FIREBASE_MODELS, type FirebaseModel } from './firebase-models.js';
+
+export { FIREBASE_MODELS } from './firebase-models.js';
+export type { FirebaseModel, FirebaseEnum, FirebaseEnumValue, FirebaseField } from './firebase-models.js';
+
+/**
+ * Returns every registered Firebase model entry.
+ */
+export function getFirebaseModels(): readonly FirebaseModel[] {
+  return FIREBASE_MODELS;
+}
+
+/**
+ * Looks up a model by its interface name (`'StorageFile'`) or identity const
+ * (`'storageFileIdentity'`). Case-insensitive.
+ */
+export function getFirebaseModel(key: string): FirebaseModel | undefined {
+  const lowered = key.toLowerCase();
+  const result = FIREBASE_MODELS.find((m) => m.name.toLowerCase() === lowered || m.identityConst.toLowerCase() === lowered || m.modelType.toLowerCase() === lowered);
+  return result;
+}
+
+/**
+ * PRIMARY INDEX. Returns the model with the given collection prefix
+ * (`'sf'` → StorageFile). Case-insensitive exact match.
+ */
+export function getFirebaseModelByPrefix(prefix: string): FirebaseModel | undefined {
+  const lowered = prefix.toLowerCase();
+  const result = FIREBASE_MODELS.find((m) => m.collectionPrefix.toLowerCase() === lowered);
+  return result;
+}
+
+/**
+ * Returns every subcollection model whose parent identity matches
+ * `parentIdentityConst` (e.g. `'notificationBoxIdentity'`).
+ */
+export function getFirebaseSubcollectionsOf(parentIdentityConst: string): readonly FirebaseModel[] {
+  return FIREBASE_MODELS.filter((m) => m.parentIdentityConst === parentIdentityConst);
+}
+
+/**
+ * Returns the catalog of distinct collection prefixes in the registry.
+ */
+export function getFirebasePrefixCatalog(): readonly string[] {
+  const set = new Set<string>();
+  for (const model of FIREBASE_MODELS) {
+    set.add(model.collectionPrefix);
+  }
+  const result = Array.from(set).sort();
+  return result;
+}

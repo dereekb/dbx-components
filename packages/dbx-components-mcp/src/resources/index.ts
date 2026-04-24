@@ -13,7 +13,9 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { registerForgeFieldsResource } from './forge-fields.resource.js';
+import { registerFirebaseModelsResource } from './firebase-models.resource.js';
 
 export function registerResources(server: McpServer): void {
   registerForgeFieldsResource(server);
+  registerFirebaseModelsResource(server);
 }

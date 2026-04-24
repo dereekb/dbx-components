@@ -18,12 +18,12 @@
  * | dbx_search     | Discovery      | "Find entries matching keywords"       |
  * | dbx_examples   | Working code   | "Show me how to compose X"             |
  * | dbx_scaffold   | Generation     | "Generate a FormConfig skeleton"       |
+ * | dbx_decode     | Decoding       | "What does this Firestore doc mean?"   |
  *
  * Planned (later phases):
  *
  * | Tool           | Purpose        | One-liner                              |
  * |----------------|----------------|----------------------------------------|
- * | dbx_decode     | Decoding       | "What does this Firestore doc mean?"   |
  * | dbx_validate   | Verification   | "Is my model/field/action correct?"    |
  */
 
@@ -33,12 +33,13 @@ import { lookupTool } from './lookup.tool.js';
 import { searchTool } from './search.tool.js';
 import { examplesTool } from './examples.tool.js';
 import { scaffoldTool } from './scaffold.tool.js';
+import { decodeTool } from './decode.tool.js';
 import { toolError, type DbxTool } from './types.js';
 
 /**
  * Every registered tool in order of presentation in `tools/list`.
  */
-export const DBX_TOOLS: readonly DbxTool[] = [lookupTool, searchTool, examplesTool, scaffoldTool];
+export const DBX_TOOLS: readonly DbxTool[] = [lookupTool, searchTool, examplesTool, scaffoldTool, decodeTool];
 
 export function registerTools(server: McpServer): void {
   const underlyingServer = server.server;
