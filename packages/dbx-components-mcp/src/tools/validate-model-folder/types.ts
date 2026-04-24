@@ -1,0 +1,91 @@
+/**
+ * Shared types for the `dbx_validate_model_folder` validator.
+ *
+ * The validator takes one or more folder paths and asserts that each is
+ * a canonical model folder: contains `<name>.ts`, `<name>.id.ts`,
+ * `<name>.query.ts`, `<name>.action.ts`, `<name>.api.ts`, and
+ * `index.ts`. Stray `.ts` files at the folder root that don't start
+ * with `<name>.` are warned about.
+ *
+ * Special-case folders (like `system/`) are recognized by name and
+ * skipped with a warning — they'll be covered by a future dedicated
+ * validator.
+ */
+
+export type ViolationCode =
+  // I/O failures (errors)
+  | 'FOLDER_NOT_FOUND'
+  | 'FOLDER_NOT_DIRECTORY'
+  // Missing required files (errors)
+  | 'FOLDER_MISSING_MAIN'
+  | 'FOLDER_MISSING_ID'
+  | 'FOLDER_MISSING_QUERY'
+  | 'FOLDER_MISSING_ACTION'
+  | 'FOLDER_MISSING_API'
+  | 'FOLDER_MISSING_INDEX'
+  // Warnings
+  | 'FOLDER_STRAY_FILE'
+  | 'SPECIAL_CASE_MODEL_FOLDER';
+
+export type ViolationSeverity = 'error' | 'warning';
+
+export interface Violation {
+  readonly code: ViolationCode;
+  readonly severity: ViolationSeverity;
+  readonly message: string;
+  readonly folder: string;
+  readonly file: string | undefined;
+}
+
+export interface ValidationResult {
+  readonly violations: readonly Violation[];
+  readonly errorCount: number;
+  readonly warningCount: number;
+  readonly foldersChecked: number;
+}
+
+/**
+ * Folder-name prefixes that are recognized as model-group folders but
+ * don't follow the canonical 5-file layout. The validator emits a
+ * {@link SPECIAL_CASE_MODEL_FOLDER} warning and short-circuits
+ * structural checks.
+ */
+export const SPECIAL_CASE_MODEL_FOLDER_NAMES: readonly string[] = ['system'];
+
+/**
+ * One folder inspection result passed into the pure rules core. The MCP
+ * tool populates this via `node:fs/promises` before calling into the
+ * validator. Specs build fixtures directly without touching the disk.
+ */
+export interface FolderInspection {
+  /** Display name for the folder (typically the last path segment). */
+  readonly name: string;
+  /** Original path as provided by the caller (used in violation messages). */
+  readonly path: string;
+  readonly status: FolderInspectionStatus;
+  /** `.ts` file basenames at the folder root (ignored when `status !== 'ok'`). */
+  readonly files: readonly string[];
+}
+
+export type FolderInspectionStatus = 'ok' | 'not-found' | 'not-directory';
+
+/**
+ * Canonical file suffixes required inside each model folder. `index`
+ * is the odd one out — no `<name>.` prefix.
+ */
+export interface RequiredFile {
+  readonly filename: string;
+  readonly code: Extract<ViolationCode, `FOLDER_MISSING_${string}`>;
+  readonly role: string;
+}
+
+export function buildRequiredFiles(name: string): readonly RequiredFile[] {
+  return [
+    { filename: `${name}.ts`, code: 'FOLDER_MISSING_MAIN', role: 'main model' },
+    { filename: `${name}.id.ts`, code: 'FOLDER_MISSING_ID', role: 'id types' },
+    { filename: `${name}.query.ts`, code: 'FOLDER_MISSING_QUERY', role: 'query helpers' },
+    { filename: `${name}.action.ts`, code: 'FOLDER_MISSING_ACTION', role: 'model actions' },
+    { filename: `${name}.api.ts`, code: 'FOLDER_MISSING_API', role: 'CRUD api' },
+    { filename: 'index.ts', code: 'FOLDER_MISSING_INDEX', role: 'barrel export' }
+  ];
+}
