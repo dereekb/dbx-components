@@ -7,6 +7,7 @@
   },
   "peerDependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
-    "arktype": "^2.2.0"
+    "arktype": "^2.2.0",
+    "ts-morph": "^21.0.0"
   }
 }

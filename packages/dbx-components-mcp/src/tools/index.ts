@@ -17,14 +17,9 @@
  * | dbx_lookup     | Documentation  | "Tell me about X"                      |
  * | dbx_search     | Discovery      | "Find entries matching keywords"       |
  * | dbx_examples   | Working code   | "Show me how to compose X"             |
- * | dbx_scaffold   | Generation     | "Generate a FormConfig skeleton"       |
- * | dbx_decode     | Decoding       | "What does this Firestore doc mean?"   |
- *
- * Planned (later phases):
- *
- * | Tool           | Purpose        | One-liner                              |
- * |----------------|----------------|----------------------------------------|
- * | dbx_validate   | Verification   | "Is my model/field/action correct?"    |
+ * | dbx_scaffold                | Generation     | "Generate a FormConfig skeleton"       |
+ * | dbx_decode                  | Decoding       | "What does this Firestore doc mean?"   |
+ * | dbx_validate_firebase_model | Verification   | "Is this Firestore model file correct?" |
  */
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -34,12 +29,13 @@ import { searchTool } from './search.tool.js';
 import { examplesTool } from './examples.tool.js';
 import { scaffoldTool } from './scaffold.tool.js';
 import { decodeTool } from './decode.tool.js';
+import { validateFirebaseModelTool } from './validate-firebase-model.tool.js';
 import { toolError, type DbxTool } from './types.js';
 
 /**
  * Every registered tool in order of presentation in `tools/list`.
  */
-export const DBX_TOOLS: readonly DbxTool[] = [lookupTool, searchTool, examplesTool, scaffoldTool, decodeTool];
+export const DBX_TOOLS: readonly DbxTool[] = [lookupTool, searchTool, examplesTool, scaffoldTool, decodeTool, validateFirebaseModelTool];
 
 export function registerTools(server: McpServer): void {
   const underlyingServer = server.server;
