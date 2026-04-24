@@ -17,6 +17,7 @@
  * | dbx_lookup     | Documentation  | "Tell me about X"                      |
  * | dbx_search     | Discovery      | "Find entries matching keywords"       |
  * | dbx_examples   | Working code   | "Show me how to compose X"             |
+ * | dbx_scaffold   | Generation     | "Generate a FormConfig skeleton"       |
  *
  * Planned (later phases):
  *
@@ -24,7 +25,6 @@
  * |----------------|----------------|----------------------------------------|
  * | dbx_decode     | Decoding       | "What does this Firestore doc mean?"   |
  * | dbx_validate   | Verification   | "Is my model/field/action correct?"    |
- * | dbx_scaffold   | Generation     | "Generate boilerplate for X"           |
  */
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -32,12 +32,13 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprot
 import { lookupTool } from './lookup.tool.js';
 import { searchTool } from './search.tool.js';
 import { examplesTool } from './examples.tool.js';
+import { scaffoldTool } from './scaffold.tool.js';
 import { toolError, type DbxTool } from './types.js';
 
 /**
  * Every registered tool in order of presentation in `tools/list`.
  */
-export const DBX_TOOLS: readonly DbxTool[] = [lookupTool, searchTool, examplesTool];
+export const DBX_TOOLS: readonly DbxTool[] = [lookupTool, searchTool, examplesTool, scaffoldTool];
 
 export function registerTools(server: McpServer): void {
   const underlyingServer = server.server;
