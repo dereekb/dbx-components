@@ -68,8 +68,8 @@ export interface ReservedModelFolder {
 export const RESERVED_MODEL_FOLDERS: readonly ReservedModelFolder[] = [
   {
     name: 'system',
-    reason: 'System-state folder uses a distinct minimal layout (`<name>.ts`, `<name>.action.ts`, `index.ts`) with project-specific system config.',
-    recommendedTool: 'dbx_validate_system_folder (planned)'
+    reason: 'System-state folder uses a distinct minimal layout (`system.ts` + `index.ts` required; optional `system.action.ts`/`system.api.ts`) with project-specific state-type declarations.',
+    recommendedTool: 'dbx_validate_system_folder'
   },
   {
     name: 'notification',
