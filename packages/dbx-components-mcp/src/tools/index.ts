@@ -20,6 +20,7 @@
  * | dbx_scaffold                | Generation     | "Generate a FormConfig skeleton"       |
  * | dbx_decode                  | Decoding       | "What does this Firestore doc mean?"   |
  * | dbx_validate_firebase_model | Verification   | "Is this Firestore model file correct?" |
+ * | dbx_validate_model_api      | Verification   | "Is this model api file correct?"      |
  */
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -30,12 +31,13 @@ import { examplesTool } from './examples.tool.js';
 import { scaffoldTool } from './scaffold.tool.js';
 import { decodeTool } from './decode.tool.js';
 import { validateFirebaseModelTool } from './validate-firebase-model.tool.js';
+import { validateModelApiTool } from './validate-model-api.tool.js';
 import { toolError, type DbxTool } from './types.js';
 
 /**
  * Every registered tool in order of presentation in `tools/list`.
  */
-export const DBX_TOOLS: readonly DbxTool[] = [lookupTool, searchTool, examplesTool, scaffoldTool, decodeTool, validateFirebaseModelTool];
+export const DBX_TOOLS: readonly DbxTool[] = [lookupTool, searchTool, examplesTool, scaffoldTool, decodeTool, validateFirebaseModelTool, validateModelApiTool];
 
 export function registerTools(server: McpServer): void {
   const underlyingServer = server.server;
