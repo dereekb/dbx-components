@@ -1,4 +1,4 @@
-import type { RowField, GroupField, FieldDef, RowAllowedChildren, GroupAllowedChildren, ConditionalExpression } from '@ng-forge/dynamic-forms';
+import type { RowField, GroupField, ContainerField, FieldDef, RowAllowedChildren, ConditionalExpression, WrapperConfig } from '@ng-forge/dynamic-forms';
 import { FORGE_EXPAND_FIELD_TYPE_NAME, type DbxForgeExpandButtonType, type DbxForgeExpandFieldDef, type DbxForgeExpandFieldProps } from './expand/expand.field';
 /**
  * Logic configuration for container fields (group, row, array).
@@ -12,7 +12,7 @@ export interface DbxForgeContainerLogicConfig {
 }
 
 let _dbxForgeRowCounter = 0;
-let _dbxForgeGroupCounter = 0;
+let _dbxForgeContainerCounter = 0;
 let _dbxForgeToggleCounter = 0;
 let _dbxForgeExpandCounter = 0;
 
@@ -65,37 +65,136 @@ export function dbxForgeRow(config: DbxForgeRowConfig): RowField {
 /**
  * Configuration for a forge group layout.
  *
- * Extends {@link GroupField} with `key` made optional (auto-generated if omitted)
- * and `type` omitted (always `'group'`).
+ * Extends {@link GroupField} with `type` omitted (always `'group'`). The `key`
+ * is required because a `group` field creates a nested object in the form value
+ * under that key — it is part of the value shape, not a display-only identifier.
  */
-export interface DbxForgeGroupConfig extends Omit<GroupField, 'type' | 'key'> {
-  /**
-   * Optional key for the group. Defaults to a unique auto-generated key.
-   *
-   * Must be unique within the form config to avoid ng-forge duplicate key errors.
-   */
-  readonly key?: string;
-}
+export interface DbxForgeGroupConfig extends Omit<GroupField, 'type'> {}
 
 /**
- * Creates a plain forge group layout field.
+ * Creates a plain ng-forge `group` field. A group produces a nested object in
+ * the form value under its `key`, so the key is semantically significant and
+ * must be chosen deliberately.
  *
- * Groups collect child field values into a nested object when a `key` is provided.
- * When used without a key, the group serves as a visual/logical grouping only.
+ * For visual-only grouping (conditional visibility, layout wrappers, shared
+ * CSS class) that should NOT introduce a nested object in the form value, use
+ * {@link dbxForgeContainer} instead — that is what ng-forge's `container`
+ * field type is for.
  *
  * For sections with headers, use the section wrapper type instead.
  *
- * @param config - Group configuration with fields and optional key/className
+ * @param config - Group configuration with fields and required key
  * @returns A {@link GroupField} with type `'group'`
+ *
+ * @example
+ * ```typescript
+ * // Groups the address sub-fields under an `address` property in the form value.
+ * const group = dbxForgeGroup({
+ *   key: 'address',
+ *   fields: [
+ *     dbxForgeTextField({ key: 'city', label: 'City' }),
+ *     dbxForgeTextField({ key: 'state', label: 'State' })
+ *   ]
+ * });
+ *
+ * // Resulting form value shape:
+ * // { address: { city: '...', state: '...' } }
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // Wrong: if the intent is purely visual (e.g. conditional visibility) and
+ * // the fields should remain at the parent level in the form value, do NOT
+ * // use a group — use dbxForgeContainer instead. Otherwise you end up with a
+ * // spurious nested object:
+ * //   { _group_0: { city: '...', state: '...' } }   // ← unwanted wrapper
+ * ```
  */
 export function dbxForgeGroup(config: DbxForgeGroupConfig): GroupField {
-  const { key: inputKey, ...rest } = config;
+  return {
+    ...config,
+    type: 'group'
+  } as GroupField;
+}
+
+// MARK: Container
+/**
+ * Configuration for a forge container layout.
+ *
+ * Extends {@link ContainerField} with `type` omitted (always `'container'`),
+ * `key` made optional (auto-generated if omitted), and `wrappers` made optional
+ * (defaults to an empty array).
+ */
+export interface DbxForgeContainerConfig extends Omit<ContainerField, 'type' | 'key' | 'wrappers'> {
+  /**
+   * Optional key for the container. Defaults to a unique auto-generated key.
+   *
+   * Containers do not introduce a nested object in the form value — the key is
+   * only an identifier and is not part of the value shape. Must still be unique
+   * within the form config to avoid ng-forge duplicate key errors.
+   */
+  readonly key?: string;
+  /**
+   * Optional wrapper configs to chain around the children. Defaults to `[]`.
+   */
+  readonly wrappers?: readonly WrapperConfig[];
+}
+
+/**
+ * Creates an ng-forge `container` field. Containers group child fields for
+ * layout, conditional visibility, or wrapper application WITHOUT introducing
+ * a nested object in the form value — child values remain at the same level
+ * as the container itself.
+ *
+ * Use this (not {@link dbxForgeGroup}) whenever the grouping is purely visual
+ * or structural. Use {@link dbxForgeGroup} when the intent is to nest the
+ * child values under a named key in the form value.
+ *
+ * @param config - Container configuration with fields and optional key/wrappers
+ * @returns A {@link ContainerField} with type `'container'`
+ *
+ * @example
+ * ```typescript
+ * // Visual-only grouping (e.g. to apply a CSS class or a wrapper). Children
+ * // remain at the parent level in the form value — the container itself
+ * // does not add a property.
+ * const container = dbxForgeContainer({
+ *   className: 'dbx-highlight-group',
+ *   fields: [
+ *     dbxForgeTextField({ key: 'city', label: 'City' }),
+ *     dbxForgeTextField({ key: 'state', label: 'State' })
+ *   ]
+ * });
+ *
+ * // Resulting form value shape (flat):
+ * // { city: '...', state: '...' }
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // Conditional visibility without altering the value shape — a common use
+ * // case that should NOT use dbxForgeGroup.
+ * const container = dbxForgeContainer({
+ *   fields: [dbxForgeTextField({ key: 'jwks_uri', label: 'JWKS URI' })],
+ *   logic: [{
+ *     type: 'hidden',
+ *     condition: { type: 'fieldValue', fieldPath: 'authMethod', operator: 'notEquals', value: 'private_key_jwt' }
+ *   }]
+ * });
+ *
+ * // Resulting form value shape (jwks_uri stays flat, not nested):
+ * // { authMethod: '...', jwks_uri: '...' }
+ * ```
+ */
+export function dbxForgeContainer(config: DbxForgeContainerConfig): ContainerField {
+  const { key: inputKey, wrappers, ...rest } = config;
 
   return {
     ...rest,
-    type: 'group',
-    key: inputKey ?? `_group_${_dbxForgeGroupCounter++}`
-  } as GroupField;
+    type: 'container',
+    key: inputKey ?? `_container_${_dbxForgeContainerCounter++}`,
+    wrappers: wrappers ?? []
+  } as ContainerField;
 }
 
 // MARK: Toggle Wrapper
@@ -124,7 +223,10 @@ export interface DbxForgeToggleWrapperConfig {
    */
   readonly defaultOpen?: boolean;
   /**
-   * Optional key for the content group.
+   * Optional key for the content container. Auto-generated if omitted.
+   *
+   * The container does not add a property to the form value; this is only a
+   * stable identifier for the container field.
    */
   readonly contentKey?: string;
 }
@@ -134,29 +236,35 @@ export interface DbxForgeToggleWrapperConfig {
  *
  * Uses ng-forge's built-in `toggle` field type (MatSlideToggle) and
  * `FieldValueCondition` for conditional visibility. The toggle boolean value
- * IS part of the form model (standard ng-forge pattern).
+ * IS part of the form model. The hidden content is wrapped in a `container`
+ * (not a `group`), so the wrapped fields sit at the same level as the toggle
+ * in the form value — they are NOT nested under an extra object.
  *
  * Structure produced:
  * ```
  * Row (outer)
  *   ├── toggle field (type: 'toggle', boolean value)
- *   └── Group (content, hidden when toggle === false)
+ *   └── Container (content, hidden when toggle === false)
  * ```
  *
  * This is the forge equivalent of the formly `formlyToggleWrapper`.
  *
  * @param config - Toggle wrapper configuration
- * @returns A {@link RowField} containing the toggle and content group
+ * @returns A {@link RowField} containing the toggle and content container
  *
  * @example
  * ```typescript
  * const toggle = dbxForgeToggleWrapper({
+ *   key: 'showAdvanced',
  *   label: 'Show advanced options',
  *   fields: [
  *     dbxForgeTextField({ key: 'advanced1', label: 'Option 1' }),
  *     dbxForgeTextField({ key: 'advanced2', label: 'Option 2' })
  *   ]
  * });
+ *
+ * // Resulting form value (flat — no nesting under the container):
+ * // { showAdvanced: true, advanced1: '...', advanced2: '...' }
  * ```
  */
 export function dbxForgeToggleWrapper(config: DbxForgeToggleWrapperConfig): RowField {
@@ -170,7 +278,9 @@ export function dbxForgeToggleWrapper(config: DbxForgeToggleWrapperConfig): RowF
     value: config.defaultOpen ?? false
   } as FieldDef<unknown>;
 
-  // Content group with conditional visibility based on toggle value
+  // Content container with conditional visibility based on toggle value.
+  // A container is used (not a group) so the wrapped fields stay at the same
+  // level in the form value as the toggle itself.
   const hiddenCondition: DbxForgeContainerLogicConfig = {
     type: 'hidden',
     condition: {
@@ -181,14 +291,14 @@ export function dbxForgeToggleWrapper(config: DbxForgeToggleWrapperConfig): RowF
     }
   };
 
-  const contentGroup = dbxForgeGroup({
-    key: config.contentKey,
-    fields: config.fields as unknown as GroupAllowedChildren[],
+  const contentContainer = dbxForgeContainer({
+    ...(config.contentKey != null && { key: config.contentKey }),
+    fields: config.fields as unknown as ContainerField['fields'],
     logic: [hiddenCondition]
   });
 
   return dbxForgeRow({
-    fields: [toggleField as unknown as RowAllowedChildren, contentGroup as unknown as RowAllowedChildren],
+    fields: [toggleField as unknown as RowAllowedChildren, contentContainer as unknown as RowAllowedChildren],
     className: config.className ?? 'dbx-forge-toggle-wrapper'
   });
 }
@@ -223,7 +333,10 @@ export interface DbxForgeExpandWrapperConfig {
    */
   readonly defaultOpen?: boolean;
   /**
-   * Optional key for the content group.
+   * Optional key for the content container. Auto-generated if omitted.
+   *
+   * The container does not add a property to the form value; this is only a
+   * stable identifier for the container field.
    */
   readonly contentKey?: string;
 }
@@ -232,24 +345,28 @@ export interface DbxForgeExpandWrapperConfig {
  * Creates a forge expand wrapper that shows/hides content via a button or text link.
  *
  * Uses a custom `dbx-forge-expand` field type for the expand trigger and
- * `FieldValueCondition` for conditional visibility on the content group.
- * The expand boolean value IS part of the form model.
+ * `FieldValueCondition` for conditional visibility on the content. The
+ * expand boolean value IS part of the form model. The hidden content is
+ * wrapped in a `container` (not a `group`), so the wrapped fields sit at the
+ * same level as the expand control in the form value — they are NOT nested
+ * under an extra object.
  *
  * Structure produced:
  * ```
  * Row (outer)
  *   ├── expand field (type: 'dbx-forge-expand', boolean value)
- *   └── Group (content, hidden when expand field === false)
+ *   └── Container (content, hidden when expand field === false)
  * ```
  *
  * This is the forge equivalent of the formly `formlyExpandWrapper`.
  *
  * @param config - Expand wrapper configuration
- * @returns A {@link RowField} containing the expand control and content group
+ * @returns A {@link RowField} containing the expand control and content container
  *
  * @example
  * ```typescript
  * const expand = dbxForgeExpandWrapper({
+ *   key: 'showMore',
  *   label: 'Show more options',
  *   buttonType: 'button',
  *   fields: [
@@ -257,6 +374,9 @@ export interface DbxForgeExpandWrapperConfig {
  *     dbxForgeTextField({ key: 'extra2', label: 'Extra 2' })
  *   ]
  * });
+ *
+ * // Resulting form value (flat — no nesting under the container):
+ * // { showMore: true, extra1: '...', extra2: '...' }
  * ```
  */
 export function dbxForgeExpandWrapper(config: DbxForgeExpandWrapperConfig): RowField {
@@ -283,14 +403,14 @@ export function dbxForgeExpandWrapper(config: DbxForgeExpandWrapperConfig): RowF
     }
   };
 
-  const contentGroup = dbxForgeGroup({
-    key: config.contentKey,
-    fields: config.fields as unknown as GroupAllowedChildren[],
+  const contentContainer = dbxForgeContainer({
+    ...(config.contentKey != null && { key: config.contentKey }),
+    fields: config.fields as unknown as ContainerField['fields'],
     logic: [hiddenCondition]
   });
 
   return dbxForgeRow({
-    fields: [expandField as unknown as RowAllowedChildren, contentGroup as unknown as RowAllowedChildren],
+    fields: [expandField as unknown as RowAllowedChildren, contentContainer as unknown as RowAllowedChildren],
     className: config.className ?? 'dbx-forge-expand-wrapper'
   });
 }
