@@ -7,9 +7,10 @@
  * `index.ts`. Stray `.ts` files at the folder root that don't start
  * with `<name>.` are warned about.
  *
- * Special-case folders (like `system/`) are recognized by name and
- * skipped with a warning — they'll be covered by a future dedicated
- * validator.
+ * Reserved folder names (like `system`, `notification`, `storagefile`)
+ * either follow a distinct layout or are imported from the upstream
+ * `@dereekb/firebase` package. Those are skipped with a warning and
+ * defer to their dedicated validators.
  */
 
 export type ViolationCode =
@@ -25,7 +26,7 @@ export type ViolationCode =
   | 'FOLDER_MISSING_INDEX'
   // Warnings
   | 'FOLDER_STRAY_FILE'
-  | 'SPECIAL_CASE_MODEL_FOLDER';
+  | 'RESERVED_MODEL_FOLDER';
 
 export type ViolationSeverity = 'error' | 'warning';
 
@@ -45,12 +46,42 @@ export interface ValidationResult {
 }
 
 /**
- * Folder-name prefixes that are recognized as model-group folders but
- * don't follow the canonical 5-file layout. The validator emits a
- * {@link SPECIAL_CASE_MODEL_FOLDER} warning and short-circuits
- * structural checks.
+ * Descriptor for a reserved model-folder name — one that the validator
+ * recognizes but deliberately skips because the folder either follows a
+ * distinct layout (e.g. `system/`) or is an extension of an upstream
+ * group imported from `@dereekb/firebase` (e.g. `notification/`,
+ * `storagefile/`). The emitted warning points the caller at the
+ * dedicated validator for that group.
  */
-export const SPECIAL_CASE_MODEL_FOLDER_NAMES: readonly string[] = ['system'];
+export interface ReservedModelFolder {
+  readonly name: string;
+  readonly reason: string;
+  readonly recommendedTool: string;
+}
+
+/**
+ * Folder names reserved from the canonical 5-file check. The validator
+ * emits a {@link RESERVED_MODEL_FOLDER} warning naming the
+ * {@link ReservedModelFolder.recommendedTool} instead of running
+ * structural rules.
+ */
+export const RESERVED_MODEL_FOLDERS: readonly ReservedModelFolder[] = [
+  {
+    name: 'system',
+    reason: 'System-state folder uses a distinct minimal layout (`<name>.ts`, `<name>.action.ts`, `index.ts`) with project-specific system config.',
+    recommendedTool: 'dbx_validate_system_folder (planned)'
+  },
+  {
+    name: 'notification',
+    reason: 'Notification is a canonical group from `@dereekb/firebase` with a richer layout than the base 5 files (task, send, config, message, etc.); downstream projects extend rather than redeclare it.',
+    recommendedTool: 'dbx_validate_notification_folder (planned)'
+  },
+  {
+    name: 'storagefile',
+    reason: 'StorageFile is a canonical group from `@dereekb/firebase` with a richer layout than the base 5 files (group, upload, file, etc.); downstream projects extend rather than redeclare it.',
+    recommendedTool: 'dbx_validate_storagefile_folder (planned)'
+  }
+];
 
 /**
  * One folder inspection result passed into the pure rules core. The MCP

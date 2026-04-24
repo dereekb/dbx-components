@@ -7,9 +7,12 @@
  * `index.ts`. Stray `.ts` files at the folder root that don't start
  * with `<name>.` trigger a warning.
  *
- * Recognized special-case folders (e.g. `system/`) emit a warning and
- * skip structural validation — they'll be covered by dedicated
- * validators.
+ * Reserved folder names — `system/`, `notification/`, `storagefile/` —
+ * emit a warning naming the dedicated validator to use instead and
+ * skip structural checks. `system/` uses a distinct minimal layout;
+ * `notification/` and `storagefile/` are imported from
+ * `@dereekb/firebase` and downstream folders extend the canonical
+ * group rather than redeclaring it.
  *
  * Accepts two interchangeable input forms (at least one required):
  *   - `paths`: relative folder paths resolved against cwd.
@@ -30,7 +33,7 @@ const DBX_VALIDATE_MODEL_FOLDER_TOOL: Tool = {
   description: [
     'Validate that one or more model folders follow the canonical layout. Each folder named `<name>/` must contain `<name>.ts`, `<name>.id.ts`, `<name>.query.ts`, `<name>.action.ts`, `<name>.api.ts`, and `index.ts`. Missing files are hard errors.',
     '',
-    'Warnings cover: stray `.ts` files at the folder root that do not start with `<name>.` (they should be grouped under the model prefix), and folders recognized as special cases (e.g. `system/`) that do not follow the canonical layout and will be validated by a dedicated tool.',
+    'Warnings cover: stray `.ts` files at the folder root that do not start with `<name>.` (they should be grouped under the model prefix), and reserved folder names (`system/`, `notification/`, `storagefile/`) that have dedicated validators and are skipped here.',
     '',
     'Provide at least one of:',
     '- `paths`: array of folder paths (relative to the server cwd).',

@@ -112,7 +112,7 @@ describe('validateModelFolders', () => {
     expect(strayWarnings).toHaveLength(0);
   });
 
-  it('short-circuits structural checks for special-case folders (system) with a warning', () => {
+  it('reserves the `system` folder and recommends the dedicated tool', () => {
     const inspection: FolderInspection = {
       name: 'system',
       path: 'packages/foo/src/lib/model/system',
@@ -122,10 +122,46 @@ describe('validateModelFolders', () => {
     const result = validateModelFolders([inspection]);
     expect(result.errorCount).toBe(0);
     const codes = result.violations.map((v) => v.code);
-    expect(codes).toContain('SPECIAL_CASE_MODEL_FOLDER');
+    expect(codes).toContain('RESERVED_MODEL_FOLDER');
     expect(codes).not.toContain('FOLDER_MISSING_ID');
     expect(codes).not.toContain('FOLDER_MISSING_QUERY');
     expect(codes).not.toContain('FOLDER_MISSING_API');
+    const warning = result.violations.find((v) => v.code === 'RESERVED_MODEL_FOLDER');
+    expect(warning?.message).toContain('dbx_validate_system_folder');
+  });
+
+  it('reserves the `notification` folder (imported from @dereekb/firebase) and recommends the dedicated tool', () => {
+    const inspection: FolderInspection = {
+      name: 'notification',
+      path: 'components/foo-firebase/src/lib/model/notification',
+      status: 'ok',
+      files: ['index.ts', 'notification.ts', 'notification.job.ts', 'notification.worker.ts']
+    };
+    const result = validateModelFolders([inspection]);
+    expect(result.errorCount).toBe(0);
+    const codes = result.violations.map((v) => v.code);
+    expect(codes).toContain('RESERVED_MODEL_FOLDER');
+    expect(codes).not.toContain('FOLDER_MISSING_ID');
+    expect(codes).not.toContain('FOLDER_MISSING_API');
+    const warning = result.violations.find((v) => v.code === 'RESERVED_MODEL_FOLDER');
+    expect(warning?.message).toContain('dbx_validate_notification_folder');
+  });
+
+  it('reserves the `storagefile` folder (imported from @dereekb/firebase) and recommends the dedicated tool', () => {
+    const inspection: FolderInspection = {
+      name: 'storagefile',
+      path: 'components/foo-firebase/src/lib/model/storagefile',
+      status: 'ok',
+      files: ['index.ts', 'storagefile.job.ts', 'storagefilegroup.ts']
+    };
+    const result = validateModelFolders([inspection]);
+    expect(result.errorCount).toBe(0);
+    const codes = result.violations.map((v) => v.code);
+    expect(codes).toContain('RESERVED_MODEL_FOLDER');
+    expect(codes).not.toContain('FOLDER_MISSING_MAIN');
+    expect(codes).not.toContain('FOLDER_STRAY_FILE');
+    const warning = result.violations.find((v) => v.code === 'RESERVED_MODEL_FOLDER');
+    expect(warning?.message).toContain('dbx_validate_storagefile_folder');
   });
 
   it('flags a not-found folder', () => {

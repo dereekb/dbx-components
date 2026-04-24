@@ -4,7 +4,7 @@
  * point is {@link validateModelFolders} in `./index.ts`.
  */
 
-import { buildRequiredFiles, SPECIAL_CASE_MODEL_FOLDER_NAMES, type FolderInspection, type Violation, type ViolationSeverity } from './types.js';
+import { buildRequiredFiles, RESERVED_MODEL_FOLDERS, type FolderInspection, type ReservedModelFolder, type Violation, type ViolationSeverity } from './types.js';
 
 export function runRules(inspection: FolderInspection): readonly Violation[] {
   const violations: Violation[] = [];
@@ -26,11 +26,12 @@ export function runRules(inspection: FolderInspection): readonly Violation[] {
     });
     return violations;
   }
-  if (SPECIAL_CASE_MODEL_FOLDER_NAMES.includes(inspection.name)) {
+  const reserved = findReserved(inspection.name);
+  if (reserved) {
     pushViolation(violations, {
-      code: 'SPECIAL_CASE_MODEL_FOLDER',
+      code: 'RESERVED_MODEL_FOLDER',
       severity: 'warning',
-      message: `Folder \`${inspection.name}\` is a recognized special-case model folder and does not follow the canonical 5-file layout. Skipping structural validation — use the dedicated validator for this model group.`,
+      message: `Folder \`${inspection.name}\` is reserved and skipped by this tool. ${reserved.reason} Use \`${reserved.recommendedTool}\` instead.`,
       folder: inspection.path,
       file: undefined
     });
@@ -74,6 +75,15 @@ function checkStrayFiles(inspection: FolderInspection, violations: Violation[]):
 }
 
 // MARK: Helpers
+function findReserved(name: string): ReservedModelFolder | undefined {
+  for (const entry of RESERVED_MODEL_FOLDERS) {
+    if (entry.name === name) {
+      return entry;
+    }
+  }
+  return undefined;
+}
+
 function pushViolation(buffer: Violation[], violation: Omit<Violation, 'severity'> & { readonly severity?: ViolationSeverity }): void {
   const severity: ViolationSeverity = violation.severity ?? 'error';
   const filled: Violation = {
