@@ -7,12 +7,14 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { getForgeFields, getForgeField, getForgeFieldsByProduces, getForgeFieldsByTier, getForgeProducesCatalog, FORGE_TIER_ORDER, type ForgeTier } from '../registry/index.js';
+import { getForgeFields, getForgeField, getForgeFieldsByProduces, getForgeFieldsByTier, getForgeFieldsByArrayOutput, getForgeProducesCatalog, FORGE_TIER_ORDER, type ForgeTier, type ForgeArrayOutput } from '../registry/index.js';
 
 const FORGE_FIELDS_URI = 'dbx://forge-fields';
 const FORGE_FIELD_TEMPLATE = 'dbx://forge-fields/{slug}';
 const FORGE_FIELDS_BY_PRODUCES_TEMPLATE = 'dbx://forge-fields/produces/{produces}';
 const FORGE_FIELDS_BY_TIER_TEMPLATE = 'dbx://forge-fields/tier/{tier}';
+const FORGE_FIELDS_BY_ARRAY_OUTPUT_TEMPLATE = 'dbx://forge-fields/array-output/{arrayOutput}';
+const ARRAY_OUTPUT_VALUES: readonly ForgeArrayOutput[] = ['yes', 'no', 'optional'];
 
 export function registerForgeFieldsResource(server: McpServer): void {
   server.registerResource(
@@ -147,6 +149,40 @@ export function registerForgeFieldsResource(server: McpServer): void {
       } else {
         const entries = getForgeFieldsByTier(tier);
         text = JSON.stringify({ tier, fields: entries }, null, 2);
+      }
+
+      const result = {
+        contents: [
+          {
+            uri: uri.href,
+            mimeType: valid ? 'application/json' : 'text/plain',
+            text
+          }
+        ]
+      };
+      return result;
+    }
+  );
+
+  server.registerResource(
+    'dbx-components Forge Fields by Array Output',
+    new ResourceTemplate(FORGE_FIELDS_BY_ARRAY_OUTPUT_TEMPLATE, { list: undefined }),
+    {
+      title: 'Forge Fields by Array Output',
+      description: "Forge entries filtered by whether their output is an array ('yes'), single value ('no'), or configurable ('optional').",
+      mimeType: 'application/json'
+    },
+    async (uri, variables) => {
+      const value = variables.arrayOutput;
+      const arrayOutput = (Array.isArray(value) ? value[0] : value) as ForgeArrayOutput | undefined;
+
+      const valid = arrayOutput && ARRAY_OUTPUT_VALUES.includes(arrayOutput);
+      let text: string;
+      if (!valid) {
+        text = `Invalid arrayOutput value. Valid values: ${ARRAY_OUTPUT_VALUES.join(', ')}`;
+      } else {
+        const entries = getForgeFieldsByArrayOutput(arrayOutput);
+        text = JSON.stringify({ arrayOutput, fields: entries }, null, 2);
       }
 
       const result = {

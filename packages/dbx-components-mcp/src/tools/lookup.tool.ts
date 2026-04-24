@@ -11,12 +11,12 @@
  * {@link parseLookupArgs} using arktype.
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { CallToolRequestSchema, ListToolsRequestSchema, type Tool } from '@modelcontextprotocol/sdk/types.js';
+import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
 import { FORGE_FIELDS, FORGE_TIER_ORDER, getForgeField, getForgeFieldsByProduces, getForgeFieldsByTier, getForgeProducesCatalog, type ForgeFieldInfo, type ForgeTier } from '../registry/index.js';
 import { resolveTopicAlias } from './alias-resolver.js';
 import { formatForgeFieldEntry, formatForgeFieldGroup } from './forge-lookup.formatter.js';
+import { toolError, type DbxTool, type ToolResult } from './types.js';
 
 // MARK: Tool registry
 /**
@@ -199,23 +199,18 @@ function formatNotFound(normalized: string, candidates: readonly ForgeFieldInfo[
 }
 
 // MARK: Handler
-interface LookupResult {
-  readonly content: readonly { readonly type: 'text'; readonly text: string }[];
-  readonly isError?: boolean;
-}
-
 /**
- * Executes a lookup against the forge registry and returns a CallToolResult.
+ * Executes a lookup against the forge registry and returns a ToolResult.
  * Exported separately so it can be tested without spinning up the full MCP
  * transport.
  */
-export function runLookup(rawArgs: unknown): LookupResult {
+export function runLookup(rawArgs: unknown): ToolResult {
   let args: { readonly topic: string; readonly depth: 'brief' | 'full' };
   try {
     args = parseLookupArgs(rawArgs);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    return { content: [{ type: 'text', text: message }], isError: true };
+    return toolError(message);
   }
 
   const match = resolveTopic(args.topic);
@@ -235,35 +230,11 @@ export function runLookup(rawArgs: unknown): LookupResult {
       break;
   }
 
-  const result: LookupResult = { content: [{ type: 'text', text }] };
+  const result: ToolResult = { content: [{ type: 'text', text }] };
   return result;
 }
 
-// MARK: Registration
-/**
- * Wires the lookup tool into the server via low-level request handlers.
- *
- * Registers a single `tools/list` handler (returning only `dbx_lookup` for now
- * — phase 2d/e will add more tools) and a single `tools/call` dispatcher that
- * routes by name. Calling this multiple times re-registers both handlers, so
- * prefer invoking it from `registerTools()` exactly once.
- */
-export function registerLookupTool(server: McpServer): void {
-  const underlyingServer = server.server;
-
-  underlyingServer.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: [DBX_LOOKUP_TOOL]
-  }));
-
-  underlyingServer.setRequestHandler(CallToolRequestSchema, async (request) => {
-    const { name, arguments: toolArgs } = request.params;
-    if (name === DBX_LOOKUP_TOOL.name) {
-      const result = runLookup(toolArgs);
-      return result;
-    }
-    return {
-      content: [{ type: 'text', text: `Unknown tool: ${name}` }],
-      isError: true
-    };
-  });
-}
+export const lookupTool: DbxTool = {
+  definition: DBX_LOOKUP_TOOL,
+  run: runLookup
+};
