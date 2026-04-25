@@ -1,17 +1,17 @@
 /**
- * `dbx_search` tool.
+ * `dbx_form_search` tool.
  *
- * Returns ranked matches across the forge registry. Unlike `dbx_lookup` —
+ * Returns ranked matches across the forge registry. Unlike `dbx_form_lookup` —
  * which resolves exactly one topic to a single entry, a tier group, or a
  * produces group — search is deliberately ranked and many-result: give it a
  * keyword (or several space-separated keywords) and it returns the top-N
- * entries scored by where the match landed (slug > factory name > produces >
- * tier > config property names > description).
+ * forge entries scored by where the match landed (slug > factory name >
+ * produces > tier > config property names > description).
  */
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { FIREBASE_MODELS, FORGE_FIELDS, type FirebaseModel, type ForgeFieldInfo } from '../registry/index.js';
+import { FORGE_FIELDS, type ForgeFieldInfo } from '../registry/index.js';
 import { resolveTopicAlias } from './alias-resolver.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 
@@ -19,18 +19,11 @@ const DEFAULT_LIMIT = 10;
 const MAX_LIMIT = 25;
 
 // MARK: Tool advertisement
-const DBX_SEARCH_TOOL: Tool = {
-  name: 'dbx_search',
-  description: [
-    'Search the @dereekb/dbx-form forge registry AND the @dereekb/firebase models registry by keyword(s). Returns ranked candidates — pick one, then call `dbx_lookup` with the slug/name or `dbx_decode` to work with a Firestore document.',
-    '',
-    'Query strategy:',
-    '  • Space-separated tokens are ANDed (every token must contribute at least some score).',
-    '  • Forge aliases resolve (e.g. "datepicker" is treated as "date").',
-    '  • Results cover both forge entries (field factories / composites / primitives) and Firebase models (identity, fields, enums).',
-    '',
-    "Use `dbx_lookup` when you already know which slug/model you want. Use `dbx_search` to discover candidates you don't yet know about."
-  ].join('\n'),
+const DBX_FORM_SEARCH_TOOL: Tool = {
+  name: 'dbx_form_search',
+  description: ['Search the @dereekb/dbx-form forge registry by keyword(s). Returns ranked candidates — pick one, then call `dbx_form_lookup` with the slug/name.', '', 'Query strategy:', '  • Space-separated tokens are ANDed (every token must contribute at least some score).', '  • Forge aliases resolve (e.g. "datepicker" is treated as "date").', '', "Use `dbx_form_lookup` when you already know which slug you want. Use `dbx_form_search` to discover candidates you don't yet know about."].join(
+    '\n'
+  ),
   inputSchema: {
     type: 'object',
     properties: {
@@ -73,18 +66,8 @@ function parseSearchArgs(raw: unknown): ParsedSearchArgs {
 }
 
 // MARK: Scoring
-type SearchHit = ForgeSearchHit | FirebaseSearchHit;
-
 interface ForgeSearchHit {
-  readonly kind: 'forge';
   readonly field: ForgeFieldInfo;
-  readonly score: number;
-  readonly matchedTokens: readonly string[];
-}
-
-interface FirebaseSearchHit {
-  readonly kind: 'firebase';
-  readonly model: FirebaseModel;
   readonly score: number;
   readonly matchedTokens: readonly string[];
 }
@@ -178,64 +161,11 @@ function scoreFieldAgainstToken(field: ForgeFieldInfo, token: string): number {
   return score;
 }
 
-/**
- * Scores a Firebase model against a single token.
- *
- * Weights mirror the forge scorer so cross-domain results rank fairly. Most
- * signal comes from the model name, identity, and prefix — falling through to
- * field names and enum names for more speculative matches.
- */
-function scoreFirebaseModelAgainstToken(model: FirebaseModel, token: string): number {
-  const name = model.name.toLowerCase();
-  const identity = model.identityConst.toLowerCase();
-  const modelType = model.modelType.toLowerCase();
-  const prefix = model.collectionPrefix.toLowerCase();
-
-  let score = 0;
-  if (name === token) {
-    score += 20;
-  } else if (name.startsWith(token)) {
-    score += 14;
-  } else if (name.includes(token)) {
-    score += 8;
-  }
-  if (identity === token) {
-    score += 12;
-  } else if (identity.includes(token)) {
-    score += 6;
-  }
-  if (modelType === token) {
-    score += 10;
-  } else if (modelType.includes(token)) {
-    score += 4;
-  }
-  if (prefix === token) {
-    score += 10;
-  }
-  for (const field of model.fields) {
-    if (field.name.toLowerCase() === token) {
-      score += 3;
-      break;
-    }
-  }
-  for (const en of model.enums) {
-    if (en.name.toLowerCase() === token) {
-      score += 5;
-      break;
-    }
-    if (en.name.toLowerCase().includes(token)) {
-      score += 2;
-      break;
-    }
-  }
-  return score;
-}
-
-function searchRegistry(tokens: readonly QueryToken[], limit: number): readonly SearchHit[] {
+function searchRegistry(tokens: readonly QueryToken[], limit: number): readonly ForgeSearchHit[] {
   if (tokens.length === 0) {
     return [];
   }
-  const hits: SearchHit[] = [];
+  const hits: ForgeSearchHit[] = [];
   for (const field of FORGE_FIELDS) {
     const matched: string[] = [];
     let total = 0;
@@ -251,23 +181,7 @@ function searchRegistry(tokens: readonly QueryToken[], limit: number): readonly 
     // AND semantics: require every token to contribute SOMETHING, otherwise
     // single-word dominant hits would drown multi-word disambiguation.
     if (total > 0 && matched.length === tokens.length) {
-      hits.push({ kind: 'forge', field, score: total, matchedTokens: matched });
-    }
-  }
-  for (const model of FIREBASE_MODELS) {
-    const matched: string[] = [];
-    let total = 0;
-    for (const token of tokens) {
-      const rawScore = scoreFirebaseModelAgainstToken(model, token.raw);
-      const aliasScore = token.alias === token.raw ? 0 : scoreFirebaseModelAgainstToken(model, token.alias);
-      const score = Math.max(rawScore, aliasScore);
-      if (score > 0) {
-        total += score;
-        matched.push(token.display);
-      }
-    }
-    if (total > 0 && matched.length === tokens.length) {
-      hits.push({ kind: 'firebase', model, score: total, matchedTokens: matched });
+      hits.push({ field, score: total, matchedTokens: matched });
     }
   }
   hits.sort((a, b) => {
@@ -275,50 +189,32 @@ function searchRegistry(tokens: readonly QueryToken[], limit: number): readonly 
     if (byScore !== 0) {
       return byScore;
     }
-    const aKey = hitSortKey(a);
-    const bKey = hitSortKey(b);
-    return aKey.localeCompare(bKey);
+    return a.field.slug.localeCompare(b.field.slug);
   });
   const result = hits.slice(0, limit);
   return result;
 }
 
-function hitSortKey(hit: SearchHit): string {
-  return hit.kind === 'forge' ? `a:${hit.field.slug}` : `b:${hit.model.name}`;
-}
-
 // MARK: Formatting
-function formatSearchResults(query: string, tokens: readonly QueryToken[], hits: readonly SearchHit[]): string {
+function formatSearchResults(query: string, tokens: readonly QueryToken[], hits: readonly ForgeSearchHit[]): string {
   const tokenDisplay = tokens.map((t) => t.display).join(', ');
   if (hits.length === 0) {
-    const result = [`No results matched \`${query}\` (tokens: \`${tokenDisplay}\`).`, '', 'Try `dbx_lookup topic="list"` for the forge catalog, `dbx_lookup topic="models"` for the Firebase catalog, or a broader single-word query.'].join('\n');
+    const result = [`No forge entries matched \`${query}\` (tokens: \`${tokenDisplay}\`).`, '', 'Try `dbx_form_lookup topic="list"` for the forge catalog or a broader single-word query.'].join('\n');
     return result;
   }
   const lines: string[] = [`# Search: \`${query}\``, '', `Tokens: \`${tokenDisplay}\` · ${hits.length} result${hits.length === 1 ? '' : 's'}`, ''];
   for (const hit of hits) {
-    if (hit.kind === 'forge') {
-      const array = hit.field.arrayOutput === 'yes' ? ' *(array)*' : hit.field.arrayOutput === 'optional' ? ' *(single or array)*' : '';
-      lines.push(`## \`${hit.field.slug}\` · forge · score ${hit.score}`);
-      lines.push('');
-      lines.push(`- **factory:** \`${hit.field.factoryName}\``);
-      lines.push(`- **tier:** \`${hit.field.tier}\``);
-      lines.push(`- **produces:** \`${hit.field.produces}\`${array}`);
-      lines.push(`- **matched:** \`${hit.matchedTokens.join(', ')}\``);
-      lines.push('');
-      lines.push(hit.field.description);
-      lines.push('');
-      lines.push(`→ \`dbx_lookup topic="${hit.field.slug}"\` for full docs.`);
-    } else {
-      const parent = hit.model.parentIdentityConst ? ` · subcollection of \`${hit.model.parentIdentityConst}\`` : '';
-      lines.push(`## \`${hit.model.name}\` · firebase model · score ${hit.score}`);
-      lines.push('');
-      lines.push(`- **identity:** \`${hit.model.identityConst}\`${parent}`);
-      lines.push(`- **collection:** \`${hit.model.modelType}\` · prefix \`${hit.model.collectionPrefix}\``);
-      lines.push(`- **fields:** ${hit.model.fields.length}${hit.model.enums.length > 0 ? ` · **enums:** ${hit.model.enums.length}` : ''}`);
-      lines.push(`- **matched:** \`${hit.matchedTokens.join(', ')}\``);
-      lines.push('');
-      lines.push(`→ \`dbx_lookup topic="${hit.model.name}"\` for full docs, or \`dbx_decode\` to decode a raw document.`);
-    }
+    const array = hit.field.arrayOutput === 'yes' ? ' *(array)*' : hit.field.arrayOutput === 'optional' ? ' *(single or array)*' : '';
+    lines.push(`## \`${hit.field.slug}\` · forge · score ${hit.score}`);
+    lines.push('');
+    lines.push(`- **factory:** \`${hit.field.factoryName}\``);
+    lines.push(`- **tier:** \`${hit.field.tier}\``);
+    lines.push(`- **produces:** \`${hit.field.produces}\`${array}`);
+    lines.push(`- **matched:** \`${hit.matchedTokens.join(', ')}\``);
+    lines.push('');
+    lines.push(hit.field.description);
+    lines.push('');
+    lines.push(`→ \`dbx_form_lookup topic="${hit.field.slug}"\` for full docs.`);
     lines.push('');
   }
   const result = lines.join('\n').trimEnd();
@@ -326,7 +222,7 @@ function formatSearchResults(query: string, tokens: readonly QueryToken[], hits:
 }
 
 // MARK: Handler
-export function runSearch(rawArgs: unknown): ToolResult {
+export function runSearchForge(rawArgs: unknown): ToolResult {
   let args: ParsedSearchArgs;
   try {
     args = parseSearchArgs(rawArgs);
@@ -341,7 +237,7 @@ export function runSearch(rawArgs: unknown): ToolResult {
   return result;
 }
 
-export const searchTool: DbxTool = {
-  definition: DBX_SEARCH_TOOL,
-  run: runSearch
+export const searchForgeTool: DbxTool = {
+  definition: DBX_FORM_SEARCH_TOOL,
+  run: runSearchForge
 };
