@@ -103,3 +103,34 @@ describe('scaffoldArtifact — storagefile-purpose body', () => {
     expect(step.snippet ?? '').toContain('userPhotoFileInitializer');
   });
 });
+
+describe('scaffoldArtifact — notification-template body', () => {
+  it('emits component-side type + info + factory with the right tokens', () => {
+    const result = scaffoldArtifact(input('notification-template', 'guestbookLiked'));
+    const componentFile = result.files.find((f) => f.path.endsWith('notification.ts'));
+    expect(componentFile?.status).toBe('append');
+    const text = componentFile?.content ?? '';
+    expect(text).toContain('GUESTBOOK_LIKED_NOTIFICATION_TEMPLATE_TYPE');
+    expect(text).toContain('GUESTBOOK_LIKED_NOTIFICATION_TEMPLATE_TYPE_INFO');
+    expect(text).toContain('GuestbookLikedNotificationData');
+    expect(text).toContain('guestbookLikedNotificationTemplate');
+  });
+
+  it('emits an API-side factory that names the type-config function with the AppPascal prefix', () => {
+    const result = scaffoldArtifact(input('notification-template', 'guestbookLiked'));
+    const factory = result.files.find((f) => f.path.endsWith('notification.factory.ts'));
+    expect(factory?.status).toBe('append');
+    const text = factory?.content ?? '';
+    expect(text).toContain('demoGuestbookLikedNotificationFactory(_context: DemoFirebaseServerActionsContext)');
+    expect(text).toContain('GUESTBOOK_LIKED_NOTIFICATION_TEMPLATE_TYPE');
+  });
+
+  it('renders wiring instructions covering both the configs-array factory and the info-record aggregator', () => {
+    const result = scaffoldArtifact(input('notification-template', 'guestbookLiked'));
+    expect(result.wiring).toHaveLength(1);
+    const snippet = result.wiring[0].snippet ?? '';
+    expect(snippet).toContain('demoGuestbookLikedNotificationFactory(context)');
+    expect(snippet).toContain('GUESTBOOK_LIKED_NOTIFICATION_TEMPLATE_TYPE_INFO');
+    expect(snippet).toContain('notificationTemplateTypeInfoRecord');
+  });
+});

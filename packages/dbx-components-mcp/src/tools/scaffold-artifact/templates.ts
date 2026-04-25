@@ -58,6 +58,7 @@ export interface TemplateContext {
   readonly apiDir: string;
   readonly componentPackageName: string;
   readonly appPascal: string;
+  readonly appCamel: string;
   readonly contextTypeName: string;
   readonly contextVarName: string;
 }
@@ -82,6 +83,7 @@ export function buildTemplateContext(input: { readonly tokens: NameTokens; reado
     apiDir: input.apiDir,
     componentPackageName,
     appPascal,
+    appCamel,
     contextTypeName,
     contextVarName
   };
@@ -103,6 +105,7 @@ export function applyTokens(template: string, ctx: TemplateContext): string {
   result = result.split('<<ContextTypeName>>').join(ctx.contextTypeName);
   result = result.split('<<contextVarName>>').join(ctx.contextVarName);
   result = result.split('<<AppPascal>>').join(ctx.appPascal);
+  result = result.split('<<appCamel>>').join(ctx.appCamel);
   result = result.split('<<camel>>').join(ctx.tokens.camel);
   result = result.split('<<Pascal>>').join(ctx.tokens.pascal);
   result = result.split('<<SCREAMING>>').join(ctx.tokens.screaming);
@@ -240,4 +243,91 @@ const <<camel>>FileInitializer = make<<Pascal>>FileUploadInitializer(<<contextVa
 
 // Add to the existing initializer array:
 const userFileInitializers = [/* ... */, <<camel>>FileInitializer];
+`;
+
+// MARK: notification-template templates
+//
+// Modeled after demo's `EXAMPLE_NOTIFICATION_TEMPLATE_TYPE` block in
+// `components/demo-firebase/src/lib/model/notification/notification.ts` and
+// the `demoExampleNotificationFactory` in
+// `apps/demo-api/src/app/common/model/notification/notification.factory.ts`.
+
+export const NOTIFICATION_TEMPLATE_COMPONENT_TEMPLATE = `// MARK: <<Pascal>> Notification
+export const <<SCREAMING>>_NOTIFICATION_TEMPLATE_TYPE: NotificationTemplateType = '<<SCREAMING>>'; // TODO: shorten to a stable abbreviation if needed
+
+export const <<SCREAMING>>_NOTIFICATION_TEMPLATE_TYPE_INFO: NotificationTemplateTypeInfo = {
+  type: <<SCREAMING>>_NOTIFICATION_TEMPLATE_TYPE,
+  name: '<<Pascal>>',
+  description: 'TODO: describe the <<Pascal>> notification.',
+  notificationModelIdentity: profileIdentity // TODO: replace with the model identity this notification targets
+};
+
+export interface <<Pascal>>NotificationData {
+  readonly uid: FirebaseAuthUserId;
+  // TODO: add notification-specific fields
+}
+
+export interface <<Pascal>>NotificationInput extends Omit<<<Pascal>>NotificationData, 'uid'> {
+  readonly profileDocument: ProfileDocument;
+}
+
+/**
+ * Creates a notification template for the <<Pascal>> notification type.
+ */
+export function <<camel>>NotificationTemplate(input: <<Pascal>>NotificationInput): CreateNotificationTemplate {
+  const { profileDocument } = input;
+  const uid = profileDocument.id;
+
+  return createNotificationTemplate({
+    type: <<SCREAMING>>_NOTIFICATION_TEMPLATE_TYPE,
+    notificationModel: profileDocument,
+    targetModel: profileDocument,
+    data: { uid }
+  });
+}
+`;
+
+export const NOTIFICATION_TEMPLATE_FACTORY_TEMPLATE = `/**
+ * Creates a notification template config for <<Pascal>> notifications.
+ */
+export function <<appCamel>><<Pascal>>NotificationFactory(_context: <<ContextTypeName>>): NotificationTemplateServiceTypeConfig {
+  return {
+    type: <<SCREAMING>>_NOTIFICATION_TEMPLATE_TYPE,
+    factory: async (config: NotificationMessageFunctionFactoryConfig<<<Pascal>>NotificationData>) => {
+      const { item } = config;
+
+      return notificationMessageFunction(async (inputContext: NotificationMessageInputContext) => {
+        const content: NotificationMessageContent = {
+          title: '<<Pascal>>',
+          openingMessage: 'TODO: write the opening message.',
+          action: 'View',
+          actionUrl: '' // TODO: build action URL from item.m
+        };
+
+        const result: NotificationMessage = {
+          inputContext,
+          item,
+          content
+        };
+
+        return result;
+      });
+    }
+  };
+}
+`;
+
+export const NOTIFICATION_TEMPLATE_WIRING_SNIPPET = `// 1. Import in notification.factory.ts:
+import { <<SCREAMING>>_NOTIFICATION_TEMPLATE_TYPE, type <<Pascal>>NotificationData } from '<<componentPackageName>>';
+
+// 2. Add the new factory call to the configs-array factory return list:
+export const <<camel>>NotificationTemplateServiceConfigsArrayFactory = (context: <<ContextTypeName>>) => {
+  return [/* existing factories */, <<appCamel>><<Pascal>>NotificationFactory(context)];
+};
+
+// 3. Register the info constant in the aggregator (notification.ts):
+export const <<componentPackageName>>NotificationTemplateTypeInfoRecord = notificationTemplateTypeInfoRecord([
+  /* existing infos */,
+  <<SCREAMING>>_NOTIFICATION_TEMPLATE_TYPE_INFO
+]);
 `;
