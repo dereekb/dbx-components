@@ -1,5 +1,5 @@
 /**
- * `dbx_validate_system_folder` tool.
+ * `dbx_system_model_validate_folder` tool.
  *
  * Validates that one or more `system/` model folders follow the
  * downstream convention. At the folder level: `system.ts` and `index.ts`
@@ -26,11 +26,11 @@ import { resolve, sep } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { formatResult, inspectFolder, validateSystemFolders, type SystemFolderInspection } from './validate-system-folder/index.js';
+import { formatResult, inspectFolder, validateSystemFolders, type SystemFolderInspection } from './system-model-validate-folder/index.js';
 
 // MARK: Tool definition
-const DBX_VALIDATE_SYSTEM_FOLDER_TOOL: Tool = {
-  name: 'dbx_validate_system_folder',
+const DBX_SYSTEM_MODEL_VALIDATE_FOLDER_TOOL: Tool = {
+  name: 'dbx_system_model_validate_folder',
   description: [
     'Validate that one or more `system/` model folders follow the downstream convention. Each folder must contain `system.ts` and `index.ts` at minimum; `system.action.ts` and `system.api.ts` are optional; `system.id.ts` and `system.query.ts` are disallowed.',
     '',
@@ -134,7 +134,7 @@ async function buildInspections(paths: readonly string[], cwd: string): Promise<
 }
 
 // MARK: Handler
-export async function runValidateSystemFolder(rawArgs: unknown): Promise<ToolResult> {
+export async function runSystemModelValidateFolder(rawArgs: unknown): Promise<ToolResult> {
   let args: ParsedArgs;
   try {
     args = parseArgs(rawArgs);
@@ -177,7 +177,7 @@ export async function runValidateSystemFolder(rawArgs: unknown): Promise<ToolRes
   return result;
 }
 
-export const validateSystemFolderTool: DbxTool = {
-  definition: DBX_VALIDATE_SYSTEM_FOLDER_TOOL,
-  run: runValidateSystemFolder
+export const systemModelValidateFolderTool: DbxTool = {
+  definition: DBX_SYSTEM_MODEL_VALIDATE_FOLDER_TOOL,
+  run: runSystemModelValidateFolder
 };

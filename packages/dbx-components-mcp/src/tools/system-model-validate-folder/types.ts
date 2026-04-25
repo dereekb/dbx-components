@@ -1,5 +1,5 @@
 /**
- * Shared types for the `dbx_validate_system_folder` validator.
+ * Shared types for the `dbx_system_model_validate_folder` validator.
  *
  * The validator takes one or more folder paths and asserts that each is a
  * downstream `system/` model folder following the project convention:

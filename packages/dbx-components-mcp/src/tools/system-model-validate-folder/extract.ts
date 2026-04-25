@@ -1,5 +1,5 @@
 /**
- * AST extraction for `dbx_validate_system_folder`.
+ * AST extraction for `dbx_system_model_validate_folder`.
  *
  * Parses a `system.ts` source with ts-morph and emits a normalized
  * {@link ExtractedSystemFile}. No type resolution is needed for

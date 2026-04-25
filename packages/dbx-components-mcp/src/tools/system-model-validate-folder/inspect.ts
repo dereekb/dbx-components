@@ -1,5 +1,5 @@
 /**
- * Filesystem inspection for `dbx_validate_system_folder`.
+ * Filesystem inspection for `dbx_system_model_validate_folder`.
  *
  * Resolves a folder path, stats it, lists its direct `.ts` children, and
  * reads `system.ts` when present into a {@link SystemFolderInspection}.

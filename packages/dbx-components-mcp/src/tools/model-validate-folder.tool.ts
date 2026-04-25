@@ -10,7 +10,7 @@
  * Reserved folder names — `system/`, `notification/`, `storagefile/` —
  * emit a warning naming the dedicated validator to use instead and
  * skip structural checks. `system/` is covered by
- * `dbx_validate_system_folder`; `notification/` and `storagefile/` are
+ * `dbx_system_model_validate_folder`; `notification/` and `storagefile/` are
  * imported from `@dereekb/firebase` and downstream folders extend the
  * canonical group rather than redeclaring it.
  *
