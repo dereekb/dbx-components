@@ -30,6 +30,9 @@ export function formatResult(result: ValidationResult): string {
     }
   }
 
+  lines.push('');
+  lines.push("_Run `dbx_file_convention` with the relevant artifact (e.g. `{artifact: 'storagefile-purpose'}`, `'storagefile-upload-handler'`, `'storagefile-processor'`, `'storagefile-processor-subtask'`) to see canonical paths and wiring for missing pieces._");
+
   return lines.join('\n');
 }
 

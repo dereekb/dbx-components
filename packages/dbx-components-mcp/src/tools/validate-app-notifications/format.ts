@@ -30,6 +30,9 @@ export function formatResult(result: ValidationResult): string {
     }
   }
 
+  lines.push('');
+  lines.push("_Run `dbx_file_convention` with `{artifact: 'notification-template'}` or `{artifact: 'notification-task'}` to see canonical paths and wiring for missing pieces._");
+
   return lines.join('\n');
 }
 
