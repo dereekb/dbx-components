@@ -1,5 +1,5 @@
 /**
- * Formatter for `dbx_decode`.
+ * Formatter for `dbx_model_decode`.
  *
  * Turns a registry-matched {@link FirebaseModel} plus the raw Firestore
  * document into a markdown explanation suitable for AI clients — field

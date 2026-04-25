@@ -1,5 +1,5 @@
 /**
- * Markdown formatters for forge registry entries. The `dbx_lookup` tool calls
+ * Markdown formatters for forge registry entries. The `dbx_form_lookup` tool calls
  * these to produce human-readable output that LLMs can pass through verbatim.
  *
  * Two depths:

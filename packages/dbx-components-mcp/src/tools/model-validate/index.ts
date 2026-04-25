@@ -2,7 +2,7 @@
  * Pure entry point for the firebase-model validator. Callers pass one or
  * more {@link ValidatorSource} records (name + text) and receive a
  * {@link ValidationResult}. The MCP tool in
- * `../validate-firebase-model.tool.ts` wraps this with file/glob I/O.
+ * `../model-validate.tool.ts` wraps this with file/glob I/O.
  */
 
 import { extractFile } from './extract.js';

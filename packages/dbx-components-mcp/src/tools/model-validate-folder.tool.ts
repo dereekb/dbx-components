@@ -1,5 +1,5 @@
 /**
- * `dbx_validate_model_folder` tool.
+ * `dbx_model_validate_folder` tool.
  *
  * Validates that one or more model folders follow the canonical layout:
  * every folder must contain `<name>.ts`, `<name>.id.ts`,
@@ -25,11 +25,11 @@ import { resolve, sep } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { formatResult, inspectFolder, validateModelFolders, type FolderInspection } from './validate-model-folder/index.js';
+import { formatResult, inspectFolder, validateModelFolders, type FolderInspection } from './model-validate-folder/index.js';
 
 // MARK: Tool definition
-const DBX_VALIDATE_MODEL_FOLDER_TOOL: Tool = {
-  name: 'dbx_validate_model_folder',
+const DBX_MODEL_VALIDATE_FOLDER_TOOL: Tool = {
+  name: 'dbx_model_validate_folder',
   description: [
     'Validate that one or more model folders follow the canonical layout. Each folder named `<name>/` must contain `<name>.ts`, `<name>.id.ts`, `<name>.query.ts`, `<name>.action.ts`, `<name>.api.ts`, and `index.ts`. Missing files are hard errors.',
     '',
@@ -129,7 +129,7 @@ async function buildInspections(paths: readonly string[], cwd: string): Promise<
 }
 
 // MARK: Handler
-export async function runValidateModelFolder(rawArgs: unknown): Promise<ToolResult> {
+export async function runModelValidateFolder(rawArgs: unknown): Promise<ToolResult> {
   let args: ParsedArgs;
   try {
     args = parseArgs(rawArgs);
@@ -172,7 +172,7 @@ export async function runValidateModelFolder(rawArgs: unknown): Promise<ToolResu
   return result;
 }
 
-export const validateModelFolderTool: DbxTool = {
-  definition: DBX_VALIDATE_MODEL_FOLDER_TOOL,
-  run: runValidateModelFolder
+export const modelValidateFolderTool: DbxTool = {
+  definition: DBX_MODEL_VALIDATE_FOLDER_TOOL,
+  run: runModelValidateFolder
 };

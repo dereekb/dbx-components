@@ -24,7 +24,7 @@ export function runRules(file: ExtractedFile): readonly Violation[] {
   }
   if (!file.factoryCallSeen) {
     // Not a CRUD model-api file. Skip silently, mirroring the
-    // validate-firebase-model behavior for non-model files.
+    // model-validate behavior for non-model files.
     return violations;
   }
   checkRequiredExports(file, violations);

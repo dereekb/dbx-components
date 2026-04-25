@@ -1,9 +1,9 @@
 /**
- * Curated dbx-form forge compositions used by the `dbx_examples` tool.
+ * Curated dbx-form forge compositions used by the `dbx_form_examples` tool.
  *
  * Each entry shows how to compose multiple forge entries into a complete,
  * copy-paste-ready `FormConfig`. The per-field registry already surfaces
- * minimal single-field examples via `dbx_lookup` — PATTERNS is deliberately
+ * minimal single-field examples via `dbx_form_lookup` — PATTERNS is deliberately
  * about MULTI-field compositions that answer "how do I build a ___ form?"
  *
  * Authored prose, not generated — keep entries tight and grounded in working
@@ -13,7 +13,7 @@
 export type ExampleDepth = 'minimal' | 'brief' | 'full';
 
 export interface ExamplePattern {
-  /** Slug used as the pattern key and in `dbx_examples pattern="..."` calls. */
+  /** Slug used as the pattern key and in `dbx_form_examples pattern="..."` calls. */
   readonly slug: string;
   /** Short display name. */
   readonly name: string;

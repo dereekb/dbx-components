@@ -1,21 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import { runDecode } from './decode.tool.js';
+import { runModelDecode } from './model-decode.tool.js';
 
-describe('dbx_decode', () => {
+describe('dbx_model_decode', () => {
   it('returns isError when required `data` is missing', () => {
-    const result = runDecode({});
+    const result = runModelDecode({});
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('Invalid arguments');
   });
 
   it('returns isError when `data` is a non-JSON string', () => {
-    const result = runDecode({ data: 'not json at all {' });
+    const result = runModelDecode({ data: 'not json at all {' });
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('not valid JSON');
   });
 
   it('returns isError when parsed data is an array rather than an object', () => {
-    const result = runDecode({ data: '[1, 2, 3]' });
+    const result = runModelDecode({ data: '[1, 2, 3]' });
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('must be a JSON object');
   });
@@ -33,7 +33,7 @@ describe('dbx_decode', () => {
       o: 'pr/abc123',
       g: ['wk_abc123']
     };
-    const result = runDecode({ data: doc, model: 'StorageFile' });
+    const result = runModelDecode({ data: doc, model: 'StorageFile' });
     expect(result.isError).toBeFalsy();
     const text = result.content[0].text;
     expect(text).toContain('# StorageFile');
@@ -53,7 +53,7 @@ describe('dbx_decode', () => {
       ps: 0,
       g: []
     };
-    const result = runDecode({ data: doc });
+    const result = runModelDecode({ data: doc });
     expect(result.isError).toBeFalsy();
     expect(result.content[0].text).toContain('# StorageFile');
     expect(result.content[0].text).toContain('_Model detected from document key prefix._');
@@ -66,7 +66,7 @@ describe('dbx_decode', () => {
       fs: 1,
       ps: 0
     };
-    const result = runDecode({ data: doc });
+    const result = runModelDecode({ data: doc });
     expect(result.isError).toBeFalsy();
     expect(result.content[0].text).toContain('# StorageFile');
     expect(result.content[0].text).toMatch(/Model detected by field-name match/);
@@ -74,7 +74,7 @@ describe('dbx_decode', () => {
 
   it('parses a JSON string input', () => {
     const doc = { key: 'sf/x', bucketId: 'b', pathString: 'p', fs: 2, ps: 0, g: [] };
-    const result = runDecode({ data: JSON.stringify(doc) });
+    const result = runModelDecode({ data: JSON.stringify(doc) });
     expect(result.isError).toBeFalsy();
     expect(result.content[0].text).toContain('# StorageFile');
   });
@@ -88,14 +88,14 @@ describe('dbx_decode', () => {
       g: [],
       o: 'nb/abc123'
     };
-    const result = runDecode({ data: doc, model: 'StorageFile' });
+    const result = runModelDecode({ data: doc, model: 'StorageFile' });
     expect(result.content[0].text).toContain('## Detected relationships');
     expect(result.content[0].text).toContain('NotificationBox');
     expect(result.content[0].text).toContain('prefix `nb`');
   });
 
   it('falls back to a guidance message when no model matches the hint', () => {
-    const result = runDecode({ data: { unknown: 1 }, model: 'ThereIsNoSuchModel' });
+    const result = runModelDecode({ data: { unknown: 1 }, model: 'ThereIsNoSuchModel' });
     expect(result.isError).toBeFalsy();
     expect(result.content[0].text).toContain(`No Firebase model matched hint 'ThereIsNoSuchModel'`);
     expect(result.content[0].text).toContain('Known models:');
@@ -103,7 +103,7 @@ describe('dbx_decode', () => {
 
   it('flags unknown fields that are on the document but not the registry', () => {
     const doc = { bucketId: 'b', pathString: 'p', fs: 2, ps: 0, g: [], brandNewField: true };
-    const result = runDecode({ data: doc, model: 'StorageFile' });
+    const result = runModelDecode({ data: doc, model: 'StorageFile' });
     expect(result.content[0].text).toContain('## Unknown keys on document');
     expect(result.content[0].text).toContain('brandNewField');
   });

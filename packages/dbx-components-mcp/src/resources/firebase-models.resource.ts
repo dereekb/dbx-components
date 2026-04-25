@@ -3,7 +3,7 @@
  *
  * Exposes the firebase-models registry as read-only resources for clients
  * that prefer browsing registry data over calling tools. Companion to
- * `dbx_decode` which consumes the same registry.
+ * `dbx_model_decode` which consumes the same registry.
  */
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';

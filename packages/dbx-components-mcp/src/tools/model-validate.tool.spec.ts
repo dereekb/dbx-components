@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { runValidateFirebaseModel } from './validate-firebase-model.tool.js';
+import { runModelValidate } from './model-validate.tool.js';
 
-describe('dbx_validate_firebase_model', () => {
+describe('dbx_model_validate', () => {
   it('returns isError when no input form is supplied', async () => {
-    const result = await runValidateFirebaseModel({});
+    const result = await runModelValidate({});
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('at least one of');
   });
 
   it('returns isError for malformed sources payload', async () => {
-    const result = await runValidateFirebaseModel({ sources: [{ name: 'x.ts' }] });
+    const result = await runModelValidate({ sources: [{ name: 'x.ts' }] });
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('Invalid arguments');
   });
@@ -44,7 +44,7 @@ export function fooFirestoreCollection(firestoreContext: FirestoreContext): FooF
   return firestoreContext.firestoreCollection({ modelIdentity: fooIdentity, converter: fooConverter, collection: fooCollectionReference(firestoreContext), makeDocument: (a, b) => new FooDocument(a, b), firestoreContext });
 }
 `;
-    const result = await runValidateFirebaseModel({ sources: [{ name: 'foo.ts', text }] });
+    const result = await runModelValidate({ sources: [{ name: 'foo.ts', text }] });
     expect(result.isError).toBeFalsy();
     expect(result.content[0].text).toContain('PASS');
     expect(result.content[0].text).toContain('1 model(s)');
@@ -55,7 +55,7 @@ export function fooFirestoreCollection(firestoreContext: FirestoreContext): FooF
 export const fooIdentity = firestoreModelIdentity('foo', 'fo');
 export interface Foo { n: string; }
 `;
-    const result = await runValidateFirebaseModel({ sources: [{ name: 'foo.ts', text }] });
+    const result = await runModelValidate({ sources: [{ name: 'foo.ts', text }] });
     expect(result.isError).toBe(true);
     const output = result.content[0].text;
     expect(output).toContain('FAIL');
@@ -77,7 +77,7 @@ export function fooCollectionReference(context: FirestoreContext): CollectionRef
 export type FooFirestoreCollection = FirestoreCollection<Foo, FooDocument>;
 export function fooFirestoreCollection(firestoreContext: FirestoreContext): FooFirestoreCollection { return firestoreContext.firestoreCollection({ modelIdentity: fooIdentity, converter: fooConverter, collection: fooCollectionReference(firestoreContext), makeDocument: (a, b) => new FooDocument(a, b), firestoreContext }); }
 `;
-    const result = await runValidateFirebaseModel({ sources: [{ name: 'foo.ts', text }] });
+    const result = await runModelValidate({ sources: [{ name: 'foo.ts', text }] });
     expect(result.isError).toBeFalsy();
     expect(result.content[0].text).toContain('PASS WITH WARNINGS');
     expect(result.content[0].text).toContain('MODEL_FIELD_NAME_TOO_LONG');

@@ -1,23 +1,20 @@
 /**
- * `dbx_validate_model_api` tool.
+ * `dbx_model_validate` tool.
  *
- * Validates that a `<model>.api.ts` file follows the workspace's CRUD
- * model-api convention: one or more exported `*Params` / `*Result`
- * interfaces paired with Arktype validators, followed by the Functions
- * block — `<Group>FunctionTypeMap`, `<group>FunctionTypeConfigMap`,
- * `<Group>ModelCrudFunctionsConfig` (type + const), `<group>FunctionMap`,
- * and the `<Group>Functions` abstract class.
+ * Validates that a @dereekb/firebase model file follows the workspace's
+ * model-group convention: a `<Group>FirestoreCollections` interface and
+ * `<Group>Types` union declared before the first model, and each model
+ * anchored on a `firestoreModelIdentity(...)` call with the canonical
+ * ordered set of declarations (identity, interface, roles, document class,
+ * converter, reference fn, collection type, collection fn — plus the
+ * single-item factory and collection-group triple for subcollections).
  *
  * Accepts three interchangeable input forms (at least one required):
  *   - `sources`: `{ name, text }[]` — file contents supplied by the caller.
  *   - `paths`: relative file paths resolved against cwd.
  *   - `glob`: a single glob pattern expanded via `node:fs/promises` (Node 24+).
  *
- * Returns a markdown report with all violations grouped by file and model
- * group. Hard errors fail the tool call; warnings flag convention
- * deviations (ordering, readonly fields, `Maybe<T>` without
- * `clearable(...)`, missing `[Params, Result]` tuple form, missing
- * `// MARK:` markers).
+ * Returns a markdown report with all violations grouped by file and model.
  */
 
 import { glob as fsGlob, readFile } from 'node:fs/promises';
@@ -25,22 +22,18 @@ import { resolve, sep } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { formatResult, validateModelApiSources, type ValidatorSource } from './validate-model-api/index.js';
+import { formatResult, validateFirebaseModelSources, type ValidatorSource } from './model-validate/index.js';
 
 // MARK: Tool definition
-const DBX_VALIDATE_MODEL_API_TOOL: Tool = {
-  name: 'dbx_validate_model_api',
+const DBX_MODEL_VALIDATE_TOOL: Tool = {
+  name: 'dbx_model_validate',
   description: [
-    'Validate a `<model>.api.ts` file against the workspace CRUD model-api convention. Checks that every `*Params` interface has a matching `*ParamsType` Arktype validator (with the correct `as Type<...>` cast), and that the Functions block at the bottom declares the six required exports in the canonical order: `<Group>FunctionTypeMap` → `<group>FunctionTypeConfigMap` → `<Group>ModelCrudFunctionsConfig` → `<group>ModelCrudFunctionsConfig` → `<group>FunctionMap` → `<Group>Functions` abstract class.',
-    '',
-    'Warnings cover: readonly fields, `Maybe<T>` fields without `clearable(...)` in the validator, missing `[Params, Result]` tuple form in the CRUD config when a matching `*Result` interface exists, missing `// MARK: Constants/Keys/Functions` section markers, validators not adjacent to their paired interfaces, and declarations appearing after the Functions block.',
-    '',
-    'Files whose basename is conventionally non-CRUD (e.g. `development.api.ts`) emit a tool-level warning and skip structural validation. Files without a `callModelFirebaseFunctionMapFactory(...)` call are skipped silently.',
+    'Validate a @dereekb/firebase model file against the workspace model-group convention. Checks that the file exports a `<Group>FirestoreCollections` interface and `<Group>Types` union, and that every `firestoreModelIdentity(...)` has the canonical declarations in order (interface, roles, document class, converter, collection reference fn, collection type, collection fn) — plus the factory-type + collection-group triple for subcollections. All reported issues are hard errors.',
     '',
     'Provide at least one of:',
     '- `sources`: array of `{ name, text }` — file contents supplied directly.',
     '- `paths`: array of file paths (relative to the server cwd).',
-    '- `glob`: a glob pattern resolved against the server cwd (e.g. `packages/foo/src/lib/model/**/*.api.ts`).',
+    '- `glob`: a glob pattern resolved against the server cwd (e.g. `packages/foo/src/lib/model/**/*.ts`).',
     '',
     'Paths escaping the cwd are rejected.'
   ].join('\n'),
@@ -139,7 +132,7 @@ async function resolveSources(args: ParsedArgs, cwd: string): Promise<readonly V
 }
 
 // MARK: Handler
-export async function runValidateModelApi(rawArgs: unknown): Promise<ToolResult> {
+export async function runModelValidate(rawArgs: unknown): Promise<ToolResult> {
   let args: ParsedArgs;
   try {
     args = parseArgs(rawArgs);
@@ -165,7 +158,7 @@ export async function runValidateModelApi(rawArgs: unknown): Promise<ToolResult>
     return toolError('No matching source files found.');
   }
 
-  const validation = validateModelApiSources(sources);
+  const validation = validateFirebaseModelSources(sources);
   const text = formatResult(validation);
   const result: ToolResult = {
     content: [{ type: 'text', text }],
@@ -174,7 +167,7 @@ export async function runValidateModelApi(rawArgs: unknown): Promise<ToolResult>
   return result;
 }
 
-export const validateModelApiTool: DbxTool = {
-  definition: DBX_VALIDATE_MODEL_API_TOOL,
-  run: runValidateModelApi
+export const modelValidateTool: DbxTool = {
+  definition: DBX_MODEL_VALIDATE_TOOL,
+  run: runModelValidate
 };

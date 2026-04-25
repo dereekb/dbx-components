@@ -1,5 +1,5 @@
 /**
- * `dbx_decode` tool.
+ * `dbx_model_decode` tool.
  *
  * Takes a raw Firestore document (as JSON string or already-parsed object),
  * identifies the @dereekb/firebase model it matches, and explains every
@@ -21,8 +21,8 @@ import { formatDecode } from './decode.formatter.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 
 // MARK: Tool registry
-const DBX_DECODE_TOOL: Tool = {
-  name: 'dbx_decode',
+const DBX_MODEL_DECODE_TOOL: Tool = {
+  name: 'dbx_model_decode',
   description: [
     'Decode a raw @dereekb/firebase Firestore document — identify the model, expand abbreviated field names to their descriptions, decode enum integer values, and surface foreign-key relationships to other models.',
     '',
@@ -160,7 +160,7 @@ function buildPrefixMap(): Map<string, string> {
  * Executes a decode request against the firebase-models registry. Exported so
  * it can be tested without the MCP transport.
  */
-export function runDecode(rawArgs: unknown): ToolResult {
+export function runModelDecode(rawArgs: unknown): ToolResult {
   let args: ParsedDecodeArgs;
   try {
     args = parseDecodeArgs(rawArgs);
@@ -223,7 +223,7 @@ function buildUnmatchedMessage(hint: string | undefined, document: Document): st
   return result;
 }
 
-export const decodeTool: DbxTool = {
-  definition: DBX_DECODE_TOOL,
-  run: runDecode
+export const modelDecodeTool: DbxTool = {
+  definition: DBX_MODEL_DECODE_TOOL,
+  run: runModelDecode
 };

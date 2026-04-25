@@ -1,5 +1,5 @@
 /**
- * Formatter for firebase-model lookups through `dbx_lookup`.
+ * Formatter for firebase-model lookups through `dbx_model_lookup`.
  *
  * Brief depth: headline + collapsed field table (no enums, no source).
  * Full depth: everything — identity, parent chain, every field with JSDoc,
@@ -85,7 +85,7 @@ export function formatFirebaseModelCatalog(models: readonly FirebaseModel[]): st
     }
   }
   lines.push('');
-  lines.push('Use `dbx_lookup topic="<Name>"` or `dbx_lookup topic="<prefix>"` for full model details, or `dbx_decode` to decode a raw document.');
+  lines.push('Use `dbx_model_lookup topic="<Name>"` or `dbx_model_lookup topic="<prefix>"` for full model details, or `dbx_model_decode` to decode a raw document.');
   const result = lines.join('\n').trimEnd();
   return result;
 }
