@@ -10,7 +10,7 @@
  * `run(args)` handler. This file sets the `tools/list` and `tools/call`
  * request handlers exactly once and routes calls by tool name.
  *
- * Registered tools (clustered by domain — form, model, storagefile,
+ * Registered tools (clustered by domain — form, ui, model, storagefile,
  * notification, system, action, artifact):
  *
  * | Tool                                    | Purpose       | One-liner                                              |
@@ -19,6 +19,9 @@
  * | dbx_form_search                         | Discovery     | "Find forge entries matching keywords"                 |
  * | dbx_form_examples                       | Working code  | "Show me how to compose X"                             |
  * | dbx_form_scaffold                       | Generation    | "Generate a FormConfig skeleton"                       |
+ * | dbx_ui_lookup                           | Documentation | "Tell me about dbx-web component X"                    |
+ * | dbx_ui_search                           | Discovery     | "Find dbx-web components matching keywords"            |
+ * | dbx_ui_examples                         | Working code  | "Show me a settings-section / list-page layout"        |
  * | dbx_model_lookup                        | Documentation | "Tell me about Firebase model X"                       |
  * | dbx_model_search                        | Discovery     | "Find Firebase models matching keywords"               |
  * | dbx_model_decode                        | Decoding      | "What does this Firestore doc mean?"                   |
@@ -45,6 +48,9 @@ import { lookupForgeTool } from './lookup-forge.tool.js';
 import { searchForgeTool } from './search-forge.tool.js';
 import { formExamplesTool } from './form-examples.tool.js';
 import { formScaffoldTool } from './form-scaffold.tool.js';
+import { lookupUiTool } from './lookup-ui.tool.js';
+import { searchUiTool } from './search-ui.tool.js';
+import { uiExamplesTool } from './ui-examples.tool.js';
 import { lookupModelTool } from './lookup-model.tool.js';
 import { searchModelTool } from './search-model.tool.js';
 import { modelDecodeTool } from './model-decode.tool.js';
@@ -69,7 +75,7 @@ import { toolError, type DbxTool } from './types.js';
  * Every registered tool in order of presentation in `tools/list`.
  *
  * Order clusters tools by domain so callers see related entries together:
- * form → model → storagefile → notification → system → artifact.
+ * form → ui → model → storagefile → notification → system → action → artifact.
  */
 export const DBX_TOOLS: readonly DbxTool[] = [
   // form
@@ -77,6 +83,10 @@ export const DBX_TOOLS: readonly DbxTool[] = [
   searchForgeTool,
   formExamplesTool,
   formScaffoldTool,
+  // ui
+  lookupUiTool,
+  searchUiTool,
+  uiExamplesTool,
   // model
   lookupModelTool,
   searchModelTool,

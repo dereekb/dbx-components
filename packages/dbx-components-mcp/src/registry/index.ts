@@ -177,6 +177,66 @@ export function getActionStateEntry(stateValue: string): ActionStateInfo | undef
   return result;
 }
 
+// MARK: UI Components
+import { UI_COMPONENTS, type UiComponentInfo, type UiComponentCategory, type UiComponentKind } from './ui-components.js';
+
+export { UI_COMPONENTS, UI_CATEGORY_ORDER, UI_KIND_ORDER } from './ui-components.js';
+export type { UiComponentInfo, UiComponentCategory, UiComponentKind, UiComponentInputInfo, UiComponentOutputInfo } from './ui-components.js';
+
+/**
+ * Returns every registered UI component / directive / pipe / service.
+ */
+export function getUiComponents(): readonly UiComponentInfo[] {
+  return UI_COMPONENTS;
+}
+
+/**
+ * Looks up a UI entry by slug (`'section'`), class name (`'DbxSectionComponent'`),
+ * or selector substring (`'dbx-section'`). Slug match is exact; className is
+ * case-insensitive; selector match is exact against any comma-separated piece
+ * of the entry's selector string.
+ */
+export function getUiComponent(key: string): UiComponentInfo | undefined {
+  const direct = UI_COMPONENTS.find((c) => c.slug === key);
+  let result: UiComponentInfo | undefined = direct;
+  if (!result) {
+    const lowered = key.toLowerCase();
+    result = UI_COMPONENTS.find((c) => c.className.toLowerCase() === lowered);
+  }
+  if (!result) {
+    result = getUiComponentBySelector(key);
+  }
+  return result;
+}
+
+/**
+ * PRIMARY index. Returns every UI entry whose `category` matches the given value.
+ */
+export function getUiComponentsByCategory(category: UiComponentCategory): readonly UiComponentInfo[] {
+  return UI_COMPONENTS.filter((c) => c.category === category);
+}
+
+/**
+ * Returns every UI entry whose `kind` matches the given value.
+ */
+export function getUiComponentsByKind(kind: UiComponentKind): readonly UiComponentInfo[] {
+  return UI_COMPONENTS.filter((c) => c.kind === kind);
+}
+
+/**
+ * Looks up a UI entry by selector. Splits comma-separated selector strings and
+ * matches each piece individually so callers can pass either the element form
+ * (`'dbx-section'`) or the attribute form (`'[dbxContent]'`).
+ */
+export function getUiComponentBySelector(selector: string): UiComponentInfo | undefined {
+  const target = selector.trim();
+  const result = UI_COMPONENTS.find((c) => {
+    const pieces = c.selector.split(',').map((s) => s.trim());
+    return pieces.includes(target);
+  });
+  return result;
+}
+
 // MARK: Firebase Models
 import { FIREBASE_MODELS, type FirebaseModel } from './firebase-models.js';
 
