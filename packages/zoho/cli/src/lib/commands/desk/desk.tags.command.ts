@@ -3,6 +3,7 @@ import { getDeskApi } from '../../middleware/auth.middleware';
 import { noop } from '../../util/noop';
 import { outputResult, outputError } from '../../util/output';
 import { withDeskPagination } from '../../util/args';
+import { runPaginatedList, zohoDeskPaginationAdapter } from '../../util/pagination';
 
 const tagsListCommand: CommandModule = {
   command: 'list',
@@ -11,8 +12,20 @@ const tagsListCommand: CommandModule = {
   handler: async (argv: any) => {
     try {
       const api = getDeskApi(argv);
-      const result = await api.getAllTags({ from: argv.from, limit: argv.limit, departmentId: argv.departmentId });
-      outputResult(result.data, { count: result.data?.length });
+      const initialInput = { from: argv.from, limit: argv.limit, departmentId: argv.departmentId };
+      const outcome = await runPaginatedList({
+        initialInput,
+        fetchPage: (input) => api.getAllTags(input as any),
+        adapter: zohoDeskPaginationAdapter,
+        multiplePages: argv.multiplePages,
+        multiplePagesOutput: argv.multiplePagesOutput,
+        dumpOutput: argv.dumpOutput,
+        dumpMerge: argv.dumpMerge
+      });
+      if (outcome.handled === false) {
+        const result = outcome.result;
+        outputResult(result.data, { count: result.data?.length });
+      }
     } catch (e) {
       outputError(e);
       process.exit(1);
@@ -27,8 +40,20 @@ const tagsSearchCommand: CommandModule = {
   handler: async (argv: any) => {
     try {
       const api = getDeskApi(argv);
-      const result = await api.searchTags({ from: argv.from, limit: argv.limit, departmentId: argv.departmentId, searchVal: argv.query });
-      outputResult(result.data, { count: result.data?.length });
+      const initialInput = { from: argv.from, limit: argv.limit, departmentId: argv.departmentId, searchVal: argv.query };
+      const outcome = await runPaginatedList({
+        initialInput,
+        fetchPage: (input) => api.searchTags(input as any),
+        adapter: zohoDeskPaginationAdapter,
+        multiplePages: argv.multiplePages,
+        multiplePagesOutput: argv.multiplePagesOutput,
+        dumpOutput: argv.dumpOutput,
+        dumpMerge: argv.dumpMerge
+      });
+      if (outcome.handled === false) {
+        const result = outcome.result;
+        outputResult(result.data, { count: result.data?.length });
+      }
     } catch (e) {
       outputError(e);
       process.exit(1);

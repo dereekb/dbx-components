@@ -75,8 +75,43 @@ function sanitizeString(value: string): string {
 /**
  * Builds a file-safe timestamp string for dump file names.
  */
-function dumpTimestamp(): string {
+export function dumpTimestamp(): string {
   return new Date().toISOString().replace(/[:.]/g, '-');
+}
+
+/**
+ * Returns a snapshot of the current output options.
+ *
+ * Used by the multi-page pagination helper to read `dumpDir`, `commandPath`, and `pick`
+ * from the same source the rest of the output utilities use.
+ */
+export function getOutputOptions(): CliOutputOptions {
+  return _outputOptions;
+}
+
+/**
+ * Builds a dump file path based on the current `dumpDir` and `commandPath`.
+ *
+ * Ensures the dump directory exists. Returns `undefined` if no `dumpDir` is configured.
+ *
+ * @param extension File extension without the leading dot (`json` or `ndjson`).
+ * @param suffix Optional suffix appended before the extension (e.g. `pick`).
+ */
+export function buildDumpFilePath(extension: 'json' | 'ndjson', suffix?: string): string | undefined {
+  const { dumpDir, commandPath } = _outputOptions;
+
+  if (!dumpDir) {
+    return undefined;
+  }
+
+  if (!existsSync(dumpDir)) {
+    mkdirSync(dumpDir, { recursive: true });
+  }
+
+  const prefix = commandPath?.length ? commandPath.join('_') : 'response';
+  const stamp = dumpTimestamp();
+  const base = suffix ? `${prefix}_${stamp}_${suffix}` : `${prefix}_${stamp}`;
+  return join(dumpDir, `${base}.${extension}`);
 }
 
 /**
@@ -111,7 +146,7 @@ function dumpResponse<T>(data: T, meta: Record<string, unknown> | undefined): vo
  * For arrays, each element is filtered. For plain objects, the object itself is filtered.
  * Non-object/array values pass through unchanged.
  */
-function pickFields<T>(data: T, pick: string): T {
+export function pickFields<T>(data: T, pick: string): T {
   const fields = pick.split(',').map((f) => f.trim());
 
   if (Array.isArray(data)) {

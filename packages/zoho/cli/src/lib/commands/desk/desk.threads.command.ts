@@ -3,6 +3,7 @@ import { getDeskApi } from '../../middleware/auth.middleware';
 import { noop } from '../../util/noop';
 import { outputResult, outputError } from '../../util/output';
 import { withDeskPagination } from '../../util/args';
+import { runPaginatedList, zohoDeskPaginationAdapter } from '../../util/pagination';
 
 const threadsListCommand: CommandModule = {
   command: 'list <ticketId>',
@@ -11,8 +12,20 @@ const threadsListCommand: CommandModule = {
   handler: async (argv: any) => {
     try {
       const api = getDeskApi(argv);
-      const result = await api.getTicketThreads({ ticketId: argv.ticketId, from: argv.from, limit: argv.limit, include: argv.include });
-      outputResult(result.data, { from: argv.from, limit: argv.limit, count: result.data?.length });
+      const initialInput = { ticketId: argv.ticketId, from: argv.from, limit: argv.limit, include: argv.include };
+      const outcome = await runPaginatedList({
+        initialInput,
+        fetchPage: (input) => api.getTicketThreads(input as any),
+        adapter: zohoDeskPaginationAdapter,
+        multiplePages: argv.multiplePages,
+        multiplePagesOutput: argv.multiplePagesOutput,
+        dumpOutput: argv.dumpOutput,
+        dumpMerge: argv.dumpMerge
+      });
+      if (outcome.handled === false) {
+        const result = outcome.result;
+        outputResult(result.data, { from: argv.from, limit: argv.limit, count: result.data?.length });
+      }
     } catch (e) {
       outputError(e);
       process.exit(1);
