@@ -1,0 +1,52 @@
+import type { AppStorageFilesReport, StorageFilePurposeSummary } from './types.js';
+
+export function formatReportAsMarkdown(report: AppStorageFilesReport): string {
+  const lines: string[] = [];
+  const basename = report.componentDir.split('/').pop() ?? report.componentDir;
+  lines.push(`# App storagefiles — ${basename}`);
+  lines.push('');
+  lines.push(`Component: \`${report.componentDir}\``);
+  lines.push(`API: \`${report.apiDir}\``);
+  lines.push('');
+  lines.push(`Upload service factory: ${report.uploadServiceFactoryName ? `\`${report.uploadServiceFactoryName}\`` : '_Not defined._'}`);
+  lines.push(`Wired via \`StorageFileInitializeFromUploadService\` provider: ${formatBool(report.uploadServiceWiredInApi)}`);
+  lines.push(`Processing handler call present: ${formatBool(report.processingHandlerWiredInApi)}`);
+
+  lines.push('');
+  lines.push(`## Purposes (${report.purposes.length})`);
+  if (report.purposes.length === 0) {
+    lines.push('');
+    lines.push('_None found._');
+  } else {
+    for (const p of report.purposes) {
+      lines.push('');
+      lines.push(formatPurposeBlock(p));
+    }
+  }
+
+  return lines.join('\n');
+}
+
+function formatPurposeBlock(p: StorageFilePurposeSummary): string {
+  const parts: string[] = [];
+  const heading = p.purposeCode ? `### ${p.purposeCode} — \`${p.purposeSymbolName}\`` : `### \`${p.purposeSymbolName}\``;
+  parts.push(heading);
+  if (p.fileTypeIdentifierCode) {
+    const codePart = p.fileTypeIdentifier ? ` (\`'${p.fileTypeIdentifier}'\`)` : '';
+    parts.push(`- Uploaded file type identifier: \`${p.fileTypeIdentifierCode}\`${codePart}`);
+  } else {
+    parts.push(`- Uploaded file type identifier: _Missing._`);
+  }
+  parts.push(`- Group-ids helper: ${p.fileGroupIdsFunctionName ? `\`${p.fileGroupIdsFunctionName}\`` : '_Missing._'}`);
+  if (p.subtasks.length > 0) {
+    parts.push(`- Processing subtasks: ${p.subtasks.map((s) => `\`${s}\``).join(', ')}`);
+  }
+  parts.push(`- Has upload initializer: ${formatBool(p.hasUploadInitializer)}${p.uploadInitializerSourceFile ? ` _(${p.uploadInitializerSourceFile})_` : ''}`);
+  parts.push(`- Has processing config: ${formatBool(p.hasProcessingConfig)}${p.processingConfigSourceFile ? ` _(${p.processingConfigSourceFile})_` : ''}`);
+  parts.push(`- Source: \`${p.sourceFile}\``);
+  return parts.join('\n');
+}
+
+function formatBool(value: boolean): string {
+  return value ? 'yes' : 'no';
+}

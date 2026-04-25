@@ -26,6 +26,7 @@
  * | dbx_validate_app_notifications | Verification | "Is every app notification wired end-to-end?" |
  * | dbx_list_app_notifications     | Discovery    | "What notifications does this app configure?" |
  * | dbx_validate_app_storagefiles  | Verification | "Is every storagefile purpose wired end-to-end?" |
+ * | dbx_list_app_storagefiles      | Discovery    | "What storagefile purposes does this app configure?" |
  */
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -42,12 +43,13 @@ import { validateSystemFolderTool } from './validate-system-folder.tool.js';
 import { validateAppNotificationsTool } from './validate-app-notifications.tool.js';
 import { listAppNotificationsTool } from './list-app-notifications.tool.js';
 import { validateAppStorageFilesTool } from './validate-app-storagefiles.tool.js';
+import { listAppStorageFilesTool } from './list-app-storagefiles.tool.js';
 import { toolError, type DbxTool } from './types.js';
 
 /**
  * Every registered tool in order of presentation in `tools/list`.
  */
-export const DBX_TOOLS: readonly DbxTool[] = [lookupTool, searchTool, examplesTool, scaffoldTool, decodeTool, validateFirebaseModelTool, validateModelApiTool, validateModelFolderTool, validateSystemFolderTool, validateAppNotificationsTool, listAppNotificationsTool, validateAppStorageFilesTool];
+export const DBX_TOOLS: readonly DbxTool[] = [lookupTool, searchTool, examplesTool, scaffoldTool, decodeTool, validateFirebaseModelTool, validateModelApiTool, validateModelFolderTool, validateSystemFolderTool, validateAppNotificationsTool, listAppNotificationsTool, validateAppStorageFilesTool, listAppStorageFilesTool];
 
 export function registerTools(server: McpServer): void {
   const underlyingServer = server.server;
