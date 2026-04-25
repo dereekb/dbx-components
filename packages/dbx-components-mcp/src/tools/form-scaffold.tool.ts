@@ -1,5 +1,5 @@
 /**
- * `dbx_scaffold` tool.
+ * `dbx_form_scaffold` tool.
  *
  * Generates a copy-paste-ready @dereekb/dbx-form forge `FormConfig` skeleton
  * from a compact field spec list. Each entry in `fields` is either:
@@ -21,8 +21,8 @@ import { toolError, type DbxTool, type ToolResult } from './types.js';
 const DEFAULT_VALUE_TYPE_NAME = 'ScaffoldedFormValue';
 
 // MARK: Tool advertisement
-const DBX_SCAFFOLD_TOOL: Tool = {
-  name: 'dbx_scaffold',
+const DBX_FORM_SCAFFOLD_TOOL: Tool = {
+  name: 'dbx_form_scaffold',
   description: [
     'Generate a @dereekb/dbx-form forge FormConfig skeleton from a compact field list.',
     '',
@@ -32,7 +32,7 @@ const DBX_SCAFFOLD_TOOL: Tool = {
     '',
     "Output includes: imports grouped by source, a `FormConfig` literal, and a `<name>Value` interface inferred from each field's produces+arrayOutput. Pass `valueTypeName` to customize the interface name.",
     '',
-    'Use `dbx_lookup topic="list"` to see every available slug. Use `dbx_examples` for pre-built multi-field compositions.'
+    'Use `dbx_form_lookup topic="list"` to see every available slug. Use `dbx_form_examples` for pre-built multi-field compositions.'
   ].join('\n'),
   inputSchema: {
     type: 'object',
@@ -228,7 +228,7 @@ function renderScaffold(specs: readonly FieldSpec[], valueTypeName: string, wrap
 }
 
 // MARK: Handler
-export function runScaffold(rawArgs: unknown): ToolResult {
+export function runFormScaffold(rawArgs: unknown): ToolResult {
   let args: ParsedScaffoldArgs;
   try {
     args = parseScaffoldArgs(rawArgs);
@@ -244,7 +244,7 @@ export function runScaffold(rawArgs: unknown): ToolResult {
       lines.push(`- \`${error.raw}\` — ${error.reason}`);
     }
     lines.push('');
-    lines.push('Expected format: `"<slug>:<key>"` (e.g. `"text:email"`) or `"<slug>"` for auto-keyed entries. Run `dbx_lookup topic="list"` for every slug.');
+    lines.push('Expected format: `"<slug>:<key>"` (e.g. `"text:email"`) or `"<slug>"` for auto-keyed entries. Run `dbx_form_lookup topic="list"` for every slug.');
     return toolError(lines.join('\n'));
   }
   const specs = parsed as readonly FieldSpec[];
@@ -256,7 +256,7 @@ export function runScaffold(rawArgs: unknown): ToolResult {
   return result;
 }
 
-export const scaffoldTool: DbxTool = {
-  definition: DBX_SCAFFOLD_TOOL,
-  run: runScaffold
+export const formScaffoldTool: DbxTool = {
+  definition: DBX_FORM_SCAFFOLD_TOOL,
+  run: runFormScaffold
 };

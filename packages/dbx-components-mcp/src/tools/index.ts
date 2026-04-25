@@ -18,8 +18,8 @@
  * | dbx_model_lookup | Documentation  | "Tell me about Firebase model X"       |
  * | dbx_form_search  | Discovery      | "Find forge entries matching keywords" |
  * | dbx_model_search | Discovery      | "Find Firebase models matching keywords" |
- * | dbx_examples     | Working code   | "Show me how to compose X"             |
- * | dbx_scaffold                | Generation     | "Generate a FormConfig skeleton"       |
+ * | dbx_form_examples | Working code  | "Show me how to compose X"             |
+ * | dbx_form_scaffold | Generation    | "Generate a FormConfig skeleton"       |
  * | dbx_decode                  | Decoding       | "What does this Firestore doc mean?"   |
  * | dbx_validate_firebase_model | Verification   | "Is this Firestore model file correct?" |
  * | dbx_validate_model_api      | Verification   | "Is this model api file correct?"      |
@@ -41,8 +41,8 @@ import { lookupForgeTool } from './lookup-forge.tool.js';
 import { lookupModelTool } from './lookup-model.tool.js';
 import { searchForgeTool } from './search-forge.tool.js';
 import { searchModelTool } from './search-model.tool.js';
-import { examplesTool } from './examples.tool.js';
-import { scaffoldTool } from './scaffold.tool.js';
+import { formExamplesTool } from './form-examples.tool.js';
+import { formScaffoldTool } from './form-scaffold.tool.js';
 import { decodeTool } from './decode.tool.js';
 import { validateFirebaseModelTool } from './validate-firebase-model.tool.js';
 import { validateModelApiTool } from './validate-model-api.tool.js';
@@ -61,7 +61,7 @@ import { toolError, type DbxTool } from './types.js';
 /**
  * Every registered tool in order of presentation in `tools/list`.
  */
-export const DBX_TOOLS: readonly DbxTool[] = [lookupForgeTool, lookupModelTool, searchForgeTool, searchModelTool, examplesTool, scaffoldTool, decodeTool, validateFirebaseModelTool, validateModelApiTool, validateModelFolderTool, validateSystemFolderTool, validateAppNotificationsTool, listAppNotificationsTool, validateAppStorageFilesTool, listAppStorageFilesTool, validateStorageFileFolderTool, validateNotificationFolderTool, scaffoldArtifactTool, fileConventionTool];
+export const DBX_TOOLS: readonly DbxTool[] = [lookupForgeTool, lookupModelTool, searchForgeTool, searchModelTool, formExamplesTool, formScaffoldTool, decodeTool, validateFirebaseModelTool, validateModelApiTool, validateModelFolderTool, validateSystemFolderTool, validateAppNotificationsTool, listAppNotificationsTool, validateAppStorageFilesTool, listAppStorageFilesTool, validateStorageFileFolderTool, validateNotificationFolderTool, scaffoldArtifactTool, fileConventionTool];
 
 export function registerTools(server: McpServer): void {
   const underlyingServer = server.server;
