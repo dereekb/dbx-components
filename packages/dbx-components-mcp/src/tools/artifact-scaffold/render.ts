@@ -1,5 +1,5 @@
 /**
- * Per-artifact render dispatch for `dbx_scaffold_artifact`.
+ * Per-artifact render dispatch for `dbx_artifact_scaffold`.
  *
  * Each `render*` function takes the parsed input + derived tokens
  * and returns a {@link ScaffoldArtifactResult} with file emissions

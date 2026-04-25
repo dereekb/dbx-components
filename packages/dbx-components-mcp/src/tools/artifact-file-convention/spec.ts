@@ -1,5 +1,5 @@
 /**
- * File convention catalog for `dbx_file_convention`.
+ * File convention catalog for `dbx_artifact_file_convention`.
  *
  * One {@link FileConventionSpec} per supported artifact kind. Each
  * spec lists canonical file paths, required exports, wiring

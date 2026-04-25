@@ -1,5 +1,5 @@
 /**
- * Pure entry point for `dbx_scaffold_artifact`. Callers pass a
+ * Pure entry point for `dbx_artifact_scaffold`. Callers pass a
  * {@link ScaffoldArtifactInput} and receive a
  * {@link ScaffoldArtifactResult} with file emissions and manual
  * wiring instructions. The MCP wrapper layers filesystem-based

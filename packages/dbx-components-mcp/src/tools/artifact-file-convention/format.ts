@@ -1,5 +1,5 @@
 /**
- * Markdown rendering for `dbx_file_convention`. Each
+ * Markdown rendering for `dbx_artifact_file_convention`. Each
  * {@link FileConventionSpec} renders as a single markdown document
  * with placeholder substitution applied to every string field.
  */

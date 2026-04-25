@@ -31,8 +31,8 @@
  * | dbx_storagefile_model_list_app     | Discovery    | "What storagefile purposes does this app configure?" |
  * | dbx_storagefile_model_validate_folder | Verification | "Does this storagefile folder follow the convention?" |
  * | dbx_notification_model_validate_folder | Verification | "Does this notification folder follow the convention?" |
- * | dbx_scaffold_artifact          | Generation   | "Give me the body for a new <artifact>." |
- * | dbx_file_convention            | Reference    | "Where do I put a new <artifact>?"     |
+ * | dbx_artifact_scaffold        | Generation   | "Give me the body for a new <artifact>." |
+ * | dbx_artifact_file_convention | Reference    | "Where do I put a new <artifact>?"     |
  */
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -54,8 +54,8 @@ import { storageFileModelValidateAppTool } from './storagefile-model-validate-ap
 import { storageFileModelListAppTool } from './storagefile-model-list-app.tool.js';
 import { storageFileModelValidateFolderTool } from './storagefile-model-validate-folder.tool.js';
 import { notificationModelValidateFolderTool } from './notification-model-validate-folder.tool.js';
-import { scaffoldArtifactTool } from './scaffold-artifact.tool.js';
-import { fileConventionTool } from './file-convention.tool.js';
+import { artifactScaffoldTool } from './artifact-scaffold.tool.js';
+import { artifactFileConventionTool } from './artifact-file-convention.tool.js';
 import { toolError, type DbxTool } from './types.js';
 
 /**
@@ -79,8 +79,8 @@ export const DBX_TOOLS: readonly DbxTool[] = [
   storageFileModelListAppTool,
   storageFileModelValidateFolderTool,
   notificationModelValidateFolderTool,
-  scaffoldArtifactTool,
-  fileConventionTool
+  artifactScaffoldTool,
+  artifactFileConventionTool
 ];
 
 export function registerTools(server: McpServer): void {

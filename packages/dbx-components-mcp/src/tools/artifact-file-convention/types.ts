@@ -1,5 +1,5 @@
 /**
- * Shared types for `dbx_file_convention`.
+ * Shared types for `dbx_artifact_file_convention`.
  *
  * The tool returns canonical file paths + required exports + wiring
  * registrations for each supported artifact kind. Specs are pure

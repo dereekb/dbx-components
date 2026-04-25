@@ -1,10 +1,10 @@
 /**
- * Shared types for `dbx_scaffold_artifact`.
+ * Shared types for `dbx_artifact_scaffold`.
  *
  * The tool generates copy-paste-ready body templates for downstream
  * dbx-components artifacts: a new `StorageFilePurpose`, a new
  * `NotificationTemplateType`, or a new `NotificationTaskType`. Sibling
- * to `dbx_file_convention` — that tool says where each artifact's
+ * to `dbx_artifact_file_convention` — that tool says where each artifact's
  * files live and what their exports look like; this tool emits the
  * actual TypeScript bodies.
  *

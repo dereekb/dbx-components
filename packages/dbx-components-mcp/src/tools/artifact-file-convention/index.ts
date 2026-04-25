@@ -1,5 +1,5 @@
 /**
- * Pure entry point for `dbx_file_convention`. Returns the spec for
+ * Pure entry point for `dbx_artifact_file_convention`. Returns the spec for
  * a given artifact kind, or undefined if no spec is registered.
  */
 

@@ -1,7 +1,7 @@
 /**
- * `dbx_scaffold_artifact` tool.
+ * `dbx_artifact_scaffold` tool.
  *
- * Sibling to `dbx_file_convention`. Where that tool returns canonical
+ * Sibling to `dbx_artifact_file_convention`. Where that tool returns canonical
  * file paths + required-export shapes for an artifact kind, this tool
  * emits the body templates — copy-paste-ready TypeScript for a new
  * `StorageFilePurpose`, `NotificationTemplateType`, or
@@ -24,16 +24,16 @@ import { resolve, sep } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { applyIdempotency, formatResult, scaffoldArtifact, type ArtifactKind, type ScaffoldArtifactInput } from './scaffold-artifact/index.js';
+import { applyIdempotency, formatResult, scaffoldArtifact, type ArtifactKind, type ScaffoldArtifactInput } from './artifact-scaffold/index.js';
 
 const ARTIFACT_KINDS: readonly ArtifactKind[] = ['storagefile-purpose', 'notification-template', 'notification-task'];
 const ARTIFACT_KIND_LITERAL_UNION = ARTIFACT_KINDS.map((k) => `'${k}'`).join(' | ');
 
 // MARK: Tool definition
-const DBX_SCAFFOLD_ARTIFACT_TOOL: Tool = {
-  name: 'dbx_scaffold_artifact',
+const DBX_ARTIFACT_SCAFFOLD_TOOL: Tool = {
+  name: 'dbx_artifact_scaffold',
   description: [
-    'Generate copy-paste-ready body templates for a downstream dbx-components artifact: a new `StorageFilePurpose`, `NotificationTemplateType`, or `NotificationTaskType`. Sibling to `dbx_file_convention` — that tool says where each piece belongs and what its export shape is; this one emits the actual TypeScript bodies.',
+    'Generate copy-paste-ready body templates for a downstream dbx-components artifact: a new `StorageFilePurpose`, `NotificationTemplateType`, or `NotificationTaskType`. Sibling to `dbx_artifact_file_convention` — that tool says where each piece belongs and what its export shape is; this one emits the actual TypeScript bodies.',
     '',
     `Supported artifact kinds: ${ARTIFACT_KINDS.map((k) => `\`${k}\``).join(', ')}.`,
     '',
@@ -124,7 +124,7 @@ async function fileExists(absolutePath: string): Promise<boolean> {
 }
 
 // MARK: Handler
-export async function runScaffoldArtifact(rawArgs: unknown): Promise<ToolResult> {
+export async function runArtifactScaffold(rawArgs: unknown): Promise<ToolResult> {
   let input: ScaffoldArtifactInput;
   try {
     input = parseArgs(rawArgs);
@@ -158,7 +158,7 @@ export async function runScaffoldArtifact(rawArgs: unknown): Promise<ToolResult>
   return result;
 }
 
-export const scaffoldArtifactTool: DbxTool = {
-  definition: DBX_SCAFFOLD_ARTIFACT_TOOL,
-  run: runScaffoldArtifact
+export const artifactScaffoldTool: DbxTool = {
+  definition: DBX_ARTIFACT_SCAFFOLD_TOOL,
+  run: runArtifactScaffold
 };

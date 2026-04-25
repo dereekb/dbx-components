@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { runFileConvention } from '../file-convention.tool.js';
+import { runArtifactFileConvention } from '../artifact-file-convention.tool.js';
 import { FILE_CONVENTIONS, formatSpec, getFileConventionSpec, listArtifactKinds } from './index.js';
 import type { ArtifactKind } from './types.js';
 
@@ -75,19 +75,19 @@ describe('formatSpec — placeholder substitution', () => {
   });
 });
 
-describe('runFileConvention — MCP handler', () => {
+describe('runArtifactFileConvention — MCP handler', () => {
   it('returns isError when artifact kind is missing', () => {
-    const result = runFileConvention({});
+    const result = runArtifactFileConvention({});
     expect(result.isError).toBe(true);
   });
 
   it('returns isError for an unknown artifact kind', () => {
-    const result = runFileConvention({ artifact: 'unknown-artifact' });
+    const result = runArtifactFileConvention({ artifact: 'unknown-artifact' });
     expect(result.isError).toBe(true);
   });
 
   it('returns a markdown text block for a valid artifact kind', () => {
-    const result = runFileConvention({ artifact: 'storagefile-processor', componentDir: 'components/demo-firebase', apiDir: 'apps/demo-api', name: 'user-test-file' });
+    const result = runArtifactFileConvention({ artifact: 'storagefile-processor', componentDir: 'components/demo-firebase', apiDir: 'apps/demo-api', name: 'user-test-file' });
     expect(result.isError).toBeFalsy();
     expect(result.content).toHaveLength(1);
     expect(result.content[0]).toMatchObject({ type: 'text' });

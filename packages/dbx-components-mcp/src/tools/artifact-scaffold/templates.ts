@@ -1,9 +1,9 @@
 /**
- * Token derivation + body templates for `dbx_scaffold_artifact`.
+ * Token derivation + body templates for `dbx_artifact_scaffold`.
  *
  * Templates are inline TypeScript template-literal strings with
  * `<<token>>` slots that {@link applyTokens} substitutes once per
- * invocation. Slot-token names parallel the `dbx_file_convention`
+ * invocation. Slot-token names parallel the `dbx_artifact_file_convention`
  * placeholder set ({@link NameTokens}) so callers can think in the
  * same vocabulary across both tools.
  */

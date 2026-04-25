@@ -1,5 +1,5 @@
 /**
- * `dbx_file_convention` tool.
+ * `dbx_artifact_file_convention` tool.
  *
  * Returns canonical file paths + required exports + wiring
  * registrations for a given artifact kind. Companion to the
@@ -12,14 +12,14 @@
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { formatSpec, getFileConventionSpec, listArtifactKinds, type ArtifactKind } from './file-convention/index.js';
+import { formatSpec, getFileConventionSpec, listArtifactKinds, type ArtifactKind } from './artifact-file-convention/index.js';
 
 const ARTIFACT_KINDS = listArtifactKinds();
 const ARTIFACT_KIND_LITERAL_UNION = ARTIFACT_KINDS.map((k) => `'${k}'`).join(' | ');
 
 // MARK: Tool definition
-const DBX_FILE_CONVENTION_TOOL: Tool = {
-  name: 'dbx_file_convention',
+const DBX_ARTIFACT_FILE_CONVENTION_TOOL: Tool = {
+  name: 'dbx_artifact_file_convention',
   description: [
     'Return canonical file paths + required exports + wiring registrations for a given artifact kind in a dbx-components project. Companion to the cross-file validators (`dbx_notification_model_validate_app`, `dbx_storagefile_model_validate_app`, `dbx_model_validate`) — those say what is missing, this says where each piece belongs.',
     '',
@@ -79,7 +79,7 @@ function parseArgs(raw: unknown): ParsedArgs {
 }
 
 // MARK: Handler
-export function runFileConvention(rawArgs: unknown): ToolResult {
+export function runArtifactFileConvention(rawArgs: unknown): ToolResult {
   let args: ParsedArgs;
   try {
     args = parseArgs(rawArgs);
@@ -96,7 +96,7 @@ export function runFileConvention(rawArgs: unknown): ToolResult {
   return result;
 }
 
-export const fileConventionTool: DbxTool = {
-  definition: DBX_FILE_CONVENTION_TOOL,
-  run: runFileConvention
+export const artifactFileConventionTool: DbxTool = {
+  definition: DBX_ARTIFACT_FILE_CONVENTION_TOOL,
+  run: runArtifactFileConvention
 };
