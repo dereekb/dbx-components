@@ -254,10 +254,64 @@ describe('validateAppNotifications — task rules', () => {
       replaceInFile(api, 'src/app/common/model/notification/notification.task.service.ts', /const exampleNotificationTaskHandler: NotificationTaskServiceTaskHandlerConfig[\s\S]*?\};/, '');
       replaceInFile(api, 'src/app/common/model/notification/notification.task.service.ts', '[exampleNotificationTaskHandler]', '[]');
     });
-    expectCodes(
-      result.violations.map((v) => v.code),
-      ['NOTIF_TASK_NOT_REGISTERED_IN_SERVICE']
-    );
+    const codes = result.violations.map((v) => v.code);
+    expectCodes(codes, ['NOTIF_TASK_NOT_REGISTERED_IN_SERVICE']);
+    // No literal at all → mismatch should NOT also fire.
+    expect(codes).not.toContain('NOTIF_TASK_HANDLER_NAME_MISMATCH');
+  });
+
+  it('flags NOTIF_TASK_HANDLER_NAME_MISMATCH when a handler literal exists but no array element resolves to its binding', () => {
+    const result = runWith(({ api }) => {
+      // Keep the inline handler literal but reference an unrelated identifier
+      // in the handlers array. The trace cannot bridge the call-site name to
+      // the handler's bindingName, so mismatch should fire instead of the
+      // "no literal at all" missing-handler error.
+      replaceInFile(api, 'src/app/common/model/notification/notification.task.service.ts', '[exampleNotificationTaskHandler]', '[exampleNotificationTaskHandlerTypo]');
+    });
+    const codes = result.violations.map((v) => v.code);
+    expectCodes(codes, ['NOTIF_TASK_HANDLER_NAME_MISMATCH']);
+    expect(codes).not.toContain('NOTIF_TASK_NOT_REGISTERED_IN_SERVICE');
+    const mismatch = result.violations.find((v) => v.code === 'NOTIF_TASK_HANDLER_NAME_MISMATCH');
+    expect(mismatch?.file).toBe('src/app/common/model/notification/notification.task.service.ts');
+    expect(mismatch?.message).toContain('exampleNotificationTaskHandler');
+  });
+
+  it('passes when a factory-shipped handler binds its inner variable to the same name as the call-site identifier', () => {
+    const HANDLER_FILE = `import { type NotificationTaskServiceTaskHandlerConfig } from '@dereekb/firebase-server/model';
+import { EXAMPLE_NOTIFICATION_TASK_TYPE, type ExampleNotificationTaskData, type ExampleNotificationTaskCheckpoint } from 'demo-firebase';
+
+export function demoExampleHandledNotificationTaskHandler(context) {
+  const exampleHandledHandler: NotificationTaskServiceTaskHandlerConfig<ExampleNotificationTaskData, ExampleNotificationTaskCheckpoint> = {
+    type: EXAMPLE_NOTIFICATION_TASK_TYPE,
+    flow: [{ checkpoint: 'part_a', fn: async () => null }]
+  };
+  return exampleHandledHandler;
+}
+`;
+    const result = runWith(({ api }) => {
+      replaceInFile(api, 'src/app/common/model/notification/notification.task.service.ts', /const exampleNotificationTaskHandler: NotificationTaskServiceTaskHandlerConfig[\s\S]*?\};/, 'const exampleHandledHandler = demoExampleHandledNotificationTaskHandler(context);');
+      replaceInFile(
+        api,
+        'src/app/common/model/notification/notification.task.service.ts',
+        "import { ALL_NOTIFICATION_TASK_TYPES, EXAMPLE_NOTIFICATION_TASK_TYPE, type ExampleNotificationTaskData, type ExampleNotificationTaskCheckpoint } from 'demo-firebase';",
+        "import { ALL_NOTIFICATION_TASK_TYPES, EXAMPLE_NOTIFICATION_TASK_TYPE, type ExampleNotificationTaskData, type ExampleNotificationTaskCheckpoint } from 'demo-firebase';\nimport { demoExampleHandledNotificationTaskHandler } from './handlers/task.handler.example.handled';"
+      );
+      replaceInFile(api, 'src/app/common/model/notification/notification.task.service.ts', '[exampleNotificationTaskHandler]', '[exampleHandledHandler]');
+      api.push({ relPath: 'src/app/common/model/notification/handlers/task.handler.example.handled.ts', text: HANDLER_FILE });
+    });
+    const codes = result.violations.map((v) => v.code);
+    expect(codes).not.toContain('NOTIF_TASK_HANDLER_NAME_MISMATCH');
+    expect(codes).not.toContain('NOTIF_TASK_NOT_REGISTERED_IN_SERVICE');
+  });
+
+  it('warns NOTIF_TASK_HANDLER_SPREAD_UNRESOLVED when an unknown identifier appears in handlers and is not trust-listed', () => {
+    const result = runWith(({ api }) => {
+      replaceInFile(api, 'src/app/common/model/notification/notification.task.service.ts', '[exampleNotificationTaskHandler]', '[exampleNotificationTaskHandler, mysteryHandler]');
+    });
+    const codes = result.violations.map((v) => v.code);
+    expectCodes(codes, ['NOTIF_TASK_HANDLER_SPREAD_UNRESOLVED']);
+    const warn = result.violations.find((v) => v.code === 'NOTIF_TASK_HANDLER_SPREAD_UNRESOLVED');
+    expect(warn?.message).toContain('mysteryHandler');
   });
 
   it('flags NOTIF_TASK_HANDLER_ORPHAN when a handler references a phantom type identifier', () => {

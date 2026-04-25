@@ -56,8 +56,14 @@ interface ComponentAggregateIndex {
   readonly taskAllTypesAggregates: ReadonlyMap<string, ExtractedTaskTypeAggregateArray>;
 }
 
+interface ApiFunctionEntry {
+  readonly node: FunctionDeclaration | ArrowFunction | FunctionExpression;
+  readonly sourceFile: SourceFile;
+  readonly relPath: string;
+}
+
 interface ApiFunctionIndex {
-  readonly functionsByName: ReadonlyMap<string, { readonly node: FunctionDeclaration | ArrowFunction | FunctionExpression; readonly sourceFile: string }>;
+  readonly functionsByName: ReadonlyMap<string, ApiFunctionEntry>;
 }
 
 export function extractAppNotifications(inspection: AppNotificationsInspection): ExtractedAppNotifications {
@@ -90,7 +96,7 @@ export function extractAppNotifications(inspection: AppNotificationsInspection):
   const apiFunctionIndex = buildApiFunctionIndex(apiSources);
   const templateConfigsArrayFactory = extractTemplateConfigsArrayFactory(apiSources, apiFunctionIndex);
   const templateHandlerEntries = extractTemplateHandlerEntries(templateConfigsArrayFactory, apiFunctionIndex);
-  const taskServiceCalls = extractTaskServiceCalls(apiSources);
+  const taskServiceCalls = extractTaskServiceCalls(apiSources, apiFunctionIndex, trustedExternalIdentifiers);
   const taskHandlerEntries = extractTaskHandlerEntries(apiSources, taskServiceCalls, apiFunctionIndex);
 
   const result: ExtractedAppNotifications = {
@@ -522,13 +528,13 @@ function extractTemplateConfigsArrayWiring(sources: readonly SourceFile[]): Extr
 }
 
 function buildApiFunctionIndex(sources: readonly SourceFile[]): ApiFunctionIndex {
-  const map = new Map<string, { readonly node: FunctionDeclaration | ArrowFunction | FunctionExpression; readonly sourceFile: string }>();
+  const map = new Map<string, ApiFunctionEntry>();
   for (const sf of sources) {
     const rel = apiRelPath(sf);
     for (const fn of sf.getFunctions()) {
       const name = fn.getName();
       if (name) {
-        map.set(name, { node: fn, sourceFile: rel });
+        map.set(name, { node: fn, sourceFile: sf, relPath: rel });
       }
     }
     for (const stmt of sf.getVariableStatements()) {
@@ -536,7 +542,7 @@ function buildApiFunctionIndex(sources: readonly SourceFile[]): ApiFunctionIndex
         const initializer = unwrapAsExpressions(decl.getInitializer());
         if (!initializer) continue;
         if (Node.isArrowFunction(initializer) || Node.isFunctionExpression(initializer)) {
-          map.set(decl.getName(), { node: initializer, sourceFile: rel });
+          map.set(decl.getName(), { node: initializer, sourceFile: sf, relPath: rel });
         }
       }
     }
@@ -631,7 +637,7 @@ function collectFromSingleEntryFactory(name: string, out: ExtractedTemplateHandl
   out.push({
     typeIdentifier: typeIdent,
     factoryFunctionName: name,
-    sourceFile: fn.sourceFile,
+    sourceFile: fn.relPath,
     line: obj.getStartLineNumber()
   });
 }
@@ -666,14 +672,14 @@ function collectFromArrayEntryFactory(name: string, out: ExtractedTemplateHandle
     if (obj) {
       const typeIdent = readIdentifierProperty(obj, 'type');
       if (typeIdent) {
-        out.push({ typeIdentifier: typeIdent, factoryFunctionName: name, sourceFile: fn.sourceFile, line: obj.getStartLineNumber() });
+        out.push({ typeIdentifier: typeIdent, factoryFunctionName: name, sourceFile: fn.relPath, line: obj.getStartLineNumber() });
       }
     }
   }
 }
 
 // MARK: Task service calls
-function extractTaskServiceCalls(sources: readonly SourceFile[]): readonly ExtractedTaskServiceCall[] {
+function extractTaskServiceCalls(sources: readonly SourceFile[], index: ApiFunctionIndex, trustedExternal: ReadonlySet<string>): readonly ExtractedTaskServiceCall[] {
   const out: ExtractedTaskServiceCall[] = [];
   for (const sf of sources) {
     const rel = apiRelPath(sf);
@@ -700,6 +706,9 @@ function extractTaskServiceCalls(sources: readonly SourceFile[]): readonly Extra
       }
       const handlerTypes: string[] = [];
       const unresolvedSpreads: string[] = [];
+      const resolvedBindings: string[] = [];
+      const unresolvedBindings: string[] = [];
+      const visited = new Set<string>();
       if (handlersArr) {
         for (const el of handlersArr.getElements()) {
           if (Node.isSpreadElement(el)) {
@@ -707,11 +716,27 @@ function extractTaskServiceCalls(sources: readonly SourceFile[]): readonly Extra
             if (Node.isCallExpression(inner)) {
               const callee = inner.getExpression();
               if (Node.isIdentifier(callee)) {
-                unresolvedSpreads.push(callee.getText());
+                const name = callee.getText();
+                unresolvedSpreads.push(name);
+                collectHandlerBindingsFromIdentifier(name, sf, index, trustedExternal, resolvedBindings, unresolvedBindings, visited);
               }
+            } else if (Node.isIdentifier(inner)) {
+              const name = inner.getText();
+              unresolvedSpreads.push(name);
+              collectHandlerBindingsFromIdentifier(name, sf, index, trustedExternal, resolvedBindings, unresolvedBindings, visited);
+            }
+            continue;
+          }
+          const inner = unwrapAsExpressions(el);
+          if (!inner) continue;
+          if (Node.isIdentifier(inner)) {
+            collectHandlerBindingsFromIdentifier(inner.getText(), sf, index, trustedExternal, resolvedBindings, unresolvedBindings, visited);
+          } else if (Node.isCallExpression(inner)) {
+            const callee = inner.getExpression();
+            if (Node.isIdentifier(callee)) {
+              collectHandlerBindingsFromIdentifier(callee.getText(), sf, index, trustedExternal, resolvedBindings, unresolvedBindings, visited);
             }
           }
-          // Other elements are per-handler identifiers; their `type:` is resolved downstream via extractTaskHandlerEntries.
         }
       }
       out.push({
@@ -719,11 +744,89 @@ function extractTaskServiceCalls(sources: readonly SourceFile[]): readonly Extra
         spreadValidateIdentifiers: validateSpreads,
         handlerTypeIdentifiers: handlerTypes,
         unresolvedHandlerSpreadIdentifiers: unresolvedSpreads,
+        resolvedHandlerBindings: resolvedBindings,
+        unresolvedHandlerBindings: unresolvedBindings,
         sourceFile: rel
       });
     }
   }
   return out;
+}
+
+/**
+ * Walks a value-position node looking for a typed
+ * `NotificationTaskServiceTaskHandlerConfig<...>` object literal. When
+ * one is reached via a local-variable binding, the variable's name is
+ * pushed to {@link resolved}. Identifiers and call expressions that
+ * cannot be followed (upstream imports, unbound names, non-handler
+ * intermediate types) end up in {@link unresolved} for the rules pass
+ * to cross-check against the trust-list.
+ */
+function collectHandlerBindingsFromValue(node: Node | undefined, sf: SourceFile, index: ApiFunctionIndex, trustedExternal: ReadonlySet<string>, resolved: string[], unresolved: string[], visited: Set<string>): boolean {
+  const inner = unwrapAsExpressions(node);
+  if (!inner) return false;
+  if (Node.isCallExpression(inner)) {
+    const callee = inner.getExpression();
+    if (Node.isIdentifier(callee)) {
+      return collectHandlerBindingsFromIdentifier(callee.getText(), sf, index, trustedExternal, resolved, unresolved, visited);
+    }
+  }
+  if (Node.isIdentifier(inner)) {
+    return collectHandlerBindingsFromIdentifier(inner.getText(), sf, index, trustedExternal, resolved, unresolved, visited);
+  }
+  return false;
+}
+
+function collectHandlerBindingsFromIdentifier(name: string, sf: SourceFile, index: ApiFunctionIndex, trustedExternal: ReadonlySet<string>, resolved: string[], unresolved: string[], visited: Set<string>): boolean {
+  let resolvedAny = false;
+
+  const localKey = `${sf.getFilePath()}::${name}`;
+  if (!visited.has(localKey)) {
+    visited.add(localKey);
+    const localDecl = findLocalVariable(sf, name);
+    if (localDecl) {
+      const typeNode = localDecl.getTypeNode();
+      const typeText = typeNode ? typeNode.getText() : undefined;
+      const isHandlerConfigTyped = typeText !== undefined && (typeText === NOTIF_TASK_SERVICE_HANDLER_CONFIG || typeText.startsWith(`${NOTIF_TASK_SERVICE_HANDLER_CONFIG}<`));
+      const declInit = unwrapAsExpressions(localDecl.getInitializer());
+      const isObjectLit = declInit !== undefined && Node.isObjectLiteralExpression(declInit);
+
+      if (isHandlerConfigTyped && isObjectLit) {
+        // Leaf reached — bind the variable name.
+        resolved.push(localDecl.getName());
+        resolvedAny = true;
+      } else if (declInit) {
+        if (collectHandlerBindingsFromValue(declInit, sf, index, trustedExternal, resolved, unresolved, visited)) {
+          resolvedAny = true;
+        }
+      }
+    }
+  }
+
+  const fnKey = `fn::${name}`;
+  if (!visited.has(fnKey)) {
+    visited.add(fnKey);
+    const fnEntry = index.functionsByName.get(name);
+    if (fnEntry) {
+      const ret = findReturnExpression(fnEntry.node);
+      if (ret && collectHandlerBindingsFromValue(ret, fnEntry.sourceFile, index, trustedExternal, resolved, unresolved, visited)) {
+        resolvedAny = true;
+      }
+    }
+  }
+
+  // Chain ends at an upstream-imported identifier — treat as resolved so
+  // the rules pass does not warn for legitimate upstream factory calls
+  // (e.g. `storageFileProcessingNotificationTaskHandler` from
+  // `@dereekb/firebase-server/model`).
+  if (!resolvedAny && trustedExternal.has(name)) {
+    return true;
+  }
+
+  if (!resolvedAny) {
+    unresolved.push(name);
+  }
+  return resolvedAny;
 }
 
 /**
@@ -790,6 +893,7 @@ function extractTaskHandlerEntries(sources: readonly SourceFile[], taskServiceCa
     seenSymbols.add(key);
     out.push({
       typeIdentifier: typeIdent,
+      bindingName: decl.getName(),
       flowStepCount: flowCount,
       dataTypeArgument: dataArg,
       checkpointTypeArgument: checkpointArg,

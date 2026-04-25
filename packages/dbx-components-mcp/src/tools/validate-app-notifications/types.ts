@@ -49,7 +49,9 @@ export type ViolationCode =
   | 'NOTIF_TASK_NOT_IN_ALL_ARRAY'
   | 'NOTIF_TASK_NOT_REGISTERED_IN_SERVICE'
   | 'NOTIF_TASK_HANDLER_ORPHAN'
+  | 'NOTIF_TASK_HANDLER_NAME_MISMATCH'
   | 'NOTIF_TASK_SERVICE_FACTORY_MISSING'
+  | 'NOTIF_TASK_HANDLER_SPREAD_UNRESOLVED'
   // Warnings
   | 'NOTIF_TEMPLATE_INFO_UNUSED'
   | 'NOTIF_TEMPLATE_TYPE_CODE_DUPLICATE'
@@ -193,6 +195,14 @@ export interface ExtractedTemplateConfigsArrayFactory {
 /** A `{ type, flow }` task-handler config (either a variable binding or an object-literal element). */
 export interface ExtractedTaskHandlerEntry {
   readonly typeIdentifier: string;
+  /**
+   * Variable binding name when the literal is bound to a typed
+   * `const <name>: NotificationTaskServiceTaskHandlerConfig<...> = { ... }`.
+   * Used by the cross-file reachability trace to match the call-site
+   * identifier in `notificationTaskService({ handlers })` against the
+   * declared literal. `undefined` for inline / anonymous literals.
+   */
+  readonly bindingName: string | undefined;
   readonly flowStepCount: number | undefined;
   readonly dataTypeArgument: string | undefined;
   readonly checkpointTypeArgument: string | undefined;
@@ -206,6 +216,24 @@ export interface ExtractedTaskServiceCall {
   readonly spreadValidateIdentifiers: readonly string[];
   readonly handlerTypeIdentifiers: readonly string[];
   readonly unresolvedHandlerSpreadIdentifiers: readonly string[];
+  /**
+   * Binding names (variable identifiers) reachable through the
+   * `handlers:` array — direct elements, spreads, and chains followed
+   * through local-variable initializers and function returns until a
+   * typed `NotificationTaskServiceTaskHandlerConfig<...>` object literal
+   * is reached. The rules pass intersects this set with the
+   * {@link ExtractedTaskHandlerEntry.bindingName} field to compute
+   * which declared handlers are actually wired.
+   */
+  readonly resolvedHandlerBindings: readonly string[];
+  /**
+   * Identifiers that the handler-array trace could not bind to a local
+   * declaration or function. The rules pass cross-checks them against
+   * the trust-list before warning, so upstream factory calls (e.g.
+   * `storageFileProcessingNotificationTaskHandler` from
+   * `@dereekb/firebase-server/model`) do not produce noise.
+   */
+  readonly unresolvedHandlerBindings: readonly string[];
   readonly sourceFile: string;
 }
 

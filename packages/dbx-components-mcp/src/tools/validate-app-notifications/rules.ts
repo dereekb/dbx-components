@@ -4,7 +4,7 @@
  * entry point is {@link validateAppNotifications} in `./index.ts`.
  */
 
-import type { AppNotificationsInspection, ExtractedAppNotifications, ExtractedTemplateHandlerEntry, ExtractedTemplateTypeInfo, Violation, ViolationSeverity } from './types.js';
+import type { AppNotificationsInspection, ExtractedAppNotifications, ExtractedTaskHandlerEntry, ExtractedTemplateHandlerEntry, ExtractedTemplateTypeInfo, Violation, ViolationSeverity } from './types.js';
 
 export function runRules(inspection: AppNotificationsInspection, extracted: ExtractedAppNotifications): readonly Violation[] {
   const violations: Violation[] = [];
@@ -270,9 +270,14 @@ function checkTasks(extracted: ExtractedAppNotifications, violations: Violation[
   }
 
   const taskConstantNames = new Set(extracted.taskTypeConstants.map((c) => c.symbolName));
-  const handlerTypeIdentifiers = new Set<string>();
+
+  // Lenient set: every extracted handler config's type identifier counts.
+  // Used by the validate-vs-handlers parity warning to keep the broader
+  // "you declared a handler somewhere" signal even when strict
+  // reachability marks it as unreachable.
+  const lenientHandlerTypeIdentifiers = new Set<string>();
   for (const entry of extracted.taskHandlerEntries) {
-    handlerTypeIdentifiers.add(entry.typeIdentifier);
+    lenientHandlerTypeIdentifiers.add(entry.typeIdentifier);
     if (!taskConstantNames.has(entry.typeIdentifier) && !extracted.trustedExternalIdentifiers.has(entry.typeIdentifier)) {
       pushViolation(violations, {
         code: 'NOTIF_TASK_HANDLER_ORPHAN',
@@ -282,18 +287,75 @@ function checkTasks(extracted: ExtractedAppNotifications, violations: Violation[
       });
     }
   }
+
+  // Strict reachability: only handlers whose binding name lands in the
+  // resolved trace of some `notificationTaskService({ handlers })` call
+  // count as registered.
+  const reachableBindings = new Set<string>();
+  for (const c of extracted.taskServiceCalls) {
+    for (const name of c.resolvedHandlerBindings) reachableBindings.add(name);
+  }
+  const reachableTypeIdentifiers = new Set<string>();
+  for (const entry of extracted.taskHandlerEntries) {
+    if (entry.bindingName && reachableBindings.has(entry.bindingName)) {
+      reachableTypeIdentifiers.add(entry.typeIdentifier);
+    }
+  }
+
+  // Index entries by typeIdentifier so the coverage loop can distinguish
+  // "literal exists but binding-name mismatch" from "no literal at all".
+  const entriesByType = new Map<string, ExtractedTaskHandlerEntry[]>();
+  for (const entry of extracted.taskHandlerEntries) {
+    const list = entriesByType.get(entry.typeIdentifier);
+    if (list) {
+      list.push(entry);
+    } else {
+      entriesByType.set(entry.typeIdentifier, [entry]);
+    }
+  }
+
   for (const constant of extracted.taskTypeConstants) {
-    if (!handlerTypeIdentifiers.has(constant.symbolName)) {
+    if (reachableTypeIdentifiers.has(constant.symbolName)) continue;
+    const entries = entriesByType.get(constant.symbolName);
+    if (entries && entries.length > 0) {
+      const entry = entries[0];
+      const bindingHint = entry.bindingName ? `\`${entry.bindingName}\`` : '<anonymous>';
       pushViolation(violations, {
-        code: 'NOTIF_TASK_NOT_REGISTERED_IN_SERVICE',
-        message: `Task type \`${constant.symbolName}\` has no \`NotificationTaskServiceTaskHandlerConfig\` declared in the API. Add a handler config typed \`NotificationTaskServiceTaskHandlerConfig<${handlerDataHint(constant.symbolName)}>\` and include it in \`notificationTaskService({ handlers })\`.`,
+        code: 'NOTIF_TASK_HANDLER_NAME_MISMATCH',
+        message: `Handler ${bindingHint} in \`${entry.sourceFile}\` declares \`type: ${constant.symbolName}\` but is not reachable from \`notificationTaskService({ handlers })\` because no array element resolves to that binding name. The cross-file tracer matches by identifier name through function returns — when a factory function ships a task-handler config, its inner variable name must match the call-site binding name (and the array element / spread that references it).`,
         side: 'api',
-        file: undefined
+        file: entry.sourceFile
+      });
+      continue;
+    }
+    pushViolation(violations, {
+      code: 'NOTIF_TASK_NOT_REGISTERED_IN_SERVICE',
+      message: `Task type \`${constant.symbolName}\` has no \`NotificationTaskServiceTaskHandlerConfig\` declared in the API. Add a handler config typed \`NotificationTaskServiceTaskHandlerConfig<${handlerDataHint(constant.symbolName)}>\` and include it in \`notificationTaskService({ handlers })\`.`,
+      side: 'api',
+      file: undefined
+    });
+  }
+
+  // Unresolved handler-array identifiers that aren't trust-listed
+  // upstream factories — usually a typo or a missing import.
+  for (const c of extracted.taskServiceCalls) {
+    for (const unresolved of c.unresolvedHandlerBindings) {
+      if (extracted.trustedExternalIdentifiers.has(unresolved)) continue;
+      if (reachableBindings.has(unresolved)) continue;
+      pushViolation(violations, {
+        code: 'NOTIF_TASK_HANDLER_SPREAD_UNRESOLVED',
+        severity: 'warning',
+        message: `Identifier \`${unresolved}\` inside \`notificationTaskService({ handlers })\` does not resolve to a declared \`NotificationTaskServiceTaskHandlerConfig\` literal or a trust-listed upstream factory. Declare the handler locally or import the factory from a trusted \`@dereekb/*\` package.`,
+        side: 'api',
+        file: c.sourceFile
       });
     }
   }
 
-  // validate vs handlers parity (warning).
+  // validate vs handlers parity (warning) — uses the lenient set so a
+  // declared-but-unreachable handler still counts as "exists" here. The
+  // strict reachability check above covers the missing-coverage case
+  // for local task constants.
   const call = extracted.taskServiceCalls[0];
   if (call) {
     const validateNames = new Set<string>(call.validateIdentifiers);
@@ -304,7 +366,7 @@ function checkTasks(extracted: ExtractedAppNotifications, violations: Violation[
       }
     }
     for (const name of validateNames) {
-      if (!handlerTypeIdentifiers.has(name) && !extracted.trustedExternalIdentifiers.has(name)) {
+      if (!lenientHandlerTypeIdentifiers.has(name) && !extracted.trustedExternalIdentifiers.has(name)) {
         pushViolation(violations, {
           code: 'NOTIF_TASK_IN_VALIDATE_WITHOUT_HANDLER',
           severity: 'warning',
