@@ -11,7 +11,7 @@
  * request handlers exactly once and routes calls by tool name.
  *
  * Registered tools (clustered by domain — form, ui, model, storagefile,
- * notification, system, action, artifact):
+ * notification, system, action, route, filter, artifact):
  *
  * | Tool                                    | Purpose       | One-liner                                              |
  * |-----------------------------------------|---------------|--------------------------------------------------------|
@@ -38,6 +38,11 @@
  * | dbx_action_lookup                       | Documentation | "Tell me about action directive / state X"             |
  * | dbx_action_examples                     | Working code  | "Show me how to wire an action like X"                 |
  * | dbx_action_scaffold                     | Generation    | "Scaffold the action stack for use case X"             |
+ * | dbx_route_tree                          | Discovery     | "What states does this app expose?"                    |
+ * | dbx_route_lookup                        | Documentation | "What's the route definition for X?"                   |
+ * | dbx_route_search                        | Discovery     | "Where do we have routes mentioning X?"                |
+ * | dbx_filter_lookup                       | Documentation | "Tell me about filter directive / preset X"            |
+ * | dbx_filter_scaffold                     | Generation    | "Scaffold a filter source + presets for model X"       |
  * | dbx_artifact_scaffold                   | Generation    | "Give me the body for a new <artifact>."               |
  * | dbx_artifact_file_convention            | Reference     | "Where do I put a new <artifact>?"                     |
  */
@@ -67,6 +72,11 @@ import { systemModelValidateFolderTool } from './system-model-validate-folder.to
 import { lookupActionTool } from './lookup-action.tool.js';
 import { actionExamplesTool } from './action-examples.tool.js';
 import { actionScaffoldTool } from './action-scaffold.tool.js';
+import { routeTreeTool } from './route-tree.tool.js';
+import { routeLookupTool } from './route-lookup.tool.js';
+import { routeSearchTool } from './route-search.tool.js';
+import { lookupFilterTool } from './lookup-filter.tool.js';
+import { filterScaffoldTool } from './filter-scaffold.tool.js';
 import { artifactScaffoldTool } from './artifact-scaffold.tool.js';
 import { artifactFileConventionTool } from './artifact-file-convention.tool.js';
 import { toolError, type DbxTool } from './types.js';
@@ -75,7 +85,8 @@ import { toolError, type DbxTool } from './types.js';
  * Every registered tool in order of presentation in `tools/list`.
  *
  * Order clusters tools by domain so callers see related entries together:
- * form → ui → model → storagefile → notification → system → action → artifact.
+ * form → ui → model → storagefile → notification → system → action → route →
+ * filter → artifact.
  */
 export const DBX_TOOLS: readonly DbxTool[] = [
   // form
@@ -108,6 +119,13 @@ export const DBX_TOOLS: readonly DbxTool[] = [
   lookupActionTool,
   actionExamplesTool,
   actionScaffoldTool,
+  // route
+  routeTreeTool,
+  routeLookupTool,
+  routeSearchTool,
+  // filter
+  lookupFilterTool,
+  filterScaffoldTool,
   // artifact (cross-domain dispatchers)
   artifactScaffoldTool,
   artifactFileConventionTool
