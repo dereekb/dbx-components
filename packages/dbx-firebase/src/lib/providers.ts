@@ -2,7 +2,6 @@ import { type ArrayOrValue, asArray, type Maybe } from '@dereekb/util';
 import { type EnvironmentProviders, makeEnvironmentProviders } from '@angular/core';
 import { type FirebaseFunctionsMap } from '@dereekb/firebase';
 import { provideDbxFirebaseAuth, type ProvideDbxFirebaseAuthConfig } from './auth//firebase.auth.providers';
-import { provideDbxFirebaseEmulator, type ProvideDbxFirebaseEmulatorsConfig } from './firebase/firebase.emulator.providers';
 import { provideDbxFirebaseApp, type ProvideDbxFirebaseAppConfig } from './firebase/firebase.providers';
 import { type ProvideDbxFirebaseFirestoreCollectionConfig, provideDbxFirestoreCollection } from './firestore/firebase.firestore.providers';
 import { provideDbxFirebaseFunctions, type ProvideDbxFirebaseFunctionsConfig } from './function/firebase.function.providers';
@@ -18,7 +17,6 @@ import { provideDbxFirebaseModelEntitiesWidgetService, type ProvideDbxFirebaseMo
 export interface ProvideDbxFirebaseConfig<T, M extends FirebaseFunctionsMap = FirebaseFunctionsMap> {
   // Required Configurations
   readonly app: ProvideDbxFirebaseAppConfig;
-  readonly emulator: ProvideDbxFirebaseEmulatorsConfig;
   readonly storage: ProvideDbxFirebaseStorageConfig;
   readonly auth: ProvideDbxFirebaseAuthConfig;
   readonly functions: ProvideDbxFirebaseFunctionsConfig<T, M>;
@@ -71,13 +69,13 @@ export interface ProvideDbxFirebaseConfig<T, M extends FirebaseFunctionsMap = Fi
  * @returns EnvironmentProviders for the DbxFirebase configuration.
  */
 export function provideDbxFirebase<T, M extends FirebaseFunctionsMap = FirebaseFunctionsMap>(config: ProvideDbxFirebaseConfig<T, M>) {
-  const { app, emulator, storage, auth, functions, firestores, modelContextService, modelTypesService, development, notifications, provideAnalyticsUserEventsListener, provideStorageFileService, modelEntitiesWidgetService: inputModelEntitiesWidgetService } = config;
+  const { app, storage, auth, functions, firestores, modelContextService, modelTypesService, development, notifications, provideAnalyticsUserEventsListener, provideStorageFileService, modelEntitiesWidgetService: inputModelEntitiesWidgetService } = config;
 
   const modelEntitiesWidgetServiceConfig = inputModelEntitiesWidgetService ?? {
     dbxFirebaseModelEntitiesWidgetServiceConfigFactory: () => ({ entries: [] })
   };
 
-  const providers: EnvironmentProviders[] = [provideDbxFirebaseApp(app), provideDbxFirebaseEmulator(emulator), providedDbxFirebaseStorage(storage), provideDbxFirebaseAuth(auth), provideDbxFirebaseFunctions(functions), provideDbxFirebaseModelContextService(modelContextService), provideDbxFirebaseModelTypesService(modelTypesService), provideDbxFirebaseModelEntitiesWidgetService(modelEntitiesWidgetServiceConfig)];
+  const providers: EnvironmentProviders[] = [provideDbxFirebaseApp(app), providedDbxFirebaseStorage(storage), provideDbxFirebaseAuth(auth), provideDbxFirebaseFunctions(functions), provideDbxFirebaseModelContextService(modelContextService), provideDbxFirebaseModelTypesService(modelTypesService), provideDbxFirebaseModelEntitiesWidgetService(modelEntitiesWidgetServiceConfig)];
 
   asArray(firestores).forEach((firestore) => {
     providers.push(provideDbxFirestoreCollection(firestore));
