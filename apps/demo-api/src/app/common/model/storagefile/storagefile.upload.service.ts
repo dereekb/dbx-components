@@ -4,6 +4,7 @@ import { makeUserAvatarFileStoragePath, USER_AVATAR_IMAGE_HEIGHT, USER_AVATAR_IM
 import { ALL_USER_UPLOADS_FOLDER_PATH, createStorageFileDocumentPairFactory, determineByFilePath, determineUserByUserUploadsFolderWrapperFunction, type FirebaseAuthUserId, StorageFileCreationType } from '@dereekb/firebase';
 import { mimeTypeForImageFileExtension, type SlashPathPathMatcherPath } from '@dereekb/util';
 import sharp from 'sharp';
+import { makeUserLogFileUploadInitializer } from './handlers/upload.user.log';
 
 /**
  * Builds the StorageFileInitializeFromUploadService for the demo API.
@@ -137,7 +138,9 @@ export function demoStorageFileUploadServiceFactory(demoFirebaseServerActionsCon
     determiner: userTestAvatarDeterminer
   };
 
-  const userFileInitializers = [userTestFileInitializer, userTestAvatarInitializer];
+  const userLogFileInitializer = makeUserLogFileUploadInitializer(demoFirebaseServerActionsContext);
+
+  const userFileInitializers = [userTestFileInitializer, userTestAvatarInitializer, userLogFileInitializer];
 
   // MARK: System Upload Files
 

@@ -130,5 +130,54 @@ export function exampleUniqueNotificationTaskTemplate(input: ExampleUniqueNotifi
   });
 }
 
+// MARK: Example Handled Notification (handler lives under handlers/)
+/**
+ * Demo task type whose handler ships in the API's `notification/handlers/`
+ * subfolder rather than inline in `notification.task.service.ts`. Exists
+ * to exercise the multi-file split convention used by larger downstream
+ * apps and to provide a real-tree fixture for the
+ * `dbx_validate_notification_folder` validator.
+ */
+export const EXAMPLE_HANDLED_NOTIFICATION_TASK_TYPE: NotificationTaskType = 'EH';
+
+export const EXAMPLE_HANDLED_NOTIFICATION_TASK_PING_CHECKPOINT = 'ping';
+
+export type ExampleHandledNotificationTaskCheckpoint = typeof EXAMPLE_HANDLED_NOTIFICATION_TASK_PING_CHECKPOINT;
+
+export interface ExampleHandledNotificationTaskData {
+  readonly uid: FirebaseAuthUserId;
+  readonly message?: Maybe<string>;
+}
+
+export interface ExampleHandledNotificationTaskInput extends Omit<ExampleHandledNotificationTaskData, 'uid'> {
+  readonly profileDocument: ProfileDocument;
+}
+
+/**
+ * Creates a notification task template for the example handled task type.
+ *
+ * The handler lives in `apps/demo-api/.../notification/handlers/`,
+ * demonstrating the split convention where handler logic moves out of
+ * `notification.task.service.ts` once the file would otherwise grow
+ * unwieldy.
+ *
+ * @param input - Configuration containing the profile document and an optional message.
+ * @returns A CreateNotificationTaskTemplate ready for submission to the notification task service.
+ */
+export function exampleHandledNotificationTaskTemplate(input: ExampleHandledNotificationTaskInput): CreateNotificationTaskTemplate {
+  const { profileDocument, message } = input;
+  const uid = profileDocument.id;
+
+  return createNotificationTaskTemplate({
+    type: EXAMPLE_HANDLED_NOTIFICATION_TASK_TYPE,
+    notificationModel: profileDocument,
+    targetModel: profileDocument,
+    data: {
+      uid,
+      message
+    }
+  });
+}
+
 // MARK: All Tasks
-export const ALL_NOTIFICATION_TASK_TYPES: NotificationTaskType[] = [EXAMPLE_NOTIFICATION_TASK_TYPE, EXAMPLE_UNIQUE_NOTIFICATION_TASK_TYPE];
+export const ALL_NOTIFICATION_TASK_TYPES: NotificationTaskType[] = [EXAMPLE_NOTIFICATION_TASK_TYPE, EXAMPLE_UNIQUE_NOTIFICATION_TASK_TYPE, EXAMPLE_HANDLED_NOTIFICATION_TASK_TYPE];
