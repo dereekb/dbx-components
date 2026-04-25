@@ -28,6 +28,7 @@
  * | dbx_model_validate                      | Verification  | "Is this Firestore model file correct?"                |
  * | dbx_model_validate_api                  | Verification  | "Is this model api file correct?"                      |
  * | dbx_model_validate_folder               | Verification  | "Does this model folder have the 5 files?"             |
+ * | dbx_model_store_scaffold                | Generation    | "Scaffold the 4 store files for model X"               |
  * | dbx_storagefile_model_validate_app      | Verification  | "Is every storagefile purpose wired end-to-end?"       |
  * | dbx_storagefile_model_list_app          | Discovery     | "What storagefile purposes does this app configure?"   |
  * | dbx_storagefile_model_validate_folder   | Verification  | "Does this storagefile folder follow the convention?"  |
@@ -63,6 +64,7 @@ import { modelDecodeTool } from './model-decode.tool.js';
 import { modelValidateTool } from './model-validate.tool.js';
 import { modelValidateApiTool } from './model-validate-api.tool.js';
 import { modelValidateFolderTool } from './model-validate-folder.tool.js';
+import { modelStoreScaffoldTool } from './model-store-scaffold.tool.js';
 import { storageFileModelValidateAppTool } from './storagefile-model-validate-app.tool.js';
 import { storageFileModelListAppTool } from './storagefile-model-list-app.tool.js';
 import { storageFileModelValidateFolderTool } from './storagefile-model-validate-folder.tool.js';
@@ -107,6 +109,7 @@ export const DBX_TOOLS: readonly DbxTool[] = [
   modelValidateTool,
   modelValidateApiTool,
   modelValidateFolderTool,
+  modelStoreScaffoldTool,
   // storagefile
   storageFileModelValidateAppTool,
   storageFileModelListAppTool,
