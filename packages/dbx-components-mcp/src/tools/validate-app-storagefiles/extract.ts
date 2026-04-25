@@ -1,0 +1,629 @@
+/**
+ * Cross-file AST extraction for `dbx_validate_app_storagefiles`.
+ *
+ * Every component + API file lands in a single in-memory ts-morph
+ * `Project`; extraction resolves spreads and array-binding references
+ * by symbol-name lookup inside that project — no language service.
+ *
+ * External imports (`@dereekb/*`) are tracked in a trust-list so
+ * rules can suppress "unresolved" / "orphan" diagnostics for
+ * identifiers that cross into upstream packages.
+ */
+
+import { Node, Project, SyntaxKind, type ArrayLiteralExpression, type ArrowFunction, type FunctionDeclaration, type FunctionExpression, type ObjectLiteralExpression, type SourceFile, type TypeNode, type VariableDeclaration } from 'ts-morph';
+import type { AppStorageFilesInspection, ExtractedAppStorageFiles, ExtractedGroupIdsFunction, ExtractedProcessingConfig, ExtractedProcessingHandlerCall, ExtractedProcessingSubtaskAlias, ExtractedProcessingSubtaskConstant, ExtractedPurposeConstant, ExtractedUploadInitializerEntry, ExtractedUploadServiceCall, ExtractedUploadServiceWiring, ExtractedUploadedFileTypeIdentifierConstant } from './types.js';
+
+const STORAGEFILE_PURPOSE_TYPE = 'StorageFilePurpose';
+const UPLOADED_FILE_TYPE_IDENTIFIER_TYPE = 'UploadedFileTypeIdentifier';
+const STORAGEFILE_PROCESSING_SUBTASK_TYPE = 'StorageFileProcessingSubtask';
+const UPLOAD_SERVICE_INITIALIZER_TYPE = 'StorageFileInitializeFromUploadServiceInitializer';
+const PROCESSING_CONFIG_TYPE = 'StorageFileProcessingPurposeSubtaskProcessorConfig';
+const UPLOAD_SERVICE_FACTORY = 'storageFileInitializeFromUploadService';
+const PROCESSING_HANDLER_FACTORY = 'storageFileProcessingNotificationTaskHandler';
+const UPLOAD_SERVICE_PROVIDE_TOKEN = 'StorageFileInitializeFromUploadService';
+const PROCESSING_SUBTASK_ALIAS_SUFFIX = 'ProcessingSubtask';
+const GROUP_IDS_FUNCTION_SUFFIXES: readonly string[] = ['StorageFileGroupIds', 'FileGroupIds'];
+
+export function extractAppStorageFiles(inspection: AppStorageFilesInspection): ExtractedAppStorageFiles {
+  const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });
+  const componentSources: SourceFile[] = [];
+  const apiSources: SourceFile[] = [];
+  for (const file of inspection.component.files) {
+    componentSources.push(project.createSourceFile(`__component__/${file.relPath}`, file.text, { overwrite: true }));
+  }
+  for (const file of inspection.api.files) {
+    apiSources.push(project.createSourceFile(`__api__/${file.relPath}`, file.text, { overwrite: true }));
+  }
+
+  const trustedExternalIdentifiers = collectTrustedExternalIdentifiers([...componentSources, ...apiSources]);
+
+  // Component pass
+  const purposeConstants = extractPurposeConstants(componentSources);
+  const fileTypeIdentifierConstants = extractFileTypeIdentifierConstants(componentSources);
+  const processingSubtaskConstants = extractProcessingSubtaskConstants(componentSources);
+  const processingSubtaskAliases = extractProcessingSubtaskAliases(componentSources);
+  const groupIdsFunctions = extractGroupIdsFunctions(componentSources);
+
+  // API pass
+  const uploadInitializerEntries = extractUploadInitializerEntries(apiSources);
+  const apiFunctionIndex = buildApiFunctionIndex(apiSources);
+  const uploadServiceCalls = extractUploadServiceCalls(apiSources, apiFunctionIndex);
+  const uploadServiceWirings = extractUploadServiceWirings(apiSources);
+  const processingConfigs = extractProcessingConfigs(apiSources);
+  const processingHandlerCalls = extractProcessingHandlerCalls(apiSources);
+
+  const result: ExtractedAppStorageFiles = {
+    purposeConstants,
+    fileTypeIdentifierConstants,
+    processingSubtaskConstants,
+    processingSubtaskAliases,
+    groupIdsFunctions,
+    uploadInitializerEntries,
+    uploadServiceCalls,
+    uploadServiceWirings,
+    processingConfigs,
+    processingHandlerCalls,
+    trustedExternalIdentifiers
+  };
+  return result;
+}
+
+// MARK: Helpers
+function apiRelPath(sourceFile: SourceFile): string {
+  return sourceFile
+    .getFilePath()
+    .replace(/^\/__api__\//, '')
+    .replace(/^\/__component__\//, '');
+}
+
+function componentRelPath(sourceFile: SourceFile): string {
+  return sourceFile.getFilePath().replace(/^\/__component__\//, '');
+}
+
+function unwrapAsExpressions(node: Node | undefined): Node | undefined {
+  let current: Node | undefined = node;
+  while (current && Node.isAsExpression(current)) {
+    current = current.getExpression();
+  }
+  return current;
+}
+
+function asObjectLiteral(node: Node | undefined): ObjectLiteralExpression | undefined {
+  const inner = unwrapAsExpressions(node);
+  if (inner && Node.isObjectLiteralExpression(inner)) {
+    return inner;
+  }
+  return undefined;
+}
+
+function asArrayLiteral(node: Node | undefined): ArrayLiteralExpression | undefined {
+  const inner = unwrapAsExpressions(node);
+  if (inner && Node.isArrayLiteralExpression(inner)) {
+    return inner;
+  }
+  return undefined;
+}
+
+function readStringLiteralInitializer(decl: VariableDeclaration): string | undefined {
+  const initializer = unwrapAsExpressions(decl.getInitializer());
+  if (initializer && Node.isStringLiteral(initializer)) {
+    return initializer.getLiteralText();
+  }
+  return undefined;
+}
+
+function typeAnnotationText(node: VariableDeclaration): string | undefined {
+  const tn = node.getTypeNode();
+  return tn ? tn.getText() : undefined;
+}
+
+function getPropertyInitializer(obj: ObjectLiteralExpression, name: string): Node | undefined {
+  const prop = obj.getProperty(name);
+  if (!prop) return undefined;
+  if (Node.isPropertyAssignment(prop)) {
+    return prop.getInitializer();
+  }
+  if (Node.isShorthandPropertyAssignment(prop)) {
+    return prop.getNameNode();
+  }
+  return undefined;
+}
+
+function readIdentifierProperty(obj: ObjectLiteralExpression, name: string): string | undefined {
+  const init = unwrapAsExpressions(getPropertyInitializer(obj, name));
+  if (init && Node.isIdentifier(init)) {
+    return init.getText();
+  }
+  return undefined;
+}
+
+function findLocalVariable(sf: SourceFile, name: string): VariableDeclaration | undefined {
+  for (const stmt of sf.getVariableStatements()) {
+    for (const decl of stmt.getDeclarations()) {
+      if (decl.getName() === name) return decl;
+    }
+  }
+  for (const decl of sf.getDescendantsOfKind(SyntaxKind.VariableDeclaration)) {
+    if (decl.getName() === name) return decl;
+  }
+  return undefined;
+}
+
+function collectTypeofReferences(node: TypeNode, out: string[]): void {
+  if (Node.isTypeQuery(node)) {
+    out.push(node.getExprName().getText());
+    return;
+  }
+  for (const tq of node.getDescendantsOfKind(SyntaxKind.TypeQuery)) {
+    out.push(tq.getExprName().getText());
+  }
+}
+
+// MARK: Trusted external identifiers
+function collectTrustedExternalIdentifiers(sources: readonly SourceFile[]): ReadonlySet<string> {
+  const out = new Set<string>();
+  for (const sf of sources) {
+    for (const imp of sf.getImportDeclarations()) {
+      const spec = imp.getModuleSpecifierValue();
+      if (!spec.startsWith('@dereekb/')) continue;
+      for (const named of imp.getNamedImports()) {
+        const alias = named.getAliasNode();
+        out.add(alias ? alias.getText() : named.getNameNode().getText());
+      }
+      const namespace = imp.getNamespaceImport();
+      if (namespace) {
+        out.add(namespace.getText());
+      }
+    }
+  }
+  return out;
+}
+
+// MARK: Component — purpose constants
+function extractPurposeConstants(sources: readonly SourceFile[]): readonly ExtractedPurposeConstant[] {
+  const out: ExtractedPurposeConstant[] = [];
+  for (const sf of sources) {
+    const rel = componentRelPath(sf);
+    for (const stmt of sf.getVariableStatements()) {
+      for (const decl of stmt.getDeclarations()) {
+        const typeText = typeAnnotationText(decl);
+        if (typeText !== STORAGEFILE_PURPOSE_TYPE) continue;
+        out.push({
+          symbolName: decl.getName(),
+          purposeCode: readStringLiteralInitializer(decl),
+          sourceFile: rel,
+          line: decl.getStartLineNumber()
+        });
+      }
+    }
+  }
+  return out;
+}
+
+// MARK: Component — file type identifier constants
+function extractFileTypeIdentifierConstants(sources: readonly SourceFile[]): readonly ExtractedUploadedFileTypeIdentifierConstant[] {
+  const out: ExtractedUploadedFileTypeIdentifierConstant[] = [];
+  for (const sf of sources) {
+    const rel = componentRelPath(sf);
+    for (const stmt of sf.getVariableStatements()) {
+      for (const decl of stmt.getDeclarations()) {
+        const typeText = typeAnnotationText(decl);
+        if (typeText !== UPLOADED_FILE_TYPE_IDENTIFIER_TYPE) continue;
+        out.push({
+          symbolName: decl.getName(),
+          typeCode: readStringLiteralInitializer(decl),
+          sourceFile: rel,
+          line: decl.getStartLineNumber()
+        });
+      }
+    }
+  }
+  return out;
+}
+
+// MARK: Component — processing subtask constants
+function extractProcessingSubtaskConstants(sources: readonly SourceFile[]): readonly ExtractedProcessingSubtaskConstant[] {
+  const out: ExtractedProcessingSubtaskConstant[] = [];
+  for (const sf of sources) {
+    const rel = componentRelPath(sf);
+    for (const stmt of sf.getVariableStatements()) {
+      for (const decl of stmt.getDeclarations()) {
+        const typeText = typeAnnotationText(decl);
+        if (typeText !== STORAGEFILE_PROCESSING_SUBTASK_TYPE) continue;
+        out.push({
+          symbolName: decl.getName(),
+          subtaskCode: readStringLiteralInitializer(decl),
+          sourceFile: rel,
+          line: decl.getStartLineNumber()
+        });
+      }
+    }
+  }
+  return out;
+}
+
+// MARK: Component — processing subtask aliases
+function extractProcessingSubtaskAliases(sources: readonly SourceFile[]): readonly ExtractedProcessingSubtaskAlias[] {
+  const out: ExtractedProcessingSubtaskAlias[] = [];
+  for (const sf of sources) {
+    const rel = componentRelPath(sf);
+    for (const alias of sf.getTypeAliases()) {
+      const name = alias.getName();
+      if (!name.endsWith(PROCESSING_SUBTASK_ALIAS_SUFFIX)) continue;
+      const typeNode = alias.getTypeNode();
+      const refs: string[] = [];
+      if (typeNode) {
+        collectTypeofReferences(typeNode, refs);
+      }
+      out.push({ symbolName: name, subtaskConstantNames: refs, sourceFile: rel });
+    }
+  }
+  return out;
+}
+
+// MARK: Component — group-ids functions
+function extractGroupIdsFunctions(sources: readonly SourceFile[]): readonly ExtractedGroupIdsFunction[] {
+  const out: ExtractedGroupIdsFunction[] = [];
+  for (const sf of sources) {
+    const rel = componentRelPath(sf);
+    for (const fn of sf.getFunctions()) {
+      const name = fn.getName();
+      if (!name) continue;
+      if (!hasGroupIdsSuffix(name)) continue;
+      out.push({ symbolName: name, sourceFile: rel });
+    }
+  }
+  return out;
+}
+
+function hasGroupIdsSuffix(name: string): boolean {
+  for (const suffix of GROUP_IDS_FUNCTION_SUFFIXES) {
+    if (name.endsWith(suffix)) return true;
+  }
+  return false;
+}
+
+// MARK: API — upload initializer entries
+function extractUploadInitializerEntries(sources: readonly SourceFile[]): readonly ExtractedUploadInitializerEntry[] {
+  const out: ExtractedUploadInitializerEntry[] = [];
+  for (const sf of sources) {
+    const rel = apiRelPath(sf);
+    for (const decl of sf.getDescendantsOfKind(SyntaxKind.VariableDeclaration)) {
+      const typeText = typeAnnotationText(decl);
+      if (typeText !== UPLOAD_SERVICE_INITIALIZER_TYPE) continue;
+      const obj = asObjectLiteral(decl.getInitializer());
+      if (!obj) continue;
+      const typeIdent = readIdentifierProperty(obj, 'type');
+      if (!typeIdent) continue;
+      out.push({
+        typeIdentifier: typeIdent,
+        bindingName: decl.getName(),
+        sourceFile: rel,
+        line: decl.getStartLineNumber()
+      });
+    }
+  }
+  return out;
+}
+
+// MARK: API — upload service calls
+interface ApiFunctionIndex {
+  readonly functionsByName: ReadonlyMap<string, { readonly node: FunctionDeclaration | ArrowFunction | FunctionExpression; readonly sourceFile: SourceFile }>;
+}
+
+function buildApiFunctionIndex(sources: readonly SourceFile[]): ApiFunctionIndex {
+  const map = new Map<string, { readonly node: FunctionDeclaration | ArrowFunction | FunctionExpression; readonly sourceFile: SourceFile }>();
+  for (const sf of sources) {
+    for (const fn of sf.getFunctions()) {
+      const name = fn.getName();
+      if (name) {
+        map.set(name, { node: fn, sourceFile: sf });
+      }
+    }
+    for (const stmt of sf.getVariableStatements()) {
+      for (const decl of stmt.getDeclarations()) {
+        const initializer = unwrapAsExpressions(decl.getInitializer());
+        if (!initializer) continue;
+        if (Node.isArrowFunction(initializer) || Node.isFunctionExpression(initializer)) {
+          map.set(decl.getName(), { node: initializer, sourceFile: sf });
+        }
+      }
+    }
+  }
+  const result: ApiFunctionIndex = { functionsByName: map };
+  return result;
+}
+
+function findReturnExpression(fn: FunctionDeclaration | ArrowFunction | FunctionExpression): Node | undefined {
+  const body = fn.getBody();
+  if (!body) return undefined;
+  if (Node.isBlock(body)) {
+    for (const stmt of body.getStatements()) {
+      if (Node.isReturnStatement(stmt)) {
+        return stmt.getExpression();
+      }
+    }
+    return undefined;
+  }
+  return body;
+}
+
+/**
+ * Walk a binding name through local-variable, spread, and cross-file
+ * function-call indirection until we find a concrete array literal —
+ * collect every identifier that ends up as a member of that array.
+ */
+function collectInitializerBindingsFromValue(node: Node | undefined, sf: SourceFile, index: ApiFunctionIndex, resolved: string[], unresolved: string[], visited: Set<string>): boolean {
+  const inner = unwrapAsExpressions(node);
+  if (!inner) return false;
+  if (Node.isArrayLiteralExpression(inner)) {
+    for (const el of inner.getElements()) {
+      if (Node.isSpreadElement(el)) {
+        const spreadInner = el.getExpression();
+        if (Node.isIdentifier(spreadInner)) {
+          collectInitializerBindingsFromIdentifier(spreadInner.getText(), sf, index, resolved, unresolved, visited);
+        } else if (Node.isCallExpression(spreadInner)) {
+          const callee = spreadInner.getExpression();
+          if (Node.isIdentifier(callee)) {
+            collectInitializerBindingsFromIdentifier(callee.getText(), sf, index, resolved, unresolved, visited);
+          }
+        }
+        continue;
+      }
+      const elementInner = unwrapAsExpressions(el);
+      if (elementInner && Node.isIdentifier(elementInner)) {
+        resolved.push(elementInner.getText());
+      }
+    }
+    return true;
+  }
+  if (Node.isCallExpression(inner)) {
+    const callee = inner.getExpression();
+    if (Node.isIdentifier(callee)) {
+      return collectInitializerBindingsFromIdentifier(callee.getText(), sf, index, resolved, unresolved, visited);
+    }
+  }
+  if (Node.isIdentifier(inner)) {
+    return collectInitializerBindingsFromIdentifier(inner.getText(), sf, index, resolved, unresolved, visited);
+  }
+  return false;
+}
+
+function collectInitializerBindingsFromIdentifier(name: string, sf: SourceFile, index: ApiFunctionIndex, resolved: string[], unresolved: string[], visited: Set<string>): boolean {
+  const localKey = `${sf.getFilePath()}::${name}`;
+  let resolvedAny = false;
+  if (!visited.has(localKey)) {
+    visited.add(localKey);
+    const localDecl = findLocalVariable(sf, name);
+    if (localDecl) {
+      const declInit = localDecl.getInitializer();
+      if (declInit && collectInitializerBindingsFromValue(declInit, sf, index, resolved, unresolved, visited)) {
+        resolvedAny = true;
+      }
+    }
+  }
+
+  const fnKey = `fn::${name}`;
+  if (!visited.has(fnKey)) {
+    visited.add(fnKey);
+    const fnEntry = index.functionsByName.get(name);
+    if (fnEntry) {
+      const ret = findReturnExpression(fnEntry.node);
+      if (ret && collectInitializerBindingsFromValue(ret, fnEntry.sourceFile, index, resolved, unresolved, visited)) {
+        resolvedAny = true;
+      }
+    }
+  }
+
+  if (!resolvedAny) {
+    unresolved.push(name);
+  }
+  return resolvedAny;
+}
+
+function extractUploadServiceCalls(sources: readonly SourceFile[], index: ApiFunctionIndex): readonly ExtractedUploadServiceCall[] {
+  const out: ExtractedUploadServiceCall[] = [];
+  for (const sf of sources) {
+    const rel = apiRelPath(sf);
+    for (const call of sf.getDescendantsOfKind(SyntaxKind.CallExpression)) {
+      const expr = call.getExpression();
+      if (!Node.isIdentifier(expr) || expr.getText() !== UPLOAD_SERVICE_FACTORY) continue;
+      const args = call.getArguments();
+      const first = args[0] ? resolveObjectArg(args[0], sf) : undefined;
+      if (!first) continue;
+      const initializerArr = resolveArrayFromProperty(first, 'initializer', sf);
+      const direct: string[] = [];
+      const spreads: string[] = [];
+      const unresolved: string[] = [];
+      const resolved: string[] = [];
+      const visited = new Set<string>();
+      if (initializerArr) {
+        for (const el of initializerArr.getElements()) {
+          if (Node.isSpreadElement(el)) {
+            const inner = el.getExpression();
+            if (Node.isIdentifier(inner)) {
+              const name = inner.getText();
+              spreads.push(name);
+              collectInitializerBindingsFromIdentifier(name, sf, index, resolved, unresolved, visited);
+            } else if (Node.isCallExpression(inner)) {
+              const callee = inner.getExpression();
+              if (Node.isIdentifier(callee)) {
+                const name = callee.getText();
+                spreads.push(name);
+                collectInitializerBindingsFromIdentifier(name, sf, index, resolved, unresolved, visited);
+              }
+            }
+            continue;
+          }
+          const inner = unwrapAsExpressions(el);
+          if (inner && Node.isIdentifier(inner)) {
+            const name = inner.getText();
+            direct.push(name);
+            resolved.push(name);
+          }
+        }
+      }
+      const enclosing = enclosingFactoryName(call);
+      out.push({
+        directBindingNames: direct,
+        spreadBindingNames: spreads,
+        unresolvedSpreadIdentifiers: unresolved,
+        resolvedInitializerBindings: resolved,
+        enclosingFactoryName: enclosing,
+        sourceFile: rel
+      });
+    }
+  }
+  return out;
+}
+
+function resolveObjectArg(node: Node, sf: SourceFile): ObjectLiteralExpression | undefined {
+  const inner = unwrapAsExpressions(node);
+  if (!inner) return undefined;
+  if (Node.isObjectLiteralExpression(inner)) return inner;
+  if (Node.isIdentifier(inner)) {
+    const declNode = findLocalVariable(sf, inner.getText());
+    if (declNode) {
+      const declInit = unwrapAsExpressions(declNode.getInitializer());
+      if (declInit && Node.isObjectLiteralExpression(declInit)) {
+        return declInit;
+      }
+    }
+  }
+  return undefined;
+}
+
+function resolveArrayFromProperty(obj: ObjectLiteralExpression, name: string, sf: SourceFile): ArrayLiteralExpression | undefined {
+  const init = unwrapAsExpressions(getPropertyInitializer(obj, name));
+  if (!init) return undefined;
+  if (Node.isArrayLiteralExpression(init)) return init;
+  if (Node.isIdentifier(init)) {
+    const declNode = findLocalVariable(sf, init.getText());
+    if (declNode) {
+      const declInit = unwrapAsExpressions(declNode.getInitializer());
+      if (declInit && Node.isArrayLiteralExpression(declInit)) {
+        return declInit;
+      }
+    }
+  }
+  return undefined;
+}
+
+function enclosingFactoryName(node: Node): string | undefined {
+  let current: Node | undefined = node.getParent();
+  let result: string | undefined;
+  while (current) {
+    if (Node.isFunctionDeclaration(current)) {
+      result = current.getName() ?? undefined;
+      break;
+    }
+    if (Node.isVariableDeclaration(current)) {
+      result = current.getName();
+      break;
+    }
+    current = current.getParent();
+  }
+  return result;
+}
+
+// MARK: API — upload service wirings (NestJS providers)
+function extractUploadServiceWirings(sources: readonly SourceFile[]): readonly ExtractedUploadServiceWiring[] {
+  const out: ExtractedUploadServiceWiring[] = [];
+  for (const sf of sources) {
+    const rel = apiRelPath(sf);
+    for (const obj of sf.getDescendantsOfKind(SyntaxKind.ObjectLiteralExpression)) {
+      const provideIdent = readIdentifierProperty(obj, 'provide');
+      if (provideIdent !== UPLOAD_SERVICE_PROVIDE_TOKEN) continue;
+      const useFactory = readIdentifierProperty(obj, 'useFactory');
+      out.push({ useFactoryIdentifier: useFactory, sourceFile: rel });
+    }
+  }
+  return out;
+}
+
+// MARK: API — processing configs
+function extractProcessingConfigs(sources: readonly SourceFile[]): readonly ExtractedProcessingConfig[] {
+  const out: ExtractedProcessingConfig[] = [];
+  for (const sf of sources) {
+    const rel = apiRelPath(sf);
+    for (const decl of sf.getDescendantsOfKind(SyntaxKind.VariableDeclaration)) {
+      const typeNode = decl.getTypeNode();
+      if (!typeNode) continue;
+      const typeText = typeNode.getText();
+      if (!typeText.startsWith(`${PROCESSING_CONFIG_TYPE}<`) && typeText !== PROCESSING_CONFIG_TYPE) continue;
+      const obj = asObjectLiteral(decl.getInitializer());
+      if (!obj) continue;
+      const target = readIdentifierProperty(obj, 'target');
+      if (!target) continue;
+      const flowInit = unwrapAsExpressions(getPropertyInitializer(obj, 'flow'));
+      const subtasks: string[] = [];
+      if (flowInit && Node.isArrayLiteralExpression(flowInit)) {
+        for (const el of flowInit.getElements()) {
+          const inner = unwrapAsExpressions(el);
+          if (inner && Node.isObjectLiteralExpression(inner)) {
+            const subtask = readIdentifierProperty(inner, 'subtask');
+            if (subtask) subtasks.push(subtask);
+          }
+        }
+      }
+      out.push({
+        targetIdentifier: target,
+        flowSubtaskIdentifiers: subtasks,
+        sourceFile: rel,
+        line: decl.getStartLineNumber()
+      });
+    }
+  }
+  return out;
+}
+
+// MARK: API — processing handler calls
+function extractProcessingHandlerCalls(sources: readonly SourceFile[]): readonly ExtractedProcessingHandlerCall[] {
+  const out: ExtractedProcessingHandlerCall[] = [];
+  for (const sf of sources) {
+    const rel = apiRelPath(sf);
+    for (const call of sf.getDescendantsOfKind(SyntaxKind.CallExpression)) {
+      const expr = call.getExpression();
+      if (!Node.isIdentifier(expr) || expr.getText() !== PROCESSING_HANDLER_FACTORY) continue;
+      const args = call.getArguments();
+      const first = args[0] ? resolveObjectArg(args[0], sf) : undefined;
+      if (!first) continue;
+      const processorsArr = resolveArrayFromProperty(first, 'processors', sf);
+      const direct: string[] = [];
+      const spreads: string[] = [];
+      if (processorsArr) {
+        for (const el of processorsArr.getElements()) {
+          if (Node.isSpreadElement(el)) {
+            const inner = el.getExpression();
+            if (Node.isIdentifier(inner)) {
+              spreads.push(inner.getText());
+            } else if (Node.isCallExpression(inner)) {
+              const callee = inner.getExpression();
+              if (Node.isIdentifier(callee)) {
+                spreads.push(callee.getText());
+              }
+            }
+            continue;
+          }
+          const inner = unwrapAsExpressions(el);
+          if (inner) {
+            if (Node.isIdentifier(inner)) {
+              direct.push(inner.getText());
+            } else if (Node.isCallExpression(inner)) {
+              const callee = inner.getExpression();
+              if (Node.isIdentifier(callee)) {
+                direct.push(callee.getText());
+              }
+            }
+          }
+        }
+      }
+      out.push({
+        directProcessorReferences: direct,
+        spreadProcessorReferences: spreads,
+        sourceFile: rel
+      });
+    }
+  }
+  return out;
+}
