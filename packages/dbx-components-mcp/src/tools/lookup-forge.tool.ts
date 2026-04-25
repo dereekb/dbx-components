@@ -1,22 +1,21 @@
 /**
- * `dbx_lookup` tool.
+ * `dbx_form_lookup` tool.
  *
- * Unified lookup over the forge registry. Accepts a topic (slug, factory name,
- * `produces` value, alias, or the literal `'list'`) and a depth and returns
- * markdown documentation.
+ * Forge-domain lookup. Accepts a topic (slug, factory name, `produces` value,
+ * tier name, alias, or the literal `'list'`) and a depth and returns markdown
+ * documentation for `@dereekb/dbx-form` forge entries.
  *
  * Registered via the low-level `server.setRequestHandler(CallToolRequestSchema, ...)`
  * API (not `McpServer.registerTool`) because registerTool requires a zod
  * schema — the workspace standard is arktype. Input validation happens in
- * {@link parseLookupArgs} using arktype.
+ * {@link parseLookupForgeArgs} using arktype.
  */
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { FORGE_FIELDS, FORGE_TIER_ORDER, getFirebaseModel, getFirebaseModelByPrefix, getFirebaseModels, getForgeField, getForgeFieldsByProduces, getForgeFieldsByTier, getForgeProducesCatalog, type FirebaseModel, type ForgeFieldInfo, type ForgeTier } from '../registry/index.js';
+import { FORGE_FIELDS, FORGE_TIER_ORDER, getForgeField, getForgeFieldsByProduces, getForgeFieldsByTier, getForgeProducesCatalog, type ForgeFieldInfo, type ForgeTier } from '../registry/index.js';
 import { resolveTopicAlias } from './alias-resolver.js';
 import { formatForgeFieldEntry, formatForgeFieldGroup } from './forge-lookup.formatter.js';
-import { formatFirebaseModelCatalog, formatFirebaseModelEntry } from './firebase-lookup.formatter.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 
 // MARK: Tool registry
@@ -24,18 +23,17 @@ import { toolError, type DbxTool, type ToolResult } from './types.js';
  * Tool advertised via `tools/list`. Input schema is plain JSON Schema so the
  * MCP SDK passes it straight through without any zod involvement.
  */
-const DBX_LOOKUP_TOOL: Tool = {
-  name: 'dbx_lookup',
+const DBX_FORM_LOOKUP_TOOL: Tool = {
+  name: 'dbx_form_lookup',
   description: [
-    'Look up @dereekb/dbx-form forge entries OR @dereekb/firebase Firestore models.',
+    'Look up @dereekb/dbx-form forge entries.',
     '',
     'The `topic` accepts:',
     '  • a forge registry slug like "text", "date-range-row", "address-group";',
     '  • a forge factory name like "dbxForgeTextField";',
     '  • an output primitive like "string", "Date", "RowField" (returns every forge entry that produces that primitive);',
     "  • a forge tier name (`'field-factory'`, `'composite-builder'`, `'primitive'`) to list every entry in that tier;",
-    '  • a Firebase model name (`"StorageFile"`), identity const (`"storageFileIdentity"`), modelType (`"storageFile"`), or collection prefix (`"sf"`);',
-    '  • the literal `"list"` for the forge catalog, or `"models"` / `"firebase-models"` for the Firebase-model catalog.',
+    '  • the literal `"list"` for the forge catalog.',
     '',
     'Forge synonyms resolve automatically (e.g. "datepicker" → "date").'
   ].join('\n'),
@@ -58,7 +56,7 @@ const DBX_LOOKUP_TOOL: Tool = {
 };
 
 // MARK: Input validation
-const LookupArgsType = type({
+const LookupForgeArgsType = type({
   topic: 'string',
   'depth?': "'brief' | 'full'"
 });
@@ -67,8 +65,8 @@ const LookupArgsType = type({
  * Parses and validates the caller's args via arktype. Throws a user-facing
  * error string when validation fails — the handler catches and formats it.
  */
-function parseLookupArgs(raw: unknown): { readonly topic: string; readonly depth: 'brief' | 'full' } {
-  const parsed = LookupArgsType(raw);
+function parseLookupForgeArgs(raw: unknown): { readonly topic: string; readonly depth: 'brief' | 'full' } {
+  const parsed = LookupForgeArgsType(raw);
 
   if (parsed instanceof type.errors) {
     throw new Error(`Invalid arguments: ${parsed.summary}`);
@@ -82,30 +80,25 @@ function parseLookupArgs(raw: unknown): { readonly topic: string; readonly depth
 }
 
 // MARK: Resolution
-type LookupMatch = { readonly kind: 'single'; readonly field: ForgeFieldInfo } | { readonly kind: 'group'; readonly title: string; readonly fields: readonly ForgeFieldInfo[] } | { readonly kind: 'catalog' } | { readonly kind: 'firebase-model'; readonly model: FirebaseModel } | { readonly kind: 'firebase-catalog' } | { readonly kind: 'not-found'; readonly normalized: string; readonly candidates: readonly ForgeFieldInfo[] };
-
-const FIREBASE_CATALOG_ALIASES = new Set(['models', 'firebase-models', 'firebase', 'firestore-models']);
+type LookupForgeMatch = { readonly kind: 'single'; readonly field: ForgeFieldInfo } | { readonly kind: 'group'; readonly title: string; readonly fields: readonly ForgeFieldInfo[] } | { readonly kind: 'catalog' } | { readonly kind: 'not-found'; readonly normalized: string; readonly candidates: readonly ForgeFieldInfo[] };
 
 /**
- * Resolves a topic string into the best match across both registries.
+ * Resolves a topic string into the best forge match.
  *
  * Resolution order:
- *   1. `'list'` / `'models'` → catalog modes
+ *   1. `'list'` → catalog
  *   2. forge tier name → forge group
  *   3. exact forge slug or factory-name match → single forge entry
- *   4. Firebase model name / identity / modelType / prefix → firebase entry
- *   5. forge alias → remap and retry slug/factory lookup
- *   6. forge `produces` value match → forge group
- *   7. fuzzy substring search over forge slug/factoryName/description
+ *   4. forge alias → remap and retry slug/factory lookup
+ *   5. forge `produces` value match → forge group
+ *   6. fuzzy substring search over forge slug/factoryName/description
  */
-function resolveTopic(rawTopic: string): LookupMatch {
+function resolveTopic(rawTopic: string): LookupForgeMatch {
   const lowered = rawTopic.trim().toLowerCase();
-  let result: LookupMatch;
+  let result: LookupForgeMatch;
 
   if (lowered === 'list' || lowered === 'catalog' || lowered === 'all') {
     result = { kind: 'catalog' };
-  } else if (FIREBASE_CATALOG_ALIASES.has(lowered)) {
-    result = { kind: 'firebase-catalog' };
   } else if (FORGE_TIER_ORDER.includes(lowered as ForgeTier)) {
     const tier = lowered as ForgeTier;
     result = { kind: 'group', title: `Forge entries: tier = ${tier}`, fields: getForgeFieldsByTier(tier) };
@@ -114,34 +107,20 @@ function resolveTopic(rawTopic: string): LookupMatch {
     if (directHit) {
       result = { kind: 'single', field: directHit };
     } else {
-      const firebaseHit = resolveFirebaseTopic(rawTopic);
-      if (firebaseHit) {
-        result = { kind: 'firebase-model', model: firebaseHit };
+      const aliased = resolveTopicAlias(rawTopic);
+      const aliasHit = aliased !== lowered ? getForgeField(aliased) : undefined;
+      if (aliasHit) {
+        result = { kind: 'single', field: aliasHit };
       } else {
-        const aliased = resolveTopicAlias(rawTopic);
-        const aliasHit = aliased !== lowered ? getForgeField(aliased) : undefined;
-        if (aliasHit) {
-          result = { kind: 'single', field: aliasHit };
+        const produces = findProducesMatch(rawTopic);
+        if (produces) {
+          result = { kind: 'group', title: `Forge entries producing \`${produces}\``, fields: getForgeFieldsByProduces(produces) };
         } else {
-          const produces = findProducesMatch(rawTopic);
-          if (produces) {
-            result = { kind: 'group', title: `Forge entries producing \`${produces}\``, fields: getForgeFieldsByProduces(produces) };
-          } else {
-            result = { kind: 'not-found', normalized: aliased, candidates: fuzzyCandidates(aliased) };
-          }
+          result = { kind: 'not-found', normalized: aliased, candidates: fuzzyCandidates(aliased) };
         }
       }
     }
   }
-  return result;
-}
-
-/**
- * Resolves a raw topic to a Firebase model entry by interface name, identity
- * const, modelType, or collection prefix.
- */
-function resolveFirebaseTopic(rawTopic: string): FirebaseModel | undefined {
-  const result = getFirebaseModel(rawTopic) ?? getFirebaseModelByPrefix(rawTopic);
   return result;
 }
 
@@ -213,7 +192,7 @@ function formatNotFound(normalized: string, candidates: readonly ForgeFieldInfo[
       lines.push(`- \`${field.slug}\` → ${field.factoryName} — ${field.description}`);
     }
   } else {
-    lines.push('Try `dbx_lookup topic="list"` to browse the catalog.');
+    lines.push('Try `dbx_form_lookup topic="list"` to browse the catalog.');
   }
   const result = lines.join('\n');
   return result;
@@ -221,14 +200,13 @@ function formatNotFound(normalized: string, candidates: readonly ForgeFieldInfo[
 
 // MARK: Handler
 /**
- * Executes a lookup against the forge registry and returns a ToolResult.
- * Exported separately so it can be tested without spinning up the full MCP
- * transport.
+ * Executes a forge lookup and returns a ToolResult. Exported separately so it
+ * can be tested without spinning up the full MCP transport.
  */
-export function runLookup(rawArgs: unknown): ToolResult {
+export function runLookupForge(rawArgs: unknown): ToolResult {
   let args: { readonly topic: string; readonly depth: 'brief' | 'full' };
   try {
-    args = parseLookupArgs(rawArgs);
+    args = parseLookupForgeArgs(rawArgs);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return toolError(message);
@@ -240,14 +218,8 @@ export function runLookup(rawArgs: unknown): ToolResult {
     case 'catalog':
       text = formatCatalog();
       break;
-    case 'firebase-catalog':
-      text = formatFirebaseModelCatalog(getFirebaseModels());
-      break;
     case 'single':
       text = formatForgeFieldEntry(match.field, args.depth);
-      break;
-    case 'firebase-model':
-      text = formatFirebaseModelEntry(match.model, args.depth);
       break;
     case 'group':
       text = formatForgeFieldGroup(match.fields, match.title);
@@ -261,7 +233,7 @@ export function runLookup(rawArgs: unknown): ToolResult {
   return result;
 }
 
-export const lookupTool: DbxTool = {
-  definition: DBX_LOOKUP_TOOL,
-  run: runLookup
+export const lookupForgeTool: DbxTool = {
+  definition: DBX_FORM_LOOKUP_TOOL,
+  run: runLookupForge
 };
