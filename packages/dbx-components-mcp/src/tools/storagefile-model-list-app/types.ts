@@ -1,5 +1,5 @@
 /**
- * Report shapes for `dbx_list_app_storagefiles`. Built from the same
+ * Report shapes for `dbx_storagefile_model_list_app`. Built from the same
  * {@link ExtractedAppStorageFiles} the validator produces — this tool
  * reshapes the cross-file extraction into a human-friendly summary.
  */

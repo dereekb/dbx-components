@@ -1,6 +1,6 @@
 /**
- * Shared types for the `dbx_validate_app_storagefiles` validator and
- * its sibling `dbx_list_app_storagefiles` listing tool.
+ * Shared types for the `dbx_storagefile_model_validate_app` validator and
+ * its sibling `dbx_storagefile_model_list_app` listing tool.
  *
  * The validator accepts two directories — a `-firebase` component
  * package (where `StorageFilePurpose` / `UploadedFileTypeIdentifier`

@@ -1,5 +1,5 @@
 /**
- * Filesystem inspection for `dbx_validate_app_storagefiles`.
+ * Filesystem inspection for `dbx_storagefile_model_validate_app`.
  *
  * Walks the component's `src/lib/model/storagefile/` recursively and
  * the API's `src/app/common/model/storagefile/` AND

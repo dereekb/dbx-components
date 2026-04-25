@@ -12,7 +12,7 @@
  *   name starts with the purpose constant name plus `_`.
  */
 
-import type { ExtractedAppStorageFiles } from '../validate-app-storagefiles/index.js';
+import type { ExtractedAppStorageFiles } from '../storagefile-model-validate-app/index.js';
 import type { AppStorageFilesReport, StorageFilePurposeSummary } from './types.js';
 
 const PURPOSE_SUFFIX = '_PURPOSE';

@@ -1,5 +1,5 @@
 /**
- * Filesystem inspection for `dbx_validate_storagefile_folder`.
+ * Filesystem inspection for `dbx_storagefile_model_validate_folder`.
  *
  * Stats the supplied component and API directories, locates the
  * storagefile area on each side, and reads the root `.ts` file list,

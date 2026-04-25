@@ -3,7 +3,7 @@
  * `AppStorageFilesInspection` and receive an {@link AppStorageFilesReport}.
  */
 
-import { extractAppStorageFiles, type AppStorageFilesInspection } from '../validate-app-storagefiles/index.js';
+import { extractAppStorageFiles, type AppStorageFilesInspection } from '../storagefile-model-validate-app/index.js';
 import { collectAppStorageFiles } from './collect.js';
 import type { AppStorageFilesReport } from './types.js';
 

@@ -1,13 +1,20 @@
 /**
- * `dbx_validate_app_storagefiles` tool.
+ * `dbx_storagefile_model_validate_folder` tool.
  *
- * Cross-file verifier for downstream app StorageFile configuration.
- * Reads the component package's `src/lib/model/storagefile/` and the
- * API app's `src/app/common/model/storagefile/` +
- * `src/app/common/model/notification/`, then asserts every declared
- * `StorageFilePurpose` is wired through the upload-service initializer
- * path AND, for purposes that declare processing subtasks, through
- * the storage-file processing handler.
+ * Validates that the `storagefile/` model folder layout on both the
+ * component (`<componentDir>/src/lib/model/storagefile/`) and API
+ * (`<apiDir>/src/app/common/model/storagefile/`) sides follows the
+ * downstream convention. The API side must contain
+ * `storagefile.upload.service.ts`, `storagefile.module.ts`, and
+ * `storagefile.init.ts` at minimum. Any `.ts` file that does not start
+ * with `storagefile.` (and is not `index.ts`) is flagged as a stray
+ * filename. When a `handlers/` subfolder exists at the API root,
+ * non-canonical files at root are flagged so handler logic stays
+ * inside `handlers/`.
+ *
+ * Cross-file wiring (whether each declared StorageFilePurpose is
+ * reachable from the upload service / processing handler) is checked
+ * by the sibling `dbx_storagefile_model_validate_app` tool.
  *
  * Accepts two required inputs:
  *   - `componentDir`: relative path to the `-firebase` component package.
@@ -20,19 +27,21 @@ import { resolve, sep } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { formatResult, inspectAppStorageFiles, validateAppStorageFiles } from './validate-app-storagefiles/index.js';
+import { formatResult, inspectStorageFileFolder, validateStorageFileFolder } from './storagefile-model-validate-folder/index.js';
 
 // MARK: Tool definition
-const DBX_VALIDATE_APP_STORAGEFILES_TOOL: Tool = {
-  name: 'dbx_validate_app_storagefiles',
+const DBX_STORAGEFILE_MODEL_VALIDATE_FOLDER_TOOL: Tool = {
+  name: 'dbx_storagefile_model_validate_folder',
   description: [
-    'Validate that every `StorageFilePurpose` declared in a `-firebase` component package is wired through the upload-service path in the API app: a paired `*_UPLOADED_FILE_TYPE_IDENTIFIER` constant, a `StorageFileInitializeFromUploadServiceInitializer` whose `type:` references it, the surrounding `storageFileInitializeFromUploadService({ initializer })` factory, and a NestJS provider with `provide: StorageFileInitializeFromUploadService, useFactory: <factory>`.',
+    'Validate that the `storagefile/` model folder layout on both the component and API sides follows the downstream convention. The component-side folder lives at `<componentDir>/src/lib/model/storagefile/` and the API-side folder at `<apiDir>/src/app/common/model/storagefile/`.',
     '',
-    'For purposes that declare processing subtasks (a `<Foo>ProcessingSubtask` union alias and at least one `*_PROCESSING_SUBTASK` constant), the validator additionally verifies a `StorageFileProcessingPurposeSubtaskProcessorConfig` whose `target:` references the purpose, with a `flow:` array that covers every declared subtask, and that the surrounding `storageFileProcessingNotificationTaskHandler({ processors })` call exists.',
+    'API-side required files (errors when missing): `storagefile.upload.service.ts`, `storagefile.module.ts`, `storagefile.init.ts`.',
     '',
-    'Cross-file tracing follows direct entries and spread (`...workerFileInitializers`) through every `.ts` file under `src/lib/model/storagefile/` on the component side and `src/app/common/model/storagefile/` + `src/app/common/model/notification/` on the API side.',
+    'Layout warnings cover: `.ts` files at the folder root that do not start with `storagefile.` (and are not `index.ts`); and non-canonical files at the API root when a sibling `handlers/` subfolder also exists (suggesting they should move into `handlers/`).',
     '',
-    'External identifiers imported from `@dereekb/*` are trusted — spreads and `type:` / `target:` references that resolve into upstream packages do not produce orphan/unresolved errors.',
+    "Barrel rule (error): when an `index.ts` is present at either folder root, every `export * from './X'` clause must resolve locally — to either `./X.ts` or `./X/`.",
+    '',
+    'Cross-file wiring (whether every declared `StorageFilePurpose` is reachable from the upload service and processing handler) is verified by the sibling `dbx_storagefile_model_validate_app` tool and is not re-checked here.',
     '',
     'Provide both:',
     '- `componentDir`: relative path to the `-firebase` component package (e.g. `components/demo-firebase`).',
@@ -90,7 +99,7 @@ function ensureInsideCwd(relativePath: string, cwd: string): string {
 }
 
 // MARK: Handler
-export async function runValidateAppStorageFiles(rawArgs: unknown): Promise<ToolResult> {
+export async function runStorageFileModelValidateFolder(rawArgs: unknown): Promise<ToolResult> {
   let args: ParsedArgs;
   try {
     args = parseArgs(rawArgs);
@@ -110,8 +119,13 @@ export async function runValidateAppStorageFiles(rawArgs: unknown): Promise<Tool
     return toolError(message);
   }
 
-  const inspection = await inspectAppStorageFiles(componentAbs, apiAbs);
-  const validation = validateAppStorageFiles(inspection, { componentDir: args.componentDir, apiDir: args.apiDir });
+  const inspection = await inspectStorageFileFolder({
+    componentRootDir: componentAbs,
+    componentRelDir: args.componentDir,
+    apiRootDir: apiAbs,
+    apiRelDir: args.apiDir
+  });
+  const validation = validateStorageFileFolder(inspection);
   const text = formatResult(validation);
   const result: ToolResult = {
     content: [{ type: 'text', text }],
@@ -120,7 +134,7 @@ export async function runValidateAppStorageFiles(rawArgs: unknown): Promise<Tool
   return result;
 }
 
-export const validateAppStorageFilesTool: DbxTool = {
-  definition: DBX_VALIDATE_APP_STORAGEFILES_TOOL,
-  run: runValidateAppStorageFiles
+export const storageFileModelValidateFolderTool: DbxTool = {
+  definition: DBX_STORAGEFILE_MODEL_VALIDATE_FOLDER_TOOL,
+  run: runStorageFileModelValidateFolder
 };

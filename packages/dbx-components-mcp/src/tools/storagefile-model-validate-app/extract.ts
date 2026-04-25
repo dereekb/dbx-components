@@ -1,5 +1,5 @@
 /**
- * Cross-file AST extraction for `dbx_validate_app_storagefiles`.
+ * Cross-file AST extraction for `dbx_storagefile_model_validate_app`.
  *
  * Every component + API file lands in a single in-memory ts-morph
  * `Project`; extraction resolves spreads and array-binding references

@@ -27,9 +27,9 @@
  * | dbx_validate_system_folder  | Verification   | "Is this system folder set up correctly?" |
  * | dbx_validate_app_notifications | Verification | "Is every app notification wired end-to-end?" |
  * | dbx_list_app_notifications     | Discovery    | "What notifications does this app configure?" |
- * | dbx_validate_app_storagefiles  | Verification | "Is every storagefile purpose wired end-to-end?" |
- * | dbx_list_app_storagefiles      | Discovery    | "What storagefile purposes does this app configure?" |
- * | dbx_validate_storagefile_folder | Verification | "Does this storagefile folder follow the convention?" |
+ * | dbx_storagefile_model_validate_app | Verification | "Is every storagefile purpose wired end-to-end?" |
+ * | dbx_storagefile_model_list_app     | Discovery    | "What storagefile purposes does this app configure?" |
+ * | dbx_storagefile_model_validate_folder | Verification | "Does this storagefile folder follow the convention?" |
  * | dbx_validate_notification_folder | Verification | "Does this notification folder follow the convention?" |
  * | dbx_scaffold_artifact          | Generation   | "Give me the body for a new <artifact>." |
  * | dbx_file_convention            | Reference    | "Where do I put a new <artifact>?"     |
@@ -50,9 +50,9 @@ import { modelValidateFolderTool } from './model-validate-folder.tool.js';
 import { validateSystemFolderTool } from './validate-system-folder.tool.js';
 import { validateAppNotificationsTool } from './validate-app-notifications.tool.js';
 import { listAppNotificationsTool } from './list-app-notifications.tool.js';
-import { validateAppStorageFilesTool } from './validate-app-storagefiles.tool.js';
-import { listAppStorageFilesTool } from './list-app-storagefiles.tool.js';
-import { validateStorageFileFolderTool } from './validate-storagefile-folder.tool.js';
+import { storageFileModelValidateAppTool } from './storagefile-model-validate-app.tool.js';
+import { storageFileModelListAppTool } from './storagefile-model-list-app.tool.js';
+import { storageFileModelValidateFolderTool } from './storagefile-model-validate-folder.tool.js';
 import { validateNotificationFolderTool } from './validate-notification-folder.tool.js';
 import { scaffoldArtifactTool } from './scaffold-artifact.tool.js';
 import { fileConventionTool } from './file-convention.tool.js';
@@ -61,7 +61,7 @@ import { toolError, type DbxTool } from './types.js';
 /**
  * Every registered tool in order of presentation in `tools/list`.
  */
-export const DBX_TOOLS: readonly DbxTool[] = [lookupForgeTool, lookupModelTool, searchForgeTool, searchModelTool, formExamplesTool, formScaffoldTool, modelDecodeTool, modelValidateTool, modelValidateApiTool, modelValidateFolderTool, validateSystemFolderTool, validateAppNotificationsTool, listAppNotificationsTool, validateAppStorageFilesTool, listAppStorageFilesTool, validateStorageFileFolderTool, validateNotificationFolderTool, scaffoldArtifactTool, fileConventionTool];
+export const DBX_TOOLS: readonly DbxTool[] = [lookupForgeTool, lookupModelTool, searchForgeTool, searchModelTool, formExamplesTool, formScaffoldTool, modelDecodeTool, modelValidateTool, modelValidateApiTool, modelValidateFolderTool, validateSystemFolderTool, validateAppNotificationsTool, listAppNotificationsTool, storageFileModelValidateAppTool, storageFileModelListAppTool, storageFileModelValidateFolderTool, validateNotificationFolderTool, scaffoldArtifactTool, fileConventionTool];
 
 export function registerTools(server: McpServer): void {
   const underlyingServer = server.server;

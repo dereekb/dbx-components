@@ -1,5 +1,5 @@
 /**
- * Shared types for the `dbx_validate_storagefile_folder` validator.
+ * Shared types for the `dbx_storagefile_model_validate_folder` validator.
  *
  * The validator takes two directory paths — a `-firebase` component
  * package and an API app — and asserts that the `storagefile/` model
@@ -18,7 +18,7 @@
  *
  * Cross-file wiring (whether each declared purpose is reachable from
  * the upload service / processing handler) is verified by the
- * sibling validator `dbx_validate_app_storagefiles` and is not
+ * sibling validator `dbx_storagefile_model_validate_app` and is not
  * re-checked here.
  */
 

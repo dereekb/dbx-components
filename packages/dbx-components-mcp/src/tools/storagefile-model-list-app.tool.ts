@@ -1,5 +1,5 @@
 /**
- * `dbx_list_app_storagefiles` tool.
+ * `dbx_storagefile_model_list_app` tool.
  *
  * Emits a human-readable report of every `StorageFilePurpose`
  * configured in a downstream `-firebase` component + API app pair.
@@ -10,7 +10,7 @@
  * configured and whether it's fully wired.
  *
  * Reuses the cross-file extractor from
- * `dbx_validate_app_storagefiles` — no duplicate AST walk.
+ * `dbx_storagefile_model_validate_app` — no duplicate AST walk.
  *
  * Accepts the same `componentDir` + `apiDir` as the validator, plus
  * an optional `format: 'markdown' | 'json'` (default markdown).
@@ -20,16 +20,16 @@ import { resolve, sep } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { inspectAppStorageFiles } from './validate-app-storagefiles/index.js';
-import { formatReportAsJson, formatReportAsMarkdown, listAppStorageFiles } from './list-app-storagefiles/index.js';
+import { inspectAppStorageFiles } from './storagefile-model-validate-app/index.js';
+import { formatReportAsJson, formatReportAsMarkdown, listAppStorageFiles } from './storagefile-model-list-app/index.js';
 
 // MARK: Tool definition
-const DBX_LIST_APP_STORAGEFILES_TOOL: Tool = {
-  name: 'dbx_list_app_storagefiles',
+const DBX_STORAGEFILE_MODEL_LIST_APP_TOOL: Tool = {
+  name: 'dbx_storagefile_model_list_app',
   description: [
     'List every `StorageFilePurpose` configured in a downstream `-firebase` component + API app pair. Each entry reports its purpose code, paired `UploadedFileTypeIdentifier` constant, group-ids helper, declared processing subtasks, and registration flags (`hasUploadInitializer`, `hasProcessingConfig`).',
     '',
-    'Cross-file resolution mirrors `dbx_validate_app_storagefiles` — initializer arrays and spread-of-call factory composition are traced through every `.ts` file under `src/lib/model/storagefile/` on the component side and `src/app/common/model/storagefile/` + `src/app/common/model/notification/` on the API side.',
+    'Cross-file resolution mirrors `dbx_storagefile_model_validate_app` — initializer arrays and spread-of-call factory composition are traced through every `.ts` file under `src/lib/model/storagefile/` on the component side and `src/app/common/model/storagefile/` + `src/app/common/model/notification/` on the API side.',
     '',
     'Provide:',
     '- `componentDir`: relative path to the `-firebase` component package (e.g. `components/demo-firebase`).',
@@ -85,7 +85,7 @@ function ensureInsideCwd(relativePath: string, cwd: string): string {
 }
 
 // MARK: Handler
-export async function runListAppStorageFiles(rawArgs: unknown): Promise<ToolResult> {
+export async function runStorageFileModelListApp(rawArgs: unknown): Promise<ToolResult> {
   let args: ParsedArgs;
   try {
     args = parseArgs(rawArgs);
@@ -112,7 +112,7 @@ export async function runListAppStorageFiles(rawArgs: unknown): Promise<ToolResu
   return result;
 }
 
-export const listAppStorageFilesTool: DbxTool = {
-  definition: DBX_LIST_APP_STORAGEFILES_TOOL,
-  run: runListAppStorageFiles
+export const storageFileModelListAppTool: DbxTool = {
+  definition: DBX_STORAGEFILE_MODEL_LIST_APP_TOOL,
+  run: runStorageFileModelListApp
 };

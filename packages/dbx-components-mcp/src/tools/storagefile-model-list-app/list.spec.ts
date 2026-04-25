@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { formatReportAsJson, formatReportAsMarkdown, listAppStorageFiles } from './index.js';
-import type { AppStorageFilesInspection, InspectedFile } from '../validate-app-storagefiles/index.js';
+import type { AppStorageFilesInspection, InspectedFile } from '../storagefile-model-validate-app/index.js';
 
 const COMPONENT_MAIN = `import { type StorageFileGroupId, type FirebaseAuthUserId, type StorageFileProcessingSubtask, type StorageFilePurpose, type UploadedFileTypeIdentifier } from '@dereekb/firebase';
 
