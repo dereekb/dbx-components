@@ -1,7 +1,7 @@
 /**
- * Forge Field Registry.
+ * Form Field Registry.
  *
- * Canonical metadata for @dereekb/dbx-form forge helpers — field factories
+ * Canonical metadata for @dereekb/dbx-form helpers — field factories
  * (e.g. `dbxForgeTextField`), composite builders (e.g. `dbxForgeDateRangeRow`),
  * and layout primitives (e.g. `dbxForgeRow`). The three-tier taxonomy is
  * documented in the `dbx__ref__dbx-forge-field` skill.
@@ -18,21 +18,21 @@
 import type { PropertyInfo } from './index.js';
 
 /**
- * Builder tier from the forge-field skill.
+ * Builder tier from the form-field skill.
  *
  *   - `field-factory`     dbxForgeFieldFunction / dbxForgeMaterialFormFieldWrappedFieldFunction — registers a type
- *   - `composite-builder` plain function composing other forge entries — does NOT register a type
+ *   - `composite-builder` plain function composing other form entries — does NOT register a type
  *   - `primitive`         core layout helper (row, group, array, section)
  */
-export type ForgeTier = 'field-factory' | 'composite-builder' | 'primitive';
+export type FormTier = 'field-factory' | 'composite-builder' | 'primitive';
 
 /**
- * Which forge factory helper a field-factory entry is built with.
+ * Which form factory helper a field-factory entry is built with.
  *
  *   - `unwrapped`                    `dbxForgeFieldFunction` (field renders its own chrome)
  *   - `material-form-field-wrapped`  `dbxForgeMaterialFormFieldWrappedFieldFunction` (wrapped in mat-form-field)
  */
-export type ForgeFieldWrapperPattern = 'unwrapped' | 'material-form-field-wrapped';
+export type FormFieldWrapperPattern = 'unwrapped' | 'material-form-field-wrapped';
 
 /**
  * What a composite builder's naming suffix advertises it returns.
@@ -44,7 +44,7 @@ export type ForgeFieldWrapperPattern = 'unwrapped' | 'material-form-field-wrappe
  *   - `Wrapper` `dbxForgeXWrapper` → WrapperConfig or composed layout wrapped in a toggle/expand
  *   - `Layout`  `dbxForgeXLayout`  → GroupField with responsive flex configuration
  */
-export type ForgeCompositeSuffix = 'Row' | 'Group' | 'Fields' | 'Field' | 'Wrapper' | 'Layout';
+export type FormCompositeSuffix = 'Row' | 'Group' | 'Fields' | 'Field' | 'Wrapper' | 'Layout';
 
 /**
  * Documentation of the common output primitives. `produces` on an entry is a
@@ -52,7 +52,7 @@ export type ForgeCompositeSuffix = 'Row' | 'Group' | 'Fields' | 'Field' | 'Wrapp
  * `'number'`, `'Date'`, `'T'`, `'T[]'`, `'AddressValue'`, ...). These are the
  * canonical layout outputs that commonly show up in the catalog.
  */
-export type ForgeLayoutPrimitive = 'RowField' | 'GroupField' | 'ArrayField' | 'SectionField' | 'FieldDef[]' | 'WrapperConfig';
+export type FormLayoutPrimitive = 'RowField' | 'GroupField' | 'ArrayField' | 'SectionField' | 'FieldDef[]' | 'WrapperConfig';
 
 /**
  * Whether an entry's output is an array / collection.
@@ -63,10 +63,10 @@ export type ForgeLayoutPrimitive = 'RowField' | 'GroupField' | 'ArrayField' | 'S
  *   - `optional`  entry can be configured either way (e.g. searchable-chip in
  *                 single-select vs multi-select mode).
  */
-export type ForgeArrayOutput = 'yes' | 'no' | 'optional';
+export type FormArrayOutput = 'yes' | 'no' | 'optional';
 
 // MARK: Entry shapes
-interface ForgeEntryBase {
+interface FormEntryBase {
   /** Unique registry slug (kebab-case). Used for lookup. */
   readonly slug: string;
   /** Exported factory/builder function name (e.g. `'dbxForgeTextField'`). */
@@ -87,10 +87,10 @@ interface ForgeEntryBase {
    * callers ask "I need a single X" vs "I need a list of X" without parsing
    * the type string.
    */
-  readonly arrayOutput: ForgeArrayOutput;
+  readonly arrayOutput: FormArrayOutput;
   /** Prose description of what the entry builds and when to reach for it. */
   readonly description: string;
-  /** Path within `packages/dbx-form/src/lib/forge/` where the export is defined. */
+  /** Path within `packages/dbx-form/src/lib/form/` where the export is defined. */
   readonly sourcePath: string;
   /** Full copy-paste-ready usage example. */
   readonly example: string;
@@ -101,13 +101,13 @@ interface ForgeEntryBase {
 }
 
 /**
- * A field factory: registers an ng-forge field type via
+ * A field factory: registers an ng-form field type via
  * `dbxForgeFieldFunction` or `dbxForgeMaterialFormFieldWrappedFieldFunction`.
  */
-export interface ForgeFieldFactoryInfo extends ForgeEntryBase {
+export interface FormFieldFactoryInfo extends FormEntryBase {
   readonly tier: 'field-factory';
-  readonly wrapperPattern: ForgeFieldWrapperPattern;
-  /** Underlying ng-forge dynamic-forms type string (e.g. `'input'`, `'textarea'`, `'datepicker'`, `'toggle'`, `'slider'`). */
+  readonly wrapperPattern: FormFieldWrapperPattern;
+  /** Underlying ng-form dynamic-forms type string (e.g. `'input'`, `'textarea'`, `'datepicker'`, `'toggle'`, `'slider'`). */
   readonly ngFormType: string;
   /** TypeScript config interface name (e.g. `'DbxForgeTextFieldConfig'`). */
   readonly configInterface: string;
@@ -116,45 +116,45 @@ export interface ForgeFieldFactoryInfo extends ForgeEntryBase {
 }
 
 /**
- * A composite builder: composes other forge entries into a layout. Does not
- * register a new ng-forge type.
+ * A composite builder: composes other form entries into a layout. Does not
+ * register a new ng-form type.
  */
-export interface ForgeCompositeBuilderInfo extends ForgeEntryBase {
+export interface FormCompositeBuilderInfo extends FormEntryBase {
   readonly tier: 'composite-builder';
   /** Which suffix the builder uses — mirrors its return shape. */
-  readonly suffix: ForgeCompositeSuffix;
+  readonly suffix: FormCompositeSuffix;
   /** TypeScript config interface name (descriptive, not `DbxForgeFieldFunctionDef`-based). */
   readonly configInterface: string;
-  /** Slugs of other forge entries this composite composes from. */
+  /** Slugs of other form entries this composite composes from. */
   readonly composesFromSlugs: readonly string[];
 }
 
 /**
  * A layout primitive: core library helper that composites wrap (e.g. `dbxForgeRow`).
  */
-export interface ForgePrimitiveInfo extends ForgeEntryBase {
+export interface FormPrimitiveInfo extends FormEntryBase {
   readonly tier: 'primitive';
-  /** Layout field type this primitive returns. Accepts any string for flexibility; common values enumerated in {@link ForgeLayoutPrimitive}. */
+  /** Layout field type this primitive returns. Accepts any string for flexibility; common values enumerated in {@link FormLayoutPrimitive}. */
   readonly returns: string;
   /** TypeScript config interface name if the primitive accepts a config object. */
   readonly configInterface?: string;
 }
 
 /**
- * Any entry in the forge registry.
+ * Any entry in the form registry.
  */
-export type ForgeFieldInfo = ForgeFieldFactoryInfo | ForgeCompositeBuilderInfo | ForgePrimitiveInfo;
+export type FormFieldInfo = FormFieldFactoryInfo | FormCompositeBuilderInfo | FormPrimitiveInfo;
 
 /**
  * Presentation order for tiers in listings.
  */
-export const FORGE_TIER_ORDER: readonly ForgeTier[] = ['field-factory', 'composite-builder', 'primitive'];
+export const FORM_TIER_ORDER: readonly FormTier[] = ['field-factory', 'composite-builder', 'primitive'];
 
 // MARK: Helpers for compact entry authoring
 const NO_EXTRA_CONFIG: Record<string, PropertyInfo> = {};
 
 // MARK: Registry
-export const FORGE_FIELDS: readonly ForgeFieldInfo[] = [
+export const FORM_FIELDS: readonly FormFieldInfo[] = [
   // =====================================================================
   // FIELD FACTORIES
   // =====================================================================
@@ -709,7 +709,7 @@ export const FORGE_FIELDS: readonly ForgeFieldInfo[] = [
     arrayOutput: 'no',
     configInterface: 'DbxForgeComponentFieldConfig<T>',
     generic: '<T = unknown>',
-    description: 'Escape hatch — injects any Angular component as the field renderer via DbxInjection. Use when no existing forge field fits.',
+    description: 'Escape hatch — injects any Angular component as the field renderer via DbxInjection. Use when no existing form field fits.',
     sourcePath: 'field/component/component.field.ts',
     config: {
       props: { name: 'props', type: 'DbxForgeComponentFieldProps<T>', description: 'Component injection config (component class + data).', required: true }

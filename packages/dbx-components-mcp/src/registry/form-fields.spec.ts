@@ -1,19 +1,19 @@
 import { describe, expect, it } from 'vitest';
-import { FORGE_FIELDS, FORGE_TIER_ORDER, getForgeField, getForgeFields, getForgeFieldsByProduces, getForgeFieldsByTier, getForgeFieldsByArrayOutput, getForgeProducesCatalog } from './index.js';
+import { FORM_FIELDS, FORM_TIER_ORDER, getFormField, getFormFields, getFormFieldsByProduces, getFormFieldsByTier, getFormFieldsByArrayOutput, getFormProducesCatalog } from './index.js';
 
-describe('forge-fields registry', () => {
+describe('form-fields registry', () => {
   it('exposes a non-empty list and covers all three tiers', () => {
-    expect(FORGE_FIELDS.length).toBeGreaterThan(0);
-    expect(getForgeFields()).toBe(FORGE_FIELDS);
-    for (const tier of FORGE_TIER_ORDER) {
-      expect(getForgeFieldsByTier(tier).length, `no entries for tier ${tier}`).toBeGreaterThan(0);
+    expect(FORM_FIELDS.length).toBeGreaterThan(0);
+    expect(getFormFields()).toBe(FORM_FIELDS);
+    for (const tier of FORM_TIER_ORDER) {
+      expect(getFormFieldsByTier(tier).length, `no entries for tier ${tier}`).toBeGreaterThan(0);
     }
   });
 
   it('gives every entry a unique slug and a known tier', () => {
     const slugs = new Set<string>();
-    const knownTiers = new Set<string>(FORGE_TIER_ORDER);
-    for (const field of FORGE_FIELDS) {
+    const knownTiers = new Set<string>(FORM_TIER_ORDER);
+    for (const field of FORM_FIELDS) {
       expect(slugs.has(field.slug), `duplicate slug: ${field.slug}`).toBe(false);
       slugs.add(field.slug);
       expect(knownTiers.has(field.tier), `unknown tier on ${field.slug}: ${field.tier}`).toBe(true);
@@ -22,18 +22,18 @@ describe('forge-fields registry', () => {
 
   it('gives every entry a produces value + arrayOutput in the known set', () => {
     const knownArray = new Set(['yes', 'no', 'optional']);
-    for (const field of FORGE_FIELDS) {
+    for (const field of FORM_FIELDS) {
       expect(field.produces.length, `${field.slug} missing produces`).toBeGreaterThan(0);
       expect(knownArray.has(field.arrayOutput), `${field.slug} has unknown arrayOutput ${field.arrayOutput}`).toBe(true);
     }
   });
 
-  it('primary index: getForgeFieldsByProduces returns all entries for a value', () => {
-    const strings = getForgeFieldsByProduces('string');
+  it('primary index: getFormFieldsByProduces returns all entries for a value', () => {
+    const strings = getFormFieldsByProduces('string');
     expect(strings.length).toBeGreaterThanOrEqual(2);
     expect(strings.every((f) => f.produces === 'string')).toBe(true);
 
-    const rowFields = getForgeFieldsByProduces('RowField');
+    const rowFields = getFormFieldsByProduces('RowField');
     expect(rowFields.length).toBeGreaterThanOrEqual(2);
     const rowTiers = new Set(rowFields.map((f) => f.tier));
     expect(rowTiers.has('primitive'), 'primitive row missing').toBe(true);
@@ -41,20 +41,20 @@ describe('forge-fields registry', () => {
   });
 
   it('produces catalog surfaces every distinct output primitive', () => {
-    const catalog = getForgeProducesCatalog();
+    const catalog = getFormProducesCatalog();
     expect(catalog).toContain('string');
     expect(catalog).toContain('RowField');
     expect(new Set(catalog).size).toBe(catalog.length);
   });
 
   it('looks up fields by slug and case-insensitive factory name', () => {
-    expect(getForgeField('text')?.factoryName).toBe('dbxForgeTextField');
-    expect(getForgeField('DBXFORGETEXTFIELD')?.slug).toBe('text');
-    expect(getForgeField('not-a-real-field')).toBeUndefined();
+    expect(getFormField('text')?.factoryName).toBe('dbxForgeTextField');
+    expect(getFormField('DBXFORGETEXTFIELD')?.slug).toBe('text');
+    expect(getFormField('not-a-real-field')).toBeUndefined();
   });
 
   it('filters by arrayOutput', () => {
-    const nonArray = getForgeFieldsByArrayOutput('no');
+    const nonArray = getFormFieldsByArrayOutput('no');
     expect(nonArray.length).toBeGreaterThan(0);
     expect(nonArray.every((f) => f.arrayOutput === 'no')).toBe(true);
   });

@@ -10,10 +10,10 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { getFirebaseModel, getFirebaseModelByPrefix, getFirebaseModels, getFirebasePrefixCatalog, getFirebaseSubcollectionsOf } from '../registry/index.js';
 
-const FIREBASE_MODELS_URI = 'dbx://firebase-models';
-const FIREBASE_MODEL_TEMPLATE = 'dbx://firebase-models/{name}';
-const FIREBASE_MODELS_BY_PREFIX_TEMPLATE = 'dbx://firebase-models/prefix/{prefix}';
-const FIREBASE_SUBCOLLECTIONS_TEMPLATE = 'dbx://firebase-models/subcollections/{parent}';
+const FIREBASE_MODELS_URI = 'dbx://model/firebase';
+const FIREBASE_MODEL_TEMPLATE = 'dbx://model/firebase/{name}';
+const FIREBASE_MODELS_BY_PREFIX_TEMPLATE = 'dbx://model/firebase/prefix/{prefix}';
+const FIREBASE_SUBCOLLECTIONS_TEMPLATE = 'dbx://model/firebase/subcollections/{parent}';
 
 export function registerFirebaseModelsResource(server: McpServer): void {
   server.registerResource(

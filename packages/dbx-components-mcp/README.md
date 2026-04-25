@@ -1,6 +1,6 @@
 # @dereekb/dbx-components-mcp
 
-MCP server for dbx-components — structured tool access to forge fields, Firebase models, server actions, UI components, routes, filters, pipes, and code-scaffolding helpers.
+MCP server for dbx-components — structured tool access to form fields, Firebase models, server actions, UI components, routes, filters, pipes, and code-scaffolding helpers.
 
 ## Tools
 
@@ -22,17 +22,19 @@ Tools are clustered by domain. Each cluster exposes lookup, search, examples, an
 
 ## Resources
 
+URIs are namespaced by domain (`dbx://<domain>/...`).
+
 | URI                                                  | Description                                            |
 |------------------------------------------------------|--------------------------------------------------------|
-| `dbx://forge-fields`                                 | Forge entry catalog                                    |
-| `dbx://forge-fields/{slug}`                          | Single forge entry                                     |
-| `dbx://forge-fields/produces/{produces}`             | Forge entries by output primitive                      |
-| `dbx://forge-fields/tier/{tier}`                     | Forge entries by tier                                  |
-| `dbx://forge-fields/array-output/{arrayOutput}`      | Forge entries by array-output flag                     |
-| `dbx://firebase-models`                              | Firebase model catalog                                 |
-| `dbx://firebase-models/{name}`                       | Single Firebase model                                  |
-| `dbx://firebase-models/prefix/{prefix}`              | Firebase model by collection prefix                    |
-| `dbx://firebase-models/subcollections/{parent}`      | Subcollection models nested under a parent identity    |
+| `dbx://form/fields`                                  | Form field catalog                                     |
+| `dbx://form/fields/{slug}`                           | Single form field entry                                |
+| `dbx://form/fields/produces/{produces}`              | Form fields by output primitive                        |
+| `dbx://form/fields/tier/{tier}`                      | Form fields by tier                                    |
+| `dbx://form/fields/array-output/{arrayOutput}`       | Form fields by array-output flag                       |
+| `dbx://model/firebase`                               | Firebase model catalog                                 |
+| `dbx://model/firebase/{name}`                        | Single Firebase model                                  |
+| `dbx://model/firebase/prefix/{prefix}`               | Firebase model by collection prefix                    |
+| `dbx://model/firebase/subcollections/{parent}`       | Subcollection models nested under a parent identity    |
 
 ## Usage
 

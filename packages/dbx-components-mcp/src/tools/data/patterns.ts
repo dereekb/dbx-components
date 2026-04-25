@@ -1,7 +1,7 @@
 /**
- * Curated dbx-form forge compositions used by the `dbx_form_examples` tool.
+ * Curated dbx-form compositions used by the `dbx_form_examples` tool.
  *
- * Each entry shows how to compose multiple forge entries into a complete,
+ * Each entry shows how to compose multiple form entries into a complete,
  * copy-paste-ready `FormConfig`. The per-field registry already surfaces
  * minimal single-field examples via `dbx_form_lookup` — PATTERNS is deliberately
  * about MULTI-field compositions that answer "how do I build a ___ form?"
@@ -19,8 +19,8 @@ export interface ExamplePattern {
   readonly name: string;
   /** One-sentence description of what the pattern builds. */
   readonly summary: string;
-  /** Forge slugs that this pattern composes from. Useful for cross-linking. */
-  readonly usesForgeSlugs: readonly string[];
+  /** Form slugs that this pattern composes from. Useful for cross-linking. */
+  readonly usesFormSlugs: readonly string[];
   /** Code snippets at increasing levels of detail. */
   readonly snippets: {
     readonly minimal: string;
@@ -36,7 +36,7 @@ export const EXAMPLE_PATTERNS: readonly ExamplePattern[] = [
     slug: 'contact-form',
     name: 'Contact form',
     summary: 'Name + email + phone + multi-line message, arranged in a single column.',
-    usesForgeSlugs: ['name', 'email', 'phone', 'text-area'],
+    usesFormSlugs: ['name', 'email', 'phone', 'text-area'],
     snippets: {
       minimal: `[
   dbxForgeNameField({ key: 'name', required: true }),
@@ -74,7 +74,7 @@ export interface ContactFormValue {
     slug: 'sign-up-form',
     name: 'Sign-up form',
     summary: 'Email-based username + password with confirmation, all wired up for cross-field equality via the login composite.',
-    usesForgeSlugs: ['username-password-login-fields', 'username-login-field', 'password-field', 'verify-password-field'],
+    usesFormSlugs: ['username-password-login-fields', 'username-login-field', 'password-field', 'verify-password-field'],
     snippets: {
       minimal: `dbxForgeUsernamePasswordLoginFields({ username: 'email', verifyPassword: true })`,
       brief: `// Sign-up form — uses the login composite with verifyPassword enabled
@@ -104,7 +104,7 @@ export interface SignUpValue {
     slug: 'login-form',
     name: 'Login form',
     summary: 'Email + password, no verification.',
-    usesForgeSlugs: ['username-password-login-fields'],
+    usesFormSlugs: ['username-password-login-fields'],
     snippets: {
       minimal: `dbxForgeUsernamePasswordLoginFields({ username: 'email' })`,
       brief: `const loginFields = dbxForgeUsernamePasswordLoginFields({ username: 'email' });`,
@@ -124,7 +124,7 @@ export interface LoginValue {
     slug: 'address-form',
     name: 'Address form',
     summary: 'Full US-style address (line 1, optional line 2, city, state, zip, optional country) as a nested group.',
-    usesForgeSlugs: ['address-group', 'address-fields', 'address-line', 'city', 'state', 'zip-code', 'country'],
+    usesFormSlugs: ['address-group', 'address-fields', 'address-line', 'city', 'state', 'zip-code', 'country'],
     snippets: {
       minimal: `dbxForgeAddressGroup({ key: 'address' })`,
       brief: `// Nested under \`address\` in the form value
@@ -149,7 +149,7 @@ export interface CheckoutValue {
     slug: 'date-range-filter',
     name: 'Date range filter',
     summary: 'Start and end dates side by side, labelled "From" / "To".',
-    usesForgeSlugs: ['date-range-row', 'date-time'],
+    usesFormSlugs: ['date-range-row', 'date-time'],
     snippets: {
       minimal: `dbxForgeDateRangeRow({ start: { label: 'From' }, end: { label: 'To' } })`,
       brief: `const rangeRow = dbxForgeDateRangeRow({
@@ -182,7 +182,7 @@ export interface FilterValue {
     slug: 'tag-picker',
     name: 'Tag picker',
     summary: 'Multi-select searchable chips over a string tag list.',
-    usesForgeSlugs: ['searchable-string-chip', 'searchable-chip', 'pickable-chip'],
+    usesFormSlugs: ['searchable-string-chip', 'searchable-chip', 'pickable-chip'],
     snippets: {
       minimal: `dbxForgeSearchableStringChipField({
   key: 'tags',
@@ -230,7 +230,7 @@ export interface ArticleValue {
     slug: 'expandable-advanced',
     name: 'Expandable "advanced" options',
     summary: 'Always-visible required fields with a collapsible bucket of optional advanced settings below.',
-    usesForgeSlugs: ['expand-wrapper', 'toggle', 'number', 'text'],
+    usesFormSlugs: ['expand-wrapper', 'toggle', 'number', 'text'],
     snippets: {
       minimal: `dbxForgeExpandWrapper({
   label: 'Show advanced options',

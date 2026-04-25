@@ -15,8 +15,8 @@
  *
  * | Tool                                    | Purpose       | One-liner                                              |
  * |-----------------------------------------|---------------|--------------------------------------------------------|
- * | dbx_form_lookup                         | Documentation | "Tell me about forge entry X"                          |
- * | dbx_form_search                         | Discovery     | "Find forge entries matching keywords"                 |
+ * | dbx_form_lookup                         | Documentation | "Tell me about form entry X"                          |
+ * | dbx_form_search                         | Discovery     | "Find form entries matching keywords"                 |
  * | dbx_form_examples                       | Working code  | "Show me how to compose X"                             |
  * | dbx_form_scaffold                       | Generation    | "Generate a FormConfig skeleton"                       |
  * | dbx_ui_lookup                           | Documentation | "Tell me about dbx-web component X"                    |
@@ -51,8 +51,8 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
-import { lookupForgeTool } from './lookup-forge.tool.js';
-import { searchForgeTool } from './search-forge.tool.js';
+import { lookupFormTool } from './lookup-form.tool.js';
+import { searchFormTool } from './search-form.tool.js';
 import { formExamplesTool } from './form-examples.tool.js';
 import { formScaffoldTool } from './form-scaffold.tool.js';
 import { lookupUiTool } from './lookup-ui.tool.js';
@@ -94,8 +94,8 @@ import { toolError, type DbxTool } from './types.js';
  */
 export const DBX_TOOLS: readonly DbxTool[] = [
   // form
-  lookupForgeTool,
-  searchForgeTool,
+  lookupFormTool,
+  searchFormTool,
   formExamplesTool,
   formScaffoldTool,
   // ui

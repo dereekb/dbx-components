@@ -18,7 +18,7 @@ describe('dbx_form_examples', () => {
 
   it('renders the pattern catalog for "list"', () => {
     const text = firstText(runFormExamples({ pattern: 'list' }));
-    expect(text).toMatch(/# Forge example patterns/);
+    expect(text).toMatch(/# Form example patterns/);
     for (const pattern of EXAMPLE_PATTERNS) {
       expect(text).toContain(pattern.slug);
     }

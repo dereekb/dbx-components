@@ -72,7 +72,7 @@ export class DeleteAccountButtonComponent {
   };
 }`
     },
-    notes: 'No form means we still need a value provider — `dbxActionValue` (with no expression) is what unblocks the TRIGGERED → VALUE_READY transition. Forgetting it is the most common reason an action button "does nothing".'
+    notes: 'No form means we still need a value provider — `dbxActionValue` (with no expression) is what unblocks the TRIGGERED → VALUE_READY transition. Formtting it is the most common reason an action button "does nothing".'
   },
   {
     slug: 'form-submit',

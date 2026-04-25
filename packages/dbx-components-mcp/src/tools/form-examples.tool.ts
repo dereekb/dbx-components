@@ -1,7 +1,7 @@
 /**
  * `dbx_form_examples` tool.
  *
- * Surfaces curated multi-field forge compositions ("contact form", "sign-up",
+ * Surfaces curated multi-field form compositions ("contact form", "sign-up",
  * "address form"). Complements `dbx_form_lookup` — lookup shows a SINGLE field's
  * docs, examples show how to compose several into a working form.
  */
@@ -17,11 +17,11 @@ const DEPTH_VALUES = ['minimal', 'brief', 'full'] as const;
 const DBX_FORM_EXAMPLES_TOOL: Tool = {
   name: 'dbx_form_examples',
   description: [
-    'Get curated multi-field @dereekb/dbx-form forge compositions — e.g. "contact-form", "sign-up-form", "address-form", "date-range-filter", "tag-picker".',
+    'Get curated multi-field @dereekb/dbx-form compositions — e.g. "contact-form", "sign-up-form", "address-form", "date-range-filter", "tag-picker".',
     '',
     'Pass `pattern="list"` to see every available composition. Pass any slug for a copy-paste-ready example at the requested depth (`minimal`, `brief`, or `full`).',
     '',
-    'This complements `dbx_form_lookup`, which covers single-field docs. Reach for `dbx_form_examples` when the question is "how do I compose several forge helpers together?"'
+    'This complements `dbx_form_lookup`, which covers single-field docs. Reach for `dbx_form_examples` when the question is "how do I compose several form helpers together?"'
   ].join('\n'),
   inputSchema: {
     type: 'object',
@@ -66,13 +66,13 @@ function parseExamplesArgs(raw: unknown): ParsedExamplesArgs {
 
 // MARK: Formatting
 function formatPatternCatalog(): string {
-  const lines: string[] = [`# Forge example patterns (${EXAMPLE_PATTERNS.length})`, '', 'Call `dbx_form_examples pattern="<slug>"` for a full example.', ''];
+  const lines: string[] = [`# Form example patterns (${EXAMPLE_PATTERNS.length})`, '', 'Call `dbx_form_examples pattern="<slug>"` for a full example.', ''];
   for (const pattern of EXAMPLE_PATTERNS) {
     lines.push(`## ${pattern.name}`);
     lines.push('');
     lines.push(`- **slug:** \`${pattern.slug}\``);
     lines.push(`- **summary:** ${pattern.summary}`);
-    lines.push(`- **uses:** ${pattern.usesForgeSlugs.map((s) => `\`${s}\``).join(', ')}`);
+    lines.push(`- **uses:** ${pattern.usesFormSlugs.map((s) => `\`${s}\``).join(', ')}`);
     lines.push('');
   }
   const result = lines.join('\n').trimEnd();
@@ -81,7 +81,7 @@ function formatPatternCatalog(): string {
 
 function formatPattern(pattern: ExamplePattern, depth: ExampleDepth): string {
   const snippet = pattern.snippets[depth];
-  const sections: string[] = [`# ${pattern.name}`, '', pattern.summary, '', `**slug:** \`${pattern.slug}\` · **depth:** \`${depth}\` · **uses:** ${pattern.usesForgeSlugs.map((s) => `\`${s}\``).join(', ')}`, '', '```ts', snippet, '```'];
+  const sections: string[] = [`# ${pattern.name}`, '', pattern.summary, '', `**slug:** \`${pattern.slug}\` · **depth:** \`${depth}\` · **uses:** ${pattern.usesFormSlugs.map((s) => `\`${s}\``).join(', ')}`, '', '```ts', snippet, '```'];
   if (pattern.notes && depth === 'full') {
     sections.push('');
     sections.push('## Notes');

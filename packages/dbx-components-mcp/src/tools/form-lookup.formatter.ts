@@ -1,5 +1,5 @@
 /**
- * Markdown formatters for forge registry entries. The `dbx_form_lookup` tool calls
+ * Markdown formatters for form registry entries. The `dbx_form_lookup` tool calls
  * these to produce human-readable output that LLMs can pass through verbatim.
  *
  * Two depths:
@@ -7,26 +7,26 @@
  *   - `full`  — complete documentation with config table and full example
  */
 
-import { FORGE_TIER_ORDER, type ForgeFieldInfo } from '../registry/index.js';
+import { FORM_TIER_ORDER, type FormFieldInfo } from '../registry/index.js';
 
 type Depth = 'brief' | 'full';
 
 /**
- * Formats a single forge entry as markdown at the requested depth.
+ * Formats a single form entry as markdown at the requested depth.
  */
-export function formatForgeFieldEntry(field: ForgeFieldInfo, depth: Depth): string {
+export function formatFormFieldEntry(field: FormFieldInfo, depth: Depth): string {
   const result = depth === 'brief' ? formatBrief(field) : formatFull(field);
   return result;
 }
 
-function formatBrief(field: ForgeFieldInfo): string {
+function formatBrief(field: FormFieldInfo): string {
   const tierBits = formatTierBits(field);
   const array = field.arrayOutput === 'yes' ? ' (array)' : field.arrayOutput === 'optional' ? ' (single or array)' : '';
   const result = [`## ${field.factoryName}`, '', `**slug:** \`${field.slug}\` · **tier:** \`${field.tier}\` · **produces:** \`${field.produces}\`${array}${tierBits}`, '', field.description, '', '```ts', field.minimalExample, '```'].join('\n');
   return result;
 }
 
-function formatFull(field: ForgeFieldInfo): string {
+function formatFull(field: FormFieldInfo): string {
   const header = formatHeader(field);
   const configTable = formatConfigTable(field);
   const exampleSection = formatExampleSection(field);
@@ -37,13 +37,13 @@ function formatFull(field: ForgeFieldInfo): string {
   return result;
 }
 
-function formatHeader(field: ForgeFieldInfo): string {
+function formatHeader(field: FormFieldInfo): string {
   const array = field.arrayOutput === 'yes' ? ' · array output' : field.arrayOutput === 'optional' ? ' · array optional' : '';
-  const result = [`# ${field.factoryName}`, '', `- **slug:** \`${field.slug}\``, `- **tier:** \`${field.tier}\``, `- **produces:** \`${field.produces}\`${array}`, `- **source:** \`packages/dbx-form/src/lib/forge/${field.sourcePath}\``].join('\n');
+  const result = [`# ${field.factoryName}`, '', `- **slug:** \`${field.slug}\``, `- **tier:** \`${field.tier}\``, `- **produces:** \`${field.produces}\`${array}`, `- **source:** \`packages/dbx-form/src/lib/form/${field.sourcePath}\``].join('\n');
   return result;
 }
 
-function formatTierBits(field: ForgeFieldInfo): string {
+function formatTierBits(field: FormFieldInfo): string {
   let result = '';
   if (field.tier === 'field-factory') {
     result = ` · ngFormType: \`${field.ngFormType}\``;
@@ -55,11 +55,11 @@ function formatTierBits(field: ForgeFieldInfo): string {
   return result;
 }
 
-function formatTierDetails(field: ForgeFieldInfo): string {
+function formatTierDetails(field: FormFieldInfo): string {
   const lines: string[] = [];
   if (field.tier === 'field-factory') {
     lines.push('## Factory');
-    lines.push(`- **ng-forge type:** \`${field.ngFormType}\``);
+    lines.push(`- **ng-form type:** \`${field.ngFormType}\``);
     lines.push(`- **wrapper pattern:** \`${field.wrapperPattern}\``);
     lines.push(`- **config interface:** \`${field.configInterface}\``);
     if (field.generic) {
@@ -84,7 +84,7 @@ function formatTierDetails(field: ForgeFieldInfo): string {
   return result;
 }
 
-function formatConfigTable(field: ForgeFieldInfo): string {
+function formatConfigTable(field: FormFieldInfo): string {
   const keys = Object.keys(field.config);
   let result: string;
   if (keys.length === 0) {
@@ -102,21 +102,21 @@ function formatConfigTable(field: ForgeFieldInfo): string {
   return result;
 }
 
-function formatExampleSection(field: ForgeFieldInfo): string {
+function formatExampleSection(field: FormFieldInfo): string {
   const result = ['## Example', '', '```ts', field.example, '```', '', '### Minimal', '', '```ts', field.minimalExample, '```'].join('\n');
   return result;
 }
 
 /**
- * Formats a list of forge entries — used when a query (slug/alias that
+ * Formats a list of form entries — used when a query (slug/alias that
  * matches a produces value, or `list` topic) returns multiple candidates.
  */
-export function formatForgeFieldGroup(fields: readonly ForgeFieldInfo[], title: string): string {
+export function formatFormFieldGroup(fields: readonly FormFieldInfo[], title: string): string {
   if (fields.length === 0) {
-    const result = `_No forge entries matched._`;
+    const result = `_No form entries matched._`;
     return result;
   }
-  const byTier = new Map<string, ForgeFieldInfo[]>();
+  const byTier = new Map<string, FormFieldInfo[]>();
   for (const field of fields) {
     const list = byTier.get(field.tier) ?? [];
     list.push(field);
@@ -124,7 +124,7 @@ export function formatForgeFieldGroup(fields: readonly ForgeFieldInfo[], title: 
   }
 
   const sections: string[] = [`# ${title}`, ''];
-  for (const tier of FORGE_TIER_ORDER) {
+  for (const tier of FORM_TIER_ORDER) {
     const list = byTier.get(tier);
     if (!list || list.length === 0) {
       continue;

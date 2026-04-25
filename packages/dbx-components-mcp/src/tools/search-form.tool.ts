@@ -1,18 +1,18 @@
 /**
  * `dbx_form_search` tool.
  *
- * Returns ranked matches across the forge registry. Unlike `dbx_form_lookup` —
+ * Returns ranked matches across the form registry. Unlike `dbx_form_lookup` —
  * which resolves exactly one topic to a single entry, a tier group, or a
  * produces group — search is deliberately ranked and many-result: give it a
  * keyword (or several space-separated keywords) and it returns the top-N
- * forge entries scored by where the match landed (slug > factory name >
+ * form entries scored by where the match landed (slug > factory name >
  * produces > tier > config property names > description).
  */
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { FORGE_FIELDS, type ForgeFieldInfo } from '../registry/index.js';
-import { resolveTopicAlias } from './forge-alias-resolver.js';
+import { FORM_FIELDS, type FormFieldInfo } from '../registry/index.js';
+import { resolveTopicAlias } from './form-alias-resolver.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 
 const DEFAULT_LIMIT = 10;
@@ -21,9 +21,7 @@ const MAX_LIMIT = 25;
 // MARK: Tool advertisement
 const DBX_FORM_SEARCH_TOOL: Tool = {
   name: 'dbx_form_search',
-  description: ['Search the @dereekb/dbx-form forge registry by keyword(s). Returns ranked candidates — pick one, then call `dbx_form_lookup` with the slug/name.', '', 'Query strategy:', '  • Space-separated tokens are ANDed (every token must contribute at least some score).', '  • Forge aliases resolve (e.g. "datepicker" is treated as "date").', '', "Use `dbx_form_lookup` when you already know which slug you want. Use `dbx_form_search` to discover candidates you don't yet know about."].join(
-    '\n'
-  ),
+  description: ['Search the @dereekb/dbx-form registry by keyword(s). Returns ranked candidates — pick one, then call `dbx_form_lookup` with the slug/name.', '', 'Query strategy:', '  • Space-separated tokens are ANDed (every token must contribute at least some score).', '  • Form aliases resolve (e.g. "datepicker" is treated as "date").', '', "Use `dbx_form_lookup` when you already know which slug you want. Use `dbx_form_search` to discover candidates you don't yet know about."].join('\n'),
   inputSchema: {
     type: 'object',
     properties: {
@@ -66,8 +64,8 @@ function parseSearchArgs(raw: unknown): ParsedSearchArgs {
 }
 
 // MARK: Scoring
-interface ForgeSearchHit {
-  readonly field: ForgeFieldInfo;
+interface FormSearchHit {
+  readonly field: FormFieldInfo;
   readonly score: number;
   readonly matchedTokens: readonly string[];
 }
@@ -116,7 +114,7 @@ function tokenize(query: string): readonly QueryToken[] {
  * spaced so stacked hits can't fabricate a higher score than the next-better
  * match kind.
  */
-function scoreFieldAgainstToken(field: ForgeFieldInfo, token: string): number {
+function scoreFieldAgainstToken(field: FormFieldInfo, token: string): number {
   const slug = field.slug.toLowerCase();
   const factory = field.factoryName.toLowerCase();
   const produces = field.produces.toLowerCase();
@@ -161,12 +159,12 @@ function scoreFieldAgainstToken(field: ForgeFieldInfo, token: string): number {
   return score;
 }
 
-function searchRegistry(tokens: readonly QueryToken[], limit: number): readonly ForgeSearchHit[] {
+function searchRegistry(tokens: readonly QueryToken[], limit: number): readonly FormSearchHit[] {
   if (tokens.length === 0) {
     return [];
   }
-  const hits: ForgeSearchHit[] = [];
-  for (const field of FORGE_FIELDS) {
+  const hits: FormSearchHit[] = [];
+  for (const field of FORM_FIELDS) {
     const matched: string[] = [];
     let total = 0;
     for (const token of tokens) {
@@ -196,16 +194,16 @@ function searchRegistry(tokens: readonly QueryToken[], limit: number): readonly 
 }
 
 // MARK: Formatting
-function formatSearchResults(query: string, tokens: readonly QueryToken[], hits: readonly ForgeSearchHit[]): string {
+function formatSearchResults(query: string, tokens: readonly QueryToken[], hits: readonly FormSearchHit[]): string {
   const tokenDisplay = tokens.map((t) => t.display).join(', ');
   if (hits.length === 0) {
-    const result = [`No forge entries matched \`${query}\` (tokens: \`${tokenDisplay}\`).`, '', 'Try `dbx_form_lookup topic="list"` for the forge catalog or a broader single-word query.'].join('\n');
+    const result = [`No form entries matched \`${query}\` (tokens: \`${tokenDisplay}\`).`, '', 'Try `dbx_form_lookup topic="list"` for the form catalog or a broader single-word query.'].join('\n');
     return result;
   }
   const lines: string[] = [`# Search: \`${query}\``, '', `Tokens: \`${tokenDisplay}\` · ${hits.length} result${hits.length === 1 ? '' : 's'}`, ''];
   for (const hit of hits) {
     const array = hit.field.arrayOutput === 'yes' ? ' *(array)*' : hit.field.arrayOutput === 'optional' ? ' *(single or array)*' : '';
-    lines.push(`## \`${hit.field.slug}\` · forge · score ${hit.score}`);
+    lines.push(`## \`${hit.field.slug}\` · form · score ${hit.score}`);
     lines.push('');
     lines.push(`- **factory:** \`${hit.field.factoryName}\``);
     lines.push(`- **tier:** \`${hit.field.tier}\``);
@@ -222,7 +220,7 @@ function formatSearchResults(query: string, tokens: readonly QueryToken[], hits:
 }
 
 // MARK: Handler
-export function runSearchForge(rawArgs: unknown): ToolResult {
+export function runSearchForm(rawArgs: unknown): ToolResult {
   let args: ParsedSearchArgs;
   try {
     args = parseSearchArgs(rawArgs);
@@ -237,7 +235,7 @@ export function runSearchForge(rawArgs: unknown): ToolResult {
   return result;
 }
 
-export const searchForgeTool: DbxTool = {
+export const searchFormTool: DbxTool = {
   definition: DBX_FORM_SEARCH_TOOL,
-  run: runSearchForge
+  run: runSearchForm
 };

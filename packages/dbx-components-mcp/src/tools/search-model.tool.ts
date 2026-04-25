@@ -2,7 +2,7 @@
  * `dbx_model_search` tool.
  *
  * Returns ranked Firebase-model matches keyed by name, identity, modelType,
- * collection prefix, field name, and enum name. Mirrors the forge
+ * collection prefix, field name, and enum name. Mirrors the form
  * `dbx_form_search` weights so cross-domain calls feel symmetrical.
  */
 
@@ -95,7 +95,7 @@ function tokenize(query: string): readonly QueryToken[] {
 /**
  * Scores a Firebase model against a single token.
  *
- * Weights mirror the forge scorer so cross-domain results rank fairly. Most
+ * Weights mirror the form scorer so cross-domain results rank fairly. Most
  * signal comes from the model name, identity, and prefix — falling through to
  * field names and enum names for more speculative matches.
  */

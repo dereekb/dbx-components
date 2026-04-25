@@ -3,7 +3,7 @@
  *
  * Canonical metadata for @dereekb/dbx-web UI building blocks — section, list,
  * button, card, layout, loading, error, navigation, and overlay components.
- * Mirrors `forge-fields.ts` shape: typed `readonly` constants + a discriminated
+ * Mirrors `form-fields.ts` shape: typed `readonly` constants + a discriminated
  * union over `kind`.
  *
  * The PRIMARY index is `category` (e.g. `'layout'`, `'list'`, `'button'`).

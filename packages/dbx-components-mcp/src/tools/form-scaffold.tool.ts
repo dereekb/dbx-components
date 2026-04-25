@@ -1,7 +1,7 @@
 /**
  * `dbx_form_scaffold` tool.
  *
- * Generates a copy-paste-ready @dereekb/dbx-form forge `FormConfig` skeleton
+ * Generates a copy-paste-ready @dereekb/dbx-form `FormConfig` skeleton
  * from a compact field spec list. Each entry in `fields` is either:
  *
  *   • `"<slug>:<key>"` — picks the registry entry by slug, uses `<key>` as
@@ -15,7 +15,7 @@
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { getForgeField, type ForgeFieldInfo } from '../registry/index.js';
+import { getFormField, type FormFieldInfo } from '../registry/index.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 
 const DEFAULT_VALUE_TYPE_NAME = 'ScaffoldedFormValue';
@@ -24,7 +24,7 @@ const DEFAULT_VALUE_TYPE_NAME = 'ScaffoldedFormValue';
 const DBX_FORM_SCAFFOLD_TOOL: Tool = {
   name: 'dbx_form_scaffold',
   description: [
-    'Generate a @dereekb/dbx-form forge FormConfig skeleton from a compact field list.',
+    'Generate a @dereekb/dbx-form FormConfig skeleton from a compact field list.',
     '',
     'Each entry in `fields` is either:',
     '  • `"<slug>:<key>"` — e.g. `"text:email"`, `"phone:contactPhone"`, `"number-slider:rating"`',
@@ -89,7 +89,7 @@ interface FieldSpec {
   readonly raw: string;
   readonly slug: string;
   readonly key?: string;
-  readonly field: ForgeFieldInfo;
+  readonly field: FormFieldInfo;
 }
 
 interface SpecError {
@@ -117,7 +117,7 @@ function parseFieldSpec(raw: string): FieldSpec | SpecError {
       return { raw, reason: `key "${key}" is not a valid JS identifier` };
     }
   }
-  const field = getForgeField(slug);
+  const field = getFormField(slug);
   if (!field) {
     return { raw, reason: `unknown slug "${slug}"` };
   }

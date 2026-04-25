@@ -5,7 +5,7 @@
  * class name, `DbxActionState` enum member, or the literal `'list'`) and a
  * depth; returns markdown documentation for the matched action entry.
  *
- * Mirrors {@link runLookupForge} in shape — low-level `setRequestHandler`,
+ * Mirrors {@link runLookupForm} in shape — low-level `setRequestHandler`,
  * arktype validation, plain JSON Schema. The resolution order is:
  *
  *   1. `'list'` / `'catalog'` / `'all'` → catalog

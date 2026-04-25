@@ -6,7 +6,7 @@
  * implementation plan in the feat/dbx-components-mcp branch.
  *
  * Planned domains:
- *   - forge-fields       field factories, composite builders, and layout primitives
+ *   - form-fields       field factories, composite builders, and layout primitives
  *   - firebase-models    model identity, data interfaces, converters, collection patterns
  *   - model-pointers     lightweight source-file pointers used by the decode tool
  *   - server-actions     callable / on-call / scheduled / event pipeline patterns
@@ -22,43 +22,43 @@ export interface PropertyInfo {
   readonly default?: unknown;
 }
 
-// MARK: Forge Fields
-import { FORGE_FIELDS, type ForgeFieldInfo, type ForgeTier, type ForgeArrayOutput } from './forge-fields.js';
+// MARK: Form Fields
+import { FORM_FIELDS, type FormFieldInfo, type FormTier, type FormArrayOutput } from './form-fields.js';
 
-export { FORGE_FIELDS, FORGE_TIER_ORDER } from './forge-fields.js';
-export type { ForgeFieldInfo, ForgeFieldFactoryInfo, ForgeCompositeBuilderInfo, ForgePrimitiveInfo, ForgeTier, ForgeFieldWrapperPattern, ForgeCompositeSuffix, ForgeLayoutPrimitive, ForgeArrayOutput } from './forge-fields.js';
+export { FORM_FIELDS, FORM_TIER_ORDER } from './form-fields.js';
+export type { FormFieldInfo, FormFieldFactoryInfo, FormCompositeBuilderInfo, FormPrimitiveInfo, FormTier, FormFieldWrapperPattern, FormCompositeSuffix, FormLayoutPrimitive, FormArrayOutput } from './form-fields.js';
 
 /**
- * Returns every registered forge entry (factories, composites, primitives).
+ * Returns every registered form entry (factories, composites, primitives).
  */
-export function getForgeFields(): readonly ForgeFieldInfo[] {
-  return FORGE_FIELDS;
+export function getFormFields(): readonly FormFieldInfo[] {
+  return FORM_FIELDS;
 }
 
 /**
- * Looks up a forge entry by its registry slug (e.g. `'text'`) or by factory
+ * Looks up a form entry by its registry slug (e.g. `'text'`) or by factory
  * name (e.g. `'dbxForgeTextField'`). Factory-name lookup is case insensitive;
  * slug lookup is exact.
  */
-export function getForgeField(key: string): ForgeFieldInfo | undefined {
-  let result = FORGE_FIELDS.find((f) => f.slug === key);
+export function getFormField(key: string): FormFieldInfo | undefined {
+  let result = FORM_FIELDS.find((f) => f.slug === key);
   if (!result) {
     const lowered = key.toLowerCase();
-    result = FORGE_FIELDS.find((f) => f.factoryName.toLowerCase() === lowered);
+    result = FORM_FIELDS.find((f) => f.factoryName.toLowerCase() === lowered);
   }
   return result;
 }
 
 /**
- * PRIMARY index. Returns every forge entry whose `produces` matches `value`.
+ * PRIMARY index. Returns every form entry whose `produces` matches `value`.
  *
  * Examples:
- *   `getForgeFieldsByProduces('string')` → text, text-area, searchable-text, ...
- *   `getForgeFieldsByProduces('Date')`   → date, date-time
- *   `getForgeFieldsByProduces('RowField')` → row (primitive) + date-range-row (composite)
+ *   `getFormFieldsByProduces('string')` → text, text-area, searchable-text, ...
+ *   `getFormFieldsByProduces('Date')`   → date, date-time
+ *   `getFormFieldsByProduces('RowField')` → row (primitive) + date-range-row (composite)
  */
-export function getForgeFieldsByProduces(value: string): readonly ForgeFieldInfo[] {
-  return FORGE_FIELDS.filter((f) => f.produces === value);
+export function getFormFieldsByProduces(value: string): readonly FormFieldInfo[] {
+  return FORM_FIELDS.filter((f) => f.produces === value);
 }
 
 /**
@@ -66,9 +66,9 @@ export function getForgeFieldsByProduces(value: string): readonly ForgeFieldInfo
  * listing available output primitives to callers that want to pick one before
  * querying.
  */
-export function getForgeProducesCatalog(): readonly string[] {
+export function getFormProducesCatalog(): readonly string[] {
   const set = new Set<string>();
-  for (const field of FORGE_FIELDS) {
+  for (const field of FORM_FIELDS) {
     set.add(field.produces);
   }
   const result = Array.from(set).sort();
@@ -76,18 +76,18 @@ export function getForgeProducesCatalog(): readonly string[] {
 }
 
 /**
- * Filters forge entries by {@link ForgeTier}.
+ * Filters form entries by {@link FormTier}.
  */
-export function getForgeFieldsByTier(tier: ForgeTier): readonly ForgeFieldInfo[] {
-  return FORGE_FIELDS.filter((f) => f.tier === tier);
+export function getFormFieldsByTier(tier: FormTier): readonly FormFieldInfo[] {
+  return FORM_FIELDS.filter((f) => f.tier === tier);
 }
 
 /**
- * Filters forge entries by whether their output is an array (`'yes'`),
+ * Filters form entries by whether their output is an array (`'yes'`),
  * single value (`'no'`), or configurable (`'optional'`).
  */
-export function getForgeFieldsByArrayOutput(arrayOutput: ForgeArrayOutput): readonly ForgeFieldInfo[] {
-  return FORGE_FIELDS.filter((f) => f.arrayOutput === arrayOutput);
+export function getFormFieldsByArrayOutput(arrayOutput: FormArrayOutput): readonly FormFieldInfo[] {
+  return FORM_FIELDS.filter((f) => f.arrayOutput === arrayOutput);
 }
 
 // MARK: Actions

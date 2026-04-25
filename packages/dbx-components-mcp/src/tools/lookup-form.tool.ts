@@ -1,21 +1,21 @@
 /**
  * `dbx_form_lookup` tool.
  *
- * Forge-domain lookup. Accepts a topic (slug, factory name, `produces` value,
+ * Form-domain lookup. Accepts a topic (slug, factory name, `produces` value,
  * tier name, alias, or the literal `'list'`) and a depth and returns markdown
- * documentation for `@dereekb/dbx-form` forge entries.
+ * documentation for `@dereekb/dbx-form` form entries.
  *
  * Registered via the low-level `server.setRequestHandler(CallToolRequestSchema, ...)`
  * API (not `McpServer.registerTool`) because registerTool requires a zod
  * schema — the workspace standard is arktype. Input validation happens in
- * {@link parseLookupForgeArgs} using arktype.
+ * {@link parseLookupFormArgs} using arktype.
  */
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { FORGE_FIELDS, FORGE_TIER_ORDER, getForgeField, getForgeFieldsByProduces, getForgeFieldsByTier, getForgeProducesCatalog, type ForgeFieldInfo, type ForgeTier } from '../registry/index.js';
-import { resolveTopicAlias } from './forge-alias-resolver.js';
-import { formatForgeFieldEntry, formatForgeFieldGroup } from './forge-lookup.formatter.js';
+import { FORM_FIELDS, FORM_TIER_ORDER, getFormField, getFormFieldsByProduces, getFormFieldsByTier, getFormProducesCatalog, type FormFieldInfo, type FormTier } from '../registry/index.js';
+import { resolveTopicAlias } from './form-alias-resolver.js';
+import { formatFormFieldEntry, formatFormFieldGroup } from './form-lookup.formatter.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 
 // MARK: Tool registry
@@ -26,16 +26,16 @@ import { toolError, type DbxTool, type ToolResult } from './types.js';
 const DBX_FORM_LOOKUP_TOOL: Tool = {
   name: 'dbx_form_lookup',
   description: [
-    'Look up @dereekb/dbx-form forge entries.',
+    'Look up @dereekb/dbx-form entries.',
     '',
     'The `topic` accepts:',
-    '  • a forge registry slug like "text", "date-range-row", "address-group";',
-    '  • a forge factory name like "dbxForgeTextField";',
-    '  • an output primitive like "string", "Date", "RowField" (returns every forge entry that produces that primitive);',
-    "  • a forge tier name (`'field-factory'`, `'composite-builder'`, `'primitive'`) to list every entry in that tier;",
-    '  • the literal `"list"` for the forge catalog.',
+    '  • a form registry slug like "text", "date-range-row", "address-group";',
+    '  • a form factory name like "dbxForgeTextField";',
+    '  • an output primitive like "string", "Date", "RowField" (returns every form entry that produces that primitive);',
+    "  • a form tier name (`'field-factory'`, `'composite-builder'`, `'primitive'`) to list every entry in that tier;",
+    '  • the literal `"list"` for the form catalog.',
     '',
-    'Forge synonyms resolve automatically (e.g. "datepicker" → "date").'
+    'Form synonyms resolve automatically (e.g. "datepicker" → "date").'
   ].join('\n'),
   inputSchema: {
     type: 'object',
@@ -56,7 +56,7 @@ const DBX_FORM_LOOKUP_TOOL: Tool = {
 };
 
 // MARK: Input validation
-const LookupForgeArgsType = type({
+const LookupFormArgsType = type({
   topic: 'string',
   'depth?': "'brief' | 'full'"
 });
@@ -65,8 +65,8 @@ const LookupForgeArgsType = type({
  * Parses and validates the caller's args via arktype. Throws a user-facing
  * error string when validation fails — the handler catches and formats it.
  */
-function parseLookupForgeArgs(raw: unknown): { readonly topic: string; readonly depth: 'brief' | 'full' } {
-  const parsed = LookupForgeArgsType(raw);
+function parseLookupFormArgs(raw: unknown): { readonly topic: string; readonly depth: 'brief' | 'full' } {
+  const parsed = LookupFormArgsType(raw);
 
   if (parsed instanceof type.errors) {
     throw new Error(`Invalid arguments: ${parsed.summary}`);
@@ -80,41 +80,41 @@ function parseLookupForgeArgs(raw: unknown): { readonly topic: string; readonly 
 }
 
 // MARK: Resolution
-type LookupForgeMatch = { readonly kind: 'single'; readonly field: ForgeFieldInfo } | { readonly kind: 'group'; readonly title: string; readonly fields: readonly ForgeFieldInfo[] } | { readonly kind: 'catalog' } | { readonly kind: 'not-found'; readonly normalized: string; readonly candidates: readonly ForgeFieldInfo[] };
+type LookupFormMatch = { readonly kind: 'single'; readonly field: FormFieldInfo } | { readonly kind: 'group'; readonly title: string; readonly fields: readonly FormFieldInfo[] } | { readonly kind: 'catalog' } | { readonly kind: 'not-found'; readonly normalized: string; readonly candidates: readonly FormFieldInfo[] };
 
 /**
- * Resolves a topic string into the best forge match.
+ * Resolves a topic string into the best form match.
  *
  * Resolution order:
  *   1. `'list'` → catalog
- *   2. forge tier name → forge group
- *   3. exact forge slug or factory-name match → single forge entry
- *   4. forge alias → remap and retry slug/factory lookup
- *   5. forge `produces` value match → forge group
- *   6. fuzzy substring search over forge slug/factoryName/description
+ *   2. form tier name → form group
+ *   3. exact form slug or factory-name match → single form entry
+ *   4. form alias → remap and retry slug/factory lookup
+ *   5. form `produces` value match → form group
+ *   6. fuzzy substring search over form slug/factoryName/description
  */
-function resolveTopic(rawTopic: string): LookupForgeMatch {
+function resolveTopic(rawTopic: string): LookupFormMatch {
   const lowered = rawTopic.trim().toLowerCase();
-  let result: LookupForgeMatch;
+  let result: LookupFormMatch;
 
   if (lowered === 'list' || lowered === 'catalog' || lowered === 'all') {
     result = { kind: 'catalog' };
-  } else if (FORGE_TIER_ORDER.includes(lowered as ForgeTier)) {
-    const tier = lowered as ForgeTier;
-    result = { kind: 'group', title: `Forge entries: tier = ${tier}`, fields: getForgeFieldsByTier(tier) };
+  } else if (FORM_TIER_ORDER.includes(lowered as FormTier)) {
+    const tier = lowered as FormTier;
+    result = { kind: 'group', title: `Form entries: tier = ${tier}`, fields: getFormFieldsByTier(tier) };
   } else {
-    const directHit = getForgeField(rawTopic) ?? getForgeField(lowered);
+    const directHit = getFormField(rawTopic) ?? getFormField(lowered);
     if (directHit) {
       result = { kind: 'single', field: directHit };
     } else {
       const aliased = resolveTopicAlias(rawTopic);
-      const aliasHit = aliased !== lowered ? getForgeField(aliased) : undefined;
+      const aliasHit = aliased !== lowered ? getFormField(aliased) : undefined;
       if (aliasHit) {
         result = { kind: 'single', field: aliasHit };
       } else {
         const produces = findProducesMatch(rawTopic);
         if (produces) {
-          result = { kind: 'group', title: `Forge entries producing \`${produces}\``, fields: getForgeFieldsByProduces(produces) };
+          result = { kind: 'group', title: `Form entries producing \`${produces}\``, fields: getFormFieldsByProduces(produces) };
         } else {
           result = { kind: 'not-found', normalized: aliased, candidates: fuzzyCandidates(aliased) };
         }
@@ -130,7 +130,7 @@ function resolveTopic(rawTopic: string): LookupForgeMatch {
  */
 function findProducesMatch(topic: string): string | undefined {
   const lowered = topic.trim().toLowerCase();
-  const catalog = getForgeProducesCatalog();
+  const catalog = getFormProducesCatalog();
   const result = catalog.find((v) => v.toLowerCase() === lowered);
   return result;
 }
@@ -140,13 +140,13 @@ function findProducesMatch(topic: string): string | undefined {
  * Returns up to five entries whose slug / factory name / description contains
  * the query. Good enough at registry size <50 — revisit if it grows.
  */
-function fuzzyCandidates(query: string): readonly ForgeFieldInfo[] {
+function fuzzyCandidates(query: string): readonly FormFieldInfo[] {
   const q = query.trim().toLowerCase();
   if (q.length === 0) {
     return [];
   }
-  const scored: { readonly field: ForgeFieldInfo; readonly score: number }[] = [];
-  for (const field of FORGE_FIELDS) {
+  const scored: { readonly field: FormFieldInfo; readonly score: number }[] = [];
+  for (const field of FORM_FIELDS) {
     const slugHit = field.slug.toLowerCase().includes(q) ? 3 : 0;
     const nameHit = field.factoryName.toLowerCase().includes(q) ? 2 : 0;
     const descHit = field.description.toLowerCase().includes(q) ? 1 : 0;
@@ -162,9 +162,9 @@ function fuzzyCandidates(query: string): readonly ForgeFieldInfo[] {
 
 // MARK: Formatting
 function formatCatalog(): string {
-  const lines: string[] = ['# Forge catalog', '', `${FORGE_FIELDS.length} entries across ${FORGE_TIER_ORDER.length} tiers.`, ''];
-  for (const tier of FORGE_TIER_ORDER) {
-    const list = getForgeFieldsByTier(tier);
+  const lines: string[] = ['# Form catalog', '', `${FORM_FIELDS.length} entries across ${FORM_TIER_ORDER.length} tiers.`, ''];
+  for (const tier of FORM_TIER_ORDER) {
+    const list = getFormFieldsByTier(tier);
     lines.push(`## ${tier} (${list.length})`);
     lines.push('');
     for (const field of list) {
@@ -174,17 +174,17 @@ function formatCatalog(): string {
   }
   lines.push('## Output primitives');
   lines.push('');
-  const catalog = getForgeProducesCatalog();
+  const catalog = getFormProducesCatalog();
   for (const value of catalog) {
-    const count = getForgeFieldsByProduces(value).length;
+    const count = getFormFieldsByProduces(value).length;
     lines.push(`- \`${value}\` (${count})`);
   }
   const result = lines.join('\n').trimEnd();
   return result;
 }
 
-function formatNotFound(normalized: string, candidates: readonly ForgeFieldInfo[]): string {
-  const lines: string[] = [`No forge entry matched \`${normalized}\`.`, ''];
+function formatNotFound(normalized: string, candidates: readonly FormFieldInfo[]): string {
+  const lines: string[] = [`No form entry matched \`${normalized}\`.`, ''];
   if (candidates.length > 0) {
     lines.push('Did you mean one of these?');
     lines.push('');
@@ -200,13 +200,13 @@ function formatNotFound(normalized: string, candidates: readonly ForgeFieldInfo[
 
 // MARK: Handler
 /**
- * Executes a forge lookup and returns a ToolResult. Exported separately so it
+ * Executes a form lookup and returns a ToolResult. Exported separately so it
  * can be tested without spinning up the full MCP transport.
  */
-export function runLookupForge(rawArgs: unknown): ToolResult {
+export function runLookupForm(rawArgs: unknown): ToolResult {
   let args: { readonly topic: string; readonly depth: 'brief' | 'full' };
   try {
-    args = parseLookupForgeArgs(rawArgs);
+    args = parseLookupFormArgs(rawArgs);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return toolError(message);
@@ -219,10 +219,10 @@ export function runLookupForge(rawArgs: unknown): ToolResult {
       text = formatCatalog();
       break;
     case 'single':
-      text = formatForgeFieldEntry(match.field, args.depth);
+      text = formatFormFieldEntry(match.field, args.depth);
       break;
     case 'group':
-      text = formatForgeFieldGroup(match.fields, match.title);
+      text = formatFormFieldGroup(match.fields, match.title);
       break;
     case 'not-found':
       text = formatNotFound(match.normalized, match.candidates);
@@ -233,7 +233,7 @@ export function runLookupForge(rawArgs: unknown): ToolResult {
   return result;
 }
 
-export const lookupForgeTool: DbxTool = {
+export const lookupFormTool: DbxTool = {
   definition: DBX_FORM_LOOKUP_TOOL,
-  run: runLookupForge
+  run: runLookupForm
 };

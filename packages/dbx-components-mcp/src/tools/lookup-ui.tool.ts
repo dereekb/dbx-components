@@ -5,7 +5,7 @@
  * the literal `'list'`) and a depth and returns markdown documentation for
  * `@dereekb/dbx-web` UI building blocks.
  *
- * Mirrors `lookup-forge.tool.ts` shape: low-level `setRequestHandler` registration
+ * Mirrors `lookup-form.tool.ts` shape: low-level `setRequestHandler` registration
  * via the central dispatcher, plain JSON Schema input, arktype validation in
  * the handler. No zod.
  */

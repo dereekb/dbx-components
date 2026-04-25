@@ -1,7 +1,7 @@
 /**
  * MCP server for dbx-components.
  *
- * Mirrors the structure of @ng-forge/dynamic-form-mcp — a thin factory that
+ * Mirrors the structure of @ng-form/dynamic-form-mcp — a thin factory that
  * wires registered resources and tools to a stdio transport.
  */
 

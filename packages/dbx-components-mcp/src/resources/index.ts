@@ -1,21 +1,20 @@
 /**
  * MCP resource registration for dbx-components.
  *
- * Planned URIs:
- *   dbx://forge-fields, dbx://forge-fields/{slug}, dbx://forge-fields/category/{category}
- *   dbx://models, dbx://models/{pattern}
- *   dbx://actions, dbx://actions/{type}
- *   dbx://components, dbx://components/{pattern}
- *   dbx://conventions
- *   dbx://semantic-types
- *   dbx://instructions
+ * URIs are namespaced by domain (`dbx://<domain>/...`) so each cluster can
+ * grow its own subpaths without colliding. Currently registered:
+ *
+ *   dbx://form/fields, dbx://form/fields/{slug}, dbx://form/fields/produces/{produces},
+ *   dbx://form/fields/tier/{tier}, dbx://form/fields/array-output/{arrayOutput}
+ *   dbx://model/firebase, dbx://model/firebase/{name},
+ *   dbx://model/firebase/prefix/{prefix}, dbx://model/firebase/subcollections/{parent}
  */
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { registerForgeFieldsResource } from './forge-fields.resource.js';
+import { registerFormFieldsResource } from './form-fields.resource.js';
 import { registerFirebaseModelsResource } from './firebase-models.resource.js';
 
 export function registerResources(server: McpServer): void {
-  registerForgeFieldsResource(server);
+  registerFormFieldsResource(server);
   registerFirebaseModelsResource(server);
 }
