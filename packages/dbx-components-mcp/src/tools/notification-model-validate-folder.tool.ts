@@ -1,5 +1,5 @@
 /**
- * `dbx_validate_notification_folder` tool.
+ * `dbx_notification_model_validate_folder` tool.
  *
  * Validates that the `notification/` model folder layout on both the
  * component (`<componentDir>/src/lib/model/notification/`) and API
@@ -15,7 +15,7 @@
  * Cross-file wiring (whether each declared `NotificationTemplateType`
  * and `NotificationTaskType` is reachable from the metadata-record /
  * service-factory paths) is checked by the sibling
- * `dbx_validate_app_notifications` tool.
+ * `dbx_notification_model_validate_app` tool.
  *
  * Accepts two required inputs:
  *   - `componentDir`: relative path to the `-firebase` component package.
@@ -28,11 +28,11 @@ import { resolve, sep } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { formatResult, inspectNotificationFolder, validateNotificationFolder } from './validate-notification-folder/index.js';
+import { formatResult, inspectNotificationFolder, validateNotificationFolder } from './notification-model-validate-folder/index.js';
 
 // MARK: Tool definition
-const DBX_VALIDATE_NOTIFICATION_FOLDER_TOOL: Tool = {
-  name: 'dbx_validate_notification_folder',
+const DBX_NOTIFICATION_MODEL_VALIDATE_FOLDER_TOOL: Tool = {
+  name: 'dbx_notification_model_validate_folder',
   description: [
     'Validate that the `notification/` model folder layout on both the component and API sides follows the downstream convention. The component-side folder lives at `<componentDir>/src/lib/model/notification/` and the API-side folder at `<apiDir>/src/app/common/model/notification/`.',
     '',
@@ -42,7 +42,7 @@ const DBX_VALIDATE_NOTIFICATION_FOLDER_TOOL: Tool = {
     '',
     "Barrel rule (error): when an `index.ts` is present at either folder root, every `export * from './X'` clause must resolve locally — to either `./X.ts` or `./X/`.",
     '',
-    'Cross-file wiring (whether every declared `NotificationTemplateType` and `NotificationTaskType` is reachable through the metadata-record and service-factory paths) is verified by the sibling `dbx_validate_app_notifications` tool and is not re-checked here.',
+    'Cross-file wiring (whether every declared `NotificationTemplateType` and `NotificationTaskType` is reachable through the metadata-record and service-factory paths) is verified by the sibling `dbx_notification_model_validate_app` tool and is not re-checked here.',
     '',
     'Provide both:',
     '- `componentDir`: relative path to the `-firebase` component package (e.g. `components/demo-firebase`).',
@@ -100,7 +100,7 @@ function ensureInsideCwd(relativePath: string, cwd: string): string {
 }
 
 // MARK: Handler
-export async function runValidateNotificationFolder(rawArgs: unknown): Promise<ToolResult> {
+export async function runNotificationModelValidateFolder(rawArgs: unknown): Promise<ToolResult> {
   let args: ParsedArgs;
   try {
     args = parseArgs(rawArgs);
@@ -135,7 +135,7 @@ export async function runValidateNotificationFolder(rawArgs: unknown): Promise<T
   return result;
 }
 
-export const validateNotificationFolderTool: DbxTool = {
-  definition: DBX_VALIDATE_NOTIFICATION_FOLDER_TOOL,
-  run: runValidateNotificationFolder
+export const notificationModelValidateFolderTool: DbxTool = {
+  definition: DBX_NOTIFICATION_MODEL_VALIDATE_FOLDER_TOOL,
+  run: runNotificationModelValidateFolder
 };

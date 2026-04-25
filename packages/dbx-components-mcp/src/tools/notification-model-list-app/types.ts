@@ -1,5 +1,5 @@
 /**
- * Report shapes for `dbx_list_app_notifications`. Built from the same
+ * Report shapes for `dbx_notification_model_list_app`. Built from the same
  * {@link ExtractedAppNotifications} the validator produces — this tool
  * reshapes the cross-file extraction into a human-friendly summary.
  */

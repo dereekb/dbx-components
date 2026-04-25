@@ -1,6 +1,6 @@
 /**
- * Shared types for the `dbx_validate_app_notifications` validator and
- * its sibling `dbx_list_app_notifications` listing tool.
+ * Shared types for the `dbx_notification_model_validate_app` validator and
+ * its sibling `dbx_notification_model_list_app` listing tool.
  *
  * The validator accepts two directories — a `-firebase` component
  * package (where `NotificationTemplateType` / `NotificationTaskType`

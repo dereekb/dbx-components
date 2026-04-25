@@ -1,5 +1,5 @@
 /**
- * `dbx_validate_app_notifications` tool.
+ * `dbx_notification_model_validate_app` tool.
  *
  * Cross-file verifier for downstream app notifications. Reads the
  * component package's `src/lib/model/notification/` and the API app's
@@ -18,11 +18,11 @@ import { resolve, sep } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { formatResult, inspectAppNotifications, validateAppNotifications } from './validate-app-notifications/index.js';
+import { formatResult, inspectAppNotifications, validateAppNotifications } from './notification-model-validate-app/index.js';
 
 // MARK: Tool definition
-const DBX_VALIDATE_APP_NOTIFICATIONS_TOOL: Tool = {
-  name: 'dbx_validate_app_notifications',
+const DBX_NOTIFICATION_MODEL_VALIDATE_APP_TOOL: Tool = {
+  name: 'dbx_notification_model_validate_app',
   description: [
     'Validate that every notification template + notification task declared in a `-firebase` component package is wired through the two registration paths in the API app: the info-record aggregator (`<APP>_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD` → `appNotificationTemplateTypeInfoRecordService(...)`) AND the handler factory (`<app>NotificationTemplateServiceConfigsArrayFactory` for templates, `notificationTaskService({ handlers })` for tasks).',
     '',
@@ -86,7 +86,7 @@ function ensureInsideCwd(relativePath: string, cwd: string): string {
 }
 
 // MARK: Handler
-export async function runValidateAppNotifications(rawArgs: unknown): Promise<ToolResult> {
+export async function runNotificationModelValidateApp(rawArgs: unknown): Promise<ToolResult> {
   let args: ParsedArgs;
   try {
     args = parseArgs(rawArgs);
@@ -116,7 +116,7 @@ export async function runValidateAppNotifications(rawArgs: unknown): Promise<Too
   return result;
 }
 
-export const validateAppNotificationsTool: DbxTool = {
-  definition: DBX_VALIDATE_APP_NOTIFICATIONS_TOOL,
-  run: runValidateAppNotifications
+export const notificationModelValidateAppTool: DbxTool = {
+  definition: DBX_NOTIFICATION_MODEL_VALIDATE_APP_TOOL,
+  run: runNotificationModelValidateApp
 };

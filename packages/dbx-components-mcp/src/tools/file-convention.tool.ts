@@ -21,7 +21,7 @@ const ARTIFACT_KIND_LITERAL_UNION = ARTIFACT_KINDS.map((k) => `'${k}'`).join(' |
 const DBX_FILE_CONVENTION_TOOL: Tool = {
   name: 'dbx_file_convention',
   description: [
-    'Return canonical file paths + required exports + wiring registrations for a given artifact kind in a dbx-components project. Companion to the cross-file validators (`dbx_validate_app_notifications`, `dbx_validate_app_storagefiles`, `dbx_validate_firebase_model`) — those say what is missing, this says where each piece belongs.',
+    'Return canonical file paths + required exports + wiring registrations for a given artifact kind in a dbx-components project. Companion to the cross-file validators (`dbx_notification_model_validate_app`, `dbx_storagefile_model_validate_app`, `dbx_model_validate`) — those say what is missing, this says where each piece belongs.',
     '',
     `Supported artifact kinds: ${ARTIFACT_KINDS.map((k) => `\`${k}\``).join(', ')}.`,
     '',

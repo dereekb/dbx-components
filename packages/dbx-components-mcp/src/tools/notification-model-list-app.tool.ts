@@ -1,5 +1,5 @@
 /**
- * `dbx_list_app_notifications` tool.
+ * `dbx_notification_model_list_app` tool.
  *
  * Emits a human-readable report of every notification template + task
  * configured in a downstream `-firebase` component + API app pair.
@@ -9,7 +9,7 @@
  * configured and whether it's fully wired.
  *
  * Reuses the cross-file extractor from
- * `dbx_validate_app_notifications` — no duplicate AST walk.
+ * `dbx_notification_model_validate_app` — no duplicate AST walk.
  *
  * Accepts the same `componentDir` + `apiDir` as the validator, plus an
  * optional `format: 'markdown' | 'json'` (default markdown).
@@ -19,16 +19,16 @@ import { resolve, sep } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { inspectAppNotifications } from './validate-app-notifications/index.js';
-import { formatReportAsJson, formatReportAsMarkdown, listAppNotifications } from './list-app-notifications/index.js';
+import { inspectAppNotifications } from './notification-model-validate-app/index.js';
+import { formatReportAsJson, formatReportAsMarkdown, listAppNotifications } from './notification-model-list-app/index.js';
 
 // MARK: Tool definition
-const DBX_LIST_APP_NOTIFICATIONS_TOOL: Tool = {
-  name: 'dbx_list_app_notifications',
+const DBX_NOTIFICATION_MODEL_LIST_APP_TOOL: Tool = {
+  name: 'dbx_notification_model_list_app',
   description: [
     'List every notification template + notification task configured in a downstream `-firebase` component + API app pair. Each entry reports its type code, metadata (human name, description, notification/target model identity), and registration flags — `inInfoRecord` + `hasFactory` for templates, `inAllArray` + `inValidateList` + `hasHandler` for tasks.',
     '',
-    'Cross-file resolution mirrors `dbx_validate_app_notifications` — spreads and factory composition are traced through every `.ts` file under `src/lib/model/notification/` on the component side and `src/app/common/model/notification/` + `src/app/common/firebase/` on the API side.',
+    'Cross-file resolution mirrors `dbx_notification_model_validate_app` — spreads and factory composition are traced through every `.ts` file under `src/lib/model/notification/` on the component side and `src/app/common/model/notification/` + `src/app/common/firebase/` on the API side.',
     '',
     'Provide:',
     '- `componentDir`: relative path to the `-firebase` component package (e.g. `components/demo-firebase`).',
@@ -84,7 +84,7 @@ function ensureInsideCwd(relativePath: string, cwd: string): string {
 }
 
 // MARK: Handler
-export async function runListAppNotifications(rawArgs: unknown): Promise<ToolResult> {
+export async function runNotificationModelListApp(rawArgs: unknown): Promise<ToolResult> {
   let args: ParsedArgs;
   try {
     args = parseArgs(rawArgs);
@@ -111,7 +111,7 @@ export async function runListAppNotifications(rawArgs: unknown): Promise<ToolRes
   return result;
 }
 
-export const listAppNotificationsTool: DbxTool = {
-  definition: DBX_LIST_APP_NOTIFICATIONS_TOOL,
-  run: runListAppNotifications
+export const notificationModelListAppTool: DbxTool = {
+  definition: DBX_NOTIFICATION_MODEL_LIST_APP_TOOL,
+  run: runNotificationModelListApp
 };

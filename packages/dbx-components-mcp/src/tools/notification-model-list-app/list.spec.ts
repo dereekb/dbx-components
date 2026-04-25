@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { AppNotificationsInspection, InspectedFile } from '../validate-app-notifications/index.js';
+import type { AppNotificationsInspection, InspectedFile } from '../notification-model-validate-app/index.js';
 import { formatReportAsJson, formatReportAsMarkdown, listAppNotifications } from './index.js';
 
 const COMPONENT_MAIN = `import { notificationTemplateTypeInfoRecord, type NotificationTemplateType, type NotificationTemplateTypeInfo } from '@dereekb/firebase';

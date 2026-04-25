@@ -4,7 +4,7 @@
  * {@link AppNotificationsReport} — no AST walk happens here.
  */
 
-import type { ExtractedAppNotifications, ExtractedTemplateTypeInfo } from '../validate-app-notifications/index.js';
+import type { ExtractedAppNotifications, ExtractedTemplateTypeInfo } from '../notification-model-validate-app/index.js';
 import type { AppNotificationsReport, TaskSummary, TemplateSummary } from './types.js';
 
 export interface CollectOptions {

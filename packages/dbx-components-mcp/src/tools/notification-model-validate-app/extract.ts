@@ -1,5 +1,5 @@
 /**
- * Cross-file AST extraction for `dbx_validate_app_notifications`.
+ * Cross-file AST extraction for `dbx_notification_model_validate_app`.
  *
  * All component + API files land in a single in-memory ts-morph
  * `Project`; extraction resolves spreads and factory-call references by

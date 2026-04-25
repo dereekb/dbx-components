@@ -3,7 +3,7 @@
  * `AppNotificationsInspection` and receive an {@link AppNotificationsReport}.
  */
 
-import { extractAppNotifications, type AppNotificationsInspection } from '../validate-app-notifications/index.js';
+import { extractAppNotifications, type AppNotificationsInspection } from '../notification-model-validate-app/index.js';
 import { collectAppNotifications } from './collect.js';
 import type { AppNotificationsReport } from './types.js';
 

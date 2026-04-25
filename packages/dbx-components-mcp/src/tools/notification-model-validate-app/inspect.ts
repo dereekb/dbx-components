@@ -1,5 +1,5 @@
 /**
- * Filesystem inspection for `dbx_validate_app_notifications`.
+ * Filesystem inspection for `dbx_notification_model_validate_app`.
  *
  * Walks each side's notification folder recursively and reads every
  * non-spec `.ts` file into an {@link AppNotificationsInspection}. Pure

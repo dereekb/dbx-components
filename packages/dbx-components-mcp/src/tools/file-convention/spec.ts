@@ -204,7 +204,7 @@ const NOTIFICATION_TEMPLATE: FileConventionSpec = {
     }
   ],
   seeAlso: ['notification-task'],
-  verify: 'Run `dbx_validate_app_notifications` to confirm both registration paths (info-record + handler factory) are wired, then `dbx_list_app_notifications` to confirm the new template appears with `inInfoRecord: true` and `hasFactory: true`.'
+  verify: 'Run `dbx_notification_model_validate_app` to confirm both registration paths (info-record + handler factory) are wired, then `dbx_notification_model_list_app` to confirm the new template appears with `inInfoRecord: true` and `hasFactory: true`.'
 };
 
 const NOTIFICATION_TASK: FileConventionSpec = {
@@ -238,7 +238,7 @@ const NOTIFICATION_TASK: FileConventionSpec = {
     }
   ],
   seeAlso: ['notification-template'],
-  verify: 'Run `dbx_validate_app_notifications` to confirm `inAllArray: true` + `hasHandler: true` for the new task type.'
+  verify: 'Run `dbx_notification_model_validate_app` to confirm `inAllArray: true` + `hasHandler: true` for the new task type.'
 };
 
 const NESTJS_MODEL_MODULE: FileConventionSpec = {

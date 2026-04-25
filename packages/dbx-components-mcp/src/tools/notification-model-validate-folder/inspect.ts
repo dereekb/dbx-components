@@ -1,5 +1,5 @@
 /**
- * Filesystem inspection for `dbx_validate_notification_folder`.
+ * Filesystem inspection for `dbx_notification_model_validate_folder`.
  *
  * Stats the supplied component and API directories, locates the
  * notification area on each side, and reads the root `.ts` file list,
