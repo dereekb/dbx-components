@@ -15,13 +15,23 @@
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
 import { getFirebaseModel, getFirebaseModelByPrefix, getFirebaseModels, type FirebaseModel } from '../registry/index.js';
-import { formatFirebaseModelCatalog, formatFirebaseModelEntry } from './firebase-lookup.formatter.js';
+import { formatFirebaseModelCatalog, formatFirebaseModelEntry, formatFirebaseStoreShapeTaxonomy } from './firebase-lookup.formatter.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 
 // MARK: Tool registry
 const DBX_MODEL_LOOKUP_TOOL: Tool = {
   name: 'dbx_model_lookup',
-  description: ['Look up @dereekb/firebase Firestore models.', '', 'The `topic` accepts:', '  • a Firebase model name (`"StorageFile"`);', '  • an identity const (`"storageFileIdentity"`);', '  • a modelType (`"storageFile"`);', '  • a collection prefix (`"sf"`);', '  • the literal `"models"` / `"firebase-models"` for the Firebase-model catalog.'].join('\n'),
+  description: [
+    'Look up @dereekb/firebase Firestore models.',
+    '',
+    'The `topic` accepts:',
+    '  • a Firebase model name (`"StorageFile"`);',
+    '  • an identity const (`"storageFileIdentity"`);',
+    '  • a modelType (`"storageFile"`);',
+    '  • a collection prefix (`"sf"`);',
+    '  • the literal `"models"` / `"firebase-models"` for the Firebase-model catalog;',
+    '  • the literal `"shapes"` / `"store-shapes"` for the consumer-side store-shape taxonomy (root, root-singleton, sub-collection, singleton-sub, system-state).'
+  ].join('\n'),
   inputSchema: {
     type: 'object',
     properties: {
@@ -61,20 +71,24 @@ function parseLookupModelArgs(raw: unknown): { readonly topic: string; readonly 
 }
 
 // MARK: Resolution
-type LookupModelMatch = { readonly kind: 'single'; readonly model: FirebaseModel } | { readonly kind: 'catalog' } | { readonly kind: 'not-found'; readonly normalized: string };
+type LookupModelMatch = { readonly kind: 'single'; readonly model: FirebaseModel } | { readonly kind: 'catalog' } | { readonly kind: 'shapes' } | { readonly kind: 'not-found'; readonly normalized: string };
 
 const FIREBASE_CATALOG_ALIASES = new Set(['list', 'models', 'firebase-models', 'firebase', 'firestore-models', 'catalog', 'all']);
+const FIREBASE_SHAPES_ALIASES = new Set(['shapes', 'store-shapes', 'storeshapes', 'shape', 'store-shape', 'storeshape', 'store-shape-taxonomy', 'store-shape-list']);
 
 /**
  * Resolves a topic string to a Firebase model entry by interface name,
  * identity const, modelType, or collection prefix. Falls back to catalog mode
- * for the well-known catalog aliases.
+ * for the well-known catalog aliases or the store-shape taxonomy mode for the
+ * shape aliases.
  */
 function resolveTopic(rawTopic: string): LookupModelMatch {
   const lowered = rawTopic.trim().toLowerCase();
   let result: LookupModelMatch;
   if (FIREBASE_CATALOG_ALIASES.has(lowered)) {
     result = { kind: 'catalog' };
+  } else if (FIREBASE_SHAPES_ALIASES.has(lowered)) {
+    result = { kind: 'shapes' };
   } else {
     const hit = getFirebaseModel(rawTopic) ?? getFirebaseModelByPrefix(rawTopic);
     if (hit) {
@@ -107,6 +121,9 @@ export function runLookupModel(rawArgs: unknown): ToolResult {
   switch (match.kind) {
     case 'catalog':
       text = formatFirebaseModelCatalog(getFirebaseModels());
+      break;
+    case 'shapes':
+      text = formatFirebaseStoreShapeTaxonomy();
       break;
     case 'single':
       text = formatFirebaseModelEntry(match.model, args.depth);

@@ -24,6 +24,18 @@ describe('dbx_model_lookup', () => {
     expect(text).toMatch(/## Enums/);
   });
 
+  it('reports `root` store shape on a root-collection model entry', () => {
+    const text = firstText(runLookupModel({ topic: 'StorageFile' }));
+    expect(text).toMatch(/\*\*Store shape:\*\* `root`/);
+    expect(text).toMatch(/topic="shapes"/);
+  });
+
+  it('reports `sub-collection` store shape on a sub-collection model entry', () => {
+    const text = firstText(runLookupModel({ topic: 'NotificationWeek' }));
+    expect(text).toMatch(/\*\*Store shape:\*\* `sub-collection`/);
+    expect(text).toMatch(/subcollection of `notificationBoxIdentity`/);
+  });
+
   it('resolves a Firebase model by collection prefix', () => {
     const text = firstText(runLookupModel({ topic: 'nb' }));
     expect(text).toMatch(/# NotificationBox/);
@@ -35,6 +47,27 @@ describe('dbx_model_lookup', () => {
     expect(text).toMatch(/## Root collections/);
     expect(text).toMatch(/## Subcollections/);
     expect(text).toMatch(/\*\*StorageFile\*\*/);
+    expect(text).toMatch(/topic="shapes"/);
+  });
+
+  it('resolves the store-shape taxonomy via "shapes" alias', () => {
+    const text = firstText(runLookupModel({ topic: 'shapes' }));
+    expect(text).toMatch(/# Firebase model store shapes/);
+    expect(text).toMatch(/`root`/);
+    expect(text).toMatch(/`root-singleton`/);
+    expect(text).toMatch(/`sub-collection`/);
+    expect(text).toMatch(/`singleton-sub`/);
+    expect(text).toMatch(/`system-state`/);
+    expect(text).toMatch(/AbstractDbxFirebaseDocumentStore/);
+    expect(text).toMatch(/AbstractRootSingleItemDbxFirebaseDocument/);
+    expect(text).toMatch(/AbstractDbxFirebaseDocumentWithParentStore/);
+    expect(text).toMatch(/AbstractSingleItemDbxFirebaseDocument/);
+    expect(text).toMatch(/AbstractSystemStateDocumentStoreAccessor/);
+  });
+
+  it('also resolves the shape taxonomy via "store-shapes" alias', () => {
+    const text = firstText(runLookupModel({ topic: 'store-shapes' }));
+    expect(text).toMatch(/# Firebase model store shapes/);
   });
 
   it('returns a not-found message when nothing resolves', () => {
