@@ -134,3 +134,41 @@ describe('scaffoldArtifact — notification-template body', () => {
     expect(snippet).toContain('notificationTemplateTypeInfoRecord');
   });
 });
+
+describe('scaffoldArtifact — notification-task body', () => {
+  it('emits component-side type + checkpoint + data + template with the right tokens', () => {
+    const result = scaffoldArtifact(input('notification-task', 'userPing'));
+    const componentFile = result.files.find((f) => f.path.endsWith('notification.task.ts'));
+    expect(componentFile?.status).toBe('append');
+    const text = componentFile?.content ?? '';
+    expect(text).toContain('USER_PING_NOTIFICATION_TASK_TYPE');
+    expect(text).toContain('UserPingNotificationTaskCheckpoint');
+    expect(text).toContain('UserPingNotificationTaskData');
+    expect(text).toContain('userPingNotificationTaskTemplate');
+    expect(text).not.toContain('unique: true');
+  });
+
+  it('emits a handler file with the inner var matching the strict-reachability convention', () => {
+    const result = scaffoldArtifact(input('notification-task', 'userPing'));
+    const handler = result.files.find((f) => f.path.includes('handlers/task.handler.user-ping.ts'));
+    expect(handler?.status).toBe('new');
+    const text = handler?.content ?? '';
+    expect(text).toContain('const userPingHandler: NotificationTaskServiceTaskHandlerConfig');
+    expect(text).toContain('return userPingHandler;');
+    expect(text).toContain('demoUserPingNotificationTaskHandler(_context: DemoFirebaseServerActionsContext)');
+  });
+
+  it('emits `unique: true` when the option is set', () => {
+    const result = scaffoldArtifact(input('notification-task', 'userPing', { unique: true }));
+    const componentFile = result.files.find((f) => f.path.endsWith('notification.task.ts'));
+    expect(componentFile?.content).toContain('unique: true');
+  });
+
+  it('renders wiring instructions covering both the handlers array and ALL_NOTIFICATION_TASK_TYPES', () => {
+    const result = scaffoldArtifact(input('notification-task', 'userPing'));
+    const snippet = result.wiring[0].snippet ?? '';
+    expect(snippet).toContain('demoUserPingNotificationTaskHandler');
+    expect(snippet).toContain('userPingHandler');
+    expect(snippet).toContain('ALL_NOTIFICATION_TASK_TYPES');
+  });
+});

@@ -8,8 +8,8 @@
  * {@link EmittedFile.status} based on `fs.access` results.
  */
 
-import { applyTokens, NOTIFICATION_TEMPLATE_COMPONENT_TEMPLATE, NOTIFICATION_TEMPLATE_FACTORY_TEMPLATE, NOTIFICATION_TEMPLATE_WIRING_SNIPPET, STORAGEFILE_PURPOSE_COMPONENT_TEMPLATE, STORAGEFILE_PURPOSE_HANDLER_TEMPLATE, STORAGEFILE_PURPOSE_WIRING_SNIPPET, type TemplateContext } from './templates.js';
-import type { ArtifactKind, EmittedFile, ScaffoldArtifactInput, ScaffoldArtifactOptions, ScaffoldArtifactResult, WiringStep } from './types.js';
+import { applyTokens, NOTIFICATION_TASK_COMPONENT_TEMPLATE, NOTIFICATION_TASK_HANDLER_TEMPLATE, NOTIFICATION_TASK_WIRING_SNIPPET, NOTIFICATION_TEMPLATE_COMPONENT_TEMPLATE, NOTIFICATION_TEMPLATE_FACTORY_TEMPLATE, NOTIFICATION_TEMPLATE_WIRING_SNIPPET, STORAGEFILE_PURPOSE_COMPONENT_TEMPLATE, STORAGEFILE_PURPOSE_HANDLER_TEMPLATE, STORAGEFILE_PURPOSE_WIRING_SNIPPET, type TemplateContext } from './templates.js';
+import type { ArtifactKind, EmittedFile, ScaffoldArtifactInput, ScaffoldArtifactResult, WiringStep } from './types.js';
 
 export function renderArtifact(input: ScaffoldArtifactInput, ctx: TemplateContext): ScaffoldArtifactResult {
   let result: ScaffoldArtifactResult;
@@ -100,18 +100,41 @@ function renderNotificationTemplate(input: ScaffoldArtifactInput, ctx: TemplateC
 
 // MARK: notification-task
 function renderNotificationTask(input: ScaffoldArtifactInput, ctx: TemplateContext): ScaffoldArtifactResult {
-  const files: EmittedFile[] = [placeholderEmission('append', `<<componentDir>>/src/lib/model/notification/notification.task.ts`, 'Append the new NotificationTaskType + checkpoint alias + data interface + template factory to notification.task.ts.', ctx), placeholderEmission('new', `<<apiDir>>/src/app/common/model/notification/handlers/task.handler.<<kebab>>.ts`, 'New task-handler factory in handlers/.', ctx)];
-  const wiring: WiringStep[] = [{ file: applyTokens('<<apiDir>>/src/app/common/model/notification/notification.task.service.ts', ctx), description: 'Import the handler factory and add the bound result to the handlers array.' }];
+  const unique = input.options?.unique === true;
+  const componentTemplate = applyTokens(NOTIFICATION_TASK_COMPONENT_TEMPLATE, ctx).replace('<<UNIQUE_FIELD>>', unique ? ',\n    unique: true' : '');
+
+  const componentFile: EmittedFile = {
+    status: 'append',
+    path: applyTokens('<<componentDir>>/src/lib/model/notification/notification.task.ts', ctx),
+    description: applyTokens(
+      `Append the \`<<Pascal>>\` task block to \`notification.task.ts\`: type constant + primary checkpoint constant + checkpoint alias + data + input interfaces + template factory. Reuses the file's existing imports — no new top-level imports required as long as \`NotificationTaskType\`, \`CreateNotificationTaskTemplate\`, \`createNotificationTaskTemplate\`, \`FirebaseAuthUserId\`, and \`ProfileDocument\` are already in scope.${unique ? ' Includes `unique: true` per the requested option.' : ''}`,
+      ctx
+    ),
+    content: componentTemplate
+  };
+
+  const handlerFile: EmittedFile = {
+    status: 'new',
+    path: applyTokens('<<apiDir>>/src/app/common/model/notification/handlers/task.handler.<<kebab>>.ts', ctx),
+    description: applyTokens(`Task-handler factory bound to \`<<SCREAMING>>_NOTIFICATION_TASK_TYPE\`. The inner variable is named \`<<camel>>Handler\` so the strict-reachability trace in \`dbx_validate_app_notifications\` resolves cleanly when the call-site uses the same name.`, ctx),
+    content: applyTokens(NOTIFICATION_TASK_HANDLER_TEMPLATE, ctx)
+  };
+
+  const wiring: WiringStep[] = [
+    {
+      file: applyTokens('<<apiDir>>/src/app/common/model/notification/notification.task.service.ts', ctx),
+      description: applyTokens(`Import the new factory, instantiate it bound to \`<<camel>>Handler\`, push that name into the existing \`handlers\` array, and add \`<<SCREAMING>>_NOTIFICATION_TASK_TYPE\` to the \`ALL_NOTIFICATION_TASK_TYPES\` aggregate in the component package's \`notification.task.ts\` so the validate-vs-handler parity check stays consistent.`, ctx),
+      snippet: applyTokens(NOTIFICATION_TASK_WIRING_SNIPPET, ctx)
+    }
+  ];
+
   const result: ScaffoldArtifactResult = {
     artifact: input.artifact,
     tokens: ctx.tokens,
-    files,
+    files: [componentFile, handlerFile],
     wiring,
-    summary: 'notification-task scaffold (skeleton — content TBD)'
+    summary: applyTokens(`Scaffolds a new \`<<SCREAMING>>_NOTIFICATION_TASK_TYPE\` end-to-end: component-side type + checkpoint alias + data + template factory (append to \`notification.task.ts\`) and an API-side handler factory in \`handlers/\`. After applying the wiring (handlers array + ALL_NOTIFICATION_TASK_TYPES), run \`dbx_validate_app_notifications\` and \`dbx_validate_notification_folder\` against your project — both should PASS.`, ctx)
   };
-  // Suppress unused options arg until per-artifact options land.
-  const _opts: ScaffoldArtifactOptions | undefined = input.options;
-  void _opts;
   void artifactKindLabel;
   return result;
 }

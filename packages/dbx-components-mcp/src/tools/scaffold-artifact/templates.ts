@@ -331,3 +331,92 @@ export const <<componentPackageName>>NotificationTemplateTypeInfoRecord = notifi
   <<SCREAMING>>_NOTIFICATION_TEMPLATE_TYPE_INFO
 ]);
 `;
+
+// MARK: notification-task templates
+//
+// Modeled after demo's `EXAMPLE_HANDLED_NOTIFICATION_TASK_TYPE` block in
+// `components/demo-firebase/src/lib/model/notification/notification.task.ts`
+// and `apps/demo-api/src/app/common/model/notification/handlers/task.handler.example.handled.ts`.
+// Inner-variable naming convention (`<<camel>>Handler`) supports the
+// notification cross-file validator's strict-reachability trace; the
+// trace is permissive enough that the leaf bindingName matters more
+// than call-site name matching, but keeping them aligned avoids
+// surprises when the trace's chain-walking falls back.
+
+export const NOTIFICATION_TASK_COMPONENT_TEMPLATE = `// MARK: <<Pascal>> Notification Task
+export const <<SCREAMING>>_NOTIFICATION_TASK_TYPE: NotificationTaskType = '<<SCREAMING>>'; // TODO: shorten to a stable abbreviation if needed
+
+export const <<SCREAMING>>_NOTIFICATION_TASK_PRIMARY_CHECKPOINT = 'primary';
+
+export type <<Pascal>>NotificationTaskCheckpoint = typeof <<SCREAMING>>_NOTIFICATION_TASK_PRIMARY_CHECKPOINT;
+
+export interface <<Pascal>>NotificationTaskData {
+  readonly uid: FirebaseAuthUserId;
+  // TODO: add task-specific fields
+}
+
+export interface <<Pascal>>NotificationTaskInput extends Omit<<<Pascal>>NotificationTaskData, 'uid'> {
+  readonly profileDocument: ProfileDocument;
+}
+
+/**
+ * Creates a notification task template for the <<Pascal>> notification task type.
+ */
+export function <<camel>>NotificationTaskTemplate(input: <<Pascal>>NotificationTaskInput): CreateNotificationTaskTemplate {
+  const { profileDocument } = input;
+  const uid = profileDocument.id;
+
+  return createNotificationTaskTemplate({
+    type: <<SCREAMING>>_NOTIFICATION_TASK_TYPE,
+    notificationModel: profileDocument,
+    targetModel: profileDocument,
+    data: { uid }<<UNIQUE_FIELD>>
+  });
+}
+
+// Add the new task type to the all-types aggregate at the bottom of this file:
+//   export const ALL_NOTIFICATION_TASK_TYPES: NotificationTaskType[] = [..., <<SCREAMING>>_NOTIFICATION_TASK_TYPE];
+`;
+
+export const NOTIFICATION_TASK_HANDLER_TEMPLATE = `import { type NotificationTaskServiceTaskHandlerConfig } from '@dereekb/firebase-server/model';
+import { <<SCREAMING>>_NOTIFICATION_TASK_PRIMARY_CHECKPOINT, <<SCREAMING>>_NOTIFICATION_TASK_TYPE, type <<Pascal>>NotificationTaskCheckpoint, type <<Pascal>>NotificationTaskData } from '<<componentPackageName>>';
+import { type <<ContextTypeName>> } from '../../../firebase/action.context';
+
+/**
+ * Builds the handler config for the <<Pascal>> notification task. The
+ * inner-variable name (\`<<camel>>Handler\`) aligns with the call-site
+ * binding in \`notification.task.service.ts\` so the cross-file
+ * validator's strict-reachability trace resolves cleanly. See commit
+ * 475129fd2 for the diagnostic that fires on a mismatch.
+ */
+export function <<appCamel>><<Pascal>>NotificationTaskHandler(_context: <<ContextTypeName>>): NotificationTaskServiceTaskHandlerConfig<<<Pascal>>NotificationTaskData, <<Pascal>>NotificationTaskCheckpoint> {
+  const <<camel>>Handler: NotificationTaskServiceTaskHandlerConfig<<<Pascal>>NotificationTaskData, <<Pascal>>NotificationTaskCheckpoint> = {
+    type: <<SCREAMING>>_NOTIFICATION_TASK_TYPE,
+    flow: [
+      {
+        checkpoint: <<SCREAMING>>_NOTIFICATION_TASK_PRIMARY_CHECKPOINT,
+        fn: async (_notificationTask) => {
+          // TODO: implement the task body.
+          const result = { completion: true };
+          return result;
+        }
+      }
+    ]
+  };
+  return <<camel>>Handler;
+}
+`;
+
+export const NOTIFICATION_TASK_WIRING_SNIPPET = `// Imports in notification.task.service.ts:
+import { <<appCamel>><<Pascal>>NotificationTaskHandler } from './handlers/task.handler.<<kebab>>';
+
+// Inside the task-service factory:
+const <<camel>>Handler = <<appCamel>><<Pascal>>NotificationTaskHandler(<<contextVarName>>);
+
+// Add to the existing handlers array:
+const handlers: NotificationTaskServiceTaskHandlerConfig<any>[] = [/* ... */, <<camel>>Handler];
+
+// Also add the new task type to ALL_NOTIFICATION_TASK_TYPES in
+// components/<<componentPackageName>>/src/lib/model/notification/notification.task.ts:
+//   export const ALL_NOTIFICATION_TASK_TYPES: NotificationTaskType[] = [..., <<SCREAMING>>_NOTIFICATION_TASK_TYPE];
+`;
