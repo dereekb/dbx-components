@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { deriveNameTokens, scaffoldArtifact } from './index.js';
+import { applyIdempotency, deriveNameTokens, scaffoldArtifact } from './index.js';
 import type { ScaffoldArtifactInput } from './types.js';
 
 const COMPONENT_DIR = 'components/demo-firebase';
@@ -170,5 +170,46 @@ describe('scaffoldArtifact — notification-task body', () => {
     expect(snippet).toContain('demoUserPingNotificationTaskHandler');
     expect(snippet).toContain('userPingHandler');
     expect(snippet).toContain('ALL_NOTIFICATION_TASK_TYPES');
+  });
+});
+
+describe('applyIdempotency', () => {
+  it('rewrites `new` files whose paths are reported as existing to `exists-skipped` and clears their content', async () => {
+    const result = scaffoldArtifact(input('storagefile-purpose', 'userPhoto'));
+    const handlerPath = result.files.find((f) => f.status === 'new')?.path;
+    expect(handlerPath).toBeDefined();
+    const checked = await applyIdempotency(result, (path) => path === handlerPath);
+    const handler = checked.files.find((f) => f.path === handlerPath);
+    expect(handler?.status).toBe('exists-skipped');
+    expect(handler?.content).toBe('');
+  });
+
+  it('leaves `new` files alone when the checker reports they do not exist', async () => {
+    const result = scaffoldArtifact(input('storagefile-purpose', 'userPhoto'));
+    const checked = await applyIdempotency(result, () => false);
+    const newFiles = checked.files.filter((f) => f.status === 'new');
+    expect(newFiles.length).toBeGreaterThan(0);
+    for (const f of newFiles) {
+      expect(f.content.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('always passes `append` files through unchanged', async () => {
+    const result = scaffoldArtifact(input('notification-template', 'guestbookLiked'));
+    const checked = await applyIdempotency(result, () => true);
+    const appendFiles = checked.files.filter((f) => f.status === 'append');
+    expect(appendFiles.length).toBeGreaterThan(0);
+    for (const f of appendFiles) {
+      expect(f.content.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('is stable on a second pass (running again with the same checker leaves the result unchanged)', async () => {
+    const result = scaffoldArtifact(input('notification-task', 'userPing'));
+    const handlerPath = result.files.find((f) => f.status === 'new')?.path;
+    const exists = (path: string): boolean => path === handlerPath;
+    const first = await applyIdempotency(result, exists);
+    const second = await applyIdempotency(first, exists);
+    expect(second.files.map((f) => f.status)).toEqual(first.files.map((f) => f.status));
   });
 });

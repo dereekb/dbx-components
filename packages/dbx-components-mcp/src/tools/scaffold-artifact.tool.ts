@@ -24,7 +24,7 @@ import { resolve, sep } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { formatResult, scaffoldArtifact, type ArtifactKind, type EmittedFile, type ScaffoldArtifactInput, type ScaffoldArtifactResult } from './scaffold-artifact/index.js';
+import { applyIdempotency, formatResult, scaffoldArtifact, type ArtifactKind, type ScaffoldArtifactInput } from './scaffold-artifact/index.js';
 
 const ARTIFACT_KINDS: readonly ArtifactKind[] = ['storagefile-purpose', 'notification-template', 'notification-task'];
 const ARTIFACT_KIND_LITERAL_UNION = ARTIFACT_KINDS.map((k) => `'${k}'`).join(' | ');
@@ -123,22 +123,6 @@ async function fileExists(absolutePath: string): Promise<boolean> {
   return exists;
 }
 
-async function applyIdempotencyChecks(result: ScaffoldArtifactResult, cwd: string): Promise<ScaffoldArtifactResult> {
-  const updated: EmittedFile[] = [];
-  for (const file of result.files) {
-    let next: EmittedFile = file;
-    if (file.status === 'new') {
-      const absolute = resolve(cwd, file.path);
-      if (await fileExists(absolute)) {
-        next = { ...file, status: 'exists-skipped', content: '' };
-      }
-    }
-    updated.push(next);
-  }
-  const out: ScaffoldArtifactResult = { ...result, files: updated };
-  return out;
-}
-
 // MARK: Handler
 export async function runScaffoldArtifact(rawArgs: unknown): Promise<ToolResult> {
   let input: ScaffoldArtifactInput;
@@ -158,7 +142,7 @@ export async function runScaffoldArtifact(rawArgs: unknown): Promise<ToolResult>
     return toolError(message);
   }
 
-  let raw: ScaffoldArtifactResult;
+  let raw;
   try {
     raw = scaffoldArtifact(input);
   } catch (err) {
@@ -166,7 +150,7 @@ export async function runScaffoldArtifact(rawArgs: unknown): Promise<ToolResult>
     return toolError(`Scaffold failed: ${message}`);
   }
 
-  const checked = await applyIdempotencyChecks(raw, cwd);
+  const checked = await applyIdempotency(raw, (relativePath) => fileExists(resolve(cwd, relativePath)));
   const text = formatResult(checked);
   const result: ToolResult = {
     content: [{ type: 'text', text }]
