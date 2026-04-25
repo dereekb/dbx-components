@@ -11,7 +11,7 @@
  * request handlers exactly once and routes calls by tool name.
  *
  * Registered tools (clustered by domain — form, model, storagefile,
- * notification, system, artifact):
+ * notification, system, action, artifact):
  *
  * | Tool                                    | Purpose       | One-liner                                              |
  * |-----------------------------------------|---------------|--------------------------------------------------------|
@@ -32,6 +32,9 @@
  * | dbx_notification_model_list_app         | Discovery     | "What notifications does this app configure?"          |
  * | dbx_notification_model_validate_folder  | Verification  | "Does this notification folder follow the convention?" |
  * | dbx_system_model_validate_folder        | Verification  | "Is this system folder set up correctly?"              |
+ * | dbx_action_lookup                       | Documentation | "Tell me about action directive / state X"             |
+ * | dbx_action_examples                     | Working code  | "Show me how to wire an action like X"                 |
+ * | dbx_action_scaffold                     | Generation    | "Scaffold the action stack for use case X"             |
  * | dbx_artifact_scaffold                   | Generation    | "Give me the body for a new <artifact>."               |
  * | dbx_artifact_file_convention            | Reference     | "Where do I put a new <artifact>?"                     |
  */
@@ -55,6 +58,9 @@ import { notificationModelValidateAppTool } from './notification-model-validate-
 import { notificationModelListAppTool } from './notification-model-list-app.tool.js';
 import { notificationModelValidateFolderTool } from './notification-model-validate-folder.tool.js';
 import { systemModelValidateFolderTool } from './system-model-validate-folder.tool.js';
+import { lookupActionTool } from './lookup-action.tool.js';
+import { actionExamplesTool } from './action-examples.tool.js';
+import { actionScaffoldTool } from './action-scaffold.tool.js';
 import { artifactScaffoldTool } from './artifact-scaffold.tool.js';
 import { artifactFileConventionTool } from './artifact-file-convention.tool.js';
 import { toolError, type DbxTool } from './types.js';
@@ -88,6 +94,10 @@ export const DBX_TOOLS: readonly DbxTool[] = [
   notificationModelValidateFolderTool,
   // system
   systemModelValidateFolderTool,
+  // action
+  lookupActionTool,
+  actionExamplesTool,
+  actionScaffoldTool,
   // artifact (cross-domain dispatchers)
   artifactScaffoldTool,
   artifactFileConventionTool

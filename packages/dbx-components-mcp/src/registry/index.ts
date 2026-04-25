@@ -90,6 +90,93 @@ export function getForgeFieldsByArrayOutput(arrayOutput: ForgeArrayOutput): read
   return FORGE_FIELDS.filter((f) => f.arrayOutput === arrayOutput);
 }
 
+// MARK: Actions
+import { ACTION_ENTRIES, ACTION_STATE_VALUES, type ActionEntryInfo, type ActionDirectiveInfo, type ActionStateInfo, type ActionEntryRole } from './actions.js';
+
+export { ACTION_ENTRIES, ACTION_ROLE_ORDER, ACTION_STATE_VALUES } from './actions.js';
+export type { ActionEntryInfo, ActionDirectiveInfo, ActionStoreInfo, ActionStateInfo, ActionEntryRole, ActionInputInfo, ActionOutputInfo, ActionMethodInfo, ActionObservableInfo, DbxActionStateValue } from './actions.js';
+
+/**
+ * Returns every registered action entry (directives + store + states).
+ */
+export function getActionEntries(): readonly ActionEntryInfo[] {
+  return ACTION_ENTRIES;
+}
+
+/**
+ * Looks up a single action entry by its registry slug. Slugs are unique across
+ * roles, so one match is the most that ever comes back.
+ */
+export function getActionEntry(key: string): ActionEntryInfo | undefined {
+  const lowered = key.trim().toLowerCase();
+  const result = ACTION_ENTRIES.find((e) => e.slug === lowered);
+  return result;
+}
+
+/**
+ * Filters action entries by role. Order within a role is preserved from the
+ * registry definition.
+ */
+export function getActionEntriesByRole(role: ActionEntryRole): readonly ActionEntryInfo[] {
+  return ACTION_ENTRIES.filter((e) => e.role === role);
+}
+
+/**
+ * Looks up a directive entry by its raw `@Directive` selector. Matches against
+ * any of the comma-separated selector tokens (e.g. `'dbx-action,[dbxAction]'`
+ * resolves on either form). The lookup also tolerates the bracket-less form
+ * (e.g. `'dbxActionHandler'` for `'[dbxActionHandler]'`).
+ */
+export function getActionDirectiveBySelector(selector: string): ActionDirectiveInfo | undefined {
+  const lowered = selector.trim().toLowerCase();
+  const candidates = [lowered, `[${lowered}]`];
+  let result: ActionDirectiveInfo | undefined;
+  for (const entry of ACTION_ENTRIES) {
+    if (entry.role !== 'directive') {
+      continue;
+    }
+    const tokens = entry.selector
+      .toLowerCase()
+      .split(',')
+      .map((t) => t.trim());
+    if (candidates.some((c) => tokens.includes(c))) {
+      result = entry;
+      break;
+    }
+  }
+  return result;
+}
+
+/**
+ * Looks up an entry by its `className` (`'DbxActionHandlerDirective'`,
+ * `'ActionContextStore'`). Case-insensitive exact match.
+ */
+export function getActionEntryByClassName(className: string): ActionEntryInfo | undefined {
+  const lowered = className.trim().toLowerCase();
+  const result = ACTION_ENTRIES.find((entry) => {
+    let match = false;
+    if (entry.role === 'directive' || entry.role === 'store') {
+      match = entry.className.toLowerCase() === lowered;
+    }
+    return match;
+  });
+  return result;
+}
+
+/**
+ * Looks up the {@link ActionStateInfo} entry for a `DbxActionState` enum
+ * member name (`'IDLE'`, `'TRIGGERED'`, ...). Case-insensitive.
+ */
+export function getActionStateEntry(stateValue: string): ActionStateInfo | undefined {
+  const upper = stateValue.trim().toUpperCase();
+  const matched = ACTION_STATE_VALUES.find((v) => v === upper);
+  let result: ActionStateInfo | undefined;
+  if (matched) {
+    result = ACTION_ENTRIES.find((e): e is ActionStateInfo => e.role === 'state' && e.stateValue === matched);
+  }
+  return result;
+}
+
 // MARK: Firebase Models
 import { FIREBASE_MODELS, type FirebaseModel } from './firebase-models.js';
 
