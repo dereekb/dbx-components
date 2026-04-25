@@ -12,7 +12,7 @@
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
 import { FORGE_FIELDS, type ForgeFieldInfo } from '../registry/index.js';
-import { resolveTopicAlias } from './alias-resolver.js';
+import { resolveTopicAlias } from './forge-alias-resolver.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 
 const DEFAULT_LIMIT = 10;

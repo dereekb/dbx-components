@@ -14,7 +14,7 @@
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
 import { FORGE_FIELDS, FORGE_TIER_ORDER, getForgeField, getForgeFieldsByProduces, getForgeFieldsByTier, getForgeProducesCatalog, type ForgeFieldInfo, type ForgeTier } from '../registry/index.js';
-import { resolveTopicAlias } from './alias-resolver.js';
+import { resolveTopicAlias } from './forge-alias-resolver.js';
 import { formatForgeFieldEntry, formatForgeFieldGroup } from './forge-lookup.formatter.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 

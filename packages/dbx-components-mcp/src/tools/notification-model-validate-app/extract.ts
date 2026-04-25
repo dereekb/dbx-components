@@ -97,7 +97,7 @@ export function extractAppNotifications(inspection: AppNotificationsInspection):
   const templateConfigsArrayFactory = extractTemplateConfigsArrayFactory(apiSources, apiFunctionIndex);
   const templateHandlerEntries = extractTemplateHandlerEntries(templateConfigsArrayFactory, apiFunctionIndex);
   const taskServiceCalls = extractTaskServiceCalls(apiSources, apiFunctionIndex, trustedExternalIdentifiers);
-  const taskHandlerEntries = extractTaskHandlerEntries(apiSources, taskServiceCalls, apiFunctionIndex);
+  const taskHandlerEntries = extractTaskHandlerEntries(apiSources);
 
   const result: ExtractedAppNotifications = {
     templateTypeConstants,
@@ -863,7 +863,7 @@ function findLocalVariable(sf: SourceFile, name: string): VariableDeclaration | 
 }
 
 // MARK: Task handler entries
-function extractTaskHandlerEntries(sources: readonly SourceFile[], taskServiceCalls: readonly ExtractedTaskServiceCall[], index: ApiFunctionIndex): readonly ExtractedTaskHandlerEntry[] {
+function extractTaskHandlerEntries(sources: readonly SourceFile[]): readonly ExtractedTaskHandlerEntry[] {
   const out: ExtractedTaskHandlerEntry[] = [];
   const seenSymbols = new Set<string>();
 
@@ -909,8 +909,5 @@ function extractTaskHandlerEntries(sources: readonly SourceFile[], taskServiceCa
     }
   }
 
-  // Suppress unused-warning for the external-call source parameter: not referenced in body but kept for API symmetry.
-  void taskServiceCalls;
-  void index;
   return out;
 }

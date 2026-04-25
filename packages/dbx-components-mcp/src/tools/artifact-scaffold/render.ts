@@ -9,7 +9,7 @@
  */
 
 import { applyTokens, NOTIFICATION_TASK_COMPONENT_TEMPLATE, NOTIFICATION_TASK_HANDLER_TEMPLATE, NOTIFICATION_TASK_WIRING_SNIPPET, NOTIFICATION_TEMPLATE_COMPONENT_TEMPLATE, NOTIFICATION_TEMPLATE_FACTORY_TEMPLATE, NOTIFICATION_TEMPLATE_WIRING_SNIPPET, STORAGEFILE_PURPOSE_COMPONENT_TEMPLATE, STORAGEFILE_PURPOSE_HANDLER_TEMPLATE, STORAGEFILE_PURPOSE_WIRING_SNIPPET, type TemplateContext } from './templates.js';
-import type { ArtifactKind, EmittedFile, ScaffoldArtifactInput, ScaffoldArtifactResult, WiringStep } from './types.js';
+import type { EmittedFile, ScaffoldArtifactInput, ScaffoldArtifactResult, WiringStep } from './types.js';
 
 export function renderArtifact(input: ScaffoldArtifactInput, ctx: TemplateContext): ScaffoldArtifactResult {
   let result: ScaffoldArtifactResult;
@@ -135,23 +135,5 @@ function renderNotificationTask(input: ScaffoldArtifactInput, ctx: TemplateConte
     wiring,
     summary: applyTokens(`Scaffolds a new \`<<SCREAMING>>_NOTIFICATION_TASK_TYPE\` end-to-end: component-side type + checkpoint alias + data + template factory (append to \`notification.task.ts\`) and an API-side handler factory in \`handlers/\`. After applying the wiring (handlers array + ALL_NOTIFICATION_TASK_TYPES), run \`dbx_notification_model_validate_app\` and \`dbx_notification_model_validate_folder\` against your project — both should PASS.`, ctx)
   };
-  void artifactKindLabel;
   return result;
-}
-
-// MARK: helpers
-function placeholderEmission(status: 'new' | 'append', pathTemplate: string, description: string, ctx: TemplateContext): EmittedFile {
-  const path = applyTokens(pathTemplate, ctx);
-  const description_ = applyTokens(description, ctx);
-  const result: EmittedFile = {
-    status,
-    path,
-    description: description_,
-    content: `// TODO: scaffold body for <<Pascal>> artifact lands in a follow-up commit.\n`
-  };
-  return result;
-}
-
-function artifactKindLabel(kind: ArtifactKind): string {
-  return kind;
 }

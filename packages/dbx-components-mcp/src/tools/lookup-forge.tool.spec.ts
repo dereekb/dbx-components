@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { runLookupForge } from './lookup-forge.tool.js';
-import { resolveTopicAlias } from './alias-resolver.js';
+import { resolveTopicAlias } from './forge-alias-resolver.js';
 
 function firstText(result: ReturnType<typeof runLookupForge>): string {
   expect(result.content.length).toBeGreaterThan(0);

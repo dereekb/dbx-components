@@ -1,9 +1,12 @@
 /**
- * Alias table + resolver for forge entry topics.
+ * Alias table + resolver for forge (`dbx_form_*`) entry topics.
  *
  * Maps common synonyms, factory-name shortcuts, and category keywords to
  * canonical registry slugs. Kept simple (case-insensitive string map) because
  * the registry is small enough that fuzzy search picks up the long tail.
+ *
+ * Forge-only by design — other clusters (`lookup-model`, `lookup-action`, etc.)
+ * keep their alias tables inline since synonyms differ wildly across domains.
  */
 
 /**
