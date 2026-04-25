@@ -127,7 +127,7 @@ describe('validateModelFolders', () => {
     expect(codes).not.toContain('FOLDER_MISSING_QUERY');
     expect(codes).not.toContain('FOLDER_MISSING_API');
     const warning = result.violations.find((v) => v.code === 'RESERVED_MODEL_FOLDER');
-    expect(warning?.message).toContain('dbx_system_model_validate_folder');
+    expect(warning?.message).toContain('dbx_system_m_validate_folder');
   });
 
   it('reserves the `notification` folder (imported from @dereekb/firebase) and recommends the dedicated tool', () => {
@@ -144,7 +144,7 @@ describe('validateModelFolders', () => {
     expect(codes).not.toContain('FOLDER_MISSING_ID');
     expect(codes).not.toContain('FOLDER_MISSING_API');
     const warning = result.violations.find((v) => v.code === 'RESERVED_MODEL_FOLDER');
-    expect(warning?.message).toContain('dbx_notification_model_validate_folder');
+    expect(warning?.message).toContain('dbx_notification_m_validate_folder');
   });
 
   it('reserves the `storagefile` folder (imported from @dereekb/firebase) and recommends the dedicated tool', () => {
@@ -161,7 +161,7 @@ describe('validateModelFolders', () => {
     expect(codes).not.toContain('FOLDER_MISSING_MAIN');
     expect(codes).not.toContain('FOLDER_STRAY_FILE');
     const warning = result.violations.find((v) => v.code === 'RESERVED_MODEL_FOLDER');
-    expect(warning?.message).toContain('dbx_storagefile_model_validate_folder');
+    expect(warning?.message).toContain('dbx_storagefile_m_validate_folder');
   });
 
   it('flags a not-found folder', () => {

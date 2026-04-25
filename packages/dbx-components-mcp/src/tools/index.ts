@@ -10,43 +10,46 @@
  * `run(args)` handler. This file sets the `tools/list` and `tools/call`
  * request handlers exactly once and routes calls by tool name.
  *
- * Registered tools (clustered by domain — form, ui, model, storagefile,
- * notification, system, action, route, filter, pipe, artifact):
+ * Registered tools (clustered by domain — form, ui, model, storagefile_m,
+ * notification_m, system_m, action, route, filter, pipe, artifact). The `_m`
+ * suffix on the storagefile / notification / system clusters marks them as
+ * model extensions: tools that walk a downstream app's source tree to verify
+ * end-to-end wiring of a specific dbx-components model type.
  *
- * | Tool                                    | Purpose       | One-liner                                              |
- * |-----------------------------------------|---------------|--------------------------------------------------------|
- * | dbx_form_lookup                         | Documentation | "Tell me about form entry X"                          |
- * | dbx_form_search                         | Discovery     | "Find form entries matching keywords"                 |
- * | dbx_form_examples                       | Working code  | "Show me how to compose X"                             |
- * | dbx_form_scaffold                       | Generation    | "Generate a FormConfig skeleton"                       |
- * | dbx_ui_lookup                           | Documentation | "Tell me about dbx-web component X"                    |
- * | dbx_ui_search                           | Discovery     | "Find dbx-web components matching keywords"            |
- * | dbx_ui_examples                         | Working code  | "Show me a settings-section / list-page layout"        |
- * | dbx_model_lookup                        | Documentation | "Tell me about Firebase model X"                       |
- * | dbx_model_search                        | Discovery     | "Find Firebase models matching keywords"               |
- * | dbx_model_decode                        | Decoding      | "What does this Firestore doc mean?"                   |
- * | dbx_model_validate                      | Verification  | "Is this Firestore model file correct?"                |
- * | dbx_model_validate_api                  | Verification  | "Is this model api file correct?"                      |
- * | dbx_model_validate_folder               | Verification  | "Does this model folder have the 5 files?"             |
- * | dbx_model_store_scaffold                | Generation    | "Scaffold the 4 store files for model X"               |
- * | dbx_storagefile_model_validate_app      | Verification  | "Is every storagefile purpose wired end-to-end?"       |
- * | dbx_storagefile_model_list_app          | Discovery     | "What storagefile purposes does this app configure?"   |
- * | dbx_storagefile_model_validate_folder   | Verification  | "Does this storagefile folder follow the convention?"  |
- * | dbx_notification_model_validate_app     | Verification  | "Is every app notification wired end-to-end?"          |
- * | dbx_notification_model_list_app         | Discovery     | "What notifications does this app configure?"          |
- * | dbx_notification_model_validate_folder  | Verification  | "Does this notification folder follow the convention?" |
- * | dbx_system_model_validate_folder        | Verification  | "Is this system folder set up correctly?"              |
- * | dbx_action_lookup                       | Documentation | "Tell me about action directive / state X"             |
- * | dbx_action_examples                     | Working code  | "Show me how to wire an action like X"                 |
- * | dbx_action_scaffold                     | Generation    | "Scaffold the action stack for use case X"             |
- * | dbx_route_tree                          | Discovery     | "What states does this app expose?"                    |
- * | dbx_route_lookup                        | Documentation | "What's the route definition for X?"                   |
- * | dbx_route_search                        | Discovery     | "Where do we have routes mentioning X?"                |
- * | dbx_filter_lookup                       | Documentation | "Tell me about filter directive / preset X"            |
- * | dbx_filter_scaffold                     | Generation    | "Scaffold a filter source + presets for model X"       |
- * | dbx_pipe_lookup                         | Documentation | "Tell me about Angular pipe X"                         |
- * | dbx_artifact_scaffold                   | Generation    | "Give me the body for a new <artifact>."               |
- * | dbx_artifact_file_convention            | Reference     | "Where do I put a new <artifact>?"                     |
+ * | Tool                                | Purpose       | One-liner                                              |
+ * |-------------------------------------|---------------|--------------------------------------------------------|
+ * | dbx_form_lookup                     | Documentation | "Tell me about form entry X"                           |
+ * | dbx_form_search                     | Discovery     | "Find form entries matching keywords"                  |
+ * | dbx_form_examples                   | Working code  | "Show me how to compose X"                             |
+ * | dbx_form_scaffold                   | Generation    | "Generate a FormConfig skeleton"                       |
+ * | dbx_ui_lookup                       | Documentation | "Tell me about dbx-web component X"                    |
+ * | dbx_ui_search                       | Discovery     | "Find dbx-web components matching keywords"            |
+ * | dbx_ui_examples                     | Working code  | "Show me a settings-section / list-page layout"        |
+ * | dbx_model_lookup                    | Documentation | "Tell me about Firebase model X"                       |
+ * | dbx_model_search                    | Discovery     | "Find Firebase models matching keywords"               |
+ * | dbx_model_decode                    | Decoding      | "What does this Firestore doc mean?"                   |
+ * | dbx_model_validate                  | Verification  | "Is this Firestore model file correct?"                |
+ * | dbx_model_validate_api              | Verification  | "Is this model api file correct?"                      |
+ * | dbx_model_validate_folder           | Verification  | "Does this model folder have the 5 files?"             |
+ * | dbx_model_store_scaffold            | Generation    | "Scaffold the 4 store files for model X"               |
+ * | dbx_storagefile_m_validate_app      | Verification  | "Is every storagefile purpose wired end-to-end?"       |
+ * | dbx_storagefile_m_list_app          | Discovery     | "What storagefile purposes does this app configure?"   |
+ * | dbx_storagefile_m_validate_folder   | Verification  | "Does this storagefile folder follow the convention?"  |
+ * | dbx_notification_m_validate_app     | Verification  | "Is every app notification wired end-to-end?"          |
+ * | dbx_notification_m_list_app         | Discovery     | "What notifications does this app configure?"          |
+ * | dbx_notification_m_validate_folder  | Verification  | "Does this notification folder follow the convention?" |
+ * | dbx_system_m_validate_folder        | Verification  | "Is this system folder set up correctly?"              |
+ * | dbx_action_lookup                   | Documentation | "Tell me about action directive / state X"             |
+ * | dbx_action_examples                 | Working code  | "Show me how to wire an action like X"                 |
+ * | dbx_action_scaffold                 | Generation    | "Scaffold the action stack for use case X"             |
+ * | dbx_route_tree                      | Discovery     | "What states does this app expose?"                    |
+ * | dbx_route_lookup                    | Documentation | "What's the route definition for X?"                   |
+ * | dbx_route_search                    | Discovery     | "Where do we have routes mentioning X?"                |
+ * | dbx_filter_lookup                   | Documentation | "Tell me about filter directive / preset X"            |
+ * | dbx_filter_scaffold                 | Generation    | "Scaffold a filter source + presets for model X"       |
+ * | dbx_pipe_lookup                     | Documentation | "Tell me about Angular pipe X"                         |
+ * | dbx_artifact_scaffold               | Generation    | "Give me the body for a new <artifact>."               |
+ * | dbx_artifact_file_convention        | Reference     | "Where do I put a new <artifact>?"                     |
  */
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -65,13 +68,13 @@ import { modelValidateTool } from './model-validate.tool.js';
 import { modelValidateApiTool } from './model-validate-api.tool.js';
 import { modelValidateFolderTool } from './model-validate-folder.tool.js';
 import { modelStoreScaffoldTool } from './model-store-scaffold.tool.js';
-import { storageFileModelValidateAppTool } from './storagefile-model-validate-app.tool.js';
-import { storageFileModelListAppTool } from './storagefile-model-list-app.tool.js';
-import { storageFileModelValidateFolderTool } from './storagefile-model-validate-folder.tool.js';
-import { notificationModelValidateAppTool } from './notification-model-validate-app.tool.js';
-import { notificationModelListAppTool } from './notification-model-list-app.tool.js';
-import { notificationModelValidateFolderTool } from './notification-model-validate-folder.tool.js';
-import { systemModelValidateFolderTool } from './system-model-validate-folder.tool.js';
+import { storageFileMValidateAppTool } from './storagefile-m-validate-app.tool.js';
+import { storageFileMListAppTool } from './storagefile-m-list-app.tool.js';
+import { storageFileMValidateFolderTool } from './storagefile-m-validate-folder.tool.js';
+import { notificationMValidateAppTool } from './notification-m-validate-app.tool.js';
+import { notificationMListAppTool } from './notification-m-list-app.tool.js';
+import { notificationMValidateFolderTool } from './notification-m-validate-folder.tool.js';
+import { systemMValidateFolderTool } from './system-m-validate-folder.tool.js';
 import { lookupActionTool } from './lookup-action.tool.js';
 import { actionExamplesTool } from './action-examples.tool.js';
 import { actionScaffoldTool } from './action-scaffold.tool.js';
@@ -89,8 +92,9 @@ import { toolError, type DbxTool } from './types.js';
  * Every registered tool in order of presentation in `tools/list`.
  *
  * Order clusters tools by domain so callers see related entries together:
- * form → ui → model → storagefile → notification → system → action → route →
- * filter → pipe → artifact.
+ * form → ui → model → storagefile_m → notification_m → system_m → action →
+ * route → filter → pipe → artifact. The `_m` clusters are model extensions
+ * that walk an app's source tree to verify end-to-end model wiring.
  */
 export const DBX_TOOLS: readonly DbxTool[] = [
   // form
@@ -110,16 +114,16 @@ export const DBX_TOOLS: readonly DbxTool[] = [
   modelValidateApiTool,
   modelValidateFolderTool,
   modelStoreScaffoldTool,
-  // storagefile
-  storageFileModelValidateAppTool,
-  storageFileModelListAppTool,
-  storageFileModelValidateFolderTool,
-  // notification
-  notificationModelValidateAppTool,
-  notificationModelListAppTool,
-  notificationModelValidateFolderTool,
-  // system
-  systemModelValidateFolderTool,
+  // storagefile_m (model extension)
+  storageFileMValidateAppTool,
+  storageFileMListAppTool,
+  storageFileMValidateFolderTool,
+  // notification_m (model extension)
+  notificationMValidateAppTool,
+  notificationMListAppTool,
+  notificationMValidateFolderTool,
+  // system_m (model extension)
+  systemMValidateFolderTool,
   // action
   lookupActionTool,
   actionExamplesTool,

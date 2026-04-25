@@ -14,7 +14,7 @@
  * overwritten — the tool never mutates the workspace.
  *
  * Pairs with the recently-shipped strict-reachability validators
- * (`dbx_storagefile_model_validate_app`, `dbx_notification_model_validate_app`)
+ * (`dbx_storagefile_m_validate_app`, `dbx_notification_m_validate_app`)
  * — generated handler files use the bindingName discipline those
  * validators enforce.
  */

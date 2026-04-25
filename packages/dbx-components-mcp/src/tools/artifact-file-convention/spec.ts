@@ -185,7 +185,7 @@ const NOTIFICATION_TEMPLATE: FileConventionSpec = {
       body: [
         '**Required exports:**',
         "- `<NAME>_NOTIFICATION_TEMPLATE_TYPE: NotificationTemplateType = '<short_code>'`.",
-        '- `<NAME>_NOTIFICATION_TEMPLATE_TYPE_INFO: NotificationTemplateTypeInfo` with `{ type, name, description, notificationModelIdentity, targetModelIdentity? }`.',
+        '- `<NAME>_NOTIFICATION_TEMPLATE_TYPE_INFO: NotificationTemplateTypeInfo` with `{ type, name, description, notificationMIdentity, targetModelIdentity? }`.',
         '- For multi-file workspaces, also declare `ALL_<MODULE>_NOTIFICATION_TEMPLATE_TYPE_INFOS: NotificationTemplateTypeInfo[]` and re-export the per-file infos.',
         '',
         '**Barrel:** Re-export from `<componentDir>/src/lib/model/notification/index.ts`.'
@@ -204,7 +204,7 @@ const NOTIFICATION_TEMPLATE: FileConventionSpec = {
     }
   ],
   seeAlso: ['notification-task'],
-  verify: 'Run `dbx_notification_model_validate_app` to confirm both registration paths (info-record + handler factory) are wired, then `dbx_notification_model_list_app` to confirm the new template appears with `inInfoRecord: true` and `hasFactory: true`.'
+  verify: 'Run `dbx_notification_m_validate_app` to confirm both registration paths (info-record + handler factory) are wired, then `dbx_notification_m_list_app` to confirm the new template appears with `inInfoRecord: true` and `hasFactory: true`.'
 };
 
 const NOTIFICATION_TASK: FileConventionSpec = {
@@ -238,7 +238,7 @@ const NOTIFICATION_TASK: FileConventionSpec = {
     }
   ],
   seeAlso: ['notification-template'],
-  verify: 'Run `dbx_notification_model_validate_app` to confirm `inAllArray: true` + `hasHandler: true` for the new task type.'
+  verify: 'Run `dbx_notification_m_validate_app` to confirm `inAllArray: true` + `hasHandler: true` for the new task type.'
 };
 
 const NESTJS_MODEL_MODULE: FileConventionSpec = {

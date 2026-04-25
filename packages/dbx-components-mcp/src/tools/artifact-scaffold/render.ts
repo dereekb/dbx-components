@@ -93,7 +93,7 @@ function renderNotificationTemplate(input: ScaffoldArtifactInput, ctx: TemplateC
     tokens: ctx.tokens,
     files: [componentFile, factoryFile],
     wiring,
-    summary: applyTokens(`Scaffolds a new \`<<SCREAMING>>_NOTIFICATION_TEMPLATE_TYPE\` end-to-end: component-side type + info + data + template factory (append to \`notification.ts\`) and an API-side template-service factory (append to \`notification.factory.ts\`). After applying the wiring, run \`dbx_notification_model_validate_app\` and \`dbx_notification_model_validate_folder\` against your project — both should PASS.`, ctx)
+    summary: applyTokens(`Scaffolds a new \`<<SCREAMING>>_NOTIFICATION_TEMPLATE_TYPE\` end-to-end: component-side type + info + data + template factory (append to \`notification.ts\`) and an API-side template-service factory (append to \`notification.factory.ts\`). After applying the wiring, run \`dbx_notification_m_validate_app\` and \`dbx_notification_m_validate_folder\` against your project — both should PASS.`, ctx)
   };
   return result;
 }
@@ -116,7 +116,7 @@ function renderNotificationTask(input: ScaffoldArtifactInput, ctx: TemplateConte
   const handlerFile: EmittedFile = {
     status: 'new',
     path: applyTokens('<<apiDir>>/src/app/common/model/notification/handlers/task.handler.<<kebab>>.ts', ctx),
-    description: applyTokens(`Task-handler factory bound to \`<<SCREAMING>>_NOTIFICATION_TASK_TYPE\`. The inner variable is named \`<<camel>>Handler\` so the strict-reachability trace in \`dbx_notification_model_validate_app\` resolves cleanly when the call-site uses the same name.`, ctx),
+    description: applyTokens(`Task-handler factory bound to \`<<SCREAMING>>_NOTIFICATION_TASK_TYPE\`. The inner variable is named \`<<camel>>Handler\` so the strict-reachability trace in \`dbx_notification_m_validate_app\` resolves cleanly when the call-site uses the same name.`, ctx),
     content: applyTokens(NOTIFICATION_TASK_HANDLER_TEMPLATE, ctx)
   };
 
@@ -133,7 +133,7 @@ function renderNotificationTask(input: ScaffoldArtifactInput, ctx: TemplateConte
     tokens: ctx.tokens,
     files: [componentFile, handlerFile],
     wiring,
-    summary: applyTokens(`Scaffolds a new \`<<SCREAMING>>_NOTIFICATION_TASK_TYPE\` end-to-end: component-side type + checkpoint alias + data + template factory (append to \`notification.task.ts\`) and an API-side handler factory in \`handlers/\`. After applying the wiring (handlers array + ALL_NOTIFICATION_TASK_TYPES), run \`dbx_notification_model_validate_app\` and \`dbx_notification_model_validate_folder\` against your project — both should PASS.`, ctx)
+    summary: applyTokens(`Scaffolds a new \`<<SCREAMING>>_NOTIFICATION_TASK_TYPE\` end-to-end: component-side type + checkpoint alias + data + template factory (append to \`notification.task.ts\`) and an API-side handler factory in \`handlers/\`. After applying the wiring (handlers array + ALL_NOTIFICATION_TASK_TYPES), run \`dbx_notification_m_validate_app\` and \`dbx_notification_m_validate_folder\` against your project — both should PASS.`, ctx)
   };
   return result;
 }

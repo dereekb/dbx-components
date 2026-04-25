@@ -1,18 +1,19 @@
 /**
- * `dbx_model_validate_folder` tool.
+ * `dbx_system_m_validate_folder` tool.
  *
- * Validates that one or more model folders follow the canonical layout:
- * every folder must contain `<name>.ts`, `<name>.id.ts`,
- * `<name>.query.ts`, `<name>.action.ts`, `<name>.api.ts`, and
- * `index.ts`. Stray `.ts` files at the folder root that don't start
- * with `<name>.` trigger a warning.
+ * Validates that one or more `system/` model folders follow the
+ * downstream convention. At the folder level: `system.ts` and `index.ts`
+ * are required; `system.action.ts` and `system.api.ts` are optional;
+ * `system.id.ts` and `system.query.ts` are disallowed. Inside
+ * `system.ts`, every `<NAME>_SYSTEM_STATE_TYPE` constant must be paired
+ * with an interface `<Foo>SystemData extends SystemStateStoredData` and
+ * a converter `<foo>SystemDataConverter` typed
+ * `SystemStateStoredDataFieldConverterConfig<<Foo>SystemData>`; the file
+ * must end with the aggregate `<app>SystemStateStoredDataConverterMap`
+ * whose keys reference each declared type constant.
  *
- * Reserved folder names — `system/`, `notification/`, `storagefile/` —
- * emit a warning naming the dedicated validator to use instead and
- * skip structural checks. `system/` is covered by
- * `dbx_system_m_validate_folder`; `notification/` and `storagefile/` are
- * imported from `@dereekb/firebase` and downstream folders extend the
- * canonical group rather than redeclaring it.
+ * Stray `.ts` files that don't start with `system.` and aren't
+ * `index.ts` emit a warning, mirroring `dbx_validate_model_folder`.
  *
  * Accepts two interchangeable input forms (at least one required):
  *   - `paths`: relative folder paths resolved against cwd.
@@ -25,19 +26,23 @@ import { resolve, sep } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { formatResult, inspectFolder, validateModelFolders, type FolderInspection } from './model-validate-folder/index.js';
+import { formatResult, inspectFolder, validateSystemFolders, type SystemFolderInspection } from './system-m-validate-folder/index.js';
 
 // MARK: Tool definition
-const DBX_MODEL_VALIDATE_FOLDER_TOOL: Tool = {
-  name: 'dbx_model_validate_folder',
+const DBX_SYSTEM_M_VALIDATE_FOLDER_TOOL: Tool = {
+  name: 'dbx_system_m_validate_folder',
   description: [
-    'Validate that one or more model folders follow the canonical layout. Each folder named `<name>/` must contain `<name>.ts`, `<name>.id.ts`, `<name>.query.ts`, `<name>.action.ts`, `<name>.api.ts`, and `index.ts`. Missing files are hard errors.',
+    'Validate that one or more `system/` model folders follow the downstream convention. Each folder must contain `system.ts` and `index.ts` at minimum; `system.action.ts` and `system.api.ts` are optional; `system.id.ts` and `system.query.ts` are disallowed.',
     '',
-    'Warnings cover: stray `.ts` files at the folder root that do not start with `<name>.` (they should be grouped under the model prefix), and reserved folder names (`system/`, `notification/`, `storagefile/`) that have dedicated validators and are skipped here.',
+    'Inside `system.ts`, every `<NAME>_SYSTEM_STATE_TYPE` constant must be paired with an interface `<Foo>SystemData extends SystemStateStoredData` and a converter `<foo>SystemDataConverter` typed `SystemStateStoredDataFieldConverterConfig<<Foo>SystemData>`. The file must end with an aggregate `<app>SystemStateStoredDataConverterMap` whose keys reference each declared type constant.',
+    '',
+    'Warnings cover: stray `.ts` files at the folder root that do not start with `system.`, converter-map ordering (should be the last top-level export), and bare or unknown identifiers used as converter-map keys.',
+    '',
+    'Always runs in downstream mode — the base `@dereekb/firebase` system folder ships machinery (`systemStateIdentity`, `SystemStateDocument`, etc.) rather than state-type triples and should not be validated with this tool.',
     '',
     'Provide at least one of:',
     '- `paths`: array of folder paths (relative to the server cwd).',
-    '- `glob`: a glob pattern resolved against the server cwd (e.g. `packages/foo/src/lib/model/*`). Non-directory matches are skipped.',
+    '- `glob`: a glob pattern resolved against the server cwd (e.g. `components/foo-firebase/src/lib/model/system`). Non-directory matches are skipped.',
     '',
     'Paths escaping the cwd are rejected.'
   ].join('\n'),
@@ -117,19 +122,19 @@ async function resolveFolderPaths(args: ParsedArgs, cwd: string): Promise<readon
   return collected;
 }
 
-async function buildInspections(paths: readonly string[], cwd: string): Promise<readonly FolderInspection[]> {
-  const out: FolderInspection[] = [];
+async function buildInspections(paths: readonly string[], cwd: string): Promise<readonly SystemFolderInspection[]> {
+  const out: SystemFolderInspection[] = [];
   for (const relative of paths) {
     const absolute = resolve(cwd, relative);
     const inspection = await inspectFolder(absolute);
-    const relativized: FolderInspection = { ...inspection, path: relative };
+    const relativized: SystemFolderInspection = { ...inspection, path: relative };
     out.push(relativized);
   }
   return out;
 }
 
 // MARK: Handler
-export async function runModelValidateFolder(rawArgs: unknown): Promise<ToolResult> {
+export async function runSystemMValidateFolder(rawArgs: unknown): Promise<ToolResult> {
   let args: ParsedArgs;
   try {
     args = parseArgs(rawArgs);
@@ -155,7 +160,7 @@ export async function runModelValidateFolder(rawArgs: unknown): Promise<ToolResu
     return toolError('No matching folders found.');
   }
 
-  let inspections: readonly FolderInspection[];
+  let inspections: readonly SystemFolderInspection[];
   try {
     inspections = await buildInspections(paths, process.cwd());
   } catch (err) {
@@ -163,7 +168,7 @@ export async function runModelValidateFolder(rawArgs: unknown): Promise<ToolResu
     return toolError(`Failed to read folders: ${message}`);
   }
 
-  const validation = validateModelFolders(inspections);
+  const validation = validateSystemFolders(inspections);
   const text = formatResult(validation);
   const result: ToolResult = {
     content: [{ type: 'text', text }],
@@ -172,7 +177,7 @@ export async function runModelValidateFolder(rawArgs: unknown): Promise<ToolResu
   return result;
 }
 
-export const modelValidateFolderTool: DbxTool = {
-  definition: DBX_MODEL_VALIDATE_FOLDER_TOOL,
-  run: runModelValidateFolder
+export const systemMValidateFolderTool: DbxTool = {
+  definition: DBX_SYSTEM_M_VALIDATE_FOLDER_TOOL,
+  run: runSystemMValidateFolder
 };
