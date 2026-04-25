@@ -11,7 +11,7 @@
  * request handlers exactly once and routes calls by tool name.
  *
  * Registered tools (clustered by domain — form, ui, model, storagefile,
- * notification, system, action, route, filter, artifact):
+ * notification, system, action, route, filter, pipe, artifact):
  *
  * | Tool                                    | Purpose       | One-liner                                              |
  * |-----------------------------------------|---------------|--------------------------------------------------------|
@@ -43,6 +43,7 @@
  * | dbx_route_search                        | Discovery     | "Where do we have routes mentioning X?"                |
  * | dbx_filter_lookup                       | Documentation | "Tell me about filter directive / preset X"            |
  * | dbx_filter_scaffold                     | Generation    | "Scaffold a filter source + presets for model X"       |
+ * | dbx_pipe_lookup                         | Documentation | "Tell me about Angular pipe X"                         |
  * | dbx_artifact_scaffold                   | Generation    | "Give me the body for a new <artifact>."               |
  * | dbx_artifact_file_convention            | Reference     | "Where do I put a new <artifact>?"                     |
  */
@@ -77,6 +78,7 @@ import { routeLookupTool } from './route-lookup.tool.js';
 import { routeSearchTool } from './route-search.tool.js';
 import { lookupFilterTool } from './lookup-filter.tool.js';
 import { filterScaffoldTool } from './filter-scaffold.tool.js';
+import { lookupPipeTool } from './lookup-pipe.tool.js';
 import { artifactScaffoldTool } from './artifact-scaffold.tool.js';
 import { artifactFileConventionTool } from './artifact-file-convention.tool.js';
 import { toolError, type DbxTool } from './types.js';
@@ -86,7 +88,7 @@ import { toolError, type DbxTool } from './types.js';
  *
  * Order clusters tools by domain so callers see related entries together:
  * form → ui → model → storagefile → notification → system → action → route →
- * filter → artifact.
+ * filter → pipe → artifact.
  */
 export const DBX_TOOLS: readonly DbxTool[] = [
   // form
@@ -126,6 +128,8 @@ export const DBX_TOOLS: readonly DbxTool[] = [
   // filter
   lookupFilterTool,
   filterScaffoldTool,
+  // pipe
+  lookupPipeTool,
   // artifact (cross-domain dispatchers)
   artifactScaffoldTool,
   artifactFileConventionTool
