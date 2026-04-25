@@ -161,10 +161,39 @@ describe('validateAppStorageFiles — upload service rules', () => {
       replaceInFile(api, 'src/app/common/model/storagefile/storagefile.upload.service.ts', /const userAvatarInitializer: StorageFileInitializeFromUploadServiceInitializer = \{[\s\S]*?\};\s*/, '');
       replaceInFile(api, 'src/app/common/model/storagefile/storagefile.upload.service.ts', '[userTestFileInitializer, userAvatarInitializer]', '[userTestFileInitializer]');
     });
-    expectCodes(
-      result.violations.map((v) => v.code),
-      ['STORAGEFILE_PURPOSE_NOT_IN_UPLOAD_SERVICE']
-    );
+    const codes = result.violations.map((v) => v.code);
+    expectCodes(codes, ['STORAGEFILE_PURPOSE_NOT_IN_UPLOAD_SERVICE']);
+    // Should NOT also fire the mismatch error when there is no literal at all.
+    expect(codes).not.toContain('STORAGEFILE_UPLOAD_INITIALIZER_NAME_MISMATCH');
+  });
+
+  it('flags STORAGEFILE_UPLOAD_INITIALIZER_NAME_MISMATCH when a literal exists but its binding name does not match the call-site reference', () => {
+    const HANDLER_FILE = `import { type StorageFileInitializeFromUploadServiceInitializer } from '@dereekb/firebase-server/model';
+import { USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER } from 'demo-firebase';
+
+export function makeUserAvatarUploadInitializer(): StorageFileInitializeFromUploadServiceInitializer {
+  const wrongName: StorageFileInitializeFromUploadServiceInitializer = {
+    type: USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER,
+    initialize: async () => null,
+    determiner: null
+  };
+  return wrongName;
+}
+`;
+    const result = runWith(({ api }) => {
+      // Drop the inline avatar initializer; replace it with a factory-returned one whose
+      // inner variable name (`wrongName`) does not match the call-site binding (`userAvatarInitializer`).
+      replaceInFile(api, 'src/app/common/model/storagefile/storagefile.upload.service.ts', /const userAvatarInitializer: StorageFileInitializeFromUploadServiceInitializer = \{[\s\S]*?\};\s*/, 'const userAvatarInitializer = makeUserAvatarUploadInitializer();\n');
+      replaceInFile(api, 'src/app/common/model/storagefile/storagefile.upload.service.ts', "import { USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER, USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER } from 'demo-firebase';", "import { USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER, USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER } from 'demo-firebase';\nimport { makeUserAvatarUploadInitializer } from './handlers/upload.user.avatar';");
+      api.push({ relPath: 'src/app/common/model/storagefile/handlers/upload.user.avatar.ts', text: HANDLER_FILE });
+    });
+    const codes = result.violations.map((v) => v.code);
+    expectCodes(codes, ['STORAGEFILE_UPLOAD_INITIALIZER_NAME_MISMATCH']);
+    // Should not double-emit the original missing-initializer error in this case.
+    expect(codes).not.toContain('STORAGEFILE_PURPOSE_NOT_IN_UPLOAD_SERVICE');
+    const mismatch = result.violations.find((v) => v.code === 'STORAGEFILE_UPLOAD_INITIALIZER_NAME_MISMATCH');
+    expect(mismatch?.file).toBe('src/app/common/model/storagefile/handlers/upload.user.avatar.ts');
+    expect(mismatch?.message).toContain('wrongName');
   });
 
   it('flags STORAGEFILE_UPLOAD_INITIALIZER_ORPHAN when an initializer references a phantom identifier', () => {

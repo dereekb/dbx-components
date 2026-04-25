@@ -12,7 +12,7 @@
  * `<Foo>ProcessingSubtask` union aliases.
  */
 
-import type { AppStorageFilesInspection, ExtractedAppStorageFiles, ExtractedPurposeConstant, ExtractedUploadedFileTypeIdentifierConstant, Violation, ViolationSeverity } from './types.js';
+import type { AppStorageFilesInspection, ExtractedAppStorageFiles, ExtractedPurposeConstant, ExtractedUploadInitializerEntry, ExtractedUploadedFileTypeIdentifierConstant, Violation, ViolationSeverity } from './types.js';
 
 const PURPOSE_SUFFIX = '_PURPOSE';
 const FILE_TYPE_IDENTIFIER_SUFFIX = '_UPLOADED_FILE_TYPE_IDENTIFIER';
@@ -149,15 +149,40 @@ function checkUploadService(extracted: ExtractedAppStorageFiles, violations: Vio
   }
 
   // Coverage check: every declared file-type identifier must appear in some reachable initializer.
-  for (const c of extracted.fileTypeIdentifierConstants) {
-    if (!reachableTypeIdentifiers.has(c.symbolName)) {
-      pushViolation(violations, {
-        code: 'STORAGEFILE_PURPOSE_NOT_IN_UPLOAD_SERVICE',
-        message: `\`${c.symbolName}\` has no \`StorageFileInitializeFromUploadServiceInitializer\` reachable from any \`storageFileInitializeFromUploadService(...)\` call. Add an initializer with \`type: ${c.symbolName}\` and include it in the \`initializer\` array.`,
-        side: 'api',
-        file: undefined
-      });
+  // When an initializer literal with the right `type:` exists but its binding name
+  // never makes it into a `storageFileInitializeFromUploadService({ initializer })`
+  // call's array (e.g. a factory in `handlers/` named its inner variable
+  // differently from the call-site binding), emit a more actionable error.
+  const entriesByType = new Map<string, typeof extracted.uploadInitializerEntries>();
+  for (const entry of extracted.uploadInitializerEntries) {
+    const list = entriesByType.get(entry.typeIdentifier);
+    if (list) {
+      (list as ExtractedUploadInitializerEntry[]).push(entry);
+    } else {
+      entriesByType.set(entry.typeIdentifier, [entry]);
     }
+  }
+
+  for (const c of extracted.fileTypeIdentifierConstants) {
+    if (reachableTypeIdentifiers.has(c.symbolName)) continue;
+    const entries = entriesByType.get(c.symbolName);
+    if (entries && entries.length > 0) {
+      const entry = entries[0];
+      const bindingHint = entry.bindingName ? `\`${entry.bindingName}\`` : '<anonymous>';
+      pushViolation(violations, {
+        code: 'STORAGEFILE_UPLOAD_INITIALIZER_NAME_MISMATCH',
+        message: `Initializer ${bindingHint} in \`${entry.sourceFile}\` declares \`type: ${c.symbolName}\` but is not reachable from \`storageFileInitializeFromUploadService({ initializer })\` because no array element resolves to that binding name. The cross-file tracer matches by identifier name through function returns — when a factory function ships an initializer, its inner variable name must match the call-site binding name (and the array element/spread that references it).`,
+        side: 'api',
+        file: entry.sourceFile
+      });
+      continue;
+    }
+    pushViolation(violations, {
+      code: 'STORAGEFILE_PURPOSE_NOT_IN_UPLOAD_SERVICE',
+      message: `\`${c.symbolName}\` has no \`StorageFileInitializeFromUploadServiceInitializer\` reachable from any \`storageFileInitializeFromUploadService(...)\` call. Add an initializer with \`type: ${c.symbolName}\` and include it in the \`initializer\` array.`,
+      side: 'api',
+      file: undefined
+    });
   }
 
   // Wiring check: at least one NestJS provider with `provide: StorageFileInitializeFromUploadService, useFactory: <factoryName>`.
