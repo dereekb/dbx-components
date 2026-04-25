@@ -67,3 +67,39 @@ describe('scaffoldArtifact — skeleton', () => {
     expect(apiFile?.path).toContain('apps/demo-api/src/app/common/model/storagefile/');
   });
 });
+
+describe('scaffoldArtifact — storagefile-purpose body', () => {
+  it('emits component-side constants + helpers with the right tokens', () => {
+    const result = scaffoldArtifact(input('storagefile-purpose', 'userPhoto'));
+    const componentFile = result.files.find((f) => f.path.endsWith('storagefile.ts'));
+    expect(componentFile?.status).toBe('append');
+    const text = componentFile?.content ?? '';
+    expect(text).toContain('USER_PHOTO_UPLOADED_FILE_TYPE_IDENTIFIER');
+    expect(text).toContain('USER_PHOTO_PURPOSE');
+    expect(text).toContain('userPhotoUploadsFolderPath');
+    expect(text).toContain('userPhotoStoragePath');
+    expect(text).toContain('userPhotoFileGroupIds');
+  });
+
+  it('emits a handler file with the bindingName matching the call-site convention', () => {
+    const result = scaffoldArtifact(input('storagefile-purpose', 'userPhoto'));
+    const handler = result.files.find((f) => f.path.includes('handlers/upload.user-photo.ts'));
+    expect(handler?.status).toBe('new');
+    const text = handler?.content ?? '';
+    // The strict-reachability trace matches by inner var name; this is the convention.
+    expect(text).toContain('const userPhotoFileInitializer: StorageFileInitializeFromUploadServiceInitializer');
+    expect(text).toContain('return userPhotoFileInitializer;');
+    expect(text).toContain('makeUserPhotoFileUploadInitializer(context: DemoFirebaseServerActionsContext)');
+    // Imports from the inferred component package name.
+    expect(text).toContain("from 'demo-firebase'");
+  });
+
+  it('renders wiring instructions naming the call-site binding', () => {
+    const result = scaffoldArtifact(input('storagefile-purpose', 'userPhoto'));
+    expect(result.wiring).toHaveLength(1);
+    const step = result.wiring[0];
+    expect(step.file).toBe('apps/demo-api/src/app/common/model/storagefile/storagefile.upload.service.ts');
+    expect(step.snippet ?? '').toContain('makeUserPhotoFileUploadInitializer');
+    expect(step.snippet ?? '').toContain('userPhotoFileInitializer');
+  });
+});

@@ -33,27 +33,211 @@ export function deriveNameTokens(name: string): NameTokens {
   const pascal = lower.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join('');
   const screaming = lower.map((p) => p.toUpperCase()).join('_');
   const kebab = lower.join('-');
-  const result: NameTokens = { camel, pascal, screaming, kebab };
+  const snake = lower.join('_');
+  const result: NameTokens = { camel, pascal, screaming, kebab, snake };
   return result;
 }
 
 /**
- * Token substitution. Slot syntax: `<<camel>>`, `<<Pascal>>`,
- * `<<SCREAMING>>`, `<<kebab>>`, `<<componentDir>>`, `<<apiDir>>`.
+ * Token substitution context. Slot syntax used by all templates:
+ *
+ * - `<<camel>>` / `<<Pascal>>` / `<<SCREAMING>>` / `<<kebab>>` / `<<snake>>` — name variants
+ * - `<<componentDir>>` / `<<apiDir>>` — caller-supplied workspace paths
+ * - `<<componentPackageName>>` — the component package name, derived from `componentDir`
+ *   basename (`components/demo-firebase` → `demo-firebase`). Used in import sources.
+ * - `<<AppPascal>>` — Pascal-cased application stem from the component package name
+ *   (`demo-firebase` → `Demo`). Used in NestJS context type names.
+ * - `<<ContextTypeName>>` — `<<AppPascal>>FirebaseServerActionsContext` — the type
+ *   imported into handler files for the `context` parameter.
+ * - `<<contextVarName>>` — camel-cased application stem (`demo`) for documentation
+ *   wiring snippets. Defaults to lowercased `<<AppPascal>>`.
  */
 export interface TemplateContext {
   readonly tokens: NameTokens;
   readonly componentDir: string;
   readonly apiDir: string;
+  readonly componentPackageName: string;
+  readonly appPascal: string;
+  readonly contextTypeName: string;
+  readonly contextVarName: string;
+}
+
+/**
+ * Builds a {@link TemplateContext} from the caller's input. Project-scoped
+ * tokens are derived from the basename of `componentDir`:
+ * `components/demo-firebase` → package name `demo-firebase`, app stem `demo`,
+ * context type `DemoFirebaseServerActionsContext`.
+ */
+export function buildTemplateContext(input: { readonly tokens: NameTokens; readonly componentDir: string; readonly apiDir: string }): TemplateContext {
+  const componentPackageName = basenameOf(input.componentDir) || 'firebase';
+  const appStemParts = splitWords(componentPackageName.replace(/-firebase$/, ''));
+  const appLower = appStemParts.map((p) => p.toLowerCase());
+  const appPascal = appLower.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join('');
+  const appCamel = appLower.map((p, i) => (i === 0 ? p : p.charAt(0).toUpperCase() + p.slice(1))).join('');
+  const contextTypeName = `${appPascal}FirebaseServerActionsContext`;
+  const contextVarName = appCamel ? `${appCamel}FirebaseServerActionsContext` : 'context';
+  const result: TemplateContext = {
+    tokens: input.tokens,
+    componentDir: input.componentDir,
+    apiDir: input.apiDir,
+    componentPackageName,
+    appPascal,
+    contextTypeName,
+    contextVarName
+  };
+  return result;
+}
+
+function basenameOf(path: string): string {
+  const stripped = path.replace(/\/+$/, '');
+  const parts = stripped.split('/');
+  return parts[parts.length - 1] ?? '';
 }
 
 export function applyTokens(template: string, ctx: TemplateContext): string {
   let result = template;
+  // Order: longer / more-specific tokens first to avoid partial matches.
+  result = result.split('<<componentPackageName>>').join(ctx.componentPackageName);
   result = result.split('<<componentDir>>').join(ctx.componentDir);
   result = result.split('<<apiDir>>').join(ctx.apiDir);
+  result = result.split('<<ContextTypeName>>').join(ctx.contextTypeName);
+  result = result.split('<<contextVarName>>').join(ctx.contextVarName);
+  result = result.split('<<AppPascal>>').join(ctx.appPascal);
   result = result.split('<<camel>>').join(ctx.tokens.camel);
   result = result.split('<<Pascal>>').join(ctx.tokens.pascal);
   result = result.split('<<SCREAMING>>').join(ctx.tokens.screaming);
   result = result.split('<<kebab>>').join(ctx.tokens.kebab);
+  result = result.split('<<snake>>').join(ctx.tokens.snake);
   return result;
 }
+
+// MARK: storagefile-purpose templates
+//
+// Modeled after demo's `userLog` block in
+// `components/demo-firebase/src/lib/model/storagefile/storagefile.ts` and
+// `apps/demo-api/src/app/common/model/storagefile/handlers/upload.user.log.ts`.
+// The `<<camel>>FileInitializer` inner-variable name is intentional: the
+// strict-reachability validator (`dbx_validate_app_storagefiles`) matches by
+// identifier name through the trace, and the call-site naming convention is
+// `<<camel>>FileInitializer = make<<Pascal>>FileUploadInitializer(context)`.
+
+export const STORAGEFILE_PURPOSE_COMPONENT_TEMPLATE = `// === <<Pascal>> ===
+/**
+ * <<Pascal>> file uploaded by a user.
+ */
+export const <<SCREAMING>>_UPLOADED_FILE_TYPE_IDENTIFIER: UploadedFileTypeIdentifier = '<<snake>>';
+
+/**
+ * Allowed mime types for <<camel>> uploads.
+ */
+export const <<SCREAMING>>_UPLOADS_ALLOWED_FILE_TYPES: string[] = ['application/octet-stream']; // TODO: customize
+
+/**
+ * Folder under \`/uploads/u/{userId}/\` where <<camel>> files are uploaded.
+ */
+export const <<SCREAMING>>_UPLOADS_FOLDER_NAME: string = '<<kebab>>';
+
+/**
+ * Returns the uploads folder path for a user's <<camel>> files.
+ */
+export function <<camel>>UploadsFolderPath(userId: FirebaseAuthUserId): SlashPathFolder {
+  return \`\${ALL_USER_UPLOADS_FOLDER_PATH}/\${userId}/\${<<SCREAMING>>_UPLOADS_FOLDER_NAME}/\`;
+}
+
+/**
+ * Returns the full uploads file path for a user's <<camel>> file with the given name.
+ */
+export function <<camel>>UploadsFilePath(userId: FirebaseAuthUserId, name: SlashPathFile): SlashPath {
+  return \`\${<<camel>>UploadsFolderPath(userId)}\${name}\`;
+}
+
+export const <<SCREAMING>>_PURPOSE: StorageFilePurpose = '<<snake>>';
+
+export const <<SCREAMING>>_STORAGE_FOLDER_PATH: SlashPathFolder = '<<kebab>>/';
+
+/**
+ * Returns the final storage path for a user's <<camel>> file after upload processing.
+ */
+export function <<camel>>StoragePath(userId: FirebaseAuthUserId, name: SlashPathFile): SlashPath {
+  return userStorageFolderPath(userId, <<SCREAMING>>_STORAGE_FOLDER_PATH, name);
+}
+
+/**
+ * Returns the list of StorageFileGroupIds that a user's <<camel>> files belong to.
+ */
+export function <<camel>>FileGroupIds(userId: FirebaseAuthUserId): StorageFileGroupId[] {
+  return [userProfileStorageFileGroupId(userId)];
+}
+`;
+
+export const STORAGEFILE_PURPOSE_HANDLER_TEMPLATE = `import { ALL_USER_UPLOADS_FOLDER_PATH, createStorageFileDocumentPairFactory, determineByFilePath, determineUserByUserUploadsFolderWrapperFunction, type FirebaseAuthUserId, StorageFileCreationType } from '@dereekb/firebase';
+import { type StorageFileInitializeFromUploadServiceInitializer, type StorageFileInitializeFromUploadServiceInitializerInput, type StorageFileInitializeFromUploadServiceInitializerResult } from '@dereekb/firebase-server/model';
+import { type SlashPathPathMatcherPath } from '@dereekb/util';
+import { <<SCREAMING>>_PURPOSE, <<SCREAMING>>_UPLOADED_FILE_TYPE_IDENTIFIER, <<SCREAMING>>_UPLOADS_FOLDER_NAME, <<camel>>FileGroupIds, <<camel>>StoragePath } from '<<componentPackageName>>';
+import { type <<ContextTypeName>> } from '../../../firebase/action.context';
+
+/**
+ * Builds the upload initializer for \`<<SCREAMING>>_UPLOADED_FILE_TYPE_IDENTIFIER\`.
+ *
+ * The inner-variable name (\`<<camel>>FileInitializer\`) must match the
+ * call-site binding in \`storagefile.upload.service.ts\` so the
+ * \`dbx_validate_app_storagefiles\` strict-reachability trace can connect
+ * them — see commit 8035c7bcd for the diagnostic that fires on a
+ * mismatch.
+ */
+export function make<<Pascal>>FileUploadInitializer(context: <<ContextTypeName>>): StorageFileInitializeFromUploadServiceInitializer {
+  const { storageFileCollection } = context;
+  const storageFileDocumentAccessor = storageFileCollection.documentAccessor();
+  const createStorageFileDocumentPair = createStorageFileDocumentPairFactory({
+    defaultCreationType: StorageFileCreationType.INIT_FROM_UPLOAD
+  });
+
+  const matchUserUploadsFolderMatcherPath: SlashPathPathMatcherPath = [ALL_USER_UPLOADS_FOLDER_PATH, true];
+  const determineUserFromUploadsFolderPath = determineUserByUserUploadsFolderWrapperFunction({ allowSubPaths: true });
+
+  const determiner = determineUserFromUploadsFolderPath(
+    determineByFilePath({
+      fileType: <<SCREAMING>>_UPLOADED_FILE_TYPE_IDENTIFIER,
+      match: {
+        targetPath: [...matchUserUploadsFolderMatcherPath, <<SCREAMING>>_UPLOADS_FOLDER_NAME, true]
+      }
+    })
+  );
+
+  const <<camel>>FileInitializer: StorageFileInitializeFromUploadServiceInitializer = {
+    type: <<SCREAMING>>_UPLOADED_FILE_TYPE_IDENTIFIER,
+    initialize: async function (input: StorageFileInitializeFromUploadServiceInitializerInput): Promise<StorageFileInitializeFromUploadServiceInitializerResult> {
+      const { file } = input.fileDetailsAccessor.getPathDetails();
+      const userId = input.determinerResult.user as FirebaseAuthUserId;
+
+      const newPath = <<camel>>StoragePath(userId, file as string);
+      const createdFile = await input.fileDetailsAccessor.copy(newPath);
+
+      const { storageFileDocument } = await createStorageFileDocumentPair({
+        accessor: storageFileDocumentAccessor,
+        file: createdFile,
+        user: userId,
+        purpose: <<SCREAMING>>_PURPOSE,
+        storageFileGroupIds: <<camel>>FileGroupIds(userId),
+        shouldBeProcessed: false
+      });
+
+      const result: StorageFileInitializeFromUploadServiceInitializerResult = { createdFile, storageFileDocument };
+      return result;
+    },
+    determiner
+  };
+
+  return <<camel>>FileInitializer;
+}
+`;
+
+export const STORAGEFILE_PURPOSE_WIRING_SNIPPET = `// Imports:
+import { make<<Pascal>>FileUploadInitializer } from './handlers/upload.<<kebab>>';
+
+// Inside the upload-service factory:
+const <<camel>>FileInitializer = make<<Pascal>>FileUploadInitializer(<<contextVarName>>);
+
+// Add to the existing initializer array:
+const userFileInitializers = [/* ... */, <<camel>>FileInitializer];
+`;

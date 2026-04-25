@@ -6,13 +6,13 @@
  * idempotency on top.
  */
 
-import { deriveNameTokens, type TemplateContext } from './templates.js';
+import { buildTemplateContext, deriveNameTokens } from './templates.js';
 import { renderArtifact } from './render.js';
 import type { EmittedFile, ScaffoldArtifactInput, ScaffoldArtifactResult } from './types.js';
 
 export function scaffoldArtifact(input: ScaffoldArtifactInput): ScaffoldArtifactResult {
   const tokens = deriveNameTokens(input.name);
-  const ctx: TemplateContext = { tokens, componentDir: input.componentDir, apiDir: input.apiDir };
+  const ctx = buildTemplateContext({ tokens, componentDir: input.componentDir, apiDir: input.apiDir });
   const result = renderArtifact(input, ctx);
   return result;
 }

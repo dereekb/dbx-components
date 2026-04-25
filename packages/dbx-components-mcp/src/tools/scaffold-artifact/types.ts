@@ -15,12 +15,13 @@
 
 export type ArtifactKind = 'storagefile-purpose' | 'notification-template' | 'notification-task';
 
-/** Camel/Pascal/Screaming-Snake/Kebab variants of the input name. */
+/** Camel/Pascal/Screaming-Snake/Kebab/Snake variants of the input name. */
 export interface NameTokens {
   readonly camel: string;
   readonly pascal: string;
   readonly screaming: string;
   readonly kebab: string;
+  readonly snake: string;
 }
 
 export interface ScaffoldArtifactOptions {

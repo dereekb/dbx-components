@@ -8,7 +8,7 @@
  * {@link EmittedFile.status} based on `fs.access` results.
  */
 
-import { applyTokens, type TemplateContext } from './templates.js';
+import { applyTokens, STORAGEFILE_PURPOSE_COMPONENT_TEMPLATE, STORAGEFILE_PURPOSE_HANDLER_TEMPLATE, STORAGEFILE_PURPOSE_WIRING_SNIPPET, type TemplateContext } from './templates.js';
 import type { ArtifactKind, EmittedFile, ScaffoldArtifactInput, ScaffoldArtifactOptions, ScaffoldArtifactResult, WiringStep } from './types.js';
 
 export function renderArtifact(input: ScaffoldArtifactInput, ctx: TemplateContext): ScaffoldArtifactResult {
@@ -29,14 +29,37 @@ export function renderArtifact(input: ScaffoldArtifactInput, ctx: TemplateContex
 
 // MARK: storagefile-purpose
 function renderStorageFilePurpose(input: ScaffoldArtifactInput, ctx: TemplateContext): ScaffoldArtifactResult {
-  const files: EmittedFile[] = [placeholderEmission('append', `<<componentDir>>/src/lib/model/storagefile/storagefile.ts`, 'Append the new purpose constants + path helpers to the existing storagefile.ts.', ctx), placeholderEmission('new', `<<apiDir>>/src/app/common/model/storagefile/handlers/upload.<<kebab>>.ts`, 'New upload-initializer factory in handlers/.', ctx)];
-  const wiring: WiringStep[] = [{ file: applyTokens('<<apiDir>>/src/app/common/model/storagefile/storagefile.upload.service.ts', ctx), description: 'Import the factory and add it to the initializer array.' }];
+  const componentFile: EmittedFile = {
+    status: 'append',
+    path: applyTokens('<<componentDir>>/src/lib/model/storagefile/storagefile.ts', ctx),
+    description: applyTokens(
+      `Append the \`<<Pascal>>\` purpose block (constants + path helpers + group-ids) to the bottom of \`storagefile.ts\`. The block reuses the file's existing imports — no new top-level imports required as long as \`UploadedFileTypeIdentifier\`, \`StorageFilePurpose\`, \`StorageFileGroupId\`, \`SlashPathFolder\`, \`SlashPathFile\`, \`SlashPath\`, \`FirebaseAuthUserId\`, \`ALL_USER_UPLOADS_FOLDER_PATH\`, \`userStorageFolderPath\`, and \`userProfileStorageFileGroupId\` are already in scope (they are in the demo).`,
+      ctx
+    ),
+    content: applyTokens(STORAGEFILE_PURPOSE_COMPONENT_TEMPLATE, ctx)
+  };
+
+  const handlerFile: EmittedFile = {
+    status: 'new',
+    path: applyTokens('<<apiDir>>/src/app/common/model/storagefile/handlers/upload.<<kebab>>.ts', ctx),
+    description: applyTokens(`Upload-initializer factory bound to \`<<SCREAMING>>_UPLOADED_FILE_TYPE_IDENTIFIER\`. The inner variable is named \`<<camel>>FileInitializer\` so the strict-reachability trace in \`dbx_validate_app_storagefiles\` resolves cleanly when the call-site uses the same name.`, ctx),
+    content: applyTokens(STORAGEFILE_PURPOSE_HANDLER_TEMPLATE, ctx)
+  };
+
+  const wiring: WiringStep[] = [
+    {
+      file: applyTokens('<<apiDir>>/src/app/common/model/storagefile/storagefile.upload.service.ts', ctx),
+      description: applyTokens(`Import the new factory, instantiate it bound to \`<<camel>>FileInitializer\`, and push that name into the existing \`userFileInitializers\` array (or whichever array is spread into \`storageFileInitializeFromUploadService({ initializer })\`).`, ctx),
+      snippet: applyTokens(STORAGEFILE_PURPOSE_WIRING_SNIPPET, ctx)
+    }
+  ];
+
   const result: ScaffoldArtifactResult = {
     artifact: input.artifact,
     tokens: ctx.tokens,
-    files,
+    files: [componentFile, handlerFile],
     wiring,
-    summary: 'storagefile-purpose scaffold (skeleton — content TBD)'
+    summary: applyTokens(`Scaffolds a new \`<<SCREAMING>>_PURPOSE\` storage-file purpose end-to-end: component-side constants + path helpers (append to \`storagefile.ts\`) and an API-side upload-initializer factory in \`handlers/\`. After applying, run \`dbx_validate_app_storagefiles\` and \`dbx_validate_storagefile_folder\` against your project — both should PASS.`, ctx)
   };
   return result;
 }
