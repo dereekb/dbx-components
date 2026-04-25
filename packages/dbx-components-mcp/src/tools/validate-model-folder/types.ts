@@ -74,12 +74,12 @@ export const RESERVED_MODEL_FOLDERS: readonly ReservedModelFolder[] = [
   {
     name: 'notification',
     reason: 'Notification is a canonical group from `@dereekb/firebase` with a richer layout than the base 5 files (task, send, config, message, etc.); downstream projects extend rather than redeclare it.',
-    recommendedTool: 'dbx_validate_notification_folder (planned)'
+    recommendedTool: 'dbx_validate_notification_folder'
   },
   {
     name: 'storagefile',
     reason: 'StorageFile is a canonical group from `@dereekb/firebase` with a richer layout than the base 5 files (group, upload, file, etc.); downstream projects extend rather than redeclare it.',
-    recommendedTool: 'dbx_validate_storagefile_folder (planned)'
+    recommendedTool: 'dbx_validate_storagefile_folder'
   }
 ];
 
