@@ -108,18 +108,15 @@ const SUPPORTED_VERSION = 1;
  */
 async function loadFromSource(source: ManifestSource, readFile: ManifestReadFile): Promise<LoadFromSourceResult> {
   let raw: string | null = null;
-  let readError: string | null = null;
   try {
     raw = await readFile(source.path);
-  } catch (err) {
-    readError = err instanceof Error ? err.message : String(err);
+  } catch {
+    // read errors currently informational only — surfaced via the manifest-missing warning kind.
   }
 
   let result: LoadFromSourceResult;
   if (raw === null) {
     result = { kind: 'failure', warning: { kind: 'manifest-missing', path: source.path } };
-    // readError currently informational only — surfaced via the warning kind.
-    void readError;
   } else {
     let parsed: unknown;
     let parseError: string | null = null;
@@ -129,20 +126,20 @@ async function loadFromSource(source: ManifestSource, readFile: ManifestReadFile
       parseError = err instanceof Error ? err.message : String(err);
     }
 
-    if (parseError !== null) {
-      result = { kind: 'failure', warning: { kind: 'manifest-parse-failed', path: source.path, error: parseError } };
-    } else {
+    if (parseError === null) {
       const candidateVersion = (parsed as { readonly version?: unknown } | null | undefined)?.version;
-      if (candidateVersion !== SUPPORTED_VERSION) {
-        result = { kind: 'failure', warning: { kind: 'manifest-version-unsupported', path: source.path, version: candidateVersion } };
-      } else {
+      if (candidateVersion === SUPPORTED_VERSION) {
         const validated = SemanticTypeManifest(parsed);
         if (validated instanceof type.errors) {
           result = { kind: 'failure', warning: { kind: 'manifest-schema-failed', path: source.path, error: validated.summary } };
         } else {
           result = { kind: 'success', manifest: validated };
         }
+      } else {
+        result = { kind: 'failure', warning: { kind: 'manifest-version-unsupported', path: source.path, version: candidateVersion } };
       }
+    } else {
+      result = { kind: 'failure', warning: { kind: 'manifest-parse-failed', path: source.path, error: parseError } };
     }
   }
 
@@ -322,10 +319,10 @@ export async function loadSemanticTypeManifests(input: LoadSemanticTypeManifests
   for (const [entryKey, entry] of mergedEntries) {
     for (const topic of entry.topics) {
       const existing = topicsIndex.get(topic);
-      if (existing !== undefined) {
-        topicsIndex.set(topic, [...existing, entryKey]);
-      } else {
+      if (existing === undefined) {
         topicsIndex.set(topic, [entryKey]);
+      } else {
+        topicsIndex.set(topic, [...existing, entryKey]);
       }
     }
   }
