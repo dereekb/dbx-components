@@ -376,6 +376,6 @@ describe('loadSemanticTypeManifests – warning ordering', () => {
     expect(orderA.warnings).toEqual(orderB.warnings);
     // sanity: both kinds present, sorted alphabetically by kind
     const kinds = warningKinds(orderA.warnings);
-    expect(kinds).toEqual([...kinds].sort());
+    expect(kinds).toEqual([...kinds].sort((a, b) => a.localeCompare(b)));
   });
 });

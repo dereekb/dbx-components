@@ -43,7 +43,7 @@ describe('createSemanticTypeRegistryFromEntries', () => {
     });
     const matches = registry.findByName('Identifier');
     expect(matches).toHaveLength(2);
-    expect(matches.map((e) => e.package).sort()).toEqual(['@dereekb/model', '@dereekb/util']);
+    expect(matches.map((e) => e.package).sort((a, b) => a.localeCompare(b))).toEqual(['@dereekb/model', '@dereekb/util']);
   });
 
   it('findByTopic returns every entry tagged with the topic', () => {
