@@ -1,5 +1,10 @@
 /**
  * Key that corresponds with a function on the server.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:functions
  */
 export type FirebaseFunctionKey = string;
 

@@ -2,6 +2,11 @@ import { type FirebaseStorageAccessorDriverRef } from './accessor';
 
 /**
  * Unique identifier string for a storage driver implementation.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:storage
  */
 export type FirebaseStorageDriverIdentifier = string;
 

@@ -68,6 +68,11 @@ export function firebaseFunctionMapFactory<M extends FirebaseFunctionTypeMap>(co
 // MARK: Lazy Functions Accessor
 /**
  * String key used to identify a function group in the app-level functions map.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:functions
  */
 export type FirebaseFunctionMapKey = string;
 

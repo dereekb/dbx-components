@@ -6,6 +6,11 @@ import { type ArrayOrValue, asArray, pushItemOrArrayItemsIntoArray, type Separat
  *
  * Used to uniquely identify different types of query constraints, such as
  * where, limit, orderBy, etc.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:firestore
  */
 export type FirestoreQueryConstraintType = string;
 

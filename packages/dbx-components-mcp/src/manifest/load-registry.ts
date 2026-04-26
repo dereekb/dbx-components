@@ -51,7 +51,7 @@ export interface LoadSemanticTypeRegistryResult {
 }
 
 // MARK: Defaults
-const DEFAULT_BUNDLED_FILENAMES = ['dereekb-util.semantic-types.mcp.json', 'dereekb-model.semantic-types.mcp.json', 'dereekb-date.semantic-types.mcp.json'] as const;
+const DEFAULT_BUNDLED_FILENAMES = ['dereekb-util.semantic-types.mcp.json', 'dereekb-model.semantic-types.mcp.json', 'dereekb-date.semantic-types.mcp.json', 'dereekb-firebase.semantic-types.mcp.json', 'dereekb-firebase-server.semantic-types.mcp.json'] as const;
 
 /**
  * Walks up from {@link startUrl} until it finds a directory containing

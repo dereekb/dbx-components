@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "source": "@dereekb/firebase-server",
+  "topicNamespace": "dereekb-firebase-server",
+  "generatedAt": "1970-01-01T00:00:00.000Z",
+  "generator": "@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs",
+  "topics": [],
+  "entries": [
+    {
+      "name": "TestEncodedFirestoreToken",
+      "package": "@dereekb/firebase-server",
+      "module": "test/src/lib/firebase/firebase.admin.auth",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["string", "dereekb-firebase-server:test"],
+      "notes": "An encoded JWT string representing a Firebase custom token created for testing.",
+      "sourceLocation": {
+        "file": "test/src/lib/firebase/firebase.admin.auth.ts",
+        "line": 444
+      }
+    },
+    {
+      "name": "FirebaseAdminTestEnvironmentHost",
+      "package": "@dereekb/firebase-server",
+      "module": "test/src/lib/firebase/firebase",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["string", "dereekb-firebase-server:test"],
+      "examples": [
+        {
+          "code": "const host: FirebaseAdminTestEnvironmentHost = 'localhost:8080';"
+        }
+      ],
+      "notes": "A `host:port` string used to connect to a Firebase emulator.",
+      "sourceLocation": {
+        "file": "test/src/lib/firebase/firebase.ts",
+        "line": 15
+      }
+    },
+    {
+      "name": "McpToolResponseSummary",
+      "package": "@dereekb/firebase-server",
+      "module": "src/lib/nest/model/api.details",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["string", "dereekb-firebase-server:mcp"],
+      "notes": "A natural language summary of an MCP tool operation result.",
+      "sourceLocation": {
+        "file": "src/lib/nest/model/api.details.ts",
+        "line": 25
+      }
+    }
+  ]
+}

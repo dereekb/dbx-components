@@ -436,6 +436,10 @@ export const testUidFactory: Factory<FirebaseAuthUserId> = mapGetter(incrementin
  *
  * @see {@link createEncodedTestFirestoreTokenForUserRecord} to create one
  * @see {@link decodeEncodedCreateCustomTokenResult} to decode one
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase-server:test
  */
 export type TestEncodedFirestoreToken = string;
 

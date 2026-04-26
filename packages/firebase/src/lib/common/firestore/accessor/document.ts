@@ -672,6 +672,14 @@ export function firestoreSingleDocumentAccessor<T, D extends FirestoreDocument<T
  */
 export const DEFAULT_SINGLE_ITEM_FIRESTORE_COLLECTION_DOCUMENT_IDENTIFIER = '0';
 
+/**
+ * Document ID used for the single document in a single-item Firestore collection.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:firestore
+ */
 export type SingleItemFirestoreCollectionDocumentIdentifier = string;
 
 export interface SingleItemFirestoreCollectionDocumentIdentifierRef {

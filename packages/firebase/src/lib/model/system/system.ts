@@ -43,6 +43,11 @@ export const systemStateIdentity = firestoreModelIdentity('systemState', 'sys');
 
 /**
  * Used to identify a SystemStateId.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:system-state
  */
 export type SystemStateTypeIdentifier = string;
 

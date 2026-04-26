@@ -35,6 +35,10 @@ import { type StoredFileReader } from './storagefile.file';
  * it is processed properly.
  *
  * In the ideal case there generally shouldn't be two determiners that could potentially match the same file.
+ *
+ * @semanticType
+ * @semanticTopic numeric
+ * @semanticTopic dereekb-firebase:storage-file
  */
 export type UploadedFileTypeDeterminationLevel = number;
 

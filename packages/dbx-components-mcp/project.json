@@ -16,7 +16,7 @@
     },
     "generate-manifests": {
       "executor": "nx:run-commands",
-      "outputs": ["{projectRoot}/manifests/dereekb-util.semantic-types.mcp.json", "{projectRoot}/manifests/dereekb-model.semantic-types.mcp.json", "{projectRoot}/manifests/dereekb-dbx-web.ui-components.mcp.json", "{projectRoot}/manifests/dereekb-dbx-form.forge-fields.mcp.json"],
+      "outputs": ["{projectRoot}/manifests/dereekb-util.semantic-types.mcp.json", "{projectRoot}/manifests/dereekb-model.semantic-types.mcp.json", "{projectRoot}/manifests/dereekb-date.semantic-types.mcp.json", "{projectRoot}/manifests/dereekb-firebase.semantic-types.mcp.json", "{projectRoot}/manifests/dereekb-firebase-server.semantic-types.mcp.json", "{projectRoot}/manifests/dereekb-dbx-web.ui-components.mcp.json", "{projectRoot}/manifests/dereekb-dbx-form.forge-fields.mcp.json"],
       "inputs": [
         "{projectRoot}/scripts/generate-manifests.mjs",
         "{projectRoot}/src/scan/**/*.ts",
@@ -25,6 +25,13 @@
         "{workspaceRoot}/packages/util/src/**/*.ts",
         "{workspaceRoot}/packages/model/dbx-mcp.scan.json",
         "{workspaceRoot}/packages/model/src/**/*.ts",
+        "{workspaceRoot}/packages/date/dbx-mcp.scan.json",
+        "{workspaceRoot}/packages/date/src/**/*.ts",
+        "{workspaceRoot}/packages/firebase/dbx-mcp.scan.json",
+        "{workspaceRoot}/packages/firebase/src/**/*.ts",
+        "{workspaceRoot}/packages/firebase-server/dbx-mcp.scan.json",
+        "{workspaceRoot}/packages/firebase-server/src/**/*.ts",
+        "{workspaceRoot}/packages/firebase-server/test/src/**/*.ts",
         "{workspaceRoot}/packages/dbx-web/dbx-mcp.scan.json",
         "{workspaceRoot}/packages/dbx-web/src/**/*.ts",
         "{workspaceRoot}/packages/dbx-form/dbx-mcp.scan.json",

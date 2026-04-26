@@ -37,7 +37,7 @@ const { runForgeFieldsScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).hr
  * scan config in that package's root drives `include`, `topicNamespace`, and
  * `out` path resolution.
  */
-const BUNDLED_PROJECTS = ['packages/util', 'packages/model', 'packages/date'];
+const BUNDLED_PROJECTS = ['packages/util', 'packages/model', 'packages/date', 'packages/firebase', 'packages/firebase-server'];
 
 /**
  * Projects whose ui-components ship bundled with this MCP package. Each entry

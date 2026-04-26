@@ -590,6 +590,11 @@ export interface NotificationSendFlags {
 
 /**
  * Arbitrary unique string that denotes checkpoint progress for a multi-step task.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:notification
  */
 export type NotificationTaskCheckpointString = string;
 

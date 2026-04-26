@@ -3,6 +3,11 @@
  * Identifies a specific development function endpoint to route requests to.
  *
  * Used in dev/test environments to invoke specific server-side functions by name.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:functions
  */
 export type DevelopmentFirebaseFunctionSpecifier = string;
 

@@ -90,6 +90,11 @@ export function userUploadsFolderStoragePathFactory({ bucketId, basePath: inputB
  * - folder name: A specific folder name (e.g. 'photos' in 'photos/12345.png')
  * - metadata: specific metadata value in the uploaded file's custom metadata
  * - data: specific data in the uploaded file
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:storage-file
  */
 export type UploadedFileTypeIdentifier = string;
 

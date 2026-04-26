@@ -17,5 +17,10 @@ export type OidcEntryKey = FirestoreModelKey;
 
 /**
  * Unique client identifier for an OIDC client registration.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:oidc
  */
 export type OidcEntryClientId = string;
