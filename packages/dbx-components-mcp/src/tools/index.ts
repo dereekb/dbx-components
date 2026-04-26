@@ -86,6 +86,9 @@ import { filterScaffoldTool } from './filter-scaffold.tool.js';
 import { lookupPipeTool } from './lookup-pipe.tool.js';
 import { artifactScaffoldTool } from './artifact-scaffold.tool.js';
 import { artifactFileConventionTool } from './artifact-file-convention.tool.js';
+import { createSemanticTypeLookupTool } from './lookup-semantic-type.tool.js';
+import { createSemanticTypeSearchTool } from './search-semantic-type.tool.js';
+import type { SemanticTypeRegistry } from '../registry/semantic-types.js';
 import { toolError, type DbxTool } from './types.js';
 
 /**
@@ -143,25 +146,43 @@ export const DBX_TOOLS: readonly DbxTool[] = [
 ];
 
 /**
+ * Options consumed by {@link registerTools}. The semantic-types registry is
+ * loaded asynchronously at server startup, so the lookup / search tools
+ * receive it via the options bag rather than from a module-level static.
+ * When no registry is supplied (e.g. tests that exercise other tools) the
+ * semantic-type tools are not registered.
+ */
+export interface RegisterToolsOptions {
+  readonly semanticTypeRegistry?: SemanticTypeRegistry;
+}
+
+/**
  * Wires `tools/list` and `tools/call` against the underlying MCP server using
  * a single shared dispatch table. Each tool surfaces its own definition and a
  * pure handler — the dispatcher routes calls by name and converts thrown
  * errors into `isError` tool results.
  *
  * @param server - the MCP server whose underlying transport handlers to register
+ * @param options - optional registry handles passed to tool factories
  */
-export function registerTools(server: McpServer): void {
+export function registerTools(server: McpServer, options: RegisterToolsOptions = {}): void {
   const underlyingServer = server.server;
 
+  const tools: DbxTool[] = [...DBX_TOOLS];
+  if (options.semanticTypeRegistry !== undefined) {
+    tools.push(createSemanticTypeLookupTool({ registry: options.semanticTypeRegistry }));
+    tools.push(createSemanticTypeSearchTool({ registry: options.semanticTypeRegistry }));
+  }
+
   underlyingServer.setRequestHandler(ListToolsRequestSchema, async () => {
-    return { tools: DBX_TOOLS.map((t) => t.definition) };
+    return { tools: tools.map((t) => t.definition) };
   });
 
   underlyingServer.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { name, arguments: toolArgs } = request.params;
-    const tool = DBX_TOOLS.find((t) => t.definition.name === name);
+    const tool = tools.find((t) => t.definition.name === name);
     if (!tool) {
-      return toolError(`Unknown tool: ${name}. Known tools: ${DBX_TOOLS.map((t) => t.definition.name).join(', ')}.`);
+      return toolError(`Unknown tool: ${name}. Known tools: ${tools.map((t) => t.definition.name).join(', ')}.`);
     }
     return tool.run(toolArgs);
   });

@@ -17,12 +17,23 @@
  */
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { SemanticTypeRegistry } from '../registry/semantic-types.js';
 import { registerFormFieldsResource } from './form-fields.resource.js';
 import { registerFirebaseModelsResource } from './firebase-models.resource.js';
 import { registerActionsResource } from './actions.resource.js';
 import { registerUiComponentsResource } from './ui-components.resource.js';
 import { registerPipesResource } from './pipes.resource.js';
 import { registerFiltersResource } from './filters.resource.js';
+import { registerSemanticTypesResource } from './semantic-types.resource.js';
+
+/**
+ * Options consumed by {@link registerResources}. Mirrors {@link RegisterToolsOptions}
+ * — the semantic-types registry is loaded asynchronously at startup, so the
+ * resource registrar takes it via this options bag.
+ */
+export interface RegisterResourcesOptions {
+  readonly semanticTypeRegistry?: SemanticTypeRegistry;
+}
 
 /**
  * Aggregates every domain-level `register*Resource` call so server bootstrap
@@ -30,12 +41,16 @@ import { registerFiltersResource } from './filters.resource.js';
  * and adding one call here.
  *
  * @param server - the MCP server to register resources against
+ * @param options - optional registry handles passed to dynamic resources
  */
-export function registerResources(server: McpServer): void {
+export function registerResources(server: McpServer, options: RegisterResourcesOptions = {}): void {
   registerFormFieldsResource(server);
   registerFirebaseModelsResource(server);
   registerActionsResource(server);
   registerUiComponentsResource(server);
   registerPipesResource(server);
   registerFiltersResource(server);
+  if (options.semanticTypeRegistry !== undefined) {
+    registerSemanticTypesResource(server, { registry: options.semanticTypeRegistry });
+  }
 }
