@@ -421,28 +421,26 @@ function collectSameFileExports(sourceFile: SourceFile): ReadonlySet<string> {
  */
 function detectBaseType(typeNode: TypeNode | undefined): SemanticTypeEntry['baseType'] {
   let result: SemanticTypeEntry['baseType'] = 'other';
-  if (!typeNode) {
-    result = 'other';
-  } else if (Node.isUnionTypeNode(typeNode)) {
-    result = isUnionLiteralOnly(typeNode.getTypeNodes()) ? 'union-literal' : 'other';
-  } else if (Node.isIntersectionTypeNode(typeNode)) {
-    result = isBrandedIntersection(typeNode.getTypeNodes()) ? 'branded' : 'other';
-  } else if (Node.isTemplateLiteralTypeNode(typeNode)) {
-    result = 'template-literal';
-  } else if (Node.isLiteralTypeNode(typeNode)) {
-    result = 'union-literal';
-  } else {
-    const kind = typeNode.getKind();
-    if (kind === SyntaxKind.StringKeyword) {
-      result = 'string';
-    } else if (kind === SyntaxKind.NumberKeyword) {
-      result = 'number';
-    } else if (kind === SyntaxKind.BooleanKeyword) {
-      result = 'boolean';
-    } else if (Node.isTypeLiteral(typeNode)) {
-      result = 'object';
+  if (typeNode) {
+    if (Node.isUnionTypeNode(typeNode)) {
+      result = isUnionLiteralOnly(typeNode.getTypeNodes()) ? 'union-literal' : 'other';
+    } else if (Node.isIntersectionTypeNode(typeNode)) {
+      result = isBrandedIntersection(typeNode.getTypeNodes()) ? 'branded' : 'other';
+    } else if (Node.isTemplateLiteralTypeNode(typeNode)) {
+      result = 'template-literal';
+    } else if (Node.isLiteralTypeNode(typeNode)) {
+      result = 'union-literal';
     } else {
-      result = 'other';
+      const kind = typeNode.getKind();
+      if (kind === SyntaxKind.StringKeyword) {
+        result = 'string';
+      } else if (kind === SyntaxKind.NumberKeyword) {
+        result = 'number';
+      } else if (kind === SyntaxKind.BooleanKeyword) {
+        result = 'boolean';
+      } else if (Node.isTypeLiteral(typeNode)) {
+        result = 'object';
+      }
     }
   }
   return result;
