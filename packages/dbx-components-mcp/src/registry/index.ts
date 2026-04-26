@@ -164,11 +164,13 @@ export function getActionDirectiveBySelector(selector: string): ActionDirectiveI
     if (entry.role !== 'directive') {
       continue;
     }
-    const tokens = entry.selector
-      .toLowerCase()
-      .split(',')
-      .map((t) => t.trim());
-    if (candidates.some((c) => tokens.includes(c))) {
+    const tokens = new Set(
+      entry.selector
+        .toLowerCase()
+        .split(',')
+        .map((t) => t.trim())
+    );
+    if (candidates.some((c) => tokens.has(c))) {
       result = entry;
       break;
     }
@@ -236,15 +238,10 @@ export function getUiComponents(): readonly UiComponentInfo[] {
  * @returns the matching entry, or `undefined` when no candidate matches
  */
 export function getUiComponent(key: string): UiComponentInfo | undefined {
-  const direct = UI_COMPONENTS.find((c) => c.slug === key);
-  let result: UiComponentInfo | undefined = direct;
-  if (!result) {
-    const lowered = key.toLowerCase();
-    result = UI_COMPONENTS.find((c) => c.className.toLowerCase() === lowered);
-  }
-  if (!result) {
-    result = getUiComponentBySelector(key);
-  }
+  let result: UiComponentInfo | undefined = UI_COMPONENTS.find((c) => c.slug === key);
+  const lowered = key.toLowerCase();
+  result ??= UI_COMPONENTS.find((c) => c.className.toLowerCase() === lowered);
+  result ??= getUiComponentBySelector(key);
   return result;
 }
 
