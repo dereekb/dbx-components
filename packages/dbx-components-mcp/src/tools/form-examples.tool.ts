@@ -79,14 +79,10 @@ function formatPattern(pattern: ExamplePattern, depth: ExampleDepth): string {
   const usesText = pattern.usesFormSlugs.map((s) => code(s)).join(', ');
   const sections: string[] = [`# ${pattern.name}`, '', pattern.summary, '', `**slug:** \`${pattern.slug}\` · **depth:** \`${depth}\` · **uses:** ${usesText}`, '', '```ts', snippet, '```'];
   if (pattern.notes && depth === 'full') {
-    sections.push('');
-    sections.push('## Notes');
-    sections.push('');
-    sections.push(pattern.notes);
+    sections.push('', '## Notes', '', pattern.notes);
   }
   if (depth !== 'full') {
-    sections.push('');
-    sections.push(`→ Call \`dbx_form_examples pattern="${pattern.slug}" depth="full"\` for imports, FormConfig wrapper, and value-type interface.`);
+    sections.push('', `→ Call \`dbx_form_examples pattern="${pattern.slug}" depth="full"\` for imports, FormConfig wrapper, and value-type interface.`);
   }
   return sections.join('\n');
 }

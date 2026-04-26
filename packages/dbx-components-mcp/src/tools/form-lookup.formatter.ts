@@ -63,16 +63,13 @@ function formatTierDetails(field: FormFieldInfo): string {
       lines.push(`- **generic:** \`${field.generic}\``);
     }
   } else if (field.tier === 'composite-builder') {
-    lines.push('## Composite');
-    lines.push(`- **suffix:** \`${field.suffix}\``);
-    lines.push(`- **config interface:** \`${field.configInterface}\``);
+    lines.push('## Composite', `- **suffix:** \`${field.suffix}\``, `- **config interface:** \`${field.configInterface}\``);
     if (field.composesFromSlugs.length > 0) {
       const composed = field.composesFromSlugs.map((s) => `\`${s}\``).join(', ');
       lines.push(`- **composes from:** ${composed}`);
     }
   } else {
-    lines.push('## Primitive');
-    lines.push(`- **returns:** \`${field.returns}\``);
+    lines.push('## Primitive', `- **returns:** \`${field.returns}\``);
     if (field.configInterface) {
       lines.push(`- **config interface:** \`${field.configInterface}\``);
     }
@@ -127,8 +124,7 @@ export function formatFormFieldGroup(fields: readonly FormFieldInfo[], title: st
     if (!list || list.length === 0) {
       continue;
     }
-    sections.push(`## ${tier} (${list.length})`);
-    sections.push('');
+    sections.push(`## ${tier} (${list.length})`, '');
     for (const field of list) {
       const array = field.arrayOutput === 'yes' ? ' *(array)*' : field.arrayOutput === 'optional' ? ' *(single or array)*' : '';
       sections.push(`- **\`${field.slug}\`** → \`${field.factoryName}\` — produces \`${field.produces}\`${array}. ${field.description}`);
