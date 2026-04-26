@@ -217,7 +217,7 @@ function requireString(value: string | undefined, label: string): string {
 function parseArgs(raw: unknown): ParsedScaffoldArgs {
   const parsed = ScaffoldArgsType(raw);
   if (parsed instanceof type.errors) {
-    throw new Error(`Invalid arguments: ${parsed.summary}`);
+    throw new TypeError(`Invalid arguments: ${parsed.summary}`);
   }
 
   const modelName = requireString(parsed.model_name, 'model_name');

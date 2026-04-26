@@ -65,7 +65,7 @@ interface ParsedLookupArgs {
 function parseArgs(raw: unknown): ParsedLookupArgs {
   const parsed = LookupArgsType(raw);
   if (parsed instanceof type.errors) {
-    throw new Error(`Invalid arguments: ${parsed.summary}`);
+    throw new TypeError(`Invalid arguments: ${parsed.summary}`);
   }
   const result: ParsedLookupArgs = {
     topic: parsed.topic,

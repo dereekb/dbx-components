@@ -54,7 +54,7 @@ interface ParsedLookupFilterArgs {
 function parseArgs(raw: unknown): ParsedLookupFilterArgs {
   const parsed = LookupFilterArgsType(raw);
   if (parsed instanceof type.errors) {
-    throw new Error(`Invalid arguments: ${parsed.summary}`);
+    throw new TypeError(`Invalid arguments: ${parsed.summary}`);
   }
   const result: ParsedLookupFilterArgs = {
     topic: parsed.topic,
