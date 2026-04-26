@@ -69,13 +69,13 @@ export function registerFiltersResource(server: McpServer): void {
       const entry = slug ? getFilterEntry(slug) : undefined;
 
       let text: string;
-      if (!slug) {
-        text = 'No slug provided.';
-      } else if (entry) {
+      if (slug && entry) {
         text = JSON.stringify(entry, null, 2);
-      } else {
+      } else if (slug) {
         const available = FILTER_ENTRIES.map((e) => e.slug).join(', ');
         text = `Filter '${slug}' not found. Available slugs: ${available}`;
+      } else {
+        text = 'No slug provided.';
       }
 
       return {

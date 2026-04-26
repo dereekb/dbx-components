@@ -71,13 +71,13 @@ export function registerPipesResource(server: McpServer): void {
       const entry = slug ? getPipeEntry(slug) : undefined;
 
       let text: string;
-      if (!slug) {
-        text = 'No slug provided.';
-      } else if (entry) {
+      if (slug && entry) {
         text = JSON.stringify(entry, null, 2);
-      } else {
+      } else if (slug) {
         const available = PIPE_ENTRIES.map((e) => e.slug).join(', ');
         text = `Pipe '${slug}' not found. Available slugs: ${available}`;
+      } else {
+        text = 'No slug provided.';
       }
 
       return {

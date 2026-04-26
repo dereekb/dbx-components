@@ -71,15 +71,15 @@ export function registerUiComponentsResource(server: McpServer): void {
       const entry = slug ? getUiComponent(slug) : undefined;
 
       let text: string;
-      if (!slug) {
-        text = 'No slug provided.';
-      } else if (entry) {
+      if (slug && entry) {
         text = JSON.stringify(entry, null, 2);
-      } else {
+      } else if (slug) {
         const available = getUiComponents()
           .map((c) => c.slug)
           .join(', ');
         text = `UI component '${slug}' not found. Available slugs: ${available}`;
+      } else {
+        text = 'No slug provided.';
       }
 
       return {
