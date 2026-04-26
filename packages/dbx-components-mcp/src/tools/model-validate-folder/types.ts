@@ -28,7 +28,8 @@ export type ViolationCode =
   | 'FOLDER_STRAY_FILE'
   | 'RESERVED_MODEL_FOLDER';
 
-export type ViolationSeverity = 'error' | 'warning';
+import type { ViolationSeverity } from '../validate-format.js';
+export type { ViolationSeverity };
 
 export interface Violation {
   readonly code: ViolationCode;

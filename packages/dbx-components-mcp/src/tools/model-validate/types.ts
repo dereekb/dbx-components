@@ -61,7 +61,8 @@ export type ViolationCode =
  * Error codes are hard failures the caller is expected to fix. Warning codes
  * flag convention deviations — validation is still considered a pass.
  */
-export type ViolationSeverity = 'error' | 'warning';
+import type { ViolationSeverity } from '../validate-format.js';
+export type { ViolationSeverity };
 
 export interface Violation {
   readonly code: ViolationCode;

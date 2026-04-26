@@ -46,7 +46,8 @@ export type ViolationCode =
   | 'SYSTEM_CONVERTER_MAP_NOT_LAST'
   | 'SYSTEM_UNKNOWN_MAP_KEY';
 
-export type ViolationSeverity = 'error' | 'warning';
+import type { ViolationSeverity } from '../validate-format.js';
+export type { ViolationSeverity };
 
 export interface Violation {
   readonly code: ViolationCode;

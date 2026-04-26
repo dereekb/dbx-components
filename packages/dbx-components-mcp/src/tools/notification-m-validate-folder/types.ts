@@ -38,7 +38,8 @@ export type ViolationCode =
   | 'NOTIF_FOLDER_UNEXPECTED_FILE_NAME'
   | 'NOTIF_FOLDER_HANDLERS_SUBFOLDER_MIXED';
 
-export type ViolationSeverity = 'error' | 'warning';
+import type { ViolationSeverity } from '../validate-format.js';
+export type { ViolationSeverity };
 
 export interface Violation {
   readonly code: ViolationCode;
