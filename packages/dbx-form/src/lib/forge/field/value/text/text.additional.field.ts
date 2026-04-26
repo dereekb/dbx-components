@@ -5,14 +5,20 @@ import type { FieldAutocompleteAttributeOption } from '../../../../field/field.a
 
 // MARK: Name Field
 /**
- * Creates a forge text field pre-configured for a person's full name.
+ * Pre-configured text field for capturing a full name with sensible min/max length defaults.
  *
  * @param config - Optional overrides; defaults to key `'name'`, label `'Name'`
  * @returns A {@link MatInputField} for name input
  *
+ * @dbxFormField
+ * @dbxFormSlug name
+ * @dbxFormProduces string
+ * @dbxFormArrayOutput no
+ * @dbxFormFieldDerivative text
+ * @dbxFormConfigInterface DbxForgeNameFieldConfig
  * @example
  * ```typescript
- * const field = dbxForgeNameField({ required: true });
+ * dbxForgeNameField({ key: 'fullName', label: 'Full Name', required: true })
  * ```
  */
 export function dbxForgeNameField(config: Partial<DbxForgeTextFieldConfig> = {}) {
@@ -47,16 +53,22 @@ export interface DbxForgeEmailFieldConfig {
 }
 
 /**
- * Creates a forge text field pre-configured for email address input.
+ * Text field pre-configured with email input type and email validator. Prefer this over configuring `dbxForgeTextField` with `inputType: "email"` directly.
  *
  * Uses the `'email'` input type for built-in browser validation.
  *
  * @param config - Optional overrides; defaults to key `'email'`, label `'Email Address'`
  * @returns A {@link MatInputField} with email input type
  *
+ * @dbxFormField
+ * @dbxFormSlug email
+ * @dbxFormProduces string
+ * @dbxFormArrayOutput no
+ * @dbxFormFieldDerivative text
+ * @dbxFormConfigInterface DbxForgeEmailFieldConfig
  * @example
  * ```typescript
- * const field = dbxForgeEmailField({ required: true });
+ * dbxForgeEmailField({ key: 'email', label: 'Email', required: true })
  * ```
  */
 export function dbxForgeEmailField(config: DbxForgeEmailFieldConfig = {}) {
@@ -81,14 +93,20 @@ export function dbxForgeEmailField(config: DbxForgeEmailFieldConfig = {}) {
 export type DbxForgeCityFieldConfig = Partial<DbxForgeTextFieldConfig>;
 
 /**
- * Creates a forge text field pre-configured for city name input.
+ * City name input enforcing `ADDRESS_CITY_MAX_LENGTH`. Typically used inside the address composite set.
  *
  * @param config - Optional overrides; defaults to key `'city'`, label `'City'`
  * @returns A {@link MatInputField} for city input
  *
+ * @dbxFormField
+ * @dbxFormSlug city
+ * @dbxFormProduces string
+ * @dbxFormArrayOutput no
+ * @dbxFormFieldDerivative text
+ * @dbxFormConfigInterface DbxForgeCityFieldConfig
  * @example
  * ```typescript
- * const field = dbxForgeCityField({ required: true });
+ * dbxForgeCityField({ required: true })
  * ```
  */
 export function dbxForgeCityField(config: DbxForgeCityFieldConfig = {}) {
@@ -116,16 +134,20 @@ export interface DbxForgeStateFieldConfig extends Partial<DbxForgeTextFieldConfi
 }
 
 /**
- * Creates a forge text field pre-configured for US state input with optional state code validation.
- *
- * When `asCode` is true, enforces the 2-letter state code pattern and auto-uppercases input.
+ * US state input. When `asCode: true`, validates two-letter codes and auto-uppercases input via an idempotent transform.
  *
  * @param config - Optional overrides; defaults to key `'state'`, label `'State'`
  * @returns A {@link MatInputField} for state input
  *
+ * @dbxFormField
+ * @dbxFormSlug state
+ * @dbxFormProduces string
+ * @dbxFormArrayOutput no
+ * @dbxFormFieldDerivative text
+ * @dbxFormConfigInterface DbxForgeStateFieldConfig
  * @example
  * ```typescript
- * const field = dbxForgeStateField({ asCode: true, required: true });
+ * dbxForgeStateField({ asCode: true, required: true })
  * ```
  */
 export function dbxForgeStateField(config: DbxForgeStateFieldConfig = {}) {
@@ -153,14 +175,20 @@ export function dbxForgeStateField(config: DbxForgeStateFieldConfig = {}) {
 export type DbxForgeCountryFieldConfig = Partial<DbxForgeTextFieldConfig>;
 
 /**
- * Creates a forge text field pre-configured for country name input.
+ * Country name input enforcing `ADDRESS_COUNTRY_MAX_LENGTH`. Typically used inside the address composite set.
  *
  * @param config - Optional overrides; defaults to key `'country'`, label `'Country'`
  * @returns A {@link MatInputField} for country input
  *
+ * @dbxFormField
+ * @dbxFormSlug country
+ * @dbxFormProduces string
+ * @dbxFormArrayOutput no
+ * @dbxFormFieldDerivative text
+ * @dbxFormConfigInterface DbxForgeCountryFieldConfig
  * @example
  * ```typescript
- * const field = dbxForgeCountryField({ required: true });
+ * dbxForgeCountryField({ required: true })
  * ```
  */
 export function dbxForgeCountryField(config: DbxForgeCountryFieldConfig = {}) {
@@ -183,14 +211,20 @@ export function dbxForgeCountryField(config: DbxForgeCountryFieldConfig = {}) {
 export type DbxForgeZipCodeFieldConfig = Partial<DbxForgeTextFieldConfig>;
 
 /**
- * Creates a forge text field pre-configured for US zip code input with pattern validation.
+ * US zip code input with pattern validation and max-length enforcement.
  *
  * @param config - Optional overrides; defaults to key `'zip'`, label `'Zip Code'`
  * @returns A {@link MatInputField} for zip code input
  *
+ * @dbxFormField
+ * @dbxFormSlug zip-code
+ * @dbxFormProduces string
+ * @dbxFormArrayOutput no
+ * @dbxFormFieldDerivative text
+ * @dbxFormConfigInterface DbxForgeZipCodeFieldConfig
  * @example
  * ```typescript
- * const field = dbxForgeZipCodeField({ required: true });
+ * dbxForgeZipCodeField({ required: true })
  * ```
  */
 export function dbxForgeZipCodeField(config: DbxForgeZipCodeFieldConfig = {}) {
@@ -214,14 +248,20 @@ export function dbxForgeZipCodeField(config: DbxForgeZipCodeFieldConfig = {}) {
 export const DEFAULT_FORGE_LAT_LNG_TEXT_FIELD_PLACEHOLDER = '12.345,-67.8910';
 
 /**
- * Creates a forge text field pre-configured for latitude/longitude coordinate input with pattern validation.
+ * Latitude/longitude coordinate input with decimal-degree pattern validation.
  *
  * @param config - Optional overrides; defaults to key `'latLng'`
  * @returns A {@link MatInputField} for coordinate input
  *
+ * @dbxFormField
+ * @dbxFormSlug lat-lng
+ * @dbxFormProduces string
+ * @dbxFormArrayOutput no
+ * @dbxFormFieldDerivative text
+ * @dbxFormConfigInterface DbxForgeLatLngTextFieldConfig
  * @example
  * ```typescript
- * const field = dbxForgeLatLngTextField();
+ * dbxForgeLatLngTextField({ key: 'coords', label: 'Coordinates' })
  * ```
  */
 export function dbxForgeLatLngTextField(config: Partial<DbxForgeTextFieldConfig> = {}) {

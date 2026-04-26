@@ -30,7 +30,7 @@ export interface PropertyInfo {
 import { FORM_FIELDS, type FormFieldInfo, type FormTier, type FormArrayOutput } from './form-fields.js';
 
 export { FORM_FIELDS, FORM_TIER_ORDER } from './form-fields.js';
-export type { FormFieldInfo, FormFieldFactoryInfo, FormCompositeBuilderInfo, FormPrimitiveInfo, FormTier, FormFieldWrapperPattern, FormCompositeSuffix, FormLayoutPrimitive, FormArrayOutput } from './form-fields.js';
+export type { FormFieldInfo, FormFieldFactoryInfo, FormFieldDerivativeInfo, FormCompositeBuilderInfo, FormFieldTemplateInfo, FormPrimitiveInfo, FormTier, FormFieldWrapperPattern, FormCompositeSuffix, FormLayoutPrimitive, FormArrayOutput } from './form-fields.js';
 
 /**
  * Returns every registered form entry (factories, composites, primitives).

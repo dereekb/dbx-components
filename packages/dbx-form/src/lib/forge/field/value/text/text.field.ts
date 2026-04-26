@@ -52,21 +52,27 @@ export interface DbxForgeTextFieldConfig extends DbxForgeFieldFunctionDef<DbxFor
 }
 
 /**
- * Creates a forge field definition for a single-line text input.
+ * Single-line text input. Supports text/email/password input types, autocomplete attribute, regex pattern validation, and idempotent string transforms (trim, case changes, etc.).
  *
  * @param config - Text field configuration including key, label, validation, and transform options
  * @returns A text input field with type `'input'`
  *
+ * @dbxFormField
+ * @dbxFormSlug text
+ * @dbxFormTier field-factory
+ * @dbxFormProduces string
+ * @dbxFormArrayOutput no
+ * @dbxFormNgFormType input
+ * @dbxFormWrapperPattern unwrapped
+ * @dbxFormConfigInterface DbxForgeTextFieldConfig
  * @example
  * ```typescript
- * const field = dbxForgeTextField({
+ * const emailField = dbxForgeTextField({
  *   key: 'email',
  *   label: 'Email',
  *   required: true,
- *   props: {
- *     type: 'email',
- *     placeholder: 'user@example.com'
- *   }
+ *   inputType: 'email',
+ *   props: { placeholder: 'user@example.com' }
  * });
  * ```
  */

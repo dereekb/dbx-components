@@ -67,8 +67,7 @@ function isFlexFieldConfig(input: FieldDef<unknown> | DbxForgeFlexLayoutFieldCon
 }
 
 /**
- * Creates a responsive flex layout group that arranges child fields horizontally
- * with configurable sizing, breakpoints, and responsive behavior.
+ * Responsive flex group — children lay out horizontally at wide breakpoints and stack at narrow ones. Per-field `size` overrides the default column weight.
  *
  * Each child field gets a `dbx-flex-N` CSS class applied (merged with any existing className).
  * The group is wrapped with the `dbx-forge-flex` wrapper that renders the `dbxFlexGroup` directive
@@ -80,20 +79,18 @@ function isFlexFieldConfig(input: FieldDef<unknown> | DbxForgeFlexLayoutFieldCon
  * @param config - Flex layout defaults including breakpoint, relative sizing, and default size
  * @returns A {@link GroupField} with flex wrapper applied and sized children
  *
+ * @dbxFormField
+ * @dbxFormSlug flex-layout
+ * @dbxFormTier composite-builder
+ * @dbxFormSuffix Layout
+ * @dbxFormProduces GroupField
+ * @dbxFormArrayOutput no
+ * @dbxFormConfigInterface DbxForgeFlexLayoutConfig
+ * @dbxFormComposesFrom group
+ *
  * @example
  * ```typescript
- * // Simple: all fields get default size (2)
- * dbxForgeFlexLayout([dbxForgeCityField({}), dbxForgeStateField({}), dbxForgeZipCodeField({})])
- *
- * // With per-field sizing and breakpoint
- * dbxForgeFlexLayout([
- *   { field: dbxForgeCityField({}), size: 4 },
- *   dbxForgeStateField({}),
- *   dbxForgeZipCodeField({})
- * ], { breakpoint: 'small', size: 1 })
- *
- * // Full config
- * dbxForgeFlexLayout([...fields], { breakpoint: 'large', breakToColumn: true, relative: true, size: 1 })
+ * dbxForgeFlexLayout({ fieldConfigs: [dbxForgeTextField({ key: 'a' }), dbxForgeTextField({ key: 'b' })] })
  * ```
  */
 export function dbxForgeFlexLayout(fieldConfigs: (FieldDef<unknown> | DbxForgeFlexLayoutFieldConfig)[], config: DbxForgeFlexLayoutConfig = {}): GroupField {

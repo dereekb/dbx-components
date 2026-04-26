@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "forgeFields": {
+    "source": "@dereekb/dbx-form",
+    "module": "@dereekb/dbx-form",
+    "include": ["src/lib/forge/**/*.ts", "src/lib/field/field.autocomplete.ts"],
+    "exclude": ["**/*.spec.ts", "**/*.test.ts"],
+    "out": "../dbx-components-mcp/manifests/dereekb-dbx-form.forge-fields.mcp.json"
+  }
+}

@@ -28,6 +28,8 @@ const WORKSPACE_ROOT = resolve(PACKAGE_ROOT, '..', '..');
 register('ts-node/esm', pathToFileURL(`${WORKSPACE_ROOT}/`));
 
 const { runScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/cli.ts`);
+const { runUiComponentsScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/ui-components-cli.ts`);
+const { runForgeFieldsScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/forge-fields-cli.ts`);
 
 /**
  * Projects whose semantic types ship bundled with this MCP package. Add a new
@@ -36,6 +38,22 @@ const { runScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/sca
  * `out` path resolution.
  */
 const BUNDLED_PROJECTS = ['packages/util', 'packages/model', 'packages/date'];
+
+/**
+ * Projects whose ui-components ship bundled with this MCP package. Each entry
+ * needs a `dbx-mcp.scan.json` with a `uiComponents` section that drives
+ * `include`/`exclude`/`out` resolution.
+ */
+const BUNDLED_UI_COMPONENT_PROJECTS = ['packages/dbx-web'];
+
+/**
+ * Projects whose forge-fields ship bundled with this MCP package. Each entry
+ * needs a `dbx-mcp.scan.json` with a `forgeFields` section that drives
+ * `include`/`exclude`/`out` resolution. Subpath packages (e.g.
+ * `packages/dbx-form/calendar`) get their own scan config and are listed here
+ * separately.
+ */
+const BUNDLED_FORGE_FIELD_PROJECTS = ['packages/dbx-form'];
 
 /**
  * Bundled manifests stamp a fixed `generatedAt` so the produced JSON is
@@ -51,6 +69,26 @@ const argv = process.argv.slice(2);
 const results = [];
 for (const project of BUNDLED_PROJECTS) {
   const result = await runScanCli({
+    argv: ['--project', project, ...argv],
+    cwd: WORKSPACE_ROOT,
+    generator: '@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs',
+    now: BUNDLED_GENERATED_AT
+  });
+  results.push({ project, exitCode: result.exitCode });
+}
+
+for (const project of BUNDLED_UI_COMPONENT_PROJECTS) {
+  const result = await runUiComponentsScanCli({
+    argv: ['--project', project, ...argv],
+    cwd: WORKSPACE_ROOT,
+    generator: '@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs',
+    now: BUNDLED_GENERATED_AT
+  });
+  results.push({ project, exitCode: result.exitCode });
+}
+
+for (const project of BUNDLED_FORGE_FIELD_PROJECTS) {
+  const result = await runForgeFieldsScanCli({
     argv: ['--project', project, ...argv],
     cwd: WORKSPACE_ROOT,
     generator: '@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs',

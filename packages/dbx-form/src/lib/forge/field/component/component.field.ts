@@ -44,7 +44,7 @@ const _dbxForgeComponentField = dbxForgeFieldFunction<_DbxForgeComponentFieldCon
 }) as DbxForgeFieldFunction<_DbxForgeComponentFieldConfig, DbxForgeComponentFieldDef>;
 
 /**
- * Creates a forge field definition that renders a custom Angular component.
+ * Escape hatch — injects any Angular component as the field renderer via DbxInjection. Use when no existing form field fits.
  *
  * Uses {@link DbxInjectionComponent} to dynamically inject any Angular component
  * into the form. Generates a unique key when none is provided so that ng-forge's
@@ -53,12 +53,19 @@ const _dbxForgeComponentField = dbxForgeFieldFunction<_DbxForgeComponentFieldCon
  * @param config - Component field configuration
  * @returns A validated {@link DbxForgeComponentFieldDef}
  *
+ * @dbxFormField
+ * @dbxFormSlug component-field
+ * @dbxFormTier field-factory
+ * @dbxFormProduces T
+ * @dbxFormArrayOutput no
+ * @dbxFormNgFormType component
+ * @dbxFormWrapperPattern unwrapped
+ * @dbxFormConfigInterface DbxForgeComponentFieldConfig<T>
+ * @dbxFormGeneric <T = unknown>
+ *
  * @example
  * ```typescript
- * const field = dbxForgeComponentField({
- *   key: 'custom',
- *   props: { componentField: { componentClass: MyCustomFormComponent, data: { someInput: 'value' } } }
- * });
+ * dbxForgeComponentField<MyValue>({ key: 'custom', props: { component: MyCustomComp } })
  * ```
  */
 export const dbxForgeComponentField: DbxForgeComponentFieldFunction = (config) => {

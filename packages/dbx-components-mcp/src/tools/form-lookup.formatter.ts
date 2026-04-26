@@ -49,8 +49,13 @@ function formatTierBits(field: FormFieldInfo): string {
   let result = '';
   if (field.tier === 'field-factory') {
     result = ` · ngFormType: \`${field.ngFormType}\``;
+  } else if (field.tier === 'field-derivative') {
+    result = ` · derived from: \`${field.derivedFromSlug}\``;
   } else if (field.tier === 'composite-builder') {
     result = ` · suffix: \`${field.suffix}\``;
+  } else if (field.tier === 'template-builder') {
+    const fields = field.returnsSlugs.map((s) => `\`${s}\``).join(', ');
+    result = ` · returns fields: ${fields}`;
   } else if (field.tier === 'primitive') {
     result = ` · returns: \`${field.returns}\``;
   }
@@ -64,11 +69,22 @@ function formatTierDetails(field: FormFieldInfo): string {
     if (field.generic) {
       lines.push(`- **generic:** \`${field.generic}\``);
     }
+  } else if (field.tier === 'field-derivative') {
+    lines.push('## Field Derivative', `- **derived from:** \`${field.derivedFromSlug}\``, `- **config interface:** \`${field.configInterface}\``);
+    if (field.generic) {
+      lines.push(`- **generic:** \`${field.generic}\``);
+    }
   } else if (field.tier === 'composite-builder') {
     lines.push('## Composite', `- **suffix:** \`${field.suffix}\``, `- **config interface:** \`${field.configInterface}\``);
     if (field.composesFromSlugs.length > 0) {
       const composed = field.composesFromSlugs.map((s) => `\`${s}\``).join(', ');
       lines.push(`- **composes from:** ${composed}`);
+    }
+  } else if (field.tier === 'template-builder') {
+    lines.push('## Template', `- **config interface:** \`${field.configInterface}\``);
+    if (field.returnsSlugs.length > 0) {
+      const returned = field.returnsSlugs.map((s) => `\`${s}\``).join(', ');
+      lines.push(`- **returns fields:** ${returned}`);
     }
   } else {
     lines.push('## Primitive', `- **returns:** \`${field.returns}\``);

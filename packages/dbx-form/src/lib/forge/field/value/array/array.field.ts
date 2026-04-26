@@ -30,7 +30,7 @@ export type DbxForgeArrayFieldFunction = (config: DbxForgeArrayFieldConfig) => D
 
 // MARK: Internal
 /**
- * Creates a forge array field with add/remove controls and per-item rendering.
+ * Repeatable array wrapper with add/remove/drag-to-reorder controls. Template fields are cloned per item. Internally built with `dbxForgeFieldFunction` but categorized as a primitive because composites wrap it.
  *
  * Wraps the array with {@link DbxForgeArrayFieldWrapperComponent} for label/hint,
  * and wraps each template item in a ContainerField with
@@ -40,17 +40,17 @@ export type DbxForgeArrayFieldFunction = (config: DbxForgeArrayFieldConfig) => D
  * @param config - Array field configuration
  * @returns A {@link DbxForgeField}
  *
+ * @dbxFormField
+ * @dbxFormSlug array-field
+ * @dbxFormTier primitive
+ * @dbxFormProduces ArrayField
+ * @dbxFormReturns ArrayField
+ * @dbxFormArrayOutput yes
+ * @dbxFormConfigInterface DbxForgeArrayFieldConfig
+ *
  * @example
  * ```typescript
- * const field = dbxForgeArrayField({
- *   key: 'phones',
- *   label: 'Phone Numbers',
- *   addText: 'Add Phone',
- *   template: [
- *     dbxForgeTextField({ key: 'number', label: 'Number' }),
- *     dbxForgeTextField({ key: 'label', label: 'Label' })
- *   ]
- * });
+ * dbxForgeArrayField({ key: 'tags', template: [dbxForgeTextField({ key: 'value' })] })
  * ```
  */
 export const dbxForgeArrayField = dbxForgeFieldFunction<DbxForgeArrayFieldConfig>({

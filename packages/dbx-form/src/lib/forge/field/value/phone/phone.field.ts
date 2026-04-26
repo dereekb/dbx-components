@@ -53,7 +53,7 @@ export interface DbxForgePhoneFieldConfig extends DbxForgeFieldFunctionDef<DbxFo
 }
 
 /**
- * Creates a forge field definition for an international phone number input.
+ * International phone number input backed by ngx-mat-input-tel. Supports preferred-country lists, search, and optional extension input.
  *
  * Uses the custom 'phone' field type which renders the ngx-mat-input-tel component
  * bridged to Signal Forms.
@@ -61,9 +61,18 @@ export interface DbxForgePhoneFieldConfig extends DbxForgeFieldFunctionDef<DbxFo
  * @param config - Phone field configuration
  * @returns A forge field definition for the phone input
  *
+ * @dbxFormField
+ * @dbxFormSlug phone
+ * @dbxFormTier field-factory
+ * @dbxFormProduces string
+ * @dbxFormArrayOutput no
+ * @dbxFormNgFormType phone
+ * @dbxFormWrapperPattern unwrapped
+ * @dbxFormConfigInterface DbxForgePhoneFieldConfig
+ *
  * @example
  * ```typescript
- * const field = dbxForgePhoneField({ key: 'phone', label: 'Phone Number', required: true });
+ * dbxForgePhoneField({ key: 'phone', label: 'Phone', preferredCountries: ['US', 'CA'] })
  * ```
  */
 export const dbxForgePhoneField = dbxForgeFieldFunction<DbxForgePhoneFieldConfig>({

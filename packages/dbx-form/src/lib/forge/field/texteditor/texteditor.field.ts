@@ -9,7 +9,7 @@ import { dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder,
 export interface DbxForgeTextEditorFieldConfig extends DbxForgeFieldFunctionDef<DbxForgeTextEditorFieldDef> {}
 
 /**
- * Creates a forge field definition for a rich text editor.
+ * Rich HTML text editor (ngx-editor). Output is the serialized HTML string.
  *
  * Uses ngx-editor under the hood, outputting HTML format.
  * The field defaults to an empty string.
@@ -17,9 +17,18 @@ export interface DbxForgeTextEditorFieldConfig extends DbxForgeFieldFunctionDef<
  * @param config - Text editor field configuration
  * @returns A validated {@link DbxForgeTextEditorFieldDef}
  *
+ * @dbxFormField
+ * @dbxFormSlug text-editor
+ * @dbxFormTier field-factory
+ * @dbxFormProduces string
+ * @dbxFormArrayOutput no
+ * @dbxFormNgFormType texteditor
+ * @dbxFormWrapperPattern unwrapped
+ * @dbxFormConfigInterface DbxForgeTextEditorFieldConfig
+ *
  * @example
  * ```typescript
- * const field = dbxForgeTextEditorField({ key: 'bio', label: 'Biography', maxLength: 2000 });
+ * dbxForgeTextEditorField({ key: 'content', label: 'Body', maxLength: 10000 })
  * ```
  */
 export const dbxForgeTextEditorField = dbxForgeFieldFunction<DbxForgeTextEditorFieldConfig>({

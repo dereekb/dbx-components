@@ -12,10 +12,21 @@
  */
 
 import packageJson from '../package.json' with { type: 'json' };
+import { runForgeFieldsScanCli } from '../src/scan/forge-fields-cli.js';
 import { runScanCli } from '../src/scan/cli.js';
+import { runUiComponentsScanCli } from '../src/scan/ui-components-cli.js';
 import { runStdioServer } from '../src/server.js';
 
-const TOP_LEVEL_USAGE = ['Usage:', '  dbx-components-mcp                                     Run the MCP stdio server', '  dbx-components-mcp scan-semantic-types --project <dir> Generate a SemanticTypeManifest', '  dbx-components-mcp --help                              Show this message', '', 'Run `dbx-components-mcp scan-semantic-types --help` for scanner-specific options.'].join('\n');
+const TOP_LEVEL_USAGE = [
+  'Usage:',
+  '  dbx-components-mcp                                     Run the MCP stdio server',
+  '  dbx-components-mcp scan-semantic-types --project <dir> Generate a SemanticTypeManifest',
+  '  dbx-components-mcp scan-ui-components  --project <dir> Generate a UiComponentManifest',
+  '  dbx-components-mcp scan-forge-fields   --project <dir> Generate a ForgeFieldManifest',
+  '  dbx-components-mcp --help                              Show this message',
+  '',
+  'Run `dbx-components-mcp <subcommand> --help` for scanner-specific options.'
+].join('\n');
 
 async function main(): Promise<number> {
   const argv = process.argv.slice(2);
@@ -29,6 +40,20 @@ async function main(): Promise<number> {
     exitCode = 0;
   } else if (argv[0] === 'scan-semantic-types') {
     const result = await runScanCli({
+      argv: argv.slice(1),
+      cwd: process.cwd(),
+      generator: `@dereekb/dbx-components-mcp@${packageJson.version}`
+    });
+    exitCode = result.exitCode;
+  } else if (argv[0] === 'scan-ui-components') {
+    const result = await runUiComponentsScanCli({
+      argv: argv.slice(1),
+      cwd: process.cwd(),
+      generator: `@dereekb/dbx-components-mcp@${packageJson.version}`
+    });
+    exitCode = result.exitCode;
+  } else if (argv[0] === 'scan-forge-fields') {
+    const result = await runForgeFieldsScanCli({
       argv: argv.slice(1),
       cwd: process.cwd(),
       generator: `@dereekb/dbx-components-mcp@${packageJson.version}`

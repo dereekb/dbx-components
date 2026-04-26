@@ -47,7 +47,7 @@ export interface DbxForgeSourceSelectFieldConfig<T extends PrimativeKey = Primat
 export type DbxForgeSourceSelectFieldFunction = <T extends PrimativeKey = PrimativeKey, M = unknown>(config: DbxForgeSourceSelectFieldConfig<T, M>) => DbxForgeSourceSelectFieldDef<T, M>;
 
 /**
- * Creates a forge field definition for a source select field.
+ * Selection field that stores just the value key (`T`) but resolves full metadata (`M`) async for display. Use for reference fields where the form should store only the id.
  *
  * The component uses `<mat-form-field>` with `[formField]` for native ng-forge value binding,
  * proper Material rendering, and built-in logic (hidden/disabled/readonly) support.
@@ -55,17 +55,19 @@ export type DbxForgeSourceSelectFieldFunction = <T extends PrimativeKey = Primat
  * @param config - Source select field configuration
  * @returns A {@link DbxForgeSourceSelectFieldDef}
  *
+ * @dbxFormField
+ * @dbxFormSlug source-select
+ * @dbxFormTier field-factory
+ * @dbxFormProduces T | T[]
+ * @dbxFormArrayOutput optional
+ * @dbxFormNgFormType dbx-source-select
+ * @dbxFormWrapperPattern unwrapped
+ * @dbxFormConfigInterface DbxForgeSourceSelectFieldConfig<T, M>
+ * @dbxFormGeneric <T extends PrimativeKey = PrimativeKey, M = unknown>
+ *
  * @example
  * ```typescript
- * const field = dbxForgeSourceSelectField({
- *   key: 'source',
- *   label: 'Source',
- *   props: {
- *     valueReader: (meta) => meta.id,
- *     metaLoader: (values) => myService.loadMeta(values),
- *     displayForValue: (values) => of(values.map(v => ({ ...v, label: v.meta.name })))
- *   }
- * });
+ * dbxForgeSourceSelectField<string, User>({ key: 'userId', props: { valueReader: (u) => u.id, metaLoader, displayForValue } })
  * ```
  */
 export const dbxForgeSourceSelectField = dbxForgeFieldFunction<DbxForgeSourceSelectFieldConfig>({

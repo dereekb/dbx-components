@@ -7,8 +7,12 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { loadForgeFieldRegistry, type LoadForgeFieldRegistryResult } from './manifest/load-forge-fields-registry.js';
 import { loadSemanticTypeRegistry, type LoadSemanticTypeRegistryResult } from './manifest/load-registry.js';
+import { loadUiComponentRegistry, type LoadUiComponentRegistryResult } from './manifest/load-ui-components-registry.js';
+import type { ForgeFieldRegistry } from './registry/forge-fields.js';
 import type { SemanticTypeRegistry } from './registry/semantic-types.js';
+import type { UiComponentRegistry } from './registry/ui-components-runtime.js';
 import { registerResources } from './resources/index.js';
 import { registerTools } from './tools/index.js';
 import packageJson from '../package.json' with { type: 'json' };
@@ -26,7 +30,11 @@ export const SERVER_VERSION = packageJson.version;
 export interface CreateServerOptions {
   readonly cwd?: string;
   readonly semanticTypeRegistry?: SemanticTypeRegistry;
+  readonly uiComponentRegistry?: UiComponentRegistry;
+  readonly forgeFieldRegistry?: ForgeFieldRegistry;
   readonly onLoaderResult?: (result: LoadSemanticTypeRegistryResult) => void;
+  readonly onUiLoaderResult?: (result: LoadUiComponentRegistryResult) => void;
+  readonly onForgeLoaderResult?: (result: LoadForgeFieldRegistryResult) => void;
 }
 
 /**
@@ -67,8 +75,46 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
     registry = loaderResult.registry;
   }
 
+  let uiRegistry: UiComponentRegistry | undefined = options.uiComponentRegistry;
+  if (uiRegistry === undefined) {
+    const cwd = options.cwd ?? process.cwd();
+    try {
+      const uiLoaderResult = await loadUiComponentRegistry({ cwd });
+      if (options.onUiLoaderResult === undefined) {
+        reportUiLoaderResult(uiLoaderResult);
+      } else {
+        options.onUiLoaderResult(uiLoaderResult);
+      }
+      uiRegistry = uiLoaderResult.registry;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      process.stderr.write(`[dbx-components-mcp] ui-components registry unavailable: ${message}\n`);
+      uiRegistry = undefined;
+    }
+  }
+
+  let forgeRegistry: ForgeFieldRegistry | undefined = options.forgeFieldRegistry;
+  if (forgeRegistry === undefined) {
+    const cwd = options.cwd ?? process.cwd();
+    try {
+      const forgeLoaderResult = await loadForgeFieldRegistry({ cwd });
+      if (options.onForgeLoaderResult === undefined) {
+        reportForgeLoaderResult(forgeLoaderResult);
+      } else {
+        options.onForgeLoaderResult(forgeLoaderResult);
+      }
+      forgeRegistry = forgeLoaderResult.registry;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      process.stderr.write(`[dbx-components-mcp] forge-fields registry unavailable: ${message}\n`);
+      forgeRegistry = undefined;
+    }
+  }
+
   registerResources(server, { semanticTypeRegistry: registry });
   registerTools(server, { semanticTypeRegistry: registry });
+  void uiRegistry;
+  void forgeRegistry;
 
   return server;
 }
@@ -100,5 +146,43 @@ function reportLoaderResult(result: LoadSemanticTypeRegistryResult): void {
   }
   for (const warning of loaderWarnings) {
     process.stderr.write(`[dbx-components-mcp] loader-warning: ${warning.kind}\n`);
+  }
+}
+
+/**
+ * Default observer used when {@link CreateServerOptions.onUiLoaderResult} is
+ * not supplied. Mirrors {@link reportLoaderResult} for the ui-components
+ * registry so operators can see the same information for both pipelines.
+ *
+ * @param result - the loader output to summarise
+ */
+function reportUiLoaderResult(result: LoadUiComponentRegistryResult): void {
+  const { registry, configPath, configWarnings, loaderWarnings, externalSourceCount } = result;
+  const summary = [`[dbx-components-mcp] ui-components registry loaded`, `  sources: ${registry.loadedSources.join(', ') || '(none)'}`, `  external: ${externalSourceCount}`, `  config: ${configPath ?? '(none)'}`, `  entries: ${registry.all.length}`, `  warnings: ${configWarnings.length + loaderWarnings.length}`].join('\n');
+  process.stderr.write(`${summary}\n`);
+  for (const warning of configWarnings) {
+    process.stderr.write(`[dbx-components-mcp] ui-config-warning: ${warning.kind} ${warning.path}\n`);
+  }
+  for (const warning of loaderWarnings) {
+    process.stderr.write(`[dbx-components-mcp] ui-loader-warning: ${warning.kind}\n`);
+  }
+}
+
+/**
+ * Default observer used when {@link CreateServerOptions.onForgeLoaderResult}
+ * is not supplied. Mirrors {@link reportLoaderResult} for the forge-fields
+ * registry so operators can see the same information for all three pipelines.
+ *
+ * @param result - the loader output to summarise
+ */
+function reportForgeLoaderResult(result: LoadForgeFieldRegistryResult): void {
+  const { registry, configPath, configWarnings, loaderWarnings, externalSourceCount } = result;
+  const summary = [`[dbx-components-mcp] forge-fields registry loaded`, `  sources: ${registry.loadedSources.join(', ') || '(none)'}`, `  external: ${externalSourceCount}`, `  config: ${configPath ?? '(none)'}`, `  entries: ${registry.all.length}`, `  warnings: ${configWarnings.length + loaderWarnings.length}`].join('\n');
+  process.stderr.write(`${summary}\n`);
+  for (const warning of configWarnings) {
+    process.stderr.write(`[dbx-components-mcp] forge-config-warning: ${warning.kind} ${warning.path}\n`);
+  }
+  for (const warning of loaderWarnings) {
+    process.stderr.write(`[dbx-components-mcp] forge-loader-warning: ${warning.kind}\n`);
   }
 }

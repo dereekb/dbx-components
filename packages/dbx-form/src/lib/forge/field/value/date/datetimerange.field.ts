@@ -32,17 +32,25 @@ export interface DbxForgeDateTimeRangeRowConfig {
 }
 
 /**
- * Composite builder that creates a pair of time-only pickers for selecting a time range (start and end times)
- * arranged in a flex row.
+ * Two-column row of time-only pickers for selecting a time range within a single day.
  *
  * This is the forge equivalent of formly's `formlyDateTimeRangeField()`.
  *
  * @param inputConfig - Time range configuration with optional shared props and start/end overrides
  * @returns A {@link RowField} containing the start and end time field pair
  *
+ * @dbxFormField
+ * @dbxFormSlug date-time-range-row
+ * @dbxFormTier composite-builder
+ * @dbxFormSuffix Row
+ * @dbxFormProduces RowField
+ * @dbxFormArrayOutput no
+ * @dbxFormConfigInterface DbxForgeDateTimeRangeRowConfig
+ * @dbxFormComposesFrom date-time, row
+ *
  * @example
  * ```typescript
- * const row = dbxForgeDateTimeRangeRow({ required: true });
+ * dbxForgeDateTimeRangeRow({ start: { label: 'From' }, end: { label: 'Until' } })
  * ```
  */
 export function dbxForgeDateTimeRangeRow(inputConfig: DbxForgeDateTimeRangeRowConfig = {}): RowField {

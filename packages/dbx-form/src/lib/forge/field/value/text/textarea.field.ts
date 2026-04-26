@@ -21,14 +21,27 @@ export interface DbxForgeTextAreaFieldConfig extends DbxForgeFieldFunctionDef<Ma
 }
 
 /**
- * Creates a forge field definition for a multi-line textarea input.
+ * Multi-line textarea input. Supports row count, autocomplete attribute, pattern validation (RegExp → string conversion), and default value.
  *
  * @param config - Textarea field configuration including key, label, rows, and validation options
  * @returns A textarea field with type `'textarea'`
  *
+ * @dbxFormField
+ * @dbxFormSlug text-area
+ * @dbxFormTier field-factory
+ * @dbxFormProduces string
+ * @dbxFormArrayOutput no
+ * @dbxFormNgFormType textarea
+ * @dbxFormWrapperPattern unwrapped
+ * @dbxFormConfigInterface DbxForgeTextAreaFieldConfig
  * @example
  * ```typescript
- * const field = dbxForgeTextAreaField({ key: 'bio', label: 'Biography', rows: 5, maxLength: 500 });
+ * const bioField = dbxForgeTextAreaField({
+ *   key: 'bio',
+ *   label: 'Biography',
+ *   rows: 5,
+ *   maxLength: 500
+ * });
  * ```
  */
 export const dbxForgeTextAreaField = dbxForgeFieldFunction<DbxForgeTextAreaFieldConfig>({

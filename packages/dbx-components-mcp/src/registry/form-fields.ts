@@ -21,10 +21,12 @@ import type { PropertyInfo } from './index.js';
  * Builder tier from the form-field skill.
  *
  *   - `field-factory`     dbxForgeFieldFunction / dbxForgeMaterialFormFieldWrappedFieldFunction — registers a type
- *   - `composite-builder` plain function composing other form entries — does NOT register a type
+ *   - `field-derivative`  pre-configured wrapper around a single field-factory — returns one field of the same shape with presets baked in; does NOT register a type
+ *   - `composite-builder` plain function composing other form entries into ONE field/group — does NOT register a type
+ *   - `template-builder`  returns multiple related fields as an array/tuple — distinct from composite-builders, which compose into a single container
  *   - `primitive`         core layout helper (row, group, array, section)
  */
-export type FormTier = 'field-factory' | 'composite-builder' | 'primitive';
+export type FormTier = 'field-factory' | 'field-derivative' | 'composite-builder' | 'template-builder' | 'primitive';
 
 /**
  * Which form factory helper a field-factory entry is built with.
@@ -136,6 +138,27 @@ export interface FormFieldFactoryInfo extends FormEntryBase {
 }
 
 /**
+ * A field-derivative: pre-configured wrapper around a single field-factory.
+ * Returns one field of the same shape as its base factory, with presets baked in.
+ * Does not register a new ng-forge type.
+ */
+export interface FormFieldDerivativeInfo extends FormEntryBase {
+  readonly tier: 'field-derivative';
+  /**
+   * TypeScript config interface name (e.g. `'DbxForgeEmailFieldConfig'`).
+   */
+  readonly configInterface: string;
+  /**
+   * Generic signature if the derivative accepts type parameters.
+   */
+  readonly generic?: string;
+  /**
+   * Slug of the base field-factory (or other registered entry) this derivative wraps.
+   */
+  readonly derivedFromSlug: string;
+}
+
+/**
  * A composite builder: composes other form entries into a layout. Does not
  * register a new ng-forge type.
  */
@@ -156,6 +179,22 @@ export interface FormCompositeBuilderInfo extends FormEntryBase {
 }
 
 /**
+ * A template-builder: returns multiple related fields as an array or tuple.
+ * Distinct from composite-builders, which return one composed field/group.
+ */
+export interface FormFieldTemplateInfo extends FormEntryBase {
+  readonly tier: 'template-builder';
+  /**
+   * TypeScript config interface name.
+   */
+  readonly configInterface: string;
+  /**
+   * Slugs of the fields this template returns, in declaration order.
+   */
+  readonly returnsSlugs: readonly string[];
+}
+
+/**
  * A layout primitive: core library helper that composites wrap (e.g. `dbxForgeRow`).
  */
 export interface FormPrimitiveInfo extends FormEntryBase {
@@ -173,12 +212,12 @@ export interface FormPrimitiveInfo extends FormEntryBase {
 /**
  * Any entry in the form registry.
  */
-export type FormFieldInfo = FormFieldFactoryInfo | FormCompositeBuilderInfo | FormPrimitiveInfo;
+export type FormFieldInfo = FormFieldFactoryInfo | FormFieldDerivativeInfo | FormCompositeBuilderInfo | FormFieldTemplateInfo | FormPrimitiveInfo;
 
 /**
  * Presentation order for tiers in listings.
  */
-export const FORM_TIER_ORDER: readonly FormTier[] = ['field-factory', 'composite-builder', 'primitive'];
+export const FORM_TIER_ORDER: readonly FormTier[] = ['field-factory', 'field-derivative', 'composite-builder', 'template-builder', 'primitive'];
 
 // MARK: Helpers for compact entry authoring
 const NO_EXTRA_CONFIG: Record<string, PropertyInfo> = {};

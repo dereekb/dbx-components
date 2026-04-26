@@ -28,7 +28,7 @@ export type ForgeValueSelectionFieldFunction = DbxForgeValueSelectionFieldFuncti
 
 // MARK: Factory
 /**
- * Creates a forge field definition for a Material select (dropdown) field.
+ * Single-select dropdown over a static or async value list. Simpler than `source-select` when metadata lookup is unnecessary.
  *
  * The component uses `<mat-form-field>` with `[formField]` for native ng-forge value binding,
  * proper Material rendering, and built-in logic (hidden/disabled/readonly) support.
@@ -38,26 +38,19 @@ export type ForgeValueSelectionFieldFunction = DbxForgeValueSelectionFieldFuncti
  * @param config - Selection field configuration
  * @returns A forge field definition for the value selection component
  *
+ * @dbxFormField
+ * @dbxFormSlug value-selection
+ * @dbxFormTier field-factory
+ * @dbxFormProduces T
+ * @dbxFormArrayOutput no
+ * @dbxFormNgFormType dbx-value-selection
+ * @dbxFormWrapperPattern material-form-field-wrapped
+ * @dbxFormConfigInterface DbxForgeValueSelectionFieldConfig<T>
+ * @dbxFormGeneric <T = unknown>
+ *
  * @example
  * ```typescript
- * // Static options
- * const field = dbxForgeValueSelectionField({
- *   key: 'color',
- *   label: 'Color',
- *   props: {
- *     options: [{ label: 'Red', value: 'red' }, { label: 'Blue', value: 'blue' }]
- *   }
- * });
- *
- * // Observable options
- * const field = dbxForgeValueSelectionField({
- *   key: 'status',
- *   label: 'Status',
- *   props: {
- *     options: status$.pipe(map(statuses => statuses.map(s => ({ label: s.name, value: s.id })))),
- *     addClearOption: 'No Selection'
- *   }
- * });
+ * dbxForgeValueSelectionField<string>({ key: 'status', props: { options: [{ value: 'active', label: 'Active' }] } })
  * ```
  */
 export const dbxForgeValueSelectionField = dbxForgeFieldFunction<DbxForgeValueSelectionFieldConfig>({

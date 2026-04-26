@@ -8,16 +8,25 @@ import { dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder,
 export interface DbxForgeDateFieldConfig extends DbxForgeFieldFunctionDef<MatDatepickerField> {}
 
 /**
- * Creates a forge field definition for a date picker input.
+ * Material datepicker (date-only, no time). For time-of-day picking use the `date-time` field; for ranges use `date-range-row` or `date-time-range-row`.
  *
  * Uses the native ng-forge MatDatepickerField.
  *
  * @param config - Date field configuration including key, label, and date constraints
  * @returns A validated {@link MatDatepickerField}
  *
+ * @dbxFormField
+ * @dbxFormSlug date
+ * @dbxFormTier field-factory
+ * @dbxFormProduces Date
+ * @dbxFormArrayOutput no
+ * @dbxFormNgFormType datepicker
+ * @dbxFormWrapperPattern unwrapped
+ * @dbxFormConfigInterface DbxForgeDateFieldConfig
+ *
  * @example
  * ```typescript
- * const field = dbxForgeDateField({ key: 'startDate', label: 'Start Date', required: true });
+ * dbxForgeDateField({ key: 'startDate', label: 'Start Date', required: true })
  * ```
  */
 export const dbxForgeDateField = dbxForgeFieldFunction<DbxForgeDateFieldConfig>({

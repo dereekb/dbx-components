@@ -1,13 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { FORM_FIELDS, FORM_TIER_ORDER, getFormField, getFormFields, getFormFieldsByProduces, getFormFieldsByTier, getFormFieldsByArrayOutput, getFormProducesCatalog } from './index.js';
+import { FORM_FIELDS, FORM_TIER_ORDER, getFormField, getFormFields, getFormFieldsByProduces, getFormFieldsByTier, getFormFieldsByArrayOutput, getFormProducesCatalog, type FormTier } from './index.js';
+
+// The static legacy registry only populates the original three tiers.
+// `field-derivative` and `template-builder` are emitted by the manifest pipeline
+// and become non-empty once the static array is cut over.
+const LEGACY_POPULATED_TIERS: readonly FormTier[] = ['field-factory', 'composite-builder', 'primitive'];
 
 describe('form-fields registry', () => {
-  it('exposes a non-empty list and covers all three tiers', () => {
+  it('exposes a non-empty list and covers the legacy tiers', () => {
     expect(FORM_FIELDS.length).toBeGreaterThan(0);
     expect(getFormFields()).toBe(FORM_FIELDS);
-    for (const tier of FORM_TIER_ORDER) {
+    for (const tier of LEGACY_POPULATED_TIERS) {
       expect(getFormFieldsByTier(tier).length, `no entries for tier ${tier}`).toBeGreaterThan(0);
     }
+    expect(FORM_TIER_ORDER).toContain('field-derivative');
+    expect(FORM_TIER_ORDER).toContain('template-builder');
   });
 
   it('gives every entry a unique slug and a known tier', () => {

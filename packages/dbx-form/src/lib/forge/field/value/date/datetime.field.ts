@@ -46,7 +46,7 @@ export type DbxForgeDateTimeFieldDef = BaseValueField<DbxForgeDateTimeFieldCompo
 export interface DbxForgeDateTimeFieldConfig extends DbxForgeFieldFunctionDef<DbxForgeDateTimeFieldDef> {}
 
 /**
- * Creates a forge field definition for a combined date-time picker.
+ * Combined date-time picker with timezone, value mode (DATE_STRING / TIMESTAMP / Date), and time mode (REQUIRED / OPTIONAL / NONE). Powers `date-range-row` and `date-time-range-row`.
  *
  * Full parity with formly `dateTimeField()` — supports timezone, valueMode, timeMode,
  * pickerConfig, presets, and all other features via the `props` slot.
@@ -54,18 +54,19 @@ export interface DbxForgeDateTimeFieldConfig extends DbxForgeFieldFunctionDef<Db
  * @param config - Date-time field configuration
  * @returns A {@link DbxForgeDateTimeFieldDef}
  *
+ * @dbxFormField
+ * @dbxFormSlug date-time
+ * @dbxFormTier field-factory
+ * @dbxFormProduces DateTimeValue
+ * @dbxFormArrayOutput no
+ * @dbxFormNgFormType datetime
+ * @dbxFormWrapperPattern unwrapped
+ * @dbxFormConfigInterface DbxForgeDateTimeFieldConfig
+ * @dbxFormPropsInterface DbxForgeDateTimeFieldComponentProps
+ *
  * @example
  * ```typescript
- * const field = dbxForgeDateTimeField({
- *   key: 'eventStart',
- *   label: 'Start',
- *   required: true,
- *   props: {
- *     timezone: 'America/New_York',
- *     valueMode: DbxDateTimeValueMode.DATE_STRING,
- *     timeMode: DbxDateTimeFieldTimeMode.OPTIONAL
- *   }
- * });
+ * dbxForgeDateTimeField({ key: 'when', label: 'When', timezone: 'America/New_York' })
  * ```
  */
 export const dbxForgeDateTimeField = dbxForgeFieldFunction<DbxForgeDateTimeFieldConfig>({

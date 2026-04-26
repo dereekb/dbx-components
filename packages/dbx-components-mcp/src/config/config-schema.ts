@@ -25,6 +25,12 @@ export const DbxMcpConfig = type({
   version: '1',
   'semanticTypes?': {
     'sources?': 'string[]'
+  },
+  'uiComponents?': {
+    'sources?': 'string[]'
+  },
+  'forgeFields?': {
+    'sources?': 'string[]'
   }
 });
 

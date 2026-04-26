@@ -16,8 +16,20 @@
     },
     "generate-manifests": {
       "executor": "nx:run-commands",
-      "outputs": ["{projectRoot}/manifests/dereekb-util.semantic-types.mcp.json", "{projectRoot}/manifests/dereekb-model.semantic-types.mcp.json", "{projectRoot}/manifests/dereekb-date.semantic-types.mcp.json"],
-      "inputs": ["{projectRoot}/scripts/generate-manifests.mjs", "{projectRoot}/src/scan/**/*.ts", "{projectRoot}/src/manifest/**/*.ts", "{workspaceRoot}/packages/util/dbx-mcp.scan.json", "{workspaceRoot}/packages/util/src/**/*.ts", "{workspaceRoot}/packages/model/dbx-mcp.scan.json", "{workspaceRoot}/packages/model/src/**/*.ts", "{workspaceRoot}/packages/date/dbx-mcp.scan.json", "{workspaceRoot}/packages/date/src/**/*.ts"],
+      "outputs": ["{projectRoot}/manifests/dereekb-util.semantic-types.mcp.json", "{projectRoot}/manifests/dereekb-model.semantic-types.mcp.json", "{projectRoot}/manifests/dereekb-dbx-web.ui-components.mcp.json", "{projectRoot}/manifests/dereekb-dbx-form.forge-fields.mcp.json"],
+      "inputs": [
+        "{projectRoot}/scripts/generate-manifests.mjs",
+        "{projectRoot}/src/scan/**/*.ts",
+        "{projectRoot}/src/manifest/**/*.ts",
+        "{workspaceRoot}/packages/util/dbx-mcp.scan.json",
+        "{workspaceRoot}/packages/util/src/**/*.ts",
+        "{workspaceRoot}/packages/model/dbx-mcp.scan.json",
+        "{workspaceRoot}/packages/model/src/**/*.ts",
+        "{workspaceRoot}/packages/dbx-web/dbx-mcp.scan.json",
+        "{workspaceRoot}/packages/dbx-web/src/**/*.ts",
+        "{workspaceRoot}/packages/dbx-form/dbx-mcp.scan.json",
+        "{workspaceRoot}/packages/dbx-form/src/**/*.ts"
+      ],
       "options": {
         "command": "node packages/dbx-components-mcp/scripts/generate-manifests.mjs",
         "cwd": "{workspaceRoot}"

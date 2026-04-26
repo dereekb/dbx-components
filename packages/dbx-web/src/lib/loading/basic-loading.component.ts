@@ -26,6 +26,15 @@ export type LoadingComponentState = 'none' | 'loading' | 'content' | 'error';
  * Prefer using {@link DbxLoadingComponent} (`<dbx-loading>`) which wraps this component with
  * support for {@link LoadingContext} streams.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug basic-loading
+ * @dbxWebCategory feedback
+ * @dbxWebRelated loading, loading-progress, error
+ * @dbxWebSkillRefs dbx__ref__dbx-ui-building-blocks
+ * @dbxWebMinimalExample ```html
+ * <dbx-basic-loading [loading]="true"><p>Content</p></dbx-basic-loading>
+ * ```
+ *
  * @example
  * ```html
  * <dbx-basic-loading [loading]="true" color="accent" text="Loading data...">
