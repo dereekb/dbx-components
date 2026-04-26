@@ -12,6 +12,7 @@
 
 import { Node, SyntaxKind, type ArrayLiteralExpression, type ArrowFunction, type FunctionDeclaration, type FunctionExpression, type ObjectLiteralExpression, type SourceFile, type VariableDeclaration } from 'ts-morph';
 import { apiRelPath, asObjectLiteral, buildInMemoryProject, collectTrustedExternalIdentifiers, collectTypeofReferences, componentRelPath, findLocalVariable, findReturnExpression, getPropertyInitializer, readIdentifierProperty, readStringLiteralInitializer, typeAnnotationText, unwrapAsExpressions } from '../_validate/ast.js';
+import { GROUP_IDS_FUNCTION_SUFFIXES } from './group-ids.js';
 import type { AppStorageFilesInspection, ExtractedAppStorageFiles, ExtractedGroupIdsFunction, ExtractedProcessingConfig, ExtractedProcessingHandlerCall, ExtractedProcessingSubtaskAlias, ExtractedProcessingSubtaskConstant, ExtractedPurposeConstant, ExtractedUploadInitializerEntry, ExtractedUploadServiceCall, ExtractedUploadServiceWiring, ExtractedUploadedFileTypeIdentifierConstant } from './types.js';
 
 const STORAGEFILE_PURPOSE_TYPE = 'StorageFilePurpose';
@@ -23,7 +24,6 @@ const UPLOAD_SERVICE_FACTORY = 'storageFileInitializeFromUploadService';
 const PROCESSING_HANDLER_FACTORY = 'storageFileProcessingNotificationTaskHandler';
 const UPLOAD_SERVICE_PROVIDE_TOKEN = 'StorageFileInitializeFromUploadService';
 const PROCESSING_SUBTASK_ALIAS_SUFFIX = 'ProcessingSubtask';
-const GROUP_IDS_FUNCTION_SUFFIXES: readonly string[] = ['StorageFileGroupIds', 'FileGroupIds'];
 
 /**
  * Builds a ts-morph project from the prepared inspection and extracts every

@@ -12,12 +12,13 @@
  *   name starts with the purpose constant name plus `_`.
  */
 
+import { removeSuffix, screamingSnakeToCamelCase } from '@dereekb/util';
+import { stripGroupIdsSuffix } from '../storagefile-m-validate-app/group-ids.js';
 import type { ExtractedAppStorageFiles } from '../storagefile-m-validate-app/index.js';
 import type { AppStorageFilesReport, StorageFilePurposeSummary } from './types.js';
 
 const PURPOSE_SUFFIX = '_PURPOSE';
 const FILE_TYPE_IDENTIFIER_SUFFIX = '_UPLOADED_FILE_TYPE_IDENTIFIER';
-const GROUP_IDS_FUNCTION_SUFFIXES: readonly string[] = ['StorageFileGroupIds', 'FileGroupIds'];
 
 export interface CollectOptions {
   readonly componentDir: string;
@@ -36,7 +37,7 @@ export interface CollectOptions {
 export function collectAppStorageFiles(extracted: ExtractedAppStorageFiles, options: CollectOptions): AppStorageFilesReport {
   const fileTypeByPrefix = new Map<string, (typeof extracted.fileTypeIdentifierConstants)[number]>();
   for (const c of extracted.fileTypeIdentifierConstants) {
-    const prefix = prefixBefore(c.symbolName, FILE_TYPE_IDENTIFIER_SUFFIX);
+    const prefix = removeSuffix(c.symbolName, FILE_TYPE_IDENTIFIER_SUFFIX);
     if (prefix) fileTypeByPrefix.set(prefix, c);
   }
 
@@ -58,7 +59,7 @@ export function collectAppStorageFiles(extracted: ExtractedAppStorageFiles, opti
 
   const purposes: StorageFilePurposeSummary[] = [];
   for (const purpose of extracted.purposeConstants) {
-    const prefix = prefixBefore(purpose.symbolName, PURPOSE_SUFFIX);
+    const prefix = removeSuffix(purpose.symbolName, PURPOSE_SUFFIX);
     const fileType = prefix ? fileTypeByPrefix.get(prefix) : undefined;
     const groupIdsFn = findGroupIdsFunction(prefix, extracted);
     const subtasks: string[] = [];
@@ -101,14 +102,9 @@ export function collectAppStorageFiles(extracted: ExtractedAppStorageFiles, opti
   return result;
 }
 
-function prefixBefore(name: string, suffix: string): string | undefined {
-  if (!name.endsWith(suffix)) return undefined;
-  return name.slice(0, -suffix.length);
-}
-
 function findGroupIdsFunction(purposePrefix: string | undefined, extracted: ExtractedAppStorageFiles): string | undefined {
   if (!purposePrefix) return undefined;
-  const camel = toCamelCase(purposePrefix);
+  const camel = screamingSnakeToCamelCase(purposePrefix);
   let bestMatch: string | undefined;
   for (const fn of extracted.groupIdsFunctions) {
     const stripped = stripGroupIdsSuffix(fn.symbolName);
@@ -118,27 +114,4 @@ function findGroupIdsFunction(purposePrefix: string | undefined, extracted: Extr
     }
   }
   return bestMatch;
-}
-
-function stripGroupIdsSuffix(name: string): string {
-  for (const suffix of GROUP_IDS_FUNCTION_SUFFIXES) {
-    if (name.endsWith(suffix)) {
-      return name.slice(0, -suffix.length);
-    }
-  }
-  return name;
-}
-
-function toCamelCase(screaming: string): string {
-  const parts = screaming.split('_').filter((p) => p.length > 0);
-  let result = '';
-  for (const [i, part_] of parts.entries()) {
-    const part = part_.toLowerCase();
-    if (i === 0) {
-      result += part;
-    } else {
-      result += part.charAt(0).toUpperCase() + part.slice(1);
-    }
-  }
-  return result;
 }

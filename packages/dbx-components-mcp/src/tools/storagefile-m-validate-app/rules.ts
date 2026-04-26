@@ -12,12 +12,13 @@
  * `<Foo>ProcessingSubtask` union aliases.
  */
 
+import { camelOrPascalToScreamingSnake, removeSuffix, screamingSnakeToCamelCase } from '@dereekb/util';
 import { pushIoViolations, type IoViolationCodes, type IoViolationMessages } from '../_validate/io-violations.js';
+import { stripGroupIdsSuffix } from './group-ids.js';
 import type { AppStorageFilesInspection, ExtractedAppStorageFiles, ExtractedPurposeConstant, ExtractedUploadInitializerEntry, ExtractedUploadedFileTypeIdentifierConstant, Violation, ViolationCode, ViolationSeverity } from './types.js';
 
 const PURPOSE_SUFFIX = '_PURPOSE';
 const FILE_TYPE_IDENTIFIER_SUFFIX = '_UPLOADED_FILE_TYPE_IDENTIFIER';
-const GROUP_IDS_FUNCTION_SUFFIXES: readonly string[] = ['StorageFileGroupIds', 'FileGroupIds'];
 
 const IO_VIOLATION_CODES: IoViolationCodes<ViolationCode> = {
   componentDirNotFound: 'STORAGEFILE_COMPONENT_DIR_NOT_FOUND',
@@ -67,11 +68,11 @@ export function runRules(inspection: AppStorageFilesInspection, extracted: Extra
 function checkPurposePairing(extracted: ExtractedAppStorageFiles, violations: Violation[]): void {
   const fileTypePrefixes = new Set<string>();
   for (const c of extracted.fileTypeIdentifierConstants) {
-    fileTypePrefixes.add(prefixBefore(c.symbolName, FILE_TYPE_IDENTIFIER_SUFFIX) ?? c.symbolName);
+    fileTypePrefixes.add(removeSuffix(c.symbolName, FILE_TYPE_IDENTIFIER_SUFFIX) ?? c.symbolName);
   }
 
   for (const purpose of extracted.purposeConstants) {
-    const prefix = prefixBefore(purpose.symbolName, PURPOSE_SUFFIX);
+    const prefix = removeSuffix(purpose.symbolName, PURPOSE_SUFFIX);
     if (!prefix) continue;
     if (!fileTypePrefixes.has(prefix)) {
       pushViolation(violations, {
@@ -302,7 +303,7 @@ function collectPurposesWithSubtasks(extracted: ExtractedAppStorageFiles): Map<s
   const aliasStems = new Set<string>();
   for (const alias of extracted.processingSubtaskAliases) {
     const stem = alias.symbolName.endsWith('ProcessingSubtask') ? alias.symbolName.slice(0, -'ProcessingSubtask'.length) : alias.symbolName;
-    aliasStems.add(toScreamingSnake(stem));
+    aliasStems.add(camelOrPascalToScreamingSnake(stem));
   }
 
   // A purpose has subtasks if a `*_PROCESSING_SUBTASK`-typed constant's name
@@ -311,7 +312,7 @@ function collectPurposesWithSubtasks(extracted: ExtractedAppStorageFiles): Map<s
   // own prefix exists (best-effort sanity check).
   const result = new Map<string, readonly string[]>();
   for (const purpose of extracted.purposeConstants) {
-    const purposePrefix = prefixBefore(purpose.symbolName, PURPOSE_SUFFIX);
+    const purposePrefix = removeSuffix(purpose.symbolName, PURPOSE_SUFFIX);
     if (!purposePrefix) continue;
     const subtaskNames: string[] = [];
     for (const c of extracted.processingSubtaskConstants) {
@@ -383,9 +384,9 @@ function checkGroupIdsFunctions(extracted: ExtractedAppStorageFiles, violations:
     fnPrefixes.add(prefix);
   }
   for (const purpose of extracted.purposeConstants) {
-    const prefix = prefixBefore(purpose.symbolName, PURPOSE_SUFFIX);
+    const prefix = removeSuffix(purpose.symbolName, PURPOSE_SUFFIX);
     if (!prefix) continue;
-    const camel = toCamelCase(prefix);
+    const camel = screamingSnakeToCamelCase(prefix);
     let matched = false;
     for (const fnPrefix of fnPrefixes) {
       if (fnPrefix === camel || fnPrefix.startsWith(camel) || camel.startsWith(fnPrefix)) {
@@ -405,47 +406,6 @@ function checkGroupIdsFunctions(extracted: ExtractedAppStorageFiles, violations:
 }
 
 // MARK: Helpers
-function prefixBefore(name: string, suffix: string): string | undefined {
-  if (!name.endsWith(suffix)) return undefined;
-  return name.slice(0, -suffix.length);
-}
-
-function stripGroupIdsSuffix(name: string): string {
-  for (const suffix of GROUP_IDS_FUNCTION_SUFFIXES) {
-    if (name.endsWith(suffix)) {
-      return name.slice(0, -suffix.length);
-    }
-  }
-  return name;
-}
-
-function toCamelCase(screaming: string): string {
-  const parts = screaming.split('_').filter((p) => p.length > 0);
-  let result = '';
-  for (const [i, part_] of parts.entries()) {
-    const part = part_.toLowerCase();
-    if (i === 0) {
-      result += part;
-    } else {
-      result += part.charAt(0).toUpperCase() + part.slice(1);
-    }
-  }
-  return result;
-}
-
-function toScreamingSnake(camelOrPascal: string): string {
-  let out = '';
-  for (let i = 0; i < camelOrPascal.length; i += 1) {
-    const ch = camelOrPascal.charAt(i);
-    const isUpper = ch >= 'A' && ch <= 'Z';
-    if (isUpper && i > 0) {
-      out += '_';
-    }
-    out += ch.toUpperCase();
-  }
-  return out;
-}
-
 function pushViolation(buffer: Violation[], violation: Omit<Violation, 'severity'> & { readonly severity?: ViolationSeverity }): void {
   const severity: ViolationSeverity = violation.severity ?? 'error';
   const filled: Violation = {
