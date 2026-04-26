@@ -60,7 +60,7 @@ check_json_field() {
   local expected="$4"
   local actual
   actual=$(echo "$output" | jq -r "$field" 2>/dev/null)
-  if [ "$actual" = "$expected" ]; then
+  if [[ "$actual" = "$expected" ]]; then
     echo "  PASS: $description"
     PASS=$((PASS + 1))
   else
@@ -75,7 +75,7 @@ check_api_ok() {
   local output="$2"
   local ok
   ok=$(echo "$output" | jq -r '.ok' 2>/dev/null)
-  if [ "$ok" = "true" ]; then
+  if [[ "$ok" = "true" ]]; then
     echo "  PASS: $description"
     PASS=$((PASS + 1))
   else
@@ -102,7 +102,7 @@ chmod +x "$ROOT_DIR/dist/packages/zoho/cli/index.js" 2>/dev/null || true
 check "CLI binary is executable" test -x "$ROOT_DIR/dist/packages/zoho/cli/index.js"
 
 SHEBANG=$(head -1 "$ROOT_DIR/dist/packages/zoho/cli/index.js")
-if [ "$SHEBANG" = "#!/usr/bin/env node" ]; then
+if [[ "$SHEBANG" = "#!/usr/bin/env node" ]]; then
   echo "  PASS: Shebang present"
   PASS=$((PASS + 1))
 else
@@ -200,7 +200,7 @@ check_json_field "output clear all reports cleared" "$OUTPUT_CLEAR_ALL" ".data.c
 
 OUTPUT_SHOW_CLEARED=$(HOME="$TEST_HOME" $CLI output show 2>&1 || true)
 OUTPUT_DUMP_AFTER_CLEAR=$(echo "$OUTPUT_SHOW_CLEARED" | jq -r '.data.output.dumpDir // "null"' 2>/dev/null)
-if [ "$OUTPUT_DUMP_AFTER_CLEAR" = "null" ]; then
+if [[ "$OUTPUT_DUMP_AFTER_CLEAR" = "null" ]]; then
   echo "  PASS: output clear removed dumpDir"
   PASS=$((PASS + 1))
 else
@@ -213,7 +213,7 @@ echo ""
 # ============================
 # Phase 4: Auth + API tests (requires credentials)
 # ============================
-if [ -z "$ZOHO_ACCOUNTS_CLIENT_ID" ] || [ -z "$ZOHO_ACCOUNTS_CLIENT_SECRET" ] || [ -z "$ZOHO_ACCOUNTS_REFRESH_TOKEN" ]; then
+if [[ -z "$ZOHO_ACCOUNTS_CLIENT_ID" ]] || [[ -z "$ZOHO_ACCOUNTS_CLIENT_SECRET" ]] || [[ -z "$ZOHO_ACCOUNTS_REFRESH_TOKEN" ]]; then
   echo "Phase 4: SKIP (ZOHO_ACCOUNTS_CLIENT_ID, ZOHO_ACCOUNTS_CLIENT_SECRET, ZOHO_ACCOUNTS_REFRESH_TOKEN required)"
   echo ""
 else
@@ -252,7 +252,7 @@ else
   check_json_field "auth check has products" "$CHECK_OUTPUT" '.data.products | length > 0' "true"
 
   AUTH_OK=$(echo "$CHECK_OUTPUT" | jq '[.data.products[].authenticated] | any' 2>/dev/null)
-  if [ "$AUTH_OK" = "true" ]; then
+  if [[ "$AUTH_OK" = "true" ]]; then
     echo "  PASS: auth check reports at least one product authenticated"
     PASS=$((PASS + 1))
   else
@@ -280,7 +280,7 @@ else
   check_json_valid "crm list outputs valid JSON" "$CRM_LIST"
   check_api_ok "crm list reports ok" "$CRM_LIST"
 
-  if [ -n "$ZOHO_DESK_ORG_ID" ]; then
+  if [[ -n "$ZOHO_DESK_ORG_ID" ]]; then
     DESK_LIST=$(HOME="$TEST_HOME" $CLI desk tickets list --limit 1 2>&1 || true)
     check_json_valid "desk tickets list outputs valid JSON" "$DESK_LIST"
     check_api_ok "desk tickets list reports ok" "$DESK_LIST"
@@ -306,7 +306,7 @@ else
   check_api_ok "recruit list with --dump-dir reports ok" "$DUMP_OUTPUT"
 
   DUMP_FILE_COUNT=$(ls "$DUMP_DIR"/*.json 2>/dev/null | wc -l | tr -d ' ')
-  if [ "$DUMP_FILE_COUNT" -gt 0 ]; then
+  if [[ "$DUMP_FILE_COUNT" -gt 0 ]]; then
     echo "  PASS: dump file was created"
     PASS=$((PASS + 1))
 
@@ -337,7 +337,7 @@ else
 
   # Verify that data items only contain the picked field
   PICK_KEYS=$(echo "$PICK_OUTPUT" | jq -r '.data[0] | keys | join(",")' 2>/dev/null)
-  if [ "$PICK_KEYS" = "id" ]; then
+  if [[ "$PICK_KEYS" = "id" ]]; then
     echo "  PASS: --pick filters data items to only picked fields"
     PASS=$((PASS + 1))
   else
@@ -347,7 +347,7 @@ else
 
   # Verify meta is preserved alongside filtered data
   PICK_META_OK=$(echo "$PICK_OUTPUT" | jq 'has("meta")' 2>/dev/null)
-  if [ "$PICK_META_OK" = "true" ]; then
+  if [[ "$PICK_META_OK" = "true" ]]; then
     echo "  PASS: --pick preserves meta"
     PASS=$((PASS + 1))
   else
@@ -363,7 +363,7 @@ else
 
   # Verify stdout is filtered
   PICK_DUMP_KEYS=$(echo "$PICK_DUMP_OUTPUT" | jq -r '.data[0] | keys | join(",")' 2>/dev/null)
-  if [ "$PICK_DUMP_KEYS" = "id" ]; then
+  if [[ "$PICK_DUMP_KEYS" = "id" ]]; then
     echo "  PASS: stdout filtered with --pick when --dump-dir present"
     PASS=$((PASS + 1))
   else
@@ -373,9 +373,9 @@ else
 
   # Verify dump file has more fields than just "id" (full response)
   DUMP_FILE2=$(ls "$DUMP_DIR2"/*.json 2>/dev/null | head -1)
-  if [ -n "$DUMP_FILE2" ]; then
+  if [[ -n "$DUMP_FILE2" ]]; then
     DUMP_KEY_COUNT=$(cat "$DUMP_FILE2" | jq '.data[0] | keys | length' 2>/dev/null)
-    if [ "$DUMP_KEY_COUNT" -gt 1 ]; then
+    if [[ "$DUMP_KEY_COUNT" -gt 1 ]]; then
       echo "  PASS: dump file contains full response (${DUMP_KEY_COUNT} fields vs 1 picked)"
       PASS=$((PASS + 1))
     else
@@ -394,7 +394,7 @@ else
   check_api_ok "recruit list with multi-field --pick reports ok" "$PICK_MULTI_OUTPUT"
 
   PICK_MULTI_COUNT=$(echo "$PICK_MULTI_OUTPUT" | jq '.data[0] | keys | length' 2>/dev/null)
-  if [ "$PICK_MULTI_COUNT" = "2" ]; then
+  if [[ "$PICK_MULTI_COUNT" = "2" ]]; then
     echo "  PASS: --pick with multiple fields returns correct count"
     PASS=$((PASS + 1))
   else
@@ -409,7 +409,7 @@ else
   check_api_ok "recruit list with config-driven pick reports ok" "$CONFIG_PICK_OUTPUT"
 
   CONFIG_PICK_KEYS=$(echo "$CONFIG_PICK_OUTPUT" | jq -r '.data[0] | keys | join(",")' 2>/dev/null)
-  if [ "$CONFIG_PICK_KEYS" = "id" ]; then
+  if [[ "$CONFIG_PICK_KEYS" = "id" ]]; then
     echo "  PASS: config-driven pick filters data items"
     PASS=$((PASS + 1))
   else
@@ -422,7 +422,7 @@ else
   check_api_ok "recruit list with CLI flag override reports ok" "$CLI_OVERRIDE_OUTPUT"
 
   CLI_OVERRIDE_COUNT=$(echo "$CLI_OVERRIDE_OUTPUT" | jq '.data[0] | keys | length' 2>/dev/null)
-  if [ "$CLI_OVERRIDE_COUNT" = "2" ]; then
+  if [[ "$CLI_OVERRIDE_COUNT" = "2" ]]; then
     echo "  PASS: CLI --pick flag overrides config pick"
     PASS=$((PASS + 1))
   else
@@ -437,7 +437,7 @@ else
   check_api_ok "recruit list with per-command config reports ok" "$CMD_CONFIG_OUTPUT"
 
   CMD_CONFIG_COUNT=$(echo "$CMD_CONFIG_OUTPUT" | jq '.data[0] | keys | length' 2>/dev/null)
-  if [ "$CMD_CONFIG_COUNT" = "3" ]; then
+  if [[ "$CMD_CONFIG_COUNT" = "3" ]]; then
     echo "  PASS: per-command config overrides global config (3 fields vs 1)"
     PASS=$((PASS + 1))
   else
@@ -453,7 +453,7 @@ else
   check_api_ok "recruit list with inline --set-pick reports ok" "$INLINE_SET_OUTPUT"
 
   INLINE_SET_KEYS=$(echo "$INLINE_SET_OUTPUT" | jq -r '.data[0] | keys | join(",")' 2>/dev/null)
-  if [ "$INLINE_SET_KEYS" = "id" ]; then
+  if [[ "$INLINE_SET_KEYS" = "id" ]]; then
     echo "  PASS: inline --set-pick applied for current run"
     PASS=$((PASS + 1))
   else
@@ -464,7 +464,7 @@ else
   # Verify --set-pick was saved to config
   INLINE_SAVED=$(HOME="$TEST_HOME" $CLI output show 2>&1 || true)
   INLINE_SAVED_PICK=$(echo "$INLINE_SAVED" | jq -r '.data.output.commands["recruit.list"].pick // "null"' 2>/dev/null)
-  if [ "$INLINE_SAVED_PICK" = "id" ]; then
+  if [[ "$INLINE_SAVED_PICK" = "id" ]]; then
     echo "  PASS: inline --set-pick saved to config"
     PASS=$((PASS + 1))
   else
@@ -477,7 +477,7 @@ else
   check_api_ok "recruit list rerun with saved config reports ok" "$INLINE_RERUN"
 
   INLINE_RERUN_KEYS=$(echo "$INLINE_RERUN" | jq -r '.data[0] | keys | join(",")' 2>/dev/null)
-  if [ "$INLINE_RERUN_KEYS" = "id" ]; then
+  if [[ "$INLINE_RERUN_KEYS" = "id" ]]; then
     echo "  PASS: saved --set-pick config applied on subsequent run"
     PASS=$((PASS + 1))
   else
@@ -490,7 +490,7 @@ else
   check_api_ok "recruit list with --pick-all reports ok" "$PICK_ALL_OUTPUT"
 
   PICK_ALL_COUNT=$(echo "$PICK_ALL_OUTPUT" | jq '.data[0] | keys | length' 2>/dev/null)
-  if [ "$PICK_ALL_COUNT" -gt 1 ]; then
+  if [[ "$PICK_ALL_COUNT" -gt 1 ]]; then
     echo "  PASS: --pick-all returns full response ($PICK_ALL_COUNT fields)"
     PASS=$((PASS + 1))
   else
@@ -522,7 +522,7 @@ echo "  Passed: $PASS"
 echo "  Failed: $FAIL"
 echo ""
 
-if [ "$FAIL" -gt 0 ]; then
+if [[ "$FAIL" -gt 0 ]]; then
   echo "FAILED"
   exit 1
 else

@@ -21,8 +21,7 @@ export function demoExampleHandledNotificationTaskHandler(_context: DemoFirebase
       {
         checkpoint: EXAMPLE_HANDLED_NOTIFICATION_TASK_PING_CHECKPOINT,
         fn: async (_notificationTask) => {
-          const result = { completion: true };
-          return result;
+          return { completion: true };
         }
       }
     ]
