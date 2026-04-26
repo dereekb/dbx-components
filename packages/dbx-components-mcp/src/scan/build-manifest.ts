@@ -172,15 +172,15 @@ async function loadScanConfig(configPath: string, readFile: BuildManifestReadFil
     } catch (err) {
       parseError = err instanceof Error ? err.message : String(err);
     }
-    if (parseError !== null) {
-      result = { kind: 'fail', outcome: { kind: 'invalid-scan-config', configPath, error: parseError } };
-    } else {
+    if (parseError === null) {
       const validated = SemanticTypeScanConfig(parsed);
       if (validated instanceof type.errors) {
         result = { kind: 'fail', outcome: { kind: 'invalid-scan-config', configPath, error: validated.summary } };
       } else {
         result = { kind: 'ok', config: validated };
       }
+    } else {
+      result = { kind: 'fail', outcome: { kind: 'invalid-scan-config', configPath, error: parseError } };
     }
   }
   return result;
@@ -206,15 +206,15 @@ async function loadPackageName(packagePath: string, readFile: BuildManifestReadF
     } catch (err) {
       parseError = err instanceof Error ? err.message : String(err);
     }
-    if (parseError !== null) {
-      result = { kind: 'fail', outcome: { kind: 'invalid-package', packagePath, error: parseError } };
-    } else {
+    if (parseError === null) {
       const name = (parsed as { readonly name?: unknown } | null | undefined)?.name;
       if (typeof name !== 'string' || name.length === 0) {
         result = { kind: 'fail', outcome: { kind: 'invalid-package', packagePath, error: 'package.json is missing a non-empty `name` field' } };
       } else {
         result = { kind: 'ok', packageName: name };
       }
+    } else {
+      result = { kind: 'fail', outcome: { kind: 'invalid-package', packagePath, error: parseError } };
     }
   }
   return result;
@@ -228,7 +228,7 @@ interface AssembleEntryInput {
 
 function assembleEntry(input: AssembleEntryInput): SemanticTypeEntry {
   const { entry, packageName, projectRoot } = input;
-  const projectRelative = relative(projectRoot, entry.filePath).replace(/\\/g, '/');
+  const projectRelative = relative(projectRoot, entry.filePath).replaceAll('\\', '/');
   const moduleId = projectRelative.replace(/\.ts$/, '');
 
   const out: SemanticTypeEntry = {
@@ -244,9 +244,9 @@ function assembleEntry(input: AssembleEntryInput): SemanticTypeEntry {
     ...(entry.guards.length > 0 ? { guards: [...entry.guards] } : {}),
     ...(entry.factories.length > 0 ? { factories: [...entry.factories] } : {}),
     ...(entry.examples.length > 0 ? { examples: entry.examples.map((e) => ({ ...e })) } : {}),
-    ...(entry.notes !== undefined ? { notes: entry.notes } : {}),
-    ...(entry.deprecated !== undefined ? { deprecated: entry.deprecated } : {}),
-    ...(entry.since !== undefined ? { since: entry.since } : {}),
+    ...(entry.notes === undefined ? {} : { notes: entry.notes }),
+    ...(entry.deprecated === undefined ? {} : { deprecated: entry.deprecated }),
+    ...(entry.since === undefined ? {} : { since: entry.since }),
     sourceLocation: { file: projectRelative, line: entry.line }
   };
   return out;

@@ -156,10 +156,10 @@ function parseArgs(argv: readonly string[]): ParsedArgs {
   }
 
   let result: ParsedArgs;
-  if (error !== undefined) {
-    result = { kind: 'parse-error', message: error };
-  } else {
+  if (error === undefined) {
     result = { kind: 'parsed', project, check, out, help };
+  } else {
+    result = { kind: 'parse-error', message: error };
   }
   return result;
 }
@@ -180,7 +180,7 @@ async function handleOutcome(input: HandleOutcomeInput): Promise<RunScanCliResul
 
   let result: RunScanCliResult;
   if (outcome.kind === 'success') {
-    const finalOutPath = args.out !== undefined ? resolve(outcome.outPath, '..', args.out) : outcome.outPath;
+    const finalOutPath = args.out === undefined ? outcome.outPath : resolve(outcome.outPath, '..', args.out);
     const serialized = serializeManifest(outcome.manifest);
     if (args.check) {
       let existing: string | null = null;
