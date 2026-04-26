@@ -106,7 +106,7 @@ export function formatResult(result: ScaffoldArtifactResult): string {
 
   return lines
     .join('\n')
-    .replace(/\n{3,}/g, '\n\n')
+    .replaceAll(/\n{3,}/g, '\n\n')
     .trimEnd();
 }
 

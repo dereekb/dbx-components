@@ -82,7 +82,7 @@ describe('firebase-models registry', () => {
   it('prefix catalog is sorted and unique', () => {
     const catalog = getFirebasePrefixCatalog();
     expect(catalog.length).toBe(FIREBASE_MODELS.length);
-    const sorted = [...catalog].sort();
+    const sorted = [...catalog].sort((a, b) => a.localeCompare(b));
     expect(catalog).toEqual(sorted);
   });
 });

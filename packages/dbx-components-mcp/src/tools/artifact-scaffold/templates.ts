@@ -19,8 +19,8 @@ import type { NameTokens } from './types.js';
  */
 function splitWords(input: string): readonly string[] {
   return input
-    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
-    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+    .replaceAll(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replaceAll(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
     .split(/[\s\-_]+/)
     .filter((p) => p.length > 0);
 }

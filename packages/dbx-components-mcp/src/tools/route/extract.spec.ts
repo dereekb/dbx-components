@@ -35,7 +35,7 @@ export const STATES: Ng2StateDeclaration[] = [
 ];
 `;
     const result = extractFile({ name: 'multi.router.ts', text });
-    expect(result.nodes.map((n) => n.name).sort()).toEqual(['a', 'a.b']);
+    expect(result.nodes.map((n) => n.name).sort((a, b) => a.localeCompare(b))).toEqual(['a', 'a.b']);
     const b = result.nodes.find((n) => n.name === 'a.b');
     expect(b?.component).toBe('BComponent');
   });
@@ -56,7 +56,7 @@ export const homeState: Ng2StateDeclaration = {
 export const STATES = [layoutState, homeState];
 `;
     const result = extractFile({ name: 'mixed.router.ts', text });
-    expect(result.nodes.map((n) => n.name).sort()).toEqual(['root', 'root.home']);
+    expect(result.nodes.map((n) => n.name).sort((a, b) => a.localeCompare(b))).toEqual(['root', 'root.home']);
   });
 
   it('extracts states from provideStates({ states: [...] })', () => {
@@ -73,7 +73,7 @@ export const providers = [
 ];
 `;
     const result = extractFile({ name: 'provide.ts', text });
-    expect(result.nodes.map((n) => n.name).sort()).toEqual(['p', 'p.child']);
+    expect(result.nodes.map((n) => n.name).sort((a, b) => a.localeCompare(b))).toEqual(['p', 'p.child']);
   });
 
   it('extracts states from UIRouterModule.forChild({ states })', () => {
@@ -129,8 +129,8 @@ export const detailState: Ng2StateDeclaration = {
 };
 `;
     const result = extractFile({ name: 'detail.router.ts', text });
-    expect(result.nodes[0].paramKeys.sort()).toEqual(['id', 'mode']);
-    expect(result.nodes[0].resolveKeys.sort()).toEqual(['profile', 'settings']);
+    expect(result.nodes[0].paramKeys.sort((a, b) => a.localeCompare(b))).toEqual(['id', 'mode']);
+    expect(result.nodes[0].resolveKeys.sort((a, b) => a.localeCompare(b))).toEqual(['profile', 'settings']);
   });
 
   it('reports states with a non-string-literal name as info issues', () => {

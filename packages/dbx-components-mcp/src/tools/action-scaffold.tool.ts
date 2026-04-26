@@ -105,7 +105,7 @@ function parseScaffoldArgs(raw: unknown): ParsedScaffoldArgs {
 // MARK: Naming helpers
 function toCamelCase(useCase: string): string {
   const cleaned = useCase
-    .replace(/[^a-zA-Z0-9 _-]/g, ' ')
+    .replaceAll(/[^a-zA-Z0-9 _-]/g, ' ')
     .split(/[\s_-]+/)
     .filter((w) => w.length > 0);
   let result = '';
@@ -139,7 +139,7 @@ function deriveNames(useCase: string): ScaffoldNames {
   const pascal = toPascalCase(useCase);
   const handlerName = `handle${pascal}`;
   const componentClassName = `${pascal}ActionComponent`;
-  const componentSelector = `app-${camel.replace(/([A-Z])/g, '-$1').toLowerCase()}-action`.replace(/--+/g, '-');
+  const componentSelector = `app-${camel.replaceAll(/([A-Z])/g, '-$1').toLowerCase()}-action`.replaceAll(/--+/g, '-');
   const result: ScaffoldNames = { handlerName, componentClassName, componentSelector };
   return result;
 }
@@ -253,7 +253,11 @@ function buildImports(args: ParsedScaffoldArgs): readonly string[] {
   symbols.add('Component');
   symbols.add('inject');
   const result: string[] = [];
-  result.push(`import { ${Array.from(symbols).sort().join(', ')} } from '@angular/core';`);
+  result.push(
+    `import { ${Array.from(symbols)
+      .sort((a, b) => a.localeCompare(b))
+      .join(', ')} } from '@angular/core';`
+  );
 
   const dbxRxjsTypes: string[] = [];
   if (args.trigger === 'button' && args.valueType === 'void') {

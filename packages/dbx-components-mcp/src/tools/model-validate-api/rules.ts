@@ -613,7 +613,7 @@ function checkMarkComments(file: ExtractedFile, violations: Violation[]): void {
 
 // MARK: Helpers
 function normalizeWhitespace(s: string): string {
-  return s.replace(/\s+/g, '');
+  return s.replaceAll(/\s+/g, '');
 }
 
 function pushViolation(buffer: Violation[], violation: Omit<Violation, 'severity'> & { readonly severity?: ViolationSeverity }): void {

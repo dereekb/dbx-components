@@ -199,7 +199,7 @@ function composeFullUrl(node: MutableTreeNode): string | undefined {
   // Join segments and collapse double slashes (root url '/' followed by
   // child '/foo' would otherwise yield '//foo').
   const joined = segments.join('');
-  const collapsed = joined.replace(/\/{2,}/g, '/');
+  const collapsed = joined.replaceAll(/\/{2,}/g, '/');
   return collapsed.length === 0 ? '/' : collapsed;
 }
 

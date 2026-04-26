@@ -561,7 +561,7 @@ function extractValidatorProperties(initializer: Node): readonly ExtractedValida
     }
     const propAssignment = prop as PropertyAssignment;
     const rawName = propAssignment.getName();
-    const stripped = rawName.replace(/^['"`]|['"`]$/g, '');
+    const stripped = rawName.replaceAll(/^['"`]|['"`]$/g, '');
     const optional = stripped.endsWith('?');
     const clean = optional ? stripped.slice(0, -1) : stripped;
     const valueNode = propAssignment.getInitializer();

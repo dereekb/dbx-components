@@ -167,8 +167,8 @@ function formatInputsTable(entry: UiComponentInfo): string {
     const rows = entry.inputs.map((input) => {
       const required = input.required ? '✓' : '';
       const defaultCell = input.default !== undefined ? `\`${input.default}\`` : '';
-      const desc = input.description.replace(/\|/g, '\\|');
-      const typeCell = input.type.replace(/\|/g, '\\|');
+      const desc = input.description.replaceAll(/\|/g, '\\|');
+      const typeCell = input.type.replaceAll(/\|/g, '\\|');
       return `| \`${input.name}\` | \`${typeCell}\` | ${required} | ${defaultCell} | ${desc} |`;
     });
     result = ['## Inputs', '', '| Name | Type | Required | Default | Description |', '| --- | --- | --- | --- | --- |', ...rows].join('\n');
@@ -182,8 +182,8 @@ function formatOutputsTable(entry: UiComponentInfo): string {
     result = '';
   } else {
     const rows = entry.outputs.map((output) => {
-      const desc = output.description.replace(/\|/g, '\\|');
-      const emits = output.emits.replace(/\|/g, '\\|');
+      const desc = output.description.replaceAll(/\|/g, '\\|');
+      const emits = output.emits.replaceAll(/\|/g, '\\|');
       return `| \`${output.name}\` | \`${emits}\` | ${desc} |`;
     });
     result = ['## Outputs', '', '| Name | Emits | Description |', '| --- | --- | --- |', ...rows].join('\n');

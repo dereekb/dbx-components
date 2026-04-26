@@ -250,7 +250,7 @@ function isExportedTopLevel(stmt: Node): boolean {
 
 // MARK: Helpers
 function normalize(raw: string): string {
-  return raw.replace(/_/g, '').toLowerCase();
+  return raw.replaceAll(/_/g, '').toLowerCase();
 }
 
 // Suppress unused-warning for a type-only helper used by rules.

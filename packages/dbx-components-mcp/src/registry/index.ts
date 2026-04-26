@@ -81,7 +81,7 @@ export function getFormProducesCatalog(): readonly string[] {
   for (const field of FORM_FIELDS) {
     set.add(field.produces);
   }
-  return Array.from(set).sort();
+  return Array.from(set).sort((a, b) => a.localeCompare(b));
 }
 
 /**
@@ -340,5 +340,5 @@ export function getFirebasePrefixCatalog(): readonly string[] {
   for (const model of FIREBASE_MODELS) {
     set.add(model.collectionPrefix);
   }
-  return Array.from(set).sort();
+  return Array.from(set).sort((a, b) => a.localeCompare(b));
 }

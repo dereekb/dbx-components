@@ -361,7 +361,7 @@ function collectResolveKeys(literal: ObjectLiteralExpression): readonly string[]
         if (tokenProp && Node.isPropertyAssignment(tokenProp)) {
           const tokenInit = tokenProp.getInitializer();
           if (tokenInit && (Node.isStringLiteral(tokenInit) || Node.isIdentifier(tokenInit))) {
-            keys.push(tokenInit.getText().replace(/^['"]|['"]$/g, ''));
+            keys.push(tokenInit.getText().replaceAll(/^['"]|['"]$/g, ''));
           }
         }
       }

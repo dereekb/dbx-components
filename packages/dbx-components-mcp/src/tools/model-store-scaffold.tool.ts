@@ -399,7 +399,7 @@ function renderCrudHelperImports(args: ParsedScaffoldArgs): readonly string[] {
   for (const cf of args.crudFunctions) {
     helpers.add(crudFunctionHelperName(cf.kind));
   }
-  return Array.from(helpers).sort();
+  return Array.from(helpers).sort((a, b) => a.localeCompare(b));
 }
 
 function rootDocumentStoreBody(args: ParsedScaffoldArgs): FileBlock {
@@ -670,7 +670,7 @@ function formatScaffold(args: ParsedScaffoldArgs): string {
   const parentLabel = args.parentModel !== undefined ? args.parentModel.name : 'n/a';
   lines.push(`Shape: \`${args.shape}\` · Surfaces: ${surfaceLabel} · Parent: ${parentLabel} · Functions: ${functionsLabel} · Crud: ${crudLabel}`);
   lines.push('');
-  lines.push(`Drop into \`<app>/src/lib/modules/${args.fileBaseName.replace(/\./g, '/')}/store/\`.`);
+  lines.push(`Drop into \`<app>/src/lib/modules/${args.fileBaseName.replaceAll(/\./g, '/')}/store/\`.`);
   lines.push('');
 
   for (const block of blocks) {

@@ -173,7 +173,7 @@ function groupImportsBySource(specs: readonly FieldSpec[]): readonly string[] {
   for (const spec of specs) {
     names.add(spec.field.factoryName);
   }
-  const sorted = Array.from(names).sort();
+  const sorted = Array.from(names).sort((a, b) => a.localeCompare(b));
   return [`import { ${sorted.join(', ')} } from '@dereekb/dbx-form';`];
 }
 

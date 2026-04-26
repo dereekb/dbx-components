@@ -93,7 +93,7 @@ function camelCase(name: string): string {
 }
 
 function presetConstName(modelCamel: string, presetKey: string): string {
-  const cleaned = presetKey.replace(/[^a-zA-Z0-9]/g, ' ').trim();
+  const cleaned = presetKey.replaceAll(/[^a-zA-Z0-9]/g, ' ').trim();
   const parts = cleaned.split(/\s+/).filter((p) => p.length > 0);
   let suffix = '';
   for (const part of parts) {

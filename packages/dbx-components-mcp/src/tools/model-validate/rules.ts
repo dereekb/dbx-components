@@ -423,7 +423,7 @@ function checkCollectionType(file: ExtractedFile, model: ExtractedModel, violati
   const typeText = model.collectionType.typeText ?? '';
   if (model.variant === 'root') {
     const expected = `FirestoreCollection<${model.name}, ${model.name}Document>`;
-    if (typeText.replace(/\s+/g, '') !== expected.replace(/\s+/g, '')) {
+    if (typeText.replaceAll(/\s+/g, '') !== expected.replaceAll(/\s+/g, '')) {
       pushViolation(violations, {
         code: 'MODEL_COLLECTION_TYPE_WRONG_GENERIC',
         message: `Type alias \`${model.name}FirestoreCollection\` must equal \`${expected}\` (found \`${typeText || '<none>'}\`).`,
@@ -436,7 +436,7 @@ function checkCollectionType(file: ExtractedFile, model: ExtractedModel, violati
   }
   const parentPascal = pascalCase(deriveCamelName(model.identity.parentIdentityRef ?? ''));
   const expected = `SingleItemFirestoreCollection<${model.name}, ${parentPascal}, ${model.name}Document, ${parentPascal}Document>`;
-  if (typeText.replace(/\s+/g, '') !== expected.replace(/\s+/g, '')) {
+  if (typeText.replaceAll(/\s+/g, '') !== expected.replaceAll(/\s+/g, '')) {
     pushViolation(violations, {
       code: 'MODEL_COLLECTION_TYPE_WRONG_GENERIC',
       message: `Type alias \`${model.name}FirestoreCollection\` must equal \`${expected}\` (found \`${typeText || '<none>'}\`).`,
@@ -582,7 +582,7 @@ function typeArgsMatch(found: readonly string[], expected: readonly string[]): b
     return false;
   }
   for (const [i, element] of found.entries()) {
-    if (element.replace(/\s+/g, '') !== expected[i].replace(/\s+/g, '')) {
+    if (element.replaceAll(/\s+/g, '') !== expected[i].replaceAll(/\s+/g, '')) {
       return false;
     }
   }

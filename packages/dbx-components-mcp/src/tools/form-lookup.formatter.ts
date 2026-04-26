@@ -93,8 +93,8 @@ function formatConfigTable(field: FormFieldInfo): string {
       const prop = field.config[key];
       const required = prop.required ? '✓' : '';
       const defaultCell = prop.default !== undefined ? `\`${String(prop.default)}\`` : '';
-      const desc = prop.description.replace(/\|/g, '\\|');
-      return `| \`${prop.name}\` | \`${prop.type.replace(/\|/g, '\\|')}\` | ${required} | ${defaultCell} | ${desc} |`;
+      const desc = prop.description.replaceAll(/\|/g, '\\|');
+      return `| \`${prop.name}\` | \`${prop.type.replaceAll(/\|/g, '\\|')}\` | ${required} | ${defaultCell} | ${desc} |`;
     });
     result = ['## Config', '', '| Property | Type | Required | Default | Description |', '| --- | --- | --- | --- | --- |', ...rows].join('\n');
   }
