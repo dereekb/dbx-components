@@ -56,7 +56,7 @@ interface ParsedActionExamplesArgs {
 function parseActionExamplesArgs(raw: unknown): ParsedActionExamplesArgs {
   const parsed = ActionExamplesArgsType(raw);
   if (parsed instanceof type.errors) {
-    throw new Error(`Invalid arguments: ${parsed.summary}`);
+    throw new TypeError(`Invalid arguments: ${parsed.summary}`);
   }
   const result: ParsedActionExamplesArgs = {
     pattern: parsed.pattern,

@@ -27,17 +27,12 @@ interface ResolvedPlaceholders {
 export function formatSpec(spec: FileConventionSpec, values: PlaceholderValues): string {
   const resolved = resolvePlaceholders(values);
   const lines: string[] = [];
-  lines.push(`# ${spec.title} — \`${spec.artifact}\``);
-  lines.push('');
-  lines.push(applyPlaceholders(spec.summary, resolved));
-  lines.push('');
+  lines.push(`# ${spec.title} — \`${spec.artifact}\``, '', applyPlaceholders(spec.summary, resolved), '');
 
   spec.steps.forEach((step, index) => {
-    lines.push(`## ${index + 1}. ${applyPlaceholders(step.heading, resolved)}`);
-    lines.push('');
+    lines.push(`## ${index + 1}. ${applyPlaceholders(step.heading, resolved)}`, '');
     if (step.path) {
-      lines.push(`**Path:** \`${applyPlaceholders(step.path, resolved)}\``);
-      lines.push('');
+      lines.push(`**Path:** \`${applyPlaceholders(step.path, resolved)}\``, '');
     }
     if (step.altPaths && step.altPaths.length > 0) {
       lines.push('**Alternatives:**');
@@ -46,13 +41,11 @@ export function formatSpec(spec: FileConventionSpec, values: PlaceholderValues):
       }
       lines.push('');
     }
-    lines.push(applyPlaceholders(step.body, resolved));
-    lines.push('');
+    lines.push(applyPlaceholders(step.body, resolved), '');
   });
 
   if (spec.seeAlso && spec.seeAlso.length > 0) {
-    lines.push('## See also');
-    lines.push('');
+    lines.push('## See also', '');
     for (const ref of spec.seeAlso) {
       lines.push(`- \`${ref}\``);
     }
@@ -60,9 +53,7 @@ export function formatSpec(spec: FileConventionSpec, values: PlaceholderValues):
   }
 
   if (spec.verify) {
-    lines.push('## Verify');
-    lines.push('');
-    lines.push(applyPlaceholders(spec.verify, resolved));
+    lines.push('## Verify', '', applyPlaceholders(spec.verify, resolved));
   }
 
   return lines

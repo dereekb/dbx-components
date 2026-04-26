@@ -72,7 +72,7 @@ function parseLookupFormArgs(raw: unknown): { readonly topic: string; readonly d
   const parsed = LookupFormArgsType(raw);
 
   if (parsed instanceof type.errors) {
-    throw new Error(`Invalid arguments: ${parsed.summary}`);
+    throw new TypeError(`Invalid arguments: ${parsed.summary}`);
   }
 
   return {

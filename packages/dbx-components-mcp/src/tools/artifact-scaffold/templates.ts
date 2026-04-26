@@ -110,7 +110,7 @@ export function buildTemplateContext(input: { readonly tokens: NameTokens; reado
 function basenameOf(path: string): string {
   const stripped = path.replace(/\/+$/, '');
   const parts = stripped.split('/');
-  return parts[parts.length - 1] ?? '';
+  return parts.at(-1) ?? '';
 }
 
 /**

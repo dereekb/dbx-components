@@ -24,7 +24,8 @@ export function formatFormFieldEntry(field: FormFieldInfo, depth: Depth): string
 
 function formatBrief(field: FormFieldInfo): string {
   const tierBits = formatTierBits(field);
-  const array = field.arrayOutput === 'yes' ? ' (array)' : field.arrayOutput === 'optional' ? ' (single or array)' : '';
+  const arrayOptional = field.arrayOutput === 'optional' ? ' (single or array)' : '';
+  const array = field.arrayOutput === 'yes' ? ' (array)' : arrayOptional;
   return [`## ${field.factoryName}`, '', `**slug:** \`${field.slug}\` · **tier:** \`${field.tier}\` · **produces:** \`${field.produces}\`${array}${tierBits}`, '', field.description, '', '```ts', field.minimalExample, '```', '', `→ Call \`dbx_form_lookup topic="${field.slug}" depth="full"\` for the config table and full example.`].join('\n');
 }
 
@@ -39,7 +40,8 @@ function formatFull(field: FormFieldInfo): string {
 }
 
 function formatHeader(field: FormFieldInfo): string {
-  const array = field.arrayOutput === 'yes' ? ' · array output' : field.arrayOutput === 'optional' ? ' · array optional' : '';
+  const arrayOptional = field.arrayOutput === 'optional' ? ' · array optional' : '';
+  const array = field.arrayOutput === 'yes' ? ' · array output' : arrayOptional;
   return [`# ${field.factoryName}`, '', `- **slug:** \`${field.slug}\``, `- **tier:** \`${field.tier}\``, `- **produces:** \`${field.produces}\`${array}`, `- **source:** \`packages/dbx-form/src/lib/form/${field.sourcePath}\``].join('\n');
 }
 
@@ -86,9 +88,9 @@ function formatConfigTable(field: FormFieldInfo): string {
     const rows = keys.map((key) => {
       const prop = field.config[key];
       const required = prop.required ? '✓' : '';
-      const defaultCell = prop.default !== undefined ? `\`${String(prop.default)}\`` : '';
-      const desc = prop.description.replaceAll('|', '\\|');
-      return `| \`${prop.name}\` | \`${prop.type.replaceAll('|', '\\|')}\` | ${required} | ${defaultCell} | ${desc} |`;
+      const defaultCell = prop.default === undefined ? '' : `\`${String(prop.default)}\``;
+      const desc = prop.description.replaceAll('|', String.raw`\|`);
+      return `| \`${prop.name}\` | \`${prop.type.replaceAll('|', String.raw`\|`)}\` | ${required} | ${defaultCell} | ${desc} |`;
     });
     result = ['## Config', '', '| Property | Type | Required | Default | Description |', '| --- | --- | --- | --- | --- |', ...rows].join('\n');
   }
@@ -126,7 +128,8 @@ export function formatFormFieldGroup(fields: readonly FormFieldInfo[], title: st
     }
     sections.push(`## ${tier} (${list.length})`, '');
     for (const field of list) {
-      const array = field.arrayOutput === 'yes' ? ' *(array)*' : field.arrayOutput === 'optional' ? ' *(single or array)*' : '';
+      const arrayOptional = field.arrayOutput === 'optional' ? ' *(single or array)*' : '';
+      const array = field.arrayOutput === 'yes' ? ' *(array)*' : arrayOptional;
       sections.push(`- **\`${field.slug}\`** → \`${field.factoryName}\` — produces \`${field.produces}\`${array}. ${field.description}`);
     }
     sections.push('');

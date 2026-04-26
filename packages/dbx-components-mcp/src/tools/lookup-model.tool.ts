@@ -60,7 +60,7 @@ function parseLookupModelArgs(raw: unknown): { readonly topic: string; readonly 
   const parsed = LookupModelArgsType(raw);
 
   if (parsed instanceof type.errors) {
-    throw new Error(`Invalid arguments: ${parsed.summary}`);
+    throw new TypeError(`Invalid arguments: ${parsed.summary}`);
   }
 
   return {

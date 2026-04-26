@@ -80,7 +80,7 @@ interface ParsedScaffoldArgs {
 function parseScaffoldArgs(raw: unknown): ParsedScaffoldArgs {
   const parsed = ScaffoldArgsType(raw);
   if (parsed instanceof type.errors) {
-    throw new Error(`Invalid arguments: ${parsed.summary}`);
+    throw new TypeError(`Invalid arguments: ${parsed.summary}`);
   }
   const useCase = parsed.use_case.trim();
   const valueType = parsed.value_type.trim();
@@ -156,8 +156,7 @@ function buildTemplate(args: ParsedScaffoldArgs, names: ScaffoldNames): string {
   }
 
   if (args.successFeedback === 'snackbar') {
-    rootDirectives.push('dbxActionSnackbar');
-    rootDirectives.push('dbxActionSnackbarDefault="save"');
+    rootDirectives.push('dbxActionSnackbar', 'dbxActionSnackbarDefault="save"');
   }
 
   rootDirectives.push(`[dbxActionHandler]="${names.handlerName}"`);
@@ -170,9 +169,7 @@ function buildTemplate(args: ParsedScaffoldArgs, names: ScaffoldNames): string {
   lines.push(`<${rootTag} ${rootDirectives.join(' ')}>`);
 
   if (args.trigger === 'auto-modify') {
-    lines.push('  <ng-container dbxActionAutoTrigger useFastTriggerPreset></ng-container>');
-    lines.push('  <ng-container dbxActionAutoModify></ng-container>');
-    lines.push('  <my-form dbxActionForm [dbxFormSource]="data$"></my-form>');
+    lines.push('  <ng-container dbxActionAutoTrigger useFastTriggerPreset></ng-container>', '  <ng-container dbxActionAutoModify></ng-container>', '  <my-form dbxActionForm [dbxFormSource]="data$"></my-form>');
   } else if (args.trigger === 'form') {
     lines.push('  <my-form dbxActionForm [dbxFormSource]="data$"></my-form>');
   } else {
@@ -205,28 +202,16 @@ function buildTemplate(args: ParsedScaffoldArgs, names: ScaffoldNames): string {
 function buildHandler(args: ParsedScaffoldArgs, names: ScaffoldNames): string {
   const handlerType = args.trigger === 'button' && args.valueType === 'void' ? `Work<void, ${args.resultType}>` : `WorkUsingContext<${args.valueType}, ${args.resultType}>`;
   const lines: string[] = [];
-  lines.push(`@Component({`);
-  lines.push(`  selector: '${names.componentSelector}',`);
-  lines.push(`  templateUrl: './${names.componentSelector}.component.html',`);
-  lines.push(`  standalone: true`);
-  lines.push(`})`);
-  lines.push(`export class ${names.componentClassName} {`);
+  lines.push(`@Component({`, `  selector: '${names.componentSelector}',`, `  templateUrl: './${names.componentSelector}.component.html',`, `  standalone: true`, `})`, `export class ${names.componentClassName} {`);
 
   if (args.contextProvider === 'parent') {
-    lines.push(`  // Provided by an ancestor that owns the action source.`);
-    lines.push(`  readonly actionSource = inject<ActionContextStoreSource<${args.valueType}, ${args.resultType}>>(ACTION_SOURCE_TOKEN);`);
-    lines.push('');
+    lines.push(`  // Provided by an ancestor that owns the action source.`, `  readonly actionSource = inject<ActionContextStoreSource<${args.valueType}, ${args.resultType}>>(ACTION_SOURCE_TOKEN);`, '');
   }
 
   if (args.trigger === 'form' || args.trigger === 'auto-modify') {
-    lines.push(`  // TODO: replace with the upstream document/collection store for this use case.`);
-    lines.push(`  private readonly store = inject(MyDocumentStore);`);
-    lines.push(`  readonly data$ = this.store.data$;`);
-    lines.push('');
+    lines.push(`  // TODO: replace with the upstream document/collection store for this use case.`, `  private readonly store = inject(MyDocumentStore);`, `  readonly data$ = this.store.data$;`, '');
   } else {
-    lines.push(`  // TODO: replace with whatever supplies the action's input.`);
-    lines.push(`  private readonly api = inject(MyApi);`);
-    lines.push('');
+    lines.push(`  // TODO: replace with whatever supplies the action's input.`, `  private readonly api = inject(MyApi);`, '');
   }
 
   lines.push(`  readonly ${names.handlerName}: ${handlerType} = (value, context) => {`);
@@ -237,12 +222,9 @@ function buildHandler(args: ParsedScaffoldArgs, names: ScaffoldNames): string {
   }
 
   if (args.successFeedback === 'redirect') {
-    lines.push('    context.successPair$.subscribe(() => {');
-    lines.push("      // TODO: redirect after success — e.g. inject(StateService).go('home');");
-    lines.push('    });');
+    lines.push('    context.successPair$.subscribe(() => {', "      // TODO: redirect after success — e.g. inject(StateService).go('home');", '    });');
   }
-  lines.push('  };');
-  lines.push('}');
+  lines.push('  };', '}');
 
   return lines.join('\n');
 }
@@ -279,23 +261,17 @@ function buildDirectivesUsed(args: ParsedScaffoldArgs): readonly string[] {
   const directives: string[] = [];
   directives.push(args.contextProvider === 'parent' ? '[dbxActionSource]' : 'dbxAction');
   if (args.trigger === 'form') {
-    directives.push('dbxActionForm (from @dereekb/dbx-form)');
-    directives.push('dbxActionEnforceModified');
-    directives.push('dbxActionButton (from @dereekb/dbx-web)');
+    directives.push('dbxActionForm (from @dereekb/dbx-form)', 'dbxActionEnforceModified', 'dbxActionButton (from @dereekb/dbx-web)');
   } else if (args.trigger === 'auto-modify') {
-    directives.push('dbxActionForm (from @dereekb/dbx-form)');
-    directives.push('dbxActionAutoTrigger');
-    directives.push('dbxActionAutoModify');
+    directives.push('dbxActionForm (from @dereekb/dbx-form)', 'dbxActionAutoTrigger', 'dbxActionAutoModify');
   } else {
-    directives.push('dbxActionValue');
-    directives.push('dbxActionButton (from @dereekb/dbx-web)');
+    directives.push('dbxActionValue', 'dbxActionButton (from @dereekb/dbx-web)');
   }
   if (args.confirm && args.trigger === 'button') {
     directives.push('dbxActionPopoverConfirm (from @dereekb/dbx-web)');
   }
   if (args.successFeedback === 'snackbar') {
-    directives.push('dbxActionSnackbar');
-    directives.push('dbxActionError');
+    directives.push('dbxActionSnackbar', 'dbxActionError');
   }
   directives.push('[dbxActionHandler]');
   return directives;
@@ -325,39 +301,15 @@ function renderScaffold(args: ParsedScaffoldArgs): string {
   const examplePattern = relatedExamplePattern(args);
 
   const lines: string[] = [];
-  lines.push(`# Action scaffold — ${args.useCase}`);
-  lines.push('');
-  lines.push(`Trigger: \`${args.trigger}\` · Confirm: \`${args.confirm}\` · Success feedback: \`${args.successFeedback}\` · Context: \`${args.contextProvider}\``);
-  lines.push('');
-  lines.push('## Template');
-  lines.push('');
-  lines.push('```html');
-  lines.push(template);
-  lines.push('```');
-  lines.push('');
-  lines.push('## Component class');
-  lines.push('');
-  lines.push('```ts');
-  lines.push(handler);
-  lines.push('```');
-  lines.push('');
-  lines.push('## Imports');
-  lines.push('');
-  lines.push('```ts');
+  lines.push(`# Action scaffold — ${args.useCase}`, '', `Trigger: \`${args.trigger}\` · Confirm: \`${args.confirm}\` · Success feedback: \`${args.successFeedback}\` · Context: \`${args.contextProvider}\``, '', '## Template', '', '```html', template, '```', '', '## Component class', '', '```ts', handler, '```', '', '## Imports', '', '```ts');
   for (const line of imports) {
     lines.push(line);
   }
-  lines.push('```');
-  lines.push('');
-  lines.push('## Notes');
-  lines.push('');
-  lines.push('Directives wired:');
-  lines.push('');
+  lines.push('```', '', '## Notes', '', 'Directives wired:', '');
   for (const directive of directivesUsed) {
     lines.push(`- \`${directive}\``);
   }
-  lines.push('');
-  lines.push(`→ See \`dbx_action_examples pattern="${examplePattern}"\` for the closest matching pattern.`);
+  lines.push('', `→ See \`dbx_action_examples pattern="${examplePattern}"\` for the closest matching pattern.`);
 
   return lines.join('\n');
 }

@@ -51,29 +51,20 @@ export function formatDecode(context: DecodeContext): string {
   const referencedEnums = collectReferencedEnums(decodedFields, model.enums);
 
   const lines: string[] = [];
-  lines.push(`# ${model.name}`);
-  lines.push('');
+  lines.push(`# ${model.name}`, '');
   const identity = model.parentIdentityConst ? `subcollection of \`${model.parentIdentityConst}\`` : 'root collection';
-  lines.push(`**Identity:** \`${model.identityConst}\` — ${identity}.`);
-  lines.push(`**Collection:** \`${model.modelType}\` (prefix \`${model.collectionPrefix}\`)`);
-  lines.push(`**Source:** \`${model.sourceFile}\``);
+  lines.push(`**Identity:** \`${model.identityConst}\` — ${identity}.`, `**Collection:** \`${model.modelType}\` (prefix \`${model.collectionPrefix}\`)`, `**Source:** \`${model.sourceFile}\``);
   if (extraKey) lines.push(`**Document key:** \`${extraKey}\``);
   lines.push('');
 
-  lines.push(`## Fields (${decodedFields.length})`);
-  lines.push('');
-  lines.push('| Field | Description | Value | Type / Converter |');
-  lines.push('|-------|-------------|-------|------------------|');
+  lines.push(`## Fields (${decodedFields.length})`, '', '| Field | Description | Value | Type / Converter |', '|-------|-------------|-------|------------------|');
   for (const row of decodedFields) {
     lines.push(formatFieldRow(row));
   }
   lines.push('');
 
   if (unknownKeys.length > 0) {
-    lines.push('## Unknown keys on document');
-    lines.push('');
-    lines.push('These keys appear in the input but are not declared on the model. They may be legacy fields, fields from a newer model version not yet in the registry, or indicate the wrong model was matched.');
-    lines.push('');
+    lines.push('## Unknown keys on document', '', 'These keys appear in the input but are not declared on the model. They may be legacy fields, fields from a newer model version not yet in the registry, or indicate the wrong model was matched.', '');
     for (const key of unknownKeys) {
       lines.push(`- \`${key}\`: ${formatValue(doc[key])}`);
     }
@@ -81,8 +72,7 @@ export function formatDecode(context: DecodeContext): string {
   }
 
   if (referencedEnums.length > 0) {
-    lines.push('## Enums');
-    lines.push('');
+    lines.push('## Enums', '');
     for (const en of referencedEnums) {
       const valueList = en.values.map((v) => `\`${v.name}=${v.value}\``).join(', ');
       lines.push(`- **${en.name}**: ${valueList}`);
@@ -91,8 +81,7 @@ export function formatDecode(context: DecodeContext): string {
   }
 
   if (relationships.length > 0) {
-    lines.push('## Detected relationships');
-    lines.push('');
+    lines.push('## Detected relationships', '');
     for (const rel of relationships) {
       const target = rel.targetModel ? `**${rel.targetModel}**` : `(unknown model)`;
       lines.push(`- \`${rel.fieldName}\` → ${target} via prefix \`${rel.targetPrefix}\` — \`${rel.value}\``);
@@ -141,7 +130,7 @@ function formatFieldRow(row: DecodedField): string {
 }
 
 function escapeCell(text: string): string {
-  return text.replaceAll('|', '\\|').replaceAll('\n', ' ');
+  return text.replaceAll('|', String.raw`\|`).replaceAll('\n', ' ');
 }
 
 function formatValue(value: unknown): string {
@@ -164,6 +153,9 @@ function formatValue(value: unknown): string {
     if (keys.length <= 4) return JSON.stringify(value);
     return `{Object(${keys.length} keys)}`;
   }
+  if (typeof value === 'bigint') return `${value.toString()}n`;
+  if (typeof value === 'symbol') return value.toString();
+  if (typeof value === 'function') return `[Function]`;
   return String(value);
 }
 

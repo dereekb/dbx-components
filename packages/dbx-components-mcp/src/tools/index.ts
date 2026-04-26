@@ -170,8 +170,7 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions =
 
   const tools: DbxTool[] = [...DBX_TOOLS];
   if (options.semanticTypeRegistry !== undefined) {
-    tools.push(createSemanticTypeLookupTool({ registry: options.semanticTypeRegistry }));
-    tools.push(createSemanticTypeSearchTool({ registry: options.semanticTypeRegistry }));
+    tools.push(createSemanticTypeLookupTool({ registry: options.semanticTypeRegistry }), createSemanticTypeSearchTool({ registry: options.semanticTypeRegistry }));
   }
 
   underlyingServer.setRequestHandler(ListToolsRequestSchema, async () => {

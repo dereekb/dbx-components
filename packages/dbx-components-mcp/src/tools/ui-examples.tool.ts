@@ -56,7 +56,7 @@ interface ParsedUiExamplesArgs {
 function parseUiExamplesArgs(raw: unknown): ParsedUiExamplesArgs {
   const parsed = UiExamplesArgsType(raw);
   if (parsed instanceof type.errors) {
-    throw new Error(`Invalid arguments: ${parsed.summary}`);
+    throw new TypeError(`Invalid arguments: ${parsed.summary}`);
   }
   const result: ParsedUiExamplesArgs = {
     pattern: parsed.pattern,

@@ -74,7 +74,7 @@ interface ParsedScaffoldArgs {
 function parseScaffoldArgs(raw: unknown): ParsedScaffoldArgs {
   const parsed = ScaffoldArgsType(raw);
   if (parsed instanceof type.errors) {
-    throw new Error(`Invalid arguments: ${parsed.summary}`);
+    throw new TypeError(`Invalid arguments: ${parsed.summary}`);
   }
   const result: ParsedScaffoldArgs = {
     fields: parsed.fields,
@@ -161,7 +161,7 @@ function renderFieldCall(spec: FieldSpec): string {
   const base = spec.key ? `{ key: '${spec.key}' }` : `{}`;
   // For primitives like `row` / `group` we don't auto-emit args because callers
   // almost always want to fill `fields: [...]` themselves. Emit an empty call
-  // with a TODO so the code compiles up to the user's edits.
+  // with a placeholder so the code compiles up to the user's edits.
   if (spec.field.tier === 'primitive') {
     return `${spec.field.factoryName}({ /* TODO */ })`;
   }
@@ -242,8 +242,7 @@ export function runFormScaffold(rawArgs: unknown): ToolResult {
     for (const error of errors) {
       lines.push(`- \`${error.raw}\` — ${error.reason}`);
     }
-    lines.push('');
-    lines.push('Expected format: `"<slug>:<key>"` (e.g. `"text:email"`) or `"<slug>"` for auto-keyed entries. Run `dbx_form_lookup topic="list"` for every slug.');
+    lines.push('', 'Expected format: `"<slug>:<key>"` (e.g. `"text:email"`) or `"<slug>"` for auto-keyed entries. Run `dbx_form_lookup topic="list"` for every slug.');
     return toolError(lines.join('\n'));
   }
   const specs = parsed as readonly FieldSpec[];

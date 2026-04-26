@@ -69,37 +69,21 @@ export async function applyIdempotency(result: ScaffoldArtifactResult, exists: E
  */
 export function formatResult(result: ScaffoldArtifactResult): string {
   const lines: string[] = [];
-  lines.push(`# Scaffold — ${result.artifact}`);
-  lines.push('');
-  lines.push(result.summary);
-  lines.push('');
+  lines.push(`# Scaffold — ${result.artifact}`, '', result.summary, '');
 
   for (const file of result.files) {
-    lines.push(`## ${formatStatusLabel(file.status)} — \`${file.path}\``);
-    lines.push('');
-    lines.push(file.description);
-    lines.push('');
+    lines.push(`## ${formatStatusLabel(file.status)} — \`${file.path}\``, '', file.description, '');
     if (file.status !== 'exists-skipped') {
-      lines.push('```ts');
-      lines.push(file.content.trimEnd());
-      lines.push('```');
-      lines.push('');
+      lines.push('```ts', file.content.trimEnd(), '```', '');
     }
   }
 
   if (result.wiring.length > 0) {
-    lines.push('## Wiring instructions');
-    lines.push('');
+    lines.push('## Wiring instructions', '');
     for (const step of result.wiring) {
-      lines.push(`### \`${step.file}\``);
-      lines.push('');
-      lines.push(step.description);
-      lines.push('');
+      lines.push(`### \`${step.file}\``, '', step.description, '');
       if (step.snippet) {
-        lines.push('```ts');
-        lines.push(step.snippet.trimEnd());
-        lines.push('```');
-        lines.push('');
+        lines.push('```ts', step.snippet.trimEnd(), '```', '');
       }
     }
   }

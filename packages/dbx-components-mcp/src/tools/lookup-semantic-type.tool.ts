@@ -62,7 +62,7 @@ interface ParsedLookupArgs {
 function parseLookupArgs(raw: unknown): ParsedLookupArgs {
   const parsed = LookupSemanticTypeArgsType(raw);
   if (parsed instanceof type.errors) {
-    throw new Error(`Invalid arguments: ${parsed.summary}`);
+    throw new TypeError(`Invalid arguments: ${parsed.summary}`);
   }
   const result: ParsedLookupArgs = {
     name: parsed.name,

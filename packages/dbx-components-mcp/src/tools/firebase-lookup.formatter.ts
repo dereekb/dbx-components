@@ -57,13 +57,13 @@ export function formatFirebaseModelEntry(model: FirebaseModel, depth: LookupDept
   if (depth === 'brief') {
     lines.push('| Field | Description |', '|-------|-------------|');
     for (const field of model.fields) {
-      const desc = (field.description ?? '–').replaceAll('|', '\\|').replaceAll('\n', ' ');
+      const desc = (field.description ?? '–').replaceAll('|', String.raw`\|`).replaceAll('\n', ' ');
       lines.push(`| \`${field.name}\` | ${desc} |`);
     }
   } else {
     lines.push('| Field | Description | Type | Converter |', '|-------|-------------|------|-----------|');
     for (const field of model.fields) {
-      const desc = (field.description ?? '–').replaceAll('|', '\\|').replaceAll('\n', ' ');
+      const desc = (field.description ?? '–').replaceAll('|', String.raw`\|`).replaceAll('\n', ' ');
       const ts = field.tsType ? `\`${field.tsType}\`` : '–';
       const conv = `\`${field.converter}\``;
       lines.push(`| \`${field.name}\` | ${desc} | ${ts} | ${conv} |`);

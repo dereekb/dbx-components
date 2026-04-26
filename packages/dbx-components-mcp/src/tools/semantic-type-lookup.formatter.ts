@@ -38,17 +38,7 @@ export function formatSemanticTypeEntry(entry: SemanticTypeEntry, depth: 'brief'
 // MARK: Brief
 function formatBrief(entry: SemanticTypeEntry): string {
   const lines: string[] = [];
-  lines.push(`## \`${entry.name}\``);
-  lines.push('');
-  lines.push(`- **package:** \`${entry.package}\``);
-  lines.push(`- **module:** \`${entry.module}\``);
-  lines.push(`- **kind:** ${entry.kind}`);
-  lines.push(`- **baseType:** ${entry.baseType}`);
-  lines.push(`- **topics:** ${formatTopicList(entry.topics)}`);
-  lines.push('');
-  lines.push('```ts');
-  lines.push(entry.definition);
-  lines.push('```');
+  lines.push(`## \`${entry.name}\``, '', `- **package:** \`${entry.package}\``, `- **module:** \`${entry.module}\``, `- **kind:** ${entry.kind}`, `- **baseType:** ${entry.baseType}`, `- **topics:** ${formatTopicList(entry.topics)}`, '', '```ts', entry.definition, '```');
   return lines.join('\n');
 }
 
@@ -130,12 +120,9 @@ function formatExamples(examples: readonly { readonly caption?: string; readonly
   for (const example of examples) {
     lines.push('');
     if (example.caption !== undefined && example.caption.length > 0) {
-      lines.push(`_${example.caption}_`);
-      lines.push('');
+      lines.push(`_${example.caption}_`, '');
     }
-    lines.push('```ts');
-    lines.push(example.code);
-    lines.push('```');
+    lines.push('```ts', example.code, '```');
   }
   return lines.join('\n');
 }
@@ -153,8 +140,7 @@ function formatExamples(examples: readonly { readonly caption?: string; readonly
 export function formatSemanticTypeCollision(name: string, entries: readonly SemanticTypeEntry[]): string {
   const lines: string[] = [`# \`${name}\` — multiple matches`, '', `\`${name}\` is exported from ${entries.length} packages. Pass \`name\` plus the package via \`dbx_semantic_type_search\` if you need a single answer.`, ''];
   for (const entry of entries) {
-    lines.push(formatBrief(entry));
-    lines.push('');
+    lines.push(formatBrief(entry), '');
   }
   return lines.join('\n').trimEnd();
 }
@@ -176,8 +162,7 @@ export function formatSemanticTypeSearchResults(config: { readonly query: string
   } else {
     const lines: string[] = [`# Search: \`${query}\``, '', `${entries.length} result${entries.length === 1 ? '' : 's'}`, ''];
     for (const entry of entries) {
-      lines.push(formatBrief(entry));
-      lines.push('');
+      lines.push(formatBrief(entry), '');
     }
     text = lines.join('\n').trimEnd();
   }
@@ -199,11 +184,7 @@ export function formatSemanticTypeSearchResults(config: { readonly query: string
  */
 export function formatSemanticTypeCatalog(config: { readonly total: number; readonly topics: readonly string[]; readonly packages: readonly string[]; readonly baseTypes: readonly string[]; readonly loadedSources: readonly string[] }): string {
   const lines: string[] = ['# Semantic-types registry', ''];
-  lines.push(`- **entries:** ${config.total}`);
-  lines.push(`- **packages:** ${formatBacktickInline(config.packages)}`);
-  lines.push(`- **sources:** ${formatBacktickInline(config.loadedSources)}`);
-  lines.push(`- **topics:** ${formatBacktickInline(config.topics)}`);
-  lines.push(`- **baseTypes:** ${formatBacktickInline(config.baseTypes)}`);
+  lines.push(`- **entries:** ${config.total}`, `- **packages:** ${formatBacktickInline(config.packages)}`, `- **sources:** ${formatBacktickInline(config.loadedSources)}`, `- **topics:** ${formatBacktickInline(config.topics)}`, `- **baseTypes:** ${formatBacktickInline(config.baseTypes)}`);
   return lines.join('\n');
 }
 

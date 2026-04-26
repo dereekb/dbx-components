@@ -91,7 +91,7 @@ const ScaffoldArtifactArgsType = type({
 function parseArgs(raw: unknown): ScaffoldArtifactInput {
   const parsed = ScaffoldArtifactArgsType(raw);
   if (parsed instanceof type.errors) {
-    throw new Error(`Invalid arguments: ${parsed.summary}`);
+    throw new TypeError(`Invalid arguments: ${parsed.summary}`);
   }
   const result: ScaffoldArtifactInput = {
     artifact: parsed.artifact as ArtifactKind,

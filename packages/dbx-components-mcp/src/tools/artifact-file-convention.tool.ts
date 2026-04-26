@@ -68,7 +68,7 @@ interface ParsedArgs {
 function parseArgs(raw: unknown): ParsedArgs {
   const parsed = FileConventionArgsType(raw);
   if (parsed instanceof type.errors) {
-    throw new Error(`Invalid arguments: ${parsed.summary}`);
+    throw new TypeError(`Invalid arguments: ${parsed.summary}`);
   }
   const result: ParsedArgs = {
     artifact: parsed.artifact as ArtifactKind,

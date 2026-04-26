@@ -60,7 +60,7 @@ interface ParsedLookupUiArgs {
 function parseLookupUiArgs(raw: unknown): ParsedLookupUiArgs {
   const parsed = LookupUiArgsType(raw);
   if (parsed instanceof type.errors) {
-    throw new Error(`Invalid arguments: ${parsed.summary}`);
+    throw new TypeError(`Invalid arguments: ${parsed.summary}`);
   }
   const result: ParsedLookupUiArgs = {
     topic: parsed.topic,
@@ -166,9 +166,9 @@ function formatInputsTable(entry: UiComponentInfo): string {
   } else {
     const rows = entry.inputs.map((input) => {
       const required = input.required ? '✓' : '';
-      const defaultCell = input.default !== undefined ? `\`${input.default}\`` : '';
-      const desc = input.description.replaceAll('|', '\\|');
-      const typeCell = input.type.replaceAll('|', '\\|');
+      const defaultCell = input.default === undefined ? '' : `\`${input.default}\``;
+      const desc = input.description.replaceAll('|', String.raw`\|`);
+      const typeCell = input.type.replaceAll('|', String.raw`\|`);
       return `| \`${input.name}\` | \`${typeCell}\` | ${required} | ${defaultCell} | ${desc} |`;
     });
     result = ['## Inputs', '', '| Name | Type | Required | Default | Description |', '| --- | --- | --- | --- | --- |', ...rows].join('\n');
@@ -182,8 +182,8 @@ function formatOutputsTable(entry: UiComponentInfo): string {
     result = '';
   } else {
     const rows = entry.outputs.map((output) => {
-      const desc = output.description.replaceAll('|', '\\|');
-      const emits = output.emits.replaceAll('|', '\\|');
+      const desc = output.description.replaceAll('|', String.raw`\|`);
+      const emits = output.emits.replaceAll('|', String.raw`\|`);
       return `| \`${output.name}\` | \`${emits}\` | ${desc} |`;
     });
     result = ['## Outputs', '', '| Name | Emits | Description |', '| --- | --- | --- |', ...rows].join('\n');
@@ -238,8 +238,7 @@ function formatGroup(entries: readonly UiComponentInfo[], title: string): string
       if (!list || list.length === 0) {
         continue;
       }
-      sections.push(`## ${kind} (${list.length})`);
-      sections.push('');
+      sections.push(`## ${kind} (${list.length})`, '');
       for (const entry of list) {
         sections.push(`- **\`${entry.slug}\`** → \`${entry.className}\` (\`${entry.selector}\`) — ${entry.description}`);
       }
@@ -257,8 +256,7 @@ function formatCatalog(): string {
     if (list.length === 0) {
       continue;
     }
-    lines.push(`## ${category} (${list.length})`);
-    lines.push('');
+    lines.push(`## ${category} (${list.length})`, '');
     for (const entry of list) {
       lines.push(`- \`${entry.slug}\` → ${entry.className} · selector \`${entry.selector}\``);
     }
@@ -270,8 +268,7 @@ function formatCatalog(): string {
 function formatNotFound(normalized: string, candidates: readonly UiComponentInfo[]): string {
   const lines: string[] = [`No UI component matched \`${normalized}\`.`, ''];
   if (candidates.length > 0) {
-    lines.push('Did you mean one of these?');
-    lines.push('');
+    lines.push('Did you mean one of these?', '');
     for (const entry of candidates) {
       lines.push(`- \`${entry.slug}\` → ${entry.className} (\`${entry.selector}\`) — ${entry.description}`);
     }

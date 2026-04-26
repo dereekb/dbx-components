@@ -81,7 +81,7 @@ interface ParsedTreeArgs {
 function parseArgs(raw: unknown): ParsedTreeArgs {
   const parsed = TreeArgsType(raw);
   if (parsed instanceof type.errors) {
-    throw new Error(`Invalid arguments: ${parsed.summary}`);
+    throw new TypeError(`Invalid arguments: ${parsed.summary}`);
   }
   const result: ParsedTreeArgs = {
     sources: parsed.sources,
