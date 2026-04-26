@@ -38,8 +38,7 @@ export type ViolationCode =
   | 'STORAGEFILE_FOLDER_UNEXPECTED_FILE_NAME'
   | 'STORAGEFILE_FOLDER_HANDLERS_SUBFOLDER_MIXED';
 
-import type { ViolationSeverity } from '../validate-format.js';
-export type { ViolationSeverity };
+export type { ViolationSeverity } from '../validate-format.js';
 
 export interface Violation {
   readonly code: ViolationCode;

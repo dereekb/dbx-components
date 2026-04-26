@@ -60,8 +60,7 @@ export type ViolationCode =
   | 'STORAGEFILE_FILE_TYPE_IDENTIFIER_DUPLICATE'
   | 'STORAGEFILE_GROUP_IDS_FUNCTION_MISSING';
 
-import type { ViolationSeverity } from '../validate-format.js';
-export type { ViolationSeverity };
+export type { ViolationSeverity } from '../validate-format.js';
 
 export interface Violation {
   readonly code: ViolationCode;
