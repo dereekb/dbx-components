@@ -182,3 +182,9 @@ export function getFilterEntryBySelector(selector: string): FilterEntryInfo | un
     return eStripped === stripped;
   });
 }
+
+export const FILTER_KIND_ORDER: readonly FilterEntryKind[] = ['directive', 'pattern'];
+
+export function getFilterEntriesByKind(kind: FilterEntryKind): readonly FilterEntryInfo[] {
+  return FILTER_ENTRIES.filter((e) => e.kind === kind);
+}

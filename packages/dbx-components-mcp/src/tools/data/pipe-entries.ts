@@ -536,3 +536,9 @@ export function getPipeEntryByClassName(className: TypeScriptClassName): Maybe<P
   const trimmed = className.trim();
   return PIPE_ENTRIES.find((e) => e.className === trimmed);
 }
+
+export const PIPE_CATEGORY_ORDER: readonly PipeCategory[] = ['value', 'date', 'async', 'misc'];
+
+export function getPipeEntriesByCategory(category: PipeCategory): readonly PipeEntryInfo[] {
+  return PIPE_ENTRIES.filter((e) => e.category === category);
+}

@@ -24,7 +24,7 @@ Clusters with the `_m` suffix are **model extensions** — tools that walk a dow
 
 ## Resources
 
-URIs are namespaced by domain (`dbx://<domain>/...`).
+URIs are namespaced by domain (`dbx://<domain>/...`). Validators, scaffolders, and route trees don't expose resources because their output depends on caller input rather than a fixed catalog.
 
 | URI                                                  | Description                                            |
 |------------------------------------------------------|--------------------------------------------------------|
@@ -37,6 +37,19 @@ URIs are namespaced by domain (`dbx://<domain>/...`).
 | `dbx://model/firebase/{name}`                        | Single Firebase model                                  |
 | `dbx://model/firebase/prefix/{prefix}`               | Firebase model by collection prefix                    |
 | `dbx://model/firebase/subcollections/{parent}`       | Subcollection models nested under a parent identity    |
+| `dbx://action/entries`                               | Action entries catalog (directives, store, states)     |
+| `dbx://action/entries/{slug}`                        | Single action entry                                    |
+| `dbx://action/entries/role/{role}`                   | Action entries by role                                 |
+| `dbx://ui/components`                                | UI component catalog                                   |
+| `dbx://ui/components/{slug}`                         | Single UI entry                                        |
+| `dbx://ui/components/category/{category}`            | UI entries by category                                 |
+| `dbx://ui/components/kind/{kind}`                    | UI entries by Angular kind                             |
+| `dbx://pipe/entries`                                 | Angular pipe catalog                                   |
+| `dbx://pipe/entries/{slug}`                          | Single pipe entry                                      |
+| `dbx://pipe/entries/category/{category}`             | Pipes by category                                      |
+| `dbx://filter/entries`                               | Filter directive / preset catalog                      |
+| `dbx://filter/entries/{slug}`                        | Single filter entry                                    |
+| `dbx://filter/entries/kind/{kind}`                   | Filter entries by kind (directive, pattern)            |
 
 ## Usage
 
