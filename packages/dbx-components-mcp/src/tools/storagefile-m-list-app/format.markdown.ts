@@ -54,9 +54,7 @@ function formatPurposeBlock(p: StorageFilePurposeSummary): string {
   }
   const uploadInitSuffix = p.uploadInitializerSourceFile ? ` _(${p.uploadInitializerSourceFile})_` : '';
   const processingConfigSuffix = p.processingConfigSourceFile ? ` _(${p.processingConfigSourceFile})_` : '';
-  parts.push(`- Has upload initializer: ${formatBool(p.hasUploadInitializer)}${uploadInitSuffix}`);
-  parts.push(`- Has processing config: ${formatBool(p.hasProcessingConfig)}${processingConfigSuffix}`);
-  parts.push(`- Source: \`${p.sourceFile}\``);
+  parts.push(`- Has upload initializer: ${formatBool(p.hasUploadInitializer)}${uploadInitSuffix}`, `- Has processing config: ${formatBool(p.hasProcessingConfig)}${processingConfigSuffix}`, `- Source: \`${p.sourceFile}\``);
   return parts.join('\n');
 }
 
