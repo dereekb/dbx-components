@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* eslint-disable */
+/* eslint-disable import/default */
 /**
  * Extracts Firebase model metadata from @dereekb/firebase source files and
  * emits packages/dbx-components-mcp/src/registry/firebase-models.generated.ts.
