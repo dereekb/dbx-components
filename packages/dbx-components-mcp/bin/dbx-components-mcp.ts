@@ -8,7 +8,9 @@
 
 import { runStdioServer } from '../src/server.js';
 
-runStdioServer().catch((error: unknown) => {
+try {
+  await runStdioServer();
+} catch (error: unknown) {
   console.error('Failed to start dbx-components MCP server:', error);
   process.exit(1);
-});
+}

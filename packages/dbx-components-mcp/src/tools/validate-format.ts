@@ -126,17 +126,13 @@ export interface FolderGroupedResult {
 export function formatFolderGroupedResult<TResult extends FolderGroupedResult>(config: { readonly title: string; readonly result: TResult }): string {
   const { title, result } = config;
   const { violations, errorCount, warningCount, foldersChecked } = result;
-  const lines: string[] = [];
-  lines.push(`# ${title} — ${formatStatusLabel(errorCount, warningCount)}`);
-  lines.push('');
-  lines.push(`Checked ${foldersChecked} folder(s). ${errorCount} error(s), ${warningCount} warning(s).`);
+  const lines: string[] = [`# ${title} — ${formatStatusLabel(errorCount, warningCount)}`, '', `Checked ${foldersChecked} folder(s). ${errorCount} error(s), ${warningCount} warning(s).`];
   if (violations.length === 0) {
     return lines.join('\n');
   }
   const byFolder = groupViolations(violations, (v) => v.folder);
   for (const [folder, folderViolations] of byFolder) {
-    lines.push('');
-    lines.push(`## ${folder}`);
+    lines.push('', `## ${folder}`);
     for (const v of folderViolations) {
       lines.push(formatViolationLine(v, v.file ? ` _(file: ${v.file})_` : ''));
     }
@@ -185,22 +181,18 @@ export interface TwoSideResult {
 export function formatTwoSideResult<TResult extends TwoSideResult>(config: { readonly title: string; readonly result: TResult }): string {
   const { title, result } = config;
   const { violations, errorCount, warningCount, componentDir, apiDir } = result;
-  const lines: string[] = [];
-  lines.push(`# ${title} — ${formatStatusLabel(errorCount, warningCount)}`);
-  lines.push('');
-  lines.push(`Component: \`${componentDir}\` · API: \`${apiDir}\``);
-  lines.push(`${errorCount} error(s), ${warningCount} warning(s).`);
+  const lines: string[] = [`# ${title} — ${formatStatusLabel(errorCount, warningCount)}`, '', `Component: \`${componentDir}\` · API: \`${apiDir}\``, `${errorCount} error(s), ${warningCount} warning(s).`];
   if (violations.length === 0) {
     return lines.join('\n');
   }
   const grouped = groupViolations(violations, (v) => v.side);
   for (const side of ['component', 'api'] as const) {
     const sideViolations = grouped.get(side);
-    if (!sideViolations || sideViolations.length === 0) continue;
-    lines.push('');
-    lines.push(`## ${side === 'component' ? 'Component' : 'API'}`);
-    for (const v of sideViolations) {
-      lines.push(formatViolationLine(v, v.file ? ` _(file: ${v.file})_` : ''));
+    if (sideViolations && sideViolations.length > 0) {
+      lines.push('', `## ${side === 'component' ? 'Component' : 'API'}`);
+      for (const v of sideViolations) {
+        lines.push(formatViolationLine(v, v.file ? ` _(file: ${v.file})_` : ''));
+      }
     }
   }
   return lines.join('\n');
@@ -243,21 +235,16 @@ export interface FileGroupedResult {
 export function formatFileGroupedResult<TResult extends FileGroupedResult>(config: { readonly title: string; readonly summary: string; readonly innerKey: (violation: TResult['violations'][number]) => string; readonly result: TResult }): string {
   const { title, summary, innerKey, result } = config;
   const { violations, errorCount, warningCount } = result;
-  const lines: string[] = [];
-  lines.push(`# ${title} — ${formatStatusLabel(errorCount, warningCount)}`);
-  lines.push('');
-  lines.push(`${summary} ${errorCount} error(s), ${warningCount} warning(s).`);
+  const lines: string[] = [`# ${title} — ${formatStatusLabel(errorCount, warningCount)}`, '', `${summary} ${errorCount} error(s), ${warningCount} warning(s).`];
   if (violations.length === 0) {
     return lines.join('\n');
   }
   const byFile = groupViolations(violations, (v) => v.file);
   for (const [file, fileViolations] of byFile) {
-    lines.push('');
-    lines.push(`## ${file}`);
+    lines.push('', `## ${file}`);
     const byInner = groupViolations(fileViolations, (v) => innerKey(v));
     for (const [inner, innerViolations] of byInner) {
-      lines.push('');
-      lines.push(`### ${inner}`);
+      lines.push('', `### ${inner}`);
       for (const v of innerViolations) {
         const location = v.line !== undefined ? `line ${v.line}` : 'file-level';
         lines.push(formatViolationLine(v, ` _(${location})_`));
