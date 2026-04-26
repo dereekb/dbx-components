@@ -21,12 +21,10 @@
  *     non-directory matches are filtered out automatically.
  */
 
-import { resolve } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
-import { type } from 'arktype';
-import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { resolveFolderPaths } from './validate-input.js';
-import { formatResult, inspectFolder, validateSystemFolders, type SystemFolderInspection } from './system-m-validate-folder/index.js';
+import { type DbxTool } from './types.js';
+import { createFolderValidateTool } from './validate-tool.js';
+import { formatResult, inspectFolder, validateSystemFolders } from './system-m-validate-folder/index.js';
 
 // MARK: Tool definition
 const DBX_SYSTEM_M_VALIDATE_FOLDER_TOOL: Tool = {
@@ -62,94 +60,9 @@ const DBX_SYSTEM_M_VALIDATE_FOLDER_TOOL: Tool = {
   }
 };
 
-// MARK: Input validation
-const ValidateArgsType = type({
-  'paths?': 'string[]',
-  'glob?': 'string'
-});
-
-interface ParsedArgs {
-  readonly paths: readonly string[] | undefined;
-  readonly glob: string | undefined;
-}
-
-function parseArgs(raw: unknown): ParsedArgs {
-  const parsed = ValidateArgsType(raw);
-  if (parsed instanceof type.errors) {
-    throw new Error(`Invalid arguments: ${parsed.summary}`);
-  }
-  const result: ParsedArgs = {
-    paths: parsed.paths,
-    glob: parsed.glob
-  };
-  return result;
-}
-
-// MARK: Path resolution
-async function buildInspections(paths: readonly string[], cwd: string): Promise<readonly SystemFolderInspection[]> {
-  const out: SystemFolderInspection[] = [];
-  for (const relative of paths) {
-    const absolute = resolve(cwd, relative);
-    const inspection = await inspectFolder(absolute);
-    const relativized: SystemFolderInspection = { ...inspection, path: relative };
-    out.push(relativized);
-  }
-  return out;
-}
-
-// MARK: Handler
-/**
- * Tool handler for `dbx_validate_folder_system_m`. Audits the system-state
- * map structure (state map keys vs. handler keys, manual-task constants) so
- * callers catch drift before deploying a system task.
- *
- * @param rawArgs - the unvalidated tool arguments from the MCP runtime
- * @returns the formatted folder report, or an error result when args fail validation
- */
-export async function runSystemMValidateFolder(rawArgs: unknown): Promise<ToolResult> {
-  let args: ParsedArgs;
-  try {
-    args = parseArgs(rawArgs);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return toolError(message);
-  }
-
-  const hasAny = (args.paths && args.paths.length > 0) || args.glob;
-  if (!hasAny) {
-    return toolError('Must provide at least one of `paths` or `glob`.');
-  }
-
-  let paths: readonly string[];
-  try {
-    paths = await resolveFolderPaths({ paths: args.paths, glob: args.glob, cwd: process.cwd() });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return toolError(`Failed to resolve folder paths: ${message}`);
-  }
-
-  if (paths.length === 0) {
-    return toolError('No matching folders found.');
-  }
-
-  let inspections: readonly SystemFolderInspection[];
-  try {
-    inspections = await buildInspections(paths, process.cwd());
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return toolError(`Failed to read folders: ${message}`);
-  }
-
-  const validation = validateSystemFolders(inspections);
-  const text = formatResult(validation);
-  const result: ToolResult = {
-    content: [{ type: 'text', text }],
-    isError: validation.errorCount > 0
-  };
-  return result;
-}
-
-export const systemMValidateFolderTool: DbxTool = {
+export const systemMValidateFolderTool: DbxTool = createFolderValidateTool({
   definition: DBX_SYSTEM_M_VALIDATE_FOLDER_TOOL,
-  run: runSystemMValidateFolder
-};
+  inspectFolder,
+  validate: validateSystemFolders,
+  format: formatResult
+});
