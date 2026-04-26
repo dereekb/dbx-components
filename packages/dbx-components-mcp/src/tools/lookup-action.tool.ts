@@ -124,40 +124,35 @@ function resolveTopic(rawTopic: string): LookupActionMatch {
   return result;
 }
 
+function scoreActionEntryRole(entry: ActionEntryInfo, q: string): number {
+  let score = 0;
+  if (entry.role === 'directive') {
+    if (entry.selector.toLowerCase().includes(q)) score += 2;
+    if (entry.className.toLowerCase().includes(q)) score += 2;
+  } else if (entry.role === 'store') {
+    if (entry.className.toLowerCase().includes(q)) score += 2;
+  } else if (entry.role === 'state' && (entry.stateValue.toLowerCase().includes(q) || entry.literal.toLowerCase().includes(q))) {
+    score += 2;
+  }
+  return score;
+}
+
+function scoreActionEntry(entry: ActionEntryInfo, q: string): number {
+  let score = scoreActionEntryRole(entry, q);
+  if (entry.slug.toLowerCase().includes(q)) score += 3;
+  if (entry.description.toLowerCase().includes(q)) score += 1;
+  return score;
+}
+
 function fuzzyCandidates(query: string): readonly ActionEntryInfo[] {
   const q = query.trim().toLowerCase();
-  if (q.length === 0) {
-    return [];
+  let result: readonly ActionEntryInfo[] = [];
+  if (q.length > 0) {
+    const scored = ACTION_ENTRIES.map((entry) => ({ entry, score: scoreActionEntry(entry, q) })).filter((s) => s.score > 0);
+    scored.sort((a, b) => b.score - a.score);
+    result = scored.slice(0, 5).map((s) => s.entry);
   }
-  const scored: { readonly entry: ActionEntryInfo; readonly score: number }[] = [];
-  for (const entry of ACTION_ENTRIES) {
-    let score = 0;
-    if (entry.slug.toLowerCase().includes(q)) {
-      score += 3;
-    }
-    if (entry.role === 'directive') {
-      if (entry.selector.toLowerCase().includes(q)) {
-        score += 2;
-      }
-      if (entry.className.toLowerCase().includes(q)) {
-        score += 2;
-      }
-    } else if (entry.role === 'store') {
-      if (entry.className.toLowerCase().includes(q)) {
-        score += 2;
-      }
-    } else if (entry.role === 'state' && (entry.stateValue.toLowerCase().includes(q) || entry.literal.toLowerCase().includes(q))) {
-      score += 2;
-    }
-    if (entry.description.toLowerCase().includes(q)) {
-      score += 1;
-    }
-    if (score > 0) {
-      scored.push({ entry, score });
-    }
-  }
-  scored.sort((a, b) => b.score - a.score);
-  return scored.slice(0, 5).map((s) => s.entry);
+  return result;
 }
 
 // MARK: Formatting helpers

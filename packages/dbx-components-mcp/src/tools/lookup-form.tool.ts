@@ -98,35 +98,40 @@ type LookupFormMatch = { readonly kind: 'single'; readonly field: FormFieldInfo 
  * @param rawTopic - the caller-supplied topic, untrimmed
  * @returns the resolved match describing how to render the response
  */
+function resolveCatalogTopic(lowered: string): LookupFormMatch | undefined {
+  if (lowered === 'list' || lowered === 'catalog' || lowered === 'all') {
+    return { kind: 'catalog' };
+  }
+  return undefined;
+}
+
+function resolveTierTopic(lowered: string): LookupFormMatch | undefined {
+  if (FORM_TIER_ORDER.includes(lowered as FormTier)) {
+    const tier = lowered as FormTier;
+    return { kind: 'group', title: `Form entries: tier = ${tier}`, fields: getFormFieldsByTier(tier) };
+  }
+  return undefined;
+}
+
+function resolveDirectFieldTopic(rawTopic: string, lowered: string): LookupFormMatch | undefined {
+  const directHit = getFormField(rawTopic) ?? getFormField(lowered);
+  return directHit ? { kind: 'single', field: directHit } : undefined;
+}
+
+function resolveAliasFieldTopic(aliased: string, lowered: string): LookupFormMatch | undefined {
+  const aliasHit = aliased === lowered ? undefined : getFormField(aliased);
+  return aliasHit ? { kind: 'single', field: aliasHit } : undefined;
+}
+
+function resolveProducesTopic(rawTopic: string): LookupFormMatch | undefined {
+  const produces = findProducesMatch(rawTopic);
+  return produces ? { kind: 'group', title: `Form entries producing \`${produces}\``, fields: getFormFieldsByProduces(produces) } : undefined;
+}
+
 function resolveTopic(rawTopic: string): LookupFormMatch {
   const lowered = rawTopic.trim().toLowerCase();
-  let result: LookupFormMatch;
-
-  if (lowered === 'list' || lowered === 'catalog' || lowered === 'all') {
-    result = { kind: 'catalog' };
-  } else if (FORM_TIER_ORDER.includes(lowered as FormTier)) {
-    const tier = lowered as FormTier;
-    result = { kind: 'group', title: `Form entries: tier = ${tier}`, fields: getFormFieldsByTier(tier) };
-  } else {
-    const directHit = getFormField(rawTopic) ?? getFormField(lowered);
-    if (directHit) {
-      result = { kind: 'single', field: directHit };
-    } else {
-      const aliased = resolveTopicAlias(rawTopic);
-      const aliasHit = aliased === lowered ? undefined : getFormField(aliased);
-      if (aliasHit) {
-        result = { kind: 'single', field: aliasHit };
-      } else {
-        const produces = findProducesMatch(rawTopic);
-        if (produces) {
-          result = { kind: 'group', title: `Form entries producing \`${produces}\``, fields: getFormFieldsByProduces(produces) };
-        } else {
-          result = { kind: 'not-found', normalized: aliased, candidates: fuzzyCandidates(aliased) };
-        }
-      }
-    }
-  }
-  return result;
+  const aliased = resolveTopicAlias(rawTopic);
+  return resolveCatalogTopic(lowered) ?? resolveTierTopic(lowered) ?? resolveDirectFieldTopic(rawTopic, lowered) ?? resolveAliasFieldTopic(aliased, lowered) ?? resolveProducesTopic(rawTopic) ?? { kind: 'not-found', normalized: aliased, candidates: fuzzyCandidates(aliased) };
 }
 
 /**
