@@ -2,11 +2,14 @@
  * Form Fields MCP resources.
  *
  * Exposes the form field registry as read-only resources for clients that
- * prefer browsing data over calling tools.
+ * prefer browsing data over calling tools. Built around a
+ * {@link ForgeFieldRegistry} loaded at server startup; tests can drive it via
+ * {@link createForgeFieldRegistryFromEntries}.
  */
 
 import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { getFormFields, getFormField, getFormFieldsByProduces, getFormFieldsByTier, getFormFieldsByArrayOutput, getFormProducesCatalog, FORM_TIER_ORDER, type FormTier, type FormArrayOutput } from '../registry/index.js';
+import { FORM_TIER_ORDER, type FormTier, type FormArrayOutput } from '../registry/index.js';
+import type { ForgeFieldRegistry } from '../registry/forge-fields.js';
 
 const FORM_FIELDS_URI = 'dbx://form/fields';
 const FORM_FIELD_TEMPLATE = 'dbx://form/fields/{slug}';
@@ -16,13 +19,23 @@ const FORM_FIELDS_BY_ARRAY_OUTPUT_TEMPLATE = 'dbx://form/fields/array-output/{ar
 const ARRAY_OUTPUT_VALUES: readonly FormArrayOutput[] = ['yes', 'no', 'optional'];
 
 /**
+ * Configuration for {@link registerFormFieldsResource}.
+ */
+export interface RegisterFormFieldsResourceConfig {
+  readonly registry: ForgeFieldRegistry;
+}
+
+/**
  * Registers the form-field MCP resources (catalog, per-slug details, plus
  * filtered views by produces/tier/array-output) on the given server. The
  * separate URIs reflect the same primary indexes that the lookup tools use.
  *
  * @param server - the MCP server to register resources against
+ * @param config - registry the resources should read from
  */
-export function registerFormFieldsResource(server: McpServer): void {
+export function registerFormFieldsResource(server: McpServer, config: RegisterFormFieldsResourceConfig): void {
+  const { registry } = config;
+
   server.registerResource(
     'dbx-components Form Fields',
     FORM_FIELDS_URI,
@@ -32,11 +45,11 @@ export function registerFormFieldsResource(server: McpServer): void {
       mimeType: 'application/json'
     },
     async () => {
-      const fields = getFormFields();
+      const fields = registry.all;
       const payload = {
-        description: 'All registered @dereekb/dbx-form entries (factories, composite builders, primitives).',
+        description: 'All registered @dereekb/dbx-form entries (factories, derivatives, composite builders, template builders, primitives).',
         tierOrder: FORM_TIER_ORDER,
-        producesCatalog: getFormProducesCatalog(),
+        producesCatalog: registry.producesCatalog,
         fields: fields.map((f) => ({
           slug: f.slug,
           factoryName: f.factoryName,
@@ -69,15 +82,13 @@ export function registerFormFieldsResource(server: McpServer): void {
     async (uri, variables) => {
       const slugValue = variables.slug;
       const slug = Array.isArray(slugValue) ? slugValue[0] : slugValue;
-      const field = slug ? getFormField(slug) : undefined;
+      const field = slug ? (registry.findBySlug(slug) ?? registry.findByFactoryName(slug)) : undefined;
 
       let text: string;
       if (slug && field) {
         text = JSON.stringify(field, null, 2);
       } else if (slug) {
-        const available = getFormFields()
-          .map((f) => f.slug)
-          .join(', ');
+        const available = registry.all.map((f) => f.slug).join(', ');
         text = `Form field '${slug}' not found. Available slugs: ${available}`;
       } else {
         text = 'No slug provided.';
@@ -110,15 +121,15 @@ export function registerFormFieldsResource(server: McpServer): void {
       let text: string;
       let isJson = false;
       if (produces) {
-        const entries = getFormFieldsByProduces(produces);
+        const entries = registry.findByProduces(produces);
         if (entries.length === 0) {
-          text = `No form entries produce '${produces}'. Known values: ${getFormProducesCatalog().join(', ')}`;
+          text = `No form entries produce '${produces}'. Known values: ${registry.producesCatalog.join(', ')}`;
         } else {
           text = JSON.stringify({ produces, fields: entries }, null, 2);
           isJson = true;
         }
       } else {
-        text = `No produces value supplied. Known values: ${getFormProducesCatalog().join(', ')}`;
+        text = `No produces value supplied. Known values: ${registry.producesCatalog.join(', ')}`;
       }
 
       return {
@@ -138,7 +149,7 @@ export function registerFormFieldsResource(server: McpServer): void {
     new ResourceTemplate(FORM_FIELDS_BY_TIER_TEMPLATE, { list: undefined }),
     {
       title: 'Form Fields by Tier',
-      description: 'Form entries filtered by builder tier (field-factory, composite-builder, primitive).',
+      description: 'Form entries filtered by builder tier (field-factory, field-derivative, composite-builder, template-builder, primitive).',
       mimeType: 'application/json'
     },
     async (uri, variables) => {
@@ -148,7 +159,7 @@ export function registerFormFieldsResource(server: McpServer): void {
       const valid = tier && FORM_TIER_ORDER.includes(tier);
       let text: string;
       if (valid) {
-        const entries = getFormFieldsByTier(tier);
+        const entries = registry.findByTier(tier);
         text = JSON.stringify({ tier, fields: entries }, null, 2);
       } else {
         text = `Invalid tier. Valid values: ${FORM_TIER_ORDER.join(', ')}`;
@@ -181,7 +192,7 @@ export function registerFormFieldsResource(server: McpServer): void {
       const valid = arrayOutput && ARRAY_OUTPUT_VALUES.includes(arrayOutput);
       let text: string;
       if (valid) {
-        const entries = getFormFieldsByArrayOutput(arrayOutput);
+        const entries = registry.findByArrayOutput(arrayOutput);
         text = JSON.stringify({ arrayOutput, fields: entries }, null, 2);
       } else {
         text = `Invalid arrayOutput value. Valid values: ${ARRAY_OUTPUT_VALUES.join(', ')}`;

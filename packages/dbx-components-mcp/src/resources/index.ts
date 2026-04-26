@@ -17,6 +17,7 @@
  */
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { ForgeFieldRegistry } from '../registry/forge-fields.js';
 import type { SemanticTypeRegistry } from '../registry/semantic-types.js';
 import { registerFormFieldsResource } from './form-fields.resource.js';
 import { registerFirebaseModelsResource } from './firebase-models.resource.js';
@@ -28,11 +29,13 @@ import { registerSemanticTypesResource } from './semantic-types.resource.js';
 
 /**
  * Options consumed by {@link registerResources}. Mirrors {@link RegisterToolsOptions}
- * — the semantic-types registry is loaded asynchronously at startup, so the
- * resource registrar takes it via this options bag.
+ * — registries are loaded asynchronously at startup, so the resource registrar
+ * takes them via this options bag. When a registry is omitted, the resources
+ * that depend on it are skipped.
  */
 export interface RegisterResourcesOptions {
   readonly semanticTypeRegistry?: SemanticTypeRegistry;
+  readonly forgeFieldRegistry?: ForgeFieldRegistry;
 }
 
 /**
@@ -44,7 +47,9 @@ export interface RegisterResourcesOptions {
  * @param options - optional registry handles passed to dynamic resources
  */
 export function registerResources(server: McpServer, options: RegisterResourcesOptions = {}): void {
-  registerFormFieldsResource(server);
+  if (options.forgeFieldRegistry !== undefined) {
+    registerFormFieldsResource(server, { registry: options.forgeFieldRegistry });
+  }
   registerFirebaseModelsResource(server);
   registerActionsResource(server);
   registerUiComponentsResource(server);

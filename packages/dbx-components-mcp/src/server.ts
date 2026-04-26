@@ -111,10 +111,9 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
     }
   }
 
-  registerResources(server, { semanticTypeRegistry: registry });
-  registerTools(server, { semanticTypeRegistry: registry });
+  registerResources(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry });
+  registerTools(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry });
   void uiRegistry;
-  void forgeRegistry;
 
   return server;
 }

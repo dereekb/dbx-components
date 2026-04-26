@@ -1,5 +1,5 @@
 /**
- * `dbx_form_search` tool.
+ * `dbx_form_search` tool factory.
  *
  * Returns ranked matches across the form registry. Unlike `dbx_form_lookup` —
  * which resolves exactly one topic to a single entry, a tier group, or a
@@ -7,10 +7,13 @@
  * keyword (or several space-separated keywords) and it returns the top-N
  * form entries scored by where the match landed (slug > factory name >
  * produces > tier > config property names > description).
+ *
+ * Built from a {@link ForgeFieldRegistry} loaded at server startup.
  */
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
-import { FORM_FIELDS, type FormFieldInfo } from '../registry/index.js';
+import { type FormFieldInfo } from '../registry/index.js';
+import type { ForgeFieldRegistry } from '../registry/forge-fields.js';
 import { resolveTopicAlias } from './form-alias-resolver.js';
 import { runSearchTool, type QueryToken, type SearchHit } from './_search/score.js';
 import { type DbxTool, type ToolResult } from './types.js';
@@ -21,7 +24,17 @@ const MAX_LIMIT = 25;
 // MARK: Tool advertisement
 const DBX_FORM_SEARCH_TOOL: Tool = {
   name: 'dbx_form_search',
-  description: ['Search the @dereekb/dbx-form registry by keyword(s). Returns ranked candidates — pick one, then call `dbx_form_lookup` with the slug/name.', '', 'Query strategy:', '  • Space-separated tokens are ANDed (every token must contribute at least some score).', '  • Form aliases resolve (e.g. "datepicker" is treated as "date").', '', "Use `dbx_form_lookup` when you already know which slug you want. Use `dbx_form_search` to discover candidates you don't yet know about."].join('\n'),
+  description: [
+    'Search the @dereekb/dbx-form registry by keyword(s). Returns ranked candidates — pick one, then call `dbx_form_lookup` with the slug/name.',
+    '',
+    'Tiers covered: `field-factory`, `field-derivative`, `composite-builder`, `template-builder`, `primitive`.',
+    '',
+    'Query strategy:',
+    '  • Space-separated tokens are ANDed (every token must contribute at least some score).',
+    '  • Form aliases resolve (e.g. "datepicker" is treated as "date").',
+    '',
+    "Use `dbx_form_lookup` when you already know which slug you want. Use `dbx_form_search` to discover candidates you don't yet know about."
+  ].join('\n'),
   inputSchema: {
     type: 'object',
     properties: {
@@ -112,13 +125,28 @@ function formatSearchResults(input: { readonly query: string; readonly tokens: r
   return lines.join('\n').trimEnd();
 }
 
-// MARK: Tool
-export const searchFormTool: DbxTool = {
-  definition: DBX_FORM_SEARCH_TOOL,
-  run: (rawArgs) =>
-    runSearchTool<FormFieldInfo>(
+// MARK: Factory
+/**
+ * Configuration for {@link createSearchFormTool}.
+ */
+export interface CreateSearchFormToolConfig {
+  readonly registry: ForgeFieldRegistry;
+}
+
+/**
+ * Builds the `dbx_form_search` tool against a forge-fields registry. Called by
+ * {@link registerTools} once the registry has loaded at server startup.
+ *
+ * @param config - the registry the tool should rank against
+ * @returns a registered {@link DbxTool} ready to add to the dispatch table
+ */
+export function createSearchFormTool(config: CreateSearchFormToolConfig): DbxTool {
+  const { registry } = config;
+
+  function run(rawArgs: unknown): ToolResult {
+    return runSearchTool<FormFieldInfo>(
       {
-        entries: FORM_FIELDS,
+        entries: registry.all,
         defaultLimit: DEFAULT_LIMIT,
         maxLimit: MAX_LIMIT,
         aliasResolver: resolveTopicAlias,
@@ -127,19 +155,12 @@ export const searchFormTool: DbxTool = {
         formatResults: formatSearchResults
       },
       rawArgs
-    )
-};
+    );
+  }
 
-/**
- * Tool handler for `dbx_form_search`. Tokenises the query, scores every form
- * registry entry, and renders the top hits with matched-token annotations.
- *
- * Kept as a separately-exported function so existing spec files can call it
- * without going through the {@link DbxTool} surface.
- *
- * @param rawArgs - the unvalidated tool arguments from the MCP runtime
- * @returns the formatted search results, or an error result when args fail validation
- */
-export function runSearchForm(rawArgs: unknown): ToolResult {
-  return searchFormTool.run(rawArgs) as ToolResult;
+  const tool: DbxTool = {
+    definition: DBX_FORM_SEARCH_TOOL,
+    run
+  };
+  return tool;
 }

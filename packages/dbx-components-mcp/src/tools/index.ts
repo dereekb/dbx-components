@@ -54,10 +54,10 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
-import { lookupFormTool } from './lookup-form.tool.js';
-import { searchFormTool } from './search-form.tool.js';
+import { createLookupFormTool } from './lookup-form.tool.js';
+import { createSearchFormTool } from './search-form.tool.js';
 import { formExamplesTool } from './form-examples.tool.js';
-import { formScaffoldTool } from './form-scaffold.tool.js';
+import { createFormScaffoldTool } from './form-scaffold.tool.js';
 import { lookupUiTool } from './lookup-ui.tool.js';
 import { searchUiTool } from './search-ui.tool.js';
 import { uiExamplesTool } from './ui-examples.tool.js';
@@ -88,6 +88,7 @@ import { artifactScaffoldTool } from './artifact-scaffold.tool.js';
 import { artifactFileConventionTool } from './artifact-file-convention.tool.js';
 import { createSemanticTypeLookupTool } from './lookup-semantic-type.tool.js';
 import { createSemanticTypeSearchTool } from './search-semantic-type.tool.js';
+import type { ForgeFieldRegistry } from '../registry/forge-fields.js';
 import type { SemanticTypeRegistry } from '../registry/semantic-types.js';
 import { toolError, type DbxTool } from './types.js';
 
@@ -101,10 +102,7 @@ import { toolError, type DbxTool } from './types.js';
  */
 export const DBX_TOOLS: readonly DbxTool[] = [
   // form
-  lookupFormTool,
-  searchFormTool,
   formExamplesTool,
-  formScaffoldTool,
   // ui
   lookupUiTool,
   searchUiTool,
@@ -146,14 +144,15 @@ export const DBX_TOOLS: readonly DbxTool[] = [
 ];
 
 /**
- * Options consumed by {@link registerTools}. The semantic-types registry is
- * loaded asynchronously at server startup, so the lookup / search tools
- * receive it via the options bag rather than from a module-level static.
- * When no registry is supplied (e.g. tests that exercise other tools) the
- * semantic-type tools are not registered.
+ * Options consumed by {@link registerTools}. Registries are loaded
+ * asynchronously at server startup, so registry-bound tools (semantic-types,
+ * form fields) receive their registry via this options bag rather than from a
+ * module-level static. When a registry is not supplied (e.g. tests that
+ * exercise other tools) the dependent tools are not registered.
  */
 export interface RegisterToolsOptions {
   readonly semanticTypeRegistry?: SemanticTypeRegistry;
+  readonly forgeFieldRegistry?: ForgeFieldRegistry;
 }
 
 /**
@@ -169,6 +168,9 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions =
   const underlyingServer = server.server;
 
   const tools: DbxTool[] = [...DBX_TOOLS];
+  if (options.forgeFieldRegistry !== undefined) {
+    tools.push(createLookupFormTool({ registry: options.forgeFieldRegistry }), createSearchFormTool({ registry: options.forgeFieldRegistry }), createFormScaffoldTool({ registry: options.forgeFieldRegistry }));
+  }
   if (options.semanticTypeRegistry !== undefined) {
     tools.push(createSemanticTypeLookupTool({ registry: options.semanticTypeRegistry }), createSemanticTypeSearchTool({ registry: options.semanticTypeRegistry }));
   }

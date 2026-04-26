@@ -1,29 +1,25 @@
 import { describe, expect, it } from 'vitest';
-import { FORM_FIELDS, FORM_TIER_ORDER, getFormField, getFormFields, getFormFieldsByProduces, getFormFieldsByTier, getFormFieldsByArrayOutput, getFormProducesCatalog, type FormTier } from './index.js';
+import { FORM_FIELDS, FORM_TIER_ORDER, getFormField, getFormFields, getFormFieldsByProduces, getFormFieldsByTier, getFormFieldsByArrayOutput, getFormProducesCatalog } from './index.js';
 
-// The static legacy registry only populates the original three tiers.
-// `field-derivative` and `template-builder` are emitted by the manifest pipeline
-// and become non-empty once the static array is cut over.
-const LEGACY_POPULATED_TIERS: readonly FormTier[] = ['field-factory', 'composite-builder', 'primitive'];
-
-describe('form-fields registry', () => {
-  it('exposes a non-empty list and covers the legacy tiers', () => {
+describe('form-fields legacy fallback registry', () => {
+  it('exposes a non-empty list whose entries each carry a known tier', () => {
     expect(FORM_FIELDS.length).toBeGreaterThan(0);
     expect(getFormFields()).toBe(FORM_FIELDS);
-    for (const tier of LEGACY_POPULATED_TIERS) {
-      expect(getFormFieldsByTier(tier).length, `no entries for tier ${tier}`).toBeGreaterThan(0);
+    const knownTiers = new Set<string>(FORM_TIER_ORDER);
+    for (const field of FORM_FIELDS) {
+      expect(knownTiers.has(field.tier), `${field.slug} has unknown tier ${field.tier}`).toBe(true);
     }
-    expect(FORM_TIER_ORDER).toContain('field-derivative');
-    expect(FORM_TIER_ORDER).toContain('template-builder');
   });
 
-  it('gives every entry a unique slug and a known tier', () => {
+  it('FORM_TIER_ORDER advertises all 5 canonical tiers', () => {
+    expect(FORM_TIER_ORDER).toEqual(['field-factory', 'field-derivative', 'composite-builder', 'template-builder', 'primitive']);
+  });
+
+  it('gives every entry a unique slug', () => {
     const slugs = new Set<string>();
-    const knownTiers = new Set<string>(FORM_TIER_ORDER);
     for (const field of FORM_FIELDS) {
       expect(slugs.has(field.slug), `duplicate slug: ${field.slug}`).toBe(false);
       slugs.add(field.slug);
-      expect(knownTiers.has(field.tier), `unknown tier on ${field.slug}: ${field.tier}`).toBe(true);
     }
   });
 
@@ -64,5 +60,11 @@ describe('form-fields registry', () => {
     const nonArray = getFormFieldsByArrayOutput('no');
     expect(nonArray.length).toBeGreaterThan(0);
     expect(nonArray.every((f) => f.arrayOutput === 'no')).toBe(true);
+  });
+
+  it('field-factory and primitive tiers have entries in the fallback', () => {
+    for (const tier of ['field-factory', 'primitive'] as const) {
+      expect(getFormFieldsByTier(tier).length, `legacy fallback missing tier ${tier}`).toBeGreaterThan(0);
+    }
   });
 });
