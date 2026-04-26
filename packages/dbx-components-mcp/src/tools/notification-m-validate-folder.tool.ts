@@ -24,10 +24,9 @@
  * Paths escaping the cwd are rejected.
  */
 
-import { resolve, sep } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
-import { type } from 'arktype';
-import { toolError, type DbxTool, type ToolResult } from './types.js';
+import { type DbxTool } from './types.js';
+import { createTwoSideValidateTool } from './validate-tool.js';
 import { formatResult, inspectNotificationFolder, validateNotificationFolder } from './notification-m-validate-folder/index.js';
 
 // MARK: Tool definition
@@ -66,84 +65,16 @@ const DBX_NOTIFICATION_M_VALIDATE_FOLDER_TOOL: Tool = {
   }
 };
 
-// MARK: Input validation
-const ValidateArgsType = type({
-  componentDir: 'string',
-  apiDir: 'string'
-});
-
-interface ParsedArgs {
-  readonly componentDir: string;
-  readonly apiDir: string;
-}
-
-function parseArgs(raw: unknown): ParsedArgs {
-  const parsed = ValidateArgsType(raw);
-  if (parsed instanceof type.errors) {
-    throw new Error(`Invalid arguments: ${parsed.summary}`);
-  }
-  const result: ParsedArgs = {
-    componentDir: parsed.componentDir,
-    apiDir: parsed.apiDir
-  };
-  return result;
-}
-
-// MARK: Path guard
-function ensureInsideCwd(relativePath: string, cwd: string): string {
-  const absolute = resolve(cwd, relativePath);
-  const cwdPrefix = cwd.endsWith(sep) ? cwd : cwd + sep;
-  if (!absolute.startsWith(cwdPrefix) && absolute !== cwd) {
-    throw new Error(`Path \`${relativePath}\` resolves outside the server cwd and is not allowed.`);
-  }
-  return absolute;
-}
-
-// MARK: Handler
-/**
- * Tool handler for `dbx_validate_folder_notification_m`. Audits a single
- * notification folder against the per-folder layout rules so callers can
- * verify the structure before scaffolding new notifications.
- *
- * @param rawArgs - the unvalidated tool arguments from the MCP runtime
- * @returns the formatted folder report, or an error result when args fail validation
- */
-export async function runNotificationMValidateFolder(rawArgs: unknown): Promise<ToolResult> {
-  let args: ParsedArgs;
-  try {
-    args = parseArgs(rawArgs);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return toolError(message);
-  }
-
-  const cwd = process.cwd();
-  let componentAbs: string;
-  let apiAbs: string;
-  try {
-    componentAbs = ensureInsideCwd(args.componentDir, cwd);
-    apiAbs = ensureInsideCwd(args.apiDir, cwd);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return toolError(message);
-  }
-
-  const inspection = await inspectNotificationFolder({
-    componentRootDir: componentAbs,
-    componentRelDir: args.componentDir,
-    apiRootDir: apiAbs,
-    apiRelDir: args.apiDir
-  });
-  const validation = validateNotificationFolder(inspection);
-  const text = formatResult(validation);
-  const result: ToolResult = {
-    content: [{ type: 'text', text }],
-    isError: validation.errorCount > 0
-  };
-  return result;
-}
-
-export const notificationMValidateFolderTool: DbxTool = {
+export const notificationMValidateFolderTool: DbxTool = createTwoSideValidateTool({
   definition: DBX_NOTIFICATION_M_VALIDATE_FOLDER_TOOL,
-  run: runNotificationMValidateFolder
-};
+  inspectAndValidate: async ({ componentAbs, componentRel, apiAbs, apiRel }) => {
+    const inspection = await inspectNotificationFolder({
+      componentRootDir: componentAbs,
+      componentRelDir: componentRel,
+      apiRootDir: apiAbs,
+      apiRelDir: apiRel
+    });
+    return validateNotificationFolder(inspection);
+  },
+  format: formatResult
+});

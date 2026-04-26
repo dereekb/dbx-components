@@ -12,7 +12,7 @@ import { resolve } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { resolveFolderPaths } from './validate-input.js';
+import { ensurePathInsideCwd, resolveFolderPaths } from './validate-input.js';
 
 // MARK: paths + glob input shape
 
@@ -101,6 +101,110 @@ export function createFolderValidateTool<TInspection extends { readonly path: st
     }
 
     const result = validate(inspections);
+    const text = format(result);
+    const toolResult: ToolResult = {
+      content: [{ type: 'text', text }],
+      isError: result.errorCount > 0
+    };
+    return toolResult;
+  }
+
+  const tool: DbxTool = { definition, run };
+  return tool;
+}
+
+// MARK: componentDir + apiDir input shape
+
+const TwoSideValidateArgsType = type({
+  componentDir: 'string',
+  apiDir: 'string'
+});
+
+/**
+ * Resolved component / api paths supplied to {@link CreateTwoSideValidateToolConfig.inspectAndValidate}.
+ * Both absolute and relative forms are provided so the domain can hand the
+ * absolute path to its file-system inspection and the relative path to its
+ * formatter.
+ */
+export interface TwoSideInspectAndValidateInput {
+  /**
+   * Absolute path to the component package root.
+   */
+  readonly componentAbs: string;
+  /**
+   * Caller-supplied relative path to the component package root.
+   */
+  readonly componentRel: string;
+  /**
+   * Absolute path to the API app root.
+   */
+  readonly apiAbs: string;
+  /**
+   * Caller-supplied relative path to the API app root.
+   */
+  readonly apiRel: string;
+}
+
+/**
+ * Domain-specific hooks needed to build a `componentDir` / `apiDir` validator
+ * tool. The factory owns argument parsing, the cwd-bounded path guard, error
+ * wrapping, and the `ToolResult` shape; each domain only supplies the
+ * inspect+validate pipeline and the formatter.
+ */
+export interface CreateTwoSideValidateToolConfig<TResult extends { readonly errorCount: number }> {
+  /**
+   * MCP tool definition (name, description, inputSchema).
+   */
+  readonly definition: Tool;
+  /**
+   * Runs the domain inspection and validation. Receives the resolved
+   * absolute and relative paths for both sides; returns the validation
+   * result the formatter consumes.
+   */
+  inspectAndValidate(input: TwoSideInspectAndValidateInput): Promise<TResult>;
+  /**
+   * Renders the markdown report shown to the caller.
+   */
+  format(result: TResult): string;
+}
+
+/**
+ * Builds an MCP tool that validates a component / API directory pair. Accepts
+ * required `componentDir` + `apiDir`, resolves them against `process.cwd()`
+ * (rejecting paths that escape the cwd), and threads the resolved paths
+ * through the domain-supplied `inspectAndValidate` and `format`.
+ *
+ * Used by `dbx_notification_m_validate_folder`, `dbx_notification_m_validate_app`,
+ * `dbx_storagefile_m_validate_folder`, and `dbx_storagefile_m_validate_app`.
+ *
+ * @param config - the domain-specific hooks and tool definition
+ * @returns the registered {@link DbxTool}
+ */
+export function createTwoSideValidateTool<TResult extends { readonly errorCount: number }>(config: CreateTwoSideValidateToolConfig<TResult>): DbxTool {
+  const { definition, inspectAndValidate, format } = config;
+
+  async function run(rawArgs: unknown): Promise<ToolResult> {
+    const parsed = TwoSideValidateArgsType(rawArgs);
+    if (parsed instanceof type.errors) {
+      return toolError(`Invalid arguments: ${parsed.summary}`);
+    }
+
+    const cwd = process.cwd();
+    const componentRel = parsed.componentDir;
+    const apiRel = parsed.apiDir;
+    let componentAbs: string;
+    let apiAbs: string;
+    try {
+      ensurePathInsideCwd(componentRel, cwd);
+      ensurePathInsideCwd(apiRel, cwd);
+      componentAbs = resolve(cwd, componentRel);
+      apiAbs = resolve(cwd, apiRel);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return toolError(message);
+    }
+
+    const result = await inspectAndValidate({ componentAbs, componentRel, apiAbs, apiRel });
     const text = format(result);
     const toolResult: ToolResult = {
       content: [{ type: 'text', text }],
