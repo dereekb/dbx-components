@@ -1,5 +1,6 @@
 /**
- * Shared types for the `dbx_notification_m_validate_folder` validator.
+ * Domain types and constants for the
+ * `dbx_notification_m_validate_folder` validator.
  *
  * The validator takes two directory paths — a `-firebase` component
  * package and an API app — and asserts that the `notification/` model
@@ -20,7 +21,17 @@
  * and NotificationTaskType is reachable from the metadata record /
  * service factory paths) is verified by the sibling validator
  * `dbx_notification_m_validate_app` and is not re-checked here.
+ *
+ * The structural types ({@link SideInspection},
+ * {@link NotificationFolderInspection}, {@link Violation},
+ * {@link ValidationResult}) are aliases of the shared
+ * `validate-two-side-folder` engine specialised on this domain's
+ * {@link ViolationCode} literal union.
  */
+
+import type { RequiredApiFile, SideInspection as SharedSideInspection, SideStatus, TwoSideFolderInspection, TwoSideFolderValidationResult, TwoSideFolderViolation, ViolationSeverity } from '../validate-two-side-folder.js';
+
+export type { SideStatus, ViolationSeverity };
 
 export type ViolationCode =
   // I/O failures (errors)
@@ -38,80 +49,12 @@ export type ViolationCode =
   | 'NOTIF_FOLDER_UNEXPECTED_FILE_NAME'
   | 'NOTIF_FOLDER_HANDLERS_SUBFOLDER_MIXED';
 
-import type { ViolationSeverity } from '../validate-format.js';
-export type { ViolationSeverity };
+export type SideInspection = SharedSideInspection;
+export type NotificationFolderInspection = TwoSideFolderInspection;
+export type Violation = TwoSideFolderViolation<ViolationCode>;
+export type ValidationResult = TwoSideFolderValidationResult<ViolationCode>;
 
-export interface Violation {
-  readonly code: ViolationCode;
-  readonly severity: ViolationSeverity;
-  readonly message: string;
-  readonly side: 'component' | 'api';
-  readonly file: string | undefined;
-}
-
-export interface ValidationResult {
-  readonly violations: readonly Violation[];
-  readonly errorCount: number;
-  readonly warningCount: number;
-  readonly componentDir: string;
-  readonly apiDir: string;
-}
-
-export type SideStatus = 'ok' | 'dir-not-found' | 'folder-missing';
-
-/**
- * Inspection of one side (component or API) of the notification area.
- * The validator wrapper populates {@link files}, {@link entries}, and
- * {@link indexSource} via `node:fs/promises`; specs build inspections
- * directly without touching the disk.
- */
-export interface SideInspection {
-  /**
-   * Side name. Used in violation messages.
-   */
-  readonly side: 'component' | 'api';
-  /**
-   * Path supplied by the caller (e.g. `components/demo-firebase`).
-   */
-  readonly rootDir: string;
-  /**
-   * Relative path of the notification folder under {@link rootDir}, e.g. `src/lib/model/notification`.
-   */
-  readonly subPath: string;
-  readonly status: SideStatus;
-  /**
-   * `.ts` file basenames at the notification folder root.
-   */
-  readonly files: readonly string[];
-  /**
-   * Direct subdirectory names at the notification folder root (used to flag `handlers/`).
-   */
-  readonly entries: readonly string[];
-  /**
-   * Contents of `index.ts` when present at the folder root; `undefined` otherwise.
-   */
-  readonly indexSource: string | undefined;
-}
-
-export interface NotificationFolderInspection {
-  readonly componentDir: string;
-  readonly apiDir: string;
-  readonly component: SideInspection;
-  readonly api: SideInspection;
-}
-
-/**
- * Required file at the API root for a notification folder. The
- * validator emits the corresponding {@link RequiredApiFile.code}
- * error naming the file when it is absent.
- */
-export interface RequiredApiFile {
-  readonly filename: string;
-  readonly code: Extract<ViolationCode, `NOTIF_FOLDER_${string}_FILE_MISSING`>;
-  readonly role: string;
-}
-
-export const REQUIRED_API_FILES: readonly RequiredApiFile[] = [
+export const REQUIRED_API_FILES: readonly RequiredApiFile<ViolationCode>[] = [
   { filename: 'notification.module.ts', code: 'NOTIF_FOLDER_MODULE_FILE_MISSING', role: 'NestJS notification module' },
   { filename: 'notification.task.service.ts', code: 'NOTIF_FOLDER_TASK_SERVICE_FILE_MISSING', role: 'NotificationTaskService factory' },
   { filename: 'notification.send.service.ts', code: 'NOTIF_FOLDER_SEND_SERVICE_FILE_MISSING', role: 'NotificationSendService factory' }

@@ -1,5 +1,6 @@
 /**
- * Shared types for the `dbx_storagefile_m_validate_folder` validator.
+ * Domain types and constants for the
+ * `dbx_storagefile_m_validate_folder` validator.
  *
  * The validator takes two directory paths — a `-firebase` component
  * package and an API app — and asserts that the `storagefile/` model
@@ -20,7 +21,17 @@
  * the upload service / processing handler) is verified by the
  * sibling validator `dbx_storagefile_m_validate_app` and is not
  * re-checked here.
+ *
+ * The structural types ({@link SideInspection},
+ * {@link StorageFileFolderInspection}, {@link Violation},
+ * {@link ValidationResult}) are aliases of the shared
+ * `validate-two-side-folder` engine specialised on this domain's
+ * {@link ViolationCode} literal union.
  */
+
+import type { RequiredApiFile, SideInspection as SharedSideInspection, SideStatus, TwoSideFolderInspection, TwoSideFolderValidationResult, TwoSideFolderViolation, ViolationSeverity } from '../validate-two-side-folder.js';
+
+export type { SideStatus, ViolationSeverity };
 
 export type ViolationCode =
   // I/O failures (errors)
@@ -38,80 +49,12 @@ export type ViolationCode =
   | 'STORAGEFILE_FOLDER_UNEXPECTED_FILE_NAME'
   | 'STORAGEFILE_FOLDER_HANDLERS_SUBFOLDER_MIXED';
 
-import type { ViolationSeverity } from '../validate-format.js';
-export type { ViolationSeverity };
+export type SideInspection = SharedSideInspection;
+export type StorageFileFolderInspection = TwoSideFolderInspection;
+export type Violation = TwoSideFolderViolation<ViolationCode>;
+export type ValidationResult = TwoSideFolderValidationResult<ViolationCode>;
 
-export interface Violation {
-  readonly code: ViolationCode;
-  readonly severity: ViolationSeverity;
-  readonly message: string;
-  readonly side: 'component' | 'api';
-  readonly file: string | undefined;
-}
-
-export interface ValidationResult {
-  readonly violations: readonly Violation[];
-  readonly errorCount: number;
-  readonly warningCount: number;
-  readonly componentDir: string;
-  readonly apiDir: string;
-}
-
-export type SideStatus = 'ok' | 'dir-not-found' | 'folder-missing';
-
-/**
- * Inspection of one side (component or API) of the storagefile area.
- * The validator wrapper populates {@link files}, {@link entries}, and
- * {@link indexSource} via `node:fs/promises`; specs build inspections
- * directly without touching the disk.
- */
-export interface SideInspection {
-  /**
-   * Side name. Used in violation messages.
-   */
-  readonly side: 'component' | 'api';
-  /**
-   * Path supplied by the caller (e.g. `components/demo-firebase`).
-   */
-  readonly rootDir: string;
-  /**
-   * Relative path of the storagefile folder under {@link rootDir}, e.g. `src/lib/model/storagefile`.
-   */
-  readonly subPath: string;
-  readonly status: SideStatus;
-  /**
-   * `.ts` file basenames at the storagefile folder root.
-   */
-  readonly files: readonly string[];
-  /**
-   * Direct subdirectory names at the storagefile folder root (used to flag `handlers/`).
-   */
-  readonly entries: readonly string[];
-  /**
-   * Contents of `index.ts` when present at the folder root; `undefined` otherwise.
-   */
-  readonly indexSource: string | undefined;
-}
-
-export interface StorageFileFolderInspection {
-  readonly componentDir: string;
-  readonly apiDir: string;
-  readonly component: SideInspection;
-  readonly api: SideInspection;
-}
-
-/**
- * Required file at the API root for a storagefile folder. The
- * validator emits the corresponding {@link RequiredApiFile.code} error
- * naming the file when it is absent.
- */
-export interface RequiredApiFile {
-  readonly filename: string;
-  readonly code: Extract<ViolationCode, `STORAGEFILE_FOLDER_${string}_FILE_MISSING`>;
-  readonly role: string;
-}
-
-export const REQUIRED_API_FILES: readonly RequiredApiFile[] = [
+export const REQUIRED_API_FILES: readonly RequiredApiFile<ViolationCode>[] = [
   { filename: 'storagefile.upload.service.ts', code: 'STORAGEFILE_FOLDER_UPLOAD_SERVICE_FILE_MISSING', role: 'upload-service factory' },
   { filename: 'storagefile.module.ts', code: 'STORAGEFILE_FOLDER_MODULE_FILE_MISSING', role: 'NestJS storage-file module' },
   { filename: 'storagefile.init.ts', code: 'STORAGEFILE_FOLDER_INIT_FILE_MISSING', role: 'storage-file init server actions config' }
