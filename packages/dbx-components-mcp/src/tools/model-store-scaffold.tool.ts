@@ -414,26 +414,14 @@ function rootDocumentStoreBody(args: ParsedScaffoldArgs): FileBlock {
     packageImports.push(args.functionsClass);
   }
 
-  const lines: string[] = [];
-  lines.push(`import { Injectable, inject } from '@angular/core';`);
-  lines.push(`import { ${joinUnique(dbxFirebaseImports)} } from '@dereekb/dbx-firebase';`);
-  lines.push(`import { ${joinUnique(packageImports)} } from '${args.firebasePackage}';`);
-  lines.push('');
-  lines.push(`@Injectable()`);
-  lines.push(`export class ${storeClass} extends ${baseClass}<${args.modelName}, ${docType}> {`);
+  const lines: string[] = [`import { Injectable, inject } from '@angular/core';`, `import { ${joinUnique(dbxFirebaseImports)} } from '@dereekb/dbx-firebase';`, `import { ${joinUnique(packageImports)} } from '${args.firebasePackage}';`, '', `@Injectable()`, `export class ${storeClass} extends ${baseClass}<${args.modelName}, ${docType}> {`];
   if (args.functionsClass !== undefined) {
-    lines.push(`  readonly ${functionsFieldName(args.functionsClass)} = inject(${args.functionsClass});`);
-    lines.push('');
+    lines.push(`  readonly ${functionsFieldName(args.functionsClass)} = inject(${args.functionsClass});`, '');
   }
-  lines.push(`  constructor() {`);
-  lines.push(`    super({ firestoreCollection: inject(${collections}).${args.collectionAccessor} });`);
-  lines.push(`  }`);
+  lines.push(`  constructor() {`, `    super({ firestoreCollection: inject(${collections}).${args.collectionAccessor} });`, `  }`);
   const crudLines = renderCrudLines(args, 'this');
   if (crudLines.length > 0) {
-    lines.push('');
-    for (const cl of crudLines) {
-      lines.push(cl);
-    }
+    lines.push('', ...crudLines);
   }
   lines.push(`}`);
 
@@ -445,17 +433,18 @@ function rootCollectionStoreBody(args: ParsedScaffoldArgs): FileBlock {
   const storeClass = `${args.modelName}CollectionStore`;
   const collections = args.collectionsClass as string;
 
-  const lines: string[] = [];
-  lines.push(`import { Injectable, inject } from '@angular/core';`);
-  lines.push(`import { AbstractDbxFirebaseCollectionStore } from '@dereekb/dbx-firebase';`);
-  lines.push(`import { ${collections}, type ${args.modelName}, type ${docType} } from '${args.firebasePackage}';`);
-  lines.push('');
-  lines.push(`@Injectable()`);
-  lines.push(`export class ${storeClass} extends AbstractDbxFirebaseCollectionStore<${args.modelName}, ${docType}> {`);
-  lines.push(`  constructor() {`);
-  lines.push(`    super({ firestoreCollection: inject(${collections}).${args.collectionAccessor} });`);
-  lines.push(`  }`);
-  lines.push(`}`);
+  const lines: string[] = [
+    `import { Injectable, inject } from '@angular/core';`,
+    `import { AbstractDbxFirebaseCollectionStore } from '@dereekb/dbx-firebase';`,
+    `import { ${collections}, type ${args.modelName}, type ${docType} } from '${args.firebasePackage}';`,
+    '',
+    `@Injectable()`,
+    `export class ${storeClass} extends AbstractDbxFirebaseCollectionStore<${args.modelName}, ${docType}> {`,
+    `  constructor() {`,
+    `    super({ firestoreCollection: inject(${collections}).${args.collectionAccessor} });`,
+    `  }`,
+    `}`
+  ];
 
   return { path: `${args.fileBaseName}.collection.store.ts`, body: lines.join('\n') };
 }
@@ -475,33 +464,14 @@ function subDocumentStoreBody(args: ParsedScaffoldArgs): FileBlock {
     packageImports.push(args.functionsClass);
   }
 
-  const lines: string[] = [];
-  lines.push(`import { Injectable, inject } from '@angular/core';`);
-  lines.push(`import { ${joinUnique(dbxFirebaseImports)} } from '@dereekb/dbx-firebase';`);
-  lines.push(`import { ${joinUnique(packageImports)} } from '${args.firebasePackage}';`);
-  lines.push(`import { ${parentStore} } from './${parentBaseFile}.document.store';`);
-  lines.push('');
-  lines.push(`@Injectable()`);
-  lines.push(`export class ${storeClass} extends ${baseClass}<${args.modelName}, ${parent.name}, ${docType}, ${parent.documentType}> {`);
+  const lines: string[] = [`import { Injectable, inject } from '@angular/core';`, `import { ${joinUnique(dbxFirebaseImports)} } from '@dereekb/dbx-firebase';`, `import { ${joinUnique(packageImports)} } from '${args.firebasePackage}';`, `import { ${parentStore} } from './${parentBaseFile}.document.store';`, '', `@Injectable()`, `export class ${storeClass} extends ${baseClass}<${args.modelName}, ${parent.name}, ${docType}, ${parent.documentType}> {`];
   if (args.functionsClass !== undefined) {
-    lines.push(`  readonly ${functionsFieldName(args.functionsClass)} = inject(${args.functionsClass});`);
-    lines.push('');
+    lines.push(`  readonly ${functionsFieldName(args.functionsClass)} = inject(${args.functionsClass});`, '');
   }
-  lines.push(`  constructor() {`);
-  lines.push(`    const collections = inject(${collections});`);
-  lines.push(`    super({ collectionFactory: collections.${args.factoryAccessor}, firestoreCollectionLike: collections.${args.groupAccessor} });`);
-  lines.push(`    const parent = inject(${parentStore}, { optional: true });`);
-  lines.push('');
-  lines.push(`    if (parent) {`);
-  lines.push(`      this.setParentStore(parent);`);
-  lines.push(`    }`);
-  lines.push(`  }`);
+  lines.push(`  constructor() {`, `    const collections = inject(${collections});`, `    super({ collectionFactory: collections.${args.factoryAccessor}, firestoreCollectionLike: collections.${args.groupAccessor} });`, `    const parent = inject(${parentStore}, { optional: true });`, '', `    if (parent) {`, `      this.setParentStore(parent);`, `    }`, `  }`);
   const crudLines = renderCrudLines(args, 'this');
   if (crudLines.length > 0) {
-    lines.push('');
-    for (const cl of crudLines) {
-      lines.push(cl);
-    }
+    lines.push('', ...crudLines);
   }
   lines.push(`}`);
 
@@ -516,24 +486,25 @@ function subCollectionStoreBody(args: ParsedScaffoldArgs): FileBlock {
   const parentStore = `${parent.name}DocumentStore`;
   const parentBaseFile = parent.name.toLowerCase();
 
-  const lines: string[] = [];
-  lines.push(`import { Injectable, inject } from '@angular/core';`);
-  lines.push(`import { AbstractDbxFirebaseCollectionWithParentStore } from '@dereekb/dbx-firebase';`);
-  lines.push(`import { ${collections}, type ${args.modelName}, type ${docType}, type ${parent.name}, type ${parent.documentType} } from '${args.firebasePackage}';`);
-  lines.push(`import { ${parentStore} } from './${parentBaseFile}.document.store';`);
-  lines.push('');
-  lines.push(`@Injectable()`);
-  lines.push(`export class ${storeClass} extends AbstractDbxFirebaseCollectionWithParentStore<${args.modelName}, ${parent.name}, ${docType}, ${parent.documentType}> {`);
-  lines.push(`  constructor() {`);
-  lines.push(`    const collections = inject(${collections});`);
-  lines.push(`    super({ collectionFactory: collections.${args.factoryAccessor}, collectionGroup: collections.${args.groupAccessor} });`);
-  lines.push(`    const parent = inject(${parentStore}, { optional: true });`);
-  lines.push('');
-  lines.push(`    if (parent) {`);
-  lines.push(`      this.setParentStore(parent);`);
-  lines.push(`    }`);
-  lines.push(`  }`);
-  lines.push(`}`);
+  const lines: string[] = [
+    `import { Injectable, inject } from '@angular/core';`,
+    `import { AbstractDbxFirebaseCollectionWithParentStore } from '@dereekb/dbx-firebase';`,
+    `import { ${collections}, type ${args.modelName}, type ${docType}, type ${parent.name}, type ${parent.documentType} } from '${args.firebasePackage}';`,
+    `import { ${parentStore} } from './${parentBaseFile}.document.store';`,
+    '',
+    `@Injectable()`,
+    `export class ${storeClass} extends AbstractDbxFirebaseCollectionWithParentStore<${args.modelName}, ${parent.name}, ${docType}, ${parent.documentType}> {`,
+    `  constructor() {`,
+    `    const collections = inject(${collections});`,
+    `    super({ collectionFactory: collections.${args.factoryAccessor}, collectionGroup: collections.${args.groupAccessor} });`,
+    `    const parent = inject(${parentStore}, { optional: true });`,
+    '',
+    `    if (parent) {`,
+    `      this.setParentStore(parent);`,
+    `    }`,
+    `  }`,
+    `}`
+  ];
 
   return { path: `${args.fileBaseName}.collection.store.ts`, body: lines.join('\n') };
 }
@@ -549,26 +520,14 @@ function systemStateAccessorBody(args: ParsedScaffoldArgs): FileBlock {
     packageImports.push(args.functionsClass);
   }
 
-  const lines: string[] = [];
-  lines.push(`import { Injectable, inject } from '@angular/core';`);
-  lines.push(`import { ${joinUnique(dbxFirebaseImports)} } from '@dereekb/dbx-firebase';`);
-  lines.push(`import { ${joinUnique(packageImports)} } from '${args.firebasePackage}';`);
-  lines.push('');
-  lines.push(`@Injectable()`);
-  lines.push(`export class ${accessorClass} extends AbstractSystemStateDocumentStoreAccessor<${dataType}> {`);
+  const lines: string[] = [`import { Injectable, inject } from '@angular/core';`, `import { ${joinUnique(dbxFirebaseImports)} } from '@dereekb/dbx-firebase';`, `import { ${joinUnique(packageImports)} } from '${args.firebasePackage}';`, '', `@Injectable()`, `export class ${accessorClass} extends AbstractSystemStateDocumentStoreAccessor<${dataType}> {`];
   if (args.functionsClass !== undefined) {
-    lines.push(`  readonly ${functionsFieldName(args.functionsClass)} = inject(${args.functionsClass});`);
-    lines.push('');
+    lines.push(`  readonly ${functionsFieldName(args.functionsClass)} = inject(${args.functionsClass});`, '');
   }
-  lines.push(`  constructor() {`);
-  lines.push(`    super(${typeConst});`);
-  lines.push(`  }`);
+  lines.push(`  constructor() {`, `    super(${typeConst});`, `  }`);
   const crudLines = renderCrudLines(args, 'this.systemStateDocumentStore');
   if (crudLines.length > 0) {
-    lines.push('');
-    for (const cl of crudLines) {
-      lines.push(cl);
-    }
+    lines.push('', ...crudLines);
   }
   lines.push(`}`);
 
@@ -581,22 +540,23 @@ function documentDirectiveBody(args: ParsedScaffoldArgs): FileBlock {
   const directiveClass = `${args.appPrefixPascal}${args.modelName}DocumentStoreDirective`;
   const selector = `[${args.appPrefixCamel}${args.modelName}Document]`;
 
-  const lines: string[] = [];
-  lines.push(`import { Directive, inject } from '@angular/core';`);
-  lines.push(`import { DbxFirebaseDocumentStoreDirective, provideDbxFirebaseDocumentStoreDirective } from '@dereekb/dbx-firebase';`);
-  lines.push(`import { type ${args.modelName}, type ${docType} } from '${args.firebasePackage}';`);
-  lines.push(`import { ${storeClass} } from './${args.fileBaseName}.document.store';`);
-  lines.push('');
-  lines.push(`@Directive({`);
-  lines.push(`  selector: '${selector}',`);
-  lines.push(`  providers: provideDbxFirebaseDocumentStoreDirective(${directiveClass}, ${storeClass}),`);
-  lines.push(`  standalone: true`);
-  lines.push(`})`);
-  lines.push(`export class ${directiveClass} extends DbxFirebaseDocumentStoreDirective<${args.modelName}, ${docType}, ${storeClass}> {`);
-  lines.push(`  constructor() {`);
-  lines.push(`    super(inject(${storeClass}));`);
-  lines.push(`  }`);
-  lines.push(`}`);
+  const lines: string[] = [
+    `import { Directive, inject } from '@angular/core';`,
+    `import { DbxFirebaseDocumentStoreDirective, provideDbxFirebaseDocumentStoreDirective } from '@dereekb/dbx-firebase';`,
+    `import { type ${args.modelName}, type ${docType} } from '${args.firebasePackage}';`,
+    `import { ${storeClass} } from './${args.fileBaseName}.document.store';`,
+    '',
+    `@Directive({`,
+    `  selector: '${selector}',`,
+    `  providers: provideDbxFirebaseDocumentStoreDirective(${directiveClass}, ${storeClass}),`,
+    `  standalone: true`,
+    `})`,
+    `export class ${directiveClass} extends DbxFirebaseDocumentStoreDirective<${args.modelName}, ${docType}, ${storeClass}> {`,
+    `  constructor() {`,
+    `    super(inject(${storeClass}));`,
+    `  }`,
+    `}`
+  ];
 
   return { path: `${args.fileBaseName}.document.store.directive.ts`, body: lines.join('\n') };
 }
@@ -607,22 +567,23 @@ function collectionDirectiveBody(args: ParsedScaffoldArgs): FileBlock {
   const directiveClass = `${args.appPrefixPascal}${args.modelName}CollectionStoreDirective`;
   const selector = `[${args.appPrefixCamel}${args.modelName}Collection]`;
 
-  const lines: string[] = [];
-  lines.push(`import { Directive, inject } from '@angular/core';`);
-  lines.push(`import { DbxFirebaseCollectionStoreDirective, provideDbxFirebaseCollectionStoreDirective } from '@dereekb/dbx-firebase';`);
-  lines.push(`import { type ${args.modelName}, type ${docType} } from '${args.firebasePackage}';`);
-  lines.push(`import { ${storeClass} } from './${args.fileBaseName}.collection.store';`);
-  lines.push('');
-  lines.push(`@Directive({`);
-  lines.push(`  selector: '${selector}',`);
-  lines.push(`  providers: provideDbxFirebaseCollectionStoreDirective(${directiveClass}, ${storeClass}),`);
-  lines.push(`  standalone: true`);
-  lines.push(`})`);
-  lines.push(`export class ${directiveClass} extends DbxFirebaseCollectionStoreDirective<${args.modelName}, ${docType}, ${storeClass}> {`);
-  lines.push(`  constructor() {`);
-  lines.push(`    super(inject(${storeClass}));`);
-  lines.push(`  }`);
-  lines.push(`}`);
+  const lines: string[] = [
+    `import { Directive, inject } from '@angular/core';`,
+    `import { DbxFirebaseCollectionStoreDirective, provideDbxFirebaseCollectionStoreDirective } from '@dereekb/dbx-firebase';`,
+    `import { type ${args.modelName}, type ${docType} } from '${args.firebasePackage}';`,
+    `import { ${storeClass} } from './${args.fileBaseName}.collection.store';`,
+    '',
+    `@Directive({`,
+    `  selector: '${selector}',`,
+    `  providers: provideDbxFirebaseCollectionStoreDirective(${directiveClass}, ${storeClass}),`,
+    `  standalone: true`,
+    `})`,
+    `export class ${directiveClass} extends DbxFirebaseCollectionStoreDirective<${args.modelName}, ${docType}, ${storeClass}> {`,
+    `  constructor() {`,
+    `    super(inject(${storeClass}));`,
+    `  }`,
+    `}`
+  ];
 
   return { path: `${args.fileBaseName}.collection.store.directive.ts`, body: lines.join('\n') };
 }
@@ -661,30 +622,17 @@ function buildBlocks(args: ParsedScaffoldArgs): readonly FileBlock[] {
 // MARK: Output
 function formatScaffold(args: ParsedScaffoldArgs): string {
   const blocks = buildBlocks(args);
-  const lines: string[] = [];
-  lines.push(`# ${args.modelName} store scaffold`);
-  lines.push('');
   const surfaceLabel = args.shape === 'system-state' ? 'accessor' : args.surfaces.join(' + ');
   const functionsLabel = args.functionsClass ?? 'none';
   const crudLabel = args.crudFunctions.length > 0 ? args.crudFunctions.map((c) => `${c.name} (${c.kind})`).join(', ') : 'none';
-  const parentLabel = args.parentModel !== undefined ? args.parentModel.name : 'n/a';
-  lines.push(`Shape: \`${args.shape}\` · Surfaces: ${surfaceLabel} · Parent: ${parentLabel} · Functions: ${functionsLabel} · Crud: ${crudLabel}`);
-  lines.push('');
-  lines.push(`Drop into \`<app>/src/lib/modules/${args.fileBaseName.replaceAll('.', '/')}/store/\`.`);
-  lines.push('');
+  const parentLabel = args.parentModel === undefined ? 'n/a' : args.parentModel.name;
+  const lines: string[] = [`# ${args.modelName} store scaffold`, '', `Shape: \`${args.shape}\` · Surfaces: ${surfaceLabel} · Parent: ${parentLabel} · Functions: ${functionsLabel} · Crud: ${crudLabel}`, '', `Drop into \`<app>/src/lib/modules/${args.fileBaseName.replaceAll('.', '/')}/store/\`.`, ''];
 
   for (const block of blocks) {
-    lines.push(`## \`${block.path}\``);
-    lines.push('');
-    lines.push('```ts');
-    lines.push(block.body);
-    lines.push('```');
-    lines.push('');
+    lines.push(`## \`${block.path}\``, '', '```ts', block.body, '```', '');
   }
 
-  lines.push('## Notes');
-  lines.push('');
-  lines.push('- Each store is `@Injectable()` with no `providedIn` — wire it in the consuming feature module / route providers, alongside its directive (when present).');
+  lines.push('## Notes', '', '- Each store is `@Injectable()` with no `providedIn` — wire it in the consuming feature module / route providers, alongside its directive (when present).');
   if (args.shape === 'sub-collection' || args.shape === 'singleton-sub') {
     lines.push(`- The \`${args.parentModel?.name}DocumentStore\` parent is injected with \`{ optional: true }\` so the store works both as a standalone and as a child of a parent's document directive.`);
   }
@@ -694,8 +642,7 @@ function formatScaffold(args: ParsedScaffoldArgs): string {
   if (args.crudFunctions.length > 0) {
     lines.push(`- ${args.crudFunctions.length} CRUD helper line${args.crudFunctions.length === 1 ? '' : 's'} wired through \`firebaseDocumentStore{Create,Update,Crud}Function\`.`);
   }
-  lines.push('- → See `dbx_model_lookup topic="shapes"` for the full store-shape taxonomy.');
-  lines.push('- → Skill: `dbx__guide__angular-stores`.');
+  lines.push('- → See `dbx_model_lookup topic="shapes"` for the full store-shape taxonomy.', '- → Skill: `dbx__guide__angular-stores`.');
 
   return lines.join('\n');
 }
