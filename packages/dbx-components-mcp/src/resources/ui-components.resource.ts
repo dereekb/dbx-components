@@ -73,13 +73,13 @@ export function registerUiComponentsResource(server: McpServer): void {
       let text: string;
       if (!slug) {
         text = 'No slug provided.';
-      } else if (!entry) {
+      } else if (entry) {
+        text = JSON.stringify(entry, null, 2);
+      } else {
         const available = getUiComponents()
           .map((c) => c.slug)
           .join(', ');
         text = `UI component '${slug}' not found. Available slugs: ${available}`;
-      } else {
-        text = JSON.stringify(entry, null, 2);
       }
 
       return {
@@ -108,11 +108,11 @@ export function registerUiComponentsResource(server: McpServer): void {
 
       const valid = category && UI_CATEGORY_ORDER.includes(category);
       let text: string;
-      if (!valid) {
-        text = `Invalid category. Valid values: ${UI_CATEGORY_ORDER.join(', ')}`;
-      } else {
+      if (valid) {
         const components = getUiComponentsByCategory(category);
         text = JSON.stringify({ category, components }, null, 2);
+      } else {
+        text = `Invalid category. Valid values: ${UI_CATEGORY_ORDER.join(', ')}`;
       }
 
       return {
@@ -141,11 +141,11 @@ export function registerUiComponentsResource(server: McpServer): void {
 
       const valid = kind && UI_KIND_ORDER.includes(kind);
       let text: string;
-      if (!valid) {
-        text = `Invalid kind. Valid values: ${UI_KIND_ORDER.join(', ')}`;
-      } else {
+      if (valid) {
         const components = getUiComponentsByKind(kind);
         text = JSON.stringify({ kind, components }, null, 2);
+      } else {
+        text = `Invalid kind. Valid values: ${UI_KIND_ORDER.join(', ')}`;
       }
 
       return {

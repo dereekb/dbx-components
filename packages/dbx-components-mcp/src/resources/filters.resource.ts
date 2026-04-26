@@ -71,11 +71,11 @@ export function registerFiltersResource(server: McpServer): void {
       let text: string;
       if (!slug) {
         text = 'No slug provided.';
-      } else if (!entry) {
+      } else if (entry) {
+        text = JSON.stringify(entry, null, 2);
+      } else {
         const available = FILTER_ENTRIES.map((e) => e.slug).join(', ');
         text = `Filter '${slug}' not found. Available slugs: ${available}`;
-      } else {
-        text = JSON.stringify(entry, null, 2);
       }
 
       return {
@@ -104,11 +104,11 @@ export function registerFiltersResource(server: McpServer): void {
 
       const valid = kind && FILTER_KIND_ORDER.includes(kind);
       let text: string;
-      if (!valid) {
-        text = `Invalid kind. Valid values: ${FILTER_KIND_ORDER.join(', ')}`;
-      } else {
+      if (valid) {
         const filters = getFilterEntriesByKind(kind);
         text = JSON.stringify({ kind, filters }, null, 2);
+      } else {
+        text = `Invalid kind. Valid values: ${FILTER_KIND_ORDER.join(', ')}`;
       }
 
       return {

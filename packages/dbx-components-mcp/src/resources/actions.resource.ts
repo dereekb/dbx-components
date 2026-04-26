@@ -81,13 +81,13 @@ export function registerActionsResource(server: McpServer): void {
       let text: string;
       if (!slug) {
         text = 'No slug provided.';
-      } else if (!entry) {
+      } else if (entry) {
+        text = JSON.stringify(entry, null, 2);
+      } else {
         const available = getActionEntries()
           .map((e) => e.slug)
           .join(', ');
         text = `Action entry '${slug}' not found. Available slugs: ${available}`;
-      } else {
-        text = JSON.stringify(entry, null, 2);
       }
 
       return {
@@ -116,11 +116,11 @@ export function registerActionsResource(server: McpServer): void {
 
       const valid = role && ACTION_ROLE_ORDER.includes(role);
       let text: string;
-      if (!valid) {
-        text = `Invalid role. Valid values: ${ACTION_ROLE_ORDER.join(', ')}`;
-      } else {
+      if (valid) {
         const entries = getActionEntriesByRole(role);
         text = JSON.stringify({ role, entries }, null, 2);
+      } else {
+        text = `Invalid role. Valid values: ${ACTION_ROLE_ORDER.join(', ')}`;
       }
 
       return {

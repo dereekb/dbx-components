@@ -74,13 +74,13 @@ export function registerFormFieldsResource(server: McpServer): void {
       let text: string;
       if (!slug) {
         text = 'No slug provided.';
-      } else if (!field) {
+      } else if (field) {
+        text = JSON.stringify(field, null, 2);
+      } else {
         const available = getFormFields()
           .map((f) => f.slug)
           .join(', ');
         text = `Form field '${slug}' not found. Available slugs: ${available}`;
-      } else {
-        text = JSON.stringify(field, null, 2);
       }
 
       return {
@@ -147,11 +147,11 @@ export function registerFormFieldsResource(server: McpServer): void {
 
       const valid = tier && FORM_TIER_ORDER.includes(tier);
       let text: string;
-      if (!valid) {
-        text = `Invalid tier. Valid values: ${FORM_TIER_ORDER.join(', ')}`;
-      } else {
+      if (valid) {
         const entries = getFormFieldsByTier(tier);
         text = JSON.stringify({ tier, fields: entries }, null, 2);
+      } else {
+        text = `Invalid tier. Valid values: ${FORM_TIER_ORDER.join(', ')}`;
       }
 
       return {
@@ -180,11 +180,11 @@ export function registerFormFieldsResource(server: McpServer): void {
 
       const valid = arrayOutput && ARRAY_OUTPUT_VALUES.includes(arrayOutput);
       let text: string;
-      if (!valid) {
-        text = `Invalid arrayOutput value. Valid values: ${ARRAY_OUTPUT_VALUES.join(', ')}`;
-      } else {
+      if (valid) {
         const entries = getFormFieldsByArrayOutput(arrayOutput);
         text = JSON.stringify({ arrayOutput, fields: entries }, null, 2);
+      } else {
+        text = `Invalid arrayOutput value. Valid values: ${ARRAY_OUTPUT_VALUES.join(', ')}`;
       }
 
       return {

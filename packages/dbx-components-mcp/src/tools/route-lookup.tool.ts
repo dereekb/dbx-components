@@ -147,16 +147,9 @@ function fuzzyCandidates(query: string, byName: ReadonlyMap<string, RouteTreeNod
 
 // MARK: Formatting
 function formatSingle(node: RouteTreeNode, depth: 'brief' | 'full', via: string): string {
-  const lines: string[] = [];
-  lines.push(`# ${node.data.name}`);
-  lines.push('');
-  lines.push(`Matched via ${via}.`);
-  lines.push('');
-  const urlText = node.fullUrl !== undefined ? code(node.fullUrl) : '_no url_';
-  const componentText = node.data.component !== undefined ? code(node.data.component) : '_no component_';
-  lines.push(`- **URL:** ${urlText}`);
-  lines.push(`- **Component:** ${componentText}`);
-  lines.push(`- **Defined in:** \`${node.data.file}:${node.data.line}\``);
+  const urlText = node.fullUrl === undefined ? '_no url_' : code(node.fullUrl);
+  const componentText = node.data.component === undefined ? '_no component_' : code(node.data.component);
+  const lines: string[] = [`# ${node.data.name}`, '', `Matched via ${via}.`, '', `- **URL:** ${urlText}`, `- **Component:** ${componentText}`, `- **Defined in:** \`${node.data.file}:${node.data.line}\``];
   if (node.data.redirectTo) {
     lines.push(`- **Redirects to:** \`${node.data.redirectTo}\``);
   }
@@ -177,8 +170,7 @@ function formatSingle(node: RouteTreeNode, depth: 'brief' | 'full', via: string)
   appendRelatedNodesSection(lines, 'Siblings', node.parent ? node.parent.children.filter((c) => c.data.name !== node.data.name) : []);
   appendRelatedNodesSection(lines, 'Children', node.children);
 
-  lines.push('');
-  lines.push('→ See skill `dbx__ref__dbx-app-structure` for state composition patterns.');
+  lines.push('', '→ See skill `dbx__ref__dbx-app-structure` for state composition patterns.');
   return lines.join('\n');
 }
 
@@ -189,11 +181,9 @@ function formatSingle(node: RouteTreeNode, depth: 'brief' | 'full', via: string)
  * @param node - the node whose ancestor chain to render
  */
 function appendParentChainSection(lines: string[], node: RouteTreeNode): void {
-  lines.push('');
-  lines.push('## Parent chain');
   const chain = ancestors(node);
   const chainLine = chain.map((c) => code(c.data.name)).join(' → ');
-  lines.push(chainLine.length > 0 ? chainLine : '_root_');
+  lines.push('', '## Parent chain', chainLine.length > 0 ? chainLine : '_root_');
 }
 
 /**
@@ -205,8 +195,7 @@ function appendParentChainSection(lines: string[], node: RouteTreeNode): void {
  * @param keys - the list of identifier keys to render
  */
 function appendKeyListSection(lines: string[], title: string, keys: readonly string[]): void {
-  lines.push('');
-  lines.push(`## ${title}`);
+  lines.push('', `## ${title}`);
   if (keys.length === 0) {
     lines.push('_None._');
   } else {
@@ -225,14 +214,13 @@ function appendKeyListSection(lines: string[], title: string, keys: readonly str
  * @param nodes - the related nodes (siblings or children) to render
  */
 function appendRelatedNodesSection(lines: string[], title: string, nodes: readonly RouteTreeNode[]): void {
-  lines.push('');
-  lines.push(`## ${title}`);
+  lines.push('', `## ${title}`);
   if (nodes.length === 0) {
     lines.push('_None._');
     return;
   }
   for (const child of nodes) {
-    const urlPart = child.fullUrl !== undefined ? code(child.fullUrl) : '';
+    const urlPart = child.fullUrl === undefined ? '' : code(child.fullUrl);
     const componentPart = child.data.component ? ` → ${code(child.data.component)}` : '';
     lines.push(`- \`${child.data.name}\` ${urlPart}${componentPart}`);
   }
@@ -251,7 +239,7 @@ function ancestors(node: RouteTreeNode): readonly RouteTreeNode[] {
 function formatGroup(title: string, nodes: readonly RouteTreeNode[]): string {
   const lines: string[] = [`# ${title}`, '', `${nodes.length} match(es).`, ''];
   for (const node of nodes) {
-    const urlPart = node.fullUrl !== undefined ? code(node.fullUrl) : '';
+    const urlPart = node.fullUrl === undefined ? '' : code(node.fullUrl);
     const componentPart = node.data.component ? ` → ${code(node.data.component)}` : '';
     lines.push(`- \`${node.data.name}\` ${urlPart}${componentPart} _(${node.data.file}:${node.data.line})_`);
   }
@@ -261,10 +249,9 @@ function formatGroup(title: string, nodes: readonly RouteTreeNode[]): string {
 function formatNotFound(query: string, candidates: readonly RouteTreeNode[]): string {
   const lines: string[] = [`No state matched \`${query}\`.`, ''];
   if (candidates.length > 0) {
-    lines.push('Did you mean one of these?');
-    lines.push('');
+    lines.push('Did you mean one of these?', '');
     for (const node of candidates) {
-      const urlPart = node.fullUrl !== undefined ? code(node.fullUrl) : '';
+      const urlPart = node.fullUrl === undefined ? '' : code(node.fullUrl);
       const componentPart = node.data.component ? ` → ${code(node.data.component)}` : '';
       lines.push(`- \`${node.data.name}\` ${urlPart}${componentPart}`);
     }

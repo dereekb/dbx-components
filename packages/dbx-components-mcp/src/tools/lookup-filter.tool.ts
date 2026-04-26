@@ -164,13 +164,11 @@ function formatEntry(entry: FilterEntryInfo, depth: 'brief' | 'full'): string {
     lines.push('```');
     if (entry.relatedSlugs.length > 0) {
       const relatedText = entry.relatedSlugs.map((s) => code(s)).join(', ');
-      lines.push('');
-      lines.push(`→ Related: ${relatedText}`);
+      lines.push('', `→ Related: ${relatedText}`);
     }
     if (entry.skillRefs.length > 0) {
       const skillsText = entry.skillRefs.map((s) => code(s)).join(', ');
-      lines.push('');
-      lines.push(`→ Skills: ${skillsText}`);
+      lines.push('', `→ Skills: ${skillsText}`);
     }
   } else {
     lines.push(`→ Call \`dbx_filter_lookup topic="${entry.slug}" depth="full"\` for inputs and the example.`);
