@@ -45,6 +45,11 @@ export type RelationChangeType = (typeof RelationChange)[keyof typeof RelationCh
 
 /**
  * A string-based relation identifier.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-util:relation
  */
 export type RelationString = string;
 
@@ -55,6 +60,11 @@ export type RelationObject = RelationString | object;
 
 /**
  * A string identifying the type/category of a relation model.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-util:relation
  */
 export type RelationModelType = string;
 

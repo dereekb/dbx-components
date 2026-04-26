@@ -5,6 +5,10 @@ import { type Maybe } from '../value/maybe.type';
 
 /**
  * A string value representing a node in a split string tree.
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-util:tree
  */
 export type SplitStringTreeNodeString = string;
 

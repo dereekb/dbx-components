@@ -5,5 +5,1614 @@
   "generatedAt": "1970-01-01T00:00:00.000Z",
   "generator": "@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs",
   "topics": [],
-  "entries": []
+  "entries": [
+    {
+      "name": "BooleanTrueChance",
+      "package": "@dereekb/util",
+      "module": "src/lib/boolean",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["percent", "numeric"],
+      "notes": "Number from 0.0 to 100.0 used for the chance to return true.",
+      "sourceLocation": {
+        "file": "src/lib/boolean.ts",
+        "line": 142
+      }
+    },
+    {
+      "name": "HashSalt",
+      "package": "@dereekb/util",
+      "module": "src/lib/hash",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["string", "dereekb-util:hash"],
+      "notes": "Represents a salt value used in hashing.",
+      "sourceLocation": {
+        "file": "src/lib/hash.ts",
+        "line": 10
+      }
+    },
+    {
+      "name": "SortComparisonNumber",
+      "package": "@dereekb/util",
+      "module": "src/lib/sort",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["numeric"],
+      "notes": "A number that is the result of comparison two items.\n\nIn \"ascending\" order, a value:\n- smaller than another will return -1 (or less).\n- equal to another will return 0\n- greater than another will return 1 (or more).\n- Example: a - b\n\nIn \"descending\" order, this returns the opposite values as \"ascending\".\n- Example: b - a",
+      "sourceLocation": {
+        "file": "src/lib/sort.ts",
+        "line": 26
+      }
+    },
+    {
+      "name": "BooleanStringKey",
+      "package": "@dereekb/util",
+      "module": "src/lib/array/array.boolean",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["identifier", "string"],
+      "notes": "A string type used as a key in boolean arrays.",
+      "sourceLocation": {
+        "file": "src/lib/array/array.boolean.ts",
+        "line": 11
+      }
+    },
+    {
+      "name": "RangeInputEndValue",
+      "package": "@dereekb/util",
+      "module": "src/lib/array/array.number",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["numeric"],
+      "notes": "Exclusive end value used by range().",
+      "sourceLocation": {
+        "file": "src/lib/array/array.number.ts",
+        "line": 99
+      }
+    },
+    {
+      "name": "AuthClaimKey",
+      "package": "@dereekb/util",
+      "module": "src/lib/auth/auth.role.claims",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["identifier", "string", "dereekb-util:auth"],
+      "notes": "Key in the claims.",
+      "sourceLocation": {
+        "file": "src/lib/auth/auth.role.claims.ts",
+        "line": 17
+      }
+    },
+    {
+      "name": "AuthRole",
+      "package": "@dereekb/util",
+      "module": "src/lib/auth/auth.role",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["identifier", "string", "dereekb-util:auth"],
+      "notes": "An application role.\n\nIs used in the client to decide which content a user can view.\n\nRoles should always be lowercase.",
+      "sourceLocation": {
+        "file": "src/lib/auth/auth.role.ts",
+        "line": 16
+      }
+    },
+    {
+      "name": "EmailAddressDomain",
+      "package": "@dereekb/util",
+      "module": "src/lib/contact/domain",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["email", "contact", "string"],
+      "notes": "Domain name portion of an email address (e.g., \"example.com\").",
+      "sourceLocation": {
+        "file": "src/lib/contact/domain.ts",
+        "line": 13
+      }
+    },
+    {
+      "name": "EmailAddress",
+      "package": "@dereekb/util",
+      "module": "src/lib/contact/email",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["email", "contact", "string"],
+      "notes": "Type representing an email address as a string.",
+      "sourceLocation": {
+        "file": "src/lib/contact/email.ts",
+        "line": 11
+      }
+    },
+    {
+      "name": "EmailParticipantString",
+      "package": "@dereekb/util",
+      "module": "src/lib/contact/email",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["email", "contact", "string"],
+      "notes": "Email participant string. Starts with the email, followed by the name if available.",
+      "sourceLocation": {
+        "file": "src/lib/contact/email.ts",
+        "line": 35
+      }
+    },
+    {
+      "name": "PhoneNumber",
+      "package": "@dereekb/util",
+      "module": "src/lib/contact/phone",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["phone", "contact", "string"],
+      "notes": "Phone number string input. No format specified.\n\nExamples:\n- 4567890\n- 123-456-7890\n- (123) 456-7890\n- 1234567890\n- +1234567890\n- +1-555-555-5555\n- 2345678;ext=123",
+      "sourceLocation": {
+        "file": "src/lib/contact/phone.ts",
+        "line": 21
+      }
+    },
+    {
+      "name": "PhoneExtensionNumber",
+      "package": "@dereekb/util",
+      "module": "src/lib/contact/phone",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["phone", "contact", "string"],
+      "notes": "1-6 digit extension number",
+      "sourceLocation": {
+        "file": "src/lib/contact/phone.ts",
+        "line": 31
+      }
+    },
+    {
+      "name": "ReadableTimeString",
+      "package": "@dereekb/util",
+      "module": "src/lib/date/date.time",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["time", "string"],
+      "notes": "Represents a string for a time. This may be human-input, and\ncan be interpreted in various ways depending on the input.\n\nExamples:\n- 1:20AM\n- 1:20\n- 120AM\n- 120",
+      "sourceLocation": {
+        "file": "src/lib/date/date.time.ts",
+        "line": 17
+      }
+    },
+    {
+      "name": "RFC3339DateString",
+      "package": "@dereekb/util",
+      "module": "src/lib/date/date",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["date", "string"],
+      "notes": "A valid RFC3339 formatted date string.\n\nI.E. \"2020-04-30 00:00:00.000Z\" and \"2020-04-30T00:00:00.000Z\"\n\nThe only difference between this and an ISO8601DateString is the spacing between the date and time is allowed, while in ISO8601DateString it is not.",
+      "sourceLocation": {
+        "file": "src/lib/date/date.ts",
+        "line": 25
+      }
+    },
+    {
+      "name": "ISO8601DateString",
+      "package": "@dereekb/util",
+      "module": "src/lib/date/date",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["date", "string"],
+      "guards": ["isISO8601DateString"],
+      "notes": "A valid ISO8601 formatted date string.\n\nI.E. \"2020-04-30T00:00:00.000Z\"",
+      "sourceLocation": {
+        "file": "src/lib/date/date.ts",
+        "line": 36
+      }
+    },
+    {
+      "name": "UTCDateString",
+      "package": "@dereekb/util",
+      "module": "src/lib/date/date",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["date", "string"],
+      "guards": ["isUTCDateString"],
+      "notes": "A UTC date string.\n\nI.E. \"Sat, 03 Feb 2001 04:05:06 GMT\"",
+      "sourceLocation": {
+        "file": "src/lib/date/date.ts",
+        "line": 64
+      }
+    },
+    {
+      "name": "ISO8601DateStringUTCFull",
+      "package": "@dereekb/util",
+      "module": "src/lib/date/date",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["date", "string"],
+      "notes": "A full ISO8601 date string that is in UTC.\n\nI.E. \"2020-04-30T00:00:00.000Z\"",
+      "sourceLocation": {
+        "file": "src/lib/date/date.ts",
+        "line": 94
+      }
+    },
+    {
+      "name": "TimezoneString",
+      "package": "@dereekb/util",
+      "module": "src/lib/date/date",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["timezone", "string"],
+      "notes": "A valid timezone string.\n\nI.E. \"UTC\", \"America/Denver\", etc.",
+      "sourceLocation": {
+        "file": "src/lib/date/date.ts",
+        "line": 105
+      }
+    },
+    {
+      "name": "TimezoneAbbreviation",
+      "package": "@dereekb/util",
+      "module": "src/lib/date/date",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["timezone", "string"],
+      "notes": "A timezone abbreviation (UTC, EST, etc).",
+      "sourceLocation": {
+        "file": "src/lib/date/date.ts",
+        "line": 114
+      }
+    },
+    {
+      "name": "ISO8601DayString",
+      "package": "@dereekb/util",
+      "module": "src/lib/date/date",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["date", "string"],
+      "guards": ["isISO8601DayString"],
+      "notes": "A full date string Formatted as ISO8601 with 4 digits for the year.\n\nYear, Month, Day\n\nI.E. 1921-06-23\n\nNOTE: Negative years and years with more than 4 digits are not supported/expected. Support can be added later, but will require adding a more complex regex, and improved parsing in",
+      "sourceLocation": {
+        "file": "src/lib/date/date.ts",
+        "line": 180
+      }
+    },
+    {
+      "name": "MonthDaySlashDate",
+      "package": "@dereekb/util",
+      "module": "src/lib/date/date",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["date", "string"],
+      "guards": ["isMonthDaySlashDate"],
+      "notes": "Date that is represented by slashes. Is considered in the Month/Day/Year format.",
+      "sourceLocation": {
+        "file": "src/lib/date/date.ts",
+        "line": 258
+      }
+    },
+    {
+      "name": "UnixDateTimeMillisecondsNumber",
+      "package": "@dereekb/util",
+      "module": "src/lib/date/date",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["time", "numeric"],
+      "notes": "Time in milliseconds since the epoch.\n\nReturned by Date.getTime().",
+      "sourceLocation": {
+        "file": "src/lib/date/date.ts",
+        "line": 310
+      }
+    },
+    {
+      "name": "Milliseconds",
+      "package": "@dereekb/util",
+      "module": "src/lib/date/date",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["time", "duration", "numeric"],
+      "notes": "Number of milliseconds.",
+      "sourceLocation": {
+        "file": "src/lib/date/date.ts",
+        "line": 358
+      }
+    },
+    {
+      "name": "Seconds",
+      "package": "@dereekb/util",
+      "module": "src/lib/date/date",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["time", "duration", "numeric"],
+      "notes": "Number of seconds.",
+      "sourceLocation": {
+        "file": "src/lib/date/date.ts",
+        "line": 388
+      }
+    },
+    {
+      "name": "Minutes",
+      "package": "@dereekb/util",
+      "module": "src/lib/date/date",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["time", "duration", "numeric"],
+      "notes": "Number of minutes.",
+      "sourceLocation": {
+        "file": "src/lib/date/date.ts",
+        "line": 398
+      }
+    },
+    {
+      "name": "Hours",
+      "package": "@dereekb/util",
+      "module": "src/lib/date/date",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["time", "duration", "numeric"],
+      "notes": "Number of hours.",
+      "sourceLocation": {
+        "file": "src/lib/date/date.ts",
+        "line": 408
+      }
+    },
+    {
+      "name": "Days",
+      "package": "@dereekb/util",
+      "module": "src/lib/date/date",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["time", "duration", "numeric"],
+      "notes": "Number of days.",
+      "sourceLocation": {
+        "file": "src/lib/date/date.ts",
+        "line": 418
+      }
+    },
+    {
+      "name": "DayOfMonth",
+      "package": "@dereekb/util",
+      "module": "src/lib/date/date",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["date", "numeric"],
+      "notes": "Day of the month, 1-31",
+      "sourceLocation": {
+        "file": "src/lib/date/date.ts",
+        "line": 487
+      }
+    },
+    {
+      "name": "MonthOfYear",
+      "package": "@dereekb/util",
+      "module": "src/lib/date/date",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["date", "numeric"],
+      "notes": "Month of the year, 1-12.\n\nNOTE: The month from Date.getMonth() is from 0-11. Use monthOfYearFromDate() to get the MonthOfYear value.",
+      "sourceLocation": {
+        "file": "src/lib/date/date.ts",
+        "line": 498
+      }
+    },
+    {
+      "name": "DateMonth",
+      "package": "@dereekb/util",
+      "module": "src/lib/date/date",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["date", "numeric"],
+      "notes": "Javascript Date month number. 0-11.",
+      "sourceLocation": {
+        "file": "src/lib/date/date.ts",
+        "line": 507
+      }
+    },
+    {
+      "name": "YearNumber",
+      "package": "@dereekb/util",
+      "module": "src/lib/date/date",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["date", "numeric"],
+      "notes": "Year number. I.E. 2022",
+      "sourceLocation": {
+        "file": "src/lib/date/date.ts",
+        "line": 560
+      }
+    },
+    {
+      "name": "UnixDateTimeSecondsNumber",
+      "package": "@dereekb/util",
+      "module": "src/lib/date/date.unix",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["time", "numeric"],
+      "notes": "This value is in seconds since the Epoch.\n\nUse UnixDateTimeMillisecondsNumber instead if you need milliseconds.",
+      "sourceLocation": {
+        "file": "src/lib/date/date.unix.ts",
+        "line": 13
+      }
+    },
+    {
+      "name": "FractionalHour",
+      "package": "@dereekb/util",
+      "module": "src/lib/date/hour",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["date", "numeric"],
+      "notes": "A number that represents hours and rounded to the nearest minute.\n\nIt has only three decimal places max.\n\nFractional hours are safe to add together.\n\nFor example:\n\n- 10 minutes: 0.16\n- 15 minutes : 0.25",
+      "sourceLocation": {
+        "file": "src/lib/date/hour.ts",
+        "line": 21
+      }
+    },
+    {
+      "name": "MinuteOfDay",
+      "package": "@dereekb/util",
+      "module": "src/lib/date/hour",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["date", "numeric"],
+      "guards": ["isMinuteOfDay"],
+      "notes": "The minute of the day.\n\nNumber from 0-1439.",
+      "sourceLocation": {
+        "file": "src/lib/date/hour.ts",
+        "line": 98
+      }
+    },
+    {
+      "name": "EncryptedString",
+      "package": "@dereekb/util",
+      "module": "src/lib/encryption/encryption.object",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["string", "dereekb-util:encryption"],
+      "notes": "Branded type representing a string that has been encrypted.\n\nUse this type to distinguish encrypted ciphertext from plain strings at the type level.\nThe actual encryption algorithm is determined by the {@link StringEncryptionProvider}.",
+      "sourceLocation": {
+        "file": "src/lib/encryption/encryption.object.ts",
+        "line": 14
+      }
+    },
+    {
+      "name": "StringErrorCode",
+      "package": "@dereekb/util",
+      "module": "src/lib/error/error",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["identifier", "string"],
+      "notes": "A unique identifier for a specific error.",
+      "sourceLocation": {
+        "file": "src/lib/error/error.ts",
+        "line": 17
+      }
+    },
+    {
+      "name": "FileSize",
+      "package": "@dereekb/util",
+      "module": "src/lib/file/file",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["measurement", "numeric"],
+      "notes": "File size in bytes.",
+      "sourceLocation": {
+        "file": "src/lib/file/file.ts",
+        "line": 8
+      }
+    },
+    {
+      "name": "XMLSVG",
+      "package": "@dereekb/util",
+      "module": "src/lib/file/xml",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["string", "dereekb-util:xml"],
+      "notes": "String value containing an XML SVG string.",
+      "sourceLocation": {
+        "file": "src/lib/file/xml.ts",
+        "line": 8
+      }
+    },
+    {
+      "name": "ModelKey",
+      "package": "@dereekb/util",
+      "module": "src/lib/model/model",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["identifier", "string"],
+      "guards": ["isModelKey"],
+      "notes": "A string model key",
+      "sourceLocation": {
+        "file": "src/lib/model/model.ts",
+        "line": 14
+      }
+    },
+    {
+      "name": "ModelId",
+      "package": "@dereekb/util",
+      "module": "src/lib/model/model",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["identifier", "string"],
+      "notes": "A string model identifier (typically the document/record ID segment, not the full path).",
+      "sourceLocation": {
+        "file": "src/lib/model/model.ts",
+        "line": 23
+      }
+    },
+    {
+      "name": "ModelTypeString",
+      "package": "@dereekb/util",
+      "module": "src/lib/model/model",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["identifier", "string"],
+      "notes": "Arbitrary model type.",
+      "sourceLocation": {
+        "file": "src/lib/model/model.ts",
+        "line": 32
+      }
+    },
+    {
+      "name": "TypedModelKey",
+      "package": "@dereekb/util",
+      "module": "src/lib/model/model",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["identifier", "string"],
+      "notes": "String model key from which the model's type can be inferred from.",
+      "sourceLocation": {
+        "file": "src/lib/model/model.ts",
+        "line": 41
+      }
+    },
+    {
+      "name": "ModelKeyTypePairString",
+      "package": "@dereekb/util",
+      "module": "src/lib/model/model",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["identifier", "string"],
+      "notes": "An encoded ModelKeyTypePair.",
+      "sourceLocation": {
+        "file": "src/lib/model/model.ts",
+        "line": 86
+      }
+    },
+    {
+      "name": "BitwiseEncodedSetIndex",
+      "package": "@dereekb/util",
+      "module": "src/lib/number/bitwise.dencoder",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["numeric", "dereekb-util:encoding"],
+      "notes": "Enum or number value from 0 to 31 that denotes a specific item via index of the bit to measure.",
+      "sourceLocation": {
+        "file": "src/lib/number/bitwise.dencoder.ts",
+        "line": 19
+      }
+    },
+    {
+      "name": "BitwiseEncodedSet",
+      "package": "@dereekb/util",
+      "module": "src/lib/number/bitwise.dencoder",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["numeric", "dereekb-util:encoding"],
+      "notes": "Set of values that are encoded into a single number.\n\nThe number can include up to 32 unique boolean values.",
+      "sourceLocation": {
+        "file": "src/lib/number/bitwise.dencoder.ts",
+        "line": 30
+      }
+    },
+    {
+      "name": "WholeDollarAmount",
+      "package": "@dereekb/util",
+      "module": "src/lib/number/dollar",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["currency", "numeric"],
+      "notes": "Whole dollar amounts, before the ','.",
+      "sourceLocation": {
+        "file": "src/lib/number/dollar.ts",
+        "line": 11
+      }
+    },
+    {
+      "name": "DollarAmount",
+      "package": "@dereekb/util",
+      "module": "src/lib/number/dollar",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["currency", "numeric"],
+      "notes": "Dollar amount number.",
+      "sourceLocation": {
+        "file": "src/lib/number/dollar.ts",
+        "line": 20
+      }
+    },
+    {
+      "name": "DollarAmountPerHour",
+      "package": "@dereekb/util",
+      "module": "src/lib/number/dollar",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["currency", "numeric"],
+      "notes": "Dollars amount number per hour.",
+      "sourceLocation": {
+        "file": "src/lib/number/dollar.ts",
+        "line": 29
+      }
+    },
+    {
+      "name": "DollarAmountPerDay",
+      "package": "@dereekb/util",
+      "module": "src/lib/number/dollar",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["currency", "numeric"],
+      "notes": "Dollars amount number per day.",
+      "sourceLocation": {
+        "file": "src/lib/number/dollar.ts",
+        "line": 38
+      }
+    },
+    {
+      "name": "CentsAmount",
+      "package": "@dereekb/util",
+      "module": "src/lib/number/dollar",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["currency", "numeric"],
+      "notes": "Amount in whole cents.",
+      "sourceLocation": {
+        "file": "src/lib/number/dollar.ts",
+        "line": 47
+      }
+    },
+    {
+      "name": "DollarAmountUnit",
+      "package": "@dereekb/util",
+      "module": "src/lib/number/dollar",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["currency", "string"],
+      "notes": "Unit to affix to a dollar amount string.",
+      "sourceLocation": {
+        "file": "src/lib/number/dollar.ts",
+        "line": 61
+      }
+    },
+    {
+      "name": "DollarAmountString",
+      "package": "@dereekb/util",
+      "module": "src/lib/number/dollar",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["currency", "string"],
+      "guards": ["isDollarAmountString"],
+      "notes": "String representing a dollar amount.\n\nIs formatted as a number with two decimal places. No unit is affixed.",
+      "sourceLocation": {
+        "file": "src/lib/number/dollar.ts",
+        "line": 72
+      }
+    },
+    {
+      "name": "Radix36EncodedNumber",
+      "package": "@dereekb/util",
+      "module": "src/lib/number/encoded",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["string", "dereekb-util:encoding"],
+      "examples": [
+        {
+          "code": "const encoded: Radix36EncodedNumber = 'z'; // represents 35\nconst largeEncoded: Radix36EncodedNumber = '2s'; // represents 100"
+        }
+      ],
+      "notes": "A number encoded as a radix-36 string using digits 0-9 and letters a-z.\n\nRadix-36 encoding produces compact string representations of numbers,\nuseful for URL-safe identifiers and short codes.",
+      "sourceLocation": {
+        "file": "src/lib/number/encoded.ts",
+        "line": 17
+      }
+    },
+    {
+      "name": "HexString",
+      "package": "@dereekb/util",
+      "module": "src/lib/number/encoded",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["string", "dereekb-util:encoding"],
+      "notes": "A string containing only hexadecimal characters (0-9, a-f or A-F).",
+      "sourceLocation": {
+        "file": "src/lib/number/encoded.ts",
+        "line": 67
+      }
+    },
+    {
+      "name": "Count",
+      "package": "@dereekb/util",
+      "module": "src/lib/number/number",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["numeric"],
+      "examples": [
+        {
+          "code": "const totalUsers: Count = 42;"
+        }
+      ],
+      "notes": "A non-negative integer representing a count of items.",
+      "sourceLocation": {
+        "file": "src/lib/number/number.ts",
+        "line": 16
+      }
+    },
+    {
+      "name": "NumberString",
+      "package": "@dereekb/util",
+      "module": "src/lib/number/number",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["numeric", "string"],
+      "notes": "A string represented within a number.",
+      "sourceLocation": {
+        "file": "src/lib/number/number.ts",
+        "line": 25
+      }
+    },
+    {
+      "name": "PercentNumber",
+      "package": "@dereekb/util",
+      "module": "src/lib/number/number",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["percent", "numeric"],
+      "notes": "Number that represents a percent.\n\n e.g. PercentNumber of 5 = 0.05 = 5%",
+      "sourceLocation": {
+        "file": "src/lib/number/number.ts",
+        "line": 36
+      }
+    },
+    {
+      "name": "PercentDecimal",
+      "package": "@dereekb/util",
+      "module": "src/lib/number/number",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["percent", "numeric"],
+      "notes": "A percent decimal value.\n\ne.g. PercentDecimal of 0.05 = 5%",
+      "sourceLocation": {
+        "file": "src/lib/number/number.ts",
+        "line": 47
+      }
+    },
+    {
+      "name": "PayRate",
+      "package": "@dereekb/util",
+      "module": "src/lib/number/pay",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["currency", "numeric"],
+      "notes": "Rate per hour the worker should be paid.",
+      "sourceLocation": {
+        "file": "src/lib/number/pay.ts",
+        "line": 8
+      }
+    },
+    {
+      "name": "PayAmount",
+      "package": "@dereekb/util",
+      "module": "src/lib/number/pay",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["currency", "numeric"],
+      "notes": "The total pay amount that should be paid.",
+      "sourceLocation": {
+        "file": "src/lib/number/pay.ts",
+        "line": 17
+      }
+    },
+    {
+      "name": "NumberPrecision",
+      "package": "@dereekb/util",
+      "module": "src/lib/number/round",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["numeric", "measurement"],
+      "notes": "The number of decimal places ot use.",
+      "sourceLocation": {
+        "file": "src/lib/number/round.ts",
+        "line": 49
+      }
+    },
+    {
+      "name": "StepNumber",
+      "package": "@dereekb/util",
+      "module": "src/lib/number/round",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["numeric"],
+      "notes": "Number used to increase or decrease by the \"step\" value. When used in rounding the steps are aligned at a StepOrigin.",
+      "sourceLocation": {
+        "file": "src/lib/number/round.ts",
+        "line": 168
+      }
+    },
+    {
+      "name": "StepOrigin",
+      "package": "@dereekb/util",
+      "module": "src/lib/number/round",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["numeric"],
+      "notes": "Origin value for StepNumbers that is used as an offset for input. Is usually 0.",
+      "sourceLocation": {
+        "file": "src/lib/number/round.ts",
+        "line": 176
+      }
+    },
+    {
+      "name": "ObjectKey",
+      "package": "@dereekb/util",
+      "module": "src/lib/object/object",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["identifier", "string"],
+      "notes": "String key of an object.",
+      "sourceLocation": {
+        "file": "src/lib/object/object.ts",
+        "line": 23
+      }
+    },
+    {
+      "name": "PageNumber",
+      "package": "@dereekb/util",
+      "module": "src/lib/page/page",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["numeric", "reference", "dereekb-util:pagination"],
+      "notes": "Numeric page identifier.",
+      "sourceLocation": {
+        "file": "src/lib/page/page.ts",
+        "line": 26
+      }
+    },
+    {
+      "name": "SlashPathTypedFileExtension",
+      "package": "@dereekb/util",
+      "module": "src/lib/path/path",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["string", "dereekb-util:path"],
+      "notes": "The file extension of a SlashPathTypedFile.\n\ne.g. 'png' in 'image.png'",
+      "sourceLocation": {
+        "file": "src/lib/path/path.ts",
+        "line": 60
+      }
+    },
+    {
+      "name": "SlashPathUntypedFile",
+      "package": "@dereekb/util",
+      "module": "src/lib/path/path",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["string", "dereekb-util:path"],
+      "notes": "A SlashPath file name without a file type identifier (e.g. 'image', and not 'image.png')",
+      "sourceLocation": {
+        "file": "src/lib/path/path.ts",
+        "line": 76
+      }
+    },
+    {
+      "name": "PerformTasksInParallelTaskUniqueKey",
+      "package": "@dereekb/util",
+      "module": "src/lib/promise/promise",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["identifier", "string", "dereekb-util:concurrency"],
+      "notes": "Used as a key to identify the \"group\" that a task belongs to to prevent other concurrent tasks from that group from running in parallel when parallel execution is desired.",
+      "sourceLocation": {
+        "file": "src/lib/promise/promise.ts",
+        "line": 257
+      }
+    },
+    {
+      "name": "RelationString",
+      "package": "@dereekb/util",
+      "module": "src/lib/relation/relation",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["identifier", "string", "dereekb-util:relation"],
+      "notes": "A string-based relation identifier.",
+      "sourceLocation": {
+        "file": "src/lib/relation/relation.ts",
+        "line": 54
+      }
+    },
+    {
+      "name": "RelationModelType",
+      "package": "@dereekb/util",
+      "module": "src/lib/relation/relation",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["identifier", "string", "dereekb-util:relation"],
+      "notes": "A string identifying the type/category of a relation model.",
+      "sourceLocation": {
+        "file": "src/lib/relation/relation.ts",
+        "line": 69
+      }
+    },
+    {
+      "name": "StoredDataString",
+      "package": "@dereekb/util",
+      "module": "src/lib/storage/storage",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["string", "reference"],
+      "notes": "String representation of data that is stored.",
+      "sourceLocation": {
+        "file": "src/lib/storage/storage.ts",
+        "line": 10
+      }
+    },
+    {
+      "name": "StoredDataStorageKey",
+      "package": "@dereekb/util",
+      "module": "src/lib/storage/storage",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["identifier", "string", "reference"],
+      "notes": "Key used for accessing stored data.",
+      "sourceLocation": {
+        "file": "src/lib/storage/storage.ts",
+        "line": 19
+      }
+    },
+    {
+      "name": "NumberStringDencoderNumber",
+      "package": "@dereekb/util",
+      "module": "src/lib/string/dencoder",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["numeric", "dereekb-util:encoding"],
+      "notes": "An encodable number. This is typically a positive integer value.",
+      "sourceLocation": {
+        "file": "src/lib/string/dencoder.ts",
+        "line": 224
+      }
+    },
+    {
+      "name": "NumberStringDencoderString",
+      "package": "@dereekb/util",
+      "module": "src/lib/string/dencoder",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["string", "dereekb-util:encoding"],
+      "notes": "A number-encoded string. Little-Endian. Should Decode to the same value each time.",
+      "sourceLocation": {
+        "file": "src/lib/string/dencoder.ts",
+        "line": 233
+      }
+    },
+    {
+      "name": "NumberStringDencoderDigits",
+      "package": "@dereekb/util",
+      "module": "src/lib/string/dencoder",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["string", "dereekb-util:encoding"],
+      "notes": "Digits used when encoding/decoding a value.\n\nThe number of digits/characters must be a factor of 2. I.E. 8, 16, 32, 64",
+      "sourceLocation": {
+        "file": "src/lib/string/dencoder.ts",
+        "line": 244
+      }
+    },
+    {
+      "name": "CssClass",
+      "package": "@dereekb/util",
+      "module": "src/lib/string/html",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["string", "dereekb-util:css"],
+      "notes": "Represents a single CSS Class",
+      "sourceLocation": {
+        "file": "src/lib/string/html.ts",
+        "line": 21
+      }
+    },
+    {
+      "name": "CssTokenName",
+      "package": "@dereekb/util",
+      "module": "src/lib/string/html",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["string", "dereekb-util:css"],
+      "examples": [
+        {
+          "code": "const name: CssTokenName = 'dbx-primary-color';"
+        }
+      ],
+      "notes": "The name portion of a CSS token, without the leading `--` prefix.",
+      "sourceLocation": {
+        "file": "src/lib/string/html.ts",
+        "line": 35
+      }
+    },
+    {
+      "name": "CssStyle",
+      "package": "@dereekb/util",
+      "module": "src/lib/string/html",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["string", "dereekb-util:css"],
+      "notes": "Represents a single CSS Style",
+      "sourceLocation": {
+        "file": "src/lib/string/html.ts",
+        "line": 95
+      }
+    },
+    {
+      "name": "SpaceSeparatedCssClasses",
+      "package": "@dereekb/util",
+      "module": "src/lib/string/html",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["string", "dereekb-util:css"],
+      "notes": "Represents one or more CssClasses that are space separated.",
+      "sourceLocation": {
+        "file": "src/lib/string/html.ts",
+        "line": 104
+      }
+    },
+    {
+      "name": "SpaceSeparatedCssStyles",
+      "package": "@dereekb/util",
+      "module": "src/lib/string/html",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["string", "dereekb-util:css"],
+      "notes": "Represents one or more CssStyles that are space separated.",
+      "sourceLocation": {
+        "file": "src/lib/string/html.ts",
+        "line": 118
+      }
+    },
+    {
+      "name": "JSONEncodedString",
+      "package": "@dereekb/util",
+      "module": "src/lib/string/json",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["string", "dereekb-util:encoding"],
+      "notes": "A json encoded string.",
+      "sourceLocation": {
+        "file": "src/lib/string/json.ts",
+        "line": 8
+      }
+    },
+    {
+      "name": "MimeTypeWithoutParameters",
+      "package": "@dereekb/util",
+      "module": "src/lib/string/mimetype",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["string", "dereekb-util:mime"],
+      "notes": "A simple mime type string with just the type/subtype and no parameters.\n\nI.E. \"application/json\"",
+      "sourceLocation": {
+        "file": "src/lib/string/mimetype.ts",
+        "line": 14
+      }
+    },
+    {
+      "name": "MimeTypeWithSubtypeWildcardWithoutParameters",
+      "package": "@dereekb/util",
+      "module": "src/lib/string/mimetype",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["string", "dereekb-util:mime"],
+      "notes": "A mime type with a wildcard subtype. Has a star as the subtype.\n\nI.E. \"application/*\"",
+      "sourceLocation": {
+        "file": "src/lib/string/mimetype.ts",
+        "line": 30
+      }
+    },
+    {
+      "name": "ContentTypeMimeType",
+      "package": "@dereekb/util",
+      "module": "src/lib/string/mimetype",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["string", "dereekb-util:mime"],
+      "notes": "A mime type string that may contain additional parameters.\n\nI.E. \"text/plain\", \"application/json; charset=utf-8\"",
+      "sourceLocation": {
+        "file": "src/lib/string/mimetype.ts",
+        "line": 41
+      }
+    },
+    {
+      "name": "PasswordString",
+      "package": "@dereekb/util",
+      "module": "src/lib/string/password",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["string", "dereekb-util:secret"],
+      "notes": "A password string",
+      "sourceLocation": {
+        "file": "src/lib/string/password.ts",
+        "line": 8
+      }
+    },
+    {
+      "name": "CharacterPrefix",
+      "package": "@dereekb/util",
+      "module": "src/lib/string/prefix",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["string", "dereekb-util:prefix"],
+      "notes": "A character or string that is added to the start of a string.\n\nExample: '-' in \"-class\"",
+      "sourceLocation": {
+        "file": "src/lib/string/prefix.ts",
+        "line": 12
+      }
+    },
+    {
+      "name": "CharacterSuffix",
+      "package": "@dereekb/util",
+      "module": "src/lib/string/prefix",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["string", "dereekb-util:prefix"],
+      "notes": "A character or string that is added to the end of a string.\n\nExample: '-' in \"class-\"",
+      "sourceLocation": {
+        "file": "src/lib/string/prefix.ts",
+        "line": 23
+      }
+    },
+    {
+      "name": "CharacterPrefixSuffixCleanString",
+      "package": "@dereekb/util",
+      "module": "src/lib/string/prefix",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["string", "dereekb-util:prefix"],
+      "notes": "A string that does not have a CharacterPrefix or CharacterSuffix.",
+      "sourceLocation": {
+        "file": "src/lib/string/prefix.ts",
+        "line": 32
+      }
+    },
+    {
+      "name": "SplitStringTreeNodeString",
+      "package": "@dereekb/util",
+      "module": "src/lib/string/tree",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["string", "dereekb-util:tree"],
+      "notes": "A string value representing a node in a split string tree.",
+      "sourceLocation": {
+        "file": "src/lib/string/tree.ts",
+        "line": 13
+      }
+    },
+    {
+      "name": "WebsiteProtocol",
+      "package": "@dereekb/util",
+      "module": "src/lib/string/url",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["url", "string"],
+      "notes": "Connection protocol\n\nI.E. http, https, etc.",
+      "sourceLocation": {
+        "file": "src/lib/string/url.ts",
+        "line": 22
+      }
+    },
+    {
+      "name": "WebsiteDomain",
+      "package": "@dereekb/util",
+      "module": "src/lib/string/url",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["url", "string"],
+      "notes": "A website domain.\n\nExamples:\n- dereekb.com\n- components.dereekb.com",
+      "sourceLocation": {
+        "file": "src/lib/string/url.ts",
+        "line": 59
+      }
+    },
+    {
+      "name": "WebsiteTopLevelDomain",
+      "package": "@dereekb/util",
+      "module": "src/lib/string/url",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["url", "string"],
+      "notes": "The top-level domain (tld).\n\nExamples:\n- com\n- net",
+      "sourceLocation": {
+        "file": "src/lib/string/url.ts",
+        "line": 94
+      }
+    },
+    {
+      "name": "PortNumber",
+      "package": "@dereekb/util",
+      "module": "src/lib/string/url",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["numeric", "url"],
+      "notes": "A connection port number.\n\nExample:\n- 443\n- 8080",
+      "sourceLocation": {
+        "file": "src/lib/string/url.ts",
+        "line": 130
+      }
+    },
+    {
+      "name": "WebsiteUrl",
+      "package": "@dereekb/util",
+      "module": "src/lib/string/url",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["url", "string"],
+      "guards": ["isWebsiteUrl"],
+      "notes": "A website url. Is at minimum a domain.\n\nExamples:\n- dereekb.com\n- https://components.dereekb.com\n- https://components.dereekb.com/\n- https://components.dereekb.com/doc/home?\n- https://components.dereekb.com/doc/home?test=true&test2=true",
+      "sourceLocation": {
+        "file": "src/lib/string/url.ts",
+        "line": 210
+      }
+    },
+    {
+      "name": "WebsiteUrlWithPrefix",
+      "package": "@dereekb/util",
+      "module": "src/lib/string/url",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["url", "string"],
+      "guards": ["isWebsiteUrlWithPrefix"],
+      "notes": "A website url that starts with the proper http/https prefix.",
+      "sourceLocation": {
+        "file": "src/lib/string/url.ts",
+        "line": 317
+      }
+    },
+    {
+      "name": "StandardInternetAccessibleWebsiteUrl",
+      "package": "@dereekb/util",
+      "module": "src/lib/string/url",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["url", "string"],
+      "guards": ["isStandardInternetAccessibleWebsiteUrl"],
+      "notes": "A \"standard\" internet accessible website url with a tld (.com/.net/etc) and optionally has the http/https protocol, but no other protocol.\n\nExamples:\n- dereekb.com\n- dereekb.com:8080\n- components.dereekb.com/\n- components.dereekb.com/doc/home\n- http://dereekb.com\n- https://components.dereekb.com/\n- https://components.dereekb.com/doc/home\n\nNon-examples:\n- localhost:8080       // not internet-accessible\n- test://dereekb.com   // non-http/https protocol",
+      "sourceLocation": {
+        "file": "src/lib/string/url.ts",
+        "line": 350
+      }
+    },
+    {
+      "name": "WebsiteDomainAndPath",
+      "package": "@dereekb/util",
+      "module": "src/lib/string/url",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["url", "string"],
+      "notes": "A website's domain and path combined, without the BaseWebsiteUrl\n\nExamples:\n- dereekb.com\n- components.dereekb.com/\n- components.dereekb.com/doc/home",
+      "sourceLocation": {
+        "file": "src/lib/string/url.ts",
+        "line": 375
+      }
+    },
+    {
+      "name": "CityString",
+      "package": "@dereekb/util",
+      "module": "src/lib/value/address",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["geo", "string", "dereekb-util:address"],
+      "notes": "City name string (e.g. \"San Antonio\").",
+      "sourceLocation": {
+        "file": "src/lib/value/address.ts",
+        "line": 12
+      }
+    },
+    {
+      "name": "StateString",
+      "package": "@dereekb/util",
+      "module": "src/lib/value/address",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["geo", "string", "dereekb-util:address"],
+      "notes": "Full state name string (e.g. \"Texas\").",
+      "sourceLocation": {
+        "file": "src/lib/value/address.ts",
+        "line": 22
+      }
+    },
+    {
+      "name": "StateCodeString",
+      "package": "@dereekb/util",
+      "module": "src/lib/value/address",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["geo", "string", "dereekb-util:address"],
+      "notes": "Two-letter US state code (e.g. \"TX\").",
+      "sourceLocation": {
+        "file": "src/lib/value/address.ts",
+        "line": 32
+      }
+    },
+    {
+      "name": "CountryString",
+      "package": "@dereekb/util",
+      "module": "src/lib/value/address",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["geo", "string", "dereekb-util:address"],
+      "notes": "Full country name string (e.g. \"United States\").",
+      "sourceLocation": {
+        "file": "src/lib/value/address.ts",
+        "line": 42
+      }
+    },
+    {
+      "name": "CountryCodeString",
+      "package": "@dereekb/util",
+      "module": "src/lib/value/address",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["geo", "string", "dereekb-util:address"],
+      "notes": "Country code string (e.g. \"US\").",
+      "sourceLocation": {
+        "file": "src/lib/value/address.ts",
+        "line": 52
+      }
+    },
+    {
+      "name": "AddressLineString",
+      "package": "@dereekb/util",
+      "module": "src/lib/value/address",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["geo", "string", "dereekb-util:address"],
+      "notes": "A single line in a street address.",
+      "sourceLocation": {
+        "file": "src/lib/value/address.ts",
+        "line": 62
+      }
+    },
+    {
+      "name": "ZipCodeString",
+      "package": "@dereekb/util",
+      "module": "src/lib/value/address",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["geo", "string", "dereekb-util:address"],
+      "notes": "Postal/zip code string.",
+      "sourceLocation": {
+        "file": "src/lib/value/address.ts",
+        "line": 72
+      }
+    },
+    {
+      "name": "CronExpression",
+      "package": "@dereekb/util",
+      "module": "src/lib/value/cron",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["string", "dereekb-util:cron"],
+      "notes": "A cron schedule expression string",
+      "sourceLocation": {
+        "file": "src/lib/value/cron.ts",
+        "line": 11
+      }
+    },
+    {
+      "name": "IndexNumber",
+      "package": "@dereekb/util",
+      "module": "src/lib/value/indexed",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["numeric", "reference"],
+      "notes": "An integer that denotes which index an item is at.\n\nIs typically non-negative only.",
+      "sourceLocation": {
+        "file": "src/lib/value/indexed.ts",
+        "line": 26
+      }
+    },
+    {
+      "name": "ModifierKey",
+      "package": "@dereekb/util",
+      "module": "src/lib/value/modifier",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["string", "identifier"],
+      "notes": "String key that uniquely identifies a modifier within a {@link ModifierMap}.",
+      "sourceLocation": {
+        "file": "src/lib/value/modifier.ts",
+        "line": 11
+      }
+    },
+    {
+      "name": "Pixels",
+      "package": "@dereekb/util",
+      "module": "src/lib/value/pixel",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["measurement", "numeric"],
+      "notes": "Pixel count.",
+      "sourceLocation": {
+        "file": "src/lib/value/pixel.ts",
+        "line": 8
+      }
+    },
+    {
+      "name": "PixelsString",
+      "package": "@dereekb/util",
+      "module": "src/lib/value/pixel",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["measurement", "string"],
+      "notes": "Pixel count as a string with a \"px\" suffix (e.g. \"100px\").",
+      "sourceLocation": {
+        "file": "src/lib/value/pixel.ts",
+        "line": 17
+      }
+    },
+    {
+      "name": "Latitude",
+      "package": "@dereekb/util",
+      "module": "src/lib/value/point",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["geo", "numeric"],
+      "notes": "Latitude value in degrees, ranging from -90 to 90.",
+      "sourceLocation": {
+        "file": "src/lib/value/point.ts",
+        "line": 16
+      }
+    },
+    {
+      "name": "Longitude",
+      "package": "@dereekb/util",
+      "module": "src/lib/value/point",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["geo", "numeric"],
+      "notes": "Longitude value in degrees, ranging from -180 to 180.",
+      "sourceLocation": {
+        "file": "src/lib/value/point.ts",
+        "line": 25
+      }
+    },
+    {
+      "name": "LatLngPoint",
+      "package": "@dereekb/util",
+      "module": "src/lib/value/point",
+      "kind": "semantic-type",
+      "definition": "export interface LatLngPoint {\n  lat: Latitude;\n  lng: Longitude;\n}",
+      "baseType": "object",
+      "topics": ["geo"],
+      "guards": ["isLatLngPoint"],
+      "notes": "A geographic point represented by latitude and longitude.",
+      "sourceLocation": {
+        "file": "src/lib/value/point.ts",
+        "line": 63
+      }
+    },
+    {
+      "name": "ZoomLevel",
+      "package": "@dereekb/util",
+      "module": "src/lib/value/zoom",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["measurement", "numeric"],
+      "notes": "Camera zoom level.",
+      "sourceLocation": {
+        "file": "src/lib/value/zoom.ts",
+        "line": 8
+      }
+    }
+  ]
 }

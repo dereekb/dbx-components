@@ -6,6 +6,10 @@ import { type Maybe } from '../value/maybe.type';
  *
  * Use this type to distinguish encrypted ciphertext from plain strings at the type level.
  * The actual encryption algorithm is determined by the {@link StringEncryptionProvider}.
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-util:encryption
  */
 export type EncryptedString = string;
 

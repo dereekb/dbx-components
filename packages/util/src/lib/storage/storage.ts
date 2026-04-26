@@ -2,10 +2,19 @@ import { type UnixDateTimeMillisecondsNumber } from '../date/date';
 
 /**
  * String representation of data that is stored.
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic reference
  */
 export type StoredDataString = string;
 /**
  * Key used for accessing stored data.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic reference
  */
 export type StoredDataStorageKey = string;
 

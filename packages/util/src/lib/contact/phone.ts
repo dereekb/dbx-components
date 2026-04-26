@@ -12,11 +12,21 @@ import { type Maybe } from '../value/maybe.type';
  * - +1234567890
  * - +1-555-555-5555
  * - 2345678;ext=123
+ *
+ * @semanticType
+ * @semanticTopic phone
+ * @semanticTopic contact
+ * @semanticTopic string
  */
 export type PhoneNumber = string;
 
 /**
  * 1-6 digit extension number
+ *
+ * @semanticType
+ * @semanticTopic phone
+ * @semanticTopic contact
+ * @semanticTopic string
  */
 export type PhoneExtensionNumber = string;
 

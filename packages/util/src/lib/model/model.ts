@@ -6,21 +6,37 @@ import { filterUniqueValues } from '../array/array.unique';
 
 /**
  * A string model key
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
  */
 export type ModelKey = string;
 
 /**
  * A string model identifier (typically the document/record ID segment, not the full path).
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
  */
 export type ModelId = string;
 
 /**
  * Arbitrary model type.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
  */
 export type ModelTypeString = string;
 
 /**
  * String model key from which the model's type can be inferred from.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
  */
 export type TypedModelKey = string;
 
@@ -62,6 +78,10 @@ export interface ModelKeyTypePair<M extends ModelTypeString = ModelTypeString> e
 
 /**
  * An encoded ModelKeyTypePair.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
  */
 export type ModelKeyTypePairString = string;
 

@@ -8,6 +8,10 @@ import { dateTimezoneUtcNormal, DateTimezoneUtcNormalInstance, type DateTimezone
  *
  * The encoding uses `year * 10000 + month * 100 + day`, so January 1st 2022 becomes `20220101`.
  * This allows simple numeric comparisons to determine chronological order between dates.
+ *
+ * @semanticType
+ * @semanticTopic date
+ * @semanticTopic numeric
  */
 export type YearMonthDayCode = number;
 

@@ -2,6 +2,11 @@ import { type ArrayOrValue, arrayToObject, type Building, forEachKeyValue, type 
 
 /**
  * A granted role for a model.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-model:auth
  */
 export type GrantedRole = string;
 

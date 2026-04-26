@@ -13,6 +13,10 @@ import { type Hours, type Minutes, MINUTES_IN_HOUR, MINUTES_IN_DAY } from './dat
  *
  * - 10 minutes: 0.16
  * - 15 minutes : 0.25
+ *
+ * @semanticType
+ * @semanticTopic date
+ * @semanticTopic numeric
  */
 export type FractionalHour = number;
 
@@ -86,6 +90,10 @@ export function computeNextFractionalHour(input: FractionalHour, change: Compute
  * The minute of the day.
  *
  * Number from 0-1439.
+ *
+ * @semanticType
+ * @semanticTopic date
+ * @semanticTopic numeric
  */
 export type MinuteOfDay = number;
 

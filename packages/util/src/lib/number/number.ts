@@ -9,11 +9,18 @@ import { type Maybe } from '../value/maybe.type';
  * ```ts
  * const totalUsers: Count = 42;
  * ```
+ *
+ * @semanticType
+ * @semanticTopic numeric
  */
 export type Count = number;
 
 /**
  * A string represented within a number.
+ *
+ * @semanticType
+ * @semanticTopic numeric
+ * @semanticTopic string
  */
 export type NumberString = string;
 
@@ -21,6 +28,10 @@ export type NumberString = string;
  * Number that represents a percent.
  *
  *  e.g. PercentNumber of 5 = 0.05 = 5%
+ *
+ * @semanticType
+ * @semanticTopic percent
+ * @semanticTopic numeric
  */
 export type PercentNumber = number;
 
@@ -28,6 +39,10 @@ export type PercentNumber = number;
  * A percent decimal value.
  *
  * e.g. PercentDecimal of 0.05 = 5%
+ *
+ * @semanticType
+ * @semanticTopic percent
+ * @semanticTopic numeric
  */
 export type PercentDecimal = number;
 

@@ -35,7 +35,7 @@ const { runScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/sca
  * scan config in that package's root drives `include`, `topicNamespace`, and
  * `out` path resolution.
  */
-const BUNDLED_PROJECTS = ['packages/util', 'packages/model'];
+const BUNDLED_PROJECTS = ['packages/util', 'packages/model', 'packages/date'];
 
 /**
  * Bundled manifests stamp a fixed `generatedAt` so the produced JSON is

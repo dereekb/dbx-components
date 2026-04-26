@@ -17,6 +17,10 @@ export type DateHourMinuteOrSecond = 'hour' | 'minute' | 'second';
  * I.E. "2020-04-30 00:00:00.000Z" and "2020-04-30T00:00:00.000Z"
  *
  * The only difference between this and an ISO8601DateString is the spacing between the date and time is allowed, while in ISO8601DateString it is not.
+ *
+ * @semanticType
+ * @semanticTopic date
+ * @semanticTopic string
  */
 export type RFC3339DateString = string;
 
@@ -24,6 +28,10 @@ export type RFC3339DateString = string;
  * A valid ISO8601 formatted date string.
  *
  * I.E. "2020-04-30T00:00:00.000Z"
+ *
+ * @semanticType
+ * @semanticTopic date
+ * @semanticTopic string
  */
 export type ISO8601DateString = string;
 
@@ -48,6 +56,10 @@ export function isISO8601DateString(input: string): input is ISO8601DateString {
  * A UTC date string.
  *
  * I.E. "Sat, 03 Feb 2001 04:05:06 GMT"
+ *
+ * @semanticType
+ * @semanticTopic date
+ * @semanticTopic string
  */
 export type UTCDateString = string;
 
@@ -74,6 +86,10 @@ export function isUTCDateString(input: string): boolean {
  * A full ISO8601 date string that is in UTC.
  *
  * I.E. "2020-04-30T00:00:00.000Z"
+ *
+ * @semanticType
+ * @semanticTopic date
+ * @semanticTopic string
  */
 export type ISO8601DateStringUTCFull = string;
 
@@ -81,11 +97,19 @@ export type ISO8601DateStringUTCFull = string;
  * A valid timezone string.
  *
  * I.E. "UTC", "America/Denver", etc.
+ *
+ * @semanticType
+ * @semanticTopic timezone
+ * @semanticTopic string
  */
 export type TimezoneString = string;
 
 /**
  * A timezone abbreviation (UTC, EST, etc).
+ *
+ * @semanticType
+ * @semanticTopic timezone
+ * @semanticTopic string
  */
 export type TimezoneAbbreviation = string;
 
@@ -148,6 +172,10 @@ export type DateOrDateString = Date | ISO8601DateString;
  * I.E. 1921-06-23
  *
  * NOTE: Negative years and years with more than 4 digits are not supported/expected. Support can be added later, but will require adding a more complex regex, and improved parsing in @dereekb/date
+ *
+ * @semanticType
+ * @semanticTopic date
+ * @semanticTopic string
  */
 export type ISO8601DayString = string; // '1921-06-23'
 
@@ -222,6 +250,10 @@ export function isISO8601DayStringStart(input: string): input is ISO8601DayStrin
 
 /**
  * Date that is represented by slashes. Is considered in the Month/Day/Year format.
+ *
+ * @semanticType
+ * @semanticTopic date
+ * @semanticTopic string
  */
 export type MonthDaySlashDate = string; // 11/1/2020
 
@@ -270,6 +302,10 @@ export function monthDaySlashDateToDateString(slashDate: MonthDaySlashDate): ISO
  * Time in milliseconds since the epoch.
  *
  * Returned by Date.getTime().
+ *
+ * @semanticType
+ * @semanticTopic time
+ * @semanticTopic numeric
  */
 export type UnixDateTimeMillisecondsNumber = number;
 
@@ -313,6 +349,11 @@ export function unixMillisecondsNumberToDate(dateTimeNumber: Maybe<UnixDateTimeM
 
 /**
  * Number of milliseconds.
+ *
+ * @semanticType
+ * @semanticTopic time
+ * @semanticTopic duration
+ * @semanticTopic numeric
  */
 export type Milliseconds = number;
 
@@ -338,21 +379,41 @@ export function dateOrMillisecondsToDate(dateOrMilliseconds: DateOrMilliseconds,
 
 /**
  * Number of seconds.
+ *
+ * @semanticType
+ * @semanticTopic time
+ * @semanticTopic duration
+ * @semanticTopic numeric
  */
 export type Seconds = number;
 
 /**
  * Number of minutes.
+ *
+ * @semanticType
+ * @semanticTopic time
+ * @semanticTopic duration
+ * @semanticTopic numeric
  */
 export type Minutes = number;
 
 /**
  * Number of hours.
+ *
+ * @semanticType
+ * @semanticTopic time
+ * @semanticTopic duration
+ * @semanticTopic numeric
  */
 export type Hours = number;
 
 /**
  * Number of days.
+ *
+ * @semanticType
+ * @semanticTopic time
+ * @semanticTopic duration
+ * @semanticTopic numeric
  */
 export type Days = number;
 
@@ -418,6 +479,10 @@ export const MS_IN_WEEK: Milliseconds = MS_IN_DAY * DAYS_IN_WEEK;
 
 /**
  * Day of the month, 1-31
+ *
+ * @semanticType
+ * @semanticTopic date
+ * @semanticTopic numeric
  */
 export type DayOfMonth = number;
 
@@ -425,11 +490,19 @@ export type DayOfMonth = number;
  * Month of the year, 1-12.
  *
  * NOTE: The month from Date.getMonth() is from 0-11. Use monthOfYearFromDate() to get the MonthOfYear value.
+ *
+ * @semanticType
+ * @semanticTopic date
+ * @semanticTopic numeric
  */
 export type MonthOfYear = number;
 
 /**
  * Javascript Date month number. 0-11.
+ *
+ * @semanticType
+ * @semanticTopic date
+ * @semanticTopic numeric
  */
 export type DateMonth = number;
 
@@ -479,6 +552,10 @@ export function makeDateMonthForMonthOfYear(monthOfYear: MonthOfYear): DateMonth
 
 /**
  * Year number. I.E. 2022
+ *
+ * @semanticType
+ * @semanticTopic date
+ * @semanticTopic numeric
  */
 export type YearNumber = number;
 

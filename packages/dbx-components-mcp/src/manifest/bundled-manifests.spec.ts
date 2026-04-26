@@ -7,7 +7,8 @@ const MANIFESTS_DIR = resolve(PACKAGE_ROOT, 'manifests');
 
 const BUNDLED_PATHS = {
   util: resolve(MANIFESTS_DIR, 'dereekb-util.semantic-types.mcp.json'),
-  model: resolve(MANIFESTS_DIR, 'dereekb-model.semantic-types.mcp.json')
+  model: resolve(MANIFESTS_DIR, 'dereekb-model.semantic-types.mcp.json'),
+  date: resolve(MANIFESTS_DIR, 'dereekb-date.semantic-types.mcp.json')
 } as const;
 
 describe('bundled @dereekb/* manifests', () => {
@@ -15,11 +16,12 @@ describe('bundled @dereekb/* manifests', () => {
     const result = await loadSemanticTypeManifests({
       sources: [
         { origin: 'bundled', path: BUNDLED_PATHS.util },
-        { origin: 'bundled', path: BUNDLED_PATHS.model }
+        { origin: 'bundled', path: BUNDLED_PATHS.model },
+        { origin: 'bundled', path: BUNDLED_PATHS.date }
       ]
     });
 
-    expect(result.loadedSources).toEqual(['@dereekb/util', '@dereekb/model']);
+    expect(result.loadedSources).toEqual(['@dereekb/util', '@dereekb/model', '@dereekb/date']);
     expect(result.warnings).toEqual([]);
     // Step 4 ships only the rails — entries get populated in Step 3 as types
     // gain `@semanticType` JSDoc tags. Asserting a non-zero count would

@@ -92,6 +92,9 @@ export function reduceNumbersFn<D extends number>(reduceFn: (a: number, b: numbe
 
 /**
  * Exclusive end value used by range().
+ *
+ * @semanticType
+ * @semanticTopic numeric
  */
 export type RangeInputEndValue = number;
 

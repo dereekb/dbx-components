@@ -2,6 +2,11 @@ import { excludeValuesFromArray } from '../array';
 
 /**
  * Type representing an email address as a string.
+ *
+ * @semanticType
+ * @semanticTopic email
+ * @semanticTopic contact
+ * @semanticTopic string
  */
 export type EmailAddress = string;
 
@@ -21,6 +26,11 @@ export type EmailParticipant = NameEmailPair;
 
 /**
  * Email participant string. Starts with the email, followed by the name if available.
+ *
+ * @semanticType
+ * @semanticTopic email
+ * @semanticTopic contact
+ * @semanticTopic string
  */
 export type EmailParticipantString = string;
 

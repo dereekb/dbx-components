@@ -5,5 +5,286 @@
   "generatedAt": "1970-01-01T00:00:00.000Z",
   "generator": "@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs",
   "topics": [],
-  "entries": []
+  "entries": [
+    {
+      "name": "WebsiteFileLinkMimeType",
+      "package": "@dereekb/model",
+      "module": "src/lib/data/website/link.file",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["string", "dereekb-model:website-link"],
+      "notes": "MIME type string for a file link (e.g., \"image/png\", \"application/pdf\").",
+      "sourceLocation": {
+        "file": "src/lib/data/website/link.file.ts",
+        "line": 28
+      }
+    },
+    {
+      "name": "WebsiteFileLinkName",
+      "package": "@dereekb/model",
+      "module": "src/lib/data/website/link.file",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["string", "dereekb-model:website-link"],
+      "notes": "Display name for a file link. Has no pattern restriction.",
+      "sourceLocation": {
+        "file": "src/lib/data/website/link.file.ts",
+        "line": 47
+      }
+    },
+    {
+      "name": "WebsiteFileLinkData",
+      "package": "@dereekb/model",
+      "module": "src/lib/data/website/link.file",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["string", "dereekb-model:website-link"],
+      "notes": "The data payload of a file link, typically a URL pointing to the file.",
+      "sourceLocation": {
+        "file": "src/lib/data/website/link.file.ts",
+        "line": 61
+      }
+    },
+    {
+      "name": "WebsiteLinkEncodedData",
+      "package": "@dereekb/model",
+      "module": "src/lib/data/website/link",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["string", "dereekb-model:website-link"],
+      "notes": "Pipe-separated or raw string encoding of website link data.",
+      "sourceLocation": {
+        "file": "src/lib/data/website/link.ts",
+        "line": 48
+      }
+    },
+    {
+      "name": "FacebookProfileId",
+      "package": "@dereekb/model",
+      "module": "src/lib/data/website/link.website",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["identifier", "string", "dereekb-model:social"],
+      "notes": "Facebook profile identifier.",
+      "sourceLocation": {
+        "file": "src/lib/data/website/link.website.ts",
+        "line": 153
+      }
+    },
+    {
+      "name": "InstagramProfileId",
+      "package": "@dereekb/model",
+      "module": "src/lib/data/website/link.website",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["identifier", "string", "dereekb-model:social"],
+      "notes": "Instagram profile identifier.",
+      "sourceLocation": {
+        "file": "src/lib/data/website/link.website.ts",
+        "line": 210
+      }
+    },
+    {
+      "name": "TwitterProfileId",
+      "package": "@dereekb/model",
+      "module": "src/lib/data/website/link.website",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["identifier", "string", "dereekb-model:social"],
+      "notes": "Twitter/X profile identifier.",
+      "sourceLocation": {
+        "file": "src/lib/data/website/link.website.ts",
+        "line": 256
+      }
+    },
+    {
+      "name": "TikTokProfileId",
+      "package": "@dereekb/model",
+      "module": "src/lib/data/website/link.website",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["identifier", "string", "dereekb-model:social"],
+      "notes": "TikTok profile identifier.",
+      "sourceLocation": {
+        "file": "src/lib/data/website/link.website.ts",
+        "line": 306
+      }
+    },
+    {
+      "name": "SnapchatProfileId",
+      "package": "@dereekb/model",
+      "module": "src/lib/data/website/link.website",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["identifier", "string", "dereekb-model:social"],
+      "notes": "Snapchat profile identifier.",
+      "sourceLocation": {
+        "file": "src/lib/data/website/link.website.ts",
+        "line": 355
+      }
+    },
+    {
+      "name": "YouTubeProfileId",
+      "package": "@dereekb/model",
+      "module": "src/lib/data/website/link.website",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["identifier", "string", "dereekb-model:social"],
+      "notes": "YouTube profile identifier.",
+      "sourceLocation": {
+        "file": "src/lib/data/website/link.website.ts",
+        "line": 414
+      }
+    },
+    {
+      "name": "PayPalProfileId",
+      "package": "@dereekb/model",
+      "module": "src/lib/data/website/link.website",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["identifier", "string", "dereekb-model:social"],
+      "notes": "PayPal profile identifier.",
+      "sourceLocation": {
+        "file": "src/lib/data/website/link.website.ts",
+        "line": 473
+      }
+    },
+    {
+      "name": "CashappProfileId",
+      "package": "@dereekb/model",
+      "module": "src/lib/data/website/link.website",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["identifier", "string", "dereekb-model:social"],
+      "notes": "Cash App profile identifier.",
+      "sourceLocation": {
+        "file": "src/lib/data/website/link.website.ts",
+        "line": 524
+      }
+    },
+    {
+      "name": "VenmoProfileId",
+      "package": "@dereekb/model",
+      "module": "src/lib/data/website/link.website",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["identifier", "string", "dereekb-model:social"],
+      "notes": "Venmo profile identifier.",
+      "sourceLocation": {
+        "file": "src/lib/data/website/link.website.ts",
+        "line": 573
+      }
+    },
+    {
+      "name": "SpotifyProfileId",
+      "package": "@dereekb/model",
+      "module": "src/lib/data/website/link.website",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["identifier", "string", "dereekb-model:social"],
+      "notes": "Spotify profile identifier.",
+      "sourceLocation": {
+        "file": "src/lib/data/website/link.website.ts",
+        "line": 632
+      }
+    },
+    {
+      "name": "GrantedRole",
+      "package": "@dereekb/model",
+      "module": "src/lib/service/permission/role",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["identifier", "string", "dereekb-model:auth"],
+      "notes": "A granted role for a model.",
+      "sourceLocation": {
+        "file": "src/lib/service/permission/role.ts",
+        "line": 11
+      }
+    },
+    {
+      "name": "SyncEntityId",
+      "package": "@dereekb/model",
+      "module": "src/lib/service/sync/sync.entity",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["identifier", "string", "dereekb-model:sync"],
+      "notes": "A unique identifier for an entity on a specific server.",
+      "sourceLocation": {
+        "file": "src/lib/service/sync/sync.entity.ts",
+        "line": 12
+      }
+    },
+    {
+      "name": "SyncEntityCommonType",
+      "package": "@dereekb/model",
+      "module": "src/lib/service/sync/sync.entity",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["identifier", "string", "dereekb-model:sync"],
+      "notes": "A common type for an entity that is shared/used between all systems for an entity that should be synchronized.",
+      "sourceLocation": {
+        "file": "src/lib/service/sync/sync.entity.ts",
+        "line": 22
+      }
+    },
+    {
+      "name": "SyncEntityCommonId",
+      "package": "@dereekb/model",
+      "module": "src/lib/service/sync/sync.entity",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["identifier", "string", "dereekb-model:sync"],
+      "notes": "A common identifier for an entity that is shared/used between all systems for an entity that should be synchronized.\n\nThis identifier should be used for retrieving a similar entity from any server.",
+      "sourceLocation": {
+        "file": "src/lib/service/sync/sync.entity.ts",
+        "line": 34
+      }
+    },
+    {
+      "name": "SyncSourceName",
+      "package": "@dereekb/model",
+      "module": "src/lib/service/sync/sync.source",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["string", "dereekb-model:sync"],
+      "notes": "English name for a SyncSource.\n\nIs not used as a key.",
+      "sourceLocation": {
+        "file": "src/lib/service/sync/sync.source.ts",
+        "line": 10
+      }
+    },
+    {
+      "name": "SyncSourceId",
+      "package": "@dereekb/model",
+      "module": "src/lib/service/sync/sync.source",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["identifier", "string", "dereekb-model:sync"],
+      "notes": "A unique identifier for a SyncSource.",
+      "sourceLocation": {
+        "file": "src/lib/service/sync/sync.source.ts",
+        "line": 20
+      }
+    }
+  ]
 }

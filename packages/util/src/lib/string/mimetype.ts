@@ -6,6 +6,10 @@ import { invertStringRecord } from './record';
  * A simple mime type string with just the type/subtype and no parameters.
  *
  * I.E. "application/json"
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-util:mime
  */
 export type MimeTypeWithoutParameters = string;
 
@@ -18,6 +22,10 @@ export type MimeTypeWildcard = '*';
  * A mime type with a wildcard subtype. Has a star as the subtype.
  *
  * I.E. "application/*"
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-util:mime
  */
 export type MimeTypeWithSubtypeWildcardWithoutParameters = string;
 
@@ -25,6 +33,10 @@ export type MimeTypeWithSubtypeWildcardWithoutParameters = string;
  * A mime type string that may contain additional parameters.
  *
  * I.E. "text/plain", "application/json; charset=utf-8"
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-util:mime
  */
 export type ContentTypeMimeType = string;
 

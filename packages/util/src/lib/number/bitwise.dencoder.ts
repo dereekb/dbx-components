@@ -11,6 +11,10 @@ export const MAX_BITWISE_SET_SIZE = 32;
 
 /**
  * Enum or number value from 0 to 31 that denotes a specific item via index of the bit to measure.
+ *
+ * @semanticType
+ * @semanticTopic numeric
+ * @semanticTopic dereekb-util:encoding
  */
 export type BitwiseEncodedSetIndex = number;
 
@@ -18,6 +22,10 @@ export type BitwiseEncodedSetIndex = number;
  * Set of values that are encoded into a single number.
  *
  * The number can include up to 32 unique boolean values.
+ *
+ * @semanticType
+ * @semanticTopic numeric
+ * @semanticTopic dereekb-util:encoding
  */
 export type BitwiseEncodedSet = number;
 

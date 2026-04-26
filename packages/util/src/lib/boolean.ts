@@ -134,6 +134,10 @@ export type BooleanFactory = Factory<boolean>;
 
 /**
  * Number from 0.0 to 100.0 used for the chance to return true.
+ *
+ * @semanticType
+ * @semanticTopic percent
+ * @semanticTopic numeric
  */
 export type BooleanTrueChance = number;
 

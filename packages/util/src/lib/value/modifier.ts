@@ -3,6 +3,10 @@ import { type Maybe } from './maybe.type';
 
 /**
  * String key that uniquely identifies a modifier within a {@link ModifierMap}.
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic identifier
  */
 export type ModifierKey = string;
 

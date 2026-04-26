@@ -2,6 +2,10 @@ import { filterMaybeArrayValues } from './array';
 
 /**
  * Represents a salt value used in hashing.
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-util:hash
  */
 export type HashSalt = string;
 

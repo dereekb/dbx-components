@@ -40,6 +40,10 @@ export function isValidWebsiteLinkType(input: string): input is WebsiteLinkType 
 
 /**
  * Pipe-separated or raw string encoding of website link data.
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-model:website-link
  */
 export type WebsiteLinkEncodedData = string;
 

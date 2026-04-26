@@ -4,6 +4,10 @@ import { type Maybe } from '../value/maybe.type';
  * A character or string that is added to the start of a string.
  *
  * Example: '-' in "-class"
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-util:prefix
  */
 export type CharacterPrefix = string;
 
@@ -11,11 +15,19 @@ export type CharacterPrefix = string;
  * A character or string that is added to the end of a string.
  *
  * Example: '-' in "class-"
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-util:prefix
  */
 export type CharacterSuffix = string;
 
 /**
  * A string that does not have a CharacterPrefix or CharacterSuffix.
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-util:prefix
  */
 export type CharacterPrefixSuffixCleanString = string;
 

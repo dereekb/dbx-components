@@ -52,6 +52,10 @@ export type InferredSlashPathFolder = SlashPathFolder | EmptyRelativeSlashPathFo
  * The file extension of a SlashPathTypedFile.
  *
  * e.g. 'png' in 'image.png'
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-util:path
  */
 export type SlashPathTypedFileExtension = string;
 
@@ -64,6 +68,10 @@ export type SlashPathTypedFileSuffix = `${SlashFileTypeSeparatorString}${SlashPa
 
 /**
  * A SlashPath file name without a file type identifier (e.g. 'image', and not 'image.png')
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-util:path
  */
 export type SlashPathUntypedFile = string;
 

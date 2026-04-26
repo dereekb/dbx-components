@@ -15,6 +15,10 @@ export type JsonSerializableObject = Record<PrimativeKey, any>;
 
 /**
  * String key of an object.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
  */
 export type ObjectKey = string;
 

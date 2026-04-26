@@ -4,6 +4,11 @@ import { type EmailAddress } from './email';
 
 /**
  * Domain name portion of an email address (e.g., "example.com").
+ *
+ * @semanticType
+ * @semanticTopic email
+ * @semanticTopic contact
+ * @semanticTopic string
  */
 export type EmailAddressDomain = string;
 
