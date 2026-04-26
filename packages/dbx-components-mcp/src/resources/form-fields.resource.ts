@@ -72,15 +72,15 @@ export function registerFormFieldsResource(server: McpServer): void {
       const field = slug ? getFormField(slug) : undefined;
 
       let text: string;
-      if (!slug) {
-        text = 'No slug provided.';
-      } else if (field) {
+      if (slug && field) {
         text = JSON.stringify(field, null, 2);
-      } else {
+      } else if (slug) {
         const available = getFormFields()
           .map((f) => f.slug)
           .join(', ');
         text = `Form field '${slug}' not found. Available slugs: ${available}`;
+      } else {
+        text = 'No slug provided.';
       }
 
       return {
@@ -109,9 +109,7 @@ export function registerFormFieldsResource(server: McpServer): void {
 
       let text: string;
       let isJson = false;
-      if (!produces) {
-        text = `No produces value supplied. Known values: ${getFormProducesCatalog().join(', ')}`;
-      } else {
+      if (produces) {
         const entries = getFormFieldsByProduces(produces);
         if (entries.length === 0) {
           text = `No form entries produce '${produces}'. Known values: ${getFormProducesCatalog().join(', ')}`;
@@ -119,6 +117,8 @@ export function registerFormFieldsResource(server: McpServer): void {
           text = JSON.stringify({ produces, fields: entries }, null, 2);
           isJson = true;
         }
+      } else {
+        text = `No produces value supplied. Known values: ${getFormProducesCatalog().join(', ')}`;
       }
 
       return {

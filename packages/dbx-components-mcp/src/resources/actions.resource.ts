@@ -79,15 +79,15 @@ export function registerActionsResource(server: McpServer): void {
       const entry = slug ? getActionEntry(slug) : undefined;
 
       let text: string;
-      if (!slug) {
-        text = 'No slug provided.';
-      } else if (entry) {
+      if (slug && entry) {
         text = JSON.stringify(entry, null, 2);
-      } else {
+      } else if (slug) {
         const available = getActionEntries()
           .map((e) => e.slug)
           .join(', ');
         text = `Action entry '${slug}' not found. Available slugs: ${available}`;
+      } else {
+        text = 'No slug provided.';
       }
 
       return {
