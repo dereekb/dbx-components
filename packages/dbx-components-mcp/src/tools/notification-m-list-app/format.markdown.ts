@@ -9,43 +9,37 @@ import type { AppNotificationsReport, TaskSummary, TemplateSummary } from './typ
  * @returns the markdown body
  */
 export function formatReportAsMarkdown(report: AppNotificationsReport): string {
-  const lines: string[] = [];
   const basename = report.componentDir.split('/').pop() ?? report.componentDir;
-  lines.push(`# App notifications — ${basename}`);
-  lines.push('');
-  lines.push(`Component: \`${report.componentDir}\``);
-  lines.push(`API: \`${report.apiDir}\``);
-  lines.push('');
-
   const aggregatorRecordText = report.aggregatorRecordName ? code(report.aggregatorRecordName) : '_Not defined._';
   const templateConfigsFactoryText = report.templateConfigsArrayFactoryName ? code(report.templateConfigsArrayFactoryName) : '_Not defined._';
-  lines.push(`Aggregator record: ${aggregatorRecordText}`);
-  lines.push(`Wired via \`appNotificationTemplateTypeInfoRecordService\`: ${formatBool(report.aggregatorWiredInApi)}`);
-  lines.push(`Template configs-array factory: ${templateConfigsFactoryText}`);
-  lines.push(`Wired via \`NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN\`: ${formatBool(report.templateConfigsArrayWiredInApi)}`);
-  lines.push(`\`notificationTaskService({...})\` call count: ${report.taskServiceCallCount}`);
-
-  lines.push('');
-  lines.push(`## Notification templates (${report.templates.length})`);
+  const lines: string[] = [
+    `# App notifications — ${basename}`,
+    '',
+    `Component: \`${report.componentDir}\``,
+    `API: \`${report.apiDir}\``,
+    '',
+    `Aggregator record: ${aggregatorRecordText}`,
+    `Wired via \`appNotificationTemplateTypeInfoRecordService\`: ${formatBool(report.aggregatorWiredInApi)}`,
+    `Template configs-array factory: ${templateConfigsFactoryText}`,
+    `Wired via \`NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN\`: ${formatBool(report.templateConfigsArrayWiredInApi)}`,
+    `\`notificationTaskService({...})\` call count: ${report.taskServiceCallCount}`,
+    '',
+    `## Notification templates (${report.templates.length})`
+  ];
   if (report.templates.length === 0) {
-    lines.push('');
-    lines.push('_None found._');
+    lines.push('', '_None found._');
   } else {
     for (const t of report.templates) {
-      lines.push('');
-      lines.push(formatTemplateBlock(t));
+      lines.push('', formatTemplateBlock(t));
     }
   }
 
-  lines.push('');
-  lines.push(`## Notification tasks (${report.tasks.length})`);
+  lines.push('', `## Notification tasks (${report.tasks.length})`);
   if (report.tasks.length === 0) {
-    lines.push('');
-    lines.push('_None found._');
+    lines.push('', '_None found._');
   } else {
     for (const t of report.tasks) {
-      lines.push('');
-      lines.push(formatTaskBlock(t));
+      lines.push('', formatTaskBlock(t));
     }
   }
 
@@ -62,10 +56,7 @@ function formatTemplateBlock(t: TemplateSummary): string {
   if (t.targetModelIdentity) parts.push(`- Target model: \`${t.targetModelIdentity}\``);
   const infoText = t.infoSymbolName ? code(t.infoSymbolName) : '_Missing._';
   const factorySuffix = t.factoryFunctionName ? ` (${code(t.factoryFunctionName)})` : '';
-  parts.push(`- Info object: ${infoText}`);
-  parts.push(`- In info record: ${formatBool(t.inInfoRecord)}`);
-  parts.push(`- Has factory: ${formatBool(t.hasFactory)}${factorySuffix}`);
-  parts.push(`- Source: \`${t.sourceFile}\``);
+  parts.push(`- Info object: ${infoText}`, `- In info record: ${formatBool(t.inInfoRecord)}`, `- Has factory: ${formatBool(t.hasFactory)}${factorySuffix}`, `- Source: \`${t.sourceFile}\``);
   return parts.join('\n');
 }
 
@@ -78,15 +69,12 @@ function formatTaskBlock(t: TaskSummary): string {
     const checkpointsText = t.checkpoints.map((c) => code(c)).join(', ');
     parts.push(`- Checkpoints: ${checkpointsText}`);
   }
-  parts.push(`- In \`ALL_*_NOTIFICATION_TASK_TYPES\`: ${formatBool(t.inAllArray)}`);
-  parts.push(`- In \`validate: [...]\`: ${formatBool(t.inValidateList)}`);
   let handlerSuffix = '';
   if (t.handlerFlowStepCount !== undefined) {
     const stepWord = t.handlerFlowStepCount === 1 ? 'step' : 'steps';
     handlerSuffix = ` (${t.handlerFlowStepCount} flow ${stepWord})`;
   }
-  parts.push(`- Handler: ${formatBool(t.hasHandler)}${handlerSuffix}`);
-  parts.push(`- Source: \`${t.sourceFile}\``);
+  parts.push(`- In \`ALL_*_NOTIFICATION_TASK_TYPES\`: ${formatBool(t.inAllArray)}`, `- In \`validate: [...]\`: ${formatBool(t.inValidateList)}`, `- Handler: ${formatBool(t.hasHandler)}${handlerSuffix}`, `- Source: \`${t.sourceFile}\``);
   return parts.join('\n');
 }
 
