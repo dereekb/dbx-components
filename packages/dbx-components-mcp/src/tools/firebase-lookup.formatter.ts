@@ -50,29 +50,18 @@ const STORE_SHAPE_LABEL: Readonly<Record<FirebaseModelStoreShape, string>> = {
  * @returns the markdown body the tool emits as content
  */
 export function formatFirebaseModelEntry(model: FirebaseModel, depth: LookupDepth): string {
-  const lines: string[] = [];
-  lines.push(`# ${model.name}`);
-  lines.push('');
   const identityLine = model.parentIdentityConst ? `\`${model.identityConst}\` — subcollection of \`${model.parentIdentityConst}\`` : `\`${model.identityConst}\` — root collection`;
   const shape = firebaseModelStoreShape(model);
-  lines.push(`**Identity:** ${identityLine}`);
-  lines.push(`**Collection:** \`${model.modelType}\` · prefix \`${model.collectionPrefix}\``);
-  lines.push(`**Store shape:** \`${STORE_SHAPE_LABEL[shape]}\` (see \`dbx_model_lookup topic="shapes"\` for the full taxonomy)`);
-  lines.push(`**Source:** \`${model.sourceFile}\``);
-  lines.push('');
-  lines.push(`## Fields (${model.fields.length})`);
-  lines.push('');
+  const lines: string[] = [`# ${model.name}`, '', `**Identity:** ${identityLine}`, `**Collection:** \`${model.modelType}\` · prefix \`${model.collectionPrefix}\``, `**Store shape:** \`${STORE_SHAPE_LABEL[shape]}\` (see \`dbx_model_lookup topic="shapes"\` for the full taxonomy)`, `**Source:** \`${model.sourceFile}\``, '', `## Fields (${model.fields.length})`, ''];
 
   if (depth === 'brief') {
-    lines.push('| Field | Description |');
-    lines.push('|-------|-------------|');
+    lines.push('| Field | Description |', '|-------|-------------|');
     for (const field of model.fields) {
       const desc = (field.description ?? '–').replaceAll('|', '\\|').replaceAll('\n', ' ');
       lines.push(`| \`${field.name}\` | ${desc} |`);
     }
   } else {
-    lines.push('| Field | Description | Type | Converter |');
-    lines.push('|-------|-------------|------|-----------|');
+    lines.push('| Field | Description | Type | Converter |', '|-------|-------------|------|-----------|');
     for (const field of model.fields) {
       const desc = (field.description ?? '–').replaceAll('|', '\\|').replaceAll('\n', ' ');
       const ts = field.tsType ? `\`${field.tsType}\`` : '–';
@@ -81,15 +70,11 @@ export function formatFirebaseModelEntry(model: FirebaseModel, depth: LookupDept
     }
 
     if (model.enums.length > 0) {
-      lines.push('');
-      lines.push('## Enums');
-      lines.push('');
+      lines.push('', '## Enums', '');
       for (const en of model.enums) {
-        lines.push(`### ${en.name}`);
-        lines.push('');
+        lines.push(`### ${en.name}`, '');
         if (en.description) {
-          lines.push(en.description);
-          lines.push('');
+          lines.push(en.description, '');
         }
         for (const value of en.values) {
           const desc = value.description ? ` — ${value.description}` : '';
@@ -111,29 +96,19 @@ export function formatFirebaseModelEntry(model: FirebaseModel, depth: LookupDept
  * @returns the markdown body the tool emits as content
  */
 export function formatFirebaseModelCatalog(models: readonly FirebaseModel[]): string {
-  const lines: string[] = [];
   const roots = models.filter((m) => !m.parentIdentityConst);
   const subs = models.filter((m) => m.parentIdentityConst);
-  lines.push(`# Firebase model catalog`);
-  lines.push('');
-  lines.push(`${models.length} models (${roots.length} root, ${subs.length} subcollection).`);
-  lines.push('');
-  lines.push('## Root collections');
-  lines.push('');
+  const lines: string[] = [`# Firebase model catalog`, '', `${models.length} models (${roots.length} root, ${subs.length} subcollection).`, '', '## Root collections', ''];
   for (const model of roots) {
     lines.push(`- \`${model.collectionPrefix}\` → **${model.name}** (${model.fields.length} fields)`);
   }
   if (subs.length > 0) {
-    lines.push('');
-    lines.push('## Subcollections');
-    lines.push('');
+    lines.push('', '## Subcollections', '');
     for (const model of subs) {
       lines.push(`- \`${model.collectionPrefix}\` → **${model.name}** (under \`${model.parentIdentityConst}\`, ${model.fields.length} fields)`);
     }
   }
-  lines.push('');
-  lines.push('Use `dbx_model_lookup topic="<Name>"` or `dbx_model_lookup topic="<prefix>"` for full model details, or `dbx_model_decode` to decode a raw document.');
-  lines.push('See `dbx_model_lookup topic="shapes"` for the consumer-side store-shape taxonomy (root, sub-collection, singletons, system-state).');
+  lines.push('', 'Use `dbx_model_lookup topic="<Name>"` or `dbx_model_lookup topic="<prefix>"` for full model details, or `dbx_model_decode` to decode a raw document.', 'See `dbx_model_lookup topic="shapes"` for the consumer-side store-shape taxonomy (root, sub-collection, singletons, system-state).');
   return lines.join('\n').trimEnd();
 }
 

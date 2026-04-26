@@ -16,7 +16,7 @@
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
 import { type Maybe } from '@dereekb/util';
-import { PIPE_ENTRIES, getPipeEntry, getPipeEntryByClassName, getPipeEntryByPipeName, type PipeEntryInfo, type PipeRegistrySlug } from './data/pipe-entries.js';
+import { PIPE_ENTRIES, getPipeEntry, getPipeEntryByClassName, getPipeEntryByPipeName, type PipeEntryInfo } from './data/pipe-entries.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 
 // MARK: Tool definition
@@ -137,26 +137,11 @@ function formatArgsTable(args: readonly { readonly name: string; readonly type: 
 }
 
 function formatEntry(entry: PipeEntryInfo, depth: 'brief' | 'full'): string {
-  const lines: string[] = [];
-  lines.push(`# ${entry.className}`);
-  lines.push('');
-  lines.push(entry.description);
-  lines.push('');
-  lines.push(bullet('slug', `\`${entry.slug}\``));
-  lines.push(bullet('pipe', `\`${entry.pipeName}\``));
-  lines.push(bullet('category', `\`${entry.category}\``));
-  lines.push(bullet('purity', `\`${entry.purity}\``));
-  lines.push(bullet('input', `\`${entry.inputType}\``));
-  lines.push(bullet('output', `\`${entry.outputType}\``));
-  lines.push(bullet('module', `\`${entry.module}\``));
-  lines.push('');
+  const lines: string[] = [`# ${entry.className}`, '', entry.description, '', bullet('slug', `\`${entry.slug}\``), bullet('pipe', `\`${entry.pipeName}\``), bullet('category', `\`${entry.category}\``), bullet('purity', `\`${entry.purity}\``), bullet('input', `\`${entry.inputType}\``), bullet('output', `\`${entry.outputType}\``), bullet('module', `\`${entry.module}\``), ''];
 
   if (depth === 'full') {
     if (entry.args.length > 0) {
-      lines.push('## Args');
-      lines.push('');
-      lines.push(formatArgsTable(entry.args));
-      lines.push('');
+      lines.push('## Args', '', formatArgsTable(entry.args), '');
     }
     lines.push('## Example', '', '```html', entry.example, '```');
     if (entry.relatedSlugs.length > 0) {
@@ -179,13 +164,10 @@ function formatCatalog(): string {
   let lastCategory: Maybe<string>;
   for (const entry of PIPE_ENTRIES) {
     if (entry.category !== lastCategory) {
-      lines.push('');
-      lines.push(`## ${entry.category}`);
-      lines.push('');
+      lines.push('', `## ${entry.category}`, '');
       lastCategory = entry.category;
     }
-    lines.push(`- \`${entry.slug}\` → \`${entry.pipeName}\` (${entry.className})`);
-    lines.push(`  ${entry.description}`);
+    lines.push(`- \`${entry.slug}\` → \`${entry.pipeName}\` (${entry.className})`, `  ${entry.description}`);
   }
   return lines.join('\n').trimEnd();
 }
@@ -193,8 +175,7 @@ function formatCatalog(): string {
 function formatNotFound(normalized: string, candidates: readonly PipeEntryInfo[]): string {
   const lines: string[] = [`No pipe entry matched \`${normalized}\`.`, ''];
   if (candidates.length > 0) {
-    lines.push('Did you mean one of these?');
-    lines.push('');
+    lines.push('Did you mean one of these?', '');
     for (const entry of candidates) {
       lines.push(`- \`${entry.slug}\` → \`${entry.pipeName}\` (${entry.className}) — ${entry.description}`);
     }
@@ -252,4 +233,4 @@ export const lookupPipeTool: DbxTool = {
 };
 
 // Re-export so consumers don't need to reach into `data/`.
-export type { PipeRegistrySlug };
+export type { PipeRegistrySlug } from './data/pipe-entries.js';
