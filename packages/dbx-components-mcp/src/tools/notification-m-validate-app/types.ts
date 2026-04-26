@@ -60,8 +60,7 @@ export type ViolationCode =
   | 'NOTIF_TEMPLATE_INFO_MISSING_NAME_OR_DESCRIPTION'
   | 'NOTIF_TASK_MULTIPLE_SERVICES';
 
-import type { ViolationSeverity } from '../validate-format.js';
-export type { ViolationSeverity };
+export type { ViolationSeverity } from '../validate-format.js';
 
 export interface Violation {
   readonly code: ViolationCode;
