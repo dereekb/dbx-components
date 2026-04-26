@@ -183,40 +183,18 @@ function formatStateInteraction(entry: ActionDirectiveInfo): string {
 }
 
 function formatDirectiveEntry(entry: ActionDirectiveInfo, depth: 'brief' | 'full'): string {
-  const lines: string[] = [];
-  lines.push(`# ${entry.className}`);
-  lines.push('');
-  lines.push(entry.description);
-  lines.push('');
-  lines.push(bullet('selector', `\`${entry.selector}\``));
-  lines.push(bullet('module', `\`${entry.module}\``));
-  lines.push(bullet('slug', `\`${entry.slug}\``));
-  lines.push(bullet('produces context', entry.producesContext ? 'yes (provides `ActionContextStore` via DI)' : 'no'));
-  lines.push(bullet('consumes context', entry.consumesContext ? 'yes (injects `DbxActionContextStoreSourceInstance`)' : 'no'));
-  lines.push('');
+  const lines: string[] = [`# ${entry.className}`, '', entry.description, '', bullet('selector', `\`${entry.selector}\``), bullet('module', `\`${entry.module}\``), bullet('slug', `\`${entry.slug}\``), bullet('produces context', entry.producesContext ? 'yes (provides `ActionContextStore` via DI)' : 'no'), bullet('consumes context', entry.consumesContext ? 'yes (injects `DbxActionContextStoreSourceInstance`)' : 'no'), ''];
 
   if (depth === 'full') {
-    lines.push('## Inputs');
-    lines.push('');
-    lines.push(entry.inputs.length > 0 ? formatInputsTable(entry.inputs) : '_No inputs._');
-    lines.push('');
+    lines.push('## Inputs', '', entry.inputs.length > 0 ? formatInputsTable(entry.inputs) : '_No inputs._', '');
     if (entry.outputs.length > 0) {
-      lines.push('## Outputs');
-      lines.push('');
+      lines.push('## Outputs', '');
       for (const output of entry.outputs) {
         lines.push(`- \`${output.name}: ${output.type}\` — ${output.description}`);
       }
       lines.push('');
     }
-    lines.push('## State interaction');
-    lines.push('');
-    lines.push(formatStateInteraction(entry));
-    lines.push('');
-    lines.push('## Example');
-    lines.push('');
-    lines.push('```html');
-    lines.push(entry.example);
-    lines.push('```');
+    lines.push('## State interaction', '', formatStateInteraction(entry), '', '## Example', '', '```html', entry.example, '```');
     if (entry.skillRefs.length > 0) {
       const skillsText = entry.skillRefs.map((s) => code(s)).join(', ');
       lines.push('', `→ Skills: ${skillsText}`);
@@ -229,39 +207,25 @@ function formatDirectiveEntry(entry: ActionDirectiveInfo, depth: 'brief' | 'full
 }
 
 function formatStoreEntry(entry: ActionStoreInfo, depth: 'brief' | 'full'): string {
-  const lines: string[] = [];
-  lines.push(`# ${entry.className}`);
-  lines.push('');
-  lines.push(entry.description);
-  lines.push('');
-  lines.push(bullet('module', `\`${entry.module}\``));
-  lines.push(bullet('slug', `\`${entry.slug}\``));
-  lines.push('');
+  const lines: string[] = [`# ${entry.className}`, '', entry.description, '', bullet('module', `\`${entry.module}\``), bullet('slug', `\`${entry.slug}\``), ''];
 
   if (depth === 'full') {
     if (entry.methods.length > 0) {
-      lines.push('## Methods');
-      lines.push('');
-      lines.push('| Method | Signature | Description |');
-      lines.push('| --- | --- | --- |');
+      lines.push('## Methods', '', '| Method | Signature | Description |', '| --- | --- | --- |');
       for (const method of entry.methods) {
         lines.push(`| \`${method.name}\` | \`${method.signature}\` | ${method.description} |`);
       }
       lines.push('');
     }
     if (entry.observables.length > 0) {
-      lines.push('## Observables');
-      lines.push('');
-      lines.push('| Observable | Type | Description |');
-      lines.push('| --- | --- | --- |');
+      lines.push('## Observables', '', '| Observable | Type | Description |', '| --- | --- | --- |');
       for (const obs of entry.observables) {
         lines.push(`| \`${obs.name}\` | \`${obs.type}\` | ${obs.description} |`);
       }
       lines.push('');
     }
     if (entry.disabledKeyDefaults.length > 0) {
-      lines.push('## Disabled-key constants');
-      lines.push('');
+      lines.push('## Disabled-key constants', '');
       for (const key of entry.disabledKeyDefaults) {
         lines.push(`- \`${key}\``);
       }
@@ -330,15 +294,9 @@ function formatActionGroup(entries: readonly ActionEntryInfo[], title: string): 
     } else {
       header = `DbxActionState.${entry.stateValue}`;
     }
-    lines.push(`## ${header}`);
-    lines.push('');
-    lines.push(`- **slug:** \`${entry.slug}\``);
-    lines.push(`- ${entry.description}`);
+    lines.push(`## ${header}`, '', `- **slug:** \`${entry.slug}\``, `- ${entry.description}`);
     if (entry.role === 'state') {
-      lines.push('');
-      lines.push('```');
-      lines.push(formatStateDiagram(entry));
-      lines.push('```');
+      lines.push('', '```', formatStateDiagram(entry), '```');
     }
     lines.push('');
   }
@@ -349,8 +307,7 @@ function formatCatalog(): string {
   const lines: string[] = ['# Action catalog', '', `${ACTION_ENTRIES.length} entries across ${ACTION_ROLE_ORDER.length} roles.`, ''];
   for (const role of ACTION_ROLE_ORDER) {
     const entries = getActionEntriesByRole(role);
-    lines.push(`## ${ROLE_TITLES[role]} (${entries.length})`);
-    lines.push('');
+    lines.push(`## ${ROLE_TITLES[role]} (${entries.length})`, '');
     for (const entry of entries) {
       let label: string;
       if (entry.role === 'directive') {
@@ -370,8 +327,7 @@ function formatCatalog(): string {
 function formatNotFound(normalized: string, candidates: readonly ActionEntryInfo[]): string {
   const lines: string[] = [`No action entry matched \`${normalized}\`.`, ''];
   if (candidates.length > 0) {
-    lines.push('Did you mean one of these?');
-    lines.push('');
+    lines.push('Did you mean one of these?', '');
     for (const entry of candidates) {
       let label: string;
       if (entry.role === 'directive') {
