@@ -14,9 +14,9 @@
  */
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
-import { type } from 'arktype';
 import { FILTER_ENTRIES, getFilterEntry, getFilterEntryByClassName, getFilterEntryBySelector, type FilterEntryInfo } from './data/filter-entries.js';
-import { toolError, type DbxTool, type ToolResult } from './types.js';
+import { createLookupTool, type FuzzyField, type LookupDepth } from './_lookup.factory.js';
+import { type DbxTool, type ToolResult } from './types.js';
 
 // MARK: Tool definition
 const DBX_FILTER_LOOKUP_TOOL: Tool = {
@@ -40,86 +40,13 @@ const DBX_FILTER_LOOKUP_TOOL: Tool = {
   }
 };
 
-// MARK: Input validation
-const LookupFilterArgsType = type({
-  topic: 'string',
-  'depth?': "'brief' | 'full'"
-});
-
-interface ParsedLookupFilterArgs {
-  readonly topic: string;
-  readonly depth: 'brief' | 'full';
-}
-
-function parseArgs(raw: unknown): ParsedLookupFilterArgs {
-  const parsed = LookupFilterArgsType(raw);
-  if (parsed instanceof type.errors) {
-    throw new TypeError(`Invalid arguments: ${parsed.summary}`);
-  }
-  const result: ParsedLookupFilterArgs = {
-    topic: parsed.topic,
-    depth: parsed.depth ?? 'full'
-  };
-  return result;
-}
-
-// MARK: Resolution
-type LookupFilterMatch = { readonly kind: 'single'; readonly entry: FilterEntryInfo } | { readonly kind: 'catalog' } | { readonly kind: 'not-found'; readonly normalized: string; readonly candidates: readonly FilterEntryInfo[] };
-
-function resolveTopic(rawTopic: string): LookupFilterMatch {
-  const trimmed = rawTopic.trim();
-  const lowered = trimmed.toLowerCase();
-  let result: LookupFilterMatch;
-
-  if (lowered === 'list' || lowered === 'catalog' || lowered === 'all') {
-    result = { kind: 'catalog' };
-  } else {
-    const slugHit = getFilterEntry(trimmed);
-    if (slugHit) {
-      result = { kind: 'single', entry: slugHit };
-    } else {
-      const selectorHit = getFilterEntryBySelector(trimmed);
-      if (selectorHit) {
-        result = { kind: 'single', entry: selectorHit };
-      } else {
-        const classHit = getFilterEntryByClassName(trimmed);
-        if (classHit) {
-          result = { kind: 'single', entry: classHit };
-        } else {
-          result = { kind: 'not-found', normalized: lowered, candidates: fuzzyCandidates(lowered) };
-        }
-      }
-    }
-  }
-  return result;
-}
-
-function fuzzyCandidates(query: string): readonly FilterEntryInfo[] {
-  const q = query.trim().toLowerCase();
-  if (q.length === 0) {
-    return [];
-  }
-  const scored: { readonly entry: FilterEntryInfo; readonly score: number }[] = [];
-  for (const entry of FILTER_ENTRIES) {
-    let score = 0;
-    if (entry.slug.toLowerCase().includes(q)) {
-      score += 3;
-    }
-    if (entry.className.toLowerCase().includes(q)) {
-      score += 2;
-    }
-    if (entry.selector?.toLowerCase().includes(q)) {
-      score += 2;
-    }
-    if (entry.description.toLowerCase().includes(q)) {
-      score += 1;
-    }
-    if (score > 0) {
-      scored.push({ entry, score });
-    }
-  }
-  scored.sort((a, b) => b.score - a.score);
-  return scored.slice(0, 5).map((s) => s.entry);
+function filterFuzzyFields(entry: FilterEntryInfo): readonly FuzzyField[] {
+  return [
+    { value: entry.slug, weight: 3 },
+    { value: entry.className, weight: 2 },
+    { value: entry.selector, weight: 2 },
+    { value: entry.description, weight: 1 }
+  ];
 }
 
 // MARK: Formatting
@@ -135,7 +62,7 @@ function formatInputsTable(inputs: readonly { readonly name: string; readonly ty
   return lines.join('\n');
 }
 
-function formatEntry(entry: FilterEntryInfo, depth: 'brief' | 'full'): string {
+function formatEntry(entry: FilterEntryInfo, depth: LookupDepth): string {
   const lines: string[] = [`# ${entry.className}`, '', entry.description, '', bullet('slug', `\`${entry.slug}\``), bullet('kind', `\`${entry.kind}\``)];
   if (entry.selector) {
     lines.push(bullet('selector', `\`${entry.selector}\``));
@@ -163,9 +90,9 @@ function formatEntry(entry: FilterEntryInfo, depth: 'brief' | 'full'): string {
   return lines.join('\n');
 }
 
-function formatCatalog(): string {
-  const lines: string[] = ['# Filter catalog', '', `${FILTER_ENTRIES.length} entries.`, ''];
-  for (const entry of FILTER_ENTRIES) {
+function formatCatalog(entries: readonly FilterEntryInfo[]): string {
+  const lines: string[] = ['# Filter catalog', '', `${entries.length} entries.`, ''];
+  for (const entry of entries) {
     const selector = entry.selector ? ` \`${entry.selector}\`` : '';
     lines.push(`- \`${entry.slug}\` → ${entry.className}${selector}`, `  ${entry.description}`);
   }
@@ -190,45 +117,28 @@ function code(value: string): string {
   return '`' + value + '`';
 }
 
-// MARK: Handler
+// MARK: Tool
+export const lookupFilterTool: DbxTool = createLookupTool<FilterEntryInfo>({
+  definition: DBX_FILTER_LOOKUP_TOOL,
+  entries: FILTER_ENTRIES,
+  resolvers: [getFilterEntry, getFilterEntryBySelector, getFilterEntryByClassName],
+  fuzzyFields: filterFuzzyFields,
+  formatCatalog,
+  formatEntry,
+  formatNotFound
+});
+
 /**
  * Tool handler for `dbx_filter_lookup`. Resolves the requested filter topic
- * against the registry and renders the matching catalog, kind group, single
- * entry, or not-found suggestion list.
+ * against the registry and renders the matching catalog, single entry, or
+ * not-found suggestion list.
+ *
+ * Kept as a separately-exported function so existing spec files can call
+ * it without going through the {@link DbxTool} surface.
  *
  * @param rawArgs - the unvalidated tool arguments from the MCP runtime
  * @returns the rendered match, or an error result when args fail validation
  */
 export function runLookupFilter(rawArgs: unknown): ToolResult {
-  let args: ParsedLookupFilterArgs;
-  try {
-    args = parseArgs(rawArgs);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return toolError(message);
-  }
-
-  const match = resolveTopic(args.topic);
-  let text: string;
-  let isError = false;
-  switch (match.kind) {
-    case 'catalog':
-      text = formatCatalog();
-      break;
-    case 'single':
-      text = formatEntry(match.entry, args.depth);
-      break;
-    case 'not-found':
-      text = formatNotFound(match.normalized, match.candidates);
-      isError = true;
-      break;
-  }
-
-  const result: ToolResult = { content: [{ type: 'text', text }], isError };
-  return result;
+  return lookupFilterTool.run(rawArgs) as ToolResult;
 }
-
-export const lookupFilterTool: DbxTool = {
-  definition: DBX_FILTER_LOOKUP_TOOL,
-  run: runLookupFilter
-};

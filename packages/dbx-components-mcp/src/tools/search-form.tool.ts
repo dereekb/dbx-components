@@ -10,10 +10,10 @@
  */
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
-import { type } from 'arktype';
 import { FORM_FIELDS, type FormFieldInfo } from '../registry/index.js';
 import { resolveTopicAlias } from './form-alias-resolver.js';
-import { toolError, type DbxTool, type ToolResult } from './types.js';
+import { runSearchTool, type QueryToken, type SearchHit } from './_search/score.js';
+import { type DbxTool, type ToolResult } from './types.js';
 
 const DEFAULT_LIMIT = 10;
 const MAX_LIMIT = 25;
@@ -40,83 +40,6 @@ const DBX_FORM_SEARCH_TOOL: Tool = {
     required: ['query']
   }
 };
-
-// MARK: Input validation
-const SearchArgsType = type({
-  query: 'string',
-  'limit?': 'number'
-});
-
-interface ParsedSearchArgs {
-  readonly query: string;
-  readonly limit: number;
-}
-
-function parseSearchArgs(raw: unknown): ParsedSearchArgs {
-  const parsed = SearchArgsType(raw);
-  if (parsed instanceof type.errors) {
-    throw new Error(`Invalid arguments: ${parsed.summary}`);
-  }
-  const rawLimit = parsed.limit ?? DEFAULT_LIMIT;
-  const limit = Math.max(1, Math.min(MAX_LIMIT, Math.trunc(rawLimit)));
-  const result: ParsedSearchArgs = { query: parsed.query, limit };
-  return result;
-}
-
-// MARK: Scoring
-interface FormSearchHit {
-  readonly field: FormFieldInfo;
-  readonly score: number;
-  readonly matchedTokens: readonly string[];
-}
-
-/**
- * A query token kept together with its aliased form. Each token scores as
- * `max(score(raw), score(alias))` against every field — this way an alias
- * that hits a single slug exactly doesn't exclude the many other entries
- * whose slugs legitimately contain the raw token as a substring.
- */
-interface QueryToken {
-  /**
-   * Token as the caller typed it (lowercased, trimmed).
-   */
-  readonly raw: string;
-  /**
-   * Alias of `raw`; equal to `raw` when no alias exists.
-   */
-  readonly alias: string;
-  /**
-   * Human-readable representation (`raw` or `raw → alias`) for output.
-   */
-  readonly display: string;
-}
-
-/**
- * Tokenizes the query into lowercase non-empty (raw, alias) pairs. Duplicates
- * are deduped on the raw form so `"date date"` collapses to one token.
- *
- * @param query - the raw multi-word search query
- * @returns the unique token pairs in original-query order
- */
-function tokenize(query: string): readonly QueryToken[] {
-  const raw = query
-    .toLowerCase()
-    .split(/\s+/)
-    .map((t) => t.trim())
-    .filter((t) => t.length > 0);
-  const seen = new Set<string>();
-  const result: QueryToken[] = [];
-  for (const token of raw) {
-    if (seen.has(token)) {
-      continue;
-    }
-    seen.add(token);
-    const alias = resolveTopicAlias(token);
-    const display = alias === token ? token : `${token} → ${alias}`;
-    result.push({ raw: token, alias, display });
-  }
-  return result;
-}
 
 /**
  * Scores a single field against a single token. Weights are deliberately
@@ -172,87 +95,60 @@ function scoreFieldAgainstToken(field: FormFieldInfo, token: string): number {
   return score;
 }
 
-function searchRegistry(tokens: readonly QueryToken[], limit: number): readonly FormSearchHit[] {
-  if (tokens.length === 0) {
-    return [];
-  }
-  const hits: FormSearchHit[] = [];
-  for (const field of FORM_FIELDS) {
-    const matched: string[] = [];
-    let total = 0;
-    for (const token of tokens) {
-      const rawScore = scoreFieldAgainstToken(field, token.raw);
-      const aliasScore = token.alias === token.raw ? 0 : scoreFieldAgainstToken(field, token.alias);
-      const score = Math.max(rawScore, aliasScore);
-      if (score > 0) {
-        total += score;
-        matched.push(token.display);
-      }
-    }
-    // AND semantics: require every token to contribute SOMETHING, otherwise
-    // single-word dominant hits would drown multi-word disambiguation.
-    if (total > 0 && matched.length === tokens.length) {
-      hits.push({ field, score: total, matchedTokens: matched });
-    }
-  }
-  hits.sort((a, b) => {
-    const byScore = b.score - a.score;
-    if (byScore !== 0) {
-      return byScore;
-    }
-    return a.field.slug.localeCompare(b.field.slug);
-  });
-  return hits.slice(0, limit);
-}
-
 // MARK: Formatting
-function formatSearchResults(query: string, tokens: readonly QueryToken[], hits: readonly FormSearchHit[]): string {
+function formatSearchResults(input: { readonly query: string; readonly tokens: readonly QueryToken[]; readonly hits: readonly SearchHit<FormFieldInfo>[] }): string {
+  const { query, tokens, hits } = input;
   const tokenDisplay = tokens.map((t) => t.display).join(', ');
   if (hits.length === 0) {
     return [`No form entries matched \`${query}\` (tokens: \`${tokenDisplay}\`).`, '', 'Try `dbx_form_lookup topic="list"` for the form catalog or a broader single-word query.'].join('\n');
   }
   const lines: string[] = [`# Search: \`${query}\``, '', `Tokens: \`${tokenDisplay}\` · ${hits.length} result${hits.length === 1 ? '' : 's'}`, ''];
   for (const hit of hits) {
-    const array = hit.field.arrayOutput === 'yes' ? ' *(array)*' : hit.field.arrayOutput === 'optional' ? ' *(single or array)*' : '';
-    lines.push(`## \`${hit.field.slug}\` · form · score ${hit.score}`);
+    const field = hit.entry;
+    const array = field.arrayOutput === 'yes' ? ' *(array)*' : field.arrayOutput === 'optional' ? ' *(single or array)*' : '';
+    lines.push(`## \`${field.slug}\` · form · score ${hit.score}`);
     lines.push('');
-    lines.push(`- **factory:** \`${hit.field.factoryName}\``);
-    lines.push(`- **tier:** \`${hit.field.tier}\``);
-    lines.push(`- **produces:** \`${hit.field.produces}\`${array}`);
+    lines.push(`- **factory:** \`${field.factoryName}\``);
+    lines.push(`- **tier:** \`${field.tier}\``);
+    lines.push(`- **produces:** \`${field.produces}\`${array}`);
     lines.push(`- **matched:** \`${hit.matchedTokens.join(', ')}\``);
     lines.push('');
-    lines.push(hit.field.description);
+    lines.push(field.description);
     lines.push('');
-    lines.push(`→ \`dbx_form_lookup topic="${hit.field.slug}"\` for full docs.`);
+    lines.push(`→ \`dbx_form_lookup topic="${field.slug}"\` for full docs.`);
     lines.push('');
   }
   return lines.join('\n').trimEnd();
 }
 
-// MARK: Handler
+// MARK: Tool
+export const searchFormTool: DbxTool = {
+  definition: DBX_FORM_SEARCH_TOOL,
+  run: (rawArgs) =>
+    runSearchTool<FormFieldInfo>(
+      {
+        entries: FORM_FIELDS,
+        defaultLimit: DEFAULT_LIMIT,
+        maxLimit: MAX_LIMIT,
+        aliasResolver: resolveTopicAlias,
+        scoreEntry: scoreFieldAgainstToken,
+        tieBreaker: (field) => field.slug,
+        formatResults: formatSearchResults
+      },
+      rawArgs
+    )
+};
+
 /**
  * Tool handler for `dbx_form_search`. Tokenises the query, scores every form
  * registry entry, and renders the top hits with matched-token annotations.
+ *
+ * Kept as a separately-exported function so existing spec files can call it
+ * without going through the {@link DbxTool} surface.
  *
  * @param rawArgs - the unvalidated tool arguments from the MCP runtime
  * @returns the formatted search results, or an error result when args fail validation
  */
 export function runSearchForm(rawArgs: unknown): ToolResult {
-  let args: ParsedSearchArgs;
-  try {
-    args = parseSearchArgs(rawArgs);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return toolError(message);
-  }
-  const tokens = tokenize(args.query);
-  const hits = searchRegistry(tokens, args.limit);
-  const text = formatSearchResults(args.query, tokens, hits);
-  const result: ToolResult = { content: [{ type: 'text', text }] };
-  return result;
+  return searchFormTool.run(rawArgs) as ToolResult;
 }
-
-export const searchFormTool: DbxTool = {
-  definition: DBX_FORM_SEARCH_TOOL,
-  run: runSearchForm
-};

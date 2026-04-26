@@ -17,8 +17,7 @@
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { loadRouteTree } from './route/index.js';
-import { loadRouteSources } from './route/load-sources.js';
+import { loadRouteContext } from './route/load-context.js';
 import { formatRouteTree, type RouteTreeFormat } from './route/format.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 
@@ -113,31 +112,12 @@ export async function runRouteTree(rawArgs: unknown): Promise<ToolResult> {
     return toolError(message);
   }
 
-  const hasAny = (args.sources && args.sources.length > 0) || (args.paths && args.paths.length > 0) || args.glob;
-  if (!hasAny) {
-    return toolError('Must provide at least one of `sources`, `paths`, or `glob`.');
+  const ctx = await loadRouteContext(args);
+  if (ctx.kind === 'error') {
+    return ctx.result;
   }
 
-  let sources;
-  try {
-    const loaded = await loadRouteSources({
-      sources: args.sources,
-      paths: args.paths,
-      glob: args.glob,
-      cwd: args.cwd,
-      walkImports: true
-    });
-    sources = loaded.sources;
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return toolError(`Failed to read sources: ${message}`);
-  }
-
-  if (sources.length === 0) {
-    return toolError('No matching source files found.');
-  }
-
-  const tree = loadRouteTree({ sources });
+  const { tree } = ctx;
   const title = describeTitle(args);
   const text = formatRouteTree({ tree, format: args.format, depthLimit: args.depthLimit, title });
   const errorCount = tree.issues.filter((i) => i.severity === 'error').length;

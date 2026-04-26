@@ -144,9 +144,27 @@ export function formatFolderGroupedResult<TResult extends FolderGroupedResult>(c
 
 /**
  * Side of a two-directory validator. `component` = the `-firebase` package;
- * `api` = the API app that wires the services.
+ * `api` = the API app that wires the services. `both` indicates a cross-side
+ * issue surfaced by the app validators when a wiring mismatch spans both
+ * directories.
  */
-export type ValidationSide = 'component' | 'api';
+export type ValidationSide = 'component' | 'api' | 'both';
+
+/**
+ * Canonical render order for {@link ValidationSide}. `both` is rendered last
+ * under a `Cross-side` heading so callers see same-side issues before
+ * cross-side ones.
+ */
+const VALIDATION_SIDE_ORDER: readonly ValidationSide[] = ['component', 'api', 'both'];
+
+/**
+ * Section heading for each {@link ValidationSide}.
+ */
+const VALIDATION_SIDE_HEADING: Readonly<Record<ValidationSide, string>> = {
+  component: 'Component',
+  api: 'API',
+  both: 'Cross-side'
+};
 
 /**
  * Minimum violation shape required by {@link formatTwoSideResult}.
@@ -169,31 +187,38 @@ export interface TwoSideResult {
 
 /**
  * Renders a two-directory validator result as the canonical markdown report
- * used by `dbx_notification_m_validate_folder` and
- * `dbx_storagefile_m_validate_folder`. Violations are grouped by side
- * (component / api) so each row points at the directory needing the fix.
+ * used by both the folder-level (`dbx_notification_m_validate_folder`,
+ * `dbx_storagefile_m_validate_folder`) and the app-level
+ * (`dbx_notification_m_validate_app`, `dbx_storagefile_m_validate_app`)
+ * validators. Violations are grouped by side (component / api / cross-side)
+ * so each row points at the directory needing the fix.
  *
  * @param config - shared call config
  * @param config.title - heading text (e.g. `'Notification folder validation'`)
  * @param config.result - the aggregated validator outcome
+ * @param config.footer - optional trailing paragraph appended after the
+ *   violation sections. Used by app validators to point readers at the
+ *   `dbx_artifact_file_convention` tool for canonical paths.
  * @returns the markdown report
  */
-export function formatTwoSideResult<TResult extends TwoSideResult>(config: { readonly title: string; readonly result: TResult }): string {
-  const { title, result } = config;
+export function formatTwoSideResult<TResult extends TwoSideResult>(config: { readonly title: string; readonly result: TResult; readonly footer?: string }): string {
+  const { title, result, footer } = config;
   const { violations, errorCount, warningCount, componentDir, apiDir } = result;
   const lines: string[] = [`# ${title} — ${formatStatusLabel(errorCount, warningCount)}`, '', `Component: \`${componentDir}\` · API: \`${apiDir}\``, `${errorCount} error(s), ${warningCount} warning(s).`];
-  if (violations.length === 0) {
-    return lines.join('\n');
-  }
-  const grouped = groupViolations(violations, (v) => v.side);
-  for (const side of ['component', 'api'] as const) {
-    const sideViolations = grouped.get(side);
-    if (sideViolations && sideViolations.length > 0) {
-      lines.push('', `## ${side === 'component' ? 'Component' : 'API'}`);
-      for (const v of sideViolations) {
-        lines.push(formatViolationLine(v, v.file ? ` _(file: ${v.file})_` : ''));
+  if (violations.length > 0) {
+    const grouped = groupViolations(violations, (v) => v.side);
+    for (const side of VALIDATION_SIDE_ORDER) {
+      const sideViolations = grouped.get(side);
+      if (sideViolations && sideViolations.length > 0) {
+        lines.push('', `## ${VALIDATION_SIDE_HEADING[side]}`);
+        for (const v of sideViolations) {
+          lines.push(formatViolationLine(v, v.file ? ` _(file: ${v.file})_` : ''));
+        }
       }
     }
+  }
+  if (footer !== undefined) {
+    lines.push('', footer);
   }
   return lines.join('\n');
 }

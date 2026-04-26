@@ -19,6 +19,8 @@
  * entries.
  */
 
+import { actionDirective, actionState, actionStore } from './actions.factory.js';
+
 // MARK: Common shapes
 /**
  * Discriminator for the action registry's three entry shapes.
@@ -223,34 +225,23 @@ export type ActionEntryInfo = ActionDirectiveInfo | ActionStoreInfo | ActionStat
  */
 export const ACTION_ROLE_ORDER: readonly ActionEntryRole[] = ['directive', 'store', 'state'];
 
-const DBX_CORE_MODULE = '@dereekb/dbx-core';
-
 // MARK: Registry entries
 const DIRECTIVE_ENTRIES: readonly ActionDirectiveInfo[] = [
-  {
+  actionDirective({
     slug: 'action',
-    role: 'directive',
     selector: 'dbx-action,[dbxAction]',
     className: 'DbxActionDirective',
-    module: DBX_CORE_MODULE,
     description: 'Root of the action context. Creates an `ActionContextStore` and exposes it (plus source tokens) via DI so child action directives can read/write the same lifecycle. Reuses an upstream `SecondaryActionContextStoreSource` if one is provided on the host.',
-    skillRefs: ['dbx__ref__dbx-component-patterns'],
     sourcePath: 'packages/dbx-core/src/lib/action/directive/context/action.directive.ts',
-    inputs: [],
-    outputs: [],
     producesContext: true,
-    consumesContext: false,
     stateInteraction: ['IDLE'],
     example: '<div dbxAction [dbxActionHandler]="handleSave">\n  <!-- value provider + trigger + feedback children -->\n</div>'
-  },
-  {
+  }),
+  actionDirective({
     slug: 'source',
-    role: 'directive',
     selector: '[dbxActionSource]',
     className: 'DbxActionSourceDirective',
-    module: DBX_CORE_MODULE,
     description: 'Forwards an externally created `ActionContextStoreSource` (e.g. one built programmatically by `DbxActionContextMachine`) as a `SecondaryActionContextStoreSource`, allowing a downstream `dbxAction` to reuse it instead of spinning up its own store.',
-    skillRefs: ['dbx__ref__dbx-component-patterns'],
     sourcePath: 'packages/dbx-core/src/lib/action/directive/context/action.source.directive.ts',
     inputs: [
       {
@@ -261,18 +252,12 @@ const DIRECTIVE_ENTRIES: readonly ActionDirectiveInfo[] = [
         description: 'External source whose `store$` will be forwarded to children.'
       }
     ],
-    outputs: [],
-    producesContext: false,
-    consumesContext: false,
-    stateInteraction: [],
     example: '<div [dbxActionSource]="machineSource">\n  <div dbxAction>\n    <button (click)="action.trigger()">Submit</button>\n  </div>\n</div>'
-  },
-  {
+  }),
+  actionDirective({
     slug: 'handler',
-    role: 'directive',
     selector: '[dbxActionHandler]',
     className: 'DbxActionHandlerDirective',
-    module: DBX_CORE_MODULE,
     description: 'Wires a `Work<T, O>` (or `WorkUsingContext<T, O>`) function as the action handler. Runs when the store transitions to VALUE_READY and is responsible for moving it through WORKING → RESOLVED/REJECTED via the work context.',
     skillRefs: ['dbx__ref__dbx-component-patterns', 'dbx__guide__action-analytics'],
     sourcePath: 'packages/dbx-core/src/lib/action/directive/state/action.handler.directive.ts',
@@ -285,20 +270,15 @@ const DIRECTIVE_ENTRIES: readonly ActionDirectiveInfo[] = [
         description: 'The work function invoked when a value is ready. Required.'
       }
     ],
-    outputs: [],
-    producesContext: false,
     consumesContext: true,
     stateInteraction: ['VALUE_READY', 'WORKING', 'RESOLVED', 'REJECTED'],
     example: '<div dbxAction [dbxActionHandler]="handleSave">\n  <!-- value provider + trigger -->\n</div>'
-  },
-  {
+  }),
+  actionDirective({
     slug: 'handler-value',
-    role: 'directive',
     selector: '[dbxActionHandlerValue]',
     className: 'DbxActionHandlerValueDirective',
-    module: DBX_CORE_MODULE,
     description: 'Lighter-weight alternative to `[dbxActionHandler]`: accepts a static value, getter, or factory and uses the resolved value as the action result directly. Lifecycle (working → success) is handled internally.',
-    skillRefs: ['dbx__ref__dbx-component-patterns'],
     sourcePath: 'packages/dbx-core/src/lib/action/directive/state/action.handler.directive.ts',
     inputs: [
       {
@@ -309,20 +289,15 @@ const DIRECTIVE_ENTRIES: readonly ActionDirectiveInfo[] = [
         description: 'Value, getter, or factory used as the action result.'
       }
     ],
-    outputs: [],
-    producesContext: false,
     consumesContext: true,
     stateInteraction: ['VALUE_READY', 'WORKING', 'RESOLVED'],
     example: '<div dbxAction [dbxActionHandlerValue]="computeSummary">\n  <button dbxActionButton>Compute</button>\n</div>'
-  },
-  {
+  }),
+  actionDirective({
     slug: 'value',
-    role: 'directive',
     selector: 'dbxActionValue,[dbxActionValue]',
     className: 'DbxActionValueDirective',
-    module: DBX_CORE_MODULE,
     description: 'Always-available value provider. Whenever the action is TRIGGERED, the resolved value (a static value or the result of a getter) is fed into `readyValue()`. Use when the action does not have a form. Filters out null/undefined — for nullable values use `[dbxActionValueGetter]`.',
-    skillRefs: ['dbx__ref__dbx-component-patterns'],
     sourcePath: 'packages/dbx-core/src/lib/action/directive/state/action.value.directive.ts',
     inputs: [
       {
@@ -333,20 +308,15 @@ const DIRECTIVE_ENTRIES: readonly ActionDirectiveInfo[] = [
         description: 'Static value or getter function. An empty string is allowed (no value).'
       }
     ],
-    outputs: [],
-    producesContext: false,
     consumesContext: true,
     stateInteraction: ['TRIGGERED', 'VALUE_READY'],
     example: '<ng-container dbxAction dbxActionValue [dbxActionHandler]="handleClear">\n  <dbx-button dbxActionButton text="Clear"></dbx-button>\n</ng-container>'
-  },
-  {
+  }),
+  actionDirective({
     slug: 'value-getter',
-    role: 'directive',
     selector: '[dbxActionValueGetter]',
     className: 'DbxActionValueTriggerDirective',
-    module: DBX_CORE_MODULE,
     description: 'Lazy value provider that calls a getter only when the action is TRIGGERED. Supports optional `isModified` and `isEqual` functions to short-circuit `readyValue` when the value has not changed.',
-    skillRefs: ['dbx__ref__dbx-component-patterns'],
     sourcePath: 'packages/dbx-core/src/lib/action/directive/state/action.value.trigger.directive.ts',
     inputs: [
       {
@@ -371,20 +341,15 @@ const DIRECTIVE_ENTRIES: readonly ActionDirectiveInfo[] = [
         description: 'Equality predicate used to suppress duplicate values.'
       }
     ],
-    outputs: [],
-    producesContext: false,
     consumesContext: true,
     stateInteraction: ['TRIGGERED', 'VALUE_READY'],
     example: '<ng-container dbxAction [dbxActionValueGetter]="getFormSnapshot" [dbxActionHandler]="handleSubmit"></ng-container>'
-  },
-  {
+  }),
+  actionDirective({
     slug: 'auto-trigger',
-    role: 'directive',
     selector: 'dbxActionAutoTrigger,[dbxActionAutoTrigger]',
     className: 'DbxActionAutoTriggerDirective',
-    module: DBX_CORE_MODULE,
     description: 'Auto-fires the action whenever it becomes "modified and can trigger". Configurable debounce, throttle, error-aware throttle (slows down as consecutive errors mount), and an optional trigger limit.',
-    skillRefs: ['dbx__ref__dbx-component-patterns'],
     sourcePath: 'packages/dbx-core/src/lib/action/directive/auto/action.autotrigger.directive.ts',
     inputs: [
       { alias: 'dbxActionAutoTrigger', propertyName: 'triggerEnabled', type: 'boolean', required: false, defaultValue: 'true', description: 'Enable/disable the auto-trigger behavior.' },
@@ -395,20 +360,15 @@ const DIRECTIVE_ENTRIES: readonly ActionDirectiveInfo[] = [
       { alias: 'useFastTriggerPreset', propertyName: 'useFastTriggerPreset', type: 'boolean', required: false, description: 'Preset using a 200ms debounce/throttle.' },
       { alias: 'useInstantTriggerPreset', propertyName: 'useInstantTriggerPreset', type: 'boolean', required: false, description: 'Preset using a ~10ms debounce/throttle.' }
     ],
-    outputs: [],
-    producesContext: false,
     consumesContext: true,
     stateInteraction: ['IDLE', 'TRIGGERED'],
     example: '<div dbxAction>\n  <ng-container dbxActionAutoTrigger useFastTriggerPreset></ng-container>\n  <my-form dbxActionForm [dbxFormSource]="data$"></my-form>\n</div>'
-  },
-  {
+  }),
+  actionDirective({
     slug: 'auto-modify',
-    role: 'directive',
     selector: 'dbxActionAutoModify, [dbxActionAutoModify]',
     className: 'DbxActionAutoModifyDirective',
-    module: DBX_CORE_MODULE,
     description: 'Continuously remarks the action as modified whenever it falls back to unmodified, keeping it eligible to trigger. Combine with `[dbxActionAutoTrigger]` and `[dbxActionEnforceModified]` for always-on submission flows.',
-    skillRefs: ['dbx__ref__dbx-component-patterns'],
     sourcePath: 'packages/dbx-core/src/lib/action/directive/auto/action.automodify.directive.ts',
     inputs: [
       {
@@ -420,20 +380,15 @@ const DIRECTIVE_ENTRIES: readonly ActionDirectiveInfo[] = [
         description: 'Enable/disable auto-modify (set to false to opt out).'
       }
     ],
-    outputs: [],
-    producesContext: false,
     consumesContext: true,
     stateInteraction: ['IDLE'],
     example: '<div dbxAction>\n  <ng-container dbxActionAutoModify></ng-container>\n  <ng-container dbxActionAutoTrigger></ng-container>\n</div>'
-  },
-  {
+  }),
+  actionDirective({
     slug: 'disabled',
-    role: 'directive',
     selector: '[dbxActionDisabled]',
     className: 'DbxActionDisabledDirective',
-    module: DBX_CORE_MODULE,
     description: 'Disables the action under the `dbx_action_disabled` key while the bound expression is truthy. Disable keys are additive — multiple sources can independently disable the action.',
-    skillRefs: ['dbx__ref__dbx-component-patterns'],
     sourcePath: 'packages/dbx-core/src/lib/action/directive/state/action.disabled.directive.ts',
     inputs: [
       {
@@ -445,20 +400,15 @@ const DIRECTIVE_ENTRIES: readonly ActionDirectiveInfo[] = [
         description: 'When truthy, disables the action; when falsy, removes the disable key.'
       }
     ],
-    outputs: [],
-    producesContext: false,
     consumesContext: true,
     stateInteraction: ['DISABLED'],
     example: '<div dbxAction [dbxActionDisabled]="form.invalid">\n  <button dbxActionButton>Submit</button>\n</div>'
-  },
-  {
+  }),
+  actionDirective({
     slug: 'enforce-modified',
-    role: 'directive',
     selector: '[dbxActionEnforceModified]',
     className: 'DbxActionEnforceModifiedDirective',
-    module: DBX_CORE_MODULE,
     description: 'Disables the action under the `dbx_action_enforce_modified` key whenever it is not flagged modified. Prevents no-op submissions on forms that have not changed.',
-    skillRefs: ['dbx__ref__dbx-component-patterns'],
     sourcePath: 'packages/dbx-core/src/lib/action/directive/state/action.enforce.modified.directive.ts',
     inputs: [
       {
@@ -470,20 +420,15 @@ const DIRECTIVE_ENTRIES: readonly ActionDirectiveInfo[] = [
         description: 'Set to false to opt out of the enforce-modified gating.'
       }
     ],
-    outputs: [],
-    producesContext: false,
     consumesContext: true,
     stateInteraction: ['IDLE', 'DISABLED'],
     example: '<div dbxAction dbxActionEnforceModified [dbxActionHandler]="handleSave">\n  <my-form dbxActionForm [dbxFormSource]="data$"></my-form>\n</div>'
-  },
-  {
+  }),
+  actionDirective({
     slug: 'disabled-on-success',
-    role: 'directive',
     selector: '[dbxActionDisabledOnSuccess]',
     className: 'DbxActionDisabledOnSuccessDirective',
-    module: DBX_CORE_MODULE,
     description: 'Latches the action into a DISABLED state once it RESOLVES — useful for one-shot forms (e.g. checkout) where re-submission is not allowed.',
-    skillRefs: ['dbx__ref__dbx-component-patterns'],
     sourcePath: 'packages/dbx-core/src/lib/action/directive/state/action.disableonsuccess.directive.ts',
     inputs: [
       {
@@ -495,20 +440,15 @@ const DIRECTIVE_ENTRIES: readonly ActionDirectiveInfo[] = [
         description: 'Set to false to opt out of the disable-on-success behavior.'
       }
     ],
-    outputs: [],
-    producesContext: false,
     consumesContext: true,
     stateInteraction: ['RESOLVED', 'DISABLED'],
     example: '<div dbxAction dbxActionDisabledOnSuccess [dbxActionHandler]="placeOrder">\n  <button dbxActionButton>Place order</button>\n</div>'
-  },
-  {
+  }),
+  actionDirective({
     slug: 'error-handler',
-    role: 'directive',
     selector: '[dbxActionErrorHandler]',
     className: 'DbxActionErrorHandlerDirective',
-    module: DBX_CORE_MODULE,
     description: 'Side-effect callback invoked whenever the action emits a new error. Useful for logging, analytics, or surfacing custom toasts on REJECTED.',
-    skillRefs: ['dbx__ref__dbx-component-patterns'],
     sourcePath: 'packages/dbx-core/src/lib/action/directive/state/action.error.handler.directive.ts',
     inputs: [
       {
@@ -519,54 +459,35 @@ const DIRECTIVE_ENTRIES: readonly ActionDirectiveInfo[] = [
         description: 'Callback receiving the latest `ReadableError`.'
       }
     ],
-    outputs: [],
-    producesContext: false,
     consumesContext: true,
     stateInteraction: ['REJECTED'],
     example: '<div dbxAction [dbxActionErrorHandler]="onError" [dbxActionHandler]="handleSave">\n  <!-- ... -->\n</div>'
-  },
-  {
+  }),
+  actionDirective({
     slug: 'context-map',
-    role: 'directive',
     selector: '[dbxActionContextMap]',
     className: 'DbxActionContextMapDirective',
-    module: DBX_CORE_MODULE,
     description: 'Provides an `ActionContextStoreSourceMap` so sibling actions registered with `[dbxActionMapSource]` can be looked up by key with `[dbxActionFromMap]`. Enables cross-action coordination (e.g. disabling siblings while one is working).',
-    skillRefs: ['dbx__ref__dbx-component-patterns'],
     sourcePath: 'packages/dbx-core/src/lib/action/directive/map/action.map.directive.ts',
-    inputs: [],
-    outputs: [],
-    producesContext: false,
-    consumesContext: false,
-    stateInteraction: [],
     example: '<div dbxActionContextMap>\n  <div dbxAction [dbxActionMapSource]="\'save\'">...</div>\n  <div [dbxActionFromMap]="\'save\'">consumer</div>\n</div>'
-  },
-  {
+  }),
+  actionDirective({
     slug: 'logger',
-    role: 'directive',
     selector: '[dbxActionLogger],[dbxActionContextLogger]',
     className: 'DbxActionContextLoggerDirective',
-    module: DBX_CORE_MODULE,
     description: 'Diagnostic directive — logs every state transition of the parent action context to the console. Drop in temporarily while debugging an action that is not firing as expected.',
-    skillRefs: ['dbx__ref__dbx-component-patterns'],
     sourcePath: 'packages/dbx-core/src/lib/action/directive/debug/action.logger.directive.ts',
-    inputs: [],
-    outputs: [],
-    producesContext: false,
     consumesContext: true,
     stateInteraction: ['IDLE', 'TRIGGERED', 'VALUE_READY', 'WORKING', 'RESOLVED', 'REJECTED', 'DISABLED'],
     example: '<div dbxAction dbxActionLogger [dbxActionHandler]="handleSave">\n  <!-- transitions print to console -->\n</div>'
-  }
+  })
 ];
 
 const STORE_ENTRIES: readonly ActionStoreInfo[] = [
-  {
+  actionStore({
     slug: 'action-context-store',
-    role: 'store',
     className: 'ActionContextStore',
-    module: DBX_CORE_MODULE,
     description: 'NgRx ComponentStore that drives a single action lifecycle. Owns the `DbxActionState` machine, tracks modification, captures input value + output result + error, and coordinates teardown through a `LockSet` so in-flight work finishes before the store is destroyed. Directives interact with it through the `DbxActionContextStoreSourceInstance` convenience wrapper rather than injecting the raw store.',
-    skillRefs: ['dbx__ref__dbx-component-patterns'],
     sourcePath: 'packages/dbx-core/src/lib/action/action.store.ts',
     methods: [
       { name: 'trigger', signature: 'trigger(): void', description: 'Transitions IDLE → TRIGGERED if not disabled. Clears any previous value but preserves the last error.' },
@@ -603,101 +524,59 @@ const STORE_ENTRIES: readonly ActionStoreInfo[] = [
     ],
     disabledKeyDefaults: ['dbx_action_disabled', 'dbx_action_enforce_modified'],
     example: "// Most directives inject `DbxActionContextStoreSourceInstance` and call helpers on it.\n// Direct store access:\nconst store = inject(ActionContextStore<MyValue, MyResult>);\nstore.disable('my_key');"
-  }
+  })
 ];
 
 const STATE_ENTRIES: readonly ActionStateInfo[] = [
-  {
-    slug: 'state-idle',
-    role: 'state',
-    enumName: 'DbxActionState',
+  actionState({
     stateValue: 'IDLE',
     literal: 'idle',
     description: 'Default state — no work in progress, ready to be triggered. Set on construction and after `reset()` or `setIsModified()` from RESOLVED.',
-    skillRefs: ['dbx__ref__dbx-component-patterns'],
-    sourcePath: 'packages/dbx-core/src/lib/action/action.ts',
     transitionsFrom: ['RESOLVED', 'REJECTED', 'DISABLED'],
-    transitionsTo: ['TRIGGERED', 'DISABLED'],
-    example: 'DbxActionState.IDLE'
-  },
-  {
-    slug: 'state-disabled',
-    role: 'state',
-    enumName: 'DbxActionState',
+    transitionsTo: ['TRIGGERED', 'DISABLED']
+  }),
+  actionState({
     stateValue: 'DISABLED',
     literal: 'disabled',
     description: 'Idle and gated — at least one disable key is set. The store still reports its underlying actionState in state objects but `actionState$` collapses to DISABLED so consumers gate UI.',
-    skillRefs: ['dbx__ref__dbx-component-patterns'],
-    sourcePath: 'packages/dbx-core/src/lib/action/action.ts',
     transitionsFrom: ['IDLE', 'RESOLVED', 'REJECTED'],
-    transitionsTo: ['IDLE'],
-    example: 'DbxActionState.DISABLED'
-  },
-  {
-    slug: 'state-triggered',
-    role: 'state',
-    enumName: 'DbxActionState',
+    transitionsTo: ['IDLE']
+  }),
+  actionState({
     stateValue: 'TRIGGERED',
     literal: 'triggered',
     description: 'A trigger fired. The store waits for a value provider to call `readyValue()`. Without a value provider the action stalls here forever.',
-    skillRefs: ['dbx__ref__dbx-component-patterns'],
-    sourcePath: 'packages/dbx-core/src/lib/action/action.ts',
     transitionsFrom: ['IDLE'],
-    transitionsTo: ['VALUE_READY'],
-    example: 'DbxActionState.TRIGGERED'
-  },
-  {
-    slug: 'state-value-ready',
-    role: 'state',
-    enumName: 'DbxActionState',
+    transitionsTo: ['VALUE_READY']
+  }),
+  actionState({
     stateValue: 'VALUE_READY',
     literal: 'valueReady',
     description: 'A value has been staged for the action. The handler directive picks it up immediately and transitions to WORKING.',
-    skillRefs: ['dbx__ref__dbx-component-patterns'],
-    sourcePath: 'packages/dbx-core/src/lib/action/action.ts',
     transitionsFrom: ['TRIGGERED'],
-    transitionsTo: ['WORKING'],
-    example: 'DbxActionState.VALUE_READY'
-  },
-  {
-    slug: 'state-working',
-    role: 'state',
-    enumName: 'DbxActionState',
+    transitionsTo: ['WORKING']
+  }),
+  actionState({
     stateValue: 'WORKING',
     literal: 'working',
     description: 'Handler is in flight. Buttons disable, snackbars show "Working...", `workProgress` may stream updates.',
-    skillRefs: ['dbx__ref__dbx-component-patterns'],
-    sourcePath: 'packages/dbx-core/src/lib/action/action.ts',
     transitionsFrom: ['VALUE_READY'],
-    transitionsTo: ['RESOLVED', 'REJECTED'],
-    example: 'DbxActionState.WORKING'
-  },
-  {
-    slug: 'state-resolved',
-    role: 'state',
-    enumName: 'DbxActionState',
+    transitionsTo: ['RESOLVED', 'REJECTED']
+  }),
+  actionState({
     stateValue: 'RESOLVED',
     literal: 'resolved',
     description: 'The handler succeeded. Result is stored, modified flag is cleared, error is cleared. From here `setIsModified()` returns the action to IDLE.',
-    skillRefs: ['dbx__ref__dbx-component-patterns'],
-    sourcePath: 'packages/dbx-core/src/lib/action/action.ts',
     transitionsFrom: ['WORKING'],
-    transitionsTo: ['IDLE', 'DISABLED'],
-    example: 'DbxActionState.RESOLVED'
-  },
-  {
-    slug: 'state-rejected',
-    role: 'state',
-    enumName: 'DbxActionState',
+    transitionsTo: ['IDLE', 'DISABLED']
+  }),
+  actionState({
     stateValue: 'REJECTED',
     literal: 'rejected',
     description: 'The handler failed. `errorCount` increments and the error is exposed for handlers/snackbars. The action returns to IDLE on the next trigger or `setIsModified()`.',
-    skillRefs: ['dbx__ref__dbx-component-patterns'],
-    sourcePath: 'packages/dbx-core/src/lib/action/action.ts',
     transitionsFrom: ['WORKING'],
-    transitionsTo: ['IDLE', 'DISABLED'],
-    example: 'DbxActionState.REJECTED'
-  }
+    transitionsTo: ['IDLE', 'DISABLED']
+  })
 ];
 
 /**

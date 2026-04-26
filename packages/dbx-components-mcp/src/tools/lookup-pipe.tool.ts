@@ -14,10 +14,10 @@
  */
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
-import { type } from 'arktype';
 import { type Maybe } from '@dereekb/util';
 import { PIPE_ENTRIES, getPipeEntry, getPipeEntryByClassName, getPipeEntryByPipeName, type PipeEntryInfo } from './data/pipe-entries.js';
-import { toolError, type DbxTool, type ToolResult } from './types.js';
+import { createLookupTool, type FuzzyField, type LookupDepth } from './_lookup.factory.js';
+import { type DbxTool, type ToolResult } from './types.js';
 
 // MARK: Tool definition
 const DBX_PIPE_LOOKUP_TOOL: Tool = {
@@ -41,86 +41,13 @@ const DBX_PIPE_LOOKUP_TOOL: Tool = {
   }
 };
 
-// MARK: Input validation
-const LookupPipeArgsType = type({
-  topic: 'string',
-  'depth?': "'brief' | 'full'"
-});
-
-interface ParsedLookupPipeArgs {
-  readonly topic: string;
-  readonly depth: 'brief' | 'full';
-}
-
-function parseArgs(raw: unknown): ParsedLookupPipeArgs {
-  const parsed = LookupPipeArgsType(raw);
-  if (parsed instanceof type.errors) {
-    throw new TypeError(`Invalid arguments: ${parsed.summary}`);
-  }
-  const result: ParsedLookupPipeArgs = {
-    topic: parsed.topic,
-    depth: parsed.depth ?? 'full'
-  };
-  return result;
-}
-
-// MARK: Resolution
-type LookupPipeMatch = { readonly kind: 'single'; readonly entry: PipeEntryInfo } | { readonly kind: 'catalog' } | { readonly kind: 'not-found'; readonly normalized: string; readonly candidates: readonly PipeEntryInfo[] };
-
-function resolveTopic(rawTopic: string): LookupPipeMatch {
-  const trimmed = rawTopic.trim();
-  const lowered = trimmed.toLowerCase();
-  let result: LookupPipeMatch;
-
-  if (lowered === 'list' || lowered === 'catalog' || lowered === 'all') {
-    result = { kind: 'catalog' };
-  } else {
-    const slugHit = getPipeEntry(trimmed);
-    if (slugHit) {
-      result = { kind: 'single', entry: slugHit };
-    } else {
-      const pipeHit = getPipeEntryByPipeName(trimmed);
-      if (pipeHit) {
-        result = { kind: 'single', entry: pipeHit };
-      } else {
-        const classHit = getPipeEntryByClassName(trimmed);
-        if (classHit) {
-          result = { kind: 'single', entry: classHit };
-        } else {
-          result = { kind: 'not-found', normalized: lowered, candidates: fuzzyCandidates(lowered) };
-        }
-      }
-    }
-  }
-  return result;
-}
-
-function fuzzyCandidates(query: string): readonly PipeEntryInfo[] {
-  const q = query.trim().toLowerCase();
-  if (q.length === 0) {
-    return [];
-  }
-  const scored: { readonly entry: PipeEntryInfo; readonly score: number }[] = [];
-  for (const entry of PIPE_ENTRIES) {
-    let score = 0;
-    if (entry.slug.toLowerCase().includes(q)) {
-      score += 3;
-    }
-    if (entry.pipeName.toLowerCase().includes(q)) {
-      score += 3;
-    }
-    if (entry.className.toLowerCase().includes(q)) {
-      score += 2;
-    }
-    if (entry.description.toLowerCase().includes(q)) {
-      score += 1;
-    }
-    if (score > 0) {
-      scored.push({ entry, score });
-    }
-  }
-  scored.sort((a, b) => b.score - a.score);
-  return scored.slice(0, 5).map((s) => s.entry);
+function pipeFuzzyFields(entry: PipeEntryInfo): readonly FuzzyField[] {
+  return [
+    { value: entry.slug, weight: 3 },
+    { value: entry.pipeName, weight: 3 },
+    { value: entry.className, weight: 2 },
+    { value: entry.description, weight: 1 }
+  ];
 }
 
 // MARK: Formatting
@@ -136,7 +63,7 @@ function formatArgsTable(args: readonly { readonly name: string; readonly type: 
   return lines.join('\n');
 }
 
-function formatEntry(entry: PipeEntryInfo, depth: 'brief' | 'full'): string {
+function formatEntry(entry: PipeEntryInfo, depth: LookupDepth): string {
   const lines: string[] = [`# ${entry.className}`, '', entry.description, '', bullet('slug', `\`${entry.slug}\``), bullet('pipe', `\`${entry.pipeName}\``), bullet('category', `\`${entry.category}\``), bullet('purity', `\`${entry.purity}\``), bullet('input', `\`${entry.inputType}\``), bullet('output', `\`${entry.outputType}\``), bullet('module', `\`${entry.module}\``), ''];
 
   if (depth === 'full') {
@@ -159,10 +86,10 @@ function formatEntry(entry: PipeEntryInfo, depth: 'brief' | 'full'): string {
   return lines.join('\n');
 }
 
-function formatCatalog(): string {
-  const lines: string[] = ['# Pipe catalog', '', `${PIPE_ENTRIES.length} entries.`, ''];
+function formatCatalog(entries: readonly PipeEntryInfo[]): string {
+  const lines: string[] = ['# Pipe catalog', '', `${entries.length} entries.`, ''];
   let lastCategory: Maybe<string>;
-  for (const entry of PIPE_ENTRIES) {
+  for (const entry of entries) {
     if (entry.category !== lastCategory) {
       lines.push('', `## ${entry.category}`, '');
       lastCategory = entry.category;
@@ -189,48 +116,31 @@ function code(value: string): string {
   return '`' + value + '`';
 }
 
-// MARK: Handler
+// MARK: Tool
+export const lookupPipeTool: DbxTool = createLookupTool<PipeEntryInfo>({
+  definition: DBX_PIPE_LOOKUP_TOOL,
+  entries: PIPE_ENTRIES,
+  resolvers: [getPipeEntry, getPipeEntryByPipeName, getPipeEntryByClassName],
+  fuzzyFields: pipeFuzzyFields,
+  formatCatalog,
+  formatEntry,
+  formatNotFound
+});
+
 /**
  * Tool handler for `dbx_pipe_lookup`. Resolves the requested pipe topic
- * against the registry and renders the matching catalog, category group,
- * single entry, or not-found suggestion list.
+ * against the registry and renders the matching catalog, single entry, or
+ * not-found suggestion list.
+ *
+ * Kept as a separately-exported function so existing spec files can call
+ * it without going through the {@link DbxTool} surface.
  *
  * @param rawArgs - the unvalidated tool arguments from the MCP runtime
  * @returns the rendered match, or an error result when args fail validation
  */
 export function runLookupPipe(rawArgs: unknown): ToolResult {
-  let args: ParsedLookupPipeArgs;
-  try {
-    args = parseArgs(rawArgs);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return toolError(message);
-  }
-
-  const match = resolveTopic(args.topic);
-  let text: string;
-  let isError = false;
-  switch (match.kind) {
-    case 'catalog':
-      text = formatCatalog();
-      break;
-    case 'single':
-      text = formatEntry(match.entry, args.depth);
-      break;
-    case 'not-found':
-      text = formatNotFound(match.normalized, match.candidates);
-      isError = true;
-      break;
-  }
-
-  const result: ToolResult = { content: [{ type: 'text', text }], isError };
-  return result;
+  return lookupPipeTool.run(rawArgs) as ToolResult;
 }
-
-export const lookupPipeTool: DbxTool = {
-  definition: DBX_PIPE_LOOKUP_TOOL,
-  run: runLookupPipe
-};
 
 // Re-export so consumers don't need to reach into `data/`.
 export type { PipeRegistrySlug } from './data/pipe-entries.js';

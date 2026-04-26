@@ -7,9 +7,9 @@
  */
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
-import { type } from 'arktype';
 import { FIREBASE_MODELS, type FirebaseModel } from '../registry/index.js';
-import { toolError, type DbxTool, type ToolResult } from './types.js';
+import { runSearchTool, type QueryToken, type SearchHit } from './_search/score.js';
+import { type DbxTool, type ToolResult } from './types.js';
 
 const DEFAULT_LIMIT = 10;
 const MAX_LIMIT = 25;
@@ -36,64 +36,6 @@ const DBX_MODEL_SEARCH_TOOL: Tool = {
     required: ['query']
   }
 };
-
-// MARK: Input validation
-const SearchArgsType = type({
-  query: 'string',
-  'limit?': 'number'
-});
-
-interface ParsedSearchArgs {
-  readonly query: string;
-  readonly limit: number;
-}
-
-function parseSearchArgs(raw: unknown): ParsedSearchArgs {
-  const parsed = SearchArgsType(raw);
-  if (parsed instanceof type.errors) {
-    throw new Error(`Invalid arguments: ${parsed.summary}`);
-  }
-  const rawLimit = parsed.limit ?? DEFAULT_LIMIT;
-  const limit = Math.max(1, Math.min(MAX_LIMIT, Math.trunc(rawLimit)));
-  const result: ParsedSearchArgs = { query: parsed.query, limit };
-  return result;
-}
-
-// MARK: Scoring
-interface FirebaseSearchHit {
-  readonly model: FirebaseModel;
-  readonly score: number;
-  readonly matchedTokens: readonly string[];
-}
-
-interface QueryToken {
-  readonly raw: string;
-  readonly display: string;
-}
-
-/**
- * Tokenizes the query into lowercase non-empty tokens. Duplicates are deduped.
- *
- * @param query - the raw multi-word search query
- * @returns the unique tokens in original-query order
- */
-function tokenize(query: string): readonly QueryToken[] {
-  const raw = query
-    .toLowerCase()
-    .split(/\s+/)
-    .map((t) => t.trim())
-    .filter((t) => t.length > 0);
-  const seen = new Set<string>();
-  const result: QueryToken[] = [];
-  for (const token of raw) {
-    if (seen.has(token)) {
-      continue;
-    }
-    seen.add(token);
-    result.push({ raw: token, display: token });
-  }
-  return result;
-}
 
 /**
  * Scores a Firebase model against a single token.
@@ -152,83 +94,59 @@ function scoreFirebaseModelAgainstToken(model: FirebaseModel, token: string): nu
   return score;
 }
 
-function searchRegistry(tokens: readonly QueryToken[], limit: number): readonly FirebaseSearchHit[] {
-  if (tokens.length === 0) {
-    return [];
-  }
-  const hits: FirebaseSearchHit[] = [];
-  for (const model of FIREBASE_MODELS) {
-    const matched: string[] = [];
-    let total = 0;
-    for (const token of tokens) {
-      const score = scoreFirebaseModelAgainstToken(model, token.raw);
-      if (score > 0) {
-        total += score;
-        matched.push(token.display);
-      }
-    }
-    if (total > 0 && matched.length === tokens.length) {
-      hits.push({ model, score: total, matchedTokens: matched });
-    }
-  }
-  hits.sort((a, b) => {
-    const byScore = b.score - a.score;
-    if (byScore !== 0) {
-      return byScore;
-    }
-    return a.model.name.localeCompare(b.model.name);
-  });
-  return hits.slice(0, limit);
-}
-
 // MARK: Formatting
-function formatSearchResults(query: string, tokens: readonly QueryToken[], hits: readonly FirebaseSearchHit[]): string {
+function formatSearchResults(input: { readonly query: string; readonly tokens: readonly QueryToken[]; readonly hits: readonly SearchHit<FirebaseModel>[] }): string {
+  const { query, tokens, hits } = input;
   const tokenDisplay = tokens.map((t) => t.display).join(', ');
   if (hits.length === 0) {
     return [`No Firebase models matched \`${query}\` (tokens: \`${tokenDisplay}\`).`, '', 'Try `dbx_model_lookup topic="models"` to browse the catalog or a broader single-word query.'].join('\n');
   }
   const lines: string[] = [`# Search: \`${query}\``, '', `Tokens: \`${tokenDisplay}\` · ${hits.length} result${hits.length === 1 ? '' : 's'}`, ''];
   for (const hit of hits) {
-    const parent = hit.model.parentIdentityConst ? ` · subcollection of \`${hit.model.parentIdentityConst}\`` : '';
-    lines.push(`## \`${hit.model.name}\` · firebase model · score ${hit.score}`);
+    const model = hit.entry;
+    const parent = model.parentIdentityConst ? ` · subcollection of \`${model.parentIdentityConst}\`` : '';
+    lines.push(`## \`${model.name}\` · firebase model · score ${hit.score}`);
     lines.push('');
-    lines.push(`- **identity:** \`${hit.model.identityConst}\`${parent}`);
-    lines.push(`- **collection:** \`${hit.model.modelType}\` · prefix \`${hit.model.collectionPrefix}\``);
-    const enumsPart = hit.model.enums.length > 0 ? ` · **enums:** ${hit.model.enums.length}` : '';
-    lines.push(`- **fields:** ${hit.model.fields.length}${enumsPart}`);
+    lines.push(`- **identity:** \`${model.identityConst}\`${parent}`);
+    lines.push(`- **collection:** \`${model.modelType}\` · prefix \`${model.collectionPrefix}\``);
+    const enumsPart = model.enums.length > 0 ? ` · **enums:** ${model.enums.length}` : '';
+    lines.push(`- **fields:** ${model.fields.length}${enumsPart}`);
     lines.push(`- **matched:** \`${hit.matchedTokens.join(', ')}\``);
     lines.push('');
-    lines.push(`→ \`dbx_model_lookup topic="${hit.model.name}"\` for full docs, or \`dbx_model_decode\` to decode a raw document.`);
+    lines.push(`→ \`dbx_model_lookup topic="${model.name}"\` for full docs, or \`dbx_model_decode\` to decode a raw document.`);
     lines.push('');
   }
   return lines.join('\n').trimEnd();
 }
 
-// MARK: Handler
+// MARK: Tool
+export const searchModelTool: DbxTool = {
+  definition: DBX_MODEL_SEARCH_TOOL,
+  run: (rawArgs) =>
+    runSearchTool<FirebaseModel>(
+      {
+        entries: FIREBASE_MODELS,
+        defaultLimit: DEFAULT_LIMIT,
+        maxLimit: MAX_LIMIT,
+        scoreEntry: scoreFirebaseModelAgainstToken,
+        tieBreaker: (model) => model.name,
+        formatResults: formatSearchResults
+      },
+      rawArgs
+    )
+};
+
 /**
  * Tool handler for `dbx_model_search`. Tokenises the query, scores every
  * Firebase model entry, and renders the top hits with matched-token
  * annotations.
  *
+ * Kept as a separately-exported function so existing spec files can call it
+ * without going through the {@link DbxTool} surface.
+ *
  * @param rawArgs - the unvalidated tool arguments from the MCP runtime
  * @returns the formatted search results, or an error result when args fail validation
  */
 export function runSearchModel(rawArgs: unknown): ToolResult {
-  let args: ParsedSearchArgs;
-  try {
-    args = parseSearchArgs(rawArgs);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return toolError(message);
-  }
-  const tokens = tokenize(args.query);
-  const hits = searchRegistry(tokens, args.limit);
-  const text = formatSearchResults(args.query, tokens, hits);
-  const result: ToolResult = { content: [{ type: 'text', text }] };
-  return result;
+  return searchModelTool.run(rawArgs) as ToolResult;
 }
-
-export const searchModelTool: DbxTool = {
-  definition: DBX_MODEL_SEARCH_TOOL,
-  run: runSearchModel
-};
