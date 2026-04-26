@@ -16,7 +16,15 @@
     },
     "generate-manifests": {
       "executor": "nx:run-commands",
-      "outputs": ["{projectRoot}/manifests/dereekb-util.semantic-types.mcp.json", "{projectRoot}/manifests/dereekb-model.semantic-types.mcp.json", "{projectRoot}/manifests/dereekb-date.semantic-types.mcp.json", "{projectRoot}/manifests/dereekb-firebase.semantic-types.mcp.json", "{projectRoot}/manifests/dereekb-firebase-server.semantic-types.mcp.json", "{projectRoot}/manifests/dereekb-dbx-web.ui-components.mcp.json", "{projectRoot}/manifests/dereekb-dbx-form.forge-fields.mcp.json"],
+      "outputs": [
+        "{projectRoot}/manifests/dereekb-util.semantic-types.mcp.generated.json",
+        "{projectRoot}/manifests/dereekb-model.semantic-types.mcp.generated.json",
+        "{projectRoot}/manifests/dereekb-date.semantic-types.mcp.generated.json",
+        "{projectRoot}/manifests/dereekb-firebase.semantic-types.mcp.generated.json",
+        "{projectRoot}/manifests/dereekb-firebase-server.semantic-types.mcp.generated.json",
+        "{projectRoot}/manifests/dereekb-dbx-web.ui-components.mcp.generated.json",
+        "{projectRoot}/manifests/dereekb-dbx-form.forge-fields.mcp.generated.json"
+      ],
       "inputs": [
         "{projectRoot}/scripts/generate-manifests.mjs",
         "{projectRoot}/src/scan/**/*.ts",

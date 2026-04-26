@@ -4,8 +4,8 @@ import type { ManifestReadFile } from './loader.js';
 import { loadSemanticTypeRegistry } from './load-registry.js';
 
 const PACKAGE_ROOT = resolve(__dirname, '..', '..');
-const BUNDLED_UTIL = resolve(PACKAGE_ROOT, 'manifests', 'dereekb-util.semantic-types.mcp.json');
-const BUNDLED_MODEL = resolve(PACKAGE_ROOT, 'manifests', 'dereekb-model.semantic-types.mcp.json');
+const BUNDLED_UTIL = resolve(PACKAGE_ROOT, 'manifests', 'dereekb-util.semantic-types.mcp.generated.json');
+const BUNDLED_MODEL = resolve(PACKAGE_ROOT, 'manifests', 'dereekb-model.semantic-types.mcp.generated.json');
 
 const FAKE_BUNDLED_PATHS = [BUNDLED_UTIL, BUNDLED_MODEL] as const;
 

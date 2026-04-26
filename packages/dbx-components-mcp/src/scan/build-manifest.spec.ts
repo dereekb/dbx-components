@@ -120,7 +120,7 @@ describe('buildManifest — successful builds', () => {
       throw new Error('expected success');
     }
     expect(result.scannedFileCount).toBe(1);
-    expect(result.outPath).toBe(resolve(PROJECT_ROOT, 'semantic-types.mcp.json'));
+    expect(result.outPath).toBe(resolve(PROJECT_ROOT, 'semantic-types.mcp.generated.json'));
     expect(result.manifest.source).toBe('@dereekb/util');
     expect(result.manifest.topicNamespace).toBe('dereekb-util');
     expect(result.manifest.generatedAt).toBe('2026-04-25T00:00:00.000Z');

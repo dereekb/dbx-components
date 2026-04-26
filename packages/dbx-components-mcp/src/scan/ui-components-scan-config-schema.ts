@@ -54,7 +54,7 @@ export type UiComponentsScanConfig = typeof UiComponentsScanConfig.infer;
  * Default value used when the scan config does not specify `out`.
  * Lives next to the scan config in the project root.
  */
-export const DEFAULT_UI_COMPONENTS_SCAN_OUT_PATH = 'ui-components.mcp.json';
+export const DEFAULT_UI_COMPONENTS_SCAN_OUT_PATH = 'ui-components.mcp.generated.json';
 
 /**
  * Filename the loader looks for at `${projectRoot}/`. Re-exported here so

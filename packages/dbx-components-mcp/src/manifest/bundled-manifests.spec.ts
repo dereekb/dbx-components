@@ -6,11 +6,11 @@ const PACKAGE_ROOT = resolve(__dirname, '..', '..');
 const MANIFESTS_DIR = resolve(PACKAGE_ROOT, 'manifests');
 
 const BUNDLED_PATHS = {
-  util: resolve(MANIFESTS_DIR, 'dereekb-util.semantic-types.mcp.json'),
-  model: resolve(MANIFESTS_DIR, 'dereekb-model.semantic-types.mcp.json'),
-  date: resolve(MANIFESTS_DIR, 'dereekb-date.semantic-types.mcp.json'),
-  firebase: resolve(MANIFESTS_DIR, 'dereekb-firebase.semantic-types.mcp.json'),
-  firebaseServer: resolve(MANIFESTS_DIR, 'dereekb-firebase-server.semantic-types.mcp.json')
+  util: resolve(MANIFESTS_DIR, 'dereekb-util.semantic-types.mcp.generated.json'),
+  model: resolve(MANIFESTS_DIR, 'dereekb-model.semantic-types.mcp.generated.json'),
+  date: resolve(MANIFESTS_DIR, 'dereekb-date.semantic-types.mcp.generated.json'),
+  firebase: resolve(MANIFESTS_DIR, 'dereekb-firebase.semantic-types.mcp.generated.json'),
+  firebaseServer: resolve(MANIFESTS_DIR, 'dereekb-firebase-server.semantic-types.mcp.generated.json')
 } as const;
 
 describe('bundled @dereekb/* manifests', () => {

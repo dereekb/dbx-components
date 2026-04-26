@@ -52,7 +52,7 @@ export interface LoadForgeFieldRegistryResult {
 }
 
 // MARK: Defaults
-const DEFAULT_BUNDLED_FILENAMES = ['dereekb-dbx-form.forge-fields.mcp.json'] as const;
+const DEFAULT_BUNDLED_FILENAMES = ['dereekb-dbx-form.forge-fields.mcp.generated.json'] as const;
 
 function findPackageRoot(startUrl: string): string {
   const startPath = fileURLToPath(startUrl);

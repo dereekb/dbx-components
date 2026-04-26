@@ -27,7 +27,7 @@ const SOURCE_TEXT = `
   export type EmailAddress = string;
 `;
 
-const OUT_PATH = resolve(PROJECT_ROOT, 'semantic-types.mcp.json');
+const OUT_PATH = resolve(PROJECT_ROOT, 'semantic-types.mcp.generated.json');
 
 interface Sinks {
   readonly logs: string[];

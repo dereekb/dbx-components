@@ -52,7 +52,7 @@ export interface LoadUiComponentRegistryResult {
 }
 
 // MARK: Defaults
-const DEFAULT_BUNDLED_FILENAMES = ['dereekb-dbx-web.ui-components.mcp.json'] as const;
+const DEFAULT_BUNDLED_FILENAMES = ['dereekb-dbx-web.ui-components.mcp.generated.json'] as const;
 
 function findPackageRoot(startUrl: string): string {
   const startPath = fileURLToPath(startUrl);

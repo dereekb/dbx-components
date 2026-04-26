@@ -4,5 +4,5 @@
   "topicNamespace": "dereekb-firebase",
   "include": ["src/lib/**/*.ts"],
   "exclude": ["**/*.spec.ts", "**/*.test.ts"],
-  "out": "../dbx-components-mcp/manifests/dereekb-firebase.semantic-types.mcp.json"
+  "out": "../dbx-components-mcp/manifests/dereekb-firebase.semantic-types.mcp.generated.json"
 }

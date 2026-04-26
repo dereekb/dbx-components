@@ -53,7 +53,7 @@ export type ForgeFieldsScanConfig = typeof ForgeFieldsScanConfig.infer;
  * Default value used when the scan config does not specify `out`.
  * Lives next to the scan config in the project root.
  */
-export const DEFAULT_FORGE_FIELDS_SCAN_OUT_PATH = 'forge-fields.mcp.json';
+export const DEFAULT_FORGE_FIELDS_SCAN_OUT_PATH = 'forge-fields.mcp.generated.json';
 
 /**
  * Filename the loader looks for at `${projectRoot}/`. Re-exported here so

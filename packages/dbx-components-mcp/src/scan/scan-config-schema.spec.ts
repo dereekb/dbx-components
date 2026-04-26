@@ -19,7 +19,7 @@ describe('SemanticTypeScanConfig schema', () => {
     const parsed = SemanticTypeScanConfig({
       ...minimal,
       exclude: ['**/*.spec.ts'],
-      out: 'dist/semantic-types.mcp.json',
+      out: 'dist/semantic-types.mcp.generated.json',
       declaredTopics: ['duration', 'ranges']
     });
     expect(parsed instanceof type.errors).toBe(false);
@@ -54,6 +54,6 @@ describe('scan-config constants', () => {
   });
 
   it('exposes the default out path', () => {
-    expect(DEFAULT_SCAN_OUT_PATH).toBe('semantic-types.mcp.json');
+    expect(DEFAULT_SCAN_OUT_PATH).toBe('semantic-types.mcp.generated.json');
   });
 });

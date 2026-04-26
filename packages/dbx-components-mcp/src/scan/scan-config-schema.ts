@@ -41,7 +41,7 @@ export type SemanticTypeScanConfig = typeof SemanticTypeScanConfig.infer;
  * Default value used when the scan config does not specify `out`.
  * Lives next to the scan config in the project root.
  */
-export const DEFAULT_SCAN_OUT_PATH = 'semantic-types.mcp.json';
+export const DEFAULT_SCAN_OUT_PATH = 'semantic-types.mcp.generated.json';
 
 /**
  * Filename the loader looks for at `${projectRoot}/`. Constant so tests
