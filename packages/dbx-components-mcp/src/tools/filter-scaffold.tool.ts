@@ -104,14 +104,12 @@ function presetConstName(modelCamel: string, presetKey: string): string {
 
 // MARK: Snippet builders
 function renderFilterType(args: ParsedScaffoldArgs): string {
-  const lines: string[] = [];
-  lines.push(`export interface ${args.filterType} {`);
+  const lines: string[] = [`export interface ${args.filterType} {`];
   if (args.presetKeys.length > 0) {
     const union = args.presetKeys.map((k) => `'${k}'`).join(' | ');
     lines.push(`  readonly preset?: ${union};`);
   }
-  lines.push(`  // TODO: add filter fields (e.g. status, search, dates)`);
-  lines.push(`}`);
+  lines.push(`  // TODO: add filter fields (e.g. status, search, dates)`, `}`);
   return lines.join('\n');
 }
 
@@ -120,12 +118,7 @@ function renderPresetConstants(args: ParsedScaffoldArgs): string {
   const modelCamel = camelCase(args.modelName);
   for (const key of args.presetKeys) {
     const constName = presetConstName(modelCamel, key);
-    lines.push(`export const ${constName}: ClickableFilterPreset<${args.filterType}> = {`);
-    lines.push(`  preset: '${key}',`);
-    lines.push(`  title: '${capitalize(key)}',`);
-    lines.push(`  presetValue: { preset: '${key}' }`);
-    lines.push(`};`);
-    lines.push('');
+    lines.push(`export const ${constName}: ClickableFilterPreset<${args.filterType}> = {`, `  preset: '${key}',`, `  title: '${capitalize(key)}',`, `  presetValue: { preset: '${key}' }`, `};`, '');
   }
   const arrayName = `${modelCamel}FilterPresets`;
   const elements = args.presetKeys.map((k) => presetConstName(modelCamel, k)).join(', ');
@@ -134,9 +127,8 @@ function renderPresetConstants(args: ParsedScaffoldArgs): string {
 }
 
 function renderTemplate(args: ParsedScaffoldArgs): string {
-  const lines: string[] = [];
   const modelCamel = camelCase(args.modelName);
-  lines.push(`<div dbxFilterSourceConnector>`);
+  const lines: string[] = [`<div dbxFilterSourceConnector>`];
   if (args.presetKeys.length > 0) {
     lines.push(`  <dbx-filter-preset-list [presets]="${modelCamel}FilterPresets"></dbx-filter-preset-list>`);
   }
@@ -151,27 +143,16 @@ function renderTemplate(args: ParsedScaffoldArgs): string {
 }
 
 function renderClass(args: ParsedScaffoldArgs): string {
-  const lines: string[] = [];
   const modelCamel = camelCase(args.modelName);
   const componentName = `${args.modelName}ListPageComponent`;
-  lines.push(`@Component({`);
-  lines.push(`  selector: 'app-${modelCamel}-list-page',`);
-  lines.push(`  templateUrl: './${modelCamel}-list-page.component.html',`);
-  lines.push(`  standalone: true,`);
-  lines.push(`  changeDetection: ChangeDetectionStrategy.OnPush,`);
-  lines.push(`  imports: [`);
-  lines.push(`    DbxCoreFilterModule,`);
+  const lines: string[] = [`@Component({`, `  selector: 'app-${modelCamel}-list-page',`, `  templateUrl: './${modelCamel}-list-page.component.html',`, `  standalone: true,`, `  changeDetection: ChangeDetectionStrategy.OnPush,`, `  imports: [`, `    DbxCoreFilterModule,`];
   if (args.presetKeys.length > 0) {
     lines.push(`    DbxFilterPresetListComponent,`);
   }
   if (args.usesCollectionStore) {
     lines.push(`    DbxFirebaseCollectionListDirective,`);
   }
-  lines.push(`    My${args.modelName}FilterFormComponent,`);
-  lines.push(`    My${args.modelName}ListComponent`);
-  lines.push(`  ]`);
-  lines.push(`})`);
-  lines.push(`export class ${componentName} {`);
+  lines.push(`    My${args.modelName}FilterFormComponent,`, `    My${args.modelName}ListComponent`, `  ]`, `})`, `export class ${componentName} {`);
   if (args.usesCollectionStore) {
     lines.push(`  readonly store = inject(${args.modelName}CollectionStore);`);
   }
@@ -180,9 +161,7 @@ function renderClass(args: ParsedScaffoldArgs): string {
 }
 
 function renderImports(args: ParsedScaffoldArgs): readonly string[] {
-  const imports: string[] = [];
-  imports.push(`import { ChangeDetectionStrategy, Component${args.usesCollectionStore ? ', inject' : ''} } from '@angular/core';`);
-  imports.push(`import { DbxCoreFilterModule${args.presetKeys.length > 0 ? ', type ClickableFilterPreset' : ''} } from '@dereekb/dbx-core';`);
+  const imports: string[] = [`import { ChangeDetectionStrategy, Component${args.usesCollectionStore ? ', inject' : ''} } from '@angular/core';`, `import { DbxCoreFilterModule${args.presetKeys.length > 0 ? ', type ClickableFilterPreset' : ''} } from '@dereekb/dbx-core';`];
   if (args.presetKeys.length > 0) {
     imports.push(`import { DbxFilterPresetListComponent } from '@dereekb/dbx-web';`);
   }
@@ -201,49 +180,13 @@ function capitalize(value: string): string {
 
 // MARK: Output
 function formatScaffold(args: ParsedScaffoldArgs): string {
-  const lines: string[] = [];
-  lines.push(`# ${args.modelName} filter scaffold`);
-  lines.push('');
-  lines.push(`Filter type: \`${args.filterType}\` · Presets: ${args.presetKeys.length > 0 ? args.presetKeys.length : 'none'} · Collection store: ${args.usesCollectionStore ? 'yes' : 'no'}`);
-  lines.push('');
-
-  lines.push('## Filter type');
-  lines.push('');
-  lines.push('```ts');
-  lines.push(renderFilterType(args));
-  lines.push('```');
-  lines.push('');
+  const lines: string[] = [`# ${args.modelName} filter scaffold`, '', `Filter type: \`${args.filterType}\` · Presets: ${args.presetKeys.length > 0 ? args.presetKeys.length : 'none'} · Collection store: ${args.usesCollectionStore ? 'yes' : 'no'}`, '', '## Filter type', '', '```ts', renderFilterType(args), '```', ''];
 
   if (args.presetKeys.length > 0) {
-    lines.push('## Presets');
-    lines.push('');
-    lines.push('```ts');
-    lines.push(renderPresetConstants(args));
-    lines.push('```');
-    lines.push('');
+    lines.push('## Presets', '', '```ts', renderPresetConstants(args), '```', '');
   }
 
-  lines.push('## Template');
-  lines.push('');
-  lines.push('```html');
-  lines.push(renderTemplate(args));
-  lines.push('```');
-  lines.push('');
-
-  lines.push('## Component class');
-  lines.push('');
-  lines.push('```ts');
-  for (const line of renderImports(args)) {
-    lines.push(line);
-  }
-  lines.push('');
-  lines.push(renderClass(args));
-  lines.push('```');
-  lines.push('');
-
-  lines.push('## Notes');
-  lines.push('');
-  lines.push('- The outer `[dbxFilterSourceConnector]` provides both `FilterSource` and `FilterSourceConnector`. Children that own the form use `[dbxFilterSource]` + `[dbxFilterConnectSource]` to wire up.');
+  lines.push('## Template', '', '```html', renderTemplate(args), '```', '', '## Component class', '', '```ts', ...renderImports(args), '', renderClass(args), '```', '', '## Notes', '', '- The outer `[dbxFilterSourceConnector]` provides both `FilterSource` and `FilterSourceConnector`. Children that own the form use `[dbxFilterSource]` + `[dbxFilterConnectSource]` to wire up.');
   if (args.presetKeys.length > 0) {
     lines.push('- Each `ClickableFilterPreset` listed in the preset array becomes a chip; clicking sets `presetValue` on the filter source.');
   }
