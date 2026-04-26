@@ -91,47 +91,33 @@ interface ScoredHit {
   readonly matchedOn: readonly string[];
 }
 
+interface ScopeCheck {
+  readonly scopes: readonly SearchScope[];
+  readonly match: boolean;
+  readonly label: string;
+  readonly score: number;
+}
+
 function scoreHit(node: RouteTreeNode, query: string, scope: SearchScope): ScoredHit | undefined {
   const q = query.toLowerCase();
-  const matchedOn: string[] = [];
+  const checks: readonly ScopeCheck[] = [
+    { scopes: ['all', 'name'], match: node.data.name.toLowerCase().includes(q), label: 'name', score: 5 },
+    { scopes: ['all', 'url'], match: Boolean(node.fullUrl?.toLowerCase().includes(q) || node.data.url?.toLowerCase().includes(q)), label: 'url', score: 4 },
+    { scopes: ['all', 'component'], match: Boolean(node.data.component?.toLowerCase().includes(q)), label: 'component', score: 3 },
+    { scopes: ['all', 'resolve'], match: node.data.resolveKeys.some((key) => key.toLowerCase().includes(q)), label: 'resolve', score: 2 },
+    { scopes: ['all'], match: node.data.file.toLowerCase().includes(q), label: 'file', score: 1 }
+  ];
+
   let score = 0;
-
-  if ((scope === 'all' || scope === 'name') && node.data.name.toLowerCase().includes(q)) {
-    score += 5;
-    matchedOn.push('name');
-  }
-  if (scope === 'all' || scope === 'url') {
-    if (node.fullUrl?.toLowerCase().includes(q)) {
-      score += 4;
-      matchedOn.push('url');
-    } else if (node.data.url?.toLowerCase().includes(q)) {
-      score += 4;
-      matchedOn.push('url');
+  const matchedOn: string[] = [];
+  for (const check of checks) {
+    if (check.scopes.includes(scope) && check.match) {
+      score += check.score;
+      matchedOn.push(check.label);
     }
   }
-  if ((scope === 'all' || scope === 'component') && node.data.component?.toLowerCase().includes(q)) {
-    score += 3;
-    matchedOn.push('component');
-  }
-  if (scope === 'all' || scope === 'resolve') {
-    for (const key of node.data.resolveKeys) {
-      if (key.toLowerCase().includes(q)) {
-        score += 2;
-        matchedOn.push('resolve');
-        break;
-      }
-    }
-  }
-  if (scope === 'all' && node.data.file.toLowerCase().includes(q)) {
-    score += 1;
-    matchedOn.push('file');
-  }
 
-  if (score === 0) {
-    return undefined;
-  }
-  const result: ScoredHit = { node, score, matchedOn };
-  return result;
+  return score === 0 ? undefined : { node, score, matchedOn };
 }
 
 /**
