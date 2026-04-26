@@ -10,7 +10,8 @@
  * cross into upstream packages.
  */
 
-import { Node, Project, SyntaxKind, type ArrayLiteralExpression, type ArrowFunction, type FunctionDeclaration, type FunctionExpression, type ObjectLiteralExpression, type SourceFile, type TypeNode, type VariableDeclaration } from 'ts-morph';
+import { Node, SyntaxKind, type ArrayLiteralExpression, type ArrowFunction, type FunctionDeclaration, type FunctionExpression, type ObjectLiteralExpression, type SourceFile, type TypeNode, type VariableDeclaration } from 'ts-morph';
+import { apiRelPath, asArrayLiteral, asObjectLiteral, buildInMemoryProject, collectTrustedExternalIdentifiers, componentRelPath, findLocalVariable, findReturnExpression, getPropertyInitializer, readIdentifierProperty, readStringLiteralInitializer, readStringProperty, typeAnnotationText, unwrapAsExpressions } from '../_validate/ast.js';
 import type {
   AppNotificationsInspection,
   ExtractedAppNotifications,
@@ -75,16 +76,7 @@ interface ApiFunctionIndex {
  * @returns the structured extraction used by the rules layer
  */
 export function extractAppNotifications(inspection: AppNotificationsInspection): ExtractedAppNotifications {
-  const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });
-  const componentSources: SourceFile[] = [];
-  const apiSources: SourceFile[] = [];
-  for (const file of inspection.component.files) {
-    componentSources.push(project.createSourceFile(`__component__/${file.relPath}`, file.text, { overwrite: true }));
-  }
-  for (const file of inspection.api.files) {
-    apiSources.push(project.createSourceFile(`__api__/${file.relPath}`, file.text, { overwrite: true }));
-  }
-
+  const { componentSources, apiSources } = buildInMemoryProject(inspection);
   const trustedExternalIdentifiers = collectTrustedExternalIdentifiers([...componentSources, ...apiSources]);
 
   // Component pass
@@ -125,121 +117,6 @@ export function extractAppNotifications(inspection: AppNotificationsInspection):
     trustedExternalIdentifiers
   };
   return result;
-}
-
-// MARK: Helpers
-function apiRelPath(sourceFile: SourceFile): string {
-  return sourceFile
-    .getFilePath()
-    .replace(/^\/__api__\//, '')
-    .replace(/^\/__component__\//, '');
-}
-
-function componentRelPath(sourceFile: SourceFile): string {
-  return sourceFile.getFilePath().replace(/^\/__component__\//, '');
-}
-
-function unwrapAsExpressions(node: Node | undefined): Node | undefined {
-  let current: Node | undefined = node;
-  while (current && Node.isAsExpression(current)) {
-    current = current.getExpression();
-  }
-  return current;
-}
-
-function asObjectLiteral(node: Node | undefined): ObjectLiteralExpression | undefined {
-  const inner = unwrapAsExpressions(node);
-  if (inner && Node.isObjectLiteralExpression(inner)) {
-    return inner;
-  }
-  return undefined;
-}
-
-function asArrayLiteral(node: Node | undefined): ArrayLiteralExpression | undefined {
-  const inner = unwrapAsExpressions(node);
-  if (inner && Node.isArrayLiteralExpression(inner)) {
-    return inner;
-  }
-  return undefined;
-}
-
-function readStringLiteralInitializer(decl: VariableDeclaration): string | undefined {
-  const initializer = unwrapAsExpressions(decl.getInitializer());
-  if (initializer && Node.isStringLiteral(initializer)) {
-    return initializer.getLiteralText();
-  }
-  return undefined;
-}
-
-function typeAnnotationText(node: VariableDeclaration): string | undefined {
-  const tn = node.getTypeNode();
-  return tn ? tn.getText() : undefined;
-}
-
-function getPropertyInitializer(obj: ObjectLiteralExpression, name: string): Node | undefined {
-  const prop = obj.getProperty(name);
-  if (!prop) return undefined;
-  if (Node.isPropertyAssignment(prop)) {
-    return prop.getInitializer();
-  }
-  if (Node.isShorthandPropertyAssignment(prop)) {
-    return prop.getNameNode();
-  }
-  return undefined;
-}
-
-function readStringProperty(obj: ObjectLiteralExpression, name: string): string | undefined {
-  const init = unwrapAsExpressions(getPropertyInitializer(obj, name));
-  if (init && Node.isStringLiteral(init)) {
-    return init.getLiteralText();
-  }
-  return undefined;
-}
-
-function readIdentifierProperty(obj: ObjectLiteralExpression, name: string): string | undefined {
-  const init = unwrapAsExpressions(getPropertyInitializer(obj, name));
-  if (init && Node.isIdentifier(init)) {
-    return init.getText();
-  }
-  return undefined;
-}
-
-function findReturnExpression(body: Node): Node | undefined {
-  if (Node.isArrowFunction(body) || Node.isFunctionDeclaration(body) || Node.isFunctionExpression(body)) {
-    const innerBody = body.getBody();
-    if (!innerBody) return undefined;
-    if (Node.isBlock(innerBody)) {
-      for (const stmt of innerBody.getStatements()) {
-        if (Node.isReturnStatement(stmt)) {
-          return stmt.getExpression();
-        }
-      }
-      return undefined;
-    }
-    // Concise arrow body.
-    return innerBody;
-  }
-  return undefined;
-}
-
-// MARK: Trusted external identifiers
-function collectTrustedExternalIdentifiers(sources: readonly SourceFile[]): ReadonlySet<string> {
-  const out = new Set<string>();
-  for (const sf of sources) {
-    for (const imp of sf.getImportDeclarations()) {
-      const spec = imp.getModuleSpecifierValue();
-      if (!spec.startsWith('@dereekb/')) continue;
-      for (const named of imp.getNamedImports()) {
-        const alias = named.getAliasNode();
-        out.add(alias ? alias.getText() : named.getNameNode().getText());
-      }
-      const namespace = imp.getNamespaceImport();
-      if (namespace) {
-        out.add(namespace.getText());
-      }
-    }
-  }
-  return out;
 }
 
 // MARK: Template type constants
@@ -1005,18 +882,6 @@ function resolveArrayFromProperty(obj: ObjectLiteralExpression, name: string, sf
         return declInit;
       }
     }
-  }
-  return undefined;
-}
-
-function findLocalVariable(sf: SourceFile, name: string): VariableDeclaration | undefined {
-  for (const stmt of sf.getVariableStatements()) {
-    for (const decl of stmt.getDeclarations()) {
-      if (decl.getName() === name) return decl;
-    }
-  }
-  for (const decl of sf.getDescendantsOfKind(SyntaxKind.VariableDeclaration)) {
-    if (decl.getName() === name) return decl;
   }
   return undefined;
 }
