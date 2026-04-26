@@ -271,7 +271,7 @@ export function formatFileGroupedResult<TResult extends FileGroupedResult>(confi
     for (const [inner, innerViolations] of byInner) {
       lines.push('', `### ${inner}`);
       for (const v of innerViolations) {
-        const location = v.line !== undefined ? `line ${v.line}` : 'file-level';
+        const location = v.line === undefined ? 'file-level' : `line ${v.line}`;
         lines.push(formatViolationLine(v, ` _(${location})_`));
       }
     }

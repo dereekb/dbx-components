@@ -8,7 +8,7 @@ const API_DIR = 'apps/demo-api';
 const COMPONENT_FILES = ['storagefile.ts', 'index.ts'];
 const API_FILES = ['storagefile.upload.service.ts', 'storagefile.module.ts', 'storagefile.init.ts', 'index.ts'];
 
-function componentSide(input: { readonly files?: readonly string[]; readonly entries?: readonly string[]; readonly indexSource?: string | undefined; readonly status?: SideInspection['status'] }): SideInspection {
+function componentSide(input: { readonly files?: readonly string[]; readonly entries?: readonly string[]; readonly indexSource?: string; readonly status?: SideInspection['status'] }): SideInspection {
   return {
     side: 'component',
     rootDir: COMPONENT_DIR,
@@ -20,7 +20,7 @@ function componentSide(input: { readonly files?: readonly string[]; readonly ent
   };
 }
 
-function apiSide(input: { readonly files?: readonly string[]; readonly entries?: readonly string[]; readonly indexSource?: string | undefined; readonly status?: SideInspection['status'] }): SideInspection {
+function apiSide(input: { readonly files?: readonly string[]; readonly entries?: readonly string[]; readonly indexSource?: string; readonly status?: SideInspection['status'] }): SideInspection {
   return {
     side: 'api',
     rootDir: API_DIR,

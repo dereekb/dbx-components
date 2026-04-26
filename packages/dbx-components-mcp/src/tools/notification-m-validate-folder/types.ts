@@ -29,9 +29,9 @@
  * {@link ViolationCode} literal union.
  */
 
-import type { RequiredApiFile, SideInspection as SharedSideInspection, SideStatus, TwoSideFolderInspection, TwoSideFolderValidationResult, TwoSideFolderViolation, ViolationSeverity } from '../validate-two-side-folder.js';
+import type { RequiredApiFile, SideInspection as SharedSideInspection, TwoSideFolderInspection, TwoSideFolderValidationResult, TwoSideFolderViolation } from '../validate-two-side-folder.js';
 
-export type { SideStatus, ViolationSeverity };
+export type { SideStatus, ViolationSeverity } from '../validate-two-side-folder.js';
 
 export type ViolationCode =
   // I/O failures (errors)

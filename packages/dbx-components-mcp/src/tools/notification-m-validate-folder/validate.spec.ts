@@ -8,7 +8,7 @@ const API_DIR = 'apps/demo-api';
 const COMPONENT_FILES = ['notification.ts', 'notification.task.ts', 'index.ts'];
 const API_FILES = ['notification.module.ts', 'notification.task.service.ts', 'notification.send.service.ts', 'notification.send.mailgun.service.ts', 'notification.action.context.ts', 'notification.factory.ts', 'notification.init.ts', 'notification.mailgun.ts', 'index.ts'];
 
-function componentSide(input: { readonly files?: readonly string[]; readonly entries?: readonly string[]; readonly indexSource?: string | undefined; readonly status?: SideInspection['status'] }): SideInspection {
+function componentSide(input: { readonly files?: readonly string[]; readonly entries?: readonly string[]; readonly indexSource?: string; readonly status?: SideInspection['status'] }): SideInspection {
   return {
     side: 'component',
     rootDir: COMPONENT_DIR,
@@ -20,7 +20,7 @@ function componentSide(input: { readonly files?: readonly string[]; readonly ent
   };
 }
 
-function apiSide(input: { readonly files?: readonly string[]; readonly entries?: readonly string[]; readonly indexSource?: string | undefined; readonly status?: SideInspection['status'] }): SideInspection {
+function apiSide(input: { readonly files?: readonly string[]; readonly entries?: readonly string[]; readonly indexSource?: string; readonly status?: SideInspection['status'] }): SideInspection {
   return {
     side: 'api',
     rootDir: API_DIR,

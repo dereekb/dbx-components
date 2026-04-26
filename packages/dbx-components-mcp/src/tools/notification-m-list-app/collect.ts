@@ -136,7 +136,8 @@ function buildTaskSummaries(extracted: ExtractedAppNotifications): TaskSummary[]
 }
 
 function symbolStemForTask(name: string): string {
-  const stripped = name.endsWith('_NOTIFICATION_TASK_TYPE') ? name.slice(0, -'_NOTIFICATION_TASK_TYPE'.length) : name.endsWith('_TASK_TYPE') ? name.slice(0, -'_TASK_TYPE'.length) : name;
+  const withoutTaskTypeSuffix = name.endsWith('_TASK_TYPE') ? name.slice(0, -'_TASK_TYPE'.length) : name;
+  const stripped = name.endsWith('_NOTIFICATION_TASK_TYPE') ? name.slice(0, -'_NOTIFICATION_TASK_TYPE'.length) : withoutTaskTypeSuffix;
   const parts = stripped.split('_').filter((p) => p.length > 0);
   let out = '';
   for (const p of parts) {

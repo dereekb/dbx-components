@@ -309,12 +309,14 @@ function extractUploadInitializerEntries(sources: readonly SourceFile[]): readon
 }
 
 // MARK: API — upload service calls
+type ApiFunctionNode = FunctionDeclaration | ArrowFunction | FunctionExpression;
+
 interface ApiFunctionIndex {
-  readonly functionsByName: ReadonlyMap<string, { readonly node: FunctionDeclaration | ArrowFunction | FunctionExpression; readonly sourceFile: SourceFile }>;
+  readonly functionsByName: ReadonlyMap<string, { readonly node: ApiFunctionNode; readonly sourceFile: SourceFile }>;
 }
 
 function buildApiFunctionIndex(sources: readonly SourceFile[]): ApiFunctionIndex {
-  const map = new Map<string, { readonly node: FunctionDeclaration | ArrowFunction | FunctionExpression; readonly sourceFile: SourceFile }>();
+  const map = new Map<string, { readonly node: ApiFunctionNode; readonly sourceFile: SourceFile }>();
   for (const sf of sources) {
     for (const fn of sf.getFunctions()) {
       const name = fn.getName();
@@ -336,7 +338,7 @@ function buildApiFunctionIndex(sources: readonly SourceFile[]): ApiFunctionIndex
   return result;
 }
 
-function findReturnExpression(fn: FunctionDeclaration | ArrowFunction | FunctionExpression): Node | undefined {
+function findReturnExpression(fn: ApiFunctionNode): Node | undefined {
   const body = fn.getBody();
   if (!body) return undefined;
   if (Node.isBlock(body)) {

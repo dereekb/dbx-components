@@ -21,7 +21,7 @@ import { readdir, readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { ViolationSeverity } from './validate-format.js';
 
-export type { ViolationSeverity };
+export type { ViolationSeverity } from './validate-format.js';
 
 /**
  * Side of a two-directory validator. `component` = the `-firebase`
@@ -252,19 +252,19 @@ async function inspectSide(input: InspectSideInput): Promise<SideInspection> {
   let indexSource: string | undefined;
 
   const rootStatOk = await isExistingDirectory(rootDir);
-  if (!rootStatOk) {
-    status = 'dir-not-found';
-  } else {
+  if (rootStatOk) {
     const absFolder = join(rootDir, subPath);
     const folderStatOk = await isExistingDirectory(absFolder);
-    if (!folderStatOk) {
-      status = 'folder-missing';
-    } else {
+    if (folderStatOk) {
       const folder = await readFolder(absFolder, indexFile);
       files = folder.files;
       entries = folder.entries;
       indexSource = folder.indexSource;
+    } else {
+      status = 'folder-missing';
     }
+  } else {
+    status = 'dir-not-found';
   }
 
   const result: SideInspection = {

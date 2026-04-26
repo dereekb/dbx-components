@@ -26,9 +26,7 @@ export async function inspectFolder(path: string): Promise<SystemFolderInspectio
   let systemSource: string | undefined;
   try {
     const stats = await stat(path);
-    if (!stats.isDirectory()) {
-      status = 'not-directory';
-    } else {
+    if (stats.isDirectory()) {
       status = 'ok';
       const entries = await readdir(path, { withFileTypes: true });
       const collected: string[] = [];
@@ -45,6 +43,8 @@ export async function inspectFolder(path: string): Promise<SystemFolderInspectio
           systemSource = undefined;
         }
       }
+    } else {
+      status = 'not-directory';
     }
   } catch (err) {
     const code = (err as NodeJS.ErrnoException).code;

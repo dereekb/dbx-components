@@ -141,6 +141,3 @@ export const lookupPipeTool: DbxTool = createLookupTool<PipeEntryInfo>({
 export function runLookupPipe(rawArgs: unknown): ToolResult {
   return lookupPipeTool.run(rawArgs) as ToolResult;
 }
-
-// Re-export so consumers don't need to reach into `data/`.
-export type { PipeRegistrySlug } from './data/pipe-entries.js';

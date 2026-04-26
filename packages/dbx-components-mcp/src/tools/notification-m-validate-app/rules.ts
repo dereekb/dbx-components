@@ -104,7 +104,7 @@ function checkTemplateInfoPairing(extracted: ExtractedAppNotifications, violatio
       pushViolation(violations, {
         code: 'NOTIF_TEMPLATE_INFO_MISSING_NAME_OR_DESCRIPTION',
         severity: 'warning',
-        message: `Info \`${info.symbolName}\` is missing ${!info.humanName ? '`name`' : '`description`'} — human-readable metadata is required for the list tool.`,
+        message: `Info \`${info.symbolName}\` is missing ${info.humanName ? '`description`' : '`name`'} — human-readable metadata is required for the list tool.`,
         side: 'component',
         file: info.sourceFile
       });

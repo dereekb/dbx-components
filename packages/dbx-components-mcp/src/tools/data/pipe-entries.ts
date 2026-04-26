@@ -14,41 +14,6 @@
 import { type Maybe } from '@dereekb/util';
 
 /**
- * Kebab-case identifier used to look up a pipe entry. Unique within the
- * pipe registry.
- */
-export type PipeRegistrySlug = string;
-
-/**
- * The Angular pipe selector name as declared in `@Pipe({ name })` and used
- * inside templates (e.g. `{{ value | dollarAmount }}`).
- */
-export type AngularPipeName = string;
-
-/**
- * Fully-qualified TypeScript class name exported from the pipe module
- * (e.g. `DollarAmountPipe`).
- */
-export type TypeScriptClassName = string;
-
-/**
- * A serialized TypeScript type expression rendered for documentation
- * purposes (e.g. `Maybe<DateOrDateString>`, `Observable<T>`).
- */
-export type TypeScriptTypeExpression = string;
-
-/**
- * An npm package import path (e.g. `@dereekb/dbx-core`).
- */
-export type NpmPackagePath = string;
-
-/**
- * A repo-relative source file path (e.g.
- * `packages/dbx-core/src/lib/pipe/value/dollar.pipe.ts`).
- */
-export type RepoRelativeSourcePath = string;
-
-/**
  * Categorization for browse-friendly catalog grouping. Mirrors the on-disk
  * folder structure of `packages/dbx-core/src/lib/pipe/`.
  */
@@ -66,7 +31,7 @@ export type PipePurity = 'pure' | 'impure';
  */
 export interface PipeEntryArgInfo {
   readonly name: string;
-  readonly type: TypeScriptTypeExpression;
+  readonly type: string;
   readonly description: string;
   readonly required: boolean;
 }
@@ -75,23 +40,23 @@ export interface PipeEntryArgInfo {
  * A single curated pipe entry surfaced through `dbx_pipe_lookup`.
  */
 export interface PipeEntryInfo {
-  readonly slug: PipeRegistrySlug;
+  readonly slug: string;
   readonly category: PipeCategory;
-  readonly pipeName: AngularPipeName;
-  readonly className: TypeScriptClassName;
-  readonly module: NpmPackagePath;
-  readonly inputType: TypeScriptTypeExpression;
-  readonly outputType: TypeScriptTypeExpression;
+  readonly pipeName: string;
+  readonly className: string;
+  readonly module: string;
+  readonly inputType: string;
+  readonly outputType: string;
   readonly purity: PipePurity;
   readonly description: string;
   readonly args: readonly PipeEntryArgInfo[];
-  readonly relatedSlugs: readonly PipeRegistrySlug[];
+  readonly relatedSlugs: readonly string[];
   readonly skillRefs: readonly string[];
-  readonly sourcePath: RepoRelativeSourcePath;
+  readonly sourcePath: string;
   readonly example: string;
 }
 
-const DBX_CORE_MODULE: NpmPackagePath = '@dereekb/dbx-core';
+const DBX_CORE_MODULE: string = '@dereekb/dbx-core';
 
 export const PIPE_ENTRIES: readonly PipeEntryInfo[] = [
   // MARK: value
@@ -534,7 +499,7 @@ export function getPipeEntries(): readonly PipeEntryInfo[] {
  * @param slug - the registry slug to resolve, trimmed
  * @returns the matching entry, or `undefined` when no slug matches
  */
-export function getPipeEntry(slug: PipeRegistrySlug): Maybe<PipeEntryInfo> {
+export function getPipeEntry(slug: string): Maybe<PipeEntryInfo> {
   const trimmed = slug.trim();
   return PIPE_ENTRIES.find((e) => e.slug === trimmed);
 }
@@ -546,7 +511,7 @@ export function getPipeEntry(slug: PipeRegistrySlug): Maybe<PipeEntryInfo> {
  * @param pipeName - the template-side pipe name to resolve
  * @returns the matching entry, or `undefined` when no pipe name matches
  */
-export function getPipeEntryByPipeName(pipeName: AngularPipeName): Maybe<PipeEntryInfo> {
+export function getPipeEntryByPipeName(pipeName: string): Maybe<PipeEntryInfo> {
   const trimmed = pipeName.trim();
   return PIPE_ENTRIES.find((e) => e.pipeName === trimmed);
 }
@@ -558,7 +523,7 @@ export function getPipeEntryByPipeName(pipeName: AngularPipeName): Maybe<PipeEnt
  * @param className - the TypeScript class name to resolve
  * @returns the matching entry, or `undefined` when no class matches
  */
-export function getPipeEntryByClassName(className: TypeScriptClassName): Maybe<PipeEntryInfo> {
+export function getPipeEntryByClassName(className: string): Maybe<PipeEntryInfo> {
   const trimmed = className.trim();
   return PIPE_ENTRIES.find((e) => e.className === trimmed);
 }
