@@ -16,10 +16,9 @@
  * an optional `format: 'markdown' | 'json'` (default markdown).
  */
 
-import { resolve, sep } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
-import { type } from 'arktype';
-import { toolError, type DbxTool, type ToolResult } from './types.js';
+import { type DbxTool } from './types.js';
+import { createListAppTool } from './validate-tool.js';
 import { inspectAppStorageFiles } from './storagefile-m-validate-app/index.js';
 import { formatReportAsJson, formatReportAsMarkdown, listAppStorageFiles } from './storagefile-m-list-app/index.js';
 
@@ -49,78 +48,12 @@ const DBX_STORAGEFILE_M_LIST_APP_TOOL: Tool = {
   }
 };
 
-// MARK: Input validation
-const ListArgsType = type({
-  componentDir: 'string',
-  apiDir: 'string',
-  'format?': "'markdown' | 'json'"
-});
-
-interface ParsedArgs {
-  readonly componentDir: string;
-  readonly apiDir: string;
-  readonly format: 'markdown' | 'json';
-}
-
-function parseArgs(raw: unknown): ParsedArgs {
-  const parsed = ListArgsType(raw);
-  if (parsed instanceof type.errors) {
-    throw new Error(`Invalid arguments: ${parsed.summary}`);
-  }
-  const result: ParsedArgs = {
-    componentDir: parsed.componentDir,
-    apiDir: parsed.apiDir,
-    format: parsed.format ?? 'markdown'
-  };
-  return result;
-}
-
-function ensureInsideCwd(relativePath: string, cwd: string): string {
-  const absolute = resolve(cwd, relativePath);
-  const cwdPrefix = cwd.endsWith(sep) ? cwd : cwd + sep;
-  if (!absolute.startsWith(cwdPrefix) && absolute !== cwd) {
-    throw new Error(`Path \`${relativePath}\` resolves outside the server cwd and is not allowed.`);
-  }
-  return absolute;
-}
-
-// MARK: Handler
-/**
- * Tool handler for `dbx_list_app_storagefile_m`. Walks the resolved app
- * directory and reports the registered storage-file purposes plus their
- * upload/processing wiring.
- *
- * @param rawArgs - the unvalidated tool arguments from the MCP runtime
- * @returns the formatted listing, or an error result when args fail validation
- */
-export async function runStorageFileMListApp(rawArgs: unknown): Promise<ToolResult> {
-  let args: ParsedArgs;
-  try {
-    args = parseArgs(rawArgs);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return toolError(message);
-  }
-
-  const cwd = process.cwd();
-  let componentAbs: string;
-  let apiAbs: string;
-  try {
-    componentAbs = ensureInsideCwd(args.componentDir, cwd);
-    apiAbs = ensureInsideCwd(args.apiDir, cwd);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return toolError(message);
-  }
-
-  const inspection = await inspectAppStorageFiles(componentAbs, apiAbs);
-  const report = listAppStorageFiles(inspection, { componentDir: args.componentDir, apiDir: args.apiDir });
-  const text = args.format === 'json' ? formatReportAsJson(report) : formatReportAsMarkdown(report);
-  const result: ToolResult = { content: [{ type: 'text', text }] };
-  return result;
-}
-
-export const storageFileMListAppTool: DbxTool = {
+export const storageFileMListAppTool: DbxTool = createListAppTool({
   definition: DBX_STORAGEFILE_M_LIST_APP_TOOL,
-  run: runStorageFileMListApp
-};
+  inspectAndList: async ({ componentAbs, componentRel, apiAbs, apiRel }) => {
+    const inspection = await inspectAppStorageFiles(componentAbs, apiAbs);
+    return listAppStorageFiles(inspection, { componentDir: componentRel, apiDir: apiRel });
+  },
+  formatMarkdown: formatReportAsMarkdown,
+  formatJson: formatReportAsJson
+});

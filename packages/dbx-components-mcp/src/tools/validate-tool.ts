@@ -250,6 +250,36 @@ export interface CreateTwoSideValidateToolConfig<TResult extends { readonly erro
 }
 
 /**
+ * Resolves the parsed `componentDir` / `apiDir` pair into the absolute /
+ * relative quad consumed by both the two-side validator and list-app
+ * factories. Returns the resolved input or a {@link toolError} payload
+ * when either path escapes `cwd`.
+ *
+ * @param parsed - the parsed-args envelope
+ * @param parsed.componentDir - the relative path to the component package root
+ * @param parsed.apiDir - the relative path to the API app root
+ * @returns the absolute + relative quad, or an error `ToolResult`
+ */
+function resolveTwoSideInput(parsed: { readonly componentDir: string; readonly apiDir: string }): TwoSideInspectAndValidateInput | ToolResult {
+  const cwd = process.cwd();
+  const componentRel = parsed.componentDir;
+  const apiRel = parsed.apiDir;
+  try {
+    ensurePathInsideCwd(componentRel, cwd);
+    ensurePathInsideCwd(apiRel, cwd);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return toolError(message);
+  }
+  return {
+    componentAbs: resolve(cwd, componentRel),
+    componentRel,
+    apiAbs: resolve(cwd, apiRel),
+    apiRel
+  };
+}
+
+/**
  * Builds an MCP tool that validates a component / API directory pair. Accepts
  * required `componentDir` + `apiDir`, resolves them against `process.cwd()`
  * (rejecting paths that escape the cwd), and threads the resolved paths
@@ -270,27 +300,90 @@ export function createTwoSideValidateTool<TResult extends { readonly errorCount:
       return toolError(`Invalid arguments: ${parsed.summary}`);
     }
 
-    const cwd = process.cwd();
-    const componentRel = parsed.componentDir;
-    const apiRel = parsed.apiDir;
-    let componentAbs: string;
-    let apiAbs: string;
-    try {
-      ensurePathInsideCwd(componentRel, cwd);
-      ensurePathInsideCwd(apiRel, cwd);
-      componentAbs = resolve(cwd, componentRel);
-      apiAbs = resolve(cwd, apiRel);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      return toolError(message);
+    const resolved = resolveTwoSideInput(parsed);
+    if ('content' in resolved) {
+      return resolved;
     }
 
-    const result = await inspectAndValidate({ componentAbs, componentRel, apiAbs, apiRel });
+    const result = await inspectAndValidate(resolved);
     const text = format(result);
     const toolResult: ToolResult = {
       content: [{ type: 'text', text }],
       isError: result.errorCount > 0
     };
+    return toolResult;
+  }
+
+  const tool: DbxTool = { definition, run };
+  return tool;
+}
+
+// MARK: componentDir + apiDir + format input shape (list-app)
+
+const ListAppArgsType = type({
+  componentDir: 'string',
+  apiDir: 'string',
+  'format?': "'markdown' | 'json'"
+});
+
+/**
+ * Domain-specific hooks needed to build a `componentDir` / `apiDir` /
+ * `format?` list-app tool. The factory owns argument parsing, the
+ * cwd-bounded path guard, format dispatch, and the `ToolResult` shape;
+ * each domain only supplies the inspect+list pipeline and the two
+ * formatters.
+ */
+export interface CreateListAppToolConfig<TReport> {
+  /**
+   * MCP tool definition (name, description, inputSchema).
+   */
+  readonly definition: Tool;
+  /**
+   * Runs the domain inspection and listing. Receives the resolved
+   * absolute and relative paths for both sides; returns the report
+   * the formatters consume.
+   */
+  inspectAndList(input: TwoSideInspectAndValidateInput): Promise<TReport>;
+  /**
+   * Renders the report as markdown (the default format).
+   */
+  formatMarkdown(report: TReport): string;
+  /**
+   * Renders the report as JSON.
+   */
+  formatJson(report: TReport): string;
+}
+
+/**
+ * Builds an MCP tool that lists configured items in a component / API
+ * directory pair. Accepts required `componentDir` + `apiDir` plus an
+ * optional `format: 'markdown' | 'json'` (default markdown), resolves
+ * them against `process.cwd()` (rejecting paths that escape the cwd),
+ * and threads the resolved paths through the domain-supplied
+ * `inspectAndList` and the format dispatcher.
+ *
+ * Used by `dbx_notification_m_list_app` and `dbx_storagefile_m_list_app`.
+ *
+ * @param config - the domain-specific hooks and tool definition
+ * @returns the registered {@link DbxTool}
+ */
+export function createListAppTool<TReport>(config: CreateListAppToolConfig<TReport>): DbxTool {
+  const { definition, inspectAndList, formatMarkdown, formatJson } = config;
+
+  async function run(rawArgs: unknown): Promise<ToolResult> {
+    const parsed = ListAppArgsType(rawArgs);
+    if (parsed instanceof type.errors) {
+      return toolError(`Invalid arguments: ${parsed.summary}`);
+    }
+
+    const resolved = resolveTwoSideInput(parsed);
+    if ('content' in resolved) {
+      return resolved;
+    }
+
+    const report = await inspectAndList(resolved);
+    const text = parsed.format === 'json' ? formatJson(report) : formatMarkdown(report);
+    const toolResult: ToolResult = { content: [{ type: 'text', text }] };
     return toolResult;
   }
 
