@@ -67,14 +67,14 @@ export function formatFirebaseModelEntry(model: FirebaseModel, depth: LookupDept
     lines.push('| Field | Description |');
     lines.push('|-------|-------------|');
     for (const field of model.fields) {
-      const desc = (field.description ?? '–').replaceAll(/\|/g, '\\|').replaceAll(/\n/g, ' ');
+      const desc = (field.description ?? '–').replaceAll('|', '\\|').replaceAll('\n', ' ');
       lines.push(`| \`${field.name}\` | ${desc} |`);
     }
   } else {
     lines.push('| Field | Description | Type | Converter |');
     lines.push('|-------|-------------|------|-----------|');
     for (const field of model.fields) {
-      const desc = (field.description ?? '–').replaceAll(/\|/g, '\\|').replaceAll(/\n/g, ' ');
+      const desc = (field.description ?? '–').replaceAll('|', '\\|').replaceAll('\n', ' ');
       const ts = field.tsType ? `\`${field.tsType}\`` : '–';
       const conv = `\`${field.converter}\``;
       lines.push(`| \`${field.name}\` | ${desc} | ${ts} | ${conv} |`);

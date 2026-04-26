@@ -670,7 +670,7 @@ function formatScaffold(args: ParsedScaffoldArgs): string {
   const parentLabel = args.parentModel !== undefined ? args.parentModel.name : 'n/a';
   lines.push(`Shape: \`${args.shape}\` · Surfaces: ${surfaceLabel} · Parent: ${parentLabel} · Functions: ${functionsLabel} · Crud: ${crudLabel}`);
   lines.push('');
-  lines.push(`Drop into \`<app>/src/lib/modules/${args.fileBaseName.replaceAll(/\./g, '/')}/store/\`.`);
+  lines.push(`Drop into \`<app>/src/lib/modules/${args.fileBaseName.replaceAll('.', '/')}/store/\`.`);
   lines.push('');
 
   for (const block of blocks) {

@@ -175,11 +175,7 @@ function collectConverterMapKeys(decl: VariableDeclaration): readonly ExtractedC
     const line = prop.getStartLineNumber();
     if (Node.isComputedPropertyName(nameNode)) {
       const inner = nameNode.getExpression();
-      if (Node.isIdentifier(inner)) {
-        out.push({ raw: inner.getText(), kind: 'identifier', line });
-      } else {
-        out.push({ raw: inner.getText(), kind: 'identifier', line });
-      }
+      out.push({ raw: inner.getText(), kind: 'identifier', line });
       continue;
     }
     if (Node.isStringLiteral(nameNode)) {
@@ -250,7 +246,7 @@ function isExportedTopLevel(stmt: Node): boolean {
 
 // MARK: Helpers
 function normalize(raw: string): string {
-  return raw.replaceAll(/_/g, '').toLowerCase();
+  return raw.replaceAll('_', '').toLowerCase();
 }
 
 // Suppress unused-warning for a type-only helper used by rules.

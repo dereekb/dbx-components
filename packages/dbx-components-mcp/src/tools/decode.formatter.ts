@@ -141,7 +141,7 @@ function formatFieldRow(row: DecodedField): string {
 }
 
 function escapeCell(text: string): string {
-  return text.replaceAll(/\|/g, '\\|').replaceAll(/\n/g, ' ');
+  return text.replaceAll('|', '\\|').replaceAll('\n', ' ');
 }
 
 function formatValue(value: unknown): string {
