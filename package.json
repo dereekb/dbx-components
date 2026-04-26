@@ -31,7 +31,7 @@
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.1.18",
     "@nestjs/platform-express": "^11.1.18",
-    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@modelcontextprotocol/sdk": "1.29.0",
     "@ng-forge/dynamic-forms": "0.8.0-next.2",
     "@ng-forge/dynamic-forms-material": "0.8.0-next.2",
     "@ng-web-apis/common": "^5.1.0",
