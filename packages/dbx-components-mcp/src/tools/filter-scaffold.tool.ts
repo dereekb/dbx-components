@@ -64,7 +64,7 @@ interface ParsedScaffoldArgs {
 function parseArgs(raw: unknown): ParsedScaffoldArgs {
   const parsed = ScaffoldArgsType(raw);
   if (parsed instanceof type.errors) {
-    throw new Error(`Invalid arguments: ${parsed.summary}`);
+    throw new TypeError(`Invalid arguments: ${parsed.summary}`);
   }
   const modelName = parsed.model_name.trim();
   const filterType = parsed.filter_type.trim();
