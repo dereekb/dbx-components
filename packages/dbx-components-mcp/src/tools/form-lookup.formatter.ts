@@ -58,10 +58,7 @@ function formatTierBits(field: FormFieldInfo): string {
 function formatTierDetails(field: FormFieldInfo): string {
   const lines: string[] = [];
   if (field.tier === 'field-factory') {
-    lines.push('## Factory');
-    lines.push(`- **ng-forge type:** \`${field.ngFormType}\``);
-    lines.push(`- **wrapper pattern:** \`${field.wrapperPattern}\``);
-    lines.push(`- **config interface:** \`${field.configInterface}\``);
+    lines.push('## Factory', `- **ng-forge type:** \`${field.ngFormType}\``, `- **wrapper pattern:** \`${field.wrapperPattern}\``, `- **config interface:** \`${field.configInterface}\``);
     if (field.generic) {
       lines.push(`- **generic:** \`${field.generic}\``);
     }

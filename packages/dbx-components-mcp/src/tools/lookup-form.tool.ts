@@ -113,7 +113,7 @@ function resolveTopic(rawTopic: string): LookupFormMatch {
       result = { kind: 'single', field: directHit };
     } else {
       const aliased = resolveTopicAlias(rawTopic);
-      const aliasHit = aliased !== lowered ? getFormField(aliased) : undefined;
+      const aliasHit = aliased === lowered ? undefined : getFormField(aliased);
       if (aliasHit) {
         result = { kind: 'single', field: aliasHit };
       } else {
@@ -174,15 +174,13 @@ function formatCatalog(): string {
   const lines: string[] = ['# Form catalog', '', `${FORM_FIELDS.length} entries across ${FORM_TIER_ORDER.length} tiers.`, ''];
   for (const tier of FORM_TIER_ORDER) {
     const list = getFormFieldsByTier(tier);
-    lines.push(`## ${tier} (${list.length})`);
-    lines.push('');
+    lines.push(`## ${tier} (${list.length})`, '');
     for (const field of list) {
       lines.push(`- \`${field.slug}\` → ${field.factoryName} · produces \`${field.produces}\``);
     }
     lines.push('');
   }
-  lines.push('## Output primitives');
-  lines.push('');
+  lines.push('## Output primitives', '');
   const catalog = getFormProducesCatalog();
   for (const value of catalog) {
     const count = getFormFieldsByProduces(value).length;
@@ -194,8 +192,7 @@ function formatCatalog(): string {
 function formatNotFound(normalized: string, candidates: readonly FormFieldInfo[]): string {
   const lines: string[] = [`No form entry matched \`${normalized}\`.`, ''];
   if (candidates.length > 0) {
-    lines.push('Did you mean one of these?');
-    lines.push('');
+    lines.push('Did you mean one of these?', '');
     for (const field of candidates) {
       lines.push(`- \`${field.slug}\` → ${field.factoryName} — ${field.description}`);
     }
