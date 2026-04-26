@@ -3,7 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/dbx-components-mcp/src",
   "projectType": "library",
-  "tags": ["scope:mcp", "type:server"],
+  "tags": ["scope:mcp", "type:server", "publishable"],
   "targets": {
     "generate-firebase-models": {
       "executor": "nx:run-commands",
@@ -13,6 +13,15 @@
         "command": "node packages/dbx-components-mcp/scripts/extract-firebase-models.mjs",
         "cwd": "{workspaceRoot}"
       }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/packages/dbx-components-mcp"],
+      "options": {
+        "command": "npx nx run dbx-components-mcp:build-base",
+        "color": true
+      },
+      "dependsOn": ["^build"]
     },
     "build-base": {
       "executor": "@nx/esbuild:esbuild",
@@ -37,8 +46,8 @@
         },
         "assets": [
           {
-            "glob": "packages/dbx-components-mcp/README.md",
-            "input": ".",
+            "glob": "README.md",
+            "input": "packages/dbx-components-mcp",
             "output": "."
           },
           {
@@ -58,6 +67,12 @@
     "lint": {
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"]
+    },
+    "ci-publish-npmjs": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cd ./dist/packages/dbx-components-mcp && npm publish --access public"
+      }
     },
     "test": {
       "executor": "@nx/vitest:test",

@@ -3,9 +3,9 @@
   "version": "13.9.0",
   "type": "module",
   "bin": {
-    "dbx-components-mcp": "./index.js"
+    "dbx-components-mcp": "./dbx-components-mcp.js"
   },
-  "peerDependencies": {
+  "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
     "arktype": "^2.2.0",
     "ts-morph": "^21.0.0"
