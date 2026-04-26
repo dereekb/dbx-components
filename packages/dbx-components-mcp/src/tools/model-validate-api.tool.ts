@@ -20,12 +20,10 @@
  * `// MARK:` markers).
  */
 
-import { glob as fsGlob, readFile } from 'node:fs/promises';
-import { resolve, sep } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
-import { type } from 'arktype';
-import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { formatResult, validateModelApiSources, type ValidatorSource } from './model-validate-api/index.js';
+import { type DbxTool } from './types.js';
+import { createSourceValidateTool } from './validate-tool.js';
+import { formatResult, validateModelApiSources } from './model-validate-api/index.js';
 
 // MARK: Tool definition
 const DBX_MODEL_VALIDATE_API_TOOL: Tool = {
@@ -72,117 +70,8 @@ const DBX_MODEL_VALIDATE_API_TOOL: Tool = {
   }
 };
 
-// MARK: Input validation
-const ValidateArgsType = type({
-  'sources?': type({ name: 'string', text: 'string' }).array(),
-  'paths?': 'string[]',
-  'glob?': 'string'
-});
-
-interface ParsedArgs {
-  readonly sources: readonly ValidatorSource[] | undefined;
-  readonly paths: readonly string[] | undefined;
-  readonly glob: string | undefined;
-}
-
-function parseArgs(raw: unknown): ParsedArgs {
-  const parsed = ValidateArgsType(raw);
-  if (parsed instanceof type.errors) {
-    throw new Error(`Invalid arguments: ${parsed.summary}`);
-  }
-  const result: ParsedArgs = {
-    sources: parsed.sources,
-    paths: parsed.paths,
-    glob: parsed.glob
-  };
-  return result;
-}
-
-// MARK: Source resolution
-async function resolveSources(args: ParsedArgs, cwd: string): Promise<readonly ValidatorSource[]> {
-  const collected: ValidatorSource[] = [];
-  const seenNames = new Set<string>();
-
-  if (args.sources) {
-    for (const src of args.sources) {
-      if (seenNames.has(src.name)) continue;
-      seenNames.add(src.name);
-      collected.push(src);
-    }
-  }
-
-  const pathList: string[] = [];
-  if (args.paths) {
-    for (const p of args.paths) {
-      pathList.push(p);
-    }
-  }
-  if (args.glob) {
-    for await (const match of fsGlob(args.glob, { cwd })) {
-      pathList.push(match);
-    }
-  }
-
-  for (const relative of pathList) {
-    if (seenNames.has(relative)) continue;
-    const absolute = resolve(cwd, relative);
-    const cwdPrefix = cwd.endsWith(sep) ? cwd : cwd + sep;
-    if (!absolute.startsWith(cwdPrefix) && absolute !== cwd) {
-      throw new Error(`Path \`${relative}\` resolves outside the server cwd and is not allowed.`);
-    }
-    const text = await readFile(absolute, 'utf8');
-    seenNames.add(relative);
-    collected.push({ name: relative, text });
-  }
-
-  return collected;
-}
-
-// MARK: Handler
-/**
- * Tool handler for `dbx_validate_app_models_api`. Walks the resolved api
- * directory and applies the cross-file model rules — used as a CI-friendly
- * smoke check before scaffolding new models.
- *
- * @param rawArgs - the unvalidated tool arguments from the MCP runtime
- * @returns the formatted validation report, or an error result when args fail validation
- */
-export async function runModelValidateApi(rawArgs: unknown): Promise<ToolResult> {
-  let args: ParsedArgs;
-  try {
-    args = parseArgs(rawArgs);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return toolError(message);
-  }
-
-  const hasAny = (args.sources && args.sources.length > 0) || (args.paths && args.paths.length > 0) || args.glob;
-  if (!hasAny) {
-    return toolError('Must provide at least one of `sources`, `paths`, or `glob`.');
-  }
-
-  let sources: readonly ValidatorSource[];
-  try {
-    sources = await resolveSources(args, process.cwd());
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return toolError(`Failed to read sources: ${message}`);
-  }
-
-  if (sources.length === 0) {
-    return toolError('No matching source files found.');
-  }
-
-  const validation = validateModelApiSources(sources);
-  const text = formatResult(validation);
-  const result: ToolResult = {
-    content: [{ type: 'text', text }],
-    isError: validation.errorCount > 0
-  };
-  return result;
-}
-
-export const modelValidateApiTool: DbxTool = {
+export const modelValidateApiTool: DbxTool = createSourceValidateTool({
   definition: DBX_MODEL_VALIDATE_API_TOOL,
-  run: runModelValidateApi
-};
+  validate: validateModelApiSources,
+  format: formatResult
+});

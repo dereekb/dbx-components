@@ -17,12 +17,10 @@
  * Returns a markdown report with all violations grouped by file and model.
  */
 
-import { glob as fsGlob, readFile } from 'node:fs/promises';
-import { resolve, sep } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
-import { type } from 'arktype';
-import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { formatResult, validateFirebaseModelSources, type ValidatorSource } from './model-validate/index.js';
+import { type DbxTool } from './types.js';
+import { createSourceValidateTool } from './validate-tool.js';
+import { formatResult, validateFirebaseModelSources } from './model-validate/index.js';
 
 // MARK: Tool definition
 const DBX_MODEL_VALIDATE_TOOL: Tool = {
@@ -65,117 +63,18 @@ const DBX_MODEL_VALIDATE_TOOL: Tool = {
   }
 };
 
-// MARK: Input validation
-const ValidateArgsType = type({
-  'sources?': type({ name: 'string', text: 'string' }).array(),
-  'paths?': 'string[]',
-  'glob?': 'string'
+export const modelValidateTool: DbxTool = createSourceValidateTool({
+  definition: DBX_MODEL_VALIDATE_TOOL,
+  validate: validateFirebaseModelSources,
+  format: formatResult
 });
 
-interface ParsedArgs {
-  readonly sources: readonly ValidatorSource[] | undefined;
-  readonly paths: readonly string[] | undefined;
-  readonly glob: string | undefined;
-}
-
-function parseArgs(raw: unknown): ParsedArgs {
-  const parsed = ValidateArgsType(raw);
-  if (parsed instanceof type.errors) {
-    throw new Error(`Invalid arguments: ${parsed.summary}`);
-  }
-  const result: ParsedArgs = {
-    sources: parsed.sources,
-    paths: parsed.paths,
-    glob: parsed.glob
-  };
-  return result;
-}
-
-// MARK: Source resolution
-async function resolveSources(args: ParsedArgs, cwd: string): Promise<readonly ValidatorSource[]> {
-  const collected: ValidatorSource[] = [];
-  const seenNames = new Set<string>();
-
-  if (args.sources) {
-    for (const src of args.sources) {
-      if (seenNames.has(src.name)) continue;
-      seenNames.add(src.name);
-      collected.push(src);
-    }
-  }
-
-  const pathList: string[] = [];
-  if (args.paths) {
-    for (const p of args.paths) {
-      pathList.push(p);
-    }
-  }
-  if (args.glob) {
-    for await (const match of fsGlob(args.glob, { cwd })) {
-      pathList.push(match);
-    }
-  }
-
-  for (const relative of pathList) {
-    if (seenNames.has(relative)) continue;
-    const absolute = resolve(cwd, relative);
-    const cwdPrefix = cwd.endsWith(sep) ? cwd : cwd + sep;
-    if (!absolute.startsWith(cwdPrefix) && absolute !== cwd) {
-      throw new Error(`Path \`${relative}\` resolves outside the server cwd and is not allowed.`);
-    }
-    const text = await readFile(absolute, 'utf8');
-    seenNames.add(relative);
-    collected.push({ name: relative, text });
-  }
-
-  return collected;
-}
-
-// MARK: Handler
 /**
- * Tool handler for `dbx_validate_app_models`. Walks the resolved component
- * directory, runs the per-file model rules, and returns the aggregated report
- * so callers can surface drift quickly.
+ * Direct invocation of the `dbx_model_validate` handler. Re-exported so
+ * the tool spec can drive the wrapper without going through the MCP
+ * dispatcher.
  *
- * @param rawArgs - the unvalidated tool arguments from the MCP runtime
+ * @param rawArgs - the unvalidated tool arguments
  * @returns the formatted validation report, or an error result when args fail validation
  */
-export async function runModelValidate(rawArgs: unknown): Promise<ToolResult> {
-  let args: ParsedArgs;
-  try {
-    args = parseArgs(rawArgs);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return toolError(message);
-  }
-
-  const hasAny = (args.sources && args.sources.length > 0) || (args.paths && args.paths.length > 0) || args.glob;
-  if (!hasAny) {
-    return toolError('Must provide at least one of `sources`, `paths`, or `glob`.');
-  }
-
-  let sources: readonly ValidatorSource[];
-  try {
-    sources = await resolveSources(args, process.cwd());
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return toolError(`Failed to read sources: ${message}`);
-  }
-
-  if (sources.length === 0) {
-    return toolError('No matching source files found.');
-  }
-
-  const validation = validateFirebaseModelSources(sources);
-  const text = formatResult(validation);
-  const result: ToolResult = {
-    content: [{ type: 'text', text }],
-    isError: validation.errorCount > 0
-  };
-  return result;
-}
-
-export const modelValidateTool: DbxTool = {
-  definition: DBX_MODEL_VALIDATE_TOOL,
-  run: runModelValidate
-};
+export const runModelValidate = modelValidateTool.run;

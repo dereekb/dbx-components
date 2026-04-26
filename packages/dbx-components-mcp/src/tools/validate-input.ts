@@ -7,8 +7,18 @@
  * lives in one place.
  */
 
-import { glob as fsGlob, stat } from 'node:fs/promises';
+import { glob as fsGlob, readFile, stat } from 'node:fs/promises';
 import { resolve, sep } from 'node:path';
+
+/**
+ * One file's raw contents passed into a source-text validator.
+ * Tool wrappers reading paths or globs off disk resolve them to this
+ * shape before calling into the validator core.
+ */
+export interface ValidatorSource {
+  readonly name: string;
+  readonly text: string;
+}
 
 /**
  * Throws when `relative` (resolved against `cwd`) escapes `cwd`.
@@ -66,6 +76,59 @@ export async function resolveFolderPaths(config: { readonly paths: readonly stri
       }
       accept(match);
     }
+  }
+
+  return collected;
+}
+
+/**
+ * Resolves an inline `sources` list plus an optional `paths` + `glob`
+ * pair into a deduplicated `{ name, text }[]` for source-text validators.
+ *
+ * Inline sources take precedence and seed the dedup set by `name`. Any
+ * `paths` / `glob` matches are then read off disk (cwd-bounded), with the
+ * relative path used as the source `name`. Paths escaping `cwd` are
+ * rejected via {@link ensurePathInsideCwd}.
+ *
+ * @param config - shared call config
+ * @param config.sources - inline `{ name, text }` records (may be undefined)
+ * @param config.paths - explicit relative file paths supplied by the caller (may be undefined)
+ * @param config.glob - single glob pattern resolved against `cwd` (may be undefined)
+ * @param config.cwd - the server cwd to bound the resolved paths against
+ * @returns the deduplicated source list (inline first, then path / glob)
+ */
+export async function resolveValidatorSources(config: { readonly sources: readonly ValidatorSource[] | undefined; readonly paths: readonly string[] | undefined; readonly glob: string | undefined; readonly cwd: string }): Promise<readonly ValidatorSource[]> {
+  const { sources, paths, glob, cwd } = config;
+  const collected: ValidatorSource[] = [];
+  const seenNames = new Set<string>();
+
+  if (sources) {
+    for (const src of sources) {
+      if (seenNames.has(src.name)) continue;
+      seenNames.add(src.name);
+      collected.push(src);
+    }
+  }
+
+  const pathList: string[] = [];
+  if (paths) {
+    for (const p of paths) {
+      pathList.push(p);
+    }
+  }
+  if (glob) {
+    for await (const match of fsGlob(glob, { cwd })) {
+      pathList.push(match);
+    }
+  }
+
+  for (const relative of pathList) {
+    if (seenNames.has(relative)) continue;
+    ensurePathInsideCwd(relative, cwd);
+    const absolute = resolve(cwd, relative);
+    const text = await readFile(absolute, 'utf8');
+    seenNames.add(relative);
+    collected.push({ name: relative, text });
   }
 
   return collected;
