@@ -22,7 +22,7 @@ export function formatFormFieldEntry(field: FormFieldInfo, depth: Depth): string
 function formatBrief(field: FormFieldInfo): string {
   const tierBits = formatTierBits(field);
   const array = field.arrayOutput === 'yes' ? ' (array)' : field.arrayOutput === 'optional' ? ' (single or array)' : '';
-  const result = [`## ${field.factoryName}`, '', `**slug:** \`${field.slug}\` · **tier:** \`${field.tier}\` · **produces:** \`${field.produces}\`${array}${tierBits}`, '', field.description, '', '```ts', field.minimalExample, '```'].join('\n');
+  const result = [`## ${field.factoryName}`, '', `**slug:** \`${field.slug}\` · **tier:** \`${field.tier}\` · **produces:** \`${field.produces}\`${array}${tierBits}`, '', field.description, '', '```ts', field.minimalExample, '```', '', `→ Call \`dbx_form_lookup topic="${field.slug}" depth="full"\` for the config table and full example.`].join('\n');
   return result;
 }
 
