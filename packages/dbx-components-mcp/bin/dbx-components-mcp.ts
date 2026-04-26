@@ -43,13 +43,12 @@ async function main(): Promise<number> {
   return exitCode;
 }
 
-main()
-  .then((exitCode) => {
-    if (exitCode !== 0) {
-      process.exit(exitCode);
-    }
-  })
-  .catch((error: unknown) => {
-    console.error('dbx-components-mcp failed:', error);
-    process.exit(1);
-  });
+try {
+  const exitCode = await main();
+  if (exitCode !== 0) {
+    process.exit(exitCode);
+  }
+} catch (error: unknown) {
+  console.error('dbx-components-mcp failed:', error);
+  process.exit(1);
+}
