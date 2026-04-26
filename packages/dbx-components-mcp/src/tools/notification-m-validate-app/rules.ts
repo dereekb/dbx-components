@@ -26,7 +26,7 @@ export function runRules(inspection: AppNotificationsInspection, extracted: Extr
       side: 'component',
       file: undefined
     });
-  } else if (inspection.component.status === 'notification-folder-missing') {
+  } else if (inspection.component.status === 'folder-missing') {
     pushViolation(violations, {
       code: 'NOTIF_COMPONENT_NOTIFICATION_FOLDER_MISSING',
       message: `Component is missing \`src/lib/model/notification/\` (looked under \`${inspection.component.rootDir}\`).`,
@@ -41,7 +41,7 @@ export function runRules(inspection: AppNotificationsInspection, extracted: Extr
       side: 'api',
       file: undefined
     });
-  } else if (inspection.api.status === 'notification-folder-missing') {
+  } else if (inspection.api.status === 'folder-missing') {
     pushViolation(violations, {
       code: 'NOTIF_API_NOTIFICATION_FOLDER_MISSING',
       message: `API is missing \`src/app/common/model/notification/\` (looked under \`${inspection.api.rootDir}\`).`,

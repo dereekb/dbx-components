@@ -38,7 +38,7 @@ export function runRules(inspection: AppStorageFilesInspection, extracted: Extra
       side: 'component',
       file: undefined
     });
-  } else if (inspection.component.status === 'storagefile-folder-missing') {
+  } else if (inspection.component.status === 'folder-missing') {
     pushViolation(violations, {
       code: 'STORAGEFILE_COMPONENT_FOLDER_MISSING',
       message: `Component is missing \`src/lib/model/storagefile/\` (looked under \`${inspection.component.rootDir}\`).`,
@@ -53,7 +53,7 @@ export function runRules(inspection: AppStorageFilesInspection, extracted: Extra
       side: 'api',
       file: undefined
     });
-  } else if (inspection.api.status === 'storagefile-folder-missing') {
+  } else if (inspection.api.status === 'folder-missing') {
     pushViolation(violations, {
       code: 'STORAGEFILE_API_FOLDER_MISSING',
       message: `API is missing \`src/app/common/model/storagefile/\` and \`src/app/common/model/notification/\` (looked under \`${inspection.api.rootDir}\`).`,

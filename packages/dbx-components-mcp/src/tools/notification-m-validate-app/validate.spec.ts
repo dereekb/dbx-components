@@ -112,8 +112,8 @@ function happyInspection(): AppNotificationsInspection {
     { relPath: 'src/app/common/model/notification/notification.module.ts', text: API_NOTIFICATION_MODULE }
   ];
   const result: AppNotificationsInspection = {
-    component: { rootDir: 'components/demo-firebase', notificationFolder: 'src/lib/model/notification', status: 'ok', files: component },
-    api: { rootDir: 'apps/demo-api', notificationFolder: 'src/app/common/model/notification,src/app/common/firebase', status: 'ok', files: api }
+    component: { rootDir: 'components/demo-firebase', folder: 'src/lib/model/notification', status: 'ok', files: component },
+    api: { rootDir: 'apps/demo-api', folder: 'src/app/common/model/notification,src/app/common/firebase', status: 'ok', files: api }
   };
   return result;
 }
@@ -386,8 +386,8 @@ describe('validateAppNotifications — trust list', () => {
 describe('validateAppNotifications — I/O rules', () => {
   it('flags NOTIF_COMPONENT_DIR_NOT_FOUND', () => {
     const inspection: AppNotificationsInspection = {
-      component: { rootDir: 'components/ghost', notificationFolder: undefined, status: 'dir-not-found', files: [] },
-      api: { rootDir: 'apps/demo-api', notificationFolder: 'src/app/common/model/notification', status: 'ok', files: [] }
+      component: { rootDir: 'components/ghost', folder: undefined, status: 'dir-not-found', files: [] },
+      api: { rootDir: 'apps/demo-api', folder: 'src/app/common/model/notification', status: 'ok', files: [] }
     };
     const result = validateAppNotifications(inspection, { componentDir: inspection.component.rootDir, apiDir: inspection.api.rootDir });
     expectCodes(
@@ -398,8 +398,8 @@ describe('validateAppNotifications — I/O rules', () => {
 
   it('flags NOTIF_API_NOTIFICATION_FOLDER_MISSING', () => {
     const inspection: AppNotificationsInspection = {
-      component: { rootDir: 'components/demo-firebase', notificationFolder: 'src/lib/model/notification', status: 'ok', files: [] },
-      api: { rootDir: 'apps/demo-api', notificationFolder: undefined, status: 'notification-folder-missing', files: [] }
+      component: { rootDir: 'components/demo-firebase', folder: 'src/lib/model/notification', status: 'ok', files: [] },
+      api: { rootDir: 'apps/demo-api', folder: undefined, status: 'folder-missing', files: [] }
     };
     const result = validateAppNotifications(inspection, { componentDir: inspection.component.rootDir, apiDir: inspection.api.rootDir });
     expectCodes(

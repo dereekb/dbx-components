@@ -76,8 +76,8 @@ function happyInspection(): AppNotificationsInspection {
     { relPath: 'src/app/common/model/notification/notification.module.ts', text: API_NOTIFICATION_MODULE }
   ];
   const result: AppNotificationsInspection = {
-    component: { rootDir: 'components/demo-firebase', notificationFolder: 'src/lib/model/notification', status: 'ok', files: component },
-    api: { rootDir: 'apps/demo-api', notificationFolder: 'src/app/common/model/notification,src/app/common/firebase', status: 'ok', files: api }
+    component: { rootDir: 'components/demo-firebase', folder: 'src/lib/model/notification', status: 'ok', files: component },
+    api: { rootDir: 'apps/demo-api', folder: 'src/app/common/model/notification,src/app/common/firebase', status: 'ok', files: api }
   };
   return result;
 }
@@ -163,8 +163,8 @@ describe('listAppNotifications', () => {
 
   it('emits _None found._ when no templates/tasks are declared', () => {
     const inspection: AppNotificationsInspection = {
-      component: { rootDir: 'components/empty-firebase', notificationFolder: 'src/lib/model/notification', status: 'ok', files: [] },
-      api: { rootDir: 'apps/empty-api', notificationFolder: 'src/app/common/model/notification', status: 'ok', files: [] }
+      component: { rootDir: 'components/empty-firebase', folder: 'src/lib/model/notification', status: 'ok', files: [] },
+      api: { rootDir: 'apps/empty-api', folder: 'src/app/common/model/notification', status: 'ok', files: [] }
     };
     const report = listAppNotifications(inspection, { componentDir: inspection.component.rootDir, apiDir: inspection.api.rootDir });
     const md = formatReportAsMarkdown(report);

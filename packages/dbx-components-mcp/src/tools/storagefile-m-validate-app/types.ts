@@ -79,22 +79,8 @@ export interface ValidationResult {
 }
 
 // MARK: Inspection
-export type SideStatus = 'ok' | 'dir-not-found' | 'storagefile-folder-missing';
-
-export interface InspectedFile {
-  /**
-   * Path relative to the side's root (e.g. `src/lib/model/storagefile/storagefile.ts`).
-   */
-  readonly relPath: string;
-  readonly text: string;
-}
-
-export interface SideInspection {
-  readonly rootDir: string;
-  readonly storagefileFolder: string | undefined;
-  readonly status: SideStatus;
-  readonly files: readonly InspectedFile[];
-}
+export type { InspectedFile, SideInspection, SideStatus } from '../_validate/inspection.types.js';
+import type { SideInspection } from '../_validate/inspection.types.js';
 
 export interface AppStorageFilesInspection {
   readonly component: SideInspection;

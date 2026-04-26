@@ -56,8 +56,8 @@ function happyInspection(): AppStorageFilesInspection {
     { relPath: 'src/app/common/model/notification/notification.task.service.ts', text: API_PROCESSING }
   ];
   const result: AppStorageFilesInspection = {
-    component: { rootDir: 'components/demo-firebase', storagefileFolder: 'src/lib/model/storagefile', status: 'ok', files: component },
-    api: { rootDir: 'apps/demo-api', storagefileFolder: 'src/app/common/model/storagefile,src/app/common/model/notification', status: 'ok', files: api }
+    component: { rootDir: 'components/demo-firebase', folder: 'src/lib/model/storagefile', status: 'ok', files: component },
+    api: { rootDir: 'apps/demo-api', folder: 'src/app/common/model/storagefile,src/app/common/model/notification', status: 'ok', files: api }
   };
   return result;
 }
@@ -136,8 +136,8 @@ describe('listAppStorageFiles — JSON formatter', () => {
 describe('listAppStorageFiles — empty case', () => {
   it('returns an empty purposes array when component has no purpose constants', () => {
     const inspection: AppStorageFilesInspection = {
-      component: { rootDir: 'components/demo-firebase', storagefileFolder: 'src/lib/model/storagefile', status: 'ok', files: [{ relPath: 'src/lib/model/storagefile/empty.ts', text: 'export const x = 1;\n' }] },
-      api: { rootDir: 'apps/demo-api', storagefileFolder: 'src/app/common/model/storagefile', status: 'ok', files: [] }
+      component: { rootDir: 'components/demo-firebase', folder: 'src/lib/model/storagefile', status: 'ok', files: [{ relPath: 'src/lib/model/storagefile/empty.ts', text: 'export const x = 1;\n' }] },
+      api: { rootDir: 'apps/demo-api', folder: 'src/app/common/model/storagefile', status: 'ok', files: [] }
     };
     const report = listAppStorageFiles(inspection, { componentDir: 'components/demo-firebase', apiDir: 'apps/demo-api' });
     expect(report.purposes).toHaveLength(0);

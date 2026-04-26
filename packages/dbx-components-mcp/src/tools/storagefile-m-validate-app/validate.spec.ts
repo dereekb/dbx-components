@@ -75,8 +75,8 @@ function happyInspection(): AppStorageFilesInspection {
     { relPath: 'src/app/common/model/notification/notification.task.service.ts', text: API_PROCESSING }
   ];
   const result: AppStorageFilesInspection = {
-    component: { rootDir: 'components/demo-firebase', storagefileFolder: 'src/lib/model/storagefile', status: 'ok', files: component },
-    api: { rootDir: 'apps/demo-api', storagefileFolder: 'src/app/common/model/storagefile,src/app/common/model/notification', status: 'ok', files: api }
+    component: { rootDir: 'components/demo-firebase', folder: 'src/lib/model/storagefile', status: 'ok', files: component },
+    api: { rootDir: 'apps/demo-api', folder: 'src/app/common/model/storagefile,src/app/common/model/notification', status: 'ok', files: api }
   };
   return result;
 }
@@ -314,8 +314,8 @@ describe('validateAppStorageFiles — trust list', () => {
 describe('validateAppStorageFiles — I/O rules', () => {
   it('flags STORAGEFILE_COMPONENT_DIR_NOT_FOUND', () => {
     const inspection: AppStorageFilesInspection = {
-      component: { rootDir: 'components/ghost', storagefileFolder: undefined, status: 'dir-not-found', files: [] },
-      api: { rootDir: 'apps/demo-api', storagefileFolder: 'src/app/common/model/storagefile', status: 'ok', files: [] }
+      component: { rootDir: 'components/ghost', folder: undefined, status: 'dir-not-found', files: [] },
+      api: { rootDir: 'apps/demo-api', folder: 'src/app/common/model/storagefile', status: 'ok', files: [] }
     };
     const result = validateAppStorageFiles(inspection, { componentDir: inspection.component.rootDir, apiDir: inspection.api.rootDir });
     expectCodes(
@@ -326,8 +326,8 @@ describe('validateAppStorageFiles — I/O rules', () => {
 
   it('flags STORAGEFILE_API_FOLDER_MISSING', () => {
     const inspection: AppStorageFilesInspection = {
-      component: { rootDir: 'components/demo-firebase', storagefileFolder: 'src/lib/model/storagefile', status: 'ok', files: [] },
-      api: { rootDir: 'apps/demo-api', storagefileFolder: undefined, status: 'storagefile-folder-missing', files: [] }
+      component: { rootDir: 'components/demo-firebase', folder: 'src/lib/model/storagefile', status: 'ok', files: [] },
+      api: { rootDir: 'apps/demo-api', folder: undefined, status: 'folder-missing', files: [] }
     };
     const result = validateAppStorageFiles(inspection, { componentDir: inspection.component.rootDir, apiDir: inspection.api.rootDir });
     expectCodes(
