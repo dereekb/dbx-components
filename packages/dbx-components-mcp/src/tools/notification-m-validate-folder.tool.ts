@@ -100,6 +100,14 @@ function ensureInsideCwd(relativePath: string, cwd: string): string {
 }
 
 // MARK: Handler
+/**
+ * Tool handler for `dbx_validate_folder_notification_m`. Audits a single
+ * notification folder against the per-folder layout rules so callers can
+ * verify the structure before scaffolding new notifications.
+ *
+ * @param rawArgs - the unvalidated tool arguments from the MCP runtime
+ * @returns the formatted folder report, or an error result when args fail validation
+ */
 export async function runNotificationMValidateFolder(rawArgs: unknown): Promise<ToolResult> {
   let args: ParsedArgs;
   try {

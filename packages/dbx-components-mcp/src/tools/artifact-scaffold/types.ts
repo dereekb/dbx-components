@@ -15,7 +15,9 @@
 
 export type ArtifactKind = 'storagefile-purpose' | 'notification-template' | 'notification-task';
 
-/** Camel/Pascal/Screaming-Snake/Kebab/Snake variants of the input name. */
+/**
+ * Camel/Pascal/Screaming-Snake/Kebab/Snake variants of the input name.
+ */
 export interface NameTokens {
   readonly camel: string;
   readonly pascal: string;
@@ -25,11 +27,17 @@ export interface NameTokens {
 }
 
 export interface ScaffoldArtifactOptions {
-  /** storagefile-purpose: also emit subtask processor scaffold + processing constants. */
+  /**
+   * storagefile-purpose: also emit subtask processor scaffold + processing constants.
+   */
   readonly withProcessing?: boolean;
-  /** notification-task: emit `unique: true` on the template factory. */
+  /**
+   * notification-task: emit `unique: true` on the template factory.
+   */
   readonly unique?: boolean;
-  /** Place API handler inside `handlers/` subfolder. Default: true for tasks/uploads. */
+  /**
+   * Place API handler inside `handlers/` subfolder. Default: true for tasks/uploads.
+   */
   readonly handlersSubfolder?: boolean;
 }
 
@@ -53,11 +61,17 @@ export type EmittedFileStatus = 'new' | 'append' | 'exists-skipped';
  */
 export interface EmittedFile {
   readonly status: EmittedFileStatus;
-  /** Path relative to the cwd where the file should be written. */
+  /**
+   * Path relative to the cwd where the file should be written.
+   */
   readonly path: string;
-  /** Markdown-friendly description shown above the code block. */
+  /**
+   * Markdown-friendly description shown above the code block.
+   */
   readonly description: string;
-  /** TypeScript body. Empty for `exists-skipped`. */
+  /**
+   * TypeScript body. Empty for `exists-skipped`.
+   */
   readonly content: string;
 }
 
@@ -69,7 +83,9 @@ export interface EmittedFile {
 export interface WiringStep {
   readonly file: string;
   readonly description: string;
-  /** Optional code snippet to splice in. */
+  /**
+   * Optional code snippet to splice in.
+   */
   readonly snippet?: string;
 }
 

@@ -5,6 +5,14 @@
 
 import type { ValidationResult, Violation } from './types.js';
 
+/**
+ * Renders a {@link ValidationResult} as the markdown report the tool returns
+ * to callers. Violations are grouped by folder so readers see one section per
+ * model directory.
+ *
+ * @param result - the aggregated folder-validation outcome
+ * @returns the markdown report
+ */
 export function formatResult(result: ValidationResult): string {
   const { violations, errorCount, warningCount, foldersChecked } = result;
   const status = statusLabel(errorCount, warningCount);

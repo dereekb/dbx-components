@@ -26,6 +26,15 @@ interface MutableTreeNode {
   readonly children: MutableTreeNode[];
 }
 
+/**
+ * Builds the parent-child UIRouter tree from a flat node list, computing each
+ * state's full URL while preserving any extraction issues so callers see one
+ * combined diagnostics view.
+ *
+ * @param nodes - the flat route nodes extracted from sources
+ * @param extractIssues - issues already discovered during extraction to forward
+ * @returns the constructed tree alongside the merged issue list
+ */
 export function buildRouteTree(nodes: readonly RouteNode[], extractIssues: readonly RouteIssue[]): RouteTree {
   const issues: RouteIssue[] = [...extractIssues];
   const byName = new Map<string, MutableTreeNode>();

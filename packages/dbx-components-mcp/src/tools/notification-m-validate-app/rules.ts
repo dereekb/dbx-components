@@ -6,6 +6,15 @@
 
 import type { AppNotificationsInspection, ExtractedAppNotifications, ExtractedTaskHandlerEntry, ExtractedTemplateHandlerEntry, ExtractedTemplateTypeInfo, Violation, ViolationSeverity } from './types.js';
 
+/**
+ * Applies every cross-file notification rule and returns the aggregated
+ * diagnostics. I/O-level rules (missing folders) short-circuit the content
+ * checks so the report stays focused on the root cause.
+ *
+ * @param inspection - the on-disk snapshot used for I/O-level rules
+ * @param extracted - the pre-extracted facts the content rules consume
+ * @returns the violations the rules emit for the snapshot
+ */
 export function runRules(inspection: AppNotificationsInspection, extracted: ExtractedAppNotifications): readonly Violation[] {
   const violations: Violation[] = [];
 
@@ -234,21 +243,7 @@ function checkTemplateHandlerFactory(extracted: ExtractedAppNotifications, viola
 function checkTasks(extracted: ExtractedAppNotifications, violations: Violation[]): void {
   if (extracted.taskTypeConstants.length === 0) return;
 
-  // Every declared task type must appear in some ALL_* array.
-  const aggregateMembers = new Set<string>();
-  for (const agg of extracted.taskAllTypesAggregates) {
-    for (const id of agg.taskTypeIdentifiers) aggregateMembers.add(id);
-  }
-  for (const constant of extracted.taskTypeConstants) {
-    if (!aggregateMembers.has(constant.symbolName)) {
-      pushViolation(violations, {
-        code: 'NOTIF_TASK_NOT_IN_ALL_ARRAY',
-        message: `Task type \`${constant.symbolName}\` is not an element of any \`ALL_*_NOTIFICATION_TASK_TYPES\` array. Add it so the task-service \`validate: [...]\` spread picks it up.`,
-        side: 'component',
-        file: constant.sourceFile
-      });
-    }
-  }
+  flagTasksMissingFromAllArrays(extracted, violations);
 
   if (extracted.taskServiceCalls.length === 0) {
     pushViolation(violations, {
@@ -269,12 +264,49 @@ function checkTasks(extracted: ExtractedAppNotifications, violations: Violation[
     });
   }
 
-  const taskConstantNames = new Set(extracted.taskTypeConstants.map((c) => c.symbolName));
+  const lenientHandlerTypeIdentifiers = flagOrphanTaskHandlers(extracted, violations);
+  const reachableBindings = collectReachableHandlerBindings(extracted);
+  flagTaskHandlerCoverage({ extracted, violations, reachableBindings });
+  flagUnresolvedHandlerIdentifiers({ extracted, violations, reachableBindings });
+  flagValidateWithoutHandler({ extracted, violations, lenientHandlerTypeIdentifiers });
+}
 
-  // Lenient set: every extracted handler config's type identifier counts.
-  // Used by the validate-vs-handlers parity warning to keep the broader
-  // "you declared a handler somewhere" signal even when strict
-  // reachability marks it as unreachable.
+/**
+ * Flags every declared `NotificationTaskType` constant that does not appear in
+ * any `ALL_*_NOTIFICATION_TASK_TYPES` aggregate array.
+ *
+ * @param extracted - the validator extraction
+ * @param violations - the mutable violations buffer to append to
+ */
+function flagTasksMissingFromAllArrays(extracted: ExtractedAppNotifications, violations: Violation[]): void {
+  const aggregateMembers = new Set<string>();
+  for (const agg of extracted.taskAllTypesAggregates) {
+    for (const id of agg.taskTypeIdentifiers) aggregateMembers.add(id);
+  }
+  for (const constant of extracted.taskTypeConstants) {
+    if (!aggregateMembers.has(constant.symbolName)) {
+      pushViolation(violations, {
+        code: 'NOTIF_TASK_NOT_IN_ALL_ARRAY',
+        message: `Task type \`${constant.symbolName}\` is not an element of any \`ALL_*_NOTIFICATION_TASK_TYPES\` array. Add it so the task-service \`validate: [...]\` spread picks it up.`,
+        side: 'component',
+        file: constant.sourceFile
+      });
+    }
+  }
+}
+
+/**
+ * Records every handler config whose `type:` does not match a declared
+ * `NotificationTaskType` constant or a trust-listed identifier, and returns
+ * the lenient set of every extracted handler's `type:` identifier (used by
+ * the validate-vs-handlers parity warning).
+ *
+ * @param extracted - the validator extraction
+ * @param violations - the mutable violations buffer to append to
+ * @returns the lenient set of all handler-config type identifiers
+ */
+function flagOrphanTaskHandlers(extracted: ExtractedAppNotifications, violations: Violation[]): Set<string> {
+  const taskConstantNames = new Set(extracted.taskTypeConstants.map((c) => c.symbolName));
   const lenientHandlerTypeIdentifiers = new Set<string>();
   for (const entry of extracted.taskHandlerEntries) {
     lenientHandlerTypeIdentifiers.add(entry.typeIdentifier);
@@ -287,14 +319,38 @@ function checkTasks(extracted: ExtractedAppNotifications, violations: Violation[
       });
     }
   }
+  return lenientHandlerTypeIdentifiers;
+}
 
-  // Strict reachability: only handlers whose binding name lands in the
-  // resolved trace of some `notificationTaskService({ handlers })` call
-  // count as registered.
+/**
+ * Collects the union of every binding name resolved from
+ * `notificationTaskService({ handlers })` array elements.
+ *
+ * @param extracted - the validator extraction
+ * @returns the reachable-binding set
+ */
+function collectReachableHandlerBindings(extracted: ExtractedAppNotifications): Set<string> {
   const reachableBindings = new Set<string>();
   for (const c of extracted.taskServiceCalls) {
     for (const name of c.resolvedHandlerBindings) reachableBindings.add(name);
   }
+  return reachableBindings;
+}
+
+interface FlagTaskHandlerCoverageOptions {
+  readonly extracted: ExtractedAppNotifications;
+  readonly violations: Violation[];
+  readonly reachableBindings: Set<string>;
+}
+
+/**
+ * Flags each declared task type whose handler config is either missing or
+ * present-but-unreachable (binding-name mismatch).
+ *
+ * @param options - extraction, violations buffer, and reachable bindings set
+ */
+function flagTaskHandlerCoverage(options: FlagTaskHandlerCoverageOptions): void {
+  const { extracted, violations, reachableBindings } = options;
   const reachableTypeIdentifiers = new Set<string>();
   for (const entry of extracted.taskHandlerEntries) {
     if (entry.bindingName && reachableBindings.has(entry.bindingName)) {
@@ -302,8 +358,6 @@ function checkTasks(extracted: ExtractedAppNotifications, violations: Violation[
     }
   }
 
-  // Index entries by typeIdentifier so the coverage loop can distinguish
-  // "literal exists but binding-name mismatch" from "no literal at all".
   const entriesByType = new Map<string, ExtractedTaskHandlerEntry[]>();
   for (const entry of extracted.taskHandlerEntries) {
     const list = entriesByType.get(entry.typeIdentifier);
@@ -335,9 +389,22 @@ function checkTasks(extracted: ExtractedAppNotifications, violations: Violation[
       file: undefined
     });
   }
+}
 
-  // Unresolved handler-array identifiers that aren't trust-listed
-  // upstream factories — usually a typo or a missing import.
+interface FlagUnresolvedHandlerIdentifiersOptions {
+  readonly extracted: ExtractedAppNotifications;
+  readonly violations: Violation[];
+  readonly reachableBindings: Set<string>;
+}
+
+/**
+ * Flags handler-array identifiers that the binding tracer could not follow
+ * locally, are not reachable as bindings, and aren't trust-listed.
+ *
+ * @param options - extraction, violations buffer, and reachable bindings set
+ */
+function flagUnresolvedHandlerIdentifiers(options: FlagUnresolvedHandlerIdentifiersOptions): void {
+  const { extracted, violations, reachableBindings } = options;
   for (const c of extracted.taskServiceCalls) {
     for (const unresolved of c.unresolvedHandlerBindings) {
       if (extracted.trustedExternalIdentifiers.has(unresolved)) continue;
@@ -351,30 +418,42 @@ function checkTasks(extracted: ExtractedAppNotifications, violations: Violation[
       });
     }
   }
+}
 
-  // validate vs handlers parity (warning) — uses the lenient set so a
-  // declared-but-unreachable handler still counts as "exists" here. The
-  // strict reachability check above covers the missing-coverage case
-  // for local task constants.
+interface FlagValidateWithoutHandlerOptions {
+  readonly extracted: ExtractedAppNotifications;
+  readonly violations: Violation[];
+  readonly lenientHandlerTypeIdentifiers: Set<string>;
+}
+
+/**
+ * Emits the validate-vs-handlers parity warning for the first
+ * `notificationTaskService` call. Uses the lenient handler-type set so a
+ * declared-but-unreachable handler still counts as "exists" here; strict
+ * reachability is covered separately.
+ *
+ * @param options - extraction, violations buffer, and lenient handler-type set
+ */
+function flagValidateWithoutHandler(options: FlagValidateWithoutHandlerOptions): void {
+  const { extracted, violations, lenientHandlerTypeIdentifiers } = options;
   const call = extracted.taskServiceCalls[0];
-  if (call) {
-    const validateNames = new Set<string>(call.validateIdentifiers);
-    for (const spread of call.spreadValidateIdentifiers) {
-      const agg = extracted.taskAllTypesAggregates.find((a) => a.symbolName === spread);
-      if (agg) {
-        for (const id of agg.taskTypeIdentifiers) validateNames.add(id);
-      }
+  if (!call) return;
+  const validateNames = new Set<string>(call.validateIdentifiers);
+  for (const spread of call.spreadValidateIdentifiers) {
+    const agg = extracted.taskAllTypesAggregates.find((a) => a.symbolName === spread);
+    if (agg) {
+      for (const id of agg.taskTypeIdentifiers) validateNames.add(id);
     }
-    for (const name of validateNames) {
-      if (!lenientHandlerTypeIdentifiers.has(name) && !extracted.trustedExternalIdentifiers.has(name)) {
-        pushViolation(violations, {
-          code: 'NOTIF_TASK_IN_VALIDATE_WITHOUT_HANDLER',
-          severity: 'warning',
-          message: `Task type \`${name}\` appears in \`notificationTaskService({ validate })\` but has no matching handler in the \`handlers\` array.`,
-          side: 'api',
-          file: call.sourceFile
-        });
-      }
+  }
+  for (const name of validateNames) {
+    if (!lenientHandlerTypeIdentifiers.has(name) && !extracted.trustedExternalIdentifiers.has(name)) {
+      pushViolation(violations, {
+        code: 'NOTIF_TASK_IN_VALIDATE_WITHOUT_HANDLER',
+        severity: 'warning',
+        message: `Task type \`${name}\` appears in \`notificationTaskService({ validate })\` but has no matching handler in the \`handlers\` array.`,
+        side: 'api',
+        file: call.sourceFile
+      });
     }
   }
 }
@@ -393,7 +472,7 @@ function checkDuplicates(extracted: ExtractedAppNotifications, violations: Viola
     }
     for (const agg of extracted.templateInfoAggregates) {
       for (const id of agg.infoIdentifiers) {
-        if (!extracted.templateTypeInfos.find((i) => i.symbolName === id) && !extracted.trustedExternalIdentifiers.has(id)) {
+        if (!extracted.templateTypeInfos.some((i) => i.symbolName === id) && !extracted.trustedExternalIdentifiers.has(id)) {
           pushViolation(violations, {
             code: 'NOTIF_TEMPLATE_INFO_UNUSED',
             severity: 'warning',
@@ -457,6 +536,10 @@ function pushViolation(buffer: Violation[], violation: Omit<Violation, 'severity
  * Exported only so the list-app-notifications tool can share the
  * trusted-handler matcher logic when computing `hasFactory` /
  * `hasHandler` booleans without re-running rules.
+ *
+ * @param entries - the resolved template-handler entries to scan
+ * @param typeIdentifier - the template-type identifier to look for coverage of
+ * @returns `true` when at least one entry handles the type
  */
 export function templateHandlerCoversType(entries: readonly ExtractedTemplateHandlerEntry[], typeIdentifier: string): boolean {
   return entries.some((e) => e.typeIdentifier === typeIdentifier);

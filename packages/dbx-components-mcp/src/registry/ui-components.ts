@@ -75,35 +75,65 @@ export interface UiComponentOutputInfo {
  * Canonical metadata for a single UI component, directive, pipe, or service.
  */
 export interface UiComponentInfo {
-  /** Unique registry slug (kebab-case). Used for lookup. */
+  /**
+   * Unique registry slug (kebab-case). Used for lookup.
+   */
   readonly slug: string;
-  /** PRIMARY INDEX. UI category bucket. */
+  /**
+   * PRIMARY INDEX. UI category bucket.
+   */
   readonly category: UiComponentCategory;
-  /** Angular construct kind. */
+  /**
+   * Angular construct kind.
+   */
   readonly kind: UiComponentKind;
-  /** Verbatim selector string from the source (`'dbx-section'`, `'[dbxAction]'`, may be comma-separated). */
+  /**
+   * Verbatim selector string from the source (`'dbx-section'`, `'[dbxAction]'`, may be comma-separated).
+   */
   readonly selector: string;
-  /** Exported class name (`'DbxSectionComponent'`). */
+  /**
+   * Exported class name (`'DbxSectionComponent'`).
+   */
   readonly className: string;
-  /** NPM package the export ships in (`'@dereekb/dbx-web'`). */
+  /**
+   * NPM package the export ships in (`'@dereekb/dbx-web'`).
+   */
   readonly module: string;
-  /** Prose description of what the component does and when to reach for it. */
+  /**
+   * Prose description of what the component does and when to reach for it.
+   */
   readonly description: string;
-  /** Documented inputs (signal inputs or `@Input()` decorators). */
+  /**
+   * Documented inputs (signal inputs or `@Input()` decorators).
+   */
   readonly inputs: readonly UiComponentInputInfo[];
-  /** Documented outputs / event emitters. */
+  /**
+   * Documented outputs / event emitters.
+   */
   readonly outputs: readonly UiComponentOutputInfo[];
-  /** Optional content projection summary (e.g. `'<ng-content select="[sectionHeader]">'`). */
+  /**
+   * Optional content projection summary (e.g. `'<ng-content select="[sectionHeader]">'`).
+   */
   readonly contentProjection?: string;
-  /** Slugs of related entries — used to surface "see also" hints. */
+  /**
+   * Slugs of related entries — used to surface "see also" hints.
+   */
   readonly relatedSlugs: readonly string[];
-  /** Skill names a caller can load for deeper patterns. */
+  /**
+   * Skill names a caller can load for deeper patterns.
+   */
   readonly skillRefs: readonly string[];
-  /** Path within `packages/dbx-web/src/` where the export is defined. */
+  /**
+   * Path within `packages/dbx-web/src/` where the export is defined.
+   */
   readonly sourcePath: string;
-  /** Full copy-paste-ready usage example. */
+  /**
+   * Full copy-paste-ready usage example.
+   */
   readonly example: string;
-  /** Smallest valid usage. */
+  /**
+   * Smallest valid usage.
+   */
   readonly minimalExample: string;
 }
 

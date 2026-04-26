@@ -6,8 +6,7 @@
  * `dbx_model_decode` which consumes the same registry.
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { getFirebaseModel, getFirebaseModelByPrefix, getFirebaseModels, getFirebasePrefixCatalog, getFirebaseSubcollectionsOf } from '../registry/index.js';
 
 const FIREBASE_MODELS_URI = 'dbx://model/firebase';
@@ -15,6 +14,13 @@ const FIREBASE_MODEL_TEMPLATE = 'dbx://model/firebase/{name}';
 const FIREBASE_MODELS_BY_PREFIX_TEMPLATE = 'dbx://model/firebase/prefix/{prefix}';
 const FIREBASE_SUBCOLLECTIONS_TEMPLATE = 'dbx://model/firebase/subcollections/{parent}';
 
+/**
+ * Registers the Firebase-model MCP resources (catalog, per-name lookup, prefix
+ * lookup, subcollection lookup) on the given server. The four URIs together
+ * reproduce the `dbx_model_decode` access patterns for browsing clients.
+ *
+ * @param server - the MCP server to register resources against
+ */
 export function registerFirebaseModelsResource(server: McpServer): void {
   server.registerResource(
     'dbx-components Firebase Models',
@@ -40,7 +46,7 @@ export function registerFirebaseModelsResource(server: McpServer): void {
           sourceFile: m.sourceFile
         }))
       };
-      const result = {
+      return {
         contents: [
           {
             uri: FIREBASE_MODELS_URI,
@@ -49,7 +55,6 @@ export function registerFirebaseModelsResource(server: McpServer): void {
           }
         ]
       };
-      return result;
     }
   );
 
@@ -78,7 +83,7 @@ export function registerFirebaseModelsResource(server: McpServer): void {
         text = JSON.stringify(model, null, 2);
       }
 
-      const result = {
+      return {
         contents: [
           {
             uri: uri.href,
@@ -87,7 +92,6 @@ export function registerFirebaseModelsResource(server: McpServer): void {
           }
         ]
       };
-      return result;
     }
   );
 
@@ -117,7 +121,7 @@ export function registerFirebaseModelsResource(server: McpServer): void {
         }
       }
 
-      const result = {
+      return {
         contents: [
           {
             uri: uri.href,
@@ -126,7 +130,6 @@ export function registerFirebaseModelsResource(server: McpServer): void {
           }
         ]
       };
-      return result;
     }
   );
 
@@ -152,7 +155,7 @@ export function registerFirebaseModelsResource(server: McpServer): void {
         isJson = true;
       }
 
-      const result = {
+      return {
         contents: [
           {
             uri: uri.href,
@@ -161,7 +164,6 @@ export function registerFirebaseModelsResource(server: McpServer): void {
           }
         ]
       };
-      return result;
     }
   );
 }

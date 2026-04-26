@@ -82,7 +82,9 @@ export interface ValidationResult {
 export type SideStatus = 'ok' | 'dir-not-found' | 'notification-folder-missing';
 
 export interface InspectedFile {
-  /** Path relative to the side's root (e.g. `src/lib/model/notification/notification.ts`). */
+  /**
+   * Path relative to the side's root (e.g. `src/lib/model/notification/notification.ts`).
+   */
   readonly relPath: string;
   readonly text: string;
 }
@@ -100,7 +102,9 @@ export interface AppNotificationsInspection {
 }
 
 // MARK: Extracted structures
-/** An exported `*_NOTIFICATION_TEMPLATE_TYPE` constant. */
+/**
+ * An exported `*_NOTIFICATION_TEMPLATE_TYPE` constant.
+ */
 export interface ExtractedTemplateTypeConstant {
   readonly symbolName: string;
   readonly typeCode: string | undefined;
@@ -108,7 +112,9 @@ export interface ExtractedTemplateTypeConstant {
   readonly line: number;
 }
 
-/** An exported `NotificationTemplateTypeInfo` object literal. */
+/**
+ * An exported `NotificationTemplateTypeInfo` object literal.
+ */
 export interface ExtractedTemplateTypeInfo {
   readonly symbolName: string;
   readonly typeConstantName: string | undefined;
@@ -120,7 +126,9 @@ export interface ExtractedTemplateTypeInfo {
   readonly line: number;
 }
 
-/** An exported `*_NOTIFICATION_TASK_TYPE` constant. */
+/**
+ * An exported `*_NOTIFICATION_TASK_TYPE` constant.
+ */
 export interface ExtractedTaskTypeConstant {
   readonly symbolName: string;
   readonly typeCode: string | undefined;
@@ -128,71 +136,107 @@ export interface ExtractedTaskTypeConstant {
   readonly line: number;
 }
 
-/** A union alias like `ExampleNotificationTaskCheckpoint = 'part_a' | 'part_b'`. */
+/**
+ * A union alias like `ExampleNotificationTaskCheckpoint = 'part_a' | 'part_b'`.
+ */
 export interface ExtractedTaskCheckpointAlias {
   readonly symbolName: string;
   readonly checkpoints: readonly string[];
   readonly sourceFile: string;
 }
 
-/** A data interface like `ExampleNotificationTaskData`. */
+/**
+ * A data interface like `ExampleNotificationTaskData`.
+ */
 export interface ExtractedTaskDataInterface {
   readonly symbolName: string;
   readonly sourceFile: string;
 }
 
-/** An aggregate `ALL_*_NOTIFICATION_TEMPLATE_TYPE_INFOS: NotificationTemplateTypeInfo[]`. */
+/**
+ * An aggregate `ALL_*_NOTIFICATION_TEMPLATE_TYPE_INFOS: NotificationTemplateTypeInfo[]`.
+ */
 export interface ExtractedTemplateInfoAggregateArray {
   readonly symbolName: string;
-  /** Identifiers that are elements of the array literal (info-symbol names). */
+  /**
+   * Identifiers that are elements of the array literal (info-symbol names).
+   */
   readonly infoIdentifiers: readonly string[];
   readonly sourceFile: string;
 }
 
-/** An aggregate `ALL_*_NOTIFICATION_TASK_TYPES: NotificationTaskType[]`. */
+/**
+ * An aggregate `ALL_*_NOTIFICATION_TASK_TYPES: NotificationTaskType[]`.
+ */
 export interface ExtractedTaskTypeAggregateArray {
   readonly symbolName: string;
   readonly taskTypeIdentifiers: readonly string[];
   readonly sourceFile: string;
 }
 
-/** The top-level `notificationTemplateTypeInfoRecord([...])` call result. */
+/**
+ * The top-level `notificationTemplateTypeInfoRecord([...])` call result.
+ */
 export interface ExtractedTemplateInfoRecord {
   readonly symbolName: string;
-  /** Identifiers that are direct elements of the record array argument. */
+  /**
+   * Identifiers that are direct elements of the record array argument.
+   */
   readonly directInfoIdentifiers: readonly string[];
-  /** Identifiers that are spread (`...ALL_X_...`) in the record array argument. */
+  /**
+   * Identifiers that are spread (`...ALL_X_...`) in the record array argument.
+   */
   readonly spreadAggregateIdentifiers: readonly string[];
-  /** Fully resolved info-symbol names after flattening all spreads (via aggregate arrays). */
+  /**
+   * Fully resolved info-symbol names after flattening all spreads (via aggregate arrays).
+   */
   readonly resolvedInfoIdentifiers: readonly string[];
-  /** Spread identifiers that could not be resolved to a declared aggregate array. */
+  /**
+   * Spread identifiers that could not be resolved to a declared aggregate array.
+   */
   readonly unresolvedSpreadIdentifiers: readonly string[];
   readonly sourceFile: string;
 }
 
-/** A `NotificationTemplateServiceTypeConfig` object literal reachable from the configs-array factory. */
+/**
+ * A `NotificationTemplateServiceTypeConfig` object literal reachable from the configs-array factory.
+ */
 export interface ExtractedTemplateHandlerEntry {
-  /** The template-type identifier the handler claims via its `type:` property. */
+  /**
+   * The template-type identifier the handler claims via its `type:` property.
+   */
   readonly typeIdentifier: string;
-  /** The factory-function name that produced this handler config (e.g. `demoNotificationTestFactory`, or a nested sub-factory like `hellosubsNotificationWorkerPaidFactory`). */
+  /**
+   * The factory-function name that produced this handler config (e.g. `demoNotificationTestFactory`, or a nested sub-factory like `hellosubsNotificationWorkerPaidFactory`).
+   */
   readonly factoryFunctionName: string | undefined;
   readonly sourceFile: string;
   readonly line: number;
 }
 
-/** The top-level `<app>NotificationTemplateServiceConfigsArrayFactory` composition. */
+/**
+ * The top-level `<app>NotificationTemplateServiceConfigsArrayFactory` composition.
+ */
 export interface ExtractedTemplateConfigsArrayFactory {
   readonly symbolName: string;
-  /** Names of functions called directly inside the return array (no spread). */
+  /**
+   * Names of functions called directly inside the return array (no spread).
+   */
   readonly directFactoryCalls: readonly string[];
-  /** Names of functions spread (`...fooNotifications(context)`) inside the return array. */
+  /**
+   * Names of functions spread (`...fooNotifications(context)`) inside the return array.
+   */
   readonly spreadFactoryCalls: readonly string[];
-  /** Spread identifiers that could not be resolved to a declared function. */
+  /**
+   * Spread identifiers that could not be resolved to a declared function.
+   */
   readonly unresolvedSpreadIdentifiers: readonly string[];
   readonly sourceFile: string;
 }
 
-/** A `{ type, flow }` task-handler config (either a variable binding or an object-literal element). */
+/**
+ * A `{ type, flow }` task-handler config (either a variable binding or an object-literal element).
+ */
 export interface ExtractedTaskHandlerEntry {
   readonly typeIdentifier: string;
   /**
@@ -210,7 +254,9 @@ export interface ExtractedTaskHandlerEntry {
   readonly line: number;
 }
 
-/** The `notificationTaskService({ validate, handlers })` call. */
+/**
+ * The `notificationTaskService({ validate, handlers })` call.
+ */
 export interface ExtractedTaskServiceCall {
   readonly validateIdentifiers: readonly string[];
   readonly spreadValidateIdentifiers: readonly string[];
@@ -237,19 +283,25 @@ export interface ExtractedTaskServiceCall {
   readonly sourceFile: string;
 }
 
-/** The `appNotificationTemplateTypeInfoRecordService(X)` call in the API. */
+/**
+ * The `appNotificationTemplateTypeInfoRecordService(X)` call in the API.
+ */
 export interface ExtractedTemplateInfoRecordWiring {
   readonly recordIdentifier: string;
   readonly sourceFile: string;
 }
 
-/** The NestJS provider `{ provide: NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN, useFactory: X }`. */
+/**
+ * The NestJS provider `{ provide: NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN, useFactory: X }`.
+ */
 export interface ExtractedTemplateConfigsArrayWiring {
   readonly useFactoryIdentifier: string;
   readonly sourceFile: string;
 }
 
-/** Aggregated cross-file extraction result. */
+/**
+ * Aggregated cross-file extraction result.
+ */
 export interface ExtractedAppNotifications {
   // Component side
   readonly templateTypeConstants: readonly ExtractedTemplateTypeConstant[];

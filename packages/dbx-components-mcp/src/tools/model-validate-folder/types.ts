@@ -89,12 +89,18 @@ export const RESERVED_MODEL_FOLDERS: readonly ReservedModelFolder[] = [
  * validator. Specs build fixtures directly without touching the disk.
  */
 export interface FolderInspection {
-  /** Display name for the folder (typically the last path segment). */
+  /**
+   * Display name for the folder (typically the last path segment).
+   */
   readonly name: string;
-  /** Original path as provided by the caller (used in violation messages). */
+  /**
+   * Original path as provided by the caller (used in violation messages).
+   */
   readonly path: string;
   readonly status: FolderInspectionStatus;
-  /** `.ts` file basenames at the folder root (ignored when `status !== 'ok'`). */
+  /**
+   * `.ts` file basenames at the folder root (ignored when `status !== 'ok'`).
+   */
   readonly files: readonly string[];
 }
 
@@ -110,6 +116,14 @@ export interface RequiredFile {
   readonly role: string;
 }
 
+/**
+ * Returns the canonical list of files required inside a `<name>` model folder.
+ * Centralised here so the folder rules and any future scaffolders share the
+ * same shape without drift.
+ *
+ * @param name - the model folder's basename
+ * @returns the required files in the order rules surface them
+ */
 export function buildRequiredFiles(name: string): readonly RequiredFile[] {
   return [
     { filename: `${name}.ts`, code: 'FOLDER_MISSING_MAIN', role: 'main model' },

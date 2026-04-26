@@ -10,6 +10,14 @@ import { readdir, stat } from 'node:fs/promises';
 import { basename } from 'node:path';
 import type { FolderInspection, FolderInspectionStatus } from './types.js';
 
+/**
+ * Stats a folder and lists its direct `.ts` children, capturing enough
+ * filesystem state for the pure rules to validate against. Specs construct
+ * inspections directly without using this function.
+ *
+ * @param path - absolute path to the folder to inspect
+ * @returns the inspection record describing the folder's status and contents
+ */
 export async function inspectFolder(path: string): Promise<FolderInspection> {
   const name = basename(path);
   let status: FolderInspectionStatus;

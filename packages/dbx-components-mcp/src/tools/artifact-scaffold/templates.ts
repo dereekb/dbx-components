@@ -13,16 +13,27 @@ import type { NameTokens } from './types.js';
 /**
  * Splits a free-form name (kebab, snake, camel, pascal) into lowercase
  * word tokens.
+ *
+ * @param input - the raw identifier-like string to split
+ * @returns the lowercased word fragments preserving original ordering
  */
 function splitWords(input: string): readonly string[] {
-  const broken = input
+  return input
     .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
     .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
     .split(/[\s\-_]+/)
     .filter((p) => p.length > 0);
-  return broken;
 }
 
+/**
+ * Derives the canonical name tokens (camel, pascal, screaming-snake, kebab,
+ * snake) used by every scaffold template from a single free-form name.
+ * Throws when the input has no extractable word so templates never emit
+ * empty identifiers.
+ *
+ * @param name - the raw artifact name supplied by the caller
+ * @returns the resolved tokens for substitution
+ */
 export function deriveNameTokens(name: string): NameTokens {
   const parts = splitWords(name);
   if (parts.length === 0) {
@@ -68,6 +79,12 @@ export interface TemplateContext {
  * tokens are derived from the basename of `componentDir`:
  * `components/demo-firebase` → package name `demo-firebase`, app stem `demo`,
  * context type `DemoFirebaseServerActionsContext`.
+ *
+ * @param input - the artifact name tokens and project directories
+ * @param input.tokens - the derived name tokens from {@link deriveNameTokens}
+ * @param input.componentDir - workspace path to the component package
+ * @param input.apiDir - workspace path to the api package
+ * @returns the resolved template context including app-stem-derived constants
  */
 export function buildTemplateContext(input: { readonly tokens: NameTokens; readonly componentDir: string; readonly apiDir: string }): TemplateContext {
   const componentPackageName = basenameOf(input.componentDir) || 'firebase';
@@ -96,6 +113,16 @@ function basenameOf(path: string): string {
   return parts[parts.length - 1] ?? '';
 }
 
+/**
+ * Substitutes every `<<token>>` slot in a template string with values from a
+ * {@link TemplateContext}. The replacement order is intentional — longer or
+ * more specific tokens go first so substrings (e.g. `<<Pascal>>` inside
+ * `<<AppPascal>>`) cannot collide.
+ *
+ * @param template - the raw template string with `<<token>>` slots
+ * @param ctx - the resolved template context to substitute from
+ * @returns the template with every recognised token replaced
+ */
 export function applyTokens(template: string, ctx: TemplateContext): string {
   let result = template;
   // Order: longer / more-specific tokens first to avoid partial matches.

@@ -108,7 +108,7 @@ function fuzzyCandidates(query: string): readonly FilterEntryInfo[] {
     if (entry.className.toLowerCase().includes(q)) {
       score += 2;
     }
-    if (entry.selector !== undefined && entry.selector.toLowerCase().includes(q)) {
+    if (entry.selector?.toLowerCase().includes(q)) {
       score += 2;
     }
     if (entry.description.toLowerCase().includes(q)) {
@@ -119,8 +119,7 @@ function fuzzyCandidates(query: string): readonly FilterEntryInfo[] {
     }
   }
   scored.sort((a, b) => b.score - a.score);
-  const result = scored.slice(0, 5).map((s) => s.entry);
-  return result;
+  return scored.slice(0, 5).map((s) => s.entry);
 }
 
 // MARK: Formatting
@@ -164,19 +163,20 @@ function formatEntry(entry: FilterEntryInfo, depth: 'brief' | 'full'): string {
     lines.push(entry.example);
     lines.push('```');
     if (entry.relatedSlugs.length > 0) {
+      const relatedText = entry.relatedSlugs.map((s) => code(s)).join(', ');
       lines.push('');
-      lines.push(`→ Related: ${entry.relatedSlugs.map((s) => `\`${s}\``).join(', ')}`);
+      lines.push(`→ Related: ${relatedText}`);
     }
     if (entry.skillRefs.length > 0) {
+      const skillsText = entry.skillRefs.map((s) => code(s)).join(', ');
       lines.push('');
-      lines.push(`→ Skills: ${entry.skillRefs.map((s) => `\`${s}\``).join(', ')}`);
+      lines.push(`→ Skills: ${skillsText}`);
     }
   } else {
     lines.push(`→ Call \`dbx_filter_lookup topic="${entry.slug}" depth="full"\` for inputs and the example.`);
   }
 
-  const result = lines.join('\n');
-  return result;
+  return lines.join('\n');
 }
 
 function formatCatalog(): string {
@@ -186,8 +186,7 @@ function formatCatalog(): string {
     lines.push(`- \`${entry.slug}\` → ${entry.className}${selector}`);
     lines.push(`  ${entry.description}`);
   }
-  const result = lines.join('\n').trimEnd();
-  return result;
+  return lines.join('\n').trimEnd();
 }
 
 function formatNotFound(normalized: string, candidates: readonly FilterEntryInfo[]): string {
@@ -205,7 +204,19 @@ function formatNotFound(normalized: string, candidates: readonly FilterEntryInfo
   return lines.join('\n');
 }
 
+function code(value: string): string {
+  return '`' + value + '`';
+}
+
 // MARK: Handler
+/**
+ * Tool handler for `dbx_filter_lookup`. Resolves the requested filter topic
+ * against the registry and renders the matching catalog, kind group, single
+ * entry, or not-found suggestion list.
+ *
+ * @param rawArgs - the unvalidated tool arguments from the MCP runtime
+ * @returns the rendered match, or an error result when args fail validation
+ */
 export function runLookupFilter(rawArgs: unknown): ToolResult {
   let args: ParsedLookupFilterArgs;
   try {

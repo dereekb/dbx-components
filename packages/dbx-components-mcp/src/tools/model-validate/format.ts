@@ -6,6 +6,14 @@
 
 import type { ValidationResult, Violation } from './types.js';
 
+/**
+ * Renders a {@link ValidationResult} as the markdown report the tool returns
+ * to callers. Groups violations by file, then by model within the file, so
+ * readers see one section per identity definition.
+ *
+ * @param result - the aggregated validation outcome
+ * @returns the markdown report
+ */
 export function formatResult(result: ValidationResult): string {
   const { violations, errorCount, warningCount, filesChecked, modelsChecked } = result;
   const status = statusLabel(errorCount, warningCount);
@@ -33,8 +41,7 @@ export function formatResult(result: ValidationResult): string {
     }
   }
 
-  const out = lines.join('\n');
-  return out;
+  return lines.join('\n');
 }
 
 function statusLabel(errorCount: number, warningCount: number): string {

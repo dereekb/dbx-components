@@ -82,7 +82,9 @@ export interface ValidationResult {
 export type SideStatus = 'ok' | 'dir-not-found' | 'storagefile-folder-missing';
 
 export interface InspectedFile {
-  /** Path relative to the side's root (e.g. `src/lib/model/storagefile/storagefile.ts`). */
+  /**
+   * Path relative to the side's root (e.g. `src/lib/model/storagefile/storagefile.ts`).
+   */
   readonly relPath: string;
   readonly text: string;
 }
@@ -100,7 +102,9 @@ export interface AppStorageFilesInspection {
 }
 
 // MARK: Extracted structures
-/** An exported `*_PURPOSE: StorageFilePurpose` constant. */
+/**
+ * An exported `*_PURPOSE: StorageFilePurpose` constant.
+ */
 export interface ExtractedPurposeConstant {
   readonly symbolName: string;
   readonly purposeCode: string | undefined;
@@ -108,7 +112,9 @@ export interface ExtractedPurposeConstant {
   readonly line: number;
 }
 
-/** An exported `*_UPLOADED_FILE_TYPE_IDENTIFIER: UploadedFileTypeIdentifier` constant. */
+/**
+ * An exported `*_UPLOADED_FILE_TYPE_IDENTIFIER: UploadedFileTypeIdentifier` constant.
+ */
 export interface ExtractedUploadedFileTypeIdentifierConstant {
   readonly symbolName: string;
   readonly typeCode: string | undefined;
@@ -116,7 +122,9 @@ export interface ExtractedUploadedFileTypeIdentifierConstant {
   readonly line: number;
 }
 
-/** An exported `*_PROCESSING_SUBTASK: StorageFileProcessingSubtask` constant. */
+/**
+ * An exported `*_PROCESSING_SUBTASK: StorageFileProcessingSubtask` constant.
+ */
 export interface ExtractedProcessingSubtaskConstant {
   readonly symbolName: string;
   readonly subtaskCode: string | undefined;
@@ -124,70 +132,108 @@ export interface ExtractedProcessingSubtaskConstant {
   readonly line: number;
 }
 
-/** A union alias like `UserTestFileProcessingSubtask = typeof X | typeof Y`. */
+/**
+ * A union alias like `UserTestFileProcessingSubtask = typeof X | typeof Y`.
+ */
 export interface ExtractedProcessingSubtaskAlias {
   readonly symbolName: string;
-  /** The `*_PROCESSING_SUBTASK` constant identifiers referenced via `typeof X` clauses. */
+  /**
+   * The `*_PROCESSING_SUBTASK` constant identifiers referenced via `typeof X` clauses.
+   */
   readonly subtaskConstantNames: readonly string[];
   readonly sourceFile: string;
 }
 
-/** A `<purpose>FileGroupIds(...)` / `<purpose>StorageFileGroupIds(...)` factory function. */
+/**
+ * A `<purpose>FileGroupIds(...)` / `<purpose>StorageFileGroupIds(...)` factory function.
+ */
 export interface ExtractedGroupIdsFunction {
   readonly symbolName: string;
   readonly sourceFile: string;
 }
 
-/** A `StorageFileInitializeFromUploadServiceInitializer` object literal in the API. */
+/**
+ * A `StorageFileInitializeFromUploadServiceInitializer` object literal in the API.
+ */
 export interface ExtractedUploadInitializerEntry {
   readonly typeIdentifier: string;
-  /** The variable name the initializer is bound to (best-effort). */
+  /**
+   * The variable name the initializer is bound to (best-effort).
+   */
   readonly bindingName: string | undefined;
   readonly sourceFile: string;
   readonly line: number;
 }
 
-/** A `storageFileInitializeFromUploadService({ initializer })` call. */
+/**
+ * A `storageFileInitializeFromUploadService({ initializer })` call.
+ */
 export interface ExtractedUploadServiceCall {
-  /** Names of variables/initializers used directly inside the initializer array. */
+  /**
+   * Names of variables/initializers used directly inside the initializer array.
+   */
   readonly directBindingNames: readonly string[];
-  /** Names of array bindings that were spread inside the initializer array. */
+  /**
+   * Names of array bindings that were spread inside the initializer array.
+   */
   readonly spreadBindingNames: readonly string[];
-  /** Spread identifiers that could not be resolved to a declared array binding. */
+  /**
+   * Spread identifiers that could not be resolved to a declared array binding.
+   */
   readonly unresolvedSpreadIdentifiers: readonly string[];
-  /** All initializer-typed binding names reachable through direct + spread elements. */
+  /**
+   * All initializer-typed binding names reachable through direct + spread elements.
+   */
   readonly resolvedInitializerBindings: readonly string[];
-  /** Best-effort name of the enclosing factory function (e.g. `demoStorageFileUploadServiceFactory`). */
+  /**
+   * Best-effort name of the enclosing factory function (e.g. `demoStorageFileUploadServiceFactory`).
+   */
   readonly enclosingFactoryName: string | undefined;
   readonly sourceFile: string;
 }
 
-/** A NestJS provider object with `provide: StorageFileInitializeFromUploadService`. */
+/**
+ * A NestJS provider object with `provide: StorageFileInitializeFromUploadService`.
+ */
 export interface ExtractedUploadServiceWiring {
   readonly useFactoryIdentifier: string | undefined;
   readonly sourceFile: string;
 }
 
-/** A `StorageFileProcessingPurposeSubtaskProcessorConfig` variable declaration. */
+/**
+ * A `StorageFileProcessingPurposeSubtaskProcessorConfig` variable declaration.
+ */
 export interface ExtractedProcessingConfig {
-  /** The identifier referenced by the `target:` property — usually a `*_PURPOSE` constant. */
+  /**
+   * The identifier referenced by the `target:` property — usually a `*_PURPOSE` constant.
+   */
   readonly targetIdentifier: string;
-  /** The `subtask:` identifiers listed in the `flow:` array. */
+  /**
+   * The `subtask:` identifiers listed in the `flow:` array.
+   */
   readonly flowSubtaskIdentifiers: readonly string[];
   readonly sourceFile: string;
   readonly line: number;
 }
 
-/** A `storageFileProcessingNotificationTaskHandler({ processors })` call. */
+/**
+ * A `storageFileProcessingNotificationTaskHandler({ processors })` call.
+ */
 export interface ExtractedProcessingHandlerCall {
-  /** Names of identifiers/calls used as direct elements of `processors:`. */
+  /**
+   * Names of identifiers/calls used as direct elements of `processors:`.
+   */
   readonly directProcessorReferences: readonly string[];
-  /** Spread identifiers inside `processors:`. */
+  /**
+   * Spread identifiers inside `processors:`.
+   */
   readonly spreadProcessorReferences: readonly string[];
   readonly sourceFile: string;
 }
 
-/** Aggregated cross-file extraction result. */
+/**
+ * Aggregated cross-file extraction result.
+ */
 export interface ExtractedAppStorageFiles {
   // Component side
   readonly purposeConstants: readonly ExtractedPurposeConstant[];

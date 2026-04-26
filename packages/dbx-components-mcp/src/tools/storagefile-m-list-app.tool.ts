@@ -85,6 +85,14 @@ function ensureInsideCwd(relativePath: string, cwd: string): string {
 }
 
 // MARK: Handler
+/**
+ * Tool handler for `dbx_list_app_storagefile_m`. Walks the resolved app
+ * directory and reports the registered storage-file purposes plus their
+ * upload/processing wiring.
+ *
+ * @param rawArgs - the unvalidated tool arguments from the MCP runtime
+ * @returns the formatted listing, or an error result when args fail validation
+ */
 export async function runStorageFileMListApp(rawArgs: unknown): Promise<ToolResult> {
   let args: ParsedArgs;
   try {

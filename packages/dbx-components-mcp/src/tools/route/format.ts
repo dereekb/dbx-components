@@ -16,6 +16,14 @@ export interface FormatRouteTreeArgs {
   readonly title: string;
 }
 
+/**
+ * Renders a route tree in the caller-requested format (markdown, json, flat).
+ * Centralising the dispatch here means callers pass the same args shape no
+ * matter which output mode they need.
+ *
+ * @param args - the tree, format, depth limit, and title to render
+ * @returns the rendered tree string
+ */
 export function formatRouteTree(args: FormatRouteTreeArgs): string {
   const { format } = args;
   let result: string;
@@ -46,14 +54,25 @@ function renderMarkdown(args: FormatRouteTreeArgs): string {
   } else {
     lines.push('');
     for (const root of tree.roots) {
-      renderMarkdownNode(root, 0, depthLimit, lines);
+      renderMarkdownNode({ node: root, depth: 0, depthLimit, lines });
     }
   }
   appendIssuesSection(lines, tree.issues);
   return lines.join('\n');
 }
 
-function renderMarkdownNode(node: RouteTreeNode, depth: number, depthLimit: number | undefined, lines: string[]): void {
+/**
+ * Options for rendering a route tree node as markdown.
+ */
+interface RenderMarkdownNodeOptions {
+  readonly node: RouteTreeNode;
+  readonly depth: number;
+  readonly depthLimit: number | undefined;
+  readonly lines: string[];
+}
+
+function renderMarkdownNode(options: RenderMarkdownNodeOptions): void {
+  const { node, depth, depthLimit, lines } = options;
   if (depthLimit !== undefined && depth > depthLimit) {
     return;
   }
@@ -73,7 +92,7 @@ function renderMarkdownNode(node: RouteTreeNode, depth: number, depthLimit: numb
     return;
   }
   for (const child of node.children) {
-    renderMarkdownNode(child, depth + 1, depthLimit, lines);
+    renderMarkdownNode({ node: child, depth: depth + 1, depthLimit, lines });
   }
 }
 
@@ -136,13 +155,24 @@ function renderFlat(args: FormatRouteTreeArgs): string {
   if (tree.nodeCount === 0) {
     lines.push('_No states found._');
   } else {
-    walkFlat(tree.roots, 0, depthLimit, lines);
+    walkFlat({ nodes: tree.roots, depth: 0, depthLimit, lines });
   }
   appendIssuesSection(lines, tree.issues);
   return lines.join('\n');
 }
 
-function walkFlat(nodes: readonly RouteTreeNode[], depth: number, depthLimit: number | undefined, lines: string[]): void {
+/**
+ * Options for emitting a flat list of route nodes.
+ */
+interface WalkFlatOptions {
+  readonly nodes: readonly RouteTreeNode[];
+  readonly depth: number;
+  readonly depthLimit: number | undefined;
+  readonly lines: string[];
+}
+
+function walkFlat(options: WalkFlatOptions): void {
+  const { nodes, depth, depthLimit, lines } = options;
   if (depthLimit !== undefined && depth > depthLimit) {
     return;
   }
@@ -150,7 +180,7 @@ function walkFlat(nodes: readonly RouteTreeNode[], depth: number, depthLimit: nu
     const url = node.fullUrl ?? '(no url)';
     const component = node.data.component ?? '(no component)';
     lines.push(`${node.data.name}\t${url}\t${component}`);
-    walkFlat(node.children, depth + 1, depthLimit, lines);
+    walkFlat({ nodes: node.children, depth: depth + 1, depthLimit, lines });
   }
 }
 
@@ -164,7 +194,8 @@ function appendIssuesSection(lines: string[], issues: readonly RouteIssue[]): vo
   lines.push('');
   for (const issue of issues) {
     const label = issue.severity === 'error' ? 'ERROR' : issue.severity === 'warning' ? 'WARN' : 'INFO';
-    const where = issue.file !== undefined ? `${issue.file}${issue.line !== undefined ? `:${issue.line}` : ''}` : 'extraction';
+    const linePart = issue.line !== undefined ? `:${issue.line}` : '';
+    const where = issue.file !== undefined ? `${issue.file}${linePart}` : 'extraction';
     lines.push(`- **[${label}] ${issue.code}** _(${where})_ — ${issue.message}`);
   }
 }

@@ -109,8 +109,7 @@ function toCamelCase(useCase: string): string {
     .split(/[\s_-]+/)
     .filter((w) => w.length > 0);
   let result = '';
-  for (let i = 0; i < cleaned.length; i++) {
-    const word = cleaned[i];
+  for (const [i, word] of cleaned.entries()) {
     const lower = word.toLowerCase();
     if (i === 0) {
       result += lower;
@@ -126,8 +125,7 @@ function toCamelCase(useCase: string): string {
 
 function toPascalCase(useCase: string): string {
   const camel = toCamelCase(useCase);
-  const result = camel.charAt(0).toUpperCase() + camel.slice(1);
-  return result;
+  return camel.charAt(0).toUpperCase() + camel.slice(1);
 }
 
 interface ScaffoldNames {
@@ -200,8 +198,7 @@ function buildTemplate(args: ParsedScaffoldArgs, names: ScaffoldNames): string {
 
   lines.push(`</${rootTag}>`);
 
-  const result = lines.join('\n');
-  return result;
+  return lines.join('\n');
 }
 
 // MARK: Handler builder
@@ -247,8 +244,7 @@ function buildHandler(args: ParsedScaffoldArgs, names: ScaffoldNames): string {
   lines.push('  };');
   lines.push('}');
 
-  const result = lines.join('\n');
-  return result;
+  return lines.join('\n');
 }
 
 // MARK: Imports builder
@@ -359,11 +355,18 @@ function renderScaffold(args: ParsedScaffoldArgs): string {
   lines.push('');
   lines.push(`→ See \`dbx_action_examples pattern="${examplePattern}"\` for the closest matching pattern.`);
 
-  const result = lines.join('\n');
-  return result;
+  return lines.join('\n');
 }
 
 // MARK: Handler
+/**
+ * Tool handler for `dbx_action_scaffold`. Validates the request, renders the
+ * scaffold output for the requested action role, and packages it as tool
+ * content.
+ *
+ * @param rawArgs - the unvalidated tool arguments object from the MCP runtime
+ * @returns the rendered scaffold, or an error result when args fail validation
+ */
 export function runActionScaffold(rawArgs: unknown): ToolResult {
   let args: ParsedScaffoldArgs;
   try {

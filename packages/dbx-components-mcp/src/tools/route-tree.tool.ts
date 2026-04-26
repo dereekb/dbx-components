@@ -96,6 +96,14 @@ function parseArgs(raw: unknown): ParsedTreeArgs {
 }
 
 // MARK: Handler
+/**
+ * Tool handler for `dbx_route_tree`. Builds the UIRouter state tree from the
+ * resolved app sources and renders it in markdown or json depending on the
+ * requested format.
+ *
+ * @param rawArgs - the unvalidated tool arguments from the MCP runtime
+ * @returns the formatted tree, or an error result when args fail validation
+ */
 export async function runRouteTree(rawArgs: unknown): Promise<ToolResult> {
   let args: ParsedTreeArgs;
   try {

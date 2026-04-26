@@ -86,6 +86,14 @@ function ensureInsideCwd(relativePath: string, cwd: string): string {
 }
 
 // MARK: Handler
+/**
+ * Tool handler for `dbx_validate_app_notification_m`. Walks the resolved app
+ * tree, runs the cross-file notification rules, and returns the aggregated
+ * report — the strictest of the notification validators.
+ *
+ * @param rawArgs - the unvalidated tool arguments from the MCP runtime
+ * @returns the formatted validation report, or an error result when args fail validation
+ */
 export async function runNotificationMValidateApp(rawArgs: unknown): Promise<ToolResult> {
   let args: ParsedArgs;
   try {

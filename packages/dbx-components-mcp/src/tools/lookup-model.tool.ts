@@ -63,11 +63,10 @@ function parseLookupModelArgs(raw: unknown): { readonly topic: string; readonly 
     throw new Error(`Invalid arguments: ${parsed.summary}`);
   }
 
-  const result = {
+  return {
     topic: parsed.topic,
     depth: parsed.depth ?? ('full' as const)
   };
-  return result;
 }
 
 // MARK: Resolution
@@ -81,6 +80,9 @@ const FIREBASE_SHAPES_ALIASES = new Set(['shapes', 'store-shapes', 'storeshapes'
  * identity const, modelType, or collection prefix. Falls back to catalog mode
  * for the well-known catalog aliases or the store-shape taxonomy mode for the
  * shape aliases.
+ *
+ * @param rawTopic - the caller-supplied topic, untrimmed
+ * @returns the resolved match describing how to render the response
  */
 function resolveTopic(rawTopic: string): LookupModelMatch {
   const lowered = rawTopic.trim().toLowerCase();
@@ -102,11 +104,18 @@ function resolveTopic(rawTopic: string): LookupModelMatch {
 
 // MARK: Formatting
 function formatNotFound(normalized: string): string {
-  const result = [`No Firebase model matched \`${normalized}\`.`, '', 'Try `dbx_model_lookup topic="models"` to browse the catalog.'].join('\n');
-  return result;
+  return [`No Firebase model matched \`${normalized}\`.`, '', 'Try `dbx_model_lookup topic="models"` to browse the catalog.'].join('\n');
 }
 
 // MARK: Handler
+/**
+ * Tool handler for `dbx_model_lookup`. Resolves the requested model topic
+ * against the Firebase registry and renders the matching catalog, store-shape
+ * taxonomy, single entry, or not-found suggestion list.
+ *
+ * @param rawArgs - the unvalidated tool arguments from the MCP runtime
+ * @returns the rendered match, or an error result when args fail validation
+ */
 export function runLookupModel(rawArgs: unknown): ToolResult {
   let args: { readonly topic: string; readonly depth: 'brief' | 'full' };
   try {

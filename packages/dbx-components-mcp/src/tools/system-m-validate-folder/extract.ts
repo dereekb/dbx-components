@@ -17,6 +17,15 @@ const CONVERTER_CONFIG_TYPE = 'SystemStateStoredDataFieldConverterConfig';
 const CONVERTER_MAP_TYPE = 'SystemStateStoredDataConverterMap';
 const SYSTEM_STATE_STORED_DATA = 'SystemStateStoredData';
 
+/**
+ * Extracts the system-state facts (type constants, data interfaces, converter
+ * configs/maps, imported identifiers) the rules layer consumes from a single
+ * source file.
+ *
+ * @param name - the source file name (used by ts-morph and diagnostics)
+ * @param text - the raw source text to parse
+ * @returns the structured extraction used by the rules layer
+ */
 export function extractSystemFile(name: string, text: string): ExtractedSystemFile {
   const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });
   const sourceFile = project.createSourceFile(name, text, { overwrite: true });

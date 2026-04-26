@@ -25,7 +25,9 @@ import type { RouteIssue, RouteNode, RouteSource } from './types.js';
 export interface ExtractFileResult {
   readonly nodes: readonly RouteNode[];
   readonly issues: readonly RouteIssue[];
-  /** Identifiers that this file imports — used by `resolve.ts` to walk transitively. */
+  /**
+   * Identifiers that this file imports — used by `resolve.ts` to walk transitively.
+   */
   readonly importedFromRelative: readonly RelativeImport[];
 }
 
@@ -35,6 +37,14 @@ export interface RelativeImport {
 }
 
 // MARK: Entry
+/**
+ * Extracts every UIRouter state declaration from a single source file plus any
+ * extraction-time diagnostics. Best-effort: malformed states surface as issues
+ * rather than throwing so the rest of the file still contributes nodes.
+ *
+ * @param source - the in-memory source name + text pair to extract
+ * @returns the discovered route nodes alongside extraction issues
+ */
 export function extractFile(source: RouteSource): ExtractFileResult {
   const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });
   const sourceFile = project.createSourceFile(source.name, source.text, { overwrite: true });
@@ -48,18 +58,18 @@ export function extractFile(source: RouteSource): ExtractFileResult {
     if (!info.typedAsState) {
       continue;
     }
-    addNode(source.name, info.literal, name, collected, issues);
+    addNode({ file: source.name, literal: info.literal, fallbackConstName: name, into: collected, issues });
   }
 
   // (2) every array literal that participates in state registration
   for (const arrayLit of findStateArrayLiterals(sourceFile)) {
     for (const element of arrayLit.getElements()) {
       if (Node.isObjectLiteralExpression(element)) {
-        addNode(source.name, element, undefined, collected, issues);
+        addNode({ file: source.name, literal: element, fallbackConstName: undefined, into: collected, issues });
       } else if (Node.isIdentifier(element)) {
         const ref = objectLiteralsByName.get(element.getText());
         if (ref) {
-          addNode(source.name, ref.literal, element.getText(), collected, issues);
+          addNode({ file: source.name, literal: ref.literal, fallbackConstName: element.getText(), into: collected, issues });
         }
       }
     }
@@ -105,10 +115,8 @@ function findStateArrayLiterals(sourceFile: SourceFile): readonly ArrayLiteralEx
   for (const stmt of sourceFile.getVariableStatements()) {
     for (const decl of stmt.getDeclarations()) {
       const initializer = decl.getInitializer();
-      if (initializer && Node.isArrayLiteralExpression(initializer)) {
-        if (declarationIsStateArray(stmt, decl.getName(), initializer)) {
-          arrays.push(initializer);
-        }
+      if (initializer && Node.isArrayLiteralExpression(initializer) && declarationIsStateArray(stmt, decl.getName(), initializer)) {
+        arrays.push(initializer);
       }
     }
   }
@@ -150,7 +158,7 @@ function declarationIsStateArray(stmt: VariableStatement, name: string, literal:
   // Heuristic 1: explicit `: Ng2StateDeclaration[]` annotation
   const decl = stmt.getDeclarations().find((d) => d.getName() === name);
   const typeNode = decl?.getTypeNode();
-  if (typeNode && typeNode.getText() === 'Ng2StateDeclaration[]') {
+  if (typeNode?.getText() === 'Ng2StateDeclaration[]') {
     return true;
   }
   // Heuristic 2: array contains at least one identifier or object literal that
@@ -174,8 +182,7 @@ function hasStringNameProperty(literal: ObjectLiteralExpression): boolean {
     return false;
   }
   const initializer = nameProp.getInitializer();
-  const isString = initializer !== undefined && (Node.isStringLiteral(initializer) || Node.isNoSubstitutionTemplateLiteral(initializer));
-  return isString;
+  return initializer !== undefined && (Node.isStringLiteral(initializer) || Node.isNoSubstitutionTemplateLiteral(initializer));
 }
 
 function findArrayLiteralForIdentifier(sourceFile: SourceFile, identifier: Identifier): ArrayLiteralExpression | undefined {
@@ -194,8 +201,20 @@ function findArrayLiteralForIdentifier(sourceFile: SourceFile, identifier: Ident
   return undefined;
 }
 
+/**
+ * Options for adding a parsed state-object literal to the route tree.
+ */
+interface AddNodeOptions {
+  readonly file: string;
+  readonly literal: ObjectLiteralExpression;
+  readonly fallbackConstName: string | undefined;
+  readonly into: Map<string, RouteNode>;
+  readonly issues: RouteIssue[];
+}
+
 // MARK: Single-state extraction
-function addNode(file: string, literal: ObjectLiteralExpression, fallbackConstName: string | undefined, into: Map<string, RouteNode>, issues: RouteIssue[]): void {
+function addNode(options: AddNodeOptions): void {
+  const { file, literal, fallbackConstName, into, issues } = options;
   const stringField = (key: string): string | undefined => stringPropertyValue(literal, key);
   const name = stringField('name');
   const line = literal.getStartLineNumber();

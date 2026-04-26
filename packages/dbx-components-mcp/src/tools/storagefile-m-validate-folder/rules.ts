@@ -7,10 +7,17 @@
 
 import { API_STORAGEFILE_SUBPATH, CANONICAL_API_ROOT_FILES, COMPONENT_STORAGEFILE_SUBPATH, HANDLERS_SUBFOLDER_NAME, INDEX_FILE, REQUIRED_API_FILES, STORAGEFILE_FILE_PREFIX, type SideInspection, type StorageFileFolderInspection, type Violation, type ViolationSeverity } from './types.js';
 
+/**
+ * Applies every per-folder layout rule for storage-files and returns the
+ * aggregated diagnostics.
+ *
+ * @param inspection - the prepared component + api folder snapshot
+ * @returns the violations the rules emit for the snapshot
+ */
 export function runRules(inspection: StorageFileFolderInspection): readonly Violation[] {
   const violations: Violation[] = [];
-  checkSidePresence(inspection.component, violations, 'STORAGEFILE_FOLDER_COMPONENT_DIR_NOT_FOUND', 'STORAGEFILE_FOLDER_COMPONENT_FOLDER_MISSING', COMPONENT_STORAGEFILE_SUBPATH);
-  checkSidePresence(inspection.api, violations, 'STORAGEFILE_FOLDER_API_DIR_NOT_FOUND', 'STORAGEFILE_FOLDER_API_FOLDER_MISSING', API_STORAGEFILE_SUBPATH);
+  checkSidePresence({ side: inspection.component, violations, dirCode: 'STORAGEFILE_FOLDER_COMPONENT_DIR_NOT_FOUND', folderCode: 'STORAGEFILE_FOLDER_COMPONENT_FOLDER_MISSING', subPath: COMPONENT_STORAGEFILE_SUBPATH });
+  checkSidePresence({ side: inspection.api, violations, dirCode: 'STORAGEFILE_FOLDER_API_DIR_NOT_FOUND', folderCode: 'STORAGEFILE_FOLDER_API_FOLDER_MISSING', subPath: API_STORAGEFILE_SUBPATH });
 
   if (inspection.component.status === 'ok') {
     checkComponent(inspection.component, violations);
@@ -21,8 +28,20 @@ export function runRules(inspection: StorageFileFolderInspection): readonly Viol
   return violations;
 }
 
+/**
+ * Options for verifying a storagefile folder side is present.
+ */
+interface CheckSidePresenceOptions {
+  readonly side: SideInspection;
+  readonly violations: Violation[];
+  readonly dirCode: 'STORAGEFILE_FOLDER_COMPONENT_DIR_NOT_FOUND' | 'STORAGEFILE_FOLDER_API_DIR_NOT_FOUND';
+  readonly folderCode: 'STORAGEFILE_FOLDER_COMPONENT_FOLDER_MISSING' | 'STORAGEFILE_FOLDER_API_FOLDER_MISSING';
+  readonly subPath: string;
+}
+
 // MARK: Presence
-function checkSidePresence(side: SideInspection, violations: Violation[], dirCode: 'STORAGEFILE_FOLDER_COMPONENT_DIR_NOT_FOUND' | 'STORAGEFILE_FOLDER_API_DIR_NOT_FOUND', folderCode: 'STORAGEFILE_FOLDER_COMPONENT_FOLDER_MISSING' | 'STORAGEFILE_FOLDER_API_FOLDER_MISSING', subPath: string): void {
+function checkSidePresence(options: CheckSidePresenceOptions): void {
+  const { side, violations, dirCode, folderCode, subPath } = options;
   if (side.status === 'dir-not-found') {
     pushViolation(violations, {
       code: dirCode,

@@ -134,6 +134,14 @@ async function buildInspections(paths: readonly string[], cwd: string): Promise<
 }
 
 // MARK: Handler
+/**
+ * Tool handler for `dbx_validate_folder_system_m`. Audits the system-state
+ * map structure (state map keys vs. handler keys, manual-task constants) so
+ * callers catch drift before deploying a system task.
+ *
+ * @param rawArgs - the unvalidated tool arguments from the MCP runtime
+ * @returns the formatted folder report, or an error result when args fail validation
+ */
 export async function runSystemMValidateFolder(rawArgs: unknown): Promise<ToolResult> {
   let args: ParsedArgs;
   try {

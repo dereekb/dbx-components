@@ -10,13 +10,21 @@
 export type ArtifactKind = 'firestore-model' | 'storagefile-purpose' | 'storagefile-upload-handler' | 'storagefile-processor' | 'storagefile-processor-subtask' | 'notification-template' | 'notification-task' | 'nestjs-model-module' | 'nestjs-function-module' | 'nestjs-app-module';
 
 export interface FileConventionStep {
-  /** Section heading rendered as `## <heading>` in the markdown output. */
+  /**
+   * Section heading rendered as `## <heading>` in the markdown output.
+   */
   readonly heading: string;
-  /** Primary file path template — supports placeholders (see below). */
+  /**
+   * Primary file path template — supports placeholders (see below).
+   */
   readonly path?: string;
-  /** Alternative path templates (rendered as a "_OR_" sub-list). */
+  /**
+   * Alternative path templates (rendered as a "_OR_" sub-list).
+   */
   readonly altPaths?: readonly string[];
-  /** Body markdown — placeholders are substituted before rendering. */
+  /**
+   * Body markdown — placeholders are substituted before rendering.
+   */
   readonly body: string;
 }
 
@@ -26,7 +34,9 @@ export interface FileConventionSpec {
   readonly summary: string;
   readonly steps: readonly FileConventionStep[];
   readonly seeAlso?: readonly ArtifactKind[];
-  /** Optional verification command suggestion (e.g. "Run `dbx_validate_app_storagefiles`"). */
+  /**
+   * Optional verification command suggestion (e.g. "Run `dbx_validate_app_storagefiles`").
+   */
   readonly verify?: string;
 }
 

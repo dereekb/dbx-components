@@ -15,6 +15,15 @@ interface ResolvedPlaceholders {
   readonly NAME: string;
 }
 
+/**
+ * Renders a {@link FileConventionSpec} as a markdown document, applying
+ * placeholder substitution (`<componentDir>`, `<name>`, ...) so callers see
+ * paths relative to their own project layout.
+ *
+ * @param spec - the convention spec to render
+ * @param values - placeholder substitutions supplied by the caller
+ * @returns the trimmed markdown document
+ */
 export function formatSpec(spec: FileConventionSpec, values: PlaceholderValues): string {
   const resolved = resolvePlaceholders(values);
   const lines: string[] = [];
@@ -92,12 +101,11 @@ function applyPlaceholders(text: string, values: ResolvedPlaceholders): string {
 
 function splitWords(input: string): readonly string[] {
   // Accept any combination of `-`, `_`, and case transitions as separators.
-  const broken = input
+  return input
     .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
     .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
     .split(/[\s\-_]+/)
     .filter((p) => p.length > 0);
-  return broken;
 }
 
 function toKebab(input: string): string {
@@ -109,8 +117,8 @@ function toKebab(input: string): string {
 function toCamel(input: string): string {
   const parts = splitWords(input);
   let result = '';
-  for (let i = 0; i < parts.length; i += 1) {
-    const part = parts[i].toLowerCase();
+  for (const [i, part_] of parts.entries()) {
+    const part = part_.toLowerCase();
     if (i === 0) {
       result += part;
     } else {

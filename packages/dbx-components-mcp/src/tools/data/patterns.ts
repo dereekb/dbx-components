@@ -13,21 +13,33 @@
 export type ExampleDepth = 'minimal' | 'brief' | 'full';
 
 export interface ExamplePattern {
-  /** Slug used as the pattern key and in `dbx_form_examples pattern="..."` calls. */
+  /**
+   * Slug used as the pattern key and in `dbx_form_examples pattern="..."` calls.
+   */
   readonly slug: string;
-  /** Short display name. */
+  /**
+   * Short display name.
+   */
   readonly name: string;
-  /** One-sentence description of what the pattern builds. */
+  /**
+   * One-sentence description of what the pattern builds.
+   */
   readonly summary: string;
-  /** Form slugs that this pattern composes from. Useful for cross-linking. */
+  /**
+   * Form slugs that this pattern composes from. Useful for cross-linking.
+   */
   readonly usesFormSlugs: readonly string[];
-  /** Code snippets at increasing levels of detail. */
+  /**
+   * Code snippets at increasing levels of detail.
+   */
   readonly snippets: {
     readonly minimal: string;
     readonly brief: string;
     readonly full: string;
   };
-  /** Optional supplementary notes appended to `full` depth. */
+  /**
+   * Optional supplementary notes appended to `full` depth.
+   */
   readonly notes?: string;
 }
 
@@ -274,9 +286,11 @@ export interface SettingsValue {
 
 /**
  * Looks up an example pattern by its slug.
+ *
+ * @param slug - the pattern slug to resolve, case-insensitive and trimmed
+ * @returns the matching pattern, or `undefined` when no slug matches
  */
 export function getExamplePattern(slug: string): ExamplePattern | undefined {
   const lowered = slug.trim().toLowerCase();
-  const result = EXAMPLE_PATTERNS.find((p) => p.slug === lowered);
-  return result;
+  return EXAMPLE_PATTERNS.find((p) => p.slug === lowered);
 }

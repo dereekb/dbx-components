@@ -6,6 +6,14 @@
 
 import { buildRequiredFiles, RESERVED_MODEL_FOLDERS, type FolderInspection, type ReservedModelFolder, type Violation, type ViolationSeverity } from './types.js';
 
+/**
+ * Applies every folder-level rule to a single inspection and returns the
+ * aggregated diagnostics. Rules short-circuit on missing/invalid folders so a
+ * stat failure does not cascade into spurious downstream warnings.
+ *
+ * @param inspection - the prepared folder inspection
+ * @returns the violations the rules emit for that folder
+ */
 export function runRules(inspection: FolderInspection): readonly Violation[] {
   const violations: Violation[] = [];
   if (inspection.status === 'not-found') {

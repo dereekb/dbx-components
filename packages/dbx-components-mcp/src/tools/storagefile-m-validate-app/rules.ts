@@ -18,6 +18,15 @@ const PURPOSE_SUFFIX = '_PURPOSE';
 const FILE_TYPE_IDENTIFIER_SUFFIX = '_UPLOADED_FILE_TYPE_IDENTIFIER';
 const GROUP_IDS_FUNCTION_SUFFIXES: readonly string[] = ['StorageFileGroupIds', 'FileGroupIds'];
 
+/**
+ * Applies every cross-file storage-file rule and returns the aggregated
+ * diagnostics. I/O-level rules (missing folders) short-circuit content checks
+ * so the report stays focused on the root cause.
+ *
+ * @param inspection - the on-disk snapshot used for I/O-level rules
+ * @param extracted - the pre-extracted facts the content rules consume
+ * @returns the violations the rules emit for the snapshot
+ */
 export function runRules(inspection: AppStorageFilesInspection, extracted: ExtractedAppStorageFiles): readonly Violation[] {
   const violations: Violation[] = [];
 
@@ -109,7 +118,21 @@ function checkUploadService(extracted: ExtractedAppStorageFiles, violations: Vio
     });
   }
 
-  // Flag unresolved spreads.
+  flagUnresolvedUploadSpreads(extracted, violations);
+  flagUploadInitializerOrphans(extracted, violations);
+  flagUploadCoverageGaps(extracted, violations);
+  flagUploadServiceWiring(extracted, violations);
+}
+
+/**
+ * Flags any spread element inside `storageFileInitializeFromUploadService({ initializer })`
+ * whose target identifier could not be resolved to an array binding or factory
+ * call (and isn't trust-listed).
+ *
+ * @param extracted - the validator extraction
+ * @param violations - the mutable violations buffer to append to
+ */
+function flagUnresolvedUploadSpreads(extracted: ExtractedAppStorageFiles, violations: Violation[]): void {
   for (const call of extracted.uploadServiceCalls) {
     for (const unresolved of call.unresolvedSpreadIdentifiers) {
       if (extracted.trustedExternalIdentifiers.has(unresolved)) continue;
@@ -122,20 +145,16 @@ function checkUploadService(extracted: ExtractedAppStorageFiles, violations: Vio
       });
     }
   }
+}
 
-  // Reachable initializer entries — by binding name.
-  const reachableBindings = new Set<string>();
-  for (const call of extracted.uploadServiceCalls) {
-    for (const name of call.resolvedInitializerBindings) reachableBindings.add(name);
-  }
-  const reachableTypeIdentifiers = new Set<string>();
-  for (const entry of extracted.uploadInitializerEntries) {
-    if (entry.bindingName && reachableBindings.has(entry.bindingName)) {
-      reachableTypeIdentifiers.add(entry.typeIdentifier);
-    }
-  }
-
-  // Orphan check: every initializer's `type:` should reference a declared file-type identifier.
+/**
+ * Flags every initializer whose `type:` field references an identifier that
+ * isn't a declared `UploadedFileTypeIdentifier` constant or trust-listed name.
+ *
+ * @param extracted - the validator extraction
+ * @param violations - the mutable violations buffer to append to
+ */
+function flagUploadInitializerOrphans(extracted: ExtractedAppStorageFiles, violations: Violation[]): void {
   const fileTypeNames = new Set(extracted.fileTypeIdentifierConstants.map((c) => c.symbolName));
   for (const entry of extracted.uploadInitializerEntries) {
     if (fileTypeNames.has(entry.typeIdentifier)) continue;
@@ -147,12 +166,29 @@ function checkUploadService(extracted: ExtractedAppStorageFiles, violations: Vio
       file: entry.sourceFile
     });
   }
+}
 
-  // Coverage check: every declared file-type identifier must appear in some reachable initializer.
-  // When an initializer literal with the right `type:` exists but its binding name
-  // never makes it into a `storageFileInitializeFromUploadService({ initializer })`
-  // call's array (e.g. a factory in `handlers/` named its inner variable
-  // differently from the call-site binding), emit a more actionable error.
+/**
+ * Flags coverage gaps where a declared `UploadedFileTypeIdentifier` constant
+ * has no reachable initializer in any `storageFileInitializeFromUploadService`
+ * call. When an unreachable initializer literal exists for that type, a more
+ * actionable name-mismatch violation is emitted instead.
+ *
+ * @param extracted - the validator extraction
+ * @param violations - the mutable violations buffer to append to
+ */
+function flagUploadCoverageGaps(extracted: ExtractedAppStorageFiles, violations: Violation[]): void {
+  const reachableBindings = new Set<string>();
+  for (const call of extracted.uploadServiceCalls) {
+    for (const name of call.resolvedInitializerBindings) reachableBindings.add(name);
+  }
+  const reachableTypeIdentifiers = new Set<string>();
+  for (const entry of extracted.uploadInitializerEntries) {
+    if (entry.bindingName && reachableBindings.has(entry.bindingName)) {
+      reachableTypeIdentifiers.add(entry.typeIdentifier);
+    }
+  }
+
   const entriesByType = new Map<string, typeof extracted.uploadInitializerEntries>();
   for (const entry of extracted.uploadInitializerEntries) {
     const list = entriesByType.get(entry.typeIdentifier);
@@ -184,8 +220,16 @@ function checkUploadService(extracted: ExtractedAppStorageFiles, violations: Vio
       file: undefined
     });
   }
+}
 
-  // Wiring check: at least one NestJS provider with `provide: StorageFileInitializeFromUploadService, useFactory: <factoryName>`.
+/**
+ * Verifies that at least one NestJS provider wires the upload-service factory
+ * via `useFactory: <factoryName>`. Trust-listed factory names also count.
+ *
+ * @param extracted - the validator extraction
+ * @param violations - the mutable violations buffer to append to
+ */
+function flagUploadServiceWiring(extracted: ExtractedAppStorageFiles, violations: Violation[]): void {
   const factoryNames = new Set<string>();
   for (const call of extracted.uploadServiceCalls) {
     if (call.enclosingFactoryName) factoryNames.add(call.enclosingFactoryName);
@@ -302,8 +346,8 @@ function collectPurposesWithSubtasks(extracted: ExtractedAppStorageFiles): Map<s
 
 // MARK: Duplicates
 function checkDuplicates(extracted: ExtractedAppStorageFiles, violations: Violation[]): void {
-  flagDuplicates(extracted.purposeConstants.map(toCodeRef), 'STORAGEFILE_PURPOSE_DUPLICATE', '`StorageFilePurpose`', violations);
-  flagDuplicates(extracted.fileTypeIdentifierConstants.map(toCodeRef), 'STORAGEFILE_FILE_TYPE_IDENTIFIER_DUPLICATE', '`UploadedFileTypeIdentifier`', violations);
+  flagDuplicates({ entries: extracted.purposeConstants.map(toCodeRef), code: 'STORAGEFILE_PURPOSE_DUPLICATE', label: '`StorageFilePurpose`', violations });
+  flagDuplicates({ entries: extracted.fileTypeIdentifierConstants.map(toCodeRef), code: 'STORAGEFILE_FILE_TYPE_IDENTIFIER_DUPLICATE', label: '`UploadedFileTypeIdentifier`', violations });
 }
 
 function toCodeRef(entry: ExtractedPurposeConstant | ExtractedUploadedFileTypeIdentifierConstant): { readonly symbolName: string; readonly code: string | undefined; readonly sourceFile: string } {
@@ -311,7 +355,18 @@ function toCodeRef(entry: ExtractedPurposeConstant | ExtractedUploadedFileTypeId
   return { symbolName: entry.symbolName, code, sourceFile: entry.sourceFile };
 }
 
-function flagDuplicates(entries: readonly { readonly symbolName: string; readonly code: string | undefined; readonly sourceFile: string }[], code: 'STORAGEFILE_PURPOSE_DUPLICATE' | 'STORAGEFILE_FILE_TYPE_IDENTIFIER_DUPLICATE', label: string, violations: Violation[]): void {
+/**
+ * Options for flagging duplicate code values across constants.
+ */
+interface FlagDuplicatesOptions {
+  readonly entries: readonly { readonly symbolName: string; readonly code: string | undefined; readonly sourceFile: string }[];
+  readonly code: 'STORAGEFILE_PURPOSE_DUPLICATE' | 'STORAGEFILE_FILE_TYPE_IDENTIFIER_DUPLICATE';
+  readonly label: string;
+  readonly violations: Violation[];
+}
+
+function flagDuplicates(options: FlagDuplicatesOptions): void {
+  const { entries, code, label, violations } = options;
   const seen = new Map<string, string>();
   for (const entry of entries) {
     if (!entry.code) continue;
@@ -378,8 +433,8 @@ function stripGroupIdsSuffix(name: string): string {
 function toCamelCase(screaming: string): string {
   const parts = screaming.split('_').filter((p) => p.length > 0);
   let result = '';
-  for (let i = 0; i < parts.length; i += 1) {
-    const part = parts[i].toLowerCase();
+  for (const [i, part_] of parts.entries()) {
+    const part = part_.toLowerCase();
     if (i === 0) {
       result += part;
     } else {

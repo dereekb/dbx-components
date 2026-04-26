@@ -7,10 +7,16 @@
 
 import { API_NOTIFICATION_SUBPATH, CANONICAL_API_ROOT_FILES, COMPONENT_NOTIFICATION_SUBPATH, HANDLERS_SUBFOLDER_NAME, INDEX_FILE, NOTIFICATION_FILE_PREFIX, REQUIRED_API_FILES, type NotificationFolderInspection, type SideInspection, type Violation, type ViolationSeverity } from './types.js';
 
+/**
+ * Applies every per-folder layout rule and returns the aggregated diagnostics.
+ *
+ * @param inspection - the prepared component + api folder snapshot
+ * @returns the violations the rules emit for the snapshot
+ */
 export function runRules(inspection: NotificationFolderInspection): readonly Violation[] {
   const violations: Violation[] = [];
-  checkSidePresence(inspection.component, violations, 'NOTIF_FOLDER_COMPONENT_DIR_NOT_FOUND', 'NOTIF_FOLDER_COMPONENT_FOLDER_MISSING', COMPONENT_NOTIFICATION_SUBPATH);
-  checkSidePresence(inspection.api, violations, 'NOTIF_FOLDER_API_DIR_NOT_FOUND', 'NOTIF_FOLDER_API_FOLDER_MISSING', API_NOTIFICATION_SUBPATH);
+  checkSidePresence({ side: inspection.component, violations, dirCode: 'NOTIF_FOLDER_COMPONENT_DIR_NOT_FOUND', folderCode: 'NOTIF_FOLDER_COMPONENT_FOLDER_MISSING', subPath: COMPONENT_NOTIFICATION_SUBPATH });
+  checkSidePresence({ side: inspection.api, violations, dirCode: 'NOTIF_FOLDER_API_DIR_NOT_FOUND', folderCode: 'NOTIF_FOLDER_API_FOLDER_MISSING', subPath: API_NOTIFICATION_SUBPATH });
 
   if (inspection.component.status === 'ok') {
     checkComponent(inspection.component, violations);
@@ -21,8 +27,20 @@ export function runRules(inspection: NotificationFolderInspection): readonly Vio
   return violations;
 }
 
+/**
+ * Options for verifying a notification folder side is present.
+ */
+interface CheckSidePresenceOptions {
+  readonly side: SideInspection;
+  readonly violations: Violation[];
+  readonly dirCode: 'NOTIF_FOLDER_COMPONENT_DIR_NOT_FOUND' | 'NOTIF_FOLDER_API_DIR_NOT_FOUND';
+  readonly folderCode: 'NOTIF_FOLDER_COMPONENT_FOLDER_MISSING' | 'NOTIF_FOLDER_API_FOLDER_MISSING';
+  readonly subPath: string;
+}
+
 // MARK: Presence
-function checkSidePresence(side: SideInspection, violations: Violation[], dirCode: 'NOTIF_FOLDER_COMPONENT_DIR_NOT_FOUND' | 'NOTIF_FOLDER_API_DIR_NOT_FOUND', folderCode: 'NOTIF_FOLDER_COMPONENT_FOLDER_MISSING' | 'NOTIF_FOLDER_API_FOLDER_MISSING', subPath: string): void {
+function checkSidePresence(options: CheckSidePresenceOptions): void {
+  const { side, violations, dirCode, folderCode, subPath } = options;
   if (side.status === 'dir-not-found') {
     pushViolation(violations, {
       code: dirCode,

@@ -70,18 +70,19 @@ function formatPatternCatalog(): string {
   for (const pattern of EXAMPLE_PATTERNS) {
     lines.push(`## ${pattern.name}`);
     lines.push('');
+    const usesText = pattern.usesFormSlugs.map((s) => code(s)).join(', ');
     lines.push(`- **slug:** \`${pattern.slug}\``);
     lines.push(`- **summary:** ${pattern.summary}`);
-    lines.push(`- **uses:** ${pattern.usesFormSlugs.map((s) => `\`${s}\``).join(', ')}`);
+    lines.push(`- **uses:** ${usesText}`);
     lines.push('');
   }
-  const result = lines.join('\n').trimEnd();
-  return result;
+  return lines.join('\n').trimEnd();
 }
 
 function formatPattern(pattern: ExamplePattern, depth: ExampleDepth): string {
   const snippet = pattern.snippets[depth];
-  const sections: string[] = [`# ${pattern.name}`, '', pattern.summary, '', `**slug:** \`${pattern.slug}\` · **depth:** \`${depth}\` · **uses:** ${pattern.usesFormSlugs.map((s) => `\`${s}\``).join(', ')}`, '', '```ts', snippet, '```'];
+  const usesText = pattern.usesFormSlugs.map((s) => code(s)).join(', ');
+  const sections: string[] = [`# ${pattern.name}`, '', pattern.summary, '', `**slug:** \`${pattern.slug}\` · **depth:** \`${depth}\` · **uses:** ${usesText}`, '', '```ts', snippet, '```'];
   if (pattern.notes && depth === 'full') {
     sections.push('');
     sections.push('## Notes');
@@ -92,17 +93,26 @@ function formatPattern(pattern: ExamplePattern, depth: ExampleDepth): string {
     sections.push('');
     sections.push(`→ Call \`dbx_form_examples pattern="${pattern.slug}" depth="full"\` for imports, FormConfig wrapper, and value-type interface.`);
   }
-  const result = sections.join('\n');
-  return result;
+  return sections.join('\n');
 }
 
 function formatNotFound(slug: string): string {
-  const available = EXAMPLE_PATTERNS.map((p) => `\`${p.slug}\``).join(', ');
-  const result = [`No example pattern matched \`${slug}\`.`, '', `Available patterns: ${available}.`, '', 'Call `dbx_form_examples pattern="list"` for summaries.'].join('\n');
-  return result;
+  const available = EXAMPLE_PATTERNS.map((p) => code(p.slug)).join(', ');
+  return [`No example pattern matched \`${slug}\`.`, '', `Available patterns: ${available}.`, '', 'Call `dbx_form_examples pattern="list"` for summaries.'].join('\n');
+}
+
+function code(value: string): string {
+  return '`' + value + '`';
 }
 
 // MARK: Handler
+/**
+ * Tool handler for `dbx_form_examples`. Resolves a form example pattern from
+ * the registry and renders it at the requested depth.
+ *
+ * @param rawArgs - the unvalidated tool arguments from the MCP runtime
+ * @returns the formatted pattern text, or an error result when args fail validation
+ */
 export function runFormExamples(rawArgs: unknown): ToolResult {
   let args: ParsedExamplesArgs;
   try {

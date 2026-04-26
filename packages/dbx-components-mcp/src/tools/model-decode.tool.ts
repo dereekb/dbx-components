@@ -159,6 +159,9 @@ function buildPrefixMap(): Map<string, string> {
 /**
  * Executes a decode request against the firebase-models registry. Exported so
  * it can be tested without the MCP transport.
+ *
+ * @param rawArgs - the unvalidated tool arguments from the MCP runtime
+ * @returns the formatted decode, or an error result when args fail validation
  */
 export function runModelDecode(rawArgs: unknown): ToolResult {
   let args: ParsedDecodeArgs;
@@ -219,8 +222,7 @@ function buildUnmatchedMessage(hint: string | undefined, document: Document): st
     lines.push('');
     lines.push(`Document key seen: \`${document.extraKey}\``);
   }
-  const result = lines.join('\n');
-  return result;
+  return lines.join('\n');
 }
 
 export const modelDecodeTool: DbxTool = {

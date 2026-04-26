@@ -142,12 +142,19 @@ export const DBX_TOOLS: readonly DbxTool[] = [
   artifactFileConventionTool
 ];
 
+/**
+ * Wires `tools/list` and `tools/call` against the underlying MCP server using
+ * a single shared dispatch table. Each tool surfaces its own definition and a
+ * pure handler — the dispatcher routes calls by name and converts thrown
+ * errors into `isError` tool results.
+ *
+ * @param server - the MCP server whose underlying transport handlers to register
+ */
 export function registerTools(server: McpServer): void {
   const underlyingServer = server.server;
 
   underlyingServer.setRequestHandler(ListToolsRequestSchema, async () => {
-    const result = { tools: DBX_TOOLS.map((t) => t.definition) };
-    return result;
+    return { tools: DBX_TOOLS.map((t) => t.definition) };
   });
 
   underlyingServer.setRequestHandler(CallToolRequestSchema, async (request) => {
@@ -156,7 +163,6 @@ export function registerTools(server: McpServer): void {
     if (!tool) {
       return toolError(`Unknown tool: ${name}. Known tools: ${DBX_TOOLS.map((t) => t.definition.name).join(', ')}.`);
     }
-    const result = await tool.run(toolArgs);
-    return result;
+    return tool.run(toolArgs);
   });
 }

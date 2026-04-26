@@ -39,6 +39,9 @@ export interface DecodeContext {
 
 /**
  * Produces the markdown body for a successful decode.
+ *
+ * @param context - the resolved model, document, prefixes, and optional extra key
+ * @returns the rendered markdown that the tool emits as content
  */
 export function formatDecode(context: DecodeContext): string {
   const { model, doc, prefixes, extraKey } = context;
@@ -97,8 +100,7 @@ export function formatDecode(context: DecodeContext): string {
     lines.push('');
   }
 
-  const result = lines.join('\n').trimEnd();
-  return result;
+  return lines.join('\n').trimEnd();
 }
 
 function decodeField(field: FirebaseField, rawValue: unknown, enums: readonly FirebaseEnum[]): DecodedField {
@@ -135,8 +137,7 @@ function formatFieldRow(row: DecodedField): string {
   const desc = escapeCell(row.field.description ?? '–');
   const value = escapeCell(row.displayValue);
   const typeSeg = [row.field.tsType ? `\`${row.field.tsType}\`` : undefined, `\`${row.field.converter}\``].filter(Boolean).join(' · ');
-  const result = `| ${name} | ${desc} | ${value} | ${typeSeg} |`;
-  return result;
+  return `| ${name} | ${desc} | ${value} | ${typeSeg} |`;
 }
 
 function escapeCell(text: string): string {
@@ -171,14 +172,17 @@ function collectReferencedEnums(fields: readonly DecodedField[], enums: readonly
   for (const f of fields) {
     if (f.field.enumRef) names.add(f.field.enumRef);
   }
-  const result = enums.filter((e) => names.has(e.name));
-  return result;
+  return enums.filter((e) => names.has(e.name));
 }
 
 /**
  * Walks every string value (including inside arrays) looking for values that
  * start with a known collection prefix. The resulting hints let callers see
  * which other models this document relates to.
+ *
+ * @param doc - the raw decoded Firestore document being inspected
+ * @param prefixes - map of `prefix -> targetModelName` for the active registry
+ * @returns the inferred outbound relationships in document order
  */
 export function detectRelationships(doc: Readonly<Record<string, unknown>>, prefixes: ReadonlyMap<string, string>): readonly DecodedRelationship[] {
   const out: DecodedRelationship[] = [];
@@ -207,8 +211,7 @@ function matchPrefix(value: string, prefixes: ReadonlyMap<string, string>): { re
   for (const candidate of candidates) {
     const model = prefixes.get(candidate);
     if (model) {
-      const result = { prefix: candidate, model };
-      return result;
+      return { prefix: candidate, model };
     }
   }
   return undefined;

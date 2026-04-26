@@ -119,12 +119,16 @@ export interface ExtractedFile {
   readonly firstFunctionsBlockLine: number | undefined;
   readonly markComments: readonly MarkComment[];
   readonly firstParamsOrResultLine: number | undefined;
-  /** Line of the last `*Params` or `*Result` declaration that falls before the Functions block. */
+  /**
+   * Line of the last `*Params` or `*Result` declaration that falls before the Functions block.
+   */
   readonly lastParamsOrResultBeforeFunctionsLine: number | undefined;
 }
 
 export interface MarkComment {
-  /** The text after `// MARK:` trimmed (e.g. `Functions`, `Keys`, `Constants`). */
+  /**
+   * The text after `// MARK:` trimmed (e.g. `Functions`, `Keys`, `Constants`).
+   */
   readonly label: string;
   readonly line: number;
 }
@@ -139,28 +143,42 @@ export interface ExtractedVariable {
   readonly name: string;
   readonly exported: boolean;
   readonly line: number;
-  /** Raw text of the declaration's type annotation (the text after `:`), if any. */
+  /**
+   * Raw text of the declaration's type annotation (the text after `:`), if any.
+   */
   readonly typeAnnotation: string | undefined;
 }
 
 export interface ExtractedCrudConfigType extends ExtractedTypeAlias {
-  /** Top-level keys declared in the type (e.g. `profile`, `userInvite`). */
+  /**
+   * Top-level keys declared in the type (e.g. `profile`, `userInvite`).
+   */
   readonly keys: readonly string[];
-  /** Keys whose value is not `null` (need abstract class members + runtime entries). */
+  /**
+   * Keys whose value is not `null` (need abstract class members + runtime entries).
+   */
   readonly nonNullKeys: readonly string[];
-  /** Names of `*Params` interfaces referenced at leaves in bare form (no `[*, *Result]` tuple). */
+  /**
+   * Names of `*Params` interfaces referenced at leaves in bare form (no `[*, *Result]` tuple).
+   */
   readonly bareLeafParamsNames: readonly string[];
 }
 
 export interface ExtractedCrudConfigConst extends ExtractedVariable {
-  /** Top-level keys declared in the runtime object literal initializer. */
+  /**
+   * Top-level keys declared in the runtime object literal initializer.
+   */
   readonly runtimeKeys: readonly string[];
 }
 
 export interface ExtractedFunctionMap extends ExtractedVariable {
-  /** Whether the initializer is a call to `callModelFirebaseFunctionMapFactory(...)`. */
+  /**
+   * Whether the initializer is a call to `callModelFirebaseFunctionMapFactory(...)`.
+   */
   readonly callsFactory: boolean;
-  /** Identifier arg names passed to the factory, in order. */
+  /**
+   * Identifier arg names passed to the factory, in order.
+   */
   readonly factoryArgs: readonly string[];
 }
 
@@ -169,9 +187,13 @@ export interface ExtractedFunctionsClass {
   readonly exported: boolean;
   readonly isAbstract: boolean;
   readonly line: number;
-  /** Raw text of the first `implements` clause (including generics), or `undefined`. */
+  /**
+   * Raw text of the first `implements` clause (including generics), or `undefined`.
+   */
   readonly implementsText: string | undefined;
-  /** Property names declared on the class (abstract or otherwise). */
+  /**
+   * Property names declared on the class (abstract or otherwise).
+   */
   readonly memberNames: readonly string[];
 }
 
@@ -179,7 +201,9 @@ export interface ExtractedParamsDecl {
   readonly name: string;
   readonly exported: boolean;
   readonly line: number;
-  /** Whether this was declared as `interface` (true) or `type` alias (false). */
+  /**
+   * Whether this was declared as `interface` (true) or `type` alias (false).
+   */
   readonly isInterface: boolean;
   readonly fields: readonly ExtractedField[];
 }
@@ -196,9 +220,13 @@ export interface ExtractedParamsValidator {
   readonly name: string;
   readonly exported: boolean;
   readonly line: number;
-  /** Target type inside `as Type<...>` / `as unknown as Type<...>`, if present. */
+  /**
+   * Target type inside `as Type<...>` / `as unknown as Type<...>`, if present.
+   */
   readonly castTargetName: string | undefined;
-  /** Top-level properties from the arktype object literal (`type({...})` or `base.merge({...})`). */
+  /**
+   * Top-level properties from the arktype object literal (`type({...})` or `base.merge({...})`).
+   */
   readonly properties: readonly ExtractedValidatorProperty[];
 }
 
@@ -211,7 +239,9 @@ export interface ExtractedParamsValidator {
 export interface ExtractedValidatorProperty {
   readonly name: string;
   readonly optional: boolean;
-  /** `true` if the property value is a call to `clearable(...)`. */
+  /**
+   * `true` if the property value is a call to `clearable(...)`.
+   */
   readonly hasClearable: boolean;
   readonly line: number;
 }
@@ -220,7 +250,9 @@ export interface ExtractedField {
   readonly name: string;
   readonly readonly: boolean;
   readonly line: number;
-  /** Raw type-annotation text. Used to detect `Maybe<...>` wrappers. */
+  /**
+   * Raw type-annotation text. Used to detect `Maybe<...>` wrappers.
+   */
   readonly typeText: string;
   readonly hasMaybeType: boolean;
 }

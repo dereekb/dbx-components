@@ -6,14 +6,20 @@
  * clients that prefer browsing data over calling `dbx_pipe_lookup`.
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { PIPE_CATEGORY_ORDER, PIPE_ENTRIES, getPipeEntries, getPipeEntriesByCategory, getPipeEntry, type PipeCategory } from '../tools/data/pipe-entries.js';
 
 const PIPES_URI = 'dbx://pipe/entries';
 const PIPE_TEMPLATE = 'dbx://pipe/entries/{slug}';
 const PIPES_BY_CATEGORY_TEMPLATE = 'dbx://pipe/entries/category/{category}';
 
+/**
+ * Registers the pipe-entry MCP resources (catalog, per-slug details, category
+ * filter) on the given server, mirroring the layout used by other registry
+ * resources so clients can browse instead of invoking `dbx_pipe_lookup`.
+ *
+ * @param server - the MCP server to register resources against
+ */
 export function registerPipesResource(server: McpServer): void {
   server.registerResource(
     'dbx-components Pipe Entries',
@@ -39,7 +45,7 @@ export function registerPipesResource(server: McpServer): void {
           description: e.description
         }))
       };
-      const result = {
+      return {
         contents: [
           {
             uri: PIPES_URI,
@@ -48,7 +54,6 @@ export function registerPipesResource(server: McpServer): void {
           }
         ]
       };
-      return result;
     }
   );
 
@@ -75,7 +80,7 @@ export function registerPipesResource(server: McpServer): void {
         text = JSON.stringify(entry, null, 2);
       }
 
-      const result = {
+      return {
         contents: [
           {
             uri: uri.href,
@@ -84,7 +89,6 @@ export function registerPipesResource(server: McpServer): void {
           }
         ]
       };
-      return result;
     }
   );
 
@@ -109,7 +113,7 @@ export function registerPipesResource(server: McpServer): void {
         text = JSON.stringify({ category, pipes }, null, 2);
       }
 
-      const result = {
+      return {
         contents: [
           {
             uri: uri.href,
@@ -118,7 +122,6 @@ export function registerPipesResource(server: McpServer): void {
           }
         ]
       };
-      return result;
     }
   );
 }

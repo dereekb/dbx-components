@@ -64,6 +64,9 @@ const LookupFormArgsType = type({
 /**
  * Parses and validates the caller's args via arktype. Throws a user-facing
  * error string when validation fails — the handler catches and formats it.
+ *
+ * @param raw - the unvalidated tool arguments from the MCP runtime
+ * @returns the canonical args with `depth` defaulted to `'full'`
  */
 function parseLookupFormArgs(raw: unknown): { readonly topic: string; readonly depth: 'brief' | 'full' } {
   const parsed = LookupFormArgsType(raw);
@@ -72,11 +75,10 @@ function parseLookupFormArgs(raw: unknown): { readonly topic: string; readonly d
     throw new Error(`Invalid arguments: ${parsed.summary}`);
   }
 
-  const result = {
+  return {
     topic: parsed.topic,
     depth: parsed.depth ?? ('full' as const)
   };
-  return result;
 }
 
 // MARK: Resolution
@@ -92,6 +94,9 @@ type LookupFormMatch = { readonly kind: 'single'; readonly field: FormFieldInfo 
  *   4. form alias → remap and retry slug/factory lookup
  *   5. form `produces` value match → form group
  *   6. fuzzy substring search over form slug/factoryName/description
+ *
+ * @param rawTopic - the caller-supplied topic, untrimmed
+ * @returns the resolved match describing how to render the response
  */
 function resolveTopic(rawTopic: string): LookupFormMatch {
   const lowered = rawTopic.trim().toLowerCase();
@@ -127,18 +132,23 @@ function resolveTopic(rawTopic: string): LookupFormMatch {
 /**
  * Case-insensitive exact match against the catalog of `produces` values.
  * Returns the catalog value with its original casing when found.
+ *
+ * @param topic - the lookup topic to test against the produces catalog
+ * @returns the matching catalog value with its original casing, or `undefined`
  */
 function findProducesMatch(topic: string): string | undefined {
   const lowered = topic.trim().toLowerCase();
   const catalog = getFormProducesCatalog();
-  const result = catalog.find((v) => v.toLowerCase() === lowered);
-  return result;
+  return catalog.find((v) => v.toLowerCase() === lowered);
 }
 
 /**
  * Cheap substring-based candidate list used when a topic doesn't resolve.
  * Returns up to five entries whose slug / factory name / description contains
  * the query. Good enough at registry size <50 — revisit if it grows.
+ *
+ * @param query - the unmatched lookup topic to fuzzy-search
+ * @returns up to five candidate entries ordered by descending score
  */
 function fuzzyCandidates(query: string): readonly FormFieldInfo[] {
   const q = query.trim().toLowerCase();
@@ -156,8 +166,7 @@ function fuzzyCandidates(query: string): readonly FormFieldInfo[] {
     }
   }
   scored.sort((a, b) => b.score - a.score);
-  const result = scored.slice(0, 5).map((s) => s.field);
-  return result;
+  return scored.slice(0, 5).map((s) => s.field);
 }
 
 // MARK: Formatting
@@ -179,8 +188,7 @@ function formatCatalog(): string {
     const count = getFormFieldsByProduces(value).length;
     lines.push(`- \`${value}\` (${count})`);
   }
-  const result = lines.join('\n').trimEnd();
-  return result;
+  return lines.join('\n').trimEnd();
 }
 
 function formatNotFound(normalized: string, candidates: readonly FormFieldInfo[]): string {
@@ -194,14 +202,16 @@ function formatNotFound(normalized: string, candidates: readonly FormFieldInfo[]
   } else {
     lines.push('Try `dbx_form_lookup topic="list"` to browse the catalog.');
   }
-  const result = lines.join('\n');
-  return result;
+  return lines.join('\n');
 }
 
 // MARK: Handler
 /**
  * Executes a form lookup and returns a ToolResult. Exported separately so it
  * can be tested without spinning up the full MCP transport.
+ *
+ * @param rawArgs - the unvalidated tool arguments from the MCP runtime
+ * @returns the rendered match, or an error result when args fail validation
  */
 export function runLookupForm(rawArgs: unknown): ToolResult {
   let args: { readonly topic: string; readonly depth: 'brief' | 'full' };

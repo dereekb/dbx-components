@@ -26,17 +26,29 @@
 export type ActionEntryRole = 'directive' | 'store' | 'state';
 
 interface ActionEntryBase {
-  /** Unique registry slug (kebab-case). */
+  /**
+   * Unique registry slug (kebab-case).
+   */
   readonly slug: string;
-  /** Discriminator. */
+  /**
+   * Discriminator.
+   */
   readonly role: ActionEntryRole;
-  /** Prose description of what the entry is and when to reach for it. */
+  /**
+   * Prose description of what the entry is and when to reach for it.
+   */
   readonly description: string;
-  /** Skill slugs callers can load for further context. */
+  /**
+   * Skill slugs callers can load for further context.
+   */
   readonly skillRefs: readonly string[];
-  /** Path within the source repository where the entry is defined. */
+  /**
+   * Path within the source repository where the entry is defined.
+   */
   readonly sourcePath: string;
-  /** Copy-paste-ready usage snippet (HTML for directives, TS for store/state). */
+  /**
+   * Copy-paste-ready usage snippet (HTML for directives, TS for store/state).
+   */
   readonly example: string;
 }
 
@@ -45,17 +57,29 @@ interface ActionEntryBase {
  * whether it is required, and a short description.
  */
 export interface ActionInputInfo {
-  /** Template alias (the value passed in `[alias]="..."`). */
+  /**
+   * Template alias (the value passed in `[alias]="..."`).
+   */
   readonly alias: string;
-  /** Class-side property name on the directive. */
+  /**
+   * Class-side property name on the directive.
+   */
   readonly propertyName: string;
-  /** TypeScript type displayed for the input. */
+  /**
+   * TypeScript type displayed for the input.
+   */
   readonly type: string;
-  /** Whether the input is required (`input.required`). */
+  /**
+   * Whether the input is required (`input.required`).
+   */
   readonly required: boolean;
-  /** Optional default value, when one is configured. */
+  /**
+   * Optional default value, when one is configured.
+   */
   readonly defaultValue?: string;
-  /** Short prose description. */
+  /**
+   * Short prose description.
+   */
   readonly description: string;
 }
 
@@ -76,21 +100,37 @@ export interface ActionOutputInfo {
  */
 export interface ActionDirectiveInfo extends ActionEntryBase {
   readonly role: 'directive';
-  /** Full Angular `@Directive` selector string (e.g. `'[dbxActionHandler]'`). */
+  /**
+   * Full Angular `@Directive` selector string (e.g. `'[dbxActionHandler]'`).
+   */
   readonly selector: string;
-  /** Exported class name (e.g. `'DbxActionHandlerDirective'`). */
+  /**
+   * Exported class name (e.g. `'DbxActionHandlerDirective'`).
+   */
   readonly className: string;
-  /** Module the directive is exported from. */
+  /**
+   * Module the directive is exported from.
+   */
   readonly module: string;
-  /** Inputs the directive accepts. */
+  /**
+   * Inputs the directive accepts.
+   */
   readonly inputs: readonly ActionInputInfo[];
-  /** Outputs the directive emits. */
+  /**
+   * Outputs the directive emits.
+   */
   readonly outputs: readonly ActionOutputInfo[];
-  /** Whether the directive `provide:`s a store (creates a context). */
+  /**
+   * Whether the directive `provide:`s a store (creates a context).
+   */
   readonly producesContext: boolean;
-  /** Whether the directive `inject:`s a store (consumes a context). */
+  /**
+   * Whether the directive `inject:`s a store (consumes a context).
+   */
   readonly consumesContext: boolean;
-  /** Action states the directive reads and/or writes. */
+  /**
+   * Action states the directive reads and/or writes.
+   */
   readonly stateInteraction: readonly DbxActionStateValue[];
 }
 
@@ -119,15 +159,25 @@ export interface ActionObservableInfo {
  */
 export interface ActionStoreInfo extends ActionEntryBase {
   readonly role: 'store';
-  /** Exported class name. */
+  /**
+   * Exported class name.
+   */
   readonly className: string;
-  /** Module the store is exported from. */
+  /**
+   * Module the store is exported from.
+   */
   readonly module: string;
-  /** Public methods on the store (updaters + utilities). */
+  /**
+   * Public methods on the store (updaters + utilities).
+   */
   readonly methods: readonly ActionMethodInfo[];
-  /** Public observables on the store. */
+  /**
+   * Public observables on the store.
+   */
   readonly observables: readonly ActionObservableInfo[];
-  /** Common disabled-key constants surfaced by sibling directives. */
+  /**
+   * Common disabled-key constants surfaced by sibling directives.
+   */
   readonly disabledKeyDefaults: readonly string[];
 }
 
@@ -144,15 +194,25 @@ export type DbxActionStateValue = 'IDLE' | 'DISABLED' | 'TRIGGERED' | 'VALUE_REA
  */
 export interface ActionStateInfo extends ActionEntryBase {
   readonly role: 'state';
-  /** Always `'DbxActionState'`. */
+  /**
+   * Always `'DbxActionState'`.
+   */
   readonly enumName: 'DbxActionState';
-  /** Enum member name (`'IDLE'`, `'TRIGGERED'`, ...). */
+  /**
+   * Enum member name (`'IDLE'`, `'TRIGGERED'`, ...).
+   */
   readonly stateValue: DbxActionStateValue;
-  /** Underlying string literal value the enum member is assigned. */
+  /**
+   * Underlying string literal value the enum member is assigned.
+   */
   readonly literal: string;
-  /** States that can transition INTO this state (incoming arrows). */
+  /**
+   * States that can transition INTO this state (incoming arrows).
+   */
   readonly transitionsFrom: readonly DbxActionStateValue[];
-  /** States this state can transition OUT to (outgoing arrows). */
+  /**
+   * States this state can transition OUT to (outgoing arrows).
+   */
   readonly transitionsTo: readonly DbxActionStateValue[];
 }
 

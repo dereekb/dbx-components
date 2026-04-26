@@ -8,6 +8,14 @@ import { basename } from 'node:path';
 import { FUNCTIONS_BLOCK_ORDER, NON_CRUD_API_BASENAMES, type ExtractedFile, type ExtractedParamsDecl, type ExtractedParamsValidator, type ExtractedResultDecl, type FunctionsBlockKind, type Violation, type ViolationSeverity } from './types.js';
 
 // MARK: Entry
+/**
+ * Applies every cross-file rule to a single extracted api file and returns the
+ * aggregated diagnostics. Rules accumulate into a buffer so they can short-
+ * circuit early when a structural prerequisite is missing.
+ *
+ * @param file - the extracted facts for one api source
+ * @returns the violations the rules emit for that file
+ */
 export function runRules(file: ExtractedFile): readonly Violation[] {
   const violations: Violation[] = [];
   const base = basename(file.name);
@@ -290,7 +298,7 @@ function checkParamsValidatorPairing(file: ExtractedFile, violations: Violation[
     }
     // Adjacency check (warning): no other params decl, validator, or result decl between the paired decl and validator.
     if (validator.line > decl.line) {
-      const blockers = findStatementsBetween(file, decl.line, validator.line, decl.name, validator.name);
+      const blockers = findStatementsBetween({ file, lowExclusive: decl.line, highExclusive: validator.line, ignoreDeclName: decl.name, ignoreValidatorName: validator.name });
       if (blockers.length > 0) {
         pushViolation(violations, {
           code: 'PARAMS_VALIDATOR_NOT_ADJACENT',
@@ -314,7 +322,19 @@ function checkParamsValidatorPairing(file: ExtractedFile, violations: Violation[
   }
 }
 
-function findStatementsBetween(file: ExtractedFile, lowExclusive: number, highExclusive: number, ignoreDeclName: string, ignoreValidatorName: string): readonly string[] {
+/**
+ * Options for finding statements between two line numbers.
+ */
+interface FindStatementsBetweenOptions {
+  readonly file: ExtractedFile;
+  readonly lowExclusive: number;
+  readonly highExclusive: number;
+  readonly ignoreDeclName: string;
+  readonly ignoreValidatorName: string;
+}
+
+function findStatementsBetween(options: FindStatementsBetweenOptions): readonly string[] {
+  const { file, lowExclusive, highExclusive, ignoreDeclName, ignoreValidatorName } = options;
   const names: string[] = [];
   for (const d of file.paramsDecls) {
     if (d.name === ignoreDeclName) continue;
@@ -358,15 +378,26 @@ function camelCase(pascal: string): string {
 function checkReadonlyFields(file: ExtractedFile, violations: Violation[]): void {
   for (const decl of file.paramsDecls) {
     if (!decl.isInterface) continue;
-    checkInterfaceReadonly(file, decl, 'PARAMS_FIELD_NOT_READONLY', violations);
+    checkInterfaceReadonly({ file, decl, code: 'PARAMS_FIELD_NOT_READONLY', violations });
   }
   for (const decl of file.resultDecls) {
     if (!decl.isInterface) continue;
-    checkInterfaceReadonly(file, decl, 'RESULT_FIELD_NOT_READONLY', violations);
+    checkInterfaceReadonly({ file, decl, code: 'RESULT_FIELD_NOT_READONLY', violations });
   }
 }
 
-function checkInterfaceReadonly(file: ExtractedFile, decl: ExtractedParamsDecl | ExtractedResultDecl, code: 'PARAMS_FIELD_NOT_READONLY' | 'RESULT_FIELD_NOT_READONLY', violations: Violation[]): void {
+/**
+ * Options for checking interface readonly fields.
+ */
+interface CheckInterfaceReadonlyOptions {
+  readonly file: ExtractedFile;
+  readonly decl: ExtractedParamsDecl | ExtractedResultDecl;
+  readonly code: 'PARAMS_FIELD_NOT_READONLY' | 'RESULT_FIELD_NOT_READONLY';
+  readonly violations: Violation[];
+}
+
+function checkInterfaceReadonly(options: CheckInterfaceReadonlyOptions): void {
+  const { file, decl, code, violations } = options;
   for (const field of decl.fields) {
     if (field.readonly) continue;
     pushViolation(violations, {

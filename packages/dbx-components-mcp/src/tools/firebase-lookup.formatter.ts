@@ -41,6 +41,14 @@ const STORE_SHAPE_LABEL: Readonly<Record<FirebaseModelStoreShape, string>> = {
   'system-state': 'system-state'
 };
 
+/**
+ * Renders a single Firebase model entry as markdown — identity, store shape,
+ * source path, and a fields table whose width depends on `depth`.
+ *
+ * @param model - the registry entry to render
+ * @param depth - `'brief'` for fields-only or `'full'` for type/converter columns + enums
+ * @returns the markdown body the tool emits as content
+ */
 export function formatFirebaseModelEntry(model: FirebaseModel, depth: LookupDepth): string {
   const lines: string[] = [];
   lines.push(`# ${model.name}`);
@@ -92,10 +100,16 @@ export function formatFirebaseModelEntry(model: FirebaseModel, depth: LookupDept
     }
   }
 
-  const result = lines.join('\n').trimEnd();
-  return result;
+  return lines.join('\n').trimEnd();
 }
 
+/**
+ * Renders the catalog view (root vs. subcollection split) so callers can
+ * browse the registry before deciding which entry to drill into.
+ *
+ * @param models - the entries to list, typically the full registry
+ * @returns the markdown body the tool emits as content
+ */
 export function formatFirebaseModelCatalog(models: readonly FirebaseModel[]): string {
   const lines: string[] = [];
   const roots = models.filter((m) => !m.parentIdentityConst);
@@ -120,8 +134,7 @@ export function formatFirebaseModelCatalog(models: readonly FirebaseModel[]): st
   lines.push('');
   lines.push('Use `dbx_model_lookup topic="<Name>"` or `dbx_model_lookup topic="<prefix>"` for full model details, or `dbx_model_decode` to decode a raw document.');
   lines.push('See `dbx_model_lookup topic="shapes"` for the consumer-side store-shape taxonomy (root, sub-collection, singletons, system-state).');
-  const result = lines.join('\n').trimEnd();
-  return result;
+  return lines.join('\n').trimEnd();
 }
 
 /**
@@ -134,7 +147,7 @@ export function formatFirebaseModelCatalog(models: readonly FirebaseModel[]): st
  * @returns A self-contained markdown reference for the shape taxonomy.
  */
 export function formatFirebaseStoreShapeTaxonomy(): string {
-  const result = [
+  return [
     '# Firebase model store shapes',
     '',
     'Five consumer-side store shapes exist for Firestore-backed models. Each maps to one or two abstract base classes in `@dereekb/dbx-firebase`.',
@@ -201,5 +214,4 @@ export function formatFirebaseStoreShapeTaxonomy(): string {
     '- No Firestore identity of its own; lives under the central `SystemState` collection keyed by a type constant? → `system-state`.',
     '- Otherwise → `root`.'
   ].join('\n');
-  return result;
 }

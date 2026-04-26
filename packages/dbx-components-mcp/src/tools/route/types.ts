@@ -53,17 +53,27 @@ export interface RouteNode {
   readonly name: string;
   readonly url: string | undefined;
   readonly component: string | undefined;
-  /** Explicit `parent` field if set; otherwise undefined (parent is derived from the dot-prefix of `name`). */
+  /**
+   * Explicit `parent` field if set; otherwise undefined (parent is derived from the dot-prefix of `name`).
+   */
   readonly explicitParent: string | undefined;
   readonly redirectTo: string | undefined;
   readonly abstract: boolean;
-  /** `name` ends with `.**` — UIRouter lazy/future-state marker. */
+  /**
+   * `name` ends with `.**` — UIRouter lazy/future-state marker.
+   */
   readonly futureState: boolean;
-  /** Names of declared params (object keys only). */
+  /**
+   * Names of declared params (object keys only).
+   */
   readonly paramKeys: readonly string[];
-  /** Names of declared resolves (object keys, or array element identifiers). */
+  /**
+   * Names of declared resolves (object keys, or array element identifiers).
+   */
   readonly resolveKeys: readonly string[];
-  /** Source file the state was defined in. */
+  /**
+   * Source file the state was defined in.
+   */
   readonly file: string;
   readonly line: number;
 }
@@ -74,21 +84,33 @@ export interface RouteNode {
  */
 export interface RouteTreeNode {
   readonly data: RouteNode;
-  /** Composed URL from root → this node, or `undefined` if any segment is missing. */
+  /**
+   * Composed URL from root → this node, or `undefined` if any segment is missing.
+   */
   readonly fullUrl: string | undefined;
   readonly parent: RouteTreeNode | undefined;
   readonly children: readonly RouteTreeNode[];
 }
 
 export interface RouteTree {
-  /** Top-level nodes (no resolvable parent in the source set). */
+  /**
+   * Top-level nodes (no resolvable parent in the source set).
+   */
   readonly roots: readonly RouteTreeNode[];
-  /** Every node, indexed by state name. */
+  /**
+   * Every node, indexed by state name.
+   */
   readonly byName: ReadonlyMap<string, RouteTreeNode>;
-  /** Issues surfaced during extraction or tree building. */
+  /**
+   * Issues surfaced during extraction or tree building.
+   */
   readonly issues: readonly RouteIssue[];
-  /** Files actually parsed (after import-walking). */
+  /**
+   * Files actually parsed (after import-walking).
+   */
   readonly filesChecked: number;
-  /** Total nodes in the tree. */
+  /**
+   * Total nodes in the tree.
+   */
   readonly nodeCount: number;
 }

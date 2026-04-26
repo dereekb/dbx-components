@@ -13,17 +13,19 @@ type Depth = 'brief' | 'full';
 
 /**
  * Formats a single form entry as markdown at the requested depth.
+ *
+ * @param field - the registry entry to render
+ * @param depth - `'brief'` for a tight summary or `'full'` for the config table and example
+ * @returns the markdown body the tool emits as content
  */
 export function formatFormFieldEntry(field: FormFieldInfo, depth: Depth): string {
-  const result = depth === 'brief' ? formatBrief(field) : formatFull(field);
-  return result;
+  return depth === 'brief' ? formatBrief(field) : formatFull(field);
 }
 
 function formatBrief(field: FormFieldInfo): string {
   const tierBits = formatTierBits(field);
   const array = field.arrayOutput === 'yes' ? ' (array)' : field.arrayOutput === 'optional' ? ' (single or array)' : '';
-  const result = [`## ${field.factoryName}`, '', `**slug:** \`${field.slug}\` · **tier:** \`${field.tier}\` · **produces:** \`${field.produces}\`${array}${tierBits}`, '', field.description, '', '```ts', field.minimalExample, '```', '', `→ Call \`dbx_form_lookup topic="${field.slug}" depth="full"\` for the config table and full example.`].join('\n');
-  return result;
+  return [`## ${field.factoryName}`, '', `**slug:** \`${field.slug}\` · **tier:** \`${field.tier}\` · **produces:** \`${field.produces}\`${array}${tierBits}`, '', field.description, '', '```ts', field.minimalExample, '```', '', `→ Call \`dbx_form_lookup topic="${field.slug}" depth="full"\` for the config table and full example.`].join('\n');
 }
 
 function formatFull(field: FormFieldInfo): string {
@@ -33,14 +35,12 @@ function formatFull(field: FormFieldInfo): string {
   const tierDetails = formatTierDetails(field);
 
   const sections: string[] = [header, field.description, tierDetails, configTable, exampleSection].filter((s) => s.length > 0);
-  const result = sections.join('\n\n');
-  return result;
+  return sections.join('\n\n');
 }
 
 function formatHeader(field: FormFieldInfo): string {
   const array = field.arrayOutput === 'yes' ? ' · array output' : field.arrayOutput === 'optional' ? ' · array optional' : '';
-  const result = [`# ${field.factoryName}`, '', `- **slug:** \`${field.slug}\``, `- **tier:** \`${field.tier}\``, `- **produces:** \`${field.produces}\`${array}`, `- **source:** \`packages/dbx-form/src/lib/form/${field.sourcePath}\``].join('\n');
-  return result;
+  return [`# ${field.factoryName}`, '', `- **slug:** \`${field.slug}\``, `- **tier:** \`${field.tier}\``, `- **produces:** \`${field.produces}\`${array}`, `- **source:** \`packages/dbx-form/src/lib/form/${field.sourcePath}\``].join('\n');
 }
 
 function formatTierBits(field: FormFieldInfo): string {
@@ -80,8 +80,7 @@ function formatTierDetails(field: FormFieldInfo): string {
       lines.push(`- **config interface:** \`${field.configInterface}\``);
     }
   }
-  const result = lines.join('\n');
-  return result;
+  return lines.join('\n');
 }
 
 function formatConfigTable(field: FormFieldInfo): string {
@@ -103,18 +102,20 @@ function formatConfigTable(field: FormFieldInfo): string {
 }
 
 function formatExampleSection(field: FormFieldInfo): string {
-  const result = ['## Example', '', '```ts', field.example, '```', '', '### Minimal', '', '```ts', field.minimalExample, '```'].join('\n');
-  return result;
+  return ['## Example', '', '```ts', field.example, '```', '', '### Minimal', '', '```ts', field.minimalExample, '```'].join('\n');
 }
 
 /**
  * Formats a list of form entries — used when a query (slug/alias that
  * matches a produces value, or `list` topic) returns multiple candidates.
+ *
+ * @param fields - the entries to render, grouped by tier internally
+ * @param title - heading shown at the top of the rendered list
+ * @returns the markdown body the tool emits as content
  */
 export function formatFormFieldGroup(fields: readonly FormFieldInfo[], title: string): string {
   if (fields.length === 0) {
-    const result = `_No form entries matched._`;
-    return result;
+    return `_No form entries matched._`;
   }
   const byTier = new Map<string, FormFieldInfo[]>();
   for (const field of fields) {
@@ -137,6 +138,5 @@ export function formatFormFieldGroup(fields: readonly FormFieldInfo[], title: st
     }
     sections.push('');
   }
-  const result = sections.join('\n').trimEnd();
-  return result;
+  return sections.join('\n').trimEnd();
 }

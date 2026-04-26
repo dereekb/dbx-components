@@ -12,6 +12,14 @@ import { Node, Project, SyntaxKind, type ClassDeclaration, type InterfaceDeclara
 import type { ExtractedCrudConfigConst, ExtractedCrudConfigType, ExtractedField, ExtractedFile, ExtractedFunctionMap, ExtractedFunctionsClass, ExtractedParamsDecl, ExtractedParamsValidator, ExtractedResultDecl, ExtractedTypeAlias, ExtractedValidatorProperty, ExtractedVariable, MarkComment, ValidatorSource } from './types.js';
 
 // MARK: Entry
+/**
+ * Parses a single api source via ts-morph and returns the normalised facts the
+ * rules module consumes. Extraction is best-effort — when a section is missing
+ * the rules treat the absence as the diagnostic instead of crashing here.
+ *
+ * @param source - the in-memory source name + text pair to extract
+ * @returns the structured extraction used by the rules layer
+ */
 export function extractFile(source: ValidatorSource): ExtractedFile {
   const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });
   const sourceFile = project.createSourceFile(source.name, source.text, { overwrite: true });
@@ -149,6 +157,14 @@ function inferGroupName(parts: { readonly functionTypeMap: ExtractedTypeAlias | 
   return best;
 }
 
+/**
+ * Returns the leading stem of `name` when it ends in the given suffix, or
+ * `undefined` when the suffix is absent or consumes the entire name.
+ *
+ * @param name - the candidate identifier
+ * @param suffix - the trailing fragment to strip
+ * @returns the stem, or `undefined` when no usable stem remains
+ */
 function stripSuffix(name: string, suffix: string): string | undefined {
   if (!name.endsWith(suffix)) {
     return undefined;
@@ -157,20 +173,32 @@ function stripSuffix(name: string, suffix: string): string | undefined {
   return stem.length > 0 ? stem : undefined;
 }
 
+/**
+ * Capitalises the first character of a camel-case identifier so it can be
+ * compared to its pascal-case sibling.
+ *
+ * @param camel - the camel-cased input
+ * @returns the same identifier with the first character uppercased
+ */
 function pascalCase(camel: string): string {
   if (camel.length === 0) {
     return camel;
   }
-  const result = camel.charAt(0).toUpperCase() + camel.slice(1);
-  return result;
+  return camel.charAt(0).toUpperCase() + camel.slice(1);
 }
 
+/**
+ * Lowercases the first character of a pascal-case identifier so it can be
+ * compared to its camel-case sibling.
+ *
+ * @param pascal - the pascal-cased input
+ * @returns the same identifier with the first character lowercased
+ */
 function camelCase(pascal: string): string {
   if (pascal.length === 0) {
     return pascal;
   }
-  const result = pascal.charAt(0).toLowerCase() + pascal.slice(1);
-  return result;
+  return pascal.charAt(0).toLowerCase() + pascal.slice(1);
 }
 
 // MARK: Functions-block finders
@@ -287,7 +315,6 @@ function collectBareParamsLeaves(node: TypeNode, out: string[]): void {
     if (name.endsWith('Params')) {
       out.push(name);
     }
-    return;
   }
   // Primitives, unions, null — ignore.
 }
@@ -371,7 +398,7 @@ function findFunctionsClass(sourceFile: SourceFile): ExtractedFunctionsClass | u
   const candidates: ClassDeclaration[] = [];
   for (const cls of sourceFile.getClasses()) {
     const name = cls.getName();
-    if (name && name.endsWith('Functions')) {
+    if (name?.endsWith('Functions')) {
       candidates.push(cls);
     }
   }
@@ -514,6 +541,14 @@ function extractCastTargetName(node: Node | undefined): string | undefined {
   return undefined;
 }
 
+/**
+ * Walks an arktype `type({...})` initializer and emits one record per property.
+ * Picks up the `?` optional marker and detects `clearable(...)` wrappers so
+ * the rules layer can compare against the matching params interface.
+ *
+ * @param initializer - the variable initializer node (typically a `type(...)` call)
+ * @returns the parsed property descriptors in source order
+ */
 function extractValidatorProperties(initializer: Node): readonly ExtractedValidatorProperty[] {
   const obj = findArktypeObjectLiteral(initializer);
   if (!obj) {
@@ -548,6 +583,9 @@ function extractValidatorProperties(initializer: Node): readonly ExtractedValida
  *   - `type({...}) as Type<X>` / `type({...}) as unknown as Type<X>`
  *   - `baseParamsType.merge({...}) as Type<X>` / with `as unknown as`
  *   - `baseParamsType as Type<X>` → returns `undefined` (no object literal).
+ *
+ * @param initializer - the variable initializer node to unwrap
+ * @returns the underlying arktype object literal, or `undefined` when the initializer is a re-export
  */
 function findArktypeObjectLiteral(initializer: Node): ObjectLiteralExpression | undefined {
   let current: Node | undefined = initializer;

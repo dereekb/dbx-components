@@ -73,6 +73,9 @@ interface QueryToken {
 
 /**
  * Tokenizes the query into lowercase non-empty tokens. Duplicates are deduped.
+ *
+ * @param query - the raw multi-word search query
+ * @returns the unique tokens in original-query order
  */
 function tokenize(query: string): readonly QueryToken[] {
   const raw = query
@@ -98,6 +101,10 @@ function tokenize(query: string): readonly QueryToken[] {
  * Weights mirror the form scorer so cross-domain results rank fairly. Most
  * signal comes from the model name, identity, and prefix — falling through to
  * field names and enum names for more speculative matches.
+ *
+ * @param model - the Firebase registry entry being scored
+ * @param token - the lowercase token to score against
+ * @returns the additive score for this token/model pair (`0` when there's no hit)
  */
 function scoreFirebaseModelAgainstToken(model: FirebaseModel, token: string): number {
   const name = model.name.toLowerCase();
@@ -171,16 +178,14 @@ function searchRegistry(tokens: readonly QueryToken[], limit: number): readonly 
     }
     return a.model.name.localeCompare(b.model.name);
   });
-  const result = hits.slice(0, limit);
-  return result;
+  return hits.slice(0, limit);
 }
 
 // MARK: Formatting
 function formatSearchResults(query: string, tokens: readonly QueryToken[], hits: readonly FirebaseSearchHit[]): string {
   const tokenDisplay = tokens.map((t) => t.display).join(', ');
   if (hits.length === 0) {
-    const result = [`No Firebase models matched \`${query}\` (tokens: \`${tokenDisplay}\`).`, '', 'Try `dbx_model_lookup topic="models"` to browse the catalog or a broader single-word query.'].join('\n');
-    return result;
+    return [`No Firebase models matched \`${query}\` (tokens: \`${tokenDisplay}\`).`, '', 'Try `dbx_model_lookup topic="models"` to browse the catalog or a broader single-word query.'].join('\n');
   }
   const lines: string[] = [`# Search: \`${query}\``, '', `Tokens: \`${tokenDisplay}\` · ${hits.length} result${hits.length === 1 ? '' : 's'}`, ''];
   for (const hit of hits) {
@@ -189,17 +194,25 @@ function formatSearchResults(query: string, tokens: readonly QueryToken[], hits:
     lines.push('');
     lines.push(`- **identity:** \`${hit.model.identityConst}\`${parent}`);
     lines.push(`- **collection:** \`${hit.model.modelType}\` · prefix \`${hit.model.collectionPrefix}\``);
-    lines.push(`- **fields:** ${hit.model.fields.length}${hit.model.enums.length > 0 ? ` · **enums:** ${hit.model.enums.length}` : ''}`);
+    const enumsPart = hit.model.enums.length > 0 ? ` · **enums:** ${hit.model.enums.length}` : '';
+    lines.push(`- **fields:** ${hit.model.fields.length}${enumsPart}`);
     lines.push(`- **matched:** \`${hit.matchedTokens.join(', ')}\``);
     lines.push('');
     lines.push(`→ \`dbx_model_lookup topic="${hit.model.name}"\` for full docs, or \`dbx_model_decode\` to decode a raw document.`);
     lines.push('');
   }
-  const result = lines.join('\n').trimEnd();
-  return result;
+  return lines.join('\n').trimEnd();
 }
 
 // MARK: Handler
+/**
+ * Tool handler for `dbx_model_search`. Tokenises the query, scores every
+ * Firebase model entry, and renders the top hits with matched-token
+ * annotations.
+ *
+ * @param rawArgs - the unvalidated tool arguments from the MCP runtime
+ * @returns the formatted search results, or an error result when args fail validation
+ */
 export function runSearchModel(rawArgs: unknown): ToolResult {
   let args: ParsedSearchArgs;
   try {

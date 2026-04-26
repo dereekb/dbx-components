@@ -102,7 +102,15 @@ function expectCodes(codes: readonly ViolationCode[], expected: readonly Violati
   }
 }
 
-function replaceInFile(files: InspectedFile[], relPath: string, from: string | RegExp, to: string): void {
+interface ReplaceInFileOptions {
+  readonly files: InspectedFile[];
+  readonly relPath: string;
+  readonly from: string | RegExp;
+  readonly to: string;
+}
+
+function replaceInFile(options: ReplaceInFileOptions): void {
+  const { files, relPath, from, to } = options;
   const i = files.findIndex((f) => f.relPath === relPath);
   const next = files[i].text.replace(from, to);
   files[i] = { ...files[i], text: next };
@@ -126,7 +134,7 @@ describe('validateAppStorageFiles — happy path', () => {
 describe('validateAppStorageFiles — purpose pairing', () => {
   it('flags STORAGEFILE_PURPOSE_MISSING_FILE_TYPE_IDENTIFIER when a purpose has no matching identifier', () => {
     const result = runWith(({ component }) => {
-      replaceInFile(component, 'src/lib/model/storagefile/storagefile.ts', "export const USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER: UploadedFileTypeIdentifier = 'user_avatar';", '');
+      replaceInFile({ files: component, relPath: 'src/lib/model/storagefile/storagefile.ts', from: "export const USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER: UploadedFileTypeIdentifier = 'user_avatar';", to: '' });
     });
     expectCodes(
       result.violations.map((v) => v.code),
@@ -138,7 +146,7 @@ describe('validateAppStorageFiles — purpose pairing', () => {
 describe('validateAppStorageFiles — upload service rules', () => {
   it('flags STORAGEFILE_UPLOAD_SERVICE_FACTORY_MISSING when no upload-service call exists', () => {
     const result = runWith(({ api }) => {
-      replaceInFile(api, 'src/app/common/model/storagefile/storagefile.upload.service.ts', /return storageFileInitializeFromUploadService\(config\);/, 'return null;');
+      replaceInFile({ files: api, relPath: 'src/app/common/model/storagefile/storagefile.upload.service.ts', from: /return storageFileInitializeFromUploadService\(config\);/, to: 'return null;' });
     });
     expectCodes(
       result.violations.map((v) => v.code),
@@ -148,7 +156,7 @@ describe('validateAppStorageFiles — upload service rules', () => {
 
   it('flags STORAGEFILE_UPLOAD_SERVICE_NOT_WIRED when no NestJS provider matches', () => {
     const result = runWith(({ api }) => {
-      replaceInFile(api, 'src/app/common/model/storagefile/storagefile.module.ts', 'useFactory: demoStorageFileUploadServiceFactory', 'useFactory: someOtherFactory');
+      replaceInFile({ files: api, relPath: 'src/app/common/model/storagefile/storagefile.module.ts', from: 'useFactory: demoStorageFileUploadServiceFactory', to: 'useFactory: someOtherFactory' });
     });
     expectCodes(
       result.violations.map((v) => v.code),
@@ -158,8 +166,8 @@ describe('validateAppStorageFiles — upload service rules', () => {
 
   it('flags STORAGEFILE_PURPOSE_NOT_IN_UPLOAD_SERVICE when a declared identifier has no initializer', () => {
     const result = runWith(({ api }) => {
-      replaceInFile(api, 'src/app/common/model/storagefile/storagefile.upload.service.ts', /const userAvatarInitializer: StorageFileInitializeFromUploadServiceInitializer = \{[\s\S]*?\};\s*/, '');
-      replaceInFile(api, 'src/app/common/model/storagefile/storagefile.upload.service.ts', '[userTestFileInitializer, userAvatarInitializer]', '[userTestFileInitializer]');
+      replaceInFile({ files: api, relPath: 'src/app/common/model/storagefile/storagefile.upload.service.ts', from: /const userAvatarInitializer: StorageFileInitializeFromUploadServiceInitializer = \{[\s\S]*?\};\s*/, to: '' });
+      replaceInFile({ files: api, relPath: 'src/app/common/model/storagefile/storagefile.upload.service.ts', from: '[userTestFileInitializer, userAvatarInitializer]', to: '[userTestFileInitializer]' });
     });
     const codes = result.violations.map((v) => v.code);
     expectCodes(codes, ['STORAGEFILE_PURPOSE_NOT_IN_UPLOAD_SERVICE']);
@@ -183,8 +191,8 @@ export function makeUserAvatarUploadInitializer(): StorageFileInitializeFromUplo
     const result = runWith(({ api }) => {
       // Drop the inline avatar initializer; replace it with a factory-returned one whose
       // inner variable name (`wrongName`) does not match the call-site binding (`userAvatarInitializer`).
-      replaceInFile(api, 'src/app/common/model/storagefile/storagefile.upload.service.ts', /const userAvatarInitializer: StorageFileInitializeFromUploadServiceInitializer = \{[\s\S]*?\};\s*/, 'const userAvatarInitializer = makeUserAvatarUploadInitializer();\n');
-      replaceInFile(api, 'src/app/common/model/storagefile/storagefile.upload.service.ts', "import { USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER, USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER } from 'demo-firebase';", "import { USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER, USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER } from 'demo-firebase';\nimport { makeUserAvatarUploadInitializer } from './handlers/upload.user.avatar';");
+      replaceInFile({ files: api, relPath: 'src/app/common/model/storagefile/storagefile.upload.service.ts', from: /const userAvatarInitializer: StorageFileInitializeFromUploadServiceInitializer = \{[\s\S]*?\};\s*/, to: 'const userAvatarInitializer = makeUserAvatarUploadInitializer();\n' });
+      replaceInFile({ files: api, relPath: 'src/app/common/model/storagefile/storagefile.upload.service.ts', from: "import { USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER, USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER } from 'demo-firebase';", to: "import { USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER, USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER } from 'demo-firebase';\nimport { makeUserAvatarUploadInitializer } from './handlers/upload.user.avatar';" });
       api.push({ relPath: 'src/app/common/model/storagefile/handlers/upload.user.avatar.ts', text: HANDLER_FILE });
     });
     const codes = result.violations.map((v) => v.code);
@@ -198,7 +206,7 @@ export function makeUserAvatarUploadInitializer(): StorageFileInitializeFromUplo
 
   it('flags STORAGEFILE_UPLOAD_INITIALIZER_ORPHAN when an initializer references a phantom identifier', () => {
     const result = runWith(({ api }) => {
-      replaceInFile(api, 'src/app/common/model/storagefile/storagefile.upload.service.ts', 'type: USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER,', 'type: PHANTOM_UPLOADED_FILE_TYPE_IDENTIFIER,');
+      replaceInFile({ files: api, relPath: 'src/app/common/model/storagefile/storagefile.upload.service.ts', from: 'type: USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER,', to: 'type: PHANTOM_UPLOADED_FILE_TYPE_IDENTIFIER,' });
     });
     expectCodes(
       result.violations.map((v) => v.code),
@@ -208,7 +216,7 @@ export function makeUserAvatarUploadInitializer(): StorageFileInitializeFromUplo
 
   it('warns STORAGEFILE_UPLOAD_SERVICE_SPREAD_UNRESOLVED when a spread does not resolve', () => {
     const result = runWith(({ api }) => {
-      replaceInFile(api, 'src/app/common/model/storagefile/storagefile.upload.service.ts', '[...userFileInitializers, ...systemFileInitializers]', '[...userFileInitializers, ...mysteryInitializers]');
+      replaceInFile({ files: api, relPath: 'src/app/common/model/storagefile/storagefile.upload.service.ts', from: '[...userFileInitializers, ...systemFileInitializers]', to: '[...userFileInitializers, ...mysteryInitializers]' });
     });
     const warnings = result.violations.filter((v) => v.code === 'STORAGEFILE_UPLOAD_SERVICE_SPREAD_UNRESOLVED');
     expect(warnings.length).toBeGreaterThan(0);
@@ -216,7 +224,7 @@ export function makeUserAvatarUploadInitializer(): StorageFileInitializeFromUplo
 
   it('warns STORAGEFILE_UPLOAD_SERVICE_MULTIPLE_FACTORIES when more than one upload-service call exists', () => {
     const result = runWith(({ api }) => {
-      replaceInFile(api, 'src/app/common/model/storagefile/storagefile.upload.service.ts', 'return storageFileInitializeFromUploadService(config);', 'storageFileInitializeFromUploadService(config); return storageFileInitializeFromUploadService(config);');
+      replaceInFile({ files: api, relPath: 'src/app/common/model/storagefile/storagefile.upload.service.ts', from: 'return storageFileInitializeFromUploadService(config);', to: 'storageFileInitializeFromUploadService(config); return storageFileInitializeFromUploadService(config);' });
     });
     const warnings = result.violations.filter((v) => v.code === 'STORAGEFILE_UPLOAD_SERVICE_MULTIPLE_FACTORIES');
     expect(warnings.length).toBeGreaterThan(0);
@@ -226,7 +234,7 @@ export function makeUserAvatarUploadInitializer(): StorageFileInitializeFromUplo
 describe('validateAppStorageFiles — processing handler rules', () => {
   it('flags STORAGEFILE_PROCESSING_HANDLER_MISSING when no handler call exists despite subtasks', () => {
     const result = runWith(({ api }) => {
-      replaceInFile(api, 'src/app/common/model/notification/notification.task.service.ts', /return storageFileProcessingNotificationTaskHandler\(\{ processors \}\);/, 'return null;');
+      replaceInFile({ files: api, relPath: 'src/app/common/model/notification/notification.task.service.ts', from: /return storageFileProcessingNotificationTaskHandler\(\{ processors \}\);/, to: 'return null;' });
     });
     expectCodes(
       result.violations.map((v) => v.code),
@@ -236,7 +244,7 @@ describe('validateAppStorageFiles — processing handler rules', () => {
 
   it('flags STORAGEFILE_PROCESSING_CONFIG_MISSING when a subtask-bearing purpose has no processor config', () => {
     const result = runWith(({ api }) => {
-      replaceInFile(api, 'src/app/common/model/notification/notification.task.service.ts', 'target: USER_TEST_FILE_PURPOSE,', 'target: SOME_OTHER_PURPOSE,');
+      replaceInFile({ files: api, relPath: 'src/app/common/model/notification/notification.task.service.ts', from: 'target: USER_TEST_FILE_PURPOSE,', to: 'target: SOME_OTHER_PURPOSE,' });
     });
     expectCodes(
       result.violations.map((v) => v.code),
@@ -246,7 +254,7 @@ describe('validateAppStorageFiles — processing handler rules', () => {
 
   it('flags STORAGEFILE_PROCESSING_CONFIG_ORPHAN when a config target is not a declared purpose', () => {
     const result = runWith(({ api }) => {
-      replaceInFile(api, 'src/app/common/model/notification/notification.task.service.ts', 'target: USER_TEST_FILE_PURPOSE,', 'target: PHANTOM_PURPOSE,');
+      replaceInFile({ files: api, relPath: 'src/app/common/model/notification/notification.task.service.ts', from: 'target: USER_TEST_FILE_PURPOSE,', to: 'target: PHANTOM_PURPOSE,' });
     });
     expectCodes(
       result.violations.map((v) => v.code),
@@ -256,7 +264,7 @@ describe('validateAppStorageFiles — processing handler rules', () => {
 
   it('flags STORAGEFILE_PROCESSING_SUBTASK_NOT_HANDLED when a subtask is missing from the flow', () => {
     const result = runWith(({ api }) => {
-      replaceInFile(api, 'src/app/common/model/notification/notification.task.service.ts', '{ subtask: USER_TEST_FILE_PURPOSE_PART_B_SUBTASK, fn: async () => null }', '');
+      replaceInFile({ files: api, relPath: 'src/app/common/model/notification/notification.task.service.ts', from: '{ subtask: USER_TEST_FILE_PURPOSE_PART_B_SUBTASK, fn: async () => null }', to: '' });
     });
     expectCodes(
       result.violations.map((v) => v.code),
@@ -268,7 +276,7 @@ describe('validateAppStorageFiles — processing handler rules', () => {
 describe('validateAppStorageFiles — duplicate / convention warnings', () => {
   it('warns STORAGEFILE_PURPOSE_DUPLICATE when two purpose constants share a string literal', () => {
     const result = runWith(({ component }) => {
-      replaceInFile(component, 'src/lib/model/storagefile/storagefile.ts', "export const USER_AVATAR_PURPOSE: StorageFilePurpose = 'avatar';", "export const USER_AVATAR_PURPOSE: StorageFilePurpose = 'test';");
+      replaceInFile({ files: component, relPath: 'src/lib/model/storagefile/storagefile.ts', from: "export const USER_AVATAR_PURPOSE: StorageFilePurpose = 'avatar';", to: "export const USER_AVATAR_PURPOSE: StorageFilePurpose = 'test';" });
     });
     const warnings = result.violations.filter((v) => v.code === 'STORAGEFILE_PURPOSE_DUPLICATE');
     expect(warnings.length).toBeGreaterThan(0);
@@ -277,7 +285,7 @@ describe('validateAppStorageFiles — duplicate / convention warnings', () => {
 
   it('warns STORAGEFILE_FILE_TYPE_IDENTIFIER_DUPLICATE when two identifier constants share a string literal', () => {
     const result = runWith(({ component }) => {
-      replaceInFile(component, 'src/lib/model/storagefile/storagefile.ts', "export const USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER: UploadedFileTypeIdentifier = 'user_avatar';", "export const USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER: UploadedFileTypeIdentifier = 'user_test_file';");
+      replaceInFile({ files: component, relPath: 'src/lib/model/storagefile/storagefile.ts', from: "export const USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER: UploadedFileTypeIdentifier = 'user_avatar';", to: "export const USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER: UploadedFileTypeIdentifier = 'user_test_file';" });
     });
     const warnings = result.violations.filter((v) => v.code === 'STORAGEFILE_FILE_TYPE_IDENTIFIER_DUPLICATE');
     expect(warnings.length).toBeGreaterThan(0);
@@ -285,7 +293,7 @@ describe('validateAppStorageFiles — duplicate / convention warnings', () => {
 
   it('warns STORAGEFILE_GROUP_IDS_FUNCTION_MISSING when a purpose has no group-ids helper', () => {
     const result = runWith(({ component }) => {
-      replaceInFile(component, 'src/lib/model/storagefile/storagefile.ts', /export function userAvatarFileGroupIds[\s\S]*?\}/, '');
+      replaceInFile({ files: component, relPath: 'src/lib/model/storagefile/storagefile.ts', from: /export function userAvatarFileGroupIds[\s\S]*?\}/, to: '' });
     });
     const warnings = result.violations.filter((v) => v.code === 'STORAGEFILE_GROUP_IDS_FUNCTION_MISSING');
     expect(warnings.length).toBeGreaterThan(0);
@@ -295,8 +303,8 @@ describe('validateAppStorageFiles — duplicate / convention warnings', () => {
 describe('validateAppStorageFiles — trust list', () => {
   it('does not flag STORAGEFILE_UPLOAD_INITIALIZER_ORPHAN for an identifier imported from @dereekb/*', () => {
     const result = runWith(({ api }) => {
-      replaceInFile(api, 'src/app/common/model/storagefile/storagefile.upload.service.ts', "import { USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER, USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER } from 'demo-firebase';", "import { USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER, USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER } from 'demo-firebase';\nimport { EXTERNAL_UPLOADED_FILE_TYPE_IDENTIFIER } from '@dereekb/firebase';");
-      replaceInFile(api, 'src/app/common/model/storagefile/storagefile.upload.service.ts', 'type: USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER,', 'type: EXTERNAL_UPLOADED_FILE_TYPE_IDENTIFIER,');
+      replaceInFile({ files: api, relPath: 'src/app/common/model/storagefile/storagefile.upload.service.ts', from: "import { USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER, USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER } from 'demo-firebase';", to: "import { USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER, USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER } from 'demo-firebase';\nimport { EXTERNAL_UPLOADED_FILE_TYPE_IDENTIFIER } from '@dereekb/firebase';" });
+      replaceInFile({ files: api, relPath: 'src/app/common/model/storagefile/storagefile.upload.service.ts', from: 'type: USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER,', to: 'type: EXTERNAL_UPLOADED_FILE_TYPE_IDENTIFIER,' });
     });
     const orphans = result.violations.filter((v) => v.code === 'STORAGEFILE_UPLOAD_INITIALIZER_ORPHAN');
     expect(orphans).toHaveLength(0);

@@ -518,20 +518,46 @@ export const PIPE_ENTRIES: readonly PipeEntryInfo[] = [
   }
 ];
 
+/**
+ * Returns every registered pipe entry (value, date, async, misc) in
+ * declaration order.
+ *
+ * @returns the full pipe registry list
+ */
 export function getPipeEntries(): readonly PipeEntryInfo[] {
   return PIPE_ENTRIES;
 }
 
+/**
+ * Looks up a pipe entry by its registry slug.
+ *
+ * @param slug - the registry slug to resolve, trimmed
+ * @returns the matching entry, or `undefined` when no slug matches
+ */
 export function getPipeEntry(slug: PipeRegistrySlug): Maybe<PipeEntryInfo> {
   const trimmed = slug.trim();
   return PIPE_ENTRIES.find((e) => e.slug === trimmed);
 }
 
+/**
+ * Looks up a pipe entry by its Angular pipe name (the value used in
+ * templates after the `|`).
+ *
+ * @param pipeName - the template-side pipe name to resolve
+ * @returns the matching entry, or `undefined` when no pipe name matches
+ */
 export function getPipeEntryByPipeName(pipeName: AngularPipeName): Maybe<PipeEntryInfo> {
   const trimmed = pipeName.trim();
   return PIPE_ENTRIES.find((e) => e.pipeName === trimmed);
 }
 
+/**
+ * Looks up a pipe entry by its TypeScript class name. Useful when callers
+ * arrive at the registry from an import statement rather than a template.
+ *
+ * @param className - the TypeScript class name to resolve
+ * @returns the matching entry, or `undefined` when no class matches
+ */
 export function getPipeEntryByClassName(className: TypeScriptClassName): Maybe<PipeEntryInfo> {
   const trimmed = className.trim();
   return PIPE_ENTRIES.find((e) => e.className === trimmed);
@@ -539,6 +565,13 @@ export function getPipeEntryByClassName(className: TypeScriptClassName): Maybe<P
 
 export const PIPE_CATEGORY_ORDER: readonly PipeCategory[] = ['value', 'date', 'async', 'misc'];
 
+/**
+ * Filters the registry by category so the lookup tool can render value, date,
+ * async, and misc pipes in separate sections.
+ *
+ * @param category - the category to filter by
+ * @returns entries matching the category, in registry order
+ */
 export function getPipeEntriesByCategory(category: PipeCategory): readonly PipeEntryInfo[] {
   return PIPE_ENTRIES.filter((e) => e.category === category);
 }

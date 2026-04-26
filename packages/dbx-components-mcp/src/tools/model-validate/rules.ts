@@ -10,6 +10,14 @@
 import { MAX_FIELD_NAME_LENGTH, ROOT_MODEL_ORDER, SUBCOLLECTION_MODEL_ORDER, type DeclarationKind, type ExtractedFile, type ExtractedModel, type Violation, type ViolationSeverity } from './types.js';
 
 // MARK: Entry
+/**
+ * Applies every model-level rule to a single extracted model file and returns
+ * the aggregated diagnostics. Rules short-circuit early when prerequisites
+ * (like a missing identity) are absent.
+ *
+ * @param file - the extracted facts for one model source
+ * @returns the violations the rules emit for that file
+ */
 export function runRules(file: ExtractedFile): readonly Violation[] {
   const violations: Violation[] = [];
   if (file.models.length === 0) {
@@ -552,6 +560,9 @@ function declarationLine(model: ExtractedModel, kind: DeclarationKind): number |
 /**
  * Accepts violations with an optional `severity` to keep the majority of
  * call sites (all hard-error rules) terse — defaults to `'error'`.
+ *
+ * @param buffer - the mutable violation buffer the rule is appending to
+ * @param violation - the violation payload, with severity defaulting to `'error'`
  */
 function pushViolation(buffer: Violation[], violation: Omit<Violation, 'severity'> & { readonly severity?: ViolationSeverity }): void {
   const severity: ViolationSeverity = violation.severity ?? 'error';
@@ -570,8 +581,8 @@ function typeArgsMatch(found: readonly string[], expected: readonly string[]): b
   if (found.length !== expected.length) {
     return false;
   }
-  for (let i = 0; i < found.length; i++) {
-    if (found[i].replace(/\s+/g, '') !== expected[i].replace(/\s+/g, '')) {
+  for (const [i, element] of found.entries()) {
+    if (element.replace(/\s+/g, '') !== expected[i].replace(/\s+/g, '')) {
       return false;
     }
   }
@@ -580,14 +591,12 @@ function typeArgsMatch(found: readonly string[], expected: readonly string[]): b
 
 function deriveCamelName(constName: string): string {
   const suffix = 'Identity';
-  const base = constName.endsWith(suffix) ? constName.slice(0, -suffix.length) : constName;
-  return base;
+  return constName.endsWith(suffix) ? constName.slice(0, -suffix.length) : constName;
 }
 
 function pascalCase(camel: string): string {
   if (camel.length === 0) {
     return camel;
   }
-  const result = camel.charAt(0).toUpperCase() + camel.slice(1);
-  return result;
+  return camel.charAt(0).toUpperCase() + camel.slice(1);
 }

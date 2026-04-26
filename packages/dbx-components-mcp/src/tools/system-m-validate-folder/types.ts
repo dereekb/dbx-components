@@ -71,12 +71,18 @@ export type FolderInspectionStatus = 'ok' | 'not-found' | 'not-directory';
  * populates {@link files} and {@link systemSource} via `node:fs/promises`.
  */
 export interface SystemFolderInspection {
-  /** Display name for the folder (typically the last path segment). */
+  /**
+   * Display name for the folder (typically the last path segment).
+   */
   readonly name: string;
-  /** Original path as provided by the caller (used in violation messages). */
+  /**
+   * Original path as provided by the caller (used in violation messages).
+   */
   readonly path: string;
   readonly status: FolderInspectionStatus;
-  /** `.ts` file basenames at the folder root (ignored when `status !== 'ok'`). */
+  /**
+   * `.ts` file basenames at the folder root (ignored when `status !== 'ok'`).
+   */
   readonly files: readonly string[];
   /**
    * Contents of `system.ts` when present. `undefined` when the file is
@@ -86,25 +92,35 @@ export interface SystemFolderInspection {
   readonly systemSource: string | undefined;
 }
 
-/** A `<NAME>_SYSTEM_STATE_TYPE` constant declared in `system.ts`. */
+/**
+ * A `<NAME>_SYSTEM_STATE_TYPE` constant declared in `system.ts`.
+ */
 export interface ExtractedTypeConstant {
   readonly name: string;
   readonly exported: boolean;
   readonly line: number;
-  /** Lowercase, underscore-stripped prefix (suffix `_SYSTEM_STATE_TYPE` removed). Used to pair with interfaces. */
+  /**
+   * Lowercase, underscore-stripped prefix (suffix `_SYSTEM_STATE_TYPE` removed). Used to pair with interfaces.
+   */
   readonly normalizedRoot: string;
 }
 
-/** An interface `<Foo>SystemData extends SystemStateStoredData`. */
+/**
+ * An interface `<Foo>SystemData extends SystemStateStoredData`.
+ */
 export interface ExtractedSystemDataInterface {
   readonly name: string;
   readonly exported: boolean;
   readonly line: number;
-  /** Lowercase, underscore-stripped form of the `<Foo>` stem (suffix `SystemData` removed). */
+  /**
+   * Lowercase, underscore-stripped form of the `<Foo>` stem (suffix `SystemData` removed).
+   */
   readonly normalizedRoot: string;
 }
 
-/** An `export const <foo>: SystemStateStoredDataFieldConverterConfig<X> = ...` constant. */
+/**
+ * An `export const <foo>: SystemStateStoredDataFieldConverterConfig<X> = ...` constant.
+ */
 export interface ExtractedConverter {
   readonly name: string;
   readonly exported: boolean;
@@ -117,14 +133,18 @@ export interface ExtractedConverter {
   readonly dataTypeArgument: string | undefined;
 }
 
-/** A key referenced inside the aggregate converter map. */
+/**
+ * A key referenced inside the aggregate converter map.
+ */
 export interface ExtractedConverterMapKey {
   readonly raw: string;
   readonly kind: 'identifier' | 'string';
   readonly line: number;
 }
 
-/** The `<app>SystemStateStoredDataConverterMap` aggregator constant. */
+/**
+ * The `<app>SystemStateStoredDataConverterMap` aggregator constant.
+ */
 export interface ExtractedConverterMap {
   readonly name: string;
   readonly exported: boolean;
@@ -133,15 +153,21 @@ export interface ExtractedConverterMap {
   readonly keys: readonly ExtractedConverterMapKey[];
 }
 
-/** Aggregated AST extraction result for a single `system.ts` file. */
+/**
+ * Aggregated AST extraction result for a single `system.ts` file.
+ */
 export interface ExtractedSystemFile {
   readonly typeConstants: readonly ExtractedTypeConstant[];
   readonly dataInterfaces: readonly ExtractedSystemDataInterface[];
   readonly converters: readonly ExtractedConverter[];
   readonly converterMap: ExtractedConverterMap | undefined;
-  /** Identifier names imported into the file (used to accept cross-package map keys). */
+  /**
+   * Identifier names imported into the file (used to accept cross-package map keys).
+   */
   readonly importedIdentifiers: ReadonlySet<string>;
-  /** Line number of the last top-level export (used to flag converter-map ordering). */
+  /**
+   * Line number of the last top-level export (used to flag converter-map ordering).
+   */
   readonly lastTopLevelExportLine: number;
 }
 

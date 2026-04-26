@@ -6,6 +6,13 @@
 
 import type { ValidationResult, Violation } from './types.js';
 
+/**
+ * Renders a {@link ValidationResult} as the markdown report the tool returns
+ * to callers, grouping violations by side (component / api).
+ *
+ * @param result - the aggregated folder-validation outcome
+ * @returns the markdown report
+ */
 export function formatResult(result: ValidationResult): string {
   const { violations, errorCount, warningCount, componentDir, apiDir } = result;
   const status = statusLabel(errorCount, warningCount);

@@ -137,7 +137,9 @@ export interface ExtractedDataInterface {
 export interface ExtractedField {
   readonly name: string;
   readonly line: number;
-  /** First non-empty description line of the field's JSDoc, or `undefined` if absent. */
+  /**
+   * First non-empty description line of the field's JSDoc, or `undefined` if absent.
+   */
   readonly jsDocFirstLine: string | undefined;
 }
 

@@ -7,6 +7,13 @@
 import { runRules } from './rules.js';
 import type { NotificationFolderInspection, ValidationResult, Violation } from './types.js';
 
+/**
+ * Pure validation entry point. Runs the rules layer over a prepared folder
+ * inspection and aggregates the violations and counts.
+ *
+ * @param inspection - the prepared component + api folder snapshot
+ * @returns the aggregated validation outcome with counts and violations
+ */
 export function validateNotificationFolder(inspection: NotificationFolderInspection): ValidationResult {
   const violations: Violation[] = [];
   let errorCount = 0;

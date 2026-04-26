@@ -6,6 +6,14 @@
 
 import type { ValidationResult, Violation } from './types.js';
 
+/**
+ * Renders a {@link ValidationResult} as the markdown report the tool returns
+ * to callers. Groups violations by file, then by rule group, with a headline
+ * summary of pass/fail counts.
+ *
+ * @param result - the aggregated validation outcome
+ * @returns the markdown report
+ */
 export function formatResult(result: ValidationResult): string {
   const { violations, errorCount, warningCount, filesChecked, apisChecked } = result;
   const status = statusLabel(errorCount, warningCount);

@@ -7,6 +7,14 @@
 import { runRules } from './rules.js';
 import type { FolderInspection, ValidationResult, Violation } from './types.js';
 
+/**
+ * Pure validation entry point. Runs the rules layer over each prepared folder
+ * inspection and aggregates the violations and counts. The MCP tool layer
+ * supplies the file-system inspection on top of this.
+ *
+ * @param inspections - the folder snapshots to validate
+ * @returns the aggregated validation outcome with counts and violations
+ */
 export function validateModelFolders(inspections: readonly FolderInspection[]): ValidationResult {
   const violations: Violation[] = [];
   let errorCount = 0;

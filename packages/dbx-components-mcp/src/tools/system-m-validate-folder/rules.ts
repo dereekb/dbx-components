@@ -11,6 +11,14 @@ const MAIN_FILE = 'system.ts';
 const INDEX_FILE = 'index.ts';
 const SYSTEM_PREFIX = 'system.';
 
+/**
+ * Applies every system-state folder rule and returns the aggregated
+ * diagnostics. Short-circuits cleanly on missing/invalid folders so a stat
+ * failure does not cascade into spurious downstream warnings.
+ *
+ * @param inspection - the prepared folder inspection
+ * @returns the violations the rules emit for that folder
+ */
 export function runRules(inspection: SystemFolderInspection): readonly Violation[] {
   const violations: Violation[] = [];
   if (inspection.status === 'not-found') {
@@ -103,7 +111,7 @@ function checkContent(inspection: SystemFolderInspection, extracted: ExtractedSy
 
   checkTriplePairing(inspection.path, extracted, violations);
   if (converterMap) {
-    checkMapKeys(inspection.path, extracted, converterMap, violations);
+    checkMapKeys({ folderPath: inspection.path, extracted, converterMap, violations });
   }
 }
 
@@ -170,8 +178,19 @@ function checkTriplePairing(folderPath: string, extracted: ExtractedSystemFile, 
   }
 }
 
+/**
+ * Options for verifying converter map keys against the extracted file.
+ */
+interface CheckMapKeysOptions {
+  readonly folderPath: string;
+  readonly extracted: ExtractedSystemFile;
+  readonly converterMap: ExtractedConverterMap;
+  readonly violations: Violation[];
+}
+
 // MARK: Map keys
-function checkMapKeys(folderPath: string, extracted: ExtractedSystemFile, converterMap: ExtractedConverterMap, violations: Violation[]): void {
+function checkMapKeys(options: CheckMapKeysOptions): void {
+  const { folderPath, extracted, converterMap, violations } = options;
   const identifierKeys = new Set<string>();
   for (const key of converterMap.keys) {
     if (key.kind === 'identifier') {

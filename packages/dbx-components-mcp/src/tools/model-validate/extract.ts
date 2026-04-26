@@ -12,6 +12,14 @@ import { Node, Project, SyntaxKind, type ClassDeclaration, type GetAccessorDecla
 import type { ExtractedDataInterface, ExtractedDecl, ExtractedDocumentClass, ExtractedField, ExtractedFile, ExtractedGroupInterface, ExtractedGroupTypes, ExtractedIdentity, ExtractedModel, ModelVariant, ValidatorSource } from './types.js';
 
 // MARK: Entry
+/**
+ * Parses a single model source via ts-morph and returns the normalised facts
+ * the rules module consumes. Extraction stays best-effort so partial files
+ * still produce useful diagnostics rather than crashing the validator.
+ *
+ * @param source - the in-memory source name + text pair to extract
+ * @returns the structured extraction used by the rules layer
+ */
 export function extractFile(source: ValidatorSource): ExtractedFile {
   const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });
   const sourceFile = project.createSourceFile(source.name, source.text, { overwrite: true });
@@ -75,8 +83,8 @@ function firstJsDocLine(jsDocs: readonly { getDescription(): string }[]): string
 
 // MARK: File-level
 function findGroupInterface(sourceFile: SourceFile): ExtractedGroupInterface | undefined {
-  const candidates = sourceFile.getInterfaces().filter((i) => i.getName().endsWith('FirestoreCollections'));
-  const iface = candidates[0];
+  const candidate = sourceFile.getInterfaces().find((i) => i.getName().endsWith('FirestoreCollections'));
+  const iface = candidate;
   if (!iface) {
     return undefined;
   }
@@ -95,13 +103,13 @@ function findGroupInterface(sourceFile: SourceFile): ExtractedGroupInterface | u
 }
 
 function findGroupTypes(sourceFile: SourceFile): ExtractedGroupTypes | undefined {
-  const candidates = sourceFile.getTypeAliases().filter((t) => {
+  const candidate = sourceFile.getTypeAliases().find((t) => {
     const name = t.getName();
     const endsWithTypes = name.endsWith('Types');
     const isNotFirestoreCollections = !name.endsWith('FirestoreCollections');
     return endsWithTypes && isNotFirestoreCollections;
   });
-  const alias = candidates[0];
+  const alias = candidate;
   if (!alias) {
     return undefined;
   }
@@ -115,8 +123,13 @@ function findGroupTypes(sourceFile: SourceFile): ExtractedGroupTypes | undefined
   return result;
 }
 
-/** Pulls `X` out of each `typeof X` member of the alias (covers both single
- * `typeof X` aliases and `typeof A | typeof B` unions). */
+/**
+ * Pulls `X` out of each `typeof X` member of the alias (covers both single
+ * `typeof X` aliases and `typeof A | typeof B` unions).
+ *
+ * @param alias - the `*Types` type alias to inspect
+ * @returns each referenced identity-const name in source order
+ */
 function extractIdentityRefs(alias: TypeAliasDeclaration): readonly string[] {
   const typeNode = alias.getTypeNode();
   const refs: string[] = [];
@@ -266,16 +279,14 @@ function extractModel(sourceFile: SourceFile, identity: RawIdentity): ExtractedM
 // MARK: Name helpers
 function deriveCamelName(constName: string): string {
   const suffix = 'Identity';
-  const base = constName.endsWith(suffix) ? constName.slice(0, -suffix.length) : constName;
-  return base;
+  return constName.endsWith(suffix) ? constName.slice(0, -suffix.length) : constName;
 }
 
 function pascalCase(camel: string): string {
   if (camel.length === 0) {
     return camel;
   }
-  const result = camel.charAt(0).toUpperCase() + camel.slice(1);
-  return result;
+  return camel.charAt(0).toUpperCase() + camel.slice(1);
 }
 
 // MARK: Declaration lookups

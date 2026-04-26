@@ -91,6 +91,9 @@ interface UiSearchHit {
 
 /**
  * Tokenizes the query into lowercase non-empty tokens. Duplicates collapse.
+ *
+ * @param query - the raw multi-word search query
+ * @returns the unique tokens in original-query order
  */
 function tokenize(query: string): readonly string[] {
   const raw = query
@@ -121,6 +124,10 @@ function tokenize(query: string): readonly string[] {
  *   category exact: 6
  *   relatedSlugs membership: 2
  *   description includes: 1
+ *
+ * @param entry - the UI registry entry being scored
+ * @param token - the lowercase token to score against
+ * @returns the additive score for this token/entry pair (`0` when there's no hit)
  */
 function scoreEntryAgainstToken(entry: UiComponentInfo, token: string): number {
   const slug = entry.slug.toLowerCase();
@@ -203,8 +210,19 @@ function searchRegistry(corpus: readonly UiComponentInfo[], tokens: readonly str
   return result;
 }
 
+/**
+ * Options for formatting UI search results as markdown.
+ */
+interface FormatSearchResultsOptions {
+  readonly query: string;
+  readonly tokens: readonly string[];
+  readonly hits: readonly UiSearchHit[];
+  readonly category: UiComponentCategory | undefined;
+}
+
 // MARK: Formatting
-function formatSearchResults(query: string, tokens: readonly string[], hits: readonly UiSearchHit[], category: UiComponentCategory | undefined): string {
+function formatSearchResults(options: FormatSearchResultsOptions): string {
+  const { query, tokens, hits, category } = options;
   const tokenDisplay = tokens.join(', ');
   const scopeLabel = category ? ` · category=\`${category}\`` : '';
   let result: string;
@@ -231,6 +249,13 @@ function formatSearchResults(query: string, tokens: readonly string[], hits: rea
 }
 
 // MARK: Handler
+/**
+ * Tool handler for `dbx_ui_search`. Tokenises the query, scores every UI
+ * registry entry, and renders the top hits with matched-token annotations.
+ *
+ * @param rawArgs - the unvalidated tool arguments from the MCP runtime
+ * @returns the formatted search results, or an error result when args fail validation
+ */
 export function runSearchUi(rawArgs: unknown): ToolResult {
   let args: ParsedSearchUiArgs;
   try {
@@ -242,7 +267,7 @@ export function runSearchUi(rawArgs: unknown): ToolResult {
   const tokens = tokenize(args.query);
   const corpus = args.category ? getUiComponentsByCategory(args.category) : UI_COMPONENTS;
   const hits = searchRegistry(corpus, tokens, args.limit);
-  const text = formatSearchResults(args.query, tokens, hits, args.category);
+  const text = formatSearchResults({ query: args.query, tokens, hits, category: args.category });
   const result: ToolResult = { content: [{ type: 'text', text }] };
   return result;
 }

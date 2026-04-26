@@ -84,6 +84,14 @@ function ensureInsideCwd(relativePath: string, cwd: string): string {
 }
 
 // MARK: Handler
+/**
+ * Tool handler for `dbx_list_app_notification_m`. Walks the resolved app
+ * directory and reports the registered notification template/task wiring so
+ * callers can audit cross-file references.
+ *
+ * @param rawArgs - the unvalidated tool arguments from the MCP runtime
+ * @returns the formatted listing, or an error result when args fail validation
+ */
 export async function runNotificationMListApp(rawArgs: unknown): Promise<ToolResult> {
   let args: ParsedArgs;
   try {

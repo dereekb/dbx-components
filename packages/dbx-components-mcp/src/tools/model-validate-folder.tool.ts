@@ -129,6 +129,14 @@ async function buildInspections(paths: readonly string[], cwd: string): Promise<
 }
 
 // MARK: Handler
+/**
+ * Tool handler for `dbx_validate_app_models_folder`. Walks the resolved
+ * components directory and reports per-folder structural deviations from the
+ * expected model layout.
+ *
+ * @param rawArgs - the unvalidated tool arguments from the MCP runtime
+ * @returns the formatted folder report, or an error result when args fail validation
+ */
 export async function runModelValidateFolder(rawArgs: unknown): Promise<ToolResult> {
   let args: ParsedArgs;
   try {

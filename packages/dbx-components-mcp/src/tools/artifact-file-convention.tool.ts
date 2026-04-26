@@ -16,6 +16,7 @@ import { formatSpec, getFileConventionSpec, listArtifactKinds, type ArtifactKind
 
 const ARTIFACT_KINDS = listArtifactKinds();
 const ARTIFACT_KIND_LITERAL_UNION = ARTIFACT_KINDS.map((k) => `'${k}'`).join(' | ');
+const ARTIFACT_KIND_BACKTICK_LIST = ARTIFACT_KINDS.map((k) => '`' + k + '`').join(', ');
 
 // MARK: Tool definition
 const DBX_ARTIFACT_FILE_CONVENTION_TOOL: Tool = {
@@ -23,7 +24,7 @@ const DBX_ARTIFACT_FILE_CONVENTION_TOOL: Tool = {
   description: [
     'Return canonical file paths + required exports + wiring registrations for a given artifact kind in a dbx-components project. Companion to the cross-file validators (`dbx_notification_m_validate_app`, `dbx_storagefile_m_validate_app`, `dbx_model_validate`) — those say what is missing, this says where each piece belongs.',
     '',
-    `Supported artifact kinds: ${ARTIFACT_KINDS.map((k) => `\`${k}\``).join(', ')}.`,
+    `Supported artifact kinds: ${ARTIFACT_KIND_BACKTICK_LIST}.`,
     '',
     'Inputs:',
     '- `artifact`: required — the artifact kind to look up.',
@@ -79,6 +80,14 @@ function parseArgs(raw: unknown): ParsedArgs {
 }
 
 // MARK: Handler
+/**
+ * Tool handler for `dbx_artifact_file_convention`. Resolves the file naming /
+ * placement spec for the requested artifact and renders it for callers about
+ * to scaffold or validate one.
+ *
+ * @param rawArgs - the unvalidated tool arguments object from the MCP runtime
+ * @returns the formatted convention text, or an error result when the artifact is unknown
+ */
 export function runArtifactFileConvention(rawArgs: unknown): ToolResult {
   let args: ParsedArgs;
   try {

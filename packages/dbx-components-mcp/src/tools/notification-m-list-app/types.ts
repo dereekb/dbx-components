@@ -12,11 +12,17 @@ export interface TemplateSummary {
   readonly description: string | undefined;
   readonly notificationMIdentity: string | undefined;
   readonly targetModelIdentity: string | undefined;
-  /** Reachable from the `<APP>_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD` aggregator. */
+  /**
+   * Reachable from the `<APP>_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD` aggregator.
+   */
   readonly inInfoRecord: boolean;
-  /** Handled by a `NotificationTemplateServiceTypeConfig` reachable from the configs-array factory. */
+  /**
+   * Handled by a `NotificationTemplateServiceTypeConfig` reachable from the configs-array factory.
+   */
   readonly hasFactory: boolean;
-  /** Name of the factory function that produced the handler (leaf factory, may live in a sub-file). */
+  /**
+   * Name of the factory function that produced the handler (leaf factory, may live in a sub-file).
+   */
   readonly factoryFunctionName: string | undefined;
   readonly sourceFile: string;
 }

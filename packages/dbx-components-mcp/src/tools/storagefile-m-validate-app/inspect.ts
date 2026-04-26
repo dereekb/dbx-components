@@ -27,6 +27,15 @@ const COMPONENT_STORAGEFILE_SUBPATH = 'src/lib/model/storagefile';
  */
 const API_STORAGEFILE_SUBPATHS: readonly string[] = ['src/app/common/model/storagefile', 'src/app/common/model/notification'];
 
+/**
+ * Reads the component and api storage-file trees off disk and returns the
+ * snapshot the validator/lister consume. Centralising the I/O here keeps the
+ * pure layers free of file-system concerns.
+ *
+ * @param componentDir - absolute path to the component package root
+ * @param apiDir - absolute path to the api package root
+ * @returns the prepared inspection containing both sides' files
+ */
 export async function inspectAppStorageFiles(componentDir: string, apiDir: string): Promise<AppStorageFilesInspection> {
   const component = await inspectSide(componentDir, [COMPONENT_STORAGEFILE_SUBPATH]);
   const api = await inspectSide(apiDir, API_STORAGEFILE_SUBPATHS);

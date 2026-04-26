@@ -11,6 +11,15 @@
 import { applyTokens, NOTIFICATION_TASK_COMPONENT_TEMPLATE, NOTIFICATION_TASK_HANDLER_TEMPLATE, NOTIFICATION_TASK_WIRING_SNIPPET, NOTIFICATION_TEMPLATE_COMPONENT_TEMPLATE, NOTIFICATION_TEMPLATE_FACTORY_TEMPLATE, NOTIFICATION_TEMPLATE_WIRING_SNIPPET, STORAGEFILE_PURPOSE_COMPONENT_TEMPLATE, STORAGEFILE_PURPOSE_HANDLER_TEMPLATE, STORAGEFILE_PURPOSE_WIRING_SNIPPET, type TemplateContext } from './templates.js';
 import type { EmittedFile, ScaffoldArtifactInput, ScaffoldArtifactResult, WiringStep } from './types.js';
 
+/**
+ * Dispatches to the artifact-specific renderer for the requested kind so the
+ * scaffold core stays a small switch and individual renderers can grow
+ * independently.
+ *
+ * @param input - the validated scaffold request
+ * @param ctx - the resolved template context (name tokens + project dirs)
+ * @returns the artifact's emitted files and wiring instructions
+ */
 export function renderArtifact(input: ScaffoldArtifactInput, ctx: TemplateContext): ScaffoldArtifactResult {
   let result: ScaffoldArtifactResult;
   switch (input.artifact) {

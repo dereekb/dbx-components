@@ -256,6 +256,13 @@ function formatScaffold(args: ParsedScaffoldArgs): string {
 }
 
 // MARK: Handler
+/**
+ * Tool handler for `dbx_filter_scaffold`. Renders a starter filter-component /
+ * directive snippet for the requested filter pattern.
+ *
+ * @param rawArgs - the unvalidated tool arguments from the MCP runtime
+ * @returns the rendered scaffold, or an error result when args fail validation
+ */
 export function runFilterScaffold(rawArgs: unknown): ToolResult {
   let args: ParsedScaffoldArgs;
   try {

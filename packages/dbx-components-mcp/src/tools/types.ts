@@ -31,6 +31,9 @@ export interface DbxTool {
 /**
  * Helper that builds a plain text error ToolResult. Used by tool handlers
  * when payload validation fails.
+ *
+ * @param message - the user-facing error message to embed in the result
+ * @returns a `ToolResult` with `isError: true` and the message as text content
  */
 export function toolError(message: string): ToolResult {
   const result: ToolResult = { content: [{ type: 'text', text: message }], isError: true };

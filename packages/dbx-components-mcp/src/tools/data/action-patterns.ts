@@ -11,21 +11,33 @@
 export type ActionExampleDepth = 'minimal' | 'brief' | 'full';
 
 export interface ActionExamplePattern {
-  /** Slug used as the pattern key and in `dbx_action_examples pattern="..."` calls. */
+  /**
+   * Slug used as the pattern key and in `dbx_action_examples pattern="..."` calls.
+   */
   readonly slug: string;
-  /** Short display name. */
+  /**
+   * Short display name.
+   */
   readonly name: string;
-  /** One-sentence description of what the pattern wires. */
+  /**
+   * One-sentence description of what the pattern wires.
+   */
   readonly summary: string;
-  /** Action registry slugs the pattern composes from. */
+  /**
+   * Action registry slugs the pattern composes from.
+   */
   readonly usesActionSlugs: readonly string[];
-  /** Code snippets at increasing levels of detail. */
+  /**
+   * Code snippets at increasing levels of detail.
+   */
   readonly snippets: {
     readonly minimal: string;
     readonly brief: string;
     readonly full: string;
   };
-  /** Optional supplementary notes appended at full depth. */
+  /**
+   * Optional supplementary notes appended at full depth.
+   */
   readonly notes?: string;
 }
 
@@ -345,9 +357,11 @@ export class ChildComponent {}`
 
 /**
  * Looks up an action example pattern by its slug.
+ *
+ * @param slug - the pattern slug to resolve, case-insensitive and trimmed
+ * @returns the matching pattern, or `undefined` when no slug matches
  */
 export function getActionExamplePattern(slug: string): ActionExamplePattern | undefined {
   const lowered = slug.trim().toLowerCase();
-  const result = ACTION_EXAMPLE_PATTERNS.find((p) => p.slug === lowered);
-  return result;
+  return ACTION_EXAMPLE_PATTERNS.find((p) => p.slug === lowered);
 }

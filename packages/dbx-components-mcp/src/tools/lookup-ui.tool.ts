@@ -84,6 +84,9 @@ function isCategory(value: string): value is UiComponentCategory {
  *   2. category name → category group
  *   3. exact slug / className / selector → single entry
  *   4. fuzzy substring search over slug / className / selector / description
+ *
+ * @param rawTopic - the caller-supplied topic, untrimmed
+ * @returns the resolved match describing how to render the response
  */
 function resolveTopic(rawTopic: string): LookupUiMatch {
   const lowered = rawTopic.trim().toLowerCase();
@@ -109,6 +112,9 @@ function resolveTopic(rawTopic: string): LookupUiMatch {
  * Cheap substring-based candidate list used when a topic doesn't resolve.
  * Returns up to five entries whose slug / className / selector / description
  * contains the query.
+ *
+ * @param query - the unmatched lookup topic to fuzzy-search
+ * @returns up to five candidate entries ordered by descending score
  */
 function fuzzyCandidates(query: string): readonly UiComponentInfo[] {
   const q = query.trim().toLowerCase();
@@ -127,35 +133,30 @@ function fuzzyCandidates(query: string): readonly UiComponentInfo[] {
     }
   }
   scored.sort((a, b) => b.score - a.score);
-  const result = scored.slice(0, 5).map((s) => s.entry);
-  return result;
+  return scored.slice(0, 5).map((s) => s.entry);
 }
 
 // MARK: Formatting
 type Depth = 'brief' | 'full';
 
 function formatEntry(entry: UiComponentInfo, depth: Depth): string {
-  const result = depth === 'brief' ? formatBrief(entry) : formatFull(entry);
-  return result;
+  return depth === 'brief' ? formatBrief(entry) : formatFull(entry);
 }
 
 function formatBrief(entry: UiComponentInfo): string {
   const lines: string[] = [`## ${entry.className}`, '', `**slug:** \`${entry.slug}\` · **kind:** \`${entry.kind}\` · **category:** \`${entry.category}\` · **selector:** \`${entry.selector}\``, '', entry.description, '', '```html', entry.minimalExample, '```'];
-  const result = lines.join('\n');
-  return result;
+  return lines.join('\n');
 }
 
 function formatFull(entry: UiComponentInfo): string {
   const sections: string[] = [formatHeader(entry), entry.description, formatInputsTable(entry), formatOutputsTable(entry), formatContentProjection(entry), formatExampleSection(entry), formatRelated(entry), formatSkillRefs(entry)];
   const filtered = sections.filter((s) => s.length > 0);
-  const result = filtered.join('\n\n');
-  return result;
+  return filtered.join('\n\n');
 }
 
 function formatHeader(entry: UiComponentInfo): string {
   const lines: string[] = [`# ${entry.className}`, '', `- **slug:** \`${entry.slug}\``, `- **kind:** \`${entry.kind}\``, `- **category:** \`${entry.category}\``, `- **selector:** \`${entry.selector}\``, `- **module:** \`${entry.module}\``, `- **source:** \`packages/dbx-web/src/${entry.sourcePath}\``];
-  const result = lines.join('\n');
-  return result;
+  return lines.join('\n');
 }
 
 function formatInputsTable(entry: UiComponentInfo): string {
@@ -199,8 +200,7 @@ function formatContentProjection(entry: UiComponentInfo): string {
 }
 
 function formatExampleSection(entry: UiComponentInfo): string {
-  const result = ['## Example', '', '```html', entry.example, '```', '', '### Minimal', '', '```html', entry.minimalExample, '```'].join('\n');
-  return result;
+  return ['## Example', '', '```html', entry.example, '```', '', '### Minimal', '', '```html', entry.minimalExample, '```'].join('\n');
 }
 
 function formatRelated(entry: UiComponentInfo): string {
@@ -264,8 +264,7 @@ function formatCatalog(): string {
     }
     lines.push('');
   }
-  const result = lines.join('\n').trimEnd();
-  return result;
+  return lines.join('\n').trimEnd();
 }
 
 function formatNotFound(normalized: string, candidates: readonly UiComponentInfo[]): string {
@@ -279,11 +278,18 @@ function formatNotFound(normalized: string, candidates: readonly UiComponentInfo
   } else {
     lines.push('Try `dbx_ui_lookup topic="list"` to browse the catalog.');
   }
-  const result = lines.join('\n');
-  return result;
+  return lines.join('\n');
 }
 
 // MARK: Handler
+/**
+ * Tool handler for `dbx_ui_lookup`. Resolves the requested UI topic against
+ * the registry and renders the matching catalog, group, single entry, or
+ * not-found suggestion list.
+ *
+ * @param rawArgs - the unvalidated tool arguments from the MCP runtime
+ * @returns the rendered match, or an error result when args fail validation
+ */
 export function runLookupUi(rawArgs: unknown): ToolResult {
   let args: ParsedLookupUiArgs;
   try {

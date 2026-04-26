@@ -24,6 +24,16 @@ const UPLOAD_SERVICE_PROVIDE_TOKEN = 'StorageFileInitializeFromUploadService';
 const PROCESSING_SUBTASK_ALIAS_SUFFIX = 'ProcessingSubtask';
 const GROUP_IDS_FUNCTION_SUFFIXES: readonly string[] = ['StorageFileGroupIds', 'FileGroupIds'];
 
+/**
+ * Builds a ts-morph project from the prepared inspection and extracts every
+ * fact the storage-file rules need — `_PURPOSE` constants, file-type
+ * identifiers, group-id helpers, upload service factories, processing handler
+ * factories, and reachable bindings — in a single pass so the rules run
+ * against a stable snapshot.
+ *
+ * @param inspection - the prepared component + api file snapshot
+ * @returns the structured extraction used by the rules layer
+ */
 export function extractAppStorageFiles(inspection: AppStorageFilesInspection): ExtractedAppStorageFiles {
   const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });
   const componentSources: SourceFile[] = [];
@@ -91,14 +101,6 @@ function unwrapAsExpressions(node: Node | undefined): Node | undefined {
 function asObjectLiteral(node: Node | undefined): ObjectLiteralExpression | undefined {
   const inner = unwrapAsExpressions(node);
   if (inner && Node.isObjectLiteralExpression(inner)) {
-    return inner;
-  }
-  return undefined;
-}
-
-function asArrayLiteral(node: Node | undefined): ArrayLiteralExpression | undefined {
-  const inner = unwrapAsExpressions(node);
-  if (inner && Node.isArrayLiteralExpression(inner)) {
     return inner;
   }
   return undefined;
@@ -352,8 +354,36 @@ function findReturnExpression(fn: FunctionDeclaration | ArrowFunction | Function
  * Walk a binding name through local-variable, spread, and cross-file
  * function-call indirection until we find a concrete array literal —
  * collect every identifier that ends up as a member of that array.
+ *
+ * @param node - the value-position node to inspect
+ * @param sf - the source file the node belongs to
+ * @param index - the api function lookup index for chasing chained calls
+ * @param resolved - mutable buffer that receives in-file resolved binding names
+ * @param unresolved - mutable buffer that receives identifiers the trace could not follow locally
+ * @param visited - cycle-guard set for recursive identifier traversal
+ * @returns `true` when an initializer binding (resolved or unresolved) was recorded
  */
-function collectInitializerBindingsFromValue(node: Node | undefined, sf: SourceFile, index: ApiFunctionIndex, resolved: string[], unresolved: string[], visited: Set<string>): boolean {
+/**
+ * Context for tracing storage-file initializer bindings reachable from a node
+ * or identifier.
+ */
+interface InitializerBindingCollectorContext {
+  readonly sf: SourceFile;
+  readonly index: ApiFunctionIndex;
+  readonly resolved: string[];
+  readonly unresolved: string[];
+  readonly visited: Set<string>;
+}
+
+/**
+ * Options for collecting initializer bindings from a value-position node.
+ */
+interface CollectInitializerBindingsFromValueOptions extends InitializerBindingCollectorContext {
+  readonly node: Node | undefined;
+}
+
+function collectInitializerBindingsFromValue(options: CollectInitializerBindingsFromValueOptions): boolean {
+  const { node, sf, index, resolved, unresolved, visited } = options;
   const inner = unwrapAsExpressions(node);
   if (!inner) return false;
   if (Node.isArrayLiteralExpression(inner)) {
@@ -361,11 +391,11 @@ function collectInitializerBindingsFromValue(node: Node | undefined, sf: SourceF
       if (Node.isSpreadElement(el)) {
         const spreadInner = el.getExpression();
         if (Node.isIdentifier(spreadInner)) {
-          collectInitializerBindingsFromIdentifier(spreadInner.getText(), sf, index, resolved, unresolved, visited);
+          collectInitializerBindingsFromIdentifier({ name: spreadInner.getText(), sf, index, resolved, unresolved, visited });
         } else if (Node.isCallExpression(spreadInner)) {
           const callee = spreadInner.getExpression();
           if (Node.isIdentifier(callee)) {
-            collectInitializerBindingsFromIdentifier(callee.getText(), sf, index, resolved, unresolved, visited);
+            collectInitializerBindingsFromIdentifier({ name: callee.getText(), sf, index, resolved, unresolved, visited });
           }
         }
         continue;
@@ -380,16 +410,24 @@ function collectInitializerBindingsFromValue(node: Node | undefined, sf: SourceF
   if (Node.isCallExpression(inner)) {
     const callee = inner.getExpression();
     if (Node.isIdentifier(callee)) {
-      return collectInitializerBindingsFromIdentifier(callee.getText(), sf, index, resolved, unresolved, visited);
+      return collectInitializerBindingsFromIdentifier({ name: callee.getText(), sf, index, resolved, unresolved, visited });
     }
   }
   if (Node.isIdentifier(inner)) {
-    return collectInitializerBindingsFromIdentifier(inner.getText(), sf, index, resolved, unresolved, visited);
+    return collectInitializerBindingsFromIdentifier({ name: inner.getText(), sf, index, resolved, unresolved, visited });
   }
   return false;
 }
 
-function collectInitializerBindingsFromIdentifier(name: string, sf: SourceFile, index: ApiFunctionIndex, resolved: string[], unresolved: string[], visited: Set<string>): boolean {
+/**
+ * Options for collecting initializer bindings starting from an identifier name.
+ */
+interface CollectInitializerBindingsFromIdentifierOptions extends InitializerBindingCollectorContext {
+  readonly name: string;
+}
+
+function collectInitializerBindingsFromIdentifier(options: CollectInitializerBindingsFromIdentifierOptions): boolean {
+  const { name, sf, index, resolved, unresolved, visited } = options;
   const localKey = `${sf.getFilePath()}::${name}`;
   let resolvedAny = false;
   if (!visited.has(localKey)) {
@@ -397,7 +435,7 @@ function collectInitializerBindingsFromIdentifier(name: string, sf: SourceFile, 
     const localDecl = findLocalVariable(sf, name);
     if (localDecl) {
       const declInit = localDecl.getInitializer();
-      if (declInit && collectInitializerBindingsFromValue(declInit, sf, index, resolved, unresolved, visited)) {
+      if (declInit && collectInitializerBindingsFromValue({ node: declInit, sf, index, resolved, unresolved, visited })) {
         resolvedAny = true;
       }
     }
@@ -409,7 +447,7 @@ function collectInitializerBindingsFromIdentifier(name: string, sf: SourceFile, 
     const fnEntry = index.functionsByName.get(name);
     if (fnEntry) {
       const ret = findReturnExpression(fnEntry.node);
-      if (ret && collectInitializerBindingsFromValue(ret, fnEntry.sourceFile, index, resolved, unresolved, visited)) {
+      if (ret && collectInitializerBindingsFromValue({ node: ret, sf: fnEntry.sourceFile, index, resolved, unresolved, visited })) {
         resolvedAny = true;
       }
     }
@@ -419,6 +457,53 @@ function collectInitializerBindingsFromIdentifier(name: string, sf: SourceFile, 
     unresolved.push(name);
   }
   return resolvedAny;
+}
+
+interface UploadInitializerArrayCollectorOptions {
+  readonly initializerArr: ArrayLiteralExpression;
+  readonly sf: SourceFile;
+  readonly index: ApiFunctionIndex;
+  readonly direct: string[];
+  readonly spreads: string[];
+  readonly unresolved: string[];
+  readonly resolved: string[];
+}
+
+/**
+ * Walks an `initializer` array literal, classifying each element into the
+ * direct/spread buckets and chasing identifier references through
+ * {@link collectInitializerBindingsFromIdentifier}.
+ *
+ * @param options - the array literal, source file, function index, and the
+ *   mutable bucket arrays to populate
+ */
+function collectUploadInitializerArray(options: UploadInitializerArrayCollectorOptions): void {
+  const { initializerArr, sf, index, direct, spreads, resolved, unresolved } = options;
+  const visited = new Set<string>();
+  for (const el of initializerArr.getElements()) {
+    if (Node.isSpreadElement(el)) {
+      const inner = el.getExpression();
+      if (Node.isIdentifier(inner)) {
+        const name = inner.getText();
+        spreads.push(name);
+        collectInitializerBindingsFromIdentifier({ name, sf, index, resolved, unresolved, visited });
+      } else if (Node.isCallExpression(inner)) {
+        const callee = inner.getExpression();
+        if (Node.isIdentifier(callee)) {
+          const name = callee.getText();
+          spreads.push(name);
+          collectInitializerBindingsFromIdentifier({ name, sf, index, resolved, unresolved, visited });
+        }
+      }
+      continue;
+    }
+    const inner = unwrapAsExpressions(el);
+    if (inner && Node.isIdentifier(inner)) {
+      const name = inner.getText();
+      direct.push(name);
+      resolved.push(name);
+    }
+  }
 }
 
 function extractUploadServiceCalls(sources: readonly SourceFile[], index: ApiFunctionIndex): readonly ExtractedUploadServiceCall[] {
@@ -436,32 +521,8 @@ function extractUploadServiceCalls(sources: readonly SourceFile[], index: ApiFun
       const spreads: string[] = [];
       const unresolved: string[] = [];
       const resolved: string[] = [];
-      const visited = new Set<string>();
       if (initializerArr) {
-        for (const el of initializerArr.getElements()) {
-          if (Node.isSpreadElement(el)) {
-            const inner = el.getExpression();
-            if (Node.isIdentifier(inner)) {
-              const name = inner.getText();
-              spreads.push(name);
-              collectInitializerBindingsFromIdentifier(name, sf, index, resolved, unresolved, visited);
-            } else if (Node.isCallExpression(inner)) {
-              const callee = inner.getExpression();
-              if (Node.isIdentifier(callee)) {
-                const name = callee.getText();
-                spreads.push(name);
-                collectInitializerBindingsFromIdentifier(name, sf, index, resolved, unresolved, visited);
-              }
-            }
-            continue;
-          }
-          const inner = unwrapAsExpressions(el);
-          if (inner && Node.isIdentifier(inner)) {
-            const name = inner.getText();
-            direct.push(name);
-            resolved.push(name);
-          }
-        }
+        collectUploadInitializerArray({ initializerArr, sf, index, direct, spreads, unresolved, resolved });
       }
       const enclosing = enclosingFactoryName(call);
       out.push({
@@ -547,34 +608,64 @@ function extractProcessingConfigs(sources: readonly SourceFile[]): readonly Extr
   for (const sf of sources) {
     const rel = apiRelPath(sf);
     for (const decl of sf.getDescendantsOfKind(SyntaxKind.VariableDeclaration)) {
-      const typeNode = decl.getTypeNode();
-      if (!typeNode) continue;
-      const typeText = typeNode.getText();
-      if (!typeText.startsWith(`${PROCESSING_CONFIG_TYPE}<`) && typeText !== PROCESSING_CONFIG_TYPE) continue;
-      const obj = asObjectLiteral(decl.getInitializer());
-      if (!obj) continue;
-      const target = readIdentifierProperty(obj, 'target');
-      if (!target) continue;
-      const flowInit = unwrapAsExpressions(getPropertyInitializer(obj, 'flow'));
-      const subtasks: string[] = [];
-      if (flowInit && Node.isArrayLiteralExpression(flowInit)) {
-        for (const el of flowInit.getElements()) {
-          const inner = unwrapAsExpressions(el);
-          if (inner && Node.isObjectLiteralExpression(inner)) {
-            const subtask = readIdentifierProperty(inner, 'subtask');
-            if (subtask) subtasks.push(subtask);
-          }
-        }
+      const config = extractProcessingConfigFromDecl(decl, rel);
+      if (config) {
+        out.push(config);
       }
-      out.push({
-        targetIdentifier: target,
-        flowSubtaskIdentifiers: subtasks,
-        sourceFile: rel,
-        line: decl.getStartLineNumber()
-      });
     }
   }
   return out;
+}
+
+/**
+ * Extracts a single {@link ExtractedProcessingConfig} from a variable
+ * declaration, returning `undefined` for declarations that aren't typed as a
+ * `ProcessingConfig` or that don't carry the required `target` identifier.
+ *
+ * @param decl - the variable declaration to inspect
+ * @param rel - the relative source file path used in the result record
+ * @returns the extracted processing config, or `undefined` when the
+ *   declaration is not a recognisable processing config
+ */
+function extractProcessingConfigFromDecl(decl: VariableDeclaration, rel: string): ExtractedProcessingConfig | undefined {
+  const typeNode = decl.getTypeNode();
+  if (!typeNode) return undefined;
+  const typeText = typeNode.getText();
+  if (!typeText.startsWith(`${PROCESSING_CONFIG_TYPE}<`) && typeText !== PROCESSING_CONFIG_TYPE) return undefined;
+  const obj = asObjectLiteral(decl.getInitializer());
+  if (!obj) return undefined;
+  const target = readIdentifierProperty(obj, 'target');
+  if (!target) return undefined;
+  const subtasks = readFlowSubtasks(obj);
+  return {
+    targetIdentifier: target,
+    flowSubtaskIdentifiers: subtasks,
+    sourceFile: rel,
+    line: decl.getStartLineNumber()
+  };
+}
+
+/**
+ * Reads the `subtask` identifiers from a `flow: [{ subtask: ... }, ...]`
+ * property of a processing config object literal.
+ *
+ * @param obj - the processing config object literal
+ * @returns the collected subtask identifiers (empty when no `flow` array is
+ *   present or no entries declare a `subtask`)
+ */
+function readFlowSubtasks(obj: ObjectLiteralExpression): string[] {
+  const flowInit = unwrapAsExpressions(getPropertyInitializer(obj, 'flow'));
+  const subtasks: string[] = [];
+  if (flowInit && Node.isArrayLiteralExpression(flowInit)) {
+    for (const el of flowInit.getElements()) {
+      const inner = unwrapAsExpressions(el);
+      if (inner && Node.isObjectLiteralExpression(inner)) {
+        const subtask = readIdentifierProperty(inner, 'subtask');
+        if (subtask) subtasks.push(subtask);
+      }
+    }
+  }
+  return subtasks;
 }
 
 // MARK: API — processing handler calls
@@ -592,31 +683,7 @@ function extractProcessingHandlerCalls(sources: readonly SourceFile[]): readonly
       const direct: string[] = [];
       const spreads: string[] = [];
       if (processorsArr) {
-        for (const el of processorsArr.getElements()) {
-          if (Node.isSpreadElement(el)) {
-            const inner = el.getExpression();
-            if (Node.isIdentifier(inner)) {
-              spreads.push(inner.getText());
-            } else if (Node.isCallExpression(inner)) {
-              const callee = inner.getExpression();
-              if (Node.isIdentifier(callee)) {
-                spreads.push(callee.getText());
-              }
-            }
-            continue;
-          }
-          const inner = unwrapAsExpressions(el);
-          if (inner) {
-            if (Node.isIdentifier(inner)) {
-              direct.push(inner.getText());
-            } else if (Node.isCallExpression(inner)) {
-              const callee = inner.getExpression();
-              if (Node.isIdentifier(callee)) {
-                direct.push(callee.getText());
-              }
-            }
-          }
-        }
+        collectProcessorArrayElements(processorsArr, direct, spreads);
       }
       out.push({
         directProcessorReferences: direct,
@@ -626,4 +693,47 @@ function extractProcessingHandlerCalls(sources: readonly SourceFile[]): readonly
     }
   }
   return out;
+}
+
+/**
+ * Splits the elements of a `processors` array literal into direct and spread
+ * identifier references, supporting both bare identifiers and call
+ * expressions whose callee is an identifier.
+ *
+ * @param processorsArr - the resolved `processors` array literal
+ * @param direct - mutable buffer that receives directly referenced names
+ * @param spreads - mutable buffer that receives spread-referenced names
+ */
+function collectProcessorArrayElements(processorsArr: ArrayLiteralExpression, direct: string[], spreads: string[]): void {
+  for (const el of processorsArr.getElements()) {
+    if (Node.isSpreadElement(el)) {
+      addProcessorIdentifierName(el.getExpression(), spreads);
+      continue;
+    }
+    const inner = unwrapAsExpressions(el);
+    if (inner) {
+      addProcessorIdentifierName(inner, direct);
+    }
+  }
+}
+
+/**
+ * Pushes the identifier name onto `bucket` when `node` is itself an identifier
+ * or a call expression whose callee is an identifier; otherwise no-op.
+ *
+ * @param node - the node to inspect
+ * @param bucket - the mutable buffer to push the resolved name into
+ */
+function addProcessorIdentifierName(node: Node | undefined, bucket: string[]): void {
+  if (!node) return;
+  if (Node.isIdentifier(node)) {
+    bucket.push(node.getText());
+    return;
+  }
+  if (Node.isCallExpression(node)) {
+    const callee = node.getExpression();
+    if (Node.isIdentifier(callee)) {
+      bucket.push(callee.getText());
+    }
+  }
 }

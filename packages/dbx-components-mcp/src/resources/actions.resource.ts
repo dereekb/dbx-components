@@ -7,14 +7,20 @@
  * `dbx_action_*` tool family which consumes the same registry.
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ACTION_ROLE_ORDER, getActionEntries, getActionEntry, getActionEntriesByRole, type ActionEntryRole } from '../registry/index.js';
 
 const ACTIONS_URI = 'dbx://action/entries';
 const ACTION_TEMPLATE = 'dbx://action/entries/{slug}';
 const ACTIONS_BY_ROLE_TEMPLATE = 'dbx://action/entries/role/{role}';
 
+/**
+ * Registers the action-entry MCP resources (catalog, per-slug details, role
+ * filter) on the given server. Splitting into three URIs lets clients browse
+ * the full registry, drill into a single entry, or page by role classification.
+ *
+ * @param server - the MCP server to register resources against
+ */
 export function registerActionsResource(server: McpServer): void {
   server.registerResource(
     'dbx-components Action Entries',
@@ -47,7 +53,7 @@ export function registerActionsResource(server: McpServer): void {
           };
         })
       };
-      const result = {
+      return {
         contents: [
           {
             uri: ACTIONS_URI,
@@ -56,7 +62,6 @@ export function registerActionsResource(server: McpServer): void {
           }
         ]
       };
-      return result;
     }
   );
 
@@ -85,7 +90,7 @@ export function registerActionsResource(server: McpServer): void {
         text = JSON.stringify(entry, null, 2);
       }
 
-      const result = {
+      return {
         contents: [
           {
             uri: uri.href,
@@ -94,7 +99,6 @@ export function registerActionsResource(server: McpServer): void {
           }
         ]
       };
-      return result;
     }
   );
 
@@ -119,7 +123,7 @@ export function registerActionsResource(server: McpServer): void {
         text = JSON.stringify({ role, entries }, null, 2);
       }
 
-      const result = {
+      return {
         contents: [
           {
             uri: uri.href,
@@ -128,7 +132,6 @@ export function registerActionsResource(server: McpServer): void {
           }
         ]
       };
-      return result;
     }
   );
 }

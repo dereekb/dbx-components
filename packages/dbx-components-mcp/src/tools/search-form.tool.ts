@@ -77,17 +77,26 @@ interface FormSearchHit {
  * whose slugs legitimately contain the raw token as a substring.
  */
 interface QueryToken {
-  /** Token as the caller typed it (lowercased, trimmed). */
+  /**
+   * Token as the caller typed it (lowercased, trimmed).
+   */
   readonly raw: string;
-  /** Alias of `raw`; equal to `raw` when no alias exists. */
+  /**
+   * Alias of `raw`; equal to `raw` when no alias exists.
+   */
   readonly alias: string;
-  /** Human-readable representation (`raw` or `raw → alias`) for output. */
+  /**
+   * Human-readable representation (`raw` or `raw → alias`) for output.
+   */
   readonly display: string;
 }
 
 /**
  * Tokenizes the query into lowercase non-empty (raw, alias) pairs. Duplicates
  * are deduped on the raw form so `"date date"` collapses to one token.
+ *
+ * @param query - the raw multi-word search query
+ * @returns the unique token pairs in original-query order
  */
 function tokenize(query: string): readonly QueryToken[] {
   const raw = query
@@ -113,6 +122,10 @@ function tokenize(query: string): readonly QueryToken[] {
  * Scores a single field against a single token. Weights are deliberately
  * spaced so stacked hits can't fabricate a higher score than the next-better
  * match kind.
+ *
+ * @param field - the form registry entry being scored
+ * @param token - the lowercase token to score against
+ * @returns the additive score for this token/field pair (`0` when there's no hit)
  */
 function scoreFieldAgainstToken(field: FormFieldInfo, token: string): number {
   const slug = field.slug.toLowerCase();
@@ -189,16 +202,14 @@ function searchRegistry(tokens: readonly QueryToken[], limit: number): readonly 
     }
     return a.field.slug.localeCompare(b.field.slug);
   });
-  const result = hits.slice(0, limit);
-  return result;
+  return hits.slice(0, limit);
 }
 
 // MARK: Formatting
 function formatSearchResults(query: string, tokens: readonly QueryToken[], hits: readonly FormSearchHit[]): string {
   const tokenDisplay = tokens.map((t) => t.display).join(', ');
   if (hits.length === 0) {
-    const result = [`No form entries matched \`${query}\` (tokens: \`${tokenDisplay}\`).`, '', 'Try `dbx_form_lookup topic="list"` for the form catalog or a broader single-word query.'].join('\n');
-    return result;
+    return [`No form entries matched \`${query}\` (tokens: \`${tokenDisplay}\`).`, '', 'Try `dbx_form_lookup topic="list"` for the form catalog or a broader single-word query.'].join('\n');
   }
   const lines: string[] = [`# Search: \`${query}\``, '', `Tokens: \`${tokenDisplay}\` · ${hits.length} result${hits.length === 1 ? '' : 's'}`, ''];
   for (const hit of hits) {
@@ -215,11 +226,17 @@ function formatSearchResults(query: string, tokens: readonly QueryToken[], hits:
     lines.push(`→ \`dbx_form_lookup topic="${hit.field.slug}"\` for full docs.`);
     lines.push('');
   }
-  const result = lines.join('\n').trimEnd();
-  return result;
+  return lines.join('\n').trimEnd();
 }
 
 // MARK: Handler
+/**
+ * Tool handler for `dbx_form_search`. Tokenises the query, scores every form
+ * registry entry, and renders the top hits with matched-token annotations.
+ *
+ * @param rawArgs - the unvalidated tool arguments from the MCP runtime
+ * @returns the formatted search results, or an error result when args fail validation
+ */
 export function runSearchForm(rawArgs: unknown): ToolResult {
   let args: ParsedSearchArgs;
   try {

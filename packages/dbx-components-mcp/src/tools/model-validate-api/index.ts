@@ -9,6 +9,14 @@ import { extractFile } from './extract.js';
 import { runRules } from './rules.js';
 import type { ValidationResult, ValidatorSource, Violation } from './types.js';
 
+/**
+ * Pure validation entry point. Runs the extract + rule pipeline over each
+ * supplied source and aggregates the violations and counts. The MCP tool layer
+ * supplies real file I/O on top of this.
+ *
+ * @param sources - the in-memory api files to validate
+ * @returns the aggregated validation outcome with counts and violations
+ */
 export function validateModelApiSources(sources: readonly ValidatorSource[]): ValidationResult {
   const violations: Violation[] = [];
   let apisChecked = 0;

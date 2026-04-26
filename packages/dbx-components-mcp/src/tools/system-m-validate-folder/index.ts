@@ -7,6 +7,13 @@
 import { runRules } from './rules.js';
 import type { SystemFolderInspection, ValidationResult, Violation } from './types.js';
 
+/**
+ * Pure validation entry point. Runs the rules layer over each prepared folder
+ * inspection and aggregates the violations and counts.
+ *
+ * @param inspections - the folder snapshots to validate
+ * @returns the aggregated validation outcome with counts and violations
+ */
 export function validateSystemFolders(inspections: readonly SystemFolderInspection[]): ValidationResult {
   const violations: Violation[] = [];
   let errorCount = 0;

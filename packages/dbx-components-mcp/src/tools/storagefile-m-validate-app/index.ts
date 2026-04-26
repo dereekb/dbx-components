@@ -15,6 +15,15 @@ export interface ValidateAppStorageFilesOptions {
   readonly apiDir: string;
 }
 
+/**
+ * Pure validation entry point. Reuses the shared extractor and runs the cross-
+ * file rules over a single snapshot so the listing and validation reports
+ * stay in sync.
+ *
+ * @param inspection - the prepared component + api file snapshot
+ * @param options - workspace directories used to relativise emitted paths
+ * @returns the aggregated validation outcome with counts and violations
+ */
 export function validateAppStorageFiles(inspection: AppStorageFilesInspection, options: ValidateAppStorageFilesOptions): ValidationResult {
   const extracted = extractAppStorageFiles(inspection);
   const violations: Violation[] = [];

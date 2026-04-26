@@ -14,21 +14,33 @@
 export type UiExampleDepth = 'minimal' | 'brief' | 'full';
 
 export interface UiExamplePattern {
-  /** Slug used as the pattern key and in `dbx_ui_examples pattern="..."` calls. */
+  /**
+   * Slug used as the pattern key and in `dbx_ui_examples pattern="..."` calls.
+   */
   readonly slug: string;
-  /** Short display name. */
+  /**
+   * Short display name.
+   */
   readonly name: string;
-  /** One-sentence description of what the pattern builds. */
+  /**
+   * One-sentence description of what the pattern builds.
+   */
   readonly summary: string;
-  /** UI registry slugs this pattern composes from. Useful for cross-linking. */
+  /**
+   * UI registry slugs this pattern composes from. Useful for cross-linking.
+   */
   readonly usesUiSlugs: readonly string[];
-  /** Code snippets at increasing levels of detail. */
+  /**
+   * Code snippets at increasing levels of detail.
+   */
   readonly snippets: {
     readonly minimal: string;
     readonly brief: string;
     readonly full: string;
   };
-  /** Optional supplementary notes appended to `full` depth. */
+  /**
+   * Optional supplementary notes appended to `full` depth.
+   */
   readonly notes?: string;
 }
 
@@ -394,9 +406,11 @@ export class AppShellComponent {
 
 /**
  * Looks up a UI example pattern by its slug.
+ *
+ * @param slug - the pattern slug to resolve, case-insensitive and trimmed
+ * @returns the matching pattern, or `undefined` when no slug matches
  */
 export function getUiExamplePattern(slug: string): UiExamplePattern | undefined {
   const lowered = slug.trim().toLowerCase();
-  const result = UI_PATTERNS.find((p) => p.slug === lowered);
-  return result;
+  return UI_PATTERNS.find((p) => p.slug === lowered);
 }

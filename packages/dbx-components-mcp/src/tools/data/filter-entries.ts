@@ -156,20 +156,46 @@ export const FILTER_ENTRIES: readonly FilterEntryInfo[] = [
   }
 ];
 
+/**
+ * Returns every registered filter entry (directives + patterns) in
+ * declaration order.
+ *
+ * @returns the full filter registry list
+ */
 export function getFilterEntries(): readonly FilterEntryInfo[] {
   return FILTER_ENTRIES;
 }
 
+/**
+ * Looks up a filter entry by its registry slug.
+ *
+ * @param slug - the registry slug to resolve, trimmed
+ * @returns the matching entry, or `undefined` when no slug matches
+ */
 export function getFilterEntry(slug: string): FilterEntryInfo | undefined {
   const trimmed = slug.trim();
   return FILTER_ENTRIES.find((e) => e.slug === trimmed);
 }
 
+/**
+ * Looks up a filter entry by its declared class name.
+ *
+ * @param className - the class name to resolve, trimmed and case-sensitive
+ * @returns the matching entry, or `undefined` when no class matches
+ */
 export function getFilterEntryByClassName(className: string): FilterEntryInfo | undefined {
   const trimmed = className.trim();
   return FILTER_ENTRIES.find((e) => e.className === trimmed);
 }
 
+/**
+ * Looks up a filter directive entry by selector. The lookup tolerates the
+ * `[dbxFoo]` attribute form and the bracket-less `dbxFoo` form so callers
+ * can use whichever syntax their host context renders.
+ *
+ * @param selector - the selector string to resolve, with or without brackets
+ * @returns the matching entry, or `undefined` when no selector matches
+ */
 export function getFilterEntryBySelector(selector: string): FilterEntryInfo | undefined {
   const trimmed = selector.trim();
   // Accept both `[dbxFoo]` and `dbxFoo` forms.
@@ -185,6 +211,13 @@ export function getFilterEntryBySelector(selector: string): FilterEntryInfo | un
 
 export const FILTER_KIND_ORDER: readonly FilterEntryKind[] = ['directive', 'pattern'];
 
+/**
+ * Filters the registry by entry kind (directive vs. pattern). Useful when
+ * presenting separate sections in the lookup tool's output.
+ *
+ * @param kind - the kind classification to filter by
+ * @returns entries matching the kind, in registry order
+ */
 export function getFilterEntriesByKind(kind: FilterEntryKind): readonly FilterEntryInfo[] {
   return FILTER_ENTRIES.filter((e) => e.kind === kind);
 }

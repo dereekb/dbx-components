@@ -24,6 +24,15 @@ export interface CollectOptions {
   readonly apiDir: string;
 }
 
+/**
+ * Reshapes the validator's extraction into the listing report shape — pairing
+ * each `_PURPOSE` constant with its file-type identifier and reachable upload
+ * initializer so the listing matches the validator's reachability view.
+ *
+ * @param extracted - the validator extraction to reshape
+ * @param options - workspace directories used to relativise emitted paths
+ * @returns the listing report
+ */
 export function collectAppStorageFiles(extracted: ExtractedAppStorageFiles, options: CollectOptions): AppStorageFilesReport {
   const fileTypeByPrefix = new Map<string, (typeof extracted.fileTypeIdentifierConstants)[number]>();
   for (const c of extracted.fileTypeIdentifierConstants) {
@@ -31,7 +40,6 @@ export function collectAppStorageFiles(extracted: ExtractedAppStorageFiles, opti
     if (prefix) fileTypeByPrefix.set(prefix, c);
   }
 
-  const reachableTypeIdentifiers = new Set<string>();
   const reachableBindings = new Set<string>();
   for (const call of extracted.uploadServiceCalls) {
     for (const name of call.resolvedInitializerBindings) reachableBindings.add(name);
@@ -39,7 +47,6 @@ export function collectAppStorageFiles(extracted: ExtractedAppStorageFiles, opti
   const initializerByType = new Map<string, (typeof extracted.uploadInitializerEntries)[number]>();
   for (const entry of extracted.uploadInitializerEntries) {
     if (entry.bindingName && reachableBindings.has(entry.bindingName)) {
-      reachableTypeIdentifiers.add(entry.typeIdentifier);
       initializerByType.set(entry.typeIdentifier, entry);
     }
   }
@@ -125,8 +132,8 @@ function stripGroupIdsSuffix(name: string): string {
 function toCamelCase(screaming: string): string {
   const parts = screaming.split('_').filter((p) => p.length > 0);
   let result = '';
-  for (let i = 0; i < parts.length; i += 1) {
-    const part = parts[i].toLowerCase();
+  for (const [i, part_] of parts.entries()) {
+    const part = part_.toLowerCase();
     if (i === 0) {
       result += part;
     } else {

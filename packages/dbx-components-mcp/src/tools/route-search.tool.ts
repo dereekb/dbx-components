@@ -101,15 +101,15 @@ function scoreHit(node: RouteTreeNode, query: string, scope: SearchScope): Score
     matchedOn.push('name');
   }
   if (scope === 'all' || scope === 'url') {
-    if (node.fullUrl !== undefined && node.fullUrl.toLowerCase().includes(q)) {
+    if (node.fullUrl?.toLowerCase().includes(q)) {
       score += 4;
       matchedOn.push('url');
-    } else if (node.data.url !== undefined && node.data.url.toLowerCase().includes(q)) {
+    } else if (node.data.url?.toLowerCase().includes(q)) {
       score += 4;
       matchedOn.push('url');
     }
   }
-  if ((scope === 'all' || scope === 'component') && node.data.component !== undefined && node.data.component.toLowerCase().includes(q)) {
+  if ((scope === 'all' || scope === 'component') && node.data.component?.toLowerCase().includes(q)) {
     score += 3;
     matchedOn.push('component');
   }
@@ -134,8 +134,19 @@ function scoreHit(node: RouteTreeNode, query: string, scope: SearchScope): Score
   return result;
 }
 
+/**
+ * Options for formatting route-search hits as markdown.
+ */
+interface FormatHitsOptions {
+  readonly query: string;
+  readonly scope: SearchScope;
+  readonly hits: readonly ScoredHit[];
+  readonly totalNodes: number;
+}
+
 // MARK: Formatting
-function formatHits(query: string, scope: SearchScope, hits: readonly ScoredHit[], totalNodes: number): string {
+function formatHits(options: FormatHitsOptions): string {
+  const { query, scope, hits, totalNodes } = options;
   const lines: string[] = [];
   lines.push(`# Route search — \`${query}\` (scope: ${scope})`);
   lines.push('');
@@ -156,6 +167,14 @@ function formatHits(query: string, scope: SearchScope, hits: readonly ScoredHit[
 }
 
 // MARK: Handler
+/**
+ * Tool handler for `dbx_route_search`. Indexes the resolved UIRouter sources
+ * and ranks states by query, returning the top hits with matched-on metadata
+ * for callers exploring an unfamiliar app.
+ *
+ * @param rawArgs - the unvalidated tool arguments from the MCP runtime
+ * @returns the formatted search results, or an error result when args fail validation
+ */
 export async function runRouteSearch(rawArgs: unknown): Promise<ToolResult> {
   let args: ParsedSearchArgs;
   try {
@@ -210,7 +229,7 @@ export async function runRouteSearch(rawArgs: unknown): Promise<ToolResult> {
     return 0;
   });
   const top = hits.slice(0, 10);
-  const text = formatHits(args.query, args.scope, top, tree.nodeCount);
+  const text = formatHits({ query: args.query, scope: args.scope, hits: top, totalNodes: tree.nodeCount });
   const result: ToolResult = { content: [{ type: 'text', text }] };
   return result;
 }

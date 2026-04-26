@@ -71,19 +71,20 @@ function formatPatternCatalog(): string {
   for (const pattern of ACTION_EXAMPLE_PATTERNS) {
     lines.push(`## ${pattern.name}`);
     lines.push('');
+    const usesText = pattern.usesActionSlugs.map((s) => code(s)).join(', ');
     lines.push(`- **slug:** \`${pattern.slug}\``);
     lines.push(`- **summary:** ${pattern.summary}`);
-    lines.push(`- **uses:** ${pattern.usesActionSlugs.map((s) => `\`${s}\``).join(', ')}`);
+    lines.push(`- **uses:** ${usesText}`);
     lines.push('');
   }
-  const result = lines.join('\n').trimEnd();
-  return result;
+  return lines.join('\n').trimEnd();
 }
 
 function formatPattern(pattern: ActionExamplePattern, depth: ActionExampleDepth): string {
   const snippet = pattern.snippets[depth];
   const fence = depth === 'full' ? 'ts' : 'html';
-  const sections: string[] = [`# ${pattern.name}`, '', pattern.summary, '', `**slug:** \`${pattern.slug}\` · **depth:** \`${depth}\` · **uses:** ${pattern.usesActionSlugs.map((s) => `\`${s}\``).join(', ')}`, '', '```' + fence, snippet, '```'];
+  const usesText = pattern.usesActionSlugs.map((s) => code(s)).join(', ');
+  const sections: string[] = [`# ${pattern.name}`, '', pattern.summary, '', `**slug:** \`${pattern.slug}\` · **depth:** \`${depth}\` · **uses:** ${usesText}`, '', '```' + fence, snippet, '```'];
   if (pattern.notes && depth === 'full') {
     sections.push('');
     sections.push('## Notes');
@@ -94,17 +95,27 @@ function formatPattern(pattern: ActionExamplePattern, depth: ActionExampleDepth)
     sections.push('');
     sections.push(`→ Call \`dbx_action_examples pattern="${pattern.slug}" depth="full"\` for the full component including imports, stores, and handler wiring.`);
   }
-  const result = sections.join('\n');
-  return result;
+  return sections.join('\n');
 }
 
 function formatNotFound(slug: string): string {
-  const available = ACTION_EXAMPLE_PATTERNS.map((p) => `\`${p.slug}\``).join(', ');
-  const result = [`No action example pattern matched \`${slug}\`.`, '', `Available patterns: ${available}.`, '', 'Call `dbx_action_examples pattern="list"` for summaries.'].join('\n');
-  return result;
+  const available = ACTION_EXAMPLE_PATTERNS.map((p) => code(p.slug)).join(', ');
+  return [`No action example pattern matched \`${slug}\`.`, '', `Available patterns: ${available}.`, '', 'Call `dbx_action_examples pattern="list"` for summaries.'].join('\n');
+}
+
+function code(value: string): string {
+  return '`' + value + '`';
 }
 
 // MARK: Handler
+/**
+ * Tool handler for `dbx_action_examples`. Resolves an action example pattern
+ * from the registry, formats it at the requested depth, and packages the
+ * result as a tool content payload.
+ *
+ * @param rawArgs - the unvalidated tool arguments object from the MCP runtime
+ * @returns the formatted pattern text, or an error result when args fail validation
+ */
 export function runActionExamples(rawArgs: unknown): ToolResult {
   let args: ParsedActionExamplesArgs;
   try {

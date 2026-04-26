@@ -24,6 +24,13 @@ import { registerUiComponentsResource } from './ui-components.resource.js';
 import { registerPipesResource } from './pipes.resource.js';
 import { registerFiltersResource } from './filters.resource.js';
 
+/**
+ * Aggregates every domain-level `register*Resource` call so server bootstrap
+ * stays a single line. Adding a new domain means importing the registrar above
+ * and adding one call here.
+ *
+ * @param server - the MCP server to register resources against
+ */
 export function registerResources(server: McpServer): void {
   registerFormFieldsResource(server);
   registerFirebaseModelsResource(server);

@@ -12,10 +12,18 @@ export interface ListAppStorageFilesOptions {
   readonly apiDir: string;
 }
 
+/**
+ * Pure listing entry point. Reuses the validator's extraction step and
+ * reshapes the output into the listing report so registration state and
+ * validator findings stay in sync.
+ *
+ * @param inspection - the prepared filesystem inspection (component + api files)
+ * @param options - workspace directories used to relativise emitted paths
+ * @returns the listing report
+ */
 export function listAppStorageFiles(inspection: AppStorageFilesInspection, options: ListAppStorageFilesOptions): AppStorageFilesReport {
   const extracted = extractAppStorageFiles(inspection);
-  const report = collectAppStorageFiles(extracted, options);
-  return report;
+  return collectAppStorageFiles(extracted, options);
 }
 
 export { formatReportAsJson } from './format.json.js';

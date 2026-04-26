@@ -99,6 +99,14 @@ function ensureInsideCwd(relativePath: string, cwd: string): string {
 }
 
 // MARK: Handler
+/**
+ * Tool handler for `dbx_validate_folder_storagefile_m`. Audits a single
+ * storage-file folder against the per-folder layout rules so callers can
+ * verify the structure before scaffolding new purposes.
+ *
+ * @param rawArgs - the unvalidated tool arguments from the MCP runtime
+ * @returns the formatted folder report, or an error result when args fail validation
+ */
 export async function runStorageFileMValidateFolder(rawArgs: unknown): Promise<ToolResult> {
   let args: ParsedArgs;
   try {

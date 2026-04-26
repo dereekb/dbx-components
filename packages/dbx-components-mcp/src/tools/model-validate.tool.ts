@@ -132,6 +132,14 @@ async function resolveSources(args: ParsedArgs, cwd: string): Promise<readonly V
 }
 
 // MARK: Handler
+/**
+ * Tool handler for `dbx_validate_app_models`. Walks the resolved component
+ * directory, runs the per-file model rules, and returns the aggregated report
+ * so callers can surface drift quickly.
+ *
+ * @param rawArgs - the unvalidated tool arguments from the MCP runtime
+ * @returns the formatted validation report, or an error result when args fail validation
+ */
 export async function runModelValidate(rawArgs: unknown): Promise<ToolResult> {
   let args: ParsedArgs;
   try {

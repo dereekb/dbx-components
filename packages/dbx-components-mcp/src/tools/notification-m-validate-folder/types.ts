@@ -65,18 +65,30 @@ export type SideStatus = 'ok' | 'dir-not-found' | 'folder-missing';
  * directly without touching the disk.
  */
 export interface SideInspection {
-  /** Side name. Used in violation messages. */
+  /**
+   * Side name. Used in violation messages.
+   */
   readonly side: 'component' | 'api';
-  /** Path supplied by the caller (e.g. `components/demo-firebase`). */
+  /**
+   * Path supplied by the caller (e.g. `components/demo-firebase`).
+   */
   readonly rootDir: string;
-  /** Relative path of the notification folder under {@link rootDir}, e.g. `src/lib/model/notification`. */
+  /**
+   * Relative path of the notification folder under {@link rootDir}, e.g. `src/lib/model/notification`.
+   */
   readonly subPath: string;
   readonly status: SideStatus;
-  /** `.ts` file basenames at the notification folder root. */
+  /**
+   * `.ts` file basenames at the notification folder root.
+   */
   readonly files: readonly string[];
-  /** Direct subdirectory names at the notification folder root (used to flag `handlers/`). */
+  /**
+   * Direct subdirectory names at the notification folder root (used to flag `handlers/`).
+   */
   readonly entries: readonly string[];
-  /** Contents of `index.ts` when present at the folder root; `undefined` otherwise. */
+  /**
+   * Contents of `index.ts` when present at the folder root; `undefined` otherwise.
+   */
   readonly indexSource: string | undefined;
 }
 

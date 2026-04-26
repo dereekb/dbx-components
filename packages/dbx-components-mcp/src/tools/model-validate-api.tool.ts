@@ -139,6 +139,14 @@ async function resolveSources(args: ParsedArgs, cwd: string): Promise<readonly V
 }
 
 // MARK: Handler
+/**
+ * Tool handler for `dbx_validate_app_models_api`. Walks the resolved api
+ * directory and applies the cross-file model rules — used as a CI-friendly
+ * smoke check before scaffolding new models.
+ *
+ * @param rawArgs - the unvalidated tool arguments from the MCP runtime
+ * @returns the formatted validation report, or an error result when args fail validation
+ */
 export async function runModelValidateApi(rawArgs: unknown): Promise<ToolResult> {
   let args: ParsedArgs;
   try {

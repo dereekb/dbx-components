@@ -67,9 +67,13 @@ export type FormArrayOutput = 'yes' | 'no' | 'optional';
 
 // MARK: Entry shapes
 interface FormEntryBase {
-  /** Unique registry slug (kebab-case). Used for lookup. */
+  /**
+   * Unique registry slug (kebab-case). Used for lookup.
+   */
   readonly slug: string;
-  /** Exported factory/builder function name (e.g. `'dbxForgeTextField'`). */
+  /**
+   * Exported factory/builder function name (e.g. `'dbxForgeTextField'`).
+   */
   readonly factoryName: string;
   /**
    * PRIMARY INDEX. The output primitive this entry produces.
@@ -88,15 +92,25 @@ interface FormEntryBase {
    * the type string.
    */
   readonly arrayOutput: FormArrayOutput;
-  /** Prose description of what the entry builds and when to reach for it. */
+  /**
+   * Prose description of what the entry builds and when to reach for it.
+   */
   readonly description: string;
-  /** Path within `packages/dbx-form/src/lib/form/` where the export is defined. */
+  /**
+   * Path within `packages/dbx-form/src/lib/form/` where the export is defined.
+   */
   readonly sourcePath: string;
-  /** Full copy-paste-ready usage example. */
+  /**
+   * Full copy-paste-ready usage example.
+   */
   readonly example: string;
-  /** Smallest valid invocation. */
+  /**
+   * Smallest valid invocation.
+   */
   readonly minimalExample: string;
-  /** Noteworthy config properties beyond `key` / `label` / `required` (which are assumed). */
+  /**
+   * Noteworthy config properties beyond `key` / `label` / `required` (which are assumed).
+   */
   readonly config: Record<string, PropertyInfo>;
 }
 
@@ -107,11 +121,17 @@ interface FormEntryBase {
 export interface FormFieldFactoryInfo extends FormEntryBase {
   readonly tier: 'field-factory';
   readonly wrapperPattern: FormFieldWrapperPattern;
-  /** Underlying ng-forge dynamic-forms type string (e.g. `'input'`, `'textarea'`, `'datepicker'`, `'toggle'`, `'slider'`). */
+  /**
+   * Underlying ng-forge dynamic-forms type string (e.g. `'input'`, `'textarea'`, `'datepicker'`, `'toggle'`, `'slider'`).
+   */
   readonly ngFormType: string;
-  /** TypeScript config interface name (e.g. `'DbxForgeTextFieldConfig'`). */
+  /**
+   * TypeScript config interface name (e.g. `'DbxForgeTextFieldConfig'`).
+   */
   readonly configInterface: string;
-  /** Generic signature if the factory accepts type parameters (e.g. `'<T = unknown>'`). */
+  /**
+   * Generic signature if the factory accepts type parameters (e.g. `'<T = unknown>'`).
+   */
   readonly generic?: string;
 }
 
@@ -121,11 +141,17 @@ export interface FormFieldFactoryInfo extends FormEntryBase {
  */
 export interface FormCompositeBuilderInfo extends FormEntryBase {
   readonly tier: 'composite-builder';
-  /** Which suffix the builder uses — mirrors its return shape. */
+  /**
+   * Which suffix the builder uses — mirrors its return shape.
+   */
   readonly suffix: FormCompositeSuffix;
-  /** TypeScript config interface name (descriptive, not `DbxForgeFieldFunctionDef`-based). */
+  /**
+   * TypeScript config interface name (descriptive, not `DbxForgeFieldFunctionDef`-based).
+   */
   readonly configInterface: string;
-  /** Slugs of other form entries this composite composes from. */
+  /**
+   * Slugs of other form entries this composite composes from.
+   */
   readonly composesFromSlugs: readonly string[];
 }
 
@@ -134,9 +160,13 @@ export interface FormCompositeBuilderInfo extends FormEntryBase {
  */
 export interface FormPrimitiveInfo extends FormEntryBase {
   readonly tier: 'primitive';
-  /** Layout field type this primitive returns. Accepts any string for flexibility; common values enumerated in {@link FormLayoutPrimitive}. */
+  /**
+   * Layout field type this primitive returns. Accepts any string for flexibility; common values enumerated in {@link FormLayoutPrimitive}.
+   */
   readonly returns: string;
-  /** TypeScript config interface name if the primitive accepts a config object. */
+  /**
+   * TypeScript config interface name if the primitive accepts a config object.
+   */
   readonly configInterface?: string;
 }
 

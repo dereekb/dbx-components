@@ -46,17 +46,29 @@ export interface FirebaseEnum {
  * clauses).
  */
 export interface FirebaseField {
-  /** Field name as it appears in Firestore and on the TS interface. */
+  /**
+   * Field name as it appears in Firestore and on the TS interface.
+   */
   readonly name: string;
-  /** Raw converter expression, e.g. `'firestoreDate()'`, `'optionalFirestoreString()'`. */
+  /**
+   * Raw converter expression, e.g. `'firestoreDate()'`, `'optionalFirestoreString()'`.
+   */
   readonly converter: string;
-  /** TS type string from the interface when available (e.g. `'StorageFileState'`, `'Maybe<Date>'`). */
+  /**
+   * TS type string from the interface when available (e.g. `'StorageFileState'`, `'Maybe<Date>'`).
+   */
   readonly tsType?: string;
-  /** `true` when the interface property is optional (`?:` or `Maybe<T>`). */
+  /**
+   * `true` when the interface property is optional (`?:` or `Maybe<T>`).
+   */
   readonly optional: boolean;
-  /** First JSDoc paragraph stripped of tags. */
+  /**
+   * First JSDoc paragraph stripped of tags.
+   */
   readonly description?: string;
-  /** Name of an enum declared in this file referenced by `tsType` / converter. */
+  /**
+   * Name of an enum declared in this file referenced by `tsType` / converter.
+   */
   readonly enumRef?: string;
 }
 
@@ -64,23 +76,41 @@ export interface FirebaseField {
  * A Firestore model entry.
  */
 export interface FirebaseModel {
-  /** Interface / class name (e.g. `'StorageFile'`, `'NotificationBox'`). */
+  /**
+   * Interface / class name (e.g. `'StorageFile'`, `'NotificationBox'`).
+   */
   readonly name: string;
-  /** Identity constant name (e.g. `'storageFileIdentity'`). */
+  /**
+   * Identity constant name (e.g. `'storageFileIdentity'`).
+   */
   readonly identityConst: string;
-  /** Model type string passed to `firestoreModelIdentity` (e.g. `'storageFile'`). */
+  /**
+   * Model type string passed to `firestoreModelIdentity` (e.g. `'storageFile'`).
+   */
   readonly modelType: string;
-  /** PRIMARY INDEX — collection prefix as it appears in Firestore keys (`'sf'`, `'nb'`, `'sys'`). */
+  /**
+   * PRIMARY INDEX — collection prefix as it appears in Firestore keys (`'sf'`, `'nb'`, `'sys'`).
+   */
   readonly collectionPrefix: string;
-  /** Identity const of the parent model for subcollections. Absent for root collections. */
+  /**
+   * Identity const of the parent model for subcollections. Absent for root collections.
+   */
   readonly parentIdentityConst?: string;
-  /** Source file path relative to the workspace root. */
+  /**
+   * Source file path relative to the workspace root.
+   */
   readonly sourceFile: string;
-  /** Persisted fields, canonical list from the converter. */
+  /**
+   * Persisted fields, canonical list from the converter.
+   */
   readonly fields: readonly FirebaseField[];
-  /** Enums declared in the same file (may be referenced by field types). */
+  /**
+   * Enums declared in the same file (may be referenced by field types).
+   */
   readonly enums: readonly FirebaseEnum[];
-  /** Unique-ish field names used to auto-detect the model from raw JSON when no hint is supplied. */
+  /**
+   * Unique-ish field names used to auto-detect the model from raw JSON when no hint is supplied.
+   */
   readonly detectionHints: readonly string[];
 }
 

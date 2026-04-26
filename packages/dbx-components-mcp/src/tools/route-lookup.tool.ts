@@ -131,10 +131,10 @@ function fuzzyCandidates(query: string, byName: ReadonlyMap<string, RouteTreeNod
     if (node.data.name.toLowerCase().includes(q)) {
       score += 3;
     }
-    if (node.fullUrl !== undefined && node.fullUrl.toLowerCase().includes(q)) {
+    if (node.fullUrl?.toLowerCase().includes(q)) {
       score += 2;
     }
-    if (node.data.component !== undefined && node.data.component.toLowerCase().includes(q)) {
+    if (node.data.component?.toLowerCase().includes(q)) {
       score += 2;
     }
     if (score > 0) {
@@ -142,8 +142,7 @@ function fuzzyCandidates(query: string, byName: ReadonlyMap<string, RouteTreeNod
     }
   }
   scored.sort((a, b) => b.score - a.score);
-  const result = scored.slice(0, 5).map((s) => s.node);
-  return result;
+  return scored.slice(0, 5).map((s) => s.node);
 }
 
 // MARK: Formatting
@@ -153,8 +152,10 @@ function formatSingle(node: RouteTreeNode, depth: 'brief' | 'full', via: string)
   lines.push('');
   lines.push(`Matched via ${via}.`);
   lines.push('');
-  lines.push(`- **URL:** ${node.fullUrl !== undefined ? `\`${node.fullUrl}\`` : '_no url_'}`);
-  lines.push(`- **Component:** ${node.data.component !== undefined ? `\`${node.data.component}\`` : '_no component_'}`);
+  const urlText = node.fullUrl !== undefined ? code(node.fullUrl) : '_no url_';
+  const componentText = node.data.component !== undefined ? code(node.data.component) : '_no component_';
+  lines.push(`- **URL:** ${urlText}`);
+  lines.push(`- **Component:** ${componentText}`);
   lines.push(`- **Defined in:** \`${node.data.file}:${node.data.line}\``);
   if (node.data.redirectTo) {
     lines.push(`- **Redirects to:** \`${node.data.redirectTo}\``);
@@ -170,61 +171,71 @@ function formatSingle(node: RouteTreeNode, depth: 'brief' | 'full', via: string)
     return lines.join('\n');
   }
 
-  // Parent chain
-  lines.push('');
-  lines.push('## Parent chain');
-  const chain = ancestors(node);
-  const chainLine = chain.map((c) => `\`${c.data.name}\``).join(' → ');
-  lines.push(chainLine.length > 0 ? chainLine : '_root_');
-
-  // Params
-  lines.push('');
-  lines.push('## Params');
-  if (node.data.paramKeys.length === 0) {
-    lines.push('_None._');
-  } else {
-    for (const key of node.data.paramKeys) {
-      lines.push(`- \`${key}\``);
-    }
-  }
-
-  // Resolves
-  lines.push('');
-  lines.push('## Resolves');
-  if (node.data.resolveKeys.length === 0) {
-    lines.push('_None._');
-  } else {
-    for (const key of node.data.resolveKeys) {
-      lines.push(`- \`${key}\``);
-    }
-  }
-
-  // Siblings
-  lines.push('');
-  lines.push('## Siblings');
-  const siblings = node.parent ? node.parent.children.filter((c) => c.data.name !== node.data.name) : [];
-  if (siblings.length === 0) {
-    lines.push('_None._');
-  } else {
-    for (const sib of siblings) {
-      lines.push(`- \`${sib.data.name}\` ${sib.fullUrl !== undefined ? `\`${sib.fullUrl}\`` : ''}${sib.data.component ? ` → \`${sib.data.component}\`` : ''}`);
-    }
-  }
-
-  // Children
-  lines.push('');
-  lines.push('## Children');
-  if (node.children.length === 0) {
-    lines.push('_None._');
-  } else {
-    for (const child of node.children) {
-      lines.push(`- \`${child.data.name}\` ${child.fullUrl !== undefined ? `\`${child.fullUrl}\`` : ''}${child.data.component ? ` → \`${child.data.component}\`` : ''}`);
-    }
-  }
+  appendParentChainSection(lines, node);
+  appendKeyListSection(lines, 'Params', node.data.paramKeys);
+  appendKeyListSection(lines, 'Resolves', node.data.resolveKeys);
+  appendRelatedNodesSection(lines, 'Siblings', node.parent ? node.parent.children.filter((c) => c.data.name !== node.data.name) : []);
+  appendRelatedNodesSection(lines, 'Children', node.children);
 
   lines.push('');
   lines.push('→ See skill `dbx__ref__dbx-app-structure` for state composition patterns.');
   return lines.join('\n');
+}
+
+/**
+ * Appends the parent-chain section (root → … → node) to the markdown buffer.
+ *
+ * @param lines - the markdown buffer being built
+ * @param node - the node whose ancestor chain to render
+ */
+function appendParentChainSection(lines: string[], node: RouteTreeNode): void {
+  lines.push('');
+  lines.push('## Parent chain');
+  const chain = ancestors(node);
+  const chainLine = chain.map((c) => code(c.data.name)).join(' → ');
+  lines.push(chainLine.length > 0 ? chainLine : '_root_');
+}
+
+/**
+ * Appends a heading and a bullet list of code-formatted keys, or `_None._` when
+ * the list is empty.
+ *
+ * @param lines - the markdown buffer being built
+ * @param title - the section heading title
+ * @param keys - the list of identifier keys to render
+ */
+function appendKeyListSection(lines: string[], title: string, keys: readonly string[]): void {
+  lines.push('');
+  lines.push(`## ${title}`);
+  if (keys.length === 0) {
+    lines.push('_None._');
+  } else {
+    for (const key of keys) {
+      lines.push(`- \`${key}\``);
+    }
+  }
+}
+
+/**
+ * Appends a heading plus one bullet per node showing its URL and component, or
+ * `_None._` when the list is empty.
+ *
+ * @param lines - the markdown buffer being built
+ * @param title - the section heading title
+ * @param nodes - the related nodes (siblings or children) to render
+ */
+function appendRelatedNodesSection(lines: string[], title: string, nodes: readonly RouteTreeNode[]): void {
+  lines.push('');
+  lines.push(`## ${title}`);
+  if (nodes.length === 0) {
+    lines.push('_None._');
+    return;
+  }
+  for (const child of nodes) {
+    const urlPart = child.fullUrl !== undefined ? code(child.fullUrl) : '';
+    const componentPart = child.data.component ? ` → ${code(child.data.component)}` : '';
+    lines.push(`- \`${child.data.name}\` ${urlPart}${componentPart}`);
+  }
 }
 
 function ancestors(node: RouteTreeNode): readonly RouteTreeNode[] {
@@ -240,7 +251,9 @@ function ancestors(node: RouteTreeNode): readonly RouteTreeNode[] {
 function formatGroup(title: string, nodes: readonly RouteTreeNode[]): string {
   const lines: string[] = [`# ${title}`, '', `${nodes.length} match(es).`, ''];
   for (const node of nodes) {
-    lines.push(`- \`${node.data.name}\` ${node.fullUrl !== undefined ? `\`${node.fullUrl}\`` : ''}${node.data.component ? ` → \`${node.data.component}\`` : ''} _(${node.data.file}:${node.data.line})_`);
+    const urlPart = node.fullUrl !== undefined ? code(node.fullUrl) : '';
+    const componentPart = node.data.component ? ` → ${code(node.data.component)}` : '';
+    lines.push(`- \`${node.data.name}\` ${urlPart}${componentPart} _(${node.data.file}:${node.data.line})_`);
   }
   return lines.join('\n');
 }
@@ -251,7 +264,9 @@ function formatNotFound(query: string, candidates: readonly RouteTreeNode[]): st
     lines.push('Did you mean one of these?');
     lines.push('');
     for (const node of candidates) {
-      lines.push(`- \`${node.data.name}\` ${node.fullUrl !== undefined ? `\`${node.fullUrl}\`` : ''}${node.data.component ? ` → \`${node.data.component}\`` : ''}`);
+      const urlPart = node.fullUrl !== undefined ? code(node.fullUrl) : '';
+      const componentPart = node.data.component ? ` → ${code(node.data.component)}` : '';
+      lines.push(`- \`${node.data.name}\` ${urlPart}${componentPart}`);
     }
   } else {
     lines.push('Try `dbx_route_tree` to see the full state listing.');
@@ -259,7 +274,19 @@ function formatNotFound(query: string, candidates: readonly RouteTreeNode[]): st
   return lines.join('\n');
 }
 
+function code(value: string): string {
+  return '`' + value + '`';
+}
+
 // MARK: Handler
+/**
+ * Tool handler for `dbx_route_lookup`. Resolves the requested UIRouter state
+ * topic against the resolved app sources and renders the matching state
+ * details, child summary, or not-found suggestion list.
+ *
+ * @param rawArgs - the unvalidated tool arguments from the MCP runtime
+ * @returns the formatted lookup, or an error result when args fail validation
+ */
 export async function runRouteLookup(rawArgs: unknown): Promise<ToolResult> {
   let args: ParsedLookupArgs;
   try {

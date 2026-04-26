@@ -22,7 +22,9 @@ export interface LoadSourcesArgs {
   readonly paths: readonly string[] | undefined;
   readonly glob: string | undefined;
   readonly cwd: string | undefined;
-  /** When true, `paths` are walked transitively via their relative imports. */
+  /**
+   * When true, `paths` are walked transitively via their relative imports.
+   */
   readonly walkImports: boolean;
 }
 
@@ -33,19 +35,19 @@ export interface LoadedSources {
 
 const TRY_EXTENSIONS: readonly string[] = ['.ts', '.tsx', '/index.ts', '/index.tsx'];
 
+/**
+ * Resolves a glob (or explicit file list) into the in-memory `RouteSource`
+ * snapshots the route core consumes. Centralises path-traversal guarding and
+ * extension fallback so the route tools share one filesystem layer.
+ *
+ * @param args - glob/file list, optional cwd, and source-resolution flags
+ * @returns the materialised sources alongside the resolved cwd used
+ */
 export async function loadRouteSources(args: LoadSourcesArgs): Promise<LoadedSources> {
   const cwdResolved = args.cwd ? resolve(process.cwd(), args.cwd) : process.cwd();
-  // Path-traversal guard for an explicit cwd input
-  if (args.cwd) {
-    const serverCwd = process.cwd();
-    const cwdPrefix = serverCwd.endsWith(sep) ? serverCwd : serverCwd + sep;
-    if (!cwdResolved.startsWith(cwdPrefix) && cwdResolved !== serverCwd) {
-      throw new Error(`cwd \`${args.cwd}\` resolves outside the server cwd and is not allowed.`);
-    }
-  }
+  guardCwdInsideServer(args.cwd, cwdResolved);
 
   const collected = new Map<string, RouteSource>();
-
   if (args.sources) {
     for (const src of args.sources) {
       if (!collected.has(src.name)) {
@@ -54,7 +56,49 @@ export async function loadRouteSources(args: LoadSourcesArgs): Promise<LoadedSou
     }
   }
 
-  // Direct path inputs
+  const initialPaths = await collectInitialPaths(args, cwdResolved);
+  for (const relative of initialPaths) {
+    await loadOne(relative, cwdResolved, collected);
+  }
+
+  if (args.walkImports) {
+    await walkRelativeImports(collected, cwdResolved);
+  }
+
+  const result: LoadedSources = {
+    sources: Array.from(collected.values()),
+    cwdResolved
+  };
+  return result;
+}
+
+/**
+ * Throws when an explicit cwd input resolves outside the server cwd, mirroring
+ * the path-traversal guard the rest of the loader applies.
+ *
+ * @param requestedCwd - the original cwd argument from the caller
+ * @param resolvedCwd - the resolved absolute path
+ */
+function guardCwdInsideServer(requestedCwd: string | undefined, resolvedCwd: string): void {
+  if (!requestedCwd) {
+    return;
+  }
+  const serverCwd = process.cwd();
+  const cwdPrefix = serverCwd.endsWith(sep) ? serverCwd : serverCwd + sep;
+  if (!resolvedCwd.startsWith(cwdPrefix) && resolvedCwd !== serverCwd) {
+    throw new Error(`cwd \`${requestedCwd}\` resolves outside the server cwd and is not allowed.`);
+  }
+}
+
+/**
+ * Concatenates explicit `paths` with the matches of an optional `glob`, both
+ * relative to the resolved cwd.
+ *
+ * @param args - the loader arguments providing `paths` and/or `glob`
+ * @param cwdResolved - the resolved cwd used as glob base
+ * @returns the combined relative path list to load directly
+ */
+async function collectInitialPaths(args: LoadSourcesArgs, cwdResolved: string): Promise<string[]> {
   const initialPaths: string[] = [];
   if (args.paths) {
     for (const p of args.paths) {
@@ -66,39 +110,36 @@ export async function loadRouteSources(args: LoadSourcesArgs): Promise<LoadedSou
       initialPaths.push(match);
     }
   }
+  return initialPaths;
+}
 
-  for (const relative of initialPaths) {
-    await loadOne(relative, cwdResolved, collected);
-  }
-
-  if (args.walkImports) {
-    // BFS through relative imports.
-    const queue = Array.from(collected.values());
-    while (queue.length > 0) {
-      const next = queue.shift();
-      if (!next) {
-        break;
+/**
+ * Performs a BFS through relative imports starting from every source already
+ * present in `collected`, adding newly resolved sources to the same map.
+ *
+ * @param collected - the source map to extend in place
+ * @param cwdResolved - the resolved cwd used to build absolute paths
+ */
+async function walkRelativeImports(collected: Map<string, RouteSource>, cwdResolved: string): Promise<void> {
+  const queue = Array.from(collected.values());
+  while (queue.length > 0) {
+    const next = queue.shift();
+    if (!next) {
+      break;
+    }
+    const specifiers = computeRelativeSpecifiers(next);
+    for (const specifier of specifiers) {
+      const resolved = await resolveRelativeImport(next.name, specifier, cwdResolved);
+      if (!resolved) {
+        continue;
       }
-      const specifiers = computeRelativeSpecifiers(next);
-      for (const specifier of specifiers) {
-        const resolved = await resolveRelativeImport(next.name, specifier, cwdResolved);
-        if (!resolved) {
-          continue;
-        }
-        if (collected.has(resolved.name)) {
-          continue;
-        }
-        collected.set(resolved.name, resolved);
-        queue.push(resolved);
+      if (collected.has(resolved.name)) {
+        continue;
       }
+      collected.set(resolved.name, resolved);
+      queue.push(resolved);
     }
   }
-
-  const result: LoadedSources = {
-    sources: Array.from(collected.values()),
-    cwdResolved
-  };
-  return result;
 }
 
 async function loadOne(relative: string, cwd: string, into: Map<string, RouteSource>): Promise<void> {

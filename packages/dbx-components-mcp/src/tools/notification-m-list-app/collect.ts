@@ -12,7 +12,42 @@ export interface CollectOptions {
   readonly apiDir: string;
 }
 
+/**
+ * Reshapes the validator's extraction into the listing report shape — pairing
+ * each template/task with its corresponding type-info record so callers see a
+ * single combined row per notification kind.
+ *
+ * @param extracted - the validator extraction to reshape
+ * @param options - workspace directories used to relativise emitted paths
+ * @returns the listing report
+ */
 export function collectAppNotifications(extracted: ExtractedAppNotifications, options: CollectOptions): AppNotificationsReport {
+  const templates = buildTemplateSummaries(extracted);
+  const tasks = buildTaskSummaries(extracted);
+
+  const record = extracted.templateInfoRecord;
+  const result: AppNotificationsReport = {
+    componentDir: options.componentDir,
+    apiDir: options.apiDir,
+    aggregatorRecordName: record?.symbolName,
+    aggregatorWiredInApi: Boolean(extracted.templateInfoRecordWiring && extracted.templateInfoRecordWiring.recordIdentifier === record?.symbolName),
+    templateConfigsArrayFactoryName: extracted.templateConfigsArrayFactory?.symbolName,
+    templateConfigsArrayWiredInApi: Boolean(extracted.templateConfigsArrayWiring && extracted.templateConfigsArrayWiring.useFactoryIdentifier === extracted.templateConfigsArrayFactory?.symbolName),
+    taskServiceCallCount: extracted.taskServiceCalls.length,
+    templates,
+    tasks
+  };
+  return result;
+}
+
+/**
+ * Builds the {@link TemplateSummary} list for every notification template
+ * type-constant by joining template-info and handler entries.
+ *
+ * @param extracted - the validator extraction
+ * @returns one summary per template type-constant
+ */
+function buildTemplateSummaries(extracted: ExtractedAppNotifications): TemplateSummary[] {
   const infoByTypeConstant = new Map<string, ExtractedTemplateTypeInfo>();
   for (const info of extracted.templateTypeInfos) {
     if (info.typeConstantName) infoByTypeConstant.set(info.typeConstantName, info);
@@ -44,7 +79,18 @@ export function collectAppNotifications(extracted: ExtractedAppNotifications, op
       sourceFile: constant.sourceFile
     });
   }
+  return templates;
+}
 
+/**
+ * Builds the {@link TaskSummary} list for every notification task
+ * type-constant by joining checkpoint, data-interface, handler, and
+ * validate-list lookups.
+ *
+ * @param extracted - the validator extraction
+ * @returns one summary per task type-constant
+ */
+function buildTaskSummaries(extracted: ExtractedAppNotifications): TaskSummary[] {
   const aggregateMembers = new Set<string>();
   for (const agg of extracted.taskAllTypesAggregates) {
     for (const id of agg.taskTypeIdentifiers) aggregateMembers.add(id);
@@ -86,19 +132,7 @@ export function collectAppNotifications(extracted: ExtractedAppNotifications, op
       sourceFile: constant.sourceFile
     });
   }
-
-  const result: AppNotificationsReport = {
-    componentDir: options.componentDir,
-    apiDir: options.apiDir,
-    aggregatorRecordName: record?.symbolName,
-    aggregatorWiredInApi: Boolean(extracted.templateInfoRecordWiring && record && extracted.templateInfoRecordWiring.recordIdentifier === record.symbolName),
-    templateConfigsArrayFactoryName: extracted.templateConfigsArrayFactory?.symbolName,
-    templateConfigsArrayWiredInApi: Boolean(extracted.templateConfigsArrayWiring && extracted.templateConfigsArrayFactory && extracted.templateConfigsArrayWiring.useFactoryIdentifier === extracted.templateConfigsArrayFactory.symbolName),
-    taskServiceCallCount: extracted.taskServiceCalls.length,
-    templates,
-    tasks
-  };
-  return result;
+  return tasks;
 }
 
 function symbolStemForTask(name: string): string {

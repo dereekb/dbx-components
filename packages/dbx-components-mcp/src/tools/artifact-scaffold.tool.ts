@@ -28,6 +28,7 @@ import { applyIdempotency, formatResult, scaffoldArtifact, type ArtifactKind, ty
 
 const ARTIFACT_KINDS: readonly ArtifactKind[] = ['storagefile-purpose', 'notification-template', 'notification-task'];
 const ARTIFACT_KIND_LITERAL_UNION = ARTIFACT_KINDS.map((k) => `'${k}'`).join(' | ');
+const ARTIFACT_KIND_BACKTICK_LIST = ARTIFACT_KINDS.map((k) => '`' + k + '`').join(', ');
 
 // MARK: Tool definition
 const DBX_ARTIFACT_SCAFFOLD_TOOL: Tool = {
@@ -35,7 +36,7 @@ const DBX_ARTIFACT_SCAFFOLD_TOOL: Tool = {
   description: [
     'Generate copy-paste-ready body templates for a downstream dbx-components artifact: a new `StorageFilePurpose`, `NotificationTemplateType`, or `NotificationTaskType`. Sibling to `dbx_artifact_file_convention` — that tool says where each piece belongs and what its export shape is; this one emits the actual TypeScript bodies.',
     '',
-    `Supported artifact kinds: ${ARTIFACT_KINDS.map((k) => `\`${k}\``).join(', ')}.`,
+    `Supported artifact kinds: ${ARTIFACT_KIND_BACKTICK_LIST}.`,
     '',
     'Inputs:',
     '- `artifact`: required — which artifact kind to scaffold.',
@@ -124,6 +125,14 @@ async function fileExists(absolutePath: string): Promise<boolean> {
 }
 
 // MARK: Handler
+/**
+ * Tool handler for `dbx_artifact_scaffold`. Validates the request, scaffolds
+ * the requested artifact (writing files within the workspace), and reports
+ * existing-file conflicts before any write happens.
+ *
+ * @param rawArgs - the unvalidated tool arguments object from the MCP runtime
+ * @returns the scaffold report, or an error result when validation or write fails
+ */
 export async function runArtifactScaffold(rawArgs: unknown): Promise<ToolResult> {
   let input: ScaffoldArtifactInput;
   try {

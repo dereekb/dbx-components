@@ -5,8 +5,7 @@
  * prefer browsing data over calling tools.
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { getFormFields, getFormField, getFormFieldsByProduces, getFormFieldsByTier, getFormFieldsByArrayOutput, getFormProducesCatalog, FORM_TIER_ORDER, type FormTier, type FormArrayOutput } from '../registry/index.js';
 
 const FORM_FIELDS_URI = 'dbx://form/fields';
@@ -16,6 +15,13 @@ const FORM_FIELDS_BY_TIER_TEMPLATE = 'dbx://form/fields/tier/{tier}';
 const FORM_FIELDS_BY_ARRAY_OUTPUT_TEMPLATE = 'dbx://form/fields/array-output/{arrayOutput}';
 const ARRAY_OUTPUT_VALUES: readonly FormArrayOutput[] = ['yes', 'no', 'optional'];
 
+/**
+ * Registers the form-field MCP resources (catalog, per-slug details, plus
+ * filtered views by produces/tier/array-output) on the given server. The
+ * separate URIs reflect the same primary indexes that the lookup tools use.
+ *
+ * @param server - the MCP server to register resources against
+ */
 export function registerFormFieldsResource(server: McpServer): void {
   server.registerResource(
     'dbx-components Form Fields',
@@ -40,7 +46,7 @@ export function registerFormFieldsResource(server: McpServer): void {
           description: f.description
         }))
       };
-      const result = {
+      return {
         contents: [
           {
             uri: FORM_FIELDS_URI,
@@ -49,7 +55,6 @@ export function registerFormFieldsResource(server: McpServer): void {
           }
         ]
       };
-      return result;
     }
   );
 
@@ -78,7 +83,7 @@ export function registerFormFieldsResource(server: McpServer): void {
         text = JSON.stringify(field, null, 2);
       }
 
-      const result = {
+      return {
         contents: [
           {
             uri: uri.href,
@@ -87,7 +92,6 @@ export function registerFormFieldsResource(server: McpServer): void {
           }
         ]
       };
-      return result;
     }
   );
 
@@ -117,7 +121,7 @@ export function registerFormFieldsResource(server: McpServer): void {
         }
       }
 
-      const result = {
+      return {
         contents: [
           {
             uri: uri.href,
@@ -126,7 +130,6 @@ export function registerFormFieldsResource(server: McpServer): void {
           }
         ]
       };
-      return result;
     }
   );
 
@@ -151,7 +154,7 @@ export function registerFormFieldsResource(server: McpServer): void {
         text = JSON.stringify({ tier, fields: entries }, null, 2);
       }
 
-      const result = {
+      return {
         contents: [
           {
             uri: uri.href,
@@ -160,7 +163,6 @@ export function registerFormFieldsResource(server: McpServer): void {
           }
         ]
       };
-      return result;
     }
   );
 
@@ -185,7 +187,7 @@ export function registerFormFieldsResource(server: McpServer): void {
         text = JSON.stringify({ arrayOutput, fields: entries }, null, 2);
       }
 
-      const result = {
+      return {
         contents: [
           {
             uri: uri.href,
@@ -194,7 +196,6 @@ export function registerFormFieldsResource(server: McpServer): void {
           }
         ]
       };
-      return result;
     }
   );
 }

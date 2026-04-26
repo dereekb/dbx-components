@@ -10,11 +10,18 @@ import { buildTemplateContext, deriveNameTokens } from './templates.js';
 import { renderArtifact } from './render.js';
 import type { EmittedFile, ScaffoldArtifactInput, ScaffoldArtifactResult } from './types.js';
 
+/**
+ * Pure scaffold entry point. Builds the template context for the requested
+ * name tokens and asks the renderer to emit each file plus its wiring steps.
+ * The MCP wrapper applies filesystem idempotency on the returned result.
+ *
+ * @param input - the validated scaffold request
+ * @returns the rendered file list, wiring steps, and summary
+ */
 export function scaffoldArtifact(input: ScaffoldArtifactInput): ScaffoldArtifactResult {
   const tokens = deriveNameTokens(input.name);
   const ctx = buildTemplateContext({ tokens, componentDir: input.componentDir, apiDir: input.apiDir });
-  const result = renderArtifact(input, ctx);
-  return result;
+  return renderArtifact(input, ctx);
 }
 
 /**
@@ -31,6 +38,10 @@ export type EmittedFileExistenceChecker = (relativePath: string) => boolean | Pr
  * `'exists-skipped'` emissions pass through unchanged — appends always
  * defer to the user (no overwrite risk), and pre-skipped emissions are
  * idempotent on a second pass.
+ *
+ * @param result - the scaffold result whose `files` array should be re-classified
+ * @param exists - callback that reports whether the relative path already exists on disk
+ * @returns a new result with `'new'` emissions downgraded to `'exists-skipped'` where appropriate
  */
 export async function applyIdempotency(result: ScaffoldArtifactResult, exists: EmittedFileExistenceChecker): Promise<ScaffoldArtifactResult> {
   const updated: EmittedFile[] = [];
@@ -48,6 +59,14 @@ export async function applyIdempotency(result: ScaffoldArtifactResult, exists: E
   return out;
 }
 
+/**
+ * Renders a scaffold result as a markdown report — one section per emitted
+ * file plus a wiring-instructions block — for return through MCP tool
+ * content.
+ *
+ * @param result - the scaffold result to format
+ * @returns the trimmed markdown report
+ */
 export function formatResult(result: ScaffoldArtifactResult): string {
   const lines: string[] = [];
   lines.push(`# Scaffold — ${result.artifact}`);

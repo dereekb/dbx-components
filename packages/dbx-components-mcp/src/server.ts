@@ -14,6 +14,13 @@ import packageJson from '../package.json' with { type: 'json' };
 export const SERVER_NAME = 'dbx-components-mcp';
 export const SERVER_VERSION = packageJson.version;
 
+/**
+ * Builds a fresh `McpServer` and registers every resource/tool exposed by
+ * dbx-components-mcp. Returns the configured server without connecting it so
+ * tests can mount any transport (stdio, in-memory) without duplicating setup.
+ *
+ * @returns a configured server ready to be connected to a transport
+ */
 export function createServer(): McpServer {
   const server = new McpServer({
     name: SERVER_NAME,
@@ -32,6 +39,10 @@ export function createServer(): McpServer {
   return server;
 }
 
+/**
+ * Production entry point — creates the server and binds it to a stdio
+ * transport so it can be invoked from a Claude Code config block.
+ */
 export async function runStdioServer(): Promise<void> {
   const server = createServer();
   const transport = new StdioServerTransport();

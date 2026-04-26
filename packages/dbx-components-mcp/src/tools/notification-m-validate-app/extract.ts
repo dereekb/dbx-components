@@ -35,7 +35,6 @@ const NOTIF_TEMPLATE_TYPE_INFO = 'NotificationTemplateTypeInfo';
 const NOTIF_TEMPLATE_TYPE_INFO_ARRAY = 'NotificationTemplateTypeInfo[]';
 const NOTIF_TASK_TYPE = 'NotificationTaskType';
 const NOTIF_TASK_TYPE_ARRAY = 'NotificationTaskType[]';
-const NOTIF_TEMPLATE_SERVICE_TYPE_CONFIG = 'NotificationTemplateServiceTypeConfig';
 const NOTIF_TASK_SERVICE_HANDLER_CONFIG = 'NotificationTaskServiceTaskHandlerConfig';
 const TEMPLATE_INFO_SUFFIX = '_NOTIFICATION_TEMPLATE_TYPE_INFO';
 const ALL_TEMPLATE_INFO_ARRAY_SUFFIX = '_NOTIFICATION_TEMPLATE_TYPE_INFOS';
@@ -66,6 +65,15 @@ interface ApiFunctionIndex {
   readonly functionsByName: ReadonlyMap<string, ApiFunctionEntry>;
 }
 
+/**
+ * Builds a ts-morph project from the prepared inspection and extracts every
+ * fact the notification rules need — template/task type constants, info
+ * objects, factories, handlers, aggregator wiring, and trusted external
+ * identifiers — in a single pass so the rules run against a stable snapshot.
+ *
+ * @param inspection - the prepared component + api file snapshot
+ * @returns the structured extraction used by the rules layer
+ */
 export function extractAppNotifications(inspection: AppNotificationsInspection): ExtractedAppNotifications {
   const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });
   const componentSources: SourceFile[] = [];
@@ -212,11 +220,6 @@ function findReturnExpression(body: Node): Node | undefined {
     return innerBody;
   }
   return undefined;
-}
-
-function functionReturnTypeText(node: FunctionDeclaration | ArrowFunction | FunctionExpression): string | undefined {
-  const rt = node.getReturnTypeNode();
-  return rt ? rt.getText() : undefined;
 }
 
 // MARK: Trusted external identifiers
@@ -444,51 +447,93 @@ function extractTemplateInfoRecord(sources: readonly SourceFile[], index: Compon
     const rel = componentRelPath(sf);
     for (const stmt of sf.getVariableStatements()) {
       for (const decl of stmt.getDeclarations()) {
-        const initializer = unwrapAsExpressions(decl.getInitializer());
-        if (!initializer || !Node.isCallExpression(initializer)) continue;
-        if (initializer.getExpression().getText() !== TEMPLATE_INFO_RECORD_FACTORY) continue;
-        const args = initializer.getArguments();
-        const arr = args[0] ? asArrayLiteral(args[0]) : undefined;
-        const direct: string[] = [];
-        const spreads: string[] = [];
-        if (arr) {
-          for (const el of arr.getElements()) {
-            if (Node.isSpreadElement(el)) {
-              const inner = el.getExpression();
-              if (Node.isIdentifier(inner)) {
-                spreads.push(inner.getText());
-              }
-            } else {
-              const inner = unwrapAsExpressions(el);
-              if (inner && Node.isIdentifier(inner)) {
-                direct.push(inner.getText());
-              }
-            }
-          }
+        const record = tryReadTemplateInfoRecord(decl, rel, index);
+        if (record) {
+          return record;
         }
-        const resolved = new Set<string>(direct);
-        const unresolved: string[] = [];
-        for (const spread of spreads) {
-          const agg = index.templateInfoAggregates.get(spread);
-          if (!agg) {
-            unresolved.push(spread);
-            continue;
-          }
-          for (const id of agg.infoIdentifiers) resolved.add(id);
-        }
-        const result: ExtractedTemplateInfoRecord = {
-          symbolName: decl.getName(),
-          directInfoIdentifiers: direct,
-          spreadAggregateIdentifiers: spreads,
-          resolvedInfoIdentifiers: [...resolved],
-          unresolvedSpreadIdentifiers: unresolved,
-          sourceFile: rel
-        };
-        return result;
       }
     }
   }
   return undefined;
+}
+
+/**
+ * Inspects a single variable declaration and returns a populated
+ * {@link ExtractedTemplateInfoRecord} when the initializer is a call to the
+ * `notificationTemplateTypeInfoRecord` factory; otherwise `undefined`.
+ *
+ * @param decl - the variable declaration to inspect
+ * @param rel - the relative source file path used in the result record
+ * @param index - the component aggregate index used to resolve spread aggregates
+ * @returns the extracted record or `undefined` when this declaration is not the factory call
+ */
+function tryReadTemplateInfoRecord(decl: VariableDeclaration, rel: string, index: ComponentAggregateIndex): ExtractedTemplateInfoRecord | undefined {
+  const initializer = unwrapAsExpressions(decl.getInitializer());
+  if (!initializer || !Node.isCallExpression(initializer)) return undefined;
+  if (initializer.getExpression().getText() !== TEMPLATE_INFO_RECORD_FACTORY) return undefined;
+  const args = initializer.getArguments();
+  const arr = args[0] ? asArrayLiteral(args[0]) : undefined;
+  const direct: string[] = [];
+  const spreads: string[] = [];
+  if (arr) {
+    classifyInfoRecordArrayElements(arr, direct, spreads);
+  }
+  const { resolved, unresolved } = resolveTemplateInfoSpreads(direct, spreads, index);
+  return {
+    symbolName: decl.getName(),
+    directInfoIdentifiers: direct,
+    spreadAggregateIdentifiers: spreads,
+    resolvedInfoIdentifiers: [...resolved],
+    unresolvedSpreadIdentifiers: unresolved,
+    sourceFile: rel
+  };
+}
+
+/**
+ * Splits the elements of the `notificationTemplateTypeInfoRecord([...])`
+ * array argument into direct identifier and spread-identifier buckets.
+ *
+ * @param arr - the array literal argument
+ * @param direct - mutable buffer for direct identifier names
+ * @param spreads - mutable buffer for spread-aggregate identifier names
+ */
+function classifyInfoRecordArrayElements(arr: ArrayLiteralExpression, direct: string[], spreads: string[]): void {
+  for (const el of arr.getElements()) {
+    if (Node.isSpreadElement(el)) {
+      const inner = el.getExpression();
+      if (Node.isIdentifier(inner)) {
+        spreads.push(inner.getText());
+      }
+      continue;
+    }
+    const inner = unwrapAsExpressions(el);
+    if (inner && Node.isIdentifier(inner)) {
+      direct.push(inner.getText());
+    }
+  }
+}
+
+/**
+ * Walks each spread aggregate, expanding it into its info identifiers when it
+ * resolves locally and recording it as unresolved otherwise.
+ *
+ * @param direct - directly referenced info identifiers (seed for `resolved`)
+ * @param spreads - spread-aggregate identifier names to resolve
+ * @param index - the component aggregate index used to look up aggregates
+ * @returns the resolved info identifier set and unresolved spread list
+ */
+function resolveTemplateInfoSpreads(direct: readonly string[], spreads: readonly string[], index: ComponentAggregateIndex): { readonly resolved: Set<string>; readonly unresolved: string[] } {
+  const resolved = new Set<string>(direct);
+  const unresolved: string[] = [];
+  for (const spread of spreads) {
+    const agg = index.templateInfoAggregates.get(spread);
+    if (!agg) {
+      unresolved.push(spread);
+      continue;
+    }
+    for (const id of agg.infoIdentifiers) resolved.add(id);
+  }
+  return { resolved, unresolved };
 }
 
 // MARK: API wiring
@@ -565,7 +610,7 @@ function extractTemplateConfigsArrayFactory(sources: readonly SourceFile[], inde
     }
     for (const fn of sf.getFunctions()) {
       const name = fn.getName();
-      if (!name || !name.endsWith(TEMPLATE_CONFIGS_ARRAY_FACTORY_SUFFIX)) continue;
+      if (!name?.endsWith(TEMPLATE_CONFIGS_ARRAY_FACTORY_SUFFIX)) continue;
       return buildFactorySummary(name, fn, rel);
     }
   }
@@ -691,66 +736,139 @@ function extractTaskServiceCalls(sources: readonly SourceFile[], index: ApiFunct
       if (!first) continue;
       const validateArr = resolveArrayFromProperty(first, 'validate', sf);
       const handlersArr = resolveArrayFromProperty(first, 'handlers', sf);
-      const validateIds: string[] = [];
-      const validateSpreads: string[] = [];
-      if (validateArr) {
-        for (const el of validateArr.getElements()) {
-          if (Node.isSpreadElement(el)) {
-            const inner = el.getExpression();
-            if (Node.isIdentifier(inner)) validateSpreads.push(inner.getText());
-            continue;
-          }
-          const inner = unwrapAsExpressions(el);
-          if (inner && Node.isIdentifier(inner)) validateIds.push(inner.getText());
-        }
-      }
-      const handlerTypes: string[] = [];
-      const unresolvedSpreads: string[] = [];
-      const resolvedBindings: string[] = [];
-      const unresolvedBindings: string[] = [];
-      const visited = new Set<string>();
-      if (handlersArr) {
-        for (const el of handlersArr.getElements()) {
-          if (Node.isSpreadElement(el)) {
-            const inner = el.getExpression();
-            if (Node.isCallExpression(inner)) {
-              const callee = inner.getExpression();
-              if (Node.isIdentifier(callee)) {
-                const name = callee.getText();
-                unresolvedSpreads.push(name);
-                collectHandlerBindingsFromIdentifier(name, sf, index, trustedExternal, resolvedBindings, unresolvedBindings, visited);
-              }
-            } else if (Node.isIdentifier(inner)) {
-              const name = inner.getText();
-              unresolvedSpreads.push(name);
-              collectHandlerBindingsFromIdentifier(name, sf, index, trustedExternal, resolvedBindings, unresolvedBindings, visited);
-            }
-            continue;
-          }
-          const inner = unwrapAsExpressions(el);
-          if (!inner) continue;
-          if (Node.isIdentifier(inner)) {
-            collectHandlerBindingsFromIdentifier(inner.getText(), sf, index, trustedExternal, resolvedBindings, unresolvedBindings, visited);
-          } else if (Node.isCallExpression(inner)) {
-            const callee = inner.getExpression();
-            if (Node.isIdentifier(callee)) {
-              collectHandlerBindingsFromIdentifier(callee.getText(), sf, index, trustedExternal, resolvedBindings, unresolvedBindings, visited);
-            }
-          }
-        }
-      }
+      const validate = collectValidateArrayElements(validateArr);
+      const handlers = collectHandlersArrayElements({ handlersArr, sf, index, trustedExternal });
       out.push({
-        validateIdentifiers: validateIds,
-        spreadValidateIdentifiers: validateSpreads,
-        handlerTypeIdentifiers: handlerTypes,
-        unresolvedHandlerSpreadIdentifiers: unresolvedSpreads,
-        resolvedHandlerBindings: resolvedBindings,
-        unresolvedHandlerBindings: unresolvedBindings,
+        validateIdentifiers: validate.ids,
+        spreadValidateIdentifiers: validate.spreads,
+        handlerTypeIdentifiers: handlers.handlerTypes,
+        unresolvedHandlerSpreadIdentifiers: handlers.unresolvedSpreads,
+        resolvedHandlerBindings: handlers.resolvedBindings,
+        unresolvedHandlerBindings: handlers.unresolvedBindings,
         sourceFile: rel
       });
     }
   }
   return out;
+}
+
+interface ValidateArrayElements {
+  readonly ids: string[];
+  readonly spreads: string[];
+}
+
+/**
+ * Splits the elements of the `validate: [...]` array into direct identifier
+ * names and spread identifier names.
+ *
+ * @param validateArr - the resolved `validate` array literal, or `undefined`
+ *   when the property is absent
+ * @returns the direct identifier names and spread identifier names
+ */
+function collectValidateArrayElements(validateArr: ArrayLiteralExpression | undefined): ValidateArrayElements {
+  const ids: string[] = [];
+  const spreads: string[] = [];
+  if (!validateArr) return { ids, spreads };
+  for (const el of validateArr.getElements()) {
+    if (Node.isSpreadElement(el)) {
+      const inner = el.getExpression();
+      if (Node.isIdentifier(inner)) spreads.push(inner.getText());
+      continue;
+    }
+    const inner = unwrapAsExpressions(el);
+    if (inner && Node.isIdentifier(inner)) ids.push(inner.getText());
+  }
+  return { ids, spreads };
+}
+
+interface CollectHandlersArrayElementsOptions {
+  readonly handlersArr: ArrayLiteralExpression | undefined;
+  readonly sf: SourceFile;
+  readonly index: ApiFunctionIndex;
+  readonly trustedExternal: ReadonlySet<string>;
+}
+
+interface HandlersArrayElements {
+  readonly handlerTypes: string[];
+  readonly unresolvedSpreads: string[];
+  readonly resolvedBindings: string[];
+  readonly unresolvedBindings: string[];
+}
+
+/**
+ * Walks the `handlers: [...]` array, classifying each spread/non-spread
+ * element and chasing identifier references through
+ * {@link collectHandlerBindingsFromIdentifier}. Spread call/identifier names
+ * are recorded as "unresolved spreads" because the runtime expansion lives
+ * elsewhere; the binding tracer still walks them so the rules pass can match
+ * resolved bindings against the trust list.
+ *
+ * @param options - the array literal, source file, function index, and
+ *   trust-listed identifier set
+ * @returns the per-call buckets used to populate the task-service-call record
+ */
+function collectHandlersArrayElements(options: CollectHandlersArrayElementsOptions): HandlersArrayElements {
+  const { handlersArr, sf, index, trustedExternal } = options;
+  const handlerTypes: string[] = [];
+  const unresolvedSpreads: string[] = [];
+  const resolvedBindings: string[] = [];
+  const unresolvedBindings: string[] = [];
+  if (!handlersArr) return { handlerTypes, unresolvedSpreads, resolvedBindings, unresolvedBindings };
+  const visited = new Set<string>();
+  for (const el of handlersArr.getElements()) {
+    if (Node.isSpreadElement(el)) {
+      consumeHandlersSpreadElement({ inner: el.getExpression(), sf, index, trustedExternal, unresolvedSpreads, resolvedBindings, unresolvedBindings, visited });
+      continue;
+    }
+    const inner = unwrapAsExpressions(el);
+    if (!inner) continue;
+    if (Node.isIdentifier(inner)) {
+      collectHandlerBindingsFromIdentifier({ name: inner.getText(), sf, index, trustedExternal, resolved: resolvedBindings, unresolved: unresolvedBindings, visited });
+    } else if (Node.isCallExpression(inner)) {
+      const callee = inner.getExpression();
+      if (Node.isIdentifier(callee)) {
+        collectHandlerBindingsFromIdentifier({ name: callee.getText(), sf, index, trustedExternal, resolved: resolvedBindings, unresolved: unresolvedBindings, visited });
+      }
+    }
+  }
+  return { handlerTypes, unresolvedSpreads, resolvedBindings, unresolvedBindings };
+}
+
+interface ConsumeHandlersSpreadElementOptions {
+  readonly inner: Node;
+  readonly sf: SourceFile;
+  readonly index: ApiFunctionIndex;
+  readonly trustedExternal: ReadonlySet<string>;
+  readonly unresolvedSpreads: string[];
+  readonly resolvedBindings: string[];
+  readonly unresolvedBindings: string[];
+  readonly visited: Set<string>;
+}
+
+/**
+ * Records a spread element from `handlers: [...]`, supporting both
+ * `...identifier` and `...callee(...)` forms. The spread name is appended to
+ * `unresolvedSpreads` because the array expansion happens at runtime, while
+ * the binding tracer still walks it for trust-list matching.
+ *
+ * @param options - the spread inner expression and the buckets to populate
+ */
+function consumeHandlersSpreadElement(options: ConsumeHandlersSpreadElementOptions): void {
+  const { inner, sf, index, trustedExternal, unresolvedSpreads, resolvedBindings, unresolvedBindings, visited } = options;
+  if (Node.isCallExpression(inner)) {
+    const callee = inner.getExpression();
+    if (Node.isIdentifier(callee)) {
+      const name = callee.getText();
+      unresolvedSpreads.push(name);
+      collectHandlerBindingsFromIdentifier({ name, sf, index, trustedExternal, resolved: resolvedBindings, unresolved: unresolvedBindings, visited });
+    }
+    return;
+  }
+  if (Node.isIdentifier(inner)) {
+    const name = inner.getText();
+    unresolvedSpreads.push(name);
+    collectHandlerBindingsFromIdentifier({ name, sf, index, trustedExternal, resolved: resolvedBindings, unresolved: unresolvedBindings, visited });
+  }
 }
 
 /**
@@ -761,23 +879,61 @@ function extractTaskServiceCalls(sources: readonly SourceFile[], index: ApiFunct
  * cannot be followed (upstream imports, unbound names, non-handler
  * intermediate types) end up in {@link unresolved} for the rules pass
  * to cross-check against the trust-list.
+ *
+ * @param node - the value-position node to inspect
+ * @param sf - the source file the node belongs to
+ * @param index - the api function lookup index for chasing chained calls
+ * @param trustedExternal - set of identifiers that downstream rules consider safe upstream re-exports
+ * @param resolved - mutable buffer that receives in-file resolved binding names
+ * @param unresolved - mutable buffer that receives identifiers the trace could not follow locally
+ * @param visited - cycle-guard set for recursive identifier traversal
+ * @returns `true` when a handler binding (resolved or unresolved) was recorded
  */
-function collectHandlerBindingsFromValue(node: Node | undefined, sf: SourceFile, index: ApiFunctionIndex, trustedExternal: ReadonlySet<string>, resolved: string[], unresolved: string[], visited: Set<string>): boolean {
+/**
+ * Context for collecting notification-task handler bindings reachable from a
+ * given identifier or expression.
+ */
+interface HandlerBindingCollectorContext {
+  readonly sf: SourceFile;
+  readonly index: ApiFunctionIndex;
+  readonly trustedExternal: ReadonlySet<string>;
+  readonly resolved: string[];
+  readonly unresolved: string[];
+  readonly visited: Set<string>;
+}
+
+/**
+ * Options for collecting handler bindings starting from an arbitrary node.
+ */
+interface CollectHandlerBindingsFromValueOptions extends HandlerBindingCollectorContext {
+  readonly node: Node | undefined;
+}
+
+function collectHandlerBindingsFromValue(options: CollectHandlerBindingsFromValueOptions): boolean {
+  const { node, sf, index, trustedExternal, resolved, unresolved, visited } = options;
   const inner = unwrapAsExpressions(node);
   if (!inner) return false;
   if (Node.isCallExpression(inner)) {
     const callee = inner.getExpression();
     if (Node.isIdentifier(callee)) {
-      return collectHandlerBindingsFromIdentifier(callee.getText(), sf, index, trustedExternal, resolved, unresolved, visited);
+      return collectHandlerBindingsFromIdentifier({ name: callee.getText(), sf, index, trustedExternal, resolved, unresolved, visited });
     }
   }
   if (Node.isIdentifier(inner)) {
-    return collectHandlerBindingsFromIdentifier(inner.getText(), sf, index, trustedExternal, resolved, unresolved, visited);
+    return collectHandlerBindingsFromIdentifier({ name: inner.getText(), sf, index, trustedExternal, resolved, unresolved, visited });
   }
   return false;
 }
 
-function collectHandlerBindingsFromIdentifier(name: string, sf: SourceFile, index: ApiFunctionIndex, trustedExternal: ReadonlySet<string>, resolved: string[], unresolved: string[], visited: Set<string>): boolean {
+/**
+ * Options for collecting handler bindings starting from an identifier name.
+ */
+interface CollectHandlerBindingsFromIdentifierOptions extends HandlerBindingCollectorContext {
+  readonly name: string;
+}
+
+function collectHandlerBindingsFromIdentifier(options: CollectHandlerBindingsFromIdentifierOptions): boolean {
+  const { name, sf, index, trustedExternal, resolved, unresolved, visited } = options;
   let resolvedAny = false;
 
   const localKey = `${sf.getFilePath()}::${name}`;
@@ -795,10 +951,8 @@ function collectHandlerBindingsFromIdentifier(name: string, sf: SourceFile, inde
         // Leaf reached — bind the variable name.
         resolved.push(localDecl.getName());
         resolvedAny = true;
-      } else if (declInit) {
-        if (collectHandlerBindingsFromValue(declInit, sf, index, trustedExternal, resolved, unresolved, visited)) {
-          resolvedAny = true;
-        }
+      } else if (declInit && collectHandlerBindingsFromValue({ node: declInit, sf, index, trustedExternal, resolved, unresolved, visited })) {
+        resolvedAny = true;
       }
     }
   }
@@ -809,7 +963,7 @@ function collectHandlerBindingsFromIdentifier(name: string, sf: SourceFile, inde
     const fnEntry = index.functionsByName.get(name);
     if (fnEntry) {
       const ret = findReturnExpression(fnEntry.node);
-      if (ret && collectHandlerBindingsFromValue(ret, fnEntry.sourceFile, index, trustedExternal, resolved, unresolved, visited)) {
+      if (ret && collectHandlerBindingsFromValue({ node: ret, sf: fnEntry.sourceFile, index, trustedExternal, resolved, unresolved, visited })) {
         resolvedAny = true;
       }
     }
@@ -833,6 +987,11 @@ function collectHandlerBindingsFromIdentifier(name: string, sf: SourceFile, inde
  * Resolve an array-literal argument passed to a `{ validate, handlers }`
  * property — either directly `validate: [...]` or as `validate: foo`
  * where `foo` is a local array-literal binding.
+ *
+ * @param obj - the object literal carrying the property
+ * @param name - the property name to resolve
+ * @param sf - the source file scope used to chase identifier indirection
+ * @returns the resolved array literal, or `undefined` when the property is missing or non-array
  */
 function resolveArrayFromProperty(obj: ObjectLiteralExpression, name: string, sf: SourceFile): ArrayLiteralExpression | undefined {
   const init = unwrapAsExpressions(getPropertyInitializer(obj, name));

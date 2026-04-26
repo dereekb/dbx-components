@@ -7,14 +7,20 @@
  * prefer browsing data over calling `dbx_filter_lookup`.
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { FILTER_ENTRIES, FILTER_KIND_ORDER, getFilterEntries, getFilterEntriesByKind, getFilterEntry, type FilterEntryKind } from '../tools/data/filter-entries.js';
 
 const FILTERS_URI = 'dbx://filter/entries';
 const FILTER_TEMPLATE = 'dbx://filter/entries/{slug}';
 const FILTERS_BY_KIND_TEMPLATE = 'dbx://filter/entries/kind/{kind}';
 
+/**
+ * Registers the filter-entry MCP resources (catalog, per-slug details, kind
+ * filter) on the given server, mirroring the layout used by other registry
+ * resources so clients can browse instead of invoking `dbx_filter_lookup`.
+ *
+ * @param server - the MCP server to register resources against
+ */
 export function registerFiltersResource(server: McpServer): void {
   server.registerResource(
     'dbx-components Filter Entries',
@@ -37,7 +43,7 @@ export function registerFiltersResource(server: McpServer): void {
           description: e.description
         }))
       };
-      const result = {
+      return {
         contents: [
           {
             uri: FILTERS_URI,
@@ -46,7 +52,6 @@ export function registerFiltersResource(server: McpServer): void {
           }
         ]
       };
-      return result;
     }
   );
 
@@ -73,7 +78,7 @@ export function registerFiltersResource(server: McpServer): void {
         text = JSON.stringify(entry, null, 2);
       }
 
-      const result = {
+      return {
         contents: [
           {
             uri: uri.href,
@@ -82,7 +87,6 @@ export function registerFiltersResource(server: McpServer): void {
           }
         ]
       };
-      return result;
     }
   );
 
@@ -107,7 +111,7 @@ export function registerFiltersResource(server: McpServer): void {
         text = JSON.stringify({ kind, filters }, null, 2);
       }
 
-      const result = {
+      return {
         contents: [
           {
             uri: uri.href,
@@ -116,7 +120,6 @@ export function registerFiltersResource(server: McpServer): void {
           }
         ]
       };
-      return result;
     }
   );
 }

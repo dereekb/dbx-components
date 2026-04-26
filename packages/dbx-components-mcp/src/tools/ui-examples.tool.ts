@@ -71,18 +71,19 @@ function formatPatternCatalog(): string {
   for (const pattern of UI_PATTERNS) {
     lines.push(`## ${pattern.name}`);
     lines.push('');
+    const usesText = pattern.usesUiSlugs.map((s) => code(s)).join(', ');
     lines.push(`- **slug:** \`${pattern.slug}\``);
     lines.push(`- **summary:** ${pattern.summary}`);
-    lines.push(`- **uses:** ${pattern.usesUiSlugs.map((s) => `\`${s}\``).join(', ')}`);
+    lines.push(`- **uses:** ${usesText}`);
     lines.push('');
   }
-  const result = lines.join('\n').trimEnd();
-  return result;
+  return lines.join('\n').trimEnd();
 }
 
 function formatPattern(pattern: UiExamplePattern, depth: UiExampleDepth): string {
   const snippet = pattern.snippets[depth];
-  const sections: string[] = [`# ${pattern.name}`, '', pattern.summary, '', `**slug:** \`${pattern.slug}\` · **depth:** \`${depth}\` · **uses:** ${pattern.usesUiSlugs.map((s) => `\`${s}\``).join(', ')}`, '', '```ts', snippet, '```'];
+  const usesText = pattern.usesUiSlugs.map((s) => code(s)).join(', ');
+  const sections: string[] = [`# ${pattern.name}`, '', pattern.summary, '', `**slug:** \`${pattern.slug}\` · **depth:** \`${depth}\` · **uses:** ${usesText}`, '', '```ts', snippet, '```'];
   if (pattern.notes && depth === 'full') {
     sections.push('');
     sections.push('## Notes');
@@ -93,17 +94,26 @@ function formatPattern(pattern: UiExamplePattern, depth: UiExampleDepth): string
     sections.push('');
     sections.push(`→ Call \`dbx_ui_examples pattern="${pattern.slug}" depth="full"\` for imports and a complete component skeleton.`);
   }
-  const result = sections.join('\n');
-  return result;
+  return sections.join('\n');
 }
 
 function formatNotFound(slug: string): string {
-  const available = UI_PATTERNS.map((p) => `\`${p.slug}\``).join(', ');
-  const result = [`No UI pattern matched \`${slug}\`.`, '', `Available patterns: ${available}.`, '', 'Call `dbx_ui_examples pattern="list"` for summaries.'].join('\n');
-  return result;
+  const available = UI_PATTERNS.map((p) => code(p.slug)).join(', ');
+  return [`No UI pattern matched \`${slug}\`.`, '', `Available patterns: ${available}.`, '', 'Call `dbx_ui_examples pattern="list"` for summaries.'].join('\n');
+}
+
+function code(value: string): string {
+  return '`' + value + '`';
 }
 
 // MARK: Handler
+/**
+ * Tool handler for `dbx_ui_examples`. Resolves a UI example pattern from the
+ * registry and renders it at the requested depth.
+ *
+ * @param rawArgs - the unvalidated tool arguments from the MCP runtime
+ * @returns the formatted pattern text, or an error result when args fail validation
+ */
 export function runUiExamples(rawArgs: unknown): ToolResult {
   let args: ParsedUiExamplesArgs;
   try {

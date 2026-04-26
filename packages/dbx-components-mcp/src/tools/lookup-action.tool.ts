@@ -146,10 +146,8 @@ function fuzzyCandidates(query: string): readonly ActionEntryInfo[] {
       if (entry.className.toLowerCase().includes(q)) {
         score += 2;
       }
-    } else if (entry.role === 'state') {
-      if (entry.stateValue.toLowerCase().includes(q) || entry.literal.toLowerCase().includes(q)) {
-        score += 2;
-      }
+    } else if (entry.role === 'state' && (entry.stateValue.toLowerCase().includes(q) || entry.literal.toLowerCase().includes(q))) {
+      score += 2;
     }
     if (entry.description.toLowerCase().includes(q)) {
       score += 1;
@@ -159,8 +157,7 @@ function fuzzyCandidates(query: string): readonly ActionEntryInfo[] {
     }
   }
   scored.sort((a, b) => b.score - a.score);
-  const result = scored.slice(0, 5).map((s) => s.entry);
-  return result;
+  return scored.slice(0, 5).map((s) => s.entry);
 }
 
 // MARK: Formatting helpers
@@ -226,8 +223,9 @@ function formatDirectiveEntry(entry: ActionDirectiveInfo, depth: 'brief' | 'full
     lines.push(entry.example);
     lines.push('```');
     if (entry.skillRefs.length > 0) {
+      const skillsText = entry.skillRefs.map((s) => code(s)).join(', ');
       lines.push('');
-      lines.push(`→ Skills: ${entry.skillRefs.map((s) => `\`${s}\``).join(', ')}`);
+      lines.push(`→ Skills: ${skillsText}`);
     }
   } else {
     lines.push('## State interaction');
@@ -237,8 +235,7 @@ function formatDirectiveEntry(entry: ActionDirectiveInfo, depth: 'brief' | 'full
     lines.push(`→ Call \`dbx_action_lookup topic="${entry.slug}" depth="full"\` for inputs, outputs, and the example.`);
   }
 
-  const result = lines.join('\n');
-  return result;
+  return lines.join('\n');
 }
 
 function formatStoreEntry(entry: ActionStoreInfo, depth: 'brief' | 'full'): string {
@@ -286,8 +283,9 @@ function formatStoreEntry(entry: ActionStoreInfo, depth: 'brief' | 'full'): stri
     lines.push(entry.example);
     lines.push('```');
     if (entry.skillRefs.length > 0) {
+      const skillsText = entry.skillRefs.map((s) => code(s)).join(', ');
       lines.push('');
-      lines.push(`→ Skills: ${entry.skillRefs.map((s) => `\`${s}\``).join(', ')}`);
+      lines.push(`→ Skills: ${skillsText}`);
     }
   } else {
     lines.push(`Methods: ${entry.methods.length} · Observables: ${entry.observables.length}`);
@@ -295,8 +293,7 @@ function formatStoreEntry(entry: ActionStoreInfo, depth: 'brief' | 'full'): stri
     lines.push(`→ Call \`dbx_action_lookup topic="${entry.slug}" depth="full"\` for the full method/observable tables.`);
   }
 
-  const result = lines.join('\n');
-  return result;
+  return lines.join('\n');
 }
 
 function formatStateDiagram(entry: ActionStateInfo): string {
@@ -311,8 +308,7 @@ function formatStateDiagram(entry: ActionStateInfo): string {
   } else {
     lines.push('→ (terminal state, no outgoing transitions)');
   }
-  const result = lines.join('\n');
-  return result;
+  return lines.join('\n');
 }
 
 function formatStateEntry(entry: ActionStateInfo, depth: 'brief' | 'full'): string {
@@ -330,11 +326,11 @@ function formatStateEntry(entry: ActionStateInfo, depth: 'brief' | 'full'): stri
   lines.push(formatStateDiagram(entry));
   lines.push('```');
   if (depth === 'full' && entry.skillRefs.length > 0) {
+    const skillsText = entry.skillRefs.map((s) => code(s)).join(', ');
     lines.push('');
-    lines.push(`→ Skills: ${entry.skillRefs.map((s) => `\`${s}\``).join(', ')}`);
+    lines.push(`→ Skills: ${skillsText}`);
   }
-  const result = lines.join('\n');
-  return result;
+  return lines.join('\n');
 }
 
 function formatActionEntry(entry: ActionEntryInfo, depth: 'brief' | 'full'): string {
@@ -376,8 +372,7 @@ function formatActionGroup(entries: readonly ActionEntryInfo[], title: string): 
     }
     lines.push('');
   }
-  const result = lines.join('\n').trimEnd();
-  return result;
+  return lines.join('\n').trimEnd();
 }
 
 function formatCatalog(): string {
@@ -399,8 +394,7 @@ function formatCatalog(): string {
     }
     lines.push('');
   }
-  const result = lines.join('\n').trimEnd();
-  return result;
+  return lines.join('\n').trimEnd();
 }
 
 function formatNotFound(normalized: string, candidates: readonly ActionEntryInfo[]): string {
@@ -422,11 +416,22 @@ function formatNotFound(normalized: string, candidates: readonly ActionEntryInfo
   } else {
     lines.push('Try `dbx_action_lookup topic="list"` to browse the catalog.');
   }
-  const result = lines.join('\n');
-  return result;
+  return lines.join('\n');
+}
+
+function code(value: string): string {
+  return '`' + value + '`';
 }
 
 // MARK: Handler
+/**
+ * Tool handler for `dbx_action_lookup`. Resolves the requested action topic
+ * against the registry and renders the matching catalog, role group, single
+ * entry, state taxonomy, or not-found suggestion list.
+ *
+ * @param rawArgs - the unvalidated tool arguments from the MCP runtime
+ * @returns the rendered match, or an error result when args fail validation
+ */
 export function runLookupAction(rawArgs: unknown): ToolResult {
   let args: ParsedLookupActionArgs;
   try {

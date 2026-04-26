@@ -6,8 +6,7 @@
  * browsing data over calling the `dbx_ui_*` tools.
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { UI_CATEGORY_ORDER, UI_KIND_ORDER, getUiComponents, getUiComponent, getUiComponentsByCategory, getUiComponentsByKind, type UiComponentCategory, type UiComponentKind } from '../registry/index.js';
 
 const UI_COMPONENTS_URI = 'dbx://ui/components';
@@ -15,6 +14,13 @@ const UI_COMPONENT_TEMPLATE = 'dbx://ui/components/{slug}';
 const UI_COMPONENTS_BY_CATEGORY_TEMPLATE = 'dbx://ui/components/category/{category}';
 const UI_COMPONENTS_BY_KIND_TEMPLATE = 'dbx://ui/components/kind/{kind}';
 
+/**
+ * Registers the UI-component MCP resources (catalog, per-slug details, plus
+ * category and kind filters) on the given server. Mirrors the indexes used by
+ * `dbx_ui_lookup` so browsing clients see the same access patterns.
+ *
+ * @param server - the MCP server to register resources against
+ */
 export function registerUiComponentsResource(server: McpServer): void {
   server.registerResource(
     'dbx-components UI Components',
@@ -39,7 +45,7 @@ export function registerUiComponentsResource(server: McpServer): void {
           description: c.description
         }))
       };
-      const result = {
+      return {
         contents: [
           {
             uri: UI_COMPONENTS_URI,
@@ -48,7 +54,6 @@ export function registerUiComponentsResource(server: McpServer): void {
           }
         ]
       };
-      return result;
     }
   );
 
@@ -77,7 +82,7 @@ export function registerUiComponentsResource(server: McpServer): void {
         text = JSON.stringify(entry, null, 2);
       }
 
-      const result = {
+      return {
         contents: [
           {
             uri: uri.href,
@@ -86,7 +91,6 @@ export function registerUiComponentsResource(server: McpServer): void {
           }
         ]
       };
-      return result;
     }
   );
 
@@ -111,7 +115,7 @@ export function registerUiComponentsResource(server: McpServer): void {
         text = JSON.stringify({ category, components }, null, 2);
       }
 
-      const result = {
+      return {
         contents: [
           {
             uri: uri.href,
@@ -120,7 +124,6 @@ export function registerUiComponentsResource(server: McpServer): void {
           }
         ]
       };
-      return result;
     }
   );
 
@@ -145,7 +148,7 @@ export function registerUiComponentsResource(server: McpServer): void {
         text = JSON.stringify({ kind, components }, null, 2);
       }
 
-      const result = {
+      return {
         contents: [
           {
             uri: uri.href,
@@ -154,7 +157,6 @@ export function registerUiComponentsResource(server: McpServer): void {
           }
         ]
       };
-      return result;
     }
   );
 }

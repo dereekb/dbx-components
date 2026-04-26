@@ -15,6 +15,15 @@ export interface ValidateAppNotificationsOptions {
   readonly apiDir: string;
 }
 
+/**
+ * Pure validation entry point. Reuses the shared extractor and runs the cross-
+ * file rules over a single snapshot so the listing and validation reports stay
+ * in sync.
+ *
+ * @param inspection - the prepared component + api file snapshot
+ * @param options - workspace directories used to relativise emitted paths
+ * @returns the aggregated validation outcome with counts and violations
+ */
 export function validateAppNotifications(inspection: AppNotificationsInspection, options: ValidateAppNotificationsOptions): ValidationResult {
   const extracted = extractAppNotifications(inspection);
   const violations: Violation[] = [];
