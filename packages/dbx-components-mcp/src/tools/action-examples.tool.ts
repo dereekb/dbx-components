@@ -69,13 +69,8 @@ function parseActionExamplesArgs(raw: unknown): ParsedActionExamplesArgs {
 function formatPatternCatalog(): string {
   const lines: string[] = [`# Action example patterns (${ACTION_EXAMPLE_PATTERNS.length})`, '', 'Call `dbx_action_examples pattern="<slug>"` for a full example.', ''];
   for (const pattern of ACTION_EXAMPLE_PATTERNS) {
-    lines.push(`## ${pattern.name}`);
-    lines.push('');
     const usesText = pattern.usesActionSlugs.map((s) => code(s)).join(', ');
-    lines.push(`- **slug:** \`${pattern.slug}\``);
-    lines.push(`- **summary:** ${pattern.summary}`);
-    lines.push(`- **uses:** ${usesText}`);
-    lines.push('');
+    lines.push(`## ${pattern.name}`, '', `- **slug:** \`${pattern.slug}\``, `- **summary:** ${pattern.summary}`, `- **uses:** ${usesText}`, '');
   }
   return lines.join('\n').trimEnd();
 }
