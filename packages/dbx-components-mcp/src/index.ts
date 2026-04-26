@@ -12,3 +12,7 @@ export * from './manifest/semantic-types-schema.js';
 export * from './manifest/loader.js';
 export * from './config/config-schema.js';
 export * from './config/load-config.js';
+export * from './scan/scan-config-schema.js';
+export * from './scan/extract.js';
+export * from './scan/build-manifest.js';
+export * from './scan/cli.js';
