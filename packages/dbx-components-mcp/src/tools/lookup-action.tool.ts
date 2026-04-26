@@ -224,15 +224,10 @@ function formatDirectiveEntry(entry: ActionDirectiveInfo, depth: 'brief' | 'full
     lines.push('```');
     if (entry.skillRefs.length > 0) {
       const skillsText = entry.skillRefs.map((s) => code(s)).join(', ');
-      lines.push('');
-      lines.push(`→ Skills: ${skillsText}`);
+      lines.push('', `→ Skills: ${skillsText}`);
     }
   } else {
-    lines.push('## State interaction');
-    lines.push('');
-    lines.push(formatStateInteraction(entry));
-    lines.push('');
-    lines.push(`→ Call \`dbx_action_lookup topic="${entry.slug}" depth="full"\` for inputs, outputs, and the example.`);
+    lines.push('## State interaction', '', formatStateInteraction(entry), '', `→ Call \`dbx_action_lookup topic="${entry.slug}" depth="full"\` for inputs, outputs, and the example.`);
   }
 
   return lines.join('\n');
@@ -277,20 +272,13 @@ function formatStoreEntry(entry: ActionStoreInfo, depth: 'brief' | 'full'): stri
       }
       lines.push('');
     }
-    lines.push('## Example');
-    lines.push('');
-    lines.push('```ts');
-    lines.push(entry.example);
-    lines.push('```');
+    lines.push('## Example', '', '```ts', entry.example, '```');
     if (entry.skillRefs.length > 0) {
       const skillsText = entry.skillRefs.map((s) => code(s)).join(', ');
-      lines.push('');
-      lines.push(`→ Skills: ${skillsText}`);
+      lines.push('', `→ Skills: ${skillsText}`);
     }
   } else {
-    lines.push(`Methods: ${entry.methods.length} · Observables: ${entry.observables.length}`);
-    lines.push('');
-    lines.push(`→ Call \`dbx_action_lookup topic="${entry.slug}" depth="full"\` for the full method/observable tables.`);
+    lines.push(`Methods: ${entry.methods.length} · Observables: ${entry.observables.length}`, '', `→ Call \`dbx_action_lookup topic="${entry.slug}" depth="full"\` for the full method/observable tables.`);
   }
 
   return lines.join('\n');
@@ -312,23 +300,10 @@ function formatStateDiagram(entry: ActionStateInfo): string {
 }
 
 function formatStateEntry(entry: ActionStateInfo, depth: 'brief' | 'full'): string {
-  const lines: string[] = [];
-  lines.push(`# DbxActionState.${entry.stateValue}`);
-  lines.push('');
-  lines.push(entry.description);
-  lines.push('');
-  lines.push(bullet('enum value', `\`'${entry.literal}'\``));
-  lines.push(bullet('slug', `\`${entry.slug}\``));
-  lines.push('');
-  lines.push('## Transitions');
-  lines.push('');
-  lines.push('```');
-  lines.push(formatStateDiagram(entry));
-  lines.push('```');
+  const lines: string[] = [`# DbxActionState.${entry.stateValue}`, '', entry.description, '', bullet('enum value', `\`'${entry.literal}'\``), bullet('slug', `\`${entry.slug}\``), '', '## Transitions', '', '```', formatStateDiagram(entry), '```'];
   if (depth === 'full' && entry.skillRefs.length > 0) {
     const skillsText = entry.skillRefs.map((s) => code(s)).join(', ');
-    lines.push('');
-    lines.push(`→ Skills: ${skillsText}`);
+    lines.push('', `→ Skills: ${skillsText}`);
   }
   return lines.join('\n');
 }

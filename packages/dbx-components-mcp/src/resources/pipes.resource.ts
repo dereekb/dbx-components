@@ -73,11 +73,11 @@ export function registerPipesResource(server: McpServer): void {
       let text: string;
       if (!slug) {
         text = 'No slug provided.';
-      } else if (!entry) {
+      } else if (entry) {
+        text = JSON.stringify(entry, null, 2);
+      } else {
         const available = PIPE_ENTRIES.map((e) => e.slug).join(', ');
         text = `Pipe '${slug}' not found. Available slugs: ${available}`;
-      } else {
-        text = JSON.stringify(entry, null, 2);
       }
 
       return {
@@ -106,11 +106,11 @@ export function registerPipesResource(server: McpServer): void {
 
       const valid = category && PIPE_CATEGORY_ORDER.includes(category);
       let text: string;
-      if (!valid) {
-        text = `Invalid category. Valid values: ${PIPE_CATEGORY_ORDER.join(', ')}`;
-      } else {
+      if (valid) {
         const pipes = getPipeEntriesByCategory(category);
         text = JSON.stringify({ category, pipes }, null, 2);
+      } else {
+        text = `Invalid category. Valid values: ${PIPE_CATEGORY_ORDER.join(', ')}`;
       }
 
       return {
