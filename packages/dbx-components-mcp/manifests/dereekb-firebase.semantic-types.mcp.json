@@ -283,7 +283,7 @@
       "notes": "Arbitrary unique string that denotes checkpoint progress for a multi-step task.",
       "sourceLocation": {
         "file": "src/lib/model/notification/notification.ts",
-        "line": 599
+        "line": 661
       }
     },
     {
@@ -414,7 +414,7 @@
       "notes": "Used to identify a SystemStateId.",
       "sourceLocation": {
         "file": "src/lib/model/system/system.ts",
-        "line": 52
+        "line": 54
       }
     },
     {
