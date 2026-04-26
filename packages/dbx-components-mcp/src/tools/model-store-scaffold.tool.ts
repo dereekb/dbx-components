@@ -268,7 +268,7 @@ function parseArgs(raw: unknown): ParsedScaffoldArgs {
     }
   }
 
-  const functionsClassRaw = parsed.functions_class !== undefined ? parsed.functions_class.trim() : '';
+  const functionsClassRaw = parsed.functions_class === undefined ? '' : parsed.functions_class.trim();
   const functionsClass = functionsClassRaw.length > 0 ? functionsClassRaw : undefined;
 
   const crudFunctions: ParsedCrudFunction[] = [];
