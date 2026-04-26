@@ -9,27 +9,14 @@ import type { AppStorageFilesReport, StorageFilePurposeSummary } from './types.j
  * @returns the markdown body
  */
 export function formatReportAsMarkdown(report: AppStorageFilesReport): string {
-  const lines: string[] = [];
   const basename = report.componentDir.split('/').pop() ?? report.componentDir;
-  lines.push(`# App storagefiles — ${basename}`);
-  lines.push('');
-  lines.push(`Component: \`${report.componentDir}\``);
-  lines.push(`API: \`${report.apiDir}\``);
-  lines.push('');
   const uploadServiceFactoryText = report.uploadServiceFactoryName ? code(report.uploadServiceFactoryName) : '_Not defined._';
-  lines.push(`Upload service factory: ${uploadServiceFactoryText}`);
-  lines.push(`Wired via \`StorageFileInitializeFromUploadService\` provider: ${formatBool(report.uploadServiceWiredInApi)}`);
-  lines.push(`Processing handler call present: ${formatBool(report.processingHandlerWiredInApi)}`);
-
-  lines.push('');
-  lines.push(`## Purposes (${report.purposes.length})`);
+  const lines: string[] = [`# App storagefiles — ${basename}`, '', `Component: \`${report.componentDir}\``, `API: \`${report.apiDir}\``, '', `Upload service factory: ${uploadServiceFactoryText}`, `Wired via \`StorageFileInitializeFromUploadService\` provider: ${formatBool(report.uploadServiceWiredInApi)}`, `Processing handler call present: ${formatBool(report.processingHandlerWiredInApi)}`, '', `## Purposes (${report.purposes.length})`];
   if (report.purposes.length === 0) {
-    lines.push('');
-    lines.push('_None found._');
+    lines.push('', '_None found._');
   } else {
     for (const p of report.purposes) {
-      lines.push('');
-      lines.push(formatPurposeBlock(p));
+      lines.push('', formatPurposeBlock(p));
     }
   }
 

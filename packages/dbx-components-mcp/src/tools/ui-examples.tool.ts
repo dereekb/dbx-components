@@ -80,14 +80,10 @@ function formatPattern(pattern: UiExamplePattern, depth: UiExampleDepth): string
   const usesText = pattern.usesUiSlugs.map((s) => code(s)).join(', ');
   const sections: string[] = [`# ${pattern.name}`, '', pattern.summary, '', `**slug:** \`${pattern.slug}\` · **depth:** \`${depth}\` · **uses:** ${usesText}`, '', '```ts', snippet, '```'];
   if (pattern.notes && depth === 'full') {
-    sections.push('');
-    sections.push('## Notes');
-    sections.push('');
-    sections.push(pattern.notes);
+    sections.push('', '## Notes', '', pattern.notes);
   }
   if (depth !== 'full') {
-    sections.push('');
-    sections.push(`→ Call \`dbx_ui_examples pattern="${pattern.slug}" depth="full"\` for imports and a complete component skeleton.`);
+    sections.push('', `→ Call \`dbx_ui_examples pattern="${pattern.slug}" depth="full"\` for imports and a complete component skeleton.`);
   }
   return sections.join('\n');
 }

@@ -81,14 +81,10 @@ function formatPattern(pattern: ActionExamplePattern, depth: ActionExampleDepth)
   const usesText = pattern.usesActionSlugs.map((s) => code(s)).join(', ');
   const sections: string[] = [`# ${pattern.name}`, '', pattern.summary, '', `**slug:** \`${pattern.slug}\` · **depth:** \`${depth}\` · **uses:** ${usesText}`, '', '```' + fence, snippet, '```'];
   if (pattern.notes && depth === 'full') {
-    sections.push('');
-    sections.push('## Notes');
-    sections.push('');
-    sections.push(pattern.notes);
+    sections.push('', '## Notes', '', pattern.notes);
   }
   if (depth !== 'full') {
-    sections.push('');
-    sections.push(`→ Call \`dbx_action_examples pattern="${pattern.slug}" depth="full"\` for the full component including imports, stores, and handler wiring.`);
+    sections.push('', `→ Call \`dbx_action_examples pattern="${pattern.slug}" depth="full"\` for the full component including imports, stores, and handler wiring.`);
   }
   return sections.join('\n');
 }
