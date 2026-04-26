@@ -136,32 +136,18 @@ function formatInputsTable(inputs: readonly { readonly name: string; readonly ty
 }
 
 function formatEntry(entry: FilterEntryInfo, depth: 'brief' | 'full'): string {
-  const lines: string[] = [];
-  lines.push(`# ${entry.className}`);
-  lines.push('');
-  lines.push(entry.description);
-  lines.push('');
-  lines.push(bullet('slug', `\`${entry.slug}\``));
-  lines.push(bullet('kind', `\`${entry.kind}\``));
+  const lines: string[] = [`# ${entry.className}`, '', entry.description, '', bullet('slug', `\`${entry.slug}\``), bullet('kind', `\`${entry.kind}\``)];
   if (entry.selector) {
     lines.push(bullet('selector', `\`${entry.selector}\``));
   }
-  lines.push(bullet('module', `\`${entry.module}\``));
-  lines.push('');
+  lines.push(bullet('module', `\`${entry.module}\``), '');
 
   if (depth === 'full') {
     if (entry.inputs.length > 0) {
-      lines.push('## Inputs');
-      lines.push('');
-      lines.push(formatInputsTable(entry.inputs));
-      lines.push('');
+      lines.push('## Inputs', '', formatInputsTable(entry.inputs), '');
     }
-    lines.push('## Example');
-    lines.push('');
     const fence = entry.kind === 'pattern' ? 'ts' : 'html';
-    lines.push('```' + fence);
-    lines.push(entry.example);
-    lines.push('```');
+    lines.push('## Example', '', '```' + fence, entry.example, '```');
     if (entry.relatedSlugs.length > 0) {
       const relatedText = entry.relatedSlugs.map((s) => code(s)).join(', ');
       lines.push('', `→ Related: ${relatedText}`);
@@ -181,8 +167,7 @@ function formatCatalog(): string {
   const lines: string[] = ['# Filter catalog', '', `${FILTER_ENTRIES.length} entries.`, ''];
   for (const entry of FILTER_ENTRIES) {
     const selector = entry.selector ? ` \`${entry.selector}\`` : '';
-    lines.push(`- \`${entry.slug}\` → ${entry.className}${selector}`);
-    lines.push(`  ${entry.description}`);
+    lines.push(`- \`${entry.slug}\` → ${entry.className}${selector}`, `  ${entry.description}`);
   }
   return lines.join('\n').trimEnd();
 }
@@ -190,8 +175,7 @@ function formatCatalog(): string {
 function formatNotFound(normalized: string, candidates: readonly FilterEntryInfo[]): string {
   const lines: string[] = [`No filter entry matched \`${normalized}\`.`, ''];
   if (candidates.length > 0) {
-    lines.push('Did you mean one of these?');
-    lines.push('');
+    lines.push('Did you mean one of these?', '');
     for (const entry of candidates) {
       const selector = entry.selector ? ` \`${entry.selector}\`` : '';
       lines.push(`- \`${entry.slug}\` → ${entry.className}${selector} — ${entry.description}`);
