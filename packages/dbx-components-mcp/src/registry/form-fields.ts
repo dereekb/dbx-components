@@ -101,13 +101,13 @@ interface FormEntryBase {
 }
 
 /**
- * A field factory: registers an ng-form field type via
+ * A field factory: registers an ng-forge field type via
  * `dbxForgeFieldFunction` or `dbxForgeMaterialFormFieldWrappedFieldFunction`.
  */
 export interface FormFieldFactoryInfo extends FormEntryBase {
   readonly tier: 'field-factory';
   readonly wrapperPattern: FormFieldWrapperPattern;
-  /** Underlying ng-form dynamic-forms type string (e.g. `'input'`, `'textarea'`, `'datepicker'`, `'toggle'`, `'slider'`). */
+  /** Underlying ng-forge dynamic-forms type string (e.g. `'input'`, `'textarea'`, `'datepicker'`, `'toggle'`, `'slider'`). */
   readonly ngFormType: string;
   /** TypeScript config interface name (e.g. `'DbxForgeTextFieldConfig'`). */
   readonly configInterface: string;
@@ -117,7 +117,7 @@ export interface FormFieldFactoryInfo extends FormEntryBase {
 
 /**
  * A composite builder: composes other form entries into a layout. Does not
- * register a new ng-form type.
+ * register a new ng-forge type.
  */
 export interface FormCompositeBuilderInfo extends FormEntryBase {
   readonly tier: 'composite-builder';
