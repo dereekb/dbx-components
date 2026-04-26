@@ -124,13 +124,13 @@ export function registerSemanticTypesResource(server: McpServer, config: Registe
       const topic = Array.isArray(rawTopic) ? rawTopic[0] : rawTopic;
       let text: string;
       let mimeType: string;
-      if (!topic) {
-        text = `No topic supplied. Available topics: ${registry.topics.join(', ')}`;
-        mimeType = 'text/plain';
-      } else {
+      if (topic) {
         const entries = registry.findByTopic(topic);
         text = JSON.stringify({ topic, entries }, null, 2);
         mimeType = 'application/json';
+      } else {
+        text = `No topic supplied. Available topics: ${registry.topics.join(', ')}`;
+        mimeType = 'text/plain';
       }
       return {
         contents: [
@@ -157,13 +157,13 @@ export function registerSemanticTypesResource(server: McpServer, config: Registe
       const packageLabel = Array.isArray(rawPackage) ? rawPackage[0] : rawPackage;
       let text: string;
       let mimeType: string;
-      if (!packageLabel) {
-        text = `No package supplied. Available packages: ${registry.packages.join(', ')}`;
-        mimeType = 'text/plain';
-      } else {
+      if (packageLabel) {
         const entries = registry.findByPackage(packageLabel);
         text = JSON.stringify({ package: packageLabel, entries }, null, 2);
         mimeType = 'application/json';
+      } else {
+        text = `No package supplied. Available packages: ${registry.packages.join(', ')}`;
+        mimeType = 'text/plain';
       }
       return {
         contents: [

@@ -74,13 +74,13 @@ export function registerFirebaseModelsResource(server: McpServer): void {
       let text: string;
       if (!name) {
         text = 'No model name provided.';
-      } else if (!model) {
+      } else if (model) {
+        text = JSON.stringify(model, null, 2);
+      } else {
         const available = getFirebaseModels()
           .map((m) => m.name)
           .join(', ');
         text = `Firebase model '${name}' not found. Available: ${available}`;
-      } else {
-        text = JSON.stringify(model, null, 2);
       }
 
       return {
@@ -109,16 +109,16 @@ export function registerFirebaseModelsResource(server: McpServer): void {
 
       let text: string;
       let isJson = false;
-      if (!prefix) {
-        text = `No prefix supplied. Known prefixes: ${getFirebasePrefixCatalog().join(', ')}`;
-      } else {
+      if (prefix) {
         const model = getFirebaseModelByPrefix(prefix);
-        if (!model) {
-          text = `No model uses prefix '${prefix}'. Known prefixes: ${getFirebasePrefixCatalog().join(', ')}`;
-        } else {
+        if (model) {
           text = JSON.stringify({ prefix, model }, null, 2);
           isJson = true;
+        } else {
+          text = `No model uses prefix '${prefix}'. Known prefixes: ${getFirebasePrefixCatalog().join(', ')}`;
         }
+      } else {
+        text = `No prefix supplied. Known prefixes: ${getFirebasePrefixCatalog().join(', ')}`;
       }
 
       return {
@@ -147,12 +147,12 @@ export function registerFirebaseModelsResource(server: McpServer): void {
 
       let text: string;
       let isJson = false;
-      if (!parent) {
-        text = 'No parent identity supplied.';
-      } else {
+      if (parent) {
         const subs = getFirebaseSubcollectionsOf(parent);
         text = JSON.stringify({ parent, subcollections: subs }, null, 2);
         isJson = true;
+      } else {
+        text = 'No parent identity supplied.';
       }
 
       return {
