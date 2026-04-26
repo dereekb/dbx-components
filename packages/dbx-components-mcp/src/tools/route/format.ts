@@ -189,13 +189,11 @@ function appendIssuesSection(lines: string[], issues: readonly RouteIssue[]): vo
   if (issues.length === 0) {
     return;
   }
-  lines.push('');
-  lines.push('## Issues');
-  lines.push('');
+  lines.push('', '## Issues', '');
   for (const issue of issues) {
     const label = issue.severity === 'error' ? 'ERROR' : issue.severity === 'warning' ? 'WARN' : 'INFO';
-    const linePart = issue.line !== undefined ? `:${issue.line}` : '';
-    const where = issue.file !== undefined ? `${issue.file}${linePart}` : 'extraction';
+    const linePart = issue.line === undefined ? '' : `:${issue.line}`;
+    const where = issue.file === undefined ? 'extraction' : `${issue.file}${linePart}`;
     lines.push(`- **[${label}] ${issue.code}** _(${where})_ — ${issue.message}`);
   }
 }
