@@ -24,6 +24,11 @@ import { type GrantedReadRole, type GrantedUpdateRole } from '@dereekb/model';
 import { type Maybe } from '@dereekb/util';
 import { type ProfileId } from '../profile/profile.id';
 
+/**
+ * Aggregates the Firestore collections for the Guestbook model group.
+ *
+ * @dbxModelGroup
+ */
 export interface GuestbookFirestoreCollections {
   guestbookCollection: GuestbookFirestoreCollection;
   guestbookEntryCollectionFactory: GuestbookEntryFirestoreCollectionFactory;
@@ -35,27 +40,42 @@ export type GuestbookTypes = typeof guestbookIdentity | typeof guestbookEntryIde
 // MARK: Guestbook
 export const guestbookIdentity = firestoreModelIdentity('guestbook', 'gb');
 
+/**
+ * A guestbook record that owns a list of {@link GuestbookEntry} signatures.
+ *
+ * @dbxModel
+ */
 export interface Guestbook {
   /**
    * Whether or not this guestbook should show up in the list.
    *
    * If not active, this item is still considered locked.
+   *
+   * @dbxModelVariable published
    */
   published: boolean;
   /**
-   * Guestbook name
+   * Guestbook name.
+   *
+   * @dbxModelVariable name
    */
   name: string;
   /**
    * Whether or not this guestbook and it's entries can still be edited.
+   *
+   * @dbxModelVariable locked
    */
   locked: boolean;
   /**
    * Date the guestbook was locked at.
+   *
+   * @dbxModelVariable lockedAt
    */
   lockedAt?: Maybe<Date>;
   /**
    * User who created the guestbook.
+   *
+   * @dbxModelVariable createdBy
    */
   cby?: Maybe<ProfileId>;
 }
@@ -110,31 +130,48 @@ export function guestbookFirestoreCollection(firestoreContext: FirestoreContext)
 // MARK: Guestbook Entry
 export const guestbookEntryIdentity = firestoreModelIdentity(guestbookIdentity, 'guestbookEntry', 'gbe');
 
+/**
+ * A signed entry in a {@link Guestbook}.
+ *
+ * @dbxModel
+ */
 export interface GuestbookEntry extends UserRelated, UserRelatedById {
   /**
    * Guestbook message.
+   *
+   * @dbxModelVariable message
    */
   message: string;
   /**
-   * Arbitrary string for signature
+   * Arbitrary string for signature.
+   *
+   * @dbxModelVariable signed
    */
   signed: string;
   /**
    * Date the entry was last updated at.
+   *
+   * @dbxModelVariable updatedAt
    */
   updatedAt: Date;
   /**
    * Date the entry was originally created at.
+   *
+   * @dbxModelVariable createdAt
    */
   createdAt: Date;
   /**
    * Whether or not the entry has been published. It can be unpublished at any time by the user.
+   *
+   * @dbxModelVariable published
    */
   published: boolean;
   /**
    * The number of likes the entry has recieved from users.
    *
    * Uniqueness of likes is not retained, so users may like something more than once.
+   *
+   * @dbxModelVariable likes
    */
   likes: number;
 }

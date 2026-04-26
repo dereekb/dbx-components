@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { FIREBASE_MODELS, getFirebaseModel, getFirebaseModelByPrefix, getFirebaseModels, getFirebasePrefixCatalog, getFirebaseSubcollectionsOf } from './index.js';
+import { FIREBASE_MODELS, FIREBASE_MODEL_GROUPS, getFirebaseModel, getFirebaseModelByPrefix, getFirebaseModelGroup, getFirebaseModelGroups, getFirebaseModels, getFirebasePrefixCatalog, getFirebaseSubcollectionsOf } from './index.js';
+
+const LONG_NAME_RE = /^[a-z][a-zA-Z0-9]*$/;
 
 describe('firebase-models registry', () => {
   it('exposes a non-empty list including the core library models', () => {
@@ -84,5 +86,48 @@ describe('firebase-models registry', () => {
     expect(catalog.length).toBe(FIREBASE_MODELS.length);
     const sorted = [...catalog].sort((a, b) => a.localeCompare(b));
     expect(catalog).toEqual(sorted);
+  });
+
+  it('every field carries a long camelCase name from @dbxModelVariable', () => {
+    for (const model of FIREBASE_MODELS) {
+      for (const field of model.fields) {
+        expect(field.longName.length, `${model.name}.${field.name} missing longName`).toBeGreaterThan(0);
+        expect(LONG_NAME_RE.test(field.longName), `${model.name}.${field.name} longName '${field.longName}' is not camelCase`).toBe(true);
+      }
+    }
+  });
+
+  it('every model resolves to a known @dbxModelGroup container', () => {
+    const knownGroups = new Set(FIREBASE_MODEL_GROUPS.map((g) => g.name));
+    for (const model of FIREBASE_MODELS) {
+      expect(model.modelGroup, `${model.name} is missing modelGroup`).toBeDefined();
+      expect(knownGroups.has(model.modelGroup as string), `${model.name} modelGroup '${model.modelGroup}' is not in FIREBASE_MODEL_GROUPS`).toBe(true);
+    }
+  });
+
+  it('exposes the expected core model groups', () => {
+    expect(FIREBASE_MODEL_GROUPS.length).toBeGreaterThan(0);
+    expect(getFirebaseModelGroups()).toBe(FIREBASE_MODEL_GROUPS);
+    const names = new Set(FIREBASE_MODEL_GROUPS.map((g) => g.name));
+    expect(names.has('NotificationFirestoreCollections'), 'NotificationFirestoreCollections missing').toBe(true);
+    expect(names.has('StorageFileFirestoreCollections'), 'StorageFileFirestoreCollections missing').toBe(true);
+    expect(names.has('SystemStateFirestoreCollections'), 'SystemStateFirestoreCollections missing').toBe(true);
+    expect(names.has('OidcModelFirestoreCollections'), 'OidcModelFirestoreCollections missing').toBe(true);
+  });
+
+  it('getFirebaseModelGroup is case-insensitive and returns the matching group', () => {
+    const group = getFirebaseModelGroup('NotificationFirestoreCollections');
+    expect(group?.modelNames).toEqual(['Notification', 'NotificationBox', 'NotificationSummary', 'NotificationUser', 'NotificationWeek']);
+    expect(getFirebaseModelGroup('notificationfirestorecollections')?.name).toBe('NotificationFirestoreCollections');
+    expect(getFirebaseModelGroup('not-a-group')).toBeUndefined();
+  });
+
+  it('every group references at least one registered model', () => {
+    const knownModels = new Set(FIREBASE_MODELS.map((m) => m.name));
+    for (const group of FIREBASE_MODEL_GROUPS) {
+      expect(group.modelNames.length, `${group.name} has no modelNames`).toBeGreaterThan(0);
+      const matched = group.modelNames.filter((n) => knownModels.has(n));
+      expect(matched.length, `${group.name} references no registered models (modelNames: ${group.modelNames.join(', ')})`).toBeGreaterThan(0);
+    }
   });
 });

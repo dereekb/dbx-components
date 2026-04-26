@@ -282,10 +282,10 @@ export function getUiComponentBySelector(selector: string): UiComponentInfo | un
 }
 
 // MARK: Firebase Models
-import { FIREBASE_MODELS, type FirebaseModel } from './firebase-models.js';
+import { FIREBASE_MODELS, FIREBASE_MODEL_GROUPS, type FirebaseModel, type FirebaseModelGroup } from './firebase-models.js';
 
-export { FIREBASE_MODELS } from './firebase-models.js';
-export type { FirebaseModel, FirebaseEnum, FirebaseEnumValue, FirebaseField } from './firebase-models.js';
+export { FIREBASE_MODELS, FIREBASE_MODEL_GROUPS } from './firebase-models.js';
+export type { FirebaseModel, FirebaseModelGroup, FirebaseEnum, FirebaseEnumValue, FirebaseField } from './firebase-models.js';
 
 /**
  * Returns every registered Firebase model entry.
@@ -342,4 +342,26 @@ export function getFirebasePrefixCatalog(): readonly string[] {
     set.add(model.collectionPrefix);
   }
   return Array.from(set).sort((a, b) => a.localeCompare(b));
+}
+
+/**
+ * Returns every registered Firebase model-group container (e.g.
+ * `NotificationFirestoreCollections`).
+ *
+ * @returns the full model-group registry list in declaration order
+ */
+export function getFirebaseModelGroups(): readonly FirebaseModelGroup[] {
+  return FIREBASE_MODEL_GROUPS;
+}
+
+/**
+ * Looks up a model group by its `<Name>FirestoreCollections` class/interface
+ * name (e.g. `'NotificationFirestoreCollections'`). Case-insensitive.
+ *
+ * @param name - the group container name to resolve
+ * @returns the matching group entry, or `undefined` when no group matches
+ */
+export function getFirebaseModelGroup(name: string): FirebaseModelGroup | undefined {
+  const lowered = name.toLowerCase();
+  return FIREBASE_MODEL_GROUPS.find((g) => g.name.toLowerCase() === lowered);
 }

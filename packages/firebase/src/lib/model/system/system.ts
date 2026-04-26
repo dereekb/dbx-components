@@ -25,6 +25,8 @@ import { mapObjectMap, type ModelFieldMapFunctionsConfig, cachedGetter } from '@
  * Abstract base providing access to the SystemState Firestore collection.
  *
  * Implement this in your app module to wire up dependency injection.
+ *
+ * @dbxModelGroup
  */
 export abstract class SystemStateFirestoreCollections {
   abstract readonly systemStateCollection: SystemStateFirestoreCollection;
@@ -69,8 +71,14 @@ export type SystemStateStoredData = Record<string, any>;
  * or any system-wide state that needs persistence.
  *
  * @template T - shape of the stored data record
+ * @dbxModel
  */
 export interface SystemState<T extends SystemStateStoredData = SystemStateStoredData> {
+  /**
+   * Arbitrary persisted data for this system state singleton.
+   *
+   * @dbxModelVariable data
+   */
   data: T;
 }
 

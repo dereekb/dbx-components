@@ -51,6 +51,14 @@ export interface FirebaseField {
    */
   readonly name: string;
   /**
+   * Long-form camelCase identifier for the field, sourced from the `@dbxModelVariable` JSDoc tag.
+   *
+   * Provides a human-readable expansion of the (often 1-4 character) persisted name
+   * for use by MCP tooling and downstream documentation. Defaults to `name` when no tag
+   * is present (and the scanner emits a warning).
+   */
+  readonly longName: string;
+  /**
    * Raw converter expression, e.g. `'firestoreDate()'`, `'optionalFirestoreString()'`.
    */
   readonly converter: string;
@@ -112,6 +120,39 @@ export interface FirebaseModel {
    * Unique-ish field names used to auto-detect the model from raw JSON when no hint is supplied.
    */
   readonly detectionHints: readonly string[];
+  /**
+   * Name of the `@dbxModelGroup` container class that exposes this model's collections (e.g. `'NotificationFirestoreCollections'`).
+   *
+   * Absent when the file declares no model-group container.
+   */
+  readonly modelGroup?: string;
 }
 
-export { FIREBASE_MODELS } from './firebase-models.generated.js';
+/**
+ * A `<Name>FirestoreCollections` container class tagged with `@dbxModelGroup`.
+ *
+ * Captures which models are aggregated together for dependency injection and documentation purposes.
+ */
+export interface FirebaseModelGroup {
+  /**
+   * Name of the abstract class / interface tagged with `@dbxModelGroup` (e.g. `'NotificationFirestoreCollections'`).
+   */
+  readonly name: string;
+  /**
+   * Source file path relative to the workspace root.
+   */
+  readonly sourceFile: string;
+  /**
+   * First JSDoc paragraph from the class declaration.
+   */
+  readonly description?: string;
+  /**
+   * Names of the models referenced by this group's collection accessors (e.g. `['NotificationUser', 'NotificationBox']`).
+   *
+   * Derived from the `<Model>FirestoreCollection` / `<Model>FirestoreCollectionFactory` / `<Model>FirestoreCollectionGroup`
+   * type names found on the group's declared properties.
+   */
+  readonly modelNames: readonly string[];
+}
+
+export { FIREBASE_MODELS, FIREBASE_MODEL_GROUPS } from './firebase-models.generated.js';

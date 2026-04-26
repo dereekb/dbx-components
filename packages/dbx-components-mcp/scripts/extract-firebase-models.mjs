@@ -6,15 +6,18 @@
  *
  * Run from the workspace root (that's what `nx run dbx-components-mcp:generate-firebase-models`
  * guarantees). Scans every `.ts` file under packages/firebase/src/lib/model/
- * (skipping spec/test files) and pulls four patterns out of each file:
+ * (skipping spec/test files) and pulls these patterns out of each file:
  *
  *   1. `export const <name>Identity = firestoreModelIdentity(...)` — model type + collection prefix
- *   2. `export interface <Name> { ... }` — TS types + JSDoc descriptions per field
+ *   2. `export interface <Name> { ... }` carrying the `@dbxModel` JSDoc tag — TS types + per-field tags
  *   3. `export const <name>Converter = snapshotConverterFunctions<<Name>>({ fields: { ... } })` — canonical persisted field list
  *   4. `export enum <Name> { ... }` — numeric enum values + descriptions
+ *   5. `export abstract class <Name>FirestoreCollections { ... }` (or interface) carrying `@dbxModelGroup` — model-group container
  *
- * Identities → interfaces → converters are linked by naming convention
- * (`notificationBox` → `NotificationBox` → `notificationBoxConverter`).
+ * Detection is **tag-driven**: only `@dbxModel`-tagged interfaces become models in the registry.
+ * Identities and converters are still linked by naming convention (`notificationBox` → `NotificationBox` →
+ * `notificationBoxConverter`) since they aren't interfaces. Per-field long names are read from
+ * `@dbxModelVariable <longName>` JSDoc tags on each property.
  */
 
 import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
@@ -30,14 +33,19 @@ const OUTPUT_FILE = join(WORKSPACE_ROOT, 'packages/dbx-components-mcp/src/regist
 /** Common short field names that appear on many models and are poor detection signals. */
 const COMMON_FIELDS = new Set(['cat', 'o', 'u', 's', 'fi', 'uid', 'mat', 'd']);
 
+/** Shape of an identifier acceptable as a `@dbxModelVariable` long name. */
+const LONG_NAME_RE = /^[a-z][a-zA-Z0-9]*$/;
+
 async function main() {
   const files = findTsFiles(MODEL_ROOT).filter((p) => !p.endsWith('.spec.ts') && !p.endsWith('.test.ts') && !p.endsWith('.id.ts'));
   const models = [];
+  const modelGroups = [];
   for (const file of files) {
     const content = readFileSync(file, 'utf8');
-    if (!content.includes('firestoreModelIdentity(')) continue;
+    if (!content.includes('firestoreModelIdentity(') && !content.includes('@dbxModelGroup')) continue;
     const extracted = extractFromFile(file, content);
-    for (const m of extracted) models.push(m);
+    for (const m of extracted.models) models.push(m);
+    for (const g of extracted.modelGroups) modelGroups.push(g);
   }
 
   // Sort for stable output: root collections first, then subcollections; alphabetical within.
@@ -47,11 +55,12 @@ async function main() {
     if (aRoot !== bRoot) return aRoot - bRoot;
     return a.name.localeCompare(b.name);
   });
+  modelGroups.sort((a, b) => a.name.localeCompare(b.name));
 
-  const raw = emit(models);
+  const raw = emit(models, modelGroups);
   const formatted = await formatWithPrettier(raw);
   writeFileSync(OUTPUT_FILE, formatted);
-  console.log(`Wrote ${models.length} Firebase models to ${relative(WORKSPACE_ROOT, OUTPUT_FILE)}`);
+  console.log(`Wrote ${models.length} Firebase models and ${modelGroups.length} model groups to ${relative(WORKSPACE_ROOT, OUTPUT_FILE)}`);
 }
 
 /**
@@ -85,6 +94,7 @@ function extractFromFile(file, content) {
   const interfaces = findInterfaces(content);
   const converters = findConverters(content);
   const enums = findEnums(content);
+  const modelGroups = findModelGroups(content);
 
   const interfaceByName = new Map();
   for (const iface of interfaces) interfaceByName.set(iface.name, iface);
@@ -94,14 +104,27 @@ function extractFromFile(file, content) {
 
   const relativePath = relative(WORKSPACE_ROOT, file).split('\\').join('/');
 
-  const out = [];
+  // Map model interface name → group name. A model belongs to whichever group references its
+  // `<Model>FirestoreCollection*` types.
+  const groupByModelName = new Map();
+  for (const group of modelGroups) {
+    for (const modelName of group.modelNames) {
+      groupByModelName.set(modelName, group.name);
+    }
+  }
+
+  const models = [];
   for (const id of identities) {
     const modelName = capitalize(id.modelType);
-    const converter = converterByInterface.get(modelName);
-    if (!converter) continue; // no converter → not a persisted model (rare)
     const iface = interfaceByName.get(modelName);
-    const ifaceProps = new Map();
-    if (iface) for (const p of iface.props) ifaceProps.set(p.name, p);
+    if (!iface || !iface.tags.dbxModel) continue; // detection requires the @dbxModel tag
+    const converter = converterByInterface.get(modelName);
+    if (!converter) {
+      console.warn(`[extract-firebase-models] ${relativePath}: @dbxModel '${modelName}' has no matching ${modelName[0].toLowerCase()}${modelName.slice(1)}Converter; skipping`);
+      continue;
+    }
+
+    const ifaceProps = collectInheritedProps(iface, interfaceByName);
 
     const fields = converter.fields.map((f) => {
       const prop = ifaceProps.get(f.key);
@@ -109,8 +132,15 @@ function extractFromFile(file, content) {
       const enumFromConverter = findEnumInConverter(f.converter, enumNames);
       const enumRef = enumFromType ?? enumFromConverter;
       const optional = prop?.optional ?? /^optionalFirestore/.test(f.converter);
+      const longName = resolveLongName({
+        fieldName: f.key,
+        propLongName: prop?.longName,
+        modelName,
+        relativePath
+      });
       const field = {
         name: f.key,
+        longName,
         converter: f.converter
       };
       if (prop?.tsType) field.tsType = prop.tsType;
@@ -137,9 +167,55 @@ function extractFromFile(file, content) {
       detectionHints
     };
     if (id.parentIdentityConst) entry.parentIdentityConst = id.parentIdentityConst;
-    out.push(entry);
+    const groupName = groupByModelName.get(modelName);
+    if (groupName) entry.modelGroup = groupName;
+    models.push(entry);
   }
+
+  const groups = modelGroups.map((g) => {
+    const out = { name: g.name, sourceFile: relativePath };
+    if (g.description) out.description = g.description;
+    out.modelNames = g.modelNames;
+    return out;
+  });
+
+  return { models, modelGroups: groups };
+}
+
+/**
+ * Walks an interface's `extends` chain (within the same file) and merges every
+ * ancestor's props into a single name → prop map. Closer ancestors win on conflict.
+ */
+function collectInheritedProps(iface, interfaceByName) {
+  const out = new Map();
+  const visited = new Set();
+  const walk = (current) => {
+    if (!current || visited.has(current.name)) return;
+    visited.add(current.name);
+    // Walk parents first so own props override.
+    for (const parentName of current.extendsNames) {
+      const parent = interfaceByName.get(parentName);
+      if (parent) walk(parent);
+    }
+    for (const p of current.props) out.set(p.name, p);
+  };
+  walk(iface);
   return out;
+}
+
+/**
+ * Picks the long name for a converter field. Order: explicit `@dbxModelVariable`,
+ * then the field name itself (camelCase only). Warns and falls back to `name` when
+ * neither produces a valid identifier — the registry spec test then surfaces the gap.
+ */
+function resolveLongName({ fieldName, propLongName, modelName, relativePath }) {
+  if (propLongName && LONG_NAME_RE.test(propLongName)) return propLongName;
+  if (propLongName) {
+    console.warn(`[extract-firebase-models] ${relativePath}: ${modelName}.${fieldName} @dbxModelVariable '${propLongName}' is not a camelCase identifier; ignoring`);
+  } else if (COMMON_FIELDS.has(fieldName) || fieldName.length < 4) {
+    console.warn(`[extract-firebase-models] ${relativePath}: ${modelName}.${fieldName} is missing @dbxModelVariable`);
+  }
+  return LONG_NAME_RE.test(fieldName) ? fieldName : fieldName;
 }
 
 function findIdentities(content) {
@@ -194,27 +270,84 @@ function findInterfaces(content) {
     if (endIdx < 0) continue;
     const body = content.slice(openIdx + 1, endIdx);
     const props = parseInterfaceBody(body);
-    const description = extractPrecedingJsdoc(content, m.index);
-    out.push({ name: m[1], description, props });
+    const jsdoc = readPrecedingJsdoc(content, m.index);
+    const extendsNames = parseExtendsClause(m[2]);
+    out.push({
+      name: m[1],
+      description: jsdoc.description,
+      tags: jsdoc.tags,
+      extendsNames,
+      props
+    });
   }
   return out;
 }
 
 function parseInterfaceBody(body) {
   const out = [];
-  const re = /(?:\/\*\*([\s\S]*?)\*\/\s*)?(readonly\s+)?([A-Za-z_$][\w$]*)(\?)?:\s*([^;]+);/g;
+  const re = /(\/\*\*[\s\S]*?\*\/\s*)?(readonly\s+)?([A-Za-z_$][\w$]*)(\?)?:\s*([^;]+);/g;
   let m;
   while ((m = re.exec(body)) !== null) {
     const tsType = m[5].replace(/\s+/g, ' ').trim();
     const isOptional = Boolean(m[4]) || /^Maybe</.test(tsType);
+    const rawJsdoc = m[1];
+    const innerJsdoc = rawJsdoc ? rawJsdoc.replace(/^\/\*\*/, '').replace(/\*\/\s*$/, '') : undefined;
+    const jsdoc = parseJsdocBlock(innerJsdoc);
     out.push({
       name: m[3],
       tsType,
       optional: isOptional,
-      description: cleanJsdoc(m[1])
+      description: jsdoc.description,
+      longName: jsdoc.tags.dbxModelVariable
     });
   }
   return out;
+}
+
+/**
+ * Finds `<Name>FirestoreCollections` containers carrying the `@dbxModelGroup` tag,
+ * matching either `export abstract class` or `export interface` declarations.
+ *
+ * Extracts referenced model names by walking the body for `<Model>FirestoreCollection`,
+ * `<Model>FirestoreCollectionFactory`, and `<Model>FirestoreCollectionGroup` type references.
+ */
+function findModelGroups(content) {
+  const out = [];
+  const re = /export\s+(?:abstract\s+class|interface)\s+(\w+FirestoreCollections)\b[^{]*\{/g;
+  let m;
+  while ((m = re.exec(content)) !== null) {
+    const openIdx = content.indexOf('{', m.index + m[0].length - 1);
+    if (openIdx < 0) continue;
+    const endIdx = findMatching(content, openIdx, '{', '}');
+    if (endIdx < 0) continue;
+    const jsdoc = readPrecedingJsdoc(content, m.index);
+    if (!jsdoc.tags.dbxModelGroup) continue;
+    const body = content.slice(openIdx + 1, endIdx);
+    const modelNames = extractGroupModelNames(body);
+    const entry = { name: m[1], modelNames };
+    if (jsdoc.description) entry.description = jsdoc.description;
+    out.push(entry);
+  }
+  return out;
+}
+
+function extractGroupModelNames(body) {
+  const seen = new Set();
+  const re = /\b([A-Z][A-Za-z0-9]*)FirestoreCollection(?:Factory|Group)?\b/g;
+  let m;
+  while ((m = re.exec(body)) !== null) {
+    seen.add(m[1]);
+  }
+  return [...seen].sort();
+}
+
+function parseExtendsClause(text) {
+  if (!text) return [];
+  return text
+    .split(',')
+    .map((s) => s.trim())
+    .map((s) => s.replace(/<[^>]*>/g, '').trim())
+    .filter((s) => /^[A-Z][A-Za-z0-9_$]*$/.test(s));
 }
 
 function findConverters(content) {
@@ -307,15 +440,67 @@ function findEnums(content) {
  * JSDoc exists.
  */
 function extractPrecedingJsdoc(content, pos) {
+  return readPrecedingJsdoc(content, pos).description;
+}
+
+/**
+ * Like {@link extractPrecedingJsdoc}, but returns the parsed JSDoc record
+ * (description plus structured tag values) so callers can inspect `@dbxModel`,
+ * `@dbxModelGroup`, and other custom tags.
+ */
+function readPrecedingJsdoc(content, pos) {
   let i = pos - 1;
   while (i >= 0 && /\s/.test(content[i])) i--;
-  if (i < 2) return undefined;
-  if (content[i] !== '/' || content[i - 1] !== '*') return undefined;
+  if (i < 2) return { description: undefined, tags: {} };
+  if (content[i] !== '/' || content[i - 1] !== '*') return { description: undefined, tags: {} };
   const commentEnd = i - 1;
   const commentStart = content.lastIndexOf('/**', commentEnd - 1);
-  if (commentStart < 0) return undefined;
+  if (commentStart < 0) return { description: undefined, tags: {} };
   const body = content.slice(commentStart + 3, commentEnd);
-  return cleanJsdoc(body);
+  return parseJsdocBlock(body);
+}
+
+/**
+ * Parses a JSDoc block body (the text between `/**` and `*\/`) into its
+ * leading description paragraph plus a record of recognized custom tag values.
+ *
+ * Returns `{ description, tags }` where `tags` carries:
+ *   - `dbxModel: true` if the block contains `@dbxModel`
+ *   - `dbxModelGroup: true` if the block contains `@dbxModelGroup`
+ *   - `dbxModelVariable: <identifier>` if the block contains `@dbxModelVariable <name>`
+ *
+ * Other tags are ignored. Description text after a tag line is dropped — this
+ * matches the existing first-paragraph behaviour.
+ */
+function parseJsdocBlock(body) {
+  const tags = {};
+  if (!body) return { description: undefined, tags };
+  const stripped = body.split('\n').map((l) => l.replace(/^\s*\*\s?/, '').trim());
+  // Description paragraph: lines until the first blank or first @-tag.
+  const descLines = [];
+  for (const line of stripped) {
+    if (line.startsWith('@')) break;
+    if (line.length === 0) {
+      if (descLines.length > 0) break;
+      continue;
+    }
+    descLines.push(line);
+  }
+  const description = descLines.length > 0 ? descLines.join(' ').trim() : undefined;
+  // Tag scan across the whole block.
+  for (const line of stripped) {
+    if (!line.startsWith('@')) continue;
+    const match = /^@(\w+)\s*(.*)$/.exec(line);
+    if (!match) continue;
+    const [, tag, rest] = match;
+    const value = rest.trim();
+    if (tag === 'dbxModel' || tag === 'dbxModelGroup') {
+      tags[tag] = true;
+    } else if (tag === 'dbxModelVariable') {
+      tags.dbxModelVariable = value || '';
+    }
+  }
+  return { description: description && description.length > 0 ? description : undefined, tags };
 }
 
 function parseEnumBody(body) {
@@ -449,10 +634,10 @@ function capitalize(s) {
   return s[0].toUpperCase() + s.slice(1);
 }
 
-function emit(models) {
-  const body = serializeArray(models, 0);
-  const header = `// THIS FILE IS GENERATED by scripts/extract-firebase-models.mjs.\n// Do not edit by hand. Run \`npx nx generate-firebase-models dbx-components-mcp\`.\n\nimport type { FirebaseModel } from './firebase-models.js';\n\nexport const FIREBASE_MODELS: readonly FirebaseModel[] = ${body};\n`;
-  return header;
+function emit(models, modelGroups) {
+  const modelsBody = serializeArray(models, 0);
+  const groupsBody = serializeArray(modelGroups, 0);
+  return `// THIS FILE IS GENERATED by scripts/extract-firebase-models.mjs.\n// Do not edit by hand. Run \`npx nx generate-firebase-models dbx-components-mcp\`.\n\nimport type { FirebaseModel, FirebaseModelGroup } from './firebase-models.js';\n\nexport const FIREBASE_MODELS: readonly FirebaseModel[] = ${modelsBody};\n\nexport const FIREBASE_MODEL_GROUPS: readonly FirebaseModelGroup[] = ${groupsBody};\n`;
 }
 
 /**
