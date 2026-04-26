@@ -70,7 +70,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     ],
     enums: [],
     detectionHints: ['m', 'r', 'w'],
-    modelGroup: 'NotificationFirestoreCollections'
+    modelGroup: 'Notification'
   },
   {
     name: 'NotificationSummary',
@@ -146,7 +146,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     ],
     enums: [],
     detectionHints: ['m', 'n', 'lat', 'rat'],
-    modelGroup: 'NotificationFirestoreCollections'
+    modelGroup: 'Notification'
   },
   {
     name: 'NotificationUser',
@@ -212,7 +212,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     ],
     enums: [],
     detectionHints: ['b', 'x', 'dc', 'gc', 'bc', 'ns'],
-    modelGroup: 'NotificationFirestoreCollections'
+    modelGroup: 'Notification'
   },
   {
     name: 'OidcEntry',
@@ -288,7 +288,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     ],
     enums: [],
     detectionHints: ['type', 'payload', 'grantId', 'userCode', 'consumed', 'expiresAt'],
-    modelGroup: 'OidcModelFirestoreCollections'
+    modelGroup: 'OidcModel'
   },
   {
     name: 'StorageFile',
@@ -545,7 +545,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
       }
     ],
     detectionHints: ['bucketId', 'pathString', 'n', 'ct', 'fs', 'ps', 'pn', 'pat', 'pcat', 'uby', 'p', 'pg', 'sdat', 'g', 'gs'],
-    modelGroup: 'StorageFileFirestoreCollections'
+    modelGroup: 'StorageFile'
   },
   {
     name: 'StorageFileGroup',
@@ -637,7 +637,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     ],
     enums: [],
     detectionHints: ['f', 'z', 'zsf', 'zat', 're', 'c'],
-    modelGroup: 'StorageFileFirestoreCollections'
+    modelGroup: 'StorageFile'
   },
   {
     name: 'SystemState',
@@ -657,7 +657,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     ],
     enums: [],
     detectionHints: ['data'],
-    modelGroup: 'SystemStateFirestoreCollections'
+    modelGroup: 'SystemState'
   },
   {
     name: 'Notification',
@@ -937,7 +937,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     ],
     detectionHints: ['st', 'rf', 'ts', 'es', 'ps', 'ns', 'n', 'r', 'ois', 'ots', 'sat', 'a', 'at', 'tsr', 'esr', 'tpr', 'ut'],
     parentIdentityConst: 'notificationBoxIdentity',
-    modelGroup: 'NotificationFirestoreCollections'
+    modelGroup: 'Notification'
   },
   {
     name: 'NotificationWeek',
@@ -966,31 +966,35 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     enums: [],
     detectionHints: ['w', 'n'],
     parentIdentityConst: 'notificationBoxIdentity',
-    modelGroup: 'NotificationFirestoreCollections'
+    modelGroup: 'Notification'
   }
 ];
 
 export const FIREBASE_MODEL_GROUPS: readonly FirebaseModelGroup[] = [
   {
-    name: 'NotificationFirestoreCollections',
+    name: 'Notification',
+    containerName: 'NotificationFirestoreCollections',
     sourceFile: 'packages/firebase/src/lib/model/notification/notification.ts',
     description: 'Abstract class providing access to all notification-related Firestore collections.',
     modelNames: ['Notification', 'NotificationBox', 'NotificationSummary', 'NotificationUser', 'NotificationWeek']
   },
   {
-    name: 'OidcModelFirestoreCollections',
+    name: 'OidcModel',
+    containerName: 'OidcModelFirestoreCollections',
     sourceFile: 'packages/firebase/src/lib/model/oidcmodel/oidcmodel.ts',
     description: 'Abstract class providing access to all oidc-related Firestore collections.',
     modelNames: ['OidcEntry']
   },
   {
-    name: 'StorageFileFirestoreCollections',
+    name: 'StorageFile',
+    containerName: 'StorageFileFirestoreCollections',
     sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.ts',
     description: 'Abstract base providing access to StorageFile and StorageFileGroup Firestore collections.',
     modelNames: ['StorageFile', 'StorageFileGroup']
   },
   {
-    name: 'SystemStateFirestoreCollections',
+    name: 'SystemState',
+    containerName: 'SystemStateFirestoreCollections',
     sourceFile: 'packages/firebase/src/lib/model/system/system.ts',
     description: 'Abstract base providing access to the SystemState Firestore collection.',
     modelNames: ['SystemState']

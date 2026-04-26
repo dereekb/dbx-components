@@ -55,7 +55,7 @@ import { type NotificationKey } from '../notification';
  *
  * Implement this in your app module to wire up the collections for dependency injection.
  *
- * @dbxModelGroup
+ * @dbxModelGroup StorageFile
  */
 export abstract class StorageFileFirestoreCollections {
   abstract readonly storageFileCollection: StorageFileFirestoreCollection;

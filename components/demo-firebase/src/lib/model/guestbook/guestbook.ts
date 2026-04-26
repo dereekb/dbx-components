@@ -27,7 +27,7 @@ import { type ProfileId } from '../profile/profile.id';
 /**
  * Aggregates the Firestore collections for the Guestbook model group.
  *
- * @dbxModelGroup
+ * @dbxModelGroup Guestbook
  */
 export interface GuestbookFirestoreCollections {
   guestbookCollection: GuestbookFirestoreCollection;

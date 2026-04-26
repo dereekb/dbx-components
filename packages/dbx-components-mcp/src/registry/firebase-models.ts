@@ -121,7 +121,9 @@ export interface FirebaseModel {
    */
   readonly detectionHints: readonly string[];
   /**
-   * Name of the `@dbxModelGroup` container class that exposes this model's collections (e.g. `'NotificationFirestoreCollections'`).
+   * Group name from the `@dbxModelGroup` tag on the model's `<X>FirestoreCollections` container
+   * (e.g. `'Notification'`). Defaults to the container name with the `FirestoreCollections`
+   * suffix stripped when the tag has no explicit argument.
    *
    * Absent when the file declares no model-group container.
    */
@@ -135,9 +137,17 @@ export interface FirebaseModel {
  */
 export interface FirebaseModelGroup {
   /**
-   * Name of the abstract class / interface tagged with `@dbxModelGroup` (e.g. `'NotificationFirestoreCollections'`).
+   * Group name from `@dbxModelGroup <name>` (e.g. `'Notification'`).
+   *
+   * Defaults to the container name with the `FirestoreCollections` suffix stripped when the
+   * tag is bare (`@dbxModelGroup` with no argument). The scanner emits a warning in that case.
    */
   readonly name: string;
+  /**
+   * Name of the abstract class / interface tagged with `@dbxModelGroup`
+   * (e.g. `'NotificationFirestoreCollections'`).
+   */
+  readonly containerName: string;
   /**
    * Source file path relative to the workspace root.
    */

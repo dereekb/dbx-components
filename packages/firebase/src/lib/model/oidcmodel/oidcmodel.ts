@@ -15,7 +15,7 @@ export type OidcModelTypes = typeof oidcEntryIdentity;
  *
  * @see `OidcModelServerActions` in `@dereekb/firebase-server/oidc` for server-side action processing
  *
- * @dbxModelGroup
+ * @dbxModelGroup OidcModel
  */
 export abstract class OidcModelFirestoreCollections {
   abstract readonly oidcEntryCollection: OidcEntryFirestoreCollection;

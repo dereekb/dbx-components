@@ -26,7 +26,7 @@ import { mapObjectMap, type ModelFieldMapFunctionsConfig, cachedGetter } from '@
  *
  * Implement this in your app module to wire up dependency injection.
  *
- * @dbxModelGroup
+ * @dbxModelGroup SystemState
  */
 export abstract class SystemStateFirestoreCollections {
   abstract readonly systemStateCollection: SystemStateFirestoreCollection;

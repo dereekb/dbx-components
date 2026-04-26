@@ -90,19 +90,18 @@ function findTsFiles(dir) {
 }
 
 function extractFromFile(file, content) {
+  const relativePath = relative(WORKSPACE_ROOT, file).split('\\').join('/');
   const identities = findIdentities(content);
   const interfaces = findInterfaces(content);
   const converters = findConverters(content);
   const enums = findEnums(content);
-  const modelGroups = findModelGroups(content);
+  const modelGroups = findModelGroups(content, relativePath);
 
   const interfaceByName = new Map();
   for (const iface of interfaces) interfaceByName.set(iface.name, iface);
   const converterByInterface = new Map();
   for (const c of converters) converterByInterface.set(c.interfaceName, c);
   const enumNames = new Set(enums.map((e) => e.name));
-
-  const relativePath = relative(WORKSPACE_ROOT, file).split('\\').join('/');
 
   // Map model interface name → group name. A model belongs to whichever group references its
   // `<Model>FirestoreCollection*` types.
@@ -173,7 +172,7 @@ function extractFromFile(file, content) {
   }
 
   const groups = modelGroups.map((g) => {
-    const out = { name: g.name, sourceFile: relativePath };
+    const out = { name: g.name, containerName: g.containerName, sourceFile: relativePath };
     if (g.description) out.description = g.description;
     out.modelNames = g.modelNames;
     return out;
@@ -308,10 +307,15 @@ function parseInterfaceBody(body) {
  * Finds `<Name>FirestoreCollections` containers carrying the `@dbxModelGroup` tag,
  * matching either `export abstract class` or `export interface` declarations.
  *
+ * The tag accepts an optional explicit name (`@dbxModelGroup Notification`). When
+ * the bare marker is used, the group name defaults to the container name with the
+ * `FirestoreCollections` suffix stripped — and the scanner warns so the gap
+ * surfaces in the build log without failing the run.
+ *
  * Extracts referenced model names by walking the body for `<Model>FirestoreCollection`,
  * `<Model>FirestoreCollectionFactory`, and `<Model>FirestoreCollectionGroup` type references.
  */
-function findModelGroups(content) {
+function findModelGroups(content, relativePath) {
   const out = [];
   const re = /export\s+(?:abstract\s+class|interface)\s+(\w+FirestoreCollections)\b[^{]*\{/g;
   let m;
@@ -321,14 +325,30 @@ function findModelGroups(content) {
     const endIdx = findMatching(content, openIdx, '{', '}');
     if (endIdx < 0) continue;
     const jsdoc = readPrecedingJsdoc(content, m.index);
-    if (!jsdoc.tags.dbxModelGroup) continue;
+    const tagValue = jsdoc.tags.dbxModelGroup;
+    if (!tagValue) continue;
+    const containerName = m[1];
+    const explicitName = typeof tagValue === 'string' ? tagValue : undefined;
+    const name = resolveModelGroupName({ explicitName, containerName, relativePath });
     const body = content.slice(openIdx + 1, endIdx);
     const modelNames = extractGroupModelNames(body);
-    const entry = { name: m[1], modelNames };
+    const entry = { name, containerName, modelNames };
     if (jsdoc.description) entry.description = jsdoc.description;
     out.push(entry);
   }
   return out;
+}
+
+/**
+ * Picks a group name. Order: explicit `@dbxModelGroup <name>` value, then the
+ * container name with `FirestoreCollections` stripped. Warns when defaulting so
+ * the missing argument shows up in the build log.
+ */
+function resolveModelGroupName({ explicitName, containerName, relativePath }) {
+  if (explicitName) return explicitName;
+  const stripped = containerName.replace(/FirestoreCollections$/, '');
+  console.warn(`[extract-firebase-models] ${relativePath}: ${containerName} @dbxModelGroup is missing a name; defaulting to '${stripped}'`);
+  return stripped;
 }
 
 function extractGroupModelNames(body) {
@@ -466,7 +486,9 @@ function readPrecedingJsdoc(content, pos) {
  *
  * Returns `{ description, tags }` where `tags` carries:
  *   - `dbxModel: true` if the block contains `@dbxModel`
- *   - `dbxModelGroup: true` if the block contains `@dbxModelGroup`
+ *   - `dbxModelGroup: <name> | true` if the block contains `@dbxModelGroup [name]`
+ *      — the value is the explicit group name when supplied, otherwise `true`
+ *      to signal the bare marker so the caller can derive a default + warn.
  *   - `dbxModelVariable: <identifier>` if the block contains `@dbxModelVariable <name>`
  *
  * Other tags are ignored. Description text after a tag line is dropped — this
@@ -494,8 +516,10 @@ function parseJsdocBlock(body) {
     if (!match) continue;
     const [, tag, rest] = match;
     const value = rest.trim();
-    if (tag === 'dbxModel' || tag === 'dbxModelGroup') {
-      tags[tag] = true;
+    if (tag === 'dbxModel') {
+      tags.dbxModel = true;
+    } else if (tag === 'dbxModelGroup') {
+      tags.dbxModelGroup = value.length > 0 ? value : true;
     } else if (tag === 'dbxModelVariable') {
       tags.dbxModelVariable = value || '';
     }

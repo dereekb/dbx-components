@@ -109,16 +109,23 @@ describe('firebase-models registry', () => {
     expect(FIREBASE_MODEL_GROUPS.length).toBeGreaterThan(0);
     expect(getFirebaseModelGroups()).toBe(FIREBASE_MODEL_GROUPS);
     const names = new Set(FIREBASE_MODEL_GROUPS.map((g) => g.name));
-    expect(names.has('NotificationFirestoreCollections'), 'NotificationFirestoreCollections missing').toBe(true);
-    expect(names.has('StorageFileFirestoreCollections'), 'StorageFileFirestoreCollections missing').toBe(true);
-    expect(names.has('SystemStateFirestoreCollections'), 'SystemStateFirestoreCollections missing').toBe(true);
-    expect(names.has('OidcModelFirestoreCollections'), 'OidcModelFirestoreCollections missing').toBe(true);
+    expect(names.has('Notification'), 'Notification group missing').toBe(true);
+    expect(names.has('StorageFile'), 'StorageFile group missing').toBe(true);
+    expect(names.has('SystemState'), 'SystemState group missing').toBe(true);
+    expect(names.has('OidcModel'), 'OidcModel group missing').toBe(true);
   });
 
-  it('getFirebaseModelGroup is case-insensitive and returns the matching group', () => {
-    const group = getFirebaseModelGroup('NotificationFirestoreCollections');
+  it('every group also tracks the container class name', () => {
+    for (const group of FIREBASE_MODEL_GROUPS) {
+      expect(group.containerName.endsWith('FirestoreCollections'), `${group.name} containerName '${group.containerName}' must end in 'FirestoreCollections'`).toBe(true);
+    }
+  });
+
+  it('getFirebaseModelGroup resolves by group name (case-insensitive)', () => {
+    const group = getFirebaseModelGroup('Notification');
+    expect(group?.containerName).toBe('NotificationFirestoreCollections');
     expect(group?.modelNames).toEqual(['Notification', 'NotificationBox', 'NotificationSummary', 'NotificationUser', 'NotificationWeek']);
-    expect(getFirebaseModelGroup('notificationfirestorecollections')?.name).toBe('NotificationFirestoreCollections');
+    expect(getFirebaseModelGroup('notification')?.name).toBe('Notification');
     expect(getFirebaseModelGroup('not-a-group')).toBeUndefined();
   });
 

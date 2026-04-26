@@ -59,7 +59,7 @@ import { type NotificationItem, firestoreNotificationItem } from './notification
  *
  * @see `NotificationServerActions` in `@dereekb/firebase-server/model` for server-side action processing
  *
- * @dbxModelGroup
+ * @dbxModelGroup Notification
  */
 export abstract class NotificationFirestoreCollections {
   abstract readonly notificationUserCollection: NotificationUserFirestoreCollection;
