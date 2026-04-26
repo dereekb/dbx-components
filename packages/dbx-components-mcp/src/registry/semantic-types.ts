@@ -140,10 +140,10 @@ export const EMPTY_SEMANTIC_TYPE_REGISTRY: SemanticTypeRegistry = createSemantic
 // MARK: Internals
 function pushInto(map: Map<string, SemanticTypeEntry[]>, key: string, entry: SemanticTypeEntry): void {
   const existing = map.get(key);
-  if (existing !== undefined) {
-    existing.push(entry);
-  } else {
+  if (existing === undefined) {
     map.set(key, [entry]);
+  } else {
+    existing.push(entry);
   }
 }
 

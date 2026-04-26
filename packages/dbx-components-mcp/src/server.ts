@@ -59,10 +59,10 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
   if (registry === undefined) {
     const cwd = options.cwd ?? process.cwd();
     const loaderResult = await loadSemanticTypeRegistry({ cwd });
-    if (options.onLoaderResult !== undefined) {
-      options.onLoaderResult(loaderResult);
-    } else {
+    if (options.onLoaderResult === undefined) {
       reportLoaderResult(loaderResult);
+    } else {
+      options.onLoaderResult(loaderResult);
     }
     registry = loaderResult.registry;
   }

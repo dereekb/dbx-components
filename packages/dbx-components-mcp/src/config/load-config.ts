@@ -87,13 +87,7 @@ export async function findAndLoadConfig(input: FindAndLoadConfigInput): Promise<
       parseError = err instanceof Error ? err.message : String(err);
     }
 
-    if (parseError !== null) {
-      result = {
-        config: null,
-        configPath,
-        warnings: [{ kind: 'config-parse-failed', path: configPath, error: parseError }]
-      };
-    } else {
+    if (parseError === null) {
       const validated = DbxMcpConfig(parsed);
       if (validated instanceof type.errors) {
         result = {
@@ -104,6 +98,12 @@ export async function findAndLoadConfig(input: FindAndLoadConfigInput): Promise<
       } else {
         result = { config: validated, configPath, warnings: [] };
       }
+    } else {
+      result = {
+        config: null,
+        configPath,
+        warnings: [{ kind: 'config-parse-failed', path: configPath, error: parseError }]
+      };
     }
   }
 
