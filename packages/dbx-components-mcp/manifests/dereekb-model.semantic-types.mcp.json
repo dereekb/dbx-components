@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "source": "@dereekb/model",
+  "topicNamespace": "dereekb-model",
+  "generatedAt": "1970-01-01T00:00:00.000Z",
+  "generator": "@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs",
+  "topics": [],
+  "entries": []
+}

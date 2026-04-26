@@ -14,6 +14,15 @@
         "cwd": "{workspaceRoot}"
       }
     },
+    "generate-manifests": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/manifests/dereekb-util.semantic-types.mcp.json", "{projectRoot}/manifests/dereekb-model.semantic-types.mcp.json"],
+      "inputs": ["{projectRoot}/scripts/generate-manifests.mjs", "{projectRoot}/src/scan/**/*.ts", "{projectRoot}/src/manifest/**/*.ts", "{workspaceRoot}/packages/util/dbx-mcp.scan.json", "{workspaceRoot}/packages/util/src/**/*.ts", "{workspaceRoot}/packages/model/dbx-mcp.scan.json", "{workspaceRoot}/packages/model/src/**/*.ts"],
+      "options": {
+        "command": "node packages/dbx-components-mcp/scripts/generate-manifests.mjs",
+        "cwd": "{workspaceRoot}"
+      }
+    },
     "build": {
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/packages/dbx-components-mcp"],
@@ -27,7 +36,7 @@
       "executor": "@nx/esbuild:esbuild",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
-      "dependsOn": ["generate-firebase-models"],
+      "dependsOn": ["generate-firebase-models", "generate-manifests"],
       "options": {
         "outputPath": "dist/packages/dbx-components-mcp",
         "main": "packages/dbx-components-mcp/bin/dbx-components-mcp.ts",
@@ -53,6 +62,11 @@
           {
             "glob": "LICENSE",
             "input": ".",
+            "output": "."
+          },
+          {
+            "glob": "manifests/*.json",
+            "input": "packages/dbx-components-mcp",
             "output": "."
           }
         ]
