@@ -12,11 +12,24 @@
  * `<Foo>ProcessingSubtask` union aliases.
  */
 
-import type { AppStorageFilesInspection, ExtractedAppStorageFiles, ExtractedPurposeConstant, ExtractedUploadInitializerEntry, ExtractedUploadedFileTypeIdentifierConstant, Violation, ViolationSeverity } from './types.js';
+import { pushIoViolations, type IoViolationCodes, type IoViolationMessages } from '../_validate/io-violations.js';
+import type { AppStorageFilesInspection, ExtractedAppStorageFiles, ExtractedPurposeConstant, ExtractedUploadInitializerEntry, ExtractedUploadedFileTypeIdentifierConstant, Violation, ViolationCode, ViolationSeverity } from './types.js';
 
 const PURPOSE_SUFFIX = '_PURPOSE';
 const FILE_TYPE_IDENTIFIER_SUFFIX = '_UPLOADED_FILE_TYPE_IDENTIFIER';
 const GROUP_IDS_FUNCTION_SUFFIXES: readonly string[] = ['StorageFileGroupIds', 'FileGroupIds'];
+
+const IO_VIOLATION_CODES: IoViolationCodes<ViolationCode> = {
+  componentDirNotFound: 'STORAGEFILE_COMPONENT_DIR_NOT_FOUND',
+  componentFolderMissing: 'STORAGEFILE_COMPONENT_FOLDER_MISSING',
+  apiDirNotFound: 'STORAGEFILE_API_DIR_NOT_FOUND',
+  apiFolderMissing: 'STORAGEFILE_API_FOLDER_MISSING'
+};
+
+const IO_VIOLATION_MESSAGES: IoViolationMessages = {
+  componentFolderPath: 'src/lib/model/storagefile/',
+  apiFolderPath: 'src/app/common/model/storagefile/ and src/app/common/model/notification/'
+};
 
 /**
  * Applies every cross-file storage-file rule and returns the aggregated
@@ -30,38 +43,14 @@ const GROUP_IDS_FUNCTION_SUFFIXES: readonly string[] = ['StorageFileGroupIds', '
 export function runRules(inspection: AppStorageFilesInspection, extracted: ExtractedAppStorageFiles): readonly Violation[] {
   const violations: Violation[] = [];
 
-  // I/O rules short-circuit content checks.
-  if (inspection.component.status === 'dir-not-found') {
-    pushViolation(violations, {
-      code: 'STORAGEFILE_COMPONENT_DIR_NOT_FOUND',
-      message: `Component directory \`${inspection.component.rootDir}\` does not exist.`,
-      side: 'component',
-      file: undefined
-    });
-  } else if (inspection.component.status === 'folder-missing') {
-    pushViolation(violations, {
-      code: 'STORAGEFILE_COMPONENT_FOLDER_MISSING',
-      message: `Component is missing \`src/lib/model/storagefile/\` (looked under \`${inspection.component.rootDir}\`).`,
-      side: 'component',
-      file: undefined
-    });
-  }
-  if (inspection.api.status === 'dir-not-found') {
-    pushViolation(violations, {
-      code: 'STORAGEFILE_API_DIR_NOT_FOUND',
-      message: `API directory \`${inspection.api.rootDir}\` does not exist.`,
-      side: 'api',
-      file: undefined
-    });
-  } else if (inspection.api.status === 'folder-missing') {
-    pushViolation(violations, {
-      code: 'STORAGEFILE_API_FOLDER_MISSING',
-      message: `API is missing \`src/app/common/model/storagefile/\` and \`src/app/common/model/notification/\` (looked under \`${inspection.api.rootDir}\`).`,
-      side: 'api',
-      file: undefined
-    });
-  }
-  if (inspection.component.status !== 'ok' || inspection.api.status !== 'ok') {
+  const proceed = pushIoViolations({
+    inspection,
+    violations,
+    codes: IO_VIOLATION_CODES,
+    messages: IO_VIOLATION_MESSAGES,
+    build: (code, message, side) => buildIoViolation(code, message, side)
+  });
+  if (!proceed) {
     return violations;
   }
 
@@ -467,4 +456,15 @@ function pushViolation(buffer: Violation[], violation: Omit<Violation, 'severity
     file: violation.file
   };
   buffer.push(filled);
+}
+
+function buildIoViolation(code: ViolationCode, message: string, side: 'component' | 'api'): Violation {
+  const result: Violation = {
+    code,
+    severity: 'error',
+    message,
+    side,
+    file: undefined
+  };
+  return result;
 }

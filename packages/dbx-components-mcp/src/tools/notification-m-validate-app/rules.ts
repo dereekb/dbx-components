@@ -4,7 +4,20 @@
  * entry point is {@link validateAppNotifications} in `./index.ts`.
  */
 
-import type { AppNotificationsInspection, ExtractedAppNotifications, ExtractedTaskHandlerEntry, ExtractedTemplateHandlerEntry, ExtractedTemplateTypeInfo, Violation, ViolationSeverity } from './types.js';
+import { pushIoViolations, type IoViolationCodes, type IoViolationMessages } from '../_validate/io-violations.js';
+import type { AppNotificationsInspection, ExtractedAppNotifications, ExtractedTaskHandlerEntry, ExtractedTemplateHandlerEntry, ExtractedTemplateTypeInfo, Violation, ViolationCode, ViolationSeverity } from './types.js';
+
+const IO_VIOLATION_CODES: IoViolationCodes<ViolationCode> = {
+  componentDirNotFound: 'NOTIF_COMPONENT_DIR_NOT_FOUND',
+  componentFolderMissing: 'NOTIF_COMPONENT_NOTIFICATION_FOLDER_MISSING',
+  apiDirNotFound: 'NOTIF_API_DIR_NOT_FOUND',
+  apiFolderMissing: 'NOTIF_API_NOTIFICATION_FOLDER_MISSING'
+};
+
+const IO_VIOLATION_MESSAGES: IoViolationMessages = {
+  componentFolderPath: 'src/lib/model/notification/',
+  apiFolderPath: 'src/app/common/model/notification/'
+};
 
 /**
  * Applies every cross-file notification rule and returns the aggregated
@@ -18,38 +31,14 @@ import type { AppNotificationsInspection, ExtractedAppNotifications, ExtractedTa
 export function runRules(inspection: AppNotificationsInspection, extracted: ExtractedAppNotifications): readonly Violation[] {
   const violations: Violation[] = [];
 
-  // I/O rules short-circuit content checks.
-  if (inspection.component.status === 'dir-not-found') {
-    pushViolation(violations, {
-      code: 'NOTIF_COMPONENT_DIR_NOT_FOUND',
-      message: `Component directory \`${inspection.component.rootDir}\` does not exist.`,
-      side: 'component',
-      file: undefined
-    });
-  } else if (inspection.component.status === 'folder-missing') {
-    pushViolation(violations, {
-      code: 'NOTIF_COMPONENT_NOTIFICATION_FOLDER_MISSING',
-      message: `Component is missing \`src/lib/model/notification/\` (looked under \`${inspection.component.rootDir}\`).`,
-      side: 'component',
-      file: undefined
-    });
-  }
-  if (inspection.api.status === 'dir-not-found') {
-    pushViolation(violations, {
-      code: 'NOTIF_API_DIR_NOT_FOUND',
-      message: `API directory \`${inspection.api.rootDir}\` does not exist.`,
-      side: 'api',
-      file: undefined
-    });
-  } else if (inspection.api.status === 'folder-missing') {
-    pushViolation(violations, {
-      code: 'NOTIF_API_NOTIFICATION_FOLDER_MISSING',
-      message: `API is missing \`src/app/common/model/notification/\` (looked under \`${inspection.api.rootDir}\`).`,
-      side: 'api',
-      file: undefined
-    });
-  }
-  if (inspection.component.status !== 'ok' || inspection.api.status !== 'ok') {
+  const proceed = pushIoViolations({
+    inspection,
+    violations,
+    codes: IO_VIOLATION_CODES,
+    messages: IO_VIOLATION_MESSAGES,
+    build: (code, message, side) => buildIoViolation(code, message, side)
+  });
+  if (!proceed) {
     return violations;
   }
 
@@ -530,6 +519,17 @@ function pushViolation(buffer: Violation[], violation: Omit<Violation, 'severity
     file: violation.file
   };
   buffer.push(filled);
+}
+
+function buildIoViolation(code: ViolationCode, message: string, side: 'component' | 'api'): Violation {
+  const result: Violation = {
+    code,
+    severity: 'error',
+    message,
+    side,
+    file: undefined
+  };
+  return result;
 }
 
 /**
