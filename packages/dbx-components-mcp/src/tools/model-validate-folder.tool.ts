@@ -20,11 +20,11 @@
  *     non-directory matches are filtered out automatically.
  */
 
-import { glob as fsGlob, stat } from 'node:fs/promises';
-import { resolve, sep } from 'node:path';
+import { resolve } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
+import { resolveFolderPaths } from './validate-input.js';
 import { formatResult, inspectFolder, validateModelFolders, type FolderInspection } from './model-validate-folder/index.js';
 
 // MARK: Tool definition
@@ -81,42 +81,6 @@ function parseArgs(raw: unknown): ParsedArgs {
 }
 
 // MARK: Path resolution
-async function resolveFolderPaths(args: ParsedArgs, cwd: string): Promise<readonly string[]> {
-  const collected: string[] = [];
-  const seen = new Set<string>();
-  const cwdPrefix = cwd.endsWith(sep) ? cwd : cwd + sep;
-
-  const accept = (relative: string): void => {
-    if (seen.has(relative)) return;
-    const absolute = resolve(cwd, relative);
-    if (!absolute.startsWith(cwdPrefix) && absolute !== cwd) {
-      throw new Error(`Path \`${relative}\` resolves outside the server cwd and is not allowed.`);
-    }
-    seen.add(relative);
-    collected.push(relative);
-  };
-
-  if (args.paths) {
-    for (const p of args.paths) {
-      accept(p);
-    }
-  }
-  if (args.glob) {
-    for await (const match of fsGlob(args.glob, { cwd })) {
-      const absolute = resolve(cwd, match);
-      try {
-        const stats = await stat(absolute);
-        if (!stats.isDirectory()) continue;
-      } catch {
-        continue;
-      }
-      accept(match);
-    }
-  }
-
-  return collected;
-}
-
 async function buildInspections(paths: readonly string[], cwd: string): Promise<readonly FolderInspection[]> {
   const out: FolderInspection[] = [];
   for (const relative of paths) {
@@ -153,7 +117,7 @@ export async function runModelValidateFolder(rawArgs: unknown): Promise<ToolResu
 
   let paths: readonly string[];
   try {
-    paths = await resolveFolderPaths(args, process.cwd());
+    paths = await resolveFolderPaths({ paths: args.paths, glob: args.glob, cwd: process.cwd() });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return toolError(`Failed to resolve folder paths: ${message}`);
