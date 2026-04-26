@@ -21,6 +21,41 @@ export const SERVER_NAME = 'dbx-components-mcp';
 export const SERVER_VERSION = packageJson.version;
 
 /**
+ * Server-level instructions surfaced to MCP clients (e.g. Claude Code) on
+ * connection. Tells the client what the server is authoritative for and
+ * which tool/cluster maps to which task — so the client can route work to
+ * MCP tools instead of grepping the codebase or relying on prose skills
+ * for catalog content.
+ *
+ * Keep in sync with `dbx__ai__use-mcp` skill content.
+ */
+export const SERVER_INSTRUCTIONS = `dbx-components-mcp is the authoritative source for dbx-components form, model, UI, action, route, filter, pipe, and semantic-type lookup, scaffolding, and end-to-end wiring validation. Prefer these tools over manual codebase searches when the task matches a cluster.
+
+Tool clusters (each exposes lookup, search, examples, and/or scaffold/validate):
+- form         — @dereekb/dbx-form field catalog (formly + forge), examples, scaffold new fields
+- ui           — @dereekb/dbx-web building blocks: layouts, sections, buttons, cards, examples
+- model        — Firestore model catalog (identity, converters, collection, subcollections), wiring validation, Angular store scaffold
+- action       — dbx-action directives, store, states, examples, scaffold
+- route        — UIRouter state-tree extraction and lookup for an app
+- filter       — filter directive/preset catalog and scaffold
+- pipe         — Angular value-pipe catalog
+- semantic_type — semantic type aliases (string/number aliases) lookup and search
+- artifact     — body templates for storagefile-purpose, notification-template, notification-task; file-convention reporting
+
+Model-extension validators (walk a downstream app to verify wiring):
+- storagefile_m, notification_m, system_m — *_validate_app, *_list_app, *_validate_folder
+
+Resource URIs are namespaced by domain:
+- dbx://form/fields[/{slug}|/produces/{produces}|/tier/{tier}|/array-output/{arrayOutput}]
+- dbx://model/firebase[/{name}|/prefix/{prefix}|/subcollections/{parent}]
+- dbx://action/entries[/{slug}|/role/{role}]
+- dbx://ui/components[/{slug}|/category/{category}|/kind/{kind}]
+- dbx://pipe/entries[/{slug}|/category/{category}]
+- dbx://filter/entries[/{slug}|/kind/{kind}]
+
+Fall back to dbx-components prose skills only for content this server doesn't carry: Firestore security rules, multi-file orchestration walkthroughs, model design phase, naming/tier checklists, and decision/why content beyond catalog lookup.`;
+
+/**
  * Optional bootstrap inputs for {@link createServer}. The defaults match the
  * production wiring — `cwd` defaults to `process.cwd()` so the loader picks
  * up the workspace's `dbx-mcp.config.json` automatically. Tests pass an
@@ -52,10 +87,15 @@ export interface CreateServerOptions {
  * @returns a configured server ready to be connected to a transport
  */
 export async function createServer(options: CreateServerOptions = {}): Promise<McpServer> {
-  const server = new McpServer({
-    name: SERVER_NAME,
-    version: SERVER_VERSION
-  });
+  const server = new McpServer(
+    {
+      name: SERVER_NAME,
+      version: SERVER_VERSION
+    },
+    {
+      instructions: SERVER_INSTRUCTIONS
+    }
+  );
 
   // McpServer auto-declares capabilities when registerTool/registerResource is
   // called. Our tools go through the low-level setRequestHandler API instead,
