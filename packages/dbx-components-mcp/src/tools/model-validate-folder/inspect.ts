@@ -24,9 +24,7 @@ export async function inspectFolder(path: string): Promise<FolderInspection> {
   let files: readonly string[] = [];
   try {
     const stats = await stat(path);
-    if (!stats.isDirectory()) {
-      status = 'not-directory';
-    } else {
+    if (stats.isDirectory()) {
       status = 'ok';
       const entries = await readdir(path, { withFileTypes: true });
       const collected: string[] = [];
@@ -36,6 +34,8 @@ export async function inspectFolder(path: string): Promise<FolderInspection> {
         collected.push(entry.name);
       }
       files = collected;
+    } else {
+      status = 'not-directory';
     }
   } catch (err) {
     const code = (err as NodeJS.ErrnoException).code;

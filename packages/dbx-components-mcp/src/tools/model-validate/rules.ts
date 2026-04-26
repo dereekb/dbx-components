@@ -100,15 +100,7 @@ function checkFieldJsDocs(file: ExtractedFile, violations: Violation[]): void {
 function checkFileLevel(file: ExtractedFile, violations: Violation[]): void {
   const { groupInterface, groupTypes, firstModelLine, models, name } = file;
 
-  if (!groupInterface) {
-    pushViolation(violations, {
-      code: 'FILE_MISSING_GROUP_INTERFACE',
-      message: 'Missing exported `<Group>FirestoreCollections` interface. Declare one interface ending in `FirestoreCollections` before the first model.',
-      file: name,
-      line: undefined,
-      model: undefined
-    });
-  } else {
+  if (groupInterface) {
     if (!groupInterface.exported) {
       pushViolation(violations, {
         code: 'FILE_GROUP_INTERFACE_NOT_EXPORTED',
@@ -128,17 +120,17 @@ function checkFileLevel(file: ExtractedFile, violations: Violation[]): void {
       });
     }
     checkGroupInterfaceCoverage(file, violations);
-  }
-
-  if (!groupTypes) {
+  } else {
     pushViolation(violations, {
-      code: 'FILE_MISSING_GROUP_TYPES',
-      message: 'Missing exported `<Group>Types` type alias. Declare a union of `typeof <identity>` covering every model in the file.',
+      code: 'FILE_MISSING_GROUP_INTERFACE',
+      message: 'Missing exported `<Group>FirestoreCollections` interface. Declare one interface ending in `FirestoreCollections` before the first model.',
       file: name,
       line: undefined,
       model: undefined
     });
-  } else {
+  }
+
+  if (groupTypes) {
     if (!groupTypes.exported) {
       pushViolation(violations, {
         code: 'FILE_GROUP_TYPES_NOT_EXPORTED',
@@ -158,6 +150,14 @@ function checkFileLevel(file: ExtractedFile, violations: Violation[]): void {
       });
     }
     checkGroupTypesCoverage(file, models, violations);
+  } else {
+    pushViolation(violations, {
+      code: 'FILE_MISSING_GROUP_TYPES',
+      message: 'Missing exported `<Group>Types` type alias. Declare a union of `typeof <identity>` covering every model in the file.',
+      file: name,
+      line: undefined,
+      model: undefined
+    });
   }
 }
 

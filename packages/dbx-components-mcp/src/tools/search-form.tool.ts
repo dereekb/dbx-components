@@ -105,18 +105,9 @@ function formatSearchResults(input: { readonly query: string; readonly tokens: r
   const lines: string[] = [`# Search: \`${query}\``, '', `Tokens: \`${tokenDisplay}\` · ${hits.length} result${hits.length === 1 ? '' : 's'}`, ''];
   for (const hit of hits) {
     const field = hit.entry;
-    const array = field.arrayOutput === 'yes' ? ' *(array)*' : field.arrayOutput === 'optional' ? ' *(single or array)*' : '';
-    lines.push(`## \`${field.slug}\` · form · score ${hit.score}`);
-    lines.push('');
-    lines.push(`- **factory:** \`${field.factoryName}\``);
-    lines.push(`- **tier:** \`${field.tier}\``);
-    lines.push(`- **produces:** \`${field.produces}\`${array}`);
-    lines.push(`- **matched:** \`${hit.matchedTokens.join(', ')}\``);
-    lines.push('');
-    lines.push(field.description);
-    lines.push('');
-    lines.push(`→ \`dbx_form_lookup topic="${field.slug}"\` for full docs.`);
-    lines.push('');
+    const optionalArray = field.arrayOutput === 'optional' ? ' *(single or array)*' : '';
+    const array = field.arrayOutput === 'yes' ? ' *(array)*' : optionalArray;
+    lines.push(`## \`${field.slug}\` · form · score ${hit.score}`, '', `- **factory:** \`${field.factoryName}\``, `- **tier:** \`${field.tier}\``, `- **produces:** \`${field.produces}\`${array}`, `- **matched:** \`${hit.matchedTokens.join(', ')}\``, '', field.description, '', `→ \`dbx_form_lookup topic="${field.slug}"\` for full docs.`, '');
   }
   return lines.join('\n').trimEnd();
 }

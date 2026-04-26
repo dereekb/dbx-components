@@ -42,7 +42,7 @@ export function extractFile(source: ValidatorSource): ExtractedFile {
   const paramsOrResultLines = [...paramsDecls.map((d) => d.line), ...resultDecls.map((d) => d.line), ...paramsValidators.map((v) => v.line)];
   const firstParamsOrResultLine = paramsOrResultLines.length > 0 ? Math.min(...paramsOrResultLines) : undefined;
 
-  const beforeBlock = firstFunctionsBlockLine !== undefined ? paramsOrResultLines.filter((l) => l < firstFunctionsBlockLine) : paramsOrResultLines;
+  const beforeBlock = firstFunctionsBlockLine === undefined ? paramsOrResultLines : paramsOrResultLines.filter((l) => l < firstFunctionsBlockLine);
   const lastParamsOrResultBeforeFunctionsLine = beforeBlock.length > 0 ? Math.max(...beforeBlock) : undefined;
 
   const groupName = inferGroupName({ functionTypeMap, functionTypeConfigMap, crudConfigType, crudConfigConst, functionMap, functionsClass });

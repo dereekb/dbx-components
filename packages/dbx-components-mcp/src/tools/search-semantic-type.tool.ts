@@ -74,7 +74,7 @@ interface ParsedSearchArgs {
 function parseSearchArgs(raw: unknown): ParsedSearchArgs {
   const parsed = SearchSemanticTypeArgsType(raw);
   if (parsed instanceof type.errors) {
-    throw new Error(`Invalid arguments: ${parsed.summary}`);
+    throw new TypeError(`Invalid arguments: ${parsed.summary}`);
   }
   const rawLimit = parsed.limit ?? DEFAULT_LIMIT;
   const limit = Math.max(1, Math.min(MAX_LIMIT, Math.trunc(rawLimit)));
@@ -158,10 +158,10 @@ function applyFilters(registry: SemanticTypeRegistry, args: ParsedSearchArgs): r
     candidates = registry.findByBaseType(args.baseType);
   } else if (args.package !== undefined) {
     candidates = registry.findByPackage(args.package);
-  } else if (args.query !== undefined) {
-    candidates = registry.findByQuery(args.query);
-  } else {
+  } else if (args.query === undefined) {
     candidates = registry.all;
+  } else {
+    candidates = registry.findByQuery(args.query);
   }
 
   return candidates.filter((entry) => matchesAllFilters(entry, args));

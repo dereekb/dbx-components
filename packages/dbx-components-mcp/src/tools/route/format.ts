@@ -45,12 +45,9 @@ export function formatRouteTree(args: FormatRouteTreeArgs): string {
 function renderMarkdown(args: FormatRouteTreeArgs): string {
   const { tree, depthLimit, title } = args;
   const lines: string[] = [];
-  lines.push(`# State tree (${title})`);
-  lines.push('');
-  lines.push(`${tree.nodeCount} state(s) across ${tree.filesChecked} file(s).`);
+  lines.push(`# State tree (${title})`, '', `${tree.nodeCount} state(s) across ${tree.filesChecked} file(s).`);
   if (tree.roots.length === 0) {
-    lines.push('');
-    lines.push('_No states found._');
+    lines.push('', '_No states found._');
   } else {
     lines.push('');
     for (const root of tree.roots) {
@@ -150,8 +147,7 @@ function toSerializable(node: RouteTreeNode, depth: number, depthLimit: number |
 function renderFlat(args: FormatRouteTreeArgs): string {
   const { tree, depthLimit, title } = args;
   const lines: string[] = [];
-  lines.push(`# Flat state listing (${title})`);
-  lines.push('');
+  lines.push(`# Flat state listing (${title})`, '');
   if (tree.nodeCount === 0) {
     lines.push('_No states found._');
   } else {
@@ -191,7 +187,8 @@ function appendIssuesSection(lines: string[], issues: readonly RouteIssue[]): vo
   }
   lines.push('', '## Issues', '');
   for (const issue of issues) {
-    const label = issue.severity === 'error' ? 'ERROR' : issue.severity === 'warning' ? 'WARN' : 'INFO';
+    const warningOrInfoLabel = issue.severity === 'warning' ? 'WARN' : 'INFO';
+    const label = issue.severity === 'error' ? 'ERROR' : warningOrInfoLabel;
     const linePart = issue.line === undefined ? '' : `:${issue.line}`;
     const where = issue.file === undefined ? 'extraction' : `${issue.file}${linePart}`;
     lines.push(`- **[${label}] ${issue.code}** _(${where})_ — ${issue.message}`);

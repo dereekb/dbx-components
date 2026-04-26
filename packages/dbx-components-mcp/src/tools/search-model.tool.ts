@@ -105,16 +105,9 @@ function formatSearchResults(input: { readonly query: string; readonly tokens: r
   for (const hit of hits) {
     const model = hit.entry;
     const parent = model.parentIdentityConst ? ` · subcollection of \`${model.parentIdentityConst}\`` : '';
-    lines.push(`## \`${model.name}\` · firebase model · score ${hit.score}`);
-    lines.push('');
-    lines.push(`- **identity:** \`${model.identityConst}\`${parent}`);
-    lines.push(`- **collection:** \`${model.modelType}\` · prefix \`${model.collectionPrefix}\``);
+    lines.push(`## \`${model.name}\` · firebase model · score ${hit.score}`, '', `- **identity:** \`${model.identityConst}\`${parent}`, `- **collection:** \`${model.modelType}\` · prefix \`${model.collectionPrefix}\``);
     const enumsPart = model.enums.length > 0 ? ` · **enums:** ${model.enums.length}` : '';
-    lines.push(`- **fields:** ${model.fields.length}${enumsPart}`);
-    lines.push(`- **matched:** \`${hit.matchedTokens.join(', ')}\``);
-    lines.push('');
-    lines.push(`→ \`dbx_model_lookup topic="${model.name}"\` for full docs, or \`dbx_model_decode\` to decode a raw document.`);
-    lines.push('');
+    lines.push(`- **fields:** ${model.fields.length}${enumsPart}`, `- **matched:** \`${hit.matchedTokens.join(', ')}\``, '', `→ \`dbx_model_lookup topic="${model.name}"\` for full docs, or \`dbx_model_decode\` to decode a raw document.`, '');
   }
   return lines.join('\n').trimEnd();
 }

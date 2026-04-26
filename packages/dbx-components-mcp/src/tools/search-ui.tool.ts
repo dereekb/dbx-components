@@ -70,7 +70,7 @@ interface ParsedSearchUiArgs {
 function parseSearchUiArgs(raw: unknown): ParsedSearchUiArgs {
   const parsed = SearchUiArgsType(raw);
   if (parsed instanceof type.errors) {
-    throw new Error(`Invalid arguments: ${parsed.summary}`);
+    throw new TypeError(`Invalid arguments: ${parsed.summary}`);
   }
   const rawLimit = parsed.limit ?? DEFAULT_LIMIT;
   const limit = Math.max(1, Math.min(MAX_LIMIT, Math.trunc(rawLimit)));
@@ -231,17 +231,7 @@ function formatSearchResults(options: FormatSearchResultsOptions): string {
   } else {
     const lines: string[] = [`# Search: \`${query}\``, '', `Tokens: \`${tokenDisplay}\`${scopeLabel} · ${hits.length} result${hits.length === 1 ? '' : 's'}`, ''];
     for (const hit of hits) {
-      lines.push(`## \`${hit.entry.slug}\` · ${hit.entry.category} · score ${hit.score}`);
-      lines.push('');
-      lines.push(`- **class:** \`${hit.entry.className}\``);
-      lines.push(`- **kind:** \`${hit.entry.kind}\``);
-      lines.push(`- **selector:** \`${hit.entry.selector}\``);
-      lines.push(`- **matched:** \`${hit.matchedTokens.join(', ')}\``);
-      lines.push('');
-      lines.push(hit.entry.description);
-      lines.push('');
-      lines.push(`→ \`dbx_ui_lookup topic="${hit.entry.slug}"\` for full docs.`);
-      lines.push('');
+      lines.push(`## \`${hit.entry.slug}\` · ${hit.entry.category} · score ${hit.score}`, '', `- **class:** \`${hit.entry.className}\``, `- **kind:** \`${hit.entry.kind}\``, `- **selector:** \`${hit.entry.selector}\``, `- **matched:** \`${hit.matchedTokens.join(', ')}\``, '', hit.entry.description, '', `→ \`dbx_ui_lookup topic="${hit.entry.slug}"\` for full docs.`, '');
     }
     result = lines.join('\n').trimEnd();
   }

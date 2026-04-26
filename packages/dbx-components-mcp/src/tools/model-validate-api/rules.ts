@@ -576,7 +576,7 @@ function checkMarkComments(file: ExtractedFile, violations: Violation[]): void {
   const hasKeys = file.markComments.some((c) => c.label.toLowerCase() === 'keys');
   const hasFunctions = file.markComments.some((c) => c.label.toLowerCase() === 'functions');
   const firstParamsLine = file.firstParamsOrResultLine;
-  const marksBeforeParams = firstParamsLine !== undefined ? file.markComments.filter((c) => c.line < firstParamsLine) : file.markComments;
+  const marksBeforeParams = firstParamsLine === undefined ? file.markComments : file.markComments.filter((c) => c.line < firstParamsLine);
   if (marksBeforeParams.length === 0 && firstParamsLine !== undefined) {
     pushViolation(violations, {
       code: 'FILE_MISSING_MARK_CONSTANTS',

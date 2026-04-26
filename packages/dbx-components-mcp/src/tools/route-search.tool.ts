@@ -71,7 +71,7 @@ interface ParsedSearchArgs {
 function parseArgs(raw: unknown): ParsedSearchArgs {
   const parsed = SearchArgsType(raw);
   if (parsed instanceof type.errors) {
-    throw new Error(`Invalid arguments: ${parsed.summary}`);
+    throw new TypeError(`Invalid arguments: ${parsed.summary}`);
   }
   const result: ParsedSearchArgs = {
     query: parsed.query,
@@ -134,18 +134,16 @@ interface FormatHitsOptions {
 function formatHits(options: FormatHitsOptions): string {
   const { query, scope, hits, totalNodes } = options;
   const lines: string[] = [];
-  lines.push(`# Route search — \`${query}\` (scope: ${scope})`);
-  lines.push('');
+  lines.push(`# Route search — \`${query}\` (scope: ${scope})`, '');
   if (hits.length === 0) {
     lines.push(`No matches across ${totalNodes} state(s).`);
     return lines.join('\n');
   }
-  lines.push(`${hits.length} match(es) of ${totalNodes} state(s) — top 10 shown.`);
-  lines.push('');
+  lines.push(`${hits.length} match(es) of ${totalNodes} state(s) — top 10 shown.`, '');
   for (const hit of hits) {
     const node = hit.node;
-    const url = node.fullUrl !== undefined ? `\`${node.fullUrl}\`` : '';
-    const component = node.data.component !== undefined ? ` → \`${node.data.component}\`` : '';
+    const url = node.fullUrl === undefined ? '' : `\`${node.fullUrl}\``;
+    const component = node.data.component === undefined ? '' : ` → \`${node.data.component}\``;
     const matched = hit.matchedOn.length > 0 ? ` _(matched: ${hit.matchedOn.join(', ')})_` : '';
     lines.push(`- \`${node.data.name}\` ${url}${component} _(${node.data.file}:${node.data.line})_${matched}`);
   }

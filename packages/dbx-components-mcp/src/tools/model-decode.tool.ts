@@ -60,7 +60,7 @@ interface ParsedDecodeArgs {
 function parseDecodeArgs(raw: unknown): ParsedDecodeArgs {
   const parsed = DecodeArgsType(raw);
   if (parsed instanceof type.errors) {
-    throw new Error(`Invalid arguments: ${parsed.summary}`);
+    throw new TypeError(`Invalid arguments: ${parsed.summary}`);
   }
   const result: ParsedDecodeArgs = {
     data: parsed.data,
@@ -213,14 +213,12 @@ function buildUnmatchedMessage(hint: string | undefined, document: Document): st
   } else {
     lines.push('Could not identify the Firebase model from the document data.');
   }
-  lines.push('');
-  lines.push('Try passing an explicit `model` argument. Known models:');
+  lines.push('', 'Try passing an explicit `model` argument. Known models:');
   for (const model of FIREBASE_MODELS) {
     lines.push(`- **${model.name}** — prefix \`${model.collectionPrefix}\` (${model.identityConst})`);
   }
   if (document.extraKey) {
-    lines.push('');
-    lines.push(`Document key seen: \`${document.extraKey}\``);
+    lines.push('', `Document key seen: \`${document.extraKey}\``);
   }
   return lines.join('\n');
 }
