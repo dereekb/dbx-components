@@ -8,11 +8,15 @@
  * Planned domains:
  *   - form-fields       field factories, composite builders, and layout primitives
  *   - firebase-models    model identity, data interfaces, converters, collection patterns
+ *   - semantic-types     domain-meaningful type aliases tagged with @semanticType (loaded at runtime)
  *   - model-pointers     lightweight source-file pointers used by the decode tool
  *   - server-actions     callable / on-call / scheduled / event pipeline patterns
  *   - component-patterns action, list, and store patterns
  *   - conventions        TypeScript coding standards and semantic type catalog
  */
+
+export { createSemanticTypeRegistry, createSemanticTypeRegistryFromEntries, EMPTY_SEMANTIC_TYPE_REGISTRY } from './semantic-types.js';
+export type { SemanticTypeRegistry } from './semantic-types.js';
 
 export interface PropertyInfo {
   readonly name: string;
