@@ -145,7 +145,7 @@ export function flattenArrayOrValueArray<T>(array: ArrayOrValue<Maybe<T>>[]): T[
  * @returns a new array with the same elements, or an empty array if input is nullish
  */
 export function copyArray<T>(input: Maybe<T[]>): T[] {
-  return input != null ? [...input] : ([] as T[]);
+  return input == null ? ([] as T[]) : [...input];
 }
 
 /**

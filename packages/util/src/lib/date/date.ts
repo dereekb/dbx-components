@@ -308,7 +308,7 @@ export function dateFromDateOrTimeMillisecondsNumber(input: Maybe<DateOrUnixDate
  * @returns Date object if timestamp is valid, null/undefined if timestamp is null/undefined
  */
 export function unixMillisecondsNumberToDate(dateTimeNumber: Maybe<UnixDateTimeMillisecondsNumber>): Maybe<Date> {
-  return dateTimeNumber != null ? new Date(dateTimeNumber) : (dateTimeNumber as null | undefined);
+  return dateTimeNumber == null ? (dateTimeNumber as null | undefined) : new Date(dateTimeNumber);
 }
 
 /**

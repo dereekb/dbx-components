@@ -334,10 +334,10 @@ export function slashPathFolderFactory(config: SlashPathFolderFactoryConfig = {}
         break;
     }
 
-    if (path != null) {
-      path = startTypeFactory(path) as InferredSlashPathFolder;
-    } else {
+    if (path == null) {
       path = invalidPathValue;
+    } else {
+      path = startTypeFactory(path) as InferredSlashPathFolder;
     }
 
     // must end with a slash to be a proper folder, unless it is a relative folder path ("", empty string)
@@ -980,7 +980,7 @@ export function slashPathPathMatcherConfig<N extends PrimativeValue = PrimativeV
 export function slashPathPathMatcher<N extends PrimativeValue = PrimativeValue>(input: SlashPathPathMatcherConfigInput<N>): SlashPathPathMatcher<N> {
   const config = slashPathPathMatcherConfig(input);
   const targetPathPartsInput = asArray(config.targetPath);
-  const endComparisonAtIndex = config.maxPartsToCompare != null ? config.maxPartsToCompare - 1 : Number.MAX_SAFE_INTEGER;
+  const endComparisonAtIndex = config.maxPartsToCompare == null ? Number.MAX_SAFE_INTEGER : config.maxPartsToCompare - 1;
   const matchRemaining = typeof config.matchRemaining === 'boolean' ? decisionFunction(config.matchRemaining) : (config.matchRemaining ?? decisionFunction(false));
   const nonMatchingFillValue = (config.nonMatchingFillValue ?? false) as N;
 

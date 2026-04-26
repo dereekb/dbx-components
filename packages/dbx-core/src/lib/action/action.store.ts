@@ -145,7 +145,7 @@ export function loadingStateForActionContextState<O = unknown>(state: ActionCont
     case DbxActionState.TRIGGERED:
     case DbxActionState.VALUE_READY:
     case DbxActionState.WORKING:
-      loadingState = beginLoading(state.workProgress != null ? { loadingProgress: state.workProgress } : undefined);
+      loadingState = beginLoading(state.workProgress == null ? undefined : { loadingProgress: state.workProgress });
       break;
   }
 
