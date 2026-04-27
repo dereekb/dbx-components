@@ -520,8 +520,9 @@ else
   echo "Phase 7: Multi-page pagination"
 
   # Invalid choice values are rejected by yargs validation (auth middleware runs first
-  # so this test must live inside the credentialed block).
-  INVALID_DUMP_OUTPUT=$(HOME="$TEST_HOME" $CLI crm list -m Contacts --dump-output bogus 2>&1 || true)
+  # so this test must live inside the credentialed block). Pass --fields so the
+  # choices check is reached before the missing-required-arg check on `crm list`.
+  INVALID_DUMP_OUTPUT=$(HOME="$TEST_HOME" $CLI crm list -m Contacts --fields id --dump-output bogus 2>&1 || true)
   if echo "$INVALID_DUMP_OUTPUT" | grep -qiE "invalid values"; then
     echo "  PASS: --dump-output rejects invalid value"
     PASS=$((PASS + 1))
@@ -530,7 +531,7 @@ else
     FAIL=$((FAIL + 1))
   fi
 
-  INVALID_MERGE=$(HOME="$TEST_HOME" $CLI crm list -m Contacts --dump-merge bogus 2>&1 || true)
+  INVALID_MERGE=$(HOME="$TEST_HOME" $CLI crm list -m Contacts --fields id --dump-merge bogus 2>&1 || true)
   if echo "$INVALID_MERGE" | grep -qiE "invalid values"; then
     echo "  PASS: --dump-merge rejects invalid value"
     PASS=$((PASS + 1))
