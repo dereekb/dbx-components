@@ -57,6 +57,13 @@
         "cwd": "{workspaceRoot}"
       }
     },
+    "regenerate": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["generate-firebase-models", "generate-manifests"],
+      "options": {
+        "command": "echo \"dbx-components-mcp regeneration complete\""
+      }
+    },
     "build": {
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/packages/dbx-components-mcp"],
