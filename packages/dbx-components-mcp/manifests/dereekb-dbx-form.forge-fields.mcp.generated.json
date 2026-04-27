@@ -15,7 +15,9 @@
       "sourcePath": "template/login.ts",
       "example": "dbxForgeTextPasswordField({ key: 'password', required: true })",
       "properties": [],
-      "composesFromSlugs": ["text"],
+      "composesFromSlugs": [
+        "text"
+      ],
       "configInterface": "DbxForgeTextPasswordFieldConfig",
       "sourceLocation": {
         "file": "src/lib/forge/template/login.ts",
@@ -32,7 +34,9 @@
       "sourcePath": "template/login.ts",
       "example": "dbxForgeTextVerifyPasswordField({ key: 'verifyPassword' })",
       "properties": [],
-      "composesFromSlugs": ["password-field"],
+      "composesFromSlugs": [
+        "password-field"
+      ],
       "configInterface": "DbxForgeTextPasswordFieldConfig",
       "sourceLocation": {
         "file": "src/lib/forge/template/login.ts",
@@ -62,7 +66,10 @@
           "required": false
         }
       ],
-      "composesFromSlugs": ["password-field", "verify-password-field"],
+      "composesFromSlugs": [
+        "password-field",
+        "verify-password-field"
+      ],
       "configInterface": "DbxForgeTextPasswordWithVerifyFieldConfig",
       "sourceLocation": {
         "file": "src/lib/forge/template/login.ts",
@@ -98,7 +105,11 @@
           "required": false
         }
       ],
-      "composesFromSlugs": ["username-login-field", "password-field", "verify-password-field"],
+      "composesFromSlugs": [
+        "username-login-field",
+        "password-field",
+        "verify-password-field"
+      ],
       "configInterface": "DbxForgeUsernameLoginFieldsConfig",
       "sourceLocation": {
         "file": "src/lib/forge/template/login.ts",
@@ -128,7 +139,9 @@
           "required": false
         }
       ],
-      "composesFromSlugs": ["text"],
+      "composesFromSlugs": [
+        "text"
+      ],
       "configInterface": "DbxForgeUsernameLoginFieldUsernameConfigInput",
       "sourceLocation": {
         "file": "src/lib/forge/template/login.ts",
@@ -369,7 +382,10 @@
         }
       ],
       "suffix": "Wrapper",
-      "composesFromSlugs": ["toggle", "group"],
+      "composesFromSlugs": [
+        "toggle",
+        "group"
+      ],
       "configInterface": "DbxForgeToggleWrapperConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/wrapper/wrapper.ts",
@@ -430,7 +446,9 @@
         }
       ],
       "suffix": "Wrapper",
-      "composesFromSlugs": ["group"],
+      "composesFromSlugs": [
+        "group"
+      ],
       "configInterface": "DbxForgeExpandWrapperConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/wrapper/wrapper.ts",
@@ -1202,7 +1220,10 @@
         }
       ],
       "suffix": "Row",
-      "composesFromSlugs": ["date-time", "row"],
+      "composesFromSlugs": [
+        "date-time",
+        "row"
+      ],
       "configInterface": "DbxForgeDateRangeRowConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/value/date/daterange.field.ts",
@@ -1426,7 +1447,10 @@
         }
       ],
       "suffix": "Row",
-      "composesFromSlugs": ["date-time", "row"],
+      "composesFromSlugs": [
+        "date-time",
+        "row"
+      ],
       "configInterface": "DbxForgeDateTimeRangeRowConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/value/date/datetimerange.field.ts",
@@ -1614,7 +1638,9 @@
           "required": false
         }
       ],
-      "composesFromSlugs": ["number"],
+      "composesFromSlugs": [
+        "number"
+      ],
       "configInterface": "DbxForgeDollarAmountFieldConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/value/number/number.field.ts",
@@ -1808,7 +1834,9 @@
       "sourcePath": "field/value/text/text.additional.field.ts",
       "example": "dbxForgeNameField({ key: 'fullName', label: 'Full Name', required: true })",
       "properties": [],
-      "composesFromSlugs": ["text"],
+      "composesFromSlugs": [
+        "text"
+      ],
       "configInterface": "DbxForgeNameFieldConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/value/text/text.additional.field.ts",
@@ -1868,7 +1896,9 @@
           "required": false
         }
       ],
-      "composesFromSlugs": ["text"],
+      "composesFromSlugs": [
+        "text"
+      ],
       "configInterface": "DbxForgeEmailFieldConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/value/text/text.additional.field.ts",
@@ -1904,7 +1934,9 @@
           "required": false
         }
       ],
-      "composesFromSlugs": ["text"],
+      "composesFromSlugs": [
+        "text"
+      ],
       "configInterface": "DbxForgeCityFieldConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/value/text/text.additional.field.ts",
@@ -1928,7 +1960,9 @@
           "required": false
         }
       ],
-      "composesFromSlugs": ["text"],
+      "composesFromSlugs": [
+        "text"
+      ],
       "configInterface": "DbxForgeStateFieldConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/value/text/text.additional.field.ts",
@@ -1964,7 +1998,9 @@
           "required": false
         }
       ],
-      "composesFromSlugs": ["text"],
+      "composesFromSlugs": [
+        "text"
+      ],
       "configInterface": "DbxForgeCountryFieldConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/value/text/text.additional.field.ts",
@@ -2000,7 +2036,9 @@
           "required": false
         }
       ],
-      "composesFromSlugs": ["text"],
+      "composesFromSlugs": [
+        "text"
+      ],
       "configInterface": "DbxForgeZipCodeFieldConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/value/text/text.additional.field.ts",
@@ -2017,7 +2055,9 @@
       "sourcePath": "field/value/text/text.additional.field.ts",
       "example": "dbxForgeLatLngTextField({ key: 'coords', label: 'Coordinates' })",
       "properties": [],
-      "composesFromSlugs": ["text"],
+      "composesFromSlugs": [
+        "text"
+      ],
       "configInterface": "DbxForgeLatLngTextFieldConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/value/text/text.additional.field.ts",
@@ -2041,7 +2081,9 @@
           "required": false
         }
       ],
-      "composesFromSlugs": ["text"],
+      "composesFromSlugs": [
+        "text"
+      ],
       "configInterface": "DbxForgeAddressLineFieldConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/value/text/text.address.field.ts",
@@ -2113,7 +2155,13 @@
           "required": false
         }
       ],
-      "composesFromSlugs": ["address-line", "city", "state", "zip-code", "country"],
+      "composesFromSlugs": [
+        "address-line",
+        "city",
+        "state",
+        "zip-code",
+        "country"
+      ],
       "configInterface": "DbxForgeAddressFieldsConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/value/text/text.address.field.ts",
@@ -2192,7 +2240,10 @@
         }
       ],
       "suffix": "Group",
-      "composesFromSlugs": ["address-fields", "group"],
+      "composesFromSlugs": [
+        "address-fields",
+        "group"
+      ],
       "configInterface": "DbxForgeAddressGroupConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/value/text/text.address.field.ts",
@@ -2277,7 +2328,10 @@
         }
       ],
       "suffix": "Field",
-      "composesFromSlugs": ["address-group", "array-field"],
+      "composesFromSlugs": [
+        "address-group",
+        "array-field"
+      ],
       "configInterface": "DbxForgeAddressListFieldConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/value/text/text.address.field.ts",
@@ -2376,7 +2430,9 @@
         }
       ],
       "suffix": "Layout",
-      "composesFromSlugs": ["group"],
+      "composesFromSlugs": [
+        "group"
+      ],
       "configInterface": "DbxForgeFlexLayoutConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/wrapper/flex/flex.wrapper.ts",

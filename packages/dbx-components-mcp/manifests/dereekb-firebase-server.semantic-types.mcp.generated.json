@@ -13,7 +13,10 @@
       "kind": "semantic-type",
       "definition": "string",
       "baseType": "string",
-      "topics": ["string", "dereekb-firebase-server:test"],
+      "topics": [
+        "string",
+        "dereekb-firebase-server:test"
+      ],
       "notes": "An encoded JWT string representing a Firebase custom token created for testing.",
       "sourceLocation": {
         "file": "test/src/lib/firebase/firebase.admin.auth.ts",
@@ -27,7 +30,10 @@
       "kind": "semantic-type",
       "definition": "string",
       "baseType": "string",
-      "topics": ["string", "dereekb-firebase-server:test"],
+      "topics": [
+        "string",
+        "dereekb-firebase-server:test"
+      ],
       "examples": [
         {
           "code": "const host: FirebaseAdminTestEnvironmentHost = 'localhost:8080';"
@@ -46,7 +52,10 @@
       "kind": "semantic-type",
       "definition": "string",
       "baseType": "string",
-      "topics": ["string", "dereekb-firebase-server:mcp"],
+      "topics": [
+        "string",
+        "dereekb-firebase-server:mcp"
+      ],
       "notes": "A natural language summary of an MCP tool operation result.",
       "sourceLocation": {
         "file": "src/lib/nest/model/api.details.ts",

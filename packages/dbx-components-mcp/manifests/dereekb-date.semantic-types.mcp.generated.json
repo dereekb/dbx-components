@@ -13,7 +13,11 @@
       "kind": "semantic-type",
       "definition": "number",
       "baseType": "number",
-      "topics": ["numeric", "reference", "dereekb-date:cell"],
+      "topics": [
+        "numeric",
+        "reference",
+        "dereekb-date:cell"
+      ],
       "notes": "Index from 0 of which day this block represents.\n\nIt is easiest to think of DateCellIndexes as days on a calendar. An index of 0 means the entire first day for that timezone.\n\nIt is not the time from the startsAt time to the endsAt time for a period.",
       "sourceLocation": {
         "file": "src/lib/date/date.cell.ts",
@@ -27,7 +31,10 @@
       "kind": "semantic-type",
       "definition": "number",
       "baseType": "number",
-      "topics": ["date", "numeric"],
+      "topics": [
+        "date",
+        "numeric"
+      ],
       "notes": "Encodes a calendar date as a single YYYYMMDD integer for efficient date-day comparisons and grouping.\n\nThe encoding uses `year * 10000 + month * 100 + day`, so January 1st 2022 becomes `20220101`.\nThis allows simple numeric comparisons to determine chronological order between dates.",
       "sourceLocation": {
         "file": "src/lib/date/date.day.ts",
@@ -41,7 +48,10 @@
       "kind": "semantic-type",
       "definition": "number",
       "baseType": "number",
-      "topics": ["date", "numeric"],
+      "topics": [
+        "date",
+        "numeric"
+      ],
       "notes": "A Week/Year number combination used to refer to a specific Week on a specific Year.\n\n202201 is January 2022",
       "sourceLocation": {
         "file": "src/lib/date/date.week.ts",
@@ -55,7 +65,10 @@
       "kind": "semantic-type",
       "definition": "string",
       "baseType": "string",
-      "topics": ["date", "string"],
+      "topics": [
+        "date",
+        "string"
+      ],
       "notes": "String-version of a YearWeekCode. Usually used as a",
       "sourceLocation": {
         "file": "src/lib/date/date.week.ts",
@@ -69,7 +82,10 @@
       "kind": "semantic-type",
       "definition": "number",
       "baseType": "number",
-      "topics": ["date", "numeric"],
+      "topics": [
+        "date",
+        "numeric"
+      ],
       "notes": "The week in the year. Starts from 1.",
       "sourceLocation": {
         "file": "src/lib/date/date.week.ts",
@@ -83,7 +99,10 @@
       "kind": "semantic-type",
       "definition": "string",
       "baseType": "string",
-      "topics": ["string", "dereekb-date:rrule"],
+      "topics": [
+        "string",
+        "dereekb-date:rrule"
+      ],
       "notes": "Denotes a single RRule rules string.",
       "sourceLocation": {
         "file": "src/lib/rrule/date.rrule.parse.ts",
@@ -97,7 +116,10 @@
       "kind": "semantic-type",
       "definition": "string",
       "baseType": "string",
-      "topics": ["string", "dereekb-date:rrule"],
+      "topics": [
+        "string",
+        "dereekb-date:rrule"
+      ],
       "notes": "RRule property name. i.e. DTSTART, RRULE, etc.",
       "sourceLocation": {
         "file": "src/lib/rrule/date.rrule.parse.ts",
@@ -111,7 +133,10 @@
       "kind": "semantic-type",
       "definition": "string",
       "baseType": "string",
-      "topics": ["string", "dereekb-date:rrule"],
+      "topics": [
+        "string",
+        "dereekb-date:rrule"
+      ],
       "notes": "Set of RRuleParams, separated by a \";\".\n\nThe first value in this set is the Type of RRule.",
       "sourceLocation": {
         "file": "src/lib/rrule/date.rrule.parse.ts",
@@ -125,7 +150,10 @@
       "kind": "semantic-type",
       "definition": "string",
       "baseType": "string",
-      "topics": ["string", "dereekb-date:rrule"],
+      "topics": [
+        "string",
+        "dereekb-date:rrule"
+      ],
       "notes": "Single Param string. Formatted as <ParamName>=<ParamValue>",
       "sourceLocation": {
         "file": "src/lib/rrule/date.rrule.parse.ts",
@@ -139,7 +167,10 @@
       "kind": "semantic-type",
       "definition": "string",
       "baseType": "string",
-      "topics": ["string", "dereekb-date:rrule"],
+      "topics": [
+        "string",
+        "dereekb-date:rrule"
+      ],
       "notes": "A single raw value from an RRule value set.",
       "sourceLocation": {
         "file": "src/lib/rrule/date.rrule.parse.ts",
@@ -153,7 +184,10 @@
       "kind": "semantic-type",
       "definition": "string",
       "baseType": "string",
-      "topics": ["string", "dereekb-date:rrule"],
+      "topics": [
+        "string",
+        "dereekb-date:rrule"
+      ],
       "notes": "RFC string for an RRuleStringLineSet.",
       "sourceLocation": {
         "file": "src/lib/rrule/date.rrule.parse.ts",
@@ -167,7 +201,11 @@
       "kind": "semantic-type",
       "definition": "string",
       "baseType": "string",
-      "topics": ["date", "string", "dereekb-date:rrule"],
+      "topics": [
+        "date",
+        "string",
+        "dereekb-date:rrule"
+      ],
       "notes": "Date formatted like \"20210611\".\n\nhttps://datatracker.ietf.org/doc/html/rfc5545#section-3.3.4",
       "sourceLocation": {
         "file": "src/lib/rrule/date.rrule.parse.ts",
@@ -181,7 +219,11 @@
       "kind": "semantic-type",
       "definition": "string",
       "baseType": "string",
-      "topics": ["date", "string", "dereekb-date:rrule"],
+      "topics": [
+        "date",
+        "string",
+        "dereekb-date:rrule"
+      ],
       "notes": "Date formatted like \"20210611T110000\" or \"20210611T110000Z\".\n\nhttps://datatracker.ietf.org/doc/html/rfc5545#section-3.3.5",
       "sourceLocation": {
         "file": "src/lib/rrule/date.rrule.parse.ts",

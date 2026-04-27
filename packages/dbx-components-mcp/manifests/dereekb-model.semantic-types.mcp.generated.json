@@ -13,7 +13,10 @@
       "kind": "semantic-type",
       "definition": "string",
       "baseType": "string",
-      "topics": ["string", "dereekb-model:website-link"],
+      "topics": [
+        "string",
+        "dereekb-model:website-link"
+      ],
       "notes": "MIME type string for a file link (e.g., \"image/png\", \"application/pdf\").",
       "sourceLocation": {
         "file": "src/lib/data/website/link.file.ts",
@@ -27,7 +30,10 @@
       "kind": "semantic-type",
       "definition": "string",
       "baseType": "string",
-      "topics": ["string", "dereekb-model:website-link"],
+      "topics": [
+        "string",
+        "dereekb-model:website-link"
+      ],
       "notes": "Display name for a file link. Has no pattern restriction.",
       "sourceLocation": {
         "file": "src/lib/data/website/link.file.ts",
@@ -41,7 +47,10 @@
       "kind": "semantic-type",
       "definition": "string",
       "baseType": "string",
-      "topics": ["string", "dereekb-model:website-link"],
+      "topics": [
+        "string",
+        "dereekb-model:website-link"
+      ],
       "notes": "The data payload of a file link, typically a URL pointing to the file.",
       "sourceLocation": {
         "file": "src/lib/data/website/link.file.ts",
@@ -55,7 +64,10 @@
       "kind": "semantic-type",
       "definition": "string",
       "baseType": "string",
-      "topics": ["string", "dereekb-model:website-link"],
+      "topics": [
+        "string",
+        "dereekb-model:website-link"
+      ],
       "notes": "Pipe-separated or raw string encoding of website link data.",
       "sourceLocation": {
         "file": "src/lib/data/website/link.ts",
@@ -69,7 +81,11 @@
       "kind": "semantic-type",
       "definition": "string",
       "baseType": "string",
-      "topics": ["identifier", "string", "dereekb-model:social"],
+      "topics": [
+        "identifier",
+        "string",
+        "dereekb-model:social"
+      ],
       "notes": "Facebook profile identifier.",
       "sourceLocation": {
         "file": "src/lib/data/website/link.website.ts",
@@ -83,7 +99,11 @@
       "kind": "semantic-type",
       "definition": "string",
       "baseType": "string",
-      "topics": ["identifier", "string", "dereekb-model:social"],
+      "topics": [
+        "identifier",
+        "string",
+        "dereekb-model:social"
+      ],
       "notes": "Instagram profile identifier.",
       "sourceLocation": {
         "file": "src/lib/data/website/link.website.ts",
@@ -97,7 +117,11 @@
       "kind": "semantic-type",
       "definition": "string",
       "baseType": "string",
-      "topics": ["identifier", "string", "dereekb-model:social"],
+      "topics": [
+        "identifier",
+        "string",
+        "dereekb-model:social"
+      ],
       "notes": "Twitter/X profile identifier.",
       "sourceLocation": {
         "file": "src/lib/data/website/link.website.ts",
@@ -111,7 +135,11 @@
       "kind": "semantic-type",
       "definition": "string",
       "baseType": "string",
-      "topics": ["identifier", "string", "dereekb-model:social"],
+      "topics": [
+        "identifier",
+        "string",
+        "dereekb-model:social"
+      ],
       "notes": "TikTok profile identifier.",
       "sourceLocation": {
         "file": "src/lib/data/website/link.website.ts",
@@ -125,7 +153,11 @@
       "kind": "semantic-type",
       "definition": "string",
       "baseType": "string",
-      "topics": ["identifier", "string", "dereekb-model:social"],
+      "topics": [
+        "identifier",
+        "string",
+        "dereekb-model:social"
+      ],
       "notes": "Snapchat profile identifier.",
       "sourceLocation": {
         "file": "src/lib/data/website/link.website.ts",
@@ -139,7 +171,11 @@
       "kind": "semantic-type",
       "definition": "string",
       "baseType": "string",
-      "topics": ["identifier", "string", "dereekb-model:social"],
+      "topics": [
+        "identifier",
+        "string",
+        "dereekb-model:social"
+      ],
       "notes": "YouTube profile identifier.",
       "sourceLocation": {
         "file": "src/lib/data/website/link.website.ts",
@@ -153,7 +189,11 @@
       "kind": "semantic-type",
       "definition": "string",
       "baseType": "string",
-      "topics": ["identifier", "string", "dereekb-model:social"],
+      "topics": [
+        "identifier",
+        "string",
+        "dereekb-model:social"
+      ],
       "notes": "PayPal profile identifier.",
       "sourceLocation": {
         "file": "src/lib/data/website/link.website.ts",
@@ -167,7 +207,11 @@
       "kind": "semantic-type",
       "definition": "string",
       "baseType": "string",
-      "topics": ["identifier", "string", "dereekb-model:social"],
+      "topics": [
+        "identifier",
+        "string",
+        "dereekb-model:social"
+      ],
       "notes": "Cash App profile identifier.",
       "sourceLocation": {
         "file": "src/lib/data/website/link.website.ts",
@@ -181,7 +225,11 @@
       "kind": "semantic-type",
       "definition": "string",
       "baseType": "string",
-      "topics": ["identifier", "string", "dereekb-model:social"],
+      "topics": [
+        "identifier",
+        "string",
+        "dereekb-model:social"
+      ],
       "notes": "Venmo profile identifier.",
       "sourceLocation": {
         "file": "src/lib/data/website/link.website.ts",
@@ -195,7 +243,11 @@
       "kind": "semantic-type",
       "definition": "string",
       "baseType": "string",
-      "topics": ["identifier", "string", "dereekb-model:social"],
+      "topics": [
+        "identifier",
+        "string",
+        "dereekb-model:social"
+      ],
       "notes": "Spotify profile identifier.",
       "sourceLocation": {
         "file": "src/lib/data/website/link.website.ts",
@@ -209,7 +261,11 @@
       "kind": "semantic-type",
       "definition": "string",
       "baseType": "string",
-      "topics": ["identifier", "string", "dereekb-model:auth"],
+      "topics": [
+        "identifier",
+        "string",
+        "dereekb-model:auth"
+      ],
       "notes": "A granted role for a model.",
       "sourceLocation": {
         "file": "src/lib/service/permission/role.ts",
@@ -223,7 +279,11 @@
       "kind": "semantic-type",
       "definition": "string",
       "baseType": "string",
-      "topics": ["identifier", "string", "dereekb-model:sync"],
+      "topics": [
+        "identifier",
+        "string",
+        "dereekb-model:sync"
+      ],
       "notes": "A unique identifier for an entity on a specific server.",
       "sourceLocation": {
         "file": "src/lib/service/sync/sync.entity.ts",
@@ -237,7 +297,11 @@
       "kind": "semantic-type",
       "definition": "string",
       "baseType": "string",
-      "topics": ["identifier", "string", "dereekb-model:sync"],
+      "topics": [
+        "identifier",
+        "string",
+        "dereekb-model:sync"
+      ],
       "notes": "A common type for an entity that is shared/used between all systems for an entity that should be synchronized.",
       "sourceLocation": {
         "file": "src/lib/service/sync/sync.entity.ts",
@@ -251,7 +315,11 @@
       "kind": "semantic-type",
       "definition": "string",
       "baseType": "string",
-      "topics": ["identifier", "string", "dereekb-model:sync"],
+      "topics": [
+        "identifier",
+        "string",
+        "dereekb-model:sync"
+      ],
       "notes": "A common identifier for an entity that is shared/used between all systems for an entity that should be synchronized.\n\nThis identifier should be used for retrieving a similar entity from any server.",
       "sourceLocation": {
         "file": "src/lib/service/sync/sync.entity.ts",
@@ -265,7 +333,10 @@
       "kind": "semantic-type",
       "definition": "string",
       "baseType": "string",
-      "topics": ["string", "dereekb-model:sync"],
+      "topics": [
+        "string",
+        "dereekb-model:sync"
+      ],
       "notes": "English name for a SyncSource.\n\nIs not used as a key.",
       "sourceLocation": {
         "file": "src/lib/service/sync/sync.source.ts",
@@ -279,7 +350,11 @@
       "kind": "semantic-type",
       "definition": "string",
       "baseType": "string",
-      "topics": ["identifier", "string", "dereekb-model:sync"],
+      "topics": [
+        "identifier",
+        "string",
+        "dereekb-model:sync"
+      ],
       "notes": "A unique identifier for a SyncSource.",
       "sourceLocation": {
         "file": "src/lib/service/sync/sync.source.ts",
