@@ -987,12 +987,12 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     sourcePath: 'field/wrapper/flex/flex.wrapper.ts',
     composesFromSlugs: ['group'],
     config: {
-      fieldConfigs: { name: 'fieldConfigs', type: '(FieldDef | { field: FieldDef; size: DbxFlexSize })[]', description: 'Fields or field+size pairs.', required: true },
+      fields: { name: 'fields', type: '(FieldDef | { field: FieldDef; size: DbxFlexSize })[]', description: 'Fields or field+size pairs. Can also be passed directly as the sole argument.', required: false },
       breakpoint: { name: 'breakpoint', type: 'ScreenMediaWidthType', description: 'Breakpoint below which fields stack vertically.', required: false },
       size: { name: 'size', type: 'DbxFlexSize', description: 'Default flex size for fields without their own.', required: false, default: 2 }
     },
-    example: `dbxForgeFlexLayout({ fieldConfigs: [dbxForgeTextField({ key: 'a' }), dbxForgeTextField({ key: 'b' })] })`,
-    minimalExample: `dbxForgeFlexLayout({ fieldConfigs: [] })`
+    example: `dbxForgeFlexLayout({ fields: [dbxForgeTextField({ key: 'a' }), dbxForgeTextField({ key: 'b' })] })`,
+    minimalExample: `dbxForgeFlexLayout({ fields: [] })`
   },
   {
     slug: 'password-with-verify-fields',

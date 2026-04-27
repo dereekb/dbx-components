@@ -2413,8 +2413,14 @@
       "arrayOutput": "no",
       "description": "Creates a responsive flex layout container that arranges child fields horizontally\nwith configurable sizing, breakpoints, and responsive behavior.\n\nEach child field gets a `dbx-flex-N` CSS class applied (merged with any existing className).\nThe container hosts the `dbx-forge-flex` wrapper, which renders the `dbxFlexGroup`\ndirective for responsive breakpoint handling.\n\nA `container` is used (not a `group`) because flex layout is purely visual —\nthe wrapped fields should remain at the same level in the form value, not be\nnested under an extra object.\n\nThis is the forge equivalent of {@link formlyFlexLayoutWrapper}.",
       "sourcePath": "field/wrapper/flex/flex.wrapper.ts",
-      "example": "// Simple: all fields get default size (2)\ndbxForgeFlexLayout([dbxForgeCityField({}), dbxForgeStateField({}), dbxForgeZipCodeField({})])\n\n// Resulting form value shape (flat — no wrapper property):\n// { city: '...', state: '...', zip: '...' }\n\n// With per-field sizing and breakpoint\ndbxForgeFlexLayout([\n  { field: dbxForgeCityField({}), size: 4 },\n  dbxForgeStateField({}),\n  dbxForgeZipCodeField({})\n], { breakpoint: 'small', size: 1 })\n\n// Full config\ndbxForgeFlexLayout([...fields], { breakpoint: 'large', breakToColumn: true, relative: true, size: 1 })",
+      "example": "// Simple: all fields get default size (2)\ndbxForgeFlexLayout({ fields: [dbxForgeCityField({}), dbxForgeStateField({}), dbxForgeZipCodeField({})] })\n\n// Resulting form value shape (flat — no wrapper property):\n// { city: '...', state: '...', zip: '...' }\n\n// With per-field sizing and breakpoint\ndbxForgeFlexLayout({\n  breakpoint: 'small',\n  size: 1,\n  fields: [\n    { field: dbxForgeCityField({}), size: 4 },\n    dbxForgeStateField({}),\n    dbxForgeZipCodeField({})\n  ]\n})\n\n// Full config\ndbxForgeFlexLayout({ breakpoint: 'large', breakToColumn: true, relative: true, size: 1, fields: [...] })",
       "properties": [
+        {
+          "name": "fields",
+          "type": "readonly (FieldDef<unknown> | DbxForgeFlexLayoutFieldConfig)[]",
+          "description": "Fields to include in the layout. Each entry may be a plain {@link FieldDef}\nor a {@link DbxForgeFlexLayoutFieldConfig} with a per-field size override.",
+          "required": false
+        },
         {
           "name": "size",
           "type": "DbxFlexSize",
@@ -2429,7 +2435,7 @@
       "configInterface": "DbxForgeFlexLayoutConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/wrapper/flex/flex.wrapper.ts",
-        "line": 115
+        "line": 131
       }
     },
     {
