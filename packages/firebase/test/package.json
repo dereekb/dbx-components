@@ -8,8 +8,8 @@
     "@dereekb/rxjs": "13.10.0",
     "@dereekb/util": "13.10.0",
     "@firebase/rules-unit-testing": "5.0.0",
-    "date-fns": "^4.0.0",
-    "firebase": "^12.12.0",
-    "rxjs": "^7.8.0"
+    "date-fns": "^4.1.0",
+    "firebase": "^12.12.1",
+    "rxjs": "^7.8.2"
   }
 }

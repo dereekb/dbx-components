@@ -7,9 +7,9 @@
     "@dereekb/nestjs": "13.10.0",
     "@dereekb/rxjs": "13.10.0",
     "@dereekb/util": "13.10.0",
-    "@nestjs/common": "^11.1.17",
+    "@nestjs/common": "^11.1.19",
     "@nestjs/config": "^4.0.4",
-    "express": "^5.0.0",
-    "openai": "^6.25.0"
+    "express": "^5.2.1",
+    "openai": "^6.34.0"
   }
 }

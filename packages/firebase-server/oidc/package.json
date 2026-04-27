@@ -11,11 +11,11 @@
     "@dereekb/rxjs": "13.10.0",
     "@dereekb/util": "13.10.0",
     "@dereekb/zoho": "13.10.0",
-    "@nestjs/common": "^11.1.17",
+    "@nestjs/common": "^11.1.19",
     "@nestjs/config": "^4.0.4",
-    "express": "^5.0.0",
+    "express": "^5.2.1",
     "firebase-admin": "^13.8.0",
-    "nanoid": "^5.1.7",
-    "oidc-provider": "^9.7.0"
+    "nanoid": "^5.1.9",
+    "oidc-provider": "^9.8.2"
   }
 }
