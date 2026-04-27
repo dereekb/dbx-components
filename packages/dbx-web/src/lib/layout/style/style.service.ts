@@ -23,9 +23,7 @@ export class DbxStyleService implements Destroyable {
   private readonly _styleClassSuffix = new BehaviorSubject<Maybe<DbxStyleClassCleanSuffix>>(undefined);
 
   readonly config$ = this._config.pipe(
-    switchMap((x) => {
-      return x == null ? this._defaultConfig : x;
-    }),
+    switchMap((x) => x ?? this._defaultConfig),
     filterMaybe(),
     distinctUntilChanged(),
     shareReplay(1)

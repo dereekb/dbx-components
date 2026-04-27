@@ -30,7 +30,7 @@ export interface ZohoSignPageFilter {
 /**
  * Known sortable column names for Zoho Sign list endpoints, with a `string` fallback for custom columns.
  */
-export type ZohoSignSortColumn = 'request_name' | 'folder_name' | 'owner_full_name' | 'recipient_email' | 'form_name' | 'created_time' | string;
+export type ZohoSignSortColumn = 'request_name' | 'folder_name' | 'owner_full_name' | 'recipient_email' | 'form_name' | 'created_time' | (string & {});
 
 /**
  * Sort direction for Zoho Sign list queries.

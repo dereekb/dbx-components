@@ -506,25 +506,21 @@ export function storageFileUploadFiles(input: StorageFileUploadFilesInput): Stor
         };
 
         // upload the file, subscribe to the progress
-        try {
-          uploadHandler
-            .uploadFile(file)
-            .then((uploadInstance) => {
-              // add to active file indexes
-              onStartFileUpload(index, uploadInstance);
+        uploadHandler
+          .uploadFile(file)
+          .then((uploadInstance) => {
+            // add to active file indexes
+            onStartFileUpload(index, uploadInstance);
 
-              const uploadSubscription = uploadInstance.upload.subscribe({
-                next: updateFileUploadProgress,
-                error: updateFileUploadProgressWithUncaughtError,
-                complete: completeFileUploadProgress
-              });
+            const uploadSubscription = uploadInstance.upload.subscribe({
+              next: updateFileUploadProgress,
+              error: updateFileUploadProgressWithUncaughtError,
+              complete: completeFileUploadProgress
+            });
 
-              multiUploadsSubscriptionObject.addSubs(uploadSubscription);
-            })
-            .catch(updateFileUploadProgressWithUncaughtError);
-        } catch (error) {
-          updateFileUploadProgressWithUncaughtError(error);
-        }
+            multiUploadsSubscriptionObject.addSubs(uploadSubscription);
+          })
+          .catch(updateFileUploadProgressWithUncaughtError);
       });
     }
 

@@ -167,7 +167,7 @@ export class DbxForgeDateTimeFieldComponent {
   // MARK: Form controls
   readonly dateCtrl = new FormControl<Maybe<Date>>(null);
   readonly timeCtrl = new FormControl<Maybe<ReadableTimeString>>(null, {
-    validators: [Validators.pattern(/^(now)$|^([0-9]|(0[0-9])|(1[0-9])|(2[0-3]))(:)?([0-5][0-9])?(\s)?([apAP][Mm])?(\\s)*$/)]
+    validators: [Validators.pattern(/^(now)$|^(\d|(0\d)|(1\d)|(2[0-3]))(:)?([0-5]\d)?(\s)?([apAP][Mm])?(\\s)*$/)]
   });
 
   // MARK: Internal signals
@@ -301,7 +301,7 @@ export class DbxForgeDateTimeFieldComponent {
       if (raw == null) return undefined;
       const parser = dbxDateTimeInputValueParseFactory(this.valueMode(), timezoneInstance);
       const result = parser(raw as Maybe<Date | string | number>);
-      if (result instanceof Date && isNaN(result.getTime())) return undefined;
+      if (result instanceof Date && Number.isNaN(result.getTime())) return undefined;
       return result;
     }),
     throttleTime(20, undefined, { leading: true, trailing: true }),
@@ -399,7 +399,7 @@ export class DbxForgeDateTimeFieldComponent {
               const val = config.fieldState.value();
               const date = safeToJsDate(val as any);
               // Reject Invalid Date values (e.g. from empty string sibling fields)
-              return date instanceof Date && !isNaN(date.getTime()) ? date : null;
+              return date instanceof Date && !Number.isNaN(date.getTime()) ? date : null;
             }),
             distinctUntilChanged()
           );
@@ -549,11 +549,7 @@ export class DbxForgeDateTimeFieldComponent {
     })
   ).pipe(shareReplay(1));
 
-  readonly hasError$ = this.currentErrorMessage$.pipe(
-    map((x) => Boolean(x)),
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
+  readonly hasError$ = this.currentErrorMessage$.pipe(map(Boolean), distinctUntilChanged(), shareReplay(1));
 
   // Show clear button
   readonly showClearButton$ = this.hasEmptyDisplayValue$.pipe(
@@ -579,7 +575,7 @@ export class DbxForgeDateTimeFieldComponent {
         const parser = dbxDateTimeInputValueParseFactory(this.valueMode(), this.timezoneInstance());
         const date = parser(raw as Maybe<Date | string | number>);
 
-        if (date && !(date instanceof Date && isNaN(date.getTime()))) {
+        if (date && !(date instanceof Date && Number.isNaN(date.getTime()))) {
           result = startOfDay(date);
         }
       }
@@ -710,7 +706,7 @@ export class DbxForgeDateTimeFieldComponent {
 
       const parser = dbxDateTimeInputValueParseFactory(this.valueMode(), this.timezoneInstance());
       const date = parser(raw as Maybe<Date | string | number>);
-      if (!date || (date instanceof Date && isNaN(date.getTime()))) return;
+      if (!date || (date instanceof Date && Number.isNaN(date.getTime()))) return;
 
       const currentDateCtrl = this.dateCtrl.value;
       if (!currentDateCtrl || !isSameDateDay(currentDateCtrl, date)) {

@@ -10,7 +10,7 @@ export type ZohoDeskAgentStatus = 'ACTIVE' | 'DISABLED';
 /**
  * Agent role permission type in Zoho Desk.
  */
-export type ZohoDeskAgentRolePermissionType = 'Light' | 'AgentPublic' | 'Custom' | 'AgentPersonal' | 'Admin' | string;
+export type ZohoDeskAgentRolePermissionType = 'Light' | 'AgentPublic' | 'Custom' | 'AgentPersonal' | 'Admin' | (string & {});
 
 /**
  * Related entities that can be expanded when fetching agents.

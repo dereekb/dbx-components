@@ -65,7 +65,7 @@ describe('StorageObjectUtility', () => {
       mockStorage.setItem('a', '1');
       mockStorage.setItem('b', '2');
       const keys = StorageObjectUtility.allKeysFromStorageObject(mockStorage);
-      expect(keys.sort()).toEqual(['a', 'b'].sort());
+      expect(keys.sort((a, b) => a.localeCompare(b))).toEqual(['a', 'b'].sort((a, b) => a.localeCompare(b)));
     });
 
     it('should filter keys by prefix if provided.', () => {
@@ -73,7 +73,7 @@ describe('StorageObjectUtility', () => {
       mockStorage.setItem('test_b', '2');
       mockStorage.setItem('other_c', '3');
       const keys = StorageObjectUtility.allKeysFromStorageObject(mockStorage, 'test_');
-      expect(keys.sort()).toEqual(['test_a', 'test_b'].sort());
+      expect(keys.sort((a, b) => a.localeCompare(b))).toEqual(['test_a', 'test_b'].sort((a, b) => a.localeCompare(b)));
     });
 
     it('should return an empty array if prefix matches no keys.', () => {
@@ -87,10 +87,10 @@ describe('StorageObjectUtility', () => {
       mockStorage.setItem('match_a', '1');
       mockStorage.setItem('match_b', '2');
       let keys = StorageObjectUtility.allKeysFromStorageObject(mockStorage, 'match_');
-      expect(keys.sort()).toEqual(['match_a', 'match_b'].sort());
+      expect(keys.sort((a, b) => a.localeCompare(b))).toEqual(['match_a', 'match_b'].sort((a, b) => a.localeCompare(b)));
 
       keys = StorageObjectUtility.allKeysFromStorageObject(mockStorage, '');
-      expect(keys.sort()).toEqual(['match_a', 'match_b'].sort());
+      expect(keys.sort((a, b) => a.localeCompare(b))).toEqual(['match_a', 'match_b'].sort((a, b) => a.localeCompare(b)));
     });
 
     it('should filter out null keys returned by storageObject.key().', () => {
@@ -107,7 +107,7 @@ describe('StorageObjectUtility', () => {
 
       const keys = StorageObjectUtility.allKeysFromStorageObject(mockStorage);
       // Only 'a' and 'b' should be returned as 'null' is filtered out by hasNonNullValue
-      expect(keys.sort()).toEqual(['a', 'b'].sort());
+      expect(keys.sort((a, b) => a.localeCompare(b))).toEqual(['a', 'b'].sort((a, b) => a.localeCompare(b)));
 
       // Restore original properties if needed, though beforeEach handles mockStorage re-creation
     });

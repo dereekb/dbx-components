@@ -266,10 +266,10 @@ export class DbxForgeDateRangeFieldComponent {
 
       if (timeValue) {
         const [hoursStr, minutesStr] = timeValue.split(':');
-        const hours = parseInt(hoursStr, 10);
-        const minutes = parseInt(minutesStr, 10);
+        const hours = Number.parseInt(hoursStr, 10);
+        const minutes = Number.parseInt(minutesStr, 10);
 
-        if (!isNaN(hours) && !isNaN(minutes)) {
+        if (!Number.isNaN(hours) && !Number.isNaN(minutes)) {
           result.setHours(hours, minutes, 0, 0);
         }
       }

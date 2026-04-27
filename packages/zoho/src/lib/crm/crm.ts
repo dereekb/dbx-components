@@ -246,7 +246,7 @@ export interface ZohoCrmRecordEmailMetadata {
   status: ZohoCrmRecordEmailMetadataStatus[];
 }
 
-export type ZohoCrmRecordEmailMetadataStatusType = 'sent' | string;
+export type ZohoCrmRecordEmailMetadataStatusType = 'sent' | (string & {});
 
 export interface ZohoCrmRecordEmailMetadataStatus {
   type: ZohoCrmRecordEmailMetadataStatusType;

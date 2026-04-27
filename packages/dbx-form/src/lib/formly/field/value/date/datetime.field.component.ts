@@ -460,7 +460,15 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
   get timeMode(): DbxDateTimeFieldTimeMode {
     const dateValuesOnly = this.valueMode === DbxDateTimeValueMode.DAY_STRING;
 
-    return dateValuesOnly ? DbxDateTimeFieldTimeMode.NONE : this.timeOnly ? DbxDateTimeFieldTimeMode.REQUIRED : (this.dateTimeField.timeMode ?? DbxDateTimeFieldTimeMode.REQUIRED);
+    if (dateValuesOnly) {
+      return DbxDateTimeFieldTimeMode.NONE;
+    }
+
+    if (this.timeOnly) {
+      return DbxDateTimeFieldTimeMode.REQUIRED;
+    }
+
+    return this.dateTimeField.timeMode ?? DbxDateTimeFieldTimeMode.REQUIRED;
   }
 
   get isDateRequired(): boolean {

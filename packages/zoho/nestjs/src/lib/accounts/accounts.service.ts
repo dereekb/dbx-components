@@ -179,7 +179,7 @@ export function fileZohoAccountsAccessTokenCacheService(filename: string = DEFAU
   let loadedTokens: Maybe<ZohoAccountsAccessTokenCacheRecord> = null;
 
   async function loadTokens(): Promise<ZohoAccountsAccessTokenCacheRecord> {
-    return loadedTokens ? loadedTokens : ((await readTokenFile()) ?? {});
+    return loadedTokens ?? (await readTokenFile()) ?? {};
   }
 
   function readTokenFile(): Promise<Maybe<ZohoAccountsAccessTokenCacheRecord>> {

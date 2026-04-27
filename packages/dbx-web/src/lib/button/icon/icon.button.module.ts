@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-deprecated -- this module wraps the deprecated component */
 import { NgModule } from '@angular/core';
 import { DbxIconButtonComponent } from './icon.button.component';
 

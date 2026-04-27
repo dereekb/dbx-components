@@ -29,7 +29,7 @@ export type DbxActionWorkOrWorkProgress = boolean | DbxActionWorkProgress;
  * @returns The working progress value.
  */
 export function dbxActionWorkProgress(workOrWorkProgress: Maybe<DbxActionWorkOrWorkProgress>[], progressPercent?: Maybe<DbxActionWorkProgress>) {
-  const workingValue = workOrWorkProgress.reduce((acc, val) => acc ?? val);
+  const workingValue = workOrWorkProgress.reduce<Maybe<DbxActionWorkOrWorkProgress>>((acc, val) => acc ?? val, undefined);
   const isWorking = workingValue != null && workingValue !== false;
 
   let workingProgress: DbxActionWorkOrWorkProgress;

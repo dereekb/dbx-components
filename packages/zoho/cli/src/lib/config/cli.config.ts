@@ -224,8 +224,16 @@ function mergeOutputConfig(existing: Maybe<ZohoCliOutputConfig>, updates: ZohoCl
   return {
     dumpDir: 'dumpDir' in updates ? updates.dumpDir : existing?.dumpDir,
     pick: 'pick' in updates ? updates.pick : existing?.pick,
-    commands: 'commands' in updates ? (updates.commands ? { ...existing?.commands, ...updates.commands } : undefined) : existing?.commands
+    commands: mergeOutputCommandsConfig(existing?.commands, updates)
   };
+}
+
+function mergeOutputCommandsConfig(existing: ZohoCliOutputConfig['commands'], updates: ZohoCliOutputConfig): ZohoCliOutputConfig['commands'] {
+  if (!('commands' in updates)) {
+    return existing;
+  }
+
+  return updates.commands ? { ...existing, ...updates.commands } : undefined;
 }
 
 /**

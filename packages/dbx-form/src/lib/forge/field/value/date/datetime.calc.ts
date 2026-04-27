@@ -389,7 +389,14 @@ export function navigateDate(currentDate: Date, step: KeyboardStepResult, config
     ...config
   });
 
-  const nextDate = instance.isInSchedule(newDate) ? newDate : instance.findNextAvailableDayInSchedule(newDate, step.direction === 1 ? 'future' : 'past');
+  let nextDate: Maybe<Date>;
+
+  if (instance.isInSchedule(newDate)) {
+    nextDate = newDate;
+  } else {
+    const direction = step.direction === 1 ? 'future' : 'past';
+    nextDate = instance.findNextAvailableDayInSchedule(newDate, direction);
+  }
   let result: Maybe<Date> = undefined;
 
   if (nextDate != null) {

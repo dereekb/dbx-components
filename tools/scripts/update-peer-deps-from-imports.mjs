@@ -147,7 +147,7 @@ function resolveVersion(pkgName) {
 function sortKeys(obj) {
   const sorted = {};
 
-  for (const key of Object.keys(obj).sort()) {
+  for (const key of Object.keys(obj).sort((a, b) => a.localeCompare(b))) {
     sorted[key] = obj[key];
   }
 

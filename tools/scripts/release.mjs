@@ -209,7 +209,7 @@ if (!dryRun) {
 
 // Build the commit message with a detailed body listing each individual commit
 const commitSubject = `release($workspace): v${nextVersion} release`;
-const commitLog = execSync(`git log ${fromTag}..HEAD --format="%s%n%n%b" --no-merges`, {
+const commitLog = execFileSync('git', ['log', `${fromTag}..HEAD`, '--format=%s%n%n%b', '--no-merges'], {
   encoding: 'utf-8'
 }).trim();
 
