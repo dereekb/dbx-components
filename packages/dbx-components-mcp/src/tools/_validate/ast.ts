@@ -15,7 +15,7 @@
  * convention.
  */
 
-import { Node, Project, SyntaxKind, type ArrayLiteralExpression, type ObjectLiteralExpression, type SourceFile, type TypeNode, type VariableDeclaration } from 'ts-morph';
+import { Node, Project, SyntaxKind, type ArrayLiteralExpression, type ImportDeclaration, type ObjectLiteralExpression, type SourceFile, type TypeNode, type VariableDeclaration } from 'ts-morph';
 import type { InspectedFile } from './inspection.types.js';
 
 const COMPONENT_VIRTUAL_PREFIX = '__component__/';
@@ -307,20 +307,24 @@ export function collectTypeofReferences(node: TypeNode, out: string[]): void {
  * @param sources - the source files to scan
  * @returns the set of trusted identifier names
  */
+function collectTrustedIdentifiersFromImport(imp: ImportDeclaration, out: Set<string>): void {
+  const spec = imp.getModuleSpecifierValue();
+  if (!spec.startsWith('@dereekb/')) return;
+  for (const named of imp.getNamedImports()) {
+    const alias = named.getAliasNode();
+    out.add(alias ? alias.getText() : named.getNameNode().getText());
+  }
+  const namespace = imp.getNamespaceImport();
+  if (namespace) {
+    out.add(namespace.getText());
+  }
+}
+
 export function collectTrustedExternalIdentifiers(sources: readonly SourceFile[]): ReadonlySet<string> {
   const out = new Set<string>();
   for (const sf of sources) {
     for (const imp of sf.getImportDeclarations()) {
-      const spec = imp.getModuleSpecifierValue();
-      if (!spec.startsWith('@dereekb/')) continue;
-      for (const named of imp.getNamedImports()) {
-        const alias = named.getAliasNode();
-        out.add(alias ? alias.getText() : named.getNameNode().getText());
-      }
-      const namespace = imp.getNamespaceImport();
-      if (namespace) {
-        out.add(namespace.getText());
-      }
+      collectTrustedIdentifiersFromImport(imp, out);
     }
   }
   return out;

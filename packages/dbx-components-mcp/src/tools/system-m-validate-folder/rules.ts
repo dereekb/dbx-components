@@ -116,6 +116,46 @@ function checkContent(inspection: SystemFolderInspection, extracted: ExtractedSy
 }
 
 // MARK: Triple pairing
+interface CheckInterfacePairingOptions {
+  readonly folderPath: string;
+  readonly iface: ExtractedSystemFile['dataInterfaces'][number];
+  readonly converterByName: Map<string, ExtractedConverter>;
+  readonly typeConstantByRoot: Map<string, ExtractedSystemFile['typeConstants'][number]>;
+  readonly matchedConverters: Set<string>;
+  readonly matchedTypeConstants: Set<string>;
+  readonly violations: Violation[];
+}
+
+function checkInterfacePairing(options: CheckInterfacePairingOptions): void {
+  const { folderPath, iface, converterByName, typeConstantByRoot, matchedConverters, matchedTypeConstants, violations } = options;
+  const stem = iface.name.slice(0, -'SystemData'.length);
+  const expectedConverterName = camelCase(stem) + 'SystemDataConverter';
+  const converter = converterByName.get(expectedConverterName);
+  if (converter) {
+    matchedConverters.add(converter.name);
+  } else {
+    pushViolation(violations, {
+      code: 'SYSTEM_MISSING_CONVERTER',
+      message: `Interface \`${iface.name}\` has no matching converter. Expected an exported constant named \`${expectedConverterName}\` typed \`SystemStateStoredDataFieldConverterConfig<${iface.name}>\`.`,
+      folder: folderPath,
+      file: MAIN_FILE
+    });
+  }
+
+  const typeConstant = typeConstantByRoot.get(iface.normalizedRoot);
+  if (typeConstant) {
+    matchedTypeConstants.add(typeConstant.name);
+    return;
+  }
+  const expectedScreaming = screamingSnakeFromPascal(stem) + '_SYSTEM_STATE_TYPE';
+  pushViolation(violations, {
+    code: 'SYSTEM_MISSING_TYPE_CONSTANT',
+    message: `Interface \`${iface.name}\` has no matching \`_SYSTEM_STATE_TYPE\` constant. Expected an exported constant whose name (with underscores removed, lowercased) matches \`${iface.normalizedRoot}\` — e.g. \`${expectedScreaming}\`.`,
+    folder: folderPath,
+    file: MAIN_FILE
+  });
+}
+
 function checkTriplePairing(folderPath: string, extracted: ExtractedSystemFile, violations: Violation[]): void {
   const typeConstantByRoot = indexByRoot(extracted.typeConstants);
   const interfaceByRoot = indexByRoot(extracted.dataInterfaces);
@@ -128,32 +168,7 @@ function checkTriplePairing(folderPath: string, extracted: ExtractedSystemFile, 
   const matchedConverters = new Set<string>();
 
   for (const iface of extracted.dataInterfaces) {
-    const stem = iface.name.slice(0, -'SystemData'.length);
-    const expectedConverterName = camelCase(stem) + 'SystemDataConverter';
-    const converter = converterByName.get(expectedConverterName);
-    if (converter) {
-      matchedConverters.add(converter.name);
-    } else {
-      pushViolation(violations, {
-        code: 'SYSTEM_MISSING_CONVERTER',
-        message: `Interface \`${iface.name}\` has no matching converter. Expected an exported constant named \`${expectedConverterName}\` typed \`SystemStateStoredDataFieldConverterConfig<${iface.name}>\`.`,
-        folder: folderPath,
-        file: MAIN_FILE
-      });
-    }
-
-    const typeConstant = typeConstantByRoot.get(iface.normalizedRoot);
-    if (typeConstant) {
-      matchedTypeConstants.add(typeConstant.name);
-    } else {
-      const expectedScreaming = screamingSnakeFromPascal(stem) + '_SYSTEM_STATE_TYPE';
-      pushViolation(violations, {
-        code: 'SYSTEM_MISSING_TYPE_CONSTANT',
-        message: `Interface \`${iface.name}\` has no matching \`_SYSTEM_STATE_TYPE\` constant. Expected an exported constant whose name (with underscores removed, lowercased) matches \`${iface.normalizedRoot}\` — e.g. \`${expectedScreaming}\`.`,
-        folder: folderPath,
-        file: MAIN_FILE
-      });
-    }
+    checkInterfacePairing({ folderPath, iface, converterByName, typeConstantByRoot, matchedConverters, matchedTypeConstants, violations });
   }
 
   for (const typeConstant of extracted.typeConstants) {

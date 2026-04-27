@@ -66,35 +66,48 @@ const SEMANTIC_FACTORY_TAG = 'semanticFactory';
  * @param input - the ts-morph project to scan
  * @returns the extracted entries; empty when no source declares `@semanticType`
  */
+interface SourceFileContext {
+  readonly filePath: string;
+  readonly sameFileExports: ReadonlySet<string>;
+}
+
+function collectFromTypeAliases(sourceFile: SourceFile, context: SourceFileContext, entries: ExtractedEntry[]): void {
+  for (const decl of sourceFile.getTypeAliases()) {
+    if (!decl.isExported()) {
+      continue;
+    }
+    const tags = readJsDocTags(decl.getJsDocs());
+    if (!tags.hasMarker) {
+      continue;
+    }
+    entries.push(buildEntryFromTypeAlias({ decl, tags, filePath: context.filePath, sameFileExports: context.sameFileExports }));
+  }
+}
+
+function collectFromInterfaces(sourceFile: SourceFile, context: SourceFileContext, entries: ExtractedEntry[]): void {
+  for (const decl of sourceFile.getInterfaces()) {
+    if (!decl.isExported()) {
+      continue;
+    }
+    const tags = readJsDocTags(decl.getJsDocs());
+    if (!tags.hasMarker) {
+      continue;
+    }
+    entries.push(buildEntryFromInterface({ decl, tags, filePath: context.filePath, sameFileExports: context.sameFileExports }));
+  }
+}
+
 export function extractEntries(input: ExtractEntriesInput): readonly ExtractedEntry[] {
   const { project } = input;
   const entries: ExtractedEntry[] = [];
 
   for (const sourceFile of project.getSourceFiles()) {
-    const filePath = sourceFile.getFilePath();
-    const sameFileExports = collectSameFileExports(sourceFile);
-
-    for (const decl of sourceFile.getTypeAliases()) {
-      if (!decl.isExported()) {
-        continue;
-      }
-      const tags = readJsDocTags(decl.getJsDocs());
-      if (!tags.hasMarker) {
-        continue;
-      }
-      entries.push(buildEntryFromTypeAlias({ decl, tags, filePath, sameFileExports }));
-    }
-
-    for (const decl of sourceFile.getInterfaces()) {
-      if (!decl.isExported()) {
-        continue;
-      }
-      const tags = readJsDocTags(decl.getJsDocs());
-      if (!tags.hasMarker) {
-        continue;
-      }
-      entries.push(buildEntryFromInterface({ decl, tags, filePath, sameFileExports }));
-    }
+    const context: SourceFileContext = {
+      filePath: sourceFile.getFilePath(),
+      sameFileExports: collectSameFileExports(sourceFile)
+    };
+    collectFromTypeAliases(sourceFile, context, entries);
+    collectFromInterfaces(sourceFile, context, entries);
   }
 
   return entries;

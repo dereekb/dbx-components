@@ -412,16 +412,16 @@ function buildEntryFromCandidate(input: BuildEntryFromCandidateInput): BuildEntr
     description: tags.summary,
     example,
     properties,
-    ...(tierSpecific.wrapperPattern !== undefined ? { wrapperPattern: tierSpecific.wrapperPattern } : {}),
-    ...(tierSpecific.ngFormType !== undefined ? { ngFormType: tierSpecific.ngFormType } : {}),
-    ...(tags.generic !== undefined ? { generic: tags.generic } : {}),
-    ...(tierSpecific.suffix !== undefined ? { suffix: tierSpecific.suffix } : {}),
+    ...(tierSpecific.wrapperPattern === undefined ? {} : { wrapperPattern: tierSpecific.wrapperPattern }),
+    ...(tierSpecific.ngFormType === undefined ? {} : { ngFormType: tierSpecific.ngFormType }),
+    ...(tags.generic === undefined ? {} : { generic: tags.generic }),
+    ...(tierSpecific.suffix === undefined ? {} : { suffix: tierSpecific.suffix }),
     ...(tags.composesFromSlugs.length > 0 ? { composesFromSlugs: tags.composesFromSlugs } : {}),
-    ...(tierSpecific.returns !== undefined ? { returns: tierSpecific.returns } : {}),
-    ...(tier !== 'primitive' || tags.configInterface !== undefined ? { configInterface: configInterfaceName } : {}),
-    ...(tags.propsInterface !== undefined ? { propsInterface: tags.propsInterface } : {}),
-    ...(tags.deprecated !== undefined ? { deprecated: tags.deprecated } : {}),
-    ...(tags.since !== undefined ? { since: tags.since } : {}),
+    ...(tierSpecific.returns === undefined ? {} : { returns: tierSpecific.returns }),
+    ...(tier === 'primitive' && tags.configInterface === undefined ? {} : { configInterface: configInterfaceName }),
+    ...(tags.propsInterface === undefined ? {} : { propsInterface: tags.propsInterface }),
+    ...(tags.deprecated === undefined ? {} : { deprecated: tags.deprecated }),
+    ...(tags.since === undefined ? {} : { since: tags.since }),
     filePath,
     line
   };
@@ -467,21 +467,23 @@ function checkRequiredTags(input: CheckRequiredTagsInput): CheckRequiredTagsResu
   let result: CheckRequiredTagsResult;
   if (tags.slug === undefined || tags.tier === undefined || tags.produces === undefined || tags.arrayOutput === undefined || tags.slug.length === 0 || tags.tier.length === 0 || tags.produces.length === 0 || tags.arrayOutput.length === 0) {
     result = { kind: 'fail', warnings };
-  } else if (!VALID_TIERS.has(tags.tier)) {
+  } else if (VALID_TIERS.has(tags.tier)) {
+    if (VALID_ARRAY_OUTPUTS.has(tags.arrayOutput)) {
+      result = {
+        kind: 'ok',
+        slug: tags.slug,
+        tier: tags.tier as ForgeFieldEntry['tier'],
+        produces: tags.produces,
+        arrayOutput: tags.arrayOutput as ForgeFieldEntry['arrayOutput'],
+        warnings
+      };
+    } else {
+      warnings.push({ kind: 'unknown-array-output', factoryName, arrayOutput: tags.arrayOutput, filePath, line });
+      result = { kind: 'fail', warnings };
+    }
+  } else {
     warnings.push({ kind: 'unknown-tier', factoryName, tier: tags.tier, filePath, line });
     result = { kind: 'fail', warnings };
-  } else if (!VALID_ARRAY_OUTPUTS.has(tags.arrayOutput)) {
-    warnings.push({ kind: 'unknown-array-output', factoryName, arrayOutput: tags.arrayOutput, filePath, line });
-    result = { kind: 'fail', warnings };
-  } else {
-    result = {
-      kind: 'ok',
-      slug: tags.slug,
-      tier: tags.tier as ForgeFieldEntry['tier'],
-      produces: tags.produces,
-      arrayOutput: tags.arrayOutput as ForgeFieldEntry['arrayOutput'],
-      warnings
-    };
   }
   return result;
 }
@@ -536,10 +538,10 @@ function readTierSpecificTags(input: ReadTierSpecificInput): ReadTierSpecificRes
   } else {
     result = {
       kind: 'ok',
-      ...(evaluation.wrapperPattern !== undefined ? { wrapperPattern: evaluation.wrapperPattern } : {}),
-      ...(evaluation.ngFormType !== undefined ? { ngFormType: evaluation.ngFormType } : {}),
-      ...(evaluation.suffix !== undefined ? { suffix: evaluation.suffix } : {}),
-      ...(evaluation.returns !== undefined ? { returns: evaluation.returns } : {}),
+      ...(evaluation.wrapperPattern === undefined ? {} : { wrapperPattern: evaluation.wrapperPattern }),
+      ...(evaluation.ngFormType === undefined ? {} : { ngFormType: evaluation.ngFormType }),
+      ...(evaluation.suffix === undefined ? {} : { suffix: evaluation.suffix }),
+      ...(evaluation.returns === undefined ? {} : { returns: evaluation.returns }),
       warnings: evaluation.warnings
     };
   }
@@ -556,11 +558,11 @@ function evaluateFieldFactoryTier(input: ReadTierSpecificInput): TierEvaluation 
   if (tags.wrapperPattern === undefined || tags.wrapperPattern.length === 0) {
     warnings.push({ kind: 'missing-required-tag', factoryName, tag: FORM_WRAPPER_PATTERN_TAG, filePath, line });
     failed = true;
-  } else if (!VALID_WRAPPER_PATTERNS.has(tags.wrapperPattern)) {
+  } else if (VALID_WRAPPER_PATTERNS.has(tags.wrapperPattern)) {
+    wrapperPattern = tags.wrapperPattern as ForgeFieldEntry['wrapperPattern'];
+  } else {
     warnings.push({ kind: 'unknown-wrapper-pattern', factoryName, wrapperPattern: tags.wrapperPattern, filePath, line });
     failed = true;
-  } else {
-    wrapperPattern = tags.wrapperPattern as ForgeFieldEntry['wrapperPattern'];
   }
   if (tags.ngFormType === undefined || tags.ngFormType.length === 0) {
     warnings.push({ kind: 'missing-required-tag', factoryName, tag: FORM_NG_FORM_TYPE_TAG, filePath, line });
@@ -581,11 +583,11 @@ function evaluateCompositeBuilderTier(input: ReadTierSpecificInput): TierEvaluat
   if (tags.suffix === undefined || tags.suffix.length === 0) {
     warnings.push({ kind: 'missing-required-tag', factoryName, tag: FORM_SUFFIX_TAG, filePath, line });
     failed = true;
-  } else if (!VALID_SUFFIXES.has(tags.suffix)) {
+  } else if (VALID_SUFFIXES.has(tags.suffix)) {
+    suffix = tags.suffix as ForgeFieldEntry['suffix'];
+  } else {
     warnings.push({ kind: 'unknown-suffix', factoryName, suffix: tags.suffix, filePath, line });
     failed = true;
-  } else {
-    suffix = tags.suffix as ForgeFieldEntry['suffix'];
   }
 
   return { failed, warnings, suffix };
@@ -812,7 +814,7 @@ function collectFromUnionTypeNode(typeNode: UnionTypeNode, context: CollectConte
 
 function collectFromTypeReference(ref: TypeReferenceNode, context: CollectContext): readonly ForgeFieldPropertyEntry[] {
   const refNameNode = ref.getTypeName();
-  const refName = Node.isIdentifier(refNameNode) ? refNameNode.getText() : refNameNode.getText();
+  const refName = refNameNode.getText();
   const args = ref.getTypeArguments();
 
   let result: readonly ForgeFieldPropertyEntry[];
@@ -877,11 +879,11 @@ class PropertyAccumulator {
     }
     const finalEntry = this.context.forceOptional ? { ...entry, required: false } : entry;
     const existingIdx = this.index.get(finalEntry.name);
-    if (existingIdx !== undefined) {
-      this.entries[existingIdx] = finalEntry;
-    } else {
+    if (existingIdx === undefined) {
       this.index.set(finalEntry.name, this.entries.length);
       this.entries.push(finalEntry);
+    } else {
+      this.entries[existingIdx] = finalEntry;
     }
   }
 
@@ -916,7 +918,7 @@ function propertyToEntry(property: PropertySignature): ForgeFieldPropertyEntry |
     type: typeText,
     description: tags.description,
     required,
-    ...(tags.defaultText !== undefined ? { default: tags.defaultText } : {})
+    ...(tags.defaultText === undefined ? {} : { default: tags.defaultText })
   };
   return entry;
 }
@@ -952,8 +954,8 @@ function readPropertyTags(property: PropertySignature): PropertyTagState {
   }
   return {
     description: summaries.join('\n\n'),
-    ...(defaultText !== undefined ? { defaultText } : {}),
-    ...(nameOverride !== undefined ? { nameOverride } : {}),
+    ...(defaultText === undefined ? {} : { defaultText }),
+    ...(nameOverride === undefined ? {} : { nameOverride }),
     skip
   };
 }

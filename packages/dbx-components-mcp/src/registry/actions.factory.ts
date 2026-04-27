@@ -232,7 +232,7 @@ export interface ActionStateFactoryInput {
 export function actionState(input: ActionStateFactoryInput): ActionStateInfo {
   return {
     role: 'state',
-    slug: `state-${input.stateValue.toLowerCase().replace(/_/g, '-')}`,
+    slug: `state-${input.stateValue.toLowerCase().replaceAll('_', '-')}`,
     enumName: 'DbxActionState',
     stateValue: input.stateValue,
     literal: input.literal,

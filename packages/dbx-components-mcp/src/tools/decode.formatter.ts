@@ -57,10 +57,7 @@ export function formatDecode(context: DecodeContext): string {
   if (extraKey) lines.push(`**Document key:** \`${extraKey}\``);
   lines.push('');
 
-  lines.push(`## Fields (${decodedFields.length})`, '', '| Field | Description | Value | Type / Converter |', '|-------|-------------|-------|------------------|');
-  for (const row of decodedFields) {
-    lines.push(formatFieldRow(row));
-  }
+  lines.push(`## Fields (${decodedFields.length})`, '', '| Field | Description | Value | Type / Converter |', '|-------|-------------|-------|------------------|', ...decodedFields.map(formatFieldRow));
   lines.push('');
 
   if (unknownKeys.length > 0) {
@@ -93,32 +90,23 @@ export function formatDecode(context: DecodeContext): string {
 }
 
 function decodeField(field: FirebaseField, rawValue: unknown, enums: readonly FirebaseEnum[]): DecodedField {
-  const entry: Partial<DecodedField> & { readonly field: FirebaseField; readonly rawValue: unknown; displayValue: string } = {
-    field,
-    rawValue,
-    displayValue: formatValue(rawValue)
-  };
+  let displayValue = formatValue(rawValue);
+  let enumName: string | undefined;
+  let extraDetail: string | undefined;
   if (rawValue === undefined || rawValue === null) {
-    entry.displayValue = '–';
+    displayValue = '–';
   } else if (field.enumRef) {
     const en = enums.find((e) => e.name === field.enumRef);
     if (en) {
       const match = en.values.find((v) => v.value === rawValue);
       if (match) {
-        entry.displayValue = `${formatValue(rawValue)} → \`${en.name}.${match.name}\``;
-        entry.enumName = en.name;
-        if (match.description) entry.extraDetail = match.description;
+        displayValue = `${formatValue(rawValue)} → \`${en.name}.${match.name}\``;
+        enumName = en.name;
+        if (match.description) extraDetail = match.description;
       }
     }
   }
-  const result: DecodedField = {
-    field,
-    rawValue,
-    displayValue: entry.displayValue,
-    enumName: entry.enumName,
-    extraDetail: entry.extraDetail
-  };
-  return result;
+  return { field, rawValue, displayValue, enumName, extraDetail };
 }
 
 function formatFieldRow(row: DecodedField): string {
@@ -156,7 +144,7 @@ function formatValue(value: unknown): string {
   if (typeof value === 'bigint') return `${value.toString()}n`;
   if (typeof value === 'symbol') return value.toString();
   if (typeof value === 'function') return `[Function]`;
-  return String(value);
+  return JSON.stringify(value);
 }
 
 function collectReferencedEnums(fields: readonly DecodedField[], enums: readonly FirebaseEnum[]): readonly FirebaseEnum[] {

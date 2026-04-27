@@ -60,8 +60,7 @@ function checkTemplateInfoPairing(extracted: ExtractedAppNotifications, violatio
   }
 
   for (const constant of extracted.templateTypeConstants) {
-    const info = infoByTypeConstant.get(constant.symbolName);
-    if (!info) {
+    if (!infoByTypeConstant.has(constant.symbolName)) {
       pushViolation(violations, {
         code: 'NOTIF_TEMPLATE_INFO_MISSING',
         message: `Template type \`${constant.symbolName}\` has no matching \`NotificationTemplateTypeInfo\` object whose \`type:\` property references it. Expected an exported \`${constant.symbolName}_INFO\` (or similar).`,
@@ -72,32 +71,36 @@ function checkTemplateInfoPairing(extracted: ExtractedAppNotifications, violatio
   }
 
   for (const info of extracted.templateTypeInfos) {
-    if (!info.typeConstantName) {
-      pushViolation(violations, {
-        code: 'NOTIF_TEMPLATE_INFO_TYPE_MISMATCH',
-        message: `Info \`${info.symbolName}\` has no \`type:\` property referencing a declared \`*_NOTIFICATION_TEMPLATE_TYPE\` identifier.`,
-        side: 'component',
-        file: info.sourceFile
-      });
-      continue;
-    }
-    if (!typeConstantNames.has(info.typeConstantName)) {
-      pushViolation(violations, {
-        code: 'NOTIF_TEMPLATE_INFO_TYPE_MISMATCH',
-        message: `Info \`${info.symbolName}\` has \`type: ${info.typeConstantName}\` but no matching \`NotificationTemplateType\` constant is declared in the component.`,
-        side: 'component',
-        file: info.sourceFile
-      });
-    }
-    if (!info.humanName || !info.description) {
-      pushViolation(violations, {
-        code: 'NOTIF_TEMPLATE_INFO_MISSING_NAME_OR_DESCRIPTION',
-        severity: 'warning',
-        message: `Info \`${info.symbolName}\` is missing ${info.humanName ? '`description`' : '`name`'} — human-readable metadata is required for the list tool.`,
-        side: 'component',
-        file: info.sourceFile
-      });
-    }
+    checkTemplateInfo(info, typeConstantNames, violations);
+  }
+}
+
+function checkTemplateInfo(info: ExtractedTemplateTypeInfo, typeConstantNames: Set<string>, violations: Violation[]): void {
+  if (!info.typeConstantName) {
+    pushViolation(violations, {
+      code: 'NOTIF_TEMPLATE_INFO_TYPE_MISMATCH',
+      message: `Info \`${info.symbolName}\` has no \`type:\` property referencing a declared \`*_NOTIFICATION_TEMPLATE_TYPE\` identifier.`,
+      side: 'component',
+      file: info.sourceFile
+    });
+    return;
+  }
+  if (!typeConstantNames.has(info.typeConstantName)) {
+    pushViolation(violations, {
+      code: 'NOTIF_TEMPLATE_INFO_TYPE_MISMATCH',
+      message: `Info \`${info.symbolName}\` has \`type: ${info.typeConstantName}\` but no matching \`NotificationTemplateType\` constant is declared in the component.`,
+      side: 'component',
+      file: info.sourceFile
+    });
+  }
+  if (!info.humanName || !info.description) {
+    pushViolation(violations, {
+      code: 'NOTIF_TEMPLATE_INFO_MISSING_NAME_OR_DESCRIPTION',
+      severity: 'warning',
+      message: `Info \`${info.symbolName}\` is missing ${info.humanName ? '`description`' : '`name`'} — human-readable metadata is required for the list tool.`,
+      side: 'component',
+      file: info.sourceFile
+    });
   }
 }
 
@@ -340,15 +343,28 @@ interface FlagTaskHandlerCoverageOptions {
  */
 function flagTaskHandlerCoverage(options: FlagTaskHandlerCoverageOptions): void {
   const { extracted, violations, reachableBindings } = options;
+  const reachableTypeIdentifiers = collectReachableTypeIdentifiers(extracted, reachableBindings);
+  const entriesByType = groupTaskHandlerEntriesByType(extracted.taskHandlerEntries);
+
+  for (const constant of extracted.taskTypeConstants) {
+    if (reachableTypeIdentifiers.has(constant.symbolName)) continue;
+    flagUnreachableTaskType(constant, entriesByType.get(constant.symbolName), violations);
+  }
+}
+
+function collectReachableTypeIdentifiers(extracted: ExtractedAppNotifications, reachableBindings: Set<string>): Set<string> {
   const reachableTypeIdentifiers = new Set<string>();
   for (const entry of extracted.taskHandlerEntries) {
     if (entry.bindingName && reachableBindings.has(entry.bindingName)) {
       reachableTypeIdentifiers.add(entry.typeIdentifier);
     }
   }
+  return reachableTypeIdentifiers;
+}
 
+function groupTaskHandlerEntriesByType(entries: readonly ExtractedTaskHandlerEntry[]): Map<string, ExtractedTaskHandlerEntry[]> {
   const entriesByType = new Map<string, ExtractedTaskHandlerEntry[]>();
-  for (const entry of extracted.taskHandlerEntries) {
+  for (const entry of entries) {
     const list = entriesByType.get(entry.typeIdentifier);
     if (list) {
       list.push(entry);
@@ -356,28 +372,27 @@ function flagTaskHandlerCoverage(options: FlagTaskHandlerCoverageOptions): void 
       entriesByType.set(entry.typeIdentifier, [entry]);
     }
   }
+  return entriesByType;
+}
 
-  for (const constant of extracted.taskTypeConstants) {
-    if (reachableTypeIdentifiers.has(constant.symbolName)) continue;
-    const entries = entriesByType.get(constant.symbolName);
-    if (entries && entries.length > 0) {
-      const entry = entries[0];
-      const bindingHint = entry.bindingName ? `\`${entry.bindingName}\`` : '<anonymous>';
-      pushViolation(violations, {
-        code: 'NOTIF_TASK_HANDLER_NAME_MISMATCH',
-        message: `Handler ${bindingHint} in \`${entry.sourceFile}\` declares \`type: ${constant.symbolName}\` but is not reachable from \`notificationTaskService({ handlers })\` because no array element resolves to that binding name. The cross-file tracer matches by identifier name through function returns — when a factory function ships a task-handler config, its inner variable name must match the call-site binding name (and the array element / spread that references it).`,
-        side: 'api',
-        file: entry.sourceFile
-      });
-      continue;
-    }
+function flagUnreachableTaskType(constant: { readonly symbolName: string; readonly sourceFile: string }, entries: ExtractedTaskHandlerEntry[] | undefined, violations: Violation[]): void {
+  if (entries && entries.length > 0) {
+    const entry = entries[0];
+    const bindingHint = entry.bindingName ? `\`${entry.bindingName}\`` : '<anonymous>';
     pushViolation(violations, {
-      code: 'NOTIF_TASK_NOT_REGISTERED_IN_SERVICE',
-      message: `Task type \`${constant.symbolName}\` has no \`NotificationTaskServiceTaskHandlerConfig\` declared in the API. Add a handler config typed \`NotificationTaskServiceTaskHandlerConfig<${handlerDataHint(constant.symbolName)}>\` and include it in \`notificationTaskService({ handlers })\`.`,
+      code: 'NOTIF_TASK_HANDLER_NAME_MISMATCH',
+      message: `Handler ${bindingHint} in \`${entry.sourceFile}\` declares \`type: ${constant.symbolName}\` but is not reachable from \`notificationTaskService({ handlers })\` because no array element resolves to that binding name. The cross-file tracer matches by identifier name through function returns — when a factory function ships a task-handler config, its inner variable name must match the call-site binding name (and the array element / spread that references it).`,
       side: 'api',
-      file: undefined
+      file: entry.sourceFile
     });
+    return;
   }
+  pushViolation(violations, {
+    code: 'NOTIF_TASK_NOT_REGISTERED_IN_SERVICE',
+    message: `Task type \`${constant.symbolName}\` has no \`NotificationTaskServiceTaskHandlerConfig\` declared in the API. Add a handler config typed \`NotificationTaskServiceTaskHandlerConfig<${handlerDataHint(constant.symbolName)}>\` and include it in \`notificationTaskService({ handlers })\`.`,
+    side: 'api',
+    file: undefined
+  });
 }
 
 interface FlagUnresolvedHandlerIdentifiersOptions {
@@ -452,25 +467,24 @@ function checkDuplicates(extracted: ExtractedAppNotifications, violations: Viola
   flagDuplicates(extracted.templateTypeConstants, 'NOTIF_TEMPLATE_TYPE_CODE_DUPLICATE', violations);
   flagDuplicates(extracted.taskTypeConstants, 'NOTIF_TASK_TYPE_CODE_DUPLICATE', violations);
 
-  // Unused-info warning.
   if (extracted.templateInfoRecord) {
-    const resolved = new Set(extracted.templateInfoRecord.resolvedInfoIdentifiers);
-    for (const info of extracted.templateTypeInfos) {
-      if (!resolved.has(info.symbolName)) continue;
-      // Already in record; skip — NOTIF_TEMPLATE_INFO_NOT_IN_RECORD handles the other case.
-    }
-    for (const agg of extracted.templateInfoAggregates) {
-      for (const id of agg.infoIdentifiers) {
-        if (!extracted.templateTypeInfos.some((i) => i.symbolName === id) && !extracted.trustedExternalIdentifiers.has(id)) {
-          pushViolation(violations, {
-            code: 'NOTIF_TEMPLATE_INFO_UNUSED',
-            severity: 'warning',
-            message: `Aggregate \`${agg.symbolName}\` references \`${id}\`, but that identifier is not a declared \`NotificationTemplateTypeInfo\` in the component.`,
-            side: 'component',
-            file: agg.sourceFile
-          });
-        }
-      }
+    flagUnusedInfoAggregates(extracted, violations);
+  }
+}
+
+function flagUnusedInfoAggregates(extracted: ExtractedAppNotifications, violations: Violation[]): void {
+  const declaredInfoNames = new Set(extracted.templateTypeInfos.map((i) => i.symbolName));
+  for (const agg of extracted.templateInfoAggregates) {
+    for (const id of agg.infoIdentifiers) {
+      if (declaredInfoNames.has(id)) continue;
+      if (extracted.trustedExternalIdentifiers.has(id)) continue;
+      pushViolation(violations, {
+        code: 'NOTIF_TEMPLATE_INFO_UNUSED',
+        severity: 'warning',
+        message: `Aggregate \`${agg.symbolName}\` references \`${id}\`, but that identifier is not a declared \`NotificationTemplateTypeInfo\` in the component.`,
+        side: 'component',
+        file: agg.sourceFile
+      });
     }
   }
 }

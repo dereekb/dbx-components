@@ -44,7 +44,7 @@ export interface ParsedSearchArgs {
 export function parseSearchArgs(raw: unknown, config: { readonly defaultLimit: number; readonly maxLimit: number }): ParsedSearchArgs {
   const parsed = SEARCH_ARGS_TYPE(raw);
   if (parsed instanceof type.errors) {
-    throw new Error(`Invalid arguments: ${parsed.summary}`);
+    throw new TypeError(`Invalid arguments: ${parsed.summary}`);
   }
   const rawLimit = parsed.limit ?? config.defaultLimit;
   const limit = Math.max(1, Math.min(config.maxLimit, Math.trunc(rawLimit)));
@@ -114,6 +114,25 @@ export interface SearchHit<TEntry> {
   readonly matchedTokens: readonly string[];
 }
 
+function scoreEntryForTokens<TEntry>(entry: TEntry, tokens: readonly QueryToken[], scoreFn: (entry: TEntry, token: string) => number): SearchHit<TEntry> | undefined {
+  const matched: string[] = [];
+  let total = 0;
+  for (const token of tokens) {
+    const rawScore = scoreFn(entry, token.raw);
+    const aliasScore = token.alias === token.raw ? 0 : scoreFn(entry, token.alias);
+    const score = Math.max(rawScore, aliasScore);
+    if (score > 0) {
+      total += score;
+      matched.push(token.display);
+    }
+  }
+  let hit: SearchHit<TEntry> | undefined;
+  if (total > 0 && matched.length === tokens.length) {
+    hit = { entry, score: total, matchedTokens: matched };
+  }
+  return hit;
+}
+
 /**
  * Scores every entry against every token using AND semantics: an entry is a
  * hit only if every token contributes > 0. The score is summed; the
@@ -135,30 +154,18 @@ export function searchEntries<TEntry>(config: { readonly entries: readonly TEntr
   if (tokens.length > 0) {
     const hits: SearchHit<TEntry>[] = [];
     for (const entry of entries) {
-      const matched: string[] = [];
-      let total = 0;
-      for (const token of tokens) {
-        const rawScore = scoreFn(entry, token.raw);
-        const aliasScore = token.alias === token.raw ? 0 : scoreFn(entry, token.alias);
-        const score = Math.max(rawScore, aliasScore);
-        if (score > 0) {
-          total += score;
-          matched.push(token.display);
-        }
-      }
-      // AND semantics: every token must contribute, so single-word dominant
-      // hits don't drown multi-word disambiguation.
-      if (total > 0 && matched.length === tokens.length) {
-        hits.push({ entry, score: total, matchedTokens: matched });
+      const hit = scoreEntryForTokens(entry, tokens, scoreFn);
+      if (hit !== undefined) {
+        hits.push(hit);
       }
     }
     hits.sort((a, b) => {
       const byScore = b.score - a.score;
       let cmp: number;
-      if (byScore !== 0) {
-        cmp = byScore;
-      } else {
+      if (byScore === 0) {
         cmp = tieBreaker(a.entry).localeCompare(tieBreaker(b.entry));
+      } else {
+        cmp = byScore;
       }
       return cmp;
     });

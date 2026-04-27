@@ -249,6 +249,70 @@ function checkFactoryCall(file: ExtractedFile, violations: Violation[]): void {
 }
 
 // MARK: Params / validator pairing
+interface CheckPairedDeclOptions {
+  readonly file: ExtractedFile;
+  readonly decl: ExtractedParamsDecl;
+  readonly validator: ExtractedParamsValidator;
+  readonly violations: Violation[];
+}
+
+function checkPairedDeclAdjacency(options: CheckPairedDeclOptions): void {
+  const { file, decl, validator, violations } = options;
+  if (validator.line <= decl.line) {
+    pushViolation(violations, {
+      code: 'PARAMS_VALIDATOR_NOT_ADJACENT',
+      severity: 'warning',
+      message: `\`${validator.name}\` is declared before its matching interface \`${decl.name}\`. Place the validator immediately after the interface.`,
+      file: file.name,
+      line: validator.line,
+      group: file.groupName
+    });
+    return;
+  }
+  const blockers = findStatementsBetween({ file, lowExclusive: decl.line, highExclusive: validator.line, ignoreDeclName: decl.name, ignoreValidatorName: validator.name });
+  if (blockers.length === 0) return;
+  pushViolation(violations, {
+    code: 'PARAMS_VALIDATOR_NOT_ADJACENT',
+    severity: 'warning',
+    message: `\`${validator.name}\` should immediately follow \`${decl.name}\` but other declarations appear between them (\`${blockers.join('`, `')}\`).`,
+    file: file.name,
+    line: validator.line,
+    group: file.groupName
+  });
+}
+
+function checkPairedDecl(options: CheckPairedDeclOptions): void {
+  const { file, decl, validator, violations } = options;
+  if (!decl.exported) {
+    pushViolation(violations, {
+      code: 'PARAMS_NOT_EXPORTED',
+      message: `\`${decl.name}\` must be exported.`,
+      file: file.name,
+      line: decl.line,
+      group: file.groupName
+    });
+  }
+  if (!validator.exported) {
+    pushViolation(violations, {
+      code: 'PARAMS_VALIDATOR_NOT_EXPORTED',
+      message: `\`${validator.name}\` must be exported.`,
+      file: file.name,
+      line: validator.line,
+      group: file.groupName
+    });
+  }
+  if (validator.castTargetName !== decl.name) {
+    pushViolation(violations, {
+      code: 'PARAMS_VALIDATOR_WRONG_CAST',
+      message: `\`${validator.name}\` must end with \`as Type<${decl.name}>\` or \`as unknown as Type<${decl.name}>\` (found cast target: \`${validator.castTargetName ?? '<none>'}\`).`,
+      file: file.name,
+      line: validator.line,
+      group: file.groupName
+    });
+  }
+  checkPairedDeclAdjacency(options);
+}
+
 function checkParamsValidatorPairing(file: ExtractedFile, violations: Violation[]): void {
   const validatorByBase = new Map<string, ExtractedParamsValidator>();
   for (const v of file.paramsValidators) {
@@ -269,56 +333,7 @@ function checkParamsValidatorPairing(file: ExtractedFile, violations: Violation[
       });
       continue;
     }
-    if (!decl.exported) {
-      pushViolation(violations, {
-        code: 'PARAMS_NOT_EXPORTED',
-        message: `\`${decl.name}\` must be exported.`,
-        file: file.name,
-        line: decl.line,
-        group: file.groupName
-      });
-    }
-    if (!validator.exported) {
-      pushViolation(violations, {
-        code: 'PARAMS_VALIDATOR_NOT_EXPORTED',
-        message: `\`${validator.name}\` must be exported.`,
-        file: file.name,
-        line: validator.line,
-        group: file.groupName
-      });
-    }
-    if (validator.castTargetName !== decl.name) {
-      pushViolation(violations, {
-        code: 'PARAMS_VALIDATOR_WRONG_CAST',
-        message: `\`${validator.name}\` must end with \`as Type<${decl.name}>\` or \`as unknown as Type<${decl.name}>\` (found cast target: \`${validator.castTargetName ?? '<none>'}\`).`,
-        file: file.name,
-        line: validator.line,
-        group: file.groupName
-      });
-    }
-    // Adjacency check (warning): no other params decl, validator, or result decl between the paired decl and validator.
-    if (validator.line > decl.line) {
-      const blockers = findStatementsBetween({ file, lowExclusive: decl.line, highExclusive: validator.line, ignoreDeclName: decl.name, ignoreValidatorName: validator.name });
-      if (blockers.length > 0) {
-        pushViolation(violations, {
-          code: 'PARAMS_VALIDATOR_NOT_ADJACENT',
-          severity: 'warning',
-          message: `\`${validator.name}\` should immediately follow \`${decl.name}\` but other declarations appear between them (\`${blockers.join('`, `')}\`).`,
-          file: file.name,
-          line: validator.line,
-          group: file.groupName
-        });
-      }
-    } else {
-      pushViolation(violations, {
-        code: 'PARAMS_VALIDATOR_NOT_ADJACENT',
-        severity: 'warning',
-        message: `\`${validator.name}\` is declared before its matching interface \`${decl.name}\`. Place the validator immediately after the interface.`,
-        file: file.name,
-        line: validator.line,
-        group: file.groupName
-      });
-    }
+    checkPairedDecl({ file, decl, validator, violations });
   }
 }
 

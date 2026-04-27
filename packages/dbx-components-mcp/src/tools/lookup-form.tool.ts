@@ -88,6 +88,23 @@ function parseLookupFormArgs(raw: unknown): { readonly topic: string; readonly d
 // MARK: Resolution
 type LookupFormMatch = { readonly kind: 'single'; readonly field: FormFieldInfo } | { readonly kind: 'group'; readonly title: string; readonly fields: readonly FormFieldInfo[] } | { readonly kind: 'catalog' } | { readonly kind: 'not-found'; readonly normalized: string; readonly candidates: readonly FormFieldInfo[] };
 
+function resolveCatalogTopic(lowered: string): LookupFormMatch | undefined {
+  return lowered === 'list' || lowered === 'catalog' || lowered === 'all' ? { kind: 'catalog' } : undefined;
+}
+
+function formatNotFound(normalized: string, candidates: readonly FormFieldInfo[]): string {
+  const lines: string[] = [`No form entry matched \`${normalized}\`.`, ''];
+  if (candidates.length > 0) {
+    lines.push('Did you mean one of these?', '');
+    for (const field of candidates) {
+      lines.push(`- \`${field.slug}\` → ${field.factoryName} — ${field.description}`);
+    }
+  } else {
+    lines.push('Try `dbx_form_lookup topic="list"` to browse the catalog.');
+  }
+  return lines.join('\n');
+}
+
 // MARK: Factory
 /**
  * Configuration for {@link createLookupFormTool}.
@@ -108,10 +125,6 @@ export function createLookupFormTool(config: CreateLookupFormToolConfig): DbxToo
 
   function findField(key: string): FormFieldInfo | undefined {
     return registry.findBySlug(key) ?? registry.findByFactoryName(key);
-  }
-
-  function resolveCatalogTopic(lowered: string): LookupFormMatch | undefined {
-    return lowered === 'list' || lowered === 'catalog' || lowered === 'all' ? { kind: 'catalog' } : undefined;
   }
 
   function resolveTierTopic(lowered: string): LookupFormMatch | undefined {
@@ -209,19 +222,6 @@ export function createLookupFormTool(config: CreateLookupFormToolConfig): DbxToo
       lines.push(`- \`${value}\` (${count})`);
     }
     return lines.join('\n').trimEnd();
-  }
-
-  function formatNotFound(normalized: string, candidates: readonly FormFieldInfo[]): string {
-    const lines: string[] = [`No form entry matched \`${normalized}\`.`, ''];
-    if (candidates.length > 0) {
-      lines.push('Did you mean one of these?', '');
-      for (const field of candidates) {
-        lines.push(`- \`${field.slug}\` → ${field.factoryName} — ${field.description}`);
-      }
-    } else {
-      lines.push('Try `dbx_form_lookup topic="list"` to browse the catalog.');
-    }
-    return lines.join('\n');
   }
 
   function run(rawArgs: unknown): ToolResult {

@@ -316,13 +316,13 @@ function buildEntryFromClass(input: BuildEntryFromClassInput): BuildEntryResult 
     description: tags.summary,
     inputs,
     outputs,
-    ...(contentProjection !== undefined ? { contentProjection } : {}),
+    ...(contentProjection === undefined ? {} : { contentProjection }),
     ...(tags.relatedSlugs.length > 0 ? { relatedSlugs: tags.relatedSlugs } : {}),
     ...(tags.skillRefs.length > 0 ? { skillRefs: tags.skillRefs } : {}),
-    ...(example !== undefined ? { example } : {}),
-    ...(tags.minimalExample !== undefined ? { minimalExample: tags.minimalExample } : {}),
-    ...(tags.deprecated !== undefined ? { deprecated: tags.deprecated } : {}),
-    ...(tags.since !== undefined ? { since: tags.since } : {}),
+    ...(example === undefined ? {} : { example }),
+    ...(tags.minimalExample === undefined ? {} : { minimalExample: tags.minimalExample }),
+    ...(tags.deprecated === undefined ? {} : { deprecated: tags.deprecated }),
+    ...(tags.since === undefined ? {} : { since: tags.since }),
     filePath,
     line
   };
@@ -548,7 +548,7 @@ function readDecoratorInput(property: PropertyDeclaration): UiComponentInputEntr
     type: overrides.typeOverride ?? explicitType ?? 'unknown',
     description: overrides.description,
     required,
-    ...(defaultValue !== undefined ? { default: defaultValue } : {})
+    ...(defaultValue === undefined ? {} : { default: defaultValue })
   };
   return entry;
 }
@@ -588,7 +588,7 @@ function readSignalInput(property: PropertyDeclaration): UiComponentInputEntry |
     type: overrides.typeOverride ?? inferredType,
     description: overrides.description,
     required: overrides.requiredOverride ?? requiredFromCall,
-    ...(defaultValue !== undefined ? { default: defaultValue } : {})
+    ...(defaultValue === undefined ? {} : { default: defaultValue })
   };
   return entry;
 }
@@ -723,7 +723,6 @@ function readPropertyOverrides(property: PropertyDeclaration): PropertyOverrides
   let nameOverride: string | undefined;
   let typeOverride: string | undefined;
   let requiredOverride: boolean | undefined;
-  let defaultText: string | undefined;
   for (const jsDoc of property.getJsDocs()) {
     const desc = jsDoc.getDescription().trim();
     if (desc.length > 0) {
@@ -738,21 +737,14 @@ function readPropertyOverrides(property: PropertyDeclaration): PropertyOverrides
         typeOverride = text;
       } else if (tagName === UI_INPUT_REQUIRED_TAG) {
         requiredOverride = true;
-      } else if (tagName === 'default' && text.length > 0) {
-        defaultText = text;
       }
     }
   }
-  // defaultText is used only if no source-level initializer is detected; the
-  // call sites that consume PropertyOverrides handle defaults from
-  // initializers already, so we reserve `@default` for non-initialised
-  // declarations.
-  void defaultText;
   return {
     description: summaries.join('\n\n'),
-    ...(nameOverride !== undefined ? { nameOverride } : {}),
-    ...(typeOverride !== undefined ? { typeOverride } : {}),
-    ...(requiredOverride !== undefined ? { requiredOverride } : {})
+    ...(nameOverride === undefined ? {} : { nameOverride }),
+    ...(typeOverride === undefined ? {} : { typeOverride }),
+    ...(requiredOverride === undefined ? {} : { requiredOverride })
   };
 }
 

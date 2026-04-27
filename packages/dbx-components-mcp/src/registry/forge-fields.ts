@@ -169,7 +169,7 @@ export function toFormFieldInfo(entry: ForgeFieldEntry): FormFieldInfo {
         produces: entry.produces,
         arrayOutput: entry.arrayOutput,
         configInterface: entry.configInterface ?? '',
-        ...(entry.generic !== undefined ? { generic: entry.generic } : {}),
+        ...(entry.generic === undefined ? {} : { generic: entry.generic }),
         description: entry.description,
         sourcePath: entry.sourcePath,
         config,
@@ -187,7 +187,7 @@ export function toFormFieldInfo(entry: ForgeFieldEntry): FormFieldInfo {
         produces: entry.produces,
         arrayOutput: entry.arrayOutput,
         configInterface: entry.configInterface ?? '',
-        ...(entry.generic !== undefined ? { generic: entry.generic } : {}),
+        ...(entry.generic === undefined ? {} : { generic: entry.generic }),
         derivedFromSlug: entry.composesFromSlugs?.[0] ?? '',
         description: entry.description,
         sourcePath: entry.sourcePath,
@@ -243,7 +243,7 @@ export function toFormFieldInfo(entry: ForgeFieldEntry): FormFieldInfo {
         produces: entry.produces,
         arrayOutput: entry.arrayOutput,
         returns: entry.returns ?? entry.produces,
-        ...(entry.configInterface !== undefined ? { configInterface: entry.configInterface } : {}),
+        ...(entry.configInterface === undefined ? {} : { configInterface: entry.configInterface }),
         description: entry.description,
         sourcePath: entry.sourcePath,
         config,
@@ -275,7 +275,7 @@ function toConfigRecord(properties: readonly ForgeFieldPropertyEntry[]): Record<
       type: property.type,
       description: property.description,
       required: property.required,
-      ...(property.default !== undefined ? { default: property.default } : {})
+      ...(property.default === undefined ? {} : { default: property.default })
     };
   }
   return out;

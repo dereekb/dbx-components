@@ -116,7 +116,7 @@ function extractFromFile(file, content) {
   for (const id of identities) {
     const modelName = capitalize(id.modelType);
     const iface = interfaceByName.get(modelName);
-    if (!iface || !iface.tags.dbxModel) continue; // detection requires the @dbxModel tag
+    if (!iface?.tags.dbxModel) continue; // detection requires the @dbxModel tag
     const converter = converterByInterface.get(modelName);
     if (!converter) {
       console.warn(`[extract-firebase-models] ${relativePath}: @dbxModel '${modelName}' has no matching ${modelName[0].toLowerCase()}${modelName.slice(1)}Converter; skipping`);
@@ -127,10 +127,10 @@ function extractFromFile(file, content) {
 
     const fields = converter.fields.map((f) => {
       const prop = ifaceProps.get(f.key);
-      const enumFromType = prop && prop.tsType ? findEnumInType(prop.tsType, enumNames) : undefined;
+      const enumFromType = prop?.tsType ? findEnumInType(prop.tsType, enumNames) : undefined;
       const enumFromConverter = findEnumInConverter(f.converter, enumNames);
       const enumRef = enumFromType ?? enumFromConverter;
-      const optional = prop?.optional ?? /^optionalFirestore/.test(f.converter);
+      const optional = prop?.optional ?? f.converter.startsWith('optionalFirestore');
       const longName = resolveLongName({
         fieldName: f.key,
         propLongName: prop?.longName,
@@ -213,8 +213,10 @@ function resolveLongName({ fieldName, propLongName, modelName, relativePath }) {
     console.warn(`[extract-firebase-models] ${relativePath}: ${modelName}.${fieldName} @dbxModelVariable '${propLongName}' is not a camelCase identifier; ignoring`);
   } else if (COMMON_FIELDS.has(fieldName) || fieldName.length < 4) {
     console.warn(`[extract-firebase-models] ${relativePath}: ${modelName}.${fieldName} is missing @dbxModelVariable`);
+  } else if (!LONG_NAME_RE.test(fieldName)) {
+    console.warn(`[extract-firebase-models] ${relativePath}: ${modelName}.${fieldName} is missing @dbxModelVariable and the field name is not a camelCase identifier`);
   }
-  return LONG_NAME_RE.test(fieldName) ? fieldName : fieldName;
+  return fieldName;
 }
 
 function findIdentities(content) {
@@ -287,8 +289,8 @@ function parseInterfaceBody(body) {
   const re = /(\/\*\*[\s\S]*?\*\/\s*)?(readonly\s+)?([A-Za-z_$][\w$]*)(\?)?:\s*([^;]+);/g;
   let m;
   while ((m = re.exec(body)) !== null) {
-    const tsType = m[5].replace(/\s+/g, ' ').trim();
-    const isOptional = Boolean(m[4]) || /^Maybe</.test(tsType);
+    const tsType = m[5].replaceAll(/\s+/g, ' ').trim();
+    const isOptional = Boolean(m[4]) || tsType.startsWith('Maybe<');
     const rawJsdoc = m[1];
     const innerJsdoc = rawJsdoc ? rawJsdoc.replace(/^\/\*\*/, '').replace(/\*\/\s*$/, '') : undefined;
     const jsdoc = parseJsdocBlock(innerJsdoc);
@@ -358,7 +360,7 @@ function extractGroupModelNames(body) {
   while ((m = re.exec(body)) !== null) {
     seen.add(m[1]);
   }
-  return [...seen].sort();
+  return [...seen].sort((a, b) => a.localeCompare(b));
 }
 
 function parseExtendsClause(text) {
@@ -366,7 +368,7 @@ function parseExtendsClause(text) {
   return text
     .split(',')
     .map((s) => s.trim())
-    .map((s) => s.replace(/<[^>]*>/g, '').trim())
+    .map((s) => s.replaceAll(/<[^>]*>/g, '').trim())
     .filter((s) => /^[A-Z][A-Za-z0-9_$]*$/.test(s));
 }
 
@@ -426,7 +428,7 @@ function parseFieldsBody(body) {
       else if (c === ',' && depth === 0) break;
       i++;
     }
-    const expr = body.slice(exprStart, i).replace(/\s+/g, ' ').trim();
+    const expr = body.slice(exprStart, i).replaceAll(/\s+/g, ' ').trim();
     out.push({ key, converter: expr });
   }
   return out;
@@ -529,6 +531,7 @@ function parseJsdocBlock(body) {
 
 function parseEnumBody(body) {
   const out = [];
+  // TODO(sonarqube:S5843): regex complexity 32 vs 20 — needs follow-up
   const re = /(?:\/\*\*([\s\S]*?)\*\/\s*)?([A-Z][A-Z0-9_]*)\s*(?:=\s*(-?\d+|'[^']*'|"[^"]*"))?\s*,?/g;
   let m;
   let autoValue = 0;
@@ -556,7 +559,7 @@ function parseEnumBody(body) {
 
 function findEnumInType(tsType, enumNames) {
   for (const name of enumNames) {
-    const re = new RegExp(`\\b${name}\\b`);
+    const re = new RegExp(String.raw`\b${name}\b`);
     if (re.test(tsType)) return name;
   }
   return undefined;
@@ -681,7 +684,12 @@ function serializeValue(value, indent) {
 
 function serializeString(s) {
   // Prefer single quotes. Escape backslashes and single quotes; preserve other characters.
-  const escaped = s.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
+  const escaped = s
+    .replaceAll('\\', String.raw`\\`)
+    .replaceAll("'", String.raw`\'`)
+    .replaceAll('\n', String.raw`\n`)
+    .replaceAll('\r', String.raw`\r`)
+    .replaceAll('\t', String.raw`\t`);
   return `'${escaped}'`;
 }
 
@@ -708,4 +716,4 @@ function serializeObject(obj, indent) {
   return `{\n${lines.join(',\n')}\n${closePad}}`;
 }
 
-main();
+await main();

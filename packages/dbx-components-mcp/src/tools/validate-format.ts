@@ -201,6 +201,16 @@ export interface TwoSideResult {
  *   `dbx_artifact_file_convention` tool for canonical paths.
  * @returns the markdown report
  */
+function appendTwoSideViolationSection(lines: string[], side: ValidationSide, sideViolations: readonly TwoSideViolation[] | undefined): void {
+  if (!sideViolations || sideViolations.length === 0) {
+    return;
+  }
+  lines.push('', `## ${VALIDATION_SIDE_HEADING[side]}`);
+  for (const v of sideViolations) {
+    lines.push(formatViolationLine(v, v.file ? ` _(file: ${v.file})_` : ''));
+  }
+}
+
 export function formatTwoSideResult<TResult extends TwoSideResult>(config: { readonly title: string; readonly result: TResult; readonly footer?: string }): string {
   const { title, result, footer } = config;
   const { violations, errorCount, warningCount, componentDir, apiDir } = result;
@@ -208,13 +218,7 @@ export function formatTwoSideResult<TResult extends TwoSideResult>(config: { rea
   if (violations.length > 0) {
     const grouped = groupViolations(violations, (v) => v.side);
     for (const side of VALIDATION_SIDE_ORDER) {
-      const sideViolations = grouped.get(side);
-      if (sideViolations && sideViolations.length > 0) {
-        lines.push('', `## ${VALIDATION_SIDE_HEADING[side]}`);
-        for (const v of sideViolations) {
-          lines.push(formatViolationLine(v, v.file ? ` _(file: ${v.file})_` : ''));
-        }
-      }
+      appendTwoSideViolationSection(lines, side, grouped.get(side));
     }
   }
   if (footer !== undefined) {

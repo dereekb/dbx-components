@@ -91,6 +91,7 @@ import { createSemanticTypeSearchTool } from './search-semantic-type.tool.js';
 import type { ForgeFieldRegistry } from '../registry/forge-fields.js';
 import type { PipeRegistry } from '../registry/pipes-runtime.js';
 import type { SemanticTypeRegistry } from '../registry/semantic-types.js';
+import type { UiComponentRegistry } from '../registry/ui-components-runtime.js';
 import { toolError, type DbxTool } from './types.js';
 
 /**
@@ -153,6 +154,7 @@ export interface RegisterToolsOptions {
   readonly semanticTypeRegistry?: SemanticTypeRegistry;
   readonly forgeFieldRegistry?: ForgeFieldRegistry;
   readonly pipeRegistry?: PipeRegistry;
+  readonly uiComponentRegistry?: UiComponentRegistry;
 }
 
 /**

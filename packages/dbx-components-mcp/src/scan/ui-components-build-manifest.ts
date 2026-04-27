@@ -243,15 +243,15 @@ function assembleEntry(input: AssembleEntryInput): UiComponentEntry {
     description: entry.description,
     inputs: entry.inputs.map((i) => ({ ...i })),
     outputs: entry.outputs.map((o) => ({ ...o })),
-    ...(entry.contentProjection !== undefined ? { contentProjection: entry.contentProjection } : {}),
+    ...(entry.contentProjection === undefined ? {} : { contentProjection: entry.contentProjection }),
     ...(entry.relatedSlugs && entry.relatedSlugs.length > 0 ? { relatedSlugs: [...entry.relatedSlugs] } : {}),
     ...(entry.skillRefs && entry.skillRefs.length > 0 ? { skillRefs: [...entry.skillRefs] } : {}),
     sourcePath,
-    ...(entry.example !== undefined ? { example: entry.example } : {}),
-    ...(entry.minimalExample !== undefined ? { minimalExample: entry.minimalExample } : {}),
+    ...(entry.example === undefined ? {} : { example: entry.example }),
+    ...(entry.minimalExample === undefined ? {} : { minimalExample: entry.minimalExample }),
     sourceLocation: { file: projectRelative, line: entry.line },
-    ...(entry.deprecated !== undefined ? { deprecated: entry.deprecated } : {}),
-    ...(entry.since !== undefined ? { since: entry.since } : {})
+    ...(entry.deprecated === undefined ? {} : { deprecated: entry.deprecated }),
+    ...(entry.since === undefined ? {} : { since: entry.since })
   };
   return out;
 }

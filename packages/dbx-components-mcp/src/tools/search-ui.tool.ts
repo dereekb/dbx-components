@@ -113,6 +113,51 @@ function tokenize(query: string): readonly string[] {
   return result;
 }
 
+function scoreSlug(slug: string, token: string): number {
+  let score: number;
+  if (slug === token) {
+    score = 20;
+  } else if (slug.startsWith(token)) {
+    score = 14;
+  } else if (slug.includes(token)) {
+    score = 8;
+  } else {
+    score = 0;
+  }
+  return score;
+}
+
+function scoreSelectorPieces(selectorPieces: readonly string[], token: string): number {
+  let score = 0;
+  for (const piece of selectorPieces) {
+    if (piece === token) {
+      score = 12;
+      break;
+    }
+  }
+  if (score === 0) {
+    for (const piece of selectorPieces) {
+      if (piece.includes(token)) {
+        score = 5;
+        break;
+      }
+    }
+  }
+  return score;
+}
+
+function scoreClassName(className: string, token: string): number {
+  let score: number;
+  if (className === token) {
+    score = 10;
+  } else if (className.includes(token)) {
+    score = 4;
+  } else {
+    score = 0;
+  }
+  return score;
+}
+
 /**
  * Scores a single entry against a single token. Weights are spaced so stacked
  * substring hits can't fabricate a higher score than a clean exact match.
@@ -139,35 +184,9 @@ function scoreEntryAgainstToken(entry: UiComponentInfo, token: string): number {
   const description = entry.description.toLowerCase();
   const relatedSlugsLower = entry.relatedSlugs.map((s) => s.toLowerCase());
 
-  let score = 0;
-  if (slug === token) {
-    score += 20;
-  } else if (slug.startsWith(token)) {
-    score += 14;
-  } else if (slug.includes(token)) {
-    score += 8;
-  }
-  let selectorContributed = false;
-  for (const piece of selectorPieces) {
-    if (piece === token) {
-      score += 12;
-      selectorContributed = true;
-      break;
-    }
-  }
-  if (!selectorContributed) {
-    for (const piece of selectorPieces) {
-      if (piece.includes(token)) {
-        score += 5;
-        break;
-      }
-    }
-  }
-  if (className === token) {
-    score += 10;
-  } else if (className.includes(token)) {
-    score += 4;
-  }
+  let score = scoreSlug(slug, token);
+  score += scoreSelectorPieces(selectorPieces, token);
+  score += scoreClassName(className, token);
   if (entry.category === token) {
     score += 6;
   }

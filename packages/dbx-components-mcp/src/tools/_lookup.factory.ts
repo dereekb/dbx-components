@@ -176,10 +176,10 @@ function resolveLookup<TEntry>(config: LookupToolConfig<TEntry>, rawTopic: strin
     result = { kind: 'catalog' };
   } else {
     const hit = firstResolverHit(config.resolvers, trimmed);
-    if (hit !== undefined) {
-      result = { kind: 'single', entry: hit };
-    } else {
+    if (hit === undefined) {
       result = { kind: 'not-found', normalized: lowered, candidates: fuzzyCandidates(config, lowered) };
+    } else {
+      result = { kind: 'single', entry: hit };
     }
   }
   return result;

@@ -175,53 +175,69 @@ interface HandleOutcomeInput {
   readonly errorLog: ScanCliLogger;
 }
 
-async function handleOutcome(input: HandleOutcomeInput): Promise<RunScanCliResult> {
+async function handleSuccessOutcome(input: HandleOutcomeInput & { readonly outcome: Extract<BuildManifestOutcome, { kind: 'success' }> }): Promise<RunScanCliResult> {
   const { outcome, args, projectArg, readFile, writeFile, log, errorLog } = input;
+  const finalOutPath = args.out === undefined ? outcome.outPath : resolve(outcome.outPath, '..', args.out);
+  const serialized = serializeManifest(outcome.manifest);
 
   let result: RunScanCliResult;
-  if (outcome.kind === 'success') {
-    const finalOutPath = args.out === undefined ? outcome.outPath : resolve(outcome.outPath, '..', args.out);
-    const serialized = serializeManifest(outcome.manifest);
-    if (args.check) {
-      let existing: string | null = null;
-      try {
-        existing = await readFile(finalOutPath);
-      } catch {
-        existing = null;
-      }
-      if (existing === serialized) {
-        log(`Manifest fresh: ${finalOutPath} (${outcome.manifest.entries.length} entries, ${outcome.scannedFileCount} files scanned)`);
-        result = { exitCode: 0 };
-      } else {
-        errorLog(`Manifest is stale at ${finalOutPath}.`);
-        errorLog('Regenerate by running:');
-        errorLog(`  dbx-components-mcp scan-semantic-types --project ${projectArg}`);
-        result = { exitCode: 1 };
-      }
-    } else {
-      await writeFile(finalOutPath, serialized);
-      log(`Wrote manifest: ${finalOutPath} (${outcome.manifest.entries.length} entries, ${outcome.scannedFileCount} files scanned)`);
-      result = { exitCode: 0 };
-    }
-  } else if (outcome.kind === 'no-config') {
+  if (args.check) {
+    result = await checkManifest({ finalOutPath, serialized, outcome, projectArg, readFile, log, errorLog });
+  } else {
+    await writeFile(finalOutPath, serialized);
+    log(`Wrote manifest: ${finalOutPath} (${outcome.manifest.entries.length} entries, ${outcome.scannedFileCount} files scanned)`);
+    result = { exitCode: 0 };
+  }
+  return result;
+}
+
+async function checkManifest(input: { readonly finalOutPath: string; readonly serialized: string; readonly outcome: Extract<BuildManifestOutcome, { kind: 'success' }>; readonly projectArg: string; readonly readFile: ScanCliReadFile; readonly log: ScanCliLogger; readonly errorLog: ScanCliLogger }): Promise<RunScanCliResult> {
+  const { finalOutPath, serialized, outcome, projectArg, readFile, log, errorLog } = input;
+  let existing: string | null;
+  try {
+    existing = await readFile(finalOutPath);
+  } catch {
+    existing = null;
+  }
+  let result: RunScanCliResult;
+  if (existing === serialized) {
+    log(`Manifest fresh: ${finalOutPath} (${outcome.manifest.entries.length} entries, ${outcome.scannedFileCount} files scanned)`);
+    result = { exitCode: 0 };
+  } else {
+    errorLog(`Manifest is stale at ${finalOutPath}.`);
+    errorLog('Regenerate by running:');
+    errorLog(`  dbx-components-mcp scan-semantic-types --project ${projectArg}`);
+    result = { exitCode: 1 };
+  }
+  return result;
+}
+
+function handleErrorOutcome(outcome: Exclude<BuildManifestOutcome, { kind: 'success' }>, errorLog: ScanCliLogger): RunScanCliResult {
+  if (outcome.kind === 'no-config') {
     errorLog(`Error: no scan config at ${outcome.configPath}`);
     errorLog('Create a dbx-mcp.scan.json file in the project root.');
-    result = { exitCode: 1 };
   } else if (outcome.kind === 'invalid-scan-config') {
     errorLog(`Error: invalid scan config at ${outcome.configPath}`);
     errorLog(outcome.error);
-    result = { exitCode: 1 };
   } else if (outcome.kind === 'no-package') {
     errorLog(`Error: no package.json at ${outcome.packagePath}`);
-    result = { exitCode: 1 };
   } else if (outcome.kind === 'invalid-package') {
     errorLog(`Error: invalid package.json at ${outcome.packagePath}`);
     errorLog(outcome.error);
-    result = { exitCode: 1 };
   } else {
     errorLog('Error: generated manifest failed schema validation');
     errorLog(outcome.error);
-    result = { exitCode: 1 };
+  }
+  return { exitCode: 1 };
+}
+
+async function handleOutcome(input: HandleOutcomeInput): Promise<RunScanCliResult> {
+  const { outcome, errorLog } = input;
+  let result: RunScanCliResult;
+  if (outcome.kind === 'success') {
+    result = await handleSuccessOutcome({ ...input, outcome });
+  } else {
+    result = handleErrorOutcome(outcome, errorLog);
   }
   return result;
 }

@@ -48,6 +48,29 @@ const DBX_MODEL_SEARCH_TOOL: Tool = {
  * @param token - the lowercase token to score against
  * @returns the additive score for this token/model pair (`0` when there's no hit)
  */
+function scoreTokenMatch(value: string, token: string, exact: number, starts: number, includes: number): number {
+  if (value === token) return exact;
+  if (starts > 0 && value.startsWith(token)) return starts;
+  if (includes > 0 && value.includes(token)) return includes;
+  return 0;
+}
+
+function scoreFirebaseModelEnumsAgainstToken(model: FirebaseModel, token: string): number {
+  for (const en of model.enums) {
+    const enName = en.name.toLowerCase();
+    if (enName === token) return 5;
+    if (enName.includes(token)) return 2;
+  }
+  return 0;
+}
+
+function scoreFirebaseModelFieldsAgainstToken(model: FirebaseModel, token: string): number {
+  for (const field of model.fields) {
+    if (field.name.toLowerCase() === token) return 3;
+  }
+  return 0;
+}
+
 function scoreFirebaseModelAgainstToken(model: FirebaseModel, token: string): number {
   const name = model.name.toLowerCase();
   const identity = model.identityConst.toLowerCase();
@@ -55,42 +78,12 @@ function scoreFirebaseModelAgainstToken(model: FirebaseModel, token: string): nu
   const prefix = model.collectionPrefix.toLowerCase();
 
   let score = 0;
-  if (name === token) {
-    score += 20;
-  } else if (name.startsWith(token)) {
-    score += 14;
-  } else if (name.includes(token)) {
-    score += 8;
-  }
-  if (identity === token) {
-    score += 12;
-  } else if (identity.includes(token)) {
-    score += 6;
-  }
-  if (modelType === token) {
-    score += 10;
-  } else if (modelType.includes(token)) {
-    score += 4;
-  }
-  if (prefix === token) {
-    score += 10;
-  }
-  for (const field of model.fields) {
-    if (field.name.toLowerCase() === token) {
-      score += 3;
-      break;
-    }
-  }
-  for (const en of model.enums) {
-    if (en.name.toLowerCase() === token) {
-      score += 5;
-      break;
-    }
-    if (en.name.toLowerCase().includes(token)) {
-      score += 2;
-      break;
-    }
-  }
+  score += scoreTokenMatch(name, token, 20, 14, 8);
+  score += scoreTokenMatch(identity, token, 12, 0, 6);
+  score += scoreTokenMatch(modelType, token, 10, 0, 4);
+  score += scoreTokenMatch(prefix, token, 10, 0, 0);
+  score += scoreFirebaseModelFieldsAgainstToken(model, token);
+  score += scoreFirebaseModelEnumsAgainstToken(model, token);
   return score;
 }
 

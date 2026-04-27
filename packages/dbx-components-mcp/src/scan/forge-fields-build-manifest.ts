@@ -242,16 +242,16 @@ function assembleEntry(input: AssembleEntryInput): ForgeFieldEntry {
     sourcePath,
     example: entry.example,
     properties: entry.properties.map((p) => ({ ...p })),
-    ...(entry.wrapperPattern !== undefined ? { wrapperPattern: entry.wrapperPattern } : {}),
-    ...(entry.ngFormType !== undefined ? { ngFormType: entry.ngFormType } : {}),
-    ...(entry.generic !== undefined ? { generic: entry.generic } : {}),
-    ...(entry.suffix !== undefined ? { suffix: entry.suffix } : {}),
+    ...(entry.wrapperPattern === undefined ? {} : { wrapperPattern: entry.wrapperPattern }),
+    ...(entry.ngFormType === undefined ? {} : { ngFormType: entry.ngFormType }),
+    ...(entry.generic === undefined ? {} : { generic: entry.generic }),
+    ...(entry.suffix === undefined ? {} : { suffix: entry.suffix }),
     ...(entry.composesFromSlugs && entry.composesFromSlugs.length > 0 ? { composesFromSlugs: [...entry.composesFromSlugs] } : {}),
-    ...(entry.returns !== undefined ? { returns: entry.returns } : {}),
-    ...(entry.configInterface !== undefined ? { configInterface: entry.configInterface } : {}),
+    ...(entry.returns === undefined ? {} : { returns: entry.returns }),
+    ...(entry.configInterface === undefined ? {} : { configInterface: entry.configInterface }),
     sourceLocation: { file: projectRelative, line: entry.line },
-    ...(entry.deprecated !== undefined ? { deprecated: entry.deprecated } : {}),
-    ...(entry.since !== undefined ? { since: entry.since } : {})
+    ...(entry.deprecated === undefined ? {} : { deprecated: entry.deprecated }),
+    ...(entry.since === undefined ? {} : { since: entry.since })
   };
   return out;
 }

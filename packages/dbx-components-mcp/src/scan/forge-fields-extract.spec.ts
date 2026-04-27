@@ -125,7 +125,7 @@ describe('extractForgeFieldEntries — union config walker', () => {
     });
     const result = extractForgeFieldEntries({ project });
     const entry = findEntry(result.entries, 'object-union');
-    const names = entry.properties.map((p) => p.name).sort();
+    const names = entry.properties.map((p) => p.name).sort((a, b) => a.localeCompare(b));
     expect(names).toEqual(['fromA', 'fromB']);
     expect(findWarning(result.warnings, 'union-config-not-walked')).toBeUndefined();
   });
