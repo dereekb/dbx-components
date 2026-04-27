@@ -214,72 +214,8 @@ export function getActionStateEntry(stateValue: string): ActionStateInfo | undef
 }
 
 // MARK: UI Components
-import { UI_COMPONENTS, type UiComponentInfo, type UiComponentCategory, type UiComponentKind } from './ui-components.js';
-
-export { UI_COMPONENTS, UI_CATEGORY_ORDER, UI_KIND_ORDER } from './ui-components.js';
-export type { UiComponentInfo, UiComponentCategory, UiComponentKind, UiComponentInputInfo, UiComponentOutputInfo } from './ui-components.js';
-
-/**
- * Returns every registered UI component / directive / pipe / service.
- *
- * @returns the full UI registry list in declaration order
- */
-export function getUiComponents(): readonly UiComponentInfo[] {
-  return UI_COMPONENTS;
-}
-
-/**
- * Looks up a UI entry by slug (`'section'`), class name (`'DbxSectionComponent'`),
- * or selector substring (`'dbx-section'`). Slug match is exact; className is
- * case-insensitive; selector match is exact against any comma-separated piece
- * of the entry's selector string.
- *
- * @param key - slug, class name, or selector to resolve against the registry
- * @returns the matching entry, or `undefined` when no candidate matches
- */
-export function getUiComponent(key: string): UiComponentInfo | undefined {
-  let result: UiComponentInfo | undefined = UI_COMPONENTS.find((c) => c.slug === key);
-  const lowered = key.toLowerCase();
-  result ??= UI_COMPONENTS.find((c) => c.className.toLowerCase() === lowered);
-  result ??= getUiComponentBySelector(key);
-  return result;
-}
-
-/**
- * PRIMARY index. Returns every UI entry whose `category` matches the given value.
- *
- * @param category - the category to filter by
- * @returns entries that share the given category, in registry order
- */
-export function getUiComponentsByCategory(category: UiComponentCategory): readonly UiComponentInfo[] {
-  return UI_COMPONENTS.filter((c) => c.category === category);
-}
-
-/**
- * Returns every UI entry whose `kind` matches the given value.
- *
- * @param kind - the kind classification (component, directive, pipe, service) to filter by
- * @returns entries that share the given kind, in registry order
- */
-export function getUiComponentsByKind(kind: UiComponentKind): readonly UiComponentInfo[] {
-  return UI_COMPONENTS.filter((c) => c.kind === kind);
-}
-
-/**
- * Looks up a UI entry by selector. Splits comma-separated selector strings and
- * matches each piece individually so callers can pass either the element form
- * (`'dbx-section'`) or the attribute form (`'[dbxContent]'`).
- *
- * @param selector - the element or attribute selector to resolve
- * @returns the matching UI entry, or `undefined` when no piece matches
- */
-export function getUiComponentBySelector(selector: string): UiComponentInfo | undefined {
-  const target = selector.trim();
-  return UI_COMPONENTS.find((c) => {
-    const pieces = c.selector.split(',').map((s) => s.trim());
-    return pieces.includes(target);
-  });
-}
+export { createUiComponentRegistry, createUiComponentRegistryFromEntries, EMPTY_UI_COMPONENT_REGISTRY } from './ui-components-runtime.js';
+export type { UiComponentRegistry } from './ui-components-runtime.js';
 
 // MARK: Firebase Models
 import { FIREBASE_MODELS, FIREBASE_MODEL_GROUPS, type FirebaseModel, type FirebaseModelGroup } from './firebase-models.js';

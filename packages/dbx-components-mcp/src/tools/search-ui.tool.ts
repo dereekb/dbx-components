@@ -8,11 +8,14 @@
  * (slug > selector > className > description token > relatedSlugs).
  *
  * Optional `category` arg restricts scoring to a single UI category.
+ *
+ * Reads from a {@link UiComponentRegistry} supplied at construction time.
  */
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { UI_CATEGORY_ORDER, UI_COMPONENTS, getUiComponentsByCategory, type UiComponentCategory, type UiComponentInfo } from '../registry/index.js';
+import { UI_COMPONENT_CATEGORIES, type UiComponentCategoryValue, type UiComponentEntry } from '../manifest/ui-components-schema.js';
+import type { UiComponentRegistry } from '../registry/ui-components-runtime.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 
 const DEFAULT_LIMIT = 10;
@@ -39,7 +42,7 @@ const DBX_UI_SEARCH_TOOL: Tool = {
       },
       category: {
         type: 'string',
-        enum: [...UI_CATEGORY_ORDER],
+        enum: [...UI_COMPONENT_CATEGORIES],
         description: 'Optional category filter — restricts the search corpus to one UI category.'
       },
       limit: {
@@ -63,7 +66,7 @@ const SearchUiArgsType = type({
 
 interface ParsedSearchUiArgs {
   readonly query: string;
-  readonly category: UiComponentCategory | undefined;
+  readonly category: UiComponentCategoryValue | undefined;
   readonly limit: number;
 }
 
@@ -84,7 +87,7 @@ function parseSearchUiArgs(raw: unknown): ParsedSearchUiArgs {
 
 // MARK: Scoring
 interface UiSearchHit {
-  readonly entry: UiComponentInfo;
+  readonly entry: UiComponentEntry;
   readonly score: number;
   readonly matchedTokens: readonly string[];
 }
@@ -174,7 +177,7 @@ function scoreClassName(className: string, token: string): number {
  * @param token - the lowercase token to score against
  * @returns the additive score for this token/entry pair (`0` when there's no hit)
  */
-function scoreEntryAgainstToken(entry: UiComponentInfo, token: string): number {
+function scoreEntryAgainstToken(entry: UiComponentEntry, token: string): number {
   const slug = entry.slug.toLowerCase();
   const className = entry.className.toLowerCase();
   const selectorPieces = entry.selector
@@ -182,7 +185,7 @@ function scoreEntryAgainstToken(entry: UiComponentInfo, token: string): number {
     .split(',')
     .map((s) => s.trim());
   const description = entry.description.toLowerCase();
-  const relatedSlugsLower = entry.relatedSlugs.map((s) => s.toLowerCase());
+  const relatedSlugsLower = (entry.relatedSlugs ?? []).map((s) => s.toLowerCase());
 
   let score = scoreSlug(slug, token);
   score += scoreSelectorPieces(selectorPieces, token);
@@ -199,7 +202,7 @@ function scoreEntryAgainstToken(entry: UiComponentInfo, token: string): number {
   return score;
 }
 
-function searchRegistry(corpus: readonly UiComponentInfo[], tokens: readonly string[], limit: number): readonly UiSearchHit[] {
+function searchRegistry(corpus: readonly UiComponentEntry[], tokens: readonly string[], limit: number): readonly UiSearchHit[] {
   let result: readonly UiSearchHit[] = [];
   if (tokens.length > 0) {
     const hits: UiSearchHit[] = [];
@@ -236,7 +239,7 @@ interface FormatSearchResultsOptions {
   readonly query: string;
   readonly tokens: readonly string[];
   readonly hits: readonly UiSearchHit[];
-  readonly category: UiComponentCategory | undefined;
+  readonly category: UiComponentCategoryValue | undefined;
 }
 
 // MARK: Formatting
@@ -257,31 +260,43 @@ function formatSearchResults(options: FormatSearchResultsOptions): string {
   return result;
 }
 
-// MARK: Handler
+// MARK: Tool factory
 /**
- * Tool handler for `dbx_ui_search`. Tokenises the query, scores every UI
- * registry entry, and renders the top hits with matched-token annotations.
- *
- * @param rawArgs - the unvalidated tool arguments from the MCP runtime
- * @returns the formatted search results, or an error result when args fail validation
+ * Input to {@link createSearchUiTool}.
  */
-export function runSearchUi(rawArgs: unknown): ToolResult {
-  let args: ParsedSearchUiArgs;
-  try {
-    args = parseSearchUiArgs(rawArgs);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return toolError(message);
-  }
-  const tokens = tokenize(args.query);
-  const corpus = args.category ? getUiComponentsByCategory(args.category) : UI_COMPONENTS;
-  const hits = searchRegistry(corpus, tokens, args.limit);
-  const text = formatSearchResults({ query: args.query, tokens, hits, category: args.category });
-  const result: ToolResult = { content: [{ type: 'text', text }] };
-  return result;
+export interface CreateSearchUiToolInput {
+  /**
+   * UI components registry the tool reads from. The server bootstrap supplies
+   * this after loading the bundled `@dereekb/dbx-web` ui-components manifest
+   * plus any external manifests declared in `dbx-mcp.config.json`.
+   */
+  readonly registry: UiComponentRegistry;
 }
 
-export const searchUiTool: DbxTool = {
-  definition: DBX_UI_SEARCH_TOOL,
-  run: runSearchUi
-};
+/**
+ * Creates the `dbx_ui_search` tool wired to the supplied registry. Tests pass
+ * a fixture registry; the production server passes the merged registry from
+ * {@link loadUiComponentRegistry}.
+ *
+ * @param input - the registry the tool reads from
+ * @returns a {@link DbxTool} ready to register with the dispatcher
+ */
+export function createSearchUiTool(input: CreateSearchUiToolInput): DbxTool {
+  const { registry } = input;
+  const run = (rawArgs: unknown): ToolResult => {
+    let args: ParsedSearchUiArgs;
+    try {
+      args = parseSearchUiArgs(rawArgs);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return toolError(message);
+    }
+    const tokens = tokenize(args.query);
+    const corpus = args.category ? registry.findByCategory(args.category) : registry.all;
+    const hits = searchRegistry(corpus, tokens, args.limit);
+    const text = formatSearchResults({ query: args.query, tokens, hits, category: args.category });
+    const result: ToolResult = { content: [{ type: 'text', text }] };
+    return result;
+  };
+  return { definition: DBX_UI_SEARCH_TOOL, run };
+}

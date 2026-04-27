@@ -4,15 +4,20 @@ import { Directive, input } from '@angular/core';
  * Wraps content in a box container with optional elevation (card-like shadow) and wide layout.
  * Both `elevate` and `wide` default to `true`.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug content-box
+ * @dbxWebCategory layout
+ * @dbxWebRelated content, content-elevate, content-pit
+ * @dbxWebSkillRefs dbx__ref__dbx-ui-building-blocks
+ * @dbxWebMinimalExample ```html
+ * <div dbxContentBox>Body</div>
+ * ```
+ *
  * @example
  * ```html
  * <dbx-content-box>
- *   <p>Elevated wide box content.</p>
+ *   <p>Summary content</p>
  * </dbx-content-box>
- *
- * <div dbxContentBox [elevate]="false" [wide]="false">
- *   <p>Flat, non-wide box content.</p>
- * </div>
  * ```
  */
 @Directive({

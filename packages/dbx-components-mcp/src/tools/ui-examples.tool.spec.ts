@@ -55,8 +55,9 @@ describe('dbx_ui_examples', () => {
   });
 
   it('every pattern uses real UI slugs from the registry', async () => {
-    const { UI_COMPONENTS } = await import('../registry/index.js');
-    const slugs = new Set(UI_COMPONENTS.map((c) => c.slug));
+    const { loadUiComponentRegistry } = await import('../manifest/load-ui-components-registry.js');
+    const result = await loadUiComponentRegistry({ cwd: process.cwd() });
+    const slugs = new Set(result.registry.all.map((c) => c.slug));
     for (const pattern of UI_PATTERNS) {
       for (const ref of pattern.usesUiSlugs) {
         expect(slugs.has(ref), `pattern ${pattern.slug} references unknown UI slug "${ref}"`).toBe(true);

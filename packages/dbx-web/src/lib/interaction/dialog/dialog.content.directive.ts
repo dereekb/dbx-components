@@ -11,10 +11,20 @@ export type DbxDialogContentContainerWidth = 'normal' | 'wide';
  *
  * Can be used as an element, attribute, or CSS class selector.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug dialog-content
+ * @dbxWebCategory overlay
+ * @dbxWebRelated popover, popup, prompt
+ * @dbxWebSkillRefs dbx__ref__dbx-app-structure
+ * @dbxWebMinimalExample ```html
+ * <div dbxDialogContent>Body</div>
+ * ```
+ *
  * @example
  * ```html
- * <dbx-dialog-content [width]="'wide'">
- *   <p>Dialog body content here.</p>
+ * <dbx-dialog-content>
+ *   <h2>Confirm</h2>
+ *   <p>Are you sure?</p>
  * </dbx-dialog-content>
  * ```
  */

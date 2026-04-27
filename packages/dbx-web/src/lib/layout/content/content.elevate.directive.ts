@@ -4,15 +4,18 @@ import { Directive, input } from '@angular/core';
  * Applies elevation (box-shadow) styling to the host element, giving it a raised card appearance.
  * Elevation is enabled by default and can be toggled off.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug content-elevate
+ * @dbxWebCategory layout
+ * @dbxWebRelated content-box, content-pit
+ * @dbxWebSkillRefs dbx__ref__dbx-ui-building-blocks
+ * @dbxWebMinimalExample ```html
+ * <dbx-content-elevate>Body</dbx-content-elevate>
+ * ```
+ *
  * @example
  * ```html
- * <dbx-content-elevate>
- *   <p>Elevated content with shadow.</p>
- * </dbx-content-elevate>
- *
- * <div dbxContentElevate [elevate]="false">
- *   <p>Flat content, no elevation.</p>
- * </div>
+ * <div dbxContentElevate>Highlighted block</div>
  * ```
  */
 @Directive({

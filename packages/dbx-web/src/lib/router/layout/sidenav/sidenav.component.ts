@@ -28,13 +28,18 @@ export interface DbxSidenavSidebarState {
  * Renders a Material sidenav with an anchor list and automatically transitions between mobile overlay, icon rail, and full sidebar modes.
  * Closes automatically on route transitions in mobile mode.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug sidenav
+ * @dbxWebCategory navigation
+ * @dbxWebRelated sidenav-page, anchor-list
+ * @dbxWebSkillRefs dbx__ref__dbx-app-structure
+ * @dbxWebMinimalExample ```html
+ * <dbx-sidenav [anchors]="anchors"></dbx-sidenav>
+ * ```
+ *
  * @example
  * ```html
- * <dbx-sidenav [anchors]="sidenavLinks" color="primary">
- *   <div top>Header Content</div>
- *   <div bottom>Footer Content</div>
- *   <router-outlet></router-outlet>
- * </dbx-sidenav>
+ * <dbx-sidenav [anchors]="sidenavAnchors"></dbx-sidenav>
  * ```
  */
 @Component({

@@ -15,13 +15,20 @@ import { DbxAnchorComponent } from '../../../router';
  * When this component is created, it automatically registers itself with the {@link TwoColumnsContextStore}
  * to indicate that right-side content is present.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug two-column-right
+ * @dbxWebCategory layout
+ * @dbxWebRelated two-column
+ * @dbxWebSkillRefs dbx__ref__dbx-ui-building-blocks, dbx__ref__dbx-app-structure
+ * @dbxWebMinimalExample ```html
+ * <dbx-two-column-right>Body</dbx-two-column-right>
+ * ```
+ *
  * @example
  * ```html
- * <dbx-two-column-right header="Detail View" [showBack]="true" [minRightWidth]="400">
- *   <div nav>
- *     <button mat-icon-button>Actions</button>
- *   </div>
- *   <p>Right column content here</p>
+ * <dbx-two-column-right header="Item Detail">
+ *   <button nav mat-icon-button><mat-icon>delete</mat-icon></button>
+ *   <p>Body content</p>
  * </dbx-two-column-right>
  * ```
  */

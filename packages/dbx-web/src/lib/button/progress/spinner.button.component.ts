@@ -13,11 +13,18 @@ import { DbxColorDirective } from '../../layout/style/style.color.directive';
  * Progress button that overlays a Material progress spinner on the button while working.
  * Supports icon-only, FAB, and text button modes with automatic spinner sizing.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug progress-spinner-button
+ * @dbxWebCategory button
+ * @dbxWebRelated button, progress-bar-button
+ * @dbxWebSkillRefs dbx__ref__dbx-ui-building-blocks
+ * @dbxWebMinimalExample ```html
+ * <dbx-progress-spinner-button [config]="cfg"></dbx-progress-spinner-button>
+ * ```
+ *
  * @example
  * ```html
- * <dbx-progress-spinner-button [config]="buttonConfig" (btnClick)="onSubmit()">
- *   Submit
- * </dbx-progress-spinner-button>
+ * <dbx-progress-spinner-button [config]="cfg" (btnClick)="onClick()"></dbx-progress-spinner-button>
  * ```
  */
 @Component({

@@ -13,10 +13,20 @@ import { overrideClickElementEffect } from '../../../util/click';
  *
  * Supports plain content, clickable actions, router segue references, external hrefs, and disabled states.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug anchor
+ * @dbxWebCategory router
+ * @dbxWebRelated anchor-list, navbar, sidenav
+ * @dbxWebSkillRefs dbx__ref__dbx-app-structure
+ * @dbxWebMinimalExample ```html
+ * <dbx-anchor [anchor]="{ url: '/' }">Home</dbx-anchor>
+ * ```
+ *
  * @example
  * ```html
- * <dbx-anchor [anchor]="myAnchor">Click me</dbx-anchor>
- * <span dbx-anchor [anchor]="myAnchor" [block]="true">Block anchor</span>
+ * <dbx-anchor [anchor]="{ ref: 'app.home' }">
+ *   <button mat-button>Home</button>
+ * </dbx-anchor>
  * ```
  */
 @Component({

@@ -41,10 +41,18 @@ export type NavbarButtonMode = 'menu' | 'rotate';
  *
  * Automatically selects the active anchor based on the current route and supports configurable breakpoints.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug navbar
+ * @dbxWebCategory navigation
+ * @dbxWebRelated anchor, sidenav, pagebar
+ * @dbxWebSkillRefs dbx__ref__dbx-app-structure
+ * @dbxWebMinimalExample ```html
+ * <dbx-navbar [anchors]="anchors"></dbx-navbar>
+ * ```
+ *
  * @example
  * ```html
- * <dbx-navbar [anchors]="navAnchors" breakpoint="large" buttonMode="menu"></dbx-navbar>
- * <dbx-navbar [anchors]="navAnchors" mode="icon" [showMenuCaret]="true"></dbx-navbar>
+ * <dbx-navbar [anchors]="topNav"></dbx-navbar>
  * ```
  */
 @Component({

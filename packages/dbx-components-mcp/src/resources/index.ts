@@ -56,7 +56,9 @@ export function registerResources(server: McpServer, options: RegisterResourcesO
   }
   registerFirebaseModelsResource(server);
   registerActionsResource(server);
-  registerUiComponentsResource(server);
+  if (options.uiComponentRegistry !== undefined) {
+    registerUiComponentsResource(server, { registry: options.uiComponentRegistry });
+  }
   if (options.pipeRegistry !== undefined) {
     registerPipesResource(server, { registry: options.pipeRegistry });
   }

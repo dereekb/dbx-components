@@ -7,7 +7,8 @@
  */
 
 import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { UI_CATEGORY_ORDER, UI_KIND_ORDER, getUiComponents, getUiComponent, getUiComponentsByCategory, getUiComponentsByKind, type UiComponentCategory, type UiComponentKind } from '../registry/index.js';
+import { UI_COMPONENT_CATEGORIES, UI_COMPONENT_KINDS, type UiComponentCategoryValue, type UiComponentKindValue } from '../manifest/ui-components-schema.js';
+import type { UiComponentRegistry } from '../registry/ui-components-runtime.js';
 
 const UI_COMPONENTS_URI = 'dbx://ui/components';
 const UI_COMPONENT_TEMPLATE = 'dbx://ui/components/{slug}';
@@ -15,13 +16,25 @@ const UI_COMPONENTS_BY_CATEGORY_TEMPLATE = 'dbx://ui/components/category/{catego
 const UI_COMPONENTS_BY_KIND_TEMPLATE = 'dbx://ui/components/kind/{kind}';
 
 /**
+ * Input to {@link registerUiComponentsResource}. The registry is supplied by
+ * the server bootstrap after loading the bundled `@dereekb/dbx-web`
+ * ui-components manifest plus any external sources declared in
+ * `dbx-mcp.config.json`.
+ */
+export interface RegisterUiComponentsResourceOptions {
+  readonly registry: UiComponentRegistry;
+}
+
+/**
  * Registers the UI-component MCP resources (catalog, per-slug details, plus
  * category and kind filters) on the given server. Mirrors the indexes used by
  * `dbx_ui_lookup` so browsing clients see the same access patterns.
  *
  * @param server - the MCP server to register resources against
+ * @param options - registry the resources read from
  */
-export function registerUiComponentsResource(server: McpServer): void {
+export function registerUiComponentsResource(server: McpServer, options: RegisterUiComponentsResourceOptions): void {
+  const { registry } = options;
   server.registerResource(
     'dbx-components UI Components',
     UI_COMPONENTS_URI,
@@ -31,12 +44,11 @@ export function registerUiComponentsResource(server: McpServer): void {
       mimeType: 'application/json'
     },
     async () => {
-      const entries = getUiComponents();
       const payload = {
         description: 'All registered @dereekb/dbx-web UI entries.',
-        categoryOrder: UI_CATEGORY_ORDER,
-        kindOrder: UI_KIND_ORDER,
-        components: entries.map((c) => ({
+        categoryOrder: UI_COMPONENT_CATEGORIES,
+        kindOrder: UI_COMPONENT_KINDS,
+        components: registry.all.map((c) => ({
           slug: c.slug,
           className: c.className,
           selector: c.selector,
@@ -68,15 +80,18 @@ export function registerUiComponentsResource(server: McpServer): void {
     async (uri, variables) => {
       const rawSlug = variables.slug;
       const slug = Array.isArray(rawSlug) ? rawSlug[0] : rawSlug;
-      const entry = slug ? getUiComponent(slug) : undefined;
+
+      let entry;
+      if (slug) {
+        const slugHits = registry.findBySlug(slug);
+        entry = slugHits.length > 0 ? slugHits[0] : (registry.findByClassName(slug) ?? registry.findBySelector(slug));
+      }
 
       let text: string;
       if (slug && entry) {
         text = JSON.stringify(entry, null, 2);
       } else if (slug) {
-        const available = getUiComponents()
-          .map((c) => c.slug)
-          .join(', ');
+        const available = registry.all.map((c) => c.slug).join(', ');
         text = `UI component '${slug}' not found. Available slugs: ${available}`;
       } else {
         text = 'No slug provided.';
@@ -104,15 +119,15 @@ export function registerUiComponentsResource(server: McpServer): void {
     },
     async (uri, variables) => {
       const rawCategory = variables.category;
-      const category = (Array.isArray(rawCategory) ? rawCategory[0] : rawCategory) as UiComponentCategory | undefined;
+      const category = (Array.isArray(rawCategory) ? rawCategory[0] : rawCategory) as UiComponentCategoryValue | undefined;
 
-      const valid = category && UI_CATEGORY_ORDER.includes(category);
+      const valid = category !== undefined && UI_COMPONENT_CATEGORIES.includes(category);
       let text: string;
-      if (valid) {
-        const components = getUiComponentsByCategory(category);
+      if (valid && category !== undefined) {
+        const components = registry.findByCategory(category);
         text = JSON.stringify({ category, components }, null, 2);
       } else {
-        text = `Invalid category. Valid values: ${UI_CATEGORY_ORDER.join(', ')}`;
+        text = `Invalid category. Valid values: ${UI_COMPONENT_CATEGORIES.join(', ')}`;
       }
 
       return {
@@ -137,15 +152,15 @@ export function registerUiComponentsResource(server: McpServer): void {
     },
     async (uri, variables) => {
       const rawKind = variables.kind;
-      const kind = (Array.isArray(rawKind) ? rawKind[0] : rawKind) as UiComponentKind | undefined;
+      const kind = (Array.isArray(rawKind) ? rawKind[0] : rawKind) as UiComponentKindValue | undefined;
 
-      const valid = kind && UI_KIND_ORDER.includes(kind);
+      const valid = kind !== undefined && UI_COMPONENT_KINDS.includes(kind);
       let text: string;
-      if (valid) {
-        const components = getUiComponentsByKind(kind);
+      if (valid && kind !== undefined) {
+        const components = registry.findByKind(kind);
         text = JSON.stringify({ kind, components }, null, 2);
       } else {
-        text = `Invalid kind. Valid values: ${UI_KIND_ORDER.join(', ')}`;
+        text = `Invalid kind. Valid values: ${UI_COMPONENT_KINDS.join(', ')}`;
       }
 
       return {

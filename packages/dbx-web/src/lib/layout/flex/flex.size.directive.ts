@@ -5,11 +5,20 @@ import { type DbxFlexSize } from './flex';
  * Applies a `dbx-flex-{size}` CSS class to the host element based on the given {@link DbxFlexSize} value.
  * Use within a {@link DbxFlexGroupDirective} to control how much row width this element occupies.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug flex-size
+ * @dbxWebCategory layout
+ * @dbxWebRelated flex-group
+ * @dbxWebSkillRefs dbx__ref__dbx-ui-building-blocks
+ * @dbxWebMinimalExample ```html
+ * <div dbxFlexSize="1"></div>
+ * ```
+ *
  * @example
  * ```html
  * <div dbxFlexGroup>
- *   <div [dbxFlexSize]="4">Two-thirds width</div>
- *   <div [dbxFlexSize]="2">One-third width</div>
+ *   <div dbxFlexSize="2">Twice as wide</div>
+ *   <div dbxFlexSize="1">Narrow</div>
  * </div>
  * ```
  */

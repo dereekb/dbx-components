@@ -34,9 +34,18 @@ export interface DbxErrorSnackbarData<T extends ErrorInput = ErrorInput> {
  * Supports an optional auto-dismiss timer that pauses while an error detail popover is open.
  * Typically opened via {@link DbxErrorSnackbarService} or the static {@link DbxErrorSnackbarComponent.showErrorSnackbar} method.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug error-snackbar
+ * @dbxWebCategory feedback
+ * @dbxWebRelated error
+ * @dbxWebSkillRefs dbx__ref__dbx-component-patterns
+ * @dbxWebMinimalExample ```html
+ * <dbx-error-snackbar></dbx-error-snackbar>
+ * ```
+ *
  * @example
- * ```typescript
- * DbxErrorSnackbarComponent.showErrorSnackbar(matSnackBar, error, { duration: 5000 });
+ * ```html
+ * // Triggered via DbxErrorSnackbarService.showError(error)
  * ```
  */
 @Component({

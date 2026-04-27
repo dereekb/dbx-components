@@ -3,13 +3,22 @@ import { Directive } from '@angular/core';
 /**
  * Adds flexible spacing between sibling elements in a flex container.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug spacer
+ * @dbxWebCategory layout
+ * @dbxWebRelated bar, button-spacer
+ * @dbxWebSkillRefs dbx__ref__dbx-ui-building-blocks
+ * @dbxWebMinimalExample ```html
+ * <dbx-spacer></dbx-spacer>
+ * ```
+ *
  * @example
  * ```html
- * <div class="dbx-flex">
- *   <span>Left</span>
+ * <dbx-bar>
+ *   <span>Title</span>
  *   <dbx-spacer></dbx-spacer>
- *   <span>Right</span>
- * </div>
+ *   <button mat-button>Action</button>
+ * </dbx-bar>
  * ```
  */
 @Directive({

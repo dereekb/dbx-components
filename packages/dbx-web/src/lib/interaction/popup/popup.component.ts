@@ -45,6 +45,20 @@ export interface DbxPopupComponentConfig<O, I, T> {
  * Core popup component that renders injected content with support for minimize, fullscreen, and normal window states.
  *
  * Coordinates with {@link DbxPopupCoordinatorService} to ensure only one popup per key is active at a time.
+ *
+ * @dbxWebComponent
+ * @dbxWebSlug popup
+ * @dbxWebCategory overlay
+ * @dbxWebRelated popover
+ * @dbxWebSkillRefs dbx__ref__dbx-app-structure
+ * @dbxWebMinimalExample ```html
+ * <dbx-popup></dbx-popup>
+ * ```
+ *
+ * @example
+ * ```html
+ * // In a service: this.popupService.open({ content: MyContentComponent })
+ * ```
  */
 @Component({
   template: `

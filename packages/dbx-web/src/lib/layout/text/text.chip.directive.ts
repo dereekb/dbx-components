@@ -38,11 +38,18 @@ export const DBX_CHIP_DEFAULT_TONE = 18;
 /**
  * Renders a styled chip element with optional small, block, and color modes.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug chip
+ * @dbxWebCategory text
+ * @dbxWebRelated chip-list
+ * @dbxWebSkillRefs dbx__ref__dbx-ui-building-blocks
+ * @dbxWebMinimalExample ```html
+ * <dbx-chip text="Tag"></dbx-chip>
+ * ```
+ *
  * @example
  * ```html
- * <dbx-chip [small]="true">Tag</dbx-chip>
- * <dbx-chip [block]="true">Full Width</dbx-chip>
- * <dbx-chip [color]="'primary'">Primary</dbx-chip>
+ * <dbx-chip text="Active" icon="check" color="primary"></dbx-chip>
  * ```
  */
 @Directive({

@@ -58,8 +58,8 @@ import { createLookupFormTool } from './lookup-form.tool.js';
 import { createSearchFormTool } from './search-form.tool.js';
 import { formExamplesTool } from './form-examples.tool.js';
 import { createFormScaffoldTool } from './form-scaffold.tool.js';
-import { lookupUiTool } from './lookup-ui.tool.js';
-import { searchUiTool } from './search-ui.tool.js';
+import { createLookupUiTool } from './lookup-ui.tool.js';
+import { createSearchUiTool } from './search-ui.tool.js';
 import { uiExamplesTool } from './ui-examples.tool.js';
 import { lookupModelTool } from './lookup-model.tool.js';
 import { searchModelTool } from './search-model.tool.js';
@@ -106,8 +106,6 @@ export const DBX_TOOLS: readonly DbxTool[] = [
   // form
   formExamplesTool,
   // ui
-  lookupUiTool,
-  searchUiTool,
   uiExamplesTool,
   // model
   lookupModelTool,
@@ -178,6 +176,9 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions =
   }
   if (options.pipeRegistry !== undefined) {
     tools.push(createLookupPipeTool({ registry: options.pipeRegistry }));
+  }
+  if (options.uiComponentRegistry !== undefined) {
+    tools.push(createLookupUiTool({ registry: options.uiComponentRegistry }), createSearchUiTool({ registry: options.uiComponentRegistry }));
   }
 
   underlyingServer.setRequestHandler(ListToolsRequestSchema, async () => {

@@ -5,14 +5,17 @@
  * the literal `'list'`) and a depth and returns markdown documentation for
  * `@dereekb/dbx-web` UI building blocks.
  *
- * Mirrors `lookup-form.tool.ts` shape: low-level `setRequestHandler` registration
- * via the central dispatcher, plain JSON Schema input, arktype validation in
- * the handler. No zod.
+ * Reads from a {@link UiComponentRegistry} supplied at construction time —
+ * the server bootstrap composes the registry from the bundled
+ * `@dereekb/dbx-web` manifest plus any external manifests declared in
+ * `dbx-mcp.config.json`.
  */
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { UI_CATEGORY_ORDER, UI_KIND_ORDER, UI_COMPONENTS, getUiComponent, getUiComponentsByCategory, type UiComponentCategory, type UiComponentInfo } from '../registry/index.js';
+import { type Maybe } from '@dereekb/util';
+import { UI_COMPONENT_CATEGORIES, UI_COMPONENT_KINDS, type UiComponentCategoryValue, type UiComponentEntry } from '../manifest/ui-components-schema.js';
+import type { UiComponentRegistry } from '../registry/ui-components-runtime.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 
 // MARK: Tool advertisement
@@ -70,42 +73,10 @@ function parseLookupUiArgs(raw: unknown): ParsedLookupUiArgs {
 }
 
 // MARK: Resolution
-type LookupUiMatch = { readonly kind: 'single'; readonly entry: UiComponentInfo } | { readonly kind: 'group'; readonly title: string; readonly entries: readonly UiComponentInfo[] } | { readonly kind: 'catalog' } | { readonly kind: 'not-found'; readonly normalized: string; readonly candidates: readonly UiComponentInfo[] };
+type LookupUiMatch = { readonly kind: 'single'; readonly entry: UiComponentEntry } | { readonly kind: 'group'; readonly title: string; readonly entries: readonly UiComponentEntry[] } | { readonly kind: 'catalog' } | { readonly kind: 'not-found'; readonly normalized: string; readonly candidates: readonly UiComponentEntry[] };
 
-function isCategory(value: string): value is UiComponentCategory {
-  return UI_CATEGORY_ORDER.includes(value as UiComponentCategory);
-}
-
-/**
- * Resolves a topic string into the best UI match.
- *
- * Resolution order:
- *   1. `'list'` / `'catalog'` / `'all'` → catalog
- *   2. category name → category group
- *   3. exact slug / className / selector → single entry
- *   4. fuzzy substring search over slug / className / selector / description
- *
- * @param rawTopic - the caller-supplied topic, untrimmed
- * @returns the resolved match describing how to render the response
- */
-function resolveTopic(rawTopic: string): LookupUiMatch {
-  const lowered = rawTopic.trim().toLowerCase();
-  let result: LookupUiMatch;
-
-  if (lowered === 'list' || lowered === 'catalog' || lowered === 'all') {
-    result = { kind: 'catalog' };
-  } else if (isCategory(lowered)) {
-    const category = lowered;
-    result = { kind: 'group', title: `UI components: category = ${category}`, entries: getUiComponentsByCategory(category) };
-  } else {
-    const directHit = getUiComponent(rawTopic) ?? getUiComponent(lowered);
-    if (directHit) {
-      result = { kind: 'single', entry: directHit };
-    } else {
-      result = { kind: 'not-found', normalized: lowered, candidates: fuzzyCandidates(lowered) };
-    }
-  }
-  return result;
+function isCategory(value: string): value is UiComponentCategoryValue {
+  return UI_COMPONENT_CATEGORIES.includes(value as UiComponentCategoryValue);
 }
 
 /**
@@ -113,53 +84,94 @@ function resolveTopic(rawTopic: string): LookupUiMatch {
  * Returns up to five entries whose slug / className / selector / description
  * contains the query.
  *
+ * @param registry - the registry whose entries to search
  * @param query - the unmatched lookup topic to fuzzy-search
  * @returns up to five candidate entries ordered by descending score
  */
-function fuzzyCandidates(query: string): readonly UiComponentInfo[] {
+function fuzzyCandidates(registry: UiComponentRegistry, query: string): readonly UiComponentEntry[] {
   const q = query.trim().toLowerCase();
-  if (q.length === 0) {
-    return [];
+  let result: readonly UiComponentEntry[] = [];
+  if (q.length > 0) {
+    const scored: { readonly entry: UiComponentEntry; readonly score: number }[] = [];
+    for (const entry of registry.all) {
+      const slugHit = entry.slug.toLowerCase().includes(q) ? 4 : 0;
+      const classHit = entry.className.toLowerCase().includes(q) ? 3 : 0;
+      const selectorHit = entry.selector.toLowerCase().includes(q) ? 2 : 0;
+      const descHit = entry.description.toLowerCase().includes(q) ? 1 : 0;
+      const score = slugHit + classHit + selectorHit + descHit;
+      if (score > 0) {
+        scored.push({ entry, score });
+      }
+    }
+    scored.sort((a, b) => b.score - a.score);
+    result = scored.slice(0, 5).map((s) => s.entry);
   }
-  const scored: { readonly entry: UiComponentInfo; readonly score: number }[] = [];
-  for (const entry of UI_COMPONENTS) {
-    const slugHit = entry.slug.toLowerCase().includes(q) ? 4 : 0;
-    const classHit = entry.className.toLowerCase().includes(q) ? 3 : 0;
-    const selectorHit = entry.selector.toLowerCase().includes(q) ? 2 : 0;
-    const descHit = entry.description.toLowerCase().includes(q) ? 1 : 0;
-    const score = slugHit + classHit + selectorHit + descHit;
-    if (score > 0) {
-      scored.push({ entry, score });
+  return result;
+}
+
+function resolveSingle(registry: UiComponentRegistry, rawTopic: string): Maybe<UiComponentEntry> {
+  const trimmed = rawTopic.trim();
+  const lowered = trimmed.toLowerCase();
+  const slugHit = registry.findBySlug(trimmed);
+  let entry: Maybe<UiComponentEntry>;
+  if (slugHit.length > 0) {
+    entry = slugHit[0];
+  } else {
+    const slugLowerHit = registry.findBySlug(lowered);
+    entry = slugLowerHit.length > 0 ? slugLowerHit[0] : undefined;
+  }
+  entry ??= registry.findByClassName(trimmed);
+  entry ??= registry.findBySelector(trimmed);
+  return entry;
+}
+
+function resolveTopic(registry: UiComponentRegistry, rawTopic: string): LookupUiMatch {
+  const lowered = rawTopic.trim().toLowerCase();
+  let result: LookupUiMatch;
+
+  if (lowered === 'list' || lowered === 'catalog' || lowered === 'all') {
+    result = { kind: 'catalog' };
+  } else if (isCategory(lowered)) {
+    result = { kind: 'group', title: `UI components: category = ${lowered}`, entries: registry.findByCategory(lowered) };
+  } else {
+    const directHit = resolveSingle(registry, rawTopic);
+    if (directHit) {
+      result = { kind: 'single', entry: directHit };
+    } else {
+      result = { kind: 'not-found', normalized: lowered, candidates: fuzzyCandidates(registry, lowered) };
     }
   }
-  scored.sort((a, b) => b.score - a.score);
-  return scored.slice(0, 5).map((s) => s.entry);
+  return result;
 }
 
 // MARK: Formatting
 type Depth = 'brief' | 'full';
 
-function formatEntry(entry: UiComponentInfo, depth: Depth): string {
+function formatEntry(entry: UiComponentEntry, depth: Depth): string {
   return depth === 'brief' ? formatBrief(entry) : formatFull(entry);
 }
 
-function formatBrief(entry: UiComponentInfo): string {
-  const lines: string[] = [`## ${entry.className}`, '', `**slug:** \`${entry.slug}\` · **kind:** \`${entry.kind}\` · **category:** \`${entry.category}\` · **selector:** \`${entry.selector}\``, '', entry.description, '', '```html', entry.minimalExample, '```'];
+function formatBrief(entry: UiComponentEntry): string {
+  const minimal = entry.minimalExample ?? '';
+  const lines: string[] = [`## ${entry.className}`, '', `**slug:** \`${entry.slug}\` · **kind:** \`${entry.kind}\` · **category:** \`${entry.category}\` · **selector:** \`${entry.selector}\``, '', entry.description];
+  if (minimal.length > 0) {
+    lines.push('', '```html', minimal, '```');
+  }
   return lines.join('\n');
 }
 
-function formatFull(entry: UiComponentInfo): string {
+function formatFull(entry: UiComponentEntry): string {
   const sections: string[] = [formatHeader(entry), entry.description, formatInputsTable(entry), formatOutputsTable(entry), formatContentProjection(entry), formatExampleSection(entry), formatRelated(entry), formatSkillRefs(entry)];
   const filtered = sections.filter((s) => s.length > 0);
   return filtered.join('\n\n');
 }
 
-function formatHeader(entry: UiComponentInfo): string {
-  const lines: string[] = [`# ${entry.className}`, '', `- **slug:** \`${entry.slug}\``, `- **kind:** \`${entry.kind}\``, `- **category:** \`${entry.category}\``, `- **selector:** \`${entry.selector}\``, `- **module:** \`${entry.module}\``, `- **source:** \`packages/dbx-web/src/${entry.sourcePath}\``];
+function formatHeader(entry: UiComponentEntry): string {
+  const lines: string[] = [`# ${entry.className}`, '', `- **slug:** \`${entry.slug}\``, `- **kind:** \`${entry.kind}\``, `- **category:** \`${entry.category}\``, `- **selector:** \`${entry.selector}\``, `- **module:** \`${entry.module}\``, `- **source:** \`${entry.sourcePath}\``];
   return lines.join('\n');
 }
 
-function formatInputsTable(entry: UiComponentInfo): string {
+function formatInputsTable(entry: UiComponentEntry): string {
   let result: string;
   if (entry.inputs.length === 0) {
     result = '## Inputs\n\nNone.';
@@ -176,7 +188,7 @@ function formatInputsTable(entry: UiComponentInfo): string {
   return result;
 }
 
-function formatOutputsTable(entry: UiComponentInfo): string {
+function formatOutputsTable(entry: UiComponentEntry): string {
   let result: string;
   if (entry.outputs.length === 0) {
     result = '';
@@ -191,49 +203,64 @@ function formatOutputsTable(entry: UiComponentInfo): string {
   return result;
 }
 
-function formatContentProjection(entry: UiComponentInfo): string {
+function formatContentProjection(entry: UiComponentEntry): string {
   let result = '';
-  if (entry.contentProjection) {
+  if (entry.contentProjection !== undefined && entry.contentProjection.length > 0) {
     result = `## Content projection\n\n\`\`\`html\n${entry.contentProjection}\n\`\`\``;
   }
   return result;
 }
 
-function formatExampleSection(entry: UiComponentInfo): string {
-  return ['## Example', '', '```html', entry.example, '```', '', '### Minimal', '', '```html', entry.minimalExample, '```'].join('\n');
+function formatExampleSection(entry: UiComponentEntry): string {
+  const example = entry.example ?? '';
+  const minimal = entry.minimalExample ?? '';
+  let result = '';
+  if (example.length > 0 || minimal.length > 0) {
+    const lines: string[] = ['## Example'];
+    if (example.length > 0) {
+      lines.push('', '```html', example, '```');
+    }
+    if (minimal.length > 0) {
+      lines.push('', '### Minimal', '', '```html', minimal, '```');
+    }
+    result = lines.join('\n');
+  }
+  return result;
 }
 
-function formatRelated(entry: UiComponentInfo): string {
+function formatRelated(entry: UiComponentEntry): string {
+  const related = entry.relatedSlugs ?? [];
   let result = '';
-  if (entry.relatedSlugs.length > 0) {
-    const refs = entry.relatedSlugs.map((s) => `\`${s}\``).join(', ');
+  if (related.length > 0) {
+    const refs = related.map((s) => `\`${s}\``).join(', ');
     result = `## Related\n\n${refs}`;
   }
   return result;
 }
 
-function formatSkillRefs(entry: UiComponentInfo): string {
+function formatSkillRefs(entry: UiComponentEntry): string {
+  const refs = entry.skillRefs ?? [];
   let result = '';
-  if (entry.skillRefs.length > 0) {
-    const refs = entry.skillRefs.map((s) => `\`${s}\``).join(', ');
-    result = `## See also\n\n${refs}`;
+  if (refs.length > 0) {
+    const formatted = refs.map((s) => `\`${s}\``).join(', ');
+    result = `## See also\n\n${formatted}`;
   }
   return result;
 }
 
-function formatGroup(entries: readonly UiComponentInfo[], title: string): string {
+function formatGroup(entries: readonly UiComponentEntry[], title: string): string {
   let result: string;
   if (entries.length === 0) {
     result = '_No UI components matched._';
   } else {
-    const byKind = new Map<string, UiComponentInfo[]>();
+    const byKind = new Map<string, UiComponentEntry[]>();
     for (const entry of entries) {
       const list = byKind.get(entry.kind) ?? [];
       list.push(entry);
       byKind.set(entry.kind, list);
     }
     const sections: string[] = [`# ${title}`, ''];
-    for (const kind of UI_KIND_ORDER) {
+    for (const kind of UI_COMPONENT_KINDS) {
       const list = byKind.get(kind);
       if (!list || list.length === 0) {
         continue;
@@ -249,10 +276,10 @@ function formatGroup(entries: readonly UiComponentInfo[], title: string): string
   return result;
 }
 
-function formatCatalog(): string {
-  const lines: string[] = ['# UI catalog', '', `${UI_COMPONENTS.length} entries across ${UI_CATEGORY_ORDER.length} categories.`, ''];
-  for (const category of UI_CATEGORY_ORDER) {
-    const list = getUiComponentsByCategory(category);
+function formatCatalog(registry: UiComponentRegistry): string {
+  const lines: string[] = ['# UI catalog', '', `${registry.all.length} entries across ${UI_COMPONENT_CATEGORIES.length} categories.`, ''];
+  for (const category of UI_COMPONENT_CATEGORIES) {
+    const list = registry.findByCategory(category);
     if (list.length === 0) {
       continue;
     }
@@ -265,7 +292,7 @@ function formatCatalog(): string {
   return lines.join('\n').trimEnd();
 }
 
-function formatNotFound(normalized: string, candidates: readonly UiComponentInfo[]): string {
+function formatNotFound(normalized: string, candidates: readonly UiComponentEntry[]): string {
   const lines: string[] = [`No UI component matched \`${normalized}\`.`, ''];
   if (candidates.length > 0) {
     lines.push('Did you mean one of these?', '');
@@ -278,46 +305,57 @@ function formatNotFound(normalized: string, candidates: readonly UiComponentInfo
   return lines.join('\n');
 }
 
-// MARK: Handler
+// MARK: Tool factory
 /**
- * Tool handler for `dbx_ui_lookup`. Resolves the requested UI topic against
- * the registry and renders the matching catalog, group, single entry, or
- * not-found suggestion list.
- *
- * @param rawArgs - the unvalidated tool arguments from the MCP runtime
- * @returns the rendered match, or an error result when args fail validation
+ * Input to {@link createLookupUiTool}.
  */
-export function runLookupUi(rawArgs: unknown): ToolResult {
-  let args: ParsedLookupUiArgs;
-  try {
-    args = parseLookupUiArgs(rawArgs);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return toolError(message);
-  }
-
-  const match = resolveTopic(args.topic);
-  let text: string;
-  switch (match.kind) {
-    case 'catalog':
-      text = formatCatalog();
-      break;
-    case 'single':
-      text = formatEntry(match.entry, args.depth);
-      break;
-    case 'group':
-      text = formatGroup(match.entries, match.title);
-      break;
-    case 'not-found':
-      text = formatNotFound(match.normalized, match.candidates);
-      break;
-  }
-
-  const result: ToolResult = { content: [{ type: 'text', text }] };
-  return result;
+export interface CreateLookupUiToolInput {
+  /**
+   * UI components registry the tool reads from. The server bootstrap supplies
+   * this after loading the bundled `@dereekb/dbx-web` ui-components manifest
+   * plus any external manifests declared in `dbx-mcp.config.json`.
+   */
+  readonly registry: UiComponentRegistry;
 }
 
-export const lookupUiTool: DbxTool = {
-  definition: DBX_UI_LOOKUP_TOOL,
-  run: runLookupUi
-};
+/**
+ * Creates the `dbx_ui_lookup` tool wired to the supplied registry. Tests pass
+ * a fixture registry; the production server passes the merged registry from
+ * {@link loadUiComponentRegistry}.
+ *
+ * @param input - the registry the tool reads from
+ * @returns a {@link DbxTool} ready to register with the dispatcher
+ */
+export function createLookupUiTool(input: CreateLookupUiToolInput): DbxTool {
+  const { registry } = input;
+  const run = (rawArgs: unknown): ToolResult => {
+    let args: ParsedLookupUiArgs;
+    try {
+      args = parseLookupUiArgs(rawArgs);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return toolError(message);
+    }
+
+    const match = resolveTopic(registry, args.topic);
+    let text: string;
+    switch (match.kind) {
+      case 'catalog':
+        text = formatCatalog(registry);
+        break;
+      case 'single':
+        text = formatEntry(match.entry, args.depth);
+        break;
+      case 'group':
+        text = formatGroup(match.entries, match.title);
+        break;
+      case 'not-found':
+        text = formatNotFound(match.normalized, match.candidates);
+        break;
+    }
+
+    const result: ToolResult = { content: [{ type: 'text', text }] };
+    return result;
+  };
+  return { definition: DBX_UI_LOOKUP_TOOL, run };
+}

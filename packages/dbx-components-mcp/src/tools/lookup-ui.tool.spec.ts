@@ -1,5 +1,86 @@
 import { describe, expect, it } from 'vitest';
-import { runLookupUi } from './lookup-ui.tool.js';
+import { type UiComponentEntry } from '../manifest/ui-components-schema.js';
+import { createUiComponentRegistryFromEntries } from '../registry/ui-components-runtime.js';
+import { createLookupUiTool } from './lookup-ui.tool.js';
+
+const FIXTURE_ENTRIES: readonly UiComponentEntry[] = [
+  {
+    slug: 'section',
+    category: 'layout',
+    kind: 'component',
+    selector: 'dbx-section',
+    className: 'DbxSectionComponent',
+    module: '@dereekb/dbx-web',
+    description: 'Content section with a header and body area.',
+    inputs: [
+      { name: 'header', type: 'string', description: 'Section header text.', required: false },
+      { name: 'icon', type: 'string', description: 'Material icon name.', required: false }
+    ],
+    outputs: [],
+    contentProjection: '<ng-content></ng-content>',
+    relatedSlugs: ['subsection'],
+    skillRefs: ['dbx__ref__dbx-ui-building-blocks'],
+    sourcePath: 'lib/layout/section/section.component.ts',
+    example: '<dbx-section header="Account"><p>Body</p></dbx-section>',
+    minimalExample: '<dbx-section header="Title"></dbx-section>'
+  },
+  {
+    slug: 'subsection',
+    category: 'layout',
+    kind: 'component',
+    selector: 'dbx-subsection',
+    className: 'DbxSubSectionComponent',
+    module: '@dereekb/dbx-web',
+    description: 'Subsection variant of dbx-section.',
+    inputs: [],
+    outputs: [],
+    relatedSlugs: ['section'],
+    skillRefs: ['dbx__ref__dbx-ui-building-blocks'],
+    sourcePath: 'lib/layout/section/subsection.component.ts',
+    example: '<dbx-subsection header="Detail"></dbx-subsection>',
+    minimalExample: '<dbx-subsection></dbx-subsection>'
+  },
+  {
+    slug: 'content',
+    category: 'layout',
+    kind: 'directive',
+    selector: 'dbx-content,[dbxContent]',
+    className: 'DbxContentDirective',
+    module: '@dereekb/dbx-web',
+    description: 'Marker directive that applies the canonical content class.',
+    inputs: [],
+    outputs: [],
+    relatedSlugs: [],
+    skillRefs: [],
+    sourcePath: 'lib/layout/content/content.directive.ts',
+    example: '<div dbxContent>Body</div>',
+    minimalExample: '<dbx-content>Body</dbx-content>'
+  },
+  {
+    slug: 'button',
+    category: 'button',
+    kind: 'component',
+    selector: 'dbx-button',
+    className: 'DbxButtonComponent',
+    module: '@dereekb/dbx-web',
+    description: 'Canonical action button.',
+    inputs: [{ name: 'text', type: 'string', description: 'Button text.', required: false }],
+    outputs: [{ name: 'btnClick', emits: 'MouseEvent', description: 'Click event.' }],
+    relatedSlugs: [],
+    skillRefs: [],
+    sourcePath: 'lib/button/button.component.ts',
+    example: '<dbx-button text="Save"></dbx-button>',
+    minimalExample: '<dbx-button></dbx-button>'
+  }
+];
+
+const tool = createLookupUiTool({
+  registry: createUiComponentRegistryFromEntries({ entries: FIXTURE_ENTRIES, loadedSources: ['@dereekb/dbx-web'] })
+});
+
+function runLookupUi(args: unknown): { isError?: boolean; content: { type: string; text: string }[] } {
+  return tool.run(args) as { isError?: boolean; content: { type: string; text: string }[] };
+}
 
 function firstText(result: ReturnType<typeof runLookupUi>): string {
   expect(result.content.length).toBeGreaterThan(0);
