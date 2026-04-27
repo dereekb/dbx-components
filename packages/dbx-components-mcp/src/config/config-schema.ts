@@ -31,6 +31,9 @@ export const DbxMcpConfig = type({
   },
   'forgeFields?': {
     'sources?': 'string[]'
+  },
+  'pipes?': {
+    'sources?': 'string[]'
   }
 });
 

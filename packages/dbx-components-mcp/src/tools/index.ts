@@ -83,12 +83,13 @@ import { routeLookupTool } from './route-lookup.tool.js';
 import { routeSearchTool } from './route-search.tool.js';
 import { lookupFilterTool } from './lookup-filter.tool.js';
 import { filterScaffoldTool } from './filter-scaffold.tool.js';
-import { lookupPipeTool } from './lookup-pipe.tool.js';
+import { createLookupPipeTool } from './lookup-pipe.tool.js';
 import { artifactScaffoldTool } from './artifact-scaffold.tool.js';
 import { artifactFileConventionTool } from './artifact-file-convention.tool.js';
 import { createSemanticTypeLookupTool } from './lookup-semantic-type.tool.js';
 import { createSemanticTypeSearchTool } from './search-semantic-type.tool.js';
 import type { ForgeFieldRegistry } from '../registry/forge-fields.js';
+import type { PipeRegistry } from '../registry/pipes-runtime.js';
 import type { SemanticTypeRegistry } from '../registry/semantic-types.js';
 import { toolError, type DbxTool } from './types.js';
 
@@ -136,8 +137,6 @@ export const DBX_TOOLS: readonly DbxTool[] = [
   // filter
   lookupFilterTool,
   filterScaffoldTool,
-  // pipe
-  lookupPipeTool,
   // artifact (cross-domain dispatchers)
   artifactScaffoldTool,
   artifactFileConventionTool
@@ -153,6 +152,7 @@ export const DBX_TOOLS: readonly DbxTool[] = [
 export interface RegisterToolsOptions {
   readonly semanticTypeRegistry?: SemanticTypeRegistry;
   readonly forgeFieldRegistry?: ForgeFieldRegistry;
+  readonly pipeRegistry?: PipeRegistry;
 }
 
 /**
@@ -173,6 +173,9 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions =
   }
   if (options.semanticTypeRegistry !== undefined) {
     tools.push(createSemanticTypeLookupTool({ registry: options.semanticTypeRegistry }), createSemanticTypeSearchTool({ registry: options.semanticTypeRegistry }));
+  }
+  if (options.pipeRegistry !== undefined) {
+    tools.push(createLookupPipeTool({ registry: options.pipeRegistry }));
   }
 
   underlyingServer.setRequestHandler(ListToolsRequestSchema, async () => {

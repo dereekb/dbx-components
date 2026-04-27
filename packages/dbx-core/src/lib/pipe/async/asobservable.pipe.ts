@@ -8,6 +8,9 @@ import { type Observable } from 'rxjs';
  * Useful for normalizing values that may be plain values, getter functions, or Observables
  * into a consistent Observable stream for use with the `async` pipe.
  *
+ * @dbxPipe
+ * @dbxPipeSlug as-observable
+ * @dbxPipeCategory async
  * @example
  * ```html
  * <span>{{ valueOrGetter | asObservable | async }}</span>

@@ -6,6 +6,10 @@ import { cutString, type Maybe } from '@dereekb/util';
  *
  * Returns the original value if the input is `null` or `undefined`.
  *
+ * @dbxPipe
+ * @dbxPipeSlug cut-text
+ * @dbxPipeCategory value
+ * @dbxPipeSkillRefs dbx-value-pipes
  * @example
  * ```html
  * <span>{{ 'Hello World' | cutText:5 }}</span>
@@ -14,6 +18,8 @@ import { cutString, type Maybe } from '@dereekb/util';
  * <span>{{ longText | cutText:20:'--' }}</span>
  * <!-- Output: "Some long text here--" -->
  * ```
+ * @param maxLength Maximum allowed length before truncation.
+ * @param endText Suffix appended when truncation occurs.
  */
 @Pipe({
   name: 'cutText',

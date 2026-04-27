@@ -7,6 +7,10 @@ import { type DateRange, formatToTimeRangeString } from '@dereekb/date';
  *
  * Displays only the time portion (no date). Returns a fallback string when the input is `null` or `undefined`.
  *
+ * @dbxPipe
+ * @dbxPipeSlug date-time-range-only
+ * @dbxPipeCategory date
+ * @dbxPipeRelated date-time-range
  * @example
  * ```html
  * <span>{{ dateRange | dateTimeRangeOnly }}</span>

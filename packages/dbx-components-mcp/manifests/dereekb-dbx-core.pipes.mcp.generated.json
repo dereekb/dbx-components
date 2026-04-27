@@ -1,0 +1,621 @@
+{
+  "version": 1,
+  "source": "@dereekb/dbx-core",
+  "module": "@dereekb/dbx-core",
+  "generatedAt": "1970-01-01T00:00:00.000Z",
+  "generator": "@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs",
+  "entries": [
+    {
+      "slug": "cut-text",
+      "category": "value",
+      "pipeName": "cutText",
+      "className": "CutTextPipe",
+      "module": "@dereekb/dbx-core",
+      "inputType": "Maybe<string>",
+      "outputType": "Maybe<string>",
+      "purity": "pure",
+      "description": "Truncates the input string to a maximum length and appends an ellipsis (or custom suffix) using {@link cutString}.\n\nReturns the original value if the input is `null` or `undefined`.",
+      "args": [
+        {
+          "name": "maxLength",
+          "type": "number",
+          "description": "Maximum allowed length before truncation.",
+          "required": true
+        },
+        {
+          "name": "endText",
+          "type": "Maybe<string>",
+          "description": "Suffix appended when truncation occurs.",
+          "required": false
+        }
+      ],
+      "example": "<span>{{ 'Hello World' | cutText:5 }}</span>\n<!-- Output: \"Hello...\" -->\n\n<span>{{ longText | cutText:20:'--' }}</span>\n<!-- Output: \"Some long text here--\" -->",
+      "sourcePath": "lib/pipe/value/cuttext.pipe.ts",
+      "skillRefs": ["dbx-value-pipes"],
+      "sourceLocation": {
+        "file": "src/lib/pipe/value/cuttext.pipe.ts",
+        "line": 24
+      }
+    },
+    {
+      "slug": "dollar-amount",
+      "category": "value",
+      "pipeName": "dollarAmount",
+      "className": "DollarAmountPipe",
+      "module": "@dereekb/dbx-core",
+      "inputType": "Maybe<number>",
+      "outputType": "Maybe<string>",
+      "purity": "pure",
+      "description": "Formats a numeric value as a US dollar currency string using {@link dollarAmountString}.\n\nOptionally accepts a default string to display when the input is `null` or `undefined`.",
+      "args": [
+        {
+          "name": "defaultIfNull",
+          "type": "Maybe<string>",
+          "description": "String to display when the input is `null` or `undefined`. Defaults to formatting `null` through `dollarAmountString`.",
+          "required": false
+        }
+      ],
+      "example": "<span>{{ 19.5 | dollarAmount }}</span>\n<!-- Output: \"$19.50\" -->\n\n<span>{{ nullValue | dollarAmount:'N/A' }}</span>\n<!-- Output: \"N/A\" -->",
+      "sourcePath": "lib/pipe/value/dollar.pipe.ts",
+      "skillRefs": ["dbx-value-pipes"],
+      "sourceLocation": {
+        "file": "src/lib/pipe/value/dollar.pipe.ts",
+        "line": 23
+      }
+    },
+    {
+      "slug": "get-value",
+      "category": "value",
+      "pipeName": "getValue",
+      "className": "GetValuePipe",
+      "module": "@dereekb/dbx-core",
+      "inputType": "GetterOrValue<T>",
+      "outputType": "T",
+      "purity": "impure",
+      "description": "Resolves a {@link GetterOrValue} to its underlying value using {@link getValueFromGetter}.\n\nThis is an impure pipe that re-evaluates on every change detection cycle, making it suitable\nfor getter functions whose return value may change over time.\nUse {@link GetValueOncePipe} (`getValueOnce`) for a pure alternative when the value is static.",
+      "args": [
+        {
+          "name": "args",
+          "type": "A",
+          "description": "Optional argument forwarded to the getter function.",
+          "required": false
+        }
+      ],
+      "example": "<span>{{ myGetterOrValue | getValue }}</span>\n<span>{{ myGetterFn | getValue:someArg }}</span>",
+      "sourcePath": "lib/pipe/value/getvalue.pipe.ts",
+      "relatedSlugs": ["get-value-once"],
+      "skillRefs": ["dbx-value-pipes"],
+      "sourceLocation": {
+        "file": "src/lib/pipe/value/getvalue.pipe.ts",
+        "line": 23
+      }
+    },
+    {
+      "slug": "get-value-once",
+      "category": "value",
+      "pipeName": "getValueOnce",
+      "className": "GetValueOncePipe",
+      "module": "@dereekb/dbx-core",
+      "inputType": "GetterOrValue<T>",
+      "outputType": "T",
+      "purity": "pure",
+      "description": "Resolves a {@link GetterOrValue} to its underlying value using {@link getValueFromGetter}.\n\nThis is a pure pipe that only re-evaluates when the input reference changes.\nUse {@link GetValuePipe} (`getValue`) if the getter function's return value may change between cycles.",
+      "args": [
+        {
+          "name": "args",
+          "type": "A",
+          "description": "Optional argument forwarded to the getter function.",
+          "required": false
+        }
+      ],
+      "example": "<span>{{ myGetterOrValue | getValueOnce }}</span>",
+      "sourcePath": "lib/pipe/value/getvalue.pipe.ts",
+      "relatedSlugs": ["get-value"],
+      "skillRefs": ["dbx-value-pipes"],
+      "sourceLocation": {
+        "file": "src/lib/pipe/value/getvalue.pipe.ts",
+        "line": 51
+      }
+    },
+    {
+      "slug": "prettyjson",
+      "category": "misc",
+      "pipeName": "prettyjson",
+      "className": "PrettyJsonPipe",
+      "module": "@dereekb/dbx-core",
+      "inputType": "Maybe<unknown>",
+      "outputType": "Maybe<string>",
+      "purity": "pure",
+      "description": "Formats a value as a pretty-printed JSON string using {@link JSON.stringify} with configurable indentation.\n\nReturns `undefined` for falsy input. If serialization fails, returns `'ERROR'` and logs the error to the console.",
+      "args": [
+        {
+          "name": "spacing",
+          "type": "number",
+          "description": "Indent spaces; defaults to `2`.",
+          "required": false
+        }
+      ],
+      "example": "<pre>{{ myObject | prettyjson }}</pre>\n<!-- Output: formatted JSON with 2-space indentation -->\n\n<pre>{{ myObject | prettyjson:4 }}</pre>\n<!-- Output: formatted JSON with 4-space indentation -->",
+      "sourcePath": "lib/pipe/misc/prettyjson.pipe.ts",
+      "sourceLocation": {
+        "file": "src/lib/pipe/misc/prettyjson.pipe.ts",
+        "line": 22
+      }
+    },
+    {
+      "slug": "date-day-range",
+      "category": "date",
+      "pipeName": "dateDayRange",
+      "className": "DateDayRangePipe",
+      "module": "@dereekb/dbx-core",
+      "inputType": "Maybe<DateRange>",
+      "outputType": "string",
+      "purity": "pure",
+      "description": "Formats a {@link DateRange} as a human-readable day range string using {@link formatToDayRangeString}.\n\nDisplays only the date portion (no times). Returns a fallback string when the input is `null` or `undefined`.",
+      "args": [
+        {
+          "name": "unavailable",
+          "type": "string",
+          "description": "",
+          "required": false
+        }
+      ],
+      "example": "<span>{{ dateRange | dateDayRange }}</span>\n<!-- Output: \"Jan 5 - Jan 8\" -->\n\n<span>{{ nullRange | dateDayRange:'No dates' }}</span>\n<!-- Output: \"No dates\" -->",
+      "sourcePath": "lib/pipe/date/datedayrange.pipe.ts",
+      "relatedSlugs": ["date-time-range", "date-day-time-range"],
+      "sourceLocation": {
+        "file": "src/lib/pipe/date/datedayrange.pipe.ts",
+        "line": 23
+      }
+    },
+    {
+      "slug": "date-day-time-range",
+      "category": "date",
+      "pipeName": "dateDayTimeRange",
+      "className": "DateDayTimeRangePipe",
+      "module": "@dereekb/dbx-core",
+      "inputType": "Maybe<DateRange>",
+      "outputType": "string",
+      "purity": "pure",
+      "description": "Formats a {@link DateRange} as a human-readable day and time range string using {@link formatToDayTimeRangeString}.\n\nIncludes both the date and time portions. Returns a fallback string when the input is `null` or `undefined`.",
+      "args": [
+        {
+          "name": "unavailable",
+          "type": "string",
+          "description": "",
+          "required": false
+        }
+      ],
+      "example": "<span>{{ dateRange | dateDayTimeRange }}</span>\n<!-- Output: \"Jan 5, 2:00 PM - Jan 8, 4:00 PM\" -->\n\n<span>{{ nullRange | dateDayTimeRange:'No dates' }}</span>\n<!-- Output: \"No dates\" -->",
+      "sourcePath": "lib/pipe/date/datedaytimerange.pipe.ts",
+      "relatedSlugs": ["date-time-range", "date-day-range"],
+      "sourceLocation": {
+        "file": "src/lib/pipe/date/datedaytimerange.pipe.ts",
+        "line": 23
+      }
+    },
+    {
+      "slug": "date-distance",
+      "category": "date",
+      "pipeName": "dateDistance",
+      "className": "DateDistancePipe",
+      "module": "@dereekb/dbx-core",
+      "inputType": "Maybe<DateOrDateString>",
+      "outputType": "string",
+      "purity": "impure",
+      "description": "Formats a date as a human-readable distance string relative to another date (or now) using {@link formatDateDistance}.\n\nAccepts an optional comparison date (defaults to now) and a fallback string for `null`/`undefined` input.",
+      "args": [
+        {
+          "name": "inputTo",
+          "type": "Maybe<Date>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "unavailable",
+          "type": "string",
+          "description": "",
+          "required": false
+        }
+      ],
+      "example": "<span>{{ someDate | dateDistance }}</span>\n<!-- Output: \"3 hours ago\" -->\n\n<span>{{ someDate | dateDistance:referenceDate }}</span>\n<!-- Output: \"2 days ago\" -->\n\n<span>{{ nullDate | dateDistance:null:'Unknown' }}</span>\n<!-- Output: \"Unknown\" -->",
+      "sourcePath": "lib/pipe/date/datedistance.pipe.ts",
+      "relatedSlugs": ["date-range-distance", "date-format-distance", "time-distance"],
+      "sourceLocation": {
+        "file": "src/lib/pipe/date/datedistance.pipe.ts",
+        "line": 27
+      }
+    },
+    {
+      "slug": "date-format-distance",
+      "category": "date",
+      "pipeName": "dateFormatDistance",
+      "className": "DateFormatDistancePipe",
+      "module": "@dereekb/dbx-core",
+      "inputType": "Maybe<DateOrDateString>",
+      "outputType": "Maybe<string>",
+      "purity": "impure",
+      "description": "Formats a date using a locale-aware format string and appends the relative distance to now in parentheses.\n\nReturns `undefined` if the input is falsy or not a valid date.",
+      "args": [
+        {
+          "name": "format",
+          "type": "string",
+          "description": "",
+          "required": true
+        },
+        {
+          "name": "includeSeconds",
+          "type": "boolean",
+          "description": "",
+          "required": false
+        }
+      ],
+      "example": "<span>{{ someDate | dateFormatDistance:'MMM d, y' }}</span>\n<!-- Output: \"Jan 5, 2024 (3 days ago)\" -->\n\n<span>{{ someDate | dateFormatDistance:'short':true }}</span>\n<!-- Output: \"1/5/24, 2:30 PM (about 3 days ago)\" with includeSeconds enabled -->",
+      "sourcePath": "lib/pipe/date/dateformatdistance.pipe.ts",
+      "relatedSlugs": ["date-distance", "date-format-from-to"],
+      "sourceLocation": {
+        "file": "src/lib/pipe/date/dateformatdistance.pipe.ts",
+        "line": 25
+      }
+    },
+    {
+      "slug": "date-format-from-to",
+      "category": "date",
+      "pipeName": "dateFormatFromTo",
+      "className": "DateFormatFromToPipe",
+      "module": "@dereekb/dbx-core",
+      "inputType": "Maybe<DateOrDateString>",
+      "outputType": "Maybe<string>",
+      "purity": "pure",
+      "description": "Formats a date as a \"from - to\" time range string given a start date, format string, and duration in minutes.\n\nThe start date is formatted using the Angular locale-aware {@link formatDate}, and the end time\nis computed by adding the given minutes and formatted as a time-only string.",
+      "args": [
+        {
+          "name": "format",
+          "type": "string",
+          "description": "",
+          "required": true
+        },
+        {
+          "name": "minutes",
+          "type": "Minutes",
+          "description": "",
+          "required": true
+        }
+      ],
+      "example": "<span>{{ eventStart | dateFormatFromTo:'MMM d, h:mm a':90 }}</span>\n<!-- Output: \"Jan 5, 2:00 PM - 3:30 PM\" -->",
+      "sourcePath": "lib/pipe/date/dateformatfromto.pipe.ts",
+      "relatedSlugs": ["date-time-range", "date-format-distance"],
+      "sourceLocation": {
+        "file": "src/lib/pipe/date/dateformatfromto.pipe.ts",
+        "line": 23
+      }
+    },
+    {
+      "slug": "date-range-distance",
+      "category": "date",
+      "pipeName": "dateRangeDistance",
+      "className": "DateRangeDistancePipe",
+      "module": "@dereekb/dbx-core",
+      "inputType": "Maybe<Date | DateRange>",
+      "outputType": "string",
+      "purity": "impure",
+      "description": "Formats a {@link Date} or {@link DateRange} as a human-readable distance string relative to now using {@link formatDateDistance}.\n\nThis is an impure pipe that recalculates on every change detection cycle to keep the distance up to date.\nReturns a fallback string when the input is `null` or `undefined`.",
+      "args": [
+        {
+          "name": "unavailable",
+          "type": "string",
+          "description": "",
+          "required": false
+        }
+      ],
+      "example": "<span>{{ someDate | dateRangeDistance }}</span>\n<!-- Output: \"3 hours ago\" -->\n\n<span>{{ nullDate | dateRangeDistance:'Unknown' }}</span>\n<!-- Output: \"Unknown\" -->",
+      "sourcePath": "lib/pipe/date/daterangedistance.pipe.ts",
+      "relatedSlugs": ["date-distance"],
+      "sourceLocation": {
+        "file": "src/lib/pipe/date/daterangedistance.pipe.ts",
+        "line": 24
+      }
+    },
+    {
+      "slug": "date-time-range",
+      "category": "date",
+      "pipeName": "dateTimeRange",
+      "className": "DateTimeRangePipe",
+      "module": "@dereekb/dbx-core",
+      "inputType": "Maybe<DateRange>",
+      "outputType": "string",
+      "purity": "pure",
+      "description": "Formats a {@link DateRange} as a time range string using {@link formatToTimeRangeString}.\n\nDisplays the date and time of both the start and end. Returns a fallback string when the input is `null` or `undefined`.",
+      "args": [
+        {
+          "name": "unavailable",
+          "type": "string",
+          "description": "",
+          "required": false
+        }
+      ],
+      "example": "<span>{{ dateRange | dateTimeRange }}</span>\n<!-- Output: \"Jan 5, 2:00 PM - 4:00 PM\" -->\n\n<span>{{ nullRange | dateTimeRange:'TBD' }}</span>\n<!-- Output: \"TBD\" -->",
+      "sourcePath": "lib/pipe/date/datetimerange.pipe.ts",
+      "relatedSlugs": ["date-time-range-only", "date-day-range", "date-day-time-range"],
+      "sourceLocation": {
+        "file": "src/lib/pipe/date/datetimerange.pipe.ts",
+        "line": 23
+      }
+    },
+    {
+      "slug": "date-time-range-only",
+      "category": "date",
+      "pipeName": "dateTimeRangeOnly",
+      "className": "DateTimeRangeOnlyPipe",
+      "module": "@dereekb/dbx-core",
+      "inputType": "Maybe<DateRange>",
+      "outputType": "string",
+      "purity": "pure",
+      "description": "Formats a {@link DateRange} as a time-only range string using {@link formatToTimeRangeString} with the time-only flag enabled.\n\nDisplays only the time portion (no date). Returns a fallback string when the input is `null` or `undefined`.",
+      "args": [
+        {
+          "name": "unavailable",
+          "type": "string",
+          "description": "",
+          "required": false
+        }
+      ],
+      "example": "<span>{{ dateRange | dateTimeRangeOnly }}</span>\n<!-- Output: \"2:00 PM - 4:00 PM\" -->\n\n<span>{{ nullRange | dateTimeRangeOnly:'TBD' }}</span>\n<!-- Output: \"TBD\" -->",
+      "sourcePath": "lib/pipe/date/datetimerangeonly.pipe.ts",
+      "relatedSlugs": ["date-time-range"],
+      "sourceLocation": {
+        "file": "src/lib/pipe/date/datetimerangeonly.pipe.ts",
+        "line": 23
+      }
+    },
+    {
+      "slug": "date-time-range-only-distance",
+      "category": "date",
+      "pipeName": "dateTimeRangeOnlyDistance",
+      "className": "DateTimeRangeOnlyDistancePipe",
+      "module": "@dereekb/dbx-core",
+      "inputType": "Maybe<DateRange>",
+      "outputType": "string",
+      "purity": "pure",
+      "description": "Formats a {@link DateRange} as a human-readable distance string using {@link formatDateRangeDistance}.\n\nAccepts an optional {@link FormatDateRangeDistanceFunctionConfig} to customize the output format.\nReturns a fallback string when the input is `null` or `undefined`.",
+      "args": [
+        {
+          "name": "config",
+          "type": "FormatDateRangeDistanceFunctionConfig",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "unavailable",
+          "type": "string",
+          "description": "",
+          "required": false
+        }
+      ],
+      "example": "<span>{{ dateRange | dateTimeRangeOnlyDistance }}</span>\n<!-- Output: \"3 hours\" -->\n\n<span>{{ dateRange | dateTimeRangeOnlyDistance:config }}</span>\n<!-- Output varies based on config -->\n\n<span>{{ nullRange | dateTimeRangeOnlyDistance:null:'TBD' }}</span>\n<!-- Output: \"TBD\" -->",
+      "sourcePath": "lib/pipe/date/datetimerangeonlydistance.pipe.ts",
+      "relatedSlugs": ["date-time-range", "date-range-distance"],
+      "sourceLocation": {
+        "file": "src/lib/pipe/date/datetimerangeonlydistance.pipe.ts",
+        "line": 27
+      }
+    },
+    {
+      "slug": "minutes-string",
+      "category": "date",
+      "pipeName": "minutesString",
+      "className": "MinutesStringPipe",
+      "module": "@dereekb/dbx-core",
+      "inputType": "Maybe<Minutes | string>",
+      "outputType": "Maybe<string>",
+      "purity": "impure",
+      "description": "Converts a numeric minute value into a human-readable duration string with automatic unit scaling.\n\n- Values over 3600 minutes are displayed as days (e.g., \"~2 days\")\n- Values over 180 minutes are displayed as hours (e.g., \"~4 hours\")\n- Values at or below 180 minutes are displayed as minutes (e.g., \"90 minutes\")\n\nA `~` prefix is added when the value is rounded up. Returns `undefined` for `null` or non-numeric input.",
+      "args": [],
+      "example": "<span>{{ 90 | minutesString }}</span>\n<!-- Output: \"90 minutes\" -->\n\n<span>{{ 250 | minutesString }}</span>\n<!-- Output: \"~5 hours\" -->\n\n<span>{{ 5000 | minutesString }}</span>\n<!-- Output: \"~4 days\" -->",
+      "sourcePath": "lib/pipe/date/minutesstring.pipe.ts",
+      "relatedSlugs": ["to-minutes"],
+      "sourceLocation": {
+        "file": "src/lib/pipe/date/minutesstring.pipe.ts",
+        "line": 29
+      }
+    },
+    {
+      "slug": "system-date-to-target-date",
+      "category": "date",
+      "pipeName": "systemDateToTargetDate",
+      "className": "SystemDateToTargetDatePipe",
+      "module": "@dereekb/dbx-core",
+      "inputType": "Maybe<Date>",
+      "outputType": "Maybe<Date>",
+      "purity": "impure",
+      "description": "Converts a system (UTC-based) date to the equivalent local date in the given timezone using {@link dateTimezoneUtcNormal}.\n\nThis is useful when you have a date in the system's timezone and need to display it as if it were in the target timezone.\nReturns `undefined` if either the input date or timezone is falsy.",
+      "args": [
+        {
+          "name": "timezone",
+          "type": "Maybe<TimezoneString>",
+          "description": "",
+          "required": true
+        }
+      ],
+      "example": "<span>{{ systemDate | systemDateToTargetDate:'America/New_York' | date:'short' }}</span>\n<!-- Output: the date/time as it appears in the New York timezone -->",
+      "sourcePath": "lib/pipe/date/systemdatetotargetdate.pipe.ts",
+      "relatedSlugs": ["target-date-to-system-date", "timezone-abbreviation"],
+      "sourceLocation": {
+        "file": "src/lib/pipe/date/systemdatetotargetdate.pipe.ts",
+        "line": 21
+      }
+    },
+    {
+      "slug": "target-date-to-system-date",
+      "category": "date",
+      "pipeName": "targetDateToSystemDate",
+      "className": "TargetDateToSystemDatePipe",
+      "module": "@dereekb/dbx-core",
+      "inputType": "Maybe<Date>",
+      "outputType": "Maybe<Date>",
+      "purity": "impure",
+      "description": "Converts a target timezone date back to the equivalent system (UTC-based) date using {@link dateTimezoneUtcNormal}.\n\nThis is the inverse of {@link SystemDateToTargetDatePipe}. Useful when you have a date representing\nlocal time in a target timezone and need to convert it back to the system timezone.\nReturns `undefined` if either the input date or timezone is falsy.",
+      "args": [
+        {
+          "name": "timezone",
+          "type": "Maybe<TimezoneString>",
+          "description": "",
+          "required": true
+        }
+      ],
+      "example": "<span>{{ targetDate | targetDateToSystemDate:'America/New_York' | date:'short' }}</span>\n<!-- Output: the date/time converted back to the system timezone -->",
+      "sourcePath": "lib/pipe/date/targetdatetosystemdate.pipe.ts",
+      "relatedSlugs": ["system-date-to-target-date", "timezone-abbreviation"],
+      "sourceLocation": {
+        "file": "src/lib/pipe/date/targetdatetosystemdate.pipe.ts",
+        "line": 22
+      }
+    },
+    {
+      "slug": "time-countdown-distance",
+      "category": "date",
+      "pipeName": "timeCountdownDistance",
+      "className": "TimeDistanceCountdownPipe",
+      "module": "@dereekb/dbx-core",
+      "inputType": "Maybe<DateOrDateString>",
+      "outputType": "string",
+      "purity": "impure",
+      "description": "Formats the distance from now to a future date as a countdown string.\n\nIf the target date is in the past, returns the `soonString` (defaults to `\"Soon\"`).\nOtherwise, returns a human-readable distance string with suffix (e.g., \"in 3 hours\").\nReturns the `unavailable` string when the input is falsy.",
+      "args": [
+        {
+          "name": "soonString",
+          "type": "string",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "unavailable",
+          "type": "string",
+          "description": "",
+          "required": false
+        }
+      ],
+      "example": "<span>{{ futureDate | timeCountdownDistance }}</span>\n<!-- Output: \"in 3 hours\" or \"Soon\" if past -->\n\n<span>{{ futureDate | timeCountdownDistance:'Imminent':'N/A' }}</span>\n<!-- Output: \"Imminent\" if past, \"N/A\" if null -->",
+      "sourcePath": "lib/pipe/date/timedistance.pipe.ts",
+      "relatedSlugs": ["time-distance"],
+      "sourceLocation": {
+        "file": "src/lib/pipe/date/timedistance.pipe.ts",
+        "line": 26
+      }
+    },
+    {
+      "slug": "time-distance",
+      "category": "date",
+      "pipeName": "timeDistance",
+      "className": "TimeDistancePipe",
+      "module": "@dereekb/dbx-core",
+      "inputType": "Maybe<DateOrDateString>",
+      "outputType": "string",
+      "purity": "impure",
+      "description": "Formats the distance between a date and a reference date (defaults to now) as a human-readable string with suffix.\n\nUses date-fns {@link formatDistance} to produce output like \"3 hours ago\" or \"in 2 days\".\nReturns the `unavailable` string when the input is falsy.",
+      "args": [
+        {
+          "name": "to",
+          "type": "Maybe<Date>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "unavailable",
+          "type": "string",
+          "description": "",
+          "required": false
+        }
+      ],
+      "example": "<span>{{ someDate | timeDistance }}</span>\n<!-- Output: \"3 hours ago\" -->\n\n<span>{{ someDate | timeDistance:referenceDate }}</span>\n<!-- Output: \"2 days ago\" (relative to referenceDate) -->\n\n<span>{{ nullDate | timeDistance:null:'Unknown' }}</span>\n<!-- Output: \"Unknown\" -->",
+      "sourcePath": "lib/pipe/date/timedistance.pipe.ts",
+      "relatedSlugs": ["date-distance", "time-countdown-distance"],
+      "sourceLocation": {
+        "file": "src/lib/pipe/date/timedistance.pipe.ts",
+        "line": 76
+      }
+    },
+    {
+      "slug": "timezone-abbreviation",
+      "category": "date",
+      "pipeName": "timezoneAbbreviation",
+      "className": "TimezoneAbbreviationPipe",
+      "module": "@dereekb/dbx-core",
+      "inputType": "Maybe<TimezoneString>",
+      "outputType": "Maybe<string>",
+      "purity": "impure",
+      "description": "Returns the abbreviated name for a timezone string (e.g., \"EST\", \"PDT\") using {@link getTimezoneAbbreviation}.\n\nOptionally accepts a reference date to determine the correct abbreviation (e.g., for daylight saving time).\nDefaults to the current date if no reference date is provided.\nReturns `undefined` if the timezone is falsy.",
+      "args": [
+        {
+          "name": "input",
+          "type": "Maybe<Date>",
+          "description": "",
+          "required": false
+        }
+      ],
+      "example": "<span>{{ 'America/New_York' | timezoneAbbreviation }}</span>\n<!-- Output: \"EST\" or \"EDT\" depending on the current date -->\n\n<span>{{ timezone | timezoneAbbreviation:referenceDate }}</span>\n<!-- Output: abbreviation for the timezone at the given reference date -->",
+      "sourcePath": "lib/pipe/date/timezoneabbreviation.pipe.ts",
+      "relatedSlugs": ["system-date-to-target-date", "target-date-to-system-date"],
+      "sourceLocation": {
+        "file": "src/lib/pipe/date/timezoneabbreviation.pipe.ts",
+        "line": 25
+      }
+    },
+    {
+      "slug": "to-js-date",
+      "category": "date",
+      "pipeName": "toJsDate",
+      "className": "ToJsDatePipe",
+      "module": "@dereekb/dbx-core",
+      "inputType": "Maybe<DateOrDateString>",
+      "outputType": "Maybe<Date>",
+      "purity": "pure",
+      "description": "Converts a {@link DateOrDateString} value to a JavaScript {@link Date} object using {@link toJsDate}.\n\nReturns `undefined` if the input is `null`, `undefined`, or results in an invalid date.\nAlso provides a static `toJsDate()` method used by other pipes in this package.",
+      "args": [],
+      "example": "<span>{{ '2024-01-05T12:00:00Z' | toJsDate | date:'short' }}</span>\n<!-- Output: \"1/5/24, 12:00 PM\" -->\n\n<span>{{ dateOrString | toJsDate | date:'fullDate' }}</span>",
+      "sourcePath": "lib/pipe/date/tojsdate.pipe.ts",
+      "relatedSlugs": ["date-distance", "date-format-distance"],
+      "sourceLocation": {
+        "file": "src/lib/pipe/date/tojsdate.pipe.ts",
+        "line": 24
+      }
+    },
+    {
+      "slug": "to-minutes",
+      "category": "date",
+      "pipeName": "toMinutes",
+      "className": "ToMinutesPipe",
+      "module": "@dereekb/dbx-core",
+      "inputType": "Milliseconds",
+      "outputType": "Minutes",
+      "purity": "pure",
+      "description": "Converts a duration in milliseconds to whole minutes using {@link millisecondsToMinutes}.\n\nReturns the original value (0 or falsy) if the input is falsy.",
+      "args": [],
+      "example": "<span>{{ 180000 | toMinutes }}</span>\n<!-- Output: 3 -->\n\n<span>{{ durationMs | toMinutes }} min</span>\n<!-- Output: \"5 min\" -->",
+      "sourcePath": "lib/pipe/date/tominutes.pipe.ts",
+      "relatedSlugs": ["minutes-string"],
+      "sourceLocation": {
+        "file": "src/lib/pipe/date/tominutes.pipe.ts",
+        "line": 22
+      }
+    },
+    {
+      "slug": "as-observable",
+      "category": "async",
+      "pipeName": "asObservable",
+      "className": "AsObservablePipe",
+      "module": "@dereekb/dbx-core",
+      "inputType": "ObservableOrValueGetter<T>",
+      "outputType": "Observable<T>",
+      "purity": "pure",
+      "description": "Converts an {@link ObservableOrValueGetter} into an {@link Observable}.\n\nUseful for normalizing values that may be plain values, getter functions, or Observables\ninto a consistent Observable stream for use with the `async` pipe.",
+      "args": [],
+      "example": "<span>{{ valueOrGetter | asObservable | async }}</span>",
+      "sourcePath": "lib/pipe/async/asobservable.pipe.ts",
+      "sourceLocation": {
+        "file": "src/lib/pipe/async/asobservable.pipe.ts",
+        "line": 19
+      }
+    }
+  ]
+}

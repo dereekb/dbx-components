@@ -8,6 +8,10 @@ import { type DateRange, formatDateRangeDistance, type FormatDateRangeDistanceFu
  * Accepts an optional {@link FormatDateRangeDistanceFunctionConfig} to customize the output format.
  * Returns a fallback string when the input is `null` or `undefined`.
  *
+ * @dbxPipe
+ * @dbxPipeSlug date-time-range-only-distance
+ * @dbxPipeCategory date
+ * @dbxPipeRelated date-time-range, date-range-distance
  * @example
  * ```html
  * <span>{{ dateRange | dateTimeRangeOnlyDistance }}</span>

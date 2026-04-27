@@ -7,11 +7,20 @@
  */
 
 import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { PIPE_CATEGORY_ORDER, PIPE_ENTRIES, getPipeEntries, getPipeEntriesByCategory, getPipeEntry, type PipeCategory } from '../tools/data/pipe-entries.js';
+import { PIPE_CATEGORY_ORDER, type PipeCategory, type PipeRegistry } from '../registry/pipes-runtime.js';
 
 const PIPES_URI = 'dbx://pipe/entries';
 const PIPE_TEMPLATE = 'dbx://pipe/entries/{slug}';
 const PIPES_BY_CATEGORY_TEMPLATE = 'dbx://pipe/entries/category/{category}';
+
+/**
+ * Input to {@link registerPipesResource}. The registry is supplied by the
+ * server bootstrap after loading the bundled pipes manifest plus any external
+ * sources declared in `dbx-mcp.config.json`.
+ */
+export interface RegisterPipesResourceOptions {
+  readonly registry: PipeRegistry;
+}
 
 /**
  * Registers the pipe-entry MCP resources (catalog, per-slug details, category
@@ -19,8 +28,10 @@ const PIPES_BY_CATEGORY_TEMPLATE = 'dbx://pipe/entries/category/{category}';
  * resources so clients can browse instead of invoking `dbx_pipe_lookup`.
  *
  * @param server - the MCP server to register resources against
+ * @param options - registry the resources read from
  */
-export function registerPipesResource(server: McpServer): void {
+export function registerPipesResource(server: McpServer, options: RegisterPipesResourceOptions): void {
+  const { registry } = options;
   server.registerResource(
     'dbx-components Pipe Entries',
     PIPES_URI,
@@ -30,11 +41,10 @@ export function registerPipesResource(server: McpServer): void {
       mimeType: 'application/json'
     },
     async () => {
-      const entries = getPipeEntries();
       const payload = {
         description: 'All registered @dereekb/dbx-core Angular pipes.',
         categoryOrder: PIPE_CATEGORY_ORDER,
-        pipes: entries.map((e) => ({
+        pipes: registry.all.map((e) => ({
           slug: e.slug,
           pipeName: e.pipeName,
           className: e.className,
@@ -68,13 +78,13 @@ export function registerPipesResource(server: McpServer): void {
     async (uri, variables) => {
       const rawSlug = variables.slug;
       const slug = Array.isArray(rawSlug) ? rawSlug[0] : rawSlug;
-      const entry = slug ? getPipeEntry(slug) : undefined;
+      const entry = slug ? registry.findBySlug(slug) : undefined;
 
       let text: string;
       if (slug && entry) {
         text = JSON.stringify(entry, null, 2);
       } else if (slug) {
-        const available = PIPE_ENTRIES.map((e) => e.slug).join(', ');
+        const available = registry.all.map((e) => e.slug).join(', ');
         text = `Pipe '${slug}' not found. Available slugs: ${available}`;
       } else {
         text = 'No slug provided.';
@@ -107,7 +117,7 @@ export function registerPipesResource(server: McpServer): void {
       const valid = category && PIPE_CATEGORY_ORDER.includes(category);
       let text: string;
       if (valid) {
-        const pipes = getPipeEntriesByCategory(category);
+        const pipes = registry.findByCategory(category);
         text = JSON.stringify({ category, pipes }, null, 2);
       } else {
         text = `Invalid category. Valid values: ${PIPE_CATEGORY_ORDER.join(', ')}`;

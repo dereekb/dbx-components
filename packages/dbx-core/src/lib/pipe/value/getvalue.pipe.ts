@@ -8,11 +8,17 @@ import { type GetterOrValue, getValueFromGetter } from '@dereekb/util';
  * for getter functions whose return value may change over time.
  * Use {@link GetValueOncePipe} (`getValueOnce`) for a pure alternative when the value is static.
  *
+ * @dbxPipe
+ * @dbxPipeSlug get-value
+ * @dbxPipeCategory value
+ * @dbxPipeRelated get-value-once
+ * @dbxPipeSkillRefs dbx-value-pipes
  * @example
  * ```html
  * <span>{{ myGetterOrValue | getValue }}</span>
  * <span>{{ myGetterFn | getValue:someArg }}</span>
  * ```
+ * @param args Optional argument forwarded to the getter function.
  */
 @Pipe({
   name: 'getValue',
@@ -31,10 +37,16 @@ export class GetValuePipe implements PipeTransform {
  * This is a pure pipe that only re-evaluates when the input reference changes.
  * Use {@link GetValuePipe} (`getValue`) if the getter function's return value may change between cycles.
  *
+ * @dbxPipe
+ * @dbxPipeSlug get-value-once
+ * @dbxPipeCategory value
+ * @dbxPipeRelated get-value
+ * @dbxPipeSkillRefs dbx-value-pipes
  * @example
  * ```html
  * <span>{{ myGetterOrValue | getValueOnce }}</span>
  * ```
+ * @param args Optional argument forwarded to the getter function.
  */
 @Pipe({
   name: 'getValueOnce',

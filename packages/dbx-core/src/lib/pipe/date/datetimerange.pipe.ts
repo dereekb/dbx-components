@@ -7,6 +7,10 @@ import { type DateRange, formatToTimeRangeString } from '@dereekb/date';
  *
  * Displays the date and time of both the start and end. Returns a fallback string when the input is `null` or `undefined`.
  *
+ * @dbxPipe
+ * @dbxPipeSlug date-time-range
+ * @dbxPipeCategory date
+ * @dbxPipeRelated date-time-range-only, date-day-range, date-day-time-range
  * @example
  * ```html
  * <span>{{ dateRange | dateTimeRange }}</span>

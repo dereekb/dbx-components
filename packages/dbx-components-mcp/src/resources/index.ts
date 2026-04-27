@@ -18,6 +18,7 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { ForgeFieldRegistry } from '../registry/forge-fields.js';
+import type { PipeRegistry } from '../registry/pipes-runtime.js';
 import type { SemanticTypeRegistry } from '../registry/semantic-types.js';
 import { registerFormFieldsResource } from './form-fields.resource.js';
 import { registerFirebaseModelsResource } from './firebase-models.resource.js';
@@ -36,6 +37,7 @@ import { registerSemanticTypesResource } from './semantic-types.resource.js';
 export interface RegisterResourcesOptions {
   readonly semanticTypeRegistry?: SemanticTypeRegistry;
   readonly forgeFieldRegistry?: ForgeFieldRegistry;
+  readonly pipeRegistry?: PipeRegistry;
 }
 
 /**
@@ -53,7 +55,9 @@ export function registerResources(server: McpServer, options: RegisterResourcesO
   registerFirebaseModelsResource(server);
   registerActionsResource(server);
   registerUiComponentsResource(server);
-  registerPipesResource(server);
+  if (options.pipeRegistry !== undefined) {
+    registerPipesResource(server, { registry: options.pipeRegistry });
+  }
   registerFiltersResource(server);
   if (options.semanticTypeRegistry !== undefined) {
     registerSemanticTypesResource(server, { registry: options.semanticTypeRegistry });

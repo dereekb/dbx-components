@@ -8,6 +8,10 @@ import { formatDateDistance } from '@dereekb/date';
  *
  * Accepts an optional comparison date (defaults to now) and a fallback string for `null`/`undefined` input.
  *
+ * @dbxPipe
+ * @dbxPipeSlug date-distance
+ * @dbxPipeCategory date
+ * @dbxPipeRelated date-range-distance, date-format-distance, time-distance
  * @example
  * ```html
  * <span>{{ someDate | dateDistance }}</span>

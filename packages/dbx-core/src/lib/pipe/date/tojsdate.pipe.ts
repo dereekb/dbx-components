@@ -9,6 +9,10 @@ import { type DateOrDateString, type Maybe } from '@dereekb/util';
  * Returns `undefined` if the input is `null`, `undefined`, or results in an invalid date.
  * Also provides a static `toJsDate()` method used by other pipes in this package.
  *
+ * @dbxPipe
+ * @dbxPipeSlug to-js-date
+ * @dbxPipeCategory date
+ * @dbxPipeRelated date-distance, date-format-distance
  * @example
  * ```html
  * <span>{{ '2024-01-05T12:00:00Z' | toJsDate | date:'short' }}</span>

@@ -30,6 +30,7 @@ register('ts-node/esm', pathToFileURL(`${WORKSPACE_ROOT}/`));
 const { runScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/cli.ts`);
 const { runUiComponentsScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/ui-components-cli.ts`);
 const { runForgeFieldsScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/forge-fields-cli.ts`);
+const { runPipesScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/pipes-cli.ts`);
 
 /**
  * Projects whose semantic types ship bundled with this MCP package. Add a new
@@ -54,6 +55,13 @@ const BUNDLED_UI_COMPONENT_PROJECTS = ['packages/dbx-web'];
  * separately.
  */
 const BUNDLED_FORGE_FIELD_PROJECTS = ['packages/dbx-form'];
+
+/**
+ * Projects whose Angular pipes ship bundled with this MCP package. Each entry
+ * needs a `dbx-mcp.scan.json` with a `pipes` section that drives
+ * `include`/`exclude`/`out` resolution.
+ */
+const BUNDLED_PIPE_PROJECTS = ['packages/dbx-core'];
 
 /**
  * Bundled manifests stamp a fixed `generatedAt` so the produced JSON is
@@ -89,6 +97,16 @@ for (const project of BUNDLED_UI_COMPONENT_PROJECTS) {
 
 for (const project of BUNDLED_FORGE_FIELD_PROJECTS) {
   const result = await runForgeFieldsScanCli({
+    argv: ['--project', project, ...argv],
+    cwd: WORKSPACE_ROOT,
+    generator: '@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs',
+    now: BUNDLED_GENERATED_AT
+  });
+  results.push({ project, exitCode: result.exitCode });
+}
+
+for (const project of BUNDLED_PIPE_PROJECTS) {
+  const result = await runPipesScanCli({
     argv: ['--project', project, ...argv],
     cwd: WORKSPACE_ROOT,
     generator: '@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs',

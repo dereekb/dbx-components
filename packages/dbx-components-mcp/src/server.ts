@@ -8,9 +8,11 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { loadForgeFieldRegistry, type LoadForgeFieldRegistryResult } from './manifest/load-forge-fields-registry.js';
+import { loadPipeRegistry, type LoadPipeRegistryResult } from './manifest/load-pipes-registry.js';
 import { loadSemanticTypeRegistry, type LoadSemanticTypeRegistryResult } from './manifest/load-registry.js';
 import { loadUiComponentRegistry, type LoadUiComponentRegistryResult } from './manifest/load-ui-components-registry.js';
 import type { ForgeFieldRegistry } from './registry/forge-fields.js';
+import type { PipeRegistry } from './registry/pipes-runtime.js';
 import type { SemanticTypeRegistry } from './registry/semantic-types.js';
 import type { UiComponentRegistry } from './registry/ui-components-runtime.js';
 import { registerResources } from './resources/index.js';
@@ -67,9 +69,11 @@ export interface CreateServerOptions {
   readonly semanticTypeRegistry?: SemanticTypeRegistry;
   readonly uiComponentRegistry?: UiComponentRegistry;
   readonly forgeFieldRegistry?: ForgeFieldRegistry;
+  readonly pipeRegistry?: PipeRegistry;
   readonly onLoaderResult?: (result: LoadSemanticTypeRegistryResult) => void;
   readonly onUiLoaderResult?: (result: LoadUiComponentRegistryResult) => void;
   readonly onForgeLoaderResult?: (result: LoadForgeFieldRegistryResult) => void;
+  readonly onPipeLoaderResult?: (result: LoadPipeRegistryResult) => void;
 }
 
 /**
@@ -151,8 +155,26 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
     }
   }
 
-  registerResources(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry });
-  registerTools(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry });
+  let pipeRegistry: PipeRegistry | undefined = options.pipeRegistry;
+  if (pipeRegistry === undefined) {
+    const cwd = options.cwd ?? process.cwd();
+    try {
+      const pipeLoaderResult = await loadPipeRegistry({ cwd });
+      if (options.onPipeLoaderResult === undefined) {
+        reportPipeLoaderResult(pipeLoaderResult);
+      } else {
+        options.onPipeLoaderResult(pipeLoaderResult);
+      }
+      pipeRegistry = pipeLoaderResult.registry;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      process.stderr.write(`[dbx-components-mcp] pipes registry unavailable: ${message}\n`);
+      pipeRegistry = undefined;
+    }
+  }
+
+  registerResources(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry });
+  registerTools(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry });
   void uiRegistry;
 
   return server;
@@ -223,5 +245,24 @@ function reportForgeLoaderResult(result: LoadForgeFieldRegistryResult): void {
   }
   for (const warning of loaderWarnings) {
     process.stderr.write(`[dbx-components-mcp] forge-loader-warning: ${warning.kind}\n`);
+  }
+}
+
+/**
+ * Default observer used when {@link CreateServerOptions.onPipeLoaderResult}
+ * is not supplied. Mirrors {@link reportLoaderResult} for the pipes registry
+ * so operators can see the same information for all four pipelines.
+ *
+ * @param result - the loader output to summarise
+ */
+function reportPipeLoaderResult(result: LoadPipeRegistryResult): void {
+  const { registry, configPath, configWarnings, loaderWarnings, externalSourceCount } = result;
+  const summary = [`[dbx-components-mcp] pipes registry loaded`, `  sources: ${registry.loadedSources.join(', ') || '(none)'}`, `  external: ${externalSourceCount}`, `  config: ${configPath ?? '(none)'}`, `  entries: ${registry.all.length}`, `  warnings: ${configWarnings.length + loaderWarnings.length}`].join('\n');
+  process.stderr.write(`${summary}\n`);
+  for (const warning of configWarnings) {
+    process.stderr.write(`[dbx-components-mcp] pipes-config-warning: ${warning.kind} ${warning.path}\n`);
+  }
+  for (const warning of loaderWarnings) {
+    process.stderr.write(`[dbx-components-mcp] pipes-loader-warning: ${warning.kind}\n`);
   }
 }

@@ -15,9 +15,9 @@
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type Maybe } from '@dereekb/util';
-import { PIPE_ENTRIES, getPipeEntry, getPipeEntryByClassName, getPipeEntryByPipeName, type PipeEntryInfo } from './data/pipe-entries.js';
+import type { PipeEntryInfo, PipeRegistry } from '../registry/pipes-runtime.js';
 import { createLookupTool, type FuzzyField, type LookupDepth } from './_lookup.factory.js';
-import { type DbxTool, type ToolResult } from './types.js';
+import { type DbxTool } from './types.js';
 
 // MARK: Tool definition
 const DBX_PIPE_LOOKUP_TOOL: Tool = {
@@ -116,28 +116,39 @@ function code(value: string): string {
   return '`' + value + '`';
 }
 
-// MARK: Tool
-export const lookupPipeTool: DbxTool = createLookupTool<PipeEntryInfo>({
-  definition: DBX_PIPE_LOOKUP_TOOL,
-  entries: PIPE_ENTRIES,
-  resolvers: [getPipeEntry, getPipeEntryByPipeName, getPipeEntryByClassName],
-  fuzzyFields: pipeFuzzyFields,
-  formatCatalog,
-  formatEntry,
-  formatNotFound
-});
+// MARK: Tool factory
+/**
+ * Input to {@link createLookupPipeTool}.
+ */
+export interface CreateLookupPipeToolInput {
+  /**
+   * Pipe registry the tool reads from. The server bootstrap supplies this
+   * after loading the bundled `@dereekb/dbx-core` pipes manifest plus any
+   * external manifests declared in `dbx-mcp.config.json`.
+   */
+  readonly registry: PipeRegistry;
+}
 
 /**
- * Tool handler for `dbx_pipe_lookup`. Resolves the requested pipe topic
- * against the registry and renders the matching catalog, single entry, or
- * not-found suggestion list.
+ * Creates the `dbx_pipe_lookup` tool wired to the supplied registry. Tests
+ * pass a fixture registry; the production server passes the merged registry
+ * from {@link loadPipeRegistry}.
  *
- * Kept as a separately-exported function so existing spec files can call
- * it without going through the {@link DbxTool} surface.
- *
- * @param rawArgs - the unvalidated tool arguments from the MCP runtime
- * @returns the rendered match, or an error result when args fail validation
+ * @param input - the registry the tool reads from
+ * @returns a {@link DbxTool} ready to register with the dispatcher
  */
-export function runLookupPipe(rawArgs: unknown): ToolResult {
-  return lookupPipeTool.run(rawArgs) as ToolResult;
+export function createLookupPipeTool(input: CreateLookupPipeToolInput): DbxTool {
+  const { registry } = input;
+  const resolveBySlug = (topic: string): Maybe<PipeEntryInfo> => registry.findBySlug(topic);
+  const resolveByPipeName = (topic: string): Maybe<PipeEntryInfo> => registry.findByPipeName(topic);
+  const resolveByClassName = (topic: string): Maybe<PipeEntryInfo> => registry.findByClassName(topic);
+  return createLookupTool<PipeEntryInfo>({
+    definition: DBX_PIPE_LOOKUP_TOOL,
+    entries: registry.all,
+    resolvers: [resolveBySlug, resolveByPipeName, resolveByClassName],
+    fuzzyFields: pipeFuzzyFields,
+    formatCatalog,
+    formatEntry,
+    formatNotFound
+  });
 }
