@@ -34,6 +34,9 @@ export const DbxMcpConfig = type({
   },
   'pipes?': {
     'sources?': 'string[]'
+  },
+  'actions?': {
+    'sources?': 'string[]'
   }
 });
 
