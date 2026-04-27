@@ -18,6 +18,7 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { ActionRegistry } from '../registry/actions-runtime.js';
+import type { FilterRegistry } from '../registry/filters-runtime.js';
 import type { ForgeFieldRegistry } from '../registry/forge-fields.js';
 import type { PipeRegistry } from '../registry/pipes-runtime.js';
 import type { SemanticTypeRegistry } from '../registry/semantic-types.js';
@@ -42,6 +43,7 @@ export interface RegisterResourcesOptions {
   readonly pipeRegistry?: PipeRegistry;
   readonly uiComponentRegistry?: UiComponentRegistry;
   readonly actionRegistry?: ActionRegistry;
+  readonly filterRegistry?: FilterRegistry;
 }
 
 /**
@@ -66,7 +68,9 @@ export function registerResources(server: McpServer, options: RegisterResourcesO
   if (options.pipeRegistry !== undefined) {
     registerPipesResource(server, { registry: options.pipeRegistry });
   }
-  registerFiltersResource(server);
+  if (options.filterRegistry !== undefined) {
+    registerFiltersResource(server, { registry: options.filterRegistry });
+  }
   if (options.semanticTypeRegistry !== undefined) {
     registerSemanticTypesResource(server, { registry: options.semanticTypeRegistry });
   }

@@ -8,11 +8,13 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { loadActionRegistry, type LoadActionRegistryResult } from './manifest/load-actions-registry.js';
+import { loadFilterRegistry, type LoadFilterRegistryResult } from './manifest/load-filters-registry.js';
 import { loadForgeFieldRegistry, type LoadForgeFieldRegistryResult } from './manifest/load-forge-fields-registry.js';
 import { loadPipeRegistry, type LoadPipeRegistryResult } from './manifest/load-pipes-registry.js';
 import { loadSemanticTypeRegistry, type LoadSemanticTypeRegistryResult } from './manifest/load-registry.js';
 import { loadUiComponentRegistry, type LoadUiComponentRegistryResult } from './manifest/load-ui-components-registry.js';
 import type { ActionRegistry } from './registry/actions-runtime.js';
+import type { FilterRegistry } from './registry/filters-runtime.js';
 import type { ForgeFieldRegistry } from './registry/forge-fields.js';
 import type { PipeRegistry } from './registry/pipes-runtime.js';
 import type { SemanticTypeRegistry } from './registry/semantic-types.js';
@@ -73,11 +75,13 @@ export interface CreateServerOptions {
   readonly forgeFieldRegistry?: ForgeFieldRegistry;
   readonly pipeRegistry?: PipeRegistry;
   readonly actionRegistry?: ActionRegistry;
+  readonly filterRegistry?: FilterRegistry;
   readonly onLoaderResult?: (result: LoadSemanticTypeRegistryResult) => void;
   readonly onUiLoaderResult?: (result: LoadUiComponentRegistryResult) => void;
   readonly onForgeLoaderResult?: (result: LoadForgeFieldRegistryResult) => void;
   readonly onPipeLoaderResult?: (result: LoadPipeRegistryResult) => void;
   readonly onActionLoaderResult?: (result: LoadActionRegistryResult) => void;
+  readonly onFilterLoaderResult?: (result: LoadFilterRegistryResult) => void;
 }
 
 /**
@@ -195,8 +199,26 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
     }
   }
 
-  registerResources(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, uiComponentRegistry: uiRegistry, actionRegistry });
-  registerTools(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, uiComponentRegistry: uiRegistry, actionRegistry });
+  let filterRegistry: FilterRegistry | undefined = options.filterRegistry;
+  if (filterRegistry === undefined) {
+    const cwd = options.cwd ?? process.cwd();
+    try {
+      const filterLoaderResult = await loadFilterRegistry({ cwd });
+      if (options.onFilterLoaderResult === undefined) {
+        reportFilterLoaderResult(filterLoaderResult);
+      } else {
+        options.onFilterLoaderResult(filterLoaderResult);
+      }
+      filterRegistry = filterLoaderResult.registry;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      process.stderr.write(`[dbx-components-mcp] filters registry unavailable: ${message}\n`);
+      filterRegistry = undefined;
+    }
+  }
+
+  registerResources(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, uiComponentRegistry: uiRegistry, actionRegistry, filterRegistry });
+  registerTools(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, uiComponentRegistry: uiRegistry, actionRegistry, filterRegistry });
 
   return server;
 }
@@ -304,5 +326,24 @@ function reportActionLoaderResult(result: LoadActionRegistryResult): void {
   }
   for (const warning of loaderWarnings) {
     process.stderr.write(`[dbx-components-mcp] actions-loader-warning: ${warning.kind}\n`);
+  }
+}
+
+/**
+ * Default observer used when {@link CreateServerOptions.onFilterLoaderResult}
+ * is not supplied. Mirrors {@link reportLoaderResult} for the filters registry
+ * so operators can see the same information for all six pipelines.
+ *
+ * @param result - the loader output to summarise
+ */
+function reportFilterLoaderResult(result: LoadFilterRegistryResult): void {
+  const { registry, configPath, configWarnings, loaderWarnings, externalSourceCount } = result;
+  const summary = [`[dbx-components-mcp] filters registry loaded`, `  sources: ${registry.loadedSources.join(', ') || '(none)'}`, `  external: ${externalSourceCount}`, `  config: ${configPath ?? '(none)'}`, `  entries: ${registry.all.length}`, `  warnings: ${configWarnings.length + loaderWarnings.length}`].join('\n');
+  process.stderr.write(`${summary}\n`);
+  for (const warning of configWarnings) {
+    process.stderr.write(`[dbx-components-mcp] filters-config-warning: ${warning.kind} ${warning.path}\n`);
+  }
+  for (const warning of loaderWarnings) {
+    process.stderr.write(`[dbx-components-mcp] filters-loader-warning: ${warning.kind}\n`);
   }
 }

@@ -81,7 +81,7 @@ import { actionScaffoldTool } from './action-scaffold.tool.js';
 import { routeTreeTool } from './route-tree.tool.js';
 import { routeLookupTool } from './route-lookup.tool.js';
 import { routeSearchTool } from './route-search.tool.js';
-import { lookupFilterTool } from './lookup-filter.tool.js';
+import { createLookupFilterTool } from './lookup-filter.tool.js';
 import { filterScaffoldTool } from './filter-scaffold.tool.js';
 import { createLookupPipeTool } from './lookup-pipe.tool.js';
 import { artifactScaffoldTool } from './artifact-scaffold.tool.js';
@@ -89,6 +89,7 @@ import { artifactFileConventionTool } from './artifact-file-convention.tool.js';
 import { createSemanticTypeLookupTool } from './lookup-semantic-type.tool.js';
 import { createSemanticTypeSearchTool } from './search-semantic-type.tool.js';
 import type { ActionRegistry } from '../registry/actions-runtime.js';
+import type { FilterRegistry } from '../registry/filters-runtime.js';
 import type { ForgeFieldRegistry } from '../registry/forge-fields.js';
 import type { PipeRegistry } from '../registry/pipes-runtime.js';
 import type { SemanticTypeRegistry } from '../registry/semantic-types.js';
@@ -134,7 +135,6 @@ export const DBX_TOOLS: readonly DbxTool[] = [
   routeLookupTool,
   routeSearchTool,
   // filter
-  lookupFilterTool,
   filterScaffoldTool,
   // artifact (cross-domain dispatchers)
   artifactScaffoldTool,
@@ -154,6 +154,7 @@ export interface RegisterToolsOptions {
   readonly pipeRegistry?: PipeRegistry;
   readonly uiComponentRegistry?: UiComponentRegistry;
   readonly actionRegistry?: ActionRegistry;
+  readonly filterRegistry?: FilterRegistry;
 }
 
 /**
@@ -183,6 +184,9 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions =
   }
   if (options.actionRegistry !== undefined) {
     tools.push(createLookupActionTool({ registry: options.actionRegistry }));
+  }
+  if (options.filterRegistry !== undefined) {
+    tools.push(createLookupFilterTool({ registry: options.filterRegistry }));
   }
 
   underlyingServer.setRequestHandler(ListToolsRequestSchema, async () => {

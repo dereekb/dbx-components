@@ -17,3 +17,5 @@ export * from './scan/scan-config-schema.js';
 export * from './scan/extract.js';
 export * from './scan/build-manifest.js';
 export * from './scan/cli.js';
+export * from './manifest/load-filters-registry.js';
+export * from './scan/filters-cli.js';

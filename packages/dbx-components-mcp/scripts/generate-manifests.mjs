@@ -32,6 +32,7 @@ const { runUiComponentsScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).h
 const { runForgeFieldsScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/forge-fields-cli.ts`);
 const { runPipesScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/pipes-cli.ts`);
 const { runActionsScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/actions-cli.ts`);
+const { runFiltersScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/filters-cli.ts`);
 
 /**
  * Projects whose semantic types ship bundled with this MCP package. Add a new
@@ -70,6 +71,13 @@ const BUNDLED_PIPE_PROJECTS = ['packages/dbx-core'];
  * `include`/`exclude`/`out` resolution.
  */
 const BUNDLED_ACTION_PROJECTS = ['packages/dbx-core'];
+
+/**
+ * Projects whose dbx-filter surface ships bundled with this MCP package. Each
+ * entry needs a `dbx-mcp.scan.json` with a `filters` section that drives
+ * `include`/`exclude`/`out` resolution.
+ */
+const BUNDLED_FILTER_PROJECTS = ['packages/dbx-core'];
 
 /**
  * Bundled manifests stamp a fixed `generatedAt` so the produced JSON is
@@ -125,6 +133,16 @@ for (const project of BUNDLED_PIPE_PROJECTS) {
 
 for (const project of BUNDLED_ACTION_PROJECTS) {
   const result = await runActionsScanCli({
+    argv: ['--project', project, ...argv],
+    cwd: WORKSPACE_ROOT,
+    generator: '@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs',
+    now: BUNDLED_GENERATED_AT
+  });
+  results.push({ project, exitCode: result.exitCode });
+}
+
+for (const project of BUNDLED_FILTER_PROJECTS) {
+  const result = await runFiltersScanCli({
     argv: ['--project', project, ...argv],
     cwd: WORKSPACE_ROOT,
     generator: '@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs',

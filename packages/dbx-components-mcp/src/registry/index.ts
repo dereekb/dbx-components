@@ -117,6 +117,10 @@ export type { ActionRegistry, ActionEntryInfo, ActionDirectiveInfo, ActionStoreI
 export { createUiComponentRegistry, createUiComponentRegistryFromEntries, EMPTY_UI_COMPONENT_REGISTRY } from './ui-components-runtime.js';
 export type { UiComponentRegistry } from './ui-components-runtime.js';
 
+// MARK: Filters
+export { FILTER_KIND_ORDER, createFilterRegistry, createFilterRegistryFromEntries, EMPTY_FILTER_REGISTRY, toFilterEntryInfo } from './filters-runtime.js';
+export type { FilterRegistry, FilterEntryInfo, FilterEntryInputInfo, FilterKind } from './filters-runtime.js';
+
 // MARK: Firebase Models
 import { FIREBASE_MODELS, FIREBASE_MODEL_GROUPS, type FirebaseModel, type FirebaseModelGroup } from './firebase-models.js';
 

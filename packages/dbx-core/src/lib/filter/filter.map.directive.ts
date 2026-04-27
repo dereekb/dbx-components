@@ -3,10 +3,12 @@ import { FilterMap } from '@dereekb/rxjs';
 import { clean } from '../rxjs/clean';
 
 /**
- * Directive that provides a {@link FilterMap} instance for managing multiple named filter sources.
+ * Provides a {@link FilterMap} instance in DI so multiple child sources can register / look up filters by string key. Use when one screen needs several independent filter contexts.
  *
- * Child directives like `dbxFilterMapSource` and `dbxFilterMapSourceConnector` look up this
- * map via DI to register and retrieve filter instances by key.
+ * @dbxFilter
+ * @dbxFilterSlug map
+ * @dbxFilterRelated map-source, map-source-connector
+ * @dbxFilterSkillRefs dbx__ref__dbx-component-patterns
  *
  * @example
  * ```html

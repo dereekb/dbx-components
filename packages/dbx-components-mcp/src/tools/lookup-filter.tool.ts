@@ -14,9 +14,10 @@
  */
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
-import { FILTER_ENTRIES, getFilterEntry, getFilterEntryByClassName, getFilterEntryBySelector, type FilterEntryInfo } from './data/filter-entries.js';
+import { type Maybe } from '@dereekb/util';
+import type { FilterEntryInfo, FilterRegistry } from '../registry/filters-runtime.js';
 import { createLookupTool, type FuzzyField, type LookupDepth } from './_lookup.factory.js';
-import { type DbxTool, type ToolResult } from './types.js';
+import { type DbxTool } from './types.js';
 
 // MARK: Tool definition
 const DBX_FILTER_LOOKUP_TOOL: Tool = {
@@ -117,28 +118,39 @@ function code(value: string): string {
   return '`' + value + '`';
 }
 
-// MARK: Tool
-export const lookupFilterTool: DbxTool = createLookupTool<FilterEntryInfo>({
-  definition: DBX_FILTER_LOOKUP_TOOL,
-  entries: FILTER_ENTRIES,
-  resolvers: [getFilterEntry, getFilterEntryBySelector, getFilterEntryByClassName],
-  fuzzyFields: filterFuzzyFields,
-  formatCatalog,
-  formatEntry,
-  formatNotFound
-});
+// MARK: Tool factory
+/**
+ * Input to {@link createLookupFilterTool}.
+ */
+export interface CreateLookupFilterToolInput {
+  /**
+   * Filter registry the tool reads from. The server bootstrap supplies this
+   * after loading the bundled `@dereekb/dbx-core` filters manifest plus any
+   * external manifests declared in `dbx-mcp.config.json`.
+   */
+  readonly registry: FilterRegistry;
+}
 
 /**
- * Tool handler for `dbx_filter_lookup`. Resolves the requested filter topic
- * against the registry and renders the matching catalog, single entry, or
- * not-found suggestion list.
+ * Creates the `dbx_filter_lookup` tool wired to the supplied registry. Tests
+ * pass a fixture registry; the production server passes the merged registry
+ * from {@link loadFilterRegistry}.
  *
- * Kept as a separately-exported function so existing spec files can call
- * it without going through the {@link DbxTool} surface.
- *
- * @param rawArgs - the unvalidated tool arguments from the MCP runtime
- * @returns the rendered match, or an error result when args fail validation
+ * @param input - the registry the tool reads from
+ * @returns a {@link DbxTool} ready to register with the dispatcher
  */
-export function runLookupFilter(rawArgs: unknown): ToolResult {
-  return lookupFilterTool.run(rawArgs) as ToolResult;
+export function createLookupFilterTool(input: CreateLookupFilterToolInput): DbxTool {
+  const { registry } = input;
+  const resolveBySlug = (topic: string): Maybe<FilterEntryInfo> => registry.findBySlug(topic);
+  const resolveBySelector = (topic: string): Maybe<FilterEntryInfo> => registry.findBySelector(topic);
+  const resolveByClassName = (topic: string): Maybe<FilterEntryInfo> => registry.findByClassName(topic);
+  return createLookupTool<FilterEntryInfo>({
+    definition: DBX_FILTER_LOOKUP_TOOL,
+    entries: registry.all,
+    resolvers: [resolveBySlug, resolveBySelector, resolveByClassName],
+    fuzzyFields: filterFuzzyFields,
+    formatCatalog,
+    formatEntry,
+    formatNotFound
+  });
 }

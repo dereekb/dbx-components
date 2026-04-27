@@ -8,11 +8,20 @@
  */
 
 import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { FILTER_ENTRIES, FILTER_KIND_ORDER, getFilterEntries, getFilterEntriesByKind, getFilterEntry, type FilterEntryKind } from '../tools/data/filter-entries.js';
+import { FILTER_KIND_ORDER, type FilterKind, type FilterRegistry } from '../registry/filters-runtime.js';
 
 const FILTERS_URI = 'dbx://filter/entries';
 const FILTER_TEMPLATE = 'dbx://filter/entries/{slug}';
 const FILTERS_BY_KIND_TEMPLATE = 'dbx://filter/entries/kind/{kind}';
+
+/**
+ * Input to {@link registerFiltersResource}. The registry is supplied by the
+ * server bootstrap after loading the bundled filters manifest plus any
+ * external sources declared in `dbx-mcp.config.json`.
+ */
+export interface RegisterFiltersResourceOptions {
+  readonly registry: FilterRegistry;
+}
 
 /**
  * Registers the filter-entry MCP resources (catalog, per-slug details, kind
@@ -20,8 +29,10 @@ const FILTERS_BY_KIND_TEMPLATE = 'dbx://filter/entries/kind/{kind}';
  * resources so clients can browse instead of invoking `dbx_filter_lookup`.
  *
  * @param server - the MCP server to register resources against
+ * @param options - registry the resources read from
  */
-export function registerFiltersResource(server: McpServer): void {
+export function registerFiltersResource(server: McpServer, options: RegisterFiltersResourceOptions): void {
+  const { registry } = options;
   server.registerResource(
     'dbx-components Filter Entries',
     FILTERS_URI,
@@ -31,11 +42,10 @@ export function registerFiltersResource(server: McpServer): void {
       mimeType: 'application/json'
     },
     async () => {
-      const entries = getFilterEntries();
       const payload = {
         description: 'All registered @dereekb/dbx-core filter entries.',
         kindOrder: FILTER_KIND_ORDER,
-        filters: entries.map((e) => ({
+        filters: registry.all.map((e) => ({
           slug: e.slug,
           kind: e.kind,
           className: e.className,
@@ -66,13 +76,13 @@ export function registerFiltersResource(server: McpServer): void {
     async (uri, variables) => {
       const rawSlug = variables.slug;
       const slug = Array.isArray(rawSlug) ? rawSlug[0] : rawSlug;
-      const entry = slug ? getFilterEntry(slug) : undefined;
+      const entry = slug ? registry.findBySlug(slug) : undefined;
 
       let text: string;
       if (slug && entry) {
         text = JSON.stringify(entry, null, 2);
       } else if (slug) {
-        const available = FILTER_ENTRIES.map((e) => e.slug).join(', ');
+        const available = registry.all.map((e) => e.slug).join(', ');
         text = `Filter '${slug}' not found. Available slugs: ${available}`;
       } else {
         text = 'No slug provided.';
@@ -100,12 +110,12 @@ export function registerFiltersResource(server: McpServer): void {
     },
     async (uri, variables) => {
       const rawKind = variables.kind;
-      const kind = (Array.isArray(rawKind) ? rawKind[0] : rawKind) as FilterEntryKind | undefined;
+      const kind = (Array.isArray(rawKind) ? rawKind[0] : rawKind) as FilterKind | undefined;
 
       const valid = kind && FILTER_KIND_ORDER.includes(kind);
       let text: string;
       if (valid) {
-        const filters = getFilterEntriesByKind(kind);
+        const filters = registry.findByKind(kind);
         text = JSON.stringify({ kind, filters }, null, 2);
       } else {
         text = `Invalid kind. Valid values: ${FILTER_KIND_ORDER.join(', ')}`;

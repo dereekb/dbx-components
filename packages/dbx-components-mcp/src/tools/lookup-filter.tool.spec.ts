@@ -1,5 +1,73 @@
 import { describe, expect, it } from 'vitest';
-import { runLookupFilter } from './lookup-filter.tool.js';
+import { createFilterRegistryFromEntries, type FilterEntryInfo } from '../registry/filters-runtime.js';
+import { createLookupFilterTool } from './lookup-filter.tool.js';
+
+const FIXTURE_ENTRIES: readonly FilterEntryInfo[] = [
+  {
+    slug: 'source',
+    kind: 'directive',
+    className: 'DbxFilterSourceDirective',
+    selector: '[dbxFilterSource]',
+    module: '@dereekb/dbx-core',
+    description: 'Provides a FilterSource in DI so child components can inject and consume the current filter value.',
+    inputs: [],
+    outputs: [],
+    relatedSlugs: ['connect-source', 'source-connector', 'map-source'],
+    skillRefs: ['dbx__ref__dbx-component-patterns'],
+    sourcePath: 'lib/filter/filter.source.directive.ts',
+    example: '<div dbxFilterSource>\n  <my-filter-form></my-filter-form>\n</div>'
+  },
+  {
+    slug: 'map',
+    kind: 'directive',
+    className: 'DbxFilterMapDirective',
+    selector: '[dbxFilterMap]',
+    module: '@dereekb/dbx-core',
+    description: 'Provides a FilterMap instance in DI so multiple child sources can register and look up filters by string key.',
+    inputs: [],
+    outputs: [],
+    relatedSlugs: ['map-source', 'map-source-connector'],
+    skillRefs: ['dbx__ref__dbx-component-patterns'],
+    sourcePath: 'lib/filter/filter.map.directive.ts',
+    example: '<div dbxFilterMap><div [dbxFilterMapSource]="\'a\'"></div></div>'
+  },
+  {
+    slug: 'map-source',
+    kind: 'directive',
+    className: 'DbxFilterMapSourceDirective',
+    selector: '[dbxFilterMapSource]',
+    module: '@dereekb/dbx-core',
+    description: 'Provides a FilterSource for a keyed entry in an ancestor FilterMap.',
+    inputs: [{ name: 'dbxFilterMapSource', type: 'Maybe<FilterMapKey>', description: 'The map key this source binds to.' }],
+    outputs: [],
+    relatedSlugs: ['map', 'map-source-connector'],
+    skillRefs: ['dbx__ref__dbx-component-patterns'],
+    sourcePath: 'lib/filter/filter.map.source.directive.ts',
+    example: '<div dbxFilterMap><div [dbxFilterMapSource]="\'k\'"></div></div>'
+  },
+  {
+    slug: 'clickable-preset',
+    kind: 'pattern',
+    className: 'ClickableFilterPreset',
+    selector: undefined,
+    module: '@dereekb/dbx-core',
+    description: 'Pattern for declaring a preset filter chip — combines an anchor display with a preset string identifier.',
+    inputs: [],
+    outputs: [],
+    relatedSlugs: ['source'],
+    skillRefs: ['dbx__ref__dbx-component-patterns'],
+    sourcePath: 'lib/filter/filter.preset.ts',
+    example: "const preset: ClickableFilterPreset<F> = { preset: 'a', title: 'A', presetValue: { preset: 'a' } };"
+  }
+];
+
+const tool = createLookupFilterTool({
+  registry: createFilterRegistryFromEntries({ entries: FIXTURE_ENTRIES, loadedSources: ['@dereekb/dbx-core'] })
+});
+
+function runLookupFilter(args: unknown): { isError?: boolean; content: { type: string; text: string }[] } {
+  return tool.run(args) as { isError?: boolean; content: { type: string; text: string }[] };
+}
 
 describe('dbx_filter_lookup', () => {
   it('returns isError when topic is missing', () => {
