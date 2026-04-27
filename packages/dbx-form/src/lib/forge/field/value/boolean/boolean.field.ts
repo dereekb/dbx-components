@@ -1,12 +1,21 @@
+import type { DynamicText } from '@ng-forge/dynamic-forms';
 import type { MatToggleField, MatCheckboxField } from '@ng-forge/dynamic-forms-material';
 import { dbxForgeFieldFunction, dbxForgeBuildFieldDef, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef, type DbxForgeFieldFunction } from '../../field';
+import { configureDbxForgeFormFieldWrapperWith } from '../../wrapper/formfield/formfield.wrapper';
 
 /**
  * CSS class applied to forge fields when `styledBox` is enabled.
  *
- * Mirrors the Material outlined form-field appearance for fields that don't use `<mat-form-field>` (checkbox, toggle, slider).
+ * @deprecated Boolean fields now use the Material-style form-field wrapper to render the
+ * outlined chrome and standard label/hint/error subscript. Retained as an export for any
+ * consumers still referencing the class name directly.
  */
 export const FORGE_STYLED_BOX_CLASS = 'dbx-forge-styled-box';
+
+/**
+ * Where the field's primary label is rendered when wrapped by the form-field wrapper.
+ */
+export type DbxForgeBooleanShowLabelAt = 'wrapper' | 'content' | 'both';
 
 // MARK: Toggle Field
 /**
@@ -14,15 +23,29 @@ export const FORGE_STYLED_BOX_CLASS = 'dbx-forge-styled-box';
  */
 export interface DbxForgeToggleFieldConfig extends DbxForgeFieldFunctionDef<MatToggleField> {
   /**
-   * Whether to render the toggle inside a styled outline box.
+   * Whether to render the toggle inside the shared Material-style form-field wrapper
+   * so it picks up the outlined chrome and properly styled error/hint subscript.
    *
    * Defaults to `true`.
    */
   readonly styledBox?: boolean;
+  /**
+   * Where to render the field's primary label. Defaults to `'content'`.
+   *
+   * Ignored if `styledBox` is false.
+   */
+  readonly showLabelAt?: DbxForgeBooleanShowLabelAt;
+  /**
+   * Optional secondary label rendered inside the wrapper's content area, regardless
+   * of {@link showLabelAt}. Useful for adding helper text inside the box.
+   */
+  readonly contentLabel?: DynamicText;
 }
 
 /**
- * Material slide toggle. Renders inside a styled outline box by default so it visually matches surrounding outlined form fields; pass `styledBox: false` to opt out.
+ * Material slide toggle. Renders inside the shared form-field wrapper by default so
+ * it visually matches surrounding outlined form fields and uses the standard error
+ * subscript chrome; pass `styledBox: false` to opt out.
  *
  * @param config - Toggle field configuration
  * @returns A validated {@link MatToggleField} with type `'toggle'`
@@ -33,7 +56,7 @@ export interface DbxForgeToggleFieldConfig extends DbxForgeFieldFunctionDef<MatT
  * @dbxFormProduces boolean
  * @dbxFormArrayOutput no
  * @dbxFormNgFormType toggle
- * @dbxFormWrapperPattern unwrapped
+ * @dbxFormWrapperPattern material-form-field-wrapped
  * @dbxFormConfigInterface DbxForgeToggleFieldConfig
  * @example
  * ```typescript
@@ -45,7 +68,19 @@ export const dbxForgeToggleField = dbxForgeFieldFunction<DbxForgeToggleFieldConf
   buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder(),
   buildFieldDef: dbxForgeBuildFieldDef((x, config) => {
     if (config.styledBox !== false) {
-      (config as any).className = config.className ?? FORGE_STYLED_BOX_CLASS;
+      // Boolean fields render their primary label inline next to the control,
+      // so by default the wrapper does not render a label of its own (`'content'`)
+      // — the inner field surfaces it. Callers can override via `showLabelAt`.
+      x.configure(
+        configureDbxForgeFormFieldWrapperWith({
+          label: config.showLabelAt === 'content' ? '' : config.label // clear the wrapper label if it should only show in the content
+        })
+      );
+
+      // clear the wrapper/use empty if it should only show in the wrapper
+      if (config.showLabelAt === 'wrapper') {
+        config.label = config.contentLabel ?? '';
+      }
     }
   })
 }) as DbxForgeFieldFunction<DbxForgeToggleFieldConfig, MatToggleField>;
@@ -56,15 +91,27 @@ export const dbxForgeToggleField = dbxForgeFieldFunction<DbxForgeToggleFieldConf
  */
 export interface DbxForgeCheckboxFieldConfig extends DbxForgeFieldFunctionDef<MatCheckboxField> {
   /**
-   * Whether to render the checkbox inside a styled outline box.
+   * Whether to render the checkbox inside the shared Material-style form-field wrapper
+   * so it picks up the outlined chrome and properly styled error/hint subscript.
    *
    * Defaults to `true`.
    */
   readonly styledBox?: boolean;
+  /**
+   * Where to render the field's primary label. Defaults to `'content'`.
+   *
+   * Ignored if `styledBox` is false.
+   */
+  readonly showLabelAt?: DbxForgeBooleanShowLabelAt;
+  /**
+   * Optional secondary label rendered inside the wrapper's content area, regardless
+   * of {@link showLabelAt}. Useful for adding helper text inside the box.
+   */
+  readonly contentLabel?: DynamicText;
 }
 
 /**
- * Material checkbox. Shares the styled-outline-box opt-out with toggle.
+ * Material checkbox. Shares the form-field-wrapper opt-out with toggle.
  *
  * @param config - Checkbox field configuration
  * @returns A validated {@link MatCheckboxField} with type `'checkbox'`
@@ -75,7 +122,7 @@ export interface DbxForgeCheckboxFieldConfig extends DbxForgeFieldFunctionDef<Ma
  * @dbxFormProduces boolean
  * @dbxFormArrayOutput no
  * @dbxFormNgFormType checkbox
- * @dbxFormWrapperPattern unwrapped
+ * @dbxFormWrapperPattern material-form-field-wrapped
  * @dbxFormConfigInterface DbxForgeCheckboxFieldConfig
  *
  * @example
@@ -88,7 +135,19 @@ export const dbxForgeCheckboxField = dbxForgeFieldFunction<DbxForgeCheckboxField
   buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder(),
   buildFieldDef: dbxForgeBuildFieldDef((x, config) => {
     if (config.styledBox !== false) {
-      (config as any).className = config.className ?? FORGE_STYLED_BOX_CLASS;
+      // Boolean fields render their primary label inline next to the control,
+      // so by default the wrapper does not render a label of its own (`'content'`)
+      // — the inner field surfaces it. Callers can override via `showLabelAt`.
+      x.configure(
+        configureDbxForgeFormFieldWrapperWith({
+          label: config.showLabelAt === 'content' ? '' : config.label // clear the wrapper label if it should only show in the content
+        })
+      );
+
+      // clear the wrapper/use empty if it should only show in the wrapper
+      if (config.showLabelAt === 'wrapper') {
+        config.label = config.contentLabel ?? '';
+      }
     }
   })
 }) as DbxForgeFieldFunction<DbxForgeCheckboxFieldConfig, MatCheckboxField>;

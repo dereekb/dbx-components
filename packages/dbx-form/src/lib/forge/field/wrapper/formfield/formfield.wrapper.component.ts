@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input, viewChild, ViewContainerRef } from '@angular/core';
 import { DynamicTextPipe, type FieldWrapperContract, interpolateParams, type ValidationError, type WrapperFieldInputs } from '@ng-forge/dynamic-forms';
 import { AsyncPipe } from '@angular/common';
+import { type DbxForgeFormFieldWrapperProps } from './formfield.wrapper';
 
 /**
  * Forge wrapper field component that renders child fields inside a Material-style
@@ -154,13 +155,24 @@ export class DbxForgeFormFieldWrapperComponent implements FieldWrapperContract {
   // Props from wrapper config
   readonly fieldInputs = input<WrapperFieldInputs>();
 
+  /**
+   * Wrapper config props passed via `addWrappers({ type, props })`.
+   * ng-forge delivers wrapper config properties (with `type` stripped) as individual inputs.
+   */
+  readonly props = input<DbxForgeFormFieldWrapperProps>();
+
   // Read-only field tree from the wrapped field
   private readonly formState = computed(() => this.fieldInputs()?.field);
 
   // Disabled state
   readonly isDisabled = computed(() => this.formState()?.disabled());
 
-  readonly label = computed(() => this.fieldInputs()?.label);
+  /**
+   * Resolved notch label. Prefers a wrapper-level `props.label` override and
+   * falls back to the wrapped field's own label.
+   */
+  readonly label = computed(() => this.props()?.label ?? this.fieldInputs()?.label);
+
   readonly hintSignal = computed(() => (this.fieldInputs()?.props as any)?.hint);
   readonly classNameSignal = computed(() => this.fieldInputs()?.className ?? '');
 

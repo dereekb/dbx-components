@@ -138,12 +138,17 @@ const TIME_OUTPUT_THROTTLE_TIME: Milliseconds = 10;
     @media (max-width: 599px) {
       .dbx-forge-datetime-inputs {
         flex-direction: column;
+        align-items: stretch;
       }
       .dbx-forge-datetime-col {
-        flex: 1 1 100%;
+        flex: 1 1 auto;
+        width: 100%;
       }
     }
-  `
+  `,
+  host: {
+    '[class]': 'className()'
+  }
 })
 export class DbxForgeDateTimeFieldComponent {
   private readonly materialConfig = inject(MATERIAL_CONFIG, { optional: true });

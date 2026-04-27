@@ -40,7 +40,9 @@ import { AsyncPipe } from '@angular/common';
 export class DocActionMapComponent implements OnDestroy {
   private _value = new BehaviorSubject<Maybe<DocActionFormExampleValue>>({
     name: 'test',
-    date: new Date()
+    date: new Date(),
+    startTime: new Date(),
+    endTime: new Date()
   });
 
   readonly value$ = this._value.asObservable();

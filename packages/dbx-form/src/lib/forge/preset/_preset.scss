@@ -21,38 +21,52 @@
       width: 100%;
     }
 
-    .mat-mdc-form-field > .mat-mdc-text-field-wrapper {
-      padding: 0;
+    dbx-forge-form-field-wrapper {
+      > .dbx-forge-form-field-wrapper {
+        margin-top: 0;
 
-      > .mat-mdc-form-field-flex {
-        .mdc-notched-outline__leading {
-          display: none;
+        > .dbx-forge-form-field-outline {
+          .dbx-forge-form-field-outline-leading {
+            display: none;
+          }
+
+          .dbx-forge-form-field-outline-leading,
+          .dbx-forge-form-field-outline-notch,
+          .dbx-forge-form-field-outline-trailing {
+            border: 0;
+          }
         }
 
-        .mdc-floating-label.mat-mdc-floating-label {
+        .dbx-forge-form-field-outline-label {
           margin-left: -4px; // align with the input
         }
 
-        @include theming.hide-mdc-notched-outline-border;
+        .dbx-forge-form-field-content {
+          padding: 0;
+        }
+      }
+
+      > .mat-mdc-form-field-subscript-wrapper {
+        display: none;
       }
     }
   }
 
-  .dbx-section-page-header-search-bar-with-bottom-bar .mat-mdc-form-field > .mat-mdc-text-field-wrapper {
-    > .mat-mdc-form-field-flex > .mdc-notched-outline {
-      .mdc-notched-outline__notch,
-      .mdc-notched-outline__trailing {
+  .dbx-section-page-header-search-bar-with-bottom-bar dbx-forge-form-field-wrapper > .dbx-forge-form-field-wrapper {
+    > .dbx-forge-form-field-outline {
+      .dbx-forge-form-field-outline-notch,
+      .dbx-forge-form-field-outline-trailing {
         border-bottom: var(--mdc-outlined-text-field-outline-width) solid;
         border-radius: 0;
       }
     }
 
     &:hover,
-    &.mdc-text-field--focused {
-      > .mat-mdc-form-field-flex > .mdc-notched-outline {
-        .mdc-notched-outline__notch,
-        .mdc-notched-outline__trailing {
-          border-bottom: var(--mdc-outlined-text-field-focus-outline-width) solid;
+    &:focus-within {
+      > .dbx-forge-form-field-outline {
+        .dbx-forge-form-field-outline-notch,
+        .dbx-forge-form-field-outline-trailing {
+          border-bottom-width: var(--mdc-outlined-text-field-focus-outline-width);
         }
       }
     }

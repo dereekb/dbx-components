@@ -450,10 +450,10 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     produces: 'boolean',
     arrayOutput: 'no',
     configInterface: 'DbxForgeToggleFieldConfig',
-    description: 'Material slide toggle. Renders inside a styled outline box by default so it visually matches surrounding outlined form fields; pass `styledBox: false` to opt out.',
+    description: 'Material slide toggle. Renders inside the shared form-field wrapper by default so it visually matches surrounding outlined form fields and uses the standard error/hint subscript chrome; pass `styledBox: false` to opt out.',
     sourcePath: 'field/value/boolean/boolean.field.ts',
     config: {
-      styledBox: { name: 'styledBox', type: 'boolean', description: 'When true (default), wraps the toggle in `.dbx-forge-styled-box` for visual parity with outlined form fields.', required: false, default: true }
+      styledBox: { name: 'styledBox', type: 'boolean', description: 'When true (default), renders the toggle inside the shared Material-style form-field wrapper for visual parity with outlined form fields.', required: false, default: true }
     },
     example: `dbxForgeToggleField({ key: 'active', label: 'Active', value: true })`,
     minimalExample: `dbxForgeToggleField({ key: 'enabled', label: 'Enabled' })`
