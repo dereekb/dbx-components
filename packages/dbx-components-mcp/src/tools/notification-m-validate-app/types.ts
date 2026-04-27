@@ -60,32 +60,22 @@ export type ViolationCode =
   | 'NOTIF_TEMPLATE_INFO_MISSING_NAME_OR_DESCRIPTION'
   | 'NOTIF_TASK_MULTIPLE_SERVICES';
 
+import type { TwoSideResult, TwoSideViolation } from '../validate-format.js';
 export type { ViolationSeverity } from '../validate-format.js';
 
-export interface Violation {
+export interface Violation extends TwoSideViolation {
   readonly code: ViolationCode;
-  readonly severity: ViolationSeverity;
-  readonly message: string;
-  readonly side: 'component' | 'api' | 'both';
-  readonly file: string | undefined;
 }
 
-export interface ValidationResult {
+export interface ValidationResult extends TwoSideResult {
   readonly violations: readonly Violation[];
-  readonly errorCount: number;
-  readonly warningCount: number;
-  readonly componentDir: string;
-  readonly apiDir: string;
 }
 
 // MARK: Inspection
 export type { InspectedFile, SideInspection, SideStatus } from '../_validate/inspection.types.js';
-import type { SideInspection } from '../_validate/inspection.types.js';
+import type { TwoSideInspectionInput } from '../_validate/inspection.types.js';
 
-export interface AppNotificationsInspection {
-  readonly component: SideInspection;
-  readonly api: SideInspection;
-}
+export type AppNotificationsInspection = TwoSideInspectionInput;
 
 // MARK: Extracted structures
 /**

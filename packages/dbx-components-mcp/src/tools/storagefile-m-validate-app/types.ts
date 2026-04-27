@@ -60,32 +60,22 @@ export type ViolationCode =
   | 'STORAGEFILE_FILE_TYPE_IDENTIFIER_DUPLICATE'
   | 'STORAGEFILE_GROUP_IDS_FUNCTION_MISSING';
 
+import type { TwoSideResult, TwoSideViolation } from '../validate-format.js';
 export type { ViolationSeverity } from '../validate-format.js';
 
-export interface Violation {
+export interface Violation extends TwoSideViolation {
   readonly code: ViolationCode;
-  readonly severity: ViolationSeverity;
-  readonly message: string;
-  readonly side: 'component' | 'api' | 'both';
-  readonly file: string | undefined;
 }
 
-export interface ValidationResult {
+export interface ValidationResult extends TwoSideResult {
   readonly violations: readonly Violation[];
-  readonly errorCount: number;
-  readonly warningCount: number;
-  readonly componentDir: string;
-  readonly apiDir: string;
 }
 
 // MARK: Inspection
 export type { InspectedFile, SideInspection, SideStatus } from '../_validate/inspection.types.js';
-import type { SideInspection } from '../_validate/inspection.types.js';
+import type { TwoSideInspectionInput } from '../_validate/inspection.types.js';
 
-export interface AppStorageFilesInspection {
-  readonly component: SideInspection;
-  readonly api: SideInspection;
-}
+export type AppStorageFilesInspection = TwoSideInspectionInput;
 
 // MARK: Extracted structures
 /**
