@@ -60,22 +60,24 @@ export interface DbxForgeListSelectionFieldConfig<T = unknown, C extends Abstrac
 export type DbxForgeListSelectionFieldFunction = <T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey>(config: DbxForgeListSelectionFieldConfig<T, C, K>) => DbxForgeField<DbxForgeListSelectionFieldDef<T, C, K>>;
 
 /**
- * Creates a forge field definition for a list selection field.
+ * Multi-select backed by a lazy-loadable custom list component. Use when you need complete control over item layout and pagination.
  *
  * @param config - List selection field configuration
  * @returns A {@link DbxForgeFormFieldWrapperFieldDef} wrapping a list selection field
  *
+ * @dbxFormField
+ * @dbxFormSlug list-selection
+ * @dbxFormTier field-factory
+ * @dbxFormProduces K[]
+ * @dbxFormArrayOutput yes
+ * @dbxFormNgFormType dbx-list-selection
+ * @dbxFormWrapperPattern material-form-field-wrapped
+ * @dbxFormConfigInterface DbxForgeListSelectionFieldConfig<T, C, K>
+ * @dbxFormGeneric <T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey>
+ *
  * @example
  * ```typescript
- * const field = dbxForgeListSelectionField({
- *   key: 'selectedItems',
- *   label: 'Items',
- *   props: {
- *     listComponentClass: of(MyListComponent),
- *     readKey: (item) => item.id,
- *     state$: items$
- *   }
- * });
+ * dbxForgeListSelectionField<Item, MyListComponent, string>({ key: 'items', props: { listComponentClass, readKey: (i) => i.id, state$ } })
  * ```
  */
 export const dbxForgeListSelectionField = dbxForgeFieldFunction<DbxForgeListSelectionFieldConfig>({

@@ -22,18 +22,18 @@ export type DbxActionTransitionSafetyType = 'none' | 'dialog' | 'auto';
  *
  * NOTE: This directive only works with UI-Router (not Angular Router).
  *
- * @example
- * ```html
- * <form [dbxAction]="saveAction" [dbxActionTransitionSafety]="'dialog'">
- *   <!-- Navigating away with unsaved changes shows a confirmation dialog -->
- * </form>
+ * @dbxWebComponent
+ * @dbxWebSlug action-transition-safety
+ * @dbxWebCategory action
+ * @dbxWebRelated action-confirm
+ * @dbxWebSkillRefs dbx__ref__dbx-component-patterns
+ * @dbxWebMinimalExample ```html
+ * <form [dbxActionTransitionSafety]></form>
  * ```
  *
  * @example
  * ```html
- * <form [dbxAction]="autoSaveAction" [dbxActionTransitionSafety]="'auto'">
- *   <!-- Auto-triggers save on navigation if possible, otherwise shows dialog -->
- * </form>
+ * <form [dbxAction]="formAction" dbxActionTransitionSafety>...</form>
  * ```
  */
 @Directive({

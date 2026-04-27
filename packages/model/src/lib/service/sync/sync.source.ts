@@ -2,11 +2,20 @@
  * English name for a SyncSource.
  *
  * Is not used as a key.
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-model:sync
  */
 export type SyncSourceName = string;
 
 /**
  * A unique identifier for a SyncSource.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-model:sync
  */
 export type SyncSourceId = string;
 

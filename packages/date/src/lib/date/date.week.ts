@@ -8,11 +8,19 @@ import { dateTimezoneUtcNormal, DateTimezoneUtcNormalInstance, type DateTimezone
  * A Week/Year number combination used to refer to a specific Week on a specific Year.
  *
  * 202201 is January 2022
+ *
+ * @semanticType
+ * @semanticTopic date
+ * @semanticTopic numeric
  */
 export type YearWeekCode = number;
 
 /**
  * String-version of a YearWeekCode. Usually used as a
+ *
+ * @semanticType
+ * @semanticTopic date
+ * @semanticTopic string
  */
 export type YearWeekCodeString = string;
 
@@ -25,6 +33,10 @@ export type UnknownYearWeekCode = typeof UNKNOWN_YEAR_WEEK_CODE;
 
 /**
  * The week in the year. Starts from 1.
+ *
+ * @semanticType
+ * @semanticTopic date
+ * @semanticTopic numeric
  */
 export type YearWeekCodeIndex = number;
 

@@ -170,4 +170,74 @@ export function userAvatarFileGroupIds(userId: FirebaseAuthUserId): StorageFileG
 export const USER_AVATAR_IMAGE_WIDTH = 512;
 export const USER_AVATAR_IMAGE_HEIGHT = USER_AVATAR_IMAGE_WIDTH;
 
+// === User Log File ===
+/**
+ * Plain-text log file uploaded by a user. Acts as the demo's split
+ * convention fixture: its initializer ships in
+ * `apps/demo-api/.../storagefile/handlers/upload.user.log.ts` rather
+ * than inline in `storagefile.upload.service.ts`, exercising the
+ * `dbx_validate_storagefile_folder` and
+ * `dbx_validate_app_storagefiles` tools against the multi-file pattern.
+ *
+ * No processing — the upload is copied directly to its final storage
+ * path and a StorageFile document is created.
+ */
+export const USER_LOG_FILE_UPLOADED_FILE_TYPE_IDENTIFIER: UploadedFileTypeIdentifier = 'user_log_file';
+
+/**
+ * Allowed mime types for user log uploads.
+ */
+export const USER_LOG_FILE_UPLOADS_ALLOWED_FILE_TYPES = ['text/plain'];
+
+/**
+ * Folder under `/uploads/u/{userId}/` where log files are uploaded.
+ */
+export const USER_LOG_FILE_UPLOADS_FOLDER_NAME: string = 'log';
+
+/**
+ * Returns the uploads folder path for a user's log files.
+ *
+ * @param userId - The Firebase Auth user ID.
+ * @returns The SlashPathFolder where log file uploads are stored for this user.
+ */
+export function userLogFileUploadsFolderPath(userId: FirebaseAuthUserId): SlashPathFolder {
+  return `${ALL_USER_UPLOADS_FOLDER_PATH}/${userId}/${USER_LOG_FILE_UPLOADS_FOLDER_NAME}/`;
+}
+
+/**
+ * Returns the full uploads file path for a user's log file with the given name.
+ *
+ * @param userId - The Firebase Auth user ID.
+ * @param name - The file name within the log uploads folder.
+ * @returns The full SlashPath to the uploaded log file.
+ */
+export function userLogFileUploadsFilePath(userId: FirebaseAuthUserId, name: SlashPathFile): SlashPath {
+  return `${userLogFileUploadsFolderPath(userId)}${name}`;
+}
+
+export const USER_LOG_FILE_PURPOSE: StorageFilePurpose = 'log';
+
+export const USER_LOG_FILE_STORAGE_FOLDER_PATH: SlashPathFolder = 'log/';
+
+/**
+ * Returns the final storage path for a user's log file after upload processing.
+ *
+ * @param userId - The Firebase Auth user ID.
+ * @param name - The file name within the storage folder.
+ * @returns The full SlashPath to the stored log file.
+ */
+export function userLogFileStoragePath(userId: FirebaseAuthUserId, name: SlashPathFile): SlashPath {
+  return userStorageFolderPath(userId, USER_LOG_FILE_STORAGE_FOLDER_PATH, name);
+}
+
+/**
+ * Returns the list of StorageFileGroupIds that a user's log files belong to.
+ *
+ * @param userId - The Firebase Auth user ID.
+ * @returns An array of StorageFileGroupIds for the user's log file group membership.
+ */
+export function userLogFileGroupIds(userId: FirebaseAuthUserId): StorageFileGroupId[] {
+  return [userProfileStorageFileGroupId(userId)];
+}
+
 // MARK: System File Types

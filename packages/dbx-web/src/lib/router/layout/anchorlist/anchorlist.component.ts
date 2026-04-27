@@ -19,9 +19,18 @@ export interface DbxAnchorListExpandedAnchor extends ExpandedClickableAnchorLink
  *
  * Each anchor is expanded and assigned depth-based CSS classes for nested styling.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug anchor-list
+ * @dbxWebCategory router
+ * @dbxWebRelated anchor, sidenav
+ * @dbxWebSkillRefs dbx__ref__dbx-app-structure
+ * @dbxWebMinimalExample ```html
+ * <dbx-anchor-list [anchors]="anchors"></dbx-anchor-list>
+ * ```
+ *
  * @example
  * ```html
- * <dbx-anchor-list [anchors]="navLinks"></dbx-anchor-list>
+ * <dbx-anchor-list [anchors]="navAnchors"></dbx-anchor-list>
  * ```
  */
 @Component({

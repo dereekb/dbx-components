@@ -3,6 +3,10 @@ import { minutesToHoursAndMinutes } from '../date/hour';
 
 /**
  * A cron schedule expression string
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-util:cron
  */
 export type CronExpression = string;
 

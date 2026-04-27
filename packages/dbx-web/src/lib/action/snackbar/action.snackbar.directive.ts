@@ -11,18 +11,18 @@ import { type LoadingState, LoadingStateType, loadingStateType } from '@dereekb/
  * (loading, success, error). Supports built-in message presets via `dbxActionSnackbarDefault` and
  * custom generator functions via the `dbxActionSnackbar` input.
  *
- * @example
- * ```html
- * <form [dbxAction]="saveAction" dbxActionSnackbar dbxActionSnackbarDefault="save">
- *   <!-- Shows "Saving...", "Saved", or "Save Failed" snackbars automatically -->
- * </form>
+ * @dbxWebComponent
+ * @dbxWebSlug action-snackbar
+ * @dbxWebCategory action
+ * @dbxWebRelated action-snackbar-error, action-confirm, error-snackbar
+ * @dbxWebSkillRefs dbx__ref__dbx-component-patterns
+ * @dbxWebMinimalExample ```html
+ * <div [dbxActionSnackbar]="fn"></div>
  * ```
  *
  * @example
  * ```html
- * <div [dbxAction]="deleteAction" [dbxActionSnackbar]="customSnackbarFn" [dbxActionSnackbarUndo]="undoRef">
- *   <!-- Custom snackbar with undo support -->
- * </div>
+ * <button [dbxAction]="saveAction" [dbxActionSnackbar]="snackbarFn">Save</button>
  * ```
  */
 @Directive({

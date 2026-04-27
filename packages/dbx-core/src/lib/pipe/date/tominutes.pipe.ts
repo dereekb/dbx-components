@@ -6,6 +6,10 @@ import { type Milliseconds, type Minutes, millisecondsToMinutes } from '@dereekb
  *
  * Returns the original value (0 or falsy) if the input is falsy.
  *
+ * @dbxPipe
+ * @dbxPipeSlug to-minutes
+ * @dbxPipeCategory date
+ * @dbxPipeRelated minutes-string
  * @example
  * ```html
  * <span>{{ 180000 | toMinutes }}</span>

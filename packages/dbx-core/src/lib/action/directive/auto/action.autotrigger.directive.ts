@@ -26,6 +26,11 @@ const DBX_ACTION_AUTO_TRIGGER_INSTANT_TRIGGER_DEBOUNCE = 10;
  * Useful for auto-save scenarios where data changes should automatically submit without
  * requiring an explicit user action. Use with care to avoid triggering loops.
  *
+ * @dbxAction
+ * @dbxActionSlug auto-trigger
+ * @dbxActionStateInteraction IDLE, TRIGGERED
+ * @dbxActionConsumesContext
+ *
  * @example
  * ```html
  * <div dbxAction>

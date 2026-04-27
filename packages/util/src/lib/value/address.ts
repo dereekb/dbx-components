@@ -3,36 +3,71 @@ import { type Maybe } from './maybe.type';
 
 /**
  * City name string (e.g. "San Antonio").
+ *
+ * @semanticType
+ * @semanticTopic geo
+ * @semanticTopic string
+ * @semanticTopic dereekb-util:address
  */
 export type CityString = string;
 
 /**
  * Full state name string (e.g. "Texas").
+ *
+ * @semanticType
+ * @semanticTopic geo
+ * @semanticTopic string
+ * @semanticTopic dereekb-util:address
  */
 export type StateString = string;
 
 /**
  * Two-letter US state code (e.g. "TX").
+ *
+ * @semanticType
+ * @semanticTopic geo
+ * @semanticTopic string
+ * @semanticTopic dereekb-util:address
  */
 export type StateCodeString = string;
 
 /**
  * Full country name string (e.g. "United States").
+ *
+ * @semanticType
+ * @semanticTopic geo
+ * @semanticTopic string
+ * @semanticTopic dereekb-util:address
  */
 export type CountryString = string;
 
 /**
  * Country code string (e.g. "US").
+ *
+ * @semanticType
+ * @semanticTopic geo
+ * @semanticTopic string
+ * @semanticTopic dereekb-util:address
  */
 export type CountryCodeString = string;
 
 /**
  * A single line in a street address.
+ *
+ * @semanticType
+ * @semanticTopic geo
+ * @semanticTopic string
+ * @semanticTopic dereekb-util:address
  */
 export type AddressLineString = string;
 
 /**
  * Postal/zip code string.
+ *
+ * @semanticType
+ * @semanticTopic geo
+ * @semanticTopic string
+ * @semanticTopic dereekb-util:address
  */
 export type ZipCodeString = string;
 

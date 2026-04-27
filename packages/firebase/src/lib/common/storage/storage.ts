@@ -4,6 +4,11 @@ import { toRelativeSlashPathStartType, type SlashPath, type FactoryWithRequiredI
  * Storage bucket identifier for Firebase Cloud Storage.
  *
  * Should contain no slashes — just the bucket name (e.g., `"my-app.appspot.com"`).
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:storage
  */
 export type StorageBucketId = string;
 

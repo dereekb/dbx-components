@@ -1,0 +1,179 @@
+{
+  "version": 1,
+  "source": "@dereekb/dbx-core",
+  "module": "@dereekb/dbx-core",
+  "generatedAt": "1970-01-01T00:00:00.000Z",
+  "generator": "@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs",
+  "entries": [
+    {
+      "kind": "directive",
+      "slug": "connect-source",
+      "selector": "[dbxFilterConnectSource]",
+      "className": "DbxFilterConnectSourceDirective",
+      "module": "@dereekb/dbx-core",
+      "description": "Connects the host element's {@link FilterSource} to an ancestor {@link FilterSourceConnector} on init. Place on an element whose own directive contributes a `FilterSource` (via `host: true`) so it auto-wires to the parent connector.",
+      "inputs": [],
+      "outputs": [],
+      "example": "<div dbxFilterSourceConnector>\n  <my-filter-form dbxFilterSource dbxFilterConnectSource></my-filter-form>\n</div>",
+      "sourcePath": "lib/filter/filter.connect.source.directive.ts",
+      "relatedSlugs": [
+        "source",
+        "source-connector"
+      ],
+      "skillRefs": [
+        "dbx__ref__dbx-component-patterns"
+      ],
+      "sourceLocation": {
+        "file": "src/lib/filter/filter.connect.source.directive.ts",
+        "line": 19
+      }
+    },
+    {
+      "kind": "directive",
+      "slug": "source-connector",
+      "selector": "[dbxFilterSourceConnector]",
+      "className": "DbxFilterSourceConnectorDirective",
+      "module": "@dereekb/dbx-core",
+      "description": "Acts as both {@link FilterSource} and {@link FilterSourceConnector} — bridges a filter from one part of the template to another. Pair with `[dbxFilterConnectSource]` on the inner element that owns the source.",
+      "inputs": [],
+      "outputs": [],
+      "example": "<div dbxFilterSourceConnector>\n  <my-filter-form dbxFilterSource dbxFilterConnectSource></my-filter-form>\n  <my-list></my-list>\n</div>",
+      "sourcePath": "lib/filter/filter.connector.directive.ts",
+      "relatedSlugs": [
+        "source",
+        "connect-source"
+      ],
+      "skillRefs": [
+        "dbx__ref__dbx-component-patterns"
+      ],
+      "sourceLocation": {
+        "file": "src/lib/filter/filter.connector.directive.ts",
+        "line": 21
+      }
+    },
+    {
+      "kind": "directive",
+      "slug": "map-source-connector",
+      "selector": "[dbxFilterMapSourceConnector]",
+      "className": "DbxFilterMapSourceConnectorDirective",
+      "module": "@dereekb/dbx-core",
+      "description": "Both {@link FilterSource} and {@link FilterSourceConnector} for a keyed entry in an ancestor {@link FilterMap}. Connects an external filter source to one map slot and re-emits that slot's filter.",
+      "inputs": [
+        {
+          "name": "dbxFilterMapSourceConnector",
+          "type": "Maybe<FilterMapKey>",
+          "description": "The map key this connector binds to."
+        }
+      ],
+      "outputs": [],
+      "example": "<div dbxFilterMap>\n  <div [dbxFilterMapSourceConnector]=\"'profileList'\">\n    <my-list></my-list>\n  </div>\n</div>",
+      "sourcePath": "lib/filter/filter.map.connector.directive.ts",
+      "relatedSlugs": [
+        "map",
+        "map-source"
+      ],
+      "skillRefs": [
+        "dbx__ref__dbx-component-patterns"
+      ],
+      "sourceLocation": {
+        "file": "src/lib/filter/filter.map.connector.directive.ts",
+        "line": 25
+      }
+    },
+    {
+      "kind": "directive",
+      "slug": "map",
+      "selector": "[dbxFilterMap]",
+      "className": "DbxFilterMapDirective",
+      "module": "@dereekb/dbx-core",
+      "description": "Provides a {@link FilterMap} instance in DI so multiple child sources can register / look up filters by string key. Use when one screen needs several independent filter contexts.",
+      "inputs": [],
+      "outputs": [],
+      "example": "<div dbxFilterMap>\n  <div [dbxFilterMapSource]=\"'listA'\">...</div>\n  <div [dbxFilterMapSource]=\"'listB'\">...</div>\n</div>",
+      "sourcePath": "lib/filter/filter.map.directive.ts",
+      "relatedSlugs": [
+        "map-source",
+        "map-source-connector"
+      ],
+      "skillRefs": [
+        "dbx__ref__dbx-component-patterns"
+      ],
+      "sourceLocation": {
+        "file": "src/lib/filter/filter.map.directive.ts",
+        "line": 21
+      }
+    },
+    {
+      "kind": "directive",
+      "slug": "map-source",
+      "selector": "[dbxFilterMapSource]",
+      "className": "DbxFilterMapSourceDirective",
+      "module": "@dereekb/dbx-core",
+      "description": "Provides a {@link FilterSource} for a keyed entry in an ancestor {@link FilterMap}. Children can inject the source as if it were the only filter on the page; the map dispatches by key.",
+      "inputs": [
+        {
+          "name": "dbxFilterMapSource",
+          "type": "Maybe<FilterMapKey>",
+          "description": "The map key this source binds to."
+        }
+      ],
+      "outputs": [],
+      "example": "<div dbxFilterMap>\n  <div [dbxFilterMapSource]=\"'profileList'\">\n    <my-filtered-list></my-filtered-list>\n  </div>\n</div>",
+      "sourcePath": "lib/filter/filter.map.source.directive.ts",
+      "relatedSlugs": [
+        "map",
+        "map-source-connector"
+      ],
+      "skillRefs": [
+        "dbx__ref__dbx-component-patterns"
+      ],
+      "sourceLocation": {
+        "file": "src/lib/filter/filter.map.source.directive.ts",
+        "line": 40
+      }
+    },
+    {
+      "kind": "pattern",
+      "slug": "clickable-preset",
+      "className": "ClickableFilterPreset",
+      "module": "@dereekb/dbx-core",
+      "description": "Pattern for declaring a preset filter chip — combines an anchor display (title, icon, disabled) with a preset string identifier and a `presetValue` getter. A `null` or empty preset value resets the filter.",
+      "example": "const activePreset: ClickableFilterPreset<ProfileFilter> = {\n  preset: 'active',\n  title: 'Active',\n  icon: 'check',\n  presetValue: { status: 'active', preset: 'active' }\n};",
+      "sourcePath": "lib/filter/filter.preset.ts",
+      "relatedSlugs": [
+        "source"
+      ],
+      "skillRefs": [
+        "dbx__ref__dbx-component-patterns"
+      ],
+      "sourceLocation": {
+        "file": "src/lib/filter/filter.preset.ts",
+        "line": 26
+      }
+    },
+    {
+      "kind": "directive",
+      "slug": "source",
+      "selector": "[dbxFilterSource]",
+      "className": "DbxFilterSourceDirective",
+      "module": "@dereekb/dbx-core",
+      "description": "Provides a {@link FilterSource} in DI so child components can inject and consume the current filter value. Use this on a wrapper element when the child is the canonical owner of the filter (a filter form, a chip group).",
+      "inputs": [],
+      "outputs": [],
+      "example": "<div dbxFilterSource>\n  <my-filter-form></my-filter-form>\n</div>",
+      "sourcePath": "lib/filter/filter.source.directive.ts",
+      "relatedSlugs": [
+        "connect-source",
+        "source-connector",
+        "map-source"
+      ],
+      "skillRefs": [
+        "dbx__ref__dbx-component-patterns"
+      ],
+      "sourceLocation": {
+        "file": "src/lib/filter/filter.source.directive.ts",
+        "line": 19
+      }
+    }
+  ]
+}

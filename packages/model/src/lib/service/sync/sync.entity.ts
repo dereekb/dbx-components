@@ -3,11 +3,21 @@ import { type SyncSourceInfo } from './sync.source';
 
 /**
  * A unique identifier for an entity on a specific server.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-model:sync
  */
 export type SyncEntityId = string;
 
 /**
  * A common type for an entity that is shared/used between all systems for an entity that should be synchronized.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-model:sync
  */
 export type SyncEntityCommonType = string;
 
@@ -15,6 +25,11 @@ export type SyncEntityCommonType = string;
  * A common identifier for an entity that is shared/used between all systems for an entity that should be synchronized.
  *
  * This identifier should be used for retrieving a similar entity from any server.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-model:sync
  */
 export type SyncEntityCommonId = string;
 

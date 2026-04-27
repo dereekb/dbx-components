@@ -18,6 +18,10 @@ import { filterUniqueFunction, type FilterUniqueFunctionExcludeKeysInput } from 
  * An integer that denotes which index an item is at.
  *
  * Is typically non-negative only.
+ *
+ * @semanticType
+ * @semanticTopic numeric
+ * @semanticTopic reference
  */
 export type IndexNumber = number;
 

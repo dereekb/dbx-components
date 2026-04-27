@@ -21,9 +21,18 @@ export abstract class AbstractDbxListTitleGroupHeaderComponent<O extends Primati
  * Default group header component that displays a title, optional icon, and optional hint text.
  * Used automatically by {@link DbxListTitleGroupDirective} unless a custom header component is specified.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug list-title-group-header
+ * @dbxWebCategory list
+ * @dbxWebRelated list, list-view
+ * @dbxWebSkillRefs dbx__ref__dbx-component-patterns
+ * @dbxWebMinimalExample ```html
+ * <dbx-list-title-group-header></dbx-list-title-group-header>
+ * ```
+ *
  * @example
  * ```html
- * <dbx-list-title-group-header></dbx-list-title-group-header>
+ * <dbx-list-view [config]="rowConfig" dbxListTitleGroup></dbx-list-view>
  * ```
  */
 @Component({

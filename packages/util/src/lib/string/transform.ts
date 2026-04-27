@@ -132,11 +132,11 @@ export function transformStringFunction<S extends string = string>(config: Trans
   if (config.slice) {
     const sliceTransform = sliceStringFunction(config.slice);
 
-    if (baseTransform != null) {
+    if (baseTransform == null) {
+      baseTransform = sliceTransform;
+    } else {
       const initialBaseTransform = baseTransform;
       baseTransform = (x) => (initialBaseTransform as TransformStringFunction)(sliceTransform(x));
-    } else {
-      baseTransform = sliceTransform;
     }
   }
 

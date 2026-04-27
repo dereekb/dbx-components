@@ -85,7 +85,7 @@
           { "command": "npx nx run nestjs:ci-publish-npmjs && npx nx run firebase:ci-publish-npmjs && npx nx run firebase-server:ci-publish-npmjs" },
           { "command": "npx nx run analytics:ci-publish-npmjs && npx nx run zoho:ci-publish-npmjs && npx nx run zoom:ci-publish-npmjs && npx nx run calcom:ci-publish-npmjs" },
           { "command": "npx nx run dbx-core:ci-publish-npmjs && npx nx run dbx-web:ci-publish-npmjs && npx nx run dbx-analytics:ci-publish-npmjs && npx nx run dbx-form:ci-publish-npmjs" },
-          { "command": "npx nx run dbx-firebase:ci-publish-npmjs" }
+          { "command": "npx nx run dbx-firebase:ci-publish-npmjs && npx nx run dbx-components-mcp:ci-publish-npmjs" }
         ],
         "parallel": false
       }

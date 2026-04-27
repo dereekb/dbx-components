@@ -8,6 +8,11 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
  * Subscribes to the parent action's full state stream and prints each state snapshot
  * via `console.log`. Useful during development to inspect the action lifecycle transitions.
  *
+ * @dbxAction
+ * @dbxActionSlug logger
+ * @dbxActionStateInteraction IDLE, TRIGGERED, VALUE_READY, WORKING, RESOLVED, REJECTED, DISABLED
+ * @dbxActionConsumesContext
+ *
  * @example
  * ```html
  * <div dbxAction>

@@ -1,0 +1,13 @@
+{
+  "name": "@dereekb/dbx-components-mcp",
+  "version": "13.10.0",
+  "type": "module",
+  "bin": {
+    "dbx-components-mcp": "./dbx-components-mcp.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "arktype": "^2.2.0",
+    "ts-morph": "^21.0.0"
+  }
+}

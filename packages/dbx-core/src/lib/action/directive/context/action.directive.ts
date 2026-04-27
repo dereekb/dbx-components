@@ -17,6 +17,11 @@ import { clean } from '../../../rxjs/clean';
  * On destruction, the directive coordinates cleanup through a {@link LockSet} to ensure
  * in-flight operations complete before the store is torn down.
  *
+ * @dbxAction
+ * @dbxActionSlug action
+ * @dbxActionStateInteraction IDLE
+ * @dbxActionProducesContext
+ *
  * @example
  * ```html
  * <div dbxAction>

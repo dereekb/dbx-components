@@ -3,6 +3,10 @@ import { type Maybe } from '../value/maybe.type';
 
 /**
  * A string type used as a key in boolean arrays.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
  */
 export type BooleanStringKey = string;
 

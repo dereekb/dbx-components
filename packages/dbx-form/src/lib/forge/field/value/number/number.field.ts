@@ -48,7 +48,7 @@ export interface DbxForgeNumberFieldConfig extends DbxForgeFieldFunctionDef<DbxF
 }
 
 /**
- * Creates a forge field definition for a numeric input.
+ * Numeric input (HTML `type="number"`). Supports min/max/step constraints, optional step enforcement (divisibility validator), and idempotent number transforms.
  *
  * When `step` is provided, sets the HTML `step` attribute on the input via `meta`.
  * When both `step` and `enforceStep` are set, adds a custom divisibility validator.
@@ -56,9 +56,17 @@ export interface DbxForgeNumberFieldConfig extends DbxForgeFieldFunctionDef<DbxF
  * @param config - Number field configuration
  * @returns A validated {@link MatInputField} with input type `'number'`
  *
+ * @dbxFormField
+ * @dbxFormSlug number
+ * @dbxFormTier field-factory
+ * @dbxFormProduces number
+ * @dbxFormArrayOutput no
+ * @dbxFormNgFormType input
+ * @dbxFormWrapperPattern unwrapped
+ * @dbxFormConfigInterface DbxForgeNumberFieldConfig
  * @example
  * ```typescript
- * const field = dbxForgeNumberField({ key: 'quantity', label: 'Quantity', min: 1, max: 100, step: 1 });
+ * dbxForgeNumberField({ key: 'quantity', label: 'Quantity', min: 1, max: 100, step: 1, enforceStep: true })
  * ```
  */
 export const dbxForgeNumberField = dbxForgeFieldFunction<DbxForgeNumberFieldConfig>({
@@ -114,11 +122,17 @@ export const dbxForgeNumberField = dbxForgeFieldFunction<DbxForgeNumberFieldConf
 export type DbxForgeDollarAmountFieldConfig = Omit<DbxForgeNumberFieldConfig, 'roundToStep' | 'precision'>;
 
 /**
- * Creates a forge number field pre-configured for dollar amount input with cent-level precision.
+ * Forge number field pre-configured for dollar amount input with cent-level precision. Pre-sets `transform.precision` to `DOLLAR_AMOUNT_PRECISION` so values round to whole cents.
  *
  * @param config - Number field configuration (precision is overridden to dollar amount precision)
  * @returns A {@link MatInputField} for dollar amount input
  *
+ * @dbxFormField
+ * @dbxFormSlug dollar-amount
+ * @dbxFormProduces number
+ * @dbxFormArrayOutput no
+ * @dbxFormFieldDerivative number
+ * @dbxFormConfigInterface DbxForgeDollarAmountFieldConfig
  * @example
  * ```typescript
  * const field = dbxForgeDollarAmountField({ key: 'price', label: 'Price', min: 0, required: true });

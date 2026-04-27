@@ -37,11 +37,21 @@ export type FirebaseStorage = FirebaseStorageLikeStorage | GoogleCloudLikeStorag
 // MARK: Types
 /**
  * The public storage url link.
+ *
+ * @semanticType
+ * @semanticTopic url
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:storage
  */
 export type StorageDownloadUrl = string;
 
 /**
  * A signed download link.
+ *
+ * @semanticType
+ * @semanticTopic url
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:storage
  */
 export type StorageSignedDownloadUrl = string;
 
@@ -88,6 +98,10 @@ export interface StorageSignedDownloadUrlConfig {
 /**
  * Example:
  * 'Hello! \\ud83d\\ude0a';
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:storage
  */
 export type StorageRawDataString = string;
 
@@ -103,6 +117,11 @@ export type StorageRawDataStringType = 'raw';
 /**
  * Example:
  * '5b6p5Y+344GX44G+44GX44Gf77yB44GK44KB44Gn44Go44GG77yB';
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:storage
+ * @semanticTopic dereekb-firebase:encoding
  */
 export type StorageBase64DataString = string;
 
@@ -117,6 +136,11 @@ export type StorageBase64DataStringType = 'base64';
 /**
  * Example:
  * '5b6p5Y-344GX44G-44GX44Gf77yB44GK44KB44Gn44Go44GG77yB';
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:storage
+ * @semanticTopic dereekb-firebase:encoding
  */
 export type StorageBase64UrlDataString = string;
 
@@ -131,6 +155,11 @@ export type StorageBase64UrlDataStringType = 'base64url';
 /**
  * Example:
  * 'data:text/plain;base64,5b6p5Y+344GX44G+44GX44Gf77yB44GK44KB44Gn44Go44GG77yB'
+ *
+ * @semanticType
+ * @semanticTopic url
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:storage
  */
 export type StorageDataUrlString = string;
 

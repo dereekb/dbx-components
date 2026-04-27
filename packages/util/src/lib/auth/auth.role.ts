@@ -7,6 +7,11 @@ import { type Maybe } from '../value/maybe.type';
  * Is used in the client to decide which content a user can view.
  *
  * Roles should always be lowercase.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-util:auth
  */
 export type AuthRole = string;
 

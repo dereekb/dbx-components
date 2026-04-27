@@ -12,15 +12,20 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
  *
  * When `mobileOnly` is true, the pagebar is hidden on non-mobile screen sizes.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug sidenav-page
+ * @dbxWebCategory navigation
+ * @dbxWebRelated sidenav, navbar
+ * @dbxWebSkillRefs dbx__ref__dbx-app-structure
+ * @dbxWebMinimalExample ```html
+ * <dbx-sidenav-page>Content</dbx-sidenav-page>
+ * ```
+ *
  * @example
  * ```html
- * <dbx-sidenav [anchors]="links">
- *   <dbx-sidenav-page [mobileOnly]="true" color="primary">
- *     <span navLeft>Left Nav Content</span>
- *     <span navRight>Right Nav Content</span>
- *     <p>Page body content</p>
- *   </dbx-sidenav-page>
- * </dbx-sidenav>
+ * <dbx-sidenav-page>
+ *   <ui-view></ui-view>
+ * </dbx-sidenav-page>
  * ```
  */
 @Component({

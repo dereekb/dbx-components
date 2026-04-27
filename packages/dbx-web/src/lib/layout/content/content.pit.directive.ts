@@ -21,15 +21,18 @@ export type DbxContentPitScrollableHeightSetting = 'small' | 'medium' | 'large';
  * Wraps content in a recessed "pit" container with optional scrollable overflow and rounded corners.
  * Useful for displaying bounded content areas such as lists or previews with a constrained height.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug content-pit
+ * @dbxWebCategory layout
+ * @dbxWebRelated content-box, content-elevate
+ * @dbxWebSkillRefs dbx__ref__dbx-ui-building-blocks
+ * @dbxWebMinimalExample ```html
+ * <dbx-content-pit>Body</dbx-content-pit>
+ * ```
+ *
  * @example
  * ```html
- * <dbx-content-pit [scrollable]="true" [rounded]="true">
- *   <p>Scrollable pit with medium height and rounded corners.</p>
- * </dbx-content-pit>
- *
- * <div dbxContentPit scrollable="large">
- *   <p>Large scrollable pit area.</p>
- * </div>
+ * <div dbxContentPit>Inset block</div>
  * ```
  */
 @Directive({

@@ -12,6 +12,11 @@ import { formatToISO8601DayStringForUTC } from './date.format';
  * It is easiest to think of DateCellIndexes as days on a calendar. An index of 0 means the entire first day for that timezone.
  *
  * It is not the time from the startsAt time to the endsAt time for a period.
+ *
+ * @semanticType
+ * @semanticTopic numeric
+ * @semanticTopic reference
+ * @semanticTopic dereekb-date:cell
  */
 export type DateCellIndex = number;
 

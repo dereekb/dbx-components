@@ -16,6 +16,10 @@ import { notificationTaskComplete, notificationTaskPartiallyComplete, type Notif
 
 /**
  * Discriminator string that routes the subtask to the correct processing configuration.
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:notification
  */
 export type NotificationTaskSubtaskTarget = string;
 

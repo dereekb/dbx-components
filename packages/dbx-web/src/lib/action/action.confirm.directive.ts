@@ -22,11 +22,18 @@ export interface DbxActionConfirmConfig<T = unknown> extends DbxPromptConfirmCon
  * This directive works with action triggering only, not button clicks.
  * For button-based confirmation, use an appPromptConfirmButton directive instead.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug action-confirm
+ * @dbxWebCategory action
+ * @dbxWebRelated action-snackbar, prompt-confirm
+ * @dbxWebSkillRefs dbx__ref__dbx-component-patterns
+ * @dbxWebMinimalExample ```html
+ * <div [dbxActionConfirm]="cfg"></div>
+ * ```
+ *
  * @example
  * ```html
- * <form [dbxAction]="myAction" [dbxActionConfirm]="{ title: 'Confirm Delete', prompt: 'Are you sure?', readyValue: itemId }">
- *   ...
- * </form>
+ * <button [dbxAction]="deleteAction" [dbxActionConfirm]="{ header: 'Delete account?', confirmText: 'Delete' }">Delete</button>
  * ```
  */
 @Directive({

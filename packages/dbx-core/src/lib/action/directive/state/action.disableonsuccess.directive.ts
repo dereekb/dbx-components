@@ -21,6 +21,11 @@ export const APP_ACTION_DISABLED_ON_SUCCESS_DIRECTIVE_KEY = 'dbx_action_disabled
  *
  * The disable key is automatically cleaned up on directive destruction.
  *
+ * @dbxAction
+ * @dbxActionSlug disabled-on-success
+ * @dbxActionStateInteraction RESOLVED, DISABLED
+ * @dbxActionConsumesContext
+ *
  * @example
  * ```html
  * <div dbxAction>

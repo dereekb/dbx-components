@@ -7,9 +7,20 @@ import { DbxBarDirective } from './bar.directive';
 /**
  * A themed header bar displaying an optional icon and text label, useful as a section divider.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug bar-header
+ * @dbxWebCategory layout
+ * @dbxWebRelated bar, pagebar
+ * @dbxWebSkillRefs dbx__ref__dbx-ui-building-blocks
+ * @dbxWebMinimalExample ```html
+ * <dbx-bar-header header="Title"></dbx-bar-header>
+ * ```
+ *
  * @example
  * ```html
- * <dbx-bar-header icon="info" text="Section Title" color="accent"></dbx-bar-header>
+ * <dbx-bar-header header="Members" icon="group">
+ *   <button mat-icon-button><mat-icon>add</mat-icon></button>
+ * </dbx-bar-header>
  * ```
  */
 @Component({

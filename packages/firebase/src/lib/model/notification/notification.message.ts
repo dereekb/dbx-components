@@ -29,11 +29,21 @@ export interface NotificationMessageInputContext {
  * Arbitrary key used by the sending configuration service for choosing a pre-configured entity.
  *
  * Typically used for customizing the "from" or "replyTo" addresses while maintaining a separation of concerns.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:notification
  */
 export type NotificationMessageEntityKey = string;
 
 /**
  * Arbitrary template name/key that is used to configure which template to use by the sending service.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:notification
  */
 export type NotificationSendMessageTemplateName = string;
 

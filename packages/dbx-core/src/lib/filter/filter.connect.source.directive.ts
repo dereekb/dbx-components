@@ -2,10 +2,12 @@ import { Directive, type OnInit, inject } from '@angular/core';
 import { FilterSource, FilterSourceConnector } from '@dereekb/rxjs';
 
 /**
- * Connects the host element's {@link FilterSource} to an ancestor {@link FilterSourceConnector} on initialization.
+ * Connects the host element's {@link FilterSource} to an ancestor {@link FilterSourceConnector} on init. Place on an element whose own directive contributes a `FilterSource` (via `host: true`) so it auto-wires to the parent connector.
  *
- * Place on an element that has a `FilterSource` (via `host: true`) to automatically
- * wire it up to a parent `FilterSourceConnector`.
+ * @dbxFilter
+ * @dbxFilterSlug connect-source
+ * @dbxFilterRelated source, source-connector
+ * @dbxFilterSkillRefs dbx__ref__dbx-component-patterns
  *
  * @example
  * ```html

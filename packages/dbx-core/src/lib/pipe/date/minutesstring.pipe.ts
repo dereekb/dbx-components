@@ -10,6 +10,10 @@ import { type Maybe, type Minutes, MINUTES_IN_DAY, MINUTES_IN_HOUR } from '@dere
  *
  * A `~` prefix is added when the value is rounded up. Returns `undefined` for `null` or non-numeric input.
  *
+ * @dbxPipe
+ * @dbxPipeSlug minutes-string
+ * @dbxPipeCategory date
+ * @dbxPipeRelated to-minutes
  * @example
  * ```html
  * <span>{{ 90 | minutesString }}</span>

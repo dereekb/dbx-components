@@ -14,6 +14,15 @@ import { type DbxButtonStyle, type DbxButtonType } from './button';
  * custom colors, icons, and floating action button (FAB) mode. Integrates with the dbxAction system
  * for automatic working/disabled state management.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug button
+ * @dbxWebCategory button
+ * @dbxWebRelated icon-button, progress-spinner-button, progress-bar-button
+ * @dbxWebSkillRefs dbx__ref__dbx-ui-building-blocks
+ * @dbxWebMinimalExample ```html
+ * <dbx-button text="Save" raised [dbxAction]="saveAction"></dbx-button>
+ * ```
+ *
  * @example
  * ```html
  * <dbx-button [text]="'Save'" raised [dbxAction]="saveAction">

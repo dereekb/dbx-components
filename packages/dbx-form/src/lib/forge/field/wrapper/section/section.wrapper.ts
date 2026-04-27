@@ -41,16 +41,22 @@ export interface DbxForgeSectionWrapper {
 }
 
 /**
- * Creates a section wrapper config for use in a field's `wrappers` array.
+ * Section wrapper config — attach via a field's `wrappers: []` array for a semantic section with header and optional card elevation.
  *
  * @param config - the section wrapper configuration without the `type` property
  * @returns a complete {@link DbxForgeSectionWrapper} config with the type set
  *
+ * @dbxFormField
+ * @dbxFormSlug section-wrapper
+ * @dbxFormTier primitive
+ * @dbxFormProduces WrapperConfig
+ * @dbxFormReturns WrapperConfig
+ * @dbxFormArrayOutput no
+ * @dbxFormConfigInterface DbxForgeSectionWrapper
+ *
  * @example
  * ```typescript
- * dbxForgeNameField({
- *   wrappers: [dbxForgeSectionWrapper({ headerConfig: { header: 'Contact' } })]
- * })
+ * dbxForgeSectionWrapper({ headerConfig: { text: 'Contact Details' } })
  * ```
  */
 export function dbxForgeSectionWrapper(config: Omit<DbxForgeSectionWrapper, 'type'>): DbxForgeSectionWrapper {
@@ -58,17 +64,22 @@ export function dbxForgeSectionWrapper(config: Omit<DbxForgeSectionWrapper, 'typ
 }
 
 /**
- * Creates a subsection wrapper config for use in a field's `wrappers` array.
- * Sets `subsection: true` and defaults heading level to 4.
+ * Subsection variant of `section-wrapper` — defaults to heading level 4 and `subsection: true`.
  *
  * @param config - the subsection wrapper configuration without the `type` and `subsection` properties
  * @returns a complete {@link DbxForgeSectionWrapper} config with `type` and `subsection: true` set
  *
+ * @dbxFormField
+ * @dbxFormSlug subsection-wrapper
+ * @dbxFormTier primitive
+ * @dbxFormProduces WrapperConfig
+ * @dbxFormReturns WrapperConfig
+ * @dbxFormArrayOutput no
+ * @dbxFormConfigInterface DbxForgeSectionWrapper
+ *
  * @example
  * ```typescript
- * dbxForgeNameField({
- *   wrappers: [dbxForgeSubsectionWrapper({ headerConfig: { header: 'Name' } })]
- * })
+ * dbxForgeSubsectionWrapper({ headerConfig: { text: 'Options' } })
  * ```
  */
 export function dbxForgeSubsectionWrapper(config: Omit<DbxForgeSectionWrapper, 'type' | 'subsection'>): DbxForgeSectionWrapper {

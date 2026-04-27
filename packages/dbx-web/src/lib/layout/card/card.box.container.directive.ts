@@ -5,18 +5,21 @@ import { Directive } from '@angular/core';
  *
  * Can be used as an element or as an attribute directive on any host element.
  *
- * @example
- * ```html
- * <dbx-card-box-container>
- *   <p>Padded content inside the card box.</p>
- * </dbx-card-box-container>
+ * @dbxWebComponent
+ * @dbxWebSlug card-box-container
+ * @dbxWebCategory card
+ * @dbxWebRelated card-box
+ * @dbxWebSkillRefs dbx__ref__dbx-ui-building-blocks
+ * @dbxWebMinimalExample ```html
+ * <div dbxCardBoxContainer><dbx-card-box></dbx-card-box></div>
  * ```
  *
  * @example
  * ```html
- * <div dbxCardBoxContainer>
- *   <p>Padded content using the attribute directive.</p>
- * </div>
+ * <dbx-card-box-container>
+ *   <dbx-card-box header="One"></dbx-card-box>
+ *   <dbx-card-box header="Two"></dbx-card-box>
+ * </dbx-card-box-container>
  * ```
  */
 @Directive({

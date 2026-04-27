@@ -1,5 +1,9 @@
 /**
  * Camera zoom level.
+ *
+ * @semanticType
+ * @semanticTopic measurement
+ * @semanticTopic numeric
  */
 export type ZoomLevel = number;
 

@@ -3,6 +3,11 @@ import { type FirestoreQueryDriverRef } from './query';
 
 /**
  * Optional human-readable identifier for the Firestore driver (e.g., 'firebase-admin', 'firebase-web', 'testing').
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:firestore
  */
 export type FirestoreDriverIdentifier = string;
 

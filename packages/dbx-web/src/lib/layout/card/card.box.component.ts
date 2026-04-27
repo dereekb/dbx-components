@@ -6,6 +6,15 @@ import { MatIconModule } from '@angular/material/icon';
  *
  * Supports a named content slot `[sectionHeader]` for custom header actions beside the title.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug card-box
+ * @dbxWebCategory card
+ * @dbxWebRelated card-box-container, section
+ * @dbxWebSkillRefs dbx__ref__dbx-ui-building-blocks
+ * @dbxWebMinimalExample ```html
+ * <dbx-card-box header="Title"><p>Body</p></dbx-card-box>
+ * ```
+ *
  * @example
  * ```html
  * <dbx-card-box [header]="'Settings'" [icon]="'settings'">

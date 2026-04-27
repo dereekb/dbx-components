@@ -21,19 +21,26 @@ export interface DbxForgeNumberSliderFieldConfig extends DbxForgeFieldFunctionDe
 }
 
 /**
- * Creates a forge field definition for a Material slider wrapped in a form-field wrapper.
+ * Material slider wrapped in a form-field container. Supports thumb label, tick interval, and step-derived tick spacing.
  *
  * The wrapper provides the Material outlined form-field appearance (notched outline with
  * floating label, hint/error subscript). The inner slider uses the ng-forge built-in
- * `slider` type. The wrapper key uses `_` prefix so `stripForgeInternalKeys` flattens
- * the child slider's value into the parent form.
+ * `slider` type.
  *
  * @param config - Slider field configuration including max (required), thumb label, and tick interval
  * @returns A {@link DbxForgeFormFieldWrapperDef} wrapping a slider field
  *
+ * @dbxFormField
+ * @dbxFormSlug number-slider
+ * @dbxFormTier field-factory
+ * @dbxFormProduces number
+ * @dbxFormArrayOutput no
+ * @dbxFormNgFormType slider
+ * @dbxFormWrapperPattern material-form-field-wrapped
+ * @dbxFormConfigInterface DbxForgeNumberSliderFieldConfig
  * @example
  * ```typescript
- * const field = dbxForgeNumberSliderField({ key: 'rating', label: 'Rating', min: 0, max: 10, step: 1 });
+ * dbxForgeNumberSliderField({ key: 'rating', label: 'Rating', min: 0, max: 10, step: 1 })
  * ```
  */
 export const dbxForgeNumberSliderField = dbxForgeFieldFunction<DbxForgeNumberSliderFieldConfig>({

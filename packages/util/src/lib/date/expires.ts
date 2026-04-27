@@ -84,7 +84,7 @@ export interface ExpirationDetails<T extends Expires = Expires> {
  */
 export function expirationDetails<T extends Expires = Expires>(input: ExpirationDetailsInput<T>): ExpirationDetails<T> {
   const { expiresAt, expires, now: inputNow, expiresFromDate, defaultExpiresFromDateToNow, expiresIn } = input;
-  const parsedExpiresFromDate = expiresFromDate != null ? dateFromDateOrTimeMillisecondsNumber(expiresFromDate) : null;
+  const parsedExpiresFromDate = expiresFromDate == null ? null : dateFromDateOrTimeMillisecondsNumber(expiresFromDate);
 
   function getNow(nowOverride?: Maybe<Date>) {
     return nowOverride ?? inputNow ?? new Date();

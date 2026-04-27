@@ -5,6 +5,15 @@ import { DbxSectionHeaderComponent } from './section.header.component';
  * Displays a content section with a header and body area. The header defaults to an h3 heading
  * and supports optional elevation styling.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug section
+ * @dbxWebCategory layout
+ * @dbxWebRelated subsection, section-page, section-header, intro-action-section
+ * @dbxWebSkillRefs dbx__ref__dbx-ui-building-blocks, dbx__ref__dbx-component-patterns
+ * @dbxWebMinimalExample ```html
+ * <dbx-section header="My Section"><p>Body</p></dbx-section>
+ * ```
+ *
  * @example
  * ```html
  * <dbx-section header="My Section" icon="info" hint="Additional context">
@@ -38,6 +47,7 @@ import { DbxSectionHeaderComponent } from './section.header.component';
   standalone: true
 })
 export class DbxSectionComponent extends DbxSectionHeaderComponent {
+  /** Apply elevated card styling. */
   readonly elevate = input<boolean>(false);
 
   readonly classConfig = computed(() => {

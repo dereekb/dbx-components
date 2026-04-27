@@ -1,5 +1,22 @@
 import { mergeArraysIntoArray, range, flattenArray, type Maybe } from '@dereekb/util';
-import { removeValuesAtIndexesFromArrayCopy, splitFront, takeLast } from './array';
+import { copyArray, removeValuesAtIndexesFromArrayCopy, splitFront, takeLast } from './array';
+
+describe('copyArray()', () => {
+  it('should return a shallow copy of the input array', () => {
+    const input = [1, 2, 3];
+    const result = copyArray(input);
+    expect(result).toEqual(input);
+    expect(result).not.toBe(input);
+  });
+
+  it('should return an empty array if input is null', () => {
+    expect(copyArray(null)).toEqual([]);
+  });
+
+  it('should return an empty array if input is undefined', () => {
+    expect(copyArray(undefined)).toEqual([]);
+  });
+});
 
 describe('flattenArray', () => {
   it('should return all non-null/undefined values from first dimension, and all values from the second dimension.', () => {

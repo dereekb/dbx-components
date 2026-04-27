@@ -11,13 +11,18 @@ import { filterMaybe } from '@dereekb/rxjs';
  * Subscribes to the action context's error stream and shows a snackbar via {@link DbxErrorSnackbarService}
  * whenever an error occurs. Accepts an optional configuration or a duration in milliseconds as input.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug action-snackbar-error
+ * @dbxWebCategory action
+ * @dbxWebRelated action-snackbar
+ * @dbxWebSkillRefs dbx__ref__dbx-component-patterns
+ * @dbxWebMinimalExample ```html
+ * <div [dbxActionSnackbarError]></div>
+ * ```
+ *
  * @example
  * ```html
- * <!-- Auto-dismiss after 5 seconds -->
- * <div dbxAction [dbxActionSnackbarError]="5000">...</div>
- *
- * <!-- Default behavior, no auto-dismiss -->
- * <div dbxAction dbxActionSnackbarError>...</div>
+ * <button [dbxAction]="saveAction" dbxActionSnackbarError>Save</button>
  * ```
  */
 @Directive({

@@ -14,6 +14,10 @@ import { replaceCharacterAtIndexWith, replaceLastCharacterIfIsFunction } from '.
  * Connection protocol
  *
  * I.E. http, https, etc.
+ *
+ * @semanticType
+ * @semanticTopic url
+ * @semanticTopic string
  */
 export type WebsiteProtocol = string;
 
@@ -47,6 +51,10 @@ export function isKnownHttpWebsiteProtocol(input: string): input is KnownHttpWeb
  * Examples:
  * - dereekb.com
  * - components.dereekb.com
+ *
+ * @semanticType
+ * @semanticTopic url
+ * @semanticTopic string
  */
 export type WebsiteDomain = string;
 
@@ -78,6 +86,10 @@ export function hasWebsiteDomain(input: string): input is WebsiteDomain {
  * Examples:
  * - com
  * - net
+ *
+ * @semanticType
+ * @semanticTopic url
+ * @semanticTopic string
  */
 export type WebsiteTopLevelDomain = string;
 
@@ -110,6 +122,10 @@ export const HAS_PORT_NUMBER_REGEX = /:(\d+)/;
  * Example:
  * - 443
  * - 8080
+ *
+ * @semanticType
+ * @semanticTopic numeric
+ * @semanticTopic url
  */
 export type PortNumber = number;
 
@@ -186,6 +202,10 @@ export function baseWebsiteUrl(input: BaseWebsiteUrlInput, defaultTld = 'com'): 
  * - https://components.dereekb.com/
  * - https://components.dereekb.com/doc/home?
  * - https://components.dereekb.com/doc/home?test=true&test2=true
+ *
+ * @semanticType
+ * @semanticTopic url
+ * @semanticTopic string
  */
 export type WebsiteUrl = string;
 
@@ -289,6 +309,10 @@ export function websiteUrlDetails(input: string): WebsiteUrlDetails {
 
 /**
  * A website url that starts with the proper http/https prefix.
+ *
+ * @semanticType
+ * @semanticTopic url
+ * @semanticTopic string
  */
 export type WebsiteUrlWithPrefix = string;
 
@@ -318,6 +342,10 @@ export function isWebsiteUrlWithPrefix(input: string): input is WebsiteUrlWithPr
  * Non-examples:
  * - localhost:8080       // not internet-accessible
  * - test://dereekb.com   // non-http/https protocol
+ *
+ * @semanticType
+ * @semanticTopic url
+ * @semanticTopic string
  */
 export type StandardInternetAccessibleWebsiteUrl = string;
 
@@ -339,6 +367,10 @@ export function isStandardInternetAccessibleWebsiteUrl(input: string): input is 
  * - dereekb.com
  * - components.dereekb.com/
  * - components.dereekb.com/doc/home
+ *
+ * @semanticType
+ * @semanticTopic url
+ * @semanticTopic string
  */
 export type WebsiteDomainAndPath = string;
 

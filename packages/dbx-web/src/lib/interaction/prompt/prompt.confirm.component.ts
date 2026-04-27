@@ -17,11 +17,18 @@ export interface DbxPromptConfirmConfig {
 /**
  * Renders a confirmation prompt with customizable title, message, confirm, and cancel buttons.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug prompt-confirm
+ * @dbxWebCategory overlay
+ * @dbxWebRelated prompt, action-confirm
+ * @dbxWebSkillRefs dbx__ref__dbx-app-structure
+ * @dbxWebMinimalExample ```html
+ * <dbx-prompt-confirm [config]="cfg"></dbx-prompt-confirm>
+ * ```
+ *
  * @example
  * ```html
- * <dbx-prompt-confirm [config]="{ title: 'Delete?', prompt: 'This cannot be undone.' }" (confirm)="onConfirm()" (cancel)="onCancel()">
- *   <p>Additional content here.</p>
- * </dbx-prompt-confirm>
+ * <dbx-prompt-confirm [config]="{ header: 'Delete?', confirmText: 'Delete', cancelText: 'Cancel' }"></dbx-prompt-confirm>
  * ```
  */
 @Component({

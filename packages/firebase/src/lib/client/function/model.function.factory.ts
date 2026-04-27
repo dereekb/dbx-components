@@ -13,6 +13,11 @@ import { type OnCallCreateModelResult, CALL_MODEL_APP_FUNCTION_KEY, onCallTypedM
  * String identifier that routes a CRUD request to a specific sub-handler within a model's
  * CRUD function. For example, a model's `update` might have specifiers like `'status'` or `'config'`
  * to target different update behaviors.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:functions
  */
 export type ModelFirebaseCrudFunctionSpecifier = string;
 

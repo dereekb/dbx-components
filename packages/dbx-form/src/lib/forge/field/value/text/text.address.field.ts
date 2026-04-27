@@ -49,15 +49,20 @@ export interface DbxForgeAddressLineFieldConfig extends Partial<DbxForgeTextFiel
 }
 
 /**
- * Creates a forge text field for a single address line.
+ * Street address line input. The `line` prop controls which line (1 or 2) — it affects key and label generation.
  *
  * @param config - Optional overrides; line number determines key and label
  * @returns A {@link MatInputField} for address line input
  *
+ * @dbxFormField
+ * @dbxFormSlug address-line
+ * @dbxFormProduces string
+ * @dbxFormArrayOutput no
+ * @dbxFormFieldDerivative text
+ * @dbxFormConfigInterface DbxForgeAddressLineFieldConfig
  * @example
  * ```typescript
- * const line1 = dbxForgeAddressLineField({ line: 1, required: true });
- * const line2 = dbxForgeAddressLineField({ line: 2 });
+ * dbxForgeAddressLineField({ line: 2 })
  * ```
  */
 export function dbxForgeAddressLineField(config: DbxForgeAddressLineFieldConfig = {}) {
@@ -77,15 +82,20 @@ export function dbxForgeAddressLineField(config: DbxForgeAddressLineFieldConfig 
 }
 
 /**
- * Creates the full set of address form fields (lines, city, state, zip, and optionally country)
- * arranged in a flex row layout.
+ * Flat array of address fields (line(s), city, state, zip, optional country) with a sensible flex layout. Drop directly into a parent `fields: []`.
  *
  * @param config - Address fields configuration
  * @returns Array of forge field definitions for a complete address form section
  *
+ * @dbxFormField
+ * @dbxFormSlug address-fields
+ * @dbxFormProduces FieldDef[]
+ * @dbxFormArrayOutput no
+ * @dbxFormFieldTemplate address-line, city, state, zip-code, country
+ * @dbxFormConfigInterface DbxForgeAddressFieldsConfig
  * @example
  * ```typescript
- * const fields = dbxForgeAddressFields({ required: true, includeCountry: false });
+ * dbxForgeAddressFields({ required: true, includeCountry: false })
  * ```
  */
 export function dbxForgeAddressFields(config: DbxForgeAddressFieldsConfig = {}) {
@@ -128,14 +138,22 @@ export interface DbxForgeAddressGroupConfig extends DbxForgeAddressFieldsConfig 
 }
 
 /**
- * Composite builder that wraps the full set of address sub-fields in a group.
+ * Wraps `address-fields` in a `GroupField` so the address is stored as a nested object under one key. Prefer this when the rest of the form doesn't want address fields flattened.
  *
  * @param config - Optional overrides; defaults to key `'address'`
  * @returns A {@link GroupField} containing address fields
  *
+ * @dbxFormField
+ * @dbxFormSlug address-group
+ * @dbxFormTier composite-builder
+ * @dbxFormSuffix Group
+ * @dbxFormProduces GroupField
+ * @dbxFormArrayOutput no
+ * @dbxFormConfigInterface DbxForgeAddressGroupConfig
+ * @dbxFormComposesFrom address-fields, group
  * @example
  * ```typescript
- * const group = dbxForgeAddressGroup({ required: true, includeCountry: true });
+ * dbxForgeAddressGroup({ key: 'billingAddress' })
  * ```
  */
 export function dbxForgeAddressGroup(config: Partial<DbxForgeAddressGroupConfig> = {}): GroupField {
@@ -160,15 +178,22 @@ export interface DbxForgeAddressListFieldConfig extends DbxForgeAddressFieldsCon
 }
 
 /**
- * Creates a draggable repeat-array field that allows the user to add, remove,
- * and reorder multiple addresses.
+ * Repeatable array of addresses built on top of `array-field` + `address-group`. Keeps the `Field` suffix because it returns a single composite field whose value is an array of addresses.
  *
  * @param config - Optional overrides; defaults to key `'addresses'`, max 6 entries
  * @returns A {@link DbxForgeArrayFieldDef} for multiple addresses
  *
+ * @dbxFormField
+ * @dbxFormSlug address-list
+ * @dbxFormTier composite-builder
+ * @dbxFormSuffix Field
+ * @dbxFormProduces ArrayField
+ * @dbxFormArrayOutput yes
+ * @dbxFormConfigInterface DbxForgeAddressListFieldConfig
+ * @dbxFormComposesFrom address-group, array-field
  * @example
  * ```typescript
- * const field = dbxForgeAddressListField({ maxAddresses: 3, required: true });
+ * dbxForgeAddressListField({ maxAddresses: 3 })
  * ```
  */
 export function dbxForgeAddressListField(config: Partial<DbxForgeAddressListFieldConfig> = {}) {

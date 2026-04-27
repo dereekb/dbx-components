@@ -6,10 +6,21 @@ import { dbxColorBackground } from '../style/style';
 /**
  * Renders a horizontal bar with a themed background color, used to visually group or separate content.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug bar
+ * @dbxWebCategory layout
+ * @dbxWebRelated bar-header, pagebar, button-spacer
+ * @dbxWebSkillRefs dbx__ref__dbx-ui-building-blocks
+ * @dbxWebMinimalExample ```html
+ * <dbx-bar><button>A</button><button>B</button></dbx-bar>
+ * ```
+ *
  * @example
  * ```html
- * <dbx-bar color="primary">
- *   <span>Bar content</span>
+ * <dbx-bar>
+ *   <dbx-button text="Save" raised color="primary"></dbx-button>
+ *   <dbx-button-spacer></dbx-button-spacer>
+ *   <dbx-button text="Cancel" stroked></dbx-button>
  * </dbx-bar>
  * ```
  */

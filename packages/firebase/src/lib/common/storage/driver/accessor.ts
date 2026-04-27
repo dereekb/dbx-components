@@ -152,6 +152,11 @@ export interface StorageGetAclsResult {
 
 /**
  * String used as a cursor for iterating pages of file results.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:storage
  */
 export type StorageListFilesPageToken = string;
 
@@ -203,6 +208,14 @@ export interface StorageListFileResult extends StorageListItemResult {
   file(): FirebaseStorageAccessorFile;
 }
 
+/**
+ * Token returned with a list-files result for resuming pagination on the next call.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:storage
+ */
 export type StorageListFileResultNextPageToken = string;
 
 export interface StorageListFilesResult<R = unknown> {

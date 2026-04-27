@@ -22,6 +22,11 @@ export const APP_ACTION_ENFORCE_MODIFIED_DIRECTIVE_KEY = 'dbx_action_enforce_mod
  *
  * The disable key is automatically cleaned up on directive destruction.
  *
+ * @dbxAction
+ * @dbxActionSlug enforce-modified
+ * @dbxActionStateInteraction IDLE, DISABLED
+ * @dbxActionConsumesContext
+ *
  * @example
  * ```html
  * <div dbxAction>

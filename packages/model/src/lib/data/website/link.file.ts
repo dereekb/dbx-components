@@ -20,6 +20,10 @@ export const WEBSITE_FILE_LINK_TYPE_REGEX = WEBSITE_LINK_TYPE_REGEX;
 
 /**
  * MIME type string for a file link (e.g., "image/png", "application/pdf").
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-model:website-link
  */
 export type WebsiteFileLinkMimeType = string;
 
@@ -35,6 +39,10 @@ export const WEBSITE_FILE_LINK_MIME_TYPE_REGEX = /^\w+\/[-+.\w]+$/;
 
 /**
  * Display name for a file link. Has no pattern restriction.
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-model:website-link
  */
 export type WebsiteFileLinkName = string;
 
@@ -45,6 +53,10 @@ export const WEBSITE_FILE_LINK_NAME_MAX_LENGTH = 128;
 
 /**
  * The data payload of a file link, typically a URL pointing to the file.
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-model:website-link
  */
 export type WebsiteFileLinkData = string;
 

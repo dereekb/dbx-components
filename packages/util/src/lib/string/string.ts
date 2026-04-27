@@ -243,7 +243,7 @@ export function stringSplitJoinInstance<T extends string = string>(config: Strin
     joinStrings,
     splitStrings,
     splitStringsToSet(input: Maybe<T>): Set<string> {
-      return new Set(input != null ? splitStrings(input) : []);
+      return new Set(input == null ? [] : splitStrings(input));
     },
     splitJoinRemainder(input: string, limit: number): string[] {
       return splitJoinRemainder(input, joiner, limit);

@@ -33,6 +33,8 @@ export interface DbxForgeDateRangeRowConfig {
 }
 
 /**
+ * Two-column row of start/end date-time fields configured for date-only picking. Use when you need a paired start/end date range laid out horizontally.
+ *
  * Composite builder that creates a pair of date pickers for selecting a date range (start and end dates)
  * arranged in a flex row. The pickers are synchronized so the start date stays before the end date.
  *
@@ -41,14 +43,18 @@ export interface DbxForgeDateRangeRowConfig {
  * @param config - Date range configuration with optional shared props and start/end overrides
  * @returns A {@link RowField} containing the start and end date field pair
  *
+ * @dbxFormField
+ * @dbxFormSlug date-range-row
+ * @dbxFormTier composite-builder
+ * @dbxFormSuffix Row
+ * @dbxFormProduces RowField
+ * @dbxFormArrayOutput no
+ * @dbxFormConfigInterface DbxForgeDateRangeRowConfig
+ * @dbxFormComposesFrom date-time, row
+ *
  * @example
  * ```typescript
- * const row = dbxForgeDateRangeRow({
- *   required: true,
- *   props: { timezone: 'America/New_York' },
- *   start: { key: 'from' },
- *   end: { key: 'to' }
- * });
+ * dbxForgeDateRangeRow({ required: true, start: { key: 'from', label: 'From' }, end: { key: 'to', label: 'To' } })
  * ```
  */
 export function dbxForgeDateRangeRow(config: DbxForgeDateRangeRowConfig = {}): RowField {

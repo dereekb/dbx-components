@@ -9,6 +9,10 @@ import { type Maybe } from '../value/maybe.type';
  * - 1:20
  * - 120AM
  * - 120
+ *
+ * @semanticType
+ * @semanticTopic time
+ * @semanticTopic string
  */
 export type ReadableTimeString = string;
 

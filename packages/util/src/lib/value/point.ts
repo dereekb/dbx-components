@@ -8,11 +8,19 @@ import { type Maybe } from './maybe.type';
 // MARK: Lat/Lng Point
 /**
  * Latitude value in degrees, ranging from -90 to 90.
+ *
+ * @semanticType
+ * @semanticTopic geo
+ * @semanticTopic numeric
  */
 export type Latitude = number;
 
 /**
  * Longitude value in degrees, ranging from -180 to 180.
+ *
+ * @semanticType
+ * @semanticTopic geo
+ * @semanticTopic numeric
  */
 export type Longitude = number;
 
@@ -48,6 +56,9 @@ export const TOTAL_LONGITUDE_RANGE = MAX_LONGITUDE_VALUE - MIN_LONGITUDE_VALUE;
 
 /**
  * A geographic point represented by latitude and longitude.
+ *
+ * @semanticType
+ * @semanticTopic geo
  */
 export interface LatLngPoint {
   lat: Latitude;

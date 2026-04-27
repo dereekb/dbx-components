@@ -1,6 +1,6 @@
-import { dbxForgeTextField, dbxForgeValueSelectionField, dbxForgeSearchableStringChipField, dbxForgePickableChipField, dbxForgeGroup, pickableValueFieldValuesConfigForStaticLabeledValues, isWebsiteUrlValidator } from '@dereekb/dbx-form';
+import { dbxForgeTextField, dbxForgeValueSelectionField, dbxForgeSearchableStringChipField, dbxForgePickableChipField, dbxForgeContainer, pickableValueFieldValuesConfigForStaticLabeledValues, isWebsiteUrlValidator } from '@dereekb/dbx-form';
 import { ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHOD_OPTIONS, PRIVATE_KEY_JWT_TOKEN_ENDPOINT_AUTH_METHOD, type OidcRedirectUri, type OidcScopeDetails, type OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
-import type { FormConfig } from '@ng-forge/dynamic-forms';
+import type { ContainerField, FormConfig, RegisteredFieldTypes } from '@ng-forge/dynamic-forms';
 import { of } from 'rxjs';
 
 // MARK: OidcClient Form Fields
@@ -64,7 +64,7 @@ export function oidcClientTokenEndpointAuthMethodForgeField(config?: OidcEntryCl
  *
  * @returns Array of forge field definitions for the client update form.
  */
-export function oidcEntryClientUpdateForgeFormFields() {
+export function oidcEntryClientUpdateForgeFormFields(): RegisteredFieldTypes[] {
   return [oidcClientNameForgeField(), oidcClientRedirectUrisForgeField(), oidcClientJwksUriForgeField(), oidcClientLogoUriForgeField(), oidcClientHomepageUriForgeField()];
 }
 
@@ -104,13 +104,16 @@ export function oidcClientRedirectUrisForgeField() {
 }
 
 /**
- * Creates a forge group containing the JWKS URI field, conditionally hidden
- * when the token endpoint auth method is not `private_key_jwt`.
+ * Creates a forge container wrapping the JWKS URI field, conditionally hidden
+ * when the token endpoint auth method is not `private_key_jwt`. A container
+ * (not a group) is used so the `jwks_uri` field stays at the root level of
+ * the form value rather than being nested under an extra object.
  *
- * @returns A forge group field with conditional visibility logic.
+ * @returns A forge container field with conditional visibility logic.
  */
-export function oidcClientJwksUriForgeField() {
-  return dbxForgeGroup({
+export function oidcClientJwksUriForgeField(): ContainerField {
+  return dbxForgeContainer({
+    key: 'jwks_uri_container',
     fields: [
       dbxForgeTextField({
         key: 'jwks_uri',

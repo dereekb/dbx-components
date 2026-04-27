@@ -8,6 +8,10 @@ import { dateTimezoneUtcNormal } from '@dereekb/date';
  * This is useful when you have a date in the system's timezone and need to display it as if it were in the target timezone.
  * Returns `undefined` if either the input date or timezone is falsy.
  *
+ * @dbxPipe
+ * @dbxPipeSlug system-date-to-target-date
+ * @dbxPipeCategory date
+ * @dbxPipeRelated target-date-to-system-date, timezone-abbreviation
  * @example
  * ```html
  * <span>{{ systemDate | systemDateToTargetDate:'America/New_York' | date:'short' }}</span>

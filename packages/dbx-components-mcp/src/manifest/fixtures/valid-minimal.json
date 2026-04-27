@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "source": "@dereekb/util",
+  "topicNamespace": "dereekb-util",
+  "generatedAt": "2026-04-25T00:00:00.000Z",
+  "generator": "@dereekb/dbx-components-mcp@13.9.0",
+  "topics": ["dereekb-util:duration"],
+  "entries": [
+    {
+      "name": "EmailAddress",
+      "package": "@dereekb/util",
+      "module": "contact/email",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": ["email", "contact"]
+    },
+    {
+      "name": "Milliseconds",
+      "package": "@dereekb/util",
+      "module": "date/duration",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": ["time", "duration", "dereekb-util:duration"]
+    }
+  ]
+}

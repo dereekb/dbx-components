@@ -14,6 +14,9 @@ import { toObservable } from '@angular/core/rxjs-interop';
  * This is useful when an action context is created programmatically (e.g., via
  * {@link DbxActionContextMachine}) and needs to be shared with template-based directives.
  *
+ * @dbxAction
+ * @dbxActionSlug source
+ *
  * @example
  * ```html
  * <!-- Forward a programmatic action source to template directives -->

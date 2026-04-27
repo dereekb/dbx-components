@@ -1,3 +1,28 @@
+# [13.10.0](https://github.com/dereekb/dbx-components/compare/v13.9.0-dev...v13.10.0) (2026-04-27)
+
+
+### Bug Fixes
+
+- drop emulator option from app template root.app.config ([790c990c](https://github.com/dereekb/dbx-components/commit/790c990c9098bddf85fa9e003c2d1c498ebc436a))
+- eagerly init firebase services in provideDbxFirebaseApp ([eb95556a](https://github.com/dereekb/dbx-components/commit/eb95556a5a57138c4048373f5b8b5bf386c7de28))
+- zoho-cli test invalid choice checks pass --fields ([f7d036df](https://github.com/dereekb/dbx-components/commit/f7d036df852e91c857bba6d1d395e15d7a758f83))
+
+
+### Build System
+
+- lint fix ([4c892384](https://github.com/dereekb/dbx-components/commit/4c892384af65b8a491f58cab1fd3c1b981fed2d3))
+
+
+### Code Refactoring
+
+- require key on dbxForgeGroup, add dbxForgeContainer ([9fbeec6c](https://github.com/dereekb/dbx-components/commit/9fbeec6c8ad227e229b2c8ce3eea3127c7c5a48d))
+- zoho-cli multi-page pagination flags ([e95817dd](https://github.com/dereekb/dbx-components/commit/e95817ddb0117098feb76dcce051e0de10fd2018))
+
+
+### Features
+
+- dbx-components-mcp ([#47](https://github.com/dereekb/dbx-components/issues/47)) ([e68b16a6](https://github.com/dereekb/dbx-components/commit/e68b16a66018a307ef55a4ef9cbccec6657128d8)), closes [#47](https://github.com/dereekb/dbx-components/issues/47) [hi#complexity](https://github.com/dereekb/hi/issues/complexity) [Array#sort](https://github.com/dereekb/Array/issues/sort) [Array#push](https://github.com/dereekb/Array/issues/push) [Array#push](https://github.com/dereekb/Array/issues/push) [hi#complexity](https://github.com/dereekb/hi/issues/complexity) [#47](https://github.com/dereekb/dbx-components/issues/47) [Array#at](https://github.com/dereekb/Array/issues/at)
+
 # [13.9.0](https://github.com/dereekb/dbx-components/compare/v13.8.0-dev...v13.9.0) (2026-04-23)
 
 

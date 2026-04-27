@@ -5,11 +5,20 @@ import { DbxSubSectionComponent } from '../../layout/section/subsection.componen
 /**
  * Renders a styled prompt section with a header, descriptive text, and a hero content slot.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug prompt
+ * @dbxWebCategory overlay
+ * @dbxWebRelated prompt-confirm, dialog-content
+ * @dbxWebSkillRefs dbx__ref__dbx-app-structure
+ * @dbxWebMinimalExample ```html
+ * <dbx-prompt header="Confirm"></dbx-prompt>
+ * ```
+ *
  * @example
  * ```html
- * <dbx-prompt [header]="'Welcome'" [prompt]="'Please sign in to continue.'">
- *   <img hero src="logo.png" />
- *   <button mat-raised-button>Sign In</button>
+ * <dbx-prompt header="Delete account" prompt="This cannot be undone.">
+ *   <button mat-button (click)="cancel()">Cancel</button>
+ *   <button mat-flat-button color="warn" (click)="confirm()">Delete</button>
  * </dbx-prompt>
  * ```
  */

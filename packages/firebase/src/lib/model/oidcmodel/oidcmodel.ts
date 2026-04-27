@@ -14,6 +14,8 @@ export type OidcModelTypes = typeof oidcEntryIdentity;
  * Used by both client and server code to access oidc model documents.
  *
  * @see `OidcModelServerActions` in `@dereekb/firebase-server/oidc` for server-side action processing
+ *
+ * @dbxModelGroup OidcModel
  */
 export abstract class OidcModelFirestoreCollections {
   abstract readonly oidcEntryCollection: OidcEntryFirestoreCollection;
@@ -51,10 +53,14 @@ export const OIDC_ENTRY_CLIENT_TYPE: OidcEntryType = 'Client';
  *
  * The {@link o} ownership field enables Firestore security rules to restrict reads to the owning user
  * (used primarily for Client entries so users can query their own registered OAuth clients).
+ *
+ * @dbxModel
  */
 export interface OidcEntry {
   /**
    * The oidc-provider model type (e.g., 'Session', 'AccessToken', 'Client').
+   *
+   * @dbxModelVariable type
    */
   type: OidcEntryType;
   /**
@@ -62,6 +68,8 @@ export interface OidcEntry {
    *
    * The payload structure varies by model type. Sensitive fields may be
    * selectively encrypted (prefixed with `$`) when encryption is configured.
+   *
+   * @dbxModelVariable payload
    */
   payload: JsonSerializableObject;
   /**
@@ -69,26 +77,38 @@ export interface OidcEntry {
    *
    * Set to the Firebase Auth UID of the user who created this entry.
    * Used primarily on Client entries to allow users to query their own OAuth clients.
+   *
+   * @dbxModelVariable ownerKey
    */
   o?: Maybe<FirebaseAuthOwnershipKey>;
   /**
    * User identifier. Extracted from the payload for indexed queries.
+   *
+   * @dbxModelVariable uid
    */
   uid?: Maybe<FirebaseAuthUserId>;
   /**
    * Grant identifier for revocation support. Extracted from the payload for indexed queries.
+   *
+   * @dbxModelVariable grantId
    */
   grantId?: Maybe<string>;
   /**
    * User code for device flow. Extracted from the payload for indexed queries.
+   *
+   * @dbxModelVariable userCode
    */
   userCode?: Maybe<string>;
   /**
    * Epoch timestamp when this entry was consumed. Extracted from the payload for indexed queries.
+   *
+   * @dbxModelVariable consumedAt
    */
   consumed?: Maybe<number>;
   /**
    * When this entry expires.
+   *
+   * @dbxModelVariable expiresAt
    */
   expiresAt?: Maybe<Date>;
 }

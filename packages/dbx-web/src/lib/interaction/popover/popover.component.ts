@@ -71,6 +71,20 @@ export interface FullDbxPopoverComponentConfig<O, I, T> extends DbxPopoverCompon
  * Core popover component that renders injected content with position strategy, transition watching, and keyboard close support.
  *
  * Coordinates with {@link DbxPopoverCoordinatorService} to ensure only one popover per key is active at a time.
+ *
+ * @dbxWebComponent
+ * @dbxWebSlug popover
+ * @dbxWebCategory overlay
+ * @dbxWebRelated popup, prompt-confirm, dialog-content
+ * @dbxWebSkillRefs dbx__ref__dbx-app-structure
+ * @dbxWebMinimalExample ```html
+ * <dbx-popover></dbx-popover>
+ * ```
+ *
+ * @example
+ * ```html
+ * // In a service: this.popoverService.open({ content: MyContentComponent, origin })
+ * ```
  */
 @Component({
   template: `

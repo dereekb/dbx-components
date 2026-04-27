@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/util",
-  "version": "13.9.0",
+  "version": "13.10.0",
   "exports": {
     "./test": {
       "module": "./test/index.esm.js",

@@ -9,6 +9,9 @@ if [[ `git status --porcelain` ]]; then
   exit 1
 fi
 
+echo regenerating dbx-components-mcp files before starting release
+./regenerate-dbx-components-mcp.sh
+
 echo running lint-fix before starting release
 ./lint-fix-all.sh
 

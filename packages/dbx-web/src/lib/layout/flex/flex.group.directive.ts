@@ -13,11 +13,20 @@ import { toSignal, toObservable } from '@angular/core/rxjs-interop';
  * that can be used to adjust styling. When `breakToColumn` is enabled, items will stack vertically
  * on small screens.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug flex-group
+ * @dbxWebCategory layout
+ * @dbxWebRelated flex-size, bar
+ * @dbxWebSkillRefs dbx__ref__dbx-ui-building-blocks
+ * @dbxWebMinimalExample ```html
+ * <div dbxFlexGroup><div dbxFlexSize="1">A</div></div>
+ * ```
+ *
  * @example
  * ```html
- * <div dbxFlexGroup [breakToColumn]="true" breakpoint="tablet">
- *   <div [dbxFlexSize]="3">Half width</div>
- *   <div [dbxFlexSize]="3">Half width</div>
+ * <div dbxFlexGroup breakpoint="sm">
+ *   <div dbxFlexSize="2">Wide</div>
+ *   <div dbxFlexSize="1">Narrow</div>
  * </div>
  * ```
  */

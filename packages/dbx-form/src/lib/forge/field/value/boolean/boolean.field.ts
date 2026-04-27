@@ -22,14 +22,22 @@ export interface DbxForgeToggleFieldConfig extends DbxForgeFieldFunctionDef<MatT
 }
 
 /**
- * Creates a forge field definition for a Material slide toggle.
+ * Material slide toggle. Renders inside a styled outline box by default so it visually matches surrounding outlined form fields; pass `styledBox: false` to opt out.
  *
  * @param config - Toggle field configuration
  * @returns A validated {@link MatToggleField} with type `'toggle'`
  *
+ * @dbxFormField
+ * @dbxFormSlug toggle
+ * @dbxFormTier field-factory
+ * @dbxFormProduces boolean
+ * @dbxFormArrayOutput no
+ * @dbxFormNgFormType toggle
+ * @dbxFormWrapperPattern unwrapped
+ * @dbxFormConfigInterface DbxForgeToggleFieldConfig
  * @example
  * ```typescript
- * const field = dbxForgeToggleField({ key: 'active', label: 'Active', value: true });
+ * dbxForgeToggleField({ key: 'active', label: 'Active', value: true })
  * ```
  */
 export const dbxForgeToggleField = dbxForgeFieldFunction<DbxForgeToggleFieldConfig>({
@@ -56,14 +64,23 @@ export interface DbxForgeCheckboxFieldConfig extends DbxForgeFieldFunctionDef<Ma
 }
 
 /**
- * Creates a forge field definition for a Material checkbox.
+ * Material checkbox. Shares the styled-outline-box opt-out with toggle.
  *
  * @param config - Checkbox field configuration
  * @returns A validated {@link MatCheckboxField} with type `'checkbox'`
  *
+ * @dbxFormField
+ * @dbxFormSlug checkbox
+ * @dbxFormTier field-factory
+ * @dbxFormProduces boolean
+ * @dbxFormArrayOutput no
+ * @dbxFormNgFormType checkbox
+ * @dbxFormWrapperPattern unwrapped
+ * @dbxFormConfigInterface DbxForgeCheckboxFieldConfig
+ *
  * @example
  * ```typescript
- * const field = dbxForgeCheckboxField({ key: 'agree', label: 'I agree to the terms' });
+ * dbxForgeCheckboxField({ key: 'agree', label: 'I agree to the terms' })
  * ```
  */
 export const dbxForgeCheckboxField = dbxForgeFieldFunction<DbxForgeCheckboxFieldConfig>({

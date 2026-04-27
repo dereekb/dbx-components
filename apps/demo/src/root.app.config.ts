@@ -271,7 +271,6 @@ export const appConfig: ApplicationConfig = {
       app: {
         dbxFirebaseAppOptions: environment.firebase
       },
-      emulator: environment.firebase.emulators,
       storage: {},
       auth: {
         delegateFactory: demoAuthDelegateFactory

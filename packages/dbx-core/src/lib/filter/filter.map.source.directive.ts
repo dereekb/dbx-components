@@ -21,12 +21,17 @@ export abstract class AbstractDbxFilterMapSourceDirective<F> extends AbstractDbx
 }
 
 /**
- * Concrete directive that provides a {@link FilterSource} from a keyed entry in a parent {@link FilterMap}.
+ * Provides a {@link FilterSource} for a keyed entry in an ancestor {@link FilterMap}. Children can inject the source as if it were the only filter on the page; the map dispatches by key.
+ *
+ * @dbxFilter
+ * @dbxFilterSlug map-source
+ * @dbxFilterRelated map, map-source-connector
+ * @dbxFilterSkillRefs dbx__ref__dbx-component-patterns
  *
  * @example
  * ```html
  * <div dbxFilterMap>
- *   <div [dbxFilterMapSource]="'listFilter'">
+ *   <div [dbxFilterMapSource]="'profileList'">
  *     <my-filtered-list></my-filtered-list>
  *   </div>
  * </div>
@@ -39,6 +44,9 @@ export abstract class AbstractDbxFilterMapSourceDirective<F> extends AbstractDbx
   standalone: true
 })
 export class DbxFilterMapSourceDirective<F> extends AbstractDbxFilterMapSourceDirective<F> implements FilterSource<F> {
+  /**
+   * The map key this source binds to.
+   */
   readonly dbxFilterMapSource = input<Maybe<FilterMapKey>>();
   protected readonly _dbxFilterMapSourceEffect = effect(() => this.setFilterMapKey(this.dbxFilterMapSource()));
 }

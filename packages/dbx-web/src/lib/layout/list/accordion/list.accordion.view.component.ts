@@ -211,9 +211,18 @@ export class DbxValueListAccordionViewContentComponent<T, I extends DbxValueList
  * Renders a value list as an accordion using a configuration input. Each item renders its own expansion panel.
  * Requires a parent {@link DbxListView} context.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug list-accordion-view
+ * @dbxWebCategory list
+ * @dbxWebRelated list, list-view
+ * @dbxWebSkillRefs dbx__ref__dbx-component-patterns
+ * @dbxWebMinimalExample ```html
+ * <dbx-list-accordion-view [config]="rowConfig"></dbx-list-accordion-view>
+ * ```
+ *
  * @example
  * ```html
- * <dbx-list-accordion-view [config]="accordionConfig"></dbx-list-accordion-view>
+ * <dbx-list-accordion-view [config]="rowConfig"></dbx-list-accordion-view>
  * ```
  */
 @Component({

@@ -7,10 +7,21 @@ import { type DbxChipDisplay, DbxChipDirective } from './text.chip.directive';
  *
  * Uses {@link DbxChipDirective} internally with `dbx-chip-spacer` class for spacing.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug chip-list
+ * @dbxWebCategory text
+ * @dbxWebRelated chip
+ * @dbxWebSkillRefs dbx__ref__dbx-ui-building-blocks
+ * @dbxWebMinimalExample ```html
+ * <dbx-chip-list></dbx-chip-list>
+ * ```
+ *
  * @example
  * ```html
- * <dbx-chip-list [chips]="[{ label: 'Active', value: 'active', color: 'primary' }, { label: 'Pending', value: 'pending', color: 'accent' }]"></dbx-chip-list>
- * <dbx-chip-list [chips]="chips" [small]="true"></dbx-chip-list>
+ * <dbx-chip-list>
+ *   <dbx-chip text="Tag1"></dbx-chip>
+ *   <dbx-chip text="Tag2"></dbx-chip>
+ * </dbx-chip-list>
  * ```
  */
 @Component({

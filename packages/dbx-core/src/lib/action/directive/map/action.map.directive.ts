@@ -11,6 +11,9 @@ import { clean } from '../../../rxjs/clean';
  *
  * The map is exported as `actionMap` for template reference access.
  *
+ * @dbxAction
+ * @dbxActionSlug context-map
+ *
  * @example
  * ```html
  * <div dbxActionContextMap>

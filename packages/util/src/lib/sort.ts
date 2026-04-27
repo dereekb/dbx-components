@@ -19,6 +19,9 @@ export const SORT_VALUE_EQUAL: SortComparisonNumber = 0;
  *
  * In "descending" order, this returns the opposite values as "ascending".
  * - Example: b - a
+ *
+ * @semanticType
+ * @semanticTopic numeric
  */
 export type SortComparisonNumber = number;
 

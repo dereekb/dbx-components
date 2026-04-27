@@ -13,11 +13,18 @@ import { DbxColorDirective } from '../../layout/style/style.color.directive';
 /**
  * Progress button that displays a Material progress bar beneath the button while working.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug progress-bar-button
+ * @dbxWebCategory button
+ * @dbxWebRelated button, progress-spinner-button
+ * @dbxWebSkillRefs dbx__ref__dbx-ui-building-blocks
+ * @dbxWebMinimalExample ```html
+ * <dbx-progress-bar-button [config]="cfg"></dbx-progress-bar-button>
+ * ```
+ *
  * @example
  * ```html
- * <dbx-progress-bar-button [config]="buttonConfig" (btnClick)="onSave()">
- *   Save
- * </dbx-progress-bar-button>
+ * <dbx-progress-bar-button [config]="cfg" (btnClick)="onClick()"></dbx-progress-bar-button>
  * ```
  */
 @Component({

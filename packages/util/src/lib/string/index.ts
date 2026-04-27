@@ -1,3 +1,4 @@
+export * from './case';
 export * from './char';
 export * from './dencoder';
 export * from './factory';

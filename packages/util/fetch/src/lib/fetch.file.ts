@@ -136,7 +136,7 @@ export interface FetchFileResponse {
 export function parseFetchFileResponse(response: Response): FetchFileResponse {
   const rawContentType: Maybe<ContentTypeMimeType> = response.headers.get('content-type');
   const parseContentTypeResult = parseContentType(rawContentType ?? '');
-  const contentType: Maybe<FetchFileResponseContentType> = parseContentTypeResult.type !== '' ? parseContentTypeResult : undefined;
+  const contentType: Maybe<FetchFileResponseContentType> = parseContentTypeResult.type === '' ? undefined : parseContentTypeResult;
 
   return {
     response,

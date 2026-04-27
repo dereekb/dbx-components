@@ -20,6 +20,11 @@ export type DbxActionErrorHandlerFunction = (error?: Maybe<ReadableError>) => vo
  * This is useful for performing side effects like logging, showing error toasts, or
  * handling specific error conditions programmatically.
  *
+ * @dbxAction
+ * @dbxActionSlug error-handler
+ * @dbxActionStateInteraction REJECTED
+ * @dbxActionConsumesContext
+ *
  * @example
  * ```html
  * <div dbxAction>

@@ -3,6 +3,7 @@ import { getDeskApi } from '../../middleware/auth.middleware';
 import { noop } from '../../util/noop';
 import { outputResult, outputError } from '../../util/output';
 import { withDeskPagination } from '../../util/args';
+import { runPaginatedList, zohoDeskPaginationAdapter } from '../../util/pagination';
 
 const ticketsListCommand: CommandModule = {
   command: 'list',
@@ -11,8 +12,20 @@ const ticketsListCommand: CommandModule = {
   handler: async (argv: any) => {
     try {
       const api = getDeskApi(argv);
-      const result = await api.getTickets({ from: argv.from, limit: argv.limit, departmentId: argv.departmentId, status: argv.status, sortBy: argv.sortBy, include: argv.include });
-      outputResult(result.data, { from: argv.from, limit: argv.limit, count: result.data?.length });
+      const initialInput = { from: argv.from, limit: argv.limit, departmentId: argv.departmentId, status: argv.status, sortBy: argv.sortBy, include: argv.include };
+      const outcome = await runPaginatedList({
+        initialInput,
+        fetchPage: (input) => api.getTickets(input as any),
+        adapter: zohoDeskPaginationAdapter,
+        multiplePages: argv.multiplePages,
+        multiplePagesOutput: argv.multiplePagesOutput,
+        dumpOutput: argv.dumpOutput,
+        dumpMerge: argv.dumpMerge
+      });
+      if (outcome.handled === false) {
+        const result = outcome.result;
+        outputResult(result.data, { from: argv.from, limit: argv.limit, count: result.data?.length });
+      }
     } catch (e) {
       outputError(e);
       process.exit(1);
@@ -43,8 +56,20 @@ const ticketsSearchCommand: CommandModule = {
   handler: async (argv: any) => {
     try {
       const api = getDeskApi(argv);
-      const result = await api.searchTickets({ from: argv.from, limit: argv.limit, subject: argv.subject, status: argv.status, email: argv.email, departmentId: argv.departmentId, channel: argv.channel, priority: argv.priority });
-      outputResult(result.data, { from: argv.from, limit: argv.limit, count: result.data?.length });
+      const initialInput = { from: argv.from, limit: argv.limit, subject: argv.subject, status: argv.status, email: argv.email, departmentId: argv.departmentId, channel: argv.channel, priority: argv.priority };
+      const outcome = await runPaginatedList({
+        initialInput,
+        fetchPage: (input) => api.searchTickets(input as any),
+        adapter: zohoDeskPaginationAdapter,
+        multiplePages: argv.multiplePages,
+        multiplePagesOutput: argv.multiplePagesOutput,
+        dumpOutput: argv.dumpOutput,
+        dumpMerge: argv.dumpMerge
+      });
+      if (outcome.handled === false) {
+        const result = outcome.result;
+        outputResult(result.data, { from: argv.from, limit: argv.limit, count: result.data?.length });
+      }
     } catch (e) {
       outputError(e);
       process.exit(1);
@@ -59,8 +84,20 @@ const ticketsByContactCommand: CommandModule = {
   handler: async (argv: any) => {
     try {
       const api = getDeskApi(argv);
-      const result = await api.getTicketsForContact({ contactId: argv.contactId, from: argv.from, limit: argv.limit });
-      outputResult(result.data, { from: argv.from, limit: argv.limit, count: result.data?.length });
+      const initialInput = { contactId: argv.contactId, from: argv.from, limit: argv.limit };
+      const outcome = await runPaginatedList({
+        initialInput,
+        fetchPage: (input) => api.getTicketsForContact(input as any),
+        adapter: zohoDeskPaginationAdapter,
+        multiplePages: argv.multiplePages,
+        multiplePagesOutput: argv.multiplePagesOutput,
+        dumpOutput: argv.dumpOutput,
+        dumpMerge: argv.dumpMerge
+      });
+      if (outcome.handled === false) {
+        const result = outcome.result;
+        outputResult(result.data, { from: argv.from, limit: argv.limit, count: result.data?.length });
+      }
     } catch (e) {
       outputError(e);
       process.exit(1);
