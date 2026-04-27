@@ -13,6 +13,10 @@
  * defer to their dedicated validators.
  */
 
+import type { FolderGroupedResult, FolderGroupedViolation } from '../validate-format.js';
+
+export type { FolderInspectionStatus, ViolationSeverity } from '../validate-format.js';
+
 export type ViolationCode =
   // I/O failures (errors)
   | 'FOLDER_NOT_FOUND'
@@ -28,22 +32,9 @@ export type ViolationCode =
   | 'FOLDER_STRAY_FILE'
   | 'RESERVED_MODEL_FOLDER';
 
-export type { ViolationSeverity } from '../validate-format.js';
+export type Violation = FolderGroupedViolation<ViolationCode>;
 
-export interface Violation {
-  readonly code: ViolationCode;
-  readonly severity: ViolationSeverity;
-  readonly message: string;
-  readonly folder: string;
-  readonly file: string | undefined;
-}
-
-export interface ValidationResult {
-  readonly violations: readonly Violation[];
-  readonly errorCount: number;
-  readonly warningCount: number;
-  readonly foldersChecked: number;
-}
+export type ValidationResult = FolderGroupedResult<Violation>;
 
 /**
  * Descriptor for a reserved model-folder name — one that the validator
@@ -103,8 +94,6 @@ export interface FolderInspection {
    */
   readonly files: readonly string[];
 }
-
-export type FolderInspectionStatus = 'ok' | 'not-found' | 'not-directory';
 
 /**
  * Canonical file suffixes required inside each model folder. `index`

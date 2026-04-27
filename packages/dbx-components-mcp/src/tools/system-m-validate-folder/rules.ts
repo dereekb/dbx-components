@@ -1,7 +1,7 @@
 /**
  * Validation rules run against a {@link SystemFolderInspection}. Rules
  * accumulate {@link Violation}s into a mutable buffer; the public entry
- * point is {@link validateSystemFolders} in `./index.ts`.
+ * point is {@link validateSystemFolders} in `./validate.ts`.
  */
 
 import { extractSystemFile } from './extract.js';

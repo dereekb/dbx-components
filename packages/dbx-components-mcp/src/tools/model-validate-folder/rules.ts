@@ -1,7 +1,7 @@
 /**
  * Validation rules run against a {@link FolderInspection}. Rules
  * accumulate {@link Violation}s into a mutable buffer; the public entry
- * point is {@link validateModelFolders} in `./index.ts`.
+ * point is {@link validateModelFolders} in `./validate.ts`.
  */
 
 import { buildRequiredFiles, RESERVED_MODEL_FOLDERS, type FolderInspection, type ReservedModelFolder, type Violation, type ViolationSeverity } from './types.js';

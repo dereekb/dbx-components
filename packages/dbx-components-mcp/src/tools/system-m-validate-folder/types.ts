@@ -24,6 +24,10 @@
  * this tool.
  */
 
+import type { FolderGroupedResult, FolderGroupedViolation } from '../validate-format.js';
+
+export type { FolderInspectionStatus, ViolationSeverity } from '../validate-format.js';
+
 export type ViolationCode =
   // I/O failures (errors)
   | 'SYSTEM_FOLDER_NOT_FOUND'
@@ -46,24 +50,9 @@ export type ViolationCode =
   | 'SYSTEM_CONVERTER_MAP_NOT_LAST'
   | 'SYSTEM_UNKNOWN_MAP_KEY';
 
-export type { ViolationSeverity } from '../validate-format.js';
+export type Violation = FolderGroupedViolation<ViolationCode>;
 
-export interface Violation {
-  readonly code: ViolationCode;
-  readonly severity: ViolationSeverity;
-  readonly message: string;
-  readonly folder: string;
-  readonly file: string | undefined;
-}
-
-export interface ValidationResult {
-  readonly violations: readonly Violation[];
-  readonly errorCount: number;
-  readonly warningCount: number;
-  readonly foldersChecked: number;
-}
-
-export type FolderInspectionStatus = 'ok' | 'not-found' | 'not-directory';
+export type ValidationResult = FolderGroupedResult<Violation>;
 
 /**
  * One folder inspection result passed into the pure rules core. Specs

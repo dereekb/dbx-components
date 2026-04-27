@@ -25,11 +25,13 @@ export type ViolationSeverity = 'error' | 'warning';
 /**
  * Minimum shape every domain's `Violation` satisfies. Used by the shared
  * line formatter so it can produce the canonical `- **[LABEL] CODE** ...`
- * line without knowing about domain-specific fields.
+ * line without knowing about domain-specific fields. The optional
+ * `TCode` parameter narrows the `code` field to a domain union; the
+ * default keeps existing call sites that pass `string` working unchanged.
  */
-export interface ViolationLine {
+export interface ViolationLine<TCode extends string = string> {
   readonly severity: ViolationSeverity;
-  readonly code: string;
+  readonly code: TCode;
   readonly message: string;
 }
 
@@ -96,21 +98,68 @@ export function formatViolationLine(violation: ViolationLine, locationPart: stri
 // MARK: Folder-grouped report (model, system)
 
 /**
- * Minimum violation shape required by {@link formatFolderGroupedResult}.
+ * Status of a folder inspection — `ok` when the folder exists, `not-found` /
+ * `not-directory` when the upstream `stat` short-circuits the rules. Shared
+ * across folder-validator domains so each `<domain>/types.ts` simply
+ * re-exports it.
  */
-export interface FolderGroupedViolation extends ViolationLine {
+export type FolderInspectionStatus = 'ok' | 'not-found' | 'not-directory';
+
+/**
+ * Canonical violation shape for folder validators. Each domain's `Violation`
+ * type aliases this with its own {@link ViolationCode} union, removing the
+ * duplicated 5-field interface declaration.
+ */
+export interface FolderGroupedViolation<TCode extends string = string> extends ViolationLine<TCode> {
   readonly folder: string;
   readonly file: string | undefined;
 }
 
 /**
- * Minimum result shape required by {@link formatFolderGroupedResult}.
+ * Canonical result shape for folder validators. Each domain's
+ * `ValidationResult` type aliases this with its own violation type, removing
+ * the duplicated 4-field interface declaration.
  */
-export interface FolderGroupedResult {
-  readonly violations: readonly FolderGroupedViolation[];
+export interface FolderGroupedResult<TViolation extends FolderGroupedViolation = FolderGroupedViolation> {
+  readonly violations: readonly TViolation[];
   readonly errorCount: number;
   readonly warningCount: number;
   readonly foldersChecked: number;
+}
+
+/**
+ * Runs the per-domain rules over each inspection and aggregates the
+ * violations and counts into a {@link FolderGroupedResult}. Folder validators
+ * (model, system) share this loop instead of hand-rolling identical
+ * iteration in each `index.ts`.
+ *
+ * @param config - shared call config
+ * @param config.inspections - the prepared folder inspections
+ * @param config.runRules - the per-domain rules to apply to each inspection
+ * @returns the aggregated validation outcome
+ */
+export function aggregateFolderRules<TInspection, TViolation extends FolderGroupedViolation>(config: { readonly inspections: readonly TInspection[]; readonly runRules: (inspection: TInspection) => readonly TViolation[] }): FolderGroupedResult<TViolation> {
+  const { inspections, runRules } = config;
+  const violations: TViolation[] = [];
+  let errorCount = 0;
+  let warningCount = 0;
+  for (const inspection of inspections) {
+    const folderViolations = runRules(inspection);
+    for (const v of folderViolations) {
+      violations.push(v);
+      if (v.severity === 'error') {
+        errorCount += 1;
+      } else {
+        warningCount += 1;
+      }
+    }
+  }
+  return {
+    violations,
+    errorCount,
+    warningCount,
+    foldersChecked: inspections.length
+  };
 }
 
 /**
