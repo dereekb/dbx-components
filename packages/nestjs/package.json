@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/nestjs",
-  "version": "13.9.0",
+  "version": "13.10.0",
   "types": "./src/index.d.ts",
   "module": "./index.esm.js",
   "main": "./index.cjs.js",
@@ -49,8 +49,8 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/rxjs": "13.9.0",
-    "@dereekb/util": "13.9.0",
+    "@dereekb/rxjs": "13.10.0",
+    "@dereekb/util": "13.10.0",
     "@nestjs/common": "^11.1.17",
     "@nestjs/config": "^4.0.4",
     "@typeform/api-client": "^2.5.1",

@@ -1,11 +1,11 @@
 {
   "name": "@dereekb/analytics/nestjs",
-  "version": "13.9.0",
+  "version": "13.10.0",
   "peerDependencies": {
-    "@dereekb/analytics": "13.9.0",
-    "@dereekb/nestjs": "13.9.0",
-    "@dereekb/rxjs": "13.9.0",
-    "@dereekb/util": "13.9.0",
+    "@dereekb/analytics": "13.10.0",
+    "@dereekb/nestjs": "13.10.0",
+    "@dereekb/rxjs": "13.10.0",
+    "@dereekb/util": "13.10.0",
     "@nestjs/common": "^11.1.17",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.1.18",
