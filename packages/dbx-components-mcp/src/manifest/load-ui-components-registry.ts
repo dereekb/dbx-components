@@ -3,14 +3,14 @@
  * {@link loadUiComponentManifests}, and {@link createUiComponentRegistry}.
  *
  * Resolves the bundled `@dereekb/*` ui-components manifests that ship inside
- * this package's `manifests/` directory and merges them with any external
+ * this package's `generated/` directory and merges them with any external
  * sources declared in `dbx-mcp.config.json` under `uiComponents.sources`.
  * The resulting {@link UiComponentRegistry} is the data the lookup-ui /
  * search-ui tools and the registry resource read from.
  *
  * All I/O is injectable so unit tests can drive every branch without touching
  * disk. The default `bundledManifestPaths` factory uses `import.meta.url` to
- * locate the package's `manifests/` directory regardless of whether the
+ * locate the package's `generated/` directory regardless of whether the
  * caller imports the source or the bundled binary.
  */
 
@@ -25,7 +25,7 @@ import { loadUiComponentManifests, type UiComponentLoaderWarning, type UiCompone
 /**
  * Function shape used by {@link loadUiComponentRegistry} to enumerate the
  * bundled `@dereekb/*` manifest paths shipped with this package. Defaults to
- * the JSON files inside the package's `manifests/` directory.
+ * the JSON files inside the package's `generated/` directory.
  */
 export type BundledUiManifestPathsFactory = () => readonly string[];
 
@@ -74,7 +74,7 @@ function findPackageRoot(startUrl: string): string {
 
 const DEFAULT_BUNDLED_PATHS: BundledUiManifestPathsFactory = () => {
   const packageRoot = findPackageRoot(import.meta.url);
-  return DEFAULT_BUNDLED_FILENAMES.map((name) => resolve(packageRoot, 'manifests', name));
+  return DEFAULT_BUNDLED_FILENAMES.map((name) => resolve(packageRoot, 'generated', name));
 };
 
 // MARK: Entry point

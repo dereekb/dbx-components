@@ -3,13 +3,13 @@
  * {@link loadSemanticTypeManifests}, and {@link createSemanticTypeRegistry}.
  *
  * Resolves the bundled `@dereekb/*` manifests that ship inside this package's
- * `manifests/` directory and merges them with any external sources declared
+ * `generated/` directory and merges them with any external sources declared
  * in `dbx-mcp.config.json`. The resulting {@link SemanticTypeRegistry} is the
  * data the lookup / search tools and the registry resource read from.
  *
  * All I/O is injectable so unit tests can drive every branch without touching
  * disk. The default `bundledManifestUrls` factory uses `import.meta.url` to
- * locate the package's `manifests/` directory regardless of whether the
+ * locate the package's `generated/` directory regardless of whether the
  * caller imports the source or the bundled binary.
  */
 
@@ -24,7 +24,7 @@ import { loadSemanticTypeManifests, type LoaderWarning, type ManifestReadFile, t
 /**
  * Function shape used by {@link loadSemanticTypeRegistry} to enumerate the
  * bundled `@dereekb/*` manifest paths shipped with this package. Defaults to
- * the JSON files inside the package's `manifests/` directory.
+ * the JSON files inside the package's `generated/` directory.
  */
 export type BundledManifestPathsFactory = () => readonly string[];
 
@@ -83,7 +83,7 @@ function findPackageRoot(startUrl: string): string {
 
 const DEFAULT_BUNDLED_PATHS: BundledManifestPathsFactory = () => {
   const packageRoot = findPackageRoot(import.meta.url);
-  return DEFAULT_BUNDLED_FILENAMES.map((name) => resolve(packageRoot, 'manifests', name));
+  return DEFAULT_BUNDLED_FILENAMES.map((name) => resolve(packageRoot, 'generated', name));
 };
 
 // MARK: Entry point
@@ -151,11 +151,11 @@ export function getDefaultBundledManifestPaths(): readonly string[] {
 }
 
 /**
- * Returns the package's `manifests/` directory. Useful for callers that want
+ * Returns the package's `generated/` directory. Useful for callers that want
  * to derive sibling paths without re-deriving the package root themselves.
  *
  * @returns the absolute path of the bundled manifests directory
  */
 export function getBundledManifestsDirectory(): string {
-  return resolve(findPackageRoot(import.meta.url), 'manifests');
+  return resolve(findPackageRoot(import.meta.url), 'generated');
 }

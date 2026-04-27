@@ -165,4 +165,4 @@ export interface FirebaseModelGroup {
   readonly modelNames: readonly string[];
 }
 
-export { FIREBASE_MODELS, FIREBASE_MODEL_GROUPS } from './firebase-models.generated.js';
+export { FIREBASE_MODELS, FIREBASE_MODEL_GROUPS } from '../../generated/firebase-models.generated.js';

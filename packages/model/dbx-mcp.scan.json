@@ -4,5 +4,5 @@
   "topicNamespace": "dereekb-model",
   "include": ["src/lib/**/*.ts"],
   "exclude": ["**/*.spec.ts", "**/*.test.ts"],
-  "out": "../dbx-components-mcp/manifests/dereekb-model.semantic-types.mcp.generated.json"
+  "out": "../dbx-components-mcp/generated/dereekb-model.semantic-types.mcp.generated.json"
 }

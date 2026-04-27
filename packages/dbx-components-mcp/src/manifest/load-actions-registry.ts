@@ -3,7 +3,7 @@
  * {@link loadActionManifests}, and {@link createActionRegistry}.
  *
  * Resolves the bundled `@dereekb/*` actions manifests that ship inside this
- * package's `manifests/` directory and merges them with any external sources
+ * package's `generated/` directory and merges them with any external sources
  * declared in `dbx-mcp.config.json` under `actions.sources`.
  */
 
@@ -54,7 +54,7 @@ function findPackageRoot(startUrl: string): string {
 
 const DEFAULT_BUNDLED_PATHS: BundledActionManifestPathsFactory = () => {
   const packageRoot = findPackageRoot(import.meta.url);
-  return DEFAULT_BUNDLED_FILENAMES.map((name) => resolve(packageRoot, 'manifests', name));
+  return DEFAULT_BUNDLED_FILENAMES.map((name) => resolve(packageRoot, 'generated', name));
 };
 
 // MARK: Entry point

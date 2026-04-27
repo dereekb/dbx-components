@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { loadSemanticTypeManifests } from './loader.js';
 
 const PACKAGE_ROOT = resolve(__dirname, '..', '..');
-const MANIFESTS_DIR = resolve(PACKAGE_ROOT, 'manifests');
+const MANIFESTS_DIR = resolve(PACKAGE_ROOT, 'generated');
 
 const BUNDLED_PATHS = {
   util: resolve(MANIFESTS_DIR, 'dereekb-util.semantic-types.mcp.generated.json'),

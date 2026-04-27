@@ -5,6 +5,6 @@
     "module": "@dereekb/dbx-form",
     "include": ["src/lib/forge/**/*.ts", "src/lib/field/field.autocomplete.ts"],
     "exclude": ["**/*.spec.ts", "**/*.test.ts"],
-    "out": "../dbx-components-mcp/manifests/dereekb-dbx-form.forge-fields.mcp.generated.json"
+    "out": "../dbx-components-mcp/generated/dereekb-dbx-form.forge-fields.mcp.generated.json"
   }
 }

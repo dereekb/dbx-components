@@ -7,7 +7,7 @@
   "targets": {
     "generate-firebase-models": {
       "executor": "nx:run-commands",
-      "outputs": ["{projectRoot}/src/registry/firebase-models.generated.ts"],
+      "outputs": ["{projectRoot}/generated/firebase-models.generated.ts"],
       "inputs": ["{projectRoot}/scripts/extract-firebase-models.mjs", "{workspaceRoot}/packages/firebase/src/lib/model/**/*.ts"],
       "options": {
         "command": "node packages/dbx-components-mcp/scripts/extract-firebase-models.mjs",
@@ -17,16 +17,16 @@
     "generate-manifests": {
       "executor": "nx:run-commands",
       "outputs": [
-        "{projectRoot}/manifests/dereekb-util.semantic-types.mcp.generated.json",
-        "{projectRoot}/manifests/dereekb-model.semantic-types.mcp.generated.json",
-        "{projectRoot}/manifests/dereekb-date.semantic-types.mcp.generated.json",
-        "{projectRoot}/manifests/dereekb-firebase.semantic-types.mcp.generated.json",
-        "{projectRoot}/manifests/dereekb-firebase-server.semantic-types.mcp.generated.json",
-        "{projectRoot}/manifests/dereekb-dbx-web.ui-components.mcp.generated.json",
-        "{projectRoot}/manifests/dereekb-dbx-form.forge-fields.mcp.generated.json",
-        "{projectRoot}/manifests/dereekb-dbx-core.pipes.mcp.generated.json",
-        "{projectRoot}/manifests/dereekb-dbx-core.actions.mcp.generated.json",
-        "{projectRoot}/manifests/dereekb-dbx-core.filters.mcp.generated.json"
+        "{projectRoot}/generated/dereekb-util.semantic-types.mcp.generated.json",
+        "{projectRoot}/generated/dereekb-model.semantic-types.mcp.generated.json",
+        "{projectRoot}/generated/dereekb-date.semantic-types.mcp.generated.json",
+        "{projectRoot}/generated/dereekb-firebase.semantic-types.mcp.generated.json",
+        "{projectRoot}/generated/dereekb-firebase-server.semantic-types.mcp.generated.json",
+        "{projectRoot}/generated/dereekb-dbx-web.ui-components.mcp.generated.json",
+        "{projectRoot}/generated/dereekb-dbx-form.forge-fields.mcp.generated.json",
+        "{projectRoot}/generated/dereekb-dbx-core.pipes.mcp.generated.json",
+        "{projectRoot}/generated/dereekb-dbx-core.actions.mcp.generated.json",
+        "{projectRoot}/generated/dereekb-dbx-core.filters.mcp.generated.json"
       ],
       "inputs": [
         "{projectRoot}/scripts/generate-manifests.mjs",
@@ -99,7 +99,7 @@
             "output": "."
           },
           {
-            "glob": "manifests/*.json",
+            "glob": "generated/*.json",
             "input": "packages/dbx-components-mcp",
             "output": "."
           }

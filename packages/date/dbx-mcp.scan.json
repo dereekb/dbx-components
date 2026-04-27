@@ -4,5 +4,5 @@
   "topicNamespace": "dereekb-date",
   "include": ["src/lib/**/*.ts"],
   "exclude": ["**/*.spec.ts", "**/*.test.ts"],
-  "out": "../dbx-components-mcp/manifests/dereekb-date.semantic-types.mcp.generated.json"
+  "out": "../dbx-components-mcp/generated/dereekb-date.semantic-types.mcp.generated.json"
 }
