@@ -5,8 +5,10 @@
  * class name, `DbxActionState` enum member, or the literal `'list'`) and a
  * depth; returns markdown documentation for the matched action entry.
  *
- * Mirrors {@link runLookupForm} in shape — low-level `setRequestHandler`,
- * arktype validation, plain JSON Schema. The resolution order is:
+ * Reads from an {@link ActionRegistry} supplied at construction time —
+ * the server bootstrap composes the registry from the bundled
+ * `@dereekb/dbx-core` actions manifest plus any external manifests declared
+ * in `dbx-mcp.config.json`.
  *
  *   1. `'list'` / `'catalog'` / `'all'` → catalog
  *   2. role name (`'directive'` / `'store'` / `'state'`) → role group
@@ -19,7 +21,8 @@
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { ACTION_ENTRIES, ACTION_ROLE_ORDER, getActionDirectiveBySelector, getActionEntriesByRole, getActionEntry, getActionEntryByClassName, getActionStateEntry, type ActionDirectiveInfo, type ActionEntryInfo, type ActionEntryRole, type ActionStateInfo, type ActionStoreInfo } from '../registry/index.js';
+import { DBX_ACTION_STATE_VALUES, type DbxActionStateValue } from '../manifest/actions-schema.js';
+import { ACTION_ROLE_ORDER, type ActionDirectiveInfo, type ActionEntryInfo, type ActionEntryRole, type ActionRegistry, type ActionStateInfo, type ActionStoreInfo } from '../registry/actions-runtime.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 
 // MARK: Tool registry
@@ -88,7 +91,21 @@ const ROLE_TITLES: Record<ActionEntryRole, string> = {
   state: 'DbxActionState members'
 };
 
-function resolveTopic(rawTopic: string): LookupActionMatch {
+function resolveDirectiveBySelector(registry: ActionRegistry, raw: string): ActionDirectiveInfo | undefined {
+  const trimmed = raw.trim();
+  return registry.findDirectiveBySelector(trimmed) ?? registry.findDirectiveBySelector(`[${trimmed}]`);
+}
+
+function resolveStateByMember(registry: ActionRegistry, raw: string): ActionStateInfo | undefined {
+  const upper = raw.trim().toUpperCase();
+  let result: ActionStateInfo | undefined;
+  if (DBX_ACTION_STATE_VALUES.includes(upper as DbxActionStateValue)) {
+    result = registry.findStateByValue(upper as DbxActionStateValue);
+  }
+  return result;
+}
+
+function resolveTopic(registry: ActionRegistry, rawTopic: string): LookupActionMatch {
   const trimmed = rawTopic.trim();
   const lowered = trimmed.toLowerCase();
   let result: LookupActionMatch;
@@ -97,25 +114,25 @@ function resolveTopic(rawTopic: string): LookupActionMatch {
     result = { kind: 'catalog' };
   } else if (ACTION_ROLE_ORDER.includes(lowered as ActionEntryRole)) {
     const role = lowered as ActionEntryRole;
-    result = { kind: 'group', title: ROLE_TITLES[role], entries: getActionEntriesByRole(role) };
+    result = { kind: 'group', title: ROLE_TITLES[role], entries: registry.findByRole(role) };
   } else {
-    const slugHit = getActionEntry(trimmed);
+    const slugHit = registry.findBySlug(trimmed) ?? registry.findBySlug(lowered);
     if (slugHit) {
       result = { kind: 'single', entry: slugHit };
     } else {
-      const selectorHit = getActionDirectiveBySelector(trimmed);
+      const selectorHit = resolveDirectiveBySelector(registry, trimmed);
       if (selectorHit) {
         result = { kind: 'single', entry: selectorHit };
       } else {
-        const classHit = getActionEntryByClassName(trimmed);
+        const classHit = registry.findByClassName(trimmed);
         if (classHit) {
           result = { kind: 'single', entry: classHit };
         } else {
-          const stateHit = getActionStateEntry(trimmed);
+          const stateHit = resolveStateByMember(registry, trimmed);
           if (stateHit) {
             result = { kind: 'single', entry: stateHit };
           } else {
-            result = { kind: 'not-found', normalized: lowered, candidates: fuzzyCandidates(lowered) };
+            result = { kind: 'not-found', normalized: lowered, candidates: fuzzyCandidates(registry, lowered) };
           }
         }
       }
@@ -144,11 +161,11 @@ function scoreActionEntry(entry: ActionEntryInfo, q: string): number {
   return score;
 }
 
-function fuzzyCandidates(query: string): readonly ActionEntryInfo[] {
+function fuzzyCandidates(registry: ActionRegistry, query: string): readonly ActionEntryInfo[] {
   const q = query.trim().toLowerCase();
   let result: readonly ActionEntryInfo[] = [];
   if (q.length > 0) {
-    const scored = ACTION_ENTRIES.map((entry) => ({ entry, score: scoreActionEntry(entry, q) })).filter((s) => s.score > 0);
+    const scored = registry.all.map((entry) => ({ entry, score: scoreActionEntry(entry, q) })).filter((s) => s.score > 0);
     scored.sort((a, b) => b.score - a.score);
     result = scored.slice(0, 5).map((s) => s.entry);
   }
@@ -160,7 +177,7 @@ function bullet(label: string, value: string): string {
   return `- **${label}:** ${value}`;
 }
 
-function formatInputsTable(inputs: readonly ActionDirectiveInfo['inputs'][number][]): string {
+function formatInputsTable(inputs: ActionDirectiveInfo['inputs']): string {
   let result = '';
   if (inputs.length > 0) {
     const lines: string[] = ['| Input | Type | Required | Default | Description |', '| --- | --- | --- | --- | --- |'];
@@ -303,10 +320,10 @@ function formatActionGroup(entries: readonly ActionEntryInfo[], title: string): 
   return lines.join('\n').trimEnd();
 }
 
-function formatCatalog(): string {
-  const lines: string[] = ['# Action catalog', '', `${ACTION_ENTRIES.length} entries across ${ACTION_ROLE_ORDER.length} roles.`, ''];
+function formatCatalog(registry: ActionRegistry): string {
+  const lines: string[] = ['# Action catalog', '', `${registry.all.length} entries across ${ACTION_ROLE_ORDER.length} roles.`, ''];
   for (const role of ACTION_ROLE_ORDER) {
-    const entries = getActionEntriesByRole(role);
+    const entries = registry.findByRole(role);
     lines.push(`## ${ROLE_TITLES[role]} (${entries.length})`, '');
     for (const entry of entries) {
       let label: string;
@@ -349,46 +366,57 @@ function code(value: string): string {
   return '`' + value + '`';
 }
 
-// MARK: Handler
+// MARK: Tool factory
 /**
- * Tool handler for `dbx_action_lookup`. Resolves the requested action topic
- * against the registry and renders the matching catalog, role group, single
- * entry, state taxonomy, or not-found suggestion list.
- *
- * @param rawArgs - the unvalidated tool arguments from the MCP runtime
- * @returns the rendered match, or an error result when args fail validation
+ * Input to {@link createLookupActionTool}.
  */
-export function runLookupAction(rawArgs: unknown): ToolResult {
-  let args: ParsedLookupActionArgs;
-  try {
-    args = parseLookupActionArgs(rawArgs);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return toolError(message);
-  }
-
-  const match = resolveTopic(args.topic);
-  let text: string;
-  switch (match.kind) {
-    case 'catalog':
-      text = formatCatalog();
-      break;
-    case 'single':
-      text = formatActionEntry(match.entry, args.depth);
-      break;
-    case 'group':
-      text = formatActionGroup(match.entries, match.title);
-      break;
-    case 'not-found':
-      text = formatNotFound(match.normalized, match.candidates);
-      break;
-  }
-
-  const result: ToolResult = { content: [{ type: 'text', text }] };
-  return result;
+export interface CreateLookupActionToolInput {
+  /**
+   * Action registry the tool reads from. The server bootstrap supplies this
+   * after loading the bundled `@dereekb/dbx-core` actions manifest plus any
+   * external manifests declared in `dbx-mcp.config.json`.
+   */
+  readonly registry: ActionRegistry;
 }
 
-export const lookupActionTool: DbxTool = {
-  definition: DBX_ACTION_LOOKUP_TOOL,
-  run: runLookupAction
-};
+/**
+ * Creates the `dbx_action_lookup` tool wired to the supplied registry. Tests
+ * pass a fixture registry; the production server passes the merged registry
+ * from {@link loadActionRegistry}.
+ *
+ * @param input - the registry the tool reads from
+ * @returns a {@link DbxTool} ready to register with the dispatcher
+ */
+export function createLookupActionTool(input: CreateLookupActionToolInput): DbxTool {
+  const { registry } = input;
+  const run = (rawArgs: unknown): ToolResult => {
+    let args: ParsedLookupActionArgs;
+    try {
+      args = parseLookupActionArgs(rawArgs);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return toolError(message);
+    }
+
+    const match = resolveTopic(registry, args.topic);
+    let text: string;
+    switch (match.kind) {
+      case 'catalog':
+        text = formatCatalog(registry);
+        break;
+      case 'single':
+        text = formatActionEntry(match.entry, args.depth);
+        break;
+      case 'group':
+        text = formatActionGroup(match.entries, match.title);
+        break;
+      case 'not-found':
+        text = formatNotFound(match.normalized, match.candidates);
+        break;
+    }
+
+    const result: ToolResult = { content: [{ type: 'text', text }] };
+    return result;
+  };
+  return { definition: DBX_ACTION_LOOKUP_TOOL, run };
+}

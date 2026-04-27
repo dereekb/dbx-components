@@ -49,38 +49,61 @@ export function dbxActionWorkProgress(workOrWorkProgress: Maybe<DbxActionWorkOrW
 
 /**
  * Used by ActionContextState to denote what state the action is in.
+ *
+ * @dbxActionStateEnum
  */
 export enum DbxActionState {
   /**
    * No action in progress. Waiting for the trigger.
+   *
+   * @dbxActionStateTransitionsFrom RESOLVED, REJECTED, DISABLED
+   * @dbxActionStateTransitionsTo TRIGGERED, DISABLED
    */
   IDLE = 'idle',
   /**
    * Idle state that can be set to show that the source is not yet ready.
+   *
+   * @dbxActionStateTransitionsFrom IDLE, RESOLVED, REJECTED
+   * @dbxActionStateTransitionsTo IDLE
    */
   DISABLED = 'disabled',
   /**
    * The action was triggered. We wait (and allow) the value to be updated.
+   *
+   * @dbxActionStateTransitionsFrom IDLE
+   * @dbxActionStateTransitionsTo VALUE_READY
    */
   TRIGGERED = 'triggered',
   /**
    * The trigger was accepted and the value is updated. It should begin working immediately.
    *
    * ValueReady cannot be set until triggered is set.
+   *
+   * @dbxActionStateTransitionsFrom TRIGGERED
+   * @dbxActionStateTransitionsTo WORKING
    */
   VALUE_READY = 'valueReady',
   /**
    * The action is in progress.
+   *
+   * @dbxActionStateTransitionsFrom VALUE_READY
+   * @dbxActionStateTransitionsTo RESOLVED, REJECTED
    */
   WORKING = 'working',
   /**
    * The trigger, action, or value was rejected due to an error or other issue.
    *
    * An error may be specified optionally.
+   *
+   * @dbxActionStateTransitionsFrom WORKING
+   * @dbxActionStateTransitionsTo IDLE, DISABLED
    */
   REJECTED = 'rejected',
   /**
    * The action resolved without issue.
+   *
+   * @dbxActionStateTransitionsFrom WORKING
+   * @dbxActionStateTransitionsTo IDLE, DISABLED
    */
   RESOLVED = 'resolved'
 }

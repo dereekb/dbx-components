@@ -17,6 +17,7 @@
  */
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { ActionRegistry } from '../registry/actions-runtime.js';
 import type { ForgeFieldRegistry } from '../registry/forge-fields.js';
 import type { PipeRegistry } from '../registry/pipes-runtime.js';
 import type { SemanticTypeRegistry } from '../registry/semantic-types.js';
@@ -40,6 +41,7 @@ export interface RegisterResourcesOptions {
   readonly forgeFieldRegistry?: ForgeFieldRegistry;
   readonly pipeRegistry?: PipeRegistry;
   readonly uiComponentRegistry?: UiComponentRegistry;
+  readonly actionRegistry?: ActionRegistry;
 }
 
 /**
@@ -55,7 +57,9 @@ export function registerResources(server: McpServer, options: RegisterResourcesO
     registerFormFieldsResource(server, { registry: options.forgeFieldRegistry });
   }
   registerFirebaseModelsResource(server);
-  registerActionsResource(server);
+  if (options.actionRegistry !== undefined) {
+    registerActionsResource(server, { registry: options.actionRegistry });
+  }
   if (options.uiComponentRegistry !== undefined) {
     registerUiComponentsResource(server, { registry: options.uiComponentRegistry });
   }

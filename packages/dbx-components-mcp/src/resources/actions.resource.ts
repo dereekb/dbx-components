@@ -8,11 +8,20 @@
  */
 
 import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { ACTION_ROLE_ORDER, getActionEntries, getActionEntry, getActionEntriesByRole, type ActionEntryRole } from '../registry/index.js';
+import { ACTION_ROLE_ORDER, type ActionEntryRole, type ActionRegistry } from '../registry/actions-runtime.js';
 
 const ACTIONS_URI = 'dbx://action/entries';
 const ACTION_TEMPLATE = 'dbx://action/entries/{slug}';
 const ACTIONS_BY_ROLE_TEMPLATE = 'dbx://action/entries/role/{role}';
+
+/**
+ * Input to {@link registerActionsResource}. The registry is supplied by the
+ * server bootstrap after loading the bundled `@dereekb/dbx-core` actions
+ * manifest plus any external sources declared in `dbx-mcp.config.json`.
+ */
+export interface RegisterActionsResourceOptions {
+  readonly registry: ActionRegistry;
+}
 
 /**
  * Registers the action-entry MCP resources (catalog, per-slug details, role
@@ -20,8 +29,10 @@ const ACTIONS_BY_ROLE_TEMPLATE = 'dbx://action/entries/role/{role}';
  * the full registry, drill into a single entry, or page by role classification.
  *
  * @param server - the MCP server to register resources against
+ * @param options - registry the resources read from
  */
-export function registerActionsResource(server: McpServer): void {
+export function registerActionsResource(server: McpServer, options: RegisterActionsResourceOptions): void {
+  const { registry } = options;
   server.registerResource(
     'dbx-components Action Entries',
     ACTIONS_URI,
@@ -31,11 +42,10 @@ export function registerActionsResource(server: McpServer): void {
       mimeType: 'application/json'
     },
     async () => {
-      const entries = getActionEntries();
       const payload = {
         description: 'All registered @dereekb/dbx-core action entries.',
         roleOrder: ACTION_ROLE_ORDER,
-        entries: entries.map((entry) => {
+        entries: registry.all.map((entry) => {
           let className: string | undefined;
           if (entry.role === 'directive' || entry.role === 'store') {
             className = entry.className;
@@ -76,15 +86,13 @@ export function registerActionsResource(server: McpServer): void {
     async (uri, variables) => {
       const rawSlug = variables.slug;
       const slug = Array.isArray(rawSlug) ? rawSlug[0] : rawSlug;
-      const entry = slug ? getActionEntry(slug) : undefined;
+      const entry = slug ? registry.findBySlug(slug) : undefined;
 
       let text: string;
       if (slug && entry) {
         text = JSON.stringify(entry, null, 2);
       } else if (slug) {
-        const available = getActionEntries()
-          .map((e) => e.slug)
-          .join(', ');
+        const available = registry.all.map((e) => e.slug).join(', ');
         text = `Action entry '${slug}' not found. Available slugs: ${available}`;
       } else {
         text = 'No slug provided.';
@@ -114,10 +122,10 @@ export function registerActionsResource(server: McpServer): void {
       const rawRole = variables.role;
       const role = (Array.isArray(rawRole) ? rawRole[0] : rawRole) as ActionEntryRole | undefined;
 
-      const valid = role && ACTION_ROLE_ORDER.includes(role);
+      const valid = role !== undefined && ACTION_ROLE_ORDER.includes(role);
       let text: string;
-      if (valid) {
-        const entries = getActionEntriesByRole(role);
+      if (valid && role !== undefined) {
+        const entries = registry.findByRole(role);
         text = JSON.stringify({ role, entries }, null, 2);
       } else {
         text = `Invalid role. Valid values: ${ACTION_ROLE_ORDER.join(', ')}`;

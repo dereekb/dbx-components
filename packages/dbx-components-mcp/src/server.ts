@@ -7,10 +7,12 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { loadActionRegistry, type LoadActionRegistryResult } from './manifest/load-actions-registry.js';
 import { loadForgeFieldRegistry, type LoadForgeFieldRegistryResult } from './manifest/load-forge-fields-registry.js';
 import { loadPipeRegistry, type LoadPipeRegistryResult } from './manifest/load-pipes-registry.js';
 import { loadSemanticTypeRegistry, type LoadSemanticTypeRegistryResult } from './manifest/load-registry.js';
 import { loadUiComponentRegistry, type LoadUiComponentRegistryResult } from './manifest/load-ui-components-registry.js';
+import type { ActionRegistry } from './registry/actions-runtime.js';
 import type { ForgeFieldRegistry } from './registry/forge-fields.js';
 import type { PipeRegistry } from './registry/pipes-runtime.js';
 import type { SemanticTypeRegistry } from './registry/semantic-types.js';
@@ -70,10 +72,12 @@ export interface CreateServerOptions {
   readonly uiComponentRegistry?: UiComponentRegistry;
   readonly forgeFieldRegistry?: ForgeFieldRegistry;
   readonly pipeRegistry?: PipeRegistry;
+  readonly actionRegistry?: ActionRegistry;
   readonly onLoaderResult?: (result: LoadSemanticTypeRegistryResult) => void;
   readonly onUiLoaderResult?: (result: LoadUiComponentRegistryResult) => void;
   readonly onForgeLoaderResult?: (result: LoadForgeFieldRegistryResult) => void;
   readonly onPipeLoaderResult?: (result: LoadPipeRegistryResult) => void;
+  readonly onActionLoaderResult?: (result: LoadActionRegistryResult) => void;
 }
 
 /**
@@ -173,8 +177,26 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
     }
   }
 
-  registerResources(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, uiComponentRegistry: uiRegistry });
-  registerTools(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, uiComponentRegistry: uiRegistry });
+  let actionRegistry: ActionRegistry | undefined = options.actionRegistry;
+  if (actionRegistry === undefined) {
+    const cwd = options.cwd ?? process.cwd();
+    try {
+      const actionLoaderResult = await loadActionRegistry({ cwd });
+      if (options.onActionLoaderResult === undefined) {
+        reportActionLoaderResult(actionLoaderResult);
+      } else {
+        options.onActionLoaderResult(actionLoaderResult);
+      }
+      actionRegistry = actionLoaderResult.registry;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      process.stderr.write(`[dbx-components-mcp] actions registry unavailable: ${message}\n`);
+      actionRegistry = undefined;
+    }
+  }
+
+  registerResources(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, uiComponentRegistry: uiRegistry, actionRegistry });
+  registerTools(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, uiComponentRegistry: uiRegistry, actionRegistry });
 
   return server;
 }
@@ -263,5 +285,24 @@ function reportPipeLoaderResult(result: LoadPipeRegistryResult): void {
   }
   for (const warning of loaderWarnings) {
     process.stderr.write(`[dbx-components-mcp] pipes-loader-warning: ${warning.kind}\n`);
+  }
+}
+
+/**
+ * Default observer used when {@link CreateServerOptions.onActionLoaderResult}
+ * is not supplied. Mirrors {@link reportLoaderResult} for the actions registry
+ * so operators can see the same information for all five pipelines.
+ *
+ * @param result - the loader output to summarise
+ */
+function reportActionLoaderResult(result: LoadActionRegistryResult): void {
+  const { registry, configPath, configWarnings, loaderWarnings, externalSourceCount } = result;
+  const summary = [`[dbx-components-mcp] actions registry loaded`, `  sources: ${registry.loadedSources.join(', ') || '(none)'}`, `  external: ${externalSourceCount}`, `  config: ${configPath ?? '(none)'}`, `  entries: ${registry.all.length}`, `  warnings: ${configWarnings.length + loaderWarnings.length}`].join('\n');
+  process.stderr.write(`${summary}\n`);
+  for (const warning of configWarnings) {
+    process.stderr.write(`[dbx-components-mcp] actions-config-warning: ${warning.kind} ${warning.path}\n`);
+  }
+  for (const warning of loaderWarnings) {
+    process.stderr.write(`[dbx-components-mcp] actions-loader-warning: ${warning.kind}\n`);
   }
 }

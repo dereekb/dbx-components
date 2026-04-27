@@ -24,7 +24,8 @@
         "{projectRoot}/manifests/dereekb-firebase-server.semantic-types.mcp.generated.json",
         "{projectRoot}/manifests/dereekb-dbx-web.ui-components.mcp.generated.json",
         "{projectRoot}/manifests/dereekb-dbx-form.forge-fields.mcp.generated.json",
-        "{projectRoot}/manifests/dereekb-dbx-core.pipes.mcp.generated.json"
+        "{projectRoot}/manifests/dereekb-dbx-core.pipes.mcp.generated.json",
+        "{projectRoot}/manifests/dereekb-dbx-core.actions.mcp.generated.json"
       ],
       "inputs": [
         "{projectRoot}/scripts/generate-manifests.mjs",
@@ -46,7 +47,8 @@
         "{workspaceRoot}/packages/dbx-form/dbx-mcp.scan.json",
         "{workspaceRoot}/packages/dbx-form/src/**/*.ts",
         "{workspaceRoot}/packages/dbx-core/dbx-mcp.scan.json",
-        "{workspaceRoot}/packages/dbx-core/src/lib/pipe/**/*.ts"
+        "{workspaceRoot}/packages/dbx-core/src/lib/pipe/**/*.ts",
+        "{workspaceRoot}/packages/dbx-core/src/lib/action/**/*.ts"
       ],
       "options": {
         "command": "node packages/dbx-components-mcp/scripts/generate-manifests.mjs",

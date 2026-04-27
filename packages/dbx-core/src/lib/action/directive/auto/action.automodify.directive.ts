@@ -14,6 +14,11 @@ import { toObservable } from '@angular/core/rxjs-interop';
  *
  * Can be disabled by setting `dbxActionAutoModify` to `false`.
  *
+ * @dbxAction
+ * @dbxActionSlug auto-modify
+ * @dbxActionStateInteraction IDLE
+ * @dbxActionConsumesContext
+ *
  * @example
  * ```html
  * <div dbxAction>
