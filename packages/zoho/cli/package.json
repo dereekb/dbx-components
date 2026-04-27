@@ -3,7 +3,7 @@
   "version": "13.10.0",
   "type": "module",
   "bin": {
-    "zoho-cli": "./index.js"
+    "zoho-cli": "index.js"
   },
   "peerDependencies": {
     "@dereekb/nestjs": "13.10.0",

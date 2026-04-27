@@ -2,7 +2,7 @@
   "name": "@dereekb/zoho",
   "version": "13.10.0",
   "bin": {
-    "zoho-cli": "./cli/index.js"
+    "zoho-cli": "cli/index.js"
   },
   "exports": {
     "./nestjs": {
