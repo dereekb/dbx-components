@@ -14,9 +14,10 @@
  */
 
 import { type } from 'arktype';
-import { Node, type CallExpression, type ClassDeclaration, type Decorator, type JSDoc, type ObjectLiteralExpression, type Project, type PropertyDeclaration, type SourceFile } from 'ts-morph';
+import { type ClassDeclaration, type Decorator, type JSDoc, type ObjectLiteralExpression, type Project, type PropertyDeclaration, type SourceFile, Node } from 'ts-morph';
 import { type UiComponentEntry, type UiComponentInputEntry, type UiComponentOutputEntry } from '../manifest/ui-components-schema.js';
-import { isVisibleProperty, readPropertyDescription, readStringProperty, splitListTagText, unwrapFenced } from './scan-extract-utils.js';
+import { isVisibleProperty, readStringProperty, splitListTagText, unwrapFenced } from './scan-extract-utils.js';
+import { collectClassPropertiesWithInheritance, extractAngularInputs, extractAngularOutputs } from './scan-angular-io.js';
 
 // MARK: Tag names
 const UI_COMPONENT_MARKER = 'dbxWebComponent';
@@ -439,225 +440,36 @@ function collectNgContentSelectors(template: string): readonly string[] {
   return result;
 }
 
-// MARK: Inputs
+// MARK: Inputs/outputs
 function extractInputs(decl: ClassDeclaration): readonly UiComponentInputEntry[] {
-  const inputs: UiComponentInputEntry[] = [];
-  const seen = new Set<string>();
-  for (const property of collectClassPropertiesWithInheritance(decl)) {
-    if (!isVisibleProperty(property)) {
-      continue;
-    }
-    if (hasInternalTag(property)) {
-      continue;
-    }
-    const decoratorInput = readDecoratorInput(property);
-    const signalInput = decoratorInput === undefined ? readSignalInput(property) : undefined;
-    const built = decoratorInput ?? signalInput;
-    if (built !== undefined && !seen.has(built.name)) {
-      seen.add(built.name);
-      inputs.push(built);
-    }
-  }
-  return inputs;
+  return extractAngularInputs<UiComponentInputEntry>(decl, {
+    propertySource: collectClassPropertiesWithInheritance,
+    skipProperty: (property) => !isVisibleProperty(property) || hasInternalTag(property),
+    buildEntry: (parsed, property) => {
+      const overrides = readPropertyOverrides(property);
+      return {
+        name: overrides.nameOverride ?? parsed.alias,
+        type: overrides.typeOverride ?? parsed.type,
+        description: overrides.description,
+        required: overrides.requiredOverride ?? parsed.required,
+        ...(parsed.defaultValue === undefined ? {} : { default: parsed.defaultValue })
+      };
+    },
+    dedupeBy: (entry) => entry.name
+  });
 }
 
-function collectClassPropertiesWithInheritance(decl: ClassDeclaration): readonly PropertyDeclaration[] {
-  const out: PropertyDeclaration[] = [];
-  let current: ClassDeclaration | undefined = decl;
-  const visited = new Set<ClassDeclaration>();
-  while (current !== undefined && !visited.has(current)) {
-    visited.add(current);
-    for (const property of current.getProperties()) {
-      out.push(property);
-    }
-    current = current.getBaseClass();
-  }
-  return out;
-}
-
-function readDecoratorInput(property: PropertyDeclaration): UiComponentInputEntry | undefined {
-  const decorator = property.getDecorator('Input');
-  if (decorator === undefined) {
-    return undefined;
-  }
-  const propertyName = property.getName();
-  const overrides = readPropertyOverrides(property);
-
-  const decoratorArg = decorator.getCallExpression()?.getArguments()[0];
-  let aliasFromDecorator: string | undefined;
-  let requiredFromDecorator: boolean | undefined;
-  if (decoratorArg !== undefined) {
-    if (Node.isStringLiteral(decoratorArg) || Node.isNoSubstitutionTemplateLiteral(decoratorArg)) {
-      aliasFromDecorator = decoratorArg.getLiteralText();
-    } else if (Node.isObjectLiteralExpression(decoratorArg)) {
-      aliasFromDecorator = readStringProperty(decoratorArg, 'alias');
-      const requiredProp = decoratorArg.getProperty('required');
-      if (requiredProp !== undefined && Node.isPropertyAssignment(requiredProp)) {
-        const initializer = requiredProp.getInitializer();
-        if (initializer !== undefined) {
-          const text = initializer.getText();
-          if (text === 'true') {
-            requiredFromDecorator = true;
-          } else if (text === 'false') {
-            requiredFromDecorator = false;
-          }
-        }
-      }
-    }
-  }
-
-  const explicitType = property.getTypeNode()?.getText();
-  const initializer = property.getInitializer();
-  const defaultValue = initializer === undefined ? undefined : initializer.getText();
-  const required = overrides.requiredOverride ?? requiredFromDecorator ?? !property.hasQuestionToken();
-
-  const entry: UiComponentInputEntry = {
-    name: overrides.nameOverride ?? aliasFromDecorator ?? propertyName,
-    type: overrides.typeOverride ?? explicitType ?? 'unknown',
-    description: overrides.description,
-    required,
-    ...(defaultValue === undefined ? {} : { default: defaultValue })
-  };
-  return entry;
-}
-
-function readSignalInput(property: PropertyDeclaration): UiComponentInputEntry | undefined {
-  const initializer = property.getInitializer();
-  if (initializer === undefined || !Node.isCallExpression(initializer)) {
-    return undefined;
-  }
-  const callKind = classifySignalInputCall(initializer);
-  if (callKind === undefined) {
-    return undefined;
-  }
-  const propertyName = property.getName();
-  const overrides = readPropertyOverrides(property);
-
-  const typeArgs = initializer.getTypeArguments();
-  const inferredType = typeArgs.length > 0 ? typeArgs[0].getText() : 'unknown';
-
-  const args = initializer.getArguments();
-  const requiredFromCall = callKind === 'required';
-  let defaultValue: string | undefined;
-  let alias: string | undefined;
-  if (callKind === 'plain') {
-    if (args.length > 0) {
-      defaultValue = args[0].getText();
-    }
-    if (args.length > 1 && Node.isObjectLiteralExpression(args[1])) {
-      alias = readStringProperty(args[1], 'alias');
-    }
-  } else if (args.length > 0 && Node.isObjectLiteralExpression(args[0])) {
-    alias = readStringProperty(args[0], 'alias');
-  }
-
-  const entry: UiComponentInputEntry = {
-    name: overrides.nameOverride ?? alias ?? propertyName,
-    type: overrides.typeOverride ?? inferredType,
-    description: overrides.description,
-    required: overrides.requiredOverride ?? requiredFromCall,
-    ...(defaultValue === undefined ? {} : { default: defaultValue })
-  };
-  return entry;
-}
-
-type SignalInputCallKind = 'plain' | 'required';
-
-function classifySignalInputCall(call: CallExpression): SignalInputCallKind | undefined {
-  const expression = call.getExpression();
-  let result: SignalInputCallKind | undefined;
-  if (Node.isIdentifier(expression) && expression.getText() === 'input') {
-    result = 'plain';
-  } else if (Node.isPropertyAccessExpression(expression)) {
-    const baseExpr = expression.getExpression();
-    const propertyName = expression.getName();
-    if (Node.isIdentifier(baseExpr) && baseExpr.getText() === 'input' && propertyName === 'required') {
-      result = 'required';
-    }
-  }
-  return result;
-}
-
-// MARK: Outputs
 function extractOutputs(decl: ClassDeclaration): readonly UiComponentOutputEntry[] {
-  const outputs: UiComponentOutputEntry[] = [];
-  const seen = new Set<string>();
-  for (const property of collectClassPropertiesWithInheritance(decl)) {
-    if (!isVisibleProperty(property)) {
-      continue;
-    }
-    if (hasInternalTag(property)) {
-      continue;
-    }
-    const decoratorOutput = readDecoratorOutput(property);
-    const signalOutput = decoratorOutput === undefined ? readSignalOutput(property) : undefined;
-    const built = decoratorOutput ?? signalOutput;
-    if (built !== undefined && !seen.has(built.name)) {
-      seen.add(built.name);
-      outputs.push(built);
-    }
-  }
-  return outputs;
-}
-
-function readDecoratorOutput(property: PropertyDeclaration): UiComponentOutputEntry | undefined {
-  const decorator = property.getDecorator('Output');
-  if (decorator === undefined) {
-    return undefined;
-  }
-  const propertyName = property.getName();
-  const description = readPropertyDescription(property);
-
-  const decoratorArg = decorator.getCallExpression()?.getArguments()[0];
-  let aliasFromDecorator: string | undefined;
-  if (decoratorArg !== undefined && (Node.isStringLiteral(decoratorArg) || Node.isNoSubstitutionTemplateLiteral(decoratorArg))) {
-    aliasFromDecorator = decoratorArg.getLiteralText();
-  }
-
-  const initializer = property.getInitializer();
-  let emits = 'unknown';
-  if (initializer !== undefined && Node.isNewExpression(initializer)) {
-    const typeArgs = initializer.getTypeArguments();
-    if (typeArgs.length > 0) {
-      emits = typeArgs[0].getText();
-    }
-  } else {
-    const explicitType = property.getTypeNode()?.getText();
-    if (explicitType !== undefined) {
-      emits = explicitType;
-    }
-  }
-
-  const entry: UiComponentOutputEntry = {
-    name: aliasFromDecorator ?? propertyName,
-    emits,
-    description
-  };
-  return entry;
-}
-
-function readSignalOutput(property: PropertyDeclaration): UiComponentOutputEntry | undefined {
-  const initializer = property.getInitializer();
-  if (initializer === undefined || !Node.isCallExpression(initializer)) {
-    return undefined;
-  }
-  const expression = initializer.getExpression();
-  if (!Node.isIdentifier(expression) || expression.getText() !== 'output') {
-    return undefined;
-  }
-  const typeArgs = initializer.getTypeArguments();
-  const emits = typeArgs.length > 0 ? typeArgs[0].getText() : 'void';
-  const args = initializer.getArguments();
-  let alias: string | undefined;
-  if (args.length > 0 && Node.isObjectLiteralExpression(args[0])) {
-    alias = readStringProperty(args[0], 'alias');
-  }
-  const entry: UiComponentOutputEntry = {
-    name: alias ?? property.getName(),
-    emits,
-    description: readPropertyDescription(property)
-  };
-  return entry;
+  return extractAngularOutputs<UiComponentOutputEntry>(decl, {
+    propertySource: collectClassPropertiesWithInheritance,
+    skipProperty: (property) => !isVisibleProperty(property) || hasInternalTag(property),
+    buildEntry: (parsed) => ({
+      name: parsed.name,
+      emits: parsed.type,
+      description: parsed.description
+    }),
+    dedupeBy: (entry) => entry.name
+  });
 }
 
 // MARK: Member-level helpers

@@ -9,9 +9,10 @@
  *   - Enum declarations with `@dbxActionStateEnum` JSDoc marker → one state entry per member
  */
 
-import { Node, SyntaxKind, type ClassDeclaration, type EnumDeclaration, type EnumMember, type JSDoc, type Project, type PropertyDeclaration, type MethodDeclaration } from 'ts-morph';
+import { Node, SyntaxKind, type ClassDeclaration, type EnumDeclaration, type EnumMember, type JSDoc, type Project, type MethodDeclaration } from 'ts-morph';
 import type { ActionInputEntry, ActionOutputEntry, ActionStoreMethodEntry, ActionStoreObservableEntry, DbxActionStateValue } from '../manifest/actions-schema.js';
-import { flattenList, isVisibleProperty, readDirectiveDecorator, readPropertyDescription, readStringProperty, unwrapFenced } from './scan-extract-utils.js';
+import { flattenList, isVisibleProperty, readDirectiveDecorator, readPropertyDescription, unwrapFenced } from './scan-extract-utils.js';
+import { extractAngularInputs, extractAngularOutputs } from './scan-angular-io.js';
 
 // MARK: Tag names
 const ACTION_MARKER = 'dbxAction';
@@ -344,157 +345,28 @@ function readEnumMemberLiteral(member: EnumMember): string {
 
 // MARK: Inputs/outputs
 function extractInputs(decl: ClassDeclaration): readonly ActionInputEntry[] {
-  const out: ActionInputEntry[] = [];
-  const seen = new Set<string>();
-  for (const property of decl.getProperties()) {
-    if (!isVisibleProperty(property)) continue;
-    const built = readDecoratorInput(property) ?? readSignalInput(property);
-    if (built !== undefined && !seen.has(built.alias)) {
-      seen.add(built.alias);
-      out.push(built);
-    }
-  }
-  return out;
-}
-
-function readDecoratorInput(property: PropertyDeclaration): ActionInputEntry | undefined {
-  const decorator = property.getDecorator('Input');
-  if (decorator === undefined) {
-    return undefined;
-  }
-  const propertyName = property.getName();
-  const decoratorArg = decorator.getCallExpression()?.getArguments()[0];
-  let alias: string | undefined;
-  let required = false;
-  if (decoratorArg !== undefined) {
-    if (Node.isStringLiteral(decoratorArg) || Node.isNoSubstitutionTemplateLiteral(decoratorArg)) {
-      alias = decoratorArg.getLiteralText();
-    } else if (Node.isObjectLiteralExpression(decoratorArg)) {
-      alias = readStringProperty(decoratorArg, 'alias');
-      const requiredProp = decoratorArg.getProperty('required');
-      if (requiredProp !== undefined && Node.isPropertyAssignment(requiredProp)) {
-        const init = requiredProp.getInitializer();
-        if (init !== undefined && init.getText() === 'true') {
-          required = true;
-        }
-      }
-    }
-  }
-  if (!required) {
-    required = !property.hasQuestionToken();
-  }
-  const explicitType = property.getTypeNode()?.getText() ?? 'unknown';
-  const initializer = property.getInitializer();
-  const description = readPropertyDescription(property);
-  return {
-    alias: alias ?? propertyName,
-    propertyName,
-    type: explicitType,
-    required,
-    description,
-    ...(initializer !== undefined ? { defaultValue: initializer.getText() } : {})
-  };
-}
-
-function readSignalInput(property: PropertyDeclaration): ActionInputEntry | undefined {
-  const initializer = property.getInitializer();
-  if (initializer === undefined || !Node.isCallExpression(initializer)) {
-    return undefined;
-  }
-  const expression = initializer.getExpression();
-  let kind: 'plain' | 'required' | undefined;
-  if (Node.isIdentifier(expression) && expression.getText() === 'input') {
-    kind = 'plain';
-  } else if (Node.isPropertyAccessExpression(expression)) {
-    const baseExpr = expression.getExpression();
-    if (Node.isIdentifier(baseExpr) && baseExpr.getText() === 'input' && expression.getName() === 'required') {
-      kind = 'required';
-    }
-  }
-  if (kind === undefined) return undefined;
-
-  const propertyName = property.getName();
-  const typeArgs = initializer.getTypeArguments();
-  const inferredType = typeArgs.length > 0 ? typeArgs[0].getText() : 'unknown';
-  const args = initializer.getArguments();
-  let alias: string | undefined;
-  let defaultValue: string | undefined;
-  if (kind === 'plain') {
-    if (args.length > 0) defaultValue = args[0].getText();
-    if (args.length > 1 && Node.isObjectLiteralExpression(args[1])) {
-      alias = readStringProperty(args[1], 'alias');
-    }
-  } else if (args.length > 0 && Node.isObjectLiteralExpression(args[0])) {
-    alias = readStringProperty(args[0], 'alias');
-  }
-  return {
-    alias: alias ?? propertyName,
-    propertyName,
-    type: inferredType,
-    required: kind === 'required',
-    description: readPropertyDescription(property),
-    ...(defaultValue !== undefined ? { defaultValue } : {})
-  };
+  return extractAngularInputs<ActionInputEntry>(decl, {
+    buildEntry: (parsed) => ({
+      alias: parsed.alias,
+      propertyName: parsed.propertyName,
+      type: parsed.type,
+      required: parsed.required,
+      description: parsed.description,
+      ...(parsed.defaultValue === undefined ? {} : { defaultValue: parsed.defaultValue })
+    }),
+    dedupeBy: (entry) => entry.alias
+  });
 }
 
 function extractOutputs(decl: ClassDeclaration): readonly ActionOutputEntry[] {
-  const out: ActionOutputEntry[] = [];
-  const seen = new Set<string>();
-  for (const property of decl.getProperties()) {
-    if (!isVisibleProperty(property)) continue;
-    const built = readDecoratorOutput(property) ?? readSignalOutput(property);
-    if (built !== undefined && !seen.has(built.name)) {
-      seen.add(built.name);
-      out.push(built);
-    }
-  }
-  return out;
-}
-
-function readDecoratorOutput(property: PropertyDeclaration): ActionOutputEntry | undefined {
-  const decorator = property.getDecorator('Output');
-  if (decorator === undefined) {
-    return undefined;
-  }
-  const propertyName = property.getName();
-  const decoratorArg = decorator.getCallExpression()?.getArguments()[0];
-  let alias: string | undefined;
-  if (decoratorArg !== undefined && (Node.isStringLiteral(decoratorArg) || Node.isNoSubstitutionTemplateLiteral(decoratorArg))) {
-    alias = decoratorArg.getLiteralText();
-  }
-  const initializer = property.getInitializer();
-  let type = 'unknown';
-  if (initializer !== undefined && Node.isNewExpression(initializer)) {
-    const typeArgs = initializer.getTypeArguments();
-    if (typeArgs.length > 0) type = typeArgs[0].getText();
-  } else {
-    const explicit = property.getTypeNode()?.getText();
-    if (explicit !== undefined) type = explicit;
-  }
-  return {
-    name: alias ?? propertyName,
-    type,
-    description: readPropertyDescription(property)
-  };
-}
-
-function readSignalOutput(property: PropertyDeclaration): ActionOutputEntry | undefined {
-  const initializer = property.getInitializer();
-  if (initializer === undefined || !Node.isCallExpression(initializer)) return undefined;
-  const expression = initializer.getExpression();
-  if (!Node.isIdentifier(expression) || expression.getText() !== 'output') return undefined;
-  const typeArgs = initializer.getTypeArguments();
-  const type = typeArgs.length > 0 ? typeArgs[0].getText() : 'void';
-  const args = initializer.getArguments();
-  let alias: string | undefined;
-  if (args.length > 0 && Node.isObjectLiteralExpression(args[0])) {
-    alias = readStringProperty(args[0], 'alias');
-  }
-  return {
-    name: alias ?? property.getName(),
-    type,
-    description: readPropertyDescription(property)
-  };
+  return extractAngularOutputs<ActionOutputEntry>(decl, {
+    buildEntry: (parsed) => ({
+      name: parsed.name,
+      type: parsed.type,
+      description: parsed.description
+    }),
+    dedupeBy: (entry) => entry.name
+  });
 }
 
 // MARK: Store members

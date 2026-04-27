@@ -14,9 +14,10 @@
  * refs).
  */
 
-import { Node, type ClassDeclaration, type InterfaceDeclaration, type JSDoc, type Project, type PropertyDeclaration } from 'ts-morph';
+import { type ClassDeclaration, type InterfaceDeclaration, type JSDoc, type Project } from 'ts-morph';
 import type { FilterInputEntry } from '../manifest/filters-schema.js';
-import { isVisibleProperty, readDirectiveDecorator, readPropertyDescription, readStringProperty, splitListTagText, unwrapFenced } from './scan-extract-utils.js';
+import { readDirectiveDecorator, splitListTagText, unwrapFenced } from './scan-extract-utils.js';
+import { extractAngularInputs, extractAngularOutputs } from './scan-angular-io.js';
 
 // MARK: Tag names
 const FILTER_MARKER = 'dbxFilter';
@@ -308,136 +309,23 @@ function buildPatternEntry(input: { readonly decl: InterfaceDeclaration; readonl
 
 // MARK: @Input / input() / @Output / output()
 function extractInputs(decl: ClassDeclaration): readonly FilterInputEntry[] {
-  const out: FilterInputEntry[] = [];
-  const seen = new Set<string>();
-  for (const property of decl.getProperties()) {
-    if (!isVisibleProperty(property)) continue;
-    const built = readDecoratorInput(property) ?? readSignalInput(property);
-    if (built !== undefined && !seen.has(built.name)) {
-      seen.add(built.name);
-      out.push(built);
-    }
-  }
-  return out;
-}
-
-function readDecoratorInput(property: PropertyDeclaration): FilterInputEntry | undefined {
-  const decorator = property.getDecorator('Input');
-  if (decorator === undefined) {
-    return undefined;
-  }
-  const propertyName = property.getName();
-  const decoratorArg = decorator.getCallExpression()?.getArguments()[0];
-  let alias: string | undefined;
-  if (decoratorArg !== undefined) {
-    if (Node.isStringLiteral(decoratorArg) || Node.isNoSubstitutionTemplateLiteral(decoratorArg)) {
-      alias = decoratorArg.getLiteralText();
-    } else if (Node.isObjectLiteralExpression(decoratorArg)) {
-      alias = readStringProperty(decoratorArg, 'alias');
-    }
-  }
-  const type = property.getTypeNode()?.getText() ?? 'unknown';
-  return {
-    name: alias ?? propertyName,
-    type,
-    description: readPropertyDescription(property)
-  };
-}
-
-function readSignalInput(property: PropertyDeclaration): FilterInputEntry | undefined {
-  const initializer = property.getInitializer();
-  if (initializer === undefined || !Node.isCallExpression(initializer)) {
-    return undefined;
-  }
-  const expression = initializer.getExpression();
-  let isInput = false;
-  if (Node.isIdentifier(expression) && expression.getText() === 'input') {
-    isInput = true;
-  } else if (Node.isPropertyAccessExpression(expression)) {
-    const baseExpr = expression.getExpression();
-    if (Node.isIdentifier(baseExpr) && baseExpr.getText() === 'input' && expression.getName() === 'required') {
-      isInput = true;
-    }
-  }
-  if (!isInput) return undefined;
-
-  const propertyName = property.getName();
-  const typeArgs = initializer.getTypeArguments();
-  const inferredType = typeArgs.length > 0 ? typeArgs[0].getText() : 'unknown';
-  const args = initializer.getArguments();
-  let alias: string | undefined;
-  // For `input(default, options)` the alias lives on the second argument's
-  // object literal. For `input.required(options)` it lives on the first.
-  if (Node.isIdentifier(expression)) {
-    if (args.length > 1 && Node.isObjectLiteralExpression(args[1])) {
-      alias = readStringProperty(args[1], 'alias');
-    }
-  } else if (args.length > 0 && Node.isObjectLiteralExpression(args[0])) {
-    alias = readStringProperty(args[0], 'alias');
-  }
-  return {
-    name: alias ?? propertyName,
-    type: inferredType,
-    description: readPropertyDescription(property)
-  };
+  return extractAngularInputs<FilterInputEntry>(decl, {
+    buildEntry: (parsed) => ({
+      name: parsed.alias,
+      type: parsed.type,
+      description: parsed.description
+    }),
+    dedupeBy: (entry) => entry.name
+  });
 }
 
 function extractOutputs(decl: ClassDeclaration): readonly FilterInputEntry[] {
-  const out: FilterInputEntry[] = [];
-  const seen = new Set<string>();
-  for (const property of decl.getProperties()) {
-    if (!isVisibleProperty(property)) continue;
-    const built = readDecoratorOutput(property) ?? readSignalOutput(property);
-    if (built !== undefined && !seen.has(built.name)) {
-      seen.add(built.name);
-      out.push(built);
-    }
-  }
-  return out;
-}
-
-function readDecoratorOutput(property: PropertyDeclaration): FilterInputEntry | undefined {
-  const decorator = property.getDecorator('Output');
-  if (decorator === undefined) {
-    return undefined;
-  }
-  const propertyName = property.getName();
-  const decoratorArg = decorator.getCallExpression()?.getArguments()[0];
-  let alias: string | undefined;
-  if (decoratorArg !== undefined && (Node.isStringLiteral(decoratorArg) || Node.isNoSubstitutionTemplateLiteral(decoratorArg))) {
-    alias = decoratorArg.getLiteralText();
-  }
-  const initializer = property.getInitializer();
-  let type = 'unknown';
-  if (initializer !== undefined && Node.isNewExpression(initializer)) {
-    const typeArgs = initializer.getTypeArguments();
-    if (typeArgs.length > 0) type = typeArgs[0].getText();
-  } else {
-    const explicit = property.getTypeNode()?.getText();
-    if (explicit !== undefined) type = explicit;
-  }
-  return {
-    name: alias ?? propertyName,
-    type,
-    description: readPropertyDescription(property)
-  };
-}
-
-function readSignalOutput(property: PropertyDeclaration): FilterInputEntry | undefined {
-  const initializer = property.getInitializer();
-  if (initializer === undefined || !Node.isCallExpression(initializer)) return undefined;
-  const expression = initializer.getExpression();
-  if (!Node.isIdentifier(expression) || expression.getText() !== 'output') return undefined;
-  const typeArgs = initializer.getTypeArguments();
-  const type = typeArgs.length > 0 ? typeArgs[0].getText() : 'void';
-  const args = initializer.getArguments();
-  let alias: string | undefined;
-  if (args.length > 0 && Node.isObjectLiteralExpression(args[0])) {
-    alias = readStringProperty(args[0], 'alias');
-  }
-  return {
-    name: alias ?? property.getName(),
-    type,
-    description: readPropertyDescription(property)
-  };
+  return extractAngularOutputs<FilterInputEntry>(decl, {
+    buildEntry: (parsed) => ({
+      name: parsed.name,
+      type: parsed.type,
+      description: parsed.description
+    }),
+    dedupeBy: (entry) => entry.name
+  });
 }
