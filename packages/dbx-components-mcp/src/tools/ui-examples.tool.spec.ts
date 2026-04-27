@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { runUiExamples } from './ui-examples.tool.js';
-import { UI_PATTERNS } from './data/ui-patterns.js';
+import { UI_PATTERNS } from './data/patterns/ui-patterns.js';
 
 function firstText(result: ReturnType<typeof runUiExamples>): string {
   expect(result.content.length).toBeGreaterThan(0);

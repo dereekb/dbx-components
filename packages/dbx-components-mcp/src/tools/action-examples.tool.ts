@@ -9,7 +9,7 @@
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { ACTION_EXAMPLE_PATTERNS, getActionExamplePattern, type ActionExampleDepth, type ActionExamplePattern } from './data/action-patterns.js';
+import { ACTION_EXAMPLE_PATTERNS, getActionExamplePattern, type ActionExampleDepth, type ActionExamplePattern } from './data/patterns/action-patterns.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 
 const DEPTH_VALUES = ['minimal', 'brief', 'full'] as const;

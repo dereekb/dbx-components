@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { runFormExamples } from './form-examples.tool.js';
-import { EXAMPLE_PATTERNS } from './data/patterns.js';
+import { EXAMPLE_PATTERNS } from './data/patterns/form-patterns.js';
 
 function firstText(result: ReturnType<typeof runFormExamples>): string {
   expect(result.content.length).toBeGreaterThan(0);

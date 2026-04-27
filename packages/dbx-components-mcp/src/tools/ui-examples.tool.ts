@@ -9,7 +9,7 @@
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { UI_PATTERNS, getUiExamplePattern, type UiExampleDepth, type UiExamplePattern } from './data/ui-patterns.js';
+import { UI_PATTERNS, getUiExamplePattern, type UiExampleDepth, type UiExamplePattern } from './data/patterns/ui-patterns.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 
 const DEPTH_VALUES = ['minimal', 'brief', 'full'] as const;

@@ -8,7 +8,7 @@
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { EXAMPLE_PATTERNS, getExamplePattern, type ExampleDepth, type ExamplePattern } from './data/patterns.js';
+import { EXAMPLE_PATTERNS, getExamplePattern, type ExampleDepth, type ExamplePattern } from './data/patterns/form-patterns.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 
 const DEPTH_VALUES = ['minimal', 'brief', 'full'] as const;

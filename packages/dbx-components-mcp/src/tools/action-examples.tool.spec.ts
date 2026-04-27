@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { runActionExamples } from './action-examples.tool.js';
-import { ACTION_EXAMPLE_PATTERNS } from './data/action-patterns.js';
+import { ACTION_EXAMPLE_PATTERNS } from './data/patterns/action-patterns.js';
 
 function firstText(result: ReturnType<typeof runActionExamples>): string {
   expect(result.content.length).toBeGreaterThan(0);
