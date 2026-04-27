@@ -9,6 +9,10 @@ import { toJsDate } from '@dereekb/date';
  *
  * Returns `undefined` if the input is falsy or not a valid date.
  *
+ * @dbxPipe
+ * @dbxPipeSlug date-format-distance
+ * @dbxPipeCategory date
+ * @dbxPipeRelated date-distance, date-format-from-to
  * @example
  * ```html
  * <span>{{ someDate | dateFormatDistance:'MMM d, y' }}</span>

@@ -6,11 +6,18 @@ import { type ResizedEvent, resizeSignal } from './resize';
  *
  * Uses a `ResizeObserver` internally via {@link resizeSignal}.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug resized
+ * @dbxWebCategory screen
+ * @dbxWebRelated flex-group
+ * @dbxWebSkillRefs dbx__ref__dbx-ui-building-blocks
+ * @dbxWebMinimalExample ```html
+ * <div (dbxResized)="handle($event)"></div>
+ * ```
+ *
  * @example
  * ```html
- * <div dbxResized (dbxResized)="onResize($event)">
- *   Resizable content
- * </div>
+ * <div (dbxResized)="onResized($event)" class="resizable-panel"></div>
  * ```
  */
 @Directive({

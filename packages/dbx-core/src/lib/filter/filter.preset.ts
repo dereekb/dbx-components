@@ -3,21 +3,23 @@ import { type EmptyObject, type GetterOrValue, type Maybe, objectHasKey, objectH
 import { type ClickableAnchorLink } from '../router/anchor/anchor';
 
 /**
- * A clickable preset that applies a predefined filter value when selected.
+ * Pattern for declaring a preset filter chip — combines an anchor display (title, icon, disabled) with a preset string identifier and a `presetValue` getter. A `null` or empty preset value resets the filter.
  *
- * Combines display properties (title, icon, disabled) with a filter preset value.
- * A `null` or empty `presetValue` resets the filter.
+ * @dbxFilter
+ * @dbxFilterSlug clickable-preset
+ * @dbxFilterRelated source
+ * @dbxFilterSkillRefs dbx__ref__dbx-component-patterns
  *
  * @typeParam F - The filter type, which must include a preset field.
  * @typeParam P - The preset string identifier type.
  *
  * @example
  * ```typescript
- * const preset: ClickableFilterPreset<MyFilter> = {
+ * const activePreset: ClickableFilterPreset<ProfileFilter> = {
  *   preset: 'active',
- *   title: 'Active Items',
+ *   title: 'Active',
  *   icon: 'check',
- *   presetValue: { status: 'active', preset: 'active' },
+ *   presetValue: { status: 'active', preset: 'active' }
  * };
  * ```
  */

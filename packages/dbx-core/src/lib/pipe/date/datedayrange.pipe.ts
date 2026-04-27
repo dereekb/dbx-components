@@ -7,6 +7,10 @@ import { type DateRange, formatToDayRangeString } from '@dereekb/date';
  *
  * Displays only the date portion (no times). Returns a fallback string when the input is `null` or `undefined`.
  *
+ * @dbxPipe
+ * @dbxPipeSlug date-day-range
+ * @dbxPipeCategory date
+ * @dbxPipeRelated date-time-range, date-day-time-range
  * @example
  * ```html
  * <span>{{ dateRange | dateDayRange }}</span>

@@ -1,0 +1,2563 @@
+{
+  "version": 1,
+  "source": "@dereekb/dbx-form",
+  "module": "@dereekb/dbx-form",
+  "generatedAt": "1970-01-01T00:00:00.000Z",
+  "generator": "@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs",
+  "entries": [
+    {
+      "slug": "password-field",
+      "factoryName": "dbxForgeTextPasswordField",
+      "tier": "field-derivative",
+      "produces": "string",
+      "arrayOutput": "no",
+      "description": "Password input (HTML `type=\"password\"`) with secure autocomplete defaults.\n\nDefaults to the key `'password'` and label `'Password'` unless overridden.",
+      "sourcePath": "template/login.ts",
+      "example": "dbxForgeTextPasswordField({ key: 'password', required: true })",
+      "properties": [],
+      "composesFromSlugs": [
+        "text"
+      ],
+      "configInterface": "DbxForgeTextPasswordFieldConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/template/login.ts",
+        "line": 54
+      }
+    },
+    {
+      "slug": "verify-password-field",
+      "factoryName": "dbxForgeTextVerifyPasswordField",
+      "tier": "field-derivative",
+      "produces": "string",
+      "arrayOutput": "no",
+      "description": "Companion to `password-field` for sign-up flows. Defaults `autocomplete` to `new-password`. Pair with `password-with-verify-fields` for cross-field equality validation.\n\nDefaults to the key `'verifyPassword'` and label `'Verify Password'` unless overridden.",
+      "sourcePath": "template/login.ts",
+      "example": "dbxForgeTextVerifyPasswordField({ key: 'verifyPassword' })",
+      "properties": [],
+      "composesFromSlugs": [
+        "password-field"
+      ],
+      "configInterface": "DbxForgeTextPasswordFieldConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/template/login.ts",
+        "line": 85
+      }
+    },
+    {
+      "slug": "password-with-verify-fields",
+      "factoryName": "dbxForgeTextPasswordWithVerifyField",
+      "tier": "template-builder",
+      "produces": "FieldDef[]",
+      "arrayOutput": "no",
+      "description": "Password + verify-password pair with cross-field equality validation wired up. Drop-in for sign-up flows.\n\nThe verify password field uses an expression-based custom validator that compares the\nverify field value against the primary password field's value via `formValue`.",
+      "sourcePath": "template/login.ts",
+      "example": "dbxForgeTextPasswordWithVerifyField({ password: { required: true } })",
+      "properties": [
+        {
+          "name": "password",
+          "type": "DbxForgeTextPasswordFieldConfig",
+          "description": "Optional configuration for the primary password field.",
+          "required": false
+        },
+        {
+          "name": "verifyPassword",
+          "type": "DbxForgeTextPasswordFieldConfig",
+          "description": "Optional configuration for the verify/confirm password field.",
+          "required": false
+        }
+      ],
+      "composesFromSlugs": [
+        "password-field",
+        "verify-password-field"
+      ],
+      "configInterface": "DbxForgeTextPasswordWithVerifyFieldConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/template/login.ts",
+        "line": 131
+      }
+    },
+    {
+      "slug": "username-password-login-fields",
+      "factoryName": "dbxForgeUsernamePasswordLoginFields",
+      "tier": "template-builder",
+      "produces": "FieldDef[]",
+      "arrayOutput": "no",
+      "description": "Complete login/signup field set: username, password, and optional verify-password. Drop into the top-level `fields: []`.\n\nWhen `verifyPassword` is provided, a second password field is added with a custom\nvalidator that ensures both password values match.",
+      "sourcePath": "template/login.ts",
+      "example": "dbxForgeUsernamePasswordLoginFields({ username: 'email', verifyPassword: true })",
+      "properties": [
+        {
+          "name": "username",
+          "type": "DbxForgeUsernameLoginFieldUsernameConfigInput",
+          "description": "Username field configuration. Use `'email'` or `'username'` for defaults,\nor provide a custom config.",
+          "required": true
+        },
+        {
+          "name": "password",
+          "type": "DbxForgeTextPasswordFieldConfig",
+          "description": "Optional configuration for the password field.",
+          "required": false
+        },
+        {
+          "name": "verifyPassword",
+          "type": "Maybe<boolean | DbxForgeTextPasswordFieldConfig>",
+          "description": "Whether to include a verify password field, or a custom configuration for it.\nSet to `true` for defaults, `false`/`undefined` to omit, or pass a config object.",
+          "required": false
+        }
+      ],
+      "composesFromSlugs": [
+        "username-login-field",
+        "password-field",
+        "verify-password-field"
+      ],
+      "configInterface": "DbxForgeUsernameLoginFieldsConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/template/login.ts",
+        "line": 229
+      }
+    },
+    {
+      "slug": "username-login-field",
+      "factoryName": "dbxForgeUsernameLoginField",
+      "tier": "field-derivative",
+      "produces": "string",
+      "arrayOutput": "no",
+      "description": "Username field for login forms. Accepts `\"email\"` or `\"username\"` as shorthand presets, or a full config object.\n\nSupports email or plain text input based on the provided configuration.",
+      "sourcePath": "template/login.ts",
+      "example": "dbxForgeUsernameLoginField({ username: 'email' })",
+      "properties": [
+        {
+          "name": "email",
+          "type": "Omit<DbxForgeEmailFieldConfig, 'key'>",
+          "description": "Configuration for an email-based username field.",
+          "required": false
+        },
+        {
+          "name": "username",
+          "type": "Omit<DbxForgeTextFieldConfig, 'key'>",
+          "description": "Configuration for a plain text username field.",
+          "required": false
+        }
+      ],
+      "composesFromSlugs": [
+        "text"
+      ],
+      "configInterface": "DbxForgeUsernameLoginFieldUsernameConfigInput",
+      "sourceLocation": {
+        "file": "src/lib/forge/template/login.ts",
+        "line": 270
+      }
+    },
+    {
+      "slug": "checklist",
+      "factoryName": "dbxForgeChecklistField",
+      "tier": "field-factory",
+      "produces": "T[]",
+      "arrayOutput": "yes",
+      "description": "Multi-checkbox group. Use for small static option sets where every option is visible at once.",
+      "sourcePath": "field/checklist/checklist.field.ts",
+      "example": "dbxForgeChecklistField<string>({ key: 'flags', props: { options: [{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }] } })",
+      "properties": [],
+      "wrapperPattern": "unwrapped",
+      "ngFormType": "multi-checkbox",
+      "generic": "<T = unknown>",
+      "configInterface": "DbxForgeChecklistFieldConfig<T>",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/checklist/checklist.field.ts",
+        "line": 41
+      }
+    },
+    {
+      "slug": "component-field",
+      "factoryName": "dbxForgeComponentField",
+      "tier": "field-factory",
+      "produces": "T",
+      "arrayOutput": "no",
+      "description": "Escape hatch — injects any Angular component as the field renderer via DbxInjection. Use when no existing form field fits.\n\nUses {@link DbxInjectionComponent} to dynamically inject any Angular component\ninto the form. Generates a unique key when none is provided so that ng-forge's\nfield reconciliation treats each config change as a new field instance.",
+      "sourcePath": "field/component/component.field.ts",
+      "example": "dbxForgeComponentField<MyValue>({ key: 'custom', props: { component: MyCustomComp } })",
+      "properties": [
+        {
+          "name": "props",
+          "type": "DbxForgeComponentFieldProps<T>",
+          "description": "",
+          "required": true
+        },
+        {
+          "name": "key",
+          "type": "string",
+          "description": "Key for the field. Optional for display-only components.",
+          "required": false
+        },
+        {
+          "name": "componentField (props)",
+          "type": "DbxInjectionComponentConfig<T>",
+          "description": "The injection component configuration that describes which component to render.",
+          "required": true
+        },
+        {
+          "name": "allowDisabledEffects (props)",
+          "type": "boolean",
+          "description": "Whether to visually indicate the disabled state on this component.\n\nDefaults to `true`. Set to `false` for display-only components that should\nremain visually unchanged when the form is disabled.",
+          "required": false
+        }
+      ],
+      "wrapperPattern": "unwrapped",
+      "ngFormType": "component",
+      "generic": "<T = unknown>",
+      "configInterface": "DbxForgeComponentFieldConfig<T>",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/component/component.field.ts",
+        "line": 71
+      }
+    },
+    {
+      "slug": "value-selection",
+      "factoryName": "dbxForgeValueSelectionField",
+      "tier": "field-factory",
+      "produces": "T",
+      "arrayOutput": "no",
+      "description": "Single-select dropdown over a static or async value list. Simpler than `source-select` when metadata lookup is unnecessary.\n\nThe component uses `<mat-form-field>` with `[formField]` for native ng-forge value binding,\nproper Material rendering, and built-in logic (hidden/disabled/readonly) support.\n\nSupports static arrays, Observable option sources, and `ValueSelectionOptionClear` entries.",
+      "sourcePath": "field/selection/selection.field.ts",
+      "example": "dbxForgeValueSelectionField<string>({ key: 'status', props: { options: [{ value: 'active', label: 'Active' }] } })",
+      "properties": [
+        {
+          "name": "props",
+          "type": "DbxForgeValueSelectionFieldProps<T>",
+          "description": "",
+          "required": true
+        },
+        {
+          "name": "options (props)",
+          "type": "ObservableOrValue<ValueSelectionOption<T>[]>",
+          "description": "Options to select from.\n\nAccepts a static array or an Observable that emits option arrays.\nOptions may include {@link ValueSelectionOptionClear} entries with `clear: true`.",
+          "required": true
+        },
+        {
+          "name": "addClearOption (props)",
+          "type": "boolean | string",
+          "description": "When true or a string, adds a clear/reset option at the top of the options list.\nIf a string is provided, it is used as the clear option label.\n\nIf the options already contain a clear option, no additional one is added.",
+          "required": false
+        }
+      ],
+      "wrapperPattern": "material-form-field-wrapped",
+      "ngFormType": "dbx-value-selection",
+      "generic": "<T = unknown>",
+      "configInterface": "DbxForgeValueSelectionFieldConfig<T>",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/selection/selection.field.ts",
+        "line": 56
+      }
+    },
+    {
+      "slug": "text-editor",
+      "factoryName": "dbxForgeTextEditorField",
+      "tier": "field-factory",
+      "produces": "string",
+      "arrayOutput": "no",
+      "description": "Rich HTML text editor (ngx-editor). Output is the serialized HTML string.\n\nUses ngx-editor under the hood, outputting HTML format.\nThe field defaults to an empty string.",
+      "sourcePath": "field/texteditor/texteditor.field.ts",
+      "example": "dbxForgeTextEditorField({ key: 'content', label: 'Body', maxLength: 10000 })",
+      "properties": [
+        {
+          "name": "minLength (props)",
+          "type": "number",
+          "description": "Minimum text length.",
+          "required": false
+        },
+        {
+          "name": "maxLength (props)",
+          "type": "number",
+          "description": "Maximum text length.",
+          "required": false
+        },
+        {
+          "name": "hint (props)",
+          "type": "string",
+          "description": "Hint text shown below the editor.",
+          "required": false
+        }
+      ],
+      "wrapperPattern": "unwrapped",
+      "ngFormType": "texteditor",
+      "configInterface": "DbxForgeTextEditorFieldConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/texteditor/texteditor.field.ts",
+        "line": 34
+      }
+    },
+    {
+      "slug": "row",
+      "factoryName": "dbxForgeRow",
+      "tier": "primitive",
+      "produces": "RowField",
+      "arrayOutput": "no",
+      "description": "Flex row that lays child fields out in columns. Child fields typically carry a `col` property (1–12) for grid placement.\n\nUses the `@ng-forge/dynamic-forms` `RowField` type with a 12-column grid system.\nEach child field can specify a `col` value (1-12) for responsive sizing.",
+      "sourcePath": "field/wrapper/wrapper.ts",
+      "example": "dbxForgeRow({ fields: [ { ...dbxForgeTextField({ key: 'first' }), col: 6 }, { ...dbxForgeTextField({ key: 'last' }), col: 6 } ] })",
+      "properties": [
+        {
+          "name": "key",
+          "type": "string",
+          "description": "Optional key for the row. Defaults to a unique auto-generated key.\n\nMust be unique within the form config to avoid ng-forge duplicate key errors.",
+          "required": false
+        }
+      ],
+      "returns": "RowField",
+      "configInterface": "DbxForgeRowConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/wrapper/wrapper.ts",
+        "line": 57
+      }
+    },
+    {
+      "slug": "group",
+      "factoryName": "dbxForgeGroup",
+      "tier": "primitive",
+      "produces": "GroupField",
+      "arrayOutput": "no",
+      "description": "Group container nesting child fields so their values roll up into one object under the group's key.\n\nGroups collect child field values into a nested object when a `key` is provided.\nWhen used without a key, the group serves as a visual/logical grouping only.\n\nFor sections with headers, use the section wrapper type instead.",
+      "sourcePath": "field/wrapper/wrapper.ts",
+      "example": "dbxForgeGroup({ key: 'profile', fields: [dbxForgeTextField({ key: 'name' })] })",
+      "properties": [
+        {
+          "name": "key",
+          "type": "string",
+          "description": "Optional key for the group. Defaults to a unique auto-generated key.\n\nMust be unique within the form config to avoid ng-forge duplicate key errors.",
+          "required": false
+        }
+      ],
+      "returns": "GroupField",
+      "configInterface": "DbxForgeGroupConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/wrapper/wrapper.ts",
+        "line": 107
+      }
+    },
+    {
+      "slug": "toggle-wrapper",
+      "factoryName": "dbxForgeToggleWrapper",
+      "tier": "composite-builder",
+      "produces": "RowField",
+      "arrayOutput": "no",
+      "description": "Wraps content fields in a Material slide toggle — the toggle state controls conditional visibility of the inner fields.\n\nUses ng-forge's built-in `toggle` field type (MatSlideToggle) and\n`FieldValueCondition` for conditional visibility. The toggle boolean value\nIS part of the form model (standard ng-forge pattern).",
+      "sourcePath": "field/wrapper/wrapper.ts",
+      "example": "dbxForgeToggleWrapper({ label: 'Advanced', fields: [dbxForgeTextField({ key: 'note' })] })",
+      "properties": [
+        {
+          "name": "fields",
+          "type": "FieldDef<unknown>[]",
+          "description": "Fields to show/hide based on the toggle state.",
+          "required": true
+        },
+        {
+          "name": "label",
+          "type": "string",
+          "description": "Label for the toggle control.",
+          "required": false
+        },
+        {
+          "name": "key",
+          "type": "string",
+          "description": "Key for the toggle boolean field. Defaults to auto-generated `_toggle_N`.",
+          "required": false
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "description": "Optional CSS class name applied to the outer row container.",
+          "required": false
+        },
+        {
+          "name": "defaultOpen",
+          "type": "boolean",
+          "description": "Whether the toggle starts in the open state. Defaults to false.",
+          "required": false
+        },
+        {
+          "name": "contentKey",
+          "type": "string",
+          "description": "Optional key for the content group.",
+          "required": false
+        }
+      ],
+      "suffix": "Wrapper",
+      "composesFromSlugs": [
+        "toggle",
+        "group"
+      ],
+      "configInterface": "DbxForgeToggleWrapperConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/wrapper/wrapper.ts",
+        "line": 172
+      }
+    },
+    {
+      "slug": "expand-wrapper",
+      "factoryName": "dbxForgeExpandWrapper",
+      "tier": "composite-builder",
+      "produces": "RowField",
+      "arrayOutput": "no",
+      "description": "Wraps content fields behind a button or text \"expand\" control. Use for optional sections like \"Show advanced options\".\n\nUses a custom `dbx-forge-expand` field type for the expand trigger and\n`FieldValueCondition` for conditional visibility on the content group.\nThe expand boolean value IS part of the form model.",
+      "sourcePath": "field/wrapper/wrapper.ts",
+      "example": "dbxForgeExpandWrapper({ label: 'Show details', fields: [dbxForgeTextField({ key: 'note' })] })",
+      "properties": [
+        {
+          "name": "fields",
+          "type": "FieldDef<unknown>[]",
+          "description": "Fields to show/hide when the expand control is toggled.",
+          "required": true
+        },
+        {
+          "name": "label",
+          "type": "string",
+          "description": "Label for the expand trigger.",
+          "required": false
+        },
+        {
+          "name": "buttonType",
+          "type": "DbxForgeExpandButtonType",
+          "description": "Visual style for the expand trigger. Defaults to `'text'`.",
+          "required": false
+        },
+        {
+          "name": "key",
+          "type": "string",
+          "description": "Key for the expand boolean field. Defaults to auto-generated `_expand_N`.",
+          "required": false
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "description": "Optional CSS class name applied to the outer row container.",
+          "required": false
+        },
+        {
+          "name": "defaultOpen",
+          "type": "boolean",
+          "description": "Whether the expand starts in the open state. Defaults to false.",
+          "required": false
+        },
+        {
+          "name": "contentKey",
+          "type": "string",
+          "description": "Optional key for the content group.",
+          "required": false
+        }
+      ],
+      "suffix": "Wrapper",
+      "composesFromSlugs": [
+        "group"
+      ],
+      "configInterface": "DbxForgeExpandWrapperConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/wrapper/wrapper.ts",
+        "line": 265
+      }
+    },
+    {
+      "slug": "list-selection",
+      "factoryName": "dbxForgeListSelectionField",
+      "tier": "field-factory",
+      "produces": "K[]",
+      "arrayOutput": "yes",
+      "description": "Multi-select backed by a lazy-loadable custom list component. Use when you need complete control over item layout and pagination.",
+      "sourcePath": "field/selection/list/list.field.ts",
+      "example": "dbxForgeListSelectionField<Item, MyListComponent, string>({ key: 'items', props: { listComponentClass, readKey: (i) => i.id, state$ } })",
+      "properties": [
+        {
+          "name": "listComponentClass (props)",
+          "type": "Observable<Type<C>>",
+          "description": "List component class to render items from. Can be provided as an Observable for lazy loading.",
+          "required": true
+        },
+        {
+          "name": "readKey (props)",
+          "type": "ReadKeyFunction<T, K>",
+          "description": "Read key function to extract the identifier from each item.",
+          "required": true
+        },
+        {
+          "name": "state$ (props)",
+          "type": "Observable<ListLoadingState<T>>",
+          "description": "Observable that provides the items to select.",
+          "required": true
+        },
+        {
+          "name": "loadMore (props)",
+          "type": "() => void",
+          "description": "Function that signals to load more items.",
+          "required": false
+        },
+        {
+          "name": "hint (props)",
+          "type": "string",
+          "description": "Hint text shown below the field.",
+          "required": false
+        }
+      ],
+      "wrapperPattern": "material-form-field-wrapped",
+      "ngFormType": "dbx-list-selection",
+      "generic": "<T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey>",
+      "configInterface": "DbxForgeListSelectionFieldConfig<T, C, K>",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/selection/list/list.field.ts",
+        "line": 83
+      }
+    },
+    {
+      "slug": "pickable-chip",
+      "factoryName": "dbxForgePickableChipField",
+      "tier": "field-factory",
+      "produces": "T | T[]",
+      "arrayOutput": "optional",
+      "description": "Selection field rendering selected values as Material chips. Defaults to multi-select; flip to single-select via the underlying props.",
+      "sourcePath": "field/selection/pickable/pickable-chip.field.ts",
+      "example": "dbxForgePickableChipField<Tag>({ key: 'tags', label: 'Tags', props: { loadValues: () => loadTags$, displayForValue: displayTag } })",
+      "properties": [
+        {
+          "name": "loadValues (props)",
+          "type": "PickableValueFieldLoadValuesFunction<T, M>",
+          "description": "",
+          "required": true
+        },
+        {
+          "name": "displayForValue (props)",
+          "type": "PickableValueFieldDisplayFunction<T, M>",
+          "description": "",
+          "required": true
+        },
+        {
+          "name": "hashForValue (props)",
+          "type": "PickableValueFieldHashFunction<T, H>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "filterValues (props)",
+          "type": "PickableValueFieldFilterFunction<T, M>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "sortItems (props)",
+          "type": "PickableItemFieldItemSortFn<T, M>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "multiSelect (props)",
+          "type": "boolean",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "asArrayValue (props)",
+          "type": "boolean",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "showTextFilter (props)",
+          "type": "boolean",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "skipFilterFnOnEmpty (props)",
+          "type": "boolean",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "filterLabel (props)",
+          "type": "string",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "maxPicks (props)",
+          "type": "number",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "showSelectAllButton (props)",
+          "type": "boolean",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "changeSelectionModeToViewOnDisabled (props)",
+          "type": "boolean",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "footerConfig (props)",
+          "type": "DbxInjectionComponentConfig",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "refreshDisplayValues$ (props)",
+          "type": "Observable<unknown>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "hint (props)",
+          "type": "string",
+          "description": "",
+          "required": false
+        }
+      ],
+      "wrapperPattern": "material-form-field-wrapped",
+      "ngFormType": "dbx-pickable-chip",
+      "generic": "<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>",
+      "configInterface": "DbxForgePickableChipFieldConfig<T, M, H>",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/selection/pickable/pickable-chip.field.ts",
+        "line": 37
+      }
+    },
+    {
+      "slug": "pickable-list",
+      "factoryName": "dbxForgePickableListField",
+      "tier": "field-factory",
+      "produces": "T | T[]",
+      "arrayOutput": "optional",
+      "description": "Scrollable-list variant of `pickable-chip` — same API, different presentation. Prefer this when the option set is large.",
+      "sourcePath": "field/selection/pickable/pickable-list.field.ts",
+      "example": "dbxForgePickableListField<Item>({ key: 'items', props: { loadValues, displayForValue } })",
+      "properties": [
+        {
+          "name": "loadValues (props)",
+          "type": "PickableValueFieldLoadValuesFunction<T, M>",
+          "description": "",
+          "required": true
+        },
+        {
+          "name": "displayForValue (props)",
+          "type": "PickableValueFieldDisplayFunction<T, M>",
+          "description": "",
+          "required": true
+        },
+        {
+          "name": "hashForValue (props)",
+          "type": "PickableValueFieldHashFunction<T, H>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "filterValues (props)",
+          "type": "PickableValueFieldFilterFunction<T, M>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "sortItems (props)",
+          "type": "PickableItemFieldItemSortFn<T, M>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "multiSelect (props)",
+          "type": "boolean",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "asArrayValue (props)",
+          "type": "boolean",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "showTextFilter (props)",
+          "type": "boolean",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "skipFilterFnOnEmpty (props)",
+          "type": "boolean",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "filterLabel (props)",
+          "type": "string",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "maxPicks (props)",
+          "type": "number",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "showSelectAllButton (props)",
+          "type": "boolean",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "changeSelectionModeToViewOnDisabled (props)",
+          "type": "boolean",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "footerConfig (props)",
+          "type": "DbxInjectionComponentConfig",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "refreshDisplayValues$ (props)",
+          "type": "Observable<unknown>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "hint (props)",
+          "type": "string",
+          "description": "",
+          "required": false
+        }
+      ],
+      "wrapperPattern": "material-form-field-wrapped",
+      "ngFormType": "dbx-pickable-list",
+      "generic": "<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>",
+      "configInterface": "DbxForgePickableListFieldConfig<T, M, H>",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/selection/pickable/pickable-list.field.ts",
+        "line": 37
+      }
+    },
+    {
+      "slug": "searchable-string-chip",
+      "factoryName": "dbxForgeSearchableStringChipField",
+      "tier": "field-factory",
+      "produces": "string | string[]",
+      "arrayOutput": "optional",
+      "description": "String-value specialization of `searchable-chip`. `allowStringValues` is forced true — use for free-form tag entry.\n\nAlways sets `allowStringValues: true` on the inner field props so pressing Enter\n(or typing a separator key) commits the typed value as a chip.",
+      "sourcePath": "field/selection/searchable/searchable-chip.field.ts",
+      "example": "dbxForgeSearchableStringChipField({ key: 'tags', props: { search, displayForValue } })",
+      "properties": [
+        {
+          "name": "props",
+          "type": "Omit<DbxForgeSearchableChipFieldProps<string, M>, 'allowStringValues'>",
+          "description": "",
+          "required": false
+        }
+      ],
+      "wrapperPattern": "material-form-field-wrapped",
+      "ngFormType": "dbx-searchable-chip",
+      "configInterface": "DbxForgeSearchableStringChipFieldConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/selection/searchable/searchable-chip.field.ts",
+        "line": 102
+      }
+    },
+    {
+      "slug": "searchable-chip",
+      "factoryName": "dbxForgeSearchableChipField",
+      "tier": "field-factory",
+      "produces": "T | T[]",
+      "arrayOutput": "optional",
+      "description": "Multi-value autocomplete with chips. Defaults to multi-select; supports free-form text entry when `allowStringValues` is set.",
+      "sourcePath": "field/selection/searchable/searchable-chip.field.ts",
+      "example": "dbxForgeSearchableChipField<Tag>({ key: 'tags', props: { search, displayForValue } })",
+      "properties": [
+        {
+          "name": "search (props)",
+          "type": "SearchableValueFieldStringSearchFn<T, M>",
+          "description": "",
+          "required": true
+        },
+        {
+          "name": "displayForValue (props)",
+          "type": "SearchableValueFieldDisplayFn<T, M>",
+          "description": "",
+          "required": true
+        },
+        {
+          "name": "hashForValue (props)",
+          "type": "SearchableValueFieldHashFn<T, H>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "allowStringValues (props)",
+          "type": "boolean",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "convertStringValue (props)",
+          "type": "(text: string) => T",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "showSelectedValue (props)",
+          "type": "boolean",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "searchOnEmptyText (props)",
+          "type": "boolean",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "display (props)",
+          "type": "Partial<DbxInjectionComponentConfig>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "useAnchor (props)",
+          "type": "boolean",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "anchorForValue (props)",
+          "type": "SearchableValueFieldAnchorFn<T, M>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "showClearValue (props)",
+          "type": "boolean",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "searchLabel (props)",
+          "type": "string",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "refreshDisplayValues$ (props)",
+          "type": "Observable<unknown>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "hint (props)",
+          "type": "string",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "textInputValidator (props)",
+          "type": "ValidatorFn | ValidatorFn[]",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "multiSelect (props)",
+          "type": "boolean",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "asArrayValue (props)",
+          "type": "boolean",
+          "description": "",
+          "required": false
+        }
+      ],
+      "wrapperPattern": "material-form-field-wrapped",
+      "ngFormType": "dbx-searchable-chip",
+      "generic": "<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>",
+      "configInterface": "DbxForgeSearchableChipFieldConfig<T, M, H>",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/selection/searchable/searchable-chip.field.ts",
+        "line": 60
+      }
+    },
+    {
+      "slug": "searchable-text",
+      "factoryName": "dbxForgeSearchableTextField",
+      "tier": "field-factory",
+      "produces": "T",
+      "arrayOutput": "no",
+      "description": "Single-value autocomplete field with search-as-you-type. Optionally allows free-form typed strings as values.",
+      "sourcePath": "field/selection/searchable/searchable-text.field.ts",
+      "example": "dbxForgeSearchableTextField<User>({ key: 'user', props: { search, displayForValue } })",
+      "properties": [
+        {
+          "name": "search (props)",
+          "type": "SearchableValueFieldStringSearchFn<T, M>",
+          "description": "",
+          "required": true
+        },
+        {
+          "name": "displayForValue (props)",
+          "type": "SearchableValueFieldDisplayFn<T, M>",
+          "description": "",
+          "required": true
+        },
+        {
+          "name": "hashForValue (props)",
+          "type": "SearchableValueFieldHashFn<T, H>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "allowStringValues (props)",
+          "type": "boolean",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "convertStringValue (props)",
+          "type": "(text: string) => T",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "showSelectedValue (props)",
+          "type": "boolean",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "searchOnEmptyText (props)",
+          "type": "boolean",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "display (props)",
+          "type": "Partial<DbxInjectionComponentConfig>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "useAnchor (props)",
+          "type": "boolean",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "anchorForValue (props)",
+          "type": "SearchableValueFieldAnchorFn<T, M>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "showClearValue (props)",
+          "type": "boolean",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "searchLabel (props)",
+          "type": "string",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "refreshDisplayValues$ (props)",
+          "type": "Observable<unknown>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "hint (props)",
+          "type": "string",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "textInputValidator (props)",
+          "type": "ValidatorFn | ValidatorFn[]",
+          "description": "",
+          "required": false
+        }
+      ],
+      "wrapperPattern": "material-form-field-wrapped",
+      "ngFormType": "dbx-searchable-text",
+      "generic": "<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>",
+      "configInterface": "DbxForgeSearchableTextFieldConfig<T, M, H>",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/selection/searchable/searchable-text.field.ts",
+        "line": 78
+      }
+    },
+    {
+      "slug": "source-select",
+      "factoryName": "dbxForgeSourceSelectField",
+      "tier": "field-factory",
+      "produces": "T | T[]",
+      "arrayOutput": "optional",
+      "description": "Selection field that stores just the value key (`T`) but resolves full metadata (`M`) async for display. Use for reference fields where the form should store only the id.\n\nThe component uses `<mat-form-field>` with `[formField]` for native ng-forge value binding,\nproper Material rendering, and built-in logic (hidden/disabled/readonly) support.",
+      "sourcePath": "field/selection/sourceselect/sourceselect.field.ts",
+      "example": "dbxForgeSourceSelectField<string, User>({ key: 'userId', props: { valueReader: (u) => u.id, metaLoader, displayForValue } })",
+      "properties": [
+        {
+          "name": "openSource (props)",
+          "type": "Maybe<SourceSelectOpenFunction<M>>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "loadSources (props)",
+          "type": "Maybe<SourceSelectLoadSourcesFunction<M>>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "valueReader (props)",
+          "type": "SourceSelectMetaValueReader<T, M>",
+          "description": "",
+          "required": true
+        },
+        {
+          "name": "metaLoader (props)",
+          "type": "SourceSelectValueMetaLoader<T, M>",
+          "description": "",
+          "required": true
+        },
+        {
+          "name": "displayForValue (props)",
+          "type": "SourceSelectDisplayFunction<T, M>",
+          "description": "",
+          "required": true
+        },
+        {
+          "name": "selectButtonIcon (props)",
+          "type": "Maybe<string>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "multiple (props)",
+          "type": "Maybe<boolean>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "refreshDisplayValues$ (props)",
+          "type": "Maybe<Observable<unknown>>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "filterable (props)",
+          "type": "Maybe<boolean>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "filterableGroups (props)",
+          "type": "Maybe<boolean>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "hint (props)",
+          "type": "Maybe<string>",
+          "description": "",
+          "required": false
+        }
+      ],
+      "wrapperPattern": "unwrapped",
+      "ngFormType": "dbx-source-select",
+      "generic": "<T extends PrimativeKey = PrimativeKey, M = unknown>",
+      "configInterface": "DbxForgeSourceSelectFieldConfig<T, M>",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/selection/sourceselect/sourceselect.field.ts",
+        "line": 73
+      }
+    },
+    {
+      "slug": "array-field",
+      "factoryName": "dbxForgeArrayField",
+      "tier": "primitive",
+      "produces": "ArrayField",
+      "arrayOutput": "yes",
+      "description": "Repeatable array wrapper with add/remove/drag-to-reorder controls. Template fields are cloned per item. Internally built with `dbxForgeFieldFunction` but categorized as a primitive because composites wrap it.\n\nWraps the array with {@link DbxForgeArrayFieldWrapperComponent} for label/hint,\nand wraps each template item in a ContainerField with\n{@link DbxForgeArrayFieldElementWrapperComponent} for per-item drag handle,\nlabel, and remove button.",
+      "sourcePath": "field/value/array/array.field.ts",
+      "example": "dbxForgeArrayField({ key: 'tags', template: [dbxForgeTextField({ key: 'value' })] })",
+      "properties": [
+        {
+          "name": "template",
+          "type": "ContainerField['fields']",
+          "description": "Template defining the fields for each array item.\nEach item is wrapped in a ContainerField with the element wrapper\nfor per-item drag handle, label, and remove button.\n\nThe array starts empty — items are added via the add button.",
+          "required": true
+        },
+        {
+          "name": "props",
+          "type": "Omit<DbxForgeArrayFieldWrapperProps, 'itemTemplate'>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "elementProps",
+          "type": "DbxForgeArrayFieldElementWrapperProps",
+          "description": "",
+          "required": false
+        }
+      ],
+      "returns": "ArrayField",
+      "configInterface": "DbxForgeArrayFieldConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/value/array/array.field.ts",
+        "line": 56
+      }
+    },
+    {
+      "slug": "toggle",
+      "factoryName": "dbxForgeToggleField",
+      "tier": "field-factory",
+      "produces": "boolean",
+      "arrayOutput": "no",
+      "description": "Material slide toggle. Renders inside a styled outline box by default so it visually matches surrounding outlined form fields; pass `styledBox: false` to opt out.",
+      "sourcePath": "field/value/boolean/boolean.field.ts",
+      "example": "dbxForgeToggleField({ key: 'active', label: 'Active', value: true })",
+      "properties": [
+        {
+          "name": "styledBox",
+          "type": "boolean",
+          "description": "Whether to render the toggle inside a styled outline box.\n\nDefaults to `true`.",
+          "required": false
+        }
+      ],
+      "wrapperPattern": "unwrapped",
+      "ngFormType": "toggle",
+      "configInterface": "DbxForgeToggleFieldConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/value/boolean/boolean.field.ts",
+        "line": 43
+      }
+    },
+    {
+      "slug": "checkbox",
+      "factoryName": "dbxForgeCheckboxField",
+      "tier": "field-factory",
+      "produces": "boolean",
+      "arrayOutput": "no",
+      "description": "Material checkbox. Shares the styled-outline-box opt-out with toggle.",
+      "sourcePath": "field/value/boolean/boolean.field.ts",
+      "example": "dbxForgeCheckboxField({ key: 'agree', label: 'I agree to the terms' })",
+      "properties": [
+        {
+          "name": "styledBox",
+          "type": "boolean",
+          "description": "Whether to render the checkbox inside a styled outline box.\n\nDefaults to `true`.",
+          "required": false
+        }
+      ],
+      "wrapperPattern": "unwrapped",
+      "ngFormType": "checkbox",
+      "configInterface": "DbxForgeCheckboxFieldConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/value/boolean/boolean.field.ts",
+        "line": 86
+      }
+    },
+    {
+      "slug": "date",
+      "factoryName": "dbxForgeDateField",
+      "tier": "field-factory",
+      "produces": "Date",
+      "arrayOutput": "no",
+      "description": "Material datepicker (date-only, no time). For time-of-day picking use the `date-time` field; for ranges use `date-range-row` or `date-time-range-row`.\n\nUses the native ng-forge MatDatepickerField.",
+      "sourcePath": "field/value/date/date.field.ts",
+      "example": "dbxForgeDateField({ key: 'startDate', label: 'Start Date', required: true })",
+      "properties": [],
+      "wrapperPattern": "unwrapped",
+      "ngFormType": "datepicker",
+      "configInterface": "DbxForgeDateFieldConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/value/date/date.field.ts",
+        "line": 32
+      }
+    },
+    {
+      "slug": "date-range-row",
+      "factoryName": "dbxForgeDateRangeRow",
+      "tier": "composite-builder",
+      "produces": "RowField",
+      "arrayOutput": "no",
+      "description": "Two-column row of start/end date-time fields configured for date-only picking. Use when you need a paired start/end date range laid out horizontally.\n\nComposite builder that creates a pair of date pickers for selecting a date range (start and end dates)\narranged in a flex row. The pickers are synchronized so the start date stays before the end date.\n\nThis is the forge equivalent of formly's `formlyDateRangeField()`.",
+      "sourcePath": "field/value/date/daterange.field.ts",
+      "example": "dbxForgeDateRangeRow({ required: true, start: { key: 'from', label: 'From' }, end: { key: 'to', label: 'To' } })",
+      "properties": [
+        {
+          "name": "required",
+          "type": "boolean",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "props",
+          "type": "DbxForgeDateRangeRowSharedProps",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "start",
+          "type": "Partial<DbxForgeDateRangeFieldDateConfig>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "end",
+          "type": "Partial<DbxForgeDateRangeFieldDateConfig>",
+          "description": "",
+          "required": false
+        }
+      ],
+      "suffix": "Row",
+      "composesFromSlugs": [
+        "date-time",
+        "row"
+      ],
+      "configInterface": "DbxForgeDateRangeRowConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/value/date/daterange.field.ts",
+        "line": 60
+      }
+    },
+    {
+      "slug": "date-time",
+      "factoryName": "dbxForgeDateTimeField",
+      "tier": "field-factory",
+      "produces": "DateTimeValue",
+      "arrayOutput": "no",
+      "description": "Combined date-time picker with timezone, value mode (DATE_STRING / TIMESTAMP / Date), and time mode (REQUIRED / OPTIONAL / NONE). Powers `date-range-row` and `date-time-range-row`.\n\nFull parity with formly `dateTimeField()` — supports timezone, valueMode, timeMode,\npickerConfig, presets, and all other features via the `props` slot.",
+      "sourcePath": "field/value/date/datetime.field.ts",
+      "example": "dbxForgeDateTimeField({ key: 'when', label: 'When', timezone: 'America/New_York' })",
+      "properties": [
+        {
+          "name": "timeOnly (props)",
+          "type": "boolean",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "timeMode (props)",
+          "type": "DbxDateTimeFieldTimeMode",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "valueMode (props)",
+          "type": "DbxDateTimeValueMode",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "dateLabel (props)",
+          "type": "string",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "timeLabel (props)",
+          "type": "string",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "allDayLabel (props)",
+          "type": "string",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "atTimeLabel (props)",
+          "type": "string",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "minDate (props)",
+          "type": "Date | string",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "maxDate (props)",
+          "type": "Date | string",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "timezone (props)",
+          "type": "Maybe<ObservableOrValueGetter<Maybe<TimezoneString>>>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "showTimezone (props)",
+          "type": "Maybe<boolean>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "pickerConfig (props)",
+          "type": "ObservableOrValueGetter<DbxDateTimePickerConfiguration>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "hideDateHint (props)",
+          "type": "boolean",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "hideDatePicker (props)",
+          "type": "boolean",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "alwaysShowDateInput (props)",
+          "type": "boolean",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "showClearButton (props)",
+          "type": "Maybe<boolean>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "autofillDateWhenTimeIsPicked (props)",
+          "type": "boolean",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "presets (props)",
+          "type": "ObservableOrValueGetter<DateTimePresetConfiguration[]>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "timeDate (props)",
+          "type": "Maybe<ObservableOrValueGetter<Maybe<DateOrDayString>>>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "fullDayFieldName (props)",
+          "type": "string",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "fullDayInUTC (props)",
+          "type": "boolean",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "minuteStep (props)",
+          "type": "Maybe<number>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "inputOutputDebounceTime (props)",
+          "type": "Milliseconds",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "appearance (props)",
+          "type": "'fill' | 'outline'",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "hint (props)",
+          "type": "DynamicText",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "getSyncFieldsObs (props)",
+          "type": "() => Observable<ArrayOrValue<DbxForgeDateTimeSyncField>>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "openOnInputClick (props)",
+          "type": "'picker' | 'input'",
+          "description": "Behavior when the date input is clicked.\n\n- `'picker'` — opens the datepicker overlay (default)\n- `'input'` — normal text-selection / cursor-placement behavior",
+          "required": false
+        }
+      ],
+      "wrapperPattern": "unwrapped",
+      "ngFormType": "datetime",
+      "configInterface": "DbxForgeDateTimeFieldConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/value/date/datetime.field.ts",
+        "line": 72
+      }
+    },
+    {
+      "slug": "date-time-range-row",
+      "factoryName": "dbxForgeDateTimeRangeRow",
+      "tier": "composite-builder",
+      "produces": "RowField",
+      "arrayOutput": "no",
+      "description": "Two-column row of time-only pickers for selecting a time range within a single day.\n\nThis is the forge equivalent of formly's `formlyDateTimeRangeField()`.",
+      "sourcePath": "field/value/date/datetimerange.field.ts",
+      "example": "dbxForgeDateTimeRangeRow({ start: { label: 'From' }, end: { label: 'Until' } })",
+      "properties": [
+        {
+          "name": "required",
+          "type": "boolean",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "props",
+          "type": "DbxForgeDateTimeRangeRowSharedProps",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "start",
+          "type": "Partial<DbxForgeDateTimeRangeFieldTimeConfig>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "end",
+          "type": "Partial<DbxForgeDateTimeRangeFieldTimeConfig>",
+          "description": "",
+          "required": false
+        }
+      ],
+      "suffix": "Row",
+      "composesFromSlugs": [
+        "date-time",
+        "row"
+      ],
+      "configInterface": "DbxForgeDateTimeRangeRowConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/value/date/datetimerange.field.ts",
+        "line": 56
+      }
+    },
+    {
+      "slug": "fixed-date-range",
+      "factoryName": "dbxForgeFixedDateRangeField",
+      "tier": "field-factory",
+      "produces": "DbxForgeFixedDateRangeValue",
+      "arrayOutput": "no",
+      "description": "Inline calendar-style date-range picker with fixed range length (e.g. \"7 days from start\"). Wrapped in a Material form-field container with a custom selection strategy.\n\nUses an inline `<mat-calendar>` with a custom selection strategy, matching the formly\n`fixedDateRangeField()` behavior. Supports multiple selection modes, timezone conversion,\ndate range input configuration, and optional text inputs.",
+      "sourcePath": "field/value/date/fixeddaterange.field.ts",
+      "example": "dbxForgeFixedDateRangeField({ key: 'range', label: 'Date Range' })",
+      "properties": [
+        {
+          "name": "dateRangeInput (props)",
+          "type": "ObservableOrValueGetter<DbxFixedDateRangeDateRangeInput>",
+          "description": "Date range input to build the date range from a single picked date.\nRequired for 'single' mode and boundary-based selection modes.",
+          "required": false
+        },
+        {
+          "name": "selectionMode (props)",
+          "type": "Maybe<ObservableOrValueGetter<DbxFixedDateRangeSelectionMode>>",
+          "description": "Selection mode to use when picking dates on the calendar.\n\n- `'single'` — Picks one date, range computed from dateRangeInput config.\n- `'normal'` — Standard start/end range picking with two clicks.\n- `'arbitrary'` — Free-form range selection within a boundary.\n- `'arbitrary_quick'` — Like arbitrary, but immediately sets the value on first click.\n\nDefaults to `'single'`.",
+          "required": false
+        },
+        {
+          "name": "valueMode (props)",
+          "type": "DbxDateTimeValueMode",
+          "description": "Value mode for the dates in the output DateRange.\nDefaults to DATE.",
+          "required": false
+        },
+        {
+          "name": "fullDayInUTC (props)",
+          "type": "boolean",
+          "description": "Whether to pass the date value as a UTC date, or a date in the current timezone.",
+          "required": false
+        },
+        {
+          "name": "pickerConfig (props)",
+          "type": "ObservableOrValueGetter<DbxFixedDateRangePickerConfiguration>",
+          "description": "Custom picker configuration (limits, schedule).",
+          "required": false
+        },
+        {
+          "name": "timezone (props)",
+          "type": "Maybe<ObservableOrValueGetter<Maybe<TimezoneString>>>",
+          "description": "The input timezone to default to. Ignored if fullDayInUTC is true.",
+          "required": false
+        },
+        {
+          "name": "showTimezone (props)",
+          "type": "Maybe<boolean>",
+          "description": "Whether to display the timezone. Defaults to true.",
+          "required": false
+        },
+        {
+          "name": "presets (props)",
+          "type": "ObservableOrValueGetter<DateTimePresetConfiguration[]>",
+          "description": "Custom presets.",
+          "required": false
+        },
+        {
+          "name": "showRangeInput (props)",
+          "type": "boolean",
+          "description": "Whether to show the range input text fields. Defaults to true.",
+          "required": false
+        },
+        {
+          "name": "appearance (props)",
+          "type": "'fill' | 'outline'",
+          "description": "Material form field appearance.",
+          "required": false
+        },
+        {
+          "name": "hint (props)",
+          "type": "DynamicText",
+          "description": "Hint text displayed below the field.",
+          "required": false
+        }
+      ],
+      "wrapperPattern": "material-form-field-wrapped",
+      "ngFormType": "fixeddaterange",
+      "configInterface": "DbxForgeFixedDateRangeFieldConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/value/date/fixeddaterange.field.ts",
+        "line": 51
+      }
+    },
+    {
+      "slug": "time-duration",
+      "factoryName": "dbxForgeTimeDurationField",
+      "tier": "field-factory",
+      "produces": "TimeDurationValue",
+      "arrayOutput": "no",
+      "description": "Duration input with popover picker. Output shape varies by `valueMode` — number (ms/s/…), string, or structured object.\n\nUses a custom ng-forge ValueFieldComponent that provides a text input\naccepting duration strings (e.g. \"2h30m\") and a popover picker.",
+      "sourcePath": "field/value/duration/duration.field.ts",
+      "example": "dbxForgeTimeDurationField({ key: 'duration', label: 'Duration', outputUnit: 'm' })",
+      "properties": [
+        {
+          "name": "outputUnit",
+          "type": "TimeUnit",
+          "description": "The unit of the output value.\n\nDefaults to `'ms'` (milliseconds).",
+          "required": false
+        },
+        {
+          "name": "valueMode",
+          "type": "TimeDurationFieldValueMode",
+          "description": "The output value mode.\n\nDefaults to `'number'`.",
+          "required": false
+        },
+        {
+          "name": "allowedUnits",
+          "type": "TimeUnit[]",
+          "description": "The time units available for the field.",
+          "required": false
+        },
+        {
+          "name": "pickerUnits",
+          "type": "TimeUnit[]",
+          "description": "Which units to show in the popover picker.\n\nDefaults to allowedUnits filtered to exclude 'ms'.",
+          "required": false
+        },
+        {
+          "name": "carryOver",
+          "type": "boolean",
+          "description": "Whether the popover picker should carry over values to the next larger unit.",
+          "required": false
+        }
+      ],
+      "wrapperPattern": "unwrapped",
+      "ngFormType": "timeduration",
+      "configInterface": "DbxForgeTimeDurationFieldConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/value/duration/duration.field.ts",
+        "line": 75
+      }
+    },
+    {
+      "slug": "dollar-amount",
+      "factoryName": "dbxForgeDollarAmountField",
+      "tier": "field-derivative",
+      "produces": "number",
+      "arrayOutput": "no",
+      "description": "Forge number field pre-configured for dollar amount input with cent-level precision. Pre-sets `transform.precision` to `DOLLAR_AMOUNT_PRECISION` so values round to whole cents.",
+      "sourcePath": "field/value/number/number.field.ts",
+      "example": "const field = dbxForgeDollarAmountField({ key: 'price', label: 'Price', min: 0, required: true });",
+      "properties": [
+        {
+          "name": "autocomplete",
+          "type": "FieldAutocompleteAttributeOption",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "min",
+          "type": "number",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "max",
+          "type": "number",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "step",
+          "type": "number",
+          "description": "Step increment for the input.",
+          "required": false
+        },
+        {
+          "name": "enforceStep",
+          "type": "boolean",
+          "description": "When true, validates that the value is divisible by `step`.\nRequires `step` to be set.",
+          "required": false
+        },
+        {
+          "name": "idempotentTransform",
+          "type": "TransformNumberFunctionConfig",
+          "description": "An idempotent number transformation applied as a value parser (e.g., rounding, precision, bounds).\n\nFor non-idempotent transformations, you should directly configure the `transform` property instead.",
+          "required": false
+        }
+      ],
+      "composesFromSlugs": [
+        "number"
+      ],
+      "configInterface": "DbxForgeDollarAmountFieldConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/value/number/number.field.ts",
+        "line": 141
+      }
+    },
+    {
+      "slug": "number",
+      "factoryName": "dbxForgeNumberField",
+      "tier": "field-factory",
+      "produces": "number",
+      "arrayOutput": "no",
+      "description": "Numeric input (HTML `type=\"number\"`). Supports min/max/step constraints, optional step enforcement (divisibility validator), and idempotent number transforms.\n\nWhen `step` is provided, sets the HTML `step` attribute on the input via `meta`.\nWhen both `step` and `enforceStep` are set, adds a custom divisibility validator.",
+      "sourcePath": "field/value/number/number.field.ts",
+      "example": "dbxForgeNumberField({ key: 'quantity', label: 'Quantity', min: 1, max: 100, step: 1, enforceStep: true })",
+      "properties": [
+        {
+          "name": "autocomplete",
+          "type": "FieldAutocompleteAttributeOption",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "min",
+          "type": "number",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "max",
+          "type": "number",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "step",
+          "type": "number",
+          "description": "Step increment for the input.",
+          "required": false
+        },
+        {
+          "name": "enforceStep",
+          "type": "boolean",
+          "description": "When true, validates that the value is divisible by `step`.\nRequires `step` to be set.",
+          "required": false
+        },
+        {
+          "name": "idempotentTransform",
+          "type": "TransformNumberFunctionConfig",
+          "description": "An idempotent number transformation applied as a value parser (e.g., rounding, precision, bounds).\n\nFor non-idempotent transformations, you should directly configure the `transform` property instead.",
+          "required": false
+        }
+      ],
+      "wrapperPattern": "unwrapped",
+      "ngFormType": "input",
+      "configInterface": "DbxForgeNumberFieldConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/value/number/number.field.ts",
+        "line": 72
+      }
+    },
+    {
+      "slug": "number-slider",
+      "factoryName": "dbxForgeNumberSliderField",
+      "tier": "field-factory",
+      "produces": "number",
+      "arrayOutput": "no",
+      "description": "Material slider wrapped in a form-field container. Supports thumb label, tick interval, and step-derived tick spacing.\n\nThe wrapper provides the Material outlined form-field appearance (notched outline with\nfloating label, hint/error subscript). The inner slider uses the ng-forge built-in\n`slider` type.",
+      "sourcePath": "field/value/number/slider.field.ts",
+      "example": "dbxForgeNumberSliderField({ key: 'rating', label: 'Rating', min: 0, max: 10, step: 1 })",
+      "properties": [
+        {
+          "name": "thumbLabel",
+          "type": "boolean",
+          "description": "Whether or not to show the thumb label while sliding.\n\nDefaults to true.",
+          "required": false
+        },
+        {
+          "name": "tickInterval",
+          "type": "false | number",
+          "description": "Tick interval. If not provided defaults to the step value, if provided.\nIf false, the ticks are disabled.",
+          "required": false
+        }
+      ],
+      "wrapperPattern": "material-form-field-wrapped",
+      "ngFormType": "slider",
+      "configInterface": "DbxForgeNumberSliderFieldConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/value/number/slider.field.ts",
+        "line": 46
+      }
+    },
+    {
+      "slug": "phone",
+      "factoryName": "dbxForgePhoneField",
+      "tier": "field-factory",
+      "produces": "string",
+      "arrayOutput": "no",
+      "description": "International phone number input backed by ngx-mat-input-tel. Supports preferred-country lists, search, and optional extension input.\n\nUses the custom 'phone' field type which renders the ngx-mat-input-tel component\nbridged to Signal Forms.",
+      "sourcePath": "field/value/phone/phone.field.ts",
+      "example": "dbxForgePhoneField({ key: 'phone', label: 'Phone', preferredCountries: ['US', 'CA'] })",
+      "properties": [
+        {
+          "name": "preferredCountries",
+          "type": "string[]",
+          "description": "Preferred countries to show at the top of the country selector.",
+          "required": false
+        },
+        {
+          "name": "onlyCountries",
+          "type": "string[]",
+          "description": "ISO country codes to restrict the dropdown to.",
+          "required": false
+        },
+        {
+          "name": "enableSearch",
+          "type": "boolean",
+          "description": "Whether or not to enable the search feature. True by default.",
+          "required": false
+        },
+        {
+          "name": "allowExtension",
+          "type": "boolean",
+          "description": "Whether or not to allow adding an extension. False by default.",
+          "required": false
+        },
+        {
+          "name": "autocomplete",
+          "type": "DbxForgePhoneFieldAutocomplete",
+          "description": "Sets the autocomplete attribute on the phone input.\n\nPass `'tel'` to enable phone autofill, or `false`/`'off'` to disable.",
+          "required": false
+        },
+        {
+          "name": "preferredCountries (props)",
+          "type": "string[]",
+          "description": "ISO country codes for countries shown first in the dropdown.",
+          "required": false
+        },
+        {
+          "name": "onlyCountries (props)",
+          "type": "string[]",
+          "description": "ISO country codes to restrict the dropdown to.",
+          "required": false
+        },
+        {
+          "name": "enableSearch (props)",
+          "type": "boolean",
+          "description": "Whether or not to enable the search feature. True by default.",
+          "required": false
+        },
+        {
+          "name": "allowExtension (props)",
+          "type": "boolean",
+          "description": "Whether or not to allow adding an extension. False by default.",
+          "required": false
+        },
+        {
+          "name": "appearance (props)",
+          "type": "'fill' | 'outline'",
+          "description": "Material form field appearance.",
+          "required": false
+        },
+        {
+          "name": "hint (props)",
+          "type": "DynamicText",
+          "description": "Hint text displayed below the field.",
+          "required": false
+        },
+        {
+          "name": "autocomplete (props)",
+          "type": "'off' | 'tel'",
+          "description": "Autocomplete value for the phone input. The underlying `ngx-mat-input-tel`\ncomponent supports `'off'` and `'tel'`.",
+          "required": false
+        }
+      ],
+      "wrapperPattern": "unwrapped",
+      "ngFormType": "phone",
+      "configInterface": "DbxForgePhoneFieldConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/value/phone/phone.field.ts",
+        "line": 78
+      }
+    },
+    {
+      "slug": "name",
+      "factoryName": "dbxForgeNameField",
+      "tier": "field-derivative",
+      "produces": "string",
+      "arrayOutput": "no",
+      "description": "Pre-configured text field for capturing a full name with sensible min/max length defaults.",
+      "sourcePath": "field/value/text/text.additional.field.ts",
+      "example": "dbxForgeNameField({ key: 'fullName', label: 'Full Name', required: true })",
+      "properties": [],
+      "composesFromSlugs": [
+        "text"
+      ],
+      "configInterface": "DbxForgeNameFieldConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/value/text/text.additional.field.ts",
+        "line": 24
+      }
+    },
+    {
+      "slug": "email",
+      "factoryName": "dbxForgeEmailField",
+      "tier": "field-derivative",
+      "produces": "string",
+      "arrayOutput": "no",
+      "description": "Text field pre-configured with email input type and email validator. Prefer this over configuring `dbxForgeTextField` with `inputType: \"email\"` directly.\n\nUses the `'email'` input type for built-in browser validation.",
+      "sourcePath": "field/value/text/text.additional.field.ts",
+      "example": "dbxForgeEmailField({ key: 'email', label: 'Email', required: true })",
+      "properties": [
+        {
+          "name": "key",
+          "type": "string",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "label",
+          "type": "string",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "placeholder",
+          "type": "string",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "required",
+          "type": "boolean",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "readonly",
+          "type": "boolean",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "autocomplete",
+          "type": "FieldAutocompleteAttributeOption",
+          "description": "Sets the autocomplete attribute on the input. Pass `false` to disable browser autofill.",
+          "required": false
+        }
+      ],
+      "composesFromSlugs": [
+        "text"
+      ],
+      "configInterface": "DbxForgeEmailFieldConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/value/text/text.additional.field.ts",
+        "line": 74
+      }
+    },
+    {
+      "slug": "city",
+      "factoryName": "dbxForgeCityField",
+      "tier": "field-derivative",
+      "produces": "string",
+      "arrayOutput": "no",
+      "description": "City name input enforcing `ADDRESS_CITY_MAX_LENGTH`. Typically used inside the address composite set.",
+      "sourcePath": "field/value/text/text.additional.field.ts",
+      "example": "dbxForgeCityField({ required: true })",
+      "properties": [
+        {
+          "name": "autocomplete",
+          "type": "FieldAutocompleteAttributeOption",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "inputType",
+          "type": "DbxForgeTextFieldInputType",
+          "description": "HTML input type. Defaults to `'text'`.",
+          "required": false
+        },
+        {
+          "name": "idempotentTransform",
+          "type": "TransformStringFunctionConfig",
+          "description": "An idempotent string transformation applied as a value parser (e.g., trim, uppercase).\n\nFor non-idempotent transformations, you should directly configure the `transform` property instead.",
+          "required": false
+        }
+      ],
+      "composesFromSlugs": [
+        "text"
+      ],
+      "configInterface": "DbxForgeCityFieldConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/value/text/text.additional.field.ts",
+        "line": 112
+      }
+    },
+    {
+      "slug": "state",
+      "factoryName": "dbxForgeStateField",
+      "tier": "field-derivative",
+      "produces": "string",
+      "arrayOutput": "no",
+      "description": "US state input. When `asCode: true`, validates two-letter codes and auto-uppercases input via an idempotent transform.",
+      "sourcePath": "field/value/text/text.additional.field.ts",
+      "example": "dbxForgeStateField({ asCode: true, required: true })",
+      "properties": [
+        {
+          "name": "asCode",
+          "type": "boolean",
+          "description": "When true, validates and formats as a 2-letter state code (e.g., `'CA'`).",
+          "required": false
+        }
+      ],
+      "composesFromSlugs": [
+        "text"
+      ],
+      "configInterface": "DbxForgeStateFieldConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/value/text/text.additional.field.ts",
+        "line": 153
+      }
+    },
+    {
+      "slug": "country",
+      "factoryName": "dbxForgeCountryField",
+      "tier": "field-derivative",
+      "produces": "string",
+      "arrayOutput": "no",
+      "description": "Country name input enforcing `ADDRESS_COUNTRY_MAX_LENGTH`. Typically used inside the address composite set.",
+      "sourcePath": "field/value/text/text.additional.field.ts",
+      "example": "dbxForgeCountryField({ required: true })",
+      "properties": [
+        {
+          "name": "autocomplete",
+          "type": "FieldAutocompleteAttributeOption",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "inputType",
+          "type": "DbxForgeTextFieldInputType",
+          "description": "HTML input type. Defaults to `'text'`.",
+          "required": false
+        },
+        {
+          "name": "idempotentTransform",
+          "type": "TransformStringFunctionConfig",
+          "description": "An idempotent string transformation applied as a value parser (e.g., trim, uppercase).\n\nFor non-idempotent transformations, you should directly configure the `transform` property instead.",
+          "required": false
+        }
+      ],
+      "composesFromSlugs": [
+        "text"
+      ],
+      "configInterface": "DbxForgeCountryFieldConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/value/text/text.additional.field.ts",
+        "line": 194
+      }
+    },
+    {
+      "slug": "zip-code",
+      "factoryName": "dbxForgeZipCodeField",
+      "tier": "field-derivative",
+      "produces": "string",
+      "arrayOutput": "no",
+      "description": "US zip code input with pattern validation and max-length enforcement.",
+      "sourcePath": "field/value/text/text.additional.field.ts",
+      "example": "dbxForgeZipCodeField({ required: true })",
+      "properties": [
+        {
+          "name": "autocomplete",
+          "type": "FieldAutocompleteAttributeOption",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "inputType",
+          "type": "DbxForgeTextFieldInputType",
+          "description": "HTML input type. Defaults to `'text'`.",
+          "required": false
+        },
+        {
+          "name": "idempotentTransform",
+          "type": "TransformStringFunctionConfig",
+          "description": "An idempotent string transformation applied as a value parser (e.g., trim, uppercase).\n\nFor non-idempotent transformations, you should directly configure the `transform` property instead.",
+          "required": false
+        }
+      ],
+      "composesFromSlugs": [
+        "text"
+      ],
+      "configInterface": "DbxForgeZipCodeFieldConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/value/text/text.additional.field.ts",
+        "line": 230
+      }
+    },
+    {
+      "slug": "lat-lng",
+      "factoryName": "dbxForgeLatLngTextField",
+      "tier": "field-derivative",
+      "produces": "string",
+      "arrayOutput": "no",
+      "description": "Latitude/longitude coordinate input with decimal-degree pattern validation.",
+      "sourcePath": "field/value/text/text.additional.field.ts",
+      "example": "dbxForgeLatLngTextField({ key: 'coords', label: 'Coordinates' })",
+      "properties": [],
+      "composesFromSlugs": [
+        "text"
+      ],
+      "configInterface": "DbxForgeLatLngTextFieldConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/value/text/text.additional.field.ts",
+        "line": 267
+      }
+    },
+    {
+      "slug": "address-line",
+      "factoryName": "dbxForgeAddressLineField",
+      "tier": "field-derivative",
+      "produces": "string",
+      "arrayOutput": "no",
+      "description": "Street address line input. The `line` prop controls which line (1 or 2) — it affects key and label generation.",
+      "sourcePath": "field/value/text/text.address.field.ts",
+      "example": "dbxForgeAddressLineField({ line: 2 })",
+      "properties": [
+        {
+          "name": "line",
+          "type": "0 | 1 | 2",
+          "description": "Address line number: 0 for single \"Street\" line, 1 for \"Line 1\", 2 for \"Line 2\".",
+          "required": false
+        }
+      ],
+      "composesFromSlugs": [
+        "text"
+      ],
+      "configInterface": "DbxForgeAddressLineFieldConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/value/text/text.address.field.ts",
+        "line": 68
+      }
+    },
+    {
+      "slug": "address-fields",
+      "factoryName": "dbxForgeAddressFields",
+      "tier": "template-builder",
+      "produces": "FieldDef[]",
+      "arrayOutput": "no",
+      "description": "Flat array of address fields (line(s), city, state, zip, optional country) with a sensible flex layout. Drop directly into a parent `fields: []`.",
+      "sourcePath": "field/value/text/text.address.field.ts",
+      "example": "dbxForgeAddressFields({ required: true, includeCountry: false })",
+      "properties": [
+        {
+          "name": "line1Field",
+          "type": "DbxForgeCityFieldConfig",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "line2Field",
+          "type": "DbxForgeCityFieldConfig",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "cityField",
+          "type": "DbxForgeCityFieldConfig",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "stateField",
+          "type": "DbxForgeStateFieldConfig",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "zipCodeField",
+          "type": "DbxForgeZipCodeFieldConfig",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "countryField",
+          "type": "DbxForgeCountryFieldConfig",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "required",
+          "type": "boolean",
+          "description": "Whether or not to make required fields required.\n\nTrue by default.",
+          "required": false
+        },
+        {
+          "name": "includeLine2",
+          "type": "boolean",
+          "description": "Whether or not to include the second address line.\n\nTrue by default.",
+          "required": false
+        },
+        {
+          "name": "includeCountry",
+          "type": "boolean",
+          "description": "Whether or not to include the country.\n\nTrue by default.",
+          "required": false
+        }
+      ],
+      "composesFromSlugs": [
+        "address-line",
+        "city",
+        "state",
+        "zip-code",
+        "country"
+      ],
+      "configInterface": "DbxForgeAddressFieldsConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/value/text/text.address.field.ts",
+        "line": 101
+      }
+    },
+    {
+      "slug": "address-group",
+      "factoryName": "dbxForgeAddressGroup",
+      "tier": "composite-builder",
+      "produces": "GroupField",
+      "arrayOutput": "no",
+      "description": "Wraps `address-fields` in a `GroupField` so the address is stored as a nested object under one key. Prefer this when the rest of the form doesn't want address fields flattened.",
+      "sourcePath": "field/value/text/text.address.field.ts",
+      "example": "dbxForgeAddressGroup({ key: 'billingAddress' })",
+      "properties": [
+        {
+          "name": "line1Field",
+          "type": "DbxForgeCityFieldConfig",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "line2Field",
+          "type": "DbxForgeCityFieldConfig",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "cityField",
+          "type": "DbxForgeCityFieldConfig",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "stateField",
+          "type": "DbxForgeStateFieldConfig",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "zipCodeField",
+          "type": "DbxForgeZipCodeFieldConfig",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "countryField",
+          "type": "DbxForgeCountryFieldConfig",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "required",
+          "type": "boolean",
+          "description": "Whether or not to make required fields required.\n\nTrue by default.",
+          "required": false
+        },
+        {
+          "name": "includeLine2",
+          "type": "boolean",
+          "description": "Whether or not to include the second address line.\n\nTrue by default.",
+          "required": false
+        },
+        {
+          "name": "includeCountry",
+          "type": "boolean",
+          "description": "Whether or not to include the country.\n\nTrue by default.",
+          "required": false
+        },
+        {
+          "name": "key",
+          "type": "string",
+          "description": "",
+          "required": false
+        }
+      ],
+      "suffix": "Group",
+      "composesFromSlugs": [
+        "address-fields",
+        "group"
+      ],
+      "configInterface": "DbxForgeAddressGroupConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/value/text/text.address.field.ts",
+        "line": 159
+      }
+    },
+    {
+      "slug": "address-list",
+      "factoryName": "dbxForgeAddressListField",
+      "tier": "composite-builder",
+      "produces": "ArrayField",
+      "arrayOutput": "yes",
+      "description": "Repeatable array of addresses built on top of `array-field` + `address-group`. Keeps the `Field` suffix because it returns a single composite field whose value is an array of addresses.",
+      "sourcePath": "field/value/text/text.address.field.ts",
+      "example": "dbxForgeAddressListField({ maxAddresses: 3 })",
+      "properties": [
+        {
+          "name": "line1Field",
+          "type": "DbxForgeCityFieldConfig",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "line2Field",
+          "type": "DbxForgeCityFieldConfig",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "cityField",
+          "type": "DbxForgeCityFieldConfig",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "stateField",
+          "type": "DbxForgeStateFieldConfig",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "zipCodeField",
+          "type": "DbxForgeZipCodeFieldConfig",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "countryField",
+          "type": "DbxForgeCountryFieldConfig",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "required",
+          "type": "boolean",
+          "description": "Whether or not to make required fields required.\n\nTrue by default.",
+          "required": false
+        },
+        {
+          "name": "includeLine2",
+          "type": "boolean",
+          "description": "Whether or not to include the second address line.\n\nTrue by default.",
+          "required": false
+        },
+        {
+          "name": "includeCountry",
+          "type": "boolean",
+          "description": "Whether or not to include the country.\n\nTrue by default.",
+          "required": false
+        },
+        {
+          "name": "key",
+          "type": "string",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "maxAddresses",
+          "type": "number",
+          "description": "Maximum number of addresses allowed. Defaults to 6.",
+          "required": false
+        }
+      ],
+      "suffix": "Field",
+      "composesFromSlugs": [
+        "address-group",
+        "array-field"
+      ],
+      "configInterface": "DbxForgeAddressListFieldConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/value/text/text.address.field.ts",
+        "line": 199
+      }
+    },
+    {
+      "slug": "text",
+      "factoryName": "dbxForgeTextField",
+      "tier": "field-factory",
+      "produces": "string",
+      "arrayOutput": "no",
+      "description": "Single-line text input. Supports text/email/password input types, autocomplete attribute, regex pattern validation, and idempotent string transforms (trim, case changes, etc.).",
+      "sourcePath": "field/value/text/text.field.ts",
+      "example": "const emailField = dbxForgeTextField({\n  key: 'email',\n  label: 'Email',\n  required: true,\n  inputType: 'email',\n  props: { placeholder: 'user@example.com' }\n});",
+      "properties": [
+        {
+          "name": "autocomplete",
+          "type": "FieldAutocompleteAttributeOption",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "inputType",
+          "type": "DbxForgeTextFieldInputType",
+          "description": "HTML input type. Defaults to `'text'`.",
+          "required": false
+        },
+        {
+          "name": "idempotentTransform",
+          "type": "TransformStringFunctionConfig",
+          "description": "An idempotent string transformation applied as a value parser (e.g., trim, uppercase).\n\nFor non-idempotent transformations, you should directly configure the `transform` property instead.",
+          "required": false
+        }
+      ],
+      "wrapperPattern": "unwrapped",
+      "ngFormType": "input",
+      "configInterface": "DbxForgeTextFieldConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/value/text/text.field.ts",
+        "line": 79
+      }
+    },
+    {
+      "slug": "text-area",
+      "factoryName": "dbxForgeTextAreaField",
+      "tier": "field-factory",
+      "produces": "string",
+      "arrayOutput": "no",
+      "description": "Multi-line textarea input. Supports row count, autocomplete attribute, pattern validation (RegExp → string conversion), and default value.",
+      "sourcePath": "field/value/text/textarea.field.ts",
+      "example": "const bioField = dbxForgeTextAreaField({\n  key: 'bio',\n  label: 'Biography',\n  rows: 5,\n  maxLength: 500\n});",
+      "properties": [
+        {
+          "name": "autocomplete",
+          "type": "FieldAutocompleteAttributeOption",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "rows",
+          "type": "number",
+          "description": "Number of visible text rows. Defaults to 3.",
+          "required": false
+        },
+        {
+          "name": "defaultValue",
+          "type": "string",
+          "description": "Initial value for the textarea. Defaults to empty string.",
+          "required": false
+        }
+      ],
+      "wrapperPattern": "unwrapped",
+      "ngFormType": "textarea",
+      "configInterface": "DbxForgeTextAreaFieldConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/value/text/textarea.field.ts",
+        "line": 47
+      }
+    },
+    {
+      "slug": "flex-layout",
+      "factoryName": "dbxForgeFlexLayout",
+      "tier": "composite-builder",
+      "produces": "GroupField",
+      "arrayOutput": "no",
+      "description": "Responsive flex group — children lay out horizontally at wide breakpoints and stack at narrow ones. Per-field `size` overrides the default column weight.\n\nEach child field gets a `dbx-flex-N` CSS class applied (merged with any existing className).\nThe group is wrapped with the `dbx-forge-flex` wrapper that renders the `dbxFlexGroup` directive\nfor responsive breakpoint handling.\n\nThis is the forge equivalent of {@link formlyFlexLayoutWrapper}.",
+      "sourcePath": "field/wrapper/flex/flex.wrapper.ts",
+      "example": "dbxForgeFlexLayout({ fieldConfigs: [dbxForgeTextField({ key: 'a' }), dbxForgeTextField({ key: 'b' })] })",
+      "properties": [
+        {
+          "name": "size",
+          "type": "DbxFlexSize",
+          "description": "Default flex size for fields that don't specify their own.",
+          "required": false
+        }
+      ],
+      "suffix": "Layout",
+      "composesFromSlugs": [
+        "group"
+      ],
+      "configInterface": "DbxForgeFlexLayoutConfig",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/wrapper/flex/flex.wrapper.ts",
+        "line": 96
+      }
+    },
+    {
+      "slug": "section-wrapper",
+      "factoryName": "dbxForgeSectionWrapper",
+      "tier": "primitive",
+      "produces": "WrapperConfig",
+      "arrayOutput": "no",
+      "description": "Section wrapper config — attach via a field's `wrappers: []` array for a semantic section with header and optional card elevation.",
+      "sourcePath": "field/wrapper/section/section.wrapper.ts",
+      "example": "dbxForgeSectionWrapper({ headerConfig: { text: 'Contact Details' } })",
+      "properties": [
+        {
+          "name": "type",
+          "type": "typeof DBX_FORGE_SECTION_WRAPPER_TYPE_NAME",
+          "description": "",
+          "required": true
+        },
+        {
+          "name": "headerConfig",
+          "type": "DbxSectionHeaderConfig",
+          "description": "Section header configuration.",
+          "required": true
+        },
+        {
+          "name": "elevate",
+          "type": "boolean",
+          "description": "Whether to apply elevated card styling to the section.",
+          "required": false
+        },
+        {
+          "name": "subsection",
+          "type": "boolean",
+          "description": "Whether to render as a `<dbx-subsection>` instead of `<dbx-section>`.",
+          "required": false
+        }
+      ],
+      "returns": "WrapperConfig",
+      "configInterface": "DbxForgeSectionWrapper",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/wrapper/section/section.wrapper.ts",
+        "line": 62
+      }
+    },
+    {
+      "slug": "subsection-wrapper",
+      "factoryName": "dbxForgeSubsectionWrapper",
+      "tier": "primitive",
+      "produces": "WrapperConfig",
+      "arrayOutput": "no",
+      "description": "Subsection variant of `section-wrapper` — defaults to heading level 4 and `subsection: true`.",
+      "sourcePath": "field/wrapper/section/section.wrapper.ts",
+      "example": "dbxForgeSubsectionWrapper({ headerConfig: { text: 'Options' } })",
+      "properties": [
+        {
+          "name": "type",
+          "type": "typeof DBX_FORGE_SECTION_WRAPPER_TYPE_NAME",
+          "description": "",
+          "required": true
+        },
+        {
+          "name": "headerConfig",
+          "type": "DbxSectionHeaderConfig",
+          "description": "Section header configuration.",
+          "required": true
+        },
+        {
+          "name": "elevate",
+          "type": "boolean",
+          "description": "Whether to apply elevated card styling to the section.",
+          "required": false
+        },
+        {
+          "name": "subsection",
+          "type": "boolean",
+          "description": "Whether to render as a `<dbx-subsection>` instead of `<dbx-section>`.",
+          "required": false
+        }
+      ],
+      "returns": "WrapperConfig",
+      "configInterface": "DbxForgeSectionWrapper",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/wrapper/section/section.wrapper.ts",
+        "line": 85
+      }
+    },
+    {
+      "slug": "style-wrapper",
+      "factoryName": "dbxForgeStyleWrapper",
+      "tier": "primitive",
+      "produces": "WrapperConfig",
+      "arrayOutput": "no",
+      "description": "Style wrapper config — applies dynamic CSS classes (`ngClass`) and/or inline styles (`ngStyle`) to any field via its `wrappers: []`.",
+      "sourcePath": "field/wrapper/style/style.wrapper.ts",
+      "example": "dbxForgeStyleWrapper({ classGetter: 'highlighted' })",
+      "properties": [
+        {
+          "name": "type",
+          "type": "typeof DBX_FORGE_STYLE_WRAPPER_TYPE_NAME",
+          "description": "",
+          "required": true
+        },
+        {
+          "name": "classGetter",
+          "type": "MaybeObservableOrValue<string>",
+          "description": "Observable or static value providing CSS class names via `[ngClass]`.",
+          "required": false
+        },
+        {
+          "name": "styleGetter",
+          "type": "MaybeObservableOrValue<DbxForgeStyleObject>",
+          "description": "Observable or static value providing inline styles via `[ngStyle]`.",
+          "required": false
+        }
+      ],
+      "returns": "WrapperConfig",
+      "configInterface": "DbxForgeStyleWrapper",
+      "sourceLocation": {
+        "file": "src/lib/forge/field/wrapper/style/style.wrapper.ts",
+        "line": 63
+      }
+    }
+  ]
+}

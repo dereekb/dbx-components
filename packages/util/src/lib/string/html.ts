@@ -13,6 +13,10 @@ export type HtmlHeaderLevel = 1 | 2 | 3 | 4 | 5 | 6;
 // MARK: CSS
 /**
  * Represents a single CSS Class
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-util:css
  */
 export type CssClass = string;
 
@@ -23,6 +27,10 @@ export type CssClass = string;
  * ```ts
  * const name: CssTokenName = 'dbx-primary-color';
  * ```
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-util:css
  */
 export type CssTokenName = string;
 
@@ -79,11 +87,19 @@ export const cssVariableVar = cssTokenVar;
 
 /**
  * Represents a single CSS Style
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-util:css
  */
 export type CssStyle = string;
 
 /**
  * Represents one or more CssClasses that are space separated.
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-util:css
  */
 export type SpaceSeparatedCssClasses = string;
 
@@ -94,6 +110,10 @@ export type CssStyleObject = Record<string, Maybe<PrimativeValue>>;
 
 /**
  * Represents one or more CssStyles that are space separated.
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-util:css
  */
 export type SpaceSeparatedCssStyles = string;
 

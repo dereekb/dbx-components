@@ -20,9 +20,20 @@ export interface DbxErrorViewButtonEvent {
  * Emits a {@link DbxErrorViewButtonEvent} when the button is clicked, which is typically used
  * to open an error detail popover. Used internally by {@link DbxErrorComponent}.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug error-view
+ * @dbxWebCategory feedback
+ * @dbxWebRelated error, error-snackbar
+ * @dbxWebSkillRefs dbx__ref__dbx-component-patterns
+ * @dbxWebMinimalExample ```html
+ * <dbx-error-view [error]="error"></dbx-error-view>
+ * ```
+ *
  * @example
  * ```html
- * <dbx-error-view icon="warning" [message]="'Something went wrong'" (buttonClick)="onErrorClick($event)"></dbx-error-view>
+ * <dbx-error-view [error]="error">
+ *   <dbx-button text="Retry" [dbxAction]="retryAction"></dbx-button>
+ * </dbx-error-view>
  * ```
  */
 @Component({

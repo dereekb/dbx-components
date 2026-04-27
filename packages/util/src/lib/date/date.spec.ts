@@ -1,4 +1,4 @@
-import { hasSameTimezone, isDate, isEqualDate, isISO8601DateString, isISO8601DayString, isMonthDaySlashDate, isUTCDateString, isConsideredUtcTimezoneString, UTC_TIMEZONE_STRING, startOfDayForUTCDateInUTC, startOfDayForSystemDateInUTC, parseISO8601DayStringToUTCDate, isISO8601DayStringStart, monthDaySlashDateToDateString, monthOfYearFromDate, monthOfYearFromDateMonth, makeDateMonthForMonthOfYear, isPast, addMilliseconds, monthOfYearFromUTCDate } from '@dereekb/util';
+import { hasSameTimezone, isDate, isEqualDate, isISO8601DateString, isISO8601DayString, isMonthDaySlashDate, isUTCDateString, isConsideredUtcTimezoneString, UTC_TIMEZONE_STRING, startOfDayForUTCDateInUTC, startOfDayForSystemDateInUTC, parseISO8601DayStringToUTCDate, isISO8601DayStringStart, monthDaySlashDateToDateString, monthOfYearFromDate, monthOfYearFromDateMonth, makeDateMonthForMonthOfYear, isPast, addMilliseconds, monthOfYearFromUTCDate, unixMillisecondsNumberToDate } from '@dereekb/util';
 
 describe('hasSameTimezone', () => {
   it('should return true if both timezone refs have the same timezone.', () => {
@@ -458,5 +458,22 @@ describe('addMilliseconds()', () => {
     const originalDate = new Date(baseTime);
     const result = addMilliseconds(originalDate, 1000);
     expect(result).not.toBe(originalDate);
+  });
+});
+
+describe('unixMillisecondsNumberToDate()', () => {
+  it('should convert a unix milliseconds number to a Date', () => {
+    const millis = 1700000000000;
+    const result = unixMillisecondsNumberToDate(millis);
+    expect(result).toBeInstanceOf(Date);
+    expect((result as Date).getTime()).toBe(millis);
+  });
+
+  it('should return null when input is null', () => {
+    expect(unixMillisecondsNumberToDate(null)).toBeNull();
+  });
+
+  it('should return undefined when input is undefined', () => {
+    expect(unixMillisecondsNumberToDate(undefined)).toBeUndefined();
   });
 });

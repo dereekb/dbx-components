@@ -50,7 +50,7 @@ export interface DbxForgeTimeDurationFieldConfig extends DbxForgeFieldFunctionDe
 }
 
 /**
- * Creates a forge field definition for a time duration input.
+ * Duration input with popover picker. Output shape varies by `valueMode` — number (ms/s/…), string, or structured object.
  *
  * Uses a custom ng-forge ValueFieldComponent that provides a text input
  * accepting duration strings (e.g. "2h30m") and a popover picker.
@@ -58,15 +58,18 @@ export interface DbxForgeTimeDurationFieldConfig extends DbxForgeFieldFunctionDe
  * @param config - Time duration field configuration
  * @returns A {@link DbxForgeTimeDurationFieldDef}
  *
+ * @dbxFormField
+ * @dbxFormSlug time-duration
+ * @dbxFormTier field-factory
+ * @dbxFormProduces TimeDurationValue
+ * @dbxFormArrayOutput no
+ * @dbxFormNgFormType timeduration
+ * @dbxFormWrapperPattern unwrapped
+ * @dbxFormConfigInterface DbxForgeTimeDurationFieldConfig
+ *
  * @example
  * ```typescript
- * const field = dbxForgeTimeDurationField({
- *   key: 'timeout',
- *   label: 'Timeout',
- *   outputUnit: 'min',
- *   min: 0,
- *   max: 480
- * });
+ * dbxForgeTimeDurationField({ key: 'duration', label: 'Duration', outputUnit: 'm' })
  * ```
  */
 export const dbxForgeTimeDurationField = dbxForgeFieldFunction<DbxForgeTimeDurationFieldConfig>({

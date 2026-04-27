@@ -54,6 +54,8 @@ import { type NotificationKey } from '../notification';
  * Abstract base providing access to StorageFile and StorageFileGroup Firestore collections.
  *
  * Implement this in your app module to wire up the collections for dependency injection.
+ *
+ * @dbxModelGroup StorageFile
  */
 export abstract class StorageFileFirestoreCollections {
   abstract readonly storageFileCollection: StorageFileFirestoreCollection;
@@ -75,6 +77,8 @@ export interface InitializedStorageFileModel {
    * True if this model needs to be sync'd/initialized with the original model.
    *
    * Is set false if/when "fi" is set true.
+   *
+   * @dbxModelVariable needsSync
    */
   s?: Maybe<NeedsSyncBoolean>;
   /**
@@ -83,6 +87,8 @@ export interface InitializedStorageFileModel {
    * This is for cases where the model cannot be properly initiialized.
    *
    * Typically this results in this model and related data being deleted.
+   *
+   * @dbxModelVariable flaggedInvalid
    */
   fi?: Maybe<SavedToFirestoreIfTrue>;
 }
@@ -312,10 +318,13 @@ export type StorageFileDownloadUrl = StorageFilePublicDownloadUrl | StorageFileS
  * `StorageFileActionServerActions` in `@dereekb/firebase-server/model`.
  *
  * @template M - type of the arbitrary metadata stored in the `d` field
+ * @dbxModel
  */
 export interface StorageFile<M extends StorageFileMetadata = StorageFileMetadata> extends StoragePath {
   /**
    * Created at date.
+   *
+   * @dbxModelVariable createdAt
    */
   cat: Date;
   /**
@@ -323,14 +332,20 @@ export interface StorageFile<M extends StorageFileMetadata = StorageFileMetadata
    *
    * This name is used in StorageFileGroup composite file generations, instead
    * of the file's normal path file name, if available.
+   *
+   * @dbxModelVariable displayName
    */
   n?: Maybe<StorageFileDisplayName>;
   /**
    * Type of creation.
+   *
+   * @dbxModelVariable creationType
    */
   ct?: Maybe<StorageFileCreationType>;
   /**
    * State of the storage file.
+   *
+   * @dbxModelVariable fileState
    */
   fs: StorageFileState;
   /**
@@ -339,6 +354,8 @@ export interface StorageFile<M extends StorageFileMetadata = StorageFileMetadata
    * The state is important for managing the processing of the StorageFile.
    *
    * Once processing is finished, the state determines whether or not the StorageFile can be processed again.
+   *
+   * @dbxModelVariable processingState
    */
   ps: StorageFileProcessingState;
   /**
@@ -347,50 +364,70 @@ export interface StorageFile<M extends StorageFileMetadata = StorageFileMetadata
    * Set only if the StorageFile has an associated NotificationTask.
    *
    * Cleared once the processing stage is no longer PROCESSING.
+   *
+   * @dbxModelVariable processingNotificationKey
    */
   pn?: Maybe<NotificationKey>;
   /**
    * The date that state was last updated to PROCESSING.
    *
    * Is used as a way to track if processing should be checked on.
+   *
+   * @dbxModelVariable processingAt
    */
   pat?: Maybe<Date>;
   /**
    * The date that the cleanup step of the processing task was run, and the notification ended.
+   *
+   * @dbxModelVariable processingCleanupAt
    */
   pcat?: Maybe<Date>;
   /**
    * User this file is associated with, if applicable.
+   *
+   * @dbxModelVariable userId
    */
   u?: Maybe<FirebaseAuthUserId>;
   /**
    * User who uploaded this file, if applicable.
+   *
+   * @dbxModelVariable uploadedBy
    */
   uby?: Maybe<FirebaseAuthUserId>;
   /**
    * Ownership key, if applicable.
+   *
+   * @dbxModelVariable ownerKey
    */
   o?: Maybe<FirebaseAuthOwnershipKey>;
   /**
    * Purpose of the file, if applicable.
    *
    * Is required for processing a StorageFile.
+   *
+   * @dbxModelVariable purpose
    */
   p?: Maybe<StorageFilePurpose>;
   /**
    * Subgroup of the purpose of the file, if applicable.
    *
    * If a StorageFilePurpose should have subgroups, then all StorageFiles should have subgroups too.
+   *
+   * @dbxModelVariable purposeSubgroup
    */
   pg?: Maybe<StorageFilePurposeSubgroup>;
   /**
    * Arbitrary metadata attached to the StorageFile.
+   *
+   * @dbxModelVariable data
    */
   d?: Maybe<M>;
   /**
    * Scheduled delete at date. The StorageFile cannot be deleted before this set time.
    *
    * Is the main trigger for determining a StorageFile should be deleted.
+   *
+   * @dbxModelVariable scheduledDeleteAt
    */
   sdat?: Maybe<Date>;
   /**
@@ -404,10 +441,14 @@ export interface StorageFile<M extends StorageFileMetadata = StorageFileMetadata
    * but there is no gurantee about timeliness when this will happen. StorageFiles, when deleted, are removed from StorageFileGroups immediately, which are flagged for another regeneration automatically.
    *
    * In cases where you need to have the StorageFileGroup be updated promptly, you should manually handle those cases.
+   *
+   * @dbxModelVariable groupIds
    */
   g: StorageFileGroupId[];
   /**
    * If true, this file should be re-synced with each StorageFileGroup that it references.
+   *
+   * @dbxModelVariable groupsNeedSync
    */
   gs?: Maybe<NeedsSyncBoolean>;
 }
@@ -518,20 +559,28 @@ export const storageFileGroupIdentity = firestoreModelIdentity('storageFileGroup
  */
 export interface StorageFileGroupEmbeddedFile {
   /**
-   * StorageFile id
+   * StorageFile id.
+   *
+   * @dbxModelVariable storageFileId
    */
   s: StorageFileId;
   /**
    * Overrides the display name for this file within the group when generating
    * a composite file (zip, etc.).
+   *
+   * @dbxModelVariable displayName
    */
   n?: Maybe<StorageFileDisplayName>;
   /**
    * The time number it was added to the group.
+   *
+   * @dbxModelVariable addedAt
    */
   sat: Date;
   /**
    * The first time the StorageFile's file was added to the zip, if applicable.
+   *
+   * @dbxModelVariable zippedAt
    */
   zat?: Maybe<Date>;
 }
@@ -560,42 +609,60 @@ export const storageFileGroupEmbeddedFile = firestoreSubObject<StorageFileGroupE
  *
  * Implements {@link InitializedStorageFileModel} for async initialization tracking —
  * the `s` (needs sync) flag is set on creation and cleared once initialized.
+ *
+ * @dbxModel
  */
 export interface StorageFileGroup extends InitializedStorageFileModel {
   /**
    * List of embedded files in this group currently.
+   *
+   * @dbxModelVariable files
    */
   f: StorageFileGroupEmbeddedFile[];
   /**
    * Created at date.
+   *
+   * @dbxModelVariable createdAt
    */
   cat: Date;
   /**
    * Ownership key, if applicable.
+   *
+   * @dbxModelVariable ownerKey
    */
   o?: Maybe<FirebaseAuthOwnershipKey>;
   /**
    * True if a zip file should be generated for this group.
    *
    * This should remain true while a zip file
+   *
+   * @dbxModelVariable shouldZip
    */
   z?: Maybe<SavedToFirestoreIfTrue>;
   /**
    * StorageFile that contains the zip file for this group.
+   *
+   * @dbxModelVariable zipStorageFileId
    */
   zsf?: Maybe<StorageFileId>;
   /**
    * The last date the zip file was regenerated for this group.
+   *
+   * @dbxModelVariable zippedAt
    */
   zat?: Maybe<Date>;
   /**
    * True if this StorageFileGroup should flag regeneration of output StorageFiles/content.
+   *
+   * @dbxModelVariable shouldRegenerate
    */
   re?: Maybe<SavedToFirestoreIfTrue>;
   /**
    * True if this StorageFileGroup should clean up file references.
    *
    * This cleanup process will occur during the next regeneration.
+   *
+   * @dbxModelVariable shouldCleanup
    */
   c?: Maybe<SavedToFirestoreIfTrue>;
 }

@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "source": "@dereekb/firebase",
+  "topicNamespace": "dereekb-firebase",
+  "include": ["src/lib/**/*.ts"],
+  "exclude": ["**/*.spec.ts", "**/*.test.ts"],
+  "out": "../dbx-components-mcp/generated/dereekb-firebase.semantic-types.mcp.generated.json"
+}

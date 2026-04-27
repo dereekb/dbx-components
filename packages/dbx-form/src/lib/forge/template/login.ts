@@ -32,16 +32,23 @@ export const DBX_FORGE_TEXT_VERIFY_PASSWORD_DEFAULT_AUTOCOMPLETE = 'new-password
 export interface DbxForgeTextPasswordFieldConfig extends Omit<DbxForgeTextFieldConfig, 'inputType' | 'key'>, Partial<Pick<DbxForgeTextFieldConfig, 'key'>> {}
 
 /**
- * Creates a forge text password field with the input type set to `'password'`.
+ * Password input (HTML `type="password"`) with secure autocomplete defaults.
  *
  * Defaults to the key `'password'` and label `'Password'` unless overridden.
  *
  * @param config - Optional configuration for the password field
  * @returns A {@link MatInputField} with password input type
  *
+ * @dbxFormField
+ * @dbxFormSlug password-field
+ * @dbxFormProduces string
+ * @dbxFormArrayOutput no
+ * @dbxFormFieldDerivative text
+ * @dbxFormConfigInterface DbxForgeTextPasswordFieldConfig
+ *
  * @example
  * ```typescript
- * const field = dbxForgeTextPasswordField();
+ * dbxForgeTextPasswordField({ key: 'password', required: true })
  * ```
  */
 export function dbxForgeTextPasswordField(config?: DbxForgeTextPasswordFieldConfig) {
@@ -56,16 +63,23 @@ export function dbxForgeTextPasswordField(config?: DbxForgeTextPasswordFieldConf
 }
 
 /**
- * Creates a forge verify/confirm password field, typically used alongside a primary password field.
+ * Companion to `password-field` for sign-up flows. Defaults `autocomplete` to `new-password`. Pair with `password-with-verify-fields` for cross-field equality validation.
  *
  * Defaults to the key `'verifyPassword'` and label `'Verify Password'` unless overridden.
  *
  * @param config - Optional configuration for the verify password field
  * @returns A {@link MatInputField} with password input type
  *
+ * @dbxFormField
+ * @dbxFormSlug verify-password-field
+ * @dbxFormProduces string
+ * @dbxFormArrayOutput no
+ * @dbxFormFieldDerivative password-field
+ * @dbxFormConfigInterface DbxForgeTextPasswordFieldConfig
+ *
  * @example
  * ```typescript
- * const field = dbxForgeTextVerifyPasswordField();
+ * dbxForgeTextVerifyPasswordField({ key: 'verifyPassword' })
  * ```
  */
 export function dbxForgeTextVerifyPasswordField(config?: DbxForgeTextPasswordFieldConfig) {
@@ -94,8 +108,7 @@ export interface DbxForgeTextPasswordWithVerifyFieldConfig {
 }
 
 /**
- * Creates a forge password and verify password pair with a custom validator on the verify field
- * that ensures both values match.
+ * Password + verify-password pair with cross-field equality validation wired up. Drop-in for sign-up flows.
  *
  * The verify password field uses an expression-based custom validator that compares the
  * verify field value against the primary password field's value via `formValue`.
@@ -103,9 +116,16 @@ export interface DbxForgeTextPasswordWithVerifyFieldConfig {
  * @param config - Configuration for the password and verify password fields
  * @returns A tuple of `[passwordField, verifyPasswordField]`
  *
+ * @dbxFormField
+ * @dbxFormSlug password-with-verify-fields
+ * @dbxFormProduces FieldDef[]
+ * @dbxFormArrayOutput no
+ * @dbxFormFieldTemplate password-field, verify-password-field
+ * @dbxFormConfigInterface DbxForgeTextPasswordWithVerifyFieldConfig
+ *
  * @example
  * ```typescript
- * const [passwordField, verifyPasswordField] = dbxForgeTextPasswordWithVerifyField();
+ * dbxForgeTextPasswordWithVerifyField({ password: { required: true } })
  * ```
  */
 export function dbxForgeTextPasswordWithVerifyField(config?: DbxForgeTextPasswordWithVerifyFieldConfig) {
@@ -186,7 +206,7 @@ export interface DbxForgeUsernameLoginFieldsConfig {
 }
 
 /**
- * Creates an array of forge field definitions for a username/password login form.
+ * Complete login/signup field set: username, password, and optional verify-password. Drop into the top-level `fields: []`.
  *
  * When `verifyPassword` is provided, a second password field is added with a custom
  * validator that ensures both password values match.
@@ -194,9 +214,16 @@ export interface DbxForgeUsernameLoginFieldsConfig {
  * @param config - Login fields configuration
  * @returns An array of forge field definitions for the login form
  *
+ * @dbxFormField
+ * @dbxFormSlug username-password-login-fields
+ * @dbxFormProduces FieldDef[]
+ * @dbxFormArrayOutput no
+ * @dbxFormFieldTemplate username-login-field, password-field, verify-password-field
+ * @dbxFormConfigInterface DbxForgeUsernameLoginFieldsConfig
+ *
  * @example
  * ```typescript
- * const fields = dbxForgeUsernamePasswordLoginFields({ username: 'email' });
+ * dbxForgeUsernamePasswordLoginFields({ username: 'email', verifyPassword: true })
  * ```
  */
 export function dbxForgeUsernamePasswordLoginFields(config: DbxForgeUsernameLoginFieldsConfig) {
@@ -221,16 +248,23 @@ export function dbxForgeUsernamePasswordLoginFields(config: DbxForgeUsernameLogi
 }
 
 /**
- * Creates a single forge username field for a login form.
+ * Username field for login forms. Accepts `"email"` or `"username"` as shorthand presets, or a full config object.
  *
  * Supports email or plain text input based on the provided configuration.
  *
  * @param username - Either `'email'`, `'username'`, or a full config object
  * @returns A forge field definition for the username input
  *
+ * @dbxFormField
+ * @dbxFormSlug username-login-field
+ * @dbxFormProduces string
+ * @dbxFormArrayOutput no
+ * @dbxFormFieldDerivative text
+ * @dbxFormConfigInterface DbxForgeUsernameLoginFieldUsernameConfigInput
+ *
  * @example
  * ```typescript
- * const field = dbxForgeUsernameLoginField('email');
+ * dbxForgeUsernameLoginField({ username: 'email' })
  * ```
  */
 export function dbxForgeUsernameLoginField(username: DbxForgeUsernameLoginFieldUsernameConfigInput) {

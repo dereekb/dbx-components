@@ -10,6 +10,10 @@ import { ToJsDatePipe } from './tojsdate.pipe';
  * Otherwise, returns a human-readable distance string with suffix (e.g., "in 3 hours").
  * Returns the `unavailable` string when the input is falsy.
  *
+ * @dbxPipe
+ * @dbxPipeSlug time-countdown-distance
+ * @dbxPipeCategory date
+ * @dbxPipeRelated time-distance
  * @example
  * ```html
  * <span>{{ futureDate | timeCountdownDistance }}</span>
@@ -53,6 +57,10 @@ export class TimeDistanceCountdownPipe implements PipeTransform {
  * Uses date-fns {@link formatDistance} to produce output like "3 hours ago" or "in 2 days".
  * Returns the `unavailable` string when the input is falsy.
  *
+ * @dbxPipe
+ * @dbxPipeSlug time-distance
+ * @dbxPipeCategory date
+ * @dbxPipeRelated date-distance, time-countdown-distance
  * @example
  * ```html
  * <span>{{ someDate | timeDistance }}</span>

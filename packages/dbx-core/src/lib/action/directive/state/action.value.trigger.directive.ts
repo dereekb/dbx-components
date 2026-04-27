@@ -79,6 +79,11 @@ export abstract class AbstractDbxActionValueGetterDirective<T> {
  * Supports optional `isModified` and `isEqual` functions to control whether the retrieved
  * value should proceed to `readyValue` or be rejected.
  *
+ * @dbxAction
+ * @dbxActionSlug value-getter
+ * @dbxActionStateInteraction TRIGGERED, VALUE_READY
+ * @dbxActionConsumesContext
+ *
  * @example
  * ```html
  * <div dbxAction>

@@ -3,14 +3,18 @@ import { AbstractFilterSourceConnectorDirective } from './filter.abstract.connec
 import { provideFilterSource, provideFilterSourceConnector } from './filter.content';
 
 /**
- * Concrete directive that acts as both a {@link FilterSource} and {@link FilterSourceConnector}.
+ * Acts as both {@link FilterSource} and {@link FilterSourceConnector} — bridges a filter from one part of the template to another. Pair with `[dbxFilterConnectSource]` on the inner element that owns the source.
  *
- * Place on an element to bridge a filter source from one part of the template to another.
+ * @dbxFilter
+ * @dbxFilterSlug source-connector
+ * @dbxFilterRelated source, connect-source
+ * @dbxFilterSkillRefs dbx__ref__dbx-component-patterns
  *
  * @example
  * ```html
  * <div dbxFilterSourceConnector>
- *   <my-list-component></my-list-component>
+ *   <my-filter-form dbxFilterSource dbxFilterConnectSource></my-filter-form>
+ *   <my-list></my-list>
  * </div>
  * ```
  */

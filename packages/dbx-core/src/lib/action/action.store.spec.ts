@@ -1,4 +1,5 @@
-import { canReadyValue, ActionContextStore, ACTION_CONTEXT_STORE_LOCKSET_DESTROY_DELAY_TIME } from './action.store';
+import { canReadyValue, ActionContextStore, ACTION_CONTEXT_STORE_LOCKSET_DESTROY_DELAY_TIME, loadingStateForActionContextState, type ActionContextState } from './action.store';
+import { DbxActionState } from './action';
 import { of, first, timeout, delay } from 'rxjs';
 import { containsStringAnyCase } from '@dereekb/util';
 import { isLoadingStateInErrorState, isLoadingStateInSuccessState, isLoadingStateWithDefinedValue, isLoadingStateInIdleState, LoadingStateType, SubscriptionObject } from '@dereekb/rxjs';
@@ -6,6 +7,27 @@ import { TestBed } from '@angular/core/testing';
 import { Injector } from '@angular/core';
 import { callbackTest } from '@dereekb/util/test';
 import { newWithInjector } from '../injection/injector';
+
+function workingState(workProgress?: number | null): ActionContextState {
+  return { actionState: DbxActionState.WORKING, isModified: false, workProgress };
+}
+
+describe('loadingStateForActionContextState()', () => {
+  it('should include loadingProgress when workProgress is set', () => {
+    const result = loadingStateForActionContextState(workingState(50));
+    expect((result as { loadingProgress?: number }).loadingProgress).toBe(50);
+  });
+
+  it('should not include loadingProgress when workProgress is null', () => {
+    const result = loadingStateForActionContextState(workingState(null));
+    expect((result as { loadingProgress?: number }).loadingProgress).toBeUndefined();
+  });
+
+  it('should not include loadingProgress when workProgress is undefined', () => {
+    const result = loadingStateForActionContextState(workingState());
+    expect((result as { loadingProgress?: number }).loadingProgress).toBeUndefined();
+  });
+});
 
 describe('ActionContextStore', () => {
   let contextStore: ActionContextStore;

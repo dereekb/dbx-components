@@ -18,13 +18,18 @@ export const DEFAULT_LOADING_PROGRESS_DIAMETER = 96;
  * Supports both linear (bar) and circular (spinner) modes with configurable
  * diameter, color, and optional hint text below the indicator.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug loading-progress
+ * @dbxWebCategory feedback
+ * @dbxWebRelated loading, basic-loading
+ * @dbxWebSkillRefs dbx__ref__dbx-ui-building-blocks
+ * @dbxWebMinimalExample ```html
+ * <dbx-loading-progress></dbx-loading-progress>
+ * ```
+ *
  * @example
  * ```html
- * <!-- Indeterminate spinner -->
- * <dbx-loading-progress></dbx-loading-progress>
- *
- * <!-- Determinate linear bar at 75% -->
- * <dbx-loading-progress [linear]="true" mode="determinate" [value]="75" text="Uploading..."></dbx-loading-progress>
+ * <dbx-loading-progress mode="bar"></dbx-loading-progress>
  * ```
  */
 @Component({

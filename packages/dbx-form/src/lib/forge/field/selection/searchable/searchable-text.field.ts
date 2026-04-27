@@ -55,21 +55,24 @@ export interface DbxForgeSearchableTextFieldConfig<T = unknown, M = unknown, H e
 export type DbxForgeSearchableTextFieldFunction = <T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>(config: DbxForgeSearchableTextFieldConfig<T, M, H>) => DbxForgeField<DbxForgeSearchableTextFieldDef<T, M, H>>;
 
 /**
- * Creates a forge field definition for a searchable text field with autocomplete.
+ * Single-value autocomplete field with search-as-you-type. Optionally allows free-form typed strings as values.
  *
  * @param config - Searchable text field configuration
  * @returns A {@link DbxForgeFormFieldWrapperFieldDef} wrapping a searchable text field
  *
+ * @dbxFormField
+ * @dbxFormSlug searchable-text
+ * @dbxFormTier field-factory
+ * @dbxFormProduces T
+ * @dbxFormArrayOutput no
+ * @dbxFormNgFormType dbx-searchable-text
+ * @dbxFormWrapperPattern material-form-field-wrapped
+ * @dbxFormConfigInterface DbxForgeSearchableTextFieldConfig<T, M, H>
+ * @dbxFormGeneric <T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>
+ *
  * @example
  * ```typescript
- * const field = dbxForgeSearchableTextField({
- *   key: 'assignee',
- *   label: 'Assignee',
- *   props: {
- *     search: (text) => mySearchService.search(text),
- *     displayForValue: (values) => of(values.map(v => ({ ...v, label: v.meta?.name ?? '' })))
- *   }
- * });
+ * dbxForgeSearchableTextField<User>({ key: 'user', props: { search, displayForValue } })
  * ```
  */
 export const dbxForgeSearchableTextField = dbxForgeFieldFunction<DbxForgeSearchableTextFieldConfig>({

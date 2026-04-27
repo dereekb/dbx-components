@@ -13,20 +13,25 @@ export interface DbxForgePickableChipFieldConfig<T = unknown, M = unknown, H ext
 export type DbxForgePickableChipFieldFunction = <T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>(config: DbxForgePickableChipFieldConfig<T, M, H>) => DbxForgeField<DbxForgePickableChipFieldDef<T, M, H>>;
 
 /**
- * Creates a forge field definition for a pickable chip field.
+ * Selection field rendering selected values as Material chips. Defaults to multi-select; flip to single-select via the underlying props.
  *
  * @param config - Pickable chip field configuration
  * @returns A {@link DbxForgeFormFieldWrapperFieldDef} wrapping a pickable chip field
  *
+ * @dbxFormField
+ * @dbxFormSlug pickable-chip
+ * @dbxFormTier field-factory
+ * @dbxFormProduces T | T[]
+ * @dbxFormArrayOutput optional
+ * @dbxFormNgFormType dbx-pickable-chip
+ * @dbxFormWrapperPattern material-form-field-wrapped
+ * @dbxFormConfigInterface DbxForgePickableChipFieldConfig<T, M, H>
+ * @dbxFormPropsInterface DbxForgePickableFieldProps
+ * @dbxFormGeneric <T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>
+ *
  * @example
  * ```typescript
- * const field = dbxForgePickableChipField({
- *   key: 'tags',
- *   label: 'Tags',
- *   loadValues: () => tags$,
- *   displayForValue: (values) => of(values.map(v => ({ ...v, label: v.meta?.label ?? '' }))),
- *   hashForValue: (tag) => tag.id
- * });
+ * dbxForgePickableChipField<Tag>({ key: 'tags', label: 'Tags', props: { loadValues: () => loadTags$, displayForValue: displayTag } })
  * ```
  */
 export const dbxForgePickableChipField = dbxForgeFieldFunction<DbxForgePickableChipFieldConfig>({

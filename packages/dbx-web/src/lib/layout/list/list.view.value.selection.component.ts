@@ -87,9 +87,18 @@ export class DbxSelectionValueListViewContentComponent<T, I extends DbxValueList
  * Renders a selection-capable list view using a configuration input. Requires a parent {@link DbxListView} context.
  * Switches between selection mode (with checkboxes) and view mode (standard list) based on the parent's selection mode.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug selection-list-view
+ * @dbxWebCategory list
+ * @dbxWebRelated list, list-view
+ * @dbxWebSkillRefs dbx__ref__dbx-component-patterns
+ * @dbxWebMinimalExample ```html
+ * <dbx-selection-list-view [config]="rowConfig"></dbx-selection-list-view>
+ * ```
+ *
  * @example
  * ```html
- * <dbx-selection-list-view [config]="selectionListViewConfig"></dbx-selection-list-view>
+ * <dbx-selection-list-view [config]="rowConfig" selectionMode="multi"></dbx-selection-list-view>
  * ```
  */
 @Component({

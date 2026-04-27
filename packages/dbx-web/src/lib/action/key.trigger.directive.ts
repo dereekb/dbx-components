@@ -8,18 +8,18 @@ const DEFAULT_ACTION_KEY_TRIGGER = 'enter';
  * Triggers the parent action context when a specific keyboard key is released.
  * Defaults to the "enter" key. Key names should be lowercase.
  *
- * @example
- * ```html
- * <form [dbxAction]="saveAction" dbxActionKeyTrigger>
- *   <!-- Pressing Enter triggers the action -->
- * </form>
+ * @dbxWebComponent
+ * @dbxWebSlug action-key-trigger
+ * @dbxWebCategory action
+ * @dbxWebRelated action-confirm, action-snackbar
+ * @dbxWebSkillRefs dbx__ref__dbx-component-patterns
+ * @dbxWebMinimalExample ```html
+ * <div [dbxActionKeyTrigger]="'enter'"></div>
  * ```
  *
  * @example
  * ```html
- * <div [dbxAction]="searchAction" [dbxActionKeyTrigger]="'escape'">
- *   <!-- Pressing Escape triggers the action -->
- * </div>
+ * <form [dbxAction]="saveAction" [dbxActionKeyTrigger]="'cmd+s'">...</form>
  * ```
  */
 @Directive({

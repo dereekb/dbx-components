@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "uiComponents": {
+    "source": "@dereekb/dbx-web",
+    "module": "@dereekb/dbx-web",
+    "include": ["src/lib/**/*.ts"],
+    "exclude": ["**/*.spec.ts", "**/*.test.ts"],
+    "out": "../dbx-components-mcp/generated/dereekb-dbx-web.ui-components.mcp.generated.json"
+  }
+}

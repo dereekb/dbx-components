@@ -28,11 +28,25 @@ export interface DbxTwoColumnViewState {
  *
  * Requires a {@link TwoColumnsContextStore} to be provided by a parent component or directive.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug two-column
+ * @dbxWebCategory layout
+ * @dbxWebRelated two-column-right
+ * @dbxWebSkillRefs dbx__ref__dbx-ui-building-blocks, dbx__ref__dbx-app-structure
+ * @dbxWebMinimalExample ```html
+ * <dbx-two-column>
+ *   <div left>Sidebar</div>
+ *   <div right>Main</div>
+ * </dbx-two-column>
+ * ```
+ *
  * @example
  * ```html
- * <dbx-two-column [reverseSizing]="false" [inSectionPage]="true">
- *   <div left>Navigation sidebar</div>
- *   <div right>Main content area</div>
+ * <dbx-two-column [inSectionPage]="true">
+ *   <dbx-list left [state$]="state$" [config]="listConfig" />
+ *   <dbx-two-column-right right header="Detail">
+ *     <p>Selected item detail.</p>
+ *   </dbx-two-column-right>
  * </dbx-two-column>
  * ```
  */

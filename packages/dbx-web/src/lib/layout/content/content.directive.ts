@@ -3,14 +3,19 @@ import { Directive } from '@angular/core';
 /**
  * Sets the host element to fill the available page height. Use as a wrapper for page-level content blocks.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug content
+ * @dbxWebCategory layout
+ * @dbxWebRelated content-container, content-page, content-box
+ * @dbxWebSkillRefs dbx__ref__dbx-ui-building-blocks
+ * @dbxWebMinimalExample ```html
+ * <dbx-content>Body</dbx-content>
+ * ```
+ *
  * @example
  * ```html
- * <dbx-content>
- *   <p>This content fills the page height.</p>
- * </dbx-content>
- *
  * <div dbxContent>
- *   <p>Attribute usage on any element.</p>
+ *   <p>Standard content body</p>
  * </div>
  * ```
  */

@@ -177,9 +177,18 @@ export class DbxValueListViewContentComponent<T, I extends DbxValueListItem<T> =
 /**
  * Renders a value-based list view using a configuration input. Must be used within a parent {@link DbxListView} context.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug list-view
+ * @dbxWebCategory list
+ * @dbxWebRelated list, selection-list-view, list-grid-view, list-accordion-view
+ * @dbxWebSkillRefs dbx__ref__dbx-component-patterns
+ * @dbxWebMinimalExample ```html
+ * <dbx-list-view [config]="rowConfig"></dbx-list-view>
+ * ```
+ *
  * @example
  * ```html
- * <dbx-list-view [config]="listViewConfig"></dbx-list-view>
+ * <dbx-list-view [config]="rowConfig"></dbx-list-view>
  * ```
  */
 @Component({

@@ -165,9 +165,18 @@ export class DbxValueListGridViewContentComponent<T, I extends DbxValueListItem<
 /**
  * Renders a value list as a CSS grid using a configuration input. Requires a parent {@link DbxListView} context.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug list-grid-view
+ * @dbxWebCategory list
+ * @dbxWebRelated list, list-view
+ * @dbxWebSkillRefs dbx__ref__dbx-component-patterns
+ * @dbxWebMinimalExample ```html
+ * <dbx-list-grid-view [config]="cellConfig"></dbx-list-grid-view>
+ * ```
+ *
  * @example
  * ```html
- * <dbx-list-grid-view [config]="gridViewConfig"></dbx-list-grid-view>
+ * <dbx-list-grid-view [config]="cellConfig" dbxListGridSize="md"></dbx-list-grid-view>
  * ```
  */
 @Component({

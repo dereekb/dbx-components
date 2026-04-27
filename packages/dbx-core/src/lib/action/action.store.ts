@@ -145,7 +145,7 @@ export function loadingStateForActionContextState<O = unknown>(state: ActionCont
     case DbxActionState.TRIGGERED:
     case DbxActionState.VALUE_READY:
     case DbxActionState.WORKING:
-      loadingState = beginLoading(state.workProgress != null ? { loadingProgress: state.workProgress } : undefined);
+      loadingState = beginLoading(state.workProgress == null ? undefined : { loadingProgress: state.workProgress });
       break;
   }
 
@@ -237,6 +237,13 @@ export const ACTION_CONTEXT_STORE_LOCKSET_DESTROY_DELAY_TIME = 2000;
  * ```
  * IDLE/DISABLED -> TRIGGERED -> VALUE_READY -> WORKING -> RESOLVED | REJECTED
  * ```
+ *
+ * @dbxAction
+ * @dbxActionSlug action-context-store
+ * @dbxActionRole store
+ * @dbxActionDisabledKey dbx_action_disabled
+ * @dbxActionDisabledKey dbx_action_enforce_modified
+ * @dbxActionSkillRefs dbx__ref__dbx-component-patterns
  *
  * @typeParam T - The input value type provided after triggering.
  * @typeParam O - The output result type produced on resolution.

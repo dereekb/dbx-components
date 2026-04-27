@@ -8,6 +8,11 @@ import { type Maybe } from '../value/maybe.type';
 
 /**
  * Key in the claims.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-util:auth
  */
 export type AuthClaimKey = string;
 

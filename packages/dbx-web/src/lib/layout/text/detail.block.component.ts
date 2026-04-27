@@ -7,11 +7,19 @@ import { DbxDetailBlockHeaderComponent } from './detail.block.header.component';
  *
  * Use the `[header]` content slot for extra header-level content and default content for the detail area.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug detail-block
+ * @dbxWebCategory text
+ * @dbxWebRelated label-block
+ * @dbxWebSkillRefs dbx__ref__dbx-ui-building-blocks
+ * @dbxWebMinimalExample ```html
+ * <dbx-detail-block header="Label">Body</dbx-detail-block>
+ * ```
+ *
  * @example
  * ```html
- * <dbx-detail-block icon="person" header="User Info">
- *   <span header>Extra header content</span>
- *   <p>Detail content goes here.</p>
+ * <dbx-detail-block header="Email" icon="mail">
+ *   <p>{{ user.email }}</p>
  * </dbx-detail-block>
  * ```
  */

@@ -58,6 +58,8 @@ import { type NotificationItem, firestoreNotificationItem } from './notification
  * Used by both client and server code to access notification documents.
  *
  * @see `NotificationServerActions` in `@dereekb/firebase-server/model` for server-side action processing
+ *
+ * @dbxModelGroup Notification
  */
 export abstract class NotificationFirestoreCollections {
   abstract readonly notificationUserCollection: NotificationUserFirestoreCollection;
@@ -84,6 +86,8 @@ export interface InitializedNotificationModel {
    * True if this model needs to be sync'd/initialized with the original model.
    *
    * Is set false if/when "fi" is set true.
+   *
+   * @dbxModelVariable needsSync
    */
   s?: Maybe<NeedsSyncBoolean>;
   /**
@@ -92,6 +96,8 @@ export interface InitializedNotificationModel {
    * This is for cases where the model cannot be properly initiialized.
    *
    * NOTE: The server can also be configured to automatically delete these models instead of marking them as invalid.
+   *
+   * @dbxModelVariable flaggedInvalid
    */
   fi?: Maybe<SavedToFirestoreIfTrue>;
 }
@@ -112,10 +118,14 @@ export const notificationUserIdentity = firestoreModelIdentity('notificationUser
  *
  * @see {@link NotificationBoxRecipient} for the per-box recipient entry that mirrors these configs
  * @see `NotificationServerActions.updateNotificationUser` in `@dereekb/firebase-server/model` for server-side sync logic
+ *
+ * @dbxModel
  */
 export interface NotificationUser extends UserRelated, UserRelatedById {
   /**
    * Notification box IDs this user is subscribed to. Managed by the server — not directly editable by clients.
+   *
+   * @dbxModelVariable boxes
    */
   b: NotificationBoxId[];
   /**
@@ -126,28 +136,38 @@ export interface NotificationUser extends UserRelated, UserRelatedById {
    * Exclusions are synced to the corresponding `bc` configs, which then propagate to the NotificationBoxes.
    *
    * Non-matching entries (where the user isn't associated with a matching box) are automatically removed.
+   *
+   * @dbxModelVariable boxExclusions
    */
   x: NotificationBoxSendExclusionList;
   /**
    * Global config override. Overrides all other configs (both per-box `bc` and direct/default `dc`) at send time.
    *
    * Unlike `dc`/`bc`, changes to `gc` are NOT copied to other config fields — they apply as a final override during notification delivery.
+   *
+   * @dbxModelVariable globalConfig
    */
   gc: NotificationUserDefaultNotificationBoxRecipientConfig;
   /**
    * Direct/default config. Used when a recipient is added ad-hoc (by uid) to a notification that isn't associated with any of their subscribed boxes.
    *
    * Acts as the fallback config when no per-box config (`bc`) matches.
+   *
+   * @dbxModelVariable defaultConfig
    */
   dc: NotificationUserDefaultNotificationBoxRecipientConfig;
   /**
    * Per-box recipient configurations. Each entry corresponds to one of the user's subscribed notification boxes.
    *
    * These configs are synced bidirectionally with the {@link NotificationBoxRecipient} entries on the corresponding {@link NotificationBox}.
+   *
+   * @dbxModelVariable boxConfigs
    */
   bc: NotificationUserNotificationBoxRecipientConfig[];
   /**
    * Whether one or more configs need to be synced to their corresponding NotificationBox recipients.
+   *
+   * @dbxModelVariable needsConfigSync
    */
   ns?: Maybe<NeedsSyncBoolean>;
 }
@@ -237,34 +257,50 @@ export const NOTIFICATION_SUMMARY_EMBEDDED_NOTIFICATION_ITEM_MESSAGE_MAX_LENGTH 
  * Items are capped at {@link NOTIFICATION_SUMMARY_ITEM_LIMIT} entries.
  *
  * Implements {@link InitializedNotificationModel} — requires server-side initialization to populate the owner (`o`) field.
+ *
+ * @dbxModel
  */
 export interface NotificationSummary extends InitializedNotificationModel {
   /**
    * Creation date of this summary document.
+   *
+   * @dbxModelVariable createdAt
    */
   cat: Date;
   /**
    * Model key of the model this summary represents (e.g., `'project/abc123'`).
+   *
+   * @dbxModelVariable modelKey
    */
   m: FirestoreModelKey;
   /**
    * Owner model key. Set to a dummy value on creation and populated during server-side initialization.
+   *
+   * @dbxModelVariable ownerKey
    */
   o: FirestoreModelKey;
   /**
    * Embedded notification items, sorted ascending by date (newest at end).
+   *
+   * @dbxModelVariable notifications
    */
   n: NotificationItem[];
   /**
    * Timestamp of the most recently added notification item.
+   *
+   * @dbxModelVariable lastNotificationAt
    */
   lat?: Maybe<Date>;
   /**
    * Timestamp of when the user last read this summary. Items with dates after this are considered unread.
+   *
+   * @dbxModelVariable lastReadAt
    */
   rat?: Maybe<Date>;
   /**
    * Whether this summary needs server-side sync/initialization with its source model.
+   *
+   * @dbxModelVariable needsSync
    */
   s?: Maybe<NeedsSyncBoolean>;
 }
@@ -349,39 +385,55 @@ export const notificationBoxIdentity = firestoreModelIdentity('notificationBox',
  *
  * @see {@link NotificationBoxRecipient} for per-recipient configuration embedded in this document
  * @see `NotificationServerActions.createNotificationBox` in `@dereekb/firebase-server/model` for creation logic
+ *
+ * @dbxModel
  */
 export interface NotificationBox extends InitializedNotificationModel {
   /**
    * Creation date of this NotificationBox document.
+   *
+   * @dbxModelVariable createdAt
    */
   cat: Date;
   /**
    * Model key of the model this box is assigned to (e.g., `'project/abc123'`).
+   *
+   * @dbxModelVariable modelKey
    */
   m: FirestoreModelKey;
   /**
    * Owner model key. Set to a dummy value on creation and populated during server-side initialization.
+   *
+   * @dbxModelVariable ownerKey
    */
   o: FirestoreModelKey;
   /**
    * Embedded recipient entries. Each entry represents a user who can receive notifications from this box.
    *
    * Synced from the corresponding {@link NotificationUser} `bc` configs.
+   *
+   * @dbxModelVariable recipients
    */
   r: NotificationBoxRecipient[];
   /**
    * Year-week code of the latest {@link NotificationWeek} subcollection document.
+   *
+   * @dbxModelVariable latestWeek
    */
   w: YearWeekCode;
   /**
    * Whether this box needs server-side sync/initialization with its source model.
    * Cleared when `fi` is set true (flagged invalid).
+   *
+   * @dbxModelVariable needsSync
    */
   s?: Maybe<NeedsSyncBoolean>;
   /**
    * Flagged invalid — set when the box cannot be properly initialized (e.g., source model deleted).
    *
    * The server can be configured to either flag or auto-delete invalid boxes.
+   *
+   * @dbxModelVariable flaggedInvalid
    */
   fi?: Maybe<SavedToFirestoreIfTrue>;
 }
@@ -568,28 +620,43 @@ export enum NotificationRecipientSendFlag {
 export interface NotificationSendFlags {
   /**
    * Text/SMS send state.
+   *
+   * @dbxModelVariable textSendState
    */
   ts: NotificationSendState;
   /**
    * Email send state.
+   *
+   * @dbxModelVariable emailSendState
    */
   es: NotificationSendState;
   /**
    * Push notification send state.
+   *
+   * @dbxModelVariable pushSendState
    */
   ps: NotificationSendState;
   /**
    * In-app notification summary send state (delivery to {@link NotificationSummary}).
+   *
+   * @dbxModelVariable summarySendState
    */
   ns: NotificationSendState;
   /**
    * Recipient send flag controlling who receives this notification and whether it should be archived to {@link NotificationWeek} after delivery.
+   *
+   * @dbxModelVariable recipientSendFlag
    */
   rf?: Maybe<NotificationRecipientSendFlag>;
 }
 
 /**
  * Arbitrary unique string that denotes checkpoint progress for a multi-step task.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:notification
  */
 export type NotificationTaskCheckpointString = string;
 
@@ -602,16 +669,22 @@ export type NotificationTaskCheckpointString = string;
 export interface NotificationSendCheckpoints {
   /**
    * Phone numbers that have already received the text/SMS for this notification.
+   *
+   * @dbxModelVariable textRecipients
    */
   tsr: E164PhoneNumber[];
   /**
    * Email addresses that have already received the email for this notification.
+   *
+   * @dbxModelVariable emailRecipients
    */
   esr: EmailAddress[];
   /**
    * Completed checkpoint strings for multi-step task notifications.
    *
    * @see {@link NotificationTaskCheckpointString}
+   *
+   * @dbxModelVariable taskCheckpoints
    */
   tpr: NotificationTaskCheckpointString[];
 }
@@ -629,18 +702,26 @@ export interface NotificationSendCheckpoints {
  * @see {@link NotificationSendFlags} for per-channel delivery state
  * @see {@link NotificationSendCheckpoints} for idempotent retry tracking
  * @see `NotificationServerActions.sendQueuedNotifications` in `@dereekb/firebase-server/model` for the send pipeline
+ *
+ * @dbxModel
  */
 export interface Notification extends NotificationSendFlags, NotificationSendCheckpoints {
   /**
    * Creation timestamp.
+   *
+   * @dbxModelVariable createdAt
    */
   cat: Date;
   /**
    * Send type controlling how this notification interacts with its parent NotificationBox.
+   *
+   * @dbxModelVariable sendType
    */
   st: NotificationSendType;
   /**
    * Embedded notification content (subject, message, template type, metadata).
+   *
+   * @dbxModelVariable notificationItem
    */
   n: NotificationItem;
   /**
@@ -649,12 +730,16 @@ export interface Notification extends NotificationSendFlags, NotificationSendChe
    * Any `NotificationBoxRecipientTemplateConfig` values on these recipients affect opt-in/opt-out resolution.
    * For example, setting `st: true` opts a user into text/SMS for this notification's template type,
    * unless overridden by the user's own {@link NotificationUser} config.
+   *
+   * @dbxModelVariable recipients
    */
   r: NotificationRecipientWithConfig[];
   /**
    * Explicit opt-in send only. When true, only sends to users who have explicitly opted in for each channel.
    *
    * Overrides the system-level default for this notification's template type.
+   *
+   * @dbxModelVariable optInSendOnly
    */
   ois?: Maybe<SavedToFirestoreIfTrue>;
   /**
@@ -662,6 +747,8 @@ export interface Notification extends NotificationSendFlags, NotificationSendChe
    * (still respects explicit opt-outs).
    *
    * Overrides the system-level default for this notification's template type.
+   *
+   * @dbxModelVariable optInTextSend
    */
   ots?: Maybe<SavedToFirestoreIfFalse>;
   /**
@@ -669,22 +756,30 @@ export interface Notification extends NotificationSendFlags, NotificationSendChe
    *
    * Also serves as a lock mechanism: during active sending, `sat` is pushed forward by a few minutes
    * and the attempt counter is incremented, preventing concurrent send attempts.
+   *
+   * @dbxModelVariable sendAt
    */
   sat: Date;
   /**
    * Total error attempt count. Incremented only when sending encounters an error (not on success).
+   *
+   * @dbxModelVariable attempts
    */
   a: number;
   /**
    * Current task attempt count for the active checkpoint. Incremented on delay or failure responses.
    *
    * Reset to 0 when a checkpoint completes successfully or when a new checkpoint begins.
+   *
+   * @dbxModelVariable taskAttempts
    */
   at?: Maybe<number>;
   /**
    * Delivery complete flag. When true, content has been delivered and is ready to archive to {@link NotificationWeek}.
    *
    * For task-type notifications this is always false — tasks are deleted upon completion instead of archived.
+   *
+   * @dbxModelVariable done
    */
   d: boolean;
   /**
@@ -693,6 +788,8 @@ export interface Notification extends NotificationSendFlags, NotificationSendChe
    * When true, the server re-reads the document and compares `cat` before committing a task step.
    * If `cat` has changed (indicating the task was replaced), the step is abandoned silently.
    * This prevents stale task executions when a unique task ID is reused.
+   *
+   * @dbxModelVariable uniqueTask
    */
   ut?: Maybe<SavedToFirestoreIfTrue>;
 }
@@ -827,14 +924,20 @@ export const NOTIFICATION_WEEK_NOTIFICATION_ITEM_LIMIT = 5000;
  * a {@link Notification} completes delivery and is cleaned up. Capped at {@link NOTIFICATION_WEEK_NOTIFICATION_ITEM_LIMIT} items.
  *
  * Used for historical browsing of past notifications per box.
+ *
+ * @dbxModel
  */
 export interface NotificationWeek {
   /**
    * Year-week code identifying this week. Matches the document ID.
+   *
+   * @dbxModelVariable yearWeek
    */
   w: YearWeekCode;
   /**
    * Archived notification items delivered during this week.
+   *
+   * @dbxModelVariable notifications
    */
   n: NotificationItem[];
 }

@@ -25,19 +25,19 @@ export interface DbxLoadingComponentState {
  * track loading and error state from reactive streams. Also supports manual `loading`
  * and `error` inputs for simpler use cases.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug loading
+ * @dbxWebCategory feedback
+ * @dbxWebRelated basic-loading, loading-progress, error
+ * @dbxWebSkillRefs dbx__ref__dbx-component-patterns
+ * @dbxWebMinimalExample ```html
+ * <dbx-loading [state]="state$ | async">Body</dbx-loading>
+ * ```
+ *
  * @example
  * ```html
- * <!-- With a LoadingContext -->
- * <dbx-loading [context]="myLoadingContext$">
- *   <p>Data loaded successfully.</p>
- * </dbx-loading>
- *
- * <!-- With manual loading/error inputs -->
- * <dbx-loading [loading]="isLoading" [error]="loadError" linear [padding]="true">
- *   <p>Content here.</p>
- *   <ng-container error>
- *     <p>Custom error message.</p>
- *   </ng-container>
+ * <dbx-loading [state]="state$ | async" text="Loading items...">
+ *   <dbx-list [state$]="state$" [config]="listConfig"></dbx-list>
  * </dbx-loading>
  * ```
  */

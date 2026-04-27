@@ -15,14 +15,19 @@ export type DbxSectionPageScrollLockedMode = 'all' | 'body' | 'locked';
  * Supports nested section pages that retain proper fixed-height layout. Use for top-level
  * page content that needs a prominent heading.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug section-page
+ * @dbxWebCategory layout
+ * @dbxWebRelated section, content-page
+ * @dbxWebSkillRefs dbx__ref__dbx-ui-building-blocks, dbx__ref__dbx-app-structure
+ * @dbxWebMinimalExample ```html
+ * <dbx-section-page header="Page"><p>Body</p></dbx-section-page>
+ * ```
+ *
  * @example
  * ```html
- * <dbx-section-page header="Page Title" icon="dashboard">
- *   <p>Page content here.</p>
- * </dbx-section-page>
- *
- * <dbx-section-page header="Scrollable Body" scroll="body" hint="Only the body scrolls">
- *   <div style="height: 2000px">Tall content</div>
+ * <dbx-section-page header="Dashboard" icon="dashboard" scroll="body">
+ *   <p>Top-level page content.</p>
  * </dbx-section-page>
  * ```
  */

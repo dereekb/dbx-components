@@ -9,6 +9,10 @@ import { getTimezoneAbbreviation } from '@dereekb/date';
  * Defaults to the current date if no reference date is provided.
  * Returns `undefined` if the timezone is falsy.
  *
+ * @dbxPipe
+ * @dbxPipeSlug timezone-abbreviation
+ * @dbxPipeCategory date
+ * @dbxPipeRelated system-date-to-target-date, target-date-to-system-date
  * @example
  * ```html
  * <span>{{ 'America/New_York' | timezoneAbbreviation }}</span>

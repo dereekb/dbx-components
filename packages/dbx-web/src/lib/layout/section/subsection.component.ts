@@ -6,11 +6,20 @@ import { DbxSectionHeaderComponent } from './section.header.component';
  * Renders a subsection within a parent section, using a smaller heading (defaults to h4).
  * Useful for grouping related content under a `dbx-section`.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug subsection
+ * @dbxWebCategory layout
+ * @dbxWebRelated section, section-header
+ * @dbxWebSkillRefs dbx__ref__dbx-ui-building-blocks
+ * @dbxWebMinimalExample ```html
+ * <dbx-subsection header="Details"><p>Body</p></dbx-subsection>
+ * ```
+ *
  * @example
  * ```html
- * <dbx-section header="Parent Section">
- *   <dbx-subsection header="Details" icon="settings">
- *     <p>Subsection content here.</p>
+ * <dbx-section header="Settings">
+ *   <dbx-subsection header="Notifications" icon="notifications">
+ *     <p>Subsection body.</p>
  *   </dbx-subsection>
  * </dbx-section>
  * ```

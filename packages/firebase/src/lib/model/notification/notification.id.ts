@@ -174,6 +174,11 @@ export const DEFAULT_NOTIFICATION_TASK_NOTIFICATION_MODEL_KEY: FirestoreModelKey
  * Types are generally intended to be handled case-insensitively by notification services.
  *
  * Ideally type values are shorter to reduce database size impact.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:notification
  */
 export type NotificationTemplateType = string;
 
@@ -181,6 +186,11 @@ export type NotificationTemplateType = string;
  * Task type identifier of the notification, which is used to pass this task to the appropriate handler.
  *
  * Ideally type values are shorter to reduce database size impact.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:notification
  */
 export type NotificationTaskType = string;
 

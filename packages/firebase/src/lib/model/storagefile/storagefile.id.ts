@@ -31,6 +31,11 @@ export type StorageFileKey = FirestoreModelKey;
  * set on files that do not get processed.
  *
  * Can be used for querying.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:storage-file
  */
 export type StorageFilePurpose = string;
 
@@ -40,6 +45,11 @@ export type StorageFilePurpose = string;
  * This is useful for being able to query StorageFiles that have a specific purpose and purpose subgroup.
  *
  * Example use case: Documents with the same StorageFilePurpose/processing, but should only have a single StorageFile per subgroup.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:storage-file
  */
 export type StorageFilePurposeSubgroup = string;
 

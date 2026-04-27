@@ -17,6 +17,10 @@ export interface JsonSchemaRef {
 // MARK: MCP Types
 /**
  * A natural language summary of an MCP tool operation result.
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase-server:mcp
  */
 export type McpToolResponseSummary = string;
 

@@ -248,6 +248,11 @@ async function _performAsyncTask<I, O>(value: I, taskFn: PerformAsyncTaskFn<I, O
 // MARK: Parallel
 /**
  * Used as a key to identify the "group" that a task belongs to to prevent other concurrent tasks from that group from running in parallel when parallel execution is desired.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-util:concurrency
  */
 export type PerformTasksInParallelTaskUniqueKey = string;
 

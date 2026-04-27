@@ -33,7 +33,7 @@ export interface DbxForgeRowConfig extends Omit<RowField, 'type' | 'key'> {
 }
 
 /**
- * Creates a forge row layout field that arranges child fields horizontally.
+ * Flex row that lays child fields out in columns. Child fields typically carry a `col` property (1–12) for grid placement.
  *
  * Uses the `@ng-forge/dynamic-forms` `RowField` type with a 12-column grid system.
  * Each child field can specify a `col` value (1-12) for responsive sizing.
@@ -41,14 +41,17 @@ export interface DbxForgeRowConfig extends Omit<RowField, 'type' | 'key'> {
  * @param config - Row layout configuration with fields and optional className
  * @returns A {@link RowField} with type `'row'`
  *
+ * @dbxFormField
+ * @dbxFormSlug row
+ * @dbxFormTier primitive
+ * @dbxFormProduces RowField
+ * @dbxFormReturns RowField
+ * @dbxFormArrayOutput no
+ * @dbxFormConfigInterface DbxForgeRowConfig
+ *
  * @example
  * ```typescript
- * const row = dbxForgeRow({
- *   fields: [
- *     { ...dbxForgeTextField({ key: 'first', label: 'First' }), col: 6 },
- *     { ...dbxForgeTextField({ key: 'last', label: 'Last' }), col: 6 }
- *   ]
- * });
+ * dbxForgeRow({ fields: [ { ...dbxForgeTextField({ key: 'first' }), col: 6 }, { ...dbxForgeTextField({ key: 'last' }), col: 6 } ] })
  * ```
  */
 export function dbxForgeRow(config: DbxForgeRowConfig): RowField {
@@ -85,6 +88,14 @@ export interface DbxForgeGroupConfig extends Omit<GroupField, 'type'> {}
  *
  * @param config - Group configuration with fields and required key
  * @returns A {@link GroupField} with type `'group'`
+ *
+ * @dbxFormField
+ * @dbxFormSlug group
+ * @dbxFormTier primitive
+ * @dbxFormProduces GroupField
+ * @dbxFormReturns GroupField
+ * @dbxFormArrayOutput no
+ * @dbxFormConfigInterface DbxForgeGroupConfig
  *
  * @example
  * ```typescript
@@ -232,7 +243,7 @@ export interface DbxForgeToggleWrapperConfig {
 }
 
 /**
- * Creates a forge toggle wrapper that shows/hides content via a Material slide toggle.
+ * Wraps content fields in a Material slide toggle — the toggle state controls conditional visibility of the inner fields.
  *
  * Uses ng-forge's built-in `toggle` field type (MatSlideToggle) and
  * `FieldValueCondition` for conditional visibility. The toggle boolean value
@@ -251,6 +262,15 @@ export interface DbxForgeToggleWrapperConfig {
  *
  * @param config - Toggle wrapper configuration
  * @returns A {@link RowField} containing the toggle and content container
+ *
+ * @dbxFormField
+ * @dbxFormSlug toggle-wrapper
+ * @dbxFormTier composite-builder
+ * @dbxFormSuffix Wrapper
+ * @dbxFormProduces RowField
+ * @dbxFormArrayOutput no
+ * @dbxFormConfigInterface DbxForgeToggleWrapperConfig
+ * @dbxFormComposesFrom toggle, group
  *
  * @example
  * ```typescript
@@ -342,7 +362,7 @@ export interface DbxForgeExpandWrapperConfig {
 }
 
 /**
- * Creates a forge expand wrapper that shows/hides content via a button or text link.
+ * Wraps content fields behind a button or text "expand" control. Use for optional sections like "Show advanced options".
  *
  * Uses a custom `dbx-forge-expand` field type for the expand trigger and
  * `FieldValueCondition` for conditional visibility on the content. The
@@ -362,6 +382,15 @@ export interface DbxForgeExpandWrapperConfig {
  *
  * @param config - Expand wrapper configuration
  * @returns A {@link RowField} containing the expand control and content container
+ *
+ * @dbxFormField
+ * @dbxFormSlug expand-wrapper
+ * @dbxFormTier composite-builder
+ * @dbxFormSuffix Wrapper
+ * @dbxFormProduces RowField
+ * @dbxFormArrayOutput no
+ * @dbxFormConfigInterface DbxForgeExpandWrapperConfig
+ * @dbxFormComposesFrom group
  *
  * @example
  * ```typescript

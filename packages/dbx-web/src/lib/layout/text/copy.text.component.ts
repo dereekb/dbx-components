@@ -9,10 +9,18 @@ import { MatIcon } from '@angular/material/icon';
  *
  * Clicking the text or the icon copies the text to the clipboard and optionally shows a snackbar confirmation.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug click-to-copy-text
+ * @dbxWebCategory text
+ * @dbxWebRelated chip
+ * @dbxWebSkillRefs dbx__ref__dbx-ui-building-blocks
+ * @dbxWebMinimalExample ```html
+ * <dbx-click-to-copy-text [text]="value"></dbx-click-to-copy-text>
+ * ```
+ *
  * @example
  * ```html
- * <dbx-click-to-copy-text copyText="some-value">some-value</dbx-click-to-copy-text>
- * <dbx-click-to-copy-text [clickIconToCopyOnly]="true">Click icon only</dbx-click-to-copy-text>
+ * <dbx-click-to-copy-text [text]="userId"></dbx-click-to-copy-text>
  * ```
  */
 @Component({

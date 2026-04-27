@@ -8,6 +8,10 @@ import { type DateRange, formatDateDistance } from '@dereekb/date';
  * This is an impure pipe that recalculates on every change detection cycle to keep the distance up to date.
  * Returns a fallback string when the input is `null` or `undefined`.
  *
+ * @dbxPipe
+ * @dbxPipeSlug date-range-distance
+ * @dbxPipeCategory date
+ * @dbxPipeRelated date-distance
  * @example
  * ```html
  * <span>{{ someDate | dateRangeDistance }}</span>

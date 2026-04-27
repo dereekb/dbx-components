@@ -35,12 +35,18 @@ interface DbxErrorComponentState {
  * with an icon and message, or a custom error widget registered via {@link DbxErrorWidgetService}.
  * Clicking the error icon opens a popover with detailed error information.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug error
+ * @dbxWebCategory feedback
+ * @dbxWebRelated error-snackbar, error-view, loading
+ * @dbxWebSkillRefs dbx__ref__dbx-component-patterns
+ * @dbxWebMinimalExample ```html
+ * <dbx-error [error]="error"></dbx-error>
+ * ```
+ *
  * @example
  * ```html
- * <dbx-error [error]="myError"></dbx-error>
- *
- * <!-- Icon-only mode, no message text -->
- * <dbx-error [error]="myError" [iconOnly]="true"></dbx-error>
+ * <dbx-error [error]="error$ | async"></dbx-error>
  * ```
  */
 @Component({

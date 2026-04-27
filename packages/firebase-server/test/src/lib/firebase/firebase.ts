@@ -7,6 +7,10 @@ let adminEnvironmentInitialized = false;
  * ```ts
  * const host: FirebaseAdminTestEnvironmentHost = 'localhost:8080';
  * ```
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase-server:test
  */
 export type FirebaseAdminTestEnvironmentHost = string;
 

@@ -16,6 +16,11 @@ export const FIREBASE_AUTH_PASSWORD_MAX_LENGTH = 128;
 
 /**
  * Unique identifier for a Firebase Authentication user (the `uid` from Firebase Auth).
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:auth
  */
 export type FirebaseAuthUserId = string;
 
@@ -30,6 +35,10 @@ export interface FirebaseAuthUserIdRef {
  * Raw encoded JWT for Firebase Auth.
  *
  * Corresponds with IdToken type in Firebase Auth.
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:auth
  */
 export type FirebaseAuthIdToken = string;
 
@@ -73,6 +82,11 @@ export interface FirebaseAuthDetails extends FirebaseAuthToken, Readonly<Firebas
  * A string key used to test for ownership of a particular set of objects.
  *
  * For instance, a database model (or its parent) may have an ownership key associated with it that is compared with the user's current claims.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:auth
  */
 export type FirebaseAuthOwnershipKey = string;
 

@@ -17,6 +17,11 @@ export const FINAL_PAGE = -2;
 
 /**
  * Numeric page identifier.
+ *
+ * @semanticType
+ * @semanticTopic numeric
+ * @semanticTopic reference
+ * @semanticTopic dereekb-util:pagination
  */
 export type PageNumber = number;
 

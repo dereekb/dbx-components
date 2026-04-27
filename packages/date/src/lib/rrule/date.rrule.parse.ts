@@ -5,11 +5,19 @@ import { type DateTimezoneBaseDateConverter, DateTimezoneUtcNormalInstance } fro
 
 /**
  * Denotes a single RRule rules string.
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-date:rrule
  */
 export type RRuleLineString = string;
 
 /**
  * RRule property name. i.e. DTSTART, RRULE, etc.
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-date:rrule
  */
 export type RRulePropertyType = string;
 
@@ -17,11 +25,19 @@ export type RRulePropertyType = string;
  * Set of RRuleParams, separated by a ";".
  *
  * The first value in this set is the Type of RRule.
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-date:rrule
  */
 export type RRuleRawParamSetString = string;
 
 /**
  * Single Param string. Formatted as <ParamName>=<ParamValue>
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-date:rrule
  */
 export type RRuleRawParamString = string;
 
@@ -32,6 +48,10 @@ export type RRuleRawValueSetString = CommaSeparatedString;
 
 /**
  * A single raw value from an RRule value set.
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-date:rrule
  */
 export type RRuleRawValueString = string;
 
@@ -67,6 +87,10 @@ export type RRuleStringLineSet = RRuleLineString[];
 
 /**
  * RFC string for an RRuleStringLineSet.
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-date:rrule
  */
 export type RRuleLines = string;
 
@@ -74,6 +98,11 @@ export type RRuleLines = string;
  * Date formatted like "20210611".
  *
  * https://datatracker.ietf.org/doc/html/rfc5545#section-3.3.4
+ *
+ * @semanticType
+ * @semanticTopic date
+ * @semanticTopic string
+ * @semanticTopic dereekb-date:rrule
  */
 export type RFC5545DateString = string;
 
@@ -81,6 +110,11 @@ export type RFC5545DateString = string;
  * Date formatted like "20210611T110000" or "20210611T110000Z".
  *
  * https://datatracker.ietf.org/doc/html/rfc5545#section-3.3.5
+ *
+ * @semanticType
+ * @semanticTopic date
+ * @semanticTopic string
+ * @semanticTopic dereekb-date:rrule
  */
 export type RFC5545DateTimeString = string;
 

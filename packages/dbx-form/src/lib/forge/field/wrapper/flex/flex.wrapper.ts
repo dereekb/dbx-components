@@ -84,6 +84,15 @@ function isFlexFieldConfig(input: FieldDef<unknown> | DbxForgeFlexLayoutFieldCon
  * @param config - Flex layout defaults including breakpoint, relative sizing, and default size
  * @returns A {@link ContainerField} with the flex wrapper applied and sized children
  *
+ * @dbxFormField
+ * @dbxFormSlug flex-layout
+ * @dbxFormTier composite-builder
+ * @dbxFormSuffix Layout
+ * @dbxFormProduces GroupField
+ * @dbxFormArrayOutput no
+ * @dbxFormConfigInterface DbxForgeFlexLayoutConfig
+ * @dbxFormComposesFrom group
+ *
  * @example
  * ```typescript
  * // Simple: all fields get default size (2)

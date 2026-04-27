@@ -42,16 +42,22 @@ export interface DbxForgeStyleWrapper {
 }
 
 /**
- * Creates a style wrapper config for use in a field's `wrappers` array.
+ * Style wrapper config — applies dynamic CSS classes (`ngClass`) and/or inline styles (`ngStyle`) to any field via its `wrappers: []`.
  *
  * @param config - the style wrapper configuration without the `type` property
  * @returns a complete {@link DbxForgeStyleWrapper} config with the type set
  *
+ * @dbxFormField
+ * @dbxFormSlug style-wrapper
+ * @dbxFormTier primitive
+ * @dbxFormProduces WrapperConfig
+ * @dbxFormReturns WrapperConfig
+ * @dbxFormArrayOutput no
+ * @dbxFormConfigInterface DbxForgeStyleWrapper
+ *
  * @example
  * ```typescript
- * dbxForgeNameField({
- *   wrappers: [dbxForgeStyleWrapper({ classGetter: 'highlight', styleGetter: { color: 'red' } })]
- * })
+ * dbxForgeStyleWrapper({ classGetter: 'highlighted' })
  * ```
  */
 export function dbxForgeStyleWrapper(config: Omit<DbxForgeStyleWrapper, 'type'>): DbxForgeStyleWrapper {

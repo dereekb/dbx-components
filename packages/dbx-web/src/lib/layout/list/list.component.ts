@@ -121,11 +121,18 @@ export const DBX_LIST_DEFAULT_THROTTLE_SCROLL = 50;
  *
  * This component is typically wrapped by a higher-level component that provides its configuration via the `config` input.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug list
+ * @dbxWebCategory list
+ * @dbxWebRelated list-view, list-empty-content, list-grid-view, list-accordion-view, selection-list-view
+ * @dbxWebSkillRefs dbx__ref__dbx-component-patterns
+ * @dbxWebMinimalExample ```html
+ * <dbx-list [state$]="items$" [config]="listConfig"></dbx-list>
+ * ```
+ *
  * @example
  * ```html
- * <dbx-list [state]="listState$" [config]="listConfig" [disabled]="isDisabled" [selectionMode]="'select'">
- *   <ng-container empty>No items found.</ng-container>
- * </dbx-list>
+ * <dbx-list [state$]="items$" [config]="listConfig" (contentScrolled)="onScroll($event)"></dbx-list>
  * ```
  */
 @Component({

@@ -16,6 +16,11 @@ import { cleanSubscriptionWithLockSet } from '../../../rxjs';
  * The input filters out null/undefined values, waiting until a non-null value is provided.
  * If you need to pass null/undefined as valid action values, use {@link DbxActionValueTriggerDirective} instead.
  *
+ * @dbxAction
+ * @dbxActionSlug value
+ * @dbxActionStateInteraction TRIGGERED, VALUE_READY
+ * @dbxActionConsumesContext
+ *
  * @example
  * ```html
  * <div dbxAction>

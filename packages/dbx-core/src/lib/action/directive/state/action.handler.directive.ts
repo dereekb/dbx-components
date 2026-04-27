@@ -35,6 +35,12 @@ export abstract class AbstractDbxActionHandlerDirective<T = unknown, O = unknown
  * called with the value and a work context. The work function is responsible for performing
  * the async operation and signaling success or failure through the context.
  *
+ * @dbxAction
+ * @dbxActionSlug handler
+ * @dbxActionStateInteraction VALUE_READY, WORKING, RESOLVED, REJECTED
+ * @dbxActionConsumesContext
+ * @dbxActionSkillRefs dbx__ref__dbx-component-patterns, dbx__guide__action-analytics
+ *
  * @example
  * ```html
  * <div dbxAction>
@@ -66,6 +72,11 @@ export class DbxActionHandlerDirective<T = unknown, O = unknown> extends Abstrac
  * Unlike {@link DbxActionHandlerDirective}, this does not require a full {@link Work} function.
  * The provided value (or the result of calling the getter/factory) is used directly as the
  * action's result, with the working/success lifecycle handled automatically.
+ *
+ * @dbxAction
+ * @dbxActionSlug handler-value
+ * @dbxActionStateInteraction VALUE_READY, WORKING, RESOLVED
+ * @dbxActionConsumesContext
  *
  * @example
  * ```html

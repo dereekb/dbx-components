@@ -3,24 +3,47 @@ import { cutToPrecision } from './round';
 
 /**
  * Whole dollar amounts, before the ','.
+ *
+ * @semanticType
+ * @semanticTopic currency
+ * @semanticTopic numeric
  */
 export type WholeDollarAmount = number;
 
 /**
  * Dollar amount number.
+ *
+ * @semanticType
+ * @semanticTopic currency
+ * @semanticTopic numeric
  */
 export type DollarAmount = number;
 
 /**
  * Dollars amount number per hour.
+ *
+ * @semanticType
+ * @semanticTopic currency
+ * @semanticTopic numeric
  */
 export type DollarAmountPerHour = number;
 
 /**
  * Dollars amount number per day.
+ *
+ * @semanticType
+ * @semanticTopic currency
+ * @semanticTopic numeric
  */
 export type DollarAmountPerDay = number;
 
+/**
+ * Amount in whole cents.
+ *
+ * @semanticType
+ * @semanticTopic currency
+ * @semanticTopic numeric
+ */
 export type CentsAmount = number;
 
 export interface DollarsPair {
@@ -30,6 +53,10 @@ export interface DollarsPair {
 
 /**
  * Unit to affix to a dollar amount string.
+ *
+ * @semanticType
+ * @semanticTopic currency
+ * @semanticTopic string
  */
 export type DollarAmountUnit = string;
 
@@ -37,6 +64,10 @@ export type DollarAmountUnit = string;
  * String representing a dollar amount.
  *
  * Is formatted as a number with two decimal places. No unit is affixed.
+ *
+ * @semanticType
+ * @semanticTopic currency
+ * @semanticTopic string
  */
 export type DollarAmountString = string;
 

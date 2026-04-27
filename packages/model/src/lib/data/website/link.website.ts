@@ -142,6 +142,14 @@ export const FACEBOOK_WEBSITE_LINK_TYPE: WebsiteLinkType = 'fb';
 
 export type FacebookBaseUrl = typeof FACEBOOK_BASE_URL;
 export type FacebookProfileUrl<P extends FacebookProfileId> = `${FacebookBaseUrl}/${P}`;
+/**
+ * Facebook profile identifier.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-model:social
+ */
 export type FacebookProfileId = string;
 export type FacebookWebsiteLinkType = typeof FACEBOOK_WEBSITE_LINK_TYPE;
 
@@ -191,6 +199,14 @@ export const INSTAGRAM_WEBSITE_LINK_TYPE: WebsiteLinkType = 'ig';
 
 export type InstagramBaseUrl = typeof INSTAGRAM_BASE_URL;
 export type InstagramProfileUrl<P extends InstagramProfileId> = `${InstagramBaseUrl}/${P}`;
+/**
+ * Instagram profile identifier.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-model:social
+ */
 export type InstagramProfileId = string;
 export type InstagramWebsiteLinkType = typeof INSTAGRAM_WEBSITE_LINK_TYPE;
 
@@ -229,6 +245,14 @@ export const TWITTER_WEBSITE_LINK_TYPE: WebsiteLinkType = 'tw';
 
 export type TwitterBaseUrl = typeof TWITTER_BASE_URL;
 export type TwitterProfileUrl<P extends TwitterProfileId> = `${TwitterBaseUrl}/${P}`;
+/**
+ * Twitter/X profile identifier.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-model:social
+ */
 export type TwitterProfileId = string;
 export type TwitterWebsiteLinkType = typeof TWITTER_WEBSITE_LINK_TYPE;
 
@@ -271,6 +295,14 @@ export const TIKTOK_WEBSITE_LINK_TYPE: WebsiteLinkType = 'tt';
 
 export type TikTokBaseUrl = typeof TIKTOK_BASE_URL;
 export type TikTokProfileUrl<P extends TikTokProfileId> = `${TikTokBaseUrl}/@${P}`;
+/**
+ * TikTok profile identifier.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-model:social
+ */
 export type TikTokProfileId = string;
 
 export type TikTokWebsiteLinkType = typeof TIKTOK_WEBSITE_LINK_TYPE;
@@ -312,6 +344,14 @@ export const SNAPCHAT_WEBSITE_LINK_TYPE: WebsiteLinkType = 'sc';
 
 export type SnapchatBaseUrl = typeof SNAPCHAT_BASE_URL;
 export type SnapchatProfileUrl<P extends SnapchatProfileId> = `${SnapchatBaseUrl}/add/${P}`;
+/**
+ * Snapchat profile identifier.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-model:social
+ */
 export type SnapchatProfileId = string;
 
 export type SnapchatWebsiteLinkType = typeof SNAPCHAT_WEBSITE_LINK_TYPE;
@@ -363,6 +403,14 @@ export const YOUTUBE_WEBSITE_LINK_TYPE: WebsiteLinkType = 'yt';
 
 export type YouTubeBaseUrl = typeof YOUTUBE_BASE_URL;
 export type YouTubeProfileUrl<P extends YouTubeProfileId> = `${YouTubeBaseUrl}/c/${P}`;
+/**
+ * YouTube profile identifier.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-model:social
+ */
 export type YouTubeProfileId = string;
 
 export type YouTubeWebsiteLinkType = typeof YOUTUBE_WEBSITE_LINK_TYPE;
@@ -414,6 +462,14 @@ export const PAYPAL_WEBSITE_LINK_TYPE: WebsiteLinkType = 'pp';
 
 export type PayPalBaseUrl = typeof PAYPAL_BASE_URL;
 export type PayPalProfileUrl<P extends PayPalProfileId> = `${PayPalBaseUrl}/${P}`;
+/**
+ * PayPal profile identifier.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-model:social
+ */
 export type PayPalProfileId = string;
 
 export type PayPalWebsiteLinkType = typeof PAYPAL_WEBSITE_LINK_TYPE;
@@ -457,6 +513,14 @@ export const CASHAPP_WEBSITE_LINK_TYPE: WebsiteLinkType = 'ca';
 
 export type CashappBaseUrl = typeof CASHAPP_BASE_URL;
 export type CashappProfileUrl<P extends CashappProfileId> = `${CashappBaseUrl}/$${P}`;
+/**
+ * Cash App profile identifier.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-model:social
+ */
 export type CashappProfileId = string;
 
 export type CashappWebsiteLinkType = typeof CASHAPP_WEBSITE_LINK_TYPE;
@@ -498,6 +562,14 @@ export const VENMO_WEBSITE_LINK_TYPE: WebsiteLinkType = 'vn';
 
 export type VenmoBaseUrl = typeof VENMO_BASE_URL;
 export type VenmoProfileUrl<P extends VenmoProfileId> = `${VenmoBaseUrl}/u/${P}`;
+/**
+ * Venmo profile identifier.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-model:social
+ */
 export type VenmoProfileId = string;
 
 export type VenmoWebsiteLinkType = typeof VENMO_WEBSITE_LINK_TYPE;
@@ -549,6 +621,14 @@ export const SPOTIFY_WEBSITE_LINK_TYPE: WebsiteLinkType = 'sp';
 
 export type SpotifyBaseUrl = typeof SPOTIFY_BASE_URL;
 export type SpotifyProfileUrl<P extends SpotifyProfileId> = `${SpotifyBaseUrl}/user/${P}`;
+/**
+ * Spotify profile identifier.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-model:social
+ */
 export type SpotifyProfileId = string;
 
 export type SpotifyWebsiteLinkType = typeof SPOTIFY_WEBSITE_LINK_TYPE;

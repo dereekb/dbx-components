@@ -4,11 +4,18 @@ import { type Maybe } from '@dereekb/util';
 /**
  * Displays a label header above projected content, useful for labeling form fields or data sections.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug label-block
+ * @dbxWebCategory text
+ * @dbxWebRelated detail-block
+ * @dbxWebSkillRefs dbx__ref__dbx-ui-building-blocks
+ * @dbxWebMinimalExample ```html
+ * <dbx-label-block header="Label">Body</dbx-label-block>
+ * ```
+ *
  * @example
  * ```html
- * <dbx-label-block header="Email">
- *   <span>user@example.com</span>
- * </dbx-label-block>
+ * <dbx-label-block header="Status"><span>Active</span></dbx-label-block>
  * ```
  */
 @Component({

@@ -18,21 +18,24 @@ export type DbxForgeChecklistFieldFunction = <T = unknown>(config: DbxForgeCheck
 export type ForgeChecklistFieldFunction = DbxForgeChecklistFieldFunction;
 
 /**
- * Creates a forge field definition for a Material multi-checkbox (checklist) field.
+ * Multi-checkbox group. Use for small static option sets where every option is visible at once.
  *
  * @param config - Checklist field configuration
  * @returns A validated {@link MatMultiCheckboxField} with type `'multi-checkbox'`
  *
+ * @dbxFormField
+ * @dbxFormSlug checklist
+ * @dbxFormTier field-factory
+ * @dbxFormProduces T[]
+ * @dbxFormArrayOutput yes
+ * @dbxFormNgFormType multi-checkbox
+ * @dbxFormWrapperPattern unwrapped
+ * @dbxFormConfigInterface DbxForgeChecklistFieldConfig<T>
+ * @dbxFormGeneric <T = unknown>
+ *
  * @example
  * ```typescript
- * const field = dbxForgeChecklistField({
- *   key: 'tags',
- *   label: 'Tags',
- *   options: [
- *     { label: 'Frontend', value: 'frontend' },
- *     { label: 'Backend', value: 'backend' }
- *   ]
- * });
+ * dbxForgeChecklistField<string>({ key: 'flags', props: { options: [{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }] } })
  * ```
  */
 export const dbxForgeChecklistField = dbxForgeFieldFunction<DbxForgeChecklistFieldConfig>({

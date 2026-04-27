@@ -5,6 +5,10 @@ import { isDate } from './date';
  * This value is in seconds since the Epoch.
  *
  * Use UnixDateTimeMillisecondsNumber instead if you need milliseconds.
+ *
+ * @semanticType
+ * @semanticTopic time
+ * @semanticTopic numeric
  */
 export type UnixDateTimeSecondsNumber = number;
 

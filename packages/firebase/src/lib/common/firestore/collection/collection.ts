@@ -42,6 +42,11 @@ export type FirestoreModelType = ModelTypeString;
  * with the same name to be returned regardless of their location in the document hierarchy.
  *
  * @example 'u', 'ps', 'or'
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:firestore
  */
 export type FirestoreCollectionName = string;
 
@@ -303,6 +308,11 @@ export interface FirestoreModelIdentityRef<I extends FirestoreModelIdentity = Fi
  * Example:
  *
  * 12345
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:firestore
  */
 export type FirestoreModelId = string;
 
@@ -611,6 +621,11 @@ export function firestoreModelKeyPairObject(input: FirestoreModelKey | DocumentR
  * String that is composed of the FirestoreCollectionNames derived from an input FirestoreModelKey and joined together via a separator.
  *
  * Is equivalent to a FirestoreCollectionType if the FIRESTORE_COLLECTION_NAME_SEPARATOR is used as the separator.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:firestore
  */
 export type FirestoreModelCollectionTypeArrayName = string;
 

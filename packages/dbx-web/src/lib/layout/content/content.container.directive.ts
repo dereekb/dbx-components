@@ -14,15 +14,20 @@ export type DbxContentContainerWidth = 'small' | 'medium' | 'large' | 'wide' | '
  * Constrains content to a maximum width with configurable padding. Useful for centering
  * page content and maintaining readable line lengths.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug content-container
+ * @dbxWebCategory layout
+ * @dbxWebRelated content, content-page, content-box
+ * @dbxWebSkillRefs dbx__ref__dbx-ui-building-blocks
+ * @dbxWebMinimalExample ```html
+ * <div dbxContentContainer>Body</div>
+ * ```
+ *
  * @example
  * ```html
- * <dbx-content-container grow="medium" padding="small">
- *   <p>Centered content with medium max-width.</p>
+ * <dbx-content-container grow="full" padding="normal">
+ *   <p>Page body</p>
  * </dbx-content-container>
- *
- * <div dbxContentContainer grow="full" padding="none" topPadding="small">
- *   <p>Full-width content with top padding.</p>
- * </div>
  * ```
  */
 @Directive({

@@ -37,22 +37,24 @@ export interface DbxForgeSearchableChipFieldConfig<T = unknown, M = unknown, H e
 export type DbxForgeSearchableChipFieldFunction = <T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>(config: DbxForgeSearchableChipFieldConfig<T, M, H>) => DbxForgeField<DbxForgeSearchableChipFieldDef<T, M, H>>;
 
 /**
- * Creates a forge field definition for a searchable chip field with autocomplete and chips.
+ * Multi-value autocomplete with chips. Defaults to multi-select; supports free-form text entry when `allowStringValues` is set.
  *
  * @param config - Searchable chip field configuration
  * @returns A {@link DbxForgeFormFieldWrapperFieldDef} wrapping a searchable chip field
  *
+ * @dbxFormField
+ * @dbxFormSlug searchable-chip
+ * @dbxFormTier field-factory
+ * @dbxFormProduces T | T[]
+ * @dbxFormArrayOutput optional
+ * @dbxFormNgFormType dbx-searchable-chip
+ * @dbxFormWrapperPattern material-form-field-wrapped
+ * @dbxFormConfigInterface DbxForgeSearchableChipFieldConfig<T, M, H>
+ * @dbxFormGeneric <T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>
+ *
  * @example
  * ```typescript
- * const field = dbxForgeSearchableChipField({
- *   key: 'tags',
- *   label: 'Tags',
- *   props: {
- *     search: (text) => tagService.search(text),
- *     displayForValue: (values) => of(values.map(v => ({ ...v, label: v.meta?.name ?? '' }))),
- *     allowStringValues: true
- *   }
- * });
+ * dbxForgeSearchableChipField<Tag>({ key: 'tags', props: { search, displayForValue } })
  * ```
  */
 export const dbxForgeSearchableChipField = dbxForgeFieldFunction<DbxForgeSearchableChipFieldConfig>({
@@ -75,13 +77,27 @@ export type DbxForgeSearchableStringChipFieldConfig<M = unknown> = Omit<DbxForge
 };
 
 /**
- * Creates a forge searchable chip field pre-configured for string values.
+ * String-value specialization of `searchable-chip`. `allowStringValues` is forced true — use for free-form tag entry.
  *
  * Always sets `allowStringValues: true` on the inner field props so pressing Enter
  * (or typing a separator key) commits the typed value as a chip.
  *
  * @param config - String-specific searchable chip field configuration (omits allowStringValues)
  * @returns A {@link DbxForgeFormFieldWrapperFieldDef} wrapping a searchable chip field
+ *
+ * @dbxFormField
+ * @dbxFormSlug searchable-string-chip
+ * @dbxFormTier field-factory
+ * @dbxFormProduces string | string[]
+ * @dbxFormArrayOutput optional
+ * @dbxFormNgFormType dbx-searchable-chip
+ * @dbxFormWrapperPattern material-form-field-wrapped
+ * @dbxFormConfigInterface DbxForgeSearchableStringChipFieldConfig
+ *
+ * @example
+ * ```typescript
+ * dbxForgeSearchableStringChipField({ key: 'tags', props: { search, displayForValue } })
+ * ```
  */
 export function dbxForgeSearchableStringChipField<M = unknown>(config: DbxForgeSearchableStringChipFieldConfig<M>) {
   return dbxForgeSearchableChipField<string, M>({

@@ -9,6 +9,10 @@ export type ThrowErrorFunction<T = unknown> = (error: T) => never | void;
 
 /**
  * A unique identifier for a specific error.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
  */
 export type StringErrorCode = string;
 

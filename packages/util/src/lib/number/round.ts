@@ -41,6 +41,10 @@ export type RoundingInput = NumberRounding | RoundingFunction;
 // MARK: Precision
 /**
  * The number of decimal places ot use.
+ *
+ * @semanticType
+ * @semanticTopic numeric
+ * @semanticTopic measurement
  */
 export type NumberPrecision = number;
 
@@ -157,11 +161,17 @@ export function cutToPrecision(value: number, precision: NumberPrecision): numbe
 // MARK: Steps
 /**
  * Number used to increase or decrease by the "step" value. When used in rounding the steps are aligned at a StepOrigin.
+ *
+ * @semanticType
+ * @semanticTopic numeric
  */
 export type StepNumber = number;
 
 /**
  * Origin value for StepNumbers that is used as an offset for input. Is usually 0.
+ *
+ * @semanticType
+ * @semanticTopic numeric
  */
 export type StepOrigin = number;
 

@@ -1,5 +1,6 @@
 import { type NotificationTaskService, type NotificationTaskServiceTaskHandlerConfig, type StorageFileProcessingPurposeSubtaskProcessorConfig, notificationTaskService, storageFileProcessingNotificationTaskHandler } from '@dereekb/firebase-server/model';
 import { type DemoFirebaseServerActionsContext } from '../../firebase/action.context';
+import { demoExampleHandledNotificationTaskHandler } from './handlers/task.handler.example.handled';
 import {
   ALL_NOTIFICATION_TASK_TYPES,
   EXAMPLE_NOTIFICATION_TASK_PART_A_COMPLETE_VALUE,
@@ -129,8 +130,9 @@ export function demoNotificationTaskServiceFactory(demoFirebaseServerActionsCont
   };
 
   const storageFileHandler = demoStorageFileProcessingNotificationTaskHandler(demoFirebaseServerActionsContext);
+  const exampleHandledHandler = demoExampleHandledNotificationTaskHandler(demoFirebaseServerActionsContext);
 
-  const handlers: NotificationTaskServiceTaskHandlerConfig<any>[] = [exampleNotificationTaskHandler, exampleUniqueNotificationTaskHandler, storageFileHandler];
+  const handlers: NotificationTaskServiceTaskHandlerConfig<any>[] = [exampleNotificationTaskHandler, exampleUniqueNotificationTaskHandler, storageFileHandler, exampleHandledHandler];
 
   const notificationSendService: NotificationTaskService = notificationTaskService({
     validate: [...ALL_NOTIFICATION_TASK_TYPES, ...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES],

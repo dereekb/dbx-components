@@ -8,10 +8,19 @@ import { DbxLoadingComponent } from './loading.component';
  * Apply to a `<dbx-loading>` element that is within an action context to automatically
  * reflect the action's loading state in the loading component.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug action-loading-context
+ * @dbxWebCategory action
+ * @dbxWebRelated loading, action-snackbar
+ * @dbxWebSkillRefs dbx__ref__dbx-component-patterns
+ * @dbxWebMinimalExample ```html
+ * <button [dbxActionLoadingContext]></button>
+ * ```
+ *
  * @example
  * ```html
- * <dbx-loading dbxActionLoadingContext>
- *   <p>Content appears when the action's loading state resolves.</p>
+ * <dbx-loading [state]="ctx.state$ | async">
+ *   <button [dbxAction]="saveAction" dbxActionLoadingContext>Save</button>
  * </dbx-loading>
  * ```
  */

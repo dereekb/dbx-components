@@ -14,6 +14,11 @@
 /coverage
 /setup/**/*.template.json
 
+# Generated manifests — byte-stable output from generate-manifests; prettier
+# would reformat arrays inline and break `--check` byte-equality.
+**/*.mcp.generated.json
+**/*.generated.json
+
 /art
 /docker
 .commitlintrc.json

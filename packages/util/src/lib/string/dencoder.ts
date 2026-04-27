@@ -216,11 +216,19 @@ export function primativeKeyStringDencoder<D extends PrimativeKey, E extends Pri
 // MARK: NumberString
 /**
  * An encodable number. This is typically a positive integer value.
+ *
+ * @semanticType
+ * @semanticTopic numeric
+ * @semanticTopic dereekb-util:encoding
  */
 export type NumberStringDencoderNumber = number;
 
 /**
  * A number-encoded string. Little-Endian. Should Decode to the same value each time.
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-util:encoding
  */
 export type NumberStringDencoderString = string;
 
@@ -228,6 +236,10 @@ export type NumberStringDencoderString = string;
  * Digits used when encoding/decoding a value.
  *
  * The number of digits/characters must be a factor of 2. I.E. 8, 16, 32, 64
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-util:encoding
  */
 export type NumberStringDencoderDigits = string;
 

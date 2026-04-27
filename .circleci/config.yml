@@ -93,6 +93,9 @@ jobs:
           name: run vitest
           command: npx nx test vitest
       - run:
+          name: run dbx-components-mcp tests
+          command: npx nx test dbx-components-mcp
+      - run:
           name: run util tests
           command: npx nx run-all-tests util
       - run:

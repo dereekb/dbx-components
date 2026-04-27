@@ -2209,7 +2209,7 @@ describe('dbxForgeDateRangeRow() integration', () => {
     const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
     const host = fixture.componentInstance;
 
-    host.config = createDateRangeConfig({ timezone: 'America/Chicago' });
+    host.config = createDateRangeConfig({ props: { timezone: 'America/Chicago' } });
 
     // Use waitFor instead of settle — the timezone propagates via effect → subscription → signal,
     // which can be faster than SETTLE_TIME but may need retries under CI load.

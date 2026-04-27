@@ -9,6 +9,10 @@ import { dateTimezoneUtcNormal } from '@dereekb/date';
  * local time in a target timezone and need to convert it back to the system timezone.
  * Returns `undefined` if either the input date or timezone is falsy.
  *
+ * @dbxPipe
+ * @dbxPipeSlug target-date-to-system-date
+ * @dbxPipeCategory date
+ * @dbxPipeRelated system-date-to-target-date, timezone-abbreviation
  * @example
  * ```html
  * <span>{{ targetDate | targetDateToSystemDate:'America/New_York' | date:'short' }}</span>

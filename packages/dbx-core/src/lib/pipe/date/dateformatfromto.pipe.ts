@@ -10,6 +10,10 @@ import { formatToTimeString, toJsDate } from '@dereekb/date';
  * The start date is formatted using the Angular locale-aware {@link formatDate}, and the end time
  * is computed by adding the given minutes and formatted as a time-only string.
  *
+ * @dbxPipe
+ * @dbxPipeSlug date-format-from-to
+ * @dbxPipeCategory date
+ * @dbxPipeRelated date-time-range, date-format-distance
  * @example
  * ```html
  * <span>{{ eventStart | dateFormatFromTo:'MMM d, h:mm a':90 }}</span>

@@ -6,15 +6,18 @@ import { AbstractDbxFilterMapSourceDirective } from './filter.map.source.directi
 import { type Maybe } from '@dereekb/util';
 
 /**
- * Directive that acts as both a {@link FilterSourceConnector} and {@link FilterSource} for a keyed entry in a parent {@link FilterMap}.
+ * Both {@link FilterSource} and {@link FilterSourceConnector} for a keyed entry in an ancestor {@link FilterMap}. Connects an external filter source to one map slot and re-emits that slot's filter.
  *
- * Connects an external filter source to a specific filter map entry and re-emits that entry's filter.
+ * @dbxFilter
+ * @dbxFilterSlug map-source-connector
+ * @dbxFilterRelated map, map-source
+ * @dbxFilterSkillRefs dbx__ref__dbx-component-patterns
  *
  * @example
  * ```html
  * <div dbxFilterMap>
- *   <div [dbxFilterMapSourceConnector]="'myList'">
- *     <my-list-component></my-list-component>
+ *   <div [dbxFilterMapSourceConnector]="'profileList'">
+ *     <my-list></my-list>
  *   </div>
  * </div>
  * ```
@@ -26,6 +29,9 @@ import { type Maybe } from '@dereekb/util';
   standalone: true
 })
 export class DbxFilterMapSourceConnectorDirective<F> extends AbstractDbxFilterMapSourceDirective<F> implements FilterSourceConnector<F> {
+  /**
+   * The map key this connector binds to.
+   */
   readonly dbxFilterMapSourceConnector = input<Maybe<FilterMapKey>>();
   protected readonly _dbxFilterMapSourceConnectorEffect = effect(() => this.setFilterMapKey(this.dbxFilterMapSourceConnector()));
 

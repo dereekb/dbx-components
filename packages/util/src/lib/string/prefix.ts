@@ -4,6 +4,10 @@ import { type Maybe } from '../value/maybe.type';
  * A character or string that is added to the start of a string.
  *
  * Example: '-' in "-class"
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-util:prefix
  */
 export type CharacterPrefix = string;
 
@@ -11,11 +15,19 @@ export type CharacterPrefix = string;
  * A character or string that is added to the end of a string.
  *
  * Example: '-' in "class-"
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-util:prefix
  */
 export type CharacterSuffix = string;
 
 /**
  * A string that does not have a CharacterPrefix or CharacterSuffix.
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-util:prefix
  */
 export type CharacterPrefixSuffixCleanString = string;
 
@@ -147,6 +159,42 @@ export function characterPrefixSuffixInstance<P extends CharacterPrefix = '', S 
     prefixSuffixString,
     cleanString
   };
+}
+
+/**
+ * Removes the given suffix from the input string when present, or
+ * returns `undefined` when the input does not end with the suffix.
+ *
+ * Use this when callers want to detect whether the suffix was present
+ * (vs. {@link removeFirstMatchingSuffix}, which silently passes the
+ * input through).
+ *
+ * @param input The string to trim.
+ * @param suffix The suffix to remove.
+ * @returns The input without the suffix, or `undefined` when the input
+ *   does not end with the suffix.
+ */
+export function removeSuffix(input: string, suffix: string): Maybe<string> {
+  if (!input.endsWith(suffix)) return undefined;
+  return input.slice(0, -suffix.length);
+}
+
+/**
+ * Removes the first matching suffix from the input string. Returns the
+ * input unchanged when none of the suffixes match.
+ *
+ * @param input The string to trim.
+ * @param suffixes The suffixes to try in order.
+ * @returns The input with the first matching suffix removed, or the
+ *   input unchanged when no suffix matches.
+ */
+export function removeFirstMatchingSuffix(input: string, suffixes: readonly string[]): string {
+  for (const suffix of suffixes) {
+    if (input.endsWith(suffix)) {
+      return input.slice(0, -suffix.length);
+    }
+  }
+  return input;
 }
 
 /**

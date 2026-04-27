@@ -9,6 +9,10 @@
  * const encoded: Radix36EncodedNumber = 'z'; // represents 35
  * const largeEncoded: Radix36EncodedNumber = '2s'; // represents 100
  * ```
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-util:encoding
  */
 export type Radix36EncodedNumber = string;
 
@@ -55,6 +59,10 @@ export function decodeRadix36Number(encoded: Radix36EncodedNumber): number {
 // MARK: Hex
 /**
  * A string containing only hexadecimal characters (0-9, a-f or A-F).
+ *
+ * @semanticType
+ * @semanticTopic string
+ * @semanticTopic dereekb-util:encoding
  */
 export type HexString = string;
 
