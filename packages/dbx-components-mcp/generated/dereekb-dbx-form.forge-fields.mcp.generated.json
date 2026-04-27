@@ -316,22 +316,15 @@
       "tier": "primitive",
       "produces": "GroupField",
       "arrayOutput": "no",
-      "description": "Group container nesting child fields so their values roll up into one object under the group's key.\n\nGroups collect child field values into a nested object when a `key` is provided.\nWhen used without a key, the group serves as a visual/logical grouping only.\n\nFor sections with headers, use the section wrapper type instead.",
+      "description": "Creates a plain ng-forge `group` field. A group produces a nested object in\nthe form value under its `key`, so the key is semantically significant and\nmust be chosen deliberately.\n\nFor visual-only grouping (conditional visibility, layout wrappers, shared\nCSS class) that should NOT introduce a nested object in the form value, use\n{@link dbxForgeContainer} instead — that is what ng-forge's `container`\nfield type is for.\n\nFor sections with headers, use the section wrapper type instead.",
       "sourcePath": "field/wrapper/wrapper.ts",
-      "example": "dbxForgeGroup({ key: 'profile', fields: [dbxForgeTextField({ key: 'name' })] })",
-      "properties": [
-        {
-          "name": "key",
-          "type": "string",
-          "description": "Optional key for the group. Defaults to a unique auto-generated key.\n\nMust be unique within the form config to avoid ng-forge duplicate key errors.",
-          "required": false
-        }
-      ],
+      "example": "// Groups the address sub-fields under an `address` property in the form value.\nconst group = dbxForgeGroup({\n  key: 'address',\n  fields: [\n    dbxForgeTextField({ key: 'city', label: 'City' }),\n    dbxForgeTextField({ key: 'state', label: 'State' })\n  ]\n});\n\n// Resulting form value shape:\n// { address: { city: '...', state: '...' } }",
+      "properties": [],
       "returns": "GroupField",
       "configInterface": "DbxForgeGroupConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/wrapper/wrapper.ts",
-        "line": 107
+        "line": 124
       }
     },
     {
@@ -340,9 +333,9 @@
       "tier": "composite-builder",
       "produces": "RowField",
       "arrayOutput": "no",
-      "description": "Wraps content fields in a Material slide toggle — the toggle state controls conditional visibility of the inner fields.\n\nUses ng-forge's built-in `toggle` field type (MatSlideToggle) and\n`FieldValueCondition` for conditional visibility. The toggle boolean value\nIS part of the form model (standard ng-forge pattern).",
+      "description": "Wraps content fields in a Material slide toggle — the toggle state controls conditional visibility of the inner fields.\n\nUses ng-forge's built-in `toggle` field type (MatSlideToggle) and\n`FieldValueCondition` for conditional visibility. The toggle boolean value\nIS part of the form model. The hidden content is wrapped in a `container`\n(not a `group`), so the wrapped fields sit at the same level as the toggle\nin the form value — they are NOT nested under an extra object.\n\nStructure produced:\n```\nRow (outer)\n  ├── toggle field (type: 'toggle', boolean value)\n  └── Container (content, hidden when toggle === false)\n```\n\nThis is the forge equivalent of the formly `formlyToggleWrapper`.",
       "sourcePath": "field/wrapper/wrapper.ts",
-      "example": "dbxForgeToggleWrapper({ label: 'Advanced', fields: [dbxForgeTextField({ key: 'note' })] })",
+      "example": "const toggle = dbxForgeToggleWrapper({\n  key: 'showAdvanced',\n  label: 'Show advanced options',\n  fields: [\n    dbxForgeTextField({ key: 'advanced1', label: 'Option 1' }),\n    dbxForgeTextField({ key: 'advanced2', label: 'Option 2' })\n  ]\n});\n\n// Resulting form value (flat — no nesting under the container):\n// { showAdvanced: true, advanced1: '...', advanced2: '...' }",
       "properties": [
         {
           "name": "fields",
@@ -377,7 +370,7 @@
         {
           "name": "contentKey",
           "type": "string",
-          "description": "Optional key for the content group.",
+          "description": "Optional key for the content container. Auto-generated if omitted.\n\nThe container does not add a property to the form value; this is only a\nstable identifier for the container field.",
           "required": false
         }
       ],
@@ -389,7 +382,7 @@
       "configInterface": "DbxForgeToggleWrapperConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/wrapper/wrapper.ts",
-        "line": 172
+        "line": 290
       }
     },
     {
@@ -398,9 +391,9 @@
       "tier": "composite-builder",
       "produces": "RowField",
       "arrayOutput": "no",
-      "description": "Wraps content fields behind a button or text \"expand\" control. Use for optional sections like \"Show advanced options\".\n\nUses a custom `dbx-forge-expand` field type for the expand trigger and\n`FieldValueCondition` for conditional visibility on the content group.\nThe expand boolean value IS part of the form model.",
+      "description": "Wraps content fields behind a button or text \"expand\" control. Use for optional sections like \"Show advanced options\".\n\nUses a custom `dbx-forge-expand` field type for the expand trigger and\n`FieldValueCondition` for conditional visibility on the content. The\nexpand boolean value IS part of the form model. The hidden content is\nwrapped in a `container` (not a `group`), so the wrapped fields sit at the\nsame level as the expand control in the form value — they are NOT nested\nunder an extra object.\n\nStructure produced:\n```\nRow (outer)\n  ├── expand field (type: 'dbx-forge-expand', boolean value)\n  └── Container (content, hidden when expand field === false)\n```\n\nThis is the forge equivalent of the formly `formlyExpandWrapper`.",
       "sourcePath": "field/wrapper/wrapper.ts",
-      "example": "dbxForgeExpandWrapper({ label: 'Show details', fields: [dbxForgeTextField({ key: 'note' })] })",
+      "example": "const expand = dbxForgeExpandWrapper({\n  key: 'showMore',\n  label: 'Show more options',\n  buttonType: 'button',\n  fields: [\n    dbxForgeTextField({ key: 'extra1', label: 'Extra 1' }),\n    dbxForgeTextField({ key: 'extra2', label: 'Extra 2' })\n  ]\n});\n\n// Resulting form value (flat — no nesting under the container):\n// { showMore: true, extra1: '...', extra2: '...' }",
       "properties": [
         {
           "name": "fields",
@@ -441,7 +434,7 @@
         {
           "name": "contentKey",
           "type": "string",
-          "description": "Optional key for the content group.",
+          "description": "Optional key for the content container. Auto-generated if omitted.\n\nThe container does not add a property to the form value; this is only a\nstable identifier for the container field.",
           "required": false
         }
       ],
@@ -452,7 +445,7 @@
       "configInterface": "DbxForgeExpandWrapperConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/wrapper/wrapper.ts",
-        "line": 265
+        "line": 411
       }
     },
     {
@@ -2418,9 +2411,9 @@
       "tier": "composite-builder",
       "produces": "GroupField",
       "arrayOutput": "no",
-      "description": "Responsive flex group — children lay out horizontally at wide breakpoints and stack at narrow ones. Per-field `size` overrides the default column weight.\n\nEach child field gets a `dbx-flex-N` CSS class applied (merged with any existing className).\nThe group is wrapped with the `dbx-forge-flex` wrapper that renders the `dbxFlexGroup` directive\nfor responsive breakpoint handling.\n\nThis is the forge equivalent of {@link formlyFlexLayoutWrapper}.",
+      "description": "Creates a responsive flex layout container that arranges child fields horizontally\nwith configurable sizing, breakpoints, and responsive behavior.\n\nEach child field gets a `dbx-flex-N` CSS class applied (merged with any existing className).\nThe container hosts the `dbx-forge-flex` wrapper, which renders the `dbxFlexGroup`\ndirective for responsive breakpoint handling.\n\nA `container` is used (not a `group`) because flex layout is purely visual —\nthe wrapped fields should remain at the same level in the form value, not be\nnested under an extra object.\n\nThis is the forge equivalent of {@link formlyFlexLayoutWrapper}.",
       "sourcePath": "field/wrapper/flex/flex.wrapper.ts",
-      "example": "dbxForgeFlexLayout({ fieldConfigs: [dbxForgeTextField({ key: 'a' }), dbxForgeTextField({ key: 'b' })] })",
+      "example": "// Simple: all fields get default size (2)\ndbxForgeFlexLayout([dbxForgeCityField({}), dbxForgeStateField({}), dbxForgeZipCodeField({})])\n\n// Resulting form value shape (flat — no wrapper property):\n// { city: '...', state: '...', zip: '...' }\n\n// With per-field sizing and breakpoint\ndbxForgeFlexLayout([\n  { field: dbxForgeCityField({}), size: 4 },\n  dbxForgeStateField({}),\n  dbxForgeZipCodeField({})\n], { breakpoint: 'small', size: 1 })\n\n// Full config\ndbxForgeFlexLayout([...fields], { breakpoint: 'large', breakToColumn: true, relative: true, size: 1 })",
       "properties": [
         {
           "name": "size",
@@ -2436,7 +2429,7 @@
       "configInterface": "DbxForgeFlexLayoutConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/wrapper/flex/flex.wrapper.ts",
-        "line": 96
+        "line": 115
       }
     },
     {
