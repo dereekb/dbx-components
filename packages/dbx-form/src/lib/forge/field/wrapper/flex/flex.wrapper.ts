@@ -1,6 +1,6 @@
-import type { FieldDef, GroupField, GroupAllowedChildren } from '@ng-forge/dynamic-forms';
+import type { ContainerField, FieldDef } from '@ng-forge/dynamic-forms';
 import type { DbxFlexSize, ScreenMediaWidthType } from '@dereekb/dbx-web';
-import { dbxForgeGroup } from '../wrapper';
+import { dbxForgeContainer } from '../wrapper';
 
 // MARK: Wrapper Type
 /**
@@ -67,17 +67,22 @@ function isFlexFieldConfig(input: FieldDef<unknown> | DbxForgeFlexLayoutFieldCon
 }
 
 /**
- * Responsive flex group — children lay out horizontally at wide breakpoints and stack at narrow ones. Per-field `size` overrides the default column weight.
+ * Creates a responsive flex layout container that arranges child fields horizontally
+ * with configurable sizing, breakpoints, and responsive behavior.
  *
  * Each child field gets a `dbx-flex-N` CSS class applied (merged with any existing className).
- * The group is wrapped with the `dbx-forge-flex` wrapper that renders the `dbxFlexGroup` directive
- * for responsive breakpoint handling.
+ * The container hosts the `dbx-forge-flex` wrapper, which renders the `dbxFlexGroup`
+ * directive for responsive breakpoint handling.
+ *
+ * A `container` is used (not a `group`) because flex layout is purely visual —
+ * the wrapped fields should remain at the same level in the form value, not be
+ * nested under an extra object.
  *
  * This is the forge equivalent of {@link formlyFlexLayoutWrapper}.
  *
  * @param fieldConfigs - Array of field definitions or `{ field, size }` pairs with size overrides
  * @param config - Flex layout defaults including breakpoint, relative sizing, and default size
- * @returns A {@link GroupField} with flex wrapper applied and sized children
+ * @returns A {@link ContainerField} with the flex wrapper applied and sized children
  *
  * @dbxFormField
  * @dbxFormSlug flex-layout
@@ -90,10 +95,24 @@ function isFlexFieldConfig(input: FieldDef<unknown> | DbxForgeFlexLayoutFieldCon
  *
  * @example
  * ```typescript
- * dbxForgeFlexLayout({ fieldConfigs: [dbxForgeTextField({ key: 'a' }), dbxForgeTextField({ key: 'b' })] })
+ * // Simple: all fields get default size (2)
+ * dbxForgeFlexLayout([dbxForgeCityField({}), dbxForgeStateField({}), dbxForgeZipCodeField({})])
+ *
+ * // Resulting form value shape (flat — no wrapper property):
+ * // { city: '...', state: '...', zip: '...' }
+ *
+ * // With per-field sizing and breakpoint
+ * dbxForgeFlexLayout([
+ *   { field: dbxForgeCityField({}), size: 4 },
+ *   dbxForgeStateField({}),
+ *   dbxForgeZipCodeField({})
+ * ], { breakpoint: 'small', size: 1 })
+ *
+ * // Full config
+ * dbxForgeFlexLayout([...fields], { breakpoint: 'large', breakToColumn: true, relative: true, size: 1 })
  * ```
  */
-export function dbxForgeFlexLayout(fieldConfigs: (FieldDef<unknown> | DbxForgeFlexLayoutFieldConfig)[], config: DbxForgeFlexLayoutConfig = {}): GroupField {
+export function dbxForgeFlexLayout(fieldConfigs: (FieldDef<unknown> | DbxForgeFlexLayoutFieldConfig)[], config: DbxForgeFlexLayoutConfig = {}): ContainerField {
   const { breakpoint, relative, breakToColumn, size: defaultSize = 2 } = config;
 
   const mappedFields = fieldConfigs.map((input) => {
@@ -110,8 +129,8 @@ export function dbxForgeFlexLayout(fieldConfigs: (FieldDef<unknown> | DbxForgeFl
     ...(breakToColumn != null && { breakToColumn })
   };
 
-  return dbxForgeGroup({
-    fields: mappedFields as unknown as GroupAllowedChildren[],
+  return dbxForgeContainer({
+    fields: mappedFields as unknown as ContainerField['fields'],
     className: 'dbx-flex-group',
     wrappers: [flexWrapper]
   });
