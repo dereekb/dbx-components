@@ -332,7 +332,7 @@ export function headersToHeadersTuple(headers: HeadersInit): [string, string][] 
 
   if (Array.isArray(headers)) {
     // use as tuples
-    tuples = headers as [string, string][];
+    tuples = headers;
   } else if (typeof headers.forEach === 'function') {
     // use as a headers object
     headers.forEach((value, key) => {

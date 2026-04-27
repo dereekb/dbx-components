@@ -191,7 +191,7 @@ const PHONE_NUMBER_FORMATTING_CHARACTERS_REGEX = /[() \-.]/g;
  * ```
  */
 export function tryConvertToE164PhoneNumber(input: string, defaultCountryCode = '1'): Maybe<E164PhoneNumber> {
-  const stripped = input.replace(PHONE_NUMBER_FORMATTING_CHARACTERS_REGEX, '');
+  const stripped = input.replaceAll(PHONE_NUMBER_FORMATTING_CHARACTERS_REGEX, '');
   let result: Maybe<E164PhoneNumber>;
 
   if (isE164PhoneNumber(stripped, false)) {

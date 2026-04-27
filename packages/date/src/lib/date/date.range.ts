@@ -539,7 +539,7 @@ export function endItreateDaysInDateRangeEarly() {
 export function iterateDaysInDateRangeFunction(input: IterateDaysInDateRangeFunctionConfigInput): IterateDatesInDateRangeFunction {
   const config = typeof input === 'function' ? { getNextDate: input } : input;
   const { maxIterations: inputMaxIterations = DEFAULT_ITERATE_DAYS_IN_DATE_RANGE_MAX_ITERATIONS, throwErrorOnMaxIterations = true, getNextDate } = config;
-  const maxIterations: number = inputMaxIterations ? inputMaxIterations : Number.MAX_SAFE_INTEGER;
+  const maxIterations: number = inputMaxIterations || Number.MAX_SAFE_INTEGER;
 
   return <T>({ start, end }: DateRange, forEachFn: (date: Date) => T) => {
     let current = start;
@@ -628,7 +628,7 @@ export type ExpandDaysForDateRangeFunction = FactoryWithRequiredInput<Date[], Da
  */
 export function expandDaysForDateRangeFunction(config: ExpandDaysForDateRangeConfig = {}): ExpandDaysForDateRangeFunction {
   const { maxExpansionSize: inputMaxExpansionSize = DEFAULT_EXPAND_DAYS_FOR_DATE_RANGE_MAX_EXPANSION_SIZE } = config;
-  const maxExpansionSize = inputMaxExpansionSize ? inputMaxExpansionSize : Number.MAX_SAFE_INTEGER;
+  const maxExpansionSize = inputMaxExpansionSize || Number.MAX_SAFE_INTEGER;
 
   return (dateRange: DateRange) => {
     const { start, end } = dateRange;
@@ -1065,8 +1065,10 @@ export function clampDateRangeFunction(dateRange: Partial<DateRange>, defaultCla
   const clampDate = clampDateFunction(dateRange);
 
   const fn = ((input: Partial<DateRange>, clampNullValues = defaultClampNullValues) => {
-    const start = input.start ? clampDate(input.start) : clampNullValues ? dateRange.start : undefined;
-    const end = input.end ? clampDate(input.end) : clampNullValues ? dateRange.end : undefined;
+    const fallbackStart = clampNullValues ? dateRange.start : undefined;
+    const fallbackEnd = clampNullValues ? dateRange.end : undefined;
+    const start = input.start ? clampDate(input.start) : fallbackStart;
+    const end = input.end ? clampDate(input.end) : fallbackEnd;
     return { start, end };
   }) as Building<ClampPartialDateRangeFunction>;
   fn._dateRange = dateRange;

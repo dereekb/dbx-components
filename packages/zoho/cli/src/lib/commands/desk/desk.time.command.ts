@@ -47,7 +47,7 @@ const timeEntriesCommand: CommandModule = {
       const initialInput = { ticketId: argv.ticketId, from: argv.from, limit: argv.limit };
       const outcome = await runPaginatedList({
         initialInput,
-        fetchPage: (input) => api.getTicketTimeEntries(input as any),
+        fetchPage: (input) => api.getTicketTimeEntries(input),
         adapter: zohoDeskPaginationAdapter,
         multiplePages: argv.multiplePages,
         multiplePagesOutput: argv.multiplePagesOutput,

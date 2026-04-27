@@ -324,7 +324,7 @@ export async function executeOnCallQuery<T, R = T>(config: ExecuteOnCallQueryCon
   // Build the result
   const results: R[] = resultDocs.map((doc) => (mapResult ? mapResult(doc) : (doc.data() as unknown as R)));
   const keys: FirestoreModelKey[] = resultDocs.map((doc) => doc.ref.path);
-  const cursorDocumentKey: Maybe<FirestoreModelKey> = resultDocs.length > 0 ? resultDocs[resultDocs.length - 1].ref.path : undefined;
+  const cursorDocumentKey: Maybe<FirestoreModelKey> = resultDocs.length > 0 ? resultDocs.at(-1)!.ref.path : undefined;
 
   return {
     results,

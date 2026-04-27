@@ -247,7 +247,7 @@ export class DateTimeUtilityInstance {
       function removeAmPm(inputString: string): string {
         inputString = inputString.toLowerCase();
         removedPm = inputString.includes('pm');
-        inputString = inputString.replace(/am|pm/g, '');
+        inputString = inputString.replaceAll(/am|pm/g, '');
         return inputString;
       }
 
@@ -262,7 +262,7 @@ export class DateTimeUtilityInstance {
       }
 
       if (!valid) {
-        input = input.trim().replace(/\s+/g, '');
+        input = input.trim().replaceAll(/\s+/g, '');
 
         switch (input.length) {
           case 1:

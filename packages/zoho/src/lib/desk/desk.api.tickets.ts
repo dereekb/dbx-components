@@ -119,7 +119,8 @@ export function zohoDeskGetTicketById(context: ZohoDeskContext): ZohoDeskGetTick
     const { ticketId, include } = input;
     const params = zohoDeskUrlSearchParams([{ include: joinInclude(include) }]);
     const queryString = params.toString();
-    return context.fetchJson<ZohoDeskTicket>(`/tickets/${ticketId}${queryString ? `?${queryString}` : ''}`, zohoDeskApiFetchJsonInput('GET'));
+    const querySuffix = queryString ? '?' + queryString : '';
+    return context.fetchJson<ZohoDeskTicket>(`/tickets/${ticketId}${querySuffix}`, zohoDeskApiFetchJsonInput('GET'));
   };
 }
 

@@ -1572,7 +1572,8 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                 notificationSummaryIdForUid: notificationSendService.notificationSummaryIdForUidFunction
               });
 
-              let { es, ts, ps, ns } = notification;
+              let { es, ts, ns } = notification;
+              let ps: typeof notification.ps;
               const { esr: currentEsr, tsr: currentTsr } = notification;
 
               // do emails

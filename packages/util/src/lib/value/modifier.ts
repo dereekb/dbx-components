@@ -87,7 +87,7 @@ export type ModifierMap<T> = Map<ModifierKey, Modifier<T>>;
 export function addModifiers<T>(modifiers: ArrayOrValue<Modifier<T>>, map?: Maybe<ModifierMap<T>>): ModifierMap<T> {
   map ??= new Map();
 
-  forEachWithArray(modifiers, (modifier) => (map as ModifierMap<T>).set(modifier.key, modifier));
+  forEachWithArray(modifiers, (modifier) => map.set(modifier.key, modifier));
 
   return map;
 }
@@ -198,7 +198,7 @@ export function maybeMergeModifiers<T>(modifiers: Maybe<ModifierFunction<T>[]>):
         result = modifiers[0];
         break;
       default:
-        result = (input) => (modifiers as ModifierFunction<T>[]).forEach((fn) => fn(input));
+        result = (input) => modifiers.forEach((fn) => fn(input));
         break;
     }
   }

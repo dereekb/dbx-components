@@ -1,8 +1,4 @@
-import * as DbxAppContextActions from './data.action';
-
-export {
-  /**
-   * Accessor for the DbxAppContextStateData in our DbxAppContextFeatureState.
-   */
-  DbxAppContextActions
-};
+/**
+ * Accessor for the DbxAppContextStateData in our DbxAppContextFeatureState.
+ */
+export * as DbxAppContextActions from './data.action';

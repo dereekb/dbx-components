@@ -239,8 +239,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       displayForValue: (input) => of(input.map((y) => ({ ...y, label: String(y.meta.label) }))),
       loadSources: () => {
         const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
-        sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
-        sources.push({ label: 'Source B', meta: of(successResult([...VALUE_SELECTION_VALUES, ...MORE_VALUE_SELECTION_VALUES])) }); // repeat values are ignored.
+        sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) }, { label: 'Source B', meta: of(successResult([...VALUE_SELECTION_VALUES, ...MORE_VALUE_SELECTION_VALUES])) }); // repeat values are ignored.
         return of(sources);
       }
     }),
@@ -254,8 +253,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       displayForValue: (input) => of(input.map((y) => ({ ...y, label: String(y.meta.label) }))),
       loadSources: () => {
         const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
-        sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
-        sources.push({ label: 'Source B', meta: of(successResult([...VALUE_SELECTION_VALUES, ...MORE_VALUE_SELECTION_VALUES])) }); // repeat values are ignored.
+        sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) }, { label: 'Source B', meta: of(successResult([...VALUE_SELECTION_VALUES, ...MORE_VALUE_SELECTION_VALUES])) }); // repeat values are ignored.
         return of(sources);
       }
     }),
@@ -269,8 +267,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       displayForValue: (input) => of(input.map((y) => ({ ...y, label: String(y.meta.label) }))),
       loadSources: () => {
         const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
-        sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
-        sources.push({ label: 'Source B', meta: of(beginLoading<ValueSelectionOptionWithValue<number>[]>()) }); // demonstrates loading from another source
+        sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) }, { label: 'Source B', meta: of(beginLoading<ValueSelectionOptionWithValue<number>[]>()) }); // demonstrates loading from another source
         return of(sources);
       }
     }),
@@ -303,8 +300,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       displayForValue: (input) => of(input.map((y) => ({ ...y, label: String(y.meta.label) }))),
       loadSources: () => {
         const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
-        sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
-        sources.push({ label: 'Source B', meta: of(successResult([...VALUE_SELECTION_VALUES, ...MORE_VALUE_SELECTION_VALUES])) });
+        sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) }, { label: 'Source B', meta: of(successResult([...VALUE_SELECTION_VALUES, ...MORE_VALUE_SELECTION_VALUES])) });
         return of(sources);
       }
     })
@@ -322,8 +318,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
           displayForValue: (input) => of(input.map((y) => ({ ...y, label: String(y.meta.label) }))),
           loadSources: () => {
             const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
-            sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
-            sources.push({ label: 'Source B', meta: of(successResult([...VALUE_SELECTION_VALUES, ...MORE_VALUE_SELECTION_VALUES])) });
+            sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) }, { label: 'Source B', meta: of(successResult([...VALUE_SELECTION_VALUES, ...MORE_VALUE_SELECTION_VALUES])) });
             return of(sources);
           }
         }
@@ -339,8 +334,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
           displayForValue: (input) => of(input.map((y: any) => ({ ...y, label: String(y.meta.label) }))),
           loadSources: () => {
             const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
-            sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
-            sources.push({ label: 'Source B', meta: of(successResult([...VALUE_SELECTION_VALUES, ...MORE_VALUE_SELECTION_VALUES])) });
+            sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) }, { label: 'Source B', meta: of(successResult([...VALUE_SELECTION_VALUES, ...MORE_VALUE_SELECTION_VALUES])) });
             return of(sources);
           }
         }
@@ -356,8 +350,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
           displayForValue: (input) => of(input.map((y: any) => ({ ...y, label: String(y.meta.label) }))),
           loadSources: () => {
             const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
-            sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
-            sources.push({ label: 'Source B', meta: of(beginLoading<ValueSelectionOptionWithValue<number>[]>()) });
+            sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) }, { label: 'Source B', meta: of(beginLoading<ValueSelectionOptionWithValue<number>[]>()) });
             return of(sources);
           }
         }
@@ -408,8 +401,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
           displayForValue: (input) => of(input.map((y: any) => ({ ...y, label: String(y.meta.label) }))),
           loadSources: () => {
             const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
-            sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
-            sources.push({ label: 'Source B', meta: of(successResult([...VALUE_SELECTION_VALUES, ...MORE_VALUE_SELECTION_VALUES])) });
+            sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) }, { label: 'Source B', meta: of(successResult([...VALUE_SELECTION_VALUES, ...MORE_VALUE_SELECTION_VALUES])) });
             return of(sources);
           }
         }
@@ -472,7 +464,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
           filterLabel: 'Filter',
           ...pickableValueFieldValuesConfigForStaticLabeledValues(
             range(50)
-              .map((x) => String(x))
+              .map(String)
               .map((value) => ({ label: value.toUpperCase(), value }))
           )
         }
@@ -805,7 +797,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       filterLabel: 'Filter',
       ...pickableValueFieldValuesConfigForStaticLabeledValues(
         range(50)
-          .map((x) => String(x))
+          .map(String)
           .map((value) => ({ label: value.toUpperCase(), value }))
       )
     }),

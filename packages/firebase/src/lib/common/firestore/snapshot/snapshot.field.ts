@@ -419,7 +419,7 @@ export function optionalFirestoreField<V, D = V>(config?: unknown): FirestoreMod
         loadDefaultReadValueFn = () => inputDefaultReadValue as D;
       }
 
-      fromData = (x) => transformFrom(x == null ? (loadDefaultReadValueFn as Getter<D>)() : x);
+      fromData = (x) => transformFrom(x ?? (loadDefaultReadValueFn as Getter<D>)());
     } else if (transformFrom !== passThrough) {
       fromData = ((x) => (x != null ? transformFrom(x) : x)) as MapFunction<Maybe<D>, Maybe<V>>;
     } else {
@@ -446,7 +446,7 @@ export function optionalFirestoreField<V, D = V>(config?: unknown): FirestoreMod
           return x;
         }
 
-        const transformedValue = transformTo(x) as D | null;
+        const transformedValue = transformTo(x);
         return transformedValue != null && !dontStoreValue(transformedValue) ? transformedValue : null;
       }) as MapFunction<Maybe<V>, Maybe<D>>;
     } else {
@@ -1580,7 +1580,7 @@ export function firestoreObjectArray<T extends object, O extends object = Firest
       let result = filterUnique(x);
 
       if (filterFn) {
-        result = result.filter(filterFn);
+        result = result.filter((v, i) => filterFn(v, i));
       }
 
       return result;
@@ -1806,9 +1806,7 @@ export const assignDateCellRangeFunction = assignValuesToPOJOFunction<DateCellRa
 export const firestoreDateCellRangeAssignFn: MapFunction<DateCellRange, DateCellRange> = (input) => {
   const block = assignDateCellRangeFunction(DEFAULT_DATE_CELL_RANGE_VALUE, input);
 
-  if (block.to == null) {
-    block.to = block.i;
-  }
+  block.to ??= block.i;
 
   return block;
 };

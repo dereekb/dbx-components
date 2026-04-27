@@ -375,7 +375,7 @@ export class DbxForgeDateTimeFieldComponent {
         asArray(x).map((syncField) => {
           const form = this.fieldSignalContext.form;
           const siblingTree = (form as any)?.[syncField.syncWith];
-          const siblingState = siblingTree?.() as any;
+          const siblingState = siblingTree?.();
           if (siblingState?.value) {
             return { syncType: syncField.syncType, fieldState: siblingState };
           }
@@ -397,7 +397,7 @@ export class DbxForgeDateTimeFieldComponent {
             startWith(0),
             map(() => {
               const val = config.fieldState.value();
-              const date = safeToJsDate(val as any);
+              const date = safeToJsDate(val);
               // Reject Invalid Date values (e.g. from empty string sibling fields)
               return date instanceof Date && !Number.isNaN(date.getTime()) ? date : null;
             }),
@@ -676,7 +676,7 @@ export class DbxForgeDateTimeFieldComponent {
       // Full day field name (read from sibling FieldTree)
       if (p?.fullDayFieldName) {
         const siblingTree = (this.fieldSignalContext.form as any)?.[p.fullDayFieldName];
-        const siblingState = siblingTree?.() as any;
+        const siblingState = siblingTree?.();
         if (siblingState?.value) {
           // Sync fullDay signal from sibling field
           this._fullDay.set(Boolean(siblingState.value()));
@@ -970,7 +970,7 @@ export class DbxForgeDateTimeFieldComponent {
 
     try {
       const siblingTree = (this.fieldSignalContext.form as any)?.[fieldName];
-      const siblingState = siblingTree?.() as any;
+      const siblingState = siblingTree?.();
       if (siblingState?.value?.set) {
         siblingState.value.set(fullDay);
       }

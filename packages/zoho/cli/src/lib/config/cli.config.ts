@@ -125,9 +125,6 @@ export async function loadCliConfig(): Promise<Maybe<ZohoCliConfig>> {
   // Build per-product overrides from env vars
   function productConfigFromEnv(product: string): Maybe<ZohoCliProductConfig> {
     const prefix = product.toUpperCase();
-    const clientId = envVar('ACCOUNTS_CLIENT_ID', prefix);
-    const clientSecret = envVar('ACCOUNTS_CLIENT_SECRET', prefix);
-    const refreshToken = envVar('ACCOUNTS_REFRESH_TOKEN', prefix);
     const apiUrl = envVar('API_URL', prefix);
     const orgId = product === 'desk' ? envVar('DESK_ORG_ID') : undefined;
     const fileProduct = fileConfig?.[product as ZohoCliProduct];

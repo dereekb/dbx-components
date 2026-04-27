@@ -717,7 +717,7 @@ export function dateCellTimingRelativeIndexFactory<T extends DateCellTimingStart
     }
 
     const daysOffset = Math.floor(diff / HOURS_IN_DAY); // total number of hours difference from the original UTC date
-    return daysOffset ? daysOffset : 0; // do not return -0
+    return daysOffset || 0; // do not return -0
   }) as Building<DateCellTimingRelativeIndexFactory<T>>;
   factory._timing = timing;
   factory._normalInstance = normalInstance;

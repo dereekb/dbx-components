@@ -30,7 +30,7 @@ export class DbxModelTrackerEffects {
       this.actions$.pipe(
         ofType(onDbxAppAuth.DbxAppAuthUserActions.setUserIdentifier),
         map((x) => x.id),
-        filter((x) => Boolean(x)),
+        filter(Boolean),
         distinctUntilChanged(),
         tap((accountId) => {
           this.dbxModelTrackerService.defaultFolder = accountId;

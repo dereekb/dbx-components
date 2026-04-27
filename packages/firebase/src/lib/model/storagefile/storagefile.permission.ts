@@ -74,8 +74,8 @@ export function grantStorageFileRolesForUserAuthFunction<T extends FirebaseModel
       const [a, b] = await Promise.all([userRoles, ownershipKeyRoles]);
 
       return {
-        ...(a ?? {}),
-        ...(b ?? {})
+        ...a,
+        ...b
       };
     };
 

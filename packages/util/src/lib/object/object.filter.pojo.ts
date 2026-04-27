@@ -784,7 +784,7 @@ export function filterTuplesOnPOJOFunction<T extends object>(filterTupleOnObject
     const result: Partial<T> = {};
 
     Object.entries<T>(input as unknown as Record<string, T>)
-      .filter(filterTupleOnObject)
+      .filter((tuple, i, arr) => filterTupleOnObject(tuple, i, arr))
       .forEach((tuple) => {
         (result as unknown as Record<string, unknown>)[tuple[0]] = tuple[1];
       });

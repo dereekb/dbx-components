@@ -327,8 +327,8 @@ export class DbxCalendarStore<T = any> extends ComponentStore<CalendarState<T>> 
    */
   readonly setNavigationRangeLimit = this.updater((state, navigationRangeLimit: Maybe<Partial<DateRange>>) => updateCalendarStateWithNavigationRangeLimit(state, navigationRangeLimit));
 
-  readonly setShowTodayButton = this.updater((state, showTodayButton: Maybe<boolean>) => ({ ...state, showTodayButton: showTodayButton != null ? showTodayButton : true }));
-  readonly setShowPageButtons = this.updater((state, showPageButtons: Maybe<boolean>) => ({ ...state, showPageButtons: showPageButtons != null ? showPageButtons : false }));
+  readonly setShowTodayButton = this.updater((state, showTodayButton: Maybe<boolean>) => ({ ...state, showTodayButton: showTodayButton ?? true }));
+  readonly setShowPageButtons = this.updater((state, showPageButtons: Maybe<boolean>) => ({ ...state, showPageButtons: showPageButtons ?? false }));
 }
 
 /**

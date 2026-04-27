@@ -53,10 +53,7 @@ export class WorkInstance<I = unknown, O = unknown> implements Destroyable {
   private readonly _sub = new SubscriptionObject();
 
   readonly loadingState$ = this._loadingState.pipe(filterMaybe());
-  protected readonly _hasStarted$ = this._loadingState.pipe(
-    map((x) => Boolean(x)),
-    shareReplay(1)
-  );
+  protected readonly _hasStarted$ = this._loadingState.pipe(map(Boolean), shareReplay(1));
   protected readonly _isComplete$ = this.loadingState$.pipe(
     map((x) => isLoadingStateFinishedLoading(x)),
     shareReplay(1)

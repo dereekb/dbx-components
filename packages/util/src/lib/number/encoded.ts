@@ -53,7 +53,7 @@ export function encodeRadix36Number(number: number): Radix36EncodedNumber {
  * ```
  */
 export function decodeRadix36Number(encoded: Radix36EncodedNumber): number {
-  return parseInt(encoded, 36);
+  return Number.parseInt(encoded, 36);
 }
 
 // MARK: Hex

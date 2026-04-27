@@ -41,7 +41,7 @@ export abstract class AbstractDbxButtonDirective implements DbxButton {
   readonly ariaLabel = input<Maybe<string>>(undefined);
 
   readonly disabled = input<boolean, Maybe<boolean>>(false, { transform: Boolean });
-  readonly working = input<DbxButtonWorking, Maybe<DbxButtonWorking>>(false, { transform: (x) => (x == null ? false : x) });
+  readonly working = input<DbxButtonWorking, Maybe<DbxButtonWorking>>(false, { transform: (x) => x ?? false });
   readonly buttonDisplay = input<Maybe<DbxButtonDisplay>>(undefined);
 
   private readonly _disabledSignal = signal<Maybe<boolean>>(undefined);
@@ -87,7 +87,7 @@ export abstract class AbstractDbxButtonDirective implements DbxButton {
           switchMap(() =>
             this._buttonInterceptor.pipe(
               switchMap((x) => (x ? x.interceptButtonClick().pipe(first()) : of(true))),
-              filter((x) => Boolean(x)) // Ignore false values.
+              filter(Boolean) // Ignore false values.
             )
           )
         )

@@ -114,7 +114,7 @@ export function firebaseQueryItemAccumulator<U, T>(iteration: FirestoreItemPageI
     const result: U[] = filterMaybeArrayValues(
       x.map((y) => {
         const data = snapshotData(y);
-        return (mapItem as MapFunction<DocumentDataWithIdAndKey<T>, U>)(data);
+        return mapItem(data);
       })
     );
 

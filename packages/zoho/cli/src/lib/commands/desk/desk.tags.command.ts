@@ -15,7 +15,7 @@ const tagsListCommand: CommandModule = {
       const initialInput = { from: argv.from, limit: argv.limit, departmentId: argv.departmentId };
       const outcome = await runPaginatedList({
         initialInput,
-        fetchPage: (input) => api.getAllTags(input as any),
+        fetchPage: (input) => api.getAllTags(input),
         adapter: zohoDeskPaginationAdapter,
         multiplePages: argv.multiplePages,
         multiplePagesOutput: argv.multiplePagesOutput,
@@ -43,7 +43,7 @@ const tagsSearchCommand: CommandModule = {
       const initialInput = { from: argv.from, limit: argv.limit, departmentId: argv.departmentId, searchVal: argv.query };
       const outcome = await runPaginatedList({
         initialInput,
-        fetchPage: (input) => api.searchTags(input as any),
+        fetchPage: (input) => api.searchTags(input),
         adapter: zohoDeskPaginationAdapter,
         multiplePages: argv.multiplePages,
         multiplePagesOutput: argv.multiplePagesOutput,

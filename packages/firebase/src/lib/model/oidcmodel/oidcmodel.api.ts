@@ -84,7 +84,7 @@ export const updateOidcClientParamsType = targetModelParamsType.merge(updateOidc
 
 export type RotateOidcClientSecretParams = TargetModelParams;
 
-export const rotateOidcClientSecretParamsType = targetModelParamsType as Type<RotateOidcClientSecretParams>;
+export const rotateOidcClientSecretParamsType = targetModelParamsType;
 
 export type RotateOidcClientSecretResult = Pick<CreateOidcClientResult, 'client_id' | 'client_secret'>;
 
@@ -94,7 +94,7 @@ export type RotateOidcClientSecretResult = Pick<CreateOidcClientResult, 'client_
  */
 export type DeleteOidcClientParams = TargetModelParams;
 
-export const deleteOidcClientParamsType = targetModelParamsType as Type<DeleteOidcClientParams>;
+export const deleteOidcClientParamsType = targetModelParamsType;
 
 // MARK: Functions
 /**

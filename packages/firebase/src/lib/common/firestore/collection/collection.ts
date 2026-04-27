@@ -199,7 +199,7 @@ export function firestoreModelIdentity<P extends FirestoreModelIdentity<string, 
     const collectionType = `${parentOrModelName.collectionType}/${collectionName}`;
     result = {
       type: 'nested',
-      parent: parentOrModelName as P,
+      parent: parentOrModelName,
       collectionName,
       modelType: collectionNameOrModelName as M,
       collectionType
@@ -380,7 +380,7 @@ export type OneWayFlatFirestoreModelKey = FlatFirestoreModelKey;
  * @returns
  */
 export function flatFirestoreModelKey(key: FirestoreModelKey): OneWayFlatFirestoreModelKey {
-  return key.replace(/\//g, '');
+  return key.replaceAll('/', '');
 }
 
 /**
@@ -397,7 +397,7 @@ export type TwoWayFlatFirestoreModelKey = FlatFirestoreModelKey;
  * @returns
  */
 export function twoWayFlatFirestoreModelKey(key: FirestoreModelKey): TwoWayFlatFirestoreModelKey {
-  return key.replace(/\//g, '_');
+  return key.replaceAll('/', '_');
 }
 
 /**
@@ -407,7 +407,7 @@ export function twoWayFlatFirestoreModelKey(key: FirestoreModelKey): TwoWayFlatF
  * @returns
  */
 export function inferKeyFromTwoWayFlatFirestoreModelKey(key: TwoWayFlatFirestoreModelKey): FirestoreModelKey {
-  return key.replace(/_/g, FIRESTORE_COLLECTION_NAME_SEPARATOR);
+  return key.replaceAll('_', FIRESTORE_COLLECTION_NAME_SEPARATOR);
 }
 
 /**

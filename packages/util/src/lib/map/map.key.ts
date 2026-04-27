@@ -156,7 +156,7 @@ export function multiValueMapBuilder<T, K extends PrimativeKey = PrimativeKey>()
       map.set(key, array);
     }
 
-    useIterableOrValue(value, (x) => (array as T[]).push(x));
+    useIterableOrValue(value, (x) => array.push(x));
   };
 
   const addTuples = (key: Maybe<K>, value: IterableOrValue<T>) => add(key, wrapTuples(value));

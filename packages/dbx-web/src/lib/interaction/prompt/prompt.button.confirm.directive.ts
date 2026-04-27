@@ -22,7 +22,7 @@ export class DbxPromptConfirmButtonDirective implements OnInit, DbxButtonInterce
   readonly prompt = inject(DbxPromptConfirm, { host: true });
 
   readonly interceptButtonClick: () => Observable<boolean> = () => {
-    return this.prompt.showDialog().pipe(map((x) => Boolean(x)));
+    return this.prompt.showDialog().pipe(map(Boolean));
   };
 
   ngOnInit(): void {

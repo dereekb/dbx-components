@@ -80,7 +80,8 @@ export function zohoDeskGetTicketCommentById(context: ZohoDeskContext): ZohoDesk
     const { ticketId, commentId, include } = input;
     const params = makeUrlSearchParams([{ include: joinCommentInclude(include) }]);
     const queryString = params.toString();
-    return context.fetchJson<ZohoDeskTicketComment>(`/tickets/${ticketId}/comments/${commentId}${queryString ? `?${queryString}` : ''}`, zohoDeskCommentApiFetchJsonInput('GET'));
+    const querySuffix = queryString ? '?' + queryString : '';
+    return context.fetchJson<ZohoDeskTicketComment>(`/tickets/${ticketId}/comments/${commentId}${querySuffix}`, zohoDeskCommentApiFetchJsonInput('GET'));
   };
 }
 

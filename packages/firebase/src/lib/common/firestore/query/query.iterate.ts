@@ -78,7 +78,7 @@ export interface IterateFirestoreDocumentSnapshotPairsConfig<T, R, D extends Fir
  */
 export async function iterateFirestoreDocumentSnapshotPairs<T, R, D extends FirestoreDocument<T> = FirestoreDocument<T>>(config: IterateFirestoreDocumentSnapshotPairsConfig<T, R, D>): Promise<IterateFirestoreDocumentSnapshotCheckpointsResult> {
   const { iterateSnapshotPair, documentAccessor } = config;
-  const loadPairForSnapshot = firestoreDocumentSnapshotPairsLoaderInstance<T, D>(documentAccessor as LimitedFirestoreDocumentAccessor<T, D>);
+  const loadPairForSnapshot = firestoreDocumentSnapshotPairsLoaderInstance<T, D>(documentAccessor);
 
   return iterateFirestoreDocumentSnapshots({
     ...config,

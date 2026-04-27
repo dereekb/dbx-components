@@ -402,9 +402,7 @@ export function storageFileUploadFiles(input: StorageFileUploadFilesInput): Stor
           allFilesAndLatestProgress[fileIndex] = nextProgress;
 
           // only set fileRef once
-          if (!allFilesAndDetails[fileIndex].fileRef) {
-            allFilesAndDetails[fileIndex].fileRef = nextProgress.fileRef;
-          }
+          allFilesAndDetails[fileIndex].fileRef ??= nextProgress.fileRef;
         }
 
         // if complete, update the indexes and details
@@ -472,7 +470,7 @@ export function storageFileUploadFiles(input: StorageFileUploadFilesInput): Stor
     async function runUploadTaskForFile([file, index]: readonly [File, IndexNumber]) {
       if (flaggedCancel) {
         onStartFileUploadFlaggedCancelled(index);
-        return Promise.resolve();
+        return;
       }
 
       return new Promise<void>((resolve) => {

@@ -130,10 +130,7 @@ export function unitedStatesAddressString(input: Maybe<Partial<UnitedStatesAddre
   const lineBreakLine = addLinebreaks ? '\n' : '';
   const parts: Maybe<string>[] = [];
 
-  parts.push(name);
-  parts.push(phone);
-  parts.push(line1);
-  parts.push(line2);
+  parts.push(name, phone, line1, line2);
 
   if (city || state || zip) {
     if (city && (state || zip)) {

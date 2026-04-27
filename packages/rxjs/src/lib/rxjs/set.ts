@@ -49,7 +49,7 @@ export function distinctUntilHasDifferentValues<I extends Iterable<K>, K extends
  * @returns operator that suppresses consecutive emissions whose extracted iterable values are the same
  */
 export function distinctUntilItemsHaveDifferentValues<I extends Maybe<unknown>, V extends Iterable<PrimativeKey>>(readValues: ReadValueFunction<NonNullable<I>, V>): MonoTypeOperatorFunction<I> {
-  return distinctUntilItemsValueChanges<I, V>(readValues as ReadValueFunction<NonNullable<I>, V>, hasSameValues);
+  return distinctUntilItemsValueChanges<I, V>(readValues, hasSameValues);
 }
 
 /**

@@ -703,7 +703,7 @@ export function formatStartedEndedDistanceString({ start, end }: DateRange): str
  * ```
  */
 export function toJsDayDate(input: DateOrDayString): Date {
-  return isDate(input) ? startOfDay(input as Date) : parseISO8601DayStringToDate(input as string);
+  return isDate(input) ? startOfDay(input) : parseISO8601DayStringToDate(input);
 }
 
 /**

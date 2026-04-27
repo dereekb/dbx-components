@@ -63,5 +63,5 @@ export type NoAuthUserIdentifier = typeof NO_AUTH_USER_IDENTIFIER;
  * ```
  */
 export function authUserIdentifier(inputId: Maybe<AuthUserIdentifier>): AuthUserIdentifier {
-  return inputId ? inputId : NO_AUTH_USER_IDENTIFIER;
+  return inputId || NO_AUTH_USER_IDENTIFIER;
 }

@@ -81,7 +81,8 @@ export function zohoDeskGetTicketThreadById(context: ZohoDeskContext): ZohoDeskG
     const { ticketId, threadId, include } = input;
     const params = makeUrlSearchParams([{ include: joinThreadInclude(include) }]);
     const queryString = params.toString();
-    return context.fetchJson<ZohoDeskTicketThread>(`/tickets/${ticketId}/threads/${threadId}${queryString ? `?${queryString}` : ''}`, zohoDeskThreadApiFetchJsonInput('GET'));
+    const querySuffix = queryString ? '?' + queryString : '';
+    return context.fetchJson<ZohoDeskTicketThread>(`/tickets/${ticketId}/threads/${threadId}${querySuffix}`, zohoDeskThreadApiFetchJsonInput('GET'));
   };
 }
 

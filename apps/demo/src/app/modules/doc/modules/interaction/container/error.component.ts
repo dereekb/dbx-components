@@ -49,9 +49,7 @@ export class DocInteractionErrorComponent {
   });
 
   showErrorSnackbar(errorNumber?: Maybe<number>) {
-    if (errorNumber == null) {
-      errorNumber = randomNumber(6, 'floor');
-    }
+    errorNumber ??= randomNumber(6, 'floor');
 
     let error: ReadableError;
 

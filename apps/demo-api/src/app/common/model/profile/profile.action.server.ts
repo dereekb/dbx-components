@@ -79,7 +79,7 @@ export function initProfileForUidFactory({ profileCollection: profileFirestoreCo
         });
       }
 
-      return profile as ProfileDocument;
+      return profile;
     });
   };
 }
@@ -186,7 +186,7 @@ export function createTestNotificationFactory(context: ProfileServerActionsConte
 
       // load the existing notification summary if it exists and check number of
       const notificationSummaryId = twoWayFlatFirestoreModelKey(document.key);
-      const notificationSummaryDocument = notificationSummaryCollection.documentAccessor().loadDocumentForId(notificationSummaryId as NotificationSummaryId);
+      const notificationSummaryDocument = notificationSummaryCollection.documentAccessor().loadDocumentForId(notificationSummaryId);
 
       const notificationSummary = await notificationSummaryDocument.snapshotData();
 

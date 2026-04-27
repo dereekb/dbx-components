@@ -460,7 +460,7 @@ export function isolateWebsitePathFunction(config: IsolateWebsitePathFunctionCon
 
   const pathTransform: TransformStringFunction<WebsitePath> = chainMapSameFunctions([
     // remove any base path
-    basePathRegex != null ? (inputPath) => inputPath.replace(basePathRegex as RegExp, '') as WebsitePath : undefined,
+    basePathRegex != null ? (inputPath) => inputPath.replace(basePathRegex, '') as WebsitePath : undefined,
     // remove the query parameters
     removeQueryParameters != null ? (inputPath) => websitePathAndQueryPair(inputPath).path : undefined,
     // isolate range

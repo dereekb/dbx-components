@@ -103,9 +103,9 @@ export function combineLoadingStates<O>(...args: any[]): Observable<LoadingState
 export function combineLoadingStates<O>(...args: any[]): Observable<LoadingState<O>> {
   /* eslint-enable @typescript-eslint/max-params */
   const validArgs = filterMaybeArrayValues(args); // filter out any undefined values
-  const lastValueIsMergeFn = typeof validArgs[validArgs.length - 1] === 'function';
-  const obsArgs: Observable<LoadingState<any>>[] = lastValueIsMergeFn ? validArgs.slice(0, validArgs.length - 1) : validArgs;
-  const mergeFn = lastValueIsMergeFn ? validArgs[validArgs.length - 1] : undefined;
+  const lastValueIsMergeFn = typeof validArgs.at(-1) === 'function';
+  const obsArgs: Observable<LoadingState<any>>[] = lastValueIsMergeFn ? validArgs.slice(0, -1) : validArgs;
+  const mergeFn = lastValueIsMergeFn ? validArgs.at(-1) : undefined;
 
   return combineLatest(obsArgs).pipe(
     distinctUntilChanged((x, y) => {

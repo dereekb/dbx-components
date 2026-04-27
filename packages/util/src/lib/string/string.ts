@@ -425,7 +425,7 @@ export function cutString(input: Maybe<string>, maxLength: number, endText?: May
  * @returns the string with collapsed whitespace
  */
 export function flattenWhitespace(input: string): string {
-  return input.replace(/[^\S\r\n]+/g, ' ').trim();
+  return input.replaceAll(/[^\S\r\n]+/g, ' ').trim();
 }
 
 /**

@@ -137,7 +137,7 @@ export const updateNotificationUserParamsType = targetModelParamsType.merge({
 
 export type ResyncNotificationUserParams = TargetModelParams;
 
-export const resyncNotificationUserParamsType = targetModelParamsType as Type<ResyncNotificationUserParams>;
+export const resyncNotificationUserParamsType = targetModelParamsType;
 
 export interface ResyncNotificationUserResult {
   readonly notificationBoxesUpdated: number;
@@ -228,7 +228,7 @@ export interface InitializeAllApplicableNotificationSummariesResult {
  */
 export type UpdateNotificationBoxParams = TargetModelParams;
 
-export const updateNotificationBoxParamsType = targetModelParamsType as Type<UpdateNotificationBoxParams>;
+export const updateNotificationBoxParamsType = targetModelParamsType;
 
 /**
  * Used to create/update a notification box recipient.

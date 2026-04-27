@@ -82,7 +82,8 @@ export function zohoDeskGetAgentById(context: ZohoDeskContext): ZohoDeskGetAgent
     const { agentId, include } = input;
     const params = makeUrlSearchParams([{ include: joinAgentInclude(include) }]);
     const queryString = params.toString();
-    return context.fetchJson<ZohoDeskAgent>(`/agents/${agentId}${queryString ? `?${queryString}` : ''}`, zohoDeskAgentApiFetchJsonInput('GET'));
+    const querySuffix = queryString ? '?' + queryString : '';
+    return context.fetchJson<ZohoDeskAgent>(`/agents/${agentId}${querySuffix}`, zohoDeskAgentApiFetchJsonInput('GET'));
   };
 }
 

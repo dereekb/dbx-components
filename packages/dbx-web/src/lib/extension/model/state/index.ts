@@ -1,7 +1,5 @@
 export * from './state';
 export * from './actions';
 
-import * as onDbxModel from './actions';
-import * as fromDbxModel from './reducers';
-
-export { onDbxModel, fromDbxModel };
+export * as onDbxModel from './actions';
+export * as fromDbxModel from './reducers';

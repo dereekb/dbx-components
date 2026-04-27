@@ -29,11 +29,11 @@ export function unixDateTimeSecondsNumberFromDateOrTimeNumber(input: Maybe<DateO
   let result: Maybe<UnixDateTimeSecondsNumber>;
 
   if (input == null) {
-    result = input as null | undefined;
+    result = input;
   } else if (isDate(input)) {
-    result = unixDateTimeSecondsNumberFromDate(input as Date);
+    result = unixDateTimeSecondsNumberFromDate(input);
   } else {
-    result = input as UnixDateTimeSecondsNumber;
+    result = input;
   }
 
   return result;
@@ -73,11 +73,11 @@ export function dateFromDateOrTimeSecondsNumber(input: Maybe<DateOrUnixDateTimeS
   let result: Maybe<Date>;
 
   if (input == null) {
-    result = input as null | undefined;
+    result = input;
   } else if (isDate(input)) {
-    result = input as Date;
+    result = input;
   } else {
-    result = unixDateTimeSecondsNumberToDate(input as UnixDateTimeSecondsNumber);
+    result = unixDateTimeSecondsNumberToDate(input);
   }
 
   return result;

@@ -82,9 +82,9 @@ export interface BlockingFunctionBuilder<E extends object, O> {
  * @returns A {@link BlockingFunctionWithHandler} with the handler accessible via `__handler`.
  */
 export function makeBlockingFunctionWithHandler<E extends object, O>(blockingFunctionBuilder: BlockingFunctionBuilder<E, O>, handler: BlockingFunctionHandler<E, O>, opts?: Maybe<BlockingOptions>): BlockingFunctionWithHandler<E, O> {
-  const blockingFn = opts != null ? blockingFunctionBuilder(opts, handler) : blockingFunctionBuilder(handler);
-  (blockingFn as BlockingFunctionWithHandler<E, O>).__handler = handler;
-  return blockingFn as BlockingFunctionWithHandler<E, O>;
+  const blockingFn = (opts != null ? blockingFunctionBuilder(opts, handler) : blockingFunctionBuilder(handler)) as BlockingFunctionWithHandler<E, O>;
+  blockingFn.__handler = handler;
+  return blockingFn;
 }
 
 // MARK: Blocking Function

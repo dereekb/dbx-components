@@ -107,7 +107,7 @@ export class DbxEmbedComponent {
 
           if (element) {
             // remove all embeds from the element
-            element?.childNodes.forEach((x) => element.removeChild(x));
+            element?.childNodes.forEach((x) => (x as ChildNode).remove());
 
             if (srcUrl) {
               const isImageType = type?.startsWith('image/');

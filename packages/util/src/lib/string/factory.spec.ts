@@ -18,7 +18,7 @@ describe('stringFromDateFactory', () => {
       const beforeTime = Date.now();
       const result = factory();
       const afterTime = Date.now();
-      const resultTime = parseInt(result, 10);
+      const resultTime = Number.parseInt(result, 10);
       expect(resultTime).toBeGreaterThanOrEqual(beforeTime);
       expect(resultTime).toBeLessThanOrEqual(afterTime);
     });

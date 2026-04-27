@@ -48,9 +48,9 @@ describe('getTimezoneAbbreviation()', () => {
     expect(result).toBe(UTC_TIMEZONE_STRING);
   });
 
-  it('should return UKNOWN for undefined timezone', () => {
+  it('should return UNKNOWN for undefined timezone', () => {
     const result = getTimezoneAbbreviation(undefined);
-    expect(result).toBe('UKNOWN');
+    expect(result).toBe('UNKNOWN');
   });
 
   it('should return an abbreviation for a valid timezone', () => {

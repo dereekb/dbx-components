@@ -105,7 +105,7 @@ export function zohoAccountsFactory(factoryConfig: ZohoAccountsFactoryConfig): Z
     });
 
     const tokenRefresher: ZohoAccessTokenRefresher = async () => {
-      const createdAt = new Date().getTime();
+      const createdAt = Date.now();
       const { access_token, api_domain, scope, expires_in } = await zohoAccountsAccessToken(accountsContext)();
 
       const result: ZohoAccessToken = {
@@ -211,7 +211,7 @@ export function zohoAccountsZohoAccessTokenFactory(config: ZohoAccountsZohoAcces
 
     // check expiration
     if (currentToken != null) {
-      const isExpired = new Date().getTime() + tokenExpirationBuffer >= currentToken.expiresAt.getTime();
+      const isExpired = Date.now() + tokenExpirationBuffer >= currentToken.expiresAt.getTime();
 
       if (isExpired) {
         currentToken = null;

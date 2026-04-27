@@ -1,4 +1,4 @@
-import { SORT_VALUE_LESS_THAN, SORT_VALUE_GREATER_THAN, SORT_VALUE_EQUAL, compareFnOrder, type SortingOrder, type SortCompareFunction, copyArray } from '@dereekb/util';
+import { SORT_VALUE_LESS_THAN, SORT_VALUE_GREATER_THAN, SORT_VALUE_EQUAL, compareFnOrder, type SortingOrder, type SortCompareFunction, type SortComparisonNumber, copyArray } from '@dereekb/util';
 import { type ReadDateFunction, type ReadISO8601DateStringUTCFullFunction } from './date';
 
 /**
@@ -51,7 +51,17 @@ export function sortByISO8601DateStringFunction<T>(readDateFn: ReadISO8601DateSt
     const bDate = readDateFn(b);
 
     // Lexiographical comparison of the ISO8601 Date strings.
-    return aDate < bDate ? SORT_VALUE_LESS_THAN : aDate > bDate ? SORT_VALUE_GREATER_THAN : SORT_VALUE_EQUAL;
+    let result: SortComparisonNumber;
+
+    if (aDate < bDate) {
+      result = SORT_VALUE_LESS_THAN;
+    } else if (aDate > bDate) {
+      result = SORT_VALUE_GREATER_THAN;
+    } else {
+      result = SORT_VALUE_EQUAL;
+    }
+
+    return result;
   };
 }
 

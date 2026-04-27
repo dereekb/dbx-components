@@ -5,7 +5,7 @@ const importEsm = new Function('modulePath', 'return import(modulePath)');
 
 export default async (config: any, options: any) => {
   const { visualizer } = await importEsm('rollup-plugin-visualizer');
-  const name = (options?.importPath ?? 'stats').replace(/[@/]/g, '-');
+  const name = (options?.importPath ?? 'stats').replaceAll(/[@/]/g, '-');
 
   config.plugins = [...(Array.isArray(config.plugins) ? config.plugins : []), visualizer({ filename: `./.stats/rollup/${name}.html` })];
 

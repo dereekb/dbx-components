@@ -103,7 +103,7 @@ export function dbxForgeSearchableStringChipField<M = unknown>(config: DbxForgeS
   return dbxForgeSearchableChipField<string, M>({
     ...config,
     props: {
-      ...(config.props ?? {}),
+      ...config.props,
       allowStringValues: true
     }
   } as DbxForgeSearchableChipFieldConfig<string, M>);

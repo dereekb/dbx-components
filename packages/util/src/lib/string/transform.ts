@@ -101,7 +101,7 @@ export type TransformStringFunctionConfigInput<S extends string = string> = Tran
  * @returns A `TransformStringFunctionConfig` object, or `undefined` if the input config is undefined.
  */
 export function transformStringFunctionConfig<S extends string = string>(config?: TransformStringFunctionConfigInput<S>): Maybe<TransformStringFunctionConfig<S>> {
-  return config ? (typeof config === 'function' ? { transform: config } : (config as TransformStringFunctionConfig<S>)) : undefined;
+  return config ? (typeof config === 'function' ? { transform: config } : config) : undefined;
 }
 
 /**
@@ -136,7 +136,7 @@ export function transformStringFunction<S extends string = string>(config: Trans
       baseTransform = sliceTransform;
     } else {
       const initialBaseTransform = baseTransform;
-      baseTransform = (x) => (initialBaseTransform as TransformStringFunction)(sliceTransform(x));
+      baseTransform = (x) => initialBaseTransform(sliceTransform(x));
     }
   }
 
@@ -144,7 +144,7 @@ export function transformStringFunction<S extends string = string>(config: Trans
 
   if (config.trim) {
     if (baseTransform != null) {
-      transform = (x) => (baseTransform as TransformStringFunction)(stringTrimFunction(x));
+      transform = (x) => baseTransform(stringTrimFunction(x));
     } else {
       transform = stringTrimFunction;
     }

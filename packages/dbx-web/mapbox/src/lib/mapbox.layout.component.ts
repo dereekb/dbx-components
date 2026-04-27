@@ -215,10 +215,7 @@ export class DbxMapboxLayoutComponent implements OnInit, OnDestroy {
   }
 
   toggleDrawer(open?: Maybe<boolean>) {
-    if (open == null) {
-      open = !this.isDrawerOpenSignal();
-    }
-
+    open ??= !this.isDrawerOpenSignal();
     this.isDrawerOpenSignal.set(open);
   }
 }
