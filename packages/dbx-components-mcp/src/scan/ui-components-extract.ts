@@ -14,8 +14,9 @@
  */
 
 import { type } from 'arktype';
-import { Node, SyntaxKind, type CallExpression, type ClassDeclaration, type Decorator, type JSDoc, type ObjectLiteralExpression, type Project, type PropertyDeclaration, type SourceFile } from 'ts-morph';
+import { Node, type CallExpression, type ClassDeclaration, type Decorator, type JSDoc, type ObjectLiteralExpression, type Project, type PropertyDeclaration, type SourceFile } from 'ts-morph';
 import { type UiComponentEntry, type UiComponentInputEntry, type UiComponentOutputEntry } from '../manifest/ui-components-schema.js';
+import { isVisibleProperty, readPropertyDescription, readStringProperty, splitListTagText, unwrapFenced } from './scan-extract-utils.js';
 
 // MARK: Tag names
 const UI_COMPONENT_MARKER = 'dbxWebComponent';
@@ -242,23 +243,6 @@ function applyJsDocTag(state: MutableTagState, name: string, text: string): void
   }
 }
 
-function splitListTagText(text: string): readonly string[] {
-  const out: string[] = [];
-  for (const piece of text.split(/[\s,]+/)) {
-    const trimmed = piece.trim();
-    if (trimmed.length > 0) {
-      out.push(trimmed);
-    }
-  }
-  return out;
-}
-
-function unwrapFenced(text: string): string {
-  const trimmed = text.trim();
-  const match = /^```[a-zA-Z]*\n([\s\S]*?)\n```\s*$/.exec(trimmed);
-  return match ? match[1] : trimmed;
-}
-
 // MARK: Class entry construction
 interface BuildEntryFromClassInput {
   readonly decl: ClassDeclaration;
@@ -431,22 +415,6 @@ function readDecoratorConfig(decorator: Decorator): DecoratorConfig {
   return config;
 }
 
-function readStringProperty(obj: ObjectLiteralExpression, propName: string): string | undefined {
-  const prop = obj.getProperty(propName);
-  if (prop === undefined || !Node.isPropertyAssignment(prop)) {
-    return undefined;
-  }
-  const initializer = prop.getInitializer();
-  if (initializer === undefined) {
-    return undefined;
-  }
-  let result: string | undefined;
-  if (Node.isStringLiteral(initializer) || Node.isNoSubstitutionTemplateLiteral(initializer)) {
-    result = initializer.getLiteralText();
-  }
-  return result;
-}
-
 function detectContentProjection(obj: ObjectLiteralExpression): string | undefined {
   const template = readStringProperty(obj, 'template');
   if (template === undefined) {
@@ -476,7 +444,7 @@ function extractInputs(decl: ClassDeclaration): readonly UiComponentInputEntry[]
   const inputs: UiComponentInputEntry[] = [];
   const seen = new Set<string>();
   for (const property of collectClassPropertiesWithInheritance(decl)) {
-    if (!isVisibleMember(property)) {
+    if (!isVisibleProperty(property)) {
       continue;
     }
     if (hasInternalTag(property)) {
@@ -615,7 +583,7 @@ function extractOutputs(decl: ClassDeclaration): readonly UiComponentOutputEntry
   const outputs: UiComponentOutputEntry[] = [];
   const seen = new Set<string>();
   for (const property of collectClassPropertiesWithInheritance(decl)) {
-    if (!isVisibleMember(property)) {
+    if (!isVisibleProperty(property)) {
       continue;
     }
     if (hasInternalTag(property)) {
@@ -693,13 +661,6 @@ function readSignalOutput(property: PropertyDeclaration): UiComponentOutputEntry
 }
 
 // MARK: Member-level helpers
-function isVisibleMember(property: PropertyDeclaration): boolean {
-  if (property.hasModifier(SyntaxKind.PrivateKeyword) || property.hasModifier(SyntaxKind.ProtectedKeyword)) {
-    return false;
-  }
-  return true;
-}
-
 function hasInternalTag(property: PropertyDeclaration): boolean {
   for (const jsDoc of property.getJsDocs()) {
     for (const tag of jsDoc.getTags()) {
@@ -746,17 +707,6 @@ function readPropertyOverrides(property: PropertyDeclaration): PropertyOverrides
     ...(typeOverride === undefined ? {} : { typeOverride }),
     ...(requiredOverride === undefined ? {} : { requiredOverride })
   };
-}
-
-function readPropertyDescription(property: PropertyDeclaration): string {
-  const summaries: string[] = [];
-  for (const jsDoc of property.getJsDocs()) {
-    const desc = jsDoc.getDescription().trim();
-    if (desc.length > 0) {
-      summaries.push(desc);
-    }
-  }
-  return summaries.join('\n\n');
 }
 
 // MARK: Arktype runtime guard

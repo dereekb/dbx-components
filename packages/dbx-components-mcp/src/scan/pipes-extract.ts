@@ -14,6 +14,7 @@
 
 import { Node, type ClassDeclaration, type Decorator, type JSDoc, type MethodDeclaration, type ObjectLiteralExpression, type ParameterDeclaration, type Project, type SourceFile } from 'ts-morph';
 import type { PipeArgEntry, PipeEntry } from '../manifest/pipes-schema.js';
+import { readStringProperty, splitListTagText, unwrapFenced } from './scan-extract-utils.js';
 
 // MARK: Tag names
 const PIPE_MARKER = 'dbxPipe';
@@ -229,23 +230,6 @@ function applyJsDocTag(state: MutableTagState, name: string, text: string): void
   }
 }
 
-function splitListTagText(text: string): readonly string[] {
-  const out: string[] = [];
-  for (const piece of text.split(/[\s,]+/)) {
-    const trimmed = piece.trim();
-    if (trimmed.length > 0) {
-      out.push(trimmed);
-    }
-  }
-  return out;
-}
-
-function unwrapFenced(text: string): string {
-  const trimmed = text.trim();
-  const match = /^```[a-zA-Z]*\n([\s\S]*?)\n```\s*$/.exec(trimmed);
-  return match ? match[1] : trimmed;
-}
-
 // MARK: Class entry construction
 interface BuildEntryFromClassInput {
   readonly decl: ClassDeclaration;
@@ -361,22 +345,6 @@ function readPipeDecoratorConfig(decorator: Decorator): PipeDecoratorInfo | unde
   const pureLiteral = readBooleanProperty(firstArg, 'pure');
   const purity: PipeEntry['purity'] = pureLiteral === false ? 'impure' : 'pure';
   return { name, purity };
-}
-
-function readStringProperty(obj: ObjectLiteralExpression, propName: string): string | undefined {
-  const prop = obj.getProperty(propName);
-  if (prop === undefined || !Node.isPropertyAssignment(prop)) {
-    return undefined;
-  }
-  const initializer = prop.getInitializer();
-  if (initializer === undefined) {
-    return undefined;
-  }
-  let result: string | undefined;
-  if (Node.isStringLiteral(initializer) || Node.isNoSubstitutionTemplateLiteral(initializer)) {
-    result = initializer.getLiteralText();
-  }
-  return result;
 }
 
 function readBooleanProperty(obj: ObjectLiteralExpression, propName: string): boolean | undefined {

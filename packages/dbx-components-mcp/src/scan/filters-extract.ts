@@ -14,8 +14,9 @@
  * refs).
  */
 
-import { Node, SyntaxKind, type ClassDeclaration, type Decorator, type InterfaceDeclaration, type JSDoc, type ObjectLiteralExpression, type Project, type PropertyDeclaration } from 'ts-morph';
+import { Node, type ClassDeclaration, type InterfaceDeclaration, type JSDoc, type Project, type PropertyDeclaration } from 'ts-morph';
 import type { FilterInputEntry } from '../manifest/filters-schema.js';
+import { isVisibleProperty, readDirectiveDecorator, readPropertyDescription, readStringProperty, splitListTagText, unwrapFenced } from './scan-extract-utils.js';
 
 // MARK: Tag names
 const FILTER_MARKER = 'dbxFilter';
@@ -237,23 +238,6 @@ function applyJsDocTag(state: MutableTagState, name: string, text: string): void
   }
 }
 
-function splitListTagText(text: string): readonly string[] {
-  const out: string[] = [];
-  for (const piece of text.split(/[\s,]+/)) {
-    const trimmed = piece.trim();
-    if (trimmed.length > 0) {
-      out.push(trimmed);
-    }
-  }
-  return out;
-}
-
-function unwrapFenced(text: string): string {
-  const trimmed = text.trim();
-  const match = /^```[a-zA-Z]*\n([\s\S]*?)\n```\s*$/.exec(trimmed);
-  return match ? match[1] : trimmed;
-}
-
 // MARK: Class entry construction
 type BuildResult<T> = { readonly kind: 'ok'; readonly entry: T; readonly warnings: readonly FilterExtractWarning[] } | { readonly kind: 'skipped'; readonly warnings: readonly FilterExtractWarning[] };
 
@@ -322,58 +306,12 @@ function buildPatternEntry(input: { readonly decl: InterfaceDeclaration; readonl
   return { kind: 'ok', entry, warnings };
 }
 
-// MARK: @Directive() decorator
-function readDirectiveDecorator(decl: ClassDeclaration): { readonly selector: string } | undefined {
-  for (const decorator of decl.getDecorators()) {
-    const name = decorator.getName();
-    if (name !== 'Directive' && name !== 'Component') {
-      continue;
-    }
-    const selector = readSelector(decorator);
-    if (selector !== undefined) {
-      return { selector };
-    }
-  }
-  return undefined;
-}
-
-function readSelector(decorator: Decorator): string | undefined {
-  const callExpr = decorator.getCallExpression();
-  if (callExpr === undefined) {
-    return undefined;
-  }
-  const args = callExpr.getArguments();
-  if (args.length === 0) {
-    return undefined;
-  }
-  const firstArg = args[0];
-  if (!Node.isObjectLiteralExpression(firstArg)) {
-    return undefined;
-  }
-  return readStringProperty(firstArg, 'selector');
-}
-
-function readStringProperty(obj: ObjectLiteralExpression, propName: string): string | undefined {
-  const prop = obj.getProperty(propName);
-  if (prop === undefined || !Node.isPropertyAssignment(prop)) {
-    return undefined;
-  }
-  const initializer = prop.getInitializer();
-  if (initializer === undefined) {
-    return undefined;
-  }
-  if (Node.isStringLiteral(initializer) || Node.isNoSubstitutionTemplateLiteral(initializer)) {
-    return initializer.getLiteralText();
-  }
-  return undefined;
-}
-
 // MARK: @Input / input() / @Output / output()
 function extractInputs(decl: ClassDeclaration): readonly FilterInputEntry[] {
   const out: FilterInputEntry[] = [];
   const seen = new Set<string>();
   for (const property of decl.getProperties()) {
-    if (!isVisible(property)) continue;
+    if (!isVisibleProperty(property)) continue;
     const built = readDecoratorInput(property) ?? readSignalInput(property);
     if (built !== undefined && !seen.has(built.name)) {
       seen.add(built.name);
@@ -448,7 +386,7 @@ function extractOutputs(decl: ClassDeclaration): readonly FilterInputEntry[] {
   const out: FilterInputEntry[] = [];
   const seen = new Set<string>();
   for (const property of decl.getProperties()) {
-    if (!isVisible(property)) continue;
+    if (!isVisibleProperty(property)) continue;
     const built = readDecoratorOutput(property) ?? readSignalOutput(property);
     if (built !== undefined && !seen.has(built.name)) {
       seen.add(built.name);
@@ -502,20 +440,4 @@ function readSignalOutput(property: PropertyDeclaration): FilterInputEntry | und
     type,
     description: readPropertyDescription(property)
   };
-}
-
-function isVisible(property: PropertyDeclaration): boolean {
-  if (property.hasModifier(SyntaxKind.PrivateKeyword) || property.hasModifier(SyntaxKind.ProtectedKeyword)) {
-    return false;
-  }
-  return true;
-}
-
-function readPropertyDescription(property: PropertyDeclaration): string {
-  const summaries: string[] = [];
-  for (const jsDoc of property.getJsDocs()) {
-    const desc = jsDoc.getDescription().trim();
-    if (desc.length > 0) summaries.push(desc);
-  }
-  return summaries.join('\n\n');
 }

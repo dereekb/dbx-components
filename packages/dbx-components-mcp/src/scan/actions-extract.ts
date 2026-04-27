@@ -9,8 +9,9 @@
  *   - Enum declarations with `@dbxActionStateEnum` JSDoc marker → one state entry per member
  */
 
-import { Node, SyntaxKind, type ClassDeclaration, type Decorator, type EnumDeclaration, type EnumMember, type JSDoc, type ObjectLiteralExpression, type Project, type PropertyDeclaration, type MethodDeclaration } from 'ts-morph';
+import { Node, SyntaxKind, type ClassDeclaration, type EnumDeclaration, type EnumMember, type JSDoc, type Project, type PropertyDeclaration, type MethodDeclaration } from 'ts-morph';
 import type { ActionInputEntry, ActionOutputEntry, ActionStoreMethodEntry, ActionStoreObservableEntry, DbxActionStateValue } from '../manifest/actions-schema.js';
+import { flattenList, isVisibleProperty, readDirectiveDecorator, readPropertyDescription, readStringProperty, unwrapFenced } from './scan-extract-utils.js';
 
 // MARK: Tag names
 const ACTION_MARKER = 'dbxAction';
@@ -212,25 +213,6 @@ function readClassTags(jsDocs: readonly JSDoc[]): ClassTags {
   };
 }
 
-function flattenList(values: readonly string[]): readonly string[] {
-  const out: string[] = [];
-  for (const value of values) {
-    for (const piece of value.split(/[\s,]+/)) {
-      const trimmed = piece.trim();
-      if (trimmed.length > 0) {
-        out.push(trimmed);
-      }
-    }
-  }
-  return out;
-}
-
-function unwrapFenced(text: string): string {
-  const trimmed = text.trim();
-  const match = /^```[a-zA-Z]*\n([\s\S]*?)\n```\s*$/.exec(trimmed);
-  return match ? match[1] : trimmed;
-}
-
 // MARK: Class entry construction
 type BuildResult<T> = { readonly kind: 'ok'; readonly entry: T; readonly warnings: readonly ActionExtractWarning[] } | { readonly kind: 'skipped'; readonly warnings: readonly ActionExtractWarning[] };
 
@@ -360,57 +342,12 @@ function readEnumMemberLiteral(member: EnumMember): string {
   return member.getName();
 }
 
-// MARK: Directive decorator + inputs/outputs
-function readDirectiveDecorator(decl: ClassDeclaration): { readonly selector: string } | undefined {
-  for (const decorator of decl.getDecorators()) {
-    const name = decorator.getName();
-    if (name !== 'Directive' && name !== 'Component') {
-      continue;
-    }
-    const selector = readSelector(decorator);
-    if (selector !== undefined) {
-      return { selector };
-    }
-  }
-  return undefined;
-}
-
-function readSelector(decorator: Decorator): string | undefined {
-  const callExpr = decorator.getCallExpression();
-  if (callExpr === undefined) {
-    return undefined;
-  }
-  const args = callExpr.getArguments();
-  if (args.length === 0) {
-    return undefined;
-  }
-  const firstArg = args[0];
-  if (!Node.isObjectLiteralExpression(firstArg)) {
-    return undefined;
-  }
-  return readStringProperty(firstArg, 'selector');
-}
-
-function readStringProperty(obj: ObjectLiteralExpression, propName: string): string | undefined {
-  const prop = obj.getProperty(propName);
-  if (prop === undefined || !Node.isPropertyAssignment(prop)) {
-    return undefined;
-  }
-  const initializer = prop.getInitializer();
-  if (initializer === undefined) {
-    return undefined;
-  }
-  if (Node.isStringLiteral(initializer) || Node.isNoSubstitutionTemplateLiteral(initializer)) {
-    return initializer.getLiteralText();
-  }
-  return undefined;
-}
-
+// MARK: Inputs/outputs
 function extractInputs(decl: ClassDeclaration): readonly ActionInputEntry[] {
   const out: ActionInputEntry[] = [];
   const seen = new Set<string>();
   for (const property of decl.getProperties()) {
-    if (!isVisible(property)) continue;
+    if (!isVisibleProperty(property)) continue;
     const built = readDecoratorInput(property) ?? readSignalInput(property);
     if (built !== undefined && !seen.has(built.alias)) {
       seen.add(built.alias);
@@ -504,7 +441,7 @@ function extractOutputs(decl: ClassDeclaration): readonly ActionOutputEntry[] {
   const out: ActionOutputEntry[] = [];
   const seen = new Set<string>();
   for (const property of decl.getProperties()) {
-    if (!isVisible(property)) continue;
+    if (!isVisibleProperty(property)) continue;
     const built = readDecoratorOutput(property) ?? readSignalOutput(property);
     if (built !== undefined && !seen.has(built.name)) {
       seen.add(built.name);
@@ -593,7 +530,7 @@ function buildMethodSignature(method: MethodDeclaration): string {
 function extractStoreObservables(decl: ClassDeclaration): readonly ActionStoreObservableEntry[] {
   const out: ActionStoreObservableEntry[] = [];
   for (const property of decl.getProperties()) {
-    if (!isVisible(property)) continue;
+    if (!isVisibleProperty(property)) continue;
     const typeText = property.getTypeNode()?.getText();
     if (typeText === undefined) continue;
     if (!/^Observable<.+>$/.test(typeText) && !typeText.endsWith('$')) continue;
@@ -608,13 +545,6 @@ function extractStoreObservables(decl: ClassDeclaration): readonly ActionStoreOb
 }
 
 // MARK: Member helpers
-function isVisible(property: PropertyDeclaration): boolean {
-  if (property.hasModifier(SyntaxKind.PrivateKeyword) || property.hasModifier(SyntaxKind.ProtectedKeyword)) {
-    return false;
-  }
-  return true;
-}
-
 function isVisibleMethod(method: MethodDeclaration): boolean {
   if (method.hasModifier(SyntaxKind.PrivateKeyword) || method.hasModifier(SyntaxKind.ProtectedKeyword)) {
     return false;
@@ -624,15 +554,6 @@ function isVisibleMethod(method: MethodDeclaration): boolean {
     return false;
   }
   return true;
-}
-
-function readPropertyDescription(property: PropertyDeclaration): string {
-  const summaries: string[] = [];
-  for (const jsDoc of property.getJsDocs()) {
-    const desc = jsDoc.getDescription().trim();
-    if (desc.length > 0) summaries.push(desc);
-  }
-  return summaries.join('\n\n');
 }
 
 function readMethodDescription(method: MethodDeclaration): string {

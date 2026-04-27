@@ -18,6 +18,7 @@
 import { type } from 'arktype';
 import { Node, type InterfaceDeclaration, type JSDoc, type Project, type PropertySignature, type SourceFile, type TypeAliasDeclaration, type TypeNode, type TypeReferenceNode, type UnionTypeNode } from 'ts-morph';
 import { type ForgeFieldEntry, type ForgeFieldPropertyEntry } from '../manifest/forge-fields-schema.js';
+import { splitListTagText, unwrapFenced } from './scan-extract-utils.js';
 
 // MARK: Tag names
 const FORM_FIELD_MARKER = 'dbxFormField';
@@ -349,23 +350,6 @@ function applyJsDocTag(state: MutableTagState, name: string, text: string): void
     default:
       break;
   }
-}
-
-function splitListTagText(text: string): readonly string[] {
-  const out: string[] = [];
-  for (const piece of text.split(/[\s,]+/)) {
-    const trimmed = piece.trim();
-    if (trimmed.length > 0) {
-      out.push(trimmed);
-    }
-  }
-  return out;
-}
-
-function unwrapFenced(text: string): string {
-  const trimmed = text.trim();
-  const match = /^```[a-zA-Z]*\n([\s\S]*?)\n```\s*$/.exec(trimmed);
-  return match ? match[1] : trimmed;
 }
 
 // MARK: Entry construction
