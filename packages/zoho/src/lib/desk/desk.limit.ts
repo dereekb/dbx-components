@@ -44,12 +44,12 @@ export function zohoDeskRateLimitDetailsReader(headers: Headers): Maybe<ZohoRate
     if (retryAfterHeader != null) {
       const retryAfterSeconds = Number(retryAfterHeader);
 
-      if (!isNaN(retryAfterSeconds)) {
+      if (!Number.isNaN(retryAfterSeconds)) {
         resetAt = new Date(Date.now() + retryAfterSeconds * MS_IN_SECOND);
       }
     }
 
-    if (!isNaN(remaining)) {
+    if (!Number.isNaN(remaining)) {
       result = { remaining, resetAt };
     }
   }

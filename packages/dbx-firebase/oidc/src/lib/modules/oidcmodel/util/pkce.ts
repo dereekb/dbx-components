@@ -24,5 +24,5 @@ export async function generatePkceCodeChallenge(verifier: string): Promise<strin
 
 function base64UrlEncode(bytes: Uint8Array): string {
   const binString = Array.from(bytes, (byte) => String.fromCharCode(byte)).join('');
-  return btoa(binString).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  return btoa(binString).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '');
 }

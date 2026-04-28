@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/nestjs",
-  "version": "13.10.0",
+  "version": "13.10.1",
   "types": "./src/index.d.ts",
   "module": "./index.esm.js",
   "main": "./index.cjs.js",
@@ -49,27 +49,27 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/rxjs": "13.10.0",
-    "@dereekb/util": "13.10.0",
-    "@nestjs/common": "^11.1.17",
+    "@dereekb/rxjs": "13.10.1",
+    "@dereekb/util": "13.10.1",
+    "@nestjs/common": "^11.1.19",
     "@nestjs/config": "^4.0.4",
-    "@typeform/api-client": "^2.5.1",
+    "@typeform/api-client": "^2.10.2",
     "@vapi-ai/server-sdk": "^0.11.0",
-    "body-parser": "^2.0.0",
-    "discord.js": "^14.26.0",
-    "express": "^5.0.0",
-    "form-data": "^4.0.0",
-    "mailgun.js": "^12.0.0",
-    "openai": "^6.25.0",
-    "raw-body": "^3.0.0",
+    "body-parser": "^2.2.2",
+    "discord.js": "^14.26.3",
+    "express": "^5.2.1",
+    "form-data": "^4.0.5",
+    "mailgun.js": "^12.9.0",
+    "openai": "^6.34.0",
+    "raw-body": "^3.0.2",
     "stripe": "^20.4.1"
   },
   "dependencies": {},
   "devDependencies": {
-    "@angular/core": "21.2.4",
-    "@nestjs/core": "^11.1.18",
-    "@typescript-eslint/parser": "8.56.1",
-    "eslint": "9.39.3",
-    "rxjs": "^7.8.0"
+    "@angular/core": "21.2.10",
+    "@nestjs/core": "^11.1.19",
+    "@typescript-eslint/parser": "8.59.0",
+    "eslint": "9.39.4",
+    "rxjs": "^7.8.2"
   }
 }

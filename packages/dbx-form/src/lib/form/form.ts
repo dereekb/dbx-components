@@ -66,9 +66,24 @@ export abstract class DbxForm<T = unknown> {
   abstract readonly stream$: Observable<DbxFormEvent>;
 
   /**
-   * Returns an observable that returns the current state of the form.
+   * Returns an observable that emits the form's current value, optionally gated by the
+   * implementation's validity rules (e.g. {@link DbxForgeFormContext.requireValid}).
+   *
+   * Consumers that only want a value once the form passes validation should use this method.
    */
   abstract getValue(): Observable<T>;
+
+  /**
+   * Returns an observable that emits the form's current value, regardless of validity gates.
+   *
+   * Used by infrastructure (e.g. {@link DbxActionFormDirective}) that needs the underlying
+   * value to feed user-supplied isValid/isModified functions even while the form is invalid.
+   * Defaults to {@link getValue}; implementations that gate {@link getValue} on validity
+   * should override this to bypass that gate.
+   */
+  currentValue(): Observable<T> {
+    return this.getValue();
+  }
 
   /**
    * Returns an observable that returns the current disabled keys.

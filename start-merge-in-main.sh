@@ -36,7 +36,7 @@ echo "Latest main commit timestamp: $MAIN_DATE"
 # These are new work on develop that should be preserved after the merge.
 NEW_COMMITS=$(git log HEAD --format="%H" --after="@$MAIN_TIMESTAMP" --no-merges)
 
-if [ -n "$NEW_COMMITS" ]; then
+if [[ -n "$NEW_COMMITS" ]]; then
   COMMIT_COUNT=$(echo "$NEW_COMMITS" | wc -l | tr -d ' ')
   echo ""
   echo "Found $COMMIT_COUNT commit(s) on develop after the latest main commit:"
@@ -51,7 +51,7 @@ if [ -n "$NEW_COMMITS" ]; then
   # This is the most recent commit on develop that is at or before the main commit time.
   RESET_TARGET=$(git log HEAD --format="%H" --before="@$((MAIN_TIMESTAMP + 1))" -1)
 
-  if [ -z "$RESET_TARGET" ]; then
+  if [[ -z "$RESET_TARGET" ]]; then
     echo "Error: could not find a commit to reset to. Aborting."
     git branch -D $TEMP_BRANCH
     exit 1
@@ -65,7 +65,7 @@ fi
 echo "Merging origin/main into current branch..."
 git merge origin/main --no-commit --no-ff
 
-if [ -n "$NEW_COMMITS" ]; then
+if [[ -n "$NEW_COMMITS" ]]; then
   echo ""
   echo "New develop commits have been saved to '$TEMP_BRANCH'."
   echo "After resolving any merge conflicts, run end-merge-in-main.sh to complete the merge."

@@ -112,7 +112,7 @@ export class QuizAnswerNumberComponent {
 
   handleKeyDown(event: KeyboardEvent) {
     const number = Number(event.key);
-    if (!isNaN(number)) {
+    if (!Number.isNaN(number)) {
       this.clickedAnswer(number);
     }
   }

@@ -130,9 +130,7 @@ export class DbxHelpViewPopoverComponent extends AbstractPopoverDirective<unknow
   readonly popoverHeaderConfig: Maybe<DbxInjectionComponentConfig> = (() => {
     let config: Maybe<DbxInjectionComponentConfig> = this.config.popoverHeaderConfig;
 
-    if (!config) {
-      config = this._helpWidgetService.getPopoverHeaderComponentConfig();
-    }
+    config ??= this._helpWidgetService.getPopoverHeaderComponentConfig();
 
     return config;
   })();

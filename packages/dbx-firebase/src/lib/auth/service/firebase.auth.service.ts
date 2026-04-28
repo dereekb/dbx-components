@@ -144,11 +144,7 @@ export class DbxFirebaseAuthService implements DbxAuthService {
   readonly authUser$: Observable<User> = this.currentAuthUser$.pipe(filterMaybe());
   readonly authUserInfo$: Observable<AuthUserInfo> = this.authUser$.pipe(map(authUserInfoFromAuthUser));
 
-  readonly hasAuthUser$: Observable<boolean> = this.currentAuthUser$.pipe(
-    map((x) => Boolean(x)),
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
+  readonly hasAuthUser$: Observable<boolean> = this.currentAuthUser$.pipe(map(Boolean), distinctUntilChanged(), shareReplay(1));
 
   readonly isAnonymousUser$: Observable<boolean> = this.authUser$.pipe(
     map((x) => x.isAnonymous),

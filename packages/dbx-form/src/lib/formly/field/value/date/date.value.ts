@@ -107,7 +107,7 @@ export function dbxDateTimeInputValueParseFactory(mode: DbxDateTimeValueMode, ti
 
     factory = (input) => {
       const date = originalFactory(input);
-      if (!date || (date instanceof Date && isNaN(date.getTime()))) return date;
+      if (!date || (date instanceof Date && Number.isNaN(date.getTime()))) return date;
       return timezoneInstance.systemDateToTargetDate(date);
     };
   }

@@ -20,7 +20,9 @@ import { DocActionFormExampleFormTwoComponent } from '../component/action.exampl
 export class DocActionFormComponent {
   readonly defaultValue: DocActionFormExampleValue = {
     name: 'test',
-    date: addDays(new Date(), 2)
+    date: addDays(new Date(), 2),
+    startTime: addDays(new Date(), 2),
+    endTime: addDays(new Date(), 2)
   };
 
   readonly defaultValue$ = of(this.defaultValue);

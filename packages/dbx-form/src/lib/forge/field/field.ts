@@ -3,6 +3,8 @@ import { type AsyncCustomValidator, type CustomFnConfig, type CustomValidator, t
 import { type DbxForgeFieldValidation } from './field.type';
 import { type DbxForgeField, type DbxForgeFieldFormConfig, mergeDbxForgeFieldFormConfig } from '../form/forge.form';
 
+export const SELF_DEPENDENCY_TOKEN = '$self' as const; // TODO: Import from ng-forge?
+
 // MARK: Forge Field
 /**
  * Contains a reference to a hint value of some type.
@@ -573,12 +575,14 @@ export function dbxForgeBuildFieldDef<C extends DbxForgeFieldFunctionDef<any>, F
           if ('expression' in v && v.expression) {
             result = `custom:expr:${v.kind ?? v.expression}`;
           } else {
-            const customFnName = (v as any).functionName ?? `__inline_${(_inlineValidatorCount += 1)}__`;
+            _inlineValidatorCount += 1;
+            const customFnName = (v as any).functionName ?? `__inline_${_inlineValidatorCount}__`;
             result = `custom:fn:${customFnName}`;
           }
           break;
         case 'async': {
-          const asyncFnName = (v as any).functionName ?? `__inline_${(_inlineValidatorCount += 1)}__`;
+          _inlineValidatorCount += 1;
+          const asyncFnName = (v as any).functionName ?? `__inline_${_inlineValidatorCount}__`;
           result = `async:${asyncFnName}`;
           break;
         }
@@ -814,7 +818,8 @@ function _finalizeLogicEntries<C extends DbxForgeFieldFunctionDef<any>, FV = any
    * @returns a unique auto-generated function name based on the field key
    */
   function _generateDefaultFunctionName() {
-    return `__fn__${fieldDef.key}_${(customFunctionNameCount += 1)}`;
+    customFunctionNameCount += 1;
+    return `__fn__${fieldDef.key}_${customFunctionNameCount}`;
   }
 
   /**
@@ -889,7 +894,7 @@ function _finalizeLogicEntries<C extends DbxForgeFieldFunctionDef<any>, FV = any
 
     // set the default dependsOn if not set
     if (!derivationEntry.dependsOn) {
-      derivationEntry.dependsOn = [fieldDef.key];
+      derivationEntry.dependsOn = [SELF_DEPENDENCY_TOKEN];
     }
   }
 
@@ -927,14 +932,14 @@ function _finalizeLogicEntries<C extends DbxForgeFieldFunctionDef<any>, FV = any
           type: 'derivation',
           trigger: 'onChange',
           functionName: _registerCustomFunction({ isAsync: false, fn }),
-          dependsOn: [fieldDef.key]
+          dependsOn: [SELF_DEPENDENCY_TOKEN]
         };
         break;
       case 'async':
         result = {
           type: 'derivation',
           functionName: _registerCustomFunction({ isAsync: true, fn }),
-          dependsOn: [fieldDef.key]
+          dependsOn: [SELF_DEPENDENCY_TOKEN]
         };
         break;
       case 'debounced':
@@ -942,7 +947,7 @@ function _finalizeLogicEntries<C extends DbxForgeFieldFunctionDef<any>, FV = any
           type: 'derivation',
           trigger: 'debounced',
           functionName: _registerCustomFunction({ isAsync: false, fn }),
-          dependsOn: [fieldDef.key],
+          dependsOn: [SELF_DEPENDENCY_TOKEN],
           debounceMs: entry.debounceMs
         };
         break;
@@ -1019,7 +1024,8 @@ function _finalizeValidators<C extends DbxForgeFieldFunctionDef<any>>(instance: 
   let validatorFnNameCount = 0;
 
   function _generateValidatorFunctionName() {
-    return `__vfn__${fieldDef.key}_${(validatorFnNameCount += 1)}`;
+    validatorFnNameCount += 1;
+    return `__vfn__${fieldDef.key}_${validatorFnNameCount}`;
   }
 
   const finalizedValidators: ValidatorConfig[] = validators.map((entry) => {

@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/zoom",
-  "version": "13.10.0",
+  "version": "13.10.1",
   "exports": {
     "./nestjs": {
       "module": "./nestjs/index.esm.js",
@@ -10,16 +10,16 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/nestjs": "13.10.0",
-    "@dereekb/rxjs": "13.10.0",
-    "@dereekb/util": "13.10.0",
-    "@nestjs/common": "^11.1.17",
+    "@dereekb/nestjs": "13.10.1",
+    "@dereekb/rxjs": "13.10.1",
+    "@dereekb/util": "13.10.1",
+    "@nestjs/common": "^11.1.19",
     "@nestjs/config": "^4.0.4",
-    "express": "^5.0.0",
-    "make-error": "^1.3.0"
+    "express": "^5.2.1",
+    "make-error": "^1.3.6"
   },
   "devDependencies": {
-    "@nestjs/testing": "^11.1.14",
-    "date-fns": "^4.0.0"
+    "@nestjs/testing": "^11.1.19",
+    "date-fns": "^4.1.0"
   }
 }

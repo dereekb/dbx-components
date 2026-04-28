@@ -363,7 +363,7 @@ export function areAllLoadingStatesFinishedLoading(states: LoadingState[]): bool
  * @returns a predicate function for the given type
  */
 export function isLoadingStateWithStateType(type: LoadingStateType) {
-  const defaultResult = type === LoadingStateType.IDLE ? true : false;
+  const defaultResult = type === LoadingStateType.IDLE;
   return <L extends LoadingState>(state: Maybe<L>) => {
     return state ? loadingStateType(state) === type : defaultResult;
   };
@@ -534,9 +534,9 @@ export function mergeLoadingStates<O>(...args: any[]): LoadingState<O>;
 export function mergeLoadingStates<O>(...args: any[]): LoadingState<O> {
   /* eslint-enable @typescript-eslint/max-params */
   const validArgs = filterMaybeArrayValues(args); // filter out any undefined values
-  const lastValueIsMergeFn = typeof validArgs[validArgs.length - 1] === 'function';
-  const loadingStates: LoadingState<any>[] = lastValueIsMergeFn ? validArgs.slice(0, validArgs.length - 1) : validArgs;
-  const mergeFn = lastValueIsMergeFn ? args[validArgs.length - 1] : (...inputArgs: any[]) => mergeObjects(inputArgs);
+  const lastValueIsMergeFn = typeof validArgs.at(-1) === 'function';
+  const loadingStates: LoadingState<any>[] = lastValueIsMergeFn ? validArgs.slice(0, -1) : validArgs;
+  const mergeFn = lastValueIsMergeFn ? args.at(validArgs.length - 1) : (...inputArgs: any[]) => mergeObjects(inputArgs);
 
   const error = loadingStates.find((x) => x.error)?.error; // find the first error
   let result: LoadingState<O>;
@@ -645,7 +645,7 @@ export interface MapMultipleLoadingStateResultsConfiguration<T, X, L extends Loa
 export function mapMultipleLoadingStateResults<T, X, L extends LoadingState<X>[], R extends LoadingState<T>>(input: L, config: MapMultipleLoadingStateResultsConfiguration<T, X, L, R>): Maybe<R> {
   const { mapValues, mapState } = config;
   const loading = isAnyLoadingStateInLoadingState(input);
-  const error = input.map((x) => x.error).find((x) => Boolean(x));
+  const error = input.map((x) => x.error).find(Boolean);
   let result: Maybe<R>;
 
   if (!error && !loading) {

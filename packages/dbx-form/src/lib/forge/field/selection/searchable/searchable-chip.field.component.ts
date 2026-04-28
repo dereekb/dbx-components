@@ -103,9 +103,7 @@ export class DbxForgeSearchableChipFieldComponent<T = unknown, M = unknown, H ex
         }
       }
 
-      if (result == null) {
-        result = 'Invalid input';
-      }
+      result ??= 'Invalid input';
     }
 
     return result;

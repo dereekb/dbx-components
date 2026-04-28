@@ -292,7 +292,7 @@ export class DbxForgeSourceSelectFieldComponent<T extends PrimativeKey = Primati
     const fieldState = typeof fieldGetter === 'function' ? (fieldGetter as any)() : undefined;
     const fieldValue = fieldState?.value?.() as Maybe<T | T[]>;
     // ng-forge can seed the field with the empty-string primitive default; treat nullish/empty as unset.
-    const values = filterEmptyArrayValues(fieldValue != null ? convertMaybeToArray(fieldValue as T | T[]) : []);
+    const values = filterEmptyArrayValues(fieldValue != null ? convertMaybeToArray(fieldValue) : []);
     this._valuesSubject.next(values);
   });
 
@@ -417,7 +417,7 @@ export class DbxForgeSourceSelectFieldComponent<T extends PrimativeKey = Primati
     const multiple = p?.multiple ?? false;
     const sanitized = filterEmptyArrayValues(newValueArray);
     const value = multiple ? sanitized : lastValue(sanitized);
-    const valuesArray = convertMaybeToArray(value as T | T[]);
+    const valuesArray = convertMaybeToArray(value);
     this._valuesSubject.next(valuesArray);
     this._setFieldValue(value);
   }
@@ -461,7 +461,7 @@ export class DbxForgeSourceSelectFieldComponent<T extends PrimativeKey = Primati
               const metaResultsMapping: SourceSelectValue<T, M>[] = metaResults.filter((meta) => meta != null).map((meta) => ({ meta, value: valueReader(meta) }));
               const valueIndexHashMap = new Map(metaResultsMapping.map((x) => [x.value, x]));
               metaResultsMapping.forEach((x) => metaMap.set(x.value, x));
-              return mappingResult.map((x) => x[2] ?? valueIndexHashMap.get(x[1])).filter((x) => x != null) as SourceSelectValue<T, M>[];
+              return mappingResult.map((x) => x[2] ?? valueIndexHashMap.get(x[1])).filter((x) => x != null);
             })
           );
         }

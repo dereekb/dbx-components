@@ -544,7 +544,7 @@ else
   DEFAULT_MP=$(HOME="$TEST_HOME" $CLI recruit list -m Candidates --per-page 1 2>&1 || true)
   check_api_ok "default multiple-pages=1 reports ok" "$DEFAULT_MP"
   DEFAULT_MP_HAS_DATA_ARRAY=$(echo "$DEFAULT_MP" | jq '.data | type' 2>/dev/null)
-  if [ "$DEFAULT_MP_HAS_DATA_ARRAY" = "\"array\"" ]; then
+  if [[ "$DEFAULT_MP_HAS_DATA_ARRAY" = "\"array\"" ]]; then
     echo "  PASS: default mode returns .data array (single-page behavior preserved)"
     PASS=$((PASS + 1))
   else
@@ -560,7 +560,7 @@ else
 
   # In meta mode, stdout contains only meta — no data field
   MP_META_HAS_DATA=$(echo "$MP_META" | jq 'has("data")' 2>/dev/null)
-  if [ "$MP_META_HAS_DATA" = "false" ]; then
+  if [[ "$MP_META_HAS_DATA" = "false" ]]; then
     echo "  PASS: meta mode emits no data on stdout (low memory)"
     PASS=$((PASS + 1))
   else
@@ -570,7 +570,7 @@ else
 
   # Summary fields
   MP_PAGES_FETCHED=$(echo "$MP_META" | jq -r '.meta.pagesFetched' 2>/dev/null)
-  if [ "$MP_PAGES_FETCHED" -ge 1 ] 2>/dev/null; then
+  if [[ "$MP_PAGES_FETCHED" -ge 1 ]] 2>/dev/null; then
     echo "  PASS: meta.pagesFetched is set ($MP_PAGES_FETCHED)"
     PASS=$((PASS + 1))
   else
@@ -579,7 +579,7 @@ else
   fi
 
   MP_TOTAL=$(echo "$MP_META" | jq -r '.meta.totalRecords' 2>/dev/null)
-  if [ "$MP_TOTAL" -ge 0 ] 2>/dev/null; then
+  if [[ "$MP_TOTAL" -ge 0 ]] 2>/dev/null; then
     echo "  PASS: meta.totalRecords is numeric ($MP_TOTAL)"
     PASS=$((PASS + 1))
   else
@@ -588,7 +588,7 @@ else
   fi
 
   MP_HAS_MORE=$(echo "$MP_META" | jq -r '.meta.hasMorePagesAvailable' 2>/dev/null)
-  if [ "$MP_HAS_MORE" = "true" ] || [ "$MP_HAS_MORE" = "false" ]; then
+  if [[ "$MP_HAS_MORE" = "true" ]] || [[ "$MP_HAS_MORE" = "false" ]]; then
     echo "  PASS: meta.hasMorePagesAvailable is boolean ($MP_HAS_MORE)"
     PASS=$((PASS + 1))
   else
@@ -598,7 +598,7 @@ else
 
   # Default --dump-output=raw + --dump-merge=replace produces a .json file
   MP_RAW_FILE=$(echo "$MP_META" | jq -r '.meta.dumpFile' 2>/dev/null)
-  if [ -n "$MP_RAW_FILE" ] && [ -f "$MP_RAW_FILE" ]; then
+  if [[ -n "$MP_RAW_FILE" ]] && [[ -f "$MP_RAW_FILE" ]]; then
     echo "  PASS: raw dump file exists ($MP_RAW_FILE)"
     PASS=$((PASS + 1))
     case "$MP_RAW_FILE" in
@@ -634,10 +634,10 @@ else
       ;;
   esac
 
-  if [ -n "$MP_PAGE_FILE" ] && [ -f "$MP_PAGE_FILE" ]; then
+  if [[ -n "$MP_PAGE_FILE" ]] && [[ -f "$MP_PAGE_FILE" ]]; then
     MP_PAGE_LINES=$(wc -l < "$MP_PAGE_FILE" | tr -d ' ')
     MP_PAGE_FETCHED=$(echo "$MP_PAGE" | jq -r '.meta.pagesFetched' 2>/dev/null)
-    if [ "$MP_PAGE_LINES" = "$MP_PAGE_FETCHED" ]; then
+    if [[ "$MP_PAGE_LINES" = "$MP_PAGE_FETCHED" ]]; then
       echo "  PASS: page_by_line file line count matches pagesFetched ($MP_PAGE_LINES)"
       PASS=$((PASS + 1))
     else
@@ -647,7 +647,7 @@ else
 
     # Each line should be a JSON object with a `data` array
     FIRST_LINE_TYPE=$(head -1 "$MP_PAGE_FILE" | jq -r '.data | type' 2>/dev/null)
-    if [ "$FIRST_LINE_TYPE" = "array" ]; then
+    if [[ "$FIRST_LINE_TYPE" = "array" ]]; then
       echo "  PASS: each page_by_line line wraps a data array"
       PASS=$((PASS + 1))
     else
@@ -666,10 +666,10 @@ else
   MP_REC=$(HOME="$TEST_HOME" $CLI recruit list -m Candidates --per-page 1 --multiple-pages 2 --dump-dir "$MP_REC_DIR" --dump-output data_by_line --dump-merge concat 2>&1 || true)
   check_json_valid "data_by_line+concat output is valid JSON" "$MP_REC"
   MP_REC_FILE=$(echo "$MP_REC" | jq -r '.meta.dumpFile' 2>/dev/null)
-  if [ -n "$MP_REC_FILE" ] && [ -f "$MP_REC_FILE" ]; then
+  if [[ -n "$MP_REC_FILE" ]] && [[ -f "$MP_REC_FILE" ]]; then
     MP_REC_LINES=$(wc -l < "$MP_REC_FILE" | tr -d ' ')
     MP_REC_TOTAL=$(echo "$MP_REC" | jq -r '.meta.totalRecords' 2>/dev/null)
-    if [ "$MP_REC_LINES" = "$MP_REC_TOTAL" ]; then
+    if [[ "$MP_REC_LINES" = "$MP_REC_TOTAL" ]]; then
       echo "  PASS: data_by_line file line count matches totalRecords ($MP_REC_LINES)"
       PASS=$((PASS + 1))
     else
@@ -678,9 +678,9 @@ else
     fi
 
     # Each line is a JSON object (a single record), not an array
-    if [ "$MP_REC_LINES" -gt 0 ]; then
+    if [[ "$MP_REC_LINES" -gt 0 ]]; then
       FIRST_REC_TYPE=$(head -1 "$MP_REC_FILE" | jq -r 'type' 2>/dev/null)
-      if [ "$FIRST_REC_TYPE" = "object" ]; then
+      if [[ "$FIRST_REC_TYPE" = "object" ]]; then
         echo "  PASS: data_by_line line is a single record object"
         PASS=$((PASS + 1))
       else
@@ -703,7 +703,7 @@ else
   MP_PICK_MAIN=$(echo "$MP_PICK" | jq -r '.meta.dumpFile' 2>/dev/null)
   MP_PICK_PICK=$(echo "$MP_PICK" | jq -r '.meta.dumpFilePick // "null"' 2>/dev/null)
 
-  if [ "$MP_PICK_PICK" != "null" ] && [ -f "$MP_PICK_PICK" ]; then
+  if [[ "$MP_PICK_PICK" != "null" ]] && [[ -f "$MP_PICK_PICK" ]]; then
     echo "  PASS: --pick produced a parallel _pick file ($MP_PICK_PICK)"
     PASS=$((PASS + 1))
 
@@ -720,7 +720,7 @@ else
 
     # Pick file records have only the picked field
     PICK_LINE_KEYS=$(head -1 "$MP_PICK_PICK" | jq -r 'keys | join(",")' 2>/dev/null)
-    if [ "$PICK_LINE_KEYS" = "id" ]; then
+    if [[ "$PICK_LINE_KEYS" = "id" ]]; then
       echo "  PASS: pick file record has only the picked field"
       PASS=$((PASS + 1))
     else
@@ -729,9 +729,9 @@ else
     fi
 
     # Main file is full-fidelity (more keys than just id)
-    if [ -n "$MP_PICK_MAIN" ] && [ -f "$MP_PICK_MAIN" ]; then
+    if [[ -n "$MP_PICK_MAIN" ]] && [[ -f "$MP_PICK_MAIN" ]]; then
       MAIN_LINE_KEY_COUNT=$(head -1 "$MP_PICK_MAIN" | jq 'keys | length' 2>/dev/null)
-      if [ "$MAIN_LINE_KEY_COUNT" -gt 1 ] 2>/dev/null; then
+      if [[ "$MAIN_LINE_KEY_COUNT" -gt 1 ]] 2>/dev/null; then
         echo "  PASS: main dump file is full-fidelity ($MAIN_LINE_KEY_COUNT keys)"
         PASS=$((PASS + 1))
       else
@@ -751,7 +751,7 @@ else
   MP_MERGED=$(HOME="$TEST_HOME" $CLI recruit list -m Candidates --per-page 1 --multiple-pages 2 --dump-dir "$MP_MERGED_DIR" --multiple-pages-output merged_page 2>&1 || true)
   check_json_valid "merged_page output is valid JSON" "$MP_MERGED"
   MERGED_DATA_TYPE=$(echo "$MP_MERGED" | jq -r '.data | type' 2>/dev/null)
-  if [ "$MERGED_DATA_TYPE" = "array" ]; then
+  if [[ "$MERGED_DATA_TYPE" = "array" ]]; then
     echo "  PASS: merged_page emits flat data array on stdout"
     PASS=$((PASS + 1))
   else
@@ -762,7 +762,7 @@ else
   # First element should be a record object (not a page wrapper)
   MERGED_FIRST_TYPE=$(echo "$MP_MERGED" | jq -r '.data[0] | type' 2>/dev/null)
   MERGED_FIRST_HAS_INFO=$(echo "$MP_MERGED" | jq '.data[0] | has("info")' 2>/dev/null)
-  if [ "$MERGED_FIRST_TYPE" = "object" ] && [ "$MERGED_FIRST_HAS_INFO" = "false" ]; then
+  if [[ "$MERGED_FIRST_TYPE" = "object" ]] && [[ "$MERGED_FIRST_HAS_INFO" = "false" ]]; then
     echo "  PASS: merged_page elements are flat records (no page wrapper)"
     PASS=$((PASS + 1))
   else
@@ -777,7 +777,7 @@ else
   MP_PAGES=$(HOME="$TEST_HOME" $CLI recruit list -m Candidates --per-page 1 --multiple-pages 2 --dump-dir "$MP_PAGES_DIR" --multiple-pages-output pages 2>&1 || true)
   check_json_valid "pages output is valid JSON" "$MP_PAGES"
   PAGES_FIRST_HAS_DATA=$(echo "$MP_PAGES" | jq '.data[0] | has("data")' 2>/dev/null)
-  if [ "$PAGES_FIRST_HAS_DATA" = "true" ]; then
+  if [[ "$PAGES_FIRST_HAS_DATA" = "true" ]]; then
     echo "  PASS: pages mode wraps each page's full response"
     PASS=$((PASS + 1))
   else
@@ -792,10 +792,10 @@ else
   MP_REPL=$(HOME="$TEST_HOME" $CLI recruit list -m Candidates --per-page 1 --multiple-pages 3 --dump-dir "$MP_REPL_DIR" --dump-output data_by_line --dump-merge replace 2>&1 || true)
   check_json_valid "data_by_line+replace output is valid JSON" "$MP_REPL"
   MP_REPL_FILE=$(echo "$MP_REPL" | jq -r '.meta.dumpFile' 2>/dev/null)
-  if [ -n "$MP_REPL_FILE" ] && [ -f "$MP_REPL_FILE" ]; then
+  if [[ -n "$MP_REPL_FILE" ]] && [[ -f "$MP_REPL_FILE" ]]; then
     REPL_LINES=$(wc -l < "$MP_REPL_FILE" | tr -d ' ')
     # With replace mode, file should hold at most --per-page records (only last page)
-    if [ "$REPL_LINES" -le 1 ]; then
+    if [[ "$REPL_LINES" -le 1 ]]; then
       echo "  PASS: replace mode keeps only the last page (file has $REPL_LINES lines)"
       PASS=$((PASS + 1))
     else
@@ -814,7 +814,7 @@ else
   MP_NO_DUMP=$(HOME="$TEST_HOME" $CLI recruit list -m Candidates --per-page 1 --multiple-pages 2 2> "$MP_NO_DUMP_STDERR_FILE" || true)
   check_json_valid "multi-page without dump-dir outputs valid JSON" "$MP_NO_DUMP"
   NO_DUMP_FILE=$(echo "$MP_NO_DUMP" | jq -r '.meta.dumpFile' 2>/dev/null)
-  if [ "$NO_DUMP_FILE" = "null" ]; then
+  if [[ "$NO_DUMP_FILE" = "null" ]]; then
     echo "  PASS: meta.dumpFile is null when no dump-dir configured"
     PASS=$((PASS + 1))
   else
@@ -832,13 +832,13 @@ else
   rm -f "$MP_NO_DUMP_STDERR_FILE"
 
   # Desk multi-page (offset-based) — only if Desk is configured
-  if [ -n "$ZOHO_DESK_ORG_ID" ]; then
+  if [[ -n "$ZOHO_DESK_ORG_ID" ]]; then
     DESK_MP_DIR=$(mktemp -d)
     DESK_MP=$(HOME="$TEST_HOME" $CLI desk tickets list --limit 1 --multiple-pages 2 --dump-dir "$DESK_MP_DIR" --dump-output data_by_line --dump-merge concat 2>&1 || true)
     check_json_valid "desk tickets list multi-page output is valid JSON" "$DESK_MP"
     check_json_field "desk tickets list multi-page reports ok" "$DESK_MP" ".ok" "true"
     DESK_MP_PAGES=$(echo "$DESK_MP" | jq -r '.meta.pagesFetched' 2>/dev/null)
-    if [ "$DESK_MP_PAGES" -ge 1 ] 2>/dev/null; then
+    if [[ "$DESK_MP_PAGES" -ge 1 ]] 2>/dev/null; then
       echo "  PASS: desk multi-page (offset-based) reports pagesFetched=$DESK_MP_PAGES"
       PASS=$((PASS + 1))
     else

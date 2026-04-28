@@ -89,7 +89,8 @@ export function zohoDeskGetContactById(context: ZohoDeskContext): ZohoDeskGetCon
     const { contactId, include } = input;
     const params = makeUrlSearchParams([{ include: joinContactInclude(include) }]);
     const queryString = params.toString();
-    return context.fetchJson<ZohoDeskContact>(`/contacts/${contactId}${queryString ? `?${queryString}` : ''}`, zohoDeskContactApiFetchJsonInput('GET'));
+    const querySuffix = queryString ? '?' + queryString : '';
+    return context.fetchJson<ZohoDeskContact>(`/contacts/${contactId}${querySuffix}`, zohoDeskContactApiFetchJsonInput('GET'));
   };
 }
 

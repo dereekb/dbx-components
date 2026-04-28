@@ -3,8 +3,37 @@ import { filterMaybeArrayValues } from '../array/array.value';
 import { type Maybe } from '../value/maybe.type';
 import { filterKeyValueTuplesFunction, type FilterKeyValueTuplesInput, filterKeyValueTuplesInputToFilter, type KeyValueTuple, type KeyValueTupleFilter, KeyValueTypleValueFilter } from './object.filter.tuple';
 import { cachedGetter, type Getter } from '../getter';
-import { copyObject } from './object';
+import { copyObject, objectHasNoKeys } from './object';
 import { invertBooleanReturnFunction } from '../function/function.boolean';
+
+// MARK: Object Filtering
+/**
+ * Strips the input object. If the object has no keys after the filtering process, returns undefined.
+ */
+export type StripObjectFunction<T extends object> = (input: Maybe<T>, copy?: Maybe<boolean>) => T | undefined;
+
+/**
+ *
+ * @param input
+ */
+export function stripObjectFunction<T extends object>(filter: FilterKeyValueTuplesInput<T>, copy: boolean = true): StripObjectFunction<T> {
+  const filterFn = filterFromPOJOFunction<T>({ filter, copy });
+
+  return (input: Maybe<T>, copyOverride?: Maybe<boolean>) => {
+    let result: T | undefined;
+
+    if (input != null) {
+      const filtered = filterFn(input, copyOverride);
+      result = objectHasNoKeys(filtered) ? undefined : filtered;
+    }
+
+    return result;
+  };
+}
+
+export function stripObject<T extends object>(input: Maybe<T>, copy?: boolean): T | undefined {
+  return stripObjectFunction<T>(KeyValueTypleValueFilter.UNDEFINED, copy)(input);
+}
 
 // MARK: Object Merging/Overriding
 /**
@@ -784,7 +813,7 @@ export function filterTuplesOnPOJOFunction<T extends object>(filterTupleOnObject
     const result: Partial<T> = {};
 
     Object.entries<T>(input as unknown as Record<string, T>)
-      .filter(filterTupleOnObject)
+      .filter((tuple, i, arr) => filterTupleOnObject(tuple, i, arr))
       .forEach((tuple) => {
         (result as unknown as Record<string, unknown>)[tuple[0]] = tuple[1];
       });

@@ -450,10 +450,10 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     produces: 'boolean',
     arrayOutput: 'no',
     configInterface: 'DbxForgeToggleFieldConfig',
-    description: 'Material slide toggle. Renders inside a styled outline box by default so it visually matches surrounding outlined form fields; pass `styledBox: false` to opt out.',
+    description: 'Material slide toggle. Renders inside the shared form-field wrapper by default so it visually matches surrounding outlined form fields and uses the standard error/hint subscript chrome; pass `styledBox: false` to opt out.',
     sourcePath: 'field/value/boolean/boolean.field.ts',
     config: {
-      styledBox: { name: 'styledBox', type: 'boolean', description: 'When true (default), wraps the toggle in `.dbx-forge-styled-box` for visual parity with outlined form fields.', required: false, default: true }
+      styledBox: { name: 'styledBox', type: 'boolean', description: 'When true (default), renders the toggle inside the shared Material-style form-field wrapper for visual parity with outlined form fields.', required: false, default: true }
     },
     example: `dbxForgeToggleField({ key: 'active', label: 'Active', value: true })`,
     minimalExample: `dbxForgeToggleField({ key: 'enabled', label: 'Enabled' })`
@@ -987,12 +987,12 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     sourcePath: 'field/wrapper/flex/flex.wrapper.ts',
     composesFromSlugs: ['group'],
     config: {
-      fieldConfigs: { name: 'fieldConfigs', type: '(FieldDef | { field: FieldDef; size: DbxFlexSize })[]', description: 'Fields or field+size pairs.', required: true },
+      fields: { name: 'fields', type: '(FieldDef | { field: FieldDef; size: DbxFlexSize })[]', description: 'Fields or field+size pairs. Can also be passed directly as the sole argument.', required: false },
       breakpoint: { name: 'breakpoint', type: 'ScreenMediaWidthType', description: 'Breakpoint below which fields stack vertically.', required: false },
       size: { name: 'size', type: 'DbxFlexSize', description: 'Default flex size for fields without their own.', required: false, default: 2 }
     },
-    example: `dbxForgeFlexLayout({ fieldConfigs: [dbxForgeTextField({ key: 'a' }), dbxForgeTextField({ key: 'b' })] })`,
-    minimalExample: `dbxForgeFlexLayout({ fieldConfigs: [] })`
+    example: `dbxForgeFlexLayout({ fields: [dbxForgeTextField({ key: 'a' }), dbxForgeTextField({ key: 'b' })] })`,
+    minimalExample: `dbxForgeFlexLayout({ fields: [] })`
   },
   {
     slug: 'password-with-verify-fields',

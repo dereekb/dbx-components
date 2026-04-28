@@ -246,7 +246,7 @@ export function dbxTableReader<C, T, O, G = any>(config: DbxTableReaderConfig<C,
           ? columnsData.cellDataAccessors$.pipe(
               switchMap((cellDataAccessor) => {
                 const itemAccessor = cellDataAccessor.accessorsRecord[itemKey];
-                const result: Observable<Maybe<DbxTableReaderCellDataPair<C, T, O>>> = itemAccessor ? itemAccessor : of(null);
+                const result: Observable<Maybe<DbxTableReaderCellDataPair<C, T, O>>> = itemAccessor || of(null);
                 return result;
               })
             )

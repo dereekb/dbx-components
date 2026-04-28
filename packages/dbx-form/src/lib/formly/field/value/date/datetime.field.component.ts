@@ -408,7 +408,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
   });
 
   readonly timeInputCtrl = new FormControl<Maybe<ReadableTimeString>>(null, {
-    validators: [Validators.pattern(/^(now)$|^([0-9]|(0[0-9])|(1[0-9])|(2[0-3]))(:)?([0-5][0-9])?(\s)?([apAP][Mm])?(\\s)*$/)]
+    validators: [Validators.pattern(/^(now)$|^(\d|(0\d)|(1\d)|(2[0-3]))(:)?([0-5]\d)?(\s)?([apAP][Mm])?(\\s)*$/)]
   });
 
   get dateLabel(): string {
@@ -460,7 +460,15 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
   get timeMode(): DbxDateTimeFieldTimeMode {
     const dateValuesOnly = this.valueMode === DbxDateTimeValueMode.DAY_STRING;
 
-    return dateValuesOnly ? DbxDateTimeFieldTimeMode.NONE : this.timeOnly ? DbxDateTimeFieldTimeMode.REQUIRED : (this.dateTimeField.timeMode ?? DbxDateTimeFieldTimeMode.REQUIRED);
+    if (dateValuesOnly) {
+      return DbxDateTimeFieldTimeMode.NONE;
+    }
+
+    if (this.timeOnly) {
+      return DbxDateTimeFieldTimeMode.REQUIRED;
+    }
+
+    return this.dateTimeField.timeMode ?? DbxDateTimeFieldTimeMode.REQUIRED;
   }
 
   get isDateRequired(): boolean {
@@ -842,11 +850,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     shareReplay(1)
   );
 
-  readonly hasError$ = this.currentErrorMessage$.pipe(
-    map((x) => Boolean(x)),
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
+  readonly hasError$ = this.currentErrorMessage$.pipe(map(Boolean), distinctUntilChanged(), shareReplay(1));
 
   readonly dateValueSignal = toSignal(this.dateValue$);
   readonly displayValueSignal = toSignal(this.displayValue$);

@@ -1,5 +1,4 @@
 import { NgModule } from '@angular/core';
-import { provideDbxForgeFormContext } from './forge.context';
 import { DbxForgeFormComponent } from './forge.component';
 
 /**
@@ -10,7 +9,7 @@ export const DBX_FORGE_FORM_COMPONENT_TEMPLATE = `<dbx-forge></dbx-forge>` as co
 /**
  * Default providers for a view that extends AbstractSyncForgeFormDirective or AbstractConfigAsyncForgeFormDirective.
  */
-export const dbxForgeFormComponentProviders = provideDbxForgeFormContext;
+export { provideDbxForgeFormContext as dbxForgeFormComponentProviders } from './forge.context';
 
 const dbxForgeFormComponentImports = [DbxForgeFormComponent];
 

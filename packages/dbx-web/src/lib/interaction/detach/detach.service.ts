@@ -415,6 +415,6 @@ export class DbxDetachService {
 
   private _removeDom(entry: DbxDetachEntryState): void {
     const hostEl = entry.componentRef.location.nativeElement as HTMLElement;
-    hostEl.parentElement?.removeChild(hostEl);
+    hostEl.remove();
   }
 }

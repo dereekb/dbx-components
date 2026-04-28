@@ -84,8 +84,8 @@ describe('MemoryStorageInstance', () => {
       storage.setItem('keyB', 'valueB');
       // Note: Order depends on Object.keys(), which is generally insertion order for non-integer keys
       // but not strictly guaranteed by JS spec for all engines/scenarios. Test assumes typical behavior.
-      const keys = [storage.key(0), storage.key(1)].sort();
-      expect(keys).toEqual(['keyA', 'keyB'].sort());
+      const keys = [storage.key(0), storage.key(1)].sort((a, b) => (a ?? '').localeCompare(b ?? ''));
+      expect(keys).toEqual(['keyA', 'keyB'].sort((a, b) => a.localeCompare(b)));
     });
 
     it('should return null if index is out of bounds.', () => {

@@ -87,7 +87,7 @@ export class DbxFirebaseAppCheckHttpInterceptor implements HttpInterceptor {
 
     return from(this._appCheckRoutes).pipe(
       first((route) => isEnabledRouteMatch(route), false),
-      map((x) => Boolean(x))
+      map(Boolean)
     );
   }
 }

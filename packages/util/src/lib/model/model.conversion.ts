@@ -259,7 +259,7 @@ export type ToModelFieldConversionsInput<T extends object, O extends object> = M
  * @returns Resolved field conversions
  */
 export function toModelFieldConversions<T extends object, O extends object>(input: ToModelFieldConversionsInput<T, O>) {
-  const conversions: ModelFieldConversions<T, O> = 'fieldConversions' in input ? (input as ModelFieldConversionsRef<T, O>).fieldConversions : modelFieldConversions<T, O>((input as ModelFieldConversionsConfigRef<T, O>).fields);
+  const conversions: ModelFieldConversions<T, O> = 'fieldConversions' in input ? input.fieldConversions : modelFieldConversions<T, O>(input.fields);
   return conversions;
 }
 
@@ -281,9 +281,9 @@ export function toModelMapFunctions<T extends object, O extends object>(input: T
   let mapFunctions: ModelMapFunctions<T, O>;
 
   if ('mapFunctions' in input) {
-    mapFunctions = (input as ModelMapFunctionsRef<T, O>).mapFunctions;
+    mapFunctions = input.mapFunctions;
   } else {
-    const conversions: ModelFieldConversions<T, O> = toModelFieldConversions(input as ToModelFieldConversionsInput<T, O>);
+    const conversions: ModelFieldConversions<T, O> = toModelFieldConversions(input);
     mapFunctions = makeModelMapFunctions<T, O>(conversions);
   }
 

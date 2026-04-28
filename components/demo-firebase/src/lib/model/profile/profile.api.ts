@@ -35,7 +35,7 @@ export const updateProfileParamsType = inferredTargetModelParamsType.merge({
 
 export type FinishOnboardingProfileParams = InferredTargetModelParams;
 
-export const finishOnboardingProfileParamsType = inferredTargetModelParamsType as Type<FinishOnboardingProfileParams>;
+export const finishOnboardingProfileParamsType = inferredTargetModelParamsType;
 
 /**
  * Params for initiating or completing a password reset for the current user's profile.
@@ -66,7 +66,7 @@ export const resetProfilePasswordParamsType = inferredTargetModelParamsType.merg
 
 export type DownloadProfileArchiveParams = DownloadStorageFileParams;
 
-export const downloadProfileArchiveParamsType = downloadStorageFileParamsType as Type<DownloadProfileArchiveParams>;
+export const downloadProfileArchiveParamsType = downloadStorageFileParamsType;
 
 export type DownloadProfileArchiveResult = DownloadStorageFileResult;
 

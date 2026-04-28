@@ -46,16 +46,63 @@ $dbx-forge-form-field-slider-thumb-margin: 22px;
     letter-spacing: normal;
   }
 
+  // Boolean fields (mat-checkbox / mat-slide-toggle): make the whole content
+  // box clickable. Stretches the Material `<label for="...">` to fill the
+  // rectangle so native HTML label-click delegation toggles the control on
+  // any click in the box. No overlay and no positioning resets, so MDC
+  // ripple and focus indicator stay anchored where Material expects.
+  //
+  // Disabled state already applies `pointer-events: none` on
+  // `.dbx-forge-form-field-content` (see formfield.wrapper.component.ts),
+  // so disabled clicks remain blocked.
+  dbx-forge-form-field-wrapper .dbx-forge-form-field-content:has(mat-checkbox),
+  dbx-forge-form-field-wrapper .dbx-forge-form-field-content:has(mat-slide-toggle) {
+    cursor: pointer;
+
+    mat-checkbox,
+    mat-slide-toggle {
+      display: block;
+      width: 100%;
+    }
+
+    .mdc-form-field {
+      display: flex;
+      width: 100%;
+      align-items: center;
+    }
+
+    // Negative margins cancel the wrapper's 16/16/8 padding so the label's
+    // hit-area reaches the outlined edges; matching padding restores visual
+    // spacing for the label text itself. Padding-left/inline-start is left
+    // alone so Material's gap between the control and the label text is
+    // preserved.
+    .mdc-form-field > label {
+      flex: 1 1 auto;
+      align-self: stretch;
+      display: flex;
+      align-items: center;
+      margin: -16px -16px -8px 0;
+      padding-top: 16px;
+      padding-right: 16px;
+      padding-bottom: 8px;
+      cursor: pointer;
+      min-height: 0;
+    }
+  }
+
   // Shared working bar spacing used by both the working field and working wrapper field.
   .dbx-forge-working-bar {
     margin-top: 4px;
   }
 
   // Flex layout wrapper: ng-forge's GroupFieldComponent applies `display: grid`
-  // and `gap: var(--df-grid-row-gap)` via :host styling (scoped attribute selector).
-  // Override both when our `dbx-flex-group` class is present so the flex sizing
-  // classes work. The dbx-flex-N children use padding for spacing instead of gap.
-  .df-group.dbx-flex-group {
+  // and `gap: var(--df-grid-row-gap)` via :host styling, and ContainerFieldComponent
+  // applies `display: block`. Both are scoped via attribute selectors and tie
+  // class-selector specificity, so override with `!important` whenever our
+  // `dbx-flex-group` class is present so the flex sizing classes work.
+  // The dbx-flex-N children use padding for spacing instead of gap.
+  .df-group.dbx-flex-group,
+  .df-container.dbx-flex-group {
     display: flex !important;
     flex-wrap: wrap;
     gap: 0 !important;

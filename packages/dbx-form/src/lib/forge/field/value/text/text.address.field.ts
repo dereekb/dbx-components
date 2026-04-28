@@ -1,8 +1,9 @@
-import type { GroupField } from '@ng-forge/dynamic-forms';
+import type { FieldDef, GroupAllowedChildren, GroupField } from '@ng-forge/dynamic-forms';
 import { ADDRESS_LINE_MAX_LENGTH } from '@dereekb/model';
 import { dbxForgeTextField, type DbxForgeTextFieldConfig } from './text.field';
 import { dbxForgeCityField, type DbxForgeCityFieldConfig, dbxForgeCountryField, type DbxForgeCountryFieldConfig, dbxForgeStateField, type DbxForgeStateFieldConfig, dbxForgeZipCodeField, type DbxForgeZipCodeFieldConfig } from './text.additional.field';
-import { dbxForgeGroup, dbxForgeRow } from '../../wrapper/wrapper';
+import { dbxForgeGroup } from '../../wrapper/wrapper';
+import { dbxForgeFlexLayout } from '../../wrapper/flex/flex.wrapper';
 import { dbxForgeArrayField } from '../array/array.field';
 import { type MatInputField } from '@ng-forge/dynamic-forms-material';
 import { type DbxForgeField } from '../../../form/forge.form';
@@ -98,19 +99,17 @@ export function dbxForgeAddressLineField(config: DbxForgeAddressLineFieldConfig 
  * dbxForgeAddressFields({ required: true, includeCountry: false })
  * ```
  */
-export function dbxForgeAddressFields(config: DbxForgeAddressFieldsConfig = {}) {
+export function dbxForgeAddressFields(config: DbxForgeAddressFieldsConfig = {}): GroupAllowedChildren[] {
   const { required = true, includeLine2 = true, includeCountry = true } = config;
 
-  // City and country are full-width on their own rows since names can be long
-  const cityField = dbxForgeCityField({ required, ...config.cityField });
+  // City, state, zip, and country share a single relative-sized flex row to match formly parity.
+  const singleLineFields = [dbxForgeCityField({ required, ...config.cityField }), dbxForgeStateField({ required, ...config.stateField }), dbxForgeZipCodeField({ required, ...config.zipCodeField })];
 
-  // State and zip share a row
-  const stateZipRow = dbxForgeRow({
-    fields: [
-      { ...dbxForgeStateField({ required, ...config.stateField }), col: 6 },
-      { ...dbxForgeZipCodeField({ required, ...config.zipCodeField }), col: 6 }
-    ]
-  });
+  if (includeCountry) {
+    singleLineFields.push(dbxForgeCountryField({ required, ...config.countryField }));
+  }
+
+  const singleLineRow = dbxForgeFlexLayout({ size: 1, relative: true, fields: singleLineFields });
 
   let lines: DbxForgeField<MatInputField>[];
 
@@ -120,12 +119,7 @@ export function dbxForgeAddressFields(config: DbxForgeAddressFieldsConfig = {}) 
     lines = [dbxForgeAddressLineField({ required, ...config.line1Field, line: 0 })];
   }
 
-  const fields = [...lines, cityField, stateZipRow];
-
-  if (includeCountry) {
-    fields.push(dbxForgeCountryField({ required, ...config.countryField }));
-  }
-
+  const fields: GroupAllowedChildren[] = [...lines, singleLineRow];
   return fields;
 }
 

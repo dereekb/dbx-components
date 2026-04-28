@@ -1,5 +1,4 @@
 import { type ZohoCliConfig, type ZohoCliResolvedProductCredentials, getTokenCachePath, resolveProductCredentials } from '../config/cli.config';
-import { type ZohoConfigApiUrlInput } from '@dereekb/zoho';
 import { ZohoAccountsApi, ZohoRecruitApi, ZohoCrmApi, ZohoDeskApi, type ZohoAccountsServiceConfig, type ZohoRecruitServiceConfig, type ZohoCrmServiceConfig, type ZohoDeskServiceConfig, memoryZohoAccountsAccessTokenCacheService, fileZohoAccountsAccessTokenCacheService, mergeZohoAccountsAccessTokenCacheServices } from '@dereekb/zoho/nestjs';
 import type { Maybe } from '@dereekb/util';
 
@@ -36,7 +35,7 @@ export function createCliContext(config: ZohoCliConfig): ZohoCliContext {
         refreshToken: creds.refreshToken,
         clientId: creds.clientId,
         clientSecret: creds.clientSecret,
-        apiUrl: (creds.region ?? 'us') as ZohoConfigApiUrlInput
+        apiUrl: creds.region ?? 'us'
       }
     };
 
@@ -51,7 +50,7 @@ export function createCliContext(config: ZohoCliConfig): ZohoCliContext {
 
   if (recruitCreds) {
     const accountsApi = getAccountsApi(recruitCreds, 'recruit');
-    const recruitConfig = { zohoRecruit: { apiUrl: recruitCreds.apiMode as ZohoConfigApiUrlInput } } as ZohoRecruitServiceConfig;
+    const recruitConfig = { zohoRecruit: { apiUrl: recruitCreds.apiMode } } as ZohoRecruitServiceConfig;
     recruitApi = new ZohoRecruitApi(recruitConfig, accountsApi);
   }
 
@@ -61,7 +60,7 @@ export function createCliContext(config: ZohoCliConfig): ZohoCliContext {
 
   if (crmCreds) {
     const accountsApi = getAccountsApi(crmCreds, 'crm');
-    const crmConfig = { zohoCrm: { apiUrl: crmCreds.apiMode as ZohoConfigApiUrlInput } } as ZohoCrmServiceConfig;
+    const crmConfig = { zohoCrm: { apiUrl: crmCreds.apiMode } } as ZohoCrmServiceConfig;
     crmApi = new ZohoCrmApi(crmConfig, accountsApi);
   }
 
@@ -71,7 +70,7 @@ export function createCliContext(config: ZohoCliConfig): ZohoCliContext {
 
   if (deskCreds?.orgId) {
     const accountsApi = getAccountsApi(deskCreds, 'desk');
-    const deskConfig = { zohoDesk: { apiUrl: deskCreds.apiMode as ZohoConfigApiUrlInput, orgId: deskCreds.orgId } } as ZohoDeskServiceConfig;
+    const deskConfig = { zohoDesk: { apiUrl: deskCreds.apiMode, orgId: deskCreds.orgId } } as ZohoDeskServiceConfig;
     deskApi = new ZohoDeskApi(deskConfig, accountsApi);
   }
 

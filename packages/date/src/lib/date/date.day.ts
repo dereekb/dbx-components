@@ -160,7 +160,17 @@ export interface YearMonthDayCodeConfig {
  * @returns a DateTimezoneUtcNormalInstance, falling back to the system timezone
  */
 export function yearMonthDayCodeDateTimezoneInstance(input: YearMonthDayCodeDateTimezoneInput): DateTimezoneUtcNormalInstance {
-  return input ? (input instanceof DateTimezoneUtcNormalInstance ? input : dateTimezoneUtcNormal(input)) : SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE;
+  let result: DateTimezoneUtcNormalInstance;
+
+  if (!input) {
+    result = SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE;
+  } else if (input instanceof DateTimezoneUtcNormalInstance) {
+    result = input;
+  } else {
+    result = dateTimezoneUtcNormal(input);
+  }
+
+  return result;
 }
 
 /**

@@ -22,7 +22,7 @@ const crmListCommand: CommandModule = {
       };
       const outcome = await runPaginatedList({
         initialInput,
-        fetchPage: (input) => crmApi.getRecords(input as any),
+        fetchPage: (input) => crmApi.getRecords(input),
         adapter: zohoPagePaginationAdapter,
         multiplePages: argv.multiplePages,
         multiplePagesOutput: argv.multiplePagesOutput,
@@ -74,7 +74,7 @@ const crmSearchCommand: CommandModule = {
       };
       const outcome = await runPaginatedList({
         initialInput,
-        fetchPage: (input) => crmApi.searchRecords(input as any),
+        fetchPage: (input) => crmApi.searchRecords(input),
         adapter: zohoPagePaginationAdapter,
         multiplePages: argv.multiplePages,
         multiplePagesOutput: argv.multiplePagesOutput,
@@ -170,7 +170,7 @@ const crmEmailsCommand: CommandModule = {
       const initialInput = { module: argv.module, id: argv.id, page: argv.page, per_page: argv.perPage };
       const outcome = await runPaginatedList({
         initialInput,
-        fetchPage: (input) => crmApi.getEmailsForRecord(input as any),
+        fetchPage: (input) => crmApi.getEmailsForRecord(input),
         adapter: zohoPagePaginationAdapter,
         multiplePages: argv.multiplePages,
         multiplePagesOutput: argv.multiplePagesOutput,
@@ -198,7 +198,7 @@ const crmAttachmentsCommand: CommandModule = {
       const initialInput = { module: argv.module, id: argv.id, fields: argv.fields, page: argv.page, per_page: argv.perPage };
       const outcome = await runPaginatedList({
         initialInput,
-        fetchPage: (input) => crmApi.getAttachmentsForRecord(input as any),
+        fetchPage: (input) => crmApi.getAttachmentsForRecord(input),
         adapter: zohoPagePaginationAdapter,
         multiplePages: argv.multiplePages,
         multiplePagesOutput: argv.multiplePagesOutput,

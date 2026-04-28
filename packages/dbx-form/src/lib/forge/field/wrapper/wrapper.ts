@@ -1,5 +1,6 @@
-import type { RowField, GroupField, ContainerField, FieldDef, RowAllowedChildren, ConditionalExpression, WrapperConfig } from '@ng-forge/dynamic-forms';
+import type { RowField, GroupField, ContainerField, FieldDef, ConditionalExpression, WrapperConfig } from '@ng-forge/dynamic-forms';
 import { FORGE_EXPAND_FIELD_TYPE_NAME, type DbxForgeExpandButtonType, type DbxForgeExpandFieldDef, type DbxForgeExpandFieldProps } from './expand/expand.field';
+import { DBX_FORGE_FLEX_WRAPPER_TYPE_NAME, type DbxForgeFlexWrapper } from './flex/flex.wrapper';
 /**
  * Logic configuration for container fields (group, row, array).
  *
@@ -253,7 +254,7 @@ export interface DbxForgeToggleWrapperConfig {
  *
  * Structure produced:
  * ```
- * Row (outer)
+ * Container (outer, with flex wrapper)
  *   ├── toggle field (type: 'toggle', boolean value)
  *   └── Container (content, hidden when toggle === false)
  * ```
@@ -261,13 +262,13 @@ export interface DbxForgeToggleWrapperConfig {
  * This is the forge equivalent of the formly `formlyToggleWrapper`.
  *
  * @param config - Toggle wrapper configuration
- * @returns A {@link RowField} containing the toggle and content container
+ * @returns A {@link ContainerField} containing the toggle and content container
  *
  * @dbxFormField
  * @dbxFormSlug toggle-wrapper
  * @dbxFormTier composite-builder
  * @dbxFormSuffix Wrapper
- * @dbxFormProduces RowField
+ * @dbxFormProduces ContainerField
  * @dbxFormArrayOutput no
  * @dbxFormConfigInterface DbxForgeToggleWrapperConfig
  * @dbxFormComposesFrom toggle, group
@@ -287,13 +288,13 @@ export interface DbxForgeToggleWrapperConfig {
  * // { showAdvanced: true, advanced1: '...', advanced2: '...' }
  * ```
  */
-export function dbxForgeToggleWrapper(config: DbxForgeToggleWrapperConfig): RowField {
+export function dbxForgeToggleWrapper(config: DbxForgeToggleWrapperConfig): ContainerField {
   const toggleKey = config.key ?? `_toggle_${_dbxForgeToggleCounter++}`;
 
   // Built-in ng-forge toggle field (renders <mat-slide-toggle>)
   const toggleField: FieldDef<unknown> = {
     key: toggleKey,
-    type: 'toggle' as const,
+    type: 'toggle',
     label: config.label ?? '',
     value: config.defaultOpen ?? false
   } as FieldDef<unknown>;
@@ -317,9 +318,12 @@ export function dbxForgeToggleWrapper(config: DbxForgeToggleWrapperConfig): RowF
     logic: [hiddenCondition]
   });
 
-  return dbxForgeRow({
-    fields: [toggleField as unknown as RowAllowedChildren, contentContainer as unknown as RowAllowedChildren],
-    className: config.className ?? 'dbx-forge-toggle-wrapper'
+  const flexWrapper: DbxForgeFlexWrapper = { type: DBX_FORGE_FLEX_WRAPPER_TYPE_NAME };
+
+  return dbxForgeContainer({
+    fields: [toggleField, contentContainer] as unknown as ContainerField['fields'],
+    className: config.className ?? 'dbx-forge-toggle-wrapper',
+    wrappers: [flexWrapper]
   });
 }
 
@@ -373,7 +377,7 @@ export interface DbxForgeExpandWrapperConfig {
  *
  * Structure produced:
  * ```
- * Row (outer)
+ * Container (outer, with flex wrapper)
  *   ├── expand field (type: 'dbx-forge-expand', boolean value)
  *   └── Container (content, hidden when expand field === false)
  * ```
@@ -381,13 +385,13 @@ export interface DbxForgeExpandWrapperConfig {
  * This is the forge equivalent of the formly `formlyExpandWrapper`.
  *
  * @param config - Expand wrapper configuration
- * @returns A {@link RowField} containing the expand control and content container
+ * @returns A {@link ContainerField} containing the expand control and content container
  *
  * @dbxFormField
  * @dbxFormSlug expand-wrapper
  * @dbxFormTier composite-builder
  * @dbxFormSuffix Wrapper
- * @dbxFormProduces RowField
+ * @dbxFormProduces ContainerField
  * @dbxFormArrayOutput no
  * @dbxFormConfigInterface DbxForgeExpandWrapperConfig
  * @dbxFormComposesFrom group
@@ -408,7 +412,7 @@ export interface DbxForgeExpandWrapperConfig {
  * // { showMore: true, extra1: '...', extra2: '...' }
  * ```
  */
-export function dbxForgeExpandWrapper(config: DbxForgeExpandWrapperConfig): RowField {
+export function dbxForgeExpandWrapper(config: DbxForgeExpandWrapperConfig): ContainerField {
   const expandKey = config.key ?? `_expand_${_dbxForgeExpandCounter++}`;
 
   const expandField: DbxForgeExpandFieldDef = {
@@ -438,8 +442,11 @@ export function dbxForgeExpandWrapper(config: DbxForgeExpandWrapperConfig): RowF
     logic: [hiddenCondition]
   });
 
-  return dbxForgeRow({
-    fields: [expandField as unknown as RowAllowedChildren, contentContainer as unknown as RowAllowedChildren],
-    className: config.className ?? 'dbx-forge-expand-wrapper'
+  const flexWrapper: DbxForgeFlexWrapper = { type: DBX_FORGE_FLEX_WRAPPER_TYPE_NAME };
+
+  return dbxForgeContainer({
+    fields: [expandField, contentContainer] as unknown as ContainerField['fields'],
+    className: config.className ?? 'dbx-forge-expand-wrapper',
+    wrappers: [flexWrapper]
   });
 }

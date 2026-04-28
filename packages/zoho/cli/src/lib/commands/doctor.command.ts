@@ -59,7 +59,15 @@ export const doctorCommand: CommandModule = {
 
       for (const product of products) {
         try {
-          const api = product === 'recruit' ? context.recruitApi : product === 'crm' ? context.crmApi : context.deskApi;
+          let api;
+
+          if (product === 'recruit') {
+            api = context.recruitApi;
+          } else if (product === 'crm') {
+            api = context.crmApi;
+          } else {
+            api = context.deskApi;
+          }
 
           if (api) {
             const accountsApi = (api as any).zohoAccountsApi;

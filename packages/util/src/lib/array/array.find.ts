@@ -23,7 +23,7 @@ export type ArrayDecisionFunction<T> = (values: T[]) => boolean;
  */
 export function arrayDecisionFunction<T>(decision: ArrayFindDecisionFunction<T>, mode: SetIncludesMode): ArrayDecisionFunction<T> {
   const findFn: ArrayFindDecisionFunction<T> = mode === 'all' ? invertBooleanReturnFunction(decision) : decision;
-  return invertBooleanReturnFunction((values) => values.some(findFn), mode === 'all');
+  return invertBooleanReturnFunction((values) => values.some((v, i, arr) => findFn(v, i, arr)), mode === 'all');
 }
 
 /**

@@ -126,7 +126,7 @@ export function slashPathType(input: SlashPath): SlashPathType {
       if (input.length === 0) {
         type = 'invalid';
       } else {
-        const lastValue = input[input.length - 1];
+        const lastValue = input.at(-1);
 
         if (lastValue === SLASH_PATH_SEPARATOR) {
           type = 'folder';
@@ -206,7 +206,7 @@ export function slashPathName(slashPath: SlashPath): SlashPathPart {
  * @returns Array of non-empty path segments.
  */
 export function slashPathParts(slashPath: SlashPath): SlashPathPart[] {
-  return slashPath.split(SLASH_PATH_SEPARATOR).filter((x) => Boolean(x));
+  return slashPath.split(SLASH_PATH_SEPARATOR).filter(Boolean);
 }
 
 /**
@@ -388,7 +388,7 @@ export function toAbsoluteSlashPathStartType(input: SlashPath): SlashPath {
  * @returns The path with double slashes collapsed.
  */
 export function fixMultiSlashesInSlashPath(input: SlashPath): SlashPath {
-  return input.replace(ALL_DOUBLE_SLASHES_REGEX, SLASH_PATH_SEPARATOR);
+  return input.replaceAll(ALL_DOUBLE_SLASHES_REGEX, SLASH_PATH_SEPARATOR);
 }
 
 /**
@@ -398,7 +398,7 @@ export function fixMultiSlashesInSlashPath(input: SlashPath): SlashPath {
  * @returns The path with double slashes collapsed.
  */
 export function replaceMultipleFilePathsInSlashPath(input: SlashPath): SlashPath {
-  return input.replace(ALL_DOUBLE_SLASHES_REGEX, SLASH_PATH_SEPARATOR);
+  return input.replaceAll(ALL_DOUBLE_SLASHES_REGEX, SLASH_PATH_SEPARATOR);
 }
 
 /**
@@ -451,7 +451,7 @@ export function replaceInvalidFilePathTypeSeparatorsInSlashPath(input: SlashPath
  */
 export function replaceInvalidFilePathTypeSeparatorsInSlashPathFunction(replaceWith: string = DEFAULT_SLASH_PATH_ILLEGAL_CHARACTER_REPLACEMENT): SlashPathFunction {
   return (input: SlashPath) => {
-    const endsOnFileTypeSeparator = input[input.length - 1] === SLASH_PATH_FILE_TYPE_SEPARATOR;
+    const endsOnFileTypeSeparator = input.at(-1) === SLASH_PATH_FILE_TYPE_SEPARATOR;
     const inputToEvaluate = endsOnFileTypeSeparator ? removeTrailingFileTypeSeparators(input) : input;
     const { first: _first, last, occurences } = firstAndLastCharacterOccurrence(inputToEvaluate, SLASH_PATH_FILE_TYPE_SEPARATOR);
 
@@ -475,7 +475,7 @@ export function replaceInvalidFilePathTypeSeparatorsInSlashPathFunction(replaceW
       }
       default: {
         const [head, tail] = splitStringAtIndex(inputToEvaluate, last, true);
-        const headWithReplacedSeparators = head.replace(ALL_SLASH_PATH_FILE_TYPE_SEPARATORS_REGEX, replaceWith);
+        const headWithReplacedSeparators = head.replaceAll(ALL_SLASH_PATH_FILE_TYPE_SEPARATORS_REGEX, replaceWith);
 
         fixedPath = headWithReplacedSeparators + tail;
         break;
@@ -779,7 +779,7 @@ export function slashPathDetails(path: SlashPath): SlashPathDetails {
       folderPath = (SLASH_PATH_SEPARATOR + folderPath) as SlashPathFolder;
     }
 
-    fileFolder = folderPathParts[folderPathParts.length - 1];
+    fileFolder = folderPathParts.at(-1);
   } else {
     folderPath = path as SlashPathFolder;
     fileFolder = undefined;

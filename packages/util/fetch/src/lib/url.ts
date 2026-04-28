@@ -141,7 +141,7 @@ export type FetchURLSearchParamsObject = Partial<Record<FetchURLQueryKeyValueTup
 export function fetchURLSearchParamsObjectToURLSearchParams(input: FetchURLSearchParamsObject): URLSearchParams {
   const paramTuples: [string, string][] = [];
 
-  forEachKeyValue(input as FetchURLSearchParamsObject, {
+  forEachKeyValue(input, {
     forEach: (tuple) => {
       const [key, values] = tuple;
 

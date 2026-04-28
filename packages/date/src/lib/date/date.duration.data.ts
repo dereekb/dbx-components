@@ -217,7 +217,7 @@ export function parseDurationString(input: string): TimeDurationData {
 
   while ((match = DURATION_COMPONENT_REGEX.exec(input)) !== null) {
     hasMatches = true;
-    const amount = parseFloat(match[1]);
+    const amount = Number.parseFloat(match[1]);
     const unit = normalizeUnitString(match[2]);
     const fieldName = TIME_UNIT_TO_FIELD_MAP[unit];
 
@@ -228,9 +228,9 @@ export function parseDurationString(input: string): TimeDurationData {
   // If no matches but the input is a plain number, treat as milliseconds
   if (!hasMatches) {
     const trimmed = input.trim();
-    const asNumber = parseFloat(trimmed);
+    const asNumber = Number.parseFloat(trimmed);
 
-    if (!isNaN(asNumber)) {
+    if (!Number.isNaN(asNumber)) {
       result['milliseconds'] = asNumber;
     }
   }

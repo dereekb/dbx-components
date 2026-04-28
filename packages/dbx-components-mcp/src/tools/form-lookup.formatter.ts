@@ -104,7 +104,12 @@ function formatConfigTable(field: FormFieldInfo): string {
     const rows = keys.map((key) => {
       const prop = field.config[key];
       const required = prop.required ? '✓' : '';
-      const defaultCell = prop.default === undefined ? '' : `\`${typeof prop.default === 'string' ? prop.default : JSON.stringify(prop.default)}\``;
+      let defaultCell = '';
+
+      if (prop.default !== undefined) {
+        const defaultText = typeof prop.default === 'string' ? prop.default : JSON.stringify(prop.default);
+        defaultCell = `\`${defaultText}\``;
+      }
       const desc = prop.description.replaceAll('|', String.raw`\|`);
       const escapedType = prop.type.replaceAll('|', String.raw`\|`);
       return `| \`${prop.name}\` | \`${escapedType}\` | ${required} | ${defaultCell} | ${desc} |`;

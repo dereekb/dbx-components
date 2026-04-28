@@ -461,8 +461,8 @@ export class DbxForgeFixedDateRangeFieldComponent {
                       }
                       case 'start':
                         range = {
-                          start: startOrNextDate as Date,
-                          end: startOrNextDate as Date
+                          start: startOrNextDate,
+                          end: startOrNextDate
                         };
                         break;
                     }

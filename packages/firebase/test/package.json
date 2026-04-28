@@ -1,15 +1,15 @@
 {
   "name": "@dereekb/firebase/test",
-  "version": "13.10.0",
+  "version": "13.10.1",
   "peerDependencies": {
-    "@dereekb/date": "13.10.0",
-    "@dereekb/firebase": "13.10.0",
-    "@dereekb/model": "13.10.0",
-    "@dereekb/rxjs": "13.10.0",
-    "@dereekb/util": "13.10.0",
+    "@dereekb/date": "13.10.1",
+    "@dereekb/firebase": "13.10.1",
+    "@dereekb/model": "13.10.1",
+    "@dereekb/rxjs": "13.10.1",
+    "@dereekb/util": "13.10.1",
     "@firebase/rules-unit-testing": "5.0.0",
-    "date-fns": "^4.0.0",
-    "firebase": "^12.12.0",
-    "rxjs": "^7.8.0"
+    "date-fns": "^4.1.0",
+    "firebase": "^12.12.1",
+    "rxjs": "^7.8.2"
   }
 }

@@ -22,7 +22,7 @@ const recruitListCommand: CommandModule = {
       };
       const outcome = await runPaginatedList({
         initialInput,
-        fetchPage: (input) => recruitApi.getRecords(input as any),
+        fetchPage: (input) => recruitApi.getRecords(input),
         adapter: zohoPagePaginationAdapter,
         multiplePages: argv.multiplePages,
         multiplePagesOutput: argv.multiplePagesOutput,
@@ -74,7 +74,7 @@ const recruitSearchCommand: CommandModule = {
       };
       const outcome = await runPaginatedList({
         initialInput,
-        fetchPage: (input) => recruitApi.searchRecords(input as any),
+        fetchPage: (input) => recruitApi.searchRecords(input),
         adapter: zohoPagePaginationAdapter,
         multiplePages: argv.multiplePages,
         multiplePagesOutput: argv.multiplePagesOutput,
@@ -170,7 +170,7 @@ const recruitEmailsCommand: CommandModule = {
       const initialInput = { module: argv.module, id: argv.id, page: argv.page, per_page: argv.perPage };
       const outcome = await runPaginatedList({
         initialInput,
-        fetchPage: (input) => recruitApi.getEmailsForRecord(input as any),
+        fetchPage: (input) => recruitApi.getEmailsForRecord(input),
         adapter: zohoPagePaginationAdapter,
         multiplePages: argv.multiplePages,
         multiplePagesOutput: argv.multiplePagesOutput,
@@ -198,7 +198,7 @@ const recruitAttachmentsCommand: CommandModule = {
       const initialInput = { module: argv.module, id: argv.id, page: argv.page, per_page: argv.perPage };
       const outcome = await runPaginatedList({
         initialInput,
-        fetchPage: (input) => recruitApi.getAttachmentsForRecord(input as any),
+        fetchPage: (input) => recruitApi.getAttachmentsForRecord(input),
         adapter: zohoPagePaginationAdapter,
         multiplePages: argv.multiplePages,
         multiplePagesOutput: argv.multiplePagesOutput,

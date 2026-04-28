@@ -175,7 +175,7 @@ export function makeTimer(duration: Milliseconds, startImmediately = true): Time
         result = 0;
         break;
       case 'running':
-        result = Math.max(0, currentDuration - (new Date().getTime() - startedAt.getTime()));
+        result = Math.max(0, currentDuration - (Date.now() - startedAt.getTime()));
         break;
       case 'paused':
         result = null;

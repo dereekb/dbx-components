@@ -37,7 +37,7 @@ export class MinutesStringPipe implements PipeTransform {
 
     let result: Maybe<string>;
 
-    if (input != null && !isNaN(minutes)) {
+    if (input != null && !Number.isNaN(minutes)) {
       if (minutes > MINUTES_IN_DAY * 2.5) {
         const unrounded = minutes / MINUTES_IN_DAY;
         const days = Math.ceil(unrounded);

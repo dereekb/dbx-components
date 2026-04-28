@@ -218,7 +218,7 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
   }
 
   async exists(): Promise<boolean> {
-    return getAuthUserOrUndefined(this._loadRecord()).then((x) => Boolean(x));
+    return getAuthUserOrUndefined(this._loadRecord()).then(Boolean);
   }
 
   loadRecord(): Promise<admin.auth.UserRecord> {

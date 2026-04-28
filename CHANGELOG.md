@@ -1,3 +1,35 @@
+## [13.10.1](https://github.com/dereekb/dbx-components/compare/v13.10.0-dev...v13.10.1) (2026-04-28)
+
+
+### Bug Fixes
+
+- **dbx-form:** deduplicate searchable field type defs ([ec3e7a21](https://github.com/dereekb/dbx-components/commit/ec3e7a217520296fb030e07976c03e230a20f480))
+- **dbx-form:** extract _formConfig from nested forge fields ([4e5d90e3](https://github.com/dereekb/dbx-components/commit/4e5d90e39ba7db69b7d6dd65512abb4a4dea186a))
+- **dbx-form:** integrate ng-forge fixes ([34c22fe5](https://github.com/dereekb/dbx-components/commit/34c22fe5f56084ef7ed4971c3ff23298a3246729))
+- removed leading ./ from package bin paths ([7960381f](https://github.com/dereekb/dbx-components/commit/7960381fb0c42beb4d096fd2e0a2fa2710f89ed7))
+
+
+### Build System
+
+- **$workspace:** update deps to latest minor versions ([3df46308](https://github.com/dereekb/dbx-components/commit/3df4630876605ff90a9329bf9869ed29c208f24b))
+- lint fix ([873422e9](https://github.com/dereekb/dbx-components/commit/873422e992ff9c6dd0e419b438ad0c1b2c57234b))
+
+
+### Code Refactoring
+
+- address sonarqube findings across packages ([67e167c1](https://github.com/dereekb/dbx-components/commit/67e167c1e5b9f1be4fc7f5be3baad17d8402e53a))
+- address sonarqube phase 1 mechanical and phase 2 lint fixes ([3af63e62](https://github.com/dereekb/dbx-components/commit/3af63e622d7e950ccfbce6e372e326cb6d1dda99)), closes [String#replaceAll](https://github.com/dereekb/String/issues/replaceAll) [String#replace](https://github.com/dereekb/String/issues/replace)
+- boolean fields use form-field wrapper ([54f72a29](https://github.com/dereekb/dbx-components/commit/54f72a29933040cf82a1086619d9e4b8215a0945))
+- **dbx-form:** clickable box for forge checkbox/toggle ([c6381812](https://github.com/dereekb/dbx-components/commit/c638181212138f9e7ed4d2d87ae1570db4dc82b4))
+- **dbx-form:** dbxForgeFlexLayout takes config object ([894a8286](https://github.com/dereekb/dbx-components/commit/894a82861da44651f782abf377ed46acb4bb0727))
+- text address test fixes ([7c62dc68](https://github.com/dereekb/dbx-components/commit/7c62dc68e2e8f8910cfeb1d3604cd34f9c09d70c))
+- **util:** add stripObject for filtering empty pojos ([f9255d3b](https://github.com/dereekb/dbx-components/commit/f9255d3b3c05159284c200b44d0569eca95becf5))
+
+
+### Tests
+
+- **dbx-form:** cover state field idempotentTransform wiring ([9336a456](https://github.com/dereekb/dbx-components/commit/9336a456fbbd2acdfc8f0fb9d6d63c1a26d39781))
+
 # [13.10.0](https://github.com/dereekb/dbx-components/compare/v13.9.0-dev...v13.10.0) (2026-04-27)
 
 

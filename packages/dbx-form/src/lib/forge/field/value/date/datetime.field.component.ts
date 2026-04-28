@@ -12,7 +12,7 @@ import { type DynamicText, type FieldMeta, type ValidationMessages, DEFAULT_PROP
 import { resolveValueFieldContext, buildValueFieldInputs, setupMetaTracking } from '@ng-forge/dynamic-forms/integration';
 import { MATERIAL_CONFIG } from '@ng-forge/dynamic-forms-material';
 import type { FieldTree } from '@angular/forms/signals';
-import { type Maybe, type Milliseconds, type TimezoneString, type ReadableTimeString, type DateOrDayString, type ArrayOrValue, asArray, filterMaybeArrayValues } from '@dereekb/util';
+import { type Maybe, type Milliseconds, type TimezoneString, type ReadableTimeString, type DateOrDayString, type ArrayOrValue, asArray, filterMaybeArrayValues, isDate } from '@dereekb/util';
 import { safeToJsDate, dateTimezoneUtcNormal, type DateTimezoneUtcNormalInstance, guessCurrentTimezone, toLocalReadableTimeString, getTimezoneAbbreviation, isSameDateHoursAndMinutes, isSameDateDay, DateTimeMinuteInstance, dateFromLogicalDate, dateTimeMinuteWholeDayDecisionFunction, toJsDayDate, isSameDate } from '@dereekb/date';
 import { type ObservableOrValueGetter, asObservableFromGetter, SubscriptionObject, switchMapMaybeDefault, filterMaybe, skipAllInitialMaybe } from '@dereekb/rxjs';
 import { type Observable, of, BehaviorSubject, Subject, combineLatest, interval, type Subscription } from 'rxjs';
@@ -138,12 +138,17 @@ const TIME_OUTPUT_THROTTLE_TIME: Milliseconds = 10;
     @media (max-width: 599px) {
       .dbx-forge-datetime-inputs {
         flex-direction: column;
+        align-items: stretch;
       }
       .dbx-forge-datetime-col {
-        flex: 1 1 100%;
+        flex: 1 1 auto;
+        width: 100%;
       }
     }
-  `
+  `,
+  host: {
+    '[class]': 'className()'
+  }
 })
 export class DbxForgeDateTimeFieldComponent {
   private readonly materialConfig = inject(MATERIAL_CONFIG, { optional: true });
@@ -167,7 +172,7 @@ export class DbxForgeDateTimeFieldComponent {
   // MARK: Form controls
   readonly dateCtrl = new FormControl<Maybe<Date>>(null);
   readonly timeCtrl = new FormControl<Maybe<ReadableTimeString>>(null, {
-    validators: [Validators.pattern(/^(now)$|^([0-9]|(0[0-9])|(1[0-9])|(2[0-3]))(:)?([0-5][0-9])?(\s)?([apAP][Mm])?(\\s)*$/)]
+    validators: [Validators.pattern(/^(now)$|^(\d|(0\d)|(1\d)|(2[0-3]))(:)?([0-5]\d)?(\s)?([apAP][Mm])?(\\s)*$/)]
   });
 
   // MARK: Internal signals
@@ -301,7 +306,7 @@ export class DbxForgeDateTimeFieldComponent {
       if (raw == null) return undefined;
       const parser = dbxDateTimeInputValueParseFactory(this.valueMode(), timezoneInstance);
       const result = parser(raw as Maybe<Date | string | number>);
-      if (result instanceof Date && isNaN(result.getTime())) return undefined;
+      if (result instanceof Date && Number.isNaN(result.getTime())) return undefined;
       return result;
     }),
     throttleTime(20, undefined, { leading: true, trailing: true }),
@@ -375,7 +380,7 @@ export class DbxForgeDateTimeFieldComponent {
         asArray(x).map((syncField) => {
           const form = this.fieldSignalContext.form;
           const siblingTree = (form as any)?.[syncField.syncWith];
-          const siblingState = siblingTree?.() as any;
+          const siblingState = siblingTree?.();
           if (siblingState?.value) {
             return { syncType: syncField.syncType, fieldState: siblingState };
           }
@@ -397,9 +402,9 @@ export class DbxForgeDateTimeFieldComponent {
             startWith(0),
             map(() => {
               const val = config.fieldState.value();
-              const date = safeToJsDate(val as any);
+              const date = safeToJsDate(val);
               // Reject Invalid Date values (e.g. from empty string sibling fields)
-              return date instanceof Date && !isNaN(date.getTime()) ? date : null;
+              return date instanceof Date && !Number.isNaN(date.getTime()) ? date : null;
             }),
             distinctUntilChanged()
           );
@@ -549,11 +554,7 @@ export class DbxForgeDateTimeFieldComponent {
     })
   ).pipe(shareReplay(1));
 
-  readonly hasError$ = this.currentErrorMessage$.pipe(
-    map((x) => Boolean(x)),
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
+  readonly hasError$ = this.currentErrorMessage$.pipe(map(Boolean), distinctUntilChanged(), shareReplay(1));
 
   // Show clear button
   readonly showClearButton$ = this.hasEmptyDisplayValue$.pipe(
@@ -579,7 +580,7 @@ export class DbxForgeDateTimeFieldComponent {
         const parser = dbxDateTimeInputValueParseFactory(this.valueMode(), this.timezoneInstance());
         const date = parser(raw as Maybe<Date | string | number>);
 
-        if (date && !(date instanceof Date && isNaN(date.getTime()))) {
+        if (date && !(date instanceof Date && Number.isNaN(date.getTime()))) {
           result = startOfDay(date);
         }
       }
@@ -663,7 +664,10 @@ export class DbxForgeDateTimeFieldComponent {
       // Time date
       this._timeDateSub?.unsubscribe();
       if (p?.timeDate) {
-        this._timeDateSub = asObservableFromGetter(p.timeDate).subscribe((td) => this._timeDate.set(td ? toJsDayDate(td) : undefined));
+        this._timeDateSub = asObservableFromGetter(p.timeDate).subscribe((td) => {
+          const resolved = isDate(td) || typeof td === 'string' ? toJsDayDate(td) : undefined;
+          this._timeDate.set(resolved);
+        });
       }
 
       // Presets
@@ -680,7 +684,7 @@ export class DbxForgeDateTimeFieldComponent {
       // Full day field name (read from sibling FieldTree)
       if (p?.fullDayFieldName) {
         const siblingTree = (this.fieldSignalContext.form as any)?.[p.fullDayFieldName];
-        const siblingState = siblingTree?.() as any;
+        const siblingState = siblingTree?.();
         if (siblingState?.value) {
           // Sync fullDay signal from sibling field
           this._fullDay.set(Boolean(siblingState.value()));
@@ -710,7 +714,7 @@ export class DbxForgeDateTimeFieldComponent {
 
       const parser = dbxDateTimeInputValueParseFactory(this.valueMode(), this.timezoneInstance());
       const date = parser(raw as Maybe<Date | string | number>);
-      if (!date || (date instanceof Date && isNaN(date.getTime()))) return;
+      if (!date || (date instanceof Date && Number.isNaN(date.getTime()))) return;
 
       const currentDateCtrl = this.dateCtrl.value;
       if (!currentDateCtrl || !isSameDateDay(currentDateCtrl, date)) {
@@ -974,7 +978,7 @@ export class DbxForgeDateTimeFieldComponent {
 
     try {
       const siblingTree = (this.fieldSignalContext.form as any)?.[fieldName];
-      const siblingState = siblingTree?.() as any;
+      const siblingState = siblingTree?.();
       if (siblingState?.value?.set) {
         siblingState.value.set(fullDay);
       }

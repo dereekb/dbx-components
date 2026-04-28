@@ -36,7 +36,7 @@ export interface ForEachKeyValue<T extends object = object, K extends keyof T = 
  */
 export function forEachKeyValue<T extends object = object, K extends keyof T = keyof T>(obj: T, { forEach, filter }: ForEachKeyValue<T, K>): void {
   const keyValues = filterKeyValueTuples<T, K>(obj, filter);
-  keyValues.forEach(forEach);
+  keyValues.forEach((kv, i) => forEach(kv, i));
 }
 
 /**
@@ -89,7 +89,7 @@ export function filterKeyValueTuplesFunction<T extends object = object, K extend
     const filterFn = filterKeyValueTupleFunction<T, K>(filter);
 
     result = (obj: T) => {
-      return (allKeyValueTuples(obj) as KeyValueTuple<T, K>[]).filter(filterFn);
+      return (allKeyValueTuples(obj) as KeyValueTuple<T, K>[]).filter((kv, i) => filterFn(kv, i));
     };
   } else {
     result = allKeyValueTuples;

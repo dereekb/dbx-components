@@ -59,9 +59,11 @@ export function isKnownHttpWebsiteProtocol(input: string): input is KnownHttpWeb
 export type WebsiteDomain = string;
 
 /**
- * Simple website domain regex that looks for a period in the string between the domain and the tld
+ * Simple website domain regex that looks for a period in the string between the domain and the tld.
+ *
+ * Anchored character-class form prevents catastrophic backtracking on inputs without a period.
  */
-export const HAS_WEBSITE_DOMAIN_NAME_REGEX = /(.+)\.(.+)/;
+export const HAS_WEBSITE_DOMAIN_NAME_REGEX = /^[^.]+\.[^.]/;
 
 /**
  * Returns true if the input probably contains a website domain (has at least one period separating parts).
@@ -77,7 +79,8 @@ export const HAS_WEBSITE_DOMAIN_NAME_REGEX = /(.+)\.(.+)/;
  * @returns Whether the input appears to contain a website domain.
  */
 export function hasWebsiteDomain(input: string): input is WebsiteDomain {
-  return HAS_WEBSITE_DOMAIN_NAME_REGEX.test(input);
+  const dotIndex = input.indexOf('.');
+  return dotIndex > 0 && dotIndex < input.length - 1;
 }
 
 /**
@@ -457,7 +460,7 @@ export function isolateWebsitePathFunction(config: IsolateWebsitePathFunctionCon
 
   const pathTransform: TransformStringFunction<WebsitePath> = chainMapSameFunctions([
     // remove any base path
-    basePathRegex != null ? (inputPath) => inputPath.replace(basePathRegex as RegExp, '') as WebsitePath : undefined,
+    basePathRegex != null ? (inputPath) => inputPath.replace(basePathRegex, '') as WebsitePath : undefined,
     // remove the query parameters
     removeQueryParameters != null ? (inputPath) => websitePathAndQueryPair(inputPath).path : undefined,
     // isolate range

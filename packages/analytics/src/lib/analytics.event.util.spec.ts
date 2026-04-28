@@ -93,7 +93,7 @@ describe('asAnalyticsEventData', () => {
     });
 
     it('should filter out NaN', () => {
-      const input = { a: 1, b: NaN };
+      const input = { a: 1, b: Number.NaN };
 
       expect(asAnalyticsEventData(input)).toEqual({ a: 1 });
     });
@@ -130,7 +130,7 @@ describe('asAnalyticsEventData', () => {
         tags: ['a', 'b'],
         meta: null,
         callback: () => undefined,
-        score: NaN,
+        score: Number.NaN,
         timestamp: new Date()
       };
 

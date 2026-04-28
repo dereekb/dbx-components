@@ -15,7 +15,7 @@ const ticketsListCommand: CommandModule = {
       const initialInput = { from: argv.from, limit: argv.limit, departmentId: argv.departmentId, status: argv.status, sortBy: argv.sortBy, include: argv.include };
       const outcome = await runPaginatedList({
         initialInput,
-        fetchPage: (input) => api.getTickets(input as any),
+        fetchPage: (input) => api.getTickets(input),
         adapter: zohoDeskPaginationAdapter,
         multiplePages: argv.multiplePages,
         multiplePagesOutput: argv.multiplePagesOutput,
@@ -59,7 +59,7 @@ const ticketsSearchCommand: CommandModule = {
       const initialInput = { from: argv.from, limit: argv.limit, subject: argv.subject, status: argv.status, email: argv.email, departmentId: argv.departmentId, channel: argv.channel, priority: argv.priority };
       const outcome = await runPaginatedList({
         initialInput,
-        fetchPage: (input) => api.searchTickets(input as any),
+        fetchPage: (input) => api.searchTickets(input),
         adapter: zohoDeskPaginationAdapter,
         multiplePages: argv.multiplePages,
         multiplePagesOutput: argv.multiplePagesOutput,
@@ -87,7 +87,7 @@ const ticketsByContactCommand: CommandModule = {
       const initialInput = { contactId: argv.contactId, from: argv.from, limit: argv.limit };
       const outcome = await runPaginatedList({
         initialInput,
-        fetchPage: (input) => api.getTicketsForContact(input as any),
+        fetchPage: (input) => api.getTicketsForContact(input),
         adapter: zohoDeskPaginationAdapter,
         multiplePages: argv.multiplePages,
         multiplePagesOutput: argv.multiplePagesOutput,

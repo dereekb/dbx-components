@@ -15,7 +15,7 @@ const contactsListCommand: CommandModule = {
       const initialInput = { from: argv.from, limit: argv.limit, sortBy: argv.sortBy, include: argv.include };
       const outcome = await runPaginatedList({
         initialInput,
-        fetchPage: (input) => api.getContacts(input as any),
+        fetchPage: (input) => api.getContacts(input),
         adapter: zohoDeskPaginationAdapter,
         multiplePages: argv.multiplePages,
         multiplePagesOutput: argv.multiplePagesOutput,

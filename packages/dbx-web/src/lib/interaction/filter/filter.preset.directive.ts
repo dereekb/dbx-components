@@ -65,7 +65,7 @@ export abstract class AbstractDbxPresetFilterMenuDirective<F extends FilterWithP
   readonly firstSelectedAnchorPair$ = this.presetAnchorsPairs$.pipe(
     map((presets) => {
       const firstSelected = presets.find((x) => x[2].selected);
-      return firstSelected ? firstSelected : undefined;
+      return firstSelected || undefined;
     }),
     shareReplay(1)
   );

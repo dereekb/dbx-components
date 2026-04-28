@@ -76,7 +76,7 @@ function sanitizeString(value: string): string {
  * Builds a file-safe timestamp string for dump file names.
  */
 export function dumpTimestamp(): string {
-  return new Date().toISOString().replace(/[:.]/g, '-');
+  return new Date().toISOString().replaceAll(/[:.]/g, '-');
 }
 
 /**

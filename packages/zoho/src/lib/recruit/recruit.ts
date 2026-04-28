@@ -221,7 +221,7 @@ export interface ZohoRecruitRecordEmailMetadata {
   status: ZohoRecruitRecordEmailMetadataStatus[];
 }
 
-export type ZohoRecruitRecordEmailMetadataStatusType = 'sent' | string;
+export type ZohoRecruitRecordEmailMetadataStatusType = 'sent' | (string & {});
 
 export interface ZohoRecruitRecordEmailMetadataStatus {
   type: ZohoRecruitRecordEmailMetadataStatusType;

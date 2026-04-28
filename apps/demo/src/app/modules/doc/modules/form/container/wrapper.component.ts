@@ -113,7 +113,7 @@ export class DocFormWrapperComponent {
   ];
 
   readonly forgeFlexFieldConfig: FormConfig = {
-    fields: [dbxForgeFlexLayout([dbxForgeCityField({}), dbxForgeStateField({ hint: 'State Description' }), dbxForgeToggleField({ key: 'toggle', label: 'Toggle', description: 'Toggle Description' })])]
+    fields: [dbxForgeFlexLayout({ fields: [dbxForgeCityField({}), dbxForgeStateField({ hint: 'State Description' }), dbxForgeToggleField({ key: 'toggle', label: 'Toggle', description: 'Toggle Description' })] })]
   };
 
   readonly flexThreeField: FormlyFieldConfig[] = [
@@ -131,7 +131,7 @@ export class DocFormWrapperComponent {
   ];
 
   readonly forgeFlexThreeFieldConfig: FormConfig = {
-    fields: [dbxForgeFlexLayout([{ field: dbxForgeCityField({}), size: 4 }, dbxForgeStateField({}), dbxForgeZipCodeField({})], { breakpoint: 'large', size: 1 })]
+    fields: [dbxForgeFlexLayout({ breakpoint: 'large', size: 1, fields: [{ field: dbxForgeCityField({}), size: 4 }, dbxForgeStateField({}), dbxForgeZipCodeField({})] })]
   };
 
   readonly flexThreeFieldBreakToColumn: FormlyFieldConfig[] = [
@@ -149,13 +149,13 @@ export class DocFormWrapperComponent {
   ];
 
   readonly forgeFlexThreeFieldBreakToColumnConfig: FormConfig = {
-    fields: [dbxForgeFlexLayout([{ field: dbxForgeCityField({}), size: 4 }, dbxForgeStateField({}), dbxForgeZipCodeField({})], { breakpoint: 'large', breakToColumn: true, size: 1 })]
+    fields: [dbxForgeFlexLayout({ breakpoint: 'large', breakToColumn: true, size: 1, fields: [{ field: dbxForgeCityField({}), size: 4 }, dbxForgeStateField({}), dbxForgeZipCodeField({})] })]
   };
 
   readonly flexFiveField: FormlyFieldConfig[] = [formlyFlexLayoutWrapper([formlyNameField(), formlyCityField(), formlyStateField(), formlyZipCodeField(), formlyCountryField()], { breakpoint: 'large', size: 1, relative: true })];
 
   readonly forgeFlexFiveFieldConfig: FormConfig = {
-    fields: [dbxForgeFlexLayout([dbxForgeNameField({}), dbxForgeCityField({}), dbxForgeStateField({}), dbxForgeZipCodeField({}), dbxForgeCountryField({})], { breakpoint: 'large', size: 1, relative: true })]
+    fields: [dbxForgeFlexLayout({ breakpoint: 'large', size: 1, relative: true, fields: [dbxForgeNameField({}), dbxForgeCityField({}), dbxForgeStateField({}), dbxForgeZipCodeField({}), dbxForgeCountryField({})] })]
   };
 
   // Forge wrapper equivalents

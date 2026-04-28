@@ -307,7 +307,7 @@
       "configInterface": "DbxForgeRowConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/wrapper/wrapper.ts",
-        "line": 57
+        "line": 58
       }
     },
     {
@@ -324,16 +324,16 @@
       "configInterface": "DbxForgeGroupConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/wrapper/wrapper.ts",
-        "line": 124
+        "line": 125
       }
     },
     {
       "slug": "toggle-wrapper",
       "factoryName": "dbxForgeToggleWrapper",
       "tier": "composite-builder",
-      "produces": "RowField",
+      "produces": "ContainerField",
       "arrayOutput": "no",
-      "description": "Wraps content fields in a Material slide toggle — the toggle state controls conditional visibility of the inner fields.\n\nUses ng-forge's built-in `toggle` field type (MatSlideToggle) and\n`FieldValueCondition` for conditional visibility. The toggle boolean value\nIS part of the form model. The hidden content is wrapped in a `container`\n(not a `group`), so the wrapped fields sit at the same level as the toggle\nin the form value — they are NOT nested under an extra object.\n\nStructure produced:\n```\nRow (outer)\n  ├── toggle field (type: 'toggle', boolean value)\n  └── Container (content, hidden when toggle === false)\n```\n\nThis is the forge equivalent of the formly `formlyToggleWrapper`.",
+      "description": "Wraps content fields in a Material slide toggle — the toggle state controls conditional visibility of the inner fields.\n\nUses ng-forge's built-in `toggle` field type (MatSlideToggle) and\n`FieldValueCondition` for conditional visibility. The toggle boolean value\nIS part of the form model. The hidden content is wrapped in a `container`\n(not a `group`), so the wrapped fields sit at the same level as the toggle\nin the form value — they are NOT nested under an extra object.\n\nStructure produced:\n```\nContainer (outer, with flex wrapper)\n  ├── toggle field (type: 'toggle', boolean value)\n  └── Container (content, hidden when toggle === false)\n```\n\nThis is the forge equivalent of the formly `formlyToggleWrapper`.",
       "sourcePath": "field/wrapper/wrapper.ts",
       "example": "const toggle = dbxForgeToggleWrapper({\n  key: 'showAdvanced',\n  label: 'Show advanced options',\n  fields: [\n    dbxForgeTextField({ key: 'advanced1', label: 'Option 1' }),\n    dbxForgeTextField({ key: 'advanced2', label: 'Option 2' })\n  ]\n});\n\n// Resulting form value (flat — no nesting under the container):\n// { showAdvanced: true, advanced1: '...', advanced2: '...' }",
       "properties": [
@@ -382,16 +382,16 @@
       "configInterface": "DbxForgeToggleWrapperConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/wrapper/wrapper.ts",
-        "line": 290
+        "line": 291
       }
     },
     {
       "slug": "expand-wrapper",
       "factoryName": "dbxForgeExpandWrapper",
       "tier": "composite-builder",
-      "produces": "RowField",
+      "produces": "ContainerField",
       "arrayOutput": "no",
-      "description": "Wraps content fields behind a button or text \"expand\" control. Use for optional sections like \"Show advanced options\".\n\nUses a custom `dbx-forge-expand` field type for the expand trigger and\n`FieldValueCondition` for conditional visibility on the content. The\nexpand boolean value IS part of the form model. The hidden content is\nwrapped in a `container` (not a `group`), so the wrapped fields sit at the\nsame level as the expand control in the form value — they are NOT nested\nunder an extra object.\n\nStructure produced:\n```\nRow (outer)\n  ├── expand field (type: 'dbx-forge-expand', boolean value)\n  └── Container (content, hidden when expand field === false)\n```\n\nThis is the forge equivalent of the formly `formlyExpandWrapper`.",
+      "description": "Wraps content fields behind a button or text \"expand\" control. Use for optional sections like \"Show advanced options\".\n\nUses a custom `dbx-forge-expand` field type for the expand trigger and\n`FieldValueCondition` for conditional visibility on the content. The\nexpand boolean value IS part of the form model. The hidden content is\nwrapped in a `container` (not a `group`), so the wrapped fields sit at the\nsame level as the expand control in the form value — they are NOT nested\nunder an extra object.\n\nStructure produced:\n```\nContainer (outer, with flex wrapper)\n  ├── expand field (type: 'dbx-forge-expand', boolean value)\n  └── Container (content, hidden when expand field === false)\n```\n\nThis is the forge equivalent of the formly `formlyExpandWrapper`.",
       "sourcePath": "field/wrapper/wrapper.ts",
       "example": "const expand = dbxForgeExpandWrapper({\n  key: 'showMore',\n  label: 'Show more options',\n  buttonType: 'button',\n  fields: [\n    dbxForgeTextField({ key: 'extra1', label: 'Extra 1' }),\n    dbxForgeTextField({ key: 'extra2', label: 'Extra 2' })\n  ]\n});\n\n// Resulting form value (flat — no nesting under the container):\n// { showMore: true, extra1: '...', extra2: '...' }",
       "properties": [
@@ -445,7 +445,7 @@
       "configInterface": "DbxForgeExpandWrapperConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/wrapper/wrapper.ts",
-        "line": 411
+        "line": 415
       }
     },
     {
@@ -1115,23 +1115,35 @@
       "tier": "field-factory",
       "produces": "boolean",
       "arrayOutput": "no",
-      "description": "Material slide toggle. Renders inside a styled outline box by default so it visually matches surrounding outlined form fields; pass `styledBox: false` to opt out.",
+      "description": "Material slide toggle. Renders inside the shared form-field wrapper by default so\nit visually matches surrounding outlined form fields and uses the standard error\nsubscript chrome; pass `styledBox: false` to opt out.",
       "sourcePath": "field/value/boolean/boolean.field.ts",
       "example": "dbxForgeToggleField({ key: 'active', label: 'Active', value: true })",
       "properties": [
         {
           "name": "styledBox",
           "type": "boolean",
-          "description": "Whether to render the toggle inside a styled outline box.\n\nDefaults to `true`.",
+          "description": "Whether to render the toggle inside the shared Material-style form-field wrapper\nso it picks up the outlined chrome and properly styled error/hint subscript.\n\nDefaults to `true`.",
+          "required": false
+        },
+        {
+          "name": "showLabelAt",
+          "type": "DbxForgeBooleanShowLabelAt",
+          "description": "Where to render the field's primary label. Defaults to `'content'`.\n\nIgnored if `styledBox` is false.",
+          "required": false
+        },
+        {
+          "name": "contentLabel",
+          "type": "DynamicText",
+          "description": "Optional secondary label rendered inside the wrapper's content area, regardless\nof {@link showLabelAt}. Useful for adding helper text inside the box.",
           "required": false
         }
       ],
-      "wrapperPattern": "unwrapped",
+      "wrapperPattern": "material-form-field-wrapped",
       "ngFormType": "toggle",
       "configInterface": "DbxForgeToggleFieldConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/value/boolean/boolean.field.ts",
-        "line": 43
+        "line": 66
       }
     },
     {
@@ -1140,23 +1152,35 @@
       "tier": "field-factory",
       "produces": "boolean",
       "arrayOutput": "no",
-      "description": "Material checkbox. Shares the styled-outline-box opt-out with toggle.",
+      "description": "Material checkbox. Shares the form-field-wrapper opt-out with toggle.",
       "sourcePath": "field/value/boolean/boolean.field.ts",
       "example": "dbxForgeCheckboxField({ key: 'agree', label: 'I agree to the terms' })",
       "properties": [
         {
           "name": "styledBox",
           "type": "boolean",
-          "description": "Whether to render the checkbox inside a styled outline box.\n\nDefaults to `true`.",
+          "description": "Whether to render the checkbox inside the shared Material-style form-field wrapper\nso it picks up the outlined chrome and properly styled error/hint subscript.\n\nDefaults to `true`.",
+          "required": false
+        },
+        {
+          "name": "showLabelAt",
+          "type": "DbxForgeBooleanShowLabelAt",
+          "description": "Where to render the field's primary label. Defaults to `'content'`.\n\nIgnored if `styledBox` is false.",
+          "required": false
+        },
+        {
+          "name": "contentLabel",
+          "type": "DynamicText",
+          "description": "Optional secondary label rendered inside the wrapper's content area, regardless\nof {@link showLabelAt}. Useful for adding helper text inside the box.",
           "required": false
         }
       ],
-      "wrapperPattern": "unwrapped",
+      "wrapperPattern": "material-form-field-wrapped",
       "ngFormType": "checkbox",
       "configInterface": "DbxForgeCheckboxFieldConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/value/boolean/boolean.field.ts",
-        "line": 86
+        "line": 133
       }
     },
     {
@@ -1997,7 +2021,7 @@
       "configInterface": "DbxForgeCountryFieldConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/value/text/text.additional.field.ts",
-        "line": 194
+        "line": 195
       }
     },
     {
@@ -2035,7 +2059,7 @@
       "configInterface": "DbxForgeZipCodeFieldConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/value/text/text.additional.field.ts",
-        "line": 230
+        "line": 231
       }
     },
     {
@@ -2054,7 +2078,7 @@
       "configInterface": "DbxForgeLatLngTextFieldConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/value/text/text.additional.field.ts",
-        "line": 267
+        "line": 268
       }
     },
     {
@@ -2080,7 +2104,7 @@
       "configInterface": "DbxForgeAddressLineFieldConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/value/text/text.address.field.ts",
-        "line": 68
+        "line": 69
       }
     },
     {
@@ -2158,7 +2182,7 @@
       "configInterface": "DbxForgeAddressFieldsConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/value/text/text.address.field.ts",
-        "line": 101
+        "line": 102
       }
     },
     {
@@ -2240,7 +2264,7 @@
       "configInterface": "DbxForgeAddressGroupConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/value/text/text.address.field.ts",
-        "line": 159
+        "line": 153
       }
     },
     {
@@ -2328,7 +2352,7 @@
       "configInterface": "DbxForgeAddressListFieldConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/value/text/text.address.field.ts",
-        "line": 199
+        "line": 193
       }
     },
     {
@@ -2413,8 +2437,14 @@
       "arrayOutput": "no",
       "description": "Creates a responsive flex layout container that arranges child fields horizontally\nwith configurable sizing, breakpoints, and responsive behavior.\n\nEach child field gets a `dbx-flex-N` CSS class applied (merged with any existing className).\nThe container hosts the `dbx-forge-flex` wrapper, which renders the `dbxFlexGroup`\ndirective for responsive breakpoint handling.\n\nA `container` is used (not a `group`) because flex layout is purely visual —\nthe wrapped fields should remain at the same level in the form value, not be\nnested under an extra object.\n\nThis is the forge equivalent of {@link formlyFlexLayoutWrapper}.",
       "sourcePath": "field/wrapper/flex/flex.wrapper.ts",
-      "example": "// Simple: all fields get default size (2)\ndbxForgeFlexLayout([dbxForgeCityField({}), dbxForgeStateField({}), dbxForgeZipCodeField({})])\n\n// Resulting form value shape (flat — no wrapper property):\n// { city: '...', state: '...', zip: '...' }\n\n// With per-field sizing and breakpoint\ndbxForgeFlexLayout([\n  { field: dbxForgeCityField({}), size: 4 },\n  dbxForgeStateField({}),\n  dbxForgeZipCodeField({})\n], { breakpoint: 'small', size: 1 })\n\n// Full config\ndbxForgeFlexLayout([...fields], { breakpoint: 'large', breakToColumn: true, relative: true, size: 1 })",
+      "example": "// Simple: all fields get default size (2)\ndbxForgeFlexLayout({ fields: [dbxForgeCityField({}), dbxForgeStateField({}), dbxForgeZipCodeField({})] })\n\n// Resulting form value shape (flat — no wrapper property):\n// { city: '...', state: '...', zip: '...' }\n\n// With per-field sizing and breakpoint\ndbxForgeFlexLayout({\n  breakpoint: 'small',\n  size: 1,\n  fields: [\n    { field: dbxForgeCityField({}), size: 4 },\n    dbxForgeStateField({}),\n    dbxForgeZipCodeField({})\n  ]\n})\n\n// Full config\ndbxForgeFlexLayout({ breakpoint: 'large', breakToColumn: true, relative: true, size: 1, fields: [...] })",
       "properties": [
+        {
+          "name": "fields",
+          "type": "readonly (FieldDef<unknown> | DbxForgeFlexLayoutFieldConfig)[]",
+          "description": "Fields to include in the layout. Each entry may be a plain {@link FieldDef}\nor a {@link DbxForgeFlexLayoutFieldConfig} with a per-field size override.",
+          "required": false
+        },
         {
           "name": "size",
           "type": "DbxFlexSize",
@@ -2429,7 +2459,7 @@
       "configInterface": "DbxForgeFlexLayoutConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/wrapper/flex/flex.wrapper.ts",
-        "line": 115
+        "line": 131
       }
     },
     {

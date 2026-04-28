@@ -747,7 +747,7 @@ export function updateStateWithFilter(currentState: CalendarScheduleSelectionSta
 
     if (minMaxDateRange) {
       enabledFilter.minMaxDateRange = minMaxDateRange;
-      enabledFilter.setStartAsMinDate = filterStart ? true : false; // If a start date is set, then it becomes the floor.
+      enabledFilter.setStartAsMinDate = Boolean(filterStart); // If a start date is set, then it becomes the floor.
     }
 
     /**

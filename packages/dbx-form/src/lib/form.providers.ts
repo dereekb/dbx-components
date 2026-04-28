@@ -37,8 +37,7 @@ export function provideDbxFormConfiguration(config?: ProvideDbxFormConfiguration
   ];
 
   if (provideDateAdapter !== false) {
-    providers.push(provideDateFnsAdapter());
-    providers.push({
+    providers.push(provideDateFnsAdapter(), {
       provide: MAT_DATE_LOCALE,
       useValue: enUS
     });

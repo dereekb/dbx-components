@@ -120,7 +120,7 @@ export function dateCellScheduleDayCodesFromEnabledDays(input: Maybe<EnabledDays
  */
 export type DateCellScheduleEncodedWeek = '' | StringOrder<`${DateCellScheduleDayCode}`, ''>;
 
-export const DATE_CELL_SCHEDULE_ENCODED_WEEK_REGEX = /^[0-9]{0,9}$/;
+export const DATE_CELL_SCHEDULE_ENCODED_WEEK_REGEX = /^\d{0,9}$/;
 
 /**
  * Returns true if the input is a DateCellScheduleEncodedWeek.
@@ -330,7 +330,7 @@ export function rawDateCellScheduleDayCodes(input: DateCellScheduleDayCodesInput
 
   switch (typeof input) {
     case 'string':
-      dayCodes = Array.from(new Set(input)).map((x) => Number(x)) as DateCellScheduleDayCode[];
+      dayCodes = Array.from(new Set(input)).map(Number) as DateCellScheduleDayCode[];
       break;
     case 'number':
       dayCodes = [input];
@@ -340,7 +340,7 @@ export function rawDateCellScheduleDayCodes(input: DateCellScheduleDayCodesInput
       break;
   }
 
-  return dayCodes.filter((x) => Boolean(x)); // filter out "none" code
+  return dayCodes.filter(Boolean); // filter out "none" code
 }
 
 /**

@@ -305,7 +305,7 @@ function buildStateEntries(input: { readonly decl: EnumDeclaration; readonly fil
     const transitionsFrom = filterStates(flattenList(memberRaw.tagText.get(ACTION_STATE_TRANSITIONS_FROM_TAG) ?? []));
     const transitionsTo = filterStates(flattenList(memberRaw.tagText.get(ACTION_STATE_TRANSITIONS_TO_TAG) ?? []));
     const literal = readEnumMemberLiteral(member);
-    const slug = `state-${stateValue.toLowerCase().replace(/_/g, '-')}`;
+    const slug = `state-${stateValue.toLowerCase().replaceAll('_', '-')}`;
 
     entries.push({
       role: 'state',

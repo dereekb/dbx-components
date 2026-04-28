@@ -284,7 +284,7 @@ export function safeToJsDate(input: Maybe<DateOrDateString | UTCDateString>): Ma
  * ```
  */
 export function toJsDate(input: DateOrDateString | UTCDateString | UnixDateTimeMillisecondsNumber): Date {
-  return isDate(input) ? (input as Date) : (parseJsDateString(input as string) ?? new Date(input));
+  return isDate(input) ? input : (parseJsDateString(input) ?? new Date(input));
 }
 
 /**
@@ -303,7 +303,7 @@ export function toJsDate(input: DateOrDateString | UTCDateString | UnixDateTimeM
  * ```
  */
 export function parseJsDateString(input: ISO8601DateString | UTCDateString | UnixDateTimeMillisecondsNumber): Maybe<Date> {
-  const date = typeof input === 'string' && isISO8601DateString(input) ? parseISO(input as string) : new Date(input);
+  const date = typeof input === 'string' && isISO8601DateString(input) ? parseISO(input) : new Date(input);
   return isValid(date) ? date : undefined;
 }
 

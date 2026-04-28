@@ -194,11 +194,7 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
   readonly isEmptyAndNotLoading$ = this.context.isEmptyAndNotLoading$;
 
   readonly config$ = toObservable(this.config);
-  readonly disabled$ = toObservable(this.disabled).pipe(
-    map((x) => Boolean(x)),
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
+  readonly disabled$ = toObservable(this.disabled).pipe(map(Boolean), distinctUntilChanged(), shareReplay(1));
 
   readonly selectionMode$ = toObservable(this.selectionMode).pipe(distinctUntilChanged(), shareReplay(1));
 

@@ -65,7 +65,7 @@ export function zoomOAuthFactory(factoryConfig: ZoomOAuthFactoryConfig): ZoomOAu
     });
 
     function accessTokenFromTokenResponse(result: ZoomOAuthAccessTokenResponse): ZoomAccessToken {
-      const createdAt = new Date().getTime();
+      const createdAt = Date.now();
       const { access_token, api_url, scope, expires_in } = result;
 
       const accessToken: ZoomAccessToken = {
@@ -156,7 +156,7 @@ export function zoomOAuthZoomAccessTokenFactory(config: ZoomOAuthZoomAccessToken
 
     // check expiration
     if (currentToken != null) {
-      const isExpired = new Date().getTime() + tokenExpirationBuffer >= currentToken.expiresAt.getTime();
+      const isExpired = Date.now() + tokenExpirationBuffer >= currentToken.expiresAt.getTime();
 
       if (isExpired) {
         currentToken = null;

@@ -284,7 +284,11 @@ export function caseInsensitiveString(input: Maybe<string>): Maybe<string> {
  * @returns the prefixed string, or undefined if the input is null/undefined
  */
 export function addPlusPrefixToNumber(value?: Maybe<number>, prefix = '+'): string | undefined {
-  return value != null ? (value > 0 ? `${prefix}${value}` : `${value}`) : undefined;
+  if (value == null) {
+    return undefined;
+  }
+
+  return value > 0 ? `${prefix}${value}` : `${value}`;
 }
 
 /**
@@ -421,7 +425,7 @@ export function cutString(input: Maybe<string>, maxLength: number, endText?: May
  * @returns the string with collapsed whitespace
  */
 export function flattenWhitespace(input: string): string {
-  return input.replace(/[^\S\r\n]+/g, ' ').trim();
+  return input.replaceAll(/[^\S\r\n]+/g, ' ').trim();
 }
 
 /**

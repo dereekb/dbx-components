@@ -125,9 +125,6 @@ export async function loadCliConfig(): Promise<Maybe<ZohoCliConfig>> {
   // Build per-product overrides from env vars
   function productConfigFromEnv(product: string): Maybe<ZohoCliProductConfig> {
     const prefix = product.toUpperCase();
-    const clientId = envVar('ACCOUNTS_CLIENT_ID', prefix);
-    const clientSecret = envVar('ACCOUNTS_CLIENT_SECRET', prefix);
-    const refreshToken = envVar('ACCOUNTS_REFRESH_TOKEN', prefix);
     const apiUrl = envVar('API_URL', prefix);
     const orgId = product === 'desk' ? envVar('DESK_ORG_ID') : undefined;
     const fileProduct = fileConfig?.[product as ZohoCliProduct];
@@ -224,8 +221,16 @@ function mergeOutputConfig(existing: Maybe<ZohoCliOutputConfig>, updates: ZohoCl
   return {
     dumpDir: 'dumpDir' in updates ? updates.dumpDir : existing?.dumpDir,
     pick: 'pick' in updates ? updates.pick : existing?.pick,
-    commands: 'commands' in updates ? (updates.commands ? { ...existing?.commands, ...updates.commands } : undefined) : existing?.commands
+    commands: mergeOutputCommandsConfig(existing?.commands, updates)
   };
+}
+
+function mergeOutputCommandsConfig(existing: ZohoCliOutputConfig['commands'], updates: ZohoCliOutputConfig): ZohoCliOutputConfig['commands'] {
+  if (!('commands' in updates)) {
+    return existing;
+  }
+
+  return updates.commands ? { ...existing, ...updates.commands } : undefined;
 }
 
 /**

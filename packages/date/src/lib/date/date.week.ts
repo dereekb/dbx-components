@@ -223,11 +223,11 @@ export function yearWeekCodeFactory(config?: YearWeekCodeConfig): YearWeekCodeFa
     let pair: YearWeekCodePair;
 
     if (isDate(dateOrYear)) {
-      const normalDate = normal.systemDateToTargetDate(dateOrYear as Date);
+      const normalDate = normal.systemDateToTargetDate(dateOrYear);
       pair = yearWeekCodePairFromDate(normalDate);
     } else {
       pair = {
-        year: dateOrYear as number,
+        year: dateOrYear,
         week: inputWeek as YearWeekCodeIndex
       };
     }
@@ -276,8 +276,8 @@ export function yearWeekCodeForDateRangeFactory(factory: YearWeekCodeFactory = y
 
   return (dateRange: DateRange) => {
     // do in system timezone so we can use addWeeks/startOfWeek
-    const start = _normal.systemDateToTargetDate(dateRange.start as Date);
-    const end = _normal.systemDateToTargetDate(dateRange.end as Date);
+    const start = _normal.systemDateToTargetDate(dateRange.start);
+    const end = _normal.systemDateToTargetDate(dateRange.end);
 
     const weeks: YearWeekCode[] = [];
 
@@ -422,7 +422,7 @@ export interface YearWeekCodeGroupFactoryConfig<B> {
 export function yearWeekCodeGroupFactory<B>(config: YearWeekCodeGroupFactoryConfig<B>): YearWeekCodeGroupFactory<B> {
   const { yearWeekCodeFactory: factoryInput, yearWeekCodeReader: readerInput, dateReader } = config;
   const readJobWeekYear = typeof factoryInput === 'function' ? factoryInput : yearWeekCodeFactory(factoryInput);
-  const yearWeekCodeReader = typeof readerInput === 'function' ? readerInput : (x: YearWeekCode | YearWeekCodeString) => Number(x);
+  const yearWeekCodeReader = typeof readerInput === 'function' ? readerInput : Number;
 
   return (items: B[]) => {
     const map = makeValuesGroupMap(items, (item: B) => {

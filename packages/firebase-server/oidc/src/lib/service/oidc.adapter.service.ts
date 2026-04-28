@@ -64,12 +64,12 @@ export function createAdapterFactory(collections: OidcServerFirestoreCollections
 
     async findByUserCode(userCode: string): Promise<AdapterPayload | undefined> {
       const results = await this.collection.query(oidcEntriesByUserCodeQuery(this.name, userCode)).getDocs();
-      return !results.empty ? this._toPayload(results.docs[0].data() as OidcEntry) : undefined;
+      return !results.empty ? this._toPayload(results.docs[0].data()) : undefined;
     }
 
     async findByUid(uid: string): Promise<AdapterPayload | undefined> {
       const results = await this.collection.query(oidcEntriesByUidQuery(this.name, uid)).getDocs();
-      return !results.empty ? this._toPayload(results.docs[0].data() as OidcEntry) : undefined;
+      return !results.empty ? this._toPayload(results.docs[0].data()) : undefined;
     }
 
     async consume(id: OidcEntryId): Promise<void> {

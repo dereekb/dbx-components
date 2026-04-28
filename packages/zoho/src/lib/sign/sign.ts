@@ -50,7 +50,7 @@ export type ZohoSignFieldTypeId = string;
 /**
  * Status of a Zoho Sign request.
  */
-export type ZohoSignRequestStatus = 'inprogress' | 'completed' | 'recalled' | 'declined' | 'expired' | string;
+export type ZohoSignRequestStatus = 'inprogress' | 'completed' | 'recalled' | 'declined' | 'expired' | (string & {});
 
 /**
  * Recipient action type in Zoho Sign.
@@ -65,7 +65,7 @@ export type ZohoSignVerificationType = 'EMAIL' | 'SMS' | 'OFFLINE';
 /**
  * Field type name for document fields.
  */
-export type ZohoSignFieldTypeName = 'Checkbox' | 'Radiogroup' | 'Signature' | 'Initial' | 'Textfield' | 'Email' | 'Date' | 'Name' | 'Company' | 'Jobtitle' | 'CustomDate' | 'Dropdown' | 'Attachment' | 'Checkout' | string;
+export type ZohoSignFieldTypeName = 'Checkbox' | 'Radiogroup' | 'Signature' | 'Initial' | 'Textfield' | 'Email' | 'Date' | 'Name' | 'Company' | 'Jobtitle' | 'CustomDate' | 'Dropdown' | 'Attachment' | 'Checkout' | (string & {});
 
 /**
  * Name format for name fields.
@@ -75,7 +75,7 @@ export type ZohoSignNameFormat = 'FIRST_NAME' | 'LAST_NAME' | 'FULL_NAME';
 /**
  * Field category classification.
  */
-export type ZohoSignFieldCategory = 'textfield' | 'image' | 'datefield' | string;
+export type ZohoSignFieldCategory = 'textfield' | 'image' | 'datefield' | (string & {});
 
 // MARK: Field Type
 /**

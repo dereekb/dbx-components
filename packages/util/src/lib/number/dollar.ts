@@ -76,7 +76,7 @@ export type DollarAmountString = string;
  */
 export type DollarAmountStringWithUnit<U extends DollarAmountUnit> = `${U}${DollarAmountString}`;
 
-export const DOLLAR_AMOUNT_STRING_REGEX = /^\$?([0-9]+)\.?([0-9][0-9])$/;
+export const DOLLAR_AMOUNT_STRING_REGEX = /^\$?(\d+)\.?(\d\d)$/;
 
 /**
  * Dollar amounts are to two decimal places.

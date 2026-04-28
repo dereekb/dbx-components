@@ -102,6 +102,14 @@ export class DbxFormlyContext<T = unknown> implements DbxForm<T>, Destroyable, O
     );
   }
 
+  currentValue(): Observable<T> {
+    return this._delegate.pipe(
+      filterMaybe(),
+      switchMap((x) => x.currentValue()),
+      shareReplay(1)
+    );
+  }
+
   setValue(value: Partial<T>): void {
     this._initialValue.next(value);
 

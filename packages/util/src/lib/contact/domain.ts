@@ -50,7 +50,7 @@ export function readDomainFromEmailAddress(address: EmailAddress): EmailAddressD
  */
 export function readEmailDomainFromUrlOrEmailAddress(urlLikeInput: string | EmailAddress | EmailAddressDomain): EmailAddressDomain {
   const emailSplit = urlLikeInput.split('@');
-  const url = emailSplit[emailSplit.length - 1];
+  const url = emailSplit.at(-1) as string;
 
   let domain;
 

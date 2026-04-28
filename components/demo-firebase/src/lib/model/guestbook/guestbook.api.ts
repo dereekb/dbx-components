@@ -42,11 +42,11 @@ export const insertGuestbookEntryParamsType = guestbookEntryParamsType.merge({
 
 export type LikeGuestbookEntryParams = TargetModelParams;
 
-export const likeGuestbookEntryParamsType = targetModelParamsType as Type<LikeGuestbookEntryParams>;
+export const likeGuestbookEntryParamsType = targetModelParamsType;
 
 export type SubscribeToGuestbookNotificationsParams = AbstractSubscribeToNotificationBoxParams;
 
-export const subscribeToGuestbookNotificationsParamsType = abstractSubscribeToNotificationBoxParamsType as Type<SubscribeToGuestbookNotificationsParams>;
+export const subscribeToGuestbookNotificationsParamsType = abstractSubscribeToNotificationBoxParamsType;
 
 // MARK: Query
 /**

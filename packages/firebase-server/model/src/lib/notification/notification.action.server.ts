@@ -1239,7 +1239,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
             }
 
             // if the notification box is not initialized/synchronized yet, do not run.
-            if (tryRun && notificationBox && notificationBox.s) {
+            if (tryRun && notificationBox?.s) {
               notificationBoxNeedsInitialization = true;
               tryRun = false;
               nextSat = addMinutes(now, NOTIFICATION_BOX_NOT_INITIALIZED_DELAY_MINUTES);
@@ -1572,7 +1572,8 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                 notificationSummaryIdForUid: notificationSendService.notificationSummaryIdForUidFunction
               });
 
-              let { es, ts, ps, ns } = notification;
+              let { es, ts, ns } = notification;
+              let ps: typeof notification.ps;
               const { esr: currentEsr, tsr: currentTsr } = notification;
 
               // do emails

@@ -86,7 +86,7 @@ export function reduceNumbers(reduceFn: (a: number, b: number) => number, array:
 export function reduceNumbersFn(reduceFn: (a: number, b: number) => number): (array: number[]) => number | undefined;
 export function reduceNumbersFn<D extends number>(reduceFn: (a: number, b: number) => number, emptyArrayValue?: D): (array: number[]) => number | D;
 export function reduceNumbersFn<D extends number>(reduceFn: (a: number, b: number) => number, emptyArrayValue?: D): (array: number[]) => number | D | undefined {
-  const rFn = (array: number[]) => array.reduce(reduceFn);
+  const rFn = (array: number[]) => array.reduce((a, b) => reduceFn(a, b));
   return (array: number[]) => (array.length ? rFn(array) : emptyArrayValue);
 }
 

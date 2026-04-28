@@ -285,7 +285,7 @@ export interface ZoomUserPhoneNumber {
    *
    * @example "Mobile"
    */
-  readonly label: 'Mobile' | 'Office' | 'Home' | 'Fax' | string;
+  readonly label: 'Mobile' | 'Office' | 'Home' | 'Fax' | (string & {});
   /**
    * The user's phone number.
    *

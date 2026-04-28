@@ -145,4 +145,4 @@ export function booleanKeyArrayUtility<T>(readKey: ReadModelKeyFunction<T>) {
 /**
  * Utility for working with boolean string key arrays.
  */
-export const BooleanStringKeyArrayUtility = booleanKeyArrayUtility<BooleanStringKey>((x) => (x ? x : undefined));
+export const BooleanStringKeyArrayUtility = booleanKeyArrayUtility<BooleanStringKey>((x) => x || undefined);

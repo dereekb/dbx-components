@@ -1,7 +1,8 @@
 import { describe, it, expect, expectTypeOf } from 'vitest';
 import type { LogicConfig } from '@ng-forge/dynamic-forms';
 import type { DbxForgeToggleFieldConfig, DbxForgeCheckboxFieldConfig } from './boolean.field';
-import { dbxForgeToggleField, dbxForgeCheckboxField, FORGE_STYLED_BOX_CLASS } from './boolean.field';
+import { dbxForgeToggleField, dbxForgeCheckboxField } from './boolean.field';
+import { DBX_FORGE_FORM_FIELD_WRAPPER_NAME } from '../../wrapper/formfield/formfield.wrapper';
 
 // ============================================================================
 // DbxForgeToggleFieldConfig - Exhaustive Whitelist
@@ -44,7 +45,9 @@ describe('DbxForgeToggleFieldConfig - Exhaustive Whitelist', () => {
     | 'skipDefaultWrappers'
     | '__fieldDef'
     // Field-specific config
-    | 'styledBox';
+    | 'styledBox'
+    | 'showLabelAt'
+    | 'contentLabel';
 
   type ActualKeys = keyof DbxForgeToggleFieldConfig;
 
@@ -94,7 +97,9 @@ describe('DbxForgeCheckboxFieldConfig - Exhaustive Whitelist', () => {
     | 'skipDefaultWrappers'
     | '__fieldDef'
     // Field-specific config
-    | 'styledBox';
+    | 'styledBox'
+    | 'showLabelAt'
+    | 'contentLabel';
 
   type ActualKeys = keyof DbxForgeCheckboxFieldConfig;
 
@@ -130,14 +135,14 @@ describe('dbxForgeToggleField()', () => {
     expect(field.props?.hint).toBe('A hint');
   });
 
-  it('should apply styled box className by default', () => {
+  it('should apply the form-field wrapper by default', () => {
     const field = dbxForgeToggleField({ key: 'active' });
-    expect(field.className).toBe(FORGE_STYLED_BOX_CLASS);
+    expect(field.wrappers).toEqual([{ type: DBX_FORGE_FORM_FIELD_WRAPPER_NAME }]);
   });
 
-  it('should not apply styled box className when styledBox is false', () => {
+  it('should not apply the form-field wrapper when styledBox is false', () => {
     const field = dbxForgeToggleField({ key: 'active', styledBox: false });
-    expect(field.className).toBeUndefined();
+    expect(field.wrappers ?? []).toEqual([]);
   });
 
   it('should pass logic through to the field definition', () => {
@@ -170,14 +175,14 @@ describe('dbxForgeCheckboxField()', () => {
     expect(field.props?.hint).toBe('A hint');
   });
 
-  it('should apply styled box className by default', () => {
+  it('should apply the form-field wrapper by default', () => {
     const field = dbxForgeCheckboxField({ key: 'agree' });
-    expect(field.className).toBe(FORGE_STYLED_BOX_CLASS);
+    expect(field.wrappers).toEqual([{ type: DBX_FORGE_FORM_FIELD_WRAPPER_NAME }]);
   });
 
-  it('should not apply styled box className when styledBox is false', () => {
+  it('should not apply the form-field wrapper when styledBox is false', () => {
     const field = dbxForgeCheckboxField({ key: 'agree', styledBox: false });
-    expect(field.className).toBeUndefined();
+    expect(field.wrappers ?? []).toEqual([]);
   });
 
   it('should pass logic through to the field definition', () => {

@@ -26,7 +26,7 @@ export function findNext<T>(array: Maybe<T[]>, find: ArrayFindDecisionFunction<T
   let result: Maybe<T>;
 
   if (array) {
-    const index = array.findIndex(find);
+    const index = array.findIndex((v, i, arr) => find(v, i, arr));
     const nextIndex = getArrayNextIndex(array, index, wrapAround, steps);
 
     if (nextIndex != null) {

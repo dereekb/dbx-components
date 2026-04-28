@@ -47,7 +47,9 @@ import { DbxSectionHeaderComponent } from './section.header.component';
   standalone: true
 })
 export class DbxSectionComponent extends DbxSectionHeaderComponent {
-  /** Apply elevated card styling. */
+  /**
+   * Apply elevated card styling.
+   */
   readonly elevate = input<boolean>(false);
 
   readonly classConfig = computed(() => {

@@ -402,9 +402,7 @@ export function storageFileUploadFiles(input: StorageFileUploadFilesInput): Stor
           allFilesAndLatestProgress[fileIndex] = nextProgress;
 
           // only set fileRef once
-          if (!allFilesAndDetails[fileIndex].fileRef) {
-            allFilesAndDetails[fileIndex].fileRef = nextProgress.fileRef;
-          }
+          allFilesAndDetails[fileIndex].fileRef ??= nextProgress.fileRef;
         }
 
         // if complete, update the indexes and details
@@ -472,7 +470,7 @@ export function storageFileUploadFiles(input: StorageFileUploadFilesInput): Stor
     async function runUploadTaskForFile([file, index]: readonly [File, IndexNumber]) {
       if (flaggedCancel) {
         onStartFileUploadFlaggedCancelled(index);
-        return Promise.resolve();
+        return;
       }
 
       return new Promise<void>((resolve) => {
@@ -506,25 +504,21 @@ export function storageFileUploadFiles(input: StorageFileUploadFilesInput): Stor
         };
 
         // upload the file, subscribe to the progress
-        try {
-          uploadHandler
-            .uploadFile(file)
-            .then((uploadInstance) => {
-              // add to active file indexes
-              onStartFileUpload(index, uploadInstance);
+        uploadHandler
+          .uploadFile(file)
+          .then((uploadInstance) => {
+            // add to active file indexes
+            onStartFileUpload(index, uploadInstance);
 
-              const uploadSubscription = uploadInstance.upload.subscribe({
-                next: updateFileUploadProgress,
-                error: updateFileUploadProgressWithUncaughtError,
-                complete: completeFileUploadProgress
-              });
+            const uploadSubscription = uploadInstance.upload.subscribe({
+              next: updateFileUploadProgress,
+              error: updateFileUploadProgressWithUncaughtError,
+              complete: completeFileUploadProgress
+            });
 
-              multiUploadsSubscriptionObject.addSubs(uploadSubscription);
-            })
-            .catch(updateFileUploadProgressWithUncaughtError);
-        } catch (error) {
-          updateFileUploadProgressWithUncaughtError(error);
-        }
+            multiUploadsSubscriptionObject.addSubs(uploadSubscription);
+          })
+          .catch(updateFileUploadProgressWithUncaughtError);
       });
     }
 

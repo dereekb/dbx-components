@@ -187,10 +187,8 @@ export class LimitDateTimeInstance {
    * @returns The clamped date within the allowed range.
    */
   clamp(date: Date): Date {
-    let result: Date = date;
-
     const dateRange = this.dateRange();
-    result = clampDateToDateRange(date, dateRange);
+    let result: Date = clampDateToDateRange(date, dateRange);
 
     if (this._config.takeNextUpcomingTime) {
       // Inline implementation of deprecated takeNextUpcomingTime

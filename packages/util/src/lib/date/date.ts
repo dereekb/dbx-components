@@ -70,7 +70,7 @@ export type UTCDateString = string;
  * Tue, 14 Mar 2023 12:34:56 UTC
  * Wed, 25 May 2024 20:45:07 EST
  */
-export const UTC_DATE_STRING_REGEX = /^([a-zA-Z]{3}, [0-9]{2} [a-zA-Z]{3} [0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2} [A-Z]{3})$/;
+export const UTC_DATE_STRING_REGEX = /^([a-zA-Z]{3}, \d{2} [a-zA-Z]{3} \d{4} \d{2}:\d{2}:\d{2} [A-Z]{3})$/;
 
 /**
  * Determines if a string is a valid UTC date string.
@@ -327,11 +327,11 @@ export function dateFromDateOrTimeMillisecondsNumber(input: Maybe<DateOrUnixDate
   let result: Maybe<Date>;
 
   if (input == null) {
-    result = input as null | undefined;
+    result = input;
   } else if (isDate(input)) {
-    result = input as Date;
+    result = input;
   } else {
-    result = unixMillisecondsNumberToDate(input as UnixDateTimeMillisecondsNumber);
+    result = unixMillisecondsNumberToDate(input);
   }
 
   return result;

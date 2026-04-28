@@ -102,7 +102,7 @@ export function calcomOAuthFactory(factoryConfig: CalcomOAuthFactoryConfig): Cal
     let latestRefreshToken = config.refreshToken;
 
     function accessTokenFromTokenResponse(result: CalcomOAuthTokenResponse): CalcomAccessToken {
-      const createdAt = new Date().getTime();
+      const createdAt = Date.now();
       const { access_token, refresh_token, scope, expires_in } = result;
 
       // Store the new refresh token for next use
@@ -203,7 +203,7 @@ export function calcomOAuthAccessTokenFactory(config: CalcomOAuthAccessTokenFact
 
     // check expiration
     if (currentToken != null) {
-      const isExpired = new Date().getTime() + tokenExpirationBuffer >= currentToken.expiresAt.getTime();
+      const isExpired = Date.now() + tokenExpirationBuffer >= currentToken.expiresAt.getTime();
 
       if (isExpired) {
         currentToken = null;

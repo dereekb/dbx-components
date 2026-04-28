@@ -1,21 +1,21 @@
 {
   "name": "@dereekb/firebase-server/oidc",
-  "version": "13.10.0",
+  "version": "13.10.1",
   "peerDependencies": {
-    "@dereekb/analytics": "13.10.0",
-    "@dereekb/date": "13.10.0",
-    "@dereekb/firebase": "13.10.0",
-    "@dereekb/firebase-server": "13.10.0",
-    "@dereekb/model": "13.10.0",
-    "@dereekb/nestjs": "13.10.0",
-    "@dereekb/rxjs": "13.10.0",
-    "@dereekb/util": "13.10.0",
-    "@dereekb/zoho": "13.10.0",
-    "@nestjs/common": "^11.1.17",
+    "@dereekb/analytics": "13.10.1",
+    "@dereekb/date": "13.10.1",
+    "@dereekb/firebase": "13.10.1",
+    "@dereekb/firebase-server": "13.10.1",
+    "@dereekb/model": "13.10.1",
+    "@dereekb/nestjs": "13.10.1",
+    "@dereekb/rxjs": "13.10.1",
+    "@dereekb/util": "13.10.1",
+    "@dereekb/zoho": "13.10.1",
+    "@nestjs/common": "^11.1.19",
     "@nestjs/config": "^4.0.4",
-    "express": "^5.0.0",
+    "express": "^5.2.1",
     "firebase-admin": "^13.8.0",
-    "nanoid": "^5.1.7",
-    "oidc-provider": "^9.7.0"
+    "nanoid": "^5.1.9",
+    "oidc-provider": "^9.8.2"
   }
 }

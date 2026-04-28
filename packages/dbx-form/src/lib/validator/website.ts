@@ -90,7 +90,7 @@ export function isWebsiteUrlValidator(config?: IsWebsiteUrlValidatorConfig): Val
       };
 
   const validateWebsiteDomain: (details: WebsiteUrlDetails) => ValidationErrors | null = (details: WebsiteUrlDetails) => {
-    let pass = validDomainsSet.size === 0 ? true : false;
+    let pass = validDomainsSet.size === 0;
 
     if (details.hasWebsiteDomain && validateDomains) {
       pass = validDomainsSet.has(details.domain);

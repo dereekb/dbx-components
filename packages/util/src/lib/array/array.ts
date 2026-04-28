@@ -78,7 +78,7 @@ export function firstValue<T>(input: ArrayOrValue<T>): T {
  * @returns the last element of the array, or the input value itself
  */
 export function lastValue<T>(input: ArrayOrValue<T>): T {
-  return Array.isArray(input) ? input[input.length - 1] : input;
+  return Array.isArray(input) ? (input.at(-1) as T) : input;
 }
 
 /**
@@ -113,7 +113,7 @@ export function valueAtIndex<T>(input: ArrayOrValue<T>, index: number): T {
  * @returns a single flattened array containing all elements from the non-nullish input arrays
  */
 export function concatArrays<T>(...arrays: Maybe<T[]>[]): T[] {
-  return flattenArray(arrays.filter((x) => Boolean(x)) as T[][]);
+  return flattenArray(arrays.filter(Boolean) as T[][]);
 }
 
 /**
@@ -123,7 +123,7 @@ export function concatArrays<T>(...arrays: Maybe<T[]>[]): T[] {
  * @returns a single-dimensional array with all elements from the non-nullish inner arrays
  */
 export function flattenArray<T>(array: Maybe<T[]>[]): T[] {
-  const filteredValues: T[][] = array.filter((x) => Boolean(x)) as T[][];
+  const filteredValues: T[][] = array.filter(Boolean) as T[][];
 
   return filteredValues.flat();
 }
@@ -186,7 +186,7 @@ export function mergeArraysIntoArray<T>(target: Maybe<T[]>, ...arrays: Maybe<T[]
 
   arrays.forEach((array) => {
     if (array != null) {
-      pushArrayItemsIntoArray(target as T[], array);
+      pushArrayItemsIntoArray(target, array);
     }
   });
 

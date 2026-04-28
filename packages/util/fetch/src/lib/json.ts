@@ -77,7 +77,7 @@ export function fetchJsonFunction(fetch: ConfiguredFetch, inputConfig?: FetchJso
 
   if (typeof inputConfig === 'function') {
     config = {
-      handleFetchJsonParseErrorFunction: inputConfig as HandleFetchJsonParseErrorFunction
+      handleFetchJsonParseErrorFunction: inputConfig
     };
   } else {
     config = inputConfig ?? {};

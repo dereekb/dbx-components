@@ -31,13 +31,15 @@ export abstract class CalcomOAuthAccessTokenCacheService {
 export type CalcomOAuthAccessTokenCacheServiceWithRefreshToken = Required<CalcomOAuthAccessTokenCacheService>;
 
 /**
- * Derives a short, filesystem-safe cache key from a refresh token using md5.
+ * Derives a short, filesystem-safe cache key from a refresh token.
+ *
+ * Uses SHA-256 truncated to 16 hex chars; the goal is fingerprinting, not security.
  *
  * @param refreshToken - the OAuth refresh token to hash
  * @returns a 16-character hex string suitable for use as a cache key
  */
 export function calcomRefreshTokenCacheKey(refreshToken: string): string {
-  return createHash('md5').update(refreshToken).digest('hex').substring(0, 16);
+  return createHash('sha256').update(refreshToken).digest('hex').substring(0, 16);
 }
 
 // MARK: Merge

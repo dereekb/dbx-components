@@ -327,6 +327,15 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
     return result;
   }
 
+  /**
+   * Emits the current form value regardless of {@link requireValid}. Used by infrastructure
+   * that needs the underlying value while the form is invalid (e.g. {@link DbxActionFormDirective}
+   * feeding the value into user-supplied isModified functions to drive the action's disabled state).
+   */
+  currentValue(): Observable<T> {
+    return this._value.pipe(filterMaybe());
+  }
+
   getDisabled(): Observable<BooleanStringKeyArray> {
     return this._disabled.asObservable();
   }

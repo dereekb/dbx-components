@@ -346,7 +346,7 @@ export class DateRRuleInstance {
 
     // Fix Dates w/ timezone.
     if (this.normalInstance.hasConversion) {
-      const [startF, endF] = [start, end].filter((x) => Boolean(x)).map((x) => this.normalInstance.baseDateToTargetDate(x));
+      const [startF, endF] = [start, end].filter(Boolean).map((x) => this.normalInstance.baseDateToTargetDate(x));
       start = startF;
       end = endF;
     }

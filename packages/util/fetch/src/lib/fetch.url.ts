@@ -68,7 +68,7 @@ export function makeUrlSearchParams(input: Maybe<ArrayOrValue<Maybe<object | Rec
 export function makeUrlSearchParamsString(input: Maybe<ArrayOrValue<Maybe<object | Record<string, string | number>>>>, options?: Maybe<MakeUrlSearchParamsOptions>): string {
   const params = makeUrlSearchParams(input, options);
   const str = params.toString();
-  return options?.useUrlSearchSpaceHandling ? str.replace(/\+/g, '%20') : str;
+  return options?.useUrlSearchSpaceHandling ? str.replaceAll('+', '%20') : str;
 }
 
 /**
@@ -111,13 +111,13 @@ export function updateUrlSearchParams(url: string, params: Maybe<ArrayOrValue<Ma
 
   // Apply omitKeys to the merged result
   if (options?.omitKeys != null) {
-    useIterableOrValue(options.omitKeys, (key) => existingParams.delete(key as string), false);
+    useIterableOrValue(options.omitKeys, (key) => existingParams.delete(key), false);
   }
 
   let queryString = existingParams.toString();
 
   if (options?.useUrlSearchSpaceHandling) {
-    queryString = queryString.replace(/\+/g, '%20');
+    queryString = queryString.replaceAll('+', '%20');
   }
 
   return queryString ? `${basePath}?${queryString}` : basePath;

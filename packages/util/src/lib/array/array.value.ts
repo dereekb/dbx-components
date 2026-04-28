@@ -22,7 +22,7 @@ export function filterMaybeArrayFunction<T>(filterFn: Parameters<Array<Maybe<T>>
     let result: T[];
 
     if (values != null) {
-      result = values.filter(filterFn);
+      result = values.filter((v, i, arr) => filterFn(v, i, arr));
     } else {
       result = [];
     }

@@ -26,7 +26,7 @@ export class DocInteractionButtonComponent {
   testClicked = '';
 
   onTestClick() {
-    this.testClicked = `Clicked! ${new Date().getTime()}`;
+    this.testClicked = `Clicked! ${Date.now()}`;
   }
 
   activateAndDeactivate(key: keyof this) {

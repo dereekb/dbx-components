@@ -85,7 +85,7 @@ export function timezoneInfoForSystem(): TimezoneInfo {
  * Returns the short abbreviation (e.g., `"EST"`, `"PDT"`) for the given timezone at the specified date.
  *
  * The date matters because abbreviations change with DST transitions.
- * Returns `"UKNOWN"` if no timezone is provided.
+ * Returns `"UNKNOWN"` if no timezone is provided.
  *
  * @param timezone - the IANA timezone string (or UTC abbreviation) to get the abbreviation for
  * @param date - the date at which to evaluate the abbreviation (defaults to now)
@@ -97,7 +97,17 @@ export function timezoneInfoForSystem(): TimezoneInfo {
  * ```
  */
 export function getTimezoneAbbreviation(timezone: Maybe<TimezoneString | UTCTimezoneAbbreviation>, date = new Date()): TimezoneAbbreviation {
-  return timezone === UTC_TIMEZONE_STRING ? UTC_TIMEZONE_STRING : timezone ? formatInTimeZone(date, timezone, 'zzz') : 'UKNOWN';
+  let result: TimezoneAbbreviation;
+
+  if (timezone === UTC_TIMEZONE_STRING) {
+    result = UTC_TIMEZONE_STRING;
+  } else if (timezone) {
+    result = formatInTimeZone(date, timezone, 'zzz');
+  } else {
+    result = 'UNKNOWN';
+  }
+
+  return result;
 }
 
 /**

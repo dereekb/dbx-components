@@ -1615,7 +1615,7 @@
       "notes": "The top-level domain (tld).\n\nExamples:\n- com\n- net",
       "sourceLocation": {
         "file": "src/lib/string/url.ts",
-        "line": 94
+        "line": 97
       }
     },
     {
@@ -1632,7 +1632,7 @@
       "notes": "A connection port number.\n\nExample:\n- 443\n- 8080",
       "sourceLocation": {
         "file": "src/lib/string/url.ts",
-        "line": 130
+        "line": 133
       }
     },
     {
@@ -1652,7 +1652,7 @@
       "notes": "A website url. Is at minimum a domain.\n\nExamples:\n- dereekb.com\n- https://components.dereekb.com\n- https://components.dereekb.com/\n- https://components.dereekb.com/doc/home?\n- https://components.dereekb.com/doc/home?test=true&test2=true",
       "sourceLocation": {
         "file": "src/lib/string/url.ts",
-        "line": 210
+        "line": 213
       }
     },
     {
@@ -1672,7 +1672,7 @@
       "notes": "A website url that starts with the proper http/https prefix.",
       "sourceLocation": {
         "file": "src/lib/string/url.ts",
-        "line": 317
+        "line": 320
       }
     },
     {
@@ -1692,7 +1692,7 @@
       "notes": "A \"standard\" internet accessible website url with a tld (.com/.net/etc) and optionally has the http/https protocol, but no other protocol.\n\nExamples:\n- dereekb.com\n- dereekb.com:8080\n- components.dereekb.com/\n- components.dereekb.com/doc/home\n- http://dereekb.com\n- https://components.dereekb.com/\n- https://components.dereekb.com/doc/home\n\nNon-examples:\n- localhost:8080       // not internet-accessible\n- test://dereekb.com   // non-http/https protocol",
       "sourceLocation": {
         "file": "src/lib/string/url.ts",
-        "line": 350
+        "line": 353
       }
     },
     {
@@ -1709,7 +1709,7 @@
       "notes": "A website's domain and path combined, without the BaseWebsiteUrl\n\nExamples:\n- dereekb.com\n- components.dereekb.com/\n- components.dereekb.com/doc/home",
       "sourceLocation": {
         "file": "src/lib/string/url.ts",
-        "line": 375
+        "line": 378
       }
     },
     {

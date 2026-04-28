@@ -178,9 +178,7 @@ export function skipMaybes<T>(maxToSkip: number): MonoTypeOperatorFunction<T> {
  * @returns an operator that handles optional observables
  */
 export function switchMapMaybeDefault<T = unknown>(defaultValue: Maybe<T> = undefined): OperatorFunction<Maybe<Observable<Maybe<T>>>, Maybe<T>> {
-  return switchMap((x: Maybe<Observable<Maybe<T>>>) => {
-    return x != null ? x : of(defaultValue);
-  });
+  return switchMap((x: Maybe<Observable<Maybe<T>>>) => x ?? of(defaultValue));
 }
 
 /**
@@ -285,7 +283,11 @@ export function switchMapOnBoolean<T = unknown>(switchOnValue: boolean, obs: May
 export function switchMapOnBoolean<T = unknown>(switchOnValue: boolean, obs: MaybeObservableOrValueGetter<T>, otherwise?: MaybeObservableOrValueGetter<T>): OperatorFunction<boolean, Maybe<T>>;
 export function switchMapOnBoolean<T = unknown>(switchOnValue: boolean, obs: MaybeObservableOrValueGetter<T>, otherwise?: MaybeObservableOrValueGetter<T>): OperatorFunction<boolean, Maybe<T>> {
   return switchMap((x: boolean) => {
-    return x === switchOnValue ? asObservableFromGetter(obs) : otherwise != null ? asObservableFromGetter(otherwise) : EMPTY;
+    if (x === switchOnValue) {
+      return asObservableFromGetter(obs);
+    }
+
+    return otherwise != null ? asObservableFromGetter(otherwise) : EMPTY;
   });
 }
 

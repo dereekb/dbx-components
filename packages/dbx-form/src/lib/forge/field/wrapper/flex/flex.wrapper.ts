@@ -48,6 +48,11 @@ export interface DbxForgeFlexLayoutFieldConfig {
  */
 export interface DbxForgeFlexLayoutConfig extends Omit<DbxForgeFlexWrapper, 'type'> {
   /**
+   * Fields to include in the layout. Each entry may be a plain {@link FieldDef}
+   * or a {@link DbxForgeFlexLayoutFieldConfig} with a per-field size override.
+   */
+  readonly fields?: readonly (FieldDef<unknown> | DbxForgeFlexLayoutFieldConfig)[];
+  /**
    * Default flex size for fields that don't specify their own.
    *
    * @defaultValue 2
@@ -66,6 +71,13 @@ function isFlexFieldConfig(input: FieldDef<unknown> | DbxForgeFlexLayoutFieldCon
   return (input as DbxForgeFlexLayoutFieldConfig).field != null;
 }
 
+export function dbxForgeFlexLayout(config: DbxForgeFlexLayoutConfig): ContainerField;
+/**
+ * @deprecated Pass a {@link DbxForgeFlexLayoutConfig} object instead — the array form
+ * diverges from how every other forge field factory is configured. Move array entries
+ * into the `fields` property of the config object.
+ */
+export function dbxForgeFlexLayout(fields: readonly (FieldDef<unknown> | DbxForgeFlexLayoutFieldConfig)[], config?: Omit<DbxForgeFlexLayoutConfig, 'fields'>): ContainerField;
 /**
  * Creates a responsive flex layout container that arranges child fields horizontally
  * with configurable sizing, breakpoints, and responsive behavior.
@@ -80,8 +92,8 @@ function isFlexFieldConfig(input: FieldDef<unknown> | DbxForgeFlexLayoutFieldCon
  *
  * This is the forge equivalent of {@link formlyFlexLayoutWrapper}.
  *
- * @param fieldConfigs - Array of field definitions or `{ field, size }` pairs with size overrides
- * @param config - Flex layout defaults including breakpoint, relative sizing, and default size
+ * @param input - {@link DbxForgeFlexLayoutConfig} with a `fields` property and layout defaults.
+ *   For backwards compatibility, may also be passed as a deprecated array of fields paired with an optional config.
  * @returns A {@link ContainerField} with the flex wrapper applied and sized children
  *
  * @dbxFormField
@@ -96,27 +108,32 @@ function isFlexFieldConfig(input: FieldDef<unknown> | DbxForgeFlexLayoutFieldCon
  * @example
  * ```typescript
  * // Simple: all fields get default size (2)
- * dbxForgeFlexLayout([dbxForgeCityField({}), dbxForgeStateField({}), dbxForgeZipCodeField({})])
+ * dbxForgeFlexLayout({ fields: [dbxForgeCityField({}), dbxForgeStateField({}), dbxForgeZipCodeField({})] })
  *
  * // Resulting form value shape (flat — no wrapper property):
  * // { city: '...', state: '...', zip: '...' }
  *
  * // With per-field sizing and breakpoint
- * dbxForgeFlexLayout([
- *   { field: dbxForgeCityField({}), size: 4 },
- *   dbxForgeStateField({}),
- *   dbxForgeZipCodeField({})
- * ], { breakpoint: 'small', size: 1 })
+ * dbxForgeFlexLayout({
+ *   breakpoint: 'small',
+ *   size: 1,
+ *   fields: [
+ *     { field: dbxForgeCityField({}), size: 4 },
+ *     dbxForgeStateField({}),
+ *     dbxForgeZipCodeField({})
+ *   ]
+ * })
  *
  * // Full config
- * dbxForgeFlexLayout([...fields], { breakpoint: 'large', breakToColumn: true, relative: true, size: 1 })
+ * dbxForgeFlexLayout({ breakpoint: 'large', breakToColumn: true, relative: true, size: 1, fields: [...] })
  * ```
  */
-export function dbxForgeFlexLayout(fieldConfigs: (FieldDef<unknown> | DbxForgeFlexLayoutFieldConfig)[], config: DbxForgeFlexLayoutConfig = {}): ContainerField {
-  const { breakpoint, relative, breakToColumn, size: defaultSize = 2 } = config;
+export function dbxForgeFlexLayout(input: DbxForgeFlexLayoutConfig | readonly (FieldDef<unknown> | DbxForgeFlexLayoutFieldConfig)[], legacyConfig?: Omit<DbxForgeFlexLayoutConfig, 'fields'>): ContainerField {
+  const config: DbxForgeFlexLayoutConfig = Array.isArray(input) ? { ...legacyConfig, fields: input } : (input as DbxForgeFlexLayoutConfig);
+  const { breakpoint, relative, breakToColumn, size: defaultSize = 2, fields = [] } = config;
 
-  const mappedFields = fieldConfigs.map((input) => {
-    const { field, size = defaultSize } = isFlexFieldConfig(input) ? input : { field: input };
+  const mappedFields = fields.map((entry) => {
+    const { field, size = defaultSize } = isFlexFieldConfig(entry) ? entry : { field: entry };
     const flexClassName = `dbx-flex-${size}`;
     const className = field.className ? `${field.className} ${flexClassName}` : flexClassName;
     return { ...field, className };

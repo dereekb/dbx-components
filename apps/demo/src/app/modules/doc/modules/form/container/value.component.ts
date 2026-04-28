@@ -231,6 +231,25 @@ export class DocFormValueComponent {
         key: 'toggle',
         label: 'Toggle Me',
         description: 'this is a toggle field'
+      }),
+      dbxForgeToggleField({
+        key: 'toggleWrapperLabel',
+        label: 'Wrapper notch',
+        description: "showLabelAt: 'wrapper' — label appears in the notched outline.",
+        showLabelAt: 'wrapper'
+      }),
+      dbxForgeToggleField({
+        key: 'toggleBothLabel',
+        label: 'Both',
+        description: "showLabelAt: 'both' — duplicates the label in the notch and inside the box.",
+        showLabelAt: 'both'
+      }),
+      dbxForgeToggleField({
+        key: 'toggleContentLabel',
+        label: 'Toggle Me',
+        description: 'contentLabel — explicit secondary label inside the box.',
+        showLabelAt: 'wrapper',
+        contentLabel: 'Helper text rendered via contentLabel'
       })
     ]
   };
@@ -284,6 +303,25 @@ export class DocFormValueComponent {
         label: 'Readonly Check Me',
         description: 'this is a readonly checkbox field',
         readonly: true
+      }),
+      dbxForgeCheckboxField({
+        key: 'checkboxWrapperLabel',
+        label: 'Wrapper notch',
+        description: "showLabelAt: 'wrapper' — label appears in the notched outline.",
+        showLabelAt: 'wrapper'
+      }),
+      dbxForgeCheckboxField({
+        key: 'checkboxBothLabel',
+        label: 'Both',
+        description: "showLabelAt: 'both' — duplicates the label in the notch and inside the box.",
+        showLabelAt: 'both'
+      }),
+      dbxForgeCheckboxField({
+        key: 'checkboxContentLabel',
+        label: 'Check Me',
+        description: 'contentLabel — explicit secondary label inside the box.',
+        showLabelAt: 'wrapper',
+        contentLabel: 'Helper text rendered via contentLabel'
       })
     ]
   };

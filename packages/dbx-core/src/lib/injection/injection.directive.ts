@@ -1,7 +1,7 @@
 import { type ViewContainerRef, type OnInit, type OnDestroy, Directive, Injector, inject } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { type DbxInjectionComponentConfig, type DbxInjectionTemplateConfig } from './injection';
-import { DbxInjectionInstance as DbxInjectionInstance } from './injection.instance';
+import { DbxInjectionInstance } from './injection.instance';
 import { type ObservableOrValueGetter } from '@dereekb/rxjs';
 
 /**

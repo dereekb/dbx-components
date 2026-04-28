@@ -72,7 +72,7 @@ export function copyToClipboardFunction(clipboard: Clipboard, config?: CopyToCli
             resolve(true);
             onCopyResult?.(true, content);
           } else {
-            reject(false);
+            reject(new Error('Failed to copy content to clipboard'));
             onCopyResult?.(false, content);
           }
         }
