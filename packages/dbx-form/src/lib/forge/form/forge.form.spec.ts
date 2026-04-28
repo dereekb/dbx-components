@@ -2,8 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { signal } from '@angular/core';
 import { type FieldDef, type FormConfig, type LogicConfig, type SchemaDefinition } from '@ng-forge/dynamic-forms';
 import { copyFormConfigCustomFnConfig, dbxForgeFinalizeFormConfig, type DbxForgeField, mergeDbxForgeFieldFormConfig } from './forge.form';
-import { dbxForgeAddressGroup } from '../field/value/text/text.address.field';
+import { dbxForgeAddressGroup, dbxForgeAddressListField } from '../field/value/text/text.address.field';
 import { dbxForgeStateField } from '../field/value/text/text.additional.field';
+import { SELF_DEPENDENCY_TOKEN } from '../field';
 
 /**
  * Walks a fields tree (recursing through container/group/row/array `fields` and SimplifiedArrayField `template`)
@@ -531,7 +532,7 @@ describe('dbxForgeFinalizeFormConfig()', () => {
 
         expect(derivationLogic).toBeDefined();
         expect(derivationLogic?.functionName).toBe(derivationName);
-        expect(derivationLogic?.dependsOn).toEqual(['state']);
+        expect(derivationLogic?.dependsOn).toEqual([SELF_DEPENDENCY_TOKEN]);
       });
 
       it('should run the registered derivation and uppercase a lowercase value', () => {
@@ -562,13 +563,111 @@ describe('dbxForgeFinalizeFormConfig()', () => {
         expect(derivationLogic?.functionName).toBe(derivationName);
         // dependsOn currently uses the field's local key; ng-forge needs to resolve it
         // relative to the state field's group context (`address.state`) at runtime.
-        expect(derivationLogic?.dependsOn).toEqual(['state']);
+        expect(derivationLogic?.dependsOn).toEqual([SELF_DEPENDENCY_TOKEN]);
       });
 
       it('should run the same registered derivation against a lowercase value (proving the dbx-form wiring is correct)', () => {
         const fn = derivations[derivationName as string] as (ctx: { fieldValue: unknown }) => unknown;
         expect(fn({ fieldValue: 'tx' })).toBe('TX');
       });
+    });
+
+    describe('dbxForgeAddressListField({ stateField: { asCode: true } })', () => {
+      const list = dbxForgeAddressListField({ stateField: { asCode: true } });
+      const result = dbxForgeFinalizeFormConfig({ fields: [list as never] });
+
+      const derivations = result.config.customFnConfig?.derivations ?? {};
+      const derivationName = Object.keys(derivations).find((name) => name.startsWith('__fn__state_'));
+
+      it('should register the idempotent-transform derivation pulled up from the array template state field', () => {
+        expect(derivationName).toBeDefined();
+        expect(typeof derivations[derivationName as string]).toBe('function');
+      });
+
+      it('should attach the derivation logic entry on the state field inside the array item template', () => {
+        const stateInField = findFieldByKey(result.config.fields, 'state') as (FieldDef<unknown> & { logic?: LogicConfig[] }) | undefined;
+        expect(stateInField).toBeDefined();
+
+        const derivationLogic = stateInField?.logic?.find((entry) => entry.type === 'derivation') as (LogicConfig & { type: 'derivation'; functionName?: string; dependsOn?: string[] }) | undefined;
+
+        expect(derivationLogic).toBeDefined();
+        expect(derivationLogic?.functionName).toBe(derivationName);
+        expect(derivationLogic?.dependsOn).toEqual([SELF_DEPENDENCY_TOKEN]);
+      });
+    });
+  });
+
+  // ============================================================================
+  // Cross-sibling dependency resolution inside a group
+  //
+  // The auto-applied SELF_DEPENDENCY_TOKEN only covers self-referential
+  // transforms. A user-authored derivation that declares `dependsOn: ['line1']`
+  // on a field inside a group must be left untouched by dbx-form so ng-forge
+  // can resolve it relative to the field's parent group at runtime.
+  // ============================================================================
+
+  describe('cross-sibling dependency resolution inside a group', () => {
+    it('should preserve user-supplied dependsOn (not rewrite to $self) on a derivation declared inside a group', () => {
+      const derivedField = {
+        type: 'input',
+        key: 'derived',
+        logic: [
+          {
+            type: 'derivation',
+            trigger: 'onChange',
+            functionName: 'concat',
+            dependsOn: ['line1']
+          }
+        ]
+      };
+
+      const group = {
+        type: 'group',
+        key: 'address',
+        fields: [{ type: 'input', key: 'line1' }, derivedField]
+      };
+
+      const input = testFormConfig({
+        fields: [group as never],
+        customFnConfig: {
+          derivations: {
+            concat: (ctx: { formValue: { address?: { line1?: string } } }) => 'derived: ' + (ctx.formValue?.address?.line1 ?? '')
+          }
+        }
+      });
+
+      const result = dbxForgeFinalizeFormConfig(input);
+      const derivedInField = findFieldByKey(result.config.fields, 'derived') as FieldDef<unknown> & { logic?: LogicConfig[] };
+      const derivationLogic = derivedInField.logic?.find((entry) => entry.type === 'derivation') as (LogicConfig & { type: 'derivation'; dependsOn?: string[] }) | undefined;
+
+      expect(derivationLogic).toBeDefined();
+      expect(derivationLogic?.dependsOn).toEqual(['line1']);
+      expect(result.config.customFnConfig?.derivations?.['concat']).toBeDefined();
+    });
+
+    it('should preserve user-supplied dependsOn on a top-level derivation as well', () => {
+      const fieldWithLogic = {
+        type: 'input',
+        key: 'derived',
+        logic: [
+          {
+            type: 'derivation',
+            trigger: 'onChange',
+            functionName: 'concat',
+            dependsOn: ['name']
+          }
+        ]
+      };
+
+      const input = testFormConfig({
+        fields: [{ type: 'input', key: 'name' }, fieldWithLogic as never]
+      });
+
+      const result = dbxForgeFinalizeFormConfig(input);
+      const derivedInField = findFieldByKey(result.config.fields, 'derived') as FieldDef<unknown> & { logic?: LogicConfig[] };
+      const derivationLogic = derivedInField.logic?.find((entry) => entry.type === 'derivation') as (LogicConfig & { type: 'derivation'; dependsOn?: string[] }) | undefined;
+
+      expect(derivationLogic?.dependsOn).toEqual(['name']);
     });
   });
 });

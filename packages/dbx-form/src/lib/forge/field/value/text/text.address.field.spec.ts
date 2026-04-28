@@ -5,7 +5,7 @@ import { describe, it, expect, expectTypeOf, beforeEach, afterEach } from 'vites
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
 import { waitForMs } from '@dereekb/util';
-import type { ArrayField, ContainerField, GroupField } from '@ng-forge/dynamic-forms';
+import type { ArrayField, ContainerField, FieldDef, GroupField, LogicConfig } from '@ng-forge/dynamic-forms';
 import { DBX_FORGE_FLEX_WRAPPER_TYPE_NAME } from '../../wrapper/flex/flex.wrapper';
 import type { MatInputField } from '@ng-forge/dynamic-forms-material';
 import { dbxForgeAddressGroup, dbxForgeAddressFields, dbxForgeAddressLineField, dbxForgeAddressListField } from './text.address.field';
@@ -14,6 +14,7 @@ import { DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME } from '../../wrapper/array-field/ar
 import { dbxForgeFinalizeFormConfig } from '../../../form/forge.form';
 import { DBX_FORGE_TEST_PROVIDERS } from '../../../form/forge.component.spec';
 import { DbxForgeAsyncConfigFormComponent } from '../../../form';
+import { SELF_DEPENDENCY_TOKEN } from '../../field';
 
 // Shared key set for DbxForgeTextFieldConfig (DbxForgeAddressLineFieldConfig extends Partial<DbxForgeTextFieldConfig>).
 type DbxForgeTextFieldConfigKeys =
@@ -471,6 +472,106 @@ describe('dbxForgeAddressGroup() scenarios', () => {
 
       const value = (await firstValueFrom(fixture.componentInstance.getValue())) as { address: { state: string } };
       expect(value.address?.state).toBe('tx');
+    });
+  });
+});
+
+// ============================================================================
+// Runtime Form Scenarios - dbxForgeAddressListField() idempotentTransform
+// ============================================================================
+
+describe('dbxForgeAddressListField() scenarios', () => {
+  let fixture: ComponentFixture<DbxForgeAsyncConfigFormComponent>;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [...DBX_FORGE_TEST_PROVIDERS] });
+    fixture = TestBed.createComponent(DbxForgeAsyncConfigFormComponent);
+  });
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
+  });
+
+  async function settle(): Promise<void> {
+    fixture.detectChanges();
+    await waitForMs(0);
+    await fixture.whenStable();
+  }
+
+  describe('per-item stateField idempotentTransform', () => {
+    // Deepest nesting we ship: array > itemContainer > container(flex) > input(state).
+    // Adds a numeric path segment (`addresses[0]`) on top of the address-group case,
+    // so this exercises ng-forge's $self-resolution through array item scope.
+    //
+    // KNOWN FAILURE (ng-forge gap): the dbx-form wiring is verified correct by the
+    // companion introspection test in forge.form.spec.ts (the array template's state
+    // field carries dependsOn: [SELF_DEPENDENCY_TOKEN] and references the registered
+    // derivation), but ng-forge does not yet apply $self-resolved derivations against
+    // values inside array item scope. The two transformation cases below are skipped
+    // until ng-forge supports this; flip back to `it(...)` once the upstream fix lands.
+    it('should uppercase a lowercase "tx" passed for addresses[0].state when stateField asCode: true', async () => {
+      const field = dbxForgeAddressListField({ required: false, stateField: { asCode: true } });
+
+      fixture.componentInstance.context.requireValid = false;
+      fixture.componentInstance.config.set({ fields: [field] });
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const finalConfig = await firstValueFrom(fixture.componentInstance.context.config$);
+
+      // array > container > container > state field
+      const stateFieldConfig = (finalConfig.fields[0] as any).template[0].fields[2].fields.find((x: FieldDef<any>) => x.label === 'State') as MatInputField;
+      expect(stateFieldConfig).toBeDefined();
+
+      const logic = stateFieldConfig.logic as LogicConfig[];
+      expect(logic).toHaveLength(1);
+      expect(logic[0].type).toBe('derivation');
+
+      if (logic[0].type === 'derivation') {
+        expect(logic[0].dependsOn).toBeDefined();
+        expect((logic[0].dependsOn as string[])[0]).toBe(SELF_DEPENDENCY_TOKEN);
+
+        console.log(logic[0].dependsOn);
+      }
+
+      fixture.componentInstance.setValue({ addresses: [{ state: 'tx' }] });
+      await settle();
+
+      const value = (await firstValueFrom(fixture.componentInstance.getValue())) as { addresses: { state: string }[] };
+      console.log({ value: JSON.stringify(value) });
+
+      expect(value.addresses?.[0]?.state).toBe('TX');
+    });
+
+    it('should transform each item independently (proves $self resolution is per-item, not collapsed)', async () => {
+      const list = dbxForgeAddressListField({ required: false, stateField: { asCode: true } });
+
+      fixture.componentInstance.context.requireValid = false;
+      fixture.componentInstance.config.set({ fields: [list as never] });
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      fixture.componentInstance.setValue({ addresses: [{ state: 'tx' }, { state: 'ca' }] } as never);
+      await settle();
+
+      const value = (await firstValueFrom(fixture.componentInstance.getValue())) as { addresses: { state: string }[] };
+      expect(value.addresses?.[0]?.state).toBe('TX');
+      expect(value.addresses?.[1]?.state).toBe('CA');
+    });
+
+    it('should leave addresses[0].state untouched when stateField asCode is not set and no transform is provided', async () => {
+      const list = dbxForgeAddressListField({ required: false });
+
+      fixture.componentInstance.context.requireValid = false;
+      fixture.componentInstance.config.set({ fields: [list as never] });
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      fixture.componentInstance.setValue({ addresses: [{ state: 'tx' }] } as never);
+      await settle();
+
+      const value = (await firstValueFrom(fixture.componentInstance.getValue())) as { addresses: { state: string }[] };
+      expect(value.addresses?.[0]?.state).toBe('tx');
     });
   });
 });

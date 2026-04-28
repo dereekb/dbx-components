@@ -1,4 +1,4 @@
-import type { FieldDef, GroupField } from '@ng-forge/dynamic-forms';
+import type { ContainerAllowedChildren, FieldDef, GroupAllowedChildren, GroupField } from '@ng-forge/dynamic-forms';
 import { ADDRESS_LINE_MAX_LENGTH } from '@dereekb/model';
 import { dbxForgeTextField, type DbxForgeTextFieldConfig } from './text.field';
 import { dbxForgeCityField, type DbxForgeCityFieldConfig, dbxForgeCountryField, type DbxForgeCountryFieldConfig, dbxForgeStateField, type DbxForgeStateFieldConfig, dbxForgeZipCodeField, type DbxForgeZipCodeFieldConfig } from './text.additional.field';
@@ -99,14 +99,14 @@ export function dbxForgeAddressLineField(config: DbxForgeAddressLineFieldConfig 
  * dbxForgeAddressFields({ required: true, includeCountry: false })
  * ```
  */
-export function dbxForgeAddressFields(config: DbxForgeAddressFieldsConfig = {}) {
+export function dbxForgeAddressFields(config: DbxForgeAddressFieldsConfig = {}): GroupAllowedChildren[] {
   const { required = true, includeLine2 = true, includeCountry = true } = config;
 
   // City, state, zip, and country share a single relative-sized flex row to match formly parity.
-  const singleLineFields: FieldDef<unknown>[] = [dbxForgeCityField({ required, ...config.cityField }) as unknown as FieldDef<unknown>, dbxForgeStateField({ required, ...config.stateField }) as unknown as FieldDef<unknown>, dbxForgeZipCodeField({ required, ...config.zipCodeField }) as unknown as FieldDef<unknown>];
+  const singleLineFields = [dbxForgeCityField({ required, ...config.cityField }), dbxForgeStateField({ required, ...config.stateField }), dbxForgeZipCodeField({ required, ...config.zipCodeField })];
 
   if (includeCountry) {
-    singleLineFields.push(dbxForgeCountryField({ required, ...config.countryField }) as unknown as FieldDef<unknown>);
+    singleLineFields.push(dbxForgeCountryField({ required, ...config.countryField }));
   }
 
   const singleLineRow = dbxForgeFlexLayout({ size: 1, relative: true, fields: singleLineFields });
@@ -119,9 +119,7 @@ export function dbxForgeAddressFields(config: DbxForgeAddressFieldsConfig = {}) 
     lines = [dbxForgeAddressLineField({ required, ...config.line1Field, line: 0 })];
   }
 
-  // TODO: tighten the array element type once a future/updated version of ng-forge exports `RowWrapper` so the inferred ContainerField return type can be named.
-  const fields: any[] = [...lines, singleLineRow];
-
+  const fields: GroupAllowedChildren[] = [...lines, singleLineRow];
   return fields;
 }
 

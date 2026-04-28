@@ -3,6 +3,8 @@ import { type AsyncCustomValidator, type CustomFnConfig, type CustomValidator, t
 import { type DbxForgeFieldValidation } from './field.type';
 import { type DbxForgeField, type DbxForgeFieldFormConfig, mergeDbxForgeFieldFormConfig } from '../form/forge.form';
 
+export const SELF_DEPENDENCY_TOKEN = '$self' as const; // TODO: Import from ng-forge?
+
 // MARK: Forge Field
 /**
  * Contains a reference to a hint value of some type.
@@ -892,7 +894,7 @@ function _finalizeLogicEntries<C extends DbxForgeFieldFunctionDef<any>, FV = any
 
     // set the default dependsOn if not set
     if (!derivationEntry.dependsOn) {
-      derivationEntry.dependsOn = [fieldDef.key];
+      derivationEntry.dependsOn = [SELF_DEPENDENCY_TOKEN];
     }
   }
 
@@ -930,14 +932,14 @@ function _finalizeLogicEntries<C extends DbxForgeFieldFunctionDef<any>, FV = any
           type: 'derivation',
           trigger: 'onChange',
           functionName: _registerCustomFunction({ isAsync: false, fn }),
-          dependsOn: [fieldDef.key]
+          dependsOn: [SELF_DEPENDENCY_TOKEN]
         };
         break;
       case 'async':
         result = {
           type: 'derivation',
           functionName: _registerCustomFunction({ isAsync: true, fn }),
-          dependsOn: [fieldDef.key]
+          dependsOn: [SELF_DEPENDENCY_TOKEN]
         };
         break;
       case 'debounced':
@@ -945,7 +947,7 @@ function _finalizeLogicEntries<C extends DbxForgeFieldFunctionDef<any>, FV = any
           type: 'derivation',
           trigger: 'debounced',
           functionName: _registerCustomFunction({ isAsync: false, fn }),
-          dependsOn: [fieldDef.key],
+          dependsOn: [SELF_DEPENDENCY_TOKEN],
           debounceMs: entry.debounceMs
         };
         break;

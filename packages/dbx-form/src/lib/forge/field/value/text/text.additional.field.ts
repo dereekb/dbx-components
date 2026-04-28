@@ -151,14 +151,15 @@ export interface DbxForgeStateFieldConfig extends Partial<DbxForgeTextFieldConfi
  * ```
  */
 export function dbxForgeStateField(config: DbxForgeStateFieldConfig = {}) {
-  const { asCode = false, pattern = asCode ? US_STATE_CODE_STRING_REGEX : undefined, key = 'state', placeholder = '', label = 'State', maxLength = asCode ? ADDRESS_STATE_CODE_MAX_LENGTH : ADDRESS_STATE_MAX_LENGTH, idempotentTransform: transform, required = false } = config;
+  const { asCode = false, pattern = asCode ? US_STATE_CODE_STRING_REGEX : undefined, key = 'state', placeholder: inputPlaceholder, label = 'State', maxLength = asCode ? ADDRESS_STATE_CODE_MAX_LENGTH : ADDRESS_STATE_MAX_LENGTH, idempotentTransform: transform, required = false } = config;
+  const placeholder = (inputPlaceholder ?? asCode) ? 'TX' : 'Texas';
 
   return dbxForgeTextField({
     ...config,
     key,
     placeholder,
     label,
-    // pattern,
+    pattern,
     required,
     maxLength,
     idempotentTransform: {
@@ -228,7 +229,7 @@ export type DbxForgeZipCodeFieldConfig = Partial<DbxForgeTextFieldConfig>;
  * ```
  */
 export function dbxForgeZipCodeField(config: DbxForgeZipCodeFieldConfig = {}) {
-  const { key = 'zip', placeholder = '', label = 'Zip Code', pattern = ZIP_CODE_STRING_REGEX, maxLength = ADDRESS_ZIP_MAX_LENGTH, required = false } = config;
+  const { key = 'zip', placeholder, label = 'Zip Code', pattern = ZIP_CODE_STRING_REGEX, maxLength = ADDRESS_ZIP_MAX_LENGTH, required = false } = config;
 
   return dbxForgeTextField({
     ...config,

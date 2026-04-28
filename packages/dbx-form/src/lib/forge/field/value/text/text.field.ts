@@ -92,6 +92,9 @@ export const dbxForgeTextField = dbxForgeFieldFunction<DbxForgeTextFieldConfig>(
           transform: transformStringFunction(transform)
         }
       ]);
+
+      // remove the idempotentTransform
+      delete config.idempotentTransform;
     }
 
     if (config.inputType === 'email') {
