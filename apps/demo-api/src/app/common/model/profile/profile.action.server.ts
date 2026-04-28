@@ -1,7 +1,7 @@
 import { type FirebaseServerActionsContext } from '@dereekb/firebase-server';
 import { type AsyncProfileUpdateAction, exampleNotificationTemplate, type ProfileCreateTestNotificationParams, profileCreateTestNotificationParamsType, type ProfileDocument, type ProfileFirestoreCollections, profileWithUsername, type SetProfileUsernameParams, setProfileUsernameParamsType, type UpdateProfileParams, updateProfileParamsType } from 'demo-firebase';
 import { type Maybe } from '@dereekb/util';
-import { type NotificationFirestoreCollections, type FirestoreContextReference, createNotificationDocument, twoWayFlatFirestoreModelKey, type NotificationSummaryId } from '@dereekb/firebase';
+import { type NotificationFirestoreCollections, type FirestoreContextReference, createNotificationDocument, twoWayFlatFirestoreModelKey } from '@dereekb/firebase';
 import { usernameAlreadyTakenError } from './profile.error';
 import { type NotificationExpediteServiceRef } from '@dereekb/firebase-server/model';
 

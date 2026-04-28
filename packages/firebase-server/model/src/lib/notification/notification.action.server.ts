@@ -1239,7 +1239,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
             }
 
             // if the notification box is not initialized/synchronized yet, do not run.
-            if (tryRun && notificationBox && notificationBox.s) {
+            if (tryRun && notificationBox?.s) {
               notificationBoxNeedsInitialization = true;
               tryRun = false;
               nextSat = addMinutes(now, NOTIFICATION_BOX_NOT_INITIALIZED_DELAY_MINUTES);
