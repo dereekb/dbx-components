@@ -1,4 +1,5 @@
 import { type DynamicText } from '@ng-forge/dynamic-forms';
+import { type Maybe, stripObject } from '@dereekb/util';
 import { type DbxForgeFieldFunctionDef, type DbxForgeFieldFunctionFieldDefBuilderFunctionInstance } from '../../field';
 
 // MARK: Field Type
@@ -64,10 +65,16 @@ export function configureDbxForgeFormFieldWrapper<C extends DbxForgeFieldFunctio
  * Use this from a field factory's `buildFieldDef` step to attach the wrapper and
  * pass props (such as `showLabelAt` / `contentLabel`) through to the wrapper component.
  *
+ * Undefined entries in `props` are dropped, and `props` is omitted from the wrapper
+ * config entirely when no values remain — keeps the wrapper bare in the common case
+ * (e.g. a checkbox/toggle with no label override).
+ *
  * @param props - wrapper props applied to the inserted wrapper config
  * @returns a configurator that mutates the builder instance to add the wrapper
  */
-export function configureDbxForgeFormFieldWrapperWith(props: DbxForgeFormFieldWrapperProps): <C extends DbxForgeFieldFunctionDef<any>>(instance: DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C>) => void {
+export function configureDbxForgeFormFieldWrapperWith(inputProps?: Maybe<DbxForgeFormFieldWrapperProps>): <C extends DbxForgeFieldFunctionDef<any>>(instance: DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C>) => void {
+  const props = stripObject(inputProps);
+
   return (instance) => {
     instance.addWrappers({
       type: DBX_FORGE_FORM_FIELD_WRAPPER_NAME,

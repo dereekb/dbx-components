@@ -124,13 +124,80 @@ export interface DbxForgeFinalizeFormConfigResult {
 }
 
 /**
+ * Recursively walks a list of fields, returning every field encountered including those
+ * nested inside containers, groups, rows, pages, and array fields.
+ *
+ * Container-style fields (container/group/row/page/full ArrayField) place their children
+ * under `fields`; `SimplifiedArrayField` places its children under `template`. Both are
+ * traversed here so that `_formConfig` declared on a deeply-nested field still gets pulled
+ * up to the form level.
+ *
+ * @param fields - the top-level fields to walk
+ * @returns a flat list of every field reachable from the inputs, in pre-order
+ */
+function flattenForgeFields(fields: readonly FieldDef<any>[]): DbxForgeField<FieldDef<any>>[] {
+  const out: DbxForgeField<FieldDef<any>>[] = [];
+
+  function visit(field: FieldDef<any>): void {
+    out.push(field as DbxForgeField<FieldDef<any>>);
+
+    const fieldWithChildren = field as { fields?: unknown; template?: unknown };
+
+    // ContainerField / GroupField / RowField / PageField / ArrayField all carry their
+    // children under `fields`. ArrayField entries may themselves be either a FieldDef
+    // or an array of FieldDefs (object items).
+    if (Array.isArray(fieldWithChildren.fields)) {
+      for (const child of fieldWithChildren.fields) {
+        if (Array.isArray(child)) {
+          for (const grandchild of child) {
+            if (grandchild != null && typeof grandchild === 'object') {
+              visit(grandchild as FieldDef<any>);
+            }
+          }
+        } else if (child != null && typeof child === 'object') {
+          visit(child as FieldDef<any>);
+        }
+      }
+    }
+
+    // SimplifiedArrayField carries its child shape under `template`, which can be either
+    // a single FieldDef (primitive items) or an array of FieldDefs (object items).
+    const template = fieldWithChildren.template;
+
+    if (template != null) {
+      if (Array.isArray(template)) {
+        for (const child of template) {
+          if (child != null && typeof child === 'object') {
+            visit(child as FieldDef<any>);
+          }
+        }
+      } else if (typeof template === 'object') {
+        visit(template as FieldDef<any>);
+      }
+    }
+  }
+
+  for (const field of fields) {
+    visit(field);
+  }
+
+  return out;
+}
+
+/**
  * Finalizes a `FormConfig` for consumption by dbx-forge by pulling field-level `_formConfig`
  * values up to the form level and appending any `_hiddenFields` so they participate in
  * validation and value wiring without being rendered.
  *
+ * The walk is recursive: `_formConfig` declared on a field nested inside a container,
+ * group, row, page, or array (full or simplified) is pulled up alongside top-level
+ * `_formConfig` so derivations and validators registered by a child field factory
+ * (e.g. an idempotent transform on a state field inside an address flex layout) are
+ * preserved when the field is composed into a parent layout.
+ *
  * Layering order (lowest to highest priority): `globalDefaults`, the input form's own config,
- * then each field's `_formConfig` in field order — so a later field can override an earlier
- * field's default validation message.
+ * then each field's `_formConfig` in pre-order traversal — so a later field can override an
+ * earlier field's default validation message.
  *
  * @param input - the FormConfig authored by the caller
  * @param globalDefaults - seed values for workspace-wide defaults (e.g. validation messages)
@@ -139,10 +206,12 @@ export interface DbxForgeFinalizeFormConfigResult {
 export function dbxForgeFinalizeFormConfig(input: FormConfig, globalDefaults?: DbxForgeGlobalFormConfigDefaults): DbxForgeFinalizeFormConfigResult {
   const { fields } = input;
 
+  const allFields = flattenForgeFields(fields);
+
   /**
    * Extract all the values from the fields that are of type DbxForgeFieldFormConfig.
    */
-  const extractedFieldFormConfigs: DbxForgeFieldFormConfig[] = filterMaybeArrayValues(fields.map((x: DbxForgeField<FieldDef<any>>) => x._formConfig));
+  const extractedFieldFormConfigs: DbxForgeFieldFormConfig[] = filterMaybeArrayValues(allFields.map((x) => x._formConfig));
 
   const globalDefaultsLayer: DbxForgeFieldFormConfig = globalDefaults ? { defaultValidationMessages: globalDefaults.defaultValidationMessages } : {};
   const merged = mergeDbxForgeFieldFormConfig(globalDefaultsLayer, { schemas: input.schemas, externalData: input.externalData, customFnConfig: copyFormConfigCustomFnConfig(input.customFnConfig ?? {}), defaultValidationMessages: input.defaultValidationMessages }, ...extractedFieldFormConfigs);
@@ -150,7 +219,7 @@ export function dbxForgeFinalizeFormConfig(input: FormConfig, globalDefaults?: D
   // Extract hidden fields from field-level _hiddenFields and _formConfig._hiddenFields
   const hiddenFields: RegisteredFieldTypes[] = [];
 
-  for (const field of fields as DbxForgeField<FieldDef<any>>[]) {
+  for (const field of allFields) {
     if (field._formConfig?._hiddenFields) {
       field._formConfig._hiddenFields.forEach((x) => {
         hiddenFields.push(x as RegisteredFieldTypes);

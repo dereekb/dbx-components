@@ -270,6 +270,129 @@ describe('dbxForgeFinalizeFormConfig()', () => {
     expect(result.extractedFieldFormConfigs).toHaveLength(1);
   });
 
+  describe('nested _formConfig extraction', () => {
+    it('should extract _formConfig from a field nested in a container', () => {
+      const derivationFn = () => 'computed';
+
+      const nestedField: DbxForgeField<any> = {
+        type: 'input',
+        key: 'state',
+        _formConfig: { customFnConfig: { derivations: { __fn__state_1: derivationFn } } }
+      };
+
+      const container = {
+        type: 'container',
+        key: 'wrapper',
+        fields: [nestedField],
+        wrappers: []
+      };
+
+      const input = testFormConfig({ fields: [container as any] });
+      const result = dbxForgeFinalizeFormConfig(input);
+
+      expect(result.extractedFieldFormConfigs).toHaveLength(1);
+      expect(result.config.customFnConfig!.derivations!['__fn__state_1']).toBe(derivationFn);
+    });
+
+    it('should extract _formConfig from a field nested in a group', () => {
+      const validatorFn = () => null;
+
+      const nestedField: DbxForgeField<any> = {
+        type: 'input',
+        key: 'state',
+        _formConfig: { customFnConfig: { validators: { __vfn__state_1: validatorFn } } }
+      };
+
+      const group = {
+        type: 'group',
+        key: 'address',
+        fields: [nestedField]
+      };
+
+      const input = testFormConfig({ fields: [group as any] });
+      const result = dbxForgeFinalizeFormConfig(input);
+
+      expect(result.config.customFnConfig!.validators!['__vfn__state_1']).toBe(validatorFn);
+    });
+
+    it('should extract _formConfig from a field nested two levels deep (group inside container)', () => {
+      const fn = () => 'value';
+
+      const leaf: DbxForgeField<any> = {
+        type: 'input',
+        key: 'state',
+        _formConfig: { customFnConfig: { derivations: { __fn__state_1: fn } } }
+      };
+
+      const group = { type: 'group', key: 'address', fields: [leaf] };
+      const container = { type: 'container', key: 'wrapper', fields: [group], wrappers: [] };
+
+      const input = testFormConfig({ fields: [container as any] });
+      const result = dbxForgeFinalizeFormConfig(input);
+
+      expect(result.config.customFnConfig!.derivations!['__fn__state_1']).toBe(fn);
+    });
+
+    it('should extract _formConfig from a field nested inside a SimplifiedArrayField template (single field)', () => {
+      const fn = () => 'value';
+
+      const templateField: DbxForgeField<any> = {
+        type: 'input',
+        key: 'tag',
+        _formConfig: { customFnConfig: { derivations: { __fn__tag_1: fn } } }
+      };
+
+      const arrayField = {
+        type: 'array',
+        key: 'tags',
+        template: templateField
+      };
+
+      const input = testFormConfig({ fields: [arrayField as any] });
+      const result = dbxForgeFinalizeFormConfig(input);
+
+      expect(result.config.customFnConfig!.derivations!['__fn__tag_1']).toBe(fn);
+    });
+
+    it('should extract _formConfig from fields nested inside a SimplifiedArrayField template (array)', () => {
+      const fn = () => 'value';
+
+      const templateField: DbxForgeField<any> = {
+        type: 'input',
+        key: 'state',
+        _formConfig: { customFnConfig: { derivations: { __fn__state_1: fn } } }
+      };
+
+      const arrayField = {
+        type: 'array',
+        key: 'addresses',
+        template: [templateField]
+      };
+
+      const input = testFormConfig({ fields: [arrayField as any] });
+      const result = dbxForgeFinalizeFormConfig(input);
+
+      expect(result.config.customFnConfig!.derivations!['__fn__state_1']).toBe(fn);
+    });
+
+    it('should extract _formConfig._hiddenFields from a nested field', () => {
+      const hiddenField = { type: 'hidden', key: 'shadow', value: 'x', hidden: true } as any;
+
+      const nestedField: DbxForgeField<any> = {
+        type: 'input',
+        key: 'visible',
+        _formConfig: { _hiddenFields: [hiddenField] }
+      };
+
+      const container = { type: 'container', key: 'wrapper', fields: [nestedField], wrappers: [] };
+
+      const input = testFormConfig({ fields: [container as any] });
+      const result = dbxForgeFinalizeFormConfig(input);
+
+      expect(result.config.fields).toContain(hiddenField);
+    });
+  });
+
   describe('globalDefaults', () => {
     it('should apply global defaultValidationMessages when input has none', () => {
       const input = testFormConfig({

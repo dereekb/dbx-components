@@ -2,11 +2,13 @@
  * Exhaustive type and runtime tests for the forge address fields.
  */
 import { describe, it, expect, expectTypeOf } from 'vitest';
-import type { ArrayField, GroupField, RowField } from '@ng-forge/dynamic-forms';
+import type { ArrayField, ContainerField, GroupField } from '@ng-forge/dynamic-forms';
+import { DBX_FORGE_FLEX_WRAPPER_TYPE_NAME } from '../../wrapper/flex/flex.wrapper';
 import type { MatInputField } from '@ng-forge/dynamic-forms-material';
 import { dbxForgeAddressGroup, dbxForgeAddressFields, dbxForgeAddressLineField, dbxForgeAddressListField } from './text.address.field';
 import type { DbxForgeAddressGroupConfig, DbxForgeAddressFieldsConfig, DbxForgeAddressLineFieldConfig, DbxForgeAddressListFieldConfig } from './text.address.field';
 import { DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME } from '../../wrapper/array-field/array-field.wrapper';
+import { dbxForgeFinalizeFormConfig } from '../../../form/forge.form';
 
 // Shared key set for DbxForgeTextFieldConfig (DbxForgeAddressLineFieldConfig extends Partial<DbxForgeTextFieldConfig>).
 type DbxForgeTextFieldConfigKeys =
@@ -225,28 +227,33 @@ describe('dbxForgeAddressLineField()', () => {
 // ============================================================================
 
 describe('dbxForgeAddressFields()', () => {
-  it('should create 5 fields with line2 and country by default', () => {
+  it('should create 3 fields with line2 and country by default', () => {
     const fields = dbxForgeAddressFields();
-    // line1, line2, city, stateZipRow, country
-    expect(fields.length).toBe(5);
+    // line1, line2, singleLineRow (city + state + zip + country)
+    expect(fields.length).toBe(3);
   });
 
   it('should omit line2 when includeLine2 is false', () => {
     const fields = dbxForgeAddressFields({ includeLine2: false });
-    // streetLine, city, stateZipRow, country
-    expect(fields.length).toBe(4);
+    // streetLine, singleLineRow
+    expect(fields.length).toBe(2);
   });
 
-  it('should omit country when includeCountry is false', () => {
+  it('should still produce a singleLineRow when includeCountry is false', () => {
     const fields = dbxForgeAddressFields({ includeCountry: false });
-    // line1, line2, city, stateZipRow
-    expect(fields.length).toBe(4);
+    // line1, line2, singleLineRow (city + state + zip)
+    expect(fields.length).toBe(3);
   });
 
-  it('should omit both line2 and country when disabled', () => {
+  it('should drop country from the singleLineRow when includeCountry is false', () => {
+    const fields = dbxForgeAddressFields({ includeCountry: false });
+    const row = fields[2] as ContainerField;
+    expect(row.fields).toHaveLength(3);
+  });
+
+  it('should reduce to streetLine + singleLineRow when both line2 and country are disabled', () => {
     const fields = dbxForgeAddressFields({ includeLine2: false, includeCountry: false });
-    // streetLine, city, stateZipRow
-    expect(fields.length).toBe(3);
+    expect(fields.length).toBe(2);
   });
 
   it('should use Street label when includeLine2 is false', () => {
@@ -266,7 +273,8 @@ describe('dbxForgeAddressFields()', () => {
   it('should apply required to all required sub-fields by default', () => {
     const fields = dbxForgeAddressFields();
     const line1 = fields[0] as MatInputField;
-    const city = fields[2] as MatInputField;
+    const row = fields[2] as ContainerField;
+    const city = row.fields[0] as MatInputField;
     expect(line1.required).toBe(true);
     expect(city.required).toBe(true);
   });
@@ -274,21 +282,24 @@ describe('dbxForgeAddressFields()', () => {
   it('should relax required when required is false', () => {
     const fields = dbxForgeAddressFields({ required: false });
     const line1 = fields[0] as MatInputField;
-    const city = fields[2] as MatInputField;
+    const row = fields[2] as ContainerField;
+    const city = row.fields[0] as MatInputField;
     expect(line1.required).toBe(false);
     expect(city.required).toBe(false);
   });
 
-  it('should arrange state and zip in a row', () => {
+  it('should arrange city, state, zip, and country in a single flex layout container', () => {
     const fields = dbxForgeAddressFields();
-    const row = fields[3] as RowField;
-    expect(row.type).toBe('row');
-    expect(row.fields).toHaveLength(2);
+    const row = fields[2] as ContainerField;
+    expect(row.type).toBe('container');
+    expect(row.fields).toHaveLength(4);
+    expect((row.wrappers as { type: string }[]).some((w) => w.type === DBX_FORGE_FLEX_WRAPPER_TYPE_NAME)).toBe(true);
   });
 
   it('should allow overriding individual sub-field configs', () => {
     const fields = dbxForgeAddressFields({ cityField: { label: 'Ville' } });
-    const city = fields[2] as MatInputField;
+    const row = fields[2] as ContainerField;
+    const city = row.fields[0] as MatInputField;
     expect(city.label).toBe('Ville');
   });
 });
@@ -311,12 +322,14 @@ describe('dbxForgeAddressGroup()', () => {
 
   it('should include child fields directly on the group', () => {
     const field = dbxForgeAddressGroup();
-    expect(field.fields.length).toBe(5);
+    // line1, line2, singleLineRow
+    expect(field.fields.length).toBe(3);
   });
 
   it('should respect includeLine2 and includeCountry overrides', () => {
     const field = dbxForgeAddressGroup({ includeLine2: false, includeCountry: false });
-    expect(field.fields.length).toBe(3);
+    // streetLine, singleLineRow
+    expect(field.fields.length).toBe(2);
   });
 
   it('should propagate required to child fields', () => {
@@ -374,5 +387,26 @@ describe('Usage', () => {
   it('address line factory returns a MatInputField-shaped value', () => {
     const field = dbxForgeAddressLineField();
     expectTypeOf(field.type).toEqualTypeOf<'input'>();
+  });
+});
+
+// ============================================================================
+// Regression: nested _formConfig propagation
+// ============================================================================
+
+describe('address field _formConfig propagation', () => {
+  it('should pull the state field idempotent-transform derivation up to the form config when the state field is nested in the address flex layout', () => {
+    // dbxForgeStateField always wires an idempotent transform (toUppercase tied to asCode),
+    // which registers a derivation under an auto-generated `__fn__state_N` name in the
+    // state field's _formConfig. dbxForgeAddressFields then nests that field inside a
+    // flex-layout container, so finalization has to recurse to surface the derivation.
+    const fields = dbxForgeAddressFields();
+    const result = dbxForgeFinalizeFormConfig({ fields } as never);
+
+    const derivations = result.config.customFnConfig?.derivations ?? {};
+    const stateDerivationName = Object.keys(derivations).find((name) => name.startsWith('__fn__state_'));
+
+    expect(stateDerivationName).toBeDefined();
+    expect(typeof derivations[stateDerivationName as string]).toBe('function');
   });
 });
