@@ -207,7 +207,7 @@ describe('DbxForgeFormComponent', () => {
           dbxForgeToggleWrapper({
             label: 'Show details',
             fields: [dbxForgeTextField({ key: 'detail', label: 'Detail' }) as any]
-          }) as any
+          })
         ]
       };
 

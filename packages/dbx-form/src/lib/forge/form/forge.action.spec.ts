@@ -163,6 +163,190 @@ describe('DbxActionFormDirective with forge form', () => {
     });
   });
 
+  describe('isDisabled$ on initial invalid form', () => {
+    it('should mark the action disabled when a required field is empty before any interaction', async () => {
+      const fixture = TestBed.createComponent(TestForgeActionHostComponent);
+      const host = fixture.componentInstance;
+      const context = host.context;
+      context.config = createRequiredFieldConfig();
+
+      // No source — required field stays empty (form invalid, untouched)
+      fixture.detectChanges();
+
+      await settle(fixture);
+
+      const directive = host.directive();
+
+      // Wait for the action to receive at least one disabled-state update from the directive.
+      // The directive's stream$ → enable(KEY, valid) chain runs through a delay(0) microtask,
+      // which can land after whenStable() resolves under zoneless change detection.
+      const isDisabled = await firstValueFrom(
+        directive.sourceInstance.isDisabled$.pipe(
+          filter((x) => x === true),
+          first(),
+          timeout(500),
+          catchError(() => of(false))
+        )
+      );
+      const disabledKeys = await firstValueFrom(directive.sourceInstance.disabledKeys$.pipe(first()));
+
+      expect(isDisabled).toBe(true);
+      expect(disabledKeys).toContain(APP_ACTION_FORM_DISABLED_KEY);
+
+      fixture.destroy();
+    });
+
+    it('should re-disable the action when a previously-valid form becomes invalid (required field cleared)', async () => {
+      const fixture = TestBed.createComponent(TestForgeActionHostComponent);
+      const host = fixture.componentInstance;
+      const context = host.context;
+      context.config = createRequiredFieldConfig();
+
+      // Start with a valid value so the action is enabled
+      host.source$ = of({ name: 'Bob' });
+      fixture.detectChanges();
+      await settle(fixture);
+
+      const directive = host.directive();
+
+      // Confirm the action starts enabled while the form is valid
+      const enabledWhileValid = await firstValueFrom(
+        directive.sourceInstance.isDisabled$.pipe(
+          filter((x) => x === false),
+          first(),
+          timeout(500),
+          catchError(() => of(true))
+        )
+      );
+      expect(enabledWhileValid).toBe(false);
+
+      // Clear the required field — form becomes invalid (and remains pristine=false / modified)
+      context.setValue({ name: '' } as any);
+      await settle(fixture);
+
+      // Action should disable again now that the required field is empty
+      const isDisabledAfterClear = await firstValueFrom(
+        directive.sourceInstance.isDisabled$.pipe(
+          filter((x) => x === true),
+          first(),
+          timeout(500),
+          catchError(() => of(false))
+        )
+      );
+      const disabledKeys = await firstValueFrom(directive.sourceInstance.disabledKeys$.pipe(first()));
+
+      expect(isDisabledAfterClear).toBe(true);
+      expect(disabledKeys).toContain(APP_ACTION_FORM_DISABLED_KEY);
+
+      fixture.destroy();
+    });
+
+    it('should re-enable the action when a previously-invalid form becomes valid', async () => {
+      const fixture = TestBed.createComponent(TestForgeActionHostComponent);
+      const host = fixture.componentInstance;
+      const context = host.context;
+      context.config = createRequiredFieldConfig();
+
+      // No source — required field stays empty (form invalid)
+      fixture.detectChanges();
+      await settle(fixture);
+
+      const directive = host.directive();
+
+      // Confirm action starts disabled
+      const initiallyDisabled = await firstValueFrom(
+        directive.sourceInstance.isDisabled$.pipe(
+          filter((x) => x === true),
+          first(),
+          timeout(500),
+          catchError(() => of(false))
+        )
+      );
+      expect(initiallyDisabled).toBe(true);
+
+      // Provide a valid value → form becomes valid
+      context.setValue({ name: 'Bob' } as any);
+      await settle(fixture);
+
+      const enabledAfterFill = await firstValueFrom(
+        directive.sourceInstance.isDisabled$.pipe(
+          filter((x) => x === false),
+          first(),
+          timeout(500),
+          catchError(() => of(true))
+        )
+      );
+      expect(enabledAfterFill).toBe(false);
+
+      fixture.destroy();
+    });
+
+    it('should toggle the action enable/disable state across repeated invalid → valid → invalid transitions', async () => {
+      const fixture = TestBed.createComponent(TestForgeActionHostComponent);
+      const host = fixture.componentInstance;
+      const context = host.context;
+      context.config = createRequiredFieldConfig();
+
+      host.source$ = of({ name: 'Initial' });
+      fixture.detectChanges();
+      await settle(fixture);
+
+      const directive = host.directive();
+
+      // Initially valid → enabled
+      let isDisabled = await firstValueFrom(
+        directive.sourceInstance.isDisabled$.pipe(
+          filter((x) => x === false),
+          first(),
+          timeout(500),
+          catchError(() => of(true))
+        )
+      );
+      expect(isDisabled).toBe(false);
+
+      // Clear → invalid → disabled
+      context.setValue({ name: '' } as any);
+      await settle(fixture);
+      isDisabled = await firstValueFrom(
+        directive.sourceInstance.isDisabled$.pipe(
+          filter((x) => x === true),
+          first(),
+          timeout(500),
+          catchError(() => of(false))
+        )
+      );
+      expect(isDisabled).toBe(true);
+
+      // Refill → valid → enabled
+      context.setValue({ name: 'Filled Again' } as any);
+      await settle(fixture);
+      isDisabled = await firstValueFrom(
+        directive.sourceInstance.isDisabled$.pipe(
+          filter((x) => x === false),
+          first(),
+          timeout(500),
+          catchError(() => of(true))
+        )
+      );
+      expect(isDisabled).toBe(false);
+
+      // Clear again → invalid → disabled
+      context.setValue({ name: '' } as any);
+      await settle(fixture);
+      isDisabled = await firstValueFrom(
+        directive.sourceInstance.isDisabled$.pipe(
+          filter((x) => x === true),
+          first(),
+          timeout(500),
+          catchError(() => of(false))
+        )
+      );
+      expect(isDisabled).toBe(true);
+
+      fixture.destroy();
+    });
+  });
+
   describe('disabled on working (default behavior)', () => {
     it('should disable the form while the action is working', async () => {
       const workComplete$ = new Subject<boolean>();

@@ -161,35 +161,30 @@ export class DbxActionFormDirective<T = object, O = T> implements OnInit {
         delay(0),
         filter((x) => x.state !== DbxFormState.INITIALIZING),
         switchMap((event) => {
-          return this.form.getValue().pipe(
+          // Use both changes count and whether or not something was in the past to guage whether or not the item has been touched.
+          // Angular Form's untouched is whether or not focus has been lost but we can still receive value updates.
+          // More than a certain amount of updates implies that it is being typed into/used.
+          // 3 changes and 2 seconds are arbitrary values derived from guesses about any slow/late changes that may come from external directives for setup.
+          const isProbablyTouched = !event.untouched || ((event.changesCount ?? 0) > 3 && isPast(addSeconds(event.lastResetAt ?? new Date(), 2)));
+          const runIsValidCheck = event.isComplete;
+          const isConsideredModified = event.pristine === false && isProbablyTouched;
+
+          return this.form.currentValue().pipe(
             first(),
             exhaustMap((value) => {
-              // Use both changes count and whether or not something was in the past to guage whether or not the item has been touched.
-              // Angular Form's untouched is whether or not focus has been lost but we can still receive value updates.
-              // More than a certain amount of updates implies that it is being typed into/used.
-              // 3 changes and 2 seconds are arbitrary values derived from guesses about any slow/late changes that may come from external directives for setup.
-              const isProbablyTouched = !event.untouched || ((event.changesCount ?? 0) > 3 && isPast(addSeconds(event.lastResetAt ?? new Date(), 2)));
-
-              // create overrides
               const returnFalseFunction = () => of(false);
-
-              const runIsValidCheck = event.isComplete;
               const isValidFunction: Maybe<IsValidFunction<T>> = runIsValidCheck ? undefined : returnFalseFunction;
-
-              const isConsideredModified = event.pristine === false && isProbablyTouched;
               const isModifiedFunction: Maybe<IsModifiedFunction<T>> = isConsideredModified ? undefined : returnFalseFunction;
 
               return this.checkIsValidAndIsModified(value, { isValidFunction, isModifiedFunction }).pipe(
-                map(([valid, modified]: [boolean, boolean]) => ({ valid, modified, value, event })),
+                map(([valid, modified]: [boolean, boolean]) => ({ valid, modified })),
                 first()
               );
             })
           );
         })
       )
-      .subscribe(({ valid, modified /*, value, event */ }) => {
-        // console.log('x: ', value, event, valid, modified);
-
+      .subscribe(({ valid, modified }) => {
         // Update Modified State
         this.source.setIsModified(modified);
 

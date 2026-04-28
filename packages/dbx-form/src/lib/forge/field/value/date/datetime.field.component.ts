@@ -12,7 +12,7 @@ import { type DynamicText, type FieldMeta, type ValidationMessages, DEFAULT_PROP
 import { resolveValueFieldContext, buildValueFieldInputs, setupMetaTracking } from '@ng-forge/dynamic-forms/integration';
 import { MATERIAL_CONFIG } from '@ng-forge/dynamic-forms-material';
 import type { FieldTree } from '@angular/forms/signals';
-import { type Maybe, type Milliseconds, type TimezoneString, type ReadableTimeString, type DateOrDayString, type ArrayOrValue, asArray, filterMaybeArrayValues } from '@dereekb/util';
+import { type Maybe, type Milliseconds, type TimezoneString, type ReadableTimeString, type DateOrDayString, type ArrayOrValue, asArray, filterMaybeArrayValues, isDate } from '@dereekb/util';
 import { safeToJsDate, dateTimezoneUtcNormal, type DateTimezoneUtcNormalInstance, guessCurrentTimezone, toLocalReadableTimeString, getTimezoneAbbreviation, isSameDateHoursAndMinutes, isSameDateDay, DateTimeMinuteInstance, dateFromLogicalDate, dateTimeMinuteWholeDayDecisionFunction, toJsDayDate, isSameDate } from '@dereekb/date';
 import { type ObservableOrValueGetter, asObservableFromGetter, SubscriptionObject, switchMapMaybeDefault, filterMaybe, skipAllInitialMaybe } from '@dereekb/rxjs';
 import { type Observable, of, BehaviorSubject, Subject, combineLatest, interval, type Subscription } from 'rxjs';
@@ -664,7 +664,10 @@ export class DbxForgeDateTimeFieldComponent {
       // Time date
       this._timeDateSub?.unsubscribe();
       if (p?.timeDate) {
-        this._timeDateSub = asObservableFromGetter(p.timeDate).subscribe((td) => this._timeDate.set(td ? toJsDayDate(td) : undefined));
+        this._timeDateSub = asObservableFromGetter(p.timeDate).subscribe((td) => {
+          const resolved = isDate(td) || typeof td === 'string' ? toJsDayDate(td) : undefined;
+          this._timeDate.set(resolved);
+        });
       }
 
       // Presets

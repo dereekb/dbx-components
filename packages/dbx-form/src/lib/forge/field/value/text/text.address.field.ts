@@ -1,8 +1,9 @@
-import type { GroupField } from '@ng-forge/dynamic-forms';
+import type { FieldDef, GroupField } from '@ng-forge/dynamic-forms';
 import { ADDRESS_LINE_MAX_LENGTH } from '@dereekb/model';
 import { dbxForgeTextField, type DbxForgeTextFieldConfig } from './text.field';
 import { dbxForgeCityField, type DbxForgeCityFieldConfig, dbxForgeCountryField, type DbxForgeCountryFieldConfig, dbxForgeStateField, type DbxForgeStateFieldConfig, dbxForgeZipCodeField, type DbxForgeZipCodeFieldConfig } from './text.additional.field';
-import { dbxForgeGroup, dbxForgeRow } from '../../wrapper/wrapper';
+import { dbxForgeGroup } from '../../wrapper/wrapper';
+import { dbxForgeFlexLayout } from '../../wrapper/flex/flex.wrapper';
 import { dbxForgeArrayField } from '../array/array.field';
 import { type MatInputField } from '@ng-forge/dynamic-forms-material';
 import { type DbxForgeField } from '../../../form/forge.form';
@@ -101,16 +102,14 @@ export function dbxForgeAddressLineField(config: DbxForgeAddressLineFieldConfig 
 export function dbxForgeAddressFields(config: DbxForgeAddressFieldsConfig = {}) {
   const { required = true, includeLine2 = true, includeCountry = true } = config;
 
-  // City and country are full-width on their own rows since names can be long
-  const cityField = dbxForgeCityField({ required, ...config.cityField });
+  // City, state, zip, and country share a single relative-sized flex row to match formly parity.
+  const singleLineFields: FieldDef<unknown>[] = [dbxForgeCityField({ required, ...config.cityField }) as unknown as FieldDef<unknown>, dbxForgeStateField({ required, ...config.stateField }) as unknown as FieldDef<unknown>, dbxForgeZipCodeField({ required, ...config.zipCodeField }) as unknown as FieldDef<unknown>];
 
-  // State and zip share a row
-  const stateZipRow = dbxForgeRow({
-    fields: [
-      { ...dbxForgeStateField({ required, ...config.stateField }), col: 6 },
-      { ...dbxForgeZipCodeField({ required, ...config.zipCodeField }), col: 6 }
-    ]
-  });
+  if (includeCountry) {
+    singleLineFields.push(dbxForgeCountryField({ required, ...config.countryField }) as unknown as FieldDef<unknown>);
+  }
+
+  const singleLineRow = dbxForgeFlexLayout({ size: 1, relative: true, fields: singleLineFields });
 
   let lines: DbxForgeField<MatInputField>[];
 
@@ -120,11 +119,8 @@ export function dbxForgeAddressFields(config: DbxForgeAddressFieldsConfig = {}) 
     lines = [dbxForgeAddressLineField({ required, ...config.line1Field, line: 0 })];
   }
 
-  const fields = [...lines, cityField, stateZipRow];
-
-  if (includeCountry) {
-    fields.push(dbxForgeCountryField({ required, ...config.countryField }));
-  }
+  // TODO: tighten the array element type once a future/updated version of ng-forge exports `RowWrapper` so the inferred ContainerField return type can be named.
+  const fields: any[] = [...lines, singleLineRow];
 
   return fields;
 }
