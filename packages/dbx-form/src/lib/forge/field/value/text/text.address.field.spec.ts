@@ -1,7 +1,10 @@
 /**
  * Exhaustive type and runtime tests for the forge address fields.
  */
-import { describe, it, expect, expectTypeOf } from 'vitest';
+import { describe, it, expect, expectTypeOf, beforeEach, afterEach } from 'vitest';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
+import { firstValueFrom } from 'rxjs';
+import { waitForMs } from '@dereekb/util';
 import type { ArrayField, ContainerField, GroupField } from '@ng-forge/dynamic-forms';
 import { DBX_FORGE_FLEX_WRAPPER_TYPE_NAME } from '../../wrapper/flex/flex.wrapper';
 import type { MatInputField } from '@ng-forge/dynamic-forms-material';
@@ -9,6 +12,8 @@ import { dbxForgeAddressGroup, dbxForgeAddressFields, dbxForgeAddressLineField, 
 import type { DbxForgeAddressGroupConfig, DbxForgeAddressFieldsConfig, DbxForgeAddressLineFieldConfig, DbxForgeAddressListFieldConfig } from './text.address.field';
 import { DBX_FORGE_ARRAY_FIELD_WRAPPER_NAME } from '../../wrapper/array-field/array-field.wrapper';
 import { dbxForgeFinalizeFormConfig } from '../../../form/forge.form';
+import { DBX_FORGE_TEST_PROVIDERS } from '../../../form/forge.component.spec';
+import { DbxForgeAsyncConfigFormComponent } from '../../../form';
 
 // Shared key set for DbxForgeTextFieldConfig (DbxForgeAddressLineFieldConfig extends Partial<DbxForgeTextFieldConfig>).
 type DbxForgeTextFieldConfigKeys =
@@ -408,5 +413,64 @@ describe('address field _formConfig propagation', () => {
 
     expect(stateDerivationName).toBeDefined();
     expect(typeof derivations[stateDerivationName as string]).toBe('function');
+  });
+});
+
+// ============================================================================
+// Runtime Form Scenarios - dbxForgeAddressGroup() idempotentTransform
+// ============================================================================
+
+describe('dbxForgeAddressGroup() scenarios', () => {
+  let fixture: ComponentFixture<DbxForgeAsyncConfigFormComponent>;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [...DBX_FORGE_TEST_PROVIDERS] });
+    fixture = TestBed.createComponent(DbxForgeAsyncConfigFormComponent);
+  });
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
+  });
+
+  async function settle(): Promise<void> {
+    fixture.detectChanges();
+    await waitForMs(0);
+    await fixture.whenStable();
+  }
+
+  describe('nested stateField idempotentTransform', () => {
+    // Regression: the dbxForgeStateField's idempotent transform sits inside the
+    // address group's flex-layout container. We need to confirm the transform
+    // actually runs against the form value — not just that the derivation is
+    // registered — so a lowercase "tx" must come out as "TX".
+    it('should uppercase a lowercase "tx" passed for address.state when stateField asCode: true', async () => {
+      const group = dbxForgeAddressGroup({ required: false, stateField: { asCode: true } });
+
+      fixture.componentInstance.context.requireValid = false;
+      fixture.componentInstance.config.set({ fields: [group as never] });
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      fixture.componentInstance.setValue({ address: { state: 'tx' } } as never);
+      await settle();
+
+      const value = (await firstValueFrom(fixture.componentInstance.getValue())) as { address: { state: string } };
+      expect(value.address?.state).toBe('TX');
+    });
+
+    it('should leave address.state untouched when stateField asCode is not set and no transform is provided', async () => {
+      const group = dbxForgeAddressGroup({ required: false });
+
+      fixture.componentInstance.context.requireValid = false;
+      fixture.componentInstance.config.set({ fields: [group as never] });
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      fixture.componentInstance.setValue({ address: { state: 'tx' } } as never);
+      await settle();
+
+      const value = (await firstValueFrom(fixture.componentInstance.getValue())) as { address: { state: string } };
+      expect(value.address?.state).toBe('tx');
+    });
   });
 });

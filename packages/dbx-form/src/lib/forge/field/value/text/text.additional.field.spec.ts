@@ -1,12 +1,17 @@
 /**
  * Exhaustive type and runtime tests for the additional text forge preset fields.
  */
-import { describe, it, expect, expectTypeOf } from 'vitest';
+import { describe, it, expect, expectTypeOf, beforeEach, afterEach } from 'vitest';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
+import { firstValueFrom } from 'rxjs';
+import { waitForMs } from '@dereekb/util';
 import { dbxForgeNameField, dbxForgeEmailField, dbxForgeCityField, dbxForgeStateField, dbxForgeCountryField, dbxForgeZipCodeField, dbxForgeLatLngTextField, DEFAULT_FORGE_LAT_LNG_TEXT_FIELD_PLACEHOLDER } from './text.additional.field';
 import type { DbxForgeEmailFieldConfig, DbxForgeStateFieldConfig } from './text.additional.field';
 import type { DbxForgeTextFieldConfig } from './text.field';
 import { ADDRESS_CITY_MAX_LENGTH, ADDRESS_STATE_CODE_MAX_LENGTH, ADDRESS_STATE_MAX_LENGTH, ADDRESS_COUNTRY_MAX_LENGTH, ADDRESS_ZIP_MAX_LENGTH } from '@dereekb/model';
 import type { FieldAutocompleteAttributeOption } from '../../../../field/field.autocomplete';
+import { DBX_FORGE_TEST_PROVIDERS } from '../../../form/forge.component.spec';
+import { DbxForgeAsyncConfigFormComponent } from '../../../form';
 
 // ============================================================================
 // DbxForgeEmailFieldConfig - Exhaustive Whitelist
@@ -232,6 +237,69 @@ describe('dbxForgeStateField()', () => {
   it('should default required to false', () => {
     const field = dbxForgeStateField();
     expect(field.required).toBe(false);
+  });
+
+  describe('scenarios', () => {
+    let fixture: ComponentFixture<DbxForgeAsyncConfigFormComponent>;
+
+    beforeEach(() => {
+      TestBed.configureTestingModule({ providers: [...DBX_FORGE_TEST_PROVIDERS] });
+      fixture = TestBed.createComponent(DbxForgeAsyncConfigFormComponent);
+    });
+
+    afterEach(() => {
+      TestBed.resetTestingModule();
+    });
+
+    async function settle(): Promise<void> {
+      fixture.detectChanges();
+      await waitForMs(0);
+      await fixture.whenStable();
+    }
+
+    describe('idempotentTransform', () => {
+      it('should uppercase a lowercase "tx" value when asCode: true', async () => {
+        const field = dbxForgeStateField({ asCode: true });
+
+        fixture.componentInstance.config.set({ fields: [field as never] });
+        fixture.detectChanges();
+        await fixture.whenStable();
+
+        fixture.componentInstance.setValue({ state: 'tx' } as never);
+        await settle();
+
+        const value = await firstValueFrom(fixture.componentInstance.getValue());
+        expect(value).toEqual({ state: 'TX' });
+      });
+
+      it('should uppercase a lowercase "tx" value when an explicit idempotentTransform.toUppercase is provided', async () => {
+        const field = dbxForgeStateField({ idempotentTransform: { toUppercase: true } });
+
+        fixture.componentInstance.config.set({ fields: [field as never] });
+        fixture.detectChanges();
+        await fixture.whenStable();
+
+        fixture.componentInstance.setValue({ state: 'tx' } as never);
+        await settle();
+
+        const value = await firstValueFrom(fixture.componentInstance.getValue());
+        expect(value).toEqual({ state: 'TX' });
+      });
+
+      it('should leave a lowercase "tx" value untouched when neither asCode nor a transform is provided', async () => {
+        const field = dbxForgeStateField();
+
+        fixture.componentInstance.config.set({ fields: [field as never] });
+        fixture.detectChanges();
+        await fixture.whenStable();
+
+        fixture.componentInstance.setValue({ state: 'tx' } as never);
+        await settle();
+
+        const value = await firstValueFrom(fixture.componentInstance.getValue());
+        expect(value).toEqual({ state: 'tx' });
+      });
+    });
   });
 });
 
