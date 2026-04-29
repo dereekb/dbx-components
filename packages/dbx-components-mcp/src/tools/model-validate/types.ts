@@ -43,6 +43,7 @@ export type ViolationCode =
   | 'MODEL_MISSING_COLLECTION_REFERENCE'
   | 'MODEL_MISSING_COLLECTION_TYPE'
   | 'MODEL_COLLECTION_TYPE_WRONG_GENERIC'
+  | 'MODEL_COLLECTION_FACTORY_TYPE_MISMATCH'
   | 'MODEL_MISSING_COLLECTION_FN'
   | 'MODEL_OUT_OF_ORDER'
   // Subcollection extras
@@ -61,7 +62,8 @@ export type ViolationCode =
  * Error codes are hard failures the caller is expected to fix. Warning codes
  * flag convention deviations — validation is still considered a pass.
  */
-export type { ViolationSeverity } from '../validate-format.js';
+import type { ViolationSeverity } from '../validate-format.js';
+export type { ViolationSeverity };
 
 export interface Violation {
   readonly code: ViolationCode;
@@ -97,6 +99,27 @@ export interface ValidatorSource {
 }
 
 export type ModelVariant = 'root' | 'subcollection';
+
+/**
+ * Canonical taxonomy of Firestore-collection shapes a model can declare.
+ * Mirrors the consumer-side store-shape labels used in
+ * `firebase-lookup.formatter.ts` so the verbiage is identical end-to-end
+ * (registry → validator → MCP responses).
+ *
+ * - `'root'`: standard root collection. Type alias `FirestoreCollection<T, D>`,
+ *   factory body calls `firestoreContext.firestoreCollection({...})`.
+ * - `'root-singleton'`: single-document root collection (e.g. an app-config
+ *   doc). Type alias `RootSingleItemFirestoreCollection<T, D>`, factory body
+ *   calls `firestoreContext.rootSingleItemFirestoreCollection({...})`.
+ * - `'sub-collection'`: multi-item subcollection under a parent. Type alias
+ *   `FirestoreCollectionWithParent<T, PT, D, PD>`, factory body calls
+ *   `firestoreContext.firestoreCollectionWithParent({...})`.
+ * - `'singleton-sub'`: one-document-per-parent subcollection (e.g.
+ *   `<parent>/private/private`). Type alias
+ *   `SingleItemFirestoreCollection<T, PT, D, PD>`, factory body calls
+ *   `firestoreContext.singleItemFirestoreCollection({...})`.
+ */
+export type FirestoreCollectionKind = 'root' | 'root-singleton' | 'sub-collection' | 'singleton-sub';
 
 /**
  * Canonical order of required declarations for a root-collection model.
@@ -174,6 +197,12 @@ export interface ExtractedModel {
   readonly collectionGroupType: ExtractedDecl | undefined;
   readonly collectionFn: ExtractedDecl | undefined;
   readonly collectionGroupFn: ExtractedDecl | undefined;
+  /**
+   * Collection kind discriminator derived from the factory body's
+   * `firestoreContext.*` call. `undefined` when the factory is missing or
+   * the call site cannot be located.
+   */
+  readonly factoryCallKind: FirestoreCollectionKind | undefined;
 }
 
 export interface ExtractedIdentity {

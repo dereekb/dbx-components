@@ -59,6 +59,16 @@ describe('firebase-models registry', () => {
     }
   });
 
+  it('records a collectionKind for every model that matches its parent-identity variant', () => {
+    const ROOT_KINDS = new Set(['root', 'root-singleton']);
+    const SUB_KINDS = new Set(['sub-collection', 'singleton-sub']);
+    for (const model of FIREBASE_MODELS) {
+      expect(model.collectionKind, `${model.name} is missing collectionKind`).toBeDefined();
+      const allowed = model.parentIdentityConst ? SUB_KINDS : ROOT_KINDS;
+      expect(allowed.has(model.collectionKind as string), `${model.name} collectionKind '${model.collectionKind}' is not allowed for variant ${model.parentIdentityConst ? 'subcollection' : 'root'} (allowed: ${[...allowed].join(', ')})`).toBe(true);
+    }
+  });
+
   it('PRIMARY index: getFirebaseModelByPrefix resolves StorageFile via "sf"', () => {
     const match = getFirebaseModelByPrefix('sf');
     expect(match?.name).toBe('StorageFile');

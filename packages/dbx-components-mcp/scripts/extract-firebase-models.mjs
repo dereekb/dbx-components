@@ -96,6 +96,7 @@ function extractFromFile(file, content) {
   const converters = findConverters(content);
   const enums = findEnums(content);
   const modelGroups = findModelGroups(content, relativePath);
+  const collectionFactoryCalls = findCollectionFactoryCalls(content);
 
   const interfaceByName = new Map();
   for (const iface of interfaces) interfaceByName.set(iface.name, iface);
@@ -168,6 +169,10 @@ function extractFromFile(file, content) {
     if (id.parentIdentityConst) entry.parentIdentityConst = id.parentIdentityConst;
     const groupName = groupByModelName.get(modelName);
     if (groupName) entry.modelGroup = groupName;
+    const factoryFnName = id.parentIdentityConst ? `${id.modelType}FirestoreCollectionFactory` : `${id.modelType}FirestoreCollection`;
+    const collectionKind = collectionFactoryCalls.get(factoryFnName);
+    if (collectionKind) entry.collectionKind = collectionKind;
+    else console.warn(`[extract-firebase-models] ${relativePath}: ${modelName} could not detect collectionKind from factory \`${factoryFnName}\``);
     models.push(entry);
   }
 
@@ -432,6 +437,59 @@ function parseFieldsBody(body) {
     out.push({ key, converter: expr });
   }
   return out;
+}
+
+/**
+ * Walks every `export function <name>(...): <ReturnType> { ... }` declaration
+ * and records the first `firestoreContext.*` collection-factory call inside
+ * its body. The return value maps function name → {@link FirestoreCollectionKind}
+ * for the four canonical shapes (`firestoreCollection`,
+ * `rootSingleItemFirestoreCollection`, `firestoreCollectionWithParent`,
+ * `singleItemFirestoreCollection`). Functions that don't make a recognised
+ * call are omitted.
+ */
+function findCollectionFactoryCalls(content) {
+  const out = new Map();
+  const re = /export\s+function\s+(\w+)\s*\(/g;
+  let m;
+  while ((m = re.exec(content)) !== null) {
+    const fnName = m[1];
+    const openParen = content.indexOf('(', m.index + m[0].length - 1);
+    const closeParen = findMatching(content, openParen, '(', ')');
+    if (closeParen < 0) continue;
+    const openBrace = content.indexOf('{', closeParen);
+    if (openBrace < 0) continue;
+    const closeBrace = findMatching(content, openBrace, '{', '}');
+    if (closeBrace < 0) continue;
+    const body = content.slice(openBrace + 1, closeBrace);
+    const kind = detectCollectionKindInBody(body);
+    if (kind) out.set(fnName, kind);
+  }
+  return out;
+}
+
+/**
+ * Looks for the first recognised `firestoreContext.<method>(` call expression
+ * inside a function body and maps it to a {@link FirestoreCollectionKind}.
+ * Pattern matches `<expr>.<method>(` so it works with intermediate locals
+ * (e.g. `return (parent) => firestoreContext.singleItemFirestoreCollection({...})`).
+ */
+function detectCollectionKindInBody(body) {
+  const re = /\.(firestoreCollection|rootSingleItemFirestoreCollection|firestoreCollectionWithParent|singleItemFirestoreCollection)\s*\(/g;
+  let m;
+  while ((m = re.exec(body)) !== null) {
+    switch (m[1]) {
+      case 'firestoreCollection':
+        return 'root';
+      case 'rootSingleItemFirestoreCollection':
+        return 'root-singleton';
+      case 'firestoreCollectionWithParent':
+        return 'sub-collection';
+      case 'singleItemFirestoreCollection':
+        return 'singleton-sub';
+    }
+  }
+  return undefined;
 }
 
 function findEnums(content) {

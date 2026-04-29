@@ -70,7 +70,8 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     ],
     enums: [],
     detectionHints: ['m', 'r', 'w'],
-    modelGroup: 'Notification'
+    modelGroup: 'Notification',
+    collectionKind: 'root'
   },
   {
     name: 'NotificationSummary',
@@ -146,7 +147,8 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     ],
     enums: [],
     detectionHints: ['m', 'n', 'lat', 'rat'],
-    modelGroup: 'Notification'
+    modelGroup: 'Notification',
+    collectionKind: 'root'
   },
   {
     name: 'NotificationUser',
@@ -212,7 +214,8 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     ],
     enums: [],
     detectionHints: ['b', 'x', 'dc', 'gc', 'bc', 'ns'],
-    modelGroup: 'Notification'
+    modelGroup: 'Notification',
+    collectionKind: 'root'
   },
   {
     name: 'OidcEntry',
@@ -288,7 +291,8 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     ],
     enums: [],
     detectionHints: ['type', 'payload', 'grantId', 'userCode', 'consumed', 'expiresAt'],
-    modelGroup: 'OidcModel'
+    modelGroup: 'OidcModel',
+    collectionKind: 'root'
   },
   {
     name: 'StorageFile',
@@ -545,7 +549,8 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
       }
     ],
     detectionHints: ['bucketId', 'pathString', 'n', 'ct', 'fs', 'ps', 'pn', 'pat', 'pcat', 'uby', 'p', 'pg', 'sdat', 'g', 'gs'],
-    modelGroup: 'StorageFile'
+    modelGroup: 'StorageFile',
+    collectionKind: 'root'
   },
   {
     name: 'StorageFileGroup',
@@ -637,7 +642,8 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     ],
     enums: [],
     detectionHints: ['f', 'z', 'zsf', 'zat', 're', 'c'],
-    modelGroup: 'StorageFile'
+    modelGroup: 'StorageFile',
+    collectionKind: 'root'
   },
   {
     name: 'SystemState',
@@ -657,7 +663,8 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     ],
     enums: [],
     detectionHints: ['data'],
-    modelGroup: 'SystemState'
+    modelGroup: 'SystemState',
+    collectionKind: 'root'
   },
   {
     name: 'Notification',
@@ -937,7 +944,8 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     ],
     detectionHints: ['st', 'rf', 'ts', 'es', 'ps', 'ns', 'n', 'r', 'ois', 'ots', 'sat', 'a', 'at', 'tsr', 'esr', 'tpr', 'ut'],
     parentIdentityConst: 'notificationBoxIdentity',
-    modelGroup: 'Notification'
+    modelGroup: 'Notification',
+    collectionKind: 'sub-collection'
   },
   {
     name: 'NotificationWeek',
@@ -966,7 +974,8 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     enums: [],
     detectionHints: ['w', 'n'],
     parentIdentityConst: 'notificationBoxIdentity',
-    modelGroup: 'Notification'
+    modelGroup: 'Notification',
+    collectionKind: 'sub-collection'
   }
 ];
 

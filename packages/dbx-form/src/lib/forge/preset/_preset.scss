@@ -21,6 +21,28 @@
       width: 100%;
     }
 
+    // df-mat-input / mat-form-field rendering (e.g. dbx-form-search-form's text input)
+    .mat-mdc-form-field > .mat-mdc-text-field-wrapper {
+      padding: 0;
+
+      > .mat-mdc-form-field-flex {
+        .mdc-notched-outline__leading {
+          display: none;
+        }
+
+        .mdc-floating-label.mat-mdc-floating-label {
+          margin-left: -4px; // align with the input
+        }
+
+        @include theming.hide-mdc-notched-outline-border;
+      }
+    }
+
+    .mat-mdc-form-field-subscript-wrapper {
+      display: none;
+    }
+
+    // dbx-forge-form-field-wrapper rendering (e.g. boolean fields)
     dbx-forge-form-field-wrapper {
       > .dbx-forge-form-field-wrapper {
         margin-top: 0;
@@ -45,28 +67,48 @@
           padding: 0;
         }
       }
-
-      > .mat-mdc-form-field-subscript-wrapper {
-        display: none;
-      }
     }
   }
 
-  .dbx-section-page-header-search-bar-with-bottom-bar dbx-forge-form-field-wrapper > .dbx-forge-form-field-wrapper {
-    > .dbx-forge-form-field-outline {
-      .dbx-forge-form-field-outline-notch,
-      .dbx-forge-form-field-outline-trailing {
-        border-bottom: var(--mdc-outlined-text-field-outline-width) solid;
-        border-radius: 0;
+  .dbx-section-page-header-search-bar-with-bottom-bar {
+    // df-mat-input / mat-form-field rendering
+    .mat-mdc-form-field > .mat-mdc-text-field-wrapper {
+      > .mat-mdc-form-field-flex > .mdc-notched-outline {
+        .mdc-notched-outline__notch,
+        .mdc-notched-outline__trailing {
+          border-bottom: var(--mdc-outlined-text-field-outline-width) solid;
+          border-radius: 0;
+        }
+      }
+
+      &:hover,
+      &.mdc-text-field--focused {
+        > .mat-mdc-form-field-flex > .mdc-notched-outline {
+          .mdc-notched-outline__notch,
+          .mdc-notched-outline__trailing {
+            border-bottom-width: var(--mdc-outlined-text-field-focus-outline-width);
+          }
+        }
       }
     }
 
-    &:hover,
-    &:focus-within {
+    // dbx-forge-form-field-wrapper rendering
+    dbx-forge-form-field-wrapper > .dbx-forge-form-field-wrapper {
       > .dbx-forge-form-field-outline {
         .dbx-forge-form-field-outline-notch,
         .dbx-forge-form-field-outline-trailing {
-          border-bottom-width: var(--mdc-outlined-text-field-focus-outline-width);
+          border-bottom: var(--mdc-outlined-text-field-outline-width) solid;
+          border-radius: 0;
+        }
+      }
+
+      &:hover,
+      &:focus-within {
+        > .dbx-forge-form-field-outline {
+          .dbx-forge-form-field-outline-notch,
+          .dbx-forge-form-field-outline-trailing {
+            border-bottom-width: var(--mdc-outlined-text-field-focus-outline-width);
+          }
         }
       }
     }

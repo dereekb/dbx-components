@@ -103,7 +103,10 @@ export const dbxForgeNumberField = dbxForgeFieldFunction<DbxForgeNumberFieldConf
         validators: [
           {
             type: 'custom',
-            expression: `fieldValue == null || fieldValue % ${step} === 0`,
+            // `fieldValue !== fieldValue` is true only for NaN; required because
+            // empty number inputs surface as NaN (not null) and the expression parser
+            // does not allow free function calls like isNaN().
+            expression: `fieldValue == null || fieldValue !== fieldValue || fieldValue % ${step} === 0`,
             kind: FORGE_IS_DIVISIBLE_BY_VALIDATION_KEY
           }
         ],

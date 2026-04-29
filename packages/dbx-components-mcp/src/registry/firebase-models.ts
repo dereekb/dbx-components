@@ -81,6 +81,15 @@ export interface FirebaseField {
 }
 
 /**
+ * Re-export of the canonical {@link FirestoreCollectionKind} taxonomy used
+ * across the validator and registry so consumers see one consistent label
+ * set for every Firestore-collection shape.
+ */
+export type { FirestoreCollectionKind } from '../tools/model-validate/types.js';
+
+import type { FirestoreCollectionKind } from '../tools/model-validate/types.js';
+
+/**
  * A Firestore model entry.
  */
 export interface FirebaseModel {
@@ -128,6 +137,15 @@ export interface FirebaseModel {
    * Absent when the file declares no model-group container.
    */
   readonly modelGroup?: string;
+  /**
+   * Firestore-collection shape, derived by inspecting the model's
+   * `<modelType>FirestoreCollection` / `<modelType>FirestoreCollectionFactory`
+   * function body for the `firestoreContext.*` call it makes. Mirrors the
+   * consumer-side store-shape labels: `'root'`, `'root-singleton'`,
+   * `'sub-collection'`, `'singleton-sub'`. Absent when the scanner cannot
+   * locate a recognised call (e.g. exotic factory shapes).
+   */
+  readonly collectionKind?: FirestoreCollectionKind;
 }
 
 /**

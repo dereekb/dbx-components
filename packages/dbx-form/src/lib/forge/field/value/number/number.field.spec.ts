@@ -5,7 +5,7 @@ import { waitForMs } from '@dereekb/util';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { DBX_FORGE_TEST_PROVIDERS } from '../../../form/forge.component.spec';
 import { DbxForgeAsyncConfigFormComponent } from '../../../form';
-import { firstValueFrom } from 'rxjs';
+import { catchError, first, firstValueFrom, map, of, timeout } from 'rxjs';
 import { dbxForgeNumberField, dbxForgeDollarAmountField, FORGE_IS_DIVISIBLE_BY_VALIDATION_KEY, type DbxForgeNumberFieldConfig } from './number.field';
 
 // ============================================================================
@@ -316,6 +316,140 @@ describe('scenarios', () => {
 
       const value = await firstValueFrom(fixture.componentInstance.getValue());
       expect(value).toEqual({ price: 9.99 });
+    });
+  });
+
+  describe('enforceStep + min/max runtime', () => {
+    it('should emit a value when an optional field with enforceStep is left empty', async () => {
+      const field = dbxForgeNumberField({
+        key: 'pma',
+        label: 'Maximum School Automatic Job Day Allocations Per Day',
+        description: 'The maximum number of job days allocated per day for each school in this school group. Is a hard cap that takes priority over all other allocation configurations.',
+        placeholder: undefined,
+        step: 1,
+        enforceStep: true,
+        min: 1,
+        max: 100
+      });
+
+      const formConfig = { fields: [field] };
+      fixture.componentInstance.config.set(formConfig);
+
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const result = await firstValueFrom(
+        fixture.componentInstance.getValue().pipe(
+          timeout(500),
+          first(),
+          map((value) => ({ received: true, value })),
+          catchError(() => of({ received: false, value: undefined }))
+        )
+      );
+
+      expect(result.received).toBe(true);
+    });
+
+    it('should report INVALID when enforceStep value is not divisible by step', async () => {
+      const field = dbxForgeNumberField({ key: 'qty', step: 5, enforceStep: true });
+      fixture.componentInstance.config.set({ fields: [field] });
+
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      fixture.componentInstance.setValue({ qty: 7 });
+      fixture.detectChanges();
+      await waitForMs(0);
+      await fixture.whenStable();
+
+      const event = await firstValueFrom(fixture.componentInstance.context.stream$.pipe(first()));
+      expect(event.status).toBe('INVALID');
+      expect(event.isComplete).toBe(false);
+    });
+
+    it('should report VALID when enforceStep value is divisible by step', async () => {
+      const field = dbxForgeNumberField({ key: 'qty', step: 5, enforceStep: true });
+      fixture.componentInstance.config.set({ fields: [field] });
+
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      fixture.componentInstance.setValue({ qty: 15 });
+      fixture.detectChanges();
+      await waitForMs(0);
+      await fixture.whenStable();
+
+      const event = await firstValueFrom(fixture.componentInstance.context.stream$.pipe(first()));
+      expect(event.status).toBe('VALID');
+      expect(event.isComplete).toBe(true);
+    });
+
+    it('should report VALID when enforceStep value is 0 (0 is divisible by any step)', async () => {
+      const field = dbxForgeNumberField({ key: 'qty', step: 5, enforceStep: true });
+      fixture.componentInstance.config.set({ fields: [field] });
+
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      fixture.componentInstance.setValue({ qty: 0 });
+      fixture.detectChanges();
+      await waitForMs(0);
+      await fixture.whenStable();
+
+      const event = await firstValueFrom(fixture.componentInstance.context.stream$.pipe(first()));
+      expect(event.status).toBe('VALID');
+      expect(event.isComplete).toBe(true);
+    });
+
+    it('should report INVALID when value is below min', async () => {
+      const field = dbxForgeNumberField({ key: 'qty', min: 10, max: 100 });
+      fixture.componentInstance.config.set({ fields: [field] });
+
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      fixture.componentInstance.setValue({ qty: 5 });
+      fixture.detectChanges();
+      await waitForMs(0);
+      await fixture.whenStable();
+
+      const event = await firstValueFrom(fixture.componentInstance.context.stream$.pipe(first()));
+      expect(event.status).toBe('INVALID');
+      expect(event.isComplete).toBe(false);
+    });
+
+    it('should report INVALID when value is above max', async () => {
+      const field = dbxForgeNumberField({ key: 'qty', min: 10, max: 100 });
+      fixture.componentInstance.config.set({ fields: [field] });
+
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      fixture.componentInstance.setValue({ qty: 250 });
+      fixture.detectChanges();
+      await waitForMs(0);
+      await fixture.whenStable();
+
+      const event = await firstValueFrom(fixture.componentInstance.context.stream$.pipe(first()));
+      expect(event.status).toBe('INVALID');
+      expect(event.isComplete).toBe(false);
+    });
+
+    it('should report VALID when value is within min/max range', async () => {
+      const field = dbxForgeNumberField({ key: 'qty', min: 10, max: 100 });
+      fixture.componentInstance.config.set({ fields: [field] });
+
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      fixture.componentInstance.setValue({ qty: 50 });
+      fixture.detectChanges();
+      await waitForMs(0);
+      await fixture.whenStable();
+
+      const event = await firstValueFrom(fixture.componentInstance.context.stream$.pipe(first()));
+      expect(event.status).toBe('VALID');
+      expect(event.isComplete).toBe(true);
     });
   });
 });

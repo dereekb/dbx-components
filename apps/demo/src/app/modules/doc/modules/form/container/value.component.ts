@@ -202,7 +202,15 @@ export class DocFormValueComponent {
   readonly addressField: FormlyFieldConfig[] = [formlyAddressField()];
 
   readonly forgeAddressFieldConfig: FormConfig = {
-    fields: [dbxForgeAddressGroup() as any]
+    fields: [
+      dbxForgeAddressGroup(),
+      {
+        type: 'container',
+        key: 'test',
+        wrappers: [],
+        fields: []
+      }
+    ]
   };
 
   readonly slimAddressField: FormlyFieldConfig[] = [formlyAddressField({ key: 'slim', hint: 'Line 2 and country are omitted.', stateField: { asCode: true }, includeLine2: false, includeCountry: false })];

@@ -6,7 +6,7 @@ import { type FormConfig, DynamicFormLogger, NoopLogger } from '@ng-forge/dynami
 import { first, firstValueFrom, timeout, catchError, of, map } from 'rxjs';
 import { provideDbxForgeFormFieldDeclarations } from '../forge.providers';
 import { provideDbxFormConfiguration } from '../../form.providers';
-import { DbxForgeFormComponent } from './forge.component';
+import { DbxForgeFormComponent, _forgeFormValueEqual } from './forge.component';
 import { DbxForgeFormContext, provideDbxForgeFormContext, stripForgeInternalKeys, stripEmptyForgeValues } from './forge.context';
 import { dbxForgeTextField } from '../field/value/text/text.field';
 import { dbxForgeToggleWrapper } from '../field/wrapper/wrapper';
@@ -581,6 +581,16 @@ describe('stripEmptyForgeValues()', () => {
     expect(result).toEqual({ count: 0 });
   });
 
+  it('should strip NaN values', () => {
+    const result = stripEmptyForgeValues({ amount: Number.NaN, count: 5 });
+    expect(result).toEqual({ count: 5 });
+  });
+
+  it('should recursively strip nested NaN values', () => {
+    const result = stripEmptyForgeValues({ profile: { age: Number.NaN, name: 'Bob' } });
+    expect(result).toEqual({ profile: { name: 'Bob' } });
+  });
+
   it('should preserve empty arrays', () => {
     const result = stripEmptyForgeValues({ items: [], name: '' });
     expect(result).toEqual({ items: [] });
@@ -653,5 +663,55 @@ describe('stripEmptyForgeValues()', () => {
     });
     const result = stripEmptyForgeValues(afterInternalStrip);
     expect(result).toEqual({ name: 'Bob' });
+  });
+});
+
+// MARK: _forgeFormValueEqual unit tests
+describe('_forgeFormValueEqual()', () => {
+  let context: DbxForgeFormContext;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [...DBX_FORGE_TEST_PROVIDERS, ...provideDbxForgeFormContext()]
+    });
+    context = TestBed.inject(DbxForgeFormContext);
+  });
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
+  });
+
+  it('should treat structurally equal objects as equal', () => {
+    expect(_forgeFormValueEqual({ name: 'Bob', age: 25 }, { name: 'Bob', age: 25 }, context)).toBe(true);
+  });
+
+  it('should treat objects differing in non-NaN values as unequal', () => {
+    expect(_forgeFormValueEqual({ age: 25 }, { age: 26 }, context)).toBe(false);
+  });
+
+  it('should treat two objects with the same NaN value as equal', () => {
+    expect(_forgeFormValueEqual({ amount: Number.NaN }, { amount: Number.NaN }, context)).toBe(true);
+  });
+
+  it('should treat an object with NaN as equal to one missing the key', () => {
+    expect(_forgeFormValueEqual({ amount: Number.NaN }, {}, context)).toBe(true);
+    expect(_forgeFormValueEqual({}, { amount: Number.NaN }, context)).toBe(true);
+  });
+
+  it('should ignore NaN alongside null/undefined when comparing', () => {
+    expect(_forgeFormValueEqual({ a: Number.NaN, b: null, c: undefined, name: 'Bob' }, { name: 'Bob' }, context)).toBe(true);
+  });
+
+  it('should ignore NaN inside nested objects', () => {
+    expect(_forgeFormValueEqual({ profile: { age: Number.NaN, name: 'Bob' } }, { profile: { name: 'Bob' } }, context)).toBe(true);
+  });
+
+  it('should still detect a real numeric difference even when NaN is present elsewhere', () => {
+    expect(_forgeFormValueEqual({ amount: Number.NaN, age: 25 }, { amount: Number.NaN, age: 26 }, context)).toBe(false);
+  });
+
+  it('should ignore NaN when stripInternalKeys is false', () => {
+    context.stripInternalKeys = false;
+    expect(_forgeFormValueEqual({ amount: Number.NaN, _toggle_1: true }, { _toggle_1: true }, context)).toBe(true);
   });
 });

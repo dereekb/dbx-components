@@ -7,7 +7,7 @@
  * re-run rather than silence individual codes.
  */
 
-import { MAX_FIELD_NAME_LENGTH, ROOT_MODEL_ORDER, SUBCOLLECTION_MODEL_ORDER, type DeclarationKind, type ExtractedFile, type ExtractedModel, type Violation, type ViolationSeverity } from './types.js';
+import { MAX_FIELD_NAME_LENGTH, ROOT_MODEL_ORDER, SUBCOLLECTION_MODEL_ORDER, type DeclarationKind, type ExtractedFile, type ExtractedModel, type FirestoreCollectionKind, type Violation, type ViolationSeverity } from './types.js';
 
 // MARK: Entry
 /**
@@ -421,21 +421,46 @@ function checkCollectionType(file: ExtractedFile, model: ExtractedModel, violati
     return;
   }
   const typeText = model.collectionType.typeText ?? '';
-  if (model.variant === 'root') {
-    const expected = `FirestoreCollection<${model.name}, ${model.name}Document>`;
-    if (typeText.replaceAll(/\s+/g, '') !== expected.replaceAll(/\s+/g, '')) {
-      pushViolation(violations, {
-        code: 'MODEL_COLLECTION_TYPE_WRONG_GENERIC',
-        message: `Type alias \`${model.name}FirestoreCollection\` must equal \`${expected}\` (found \`${typeText || '<none>'}\`).`,
-        file: file.name,
-        line: model.collectionType.line,
-        model: model.name
-      });
-    }
+  const allowedKinds: readonly FirestoreCollectionKind[] = model.variant === 'root' ? ['root', 'root-singleton'] : ['sub-collection', 'singleton-sub'];
+  const aliasKind = detectAliasKind(typeText);
+  const factoryKind = model.factoryCallKind;
+
+  // Mismatch: alias and factory body each pick a recognised kind, but they disagree.
+  if (aliasKind && factoryKind && aliasKind !== factoryKind) {
+    pushViolation(violations, {
+      code: 'MODEL_COLLECTION_FACTORY_TYPE_MISMATCH',
+      message: `Type alias \`${model.name}FirestoreCollection\` is \`${COLLECTION_TYPE_NAME[aliasKind]}\` but factory \`${expectedCollectionFnName(model)}\` calls \`firestoreContext.${COLLECTION_FACTORY_FN_NAME[factoryKind]}({...})\`. Type alias and factory body must declare the same collection kind (\`${aliasKind}\` vs \`${factoryKind}\`).`,
+      file: file.name,
+      line: model.collectionType.line,
+      model: model.name
+    });
     return;
   }
-  const parentPascal = pascalCase(deriveCamelName(model.identity.parentIdentityRef ?? ''));
-  const expected = `SingleItemFirestoreCollection<${model.name}, ${parentPascal}, ${model.name}Document, ${parentPascal}Document>`;
+
+  // Either kind disagrees with the parent-identity-derived variant — e.g. a
+  // model with a parent identity declared with a root collection type.
+  const isAllowed = (k: FirestoreCollectionKind | undefined): boolean => k === undefined || allowedKinds.includes(k);
+  if (!isAllowed(aliasKind) || !isAllowed(factoryKind)) {
+    const offender = !isAllowed(aliasKind) ? aliasKind : factoryKind;
+    const offenderSite = !isAllowed(aliasKind) ? 'type alias' : 'factory body';
+    const variantLabel = model.variant === 'root' ? 'root (no parent identity)' : 'subcollection (parent identity declared)';
+    const allowedList = allowedKinds.map((k) => `\`${k}\``).join(', ');
+    pushViolation(violations, {
+      code: 'MODEL_COLLECTION_FACTORY_TYPE_MISMATCH',
+      message: `Model \`${model.name}\` is a ${variantLabel} but its collection ${offenderSite} is \`${offender}\`. Allowed kinds for this variant: ${allowedList}.`,
+      file: file.name,
+      line: model.collectionType.line,
+      model: model.name
+    });
+    return;
+  }
+
+  // Pick the expected kind: alias if known (author's declared intent), else
+  // factory body, else the variant default — `'root'` and `'singleton-sub'`
+  // preserve the original validator behaviour.
+  const defaultKind: FirestoreCollectionKind = model.variant === 'root' ? 'root' : 'singleton-sub';
+  const expectedKind: FirestoreCollectionKind = aliasKind ?? factoryKind ?? defaultKind;
+  const expected = expectedCollectionTypeText(expectedKind, model);
   if (typeText.replaceAll(/\s+/g, '') !== expected.replaceAll(/\s+/g, '')) {
     pushViolation(violations, {
       code: 'MODEL_COLLECTION_TYPE_WRONG_GENERIC',
@@ -445,6 +470,78 @@ function checkCollectionType(file: ExtractedFile, model: ExtractedModel, violati
       model: model.name
     });
   }
+}
+
+/**
+ * Type-alias name for each collection kind (constructor written in the
+ * `<Model>FirestoreCollection = ...` right-hand side).
+ */
+const COLLECTION_TYPE_NAME: Record<FirestoreCollectionKind, string> = {
+  root: 'FirestoreCollection',
+  'root-singleton': 'RootSingleItemFirestoreCollection',
+  'sub-collection': 'FirestoreCollectionWithParent',
+  'singleton-sub': 'SingleItemFirestoreCollection'
+};
+
+/**
+ * `firestoreContext.*` method name each collection kind should call inside
+ * its factory function body.
+ */
+const COLLECTION_FACTORY_FN_NAME: Record<FirestoreCollectionKind, string> = {
+  root: 'firestoreCollection',
+  'root-singleton': 'rootSingleItemFirestoreCollection',
+  'sub-collection': 'firestoreCollectionWithParent',
+  'singleton-sub': 'singleItemFirestoreCollection'
+};
+
+/**
+ * Detects which {@link FirestoreCollectionKind} a type alias declares by
+ * looking at its leading constructor name. Generic arguments are validated
+ * separately.
+ *
+ * Order matters here because `SingleItemFirestoreCollection` and
+ * `RootSingleItemFirestoreCollection` overlap on substring — the longer one
+ * is checked first.
+ *
+ * @param typeText - the type alias right-hand side as written in the source
+ * @returns the matched kind, or `undefined` when no recognised constructor leads the expression
+ */
+function detectAliasKind(typeText: string): FirestoreCollectionKind | undefined {
+  const normalized = typeText.replaceAll(/\s+/g, '');
+  if (normalized.startsWith('RootSingleItemFirestoreCollection<')) {
+    return 'root-singleton';
+  }
+  if (normalized.startsWith('SingleItemFirestoreCollection<')) {
+    return 'singleton-sub';
+  }
+  if (normalized.startsWith('FirestoreCollectionWithParent<')) {
+    return 'sub-collection';
+  }
+  if (normalized.startsWith('FirestoreCollection<')) {
+    return 'root';
+  }
+  return undefined;
+}
+
+/**
+ * Builds the canonical type-alias text for a given kind — used both as the
+ * source-of-truth for validation and in error messages.
+ *
+ * @param kind - the collection kind whose canonical alias text to render
+ * @param model - the extracted model providing names + parent identity for generic args
+ * @returns the canonical right-hand side of `<Model>FirestoreCollection = ...`
+ */
+function expectedCollectionTypeText(kind: FirestoreCollectionKind, model: ExtractedModel): string {
+  const ctor = COLLECTION_TYPE_NAME[kind];
+  if (kind === 'root' || kind === 'root-singleton') {
+    return `${ctor}<${model.name}, ${model.name}Document>`;
+  }
+  const parentPascal = pascalCase(deriveCamelName(model.identity.parentIdentityRef ?? ''));
+  return `${ctor}<${model.name}, ${parentPascal}, ${model.name}Document, ${parentPascal}Document>`;
+}
+
+function expectedCollectionFnName(model: ExtractedModel): string {
+  return model.variant === 'root' ? `${model.camelName}FirestoreCollection` : `${model.camelName}FirestoreCollectionFactory`;
 }
 
 function checkCollectionFn(file: ExtractedFile, model: ExtractedModel, violations: Violation[]): void {

@@ -19,6 +19,8 @@ import type { ForgeFieldRegistry } from './registry/forge-fields.js';
 import type { PipeRegistry } from './registry/pipes-runtime.js';
 import type { SemanticTypeRegistry } from './registry/semantic-types.js';
 import type { UiComponentRegistry } from './registry/ui-components-runtime.js';
+import { FIREBASE_MODELS } from './registry/firebase-models.js';
+import type { FixtureModelRegistry } from './tools/model-fixture-shared/index.js';
 import { registerResources } from './resources/index.js';
 import { registerTools } from './tools/index.js';
 import packageJson from '../package.json' with { type: 'json' };
@@ -50,6 +52,7 @@ Tool clusters (each exposes lookup, search, examples, and/or scaffold/validate):
 
 Model-extension validators (walk a downstream app to verify wiring):
 - storagefile_m, notification_m, system_m — *_validate_app, *_list_app, *_validate_folder
+- model_fixture — list/lookup/validate/scaffold/forward an app's \`src/test/fixture.ts\` (TestContextFixture/Instance triplets)
 
 Resource URIs are namespaced by domain:
 - dbx://form/fields[/{slug}|/produces/{produces}|/tier/{tier}|/array-output/{arrayOutput}]
@@ -217,8 +220,12 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
     }
   }
 
+  const fixtureModelRegistry: FixtureModelRegistry = {
+    entries: FIREBASE_MODELS.map((m) => ({ name: m.name, modelType: m.modelType, collectionPrefix: m.collectionPrefix }))
+  };
+
   registerResources(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, uiComponentRegistry: uiRegistry, actionRegistry, filterRegistry });
-  registerTools(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, uiComponentRegistry: uiRegistry, actionRegistry, filterRegistry });
+  registerTools(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, uiComponentRegistry: uiRegistry, actionRegistry, filterRegistry, fixtureModelRegistry });
 
   return server;
 }

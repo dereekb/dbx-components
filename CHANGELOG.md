@@ -1,3 +1,18 @@
+## [13.10.2](https://github.com/dereekb/dbx-components/compare/v13.10.1-dev...v13.10.2) (2026-04-29)
+
+
+### Bug Fixes
+
+- **dbx-form:** forge enforceStep validator on empty number input ([799e388c](https://github.com/dereekb/dbx-components/commit/799e388cb26b0c1ea8df01892f3e770ee18a56c5))
+
+
+### Code Refactoring
+
+- added DbxFormLoggerDirective ([a77bd17f](https://github.com/dereekb/dbx-components/commit/a77bd17f86a69cb0d453896153dd01044c336857))
+- **dbx-components-mcp:** added FirestoreCollectionKind taxonomy ([9db2bb7c](https://github.com/dereekb/dbx-components/commit/9db2bb7cf865f32feae779bc368745d1f788f048))
+- **dbx-components-mcp:** added model-fixture tools ([809dfcce](https://github.com/dereekb/dbx-components/commit/809dfccec8d62bd7ad160d481d55c5c5f10d8a2e))
+- **dbx-form:** forge preset mat-input styles ([52e3bcfb](https://github.com/dereekb/dbx-components/commit/52e3bcfbcaed83b20ca11104dbcbb24ad3fc4e1a))
+
 ## [13.10.1](https://github.com/dereekb/dbx-components/compare/v13.10.0-dev...v13.10.1) (2026-04-28)
 
 
