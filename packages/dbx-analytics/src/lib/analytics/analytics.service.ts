@@ -32,6 +32,10 @@ export abstract class DbxAnalyticsEventEmitterService {
   abstract sendEventData(name: AnalyticsEventName, data: AnalyticsEventData): void;
   abstract sendEvent(event: AnalyticsEvent): void;
   abstract sendPageView(page?: string): void;
+  abstract startSessionRecording(): void;
+  abstract stopSessionRecording(): void;
+  abstract pauseSessionRecording(): void;
+  abstract resumeSessionRecording(): void;
 }
 
 /**
@@ -419,6 +423,43 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
       },
       DbxAnalyticsStreamEventType.PageView
     );
+  }
+
+  /**
+   * Requests that opt-in listeners (e.g. Mixpanel) start session replay recording.
+   *
+   * Forwarded as a {@link DbxAnalyticsStreamEventType.StartSessionRecording} event. Listeners
+   * that don't handle session replay (e.g. Segment) ignore it.
+   */
+  public startSessionRecording(): void {
+    this.sendNextEvent({}, DbxAnalyticsStreamEventType.StartSessionRecording);
+  }
+
+  /**
+   * Requests that opt-in listeners stop session replay recording.
+   *
+   * Forwarded as a {@link DbxAnalyticsStreamEventType.StopSessionRecording} event.
+   */
+  public stopSessionRecording(): void {
+    this.sendNextEvent({}, DbxAnalyticsStreamEventType.StopSessionRecording);
+  }
+
+  /**
+   * Requests that opt-in listeners pause active session replay recording without clearing it.
+   *
+   * Forwarded as a {@link DbxAnalyticsStreamEventType.PauseSessionRecording} event.
+   */
+  public pauseSessionRecording(): void {
+    this.sendNextEvent({}, DbxAnalyticsStreamEventType.PauseSessionRecording);
+  }
+
+  /**
+   * Requests that opt-in listeners resume previously paused session replay recording.
+   *
+   * Forwarded as a {@link DbxAnalyticsStreamEventType.ResumeSessionRecording} event.
+   */
+  public resumeSessionRecording(): void {
+    this.sendNextEvent({}, DbxAnalyticsStreamEventType.ResumeSessionRecording);
   }
 
   /**
