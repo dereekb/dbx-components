@@ -1661,7 +1661,7 @@
       "configInterface": "DbxForgeDollarAmountFieldConfig",
       "sourceLocation": {
         "file": "src/lib/forge/field/value/number/number.field.ts",
-        "line": 141
+        "line": 144
       }
     },
     {

@@ -32,6 +32,11 @@
  * | dbx_model_validate_api              | Verification  | "Is this model api file correct?"                      |
  * | dbx_model_validate_folder           | Verification  | "Does this model folder have the 5 files?"             |
  * | dbx_model_store_scaffold            | Generation    | "Scaffold the 4 store files for model X"               |
+ * | dbx_model_fixture_list_app          | Discovery     | "What fixture/instance pairs does this app declare?"   |
+ * | dbx_model_fixture_lookup            | Documentation | "Tell me about the fixture for model X"                |
+ * | dbx_model_fixture_validate_app      | Verification  | "Is every fixture<->instance pair forwarded?"          |
+ * | dbx_model_fixture_scaffold          | Generation    | "Add a new fixture/instance triplet for model X"       |
+ * | dbx_model_fixture_forward           | Generation    | "Add the missing Fixture forwarders for instance methods" |
  * | dbx_storagefile_m_validate_app      | Verification  | "Is every storagefile purpose wired end-to-end?"       |
  * | dbx_storagefile_m_list_app          | Discovery     | "What storagefile purposes does this app configure?"   |
  * | dbx_storagefile_m_validate_folder   | Verification  | "Does this storagefile folder follow the convention?"  |
@@ -68,6 +73,12 @@ import { modelValidateTool } from './model-validate.tool.js';
 import { modelValidateApiTool } from './model-validate-api.tool.js';
 import { modelValidateFolderTool } from './model-validate-folder.tool.js';
 import { modelStoreScaffoldTool } from './model-store-scaffold.tool.js';
+import { modelFixtureListAppTool } from './model-fixture-list-app.tool.js';
+import { modelFixtureLookupTool } from './model-fixture-lookup.tool.js';
+import { createModelFixtureValidateAppTool } from './model-fixture-validate-app.tool.js';
+import { modelFixtureScaffoldTool } from './model-fixture-scaffold.tool.js';
+import { modelFixtureForwardTool } from './model-fixture-forward.tool.js';
+import type { FixtureModelRegistry } from './model-fixture-shared/index.js';
 import { storageFileMValidateAppTool } from './storagefile-m-validate-app.tool.js';
 import { storageFileMListAppTool } from './storagefile-m-list-app.tool.js';
 import { storageFileMValidateFolderTool } from './storagefile-m-validate-folder.tool.js';
@@ -117,6 +128,10 @@ export const DBX_TOOLS: readonly DbxTool[] = [
   modelValidateApiTool,
   modelValidateFolderTool,
   modelStoreScaffoldTool,
+  modelFixtureListAppTool,
+  modelFixtureLookupTool,
+  modelFixtureScaffoldTool,
+  modelFixtureForwardTool,
   // storagefile_m (model extension)
   storageFileMValidateAppTool,
   storageFileMListAppTool,
@@ -155,6 +170,13 @@ export interface RegisterToolsOptions {
   readonly uiComponentRegistry?: UiComponentRegistry;
   readonly actionRegistry?: ActionRegistry;
   readonly filterRegistry?: FilterRegistry;
+  /**
+   * Optional fixture-model registry consumed by `dbx_model_fixture_validate_app`'s
+   * parent-field-naming and registry cross-reference rules. When omitted those
+   * rules are skipped — the tool still validates forwarding and structural
+   * concerns without it.
+   */
+  readonly fixtureModelRegistry?: FixtureModelRegistry;
 }
 
 /**
@@ -170,6 +192,7 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions =
   const underlyingServer = server.server;
 
   const tools: DbxTool[] = [...DBX_TOOLS];
+  tools.push(createModelFixtureValidateAppTool({ getRegistry: () => options.fixtureModelRegistry }));
   if (options.forgeFieldRegistry !== undefined) {
     tools.push(createLookupFormTool({ registry: options.forgeFieldRegistry }), createSearchFormTool({ registry: options.forgeFieldRegistry }), createFormScaffoldTool({ registry: options.forgeFieldRegistry }));
   }
