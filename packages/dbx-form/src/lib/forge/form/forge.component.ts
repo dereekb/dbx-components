@@ -302,24 +302,40 @@ export class DbxForgeFormComponent<T extends object = object> implements DbxForg
  * @param context - the forge form context providing filter configuration
  * @returns true if the two values are considered equal after filtering
  */
-function _forgeFormValueEqual<T>(a: T, b: T, context: DbxForgeFormContext<T>): boolean {
+export function _forgeFormValueEqual<T>(a: T, b: T, context: DbxForgeFormContext<T>): boolean {
   const pojoFilter = context.formValuePojoFilter ?? (context.stripInternalKeys ? _filterForgeFormValueStripInternal : _filterForgeFormValueKeepInternal);
   return areEqualPOJOValuesUsingPojoFilter(a, b, pojoFilter as FilterFromPOJOFunction<T>);
 }
 
 /**
- * Default filter: strips `_`-prefixed keys (ng-forge internal/layout keys)
- * and null/undefined values before deep equality comparison.
+ * Returns true if a value should be excluded from the deep-equality comparison
+ * performed by {@link _forgeFormValueEqual}. Mirrors the empty-value semantics of
+ * {@link stripEmptyForgeValues} for the comparison filters: null, undefined, and
+ * NaN are all skipped so that two values differing only by these "empty" values
+ * are considered equal.
+ *
+ * @param val - the value to test
+ * @returns true if the value is null, undefined, or NaN
+ */
+function _isFilteredFormValue(val: unknown): boolean {
+  return val == null || (typeof val === 'number' && Number.isNaN(val));
+}
+
+/**
+ * Default filter: strips `_`-prefixed keys (ng-forge internal/layout keys),
+ * null/undefined values, and NaN values before deep equality comparison.
  *
  * The `_`-prefixed keys can reference complex, self-referencing ng-forge
  * objects (field trees, form instances) that cause stack overflows during
  * recursive comparison. They are layout artifacts and irrelevant for
- * value equality.
+ * value equality. NaN values are stripped because `NaN === NaN` is false,
+ * which would otherwise cause `_forgeFormValueEqual` to treat two structurally
+ * identical values as unequal and trigger an infinite effect cycle.
  *
  * @param input - the form value object to filter
- * @returns a filtered copy with internal keys and null/undefined values removed
+ * @returns a filtered copy with internal keys and null/undefined/NaN values removed
  */
-function _filterForgeFormValueStripInternal<T>(input: T): T {
+export function _filterForgeFormValueStripInternal<T>(input: T): T {
   if (input == null || typeof input !== 'object' || Array.isArray(input)) {
     return input;
   }
@@ -327,7 +343,7 @@ function _filterForgeFormValueStripInternal<T>(input: T): T {
   const comparisonObject: Record<string, unknown> = {};
 
   for (const [key, val] of Object.entries(input as Record<string, unknown>)) {
-    if (val != null && !key.startsWith('_')) {
+    if (!_isFilteredFormValue(val) && !key.startsWith('_')) {
       comparisonObject[key] = val;
     }
   }
@@ -337,12 +353,12 @@ function _filterForgeFormValueStripInternal<T>(input: T): T {
 
 /**
  * Filter used when `stripInternalKeys` is false: retains `_`-prefixed keys
- * but still strips null/undefined values.
+ * but still strips null/undefined and NaN values.
  *
  * @param input - the form value object to filter
- * @returns a filtered copy with null/undefined values removed but internal keys retained
+ * @returns a filtered copy with null/undefined/NaN values removed but internal keys retained
  */
-function _filterForgeFormValueKeepInternal<T>(input: T): T {
+export function _filterForgeFormValueKeepInternal<T>(input: T): T {
   if (input == null || typeof input !== 'object' || Array.isArray(input)) {
     return input;
   }
@@ -350,7 +366,7 @@ function _filterForgeFormValueKeepInternal<T>(input: T): T {
   const comparisonObject: Record<string, unknown> = {};
 
   for (const [key, val] of Object.entries(input as Record<string, unknown>)) {
-    if (val != null) {
+    if (!_isFilteredFormValue(val)) {
       comparisonObject[key] = val;
     }
   }

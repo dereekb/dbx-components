@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "dbx-components": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["dist/packages/dbx-components-mcp/dbx-components-mcp.js"]
+    }
+  }
+}

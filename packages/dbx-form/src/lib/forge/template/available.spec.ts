@@ -1,7 +1,12 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
+import { type FormControlStatus } from '@angular/forms';
+import { firstValueFrom, of } from 'rxjs';
+import { waitForMs } from '@dereekb/util';
 import { dbxForgeTextIsAvailableField, FORGE_FIELD_VALUE_IS_AVAILABLE_VALIDATOR_NAME } from './available';
-import { of } from 'rxjs';
 import type { DbxForgeField } from '../form/forge.form';
+import { DbxForgeAsyncConfigFormComponent } from '../form';
+import { DBX_FORGE_TEST_PROVIDERS } from '../form/forge.component.spec';
 
 // MARK: dbxForgeTextIsAvailableField
 describe('dbxForgeTextIsAvailableField()', () => {
@@ -88,5 +93,74 @@ describe('dbxForgeTextIsAvailableField()', () => {
 
     expect((field as any).required).toBe(true);
     expect((field as any).maxLength).toBe(20);
+  });
+});
+
+// MARK: Scenarios
+describe('dbxForgeTextIsAvailableField() scenarios', () => {
+  let fixture: ComponentFixture<DbxForgeAsyncConfigFormComponent>;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [...DBX_FORGE_TEST_PROVIDERS]
+    });
+    fixture = TestBed.createComponent(DbxForgeAsyncConfigFormComponent);
+  });
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
+  });
+
+  async function applyField(field: ReturnType<typeof dbxForgeTextIsAvailableField>) {
+    fixture.componentInstance.config.set({ fields: [field] });
+    fixture.detectChanges();
+    await fixture.whenStable();
+  }
+
+  async function setValueAndSettle(value: string) {
+    fixture.componentInstance.setValue({ username: value });
+    fixture.detectChanges();
+    await waitForMs(100);
+    fixture.detectChanges();
+    await fixture.whenStable();
+  }
+
+  it('should treat empty values as valid (not-required fields)', async () => {
+    const field = dbxForgeTextIsAvailableField({
+      key: 'username',
+      checkValueIsAvailable: (value: string) => of(value !== 'taken')
+    });
+    await applyField(field);
+
+    await setValueAndSettle('');
+
+    const streamEvent = await firstValueFrom(fixture.componentInstance.context.stream$);
+    expect(streamEvent.status).toBe('VALID' as FormControlStatus);
+  });
+
+  it('should report VALID when checkValueIsAvailable resolves true', async () => {
+    const field = dbxForgeTextIsAvailableField({
+      key: 'username',
+      checkValueIsAvailable: (value: string) => of(value !== 'taken')
+    });
+    await applyField(field);
+
+    await setValueAndSettle('free');
+
+    const streamEvent = await firstValueFrom(fixture.componentInstance.context.stream$);
+    expect(streamEvent.status).toBe('VALID' as FormControlStatus);
+  });
+
+  it('should report INVALID when checkValueIsAvailable resolves false', async () => {
+    const field = dbxForgeTextIsAvailableField({
+      key: 'username',
+      checkValueIsAvailable: (value: string) => of(value !== 'taken')
+    });
+    await applyField(field);
+
+    await setValueAndSettle('taken');
+
+    const streamEvent = await firstValueFrom(fixture.componentInstance.context.stream$);
+    expect(streamEvent.status).toBe('INVALID' as FormControlStatus);
   });
 });

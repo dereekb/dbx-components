@@ -56,18 +56,18 @@ export function stripForgeInternalKeys<T>(value: T): T {
 /**
  * Returns true if a value is considered "empty" for forge form output purposes.
  *
- * Empty means: `null`, `undefined`, or empty string `""`.
+ * Empty means: `null`, `undefined`, empty string `""`, or `NaN`.
  * Note: `false`, `0`, empty arrays `[]`, and other falsy values are NOT empty.
  *
  * @param val - The value to check for emptiness
- * @returns True if the value is null, undefined, or an empty string
+ * @returns True if the value is null, undefined, an empty string, or NaN
  */
 function isEmptyFormValue(val: unknown): boolean {
-  return val === null || val === undefined || val === '';
+  return val === null || val === undefined || val === '' || Number.isNaN(val);
 }
 
 /**
- * Recursively strips keys whose values are empty (`null`, `undefined`, or `""`)
+ * Recursively strips keys whose values are empty (`null`, `undefined`, `""`, or `NaN`)
  * from a form value object. Also removes keys whose values become empty objects
  * `{}` after recursive stripping.
  *
