@@ -15,7 +15,7 @@
     "@dereekb/rxjs": "13.10.2",
     "@dereekb/util": "13.10.2",
     "@dereekb/vitest": "13.10.2",
-    "@ng-forge/dynamic-forms": "git+https://git@github.com/dereekb/ng-forge#e3059f8881fb39b1b1d279cd89486469dbad226d",
+    "@ng-forge/dynamic-forms": "~0.8.0",
     "@ngrx/component-store": "^21.1.0",
     "@ngx-formly/core": "git+https://git@github.com/dereekb/ngx-formly#996d1041c8d2afbe429985a5ad394e59327bfa1d",
     "firebase": "^12.12.1",
