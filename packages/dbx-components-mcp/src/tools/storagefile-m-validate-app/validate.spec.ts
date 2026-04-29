@@ -298,6 +298,17 @@ describe('validateAppStorageFiles — duplicate / convention warnings', () => {
     const warnings = result.violations.filter((v) => v.code === 'STORAGEFILE_GROUP_IDS_FUNCTION_MISSING');
     expect(warnings.length).toBeGreaterThan(0);
   });
+
+  it('auto-attaches remediation hints from the rule catalog', () => {
+    const result = runWith(({ component }) => {
+      replaceInFile({ files: component, relPath: 'src/lib/model/storagefile/storagefile.ts', from: /export function userAvatarFileGroupIds[\s\S]*?\}/, to: '' });
+    });
+    const warning = result.violations.find((v) => v.code === 'STORAGEFILE_GROUP_IDS_FUNCTION_MISSING');
+    expect(warning).toBeDefined();
+    expect(warning?.remediation).toBeDefined();
+    expect(warning?.remediation?.fix).toContain('FileGroupIds');
+    expect(warning?.remediation?.template).toContain('StorageFileGroupIds');
+  });
 });
 
 describe('validateAppStorageFiles — trust list', () => {

@@ -206,4 +206,13 @@ describe('validateStorageFileFolder — barrel re-exports', () => {
     const errors = result.violations.filter((v) => v.code === 'STORAGEFILE_FOLDER_BARREL_REEXPORT_MISSING');
     expect(errors).toHaveLength(0);
   });
+
+  it('auto-attaches remediation hints from the rule catalog', () => {
+    const api = apiSide({ files: ['storagefile.module.ts', 'storagefile.init.ts', 'index.ts'] });
+    const result = validateStorageFileFolder(inspection(componentSide({}), api));
+    const v = result.violations.find((violation) => violation.code === 'STORAGEFILE_FOLDER_UPLOAD_SERVICE_FILE_MISSING');
+    expect(v).toBeDefined();
+    expect(v?.remediation).toBeDefined();
+    expect(v?.remediation?.fix).toContain('storagefile.upload.service.ts');
+  });
 });

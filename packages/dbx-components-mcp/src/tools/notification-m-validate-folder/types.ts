@@ -30,24 +30,17 @@
  */
 
 import type { RequiredApiFile, SideInspection as SharedSideInspection, TwoSideFolderInspection, TwoSideFolderValidationResult, TwoSideFolderViolation } from '../validate-two-side-folder.js';
+import type { NotificationMValidateFolderCode } from './codes.js';
 
 export type { SideStatus, ViolationSeverity } from '../validate-two-side-folder.js';
 
-export type ViolationCode =
-  // I/O failures (errors)
-  | 'NOTIF_FOLDER_COMPONENT_DIR_NOT_FOUND'
-  | 'NOTIF_FOLDER_API_DIR_NOT_FOUND'
-  | 'NOTIF_FOLDER_COMPONENT_FOLDER_MISSING'
-  | 'NOTIF_FOLDER_API_FOLDER_MISSING'
-  // API-side required files (errors)
-  | 'NOTIF_FOLDER_MODULE_FILE_MISSING'
-  | 'NOTIF_FOLDER_TASK_SERVICE_FILE_MISSING'
-  | 'NOTIF_FOLDER_SEND_SERVICE_FILE_MISSING'
-  // Barrel re-export resolution (errors)
-  | 'NOTIF_FOLDER_BARREL_REEXPORT_MISSING'
-  // Layout warnings
-  | 'NOTIF_FOLDER_UNEXPECTED_FILE_NAME'
-  | 'NOTIF_FOLDER_HANDLERS_SUBFOLDER_MIXED';
+/**
+ * String-literal union derived from {@link NotificationMValidateFolderCode}.
+ * Source of truth for code metadata is the enum's per-member JSDoc;
+ * the template-literal type widens the enum back to its underlying
+ * SCREAMING_SNAKE strings so existing emit-sites still typecheck.
+ */
+export type ViolationCode = `${NotificationMValidateFolderCode}`;
 
 export type SideInspection = SharedSideInspection;
 export type NotificationFolderInspection = TwoSideFolderInspection;

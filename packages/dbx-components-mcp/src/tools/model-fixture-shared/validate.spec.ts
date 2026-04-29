@@ -66,6 +66,8 @@ export const demoWidgetContext = demoWidgetContextFactory();
     const missing = result.diagnostics.find((d) => d.code === 'forwarder-missing');
     expect(missing).toBeDefined();
     expect(missing?.message).toMatch(/ping/);
+    expect(missing?.remediation).toBeDefined();
+    expect(missing?.remediation?.fix).toContain('dbx_model_fixture_forward');
   });
 
   it('flags triplet-incomplete when factory registration is missing', () => {

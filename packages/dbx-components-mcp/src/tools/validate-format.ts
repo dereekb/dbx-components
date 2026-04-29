@@ -22,17 +22,25 @@
  */
 export type ViolationSeverity = 'error' | 'warning';
 
+import type { RemediationHint } from './rule-catalog/types.js';
+
 /**
  * Minimum shape every domain's `Violation` satisfies. Used by the shared
  * line formatter so it can produce the canonical `- **[LABEL] CODE** ...`
  * line without knowing about domain-specific fields. The optional
  * `TCode` parameter narrows the `code` field to a domain union; the
  * default keeps existing call sites that pass `string` working unchanged.
+ *
+ * `remediation` is auto-attached by each domain's `pushViolation` helper
+ * via `attachRemediation(code)` — pulled from the rule catalog so the
+ * formatter can render `Fix:` / `Template:` / `See also:` sub-bullets
+ * without each domain repeating the prose.
  */
 export interface ViolationLine<TCode extends string = string> {
   readonly severity: ViolationSeverity;
   readonly code: TCode;
   readonly message: string;
+  readonly remediation?: RemediationHint;
 }
 
 /**
@@ -92,7 +100,35 @@ export function groupViolations<TViolation, TKey>(violations: readonly TViolatio
  */
 export function formatViolationLine(violation: ViolationLine, locationPart: string): string {
   const label = violation.severity === 'error' ? 'ERROR' : 'WARN';
-  return `- **[${label}] ${violation.code}**${locationPart} — ${violation.message}`;
+  const head = `- **[${label}] ${violation.code}**${locationPart} — ${violation.message}`;
+  const remediation = violation.remediation ? formatRemediationBlock(violation.remediation) : '';
+  return remediation ? `${head}\n${remediation}` : head;
+}
+
+/**
+ * Renders the auto-attached `RemediationHint` as a nested bullet block
+ * appended after a violation line. Three sub-bullets max: `Fix:` (always
+ * when present), `Template:` (when set), and `See also:` (when set).
+ *
+ * @param hint - the remediation hint pulled from the rule catalog
+ * @returns the indented bullet block, or an empty string when there's nothing to render
+ */
+function formatRemediationBlock(hint: RemediationHint): string {
+  const lines: string[] = [];
+  if (hint.fix) {
+    lines.push(`  - Fix: ${hint.fix}`);
+  }
+  if (hint.template) {
+    lines.push('  - Template:');
+    for (const tline of hint.template.split('\n')) {
+      lines.push(`      ${tline}`);
+    }
+  }
+  if (hint.seeAlso && hint.seeAlso.length > 0) {
+    const refs = hint.seeAlso.map((r) => `${r.kind}:\`${r.target}\``).join(', ');
+    lines.push(`  - See also: ${refs}`);
+  }
+  return lines.join('\n');
 }
 
 // MARK: Folder-grouped report (model, system)

@@ -299,4 +299,13 @@ export interface LonelySystemData extends SystemStateStoredData { k: string; }
     const badViolations = result.violations.filter((v) => v.folder === bad.path);
     expect(badViolations.length).toBeGreaterThan(0);
   });
+
+  it('auto-attaches remediation hints from the rule catalog', () => {
+    const inspection: SystemFolderInspection = { name: 'system', path: 'components/foo-firebase/src/lib/model/system', status: 'ok', files: ['system.ts'], systemSource: undefined };
+    const result = validateSystemFolders([inspection]);
+    const v = result.violations.find((violation) => violation.code === 'SYSTEM_FOLDER_MISSING_INDEX');
+    expect(v).toBeDefined();
+    expect(v?.remediation).toBeDefined();
+    expect(v?.remediation?.fix).toContain('index.ts');
+  });
 });

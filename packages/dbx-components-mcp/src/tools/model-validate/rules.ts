@@ -7,6 +7,7 @@
  * re-run rather than silence individual codes.
  */
 
+import { attachRemediation } from '../rule-catalog/index.js';
 import { MAX_FIELD_NAME_LENGTH, ROOT_MODEL_ORDER, SUBCOLLECTION_MODEL_ORDER, type DeclarationKind, type ExtractedFile, type ExtractedModel, type FirestoreCollectionKind, type Violation, type ViolationSeverity } from './types.js';
 
 // MARK: Entry
@@ -661,7 +662,7 @@ function declarationLine(model: ExtractedModel, kind: DeclarationKind): number |
  * @param buffer - the mutable violation buffer the rule is appending to
  * @param violation - the violation payload, with severity defaulting to `'error'`
  */
-function pushViolation(buffer: Violation[], violation: Omit<Violation, 'severity'> & { readonly severity?: ViolationSeverity }): void {
+function pushViolation(buffer: Violation[], violation: Omit<Violation, 'severity' | 'remediation'> & { readonly severity?: ViolationSeverity }): void {
   const severity: ViolationSeverity = violation.severity ?? 'error';
   const filled: Violation = {
     code: violation.code,
@@ -669,7 +670,8 @@ function pushViolation(buffer: Violation[], violation: Omit<Violation, 'severity
     message: violation.message,
     file: violation.file,
     line: violation.line,
-    model: violation.model
+    model: violation.model,
+    remediation: attachRemediation(violation.code)
   };
   buffer.push(filled);
 }

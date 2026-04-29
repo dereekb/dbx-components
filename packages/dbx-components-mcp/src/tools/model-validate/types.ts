@@ -9,54 +9,13 @@
  * expected to be correctable by the caller.
  */
 
+import type { ModelValidateCode } from './codes.js';
+import type { RemediationHint } from '../rule-catalog/types.js';
+
 /**
- * Stable error codes so consumers can suppress or interpret individual
- * violations without string-matching the message text.
+ * String-literal union derived from {@link ModelValidateCode}.
  */
-export type ViolationCode =
-  // File-level
-  | 'FILE_MISSING_GROUP_INTERFACE'
-  | 'FILE_GROUP_INTERFACE_NOT_EXPORTED'
-  | 'FILE_GROUP_INTERFACE_AFTER_MODEL'
-  | 'FILE_MISSING_GROUP_TYPES'
-  | 'FILE_GROUP_TYPES_NOT_EXPORTED'
-  | 'FILE_GROUP_TYPES_AFTER_MODEL'
-  | 'FILE_GROUP_TYPES_MISSING_IDENTITY'
-  | 'FILE_GROUP_TYPES_UNKNOWN_IDENTITY'
-  | 'FILE_GROUP_INTERFACE_MISSING_COLLECTION'
-  // Per-model identity
-  | 'MODEL_IDENTITY_NOT_EXPORTED'
-  | 'MODEL_IDENTITY_BAD_ARGS'
-  // Per-model declarations
-  | 'MODEL_MISSING_INTERFACE'
-  | 'MODEL_INTERFACE_NOT_EXPORTED'
-  | 'MODEL_MISSING_ROLES'
-  | 'MODEL_ROLES_NOT_EXPORTED'
-  | 'MODEL_MISSING_DOCUMENT_CLASS'
-  | 'MODEL_DOCUMENT_CLASS_NOT_EXPORTED'
-  | 'MODEL_DOCUMENT_WRONG_BASE_CLASS'
-  | 'MODEL_DOCUMENT_BAD_TYPE_ARGS'
-  | 'MODEL_DOCUMENT_MISSING_IDENTITY_GETTER'
-  | 'MODEL_DOCUMENT_WRONG_IDENTITY_GETTER'
-  | 'MODEL_MISSING_CONVERTER'
-  | 'MODEL_CONVERTER_NOT_EXPORTED'
-  | 'MODEL_MISSING_COLLECTION_REFERENCE'
-  | 'MODEL_MISSING_COLLECTION_TYPE'
-  | 'MODEL_COLLECTION_TYPE_WRONG_GENERIC'
-  | 'MODEL_COLLECTION_FACTORY_TYPE_MISMATCH'
-  | 'MODEL_MISSING_COLLECTION_FN'
-  | 'MODEL_OUT_OF_ORDER'
-  // Subcollection extras
-  | 'SUB_MISSING_COLLECTION_REFERENCE_FACTORY'
-  | 'SUB_MISSING_COLLECTION_FACTORY_TYPE'
-  | 'SUB_MISSING_COLLECTION_FACTORY_FN'
-  | 'SUB_MISSING_COLLECTION_GROUP_REFERENCE'
-  | 'SUB_MISSING_COLLECTION_GROUP_TYPE'
-  | 'SUB_MISSING_COLLECTION_GROUP_FN'
-  // Warnings (style / convention)
-  | 'MODEL_FIELD_NAME_TOO_LONG'
-  | 'MODEL_FIELD_MISSING_JSDOC'
-  | 'MODEL_FIELD_JSDOC_NO_FULL_NAME';
+export type ViolationCode = `${ModelValidateCode}`;
 
 /**
  * Error codes are hard failures the caller is expected to fix. Warning codes
@@ -72,6 +31,12 @@ export interface Violation {
   readonly file: string;
   readonly line: number | undefined;
   readonly model: string | undefined;
+  /**
+   * Auto-attached remediation hint pulled from the rule catalog at
+   * emission time. `undefined` when no catalog entry exists for the
+   * code (the formatter renders no nested block in that case).
+   */
+  readonly remediation?: RemediationHint;
 }
 
 export interface ValidationResult {

@@ -14,6 +14,15 @@
         "cwd": "{workspaceRoot}"
       }
     },
+    "generate-rule-catalog": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/generated/rule-catalog.generated.json", "{projectRoot}/generated/rule-catalog.generated.ts"],
+      "inputs": ["{projectRoot}/scripts/extract-rule-catalog.mjs", "{projectRoot}/src/tools/*/codes.ts"],
+      "options": {
+        "command": "node packages/dbx-components-mcp/scripts/extract-rule-catalog.mjs",
+        "cwd": "{workspaceRoot}"
+      }
+    },
     "generate-manifests": {
       "executor": "nx:run-commands",
       "outputs": [
@@ -59,7 +68,7 @@
     },
     "regenerate": {
       "executor": "nx:run-commands",
-      "dependsOn": ["generate-firebase-models", "generate-manifests"],
+      "dependsOn": ["generate-firebase-models", "generate-manifests", "generate-rule-catalog"],
       "options": {
         "command": "echo \"dbx-components-mcp regeneration complete\""
       }
@@ -77,7 +86,7 @@
       "executor": "@nx/esbuild:esbuild",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
-      "dependsOn": ["generate-firebase-models", "generate-manifests"],
+      "dependsOn": ["generate-firebase-models", "generate-manifests", "generate-rule-catalog"],
       "options": {
         "outputPath": "dist/packages/dbx-components-mcp",
         "main": "packages/dbx-components-mcp/bin/dbx-components-mcp.ts",

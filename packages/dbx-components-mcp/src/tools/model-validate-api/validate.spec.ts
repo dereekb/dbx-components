@@ -346,4 +346,13 @@ describe('validateModelApiSources', () => {
     const warnings = result.violations.filter((v) => v.code === 'FILE_MISSING_MARK_CONSTANTS');
     expect(warnings.length).toBe(1);
   });
+
+  it('auto-attaches remediation hints from the rule catalog', () => {
+    const text = HAPPY_SOURCE.replace('// MARK: Functions', '// not a MARK');
+    const result = validateModelApiSources([{ name: 'widget.api.ts', text }]);
+    const v = result.violations.find((violation) => violation.code === 'FILE_MISSING_MARK_FUNCTIONS');
+    expect(v).toBeDefined();
+    expect(v?.remediation).toBeDefined();
+    expect(v?.remediation?.fix).toContain('// MARK: Functions');
+  });
 });

@@ -19,7 +19,8 @@ import { formatLookupAsJson, formatLookupAsMarkdown, inspectAppFixtures } from '
 
 const LookupArgsType = type({
   apiDir: 'string',
-  model: 'string',
+  'model?': 'string',
+  'identity?': 'string',
   'format?': "'markdown' | 'json'"
 });
 
@@ -28,9 +29,12 @@ const TOOL: Tool = {
   description: [
     'Look up one fixture/instance triplet declared in `<apiDir>/src/test/fixture.ts`. Returns the archetype, generic args, Params shape with dependency edges, factory + singleton names, and full method tables for both Fixture and Instance with forwarding status.',
     '',
-    'Provide:',
-    '- `apiDir`: relative path to the API app (e.g. `apps/demo-api`).',
+    'Provide one of:',
     '- `model`: bare model name with the workspace prefix stripped (e.g. `StorageFile`, `Profile`).',
+    '- `identity`: the `firestoreModelIdentity` const string (e.g. `profileIdentity`). Resolves to the matching fixture by camel-stem.',
+    '',
+    'Plus:',
+    '- `apiDir`: relative path to the API app (e.g. `apps/demo-api`).',
     '- `format` (optional): `markdown` (default) or `json`.'
   ].join('\n'),
   inputSchema: {
@@ -38,9 +42,10 @@ const TOOL: Tool = {
     properties: {
       apiDir: { type: 'string', description: 'Relative path to the API app.' },
       model: { type: 'string', description: 'Bare model name (e.g. `StorageFile`).' },
+      identity: { type: 'string', description: 'Identity const string (e.g. `profileIdentity`). Alternative to `model`.' },
       format: { type: 'string', enum: ['markdown', 'json'], description: 'Output format. Defaults to markdown.' }
     },
-    required: ['apiDir', 'model']
+    required: ['apiDir']
   }
 };
 
@@ -48,6 +53,9 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
   const parsed = LookupArgsType(rawArgs);
   if (parsed instanceof type.errors) {
     return toolError(`Invalid arguments: ${parsed.summary}`);
+  }
+  if (!parsed.model && !parsed.identity) {
+    return toolError('Provide either `model` (PascalCase model name) or `identity` (the `<camelName>Identity` const string).');
   }
   const cwd = process.cwd();
   try {
@@ -62,14 +70,31 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
   } catch (err) {
     return toolError(`Failed to read fixture file: ${err instanceof Error ? err.message : String(err)}`);
   }
-  const entry = extraction.entries.find((e) => e.model === parsed.model);
+
+  const lookupModel = parsed.model ?? identityToModel(parsed.identity as string);
+  const entry = extraction.entries.find((e) => e.model === lookupModel);
   if (!entry) {
     const known = extraction.entries.map((e) => e.model).join(', ') || '(none)';
-    return toolError(`Model \`${parsed.model}\` not found in \`${extraction.fixturePath}\`. Known: ${known}.`);
+    const usedIdentity = parsed.identity && !parsed.model ? ` (resolved \`identity="${parsed.identity}"\` → \`${lookupModel}\`)` : '';
+    return toolError(`Model \`${lookupModel}\` not found in \`${extraction.fixturePath}\`${usedIdentity}. Known: ${known}.`);
   }
   const text = parsed.format === 'json' ? formatLookupAsJson(extraction, entry) : formatLookupAsMarkdown(extraction, entry);
   const result: ToolResult = { content: [{ type: 'text', text }] };
   return result;
+}
+
+/**
+ * Maps a `firestoreModelIdentity` const name to the bare PascalCase
+ * model name used as the fixture entry key. Strips the trailing
+ * `Identity` suffix (case-insensitive) and PascalCases the remainder.
+ *
+ * @param identity - the identity const string (e.g. `profileIdentity`)
+ * @returns the bare PascalCase model name (e.g. `Profile`)
+ */
+function identityToModel(identity: string): string {
+  const stem = identity.replace(/Identity$/i, '');
+  if (stem.length === 0) return identity;
+  return stem.charAt(0).toUpperCase() + stem.slice(1);
 }
 
 export const modelFixtureLookupTool: DbxTool = { definition: TOOL, run };

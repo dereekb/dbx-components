@@ -25,30 +25,14 @@
  */
 
 import type { FolderGroupedResult, FolderGroupedViolation } from '../validate-format.js';
+import type { SystemMValidateFolderCode } from './codes.js';
 
 export type { FolderInspectionStatus, ViolationSeverity } from '../validate-format.js';
 
-export type ViolationCode =
-  // I/O failures (errors)
-  | 'SYSTEM_FOLDER_NOT_FOUND'
-  | 'SYSTEM_FOLDER_NOT_DIRECTORY'
-  // Folder layout (errors)
-  | 'SYSTEM_FOLDER_MISSING_MAIN'
-  | 'SYSTEM_FOLDER_MISSING_INDEX'
-  | 'SYSTEM_FOLDER_DISALLOWED_FILE'
-  // Folder layout (warning)
-  | 'SYSTEM_FOLDER_STRAY_FILE'
-  // Content: aggregator (errors)
-  | 'SYSTEM_MISSING_CONVERTER_MAP'
-  | 'SYSTEM_TYPE_NOT_IN_MAP'
-  // Content: triple pairing (errors)
-  | 'SYSTEM_MISSING_CONVERTER'
-  | 'SYSTEM_MISSING_TYPE_CONSTANT'
-  | 'SYSTEM_ORPHAN_CONVERTER'
-  | 'SYSTEM_ORPHAN_TYPE_CONSTANT'
-  // Content: warnings
-  | 'SYSTEM_CONVERTER_MAP_NOT_LAST'
-  | 'SYSTEM_UNKNOWN_MAP_KEY';
+/**
+ * String-literal union derived from {@link SystemMValidateFolderCode}.
+ */
+export type ViolationCode = `${SystemMValidateFolderCode}`;
 
 export type Violation = FolderGroupedViolation<ViolationCode>;
 

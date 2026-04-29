@@ -177,7 +177,16 @@ export type FixtureDiagnosticSeverity = 'error' | 'warning';
  * - `model-without-fixture` — registry has the model but the fixture file
  *   doesn't declare it (informational).
  */
-export type FixtureDiagnosticCode = 'forwarder-missing' | 'forwarder-divergent' | 'forwarder-not-delegating' | 'triplet-incomplete' | 'generics-misaligned' | 'archetype-inconsistent' | 'params-field-naming' | 'model-not-in-registry' | 'model-without-fixture';
+import type { FixtureDiagnosticCodeEnum } from './codes.js';
+import type { RemediationHint } from '../rule-catalog/types.js';
+
+/**
+ * String-literal union derived from {@link FixtureDiagnosticCodeEnum}.
+ * Source of truth for code metadata is the enum's per-member JSDoc;
+ * the template-literal type widens the enum back to its underlying
+ * kebab-case strings so existing emit-sites still typecheck.
+ */
+export type FixtureDiagnosticCode = `${FixtureDiagnosticCodeEnum}`;
 
 /**
  * One validation diagnostic.
@@ -188,6 +197,12 @@ export interface FixtureDiagnostic {
   readonly message: string;
   readonly model?: string;
   readonly line?: number;
+  /**
+   * Auto-attached remediation hint pulled from the rule catalog at
+   * emission time. `undefined` when no catalog entry exists for the
+   * code (the formatter renders no nested block in that case).
+   */
+  readonly remediation?: RemediationHint;
 }
 
 /**

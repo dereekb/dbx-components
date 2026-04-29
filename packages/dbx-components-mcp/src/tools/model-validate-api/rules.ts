@@ -5,6 +5,7 @@
  */
 
 import { basename } from 'node:path';
+import { attachRemediation } from '../rule-catalog/index.js';
 import { FUNCTIONS_BLOCK_ORDER, NON_CRUD_API_BASENAMES, type ExtractedFile, type ExtractedParamsDecl, type ExtractedParamsValidator, type ExtractedResultDecl, type FunctionsBlockKind, type Violation, type ViolationSeverity } from './types.js';
 
 // MARK: Entry
@@ -629,7 +630,7 @@ function normalizeWhitespace(s: string): string {
   return s.replaceAll(/\s+/g, '');
 }
 
-function pushViolation(buffer: Violation[], violation: Omit<Violation, 'severity'> & { readonly severity?: ViolationSeverity }): void {
+function pushViolation(buffer: Violation[], violation: Omit<Violation, 'severity' | 'remediation'> & { readonly severity?: ViolationSeverity }): void {
   const severity: ViolationSeverity = violation.severity ?? 'error';
   const filled: Violation = {
     code: violation.code,
@@ -637,7 +638,8 @@ function pushViolation(buffer: Violation[], violation: Omit<Violation, 'severity
     message: violation.message,
     file: violation.file,
     line: violation.line,
-    group: violation.group
+    group: violation.group,
+    remediation: attachRemediation(violation.code)
   };
   buffer.push(filled);
 }
