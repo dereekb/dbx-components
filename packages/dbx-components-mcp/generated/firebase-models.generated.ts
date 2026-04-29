@@ -9,6 +9,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     identityConst: 'notificationBoxIdentity',
     modelType: 'notificationBox',
     collectionPrefix: 'nb',
+    sourcePackage: '@dereekb/firebase',
     sourceFile: 'packages/firebase/src/lib/model/notification/notification.ts',
     fields: [
       {
@@ -78,6 +79,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     identityConst: 'notificationSummaryIdentity',
     modelType: 'notificationSummary',
     collectionPrefix: 'ns',
+    sourcePackage: '@dereekb/firebase',
     sourceFile: 'packages/firebase/src/lib/model/notification/notification.ts',
     fields: [
       {
@@ -155,6 +157,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     identityConst: 'notificationUserIdentity',
     modelType: 'notificationUser',
     collectionPrefix: 'nu',
+    sourcePackage: '@dereekb/firebase',
     sourceFile: 'packages/firebase/src/lib/model/notification/notification.ts',
     fields: [
       {
@@ -222,6 +225,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     identityConst: 'oidcEntryIdentity',
     modelType: 'oidcEntry',
     collectionPrefix: 'oidc_e',
+    sourcePackage: '@dereekb/firebase',
     sourceFile: 'packages/firebase/src/lib/model/oidcmodel/oidcmodel.ts',
     fields: [
       {
@@ -299,6 +303,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     identityConst: 'storageFileIdentity',
     modelType: 'storageFile',
     collectionPrefix: 'sf',
+    sourcePackage: '@dereekb/firebase',
     sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.ts',
     fields: [
       {
@@ -557,6 +562,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     identityConst: 'storageFileGroupIdentity',
     modelType: 'storageFileGroup',
     collectionPrefix: 'sfg',
+    sourcePackage: '@dereekb/firebase',
     sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.ts',
     fields: [
       {
@@ -650,6 +656,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     identityConst: 'systemStateIdentity',
     modelType: 'systemState',
     collectionPrefix: 'sys',
+    sourcePackage: '@dereekb/firebase',
     sourceFile: 'packages/firebase/src/lib/model/system/system.ts',
     fields: [
       {
@@ -671,6 +678,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     identityConst: 'notificationIdentity',
     modelType: 'notification',
     collectionPrefix: 'nbn',
+    sourcePackage: '@dereekb/firebase',
     sourceFile: 'packages/firebase/src/lib/model/notification/notification.ts',
     fields: [
       {
@@ -952,6 +960,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     identityConst: 'notificationWeekIdentity',
     modelType: 'notificationWeek',
     collectionPrefix: 'nbnw',
+    sourcePackage: '@dereekb/firebase',
     sourceFile: 'packages/firebase/src/lib/model/notification/notification.ts',
     fields: [
       {
@@ -983,6 +992,7 @@ export const FIREBASE_MODEL_GROUPS: readonly FirebaseModelGroup[] = [
   {
     name: 'Notification',
     containerName: 'NotificationFirestoreCollections',
+    sourcePackage: '@dereekb/firebase',
     sourceFile: 'packages/firebase/src/lib/model/notification/notification.ts',
     description: 'Abstract class providing access to all notification-related Firestore collections.',
     modelNames: ['Notification', 'NotificationBox', 'NotificationSummary', 'NotificationUser', 'NotificationWeek']
@@ -990,6 +1000,7 @@ export const FIREBASE_MODEL_GROUPS: readonly FirebaseModelGroup[] = [
   {
     name: 'OidcModel',
     containerName: 'OidcModelFirestoreCollections',
+    sourcePackage: '@dereekb/firebase',
     sourceFile: 'packages/firebase/src/lib/model/oidcmodel/oidcmodel.ts',
     description: 'Abstract class providing access to all oidc-related Firestore collections.',
     modelNames: ['OidcEntry']
@@ -997,6 +1008,7 @@ export const FIREBASE_MODEL_GROUPS: readonly FirebaseModelGroup[] = [
   {
     name: 'StorageFile',
     containerName: 'StorageFileFirestoreCollections',
+    sourcePackage: '@dereekb/firebase',
     sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.ts',
     description: 'Abstract base providing access to StorageFile and StorageFileGroup Firestore collections.',
     modelNames: ['StorageFile', 'StorageFileGroup']
@@ -1004,6 +1016,7 @@ export const FIREBASE_MODEL_GROUPS: readonly FirebaseModelGroup[] = [
   {
     name: 'SystemState',
     containerName: 'SystemStateFirestoreCollections',
+    sourcePackage: '@dereekb/firebase',
     sourceFile: 'packages/firebase/src/lib/model/system/system.ts',
     description: 'Abstract base providing access to the SystemState Firestore collection.',
     modelNames: ['SystemState']

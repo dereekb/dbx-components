@@ -3,15 +3,26 @@
  * downstream `-firebase` component and pulls the identity surface
  * (`firestoreModelIdentity(...)` call) out of every model folder's
  * `<folder>.ts` file.
+ *
+ * Implementation note: the rich shared extractor under
+ * `src/scan/extract-models/` is the primary source for `@dbxModel`-tagged
+ * models. Folders whose primary file has a `firestoreModelIdentity` but
+ * lacks the `@dbxModel` tag fall back to a lightweight ts-morph identity
+ * scan so non-canonical layouts still get listed (matching the historical
+ * behaviour of this tool).
  */
 
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { basename, join, relative, sep } from 'node:path';
 import { Node, Project, type SourceFile } from 'ts-morph';
+import { extractModels } from '../../scan/extract-models/index.js';
+import type { FirebaseModel } from '../../registry/firebase-models.js';
 import { RESERVED_MODEL_FOLDERS } from '../model-validate-folder/types.js';
 import type { ComponentModelEntry, SkippedReservedFolder } from './types.js';
 
 const MODEL_SUBPATH = 'src/lib/model';
+const MODEL_SUBPATH_PREFIX = `${MODEL_SUBPATH}/`;
+const RESERVED_NAMES = RESERVED_MODEL_FOLDERS.map((r) => r.name);
 
 /**
  * Result of extracting the model surface from one component.
@@ -54,34 +65,30 @@ export async function extractComponentModels(componentAbs: string): Promise<Extr
     targetFolders.push(folder);
   }
 
-  const project = new Project({ useInMemoryFileSystem: true });
+  const richResult = await extractModels({
+    rootDir: modelRoot,
+    sourcePackage: 'component',
+    workspaceRoot: componentAbs,
+    skipReservedFolders: RESERVED_NAMES
+  });
+  const richByFolder = groupRichByFolder(richResult.models);
+
+  const fallbackProject = new Project({ useInMemoryFileSystem: true });
   const models: ComponentModelEntry[] = [];
   const unidentified: string[] = [];
 
   for (const folder of targetFolders) {
-    const folderAbs = join(modelRoot, folder);
-    const mainFile = await readMainFile(folderAbs, folder);
-    if (mainFile === undefined) {
-      unidentified.push(folder);
+    const richBucket = richByFolder.get(folder);
+    if (richBucket && richBucket.length > 0) {
+      models.push(projectRich(richBucket[0], folder));
       continue;
     }
-    const sourceFile = project.createSourceFile(mainFile.fileName, mainFile.text, { overwrite: true });
-    const identity = findIdentityIn(sourceFile);
-    const sourceFileRel = relative(componentAbs, mainFile.absPath).split(sep).join('/');
-    if (!identity) {
+    const fallback = await fallbackForFolder({ modelRoot, componentAbs, folder, project: fallbackProject });
+    if (fallback) {
+      models.push(fallback);
+    } else {
       unidentified.push(folder);
-      continue;
     }
-    models.push({
-      folder,
-      modelName: deriveModelName(identity.constName, folder),
-      identityConst: identity.constName,
-      collectionName: identity.collectionName,
-      collectionPrefix: identity.collectionPrefix,
-      parentIdentityConst: identity.parentIdentityRef,
-      sourceFile: sourceFileRel,
-      fixtureCovered: undefined
-    });
   }
 
   models.sort((a, b) => a.folder.localeCompare(b.folder));
@@ -89,6 +96,80 @@ export async function extractComponentModels(componentAbs: string): Promise<Extr
   unidentified.sort();
   const result: ExtractionOutcome = { modelRoot, models, skipped, unidentifiedFolders: unidentified };
   return result;
+}
+
+function groupRichByFolder(models: readonly FirebaseModel[]): Map<string, FirebaseModel[]> {
+  const out = new Map<string, FirebaseModel[]>();
+  for (const model of models) {
+    const folder = folderFromSourceFile(model.sourceFile);
+    if (folder === undefined) continue;
+    const bucket = out.get(folder) ?? [];
+    bucket.push(model);
+    out.set(folder, bucket);
+  }
+  // Within each folder, root models first then sub-collections, alphabetical within each group.
+  for (const bucket of out.values()) {
+    bucket.sort((a, b) => {
+      const aRoot = a.parentIdentityConst ? 1 : 0;
+      const bRoot = b.parentIdentityConst ? 1 : 0;
+      if (aRoot !== bRoot) return aRoot - bRoot;
+      return a.name.localeCompare(b.name);
+    });
+  }
+  return out;
+}
+
+function folderFromSourceFile(sourceFile: string): string | undefined {
+  const idx = sourceFile.indexOf(MODEL_SUBPATH_PREFIX);
+  if (idx < 0) return undefined;
+  const after = sourceFile.slice(idx + MODEL_SUBPATH_PREFIX.length);
+  const slash = after.indexOf('/');
+  let result: string | undefined;
+  if (slash >= 0) {
+    result = after.slice(0, slash);
+  }
+  return result;
+}
+
+function projectRich(model: FirebaseModel, folder: string): ComponentModelEntry {
+  return {
+    folder,
+    modelName: model.name,
+    identityConst: model.identityConst,
+    collectionName: model.modelType,
+    collectionPrefix: model.collectionPrefix,
+    parentIdentityConst: model.parentIdentityConst,
+    sourceFile: model.sourceFile,
+    fixtureCovered: undefined
+  };
+}
+
+interface FallbackForFolderInput {
+  readonly modelRoot: string;
+  readonly componentAbs: string;
+  readonly folder: string;
+  readonly project: Project;
+}
+
+async function fallbackForFolder(input: FallbackForFolderInput): Promise<ComponentModelEntry | undefined> {
+  const { modelRoot, componentAbs, folder, project } = input;
+  const folderAbs = join(modelRoot, folder);
+  const mainFile = await readMainFile(folderAbs, folder);
+  if (mainFile === undefined) return undefined;
+  const sourceFile = project.createSourceFile(mainFile.fileName, mainFile.text, { overwrite: true });
+  const identity = findIdentityIn(sourceFile);
+  if (!identity) return undefined;
+  const sourceFileRel = relative(componentAbs, mainFile.absPath).split(sep).join('/');
+  return {
+    folder,
+    modelName: deriveModelName(identity.constName, folder),
+    identityConst: identity.constName,
+    collectionName: identity.collectionName,
+    collectionPrefix: identity.collectionPrefix,
+    parentIdentityConst: identity.parentIdentityRef,
+    sourceFile: sourceFileRel,
+    fixtureCovered: undefined
+  };
 }
 
 async function listFolders(modelRoot: string): Promise<readonly string[] | undefined> {

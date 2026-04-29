@@ -114,6 +114,12 @@ export interface FirebaseModel {
    */
   readonly parentIdentityConst?: string;
   /**
+   * Package the model lives in (`'@dereekb/firebase'` for upstream, downstream
+   * package name like `'demo-firebase'` for component packages discovered at
+   * runtime).
+   */
+  readonly sourcePackage: string;
+  /**
    * Source file path relative to the workspace root.
    */
   readonly sourceFile: string;
@@ -166,6 +172,12 @@ export interface FirebaseModelGroup {
    * (e.g. `'NotificationFirestoreCollections'`).
    */
   readonly containerName: string;
+  /**
+   * Package the group lives in (`'@dereekb/firebase'` for upstream, downstream
+   * package name like `'demo-firebase'` for component packages discovered at
+   * runtime).
+   */
+  readonly sourcePackage: string;
   /**
    * Source file path relative to the workspace root.
    */

@@ -48,6 +48,11 @@ import { FIREBASE_MODELS, FIREBASE_MODEL_GROUPS, type FirebaseModel, type Fireba
 export { FIREBASE_MODELS, FIREBASE_MODEL_GROUPS } from './firebase-models.js';
 export type { FirebaseModel, FirebaseModelGroup, FirebaseEnum, FirebaseEnumValue, FirebaseField } from './firebase-models.js';
 
+// MARK: Downstream Firebase Models (runtime)
+export { getDownstreamCatalog, clearDownstreamCatalogCache } from './downstream-models-runtime.js';
+export type { DownstreamCatalog, DownstreamCatalogError, GetDownstreamCatalogInput } from './downstream-models-runtime.js';
+export type { DownstreamFirebasePackage } from '../scan/discover-firebase-packages.js';
+
 /**
  * Returns every registered Firebase model entry.
  *

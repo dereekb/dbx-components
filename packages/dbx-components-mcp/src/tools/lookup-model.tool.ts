@@ -4,7 +4,8 @@
  * Firebase-model-domain lookup. Accepts a topic (model interface name,
  * identity const, modelType, collection prefix, or the literal `'models'`)
  * and a depth and returns markdown documentation for `@dereekb/firebase`
- * models.
+ * models — plus any downstream `<x>-firebase` packages discovered under
+ * the caller's workspace.
  *
  * Registered via the low-level `server.setRequestHandler(CallToolRequestSchema, ...)`
  * API (not `McpServer.registerTool`) because registerTool requires a zod
@@ -14,23 +15,28 @@
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { getFirebaseModel, getFirebaseModelByPrefix, getFirebaseModels, type FirebaseModel } from '../registry/index.js';
+import { FIREBASE_MODELS, getDownstreamCatalog, getFirebaseModel, getFirebaseModelByPrefix, type DownstreamCatalog, type FirebaseModel } from '../registry/index.js';
 import { formatFirebaseModelCatalog, formatFirebaseModelEntry, formatFirebaseStoreShapeTaxonomy } from './firebase-lookup.formatter.js';
+import { ensurePathInsideCwd } from './validate-input.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 
 // MARK: Tool registry
 const DBX_MODEL_LOOKUP_TOOL: Tool = {
   name: 'dbx_model_lookup',
   description: [
-    'Look up @dereekb/firebase Firestore models.',
+    'Look up Firebase Firestore models — `@dereekb/firebase` upstream catalog plus any `components/<x>-firebase` downstream packages discovered under the caller workspace.',
     '',
     'The `topic` accepts:',
-    '  • a Firebase model name (`"StorageFile"`);',
-    '  • an identity const (`"storageFileIdentity"`);',
-    '  • a modelType (`"storageFile"`);',
-    '  • a collection prefix (`"sf"`);',
+    '  • a Firebase model name (`"StorageFile"`, `"Guestbook"`);',
+    '  • an identity const (`"storageFileIdentity"`, `"guestbookIdentity"`);',
+    '  • a modelType (`"storageFile"`, `"guestbook"`);',
+    '  • a collection prefix (`"sf"`, `"gb"`);',
     '  • the literal `"models"` / `"firebase-models"` for the Firebase-model catalog;',
-    '  • the literal `"shapes"` / `"store-shapes"` for the consumer-side store-shape taxonomy (root, root-singleton, sub-collection, singleton-sub, system-state).'
+    '  • the literal `"shapes"` / `"store-shapes"` for the consumer-side store-shape taxonomy (root, root-singleton, sub-collection, singleton-sub, system-state).',
+    '',
+    'Optional inputs:',
+    '  • `scope`: `"all"` (default), `"upstream"` (only `@dereekb/firebase`), or `"downstream"` (only component packages).',
+    '  • `componentDirs`: explicit downstream package directories — overrides the default `components/*-firebase` discovery.'
   ].join('\n'),
   inputSchema: {
     type: 'object',
@@ -44,6 +50,17 @@ const DBX_MODEL_LOOKUP_TOOL: Tool = {
         enum: ['brief', 'full'],
         description: "Detail level for single-entry hits. Defaults to 'full'.",
         default: 'full'
+      },
+      scope: {
+        type: 'string',
+        enum: ['all', 'upstream', 'downstream'],
+        description: 'Restrict the lookup to upstream-only or downstream-only models. Defaults to all.',
+        default: 'all'
+      },
+      componentDirs: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Optional explicit downstream component directories (workspace-relative).'
       }
     },
     required: ['topic']
@@ -53,71 +70,124 @@ const DBX_MODEL_LOOKUP_TOOL: Tool = {
 // MARK: Input validation
 const LookupModelArgsType = type({
   topic: 'string',
-  'depth?': "'brief' | 'full'"
+  'depth?': "'brief' | 'full'",
+  'scope?': "'all' | 'upstream' | 'downstream'",
+  'componentDirs?': 'string[]'
 });
 
-function parseLookupModelArgs(raw: unknown): { readonly topic: string; readonly depth: 'brief' | 'full' } {
-  const parsed = LookupModelArgsType(raw);
+type LookupScope = 'all' | 'upstream' | 'downstream';
 
+interface ParsedLookupModelArgs {
+  readonly topic: string;
+  readonly depth: 'brief' | 'full';
+  readonly scope: LookupScope;
+  readonly componentDirs: readonly string[] | undefined;
+}
+
+function parseLookupModelArgs(raw: unknown): ParsedLookupModelArgs {
+  const parsed = LookupModelArgsType(raw);
   if (parsed instanceof type.errors) {
     throw new TypeError(`Invalid arguments: ${parsed.summary}`);
   }
-
   return {
     topic: parsed.topic,
-    depth: parsed.depth ?? ('full' as const)
+    depth: parsed.depth ?? ('full' as const),
+    scope: (parsed.scope ?? 'all') as LookupScope,
+    componentDirs: parsed.componentDirs
   };
 }
 
 // MARK: Resolution
-type LookupModelMatch = { readonly kind: 'single'; readonly model: FirebaseModel } | { readonly kind: 'catalog' } | { readonly kind: 'shapes' } | { readonly kind: 'not-found'; readonly normalized: string };
+type LookupModelMatch = { readonly kind: 'single'; readonly model: FirebaseModel } | { readonly kind: 'catalog' } | { readonly kind: 'shapes' } | { readonly kind: 'not-found'; readonly normalized: string; readonly candidates: readonly FirebaseModel[] };
 
 const FIREBASE_CATALOG_ALIASES = new Set(['list', 'models', 'firebase-models', 'firebase', 'firestore-models', 'catalog', 'all']);
 const FIREBASE_SHAPES_ALIASES = new Set(['shapes', 'store-shapes', 'storeshapes', 'shape', 'store-shape', 'storeshape', 'store-shape-taxonomy', 'store-shape-list']);
 
-/**
- * Resolves a topic string to a Firebase model entry by interface name,
- * identity const, modelType, or collection prefix. Falls back to catalog mode
- * for the well-known catalog aliases or the store-shape taxonomy mode for the
- * shape aliases.
- *
- * @param rawTopic - the caller-supplied topic, untrimmed
- * @returns the resolved match describing how to render the response
- */
-function resolveTopic(rawTopic: string): LookupModelMatch {
-  const lowered = rawTopic.trim().toLowerCase();
+interface ResolveTopicInput {
+  readonly rawTopic: string;
+  readonly scope: LookupScope;
+  readonly downstream: DownstreamCatalog;
+}
+
+function resolveTopic(input: ResolveTopicInput): LookupModelMatch {
+  const lowered = input.rawTopic.trim().toLowerCase();
   let result: LookupModelMatch;
   if (FIREBASE_CATALOG_ALIASES.has(lowered)) {
     result = { kind: 'catalog' };
   } else if (FIREBASE_SHAPES_ALIASES.has(lowered)) {
     result = { kind: 'shapes' };
   } else {
-    const hit = getFirebaseModel(rawTopic) ?? getFirebaseModelByPrefix(rawTopic);
+    const upstream = input.scope === 'downstream' ? undefined : (getFirebaseModel(input.rawTopic) ?? getFirebaseModelByPrefix(input.rawTopic));
+    const downstream = upstream ? undefined : input.scope === 'upstream' ? undefined : findInDownstream(input.downstream.models, lowered);
+    const hit = upstream ?? downstream;
     if (hit) {
       result = { kind: 'single', model: hit };
     } else {
-      result = { kind: 'not-found', normalized: lowered };
+      result = { kind: 'not-found', normalized: lowered, candidates: fuzzyCandidates(input.scope, input.downstream.models, lowered) };
     }
   }
   return result;
 }
 
+function findInDownstream(models: readonly FirebaseModel[], lowered: string): FirebaseModel | undefined {
+  let result: FirebaseModel | undefined;
+  for (const m of models) {
+    if (m.name.toLowerCase() === lowered || m.identityConst.toLowerCase() === lowered || m.modelType.toLowerCase() === lowered || m.collectionPrefix.toLowerCase() === lowered) {
+      result = m;
+      break;
+    }
+  }
+  return result;
+}
+
+function fuzzyCandidates(scope: LookupScope, downstream: readonly FirebaseModel[], lowered: string): readonly FirebaseModel[] {
+  const pool = scope === 'upstream' ? FIREBASE_MODELS : scope === 'downstream' ? downstream : [...FIREBASE_MODELS, ...downstream];
+  const scored: { readonly model: FirebaseModel; readonly score: number }[] = [];
+  for (const model of pool) {
+    let score = 0;
+    if (model.name.toLowerCase().includes(lowered)) score += 3;
+    if (model.identityConst.toLowerCase().includes(lowered)) score += 2;
+    if (model.modelType.toLowerCase().includes(lowered)) score += 2;
+    if (model.collectionPrefix.toLowerCase().includes(lowered)) score += 1;
+    if (score > 0) scored.push({ model, score });
+  }
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, 5).map((s) => s.model);
+}
+
 // MARK: Formatting
-function formatNotFound(normalized: string): string {
-  return [`No Firebase model matched \`${normalized}\`.`, '', 'Try `dbx_model_lookup topic="models"` to browse the catalog.'].join('\n');
+function formatNotFound(normalized: string, candidates: readonly FirebaseModel[]): string {
+  const lines: string[] = [`No Firebase model matched \`${normalized}\`.`];
+  if (candidates.length > 0) {
+    lines.push('', 'Did you mean:');
+    for (const candidate of candidates) {
+      lines.push(`- **${candidate.name}** \`[${candidate.sourcePackage}]\` (prefix \`${candidate.collectionPrefix}\`)`);
+    }
+  }
+  lines.push('', 'Try `dbx_model_lookup topic="models"` to browse the catalog.');
+  return lines.join('\n');
 }
 
 // MARK: Handler
+const EMPTY_DOWNSTREAM_CATALOG: DownstreamCatalog = {
+  models: [],
+  modelGroups: [],
+  packages: [],
+  errors: [],
+  discoveryUsed: false
+};
+
 /**
  * Tool handler for `dbx_model_lookup`. Resolves the requested model topic
- * against the Firebase registry and renders the matching catalog, store-shape
- * taxonomy, single entry, or not-found suggestion list.
+ * against the upstream registry and the runtime downstream catalog and
+ * renders the matching catalog, store-shape taxonomy, single entry, or
+ * not-found suggestion list.
  *
  * @param rawArgs - the unvalidated tool arguments from the MCP runtime
  * @returns the rendered match, or an error result when args fail validation
  */
-export function runLookupModel(rawArgs: unknown): ToolResult {
-  let args: { readonly topic: string; readonly depth: 'brief' | 'full' };
+export async function runLookupModel(rawArgs: unknown): Promise<ToolResult> {
+  let args: ParsedLookupModelArgs;
   try {
     args = parseLookupModelArgs(rawArgs);
   } catch (error) {
@@ -125,11 +195,22 @@ export function runLookupModel(rawArgs: unknown): ToolResult {
     return toolError(message);
   }
 
-  const match = resolveTopic(args.topic);
+  const cwd = process.cwd();
+  const componentDirs = args.componentDirs;
+  if (componentDirs) {
+    try {
+      for (const dir of componentDirs) ensurePathInsideCwd(dir, cwd);
+    } catch (error) {
+      return toolError(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  const downstream = args.scope === 'upstream' ? EMPTY_DOWNSTREAM_CATALOG : await getDownstreamCatalog({ workspaceRoot: cwd, componentDirs });
+  const match = resolveTopic({ rawTopic: args.topic, scope: args.scope, downstream });
   let text: string;
   switch (match.kind) {
     case 'catalog':
-      text = formatFirebaseModelCatalog(getFirebaseModels());
+      text = formatFirebaseModelCatalog(args.scope === 'downstream' ? [] : FIREBASE_MODELS, args.scope === 'upstream' ? [] : downstream.models);
       break;
     case 'shapes':
       text = formatFirebaseStoreShapeTaxonomy();
@@ -138,7 +219,7 @@ export function runLookupModel(rawArgs: unknown): ToolResult {
       text = formatFirebaseModelEntry(match.model, args.depth);
       break;
     case 'not-found':
-      text = formatNotFound(match.normalized);
+      text = formatNotFound(match.normalized, match.candidates);
       break;
   }
 
