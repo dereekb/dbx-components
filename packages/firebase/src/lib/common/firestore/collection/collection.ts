@@ -910,6 +910,16 @@ export interface FirestoreCollectionConfig<T, D extends FirestoreDocument<T> = F
 /**
  * Full Firestore collection interface with document CRUD, querying, iteration, and context support.
  *
+ * Backs the `'root'` collection kind: a standard Firestore root collection.
+ * Created at runtime via `firestoreContext.firestoreCollection({...})` and
+ * typed at the model layer as
+ * `<Model>FirestoreCollection = FirestoreCollection<T, D>`.
+ *
+ * For other collection kinds, see:
+ * - `'root-singleton'` ({@link RootSingleItemFirestoreCollection} in `./collection.single`) — single doc in a root collection.
+ * - `'sub-collection'` ({@link FirestoreCollectionWithParent} in `./subcollection`) — multi-item subcollection under a parent.
+ * - `'singleton-sub'` ({@link SingleItemFirestoreCollection} in `./subcollection.single`) — one document per parent.
+ *
  * This is the primary interface used to interact with a Firestore collection. It provides:
  * - **Document access**: Create, load, and manage documents via {@link FirestoreDocumentAccessor}
  * - **Querying**: Build typed queries via the query factory

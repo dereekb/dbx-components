@@ -5,6 +5,10 @@
  * within a specific document rather than at the root level. Subcollections enable hierarchical
  * data modeling in Firestore by allowing documents to contain their own collections.
  *
+ * Collection kind: `'sub-collection'` (multi-item subcollection under a parent).
+ * For the one-document-per-parent variant, see `'singleton-sub'`
+ * ({@link SingleItemFirestoreCollection} in `./subcollection.single`).
+ *
  * Key features of subcollections:
  * - They provide a natural way to model hierarchical relationships
  * - They establish clear ownership boundaries (parent document owns child documents)
@@ -44,6 +48,13 @@ export interface FirestoreCollectionWithParentConfig<T, PT, D extends FirestoreD
 
 /**
  * A FirestoreCollection that represents a subcollection with a reference to its parent document.
+ *
+ * Backs the `'sub-collection'` collection kind: a multi-item subcollection
+ * under a parent. Created at runtime via `firestoreContext.firestoreCollectionWithParent({...})`
+ * and typed at the model layer as `<Model>FirestoreCollection = FirestoreCollectionWithParent<T, PT, D, PD>`.
+ *
+ * For one-document-per-parent subcollections, use {@link SingleItemFirestoreCollection}
+ * (kind `'singleton-sub'`) instead.
  *
  * This interface extends FirestoreCollection to maintain the parent-child relationship
  * between documents. It allows access to documents within the context of their parent,

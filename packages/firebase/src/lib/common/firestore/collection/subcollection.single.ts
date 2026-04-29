@@ -5,6 +5,12 @@
  * within a parent document. This pattern combines the hierarchical structure of subcollections
  * with the focused access provided by single document collections.
  *
+ * Collection kind: `'singleton-sub'` (one document per parent). For
+ * multi-item subcollections under a parent, see `'sub-collection'`
+ * ({@link FirestoreCollectionWithParent} in `./subcollection`). For the
+ * root-level single-document analogue, see `'root-singleton'`
+ * ({@link RootSingleItemFirestoreCollection} in `./collection.single`).
+ *
  * Single document subcollections are useful for cases where a parent document has a specific,
  * known child document that should be accessed directly, such as:
  * - Configuration or settings for a parent entity
@@ -38,6 +44,13 @@ export interface SingleItemFirestoreCollectionConfig<T, PT, D extends FirestoreD
 /**
  * A subcollection that provides specialized accessors for working with a single document
  * within a parent document context.
+ *
+ * Backs the `'singleton-sub'` collection kind: one document per parent.
+ * Created at runtime via `firestoreContext.singleItemFirestoreCollection({...})`
+ * and typed at the model layer as `<Model>FirestoreCollection = SingleItemFirestoreCollection<T, PT, D, PD>`.
+ *
+ * For multi-item subcollections under the same parent, use
+ * {@link FirestoreCollectionWithParent} (kind `'sub-collection'`) instead.
  *
  * This interface combines the capabilities of FirestoreCollectionWithParent (which maintains
  * the parent-child relationship) with FirestoreSingleDocumentAccessor (which provides

@@ -9,7 +9,7 @@
  */
 
 import { Node, Project, SyntaxKind, type ClassDeclaration, type GetAccessorDeclaration, type InterfaceDeclaration, type SourceFile, type TypeAliasDeclaration } from 'ts-morph';
-import type { ExtractedDataInterface, ExtractedDecl, ExtractedDocumentClass, ExtractedField, ExtractedFile, ExtractedGroupInterface, ExtractedGroupTypes, ExtractedIdentity, ExtractedModel, ModelVariant, ValidatorSource } from './types.js';
+import type { ExtractedDataInterface, ExtractedDecl, ExtractedDocumentClass, ExtractedField, ExtractedFile, ExtractedGroupInterface, ExtractedGroupTypes, ExtractedIdentity, ExtractedModel, FirestoreCollectionKind, ModelVariant, ValidatorSource } from './types.js';
 
 // MARK: Entry
 /**
@@ -245,6 +245,7 @@ function extractModel(sourceFile: SourceFile, identity: RawIdentity): ExtractedM
   const collectionFnName = variant === 'root' ? `${camelName}FirestoreCollection` : `${camelName}FirestoreCollectionFactory`;
   const collectionFn = findFunction(sourceFile, collectionFnName);
   const collectionGroupFn = variant === 'subcollection' ? findFunction(sourceFile, `${camelName}FirestoreCollectionGroup`) : undefined;
+  const factoryCallKind = detectFactoryCallKind(sourceFile, collectionFnName);
 
   const extractedIdentity: ExtractedIdentity = {
     constName: identity.constName,
@@ -271,9 +272,55 @@ function extractModel(sourceFile: SourceFile, identity: RawIdentity): ExtractedM
     collectionFactoryType,
     collectionGroupType,
     collectionFn,
-    collectionGroupFn
+    collectionGroupFn,
+    factoryCallKind
   };
   return result;
+}
+
+/**
+ * Walks the model's collection factory body to determine which
+ * `firestoreContext.*` call it makes. Returns the canonical
+ * {@link FirestoreCollectionKind} for whichever recognised call is found
+ * first, or `undefined` when the function is missing / no recognised call is
+ * present (callers default per-variant to preserve prior behaviour).
+ *
+ * Mapping:
+ *   - `firestoreCollection` → `'root'`
+ *   - `rootSingleItemFirestoreCollection` → `'root-singleton'`
+ *   - `firestoreCollectionWithParent` → `'sub-collection'`
+ *   - `singleItemFirestoreCollection` → `'singleton-sub'`
+ *
+ * @param sourceFile - the parsed model source file
+ * @param factoryFnName - name of the `*FirestoreCollection`/`*FirestoreCollectionFactory` function
+ * @returns the detected kind, or `undefined` when none can be located
+ */
+function detectFactoryCallKind(sourceFile: SourceFile, factoryFnName: string): FirestoreCollectionKind | undefined {
+  const fn = sourceFile.getFunction(factoryFnName);
+  if (!fn) {
+    return undefined;
+  }
+  const calls = fn.getDescendantsOfKind(SyntaxKind.CallExpression);
+  for (const call of calls) {
+    const expr = call.getExpression();
+    if (!Node.isPropertyAccessExpression(expr)) {
+      continue;
+    }
+    const name = expr.getName();
+    if (name === 'firestoreCollection') {
+      return 'root';
+    }
+    if (name === 'rootSingleItemFirestoreCollection') {
+      return 'root-singleton';
+    }
+    if (name === 'firestoreCollectionWithParent') {
+      return 'sub-collection';
+    }
+    if (name === 'singleItemFirestoreCollection') {
+      return 'singleton-sub';
+    }
+  }
+  return undefined;
 }
 
 // MARK: Name helpers
