@@ -5,6 +5,29 @@ $dbx-forge-form-field-slider-thumb-margin: 22px;
 
 // MARK: Mixin
 @mixin core() {
+  // Forge form-field wrapper host: ensure block-level layout. The host element
+  // is a custom element (default `inline`); it previously inherited
+  // `display: inline-flex` from Material's `.mat-mdc-form-field` rule because
+  // the wrapper borrowed that class — that's no longer the case, so make the
+  // block layout explicit.
+  dbx-forge-form-field-wrapper.dbx-forge-form-field {
+    display: block;
+  }
+
+  // Restore the 300ms subscript fade animation. Material's base rule
+  // `animation: _mat-form-field-subscript-animation 0ms ...` matches
+  // `.mat-mdc-form-field-{hint,error}-wrapper` standalone (no parent
+  // required), but the duration extension to 300ms is scoped to
+  // `.mat-mdc-form-field.mat-form-field-animations-enabled` — which the
+  // wrapper no longer has on its host (the `mat-mdc-form-field` class was
+  // dropped because it carried Material's typography/layout leak). Mirror
+  // the duration rule using our own host class so the subscript still fades
+  // over 300ms once Material's stylesheet is loaded.
+  .dbx-forge-form-field.mat-form-field-animations-enabled .mat-mdc-form-field-hint-wrapper,
+  .dbx-forge-form-field.mat-form-field-animations-enabled .mat-mdc-form-field-error-wrapper {
+    animation-duration: 300ms;
+  }
+
   // Forge form-field wrapper: suppress child field label/hint/error inside the wrapper.
   // The wrapper provides its own label (notched outline), hint, and error subscript.
   dbx-forge-form-field-wrapper {
@@ -33,17 +56,6 @@ $dbx-forge-form-field-slider-thumb-margin: 22px;
     padding-left: 0 !important;
     padding-right: 0 !important;
     padding-bottom: 0 !important;
-  }
-
-  // The wrapper's mat-mdc-form-field host class causes Angular Material's
-  // form-field line-height (24px) and letter-spacing (0.496px) to cascade
-  // into all descendants. For list selection fields this distorts the list
-  // item layout. Reset typography on the list field element so descendant
-  // components inherit normal values instead of the form-field overrides.
-  dbx-forge-form-field-wrapper dbx-forge-list-selection-field {
-    display: block;
-    line-height: normal;
-    letter-spacing: normal;
   }
 
   // Boolean fields (mat-checkbox / mat-slide-toggle): make the whole content
