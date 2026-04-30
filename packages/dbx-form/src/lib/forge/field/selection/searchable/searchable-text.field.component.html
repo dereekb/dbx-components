@@ -19,7 +19,7 @@
     <mat-option [value]="{ _clear: true }">Clear</mat-option>
   }
   @for (result of searchResultsSignal(); track $index) {
-    <mat-option [value]="result">
+    <mat-option [value]="result" [class.dbx-searchable-field-anchor-option]="!!result.anchor">
       <dbx-searchable-field-autocomplete-item [displayValue]="result"></dbx-searchable-field-autocomplete-item>
     </mat-option>
   }

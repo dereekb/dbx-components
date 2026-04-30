@@ -12,6 +12,47 @@
     width: 100%;
   }
 
+  // When a mat-option wraps a dbx-anchor, the anchor must cover the entire option surface so that
+  // every click lands inside the anchor's child click target (where the override click handler is
+  // attached). Otherwise clicks on the mat-option's padding/edge land on mat-option itself,
+  // bypassing dbx-anchor's onClick handler — selection still fires (via mat-option's own click
+  // listener) but the anchor click is silently dropped. Inner padding is provided by
+  // .dbx-default-searchable-field-display.
+  //
+  // The .mdc-list-item compound is needed to outweigh Material's own .mat-mdc-option.mdc-list-item
+  // rule (which sets align-items: center).
+  .mat-mdc-option.mdc-list-item.dbx-searchable-field-anchor-option {
+    padding: 0;
+    // Override mat-option's default align-items: center so the inner chain can stretch vertically.
+    align-items: stretch;
+
+    > .mdc-list-item__primary-text {
+      width: 100%;
+      margin: 0;
+      display: flex;
+      align-items: stretch;
+    }
+
+    dbx-searchable-field-autocomplete-item,
+    dbx-anchor,
+    .dbx-anchor-a {
+      display: flex;
+      align-items: stretch;
+      flex: 1;
+      width: 100%;
+    }
+
+    // The clickOverride listener is registered on the inner <span> (childClickTarget). It must
+    // cover the full option surface so clicks anywhere on the option land inside it; otherwise
+    // the synthetic click + onClick handler is silently dropped.
+    .dbx-anchor-a > span {
+      display: flex;
+      align-items: center;
+      flex: 1;
+      width: 100%;
+    }
+  }
+
   .dbx-chip-input-error {
     display: block;
     font-size: 12px;

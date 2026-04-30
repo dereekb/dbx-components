@@ -20,7 +20,7 @@
 <!-- Autocomplete -->
 <mat-autocomplete class="dbx-searchable-text-field-autocomplete" #auto (optionSelected)="selected($event)">
   @for (displayValue of searchResultsSignal(); track displayValue.value) {
-    <mat-option [value]="displayValue">
+    <mat-option [value]="displayValue" [class.dbx-searchable-field-anchor-option]="!!displayValue.anchor">
       <dbx-searchable-field-autocomplete-item [displayValue]="displayValue"></dbx-searchable-field-autocomplete-item>
     </mat-option>
   }
