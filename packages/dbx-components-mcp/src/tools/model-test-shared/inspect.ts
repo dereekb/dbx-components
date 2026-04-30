@@ -44,6 +44,5 @@ export async function inspectSpecFile(config: { readonly specAbs: string; readon
       // Fall through to import-based detection — apiDir is optional.
     }
   }
-  const tree = extractSpecTreeFromText({ text, specPath: specRel, prefix, knownFixtureNames });
-  return tree;
+  return extractSpecTreeFromText({ text, specPath: specRel, prefix, knownFixtureNames });
 }

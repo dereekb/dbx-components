@@ -66,7 +66,7 @@ function matchNode(node: SpecNode, query: SpecSearchQuery, describeStack: readon
   let matched = false;
   switch (query.mode) {
     case 'model':
-      matched = node.kind === 'fixture' && node.model !== undefined && node.model.toLowerCase() === query.value.toLowerCase();
+      matched = node.kind === 'fixture' && node.model?.toLowerCase() === query.value.toLowerCase();
       break;
     case 'chain':
       matched = node.kind === 'fixture' && chainContainsSequence([...fixtureStack, node.model ?? ''], parseChainQuery(query.value));
@@ -124,8 +124,8 @@ function chainContainsSequence(chain: readonly string[], sequence: readonly stri
   if (sequence.length > chain.length) return false;
   const lowerChain = chain.map((s) => s.toLowerCase());
   outer: for (let i = 0; i <= lowerChain.length - sequence.length; i++) {
-    for (let j = 0; j < sequence.length; j++) {
-      if (lowerChain[i + j] !== sequence[j]) continue outer;
+    for (const [j, element] of sequence.entries()) {
+      if (lowerChain[i + j] !== element) continue outer;
     }
     return true;
   }

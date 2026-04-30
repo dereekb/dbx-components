@@ -22,7 +22,7 @@
  */
 
 import { Node, Project, SyntaxKind, type ArrowFunction, type Block, type CallExpression, type FunctionExpression, type Identifier, type ObjectLiteralExpression, type SourceFile } from 'ts-morph';
-import type { HelperDescribe, PrefixSource, SpecFileTree, SpecNode, SpecNodeKind } from './types.js';
+import type { HelperDescribe, PrefixSource, SpecFileTree, SpecNode } from './types.js';
 
 /**
  * Inputs accepted by {@link extractSpecTreeFromText}.

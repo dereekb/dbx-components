@@ -73,11 +73,9 @@ function appendHeader(lines: string[], tree: SpecFileTree, view: SpecTreeView, f
   lines.push('');
   lines.push(`Detected workspace prefix: \`${tree.prefix ?? '(none)'}\` (source: ${tree.prefixSource})`);
   lines.push(`Counts: ${tree.describeCount} describes, ${tree.itCount} its, ${tree.fixtureCallsCount} fixture calls, ${tree.helpers.length} helper-describes`);
-  if (view !== 'helpers' && view !== 'its') {
-    if (filters.filterByModel || filters.filterByDescribePath) {
+  if (view !== 'helpers' && view !== 'its' && (filters.filterByModel || filters.filterByDescribePath)) {
       lines.push(`Active filters: ${[filters.filterByModel ? `model=\`${filters.filterByModel}\`` : '', filters.filterByDescribePath ? `describePath=\`${filters.filterByDescribePath}\`` : ''].filter(Boolean).join(', ')}`);
     }
-  }
 }
 
 function appendHelpersSection(lines: string[], helpers: readonly HelperDescribe[]): void {
@@ -233,7 +231,7 @@ function collapseTo(node: SpecNode, keep: readonly string[]): SpecNode {
 }
 
 function pruneByModel(node: SpecNode, model: string): SpecNode | undefined {
-  const matchedSelf = node.kind === 'fixture' && node.model !== undefined && node.model.toLowerCase() === model;
+  const matchedSelf = node.kind === 'fixture' && node.model?.toLowerCase() === model;
   const prunedChildren: SpecNode[] = [];
   for (const child of node.children) {
     const result = pruneByModel(child, model);
@@ -268,8 +266,8 @@ function collectDescribesMatching(node: SpecNode, target: readonly string[], sta
 
 function pathStartsWith(actual: readonly string[], expected: readonly string[]): boolean {
   if (expected.length > actual.length) return false;
-  for (let i = 0; i < expected.length; i++) {
-    if (!actual[i].includes(expected[i])) return false;
+  for (const [i, element] of expected.entries()) {
+    if (!actual[i].includes(element)) return false;
   }
   return true;
 }
