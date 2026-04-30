@@ -1013,68 +1013,71 @@ function _finalizeValidation<C extends DbxForgeFieldFunctionDef<any>>(instance: 
 }
 
 function _finalizeValidators<C extends DbxForgeFieldFunctionDef<any>>(instance: DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C>, fieldDef: C, validation: DbxForgeFieldValidation): void {
-  const validators = validation.validators!;
-  let hasOneOrMoreValidatorFunctions = false;
+  const validators = validation.validators;
 
-  const validatorCustomFnConfig: {
-    validators: Record<string, CustomValidator>;
-    asyncValidators: Record<string, AsyncCustomValidator>;
-  } = { validators: {}, asyncValidators: {} };
+  if (validators) {
+    let hasOneOrMoreValidatorFunctions = false;
 
-  let validatorFnNameCount = 0;
+    const validatorCustomFnConfig: {
+      validators: Record<string, CustomValidator>;
+      asyncValidators: Record<string, AsyncCustomValidator>;
+    } = { validators: {}, asyncValidators: {} };
 
-  function _generateValidatorFunctionName() {
-    validatorFnNameCount += 1;
-    return `__vfn__${fieldDef.key}_${validatorFnNameCount}`;
-  }
+    let validatorFnNameCount = 0;
 
-  const finalizedValidators: ValidatorConfig[] = validators.map((entry) => {
-    let result: ValidatorConfig;
+    function _generateValidatorFunctionName() {
+      validatorFnNameCount += 1;
+      return `__vfn__${fieldDef.key}_${validatorFnNameCount}`;
+    }
 
-    if (!('fn' in entry)) {
-      result = entry as ValidatorConfig;
-    } else {
-      const { fn, reusableDefinition: _reusableDefinition, ...rest } = entry as any;
-      const functionName: string = rest.functionName ?? _generateValidatorFunctionName();
-      hasOneOrMoreValidatorFunctions = true;
+    const finalizedValidators: ValidatorConfig[] = validators.map((entry) => {
+      let result: ValidatorConfig;
 
-      switch (entry.type) {
-        case 'custom':
-          validatorCustomFnConfig.validators[functionName] = fn;
-          break;
-        case 'async':
-          validatorCustomFnConfig.asyncValidators[functionName] = fn;
-          break;
-        default:
-          break;
+      if (!('fn' in entry)) {
+        result = entry as ValidatorConfig;
+      } else {
+        const { fn, reusableDefinition: _reusableDefinition, ...rest } = entry as any;
+        const functionName: string = rest.functionName ?? _generateValidatorFunctionName();
+        hasOneOrMoreValidatorFunctions = true;
+
+        switch (entry.type) {
+          case 'custom':
+            validatorCustomFnConfig.validators[functionName] = fn;
+            break;
+          case 'async':
+            validatorCustomFnConfig.asyncValidators[functionName] = fn;
+            break;
+          default:
+            break;
+        }
+
+        // Return a clean ValidatorConfig without fn or reusableDefinition
+        result = { ...rest, functionName } as ValidatorConfig;
       }
 
-      // Return a clean ValidatorConfig without fn or reusableDefinition
-      result = { ...rest, functionName } as ValidatorConfig;
-    }
-
-    return result;
-  });
-
-  instance.setValidation({
-    validators: finalizedValidators,
-    validationMessages: validation.validationMessages
-  });
-
-  if (hasOneOrMoreValidatorFunctions) {
-    const validatorFormConfig: { validators?: Record<string, CustomValidator>; asyncValidators?: Record<string, AsyncCustomValidator> } = {};
-
-    if (Object.keys(validatorCustomFnConfig.validators).length > 0) {
-      validatorFormConfig.validators = validatorCustomFnConfig.validators;
-    }
-
-    if (Object.keys(validatorCustomFnConfig.asyncValidators).length > 0) {
-      validatorFormConfig.asyncValidators = validatorCustomFnConfig.asyncValidators;
-    }
-
-    instance.addFormConfig({
-      customFnConfig: validatorFormConfig
+      return result;
     });
+
+    instance.setValidation({
+      validators: finalizedValidators,
+      validationMessages: validation.validationMessages
+    });
+
+    if (hasOneOrMoreValidatorFunctions) {
+      const validatorFormConfig: { validators?: Record<string, CustomValidator>; asyncValidators?: Record<string, AsyncCustomValidator> } = {};
+
+      if (Object.keys(validatorCustomFnConfig.validators).length > 0) {
+        validatorFormConfig.validators = validatorCustomFnConfig.validators;
+      }
+
+      if (Object.keys(validatorCustomFnConfig.asyncValidators).length > 0) {
+        validatorFormConfig.asyncValidators = validatorCustomFnConfig.asyncValidators;
+      }
+
+      instance.addFormConfig({
+        customFnConfig: validatorFormConfig
+      });
+    }
   }
 }
 

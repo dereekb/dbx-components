@@ -103,9 +103,9 @@ export function describeFirestoreIterationTests(f: MockItemCollectionFixture) {
               const accumulator = firebaseQuerySnapshotAccumulator(iteration);
 
               // First page should return all items but not yet know it's the end
-              iteration.nextPage().then(() => {
+              void iteration.nextPage().then(() => {
                 // Load the next page which should discover end via empty snapshot
-                iteration.nextPage().then(() => {
+                void iteration.nextPage().then(() => {
                   sub.subscription = iteration.latestState$
                     .pipe(
                       filter((x) => isLoadingStateFinishedLoading(x)),
@@ -138,7 +138,7 @@ export function describeFirestoreIterationTests(f: MockItemCollectionFixture) {
               const accumulator = firebaseQuerySnapshotAccumulator(iteration);
 
               // Load pages until the iterator reaches the end
-              iteratorNextPageUntilPage(iteration, expectedPages + 1).then((page) => {
+              void iteratorNextPageUntilPage(iteration, expectedPages + 1).then((_page) => {
                 sub.subscription = iteration.latestState$
                   .pipe(
                     filter((x) => isLoadingStateFinishedLoading(x)),
@@ -245,10 +245,10 @@ export function describeFirestoreIterationTests(f: MockItemCollectionFixture) {
         it(
           'should load the next page and return when the page has finished loading.',
           callbackTest((done) => {
-            iteration.nextPage().then(() => {
+            void iteration.nextPage().then(() => {
               const nextPageResult = from(iteration.nextPage());
 
-              sub.subscription = nextPageResult.pipe(switchMap((x) => iteration.currentState$)).subscribe((latestState) => {
+              sub.subscription = nextPageResult.pipe(switchMap((_x) => iteration.currentState$)).subscribe((latestState) => {
                 const page = latestState.page;
                 expect(page).toBe(1);
 
@@ -290,7 +290,7 @@ export function describeFirestoreIterationTests(f: MockItemCollectionFixture) {
                 const pagesToLoad = 2;
 
                 // load up to page 2
-                iteratorNextPageUntilPage(iteration, pagesToLoad).then((page) => {
+                void iteratorNextPageUntilPage(iteration, pagesToLoad).then((page) => {
                   expect(page).toBe(pagesToLoad - 1);
 
                   const obs = flattenAccumulatorResultItemArray(accumulator);
@@ -344,7 +344,7 @@ export function describeFirestoreIterationTests(f: MockItemCollectionFixture) {
                 const pagesToLoad = 2;
 
                 // load up to page 2
-                iteratorNextPageUntilPage(iteration, pagesToLoad).then((page) => {
+                void iteratorNextPageUntilPage(iteration, pagesToLoad).then((page) => {
                   expect(page).toBe(pagesToLoad - 1);
 
                   const obs = flattenAccumulatorResultItemArray(itemAccumulator);
@@ -366,7 +366,7 @@ export function describeFirestoreIterationTests(f: MockItemCollectionFixture) {
                 const pagesToLoad = 2;
 
                 // load up to page 2
-                iteratorNextPageUntilPage(iteration, pagesToLoad).then((page) => {
+                void iteratorNextPageUntilPage(iteration, pagesToLoad).then((page) => {
                   expect(page).toBe(pagesToLoad - 1);
 
                   const obs = flattenAccumulatorResultItemArray(itemAccumulator);

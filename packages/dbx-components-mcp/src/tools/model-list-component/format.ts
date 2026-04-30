@@ -16,7 +16,8 @@ export function formatReportAsMarkdown(report: ComponentModelReport): string {
   lines.push(`- **Models found:** ${report.models.length}`);
   lines.push(`- **Reserved folders skipped:** ${report.skipped.length}`);
   if (report.unidentifiedFolders.length > 0) {
-    lines.push(`- **Folders without detectable identity:** ${report.unidentifiedFolders.length} (${report.unidentifiedFolders.map((f) => `\`${f}\``).join(', ')})`);
+    const unidentifiedFolderList = report.unidentifiedFolders.map((f) => `\`${f}\``).join(', ');
+    lines.push(`- **Folders without detectable identity:** ${report.unidentifiedFolders.length} (${unidentifiedFolderList})`);
   }
   lines.push(`- **Fixture coverage:** ${formatCoverageStatus(report)}`);
   lines.push('');

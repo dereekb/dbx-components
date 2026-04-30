@@ -206,7 +206,7 @@ export const firebaseAdminTestBuilder = testContextBuilder<FirebaseAdminTestCont
     return config;
   },
   buildFixture: () => new FirebaseAdminTestContextFixture(),
-  setupInstance: async (config) => {
+  setupInstance: async (_config) => {
     if (!isAdminEnvironmentInitialized()) {
       throw new Error('Call initFirebaseAdminTestEnvironment() from @dereekb/firebase-server was not called before using adminFirebaseTestBuilder().');
     }
@@ -217,7 +217,7 @@ export const firebaseAdminTestBuilder = testContextBuilder<FirebaseAdminTestCont
 
     return new FirebaseAdminTestContextInstance(app);
   },
-  teardownInstance: async (instance, config) => {
+  teardownInstance: async (instance, _config) => {
     await (instance as FirebaseAdminTestContextInstance).app.delete(); // clean up the instance
   }
 });

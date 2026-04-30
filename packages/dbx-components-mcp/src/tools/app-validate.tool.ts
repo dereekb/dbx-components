@@ -297,7 +297,8 @@ function formatMarkdown(report: AggregatedReport): string {
   lines.push(`- **Errors:** ${report.errorCount}`);
   lines.push(`- **Warnings:** ${report.warningCount}`);
   if (report.skipped.length > 0) {
-    lines.push(`- **Skipped clusters:** ${report.skipped.map((c) => `\`${c}\``).join(', ')}`);
+    const skippedClusters = report.skipped.map((c) => `\`${c}\``).join(', ');
+    lines.push(`- **Skipped clusters:** ${skippedClusters}`);
   }
   if (report.clusterErrors.length > 0) {
     lines.push('');
@@ -326,7 +327,8 @@ function formatMarkdown(report: AggregatedReport): string {
 
 function renderFinding(finding: AggregatedFinding): string[] {
   const out: string[] = [];
-  const fileSuffix = finding.file ? ` — \`${finding.file}\`${finding.line !== undefined ? `:${finding.line}` : ''}` : '';
+  const lineSuffix = finding.line !== undefined ? `:${finding.line}` : '';
+  const fileSuffix = finding.file ? ` — \`${finding.file}\`${lineSuffix}` : '';
   out.push(`- **\`${finding.code}\`** [${finding.cluster}]${fileSuffix}`);
   out.push(`  ${finding.message}`);
   if (finding.remediation) {

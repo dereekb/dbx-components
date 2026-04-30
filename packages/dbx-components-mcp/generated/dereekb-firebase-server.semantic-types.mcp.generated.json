@@ -20,7 +20,7 @@
       "notes": "An encoded JWT string representing a Firebase custom token created for testing.",
       "sourceLocation": {
         "file": "test/src/lib/firebase/firebase.admin.auth.ts",
-        "line": 444
+        "line": 445
       }
     },
     {

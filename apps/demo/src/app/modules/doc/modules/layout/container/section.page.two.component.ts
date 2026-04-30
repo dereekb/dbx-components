@@ -8,7 +8,7 @@ import { DbxFormSearchFormComponent, DbxFormValueChangeDirective } from '@dereek
 import { MatButton } from '@angular/material/button';
 import { DocSelectionItemListComponent } from '../component/item.list.selection.component';
 import { DocLayoutSectionPageTwoPopoverComponent } from '../component/section.page.two.popover.component';
-import { DocLayoutSectionPageTwoSearchComponent, DocLayoutSectionPageTwoSearchValue } from '../component/sectionpagetwo.picker.component';
+import { DocLayoutSectionPageTwoSearchComponent, type DocLayoutSectionPageTwoSearchValue } from '../component/sectionpagetwo.picker.component';
 
 @Component({
   templateUrl: './section.page.two.component.html',

@@ -36,7 +36,7 @@ import {
   loadAllFirestoreDocumentSnapshot,
   orderByDocumentId
 } from '@dereekb/firebase';
-import { type MockItemCollectionFixture, allChildMockItemSubItemDeepsWithinMockItem, MockItemDocument, type MockItem, type MockItemSubItemDocument, type MockItemSubItem, type MockItemSubItemDeepDocument, type MockItemSubItemDeep, type MockItemUserDocument, mockItemIdentity, type MockItemUserKey } from '../mock';
+import { type MockItemCollectionFixture, allChildMockItemSubItemDeepsWithinMockItem, MockItemDocument, type MockItem, type MockItemSubItemDocument, type MockItemSubItem, type MockItemSubItemDeep, type MockItemUserDocument, mockItemIdentity, type MockItemUserKey } from '../mock';
 import { arrayFactory, idBatchFactory, isEvenNumber, mapGetter, randomFromArrayFactory, randomNumberFactory, unique, waitForMs } from '@dereekb/util';
 import { DateRangeType } from '@dereekb/date';
 
@@ -94,8 +94,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
         const factory = idBatchFactory<string, string>({
           verifier: mockItemIdBatchVerifier(f.instance.mockItemCollection),
           factory: (count) => {
-            const ids = [random(), ...idFactory(count)];
-            return ids;
+            return [random(), ...idFactory(count)];
           }
         });
 
@@ -360,8 +359,6 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
 
           describe('iterateFirestoreDocumentSnapshots()', () => {
             it('should iterate across all mock users by each snapshot.', async () => {
-              const documentAccessor = f.instance.mockItemUserCollectionGroup.documentAccessor();
-
               const mockUserItemsVisited = new Set<MockItemUserKey>();
               const batchSize = 2;
 
@@ -474,7 +471,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
                   batchSize, // use specific batch size
                   limitPerCheckpoint: 1,
                   maxParallelCheckpoints, // do four checkpoints in parallel
-                  iterateSnapshotBatch: async (x, batchIndex) => {
+                  iterateSnapshotBatch: async (_x, _batchIndex) => {
                     currentRunningTasks += 1;
 
                     await waitForMs(1000);
@@ -591,20 +588,14 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
 
       describe('sub sub item', () => {
         const deepSubItemCountPerItem = 1;
-        const totalDeepSubItemsCount = deepSubItemCountPerItem * totalSubItemsCount;
         const totalDeepSubItemsPerMockItem = subItemCountPerItem * deepSubItemCountPerItem;
-
-        let deepSubItemParentA: MockItemSubItemDocument;
 
         let queryDeepSubItems: FirestoreQueryFactoryFunction<MockItemSubItemDeep>;
 
-        let allDeepSubItems: MockItemSubItemDeepDocument[];
-
         beforeEach(async () => {
           queryDeepSubItems = f.instance.mockItemSubItemDeepCollectionGroup.query;
-          deepSubItemParentA = allSubItems[0];
 
-          const results = await Promise.all(
+          await Promise.all(
             allSubItems.map((parent: MockItemSubItemDocument) =>
               makeDocuments(f.instance.mockItemSubItemDeepCollection(parent).documentAccessor(), {
                 count: deepSubItemCountPerItem,
@@ -616,8 +607,6 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
               })
             )
           );
-
-          allDeepSubItems = results.flat();
         });
 
         // tests querying for all nested items under a parent
@@ -715,7 +704,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
                     });
 
                   // add one item
-                  makeDocuments(f.instance.mockItemSubItemCollection(parentA).documentAccessor(), {
+                  void makeDocuments(f.instance.mockItemSubItemCollection(parentA).documentAccessor(), {
                     count: itemsToAdd,
                     init: (i) => {
                       return {
@@ -752,7 +741,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
                       tryComplete();
                     });
 
-                  allSubItems[0].accessor.exists().then((exists) => {
+                  void allSubItems[0].accessor.exists().then((exists) => {
                     expect(exists).toBe(true);
 
                     // remove one item
@@ -900,7 +889,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
               });
 
             // add one item
-            waitForMs(10).then(() =>
+            void waitForMs(10).then(() =>
               makeDocuments(f.instance.mockItemCollection.documentAccessor(), {
                 count: itemsToAdd,
                 init: (i) => {
@@ -940,7 +929,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
                 tryComplete();
               });
 
-            waitForMs(10).then(() =>
+            void waitForMs(10).then(() =>
               items[0].exists().then((exists) => {
                 expect(exists).toBe(true);
 
@@ -1002,7 +991,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
               });
 
             // add one item
-            waitForMs(10).then(() =>
+            void waitForMs(10).then(() =>
               makeDocuments(f.instance.mockItemCollection.documentAccessor(), {
                 count: itemsToAdd,
                 init: (i) => {
@@ -1042,7 +1031,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
                 tryComplete();
               });
 
-            waitForMs(10).then(() =>
+            void waitForMs(10).then(() =>
               items[0].exists().then((exists) => {
                 expect(exists).toBe(true);
 
@@ -1100,7 +1089,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
               });
 
             // add one item
-            waitForMs(10).then(() =>
+            void waitForMs(10).then(() =>
               makeDocuments(f.instance.mockItemCollection.documentAccessor(), {
                 count: itemsToAdd,
                 init: (i) => {
@@ -1140,7 +1129,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
                 tryComplete();
               });
 
-            waitForMs(10).then(() =>
+            void waitForMs(10).then(() =>
               items[0].accessor.exists().then((exists) => {
                 expect(exists).toBe(true);
 

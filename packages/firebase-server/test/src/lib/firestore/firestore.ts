@@ -88,7 +88,7 @@ export const googleCloudTestFirestoreBuilder = testContextBuilder<GoogleCloudTes
 
     return new GoogleCloudTestFirestoreInstance(drivers, firestore);
   },
-  teardownInstance: async (instance, config) => {
+  teardownInstance: async (instance, _config) => {
     await (instance.firestore as Firestore).terminate();
   }
 });

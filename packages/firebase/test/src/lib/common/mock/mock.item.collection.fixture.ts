@@ -95,11 +95,11 @@ export interface MockItemCollectionFirebaseContextConfig {}
  * }));
  * ```
  */
-export function testWithMockItemCollectionFixture(config?: MockItemCollectionFirebaseContextConfig): TestWrappedContextFactoryBuilder<MockItemCollectionFixture, TestFirestoreContextFixture> {
+export function testWithMockItemCollectionFixture(_config?: MockItemCollectionFirebaseContextConfig): TestWrappedContextFactoryBuilder<MockItemCollectionFixture, TestFirestoreContextFixture> {
   return instanceWrapTestContextFactory({
     wrapFixture: (fixture) => new MockItemCollectionFixture(fixture),
     makeInstance: (wrap) => new MockItemCollectionFixtureInstance(wrap),
-    teardownInstance: (instance: MockItemCollectionFixtureInstance) => {}
+    teardownInstance: (_instance: MockItemCollectionFixtureInstance) => undefined
     // TODO(FUTURE): Utilize config here using the setup/teardown later if needed.
   });
 }

@@ -41,7 +41,7 @@ export function findModelGroups(sf: SourceFile): readonly ExtractedModelGroup[] 
 
 function buildFromDecl(decl: ClassDeclaration | InterfaceDeclaration): ExtractedModelGroup | undefined {
   const name = decl.getName();
-  if (!name || !name.endsWith(CONTAINER_SUFFIX)) return undefined;
+  if (!name?.endsWith(CONTAINER_SUFFIX)) return undefined;
   const tag = readDbxModelGroupTag(decl.getJsDocs());
   if (tag === undefined) return undefined;
   const explicitName = typeof tag === 'string' ? tag : undefined;

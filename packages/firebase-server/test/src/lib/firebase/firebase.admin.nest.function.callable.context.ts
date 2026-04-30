@@ -10,7 +10,9 @@ import { type WrappedCallableRequest } from './firebase.function';
  * Cloud Function wrapping capabilities.
  */
 export interface CallableRequestTestBaseConfig {
-  /** The test context fixture providing NestJS module and function wrapping access. */
+  /**
+   * The test context fixture providing NestJS module and function wrapping access.
+   */
   readonly f: FirebaseAdminFunctionNestTestContext;
 }
 
@@ -19,7 +21,9 @@ export interface CallableRequestTestBaseConfig {
  * The `fn` factory is wrapped and provided to the test callback as a {@link WrappedCallableRequest}.
  */
 export interface CallableRequestTestSingleConfig<I, O = unknown> extends CallableRequestTestBaseConfig {
-  /** The callable HTTP function factory to wrap for testing. */
+  /**
+   * The callable HTTP function factory to wrap for testing.
+   */
   readonly fn: WrapCallableRequestForNestTestsInput<I, O>;
 }
 
@@ -44,7 +48,9 @@ export type CallableRequestTestConfigMapObject = {
  * Each entry in `fns` is independently wrapped and exposed via a {@link CallableRequestTestMultipleFixture}.
  */
 export interface CallableRequestTestMultipleConfig<I, T extends CallableRequestTestConfigMapObject> extends CallableRequestTestBaseConfig {
-  /** Map of named callable function factories to wrap for testing. */
+  /**
+   * Map of named callable function factories to wrap for testing.
+   */
   fns: T;
 }
 
@@ -53,6 +59,7 @@ export interface CallableRequestTestMultipleConfig<I, T extends CallableRequestT
  * the {@link CallableRequestTestMultipleFixture}. For example, a key `"createUser"` produces
  * a fixture property named `"createUserWrappedFn"`.
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention -- PascalCase chosen so the const reads as a type-level token in template literal types
 export const CallableRequestTestMultipleFixtureSuffix = 'WrappedFn';
 
 /**
@@ -75,8 +82,7 @@ export type CallableRequestTestMultipleFunction<T extends CallableRequestTestCon
  * {@link CallableRequestTestMultipleConfig} by checking for the presence of the `fn` property.
  */
 export function isCallableRequestTestSingleConfig<I, T extends CallableRequestTestConfigMapObject>(config: CallableRequestTestSingleConfig<I> | CallableRequestTestMultipleConfig<I, T>): config is CallableRequestTestSingleConfig<I> {
-  const isSingle = Boolean((config as CallableRequestTestSingleConfig<I>).fn);
-  return isSingle;
+  return Boolean((config as CallableRequestTestSingleConfig<I>).fn);
 }
 
 /**
@@ -95,8 +101,7 @@ export function callableRequestTest<I, T extends CallableRequestTestConfigMapObj
     useTestFunctionFixture<WrappedCallableRequest<I>>(
       {
         fn: () => {
-          const x = wrapCallableRequestForNestTestsGetter(f, fn)();
-          return x;
+          return wrapCallableRequestForNestTestsGetter(f, fn)();
         }
       },
       buildTests as CallableRequestTestSingleFunction<I>

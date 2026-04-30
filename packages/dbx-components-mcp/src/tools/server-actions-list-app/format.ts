@@ -35,7 +35,8 @@ export function formatReportAsMarkdown(report: ServerActionsReport): string {
     if (entry.fixtureCoverage) {
       const fc = entry.fixtureCoverage;
       const ifaceNote = fc.contextInterfaceDeclaresGetter ? '✅' : '❌';
-      const classNote = fc.classesMissingGetter.length === 0 ? '✅ all classes implement it' : `⚠️ missing on: ${fc.classesMissingGetter.map((c) => `\`${c}\``).join(', ')}`;
+      const missingClassList = fc.classesMissingGetter.map((c) => `\`${c}\``).join(', ');
+      const classNote = fc.classesMissingGetter.length === 0 ? '✅ all classes implement it' : `⚠️ missing on: ${missingClassList}`;
       lines.push(`- **Fixture context interface declares \`${fc.expectedGetterName}\` getter:** ${ifaceNote}`);
       lines.push(`- **Fixture/instance classes implement getter:** ${classNote}`);
     } else {

@@ -240,23 +240,6 @@ function rulesTestContextForConfig(rulesTestEnv: RulesTestEnvironment, testingRu
   return rulesTestContext;
 }
 
-function rewriteEmulatorConfigRulesForFuzzedCollectionNames(config: EmulatorConfig | undefined, fuzzedCollectionNamesMap: Map<string, string>): EmulatorConfig | undefined {
-  if (config && config.rules) {
-    config = {
-      ...config,
-      rules: rewriteRulesForFuzzedCollectionNames(config.rules, fuzzedCollectionNamesMap)
-    };
-  }
-
-  return config;
-}
-
-function rewriteRulesForFuzzedCollectionNames(rules: string | undefined, fuzzedCollectionNamesMap: Map<string, string>): string | undefined {
-  // TODO: rewrite the rules using regex matching/replacement.
-
-  return rules;
-}
-
 // MARK: Utility
 /**
  * Registers `beforeAll`/`afterAll` hooks to suppress verbose Firestore log output during tests.

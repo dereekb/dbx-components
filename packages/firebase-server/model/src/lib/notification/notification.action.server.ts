@@ -1573,7 +1573,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
               });
 
               let { es, ts, ns } = notification;
-              let ps: typeof notification.ps;
+              let ps: typeof notification.ps | undefined = undefined; // next ps value. If undefined, remains the same.
               const { esr: currentEsr, tsr: currentTsr } = notification;
 
               // do emails
