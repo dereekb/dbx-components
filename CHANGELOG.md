@@ -1,3 +1,17 @@
+## [13.10.4](https://github.com/dereekb/dbx-components/compare/v13.10.3-dev...v13.10.4) (2026-04-30)
+
+
+### Build System
+
+- lint fix + mcp regeneration ([cd3bf0fb](https://github.com/dereekb/dbx-components/commit/cd3bf0fbbe9df7dc7ec014126daff7ad2103d3e6))
+
+
+### Code Refactoring
+
+- **dbx-components-mcp:** added model test tree/search tools ([9787c159](https://github.com/dereekb/dbx-components/commit/9787c1591f6b72709331d8750a6d6e2e6c24a9d3))
+- **dbx-components-mcp:** added untagged model rules to validator ([51d64104](https://github.com/dereekb/dbx-components/commit/51d641045c8c1c6a3f939a2f8fe81bb84041185b))
+- fix anchor selection misfire ([05957475](https://github.com/dereekb/dbx-components/commit/05957475167d534df86ad9d765bdb0f8d0f53b81))
+
 ## [13.10.3](https://github.com/dereekb/dbx-components/compare/v13.10.2-dev...v13.10.3) (2026-04-30)
 
 
