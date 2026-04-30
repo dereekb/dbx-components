@@ -13,6 +13,9 @@ function expectCodes(codes: readonly ViolationCode[], expected: readonly Violati
 const HAPPY_SOURCE = `
 import { firestoreModelIdentity, type FirestoreContext, type CollectionReference, type CollectionGroup, type FirestoreCollection, type FirestoreCollectionGroup, type SingleItemFirestoreCollection, AbstractFirestoreDocument, AbstractFirestoreDocumentWithParent, snapshotConverterFunctions, firestoreUID, firestoreString, firestoreDate } from '@dereekb/firebase';
 
+/**
+ * @dbxModelGroup Profile
+ */
 export interface ProfileFirestoreCollections {
   profileCollection: ProfileFirestoreCollection;
   profilePrivateCollectionFactory: ProfilePrivateFirestoreCollectionFactory;
@@ -23,6 +26,9 @@ export type ProfileTypes = typeof profileIdentity | typeof profilePrivateIdentit
 
 export const profileIdentity = firestoreModelIdentity('profile', 'pr');
 
+/**
+ * @dbxModel
+ */
 export interface Profile {
   uid: string;
   n: string;
@@ -61,6 +67,9 @@ export function profileFirestoreCollection(firestoreContext: FirestoreContext): 
 
 export const profilePrivateIdentity = firestoreModelIdentity(profileIdentity, 'profilePrivate', 'prp');
 
+/**
+ * @dbxModel
+ */
 export interface ProfilePrivate {
   cat: Date;
 }
@@ -284,6 +293,9 @@ describe('validateFirebaseModelSources', () => {
   const MULTI_ITEM_SOURCE = `
 import { firestoreModelIdentity, type FirestoreContext, type CollectionReference, type CollectionGroup, type FirestoreCollection, type FirestoreCollectionGroup, type FirestoreCollectionWithParent, AbstractFirestoreDocument, AbstractFirestoreDocumentWithParent, snapshotConverterFunctions, firestoreUID, firestoreString, firestoreDate } from '@dereekb/firebase';
 
+/**
+ * @dbxModelGroup Job
+ */
 export interface JobFirestoreCollections {
   jobCollection: JobFirestoreCollection;
   jobApplicationCollectionFactory: JobApplicationFirestoreCollectionFactory;
@@ -294,6 +306,9 @@ export type JobTypes = typeof jobIdentity | typeof jobApplicationIdentity;
 
 export const jobIdentity = firestoreModelIdentity('job', 'j');
 
+/**
+ * @dbxModel
+ */
 export interface Job {
   uid: string;
   n: string;
@@ -332,6 +347,9 @@ export function jobFirestoreCollection(firestoreContext: FirestoreContext): JobF
 
 export const jobApplicationIdentity = firestoreModelIdentity(jobIdentity, 'jobApplication', 'ja');
 
+/**
+ * @dbxModel
+ */
 export interface JobApplication {
   cat: Date;
 }
@@ -421,6 +439,9 @@ export function jobApplicationFirestoreCollectionGroup(firestoreContext: Firesto
   const ROOT_SINGLETON_SOURCE = `
 import { firestoreModelIdentity, type FirestoreContext, type CollectionReference, type RootSingleItemFirestoreCollection, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString } from '@dereekb/firebase';
 
+/**
+ * @dbxModelGroup AgentSummary
+ */
 export interface AgentSummaryFirestoreCollections {
   agentSummaryCollection: AgentSummaryFirestoreCollection;
 }
@@ -429,6 +450,9 @@ export type AgentSummaryTypes = typeof agentSummaryIdentity;
 
 export const agentSummaryIdentity = firestoreModelIdentity('agentSummary', 'ags');
 
+/**
+ * @dbxModel
+ */
 export interface AgentSummary {
   n: string;
 }
@@ -508,5 +532,66 @@ export function agentSummaryFirestoreCollection(firestoreContext: FirestoreConte
     expect(v).toBeDefined();
     expect(v?.remediation).toBeDefined();
     expect(v?.remediation?.fix).toBeTruthy();
+  });
+
+  // MARK: JSDoc tag rules
+  describe('JSDoc tag rules', () => {
+    it('flags MODEL_GROUP_INTERFACE_MISSING_TAG when the group container has no `@dbxModelGroup`', () => {
+      const text = HAPPY_SOURCE.replace('/**\n * @dbxModelGroup Profile\n */\n', '');
+      const result = validateFirebaseModelSources([{ name: 'x.ts', text }]);
+      const codes = result.violations.map((v) => v.code);
+      expectCodes(codes, ['MODEL_GROUP_INTERFACE_MISSING_TAG']);
+    });
+
+    it('flags MODEL_INTERFACE_MISSING_TAG and MODEL_IDENTITY_NOT_TAGGED when a model interface lacks `@dbxModel`', () => {
+      const text = HAPPY_SOURCE.replace('/**\n * @dbxModel\n */\nexport interface Profile {', 'export interface Profile {');
+      const result = validateFirebaseModelSources([{ name: 'x.ts', text }]);
+      const codes = result.violations.map((v) => v.code);
+      expectCodes(codes, ['MODEL_INTERFACE_MISSING_TAG', 'MODEL_IDENTITY_NOT_TAGGED']);
+      const identityErr = result.violations.find((v) => v.code === 'MODEL_IDENTITY_NOT_TAGGED');
+      expect(identityErr?.message).toContain('profileIdentity');
+      expect(identityErr?.message).toContain('Profile');
+    });
+
+    it('anchors MODEL_IDENTITY_NOT_TAGGED at the firestoreModelIdentity line, not the interface line', () => {
+      const text = HAPPY_SOURCE.replace('/**\n * @dbxModel\n */\nexport interface Profile {', 'export interface Profile {');
+      const result = validateFirebaseModelSources([{ name: 'x.ts', text }]);
+      const identityErr = result.violations.find((v) => v.code === 'MODEL_IDENTITY_NOT_TAGGED');
+      const interfaceErr = result.violations.find((v) => v.code === 'MODEL_INTERFACE_MISSING_TAG');
+      expect(identityErr?.line).toBeDefined();
+      expect(interfaceErr?.line).toBeDefined();
+      // Identity line is the `export const profileIdentity` line; the interface line is below it.
+      expect(identityErr!.line!).toBeLessThan(interfaceErr!.line!);
+    });
+
+    it('emits both errors when both Profile and ProfilePrivate are untagged', () => {
+      const text = HAPPY_SOURCE.replace('/**\n * @dbxModel\n */\nexport interface Profile {', 'export interface Profile {').replace('/**\n * @dbxModel\n */\nexport interface ProfilePrivate {', 'export interface ProfilePrivate {');
+      const result = validateFirebaseModelSources([{ name: 'x.ts', text }]);
+      const identityErrs = result.violations.filter((v) => v.code === 'MODEL_IDENTITY_NOT_TAGGED');
+      expect(identityErrs).toHaveLength(2);
+      const models = identityErrs.map((v) => v.model).sort();
+      expect(models).toEqual(['Profile', 'ProfilePrivate']);
+    });
+
+    it('warns MODEL_FIELD_MISSING_VARIABLE_TAG on tagged-interface fields without `@dbxModelVariable`', () => {
+      const result = validateFirebaseModelSources([{ name: 'x.ts', text: HAPPY_SOURCE }]);
+      const tagWarnings = result.violations.filter((v) => v.code === 'MODEL_FIELD_MISSING_VARIABLE_TAG');
+      expect(tagWarnings.length).toBeGreaterThan(0);
+      expect(tagWarnings[0].severity).toBe('warning');
+    });
+
+    it('does not warn MODEL_FIELD_MISSING_VARIABLE_TAG when the parent interface lacks `@dbxModel`', () => {
+      const text = HAPPY_SOURCE.replace('/**\n * @dbxModel\n */\nexport interface Profile {', 'export interface Profile {');
+      const result = validateFirebaseModelSources([{ name: 'x.ts', text }]);
+      const profileTagWarnings = result.violations.filter((v) => v.code === 'MODEL_FIELD_MISSING_VARIABLE_TAG' && v.model === 'Profile');
+      expect(profileTagWarnings).toHaveLength(0);
+    });
+
+    it('passes when every field on a tagged interface has `@dbxModelVariable`', () => {
+      const text = HAPPY_SOURCE.replace('export interface Profile {\n  uid: string;\n  n: string;\n}', 'export interface Profile {\n  /** @dbxModelVariable userUid */\n  uid: string;\n  /** @dbxModelVariable name */\n  n: string;\n}');
+      const result = validateFirebaseModelSources([{ name: 'x.ts', text }]);
+      const profileTagWarnings = result.violations.filter((v) => v.code === 'MODEL_FIELD_MISSING_VARIABLE_TAG' && v.model === 'Profile');
+      expect(profileTagWarnings).toHaveLength(0);
+    });
   });
 });

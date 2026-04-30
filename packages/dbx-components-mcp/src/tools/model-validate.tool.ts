@@ -26,7 +26,7 @@ import { formatResult, validateFirebaseModelSources } from './model-validate/ind
 const DBX_MODEL_VALIDATE_TOOL: Tool = {
   name: 'dbx_model_validate',
   description: [
-    'Validate a @dereekb/firebase model file against the workspace model-group convention. Checks that the file exports a `<Group>FirestoreCollections` interface and `<Group>Types` union, and that every `firestoreModelIdentity(...)` has the canonical declarations in order (interface, roles, document class, converter, collection reference fn, collection type, collection fn) — plus the factory-type + collection-group triple for subcollections. All reported issues are hard errors.',
+    'Validate a @dereekb/firebase model file against the workspace model-group convention. Checks that the file exports a `<Group>FirestoreCollections` interface and `<Group>Types` union, and that every `firestoreModelIdentity(...)` has the canonical declarations in order (interface, roles, document class, converter, collection reference fn, collection type, collection fn) — plus the factory-type + collection-group triple for subcollections. Also enforces JSDoc tagging required for catalog discovery and downstream traversal: `@dbxModelGroup <Group>` on the group container, `@dbxModel` on every model interface (with a per-identity `MODEL_IDENTITY_NOT_TAGGED` error anchored at the `firestoreModelIdentity(...)` line), and `@dbxModelVariable <name>` on every persisted field (warning).',
     '',
     'Provide at least one of:',
     '- `sources`: array of `{ name, text }` — file contents supplied directly.',

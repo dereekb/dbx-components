@@ -310,6 +310,16 @@
     "canonicalFix": "Add `/** <fullName> -- <description> *\\/` above the field declaration."
   },
   {
+    "code": "MODEL_FIELD_MISSING_VARIABLE_TAG",
+    "source": "dbx_model_validate",
+    "severity": "warning",
+    "title": "A persisted field is missing its `@dbxModelVariable <name>` JSDoc tag",
+    "whatItFlags": "A persisted field is missing its `@dbxModelVariable <name>` JSDoc tag.",
+    "whenItApplies": "Every field on a `@dbxModel` interface — the tag carries the human-readable long name the catalog and decoder use when surfacing the field to operators.",
+    "whenItDoesNotApply": "Fields on embedded sub-object interfaces (no `@dbxModel` parent) and fields the project deliberately leaves untagged (rare).",
+    "canonicalFix": "Append `@dbxModelVariable <longName>` to the field's JSDoc block."
+  },
+  {
     "code": "MODEL_FIELD_NAME_TOO_LONG",
     "source": "dbx_model_validate",
     "severity": "warning",
@@ -318,6 +328,22 @@
     "whenItApplies": "Every persisted field on a model interface (or sub-object interface).",
     "whenItDoesNotApply": "Fields that compose well-known multi-character abbreviations the project intentionally allows.",
     "canonicalFix": "Rename the field to a 1–4 character abbreviation (e.g. `name` → `n`, `userId` → `uid`)."
+  },
+  {
+    "code": "MODEL_GROUP_INTERFACE_MISSING_TAG",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "The `<Group>FirestoreCollections` interface is missing its `@dbxModelGroup` JSDoc tag",
+    "whatItFlags": "The `<Group>FirestoreCollections` interface is missing its `@dbxModelGroup` JSDoc tag.",
+    "whenItApplies": "Every group container — the rich catalog extractor (`scan/extract-models`) requires the tag to register the group, and downstream traversal/referencing depends on that registration.",
+    "whenItDoesNotApply": "Files in `@dereekb/firebase` itself (upstream-owned sources).",
+    "canonicalFix": "Add `@dbxModelGroup <Group>` to the JSDoc above the `<Group>FirestoreCollections` declaration.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "firestore-model"
+      }
+    ]
   },
   {
     "code": "MODEL_IDENTITY_BAD_ARGS",
@@ -338,6 +364,38 @@
     "whenItApplies": "Every identity constant.",
     "whenItDoesNotApply": "When intentionally module-private (rare).",
     "canonicalFix": "Add `export` to the identity constant declaration."
+  },
+  {
+    "code": "MODEL_IDENTITY_NOT_TAGGED",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "`firestoreModelIdentity(...)` was found but its corresponding model interface lacks the `@dbxModel` JSDoc tag, leaving the model invisible to the catalog and to downstream traversal/referencing code",
+    "whatItFlags": "`firestoreModelIdentity(...)` was found but its corresponding model interface lacks the `@dbxModel` JSDoc tag, leaving the model invisible to the catalog and to downstream traversal/referencing code.",
+    "whenItApplies": "Every `firestoreModelIdentity(...)` call whose `<PascalName>` interface is missing `@dbxModel`. Anchored at the identity line so the fix points at both the interface and the identity.",
+    "whenItDoesNotApply": "Files in `@dereekb/firebase` itself.",
+    "canonicalFix": "Add `@dbxModel` to the JSDoc on the `<PascalName>` interface so the catalog and decoder recognise it as a model.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "firestore-model"
+      }
+    ]
+  },
+  {
+    "code": "MODEL_INTERFACE_MISSING_TAG",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "The model's data interface is missing its `@dbxModel` JSDoc tag",
+    "whatItFlags": "The model's data interface is missing its `@dbxModel` JSDoc tag.",
+    "whenItApplies": "Every `<PascalName>` interface that anchors a `firestoreModelIdentity(...)` model — the rich catalog extractor (`scan/extract-models`) requires the tag to register the model.",
+    "whenItDoesNotApply": "Embedded sub-object interfaces (no matching identity) and files in `@dereekb/firebase` itself.",
+    "canonicalFix": "Add `@dbxModel` to the JSDoc above the `<PascalName>` interface declaration.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "firestore-model"
+      }
+    ]
   },
   {
     "code": "MODEL_INTERFACE_NOT_EXPORTED",

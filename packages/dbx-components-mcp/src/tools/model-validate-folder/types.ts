@@ -14,14 +14,21 @@
  */
 
 import type { FolderGroupedResult, FolderGroupedViolation } from '../validate-format.js';
+import type { ModelValidateCode } from '../model-validate/codes.js';
 import type { ModelValidateFolderCode } from './codes.js';
 
 export type { FolderInspectionStatus, ViolationSeverity } from '../validate-format.js';
 
 /**
- * String-literal union derived from {@link ModelValidateFolderCode}.
+ * String-literal union of every code the folder validator may emit. Folder
+ * codes from {@link ModelValidateFolderCode} cover the structural rules;
+ * {@link ModelValidateCode} codes are forwarded when the folder validator
+ * runs the per-file content rules from `dbx_model_validate` against each
+ * `<sources>` entry. The rule catalog already attributes each code to its
+ * origin tool, so callers can render either cluster's diagnostics from a
+ * single folder violation list.
  */
-export type ViolationCode = `${ModelValidateFolderCode}`;
+export type ViolationCode = `${ModelValidateFolderCode}` | `${ModelValidateCode}`;
 
 export type Violation = FolderGroupedViolation<ViolationCode>;
 
@@ -84,6 +91,22 @@ export interface FolderInspection {
    * `.ts` file basenames at the folder root (ignored when `status !== 'ok'`).
    */
   readonly files: readonly string[];
+  /**
+   * Optional file contents the rules layer feeds into the per-file
+   * `model-validate` content rules. The MCP tool populates this; specs
+   * may omit it when they only exercise structural rules.
+   */
+  readonly sources?: readonly ModelFolderSource[];
+}
+
+/**
+ * One `.ts` source file's contents passed alongside the folder inspection
+ * so the rules layer can run the per-file content validator without
+ * touching the disk a second time.
+ */
+export interface ModelFolderSource {
+  readonly filename: string;
+  readonly text: string;
 }
 
 /**

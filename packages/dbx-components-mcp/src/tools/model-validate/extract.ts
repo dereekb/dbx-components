@@ -8,7 +8,7 @@
  * resolution needed, so a lightweight in-memory Project is sufficient.
  */
 
-import { Node, Project, SyntaxKind, type ClassDeclaration, type GetAccessorDeclaration, type InterfaceDeclaration, type SourceFile, type TypeAliasDeclaration } from 'ts-morph';
+import { Node, Project, SyntaxKind, type ClassDeclaration, type GetAccessorDeclaration, type InterfaceDeclaration, type JSDoc, type SourceFile, type TypeAliasDeclaration } from 'ts-morph';
 import type { ExtractedDataInterface, ExtractedDecl, ExtractedDocumentClass, ExtractedField, ExtractedFile, ExtractedGroupInterface, ExtractedGroupTypes, ExtractedIdentity, ExtractedModel, FirestoreCollectionKind, ModelVariant, ValidatorSource } from './types.js';
 
 // MARK: Entry
@@ -52,7 +52,8 @@ function findDataInterfaces(sourceFile: SourceFile, groupInterface: ExtractedGro
       continue;
     }
     const fields = extractInterfaceFields(iface);
-    out.push({ name, fields });
+    const dbxModelTag = readDbxModelTag(iface.getJsDocs());
+    out.push({ name, line: iface.getStartLineNumber(), dbxModelTag, fields });
   }
   return out;
 }
@@ -60,8 +61,10 @@ function findDataInterfaces(sourceFile: SourceFile, groupInterface: ExtractedGro
 function extractInterfaceFields(iface: InterfaceDeclaration): readonly ExtractedField[] {
   const fields: ExtractedField[] = [];
   for (const prop of iface.getProperties()) {
-    const jsDocFirstLine = firstJsDocLine(prop.getJsDocs());
-    const field: ExtractedField = { name: prop.getName(), line: prop.getStartLineNumber(), jsDocFirstLine };
+    const jsDocs = prop.getJsDocs();
+    const jsDocFirstLine = firstJsDocLine(jsDocs);
+    const dbxModelVariableTag = readDbxModelVariableTag(jsDocs);
+    const field: ExtractedField = { name: prop.getName(), line: prop.getStartLineNumber(), jsDocFirstLine, dbxModelVariableTag };
     fields.push(field);
   }
   return fields;
@@ -97,8 +100,77 @@ function findGroupInterface(sourceFile: SourceFile): ExtractedGroupInterface | u
     name: iface.getName(),
     exported: iface.isExported(),
     properties,
-    line: iface.getStartLineNumber()
+    line: iface.getStartLineNumber(),
+    dbxModelGroupTag: readDbxModelGroupTag(iface.getJsDocs())
   };
+  return result;
+}
+
+// MARK: JSDoc tag helpers
+/**
+ * Reads the `@dbxModelGroup [Name]` tag off a JSDoc block. Returns the
+ * trimmed tag text when an explicit group name is supplied, `true` for a
+ * bare `@dbxModelGroup` marker, and `undefined` when the tag is absent.
+ *
+ * Mirrors `scan/extract-models/find-model-groups.ts` so the validator and
+ * the rich catalog extractor agree on what counts as a tagged group.
+ *
+ * @param jsDocs - JSDoc blocks attached to the group container declaration
+ * @returns the tag value, or `undefined` when no `@dbxModelGroup` tag is present
+ */
+function readDbxModelGroupTag(jsDocs: readonly JSDoc[]): string | true | undefined {
+  let result: string | true | undefined;
+  for (const jsDoc of jsDocs) {
+    for (const tag of jsDoc.getTags()) {
+      if (tag.getTagName() !== 'dbxModelGroup') continue;
+      const text = tag.getCommentText()?.trim() ?? '';
+      result = text.length > 0 ? text : true;
+    }
+  }
+  return result;
+}
+
+/**
+ * Reads the `@dbxModel` flag off a JSDoc block. Returns `true` when the
+ * tag is present (regardless of any inline argument); `false` otherwise.
+ *
+ * Mirrors `scan/extract-models/find-interfaces.ts` so a downstream model
+ * interface that the catalog would skip is also flagged here.
+ *
+ * @param jsDocs - JSDoc blocks attached to the data interface declaration
+ * @returns `true` when `@dbxModel` is present, otherwise `false`
+ */
+function readDbxModelTag(jsDocs: readonly JSDoc[]): boolean {
+  let result = false;
+  for (const jsDoc of jsDocs) {
+    for (const tag of jsDoc.getTags()) {
+      if (tag.getTagName() === 'dbxModel') {
+        result = true;
+      }
+    }
+  }
+  return result;
+}
+
+/**
+ * Reads the `@dbxModelVariable <name>` long-name tag off a JSDoc block.
+ * Returns the trimmed tag text when present and non-empty; `undefined`
+ * otherwise (matching the rich extractor's "first non-empty wins" rule).
+ *
+ * @param jsDocs - JSDoc blocks attached to the property declaration
+ * @returns the long-name string, or `undefined` when no `@dbxModelVariable` tag is present
+ */
+function readDbxModelVariableTag(jsDocs: readonly JSDoc[]): string | undefined {
+  let result: string | undefined;
+  for (const jsDoc of jsDocs) {
+    for (const tag of jsDoc.getTags()) {
+      if (tag.getTagName() !== 'dbxModelVariable') continue;
+      const text = tag.getCommentText()?.trim();
+      if (text !== undefined && text.length > 0 && result === undefined) {
+        result = text;
+      }
+    }
+  }
   return result;
 }
 

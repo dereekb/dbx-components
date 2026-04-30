@@ -16,6 +16,9 @@ describe('dbx_model_validate', () => {
 
   it('validates a canonical source and reports PASS', async () => {
     const text = `
+/**
+ * @dbxModelGroup Foo
+ */
 export interface FooFirestoreCollections {
   fooCollection: FooFirestoreCollection;
 }
@@ -24,6 +27,9 @@ export type FooTypes = typeof fooIdentity;
 
 export const fooIdentity = firestoreModelIdentity('foo', 'fo');
 
+/**
+ * @dbxModel
+ */
 export interface Foo { n: string; }
 
 export type FooRoles = 'owner';
@@ -66,9 +72,11 @@ export interface Foo { n: string; }
 
   it('reports PASS WITH WARNINGS for long field names without errors', async () => {
     const text = `
+/** @dbxModelGroup Foo */
 export interface FooFirestoreCollections { fooCollection: FooFirestoreCollection; }
 export type FooTypes = typeof fooIdentity;
 export const fooIdentity = firestoreModelIdentity('foo', 'fo');
+/** @dbxModel */
 export interface Foo { tooLongField: string; n: string; }
 export type FooRoles = 'owner';
 export class FooDocument extends AbstractFirestoreDocument<Foo, FooDocument, typeof fooIdentity> { get modelIdentity() { return fooIdentity; } }
