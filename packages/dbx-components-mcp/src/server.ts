@@ -23,6 +23,7 @@ import { FIREBASE_MODELS } from './registry/firebase-models.js';
 import type { FixtureModelRegistry } from './tools/model-fixture-shared/index.js';
 import { registerResources } from './resources/index.js';
 import { registerTools } from './tools/index.js';
+import { discoverDownstreamPackages, DOWNSTREAM_CLUSTERS, type DownstreamCluster, type DownstreamPackage } from './scan/discover-downstream-packages.js';
 import packageJson from '../package.json' with { type: 'json' };
 
 export const SERVER_NAME = 'dbx-components-mcp';
@@ -85,6 +86,18 @@ export interface CreateServerOptions {
   readonly onPipeLoaderResult?: (result: LoadPipeRegistryResult) => void;
   readonly onActionLoaderResult?: (result: LoadActionRegistryResult) => void;
   readonly onFilterLoaderResult?: (result: LoadFilterRegistryResult) => void;
+  readonly onDownstreamHints?: (hints: readonly DownstreamHint[]) => void;
+}
+
+/**
+ * One hint emitted at startup when a downstream package looks like it
+ * provides entries for a cluster but no external manifest is registered.
+ * Hints are calculated once after every loader completes; the default
+ * observer prints them to stderr alongside the per-cluster summary lines.
+ */
+export interface DownstreamHint {
+  readonly cluster: DownstreamCluster;
+  readonly packages: readonly DownstreamPackage[];
 }
 
 /**
@@ -118,10 +131,13 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
   // McpServer.registerResource, which declares its own capability.
   server.server.registerCapabilities({ tools: {} });
 
+  const externalCounts: Partial<Record<DownstreamCluster, number>> = {};
+
   let registry: SemanticTypeRegistry | undefined = options.semanticTypeRegistry;
   if (registry === undefined) {
     const cwd = options.cwd ?? process.cwd();
     const loaderResult = await loadSemanticTypeRegistry({ cwd });
+    externalCounts.semanticTypes = loaderResult.externalSourceCount;
     if (options.onLoaderResult === undefined) {
       reportLoaderResult(loaderResult);
     } else {
@@ -135,6 +151,7 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
     const cwd = options.cwd ?? process.cwd();
     try {
       const uiLoaderResult = await loadUiComponentRegistry({ cwd });
+      externalCounts.uiComponents = uiLoaderResult.externalSourceCount;
       if (options.onUiLoaderResult === undefined) {
         reportUiLoaderResult(uiLoaderResult);
       } else {
@@ -153,6 +170,7 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
     const cwd = options.cwd ?? process.cwd();
     try {
       const forgeLoaderResult = await loadForgeFieldRegistry({ cwd });
+      externalCounts.forgeFields = forgeLoaderResult.externalSourceCount;
       if (options.onForgeLoaderResult === undefined) {
         reportForgeLoaderResult(forgeLoaderResult);
       } else {
@@ -171,6 +189,7 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
     const cwd = options.cwd ?? process.cwd();
     try {
       const pipeLoaderResult = await loadPipeRegistry({ cwd });
+      externalCounts.pipes = pipeLoaderResult.externalSourceCount;
       if (options.onPipeLoaderResult === undefined) {
         reportPipeLoaderResult(pipeLoaderResult);
       } else {
@@ -189,6 +208,7 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
     const cwd = options.cwd ?? process.cwd();
     try {
       const actionLoaderResult = await loadActionRegistry({ cwd });
+      externalCounts.actions = actionLoaderResult.externalSourceCount;
       if (options.onActionLoaderResult === undefined) {
         reportActionLoaderResult(actionLoaderResult);
       } else {
@@ -207,6 +227,7 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
     const cwd = options.cwd ?? process.cwd();
     try {
       const filterLoaderResult = await loadFilterRegistry({ cwd });
+      externalCounts.filters = filterLoaderResult.externalSourceCount;
       if (options.onFilterLoaderResult === undefined) {
         reportFilterLoaderResult(filterLoaderResult);
       } else {
@@ -223,6 +244,8 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
   const fixtureModelRegistry: FixtureModelRegistry = {
     entries: FIREBASE_MODELS.map((m) => ({ name: m.name, modelType: m.modelType, collectionPrefix: m.collectionPrefix }))
   };
+
+  await emitDownstreamHints({ cwd: options.cwd ?? process.cwd(), externalCounts, onDownstreamHints: options.onDownstreamHints });
 
   registerResources(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, uiComponentRegistry: uiRegistry, actionRegistry, filterRegistry });
   registerTools(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, uiComponentRegistry: uiRegistry, actionRegistry, filterRegistry, fixtureModelRegistry });
@@ -352,5 +375,65 @@ function reportFilterLoaderResult(result: LoadFilterRegistryResult): void {
   }
   for (const warning of loaderWarnings) {
     process.stderr.write(`[dbx-components-mcp] filters-loader-warning: ${warning.kind}\n`);
+  }
+}
+
+const HINT_CLUSTER_LABEL: Record<DownstreamCluster, string> = {
+  semanticTypes: 'semantic-types',
+  uiComponents: 'ui-components',
+  forgeFields: 'forge-fields',
+  pipes: 'pipes',
+  actions: 'actions',
+  filters: 'filters'
+};
+
+interface EmitDownstreamHintsInput {
+  readonly cwd: string;
+  readonly externalCounts: Partial<Record<DownstreamCluster, number>>;
+  readonly onDownstreamHints?: (hints: readonly DownstreamHint[]) => void;
+}
+
+/**
+ * Discovers downstream packages once and emits a per-cluster hint when:
+ *   - the loader for that cluster ran (i.e. wasn't bypassed by an injected
+ *     registry), AND
+ *   - the loader saw zero external sources, AND
+ *   - at least one discovered package looks like it provides entries for the
+ *     cluster (heuristic + scan-config declarations).
+ *
+ * Default observer prints a single line per cluster on stderr; tests pass
+ * `onDownstreamHints` to capture the structured hints instead.
+ *
+ * @param input - the cwd, the per-cluster external counts, and an optional observer
+ */
+async function emitDownstreamHints(input: EmitDownstreamHintsInput): Promise<void> {
+  const { cwd, externalCounts, onDownstreamHints } = input;
+  let packages: readonly DownstreamPackage[];
+  try {
+    packages = await discoverDownstreamPackages({ workspaceRoot: cwd });
+  } catch {
+    packages = [];
+  }
+  if (packages.length === 0) {
+    if (onDownstreamHints !== undefined) onDownstreamHints([]);
+    return;
+  }
+
+  const hints: DownstreamHint[] = [];
+  for (const cluster of DOWNSTREAM_CLUSTERS) {
+    const externalCount = externalCounts[cluster];
+    if (externalCount === undefined) continue; // loader bypassed (test injected registry)
+    if (externalCount > 0) continue; // already registered — no nudge needed
+    const candidates = packages.filter((p) => p.candidateClusters.includes(cluster));
+    if (candidates.length > 0) hints.push({ cluster, packages: candidates });
+  }
+
+  if (onDownstreamHints !== undefined) {
+    onDownstreamHints(hints);
+    return;
+  }
+  for (const hint of hints) {
+    const dirs = hint.packages.map((p) => p.relDir).join(', ');
+    process.stderr.write(`[dbx-components-mcp] ${HINT_CLUSTER_LABEL[hint.cluster]}-hint: ${hint.packages.length} downstream package(s) (${dirs}) appear to define ${HINT_CLUSTER_LABEL[hint.cluster]} entries but none are registered. Run \`dbx_mcp_config op="status"\` for setup instructions.\n`);
   }
 }

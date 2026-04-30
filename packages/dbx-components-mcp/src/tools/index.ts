@@ -59,6 +59,7 @@
  * | dbx_app_validate                    | Verification  | "Validate the whole app (component + API) end-to-end." |
  * | dbx_model_list_component            | Discovery     | "What downstream models live in this `-firebase` component?" |
  * | dbx_server_actions_list_app         | Discovery     | "What server-actions classes does this API expose, and are they wired?" |
+ * | dbx_mcp_config                      | Setup         | "Status / validate / init / refresh the workspace dbx-mcp config." |
  */
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -105,6 +106,7 @@ import { explainRuleTool } from './explain-rule.tool.js';
 import { appValidateTool } from './app-validate.tool.js';
 import { modelListComponentTool } from './model-list-component.tool.js';
 import { serverActionsListAppTool } from './server-actions-list-app.tool.js';
+import { mcpConfigTool } from './mcp-config.tool.js';
 import { createSemanticTypeLookupTool } from './lookup-semantic-type.tool.js';
 import { createSemanticTypeSearchTool } from './search-semantic-type.tool.js';
 import type { ActionRegistry } from '../registry/actions-runtime.js';
@@ -168,7 +170,9 @@ export const DBX_TOOLS: readonly DbxTool[] = [
   appValidateTool,
   // downstream component introspection
   modelListComponentTool,
-  serverActionsListAppTool
+  serverActionsListAppTool,
+  // workspace config audit / setup
+  mcpConfigTool
 ];
 
 /**
