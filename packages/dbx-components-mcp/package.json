@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-components-mcp",
-  "version": "13.10.2",
+  "version": "13.10.3",
   "type": "module",
   "bin": {
     "dbx-components-mcp": "dbx-components-mcp.js"

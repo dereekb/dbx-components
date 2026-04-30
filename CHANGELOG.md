@@ -1,3 +1,21 @@
+## [13.10.3](https://github.com/dereekb/dbx-components/compare/v13.10.2-dev...v13.10.3) (2026-04-30)
+
+
+### Bug Fixes
+
+- **dbx-form:** forge form-field wrapper Material CSS leak ([e55ae02c](https://github.com/dereekb/dbx-components/commit/e55ae02c16c601e8f92afdc457b80b87a14b2c9f))
+
+
+### Code Refactoring
+
+- added SessionRecording to DbxAnalyticsStreamEventType ([9d39e709](https://github.com/dereekb/dbx-components/commit/9d39e7090b053f9257cc4b344a9606975c0508d9))
+- **dbx-components-mcp:** added dbx_mcp_config tool ([f2e5658c](https://github.com/dereekb/dbx-components/commit/f2e5658c1fa96b243fb2cfbdbbe21b6b7a34018c))
+- **dbx-components-mcp:** added downstream model search/lookup ([63ea1065](https://github.com/dereekb/dbx-components/commit/63ea1065b7234cb04c5322e5abeaa139c5c8a97f))
+- lint-fix ([408a532d](https://github.com/dereekb/dbx-components/commit/408a532d5a5e2c7b1ee71092fdbff5c10a73de11))
+- update CLAUDE.md ([dbd89f7d](https://github.com/dereekb/dbx-components/commit/dbd89f7d5d1ecb7b981c232b196186ac24591925))
+- updated dbx-components-mcp ([6bcfa2d4](https://github.com/dereekb/dbx-components/commit/6bcfa2d4616ae024b1ba4dec26dd91a93e6bcb0d))
+- updated ng-forge version to 0.8.0 ([369f23b1](https://github.com/dereekb/dbx-components/commit/369f23b1145a6438ca6624ced8719ab12825cd80))
+
 ## [13.10.2](https://github.com/dereekb/dbx-components/compare/v13.10.1-dev...v13.10.2) (2026-04-29)
 
 
