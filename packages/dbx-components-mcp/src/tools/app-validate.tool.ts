@@ -51,6 +51,8 @@ const TOOL: Tool = {
   description: [
     'Aggregate validator for a downstream `-firebase` component + API app pair. Runs every per-domain validator (`storagefile_m`, `notification_m`, model-folder, `system_m`, fixture) and returns one severity-grouped report.',
     '',
+    'The `model_folder` cluster includes both folder-structure findings (canonical 5-file layout) and per-file content findings forwarded from `dbx_model_validate` — including the JSDoc-tag rules (`MODEL_IDENTITY_NOT_TAGGED`, `MODEL_GROUP_INTERFACE_MISSING_TAG`, `MODEL_INTERFACE_MISSING_TAG`) that flag downstream apps where `firestoreModelIdentity(...)` calls lack catalog tagging.',
+    '',
     'Replaces the six-tool dance an agent runs to validate one app end-to-end. Each finding is tagged with its source cluster, code, file/line, and canonical-fix line (when the rule catalog has an entry).',
     '',
     'Inputs:',

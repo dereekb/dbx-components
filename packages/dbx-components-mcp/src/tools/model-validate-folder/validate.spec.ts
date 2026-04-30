@@ -200,4 +200,68 @@ describe('validateModelFolders', () => {
     expect(v?.remediation).toBeDefined();
     expect(v?.remediation?.fix).toContain('<name>.ts');
   });
+
+  // MARK: Content-rule propagation
+  describe('content-rule propagation (delegates to model-validate)', () => {
+    const TAGGED_PROFILE_TEXT = `
+/** @dbxModelGroup Profile */
+export interface ProfileFirestoreCollections { profileCollection: ProfileFirestoreCollection; }
+export type ProfileTypes = typeof profileIdentity;
+export const profileIdentity = firestoreModelIdentity('profile', 'pr');
+/** @dbxModel */
+export interface Profile { /** @dbxModelVariable name */ n: string; }
+export type ProfileRoles = 'owner';
+export class ProfileDocument extends AbstractFirestoreDocument<Profile, ProfileDocument, typeof profileIdentity> { get modelIdentity() { return profileIdentity; } }
+export const profileConverter = snapshotConverterFunctions<Profile>({ fields: { n: firestoreString() } });
+export function profileCollectionReference(context: FirestoreContext): CollectionReference<Profile> { return context.collection(profileIdentity.collectionName); }
+export type ProfileFirestoreCollection = FirestoreCollection<Profile, ProfileDocument>;
+export function profileFirestoreCollection(firestoreContext: FirestoreContext): ProfileFirestoreCollection { return firestoreContext.firestoreCollection({ modelIdentity: profileIdentity, converter: profileConverter, collection: profileCollectionReference(firestoreContext), makeDocument: (a, b) => new ProfileDocument(a, b), firestoreContext }); }
+`;
+
+    function okInspectionWithSources(name: string, files: readonly string[], sources: readonly { filename: string; text: string }[]): FolderInspection {
+      return { name, path: `packages/foo/src/lib/model/${name}`, status: 'ok', files, sources };
+    }
+
+    it('passes through with no errors when sources are properly tagged', () => {
+      const result = validateModelFolders([okInspectionWithSources('profile', CANONICAL_FILES, [{ filename: 'profile.ts', text: TAGGED_PROFILE_TEXT }])]);
+      expect(
+        result.errorCount,
+        JSON.stringify(
+          result.violations.filter((v) => v.severity === 'error'),
+          null,
+          2
+        )
+      ).toBe(0);
+    });
+
+    it('surfaces MODEL_GROUP_INTERFACE_MISSING_TAG when the group container is untagged', () => {
+      const text = TAGGED_PROFILE_TEXT.replace('/** @dbxModelGroup Profile */\n', '');
+      const result = validateModelFolders([okInspectionWithSources('profile', CANONICAL_FILES, [{ filename: 'profile.ts', text }])]);
+      const codes = result.violations.map((v) => v.code);
+      expect(codes).toContain('MODEL_GROUP_INTERFACE_MISSING_TAG');
+    });
+
+    it('surfaces MODEL_IDENTITY_NOT_TAGGED when a firestoreModelIdentity exists but its interface lacks `@dbxModel`', () => {
+      const text = TAGGED_PROFILE_TEXT.replace('/** @dbxModel */\nexport interface Profile {', 'export interface Profile {');
+      const result = validateModelFolders([okInspectionWithSources('profile', CANONICAL_FILES, [{ filename: 'profile.ts', text }])]);
+      const codes = result.violations.map((v) => v.code);
+      expect(codes).toContain('MODEL_IDENTITY_NOT_TAGGED');
+      expect(codes).toContain('MODEL_INTERFACE_MISSING_TAG');
+      const identityErr = result.violations.find((v) => v.code === 'MODEL_IDENTITY_NOT_TAGGED');
+      expect(identityErr?.folder).toBe('packages/foo/src/lib/model/profile');
+      expect(identityErr?.file).toBe('profile.ts');
+    });
+
+    it('skips empty/no-source folders without crashing', () => {
+      const result = validateModelFolders([okInspectionWithSources('profile', CANONICAL_FILES, [])]);
+      const contentCodes = result.violations.filter((v) => v.code.startsWith('MODEL_') || v.code.startsWith('FILE_')).map((v) => v.code);
+      expect(contentCodes).toHaveLength(0);
+    });
+
+    it('omits content rules entirely when the inspection has no `sources` field (back-compat)', () => {
+      const result = validateModelFolders([okInspection('profile', CANONICAL_FILES)]);
+      expect(result.errorCount).toBe(0);
+      expect(result.warningCount).toBe(0);
+    });
+  });
 });

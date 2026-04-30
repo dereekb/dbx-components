@@ -5,6 +5,7 @@
  */
 
 import { attachRemediation } from '../rule-catalog/index.js';
+import { validateFirebaseModelSources } from '../model-validate/index.js';
 import { buildRequiredFiles, RESERVED_MODEL_FOLDERS, type FolderInspection, type ReservedModelFolder, type Violation, type ViolationSeverity } from './types.js';
 
 /**
@@ -48,7 +49,27 @@ export function runRules(inspection: FolderInspection): readonly Violation[] {
   }
   checkRequiredFiles(inspection, violations);
   checkStrayFiles(inspection, violations);
+  checkSourceContents(inspection, violations);
   return violations;
+}
+
+// MARK: Per-file content (delegates to model-validate)
+function checkSourceContents(inspection: FolderInspection, violations: Violation[]): void {
+  const sources = inspection.sources;
+  if (!sources || sources.length === 0) {
+    return;
+  }
+  const validatorSources = sources.map((s) => ({ name: s.filename, text: s.text }));
+  const result = validateFirebaseModelSources(validatorSources);
+  for (const v of result.violations) {
+    pushViolation(violations, {
+      code: v.code,
+      severity: v.severity,
+      message: v.message,
+      folder: inspection.path,
+      file: v.file
+    });
+  }
 }
 
 // MARK: Required files

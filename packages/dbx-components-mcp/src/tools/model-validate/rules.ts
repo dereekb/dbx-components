@@ -81,13 +81,21 @@ function checkFieldJsDocs(file: ExtractedFile, violations: Violation[]): void {
           line: field.line,
           model: iface.name
         });
-        continue;
-      }
-      if (!FULL_NAME_FIRST_LINE.test(field.jsDocFirstLine)) {
+      } else if (!FULL_NAME_FIRST_LINE.test(field.jsDocFirstLine)) {
         pushViolation(violations, {
           code: 'MODEL_FIELD_JSDOC_NO_FULL_NAME',
           severity: 'warning',
           message: `JSDoc on field \`${field.name}\` in interface \`${iface.name}\` should start with \`<FullName> -- <description>\` (found: \`${field.jsDocFirstLine}\`). Supported separators: \`--\`, \`—\`, \`–\`, \`-\`, \`:\`.`,
+          file: file.name,
+          line: field.line,
+          model: iface.name
+        });
+      }
+      if (iface.dbxModelTag && field.dbxModelVariableTag === undefined) {
+        pushViolation(violations, {
+          code: 'MODEL_FIELD_MISSING_VARIABLE_TAG',
+          severity: 'warning',
+          message: `Field \`${field.name}\` in interface \`${iface.name}\` is missing its \`@dbxModelVariable <name>\` JSDoc tag. The catalog uses the tag for the field's long name.`,
           file: file.name,
           line: field.line,
           model: iface.name
@@ -115,6 +123,15 @@ function checkFileLevel(file: ExtractedFile, violations: Violation[]): void {
       pushViolation(violations, {
         code: 'FILE_GROUP_INTERFACE_AFTER_MODEL',
         message: `Interface \`${groupInterface.name}\` must be declared before the first model (currently at line ${groupInterface.line}; first model at line ${firstModelLine}).`,
+        file: name,
+        line: groupInterface.line,
+        model: undefined
+      });
+    }
+    if (groupInterface.dbxModelGroupTag === undefined) {
+      pushViolation(violations, {
+        code: 'MODEL_GROUP_INTERFACE_MISSING_TAG',
+        message: `Interface \`${groupInterface.name}\` is missing its \`@dbxModelGroup\` JSDoc tag. Add \`@dbxModelGroup <Group>\` so the catalog and downstream traversal can register the group.`,
         file: name,
         line: groupInterface.line,
         model: undefined
@@ -280,6 +297,23 @@ function checkInterface(file: ExtractedFile, model: ExtractedModel, violations: 
       message: `Interface \`${model.name}\` must be exported.`,
       file: file.name,
       line: model.iface.line,
+      model: model.name
+    });
+  }
+  const dataInterface = file.dataInterfaces.find((d) => d.name === model.name);
+  if (dataInterface && !dataInterface.dbxModelTag) {
+    pushViolation(violations, {
+      code: 'MODEL_INTERFACE_MISSING_TAG',
+      message: `Interface \`${model.name}\` is missing its \`@dbxModel\` JSDoc tag. The catalog skips untagged interfaces, so downstream traversal/referencing of \`${model.name}\` is broken.`,
+      file: file.name,
+      line: dataInterface.line,
+      model: model.name
+    });
+    pushViolation(violations, {
+      code: 'MODEL_IDENTITY_NOT_TAGGED',
+      message: `\`firestoreModelIdentity\` was found for \`${model.identity.constName}\` but its \`${model.name}\` interface is not tagged with \`@dbxModel\`. Tag the interface so the catalog registers the model.`,
+      file: file.name,
+      line: model.identity.line,
       model: model.name
     });
   }

@@ -119,6 +119,13 @@ export interface ExtractedFile {
  */
 export interface ExtractedDataInterface {
   readonly name: string;
+  readonly line: number;
+  /**
+   * `true` when the interface declaration's JSDoc carries an `@dbxModel`
+   * tag. The rich `extract-models` pipeline requires this tag to register
+   * the interface as a model variant for downstream traversal/referencing.
+   */
+  readonly dbxModelTag: boolean;
   readonly fields: readonly ExtractedField[];
 }
 
@@ -129,6 +136,12 @@ export interface ExtractedField {
    * First non-empty description line of the field's JSDoc, or `undefined` if absent.
    */
   readonly jsDocFirstLine: string | undefined;
+  /**
+   * Long-name argument of the field's `@dbxModelVariable <name>` JSDoc
+   * tag, or `undefined` when the tag is absent or empty. Powers the
+   * field's catalog long-name and the decoder's display strings.
+   */
+  readonly dbxModelVariableTag: string | undefined;
 }
 
 export interface ExtractedGroupInterface {
@@ -136,6 +149,14 @@ export interface ExtractedGroupInterface {
   readonly exported: boolean;
   readonly properties: readonly { readonly name: string; readonly typeText: string }[];
   readonly line: number;
+  /**
+   * Value of the group's `@dbxModelGroup [Name]` JSDoc tag. `string` when
+   * the tag carries an explicit group name, `true` for a bare
+   * `@dbxModelGroup` marker, and `undefined` when the tag is absent.
+   * The rich `extract-models` pipeline requires this tag to register the
+   * group container.
+   */
+  readonly dbxModelGroupTag: string | true | undefined;
 }
 
 export interface ExtractedGroupTypes {

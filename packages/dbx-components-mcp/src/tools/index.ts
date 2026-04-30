@@ -37,6 +37,8 @@
  * | dbx_model_fixture_validate_app      | Verification  | "Is every fixture<->instance pair forwarded?"          |
  * | dbx_model_fixture_scaffold          | Generation    | "Add a new fixture/instance triplet for model X"       |
  * | dbx_model_fixture_forward           | Generation    | "Add the missing Fixture forwarders for instance methods" |
+ * | dbx_model_test_tree                 | Discovery     | "Show me the describe/fixture structure of this spec file."  |
+ * | dbx_model_test_search               | Discovery     | "Find every place this spec uses model X / chain Y."         |
  * | dbx_storagefile_m_validate_app      | Verification  | "Is every storagefile purpose wired end-to-end?"       |
  * | dbx_storagefile_m_list_app          | Discovery     | "What storagefile purposes does this app configure?"   |
  * | dbx_storagefile_m_validate_folder   | Verification  | "Does this storagefile folder follow the convention?"  |
@@ -83,6 +85,8 @@ import { modelFixtureLookupTool } from './model-fixture-lookup.tool.js';
 import { createModelFixtureValidateAppTool } from './model-fixture-validate-app.tool.js';
 import { modelFixtureScaffoldTool } from './model-fixture-scaffold.tool.js';
 import { modelFixtureForwardTool } from './model-fixture-forward.tool.js';
+import { modelTestTreeTool } from './model-test-tree.tool.js';
+import { modelTestSearchTool } from './model-test-search.tool.js';
 import type { FixtureModelRegistry } from './model-fixture-shared/index.js';
 import { storageFileMValidateAppTool } from './storagefile-m-validate-app.tool.js';
 import { storageFileMListAppTool } from './storagefile-m-list-app.tool.js';
@@ -142,6 +146,8 @@ export const DBX_TOOLS: readonly DbxTool[] = [
   modelFixtureLookupTool,
   modelFixtureScaffoldTool,
   modelFixtureForwardTool,
+  modelTestTreeTool,
+  modelTestSearchTool,
   // storagefile_m (model extension)
   storageFileMValidateAppTool,
   storageFileMListAppTool,

@@ -31,6 +31,8 @@ const DBX_MODEL_VALIDATE_FOLDER_TOOL: Tool = {
   description: [
     'Validate that one or more model folders follow the canonical layout. Each folder named `<name>/` must contain `<name>.ts`, `<name>.id.ts`, `<name>.query.ts`, `<name>.action.ts`, `<name>.api.ts`, and `index.ts`. Missing files are hard errors.',
     '',
+    'Also runs every `dbx_model_validate` rule against the contents of each model `.ts` file, so untagged models surface here too — e.g. `MODEL_IDENTITY_NOT_TAGGED` when `firestoreModelIdentity(...)` is declared without a matching `@dbxModel` interface. Sub-files (`<name>.id.ts`, `.query.ts`, `.action.ts`, `.api.ts`, `*.spec.ts`, `index.ts`) are skipped — they never declare `firestoreModelIdentity` calls.',
+    '',
     'Warnings cover: stray `.ts` files at the folder root that do not start with `<name>.` (they should be grouped under the model prefix), and reserved folder names (`system/`, `notification/`, `storagefile/`) that have dedicated validators and are skipped here.',
     '',
     'Provide at least one of:',

@@ -98,6 +98,17 @@ export enum ModelValidateCode {
   FILE_GROUP_INTERFACE_MISSING_COLLECTION = 'FILE_GROUP_INTERFACE_MISSING_COLLECTION',
 
   /**
+   * The `<Group>FirestoreCollections` interface is missing its `@dbxModelGroup` JSDoc tag.
+   *
+   * @dbxRuleSeverity error
+   * @dbxRuleApplies Every group container — the rich catalog extractor (`scan/extract-models`) requires the tag to register the group, and downstream traversal/referencing depends on that registration.
+   * @dbxRuleNotApplies Files in `@dereekb/firebase` itself (upstream-owned sources).
+   * @dbxRuleFix Add `@dbxModelGroup <Group>` to the JSDoc above the `<Group>FirestoreCollections` declaration.
+   * @dbxRuleSeeAlso artifact:firestore-model
+   */
+  MODEL_GROUP_INTERFACE_MISSING_TAG = 'MODEL_GROUP_INTERFACE_MISSING_TAG',
+
+  /**
    * The model's `firestoreModelIdentity(...)` const is not exported.
    *
    * @dbxRuleSeverity error
@@ -118,6 +129,17 @@ export enum ModelValidateCode {
   MODEL_IDENTITY_BAD_ARGS = 'MODEL_IDENTITY_BAD_ARGS',
 
   /**
+   * `firestoreModelIdentity(...)` was found but its corresponding model interface lacks the `@dbxModel` JSDoc tag, leaving the model invisible to the catalog and to downstream traversal/referencing code.
+   *
+   * @dbxRuleSeverity error
+   * @dbxRuleApplies Every `firestoreModelIdentity(...)` call whose `<PascalName>` interface is missing `@dbxModel`. Anchored at the identity line so the fix points at both the interface and the identity.
+   * @dbxRuleNotApplies Files in `@dereekb/firebase` itself.
+   * @dbxRuleFix Add `@dbxModel` to the JSDoc on the `<PascalName>` interface so the catalog and decoder recognise it as a model.
+   * @dbxRuleSeeAlso artifact:firestore-model
+   */
+  MODEL_IDENTITY_NOT_TAGGED = 'MODEL_IDENTITY_NOT_TAGGED',
+
+  /**
    * The model has no matching data interface (`<PascalName>`).
    *
    * @dbxRuleSeverity error
@@ -127,6 +149,17 @@ export enum ModelValidateCode {
    * @dbxRuleSeeAlso artifact:firestore-model
    */
   MODEL_MISSING_INTERFACE = 'MODEL_MISSING_INTERFACE',
+
+  /**
+   * The model's data interface is missing its `@dbxModel` JSDoc tag.
+   *
+   * @dbxRuleSeverity error
+   * @dbxRuleApplies Every `<PascalName>` interface that anchors a `firestoreModelIdentity(...)` model — the rich catalog extractor (`scan/extract-models`) requires the tag to register the model.
+   * @dbxRuleNotApplies Embedded sub-object interfaces (no matching identity) and files in `@dereekb/firebase` itself.
+   * @dbxRuleFix Add `@dbxModel` to the JSDoc above the `<PascalName>` interface declaration.
+   * @dbxRuleSeeAlso artifact:firestore-model
+   */
+  MODEL_INTERFACE_MISSING_TAG = 'MODEL_INTERFACE_MISSING_TAG',
 
   /**
    * The model's data interface is declared but not exported.
@@ -387,7 +420,17 @@ export enum ModelValidateCode {
    * @dbxRuleNotApplies When the project deliberately uses a non-standard JSDoc convention (rare).
    * @dbxRuleFix Reformat the JSDoc opener to `<longName> -- <one-line description>`.
    */
-  MODEL_FIELD_JSDOC_NO_FULL_NAME = 'MODEL_FIELD_JSDOC_NO_FULL_NAME'
+  MODEL_FIELD_JSDOC_NO_FULL_NAME = 'MODEL_FIELD_JSDOC_NO_FULL_NAME',
+
+  /**
+   * A persisted field is missing its `@dbxModelVariable <name>` JSDoc tag.
+   *
+   * @dbxRuleSeverity warning
+   * @dbxRuleApplies Every field on a `@dbxModel` interface — the tag carries the human-readable long name the catalog and decoder use when surfacing the field to operators.
+   * @dbxRuleNotApplies Fields on embedded sub-object interfaces (no `@dbxModel` parent) and fields the project deliberately leaves untagged (rare).
+   * @dbxRuleFix Append `@dbxModelVariable <longName>` to the field's JSDoc block.
+   */
+  MODEL_FIELD_MISSING_VARIABLE_TAG = 'MODEL_FIELD_MISSING_VARIABLE_TAG'
 }
 
 /**
