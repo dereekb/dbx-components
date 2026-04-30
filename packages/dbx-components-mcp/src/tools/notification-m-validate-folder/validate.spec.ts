@@ -206,4 +206,13 @@ describe('validateNotificationFolder — barrel re-exports', () => {
     const errors = result.violations.filter((v) => v.code === 'NOTIF_FOLDER_BARREL_REEXPORT_MISSING');
     expect(errors).toHaveLength(0);
   });
+
+  it('auto-attaches remediation hints from the rule catalog', () => {
+    const api = apiSide({ files: ['notification.module.ts', 'notification.send.service.ts', 'index.ts'] });
+    const result = validateNotificationFolder(inspection(componentSide({}), api));
+    const v = result.violations.find((violation) => violation.code === 'NOTIF_FOLDER_TASK_SERVICE_FILE_MISSING');
+    expect(v).toBeDefined();
+    expect(v?.remediation).toBeDefined();
+    expect(v?.remediation?.fix).toContain('notification.task.service.ts');
+  });
 });

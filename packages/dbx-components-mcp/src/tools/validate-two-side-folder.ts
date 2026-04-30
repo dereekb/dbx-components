@@ -19,6 +19,8 @@
 
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
+import { attachRemediation } from './rule-catalog/index.js';
+import type { RemediationHint } from './rule-catalog/types.js';
 import type { ViolationSeverity } from './validate-format.js';
 
 export type { ViolationSeverity } from './validate-format.js';
@@ -91,6 +93,12 @@ export interface TwoSideFolderViolation<TCode extends string> {
   readonly message: string;
   readonly side: TwoSideValidationSide;
   readonly file: string | undefined;
+  /**
+   * Auto-attached remediation hint pulled from the rule catalog at
+   * emission time. `undefined` when no catalog entry exists for the
+   * code (the formatter renders no nested block in that case).
+   */
+  readonly remediation?: RemediationHint;
 }
 
 /**
@@ -449,14 +457,15 @@ function checkBarrelReexports<TCode extends string>(config: TwoSideFolderValidat
   }
 }
 
-function pushViolation<TCode extends string>(buffer: TwoSideFolderViolation<TCode>[], violation: Omit<TwoSideFolderViolation<TCode>, 'severity'> & { readonly severity?: ViolationSeverity }): void {
+function pushViolation<TCode extends string>(buffer: TwoSideFolderViolation<TCode>[], violation: Omit<TwoSideFolderViolation<TCode>, 'severity' | 'remediation'> & { readonly severity?: ViolationSeverity }): void {
   const severity: ViolationSeverity = violation.severity ?? 'error';
   const filled: TwoSideFolderViolation<TCode> = {
     code: violation.code,
     severity,
     message: violation.message,
     side: violation.side,
-    file: violation.file
+    file: violation.file,
+    remediation: attachRemediation(violation.code)
   };
   buffer.push(filled);
 }

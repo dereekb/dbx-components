@@ -47,7 +47,7 @@ import {
   streamDocumentSnapshotDataPairsWithData,
   streamFromOnSnapshot
 } from '@dereekb/firebase';
-import { type MockItemCollectionFixture, MockItemDocument, type MockItem } from '../mock';
+import { type MockItemCollectionFixture, type MockItemDocument, type MockItem } from '../mock';
 import { isEvenNumber, unique } from '@dereekb/util';
 
 /**
@@ -243,8 +243,8 @@ export function describeFirestoreDocumentUtilityTests(f: MockItemCollectionFixtu
         it('should preserve ordering of the input array', async () => {
           const snapshots = await getDocumentSnapshots(items);
 
-          for (let i = 0; i < items.length; i++) {
-            expect(snapshots[i].id).toBe(items[i].id);
+          for (const [i, item] of items.entries()) {
+            expect(snapshots[i].id).toBe(item.id);
           }
         });
       });

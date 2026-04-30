@@ -239,7 +239,7 @@ export const firebaseAdminFunctionTestBuilder = testContextBuilder<FirebaseAdmin
       try {
         await instance.app.delete(); // will be called in cleanup
         firebaseFunctionsTestInstance!.cleanup();
-      } catch (e) {
+      } catch {
         // do nothing
       }
 

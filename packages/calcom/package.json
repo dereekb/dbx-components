@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/calcom",
-  "version": "13.10.2",
+  "version": "13.10.3",
   "exports": {
     "./nestjs": {
       "module": "./nestjs/index.esm.js",
@@ -10,9 +10,9 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/nestjs": "13.10.2",
-    "@dereekb/rxjs": "13.10.2",
-    "@dereekb/util": "13.10.2",
+    "@dereekb/nestjs": "13.10.3",
+    "@dereekb/rxjs": "13.10.3",
+    "@dereekb/util": "13.10.3",
     "@nestjs/common": "^11.1.19",
     "@nestjs/config": "^4.0.4",
     "express": "^5.2.1",

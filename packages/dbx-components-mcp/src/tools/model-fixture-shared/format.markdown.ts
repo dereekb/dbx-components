@@ -128,6 +128,19 @@ export function formatValidationAsMarkdown(result: FixtureValidationResult): str
     const linePart = d.line !== undefined ? ` (line ${d.line})` : '';
     const modelPart = d.model !== undefined ? ` [${d.model}]` : '';
     lines.push('', `- **${d.severity.toUpperCase()}** \`${d.code}\`${modelPart}${linePart}: ${d.message}`);
+    if (d.remediation) {
+      lines.push(`  - Fix: ${d.remediation.fix}`);
+      if (d.remediation.template) {
+        lines.push('  - Template:');
+        for (const tline of d.remediation.template.split('\n')) {
+          lines.push(`      ${tline}`);
+        }
+      }
+      if (d.remediation.seeAlso && d.remediation.seeAlso.length > 0) {
+        const refs = d.remediation.seeAlso.map((r) => `${r.kind}:\`${r.target}\``).join(', ');
+        lines.push(`  - See also: ${refs}`);
+      }
+    }
   }
   return lines.join('\n');
 }

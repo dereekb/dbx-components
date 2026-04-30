@@ -60,8 +60,7 @@ export function isAdminEnvironmentInitialized() {
  * ```
  */
 export function generateNewProjectId() {
-  const projectId = 'firebase-test-' + new Date().getTime();
-  return projectId;
+  return 'firebase-test-' + new Date().getTime();
 }
 
 /**

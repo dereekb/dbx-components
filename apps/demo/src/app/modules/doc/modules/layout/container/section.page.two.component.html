@@ -2,7 +2,12 @@
   <dbx-two-column dbxTwoColumnContext [reverseSizing]="true" [dbxTwoColumnFullLeft]="true" [showRight]="showRight">
     <dbx-two-block left>
       <dbx-two-column-head top>
+        <!--
+        <doc-layout-section-page-two-search class="dbx-section-page-header-search-bar dbx-section-page-header-search-bar-with-bottom-bar" (dbxFormValueChange)="onSearchChange($event)"></doc-layout-section-page-two-search>
+        -->
         <dbx-form-search-form class="dbx-section-page-header-search-bar" (search)="search($event)"></dbx-form-search-form>
+        <dbx-spacer></dbx-spacer>
+        <button #popoverOrigin mat-stroked-button (click)="openPopover()">Popover</button>
       </dbx-two-column-head>
       <doc-complex-item-list [state]="state$" (loadMore)="loadMore()">
         <dbx-list-empty-content empty>

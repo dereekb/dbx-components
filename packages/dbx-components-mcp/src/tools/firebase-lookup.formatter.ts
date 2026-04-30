@@ -52,7 +52,7 @@ const STORE_SHAPE_LABEL: Readonly<Record<FirebaseModelStoreShape, string>> = {
 export function formatFirebaseModelEntry(model: FirebaseModel, depth: LookupDepth): string {
   const identityLine = model.parentIdentityConst ? `\`${model.identityConst}\` — subcollection of \`${model.parentIdentityConst}\`` : `\`${model.identityConst}\` — root collection`;
   const shape = firebaseModelStoreShape(model);
-  const lines: string[] = [`# ${model.name}`, '', `**Identity:** ${identityLine}`, `**Collection:** \`${model.modelType}\` · prefix \`${model.collectionPrefix}\``, `**Store shape:** \`${STORE_SHAPE_LABEL[shape]}\` (see \`dbx_model_lookup topic="shapes"\` for the full taxonomy)`, `**Source:** \`${model.sourceFile}\``, '', `## Fields (${model.fields.length})`, ''];
+  const lines: string[] = [`# ${model.name}`, '', `**Package:** \`${model.sourcePackage}\``, `**Identity:** ${identityLine}`, `**Collection:** \`${model.modelType}\` · prefix \`${model.collectionPrefix}\``, `**Store shape:** \`${STORE_SHAPE_LABEL[shape]}\` (see \`dbx_model_lookup topic="shapes"\` for the full taxonomy)`, `**Source:** \`${model.sourceFile}\``, '', `## Fields (${model.fields.length})`, ''];
 
   if (depth === 'brief') {
     lines.push('| Field | Description |', '|-------|-------------|');
@@ -92,13 +92,18 @@ export function formatFirebaseModelEntry(model: FirebaseModel, depth: LookupDept
  * Renders the catalog view (root vs. subcollection split) so callers can
  * browse the registry before deciding which entry to drill into.
  *
- * @param models - the entries to list, typically the full registry
+ * The optional `downstream` argument adds a "Downstream models" section
+ * grouped by source package, listing every detected downstream entry the
+ * runtime catalog assembled.
+ *
+ * @param models - the entries to list, typically the upstream registry
+ * @param downstream - downstream-only entries grouped per package (optional)
  * @returns the markdown body the tool emits as content
  */
-export function formatFirebaseModelCatalog(models: readonly FirebaseModel[]): string {
+export function formatFirebaseModelCatalog(models: readonly FirebaseModel[], downstream?: readonly FirebaseModel[]): string {
   const roots = models.filter((m) => !m.parentIdentityConst);
   const subs = models.filter((m) => m.parentIdentityConst);
-  const lines: string[] = [`# Firebase model catalog`, '', `${models.length} models (${roots.length} root, ${subs.length} subcollection).`, '', '## Root collections', ''];
+  const lines: string[] = [`# Firebase model catalog`, '', `${models.length} upstream models (${roots.length} root, ${subs.length} subcollection).`, '', '## Root collections', ''];
   for (const model of roots) {
     lines.push(`- \`${model.collectionPrefix}\` → **${model.name}** (${model.fields.length} fields)`);
   }
@@ -108,7 +113,27 @@ export function formatFirebaseModelCatalog(models: readonly FirebaseModel[]): st
       lines.push(`- \`${model.collectionPrefix}\` → **${model.name}** (under \`${model.parentIdentityConst}\`, ${model.fields.length} fields)`);
     }
   }
-  lines.push('', 'Use `dbx_model_lookup topic="<Name>"` or `dbx_model_lookup topic="<prefix>"` for full model details, or `dbx_model_decode` to decode a raw document.', 'See `dbx_model_lookup topic="shapes"` for the consumer-side store-shape taxonomy (root, sub-collection, singletons, system-state).');
+  if (downstream && downstream.length > 0) {
+    lines.push('', '## Downstream models', '');
+    const byPackage = new Map<string, FirebaseModel[]>();
+    for (const model of downstream) {
+      const bucket = byPackage.get(model.sourcePackage) ?? [];
+      bucket.push(model);
+      byPackage.set(model.sourcePackage, bucket);
+    }
+    const packageNames = [...byPackage.keys()].sort((a, b) => a.localeCompare(b));
+    for (const pkg of packageNames) {
+      lines.push(`### \`${pkg}\``, '');
+      const bucket = byPackage.get(pkg) ?? [];
+      bucket.sort((a, b) => a.name.localeCompare(b.name));
+      for (const model of bucket) {
+        const parent = model.parentIdentityConst ? ` (under \`${model.parentIdentityConst}\`)` : '';
+        lines.push(`- \`${model.collectionPrefix}\` → **${model.name}**${parent} (${model.fields.length} fields)`);
+      }
+      lines.push('');
+    }
+  }
+  lines.push('Use `dbx_model_lookup topic="<Name>"` or `dbx_model_lookup topic="<prefix>"` for full model details, or `dbx_model_decode` to decode a raw document.', 'See `dbx_model_lookup topic="shapes"` for the consumer-side store-shape taxonomy (root, sub-collection, singletons, system-state).');
   return lines.join('\n').trimEnd();
 }
 

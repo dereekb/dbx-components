@@ -407,4 +407,16 @@ describe('validateAppNotifications — I/O rules', () => {
       ['NOTIF_API_NOTIFICATION_FOLDER_MISSING']
     );
   });
+
+  it('auto-attaches remediation hints from the rule catalog', () => {
+    const inspection: AppNotificationsInspection = {
+      component: { rootDir: 'components/ghost', folder: undefined, status: 'dir-not-found', files: [] },
+      api: { rootDir: 'apps/demo-api', folder: 'src/app/common/model/notification', status: 'ok', files: [] }
+    };
+    const result = validateAppNotifications(inspection, { componentDir: inspection.component.rootDir, apiDir: inspection.api.rootDir });
+    const v = result.violations.find((violation) => violation.code === 'NOTIF_COMPONENT_DIR_NOT_FOUND');
+    expect(v).toBeDefined();
+    expect(v?.remediation).toBeDefined();
+    expect(v?.remediation?.fix).toBeTruthy();
+  });
 });

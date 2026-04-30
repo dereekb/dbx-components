@@ -145,7 +145,14 @@ import { type DbxForgeFormFieldWrapperProps } from './formfield.wrapper';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   host: {
-    class: 'mat-mdc-form-field mat-form-field-animations-enabled',
+    // `mat-form-field-animations-enabled` is intentionally retained: it gates
+    // the 300ms subscript fade animation via Material's
+    // `.mat-form-field-animations-enabled .mat-mdc-form-field-hint-wrapper { animation-duration: 300ms; }`
+    // rule and does not cause the `.mat-mdc-form-field` style leak. The
+    // `mat-mdc-form-field` host class was removed because Material lazy-loads
+    // `display: inline-flex; line-height: 24px; ...` onto that selector once
+    // any real `mat-form-field` is instantiated, which distorted this wrapper.
+    class: 'dbx-forge-form-field mat-form-field-animations-enabled',
     '[class]': 'classNameSignal()'
   }
 })

@@ -4,6 +4,7 @@
  * point is {@link validateModelFolders} in `./validate.ts`.
  */
 
+import { attachRemediation } from '../rule-catalog/index.js';
 import { buildRequiredFiles, RESERVED_MODEL_FOLDERS, type FolderInspection, type ReservedModelFolder, type Violation, type ViolationSeverity } from './types.js';
 
 /**
@@ -92,14 +93,15 @@ function findReserved(name: string): ReservedModelFolder | undefined {
   return undefined;
 }
 
-function pushViolation(buffer: Violation[], violation: Omit<Violation, 'severity'> & { readonly severity?: ViolationSeverity }): void {
+function pushViolation(buffer: Violation[], violation: Omit<Violation, 'severity' | 'remediation'> & { readonly severity?: ViolationSeverity }): void {
   const severity: ViolationSeverity = violation.severity ?? 'error';
   const filled: Violation = {
     code: violation.code,
     severity,
     message: violation.message,
     folder: violation.folder,
-    file: violation.file
+    file: violation.file,
+    remediation: attachRemediation(violation.code)
   };
   buffer.push(filled);
 }

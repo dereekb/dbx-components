@@ -94,7 +94,11 @@ export class DbxAnalyticsSegmentServiceListener extends AbstractDbxAnalyticsServ
         break;
       case DbxAnalyticsStreamEventType.UserIdChange:
       case DbxAnalyticsStreamEventType.UserPropertiesEvent:
-        // These event types are not forwarded to Segment
+      case DbxAnalyticsStreamEventType.StartSessionRecording:
+      case DbxAnalyticsStreamEventType.StopSessionRecording:
+      case DbxAnalyticsStreamEventType.PauseSessionRecording:
+      case DbxAnalyticsStreamEventType.ResumeSessionRecording:
+        // These event types are not forwarded to Segment.
         break;
     }
   }

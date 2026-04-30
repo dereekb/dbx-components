@@ -55,6 +55,11 @@
  * | dbx_pipe_lookup                     | Documentation | "Tell me about Angular pipe X"                         |
  * | dbx_artifact_scaffold               | Generation    | "Give me the body for a new <artifact>."               |
  * | dbx_artifact_file_convention        | Reference     | "Where do I put a new <artifact>?"                     |
+ * | dbx_explain_rule                    | Reference     | "Explain validation rule X — when does it apply?"      |
+ * | dbx_app_validate                    | Verification  | "Validate the whole app (component + API) end-to-end." |
+ * | dbx_model_list_component            | Discovery     | "What downstream models live in this `-firebase` component?" |
+ * | dbx_server_actions_list_app         | Discovery     | "What server-actions classes does this API expose, and are they wired?" |
+ * | dbx_mcp_config                      | Setup         | "Status / validate / init / refresh the workspace dbx-mcp config." |
  */
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -97,6 +102,11 @@ import { filterScaffoldTool } from './filter-scaffold.tool.js';
 import { createLookupPipeTool } from './lookup-pipe.tool.js';
 import { artifactScaffoldTool } from './artifact-scaffold.tool.js';
 import { artifactFileConventionTool } from './artifact-file-convention.tool.js';
+import { explainRuleTool } from './explain-rule.tool.js';
+import { appValidateTool } from './app-validate.tool.js';
+import { modelListComponentTool } from './model-list-component.tool.js';
+import { serverActionsListAppTool } from './server-actions-list-app.tool.js';
+import { mcpConfigTool } from './mcp-config.tool.js';
 import { createSemanticTypeLookupTool } from './lookup-semantic-type.tool.js';
 import { createSemanticTypeSearchTool } from './search-semantic-type.tool.js';
 import type { ActionRegistry } from '../registry/actions-runtime.js';
@@ -153,7 +163,16 @@ export const DBX_TOOLS: readonly DbxTool[] = [
   filterScaffoldTool,
   // artifact (cross-domain dispatchers)
   artifactScaffoldTool,
-  artifactFileConventionTool
+  artifactFileConventionTool,
+  // rule catalog (cross-domain reference)
+  explainRuleTool,
+  // aggregate orchestrator
+  appValidateTool,
+  // downstream component introspection
+  modelListComponentTool,
+  serverActionsListAppTool,
+  // workspace config audit / setup
+  mcpConfigTool
 ];
 
 /**

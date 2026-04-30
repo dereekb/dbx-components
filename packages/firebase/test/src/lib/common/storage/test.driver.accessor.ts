@@ -648,7 +648,7 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
               });
 
               it('should list all the direct folders that exist at the root.', async () => {
-                const rootFolder = await f.storageContext.folder('/');
+                const rootFolder = f.storageContext.folder('/');
 
                 const result = await rootFolder.list();
                 expect(result).toBeDefined();
@@ -687,7 +687,7 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
               });
 
               it('should list all the folders that exist at the root.', async () => {
-                const rootFolder = await f.storageContext.folder('/');
+                const rootFolder = f.storageContext.folder('/');
 
                 const result = await rootFolder.list({ includeNestedResults: true });
                 expect(result).toBeDefined();
@@ -701,7 +701,7 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
 
               describe('maxResults', () => {
                 it('should limit the number of results returned.', async () => {
-                  const rootFolder = await f.storageContext.folder('/');
+                  const rootFolder = f.storageContext.folder('/');
                   const limit = 2;
 
                   const result = await rootFolder.list({ includeNestedResults: true, maxResults: limit });
@@ -745,7 +745,7 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
 
         describe('folder()', () => {
           it('should return the folder for the result.', async () => {
-            const rootFolder = await f.storageContext.folder('/');
+            const rootFolder = f.storageContext.folder('/');
 
             const result = await rootFolder.list();
             expect(result).toBeDefined();
@@ -763,7 +763,7 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
         describe('next()', () => {
           it('should return the next set of results.', async () => {
             const maxResults = 1;
-            const rootFolder = await f.storageContext.folder(existsFolderPath);
+            const rootFolder = f.storageContext.folder(existsFolderPath);
 
             const result = await rootFolder.list({ maxResults });
             expect(result).toBeDefined();
@@ -782,7 +782,7 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
           });
 
           itShouldFail('if next() is called and hasNext was false.', async () => {
-            const rootFolder = await f.storageContext.folder(existsFolderPath);
+            const rootFolder = f.storageContext.folder(existsFolderPath);
             const result = await rootFolder.list({});
 
             expect(result.hasNext).toBe(false);
@@ -794,7 +794,7 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
         describe('maxResults', () => {
           it('should respect the max results.', async () => {
             const maxResults = 1;
-            const rootFolder = await f.storageContext.folder(existsFolderPath);
+            const rootFolder = f.storageContext.folder(existsFolderPath);
 
             const result = await rootFolder.list({ maxResults });
             expect(result).toBeDefined();
@@ -811,7 +811,7 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
 
           it('prefixes/folders are unaffected by maxResults.', async () => {
             const maxResults = 1;
-            const rootFolder = await f.storageContext.folder('/');
+            const rootFolder = f.storageContext.folder('/');
 
             const result = await rootFolder.list({ maxResults });
             expect(result).toBeDefined();

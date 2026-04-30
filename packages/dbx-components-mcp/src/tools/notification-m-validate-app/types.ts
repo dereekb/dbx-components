@@ -26,45 +26,25 @@
  */
 
 // MARK: Violation codes
-export type ViolationCode =
-  // I/O failures
-  | 'NOTIF_COMPONENT_DIR_NOT_FOUND'
-  | 'NOTIF_API_DIR_NOT_FOUND'
-  | 'NOTIF_COMPONENT_NOTIFICATION_FOLDER_MISSING'
-  | 'NOTIF_API_NOTIFICATION_FOLDER_MISSING'
-  // Template metadata (info-record path)
-  | 'NOTIF_TEMPLATE_INFO_MISSING'
-  | 'NOTIF_TEMPLATE_INFO_TYPE_MISMATCH'
-  | 'NOTIF_TEMPLATE_INFO_NOT_IN_RECORD'
-  | 'NOTIF_TEMPLATE_RECORD_MISSING'
-  | 'NOTIF_TEMPLATE_RECORD_NOT_WIRED'
-  | 'NOTIF_TEMPLATE_SPREAD_UNRESOLVED'
-  // Template handler (factory path)
-  | 'NOTIF_TEMPLATE_FACTORY_MISSING'
-  | 'NOTIF_TEMPLATE_FACTORY_NOT_WIRED'
-  | 'NOTIF_TEMPLATE_FACTORY_ORPHAN'
-  | 'NOTIF_TEMPLATE_FACTORY_ARRAY_MISSING'
-  | 'NOTIF_TEMPLATE_FACTORY_SPREAD_UNRESOLVED'
-  // Tasks
-  | 'NOTIF_TASK_NOT_IN_ALL_ARRAY'
-  | 'NOTIF_TASK_NOT_REGISTERED_IN_SERVICE'
-  | 'NOTIF_TASK_HANDLER_ORPHAN'
-  | 'NOTIF_TASK_HANDLER_NAME_MISMATCH'
-  | 'NOTIF_TASK_SERVICE_FACTORY_MISSING'
-  | 'NOTIF_TASK_HANDLER_SPREAD_UNRESOLVED'
-  // Warnings
-  | 'NOTIF_TEMPLATE_INFO_UNUSED'
-  | 'NOTIF_TEMPLATE_TYPE_CODE_DUPLICATE'
-  | 'NOTIF_TASK_TYPE_CODE_DUPLICATE'
-  | 'NOTIF_TASK_IN_VALIDATE_WITHOUT_HANDLER'
-  | 'NOTIF_TEMPLATE_INFO_MISSING_NAME_OR_DESCRIPTION'
-  | 'NOTIF_TASK_MULTIPLE_SERVICES';
+import type { NotificationMValidateAppCode } from './codes.js';
+import type { RemediationHint } from '../rule-catalog/types.js';
+
+/**
+ * String-literal union derived from {@link NotificationMValidateAppCode}.
+ */
+export type ViolationCode = `${NotificationMValidateAppCode}`;
 
 import type { TwoSideResult, TwoSideViolation } from '../validate-format.js';
 export type { ViolationSeverity } from '../validate-format.js';
 
 export interface Violation extends TwoSideViolation {
   readonly code: ViolationCode;
+  /**
+   * Auto-attached remediation hint pulled from the rule catalog at
+   * emission time. `undefined` when no catalog entry exists for the
+   * code (the formatter renders no nested block in that case).
+   */
+  readonly remediation?: RemediationHint;
 }
 
 export interface ValidationResult extends TwoSideResult {

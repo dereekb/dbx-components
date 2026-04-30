@@ -14,23 +14,14 @@
  */
 
 import type { FolderGroupedResult, FolderGroupedViolation } from '../validate-format.js';
+import type { ModelValidateFolderCode } from './codes.js';
 
 export type { FolderInspectionStatus, ViolationSeverity } from '../validate-format.js';
 
-export type ViolationCode =
-  // I/O failures (errors)
-  | 'FOLDER_NOT_FOUND'
-  | 'FOLDER_NOT_DIRECTORY'
-  // Missing required files (errors)
-  | 'FOLDER_MISSING_MAIN'
-  | 'FOLDER_MISSING_ID'
-  | 'FOLDER_MISSING_QUERY'
-  | 'FOLDER_MISSING_ACTION'
-  | 'FOLDER_MISSING_API'
-  | 'FOLDER_MISSING_INDEX'
-  // Warnings
-  | 'FOLDER_STRAY_FILE'
-  | 'RESERVED_MODEL_FOLDER';
+/**
+ * String-literal union derived from {@link ModelValidateFolderCode}.
+ */
+export type ViolationCode = `${ModelValidateFolderCode}`;
 
 export type Violation = FolderGroupedViolation<ViolationCode>;
 

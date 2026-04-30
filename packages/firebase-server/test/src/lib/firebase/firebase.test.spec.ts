@@ -12,17 +12,17 @@ describe('expectFailAssertHttpErrorServerErrorCode()', () => {
     expect(result).toBe(true);
   });
 
-  itShouldFail('if the input error is an HttpsError with ServerError with a different error code', () => {
+  itShouldFail('if the input error is an HttpsError with ServerError with a different error code', async () => {
     const error = unavailableError('test');
     const instance = expectFailAssertHttpErrorServerErrorCode(ALREADY_EXISTS_ERROR_CODE); // different error code than expected
 
-    expectFail(() => instance(error), expectFailAssertErrorType(ExpectedHttpErrorWithSpecificServerErrorCode));
+    await expectFail(() => instance(error), expectFailAssertErrorType(ExpectedHttpErrorWithSpecificServerErrorCode));
   });
 
-  itShouldFail('if the input error is not an HttpsError', () => {
+  itShouldFail('if the input error is not an HttpsError', async () => {
     const error = new Error();
     const instance = expectFailAssertHttpErrorServerErrorCode(UNAVAILABLE_ERROR_CODE);
 
-    expectFail(() => instance(error), expectFailAssertErrorType(ExpectedErrorOfSpecificTypeError));
+    await expectFail(() => instance(error), expectFailAssertErrorType(ExpectedErrorOfSpecificTypeError));
   });
 });

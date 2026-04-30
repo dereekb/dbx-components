@@ -14,6 +14,7 @@ export interface TestingFirestoreAccessorDriver extends FirestoreAccessorDriver 
    * Initializes fuzzed path names for the input collections. Returns the result of getFuzzedCollectionsNameMap().
    *
    * This initialization step is useful for the client, where the rules file needs to be updated to reflect the collection names properly in order to ensure rules are correct.
+   *
    * @param collectionNames
    */
   initWithCollectionNames(collectionNames: string[]): Map<string, string>;

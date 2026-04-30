@@ -85,7 +85,7 @@ export function makeMockItemCollections(firestoreContext: FirestoreContext): Moc
  * Model service factory for {@link MockItem}. Returns configurable roles from `context.rolesToReturn`, defaulting to `{ read: true }`.
  */
 export const mockItemFirebaseModelServiceFactory = firebaseModelServiceFactory<MockFirebaseContext, MockItem, MockItemDocument, MockItemRoles>({
-  roleMapForModel: function (output: FirebasePermissionServiceModel<MockItem, MockItemDocument>, context: MockFirebaseContext, model: MockItemDocument): PromiseOrValue<GrantedRoleMap<MockItemRoles>> {
+  roleMapForModel: function (output: FirebasePermissionServiceModel<MockItem, MockItemDocument>, context: MockFirebaseContext, _model: MockItemDocument): PromiseOrValue<GrantedRoleMap<MockItemRoles>> {
     const roles: GrantedRoleMap<MockItemRoles> = context.rolesToReturn ?? { read: true };
 
     return roles;
@@ -97,7 +97,7 @@ export const mockItemFirebaseModelServiceFactory = firebaseModelServiceFactory<M
  * Model service factory for {@link MockItemPrivate}. Returns configurable roles from `context.rolesToReturn`, defaulting to `{ read: true }`.
  */
 export const mockItemPrivateFirebaseModelServiceFactory = firebaseModelServiceFactory<MockFirebaseContext, MockItemPrivate, MockItemPrivateDocument, MockItemPrivateRoles>({
-  roleMapForModel: function (output: FirebasePermissionServiceModel<MockItemPrivate, MockItemPrivateDocument>, context: MockFirebaseContext, model: MockItemPrivateDocument): PromiseOrValue<GrantedRoleMap<MockItemPrivateRoles>> {
+  roleMapForModel: function (output: FirebasePermissionServiceModel<MockItemPrivate, MockItemPrivateDocument>, context: MockFirebaseContext, _model: MockItemPrivateDocument): PromiseOrValue<GrantedRoleMap<MockItemPrivateRoles>> {
     const roles: GrantedRoleMap<MockItemPrivateRoles> = context.rolesToReturn ?? { read: true };
     return roles;
   },
@@ -122,7 +122,7 @@ export const mockItemUserFirebaseModelServiceFactory = firebaseModelServiceFacto
  * Model service factory for {@link MockItemSubItem}. Returns configurable roles from `context.rolesToReturn`, defaulting to `{ read: true }`.
  */
 export const mockItemSubItemFirebaseModelServiceFactory = firebaseModelServiceFactory<MockFirebaseContext, MockItemSubItem, MockItemSubItemDocument, MockItemSubItemRoles>({
-  roleMapForModel: function (output: FirebasePermissionServiceModel<MockItemSubItem, MockItemSubItemDocument>, context: MockFirebaseContext, model: MockItemSubItemDocument): PromiseOrValue<GrantedRoleMap<MockItemSubItemRoles>> {
+  roleMapForModel: function (output: FirebasePermissionServiceModel<MockItemSubItem, MockItemSubItemDocument>, context: MockFirebaseContext, _model: MockItemSubItemDocument): PromiseOrValue<GrantedRoleMap<MockItemSubItemRoles>> {
     const roles: GrantedRoleMap<MockItemSubItemRoles> = context.rolesToReturn ?? { read: true };
     return roles;
   },
@@ -133,7 +133,7 @@ export const mockItemSubItemFirebaseModelServiceFactory = firebaseModelServiceFa
  * Model service factory for {@link MockItemSubItemDeep}. Returns configurable roles from `context.rolesToReturn`, defaulting to `{ read: true }`.
  */
 export const mockItemSubItemDeepFirebaseModelServiceFactory = firebaseModelServiceFactory<MockFirebaseContext, MockItemSubItemDeep, MockItemSubItemDeepDocument, MockItemSubItemDeepRoles>({
-  roleMapForModel: function (output: FirebasePermissionServiceModel<MockItemSubItemDeep, MockItemSubItemDeepDocument>, context: MockFirebaseContext, model: MockItemSubItemDeepDocument): PromiseOrValue<GrantedRoleMap<MockItemSubItemDeepRoles>> {
+  roleMapForModel: function (output: FirebasePermissionServiceModel<MockItemSubItemDeep, MockItemSubItemDeepDocument>, context: MockFirebaseContext, _model: MockItemSubItemDeepDocument): PromiseOrValue<GrantedRoleMap<MockItemSubItemDeepRoles>> {
     const roles: GrantedRoleMap<MockItemSubItemDeepRoles> = context.rolesToReturn ?? { read: true };
     return roles;
   },
@@ -144,7 +144,7 @@ export const mockItemSubItemDeepFirebaseModelServiceFactory = firebaseModelServi
  * Model service factory for {@link SystemState}. Only grants access to system admins via {@link grantFullAccessIfAdmin}.
  */
 export const mockItemSystemStateFirebaseModelServiceFactory = firebaseModelServiceFactory<MockFirebaseContext, SystemState, SystemStateDocument, SystemStateRoles>({
-  roleMapForModel: function (output: FirebasePermissionServiceModel<SystemState, SystemStateDocument>, context: MockFirebaseContext, model: SystemStateDocument): PromiseOrValue<GrantedRoleMap<SystemStateRoles>> {
+  roleMapForModel: function (output: FirebasePermissionServiceModel<SystemState, SystemStateDocument>, context: MockFirebaseContext, _model: SystemStateDocument): PromiseOrValue<GrantedRoleMap<SystemStateRoles>> {
     return grantFullAccessIfAdmin(context); // only sys-admin allowed
   },
   getFirestoreCollection: (c) => c.app.mockItemSystemStateCollection

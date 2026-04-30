@@ -2,7 +2,7 @@ import { itShouldFail, expectFail, callbackTest } from '@dereekb/util/test';
 import { firstValueFrom } from 'rxjs';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { type Transaction, type DocumentReference, type WriteBatch, type FirestoreDocumentAccessor, makeDocuments, type FirestoreDocumentDataAccessor, type FirestoreContext, type FirestoreDocument, type RunTransaction, type FirebaseAuthUserId, type DocumentSnapshot, type FirestoreDataConverter, getDocumentSnapshotPairs, useDocumentSnapshot, useDocumentSnapshotData, type AbstractFirestoreDocument } from '@dereekb/firebase';
-import { type MockItemCollectionFixture, type MockItemDocument, type MockItem, type MockItemPrivateDocument, type MockItemPrivateFirestoreCollection, type MockItemPrivate, type MockItemSubItem, type MockItemSubItemDocument, type MockItemSubItemFirestoreCollection, type MockItemSubItemFirestoreCollectionGroup, type MockItemUserFirestoreCollection, type MockItemUserDocument, type MockItemUser, mockItemConverter } from '../mock';
+import { type MockItemCollectionFixture, type MockItemDocument, type MockItem, type MockItemPrivateDocument, type MockItemPrivateFirestoreCollection, type MockItemPrivate, type MockItemSubItem, type MockItemSubItemDocument, type MockItemSubItemFirestoreCollection, type MockItemSubItemFirestoreCollectionGroup, type MockItemUserFirestoreCollection, type MockItemUserDocument, mockItemConverter } from '../mock';
 import { type Getter } from '@dereekb/util';
 
 /**
@@ -38,11 +38,9 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
 
     describe('MockItem', () => {
       let itemDocument: MockItemDocument;
-      let accessor: FirestoreDocumentDataAccessor<MockItem>;
 
       beforeEach(() => {
         itemDocument = items[0];
-        accessor = itemDocument.accessor;
       });
 
       describe('accessors', () => {
@@ -114,7 +112,7 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
               const update = { number: 3 };
 
               await f.parent.firestoreContext.runTransaction(async (transaction) => {
-                const itemDocumentInTransaction = await f.instance.mockItemCollection.documentAccessorForTransaction(transaction).loadDocumentForId(itemDocument.id);
+                const itemDocumentInTransaction = f.instance.mockItemCollection.documentAccessorForTransaction(transaction).loadDocumentForId(itemDocument.id);
                 const data = await itemDocumentInTransaction.snapshotData();
 
                 expect(data?.number).toBe(undefined);
@@ -133,7 +131,7 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
 
               const writeBatch = f.parent.firestoreContext.batch();
 
-              const itemDocumentForWriteBatch = await f.instance.mockItemCollection.documentAccessorForWriteBatch(writeBatch).loadDocumentForId(itemDocument.id);
+              const itemDocumentForWriteBatch = f.instance.mockItemCollection.documentAccessorForWriteBatch(writeBatch).loadDocumentForId(itemDocument.id);
               await itemDocumentForWriteBatch.increment(update);
               await writeBatch.commit();
 
@@ -185,13 +183,11 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
           let testUserId: FirebaseAuthUserId;
           let mockItemUserFirestoreCollection: MockItemUserFirestoreCollection;
           let itemUserDataDocument: MockItemUserDocument;
-          let userDataAccessor: FirestoreDocumentDataAccessor<MockItemUser>;
 
           beforeEach(() => {
             testUserId = 'userid' + Math.ceil(Math.random() * 100000);
             mockItemUserFirestoreCollection = f.instance.collections.mockItemUserCollectionFactory(itemDocument);
             itemUserDataDocument = mockItemUserFirestoreCollection.documentAccessor().loadDocumentForId(testUserId);
-            userDataAccessor = itemUserDataDocument.accessor;
           });
 
           describe('create()', () => {
@@ -394,8 +390,8 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
                 hasRemainingDataFromFirstOfTwoUpdate: (data) => data.values.length > 0 && data.values[0] === 'a',
                 dataForUpdate: () => ({ comments: TEST_COMMENTS }),
                 hasDataFromUpdate: (data) => data.comments === TEST_COMMENTS,
-                loadDocumentForTransaction: (transaction, ref) => mockItemPrivateFirestoreCollection.loadDocumentForTransaction(transaction),
-                loadDocumentForWriteBatch: (writeBatch, ref) => mockItemPrivateFirestoreCollection.loadDocumentForWriteBatch(writeBatch)
+                loadDocumentForTransaction: (transaction) => mockItemPrivateFirestoreCollection.loadDocumentForTransaction(transaction),
+                loadDocumentForWriteBatch: (writeBatch) => mockItemPrivateFirestoreCollection.loadDocumentForWriteBatch(writeBatch)
               }));
             });
           });
@@ -469,32 +465,32 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
           expect(exists).toBe(true);
         });
 
-        itShouldFail('if the path is invalid (points to collection)', () => {
-          expectFail(() => {
+        itShouldFail('if the path is invalid (points to collection)', async () => {
+          await expectFail(() => {
             mockItemFirestoreDocumentAccessor.loadDocumentForKey('path');
           });
         });
 
-        itShouldFail('if the path points to a different type/collection', () => {
-          expectFail(() => {
+        itShouldFail('if the path points to a different type/collection', async () => {
+          await expectFail(() => {
             mockItemFirestoreDocumentAccessor.loadDocumentForKey('path/id');
           });
         });
 
-        itShouldFail('if the path is empty.', () => {
-          expectFail(() => {
+        itShouldFail('if the path is empty.', async () => {
+          await expectFail(() => {
             mockItemFirestoreDocumentAccessor.loadDocumentForKey('');
           });
         });
 
-        itShouldFail('if the path is undefined.', () => {
-          expectFail(() => {
+        itShouldFail('if the path is undefined.', async () => {
+          await expectFail(() => {
             mockItemFirestoreDocumentAccessor.loadDocumentForKey(undefined as any);
           });
         });
 
-        itShouldFail('if the path is null.', () => {
-          expectFail(() => {
+        itShouldFail('if the path is null.', async () => {
+          await expectFail(() => {
             mockItemFirestoreDocumentAccessor.loadDocumentForKey(null as any);
           });
         });
@@ -506,14 +502,14 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
           expect(document).toBeDefined();
         });
 
-        itShouldFail('if the id is empty.', () => {
-          expectFail(() => {
+        itShouldFail('if the id is empty.', async () => {
+          await expectFail(() => {
             mockItemFirestoreDocumentAccessor.loadDocumentForId('');
           });
         });
 
-        itShouldFail('if the id is undefined.', () => {
-          expectFail(() => {
+        itShouldFail('if the id is undefined.', async () => {
+          await expectFail(() => {
             mockItemFirestoreDocumentAccessor.loadDocumentForId(undefined as any);
           });
         });
@@ -530,16 +526,22 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
  * (get, set, update, create, delete, stream, transactions, write batches).
  */
 export interface DescribeAccessorTests<T> {
-  /** The Firestore context used for running transactions and creating batches. */
+  /**
+   * The Firestore context used for running transactions and creating batches.
+   */
   context: FirestoreContext;
-  /** Returns the document under test. Called fresh in each `beforeEach`. */
+  /**
+   * Returns the document under test. Called fresh in each `beforeEach`.
+   */
   firestoreDocument: Getter<FirestoreDocument<T>>;
   /**
    * Returns partial data for the first of two sequential updates within a transaction.
    * Used to verify that non-overlapping fields survive a second update.
    */
   dataForFirstOfTwoUpdates: () => Partial<T>;
-  /** Returns partial data used for standard update/set assertions. */
+  /**
+   * Returns partial data used for standard update/set assertions.
+   */
   dataForUpdate: () => Partial<T>;
   /**
    * Optional predicate that checks whether fields from the first update
@@ -547,11 +549,17 @@ export interface DescribeAccessorTests<T> {
    * the multi-update transaction test will assert this returns `true`.
    */
   hasRemainingDataFromFirstOfTwoUpdate?: (data: T) => boolean;
-  /** Predicate that returns `true` when the document's data reflects a successful update. */
+  /**
+   * Predicate that returns `true` when the document's data reflects a successful update.
+   */
   hasDataFromUpdate: (data: T) => boolean;
-  /** Loads the document within a transaction context for transaction-based tests. */
+  /**
+   * Loads the document within a transaction context for transaction-based tests.
+   */
   loadDocumentForTransaction: (transaction: Transaction, ref?: DocumentReference<T>) => AbstractFirestoreDocument<T, any>;
-  /** Loads the document within a write batch context for batch-based tests. */
+  /**
+   * Loads the document within a write batch context for batch-based tests.
+   */
   loadDocumentForWriteBatch: (writeBatch: WriteBatch, ref?: DocumentReference<T>) => FirestoreDocument<T, any>;
 }
 
@@ -722,7 +730,7 @@ export function describeFirestoreDocumentAccessorTests<T>(init: () => DescribeAc
       describe('stream$', () => {
         it('should not cause the transaction to fail if the document is loaded after changes have begun.', async () => {
           await c.context.runTransaction(async (transaction) => {
-            const transactionDocument = await c.loadDocumentForTransaction(transaction, firestoreDocument.documentRef);
+            const transactionDocument = c.loadDocumentForTransaction(transaction, firestoreDocument.documentRef);
 
             const currentData = await transactionDocument.snapshotData();
             expect(currentData).toBeDefined();
@@ -731,7 +739,7 @@ export function describeFirestoreDocumentAccessorTests<T>(init: () => DescribeAc
             await transactionDocument.update(data);
 
             // stream$ and data$ do not call stream() until called directly.
-            const secondLoading = await c.loadDocumentForTransaction(transaction, firestoreDocument.documentRef);
+            const secondLoading = c.loadDocumentForTransaction(transaction, firestoreDocument.documentRef);
             expect(secondLoading).toBeDefined();
           });
         });
@@ -739,7 +747,7 @@ export function describeFirestoreDocumentAccessorTests<T>(init: () => DescribeAc
         itShouldFail('if stream$ is called after an update has occured in the transaction', async () => {
           await expectFail(() =>
             c.context.runTransaction(async (transaction) => {
-              const transactionDocument = await c.loadDocumentForTransaction(transaction, firestoreDocument.documentRef);
+              const transactionDocument = c.loadDocumentForTransaction(transaction, firestoreDocument.documentRef);
 
               const currentData = await transactionDocument.snapshotData();
               expect(currentData).toBeDefined();
@@ -757,7 +765,7 @@ export function describeFirestoreDocumentAccessorTests<T>(init: () => DescribeAc
       describe('update()', () => {
         it('should update the data if the document exists.', async () => {
           await c.context.runTransaction(async (transaction) => {
-            const transactionDocument = await c.loadDocumentForTransaction(transaction, firestoreDocument.documentRef);
+            const transactionDocument = c.loadDocumentForTransaction(transaction, firestoreDocument.documentRef);
 
             const currentData = await transactionDocument.snapshotData();
             expect(currentData).toBeDefined();
@@ -773,7 +781,7 @@ export function describeFirestoreDocumentAccessorTests<T>(init: () => DescribeAc
         describe('multiple updates', () => {
           it('should merge the updates together and override the values from the first update that are defined in the second update', async () => {
             await c.context.runTransaction(async (transaction) => {
-              const transactionDocument = await c.loadDocumentForTransaction(transaction, firestoreDocument.documentRef);
+              const transactionDocument = c.loadDocumentForTransaction(transaction, firestoreDocument.documentRef);
 
               const currentData = await transactionDocument.snapshotData();
               expect(currentData).toBeDefined();
@@ -800,7 +808,7 @@ export function describeFirestoreDocumentAccessorTests<T>(init: () => DescribeAc
       describe('update()', () => {
         it('should update the data if the document exists.', async () => {
           const batch = c.context.batch();
-          const batchDocument = await c.loadDocumentForWriteBatch(batch, firestoreDocument.documentRef);
+          const batchDocument = c.loadDocumentForWriteBatch(batch, firestoreDocument.documentRef);
 
           const data = c.dataForUpdate();
           await batchDocument.update(data);
@@ -816,8 +824,8 @@ export function describeFirestoreDocumentAccessorTests<T>(init: () => DescribeAc
 
   describe('accessor', () => {
     describe('stream()', () => {
-      it('should return a snapshot stream', async () => {
-        const result = await accessor.stream();
+      it('should return a snapshot stream', () => {
+        const result = accessor.stream();
         expect(result).toBeDefined();
       });
 
@@ -838,7 +846,7 @@ export function describeFirestoreDocumentAccessorTests<T>(init: () => DescribeAc
           });
 
           setTimeout(() => {
-            accessor.update(c.dataForUpdate());
+            void accessor.update(c.dataForUpdate());
           }, 100);
         })
       );

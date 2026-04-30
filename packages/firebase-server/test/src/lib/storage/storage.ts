@@ -91,7 +91,7 @@ export const googleCloudTestFirebaseStorageBuilder = testContextBuilder<GoogleCl
     const defaultBucketId = projectId;
     return new GoogleCloudTestFirebaseStorageInstance(drivers, firebaseStorage, defaultBucketId);
   },
-  teardownInstance: async (instance, config) => {
+  teardownInstance: async (_instance, _config) => {
     // nothing to teardown
   }
 });

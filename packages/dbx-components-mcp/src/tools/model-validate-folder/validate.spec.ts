@@ -191,4 +191,13 @@ describe('validateModelFolders', () => {
     const widgetViolations = result.violations.filter((v) => v.folder === bad.path);
     expect(widgetViolations.length).toBe(4); // missing id, query, action, api
   });
+
+  it('auto-attaches remediation hints from the rule catalog', () => {
+    const files = CANONICAL_FILES.filter((f) => f !== 'profile.ts');
+    const result = validateModelFolders([okInspection('profile', files)]);
+    const v = result.violations.find((violation) => violation.code === 'FOLDER_MISSING_MAIN');
+    expect(v).toBeDefined();
+    expect(v?.remediation).toBeDefined();
+    expect(v?.remediation?.fix).toContain('<name>.ts');
+  });
 });

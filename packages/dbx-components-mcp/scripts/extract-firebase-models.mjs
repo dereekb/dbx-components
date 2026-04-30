@@ -30,6 +30,9 @@ const WORKSPACE_ROOT = resolve(SCRIPT_DIR, '..', '..', '..');
 const MODEL_ROOT = join(WORKSPACE_ROOT, 'packages/firebase/src/lib/model');
 const OUTPUT_FILE = join(WORKSPACE_ROOT, 'packages/dbx-components-mcp/generated/firebase-models.generated.ts');
 
+/** Canonical source package name embedded on every entry produced by this script. */
+const UPSTREAM_PACKAGE_NAME = '@dereekb/firebase';
+
 /** Common short field names that appear on many models and are poor detection signals. */
 const COMMON_FIELDS = new Set(['cat', 'o', 'u', 's', 'fi', 'uid', 'mat', 'd']);
 
@@ -161,6 +164,7 @@ function extractFromFile(file, content) {
       identityConst: id.identityConst,
       modelType: id.modelType,
       collectionPrefix: id.collectionPrefix,
+      sourcePackage: UPSTREAM_PACKAGE_NAME,
       sourceFile: relativePath,
       fields,
       enums: relevantEnums,
@@ -177,7 +181,7 @@ function extractFromFile(file, content) {
   }
 
   const groups = modelGroups.map((g) => {
-    const out = { name: g.name, containerName: g.containerName, sourceFile: relativePath };
+    const out = { name: g.name, containerName: g.containerName, sourcePackage: UPSTREAM_PACKAGE_NAME, sourceFile: relativePath };
     if (g.description) out.description = g.description;
     out.modelNames = g.modelNames;
     return out;

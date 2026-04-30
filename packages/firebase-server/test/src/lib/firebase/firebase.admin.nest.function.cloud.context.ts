@@ -15,7 +15,9 @@ export type CloudFunctionTestWrappedCloudFunction<I extends object> = WrappedClo
  * Cloud Function wrapping capabilities.
  */
 export interface CloudFunctionTestBaseConfig {
-  /** The test context fixture providing NestJS module and function wrapping access. */
+  /**
+   * The test context fixture providing NestJS module and function wrapping access.
+   */
   f: FirebaseAdminFunctionNestTestContext;
 }
 
@@ -24,7 +26,9 @@ export interface CloudFunctionTestBaseConfig {
  * The `fn` factory is wrapped and provided to the test callback as a {@link WrappedCloudFunction}.
  */
 export interface CloudFunctionTestSingleConfig<I extends object> extends CloudFunctionTestBaseConfig {
-  /** The cloud function factory to wrap for testing. */
+  /**
+   * The cloud function factory to wrap for testing.
+   */
   fn: WrapCloudFunctionForNestTestsInput<I>;
 }
 
@@ -47,7 +51,9 @@ export type CloudFunctionTestConfigMapObject = {
  * Each entry in `fns` is independently wrapped and exposed via a {@link CloudFunctionTestMultipleFixture}.
  */
 export interface CloudFunctionTestMultipleConfig<I extends object, T extends CloudFunctionTestConfigMapObject> extends CloudFunctionTestBaseConfig {
-  /** Map of named cloud function factories to wrap for testing. */
+  /**
+   * Map of named cloud function factories to wrap for testing.
+   */
   fns: T;
 }
 
@@ -71,8 +77,7 @@ export type CloudFunctionTestMultipleFunction<T extends CloudFunctionTestConfigM
  * {@link CloudFunctionTestMultipleConfig} by checking for the presence of the `fn` property.
  */
 export function isCloudFunctionTestSingleConfig<I extends object, T extends CloudFunctionTestConfigMapObject>(config: CloudFunctionTestSingleConfig<I> | CloudFunctionTestMultipleConfig<I, T>): config is CloudFunctionTestSingleConfig<I> {
-  const isSingle = Boolean((config as CloudFunctionTestSingleConfig<I>).fn);
-  return isSingle;
+  return Boolean((config as CloudFunctionTestSingleConfig<I>).fn);
 }
 
 /**
@@ -93,8 +98,7 @@ export function cloudFunctionTest<I extends object, T extends CloudFunctionTestC
     useTestFunctionFixture<CloudFunctionTestWrappedCloudFunction<I>>(
       {
         fn: () => {
-          const x = wrapCloudFunctionForNestTestsGetter(f, fn)();
-          return x;
+          return wrapCloudFunctionForNestTestsGetter(f, fn)();
         }
       },
       buildTests as CloudFunctionTestSingleFunction<I>

@@ -500,4 +500,13 @@ export function agentSummaryFirestoreCollection(firestoreContext: FirestoreConte
       ['MODEL_OUT_OF_ORDER']
     );
   });
+
+  it('auto-attaches remediation hints from the rule catalog', () => {
+    const text = HAPPY_SOURCE.replace("export type ProfileRoles = 'owner';", "type ProfileRoles = 'owner';");
+    const result = validateFirebaseModelSources([{ name: 'x.ts', text }]);
+    const v = result.violations.find((violation) => violation.code === 'MODEL_ROLES_NOT_EXPORTED');
+    expect(v).toBeDefined();
+    expect(v?.remediation).toBeDefined();
+    expect(v?.remediation?.fix).toBeTruthy();
+  });
 });

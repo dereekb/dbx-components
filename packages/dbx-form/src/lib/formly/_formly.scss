@@ -6,8 +6,9 @@
 @mixin core() {
   // MARK: Material Global Styles
 
-  .mat-mdc-form-field {
-    // in Angular Material 16 when using dynamic padding there is no space reserved between fields; the only space is the hint or error if applicable. This add a minor amount of padding to each input.
+  .mat-mdc-form-field,
+  .dbx-forge-form-field {
+    // in Angular Material 16 when using dynamic padding there is no space reserved between fields; the only space is the hint or error if applicable. This adds a minor amount of padding to each input. The forge form-field wrapper opts in via its own host class so spacing is identical for both formly Material fields and forge wrapper fields.
     padding: 6px 0;
   }
 }

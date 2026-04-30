@@ -45,6 +45,7 @@ export interface AuthorizedUserTestContext {
   callWrappedFunction<F extends WrappedCallableRequest<any, any>>(fn: F, params: WrappedCallableRequestParams<F>, skipJsonConversion?: boolean): Promise<WrappedCallableRequestOutput<F>>;
   /**
    * Used for calling any non-callable gen 2 function (e.g. scheduled functions, cloud functions, blocking functions) or any gen 1 function.
+   *
    * @param fn
    * @param params
    * @param skipJsonConversion
@@ -368,7 +369,7 @@ export function authorizedUserContextFactory<PI extends FirebaseAdminTestContext
       initInstance: async () => {
         const inputAddContactInfo = await inputAddContactInfoGetter();
         const inputUser = await inputUserGetter();
-        const inputTemplate = await templateGetter();
+        const inputTemplate = templateGetter();
 
         const uid = inputUser?.uid || makeUid();
         const { details, claims, addContactInfo: userDetailsAddContactInfo } = { ...makeUserDetails(uid, params), ...inputTemplate };
@@ -552,10 +553,8 @@ export function testFirestoreClaimsFromUserRecord(userRecord: UserRecord): objec
   };
 
   const customClaims = userRecord.customClaims;
-  const claims = {
+  return {
     ...customClaims,
     ...baseClaims
   };
-
-  return claims;
 }

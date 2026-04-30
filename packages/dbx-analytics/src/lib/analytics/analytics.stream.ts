@@ -47,7 +47,25 @@ export enum DbxAnalyticsStreamEventType {
   /**
    * A generic custom analytics event.
    */
-  Event
+  Event,
+
+  // Session Replay
+  /**
+   * Request to start session replay recording.
+   */
+  StartSessionRecording,
+  /**
+   * Request to stop session replay recording.
+   */
+  StopSessionRecording,
+  /**
+   * Request to pause an active session replay recording without clearing it.
+   */
+  PauseSessionRecording,
+  /**
+   * Request to resume a previously paused session replay recording.
+   */
+  ResumeSessionRecording
 }
 
 /**

@@ -1,0 +1,1991 @@
+[
+  {
+    "code": "archetype-inconsistent",
+    "source": "dbx_model_fixture_validate_app",
+    "severity": "error",
+    "title": "Sub-collection wiring (8-generic factory + parent-aware",
+    "whatItFlags": "Sub-collection wiring (8-generic factory + parent-aware\n`getCollection`) without a parent-fixture field on the Params type\n— or vice versa.",
+    "whenItApplies": "Sub-collection archetypes (`sub-collection`, `sub-collection-traversal`).",
+    "whenItDoesNotApply": "Top-level archetypes (`top-level-simple`, `top-level-with-deps`) — they don't need a parent fixture field.",
+    "canonicalFix": "Add the parent fixture field to the Params type (named after the parent's `firestoreModelIdentity` short alias)."
+  },
+  {
+    "code": "forwarder-divergent",
+    "source": "dbx_model_fixture_validate_app",
+    "severity": "warning",
+    "title": "A Fixture forwarder's signature drifts from the Instance method it",
+    "whatItFlags": "A Fixture forwarder's signature drifts from the Instance method it\nforwards to.",
+    "whenItApplies": "Forwarders whose parameter list, return type, or async-ness differs from the Instance source.",
+    "whenItDoesNotApply": "Forwarders that intentionally widen the Instance signature (rare — usually a refactor mismatch).",
+    "canonicalFix": "Re-run `dbx_model_fixture_forward` to regenerate the forwarder, or hand-edit the Fixture method to match."
+  },
+  {
+    "code": "forwarder-missing",
+    "source": "dbx_model_fixture_validate_app",
+    "severity": "warning",
+    "title": "An Instance method has no Fixture forwarder",
+    "whatItFlags": "An Instance method has no Fixture forwarder.",
+    "whenItApplies": "Every public Instance method should have a same-name Fixture forwarder.",
+    "whenItDoesNotApply": "Static helpers, private/protected methods, and methods that intentionally exist only on Instance.",
+    "canonicalFix": "Run `dbx_model_fixture_forward apiDir=<apiDir> model=<Model>` to scaffold the missing forwarder.",
+    "seeAlso": [
+      {
+        "kind": "tool",
+        "target": "dbx_model_fixture_forward"
+      }
+    ]
+  },
+  {
+    "code": "forwarder-not-delegating",
+    "source": "dbx_model_fixture_validate_app",
+    "severity": "warning",
+    "title": "A Fixture forwarder exists but its body re-implements the Instance",
+    "whatItFlags": "A Fixture forwarder exists but its body re-implements the Instance\nlogic instead of delegating via `this.instance.<name>(...)`.",
+    "whenItApplies": "Forwarders whose body contains anything beyond a delegation call.",
+    "whenItDoesNotApply": "Forwarders intentionally adding pre/post hooks (rare; prefer encapsulating the hook in an Instance method).",
+    "canonicalFix": "Replace the forwarder body with `return this.instance.<name>(...args)`."
+  },
+  {
+    "code": "generics-misaligned",
+    "source": "dbx_model_fixture_validate_app",
+    "severity": "error",
+    "title": "Model / Document generic args drift between the Fixture class, the",
+    "whatItFlags": "Model / Document generic args drift between the Fixture class, the\nInstance class, and the `modelTestContextFactory` call.",
+    "whenItApplies": "Every triplet's three generic-bearing positions (Fixture, Instance, factory).",
+    "whenItDoesNotApply": "Triplets that intentionally use a wider generic on Fixture (rare — almost always a typo or rename drift).",
+    "canonicalFix": "Align the generics on all three positions; the model and document type names should match exactly."
+  },
+  {
+    "code": "model-not-in-registry",
+    "source": "dbx_model_fixture_validate_app",
+    "severity": "warning",
+    "title": "The fixture references a model not in the supplied model registry",
+    "whatItFlags": "The fixture references a model not in the supplied model registry.",
+    "whenItApplies": "When a model registry is supplied.",
+    "whenItDoesNotApply": "Downstream apps without a hooked-up registry — the rule is skipped entirely in that case.",
+    "canonicalFix": "Either register the model in the workspace's identity registry or remove the fixture if the model is no longer used."
+  },
+  {
+    "code": "model-without-fixture",
+    "source": "dbx_model_fixture_validate_app",
+    "severity": "warning",
+    "title": "The model registry has the model but the fixture file doesn't",
+    "whatItFlags": "The model registry has the model but the fixture file doesn't\ndeclare a TestContext triplet for it.",
+    "whenItApplies": "When a model registry is supplied.",
+    "whenItDoesNotApply": "Models the app intentionally tests through some other harness (rare).",
+    "canonicalFix": "Run `dbx_model_fixture_scaffold apiDir=<apiDir> model=<Model>` to add the missing triplet.",
+    "seeAlso": [
+      {
+        "kind": "tool",
+        "target": "dbx_model_fixture_scaffold"
+      }
+    ]
+  },
+  {
+    "code": "params-field-naming",
+    "source": "dbx_model_fixture_validate_app",
+    "severity": "warning",
+    "title": "A parent fixture field's name doesn't match the parent's",
+    "whatItFlags": "A parent fixture field's name doesn't match the parent's\n`firestoreModelIdentity` short alias (e.g. `sg` for `SchoolGroup`).",
+    "whenItApplies": "When a model registry is supplied AND the field's parent fixture model is registered.",
+    "whenItDoesNotApply": "Fields whose parent fixture is intentionally aliased; or runs without a model registry.",
+    "canonicalFix": "Rename the field on the Params type to the parent's short alias from `firestoreModelIdentity`."
+  },
+  {
+    "code": "triplet-incomplete",
+    "source": "dbx_model_fixture_validate_app",
+    "severity": "error",
+    "title": "A model is missing one of Fixture / Instance / Params / factory",
+    "whatItFlags": "A model is missing one of Fixture / Instance / Params / factory\ncall / singleton — the five-anchor triplet definition is incomplete.",
+    "whenItApplies": "Every model that has at least one of the anchors.",
+    "whenItDoesNotApply": "Models intentionally not yet wired (uncommon — usually a forgotten scaffold step).",
+    "canonicalFix": "Run `dbx_model_fixture_scaffold apiDir=<apiDir> model=<Model>` to generate the missing pieces.",
+    "seeAlso": [
+      {
+        "kind": "tool",
+        "target": "dbx_model_fixture_scaffold"
+      }
+    ]
+  },
+  {
+    "code": "FILE_GROUP_INTERFACE_AFTER_MODEL",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "The `<Group>FirestoreCollections` interface is declared after the first model",
+    "whatItFlags": "The `<Group>FirestoreCollections` interface is declared after the first model.",
+    "whenItApplies": "Every model file with both an interface and at least one model declaration.",
+    "whenItDoesNotApply": "Files declaring no models (the interface ordering rule is moot there).",
+    "canonicalFix": "Move the `<Group>FirestoreCollections` interface above the first model declaration."
+  },
+  {
+    "code": "FILE_GROUP_INTERFACE_MISSING_COLLECTION",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "The `<Group>FirestoreCollections` interface is missing the collection entry for one of the file's models",
+    "whatItFlags": "The `<Group>FirestoreCollections` interface is missing the collection entry for one of the file's models.",
+    "whenItApplies": "Every model in the file must have its `<camelName>Collection` (root) or `<camelName>CollectionFactory` + `<camelName>CollectionGroup` (subcollection) entries on the interface.",
+    "whenItDoesNotApply": "Models intentionally excluded from the group container (rare).",
+    "canonicalFix": "Add the missing property to the interface declaration."
+  },
+  {
+    "code": "FILE_GROUP_INTERFACE_NOT_EXPORTED",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "The `<Group>FirestoreCollections` interface is declared but not exported",
+    "whatItFlags": "The `<Group>FirestoreCollections` interface is declared but not exported.",
+    "whenItApplies": "Every group-collections interface declaration.",
+    "whenItDoesNotApply": "When the interface is intentionally module-private (rare — the model wiring needs it cross-file).",
+    "canonicalFix": "Add the `export` keyword to the interface declaration."
+  },
+  {
+    "code": "FILE_GROUP_TYPES_AFTER_MODEL",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "The `<Group>Types` alias is declared after the first model",
+    "whatItFlags": "The `<Group>Types` alias is declared after the first model.",
+    "whenItApplies": "Every model file with both a types alias and at least one model.",
+    "whenItDoesNotApply": "Files declaring no models.",
+    "canonicalFix": "Move the `<Group>Types` alias above the first model."
+  },
+  {
+    "code": "FILE_GROUP_TYPES_MISSING_IDENTITY",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "The `<Group>Types` alias is missing a `typeof <identity>` ref for one of the file's models",
+    "whatItFlags": "The `<Group>Types` alias is missing a `typeof <identity>` ref for one of the file's models.",
+    "whenItApplies": "Every identity declared in the file must appear in the types union.",
+    "whenItDoesNotApply": "When the model is intentionally excluded (rare — the union is the canonical type discriminator).",
+    "canonicalFix": "Add `| typeof <identity>` to the union."
+  },
+  {
+    "code": "FILE_GROUP_TYPES_NOT_EXPORTED",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "The `<Group>Types` alias is declared but not exported",
+    "whatItFlags": "The `<Group>Types` alias is declared but not exported.",
+    "whenItApplies": "Every group-types alias.",
+    "whenItDoesNotApply": "When intentionally module-private (rare — downstream code consumes the union).",
+    "canonicalFix": "Add `export` to the type alias declaration."
+  },
+  {
+    "code": "FILE_GROUP_TYPES_UNKNOWN_IDENTITY",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "The `<Group>Types` alias references an identity that isn't declared in the file",
+    "whatItFlags": "The `<Group>Types` alias references an identity that isn't declared in the file.",
+    "whenItApplies": "Every identity ref in the union.",
+    "whenItDoesNotApply": "When the identity is imported from another file (rare — usually a typo).",
+    "canonicalFix": "Either declare the identity in the file or remove the orphaned ref."
+  },
+  {
+    "code": "FILE_MISSING_GROUP_INTERFACE",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "The file is missing its `<Group>FirestoreCollections` interface",
+    "whatItFlags": "The file is missing its `<Group>FirestoreCollections` interface.",
+    "whenItApplies": "Every model file (one declaring `firestoreModelIdentity(...)`) must anchor its `<Group>FirestoreCollections` interface above the first model.",
+    "whenItDoesNotApply": "Files in `@dereekb/firebase` itself — those are upstream sources owned by the package.",
+    "canonicalFix": "Declare `export interface <Group>FirestoreCollections { ... }` above the first `firestoreModelIdentity(...)` call.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "firestore-model"
+      }
+    ]
+  },
+  {
+    "code": "FILE_MISSING_GROUP_TYPES",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "The file is missing its `<Group>Types` union alias",
+    "whatItFlags": "The file is missing its `<Group>Types` union alias.",
+    "whenItApplies": "Every model file must declare a `<Group>Types` union of `typeof <identity>` covering every model in the file.",
+    "whenItDoesNotApply": "Files in `@dereekb/firebase` itself.",
+    "canonicalFix": "Add `export type <Group>Types = typeof <Identity1>FirestoreModelIdentity | typeof <Identity2>FirestoreModelIdentity ...`."
+  },
+  {
+    "code": "MODEL_COLLECTION_FACTORY_TYPE_MISMATCH",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "The collection-type alias kind disagrees with the factory body's `firestoreContext.*` call",
+    "whatItFlags": "The collection-type alias kind disagrees with the factory body's `firestoreContext.*` call.",
+    "whenItApplies": "When the type alias declares one shape and the factory implements another (e.g. type says `RootSingleItemFirestoreCollection` but body calls `firestoreCollection`).",
+    "whenItDoesNotApply": "When the validator can't locate the factory body (rare — emits no rule then).",
+    "canonicalFix": "Pick one shape and use it consistently — either change the type alias or change the factory body to match."
+  },
+  {
+    "code": "MODEL_COLLECTION_TYPE_WRONG_GENERIC",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "The collection type alias uses the wrong generic shape for the model variant",
+    "whatItFlags": "The collection type alias uses the wrong generic shape for the model variant.",
+    "whenItApplies": "The 4-shape taxonomy: `FirestoreCollection<T, D>` for root, `RootSingleItemFirestoreCollection<T, D>` for root-singleton, `FirestoreCollectionWithParent<T, PT, D, PD>` for sub-collection, `SingleItemFirestoreCollection<T, PT, D, PD>` for singleton-sub.",
+    "whenItDoesNotApply": "Multi-document subcollections that should genuinely use `FirestoreCollectionWithParent` — confirm the factory body calls `firestoreContext.firestoreCollectionWithParent({...})`. If yes, this rule is a false-positive (the validator detected `singleItemFirestoreCollection` somewhere it shouldn't have).",
+    "canonicalFix": "Match the type alias's generics to the factory body's `firestoreContext.*` call. Run `dbx_explain_rule code=\"MODEL_COLLECTION_TYPE_WRONG_GENERIC\"` for the full taxonomy.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "firestore-model"
+      }
+    ]
+  },
+  {
+    "code": "MODEL_CONVERTER_NOT_EXPORTED",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "The converter constant is declared but not exported",
+    "whatItFlags": "The converter constant is declared but not exported.",
+    "whenItApplies": "Every converter constant.",
+    "whenItDoesNotApply": "When intentionally module-private.",
+    "canonicalFix": "Add `export` to the converter declaration."
+  },
+  {
+    "code": "MODEL_DOCUMENT_BAD_TYPE_ARGS",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "The document class's generic type args don't line up with the model identity / interface",
+    "whatItFlags": "The document class's generic type args don't line up with the model identity / interface.",
+    "whenItApplies": "Every document class.",
+    "whenItDoesNotApply": "When generics are intentionally widened (rare).",
+    "canonicalFix": "Pass `<PascalName>, <PascalName>Document>` (root) or include the parent generics for subcollections."
+  },
+  {
+    "code": "MODEL_DOCUMENT_CLASS_NOT_EXPORTED",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "The document class is declared but not exported",
+    "whatItFlags": "The document class is declared but not exported.",
+    "whenItApplies": "Every document class.",
+    "whenItDoesNotApply": "When intentionally module-private.",
+    "canonicalFix": "Add `export` to the class declaration."
+  },
+  {
+    "code": "MODEL_DOCUMENT_MISSING_IDENTITY_GETTER",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "The document class is missing the `get modelIdentity()` getter",
+    "whatItFlags": "The document class is missing the `get modelIdentity()` getter.",
+    "whenItApplies": "Every document class.",
+    "whenItDoesNotApply": "Document classes inheriting the getter from a custom abstract base (rare).",
+    "canonicalFix": "Add `get modelIdentity() { return <identity>; }` returning the matching identity constant."
+  },
+  {
+    "code": "MODEL_DOCUMENT_WRONG_BASE_CLASS",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "The document class extends an unsupported base class",
+    "whatItFlags": "The document class extends an unsupported base class.",
+    "whenItApplies": "Every document class — must extend `AbstractFirestoreDocument` (root) or `AbstractFirestoreDocumentWithParent` (subcollection).",
+    "whenItDoesNotApply": "Custom document hierarchies (rare; usually a typo).",
+    "canonicalFix": "Change the `extends` clause to the canonical base class for the model variant."
+  },
+  {
+    "code": "MODEL_DOCUMENT_WRONG_IDENTITY_GETTER",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "The document's `get modelIdentity()` returns the wrong identity constant",
+    "whatItFlags": "The document's `get modelIdentity()` returns the wrong identity constant.",
+    "whenItApplies": "Every document class.",
+    "whenItDoesNotApply": "When the rename was intentional (rare — usually a copy-paste).",
+    "canonicalFix": "Update the getter body to return the matching identity constant."
+  },
+  {
+    "code": "MODEL_FIELD_JSDOC_NO_FULL_NAME",
+    "source": "dbx_model_validate",
+    "severity": "warning",
+    "title": "A persisted field's JSDoc doesn't open with `<fullName> -- <description>`",
+    "whatItFlags": "A persisted field's JSDoc doesn't open with `<fullName> -- <description>`.",
+    "whenItApplies": "Every field with JSDoc — the first line should match the `<fullName> -- <description>` pattern so the long-name extractor and decoder agree on field semantics.",
+    "whenItDoesNotApply": "When the project deliberately uses a non-standard JSDoc convention (rare).",
+    "canonicalFix": "Reformat the JSDoc opener to `<longName> -- <one-line description>`."
+  },
+  {
+    "code": "MODEL_FIELD_MISSING_JSDOC",
+    "source": "dbx_model_validate",
+    "severity": "warning",
+    "title": "A persisted field has no JSDoc",
+    "whatItFlags": "A persisted field has no JSDoc.",
+    "whenItApplies": "Every persisted field — short field names need JSDoc to document what they mean.",
+    "whenItDoesNotApply": "Fields whose name is unambiguously self-describing (rare with 1-4 char abbreviations).",
+    "canonicalFix": "Add `/** <fullName> -- <description> *\\/` above the field declaration."
+  },
+  {
+    "code": "MODEL_FIELD_NAME_TOO_LONG",
+    "source": "dbx_model_validate",
+    "severity": "warning",
+    "title": "A persisted field's name exceeds the workspace's 4-character convention",
+    "whatItFlags": "A persisted field's name exceeds the workspace's 4-character convention.",
+    "whenItApplies": "Every persisted field on a model interface (or sub-object interface).",
+    "whenItDoesNotApply": "Fields that compose well-known multi-character abbreviations the project intentionally allows.",
+    "canonicalFix": "Rename the field to a 1–4 character abbreviation (e.g. `name` → `n`, `userId` → `uid`)."
+  },
+  {
+    "code": "MODEL_IDENTITY_BAD_ARGS",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "`firestoreModelIdentity(...)` was called with non-string-literal args (or wrong arity)",
+    "whatItFlags": "`firestoreModelIdentity(...)` was called with non-string-literal args (or wrong arity).",
+    "whenItApplies": "Every identity call.",
+    "whenItDoesNotApply": "When the args come from a const (uncommon — the validator can't follow non-literal references).",
+    "canonicalFix": "Pass `(parentIdentity?, '<modelType>', '<prefix>')` as inline string literals."
+  },
+  {
+    "code": "MODEL_IDENTITY_NOT_EXPORTED",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "The model's `firestoreModelIdentity(...)` const is not exported",
+    "whatItFlags": "The model's `firestoreModelIdentity(...)` const is not exported.",
+    "whenItApplies": "Every identity constant.",
+    "whenItDoesNotApply": "When intentionally module-private (rare).",
+    "canonicalFix": "Add `export` to the identity constant declaration."
+  },
+  {
+    "code": "MODEL_INTERFACE_NOT_EXPORTED",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "The model's data interface is declared but not exported",
+    "whatItFlags": "The model's data interface is declared but not exported.",
+    "whenItApplies": "Every model interface declaration.",
+    "whenItDoesNotApply": "When intentionally module-private (rare).",
+    "canonicalFix": "Add `export` to the interface declaration."
+  },
+  {
+    "code": "MODEL_MISSING_COLLECTION_FN",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "The model has no `<camelName>FirestoreCollection` (root) or `<camelName>FirestoreCollectionFactory` (subcollection) function",
+    "whatItFlags": "The model has no `<camelName>FirestoreCollection` (root) or `<camelName>FirestoreCollectionFactory` (subcollection) function.",
+    "whenItApplies": "Every model.",
+    "whenItDoesNotApply": "When the function is intentionally inlined (rare).",
+    "canonicalFix": "Declare the matching factory function."
+  },
+  {
+    "code": "MODEL_MISSING_COLLECTION_REFERENCE",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "The model has no collection-reference function (`<camelName>CollectionReference` for root or `<camelName>CollectionReferenceFactory` for subcollection)",
+    "whatItFlags": "The model has no collection-reference function (`<camelName>CollectionReference` for root or `<camelName>CollectionReferenceFactory` for subcollection).",
+    "whenItApplies": "Every model.",
+    "whenItDoesNotApply": "Models that intentionally bypass the canonical reference shape.",
+    "canonicalFix": "Declare the matching reference function next to the converter."
+  },
+  {
+    "code": "MODEL_MISSING_COLLECTION_TYPE",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "The model has no `<PascalName>FirestoreCollection` type alias",
+    "whatItFlags": "The model has no `<PascalName>FirestoreCollection` type alias.",
+    "whenItApplies": "Every model.",
+    "whenItDoesNotApply": "When intentionally re-using a parent type (rare).",
+    "canonicalFix": "Declare `export type <PascalName>FirestoreCollection = FirestoreCollection<<PascalName>, <PascalName>Document>;`."
+  },
+  {
+    "code": "MODEL_MISSING_CONVERTER",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "The model has no `<camelName>Converter` constant",
+    "whatItFlags": "The model has no `<camelName>Converter` constant.",
+    "whenItApplies": "Every model in the file.",
+    "whenItDoesNotApply": "Models intentionally sharing a converter (rare).",
+    "canonicalFix": "Declare `export const <camelName>Converter = snapshotConverterFunctions<<PascalName>>({ fields: { ... } });`."
+  },
+  {
+    "code": "MODEL_MISSING_DOCUMENT_CLASS",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "The model has no matching `<PascalName>Document` class",
+    "whatItFlags": "The model has no matching `<PascalName>Document` class.",
+    "whenItApplies": "Every model in the file.",
+    "whenItDoesNotApply": "Models intentionally extending a shared document class.",
+    "canonicalFix": "Declare `export class <PascalName>Document extends AbstractFirestoreDocument<...> { ... }`."
+  },
+  {
+    "code": "MODEL_MISSING_INTERFACE",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "The model has no matching data interface (`<PascalName>`)",
+    "whatItFlags": "The model has no matching data interface (`<PascalName>`).",
+    "whenItApplies": "Every model in the file.",
+    "whenItDoesNotApply": "Models that intentionally reuse another file's interface (rare).",
+    "canonicalFix": "Declare `export interface <PascalName> extends FirestoreModelData { ... }`.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "firestore-model"
+      }
+    ]
+  },
+  {
+    "code": "MODEL_MISSING_ROLES",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "The model has no matching `<PascalName>Roles` type alias",
+    "whatItFlags": "The model has no matching `<PascalName>Roles` type alias.",
+    "whenItApplies": "Every model in the file.",
+    "whenItDoesNotApply": "Models that intentionally reuse a parent's role union (rare).",
+    "canonicalFix": "Declare `export type <PascalName>Roles = 'role-a' | 'role-b' | ...`."
+  },
+  {
+    "code": "MODEL_OUT_OF_ORDER",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "The model's declarations are out of canonical order",
+    "whatItFlags": "The model's declarations are out of canonical order.",
+    "whenItApplies": "Every model — declarations follow the order: identity, interface, rolesType, documentClass, converter, referenceFn, collectionType, collectionFn (root) or … collectionFactoryType, collectionFn, referenceGroupFn, collectionGroupType, collectionGroupFn (subcollection).",
+    "whenItDoesNotApply": "Files where multiple models intentionally interleave (rare; prefer one-model-per-file).",
+    "canonicalFix": "Re-order the declarations to match the canonical sequence."
+  },
+  {
+    "code": "MODEL_ROLES_NOT_EXPORTED",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "The roles type is declared but not exported",
+    "whatItFlags": "The roles type is declared but not exported.",
+    "whenItApplies": "Every roles type alias.",
+    "whenItDoesNotApply": "When intentionally module-private.",
+    "canonicalFix": "Add `export` to the alias."
+  },
+  {
+    "code": "SUB_MISSING_COLLECTION_FACTORY_FN",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "Subcollection model is missing its `<camelName>FirestoreCollectionFactory` function",
+    "whatItFlags": "Subcollection model is missing its `<camelName>FirestoreCollectionFactory` function.",
+    "whenItApplies": "Every subcollection model.",
+    "whenItDoesNotApply": "Root models.",
+    "canonicalFix": "Declare `export function <camelName>FirestoreCollectionFactory(...)`."
+  },
+  {
+    "code": "SUB_MISSING_COLLECTION_FACTORY_TYPE",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "Subcollection model is missing its `<PascalName>FirestoreCollectionFactory` type alias",
+    "whatItFlags": "Subcollection model is missing its `<PascalName>FirestoreCollectionFactory` type alias.",
+    "whenItApplies": "Every subcollection model.",
+    "whenItDoesNotApply": "Root models.",
+    "canonicalFix": "Declare `export type <PascalName>FirestoreCollectionFactory = FirestoreCollectionWithParentFactory<...>;`."
+  },
+  {
+    "code": "SUB_MISSING_COLLECTION_GROUP_FN",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "Subcollection model is missing its `<camelName>FirestoreCollectionGroup` function",
+    "whatItFlags": "Subcollection model is missing its `<camelName>FirestoreCollectionGroup` function.",
+    "whenItApplies": "Every subcollection model.",
+    "whenItDoesNotApply": "Root models.",
+    "canonicalFix": "Declare `export function <camelName>FirestoreCollectionGroup(firestoreContext)`."
+  },
+  {
+    "code": "SUB_MISSING_COLLECTION_GROUP_REFERENCE",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "Subcollection model is missing its `<camelName>CollectionGroup` reference function",
+    "whatItFlags": "Subcollection model is missing its `<camelName>CollectionGroup` reference function.",
+    "whenItApplies": "Every subcollection model.",
+    "whenItDoesNotApply": "Root models — they don't have a collection-group concept.",
+    "canonicalFix": "Declare `export function <camelName>CollectionGroup(firestoreContext)`."
+  },
+  {
+    "code": "SUB_MISSING_COLLECTION_GROUP_TYPE",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "Subcollection model is missing its `<PascalName>FirestoreCollectionGroup` type alias",
+    "whatItFlags": "Subcollection model is missing its `<PascalName>FirestoreCollectionGroup` type alias.",
+    "whenItApplies": "Every subcollection model.",
+    "whenItDoesNotApply": "Root models.",
+    "canonicalFix": "Declare `export type <PascalName>FirestoreCollectionGroup = FirestoreCollectionGroup<...>;`."
+  },
+  {
+    "code": "SUB_MISSING_COLLECTION_REFERENCE_FACTORY",
+    "source": "dbx_model_validate",
+    "severity": "error",
+    "title": "Subcollection model is missing its `<camelName>CollectionReferenceFactory` function",
+    "whatItFlags": "Subcollection model is missing its `<camelName>CollectionReferenceFactory` function.",
+    "whenItApplies": "Every subcollection model.",
+    "whenItDoesNotApply": "Root models — they declare `<camelName>CollectionReference` instead.",
+    "canonicalFix": "Declare `export function <camelName>CollectionReferenceFactory(...)`."
+  },
+  {
+    "code": "CRUD_CLASS_MISSING_KEY",
+    "source": "dbx_model_validate_api",
+    "severity": "warning",
+    "title": "A non-null CRUD key is missing the matching abstract member on `<Group>Functions`",
+    "whatItFlags": "A non-null CRUD key is missing the matching abstract member on `<Group>Functions`.",
+    "whenItApplies": "Every non-null key of `<Group>FunctionTypeCrudConfig` that doesn't appear as a member name on the abstract Functions class.",
+    "whenItDoesNotApply": "Keys covered by an inherited member from a base class (rare — CRUD members are declared per file by convention).",
+    "canonicalFix": "Add `abstract <key>: ModelFirebaseFunctionMapFunction<<Group>FunctionTypeMap, '<key>'>;` to the class."
+  },
+  {
+    "code": "CRUD_CONFIG_CONST_WRONG_GENERIC",
+    "source": "dbx_model_validate_api",
+    "severity": "error",
+    "title": "`<group>FunctionTypeCrudConfig` constant is annotated with the wrong generic argument",
+    "whatItFlags": "`<group>FunctionTypeCrudConfig` constant is annotated with the wrong generic argument.",
+    "whenItApplies": "When the type annotation on the const isn't the matching `<Group>FunctionTypeCrudConfig` type alias.",
+    "whenItDoesNotApply": "No known false-positive cases — the generic must point at the local type alias.",
+    "canonicalFix": "Set the annotation to `<Group>FunctionTypeCrudConfig` so the call map shape is inferred from the type map."
+  },
+  {
+    "code": "CRUD_CONFIG_MISSING_RESULT_TUPLE",
+    "source": "dbx_model_validate_api",
+    "severity": "warning",
+    "title": "A CRUD config leaf references the bare `*Params` interface without the `[Params, Result]` tuple form",
+    "whatItFlags": "A CRUD config leaf references the bare `*Params` interface without the `[Params, Result]` tuple form.",
+    "whenItApplies": "Every CRUD leaf that uses `<key>: <Foo>ParamsType` instead of `<key>: [<Foo>ParamsType, <Foo>Result]`.",
+    "whenItDoesNotApply": "CRUD entries whose result type is intentionally `void` (rare — convention is to declare `*Result` and use the tuple form).",
+    "canonicalFix": "Convert the leaf to the tuple form `[<Foo>ParamsType, <Foo>Result]` so the function signature carries the result type."
+  },
+  {
+    "code": "CRUD_CONST_MISSING_KEY",
+    "source": "dbx_model_validate_api",
+    "severity": "warning",
+    "title": "A non-null CRUD key is missing from the runtime `<group>FunctionTypeCrudConfig` const",
+    "whatItFlags": "A non-null CRUD key is missing from the runtime `<group>FunctionTypeCrudConfig` const.",
+    "whenItApplies": "Every non-null key declared on the `<Group>FunctionTypeCrudConfig` type that doesn't appear as a runtime key on the const.",
+    "whenItDoesNotApply": "Keys whose runtime entry is contributed by another file (rare — convention is to keep type + const in lockstep).",
+    "canonicalFix": "Add `<key>: [<Foo>ParamsType, <Foo>Result]` (or the bare `*Params` form) to the const."
+  },
+  {
+    "code": "DECL_AFTER_FUNCTIONS_BLOCK",
+    "source": "dbx_model_validate_api",
+    "severity": "warning",
+    "title": "A `*Params` / `*Result` declaration appears below the Functions block",
+    "whatItFlags": "A `*Params` / `*Result` declaration appears below the Functions block.",
+    "whenItApplies": "When a params or result declaration's line number falls after the first Functions-block declaration.",
+    "whenItDoesNotApply": "Files where the declaration order is intentionally inverted for project-specific reasons.",
+    "canonicalFix": "Move the params/result declaration above the Functions block so the file reads top-down: types → validators → Functions."
+  },
+  {
+    "code": "FILE_GROUP_NAME_INCONSISTENT",
+    "source": "dbx_model_validate_api",
+    "severity": "error",
+    "title": "The Functions block declarations don't all share the same `<group>` prefix",
+    "whatItFlags": "The Functions block declarations don't all share the same `<group>` prefix.",
+    "whenItApplies": "When the inferred group name on the type map, config map, CRUD type/const, function map, or class differs from the file's primary group.",
+    "whenItDoesNotApply": "Files where the prefix mismatch is intentional (rare — convention requires consistent naming).",
+    "canonicalFix": "Rename the divergent declaration so every Functions-block export shares the same `<group>` prefix."
+  },
+  {
+    "code": "FILE_MISSING_CRUD_CONFIG_CONST",
+    "source": "dbx_model_validate_api",
+    "severity": "error",
+    "title": "`<group>FunctionTypeCrudConfig` constant is missing from the file",
+    "whatItFlags": "`<group>FunctionTypeCrudConfig` constant is missing from the file.",
+    "whenItApplies": "Every `<model>.api.ts` file with a Functions block.",
+    "whenItDoesNotApply": "Non-CRUD api filenames listed in `NON_CRUD_API_BASENAMES`.",
+    "canonicalFix": "Add `export const <group>FunctionTypeCrudConfig: <Group>FunctionTypeCrudConfig = { ... };` mapping each CRUD key to its `[Params, Result]` tuple or `null`."
+  },
+  {
+    "code": "FILE_MISSING_CRUD_CONFIG_TYPE",
+    "source": "dbx_model_validate_api",
+    "severity": "error",
+    "title": "`<Group>FunctionTypeCrudConfig` type alias is missing from the file",
+    "whatItFlags": "`<Group>FunctionTypeCrudConfig` type alias is missing from the file.",
+    "whenItApplies": "Every `<model>.api.ts` file with a Functions block.",
+    "whenItDoesNotApply": "Non-CRUD api filenames listed in `NON_CRUD_API_BASENAMES`.",
+    "canonicalFix": "Add `export type <Group>FunctionTypeCrudConfig = ModelFirebaseCrudFunctionConfigMap<<Group>FunctionTypeMap>;` to bind the CRUD shape to the type map."
+  },
+  {
+    "code": "FILE_MISSING_FUNCTION_MAP",
+    "source": "dbx_model_validate_api",
+    "severity": "error",
+    "title": "`<group>FunctionMap` constant is missing from the file",
+    "whatItFlags": "`<group>FunctionMap` constant is missing from the file.",
+    "whenItApplies": "Every `<model>.api.ts` file with a Functions block.",
+    "whenItDoesNotApply": "Non-CRUD api filenames listed in `NON_CRUD_API_BASENAMES`.",
+    "canonicalFix": "Add `export const <group>FunctionMap = callModelFirebaseFunctionMapFactory(<group>FunctionTypeConfigMap, <group>FunctionTypeCrudConfig);` to wire the runtime call map."
+  },
+  {
+    "code": "FILE_MISSING_FUNCTION_TYPE_CONFIG_MAP",
+    "source": "dbx_model_validate_api",
+    "severity": "error",
+    "title": "`<group>FunctionTypeConfigMap` constant is missing from the file",
+    "whatItFlags": "`<group>FunctionTypeConfigMap` constant is missing from the file.",
+    "whenItApplies": "Every `<model>.api.ts` file with a Functions block.",
+    "whenItDoesNotApply": "Non-CRUD api filenames listed in `NON_CRUD_API_BASENAMES`.",
+    "canonicalFix": "Add `export const <group>FunctionTypeConfigMap: ModelFirebaseFunctionMapTypeConfigMap<<Group>FunctionTypeMap> = { ... };` aligned with the type-map keys.",
+    "seeAlso": [
+      {
+        "kind": "doc",
+        "target": "dbx__guide__call-model-api"
+      }
+    ]
+  },
+  {
+    "code": "FILE_MISSING_FUNCTION_TYPE_MAP",
+    "source": "dbx_model_validate_api",
+    "severity": "error",
+    "title": "`<group>FunctionTypeMap` type alias is missing from the file",
+    "whatItFlags": "`<group>FunctionTypeMap` type alias is missing from the file.",
+    "whenItApplies": "Every `<model>.api.ts` file (other than the non-CRUD basenames listed in `NON_CRUD_API_BASENAMES`).",
+    "whenItDoesNotApply": "Files matching a `NON_CRUD_API_BASENAMES` entry (e.g. `development.api.ts`) — those short-circuit structural checks.",
+    "canonicalFix": "Add `export type <Group>FunctionTypeMap = { /* keys *\\/ };` at the top of the Functions block.",
+    "seeAlso": [
+      {
+        "kind": "doc",
+        "target": "dbx__guide__call-model-api"
+      }
+    ]
+  },
+  {
+    "code": "FILE_MISSING_FUNCTIONS_CLASS",
+    "source": "dbx_model_validate_api",
+    "severity": "error",
+    "title": "`<Group>Functions` abstract class is missing from the file",
+    "whatItFlags": "`<Group>Functions` abstract class is missing from the file.",
+    "whenItApplies": "Every `<model>.api.ts` file with a Functions block.",
+    "whenItDoesNotApply": "Non-CRUD api filenames listed in `NON_CRUD_API_BASENAMES`.",
+    "canonicalFix": "Add `export abstract class <Group>Functions implements ModelFirebaseFunctionsConfigMap<<Group>FunctionTypeMap, <Group>FunctionTypeCrudConfig> { ... }` with one abstract member per non-null CRUD key."
+  },
+  {
+    "code": "FILE_MISSING_MARK_CONSTANTS",
+    "source": "dbx_model_validate_api",
+    "severity": "warning",
+    "title": "The file is missing the `// MARK: Constants` (or equivalent) section comment",
+    "whatItFlags": "The file is missing the `// MARK: Constants` (or equivalent) section comment.",
+    "whenItApplies": "Every CRUD api file expected to declare top-level constants alongside the params/results.",
+    "whenItDoesNotApply": "Files with no top-level constants — the marker is purely organizational.",
+    "canonicalFix": "Add a `// MARK: Constants` comment above the constants region so navigation and folding work consistently."
+  },
+  {
+    "code": "FILE_MISSING_MARK_FUNCTIONS",
+    "source": "dbx_model_validate_api",
+    "severity": "warning",
+    "title": "The file is missing the `// MARK: Functions` section comment above the Functions block",
+    "whatItFlags": "The file is missing the `// MARK: Functions` section comment above the Functions block.",
+    "whenItApplies": "Every CRUD api file with a Functions block.",
+    "whenItDoesNotApply": "Files matching `NON_CRUD_API_BASENAMES` (no Functions block expected).",
+    "canonicalFix": "Add a `// MARK: Functions` comment immediately above the Functions block so the file's top-down structure stays scannable."
+  },
+  {
+    "code": "FILE_MISSING_MARK_KEYS",
+    "source": "dbx_model_validate_api",
+    "severity": "warning",
+    "title": "The file is missing the `// MARK: Keys` section comment",
+    "whatItFlags": "The file is missing the `// MARK: Keys` section comment.",
+    "whenItApplies": "Every CRUD api file expected to declare key types alongside the params/results.",
+    "whenItDoesNotApply": "Files with no key declarations — the marker is purely organizational.",
+    "canonicalFix": "Add a `// MARK: Keys` comment above the keys region so navigation and folding work consistently."
+  },
+  {
+    "code": "FILE_NOT_EXPORTED",
+    "source": "dbx_model_validate_api",
+    "severity": "error",
+    "title": "A required Functions-block declaration exists but isn't `export`ed",
+    "whatItFlags": "A required Functions-block declaration exists but isn't `export`ed.",
+    "whenItApplies": "Any of the six Functions-block exports declared without the `export` keyword.",
+    "whenItDoesNotApply": "No known false-positive cases — the call map / class are consumed across packages and must be exported.",
+    "canonicalFix": "Add the `export` keyword to the declaration."
+  },
+  {
+    "code": "FUNCTION_MAP_BAD_FACTORY_ARGS",
+    "source": "dbx_model_validate_api",
+    "severity": "error",
+    "title": "`<group>FunctionMap = callModelFirebaseFunctionMapFactory(...)` was called with the wrong argument identifiers",
+    "whatItFlags": "`<group>FunctionMap = callModelFirebaseFunctionMapFactory(...)` was called with the wrong argument identifiers.",
+    "whenItApplies": "When the factory call's two argument identifiers don't match `<group>FunctionTypeConfigMap` and `<group>FunctionTypeCrudConfig` (in that order).",
+    "whenItDoesNotApply": "No known false-positive cases — the factory must be passed the file's own config + crud-config consts.",
+    "canonicalFix": "Pass `<group>FunctionTypeConfigMap` first and `<group>FunctionTypeCrudConfig` second, matching the local declarations."
+  },
+  {
+    "code": "FUNCTIONS_BLOCK_OUT_OF_ORDER",
+    "source": "dbx_model_validate_api",
+    "severity": "warning",
+    "title": "The Functions-block declarations aren't in canonical order",
+    "whatItFlags": "The Functions-block declarations aren't in canonical order.",
+    "whenItApplies": "When the actual on-disk order of `functionTypeMap` / `functionTypeConfigMap` / `crudConfigType` / `crudConfigConst` / `functionMap` / `functionsClass` doesn't match the canonical order in `FUNCTIONS_BLOCK_ORDER`.",
+    "whenItDoesNotApply": "Files where the order is intentionally different for project-specific reasons.",
+    "canonicalFix": "Reorder the Functions-block declarations to match `FUNCTIONS_BLOCK_ORDER`."
+  },
+  {
+    "code": "FUNCTIONS_CLASS_BAD_IMPLEMENTS",
+    "source": "dbx_model_validate_api",
+    "severity": "error",
+    "title": "`<Group>Functions` declares the wrong `implements` clause",
+    "whatItFlags": "`<Group>Functions` declares the wrong `implements` clause.",
+    "whenItApplies": "When the first `implements` clause text isn't `ModelFirebaseFunctionsConfigMap<<Group>FunctionTypeMap, <Group>FunctionTypeCrudConfig>` (with the local type/const names).",
+    "whenItDoesNotApply": "No known false-positive cases — the implements clause keeps the abstract members in sync with the CRUD config.",
+    "canonicalFix": "Replace the implements clause with `ModelFirebaseFunctionsConfigMap<<Group>FunctionTypeMap, <Group>FunctionTypeCrudConfig>`."
+  },
+  {
+    "code": "FUNCTIONS_CLASS_NOT_ABSTRACT",
+    "source": "dbx_model_validate_api",
+    "severity": "error",
+    "title": "`<Group>Functions` is declared as `class` rather than `abstract class`",
+    "whatItFlags": "`<Group>Functions` is declared as `class` rather than `abstract class`.",
+    "whenItApplies": "When the class declaration is missing the `abstract` modifier.",
+    "whenItDoesNotApply": "No known false-positive cases — the Functions class is implemented downstream by the API app.",
+    "canonicalFix": "Add the `abstract` modifier so concrete CRUD members are bound by the consuming `*ServerActions` class."
+  },
+  {
+    "code": "NON_CRUD_API_FILENAME",
+    "source": "dbx_model_validate_api",
+    "severity": "warning",
+    "title": "A `.api.ts` file follows the naming convention but is not a CRUD model api",
+    "whatItFlags": "A `.api.ts` file follows the naming convention but is not a CRUD model api.",
+    "whenItApplies": "Files whose basename appears in `NON_CRUD_API_BASENAMES` (e.g. `development.api.ts`).",
+    "whenItDoesNotApply": "CRUD-style api files — those run the full structural pass.",
+    "canonicalFix": "Either rename the file (drop `.api.ts`) or accept the warning — structural checks are intentionally short-circuited."
+  },
+  {
+    "code": "PARAMS_FIELD_NOT_READONLY",
+    "source": "dbx_model_validate_api",
+    "severity": "warning",
+    "title": "A field on a `*Params` interface is missing the `readonly` modifier",
+    "whatItFlags": "A field on a `*Params` interface is missing the `readonly` modifier.",
+    "whenItApplies": "Every property on a `*Params` interface (type aliases are skipped).",
+    "whenItDoesNotApply": "Fields whose type system needs mutability (rare — params are immutable by convention).",
+    "canonicalFix": "Add `readonly` to the property so the params shape stays immutable.",
+    "seeAlso": [
+      {
+        "kind": "doc",
+        "target": "dbx__note__typescript-programming"
+      }
+    ]
+  },
+  {
+    "code": "PARAMS_MAYBE_WITHOUT_CLEARABLE",
+    "source": "dbx_model_validate_api",
+    "severity": "warning",
+    "title": "A `*ParamsType` validator declares a `Maybe<...>` field without `clearable(...)`",
+    "whatItFlags": "A `*ParamsType` validator declares a `Maybe<...>` field without `clearable(...)`.",
+    "whenItApplies": "When the params interface field is wrapped in `Maybe<T>` but the validator's matching property doesn't call `clearable(...)`.",
+    "whenItDoesNotApply": "Fields that intentionally accept `null` / `undefined` without the clearable wrapper (rare — convention is to use `clearable`).",
+    "canonicalFix": "Wrap the validator property's value with `clearable(...)` so optional / clearable fields decode correctly at runtime."
+  },
+  {
+    "code": "PARAMS_MISSING_VALIDATOR",
+    "source": "dbx_model_validate_api",
+    "severity": "error",
+    "title": "A `*Params` interface has no matching `*ParamsType` Arktype validator",
+    "whatItFlags": "A `*Params` interface has no matching `*ParamsType` Arktype validator.",
+    "whenItApplies": "Every `*Params` declaration referenced by the CRUD config.",
+    "whenItDoesNotApply": "Params that are intentionally unvalidated (rare — every public CRUD entry needs a runtime validator).",
+    "canonicalFix": "Add `export const <foo>ParamsType = type({ ... }) as unknown as RuntimeTypeValidator<<Foo>Params>;` adjacent to the interface.",
+    "seeAlso": [
+      {
+        "kind": "doc",
+        "target": "dbx__guide__call-model-api"
+      }
+    ]
+  },
+  {
+    "code": "PARAMS_NOT_EXPORTED",
+    "source": "dbx_model_validate_api",
+    "severity": "error",
+    "title": "A `*Params` declaration exists but isn't `export`ed",
+    "whatItFlags": "A `*Params` declaration exists but isn't `export`ed.",
+    "whenItApplies": "Any `*Params` interface or type alias declared without the `export` keyword.",
+    "whenItDoesNotApply": "Internal helper params that aren't part of the CRUD config (rare — most params are referenced by the call map).",
+    "canonicalFix": "Add the `export` keyword so the params can be referenced by downstream packages and the validator's cast."
+  },
+  {
+    "code": "PARAMS_VALIDATOR_NOT_ADJACENT",
+    "source": "dbx_model_validate_api",
+    "severity": "warning",
+    "title": "A `*ParamsType` validator isn't declared adjacent to its `*Params` interface",
+    "whatItFlags": "A `*ParamsType` validator isn't declared adjacent to its `*Params` interface.",
+    "whenItApplies": "When the validator and its params interface are separated by another top-level declaration.",
+    "whenItDoesNotApply": "Files where the validator must live in a different region for project-specific reasons.",
+    "canonicalFix": "Move the validator immediately after its params interface so the pair stays grouped."
+  },
+  {
+    "code": "PARAMS_VALIDATOR_NOT_EXPORTED",
+    "source": "dbx_model_validate_api",
+    "severity": "error",
+    "title": "A `*ParamsType` validator declaration exists but isn't `export`ed",
+    "whatItFlags": "A `*ParamsType` validator declaration exists but isn't `export`ed.",
+    "whenItApplies": "Any `*ParamsType` constant declared without the `export` keyword.",
+    "whenItDoesNotApply": "No known false-positive cases — validators are consumed by the runtime CRUD wiring.",
+    "canonicalFix": "Add the `export` keyword so the validator can be referenced by the runtime wiring."
+  },
+  {
+    "code": "PARAMS_VALIDATOR_WRONG_CAST",
+    "source": "dbx_model_validate_api",
+    "severity": "error",
+    "title": "A `*ParamsType` validator is cast to the wrong target type",
+    "whatItFlags": "A `*ParamsType` validator is cast to the wrong target type.",
+    "whenItApplies": "When the validator's `as ... <Type>` cast doesn't reference the matching `*Params` interface.",
+    "whenItDoesNotApply": "No known false-positive cases — the cast is what links the validator to the params interface at the type level.",
+    "canonicalFix": "Cast the validator to `RuntimeTypeValidator<<Foo>Params>` (or `as unknown as RuntimeTypeValidator<<Foo>Params>`) so the CRUD config infers the right shape."
+  },
+  {
+    "code": "RESULT_FIELD_NOT_READONLY",
+    "source": "dbx_model_validate_api",
+    "severity": "warning",
+    "title": "A field on a `*Result` interface is missing the `readonly` modifier",
+    "whatItFlags": "A field on a `*Result` interface is missing the `readonly` modifier.",
+    "whenItApplies": "Every property on a `*Result` interface (type aliases are skipped).",
+    "whenItDoesNotApply": "Fields whose type system needs mutability (rare — results are immutable by convention).",
+    "canonicalFix": "Add `readonly` to the property so the result shape stays immutable.",
+    "seeAlso": [
+      {
+        "kind": "doc",
+        "target": "dbx__note__typescript-programming"
+      }
+    ]
+  },
+  {
+    "code": "TYPE_CONFIG_MAP_WRONG_GENERIC",
+    "source": "dbx_model_validate_api",
+    "severity": "error",
+    "title": "`<group>FunctionTypeConfigMap` is annotated with the wrong generic argument",
+    "whatItFlags": "`<group>FunctionTypeConfigMap` is annotated with the wrong generic argument.",
+    "whenItApplies": "When the type annotation isn't `ModelFirebaseFunctionMapTypeConfigMap<<Group>FunctionTypeMap>`.",
+    "whenItDoesNotApply": "No known false-positive cases — the generic ties the config map to the type map by design.",
+    "canonicalFix": "Set the annotation to `ModelFirebaseFunctionMapTypeConfigMap<<Group>FunctionTypeMap>` matching the file's type-map name."
+  },
+  {
+    "code": "FOLDER_MISSING_ACTION",
+    "source": "dbx_model_validate_folder",
+    "severity": "error",
+    "title": "Required `<name>.action.ts` server-actions module is missing",
+    "whatItFlags": "Required `<name>.action.ts` server-actions module is missing.",
+    "whenItApplies": "Every canonical model folder.",
+    "whenItDoesNotApply": "Reserved folders that don't follow the 5-file convention.",
+    "canonicalFix": "Add `<name>.action.ts` declaring the abstract `<Model>ServerActions` class plus the action-context interface.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "firestore-model"
+      }
+    ]
+  },
+  {
+    "code": "FOLDER_MISSING_API",
+    "source": "dbx_model_validate_folder",
+    "severity": "error",
+    "title": "Required `<name>.api.ts` CRUD api module is missing",
+    "whatItFlags": "Required `<name>.api.ts` CRUD api module is missing.",
+    "whenItApplies": "Every canonical model folder.",
+    "whenItDoesNotApply": "Reserved folders that don't follow the 5-file convention.",
+    "canonicalFix": "Add `<name>.api.ts` declaring the params/result interfaces, validators, and Functions block.",
+    "seeAlso": [
+      {
+        "kind": "tool",
+        "target": "dbx_model_validate_api"
+      }
+    ]
+  },
+  {
+    "code": "FOLDER_MISSING_ID",
+    "source": "dbx_model_validate_folder",
+    "severity": "error",
+    "title": "Required `<name>.id.ts` id-types module is missing",
+    "whatItFlags": "Required `<name>.id.ts` id-types module is missing.",
+    "whenItApplies": "Every canonical model folder.",
+    "whenItDoesNotApply": "Reserved folders that don't follow the 5-file convention.",
+    "canonicalFix": "Add `<name>.id.ts` exporting the model's id alias types and any composite-key helpers.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "firestore-model"
+      }
+    ]
+  },
+  {
+    "code": "FOLDER_MISSING_INDEX",
+    "source": "dbx_model_validate_folder",
+    "severity": "error",
+    "title": "Required `index.ts` barrel is missing",
+    "whatItFlags": "Required `index.ts` barrel is missing.",
+    "whenItApplies": "Every canonical model folder.",
+    "whenItDoesNotApply": "Reserved folders that don't follow the 5-file convention.",
+    "canonicalFix": "Add `index.ts` re-exporting every sibling `<name>.*.ts` module so the folder is consumed through one barrel."
+  },
+  {
+    "code": "FOLDER_MISSING_MAIN",
+    "source": "dbx_model_validate_folder",
+    "severity": "error",
+    "title": "Required `<name>.ts` main module is missing from the model folder",
+    "whatItFlags": "Required `<name>.ts` main module is missing from the model folder.",
+    "whenItApplies": "Every canonical model folder anchored on its folder basename.",
+    "whenItDoesNotApply": "Reserved folders (`system`, `notification`, `storagefile`) — they have a different layout and surface a separate `RESERVED_MODEL_FOLDER` warning instead.",
+    "canonicalFix": "Add `<name>.ts` containing the model's `firestoreModelIdentity`, interface, document class, converter, and collection wiring.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "firestore-model"
+      }
+    ]
+  },
+  {
+    "code": "FOLDER_MISSING_QUERY",
+    "source": "dbx_model_validate_folder",
+    "severity": "error",
+    "title": "Required `<name>.query.ts` query-helpers module is missing",
+    "whatItFlags": "Required `<name>.query.ts` query-helpers module is missing.",
+    "whenItApplies": "Every canonical model folder.",
+    "whenItDoesNotApply": "Reserved folders that don't follow the 5-file convention.",
+    "canonicalFix": "Add `<name>.query.ts` with the model's query-builder helpers.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "firestore-model"
+      }
+    ]
+  },
+  {
+    "code": "FOLDER_NOT_DIRECTORY",
+    "source": "dbx_model_validate_folder",
+    "severity": "error",
+    "title": "The path resolves to a file or other non-directory entry",
+    "whatItFlags": "The path resolves to a file or other non-directory entry.",
+    "whenItApplies": "Validating a path that exists but is not a directory.",
+    "whenItDoesNotApply": "File-level model validation — use `dbx_model_validate` for `.ts` source files.",
+    "canonicalFix": "Pass the model folder (e.g. `apps/.../src/lib/model/profile/`), not the `<name>.ts` file inside it."
+  },
+  {
+    "code": "FOLDER_NOT_FOUND",
+    "source": "dbx_model_validate_folder",
+    "severity": "error",
+    "title": "Folder does not exist on disk",
+    "whatItFlags": "Folder does not exist on disk.",
+    "whenItApplies": "Validating a folder path that doesn't resolve to a directory entry.",
+    "whenItDoesNotApply": "Glob patterns that intentionally match zero folders — pass at least one valid path.",
+    "canonicalFix": "Verify the path argument is a real folder under the workspace.",
+    "seeAlso": [
+      {
+        "kind": "tool",
+        "target": "dbx_model_validate_folder"
+      }
+    ]
+  },
+  {
+    "code": "FOLDER_STRAY_FILE",
+    "source": "dbx_model_validate_folder",
+    "severity": "warning",
+    "title": "A `.ts` file in the folder doesn't start with the folder's `<name>.` prefix",
+    "whatItFlags": "A `.ts` file in the folder doesn't start with the folder's `<name>.` prefix.",
+    "whenItApplies": "Any `.ts` file that is not `index.ts` and is not prefixed with `<folder-name>.`.",
+    "whenItDoesNotApply": "Files outside the canonical layout that the project intentionally hosts here (rare — prefer moving them out).",
+    "canonicalFix": "Rename the file to `<folder-name>.<sub>.ts` so it stays grouped, or move it out of the model folder."
+  },
+  {
+    "code": "RESERVED_MODEL_FOLDER",
+    "source": "dbx_model_validate_folder",
+    "severity": "warning",
+    "title": "The folder name matches a reserved group (system / notification / storagefile)",
+    "whatItFlags": "The folder name matches a reserved group (system / notification / storagefile)\nthat follows a distinct layout. Validation skips it and points at the\ndedicated tool.",
+    "whenItApplies": "Folders named `system`, `notification`, or `storagefile`.",
+    "whenItDoesNotApply": "Custom downstream folders that happen to share a substring — match is exact.",
+    "canonicalFix": "Re-run validation with the recommended tool from the violation's message (e.g. `dbx_system_m_validate_folder`).",
+    "seeAlso": [
+      {
+        "kind": "tool",
+        "target": "dbx_system_m_validate_folder"
+      },
+      {
+        "kind": "tool",
+        "target": "dbx_notification_m_validate_folder"
+      },
+      {
+        "kind": "tool",
+        "target": "dbx_storagefile_m_validate_folder"
+      }
+    ]
+  },
+  {
+    "code": "NOTIF_API_DIR_NOT_FOUND",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "error",
+    "title": "The API app directory does not exist on disk",
+    "whatItFlags": "The API app directory does not exist on disk.",
+    "whenItApplies": "When the supplied `apiDir` does not resolve to a directory entry.",
+    "whenItDoesNotApply": "API apps intentionally not validated — pass `--skip notification_m` instead.",
+    "canonicalFix": "Verify the path argument resolves to an existing API app root.",
+    "seeAlso": [
+      {
+        "kind": "tool",
+        "target": "dbx_notification_m_validate_folder"
+      }
+    ]
+  },
+  {
+    "code": "NOTIF_API_NOTIFICATION_FOLDER_MISSING",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "error",
+    "title": "The API root exists but `src/app/common/model/notification/` is missing",
+    "whatItFlags": "The API root exists but `src/app/common/model/notification/` is missing.",
+    "whenItApplies": "API apps expected to wire the notification module but with no notification folder.",
+    "whenItDoesNotApply": "API apps that intentionally don't wire notifications — pass `--skip notification_m`.",
+    "canonicalFix": "Add `src/app/common/model/notification/` with `notification.module.ts`, `notification.task.service.ts`, and `notification.send.service.ts`.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "notification-template"
+      }
+    ]
+  },
+  {
+    "code": "NOTIF_COMPONENT_DIR_NOT_FOUND",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "error",
+    "title": "The component package directory does not exist on disk",
+    "whatItFlags": "The component package directory does not exist on disk.",
+    "whenItApplies": "When the supplied `componentDir` does not resolve to a directory entry.",
+    "whenItDoesNotApply": "Components intentionally not part of this validation pass — pass `--skip notification_m` to `dbx_app_validate` instead.",
+    "canonicalFix": "Verify the path argument resolves to an existing component package root.",
+    "seeAlso": [
+      {
+        "kind": "tool",
+        "target": "dbx_notification_m_validate_folder"
+      }
+    ]
+  },
+  {
+    "code": "NOTIF_COMPONENT_NOTIFICATION_FOLDER_MISSING",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "error",
+    "title": "The component root exists but `src/lib/model/notification/` is missing",
+    "whatItFlags": "The component root exists but `src/lib/model/notification/` is missing.",
+    "whenItApplies": "Components that should ship template / task constants but lack the notification model folder.",
+    "whenItDoesNotApply": "Components that intentionally don't extend the notification group.",
+    "canonicalFix": "Add `src/lib/model/notification/notification.ts` and the rest of the notification artefacts.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "notification-template"
+      },
+      {
+        "kind": "artifact",
+        "target": "notification-task"
+      }
+    ]
+  },
+  {
+    "code": "NOTIF_TASK_HANDLER_NAME_MISMATCH",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "error",
+    "title": "A `NotificationTaskServiceTaskHandlerConfig`'s binding name doesn't match its handler-array reference",
+    "whatItFlags": "A `NotificationTaskServiceTaskHandlerConfig`'s binding name doesn't match its handler-array reference.",
+    "whenItApplies": "When the handler is bound to a typed const but the local-variable name diverges from the array element name in `notificationTaskService({ handlers })`.",
+    "whenItDoesNotApply": "Inline / anonymous handler literals (no binding name to check against).",
+    "canonicalFix": "Rename the binding to match the handler-array element, or update the array reference to match the binding."
+  },
+  {
+    "code": "NOTIF_TASK_HANDLER_ORPHAN",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "error",
+    "title": "A `NotificationTaskServiceTaskHandlerConfig` references a `type:` identifier that is not a declared task-type constant",
+    "whatItFlags": "A `NotificationTaskServiceTaskHandlerConfig` references a `type:` identifier that is not a declared task-type constant.",
+    "whenItApplies": "When the handler's `type:` is an identifier outside the component's declared constants and the trust list.",
+    "whenItDoesNotApply": "Handler configs whose `type:` is imported from a trust-listed module.",
+    "canonicalFix": "Either declare the matching task-type constant or remove the orphaned handler config."
+  },
+  {
+    "code": "NOTIF_TASK_HANDLER_SPREAD_UNRESOLVED",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "warning",
+    "title": "The `handlers:` array spreads an identifier that doesn't resolve to a declared array binding",
+    "whatItFlags": "The `handlers:` array spreads an identifier that doesn't resolve to a declared array binding.",
+    "whenItApplies": "When `notificationTaskService({ handlers: [...spread] })` spreads an identifier that isn't a typed `NotificationTaskServiceTaskHandlerConfig[]` binding or trusted external.",
+    "whenItDoesNotApply": "Spreads from trust-listed `@dereekb/*` modules (e.g. `storageFileProcessingNotificationTaskHandler`).",
+    "canonicalFix": "Declare the spread as `const <name>: NotificationTaskServiceTaskHandlerConfig<...>[] = [...]` or import it from a trusted module."
+  },
+  {
+    "code": "NOTIF_TASK_IN_VALIDATE_WITHOUT_HANDLER",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "warning",
+    "title": "A task type appears in `validate:` but has no matching `handlers:` registration",
+    "whatItFlags": "A task type appears in `validate:` but has no matching `handlers:` registration.",
+    "whenItApplies": "When `notificationTaskService({ validate, handlers })` lists a task type in `validate:` that the `handlers:` traversal doesn't reach.",
+    "whenItDoesNotApply": "Tasks whose handler is provided by an upstream module (covered by the trust list).",
+    "canonicalFix": "Add the matching `NotificationTaskServiceTaskHandlerConfig` for the task and include it in `handlers:`."
+  },
+  {
+    "code": "NOTIF_TASK_MULTIPLE_SERVICES",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "warning",
+    "title": "Multiple `notificationTaskService({ ... })` calls were found",
+    "whatItFlags": "Multiple `notificationTaskService({ ... })` calls were found.",
+    "whenItApplies": "When more than one task-service factory exists in the API.",
+    "whenItDoesNotApply": "Apps that intentionally compose multiple task services (rare — only the first call's config takes effect at runtime).",
+    "canonicalFix": "Consolidate the calls into one — the second call's handlers are unused at runtime."
+  },
+  {
+    "code": "NOTIF_TASK_NOT_IN_ALL_ARRAY",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "error",
+    "title": "A declared `*_NOTIFICATION_TASK_TYPE` is not present in any `ALL_*_NOTIFICATION_TASK_TYPES` aggregate array",
+    "whatItFlags": "A declared `*_NOTIFICATION_TASK_TYPE` is not present in any `ALL_*_NOTIFICATION_TASK_TYPES` aggregate array.",
+    "whenItApplies": "Every declared task-type constant.",
+    "whenItDoesNotApply": "Task-type constants intentionally held outside any aggregate (rare — most apps centralise the list).",
+    "canonicalFix": "Add the constant to `ALL_<NAME>_NOTIFICATION_TASK_TYPES: NotificationTaskType[]` so the aggregate stays comprehensive."
+  },
+  {
+    "code": "NOTIF_TASK_NOT_REGISTERED_IN_SERVICE",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "error",
+    "title": "A declared `*_NOTIFICATION_TASK_TYPE` is not reachable from any `notificationTaskService({ handlers })` call",
+    "whatItFlags": "A declared `*_NOTIFICATION_TASK_TYPE` is not reachable from any `notificationTaskService({ handlers })` call.",
+    "whenItApplies": "Every declared task-type constant.",
+    "whenItDoesNotApply": "Task-type constants whose handler is provided by an upstream module (covered by the trust list).",
+    "canonicalFix": "Add a `NotificationTaskServiceTaskHandlerConfig<...>` for the task and include its binding in `notificationTaskService({ handlers: [...] })`.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "notification-task"
+      },
+      {
+        "kind": "doc",
+        "target": "dbx__guide__notification-task"
+      }
+    ]
+  },
+  {
+    "code": "NOTIF_TASK_SERVICE_FACTORY_MISSING",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "error",
+    "title": "No `notificationTaskService({ ... })` call was found in the API",
+    "whatItFlags": "No `notificationTaskService({ ... })` call was found in the API.",
+    "whenItApplies": "APIs that declare at least one `*_NOTIFICATION_TASK_TYPE`.",
+    "whenItDoesNotApply": "APIs whose task service is provided by an upstream module (rare — extend the scanner's subpaths if so).",
+    "canonicalFix": "Add `notificationTaskService({ validate: [...], handlers: [...] })` and bind it through the notification module."
+  },
+  {
+    "code": "NOTIF_TASK_TYPE_CODE_DUPLICATE",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "warning",
+    "title": "Two `*_NOTIFICATION_TASK_TYPE` constants share the same string literal value",
+    "whatItFlags": "Two `*_NOTIFICATION_TASK_TYPE` constants share the same string literal value.",
+    "whenItApplies": "When more than one task-type constant resolves to the same `'<value>'` literal.",
+    "whenItDoesNotApply": "Constants intentionally aliased — but this defeats runtime task discrimination, so almost always a copy-paste.",
+    "canonicalFix": "Rename one of the literals so each task code is unique."
+  },
+  {
+    "code": "NOTIF_TEMPLATE_FACTORY_ARRAY_MISSING",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "error",
+    "title": "No top-level `<app>NotificationTemplateServiceConfigsArrayFactory` was found",
+    "whatItFlags": "No top-level `<app>NotificationTemplateServiceConfigsArrayFactory` was found.",
+    "whenItApplies": "APIs that declare at least one `NotificationTemplateTypeInfo`.",
+    "whenItDoesNotApply": "APIs whose configs-array factory is provided by an upstream module (rare — convention is one factory per app).",
+    "canonicalFix": "Declare `export function <app>NotificationTemplateServiceConfigsArrayFactory(context): NotificationTemplateServiceTypeConfig[] { return [<foo>NotificationTemplateFactory(context), ...]; }`."
+  },
+  {
+    "code": "NOTIF_TEMPLATE_FACTORY_MISSING",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "error",
+    "title": "A `*_NOTIFICATION_TEMPLATE_TYPE` constant has no matching `NotificationTemplateServiceTypeConfig` reachable from the configs-array factory",
+    "whatItFlags": "A `*_NOTIFICATION_TEMPLATE_TYPE` constant has no matching `NotificationTemplateServiceTypeConfig` reachable from the configs-array factory.",
+    "whenItApplies": "Every declared template-type constant.",
+    "whenItDoesNotApply": "Template types whose handler config is provided by an upstream module (covered by the trust list).",
+    "canonicalFix": "Declare a `<foo>NotificationTemplateFactory` returning the `NotificationTemplateServiceTypeConfig` and call it from the app's configs-array factory.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "notification-template"
+      }
+    ]
+  },
+  {
+    "code": "NOTIF_TEMPLATE_FACTORY_NOT_WIRED",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "error",
+    "title": "The configs-array factory exists but no NestJS provider binds it via `NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN`",
+    "whatItFlags": "The configs-array factory exists but no NestJS provider binds it via `NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN`.",
+    "whenItApplies": "When `<app>NotificationTemplateServiceConfigsArrayFactory` exists but no `{ provide: NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN, useFactory }` provider exists.",
+    "whenItDoesNotApply": "APIs that wire the factory indirectly through an imported app-module (rare — extend the scanner's subpaths if so).",
+    "canonicalFix": "Add a NestJS provider with `provide: NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN, useFactory: <app>NotificationTemplateServiceConfigsArrayFactory`."
+  },
+  {
+    "code": "NOTIF_TEMPLATE_FACTORY_ORPHAN",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "error",
+    "title": "A `NotificationTemplateServiceTypeConfig` references a `type:` identifier that is not a declared template-type constant",
+    "whatItFlags": "A `NotificationTemplateServiceTypeConfig` references a `type:` identifier that is not a declared template-type constant.",
+    "whenItApplies": "When the handler config's `type:` is an identifier outside the component's declared constants and the trust list.",
+    "whenItDoesNotApply": "Handler configs whose `type:` is imported from a trust-listed module.",
+    "canonicalFix": "Either declare the matching template-type constant or remove the orphaned config."
+  },
+  {
+    "code": "NOTIF_TEMPLATE_FACTORY_SPREAD_UNRESOLVED",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "warning",
+    "title": "The configs-array factory spreads an identifier that doesn't resolve to a declared function",
+    "whatItFlags": "The configs-array factory spreads an identifier that doesn't resolve to a declared function.",
+    "whenItApplies": "When `<app>NotificationTemplateServiceConfigsArrayFactory` spreads (`...fooNotifications(context)`) a function that isn't declared locally or imported.",
+    "whenItDoesNotApply": "Spreads from trust-listed `@dereekb/*` modules.",
+    "canonicalFix": "Declare the missing function or import it from a trusted module."
+  },
+  {
+    "code": "NOTIF_TEMPLATE_INFO_MISSING",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "error",
+    "title": "A `*_NOTIFICATION_TEMPLATE_TYPE` constant has no matching `NotificationTemplateTypeInfo` object",
+    "whatItFlags": "A `*_NOTIFICATION_TEMPLATE_TYPE` constant has no matching `NotificationTemplateTypeInfo` object.",
+    "whenItApplies": "Every declared template-type constant in the component.",
+    "whenItDoesNotApply": "Template types declared in an upstream `@dereekb/*` module — those are detected via the trust list and skipped.",
+    "canonicalFix": "Declare `export const <foo>NotificationTemplateTypeInfo: NotificationTemplateTypeInfo = { type: <CONSTANT>, name, description, ... }` adjacent to the constant.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "notification-template"
+      }
+    ]
+  },
+  {
+    "code": "NOTIF_TEMPLATE_INFO_MISSING_NAME_OR_DESCRIPTION",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "warning",
+    "title": "A `NotificationTemplateTypeInfo` object is missing the `name` and/or `description` field",
+    "whatItFlags": "A `NotificationTemplateTypeInfo` object is missing the `name` and/or `description` field.",
+    "whenItApplies": "Every declared `NotificationTemplateTypeInfo` whose `name` or `description` is empty / missing.",
+    "whenItDoesNotApply": "Infos whose human-readable fields are intentionally blank (rare — most consumers surface them in admin UI).",
+    "canonicalFix": "Populate `name: '...'` and `description: '...'` on the info object so admin / tooling surfaces have something to render."
+  },
+  {
+    "code": "NOTIF_TEMPLATE_INFO_NOT_IN_RECORD",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "error",
+    "title": "A declared `NotificationTemplateTypeInfo` is not reachable from the metadata aggregator record",
+    "whatItFlags": "A declared `NotificationTemplateTypeInfo` is not reachable from the metadata aggregator record.",
+    "whenItApplies": "Every info object whose symbol does not appear in the resolved set traced from `notificationTemplateTypeInfoRecord([...])`.",
+    "whenItDoesNotApply": "Infos intentionally excluded from the runtime record (rare — usually a missed registration step).",
+    "canonicalFix": "Add the info symbol (or its containing `ALL_*_NOTIFICATION_TEMPLATE_TYPE_INFOS` aggregate) to the record array."
+  },
+  {
+    "code": "NOTIF_TEMPLATE_INFO_TYPE_MISMATCH",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "error",
+    "title": "A `NotificationTemplateTypeInfo` object's `type:` does not match a declared template-type constant",
+    "whatItFlags": "A `NotificationTemplateTypeInfo` object's `type:` does not match a declared template-type constant.",
+    "whenItApplies": "When the info's `type:` references a missing constant or an identifier outside the trust list.",
+    "whenItDoesNotApply": "Info objects whose `type:` is provided by an imported `@dereekb/*` constant — covered by the trust list.",
+    "canonicalFix": "Either declare the missing template-type constant or update the info's `type:` to a real constant in the component."
+  },
+  {
+    "code": "NOTIF_TEMPLATE_INFO_UNUSED",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "warning",
+    "title": "A declared `NotificationTemplateTypeInfo` is unused — its symbol isn't reachable from the metadata aggregator",
+    "whatItFlags": "A declared `NotificationTemplateTypeInfo` is unused — its symbol isn't reachable from the metadata aggregator.",
+    "whenItApplies": "When the info's symbol does not appear in any aggregate array or the resolved record set.",
+    "whenItDoesNotApply": "Infos kept around for documentation / future wiring (rare — usually rename drift).",
+    "canonicalFix": "Either remove the orphan info or add it to the appropriate `ALL_*_NOTIFICATION_TEMPLATE_TYPE_INFOS` aggregate."
+  },
+  {
+    "code": "NOTIF_TEMPLATE_RECORD_MISSING",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "error",
+    "title": "No top-level `notificationTemplateTypeInfoRecord([...])` call was found",
+    "whatItFlags": "No top-level `notificationTemplateTypeInfoRecord([...])` call was found.",
+    "whenItApplies": "Components that declare at least one `NotificationTemplateTypeInfo`.",
+    "whenItDoesNotApply": "Components whose record is provided by an upstream `@dereekb/*` module (rare — convention is one record per app).",
+    "canonicalFix": "Declare `export const <APP>_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD = notificationTemplateTypeInfoRecord([...]);` covering every template info."
+  },
+  {
+    "code": "NOTIF_TEMPLATE_RECORD_NOT_WIRED",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "error",
+    "title": "The metadata record exists but is not wired through `appNotificationTemplateTypeInfoRecordService(...)` in the API",
+    "whatItFlags": "The metadata record exists but is not wired through `appNotificationTemplateTypeInfoRecordService(...)` in the API.",
+    "whenItApplies": "When `appNotificationTemplateTypeInfoRecordService(...)` is missing or its argument doesn't resolve to the declared record.",
+    "whenItDoesNotApply": "APIs that wire the record indirectly through an imported app-module (rare — extend the scanner's subpaths if so).",
+    "canonicalFix": "Add `appNotificationTemplateTypeInfoRecordService(<APP>_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD)` to the API's notification module."
+  },
+  {
+    "code": "NOTIF_TEMPLATE_SPREAD_UNRESOLVED",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "error",
+    "title": "The metadata record's `[...]` array spreads an identifier that doesn't resolve to a declared aggregate",
+    "whatItFlags": "The metadata record's `[...]` array spreads an identifier that doesn't resolve to a declared aggregate.",
+    "whenItApplies": "When `notificationTemplateTypeInfoRecord([...])` spreads a name that isn't a `ALL_*_NOTIFICATION_TEMPLATE_TYPE_INFOS` aggregate or trusted external.",
+    "whenItDoesNotApply": "Spreads from trust-listed `@dereekb/*` modules.",
+    "canonicalFix": "Declare the aggregate as `export const ALL_<NAME>_NOTIFICATION_TEMPLATE_TYPE_INFOS: NotificationTemplateTypeInfo[] = [...]` or import it from a trusted module."
+  },
+  {
+    "code": "NOTIF_TEMPLATE_TYPE_CODE_DUPLICATE",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "warning",
+    "title": "Two `*_NOTIFICATION_TEMPLATE_TYPE` constants share the same string literal value",
+    "whatItFlags": "Two `*_NOTIFICATION_TEMPLATE_TYPE` constants share the same string literal value.",
+    "whenItApplies": "When more than one template-type constant resolves to the same `'<value>'` literal.",
+    "whenItDoesNotApply": "Constants intentionally aliased — but this defeats persisted-document discrimination, so almost always a copy-paste.",
+    "canonicalFix": "Rename one of the literals so each template code is unique."
+  },
+  {
+    "code": "NOTIF_FOLDER_API_DIR_NOT_FOUND",
+    "source": "dbx_notification_m_validate_folder",
+    "severity": "error",
+    "title": "The API app directory does not exist on disk",
+    "whatItFlags": "The API app directory does not exist on disk.",
+    "whenItApplies": "When the supplied `apiDir` does not resolve to a directory entry.",
+    "whenItDoesNotApply": "API apps intentionally not validated — pass `--skip notification_m` instead.",
+    "canonicalFix": "Verify the path argument resolves to an existing API app root.",
+    "seeAlso": [
+      {
+        "kind": "tool",
+        "target": "dbx_notification_m_validate_folder"
+      }
+    ]
+  },
+  {
+    "code": "NOTIF_FOLDER_API_FOLDER_MISSING",
+    "source": "dbx_notification_m_validate_folder",
+    "severity": "error",
+    "title": "The API root exists but `src/app/common/model/notification/` is missing",
+    "whatItFlags": "The API root exists but `src/app/common/model/notification/` is missing.",
+    "whenItApplies": "API apps expected to wire the notification module but with no notification folder.",
+    "whenItDoesNotApply": "API apps that intentionally don't wire notifications — pass `--skip notification_m`.",
+    "canonicalFix": "Add `src/app/common/model/notification/` with `notification.module.ts`, `notification.task.service.ts`, and `notification.send.service.ts`.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "notification-template"
+      }
+    ]
+  },
+  {
+    "code": "NOTIF_FOLDER_BARREL_REEXPORT_MISSING",
+    "source": "dbx_notification_m_validate_folder",
+    "severity": "error",
+    "title": "`index.ts` re-exports a path that does not resolve to a sibling file or subfolder",
+    "whatItFlags": "`index.ts` re-exports a path that does not resolve to a sibling file or subfolder.",
+    "whenItApplies": "When `export * from './X'` in `index.ts` has no matching `./X.ts` or `./X/` under the notification folder root.",
+    "whenItDoesNotApply": "Re-exports that intentionally point outside the folder (use a relative path that climbs out, not `./X`).",
+    "canonicalFix": "Add the missing `<name>.ts` / `<name>/` sibling, or remove the dangling re-export from `index.ts`."
+  },
+  {
+    "code": "NOTIF_FOLDER_COMPONENT_DIR_NOT_FOUND",
+    "source": "dbx_notification_m_validate_folder",
+    "severity": "error",
+    "title": "The component package directory does not exist on disk",
+    "whatItFlags": "The component package directory does not exist on disk.",
+    "whenItApplies": "When the supplied `componentDir` does not resolve to a directory entry.",
+    "whenItDoesNotApply": "Components intentionally not part of this validation pass — pass `--skip notification_m` to `dbx_app_validate` instead.",
+    "canonicalFix": "Verify the path argument resolves to an existing component package root.",
+    "seeAlso": [
+      {
+        "kind": "tool",
+        "target": "dbx_notification_m_validate_folder"
+      }
+    ]
+  },
+  {
+    "code": "NOTIF_FOLDER_COMPONENT_FOLDER_MISSING",
+    "source": "dbx_notification_m_validate_folder",
+    "severity": "error",
+    "title": "The component root exists but `src/lib/model/notification/` is missing",
+    "whatItFlags": "The component root exists but `src/lib/model/notification/` is missing.",
+    "whenItApplies": "Components that should ship `NotificationTemplateType` / `NotificationTaskType` constants but lack the notification model folder.",
+    "whenItDoesNotApply": "Components that intentionally don't extend the notification group (rare — most apps with notifications do).",
+    "canonicalFix": "Add `src/lib/model/notification/notification.ts` and the rest of the notification artefacts.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "notification-template"
+      },
+      {
+        "kind": "artifact",
+        "target": "notification-task"
+      }
+    ]
+  },
+  {
+    "code": "NOTIF_FOLDER_HANDLERS_SUBFOLDER_MIXED",
+    "source": "dbx_notification_m_validate_folder",
+    "severity": "warning",
+    "title": "A non-canonical `.ts` file lives at the API notification root alongside a `handlers/` subfolder",
+    "whatItFlags": "A non-canonical `.ts` file lives at the API notification root alongside a `handlers/` subfolder.",
+    "whenItApplies": "API folders that mix root-level handler files with a sibling `handlers/` subfolder.",
+    "whenItDoesNotApply": "Strictly canonical files (`notification.module.ts`, `notification.task.service.ts`, `notification.send.service.ts`, plus the convention extras tracked in `CANONICAL_API_ROOT_FILES`) — those are allowed at the root.",
+    "canonicalFix": "Move the handler file into `handlers/` so the convention stays consistent across the project."
+  },
+  {
+    "code": "NOTIF_FOLDER_MODULE_FILE_MISSING",
+    "source": "dbx_notification_m_validate_folder",
+    "severity": "error",
+    "title": "The API notification folder is missing the required `notification.module.ts` file",
+    "whatItFlags": "The API notification folder is missing the required `notification.module.ts` file.",
+    "whenItApplies": "Every API notification folder that exists.",
+    "whenItDoesNotApply": "The NestJS notification module is provided elsewhere in the app (rare — convention is one module per folder).",
+    "canonicalFix": "Add `notification.module.ts` declaring the NestJS module that binds the notification task / send service providers."
+  },
+  {
+    "code": "NOTIF_FOLDER_SEND_SERVICE_FILE_MISSING",
+    "source": "dbx_notification_m_validate_folder",
+    "severity": "error",
+    "title": "The API notification folder is missing the required `notification.send.service.ts` file",
+    "whatItFlags": "The API notification folder is missing the required `notification.send.service.ts` file.",
+    "whenItApplies": "Every API notification folder that exists.",
+    "whenItDoesNotApply": "Apps whose `NotificationSendService` factory lives elsewhere (rare — convention is one factory per folder).",
+    "canonicalFix": "Add `notification.send.service.ts` exporting the `NotificationSendService` factory wired through the notification module."
+  },
+  {
+    "code": "NOTIF_FOLDER_TASK_SERVICE_FILE_MISSING",
+    "source": "dbx_notification_m_validate_folder",
+    "severity": "error",
+    "title": "The API notification folder is missing the required `notification.task.service.ts` file",
+    "whatItFlags": "The API notification folder is missing the required `notification.task.service.ts` file.",
+    "whenItApplies": "Every API notification folder that exists.",
+    "whenItDoesNotApply": "Apps whose `NotificationTaskService` factory lives elsewhere (rare — convention is one factory per folder).",
+    "canonicalFix": "Add `notification.task.service.ts` exporting the `notificationTaskService({ ... })` factory call.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "notification-task"
+      }
+    ]
+  },
+  {
+    "code": "NOTIF_FOLDER_UNEXPECTED_FILE_NAME",
+    "source": "dbx_notification_m_validate_folder",
+    "severity": "warning",
+    "title": "A `.ts` file in the notification folder doesn't start with the `notification.` prefix",
+    "whatItFlags": "A `.ts` file in the notification folder doesn't start with the `notification.` prefix.",
+    "whenItApplies": "Any `.ts` file other than `index.ts` whose basename doesn't start with `notification.`.",
+    "whenItDoesNotApply": "Files outside the canonical layout that the project intentionally hosts here (rare — prefer moving them out).",
+    "canonicalFix": "Rename the file to `notification.<sub>.ts`, or move it out of the notification folder."
+  },
+  {
+    "code": "STORAGEFILE_API_DIR_NOT_FOUND",
+    "source": "dbx_storagefile_m_validate_app",
+    "severity": "error",
+    "title": "The API app's `src/app/common/model/storagefile/` directory does not exist",
+    "whatItFlags": "The API app's `src/app/common/model/storagefile/` directory does not exist.",
+    "whenItApplies": "When `apiDir` resolves to a directory but the storagefile API folder is missing.",
+    "whenItDoesNotApply": "API apps that intentionally don't wire storage-file purposes — pass `--skip storagefile_m` instead.",
+    "canonicalFix": "Add `<apiDir>/src/app/common/model/storagefile/` with `storagefile.module.ts`, `storagefile.upload.service.ts`, and `storagefile.init.ts`.",
+    "seeAlso": [
+      {
+        "kind": "tool",
+        "target": "dbx_storagefile_m_validate_folder"
+      }
+    ]
+  },
+  {
+    "code": "STORAGEFILE_API_FOLDER_MISSING",
+    "source": "dbx_storagefile_m_validate_app",
+    "severity": "error",
+    "title": "The API root exists but neither `src/app/common/model/storagefile/` nor",
+    "whatItFlags": "The API root exists but neither `src/app/common/model/storagefile/` nor\n`src/app/common/model/notification/` is present (the storage-file\nprocessing handler may live in `notification/handlers/`).",
+    "whenItApplies": "When the API package is present but has no storagefile or notification subfolders.",
+    "whenItDoesNotApply": "API apps that don't wire storage-file or notification purposes.",
+    "canonicalFix": "Add `src/app/common/model/storagefile/` and (if processing handlers are needed) `src/app/common/model/notification/handlers/`.",
+    "seeAlso": [
+      {
+        "kind": "tool",
+        "target": "dbx_storagefile_m_validate_folder"
+      }
+    ]
+  },
+  {
+    "code": "STORAGEFILE_COMPONENT_DIR_NOT_FOUND",
+    "source": "dbx_storagefile_m_validate_app",
+    "severity": "error",
+    "title": "The component's `src/lib/model/storagefile/` directory does not exist",
+    "whatItFlags": "The component's `src/lib/model/storagefile/` directory does not exist.",
+    "whenItApplies": "When `componentDir` resolves to a directory but the storagefile model folder is missing.",
+    "whenItDoesNotApply": "Components that intentionally don't ship storage-file purposes — pass `--skip storagefile_m` to `dbx_app_validate` instead.",
+    "canonicalFix": "Add `<componentDir>/src/lib/model/storagefile/storagefile.ts` and the rest of the storagefile artefacts.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "storagefile-purpose"
+      },
+      {
+        "kind": "tool",
+        "target": "dbx_storagefile_m_validate_folder"
+      }
+    ]
+  },
+  {
+    "code": "STORAGEFILE_COMPONENT_FOLDER_MISSING",
+    "source": "dbx_storagefile_m_validate_app",
+    "severity": "error",
+    "title": "The component root exists but has no `src/lib/model/storagefile/` subfolder",
+    "whatItFlags": "The component root exists but has no `src/lib/model/storagefile/` subfolder.",
+    "whenItApplies": "When the component package is present but has no storagefile model folder.",
+    "whenItDoesNotApply": "Components that don't extend the storagefile group.",
+    "canonicalFix": "Run `dbx_artifact_scaffold artifact=\"storagefile-purpose\"` to scaffold the folder layout.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "storagefile-purpose"
+      }
+    ]
+  },
+  {
+    "code": "STORAGEFILE_FILE_TYPE_IDENTIFIER_DUPLICATE",
+    "source": "dbx_storagefile_m_validate_app",
+    "severity": "warning",
+    "title": "Two `UploadedFileTypeIdentifier` constants share the same string",
+    "whatItFlags": "Two `UploadedFileTypeIdentifier` constants share the same string\nliteral value.",
+    "whenItApplies": "When more than one file-type identifier constant resolves to the same `'<value>'`.",
+    "whenItDoesNotApply": "File-type identifiers intentionally re-used across purposes (rare — almost always a bug).",
+    "canonicalFix": "Rename one of the literals so each file-type code is unique."
+  },
+  {
+    "code": "STORAGEFILE_GROUP_IDS_FUNCTION_MISSING",
+    "source": "dbx_storagefile_m_validate_app",
+    "severity": "warning",
+    "title": "A `*_PURPOSE` constant has no `<purpose>FileGroupIds(...)` or",
+    "whatItFlags": "A `*_PURPOSE` constant has no `<purpose>FileGroupIds(...)` or\n`<purpose>StorageFileGroupIds(...)` helper function in the same\ncomponent.",
+    "whenItApplies": "Validating a downstream `-firebase` component that declares at least one `StorageFilePurpose` constant.",
+    "whenItDoesNotApply": "Purposes that intentionally hold no group membership (rare — most purposes belong to a workspace's group convention).",
+    "canonicalFix": "Declare `export function <purpose>FileGroupIds(input): StorageFileGroupIds` adjacent to the purpose constant.",
+    "canonicalFixTemplate": "```ts\nexport function <purpose>FileGroupIds(input: { /* ids the group needs *\\/ }): StorageFileGroupIds {\nreturn [storageFileGroupId({ /* ... *\\/ })];\n}\n```",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "storagefile-purpose"
+      }
+    ]
+  },
+  {
+    "code": "STORAGEFILE_PROCESSING_CONFIG_MISSING",
+    "source": "dbx_storagefile_m_validate_app",
+    "severity": "error",
+    "title": "A purpose with subtasks has no",
+    "whatItFlags": "A purpose with subtasks has no\n`StorageFileProcessingPurposeSubtaskProcessorConfig` whose `target:`\nreferences it.",
+    "whenItApplies": "Every purpose that declares a `*ProcessingSubtask` union.",
+    "whenItDoesNotApply": "Purposes whose processing config is provided by an upstream module.",
+    "canonicalFix": "Add a config with `target: <PURPOSE_CONST>, flow: [{ subtask: <SUBTASK_CONST>, ... }, ...]`.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "storagefile-processor"
+      }
+    ]
+  },
+  {
+    "code": "STORAGEFILE_PROCESSING_CONFIG_ORPHAN",
+    "source": "dbx_storagefile_m_validate_app",
+    "severity": "error",
+    "title": "A processing config references a `target:` identifier that is not",
+    "whatItFlags": "A processing config references a `target:` identifier that is not\nany declared `StorageFilePurpose` constant.",
+    "whenItApplies": "When the `target:` identifier is local but not declared.",
+    "whenItDoesNotApply": "When the target is imported from a trust-listed module.",
+    "canonicalFix": "Either declare the purpose or remove the orphaned config."
+  },
+  {
+    "code": "STORAGEFILE_PROCESSING_HANDLER_MISSING",
+    "source": "dbx_storagefile_m_validate_app",
+    "severity": "error",
+    "title": "The component declares purposes with subtasks but no",
+    "whatItFlags": "The component declares purposes with subtasks but no\n`storageFileProcessingNotificationTaskHandler({ processors })` call\nis present in the API.",
+    "whenItApplies": "When at least one purpose declares a `*ProcessingSubtask` union and `*_PROCESSING_SUBTASK` constants.",
+    "whenItDoesNotApply": "Purposes that store a file but do not need processing.",
+    "canonicalFix": "Add a `storageFileProcessingNotificationTaskHandler({ processors: [...] })` call and wire it into the notification-task service.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "storagefile-processor"
+      }
+    ]
+  },
+  {
+    "code": "STORAGEFILE_PROCESSING_SUBTASK_NOT_HANDLED",
+    "source": "dbx_storagefile_m_validate_app",
+    "severity": "error",
+    "title": "A `*_PROCESSING_SUBTASK` declared on a purpose's union is absent",
+    "whatItFlags": "A `*_PROCESSING_SUBTASK` declared on a purpose's union is absent\nfrom the matching processor config's `flow:` array.",
+    "whenItApplies": "Every purpose × subtask pairing.",
+    "whenItDoesNotApply": "Subtasks whose processor lives in a separate, dedicated config (uncommon — usually a missed flow step).",
+    "canonicalFix": "Add `{ subtask: <SUBTASK_CONST>, processor: ... }` to the config's `flow:` array.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "storagefile-processor-subtask"
+      }
+    ]
+  },
+  {
+    "code": "STORAGEFILE_PURPOSE_DUPLICATE",
+    "source": "dbx_storagefile_m_validate_app",
+    "severity": "warning",
+    "title": "Two `StorageFilePurpose` constants share the same string literal value",
+    "whatItFlags": "Two `StorageFilePurpose` constants share the same string literal value.",
+    "whenItApplies": "When more than one purpose constant resolves to the same `'<value>'` literal.",
+    "whenItDoesNotApply": "Purposes intentionally aliased — but this defeats persisted-document discrimination, so almost always a copy-paste.",
+    "canonicalFix": "Rename one of the literals so each purpose code is unique."
+  },
+  {
+    "code": "STORAGEFILE_PURPOSE_MISSING_FILE_TYPE_IDENTIFIER",
+    "source": "dbx_storagefile_m_validate_app",
+    "severity": "error",
+    "title": "A `*_PURPOSE: StorageFilePurpose` constant has no matching",
+    "whatItFlags": "A `*_PURPOSE: StorageFilePurpose` constant has no matching\n`*_UPLOADED_FILE_TYPE_IDENTIFIER` constant alongside it.",
+    "whenItApplies": "Every declared `StorageFilePurpose` constant.",
+    "whenItDoesNotApply": "Purposes whose file-type identifier is intentionally imported from a trust-listed `@dereekb/firebase` module.",
+    "canonicalFix": "Declare `<PREFIX>_UPLOADED_FILE_TYPE_IDENTIFIER: UploadedFileTypeIdentifier = '...'` next to the purpose.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "storagefile-purpose"
+      }
+    ]
+  },
+  {
+    "code": "STORAGEFILE_PURPOSE_NOT_IN_UPLOAD_SERVICE",
+    "source": "dbx_storagefile_m_validate_app",
+    "severity": "error",
+    "title": "A declared `UploadedFileTypeIdentifier` constant has no",
+    "whatItFlags": "A declared `UploadedFileTypeIdentifier` constant has no\n`StorageFileInitializeFromUploadServiceInitializer` reachable from any\n`storageFileInitializeFromUploadService(...)` call.",
+    "whenItApplies": "Every declared file-type identifier.",
+    "whenItDoesNotApply": "File-type identifiers that are intentionally orphaned (rare — usually a typo in a binding name; see `STORAGEFILE_UPLOAD_INITIALIZER_NAME_MISMATCH`).",
+    "canonicalFix": "Add an initializer with `type: <CONSTANT>` and include it in the upload-service `initializer` array.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "storagefile-upload-handler"
+      }
+    ]
+  },
+  {
+    "code": "STORAGEFILE_UPLOAD_INITIALIZER_NAME_MISMATCH",
+    "source": "dbx_storagefile_m_validate_app",
+    "severity": "error",
+    "title": "A `type:` constant is declared and referenced by an initializer, but",
+    "whatItFlags": "A `type:` constant is declared and referenced by an initializer, but\nthe initializer's binding name doesn't match any element of the\n`initializer` array — usually a rename drift.",
+    "whenItApplies": "When an initializer literal exists but the wrapping factory's local-variable name diverges from the call-site binding.",
+    "whenItDoesNotApply": "Initializer factories that intentionally compose multiple bindings via `...spread` (the validator handles spreads via `STORAGEFILE_UPLOAD_SERVICE_SPREAD_UNRESOLVED`).",
+    "canonicalFix": "Rename the local variable to match the binding name used in the `initializer` array element / spread, or update the array."
+  },
+  {
+    "code": "STORAGEFILE_UPLOAD_INITIALIZER_ORPHAN",
+    "source": "dbx_storagefile_m_validate_app",
+    "severity": "error",
+    "title": "An upload initializer references a `type:` identifier that is not a",
+    "whatItFlags": "An upload initializer references a `type:` identifier that is not a\ndeclared `UploadedFileTypeIdentifier` constant in the component (or a\ntrust-listed external).",
+    "whenItApplies": "Every initializer literal seen in the API.",
+    "whenItDoesNotApply": "When the type identifier is imported from `@dereekb/firebase`/`@dereekb/firebase-server` — those are auto-trusted.",
+    "canonicalFix": "Either declare the missing constant in the component or remove the initializer."
+  },
+  {
+    "code": "STORAGEFILE_UPLOAD_SERVICE_FACTORY_MISSING",
+    "source": "dbx_storagefile_m_validate_app",
+    "severity": "error",
+    "title": "No `storageFileInitializeFromUploadService(...)` call was found in",
+    "whatItFlags": "No `storageFileInitializeFromUploadService(...)` call was found in\nthe API.",
+    "whenItApplies": "APIs that declare at least one `UploadedFileTypeIdentifier` and therefore need to wire the upload service.",
+    "whenItDoesNotApply": "APIs whose upload service is provided by an upstream module (and the call lives outside the scanned subpaths — extend the scanner if so).",
+    "canonicalFix": "Add a factory whose return value is built from `storageFileInitializeFromUploadService({ initializer: [...] })` and bind it as a NestJS provider.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "storagefile-upload-handler"
+      }
+    ]
+  },
+  {
+    "code": "STORAGEFILE_UPLOAD_SERVICE_MULTIPLE_FACTORIES",
+    "source": "dbx_storagefile_m_validate_app",
+    "severity": "warning",
+    "title": "Multiple `storageFileInitializeFromUploadService(...)` calls were",
+    "whatItFlags": "Multiple `storageFileInitializeFromUploadService(...)` calls were\nfound.",
+    "whenItApplies": "When more than one upload-service factory exists in the API.",
+    "whenItDoesNotApply": "Apps that intentionally compose multiple factories (rare — only the first one runs).",
+    "canonicalFix": "Consolidate the factories into one — only the first call's config takes effect at runtime."
+  },
+  {
+    "code": "STORAGEFILE_UPLOAD_SERVICE_NOT_WIRED",
+    "source": "dbx_storagefile_m_validate_app",
+    "severity": "error",
+    "title": "The upload-service factory exists but no NestJS provider binds it via",
+    "whatItFlags": "The upload-service factory exists but no NestJS provider binds it via\n`provide: StorageFileInitializeFromUploadService, useFactory: ...`.",
+    "whenItApplies": "When the API has at least one upload-service factory.",
+    "whenItDoesNotApply": "When the binding lives in a module imported transitively from a trust-listed `@dereekb` package.",
+    "canonicalFix": "Add a NestJS provider with `provide: StorageFileInitializeFromUploadService, useFactory: <factory>` to a module imported by the app."
+  },
+  {
+    "code": "STORAGEFILE_UPLOAD_SERVICE_SPREAD_UNRESOLVED",
+    "source": "dbx_storagefile_m_validate_app",
+    "severity": "warning",
+    "title": "A `...spread` element inside the `initializer` array does not resolve",
+    "whatItFlags": "A `...spread` element inside the `initializer` array does not resolve\nto a declared array binding or factory call.",
+    "whenItApplies": "When the spread identifier is local but not declared anywhere reachable.",
+    "whenItDoesNotApply": "Spread identifiers from trust-listed `@dereekb/*` modules.",
+    "canonicalFix": "Declare the spread as `const <name>: StorageFileInitializeFromUploadServiceInitializer[] = [...]` or import it from a trusted module."
+  },
+  {
+    "code": "STORAGEFILE_FOLDER_API_DIR_NOT_FOUND",
+    "source": "dbx_storagefile_m_validate_folder",
+    "severity": "error",
+    "title": "The API app directory does not exist on disk",
+    "whatItFlags": "The API app directory does not exist on disk.",
+    "whenItApplies": "When the supplied `apiDir` does not resolve to a directory entry.",
+    "whenItDoesNotApply": "API apps intentionally not validated — pass `--skip storagefile_m` instead.",
+    "canonicalFix": "Verify the path argument resolves to an existing API app root.",
+    "seeAlso": [
+      {
+        "kind": "tool",
+        "target": "dbx_storagefile_m_validate_folder"
+      }
+    ]
+  },
+  {
+    "code": "STORAGEFILE_FOLDER_API_FOLDER_MISSING",
+    "source": "dbx_storagefile_m_validate_folder",
+    "severity": "error",
+    "title": "The API root exists but `src/app/common/model/storagefile/` is missing",
+    "whatItFlags": "The API root exists but `src/app/common/model/storagefile/` is missing.",
+    "whenItApplies": "API apps expected to wire the storagefile module but with no storagefile folder.",
+    "whenItDoesNotApply": "API apps that intentionally don't wire storage uploads — pass `--skip storagefile_m`.",
+    "canonicalFix": "Add `src/app/common/model/storagefile/` with `storagefile.module.ts`, `storagefile.upload.service.ts`, and `storagefile.init.ts`.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "storagefile-purpose"
+      }
+    ]
+  },
+  {
+    "code": "STORAGEFILE_FOLDER_BARREL_REEXPORT_MISSING",
+    "source": "dbx_storagefile_m_validate_folder",
+    "severity": "error",
+    "title": "`index.ts` re-exports a path that does not resolve to a sibling file or subfolder",
+    "whatItFlags": "`index.ts` re-exports a path that does not resolve to a sibling file or subfolder.",
+    "whenItApplies": "When `export * from './X'` in `index.ts` has no matching `./X.ts` or `./X/` under the storagefile folder root.",
+    "whenItDoesNotApply": "Re-exports that intentionally point outside the folder (use a relative path that climbs out, not `./X`).",
+    "canonicalFix": "Add the missing `<name>.ts` / `<name>/` sibling, or remove the dangling re-export from `index.ts`."
+  },
+  {
+    "code": "STORAGEFILE_FOLDER_COMPONENT_DIR_NOT_FOUND",
+    "source": "dbx_storagefile_m_validate_folder",
+    "severity": "error",
+    "title": "The component package directory does not exist on disk",
+    "whatItFlags": "The component package directory does not exist on disk.",
+    "whenItApplies": "When the supplied `componentDir` does not resolve to a directory entry.",
+    "whenItDoesNotApply": "Components intentionally not part of this validation pass — pass `--skip storagefile_m` to `dbx_app_validate` instead.",
+    "canonicalFix": "Verify the path argument resolves to an existing component package root.",
+    "seeAlso": [
+      {
+        "kind": "tool",
+        "target": "dbx_storagefile_m_validate_folder"
+      }
+    ]
+  },
+  {
+    "code": "STORAGEFILE_FOLDER_COMPONENT_FOLDER_MISSING",
+    "source": "dbx_storagefile_m_validate_folder",
+    "severity": "error",
+    "title": "The component root exists but `src/lib/model/storagefile/` is missing",
+    "whatItFlags": "The component root exists but `src/lib/model/storagefile/` is missing.",
+    "whenItApplies": "Components that should ship `StorageFilePurpose` constants but lack the storagefile model folder.",
+    "whenItDoesNotApply": "Components that intentionally don't extend the storagefile group (rare — most apps with file uploads do).",
+    "canonicalFix": "Run `dbx_artifact_scaffold artifact=\"storagefile-purpose\"` to scaffold the folder, or add `src/lib/model/storagefile/storagefile.ts` by hand.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "storagefile-purpose"
+      }
+    ]
+  },
+  {
+    "code": "STORAGEFILE_FOLDER_HANDLERS_SUBFOLDER_MIXED",
+    "source": "dbx_storagefile_m_validate_folder",
+    "severity": "warning",
+    "title": "A non-canonical `.ts` file lives at the API storagefile root alongside a `handlers/` subfolder",
+    "whatItFlags": "A non-canonical `.ts` file lives at the API storagefile root alongside a `handlers/` subfolder.",
+    "whenItApplies": "API folders that mix root-level handler files with a sibling `handlers/` subfolder.",
+    "whenItDoesNotApply": "Strictly canonical files (`storagefile.module.ts`, `storagefile.upload.service.ts`, `storagefile.init.ts`) — those are allowed at the root.",
+    "canonicalFix": "Move the handler file into `handlers/` so the convention stays consistent across the project."
+  },
+  {
+    "code": "STORAGEFILE_FOLDER_INIT_FILE_MISSING",
+    "source": "dbx_storagefile_m_validate_folder",
+    "severity": "error",
+    "title": "The API storagefile folder is missing the required `storagefile.init.ts` file",
+    "whatItFlags": "The API storagefile folder is missing the required `storagefile.init.ts` file.",
+    "whenItApplies": "Every API storagefile folder that exists.",
+    "whenItDoesNotApply": "Apps that don't expose storagefile server-actions on the action context (rare — most do).",
+    "canonicalFix": "Add `storagefile.init.ts` with the storage-file init server-actions config wired through the action context."
+  },
+  {
+    "code": "STORAGEFILE_FOLDER_MODULE_FILE_MISSING",
+    "source": "dbx_storagefile_m_validate_folder",
+    "severity": "error",
+    "title": "The API storagefile folder is missing the required `storagefile.module.ts` file",
+    "whatItFlags": "The API storagefile folder is missing the required `storagefile.module.ts` file.",
+    "whenItApplies": "Every API storagefile folder that exists.",
+    "whenItDoesNotApply": "The NestJS storage-file module is provided elsewhere in the app (rare — convention is one module per folder).",
+    "canonicalFix": "Add `storagefile.module.ts` declaring the NestJS module that binds the upload service provider."
+  },
+  {
+    "code": "STORAGEFILE_FOLDER_UNEXPECTED_FILE_NAME",
+    "source": "dbx_storagefile_m_validate_folder",
+    "severity": "warning",
+    "title": "A `.ts` file in the storagefile folder doesn't start with the `storagefile.` prefix",
+    "whatItFlags": "A `.ts` file in the storagefile folder doesn't start with the `storagefile.` prefix.",
+    "whenItApplies": "Any `.ts` file other than `index.ts` whose basename doesn't start with `storagefile.`.",
+    "whenItDoesNotApply": "Files outside the canonical layout that the project intentionally hosts here (rare — prefer moving them out).",
+    "canonicalFix": "Rename the file to `storagefile.<sub>.ts`, or move it out of the storagefile folder."
+  },
+  {
+    "code": "STORAGEFILE_FOLDER_UPLOAD_SERVICE_FILE_MISSING",
+    "source": "dbx_storagefile_m_validate_folder",
+    "severity": "error",
+    "title": "The API storagefile folder is missing the required `storagefile.upload.service.ts` file",
+    "whatItFlags": "The API storagefile folder is missing the required `storagefile.upload.service.ts` file.",
+    "whenItApplies": "Every API storagefile folder that exists.",
+    "whenItDoesNotApply": "API apps whose upload service is provided by an upstream module imported transitively (rare — usually a missed scaffold step).",
+    "canonicalFix": "Add `storagefile.upload.service.ts` exporting the `storageFileInitializeFromUploadService(...)` factory function.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "storagefile-purpose"
+      }
+    ]
+  },
+  {
+    "code": "SYSTEM_CONVERTER_MAP_NOT_LAST",
+    "source": "dbx_system_m_validate_folder",
+    "severity": "warning",
+    "title": "The aggregate `<app>SystemStateStoredDataConverterMap` is not the last top-level export in `system.ts`",
+    "whatItFlags": "The aggregate `<app>SystemStateStoredDataConverterMap` is not the last top-level export in `system.ts`.",
+    "whenItApplies": "When the converter-map declaration appears before another top-level export in `system.ts`.",
+    "whenItDoesNotApply": "Files where the convention isn't followed for project-specific reasons — but it makes scanning the aggregator harder.",
+    "canonicalFix": "Move the `<app>SystemStateStoredDataConverterMap` declaration to the end of `system.ts` so it always sits below the triples it aggregates."
+  },
+  {
+    "code": "SYSTEM_FOLDER_DISALLOWED_FILE",
+    "source": "dbx_system_m_validate_folder",
+    "severity": "error",
+    "title": "A file disallowed at the system folder root is present (`system.id.ts` or `system.query.ts`)",
+    "whatItFlags": "A file disallowed at the system folder root is present (`system.id.ts` or `system.query.ts`).",
+    "whenItApplies": "When the folder contains `system.id.ts` (SystemState identifiers are plain string keys) or `system.query.ts` (documents are fetched by key, not queried).",
+    "whenItDoesNotApply": "No known false-positive cases — the listed files conflict with the SystemState convention.",
+    "canonicalFix": "Delete the disallowed file. The reason is included in the violation message."
+  },
+  {
+    "code": "SYSTEM_FOLDER_MISSING_INDEX",
+    "source": "dbx_system_m_validate_folder",
+    "severity": "error",
+    "title": "Required `index.ts` barrel is missing from the system folder",
+    "whatItFlags": "Required `index.ts` barrel is missing from the system folder.",
+    "whenItApplies": "Every system folder that resolves to an existing directory.",
+    "whenItDoesNotApply": "The base `@dereekb/firebase` system folder — covered above.",
+    "canonicalFix": "Add `index.ts` re-exporting `system.ts` (and any optional siblings) so the folder is consumed through one barrel."
+  },
+  {
+    "code": "SYSTEM_FOLDER_MISSING_MAIN",
+    "source": "dbx_system_m_validate_folder",
+    "severity": "error",
+    "title": "Required `system.ts` main module is missing from the system folder",
+    "whatItFlags": "Required `system.ts` main module is missing from the system folder.",
+    "whenItApplies": "Every system folder that resolves to an existing directory.",
+    "whenItDoesNotApply": "The base `@dereekb/firebase` system folder — that ships machinery (`systemStateIdentity` etc.) and should not be validated with this tool.",
+    "canonicalFix": "Add `system.ts` declaring the downstream `<NAME>_SYSTEM_STATE_TYPE` constants, `<Foo>SystemData` interfaces, converters, and the aggregate `<app>SystemStateStoredDataConverterMap`.",
+    "seeAlso": [
+      {
+        "kind": "doc",
+        "target": "dbx__ref__system-state"
+      }
+    ]
+  },
+  {
+    "code": "SYSTEM_FOLDER_NOT_DIRECTORY",
+    "source": "dbx_system_m_validate_folder",
+    "severity": "error",
+    "title": "The supplied path resolves to a file or other non-directory entry",
+    "whatItFlags": "The supplied path resolves to a file or other non-directory entry.",
+    "whenItApplies": "When the path exists but is not a directory.",
+    "whenItDoesNotApply": "File-level system validation — pass the folder, not `system.ts`.",
+    "canonicalFix": "Pass the system folder (e.g. `apps/.../src/lib/model/system/`), not the `system.ts` file inside it."
+  },
+  {
+    "code": "SYSTEM_FOLDER_NOT_FOUND",
+    "source": "dbx_system_m_validate_folder",
+    "severity": "error",
+    "title": "The supplied path does not exist on disk",
+    "whatItFlags": "The supplied path does not exist on disk.",
+    "whenItApplies": "When the folder path argument does not resolve to an entry.",
+    "whenItDoesNotApply": "Glob patterns intentionally matching zero folders — pass at least one valid path.",
+    "canonicalFix": "Verify the path resolves to an existing system model folder under the workspace."
+  },
+  {
+    "code": "SYSTEM_FOLDER_STRAY_FILE",
+    "source": "dbx_system_m_validate_folder",
+    "severity": "warning",
+    "title": "A `.ts` file in the system folder doesn't follow the `system.<sub>.ts` convention",
+    "whatItFlags": "A `.ts` file in the system folder doesn't follow the `system.<sub>.ts` convention.",
+    "whenItApplies": "Any `.ts` file other than `index.ts` whose basename doesn't start with `system.`.",
+    "whenItDoesNotApply": "Files outside the canonical layout that the project intentionally hosts here (rare — prefer moving them out).",
+    "canonicalFix": "Rename the file to `system.<sub>.ts`, or move it out of the system folder."
+  },
+  {
+    "code": "SYSTEM_MISSING_CONVERTER",
+    "source": "dbx_system_m_validate_folder",
+    "severity": "error",
+    "title": "A `<NAME>_SYSTEM_STATE_TYPE` / `<Foo>SystemData` pair has no matching `<foo>SystemDataConverter`",
+    "whatItFlags": "A `<NAME>_SYSTEM_STATE_TYPE` / `<Foo>SystemData` pair has no matching `<foo>SystemDataConverter`.",
+    "whenItApplies": "Every state-type constant whose name normalizes to a `<Foo>SystemData` interface but no `<foo>SystemDataConverter` constant exists.",
+    "whenItDoesNotApply": "Converters provided by an upstream package and re-exported through `system.ts` (rare — usually a missed scaffold step).",
+    "canonicalFix": "Add `export const <foo>SystemDataConverter: SystemStateStoredDataFieldConverterConfig<<Foo>SystemData> = { ... }` adjacent to the interface.",
+    "seeAlso": [
+      {
+        "kind": "doc",
+        "target": "dbx__ref__system-state"
+      }
+    ]
+  },
+  {
+    "code": "SYSTEM_MISSING_CONVERTER_MAP",
+    "source": "dbx_system_m_validate_folder",
+    "severity": "error",
+    "title": "`system.ts` declares state-type triples but no aggregate `<app>SystemStateStoredDataConverterMap` is exported",
+    "whatItFlags": "`system.ts` declares state-type triples but no aggregate `<app>SystemStateStoredDataConverterMap` is exported.",
+    "whenItApplies": "When `system.ts` contains at least one `<NAME>_SYSTEM_STATE_TYPE` / `<Foo>SystemData` / `<foo>SystemDataConverter` triple.",
+    "whenItDoesNotApply": "`system.ts` files that declare zero triples (an empty downstream system folder is still valid as long as `system.ts` exists).",
+    "canonicalFix": "Add `export const <app>SystemStateStoredDataConverterMap: SystemStateStoredDataConverterMap = { ... }` mapping each `<NAME>_SYSTEM_STATE_TYPE` to its converter.",
+    "seeAlso": [
+      {
+        "kind": "doc",
+        "target": "dbx__ref__system-state"
+      }
+    ]
+  },
+  {
+    "code": "SYSTEM_MISSING_TYPE_CONSTANT",
+    "source": "dbx_system_m_validate_folder",
+    "severity": "error",
+    "title": "A `<Foo>SystemData` interface has no matching `<NAME>_SYSTEM_STATE_TYPE` constant",
+    "whatItFlags": "A `<Foo>SystemData` interface has no matching `<NAME>_SYSTEM_STATE_TYPE` constant.",
+    "whenItApplies": "Every `<Foo>SystemData` interface declared in `system.ts`.",
+    "whenItDoesNotApply": "Interfaces provided by an upstream package and re-exported here (rare — usually a missed scaffold step).",
+    "canonicalFix": "Add `export const <NAME>_SYSTEM_STATE_TYPE: SystemStateType = '<value>'` adjacent to the interface."
+  },
+  {
+    "code": "SYSTEM_ORPHAN_CONVERTER",
+    "source": "dbx_system_m_validate_folder",
+    "severity": "error",
+    "title": "A `<foo>SystemDataConverter` exists with no matching `<Foo>SystemData` interface or `<NAME>_SYSTEM_STATE_TYPE` constant",
+    "whatItFlags": "A `<foo>SystemDataConverter` exists with no matching `<Foo>SystemData` interface or `<NAME>_SYSTEM_STATE_TYPE` constant.",
+    "whenItApplies": "When the converter's prefix has no sibling interface + constant.",
+    "whenItDoesNotApply": "The converter is intentionally re-exported from another package (rare — usually a typo or rename drift).",
+    "canonicalFix": "Either declare the matching interface + constant pair or rename the converter so it pairs with an existing triple."
+  },
+  {
+    "code": "SYSTEM_ORPHAN_TYPE_CONSTANT",
+    "source": "dbx_system_m_validate_folder",
+    "severity": "error",
+    "title": "A `<Foo>SystemData` interface exists but no matching `<NAME>_SYSTEM_STATE_TYPE` constant — pair is orphaned",
+    "whatItFlags": "A `<Foo>SystemData` interface exists but no matching `<NAME>_SYSTEM_STATE_TYPE` constant — pair is orphaned.",
+    "whenItApplies": "When `<Foo>SystemData` is declared without a same-prefix state-type constant.",
+    "whenItDoesNotApply": "The interface is intentionally re-exported from another package (rare — usually a typo or rename drift).",
+    "canonicalFix": "Either declare the matching `<NAME>_SYSTEM_STATE_TYPE` constant or rename the interface so it pairs with an existing constant."
+  },
+  {
+    "code": "SYSTEM_TYPE_NOT_IN_MAP",
+    "source": "dbx_system_m_validate_folder",
+    "severity": "error",
+    "title": "A declared `<NAME>_SYSTEM_STATE_TYPE` constant is not referenced by the aggregate converter map",
+    "whatItFlags": "A declared `<NAME>_SYSTEM_STATE_TYPE` constant is not referenced by the aggregate converter map.",
+    "whenItApplies": "Every state-type constant declared in `system.ts`.",
+    "whenItDoesNotApply": "State types provided by upstream packages (the validator only reports locally declared constants).",
+    "canonicalFix": "Add the constant as a key on `<app>SystemStateStoredDataConverterMap` so the runtime knows which converter to use."
+  },
+  {
+    "code": "SYSTEM_UNKNOWN_MAP_KEY",
+    "source": "dbx_system_m_validate_folder",
+    "severity": "warning",
+    "title": "The aggregate converter map references a key that is not a declared state-type constant in `system.ts`",
+    "whatItFlags": "The aggregate converter map references a key that is not a declared state-type constant in `system.ts`.",
+    "whenItApplies": "When a key on `<app>SystemStateStoredDataConverterMap` is neither a local `<NAME>_SYSTEM_STATE_TYPE` constant nor an imported identifier.",
+    "whenItDoesNotApply": "Keys imported from upstream packages — those are detected via `importedIdentifiers` and skipped.",
+    "canonicalFix": "Either declare the missing constant locally or import it from the upstream package that owns it."
+  }
+]

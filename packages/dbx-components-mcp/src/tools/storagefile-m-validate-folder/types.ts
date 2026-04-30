@@ -30,24 +30,17 @@
  */
 
 import type { RequiredApiFile, SideInspection as SharedSideInspection, TwoSideFolderInspection, TwoSideFolderValidationResult, TwoSideFolderViolation } from '../validate-two-side-folder.js';
+import type { StorageFileMValidateFolderCode } from './codes.js';
 
 export type { SideStatus, ViolationSeverity } from '../validate-two-side-folder.js';
 
-export type ViolationCode =
-  // I/O failures (errors)
-  | 'STORAGEFILE_FOLDER_COMPONENT_DIR_NOT_FOUND'
-  | 'STORAGEFILE_FOLDER_API_DIR_NOT_FOUND'
-  | 'STORAGEFILE_FOLDER_COMPONENT_FOLDER_MISSING'
-  | 'STORAGEFILE_FOLDER_API_FOLDER_MISSING'
-  // API-side required files (errors)
-  | 'STORAGEFILE_FOLDER_UPLOAD_SERVICE_FILE_MISSING'
-  | 'STORAGEFILE_FOLDER_MODULE_FILE_MISSING'
-  | 'STORAGEFILE_FOLDER_INIT_FILE_MISSING'
-  // Barrel re-export resolution (errors)
-  | 'STORAGEFILE_FOLDER_BARREL_REEXPORT_MISSING'
-  // Layout warnings
-  | 'STORAGEFILE_FOLDER_UNEXPECTED_FILE_NAME'
-  | 'STORAGEFILE_FOLDER_HANDLERS_SUBFOLDER_MIXED';
+/**
+ * String-literal union derived from {@link StorageFileMValidateFolderCode}.
+ * Source of truth for code metadata is the enum's per-member JSDoc;
+ * the template-literal type widens the enum back to its underlying
+ * SCREAMING_SNAKE strings so existing emit-sites still typecheck.
+ */
+export type ViolationCode = `${StorageFileMValidateFolderCode}`;
 
 export type SideInspection = SharedSideInspection;
 export type StorageFileFolderInspection = TwoSideFolderInspection;

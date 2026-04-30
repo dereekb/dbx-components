@@ -56,11 +56,11 @@ export interface MockItemStorageFirebaseStorageContextConfig {}
  * }));
  * ```
  */
-export function testWithMockItemStorageFixture(config?: MockItemStorageFirebaseStorageContextConfig): TestWrappedContextFactoryBuilder<MockItemStorageFixture, TestFirebaseStorageContextFixture> {
+export function testWithMockItemStorageFixture(_config?: MockItemStorageFirebaseStorageContextConfig): TestWrappedContextFactoryBuilder<MockItemStorageFixture, TestFirebaseStorageContextFixture> {
   return instanceWrapTestContextFactory({
     wrapFixture: (fixture) => new MockItemStorageFixture(fixture),
     makeInstance: (wrap) => new MockItemStorageFixtureInstance(wrap),
-    teardownInstance: (instance: MockItemStorageFixtureInstance) => {}
+    teardownInstance: (_instance: MockItemStorageFixtureInstance) => undefined
     // TODO(FUTURE): Utilize config here using the setup/teardown later if needed.
   });
 }

@@ -33,38 +33,28 @@
  */
 
 // MARK: Violation codes
-export type ViolationCode =
-  // I/O failures
-  | 'STORAGEFILE_COMPONENT_DIR_NOT_FOUND'
-  | 'STORAGEFILE_API_DIR_NOT_FOUND'
-  | 'STORAGEFILE_COMPONENT_FOLDER_MISSING'
-  | 'STORAGEFILE_API_FOLDER_MISSING'
-  // Purpose declaration
-  | 'STORAGEFILE_PURPOSE_MISSING_FILE_TYPE_IDENTIFIER'
-  // Upload service errors
-  | 'STORAGEFILE_UPLOAD_SERVICE_FACTORY_MISSING'
-  | 'STORAGEFILE_UPLOAD_SERVICE_NOT_WIRED'
-  | 'STORAGEFILE_PURPOSE_NOT_IN_UPLOAD_SERVICE'
-  | 'STORAGEFILE_UPLOAD_INITIALIZER_ORPHAN'
-  | 'STORAGEFILE_UPLOAD_INITIALIZER_NAME_MISMATCH'
-  // Upload service warnings
-  | 'STORAGEFILE_UPLOAD_SERVICE_SPREAD_UNRESOLVED'
-  | 'STORAGEFILE_UPLOAD_SERVICE_MULTIPLE_FACTORIES'
-  // Processing handler errors
-  | 'STORAGEFILE_PROCESSING_HANDLER_MISSING'
-  | 'STORAGEFILE_PROCESSING_CONFIG_MISSING'
-  | 'STORAGEFILE_PROCESSING_CONFIG_ORPHAN'
-  | 'STORAGEFILE_PROCESSING_SUBTASK_NOT_HANDLED'
-  // Duplicate / convention warnings
-  | 'STORAGEFILE_PURPOSE_DUPLICATE'
-  | 'STORAGEFILE_FILE_TYPE_IDENTIFIER_DUPLICATE'
-  | 'STORAGEFILE_GROUP_IDS_FUNCTION_MISSING';
+import type { StorageFileMValidateAppCode } from './codes.js';
+import type { RemediationHint } from '../rule-catalog/types.js';
+
+/**
+ * String-literal union derived from {@link StorageFileMValidateAppCode}.
+ * Source of truth for code metadata is the enum's per-member JSDoc;
+ * the template-literal type widens the enum back to its underlying
+ * SCREAMING_SNAKE strings so existing emit-sites still typecheck.
+ */
+export type ViolationCode = `${StorageFileMValidateAppCode}`;
 
 import type { TwoSideResult, TwoSideViolation } from '../validate-format.js';
 export type { ViolationSeverity } from '../validate-format.js';
 
 export interface Violation extends TwoSideViolation {
   readonly code: ViolationCode;
+  /**
+   * Auto-attached remediation hint pulled from the rule catalog at
+   * emission time. `undefined` when no catalog entry exists for the
+   * code (the formatter renders no nested block in that case).
+   */
+  readonly remediation?: RemediationHint;
 }
 
 export interface ValidationResult extends TwoSideResult {

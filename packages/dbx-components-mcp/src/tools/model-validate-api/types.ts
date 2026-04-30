@@ -14,45 +14,13 @@
  *   missing `[Params, Result]` tuple form in the CRUD config.
  */
 
+import type { ModelValidateApiCode } from './codes.js';
+import type { RemediationHint } from '../rule-catalog/types.js';
+
 /**
- * Stable error codes so consumers can suppress or interpret individual
- * violations without string-matching the message text.
+ * String-literal union derived from {@link ModelValidateApiCode}.
  */
-export type ViolationCode =
-  // File-level required exports (errors)
-  | 'FILE_MISSING_FUNCTION_TYPE_MAP'
-  | 'FILE_MISSING_FUNCTION_TYPE_CONFIG_MAP'
-  | 'FILE_MISSING_CRUD_CONFIG_TYPE'
-  | 'FILE_MISSING_CRUD_CONFIG_CONST'
-  | 'FILE_MISSING_FUNCTIONS_CLASS'
-  | 'FILE_MISSING_FUNCTION_MAP'
-  // File-level structural correctness (errors)
-  | 'FILE_GROUP_NAME_INCONSISTENT'
-  | 'FILE_NOT_EXPORTED'
-  | 'TYPE_CONFIG_MAP_WRONG_GENERIC'
-  | 'CRUD_CONFIG_CONST_WRONG_GENERIC'
-  | 'FUNCTIONS_CLASS_NOT_ABSTRACT'
-  | 'FUNCTIONS_CLASS_BAD_IMPLEMENTS'
-  | 'FUNCTION_MAP_BAD_FACTORY_ARGS'
-  // Params / validator pairing (errors)
-  | 'PARAMS_MISSING_VALIDATOR'
-  | 'PARAMS_VALIDATOR_WRONG_CAST'
-  | 'PARAMS_NOT_EXPORTED'
-  | 'PARAMS_VALIDATOR_NOT_EXPORTED'
-  // Warnings (style / convention)
-  | 'PARAMS_VALIDATOR_NOT_ADJACENT'
-  | 'PARAMS_FIELD_NOT_READONLY'
-  | 'RESULT_FIELD_NOT_READONLY'
-  | 'PARAMS_MAYBE_WITHOUT_CLEARABLE'
-  | 'CRUD_CLASS_MISSING_KEY'
-  | 'CRUD_CONST_MISSING_KEY'
-  | 'CRUD_CONFIG_MISSING_RESULT_TUPLE'
-  | 'FUNCTIONS_BLOCK_OUT_OF_ORDER'
-  | 'DECL_AFTER_FUNCTIONS_BLOCK'
-  | 'FILE_MISSING_MARK_CONSTANTS'
-  | 'FILE_MISSING_MARK_KEYS'
-  | 'FILE_MISSING_MARK_FUNCTIONS'
-  | 'NON_CRUD_API_FILENAME';
+export type ViolationCode = `${ModelValidateApiCode}`;
 
 /**
  * Error codes are hard failures the caller is expected to fix. Warning
@@ -68,6 +36,12 @@ export interface Violation {
   readonly file: string;
   readonly line: number | undefined;
   readonly group: string | undefined;
+  /**
+   * Auto-attached remediation hint pulled from the rule catalog at
+   * emission time. `undefined` when no catalog entry exists for the
+   * code (the formatter renders no nested block in that case).
+   */
+  readonly remediation?: RemediationHint;
 }
 
 export interface ValidationResult {

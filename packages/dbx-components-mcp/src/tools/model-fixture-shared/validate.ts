@@ -10,6 +10,7 @@
  * diagnostic list with stable codes consumers can grep.
  */
 
+import { attachRemediation } from '../rule-catalog/index.js';
 import type { AppFixturesExtraction, FixtureDiagnostic, FixtureEntry, FixtureMethod, FixtureModelRegistry, FixtureValidationResult } from './types.js';
 
 /**
@@ -40,15 +41,20 @@ export function validateAppFixtures(extraction: AppFixturesExtraction, options: 
   pushOrphanFixtureDiagnostics(extraction, diagnostics);
   pushModelsWithoutFixtureDiagnostics(extraction, options.registry, diagnostics);
 
+  const enriched: FixtureDiagnostic[] = diagnostics.map((d) => {
+    const out: FixtureDiagnostic = { ...d, remediation: attachRemediation(d.code) };
+    return out;
+  });
+
   let errorCount = 0;
   let warningCount = 0;
-  for (const d of diagnostics) {
+  for (const d of enriched) {
     if (d.severity === 'error') errorCount += 1;
     else warningCount += 1;
   }
   return {
     fixturePath: extraction.fixturePath,
-    diagnostics,
+    diagnostics: enriched,
     errorCount,
     warningCount
   };

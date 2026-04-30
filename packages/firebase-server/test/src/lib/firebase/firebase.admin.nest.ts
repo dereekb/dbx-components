@@ -1,10 +1,10 @@
 import { AbstractChildTestContextFixture, type BuildTestsWithContextFunction, type TestContextFactory, type TestContextFixture, useTestContextFixture } from '@dereekb/util/test';
 import { AbstractFirebaseAdminTestContextInstanceChild, firebaseAdminTestContextFactory, type FirebaseAdminTestContextInstance } from './firebase.admin';
-import { INestApplication, NestApplicationOptions, type Abstract, type INestApplicationContext, type Provider, type Type } from '@nestjs/common';
+import { type INestApplication, type NestApplicationOptions, type Abstract, type INestApplicationContext, type Provider, type Type } from '@nestjs/common';
 import { type StorageBucketId } from '@dereekb/firebase';
 import { type FirebaseServerEnvironmentConfig, GlobalRoutePrefixConfig, type NestAppPromiseGetter, type NestServerInstanceConfig, buildNestServerRootModule } from '@dereekb/firebase-server';
 import { Test, type TestingModule } from '@nestjs/testing';
-import { type ArrayOrValue, asArray, asGetter, cachedGetter, type ClassType, type Getter, Maybe } from '@dereekb/util';
+import { type ArrayOrValue, asArray, asGetter, cachedGetter, type ClassType, type Getter, type Maybe } from '@dereekb/util';
 
 /**
  * NestJS injection token used to provide the {@link NestServerInstanceConfig} to the test's
@@ -94,7 +94,7 @@ export class FirebaseAdminNestTestContextInstance<PI extends FirebaseAdminTestCo
   readonly nestAppPromiseGetter: Getter<Promise<INestApplicationContext>> = () => Promise.resolve(this.nest);
 
   readonly _loadInitializedNestApplication = cachedGetter(async () => {
-    let app = this.createNewNestApplication();
+    const app = this.createNewNestApplication();
     await app.init();
     return app;
   });
@@ -223,7 +223,9 @@ export function firebaseAdminNestContextFixture<PI extends FirebaseAdminTestCont
   };
 }
 
-/** @deprecated Use `FirebaseNestServerRootModule` from `@dereekb/firebase-server` instead. */
+/**
+ * @deprecated Use `FirebaseNestServerRootModule` from `@dereekb/firebase-server` instead.
+ */
 export { FirebaseNestServerRootModule as FirebaseAdminNestRootModule } from '@dereekb/firebase-server';
 
 /**
@@ -297,7 +299,7 @@ export function firebaseAdminNestContextWithFixture<PI extends FirebaseAdminTest
         return instance;
       } catch (e) {
         // Nest was compiled but instance creation/init failed — close the compiled module to prevent resource leaks
-        await nest.close().catch(() => {});
+        await nest.close().catch(() => undefined);
         throw e;
       }
     },
