@@ -30,6 +30,9 @@
  * | dbx_model_decode                    | Decoding      | "What does this Firestore doc mean?"                   |
  * | dbx_model_validate                  | Verification  | "Is this Firestore model file correct?"                |
  * | dbx_model_validate_api              | Verification  | "Is this model api file correct?"                      |
+ * | dbx_model_api_list_app              | Discovery     | "What CRUD/standalone API calls does this component declare?" |
+ * | dbx_model_api_lookup                | Documentation | "Tell me about the API calls for model X — params, action JSDoc." |
+ * | dbx_model_api_validate_app          | Verification  | "Are all declared CRUD calls wired in this app's callModel map?" |
  * | dbx_model_validate_folder           | Verification  | "Does this model folder have the 5 files?"             |
  * | dbx_model_store_scaffold            | Generation    | "Scaffold the 4 store files for model X"               |
  * | dbx_model_fixture_list_app          | Discovery     | "What fixture/instance pairs does this app declare?"   |
@@ -78,6 +81,9 @@ import { searchModelTool } from './search-model.tool.js';
 import { modelDecodeTool } from './model-decode.tool.js';
 import { modelValidateTool } from './model-validate.tool.js';
 import { modelValidateApiTool } from './model-validate-api.tool.js';
+import { modelApiListAppTool } from './model-api-list-app.tool.js';
+import { modelApiLookupTool } from './model-api-lookup.tool.js';
+import { modelApiValidateAppTool } from './model-api-validate-app.tool.js';
 import { modelValidateFolderTool } from './model-validate-folder.tool.js';
 import { modelStoreScaffoldTool } from './model-store-scaffold.tool.js';
 import { modelFixtureListAppTool } from './model-fixture-list-app.tool.js';
@@ -140,6 +146,9 @@ export const DBX_TOOLS: readonly DbxTool[] = [
   modelDecodeTool,
   modelValidateTool,
   modelValidateApiTool,
+  modelApiListAppTool,
+  modelApiLookupTool,
+  modelApiValidateAppTool,
   modelValidateFolderTool,
   modelStoreScaffoldTool,
   modelFixtureListAppTool,
