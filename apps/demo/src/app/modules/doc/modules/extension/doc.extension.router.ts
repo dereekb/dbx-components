@@ -9,6 +9,7 @@ import { DocExtensionStructureComponent } from './container/structure.component'
 import { DocExtensionDownloadComponent } from './container/download.component';
 import { DocExtensionStorageFileComponent } from './container/storagefile.component';
 import { DocExtensionZipComponent } from './container/zip.component';
+import { DocExtensionPdfComponent } from './container/pdf.component';
 import { DocExtensionWebFilePreviewComponent } from './container/webfilepreview.component';
 import { DocExtensionHelpComponent } from './container/help.component';
 import { DocExtensionOidcComponent } from './container/oidc.component';
@@ -75,6 +76,12 @@ export const docExtensionZipState: Ng2StateDeclaration = {
   component: DocExtensionZipComponent
 };
 
+export const docExtensionPdfState: Ng2StateDeclaration = {
+  url: '/pdf',
+  name: 'doc.extension.pdf',
+  component: DocExtensionPdfComponent
+};
+
 export const docExtensionWebFilePreviewState: Ng2StateDeclaration = {
   url: '/webfilepreview',
   name: 'doc.extension.webfilepreview',
@@ -111,6 +118,7 @@ export const STATES: Ng2StateDeclaration[] = [
   docExtensionDownloadState,
   docExtensionStorageFileState,
   docExtensionZipState,
+  docExtensionPdfState,
   docExtensionWebFilePreviewState,
   docExtensionHelpState,
   docExtensionOidcState,

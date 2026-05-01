@@ -4,6 +4,7 @@
 @use './table/table';
 @use './zip/zip';
 @use './help/help';
+@use './pdf/pdf';
 
 @mixin all-extension-core($theme-config) {
   $calendar-enabled: 1;
@@ -33,6 +34,8 @@
   @if ($help-enabled == 1) {
     @include help.core();
   }
+
+  @include pdf.core();
 }
 
 @mixin all-extension-typography($theme-config-or-typography-config) {
@@ -66,4 +69,6 @@
   @if ($help-enabled == 1) {
     @include help.theme($theme-config);
   }
+
+  @include pdf.theme($theme-config);
 }
