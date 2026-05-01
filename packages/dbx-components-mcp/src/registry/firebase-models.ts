@@ -53,9 +53,10 @@ export interface FirebaseField {
   /**
    * Long-form camelCase identifier for the field, sourced from the `@dbxModelVariable` JSDoc tag.
    *
-   * Provides a human-readable expansion of the (often 1-4 character) persisted name
-   * for use by MCP tooling and downstream documentation. Defaults to `name` when no tag
-   * is present (and the scanner emits a warning).
+   * The convention is the field's unabbreviated camelCase variable name (e.g. `uid` → `userUid`,
+   * `n` → `name`, `crAt` → `createdAt`), providing a human-readable expansion of the (often
+   * 1-4 character) persisted name for use by MCP tooling and downstream documentation. Defaults
+   * to `name` when no tag is present (and the scanner emits a warning).
    */
   readonly longName: string;
   /**

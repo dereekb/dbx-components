@@ -295,24 +295,14 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     canonicalFix: 'Update the getter body to return the matching identity constant.'
   },
   {
-    code: 'MODEL_FIELD_JSDOC_NO_FULL_NAME',
-    source: 'dbx_model_validate',
-    severity: 'warning',
-    title: "A persisted field's JSDoc doesn't open with `<fullName> -- <description>`",
-    whatItFlags: "A persisted field's JSDoc doesn't open with `<fullName> -- <description>`.",
-    whenItApplies: 'Every field with JSDoc — the first line should match the `<fullName> -- <description>` pattern so the long-name extractor and decoder agree on field semantics.',
-    whenItDoesNotApply: 'When the project deliberately uses a non-standard JSDoc convention (rare).',
-    canonicalFix: 'Reformat the JSDoc opener to `<longName> -- <one-line description>`.'
-  },
-  {
     code: 'MODEL_FIELD_MISSING_JSDOC',
     source: 'dbx_model_validate',
     severity: 'warning',
-    title: 'A persisted field has no JSDoc',
-    whatItFlags: 'A persisted field has no JSDoc.',
-    whenItApplies: 'Every persisted field — short field names need JSDoc to document what they mean.',
+    title: 'A persisted field has no JSDoc description',
+    whatItFlags: 'A persisted field has no JSDoc description.',
+    whenItApplies: 'Every persisted field — short field names need a JSDoc description so a reader knows what the field is actually for. The long-name itself is carried by the `@dbxModelVariable` tag, so the JSDoc body just needs a one-line description.',
     whenItDoesNotApply: 'Fields whose name is unambiguously self-describing (rare with 1-4 char abbreviations).',
-    canonicalFix: 'Add `/** <fullName> -- <description> *\\/` above the field declaration.'
+    canonicalFix: 'Add `/** <one-line description> *\\/` above the field declaration (and append `@dbxModelVariable <longName>` for the canonical long name).'
   },
   {
     code: 'MODEL_FIELD_MISSING_VARIABLE_TAG',
@@ -320,9 +310,9 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     severity: 'warning',
     title: 'A persisted field is missing its `@dbxModelVariable <name>` JSDoc tag',
     whatItFlags: 'A persisted field is missing its `@dbxModelVariable <name>` JSDoc tag.',
-    whenItApplies: 'Every field on a `@dbxModel` interface — the tag carries the human-readable long name the catalog and decoder use when surfacing the field to operators.',
+    whenItApplies: 'Every field on a `@dbxModel` interface — the tag carries the human-readable long name the catalog and decoder use when surfacing the field to operators. The long name is the variable name the field would have unabbreviated, written in camelCase (e.g. `uid` → `userUid`, `n` → `name`, `crAt` → `createdAt`).',
     whenItDoesNotApply: 'Fields on embedded sub-object interfaces (no `@dbxModel` parent) and fields the project deliberately leaves untagged (rare).',
-    canonicalFix: "Append `@dbxModelVariable <longName>` to the field's JSDoc block."
+    canonicalFix: "Append `@dbxModelVariable <longName>` to the field's JSDoc block, where `<longName>` is the field's unabbreviated camelCase variable name."
   },
   {
     code: 'MODEL_FIELD_NAME_TOO_LONG',

@@ -139,7 +139,9 @@ export interface ExtractedField {
   /**
    * Long-name argument of the field's `@dbxModelVariable <name>` JSDoc
    * tag, or `undefined` when the tag is absent or empty. Powers the
-   * field's catalog long-name and the decoder's display strings.
+   * field's catalog long-name and the decoder's display strings. The
+   * convention is the field's unabbreviated camelCase variable name
+   * (e.g. `uid` → `userUid`, `n` → `name`).
    */
   readonly dbxModelVariableTag: string | undefined;
 }

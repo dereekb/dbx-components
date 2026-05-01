@@ -237,36 +237,25 @@ describe('validateFirebaseModelSources', () => {
     expectCodes(codes, ['SUB_MISSING_COLLECTION_GROUP_REFERENCE', 'SUB_MISSING_COLLECTION_GROUP_TYPE', 'SUB_MISSING_COLLECTION_GROUP_FN']);
   });
 
-  it('warns when a field has no JSDoc comment', () => {
+  it('warns when a field has no JSDoc description', () => {
     const result = validateFirebaseModelSources([{ name: 'x.ts', text: HAPPY_SOURCE }]);
     const missing = result.violations.filter((v) => v.code === 'MODEL_FIELD_MISSING_JSDOC');
     expect(missing.length).toBeGreaterThan(0);
     expect(missing[0].severity).toBe('warning');
   });
 
-  it('does not warn when JSDoc first line has `FullName -- description`', () => {
-    const withFullName = HAPPY_SOURCE.replace('export interface Profile {\n  uid: string;\n  n: string;\n}', 'export interface Profile {\n  /** Uid -- the user auth UID. */\n  uid: string;\n  /** Name -- the user display name. */\n  n: string;\n}');
-    const result = validateFirebaseModelSources([{ name: 'x.ts', text: withFullName }]);
-    const profileFields = result.violations.filter((v) => (v.code === 'MODEL_FIELD_MISSING_JSDOC' || v.code === 'MODEL_FIELD_JSDOC_NO_FULL_NAME') && v.model === 'Profile');
+  it('does not warn MODEL_FIELD_MISSING_JSDOC when each field has a JSDoc description', () => {
+    const withDocs = HAPPY_SOURCE.replace('export interface Profile {\n  uid: string;\n  n: string;\n}', 'export interface Profile {\n  /** the user auth UID. */\n  uid: string;\n  /** the user display name. */\n  n: string;\n}');
+    const result = validateFirebaseModelSources([{ name: 'x.ts', text: withDocs }]);
+    const profileFields = result.violations.filter((v) => v.code === 'MODEL_FIELD_MISSING_JSDOC' && v.model === 'Profile');
     expect(profileFields).toHaveLength(0);
   });
 
-  it('warns when a JSDoc is present but the first line lacks a full name', () => {
-    const noFullName = HAPPY_SOURCE.replace('export interface Profile {\n  uid: string;\n  n: string;\n}', 'export interface Profile {\n  /** the user auth UID. */\n  uid: string;\n  /** Name -- ok. */\n  n: string;\n}');
-    const result = validateFirebaseModelSources([{ name: 'x.ts', text: noFullName }]);
-    const badFormat = result.violations.filter((v) => v.code === 'MODEL_FIELD_JSDOC_NO_FULL_NAME' && v.message.includes('`uid`'));
-    expect(badFormat).toHaveLength(1);
-    expect(badFormat[0].severity).toBe('warning');
-  });
-
-  it('accepts all supported separators (`--`, em dash, en dash, `-`, `:`)', () => {
-    const variants = ['export interface Profile {\n  /** Uid -- the user auth UID. */\n  uid: string;\n  /** Name — the user display name. */\n  n: string;\n}', 'export interface Profile {\n  /** Uid – the user auth UID. */\n  uid: string;\n  /** Name: the user display name. */\n  n: string;\n}', 'export interface Profile {\n  /** Uid - the user auth UID. */\n  uid: string;\n  /** Name -- the user display name. */\n  n: string;\n}'];
-    for (const replacement of variants) {
-      const text = HAPPY_SOURCE.replace('export interface Profile {\n  uid: string;\n  n: string;\n}', replacement);
-      const result = validateFirebaseModelSources([{ name: 'x.ts', text }]);
-      const profileIssues = result.violations.filter((v) => (v.code === 'MODEL_FIELD_MISSING_JSDOC' || v.code === 'MODEL_FIELD_JSDOC_NO_FULL_NAME') && v.model === 'Profile');
-      expect(profileIssues, `variant: ${replacement}`).toHaveLength(0);
-    }
+  it('does not require a `<FullName> -- <description>` JSDoc opener', () => {
+    const freeFormDocs = HAPPY_SOURCE.replace('export interface Profile {\n  uid: string;\n  n: string;\n}', 'export interface Profile {\n  /** the user auth UID. */\n  uid: string;\n  /** the user display name. */\n  n: string;\n}');
+    const result = validateFirebaseModelSources([{ name: 'x.ts', text: freeFormDocs }]);
+    const fullNameWarnings = result.violations.filter((v) => (v.code as string) === 'MODEL_FIELD_JSDOC_NO_FULL_NAME');
+    expect(fullNameWarnings).toHaveLength(0);
   });
 
   it('warns on interface field names longer than 4 characters', () => {

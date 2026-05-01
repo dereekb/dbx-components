@@ -60,15 +60,7 @@ function checkFieldNameLengths(file: ExtractedFile, violations: Violation[]): vo
   checkFieldJsDocs(file, violations);
 }
 
-// MARK: Field JSDoc + full-name convention (warning)
-/**
- * Matches the opening "FullName — description" pattern. The full name must
- * start with an uppercase letter and consist of letters/digits, followed by
- * a separator (`--`, em dash, en dash, single dash, or colon) surrounded by
- * whitespace, then at least one non-space character.
- */
-const FULL_NAME_FIRST_LINE = /^[A-Z][A-Za-z0-9]*(?:\s+[A-Z][A-Za-z0-9]*)*\s*(?:--|—|–|-|:)\s+\S/;
-
+// MARK: Field JSDoc + @dbxModelVariable convention (warning)
 function checkFieldJsDocs(file: ExtractedFile, violations: Violation[]): void {
   for (const iface of file.dataInterfaces) {
     for (const field of iface.fields) {
@@ -76,16 +68,7 @@ function checkFieldJsDocs(file: ExtractedFile, violations: Violation[]): void {
         pushViolation(violations, {
           code: 'MODEL_FIELD_MISSING_JSDOC',
           severity: 'warning',
-          message: `Field \`${field.name}\` in interface \`${iface.name}\` is missing a JSDoc comment. First line should be \`<FullName> -- <description>\` (for example \`/** SyncFlag -- the sync flag. */\`).`,
-          file: file.name,
-          line: field.line,
-          model: iface.name
-        });
-      } else if (!FULL_NAME_FIRST_LINE.test(field.jsDocFirstLine)) {
-        pushViolation(violations, {
-          code: 'MODEL_FIELD_JSDOC_NO_FULL_NAME',
-          severity: 'warning',
-          message: `JSDoc on field \`${field.name}\` in interface \`${iface.name}\` should start with \`<FullName> -- <description>\` (found: \`${field.jsDocFirstLine}\`). Supported separators: \`--\`, \`—\`, \`–\`, \`-\`, \`:\`.`,
+          message: `Field \`${field.name}\` in interface \`${iface.name}\` is missing a JSDoc description. Add a one-line description above the field declaration (and an \`@dbxModelVariable <longName>\` tag for the canonical long name).`,
           file: file.name,
           line: field.line,
           model: iface.name
@@ -95,7 +78,7 @@ function checkFieldJsDocs(file: ExtractedFile, violations: Violation[]): void {
         pushViolation(violations, {
           code: 'MODEL_FIELD_MISSING_VARIABLE_TAG',
           severity: 'warning',
-          message: `Field \`${field.name}\` in interface \`${iface.name}\` is missing its \`@dbxModelVariable <name>\` JSDoc tag. The catalog uses the tag for the field's long name.`,
+          message: `Field \`${field.name}\` in interface \`${iface.name}\` is missing its \`@dbxModelVariable <name>\` JSDoc tag. The catalog uses the tag for the field's long name — the field's unabbreviated camelCase variable name (e.g. \`uid\` → \`userUid\`, \`n\` → \`name\`).`,
           file: file.name,
           line: field.line,
           model: iface.name
