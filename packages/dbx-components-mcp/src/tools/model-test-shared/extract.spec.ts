@@ -111,4 +111,32 @@ describe('extractSpecTreeFromText', () => {
     expect(tree.itCount).toBe(3);
     expect(tree.fixtureCallsCount).toBe(1);
   });
+
+  it('classifies itShouldFail and other itShould* helpers as it-equivalent', () => {
+    const text = `describe('persistence', () => { it('a', () => {}); itShouldFail('rejects bad input', () => {}); itShouldPass('accepts valid input', () => {}); });\n`;
+    const tree = extractSpecTreeFromText({ text, specPath: 'spec.ts' });
+    expect(tree.itCount).toBe(3);
+    const its = findAll(tree.root, (n) => n.kind === 'it');
+    expect(its.map((n) => n.title)).toEqual(['a', 'rejects bad input', 'accepts valid input']);
+    expect(its[0].callee).toBeUndefined();
+    expect(its[1].callee).toBe('itShouldFail');
+    expect(its[2].callee).toBe('itShouldPass');
+  });
+
+  it('treats itShould without a camelCase suffix as a wrapper, not an it', () => {
+    const text = `itShouldnt('not a real helper', () => {});\n`;
+    const tree = extractSpecTreeFromText({ text, specPath: 'spec.ts' });
+    expect(tree.itCount).toBe(0);
+    const wrapper = tree.root.children[0];
+    expect(wrapper.kind).toBe('wrapper');
+    expect(wrapper.callee).toBe('itShouldnt');
+  });
+
+  it('detects local helpers that emit itShould* calls', () => {
+    const text = `function itShouldFail(name, body) { it(name, body); } describe('a', () => { itShouldFail('x', () => {}); });\n`;
+    const tree = extractSpecTreeFromText({ text, specPath: 'spec.ts' });
+    expect(tree.helpers.length).toBe(1);
+    expect(tree.helpers[0].name).toBe('itShouldFail');
+    expect(tree.helpers[0].emitsIt).toBe(true);
+  });
 });

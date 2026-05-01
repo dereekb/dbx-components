@@ -74,8 +74,8 @@ function appendHeader(lines: string[], tree: SpecFileTree, view: SpecTreeView, f
   lines.push(`Detected workspace prefix: \`${tree.prefix ?? '(none)'}\` (source: ${tree.prefixSource})`);
   lines.push(`Counts: ${tree.describeCount} describes, ${tree.itCount} its, ${tree.fixtureCallsCount} fixture calls, ${tree.helpers.length} helper-describes`);
   if (view !== 'helpers' && view !== 'its' && (filters.filterByModel || filters.filterByDescribePath)) {
-      lines.push(`Active filters: ${[filters.filterByModel ? `model=\`${filters.filterByModel}\`` : '', filters.filterByDescribePath ? `describePath=\`${filters.filterByDescribePath}\`` : ''].filter(Boolean).join(', ')}`);
-    }
+    lines.push(`Active filters: ${[filters.filterByModel ? `model=\`${filters.filterByModel}\`` : '', filters.filterByDescribePath ? `describePath=\`${filters.filterByDescribePath}\`` : ''].filter(Boolean).join(', ')}`);
+  }
 }
 
 function appendHelpersSection(lines: string[], helpers: readonly HelperDescribe[]): void {
@@ -121,7 +121,8 @@ function appendItIndex(lines: string[], tree: SpecFileTree): void {
   for (const { describePath, node } of its) {
     const path = describePath.length > 0 ? `${describePath.join(' > ')} > ` : '';
     const title = node.title !== undefined ? (node.titleIsTemplate ? `\`${node.title}\` _(template)_` : `\`${node.title}\``) : '_(no title)_';
-    lines.push(`- ${path}${title} [L${node.line}]`);
+    const callee = node.callee !== undefined ? ` _(via \`${node.callee}\`)_` : '';
+    lines.push(`- ${path}${title}${callee} [L${node.line}]`);
   }
 }
 
@@ -141,9 +142,9 @@ function hitLabel(hit: SpecSearchHit): string {
     case 'fixture':
       return `**fixture** \`${hit.callee ?? '?'}\` → \`${hit.model ?? '?'}\``;
     case 'describe':
-      return `**describe** \`${hit.title ?? '?'}\``;
+      return `**${hit.callee ?? 'describe'}** \`${hit.title ?? '?'}\``;
     case 'it':
-      return `**it** \`${hit.title ?? '?'}\``;
+      return `**${hit.callee ?? 'it'}** \`${hit.title ?? '?'}\``;
     case 'helperCall':
       return `**helperCall** \`${hit.callee ?? '?'}\``;
     case 'wrapper':
@@ -166,9 +167,9 @@ function appendNode(lines: string[], node: SpecNode, depth: number): void {
 function nodeLabel(node: SpecNode): string {
   switch (node.kind) {
     case 'describe':
-      return `**describe** ${node.title === undefined ? '_(no title)_' : node.titleIsTemplate ? `\`${node.title}\` _(template)_` : `\`${node.title}\``}`;
+      return `**${node.callee ?? 'describe'}** ${node.title === undefined ? '_(no title)_' : node.titleIsTemplate ? `\`${node.title}\` _(template)_` : `\`${node.title}\``}`;
     case 'it':
-      return `**it** ${node.title === undefined ? '_(no title)_' : node.titleIsTemplate ? `\`${node.title}\` _(template)_` : `\`${node.title}\``}`;
+      return `**${node.callee ?? 'it'}** ${node.title === undefined ? '_(no title)_' : node.titleIsTemplate ? `\`${node.title}\` _(template)_` : `\`${node.title}\``}`;
     case 'hook':
       return `**${node.title ?? 'hook'}**`;
     case 'fixture': {
