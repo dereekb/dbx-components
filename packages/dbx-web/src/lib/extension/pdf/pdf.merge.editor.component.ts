@@ -1,9 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, input, output, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { AsyncPipe } from '@angular/common';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, input, output } from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
-import { BehaviorSubject, finalize, type Observable } from 'rxjs';
+import { first } from 'rxjs';
 import { type Maybe } from '@dereekb/util';
+import { type DbxButtonDisplayStylePair } from '../../button/button';
 import { DbxButtonComponent } from '../../button/button.component';
 import { DbxFileUploadComponent } from '../../interaction/upload/upload.component';
 import { type DbxFileUploadFilesChangedEvent } from '../../interaction/upload/abstract.upload.component';
@@ -16,14 +16,19 @@ import { openPdfPreviewDialog } from './pdf.preview.dialog.component';
 
 const DEFAULT_MERGED_FILE_NAME = 'merged.pdf';
 
+const DEFAULT_DOWNLOAD_BUTTON: DbxButtonDisplayStylePair = {
+  display: { icon: 'download', text: 'Download' },
+  style: { type: 'stroked' }
+};
+
 /**
- * Editor that lets the user collect PDFs and images, reorder them via drag-and-drop, and produce a single merged PDF. Reads from an ancestor-provided {@link DbxPdfMergeEditorStore} and emits the merged blob via the `merged` output. Optionally embeds a {@link DbxDownloadBlobButtonComponent} to offer a download affordance for the most recent merge.
+ * Editor that lets the user collect PDFs and images, reorder them via drag-and-drop, and produce a single merged PDF for preview/download. Reads from an ancestor-provided {@link DbxPdfMergeEditorStore}. Optionally embeds a {@link DbxDownloadBlobButtonComponent} to offer a download affordance for the most recent merge.
  *
- * The parent view (or another directive) is responsible for providing {@link DbxPdfMergeEditorStore} so the editor and its peer components ({@link DbxPdfMergeListComponent}, {@link DbxPdfMergeEntryComponent}) share the same instance.
+ * The parent view (or another directive) is responsible for providing {@link DbxPdfMergeEditorStore} so the editor and its peer components ({@link DbxPdfMergeListComponent}, {@link DbxPdfMergeEntryComponent}) share the same instance. Subscribe to the store's {@link DbxPdfMergeEditorStore.mergeOutput$} directly for downstream merge consumers.
  *
  * @example
  * ```html
- * <dbx-pdf-merge-editor (merged)="onMerged($event)" [showDownloadButton]="true" fileName="receipts.pdf"></dbx-pdf-merge-editor>
+ * <dbx-pdf-merge-editor [showDownloadButton]="true" fileName="receipts.pdf" [downloadButton]="{ display: { icon: 'cloud_download', text: 'Save' }, style: { type: 'flat', color: 'primary' } }"></dbx-pdf-merge-editor>
  * ```
  */
 @Component({
@@ -32,7 +37,7 @@ const DEFAULT_MERGED_FILE_NAME = 'merged.pdf';
   host: {
     class: 'dbx-pdf-merge-editor'
   },
-  imports: [AsyncPipe, DbxButtonComponent, DbxFileUploadComponent, DbxDownloadBlobButtonComponent, DbxPdfMergeListComponent],
+  imports: [DbxButtonComponent, DbxFileUploadComponent, DbxDownloadBlobButtonComponent, DbxPdfMergeListComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
@@ -46,25 +51,22 @@ export class DbxPdfMergeEditorComponent {
   readonly fileName = input<string>(DEFAULT_MERGED_FILE_NAME);
   readonly showDownloadButton = input<boolean>(false);
   readonly showPreviewButton = input<boolean>(true);
+  readonly downloadButton = input<Maybe<DbxButtonDisplayStylePair>>(DEFAULT_DOWNLOAD_BUTTON);
 
-  readonly merged = output<Blob>();
   readonly entriesChanged = output<readonly PdfMergeEntry[]>();
 
-  private readonly _lastBlobSignal = signal<Maybe<Blob>>(undefined);
-  private readonly _merging$ = new BehaviorSubject<boolean>(false);
+  readonly hasReadyEntriesSignal = toSignal(this.store.hasReadyEntries$, { initialValue: false });
+  readonly entryCountSignal = toSignal(this.store.entryCount$, { initialValue: 0 });
 
-  readonly hasReadyEntries$ = this.store.hasReadyEntries$;
-  readonly entryCount$ = this.store.entryCount$;
-  readonly mergeError$ = this.store.mergeError$;
-  readonly merging$: Observable<boolean> = this._merging$.asObservable();
-
-  readonly lastBlobSignal = this._lastBlobSignal.asReadonly();
+  /**
+   * Latest merged blob (or `undefined` while validation/merge is in flight or no entries are ready). Sourced from {@link DbxPdfMergeEditorStore.currentMergeOutput$} so the download button always reflects the current merge without needing the user to click Preview first.
+   */
+  readonly mergeBlobSignal = toSignal(this.store.currentMergeOutput$, { initialValue: undefined });
 
   readonly downloadConfigSignal = computed<DbxDownloadBlobButtonConfig>(() => ({
-    blob: this._lastBlobSignal(),
+    blob: this.mergeBlobSignal(),
     fileName: this.fileName(),
-    buttonDisplay: { icon: 'download', text: 'Download' },
-    buttonStyle: { type: 'stroked' }
+    buttonStylePair: this.downloadButton() ?? DEFAULT_DOWNLOAD_BUTTON
   }));
 
   constructor() {
@@ -78,32 +80,17 @@ export class DbxPdfMergeEditorComponent {
   }
 
   onClear(): void {
-    this._lastBlobSignal.set(undefined);
     this.store.clearAll();
   }
 
   onPreview(): void {
-    const blob = this._lastBlobSignal();
+    const blob = this.mergeBlobSignal();
 
     if (blob != null) {
       this.openPreviewDialog(blob);
-    } else if (!this._merging$.value) {
-      this._merging$.next(true);
-      this.store.mergeOutput$
-        .pipe(
-          finalize(() => this._merging$.next(false)),
-          takeUntilDestroyed(this._destroyRef)
-        )
-        .subscribe((merged) => {
-          this.handleMergedBlob(merged);
-          this.openPreviewDialog(merged);
-        });
+    } else {
+      this.store.mergeOutput$.pipe(first(), takeUntilDestroyed(this._destroyRef)).subscribe((merged) => this.openPreviewDialog(merged));
     }
-  }
-
-  private handleMergedBlob(blob: Blob): void {
-    this._lastBlobSignal.set(blob);
-    this.merged.emit(blob);
   }
 
   private openPreviewDialog(blob: Blob): void {

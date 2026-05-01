@@ -49,7 +49,9 @@ describe('buildPdfMergeEntry()', () => {
 });
 
 describe('validatePdfMergeEntry()', () => {
-  function pdfEntry(file: File): PdfMergeEntry {
+  type ValidatableEntry = Omit<PdfMergeEntry, 'validation'>;
+
+  function pdfEntry(file: File): ValidatableEntry {
     return {
       id: 'id',
       file,
@@ -61,7 +63,7 @@ describe('validatePdfMergeEntry()', () => {
     };
   }
 
-  function imageEntry(file: File): PdfMergeEntry {
+  function imageEntry(file: File): ValidatableEntry {
     return {
       id: 'id',
       file,
@@ -81,13 +83,13 @@ describe('validatePdfMergeEntry()', () => {
   it('marks a corrupt PDF (no header) as error', async () => {
     const result = await validatePdfMergeEntry(pdfEntry(makeFile('corrupt.pdf', 'application/pdf', 'not a pdf')));
     expect(result.ok).toBe(false);
-    expect(result.error).toContain('valid PDF');
+    expect(result.errorMessage).toContain('valid PDF');
   });
 
   it('marks an encrypted PDF as error', async () => {
     const result = await validatePdfMergeEntry(pdfEntry(makePdfFile('locked.pdf', '/Encrypt 1 0 R')));
     expect(result.ok).toBe(false);
-    expect(result.error).toContain('Password-protected');
+    expect(result.errorMessage).toContain('Password-protected');
   });
 
   it('marks an empty image as error', async () => {

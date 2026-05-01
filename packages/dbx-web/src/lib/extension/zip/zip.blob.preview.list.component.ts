@@ -113,12 +113,14 @@ export class DbxZipPreviewEntryListViewItemComponent extends AbstractDbxValueLis
     return {
       loadBlob: this.itemValue.value.getBlob,
       fileName: this.itemValue.value.slashPathDetails.fileName,
-      buttonDisplay: {
-        icon: 'download',
-        text: 'Download'
-      },
-      buttonStyle: {
-        type: 'stroked'
+      buttonStylePair: {
+        display: {
+          icon: 'download',
+          text: 'Download'
+        },
+        style: {
+          type: 'stroked'
+        }
       }
     };
   }

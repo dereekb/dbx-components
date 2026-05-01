@@ -72,12 +72,14 @@ export class DbxZipBlobPreviewComponent {
       result = {
         blob,
         fileName: fileName ?? 'download.zip',
-        buttonDisplay: {
-          icon: 'download_for_offline',
-          text: 'Download Zip'
-        },
-        buttonStyle: {
-          type: 'stroked'
+        buttonStylePair: {
+          display: {
+            icon: 'download_for_offline',
+            text: 'Download Zip'
+          },
+          style: {
+            type: 'stroked'
+          }
         }
       };
     }

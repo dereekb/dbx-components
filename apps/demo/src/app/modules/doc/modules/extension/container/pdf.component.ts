@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { type Maybe } from '@dereekb/util';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { DbxContentContainerDirective, DbxContentLayoutModule, DbxPdfMergeEditorComponent, DbxPdfMergeEditorStore } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
+import { distinctUntilChanged, map } from 'rxjs';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
   templateUrl: './pdf.component.html',
@@ -12,9 +13,11 @@ import { DocFeatureExampleComponent } from '../../shared/component/feature.examp
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocExtensionPdfComponent {
-  readonly lastBlobSizeSignal = signal<Maybe<number>>(undefined);
+  readonly store = inject(DbxPdfMergeEditorStore);
 
-  onMerged(blob: Blob): void {
-    this.lastBlobSizeSignal.set(blob.size);
-  }
+  readonly mergedBlobSize$ = this.store.mergeOutput$.pipe(
+    map((blob) => blob.size),
+    distinctUntilChanged()
+  );
+  readonly lastBlobSizeSignal = toSignal(this.mergedBlobSize$, { initialValue: undefined });
 }

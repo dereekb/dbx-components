@@ -1,21 +1,15 @@
 <div class="dbx-pdf-merge-editor-upload">
   <dbx-file-upload [accept]="accept()" [multiple]="multiple()" (filesChanged)="onFiles($event)" [hint]="'Drop PDFs or images here, or click to browse'" [text]="'Add files'" icon="upload_file"></dbx-file-upload>
 </div>
-
 <dbx-pdf-merge-list></dbx-pdf-merge-list>
-
-@if (mergeError$ | async; as mergeError) {
-  <div class="dbx-pdf-merge-editor-error dbx-warn">{{ mergeError }}</div>
-}
-
 <div class="dbx-pdf-merge-editor-actions">
-  <span class="dbx-pdf-merge-editor-count dbx-hint dbx-small">{{ entryCount$ | async }} file(s)</span>
+  <span class="dbx-pdf-merge-editor-count dbx-hint dbx-small">{{ entryCountSignal() }} file(s)</span>
   <span class="dbx-pdf-merge-editor-spacer"></span>
-  <dbx-button text="Clear" icon="delete" [disabled]="(entryCount$ | async) === 0" (buttonClick)="onClear()"></dbx-button>
+  <dbx-button text="Clear" icon="delete" [disabled]="entryCountSignal() === 0" (buttonClick)="onClear()"></dbx-button>
   @if (showPreviewButton()) {
-    <dbx-button text="Preview" icon="picture_as_pdf" [disabled]="(hasReadyEntries$ | async) === false" [working]="merging$ | async" (buttonClick)="onPreview()"></dbx-button>
+    <dbx-button text="Preview" icon="picture_as_pdf" [disabled]="!hasReadyEntriesSignal()" (buttonClick)="onPreview()"></dbx-button>
   }
-  @if (showDownloadButton()) {
+  @if (showDownloadButton() && hasReadyEntriesSignal()) {
     <dbx-download-blob-button [config]="downloadConfigSignal()"></dbx-download-blob-button>
   }
 </div>

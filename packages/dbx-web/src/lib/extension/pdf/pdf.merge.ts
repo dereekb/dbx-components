@@ -1,4 +1,4 @@
-import { type Maybe } from '@dereekb/util';
+import { JPEG_MIME_TYPE, PDF_MIME_TYPE, PNG_MIME_TYPE, type FileSize, type Maybe, type MimeTypeWithoutParameters } from '@dereekb/util';
 
 /**
  * Identifies which kind of source file a {@link PdfMergeEntry} represents.
@@ -18,19 +18,27 @@ export type PdfMergeEntryKind = 'pdf' | 'image';
 export type PdfMergeEntryStatus = 'validating' | 'ready' | 'error';
 
 /**
+ * Validation result for a single {@link PdfMergeEntry}.
+ */
+export interface PdfMergeEntryValidationResult {
+  readonly ok: boolean;
+  readonly errorMessage?: Maybe<string>;
+}
+
+/**
  * MIME types accepted by the PDF merge editor by default: PDF documents and PNG/JPEG images.
  */
-export const PDF_MERGE_DEFAULT_ACCEPT: readonly string[] = ['application/pdf', 'image/png', 'image/jpeg'];
+export const PDF_MERGE_DEFAULT_ACCEPT: readonly MimeTypeWithoutParameters[] = [PDF_MIME_TYPE, PNG_MIME_TYPE, JPEG_MIME_TYPE];
 
 /**
  * MIME type emitted by the merged result blob.
  */
-export const PDF_MERGE_RESULT_MIME_TYPE = 'application/pdf';
+export const PDF_MERGE_RESULT_MIME_TYPE: MimeTypeWithoutParameters = PDF_MIME_TYPE;
 
 /**
  * A single source file that has been added to the PDF merge editor.
  */
-export interface PdfMergeEntry {
+export interface PdfMergeEntry extends Pick<PdfMergeEntryValidationResult, 'errorMessage'> {
   /**
    * Stable identifier for this entry, generated when the entry is created.
    */
@@ -46,11 +54,11 @@ export interface PdfMergeEntry {
   /**
    * Resolved MIME type. Falls back to extension-based inference when the file did not provide one.
    */
-  readonly mimeType: string;
+  readonly mimeType: MimeTypeWithoutParameters;
   /**
    * File size in bytes.
    */
-  readonly size: number;
+  readonly size: FileSize;
   /**
    * Whether the entry contributes pages from a PDF or from an image.
    */
@@ -60,9 +68,9 @@ export interface PdfMergeEntry {
    */
   readonly status: PdfMergeEntryStatus;
   /**
-   * Optional human-readable error message when {@link status} is `error`.
+   * The validation promise.
    */
-  readonly errorMessage?: Maybe<string>;
+  readonly validation: Promise<PdfMergeEntryValidationResult>;
 }
 
 /**
@@ -72,11 +80,7 @@ export interface PdfMergeEditorState {
   /**
    * Ordered list of entries the user has added. Order determines page order in the merged output.
    */
-  readonly entries: PdfMergeEntry[];
-  /**
-   * Most recent merge error message, cleared when entries are reset.
-   */
-  readonly mergeError?: Maybe<string>;
+  readonly rawEntries: PdfMergeEntry[];
 }
 
 /**
@@ -85,13 +89,4 @@ export interface PdfMergeEditorState {
 export interface PdfMergeEntryMove {
   readonly previousIndex: number;
   readonly currentIndex: number;
-}
-
-/**
- * Status update payload used by the editor's setEntryStatus updater.
- */
-export interface PdfMergeEntryStatusUpdate {
-  readonly id: string;
-  readonly status: PdfMergeEntryStatus;
-  readonly errorMessage?: Maybe<string>;
 }

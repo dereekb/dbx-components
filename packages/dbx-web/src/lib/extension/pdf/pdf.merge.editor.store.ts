@@ -1,20 +1,21 @@
 import { Injectable } from '@angular/core';
 import { moveItemInArray } from '@angular/cdk/drag-drop';
 import { ComponentStore } from '@ngrx/component-store';
-import { catchError, distinctUntilChanged, EMPTY, first, from, map, mergeMap, type Observable, shareReplay, switchMap, tap } from 'rxjs';
-import { type Maybe } from '@dereekb/util';
-import { type PdfMergeEditorState, type PdfMergeEntry, type PdfMergeEntryMove, type PdfMergeEntryStatusUpdate } from './pdf.merge';
-import { buildPdfMergeEntry, mergePdfMergeEntries, validatePdfMergeEntry } from './pdf.merge.utility';
+import { catchError, combineLatest, defaultIfEmpty, distinctUntilChanged, from, map, type Observable, of, shareReplay, startWith, switchMap } from 'rxjs';
+import { type Building, type Maybe } from '@dereekb/util';
+import { type PdfMergeEditorState, type PdfMergeEntry, type PdfMergeEntryMove, type PdfMergeEntryStatus } from './pdf.merge';
+import { buildPdfMergeEntry, mergePdfMergeEntries } from './pdf.merge.utility';
+import { filterMaybe } from '@dereekb/rxjs';
 
 /**
- * Initial state used by {@link DbxPdfMergeEditorStore} — no entries, no error.
+ * Initial state used by {@link DbxPdfMergeEditorStore} — no entries.
  */
 export const DBX_PDF_MERGE_EDITOR_INITIAL_STATE: PdfMergeEditorState = {
-  entries: []
+  rawEntries: []
 };
 
 /**
- * Component-scoped {@link ComponentStore} that owns the list of files staged for merging in the PDF merge editor. Provides selectors for the entry list and merge readiness, updaters for add/remove/reorder/clear, an effect for validating new entries, and a {@link mergeOutput$} observable that emits each merged PDF blob.
+ * Component-scoped {@link ComponentStore} that owns the list of files staged for merging in the PDF merge editor. Each {@link PdfMergeEntry} carries its own validation promise from the moment it is built; {@link entries$} composes those promises into a live stream — emitting the entry first in `validating` state and then again as each promise resolves to `ready` or `error`. {@link mergeOutput$} emits the merged PDF blob once every entry has finished validating and at least one is `ready`.
  */
 @Injectable()
 export class DbxPdfMergeEditorStore extends ComponentStore<PdfMergeEditorState> {
@@ -23,7 +24,43 @@ export class DbxPdfMergeEditorStore extends ComponentStore<PdfMergeEditorState> 
   }
 
   // MARK: Selectors
-  readonly entries$: Observable<PdfMergeEntry[]> = this.select((state) => state.entries);
+  /**
+   * Live entry list. Each raw entry's {@link PdfMergeEntry.validation} promise is mapped onto its status: while pending, the entry is emitted with status `validating`; once resolved, the entry is mutated to `ready`/`error` and re-emitted. Subsequent emissions of the underlying state pass already-resolved entries through unchanged.
+   */
+  readonly entries$: Observable<PdfMergeEntry[]> = this.select((state) => state.rawEntries).pipe(
+    switchMap((rawEntries) =>
+      combineLatest(
+        rawEntries.map((entry) => {
+          let entry$: Observable<PdfMergeEntry>;
+
+          if (entry.status === 'validating') {
+            entry$ = from(entry.validation).pipe(
+              map((validationResult) => {
+                let status: PdfMergeEntryStatus;
+
+                if (validationResult.ok) {
+                  status = 'ready';
+                } else {
+                  status = 'error';
+                }
+
+                (entry as Building<PdfMergeEntry>).status = status;
+                (entry as Building<PdfMergeEntry>).errorMessage = validationResult.errorMessage;
+
+                return entry;
+              }),
+              startWith(entry)
+            );
+          } else {
+            entry$ = of(entry);
+          }
+
+          return entry$;
+        })
+      ).pipe(defaultIfEmpty([] as PdfMergeEntry[]))
+    ),
+    shareReplay(1)
+  );
 
   readonly entryCount$: Observable<number> = this.entries$.pipe(
     map((entries) => entries.length),
@@ -37,72 +74,56 @@ export class DbxPdfMergeEditorStore extends ComponentStore<PdfMergeEditorState> 
     shareReplay(1)
   );
 
-  readonly mergeError$: Observable<Maybe<string>> = this.select((state) => state.mergeError);
+  /**
+   * Emits `true` while any entry's validation promise has not yet resolved (i.e. one or more entries are still in `validating` status).
+   */
+  readonly isValidating$: Observable<boolean> = this.entries$.pipe(
+    map((entries) => entries.some((entry) => entry.status === 'validating')),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  /**
+   * Emits the merged PDF blob whenever every entry has finished validating (see {@link isValidating$}) and at least one is `ready`. Emits `undefined` while validation is in flight, when the list is empty, or when the most recent merge failed. Multicast via {@link shareReplay} so multiple subscribers share a single merge.
+   */
+  readonly currentMergeOutput$: Observable<Maybe<Blob>> = combineLatest([this.entries$, this.isValidating$]).pipe(
+    switchMap(([entries, isValidating]) => {
+      const hasReady = entries.some((entry) => entry.status === 'ready');
+      let next$: Observable<Maybe<Blob>>;
+
+      if (isValidating || !hasReady) {
+        next$ = of(undefined);
+      } else {
+        next$ = from(mergePdfMergeEntries(entries)).pipe(catchError(() => of(undefined)));
+      }
+
+      return next$;
+    }),
+    shareReplay(1)
+  );
+
+  readonly mergeOutput$: Observable<Blob> = this.currentMergeOutput$.pipe(filterMaybe());
 
   // MARK: Updaters
-  readonly addEntries = this.updater((state, added: PdfMergeEntry[]) => ({ ...state, entries: [...state.entries, ...added] }));
+  /**
+   * Builds {@link PdfMergeEntry} objects from the supplied files (skipping unsupported types) and appends them to state. Each entry's validation promise starts when the entry is built; {@link entries$} reflects each result as it resolves.
+   */
+  readonly addFiles = this.updater((state, files: readonly File[]) => {
+    const newEntries = files.map((file) => buildPdfMergeEntry(file)).filter((entry): entry is PdfMergeEntry => entry != null);
+    return newEntries.length > 0 ? { ...state, rawEntries: [...state.rawEntries, ...newEntries] } : state;
+  });
 
-  readonly removeEntry = this.updater((state, id: string) => ({ ...state, entries: state.entries.filter((entry) => entry.id !== id) }));
+  readonly removeEntry = this.updater((state, id: string) => ({ ...state, rawEntries: state.rawEntries.filter((entry) => entry.id !== id) }));
 
   readonly moveEntry = this.updater((state, move: PdfMergeEntryMove) => {
     if (move.previousIndex === move.currentIndex) {
       return state;
     }
 
-    const next = [...state.entries];
+    const next = [...state.rawEntries];
     moveItemInArray(next, move.previousIndex, move.currentIndex);
-    return { ...state, entries: next };
+    return { ...state, rawEntries: next };
   });
 
-  readonly setEntryStatus = this.updater((state, update: PdfMergeEntryStatusUpdate) => ({
-    ...state,
-    entries: state.entries.map((entry) => (entry.id === update.id ? { ...entry, status: update.status, errorMessage: update.errorMessage } : entry))
-  }));
-
-  readonly clearAll = this.updater((state) => ({ ...state, entries: [], mergeError: undefined }));
-
-  private readonly setMergeError = this.updater((state, mergeError: Maybe<string>) => ({ ...state, mergeError }));
-
-  // MARK: Effects
-  readonly addFiles = this.effect((files$: Observable<readonly File[]>) =>
-    files$.pipe(
-      tap((files) => {
-        const newEntries = files.map((file) => buildPdfMergeEntry(file)).filter((entry): entry is PdfMergeEntry => entry != null);
-
-        if (newEntries.length > 0) {
-          this.addEntries(newEntries);
-          newEntries.forEach((entry) => this.validateEntry(entry));
-        }
-      })
-    )
-  );
-
-  readonly validateEntry = this.effect((entry$: Observable<PdfMergeEntry>) =>
-    entry$.pipe(
-      mergeMap((entry) =>
-        from(validatePdfMergeEntry(entry)).pipe(
-          tap((result) =>
-            this.setEntryStatus({
-              id: entry.id,
-              status: result.ok ? 'ready' : 'error',
-              errorMessage: result.ok ? undefined : (result.error ?? 'Validation failed.')
-            })
-          )
-        )
-      )
-    )
-  );
-
-  /**
-   * Reads the current entries and emits the resulting PDF blob. Each subscription triggers a new merge; failures are recorded on {@link mergeError$}.
-   */
-  readonly mergeOutput$: Observable<Blob> = this.entries$.pipe(
-    first(),
-    tap(() => this.setMergeError(undefined)),
-    switchMap((entries) => from(mergePdfMergeEntries(entries))),
-    catchError((err: unknown) => {
-      this.setMergeError((err as Error)?.message ?? 'Failed to merge PDFs.');
-      return EMPTY;
-    })
-  );
+  readonly clearAll = this.updater((state) => ({ ...state, rawEntries: [] }));
 }

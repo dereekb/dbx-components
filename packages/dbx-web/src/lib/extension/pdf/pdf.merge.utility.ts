@@ -1,24 +1,8 @@
 import { PDFDocument } from '@cantoo/pdf-lib';
-import { type Maybe, sequentialIncrementingNumberStringModelIdFactory, type ModelIdFactory } from '@dereekb/util';
-import { PDF_MERGE_RESULT_MIME_TYPE, type PdfMergeEntry, type PdfMergeEntryKind } from './pdf.merge';
-
-const PDF_MIME_TYPE = 'application/pdf';
-const PNG_MIME_TYPE = 'image/png';
-const JPEG_MIME_TYPES: readonly string[] = ['image/jpeg', 'image/jpg', 'image/pjpeg'];
-
-const PDF_HEADER = '%PDF-';
-const PDF_EOF_MARKER = '%%EOF';
-const PDF_ENCRYPT_MARKER = '/Encrypt';
+import { JPEG_MIME_TYPE, JPEG_MIME_TYPES, mimeTypeForFileExtension, PDF_ENCRYPT_MARKER, PDF_EOF_MARKER, PDF_HEADER, PDF_MIME_TYPE, PNG_MIME_TYPE, sequentialIncrementingNumberStringModelIdFactory, slashPathDetails, type Building, type MimeTypeWithoutParameters, type ModelIdFactory } from '@dereekb/util';
+import { PDF_MERGE_RESULT_MIME_TYPE, type PdfMergeEntry, type PdfMergeEntryKind, type PdfMergeEntryValidationResult } from './pdf.merge';
 
 const TEXT_DECODER = new TextDecoder('latin1');
-
-/**
- * Validation result for a single {@link PdfMergeEntry}.
- */
-export interface PdfMergeEntryValidationResult {
-  readonly ok: boolean;
-  readonly error?: Maybe<string>;
-}
 
 /**
  * Returns the {@link PdfMergeEntryKind} for a file based on its MIME type, with a small fallback to file-extension matching when the browser provided no MIME type.
@@ -49,17 +33,14 @@ export function classifyPdfMergeFile(file: File): PdfMergeEntryKind | null {
  * @param kind - Classification used as the basis for fallback resolution.
  * @returns The MIME type string the merge editor should use for this file.
  */
-function resolvePdfMergeMimeType(file: File, kind: PdfMergeEntryKind): string {
-  let mimeType: string;
+function resolvePdfMergeMimeType(file: File, kind: PdfMergeEntryKind): MimeTypeWithoutParameters {
+  let mimeType: MimeTypeWithoutParameters;
 
   if (file.type) {
     mimeType = file.type;
-  } else if (kind === 'pdf') {
-    mimeType = PDF_MIME_TYPE;
-  } else if (file.name.toLowerCase().endsWith('.png')) {
-    mimeType = PNG_MIME_TYPE;
   } else {
-    mimeType = 'image/jpeg';
+    const { typedFileExtension } = slashPathDetails(file.name.toLowerCase());
+    mimeType = mimeTypeForFileExtension(typedFileExtension) ?? (kind === 'pdf' ? PDF_MIME_TYPE : JPEG_MIME_TYPE);
   }
 
   return mimeType;
@@ -84,15 +65,18 @@ export function buildPdfMergeEntry(file: File, idFactory: ModelIdFactory = DEFAU
   if (kind == null) {
     entry = null;
   } else {
-    entry = {
+    const nextEntry = {
       id: idFactory(),
       file,
       name: file.name,
       mimeType: resolvePdfMergeMimeType(file, kind),
       size: file.size,
       kind,
-      status: 'validating'
+      status: 'validating' as const
     };
+
+    (nextEntry as Building<PdfMergeEntry>).validation = validatePdfMergeEntry(nextEntry);
+    entry = nextEntry as PdfMergeEntry;
   }
 
   return entry;
@@ -104,12 +88,12 @@ export function buildPdfMergeEntry(file: File, idFactory: ModelIdFactory = DEFAU
  * @param entry - Entry to validate.
  * @returns Result indicating whether the entry can be merged plus an error message when validation fails.
  */
-export async function validatePdfMergeEntry(entry: PdfMergeEntry): Promise<PdfMergeEntryValidationResult> {
+export async function validatePdfMergeEntry(entry: Omit<PdfMergeEntry, 'validation'>): Promise<PdfMergeEntryValidationResult> {
   let result: PdfMergeEntryValidationResult;
 
   if (entry.kind === 'image') {
     if (entry.file.size <= 0) {
-      result = { ok: false, error: 'Image file is empty.' };
+      result = { ok: false, errorMessage: 'Image file is empty.' };
     } else {
       result = { ok: true };
     }
@@ -119,14 +103,14 @@ export async function validatePdfMergeEntry(entry: PdfMergeEntry): Promise<PdfMe
       const text = TEXT_DECODER.decode(buffer);
 
       if (!text.startsWith(PDF_HEADER) || !text.includes(PDF_EOF_MARKER)) {
-        result = { ok: false, error: 'File does not appear to be a valid PDF.' };
+        result = { ok: false, errorMessage: 'File does not appear to be a valid PDF.' };
       } else if (text.includes(PDF_ENCRYPT_MARKER)) {
-        result = { ok: false, error: 'Password-protected PDFs cannot be merged.' };
+        result = { ok: false, errorMessage: 'Password-protected PDFs cannot be merged.' };
       } else {
         result = { ok: true };
       }
     } catch (e) {
-      result = { ok: false, error: (e as Error)?.message ?? 'Failed to read PDF.' };
+      result = { ok: false, errorMessage: (e as Error)?.message ?? 'Failed to read PDF.' };
     }
   }
 
