@@ -39,7 +39,7 @@ describe('searchSpecTree', () => {
     const tree = extractSpecTreeFromText({ text: SPEC, specPath: 'spec.ts' });
     const result = searchSpecTree(tree, { mode: 'chain', value: 'Country > CountryState' });
     expect(result.hits.length).toBeGreaterThan(0);
-    const last = result.hits[result.hits.length - 1];
+    const last = result.hits.at(-1)!;
     expect(last.fixtureChain[0]).toBe('Country');
   });
 

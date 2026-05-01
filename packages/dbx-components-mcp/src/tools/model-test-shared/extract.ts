@@ -248,7 +248,7 @@ function trimToCamelBoundary(s: string): string {
 }
 
 function dedupedSorted(names: readonly string[]): readonly string[] {
-  return [...new Set(names)].sort();
+  return [...new Set(names)].sort((a, b) => a.localeCompare(b));
 }
 
 interface WalkContext {

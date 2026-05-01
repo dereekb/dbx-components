@@ -8,7 +8,7 @@
 
 import { DOWNSTREAM_CLUSTERS, type DownstreamCluster } from '../../scan/discover-downstream-packages.js';
 import type { InitPlan } from './init.js';
-import type { RefreshOutcome, RefreshResult } from './refresh.js';
+import type { RefreshResult } from './refresh.js';
 import type { PackageSnapshot, WorkspaceSnapshot } from './snapshot.js';
 
 /**
@@ -30,18 +30,11 @@ const CLUSTER_LABEL: Record<DownstreamCluster, string> = {
  * @returns markdown text consumed by the tool result
  */
 export function formatStatus(snapshot: WorkspaceSnapshot): string {
-  const lines: string[] = [];
-  lines.push(`# dbx-mcp config status`);
-  lines.push('');
-  lines.push(`- **Workspace:** \`${snapshot.workspaceRoot}\``);
   const configLabel = snapshot.configPath !== null ? `\`${snapshot.configPath}\`` : '_not present_';
-  lines.push(`- **Config file:** ${configLabel}`);
-  lines.push(`- **Downstream packages:** ${snapshot.packages.length}`);
-  lines.push('');
+  const lines: string[] = [`# dbx-mcp config status`, '', `- **Workspace:** \`${snapshot.workspaceRoot}\``, `- **Config file:** ${configLabel}`, `- **Downstream packages:** ${snapshot.packages.length}`, ''];
 
   if (snapshot.configWarnings.length > 0) {
-    lines.push(`## Config warnings`);
-    lines.push('');
+    lines.push(`## Config warnings`, '');
     for (const w of snapshot.configWarnings) {
       lines.push(`- **${w.kind}** \`${w.path}\` — ${w.error}`);
     }
@@ -54,8 +47,7 @@ export function formatStatus(snapshot: WorkspaceSnapshot): string {
     const anyContent = sources.length + candidatePackages.length;
     if (anyContent === 0) continue;
 
-    lines.push(`## ${CLUSTER_LABEL[cluster]}`);
-    lines.push('');
+    lines.push(`## ${CLUSTER_LABEL[cluster]}`, '');
     if (sources.length > 0) {
       lines.push(`**Registered sources:**`);
       for (const s of sources) {
@@ -73,8 +65,7 @@ export function formatStatus(snapshot: WorkspaceSnapshot): string {
   }
 
   if (snapshot.packages.length > 0) {
-    lines.push(`## Packages`);
-    lines.push('');
+    lines.push(`## Packages`, '');
     for (const ps of snapshot.packages) {
       lines.push(formatPackageBullet(ps));
     }
@@ -82,10 +73,7 @@ export function formatStatus(snapshot: WorkspaceSnapshot): string {
   }
 
   if (hasUnregisteredCandidates(snapshot)) {
-    lines.push(`## Next steps`);
-    lines.push('');
-    lines.push('Run `dbx_mcp_config op="init"` to write conventional defaults, then `op="refresh"` to populate `.tmp/dbx-mcp/`.');
-    lines.push('');
+    lines.push(`## Next steps`, '', 'Run `dbx_mcp_config op="init"` to write conventional defaults, then `op="refresh"` to populate `.tmp/dbx-mcp/`.', '');
   }
 
   return lines.join('\n').trimEnd() + '\n';
@@ -115,29 +103,20 @@ export function formatValidate(snapshot: WorkspaceSnapshot): { readonly text: st
     }
   }
 
-  const lines: string[] = [];
-  lines.push(`# dbx-mcp config validation`);
-  lines.push('');
-  lines.push(`- **Workspace:** \`${snapshot.workspaceRoot}\``);
-  lines.push(`- **Errors:** ${errors.length}`);
-  lines.push(`- **Warnings:** ${warnings.length}`);
-  lines.push('');
+  const lines: string[] = [`# dbx-mcp config validation`, '', `- **Workspace:** \`${snapshot.workspaceRoot}\``, `- **Errors:** ${errors.length}`, `- **Warnings:** ${warnings.length}`, ''];
 
   if (errors.length > 0) {
-    lines.push(`## Errors`);
-    lines.push('');
+    lines.push(`## Errors`, '');
     for (const e of errors) lines.push(`- ${e}`);
     lines.push('');
   }
   if (warnings.length > 0) {
-    lines.push(`## Warnings`);
-    lines.push('');
+    lines.push(`## Warnings`, '');
     for (const w of warnings) lines.push(`- ${w}`);
     lines.push('');
   }
   if (errors.length === 0 && warnings.length === 0) {
-    lines.push(`No issues detected.`);
-    lines.push('');
+    lines.push(`No issues detected.`, '');
   }
 
   return { text: lines.join('\n').trimEnd() + '\n', hasErrors: errors.length > 0 };
@@ -156,25 +135,16 @@ export function formatInit(plan: InitPlan, opts: { readonly dryRun: boolean }): 
   const updated = plan.changes.filter((c) => c.reason === 'updated').length;
   const unchanged = plan.changes.filter((c) => c.reason === 'unchanged').length;
 
-  const lines: string[] = [];
-  lines.push(`# dbx-mcp config init${opts.dryRun ? ' (dry run)' : ''}`);
-  lines.push('');
-  lines.push(`- **Workspace:** \`${plan.workspaceRoot}\``);
-  lines.push(`- **New files:** ${newCount}`);
-  lines.push(`- **Updated:** ${updated}`);
-  lines.push(`- **Unchanged:** ${unchanged}`);
-  lines.push('');
+  const lines: string[] = [`# dbx-mcp config init${opts.dryRun ? ' (dry run)' : ''}`, '', `- **Workspace:** \`${plan.workspaceRoot}\``, `- **New files:** ${newCount}`, `- **Updated:** ${updated}`, `- **Unchanged:** ${unchanged}`, ''];
 
   if (plan.changes.length === 0) {
-    lines.push('No changes needed.');
-    lines.push('');
+    lines.push('No changes needed.', '');
     return lines.join('\n').trimEnd() + '\n';
   }
 
   const writeable = plan.changes.filter((c) => c.reason !== 'unchanged');
   if (writeable.length > 0) {
-    lines.push(opts.dryRun ? `## Files that would be written` : `## Files written`);
-    lines.push('');
+    lines.push(opts.dryRun ? `## Files that would be written` : `## Files written`, '');
     for (const change of writeable) {
       lines.push(`- **${change.reason}** \`${change.relativePath}\``);
     }
@@ -182,10 +152,7 @@ export function formatInit(plan: InitPlan, opts: { readonly dryRun: boolean }): 
   }
 
   if (!opts.dryRun) {
-    lines.push(`## Next steps`);
-    lines.push('');
-    lines.push('Run `dbx_mcp_config op="refresh"` to populate `.tmp/dbx-mcp/` with the generated manifests.');
-    lines.push('');
+    lines.push(`## Next steps`, '', 'Run `dbx_mcp_config op="refresh"` to populate `.tmp/dbx-mcp/` with the generated manifests.', '');
   }
   return lines.join('\n').trimEnd() + '\n';
 }
@@ -197,26 +164,19 @@ export function formatInit(plan: InitPlan, opts: { readonly dryRun: boolean }): 
  * @returns markdown text plus a `hasFailures` flag the tool maps to `isError`
  */
 export function formatRefresh(result: RefreshResult): { readonly text: string; readonly hasFailures: boolean } {
-  const lines: string[] = [];
   const ok = result.outcomes.filter((o) => o.kind === 'ok');
   const fail = result.outcomes.filter((o) => o.kind === 'fail');
   const error = result.outcomes.filter((o) => o.kind === 'error');
 
-  lines.push(`# dbx-mcp config refresh`);
-  lines.push('');
-  lines.push(`- **Manifests refreshed:** ${ok.length}`);
-  lines.push(`- **Failures:** ${fail.length + error.length}`);
-  lines.push('');
+  const lines: string[] = [`# dbx-mcp config refresh`, '', `- **Manifests refreshed:** ${ok.length}`, `- **Failures:** ${fail.length + error.length}`, ''];
 
   if (ok.length > 0) {
-    lines.push(`## Refreshed`);
-    lines.push('');
+    lines.push(`## Refreshed`, '');
     for (const o of ok) lines.push(`- \`${o.packageRelDir}\` · ${CLUSTER_LABEL[o.cluster]}`);
     lines.push('');
   }
   if (fail.length > 0) {
-    lines.push(`## Scan failures`);
-    lines.push('');
+    lines.push(`## Scan failures`, '');
     for (const o of fail) {
       lines.push(`- \`${o.packageRelDir}\` · ${CLUSTER_LABEL[o.cluster]} (exit ${o.exitCode})`);
       for (const line of o.stderr.slice(0, 5)) lines.push(`    ${line}`);
@@ -224,18 +184,15 @@ export function formatRefresh(result: RefreshResult): { readonly text: string; r
     lines.push('');
   }
   if (error.length > 0) {
-    lines.push(`## Runtime errors`);
-    lines.push('');
+    lines.push(`## Runtime errors`, '');
     for (const o of error) {
-      lines.push(`- \`${o.packageRelDir}\` · ${CLUSTER_LABEL[o.cluster]} — ${(o as Extract<RefreshOutcome, { kind: 'error' }>).message}`);
+      lines.push(`- \`${o.packageRelDir}\` · ${CLUSTER_LABEL[o.cluster]} — ${o.message}`);
     }
     lines.push('');
   }
 
   if (result.outcomes.length === 0) {
-    lines.push('Nothing to refresh — no downstream package has a `dbx-mcp.scan.json` with declared clusters.');
-    lines.push('Run `dbx_mcp_config op="init"` first if defaults are missing.');
-    lines.push('');
+    lines.push('Nothing to refresh — no downstream package has a `dbx-mcp.scan.json` with declared clusters.', 'Run `dbx_mcp_config op="init"` first if defaults are missing.', '');
   }
 
   return { text: lines.join('\n').trimEnd() + '\n', hasFailures: fail.length + error.length > 0 };

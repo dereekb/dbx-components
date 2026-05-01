@@ -132,7 +132,7 @@ export async function extractModels(input: ExtractModelsInput): Promise<ExtractM
 async function listTsFiles(rootDir: string, reserved: ReadonlySet<string>): Promise<readonly string[]> {
   const out: string[] = [];
   await walk(rootDir, rootDir, reserved, out);
-  out.sort();
+  out.sort((a, b) => a.localeCompare(b));
   return out;
 }
 

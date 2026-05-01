@@ -7,7 +7,7 @@
 
 import { extractFile } from './extract.js';
 import { runRules } from './rules.js';
-import type { ValidationResult, ValidatorSource, Violation } from './types.js';
+import type { RuleOptions, ValidationResult, ValidatorSource, Violation } from './types.js';
 
 /**
  * Pure validation entry point. Runs the extract + rule pipeline over each
@@ -15,9 +15,10 @@ import type { ValidationResult, ValidatorSource, Violation } from './types.js';
  * supplies real file I/O on top of this.
  *
  * @param sources - the in-memory model files to validate
+ * @param options - optional rule overrides (field-name length limit, ignore list)
  * @returns the aggregated validation outcome with counts and violations
  */
-export function validateFirebaseModelSources(sources: readonly ValidatorSource[]): ValidationResult {
+export function validateFirebaseModelSources(sources: readonly ValidatorSource[], options?: RuleOptions): ValidationResult {
   const violations: Violation[] = [];
   let modelsChecked = 0;
   let errorCount = 0;
@@ -25,7 +26,7 @@ export function validateFirebaseModelSources(sources: readonly ValidatorSource[]
   for (const source of sources) {
     const extracted = extractFile(source);
     modelsChecked += extracted.models.length;
-    const fileViolations = runRules(extracted);
+    const fileViolations = runRules(extracted, options);
     for (const v of fileViolations) {
       violations.push(v);
       if (v.severity === 'error') {
@@ -46,4 +47,4 @@ export function validateFirebaseModelSources(sources: readonly ValidatorSource[]
 }
 
 export { formatResult } from './format.js';
-export type { ValidationResult, ValidatorSource, Violation, ViolationCode, ViolationSeverity } from './types.js';
+export type { RuleOptions, ValidationResult, ValidatorSource, Violation, ViolationCode, ViolationSeverity } from './types.js';

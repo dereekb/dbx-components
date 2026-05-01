@@ -171,7 +171,7 @@ function findEnumInType(tsType: string, enumNames: ReadonlySet<string>): string 
 }
 
 function findEnumInConverter(expr: string, enumNames: ReadonlySet<string>): string | undefined {
-  const m = expr.match(/firestoreEnum<(\w+)>|optionalFirestoreEnum<(\w+)>/);
+  const m = /firestoreEnum<(\w+)>|optionalFirestoreEnum<(\w+)>/.exec(expr);
   let result: string | undefined;
   if (m) {
     const name = m[1] ?? m[2];

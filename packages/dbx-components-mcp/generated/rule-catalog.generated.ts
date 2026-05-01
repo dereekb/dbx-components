@@ -318,11 +318,11 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     code: 'MODEL_FIELD_NAME_TOO_LONG',
     source: 'dbx_model_validate',
     severity: 'warning',
-    title: "A persisted field's name exceeds the workspace's 4-character convention",
-    whatItFlags: "A persisted field's name exceeds the workspace's 4-character convention.",
-    whenItApplies: 'Every persisted field on a model interface (or sub-object interface).',
-    whenItDoesNotApply: 'Fields that compose well-known multi-character abbreviations the project intentionally allows.',
-    canonicalFix: 'Rename the field to a 1–4 character abbreviation (e.g. `name` → `n`, `userId` → `uid`).'
+    title: "A persisted field's name exceeds the workspace's 5-character convention",
+    whatItFlags: "A persisted field's name exceeds the workspace's 5-character convention.",
+    whenItApplies: 'Every persisted field on a model interface (or sub-object interface). The default limit is 5; override via `dbx-mcp.config.json` `modelValidate.maxFieldNameLength`.',
+    whenItDoesNotApply: 'Fields whose name is listed in `dbx-mcp.config.json` `modelValidate.ignoredFieldNames`, or fields that compose well-known multi-character abbreviations the project intentionally allows.',
+    canonicalFix: 'Rename the field to a 1–5 character abbreviation (e.g. `name` → `n`, `userId` → `uid`). To exempt specific names workspace-wide, add them to `modelValidate.ignoredFieldNames` in `dbx-mcp.config.json`.'
   },
   {
     code: 'MODEL_GROUP_INTERFACE_MISSING_TAG',

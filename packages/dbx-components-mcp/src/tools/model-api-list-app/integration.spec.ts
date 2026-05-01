@@ -12,7 +12,7 @@ describe('listAppModelApi (demo-firebase)', () => {
     const report = await listAppModelApi(COMPONENT_ABS, { componentDir: COMPONENT_DIR });
 
     expect(report.entries.length).toBeGreaterThan(0);
-    expect(report.files.map((f) => f.sourceFile).sort()).toEqual(['src/lib/model/guestbook/guestbook.api.ts', 'src/lib/model/profile/profile.api.ts', 'src/lib/model/system/system.api.ts'].sort());
+    expect(report.files.map((f) => f.sourceFile).sort((a, b) => a.localeCompare(b))).toEqual(['src/lib/model/guestbook/guestbook.api.ts', 'src/lib/model/profile/profile.api.ts', 'src/lib/model/system/system.api.ts'].sort((a, b) => a.localeCompare(b)));
 
     const profileFile = report.files.find((f) => f.sourceFile.endsWith('profile/profile.api.ts'));
     expect(profileFile?.groupName).toBe('Profile');

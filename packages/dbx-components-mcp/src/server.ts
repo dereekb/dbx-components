@@ -7,6 +7,7 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { findAndLoadConfig } from './config/load-config.js';
 import { loadActionRegistry, type LoadActionRegistryResult } from './manifest/load-actions-registry.js';
 import { loadFilterRegistry, type LoadFilterRegistryResult } from './manifest/load-filters-registry.js';
 import { loadForgeFieldRegistry, type LoadForgeFieldRegistryResult } from './manifest/load-forge-fields-registry.js';
@@ -23,6 +24,7 @@ import { FIREBASE_MODELS } from './registry/firebase-models.js';
 import type { FixtureModelRegistry } from './tools/model-fixture-shared/index.js';
 import { registerResources } from './resources/index.js';
 import { registerTools } from './tools/index.js';
+import type { RuleOptions } from './tools/model-validate/index.js';
 import { discoverDownstreamPackages, DOWNSTREAM_CLUSTERS, type DownstreamCluster, type DownstreamPackage } from './scan/discover-downstream-packages.js';
 import packageJson from '../package.json' with { type: 'json' };
 
@@ -132,6 +134,13 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
   server.server.registerCapabilities({ tools: {} });
 
   const externalCounts: Partial<Record<DownstreamCluster, number>> = {};
+
+  const cwdForConfig = options.cwd ?? process.cwd();
+  const configResult = await findAndLoadConfig({ cwd: cwdForConfig });
+  for (const warning of configResult.warnings) {
+    process.stderr.write(`[dbx-components-mcp] config-warning: ${warning.kind} ${warning.path}\n`);
+  }
+  const modelValidateRuleOptions = resolveModelValidateRuleOptions(configResult.config);
 
   let registry: SemanticTypeRegistry | undefined = options.semanticTypeRegistry;
   if (registry === undefined) {
@@ -248,9 +257,30 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
   await emitDownstreamHints({ cwd: options.cwd ?? process.cwd(), externalCounts, onDownstreamHints: options.onDownstreamHints });
 
   registerResources(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, uiComponentRegistry: uiRegistry, actionRegistry, filterRegistry });
-  registerTools(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, uiComponentRegistry: uiRegistry, actionRegistry, filterRegistry, fixtureModelRegistry });
+  registerTools(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, uiComponentRegistry: uiRegistry, actionRegistry, filterRegistry, fixtureModelRegistry, modelValidateRuleOptions });
 
   return server;
+}
+
+/**
+ * Resolves the loaded config's `modelValidate` block into a {@link RuleOptions}
+ * suitable for the firebase-model rule pipeline. Returns `undefined` when
+ * no override is present (the validator falls back to its defaults).
+ *
+ * @param config - the parsed `dbx-mcp.config.json`, or `null` when missing
+ * @returns the rule overrides, or `undefined` when none are configured
+ */
+function resolveModelValidateRuleOptions(config: { readonly modelValidate?: { readonly maxFieldNameLength?: number; readonly ignoredFieldNames?: readonly string[] } } | null): RuleOptions | undefined {
+  const block = config?.modelValidate;
+  if (block === undefined) {
+    return undefined;
+  }
+  const ignoredFieldNames = block.ignoredFieldNames === undefined ? undefined : new Set(block.ignoredFieldNames);
+  const result: RuleOptions = {
+    maxFieldNameLength: block.maxFieldNameLength,
+    ignoredFieldNames
+  };
+  return result;
 }
 
 /**

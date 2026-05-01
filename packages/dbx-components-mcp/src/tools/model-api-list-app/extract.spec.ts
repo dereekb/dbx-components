@@ -111,6 +111,6 @@ describe('extractCrudEntries', () => {
     expect(entryDelete?.paramsTypeName).toBe('GuestbookEntryParams');
 
     const entryUpdates = extraction.entries.filter((e) => e.model === 'guestbookEntry' && e.verb === 'update');
-    expect(entryUpdates.map((e) => e.specifier).sort()).toEqual(['insert', 'like']);
+    expect(entryUpdates.map((e) => e.specifier).sort((a, b) => (a ?? '').localeCompare(b ?? ''))).toEqual(['insert', 'like']);
   });
 });

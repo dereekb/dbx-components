@@ -28,12 +28,12 @@ import { type } from 'arktype';
 import { ensurePathInsideCwd } from './validate-input.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 import { attachRemediation, type RemediationHint } from './rule-catalog/index.js';
-import { inspectAppStorageFiles, validateAppStorageFiles, type Violation as StorageFileViolation } from './storagefile-m-validate-app/index.js';
-import { inspectAppNotifications, validateAppNotifications, type Violation as NotificationViolation } from './notification-m-validate-app/index.js';
+import { inspectAppStorageFiles, validateAppStorageFiles } from './storagefile-m-validate-app/index.js';
+import { inspectAppNotifications, validateAppNotifications } from './notification-m-validate-app/index.js';
 import { inspectAppFixtures, validateAppFixtures, type FixtureDiagnostic } from './model-fixture-shared/index.js';
 import { RESERVED_MODEL_FOLDERS } from './model-validate-folder/types.js';
-import { inspectFolder as inspectModelFolder, validateModelFolders, type Violation as ModelFolderViolation } from './model-validate-folder/index.js';
-import { inspectFolder as inspectSystemFolder, validateSystemFolders, type Violation as SystemFolderViolation } from './system-m-validate-folder/index.js';
+import { inspectFolder as inspectModelFolder, validateModelFolders } from './model-validate-folder/index.js';
+import { inspectFolder as inspectSystemFolder, validateSystemFolders } from './system-m-validate-folder/index.js';
 
 const Cluster = "'storagefile_m' | 'notification_m' | 'model_folder' | 'system_m' | 'fixture'";
 
@@ -156,7 +156,7 @@ async function runStorageFileM(ctx: ComponentApiCtx): Promise<void> {
     const inspection = await inspectAppStorageFiles(ctx.componentAbs, ctx.apiAbs);
     const result = validateAppStorageFiles(inspection, { componentDir: ctx.componentRel, apiDir: ctx.apiRel });
     for (const v of result.violations) {
-      ctx.findings.push(toFinding({ cluster: 'storagefile_m', code: v.code, severity: v.severity, message: v.message, file: (v as StorageFileViolation).file, line: undefined }));
+      ctx.findings.push(toFinding({ cluster: 'storagefile_m', code: v.code, severity: v.severity, message: v.message, file: v.file, line: undefined }));
     }
   } catch (err) {
     ctx.clusterErrors.push({ cluster: 'storagefile_m', message: err instanceof Error ? err.message : String(err) });
@@ -172,7 +172,7 @@ async function runNotificationM(ctx: ComponentApiCtx): Promise<void> {
     const inspection = await inspectAppNotifications(ctx.componentAbs, ctx.apiAbs);
     const result = validateAppNotifications(inspection, { componentDir: ctx.componentRel, apiDir: ctx.apiRel });
     for (const v of result.violations) {
-      ctx.findings.push(toFinding({ cluster: 'notification_m', code: v.code, severity: v.severity, message: v.message, file: (v as NotificationViolation).file, line: undefined }));
+      ctx.findings.push(toFinding({ cluster: 'notification_m', code: v.code, severity: v.severity, message: v.message, file: v.file, line: undefined }));
     }
   } catch (err) {
     ctx.clusterErrors.push({ cluster: 'notification_m', message: err instanceof Error ? err.message : String(err) });
@@ -242,7 +242,7 @@ async function runModelFolders(ctx: ComponentOnlyCtx): Promise<void> {
     }
     const result = validateModelFolders(inspections);
     for (const v of result.violations) {
-      ctx.findings.push(toFinding({ cluster: 'model_folder', code: v.code, severity: v.severity, message: v.message, file: (v as ModelFolderViolation).file, line: undefined }));
+      ctx.findings.push(toFinding({ cluster: 'model_folder', code: v.code, severity: v.severity, message: v.message, file: v.file, line: undefined }));
     }
   } catch (err) {
     ctx.clusterErrors.push({ cluster: 'model_folder', message: err instanceof Error ? err.message : String(err) });
@@ -272,7 +272,7 @@ async function runSystemFolder(ctx: ComponentOnlyCtx): Promise<void> {
     const inspection = await inspectSystemFolder(systemPath);
     const result = validateSystemFolders([inspection]);
     for (const v of result.violations) {
-      ctx.findings.push(toFinding({ cluster: 'system_m', code: v.code, severity: v.severity, message: v.message, file: (v as SystemFolderViolation).file, line: undefined }));
+      ctx.findings.push(toFinding({ cluster: 'system_m', code: v.code, severity: v.severity, message: v.message, file: v.file, line: undefined }));
     }
   } catch (err) {
     ctx.clusterErrors.push({ cluster: 'system_m', message: err instanceof Error ? err.message : String(err) });

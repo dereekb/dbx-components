@@ -5,34 +5,20 @@
 import type { ReconciledEntry, ValidateReport } from './types.js';
 
 export function formatValidationAsMarkdown(report: ValidateReport): string {
-  const lines: string[] = [];
-  lines.push(`# Model API validation — ${report.apiDir}`);
-  lines.push('');
-  lines.push(`Component: \`${report.componentDir}\``);
-  lines.push(`Handler map: \`${report.handlerMapPath}\``);
+  const lines: string[] = [`# Model API validation — ${report.apiDir}`, '', `Component: \`${report.componentDir}\``, `Handler map: \`${report.handlerMapPath}\``];
   if (report.modelFilter) {
     lines.push(`Filter: \`${report.modelFilter}\``);
   }
-  lines.push('');
-  lines.push(formatHandlerMapStatus(report));
-  lines.push('');
-  lines.push(`Errors: ${report.errorCount} · Warnings: ${report.warningCount}`);
-  lines.push('');
+  lines.push('', formatHandlerMapStatus(report), '', `Errors: ${report.errorCount} · Warnings: ${report.warningCount}`, '');
 
   if (report.summaries.length === 0) {
-    lines.push('_No models reconciled._');
-    lines.push('');
+    lines.push('_No models reconciled._', '');
     return lines.join('\n');
   }
 
   for (const summary of report.summaries) {
     const modelEntries = report.entries.filter((e) => e.model === summary.model);
-    lines.push(`## \`${summary.model}\``);
-    lines.push('');
-    lines.push(`Declared: ${summary.declaredCount} · Handled: ${summary.handledCount} · Matched: ${summary.matchedCount} · Errors: ${summary.errorCount}`);
-    lines.push('');
-    lines.push('| Verb | Specifier | Declared | Handler | Status |');
-    lines.push('| --- | --- | --- | --- | --- |');
+    lines.push(`## \`${summary.model}\``, '', `Declared: ${summary.declaredCount} · Handled: ${summary.handledCount} · Matched: ${summary.matchedCount} · Errors: ${summary.errorCount}`, '', '| Verb | Specifier | Declared | Handler | Status |', '| --- | --- | --- | --- | --- |');
     for (const entry of modelEntries) {
       lines.push(formatEntryRow(entry));
     }
@@ -40,8 +26,7 @@ export function formatValidationAsMarkdown(report: ValidateReport): string {
   }
 
   if (report.issues.length > 0) {
-    lines.push('## Issues');
-    lines.push('');
+    lines.push('## Issues', '');
     for (const issue of report.issues) {
       lines.push(`- **${issue.code}** \`${issue.model}${issue.verb ? `.${issue.verb}` : ''}${issue.specifier ? `.${issue.specifier}` : ''}\` — ${issue.message}`);
     }

@@ -36,10 +36,6 @@ export function reconcile(input: ReconcileInput): ReconcileResult {
   const declaredFiltered = wanted ? input.declared.filter((d) => normalize(d.model) === wanted) : input.declared;
   const handlersFiltered = wanted ? input.handlers.filter((h) => normalize(h.model) === wanted) : input.handlers;
 
-  const declaredMap = new Map<string, DeclaredEntry>();
-  for (const d of declaredFiltered) {
-    declaredMap.set(keyOf(d), d);
-  }
   const handlerMap = new Map<string, HandlerEntry>();
   for (const h of handlersFiltered) {
     handlerMap.set(keyOf(h), h);

@@ -72,14 +72,13 @@ function matchNode(node: SpecNode, query: SpecSearchQuery, describeStack: readon
       matched = node.kind === 'fixture' && chainContainsSequence([...fixtureStack, node.model ?? ''], parseChainQuery(query.value));
       break;
     case 'describe':
-      matched = node.kind === 'describe' && node.title !== undefined && node.title.toLowerCase().includes(query.value.toLowerCase());
+      matched = node.kind === 'describe' && node.title?.toLowerCase().includes(query.value.toLowerCase()) === true;
       break;
     case 'it':
-      matched = node.kind === 'it' && node.title !== undefined && node.title.toLowerCase().includes(query.value.toLowerCase());
+      matched = node.kind === 'it' && node.title?.toLowerCase().includes(query.value.toLowerCase()) === true;
       break;
     default: {
-      const exhaustive: never = query;
-      void exhaustive;
+      query satisfies never;
     }
   }
   if (!matched) return;

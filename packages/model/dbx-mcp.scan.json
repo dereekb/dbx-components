@@ -1,8 +1,0 @@
-{
-  "version": 1,
-  "source": "@dereekb/model",
-  "topicNamespace": "dereekb-model",
-  "include": ["src/lib/**/*.ts"],
-  "exclude": ["**/*.spec.ts", "**/*.test.ts"],
-  "out": "../dbx-components-mcp/generated/dereekb-model.semantic-types.mcp.generated.json"
-}

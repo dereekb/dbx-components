@@ -6,17 +6,13 @@
 import type { ApiListEntry, ApiListFileSummary, ApiListReport } from './types.js';
 
 export function formatReportAsMarkdown(report: ApiListReport): string {
-  const lines: string[] = [];
-  lines.push(`# Model API calls — ${report.componentDir}`);
-  lines.push('');
+  const lines: string[] = [`# Model API calls — ${report.componentDir}`, ''];
   if (report.modelFilter !== undefined) {
-    lines.push(`Filter: \`${report.modelFilter}\``);
-    lines.push('');
+    lines.push(`Filter: \`${report.modelFilter}\``, '');
   }
 
   if (report.files.length === 0) {
-    lines.push('_No `<model>.api.ts` files with `callModelFirebaseFunctionMapFactory(...)` were found._');
-    lines.push('');
+    lines.push('_No `<model>.api.ts` files with `callModelFirebaseFunctionMapFactory(...)` were found._', '');
     return lines.join('\n');
   }
 
@@ -25,19 +21,12 @@ export function formatReportAsMarkdown(report: ApiListReport): string {
     if (fileEntries.length === 0 && report.modelFilter !== undefined) {
       continue;
     }
-    lines.push(`## ${fileSummary.groupName ?? '(unknown group)'} — \`${fileSummary.sourceFile}\``);
-    lines.push('');
-    lines.push(`Models: ${fileSummary.modelKeys.length === 0 ? '_(none)_' : fileSummary.modelKeys.map((m) => `\`${m}\``).join(', ')}`);
-    lines.push('');
-    lines.push(formatCounts(fileSummary));
-    lines.push('');
+    lines.push(`## ${fileSummary.groupName ?? '(unknown group)'} — \`${fileSummary.sourceFile}\``, '', `Models: ${fileSummary.modelKeys.length === 0 ? '_(none)_' : fileSummary.modelKeys.map((m) => `\`${m}\``).join(', ')}`, '', formatCounts(fileSummary), '');
     if (fileEntries.length === 0) {
-      lines.push('_(no entries)_');
-      lines.push('');
+      lines.push('_(no entries)_', '');
       continue;
     }
-    lines.push('| Model | Verb | Specifier | Params | Result | Line |');
-    lines.push('| --- | --- | --- | --- | --- | --- |');
+    lines.push('| Model | Verb | Specifier | Params | Result | Line |', '| --- | --- | --- | --- | --- | --- |');
     for (const entry of fileEntries) {
       lines.push(formatEntryRow(entry));
     }

@@ -85,7 +85,7 @@ async function collectActionFiles(root: string): Promise<readonly string[]> {
       }
     }
   }
-  out.sort();
+  out.sort((a, b) => a.localeCompare(b));
   return out;
 }
 
@@ -134,7 +134,7 @@ function collectFactoryFunctions(input: CollectFactoriesInput): void {
   const { sourceFile, sourceFileRel, factoriesByParams } = input;
   for (const fn of sourceFile.getFunctions()) {
     const fnName = fn.getName();
-    if (!fnName || !fnName.endsWith('Factory')) continue;
+    if (!fnName?.endsWith('Factory')) continue;
     const validatorName = findValidatorArgInBody(fn);
     if (!validatorName) continue;
     const paramsTypeName = stripParamsTypeSuffix(validatorName);

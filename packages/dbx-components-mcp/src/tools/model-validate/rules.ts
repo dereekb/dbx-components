@@ -8,7 +8,7 @@
  */
 
 import { attachRemediation } from '../rule-catalog/index.js';
-import { MAX_FIELD_NAME_LENGTH, ROOT_MODEL_ORDER, SUBCOLLECTION_MODEL_ORDER, type DeclarationKind, type ExtractedFile, type ExtractedModel, type FirestoreCollectionKind, type Violation, type ViolationSeverity } from './types.js';
+import { MAX_FIELD_NAME_LENGTH, ROOT_MODEL_ORDER, SUBCOLLECTION_MODEL_ORDER, type DeclarationKind, type ExtractedFile, type ExtractedModel, type FirestoreCollectionKind, type RuleOptions, type Violation, type ViolationSeverity } from './types.js';
 
 // MARK: Entry
 /**
@@ -17,9 +17,10 @@ import { MAX_FIELD_NAME_LENGTH, ROOT_MODEL_ORDER, SUBCOLLECTION_MODEL_ORDER, typ
  * (like a missing identity) are absent.
  *
  * @param file - the extracted facts for one model source
+ * @param options - optional rule overrides (field-name length limit, ignore list)
  * @returns the violations the rules emit for that file
  */
-export function runRules(file: ExtractedFile): readonly Violation[] {
+export function runRules(file: ExtractedFile, options?: RuleOptions): readonly Violation[] {
   const violations: Violation[] = [];
   if (file.models.length === 0) {
     // Files without any firestoreModelIdentity calls are not subject to
@@ -36,21 +37,26 @@ export function runRules(file: ExtractedFile): readonly Violation[] {
     }
     checkDeclarationOrder(file, model, violations);
   }
-  checkFieldNameLengths(file, violations);
+  checkFieldNameLengths(file, violations, options);
   return violations;
 }
 
 // MARK: Field-name length (warning)
-function checkFieldNameLengths(file: ExtractedFile, violations: Violation[]): void {
+function checkFieldNameLengths(file: ExtractedFile, violations: Violation[], options?: RuleOptions): void {
+  const limit = options?.maxFieldNameLength ?? MAX_FIELD_NAME_LENGTH;
+  const ignored = options?.ignoredFieldNames;
   for (const iface of file.dataInterfaces) {
     for (const field of iface.fields) {
-      if (field.name.length <= MAX_FIELD_NAME_LENGTH) {
+      if (ignored?.has(field.name)) {
+        continue;
+      }
+      if (field.name.length <= limit) {
         continue;
       }
       pushViolation(violations, {
         code: 'MODEL_FIELD_NAME_TOO_LONG',
         severity: 'warning',
-        message: `Field \`${field.name}\` in interface \`${iface.name}\` is ${field.name.length} characters (limit ${MAX_FIELD_NAME_LENGTH}). Firestore field names should be short to minimize document size.`,
+        message: `Field \`${field.name}\` in interface \`${iface.name}\` is ${field.name.length} characters (limit ${limit}). Firestore field names should be short to minimize document size.`,
         file: file.name,
         line: field.line,
         model: iface.name

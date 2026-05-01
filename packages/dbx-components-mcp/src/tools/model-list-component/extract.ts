@@ -93,7 +93,7 @@ export async function extractComponentModels(componentAbs: string): Promise<Extr
 
   models.sort((a, b) => a.folder.localeCompare(b.folder));
   skipped.sort((a, b) => a.folder.localeCompare(b.folder));
-  unidentified.sort();
+  unidentified.sort((a, b) => a.localeCompare(b));
   const result: ExtractionOutcome = { modelRoot, models, skipped, unidentifiedFolders: unidentified };
   return result;
 }
@@ -184,7 +184,7 @@ async function listFolders(modelRoot: string): Promise<readonly string[] | undef
   for (const entry of entries) {
     if (entry.isDirectory()) out.push(entry.name);
   }
-  out.sort();
+  out.sort((a, b) => a.localeCompare(b));
   return out;
 }
 

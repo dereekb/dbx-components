@@ -118,7 +118,12 @@ export function clearDownstreamCatalogCache(): void {
 function cacheKey(input: GetDownstreamCatalogInput): string {
   const root = resolve(input.workspaceRoot);
   const dirs = input.componentDirs;
-  const dirKey = dirs ? [...dirs].slice().sort().join(',') : '*';
+  const dirKey = dirs
+    ? [...dirs]
+        .slice()
+        .sort((a, b) => a.localeCompare(b))
+        .join(',')
+    : '*';
   return `${root}|${dirKey}`;
 }
 

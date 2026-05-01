@@ -44,7 +44,7 @@ export async function extractDeclaredEntries(componentAbs: string): Promise<read
       }
     }
   }
-  files.sort();
+  files.sort((a, b) => a.localeCompare(b));
 
   const out: DeclaredEntry[] = [];
   for (const fileAbs of files) {

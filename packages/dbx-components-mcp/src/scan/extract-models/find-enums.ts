@@ -48,7 +48,7 @@ function buildEnum(decl: EnumDeclaration): ExtractedEnum {
       if (Node.isNumericLiteral(inner)) {
         const raw = Number(inner.getLiteralText());
         value = initializer.getOperatorToken() === SyntaxKind.MinusToken ? -raw : raw;
-        auto = (value as number) + 1;
+        auto = value + 1;
       } else {
         value = initializer.getText();
       }

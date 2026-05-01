@@ -106,7 +106,7 @@ async function collectApiFiles(root: string): Promise<readonly string[]> {
       }
     }
   }
-  out.sort();
+  out.sort((a, b) => a.localeCompare(b));
   return out;
 }
 
@@ -126,7 +126,7 @@ function matchesModelFilter(model: string, groupName: string | undefined, wanted
   if (model.toLowerCase() === wanted) {
     return true;
   }
-  if (groupName && groupName.toLowerCase() === wanted) {
+  if (groupName?.toLowerCase() === wanted) {
     return true;
   }
   return false;

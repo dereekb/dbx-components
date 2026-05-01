@@ -142,6 +142,6 @@ function readBareHandlerName(node: Node): string | undefined {
   if (Node.isShorthandPropertyAssignment(node)) return node.getName();
   // Best-effort fallback for inline expressions.
   const text = node.getText().split(/\s|\(/)[0];
-  if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(text)) return text;
+  if (/^[A-Za-z_]\w*$/.test(text)) return text;
   return undefined;
 }

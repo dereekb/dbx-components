@@ -133,7 +133,7 @@ async function collectApiSources(componentAbs: string): Promise<readonly ApiSour
       }
     }
   }
-  files.sort();
+  files.sort((a, b) => a.localeCompare(b));
   const sources: ApiSource[] = [];
   for (const fileAbs of files) {
     const text = await readFile(fileAbs, 'utf8');
@@ -150,7 +150,7 @@ function pickMatchingSource(sources: readonly ApiSource[], modelFilter: string):
   const wanted = normalize(modelFilter);
   for (const source of sources) {
     const extraction = extractCrudEntries({ name: source.fileRel, text: source.text });
-    if (extraction.groupName && extraction.groupName.toLowerCase() === wanted) {
+    if (extraction.groupName?.toLowerCase() === wanted) {
       return source;
     }
     for (const modelKey of extraction.modelKeys) {
@@ -165,7 +165,7 @@ function pickMatchingSource(sources: readonly ApiSource[], modelFilter: string):
 function entryMatchesFilter(model: string, groupName: string | undefined, filter: string): boolean {
   const wanted = normalize(filter);
   if (model.toLowerCase() === wanted) return true;
-  if (groupName && groupName.toLowerCase() === wanted) return true;
+  if (groupName?.toLowerCase() === wanted) return true;
   return false;
 }
 

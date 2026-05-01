@@ -393,12 +393,12 @@ export enum ModelValidateCode {
   SUB_MISSING_COLLECTION_GROUP_FN = 'SUB_MISSING_COLLECTION_GROUP_FN',
 
   /**
-   * A persisted field's name exceeds the workspace's 4-character convention.
+   * A persisted field's name exceeds the workspace's 5-character convention.
    *
    * @dbxRuleSeverity warning
-   * @dbxRuleApplies Every persisted field on a model interface (or sub-object interface).
-   * @dbxRuleNotApplies Fields that compose well-known multi-character abbreviations the project intentionally allows.
-   * @dbxRuleFix Rename the field to a 1–4 character abbreviation (e.g. `name` → `n`, `userId` → `uid`).
+   * @dbxRuleApplies Every persisted field on a model interface (or sub-object interface). The default limit is 5; override via `dbx-mcp.config.json` `modelValidate.maxFieldNameLength`.
+   * @dbxRuleNotApplies Fields whose name is listed in `dbx-mcp.config.json` `modelValidate.ignoredFieldNames`, or fields that compose well-known multi-character abbreviations the project intentionally allows.
+   * @dbxRuleFix Rename the field to a 1–5 character abbreviation (e.g. `name` → `n`, `userId` → `uid`). To exempt specific names workspace-wide, add them to `modelValidate.ignoredFieldNames` in `dbx-mcp.config.json`.
    */
   MODEL_FIELD_NAME_TOO_LONG = 'MODEL_FIELD_NAME_TOO_LONG',
 

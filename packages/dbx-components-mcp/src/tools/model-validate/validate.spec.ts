@@ -258,7 +258,7 @@ describe('validateFirebaseModelSources', () => {
     expect(fullNameWarnings).toHaveLength(0);
   });
 
-  it('warns on interface field names longer than 4 characters', () => {
+  it('warns on interface field names longer than the default limit (5)', () => {
     const text = HAPPY_SOURCE.replace('export interface Profile {\n  uid: string;\n  n: string;\n}', 'export interface Profile {\n  uid: string;\n  n: string;\n  tooLong: string;\n}');
     const result = validateFirebaseModelSources([{ name: 'x.ts', text }]);
     expect(result.errorCount).toBe(0);
@@ -267,11 +267,35 @@ describe('validateFirebaseModelSources', () => {
     expect(nameWarnings[0].severity).toBe('warning');
     expect(nameWarnings[0].message).toContain('tooLong');
     expect(nameWarnings[0].message).toContain('Profile');
+    expect(nameWarnings[0].message).toContain('limit 5');
   });
 
-  it('does not warn on fields with names of exactly 4 characters', () => {
-    const text = HAPPY_SOURCE.replace('export interface Profile {\n  uid: string;\n  n: string;\n}', 'export interface Profile {\n  uid: string;\n  n: string;\n  user: string;\n}');
+  it('does not warn on fields with names of exactly 5 characters', () => {
+    const text = HAPPY_SOURCE.replace('export interface Profile {\n  uid: string;\n  n: string;\n}', 'export interface Profile {\n  uid: string;\n  n: string;\n  cuid: string;\n  email: string;\n}');
     const result = validateFirebaseModelSources([{ name: 'x.ts', text }]);
+    const nameWarnings = result.violations.filter((v) => v.code === 'MODEL_FIELD_NAME_TOO_LONG');
+    expect(nameWarnings).toHaveLength(0);
+  });
+
+  it('honors maxFieldNameLength override (limit lowered to 3 makes `user` warn)', () => {
+    const text = HAPPY_SOURCE.replace('export interface Profile {\n  uid: string;\n  n: string;\n}', 'export interface Profile {\n  uid: string;\n  n: string;\n  user: string;\n}');
+    const result = validateFirebaseModelSources([{ name: 'x.ts', text }], { maxFieldNameLength: 3 });
+    const nameWarnings = result.violations.filter((v) => v.code === 'MODEL_FIELD_NAME_TOO_LONG');
+    expect(nameWarnings).toHaveLength(1);
+    expect(nameWarnings[0].message).toContain('user');
+    expect(nameWarnings[0].message).toContain('limit 3');
+  });
+
+  it('honors maxFieldNameLength override (limit raised to 8 makes `tooLong` pass)', () => {
+    const text = HAPPY_SOURCE.replace('export interface Profile {\n  uid: string;\n  n: string;\n}', 'export interface Profile {\n  uid: string;\n  n: string;\n  tooLong: string;\n}');
+    const result = validateFirebaseModelSources([{ name: 'x.ts', text }], { maxFieldNameLength: 8 });
+    const nameWarnings = result.violations.filter((v) => v.code === 'MODEL_FIELD_NAME_TOO_LONG');
+    expect(nameWarnings).toHaveLength(0);
+  });
+
+  it('honors ignoredFieldNames — exempts a long name despite default limit', () => {
+    const text = HAPPY_SOURCE.replace('export interface Profile {\n  uid: string;\n  n: string;\n}', 'export interface Profile {\n  uid: string;\n  n: string;\n  tooLong: string;\n}');
+    const result = validateFirebaseModelSources([{ name: 'x.ts', text }], { ignoredFieldNames: new Set(['tooLong']) });
     const nameWarnings = result.violations.filter((v) => v.code === 'MODEL_FIELD_NAME_TOO_LONG');
     expect(nameWarnings).toHaveLength(0);
   });
@@ -558,7 +582,7 @@ export function agentSummaryFirestoreCollection(firestoreContext: FirestoreConte
       const result = validateFirebaseModelSources([{ name: 'x.ts', text }]);
       const identityErrs = result.violations.filter((v) => v.code === 'MODEL_IDENTITY_NOT_TAGGED');
       expect(identityErrs).toHaveLength(2);
-      const models = identityErrs.map((v) => v.model).sort();
+      const models = identityErrs.map((v) => v.model).sort((a, b) => (a ?? '').localeCompare(b ?? ''));
       expect(models).toEqual(['Profile', 'ProfilePrivate']);
     });
 

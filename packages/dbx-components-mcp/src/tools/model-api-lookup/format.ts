@@ -5,11 +5,8 @@
 import type { ApiLookupEntry, ApiLookupField, ApiLookupReport } from './types.js';
 
 export function formatLookupAsMarkdown(report: ApiLookupReport): string {
-  const lines: string[] = [];
   const heading = report.groupName ? `${report.groupName} (\`${report.modelFilter}\`)` : report.modelFilter;
-  lines.push(`# Model API lookup — ${heading}`);
-  lines.push('');
-  lines.push(`Component: \`${report.componentDir}\``);
+  const lines: string[] = [`# Model API lookup — ${heading}`, '', `Component: \`${report.componentDir}\``];
   if (report.apiDir) {
     lines.push(`API app: \`${report.apiDir}\``);
   }
@@ -19,19 +16,15 @@ export function formatLookupAsMarkdown(report: ApiLookupReport): string {
   if (report.modelKeys.length > 0) {
     lines.push(`Models: ${report.modelKeys.map((m) => `\`${m}\``).join(', ')}`);
   }
-  lines.push('');
-  lines.push(`Action lookup: ${formatActionLookupStatus(report)}`);
-  lines.push('');
+  lines.push('', `Action lookup: ${formatActionLookupStatus(report)}`, '');
 
   if (report.entries.length === 0) {
-    lines.push(`_No CRUD or standalone entries matched filter \`${report.modelFilter}\`._`);
-    lines.push('');
+    lines.push(`_No CRUD or standalone entries matched filter \`${report.modelFilter}\`._`, '');
     return lines.join('\n');
   }
 
   for (const entry of report.entries) {
-    lines.push(formatEntry(entry));
-    lines.push('');
+    lines.push(formatEntry(entry), '');
   }
   return lines.join('\n');
 }
@@ -52,22 +45,14 @@ function formatActionLookupStatus(report: ApiLookupReport): string {
 }
 
 function formatEntry(entry: ApiLookupEntry): string {
-  const lines: string[] = [];
   const wireKey = formatWireKey(entry);
   const heading = entry.specifier !== undefined ? `${entry.model}.${entry.verb}.${entry.specifier}` : `${entry.model}.${entry.verb}`;
-  lines.push(`## ${heading}`);
-  lines.push('');
-  lines.push(`- Wire key: \`${wireKey}\``);
-  lines.push(`- Params: ${entry.paramsTypeName ? `\`${entry.paramsTypeName}\`` : '_unresolved_'}`);
-  lines.push(`- Result: ${entry.resultTypeName ? `\`${entry.resultTypeName}\`` : '`void`'}`);
-  lines.push(`- Source: \`${entry.sourceFile}:${entry.line}\``);
-  lines.push('');
+  const lines: string[] = [`## ${heading}`, '', `- Wire key: \`${wireKey}\``, `- Params: ${entry.paramsTypeName ? `\`${entry.paramsTypeName}\`` : '_unresolved_'}`, `- Result: ${entry.resultTypeName ? `\`${entry.resultTypeName}\`` : '`void`'}`, `- Source: \`${entry.sourceFile}:${entry.line}\``, ''];
 
   if (entry.paramsJsDoc || entry.paramsFields.length > 0) {
     lines.push('### Params');
     if (entry.paramsJsDoc) {
-      lines.push('');
-      lines.push(entry.paramsJsDoc);
+      lines.push('', entry.paramsJsDoc);
     }
     if (entry.paramsFields.length > 0) {
       lines.push('');
@@ -81,8 +66,7 @@ function formatEntry(entry: ApiLookupEntry): string {
   if (entry.resultJsDoc || entry.resultFields.length > 0) {
     lines.push('### Result');
     if (entry.resultJsDoc) {
-      lines.push('');
-      lines.push(entry.resultJsDoc);
+      lines.push('', entry.resultJsDoc);
     }
     if (entry.resultFields.length > 0) {
       lines.push('');
@@ -94,30 +78,23 @@ function formatEntry(entry: ApiLookupEntry): string {
   }
 
   if (entry.action) {
-    lines.push('### Action method');
-    lines.push('');
-    lines.push(`- \`${entry.action.className}.${entry.action.methodName}\` — \`${entry.action.sourceFile}:${entry.action.line}\``);
+    lines.push('### Action method', '', `- \`${entry.action.className}.${entry.action.methodName}\` — \`${entry.action.sourceFile}:${entry.action.line}\``);
     if (entry.action.jsDoc) {
-      lines.push('');
-      lines.push(entry.action.jsDoc);
+      lines.push('', entry.action.jsDoc);
     }
     lines.push('');
   }
 
   if (entry.factory) {
-    lines.push('### Action factory');
-    lines.push('');
-    lines.push(`- \`${entry.factory.factoryName}\` — \`${entry.factory.sourceFile}:${entry.factory.line}\``);
+    lines.push('### Action factory', '', `- \`${entry.factory.factoryName}\` — \`${entry.factory.sourceFile}:${entry.factory.line}\``);
     if (entry.factory.jsDoc) {
-      lines.push('');
-      lines.push(entry.factory.jsDoc);
+      lines.push('', entry.factory.jsDoc);
     }
     lines.push('');
   }
 
   if (!entry.action && !entry.factory && entry.paramsTypeName) {
-    lines.push('_(no matching action method or factory resolved by params type)_');
-    lines.push('');
+    lines.push('_(no matching action method or factory resolved by params type)_', '');
   }
 
   return lines.join('\n').trimEnd();
