@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, input
 import { DomSanitizer, type SafeResourceUrl } from '@angular/platform-browser';
 import { clean, type DbxButtonDisplay } from '@dereekb/dbx-core';
 import { DbxButtonComponent } from '../../../button/button.component';
-import { type DbxButtonStyle } from '../../../button/button';
+import { type DbxButtonDisplayStylePair, type DbxButtonStyle } from '../../../button/button';
 import { DbxActionModule } from '../../../action/action.module';
 import { browserObjectUrlRef } from '@dereekb/browser';
 import { asPromise, type Getter, type Maybe, type PromiseOrValue, safeCompareEquality } from '@dereekb/util';
@@ -16,12 +16,20 @@ import { NgClass } from '@angular/common';
 export interface DbxDownloadBlobButtonConfig {
   /**
    * Button display customization.
+   *
+   * @deprecated use {@link buttonStylePair} instead.
    */
   readonly buttonDisplay?: Maybe<DbxButtonDisplay>;
   /**
    * Custom button style to use.
+   *
+   * @deprecated use {@link buttonStylePair} instead.
    */
   readonly buttonStyle?: Maybe<DbxButtonStyle>;
+  /**
+   * Custom button style pair to use.
+   */
+  readonly buttonStylePair?: Maybe<DbxButtonDisplayStylePair>;
   /**
    * Name of the file to save when downloaded.
    */
@@ -111,7 +119,8 @@ export class DbxDownloadBlobButtonComponent {
 
   readonly buttonDisplaySignal = computed(() => {
     const config = this.config();
-    const buttonDisplay = config?.buttonDisplay;
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    const buttonDisplay = config?.buttonStylePair?.display ?? config?.buttonDisplay;
 
     const display: DbxButtonDisplay = buttonDisplay ?? {
       icon: 'download',
@@ -122,7 +131,9 @@ export class DbxDownloadBlobButtonComponent {
   });
 
   readonly buttonStyleSignal = computed(() => {
-    const buttonStyle = this.config()?.buttonStyle;
+    const config = this.config();
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    const buttonStyle = config?.buttonStylePair?.style ?? config?.buttonStyle;
 
     const style: DbxButtonStyle = buttonStyle ?? {
       type: 'raised'

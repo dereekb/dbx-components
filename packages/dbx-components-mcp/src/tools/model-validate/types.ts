@@ -22,7 +22,7 @@ export type ViolationCode = `${ModelValidateCode}`;
  * flag convention deviations — validation is still considered a pass.
  */
 import type { ViolationSeverity } from '../validate-format.js';
-export type { ViolationSeverity };
+export type { ViolationSeverity } from '../validate-format.js';
 
 export interface Violation {
   readonly code: ViolationCode;
@@ -48,11 +48,33 @@ export interface ValidationResult {
 }
 
 /**
- * Max length (inclusive) allowed for a Firestore data-interface field name
- * before {@link MODEL_FIELD_NAME_TOO_LONG} warns. Matches the workspace
- * convention of 1–4 character abbreviations (`uid`, `n`, `cat`, `uat`).
+ * Default max length (inclusive) allowed for a Firestore data-interface field
+ * name before `MODEL_FIELD_NAME_TOO_LONG` warns. Matches the workspace
+ * convention of 1–5 character abbreviations (`uid`, `n`, `cat`, `uat`,
+ * `cuid`). Used as the fallback when no `dbx-mcp.config.json`
+ * `modelValidate.maxFieldNameLength` override is supplied via {@link RuleOptions}.
  */
-export const MAX_FIELD_NAME_LENGTH = 4;
+export const MAX_FIELD_NAME_LENGTH = 5;
+
+/**
+ * Optional per-call overrides for the firebase-model rule pipeline. The MCP
+ * server resolves these from `dbx-mcp.config.json` at bootstrap and threads
+ * them through {@link runRules}. Direct callers of `validateFirebaseModelSources`
+ * (tests, folder validator) may pass them inline.
+ */
+export interface RuleOptions {
+  /**
+   * Override for {@link MAX_FIELD_NAME_LENGTH}. Field names with `length`
+   * exceeding this value trigger `MODEL_FIELD_NAME_TOO_LONG`.
+   */
+  readonly maxFieldNameLength?: number;
+  /**
+   * Field names that should never trigger `MODEL_FIELD_NAME_TOO_LONG`,
+   * regardless of the configured limit. Globally scoped — matched by exact
+   * name, no regex, no per-interface qualification.
+   */
+  readonly ignoredFieldNames?: ReadonlySet<string>;
+}
 
 /**
  * One file's raw contents passed into the validator. Callers reading paths or
@@ -139,7 +161,9 @@ export interface ExtractedField {
   /**
    * Long-name argument of the field's `@dbxModelVariable <name>` JSDoc
    * tag, or `undefined` when the tag is absent or empty. Powers the
-   * field's catalog long-name and the decoder's display strings.
+   * field's catalog long-name and the decoder's display strings. The
+   * convention is the field's unabbreviated camelCase variable name
+   * (e.g. `uid` → `userUid`, `n` → `name`).
    */
   readonly dbxModelVariableTag: string | undefined;
 }

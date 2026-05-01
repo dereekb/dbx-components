@@ -64,26 +64,30 @@ export class DocExtensionDownloadComponent {
   readonly blobDownloadConfig: DbxDownloadBlobButtonConfig = {
     loadBlob: () => new Blob([createRandomCsvFile()], { type: 'application/csv' }),
     fileName: 'abc.csv',
-    buttonDisplay: {
-      icon: 'cloud_download',
-      text: 'Download CSV'
-    },
-    buttonStyle: {
-      type: 'flat',
-      color: 'primary'
+    buttonStylePair: {
+      display: {
+        icon: 'cloud_download',
+        text: 'Download CSV'
+      },
+      style: {
+        type: 'flat',
+        color: 'primary'
+      }
     }
   };
 
   readonly blobDownloadDelayedConfig: DbxDownloadBlobButtonConfig = {
     loadBlob: () => waitForMs(4000).then(() => new Blob([createRandomCsvFile()], { type: 'application/csv' })),
     fileName: 'abc.csv',
-    buttonDisplay: {
-      icon: 'cloud_download',
-      text: 'Download CSV (Delayed)'
-    },
-    buttonStyle: {
-      type: 'raised',
-      color: 'accent'
+    buttonStylePair: {
+      display: {
+        icon: 'cloud_download',
+        text: 'Download CSV (Delayed)'
+      },
+      style: {
+        type: 'raised',
+        color: 'accent'
+      }
     }
   };
 }

@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 /**
- * Generates bundled SemanticTypeManifest JSON files for the @dereekb/* packages
- * shipped with @dereekb/dbx-components-mcp. One scan config per source — see
- * `packages/<name>/dbx-mcp.scan.json` for the contract.
+ * Generates bundled manifest JSON files for the @dereekb/* packages
+ * shipped with @dereekb/dbx-components-mcp. The set of bundled scans is
+ * driven by the workspace-root `dbx-mcp.config.json` — one entry per
+ * `<cluster>.scan[]` array (semanticTypes, uiComponents, forgeFields,
+ * pipes, actions, filters).
  *
  * Run from the workspace root (that's what `nx run dbx-components-mcp:generate-manifests`
  * guarantees). Each scan invokes the canonical `runScanCli` entry point from
- * `src/scan/cli.ts` so this script and the user-facing binary stay in lockstep.
+ * `src/scan/*-cli.ts` so this script and the user-facing binary stay in lockstep.
  *
  * Forwarded flags
  *   --check    Fail with exit code 1 when any committed manifest is stale.
@@ -16,13 +18,15 @@
  * directly without a prior build step.
  */
 
+import { readFile as nodeReadFile } from 'node:fs/promises';
 import { register } from 'node:module';
-import { dirname, resolve } from 'node:path';
+import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const PACKAGE_ROOT = resolve(SCRIPT_DIR, '..');
 const WORKSPACE_ROOT = resolve(PACKAGE_ROOT, '..', '..');
+const ROOT_CONFIG_PATH = resolve(WORKSPACE_ROOT, 'dbx-mcp.config.json');
 
 // Register ts-node so we can import the canonical TypeScript entry point.
 register('ts-node/esm', pathToFileURL(`${WORKSPACE_ROOT}/`));
@@ -35,51 +39,6 @@ const { runActionsScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/
 const { runFiltersScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/filters-cli.ts`);
 
 /**
- * Projects whose semantic types ship bundled with this MCP package. Add a new
- * entry here when bringing another @dereekb/* package into the registry; the
- * scan config in that package's root drives `include`, `topicNamespace`, and
- * `out` path resolution.
- */
-const BUNDLED_PROJECTS = ['packages/util', 'packages/model', 'packages/date', 'packages/firebase', 'packages/firebase-server'];
-
-/**
- * Projects whose ui-components ship bundled with this MCP package. Each entry
- * needs a `dbx-mcp.scan.json` with a `uiComponents` section that drives
- * `include`/`exclude`/`out` resolution.
- */
-const BUNDLED_UI_COMPONENT_PROJECTS = ['packages/dbx-web'];
-
-/**
- * Projects whose forge-fields ship bundled with this MCP package. Each entry
- * needs a `dbx-mcp.scan.json` with a `forgeFields` section that drives
- * `include`/`exclude`/`out` resolution. Subpath packages (e.g.
- * `packages/dbx-form/calendar`) get their own scan config and are listed here
- * separately.
- */
-const BUNDLED_FORGE_FIELD_PROJECTS = ['packages/dbx-form'];
-
-/**
- * Projects whose Angular pipes ship bundled with this MCP package. Each entry
- * needs a `dbx-mcp.scan.json` with a `pipes` section that drives
- * `include`/`exclude`/`out` resolution.
- */
-const BUNDLED_PIPE_PROJECTS = ['packages/dbx-core'];
-
-/**
- * Projects whose dbx-action surface ships bundled with this MCP package. Each
- * entry needs a `dbx-mcp.scan.json` with an `actions` section that drives
- * `include`/`exclude`/`out` resolution.
- */
-const BUNDLED_ACTION_PROJECTS = ['packages/dbx-core'];
-
-/**
- * Projects whose dbx-filter surface ships bundled with this MCP package. Each
- * entry needs a `dbx-mcp.scan.json` with a `filters` section that drives
- * `include`/`exclude`/`out` resolution.
- */
-const BUNDLED_FILTER_PROJECTS = ['packages/dbx-core'];
-
-/**
  * Bundled manifests stamp a fixed `generatedAt` so the produced JSON is
  * byte-stable across runs. Without a deterministic timestamp every scan would
  * dirty the working tree and `--check` mode (CI freshness gate) would never
@@ -90,71 +49,78 @@ const BUNDLED_GENERATED_AT = () => new Date(0);
 
 const argv = process.argv.slice(2);
 
+const rootConfigRaw = await nodeReadFile(ROOT_CONFIG_PATH, 'utf-8');
+const rootConfig = JSON.parse(rootConfigRaw);
+if (rootConfig.version !== 1) {
+  console.error(`generate-manifests: unsupported dbx-mcp.config.json version: ${rootConfig.version}`);
+  process.exit(1);
+}
+
+/**
+ * Cluster-CLI dispatch table. Each entry maps the root-config cluster key
+ * to the per-cluster CLI runner, the legacy section key the CLI expects
+ * inside `dbx-mcp.scan.json`, and a shape flag — semantic-types entries
+ * are flattened at the JSON root, every other cluster nests inside a
+ * `<sectionKey>` block.
+ */
+const CLUSTER_DISPATCH = {
+  semanticTypes: { run: runScanCli, sectionKey: null, label: 'semantic-types' },
+  uiComponents: { run: runUiComponentsScanCli, sectionKey: 'uiComponents', label: 'ui-components' },
+  forgeFields: { run: runForgeFieldsScanCli, sectionKey: 'forgeFields', label: 'forge-fields' },
+  pipes: { run: runPipesScanCli, sectionKey: 'pipes', label: 'pipes' },
+  actions: { run: runActionsScanCli, sectionKey: 'actions', label: 'actions' },
+  filters: { run: runFiltersScanCli, sectionKey: 'filters', label: 'filters' }
+};
+
 const results = [];
-for (const project of BUNDLED_PROJECTS) {
-  const result = await runScanCli({
-    argv: ['--project', project, ...argv],
-    cwd: WORKSPACE_ROOT,
-    generator: '@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs',
-    now: BUNDLED_GENERATED_AT
-  });
-  results.push({ project, exitCode: result.exitCode });
-}
+for (const [clusterKey, dispatch] of Object.entries(CLUSTER_DISPATCH)) {
+  const cluster = rootConfig[clusterKey];
+  const scanEntries = cluster && Array.isArray(cluster.scan) ? cluster.scan : [];
+  for (const entry of scanEntries) {
+    const projectAbs = resolve(WORKSPACE_ROOT, entry.project);
+    const outAbs = resolve(WORKSPACE_ROOT, entry.out);
+    const outRel = relative(projectAbs, outAbs).replaceAll('\\', '/');
 
-for (const project of BUNDLED_UI_COMPONENT_PROJECTS) {
-  const result = await runUiComponentsScanCli({
-    argv: ['--project', project, ...argv],
-    cwd: WORKSPACE_ROOT,
-    generator: '@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs',
-    now: BUNDLED_GENERATED_AT
-  });
-  results.push({ project, exitCode: result.exitCode });
-}
+    // Build the legacy per-package shape the cluster CLI expects to read
+    // from `<projectRoot>/dbx-mcp.scan.json`. semantic-types is flat at
+    // the JSON root; every other cluster nests under its section key.
+    const sectionPayload = {
+      ...(entry.source !== undefined ? { source: entry.source } : {}),
+      ...(entry.topicNamespace !== undefined ? { topicNamespace: entry.topicNamespace } : {}),
+      ...(entry.module !== undefined ? { module: entry.module } : {}),
+      ...(entry.include !== undefined ? { include: entry.include } : {}),
+      ...(entry.exclude !== undefined ? { exclude: entry.exclude } : {}),
+      out: outRel,
+      ...(entry.declaredTopics !== undefined ? { declaredTopics: entry.declaredTopics } : {})
+    };
+    const inlineConfig = dispatch.sectionKey === null ? { version: 1, ...sectionPayload } : { version: 1, [dispatch.sectionKey]: sectionPayload };
+    const inlineConfigJson = JSON.stringify(inlineConfig);
+    const inlineConfigPath = resolve(projectAbs, 'dbx-mcp.scan.json');
 
-for (const project of BUNDLED_FORGE_FIELD_PROJECTS) {
-  const result = await runForgeFieldsScanCli({
-    argv: ['--project', project, ...argv],
-    cwd: WORKSPACE_ROOT,
-    generator: '@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs',
-    now: BUNDLED_GENERATED_AT
-  });
-  results.push({ project, exitCode: result.exitCode });
-}
+    // Wrap readFile so the cluster CLI's "load scan config" step picks
+    // up the inline JSON instead of the (now-deleted) on-disk file.
+    const wrappedReadFile = async (path) => {
+      if (path === inlineConfigPath) {
+        return inlineConfigJson;
+      }
+      return nodeReadFile(path, 'utf-8');
+    };
 
-for (const project of BUNDLED_PIPE_PROJECTS) {
-  const result = await runPipesScanCli({
-    argv: ['--project', project, ...argv],
-    cwd: WORKSPACE_ROOT,
-    generator: '@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs',
-    now: BUNDLED_GENERATED_AT
-  });
-  results.push({ project, exitCode: result.exitCode });
-}
-
-for (const project of BUNDLED_ACTION_PROJECTS) {
-  const result = await runActionsScanCli({
-    argv: ['--project', project, ...argv],
-    cwd: WORKSPACE_ROOT,
-    generator: '@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs',
-    now: BUNDLED_GENERATED_AT
-  });
-  results.push({ project, exitCode: result.exitCode });
-}
-
-for (const project of BUNDLED_FILTER_PROJECTS) {
-  const result = await runFiltersScanCli({
-    argv: ['--project', project, ...argv],
-    cwd: WORKSPACE_ROOT,
-    generator: '@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs',
-    now: BUNDLED_GENERATED_AT
-  });
-  results.push({ project, exitCode: result.exitCode });
+    const result = await dispatch.run({
+      argv: ['--project', entry.project, ...argv],
+      cwd: WORKSPACE_ROOT,
+      generator: '@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs',
+      now: BUNDLED_GENERATED_AT,
+      readFile: wrappedReadFile
+    });
+    results.push({ project: entry.project, cluster: dispatch.label, exitCode: result.exitCode });
+  }
 }
 
 const failed = results.filter((r) => r.exitCode !== 0);
 if (failed.length > 0) {
   for (const f of failed) {
-    console.error(`generate-manifests: ${f.project} exited ${f.exitCode}`);
+    console.error(`generate-manifests: ${f.cluster} ${f.project} exited ${f.exitCode}`);
   }
   process.exit(1);
 }

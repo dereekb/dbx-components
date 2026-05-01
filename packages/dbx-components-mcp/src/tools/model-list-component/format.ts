@@ -11,16 +11,12 @@ import type { ComponentModelReport } from './types.js';
  * @returns the formatted markdown text
  */
 export function formatReportAsMarkdown(report: ComponentModelReport): string {
-  const lines: string[] = [];
-  lines.push(`# Models in \`${report.componentDir}\``, '');
-  lines.push(`- **Models found:** ${report.models.length}`);
-  lines.push(`- **Reserved folders skipped:** ${report.skipped.length}`);
+  const lines: string[] = [`# Models in \`${report.componentDir}\``, '', `- **Models found:** ${report.models.length}`, `- **Reserved folders skipped:** ${report.skipped.length}`];
   if (report.unidentifiedFolders.length > 0) {
     const unidentifiedFolderList = report.unidentifiedFolders.map((f) => `\`${f}\``).join(', ');
     lines.push(`- **Folders without detectable identity:** ${report.unidentifiedFolders.length} (${unidentifiedFolderList})`);
   }
-  lines.push(`- **Fixture coverage:** ${formatCoverageStatus(report)}`);
-  lines.push('');
+  lines.push(`- **Fixture coverage:** ${formatCoverageStatus(report)}`, '');
 
   if (report.models.length === 0) {
     lines.push(`No models found under \`${report.modelRoot}\`.`);
@@ -29,12 +25,9 @@ export function formatReportAsMarkdown(report: ComponentModelReport): string {
     for (const m of report.models) {
       const parent = m.parentIdentityConst ? ` · subcollection of \`${m.parentIdentityConst}\`` : '';
       const fixtureNote = m.fixtureCovered === undefined ? '' : m.fixtureCovered ? ' · ✅ fixture' : ' · ❌ no fixture';
-      lines.push(`### \`${m.modelName}\`${parent}${fixtureNote}`, '');
-      lines.push(`- **Folder:** \`${m.folder}\``);
-      lines.push(`- **Identity:** \`${m.identityConst ?? '<not detected>'}\``);
+      lines.push(`### \`${m.modelName}\`${parent}${fixtureNote}`, '', `- **Folder:** \`${m.folder}\``, `- **Identity:** \`${m.identityConst ?? '<not detected>'}\``);
       if (m.collectionName) lines.push(`- **Collection:** \`${m.collectionName}\` · prefix \`${m.collectionPrefix ?? '<not detected>'}\``);
-      lines.push(`- **Source:** \`${m.sourceFile}\``);
-      lines.push('');
+      lines.push(`- **Source:** \`${m.sourceFile}\``, '');
     }
   }
 

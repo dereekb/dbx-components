@@ -20,7 +20,7 @@
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type DbxTool } from './types.js';
 import { createSourceValidateTool } from './validate-tool.js';
-import { formatResult, validateFirebaseModelSources } from './model-validate/index.js';
+import { formatResult, validateFirebaseModelSources, type RuleOptions } from './model-validate/index.js';
 
 // MARK: Tool definition
 const DBX_MODEL_VALIDATE_TOOL: Tool = {
@@ -63,11 +63,37 @@ const DBX_MODEL_VALIDATE_TOOL: Tool = {
   }
 };
 
-export const modelValidateTool: DbxTool = createSourceValidateTool({
-  definition: DBX_MODEL_VALIDATE_TOOL,
-  validate: validateFirebaseModelSources,
-  format: formatResult
-});
+/**
+ * Optional inputs to {@link createModelValidateTool}.
+ */
+export interface CreateModelValidateToolOptions {
+  /**
+   * Rule overrides resolved from the workspace's `dbx-mcp.config.json`
+   * `modelValidate` block. When omitted, the validator falls back to the
+   * built-in defaults (see {@link MAX_FIELD_NAME_LENGTH}).
+   */
+  readonly ruleOptions?: RuleOptions;
+}
+
+/**
+ * Builds the `dbx_model_validate` tool, optionally injecting rule
+ * overrides from the workspace config. The default-options instance is
+ * exported as {@link modelValidateTool} below for callers (and tests)
+ * that don't need config.
+ *
+ * @param options - optional rule overrides
+ * @returns the registered MCP tool wrapper
+ */
+export function createModelValidateTool(options: CreateModelValidateToolOptions = {}): DbxTool {
+  const { ruleOptions } = options;
+  return createSourceValidateTool({
+    definition: DBX_MODEL_VALIDATE_TOOL,
+    validate: (sources) => validateFirebaseModelSources(sources, ruleOptions),
+    format: formatResult
+  });
+}
+
+export const modelValidateTool: DbxTool = createModelValidateTool();
 
 /**
  * Direct invocation of the `dbx_model_validate` handler. Re-exported so

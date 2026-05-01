@@ -12,6 +12,11 @@ interface ItIndexEntry {
   readonly describePath: readonly string[];
   readonly title: string | undefined;
   readonly titleIsTemplate?: boolean;
+  /**
+   * The callee identifier when the `it` came from a non-default helper
+   * (e.g. `itShouldFail`, `xit`, `fit`). `undefined` for plain `it(...)`.
+   */
+  readonly callee?: string;
   readonly line: number;
   readonly endLine: number;
 }
@@ -56,7 +61,7 @@ function collectIts(tree: SpecFileTree): readonly ItIndexEntry[] {
   const stack: string[] = [];
   const visit = (node: SpecNode): void => {
     if (node.kind === 'it') {
-      const entry: ItIndexEntry = { describePath: [...stack], title: node.title, titleIsTemplate: node.titleIsTemplate, line: node.line, endLine: node.endLine };
+      const entry: ItIndexEntry = { describePath: [...stack], title: node.title, titleIsTemplate: node.titleIsTemplate, callee: node.callee, line: node.line, endLine: node.endLine };
       out.push(entry);
     }
     let pushed = false;

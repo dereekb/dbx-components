@@ -7,3 +7,4 @@ export * from './structure';
 export * from './widget';
 export * from './zip';
 export * from './help';
+export * from './pdf';

@@ -110,4 +110,65 @@ describe('dbx_model_lookup', () => {
     expect(text).toMatch(/No Firebase model matched/);
     expect(text).toMatch(/browse the catalog/);
   });
+
+  describe('fields filter', () => {
+    it('restricts the fields table to entries matching by persisted name', async () => {
+      const text = await firstText(runLookupModel({ topic: 'StorageFile', scope: 'upstream', fields: ['fs'] }));
+      expect(text).toMatch(/## Fields \(1 of \d+\)/);
+      expect(text).toMatch(/_Showing 1 of \d+ fields \(filtered by `fields`\)\._/);
+      expect(text).toMatch(/\| `fs` \|/);
+      expect(text).not.toMatch(/\| `name` \|/);
+      expect(text).not.toMatch(/\| `cat` \|/);
+      expect(text).toMatch(/### StorageFileState/);
+      expect(text).not.toMatch(/### StorageFileCreationType/);
+      expect(text).not.toMatch(/### StorageFileProcessingState/);
+    });
+
+    it('also matches by longName (case-insensitive)', async () => {
+      const text = await firstText(runLookupModel({ topic: 'StorageFile', scope: 'upstream', fields: ['FILESTATE'] }));
+      expect(text).toMatch(/\| `fs` \|/);
+      expect(text).toMatch(/### StorageFileState/);
+      expect(text).not.toMatch(/### StorageFileCreationType/);
+    });
+
+    it('lists unmatched filter tokens in a footer', async () => {
+      const text = await firstText(runLookupModel({ topic: 'StorageFile', scope: 'upstream', fields: ['fs', 'notARealField'] }));
+      expect(text).toMatch(/## Fields \(1 of \d+\)/);
+      expect(text).toMatch(/_Unmatched filters: `notarealfield`\._/);
+    });
+
+    it('renders empty table with a hint when no filter token matches', async () => {
+      const text = await firstText(runLookupModel({ topic: 'StorageFile', scope: 'upstream', fields: ['totallyMadeUp'] }));
+      expect(text).toMatch(/## Fields \(0 of \d+\)/);
+      expect(text).toMatch(/_Unmatched filters: `totallymadeup`\._/);
+      expect(text).toMatch(/_No fields matched\. Drop `fields` to see the full model\._/);
+      expect(text).not.toMatch(/## Enums/);
+    });
+
+    it('treats an empty fields array as "no filter"', async () => {
+      const filtered = await firstText(runLookupModel({ topic: 'StorageFile', scope: 'upstream', fields: [] }));
+      const baseline = await firstText(runLookupModel({ topic: 'StorageFile', scope: 'upstream' }));
+      expect(filtered).toBe(baseline);
+    });
+
+    it('ignores fields filter on the catalog response', async () => {
+      const text = await firstText(runLookupModel({ topic: 'models', fields: ['fs'] }));
+      expect(text).toMatch(/# Firebase model catalog/);
+      expect(text).not.toMatch(/_Showing \d+ of \d+ fields/);
+    });
+
+    it('combines with brief depth, rendering the brief column set on filtered fields', async () => {
+      const text = await firstText(runLookupModel({ topic: 'StorageFile', scope: 'upstream', depth: 'brief', fields: ['fs'] }));
+      expect(text).toMatch(/\| Field \| Description \|\n\|-------\|-------------\|/);
+      expect(text).not.toMatch(/\| Field \| Description \| Type \| Converter \|/);
+      expect(text).toMatch(/\| `fs` \|/);
+      expect(text).not.toMatch(/## Enums/);
+    });
+
+    it('dedupes filter entries and ignores whitespace-only tokens', async () => {
+      const text = await firstText(runLookupModel({ topic: 'StorageFile', scope: 'upstream', fields: ['fs', '  FS  ', '   ', 'fileState'] }));
+      expect(text).toMatch(/## Fields \(1 of \d+\)/);
+      expect(text).not.toMatch(/Unmatched filters/);
+    });
+  });
 });

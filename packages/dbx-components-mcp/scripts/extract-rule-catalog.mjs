@@ -126,7 +126,7 @@ function findCodesFiles() {
     const candidate = join(sub, 'codes.ts');
     if (existsSync(candidate)) out.push(candidate);
   }
-  out.sort();
+  out.sort((a, b) => a.localeCompare(b));
   return out;
 }
 

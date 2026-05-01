@@ -30,6 +30,9 @@
  * | dbx_model_decode                    | Decoding      | "What does this Firestore doc mean?"                   |
  * | dbx_model_validate                  | Verification  | "Is this Firestore model file correct?"                |
  * | dbx_model_validate_api              | Verification  | "Is this model api file correct?"                      |
+ * | dbx_model_api_list_app              | Discovery     | "What CRUD/standalone API calls does this component declare?" |
+ * | dbx_model_api_lookup                | Documentation | "Tell me about the API calls for model X — params, action JSDoc." |
+ * | dbx_model_api_validate_app          | Verification  | "Are all declared CRUD calls wired in this app's callModel map?" |
  * | dbx_model_validate_folder           | Verification  | "Does this model folder have the 5 files?"             |
  * | dbx_model_store_scaffold            | Generation    | "Scaffold the 4 store files for model X"               |
  * | dbx_model_fixture_list_app          | Discovery     | "What fixture/instance pairs does this app declare?"   |
@@ -76,8 +79,12 @@ import { uiExamplesTool } from './ui-examples.tool.js';
 import { lookupModelTool } from './lookup-model.tool.js';
 import { searchModelTool } from './search-model.tool.js';
 import { modelDecodeTool } from './model-decode.tool.js';
-import { modelValidateTool } from './model-validate.tool.js';
+import { createModelValidateTool } from './model-validate.tool.js';
+import type { RuleOptions } from './model-validate/index.js';
 import { modelValidateApiTool } from './model-validate-api.tool.js';
+import { modelApiListAppTool } from './model-api-list-app.tool.js';
+import { modelApiLookupTool } from './model-api-lookup.tool.js';
+import { modelApiValidateAppTool } from './model-api-validate-app.tool.js';
 import { modelValidateFolderTool } from './model-validate-folder.tool.js';
 import { modelStoreScaffoldTool } from './model-store-scaffold.tool.js';
 import { modelFixtureListAppTool } from './model-fixture-list-app.tool.js';
@@ -138,8 +145,10 @@ export const DBX_TOOLS: readonly DbxTool[] = [
   lookupModelTool,
   searchModelTool,
   modelDecodeTool,
-  modelValidateTool,
   modelValidateApiTool,
+  modelApiListAppTool,
+  modelApiLookupTool,
+  modelApiValidateAppTool,
   modelValidateFolderTool,
   modelStoreScaffoldTool,
   modelFixtureListAppTool,
@@ -202,6 +211,12 @@ export interface RegisterToolsOptions {
    * concerns without it.
    */
   readonly fixtureModelRegistry?: FixtureModelRegistry;
+  /**
+   * Optional rule overrides for `dbx_model_validate`, resolved at server
+   * bootstrap from the workspace's `dbx-mcp.config.json` `modelValidate`
+   * block. When omitted, the validator runs with built-in defaults.
+   */
+  readonly modelValidateRuleOptions?: RuleOptions;
 }
 
 /**
@@ -217,6 +232,7 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions =
   const underlyingServer = server.server;
 
   const tools: DbxTool[] = [...DBX_TOOLS];
+  tools.push(createModelValidateTool({ ruleOptions: options.modelValidateRuleOptions }));
   tools.push(createModelFixtureValidateAppTool({ getRegistry: () => options.fixtureModelRegistry }));
   if (options.forgeFieldRegistry !== undefined) {
     tools.push(createLookupFormTool({ registry: options.forgeFieldRegistry }), createSearchFormTool({ registry: options.forgeFieldRegistry }), createFormScaffoldTool({ registry: options.forgeFieldRegistry }));

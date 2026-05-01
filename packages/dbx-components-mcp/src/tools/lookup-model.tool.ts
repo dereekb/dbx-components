@@ -36,7 +36,8 @@ const DBX_MODEL_LOOKUP_TOOL: Tool = {
     '',
     'Optional inputs:',
     '  • `scope`: `"all"` (default), `"upstream"` (only `@dereekb/firebase`), or `"downstream"` (only component packages).',
-    '  • `componentDirs`: explicit downstream package directories — overrides the default `components/*-firebase` discovery.'
+    '  • `componentDirs`: explicit downstream package directories — overrides the default `components/*-firebase` discovery.',
+    '  • `fields`: when the topic resolves to a single model, restrict the rendered fields table to those whose persisted name (e.g. `"fs"`) or longName (e.g. `"fileState"`) appears in the list (case-insensitive). Enums prune to only those referenced by the kept fields. Ignored on catalog/shapes/not-found responses.'
   ].join('\n'),
   inputSchema: {
     type: 'object',
@@ -61,6 +62,11 @@ const DBX_MODEL_LOOKUP_TOOL: Tool = {
         type: 'array',
         items: { type: 'string' },
         description: 'Optional explicit downstream component directories (workspace-relative).'
+      },
+      fields: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Restrict single-entry output to fields whose persisted name or longName matches an entry in this list (case-insensitive). Enums prune to only those referenced by the kept fields.'
       }
     },
     required: ['topic']
@@ -72,7 +78,8 @@ const LookupModelArgsType = type({
   topic: 'string',
   'depth?': "'brief' | 'full'",
   'scope?': "'all' | 'upstream' | 'downstream'",
-  'componentDirs?': 'string[]'
+  'componentDirs?': 'string[]',
+  'fields?': 'string[]'
 });
 
 type LookupScope = 'all' | 'upstream' | 'downstream';
@@ -82,6 +89,26 @@ interface ParsedLookupModelArgs {
   readonly depth: 'brief' | 'full';
   readonly scope: LookupScope;
   readonly componentDirs: readonly string[] | undefined;
+  readonly fields: readonly string[] | undefined;
+}
+
+function normalizeFieldsFilter(raw: readonly string[] | undefined): readonly string[] | undefined {
+  let result: readonly string[] | undefined;
+  if (raw !== undefined) {
+    const seen = new Set<string>();
+    const cleaned: string[] = [];
+    for (const entry of raw) {
+      const trimmed = entry.trim().toLowerCase();
+      if (trimmed.length > 0 && !seen.has(trimmed)) {
+        seen.add(trimmed);
+        cleaned.push(trimmed);
+      }
+    }
+    if (cleaned.length > 0) {
+      result = cleaned;
+    }
+  }
+  return result;
 }
 
 function parseLookupModelArgs(raw: unknown): ParsedLookupModelArgs {
@@ -93,7 +120,8 @@ function parseLookupModelArgs(raw: unknown): ParsedLookupModelArgs {
     topic: parsed.topic,
     depth: parsed.depth ?? ('full' as const),
     scope: (parsed.scope ?? 'all') as LookupScope,
-    componentDirs: parsed.componentDirs
+    componentDirs: parsed.componentDirs,
+    fields: normalizeFieldsFilter(parsed.fields)
   };
 }
 
@@ -216,7 +244,7 @@ export async function runLookupModel(rawArgs: unknown): Promise<ToolResult> {
       text = formatFirebaseStoreShapeTaxonomy();
       break;
     case 'single':
-      text = formatFirebaseModelEntry(match.model, args.depth);
+      text = formatFirebaseModelEntry(match.model, args.depth, { fields: args.fields });
       break;
     case 'not-found':
       text = formatNotFound(match.normalized, match.candidates);

@@ -14,19 +14,11 @@ import type { AppFixturesExtraction, FixtureEntry, FixtureMethod, FixtureValidat
  * @returns the markdown body
  */
 export function formatListAsMarkdown(extraction: AppFixturesExtraction): string {
-  const lines: string[] = [];
-  lines.push(`# App fixtures — ${extraction.fixturePath}`);
-  lines.push('');
-  lines.push(`Detected workspace prefix: \`${extraction.prefix ?? '(none)'}\``);
-  lines.push(`Identity imports: ${extraction.identityImports.length === 0 ? '_None._' : extraction.identityImports.map((s) => '`' + s + '`').join(', ')}`);
-  lines.push('');
-  lines.push(`## Fixtures (${extraction.entries.length})`);
+  const lines: string[] = [`# App fixtures — ${extraction.fixturePath}`, '', `Detected workspace prefix: \`${extraction.prefix ?? '(none)'}\``, `Identity imports: ${extraction.identityImports.length === 0 ? '_None._' : extraction.identityImports.map((s) => '`' + s + '`').join(', ')}`, '', `## Fixtures (${extraction.entries.length})`];
   if (extraction.entries.length === 0) {
     lines.push('', '_No model fixtures found._');
   } else {
-    lines.push('');
-    lines.push('| Model | Archetype | Fixture | Instance | Params | Factory | Singleton | Methods (F/I) | Lines |');
-    lines.push('|---|---|---|---|---|---|---|---|---|');
+    lines.push('', '| Model | Archetype | Fixture | Instance | Params | Factory | Singleton | Methods (F/I) | Lines |', '|---|---|---|---|---|---|---|---|---|');
     for (const e of extraction.entries) {
       lines.push('| ' + [e.model, e.archetype, code(e.fixtureClassName), code(e.instanceClassName), code(e.paramsTypeName), code(e.factoryName ?? '—'), code(e.singletonName ?? '—'), `${e.fixtureMethods.length}/${e.instanceMethods.length}`, `${e.fixtureLine}-${e.instanceEndLine}`].join(' | ') + ' |');
     }
@@ -114,11 +106,7 @@ function appendLookupParams(lines: string[], entry: FixtureEntry): void {
  * @returns the markdown body
  */
 export function formatValidationAsMarkdown(result: FixtureValidationResult): string {
-  const lines: string[] = [];
-  lines.push(`# Fixture validation — ${result.fixturePath}`);
-  lines.push('');
-  lines.push(`Errors: ${result.errorCount}`);
-  lines.push(`Warnings: ${result.warningCount}`);
+  const lines: string[] = [`# Fixture validation — ${result.fixturePath}`, '', `Errors: ${result.errorCount}`, `Warnings: ${result.warningCount}`];
   if (result.diagnostics.length === 0) {
     lines.push('', '_No diagnostics._');
     return lines.join('\n');
@@ -150,8 +138,7 @@ function appendMethodTable(lines: string[], methods: readonly FixtureMethod[]): 
     lines.push('', '_None._');
     return;
   }
-  lines.push('', '| Method | Async | Returns | Line |');
-  lines.push('|---|---|---|---|');
+  lines.push('', '| Method | Async | Returns | Line |', '|---|---|---|---|');
   for (const m of methods) {
     lines.push('| ' + [code(m.name + '(' + m.parameterText + ')'), m.isAsync ? 'yes' : 'no', code(m.returnTypeText ?? '—'), String(m.line)].join(' | ') + ' |');
   }
@@ -163,14 +150,13 @@ function appendForwardingTable(lines: string[], entry: FixtureEntry): void {
     return;
   }
   const fixtureByName = new Map(entry.fixtureMethods.map((m) => [m.name, m]));
-  lines.push('', '| Instance method | Forwarded? |');
-  lines.push('|---|---|');
+  lines.push('', '| Instance method | Forwarded? |', '|---|---|');
   for (const m of entry.instanceMethods) {
     const fixtureMethod = fixtureByName.get(m.name);
     let status: string;
     if (!fixtureMethod) {
       status = 'missing';
-    } else if (fixtureMethod.parameterText.replace(/\s+/g, '') !== m.parameterText.replace(/\s+/g, '')) {
+    } else if (fixtureMethod.parameterText.replaceAll(/\s+/g, '') !== m.parameterText.replaceAll(/\s+/g, '')) {
       status = 'forwarded — signature drifts';
     } else {
       status = 'forwarded';

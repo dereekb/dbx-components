@@ -48,6 +48,12 @@ export const DOC_EXTENSION_ROUTES = [
     ref: 'doc.extension.zip'
   },
   {
+    icon: 'picture_as_pdf',
+    title: 'PDF Merge',
+    detail: 'dbx-pdf-merge-editor',
+    ref: 'doc.extension.pdf'
+  },
+  {
     icon: 'preview',
     title: 'Web File Preview',
     detail: 'web file preview',

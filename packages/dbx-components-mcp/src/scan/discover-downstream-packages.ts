@@ -193,8 +193,8 @@ export function packageNameToSlug(packageName: string): string {
   return packageName
     .toLowerCase()
     .replace(/^@/, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
+    .replaceAll(/[^a-z0-9]+/g, '-')
+    .replaceAll(/^-+|-+$/g, '');
 }
 
 interface ScanConfigShape {
@@ -249,12 +249,10 @@ const FILE_HEURISTICS: readonly ClusterFileHeuristic[] = [
 
 async function detectCandidateClusters(absDir: string): Promise<readonly DownstreamCluster[]> {
   const found = new Set<DownstreamCluster>();
-  let sawAnyTs = false;
 
   try {
     for await (const match of fsGlob(SOURCE_GLOB, { cwd: absDir })) {
       const rel = match.split(sep).join('/');
-      sawAnyTs = true;
       for (const h of FILE_HEURISTICS) {
         if (!found.has(h.cluster) && h.matches(rel)) {
           found.add(h.cluster);
@@ -270,8 +268,6 @@ async function detectCandidateClusters(absDir: string): Promise<readonly Downstr
   // explicit `*.filter.ts` exists we still let `actions` carry the directive.
   // Semantic types are intentionally not heuristic-detected: the scan-config's
   // explicit `topicNamespace` is the only signal we trust.
-  void sawAnyTs;
-
   return [...found];
 }
 

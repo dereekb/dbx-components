@@ -393,42 +393,32 @@ export enum ModelValidateCode {
   SUB_MISSING_COLLECTION_GROUP_FN = 'SUB_MISSING_COLLECTION_GROUP_FN',
 
   /**
-   * A persisted field's name exceeds the workspace's 4-character convention.
+   * A persisted field's name exceeds the workspace's 5-character convention.
    *
    * @dbxRuleSeverity warning
-   * @dbxRuleApplies Every persisted field on a model interface (or sub-object interface).
-   * @dbxRuleNotApplies Fields that compose well-known multi-character abbreviations the project intentionally allows.
-   * @dbxRuleFix Rename the field to a 1–4 character abbreviation (e.g. `name` → `n`, `userId` → `uid`).
+   * @dbxRuleApplies Every persisted field on a model interface (or sub-object interface). The default limit is 5; override via `dbx-mcp.config.json` `modelValidate.maxFieldNameLength`.
+   * @dbxRuleNotApplies Fields whose name is listed in `dbx-mcp.config.json` `modelValidate.ignoredFieldNames`, or fields that compose well-known multi-character abbreviations the project intentionally allows.
+   * @dbxRuleFix Rename the field to a 1–5 character abbreviation (e.g. `name` → `n`, `userId` → `uid`). To exempt specific names workspace-wide, add them to `modelValidate.ignoredFieldNames` in `dbx-mcp.config.json`.
    */
   MODEL_FIELD_NAME_TOO_LONG = 'MODEL_FIELD_NAME_TOO_LONG',
 
   /**
-   * A persisted field has no JSDoc.
+   * A persisted field has no JSDoc description.
    *
    * @dbxRuleSeverity warning
-   * @dbxRuleApplies Every persisted field — short field names need JSDoc to document what they mean.
+   * @dbxRuleApplies Every persisted field — short field names need a JSDoc description so a reader knows what the field is actually for. The long-name itself is carried by the `@dbxModelVariable` tag, so the JSDoc body just needs a one-line description.
    * @dbxRuleNotApplies Fields whose name is unambiguously self-describing (rare with 1-4 char abbreviations).
-   * @dbxRuleFix Add `/** <fullName> -- <description> *\/` above the field declaration.
+   * @dbxRuleFix Add `/** <one-line description> *\/` above the field declaration (and append `@dbxModelVariable <longName>` for the canonical long name).
    */
   MODEL_FIELD_MISSING_JSDOC = 'MODEL_FIELD_MISSING_JSDOC',
-
-  /**
-   * A persisted field's JSDoc doesn't open with `<fullName> -- <description>`.
-   *
-   * @dbxRuleSeverity warning
-   * @dbxRuleApplies Every field with JSDoc — the first line should match the `<fullName> -- <description>` pattern so the long-name extractor and decoder agree on field semantics.
-   * @dbxRuleNotApplies When the project deliberately uses a non-standard JSDoc convention (rare).
-   * @dbxRuleFix Reformat the JSDoc opener to `<longName> -- <one-line description>`.
-   */
-  MODEL_FIELD_JSDOC_NO_FULL_NAME = 'MODEL_FIELD_JSDOC_NO_FULL_NAME',
 
   /**
    * A persisted field is missing its `@dbxModelVariable <name>` JSDoc tag.
    *
    * @dbxRuleSeverity warning
-   * @dbxRuleApplies Every field on a `@dbxModel` interface — the tag carries the human-readable long name the catalog and decoder use when surfacing the field to operators.
+   * @dbxRuleApplies Every field on a `@dbxModel` interface — the tag carries the human-readable long name the catalog and decoder use when surfacing the field to operators. The long name is the variable name the field would have unabbreviated, written in camelCase (e.g. `uid` → `userUid`, `n` → `name`, `crAt` → `createdAt`).
    * @dbxRuleNotApplies Fields on embedded sub-object interfaces (no `@dbxModel` parent) and fields the project deliberately leaves untagged (rare).
-   * @dbxRuleFix Append `@dbxModelVariable <longName>` to the field's JSDoc block.
+   * @dbxRuleFix Append `@dbxModelVariable <longName>` to the field's JSDoc block, where `<longName>` is the field's unabbreviated camelCase variable name.
    */
   MODEL_FIELD_MISSING_VARIABLE_TAG = 'MODEL_FIELD_MISSING_VARIABLE_TAG'
 }

@@ -252,7 +252,7 @@ function pushModelsWithoutFixtureDiagnostics(extraction: AppFixturesExtraction, 
 
 // MARK: helpers
 function signaturesMatch(a: FixtureMethod, b: FixtureMethod): boolean {
-  if (a.parameterText.replace(/\s+/g, '') !== b.parameterText.replace(/\s+/g, '')) return false;
+  if (a.parameterText.replaceAll(/\s+/g, '') !== b.parameterText.replaceAll(/\s+/g, '')) return false;
   if (a.isAsync !== b.isAsync) return false;
   return true;
 }

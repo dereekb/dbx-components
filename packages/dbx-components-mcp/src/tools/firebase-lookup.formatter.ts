@@ -6,9 +6,44 @@
  * every declared enum, and the source path for further reading.
  */
 
-import type { FirebaseModel } from '../registry/firebase-models.js';
+import type { FirebaseField, FirebaseModel } from '../registry/firebase-models.js';
 
 export type LookupDepth = 'brief' | 'full';
+
+/**
+ * Optional knobs for {@link formatFirebaseModelEntry}.
+ *
+ * - `fields`: list of lowercased, trimmed field identifiers. When set, the
+ *   fields table is restricted to fields whose `name` or `longName` matches
+ *   one of the entries; enums are pruned to only those referenced via
+ *   `enumRef` on a kept field. The list is assumed pre-normalized by the
+ *   caller (lowercase, deduped, no empty strings).
+ */
+export interface FormatFirebaseModelEntryOptions {
+  readonly fields?: readonly string[];
+}
+
+interface FilteredFields {
+  readonly kept: readonly FirebaseField[];
+  readonly unmatchedFilters: readonly string[];
+}
+
+function applyFieldsFilter(model: FirebaseModel, filter: readonly string[]): FilteredFields {
+  const filterSet = new Set(filter);
+  const matched = new Set<string>();
+  const kept: FirebaseField[] = [];
+  for (const field of model.fields) {
+    const nameLower = field.name.toLowerCase();
+    const longNameLower = field.longName.toLowerCase();
+    if (filterSet.has(nameLower) || filterSet.has(longNameLower)) {
+      kept.push(field);
+      if (filterSet.has(nameLower)) matched.add(nameLower);
+      if (filterSet.has(longNameLower)) matched.add(longNameLower);
+    }
+  }
+  const unmatchedFilters = filter.filter((entry) => !matched.has(entry));
+  return { kept, unmatchedFilters };
+}
 
 /**
  * Discriminator for the consumer-side store-class shape that pairs with each
@@ -47,45 +82,96 @@ const STORE_SHAPE_LABEL: Readonly<Record<FirebaseModelStoreShape, string>> = {
  *
  * @param model - the registry entry to render
  * @param depth - `'brief'` for fields-only or `'full'` for type/converter columns + enums
+ * @param options - optional knobs (e.g. `fields` filter)
  * @returns the markdown body the tool emits as content
  */
-export function formatFirebaseModelEntry(model: FirebaseModel, depth: LookupDepth): string {
+export function formatFirebaseModelEntry(model: FirebaseModel, depth: LookupDepth, options?: FormatFirebaseModelEntryOptions): string {
   const identityLine = model.parentIdentityConst ? `\`${model.identityConst}\` — subcollection of \`${model.parentIdentityConst}\`` : `\`${model.identityConst}\` — root collection`;
   const shape = firebaseModelStoreShape(model);
-  const lines: string[] = [`# ${model.name}`, '', `**Package:** \`${model.sourcePackage}\``, `**Identity:** ${identityLine}`, `**Collection:** \`${model.modelType}\` · prefix \`${model.collectionPrefix}\``, `**Store shape:** \`${STORE_SHAPE_LABEL[shape]}\` (see \`dbx_model_lookup topic="shapes"\` for the full taxonomy)`, `**Source:** \`${model.sourceFile}\``, '', `## Fields (${model.fields.length})`, ''];
 
+  const filter = options?.fields;
+  const filtered = filter !== undefined ? applyFieldsFilter(model, filter) : undefined;
+  const fieldsToRender: readonly FirebaseField[] = filtered ? filtered.kept : model.fields;
+  const totalFields = model.fields.length;
+  const fieldsHeader = filtered ? `## Fields (${fieldsToRender.length} of ${totalFields})` : `## Fields (${totalFields})`;
+
+  const lines: string[] = [`# ${model.name}`, '', `**Package:** \`${model.sourcePackage}\``, `**Identity:** ${identityLine}`, `**Collection:** \`${model.modelType}\` · prefix \`${model.collectionPrefix}\``, `**Store shape:** \`${STORE_SHAPE_LABEL[shape]}\` (see \`dbx_model_lookup topic="shapes"\` for the full taxonomy)`, `**Source:** \`${model.sourceFile}\``, '', fieldsHeader, ''];
+
+  if (filtered) {
+    lines.push(`_Showing ${fieldsToRender.length} of ${totalFields} fields (filtered by \`fields\`)._`, '');
+  }
+
+  appendFieldsTable(lines, fieldsToRender, depth);
+
+  if (depth === 'full') {
+    const enumsToRender = filtered ? prunedEnumsForFields(model, fieldsToRender) : model.enums;
+    appendEnumsSection(lines, enumsToRender);
+  }
+
+  if (filtered) {
+    appendFilterFooters(lines, filtered);
+  }
+
+  return lines.join('\n').trimEnd();
+}
+
+function appendFieldsTable(lines: string[], fields: readonly FirebaseField[], depth: LookupDepth): void {
   if (depth === 'brief') {
     lines.push('| Field | Description |', '|-------|-------------|');
-    for (const field of model.fields) {
-      const desc = (field.description ?? '–').replaceAll('|', String.raw`\|`).replaceAll('\n', ' ');
+    for (const field of fields) {
+      const desc = describeField(field);
       lines.push(`| \`${field.name}\` | ${desc} |`);
     }
   } else {
     lines.push('| Field | Description | Type | Converter |', '|-------|-------------|------|-----------|');
-    for (const field of model.fields) {
-      const desc = (field.description ?? '–').replaceAll('|', String.raw`\|`).replaceAll('\n', ' ');
+    for (const field of fields) {
+      const desc = describeField(field);
       const ts = field.tsType ? `\`${field.tsType}\`` : '–';
       const conv = `\`${field.converter}\``;
       lines.push(`| \`${field.name}\` | ${desc} | ${ts} | ${conv} |`);
     }
+  }
+}
 
-    if (model.enums.length > 0) {
-      lines.push('', '## Enums', '');
-      for (const en of model.enums) {
-        lines.push(`### ${en.name}`, '');
-        if (en.description) {
-          lines.push(en.description, '');
-        }
-        for (const value of en.values) {
-          const desc = value.description ? ` — ${value.description}` : '';
-          lines.push(`- \`${value.name} = ${value.value}\`${desc}`);
-        }
-        lines.push('');
+function describeField(field: FirebaseField): string {
+  return (field.description ?? '–').replaceAll('|', String.raw`\|`).replaceAll('\n', ' ');
+}
+
+function appendEnumsSection(lines: string[], enums: readonly FirebaseModel['enums'][number][]): void {
+  if (enums.length > 0) {
+    lines.push('', '## Enums', '');
+    for (const en of enums) {
+      lines.push(`### ${en.name}`, '');
+      if (en.description) {
+        lines.push(en.description, '');
       }
+      for (const value of en.values) {
+        const desc = value.description ? ` — ${value.description}` : '';
+        lines.push(`- \`${value.name} = ${value.value}\`${desc}`);
+      }
+      lines.push('');
     }
   }
+}
 
-  return lines.join('\n').trimEnd();
+function appendFilterFooters(lines: string[], filtered: FilteredFields): void {
+  if (filtered.unmatchedFilters.length > 0) {
+    const formatted = filtered.unmatchedFilters.map((entry) => `\`${entry}\``).join(', ');
+    lines.push('', `_Unmatched filters: ${formatted}._`);
+  }
+  if (filtered.kept.length === 0) {
+    lines.push('', '_No fields matched. Drop `fields` to see the full model._');
+  }
+}
+
+function prunedEnumsForFields(model: FirebaseModel, kept: readonly FirebaseField[]): readonly FirebaseModel['enums'][number][] {
+  const referenced = new Set<string>();
+  for (const field of kept) {
+    if (field.enumRef !== undefined) {
+      referenced.add(field.enumRef);
+    }
+  }
+  return referenced.size === 0 ? [] : model.enums.filter((en) => referenced.has(en.name));
 }
 
 /**

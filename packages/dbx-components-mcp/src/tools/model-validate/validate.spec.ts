@@ -237,39 +237,28 @@ describe('validateFirebaseModelSources', () => {
     expectCodes(codes, ['SUB_MISSING_COLLECTION_GROUP_REFERENCE', 'SUB_MISSING_COLLECTION_GROUP_TYPE', 'SUB_MISSING_COLLECTION_GROUP_FN']);
   });
 
-  it('warns when a field has no JSDoc comment', () => {
+  it('warns when a field has no JSDoc description', () => {
     const result = validateFirebaseModelSources([{ name: 'x.ts', text: HAPPY_SOURCE }]);
     const missing = result.violations.filter((v) => v.code === 'MODEL_FIELD_MISSING_JSDOC');
     expect(missing.length).toBeGreaterThan(0);
     expect(missing[0].severity).toBe('warning');
   });
 
-  it('does not warn when JSDoc first line has `FullName -- description`', () => {
-    const withFullName = HAPPY_SOURCE.replace('export interface Profile {\n  uid: string;\n  n: string;\n}', 'export interface Profile {\n  /** Uid -- the user auth UID. */\n  uid: string;\n  /** Name -- the user display name. */\n  n: string;\n}');
-    const result = validateFirebaseModelSources([{ name: 'x.ts', text: withFullName }]);
-    const profileFields = result.violations.filter((v) => (v.code === 'MODEL_FIELD_MISSING_JSDOC' || v.code === 'MODEL_FIELD_JSDOC_NO_FULL_NAME') && v.model === 'Profile');
+  it('does not warn MODEL_FIELD_MISSING_JSDOC when each field has a JSDoc description', () => {
+    const withDocs = HAPPY_SOURCE.replace('export interface Profile {\n  uid: string;\n  n: string;\n}', 'export interface Profile {\n  /** the user auth UID. */\n  uid: string;\n  /** the user display name. */\n  n: string;\n}');
+    const result = validateFirebaseModelSources([{ name: 'x.ts', text: withDocs }]);
+    const profileFields = result.violations.filter((v) => v.code === 'MODEL_FIELD_MISSING_JSDOC' && v.model === 'Profile');
     expect(profileFields).toHaveLength(0);
   });
 
-  it('warns when a JSDoc is present but the first line lacks a full name', () => {
-    const noFullName = HAPPY_SOURCE.replace('export interface Profile {\n  uid: string;\n  n: string;\n}', 'export interface Profile {\n  /** the user auth UID. */\n  uid: string;\n  /** Name -- ok. */\n  n: string;\n}');
-    const result = validateFirebaseModelSources([{ name: 'x.ts', text: noFullName }]);
-    const badFormat = result.violations.filter((v) => v.code === 'MODEL_FIELD_JSDOC_NO_FULL_NAME' && v.message.includes('`uid`'));
-    expect(badFormat).toHaveLength(1);
-    expect(badFormat[0].severity).toBe('warning');
+  it('does not require a `<FullName> -- <description>` JSDoc opener', () => {
+    const freeFormDocs = HAPPY_SOURCE.replace('export interface Profile {\n  uid: string;\n  n: string;\n}', 'export interface Profile {\n  /** the user auth UID. */\n  uid: string;\n  /** the user display name. */\n  n: string;\n}');
+    const result = validateFirebaseModelSources([{ name: 'x.ts', text: freeFormDocs }]);
+    const fullNameWarnings = result.violations.filter((v) => (v.code as string) === 'MODEL_FIELD_JSDOC_NO_FULL_NAME');
+    expect(fullNameWarnings).toHaveLength(0);
   });
 
-  it('accepts all supported separators (`--`, em dash, en dash, `-`, `:`)', () => {
-    const variants = ['export interface Profile {\n  /** Uid -- the user auth UID. */\n  uid: string;\n  /** Name — the user display name. */\n  n: string;\n}', 'export interface Profile {\n  /** Uid – the user auth UID. */\n  uid: string;\n  /** Name: the user display name. */\n  n: string;\n}', 'export interface Profile {\n  /** Uid - the user auth UID. */\n  uid: string;\n  /** Name -- the user display name. */\n  n: string;\n}'];
-    for (const replacement of variants) {
-      const text = HAPPY_SOURCE.replace('export interface Profile {\n  uid: string;\n  n: string;\n}', replacement);
-      const result = validateFirebaseModelSources([{ name: 'x.ts', text }]);
-      const profileIssues = result.violations.filter((v) => (v.code === 'MODEL_FIELD_MISSING_JSDOC' || v.code === 'MODEL_FIELD_JSDOC_NO_FULL_NAME') && v.model === 'Profile');
-      expect(profileIssues, `variant: ${replacement}`).toHaveLength(0);
-    }
-  });
-
-  it('warns on interface field names longer than 4 characters', () => {
+  it('warns on interface field names longer than the default limit (5)', () => {
     const text = HAPPY_SOURCE.replace('export interface Profile {\n  uid: string;\n  n: string;\n}', 'export interface Profile {\n  uid: string;\n  n: string;\n  tooLong: string;\n}');
     const result = validateFirebaseModelSources([{ name: 'x.ts', text }]);
     expect(result.errorCount).toBe(0);
@@ -278,11 +267,35 @@ describe('validateFirebaseModelSources', () => {
     expect(nameWarnings[0].severity).toBe('warning');
     expect(nameWarnings[0].message).toContain('tooLong');
     expect(nameWarnings[0].message).toContain('Profile');
+    expect(nameWarnings[0].message).toContain('limit 5');
   });
 
-  it('does not warn on fields with names of exactly 4 characters', () => {
-    const text = HAPPY_SOURCE.replace('export interface Profile {\n  uid: string;\n  n: string;\n}', 'export interface Profile {\n  uid: string;\n  n: string;\n  user: string;\n}');
+  it('does not warn on fields with names of exactly 5 characters', () => {
+    const text = HAPPY_SOURCE.replace('export interface Profile {\n  uid: string;\n  n: string;\n}', 'export interface Profile {\n  uid: string;\n  n: string;\n  cuid: string;\n  email: string;\n}');
     const result = validateFirebaseModelSources([{ name: 'x.ts', text }]);
+    const nameWarnings = result.violations.filter((v) => v.code === 'MODEL_FIELD_NAME_TOO_LONG');
+    expect(nameWarnings).toHaveLength(0);
+  });
+
+  it('honors maxFieldNameLength override (limit lowered to 3 makes `user` warn)', () => {
+    const text = HAPPY_SOURCE.replace('export interface Profile {\n  uid: string;\n  n: string;\n}', 'export interface Profile {\n  uid: string;\n  n: string;\n  user: string;\n}');
+    const result = validateFirebaseModelSources([{ name: 'x.ts', text }], { maxFieldNameLength: 3 });
+    const nameWarnings = result.violations.filter((v) => v.code === 'MODEL_FIELD_NAME_TOO_LONG');
+    expect(nameWarnings).toHaveLength(1);
+    expect(nameWarnings[0].message).toContain('user');
+    expect(nameWarnings[0].message).toContain('limit 3');
+  });
+
+  it('honors maxFieldNameLength override (limit raised to 8 makes `tooLong` pass)', () => {
+    const text = HAPPY_SOURCE.replace('export interface Profile {\n  uid: string;\n  n: string;\n}', 'export interface Profile {\n  uid: string;\n  n: string;\n  tooLong: string;\n}');
+    const result = validateFirebaseModelSources([{ name: 'x.ts', text }], { maxFieldNameLength: 8 });
+    const nameWarnings = result.violations.filter((v) => v.code === 'MODEL_FIELD_NAME_TOO_LONG');
+    expect(nameWarnings).toHaveLength(0);
+  });
+
+  it('honors ignoredFieldNames — exempts a long name despite default limit', () => {
+    const text = HAPPY_SOURCE.replace('export interface Profile {\n  uid: string;\n  n: string;\n}', 'export interface Profile {\n  uid: string;\n  n: string;\n  tooLong: string;\n}');
+    const result = validateFirebaseModelSources([{ name: 'x.ts', text }], { ignoredFieldNames: new Set(['tooLong']) });
     const nameWarnings = result.violations.filter((v) => v.code === 'MODEL_FIELD_NAME_TOO_LONG');
     expect(nameWarnings).toHaveLength(0);
   });
@@ -569,7 +582,7 @@ export function agentSummaryFirestoreCollection(firestoreContext: FirestoreConte
       const result = validateFirebaseModelSources([{ name: 'x.ts', text }]);
       const identityErrs = result.violations.filter((v) => v.code === 'MODEL_IDENTITY_NOT_TAGGED');
       expect(identityErrs).toHaveLength(2);
-      const models = identityErrs.map((v) => v.model).sort();
+      const models = identityErrs.map((v) => v.model).sort((a, b) => (a ?? '').localeCompare(b ?? ''));
       expect(models).toEqual(['Profile', 'ProfilePrivate']);
     });
 

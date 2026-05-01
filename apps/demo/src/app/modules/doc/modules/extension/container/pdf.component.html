@@ -1,0 +1,14 @@
+<dbx-content-container>
+  <doc-feature-layout header="PDF Merge Editor" hint="Used for combining multiple PDFs and/or images into a single merged PDF.">
+    <!-- Examples -->
+    <doc-feature-example header="dbx-pdf-merge-editor" hint="Add files via drag-drop or the file picker, reorder by dragging the handle, then click Preview to merge and view the resulting PDF. Downstream consumers can subscribe to the store's mergeOutput$ for the merged blob.">
+      <p>Drop PDFs (application/pdf) and/or images (PNG/JPEG) into the upload area. Drag the handle on each row to reorder. Pages are appended in list order; image entries become a single page sized to the image.</p>
+      <dbx-content-border>
+        <dbx-pdf-merge-editor [showPreviewButton]="true" [showDownloadButton]="true"></dbx-pdf-merge-editor>
+      </dbx-content-border>
+      @if (lastBlobSizeSignal(); as size) {
+        <p class="dbx-hint">Last merged blob size: {{ size }} bytes</p>
+      }
+    </doc-feature-example>
+  </doc-feature-layout>
+</dbx-content-container>

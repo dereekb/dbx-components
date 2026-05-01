@@ -72,6 +72,22 @@ describe('formatTreeAsMarkdown', () => {
     expect(md).toContain('Country');
     expect(md).toContain('Job');
   });
+
+  it('surfaces itShould* helper callee in describes view and counts', () => {
+    const text = `describe('persistence', () => { it('a', () => {}); itShouldFail('rejects bad input', () => {}); });\n`;
+    const tree = extractSpecTreeFromText({ text, specPath: 'spec.ts' });
+    expect(tree.itCount).toBe(2);
+    const md = formatTreeAsMarkdown(tree, 'describes');
+    expect(md).toContain('**itShouldFail** `rejects bad input`');
+    expect(md).toContain('**it** `a`');
+  });
+
+  it('its view labels itShould* calls with the via-callee suffix', () => {
+    const text = `describe('persistence', () => { it('a', () => {}); itShouldFail('rejects bad input', () => {}); });\n`;
+    const tree = extractSpecTreeFromText({ text, specPath: 'spec.ts' });
+    const md = formatTreeAsMarkdown(tree, 'its');
+    expect(md).toContain('persistence > `rejects bad input` _(via `itShouldFail`)_');
+  });
 });
 
 describe('formatTreeAsJson', () => {

@@ -25,7 +25,7 @@ export type DbxFileUploadButtonFilesChangedEvent = DbxFileUploadFilesChangedEven
     <dbx-button [buttonStyle]="buttonStyle()" [text]="text()" [icon]="icon()" [ariaLabel]="ariaLabel() || text() || 'Upload file'" (buttonClick)="openInput()" [disabled]="disabledSignal()" [working]="workingSignal()">
       <ng-content></ng-content>
     </dbx-button>
-    <input #fileInput hidden type="file" [attr.accept]="buttonAcceptSignal() ?? null" [attr.multiple]="multipleAttributeSignal() ? '' : null" (change)="fileInputChanged()" />
+    <input #fileInput hidden type="file" [attr.accept]="buttonAcceptSignal() ?? null" [attr.multiple]="multipleAttributeSignal()" (change)="fileInputChanged()" />
   `,
   providers: provideDbxFileUploadActionCompatable(DbxFileUploadButtonComponent),
   imports: [DbxButtonComponent],

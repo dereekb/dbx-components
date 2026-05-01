@@ -52,6 +52,20 @@ export type ImageFileExtension = 'jpeg' | 'jpg' | 'png' | 'webp' | 'gif' | 'svg'
  */
 export const JPEG_MIME_TYPE: MimeTypeWithoutParameters = 'image/jpeg';
 /**
+ * Non-canonical MIME type sometimes emitted by older browsers/clients for JPEG images.
+ */
+export const JPG_MIME_TYPE: MimeTypeWithoutParameters = 'image/jpg';
+/**
+ * Progressive JPEG MIME type emitted by some legacy clients (notably Internet Explorer).
+ */
+export const PJPEG_MIME_TYPE: MimeTypeWithoutParameters = 'image/pjpeg';
+/**
+ * All MIME type variants that should be treated as JPEG images, including the canonical
+ * `image/jpeg` and the non-standard `image/jpg` and `image/pjpeg` variants emitted by
+ * some browsers/clients.
+ */
+export const JPEG_MIME_TYPES: readonly MimeTypeWithoutParameters[] = [JPEG_MIME_TYPE, JPG_MIME_TYPE, PJPEG_MIME_TYPE];
+/**
  * MIME type for PNG images.
  */
 export const PNG_MIME_TYPE: MimeTypeWithoutParameters = 'image/png';

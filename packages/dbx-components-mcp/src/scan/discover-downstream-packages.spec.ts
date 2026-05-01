@@ -26,7 +26,7 @@ describe('discoverDownstreamPackages', () => {
     await scaffoldPackage({ workspaceRoot, relDir: 'components/demo-web', packageName: '@demo/demo-web', files: { 'foo.directive.ts': 'export class FooDirective {}' } });
     await scaffoldPackage({ workspaceRoot, relDir: 'components/demo-core', packageName: 'demo-core', files: {} });
     const packages = await discoverDownstreamPackages({ workspaceRoot });
-    expect(packages.map((p) => p.relDir).sort()).toEqual(['components/demo-core', 'components/demo-firebase', 'components/demo-shared', 'components/demo-web']);
+    expect(packages.map((p) => p.relDir).sort((a, b) => a.localeCompare(b))).toEqual(['components/demo-core', 'components/demo-firebase', 'components/demo-shared', 'components/demo-web']);
   });
 
   it('skips apps/* without dbx-mcp.scan.json', async () => {
@@ -61,7 +61,7 @@ describe('discoverDownstreamPackages', () => {
     });
     const packages = await discoverDownstreamPackages({ workspaceRoot });
     expect(packages).toHaveLength(1);
-    expect([...packages[0].candidateClusters].sort()).toEqual(['actions', 'filters', 'forgeFields', 'pipes', 'uiComponents']);
+    expect([...packages[0].candidateClusters].sort((a, b) => a.localeCompare(b))).toEqual(['actions', 'filters', 'forgeFields', 'pipes', 'uiComponents']);
   });
 
   it('ignores .spec.ts in heuristics', async () => {
@@ -95,8 +95,8 @@ describe('discoverDownstreamPackages', () => {
     await scaffoldPackage({ workspaceRoot, relDir: 'components/demo-shared', packageName: 'demo-shared', files: { 'foo.pipe.ts': '' } });
     await writeFile(join(workspaceRoot, 'components/demo-shared/dbx-mcp.scan.json'), JSON.stringify({ version: 1, source: 'demo', topicNamespace: 'demo', include: ['src/**/*.ts'], actions: { include: ['src/**/*.ts'] } }), 'utf8');
     const packages = await discoverDownstreamPackages({ workspaceRoot });
-    expect([...packages[0].candidateClusters].sort()).toEqual(['actions', 'pipes', 'semanticTypes']);
-    expect([...packages[0].declaredScanClusters].sort()).toEqual(['actions', 'semanticTypes']);
+    expect([...packages[0].candidateClusters].sort((a, b) => a.localeCompare(b))).toEqual(['actions', 'pipes', 'semanticTypes']);
+    expect([...packages[0].declaredScanClusters].sort((a, b) => a.localeCompare(b))).toEqual(['actions', 'semanticTypes']);
   });
 });
 

@@ -1,3 +1,107 @@
 {
-  "version": 1
+  "version": 1,
+  "semanticTypes": {
+    "scan": [
+      {
+        "project": "packages/util",
+        "source": "@dereekb/util",
+        "topicNamespace": "dereekb-util",
+        "include": ["src/lib/**/*.ts"],
+        "exclude": ["**/*.spec.ts", "**/*.test.ts"],
+        "out": "packages/dbx-components-mcp/generated/dereekb-util.semantic-types.mcp.generated.json"
+      },
+      {
+        "project": "packages/model",
+        "source": "@dereekb/model",
+        "topicNamespace": "dereekb-model",
+        "include": ["src/lib/**/*.ts"],
+        "exclude": ["**/*.spec.ts", "**/*.test.ts"],
+        "out": "packages/dbx-components-mcp/generated/dereekb-model.semantic-types.mcp.generated.json"
+      },
+      {
+        "project": "packages/date",
+        "source": "@dereekb/date",
+        "topicNamespace": "dereekb-date",
+        "include": ["src/lib/**/*.ts"],
+        "exclude": ["**/*.spec.ts", "**/*.test.ts"],
+        "out": "packages/dbx-components-mcp/generated/dereekb-date.semantic-types.mcp.generated.json"
+      },
+      {
+        "project": "packages/firebase",
+        "source": "@dereekb/firebase",
+        "topicNamespace": "dereekb-firebase",
+        "include": ["src/lib/**/*.ts"],
+        "exclude": ["**/*.spec.ts", "**/*.test.ts"],
+        "out": "packages/dbx-components-mcp/generated/dereekb-firebase.semantic-types.mcp.generated.json"
+      },
+      {
+        "project": "packages/firebase-server",
+        "source": "@dereekb/firebase-server",
+        "topicNamespace": "dereekb-firebase-server",
+        "include": ["src/lib/**/*.ts", "test/src/lib/**/*.ts"],
+        "exclude": ["**/*.spec.ts", "**/*.test.ts"],
+        "out": "packages/dbx-components-mcp/generated/dereekb-firebase-server.semantic-types.mcp.generated.json"
+      }
+    ]
+  },
+  "uiComponents": {
+    "scan": [
+      {
+        "project": "packages/dbx-web",
+        "source": "@dereekb/dbx-web",
+        "module": "@dereekb/dbx-web",
+        "include": ["src/lib/**/*.ts"],
+        "exclude": ["**/*.spec.ts", "**/*.test.ts"],
+        "out": "packages/dbx-components-mcp/generated/dereekb-dbx-web.ui-components.mcp.generated.json"
+      }
+    ]
+  },
+  "forgeFields": {
+    "scan": [
+      {
+        "project": "packages/dbx-form",
+        "source": "@dereekb/dbx-form",
+        "module": "@dereekb/dbx-form",
+        "include": ["src/lib/forge/**/*.ts", "src/lib/field/field.autocomplete.ts"],
+        "exclude": ["**/*.spec.ts", "**/*.test.ts"],
+        "out": "packages/dbx-components-mcp/generated/dereekb-dbx-form.forge-fields.mcp.generated.json"
+      }
+    ]
+  },
+  "pipes": {
+    "scan": [
+      {
+        "project": "packages/dbx-core",
+        "source": "@dereekb/dbx-core",
+        "module": "@dereekb/dbx-core",
+        "include": ["src/lib/pipe/**/*.pipe.ts"],
+        "exclude": ["**/*.spec.ts", "**/*.test.ts"],
+        "out": "packages/dbx-components-mcp/generated/dereekb-dbx-core.pipes.mcp.generated.json"
+      }
+    ]
+  },
+  "actions": {
+    "scan": [
+      {
+        "project": "packages/dbx-core",
+        "source": "@dereekb/dbx-core",
+        "module": "@dereekb/dbx-core",
+        "include": ["src/lib/action/**/*.ts"],
+        "exclude": ["**/*.spec.ts", "**/*.test.ts"],
+        "out": "packages/dbx-components-mcp/generated/dereekb-dbx-core.actions.mcp.generated.json"
+      }
+    ]
+  },
+  "filters": {
+    "scan": [
+      {
+        "project": "packages/dbx-core",
+        "source": "@dereekb/dbx-core",
+        "module": "@dereekb/dbx-core",
+        "include": ["src/lib/filter/**/*.ts"],
+        "exclude": ["**/*.spec.ts", "**/*.test.ts", "**/filter.abstract.*.ts", "**/filter.module.ts", "**/filter.content.ts", "**/filter.map.instance.directive.ts", "**/index.ts"],
+        "out": "packages/dbx-components-mcp/generated/dereekb-dbx-core.filters.mcp.generated.json"
+      }
+    ]
+  }
 }

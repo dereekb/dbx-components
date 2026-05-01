@@ -49,6 +49,18 @@ const FIXTURE_FACTORY_SUFFIX = 'ContextFactory';
 const HOOK_NAMES: ReadonlySet<string> = new Set(['beforeEach', 'beforeAll', 'afterEach', 'afterAll']);
 const DESCRIBE_NAMES: ReadonlySet<string> = new Set(['describe', 'xdescribe', 'fdescribe']);
 const IT_NAMES: ReadonlySet<string> = new Set(['it', 'xit', 'fit', 'test']);
+/**
+ * Pattern matching `itShould*` helper functions (e.g. `itShouldFail`,
+ * `itShouldPass`). Such helpers wrap a real `it(...)` call and follow the
+ * same `(title, body)` shape, so we treat them as it-equivalent — they
+ * count toward {@link SpecFileTree.itCount} and surface in the `describes`,
+ * `its`, and search views with their own callee identifier preserved.
+ */
+const IT_HELPER_PREFIX_PATTERN = /^itShould(?:[A-Z]|$)/;
+
+function isItName(name: string): boolean {
+  return IT_NAMES.has(name) || IT_HELPER_PREFIX_PATTERN.test(name);
+}
 
 /**
  * Pure entry point used by inspect.ts and tests. Parses the supplied spec
@@ -236,7 +248,7 @@ function trimToCamelBoundary(s: string): string {
 }
 
 function dedupedSorted(names: readonly string[]): readonly string[] {
-  return [...new Set(names)].sort();
+  return [...new Set(names)].sort((a, b) => a.localeCompare(b));
 }
 
 interface WalkContext {
@@ -264,7 +276,7 @@ function walkCall(call: CallExpression, ctx: WalkContext): SpecNode | undefined 
     ctx.counts.describe += 1;
     return describeOrItNode('describe', call, calleeName, line, endLine, ctx);
   }
-  if (IT_NAMES.has(calleeName)) {
+  if (isItName(calleeName)) {
     ctx.counts.it += 1;
     return describeOrItNode('it', call, calleeName, line, endLine, ctx);
   }
@@ -548,7 +560,7 @@ function scanForDescribeOrIt(node: Node): DescribeOrItUsage {
     if (!Node.isIdentifier(expr)) return;
     const name = expr.getText();
     if (DESCRIBE_NAMES.has(name)) usage.emitsDescribe = true;
-    if (IT_NAMES.has(name)) usage.emitsIt = true;
+    if (isItName(name)) usage.emitsIt = true;
   });
   return usage;
 }

@@ -329,7 +329,7 @@ function readParamsAlias(a: TypeAliasDeclaration, _model: string): FixtureParams
  *   reference a fixture class
  */
 function resolveFixtureFieldModel(typeText: string, prefix: string | undefined): string | undefined {
-  const match = typeText.match(/([A-Z]\w*)TestContextFixture/);
+  const match = /([A-Z]\w*)TestContextFixture/.exec(typeText);
   if (!match) return undefined;
   const before = match[1];
   if (prefix === undefined || prefix === '') return before;
@@ -673,6 +673,6 @@ function collectIdentityImports(sourceFile: SourceFile): readonly string[] {
     }
   }
   const list = [...out];
-  list.sort();
+  list.sort((a, b) => a.localeCompare(b));
   return list;
 }

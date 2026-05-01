@@ -102,7 +102,7 @@ async function collectActionFiles(root: string): Promise<readonly string[]> {
       }
     }
   }
-  out.sort();
+  out.sort((a, b) => a.localeCompare(b));
   return out;
 }
 
@@ -149,7 +149,7 @@ async function findModuleCandidates(actionFilePath: string): Promise<readonly st
   } catch {
     // ignore
   }
-  out.sort();
+  out.sort((a, b) => a.localeCompare(b));
   return out;
 }
 
