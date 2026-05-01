@@ -1,3 +1,17 @@
+## [13.10.5](https://github.com/dereekb/dbx-components/compare/v13.10.4-dev...v13.10.5) (2026-05-01)
+
+
+### Code Refactoring
+
+- **dbx-components-mcp:** added dbx_model_api_* tool cluster ([68a7b368](https://github.com/dereekb/dbx-components/commit/68a7b368d1a1035d63a55882e54bd618495c73ee))
+- **dbx-components-mcp:** added fields filter to model lookup ([2b1cbd97](https://github.com/dereekb/dbx-components/commit/2b1cbd974737495ed116a4102046d1d8df02029a))
+- **dbx-components-mcp:** clarified @dbxModelVariable guidance ([58be05f0](https://github.com/dereekb/dbx-components/commit/58be05f0e318b16261f0a4bdf17b620f3bf632e5))
+- **dbx-components-mcp:** recognize itShould* as it ([76d9919f](https://github.com/dereekb/dbx-components/commit/76d9919f01e3d0788a6c6297f52b3abb8e954952))
+- **dbx-components-mcp:** resolved sonarqube findings ([b833e7ed](https://github.com/dereekb/dbx-components/commit/b833e7ed333799936f7594aaaa9a02f4f9ed8782)), closes [String#match](https://github.com/dereekb/String/issues/match)
+- **dbx-web:** added pdf merge editor extension ([27370932](https://github.com/dereekb/dbx-components/commit/2737093271710c00333d1834a0bba2ba335b2992))
+- fixed lock file ([61d38a21](https://github.com/dereekb/dbx-components/commit/61d38a211a9bfdb20f316a583c4dc4c1a5a42f32))
+- refactored pdf merge editor extension ([16031394](https://github.com/dereekb/dbx-components/commit/1603139485243767633051dd2eec941e7d868d10))
+
 ## [13.10.4](https://github.com/dereekb/dbx-components/compare/v13.10.3-dev...v13.10.4) (2026-04-30)
 
 
