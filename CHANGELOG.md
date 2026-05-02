@@ -1,3 +1,10 @@
+## [13.10.6](https://github.com/dereekb/dbx-components/compare/v13.10.5-dev...v13.10.6) (2026-05-02)
+
+
+### Bug Fixes
+
+- fixed calendar selection regression ([7e6a1373](https://github.com/dereekb/dbx-components/commit/7e6a137329aa597b09c6ea7e49e587fd6b42570d))
+
 ## [13.10.5](https://github.com/dereekb/dbx-components/compare/v13.10.4-dev...v13.10.5) (2026-05-01)
 
 

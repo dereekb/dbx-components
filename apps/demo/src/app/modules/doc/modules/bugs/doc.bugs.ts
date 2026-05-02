@@ -4,6 +4,12 @@ export const DOC_BUGS_ROUTES = [
     title: 'Forms',
     detail: 'form bug tests',
     ref: 'doc.bugs.forms'
+  },
+  {
+    icon: 'event',
+    title: 'Calendar',
+    detail: 'calendar selection store filter + minMaxDateRange bug',
+    ref: 'doc.bugs.calendar'
   }
 ];
 
