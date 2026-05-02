@@ -1,0 +1,59 @@
+<dbx-content-container>
+  <doc-feature-layout header="Calendar Selection Coordinate-Mismatch Bug" hint="Reproduces the bug where setMinMaxDateRange shifts dateScheduleRange.start, causing selectionValueSelectedIndexes (output-anchored) to drift from state.indexFactory (filter-anchored).">
+    <doc-feature-example header="Setup" hint="Filter weekdays-only 4/16 → 5/28 in America/Chicago, with minMaxDateRange.start clamping to a later date. The default config below mirrors the real-app flow that the user is debugging.">
+      <dbx-content-pit>
+        <p><strong>Filter:</strong></p>
+        <pre>{{ filterDescription }}</pre>
+        <p><strong>Initial minMaxDateRange:</strong></p>
+        <pre>{{ minMaxDescription }}</pre>
+      </dbx-content-pit>
+    </doc-feature-example>
+
+    <doc-feature-example header="Calendar" hint="Pink-bordered cells = dates the consumer (real app's customizeDay) thinks are selected. After the fix lands, the pink markers must always sit on the same cells as the green/blue selection highlight in every minMaxDateRange configuration.">
+      <dbx-schedule-selection-calendar-date-range></dbx-schedule-selection-calendar-date-range>
+      <dbx-schedule-selection-calendar [config]="config"></dbx-schedule-selection-calendar>
+      <dbx-content-border>
+        <div class="dbx-button-wrap-group">
+          <dbx-button [raised]="true" text="Select All" (buttonClick)="selectAll()"></dbx-button>
+          <dbx-button-spacer></dbx-button-spacer>
+          <dbx-button [raised]="true" text="Select None" (buttonClick)="selectNone()"></dbx-button>
+          <dbx-button-spacer></dbx-button-spacer>
+          <dbx-button [raised]="true" text="Toggle state-index 36 (5/22 Fri)" (buttonClick)="toggleStateIndex36()"></dbx-button>
+          <dbx-button-spacer></dbx-button-spacer>
+          <dbx-button [raised]="true" text="Toggle Date 5/22" (buttonClick)="toggleDate522()"></dbx-button>
+        </div>
+        <p></p>
+        <div class="dbx-button-wrap-group">
+          <dbx-button [raised]="true" text="minMax start = 5/4 (Mon, offset 18)" (buttonClick)="useMonMinDate()"></dbx-button>
+          <dbx-button-spacer></dbx-button-spacer>
+          <dbx-button [raised]="true" text="minMax start = 5/1 (Today, offset 15)" (buttonClick)="useTodayMinDate()"></dbx-button>
+          <dbx-button-spacer></dbx-button-spacer>
+          <dbx-button [raised]="true" text="Remove minMaxDateRange (bug should disappear)" (buttonClick)="removeMinMaxDateRange()"></dbx-button>
+        </div>
+        <p></p>
+        <div class="dbx-button-wrap-group">
+          <dbx-button [raised]="true" text="setSelectedIndexes (all weekdays from filter range — like the real app)" (buttonClick)="applyAllWeekdaySelectedIndexes()"></dbx-button>
+        </div>
+      </dbx-content-border>
+    </doc-feature-example>
+
+    <doc-feature-example header="Store Output" hint="Watch how selectionValueSelectedIndexes drifts away from state.toggledIndexes when minMaxDateRange clamps.">
+      <dbx-content-pit>
+        <p><strong>currentInputRange$:</strong></p>
+        <pre>{{ inputRangeSignal() | json }}</pre>
+        <p><strong>state.toggledIndexes (filter-anchored):</strong></p>
+        <pre>{{ toggledIndexesSignal() | json }}</pre>
+        <p><strong>currentSelectionValue$.dateScheduleRange:</strong></p>
+        <pre>{{ currentSelectionValueSignal()?.dateScheduleRange | json }}</pre>
+        <p><strong>currentDateCellScheduleRangeValue$ (with output timezone):</strong></p>
+        <pre>{{ currentDateCellScheduleRangeValueSignal() | json }}</pre>
+        <p><strong>selectionValueSelectedIndexes$ (anchored to dateScheduleRange.start — output-anchored):</strong></p>
+        <pre>{{ selectionValueSelectedIndexesSignal() | json }}</pre>
+        <p><strong>selectionValueSelectedDates$ (the correct selected dates):</strong></p>
+        <pre>{{ selectionValueSelectedDatesSignal() | json }}</pre>
+        <p><strong>Buggy consumer interpretation — what dates a consumer would render if they treat selectionValueSelectedIndexes as state-anchored:</strong></p>
+        <pre>{{ buggyConsumerInterpretationSignal() | json }}</pre>
+      </dbx-content-pit>
+    </doc-feature-example>
+  </doc-feature-layout>
+</dbx-content-container>

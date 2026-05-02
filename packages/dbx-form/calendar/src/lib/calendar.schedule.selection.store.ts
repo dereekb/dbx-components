@@ -466,6 +466,18 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
     shareReplay(1)
   );
 
+  /**
+   * State-anchored coordinate contract: the emitted indexes are anchored at
+   * `state.start` (== `filter.start` when a filter is set, otherwise `today` from
+   * `initialCalendarScheduleSelectionState()`). Consumers can use them directly
+   * with `state.indexFactory(date)`.
+   *
+   * This holds because `currentSelectionValue.dateScheduleRange.start` always
+   * equals `state.start` for filter-relative outputs, so the expansion's `i`
+   * values share the same anchor. If a future change re-introduces a non-
+   * `state.start` output anchor, translate output indexes back via
+   * `state.indexFactory(dateScheduleRange.start)` here.
+   */
   readonly selectionValueSelectedIndexes$: Observable<Set<DateCellIndex>> = this.currentSelectionValueDateCellDurationSpanExpansion$.pipe(
     map((x) => new Set(x.map((y) => y.i))),
     distinctUntilHasDifferentValues(),
@@ -892,11 +904,14 @@ export function updateStateWithDateCellScheduleRangeValue(state: CalendarSchedul
   }
 
   if (change != null) {
-    // The incoming ex indexes are relative to change.start, but toggledIndexes must be
-    // relative to state.start. Adjust by the offset between them.
-    const inputStartIndex = state.indexFactory(change.start);
-    const adjustedEx = inputStartIndex !== 0 && change.ex ? change.ex.map((i) => i + inputStartIndex) : (change.ex ?? []);
-    const nextState: CalendarScheduleSelectionState = { ...state, inputStart: change.start, inputEnd: change.end, toggledIndexes: new Set(adjustedEx) };
+    // After the legacy-restored output anchor, change.ex is already state-anchored
+    // (change.start equals state.start for filter-relative outputs), so no offset
+    // is applied. inputStart is clamped to state.minMaxDateRange.start when set so
+    // the round-trip preserves the clamp and pre-clamp days don't re-render via the
+    // "toggled outside range" branch.
+    const minMaxStart = state.minMaxDateRange?.start;
+    const clampedInputStart = minMaxStart && minMaxStart.getTime() > change.start.getTime() ? minMaxStart : change.start;
+    const nextState: CalendarScheduleSelectionState = { ...state, inputStart: clampedInputStart, inputEnd: change.end, toggledIndexes: new Set(change.ex ?? []) };
     return updateStateWithChangedScheduleDays(finalizeNewCalendarScheduleSelectionState(nextState), expandDateCellScheduleDayCodes(change.w || ('89' as const)));
   }
 
@@ -1313,25 +1328,8 @@ export function computeScheduleSelectionValue(state: CalendarScheduleSelectionSt
     const rangeStartIndex = systemIndexFactory(rangeStart);
     const startIndex = systemIndexFactory(startInSystemTimezone);
     const filterStartIndexOffset = rangeStartIndex - startIndex;
-
-    // When minMaxDateRange constrains the start to after filter.start,
-    // use rangeStart as the output start instead of filter.start.
-    // This prevents outputting a start date that violates the minMaxDateRange
-    // and avoids the round-trip corruption when the value is synced back to the store.
-    if (filterStartIndexOffset > 0 && state.minMaxDateRange?.start) {
-      // rangeStart already respects minMaxDateRange. Convert it to the filter's timezone for the output.
-      if (filter.timezone) {
-        const filterNormal = dateTimezoneUtcNormal(filter.timezone);
-        start = filterNormal.startOfDayInTargetTimezone(rangeStart);
-      } else {
-        start = rangeStart;
-      }
-      // No filter offset exclusions needed since start is at the selection start.
-      // indexOffset stays as dateCellRange.i (relative to state.start → rangeStart).
-    } else {
-      filterOffsetExcludedRange = range(0, filterStartIndexOffset);
-      indexOffset = indexOffset - filterStartIndexOffset;
-    }
+    filterOffsetExcludedRange = range(0, filterStartIndexOffset);
+    indexOffset = indexOffset - filterStartIndexOffset;
   }
 
   const excluded = computeSelectionResultRelativeToFilter

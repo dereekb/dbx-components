@@ -187,35 +187,26 @@ describe('dbxForgeDateScheduleRangeField()', () => {
         expect(state.currentSelectionValue?.dateScheduleRange).toBeDefined();
       });
 
-      it('should clamp the output start to minMaxDateRange.start (not filter.start) when minMaxDateRange is set', () => {
+      it('should anchor the output start at filter.start (not minMaxDateRange.start)', () => {
         const state = createStateWithForgeOrder();
         const range = state.currentSelectionValue?.dateScheduleRange;
         expect(range).toBeDefined();
 
-        // With computeSelectionResultRelativeToFilter: true AND minMaxDateRange.start > filter.start,
-        // the output start should be clamped to the actual selection start (which respects minMaxDateRange),
-        // NOT the filter's start date.
+        // The output dateScheduleRange.start is anchored at filter.start
+        // (in the filter's timezone). The clamp lives in inputStart / minMaxRange.
         expect(range!.start).toBeDefined();
-
-        // The output start must be strictly after today (the filter's start is today,
-        // so the clamped start should be at least minDateOffset days later).
-        expect(range!.start.getTime()).toBeGreaterThan(today.getTime());
-
-        // The output start should NOT be the same as the state.start (which is the filter's start date).
-        // It should be offset forward by the minMaxDateRange constraint.
-        expect(range!.start.getTime()).not.toBe(state.start.getTime());
+        expect(range!.start.getTime()).toBe(filterConfig.start.getTime());
       });
 
-      it('should NOT include pre-minMaxDateRange days in the exclusion array', () => {
+      it('should include pre-minMaxDateRange days as prefix exclusions', () => {
         const state = createStateWithForgeOrder();
         const range = state.currentSelectionValue?.dateScheduleRange;
         expect(range).toBeDefined();
 
-        // Since the start is clamped to minMaxDateRange.start, there should be no
-        // filter offset exclusions for days before minMaxDateRange.start.
-        // Days 0,1,2,3 should NOT be in the exclusions.
+        // Every index in [0, minDateOffset) must be present in ex so consumers
+        // expanding the range don't render pre-clamp days as selected.
         for (let i = 0; i < minDateOffset; i++) {
-          expect(range!.ex).not.toContain(i);
+          expect(range!.ex).toContain(i);
         }
       });
 
@@ -318,7 +309,7 @@ describe('dbxForgeDateScheduleRangeField()', () => {
     });
 
     describe('computeSelectionResultRelativeToFilter interaction with minMaxDateRange', () => {
-      it('should clamp the output start to minMaxDateRange.start when computeSelectionResultRelativeToFilter is true', () => {
+      it('should anchor output start at filter.start with prefix exclusions when computeSelectionResultRelativeToFilter is true', () => {
         let state = initialCalendarScheduleSelectionState();
         state = updateStateWithFilter(state, filterConfig);
         state = updateStateWithMinMaxDateRange(state, minMaxDateRange);
@@ -328,17 +319,15 @@ describe('dbxForgeDateScheduleRangeField()', () => {
         const value = state.currentSelectionValue;
         expect(value).toBeDefined();
 
-        // The output start should be clamped to the actual selection start (after minMaxDateRange.start),
-        // NOT the filter's start date.
         const range = value!.dateScheduleRange;
         expect(range.start).toBeDefined();
 
-        // The output start must be after the state.start (which is the filter's start).
-        expect(range.start.getTime()).toBeGreaterThan(state.start.getTime());
+        // Output is filter-anchored: start equals filter.start (in filter timezone).
+        expect(range.start.getTime()).toBe(filterConfig.start.getTime());
 
-        // No pre-minMaxDateRange exclusions should be present
+        // Pre-minMaxDateRange days appear as prefix exclusions in ex.
         for (let i = 0; i < minDateOffset; i++) {
-          expect(range.ex).not.toContain(i);
+          expect(range.ex).toContain(i);
         }
       });
 
@@ -392,10 +381,10 @@ describe('dbxForgeDateScheduleRangeField()', () => {
         // Simulate the field→store round-trip: feed the output dateScheduleRange back as input
         const roundTrippedState = updateStateWithDateCellScheduleRangeValue(state, originalValue!.dateScheduleRange);
 
-        // inputStart should still respect minMaxDateRange (not be before it)
-        if (roundTrippedState.inputStart) {
-          expect(roundTrippedState.inputStart.getTime()).toBeGreaterThan(state.start.getTime());
-        }
+        // inputStart must be clamped to state.minMaxDateRange.start so the
+        // round-trip preserves the clamp (pre-clamp days don't re-fill).
+        expect(roundTrippedState.inputStart).toBeDefined();
+        expect(roundTrippedState.inputStart!.getTime()).toBe(state.minMaxDateRange!.start!.getTime());
 
         // The selection value after round-trip should be equivalent
         expect(roundTrippedState.currentSelectionValue).toBeDefined();
