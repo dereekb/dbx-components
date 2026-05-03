@@ -1,0 +1,1061 @@
+{
+  "version": 1,
+  "source": "angular-material-m3",
+  "module": "@angular/material",
+  "generatedAt": "1970-01-01T00:00:00.000Z",
+  "generator": "@dereekb/dbx-components-mcp/scripts/generate-css-tokens.mjs",
+  "entries": [
+    {
+      "cssVariable": "--mat-sys-primary",
+      "source": "mat-sys",
+      "role": "color",
+      "intents": [
+        "primary color",
+        "brand color",
+        "main accent color",
+        "primary action color"
+      ],
+      "description": "The Material primary brand color. Use for the most prominent UI surfaces — filled buttons, primary FABs, navigation bar background.",
+      "antiUseNotes": "Don't paint big neutral surfaces with primary; use --mat-sys-surface family instead.",
+      "defaults": {
+        "light": "rgb(101 85 143)",
+        "dark": "rgb(207 188 252)"
+      },
+      "seeAlso": [
+        "--mat-sys-on-primary",
+        "--mat-sys-primary-container"
+      ]
+    },
+    {
+      "cssVariable": "--mat-sys-on-primary",
+      "source": "mat-sys",
+      "role": "text-color",
+      "intents": [
+        "text color on primary",
+        "foreground on primary",
+        "label color on primary surface"
+      ],
+      "description": "Foreground color used on top of `--mat-sys-primary`. Provides accessible contrast against the primary brand color.",
+      "defaults": {
+        "light": "rgb(255 255 255)",
+        "dark": "rgb(56 30 114)"
+      },
+      "seeAlso": [
+        "--mat-sys-primary"
+      ]
+    },
+    {
+      "cssVariable": "--mat-sys-primary-container",
+      "source": "mat-sys",
+      "role": "color",
+      "intents": [
+        "primary container",
+        "tonal primary background",
+        "subtle primary surface"
+      ],
+      "description": "Lower-emphasis primary surface — tonal buttons, selection indicators, badge backgrounds.",
+      "defaults": {
+        "light": "rgb(232 221 255)",
+        "dark": "rgb(78 61 119)"
+      },
+      "seeAlso": [
+        "--mat-sys-on-primary-container"
+      ]
+    },
+    {
+      "cssVariable": "--mat-sys-on-primary-container",
+      "source": "mat-sys",
+      "role": "text-color",
+      "intents": [
+        "text color on primary container"
+      ],
+      "description": "Foreground color used on top of `--mat-sys-primary-container`.",
+      "defaults": {
+        "light": "rgb(33 0 93)",
+        "dark": "rgb(232 221 255)"
+      },
+      "seeAlso": [
+        "--mat-sys-primary-container"
+      ]
+    },
+    {
+      "cssVariable": "--mat-sys-secondary",
+      "source": "mat-sys",
+      "role": "color",
+      "intents": [
+        "secondary color",
+        "supporting accent color"
+      ],
+      "description": "Material secondary color — supporting accent, less prominent than primary.",
+      "defaults": {
+        "light": "rgb(98 91 113)",
+        "dark": "rgb(204 195 219)"
+      },
+      "seeAlso": [
+        "--mat-sys-on-secondary",
+        "--mat-sys-secondary-container"
+      ]
+    },
+    {
+      "cssVariable": "--mat-sys-on-secondary",
+      "source": "mat-sys",
+      "role": "text-color",
+      "intents": [
+        "text color on secondary"
+      ],
+      "description": "Foreground color used on top of `--mat-sys-secondary`.",
+      "defaults": {
+        "light": "rgb(255 255 255)",
+        "dark": "rgb(51 45 65)"
+      },
+      "seeAlso": [
+        "--mat-sys-secondary"
+      ]
+    },
+    {
+      "cssVariable": "--mat-sys-secondary-container",
+      "source": "mat-sys",
+      "role": "color",
+      "intents": [
+        "secondary container",
+        "tonal secondary background"
+      ],
+      "description": "Lower-emphasis secondary surface for chips, filter affordances, and supporting actions.",
+      "defaults": {
+        "light": "rgb(232 222 247)",
+        "dark": "rgb(74 68 88)"
+      },
+      "seeAlso": [
+        "--mat-sys-on-secondary-container"
+      ]
+    },
+    {
+      "cssVariable": "--mat-sys-on-secondary-container",
+      "source": "mat-sys",
+      "role": "text-color",
+      "intents": [
+        "text color on secondary container"
+      ],
+      "description": "Foreground color used on top of `--mat-sys-secondary-container`.",
+      "defaults": {
+        "light": "rgb(30 24 43)",
+        "dark": "rgb(232 222 247)"
+      },
+      "seeAlso": [
+        "--mat-sys-secondary-container"
+      ]
+    },
+    {
+      "cssVariable": "--mat-sys-tertiary",
+      "source": "mat-sys",
+      "role": "color",
+      "intents": [
+        "tertiary color",
+        "accent color",
+        "highlight color"
+      ],
+      "description": "Material tertiary color — distinct accent. Aliased by `--dbx-accent-color` so dbx-web's accent and Material's tertiary stay in sync.",
+      "defaults": {
+        "light": "rgb(125 82 96)",
+        "dark": "rgb(239 184 200)"
+      },
+      "seeAlso": [
+        "--mat-sys-on-tertiary",
+        "--mat-sys-tertiary-container"
+      ]
+    },
+    {
+      "cssVariable": "--mat-sys-on-tertiary",
+      "source": "mat-sys",
+      "role": "text-color",
+      "intents": [
+        "text color on tertiary"
+      ],
+      "description": "Foreground color used on top of `--mat-sys-tertiary`.",
+      "defaults": {
+        "light": "rgb(255 255 255)",
+        "dark": "rgb(73 37 50)"
+      },
+      "seeAlso": [
+        "--mat-sys-tertiary"
+      ]
+    },
+    {
+      "cssVariable": "--mat-sys-tertiary-container",
+      "source": "mat-sys",
+      "role": "color",
+      "intents": [
+        "tertiary container",
+        "tonal accent background"
+      ],
+      "description": "Lower-emphasis tertiary surface.",
+      "defaults": {
+        "light": "rgb(255 217 225)",
+        "dark": "rgb(99 59 73)"
+      },
+      "seeAlso": [
+        "--mat-sys-on-tertiary-container"
+      ]
+    },
+    {
+      "cssVariable": "--mat-sys-on-tertiary-container",
+      "source": "mat-sys",
+      "role": "text-color",
+      "intents": [
+        "text color on tertiary container"
+      ],
+      "description": "Foreground color used on top of `--mat-sys-tertiary-container`.",
+      "defaults": {
+        "light": "rgb(49 17 30)",
+        "dark": "rgb(255 217 225)"
+      },
+      "seeAlso": [
+        "--mat-sys-tertiary-container"
+      ]
+    },
+    {
+      "cssVariable": "--mat-sys-error",
+      "source": "mat-sys",
+      "role": "color",
+      "intents": [
+        "error color",
+        "danger color",
+        "destructive color",
+        "warn color"
+      ],
+      "description": "Error/destructive color. Aliased by `--dbx-warn-color`.",
+      "defaults": {
+        "light": "rgb(186 26 26)",
+        "dark": "rgb(255 180 171)"
+      },
+      "seeAlso": [
+        "--mat-sys-on-error",
+        "--mat-sys-error-container"
+      ]
+    },
+    {
+      "cssVariable": "--mat-sys-on-error",
+      "source": "mat-sys",
+      "role": "text-color",
+      "intents": [
+        "text color on error"
+      ],
+      "description": "Foreground color used on top of `--mat-sys-error`.",
+      "defaults": {
+        "light": "rgb(255 255 255)",
+        "dark": "rgb(105 0 5)"
+      },
+      "seeAlso": [
+        "--mat-sys-error"
+      ]
+    },
+    {
+      "cssVariable": "--mat-sys-error-container",
+      "source": "mat-sys",
+      "role": "color",
+      "intents": [
+        "error container",
+        "tonal error background",
+        "destructive container"
+      ],
+      "description": "Lower-emphasis error surface for inline error chips.",
+      "defaults": {
+        "light": "rgb(255 218 214)",
+        "dark": "rgb(147 0 10)"
+      },
+      "seeAlso": [
+        "--mat-sys-on-error-container"
+      ]
+    },
+    {
+      "cssVariable": "--mat-sys-on-error-container",
+      "source": "mat-sys",
+      "role": "text-color",
+      "intents": [
+        "text color on error container"
+      ],
+      "description": "Foreground color used on top of `--mat-sys-error-container`.",
+      "defaults": {
+        "light": "rgb(65 0 2)",
+        "dark": "rgb(255 218 214)"
+      },
+      "seeAlso": [
+        "--mat-sys-error-container"
+      ]
+    },
+    {
+      "cssVariable": "--mat-sys-surface",
+      "source": "mat-sys",
+      "role": "surface",
+      "intents": [
+        "base surface",
+        "page background",
+        "default app background",
+        "background color"
+      ],
+      "description": "Default surface color — the base background under the app shell. Aliased by `--dbx-surface-color`.",
+      "antiUseNotes": "Don't hardcode `#fff` or `white` for backgrounds — use `var(--mat-sys-surface)` so dark mode flips automatically.",
+      "defaults": {
+        "light": "rgb(255 251 254)",
+        "dark": "rgb(20 12 26)"
+      },
+      "recommendedPrimitive": "content-box",
+      "seeAlso": [
+        "--mat-sys-on-surface",
+        "--mat-sys-surface-container"
+      ]
+    },
+    {
+      "cssVariable": "--mat-sys-surface-dim",
+      "source": "mat-sys",
+      "role": "surface",
+      "intents": [
+        "dimmed surface",
+        "subtly darker background"
+      ],
+      "description": "Dimmed surface — slightly darker than `--mat-sys-surface` for hierarchy.",
+      "defaults": {
+        "light": "rgb(221 216 224)",
+        "dark": "rgb(20 12 26)"
+      },
+      "seeAlso": [
+        "--mat-sys-surface"
+      ]
+    },
+    {
+      "cssVariable": "--mat-sys-surface-bright",
+      "source": "mat-sys",
+      "role": "surface",
+      "intents": [
+        "bright surface",
+        "lighter background"
+      ],
+      "description": "Bright surface — slightly lighter than `--mat-sys-surface`.",
+      "defaults": {
+        "light": "rgb(253 248 253)",
+        "dark": "rgb(58 49 65)"
+      },
+      "seeAlso": [
+        "--mat-sys-surface"
+      ]
+    },
+    {
+      "cssVariable": "--mat-sys-surface-container",
+      "source": "mat-sys",
+      "role": "surface",
+      "intents": [
+        "container surface",
+        "card background",
+        "raised surface"
+      ],
+      "description": "Container surface — the canonical `<dbx-content-box>` / card background.",
+      "antiUseNotes": "Don't paint a card with a hardcoded `#f8f9fa` or `#fff`; use this variable so light/dark mode toggles automatically.",
+      "defaults": {
+        "light": "rgb(241 236 244)",
+        "dark": "rgb(33 26 39)"
+      },
+      "recommendedPrimitive": "content-box",
+      "seeAlso": [
+        "--mat-sys-on-surface"
+      ]
+    },
+    {
+      "cssVariable": "--mat-sys-surface-container-low",
+      "source": "mat-sys",
+      "role": "surface",
+      "intents": [
+        "lower-elevation container",
+        "subtle container background"
+      ],
+      "description": "Lower-elevation container surface.",
+      "defaults": {
+        "light": "rgb(247 242 250)",
+        "dark": "rgb(28 21 33)"
+      },
+      "seeAlso": [
+        "--mat-sys-surface-container"
+      ]
+    },
+    {
+      "cssVariable": "--mat-sys-surface-container-high",
+      "source": "mat-sys",
+      "role": "surface",
+      "intents": [
+        "higher-elevation container",
+        "modal background",
+        "raised card"
+      ],
+      "description": "Higher-elevation container surface — modal cards, bottom sheets.",
+      "defaults": {
+        "light": "rgb(236 230 239)",
+        "dark": "rgb(43 35 49)"
+      },
+      "seeAlso": [
+        "--mat-sys-surface-container"
+      ]
+    },
+    {
+      "cssVariable": "--mat-sys-surface-container-highest",
+      "source": "mat-sys",
+      "role": "surface",
+      "intents": [
+        "topmost container surface"
+      ],
+      "description": "Topmost container surface — used by elements that float above other containers.",
+      "defaults": {
+        "light": "rgb(230 224 233)",
+        "dark": "rgb(54 46 60)"
+      },
+      "seeAlso": [
+        "--mat-sys-surface-container"
+      ]
+    },
+    {
+      "cssVariable": "--mat-sys-on-surface",
+      "source": "mat-sys",
+      "role": "text-color",
+      "intents": [
+        "body text color",
+        "primary text",
+        "default foreground",
+        "text on background"
+      ],
+      "description": "Default body text color on surfaces. Aliased by `--dbx-default-color`.",
+      "antiUseNotes": "Don't use this for hint or secondary text — use `--mat-sys-on-surface-variant` instead.",
+      "defaults": {
+        "light": "rgb(28 27 30)",
+        "dark": "rgb(229 225 230)"
+      },
+      "seeAlso": [
+        "--mat-sys-surface",
+        "--mat-sys-on-surface-variant"
+      ]
+    },
+    {
+      "cssVariable": "--mat-sys-on-surface-variant",
+      "source": "mat-sys",
+      "role": "text-color",
+      "intents": [
+        "hint text color",
+        "secondary text",
+        "subtitle text",
+        "muted text",
+        "caption text",
+        "subdued foreground"
+      ],
+      "description": "Lower-emphasis foreground used for hints, captions, and supporting text. Replaces hardcoded `rgba(0,0,0,0.6)` / `rgba(255,255,255,0.7)` patterns.",
+      "antiUseNotes": "Don't write `color: rgba(0,0,0,0.6)` for subtitles — use `var(--mat-sys-on-surface-variant)` so dark mode flips automatically.",
+      "defaults": {
+        "light": "rgb(73 69 79)",
+        "dark": "rgb(202 196 208)"
+      },
+      "utilityClasses": [
+        ".dbx-text-hint"
+      ],
+      "seeAlso": [
+        "--mat-sys-on-surface",
+        "--mat-sys-outline"
+      ]
+    },
+    {
+      "cssVariable": "--mat-sys-outline",
+      "source": "mat-sys",
+      "role": "color",
+      "intents": [
+        "outline color",
+        "border color",
+        "divider color",
+        "stroke color"
+      ],
+      "description": "Standard outline color for borders and dividers.",
+      "defaults": {
+        "light": "rgb(121 116 126)",
+        "dark": "rgb(148 143 153)"
+      },
+      "seeAlso": [
+        "--mat-sys-outline-variant"
+      ]
+    },
+    {
+      "cssVariable": "--mat-sys-outline-variant",
+      "source": "mat-sys",
+      "role": "color",
+      "intents": [
+        "subtle border color",
+        "decorative divider",
+        "low-contrast outline"
+      ],
+      "description": "Lower-contrast outline color for decorative dividers and disabled-state borders.",
+      "defaults": {
+        "light": "rgb(202 196 208)",
+        "dark": "rgb(74 69 78)"
+      },
+      "seeAlso": [
+        "--mat-sys-outline"
+      ]
+    },
+    {
+      "cssVariable": "--mat-sys-inverse-surface",
+      "source": "mat-sys",
+      "role": "surface",
+      "intents": [
+        "inverse surface",
+        "snackbar background"
+      ],
+      "description": "Surface color used by snackbars and tooltips.",
+      "defaults": {
+        "light": "rgb(49 48 51)",
+        "dark": "rgb(229 225 230)"
+      },
+      "seeAlso": [
+        "--mat-sys-inverse-on-surface"
+      ]
+    },
+    {
+      "cssVariable": "--mat-sys-inverse-on-surface",
+      "source": "mat-sys",
+      "role": "text-color",
+      "intents": [
+        "text color on inverse surface",
+        "snackbar foreground"
+      ],
+      "description": "Foreground color used on top of `--mat-sys-inverse-surface`.",
+      "defaults": {
+        "light": "rgb(244 239 244)",
+        "dark": "rgb(49 48 51)"
+      },
+      "seeAlso": [
+        "--mat-sys-inverse-surface"
+      ]
+    },
+    {
+      "cssVariable": "--mat-sys-inverse-primary",
+      "source": "mat-sys",
+      "role": "color",
+      "intents": [
+        "inverse primary",
+        "snackbar accent"
+      ],
+      "description": "Primary color tuned for use on inverse surfaces (snackbar action labels).",
+      "defaults": {
+        "light": "rgb(207 188 252)",
+        "dark": "rgb(101 85 143)"
+      },
+      "seeAlso": [
+        "--mat-sys-primary"
+      ]
+    },
+    {
+      "cssVariable": "--mat-sys-scrim",
+      "source": "mat-sys",
+      "role": "color",
+      "intents": [
+        "scrim",
+        "modal backdrop",
+        "overlay color"
+      ],
+      "description": "Scrim color used behind modal overlays and bottom sheets.",
+      "defaults": {
+        "light": "rgb(0 0 0)",
+        "dark": "rgb(0 0 0)"
+      }
+    },
+    {
+      "cssVariable": "--mat-sys-shadow",
+      "source": "mat-sys",
+      "role": "shadow",
+      "intents": [
+        "shadow color",
+        "elevation shadow"
+      ],
+      "description": "Shadow color used by Material elevation tokens.",
+      "defaults": {
+        "light": "rgb(0 0 0)",
+        "dark": "rgb(0 0 0)"
+      },
+      "seeAlso": [
+        "--mat-sys-level1",
+        "--mat-sys-level2"
+      ]
+    },
+    {
+      "cssVariable": "--mat-sys-corner-extra-small",
+      "source": "mat-sys",
+      "role": "radius",
+      "intents": [
+        "xs corner radius",
+        "tiny corner",
+        "subtle rounding"
+      ],
+      "description": "Smallest corner radius — chips, small buttons.",
+      "defaults": {
+        "light": "4px"
+      },
+      "seeAlso": [
+        "--mat-sys-corner-small"
+      ]
+    },
+    {
+      "cssVariable": "--mat-sys-corner-small",
+      "source": "mat-sys",
+      "role": "radius",
+      "intents": [
+        "small corner radius",
+        "8px radius",
+        "subtle card corner"
+      ],
+      "description": "Small corner radius — minor cards, embedded inputs.",
+      "defaults": {
+        "light": "8px"
+      },
+      "seeAlso": [
+        "--mat-sys-corner-medium"
+      ]
+    },
+    {
+      "cssVariable": "--mat-sys-corner-medium",
+      "source": "mat-sys",
+      "role": "radius",
+      "intents": [
+        "card radius",
+        "medium corner radius",
+        "12px radius",
+        "default rounding"
+      ],
+      "description": "Medium corner radius — Material cards, dbx-web content boxes.",
+      "antiUseNotes": "Don't hardcode `border-radius: 12px` on a card; reach for this token (or rely on `<dbx-content-box>`'s default).",
+      "defaults": {
+        "light": "12px"
+      },
+      "recommendedPrimitive": "content-box",
+      "seeAlso": [
+        "--mat-sys-corner-large"
+      ]
+    },
+    {
+      "cssVariable": "--mat-sys-corner-large",
+      "source": "mat-sys",
+      "role": "radius",
+      "intents": [
+        "large corner radius",
+        "16px radius",
+        "prominent rounding"
+      ],
+      "description": "Large corner radius — emphasised cards.",
+      "defaults": {
+        "light": "16px"
+      },
+      "seeAlso": [
+        "--mat-sys-corner-medium"
+      ]
+    },
+    {
+      "cssVariable": "--mat-sys-corner-extra-large",
+      "source": "mat-sys",
+      "role": "radius",
+      "intents": [
+        "xl corner radius",
+        "28px radius",
+        "modal corner"
+      ],
+      "description": "Extra-large corner radius — bottom sheets, modal containers.",
+      "defaults": {
+        "light": "28px"
+      }
+    },
+    {
+      "cssVariable": "--mat-sys-corner-full",
+      "source": "mat-sys",
+      "role": "radius",
+      "intents": [
+        "pill radius",
+        "full corner radius",
+        "circular radius",
+        "999px radius"
+      ],
+      "description": "Full corner radius — pills, FABs, badges.",
+      "defaults": {
+        "light": "9999px"
+      }
+    },
+    {
+      "cssVariable": "--mat-sys-level0",
+      "source": "mat-sys",
+      "role": "elevation",
+      "intents": [
+        "no shadow",
+        "level 0 elevation",
+        "flat surface"
+      ],
+      "description": "No elevation — flat. Equivalent to `box-shadow: none`.",
+      "defaults": {
+        "light": "none"
+      }
+    },
+    {
+      "cssVariable": "--mat-sys-level1",
+      "source": "mat-sys",
+      "role": "elevation",
+      "intents": [
+        "level 1 elevation",
+        "subtle shadow",
+        "card shadow"
+      ],
+      "description": "Level 1 elevation. Default for raised cards.",
+      "antiUseNotes": "Don't hardcode `box-shadow: 0 1px 2px rgba(0,0,0,.06)`; use this token or `<dbx-content-box [elevate]>`.",
+      "defaults": {
+        "light": "0px 1px 2px 0px rgba(0, 0, 0, 0.3), 0px 1px 3px 1px rgba(0, 0, 0, 0.15)"
+      },
+      "recommendedPrimitive": "content-box"
+    },
+    {
+      "cssVariable": "--mat-sys-level2",
+      "source": "mat-sys",
+      "role": "elevation",
+      "intents": [
+        "level 2 elevation",
+        "raised shadow",
+        "FAB shadow"
+      ],
+      "description": "Level 2 elevation — FABs, hovered cards.",
+      "defaults": {
+        "light": "0px 1px 2px 0px rgba(0, 0, 0, 0.3), 0px 2px 6px 2px rgba(0, 0, 0, 0.15)"
+      }
+    },
+    {
+      "cssVariable": "--mat-sys-level3",
+      "source": "mat-sys",
+      "role": "elevation",
+      "intents": [
+        "level 3 elevation",
+        "modal shadow"
+      ],
+      "description": "Level 3 elevation — modal dialogs, dropdown menus.",
+      "defaults": {
+        "light": "0px 4px 8px 3px rgba(0, 0, 0, 0.15), 0px 1px 3px 0px rgba(0, 0, 0, 0.3)"
+      }
+    },
+    {
+      "cssVariable": "--mat-sys-level4",
+      "source": "mat-sys",
+      "role": "elevation",
+      "intents": [
+        "level 4 elevation",
+        "navigation drawer shadow"
+      ],
+      "description": "Level 4 elevation — navigation drawers.",
+      "defaults": {
+        "light": "0px 6px 10px 4px rgba(0, 0, 0, 0.15), 0px 2px 3px 0px rgba(0, 0, 0, 0.3)"
+      }
+    },
+    {
+      "cssVariable": "--mat-sys-level5",
+      "source": "mat-sys",
+      "role": "elevation",
+      "intents": [
+        "level 5 elevation",
+        "highest shadow"
+      ],
+      "description": "Highest elevation — overlays.",
+      "defaults": {
+        "light": "0px 8px 12px 6px rgba(0, 0, 0, 0.15), 0px 4px 4px 0px rgba(0, 0, 0, 0.3)"
+      }
+    },
+    {
+      "cssVariable": "--mat-sys-display-large",
+      "source": "mat-sys",
+      "role": "typography",
+      "intents": [
+        "display large typography",
+        "hero text style",
+        "57px display"
+      ],
+      "description": "Display large — hero/display headings. Sub-tokens: -size, -weight, -line-height, -tracking, -font.",
+      "defaults": {
+        "light": "400 57px / 64px Roboto"
+      }
+    },
+    {
+      "cssVariable": "--mat-sys-display-medium",
+      "source": "mat-sys",
+      "role": "typography",
+      "intents": [
+        "display medium typography",
+        "45px display"
+      ],
+      "description": "Display medium — large heroes. Sub-tokens: -size, -weight, -line-height, -tracking, -font.",
+      "defaults": {
+        "light": "400 45px / 52px Roboto"
+      }
+    },
+    {
+      "cssVariable": "--mat-sys-display-small",
+      "source": "mat-sys",
+      "role": "typography",
+      "intents": [
+        "display small typography",
+        "36px display"
+      ],
+      "description": "Display small — page titles for split-screen layouts. Sub-tokens: -size, -weight, -line-height, -tracking, -font.",
+      "defaults": {
+        "light": "400 36px / 44px Roboto"
+      }
+    },
+    {
+      "cssVariable": "--mat-sys-headline-large",
+      "source": "mat-sys",
+      "role": "typography",
+      "intents": [
+        "headline large",
+        "h1 typography",
+        "32px headline"
+      ],
+      "description": "Headline large — h1 equivalents. Sub-tokens: -size, -weight, -line-height, -tracking, -font.",
+      "defaults": {
+        "light": "400 32px / 40px Roboto"
+      }
+    },
+    {
+      "cssVariable": "--mat-sys-headline-medium",
+      "source": "mat-sys",
+      "role": "typography",
+      "intents": [
+        "headline medium",
+        "h2 typography",
+        "28px headline"
+      ],
+      "description": "Headline medium — h2 equivalents. Sub-tokens: -size, -weight, -line-height, -tracking, -font.",
+      "defaults": {
+        "light": "400 28px / 36px Roboto"
+      }
+    },
+    {
+      "cssVariable": "--mat-sys-headline-small",
+      "source": "mat-sys",
+      "role": "typography",
+      "intents": [
+        "headline small",
+        "h3 typography",
+        "24px headline"
+      ],
+      "description": "Headline small — h3 equivalents. Sub-tokens: -size, -weight, -line-height, -tracking, -font.",
+      "defaults": {
+        "light": "400 24px / 32px Roboto"
+      }
+    },
+    {
+      "cssVariable": "--mat-sys-title-large",
+      "source": "mat-sys",
+      "role": "typography",
+      "intents": [
+        "title large",
+        "section header",
+        "22px title"
+      ],
+      "description": "Title large — section headers. Sub-tokens: -size, -weight, -line-height, -tracking, -font.",
+      "defaults": {
+        "light": "500 22px / 28px Roboto"
+      }
+    },
+    {
+      "cssVariable": "--mat-sys-title-medium",
+      "source": "mat-sys",
+      "role": "typography",
+      "intents": [
+        "title medium",
+        "card header",
+        "16px title"
+      ],
+      "description": "Title medium — card headers. Sub-tokens: -size, -weight, -line-height, -tracking, -font.",
+      "defaults": {
+        "light": "500 16px / 24px Roboto"
+      }
+    },
+    {
+      "cssVariable": "--mat-sys-title-small",
+      "source": "mat-sys",
+      "role": "typography",
+      "intents": [
+        "title small",
+        "compact title",
+        "14px title"
+      ],
+      "description": "Title small — compact headings. Sub-tokens: -size, -weight, -line-height, -tracking, -font.",
+      "defaults": {
+        "light": "500 14px / 20px Roboto"
+      }
+    },
+    {
+      "cssVariable": "--mat-sys-body-large",
+      "source": "mat-sys",
+      "role": "typography",
+      "intents": [
+        "body large",
+        "16px body text"
+      ],
+      "description": "Body large — primary reading text. Sub-tokens: -size, -weight, -line-height, -tracking, -font.",
+      "defaults": {
+        "light": "400 16px / 24px Roboto"
+      }
+    },
+    {
+      "cssVariable": "--mat-sys-body-medium",
+      "source": "mat-sys",
+      "role": "typography",
+      "intents": [
+        "body medium",
+        "default body text",
+        "14px body text"
+      ],
+      "description": "Body medium — default body text. Sub-tokens: -size, -weight, -line-height, -tracking, -font.",
+      "defaults": {
+        "light": "400 14px / 20px Roboto"
+      }
+    },
+    {
+      "cssVariable": "--mat-sys-body-small",
+      "source": "mat-sys",
+      "role": "typography",
+      "intents": [
+        "body small",
+        "12px body text",
+        "supporting body"
+      ],
+      "description": "Body small — supporting copy. Sub-tokens: -size, -weight, -line-height, -tracking, -font.",
+      "defaults": {
+        "light": "400 12px / 16px Roboto"
+      }
+    },
+    {
+      "cssVariable": "--mat-sys-label-large",
+      "source": "mat-sys",
+      "role": "typography",
+      "intents": [
+        "label large",
+        "button label typography",
+        "14px label"
+      ],
+      "description": "Label large — button labels. Sub-tokens: -size, -weight, -line-height, -tracking, -font.",
+      "defaults": {
+        "light": "500 14px / 20px Roboto"
+      }
+    },
+    {
+      "cssVariable": "--mat-sys-label-medium",
+      "source": "mat-sys",
+      "role": "typography",
+      "intents": [
+        "label medium",
+        "12px label"
+      ],
+      "description": "Label medium — supporting labels. Sub-tokens: -size, -weight, -line-height, -tracking, -font.",
+      "defaults": {
+        "light": "500 12px / 16px Roboto"
+      }
+    },
+    {
+      "cssVariable": "--mat-sys-label-small",
+      "source": "mat-sys",
+      "role": "typography",
+      "intents": [
+        "label small",
+        "11px label",
+        "tiny label"
+      ],
+      "description": "Label small — tiniest labels. Sub-tokens: -size, -weight, -line-height, -tracking, -font.",
+      "defaults": {
+        "light": "500 11px / 16px Roboto"
+      }
+    },
+    {
+      "cssVariable": "--mat-sys-easing-standard",
+      "source": "mat-sys",
+      "role": "motion",
+      "intents": [
+        "standard easing",
+        "default ease",
+        "cubic-bezier easing"
+      ],
+      "description": "Standard easing curve.",
+      "defaults": {
+        "light": "cubic-bezier(0.2, 0, 0, 1)"
+      }
+    },
+    {
+      "cssVariable": "--mat-sys-easing-emphasized",
+      "source": "mat-sys",
+      "role": "motion",
+      "intents": [
+        "emphasized easing",
+        "expressive ease"
+      ],
+      "description": "Emphasized easing curve — for prominent transitions.",
+      "defaults": {
+        "light": "cubic-bezier(0.2, 0, 0, 1)"
+      }
+    },
+    {
+      "cssVariable": "--mat-sys-easing-emphasized-decelerate",
+      "source": "mat-sys",
+      "role": "motion",
+      "intents": [
+        "emphasized decelerated easing"
+      ],
+      "description": "Emphasized decelerate easing curve.",
+      "defaults": {
+        "light": "cubic-bezier(0.05, 0.7, 0.1, 1)"
+      }
+    },
+    {
+      "cssVariable": "--mat-sys-easing-emphasized-accelerate",
+      "source": "mat-sys",
+      "role": "motion",
+      "intents": [
+        "emphasized accelerated easing"
+      ],
+      "description": "Emphasized accelerate easing curve.",
+      "defaults": {
+        "light": "cubic-bezier(0.3, 0, 0.8, 0.15)"
+      }
+    },
+    {
+      "cssVariable": "--mat-sys-motion-duration-short1",
+      "source": "mat-sys",
+      "role": "motion",
+      "intents": [
+        "motion duration short",
+        "quick animation duration"
+      ],
+      "description": "Short duration tier 1 — small element transitions.",
+      "defaults": {
+        "light": "50ms"
+      }
+    },
+    {
+      "cssVariable": "--mat-sys-motion-duration-medium2",
+      "source": "mat-sys",
+      "role": "motion",
+      "intents": [
+        "motion duration medium",
+        "standard animation duration"
+      ],
+      "description": "Medium duration tier 2 — standard transitions.",
+      "defaults": {
+        "light": "300ms"
+      }
+    },
+    {
+      "cssVariable": "--mat-sys-motion-duration-long2",
+      "source": "mat-sys",
+      "role": "motion",
+      "intents": [
+        "motion duration long",
+        "long animation duration"
+      ],
+      "description": "Long duration tier 2 — large element transitions.",
+      "defaults": {
+        "light": "500ms"
+      }
+    }
+  ]
+}

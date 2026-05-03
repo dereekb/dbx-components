@@ -12,11 +12,35 @@ $content-navbar-height-var: --dbx-content-navbar-height;
 $box-max-width-var: --dbx-box-max-width;
 $content-max-width-var: --dbx-content-max-width;
 
+/// Padding step 0 — zero spacing. Useful as a reset value where a tier is required.
+/// @intent zero spacing, padding 0, no padding
+/// @role spacing
 $padding-0-var: --dbx-padding-0;
+/// Padding step 1 — tightest spacing tier. Use between adjacent inline elements.
+/// @intent tight spacing, padding 1, 2px spacing
+/// @role spacing
+/// @utility .dbx-p1, .dbx-mb1
 $padding-1-var: --dbx-padding-1;
+/// Padding step 2 — small spacing tier. Use between sibling form rows or chip lists.
+/// @intent small spacing, padding 2, 6px spacing
+/// @role spacing
+/// @utility .dbx-p2, .dbx-mb2
 $padding-2-var: --dbx-padding-2;
+/// Padding step 3 — default content padding. The canonical "card padding" / "section gap".
+/// @intent section gap, default padding, card padding, 12px spacing, padding 3
+/// @role spacing
+/// @anti-use Don't hardcode `padding: 12px` — reach for this var or a `.dbx-p3` utility.
+/// @utility .dbx-p3, .dbx-mb3, .dbx-mt3
 $padding-3-var: --dbx-padding-3;
+/// Padding step 4 — emphasised spacing. Use between top-level sections.
+/// @intent emphasised spacing, padding 4, 18px spacing
+/// @role spacing
+/// @utility .dbx-p4, .dbx-mb4
 $padding-4-var: --dbx-padding-4;
+/// Padding step 5 — page padding. Use around full-width page surfaces.
+/// @intent page padding, padding 5, 24px spacing
+/// @role spacing
+/// @utility .dbx-p5, .dbx-mb5
 $padding-5-var: --dbx-padding-5;
 
 $two-column-left-width-var: --dbx-two-column-left-width;
@@ -25,16 +49,57 @@ $dbx-color-var: --dbx-color-current;
 $dbx-bg-color-var: --dbx-bg-color-current;
 $dbx-bg-tone-var: --dbx-color-bg-tone;
 
+/// dbx primary brand color. Aliased from `--mat-sys-primary` so theme switches flow through.
+/// @intent primary color, brand color, primary action color
+/// @role color
+/// @see --mat-sys-primary
 $dbx-primary-color-var: --dbx-primary-color;
+/// dbx secondary brand color. Aliased from `--mat-sys-secondary`.
+/// @intent secondary color, supporting accent
+/// @role color
+/// @see --mat-sys-secondary
 $dbx-secondary-color-var: --dbx-secondary-color;
+/// dbx tertiary brand color. Aliased from `--mat-sys-tertiary`.
+/// @intent tertiary color, accent color
+/// @role color
+/// @see --mat-sys-tertiary
 $dbx-tertiary-color-var: --dbx-tertiary-color;
+/// dbx accent color. Alias for tertiary so legacy `accent` keeps working.
+/// @intent accent color, highlight color
+/// @role color
+/// @see --mat-sys-tertiary
 $dbx-accent-color-var: --dbx-accent-color;
+/// dbx warn/error color. Aliased from `--mat-sys-error`.
+/// @intent warn color, error color, destructive color
+/// @role color
+/// @see --mat-sys-error
 $dbx-warn-color-var: --dbx-warn-color;
+/// dbx notice color. Custom palette entry from the dbx theme config (no Material equivalent). Use for informational callouts.
+/// @intent notice color, info color, informational callout, attention color
+/// @role color
 $dbx-notice-color-var: --dbx-notice-color;
+/// dbx success color. Custom palette entry from the dbx theme config (no Material equivalent). Use for confirmation / positive states.
+/// @intent success color, positive color, confirmation color, ok-state color
+/// @role color
 $dbx-success-color-var: --dbx-success-color;
+/// dbx ok color. Custom palette entry from the dbx theme config (no Material equivalent). Use for neutral acknowledged states.
+/// @intent ok color, neutral acknowledged color, completed color
+/// @role color
 $dbx-ok-color-var: --dbx-ok-color;
+/// dbx grey color. Aliased from `--mat-sys-outline` for neutral chrome / muted accents.
+/// @intent grey color, neutral color, muted accent color
+/// @role color
+/// @see --mat-sys-outline
 $dbx-grey-color-var: --dbx-grey-color;
+/// dbx disabled color. Aliased from `--mat-sys-outline-variant` — used for disabled control surfaces and dimmed accents.
+/// @intent disabled color, dimmed color, inactive color
+/// @role color
+/// @see --mat-sys-outline-variant
 $dbx-disabled-color-var: --dbx-disabled-color;
+/// dbx default color. Aliased from `--mat-sys-on-surface` — the canonical "default" foreground when no semantic role applies.
+/// @intent default color, neutral default, fallback color
+/// @role color
+/// @see --mat-sys-on-surface
 $dbx-default-color-var: --dbx-default-color;
 
 $dbx-primary-color-contrast-var: --dbx-primary-color-contrast;
@@ -50,30 +115,128 @@ $dbx-disabled-color-contrast-var: --dbx-disabled-color-contrast;
 $dbx-default-color-contrast-var: --dbx-default-color-contrast;
 
 // Surface & outline variables (aliased from --mat-sys-* system variables)
+/// Default surface background. Aliased from `--mat-sys-surface`.
+/// @intent base surface, page background, surface background, app background
+/// @role surface
+/// @anti-use Don't hardcode `background: #fff`; this token flips automatically in dark mode.
+/// @primitive content-box
+/// @see --mat-sys-surface
 $dbx-surface-color-var: --dbx-surface-color;
+/// Container surface — the canonical card / content-box background. Aliased from `--mat-sys-surface-container`.
+/// @intent card background, container surface, raised surface
+/// @role surface
+/// @anti-use Don't hardcode `background: #f8f9fa`; use this var so dark mode flips automatically.
+/// @primitive content-box
+/// @see --mat-sys-surface-container
 $dbx-surface-container-color-var: --dbx-surface-container-color;
+/// Default body text on surfaces. Aliased from `--mat-sys-on-surface`.
+/// @intent body text color, default foreground, primary text
+/// @role text-color
+/// @see --mat-sys-on-surface
 $dbx-on-surface-color-var: --dbx-on-surface-color;
+/// Hint / secondary text color. Aliased from `--mat-sys-on-surface-variant`.
+/// @intent hint text color, secondary text, subtitle text, muted text, caption text
+/// @role text-color
+/// @anti-use Don't write `color: rgba(0,0,0,0.6)` for hint text — use this var.
+/// @utility .dbx-text-hint
+/// @see --mat-sys-on-surface-variant
 $dbx-on-surface-variant-color-var: --dbx-on-surface-variant-color;
+/// Border / divider color. Aliased from `--mat-sys-outline`.
+/// @intent border color, divider color, outline color
+/// @role color
+/// @see --mat-sys-outline
 $dbx-outline-color-var: --dbx-outline-color;
+/// Subtle border color. Aliased from `--mat-sys-outline-variant`.
+/// @intent subtle border color, low-contrast outline, decorative divider
+/// @role color
+/// @see --mat-sys-outline-variant
 $dbx-outline-variant-color-var: --dbx-outline-variant-color;
+/// Error/destructive color (alias for warn). Aliased from `--mat-sys-error`.
+/// @intent error color, destructive color
+/// @role color
+/// @see --mat-sys-error
 $dbx-error-color-var: --dbx-error-color;
 
+/// Per-app additional offset subtracted from the app-height base. Set to a non-zero value to shrink `--dbx-app-height` by a fixed amount (e.g. for a sticky footer). Defaults to `0px`.
+/// @intent app height offset, app height adjustment, shrink app height
+/// @role size
+/// @see --dbx-app-height
+/// @see --dbx-app-height-base
 $dbx-app-height-additional-offset-var: --dbx-app-height-additional-offset;
+/// Base app height before the additional offset. Computed as `100vh - (top-banner + bottom-banner)`. Set by the `app-height()` mixin.
+/// @intent app height base, viewport minus banners
+/// @role size
+/// @see --dbx-app-height
 $dbx-app-height-base-var: --dbx-app-height-base;
+/// Final app height available to the page. Equal to `app-height-base - app-height-additional-offset`. The `.dbx-app-height` / `.dbx-app-height-max` utilities consume this directly.
+/// @intent app height, viewport-bound app height, full app area height
+/// @role size
+/// @utility .dbx-app-height, .dbx-app-height-max
+/// @see --dbx-app-height-base
+/// @see --dbx-app-height-additional-offset
 $dbx-app-height-var: --dbx-app-height;
 
+/// Per-page additional offset subtracted from the page-height base. Use to shrink `--dbx-page-height` on pages that overlay extra chrome. Defaults to `0px`.
+/// @intent page height offset, page height adjustment, shrink page height
+/// @role size
+/// @see --dbx-page-height
+/// @see --dbx-page-height-base
 $dbx-page-height-additional-offset-var: --dbx-page-height-additional-offset;
+/// Base page height before the additional offset. Computed as `app-height - page-navbar-height`.
+/// @intent page height base, app height minus page navbar
+/// @role size
+/// @see --dbx-page-height
 $dbx-page-height-base-var: --dbx-page-height-base;
+/// Final page height inside a page navbar. Equal to `page-height-base - page-height-additional-offset`. The `.dbx-page-height` / `.dbx-page-height-max` utilities consume this directly.
+/// @intent page height, page area height, page-without-navbar height
+/// @role size
+/// @utility .dbx-page-height, .dbx-page-height-max
+/// @see --dbx-page-height-base
+/// @see --dbx-page-height-additional-offset
 $dbx-page-height-var: --dbx-page-height;
 
+/// Per-content additional offset subtracted from the content-height base. Use to reserve space for sticky toolbars inside a content area. Defaults to `0px`.
+/// @intent content height offset, content height adjustment, shrink content height
+/// @role size
+/// @see --dbx-content-height
+/// @see --dbx-content-height-base
 $dbx-content-height-additional-offset-var: --dbx-content-height-additional-offset;
+/// Number of content navbars stacked above the content area, used to compute `--dbx-content-height-base`. Defaults to `0`.
+/// @intent content headers count, stacked content navbar count
+/// @role misc
+/// @see --dbx-content-height-base
 $dbx-content-headers-count-var: --dbx-content-headers-count;
+/// Base content height before the additional offset. Computed as `page-height - (content-navbar-height * content-headers-count)`.
+/// @intent content height base, page height minus content navbars
+/// @role size
+/// @see --dbx-content-height
 $dbx-content-height-base-var: --dbx-content-height-base;
+/// Final content height inside one or more content navbars. Equal to `content-height-base - content-height-additional-offset`. The `.dbx-content-height` / `.dbx-content-height-max` utilities consume this directly.
+/// @intent content height, content area height, content-without-navbar height
+/// @role size
+/// @utility .dbx-content-height, .dbx-content-height-max
+/// @see --dbx-content-height-base
+/// @see --dbx-content-height-additional-offset
 $dbx-content-height-var: --dbx-content-height;
+/// Nested content height — content height minus one content-navbar tier, for nested content scrolls. Equal to `content-height - content-navbar-height`.
+/// @intent nested content height, content minus one navbar
+/// @role size
+/// @utility .dbx-nested-content-height, .dbx-nested-content-height-max
+/// @see --dbx-content-height
+/// @see --dbx-content-navbar-height
 $dbx-nested-content-height-var: --dbx-nested-content-height;
 
+/// Default avatar diameter for `<dbx-avatar>`.
+/// @intent avatar size, default avatar diameter
+/// @role size
 $dbx-avatar-size-var: --dbx-avatar-size;
+/// Large avatar diameter for `<dbx-avatar>`.
+/// @intent avatar large size, big avatar
+/// @role size
 $dbx-avatar-large-size-var: --dbx-avatar-large-size;
+/// Small avatar diameter for `<dbx-avatar>`.
+/// @intent avatar small size, compact avatar
+/// @role size
 $dbx-avatar-small-size-var: --dbx-avatar-small-size;
 
 // vars
@@ -160,6 +323,10 @@ $dbx-outline-color: var($dbx-outline-color-var);
 $dbx-outline-variant-color: var($dbx-outline-variant-color-var);
 $dbx-error-color: var($dbx-error-color-var);
 
+/// Border radius for the `[dbxContentPit]` rounded variant. Defaults to `var(--mat-sys-corner-medium)`.
+/// @intent pit radius, rounded pit corner, content pit radius
+/// @role radius
+/// @see --mat-sys-corner-medium
 $dbx-content-pit-rounded-border-radius-var: --dbx-content-pit-rounded-border-radius;
 $dbx-content-pit-rounded-border-radius: var($dbx-content-pit-rounded-border-radius-var);
 

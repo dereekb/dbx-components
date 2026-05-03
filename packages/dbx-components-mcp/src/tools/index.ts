@@ -60,6 +60,8 @@
  * | dbx_pipe_lookup                     | Documentation | "Tell me about Angular pipe X"                         |
  * | dbx_artifact_scaffold               | Generation    | "Give me the body for a new <artifact>."               |
  * | dbx_artifact_file_convention        | Reference     | "Where do I put a new <artifact>?"                     |
+ * | dbx_css_token_lookup                | Documentation | "What's the canonical CSS token for X?" (intent/value/role)|
+ * | dbx_ui_smell_check                  | Verification  | "Did my new component re-implement an existing primitive?" |
  * | dbx_explain_rule                    | Reference     | "Explain validation rule X — when does it apply?"      |
  * | dbx_app_validate                    | Verification  | "Validate the whole app (component + API) end-to-end." |
  * | dbx_model_list_component            | Discovery     | "What downstream models live in this `-firebase` component?" |
@@ -120,11 +122,14 @@ import { serverActionsListAppTool } from './server-actions-list-app.tool.js';
 import { mcpConfigTool } from './mcp-config.tool.js';
 import { createSemanticTypeLookupTool } from './lookup-semantic-type.tool.js';
 import { createSemanticTypeSearchTool } from './search-semantic-type.tool.js';
+import { createCssTokenLookupTool } from './css-token-lookup.tool.js';
+import { createUiSmellCheckTool } from './ui-smell-check.tool.js';
 import type { ActionRegistry } from '../registry/actions-runtime.js';
 import type { FilterRegistry } from '../registry/filters-runtime.js';
 import type { ForgeFieldRegistry } from '../registry/forge-fields.js';
 import type { PipeRegistry } from '../registry/pipes-runtime.js';
 import type { SemanticTypeRegistry } from '../registry/semantic-types.js';
+import type { TokenRegistry } from '../registry/tokens-runtime.js';
 import type { UiComponentRegistry } from '../registry/ui-components-runtime.js';
 import { toolError, type DbxTool } from './types.js';
 
@@ -205,6 +210,16 @@ export interface RegisterToolsOptions {
   readonly actionRegistry?: ActionRegistry;
   readonly filterRegistry?: FilterRegistry;
   /**
+   * Optional token registry. Required for `dbx_css_token_lookup` and
+   * `dbx_ui_smell_check`; when omitted those tools are skipped.
+   */
+  readonly tokenRegistry?: TokenRegistry;
+  /**
+   * Working directory used by `dbx_ui_smell_check` to resolve
+   * `dbx-mcp.config.json` for project convention overrides.
+   */
+  readonly cwd?: string;
+  /**
    * Optional fixture-model registry consumed by `dbx_model_fixture_validate_app`'s
    * parent-field-naming and registry cross-reference rules. When omitted those
    * rules are skipped — the tool still validates forwarding and structural
@@ -251,6 +266,12 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions =
   }
   if (options.filterRegistry !== undefined) {
     tools.push(createLookupFilterTool({ registry: options.filterRegistry }));
+  }
+  if (options.tokenRegistry !== undefined) {
+    tools.push(createCssTokenLookupTool({ registry: options.tokenRegistry }));
+    if (options.uiComponentRegistry !== undefined) {
+      tools.push(createUiSmellCheckTool({ tokenRegistry: options.tokenRegistry, uiComponentRegistry: options.uiComponentRegistry, cwd: options.cwd }));
+    }
   }
 
   underlyingServer.setRequestHandler(ListToolsRequestSchema, async () => {

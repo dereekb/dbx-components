@@ -59,9 +59,19 @@
         "cwd": "{workspaceRoot}"
       }
     },
+    "generate-css-tokens": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/generated/dereekb-dbx-web.tokens.mcp.generated.json", "{projectRoot}/generated/angular-material-m3.tokens.mcp.generated.json", "{projectRoot}/generated/angular-material-mdc.tokens.mcp.generated.json"],
+      "inputs": ["{projectRoot}/scripts/generate-css-tokens.mjs", "{projectRoot}/src/manifest/sources/angular-material-m3.tokens.source.json", "{projectRoot}/src/manifest/sources/angular-material-mdc.tokens.source.json", "{workspaceRoot}/packages/dbx-web/src/lib/style/_variables.scss", "{workspaceRoot}/packages/dbx-web/src/lib/style/_root-variables.scss", "{workspaceRoot}/packages/dbx-web/src/lib/style/_config.scss"],
+      "options": {
+        "commands": ["node packages/dbx-components-mcp/scripts/generate-css-tokens.mjs --source=dbx-web", "node packages/dbx-components-mcp/scripts/generate-css-tokens.mjs --source=mat-sys", "node packages/dbx-components-mcp/scripts/generate-css-tokens.mjs --source=mdc"],
+        "cwd": "{workspaceRoot}",
+        "parallel": false
+      }
+    },
     "regenerate": {
       "executor": "nx:run-commands",
-      "dependsOn": ["generate-firebase-models", "generate-manifests", "generate-rule-catalog"],
+      "dependsOn": ["generate-firebase-models", "generate-manifests", "generate-rule-catalog", "generate-css-tokens"],
       "options": {
         "command": "echo \"dbx-components-mcp regeneration complete\""
       }
@@ -79,7 +89,7 @@
       "executor": "@nx/esbuild:esbuild",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
-      "dependsOn": ["generate-firebase-models", "generate-manifests", "generate-rule-catalog"],
+      "dependsOn": ["generate-firebase-models", "generate-manifests", "generate-rule-catalog", "generate-css-tokens"],
       "options": {
         "outputPath": "dist/packages/dbx-components-mcp",
         "main": "packages/dbx-components-mcp/bin/dbx-components-mcp.ts",
