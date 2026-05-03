@@ -64,6 +64,18 @@ function captureSnippet(haystack: string, index: number, length: number): string
   return haystack.slice(start, stop).trimEnd();
 }
 
+/**
+ * Returns true when `colonIndex` points at the colon inside an SCSS variable
+ * declaration (e.g. `$foo: #abc`). Used to suppress hex/value-level smells
+ * fired against the canonical declaration line, which is exactly the place
+ * the smell's own fix-text recommends putting the literal.
+ */
+function isInsideScssVarDeclaration(scss: string, colonIndex: number): boolean {
+  const lineStart = scss.lastIndexOf('\n', colonIndex - 1) + 1;
+  const prefix = scss.slice(lineStart, colonIndex);
+  return /^\s*\$[\w-]+\s*$/.test(prefix);
+}
+
 function findCardSurface(scss: string): { index: number; length: number; snippet: string } | null {
   let result: { index: number; length: number; snippet: string } | null = null;
   // Walk SCSS rule blocks: anything between `{` and matching `}`. Then look
@@ -121,7 +133,7 @@ const cardSurfaceHandrolled: SmellDetector = (input) => {
   return matches;
 };
 
-const HARDCODED_RADIUS_RE = /border-radius\s*:\s*([0-9]+(?:\.[0-9]+)?(?:px|rem))(?!\s*\))/gi;
+const HARDCODED_RADIUS_RE = /border-radius\s*:\s*([0-9]+(?:\.[0-9]+)?(?:px|rem|em))(?!\s*\))/gi;
 
 /**
  * Flags hardcoded `border-radius: <N>px|rem` not wrapped in a `var()`.
@@ -130,6 +142,8 @@ const hardcodedRadius: SmellDetector = (input) => {
   const matches: SmellMatch[] = [];
   for (const match of input.scss.matchAll(HARDCODED_RADIUS_RE)) {
     if (match.index === undefined) continue;
+    const colonIndex = input.scss.indexOf(':', match.index);
+    if (colonIndex !== -1 && isInsideScssVarDeclaration(input.scss, colonIndex)) continue;
     const raw = match[1];
     const candidates = input.tokenRegistry.findByValue(raw, 'radius');
     const top = candidates[0];
@@ -342,6 +356,7 @@ const hardcodedHexBrand: SmellDetector = (input) => {
   const seen = new Set<string>();
   for (const match of input.scss.matchAll(HARDCODED_HEX_RE)) {
     if (match.index === undefined) continue;
+    if (isInsideScssVarDeclaration(input.scss, match.index)) continue;
     const hex = match[1];
     if (seen.has(hex)) continue;
     seen.add(hex);
@@ -353,6 +368,71 @@ const hardcodedHexBrand: SmellDetector = (input) => {
         title: 'Hardcoded hex with no matching token',
         snippet: captureSnippet(input.scss, match.index, match[0].length),
         fix: `\`${hex}\` doesn't map to a known design-system token. If this is project-local brand chrome, define a project-local SCSS variable in your app's \`styles.scss\` (e.g. \`$myapp-onboarding-bg: ${hex};\`) so the value has one source of truth.`,
+        seeAlsoSlugs: [],
+        seeAlsoTokens: []
+      });
+    }
+  }
+  return matches;
+};
+
+const EMPTY_RULESET_RE = /([^{}\n;]+?)\s*\{\s*\}/g;
+
+/**
+ * Flags empty SCSS rule blocks (`.foo {}`, `&:hover { }`). They add noise and
+ * are usually leftover scaffolding.
+ */
+const emptyRuleset: SmellDetector = (input) => {
+  const matches: SmellMatch[] = [];
+  for (const match of input.scss.matchAll(EMPTY_RULESET_RE)) {
+    if (match.index === undefined) continue;
+    const selector = match[1].trim();
+    if (selector.length === 0) continue;
+    if (!/^[.#&*:@\w]/.test(selector)) continue;
+    matches.push({
+      id: 'empty-ruleset',
+      severity: 'info',
+      title: 'Empty rule block',
+      snippet: captureSnippet(input.scss, match.index, match[0].length),
+      fix: 'Empty rule blocks add noise. Either add styles, remove the block, or replace it with a `// TODO:` comment if you want to mark a placeholder.',
+      seeAlsoSlugs: [],
+      seeAlsoTokens: []
+    });
+  }
+  return matches;
+};
+
+const SCSS_USE_AS_RE = /@use\s+['"][^'"]+['"]\s+as\s+([\w-]+)\s*;/g;
+
+/**
+ * Flags `@use 'pkg' as ns;` declarations whose namespace is never referenced
+ * (`ns.something`) elsewhere in the file. Skips `as *` (wildcard) imports —
+ * those don't expose a namespace, so usage is undetectable by name.
+ */
+const unusedScssUse: SmellDetector = (input) => {
+  const matches: SmellMatch[] = [];
+  for (const match of input.scss.matchAll(SCSS_USE_AS_RE)) {
+    if (match.index === undefined) continue;
+    const ns = match[1];
+    const usagePattern = new RegExp(`(?:^|[^\\w-])${ns}\\.`, 'g');
+    let used = false;
+    for (const usageMatch of input.scss.matchAll(usagePattern)) {
+      if (usageMatch.index === undefined) continue;
+      const lineStart = input.scss.lastIndexOf('\n', usageMatch.index) + 1;
+      const lineEndRaw = input.scss.indexOf('\n', usageMatch.index);
+      const lineEnd = lineEndRaw === -1 ? input.scss.length : lineEndRaw;
+      const line = input.scss.slice(lineStart, lineEnd);
+      if (/^\s*@use\b/.test(line)) continue;
+      used = true;
+      break;
+    }
+    if (!used) {
+      matches.push({
+        id: 'unused-scss-use',
+        severity: 'info',
+        title: `Unused @use namespace \`${ns}\``,
+        snippet: captureSnippet(input.scss, match.index, match[0].length),
+        fix: `\`@use\` declares namespace \`${ns}\` but no \`${ns}.\` reference appears in this file. Remove the import to keep the file lean, or use it.`,
         seeAlsoSlugs: [],
         seeAlsoTokens: []
       });
@@ -474,6 +554,8 @@ export const UI_SMELLS: readonly { readonly id: string; readonly detect: SmellDe
   { id: 'flex-column-with-gap-as-card-stack', detect: flexColumnWithGap },
   { id: 'mdc-token-override-instead-of-wrapper', detect: mdcTokenOverride },
   { id: 'hardcoded-hex-brand-color', detect: hardcodedHexBrand },
+  { id: 'empty-ruleset', detect: emptyRuleset },
+  { id: 'unused-scss-use', detect: unusedScssUse },
   { id: 'raw-mat-button', detect: rawMatButton },
   { id: 'custom-section-header', detect: customSectionHeader },
   { id: 'custom-grid-layout', detect: customGridLayout },

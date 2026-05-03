@@ -32,7 +32,12 @@ export function formatSmellResult(input: { readonly html: string; readonly scss:
   }
 
   if (matches.length === 0) {
-    sections.push('', 'No smells detected against the v1 catalog. If you still want a token recommendation, call `dbx_css_token_lookup` with an `intent` or `value`.');
+    const goodSignals = formatGoodSignals(input.html, input.scss);
+    if (goodSignals !== null) {
+      sections.push('', 'No smells detected.', '', goodSignals, '', 'For a token recommendation, call `dbx_css_token_lookup` with an `intent` or `value`.');
+    } else {
+      sections.push('', 'No smells detected against the v1 catalog. If you still want a token recommendation, call `dbx_css_token_lookup` with an `intent` or `value`.');
+    }
   } else {
     sections.push('', '## Detected smells', '');
     for (const match of matches) {
@@ -67,6 +72,50 @@ function formatMatch(match: SmellMatch): string {
   }
   lines.push('');
   return lines.join('\n');
+}
+
+/**
+ * Builds the "Good signals" inventory shown in the no-smells branch.
+ * Counts `dbx-*` element occurrences (deduped by tag) plus design-system
+ * `var(--dbx-*)` / `var(--mat-sys-*)` references, so the caller can confirm
+ * the scanner actually saw their content. Returns null when there's nothing
+ * to report (both inputs empty).
+ */
+function formatGoodSignals(html: string, scss: string): string | null {
+  let result: string | null = null;
+  if (html.length > 0 || scss.length > 0) {
+    const lines: string[] = [];
+    if (html.length > 0) {
+      const elements = new Map<string, number>();
+      for (const match of html.matchAll(/<(dbx-[\w-]+)\b/g)) {
+        const tag = match[1].toLowerCase();
+        elements.set(tag, (elements.get(tag) ?? 0) + 1);
+      }
+      if (elements.size > 0) {
+        const summary = Array.from(elements.entries())
+          .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+          .map(([tag, n]) => `${tag} ×${n}`)
+          .join(', ');
+        lines.push(`- HTML uses: ${summary}`);
+      } else {
+        lines.push('- HTML uses: no `dbx-*` elements');
+      }
+    }
+    if (scss.length > 0) {
+      let dbx = 0;
+      let matSys = 0;
+      for (const match of scss.matchAll(/var\(\s*(--[\w-]+)/g)) {
+        const name = match[1];
+        if (name.startsWith('--dbx-')) dbx += 1;
+        else if (name.startsWith('--mat-sys-')) matSys += 1;
+      }
+      lines.push(`- SCSS uses: ${dbx} \`--dbx-*\` reference${dbx === 1 ? '' : 's'}, ${matSys} \`--mat-sys-*\` reference${matSys === 1 ? '' : 's'}`);
+    }
+    if (lines.length > 0) {
+      result = `Good signals:\n${lines.join('\n')}`;
+    }
+  }
+  return result;
 }
 
 function formatTokenTable(matches: readonly SmellMatch[], _tokenRegistry: TokenRegistry): string | null {

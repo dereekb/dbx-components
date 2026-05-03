@@ -1,36 +1,30 @@
 <div dbxBody dbxStyleBody dbxFirebaseDevelopment>
   <mat-toolbar class="app-toolbar">
     <dbx-anchor [anchor]="landing">
-      <button mat-button>
-        <mat-icon class="dbx-icon-spacer">app_shortcut</mat-icon>
-        DbxComponents
-      </button>
+      <dbx-button basic icon="app_shortcut" text="DbxComponents"></dbx-button>
     </dbx-anchor>
     <dbx-button-spacer></dbx-button-spacer>
     <dbx-anchor [anchor]="doc">
-      <button mat-button>Docs</button>
+      <dbx-button basic text="Docs"></dbx-button>
     </dbx-anchor>
     <dbx-button-spacer></dbx-button-spacer>
     <dbx-anchor [anchor]="demo">
-      <button mat-button>Demo</button>
+      <dbx-button basic text="Demo"></dbx-button>
     </dbx-anchor>
     <span class="spacer"></span>
     @if (showEmulatorButton) {
       <dbx-anchor [anchor]="emulator">
-        <button mat-flat-button color="accent">Emulator Enabled</button>
+        <dbx-button flat color="accent" text="Emulator Enabled"></dbx-button>
       </dbx-anchor>
     }
     <span class="spacer"></span>
     @if (showToggleDarkThemeButtonSignal()) {
       <dbx-anchor [anchor]="toggleDarkTheme">
-        <button mat-button>Toggle Dark Theme</button>
+        <dbx-button basic text="Toggle Dark Theme"></dbx-button>
       </dbx-anchor>
     }
     <dbx-anchor [anchor]="github">
-      <button mat-button>
-        <mat-icon class="dbx-icon-spacer">code</mat-icon>
-        Github
-      </button>
+      <dbx-button basic icon="code" text="Github"></dbx-button>
     </dbx-anchor>
   </mat-toolbar>
   <ui-view></ui-view>

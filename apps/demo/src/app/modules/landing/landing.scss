@@ -1,5 +1,9 @@
-@use '@angular/material' as mat;
-@use 'dbx-web/src/index' as dbx;
+// https://buttons.github.io/ — GitHub star widget brand colors
+$github-star-text: #24292f;
+$github-star-bg: #ebf0f4;
+$github-star-bg-top: #f6f8fa;
+$github-star-border: rgba(27, 31, 36, 0.15);
+$github-star-border-radius: 0.25em;
 
 .landing {
   overflow: scroll;
@@ -17,7 +21,7 @@
 
 .package-list {
   .package-list-item {
-    margin-bottom: 8px;
+    margin-bottom: var(--dbx-padding-4);
 
     p,
     h4 {
@@ -26,12 +30,12 @@
   }
 
   .package-primary-package-list {
-    margin: 4px 0;
+    margin: var(--dbx-padding-5) 0;
   }
 
   .package-child-package-list {
-    padding-left: 12px;
-    margin: 4px 0;
+    padding-left: var(--dbx-padding-3);
+    margin: var(--dbx-padding-5) 0;
 
     .package-child-package {
       font-size: 0.9em;
@@ -47,34 +51,41 @@
   }
 }
 
-.features {
-}
-
 .star-on-github-widget {
-  // https://buttons.github.io/
-
   display: inline-block;
   overflow: hidden;
-  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    Segoe UI,
+    Helvetica,
+    Arial,
+    sans-serif;
   font-size: 0;
   line-height: 0;
   white-space: nowrap;
 
   .star-on-github {
-    font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif;
+    font-family:
+      -apple-system,
+      BlinkMacSystemFont,
+      Segoe UI,
+      Helvetica,
+      Arial,
+      sans-serif;
     text-decoration: none;
     outline: 0;
-    color: #24292f;
-    background-color: #ebf0f4;
-    border-color: rgba(27, 31, 36, 0.15);
-    background-image: linear-gradient(180deg, #f6f8fa, #ebf0f4 90%);
+    color: $github-star-text;
+    background-color: $github-star-bg;
+    border-color: $github-star-border;
+    background-image: linear-gradient(180deg, $github-star-bg-top, $github-star-bg 90%);
 
-    border-radius: 0.25em;
+    border-radius: $github-star-border-radius;
 
     position: relative;
     display: inline-flex;
     height: 14px;
-    padding: 2px 5px;
+    padding: var(--dbx-padding-1) 5px;
     font-size: 11px;
     font-weight: 600;
     line-height: 14px;

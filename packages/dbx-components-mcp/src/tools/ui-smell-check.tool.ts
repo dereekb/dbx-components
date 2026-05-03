@@ -11,6 +11,8 @@
  * block name-checks it.
  */
 
+import { readFile as nodeReadFile } from 'node:fs/promises';
+import { isAbsolute, resolve } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
 import { findAndLoadConfig, type ConfigReadFile } from '../config/load-config.js';
@@ -27,15 +29,17 @@ const DBX_UI_SMELL_CHECK_TOOL: Tool = {
     '',
     'Run this after writing component SCSS — it flags hand-rolled card surfaces, raw `mat-button` usages, hardcoded paddings/radii/shadows/colors that map to existing tokens, MDC token overrides that should be a host attribute or wrapper, and other patterns that already have a dbx-web primitive.',
     '',
-    'Pass either `html`, `scss`, or both. Optional `context` is a one-liner about what the component is for (informational — does not change detection).',
+    'Pass either `html` / `scss` (inline strings) or `htmlPath` / `scssPath` (read from disk, relative to cwd or absolute). Prefer paths for files larger than ~1KB to keep the tool input small. Optional `context` is a one-liner about what the component is for (informational — does not change detection).',
     '',
     'Project-local conventions (e.g. wrapper class names) can be supplied via `projectConventions` or read from `dbx-mcp.config.json` `uiSmellCheck.projectConventions`.'
   ].join('\n'),
   inputSchema: {
     type: 'object',
     properties: {
-      html: { type: 'string', description: 'Component HTML (optional). Pass either html, scss, or both.' },
-      scss: { type: 'string', description: 'Component SCSS (optional). Pass either html, scss, or both.' },
+      html: { type: 'string', description: 'Component HTML (optional). Mutually exclusive with `htmlPath`.' },
+      scss: { type: 'string', description: 'Component SCSS (optional). Mutually exclusive with `scssPath`.' },
+      htmlPath: { type: 'string', description: 'Path to a component HTML file. Resolved relative to the MCP cwd, or used as-is when absolute. Mutually exclusive with `html`.' },
+      scssPath: { type: 'string', description: 'Path to a component SCSS/CSS file. Resolved relative to the MCP cwd, or used as-is when absolute. Mutually exclusive with `scss`.' },
       context: { type: 'string', description: 'Optional one-liner about what the component is for.' },
       projectConventions: {
         type: 'object',
@@ -52,6 +56,8 @@ const DBX_UI_SMELL_CHECK_TOOL: Tool = {
 const SmellCheckArgs = type({
   'html?': 'string',
   'scss?': 'string',
+  'htmlPath?': 'string',
+  'scssPath?': 'string',
   'context?': 'string',
   'projectConventions?': type({ 'cardWrapperClasses?': 'string[]' })
 });
@@ -59,6 +65,8 @@ const SmellCheckArgs = type({
 type ParsedArgs = {
   readonly html: string;
   readonly scss: string;
+  readonly htmlPath?: string;
+  readonly scssPath?: string;
   readonly context?: string;
   readonly conventions: ProjectConventions;
 };
@@ -73,7 +81,14 @@ function parseArgs(raw: unknown, defaults: ProjectConventions): ParsedArgs {
   const merged: ProjectConventions = {
     cardWrapperClasses: parsed.projectConventions?.cardWrapperClasses ?? defaults.cardWrapperClasses
   };
-  return { html, scss, context: parsed.context, conventions: merged };
+  return { html, scss, htmlPath: parsed.htmlPath, scssPath: parsed.scssPath, context: parsed.context, conventions: merged };
+}
+
+const DEFAULT_READ_FILE: ConfigReadFile = (path) => nodeReadFile(path, 'utf-8');
+
+async function readPathInput(path: string, cwd: string, readFile: ConfigReadFile): Promise<string> {
+  const absolute = isAbsolute(path) ? path : resolve(cwd, path);
+  return readFile(absolute);
 }
 
 // MARK: Tool factory
@@ -129,18 +144,47 @@ export function createUiSmellCheckTool(input: CreateUiSmellCheckToolInput): DbxT
       return toolError(message);
     }
 
-    if (args.html.length === 0 && args.scss.length === 0) {
-      return toolError('dbx_ui_smell_check: provide at least one of `html` or `scss`.');
+    if (args.html.length > 0 && args.htmlPath !== undefined) {
+      return toolError('dbx_ui_smell_check: provide either `html` or `htmlPath`, not both.');
+    }
+    if (args.scss.length > 0 && args.scssPath !== undefined) {
+      return toolError('dbx_ui_smell_check: provide either `scss` or `scssPath`, not both.');
+    }
+
+    const resolvedCwd = cwd ?? process.cwd();
+    const reader = readFile ?? DEFAULT_READ_FILE;
+
+    let html = args.html;
+    let scss = args.scss;
+    if (args.htmlPath !== undefined) {
+      try {
+        html = await readPathInput(args.htmlPath, resolvedCwd, reader);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return toolError(`dbx_ui_smell_check: failed to read htmlPath \`${args.htmlPath}\`: ${message}`);
+      }
+    }
+    if (args.scssPath !== undefined) {
+      try {
+        scss = await readPathInput(args.scssPath, resolvedCwd, reader);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return toolError(`dbx_ui_smell_check: failed to read scssPath \`${args.scssPath}\`: ${message}`);
+      }
+    }
+
+    if (html.length === 0 && scss.length === 0) {
+      return toolError('dbx_ui_smell_check: provide at least one of `html`, `scss`, `htmlPath`, or `scssPath`.');
     }
 
     const matches = detectSmells({
-      html: args.html,
-      scss: args.scss,
+      html,
+      scss,
       conventions: args.conventions,
       tokenRegistry,
       uiComponentRegistry
     });
-    const text = formatSmellResult({ html: args.html, scss: args.scss, context: args.context }, matches, tokenRegistry);
+    const text = formatSmellResult({ html, scss, context: args.context }, matches, tokenRegistry);
     return { content: [{ type: 'text', text }] };
   };
   return { definition: DBX_UI_SMELL_CHECK_TOOL, run };
