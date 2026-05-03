@@ -926,6 +926,34 @@
       }
     },
     {
+      "slug": "page-title-info",
+      "category": "navigation",
+      "kind": "directive",
+      "selector": "[dbxWebPageTitleInfo]",
+      "className": "DbxWebPageTitleInfoDirective",
+      "module": "@dereekb/dbx-web",
+      "description": "Registers a hierarchical page title segment with {@link DbxWebPageTitleService}. Multiple directives nested in the host tree\nform a chain (root → leaf); the leaf's segment takes priority through the active delegate.\n\nThe directive locates its parent of the same type via element-injector ascent (`{ skipSelf: true, optional: true }`),\nmirroring Angular CDK's tree-node hierarchy pattern. Each directive maintains its own `children` set so the service can\ncompute which directives are leaves at any moment.\n\nRequires {@link provideDbxWebPageTitleService} to be set up at the application or feature scope.",
+      "inputs": [
+        {
+          "name": "dbxWebPageTitleInfo",
+          "type": "Maybe<DbxWebPageTitleInfoConfig>",
+          "description": "",
+          "required": false
+        }
+      ],
+      "outputs": [],
+      "skillRefs": [
+        "dbx__ref__dbx-app-structure"
+      ],
+      "sourcePath": "lib/extension/title/title.directive.ts",
+      "example": "<div [dbxWebPageTitleInfo]=\"appTitleConfigSignal()\">\n  <ui-view>\n    <div [dbxWebPageTitleInfo]=\"pageTitleConfigSignal()\">\n      <!-- leaf -->\n    </div>\n  </ui-view>\n</div>",
+      "minimalExample": "<div [dbxWebPageTitleInfo]=\"{ title: 'Docs' }\"></div>",
+      "sourceLocation": {
+        "file": "src/lib/extension/title/title.directive.ts",
+        "line": 37
+      }
+    },
+    {
       "slug": "dialog-content",
       "category": "overlay",
       "kind": "directive",

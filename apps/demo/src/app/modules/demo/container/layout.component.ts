@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, ViewEncapsulation, inject } from '@
 import { type Observable, map, of, shareReplay } from 'rxjs';
 import { mapKeysIntersectionToArray } from '@dereekb/rxjs';
 import { DbxFirebaseAuthService, DbxFirebaseDocumentStoreContextModelEntitiesSourceDirective, DbxFirebaseDocumentStoreContextStoreDirective, DbxFirebaseModelEntitiesPopoverButtonComponent, type DbxFirebaseModelEntitiesPopoverButtonConfig } from '@dereekb/dbx-firebase';
-import { DbxSidenavComponent, DbxSetStyleDirective, DbxIfSidenavDisplayModeDirective, DbxContentBorderDirective, DbxSidenavPageComponent, DbxAnchorListComponent } from '@dereekb/dbx-web';
+import { DbxSidenavComponent, DbxSetStyleDirective, DbxIfSidenavDisplayModeDirective, DbxContentBorderDirective, DbxSidenavPageComponent, DbxAnchorListComponent, DbxWebPageTitleInfoDirective, type DbxWebPageTitleInfoConfig } from '@dereekb/dbx-web';
 import { UIView } from '@uirouter/angular';
 import { toSignal } from '@angular/core/rxjs-interop';
 
@@ -12,11 +12,13 @@ import { toSignal } from '@angular/core/rxjs-interop';
   styleUrls: ['../demo.scss'],
   encapsulation: ViewEncapsulation.None,
   standalone: true,
-  imports: [DbxSidenavComponent, DbxSetStyleDirective, DbxIfSidenavDisplayModeDirective, DbxContentBorderDirective, DbxSidenavPageComponent, UIView, DbxAnchorListComponent, DbxFirebaseDocumentStoreContextStoreDirective, DbxFirebaseModelEntitiesPopoverButtonComponent, DbxFirebaseDocumentStoreContextModelEntitiesSourceDirective],
+  imports: [DbxSidenavComponent, DbxSetStyleDirective, DbxIfSidenavDisplayModeDirective, DbxContentBorderDirective, DbxSidenavPageComponent, UIView, DbxAnchorListComponent, DbxFirebaseDocumentStoreContextStoreDirective, DbxFirebaseModelEntitiesPopoverButtonComponent, DbxFirebaseDocumentStoreContextModelEntitiesSourceDirective, DbxWebPageTitleInfoDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DemoLayoutComponent {
   readonly dbxAuthService = inject(DbxFirebaseAuthService);
+
+  readonly pageTitleInfo: DbxWebPageTitleInfoConfig = { title: 'Demo', description: 'dbx-components demo app' };
 
   readonly everyoneAnchors = [
     {

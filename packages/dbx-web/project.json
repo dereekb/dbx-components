@@ -17,6 +17,10 @@
             "command": "npx nx run dbx-web:build-base:production"
           },
           {
+            "description": "build dbx-web-eslint production",
+            "command": "npx nx run dbx-web-eslint:build-base:production"
+          },
+          {
             "description": "finish dbx-web build script",
             "command": "sh packages/dbx-web/complete-dbx-web-build.sh"
           }

@@ -10,7 +10,7 @@ import type { FormConfig } from '@ng-forge/dynamic-forms';
 import { BehaviorSubject, interval, map, of, shareReplay, startWith } from 'rxjs';
 import { DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER, DocExtensionCalendarScheduleSelectionWithFilterComponent } from '../component/selection.filter.calendar.component';
 import { dbxForgeTimezoneStringField, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
-import { DbxContentContainerDirective, DbxTwoColumnComponent, DbxTwoColumnContextDirective, DbxTwoColumnFullLeftDirective, DbxTwoBlockComponent, DbxTwoColumnRightComponent, DbxSubSectionComponent } from '@dereekb/dbx-web';
+import { DbxContentContainerDirective, DbxTwoColumnComponent, DbxTwoColumnContextDirective, DbxTwoColumnFullLeftDirective, DbxTwoBlockComponent, DbxTwoColumnRightComponent, DbxSubSectionComponent, DbxWebPageTitleInfoDirective, type DbxWebPageTitleInfoConfig } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureDerivedComponent } from '../../shared/component/feature.derived.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
@@ -47,6 +47,7 @@ export interface TestCalendarEventData extends DateCell {
     DbxFormSourceDirective,
     DbxFormValueChangeDirective,
     DbxSubSectionComponent,
+    DbxWebPageTitleInfoDirective,
     DocExtensionCalendarScheduleSelectionWithFilterComponent,
     DocExtensionCalendarScheduleSelectionComponent,
     DbxFormDateScheduleRangeFieldModule,
@@ -59,6 +60,8 @@ export interface TestCalendarEventData extends DateCell {
 })
 export class DocExtensionCalendarComponent implements OnInit {
   readonly calendarStore = inject(DbxCalendarStore<TestCalendarEventData>);
+
+  readonly pageTitleInfo: DbxWebPageTitleInfoConfig = { title: 'Calendar', description: 'dbx-calendar component examples' };
 
   private _timezone = new BehaviorSubject<Maybe<TimezoneString>>(undefined);
 
