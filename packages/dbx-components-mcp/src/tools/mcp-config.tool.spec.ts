@@ -51,7 +51,7 @@ describe('dbx_mcp_config', () => {
     });
 
     it('errors when registered source is missing on disk', async () => {
-      await writeFile(join(workspaceRoot, 'dbx-mcp.config.json'), JSON.stringify({ version: 1, uiComponents: { sources: ['.tmp/dbx-mcp/missing.uiComponents.json'] } }), 'utf8');
+      await writeFile(join(workspaceRoot, 'dbx-mcp.config.json'), JSON.stringify({ version: 1, uiComponents: { sources: ['.tmp/dbx-mcp/missing.ui.json'] } }), 'utf8');
       const result = await mcpConfigTool.run({ op: 'validate', cwd: workspaceRoot });
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('does not exist on disk');
@@ -81,11 +81,11 @@ describe('dbx_mcp_config', () => {
       expect(scan.version).toBe(1);
       expect(scan.uiComponents).toBeDefined();
       expect(scan.pipes).toBeDefined();
-      expect((scan.uiComponents as Record<string, unknown>).out).toBe('../../.tmp/dbx-mcp/demo-shared.uiComponents.json');
+      expect((scan.uiComponents as Record<string, unknown>).out).toBe('../../.tmp/dbx-mcp/demo-shared.ui.json');
 
       const configRaw = await readFile(join(workspaceRoot, 'dbx-mcp.config.json'), 'utf8');
       const config = JSON.parse(configRaw) as Record<string, { sources: string[] }>;
-      expect(config.uiComponents.sources).toContain('.tmp/dbx-mcp/demo-shared.uiComponents.json');
+      expect(config.uiComponents.sources).toContain('.tmp/dbx-mcp/demo-shared.ui.json');
       expect(config.pipes.sources).toContain('.tmp/dbx-mcp/demo-shared.pipes.json');
     });
 

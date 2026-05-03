@@ -70,6 +70,26 @@ export interface InitPlan {
  */
 const HEURISTIC_CLUSTERS: readonly Exclude<DownstreamCluster, 'semanticTypes'>[] = ['uiComponents', 'forgeFields', 'pipes', 'actions', 'filters'];
 
+/**
+ * Short, lowercase filename segment for the cluster — used in suggested `out`
+ * paths (e.g. `<slug>.ui.json`, `<slug>.forge.json`). The compound config keys
+ * (`uiComponents`, `forgeFields`, `semanticTypes`) collapse to their leading
+ * identifier so file names stay short and readable; one-word clusters keep
+ * their key as-is.
+ */
+const CLUSTER_FILENAME_SEGMENT: Record<DownstreamCluster, string> = {
+  semanticTypes: 'semantic',
+  uiComponents: 'ui',
+  forgeFields: 'forge',
+  pipes: 'pipes',
+  actions: 'actions',
+  filters: 'filters'
+};
+
+function clusterFilenameSegment(cluster: DownstreamCluster): string {
+  return CLUSTER_FILENAME_SEGMENT[cluster];
+}
+
 interface ScanSectionShape {
   readonly include?: unknown;
   readonly exclude?: unknown;
@@ -183,7 +203,7 @@ async function planPackageScanConfig(input: { snapshot: WorkspaceSnapshot; packa
   // register the eventual manifest output. The legacy CLI defaults `out` to a
   // sibling file when absent — we mirror that resolution here.
   if (typeof next.topicNamespace === 'string' && Array.isArray(next.include)) {
-    const outValue = typeof next.out === 'string' && next.out.length > 0 ? next.out : `${pkg.slug}.semantic-types.json`;
+    const outValue = typeof next.out === 'string' && next.out.length > 0 ? next.out : `${pkg.slug}.${clusterFilenameSegment('semanticTypes')}.json`;
     const declaredOut = resolveScanOut(scanConfigPath, outValue);
     sourcesToRegister.push({ cluster: 'semanticTypes', relPath: relativeFromConfig(snapshot, declaredOut) });
   }
@@ -262,7 +282,7 @@ interface DefaultOutInput {
 }
 
 function defaultOutFor(input: DefaultOutInput): string {
-  const targetAbs = resolve(input.snapshot.workspaceRoot, '.tmp/dbx-mcp', `${input.slug}.${input.cluster}.json`);
+  const targetAbs = resolve(input.snapshot.workspaceRoot, '.tmp/dbx-mcp', `${input.slug}.${clusterFilenameSegment(input.cluster)}.json`);
   return relative(dirname(input.scanConfigPath), targetAbs).split('\\').join('/');
 }
 
