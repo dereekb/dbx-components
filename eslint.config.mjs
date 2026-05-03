@@ -6,6 +6,7 @@ import jsdocPlugin from 'eslint-plugin-jsdoc';
 import sonarjsPlugin from 'eslint-plugin-sonarjs';
 import unicornPlugin from 'eslint-plugin-unicorn';
 import { nestjsEslintPlugin } from './dist/packages/nestjs/eslint/index.esm.js';
+import { dbxWebEslintPlugin } from './dist/packages/dbx-web/eslint/index.esm.js';
 
 export default [
   importPlugin.flatConfigs.recommended,
@@ -89,6 +90,17 @@ export default [
     },
     rules: {
       'dereekb-nestjs/require-nest-inject': 'error' // required: emitDecoratorMetadata is disabled; only flags @nestjs/common decorators
+    }
+  },
+  {
+    files: ['**/*.ts'],
+    plugins: {
+      'dereekb-dbx-web': dbxWebEslintPlugin
+    },
+    rules: {
+      'dereekb-dbx-web/require-clean-subscription': 'error',
+      'dereekb-dbx-web/require-complete-on-destroy': 'error',
+      'dereekb-dbx-web/no-redundant-on-destroy': 'error'
     }
   },
   {
