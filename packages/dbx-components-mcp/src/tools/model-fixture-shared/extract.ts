@@ -22,7 +22,8 @@
 
 import { Node, Project, SyntaxKind, type ArrowFunction, type ClassDeclaration, type FunctionExpression, type InterfaceDeclaration, type MethodDeclaration, type SourceFile, type TypeAliasDeclaration, type VariableDeclaration } from 'ts-morph';
 import { classifyFixtureArchetype } from './archetype.js';
-import type { AppFixturesExtraction, FactoryCall, FixtureEntry, FixtureMethod, FixtureParamsField, FixtureParamsType } from './types.js';
+import { findFamilyByBaseClass, findFamilyByFactoryName, NON_MODEL_JSDOC_TAG, type FrameworkNonModelFixtureFamily } from './framework-fixtures.js';
+import type { AppFixturesExtraction, FactoryCall, FixtureEntry, FixtureKind, FixtureMethod, FixtureParamsField, FixtureParamsType } from './types.js';
 
 const FIXTURE_SUFFIX = 'TestContextFixture';
 const INSTANCE_SUFFIX = 'TestContextInstance';
@@ -58,7 +59,7 @@ export function extractAppFixturesFromText(input: ExtractAppFixturesInput): AppF
   collectClasses(sourceFile, prefix, { fixtures: fixtureClasses, instances: instanceClasses, unrecognized });
 
   const paramsTypes = collectParamsTypes(sourceFile, prefix);
-  const factoriesByModel = collectFactories(sourceFile, prefix);
+  const { factoriesByModel, nonModelFamiliesByModel } = collectFactories(sourceFile, prefix);
   const singletonsByFactory = collectSingletonsByFactory(sourceFile);
 
   const entries: FixtureEntry[] = [];
@@ -83,10 +84,13 @@ export function extractAppFixturesFromText(input: ExtractAppFixturesInput): AppF
     const archetype = classifyFixtureArchetype({ factory, params });
     const fixtureMethods = readClassMethods(fixtureClass);
     const instanceMethods = readClassMethods(instanceClass);
+    const { kind, nonModelFamily } = classifyFixtureKind({ fixtureClass, instanceClass, nonModelFamily: nonModelFamiliesByModel.get(model) });
     const entry: FixtureEntry = {
       model,
       prefix: prefix ?? '',
       archetype,
+      kind,
+      nonModelFamily,
       fixtureClassName: fixtureClass.getName() ?? '',
       instanceClassName: instanceClass.getName() ?? '',
       paramsTypeName: params?.name ?? `${prefix ?? ''}${model}${PARAMS_SUFFIX}`,
@@ -340,38 +344,49 @@ function resolveFixtureFieldModel(typeText: string, prefix: string | undefined):
 
 /**
  * Walks every variable statement that initializes via a
- * `() => modelTestContextFactory<...>(...)` arrow and returns the parsed
- * {@link FactoryCall} metadata keyed by bare model name (derived from the
- * factory name `<prefix><Model>ContextFactory`).
+ * `() => modelTestContextFactory<...>(...)` arrow (or a recognized
+ * framework non-model factory like `authorizedUserContextFactory`) and
+ * returns:
+ *
+ * - `factoriesByModel` — parsed {@link FactoryCall} metadata keyed by bare
+ *   model name (derived from the factory variable name
+ *   `<prefix><Model>ContextFactory`).
+ * - `nonModelFamiliesByModel` — for entries whose body called a known
+ *   framework non-model factory, the matched family entry. Used downstream
+ *   to set `FixtureEntry.kind`.
  *
  * @param sourceFile - the parsed fixture file
  * @param prefix - the workspace prefix
- * @returns map of bare model name → factory metadata
  */
-function collectFactories(sourceFile: SourceFile, prefix: string | undefined): Map<string, FactoryCall> {
-  const out = new Map<string, FactoryCall>();
+function collectFactories(sourceFile: SourceFile, prefix: string | undefined): { factoriesByModel: Map<string, FactoryCall>; nonModelFamiliesByModel: Map<string, FrameworkNonModelFixtureFamily> } {
+  const factoriesByModel = new Map<string, FactoryCall>();
+  const nonModelFamiliesByModel = new Map<string, FrameworkNonModelFixtureFamily>();
   for (const stmt of sourceFile.getVariableStatements()) {
     for (const decl of stmt.getDeclarations()) {
-      const factory = readModelTestContextFactory(decl, prefix);
-      if (!factory) continue;
-      const model = factoryNameToModel(factory.factoryName, prefix);
+      const parsed = readContextFactory(decl);
+      if (!parsed) continue;
+      const model = factoryNameToModel(parsed.factory.factoryName, prefix);
       if (model === undefined) continue;
-      out.set(model, factory);
+      factoriesByModel.set(model, parsed.factory);
+      if (parsed.family !== undefined) {
+        nonModelFamiliesByModel.set(model, parsed.family);
+      }
     }
   }
-  return out;
+  return { factoriesByModel, nonModelFamiliesByModel };
 }
 
 /**
- * Reads a single variable declaration whose initializer is an arrow that
- * returns `modelTestContextFactory<...>(...)`. Returns `undefined` when the
- * declaration doesn't match.
+ * Reads a single variable declaration whose initializer ultimately returns a
+ * call to either `modelTestContextFactory<...>(...)` or one of the known
+ * framework non-model factories (see `framework-fixtures.ts`). Returns
+ * `undefined` when the declaration doesn't match a recognized factory.
  *
  * @param decl - the variable declaration to inspect
- * @param _prefix - currently unused; reserved for future cross-checks
- * @returns the parsed factory metadata, or `undefined`
+ * @returns the parsed factory metadata plus the matched framework family
+ *   (when the call resolved to a non-model factory), or `undefined`
  */
-function readModelTestContextFactory(decl: VariableDeclaration, _prefix: string | undefined): FactoryCall | undefined {
+function readContextFactory(decl: VariableDeclaration): { factory: FactoryCall; family: FrameworkNonModelFixtureFamily | undefined } | undefined {
   const initializer = decl.getInitializer();
   if (!initializer) return undefined;
   let bodyExpr: Node | undefined;
@@ -382,7 +397,13 @@ function readModelTestContextFactory(decl: VariableDeclaration, _prefix: string 
   }
   if (!bodyExpr || !Node.isCallExpression(bodyExpr)) return undefined;
   const callee = bodyExpr.getExpression();
-  if (!Node.isIdentifier(callee) || callee.getText() !== MODEL_FACTORY_NAME) return undefined;
+  if (!Node.isIdentifier(callee)) return undefined;
+  const calleeName = callee.getText();
+  let family: FrameworkNonModelFixtureFamily | undefined;
+  if (calleeName !== MODEL_FACTORY_NAME) {
+    family = findFamilyByFactoryName(calleeName);
+    if (family === undefined) return undefined;
+  }
   const generics = bodyExpr.getTypeArguments().map((t) => t.getText());
   const args = bodyExpr.getArguments();
   let hasParamsGetCollection = false;
@@ -409,7 +430,7 @@ function readModelTestContextFactory(decl: VariableDeclaration, _prefix: string 
       }
     }
   }
-  const result: FactoryCall = {
+  const factory: FactoryCall = {
     factoryName: decl.getName(),
     genericArgs: generics,
     hasParamsGetCollection,
@@ -418,7 +439,71 @@ function readModelTestContextFactory(decl: VariableDeclaration, _prefix: string 
     parentFixtureFieldFromGetCollection,
     line: decl.getStartLineNumber()
   };
-  return result;
+  return { factory, family };
+}
+
+/**
+ * Decides the {@link FixtureKind} for a Fixture/Instance pair. Precedence:
+ *
+ * 1. `@dbxFixtureNotModel` JSDoc tag on either class → `non-model`.
+ * 2. Inheritance from a known framework non-model base class → that
+ *    family's kind.
+ * 3. Factory body called a known framework non-model factory → that
+ *    family's kind.
+ * 4. Default → `firestore-model`.
+ *
+ * @param input - the parsed Fixture and Instance class declarations and
+ *   the matched framework family detected during factory collection
+ * @returns the resolved kind plus a `nonModelFamily` indicator surfaced in
+ *   lookup/list output
+ */
+function classifyFixtureKind(input: { fixtureClass: ClassDeclaration; instanceClass: ClassDeclaration; nonModelFamily: FrameworkNonModelFixtureFamily | undefined }): { kind: FixtureKind; nonModelFamily?: 'authorized-user' | 'jsdoc-tag' } {
+  if (hasNonModelJsDoc(input.fixtureClass) || hasNonModelJsDoc(input.instanceClass)) {
+    return { kind: 'non-model', nonModelFamily: 'jsdoc-tag' };
+  }
+  const familyFromInheritance = familyFromExtends(input.fixtureClass) ?? familyFromExtends(input.instanceClass);
+  const family = familyFromInheritance ?? input.nonModelFamily;
+  if (family !== undefined) {
+    return { kind: family.kind, nonModelFamily: family.kind };
+  }
+  return { kind: 'firestore-model' };
+}
+
+/**
+ * Returns `true` when {@link cls} has a JSDoc block carrying the
+ * `@dbxFixtureNotModel` tag.
+ *
+ * @param cls - the class declaration to inspect
+ */
+function hasNonModelJsDoc(cls: ClassDeclaration): boolean {
+  for (const doc of cls.getJsDocs()) {
+    for (const tag of doc.getTags()) {
+      if (tag.getTagName() === NON_MODEL_JSDOC_TAG) return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Looks up the framework family matching the Fixture/Instance class's
+ * `extends` clause base name.
+ *
+ * @param cls - the class declaration to inspect
+ */
+function familyFromExtends(cls: ClassDeclaration): FrameworkNonModelFixtureFamily | undefined {
+  const ext = cls.getExtends();
+  if (!ext) return undefined;
+  const expr = ext.getExpression();
+  let baseName: string | undefined;
+  if (Node.isIdentifier(expr)) {
+    baseName = expr.getText();
+  } else {
+    const text = ext.getText();
+    const match = /^([A-Za-z_$][\w$]*)/.exec(text);
+    baseName = match ? match[1] : undefined;
+  }
+  if (baseName === undefined) return undefined;
+  return findFamilyByBaseClass(baseName);
 }
 
 /**

@@ -13,4 +13,5 @@ export { formatListAsJson, formatLookupAsJson, formatValidationAsJson } from './
 export { formatListAsMarkdown, formatLookupAsMarkdown, formatValidationAsMarkdown } from './format.markdown.js';
 export { renderFixtureScaffold, type RenderFixtureScaffoldInput, type RenderedFixtureScaffold, type RenderedInsertion, type ScaffoldParamsDependency } from './scaffold.js';
 export { renderForwarders, type RenderForwardersInput, type RenderedForwarder, type RenderedForwarders } from './forward.js';
-export type { AppFixturesExtraction, FactoryCall, FixtureArchetype, FixtureDiagnostic, FixtureDiagnosticCode, FixtureDiagnosticSeverity, FixtureEntry, FixtureMethod, FixtureModelRegistry, FixtureModelRegistryEntry, FixtureParamsField, FixtureParamsType, FixtureValidationResult } from './types.js';
+export type { AppFixturesExtraction, FactoryCall, FixtureArchetype, FixtureDiagnostic, FixtureDiagnosticCode, FixtureDiagnosticSeverity, FixtureEntry, FixtureKind, FixtureMethod, FixtureModelRegistry, FixtureModelRegistryEntry, FixtureParamsField, FixtureParamsType, FixtureValidationResult } from './types.js';
+export { KNOWN_NON_MODEL_FIXTURE_FAMILIES, NON_MODEL_JSDOC_TAG, findFamilyByBaseClass, findFamilyByFactoryName, type FrameworkNonModelFixtureFamily } from './framework-fixtures.js';

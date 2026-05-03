@@ -51,9 +51,9 @@ export enum FixtureDiagnosticCodeEnum {
    * call / singleton — the five-anchor triplet definition is incomplete.
    *
    * @dbxRuleSeverity error
-   * @dbxRuleApplies Every model that has at least one of the anchors.
-   * @dbxRuleNotApplies Models intentionally not yet wired (uncommon — usually a forgotten scaffold step).
-   * @dbxRuleFix Run `dbx_model_fixture_scaffold apiDir=<apiDir> model=<Model>` to generate the missing pieces.
+   * @dbxRuleApplies Every Firestore-model fixture (`kind === 'firestore-model'`) that has at least one of the anchors.
+   * @dbxRuleNotApplies Skipped for non-Firestore-model fixture pairs: AuthorizedUser-style fixtures (extending `AuthorizedUserTestContextFixture`/`Instance` or registered via `authorizedUserContextFactory`) and pairs tagged with `@dbxFixtureNotModel`.
+   * @dbxRuleFix Run `dbx_model_fixture_scaffold apiDir=<apiDir> model=<Model>` to generate the missing pieces; or, if the pair is intentionally not a Firestore model, ensure it extends a recognized framework base or carries `@dbxFixtureNotModel`.
    * @dbxRuleSeeAlso tool:dbx_model_fixture_scaffold
    */
   TRIPLET_INCOMPLETE = 'triplet-incomplete',

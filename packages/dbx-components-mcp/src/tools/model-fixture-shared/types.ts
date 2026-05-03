@@ -30,6 +30,22 @@
 export type FixtureArchetype = 'top-level-simple' | 'top-level-with-deps' | 'sub-collection' | 'sub-collection-traversal';
 
 /**
+ * Classification of a Fixture/Instance pair by what it represents.
+ *
+ * - `firestore-model` — the default; the pair is registered via
+ *   `modelTestContextFactory(...)` and corresponds to a Firestore document
+ *   model. All validator rules apply.
+ * - `authorized-user` — the pair is part of the framework's `AuthorizedUser`
+ *   family (extends `AuthorizedUserTestContextFixture`/`Instance` or is
+ *   registered via `authorizedUserContextFactory`). Model-specific rules
+ *   (`triplet-incomplete`, `archetype-inconsistent`, etc.) are skipped.
+ * - `non-model` — the pair is explicitly opted out of model validation via
+ *   the `@dbxFixtureNotModel` JSDoc tag on the Fixture or Instance class.
+ *   Same rule gating as `authorized-user`.
+ */
+export type FixtureKind = 'firestore-model' | 'authorized-user' | 'non-model';
+
+/**
  * One method declared on an Instance or Fixture class. `signature` is the raw
  * parameter list copied verbatim from ts-morph (including parameter types and
  * default values) so the forward tool can reproduce it without rewriting type
@@ -112,6 +128,19 @@ export interface FixtureEntry {
   readonly model: string;
   readonly prefix: string;
   readonly archetype: FixtureArchetype;
+  /**
+   * Classification of what the Fixture/Instance pair represents. Defaults to
+   * `firestore-model`; framework-provided non-model families and pairs
+   * tagged with `@dbxFixtureNotModel` opt out of model-specific validator
+   * rules.
+   */
+  readonly kind: FixtureKind;
+  /**
+   * When `kind !== 'firestore-model'`, identifies the framework family that
+   * matched (e.g. `'authorized-user'`) so lookup/list output can describe
+   * the pair. Set together with `kind`.
+   */
+  readonly nonModelFamily?: 'authorized-user' | 'jsdoc-tag';
   readonly fixtureClassName: string;
   readonly instanceClassName: string;
   readonly paramsTypeName: string;
