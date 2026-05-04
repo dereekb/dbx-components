@@ -225,4 +225,176 @@ export class C implements OnDestroy {
       expect(output).not.toContain('this.sub.destroy()');
     });
   });
+
+  describe('implements OnDestroy cleanup', () => {
+    it('removes the sole `implements OnDestroy` clause when removing ngOnDestroy', () => {
+      const input = `
+import { Component, type OnDestroy } from '@angular/core';
+import { cleanSubscription } from '@dereekb/dbx-core';
+
+@Component({})
+export class C implements OnDestroy {
+  readonly sub = cleanSubscription();
+
+  ngOnDestroy(): void {
+    this.sub.destroy();
+  }
+}`;
+
+      const output = fixCode(input);
+      expect(output).not.toContain('ngOnDestroy');
+      expect(output).not.toContain('implements');
+      expect(output).toContain('export class C {');
+    });
+
+    it('removes only OnDestroy when it is the first of multiple implements', () => {
+      const input = `
+import { Component, type OnDestroy, type OnInit } from '@angular/core';
+import { cleanSubscription } from '@dereekb/dbx-core';
+
+@Component({})
+export class C implements OnDestroy, OnInit {
+  readonly sub = cleanSubscription();
+
+  ngOnInit(): void {}
+
+  ngOnDestroy(): void {
+    this.sub.destroy();
+  }
+}`;
+
+      const output = fixCode(input);
+      expect(output).not.toContain('ngOnDestroy');
+      expect(output).toContain('implements OnInit');
+      expect(output).not.toContain('implements OnDestroy');
+    });
+
+    it('removes only OnDestroy when it is the last of multiple implements', () => {
+      const input = `
+import { Component, type OnDestroy, type OnInit } from '@angular/core';
+import { cleanSubscription } from '@dereekb/dbx-core';
+
+@Component({})
+export class C implements OnInit, OnDestroy {
+  readonly sub = cleanSubscription();
+
+  ngOnInit(): void {}
+
+  ngOnDestroy(): void {
+    this.sub.destroy();
+  }
+}`;
+
+      const output = fixCode(input);
+      expect(output).not.toContain('ngOnDestroy');
+      expect(output).toContain('implements OnInit');
+      expect(output).not.toContain(', OnDestroy');
+    });
+
+    it('removes only OnDestroy when it is in the middle of multiple implements', () => {
+      const input = `
+import { Component, type OnDestroy, type OnInit, type AfterViewInit } from '@angular/core';
+import { cleanSubscription } from '@dereekb/dbx-core';
+
+@Component({})
+export class C implements OnInit, OnDestroy, AfterViewInit {
+  readonly sub = cleanSubscription();
+
+  ngOnInit(): void {}
+  ngAfterViewInit(): void {}
+
+  ngOnDestroy(): void {
+    this.sub.destroy();
+  }
+}`;
+
+      const output = fixCode(input);
+      expect(output).not.toContain('ngOnDestroy');
+      expect(output).toContain('implements OnInit, AfterViewInit');
+    });
+
+    it('removes the implements clause when removing an empty ngOnDestroy', () => {
+      const input = `
+import { Component, type OnDestroy } from '@angular/core';
+
+@Component({})
+export class C implements OnDestroy {
+  ngOnDestroy(): void {}
+}`;
+
+      const output = fixCode(input);
+      expect(output).not.toContain('ngOnDestroy');
+      expect(output).not.toContain('implements');
+    });
+
+    it('preserves the implements clause when ngOnDestroy is kept (mixed cleanup)', () => {
+      const input = `
+import { Component, type OnDestroy } from '@angular/core';
+import { cleanSubscription } from '@dereekb/dbx-core';
+
+@Component({})
+export class C implements OnDestroy {
+  readonly sub = cleanSubscription();
+
+  ngOnDestroy(): void {
+    console.log('bye');
+    this.sub.destroy();
+  }
+}`;
+
+      const output = fixCode(input);
+      expect(output).toContain('implements OnDestroy');
+      expect(output).toContain('ngOnDestroy');
+    });
+
+    it('removes orphaned `implements OnDestroy` when no ngOnDestroy exists', () => {
+      const input = `
+import { Component, type OnDestroy } from '@angular/core';
+
+@Component({})
+export class C implements OnDestroy {
+  readonly v = 1;
+}`;
+
+      const errors = lintCode(input);
+      expect(errors).toHaveLength(1);
+      expect(errors[0].messageId).toBe('orphanedImplementsOnDestroy');
+
+      const output = fixCode(input);
+      expect(output).not.toContain('implements');
+      expect(output).toContain('export class C {');
+    });
+
+    it('does not flag orphaned implements OnDestroy on a non-component class', () => {
+      const input = `
+import { type OnDestroy } from '@angular/core';
+
+export class Plain implements OnDestroy {
+  readonly v = 1;
+}`;
+
+      const errors = lintCode(input);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('does not touch implements when OnDestroy is not from @angular/core', () => {
+      const input = `
+import { Component } from '@angular/core';
+import { OnDestroy } from './local-types';
+import { cleanSubscription } from '@dereekb/dbx-core';
+
+@Component({})
+export class C implements OnDestroy {
+  readonly sub = cleanSubscription();
+
+  ngOnDestroy(): void {
+    this.sub.destroy();
+  }
+}`;
+
+      const output = fixCode(input);
+      expect(output).not.toContain('ngOnDestroy');
+      expect(output).toContain('implements OnDestroy');
+    });
+  });
 });

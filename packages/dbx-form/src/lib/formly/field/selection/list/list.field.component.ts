@@ -1,10 +1,10 @@
-import { ChangeDetectionStrategy, Component, type OnDestroy, type OnInit, type Type } from '@angular/core';
+import { ChangeDetectionStrategy, Component, type OnInit, type Type } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type AbstractControl } from '@angular/forms';
 import { MatDividerModule } from '@angular/material/divider';
-import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { DbxInjectionComponent, type DbxInjectionComponentConfig, completeOnDestroy, cleanSubscription } from '@dereekb/dbx-core';
 import { type AbstractDbxSelectionListWrapperDirective, type ListSelectionState, type DbxValueListItemDecisionFunction, dbxValueListItemDecisionFunction, DbxListModifierModule } from '@dereekb/dbx-web';
-import { distinctUntilHasDifferentValues, filterMaybe, type ListLoadingState, SubscriptionObject, switchMapFilterMaybe } from '@dereekb/rxjs';
+import { distinctUntilHasDifferentValues, filterMaybe, type ListLoadingState, switchMapFilterMaybe } from '@dereekb/rxjs';
 import { convertMaybeToArray, hasDifferentValues, isSelectedDecisionFunctionFactory, type Maybe, type PrimativeKey, type ReadKeyFunction, readKeysFrom } from '@dereekb/util';
 import { type FormlyFieldProps, FieldType, type FieldTypeConfig } from '@ngx-formly/core';
 import { map, type Observable, shareReplay, BehaviorSubject, startWith, switchMap } from 'rxjs';
@@ -44,17 +44,17 @@ export interface DbxItemListFieldProps<T = unknown, C extends AbstractDbxSelecti
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxItemListFieldComponent<T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey> extends FieldType<FieldTypeConfig<DbxItemListFieldProps<T, C, K>>> implements OnInit, OnDestroy {
-  private readonly _selectionEventSub = new SubscriptionObject();
-  private readonly _loadMoreSub = new SubscriptionObject();
+export class DbxItemListFieldComponent<T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey> extends FieldType<FieldTypeConfig<DbxItemListFieldProps<T, C, K>>> implements OnInit {
+  private readonly _selectionEventSub = cleanSubscription();
+  private readonly _loadMoreSub = cleanSubscription();
 
-  private readonly _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
+  private readonly _formControlObs = completeOnDestroy(new BehaviorSubject<Maybe<AbstractControl>>(undefined));
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
 
   readonly _formControlValue$: Observable<Maybe<K[]>> = this.formControl$.pipe(switchMap((control) => control.valueChanges.pipe(startWith(control.value), shareReplay(1))));
   readonly values$: Observable<K[]> = this._formControlValue$.pipe(map(convertMaybeToArray), shareReplay(1));
 
-  private readonly _listComponentClassObs = new BehaviorSubject<Maybe<Observable<Type<C>>>>(undefined);
+  private readonly _listComponentClassObs = completeOnDestroy(new BehaviorSubject<Maybe<Observable<Type<C>>>>(undefined));
   readonly listComponentClass$ = this._listComponentClassObs.pipe(switchMapFilterMaybe());
 
   readonly config$: Observable<DbxInjectionComponentConfig<C>> = this.listComponentClass$.pipe(
@@ -113,12 +113,6 @@ export class DbxItemListFieldComponent<T = unknown, C extends AbstractDbxSelecti
   ngOnInit(): void {
     this._formControlObs.next(this.formControl);
     this._listComponentClassObs.next(this.listComponentClass);
-  }
-
-  ngOnDestroy(): void {
-    this._formControlObs.complete();
-    this._selectionEventSub.destroy();
-    this._listComponentClassObs.complete();
   }
 
   updateForSelection(list: ListSelectionState<T>) {

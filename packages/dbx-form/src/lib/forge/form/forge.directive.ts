@@ -1,12 +1,13 @@
-import { Directive, inject, input, type OnDestroy, type OnInit, effect, model } from '@angular/core';
+import { Directive, inject, input, type OnInit, effect, model } from '@angular/core';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
 import { type Maybe } from '@dereekb/util';
 import { type Observable } from 'rxjs';
-import { SubscriptionObject, filterMaybe, type MaybeObservableOrValue, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
+import { filterMaybe, type MaybeObservableOrValue, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
 import { DbxForgeFormContext } from './forge.context';
 import { distinctUntilChanged } from 'rxjs/operators';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { type DbxFormDisabledKey } from '../../form/form';
+import { cleanSubscription } from '@dereekb/dbx-core';
 
 /**
  * Base directive for forge form components. Injects the DbxForgeFormContext and
@@ -62,20 +63,16 @@ export abstract class AbstractSyncForgeFormDirective<T = unknown> extends Abstra
  * Base directive for forge forms with dynamic (Observable) FormConfig.
  */
 @Directive()
-export abstract class AbstractAsyncForgeFormDirective<T = unknown> extends AbstractForgeFormDirective<T> implements OnInit, OnDestroy {
+export abstract class AbstractAsyncForgeFormDirective<T = unknown> extends AbstractForgeFormDirective<T> implements OnInit {
   abstract readonly formConfig$: Observable<Maybe<FormConfig>>;
 
-  private readonly _configSub = new SubscriptionObject();
+  private readonly _configSub = cleanSubscription();
 
   ngOnInit(): void {
     // TODO: Can probably move this to constructor().
     this._configSub.subscription = this.formConfig$.pipe(distinctUntilChanged(), filterMaybe()).subscribe((formConfig) => {
       this.context.config = formConfig;
     });
-  }
-
-  ngOnDestroy(): void {
-    this._configSub.destroy();
   }
 }
 

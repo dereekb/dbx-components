@@ -154,7 +154,7 @@ const hardcodedRadius: SmellDetector = (input) => {
       title: 'Hardcoded border-radius',
       snippet: captureSnippet(input.scss, match.index, match[0].length),
       fix,
-      seeAlsoSlugs: top !== undefined && top.entry.recommendedPrimitive !== undefined ? [top.entry.recommendedPrimitive] : [],
+      seeAlsoSlugs: top?.entry.recommendedPrimitive !== undefined ? [top.entry.recommendedPrimitive] : [],
       seeAlsoTokens: top !== undefined ? [top.entry.cssVariable] : []
     });
   }

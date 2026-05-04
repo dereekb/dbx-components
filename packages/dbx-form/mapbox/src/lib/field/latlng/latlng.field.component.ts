@@ -4,7 +4,7 @@ import { ChangeDetectionStrategy, Component, Injector, type OnDestroy, type OnIn
 import { type FieldTypeConfig, type FormlyFieldProps } from '@ngx-formly/core';
 import { FieldType } from '@ngx-formly/material';
 import { skip, first, BehaviorSubject, filter, shareReplay, startWith, switchMap, map, type Observable, throttleTime, skipWhile, of, distinctUntilChanged } from 'rxjs';
-import { asObservableFromGetter, filterMaybe, type ObservableFactoryWithRequiredInput, SubscriptionObject } from '@dereekb/rxjs';
+import { asObservableFromGetter, filterMaybe, type ObservableFactoryWithRequiredInput } from '@dereekb/rxjs';
 import { type Maybe, type LatLngPoint, type LatLngPointFunctionConfig, type LatLngStringFunction, latLngStringFunction, type Milliseconds, latLngPointFunction, isDefaultLatLngPoint, isValidLatLngPoint, type LatLngPointFunction, isSameLatLngPoint, defaultLatLngPoint } from '@dereekb/util';
 import { WaGeolocationService } from '@ng-web-apis/geolocation';
 import { type Marker } from 'mapbox-gl';
@@ -17,6 +17,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MapComponent, MarkerComponent } from 'ngx-mapbox-gl';
+import { completeOnDestroy, cleanSubscription } from '@dereekb/dbx-core';
 
 export const DEFAULT_DBX_FORM_MAPBOX_LAT_LNG_FIELD_INJECTION_KEY = 'DbxFormMapboxLatLngFieldComponent';
 
@@ -126,13 +127,13 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
   readonly dbxMapboxMapStore = inject(DbxMapboxMapStore);
   readonly injector = inject(Injector);
 
-  private readonly _sub = new SubscriptionObject();
-  private readonly _geoSub = new SubscriptionObject();
-  private readonly _centerSub = new SubscriptionObject();
-  private readonly _flyToCenterSub = new SubscriptionObject();
-  private readonly _clickSub = new SubscriptionObject();
-  private readonly _zoom = new BehaviorSubject<MapboxZoomLevel>(12);
-  private readonly _markerConfig = new BehaviorSubject<Observable<DbxMapboxMarkerDisplayConfig | false>>(of(DEFAULT_DBX_FORM_MAPBOX_LAT_LNG_MARKER_CONFIG));
+  private readonly _sub = cleanSubscription();
+  private readonly _geoSub = cleanSubscription();
+  private readonly _centerSub = cleanSubscription();
+  private readonly _flyToCenterSub = cleanSubscription();
+  private readonly _clickSub = cleanSubscription();
+  private readonly _zoom = completeOnDestroy(new BehaviorSubject<MapboxZoomLevel>(12));
+  private readonly _markerConfig = completeOnDestroy(new BehaviorSubject<Observable<DbxMapboxMarkerDisplayConfig | false>>(of(DEFAULT_DBX_FORM_MAPBOX_LAT_LNG_MARKER_CONFIG)));
 
   private _latLngStringFunction!: LatLngStringFunction;
   private _latLngPointFunction!: LatLngPointFunction;
@@ -141,10 +142,10 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
     compact: 'dbx-mapbox-input-field-compact'
   }).pipe(filterMaybe());
 
-  private readonly _useCurrentLocationDisabled = new BehaviorSubject<boolean>(false);
+  private readonly _useCurrentLocationDisabled = completeOnDestroy(new BehaviorSubject<boolean>(false));
   readonly useCurrentLocationDisabled$ = this._useCurrentLocationDisabled.asObservable();
 
-  private readonly _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
+  private readonly _formControlObs = completeOnDestroy(new BehaviorSubject<Maybe<AbstractControl>>(undefined));
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
 
   readonly value$ = this.formControl$.pipe(
@@ -305,14 +306,6 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
-    this._zoom.complete();
-    this._markerConfig.complete();
-    this._formControlObs.complete();
-    this._sub.destroy();
-    this._geoSub.destroy();
-    this._centerSub.destroy();
-    this._flyToCenterSub.destroy();
-    this._clickSub.destroy();
   }
 
   flyToMarker() {

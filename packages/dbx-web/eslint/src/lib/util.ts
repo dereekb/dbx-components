@@ -379,3 +379,86 @@ export function isStaticProperty(node: AstNode): boolean {
 export function isDeclareProperty(node: AstNode): boolean {
   return node?.declare === true;
 }
+
+/**
+ * The Angular `OnDestroy` lifecycle interface name.
+ */
+export const ON_DESTROY_INTERFACE_NAME = 'OnDestroy';
+
+/**
+ * Match details for an `implements OnDestroy` clause located on a class.
+ */
+export interface OnDestroyImplementsMatch {
+  /**
+   * The full list of `implements` specifiers on the class (TSClassImplements nodes).
+   */
+  readonly allImplements: readonly AstNode[];
+  /**
+   * The TSClassImplements node for `OnDestroy`.
+   */
+  readonly clauseSpecifier: AstNode;
+  /**
+   * Index of {@link clauseSpecifier} within {@link allImplements}.
+   */
+  readonly index: number;
+}
+
+/**
+ * Locates an `implements OnDestroy` clause on the class whose `OnDestroy`
+ * identifier resolves to the import from `@angular/core`. Returns null when
+ * no matching clause exists.
+ *
+ * @param classNode - The ClassDeclaration / ClassExpression AST node.
+ * @param registry - The file's import registry.
+ * @returns The match details, or null.
+ */
+export function findOnDestroyImplementsClause(classNode: AstNode, registry: ImportRegistry): OnDestroyImplementsMatch | null {
+  const allImplements: readonly AstNode[] = classNode?.implements ?? [];
+  let result: OnDestroyImplementsMatch | null = null;
+
+  for (let index = 0; index < allImplements.length; index += 1) {
+    const clauseSpecifier = allImplements[index];
+    const expression = clauseSpecifier?.expression;
+
+    if (expression?.type === 'Identifier' && expression.name === ON_DESTROY_INTERFACE_NAME && isImportedFrom(registry, ON_DESTROY_INTERFACE_NAME, ANGULAR_CORE_MODULE)) {
+      result = { allImplements, clauseSpecifier, index };
+      break;
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Computes the source range to remove for the given `implements` specifier so
+ * that the surrounding `implements` clause stays well-formed.
+ *
+ * Behavior:
+ * - When the specifier is the only entry, the entire `implements <X>` clause
+ *   is removed, including the leading whitespace before the `implements`
+ *   keyword (so `class Foo implements OnDestroy {` becomes `class Foo {`).
+ * - When the specifier is the first of several, the specifier and the
+ *   following comma+whitespace are removed.
+ * - Otherwise, the preceding comma+whitespace and the specifier are removed.
+ *
+ * @param match - The `implements OnDestroy` match details.
+ * @param sourceCode - The ESLint sourceCode service.
+ * @returns A `[start, end]` range tuple suitable for `fixer.removeRange`.
+ */
+export function getImplementsSpecifierRemovalRange(match: OnDestroyImplementsMatch, sourceCode: AstNode): readonly [number, number] {
+  const { allImplements, clauseSpecifier, index } = match;
+  let result: readonly [number, number];
+
+  if (allImplements.length === 1) {
+    const implementsKeyword = sourceCode.getTokenBefore(clauseSpecifier, { filter: (token: AstNode) => token.type === 'Keyword' && token.value === 'implements' });
+    const tokenBeforeImplements = implementsKeyword ? sourceCode.getTokenBefore(implementsKeyword) : null;
+    const startPos = tokenBeforeImplements ? tokenBeforeImplements.range[1] : implementsKeyword ? implementsKeyword.range[0] : clauseSpecifier.range[0];
+    result = [startPos, clauseSpecifier.range[1]];
+  } else if (index === 0) {
+    result = [clauseSpecifier.range[0], allImplements[1].range[0]];
+  } else {
+    result = [allImplements[index - 1].range[1], clauseSpecifier.range[1]];
+  }
+
+  return result;
+}

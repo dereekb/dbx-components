@@ -1,7 +1,7 @@
 import { MatDialog } from '@angular/material/dialog';
 import { type DbxActionDialogFunction, DbxPopoverService, type DbxActionPopoverFunction, type DbxActionConfirmConfig, DbxContentContainerDirective, DbxButtonComponent, DbxActionConfirmDirective, DbxErrorComponent, DbxActionErrorDirective, DbxActionSnackbarDirective, DbxActionSnackbarErrorDirective, DbxActionPopoverDirective, DbxActionDialogDirective } from '@dereekb/dbx-web';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, type OnDestroy, inject } from '@angular/core';
-import { DbxActionContextMachine, DbxActionDirective, DbxActionHandlerDirective, DbxActionValueStreamDirective, DbxActionButtonDirective, DbxActionDisabledDirective, DbxActionButtonTriggerDirective, DbxActionValueDirective, type DbxActionButtonEchoConfig } from '@dereekb/dbx-core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject } from '@angular/core';
+import { DbxActionContextMachine, DbxActionDirective, DbxActionHandlerDirective, DbxActionValueStreamDirective, DbxActionButtonDirective, DbxActionDisabledDirective, DbxActionButtonTriggerDirective, DbxActionValueDirective, type DbxActionButtonEchoConfig, completeOnDestroy } from '@dereekb/dbx-core';
 import { of, delay, BehaviorSubject, tap } from 'rxjs';
 import { DocActionExamplePopoverComponent } from '../component/action.example.popover.component';
 import { DocActionExampleDialogComponent } from '../component/action.example.dialog.component';
@@ -40,7 +40,7 @@ import { DbxForgeActionDialogComponent, dbxForgeTextAreaField } from '@dereekb/d
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DocActionInteractionComponent implements OnDestroy {
+export class DocActionInteractionComponent {
   readonly cdRef = inject(ChangeDetectorRef);
   readonly dbxPopoverService = inject(DbxPopoverService);
   readonly matDialog = inject(MatDialog);
@@ -87,12 +87,8 @@ export class DocActionInteractionComponent implements OnDestroy {
     }
   };
 
-  private _value = new BehaviorSubject<{ test: number }>({ test: 0 });
+  private _value = completeOnDestroy(new BehaviorSubject<{ test: number }>({ test: 0 }));
   readonly value$ = this._value.asObservable();
-
-  ngOnDestroy(): void {
-    this._value.complete();
-  }
 
   readonly handleAction: WorkUsingObservable = () => {
     return of(true).pipe(delay(1000));

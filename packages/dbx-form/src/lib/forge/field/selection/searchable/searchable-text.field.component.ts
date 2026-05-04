@@ -4,7 +4,6 @@ import { MatAutocompleteModule, type MatAutocompleteSelectedEvent } from '@angul
 import { MatIconModule } from '@angular/material/icon';
 import { MatOptionModule } from '@angular/material/core';
 import { type Maybe, type PrimativeKey } from '@dereekb/util';
-import { SubscriptionObject } from '@dereekb/rxjs';
 import { BehaviorSubject, map, shareReplay, switchMap, type Observable } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type FieldTree } from '@angular/forms/signals';
@@ -15,6 +14,7 @@ import { createResolvedErrorsSignal, setupMetaTracking, shouldShowErrors } from 
 import { dbxForgeFieldDisabled } from '../../field.util';
 import { toggleDisableFormControl } from '../../../../form/form';
 import { type DbxForgeSearchableTextFieldProps } from './searchable-text.field';
+import { cleanSubscription, completeOnDestroy } from '@dereekb/dbx-core';
 
 /**
  * Forge ValueFieldComponent for searchable text selection (single value).
@@ -35,8 +35,8 @@ export class DbxForgeSearchableTextFieldComponent<T = unknown, M = unknown, H ex
   readonly field = input.required<FieldTree<T>>();
   readonly textInputRef = viewChild<ElementRef<HTMLInputElement>>('textInput');
 
-  private readonly _singleValueSyncSub = new SubscriptionObject();
-  private readonly _valuesSubject = new BehaviorSubject<T[]>([]);
+  private readonly _singleValueSyncSub = cleanSubscription();
+  private readonly _valuesSubject = completeOnDestroy(new BehaviorSubject<T[]>([]));
 
   // Disabled state
   readonly isDisabled = dbxForgeFieldDisabled();

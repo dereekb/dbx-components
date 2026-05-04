@@ -1,4 +1,4 @@
-import { SubscriptionObject, skipUntilTimeElapsedAfterLastEmission } from '@dereekb/rxjs';
+import { skipUntilTimeElapsedAfterLastEmission } from '@dereekb/rxjs';
 import { Subject } from 'rxjs';
 import { ChangeDetectionStrategy, Component, type OnDestroy, type OnInit } from '@angular/core';
 import { MatAutocompleteModule, type MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
@@ -12,6 +12,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DbxLoadingModule } from '@dereekb/dbx-web';
 import { DbxSearchableFieldAutocompleteItemComponent } from './searchable.field.autocomplete.item.component';
 import { MatOptionModule } from '@angular/material/core';
+import { completeOnDestroy, cleanSubscription } from '@dereekb/dbx-core';
 
 /**
  * Formly field properties for the searchable chip selection field.
@@ -43,8 +44,8 @@ export class DbxSearchableChipFieldComponent<T, M = unknown, H extends Primative
     return this.props.multiSelect ?? true;
   }
 
-  private readonly _blur = new Subject<void>();
-  private readonly _blurSub = new SubscriptionObject();
+  private readonly _blur = completeOnDestroy(new Subject<void>());
+  private readonly _blurSub = cleanSubscription();
 
   readonly separatorKeysCodes: number[] = [ENTER, COMMA];
 
@@ -82,8 +83,6 @@ export class DbxSearchableChipFieldComponent<T, M = unknown, H extends Primative
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
-    this._blur.complete();
-    this._blurSub.destroy();
   }
 
   onBlur(): void {

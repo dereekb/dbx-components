@@ -1,5 +1,5 @@
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { type DbxButtonEcho } from '@dereekb/dbx-core';
+import { type DbxButtonEcho, cleanSubscription } from '@dereekb/dbx-core';
 import { type DbxProgressButtonConfig, DbxContentContainerDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent, DbxContentPitDirective, DbxAnchorComponent } from '@dereekb/dbx-web';
 import { type Milliseconds } from '@dereekb/util';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
@@ -7,7 +7,6 @@ import { DocFeatureExampleComponent } from '../../shared/component/feature.examp
 import { MatIcon } from '@angular/material/icon';
 import { DocFeatureDerivedComponent } from '../../shared/component/feature.derived.component';
 import { MatButtonModule } from '@angular/material/button';
-import { SubscriptionObject } from '@dereekb/rxjs';
 import { DEMO_WORKING_INCREASE_OBSERVABLE } from '../../shared/progress';
 
 const DEMO_SPINNER_TIME: Milliseconds = 3350;
@@ -19,7 +18,7 @@ const DEMO_SPINNER_TIME: Milliseconds = 3350;
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocInteractionButtonComponent {
-  private readonly _workingIncreaseSub = new SubscriptionObject();
+  private readonly _workingIncreaseSub = cleanSubscription();
 
   readonly workingPercentSignal = signal(0);
 

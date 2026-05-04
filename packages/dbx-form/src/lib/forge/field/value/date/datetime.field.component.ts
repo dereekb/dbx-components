@@ -14,7 +14,7 @@ import { MATERIAL_CONFIG } from '@ng-forge/dynamic-forms-material';
 import type { FieldTree } from '@angular/forms/signals';
 import { type Maybe, type Milliseconds, type TimezoneString, type ReadableTimeString, type DateOrDayString, type ArrayOrValue, asArray, filterMaybeArrayValues, isDate } from '@dereekb/util';
 import { safeToJsDate, dateTimezoneUtcNormal, type DateTimezoneUtcNormalInstance, guessCurrentTimezone, toLocalReadableTimeString, getTimezoneAbbreviation, isSameDateHoursAndMinutes, isSameDateDay, DateTimeMinuteInstance, dateFromLogicalDate, dateTimeMinuteWholeDayDecisionFunction, toJsDayDate, isSameDate } from '@dereekb/date';
-import { type ObservableOrValueGetter, asObservableFromGetter, SubscriptionObject, switchMapMaybeDefault, filterMaybe, skipAllInitialMaybe } from '@dereekb/rxjs';
+import { type ObservableOrValueGetter, asObservableFromGetter, switchMapMaybeDefault, filterMaybe, skipAllInitialMaybe } from '@dereekb/rxjs';
 import { type Observable, of, BehaviorSubject, Subject, combineLatest, interval, type Subscription } from 'rxjs';
 import { switchMap, shareReplay, map, startWith, tap, distinctUntilChanged, debounceTime, throttleTime, combineLatestWith, filter, first, skip } from 'rxjs/operators';
 import { startOfDay } from 'date-fns';
@@ -23,7 +23,7 @@ import { DbxDateTimeValueMode, dbxDateTimeInputValueParseFactory, dbxDateTimeOut
 import { DbxDateTimeFieldTimeMode, type DbxDateTimePickerConfiguration, type DbxDateTimeFieldSyncType } from '../../../../formly/field/value/date/datetime.field.component';
 import { type DateTimePresetConfiguration, type DateTimePreset, dateTimePreset } from '../../../../formly/field/value/date/datetime';
 import { DbxDateTimeFieldMenuPresetsService } from '../../../../formly/field/value/date/datetime.field.service';
-import { DateDistancePipe, TimeDistancePipe, GetValuePipe } from '@dereekb/dbx-core';
+import { DateDistancePipe, TimeDistancePipe, GetValuePipe, cleanSubscription, completeOnDestroy } from '@dereekb/dbx-core';
 import { type ErrorStateMatcher } from '@angular/material/core';
 import { toggleDisableFormControl } from '../../../../form/form';
 import { dbxForgeFieldDisabled } from '../../field.util';
@@ -185,20 +185,20 @@ export class DbxForgeDateTimeFieldComponent {
   private readonly _isTimeInputFocused = signal(false);
 
   // MARK: Subscription management
-  private readonly _sub = new SubscriptionObject();
-  private readonly _valueSub = new SubscriptionObject();
-  private readonly _autoFillDateSync = new SubscriptionObject();
-  private readonly _resyncTimeInputSub = new SubscriptionObject();
+  private readonly _sub = cleanSubscription();
+  private readonly _valueSub = cleanSubscription();
+  private readonly _autoFillDateSync = cleanSubscription();
+  private readonly _resyncTimeInputSub = cleanSubscription();
   private _timezoneSub?: Subscription;
   private _pickerConfigSub?: Subscription;
   private _timeDateSub?: Subscription;
   private _presetsSub?: Subscription;
 
   // MARK: Subjects for event coordination
-  private readonly _offset = new BehaviorSubject<number>(0);
-  private readonly _updateTime = new Subject<void>();
-  private readonly _resyncTimeInput = new Subject<void>();
-  private readonly _syncConfigObs = new BehaviorSubject<Maybe<Observable<ArrayOrValue<DbxForgeDateTimeSyncField>>>>(undefined);
+  private readonly _offset = completeOnDestroy(new BehaviorSubject<number>(0));
+  private readonly _updateTime = completeOnDestroy(new Subject<void>());
+  private readonly _resyncTimeInput = completeOnDestroy(new Subject<void>());
+  private readonly _syncConfigObs = completeOnDestroy(new BehaviorSubject<Maybe<Observable<ArrayOrValue<DbxForgeDateTimeSyncField>>>>(undefined));
 
   // MARK: Error state matcher
   readonly timeErrorStateMatcher: ErrorStateMatcher = {

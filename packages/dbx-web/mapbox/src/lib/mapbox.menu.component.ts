@@ -1,4 +1,3 @@
-import { SubscriptionObject } from '@dereekb/rxjs';
 import { filter, switchMap, of } from 'rxjs';
 import { DbxMapboxMapStore } from './mapbox.store';
 import { ChangeDetectionStrategy, Component, inject, signal, input, effect } from '@angular/core';
@@ -51,7 +50,7 @@ export class DbxMapboxMenuComponent {
   readonly active$ = toObservable(this.active);
 
   protected readonly _sub = cleanSubscription();
-  private readonly _menuCloseSub = new SubscriptionObject();
+  private readonly _menuCloseSub = cleanSubscription();
   private readonly _preventRightClick = new DestroyFunctionObject();
 
   constructor() {

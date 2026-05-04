@@ -5,6 +5,7 @@ import { BehaviorSubject, combineLatest, map, type Observable, shareReplay, swit
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { cleanSubscriptionWithLockSet } from '../../../rxjs';
+import { completeOnDestroy } from '@dereekb/dbx-core';
 
 /**
  * Directive that provides a value (or value-producing function) to the action when triggered.
@@ -53,7 +54,7 @@ export class DbxActionValueDirective<T, O> {
 
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
 
-  private readonly _valueOrFunctionOverride = new BehaviorSubject<Maybe<GetterOrValue<T>>>(undefined);
+  private readonly _valueOrFunctionOverride = completeOnDestroy(new BehaviorSubject<Maybe<GetterOrValue<T>>>(undefined));
 
   readonly valueOrFunction$: Observable<GetterOrValue<T>> = combineLatest([this._valueOrFunctionOverride, toObservable(this.valueOrFunction)]).pipe(
     map(([x, y]) => x ?? (y as Maybe<GetterOrValue<T>>)),

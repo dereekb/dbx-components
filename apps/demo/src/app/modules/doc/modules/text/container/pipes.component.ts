@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, type OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type Maybe, type TimezoneString } from '@dereekb/util';
 import { dbxForgeDateTimeField, dbxForgeTimezoneStringField, DbxFormSourceDirective, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
@@ -10,7 +10,7 @@ import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocFormForgeExampleComponent } from '../../form/component/forge.example.form.component';
 import { DatePipe } from '@angular/common';
-import { DateDistancePipe, DateRangeDistancePipe, TargetDateToSystemDatePipe, SystemDateToTargetDatePipe, TimezoneAbbreviationPipe, DateDayRangePipe, DateDayTimeRangePipe, DateTimeRangeOnlyPipe, DateTimeRangePipe, DateTimeRangeOnlyDistancePipe, MinutesStringPipe, TimeDistanceCountdownPipe, TimeDistancePipe } from '@dereekb/dbx-core';
+import { DateDistancePipe, DateRangeDistancePipe, TargetDateToSystemDatePipe, SystemDateToTargetDatePipe, TimezoneAbbreviationPipe, DateDayRangePipe, DateDayTimeRangePipe, DateTimeRangeOnlyPipe, DateTimeRangePipe, DateTimeRangeOnlyDistancePipe, MinutesStringPipe, TimeDistanceCountdownPipe, TimeDistancePipe, completeOnDestroy } from '@dereekb/dbx-core';
 
 @Component({
   templateUrl: './pipes.component.html',
@@ -41,15 +41,15 @@ import { DateDistancePipe, DateRangeDistancePipe, TargetDateToSystemDatePipe, Sy
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DocTextPipesComponent implements OnDestroy {
+export class DocTextPipesComponent {
   // TODO: Should not require a delay to set the value properly
   readonly dateAndTimezoneInitial = of({
     date: new Date(),
     timezone: guessCurrentTimezone()
   }).pipe(delay(80));
 
-  private _date = new BehaviorSubject<Maybe<Date>>(undefined);
-  private _timezone = new BehaviorSubject<Maybe<TimezoneString>>(null);
+  private _date = completeOnDestroy(new BehaviorSubject<Maybe<Date>>(undefined));
+  private _timezone = completeOnDestroy(new BehaviorSubject<Maybe<TimezoneString>>(null));
 
   readonly daylightSavingsDate = new Date('2022-03-01T06:00:00.000Z');
   readonly nonDaylightSavingsDate = new Date('2022-04-01T06:00:00.000Z');
@@ -79,9 +79,4 @@ export class DocTextPipesComponent implements OnDestroy {
     this._date.next(value?.date);
     this._timezone.next(value?.timezone);
   };
-
-  ngOnDestroy(): void {
-    this._date.complete();
-    this._timezone.complete();
-  }
 }

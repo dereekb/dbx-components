@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, injec
 import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { Editor, NgxEditorModule } from '@bobbyquantum/ngx-editor';
 import { debounceTime } from 'rxjs';
-import { SubscriptionObject, filterMaybe } from '@dereekb/rxjs';
+import { filterMaybe } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { CompactContextStore, mapCompactModeObs } from '@dereekb/dbx-web';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -12,6 +12,7 @@ import { type DynamicText, type FieldMeta, type ValidationMessages, type BaseVal
 import { createResolvedErrorsSignal, setupMetaTracking, shouldShowErrors } from '@ng-forge/dynamic-forms/integration';
 import { dbxForgeFieldDisabled } from '../field.util';
 import { toggleDisableFormControl } from '../../../form/form';
+import { cleanSubscription } from '@dereekb/dbx-core';
 
 // MARK: Forge Text Editor Field Props
 /**
@@ -77,8 +78,8 @@ export class DbxForgeTextEditorFieldComponent implements OnInit, OnDestroy {
   readonly defaultValidationMessages = input<ValidationMessages | undefined>();
 
   private _editor!: Editor;
-  private readonly _editorValueSub = new SubscriptionObject();
-  private readonly _syncFromFieldSub = new SubscriptionObject();
+  private readonly _editorValueSub = cleanSubscription();
+  private readonly _syncFromFieldSub = cleanSubscription();
 
   readonly editorFormControl = new FormControl<string>('', { nonNullable: true });
 
@@ -156,9 +157,6 @@ export class DbxForgeTextEditorFieldComponent implements OnInit, OnDestroy {
     if (this._editor != null) {
       this._editor.destroy();
     }
-
-    this._editorValueSub.destroy();
-    this._syncFromFieldSub.destroy();
   }
 
   private _setFieldValue(value: string): void {

@@ -4,6 +4,7 @@ import { BehaviorSubject, type Observable, combineLatest, map, of, shareReplay }
 import { type Maybe } from '@dereekb/util';
 import { type DbxWebPageTitleInfoConfig, type DbxWebPageTitleInfoReference } from './title';
 import { DbxWebPageTitleService } from './title.service';
+import { completeOnDestroy } from '@dereekb/dbx-core';
 
 /**
  * Registers a hierarchical page title segment with {@link DbxWebPageTitleService}. Multiple directives nested in the host tree
@@ -46,7 +47,7 @@ export class DbxWebPageTitleInfoDirective implements DbxWebPageTitleInfoReferenc
 
   readonly dbxWebPageTitleInfo = input<Maybe<DbxWebPageTitleInfoConfig>>();
 
-  private readonly _children = new BehaviorSubject<Set<DbxWebPageTitleInfoDirective>>(new Set());
+  private readonly _children = completeOnDestroy(new BehaviorSubject<Set<DbxWebPageTitleInfoDirective>>(new Set()));
 
   readonly config$: Observable<Maybe<DbxWebPageTitleInfoConfig>> = toObservable(this.dbxWebPageTitleInfo);
 

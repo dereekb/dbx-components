@@ -1,5 +1,5 @@
-import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { type LoadingState, successResult, mapLoadingStateResults, filterMaybe, mapIsListLoadingStateWithEmptyValue, startWithBeginLoading, SubscriptionObject, listLoadingStateContext } from '@dereekb/rxjs';
+import { type DbxInjectionComponentConfig, completeOnDestroy, cleanSubscription } from '@dereekb/dbx-core';
+import { type LoadingState, successResult, mapLoadingStateResults, filterMaybe, mapIsListLoadingStateWithEmptyValue, startWithBeginLoading, listLoadingStateContext } from '@dereekb/rxjs';
 import { type PrimativeKey, convertMaybeToArray, makeValuesGroupMap, type Maybe, type ArrayOrValue, separateValues, filterUniqueValues, type Configurable, asArray } from '@dereekb/util';
 import { computed, Directive, type OnDestroy, type OnInit, viewChild } from '@angular/core';
 import { FormControl, type AbstractControl } from '@angular/forms';
@@ -121,11 +121,11 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
 
   readonly inputCtrl = new FormControl('');
 
-  private readonly _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
+  private readonly _formControlObs = completeOnDestroy(new BehaviorSubject<Maybe<AbstractControl>>(undefined));
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
 
-  private readonly _clearDisplayHashMapSub = new SubscriptionObject();
-  private readonly _displayHashMap = new BehaviorSubject<Map<H, PickableValueFieldDisplayValue<T, M>>>(new Map());
+  private readonly _clearDisplayHashMapSub = cleanSubscription();
+  private readonly _displayHashMap = completeOnDestroy(new BehaviorSubject<Map<H, PickableValueFieldDisplayValue<T, M>>>(new Map()));
 
   readonly filterInputValue$: Observable<Maybe<string>> = this.inputCtrl.valueChanges.pipe(startWith(undefined));
   readonly filterInputValueString$: Observable<Maybe<string>> = this.filterInputValue$.pipe(debounceTime(200), distinctUntilChanged(), shareReplay(1));
@@ -458,9 +458,6 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
-    this._displayHashMap.complete();
-    this._formControlObs.complete();
-    this._clearDisplayHashMapSub.destroy();
     this.filterResultsContext.destroy();
   }
 

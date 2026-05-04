@@ -1,4 +1,4 @@
-import { type AstNode, CLEAN_HELPER, CLEAN_SUBSCRIPTION_HELPER, COMPLETE_ON_DESTROY_HELPER, createImportRegistry, findAngularComponentDecorator, findNgOnDestroyMethod, getClassMemberName, isCalledIdentifier, isDeclareProperty, isStaticProperty, isThisMemberAccess, trackImportDeclaration } from './util';
+import { type AstNode, CLEAN_HELPER, CLEAN_SUBSCRIPTION_HELPER, COMPLETE_ON_DESTROY_HELPER, createImportRegistry, findAngularComponentDecorator, findNgOnDestroyMethod, findOnDestroyImplementsClause, getClassMemberName, getImplementsSpecifierRemovalRange, type ImportRegistry, isCalledIdentifier, isDeclareProperty, isStaticProperty, isThisMemberAccess, trackImportDeclaration } from './util';
 import { getStatementRangeWithLeadingWhitespace } from './require-clean-subscription.rule';
 
 /**
@@ -50,6 +50,7 @@ export interface DbxWebNoRedundantOnDestroyRuleDefinition {
       readonly redundantCleanupCall: string;
       readonly redundantNgOnDestroy: string;
       readonly emptyNgOnDestroy: string;
+      readonly orphanedImplementsOnDestroy: string;
     };
     readonly schema: readonly object[];
   };
@@ -65,9 +66,13 @@ export interface DbxWebNoRedundantOnDestroyRuleDefinition {
  * Auto-fix:
  * - Removes each redundant statement, plus its leading whitespace and trailing newline.
  * - Removes the `ngOnDestroy` method declaration when its body becomes empty.
- *   Does not touch the `implements OnDestroy` clause or the `OnDestroy` import
- *   — `eslint-plugin-unused-imports` handles the import; the implements clause
- *   should be cleaned up manually or by a future rule.
+ * - When the `ngOnDestroy` method is removed entirely, also removes the
+ *   `implements OnDestroy` clause from the class (verified against the
+ *   `@angular/core` import). The now-unused `OnDestroy` import is left for
+ *   `eslint-plugin-unused-imports` to clean up.
+ * - When a class declares `implements OnDestroy` from `@angular/core` but has
+ *   no `ngOnDestroy()` method (e.g. left over from a previous run), the
+ *   orphaned implements clause is removed.
  */
 export const dbxWebNoRedundantOnDestroyRule: DbxWebNoRedundantOnDestroyRuleDefinition = {
   meta: {
@@ -80,7 +85,8 @@ export const dbxWebNoRedundantOnDestroyRule: DbxWebNoRedundantOnDestroyRuleDefin
     messages: {
       redundantCleanupCall: 'Redundant `this.{{name}}.{{method}}()` — `{{name}}` is initialized via `{{wrapper}}(...)` which already registers cleanup with Angular DestroyRef.',
       redundantNgOnDestroy: '`ngOnDestroy()` only contains redundant cleanup calls for fields wrapped with cleanSubscription/completeOnDestroy/clean. Remove the method.',
-      emptyNgOnDestroy: '`ngOnDestroy()` has an empty body. Remove the method.'
+      emptyNgOnDestroy: '`ngOnDestroy()` has an empty body. Remove the method.',
+      orphanedImplementsOnDestroy: 'Class declares `implements OnDestroy` but has no `ngOnDestroy()` method. Remove the implements clause.'
     },
     schema: []
   },
@@ -99,6 +105,16 @@ export const dbxWebNoRedundantOnDestroyRule: DbxWebNoRedundantOnDestroyRuleDefin
       const body = ngOnDestroy?.value?.body?.body;
 
       if (!ngOnDestroy || !body) {
+        const implementsMatch = findOnDestroyImplementsClause(classNode, registry);
+
+        if (implementsMatch) {
+          context.report({
+            node: implementsMatch.clauseSpecifier,
+            messageId: 'orphanedImplementsOnDestroy',
+            fix: (fixer: AstNode) => [fixer.removeRange(getImplementsSpecifierRemovalRange(implementsMatch, sourceCode))]
+          });
+        }
+
         return;
       }
 
@@ -106,7 +122,7 @@ export const dbxWebNoRedundantOnDestroyRule: DbxWebNoRedundantOnDestroyRuleDefin
         context.report({
           node: ngOnDestroy,
           messageId: 'emptyNgOnDestroy',
-          fix: (fixer: AstNode) => [fixer.removeRange(getStatementRangeWithLeadingWhitespace(ngOnDestroy, sourceCode))]
+          fix: (fixer: AstNode) => buildRemoveNgOnDestroyFixes({ fixer, ngOnDestroy, classNode, registry, sourceCode })
         });
         return;
       }
@@ -142,7 +158,7 @@ export const dbxWebNoRedundantOnDestroyRule: DbxWebNoRedundantOnDestroyRuleDefin
         context.report({
           node: ngOnDestroy,
           messageId: 'redundantNgOnDestroy',
-          fix: (fixer: AstNode) => [fixer.removeRange(getStatementRangeWithLeadingWhitespace(ngOnDestroy, sourceCode))]
+          fix: (fixer: AstNode) => buildRemoveNgOnDestroyFixes({ fixer, ngOnDestroy, classNode, registry, sourceCode })
         });
       }
     };
@@ -232,4 +248,50 @@ function matchRedundantCleanupStatement(statement: AstNode, wrappedFields: Map<s
   }
 
   return result;
+}
+
+/**
+ * Input for {@link buildRemoveNgOnDestroyFixes}.
+ */
+interface BuildRemoveNgOnDestroyFixesInput {
+  /**
+   * The ESLint RuleFixer.
+   */
+  readonly fixer: AstNode;
+  /**
+   * The MethodDefinition node for `ngOnDestroy` to remove.
+   */
+  readonly ngOnDestroy: AstNode;
+  /**
+   * The class node owning the method.
+   */
+  readonly classNode: AstNode;
+  /**
+   * The file's import registry, used to verify the `OnDestroy` identifier
+   * resolves to `@angular/core`.
+   */
+  readonly registry: ImportRegistry;
+  /**
+   * The ESLint sourceCode service.
+   */
+  readonly sourceCode: AstNode;
+}
+
+/**
+ * Builds the fix list for removing the entire `ngOnDestroy` method along with
+ * any matching `implements OnDestroy` clause from the class declaration.
+ *
+ * @param input - The fixer, method node, class node, registry, and source-code service.
+ * @returns The fix operations to apply.
+ */
+function buildRemoveNgOnDestroyFixes(input: BuildRemoveNgOnDestroyFixesInput): AstNode[] {
+  const { fixer, ngOnDestroy, classNode, registry, sourceCode } = input;
+  const fixes: AstNode[] = [fixer.removeRange(getStatementRangeWithLeadingWhitespace(ngOnDestroy, sourceCode))];
+  const implementsMatch = findOnDestroyImplementsClause(classNode, registry);
+
+  if (implementsMatch) {
+    fixes.push(fixer.removeRange(getImplementsSpecifierRemovalRange(implementsMatch, sourceCode)));
+  }
+
+  return fixes;
 }

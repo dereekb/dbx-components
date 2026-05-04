@@ -6,9 +6,9 @@ import { interval, map, shareReplay } from 'rxjs';
 
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
-import { SubscriptionObject } from '@dereekb/rxjs';
 import { DEMO_WORKING_INCREASE_OBSERVABLE } from '../../shared/progress';
 import { MatButtonModule } from '@angular/material/button';
+import { cleanSubscription } from '@dereekb/dbx-core';
 
 const TEST_ERROR_CODE = 'A_VERY_LONG_TEST_ERROR_CODE_USED_FOR_REFERENCE';
 
@@ -19,7 +19,7 @@ const TEST_ERROR_CODE = 'A_VERY_LONG_TEST_ERROR_CODE_USED_FOR_REFERENCE';
   standalone: true
 })
 export class DocInteractionLoadingComponent {
-  private readonly _workingIncreaseSub = new SubscriptionObject();
+  private readonly _workingIncreaseSub = cleanSubscription();
 
   readonly workingPercentSignal = signal(0);
 

@@ -1,5 +1,5 @@
 import { latLngPoint, latLngString, type LatLngTuple, type Maybe, type Pixels, randomLatLngFactory, range, latLngTuple, randomFromArrayFactory, isEvenNumber, randomBoolean } from '@dereekb/util';
-import { Component, type OnDestroy, type OnInit, inject, ChangeDetectionStrategy, viewChild, computed, signal } from '@angular/core';
+import { Component, type OnInit, inject, ChangeDetectionStrategy, viewChild, computed, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { dbxForgeMapboxLatLngField, dbxForgeMapboxZoomField } from '@dereekb/dbx-form/mapbox';
 import type { FormConfig } from '@ng-forge/dynamic-forms';
@@ -39,6 +39,7 @@ import { MatMenuTrigger, MatMenu, MatMenuItem } from '@angular/material/menu';
 import { FlexModule } from '@ngbracket/ngx-layout/flex';
 import { MatButton } from '@angular/material/button';
 import { DbxFormSourceDirective } from '@dereekb/dbx-form';
+import { completeOnDestroy } from '@dereekb/dbx-core';
 
 @Component({
   templateUrl: './mapbox.component.html',
@@ -76,25 +77,25 @@ import { DbxFormSourceDirective } from '@dereekb/dbx-form';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
+export class DocExtensionMapboxComponent implements OnInit {
   readonly dbxMapboxMapStore = inject(DbxMapboxMapStore);
 
   readonly mapboxLayoutChild = viewChild(DbxMapboxLayoutComponent);
   readonly drawerIsOpenSignal = computed(() => this.mapboxLayoutChild()?.isOpenAndHasContentSignal() ?? false);
 
-  private _side = new BehaviorSubject<Maybe<DbxMapboxLayoutSide>>(undefined);
+  private _side = completeOnDestroy(new BehaviorSubject<Maybe<DbxMapboxLayoutSide>>(undefined));
   readonly side$ = this._side.asObservable();
   readonly sideSignal = toSignal(this.side$, { initialValue: undefined });
 
-  private _open = new BehaviorSubject<Maybe<boolean>>(undefined);
+  private _open = completeOnDestroy(new BehaviorSubject<Maybe<boolean>>(undefined));
   readonly open$ = this._open.asObservable();
   readonly openSignal = toSignal(this.open$, { initialValue: undefined });
 
-  private _color = new BehaviorSubject<Maybe<DbxThemeColor>>(undefined);
+  private _color = completeOnDestroy(new BehaviorSubject<Maybe<DbxThemeColor>>(undefined));
   readonly color$: Observable<Maybe<DbxThemeColor>> = this._color.asObservable();
   readonly colorSignal = toSignal(this.color$, { initialValue: undefined });
 
-  private _showMarkers = new BehaviorSubject<boolean>(true);
+  private _showMarkers = completeOnDestroy(new BehaviorSubject<boolean>(true));
   readonly showMarkers$ = this._showMarkers.asObservable();
   readonly showMarkersSignal = toSignal(this.showMarkers$, { initialValue: true });
 
@@ -297,7 +298,7 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
     style: randomBoolean(20) ? this.mapboxMarkerPlainDotStyle : this.mapboxMarkerDotStyle
   });
 
-  private _addedMarkersData = new BehaviorSubject<LatLngTuple[]>([]);
+  private _addedMarkersData = completeOnDestroy(new BehaviorSubject<LatLngTuple[]>([]));
   readonly addedMapboxMarkersData$ = this._addedMarkersData.asObservable();
   readonly addedMapboxMarkersDataSignal = toSignal(this.addedMapboxMarkersData$, { initialValue: [] as LatLngTuple[] });
 
@@ -332,14 +333,6 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this._setDrawerContentToExample();
-  }
-
-  ngOnDestroy(): void {
-    this._side.complete();
-    this._open.complete();
-    this._color.complete();
-    this._addedMarkersData.complete();
-    this._showMarkers.complete();
   }
 
   addDrawerContent() {

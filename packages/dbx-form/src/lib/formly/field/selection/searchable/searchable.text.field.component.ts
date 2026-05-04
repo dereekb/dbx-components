@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, type OnDestroy, type OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, type OnInit } from '@angular/core';
 import { MatAutocompleteModule, type MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { AbstractDbxSearchableValueFieldDirective, type SearchableValueFieldsFieldProps } from './searchable.field.directive';
 import { map, shareReplay } from 'rxjs';
@@ -34,7 +34,7 @@ export interface SearchableTextValueFieldsFieldProps<T, M = unknown, H extends P
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxSearchableTextFieldComponent<T, M = unknown, H extends PrimativeKey = PrimativeKey> extends AbstractDbxSearchableValueFieldDirective<T, M, H, SearchableTextValueFieldsFieldProps<T, M, H>> implements OnInit, OnDestroy {
+export class DbxSearchableTextFieldComponent<T, M = unknown, H extends PrimativeKey = PrimativeKey> extends AbstractDbxSearchableValueFieldDirective<T, M, H, SearchableTextValueFieldsFieldProps<T, M, H>> implements OnInit {
   override allowSyncValueToInput = true;
 
   readonly selectedDisplayValue$ = this.displayValues$.pipe(

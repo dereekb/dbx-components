@@ -1,7 +1,7 @@
-import { computed, Directive, effect, input, type InputSignal, type OnDestroy, type OnInit } from '@angular/core';
+import { computed, Directive, effect, input, type InputSignal, type OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { type Maybe, type PrimativeKey, filterUniqueValues, convertMaybeToArray, filterEmptyArrayValues, type ArrayOrValue, type Configurable } from '@dereekb/util';
-import { SubscriptionObject, type LoadingState, successResult, startWithBeginLoading, mapLoadingStateResults } from '@dereekb/rxjs';
+import { type LoadingState, successResult, startWithBeginLoading, mapLoadingStateResults } from '@dereekb/rxjs';
 import { BehaviorSubject, combineLatest, debounceTime, distinctUntilChanged, first, map, mergeMap, of, shareReplay, startWith, switchMap, type Observable } from 'rxjs';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { type FieldTree } from '@angular/forms/signals';
@@ -11,6 +11,7 @@ import { type PickableValueFieldDisplayFunction, type PickableValueFieldDisplayV
 import { type PickableItemFieldItem } from '../../../../formly/field/selection/pickable/pickable.field.directive';
 import { type DbxForgePickableFieldProps } from './pickable.field';
 import { dbxForgeFieldDisabled } from '../../field.util';
+import { cleanSubscription, completeOnDestroy } from '@dereekb/dbx-core';
 
 /**
  * Display value augmented with its computed hash for deduplication.
@@ -28,7 +29,7 @@ interface PickableDisplayValueWithHash<T, M = unknown, H extends PrimativeKey = 
  * This mirrors the formly {@link AbstractDbxPickableItemFieldDirective} pattern.
  */
 @Directive()
-export abstract class AbstractForgePickableItemFieldDirective<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> implements OnInit, OnDestroy {
+export abstract class AbstractForgePickableItemFieldDirective<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> implements OnInit {
   // MARK: ng-forge ValueFieldComponent Inputs
   readonly field = input.required<FieldTree<T | T[]>>();
   readonly key = input.required<string>();
@@ -43,9 +44,9 @@ export abstract class AbstractForgePickableItemFieldDirective<T = unknown, M = u
 
   readonly inputCtrl = new FormControl<string>('');
 
-  private readonly _clearDisplayHashMapSub = new SubscriptionObject();
-  private readonly _displayHashMap = new BehaviorSubject<Map<H, PickableDisplayValueWithHash<T, M, H>>>(new Map());
-  private readonly _valuesSubject = new BehaviorSubject<T[]>([]);
+  private readonly _clearDisplayHashMapSub = cleanSubscription();
+  private readonly _displayHashMap = completeOnDestroy(new BehaviorSubject<Map<H, PickableDisplayValueWithHash<T, M, H>>>(new Map()));
+  private readonly _valuesSubject = completeOnDestroy(new BehaviorSubject<T[]>([]));
 
   // MARK: Computed Signals
   readonly labelSignal = computed(() => {
@@ -213,12 +214,6 @@ export abstract class AbstractForgePickableItemFieldDirective<T = unknown, M = u
     if (p?.refreshDisplayValues$) {
       this._clearDisplayHashMapSub.subscription = p.refreshDisplayValues$.subscribe(() => this._displayHashMap.next(new Map()));
     }
-  }
-
-  ngOnDestroy(): void {
-    this._clearDisplayHashMapSub.destroy();
-    this._displayHashMap.complete();
-    this._valuesSubject.complete();
   }
 
   // MARK: Template Actions

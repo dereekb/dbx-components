@@ -1,4 +1,4 @@
-import { filterMaybe, type LoadingState, isLoadingStateWithDefinedValue, isLoadingStateLoading, type LoadingStateWithDefinedValue, startWithBeginLoading, SubscriptionObject, successResult, beginLoading, mapLoadingStateValueWithOperator, loadingStateContext, type WorkUsingContext, valueFromFinishedLoadingState } from '@dereekb/rxjs';
+import { filterMaybe, type LoadingState, isLoadingStateWithDefinedValue, isLoadingStateLoading, type LoadingStateWithDefinedValue, startWithBeginLoading, successResult, beginLoading, mapLoadingStateValueWithOperator, loadingStateContext, type WorkUsingContext, valueFromFinishedLoadingState } from '@dereekb/rxjs';
 import { ChangeDetectionStrategy, Component, ElementRef, type OnDestroy, type OnInit, viewChild } from '@angular/core';
 import { distinctUntilChanged, map, switchMap, shareReplay, startWith, mergeMap, scan, BehaviorSubject, tap, first, type Observable, combineLatest, of } from 'rxjs';
 import { addToSetCopy, asArray, convertMaybeToArray, filterMaybeArrayValues, lastValue, makeValuesGroupMap, type Maybe, mergeArrays, type PrimativeKey, separateValues, setContainsAllValues, setsAreEquivalent, sortByStringFunction } from '@dereekb/util';
@@ -9,6 +9,7 @@ import { type AbstractControl, FormsModule, ReactiveFormsModule } from '@angular
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatOptgroup, MatOption, MatSelect } from '@angular/material/select';
 import { DbxActionModule, DbxButtonComponent, DbxButtonSpacerDirective, DbxLoadingComponent } from '@dereekb/dbx-web';
+import { cleanSubscription, completeOnDestroy } from '@dereekb/dbx-core';
 
 /**
  * Formly field properties for the source-select field.
@@ -89,14 +90,14 @@ interface SelectFieldOpenSourceMap<T extends PrimativeKey = PrimativeKey, M = un
   standalone: true
 })
 export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = PrimativeKey, M = unknown> extends FieldType<FieldTypeConfig<SourceSelectFieldProps<T, M>>> implements OnInit, OnDestroy {
-  private readonly _cacheMetaSub = new SubscriptionObject();
-  private readonly _clearDisplayHashMapSub = new SubscriptionObject();
-  private readonly _valueMetaHashMap = new BehaviorSubject<Map<T, SourceSelectValue<T, M>>>(new Map());
-  private readonly _displayHashMap = new BehaviorSubject<Map<T, SourceSelectDisplayValue<T, M>>>(new Map());
+  private readonly _cacheMetaSub = cleanSubscription();
+  private readonly _clearDisplayHashMapSub = cleanSubscription();
+  private readonly _valueMetaHashMap = completeOnDestroy(new BehaviorSubject<Map<T, SourceSelectValue<T, M>>>(new Map()));
+  private readonly _displayHashMap = completeOnDestroy(new BehaviorSubject<Map<T, SourceSelectDisplayValue<T, M>>>(new Map()));
 
-  private readonly _formControlObs = new BehaviorSubject<Maybe<AbstractControl<T[]>>>(undefined);
-  private readonly _fromOpenSource = new BehaviorSubject<SelectFieldOpenSourceMap<T, M>>({ values: [], valuesSet: new Set() });
-  private readonly _loadSources = new BehaviorSubject<Maybe<Observable<SourceSelectLoadSource<M>[]>>>(undefined);
+  private readonly _formControlObs = completeOnDestroy(new BehaviorSubject<Maybe<AbstractControl<T[]>>>(undefined));
+  private readonly _fromOpenSource = completeOnDestroy(new BehaviorSubject<SelectFieldOpenSourceMap<T, M>>({ values: [], valuesSet: new Set() }));
+  private readonly _loadSources = completeOnDestroy(new BehaviorSubject<Maybe<Observable<SourceSelectLoadSource<M>[]>>>(undefined));
 
   readonly buttonElement = viewChild<string, ElementRef<HTMLElement>>('button', { read: ElementRef<HTMLElement> });
 
@@ -304,7 +305,7 @@ export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = Primativ
   readonly groupedOptionsSignal = toSignal(this.groupedOptions$);
 
   // MARK: Filterable
-  private readonly _filterText$ = new BehaviorSubject<string>('');
+  private readonly _filterText$ = completeOnDestroy(new BehaviorSubject<string>(''));
 
   readonly filterInputElement = viewChild<string, ElementRef<HTMLInputElement>>('filterInput', { read: ElementRef<HTMLInputElement> });
 
@@ -536,14 +537,6 @@ export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = Primativ
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
-    this._cacheMetaSub.destroy();
-    this._clearDisplayHashMapSub.destroy();
-    this._valueMetaHashMap.complete();
-    this._displayHashMap.complete();
-    this._formControlObs.complete();
-    this._fromOpenSource.complete();
-    this._loadSources.complete();
-    this._filterText$.complete();
     this.context.destroy();
   }
 

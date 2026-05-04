@@ -4,7 +4,6 @@ import { type FieldTypeConfig, type FormlyFieldProps } from '@ngx-formly/core';
 import { isPhoneExtension } from '../../../../validator/phone';
 import { type E164PhoneNumber, type E164PhoneNumberExtensionPair, type Maybe, e164PhoneNumberExtensionPair, e164PhoneNumberFromE164PhoneNumberExtensionPair, objectHasNoKeys } from '@dereekb/util';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { SubscriptionObject } from '@dereekb/rxjs';
 import { combineLatest, distinctUntilChanged, map, startWith } from 'rxjs';
 
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -13,6 +12,7 @@ import { MatInputModule } from '@angular/material/input';
 import { FlexLayoutModule } from '@ngbracket/ngx-layout';
 import { FormlyMatFormFieldModule } from '@ngx-formly/material/form-field';
 import { NgxMatInputTelComponent } from 'ngx-mat-input-tel';
+import { cleanSubscription } from '@dereekb/dbx-core';
 
 /**
  * Formly field props for the international phone number component.
@@ -56,10 +56,10 @@ export const DEFAULT_PREFERRED_COUNTRIES = ['us'];
   standalone: true
 })
 export class DbxPhoneFieldComponent extends FieldType<FieldTypeConfig<InternationalPhoneFormlyFieldProps>> implements OnInit, OnDestroy {
-  readonly inputSync = new SubscriptionObject();
-  readonly outputSync = new SubscriptionObject();
-  readonly extensionErrorSync = new SubscriptionObject();
-  readonly phoneErrorSync = new SubscriptionObject();
+  readonly inputSync = cleanSubscription();
+  readonly outputSync = cleanSubscription();
+  readonly extensionErrorSync = cleanSubscription();
+  readonly phoneErrorSync = cleanSubscription();
 
   readonly phoneCtrl = new FormControl<string>('');
   readonly extensionCtrl = new FormControl<string>('', {
@@ -148,9 +148,5 @@ export class DbxPhoneFieldComponent extends FieldType<FieldTypeConfig<Internatio
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
-    this.inputSync.destroy();
-    this.outputSync.destroy();
-    this.extensionErrorSync.destroy();
-    this.phoneErrorSync.destroy();
   }
 }

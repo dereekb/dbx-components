@@ -6,7 +6,7 @@ import { type AbstractControl, FormControl, FormGroup, FormsModule, ReactiveForm
 import { FieldType } from '@ngx-formly/material';
 import { type FieldTypeConfig, type FormlyFieldProps } from '@ngx-formly/core';
 import { type MatDateRangeSelectionStrategy, MAT_DATE_RANGE_SELECTION_STRATEGY, DateRange as DatePickerDateRange, MatCalendar, MatDatepickerModule } from '@angular/material/datepicker';
-import { asObservableFromGetter, filterMaybe, type ObservableOrValueGetter, skipAllInitialMaybe, SubscriptionObject, switchMapMaybeDefault } from '@dereekb/rxjs';
+import { asObservableFromGetter, filterMaybe, type ObservableOrValueGetter, skipAllInitialMaybe, switchMapMaybeDefault } from '@dereekb/rxjs';
 import { DbxDateTimeValueMode, dbxDateRangeIsSameDateRangeFieldValue, dbxDateTimeInputValueParseFactory, dbxDateTimeOutputValueFactory } from './date.value';
 import { type DateTimePresetConfiguration } from './datetime';
 import { DbxDateTimeFieldMenuPresetsService } from './datetime.field.service';
@@ -16,6 +16,7 @@ import { MatError, MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NgClass } from '@angular/common';
+import { cleanSubscription, completeOnDestroy } from '@dereekb/dbx-core';
 
 /**
  * Date range input configuration without the `date` property, which is set by user selection.
@@ -194,28 +195,28 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
   readonly currentDateRangeInputSignal = signal<Maybe<DbxFixedDateRangeDateRangeInput>>(undefined);
   readonly currentSelectionModeSignal = signal<DbxFixedDateRangeSelectionMode>('single');
 
-  private readonly _sub = new SubscriptionObject();
+  private readonly _sub = cleanSubscription();
 
-  private readonly _inputRangeFormSub = new SubscriptionObject();
-  private readonly _inputRangeFormValueSub = new SubscriptionObject();
+  private readonly _inputRangeFormSub = cleanSubscription();
+  private readonly _inputRangeFormValueSub = cleanSubscription();
 
-  private readonly _dateRangeInputSub = new SubscriptionObject();
-  private readonly _currentSelectionModeSub = new SubscriptionObject();
-  private readonly _latestBoundarySub = new SubscriptionObject();
-  private readonly _disableEndSub = new SubscriptionObject();
-  private readonly _activeDateSub = new SubscriptionObject();
+  private readonly _dateRangeInputSub = cleanSubscription();
+  private readonly _currentSelectionModeSub = cleanSubscription();
+  private readonly _latestBoundarySub = cleanSubscription();
+  private readonly _disableEndSub = cleanSubscription();
+  private readonly _activeDateSub = cleanSubscription();
 
-  private readonly _config = new BehaviorSubject<Maybe<Observable<DbxFixedDateRangePickerConfiguration>>>(undefined);
-  private readonly _selectionMode = new BehaviorSubject<Maybe<Observable<DbxFixedDateRangeSelectionMode>>>(undefined);
-  private readonly _dateRangeInput = new BehaviorSubject<Maybe<Observable<DbxFixedDateRangeDateRangeInput>>>(undefined);
+  private readonly _config = completeOnDestroy(new BehaviorSubject<Maybe<Observable<DbxFixedDateRangePickerConfiguration>>>(undefined));
+  private readonly _selectionMode = completeOnDestroy(new BehaviorSubject<Maybe<Observable<DbxFixedDateRangeSelectionMode>>>(undefined));
+  private readonly _dateRangeInput = completeOnDestroy(new BehaviorSubject<Maybe<Observable<DbxFixedDateRangeDateRangeInput>>>(undefined));
 
-  private readonly _timezone = new BehaviorSubject<Maybe<Observable<Maybe<TimezoneString>>>>(undefined);
-  private readonly _presets = new BehaviorSubject<Observable<DateTimePresetConfiguration[]>>(of([]));
+  private readonly _timezone = completeOnDestroy(new BehaviorSubject<Maybe<Observable<Maybe<TimezoneString>>>>(undefined));
+  private readonly _presets = completeOnDestroy(new BehaviorSubject<Observable<DateTimePresetConfiguration[]>>(of([])));
 
-  private readonly _selectionEvent = new Subject<SelectedDateEvent>();
+  private readonly _selectionEvent = completeOnDestroy(new Subject<SelectedDateEvent>());
   readonly selectedDateRange$: Observable<Maybe<Partial<DateRange>>> = this._selectionEvent.pipe(map((x) => x.range));
 
-  private readonly _formControlObs = new BehaviorSubject<Maybe<AbstractControl<Maybe<DateRange>>>>(undefined);
+  private readonly _formControlObs = completeOnDestroy(new BehaviorSubject<Maybe<AbstractControl<Maybe<DateRange>>>>(undefined));
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
 
   readonly config$: Observable<DbxFixedDateRangePickerConfiguration> = this._config.pipe(
@@ -679,21 +680,6 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
-    this._sub.destroy();
-    this._inputRangeFormSub.destroy();
-    this._inputRangeFormValueSub.destroy();
-    this._dateRangeInputSub.destroy();
-    this._currentSelectionModeSub.destroy();
-    this._latestBoundarySub.destroy();
-    this._disableEndSub.destroy();
-    this._activeDateSub.destroy();
-    this._config.complete();
-    this._selectionMode.complete();
-    this._dateRangeInput.complete();
-    this._timezone.complete();
-    this._presets.complete();
-    this._selectionEvent.complete();
-    this._formControlObs.complete();
   }
 
   selectedChange(date: Maybe<Date>): void {

@@ -1,6 +1,6 @@
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
-import { ChangeDetectionStrategy, Component, type OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {
   formlyDateTimeField,
@@ -37,6 +37,7 @@ import { DocFeatureExampleComponent } from '../../shared/component/feature.examp
 import { DocFeatureFormTabsComponent } from '../../shared/component/feature.formtabs.component';
 import { DocFormExampleComponent } from '../component/example.form.component';
 import { DocFormForgeExampleComponent } from '../component/forge.example.form.component';
+import { completeOnDestroy } from '@dereekb/dbx-core';
 
 @Component({
   templateUrl: './value.date.component.html',
@@ -44,7 +45,7 @@ import { DocFormForgeExampleComponent } from '../component/forge.example.form.co
   imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormExampleComponent, DocFormForgeExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormValueChangeDirective, DbxFormFormlyDateFieldModule, DbxFormFormlyDbxListFieldModule, DbxFormFormlyDurationFieldModule, DbxFormFormlyPickableFieldModule, DbxFormFormlySearchableFieldModule, DbxFormFormlySourceSelectModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DocFormDateValueComponent implements OnDestroy {
+export class DocFormDateValueComponent {
   readonly dateValues$ = of({
     date: startOfDay(new Date()),
     dateAsString: addDays(new Date(), -6),
@@ -58,7 +59,7 @@ export class DocFormDateValueComponent implements OnDestroy {
     timeOnlyWithLockedTimezone: dateTimezoneUtcNormal({ timezone: 'America/New_York' }).systemDateToTargetDate(startOfDay(new Date()))
   });
 
-  private _timezone = new BehaviorSubject<Maybe<TimezoneString>>(undefined);
+  private _timezone = completeOnDestroy(new BehaviorSubject<Maybe<TimezoneString>>(undefined));
 
   readonly timezone$ = this._timezone.asObservable();
 
@@ -626,7 +627,7 @@ export class DocFormDateValueComponent implements OnDestroy {
     })
   ];
 
-  private _newDateValue = new BehaviorSubject<Maybe<Date>>(undefined);
+  private _newDateValue = completeOnDestroy(new BehaviorSubject<Maybe<Date>>(undefined));
   private baseDate$ = of(new Date()).pipe(delay(100));
 
   onAsyncDateValueChange(value: Maybe<{ date: Maybe<Date> }>): void {
@@ -743,9 +744,4 @@ export class DocFormDateValueComponent implements OnDestroy {
       description: 'Output is a TimeDurationData object with individual unit fields.'
     })
   ];
-
-  ngOnDestroy(): void {
-    this._timezone.complete();
-    this._newDateValue.complete();
-  }
 }

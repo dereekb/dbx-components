@@ -1,12 +1,12 @@
-import { ChangeDetectionStrategy, Component, type OnInit, type OnDestroy, computed, inject, signal, effect, untracked, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, type OnInit, computed, inject, signal, effect, untracked, viewChild } from '@angular/core';
 import { DynamicForm, EventDispatcher, type FormOptions } from '@ng-forge/dynamic-forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxForm, type DbxFormEvent, DbxFormState, DbxMutableForm } from '../../form/form';
 import { type BooleanStringKeyArray, BooleanStringKeyArrayUtility, filterUndefinedValues, type Maybe, type FilterFromPOJOFunction, areEqualPOJOValuesUsingPojoFilter } from '@dereekb/util';
-import { SubscriptionObject } from '@dereekb/rxjs';
 import { skip } from 'rxjs';
 import { DbxForgeFormContext } from './forge.context';
 import { DbxForgeDynamicFormSignalRef, DbxForgeFormContextService } from './forge.context.service';
+import { cleanSubscription } from '@dereekb/dbx-core';
 
 /**
  * Wraps ng-forge's DynamicForm and bridges it to the DbxForm system.
@@ -30,12 +30,12 @@ import { DbxForgeDynamicFormSignalRef, DbxForgeFormContextService } from './forg
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxForgeFormComponent<T extends object = object> implements DbxForgeDynamicFormSignalRef, OnInit, OnDestroy {
+export class DbxForgeFormComponent<T extends object = object> implements DbxForgeDynamicFormSignalRef, OnInit {
   private readonly _context = inject(DbxForgeFormContext<T>);
 
-  private readonly _setValueSub = new SubscriptionObject();
-  private readonly _resetSub = new SubscriptionObject();
-  private readonly _disabledSub = new SubscriptionObject();
+  private readonly _setValueSub = cleanSubscription();
+  private readonly _resetSub = cleanSubscription();
+  private readonly _disabledSub = cleanSubscription();
 
   readonly dynamicForm = viewChild(DynamicForm);
 
@@ -272,12 +272,6 @@ export class DbxForgeFormComponent<T extends object = object> implements DbxForg
     this._isReset.set(false);
     this.formValue.set(sanitized as T);
     this._emitFormState();
-  }
-
-  ngOnDestroy(): void {
-    this._setValueSub.destroy();
-    this._resetSub.destroy();
-    this._disabledSub.destroy();
   }
 }
 

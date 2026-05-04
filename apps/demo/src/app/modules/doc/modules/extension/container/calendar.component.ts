@@ -20,6 +20,7 @@ import { MatButton } from '@angular/material/button';
 import { DocFormExampleComponent } from '../../form/component/example.form.component';
 import { DocExtensionCalendarScheduleSelectionComponent } from '../component/selection.calendar.component';
 import { JsonPipe, DatePipe } from '@angular/common';
+import { completeOnDestroy } from '@dereekb/dbx-core';
 
 export interface TestCalendarEventData extends DateCell {
   readonly eventId?: string | number;
@@ -63,7 +64,7 @@ export class DocExtensionCalendarComponent implements OnInit {
 
   readonly pageTitleInfo: DbxWebPageTitleInfoConfig = { title: 'Calendar', description: 'dbx-calendar component examples' };
 
-  private _timezone = new BehaviorSubject<Maybe<TimezoneString>>(undefined);
+  private _timezone = completeOnDestroy(new BehaviorSubject<Maybe<TimezoneString>>(undefined));
 
   readonly timezone$ = this._timezone.asObservable();
 

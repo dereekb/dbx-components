@@ -5,13 +5,13 @@ import { type FieldTypeConfig, type FormlyFieldProps } from '@ngx-formly/core';
 import { type ArrayOrValue, type TimezoneString, type Maybe } from '@dereekb/util';
 import { FieldType } from '@ngx-formly/material';
 import { BehaviorSubject, distinctUntilChanged, map, shareReplay, startWith, type Subscription, switchMap } from 'rxjs';
-import { filterMaybe, type ObservableOrValue, SubscriptionObject, asObservable } from '@dereekb/rxjs';
+import { filterMaybe, type ObservableOrValue, asObservable } from '@dereekb/rxjs';
 import { type DateRange, isSameDateCellScheduleDateRange, type DateCellScheduleDateFilterConfig, type DateCellScheduleDayCode, type DateOrDateRangeOrDateCellIndexOrDateCellRange } from '@dereekb/date';
 import { type CalendarScheduleSelectionState, DbxCalendarScheduleSelectionStore } from '../../calendar.schedule.selection.store';
 import { provideCalendarScheduleSelectionStoreIfParentIsUnavailable } from '../../calendar.schedule.selection.store.provide';
 import { type MatFormFieldAppearance } from '@angular/material/form-field';
 import { type DbxScheduleSelectionCalendarDatePopupContentConfig } from '../../calendar.schedule.selection.dialog.component';
-import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { DbxInjectionComponent, type DbxInjectionComponentConfig, cleanSubscription, completeOnDestroy } from '@dereekb/dbx-core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxScheduleSelectionCalendarDateDialogButtonComponent } from '../../calendar.schedule.selection.dialog.button.component';
 import { DbxScheduleSelectionCalendarDateRangeComponent } from '../../calendar.schedule.selection.range.component';
@@ -90,15 +90,15 @@ export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCal
 
   readonly dbxCalendarScheduleSelectionStore = inject(DbxCalendarScheduleSelectionStore);
 
-  private readonly _syncSub = new SubscriptionObject();
-  private readonly _valueSub = new SubscriptionObject();
-  private readonly _timezoneSub = new SubscriptionObject();
-  private readonly _minMaxDateRangeSub = new SubscriptionObject();
-  private readonly _defaultWeekSub = new SubscriptionObject();
-  private readonly _filterSub = new SubscriptionObject();
-  private readonly _exclusionsSub = new SubscriptionObject();
+  private readonly _syncSub = cleanSubscription();
+  private readonly _valueSub = cleanSubscription();
+  private readonly _timezoneSub = cleanSubscription();
+  private readonly _minMaxDateRangeSub = cleanSubscription();
+  private readonly _defaultWeekSub = cleanSubscription();
+  private readonly _filterSub = cleanSubscription();
+  private readonly _exclusionsSub = cleanSubscription();
 
-  private readonly _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
+  private readonly _formControlObs = completeOnDestroy(new BehaviorSubject<Maybe<AbstractControl>>(undefined));
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
 
   readonly value$ = this.formControl$.pipe(
@@ -234,12 +234,5 @@ export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCal
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
-    this._syncSub.destroy();
-    this._valueSub.destroy();
-    this._filterSub.destroy();
-    this._timezoneSub.destroy();
-    this._minMaxDateRangeSub.destroy();
-    this._exclusionsSub.destroy();
-    this._formControlObs.complete();
   }
 }

@@ -6,7 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatOptionModule } from '@angular/material/core';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { type Maybe, type PrimativeKey, filterUniqueValues, lastValue, convertMaybeToArray, type ArrayOrValue } from '@dereekb/util';
-import { SubscriptionObject, skipUntilTimeElapsedAfterLastEmission } from '@dereekb/rxjs';
+import { skipUntilTimeElapsedAfterLastEmission } from '@dereekb/rxjs';
 import { DbxLoadingModule } from '@dereekb/dbx-web';
 import { BehaviorSubject, map, shareReplay, Subject, switchMap, type Observable } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -18,6 +18,7 @@ import { createResolvedErrorsSignal, setupMetaTracking, shouldShowErrors } from 
 import { dbxForgeFieldDisabled } from '../../field.util';
 import { toggleDisableFormControl } from '../../../../form/form';
 import { type DbxForgeSearchableChipFieldProps } from './searchable-chip.field';
+import { completeOnDestroy, cleanSubscription } from '@dereekb/dbx-core';
 
 /**
  * Forge ValueFieldComponent for searchable chip selection (multi-value).
@@ -54,9 +55,9 @@ export class DbxForgeSearchableChipFieldComponent<T = unknown, M = unknown, H ex
     return null;
   });
 
-  private readonly _blur = new Subject<void>();
-  private readonly _blurSub = new SubscriptionObject();
-  private readonly _valuesSubject = new BehaviorSubject<T[]>([]);
+  private readonly _blur = completeOnDestroy(new Subject<void>());
+  private readonly _blurSub = cleanSubscription();
+  private readonly _valuesSubject = completeOnDestroy(new BehaviorSubject<T[]>([]));
 
   readonly values$ = this._valuesSubject.asObservable().pipe(shareReplay(1));
 
