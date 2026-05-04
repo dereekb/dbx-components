@@ -1,6 +1,7 @@
 {
   "name": "@dereekb/model",
   "version": "13.10.7",
+  "sideEffects": false,
   "peerDependencies": {
     "@dereekb/util": "13.10.7",
     "arktype": "^2.2.0",

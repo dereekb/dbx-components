@@ -1,6 +1,7 @@
 {
   "name": "@dereekb/date",
   "version": "13.10.7",
+  "sideEffects": false,
   "peerDependencies": {
     "@dereekb/model": "13.10.7",
     "@dereekb/rxjs": "13.10.7",
