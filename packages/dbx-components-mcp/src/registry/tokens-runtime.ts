@@ -133,7 +133,7 @@ export function createTokenRegistryFromEntries(input: { readonly entries: readon
       if (trimmed.length === 0) {
         matches = [];
       } else {
-        const candidates = role !== undefined ? (byRoleImmutable.get(role) ?? []) : all;
+        const candidates = role === undefined ? all : (byRoleImmutable.get(role) ?? []);
         matches = [];
         for (const entry of candidates) {
           let best = 0;
@@ -165,7 +165,7 @@ export function createTokenRegistryFromEntries(input: { readonly entries: readon
       if (trimmed.length === 0) {
         matches = [];
       } else {
-        const candidates = role !== undefined ? (byRoleImmutable.get(role) ?? []) : all;
+        const candidates = role === undefined ? all : (byRoleImmutable.get(role) ?? []);
         matches = [];
         for (const entry of candidates) {
           let score = 0;

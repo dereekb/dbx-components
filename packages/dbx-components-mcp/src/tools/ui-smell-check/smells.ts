@@ -90,7 +90,7 @@ export function deriveProjectPrefix(scssPath: string | undefined, htmlPath: stri
   let result: string | undefined;
   for (const path of [scssPath, htmlPath]) {
     if (path === undefined) continue;
-    const match = path.match(/(?:^|[/\\])(?:apps|packages|libs)[/\\]([\w-]+)/);
+    const match = /(?:^|[/\\])(?:apps|packages|libs)[/\\]([\w-]+)/.exec(path);
     if (match !== null) {
       result = match[1];
       break;
@@ -123,7 +123,7 @@ function captureSnippet(haystack: string, index: number, length: number): string
  * Returns the 1-based line number that contains the given offset in `text`.
  */
 function lineNumberOf(text: string, offset: number): number {
-  const clamped = offset < 0 ? 0 : offset > text.length ? text.length : offset;
+  const clamped = Math.min(Math.max(offset, 0), text.length);
   let line = 1;
   for (let i = 0; i < clamped; i += 1) {
     if (text[i] === '\n') line += 1;
@@ -137,6 +137,12 @@ function lineNumberOf(text: string, offset: number): number {
  * match exists — substring matches are intentionally rejected because
  * `findByValue('4px')` would otherwise pick up `--dbx-padding-5` (24px).
  */
+function matchKindForRadius(exact: TokenEntry | undefined, raw: string): string {
+  if (exact === undefined) return '';
+  if (exact.defaults.light === raw || exact.defaults.dark === raw) return '(exact-match design-system corner token).';
+  return '(idiomatic full / pill radius — design system token).';
+}
+
 function findExactRoleToken(registry: TokenRegistry, raw: string, role: string): TokenEntry | undefined {
   const candidates = registry.byRole.get(role) ?? [];
   let result: TokenEntry | undefined;
@@ -219,9 +225,9 @@ function findCardSurface(scss: string): CardSurfaceHit | null {
 }
 
 function looksLikeCardSurface(block: string): boolean {
-  const hasPadding = /\bpadding\s*:\s*[0-9]/i.test(block);
+  const hasPadding = /\bpadding\s*:\s*\d/i.test(block);
   const hasWhiteBg = /background\s*:\s*(#fff|#ffffff|white|rgb\(\s*255\s*,\s*255\s*,\s*255\s*\))/i.test(block);
-  const hasRadius = /\bborder-radius\s*:\s*[0-9]/i.test(block);
+  const hasRadius = /\bborder-radius\s*:\s*\d/i.test(block);
   return hasPadding && hasWhiteBg && hasRadius;
 }
 
@@ -319,7 +325,7 @@ const cardSurfaceHandrolled: SmellDetector = (input) => {
   return matches;
 };
 
-const HARDCODED_RADIUS_RE = /border-radius\s*:\s*([0-9]+(?:\.[0-9]+)?(?:px|rem|em|%))(?!\s*\))/gi;
+const HARDCODED_RADIUS_RE = /border-radius\s*:\s*(\d+(?:\.\d+)?(?:px|rem|em|%))(?!\s*\))/gi;
 
 /**
  * Idiomatic values that mean "fully rounded" (pill / circle). The token
@@ -342,7 +348,7 @@ const hardcodedRadius: SmellDetector = (input) => {
     if (exact === undefined && FULL_RADIUS_SYNONYMS.has(raw)) {
       exact = input.tokenRegistry.findByCssVariable('--mat-sys-corner-full');
     }
-    const matchKind = exact === undefined ? '' : exact.defaults.light === raw || exact.defaults.dark === raw ? '(exact-match design-system corner token).' : '(idiomatic full / pill radius — design system token).';
+    const matchKind = matchKindForRadius(exact, raw);
     const fix = exact !== undefined ? `Replace \`border-radius: ${raw}\` with \`border-radius: var(${exact.cssVariable})\` ${matchKind}` : `Hardcoded radius \`${raw}\` doesn't match any design-system corner token. Either wrap it in a project-local SCSS variable or align it with one of \`--mat-sys-corner-extra-small\` (4px), \`-small\` (8px), \`-medium\` (12px), \`-large\` (16px), \`-extra-large\` (28px), or \`-full\` (pill / circle).`;
     matches.push({
       id: 'hardcoded-radius',
@@ -390,13 +396,13 @@ const hardcodedShadow: SmellDetector = (input) => {
       length: match[0].length,
       line: lineNumberOf(input.scss, match.index),
       endLine: lineNumberOf(input.scss, match.index),
-      dedupKey: `shadow:${raw.replace(/\s+/g, ' ')}`
+      dedupKey: `shadow:${raw.replaceAll(/\s+/g, ' ')}`
     });
   }
   return matches;
 };
 
-const HARDCODED_HINT_COLOR_RE = /color\s*:\s*(rgba?\(\s*0\s*,\s*0\s*,\s*0\s*[,/\s]\s*0\.[5-7][0-9]?\s*\)|rgba?\(\s*255\s*,\s*255\s*,\s*255\s*[,/\s]\s*0\.[6-8][0-9]?\s*\))/gi;
+const HARDCODED_HINT_COLOR_RE = /color\s*:\s*(rgba?\(\s*0\s*,\s*0\s*,\s*0\s*[,/\s]\s*0\.[5-7]\d?\s*\)|rgba?\(\s*255\s*,\s*255\s*,\s*255\s*[,/\s]\s*0\.[6-8]\d?\s*\))/gi;
 
 /**
  * Flags low-emphasis text colors written as raw `rgba(0,0,0,0.6)` etc. and
@@ -420,13 +426,13 @@ const hardcodedHintColor: SmellDetector = (input) => {
       length: match[0].length,
       line: lineNumberOf(input.scss, match.index),
       endLine: lineNumberOf(input.scss, match.index),
-      dedupKey: `hint-color:${raw.replace(/\s+/g, '')}`
+      dedupKey: `hint-color:${raw.replaceAll(/\s+/g, '')}`
     });
   }
   return matches;
 };
 
-const HARDCODED_PADDING_RE = /(?:padding|margin)\s*(?:-(?:top|right|bottom|left))?\s*:\s*([0-9]+(?:\.[0-9]+)?px)(?!\s*\))/gi;
+const HARDCODED_PADDING_RE = /(?:padding|margin)\s*(?:-(?:top|right|bottom|left))?\s*:\s*(\d+(?:\.\d+)?px)(?!\s*\))/gi;
 
 /**
  * Flags hardcoded `padding: <N>px` / `margin: <N>px` that exactly match one of
@@ -464,7 +470,7 @@ const hardcodedPadding: SmellDetector = (input) => {
   return matches;
 };
 
-const HARDCODED_TYPOGRAPHY_RE = /font-size\s*:\s*([0-9]+(?:\.[0-9]+)?)(rem|px)/gi;
+const HARDCODED_TYPOGRAPHY_RE = /font-size\s*:\s*(\d+(?:\.\d+)?)(rem|px)/gi;
 
 /**
  * Flags large hardcoded `font-size:` values on what look like heading rules.
@@ -473,7 +479,7 @@ const hardcodedTypography: SmellDetector = (input) => {
   const matches: SmellMatch[] = [];
   for (const match of input.scss.matchAll(HARDCODED_TYPOGRAPHY_RE)) {
     if (match.index === undefined) continue;
-    const value = parseFloat(match[1]);
+    const value = Number.parseFloat(match[1]);
     const unit = match[2];
     const tooBig = (unit === 'rem' && value > 1) || (unit === 'px' && value >= 18);
     if (tooBig) {
@@ -521,13 +527,13 @@ const pitInsteadOfTintedBg: SmellDetector = (input) => {
       length: match[0].length,
       line: lineNumberOf(input.scss, match.index),
       endLine: lineNumberOf(input.scss, match.index),
-      dedupKey: `pit-bg:${raw.replace(/\s+/g, '')}`
+      dedupKey: `pit-bg:${raw.replaceAll(/\s+/g, '')}`
     });
   }
   return matches;
 };
 
-const FLEX_COLUMN_GAP_RE = /display\s*:\s*flex\s*;\s*flex-direction\s*:\s*column\s*;\s*gap\s*:\s*[0-9]+(?:\.[0-9]+)?px\s*;/gi;
+const FLEX_COLUMN_GAP_RE = /display\s*:\s*flex\s*;\s*flex-direction\s*:\s*column\s*;\s*gap\s*:\s*\d+(?:\.\d+)?px\s*;/gi;
 
 const CARD_LIKE_CHILD_RE = /(mat-card|dbx-card|dbx-content-box|dbx-content-pit|\.[\w-]*card[\w-]*|\.[\w-]*content-box[\w-]*)\b/i;
 
@@ -719,7 +725,7 @@ const unusedScssUse: SmellDetector = (input) => {
   for (const match of input.scss.matchAll(SCSS_USE_AS_RE)) {
     if (match.index === undefined) continue;
     const ns = match[1];
-    const usagePattern = new RegExp(`(?:^|[^\\w-])${ns}\\.`, 'g');
+    const usagePattern = new RegExp(String.raw`(?:^|[^\w-])${ns}\.`, 'g');
     let used = false;
     for (const usageMatch of input.scss.matchAll(usagePattern)) {
       if (usageMatch.index === undefined) continue;
@@ -755,6 +761,13 @@ const unusedScssUse: SmellDetector = (input) => {
 // MARK: HTML smells
 const RAW_MAT_BUTTON_RE = /<button\b([^>]*?)\b(mat-stroked-button|mat-flat-button|mat-raised-button|mat-button)\b/gi;
 
+function matButtonVariantAttr(variant: string): string {
+  if (variant === 'mat-stroked-button') return 'stroked';
+  if (variant === 'mat-flat-button') return 'flat';
+  if (variant === 'mat-raised-button') return 'raised';
+  return 'basic';
+}
+
 /**
  * Flags raw `<button mat-stroked-button>` / `mat-flat-button` and routes to
  * `<dbx-button>`.
@@ -764,7 +777,7 @@ const rawMatButton: SmellDetector = (input) => {
   for (const match of input.html.matchAll(RAW_MAT_BUTTON_RE)) {
     if (match.index === undefined) continue;
     const variant = match[2];
-    const variantAttr = variant === 'mat-stroked-button' ? 'stroked' : variant === 'mat-flat-button' ? 'flat' : variant === 'mat-raised-button' ? 'raised' : 'basic';
+    const variantAttr = matButtonVariantAttr(variant);
     matches.push({
       id: 'raw-mat-button',
       severity: 'warn',
@@ -956,11 +969,17 @@ function isIgnored(match: SmellMatch, entries: readonly IgnoreEntry[]): boolean 
  */
 export interface DetectSmellsResult {
   readonly matches: readonly SmellMatch[];
-  /** Sub-findings dropped because they fall inside a card-surface rule. */
+  /**
+   * Sub-findings dropped because they fall inside a card-surface rule.
+   */
   readonly suppressedByCascade: number;
-  /** Findings dropped because of `// dbx-smell-ignore` directives. */
+  /**
+   * Findings dropped because of `// dbx-smell-ignore` directives.
+   */
   readonly suppressedByDirective: number;
-  /** Duplicate occurrences merged into a single grouped match. */
+  /**
+   * Duplicate occurrences merged into a single grouped match.
+   */
   readonly duplicatesMerged: number;
 }
 

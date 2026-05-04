@@ -48,8 +48,6 @@ export function formatReportAsJson(report: ServerActionsReport): string {
 
 function formatWiring(wiring: { readonly modulePath?: string; readonly providedByModule: boolean; readonly exportedByModule: boolean }): string {
   if (!wiring.modulePath) return '⚠️ no sibling `*.module.ts` file found';
-  const status: string[] = [];
-  status.push(wiring.providedByModule ? '✅ providers' : '❌ not in providers');
-  status.push(wiring.exportedByModule ? '✅ exports' : '❌ not in exports');
+  const status: string[] = [wiring.providedByModule ? '✅ providers' : '❌ not in providers', wiring.exportedByModule ? '✅ exports' : '❌ not in exports'];
   return `\`${wiring.modulePath}\` — ${status.join(' · ')}`;
 }

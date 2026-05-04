@@ -146,7 +146,8 @@ function resolveTopic(input: ResolveTopicInput): LookupModelMatch {
     result = { kind: 'shapes' };
   } else {
     const upstream = input.scope === 'downstream' ? undefined : (getFirebaseModel(input.rawTopic) ?? getFirebaseModelByPrefix(input.rawTopic));
-    const downstream = upstream ? undefined : input.scope === 'upstream' ? undefined : findInDownstream(input.downstream.models, lowered);
+    const shouldCheckDownstream = !upstream && input.scope !== 'upstream';
+    const downstream = shouldCheckDownstream ? findInDownstream(input.downstream.models, lowered) : undefined;
     const hit = upstream ?? downstream;
     if (hit) {
       result = { kind: 'single', model: hit };
@@ -168,8 +169,14 @@ function findInDownstream(models: readonly FirebaseModel[], lowered: string): Fi
   return result;
 }
 
+function fuzzyCandidatesPool(scope: LookupScope, downstream: readonly FirebaseModel[]): readonly FirebaseModel[] {
+  if (scope === 'upstream') return FIREBASE_MODELS;
+  if (scope === 'downstream') return downstream;
+  return [...FIREBASE_MODELS, ...downstream];
+}
+
 function fuzzyCandidates(scope: LookupScope, downstream: readonly FirebaseModel[], lowered: string): readonly FirebaseModel[] {
-  const pool = scope === 'upstream' ? FIREBASE_MODELS : scope === 'downstream' ? downstream : [...FIREBASE_MODELS, ...downstream];
+  const pool = fuzzyCandidatesPool(scope, downstream);
   const scored: { readonly model: FirebaseModel; readonly score: number }[] = [];
   for (const model of pool) {
     let score = 0;

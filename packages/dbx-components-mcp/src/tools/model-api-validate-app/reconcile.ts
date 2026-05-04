@@ -51,12 +51,13 @@ export function reconcile(input: ReconcileInput): ReconcileResult {
     const handler = handlerMap.get(key);
     entries.push({ model: d.model, verb: d.verb, specifier: d.specifier, declared: d, handler });
     if (!handler) {
+      const specifierSuffix = d.specifier ? `.${d.specifier}` : '';
       issues.push({
         code: 'MISSING_HANDLER',
         model: d.model,
         verb: d.verb,
         specifier: d.specifier,
-        message: `Declared in \`${d.sourceFile}:${d.line}\` (params: \`${d.paramsTypeName ?? '?'}\`) but no handler is wired in the app's \`${d.verb}\` map for \`${d.model}\`${d.specifier ? `.${d.specifier}` : ''}.`,
+        message: `Declared in \`${d.sourceFile}:${d.line}\` (params: \`${d.paramsTypeName ?? '?'}\`) but no handler is wired in the app's \`${d.verb}\` map for \`${d.model}\`${specifierSuffix}.`,
         source: `${d.sourceFile}:${d.line}`
       });
     }
@@ -67,12 +68,13 @@ export function reconcile(input: ReconcileInput): ReconcileResult {
     if (seenKeys.has(key)) continue;
     seenKeys.add(key);
     entries.push({ model: h.model, verb: h.verb, specifier: h.specifier, declared: undefined, handler: h });
+    const specifierSuffix = h.specifier ? `.${h.specifier}` : '';
     issues.push({
       code: 'ORPHAN_HANDLER',
       model: h.model,
       verb: h.verb,
       specifier: h.specifier,
-      message: `Handler \`${h.handlerName}\` is wired in the app's \`${h.verb}\` map (\`${h.sourceFile}:${h.line}\`) for \`${h.model}\`${h.specifier ? `.${h.specifier}` : ''} but no firebase-component \`<model>.api.ts\` declares this CRUD entry.`,
+      message: `Handler \`${h.handlerName}\` is wired in the app's \`${h.verb}\` map (\`${h.sourceFile}:${h.line}\`) for \`${h.model}\`${specifierSuffix} but no firebase-component \`<model>.api.ts\` declares this CRUD entry.`,
       source: `${h.sourceFile}:${h.line}`
     });
   }

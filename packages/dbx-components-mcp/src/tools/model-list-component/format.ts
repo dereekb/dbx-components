@@ -24,7 +24,7 @@ export function formatReportAsMarkdown(report: ComponentModelReport): string {
     lines.push('## Models', '');
     for (const m of report.models) {
       const parent = m.parentIdentityConst ? ` · subcollection of \`${m.parentIdentityConst}\`` : '';
-      const fixtureNote = m.fixtureCovered === undefined ? '' : m.fixtureCovered ? ' · ✅ fixture' : ' · ❌ no fixture';
+      const fixtureNote = formatFixtureNote(m.fixtureCovered);
       lines.push(`### \`${m.modelName}\`${parent}${fixtureNote}`, '', `- **Folder:** \`${m.folder}\``, `- **Identity:** \`${m.identityConst ?? '<not detected>'}\``);
       if (m.collectionName) lines.push(`- **Collection:** \`${m.collectionName}\` · prefix \`${m.collectionPrefix ?? '<not detected>'}\``);
       lines.push(`- **Source:** \`${m.sourceFile}\``, '');
@@ -49,6 +49,11 @@ export function formatReportAsMarkdown(report: ComponentModelReport): string {
  */
 export function formatReportAsJson(report: ComponentModelReport): string {
   return JSON.stringify(report, null, 2);
+}
+
+function formatFixtureNote(covered: boolean | undefined): string {
+  if (covered === undefined) return '';
+  return covered ? ' · ✅ fixture' : ' · ❌ no fixture';
 }
 
 function formatCoverageStatus(report: ComponentModelReport): string {

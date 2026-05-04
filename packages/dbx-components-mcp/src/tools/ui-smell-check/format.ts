@@ -217,16 +217,16 @@ function formatInfoDigest(matches: readonly SmellMatchWithExtras[]): string | nu
   }
   if (byId.size === 0) return null;
   const rows: string[] = ['Info-severity findings — flagged for review but no canonical dbx-web replacement exists yet (full detail is in **Detected smells** above).', ''];
-  const sortedIds = Array.from(byId.keys()).sort();
+  const sortedIds = Array.from(byId.keys()).sort((a, b) => a.localeCompare(b));
   for (const id of sortedIds) {
     const lines = (byId.get(id) ?? []).sort((a, b) => a - b);
     let range: string;
     if (lines.length === 1) {
       range = `L${lines[0]}`;
-    } else if (lines[0] === lines[lines.length - 1]) {
+    } else if (lines[0] === lines.at(-1)) {
       range = `L${lines[0]}`;
     } else {
-      range = `L${lines[0]}–L${lines[lines.length - 1]}`;
+      range = `L${lines[0]}–L${lines.at(-1)}`;
     }
     rows.push(`- **${id}** ×${lines.length} · ${range}`);
   }

@@ -253,9 +253,7 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions =
   const underlyingServer = server.server;
 
   const tools: DbxTool[] = [...DBX_TOOLS];
-  tools.push(createUiExamplesTool({ examplesRegistry: options.dbxDocsUiExamplesRegistry }));
-  tools.push(createModelValidateTool({ ruleOptions: options.modelValidateRuleOptions }));
-  tools.push(createModelFixtureValidateAppTool({ getRegistry: () => options.fixtureModelRegistry }));
+  tools.push(createUiExamplesTool({ examplesRegistry: options.dbxDocsUiExamplesRegistry }), createModelValidateTool({ ruleOptions: options.modelValidateRuleOptions }), createModelFixtureValidateAppTool({ getRegistry: () => options.fixtureModelRegistry }));
   if (options.forgeFieldRegistry !== undefined) {
     tools.push(createLookupFormTool({ registry: options.forgeFieldRegistry }), createSearchFormTool({ registry: options.forgeFieldRegistry }), createFormScaffoldTool({ registry: options.forgeFieldRegistry }));
   }

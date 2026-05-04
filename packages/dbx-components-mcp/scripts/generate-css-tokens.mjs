@@ -351,7 +351,7 @@ function inferIntents(cssVar, role) {
   const stripped = cssVar
     .replace(/^--dbx-/, '')
     .replace(/-var$/, '')
-    .replace(/-/g, ' ');
+    .replaceAll('-', ' ');
   const intents = [stripped];
   if (role === 'text-color') intents.push(`${stripped} text`);
   if (role === 'spacing') intents.push(`${stripped} spacing`);

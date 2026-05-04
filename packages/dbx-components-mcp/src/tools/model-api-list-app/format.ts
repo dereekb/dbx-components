@@ -21,7 +21,8 @@ export function formatReportAsMarkdown(report: ApiListReport): string {
     if (fileEntries.length === 0 && report.modelFilter !== undefined) {
       continue;
     }
-    lines.push(`## ${fileSummary.groupName ?? '(unknown group)'} — \`${fileSummary.sourceFile}\``, '', `Models: ${fileSummary.modelKeys.length === 0 ? '_(none)_' : fileSummary.modelKeys.map((m) => `\`${m}\``).join(', ')}`, '', formatCounts(fileSummary), '');
+    const modelLabels = fileSummary.modelKeys.length === 0 ? '_(none)_' : fileSummary.modelKeys.map((m) => `\`${m}\``).join(', ');
+    lines.push(`## ${fileSummary.groupName ?? '(unknown group)'} — \`${fileSummary.sourceFile}\``, '', `Models: ${modelLabels}`, '', formatCounts(fileSummary), '');
     if (fileEntries.length === 0) {
       lines.push('_(no entries)_', '');
       continue;

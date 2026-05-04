@@ -241,8 +241,7 @@ function renderFactoryBlock(input: RenderFactoryBlockInput): string {
   const generics = renderFactoryGenerics(input);
   const callbacks = renderFactoryCallbacks(input);
   const lines: string[] = [];
-  lines.push(`export const ${input.factoryName} = () =>`);
-  lines.push(`  modelTestContextFactory<`);
+  lines.push(`export const ${input.factoryName} = () =>`, `  modelTestContextFactory<`);
   for (let i = 0; i < generics.length; i += 1) {
     const isLast = i === generics.length - 1;
     lines.push(`    ${generics[i]}${isLast ? '' : ','}`);
@@ -280,8 +279,7 @@ function renderFactoryCallbacks(input: RenderFactoryBlockInput): readonly string
   } else {
     callbacks.push(`getCollection: (fi) => fi.${defaultCollectionsAccessor(input.prefix)}.${camelInitial(input.model)}Collection`);
   }
-  callbacks.push(`makeInstance: (delegate, ref, testInstance) => new ${input.instanceClassName}(delegate, ref, testInstance)`);
-  callbacks.push(`makeRef: async (collection, params, _p) => {\n      // TODO: choose the correct ref strategy (auto id vs deterministic id).\n      return collection.documentAccessor().newDocument().documentRef;\n    }`);
+  callbacks.push(`makeInstance: (delegate, ref, testInstance) => new ${input.instanceClassName}(delegate, ref, testInstance)`, `makeRef: async (collection, params, _p) => {\n      // TODO: choose the correct ref strategy (auto id vs deterministic id).\n      return collection.documentAccessor().newDocument().documentRef;\n    }`);
   if (input.withInitDocument) {
     callbacks.push(`initDocument: async (instance, params) => {\n      // TODO: seed the new document with sensible defaults from \`params\`.\n    }`);
   }

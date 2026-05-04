@@ -14,7 +14,8 @@ export function formatLookupAsMarkdown(report: ApiLookupReport): string {
     lines.push(`Source: \`${report.sourceFile}\``);
   }
   if (report.modelKeys.length > 0) {
-    lines.push(`Models: ${report.modelKeys.map((m) => `\`${m}\``).join(', ')}`);
+    const modelLabels = report.modelKeys.map((m) => `\`${m}\``).join(', ');
+    lines.push(`Models: ${modelLabels}`);
   }
   lines.push('', `Action lookup: ${formatActionLookupStatus(report)}`, '');
 
@@ -47,7 +48,9 @@ function formatActionLookupStatus(report: ApiLookupReport): string {
 function formatEntry(entry: ApiLookupEntry): string {
   const wireKey = formatWireKey(entry);
   const heading = entry.specifier !== undefined ? `${entry.model}.${entry.verb}.${entry.specifier}` : `${entry.model}.${entry.verb}`;
-  const lines: string[] = [`## ${heading}`, '', `- Wire key: \`${wireKey}\``, `- Params: ${entry.paramsTypeName ? `\`${entry.paramsTypeName}\`` : '_unresolved_'}`, `- Result: ${entry.resultTypeName ? `\`${entry.resultTypeName}\`` : '`void`'}`, `- Source: \`${entry.sourceFile}:${entry.line}\``, ''];
+  const paramsLabel = entry.paramsTypeName ? `\`${entry.paramsTypeName}\`` : '_unresolved_';
+  const resultLabel = entry.resultTypeName ? `\`${entry.resultTypeName}\`` : '`void`';
+  const lines: string[] = [`## ${heading}`, '', `- Wire key: \`${wireKey}\``, `- Params: ${paramsLabel}`, `- Result: ${resultLabel}`, `- Source: \`${entry.sourceFile}:${entry.line}\``, ''];
 
   if (entry.paramsJsDoc || entry.paramsFields.length > 0) {
     lines.push('### Params');

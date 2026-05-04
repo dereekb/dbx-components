@@ -191,9 +191,9 @@ export function parseColor(raw: string): RgbColor | null {
   let result: RgbColor | null = null;
   if (match !== null) {
     result = {
-      r: clamp(parseFloat(match[1]), 0, 255),
-      g: clamp(parseFloat(match[2]), 0, 255),
-      b: clamp(parseFloat(match[3]), 0, 255),
+      r: clamp(Number.parseFloat(match[1]), 0, 255),
+      g: clamp(Number.parseFloat(match[2]), 0, 255),
+      b: clamp(Number.parseFloat(match[3]), 0, 255),
       a: parseAlpha(match[4])
     };
   }
@@ -201,9 +201,9 @@ export function parseColor(raw: string): RgbColor | null {
     match = RGB_NEW_RE.exec(trimmed);
     if (match !== null) {
       result = {
-        r: clamp(parseFloat(match[1]), 0, 255),
-        g: clamp(parseFloat(match[2]), 0, 255),
-        b: clamp(parseFloat(match[3]), 0, 255),
+        r: clamp(Number.parseFloat(match[1]), 0, 255),
+        g: clamp(Number.parseFloat(match[2]), 0, 255),
+        b: clamp(Number.parseFloat(match[3]), 0, 255),
         a: parseAlpha(match[4])
       };
     }
@@ -221,9 +221,9 @@ function parseAlpha(value: string | undefined): number {
   let alpha = 1;
   if (value !== undefined) {
     if (value.endsWith('%')) {
-      alpha = clamp(parseFloat(value.slice(0, -1)) / 100, 0, 1);
+      alpha = clamp(Number.parseFloat(value.slice(0, -1)) / 100, 0, 1);
     } else {
-      alpha = clamp(parseFloat(value), 0, 1);
+      alpha = clamp(Number.parseFloat(value), 0, 1);
     }
   }
   return alpha;
@@ -235,23 +235,23 @@ function parseHex(hex: string): RgbColor {
   let b = 0;
   let a = 1;
   if (hex.length === 3) {
-    r = parseInt(hex[0] + hex[0], 16);
-    g = parseInt(hex[1] + hex[1], 16);
-    b = parseInt(hex[2] + hex[2], 16);
+    r = Number.parseInt(hex[0] + hex[0], 16);
+    g = Number.parseInt(hex[1] + hex[1], 16);
+    b = Number.parseInt(hex[2] + hex[2], 16);
   } else if (hex.length === 4) {
-    r = parseInt(hex[0] + hex[0], 16);
-    g = parseInt(hex[1] + hex[1], 16);
-    b = parseInt(hex[2] + hex[2], 16);
-    a = parseInt(hex[3] + hex[3], 16) / 255;
+    r = Number.parseInt(hex[0] + hex[0], 16);
+    g = Number.parseInt(hex[1] + hex[1], 16);
+    b = Number.parseInt(hex[2] + hex[2], 16);
+    a = Number.parseInt(hex[3] + hex[3], 16) / 255;
   } else if (hex.length === 6) {
-    r = parseInt(hex.slice(0, 2), 16);
-    g = parseInt(hex.slice(2, 4), 16);
-    b = parseInt(hex.slice(4, 6), 16);
+    r = Number.parseInt(hex.slice(0, 2), 16);
+    g = Number.parseInt(hex.slice(2, 4), 16);
+    b = Number.parseInt(hex.slice(4, 6), 16);
   } else if (hex.length === 8) {
-    r = parseInt(hex.slice(0, 2), 16);
-    g = parseInt(hex.slice(2, 4), 16);
-    b = parseInt(hex.slice(4, 6), 16);
-    a = parseInt(hex.slice(6, 8), 16) / 255;
+    r = Number.parseInt(hex.slice(0, 2), 16);
+    g = Number.parseInt(hex.slice(2, 4), 16);
+    b = Number.parseInt(hex.slice(4, 6), 16);
+    a = Number.parseInt(hex.slice(6, 8), 16) / 255;
   }
   return { r, g, b, a };
 }
@@ -299,7 +299,7 @@ export function colorDistance(a: RgbColor, b: RgbColor): number {
   const dA = lab1.a - lab2.a;
   const dB = lab1.b - lab2.b;
   const dAlpha = (lab1.alpha - lab2.alpha) * 0.5;
-  return Math.sqrt(dL * dL + dA * dA + dB * dB + dAlpha * dAlpha);
+  return Math.hypot(dL, dA, dB, dAlpha);
 }
 
 function scoreColor(entry: TokenEntry, target: RgbColor): number {
@@ -348,7 +348,7 @@ export function parseLength(raw: string): ParsedLength | null {
   let result: ParsedLength | null = null;
   if (match !== null) {
     result = {
-      value: parseFloat(match[1]),
+      value: Number.parseFloat(match[1]),
       unit: (match[2] ?? '').toLowerCase()
     };
   }

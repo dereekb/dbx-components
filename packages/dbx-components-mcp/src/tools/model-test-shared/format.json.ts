@@ -76,8 +76,14 @@ function collectIts(tree: SpecFileTree): readonly ItIndexEntry[] {
   return out;
 }
 
+function applyViewToRoot(root: SpecNode, view: SpecTreeView): SpecNode {
+  if (view === 'describes') return collapseTo(root, ['describe', 'it', 'hook', 'helperCall']);
+  if (view === 'fixtures') return collapseTo(root, ['fixture']);
+  return root;
+}
+
 function applyFilters(root: SpecNode, view: SpecTreeView, filters: SpecTreeFilters): SpecNode {
-  let next = view === 'describes' ? collapseTo(root, ['describe', 'it', 'hook', 'helperCall']) : view === 'fixtures' ? collapseTo(root, ['fixture']) : root;
+  let next = applyViewToRoot(root, view);
   if (filters.filterByModel !== undefined && filters.filterByModel !== '') {
     next = pruneByModel(next, filters.filterByModel.toLowerCase()) ?? { ...next, children: [] };
   }

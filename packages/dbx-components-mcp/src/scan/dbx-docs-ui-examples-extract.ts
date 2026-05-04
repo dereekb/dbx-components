@@ -22,7 +22,7 @@
 
 import { dirname, isAbsolute, resolve } from 'node:path';
 import { type } from 'arktype';
-import { type ClassDeclaration, type Decorator, type JSDoc, type ObjectLiteralExpression, type Project, type SourceFile, type FunctionDeclaration, type InterfaceDeclaration, type TypeAliasDeclaration, type VariableDeclaration, Node } from 'ts-morph';
+import { type ClassDeclaration, type Decorator, type JSDoc, type Project, type SourceFile, type FunctionDeclaration, type InterfaceDeclaration, type TypeAliasDeclaration, type VariableDeclaration, Node } from 'ts-morph';
 import { type DbxDocsUiExampleEntry, type DbxDocsUiExampleUseEntry, type DbxDocsUiExampleUseKind } from '../manifest/dbx-docs-ui-examples-schema.js';
 import { type ScanReadFile } from './scan-io.js';
 import { readStringProperty, splitListTagText } from './scan-extract-utils.js';
@@ -537,7 +537,7 @@ function collectCandidateModulePaths(sourceFile: SourceFile, fromFile: string): 
   const paths: string[] = [];
   for (const decl of sourceFile.getImportDeclarations()) {
     const specifier = decl.getModuleSpecifierValue();
-    if (specifier === undefined || !specifier.startsWith('.')) {
+    if (!specifier?.startsWith('.')) {
       // Path-aliased imports are not resolved — only relative imports.
       continue;
     }

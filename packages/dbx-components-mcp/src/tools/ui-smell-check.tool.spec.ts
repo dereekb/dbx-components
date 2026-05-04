@@ -204,7 +204,7 @@ describe('detectSmells — per-rule', () => {
     });
     const hits = matches.filter((m) => m.id === 'unused-scss-use');
     expect(hits.length).toBe(2);
-    expect(hits.map((h) => h.title).sort()).toEqual(['Unused @use namespace `dbx`', 'Unused @use namespace `mat`']);
+    expect(hits.map((h) => h.title).sort((a, b) => a.localeCompare(b))).toEqual(['Unused @use namespace `dbx`', 'Unused @use namespace `mat`']);
   });
 
   it('does not flag @use namespaces that are referenced', async () => {
