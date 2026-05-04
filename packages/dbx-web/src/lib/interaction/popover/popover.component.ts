@@ -1,6 +1,6 @@
 import { Component, type Type, type OnInit, type OnDestroy, type ElementRef, inject, ChangeDetectionStrategy } from '@angular/core';
 import { type NgOverlayContainerConfiguration, type NgPopoverCloseType, NgPopoverRef } from 'ng-overlay-container';
-import { AbstractTransitionWatcherDirective, DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { AbstractTransitionWatcherDirective, DbxInjectionComponent, type DbxInjectionComponentConfig, completeOnDestroy } from '@dereekb/dbx-core';
 import { Subject, filter, first, map, shareReplay, startWith } from 'rxjs';
 import { PopoverPositionStrategy } from './popover.position.strategy';
 import { type Overlay } from '@angular/cdk/overlay';
@@ -120,7 +120,7 @@ export class DbxPopoverComponent<O = unknown, I = unknown, T = unknown> extends 
   };
 
   private _startedClosing = false;
-  private readonly _closing = new Subject<void>();
+  private readonly _closing = completeOnDestroy(new Subject<void>());
 
   private _triggerCloseKeys: string[] = [];
 

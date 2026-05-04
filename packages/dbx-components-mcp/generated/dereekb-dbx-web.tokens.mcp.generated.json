@@ -1,0 +1,987 @@
+{
+  "version": 1,
+  "source": "dereekb-dbx-web",
+  "module": "@dereekb/dbx-web",
+  "generatedAt": "1970-01-01T00:00:00.000Z",
+  "generator": "@dereekb/dbx-components-mcp/scripts/generate-css-tokens.mjs",
+  "entries": [
+    {
+      "cssVariable": "--dbx-accent-color",
+      "scssVariable": "$dbx-accent-color-var",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "accent color",
+        "highlight color"
+      ],
+      "description": "dbx accent color. Alias for tertiary so legacy `accent` keeps working.",
+      "defaults": {
+        "light": "var(--mat-sys-tertiary)"
+      },
+      "seeAlso": [
+        "--mat-sys-tertiary"
+      ]
+    },
+    {
+      "cssVariable": "--dbx-accent-color-contrast",
+      "scssVariable": "$dbx-accent-color-contrast-var",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "accent color contrast"
+      ],
+      "description": "Auto-extracted token `--dbx-accent-color-contrast`. Add a sassdoc `///` block above the declaration in dbx-web for richer guidance.",
+      "defaults": {
+        "light": "var(--mat-sys-on-tertiary)"
+      }
+    },
+    {
+      "cssVariable": "--dbx-app-height",
+      "scssVariable": "$dbx-app-height-var",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "app height",
+        "viewport-bound app height",
+        "full app area height"
+      ],
+      "description": "Final app height available to the page. Equal to `app-height-base - app-height-additional-offset`. The `.dbx-app-height` / `.dbx-app-height-max` utilities consume this directly.",
+      "defaults": {},
+      "utilityClasses": [
+        ".dbx-app-height",
+        ".dbx-app-height-max"
+      ],
+      "seeAlso": [
+        "--dbx-app-height-base",
+        "--dbx-app-height-additional-offset"
+      ]
+    },
+    {
+      "cssVariable": "--dbx-app-height-additional-offset",
+      "scssVariable": "$dbx-app-height-additional-offset-var",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "app height offset",
+        "app height adjustment",
+        "shrink app height"
+      ],
+      "description": "Per-app additional offset subtracted from the app-height base. Set to a non-zero value to shrink `--dbx-app-height` by a fixed amount (e.g. for a sticky footer). Defaults to `0px`.",
+      "defaults": {
+        "light": "0px"
+      },
+      "seeAlso": [
+        "--dbx-app-height",
+        "--dbx-app-height-base"
+      ]
+    },
+    {
+      "cssVariable": "--dbx-app-height-base",
+      "scssVariable": "$dbx-app-height-base-var",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "app height base",
+        "viewport minus banners"
+      ],
+      "description": "Base app height before the additional offset. Computed as `100vh - (top-banner + bottom-banner)`. Set by the `app-height()` mixin.",
+      "defaults": {},
+      "seeAlso": [
+        "--dbx-app-height"
+      ]
+    },
+    {
+      "cssVariable": "--dbx-avatar-large-size",
+      "scssVariable": "$dbx-avatar-large-size-var",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "avatar large size",
+        "big avatar"
+      ],
+      "description": "Large avatar diameter for `<dbx-avatar>`.",
+      "defaults": {
+        "light": "128px"
+      }
+    },
+    {
+      "cssVariable": "--dbx-avatar-size",
+      "scssVariable": "$dbx-avatar-size-var",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "avatar size",
+        "default avatar diameter"
+      ],
+      "description": "Default avatar diameter for `<dbx-avatar>`.",
+      "defaults": {
+        "light": "64px"
+      }
+    },
+    {
+      "cssVariable": "--dbx-avatar-small-size",
+      "scssVariable": "$dbx-avatar-small-size-var",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "avatar small size",
+        "compact avatar"
+      ],
+      "description": "Small avatar diameter for `<dbx-avatar>`.",
+      "defaults": {
+        "light": "theming.get-dbx-avatar-small-size($theme-config)"
+      }
+    },
+    {
+      "cssVariable": "--dbx-bg-color-current",
+      "scssVariable": "$dbx-bg-color-var",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "bg color current"
+      ],
+      "description": "Auto-extracted token `--dbx-bg-color-current`. Add a sassdoc `///` block above the declaration in dbx-web for richer guidance.",
+      "defaults": {}
+    },
+    {
+      "cssVariable": "--dbx-bottom-banner-height",
+      "scssVariable": "$bottom-banner-height-var",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "bottom banner height"
+      ],
+      "description": "Auto-extracted token `--dbx-bottom-banner-height`. Add a sassdoc `///` block above the declaration in dbx-web for richer guidance.",
+      "defaults": {
+        "light": "$initial-bottom-banner-height"
+      }
+    },
+    {
+      "cssVariable": "--dbx-box-max-width",
+      "scssVariable": "$box-max-width-var",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "box max width"
+      ],
+      "description": "Auto-extracted token `--dbx-box-max-width`. Add a sassdoc `///` block above the declaration in dbx-web for richer guidance.",
+      "defaults": {
+        "light": "600px"
+      }
+    },
+    {
+      "cssVariable": "--dbx-color-bg-tone",
+      "scssVariable": "$dbx-bg-tone-var",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "color bg tone"
+      ],
+      "description": "Auto-extracted token `--dbx-color-bg-tone`. Add a sassdoc `///` block above the declaration in dbx-web for richer guidance.",
+      "defaults": {}
+    },
+    {
+      "cssVariable": "--dbx-color-current",
+      "scssVariable": "$dbx-color-var",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "color current"
+      ],
+      "description": "Auto-extracted token `--dbx-color-current`. Add a sassdoc `///` block above the declaration in dbx-web for richer guidance.",
+      "defaults": {}
+    },
+    {
+      "cssVariable": "--dbx-content-headers-count",
+      "scssVariable": "$dbx-content-headers-count-var",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "content headers count",
+        "stacked content navbar count"
+      ],
+      "description": "Number of content navbars stacked above the content area, used to compute `--dbx-content-height-base`. Defaults to `0`.",
+      "defaults": {},
+      "seeAlso": [
+        "--dbx-content-height-base"
+      ]
+    },
+    {
+      "cssVariable": "--dbx-content-height",
+      "scssVariable": "$dbx-content-height-var",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "content height",
+        "content area height",
+        "content-without-navbar height"
+      ],
+      "description": "Final content height inside one or more content navbars. Equal to `content-height-base - content-height-additional-offset`. The `.dbx-content-height` / `.dbx-content-height-max` utilities consume this directly.",
+      "defaults": {},
+      "utilityClasses": [
+        ".dbx-content-height",
+        ".dbx-content-height-max"
+      ],
+      "seeAlso": [
+        "--dbx-content-height-base",
+        "--dbx-content-height-additional-offset"
+      ]
+    },
+    {
+      "cssVariable": "--dbx-content-height-additional-offset",
+      "scssVariable": "$dbx-content-height-additional-offset-var",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "content height offset",
+        "content height adjustment",
+        "shrink content height"
+      ],
+      "description": "Per-content additional offset subtracted from the content-height base. Use to reserve space for sticky toolbars inside a content area. Defaults to `0px`.",
+      "defaults": {
+        "light": "0px"
+      },
+      "seeAlso": [
+        "--dbx-content-height",
+        "--dbx-content-height-base"
+      ]
+    },
+    {
+      "cssVariable": "--dbx-content-height-base",
+      "scssVariable": "$dbx-content-height-base-var",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "content height base",
+        "page height minus content navbars"
+      ],
+      "description": "Base content height before the additional offset. Computed as `page-height - (content-navbar-height * content-headers-count)`.",
+      "defaults": {},
+      "seeAlso": [
+        "--dbx-content-height"
+      ]
+    },
+    {
+      "cssVariable": "--dbx-content-max-width",
+      "scssVariable": "$content-max-width-var",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "content max width"
+      ],
+      "description": "Auto-extracted token `--dbx-content-max-width`. Add a sassdoc `///` block above the declaration in dbx-web for richer guidance.",
+      "defaults": {
+        "light": "1200px"
+      }
+    },
+    {
+      "cssVariable": "--dbx-content-navbar-height",
+      "scssVariable": "$content-navbar-height-var",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "content navbar height"
+      ],
+      "description": "Auto-extracted token `--dbx-content-navbar-height`. Add a sassdoc `///` block above the declaration in dbx-web for richer guidance.",
+      "defaults": {
+        "light": "56px"
+      }
+    },
+    {
+      "cssVariable": "--dbx-content-pit-rounded-border-radius",
+      "scssVariable": "$dbx-content-pit-rounded-border-radius-var",
+      "source": "dbx-web",
+      "role": "radius",
+      "intents": [
+        "pit radius",
+        "rounded pit corner",
+        "content pit radius"
+      ],
+      "description": "Border radius for the `[dbxContentPit]` rounded variant. Defaults to `var(--mat-sys-corner-medium)`.",
+      "defaults": {
+        "light": "var(--mat-sys-corner-medium)"
+      },
+      "seeAlso": [
+        "--mat-sys-corner-medium"
+      ]
+    },
+    {
+      "cssVariable": "--dbx-content-pit-scrollable-max-height",
+      "scssVariable": "$dbx-content-pit-scrollable-max-height-var",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "content pit scrollable max height"
+      ],
+      "description": "Auto-extracted token `--dbx-content-pit-scrollable-max-height`. Add a sassdoc `///` block above the declaration in dbx-web for richer guidance.",
+      "defaults": {
+        "light": "140px"
+      }
+    },
+    {
+      "cssVariable": "--dbx-default-color",
+      "scssVariable": "$dbx-default-color-var",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "default color",
+        "neutral default",
+        "fallback color"
+      ],
+      "description": "dbx default color. Aliased from `--mat-sys-on-surface` — the canonical \"default\" foreground when no semantic role applies.",
+      "defaults": {
+        "light": "var(--mat-sys-on-surface)"
+      },
+      "seeAlso": [
+        "--mat-sys-on-surface"
+      ]
+    },
+    {
+      "cssVariable": "--dbx-default-color-contrast",
+      "scssVariable": "$dbx-default-color-contrast-var",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "default color contrast"
+      ],
+      "description": "Auto-extracted token `--dbx-default-color-contrast`. Add a sassdoc `///` block above the declaration in dbx-web for richer guidance.",
+      "defaults": {
+        "light": "var(--mat-sys-surface-container)"
+      }
+    },
+    {
+      "cssVariable": "--dbx-disabled-color",
+      "scssVariable": "$dbx-disabled-color-var",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "disabled color",
+        "dimmed color",
+        "inactive color"
+      ],
+      "description": "dbx disabled color. Aliased from `--mat-sys-outline-variant` — used for disabled control surfaces and dimmed accents.",
+      "defaults": {
+        "light": "var(--mat-sys-outline-variant)"
+      },
+      "seeAlso": [
+        "--mat-sys-outline-variant"
+      ]
+    },
+    {
+      "cssVariable": "--dbx-disabled-color-contrast",
+      "scssVariable": "$dbx-disabled-color-contrast-var",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "disabled color contrast"
+      ],
+      "description": "Auto-extracted token `--dbx-disabled-color-contrast`. Add a sassdoc `///` block above the declaration in dbx-web for richer guidance.",
+      "defaults": {
+        "light": "var(--mat-sys-outline)"
+      }
+    },
+    {
+      "cssVariable": "--dbx-error-color",
+      "scssVariable": "$dbx-error-color-var",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "error color",
+        "destructive color"
+      ],
+      "description": "Error/destructive color (alias for warn). Aliased from `--mat-sys-error`.",
+      "defaults": {
+        "light": "var(--mat-sys-error)"
+      },
+      "seeAlso": [
+        "--mat-sys-error"
+      ]
+    },
+    {
+      "cssVariable": "--dbx-grey-color",
+      "scssVariable": "$dbx-grey-color-var",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "grey color",
+        "neutral color",
+        "muted accent color"
+      ],
+      "description": "dbx grey color. Aliased from `--mat-sys-outline` for neutral chrome / muted accents.",
+      "defaults": {
+        "light": "var(--mat-sys-outline)"
+      },
+      "seeAlso": [
+        "--mat-sys-outline"
+      ]
+    },
+    {
+      "cssVariable": "--dbx-grey-color-contrast",
+      "scssVariable": "$dbx-grey-color-contrast-var",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "grey color contrast"
+      ],
+      "description": "Auto-extracted token `--dbx-grey-color-contrast`. Add a sassdoc `///` block above the declaration in dbx-web for richer guidance.",
+      "defaults": {
+        "light": "var(--mat-sys-surface)"
+      }
+    },
+    {
+      "cssVariable": "--dbx-nested-content-height",
+      "scssVariable": "$dbx-nested-content-height-var",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "nested content height",
+        "content minus one navbar"
+      ],
+      "description": "Nested content height — content height minus one content-navbar tier, for nested content scrolls. Equal to `content-height - content-navbar-height`.",
+      "defaults": {},
+      "utilityClasses": [
+        ".dbx-nested-content-height",
+        ".dbx-nested-content-height-max"
+      ],
+      "seeAlso": [
+        "--dbx-content-height",
+        "--dbx-content-navbar-height"
+      ]
+    },
+    {
+      "cssVariable": "--dbx-notice-color",
+      "scssVariable": "$dbx-notice-color-var",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "notice color",
+        "info color",
+        "informational callout",
+        "attention color"
+      ],
+      "description": "dbx notice color. Custom palette entry from the dbx theme config (no Material equivalent). Use for informational callouts.",
+      "defaults": {
+        "light": "theming.get-dbx-notice-color($theme-config)"
+      }
+    },
+    {
+      "cssVariable": "--dbx-notice-color-contrast",
+      "scssVariable": "$dbx-notice-color-contrast-var",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "notice color contrast"
+      ],
+      "description": "Auto-extracted token `--dbx-notice-color-contrast`. Add a sassdoc `///` block above the declaration in dbx-web for richer guidance.",
+      "defaults": {
+        "light": "var(--mat-sys-surface)"
+      }
+    },
+    {
+      "cssVariable": "--dbx-ok-color",
+      "scssVariable": "$dbx-ok-color-var",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "ok color",
+        "neutral acknowledged color",
+        "completed color"
+      ],
+      "description": "dbx ok color. Custom palette entry from the dbx theme config (no Material equivalent). Use for neutral acknowledged states.",
+      "defaults": {
+        "light": "theming.get-dbx-ok-color($theme-config)"
+      }
+    },
+    {
+      "cssVariable": "--dbx-ok-color-contrast",
+      "scssVariable": "$dbx-ok-color-contrast-var",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "ok color contrast"
+      ],
+      "description": "Auto-extracted token `--dbx-ok-color-contrast`. Add a sassdoc `///` block above the declaration in dbx-web for richer guidance.",
+      "defaults": {
+        "light": "var(--mat-sys-surface)"
+      }
+    },
+    {
+      "cssVariable": "--dbx-on-surface-color",
+      "scssVariable": "$dbx-on-surface-color-var",
+      "source": "dbx-web",
+      "role": "text-color",
+      "intents": [
+        "body text color",
+        "default foreground",
+        "primary text"
+      ],
+      "description": "Default body text on surfaces. Aliased from `--mat-sys-on-surface`.",
+      "defaults": {
+        "light": "var(--mat-sys-on-surface)"
+      },
+      "seeAlso": [
+        "--mat-sys-on-surface"
+      ]
+    },
+    {
+      "cssVariable": "--dbx-on-surface-variant-color",
+      "scssVariable": "$dbx-on-surface-variant-color-var",
+      "source": "dbx-web",
+      "role": "text-color",
+      "intents": [
+        "hint text color",
+        "secondary text",
+        "subtitle text",
+        "muted text",
+        "caption text"
+      ],
+      "description": "Hint / secondary text color. Aliased from `--mat-sys-on-surface-variant`.",
+      "defaults": {
+        "light": "var(--mat-sys-on-surface-variant)"
+      },
+      "antiUseNotes": "Don't write `color: rgba(0,0,0,0.6)` for hint text — use this var.",
+      "utilityClasses": [
+        ".dbx-text-hint"
+      ],
+      "seeAlso": [
+        "--mat-sys-on-surface-variant"
+      ]
+    },
+    {
+      "cssVariable": "--dbx-outline-color",
+      "scssVariable": "$dbx-outline-color-var",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "border color",
+        "divider color",
+        "outline color"
+      ],
+      "description": "Border / divider color. Aliased from `--mat-sys-outline`.",
+      "defaults": {
+        "light": "var(--mat-sys-outline)"
+      },
+      "seeAlso": [
+        "--mat-sys-outline"
+      ]
+    },
+    {
+      "cssVariable": "--dbx-outline-variant-color",
+      "scssVariable": "$dbx-outline-variant-color-var",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "subtle border color",
+        "low-contrast outline",
+        "decorative divider"
+      ],
+      "description": "Subtle border color. Aliased from `--mat-sys-outline-variant`.",
+      "defaults": {
+        "light": "var(--mat-sys-outline-variant)"
+      },
+      "seeAlso": [
+        "--mat-sys-outline-variant"
+      ]
+    },
+    {
+      "cssVariable": "--dbx-padding-0",
+      "scssVariable": "$padding-0-var",
+      "source": "dbx-web",
+      "role": "spacing",
+      "intents": [
+        "zero spacing",
+        "padding 0",
+        "no padding"
+      ],
+      "description": "Padding step 0 — zero spacing. Useful as a reset value where a tier is required.",
+      "defaults": {
+        "light": "0px"
+      }
+    },
+    {
+      "cssVariable": "--dbx-padding-1",
+      "scssVariable": "$padding-1-var",
+      "source": "dbx-web",
+      "role": "spacing",
+      "intents": [
+        "tight spacing",
+        "padding 1",
+        "2px spacing"
+      ],
+      "description": "Padding step 1 — tightest spacing tier. Use between adjacent inline elements.",
+      "defaults": {
+        "light": "2px"
+      },
+      "utilityClasses": [
+        ".dbx-p1",
+        ".dbx-mb1"
+      ]
+    },
+    {
+      "cssVariable": "--dbx-padding-2",
+      "scssVariable": "$padding-2-var",
+      "source": "dbx-web",
+      "role": "spacing",
+      "intents": [
+        "small spacing",
+        "padding 2",
+        "6px spacing"
+      ],
+      "description": "Padding step 2 — small spacing tier. Use between sibling form rows or chip lists.",
+      "defaults": {
+        "light": "6px"
+      },
+      "utilityClasses": [
+        ".dbx-p2",
+        ".dbx-mb2"
+      ]
+    },
+    {
+      "cssVariable": "--dbx-padding-3",
+      "scssVariable": "$padding-3-var",
+      "source": "dbx-web",
+      "role": "spacing",
+      "intents": [
+        "section gap",
+        "default padding",
+        "card padding",
+        "12px spacing",
+        "padding 3"
+      ],
+      "description": "Padding step 3 — default content padding. The canonical \"card padding\" / \"section gap\".",
+      "defaults": {
+        "light": "12px"
+      },
+      "antiUseNotes": "Don't hardcode `padding: 12px` — reach for this var or a `.dbx-p3` utility.",
+      "utilityClasses": [
+        ".dbx-p3",
+        ".dbx-mb3",
+        ".dbx-mt3"
+      ]
+    },
+    {
+      "cssVariable": "--dbx-padding-4",
+      "scssVariable": "$padding-4-var",
+      "source": "dbx-web",
+      "role": "spacing",
+      "intents": [
+        "emphasised spacing",
+        "padding 4",
+        "18px spacing"
+      ],
+      "description": "Padding step 4 — emphasised spacing. Use between top-level sections.",
+      "defaults": {
+        "light": "18px"
+      },
+      "utilityClasses": [
+        ".dbx-p4",
+        ".dbx-mb4"
+      ]
+    },
+    {
+      "cssVariable": "--dbx-padding-5",
+      "scssVariable": "$padding-5-var",
+      "source": "dbx-web",
+      "role": "spacing",
+      "intents": [
+        "page padding",
+        "padding 5",
+        "24px spacing"
+      ],
+      "description": "Padding step 5 — page padding. Use around full-width page surfaces.",
+      "defaults": {
+        "light": "24px"
+      },
+      "utilityClasses": [
+        ".dbx-p5",
+        ".dbx-mb5"
+      ]
+    },
+    {
+      "cssVariable": "--dbx-page-height",
+      "scssVariable": "$dbx-page-height-var",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "page height",
+        "page area height",
+        "page-without-navbar height"
+      ],
+      "description": "Final page height inside a page navbar. Equal to `page-height-base - page-height-additional-offset`. The `.dbx-page-height` / `.dbx-page-height-max` utilities consume this directly.",
+      "defaults": {},
+      "utilityClasses": [
+        ".dbx-page-height",
+        ".dbx-page-height-max"
+      ],
+      "seeAlso": [
+        "--dbx-page-height-base",
+        "--dbx-page-height-additional-offset"
+      ]
+    },
+    {
+      "cssVariable": "--dbx-page-height-additional-offset",
+      "scssVariable": "$dbx-page-height-additional-offset-var",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "page height offset",
+        "page height adjustment",
+        "shrink page height"
+      ],
+      "description": "Per-page additional offset subtracted from the page-height base. Use to shrink `--dbx-page-height` on pages that overlay extra chrome. Defaults to `0px`.",
+      "defaults": {
+        "light": "0px"
+      },
+      "seeAlso": [
+        "--dbx-page-height",
+        "--dbx-page-height-base"
+      ]
+    },
+    {
+      "cssVariable": "--dbx-page-height-base",
+      "scssVariable": "$dbx-page-height-base-var",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "page height base",
+        "app height minus page navbar"
+      ],
+      "description": "Base page height before the additional offset. Computed as `app-height - page-navbar-height`.",
+      "defaults": {},
+      "seeAlso": [
+        "--dbx-page-height"
+      ]
+    },
+    {
+      "cssVariable": "--dbx-page-navbar-height",
+      "scssVariable": "$page-navbar-height-var",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "page navbar height"
+      ],
+      "description": "Auto-extracted token `--dbx-page-navbar-height`. Add a sassdoc `///` block above the declaration in dbx-web for richer guidance.",
+      "defaults": {
+        "light": "52px"
+      }
+    },
+    {
+      "cssVariable": "--dbx-primary-color",
+      "scssVariable": "$dbx-primary-color-var",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "primary color",
+        "brand color",
+        "primary action color"
+      ],
+      "description": "dbx primary brand color. Aliased from `--mat-sys-primary` so theme switches flow through.",
+      "defaults": {
+        "light": "var(--mat-sys-primary)"
+      },
+      "seeAlso": [
+        "--mat-sys-primary"
+      ]
+    },
+    {
+      "cssVariable": "--dbx-primary-color-contrast",
+      "scssVariable": "$dbx-primary-color-contrast-var",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "primary color contrast"
+      ],
+      "description": "Auto-extracted token `--dbx-primary-color-contrast`. Add a sassdoc `///` block above the declaration in dbx-web for richer guidance.",
+      "defaults": {
+        "light": "var(--mat-sys-on-primary)"
+      }
+    },
+    {
+      "cssVariable": "--dbx-secondary-color",
+      "scssVariable": "$dbx-secondary-color-var",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "secondary color",
+        "supporting accent"
+      ],
+      "description": "dbx secondary brand color. Aliased from `--mat-sys-secondary`.",
+      "defaults": {
+        "light": "var(--mat-sys-secondary)"
+      },
+      "seeAlso": [
+        "--mat-sys-secondary"
+      ]
+    },
+    {
+      "cssVariable": "--dbx-secondary-color-contrast",
+      "scssVariable": "$dbx-secondary-color-contrast-var",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "secondary color contrast"
+      ],
+      "description": "Auto-extracted token `--dbx-secondary-color-contrast`. Add a sassdoc `///` block above the declaration in dbx-web for richer guidance.",
+      "defaults": {
+        "light": "var(--mat-sys-on-secondary)"
+      }
+    },
+    {
+      "cssVariable": "--dbx-success-color",
+      "scssVariable": "$dbx-success-color-var",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "success color",
+        "positive color",
+        "confirmation color",
+        "ok-state color"
+      ],
+      "description": "dbx success color. Custom palette entry from the dbx theme config (no Material equivalent). Use for confirmation / positive states.",
+      "defaults": {
+        "light": "theming.get-dbx-success-color($theme-config)"
+      }
+    },
+    {
+      "cssVariable": "--dbx-success-color-contrast",
+      "scssVariable": "$dbx-success-color-contrast-var",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "success color contrast"
+      ],
+      "description": "Auto-extracted token `--dbx-success-color-contrast`. Add a sassdoc `///` block above the declaration in dbx-web for richer guidance.",
+      "defaults": {
+        "light": "var(--mat-sys-surface)"
+      }
+    },
+    {
+      "cssVariable": "--dbx-surface-color",
+      "scssVariable": "$dbx-surface-color-var",
+      "source": "dbx-web",
+      "role": "surface",
+      "intents": [
+        "base surface",
+        "page background",
+        "surface background",
+        "app background"
+      ],
+      "description": "Default surface background. Aliased from `--mat-sys-surface`.",
+      "defaults": {
+        "light": "var(--mat-sys-surface)"
+      },
+      "antiUseNotes": "Don't hardcode `background: #fff`; this token flips automatically in dark mode.",
+      "recommendedPrimitive": "content-box",
+      "seeAlso": [
+        "--mat-sys-surface"
+      ]
+    },
+    {
+      "cssVariable": "--dbx-surface-container-color",
+      "scssVariable": "$dbx-surface-container-color-var",
+      "source": "dbx-web",
+      "role": "surface",
+      "intents": [
+        "card background",
+        "container surface",
+        "raised surface"
+      ],
+      "description": "Container surface — the canonical card / content-box background. Aliased from `--mat-sys-surface-container`.",
+      "defaults": {
+        "light": "var(--mat-sys-surface-container)"
+      },
+      "antiUseNotes": "Don't hardcode `background: #f8f9fa`; use this var so dark mode flips automatically.",
+      "recommendedPrimitive": "content-box",
+      "seeAlso": [
+        "--mat-sys-surface-container"
+      ]
+    },
+    {
+      "cssVariable": "--dbx-tertiary-color",
+      "scssVariable": "$dbx-tertiary-color-var",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "tertiary color",
+        "accent color"
+      ],
+      "description": "dbx tertiary brand color. Aliased from `--mat-sys-tertiary`.",
+      "defaults": {
+        "light": "var(--mat-sys-tertiary)"
+      },
+      "seeAlso": [
+        "--mat-sys-tertiary"
+      ]
+    },
+    {
+      "cssVariable": "--dbx-tertiary-color-contrast",
+      "scssVariable": "$dbx-tertiary-color-contrast-var",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "tertiary color contrast"
+      ],
+      "description": "Auto-extracted token `--dbx-tertiary-color-contrast`. Add a sassdoc `///` block above the declaration in dbx-web for richer guidance.",
+      "defaults": {
+        "light": "var(--mat-sys-on-tertiary)"
+      }
+    },
+    {
+      "cssVariable": "--dbx-top-banner-height",
+      "scssVariable": "$top-banner-height-var",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "top banner height"
+      ],
+      "description": "Auto-extracted token `--dbx-top-banner-height`. Add a sassdoc `///` block above the declaration in dbx-web for richer guidance.",
+      "defaults": {
+        "light": "$initial-top-banner-height"
+      }
+    },
+    {
+      "cssVariable": "--dbx-two-column-left-width",
+      "scssVariable": "$two-column-left-width-var",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "two column left width"
+      ],
+      "description": "Auto-extracted token `--dbx-two-column-left-width`. Add a sassdoc `///` block above the declaration in dbx-web for richer guidance.",
+      "defaults": {
+        "light": "320px"
+      }
+    },
+    {
+      "cssVariable": "--dbx-warn-color",
+      "scssVariable": "$dbx-warn-color-var",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "warn color",
+        "error color",
+        "destructive color"
+      ],
+      "description": "dbx warn/error color. Aliased from `--mat-sys-error`.",
+      "defaults": {
+        "light": "var(--mat-sys-error)"
+      },
+      "seeAlso": [
+        "--mat-sys-error"
+      ]
+    },
+    {
+      "cssVariable": "--dbx-warn-color-contrast",
+      "scssVariable": "$dbx-warn-color-contrast-var",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "warn color contrast"
+      ],
+      "description": "Auto-extracted token `--dbx-warn-color-contrast`. Add a sassdoc `///` block above the declaration in dbx-web for richer guidance.",
+      "defaults": {
+        "light": "var(--mat-sys-on-error)"
+      }
+    }
+  ]
+}

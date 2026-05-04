@@ -121,6 +121,53 @@ export class DemoApiSchoolGroupTestContextInstance<F extends FirebaseAdminFuncti
     expect(drift?.message).toMatch(/should be named `sg`/);
   });
 
+  it('does not fire triplet-incomplete on an AuthorizedUser pair recognized via inheritance', () => {
+    const extraction = fix(`
+export class DemoApiAuthorizedUserTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends AuthorizedUserTestContextFixture<DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiAuthorizedUserTestContextInstance<F>> {}
+export class DemoApiAuthorizedUserTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends AuthorizedUserTestContextInstance<DemoApiFunctionContextFixtureInstance<F>> {}
+`);
+    const result = validateAppFixtures(extraction);
+    expect(result.diagnostics.find((d) => d.code === 'triplet-incomplete')).toBeUndefined();
+    expect(result.diagnostics.find((d) => d.code === 'archetype-inconsistent')).toBeUndefined();
+    expect(result.diagnostics.find((d) => d.code === 'params-field-naming')).toBeUndefined();
+  });
+
+  it('does not fire triplet-incomplete on an AuthorizedUser pair recognized via authorizedUserContextFactory', () => {
+    const extraction = fix(`
+export class DemoApiAuthorizedUserTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends AuthorizedUserTestContextFixture<DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiAuthorizedUserTestContextInstance<F>> {}
+export class DemoApiAuthorizedUserTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends AuthorizedUserTestContextInstance<DemoApiFunctionContextFixtureInstance<F>> {}
+export const demoAuthorizedUserContextFactory = (params: { onboarded?: boolean }) =>
+  authorizedUserContextFactory<DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiAuthorizedUserTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiAuthorizedUserTestContextFixture<FirebaseAdminFunctionTestContextInstance>>({
+    makeFixture: (f) => new DemoApiAuthorizedUserTestContextFixture(f),
+    makeInstance: (uid, testInstance) => new DemoApiAuthorizedUserTestContextInstance(uid, testInstance)
+  });
+export const demoAuthorizedUserContext = demoAuthorizedUserContextFactory({});
+`);
+    const result = validateAppFixtures(extraction);
+    expect(result.diagnostics.find((d) => d.code === 'triplet-incomplete')).toBeUndefined();
+  });
+
+  it('does not fire triplet-incomplete on a pair tagged @dbxFixtureNotModel', () => {
+    const extraction = fix(`
+/** @dbxFixtureNotModel */
+export class DemoApiCustomTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<Custom, CustomDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiCustomTestContextInstance<F>> {}
+export class DemoApiCustomTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<Custom, CustomDocument, DemoApiFunctionContextFixtureInstance<F>> {}
+`);
+    const result = validateAppFixtures(extraction);
+    expect(result.diagnostics.find((d) => d.code === 'triplet-incomplete')).toBeUndefined();
+  });
+
+  it('still flags forwarder-missing on an authorized-user pair', () => {
+    const extraction = fix(`
+export class DemoApiAuthorizedUserTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends AuthorizedUserTestContextFixture<DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiAuthorizedUserTestContextInstance<F>> {}
+export class DemoApiAuthorizedUserTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends AuthorizedUserTestContextInstance<DemoApiFunctionContextFixtureInstance<F>> {
+  async loadProfile() { return null; }
+}
+`);
+    const result = validateAppFixtures(extraction);
+    expect(result.diagnostics.find((d) => d.code === 'forwarder-missing' && d.message.includes('loadProfile'))).toBeDefined();
+  });
+
   it('does not fire params-field-naming when the parent field already matches the short alias', () => {
     const registry: FixtureModelRegistry = {
       entries: [{ name: 'SchoolGroup', modelType: 'schoolGroup', collectionPrefix: 'sg' }]

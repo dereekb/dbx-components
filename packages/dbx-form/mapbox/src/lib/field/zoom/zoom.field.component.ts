@@ -4,13 +4,14 @@ import { ChangeDetectionStrategy, Component, type OnDestroy, type OnInit, inject
 import { type FieldTypeConfig, type FormlyFieldProps } from '@ngx-formly/core';
 import { FieldType } from '@ngx-formly/material';
 import { BehaviorSubject, shareReplay, startWith, switchMap, type Observable } from 'rxjs';
-import { filterMaybe, SubscriptionObject } from '@dereekb/rxjs';
+import { filterMaybe } from '@dereekb/rxjs';
 import { type ZoomLevel, type Maybe, type LatLngPoint, latLngPoint } from '@dereekb/util';
 import { DbxMapboxService, DbxMapboxMapStore, type MapboxZoomLevel, provideMapboxStoreIfParentIsUnavailable, mapboxZoomLevel, MAPBOX_MAX_ZOOM_LEVEL, MAPBOX_MIN_ZOOM_LEVEL, DbxMapboxModule } from '@dereekb/dbx-web/mapbox';
 import { NgClass } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { completeOnDestroy, cleanSubscription } from '@dereekb/dbx-core';
 
 export interface DbxFormMapboxZoomComponentFieldProps extends Omit<FormlyFieldProps, 'min' | 'max'> {
   /**
@@ -80,10 +81,10 @@ export class DbxFormMapboxZoomFieldComponent<T extends DbxFormMapboxZoomComponen
 
   readonly compactClassSignal = toSignal(this.compactClass$, { initialValue: '' });
 
-  private readonly _sub = new SubscriptionObject();
-  private readonly _center = new BehaviorSubject<Maybe<LatLngPoint>>(undefined);
+  private readonly _sub = cleanSubscription();
+  private readonly _center = completeOnDestroy(new BehaviorSubject<Maybe<LatLngPoint>>(undefined));
 
-  private readonly _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
+  private readonly _formControlObs = completeOnDestroy(new BehaviorSubject<Maybe<AbstractControl>>(undefined));
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
 
   readonly value$ = this.formControl$.pipe(
@@ -176,9 +177,6 @@ export class DbxFormMapboxZoomFieldComponent<T extends DbxFormMapboxZoomComponen
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
-    this._formControlObs.complete();
-    this._center.complete();
-    this._sub.destroy();
 
     if (!this._undoZoomLimit) {
       this.dbxMapboxMapStore.setZoomRange({});

@@ -22,6 +22,7 @@ import type { FilterRegistry } from '../registry/filters-runtime.js';
 import type { ForgeFieldRegistry } from '../registry/forge-fields.js';
 import type { PipeRegistry } from '../registry/pipes-runtime.js';
 import type { SemanticTypeRegistry } from '../registry/semantic-types.js';
+import type { TokenRegistry } from '../registry/tokens-runtime.js';
 import type { UiComponentRegistry } from '../registry/ui-components-runtime.js';
 import { registerFormFieldsResource } from './form-fields.resource.js';
 import { registerFirebaseModelsResource } from './firebase-models.resource.js';
@@ -30,6 +31,7 @@ import { registerUiComponentsResource } from './ui-components.resource.js';
 import { registerPipesResource } from './pipes.resource.js';
 import { registerFiltersResource } from './filters.resource.js';
 import { registerSemanticTypesResource } from './semantic-types.resource.js';
+import { registerTokensResource } from './tokens.resource.js';
 
 /**
  * Options consumed by {@link registerResources}. Mirrors {@link RegisterToolsOptions}
@@ -44,6 +46,7 @@ export interface RegisterResourcesOptions {
   readonly uiComponentRegistry?: UiComponentRegistry;
   readonly actionRegistry?: ActionRegistry;
   readonly filterRegistry?: FilterRegistry;
+  readonly tokenRegistry?: TokenRegistry;
 }
 
 /**
@@ -73,5 +76,8 @@ export function registerResources(server: McpServer, options: RegisterResourcesO
   }
   if (options.semanticTypeRegistry !== undefined) {
     registerSemanticTypesResource(server, { registry: options.semanticTypeRegistry });
+  }
+  if (options.tokenRegistry !== undefined) {
+    registerTokensResource(server, { registry: options.tokenRegistry });
   }
 }

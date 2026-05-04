@@ -3,7 +3,6 @@ import { FieldType } from '@ngx-formly/material';
 import { type FieldTypeConfig, type FormlyFieldProps } from '@ngx-formly/core';
 import { type HoursAndMinutes, type TimeUnit, ALL_TIME_UNITS, hoursAndMinutesToTimeUnit, millisecondsToTimeUnit, minutesToHoursAndMinutes, timeUnitToMilliseconds } from '@dereekb/util';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { SubscriptionObject } from '@dereekb/rxjs';
 import { distinctUntilChanged, startWith } from 'rxjs';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -13,6 +12,7 @@ import { type TimeDurationFieldValueMode } from './duration.field';
 import { type TimeDurationData, durationDataToMilliseconds, formatDurationString, millisecondsToDurationData, parseDurationString } from '@dereekb/date';
 import { DbxPopoverService } from '@dereekb/dbx-web';
 import { DbxDurationPickerPopoverComponent } from './duration.picker.popover.component';
+import { cleanSubscription } from '@dereekb/dbx-core';
 
 /**
  * Formly field props for the time duration component.
@@ -70,8 +70,8 @@ export interface TimeDurationFormlyFieldProps extends FormlyFieldProps {
 export class DbxTimeDurationFieldComponent extends FieldType<FieldTypeConfig<TimeDurationFormlyFieldProps>> implements OnInit, OnDestroy {
   private readonly _popoverService = inject(DbxPopoverService);
 
-  private readonly _inputSync = new SubscriptionObject();
-  private readonly _outputSync = new SubscriptionObject();
+  private readonly _inputSync = cleanSubscription();
+  private readonly _outputSync = cleanSubscription();
 
   private _suppressOutputSync = false;
   private _currentDurationData: TimeDurationData = {};
@@ -190,8 +190,6 @@ export class DbxTimeDurationFieldComponent extends FieldType<FieldTypeConfig<Tim
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
-    this._inputSync.destroy();
-    this._outputSync.destroy();
   }
 
   /**

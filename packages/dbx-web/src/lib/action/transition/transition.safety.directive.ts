@@ -2,7 +2,7 @@ import { Directive, type OnInit, type OnDestroy, ViewContainerRef, inject, input
 import { MatDialog, type MatDialogRef } from '@angular/material/dialog';
 import { type HookResult, type Transition, TransitionService } from '@uirouter/core';
 import { type Observable, of, race, delay, first, map, mergeMap, tap, BehaviorSubject, combineLatest, firstValueFrom } from 'rxjs';
-import { DbxActionContextStoreSourceInstance, canTriggerAction, isIdleActionState } from '@dereekb/dbx-core';
+import { DbxActionContextStoreSourceInstance, canTriggerAction, isIdleActionState, completeOnDestroy } from '@dereekb/dbx-core';
 import { type DbxActionTransitionSafetyDialogResult, DbxActionUIRouterTransitionSafetyDialogComponent } from './transition.safety.dialog.component';
 import { type Maybe } from '@dereekb/util';
 
@@ -41,7 +41,7 @@ export type DbxActionTransitionSafetyType = 'none' | 'dialog' | 'auto';
   standalone: true
 })
 export class DbxActionTransitionSafetyDirective<T, O> implements OnInit, OnDestroy {
-  protected readonly _safetyType = new BehaviorSubject<Maybe<DbxActionTransitionSafetyType>>(undefined);
+  protected readonly _safetyType = completeOnDestroy(new BehaviorSubject<Maybe<DbxActionTransitionSafetyType>>(undefined));
 
   readonly dbxActionTransitionSafety = input<DbxActionTransitionSafetyType>();
 

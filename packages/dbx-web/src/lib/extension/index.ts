@@ -4,6 +4,7 @@ export * from './download';
 export * from './preview';
 export * from './structure';
 // export * from './table'; // nothing to export
+export * from './title';
 export * from './widget';
 export * from './zip';
 export * from './help';

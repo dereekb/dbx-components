@@ -5,6 +5,7 @@
  * the per-tool wrappers stay thin.
  */
 
+import { KNOWN_NON_MODEL_FIXTURE_FAMILIES } from './framework-fixtures.js';
 import type { AppFixturesExtraction, FixtureEntry, FixtureMethod, FixtureValidationResult } from './types.js';
 
 /**
@@ -18,9 +19,16 @@ export function formatListAsMarkdown(extraction: AppFixturesExtraction): string 
   if (extraction.entries.length === 0) {
     lines.push('', '_No model fixtures found._');
   } else {
-    lines.push('', '| Model | Archetype | Fixture | Instance | Params | Factory | Singleton | Methods (F/I) | Lines |', '|---|---|---|---|---|---|---|---|---|');
+    lines.push('', '| Model | Kind | Archetype | Fixture | Instance | Params | Factory | Singleton | Methods (F/I) | Lines |', '|---|---|---|---|---|---|---|---|---|---|');
     for (const e of extraction.entries) {
-      lines.push('| ' + [e.model, e.archetype, code(e.fixtureClassName), code(e.instanceClassName), code(e.paramsTypeName), code(e.factoryName ?? '—'), code(e.singletonName ?? '—'), `${e.fixtureMethods.length}/${e.instanceMethods.length}`, `${e.fixtureLine}-${e.instanceEndLine}`].join(' | ') + ' |');
+      lines.push('| ' + [e.model, e.kind, e.archetype, code(e.fixtureClassName), code(e.instanceClassName), code(e.paramsTypeName), code(e.factoryName ?? '—'), code(e.singletonName ?? '—'), `${e.fixtureMethods.length}/${e.instanceMethods.length}`, `${e.fixtureLine}-${e.instanceEndLine}`].join(' | ') + ' |');
+    }
+    const nonModelEntries = extraction.entries.filter((e) => e.kind !== 'firestore-model');
+    if (nonModelEntries.length > 0) {
+      lines.push('', '### Non-model fixtures');
+      for (const e of nonModelEntries) {
+        lines.push('', `- **${e.model}** — ${nonModelDescription(e)}`);
+      }
     }
   }
   if (extraction.unrecognizedClassNames.length > 0) {
@@ -56,7 +64,22 @@ export function formatLookupAsMarkdown(extraction: AppFixturesExtraction, entry:
 }
 
 function appendLookupHeader(lines: string[], extraction: AppFixturesExtraction, entry: FixtureEntry): void {
-  lines.push(`# Fixture: \`${entry.prefix}${entry.model}\``, '', `Source: \`${extraction.fixturePath}\``, `Archetype: \`${entry.archetype}\``, '');
+  lines.push(`# Fixture: \`${entry.prefix}${entry.model}\``, '', `Source: \`${extraction.fixturePath}\``, `Kind: \`${entry.kind}\``, `Archetype: \`${entry.archetype}\``);
+  if (entry.kind !== 'firestore-model') {
+    lines.push('', `> ${nonModelDescription(entry)}`);
+  }
+  lines.push('');
+}
+
+function nonModelDescription(entry: FixtureEntry): string {
+  if (entry.nonModelFamily === 'jsdoc-tag') {
+    return 'Tagged `@dbxFixtureNotModel` — explicitly opted out of model validation.';
+  }
+  const family = KNOWN_NON_MODEL_FIXTURE_FAMILIES.find((f) => f.kind === entry.kind);
+  if (family) {
+    return `${family.description} Registered via \`${family.factoryName}\` (\`${family.module}\`).`;
+  }
+  return 'Non-Firestore-model fixture.';
 }
 
 function appendLookupTriplet(lines: string[], entry: FixtureEntry): void {

@@ -13,12 +13,14 @@ import { loadFilterRegistry, type LoadFilterRegistryResult } from './manifest/lo
 import { loadForgeFieldRegistry, type LoadForgeFieldRegistryResult } from './manifest/load-forge-fields-registry.js';
 import { loadPipeRegistry, type LoadPipeRegistryResult } from './manifest/load-pipes-registry.js';
 import { loadSemanticTypeRegistry, type LoadSemanticTypeRegistryResult } from './manifest/load-registry.js';
+import { loadTokenRegistry, type LoadTokenRegistryResult } from './manifest/load-tokens-registry.js';
 import { loadUiComponentRegistry, type LoadUiComponentRegistryResult } from './manifest/load-ui-components-registry.js';
 import type { ActionRegistry } from './registry/actions-runtime.js';
 import type { FilterRegistry } from './registry/filters-runtime.js';
 import type { ForgeFieldRegistry } from './registry/forge-fields.js';
 import type { PipeRegistry } from './registry/pipes-runtime.js';
 import type { SemanticTypeRegistry } from './registry/semantic-types.js';
+import type { TokenRegistry } from './registry/tokens-runtime.js';
 import type { UiComponentRegistry } from './registry/ui-components-runtime.js';
 import { FIREBASE_MODELS } from './registry/firebase-models.js';
 import type { FixtureModelRegistry } from './tools/model-fixture-shared/index.js';
@@ -64,6 +66,11 @@ Resource URIs are namespaced by domain:
 - dbx://ui/components[/{slug}|/category/{category}|/kind/{kind}]
 - dbx://pipe/entries[/{slug}|/category/{category}]
 - dbx://filter/entries[/{slug}|/kind/{kind}]
+- dbx://token/entries[/{cssVariable}|/source/{source}|/role/{role}]
+
+UI styling reverse/forward lookup:
+- dbx_css_token_lookup — forward: intent/value/role/component → recommended \`var(--…)\` + utility class + dbx-web primitive.
+- dbx_ui_smell_check   — reverse: paste component HTML/SCSS, get smells + canonical fix. **Run this after writing component SCSS** so hardcoded paddings/radii/shadows/colors get caught before they ship.
 
 Fall back to dbx-components prose skills only for content this server doesn't carry: Firestore security rules, multi-file orchestration walkthroughs, model design phase, naming/tier checklists, and decision/why content beyond catalog lookup.`;
 
@@ -82,12 +89,14 @@ export interface CreateServerOptions {
   readonly pipeRegistry?: PipeRegistry;
   readonly actionRegistry?: ActionRegistry;
   readonly filterRegistry?: FilterRegistry;
+  readonly tokenRegistry?: TokenRegistry;
   readonly onLoaderResult?: (result: LoadSemanticTypeRegistryResult) => void;
   readonly onUiLoaderResult?: (result: LoadUiComponentRegistryResult) => void;
   readonly onForgeLoaderResult?: (result: LoadForgeFieldRegistryResult) => void;
   readonly onPipeLoaderResult?: (result: LoadPipeRegistryResult) => void;
   readonly onActionLoaderResult?: (result: LoadActionRegistryResult) => void;
   readonly onFilterLoaderResult?: (result: LoadFilterRegistryResult) => void;
+  readonly onTokenLoaderResult?: (result: LoadTokenRegistryResult) => void;
   readonly onDownstreamHints?: (hints: readonly DownstreamHint[]) => void;
 }
 
@@ -250,14 +259,32 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
     }
   }
 
+  let tokenRegistry: TokenRegistry | undefined = options.tokenRegistry;
+  if (tokenRegistry === undefined) {
+    const cwd = options.cwd ?? process.cwd();
+    try {
+      const tokenLoaderResult = await loadTokenRegistry({ cwd });
+      if (options.onTokenLoaderResult === undefined) {
+        reportTokenLoaderResult(tokenLoaderResult);
+      } else {
+        options.onTokenLoaderResult(tokenLoaderResult);
+      }
+      tokenRegistry = tokenLoaderResult.registry;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      process.stderr.write(`[dbx-components-mcp] tokens registry unavailable: ${message}\n`);
+      tokenRegistry = undefined;
+    }
+  }
+
   const fixtureModelRegistry: FixtureModelRegistry = {
     entries: FIREBASE_MODELS.map((m) => ({ name: m.name, modelType: m.modelType, collectionPrefix: m.collectionPrefix }))
   };
 
   await emitDownstreamHints({ cwd: options.cwd ?? process.cwd(), externalCounts, onDownstreamHints: options.onDownstreamHints });
 
-  registerResources(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, uiComponentRegistry: uiRegistry, actionRegistry, filterRegistry });
-  registerTools(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, uiComponentRegistry: uiRegistry, actionRegistry, filterRegistry, fixtureModelRegistry, modelValidateRuleOptions });
+  registerResources(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, uiComponentRegistry: uiRegistry, actionRegistry, filterRegistry, tokenRegistry });
+  registerTools(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, uiComponentRegistry: uiRegistry, actionRegistry, filterRegistry, tokenRegistry, fixtureModelRegistry, modelValidateRuleOptions, cwd: options.cwd ?? process.cwd() });
 
   return server;
 }
@@ -405,6 +432,25 @@ function reportFilterLoaderResult(result: LoadFilterRegistryResult): void {
   }
   for (const warning of loaderWarnings) {
     process.stderr.write(`[dbx-components-mcp] filters-loader-warning: ${warning.kind}\n`);
+  }
+}
+
+/**
+ * Default observer used when {@link CreateServerOptions.onTokenLoaderResult}
+ * is not supplied. Mirrors the other loader-result reporters for the
+ * design-token registry.
+ *
+ * @param result - the loader output to summarise
+ */
+function reportTokenLoaderResult(result: LoadTokenRegistryResult): void {
+  const { registry, configPath, configWarnings, loaderWarnings, externalSourceCount } = result;
+  const summary = [`[dbx-components-mcp] tokens registry loaded`, `  sources: ${registry.loadedSources.join(', ') || '(none)'}`, `  external: ${externalSourceCount}`, `  config: ${configPath ?? '(none)'}`, `  entries: ${registry.all.length}`, `  warnings: ${configWarnings.length + loaderWarnings.length}`].join('\n');
+  process.stderr.write(`${summary}\n`);
+  for (const warning of configWarnings) {
+    process.stderr.write(`[dbx-components-mcp] tokens-config-warning: ${warning.kind} ${warning.path}\n`);
+  }
+  for (const warning of loaderWarnings) {
+    process.stderr.write(`[dbx-components-mcp] tokens-loader-warning: ${warning.kind}\n`);
   }
 }
 

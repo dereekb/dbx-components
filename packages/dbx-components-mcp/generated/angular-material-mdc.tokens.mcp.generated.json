@@ -1,0 +1,298 @@
+{
+  "version": 1,
+  "source": "angular-material-mdc",
+  "module": "@angular/material",
+  "generatedAt": "1970-01-01T00:00:00.000Z",
+  "generator": "@dereekb/dbx-components-mcp/scripts/generate-css-tokens.mjs",
+  "entries": [
+    {
+      "cssVariable": "--mdc-linear-progress-active-indicator-color",
+      "source": "mdc",
+      "role": "color",
+      "componentScope": "mat-progress-bar",
+      "intents": [
+        "progress bar color",
+        "linear progress active color"
+      ],
+      "description": "Active indicator color of `mat-progress-bar`.",
+      "antiUseNotes": "Don't override this directly — set `color=\"primary|accent|warn\"` on the host `<mat-progress-bar>` instead.",
+      "defaults": {
+        "light": "var(--mat-sys-primary)"
+      }
+    },
+    {
+      "cssVariable": "--mdc-linear-progress-track-color",
+      "source": "mdc",
+      "role": "color",
+      "componentScope": "mat-progress-bar",
+      "intents": [
+        "progress bar track color",
+        "linear progress background"
+      ],
+      "description": "Track (background) color of `mat-progress-bar`.",
+      "antiUseNotes": "Don't override this directly; let Material's color attribute do the work or wrap in a styled component.",
+      "defaults": {
+        "light": "var(--mat-sys-surface-container-highest)"
+      }
+    },
+    {
+      "cssVariable": "--mdc-linear-progress-track-height",
+      "source": "mdc",
+      "role": "size",
+      "componentScope": "mat-progress-bar",
+      "intents": [
+        "progress bar height",
+        "linear progress thickness"
+      ],
+      "description": "Height of the `mat-progress-bar` track.",
+      "defaults": {
+        "light": "4px"
+      }
+    },
+    {
+      "cssVariable": "--mdc-filled-button-container-color",
+      "source": "mdc",
+      "role": "color",
+      "componentScope": "mat-button",
+      "intents": [
+        "filled button background color"
+      ],
+      "description": "Filled button container color (`mat-flat-button`).",
+      "antiUseNotes": "Don't override on every button instance — use `<dbx-button flat color=\"primary\">` and let theme resolution flow through Material.",
+      "defaults": {
+        "light": "var(--mat-sys-primary)"
+      },
+      "recommendedPrimitive": "button"
+    },
+    {
+      "cssVariable": "--mdc-filled-button-label-text-color",
+      "source": "mdc",
+      "role": "text-color",
+      "componentScope": "mat-button",
+      "intents": [
+        "filled button label color"
+      ],
+      "description": "Filled button label color (`mat-flat-button`).",
+      "defaults": {
+        "light": "var(--mat-sys-on-primary)"
+      },
+      "recommendedPrimitive": "button"
+    },
+    {
+      "cssVariable": "--mdc-outlined-button-outline-color",
+      "source": "mdc",
+      "role": "color",
+      "componentScope": "mat-button",
+      "intents": [
+        "stroked button outline color"
+      ],
+      "description": "Outline color of `mat-stroked-button`.",
+      "antiUseNotes": "Use `<dbx-button stroked>` instead of styling the underlying outline directly.",
+      "defaults": {
+        "light": "var(--mat-sys-outline)"
+      },
+      "recommendedPrimitive": "button"
+    },
+    {
+      "cssVariable": "--mdc-outlined-button-label-text-color",
+      "source": "mdc",
+      "role": "text-color",
+      "componentScope": "mat-button",
+      "intents": [
+        "stroked button label color",
+        "outlined button text"
+      ],
+      "description": "Label color of `mat-stroked-button`.",
+      "defaults": {
+        "light": "var(--mat-sys-primary)"
+      },
+      "recommendedPrimitive": "button"
+    },
+    {
+      "cssVariable": "--mdc-text-button-label-text-color",
+      "source": "mdc",
+      "role": "text-color",
+      "componentScope": "mat-button",
+      "intents": [
+        "text button label color",
+        "basic button label color"
+      ],
+      "description": "Label color of `mat-button` (text/basic variant).",
+      "defaults": {
+        "light": "var(--mat-sys-primary)"
+      },
+      "recommendedPrimitive": "button"
+    },
+    {
+      "cssVariable": "--mdc-icon-button-icon-color",
+      "source": "mdc",
+      "role": "color",
+      "componentScope": "mat-icon-button",
+      "intents": [
+        "icon button color"
+      ],
+      "description": "Icon color inside `mat-icon-button`.",
+      "antiUseNotes": "Prefer `<dbx-button icon=\"…\">` so theming flows through dbx-web.",
+      "defaults": {
+        "light": "var(--mat-sys-on-surface-variant)"
+      },
+      "recommendedPrimitive": "button"
+    },
+    {
+      "cssVariable": "--mdc-fab-container-color",
+      "source": "mdc",
+      "role": "color",
+      "componentScope": "mat-fab",
+      "intents": [
+        "FAB background color",
+        "floating action button color"
+      ],
+      "description": "Container color of `mat-fab`.",
+      "defaults": {
+        "light": "var(--mat-sys-primary-container)"
+      }
+    },
+    {
+      "cssVariable": "--mdc-filled-text-field-container-color",
+      "source": "mdc",
+      "role": "surface",
+      "componentScope": "mat-form-field",
+      "intents": [
+        "form field background color",
+        "input background color"
+      ],
+      "description": "Container color for the filled appearance of `mat-form-field`.",
+      "defaults": {
+        "light": "var(--mat-sys-surface-container-highest)"
+      }
+    },
+    {
+      "cssVariable": "--mdc-outlined-text-field-outline-color",
+      "source": "mdc",
+      "role": "color",
+      "componentScope": "mat-form-field",
+      "intents": [
+        "form field outline color",
+        "input outline color"
+      ],
+      "description": "Outline color for the outlined appearance of `mat-form-field`.",
+      "defaults": {
+        "light": "var(--mat-sys-outline)"
+      }
+    },
+    {
+      "cssVariable": "--mdc-dialog-container-color",
+      "source": "mdc",
+      "role": "surface",
+      "componentScope": "mat-dialog",
+      "intents": [
+        "dialog background",
+        "modal surface",
+        "dialog surface"
+      ],
+      "description": "Background color of `mat-dialog` containers.",
+      "defaults": {
+        "light": "var(--mat-sys-surface-container-high)"
+      }
+    },
+    {
+      "cssVariable": "--mdc-dialog-container-shape",
+      "source": "mdc",
+      "role": "radius",
+      "componentScope": "mat-dialog",
+      "intents": [
+        "dialog corner radius",
+        "modal radius"
+      ],
+      "description": "Corner radius of `mat-dialog` containers.",
+      "defaults": {
+        "light": "var(--mat-sys-corner-extra-large)"
+      }
+    },
+    {
+      "cssVariable": "--mdc-elevated-card-container-color",
+      "source": "mdc",
+      "role": "surface",
+      "componentScope": "mat-card",
+      "intents": [
+        "card background",
+        "elevated card surface"
+      ],
+      "description": "Container color of an elevated `mat-card`.",
+      "antiUseNotes": "Use `<dbx-content-box>` for the dbx-web equivalent — same surface, plus padding tokens.",
+      "defaults": {
+        "light": "var(--mat-sys-surface-container-low)"
+      },
+      "recommendedPrimitive": "content-box"
+    },
+    {
+      "cssVariable": "--mdc-elevated-card-container-shape",
+      "source": "mdc",
+      "role": "radius",
+      "componentScope": "mat-card",
+      "intents": [
+        "card corner radius",
+        "card radius"
+      ],
+      "description": "Corner radius of an elevated `mat-card`.",
+      "defaults": {
+        "light": "var(--mat-sys-corner-medium)"
+      },
+      "recommendedPrimitive": "content-box"
+    },
+    {
+      "cssVariable": "--mdc-chip-container-shape-radius",
+      "source": "mdc",
+      "role": "radius",
+      "componentScope": "mat-chip",
+      "intents": [
+        "chip corner radius"
+      ],
+      "description": "Corner radius of `mat-chip`.",
+      "defaults": {
+        "light": "var(--mat-sys-corner-small)"
+      }
+    },
+    {
+      "cssVariable": "--mdc-chip-elevated-container-color",
+      "source": "mdc",
+      "role": "surface",
+      "componentScope": "mat-chip",
+      "intents": [
+        "chip background",
+        "chip surface"
+      ],
+      "description": "Container color of an elevated `mat-chip`.",
+      "defaults": {
+        "light": "var(--mat-sys-surface-container-low)"
+      }
+    },
+    {
+      "cssVariable": "--mdc-tab-indicator-active-indicator-color",
+      "source": "mdc",
+      "role": "color",
+      "componentScope": "mat-tab-group",
+      "intents": [
+        "tab indicator color",
+        "active tab line"
+      ],
+      "description": "Active indicator color for `mat-tab-group`.",
+      "defaults": {
+        "light": "var(--mat-sys-primary)"
+      }
+    },
+    {
+      "cssVariable": "--mdc-list-list-item-container-color",
+      "source": "mdc",
+      "role": "surface",
+      "componentScope": "mat-list",
+      "intents": [
+        "list item background"
+      ],
+      "description": "Background color of `mat-list-item`.",
+      "defaults": {
+        "light": "transparent"
+      }
+    }
+  ]
+}

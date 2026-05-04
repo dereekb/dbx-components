@@ -1,8 +1,8 @@
 import { InfiniteScrollDirective } from 'ngx-infinite-scroll';
 import { catchError, filter, exhaustMap, merge, map, Subject, switchMap, shareReplay, of, type Observable, first, distinctUntilChanged, combineLatest } from 'rxjs';
 import { Component, type OnDestroy, ElementRef, HostListener, Directive, inject, ChangeDetectionStrategy, input, output, signal, computed } from '@angular/core';
-import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { SubscriptionObject, type ListLoadingState, filterMaybe, isLoadingStateFinishedLoading, startWithBeginLoading, listLoadingStateContext, switchMapMaybe, type PageLoadingState } from '@dereekb/rxjs';
+import { DbxInjectionComponent, type DbxInjectionComponentConfig, completeOnDestroy, cleanSubscription } from '@dereekb/dbx-core';
+import { type ListLoadingState, filterMaybe, isLoadingStateFinishedLoading, startWithBeginLoading, listLoadingStateContext, switchMapMaybe, type PageLoadingState } from '@dereekb/rxjs';
 import { invertMaybeBoolean, type Maybe, type Milliseconds } from '@dereekb/util';
 import { type DbxListSelectionMode, type DbxListView, type ListSelectionState } from './list.view';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
@@ -170,14 +170,14 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
   private readonly _internalContentSignal = signal<Maybe<DbxListInternalContentDirective>>(undefined);
   readonly nativeElementSignal = computed(() => (this._internalContentSignal()?.elementRef as Maybe<ElementRef<HTMLElement>>)?.nativeElement);
 
-  private readonly _loadMoreTrigger = new Subject<void>();
-  private readonly _scrollTrigger = new Subject<DbxListScrollDirectionTrigger>();
+  private readonly _loadMoreTrigger = completeOnDestroy(new Subject<void>());
+  private readonly _scrollTrigger = completeOnDestroy(new Subject<DbxListScrollDirectionTrigger>());
 
-  private readonly _loadMoreSub = new SubscriptionObject();
-  private readonly _onClickSub = new SubscriptionObject();
-  private readonly _disabledSub = new SubscriptionObject();
-  private readonly _selectionModeSub = new SubscriptionObject();
-  private readonly _onSelectionChangeSub = new SubscriptionObject();
+  private readonly _loadMoreSub = cleanSubscription();
+  private readonly _onClickSub = cleanSubscription();
+  private readonly _disabledSub = cleanSubscription();
+  private readonly _selectionModeSub = cleanSubscription();
+  private readonly _onSelectionChangeSub = cleanSubscription();
 
   readonly currentState$: Observable<Maybe<S>> = toObservable(this.state).pipe(switchMapMaybe());
   readonly context = listLoadingStateContext<T, S>({ obs: this.currentState$, showLoadingOnNoValue: false });
@@ -332,14 +332,6 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
   readonly isEndSignal = toSignal(this.isEnd$);
 
   ngOnDestroy(): void {
-    this._scrollTrigger.complete();
-    this._loadMoreTrigger.complete();
-
-    this._onClickSub.destroy();
-    this._loadMoreSub.destroy();
-    this._onSelectionChangeSub.destroy();
-    this._disabledSub.destroy();
-
     this.context.destroy();
   }
 

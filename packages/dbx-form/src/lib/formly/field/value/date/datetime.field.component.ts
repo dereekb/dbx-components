@@ -7,7 +7,7 @@ import { FieldType } from '@ngx-formly/material';
 import { type FieldTypeConfig, type FormlyFieldProps } from '@ngx-formly/core';
 import { type MatDatepickerInputEvent, MatDatepickerModule } from '@angular/material/datepicker';
 import { addMinutes, startOfDay, addDays } from 'date-fns';
-import { asObservableFromGetter, filterMaybe, type ObservableOrValueGetter, SubscriptionObject, switchMapMaybeDefault, switchMapFilterMaybe, skipAllInitialMaybe } from '@dereekb/rxjs';
+import { asObservableFromGetter, filterMaybe, type ObservableOrValueGetter, switchMapMaybeDefault, switchMapFilterMaybe, skipAllInitialMaybe } from '@dereekb/rxjs';
 import { type DateTimePreset, type DateTimePresetConfiguration, dateTimePreset } from './datetime';
 import { DbxDateTimeFieldMenuPresetsService } from './datetime.field.service';
 import { DbxDateTimeValueMode, dbxDateTimeInputValueParseFactory, dbxDateTimeIsSameDateTimeFieldValue, dbxDateTimeOutputValueFactory } from './date.value';
@@ -22,7 +22,7 @@ import { MatError, MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
-import { DateDistancePipe, GetValuePipe, TimeDistancePipe } from '@dereekb/dbx-core';
+import { DateDistancePipe, GetValuePipe, TimeDistancePipe, cleanSubscription, completeOnDestroy } from '@dereekb/dbx-core';
 import { MatDividerModule } from '@angular/material/divider';
 
 export enum DbxDateTimeFieldTimeMode {
@@ -288,35 +288,35 @@ export const DBX_DATE_TIME_FIELD_TIME_NOT_IN_RANGE_ERROR = 'dateTimeFieldTimeNot
 export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDateTimeFieldProps>> implements OnInit, OnDestroy {
   private readonly dbxDateTimeFieldConfigService = inject(DbxDateTimeFieldMenuPresetsService);
 
-  private readonly _sub = new SubscriptionObject();
-  private readonly _valueSub = new SubscriptionObject();
-  private readonly _autoFillDateSync = new SubscriptionObject();
+  private readonly _sub = cleanSubscription();
+  private readonly _valueSub = cleanSubscription();
+  private readonly _autoFillDateSync = cleanSubscription();
 
-  private readonly _config = new BehaviorSubject<Maybe<Observable<DbxDateTimePickerConfiguration>>>(undefined);
+  private readonly _config = completeOnDestroy(new BehaviorSubject<Maybe<Observable<DbxDateTimePickerConfiguration>>>(undefined));
   readonly latestConfig$ = this._config.pipe(switchMapMaybeDefault(), distinctUntilChanged(), shareReplay(1));
 
-  private readonly _syncConfigObs = new BehaviorSubject<Maybe<Observable<ArrayOrValue<DbxDateTimeFieldSyncField>>>>(undefined);
+  private readonly _syncConfigObs = completeOnDestroy(new BehaviorSubject<Maybe<Observable<ArrayOrValue<DbxDateTimeFieldSyncField>>>>(undefined));
 
-  private readonly _defaultTimezone = new BehaviorSubject<Maybe<Observable<Maybe<TimezoneString>>>>(undefined);
-  private readonly _timeDate = new BehaviorSubject<Maybe<Observable<Maybe<DbxDateTimeFieldTimeDateConfig | FormControlPath | DateOrDayString>>>>(undefined);
-  private readonly _presets = new BehaviorSubject<Observable<DateTimePresetConfiguration[]>>(of([]));
+  private readonly _defaultTimezone = completeOnDestroy(new BehaviorSubject<Maybe<Observable<Maybe<TimezoneString>>>>(undefined));
+  private readonly _timeDate = completeOnDestroy(new BehaviorSubject<Maybe<Observable<Maybe<DbxDateTimeFieldTimeDateConfig | FormControlPath | DateOrDayString>>>>(undefined));
+  private readonly _presets = completeOnDestroy(new BehaviorSubject<Observable<DateTimePresetConfiguration[]>>(of([])));
 
   /**
    * Alternative/backup full day control if not defined in the Formly form.
    */
   private readonly _fullDayInputCtrl = new FormControl(false);
-  private readonly _fullDayControlObs = new BehaviorSubject<Maybe<AbstractControl<boolean>>>(undefined);
+  private readonly _fullDayControlObs = completeOnDestroy(new BehaviorSubject<Maybe<AbstractControl<boolean>>>(undefined));
   readonly fullDayControl$ = this._fullDayControlObs.pipe(filterMaybe());
 
-  private readonly _offset = new BehaviorSubject<number>(0);
-  private readonly _formControlObs = new BehaviorSubject<Maybe<AbstractControl<Maybe<Date>>>>(undefined);
+  private readonly _offset = completeOnDestroy(new BehaviorSubject<number>(0));
+  private readonly _formControlObs = completeOnDestroy(new BehaviorSubject<Maybe<AbstractControl<Maybe<Date>>>>(undefined));
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
 
-  private readonly _cleared = new Subject<void>();
-  private readonly _updateTime = new Subject<void>();
+  private readonly _cleared = completeOnDestroy(new Subject<void>());
+  private readonly _updateTime = completeOnDestroy(new Subject<void>());
 
-  private readonly _resyncTimeInputSub = new SubscriptionObject();
-  private readonly _resyncTimeInput = new Subject<void>();
+  private readonly _resyncTimeInputSub = cleanSubscription();
+  private readonly _resyncTimeInput = completeOnDestroy(new Subject<void>());
 
   readonly timeErrorStateMatcher: ErrorStateMatcher = {
     isErrorState: (control: AbstractControl | null, form) => {
@@ -326,7 +326,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
 
   readonly resyncTimeInput$ = this._resyncTimeInput.pipe(debounceTime(200), shareReplay(1));
 
-  private readonly _configUpdateTimeSync = new SubscriptionObject(
+  private readonly _configUpdateTimeSync = cleanSubscription(
     this.latestConfig$.pipe(skip(1)).subscribe((_x) => {
       this._updateTime.next();
     })
@@ -1056,22 +1056,6 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
-    this._sub.destroy();
-    this._valueSub.destroy();
-    this._config.complete();
-    this._configUpdateTimeSync.destroy();
-    this._defaultTimezone.complete();
-    this._resyncTimeInputSub.destroy();
-    this._autoFillDateSync.destroy();
-    this._timeDate.complete();
-    this._presets.complete();
-    this._fullDayControlObs.complete();
-    this._offset.complete();
-    this._formControlObs.complete();
-    this._updateTime.complete();
-    this._cleared.complete();
-    this._resyncTimeInput.complete();
-    this._syncConfigObs.complete();
   }
 
   selectPreset(preset: DateTimePreset): void {

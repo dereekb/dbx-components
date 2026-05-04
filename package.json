@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-components",
-  "version": "13.10.6",
+  "version": "13.10.7",
   "license": "MIT",
   "scripts": {
     "postinstall": "{ [ -f .env.local ] || { rm -rf .env.local && : > .env.local; }; } && if [ \"$IS_DOCKER_INSTALL\" = \"true\" ]; then echo skipping peer dep sync in docker; else echo syncing peer deps && node ./tools/scripts/sync-peer-deps.mjs --skip-internal > /dev/null 2>&1; fi",

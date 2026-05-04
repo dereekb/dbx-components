@@ -8,13 +8,14 @@ import { createResolvedErrorsSignal, setupMetaTracking, shouldShowErrors } from 
 import { MATERIAL_CONFIG } from '@ng-forge/dynamic-forms-material';
 import { AsyncPipe } from '@angular/common';
 import { type Maybe, type PrimativeKey, addToSetCopy, asArray, convertMaybeToArray, filterEmptyArrayValues, filterMaybeArrayValues, lastValue, makeValuesGroupMap, mergeArrays, separateValues, setContainsAllValues, setsAreEquivalent, sortByStringFunction } from '@dereekb/util';
-import { filterMaybe, type LoadingState, isLoadingStateWithDefinedValue, isLoadingStateLoading, type LoadingStateWithDefinedValue, startWithBeginLoading, SubscriptionObject, successResult, beginLoading, mapLoadingStateValueWithOperator, loadingStateContext, type WorkUsingContext, valueFromFinishedLoadingState } from '@dereekb/rxjs';
+import { filterMaybe, type LoadingState, isLoadingStateWithDefinedValue, isLoadingStateLoading, type LoadingStateWithDefinedValue, startWithBeginLoading, successResult, beginLoading, mapLoadingStateValueWithOperator, loadingStateContext, type WorkUsingContext, valueFromFinishedLoadingState } from '@dereekb/rxjs';
 import { DbxActionModule, DbxButtonComponent, DbxLoadingComponent } from '@dereekb/dbx-web';
 import { BehaviorSubject, combineLatest, distinctUntilChanged, first, map, mergeMap, of, scan, shareReplay, switchMap, tap, type Observable } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type SourceSelectDisplayValue, type SourceSelectDisplayValueGroup, type SourceSelectLoadSource, type SourceSelectLoadSourceLoadingState, type SourceSelectOpenSourceResult, type SourceSelectOptions, type SourceSelectValue, type SourceSelectValueGroup } from '../../../../formly/field/selection/sourceselect/sourceselect';
 import { dbxForgeFieldDisabled } from '../../field.util';
 import type { DbxForgeSourceSelectFieldProps } from './sourceselect.field';
+import { cleanSubscription, completeOnDestroy } from '@dereekb/dbx-core';
 
 interface SelectFieldOpenSourceMap<T extends PrimativeKey = PrimativeKey, M = unknown> {
   readonly values: SourceSelectValue<T, M>[];
@@ -65,14 +66,14 @@ export class DbxForgeSourceSelectFieldComponent<T extends PrimativeKey = Primati
   // Disabled state
   readonly isDisabled = dbxForgeFieldDisabled();
 
-  private readonly _cacheMetaSub = new SubscriptionObject();
-  private readonly _clearDisplayHashMapSub = new SubscriptionObject();
-  private readonly _valueMetaHashMap = new BehaviorSubject<Map<T, SourceSelectValue<T, M>>>(new Map());
-  private readonly _displayHashMap = new BehaviorSubject<Map<T, SourceSelectDisplayValue<T, M>>>(new Map());
-  private readonly _fromOpenSource = new BehaviorSubject<SelectFieldOpenSourceMap<T, M>>({ values: [], valuesSet: new Set() });
-  private readonly _loadSources = new BehaviorSubject<Maybe<Observable<SourceSelectLoadSource<M>[]>>>(undefined);
-  private readonly _valuesSubject = new BehaviorSubject<T[]>([]);
-  private readonly _filterText$ = new BehaviorSubject<string>('');
+  private readonly _cacheMetaSub = cleanSubscription();
+  private readonly _clearDisplayHashMapSub = cleanSubscription();
+  private readonly _valueMetaHashMap = completeOnDestroy(new BehaviorSubject<Map<T, SourceSelectValue<T, M>>>(new Map()));
+  private readonly _displayHashMap = completeOnDestroy(new BehaviorSubject<Map<T, SourceSelectDisplayValue<T, M>>>(new Map()));
+  private readonly _fromOpenSource = completeOnDestroy(new BehaviorSubject<SelectFieldOpenSourceMap<T, M>>({ values: [], valuesSet: new Set() }));
+  private readonly _loadSources = completeOnDestroy(new BehaviorSubject<Maybe<Observable<SourceSelectLoadSource<M>[]>>>(undefined));
+  private readonly _valuesSubject = completeOnDestroy(new BehaviorSubject<T[]>([]));
+  private readonly _filterText$ = completeOnDestroy(new BehaviorSubject<string>(''));
 
   readonly buttonElement = viewChild<string, ElementRef<HTMLElement>>('button', { read: ElementRef<HTMLElement> });
   readonly filterInputElement = viewChild<string, ElementRef<HTMLInputElement>>('filterInput', { read: ElementRef<HTMLInputElement> });
@@ -317,14 +318,6 @@ export class DbxForgeSourceSelectFieldComponent<T extends PrimativeKey = Primati
   }
 
   ngOnDestroy(): void {
-    this._cacheMetaSub.destroy();
-    this._clearDisplayHashMapSub.destroy();
-    this._valueMetaHashMap.complete();
-    this._displayHashMap.complete();
-    this._fromOpenSource.complete();
-    this._loadSources.complete();
-    this._valuesSubject.complete();
-    this._filterText$.complete();
     this.context.destroy();
   }
 

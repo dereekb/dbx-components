@@ -1,12 +1,12 @@
-import { Component, type OnDestroy, type OnInit, inject, ChangeDetectionStrategy, input, output } from '@angular/core';
+import { Component, type OnInit, inject, ChangeDetectionStrategy, input, output } from '@angular/core';
 import { type CalendarEvent, type CalendarMonthViewBeforeRenderEvent, type CalendarMonthViewDay, CalendarMonthViewComponent, CalendarDatePipe } from 'angular-calendar';
 import { map, shareReplay, type Subject, first, throttleTime, distinctUntilChanged, type Observable, combineLatest, switchMap, of, combineLatestWith } from 'rxjs';
 import { type DbxCalendarEvent, DbxCalendarStore, prepareAndSortCalendarEvents, DbxCalendarBaseComponent } from '@dereekb/dbx-web/calendar';
 import { type DayOfWeek, type Maybe, reduceBooleansWithAnd } from '@dereekb/util';
 import { type CalendarScheduleSelectionState, DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
 import { CalendarScheduleSelectionDayState, type CalendarScheduleSelectionMetadata } from './calendar.schedule.selection';
-import { type DbxInjectionComponentConfig, switchMapDbxInjectionComponentConfig, DbxInjectionComponent } from '@dereekb/dbx-core';
-import { type ObservableOrValue, type ObservableOrValueGetter, SubscriptionObject, asObservable, asObservableFromGetter } from '@dereekb/rxjs';
+import { type DbxInjectionComponentConfig, switchMapDbxInjectionComponentConfig, DbxInjectionComponent, cleanSubscription } from '@dereekb/dbx-core';
+import { type ObservableOrValue, type ObservableOrValueGetter, asObservable, asObservableFromGetter } from '@dereekb/rxjs';
 import { DbxScheduleSelectionCalendarDatePopoverButtonComponent } from './calendar.schedule.selection.popover.button.component';
 import { DateRangeType, dateRange, isSameDate } from '@dereekb/date';
 import { endOfWeek } from 'date-fns';
@@ -109,7 +109,7 @@ export function dbxScheduleSelectionCalendarBeforeMonthViewRenderFactory(inputMo
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxScheduleSelectionCalendarComponent<T> implements OnInit, OnDestroy {
+export class DbxScheduleSelectionCalendarComponent<T> implements OnInit {
   readonly calendarStore = inject(DbxCalendarStore<T>);
   readonly dbxCalendarScheduleSelectionStore = inject(DbxCalendarScheduleSelectionStore);
 
@@ -118,7 +118,7 @@ export class DbxScheduleSelectionCalendarComponent<T> implements OnInit, OnDestr
   readonly config = input<Maybe<DbxScheduleSelectionCalendarComponentConfig>>();
   readonly readonly = input<Maybe<boolean>>(false);
 
-  private readonly _centerRangeSub = new SubscriptionObject();
+  private readonly _centerRangeSub = cleanSubscription();
 
   readonly config$: Observable<Maybe<DbxScheduleSelectionCalendarComponentConfig>> = toObservable(this.config).pipe(distinctUntilChanged(), shareReplay(1));
 
@@ -242,10 +242,6 @@ export class DbxScheduleSelectionCalendarComponent<T> implements OnInit, OnDestr
           }
         }
       });
-  }
-
-  ngOnDestroy(): void {
-    this._centerRangeSub.destroy();
   }
 
   dayClicked({ date }: { date: Date }): void {

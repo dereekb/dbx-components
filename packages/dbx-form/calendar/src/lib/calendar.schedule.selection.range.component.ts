@@ -1,5 +1,4 @@
-import { SubscriptionObject } from '@dereekb/rxjs';
-import { Component, type OnDestroy, type OnInit, inject, viewChild, input, effect, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, type OnInit, inject, viewChild, input, effect, computed, ChangeDetectionStrategy } from '@angular/core';
 import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
 import { DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { FormGroup, FormControl, type AbstractControl, ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -11,7 +10,7 @@ import { type ErrorStateMatcher } from '@angular/material/core';
 import { type DateFilterFn, type MatDateRangePicker, MatDatepickerModule } from '@angular/material/datepicker';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxButtonSpacerDirective } from '@dereekb/dbx-web';
-import { TimezoneAbbreviationPipe } from '@dereekb/dbx-core';
+import { TimezoneAbbreviationPipe, completeOnDestroy, cleanSubscription } from '@dereekb/dbx-core';
 
 interface RangeValue {
   readonly start?: Maybe<Date>;
@@ -25,7 +24,7 @@ interface RangeValue {
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxScheduleSelectionCalendarDateRangeComponent implements OnInit, OnDestroy {
+export class DbxScheduleSelectionCalendarDateRangeComponent implements OnInit {
   readonly dbxCalendarStore = inject(DbxCalendarStore);
   readonly dbxCalendarScheduleSelectionStore = inject(DbxCalendarScheduleSelectionStore);
   readonly matFormFieldDefaultOptions = inject<MatFormFieldDefaultOptions>(MAT_FORM_FIELD_DEFAULT_OPTIONS, { optional: true });
@@ -52,10 +51,10 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnInit, O
     }
   });
 
-  private readonly _pickerOpened = new BehaviorSubject<boolean>(false);
+  private readonly _pickerOpened = completeOnDestroy(new BehaviorSubject<boolean>(false));
 
-  private readonly _syncSub = new SubscriptionObject();
-  private readonly _valueSub = new SubscriptionObject();
+  private readonly _syncSub = cleanSubscription();
+  private readonly _valueSub = cleanSubscription();
 
   readonly range = new FormGroup({
     start: new FormControl<Maybe<Date>>(null),
@@ -177,11 +176,6 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnInit, O
           this.dbxCalendarScheduleSelectionStore.setInputRange({ inputStart: x.start, inputEnd: x.end });
         }
       });
-  }
-
-  ngOnDestroy(): void {
-    this._syncSub.destroy();
-    this._valueSub.destroy();
   }
 
   clickedDateRangeInput() {

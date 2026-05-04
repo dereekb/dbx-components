@@ -1,17 +1,17 @@
 import { tap, switchMap, first, startWith, throttleTime, map, distinctUntilChanged, combineLatest, Subject, type Observable, delay } from 'rxjs';
-import { Component, ElementRef, type OnDestroy, type OnInit, inject, signal, computed, input, output, viewChild, ChangeDetectionStrategy, type Signal, effect } from '@angular/core';
+import { Component, ElementRef, type OnInit, inject, signal, computed, input, output, viewChild, ChangeDetectionStrategy, type Signal, effect } from '@angular/core';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { DbxMapboxMapStore } from './mapbox.store';
 import { DbxMapboxService } from './mapbox.service';
 import { type Maybe } from '@dereekb/util';
 import { DbxColorDirective, DbxResizedDirective, type DbxThemeColor, type ResizedEvent } from '@dereekb/dbx-web';
-import { SubscriptionObject } from '@dereekb/rxjs';
 import { MatDrawer, MatDrawerContainer, MatDrawerContent } from '@angular/material/sidenav';
 import { type MapboxEaseTo } from './mapbox';
 import { NgClass } from '@angular/common';
 import { MatIconButton } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { DbxMapboxLayoutDrawerComponent } from './mapbox.layout.drawer.component';
+import { completeOnDestroy, cleanSubscription } from '@dereekb/dbx-core';
 
 export type DbxMapboxLayoutSide = 'left' | 'right';
 
@@ -35,12 +35,12 @@ export type DbxMapboxLayoutMode = 'side' | 'push';
     '[style.--mat-sidenav-container-width]': 'dbxMapboxService.drawerWidth'
   }
 })
-export class DbxMapboxLayoutComponent implements OnInit, OnDestroy {
+export class DbxMapboxLayoutComponent implements OnInit {
   readonly dbxMapboxService = inject(DbxMapboxService);
   readonly dbxMapboxMapStore = inject(DbxMapboxMapStore);
 
-  private readonly _viewResized = new Subject<ResizedEvent>();
-  private readonly _refreshContentMargins = new Subject<void>();
+  private readonly _viewResized = completeOnDestroy(new Subject<ResizedEvent>());
+  private readonly _refreshContentMargins = completeOnDestroy(new Subject<void>());
 
   readonly drawerOpenedChange = output<boolean>();
 
@@ -104,8 +104,8 @@ export class DbxMapboxLayoutComponent implements OnInit, OnDestroy {
     return opened ? icons[0] : icons[1];
   });
 
-  private readonly _reszieSyncSub = new SubscriptionObject();
-  private readonly _toggleSyncSub = new SubscriptionObject();
+  private readonly _reszieSyncSub = cleanSubscription();
+  private readonly _toggleSyncSub = cleanSubscription();
 
   ngOnInit(): void {
     this._reszieSyncSub.subscription = (
@@ -192,13 +192,6 @@ export class DbxMapboxLayoutComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe();
-  }
-
-  ngOnDestroy(): void {
-    this._viewResized.complete();
-    this._refreshContentMargins.complete();
-    this._reszieSyncSub.destroy();
-    this._toggleSyncSub.destroy();
   }
 
   viewResized(event: ResizedEvent): void {

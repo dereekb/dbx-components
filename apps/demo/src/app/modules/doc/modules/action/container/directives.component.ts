@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, type OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type WorkUsingObservable } from '@dereekb/rxjs';
 import { of, delay, BehaviorSubject } from 'rxjs';
@@ -24,7 +24,8 @@ import {
   DbxActionIdleDirective,
   DbxActionTriggeredDirective,
   DbxActionIsWorkingDirective,
-  DbxActionIsModifiedDirective
+  DbxActionIsModifiedDirective,
+  completeOnDestroy
 } from '@dereekb/dbx-core';
 import { MatButton } from '@angular/material/button';
 import { DocActionFormExampleFormComponent } from '../component/action.example.form.component';
@@ -65,21 +66,18 @@ import { JsonPipe } from '@angular/common';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DocActionDirectivesComponent implements OnDestroy {
+export class DocActionDirectivesComponent {
   successValue: any;
   actionHandlerValue = 5;
 
-  private _value = new BehaviorSubject<{ test: number }>({ test: 0 });
+  private readonly _value = completeOnDestroy(new BehaviorSubject<{ test: number }>({ test: 0 }));
+
   readonly value$ = this._value.asObservable();
   readonly valueSignal = toSignal(this.value$, { initialValue: { test: 0 } });
 
   readonly handleAction: WorkUsingObservable = (_value: any) => {
     return of(true).pipe(delay(1000));
   };
-
-  ngOnDestroy(): void {
-    this._value.complete();
-  }
 
   onActionSuccess = (value: any) => {
     this.successValue = value;

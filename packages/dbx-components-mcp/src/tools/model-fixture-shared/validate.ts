@@ -31,12 +31,15 @@ import type { AppFixturesExtraction, FixtureDiagnostic, FixtureEntry, FixtureMet
 export function validateAppFixtures(extraction: AppFixturesExtraction, options: { readonly registry?: FixtureModelRegistry } = {}): FixtureValidationResult {
   const diagnostics: FixtureDiagnostic[] = [];
   for (const entry of extraction.entries) {
-    pushTripletCompletenessDiagnostics(entry, diagnostics);
+    const isFirestoreModel = entry.kind === 'firestore-model';
+    if (isFirestoreModel) {
+      pushTripletCompletenessDiagnostics(entry, diagnostics);
+      pushArchetypeConsistencyDiagnostics(entry, diagnostics);
+      pushParentFieldNamingDiagnostics(entry, options.registry, diagnostics);
+      pushRegistryDiagnostics(entry, options.registry, diagnostics);
+    }
     pushForwardingDiagnostics(entry, diagnostics);
-    pushGenericAlignmentDiagnostics(entry, diagnostics);
-    pushArchetypeConsistencyDiagnostics(entry, diagnostics);
-    pushParentFieldNamingDiagnostics(entry, options.registry, diagnostics);
-    pushRegistryDiagnostics(entry, options.registry, diagnostics);
+    pushGenericAlignmentDiagnostics(entry, diagnostics, { skipFactoryComparison: !isFirestoreModel });
   }
   pushOrphanFixtureDiagnostics(extraction, diagnostics);
   pushModelsWithoutFixtureDiagnostics(extraction, options.registry, diagnostics);
@@ -120,7 +123,7 @@ function pushForwardingDiagnostics(entry: FixtureEntry, out: FixtureDiagnostic[]
 }
 
 // MARK: generics
-function pushGenericAlignmentDiagnostics(entry: FixtureEntry, out: FixtureDiagnostic[]): void {
+function pushGenericAlignmentDiagnostics(entry: FixtureEntry, out: FixtureDiagnostic[], options: { readonly skipFactoryComparison: boolean } = { skipFactoryComparison: false }): void {
   const fixGenerics = entry.fixtureExtendsGenerics;
   const instGenerics = entry.instanceExtendsGenerics;
   const factoryGenerics = entry.factory?.genericArgs ?? [];
@@ -148,6 +151,7 @@ function pushGenericAlignmentDiagnostics(entry: FixtureEntry, out: FixtureDiagno
       line: entry.fixtureLine
     });
   }
+  if (options.skipFactoryComparison) return;
   if (factoryModel !== undefined && fixModel !== undefined && factoryModel !== fixModel) {
     out.push({
       code: 'generics-misaligned',

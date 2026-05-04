@@ -1,12 +1,12 @@
-import { ChangeDetectionStrategy, Component, type OnDestroy, computed, effect, ElementRef, inject, input, type InputSignal, type Signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, input, type InputSignal, type Signal } from '@angular/core';
 import { type ArrayOrValue, type TimezoneString, type Maybe } from '@dereekb/util';
 import { type Subscription, distinctUntilChanged, skip } from 'rxjs';
-import { type ObservableOrValue, SubscriptionObject, asObservable } from '@dereekb/rxjs';
+import { type ObservableOrValue, asObservable } from '@dereekb/rxjs';
 import { isSameDateCellScheduleDateRange, type DateRange, type DateCellScheduleDateFilterConfig, type DateCellScheduleDayCode, type DateOrDateRangeOrDateCellIndexOrDateCellRange } from '@dereekb/date';
 import { type CalendarScheduleSelectionState, DbxCalendarScheduleSelectionStore } from '../../calendar.schedule.selection.store';
 import { provideCalendarScheduleSelectionStoreIfParentIsUnavailable } from '../../calendar.schedule.selection.store.provide';
 import { type DbxScheduleSelectionCalendarDatePopupContentConfig } from '../../calendar.schedule.selection.dialog.component';
-import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { DbxInjectionComponent, type DbxInjectionComponentConfig, cleanSubscription } from '@dereekb/dbx-core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { DbxScheduleSelectionCalendarDateDialogButtonComponent } from '../../calendar.schedule.selection.dialog.button.component';
 import { DbxScheduleSelectionCalendarDateRangeComponent } from '../../calendar.schedule.selection.range.component';
@@ -57,7 +57,7 @@ export interface DbxForgeCalendarDateScheduleRangeFieldComponentProps extends Pi
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxForgeCalendarDateScheduleRangeFieldComponent implements OnDestroy {
+export class DbxForgeCalendarDateScheduleRangeFieldComponent {
   readonly compact = inject(CompactContextStore, { optional: true });
   readonly dbxCalendarScheduleSelectionStore = inject(DbxCalendarScheduleSelectionStore);
   private readonly elementRef = inject(ElementRef<HTMLElement>);
@@ -75,13 +75,13 @@ export class DbxForgeCalendarDateScheduleRangeFieldComponent implements OnDestro
   readonly defaultValidationMessages: InputSignal<ValidationMessages | undefined> = input<ValidationMessages | undefined>();
 
   // Subscription management
-  private readonly _syncSub = new SubscriptionObject();
-  private readonly _valueSub = new SubscriptionObject();
-  private readonly _timezoneSub = new SubscriptionObject();
-  private readonly _minMaxDateRangeSub = new SubscriptionObject();
-  private readonly _defaultWeekSub = new SubscriptionObject();
-  private readonly _filterSub = new SubscriptionObject();
-  private readonly _exclusionsSub = new SubscriptionObject();
+  private readonly _syncSub = cleanSubscription();
+  private readonly _valueSub = cleanSubscription();
+  private readonly _timezoneSub = cleanSubscription();
+  private readonly _minMaxDateRangeSub = cleanSubscription();
+  private readonly _defaultWeekSub = cleanSubscription();
+  private readonly _filterSub = cleanSubscription();
+  private readonly _exclusionsSub = cleanSubscription();
 
   // Field value signal (double-call pattern: field()() to get FieldState)
   readonly fieldValue = computed(() => {
@@ -189,16 +189,6 @@ export class DbxForgeCalendarDateScheduleRangeFieldComponent implements OnDestro
         this.dbxCalendarScheduleSelectionStore.setCellContentFactory(cellContentFactory);
       }
     });
-  }
-
-  ngOnDestroy(): void {
-    this._syncSub.destroy();
-    this._valueSub.destroy();
-    this._filterSub.destroy();
-    this._timezoneSub.destroy();
-    this._minMaxDateRangeSub.destroy();
-    this._defaultWeekSub.destroy();
-    this._exclusionsSub.destroy();
   }
 }
 

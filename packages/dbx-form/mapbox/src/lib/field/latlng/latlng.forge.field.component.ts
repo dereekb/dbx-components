@@ -1,7 +1,7 @@
 import { CompactContextStore, mapCompactModeObs } from '@dereekb/dbx-web';
-import { ChangeDetectionStrategy, Component, type OnDestroy, computed, effect, ElementRef, inject, input, type InputSignal, type Signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, input, type InputSignal, type Signal } from '@angular/core';
 import { skip, first, BehaviorSubject, filter, shareReplay, switchMap, map, type Observable, throttleTime, skipWhile, of, distinctUntilChanged } from 'rxjs';
-import { asObservableFromGetter, filterMaybe, type ObservableFactoryWithRequiredInput, SubscriptionObject } from '@dereekb/rxjs';
+import { asObservableFromGetter, filterMaybe, type ObservableFactoryWithRequiredInput } from '@dereekb/rxjs';
 import { type Maybe, type LatLngPoint, type LatLngPointFunctionConfig, type LatLngStringFunction, latLngStringFunction, type Milliseconds, latLngPointFunction, isDefaultLatLngPoint, isValidLatLngPoint, type LatLngPointFunction, isSameLatLngPoint, defaultLatLngPoint } from '@dereekb/util';
 import { WaGeolocationService } from '@ng-web-apis/geolocation';
 import { type Marker } from 'mapbox-gl';
@@ -18,6 +18,7 @@ import type { FieldTree } from '@angular/forms/signals';
 import { type DynamicText, type FieldMeta, type ValidationMessages, DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES } from '@ng-forge/dynamic-forms';
 import { resolveValueFieldContext, buildValueFieldInputs, setupMetaTracking } from '@ng-forge/dynamic-forms/integration';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { completeOnDestroy, cleanSubscription } from '@dereekb/dbx-core';
 
 export const DEFAULT_DBX_FORGE_MAPBOX_LAT_LNG_FIELD_INJECTION_KEY = 'DbxForgeMapboxLatLngFieldComponent';
 
@@ -87,7 +88,7 @@ export interface DbxForgeMapboxLatLngFieldComponentProps {
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxForgeMapboxLatLngFieldComponent implements OnDestroy {
+export class DbxForgeMapboxLatLngFieldComponent {
   private readonly _geolocationService = inject(WaGeolocationService);
 
   readonly compact = inject(CompactContextStore, { optional: true });
@@ -111,13 +112,13 @@ export class DbxForgeMapboxLatLngFieldComponent implements OnDestroy {
   readonly textCtrl = new FormControl<string>('');
 
   // Subscription management
-  private readonly _sub = new SubscriptionObject();
-  private readonly _geoSub = new SubscriptionObject();
-  private readonly _centerSub = new SubscriptionObject();
-  private readonly _flyToCenterSub = new SubscriptionObject();
-  private readonly _clickSub = new SubscriptionObject();
-  private readonly _zoom = new BehaviorSubject<MapboxZoomLevel>(12);
-  private readonly _markerConfig = new BehaviorSubject<Observable<DbxMapboxMarkerDisplayConfig | false>>(of(DEFAULT_DBX_FORGE_MAPBOX_LAT_LNG_MARKER_CONFIG));
+  private readonly _sub = cleanSubscription();
+  private readonly _geoSub = cleanSubscription();
+  private readonly _centerSub = cleanSubscription();
+  private readonly _flyToCenterSub = cleanSubscription();
+  private readonly _clickSub = cleanSubscription();
+  private readonly _zoom = completeOnDestroy(new BehaviorSubject<MapboxZoomLevel>(12));
+  private readonly _markerConfig = completeOnDestroy(new BehaviorSubject<Observable<DbxMapboxMarkerDisplayConfig | false>>(of(DEFAULT_DBX_FORGE_MAPBOX_LAT_LNG_MARKER_CONFIG)));
 
   // Reactive lat/lng conversion functions derived from props so latLng$ recomputes when props arrive.
   readonly latLngPointConfigSignal = computed<LatLngPointFunctionConfig>(() => {
@@ -131,7 +132,7 @@ export class DbxForgeMapboxLatLngFieldComponent implements OnDestroy {
     compact: 'dbx-mapbox-input-field-compact'
   }).pipe(filterMaybe());
 
-  private readonly _useCurrentLocationDisabled = new BehaviorSubject<boolean>(false);
+  private readonly _useCurrentLocationDisabled = completeOnDestroy(new BehaviorSubject<boolean>(false));
   readonly useCurrentLocationDisabled$ = this._useCurrentLocationDisabled.asObservable();
 
   // Field value signal (double-call pattern)
@@ -273,17 +274,6 @@ export class DbxForgeMapboxLatLngFieldComponent implements OnDestroy {
         this._syncing = false;
       }
     });
-  }
-
-  ngOnDestroy(): void {
-    this._zoom.complete();
-    this._markerConfig.complete();
-    this._useCurrentLocationDisabled.complete();
-    this._sub.destroy();
-    this._geoSub.destroy();
-    this._centerSub.destroy();
-    this._flyToCenterSub.destroy();
-    this._clickSub.destroy();
   }
 
   flyToMarker() {

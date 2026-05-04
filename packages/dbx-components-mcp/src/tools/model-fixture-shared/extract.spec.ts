@@ -126,4 +126,79 @@ export class FooTestContextFixture {}
     const extraction = extractAppFixturesFromText({ text: BASE_HEADER, fixturePath: 'fixture.ts' });
     expect(extraction.entries).toEqual([]);
   });
+
+  it('classifies a Firestore-model triplet as kind=firestore-model', () => {
+    const extraction = extractAppFixturesFromText({ text: BASE_HEADER + TOP_LEVEL_SIMPLE, fixturePath: 'fixture.ts' });
+    const entry = extraction.entries.find((e) => e.model === 'Guestbook');
+    expect(entry?.kind).toBe('firestore-model');
+    expect(entry?.nonModelFamily).toBeUndefined();
+  });
+
+  it('classifies an AuthorizedUser pair via inheritance even without a recognized factory', () => {
+    const snippet = `
+export class DemoApiAuthorizedUserTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends AuthorizedUserTestContextFixture<DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiAuthorizedUserTestContextInstance<F>> {}
+export class DemoApiAuthorizedUserTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends AuthorizedUserTestContextInstance<DemoApiFunctionContextFixtureInstance<F>> {}
+`;
+    const extraction = extractAppFixturesFromText({ text: BASE_HEADER + snippet, fixturePath: 'fixture.ts' });
+    const entry = extraction.entries.find((e) => e.model === 'AuthorizedUser');
+    expect(entry).toBeDefined();
+    expect(entry?.kind).toBe('authorized-user');
+    expect(entry?.nonModelFamily).toBe('authorized-user');
+  });
+
+  it('classifies an AuthorizedUser pair via authorizedUserContextFactory call', () => {
+    const snippet = `
+export class DemoApiAuthorizedUserTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends AuthorizedUserTestContextFixture<DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiAuthorizedUserTestContextInstance<F>> {}
+export class DemoApiAuthorizedUserTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends AuthorizedUserTestContextInstance<DemoApiFunctionContextFixtureInstance<F>> {}
+export const demoAuthorizedUserContextFactory = (params: { onboarded?: boolean }) =>
+  authorizedUserContextFactory<DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiAuthorizedUserTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiAuthorizedUserTestContextFixture<FirebaseAdminFunctionTestContextInstance>>({
+    makeFixture: (f) => new DemoApiAuthorizedUserTestContextFixture(f),
+    makeInstance: (uid, testInstance) => new DemoApiAuthorizedUserTestContextInstance(uid, testInstance)
+  });
+export const demoAuthorizedUserContext = demoAuthorizedUserContextFactory({});
+`;
+    const extraction = extractAppFixturesFromText({ text: BASE_HEADER + snippet, fixturePath: 'fixture.ts' });
+    const entry = extraction.entries.find((e) => e.model === 'AuthorizedUser');
+    expect(entry).toBeDefined();
+    expect(entry?.kind).toBe('authorized-user');
+    expect(entry?.factoryName).toBe('demoAuthorizedUserContextFactory');
+    expect(entry?.singletonName).toBe('demoAuthorizedUserContext');
+  });
+
+  it('classifies a pair tagged @dbxFixtureNotModel as kind=non-model', () => {
+    const snippet = `
+/**
+ * @dbxFixtureNotModel
+ */
+export class DemoApiCustomTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<Custom, CustomDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiCustomTestContextInstance<F>> {}
+export class DemoApiCustomTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<Custom, CustomDocument, DemoApiFunctionContextFixtureInstance<F>> {}
+`;
+    const extraction = extractAppFixturesFromText({ text: BASE_HEADER + snippet, fixturePath: 'fixture.ts' });
+    const entry = extraction.entries.find((e) => e.model === 'Custom');
+    expect(entry?.kind).toBe('non-model');
+    expect(entry?.nonModelFamily).toBe('jsdoc-tag');
+  });
+
+  it('honors @dbxFixtureNotModel on the Instance class as well', () => {
+    const snippet = `
+export class DemoApiCustomTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<Custom, CustomDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiCustomTestContextInstance<F>> {}
+/** @dbxFixtureNotModel */
+export class DemoApiCustomTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<Custom, CustomDocument, DemoApiFunctionContextFixtureInstance<F>> {}
+`;
+    const extraction = extractAppFixturesFromText({ text: BASE_HEADER + snippet, fixturePath: 'fixture.ts' });
+    const entry = extraction.entries.find((e) => e.model === 'Custom');
+    expect(entry?.kind).toBe('non-model');
+  });
+
+  it('lets @dbxFixtureNotModel take precedence over framework-recognized inheritance', () => {
+    const snippet = `
+/** @dbxFixtureNotModel */
+export class DemoApiAuthorizedUserTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends AuthorizedUserTestContextFixture<DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiAuthorizedUserTestContextInstance<F>> {}
+export class DemoApiAuthorizedUserTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends AuthorizedUserTestContextInstance<DemoApiFunctionContextFixtureInstance<F>> {}
+`;
+    const extraction = extractAppFixturesFromText({ text: BASE_HEADER + snippet, fixturePath: 'fixture.ts' });
+    const entry = extraction.entries.find((e) => e.model === 'AuthorizedUser');
+    expect(entry?.kind).toBe('non-model');
+    expect(entry?.nonModelFamily).toBe('jsdoc-tag');
+  });
 });

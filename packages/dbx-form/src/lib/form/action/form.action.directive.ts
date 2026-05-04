@@ -1,8 +1,8 @@
 import { Directive, type OnInit, inject, input } from '@angular/core';
 import { addSeconds, isPast } from 'date-fns';
 import { type Observable, of, combineLatest, exhaustMap, catchError, delay, filter, first, map, switchMap, distinctUntilChanged, shareReplay } from 'rxjs';
-import { DbxActionContextStoreSourceInstance, type DbxActionValueGetterResult, cleanLockSet } from '@dereekb/dbx-core';
-import { SubscriptionObject, type IsModifiedFunction, type IsValidFunction, type ObservableOrValue, asObservable, type IsEqualFunction, makeIsModifiedFunctionObservable } from '@dereekb/rxjs';
+import { DbxActionContextStoreSourceInstance, type DbxActionValueGetterResult, cleanLockSet, cleanSubscription } from '@dereekb/dbx-core';
+import { type IsModifiedFunction, type IsValidFunction, type ObservableOrValue, asObservable, type IsEqualFunction, makeIsModifiedFunctionObservable } from '@dereekb/rxjs';
 import { DbxFormState, DbxMutableForm } from '../../form/form';
 import { type IsModified, type IsValid, type MapFunction, type Maybe } from '@dereekb/util';
 import { toObservable } from '@angular/core/rxjs-interop';
@@ -94,9 +94,9 @@ export class DbxActionFormDirective<T = object, O = T> implements OnInit {
 
   readonly mapValueFunction$: Observable<Maybe<DbxActionFormMapValueFunction<T, O>>> = toObservable(this.dbxActionFormMapValue);
 
-  private readonly _triggeredSub = new SubscriptionObject();
-  private readonly _isCompleteSub = new SubscriptionObject();
-  private readonly _isWorkingSub = new SubscriptionObject();
+  private readonly _triggeredSub = cleanSubscription();
+  private readonly _isCompleteSub = cleanSubscription();
+  private readonly _isWorkingSub = cleanSubscription();
 
   constructor() {
     if (this.form.lockSet) {

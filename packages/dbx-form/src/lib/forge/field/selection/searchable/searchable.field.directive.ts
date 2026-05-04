@@ -1,8 +1,8 @@
 import { computed, Directive, input, type OnDestroy, type OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { type PrimativeKey, type Configurable } from '@dereekb/util';
-import { type DbxInjectionComponentConfig, mergeDbxInjectionComponentConfigs } from '@dereekb/dbx-core';
-import { SubscriptionObject, type LoadingState, successResult, startWithBeginLoading } from '@dereekb/rxjs';
+import { type DbxInjectionComponentConfig, mergeDbxInjectionComponentConfigs, cleanSubscription, completeOnDestroy } from '@dereekb/dbx-core';
+import { type LoadingState, successResult, startWithBeginLoading } from '@dereekb/rxjs';
 import { BehaviorSubject, debounceTime, distinctUntilChanged, first, map, mergeMap, of, shareReplay, startWith, switchMap, type Observable } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type DynamicText, type FieldMeta, type ValidationMessages } from '@ng-forge/dynamic-forms';
@@ -38,8 +38,8 @@ export abstract class AbstractForgeSearchableFieldDirective<T = unknown, M = unk
 
   readonly inputCtrl = new FormControl<string>('');
 
-  protected readonly _clearDisplayHashMapSub = new SubscriptionObject();
-  protected readonly _displayHashMap = new BehaviorSubject<Map<H, ConfiguredSearchableValueFieldDisplayValue<T, M>>>(new Map());
+  protected readonly _clearDisplayHashMapSub = cleanSubscription();
+  protected readonly _displayHashMap = completeOnDestroy(new BehaviorSubject<Map<H, ConfiguredSearchableValueFieldDisplayValue<T, M>>>(new Map()));
 
   // MARK: Input Observables
   readonly inputValue$: Observable<string> = this.inputCtrl.valueChanges.pipe(
@@ -108,8 +108,6 @@ export abstract class AbstractForgeSearchableFieldDirective<T = unknown, M = unk
   }
 
   ngOnDestroy(): void {
-    this._clearDisplayHashMapSub.destroy();
-    this._displayHashMap.complete();
     this._onDestroy();
   }
 

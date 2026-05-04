@@ -1,10 +1,11 @@
 import { NgClass, NgStyle } from '@angular/common';
-import { type OnInit, type OnDestroy, Component, ChangeDetectionStrategy } from '@angular/core';
+import { type OnInit, Component, ChangeDetectionStrategy } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { asObservable, type ObservableOrValue, switchMapMaybeDefault } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { FieldWrapper, type FormlyFieldConfig } from '@ngx-formly/core';
 import { BehaviorSubject, type Observable, shareReplay } from 'rxjs';
+import { completeOnDestroy } from '@dereekb/dbx-core';
 
 /**
  * A map of CSS style properties to their values, used with `[ngStyle]`.
@@ -42,9 +43,9 @@ export interface DbxFormStyleWrapperConfig {
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxFormStyleWrapperComponent extends FieldWrapper<FormlyFieldConfig<DbxFormStyleWrapperConfig>> implements OnInit, OnDestroy {
-  private readonly _style = new BehaviorSubject<Maybe<Observable<DbxFormStyleObject>>>(undefined);
-  private readonly _class = new BehaviorSubject<Maybe<Observable<string>>>(undefined);
+export class DbxFormStyleWrapperComponent extends FieldWrapper<FormlyFieldConfig<DbxFormStyleWrapperConfig>> implements OnInit {
+  private readonly _style = completeOnDestroy(new BehaviorSubject<Maybe<Observable<DbxFormStyleObject>>>(undefined));
+  private readonly _class = completeOnDestroy(new BehaviorSubject<Maybe<Observable<string>>>(undefined));
 
   readonly style$ = this._style.pipe(switchMapMaybeDefault({}), shareReplay(1));
   readonly class$ = this._class.pipe(switchMapMaybeDefault(''), shareReplay(1));
@@ -68,10 +69,5 @@ export class DbxFormStyleWrapperComponent extends FieldWrapper<FormlyFieldConfig
     if (this.classGetter) {
       this._class.next(asObservable(this.classGetter));
     }
-  }
-
-  ngOnDestroy(): void {
-    this._style.complete();
-    this._class.complete();
   }
 }

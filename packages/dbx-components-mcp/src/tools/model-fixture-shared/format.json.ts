@@ -58,6 +58,8 @@ function summarizeEntry(entry: FixtureEntry, full: boolean = false): unknown {
   const summary: Record<string, unknown> = {
     model: entry.model,
     prefix: entry.prefix,
+    kind: entry.kind,
+    nonModelFamily: entry.nonModelFamily,
     archetype: entry.archetype,
     fixtureClassName: entry.fixtureClassName,
     instanceClassName: entry.instanceClassName,

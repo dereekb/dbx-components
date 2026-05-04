@@ -1,6 +1,7 @@
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { loadSemanticTypeManifests } from './loader.js';
+import { loadTokenManifests } from './tokens-loader.js';
 
 const PACKAGE_ROOT = resolve(__dirname, '..', '..');
 const MANIFESTS_DIR = resolve(PACKAGE_ROOT, 'generated');
@@ -11,6 +12,12 @@ const BUNDLED_PATHS = {
   date: resolve(MANIFESTS_DIR, 'dereekb-date.semantic-types.mcp.generated.json'),
   firebase: resolve(MANIFESTS_DIR, 'dereekb-firebase.semantic-types.mcp.generated.json'),
   firebaseServer: resolve(MANIFESTS_DIR, 'dereekb-firebase-server.semantic-types.mcp.generated.json')
+} as const;
+
+const BUNDLED_TOKEN_PATHS = {
+  dbxWeb: resolve(MANIFESTS_DIR, 'dereekb-dbx-web.tokens.mcp.generated.json'),
+  matSys: resolve(MANIFESTS_DIR, 'angular-material-m3.tokens.mcp.generated.json'),
+  mdc: resolve(MANIFESTS_DIR, 'angular-material-mdc.tokens.mcp.generated.json')
 } as const;
 
 describe('bundled @dereekb/* manifests', () => {
@@ -32,5 +39,18 @@ describe('bundled @dereekb/* manifests', () => {
     // couple this spec to Step 3 progress, so we just prove the pipeline
     // produces a valid registry.
     expect(result.entries.size).toBeGreaterThanOrEqual(0);
+  });
+
+  it('loads bundled token manifests cleanly through loadTokenManifests', async () => {
+    const result = await loadTokenManifests({
+      sources: [
+        { origin: 'bundled', path: BUNDLED_TOKEN_PATHS.dbxWeb },
+        { origin: 'bundled', path: BUNDLED_TOKEN_PATHS.matSys },
+        { origin: 'bundled', path: BUNDLED_TOKEN_PATHS.mdc }
+      ]
+    });
+    expect(result.loadedSources).toEqual(['dereekb-dbx-web', 'angular-material-m3', 'angular-material-mdc']);
+    expect(result.warnings).toEqual([]);
+    expect(result.entries.size).toBeGreaterThan(50);
   });
 });

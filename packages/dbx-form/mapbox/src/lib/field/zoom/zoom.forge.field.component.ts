@@ -1,7 +1,7 @@
 import { CompactContextStore, mapCompactModeObs } from '@dereekb/dbx-web';
 import { ChangeDetectionStrategy, Component, type OnDestroy, computed, effect, ElementRef, inject, input, type InputSignal, type Signal } from '@angular/core';
 import { BehaviorSubject, shareReplay, type Observable } from 'rxjs';
-import { filterMaybe, SubscriptionObject } from '@dereekb/rxjs';
+import { filterMaybe } from '@dereekb/rxjs';
 import { type ZoomLevel, type Maybe, type LatLngPoint, latLngPoint } from '@dereekb/util';
 import { DbxMapboxService, DbxMapboxMapStore, type MapboxZoomLevel, provideMapboxStoreIfParentIsUnavailable, mapboxZoomLevel, MAPBOX_MAX_ZOOM_LEVEL, MAPBOX_MIN_ZOOM_LEVEL, DbxMapboxModule } from '@dereekb/dbx-web/mapbox';
 import { NgClass } from '@angular/common';
@@ -12,6 +12,7 @@ import type { FieldTree } from '@angular/forms/signals';
 import { type DynamicText, type FieldMeta, type ValidationMessages, DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES } from '@ng-forge/dynamic-forms';
 import { resolveValueFieldContext, buildValueFieldInputs, setupMetaTracking } from '@ng-forge/dynamic-forms/integration';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { completeOnDestroy, cleanSubscription } from '@dereekb/dbx-core';
 
 /**
  * Custom props for the forge mapbox zoom field.
@@ -89,8 +90,8 @@ export class DbxForgeMapboxZoomFieldComponent implements OnDestroy {
   readonly compactClassSignal = toSignal(this.compactClass$, { initialValue: '' });
 
   // Subscription management
-  private readonly _sub = new SubscriptionObject();
-  private readonly _center = new BehaviorSubject<Maybe<LatLngPoint>>(undefined);
+  private readonly _sub = cleanSubscription();
+  private readonly _center = completeOnDestroy(new BehaviorSubject<Maybe<LatLngPoint>>(undefined));
 
   // Field value signal (double-call pattern)
   readonly fieldValue = computed(() => {
@@ -188,9 +189,6 @@ export class DbxForgeMapboxZoomFieldComponent implements OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this._center.complete();
-    this._sub.destroy();
-
     if (!this._undoZoomLimit) {
       this.dbxMapboxMapStore.setZoomRange({});
     }

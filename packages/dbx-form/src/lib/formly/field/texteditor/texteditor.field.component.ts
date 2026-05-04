@@ -5,10 +5,11 @@ import { type FieldTypeConfig, type FormlyFieldProps } from '@ngx-formly/core';
 import { FieldType } from '@ngx-formly/material';
 import { Editor, NgxEditorModule } from '@bobbyquantum/ngx-editor';
 import { debounceTime, filter } from 'rxjs';
-import { filterMaybe, SubscriptionObject } from '@dereekb/rxjs';
+import { filterMaybe } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NgClass } from '@angular/common';
+import { cleanSubscription } from '@dereekb/dbx-core';
 
 /**
  * Formly field properties for the text editor component.
@@ -46,7 +47,7 @@ export class DbxTextEditorFieldComponent<T extends TextEditorComponentFieldProps
   private readonly _compactContextStore = inject(CompactContextStore, { optional: true });
 
   private _editor!: Editor;
-  private readonly _sub = new SubscriptionObject();
+  private readonly _sub = cleanSubscription();
 
   readonly compactClass$ = mapCompactModeObs(this._compactContextStore?.mode$, {
     compact: 'dbx-texteditor-field-compact'
@@ -99,7 +100,5 @@ export class DbxTextEditorFieldComponent<T extends TextEditorComponentFieldProps
     if (this._editor != null) {
       this._editor.destroy();
     }
-
-    this._sub.destroy();
   }
 }

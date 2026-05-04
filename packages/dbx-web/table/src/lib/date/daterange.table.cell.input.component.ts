@@ -5,7 +5,6 @@ import { type MatDateRangeSelectionStrategy, DateRange, MAT_DATE_RANGE_SELECTION
 import { DateAdapter } from '@angular/material/core';
 import { type Days, type Maybe } from '@dereekb/util';
 import { FormGroup, FormControl, ReactiveFormsModule } from '@angular/forms';
-import { SubscriptionObject } from '@dereekb/rxjs';
 import { addDays, format as formatDate } from 'date-fns';
 import { distinctUntilChanged, filter, startWith, throttleTime } from 'rxjs';
 import { cleanSubscription, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
@@ -79,8 +78,8 @@ export const DEFAULT_DBX_TABLE_DATE_RANGE_DAY_BUTTON_FORMAT = 'MMM dd';
 export class DbxTableDateRangeDayDistanceInputCellInputComponent {
   readonly tableStore = inject(DbxTableStore<DateRangeDayDistanceInput>);
 
-  private readonly _syncSub = new SubscriptionObject();
-  private readonly _valueSub = new SubscriptionObject();
+  private readonly _syncSub = cleanSubscription();
+  private readonly _valueSub = cleanSubscription();
 
   private readonly _pickerOpenedSignal = signal<boolean>(false);
   private readonly _configSignal = signal<DbxTableDateRangeDayDistanceInputCellInputComponentConfig>(DEFAULT_DBX_TABLE_DATE_RANGE_DAY_DISTIANCE_INPUT_CELL_COMPONENT_CONFIG);

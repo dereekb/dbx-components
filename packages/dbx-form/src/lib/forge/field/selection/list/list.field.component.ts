@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, input, type OnDestroy, type OnInit, type Type } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, input, type OnInit, type Type } from '@angular/core';
 import { MatDividerModule } from '@angular/material/divider';
 import { type Maybe, type PrimativeKey, readKeysFrom, convertMaybeToArray, hasDifferentValues, isSelectedDecisionFunctionFactory } from '@dereekb/util';
-import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { SubscriptionObject, switchMapFilterMaybe, distinctUntilHasDifferentValues } from '@dereekb/rxjs';
+import { DbxInjectionComponent, type DbxInjectionComponentConfig, cleanSubscription, completeOnDestroy } from '@dereekb/dbx-core';
+import { switchMapFilterMaybe, distinctUntilHasDifferentValues } from '@dereekb/rxjs';
 import { type AbstractDbxSelectionListWrapperDirective, type ListSelectionState, type DbxValueListItemDecisionFunction, dbxValueListItemDecisionFunction, DbxListModifierModule } from '@dereekb/dbx-web';
 import { BehaviorSubject, map, type Observable, shareReplay } from 'rxjs';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
@@ -27,7 +27,7 @@ import { dbxForgeFieldDisabled } from '../../field.util';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxForgeListSelectionFieldComponent<T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey> implements OnInit, OnDestroy {
+export class DbxForgeListSelectionFieldComponent<T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey> implements OnInit {
   private readonly elementRef = inject(ElementRef<HTMLElement>);
 
   // ng-forge ValueFieldComponent inputs
@@ -46,10 +46,10 @@ export class DbxForgeListSelectionFieldComponent<T = unknown, C extends Abstract
   readonly isDisabled = dbxForgeFieldDisabled();
   readonly isDisabled$ = toObservable(this.isDisabled);
 
-  private readonly _selectionEventSub = new SubscriptionObject();
-  private readonly _loadMoreSub = new SubscriptionObject();
-  private readonly _listComponentClassObs = new BehaviorSubject<Maybe<Observable<Type<C>>>>(undefined);
-  private readonly _valuesSubject = new BehaviorSubject<K[]>([]);
+  private readonly _selectionEventSub = cleanSubscription();
+  private readonly _loadMoreSub = cleanSubscription();
+  private readonly _listComponentClassObs = completeOnDestroy(new BehaviorSubject<Maybe<Observable<Type<C>>>>(undefined));
+  private readonly _valuesSubject = completeOnDestroy(new BehaviorSubject<K[]>([]));
 
   readonly labelSignal = computed(() => {
     const l = this.label();
@@ -143,13 +143,6 @@ export class DbxForgeListSelectionFieldComponent<T = unknown, C extends Abstract
     if (p?.listComponentClass) {
       this._listComponentClassObs.next(p.listComponentClass);
     }
-  }
-
-  ngOnDestroy(): void {
-    this._selectionEventSub.destroy();
-    this._loadMoreSub.destroy();
-    this._listComponentClassObs.complete();
-    this._valuesSubject.complete();
   }
 
   // MARK: Internal

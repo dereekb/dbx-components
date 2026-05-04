@@ -1,5 +1,5 @@
 import { BehaviorSubject, map, type Observable, of, delay, startWith, switchMap, Subject } from 'rxjs';
-import { ChangeDetectionStrategy, Component, type OnDestroy, type Type, type OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, type Type, type OnInit, signal } from '@angular/core';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
 import {
@@ -48,6 +48,7 @@ import { DocFeatureExampleComponent } from '../../shared/component/feature.examp
 import { DocFeatureFormTabsComponent } from '../../shared/component/feature.formtabs.component';
 import { DocFormExampleComponent } from '../component/example.form.component';
 import { DocFormForgeExampleComponent } from '../component/forge.example.form.component';
+import { completeOnDestroy } from '@dereekb/dbx-core';
 
 export type TestStringSearchFunction = (text: string) => string[];
 
@@ -142,8 +143,8 @@ const EMBEDDED_SCHOOLS_FILTER_FUNCTION = searchStringFilterFunction<ExampleSearc
   imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormExampleComponent, DocFormForgeExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormFormlyDbxListFieldModule, DbxFormFormlyPickableFieldModule, DbxFormFormlySearchableFieldModule, DbxFormFormlySourceSelectModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DocFormSelectionComponent implements OnInit, OnDestroy {
-  private _searchStrings = new BehaviorSubject<TestStringSearchFunction>((search) => ['A', 'B', 'C', 'D'].map((x) => `${search} ${x}`.trim()));
+export class DocFormSelectionComponent implements OnInit {
+  private _searchStrings = completeOnDestroy(new BehaviorSubject<TestStringSearchFunction>((search) => ['A', 'B', 'C', 'D'].map((x) => `${search} ${x}`.trim())));
   readonly searchFn$ = this._searchStrings.asObservable();
 
   readonly valueSelectionFields: FormlyFieldConfig[] = [
@@ -704,7 +705,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
 
   readonly numberToLoadPerUpdate = 10;
 
-  private _values = new BehaviorSubject<(DocValue & IndexRef)[]>([]);
+  private _values = completeOnDestroy(new BehaviorSubject<(DocValue & IndexRef)[]>([]));
 
   readonly initialListSelectionValues$ = of({
     dbxlist: [1, 2, 4, 8, 16, 32, 64, 128, 256]
@@ -1008,7 +1009,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
     anchor3: '3'
   };
 
-  readonly _refreshDisplayValues = new Subject();
+  readonly _refreshDisplayValues = completeOnDestroy(new Subject());
 
   // MARK: Forge Searchable Text with Anchors
   readonly forgeSearchableTextFieldWithAnchorsConfig: FormConfig = {
@@ -1153,11 +1154,6 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadMore();
-  }
-
-  ngOnDestroy(): void {
-    this._searchStrings.complete();
-    this._refreshDisplayValues.complete();
   }
 
   refreshDisplayValues() {

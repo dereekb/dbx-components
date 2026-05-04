@@ -1,4 +1,4 @@
-import { type ClickableAnchor } from '@dereekb/dbx-core';
+import { type ClickableAnchor, completeOnDestroy } from '@dereekb/dbx-core';
 import {
   listItemModifier,
   type ListItemModifier,
@@ -23,7 +23,7 @@ import {
 import { type CustomDocValue, DocCustomItemListComponent } from './../component/item.list.custom.component';
 import { type ListLoadingState, mapLoadingStateResults, successResult, beginLoading } from '@dereekb/rxjs';
 import { BehaviorSubject, map, switchMap, startWith, type Observable, delay, of } from 'rxjs';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, type OnInit, type OnDestroy, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, type OnInit, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type DocValue, type DocValueWithSelection, makeDocValues } from '../component/item.list';
 import { type Maybe, takeFront } from '@dereekb/util';
@@ -64,7 +64,7 @@ import { DocItemListAccordionComponent } from '../component/item.list.accordion.
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DocLayoutListComponent implements OnInit, OnDestroy {
+export class DocLayoutListComponent implements OnInit {
   readonly cdRef = inject(ChangeDetectorRef);
 
   readonly numberToLoadPerUpdate = 50;
@@ -74,8 +74,8 @@ export class DocLayoutListComponent implements OnInit, OnDestroy {
 
   selectionState?: ListSelectionState<DocValue>;
 
-  private _values = new BehaviorSubject<DocValue[]>([]);
-  private _selectionMode = new BehaviorSubject<Maybe<DbxListSelectionMode>>('view');
+  private _values = completeOnDestroy(new BehaviorSubject<DocValue[]>([]));
+  private _selectionMode = completeOnDestroy(new BehaviorSubject<Maybe<DbxListSelectionMode>>('view'));
 
   readonly selectionMode$ = this._selectionMode.asObservable();
   readonly selectionModeSignal = toSignal(this.selectionMode$, { initialValue: 'view' as Maybe<DbxListSelectionMode> });
@@ -232,11 +232,6 @@ export class DocLayoutListComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadMore();
-  }
-
-  ngOnDestroy(): void {
-    this._values.complete();
-    this._selectionMode.complete();
   }
 
   loadMore() {

@@ -2,10 +2,10 @@ import { ChangeDetectionStrategy, Component, type OnInit, computed, inject, sign
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { type FormlyFieldConfig, FormlyForm, type FormlyFormOptions, FormlyModule } from '@ngx-formly/core';
 import { distinctUntilChanged, map, throttleTime, startWith, BehaviorSubject, type Observable, Subject, switchMap, shareReplay, of, scan, filter, timer, first, merge, delay } from 'rxjs';
-import { cleanWithLockSet } from '@dereekb/dbx-core';
+import { cleanWithLockSet, completeOnDestroy, cleanSubscription } from '@dereekb/dbx-core';
 import { type DbxForm, type DbxFormDisabledKey, type DbxFormEvent, DbxFormState, DEFAULT_FORM_DISABLED_KEY, provideDbxMutableForm, toggleDisableFormControl } from '../form/form';
 import { DbxFormlyContext, type DbxFormlyContextDelegate, type DbxFormlyInitialize } from './formly.context';
-import { scanCount, switchMapFilterMaybe, SubscriptionObject } from '@dereekb/rxjs';
+import { scanCount, switchMapFilterMaybe } from '@dereekb/rxjs';
 import { type BooleanStringKeyArray, BooleanStringKeyArrayUtility, iterablesAreSetEquivalent, type Maybe } from '@dereekb/util';
 import { toSignal } from '@angular/core/rxjs-interop';
 
@@ -39,15 +39,15 @@ export class DbxFormlyComponent<T> implements DbxForm, DbxFormlyContextDelegate<
 
   readonly formlyForm = viewChild(FormlyForm);
 
-  private readonly _fields = new BehaviorSubject<Maybe<Observable<FormlyFieldConfig[]>>>(undefined);
-  private readonly _events = new BehaviorSubject<DbxFormEvent>({ isComplete: false, state: DbxFormState.INITIALIZING, status: 'PENDING' });
-  private readonly _disabled = new BehaviorSubject<BooleanStringKeyArray>(undefined);
+  private readonly _fields = completeOnDestroy(new BehaviorSubject<Maybe<Observable<FormlyFieldConfig[]>>>(undefined));
+  private readonly _events = completeOnDestroy(new BehaviorSubject<DbxFormEvent>({ isComplete: false, state: DbxFormState.INITIALIZING, status: 'PENDING' }));
+  private readonly _disabled = completeOnDestroy(new BehaviorSubject<BooleanStringKeyArray>(undefined));
 
-  private readonly _reset = new BehaviorSubject<Date>(new Date());
-  private readonly _forceUpdate = new Subject<void>();
+  private readonly _reset = completeOnDestroy(new BehaviorSubject<Date>(new Date()));
+  private readonly _forceUpdate = completeOnDestroy(new Subject<void>());
 
-  private readonly _disabledSub = new SubscriptionObject();
-  private readonly _enforceDisabledSub = new SubscriptionObject();
+  private readonly _disabledSub = cleanSubscription();
+  private readonly _enforceDisabledSub = cleanSubscription();
 
   readonly form = new FormGroup({});
   readonly modelSignal = signal<T>({} as T);

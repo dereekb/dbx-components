@@ -1,10 +1,10 @@
 import { DocExtensionTableItemCellExampleComponent } from './../component/table.item.cell.example.component';
 import { startOfDay } from 'date-fns';
-import { Component, type OnDestroy, type OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, type OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type DateRangeDayDistanceInput, expandDaysForDateRange, dateRange, formatToISO8601DayStringForSystem } from '@dereekb/date';
 import { type DbxTableColumn, type DbxTableContextData, type DbxTableContextDataDelegate, dbxTableDateHeaderInjectionFactory, dbxTableDateRangeDayDistanceInputCellInput, DbxTableDirective, type DbxTableItemGroup, DbxTableViewComponent, type DbxTableViewDelegate } from '@dereekb/dbx-web/table';
-import { beginLoadingPage, type ObservableOrValue, type PageListLoadingState, SubscriptionObject, successPageResult, successResult } from '@dereekb/rxjs';
+import { beginLoadingPage, type ObservableOrValue, type PageListLoadingState, successPageResult, successResult } from '@dereekb/rxjs';
 import { arrayFactory, incrementingNumberFactory, range } from '@dereekb/util';
 import { delay, map, type Observable, of, startWith, BehaviorSubject, skip, shareReplay, distinctUntilChanged, switchMap, interval, filter, first } from 'rxjs';
 import { DocExtensionTableItemActionExampleComponent } from '../component/table.item.action.example.component';
@@ -21,6 +21,7 @@ import { DocExtensionTableSummaryRowHeaderExampleComponent } from '../component/
 import { DocExtensionTableSummaryRowEndExampleComponent } from '../component/table.summary.row.end.example.component';
 import { DocExtensionTableColumnFooterExampleComponent } from '../component/table.column.footer.example.component';
 import { DocExtensionTableFullSummaryRowExampleComponent } from '../component/table.fullsummaryrow.example.component';
+import { completeOnDestroy, cleanSubscription } from '@dereekb/dbx-core';
 
 const numberOfTestItems = 15;
 const daysInWeek = 7;
@@ -35,15 +36,15 @@ const _addRandomValuesToData = (data: ExampleTableData[]) => data.map((x) => ({ 
   imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxTableViewComponent, DbxTableDirective, MatButton],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DocExtensionTableComponent implements OnDestroy, OnInit {
+export class DocExtensionTableComponent implements OnInit {
   readonly exampleInput: DateRangeDayDistanceInput = {
     date: startOfDay(new Date()),
     distance: 6
   };
 
-  readonly increaseSub = new SubscriptionObject();
+  readonly increaseSub = cleanSubscription();
   readonly exampleTableData: ExampleTableData[] = range(0, numberOfTestItems).map((x) => ({ name: `Example ${x}`, key: String(x), columnValues: randomValueArray(daysInWeek).map((x) => x + increase) }));
-  readonly exampleTableDataItems = new BehaviorSubject<ExampleTableData[]>(this.exampleTableData);
+  readonly exampleTableDataItems = completeOnDestroy(new BehaviorSubject<ExampleTableData[]>(this.exampleTableData));
 
   readonly isLoading$ = this.exampleTableDataItems.pipe(
     skip(1),
@@ -210,10 +211,5 @@ export class DocExtensionTableComponent implements OnDestroy, OnInit {
         const newItems = this.exampleTableDataItems.value.map((x) => ({ ...x, columnValues: x.columnValues.map((x) => x + 1) }));
         this.exampleTableDataItems.next(newItems);
       });
-  }
-
-  ngOnDestroy(): void {
-    this.exampleTableDataItems.complete();
-    this.increaseSub.destroy();
   }
 }

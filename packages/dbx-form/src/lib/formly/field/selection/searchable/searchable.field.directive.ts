@@ -1,6 +1,6 @@
 import { type ArrayOrValue, type Maybe, convertMaybeToArray, lastValue, type PrimativeKey, separateValues, asArray, filterUniqueValues, type Configurable } from '@dereekb/util';
-import { type DbxInjectionComponentConfig, mergeDbxInjectionComponentConfigs } from '@dereekb/dbx-core';
-import { filterMaybe, SubscriptionObject, type LoadingState, successResult, startWithBeginLoading, isLoadingStateInLoadingState, listLoadingStateContext } from '@dereekb/rxjs';
+import { type DbxInjectionComponentConfig, mergeDbxInjectionComponentConfigs, cleanSubscription, completeOnDestroy } from '@dereekb/dbx-core';
+import { filterMaybe, type LoadingState, successResult, startWithBeginLoading, isLoadingStateInLoadingState, listLoadingStateContext } from '@dereekb/rxjs';
 import { Directive, ElementRef, type OnDestroy, type OnInit, viewChild } from '@angular/core';
 import { type AbstractControl, FormControl, type ValidatorFn } from '@angular/forms';
 import { type FieldTypeConfig, type FormlyFieldProps } from '@ngx-formly/core';
@@ -122,11 +122,11 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
 
   readonly inputCtrl = new FormControl<string>('');
 
-  private readonly _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
+  private readonly _formControlObs = completeOnDestroy(new BehaviorSubject<Maybe<AbstractControl>>(undefined));
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
 
-  private readonly _clearDisplayHashMapSub = new SubscriptionObject();
-  private readonly _displayHashMap = new BehaviorSubject<Map<H, ConfiguredSearchableValueFieldDisplayValue<T, M>>>(new Map());
+  private readonly _clearDisplayHashMapSub = cleanSubscription();
+  private readonly _displayHashMap = completeOnDestroy(new BehaviorSubject<Map<H, ConfiguredSearchableValueFieldDisplayValue<T, M>>>(new Map()));
 
   readonly inputValue$: Observable<string> = this.inputCtrl.valueChanges.pipe(
     startWith(this.inputCtrl.value),
@@ -146,7 +146,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
     shareReplay(1)
   );
 
-  private readonly _singleValueSyncSub = new SubscriptionObject();
+  private readonly _singleValueSyncSub = cleanSubscription();
 
   readonly searchContext = listLoadingStateContext({ obs: this.searchResultsState$, showLoadingOnNoValue: false });
   readonly searchResults$: Observable<ConfiguredSearchableValueFieldDisplayValue<T, M>[]> = this.searchResultsState$.pipe(
@@ -355,10 +355,6 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
-    this._clearDisplayHashMapSub.destroy();
-    this._displayHashMap.complete();
-    this._singleValueSyncSub.destroy();
-    this._formControlObs.complete();
     this.searchContext.destroy();
   }
 

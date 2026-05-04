@@ -1,0 +1,46 @@
+{
+  "name": "dbx-web-eslint",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/dbx-web/eslint/src",
+  "projectType": "library",
+  "tags": [],
+  "implicitDependencies": ["!util-test"],
+  "targets": {
+    "build-base": {
+      "executor": "@nx/rollup:rollup",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "importPath": "@dereekb/dbx-web/eslint",
+        "outputPath": "dist/packages/dbx-web/eslint",
+        "tsConfig": "packages/dbx-web/eslint/tsconfig.lib.json",
+        "project": "packages/dbx-web/eslint/package.json",
+        "main": "packages/dbx-web/eslint/src/index.ts",
+        "format": ["esm", "cjs"],
+        "generateExportsField": true,
+        "external": "all",
+        "assets": [],
+        "rollupConfig": ["rollup.visualizer.config.ts"],
+        "compiler": "swc"
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "sourceMap": false,
+          "extractLicenses": true
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "{projectRoot}/../../../coverage/packages/dbx-web/eslint"
+      }
+    }
+  }
+}

@@ -98,7 +98,13 @@ export const DbxMcpConfig = type({
   'forgeFields?': ClusterSection,
   'pipes?': ClusterSection,
   'actions?': ClusterSection,
-  'filters?': ClusterSection
+  'filters?': ClusterSection,
+  'tokens?': ClusterSection,
+  'uiSmellCheck?': {
+    'projectConventions?': {
+      'cardWrapperClasses?': 'string[]'
+    }
+  }
 });
 
 /**

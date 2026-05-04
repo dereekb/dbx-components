@@ -1,10 +1,11 @@
 import { type Maybe, objectIsEmpty } from '@dereekb/util';
 import { FieldWrapper, type FormlyFieldProps, type FormlyFieldConfig } from '@ngx-formly/core';
 import { map, shareReplay, startWith, switchMap, BehaviorSubject, of, distinctUntilChanged } from 'rxjs';
-import { Directive, type OnDestroy, type OnInit } from '@angular/core';
+import { Directive, type OnInit } from '@angular/core';
 import { type AbstractControl } from '@angular/forms';
 import { filterMaybe } from '@dereekb/rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { completeOnDestroy } from '@dereekb/dbx-core';
 
 /**
  * Base configuration for expandable form section wrappers.
@@ -41,12 +42,12 @@ export const DEFAULT_HAS_VALUE_FN = (x: object) => !objectIsEmpty(x);
  * specific UI (expand button, toggle, etc.).
  */
 @Directive()
-export class AbstractFormExpandSectionWrapperDirective<T extends object = object, S extends AbstractFormExpandSectionConfig<T> = AbstractFormExpandSectionConfig<T>> extends FieldWrapper<FormlyFieldConfig<S>> implements OnInit, OnDestroy {
+export class AbstractFormExpandSectionWrapperDirective<T extends object = object, S extends AbstractFormExpandSectionConfig<T> = AbstractFormExpandSectionConfig<T>> extends FieldWrapper<FormlyFieldConfig<S>> implements OnInit {
   private static _nextId = 0;
   readonly expandContentId = `dbx-form-expand-${AbstractFormExpandSectionWrapperDirective._nextId++}`;
 
-  protected readonly _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
-  protected readonly _toggleOpen = new BehaviorSubject<Maybe<boolean>>(undefined);
+  protected readonly _formControlObs = completeOnDestroy(new BehaviorSubject<Maybe<AbstractControl>>(undefined));
+  protected readonly _toggleOpen = completeOnDestroy(new BehaviorSubject<Maybe<boolean>>(undefined));
 
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
 
@@ -105,10 +106,5 @@ export class AbstractFormExpandSectionWrapperDirective<T extends object = object
 
   ngOnInit(): void {
     this._formControlObs.next(this.formControl);
-  }
-
-  ngOnDestroy(): void {
-    this._toggleOpen.complete();
-    this._formControlObs.complete();
   }
 }
