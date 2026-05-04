@@ -1,6 +1,10 @@
 {
   "name": "@dereekb/dbx-form",
   "version": "13.10.7",
+  "sideEffects": [
+    "*.scss",
+    "*.css"
+  ],
   "peerDependencies": {
     "@angular/cdk": "^21.2.8",
     "@angular/common": "21.2.10",
@@ -32,7 +36,8 @@
     "ng-overlay-container": "^21.0.1",
     "ngx-mapbox-gl": "git+https://git@github.com/dereekb/ngx-mapbox-gl#3f1d25b0661bc48abbd415dc79ca7f66568bae2e",
     "ngx-mat-input-tel": "^21.4.1",
-    "rxjs": "^7.8.2"
+    "rxjs": "^7.8.2",
+    "vitest": "4.1.5"
   },
   "dependencies": {},
   "exports": {

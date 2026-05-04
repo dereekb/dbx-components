@@ -6,6 +6,8 @@
   },
   "devDependencies": {
     "@angular/core": "21.2.10",
+    "@dereekb/dbx-core": "13.10.7",
+    "@dereekb/rxjs": "13.10.7",
     "@typescript-eslint/parser": "8.59.0",
     "eslint": "9.39.4",
     "rxjs": "^7.8.2"

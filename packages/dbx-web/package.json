@@ -1,6 +1,10 @@
 {
   "name": "@dereekb/dbx-web",
   "version": "13.10.7",
+  "sideEffects": [
+    "*.scss",
+    "*.css"
+  ],
   "peerDependencies": {
     "@angular/cdk": "^21.2.8",
     "@angular/common": "21.2.10",
@@ -39,6 +43,16 @@
     },
     "./mapbox": {},
     "./calendar": {},
-    "./table": {}
+    "./table": {},
+    "./eslint": {
+      "module": "./eslint/index.esm.js",
+      "types": "./eslint/index.d.ts",
+      "import": "./eslint/index.cjs.mjs",
+      "default": "./eslint/index.cjs.js"
+    }
+  },
+  "devDependencies": {
+    "@typescript-eslint/parser": "8.59.0",
+    "eslint": "9.39.4"
   }
 }

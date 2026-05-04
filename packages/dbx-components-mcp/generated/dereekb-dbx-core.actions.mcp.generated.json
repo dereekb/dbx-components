@@ -697,7 +697,7 @@
       "example": "<div dbxAction>\n  <ng-container [dbxActionValue]=\"myValue\"></ng-container>\n  <button (click)=\"action.trigger()\">Submit</button>\n</div>",
       "sourceLocation": {
         "file": "src/lib/action/directive/state/action.value.directive.ts",
-        "line": 48
+        "line": 47
       }
     },
     {

@@ -9,5 +9,24 @@
     "@modelcontextprotocol/sdk": "^1.0.0",
     "arktype": "^2.2.0",
     "ts-morph": "^21.0.0"
+  },
+  "peerDependencies": {
+    "@angular/common": "21.2.10",
+    "@angular/core": "21.2.10",
+    "@angular/forms": "21.2.10",
+    "@angular/material": "^21.2.8",
+    "@dereekb/dbx-core": "13.10.7",
+    "@dereekb/dbx-firebase": "13.10.7",
+    "@dereekb/dbx-form": "13.10.7",
+    "@dereekb/dbx-web": "13.10.7",
+    "@dereekb/firebase": "13.10.7",
+    "@dereekb/firebase-server": "13.10.7",
+    "@dereekb/rxjs": "13.10.7",
+    "@dereekb/util": "13.10.7",
+    "@uirouter/angular": "21.0.0",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@dereekb/model": "13.10.7"
   }
 }
