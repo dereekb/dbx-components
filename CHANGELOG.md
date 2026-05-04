@@ -1,3 +1,21 @@
+## [13.10.7](https://github.com/dereekb/dbx-components/compare/v13.10.6-dev...v13.10.7) (2026-05-04)
+
+
+### Build System
+
+- lint fix + mcp regeneration ([e413ee86](https://github.com/dereekb/dbx-components/commit/e413ee866c4ff79195e306502c3c4ce66bc18c4a))
+
+
+### Code Refactoring
+
+- added @dereekb/dbx-web/eslint plugin ([3db6d2a8](https://github.com/dereekb/dbx-components/commit/3db6d2a831d4c27de66357379c1a93cd71b96547))
+- added DbxWebPageTitleInfoDirective ([3a90265c](https://github.com/dereekb/dbx-components/commit/3a90265c23632abbcdfa606880c28f6bb6d60edb))
+- **dbx-components-mcp:** added css-token-lookup, ui-smell-check ([719f3c76](https://github.com/dereekb/dbx-components/commit/719f3c76f00a23ede9b26e78d50f6f54ceb53fff))
+- **dbx-components-mcp:** tune ui-smell-check from demo ([fbc14858](https://github.com/dereekb/dbx-components/commit/fbc148581db01be68639851a5af49ed6042f0742))
+- lint-fix ([dd7d218b](https://github.com/dereekb/dbx-components/commit/dd7d218b66fb926a56a67d25f42dcf3407bf9f77))
+- recognize non-model fixtures in fixture validator ([2f130dad](https://github.com/dereekb/dbx-components/commit/2f130dadbd1e81d9d455dee807bdedc2efd5f548))
+- shorter init out filenames in dbx-components-mcp ([5018bce0](https://github.com/dereekb/dbx-components/commit/5018bce036fd4fbf716c4cc82d76fabe96ec8811))
+
 ## [13.10.6](https://github.com/dereekb/dbx-components/compare/v13.10.5-dev...v13.10.6) (2026-05-02)
 
 

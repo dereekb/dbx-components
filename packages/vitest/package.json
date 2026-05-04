@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/vitest",
-  "version": "13.10.6",
+  "version": "13.10.7",
   "peerDependencies": {
     "@analogjs/vite-plugin-angular": "~2.4.10",
     "@analogjs/vitest-angular": "~2.4.10",
