@@ -1,0 +1,104 @@
+{
+  "version": 1,
+  "source": "@dereekb/demo",
+  "module": "apps/demo",
+  "generatedAt": "1970-01-01T00:00:00.000Z",
+  "generator": "@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs",
+  "entries": [
+    {
+      "slug": "list-progress-with-button",
+      "category": "list",
+      "summary": "Two-line list with template-painted icon tile, progress bar, and trailing button.",
+      "header": ".dbx-list-two-line-item Customized List With Button",
+      "className": "DocListProgressExampleComponent",
+      "selector": "doc-list-progress-example",
+      "module": "apps/demo",
+      "appRef": "apps/demo",
+      "hint": "Two-line row with a template-painted icon tile, full-width progress bar, and trailing action button.",
+      "relatedSlugs": [
+        "dbx-list",
+        "dbx-list-two-line-item",
+        "dbx-icon-tile",
+        "dbx-color"
+      ],
+      "info": "<p>\n  This variant demonstrates a heavier, custom item where the template paints the leading icon itself instead of relying on the parent list view. Add the <code>.dbx-list-two-line-item-with-icon</code> modifier so the parent skips its own icon, then drop the mapped item's <code>icon</code> field to suppress the built-in slot.\n</p>\n<p>\n  The leading element uses the reusable <code>.dbx-icon-tile</code> utility — a rounded, padded container that pairs with <code>[dbxColor]</code> + <code>[dbxColorTone]</code> for a tonal background. Inside <code>.item-left</code> the template stacks a title, an <code>X of Y complete</code> details line, and a <code>&lt;mat-progress-bar&gt;</code> that spans the full width up to the trailing column; <code>.item-right</code> holds a flat action button.\n</p>\n<p>\n  Supporting utilities used here: <code>.dbx-list-item-padded-thick</code> for a roomier row, <code>.dbx-list-item-card</code> for the tinted/rounded surface (defaults to <code>--mat-sys-surface-container</code> + <code>--mat-sys-corner-large</code>; overridable via <code>--dbx-list-item-card-background</code> / <code>--dbx-list-item-card-border-radius</code>), <code>.dbx-list-item-p0</code> on the view item host to drop Material's default list-item padding (so the icon tile can own its leading inset), and <code>.dbx-list-no-hover-effects</code> on the wrapper to disable the hover state-layer and pointer cursor for non-clickable rows.\n</p>",
+      "snippet": "<doc-progress-item-list [state]=\"state$\"></doc-progress-item-list>",
+      "uses": [
+        {
+          "kind": "component",
+          "className": "DocProgressItemListComponent",
+          "role": "list",
+          "selector": "doc-progress-item-list",
+          "classSource": "@Component({\n  selector: 'doc-progress-item-list',\n  template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,\n  imports: [DbxListWrapperComponentImportsModule],\n  host: {\n    class: 'dbx-list-no-hover-effects'\n  },\n  changeDetection: ChangeDetectionStrategy.OnPush,\n  standalone: true\n})\nexport class DocProgressItemListComponent extends AbstractDbxSelectionListWrapperDirective<ProgressItemValue> {\n  constructor() {\n    super({\n      componentClass: DocProgressItemListViewComponent,\n      defaultSelectionMode: 'view'\n    });\n  }\n}"
+        },
+        {
+          "kind": "component",
+          "className": "DocProgressItemListViewComponent",
+          "role": "view",
+          "selector": "doc-progress-item-list-view",
+          "classSource": "@Component({\n  selector: 'doc-progress-item-list-view',\n  template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,\n  imports: [DbxSelectionValueListViewComponentImportsModule],\n  providers: provideDbxListView(DocProgressItemListViewComponent),\n  host: {\n    class: 'dbx-list-item-p0'\n  },\n  changeDetection: ChangeDetectionStrategy.OnPush,\n  standalone: true\n})\nexport class DocProgressItemListViewComponent extends AbstractDbxSelectionListViewDirective<ProgressItemValue> {\n  readonly config: DbxSelectionValueListViewConfig<ProgressItemValueWithSelection> = {\n    componentClass: DocProgressItemListViewItemComponent,\n    mapValuesToItemValues: (values) => of(values.map((value) => ({ ...value, itemValue: value, icon: undefined })))\n  };\n}"
+        },
+        {
+          "kind": "component",
+          "className": "DocProgressItemListViewItemComponent",
+          "role": "item",
+          "selector": "doc-progress-item-list-view-item",
+          "classSource": "@Component({\n  selector: 'doc-progress-item-list-view-item',\n  template: `\n    <div class=\"dbx-list-item-padded-thick dbx-list-item-card dbx-list-two-line-item dbx-list-two-line-item-with-icon doc-progress-item\">\n      <div class=\"item-icon dbx-icon-tile\" [dbxColor]=\"'primary'\" [dbxColorTone]=\"18\">\n        <mat-icon>{{ icon }}</mat-icon>\n      </div>\n      <div class=\"item-left\">\n        <span class=\"doc-progress-item-title\">{{ title }}</span>\n        <span class=\"item-details\">{{ progress }} of {{ total }} complete</span>\n        <mat-progress-bar class=\"doc-progress-item-bar\" mode=\"determinate\" [value]=\"progressPercent\"></mat-progress-bar>\n      </div>\n      <div class=\"item-right\">\n        <button mat-flat-button>View requirements</button>\n      </div>\n    </div>\n  `,\n  styles: [\n    `\n      .doc-progress-item-title {\n        font-size: 1em;\n        font-weight: 600;\n      }\n\n      .doc-progress-item-bar {\n        margin-top: 6px;\n      }\n    `\n  ],\n  imports: [MatIconModule, MatButtonModule, MatProgressBar, DbxColorDirective],\n  changeDetection: ChangeDetectionStrategy.OnPush,\n  standalone: true\n})\nexport class DocProgressItemListViewItemComponent extends AbstractDbxValueListViewItemComponent<ProgressItemValue> {\n  get icon(): string {\n    return this.itemValue.icon;\n  }\n\n  get title(): string {\n    return this.itemValue.title;\n  }\n\n  get progress(): number {\n    return this.itemValue.progress;\n  }\n\n  get total(): number {\n    return this.itemValue.total;\n  }\n\n  get progressPercent(): number {\n    return this.total > 0 ? Math.min(100, Math.round((this.progress / this.total) * 100)) : 0;\n  }\n}"
+        },
+        {
+          "kind": "interface",
+          "className": "ProgressItemValue",
+          "role": "data",
+          "classSource": "export interface ProgressItemValue {\n  readonly key: string;\n  readonly title: string;\n  readonly progress: number;\n  readonly total: number;\n  readonly icon: string;\n}"
+        }
+      ]
+    },
+    {
+      "slug": "list-standard-two-line",
+      "category": "list",
+      "summary": "Two-line list with parent-rendered leading icon and trailing status chip.",
+      "header": ".dbx-list-two-line-item Standard List With Chip",
+      "className": "DocListStandardExampleComponent",
+      "selector": "doc-list-standard-example",
+      "module": "apps/demo",
+      "appRef": "apps/demo",
+      "hint": "Two-line row with parent-rendered leading icon, title/details/footnote, and a trailing status chip.",
+      "relatedSlugs": [
+        "dbx-list",
+        "dbx-list-two-line-item",
+        "dbx-chip"
+      ],
+      "info": "<p>\n  The <code>.dbx-list-two-line-item</code> wrapper organizes a row into <code>.item-left</code> (column with <code>.item-title</code>, <code>.item-details</code>, and <code>.item-details-footnote</code>) and <code>.item-right</code> (trailing content). Pair with <code>.dbx-list-item-padded</code> for the standard list-row padding and min-height.\n</p>\n<p>\n  This example uses the default selection-list rendering: the parent list view paints the leading icon (it reads <code>icon</code> off each mapped item), so the item template only fills <code>.item-left</code> with the title/details/footnote and <code>.item-right</code> with a <code>&lt;dbx-chip&gt;</code> for the status badge.\n</p>",
+      "snippet": "<doc-two-line-item-list [state]=\"state$\"></doc-two-line-item-list>",
+      "uses": [
+        {
+          "kind": "component",
+          "className": "DocTwoLineItemListComponent",
+          "role": "list",
+          "selector": "doc-two-line-item-list",
+          "classSource": "@Component({\n  selector: 'doc-two-line-item-list',\n  template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,\n  imports: [DbxListWrapperComponentImportsModule],\n  changeDetection: ChangeDetectionStrategy.OnPush,\n  standalone: true\n})\nexport class DocTwoLineItemListComponent extends AbstractDbxSelectionListWrapperDirective<TwoLineItemValue> {\n  constructor() {\n    super({\n      componentClass: DocTwoLineItemListViewComponent,\n      defaultSelectionMode: 'view'\n    });\n  }\n}"
+        },
+        {
+          "kind": "component",
+          "className": "DocTwoLineItemListViewComponent",
+          "role": "view",
+          "selector": "doc-two-line-item-list-view",
+          "classSource": "@Component({\n  selector: 'doc-two-line-item-list-view',\n  template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,\n  imports: [DbxSelectionValueListViewComponentImportsModule],\n  providers: provideDbxListView(DocTwoLineItemListViewComponent),\n  changeDetection: ChangeDetectionStrategy.OnPush,\n  standalone: true\n})\nexport class DocTwoLineItemListViewComponent extends AbstractDbxSelectionListViewDirective<TwoLineItemValue> {\n  readonly config: DbxSelectionValueListViewConfig<TwoLineItemValueWithSelection> = {\n    componentClass: DocTwoLineItemListViewItemComponent,\n    mapValuesToItemValues: (values) => of(values.map((value) => ({ ...value, itemValue: value, icon: value.icon })))\n  };\n}"
+        },
+        {
+          "kind": "component",
+          "className": "DocTwoLineItemListViewItemComponent",
+          "role": "item",
+          "selector": "doc-two-line-item-list-view-item",
+          "classSource": "@Component({\n  selector: 'doc-two-line-item-list-view-item',\n  template: `\n    <div class=\"dbx-list-item-padded dbx-list-two-line-item\">\n      <div class=\"item-left\">\n        <span class=\"item-title\">{{ title }}</span>\n        @if (details) {\n          <span class=\"item-details\">{{ details }}</span>\n        }\n        @if (footnote) {\n          <span class=\"item-details-footnote\">{{ footnote }}</span>\n        }\n      </div>\n      <dbx-spacer></dbx-spacer>\n      <div class=\"item-right\">\n        @if (status) {\n          <dbx-chip [small]=\"true\" [color]=\"statusColor\">{{ status }}</dbx-chip>\n        }\n      </div>\n    </div>\n  `,\n  imports: [DbxSpacerDirective, DbxChipDirective],\n  changeDetection: ChangeDetectionStrategy.OnPush,\n  standalone: true\n})\nexport class DocTwoLineItemListViewItemComponent extends AbstractDbxValueListViewItemComponent<TwoLineItemValue> {\n  get title(): string {\n    return this.itemValue.title;\n  }\n\n  get details(): Maybe<string> {\n    return this.itemValue.details;\n  }\n\n  get footnote(): Maybe<string> {\n    return this.itemValue.footnote;\n  }\n\n  get status(): Maybe<TwoLineItemValue['status']> {\n    return this.itemValue.status;\n  }\n\n  get statusColor(): TwoLineItemStatusColor {\n    return this.status ? STATUS_COLOR[this.status] : 'grey';\n  }\n}"
+        },
+        {
+          "kind": "interface",
+          "className": "TwoLineItemValue",
+          "role": "data",
+          "classSource": "export interface TwoLineItemValue {\n  readonly key: string;\n  readonly icon?: Maybe<string>;\n  readonly title: string;\n  readonly details?: Maybe<string>;\n  readonly footnote?: Maybe<string>;\n  readonly status?: Maybe<'active' | 'pending' | 'archived'>;\n}"
+        }
+      ]
+    }
+  ]
+}

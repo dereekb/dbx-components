@@ -70,6 +70,12 @@ export const docBugsState: Ng2StateDeclaration = {
   loadChildren: () => import('./modules/bugs/doc.bugs.module').then((m) => m.DocBugsModule)
 };
 
+export const docExamplesState: Ng2StateDeclaration = {
+  url: '/examples',
+  name: 'doc.examples.**',
+  loadChildren: () => import('./modules/examples/doc.examples.module').then((m) => m.DocExamplesModule)
+};
+
 export const STATES: Ng2StateDeclaration[] = [
   //
   layoutState,
@@ -82,5 +88,6 @@ export const STATES: Ng2StateDeclaration[] = [
   docInteractionState,
   docExtensionState,
   docFormState,
-  docBugsState
+  docBugsState,
+  docExamplesState
 ];

@@ -43,6 +43,7 @@
     },
     "./mapbox": {},
     "./calendar": {},
+    "./docs": {},
     "./table": {},
     "./eslint": {
       "module": "./eslint/index.esm.js",

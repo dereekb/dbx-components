@@ -103,5 +103,17 @@
         "out": "packages/dbx-components-mcp/generated/dereekb-dbx-core.filters.mcp.generated.json"
       }
     ]
+  },
+  "dbxDocsUiExamples": {
+    "scan": [
+      {
+        "project": "apps/demo",
+        "source": "@dereekb/demo",
+        "module": "apps/demo",
+        "include": ["src/app/modules/doc/modules/examples/**/examples/*.example.component.ts"],
+        "exclude": ["**/*.spec.ts", "**/*.test.ts"],
+        "out": "packages/dbx-components-mcp/generated/dereekb-demo.dbx-docs-ui-examples.mcp.generated.json"
+      }
+    ]
   }
 }

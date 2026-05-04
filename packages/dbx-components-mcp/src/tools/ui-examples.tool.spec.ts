@@ -51,7 +51,7 @@ describe('dbx_ui_examples', () => {
   it('falls back gracefully on unknown pattern', () => {
     const text = firstText(runUiExamples({ pattern: 'not-a-real-pattern' }));
     expect(text).toMatch(/No UI pattern matched/);
-    expect(text).toMatch(/Available patterns:/);
+    expect(text).toMatch(/Curated:/);
   });
 
   it('every pattern uses real UI slugs from the registry', async () => {

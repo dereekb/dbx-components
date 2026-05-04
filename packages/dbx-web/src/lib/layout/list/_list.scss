@@ -116,6 +116,42 @@ $list-item-padded-min-height: 42px;
     padding: 2px 6px;
   }
 
+  .dbx-list-item-padded-thick {
+    min-height: $list-item-padded-min-height;
+    padding: theming.$padding-3;
+  }
+
+  // Card-like treatment for a list-item row — tinted surface with a rounded
+  // outline. Two CSS custom properties expose the background and corner
+  // radius so consumers can override per-instance without rewriting the
+  // rule. Defaults flow through Material system tokens:
+  //   --dbx-list-item-card-background     → `--mat-sys-surface-container`
+  //   --dbx-list-item-card-border-radius  → `--mat-sys-corner-large`,
+  //     falling back to `calc(--mat-chip-container-shape-radius * 2)` when
+  //     the host theme doesn't emit the M3 shape tokens.
+  .dbx-list-item-card {
+    background: var(--dbx-list-item-card-background, var(--mat-sys-surface-container));
+    border-radius: var(--dbx-list-item-card-border-radius, var(--mat-sys-corner-large, calc(var(--mat-chip-container-shape-radius) * 2)));
+  }
+
+  // Reusable rounded, padded icon container. Composable with any leading-icon
+  // slot and works with `[dbxColor]` for tinted backgrounds. Decoupled from
+  // the list layout — usable wherever a leading icon tile is wanted.
+  .dbx-icon-tile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    padding: 8px;
+  }
+
+  // When the tile is the leading icon in a two-line list item, override the
+  // default `.item-icon` flat spacing with tile-appropriate margins.
+  .dbx-list-two-line-item .item-icon.dbx-icon-tile {
+    padding: 8px;
+    margin: 0 12px 0 4px;
+  }
+
   .dbx-list-two-line-item {
     // item broken into a left and right, and up to two rows on the left with 1 row on the right.
     display: flex;
@@ -130,11 +166,14 @@ $list-item-padded-min-height: 42px;
     .item-left {
       display: flex;
       flex-direction: column;
+      flex: 1 1 auto;
+      min-width: 0;
     }
 
     .item-right {
       display: flex;
       align-items: center;
+      margin-left: 16px;
     }
 
     .item-title {
@@ -163,6 +202,17 @@ $list-item-padded-min-height: 42px;
   }
 
   .dbx-list-no-item-padding .dbx-list > .dbx-list-content .dbx-list-view > .mat-mdc-nav-list .dbx-list-view-item.mat-mdc-list-item > .mat-mdc-list-item-content {
+    padding: 0;
+  }
+
+  // Zeros all padding on the underlying Material list item. Per-item utility
+  // (apply as host class on the value-list view) for templates that supply
+  // their own padding/leading element — e.g. a `.dbx-icon-tile` in a
+  // `.dbx-list-two-line-item-with-icon` — where Material's default item
+  // padding would otherwise double up. Complements the container-scope
+  // `.dbx-list-no-item-padding`, which zeros the inner
+  // `.mat-mdc-list-item-content` padding for all items in the list.
+  .dbx-list-item-p0 .mat-mdc-list-item.mdc-list-item {
     padding: 0;
   }
 

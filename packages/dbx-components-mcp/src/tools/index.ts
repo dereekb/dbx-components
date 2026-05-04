@@ -77,7 +77,7 @@ import { formExamplesTool } from './form-examples.tool.js';
 import { createFormScaffoldTool } from './form-scaffold.tool.js';
 import { createLookupUiTool } from './lookup-ui.tool.js';
 import { createSearchUiTool } from './search-ui.tool.js';
-import { uiExamplesTool } from './ui-examples.tool.js';
+import { createUiExamplesTool } from './ui-examples.tool.js';
 import { lookupModelTool } from './lookup-model.tool.js';
 import { searchModelTool } from './search-model.tool.js';
 import { modelDecodeTool } from './model-decode.tool.js';
@@ -131,6 +131,7 @@ import type { PipeRegistry } from '../registry/pipes-runtime.js';
 import type { SemanticTypeRegistry } from '../registry/semantic-types.js';
 import type { TokenRegistry } from '../registry/tokens-runtime.js';
 import type { UiComponentRegistry } from '../registry/ui-components-runtime.js';
+import type { DbxDocsUiExamplesRegistry } from '../registry/dbx-docs-ui-examples-runtime.js';
 import { toolError, type DbxTool } from './types.js';
 
 /**
@@ -144,8 +145,6 @@ import { toolError, type DbxTool } from './types.js';
 export const DBX_TOOLS: readonly DbxTool[] = [
   // form
   formExamplesTool,
-  // ui
-  uiExamplesTool,
   // model
   lookupModelTool,
   searchModelTool,
@@ -207,6 +206,13 @@ export interface RegisterToolsOptions {
   readonly forgeFieldRegistry?: ForgeFieldRegistry;
   readonly pipeRegistry?: PipeRegistry;
   readonly uiComponentRegistry?: UiComponentRegistry;
+  /**
+   * Optional app-sourced UI examples registry. When supplied (or empty),
+   * `dbx_ui_examples` is wired to merge curated `UI_PATTERNS` with scanned
+   * entries; `dbx_ui_search` is wired to surface a "Related examples"
+   * section when component hits overlap an example's `relatedSlugs`.
+   */
+  readonly dbxDocsUiExamplesRegistry?: DbxDocsUiExamplesRegistry;
   readonly actionRegistry?: ActionRegistry;
   readonly filterRegistry?: FilterRegistry;
   /**
@@ -247,6 +253,7 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions =
   const underlyingServer = server.server;
 
   const tools: DbxTool[] = [...DBX_TOOLS];
+  tools.push(createUiExamplesTool({ examplesRegistry: options.dbxDocsUiExamplesRegistry }));
   tools.push(createModelValidateTool({ ruleOptions: options.modelValidateRuleOptions }));
   tools.push(createModelFixtureValidateAppTool({ getRegistry: () => options.fixtureModelRegistry }));
   if (options.forgeFieldRegistry !== undefined) {
@@ -259,7 +266,7 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions =
     tools.push(createLookupPipeTool({ registry: options.pipeRegistry }));
   }
   if (options.uiComponentRegistry !== undefined) {
-    tools.push(createLookupUiTool({ registry: options.uiComponentRegistry }), createSearchUiTool({ registry: options.uiComponentRegistry }));
+    tools.push(createLookupUiTool({ registry: options.uiComponentRegistry }), createSearchUiTool({ registry: options.uiComponentRegistry, examplesRegistry: options.dbxDocsUiExamplesRegistry }));
   }
   if (options.actionRegistry !== undefined) {
     tools.push(createLookupActionTool({ registry: options.actionRegistry }));
