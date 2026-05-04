@@ -2,8 +2,8 @@
   "name": "@dereekb/dbx-form/quiz",
   "version": "13.10.7",
   "peerDependencies": {
-    "@angular/common": "21.2.10",
-    "@angular/core": "21.2.10",
+    "@angular/common": "21.2.11",
+    "@angular/core": "21.2.11",
     "@dereekb/dbx-core": "13.10.7",
     "@dereekb/dbx-web": "13.10.7",
     "@dereekb/rxjs": "13.10.7",

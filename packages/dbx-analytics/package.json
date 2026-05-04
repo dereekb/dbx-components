@@ -2,7 +2,7 @@
   "name": "@dereekb/dbx-analytics",
   "version": "13.10.7",
   "peerDependencies": {
-    "@angular/core": "21.2.10",
+    "@angular/core": "21.2.11",
     "@dereekb/analytics": "13.10.7",
     "@dereekb/browser": "13.10.7",
     "@dereekb/dbx-core": "13.10.7",
