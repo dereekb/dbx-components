@@ -4,6 +4,12 @@
 
 import type { ApiLookupEntry, ApiLookupField, ApiLookupReport } from './types.js';
 
+/**
+ * Renders the model-API lookup report as a markdown document with one section per matched entry plus action/factory cross-references.
+ *
+ * @param report - The API lookup report to render.
+ * @returns A markdown document.
+ */
 export function formatLookupAsMarkdown(report: ApiLookupReport): string {
   const heading = report.groupName ? `${report.groupName} (\`${report.modelFilter}\`)` : report.modelFilter;
   const lines: string[] = [`# Model API lookup — ${heading}`, '', `Component: \`${report.componentDir}\``];
@@ -30,6 +36,12 @@ export function formatLookupAsMarkdown(report: ApiLookupReport): string {
   return lines.join('\n');
 }
 
+/**
+ * Renders the model-API lookup report as a flat JSON payload.
+ *
+ * @param report - The API lookup report to render.
+ * @returns Pretty-printed JSON string for the report.
+ */
 export function formatLookupAsJson(report: ApiLookupReport): string {
   return JSON.stringify(report, null, 2);
 }

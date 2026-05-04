@@ -357,6 +357,7 @@ function resolveFixtureFieldModel(typeText: string, prefix: string | undefined):
  *
  * @param sourceFile - the parsed fixture file
  * @param prefix - the workspace prefix
+ * @returns The parsed factory metadata keyed by model and the matched framework non-model family map.
  */
 function collectFactories(sourceFile: SourceFile, prefix: string | undefined): { factoriesByModel: Map<string, FactoryCall>; nonModelFamiliesByModel: Map<string, FrameworkNonModelFixtureFamily> } {
   const factoriesByModel = new Map<string, FactoryCall>();
@@ -452,8 +453,10 @@ function readContextFactory(decl: VariableDeclaration): { factory: FactoryCall; 
  *    family's kind.
  * 4. Default → `firestore-model`.
  *
- * @param input - the parsed Fixture and Instance class declarations and
- *   the matched framework family detected during factory collection
+ * @param input - The parsed Fixture and Instance class declarations and the matched framework family detected during factory collection.
+ * @param input.fixtureClass - The TestContextFixture class declaration.
+ * @param input.instanceClass - The TestContextInstance class declaration paired with the fixture.
+ * @param input.nonModelFamily - The framework non-model family matched while collecting factories, if any.
  * @returns the resolved kind plus a `nonModelFamily` indicator surfaced in
  *   lookup/list output
  */
@@ -474,6 +477,7 @@ function classifyFixtureKind(input: { fixtureClass: ClassDeclaration; instanceCl
  * `@dbxFixtureNotModel` tag.
  *
  * @param cls - the class declaration to inspect
+ * @returns `true` if the class is annotated with the non-model tag.
  */
 function hasNonModelJsDoc(cls: ClassDeclaration): boolean {
   for (const doc of cls.getJsDocs()) {
@@ -489,6 +493,7 @@ function hasNonModelJsDoc(cls: ClassDeclaration): boolean {
  * `extends` clause base name.
  *
  * @param cls - the class declaration to inspect
+ * @returns The matching framework family, or `undefined` if the class extends nothing recognized.
  */
 function familyFromExtends(cls: ClassDeclaration): FrameworkNonModelFixtureFamily | undefined {
   const ext = cls.getExtends();

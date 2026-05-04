@@ -274,21 +274,21 @@ function walkCall(call: CallExpression, ctx: WalkContext): SpecNode | undefined 
 
   if (DESCRIBE_NAMES.has(calleeName)) {
     ctx.counts.describe += 1;
-    return describeOrItNode('describe', call, calleeName, line, endLine, ctx);
+    return describeOrItNode({ kind: 'describe', call, calleeName, line, endLine, ctx });
   }
   if (isItName(calleeName)) {
     ctx.counts.it += 1;
-    return describeOrItNode('it', call, calleeName, line, endLine, ctx);
+    return describeOrItNode({ kind: 'it', call, calleeName, line, endLine, ctx });
   }
   if (HOOK_NAMES.has(calleeName)) {
-    return hookNode(call, calleeName, line, endLine);
+    return hookNode({ call, calleeName, line, endLine });
   }
   if (isKnownFixtureName(calleeName, ctx)) {
     ctx.counts.fixture += 1;
-    return fixtureNode(call, calleeName, ctx, line, endLine);
+    return fixtureNode({ call, calleeName, ctx, line, endLine });
   }
   if (ctx.helperNames.has(calleeName)) {
-    return helperCallNode(call, calleeName, ctx, line, endLine);
+    return helperCallNode({ call, calleeName, ctx, line, endLine });
   }
   // Generic wrapper — only register when there's a callback we can recurse
   // into. Plain leaf calls are dropped.
@@ -323,7 +323,17 @@ function isKnownFixtureName(name: string, ctx: WalkContext): boolean {
   return true;
 }
 
-function describeOrItNode(kind: 'describe' | 'it', call: CallExpression, calleeName: string, line: number, endLine: number, ctx: WalkContext): SpecNode {
+interface DescribeOrItNodeInput {
+  readonly kind: 'describe' | 'it';
+  readonly call: CallExpression;
+  readonly calleeName: string;
+  readonly line: number;
+  readonly endLine: number;
+  readonly ctx: WalkContext;
+}
+
+function describeOrItNode(input: DescribeOrItNodeInput): SpecNode {
+  const { kind, call, calleeName, line, endLine, ctx } = input;
   const args = call.getArguments();
   const titleArg = args[0];
   const titleInfo = readTitle(titleArg);
@@ -341,12 +351,29 @@ function describeOrItNode(kind: 'describe' | 'it', call: CallExpression, calleeN
   return node;
 }
 
-function hookNode(_call: CallExpression, calleeName: string, line: number, endLine: number): SpecNode {
+interface HookNodeInput {
+  readonly call: CallExpression;
+  readonly calleeName: string;
+  readonly line: number;
+  readonly endLine: number;
+}
+
+function hookNode(input: HookNodeInput): SpecNode {
+  const { calleeName, line, endLine } = input;
   const node: SpecNode = { kind: 'hook', title: calleeName, line, endLine, children: [] };
   return node;
 }
 
-function fixtureNode(call: CallExpression, calleeName: string, ctx: WalkContext, line: number, endLine: number): SpecNode {
+interface FixtureNodeInput {
+  readonly call: CallExpression;
+  readonly calleeName: string;
+  readonly ctx: WalkContext;
+  readonly line: number;
+  readonly endLine: number;
+}
+
+function fixtureNode(input: FixtureNodeInput): SpecNode {
+  const { call, calleeName, ctx, line, endLine } = input;
   const args = call.getArguments();
   const argsObject = args[0];
   const parentVars = Node.isObjectLiteralExpression(argsObject) ? readParentVars(argsObject) : [];
@@ -367,7 +394,16 @@ function fixtureNode(call: CallExpression, calleeName: string, ctx: WalkContext,
   return node;
 }
 
-function helperCallNode(call: CallExpression, calleeName: string, ctx: WalkContext, line: number, endLine: number): SpecNode {
+interface HelperCallNodeInput {
+  readonly call: CallExpression;
+  readonly calleeName: string;
+  readonly ctx: WalkContext;
+  readonly line: number;
+  readonly endLine: number;
+}
+
+function helperCallNode(input: HelperCallNodeInput): SpecNode {
+  const { call, calleeName, ctx, line, endLine } = input;
   const callback = findCallback(call);
   const children = callback !== undefined ? walkCallbackBody(callback, ctx) : [];
   const node: SpecNode = { kind: 'helperCall', callee: calleeName, line, endLine, children };

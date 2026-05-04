@@ -131,12 +131,20 @@ export async function extractModels(input: ExtractModelsInput): Promise<ExtractM
 
 async function listTsFiles(rootDir: string, reserved: ReadonlySet<string>): Promise<readonly string[]> {
   const out: string[] = [];
-  await walk(rootDir, rootDir, reserved, out);
+  await walk({ currentDir: rootDir, rootDir, reserved, out });
   out.sort((a, b) => a.localeCompare(b));
   return out;
 }
 
-async function walk(currentDir: string, rootDir: string, reserved: ReadonlySet<string>, out: string[]): Promise<void> {
+interface WalkInput {
+  readonly currentDir: string;
+  readonly rootDir: string;
+  readonly reserved: ReadonlySet<string>;
+  readonly out: string[];
+}
+
+async function walk(input: WalkInput): Promise<void> {
+  const { currentDir, rootDir, reserved, out } = input;
   let entries: Awaited<ReturnType<typeof readdir>>;
   try {
     entries = await readdir(currentDir, { withFileTypes: true });
@@ -148,7 +156,7 @@ async function walk(currentDir: string, rootDir: string, reserved: ReadonlySet<s
     if (entry.isDirectory()) {
       // Reserved folders only apply at the top level — same as `dbx_model_list_component`'s walk.
       if (currentDir === rootDir && reserved.has(entry.name)) continue;
-      await walk(full, rootDir, reserved, out);
+      await walk({ currentDir: full, rootDir, reserved, out });
     } else if (entry.isFile()) {
       if (!entry.name.endsWith('.ts')) continue;
       if (entry.name.endsWith('.spec.ts') || entry.name.endsWith('.test.ts') || entry.name.endsWith('.id.ts')) continue;

@@ -85,6 +85,10 @@ export interface SmellInput {
  * Returns a project-local SCSS variable prefix derived from `apps/<name>` or
  * `packages/<name>` segments in the supplied path(s). Returns undefined when
  * neither convention applies — callers should fall back to a generic name.
+ *
+ * @param scssPath - Optional SCSS source path used as the primary prefix source.
+ * @param htmlPath - Optional HTML source path consulted as a fallback.
+ * @returns The matched project name, or `undefined` when neither path matches the convention.
  */
 export function deriveProjectPrefix(scssPath: string | undefined, htmlPath: string | undefined): string | undefined {
   let result: string | undefined;
@@ -121,6 +125,10 @@ function captureSnippet(haystack: string, index: number, length: number): string
 
 /**
  * Returns the 1-based line number that contains the given offset in `text`.
+ *
+ * @param text - The text to scan.
+ * @param offset - Zero-based character offset whose line is requested.
+ * @returns The 1-based line number, clamped to the bounds of `text`.
  */
 function lineNumberOf(text: string, offset: number): number {
   const clamped = Math.min(Math.max(offset, 0), text.length);
@@ -136,6 +144,10 @@ function lineNumberOf(text: string, offset: number): number {
  * `raw` (e.g. `12px` → `--dbx-padding-3`). Returns undefined when no exact
  * match exists — substring matches are intentionally rejected because
  * `findByValue('4px')` would otherwise pick up `--dbx-padding-5` (24px).
+ *
+ * @param exact - The token entry whose default may match `raw`.
+ * @param raw - The raw radius value being classified.
+ * @returns A formatted suffix describing whether the token is an exact-match or idiomatic-radius case.
  */
 function matchKindForRadius(exact: TokenEntry | undefined, raw: string): string {
   if (exact === undefined) return '';
@@ -160,6 +172,10 @@ function findExactRoleToken(registry: TokenRegistry, raw: string, role: string):
  * declaration (e.g. `$foo: #abc`). Used to suppress hex/value-level smells
  * fired against the canonical declaration line, which is exactly the place
  * the smell's own fix-text recommends putting the literal.
+ *
+ * @param scss - The full SCSS text being scanned.
+ * @param colonIndex - Offset of the colon under inspection.
+ * @returns `true` when the colon belongs to an SCSS variable declaration.
  */
 function isInsideScssVarDeclaration(scss: string, colonIndex: number): boolean {
   const lineStart = scss.lastIndexOf('\n', colonIndex - 1) + 1;
@@ -236,6 +252,9 @@ function looksLikeCardSurface(block: string): boolean {
  * directly inside the rule, not nested inside `&__player { ... }` or any
  * other child selector. Lines that open or close a brace are dropped along
  * with the entire nested block they wrap.
+ *
+ * @param block - The SCSS rule body text whose top-level lines are needed.
+ * @returns Source lines that sit at brace-depth zero.
  */
 function topLevelLines(block: string): readonly string[] {
   const lines = block.split('\n');
@@ -262,6 +281,10 @@ function topLevelLines(block: string): readonly string[] {
  * surface-defining declarations (padding / background / border-radius /
  * box-shadow) at the top level of the rule — enough for the reader to
  * confirm the smell without dumping nested child-rule content.
+ *
+ * @param selector - The matched rule's selector header text.
+ * @param block - The rule body whose top-level surface declarations should be summarized.
+ * @returns A trimmed snippet containing the selector and a few representative declarations.
  */
 function trimCardSurfaceSnippet(selector: string, block: string): string {
   const interesting = /^\s*(padding(?:-(?:top|right|bottom|left))?|margin(?:-(?:top|right|bottom|left))?|background(?:-color)?|border-radius|box-shadow)\s*:/i;
@@ -285,6 +308,9 @@ function trimCardSurfaceSnippet(selector: string, block: string): string {
 /**
  * Detects hand-rolled card surfaces — element with padding + white background
  * + border-radius. Recommends `<dbx-content-box>` + `<dbx-section>`.
+ *
+ * @param input - The smell detection input (HTML, SCSS, conventions, registries).
+ * @returns Zero or one match describing the offending rule.
  */
 const cardSurfaceHandrolled: SmellDetector = (input) => {
   const matches: SmellMatch[] = [];
@@ -336,6 +362,9 @@ const FULL_RADIUS_SYNONYMS: ReadonlySet<string> = new Set(['999px', '9999px', '5
 
 /**
  * Flags hardcoded `border-radius: <N>px|rem` not wrapped in a `var()`.
+ *
+ * @param input - The smell detection input.
+ * @returns Matches for each hardcoded radius declaration.
  */
 const hardcodedRadius: SmellDetector = (input) => {
   const matches: SmellMatch[] = [];
@@ -374,6 +403,9 @@ const HARDCODED_SHADOW_RE = /box-shadow\s*:\s*([^;]+);/gi;
 /**
  * Flags raw `box-shadow:` declarations and recommends elevation tokens or the
  * `<dbx-content-box [elevate]>` wrapper.
+ *
+ * @param input - The smell detection input.
+ * @returns Matches for each hardcoded shadow declaration.
  */
 const hardcodedShadow: SmellDetector = (input) => {
   const matches: SmellMatch[] = [];
@@ -407,6 +439,9 @@ const HARDCODED_HINT_COLOR_RE = /color\s*:\s*(rgba?\(\s*0\s*,\s*0\s*,\s*0\s*[,/\
 /**
  * Flags low-emphasis text colors written as raw `rgba(0,0,0,0.6)` etc. and
  * routes them to `--mat-sys-on-surface-variant`.
+ *
+ * @param input - The smell detection input.
+ * @returns Matches for each hardcoded hint color.
  */
 const hardcodedHintColor: SmellDetector = (input) => {
   const matches: SmellMatch[] = [];
@@ -440,6 +475,9 @@ const HARDCODED_PADDING_RE = /(?:padding|margin)\s*(?:-(?:top|right|bottom|left)
  * exact-match token are deliberately ignored — substring matches such as
  * `4px` → `--dbx-padding-5` (24px) are wrong and undermine confidence in the
  * tool's other suggestions.
+ *
+ * @param input - The smell detection input.
+ * @returns Matches for each exact-match hardcoded spacing declaration.
  */
 const hardcodedPadding: SmellDetector = (input) => {
   const matches: SmellMatch[] = [];
@@ -474,6 +512,9 @@ const HARDCODED_TYPOGRAPHY_RE = /font-size\s*:\s*(\d+(?:\.\d+)?)(rem|px)/gi;
 
 /**
  * Flags large hardcoded `font-size:` values on what look like heading rules.
+ *
+ * @param input - The smell detection input.
+ * @returns Matches for each oversized font-size declaration.
  */
 const hardcodedTypography: SmellDetector = (input) => {
   const matches: SmellMatch[] = [];
@@ -508,6 +549,9 @@ const PIT_BACKGROUND_RE = /background\s*:\s*(rgba?\(\s*0\s*,\s*0\s*,\s*0\s*[,/\s
 /**
  * Flags ad-hoc tinted backgrounds intended as a "pit" surface and recommends
  * the `[dbxContentPit]` directive.
+ *
+ * @param input - The smell detection input.
+ * @returns Matches for each ad-hoc pit background.
  */
 const pitInsteadOfTintedBg: SmellDetector = (input) => {
   const matches: SmellMatch[] = [];
@@ -540,6 +584,10 @@ const CARD_LIKE_CHILD_RE = /(mat-card|dbx-card|dbx-content-box|dbx-content-pit|\
 /**
  * Returns the body of the SCSS rule that contains `offset` (between the
  * matching `{` and `}`), or null if the offset isn't inside any rule.
+ *
+ * @param scss - The full SCSS text.
+ * @param offset - Character offset whose enclosing rule body is needed.
+ * @returns The substring between the rule's matching braces, or `null` when no rule encloses the offset.
  */
 function findEnclosingRuleBody(scss: string, offset: number): string | null {
   let depth = 0;
@@ -581,6 +629,9 @@ function findEnclosingRuleBody(scss: string, offset: number): string | null {
  * Only fires when the enclosing rule body contains a card-like child selector
  * (`mat-card`, `dbx-content-box`, `*-card`, etc.). Page-level layouts that
  * happen to use flex-column + gap are common and should not be flagged.
+ *
+ * @param input - The smell detection input.
+ * @returns Matches for each flex-column-gap card-stack pattern.
  */
 const flexColumnWithGap: SmellDetector = (input) => {
   const matches: SmellMatch[] = [];
@@ -612,6 +663,9 @@ const MDC_OVERRIDE_RE = /(--mdc-[a-z0-9-]+)\s*:/gi;
 /**
  * Flags direct `--mdc-*` token overrides — the right answer is almost always
  * to set `color="primary"` on the host or wrap in a styled component.
+ *
+ * @param input - The smell detection input.
+ * @returns Matches for each `--mdc-*` override.
  */
 const mdcTokenOverride: SmellDetector = (input) => {
   const matches: SmellMatch[] = [];
@@ -648,6 +702,9 @@ const HARDCODED_HEX_RE = /:\s*(#[0-9a-fA-F]{3,8})\b(?!\s*(?:px|rem|em))/g;
 /**
  * Flags bare brand-chrome hexes that don't match any known token. Reports
  * once per unique hex.
+ *
+ * @param input - The smell detection input.
+ * @returns Matches for each unique unmapped hex literal.
  */
 const hardcodedHexBrand: SmellDetector = (input) => {
   const matches: SmellMatch[] = [];
@@ -686,6 +743,9 @@ const EMPTY_RULESET_RE = /([^{}\n;]+?)\s*\{\s*\}/g;
 /**
  * Flags empty SCSS rule blocks (`.foo {}`, `&:hover { }`). They add noise and
  * are usually leftover scaffolding.
+ *
+ * @param input - The smell detection input.
+ * @returns Matches for each empty rule block.
  */
 const emptyRuleset: SmellDetector = (input) => {
   const matches: SmellMatch[] = [];
@@ -719,6 +779,9 @@ const SCSS_USE_AS_RE = /@use\s+['"][^'"]+['"]\s+as\s+([\w-]+)\s*;/g;
  * Flags `@use 'pkg' as ns;` declarations whose namespace is never referenced
  * (`ns.something`) elsewhere in the file. Skips `as *` (wildcard) imports —
  * those don't expose a namespace, so usage is undetectable by name.
+ *
+ * @param input - The smell detection input.
+ * @returns Matches for each unused `@use ... as ns` import.
  */
 const unusedScssUse: SmellDetector = (input) => {
   const matches: SmellMatch[] = [];
@@ -771,6 +834,9 @@ function matButtonVariantAttr(variant: string): string {
 /**
  * Flags raw `<button mat-stroked-button>` / `mat-flat-button` and routes to
  * `<dbx-button>`.
+ *
+ * @param input - The smell detection input.
+ * @returns Matches for each raw Material button usage.
  */
 const rawMatButton: SmellDetector = (input) => {
   const matches: SmellMatch[] = [];
@@ -802,6 +868,9 @@ const HEADER_THEN_HINT_RE = /<(h[1-3])\b[^>]*>([\s\S]*?)<\/\1>\s*<(?:p|span)\b[^
 /**
  * Flags `<h1>/<h2>/<h3>` followed by a sibling `<p>`/`<span>` — pattern that
  * `<dbx-section header hint>` already encapsulates.
+ *
+ * @param input - The smell detection input.
+ * @returns Matches for each header+hint pair that should be a `<dbx-section>`.
  */
 const customSectionHeader: SmellDetector = (input) => {
   const matches: SmellMatch[] = [];
@@ -833,6 +902,9 @@ const TWO_COLUMN_GRID_RE = /grid-template-columns\s*:\s*(?:1fr\s+1fr|repeat\(\s*
 /**
  * Flags two-column grid layouts — `[dbxFlexGroup]` with `[breakToColumn]` is
  * the canonical primitive.
+ *
+ * @param input - The smell detection input.
+ * @returns Matches for each two-column grid layout.
  */
 const customGridLayout: SmellDetector = (input) => {
   const matches: SmellMatch[] = [];
@@ -862,6 +934,9 @@ const EYEBROW_TEXT_RE = /<span\b[^>]*?(?:class|style)=[^>]*?(?:text-transform\s*
 /**
  * Flags small uppercase "eyebrow" labels above headings — there is no current
  * dbx primitive, so the smell is informational.
+ *
+ * @param input - The smell detection input.
+ * @returns Matches for each eyebrow-style span.
  */
 const eyebrowText: SmellDetector = (input) => {
   const matches: SmellMatch[] = [];

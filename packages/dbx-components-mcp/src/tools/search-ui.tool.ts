@@ -271,7 +271,8 @@ function formatSearchResults(options: FormatSearchResultsOptions & FormatRelated
       for (const example of relatedExamples) {
         const matchedSlugs = (example.relatedSlugs ?? []).filter((slug) => hits.some((h) => h.entry.slug === slug));
         const matchedText = matchedSlugs.map((s) => '`' + s + '`').join(', ');
-        lines.push(`- \`${example.slug}\` (${example.appRef}) — ${example.summary}${matchedText.length > 0 ? ` _(related to ${matchedText})_` : ''}`);
+        const relatedSuffix = matchedText.length > 0 ? ` _(related to ${matchedText})_` : '';
+        lines.push(`- \`${example.slug}\` (${example.appRef}) — ${example.summary}${relatedSuffix}`);
       }
       lines.push('', `→ Call \`dbx_ui_examples pattern="<slug>" depth="full"\` for the full source of any example.`);
     }

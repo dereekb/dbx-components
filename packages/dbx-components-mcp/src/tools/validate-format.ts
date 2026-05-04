@@ -271,20 +271,11 @@ export interface TwoSideResult {
 }
 
 /**
- * Renders a two-directory validator result as the canonical markdown report
- * used by both the folder-level (`dbx_notification_m_validate_folder`,
- * `dbx_storagefile_m_validate_folder`) and the app-level
- * (`dbx_notification_m_validate_app`, `dbx_storagefile_m_validate_app`)
- * validators. Violations are grouped by side (component / api / cross-side)
- * so each row points at the directory needing the fix.
+ * Appends a markdown section for the violations on a single validation side, when any exist.
  *
- * @param config - shared call config
- * @param config.title - heading text (e.g. `'Notification folder validation'`)
- * @param config.result - the aggregated validator outcome
- * @param config.footer - optional trailing paragraph appended after the
- *   violation sections. Used by app validators to point readers at the
- *   `dbx_artifact_file_convention` tool for canonical paths.
- * @returns the markdown report
+ * @param lines - The markdown line buffer to append to.
+ * @param side - The validation side (component / api / cross) the section represents.
+ * @param sideViolations - Violations on that side, possibly `undefined`.
  */
 function appendTwoSideViolationSection(lines: string[], side: ValidationSide, sideViolations: readonly TwoSideViolation[] | undefined): void {
   if (!sideViolations || sideViolations.length === 0) {
@@ -296,6 +287,20 @@ function appendTwoSideViolationSection(lines: string[], side: ValidationSide, si
   }
 }
 
+/**
+ * Renders a two-directory validator result as the canonical markdown report
+ * used by both the folder-level (`dbx_notification_m_validate_folder`,
+ * `dbx_storagefile_m_validate_folder`) and the app-level
+ * (`dbx_notification_m_validate_app`, `dbx_storagefile_m_validate_app`)
+ * validators. Violations are grouped by side (component / api / cross-side)
+ * so each row points at the directory needing the fix.
+ *
+ * @param config - Shared call config.
+ * @param config.title - Heading text (e.g. `'Notification folder validation'`).
+ * @param config.result - The aggregated validator outcome.
+ * @param config.footer - Optional trailing paragraph appended after the violation sections. Used by app validators to point readers at the `dbx_artifact_file_convention` tool for canonical paths.
+ * @returns The markdown report.
+ */
 export function formatTwoSideResult<TResult extends TwoSideResult>(config: { readonly title: string; readonly result: TResult; readonly footer?: string }): string {
   const { title, result, footer } = config;
   const { violations, errorCount, warningCount, componentDir, apiDir } = result;

@@ -299,13 +299,10 @@ export function collectTypeofReferences(node: TypeNode, out: string[]): void {
 }
 
 /**
- * Builds the trust-list of identifiers imported from `@dereekb/*`
- * packages across the supplied sources. Validators consult this set
- * to suppress "unresolved" / "orphan" diagnostics for symbols that
- * cross into upstream packages and cannot be traced locally.
+ * Adds every named or namespace identifier from an `@dereekb/*` import declaration to {@link out}.
  *
- * @param sources - the source files to scan
- * @returns the set of trusted identifier names
+ * @param imp - The import declaration to inspect.
+ * @param out - Mutable set that accumulates trusted identifier names.
  */
 function collectTrustedIdentifiersFromImport(imp: ImportDeclaration, out: Set<string>): void {
   const spec = imp.getModuleSpecifierValue();
@@ -320,6 +317,15 @@ function collectTrustedIdentifiersFromImport(imp: ImportDeclaration, out: Set<st
   }
 }
 
+/**
+ * Builds the trust-list of identifiers imported from `@dereekb/*`
+ * packages across the supplied sources. Validators consult this set
+ * to suppress "unresolved" / "orphan" diagnostics for symbols that
+ * cross into upstream packages and cannot be traced locally.
+ *
+ * @param sources - The source files to scan.
+ * @returns The set of trusted identifier names.
+ */
 export function collectTrustedExternalIdentifiers(sources: readonly SourceFile[]): ReadonlySet<string> {
   const out = new Set<string>();
   for (const sf of sources) {

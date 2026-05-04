@@ -69,6 +69,10 @@ export interface ExtractAngularOutputsOptions<TEntry> {
  * `@Input()` decorated or initialised with a signal `input()` call) and
  * builds a per-domain entry for each visible match. Returns entries in
  * source order with duplicates (per `dedupeBy`) dropped.
+ *
+ * @param decl - The Angular class declaration to scan.
+ * @param options - Per-domain entry builder, dedupe key extractor, and optional property-source/skip overrides.
+ * @returns The collected per-domain entries for each visible input.
  */
 export function extractAngularInputs<TEntry>(decl: ClassDeclaration, options: ExtractAngularInputsOptions<TEntry>): readonly TEntry[] {
   const { buildEntry, dedupeBy } = options;
@@ -101,6 +105,10 @@ export function extractAngularInputs<TEntry>(decl: ClassDeclaration, options: Ex
  * `@Output()` decorated or initialised with a signal `output()` call) and
  * builds a per-domain entry for each visible match. Returns entries in
  * source order with duplicates (per `dedupeBy`) dropped.
+ *
+ * @param decl - The Angular class declaration to scan.
+ * @param options - Per-domain entry builder, dedupe key extractor, and optional property-source/skip overrides.
+ * @returns The collected per-domain entries for each visible output.
  */
 export function extractAngularOutputs<TEntry>(decl: ClassDeclaration, options: ExtractAngularOutputsOptions<TEntry>): readonly TEntry[] {
   const { buildEntry, dedupeBy } = options;
@@ -133,6 +141,9 @@ export function extractAngularOutputs<TEntry>(decl: ClassDeclaration, options: E
  * `getProperties()` in superclass-first ... err, subclass-first order, with
  * cycle protection. Useful for {@link ExtractAngularInputsOptions.propertySource}
  * when a domain wants to inherit decorated properties from base classes.
+ *
+ * @param decl - The class declaration to walk, including all base classes.
+ * @returns Properties from `decl` and every base class in subclass-first order with cycle protection.
  */
 export function collectClassPropertiesWithInheritance(decl: ClassDeclaration): readonly PropertyDeclaration[] {
   const out: PropertyDeclaration[] = [];

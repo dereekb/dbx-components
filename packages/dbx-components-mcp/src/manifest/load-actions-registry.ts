@@ -60,6 +60,9 @@ const DEFAULT_BUNDLED_PATHS: BundledActionManifestPathsFactory = () => {
 // MARK: Entry point
 /**
  * Loads the merged actions registry for the current MCP server.
+ *
+ * @param input - The load configuration: working directory, bundled manifest path factory, and file reader.
+ * @returns The combined registry, config path, and any warnings emitted while reading config or manifests.
  */
 export async function loadActionRegistry(input: LoadActionRegistryInput): Promise<LoadActionRegistryResult> {
   const { cwd, bundledManifestPaths = DEFAULT_BUNDLED_PATHS, readFile } = input;
@@ -97,6 +100,11 @@ export async function loadActionRegistry(input: LoadActionRegistryInput): Promis
   return result;
 }
 
+/**
+ * Returns the absolute paths of the action manifests bundled with this package.
+ *
+ * @returns The absolute paths to the bundled action manifest JSON files.
+ */
 export function getDefaultBundledActionManifestPaths(): readonly string[] {
   return DEFAULT_BUNDLED_PATHS();
 }

@@ -30,6 +30,12 @@ function keyOf(cell: CellKey): string {
   return `${cell.model}|${cell.verb}|${cell.specifier ?? '__none__'}`;
 }
 
+/**
+ * Reconciles declared CRUD entries against discovered handlers, producing per-model summaries, per-cell statuses, and `MISSING_HANDLER` / `ORPHAN_HANDLER` issues.
+ *
+ * @param input - Declared entries, handler entries, and an optional model filter.
+ * @returns The reconciled entries, summaries, issues, and aggregate counts.
+ */
 export function reconcile(input: ReconcileInput): ReconcileResult {
   const wanted = input.modelFilter ? normalize(input.modelFilter) : undefined;
 

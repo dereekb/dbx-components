@@ -122,12 +122,20 @@ function pruneByModel(node: SpecNode, model: string): SpecNode | undefined {
 function pruneByDescribePath(node: SpecNode, path: readonly string[]): SpecNode | undefined {
   if (path.length === 0) return node;
   const matched: SpecNode[] = [];
-  collectDescribesMatching(node, path, [], matched);
+  collectDescribesMatching({ node, target: path, stack: [], out: matched });
   if (matched.length === 0) return undefined;
   return { ...node, children: matched };
 }
 
-function collectDescribesMatching(node: SpecNode, target: readonly string[], stack: string[], out: SpecNode[]): void {
+interface CollectDescribesMatchingInput {
+  readonly node: SpecNode;
+  readonly target: readonly string[];
+  readonly stack: string[];
+  readonly out: SpecNode[];
+}
+
+function collectDescribesMatching(input: CollectDescribesMatchingInput): void {
+  const { node, target, stack, out } = input;
   if (node.kind === 'describe' && node.title !== undefined) {
     stack.push(node.title.toLowerCase());
     if (pathStartsWith(stack, target)) {
@@ -136,7 +144,7 @@ function collectDescribesMatching(node: SpecNode, target: readonly string[], sta
       return;
     }
   }
-  for (const child of node.children) collectDescribesMatching(child, target, stack, out);
+  for (const child of node.children) collectDescribesMatching({ node: child, target, stack, out });
   if (node.kind === 'describe' && node.title !== undefined) stack.pop();
 }
 

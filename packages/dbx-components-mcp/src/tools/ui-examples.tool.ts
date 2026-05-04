@@ -92,7 +92,8 @@ function formatPattern(pattern: UiExamplePattern, depth: UiExampleDepth): string
 // MARK: Formatting — scanned entries
 function formatScannedExample(entry: DbxDocsUiExampleEntry, depth: UiExampleDepth): string {
   const relatedText = (entry.relatedSlugs ?? []).map(code).join(', ');
-  const lines: string[] = [`# ${entry.header}`, '', entry.summary, '', `**slug:** \`${entry.slug}\` · **origin:** \`${entry.appRef}\` · **category:** \`${entry.category}\` · **depth:** \`${depth}\`${relatedText.length > 0 ? ` · **related:** ${relatedText}` : ''}`];
+  const relatedSuffix = relatedText.length > 0 ? ` · **related:** ${relatedText}` : '';
+  const lines: string[] = [`# ${entry.header}`, '', entry.summary, '', `**slug:** \`${entry.slug}\` · **origin:** \`${entry.appRef}\` · **category:** \`${entry.category}\` · **depth:** \`${depth}\`${relatedSuffix}`];
   lines.push('');
 
   if (depth === 'full') {
@@ -154,7 +155,8 @@ function formatUseSummaryLine(use: DbxDocsUiExampleUseEntry): string {
 // MARK: Catalog formatting
 function formatCatalog(scannedEntries: readonly DbxDocsUiExampleEntry[]): string {
   const lines: string[] = [];
-  lines.push(`# UI example patterns (${UI_PATTERNS.length} curated${scannedEntries.length > 0 ? `, ${scannedEntries.length} app-sourced` : ''})`, '', 'Call `dbx_ui_examples pattern="<slug>"` for a full example.', '');
+  const appSourcedSuffix = scannedEntries.length > 0 ? `, ${scannedEntries.length} app-sourced` : '';
+  lines.push(`# UI example patterns (${UI_PATTERNS.length} curated${appSourcedSuffix})`, '', 'Call `dbx_ui_examples pattern="<slug>"` for a full example.', '');
 
   lines.push('## Curated', '');
   for (const pattern of UI_PATTERNS) {
@@ -209,6 +211,9 @@ export interface CreateUiExamplesToolInput {
  * examples registry. Tests can omit `examplesRegistry` to exercise the
  * curated-only path; the production server passes the merged registry from
  * {@link loadDbxDocsUiExamplesRegistry}.
+ *
+ * @param input - Optional app-sourced examples registry.
+ * @returns A {@link DbxTool} that responds to `dbx_ui_examples` invocations.
  */
 export function createUiExamplesTool(input: CreateUiExamplesToolInput = {}): DbxTool {
   const examplesRegistry = input.examplesRegistry ?? EMPTY_DBX_DOCS_UI_EXAMPLES_REGISTRY;
@@ -251,6 +256,9 @@ export const uiExamplesTool: DbxTool = createUiExamplesTool();
 
 /**
  * Re-exported handler kept for tests that exercise the curated-only path.
+ *
+ * @param rawArgs - The raw MCP tool arguments object.
+ * @returns The tool result containing the rendered example text.
  */
 export function runUiExamples(rawArgs: unknown): ToolResult {
   return uiExamplesTool.run(rawArgs);

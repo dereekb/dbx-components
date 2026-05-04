@@ -31,6 +31,9 @@ const USAGE = [
 // MARK: Entry point
 /**
  * Runs one invocation of `scan-dbx-docs-ui-examples`.
+ *
+ * @param input - Parsed CLI input including project root, optional `--out` override, and `--check` flag.
+ * @returns The CLI exit code, written file paths, and any warnings produced by the scan.
  */
 export async function runDbxDocsUiExamplesScanCli(input: RunDbxDocsUiExamplesScanCliInput): Promise<RunDbxDocsUiExamplesScanCliResult> {
   return runScanCliBase(input, {

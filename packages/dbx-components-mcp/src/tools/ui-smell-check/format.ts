@@ -161,6 +161,10 @@ function formatMatch(match: SmellMatchWithExtras): string {
  * `var(--dbx-*)` / `var(--mat-sys-*)` references, so the caller can confirm
  * the scanner actually saw their content. Returns null when there's nothing
  * to report (both inputs empty).
+ *
+ * @param html - Raw HTML source for the inspected component.
+ * @param scss - Raw SCSS/CSS source for the inspected component.
+ * @returns A formatted markdown block, or `null` when both inputs are empty.
  */
 function formatGoodSignals(html: string, scss: string): string | null {
   let result: string | null = null;
@@ -203,6 +207,9 @@ function formatGoodSignals(html: string, scss: string): string | null {
  * Builds a per-id digest of info-severity findings: count + line range. The
  * full detail for each finding already appears under `## Detected smells`,
  * so this section is intentionally compact.
+ *
+ * @param matches - The smell matches with line/extras metadata.
+ * @returns A formatted markdown digest, or `null` when there are no info-severity findings.
  */
 function formatInfoDigest(matches: readonly SmellMatchWithExtras[]): string | null {
   const byId = new Map<string, number[]>();

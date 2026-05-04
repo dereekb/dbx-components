@@ -33,6 +33,9 @@ export interface LoadDbxDocsUiExamplesManifestsResult {
 /**
  * Loads, validates, and merges the supplied manifest sources into a single
  * registry suitable for the `dbx_ui_examples` / `dbx_ui_search` MCP tools.
+ *
+ * @param input - Sources to load and an optional `readFile` override for testing.
+ * @returns Merged entry map keyed by `${module}::${slug}`, a category index, any warnings, and the list of successfully loaded source labels.
  */
 export async function loadDbxDocsUiExamplesManifests(input: LoadDbxDocsUiExamplesManifestsInput): Promise<LoadDbxDocsUiExamplesManifestsResult> {
   const { entries, indexMap, warnings, loadedSources } = await loadManifestsBase<DbxDocsUiExampleManifest, DbxDocsUiExampleEntry>(input, {

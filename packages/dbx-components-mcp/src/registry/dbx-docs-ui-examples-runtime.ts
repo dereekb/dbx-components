@@ -34,11 +34,25 @@ export interface DbxDocsUiExamplesRegistry {
 }
 
 // MARK: Construction
+/**
+ * Builds a {@link DbxDocsUiExamplesRegistry} from a loader result.
+ *
+ * @param loaded - The merged manifest loader output.
+ * @returns A registry with slug, category, module, and related-slug indices.
+ */
 export function createDbxDocsUiExamplesRegistry(loaded: LoadDbxDocsUiExamplesManifestsResult): DbxDocsUiExamplesRegistry {
   const entries = Array.from(loaded.entries.values()).sort((a, b) => a.slug.localeCompare(b.slug));
   return createDbxDocsUiExamplesRegistryFromEntries({ entries, loadedSources: loaded.loadedSources });
 }
 
+/**
+ * Builds a {@link DbxDocsUiExamplesRegistry} from a raw entry array, used by tests and tools that synthesize entries directly.
+ *
+ * @param input - Pre-built entries and source labels.
+ * @param input.entries - The example entries to index.
+ * @param input.loadedSources - Labels of the manifest sources that contributed the entries.
+ * @returns A registry with slug, category, module, and related-slug indices.
+ */
 export function createDbxDocsUiExamplesRegistryFromEntries(input: { readonly entries: readonly DbxDocsUiExampleEntry[]; readonly loadedSources: readonly string[] }): DbxDocsUiExamplesRegistry {
   const all = [...input.entries].sort((a, b) => a.slug.localeCompare(b.slug));
   const bySlug = new Map<string, DbxDocsUiExampleEntry>();

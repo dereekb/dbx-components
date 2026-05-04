@@ -39,6 +39,12 @@ const DEFAULT_READ_FILE: BuildActionsReadFile = defaultReadFile;
 const DEFAULT_GLOBBER: BuildActionsGlobber = defaultGlobber;
 
 // MARK: Entry point
+/**
+ * Loads the project's actions scan config, scans the configured files, extracts every action directive/store/state, and builds a validated {@link ActionManifest}.
+ *
+ * @param input - Build options including the project root, generator metadata, and optional file/glob/clock overrides.
+ * @returns A discriminated outcome describing success or the specific failure that occurred.
+ */
 export async function buildActionsManifest(input: BuildActionsManifestInput): Promise<BuildActionsManifestOutcome> {
   const { projectRoot, generator, readFile = DEFAULT_READ_FILE, globber = DEFAULT_GLOBBER, now = () => new Date() } = input;
 
@@ -202,6 +208,12 @@ function assembleState(input: { readonly entry: ExtractedActionState; readonly m
   };
 }
 
+/**
+ * Serializes a validated action manifest as pretty-printed JSON terminated with a newline.
+ *
+ * @param manifest - The validated action manifest to serialize.
+ * @returns A JSON string suitable for writing to disk.
+ */
 export function serializeActionManifest(manifest: ActionManifest): string {
   return `${JSON.stringify(manifest, null, 2)}\n`;
 }

@@ -156,6 +156,9 @@ export interface ActionRegistry {
 // MARK: Construction
 /**
  * Builds an {@link ActionRegistry} from a loader result.
+ *
+ * @param loaded - The result of loading action manifests.
+ * @returns A fully-indexed {@link ActionRegistry}.
  */
 export function createActionRegistry(loaded: LoadActionManifestsResult): ActionRegistry {
   const entries = Array.from(loaded.entries.values()).map(toActionEntryInfo);
@@ -164,6 +167,11 @@ export function createActionRegistry(loaded: LoadActionManifestsResult): ActionR
 
 /**
  * Builds an {@link ActionRegistry} from a raw {@link ActionEntryInfo} array.
+ *
+ * @param input - Pre-built entries and source labels.
+ * @param input.entries - Action entries already converted to runtime form.
+ * @param input.loadedSources - Labels of the manifest sources that contributed the entries.
+ * @returns A fully-indexed {@link ActionRegistry}.
  */
 export function createActionRegistryFromEntries(input: { readonly entries: readonly ActionEntryInfo[]; readonly loadedSources: readonly string[] }): ActionRegistry {
   const all = [...input.entries];
@@ -234,6 +242,9 @@ export const EMPTY_ACTION_REGISTRY: ActionRegistry = createActionRegistryFromEnt
 /**
  * Converts a manifest entry into the {@link ActionEntryInfo} shape the
  * lookup tool consumes.
+ *
+ * @param entry - The action manifest entry (directive, store, or state).
+ * @returns The runtime-shaped {@link ActionEntryInfo} for the entry.
  */
 export function toActionEntryInfo(entry: ActionEntry): ActionEntryInfo {
   let result: ActionEntryInfo;

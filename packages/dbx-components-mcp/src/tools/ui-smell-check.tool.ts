@@ -106,6 +106,9 @@ interface PairedFile {
  * Pairs an array of paths by basename (without the .html/.scss/.css
  * extension). `foo.component.html` and `foo.component.scss` collapse into a
  * single entry. Unrecognized extensions are dropped.
+ *
+ * @param paths - The list of paths to pair.
+ * @returns Each unique basename collapsed into a {@link PairedFile} entry.
  */
 function pairBatchPaths(paths: readonly string[]): readonly PairedFile[] {
   const groups = new Map<string, { html?: string; scss?: string }>();

@@ -97,6 +97,13 @@ function collectFromInterfaces(sourceFile: SourceFile, context: SourceFileContex
   }
 }
 
+/**
+ * Walks the supplied ts-morph project and returns every type/interface entry tagged with the dbx semantic-type marker.
+ *
+ * @param input - The extraction context.
+ * @param input.project - The ts-morph project containing source files to scan.
+ * @returns The extracted entries in source-file order.
+ */
 export function extractEntries(input: ExtractEntriesInput): readonly ExtractedEntry[] {
   const { project } = input;
   const entries: ExtractedEntry[] = [];

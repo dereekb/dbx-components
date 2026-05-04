@@ -101,6 +101,10 @@ const VALID_STATES: ReadonlySet<string> = new Set(['IDLE', 'DISABLED', 'TRIGGERE
 // MARK: Entry point
 /**
  * Walks the supplied project and returns every action entry. Order is stable.
+ *
+ * @param input - The extraction context.
+ * @param input.project - The ts-morph project containing source files to scan.
+ * @returns The collected action entries and any non-fatal warnings encountered during extraction.
  */
 export function extractActionEntries(input: ExtractActionEntriesInput): ExtractActionEntriesResult {
   const { project } = input;

@@ -61,6 +61,12 @@ const DEFAULT_BUNDLED_PATHS: BundledDbxDocsUiExamplesManifestPathsFactory = () =
  *
  * Bundled manifests load as strict sources; external manifests declared in
  * `dbx-mcp.config.json` load as non-strict sources.
+ *
+ * @param input - Resolution context.
+ * @param input.cwd - Working directory used to locate `dbx-mcp.config.json`.
+ * @param input.bundledManifestPaths - Optional override for the bundled manifest path factory; defaults to the manifests shipped with this package.
+ * @param input.readFile - Optional file reader used during testing.
+ * @returns The composed registry, the resolved config path (if any), config and loader warnings, and the count of external sources.
  */
 export async function loadDbxDocsUiExamplesRegistry(input: LoadDbxDocsUiExamplesRegistryInput): Promise<LoadDbxDocsUiExamplesRegistryResult> {
   const { cwd, bundledManifestPaths = DEFAULT_BUNDLED_PATHS, readFile } = input;
@@ -105,6 +111,11 @@ export async function loadDbxDocsUiExamplesRegistry(input: LoadDbxDocsUiExamples
   };
 }
 
+/**
+ * Resolves the absolute paths of the bundled dbx-docs-ui-examples manifests shipped with this package.
+ *
+ * @returns Absolute filesystem paths of the bundled manifests.
+ */
 export function getDefaultBundledDbxDocsUiExamplesManifestPaths(): readonly string[] {
   return DEFAULT_BUNDLED_PATHS();
 }

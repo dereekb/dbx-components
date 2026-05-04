@@ -4,6 +4,12 @@
 
 import type { ReconciledEntry, ValidateReport } from './types.js';
 
+/**
+ * Renders the API validation report as a markdown document with per-model sections, status tables, and an issue list.
+ *
+ * @param report - The validation report to render.
+ * @returns A markdown document.
+ */
 export function formatValidationAsMarkdown(report: ValidateReport): string {
   const lines: string[] = [`# Model API validation — ${report.apiDir}`, '', `Component: \`${report.componentDir}\``, `Handler map: \`${report.handlerMapPath}\``];
   if (report.modelFilter) {
@@ -38,14 +44,23 @@ export function formatValidationAsMarkdown(report: ValidateReport): string {
   return lines.join('\n');
 }
 
+/**
+ * Renders the API validation report as a flat JSON payload.
+ *
+ * @param report - The validation report to render.
+ * @returns Pretty-printed JSON string for the report.
+ */
 export function formatValidationAsJson(report: ValidateReport): string {
   return JSON.stringify(report, null, 2);
 }
 
 function formatHandlerMapStatus(report: ValidateReport): string {
   switch (report.handlerMapStatus.kind) {
-    case 'ok':
-      return report.handlerMapStatus.verbsFound.length === 0 ? 'Verbs found: _(none)_' : `Verbs found: ${report.handlerMapStatus.verbsFound.map((v) => `\`${v}\``).join(', ')}`;
+    case 'ok': {
+      if (report.handlerMapStatus.verbsFound.length === 0) return 'Verbs found: _(none)_';
+      const verbs = report.handlerMapStatus.verbsFound.map((v) => `\`${v}\``).join(', ');
+      return `Verbs found: ${verbs}`;
+    }
     case 'missing':
       return `_Handler map not found at \`${report.handlerMapStatus.path}\` — every declared call will be flagged as MISSING HANDLER._`;
     case 'error':

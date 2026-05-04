@@ -183,6 +183,9 @@ function assembleEntry(input: AssembleEntryInput): DbxDocsUiExampleEntry {
  * JSON-stringifies a manifest with stable key ordering and trailing newline
  * so `--check` mode can byte-compare against a committed file without
  * false-positive diffs from key reordering.
+ *
+ * @param manifest - The validated manifest to serialize.
+ * @returns A pretty-printed JSON string terminated with a newline.
  */
 export function serializeDbxDocsUiExamplesManifest(manifest: DbxDocsUiExampleManifest): string {
   return `${JSON.stringify(manifest, null, 2)}\n`;
