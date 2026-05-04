@@ -950,7 +950,7 @@
       "minimalExample": "<div [dbxWebPageTitleInfo]=\"{ title: 'Docs' }\"></div>",
       "sourceLocation": {
         "file": "src/lib/extension/title/title.directive.ts",
-        "line": 37
+        "line": 38
       }
     },
     {

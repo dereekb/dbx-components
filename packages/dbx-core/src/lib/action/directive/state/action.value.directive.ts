@@ -4,8 +4,7 @@ import { filterMaybe } from '@dereekb/rxjs';
 import { BehaviorSubject, combineLatest, map, type Observable, shareReplay, switchMap } from 'rxjs';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { cleanSubscriptionWithLockSet } from '../../../rxjs';
-import { completeOnDestroy } from '@dereekb/dbx-core';
+import { cleanSubscriptionWithLockSet, completeOnDestroy } from '../../../rxjs';
 
 /**
  * Directive that provides a value (or value-producing function) to the action when triggered.

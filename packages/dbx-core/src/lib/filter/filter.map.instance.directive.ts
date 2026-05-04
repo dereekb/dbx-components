@@ -1,7 +1,7 @@
 import { filterMaybe, type FilterMapKey, FilterMap, type MaybeObservableOrValue, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
 import { Directive, inject } from '@angular/core';
 import { BehaviorSubject, distinctUntilChanged } from 'rxjs';
-import { completeOnDestroy } from '@dereekb/dbx-core';
+import { completeOnDestroy } from '../rxjs';
 
 /**
  * Abstract directive that resolves a specific filter instance from a parent {@link FilterMap} by key.
