@@ -92,10 +92,8 @@ export const UiComponentEntry = type({
   'contentProjection?': 'string',
   'relatedSlugs?': 'string[]',
   'skillRefs?': 'string[]',
-  sourcePath: 'string',
   'example?': 'string',
   'minimalExample?': 'string',
-  'sourceLocation?': type({ file: 'string', line: 'number' }),
   'deprecated?': 'boolean | string',
   'since?': 'string'
 });

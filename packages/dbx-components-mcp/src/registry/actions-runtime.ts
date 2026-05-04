@@ -34,7 +34,6 @@ export interface ActionEntryBase {
   readonly role: ActionEntryRole;
   readonly description: string;
   readonly skillRefs: readonly string[];
-  readonly sourcePath: string;
   readonly example: string;
 }
 
@@ -261,7 +260,6 @@ function directiveFromManifest(entry: ActionDirectiveEntry): ActionDirectiveInfo
     module: entry.module,
     description: entry.description,
     skillRefs: [...entry.skillRefs],
-    sourcePath: entry.sourcePath,
     inputs: entry.inputs.map((i) => ({ ...i })),
     outputs: entry.outputs.map((o) => ({ ...o })),
     producesContext: entry.producesContext,
@@ -279,7 +277,6 @@ function storeFromManifest(entry: ActionStoreEntry): ActionStoreInfo {
     module: entry.module,
     description: entry.description,
     skillRefs: [...entry.skillRefs],
-    sourcePath: entry.sourcePath,
     methods: entry.methods.map((m) => ({ ...m })),
     observables: entry.observables.map((o) => ({ ...o })),
     disabledKeyDefaults: [...entry.disabledKeyDefaults],
@@ -297,7 +294,6 @@ function stateFromManifest(entry: ActionStateEntry): ActionStateInfo {
     module: entry.module,
     description: entry.description,
     skillRefs: [...entry.skillRefs],
-    sourcePath: entry.sourcePath,
     transitionsFrom: [...entry.transitionsFrom],
     transitionsTo: [...entry.transitionsTo],
     example: entry.example

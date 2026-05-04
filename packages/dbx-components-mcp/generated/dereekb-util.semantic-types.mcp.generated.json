@@ -17,11 +17,7 @@
         "percent",
         "numeric"
       ],
-      "notes": "Number from 0.0 to 100.0 used for the chance to return true.",
-      "sourceLocation": {
-        "file": "src/lib/boolean.ts",
-        "line": 142
-      }
+      "notes": "Number from 0.0 to 100.0 used for the chance to return true."
     },
     {
       "name": "HashSalt",
@@ -34,11 +30,7 @@
         "string",
         "dereekb-util:hash"
       ],
-      "notes": "Represents a salt value used in hashing.",
-      "sourceLocation": {
-        "file": "src/lib/hash.ts",
-        "line": 10
-      }
+      "notes": "Represents a salt value used in hashing."
     },
     {
       "name": "SortComparisonNumber",
@@ -50,11 +42,7 @@
       "topics": [
         "numeric"
       ],
-      "notes": "A number that is the result of comparison two items.\n\nIn \"ascending\" order, a value:\n- smaller than another will return -1 (or less).\n- equal to another will return 0\n- greater than another will return 1 (or more).\n- Example: a - b\n\nIn \"descending\" order, this returns the opposite values as \"ascending\".\n- Example: b - a",
-      "sourceLocation": {
-        "file": "src/lib/sort.ts",
-        "line": 26
-      }
+      "notes": "A number that is the result of comparison two items.\n\nIn \"ascending\" order, a value:\n- smaller than another will return -1 (or less).\n- equal to another will return 0\n- greater than another will return 1 (or more).\n- Example: a - b\n\nIn \"descending\" order, this returns the opposite values as \"ascending\".\n- Example: b - a"
     },
     {
       "name": "BooleanStringKey",
@@ -67,11 +55,7 @@
         "identifier",
         "string"
       ],
-      "notes": "A string type used as a key in boolean arrays.",
-      "sourceLocation": {
-        "file": "src/lib/array/array.boolean.ts",
-        "line": 11
-      }
+      "notes": "A string type used as a key in boolean arrays."
     },
     {
       "name": "RangeInputEndValue",
@@ -83,11 +67,7 @@
       "topics": [
         "numeric"
       ],
-      "notes": "Exclusive end value used by range().",
-      "sourceLocation": {
-        "file": "src/lib/array/array.number.ts",
-        "line": 99
-      }
+      "notes": "Exclusive end value used by range()."
     },
     {
       "name": "AuthClaimKey",
@@ -101,11 +81,7 @@
         "string",
         "dereekb-util:auth"
       ],
-      "notes": "Key in the claims.",
-      "sourceLocation": {
-        "file": "src/lib/auth/auth.role.claims.ts",
-        "line": 17
-      }
+      "notes": "Key in the claims."
     },
     {
       "name": "AuthRole",
@@ -119,11 +95,7 @@
         "string",
         "dereekb-util:auth"
       ],
-      "notes": "An application role.\n\nIs used in the client to decide which content a user can view.\n\nRoles should always be lowercase.",
-      "sourceLocation": {
-        "file": "src/lib/auth/auth.role.ts",
-        "line": 16
-      }
+      "notes": "An application role.\n\nIs used in the client to decide which content a user can view.\n\nRoles should always be lowercase."
     },
     {
       "name": "EmailAddressDomain",
@@ -137,11 +109,7 @@
         "contact",
         "string"
       ],
-      "notes": "Domain name portion of an email address (e.g., \"example.com\").",
-      "sourceLocation": {
-        "file": "src/lib/contact/domain.ts",
-        "line": 13
-      }
+      "notes": "Domain name portion of an email address (e.g., \"example.com\")."
     },
     {
       "name": "EmailAddress",
@@ -155,11 +123,7 @@
         "contact",
         "string"
       ],
-      "notes": "Type representing an email address as a string.",
-      "sourceLocation": {
-        "file": "src/lib/contact/email.ts",
-        "line": 11
-      }
+      "notes": "Type representing an email address as a string."
     },
     {
       "name": "EmailParticipantString",
@@ -173,11 +137,7 @@
         "contact",
         "string"
       ],
-      "notes": "Email participant string. Starts with the email, followed by the name if available.",
-      "sourceLocation": {
-        "file": "src/lib/contact/email.ts",
-        "line": 35
-      }
+      "notes": "Email participant string. Starts with the email, followed by the name if available."
     },
     {
       "name": "PhoneNumber",
@@ -191,11 +151,7 @@
         "contact",
         "string"
       ],
-      "notes": "Phone number string input. No format specified.\n\nExamples:\n- 4567890\n- 123-456-7890\n- (123) 456-7890\n- 1234567890\n- +1234567890\n- +1-555-555-5555\n- 2345678;ext=123",
-      "sourceLocation": {
-        "file": "src/lib/contact/phone.ts",
-        "line": 21
-      }
+      "notes": "Phone number string input. No format specified.\n\nExamples:\n- 4567890\n- 123-456-7890\n- (123) 456-7890\n- 1234567890\n- +1234567890\n- +1-555-555-5555\n- 2345678;ext=123"
     },
     {
       "name": "PhoneExtensionNumber",
@@ -209,11 +165,7 @@
         "contact",
         "string"
       ],
-      "notes": "1-6 digit extension number",
-      "sourceLocation": {
-        "file": "src/lib/contact/phone.ts",
-        "line": 31
-      }
+      "notes": "1-6 digit extension number"
     },
     {
       "name": "ReadableTimeString",
@@ -226,11 +178,7 @@
         "time",
         "string"
       ],
-      "notes": "Represents a string for a time. This may be human-input, and\ncan be interpreted in various ways depending on the input.\n\nExamples:\n- 1:20AM\n- 1:20\n- 120AM\n- 120",
-      "sourceLocation": {
-        "file": "src/lib/date/date.time.ts",
-        "line": 17
-      }
+      "notes": "Represents a string for a time. This may be human-input, and\ncan be interpreted in various ways depending on the input.\n\nExamples:\n- 1:20AM\n- 1:20\n- 120AM\n- 120"
     },
     {
       "name": "RFC3339DateString",
@@ -243,11 +191,7 @@
         "date",
         "string"
       ],
-      "notes": "A valid RFC3339 formatted date string.\n\nI.E. \"2020-04-30 00:00:00.000Z\" and \"2020-04-30T00:00:00.000Z\"\n\nThe only difference between this and an ISO8601DateString is the spacing between the date and time is allowed, while in ISO8601DateString it is not.",
-      "sourceLocation": {
-        "file": "src/lib/date/date.ts",
-        "line": 25
-      }
+      "notes": "A valid RFC3339 formatted date string.\n\nI.E. \"2020-04-30 00:00:00.000Z\" and \"2020-04-30T00:00:00.000Z\"\n\nThe only difference between this and an ISO8601DateString is the spacing between the date and time is allowed, while in ISO8601DateString it is not."
     },
     {
       "name": "ISO8601DateString",
@@ -263,11 +207,7 @@
       "guards": [
         "isISO8601DateString"
       ],
-      "notes": "A valid ISO8601 formatted date string.\n\nI.E. \"2020-04-30T00:00:00.000Z\"",
-      "sourceLocation": {
-        "file": "src/lib/date/date.ts",
-        "line": 36
-      }
+      "notes": "A valid ISO8601 formatted date string.\n\nI.E. \"2020-04-30T00:00:00.000Z\""
     },
     {
       "name": "UTCDateString",
@@ -283,11 +223,7 @@
       "guards": [
         "isUTCDateString"
       ],
-      "notes": "A UTC date string.\n\nI.E. \"Sat, 03 Feb 2001 04:05:06 GMT\"",
-      "sourceLocation": {
-        "file": "src/lib/date/date.ts",
-        "line": 64
-      }
+      "notes": "A UTC date string.\n\nI.E. \"Sat, 03 Feb 2001 04:05:06 GMT\""
     },
     {
       "name": "ISO8601DateStringUTCFull",
@@ -300,11 +236,7 @@
         "date",
         "string"
       ],
-      "notes": "A full ISO8601 date string that is in UTC.\n\nI.E. \"2020-04-30T00:00:00.000Z\"",
-      "sourceLocation": {
-        "file": "src/lib/date/date.ts",
-        "line": 94
-      }
+      "notes": "A full ISO8601 date string that is in UTC.\n\nI.E. \"2020-04-30T00:00:00.000Z\""
     },
     {
       "name": "TimezoneString",
@@ -317,11 +249,7 @@
         "timezone",
         "string"
       ],
-      "notes": "A valid timezone string.\n\nI.E. \"UTC\", \"America/Denver\", etc.",
-      "sourceLocation": {
-        "file": "src/lib/date/date.ts",
-        "line": 105
-      }
+      "notes": "A valid timezone string.\n\nI.E. \"UTC\", \"America/Denver\", etc."
     },
     {
       "name": "TimezoneAbbreviation",
@@ -334,11 +262,7 @@
         "timezone",
         "string"
       ],
-      "notes": "A timezone abbreviation (UTC, EST, etc).",
-      "sourceLocation": {
-        "file": "src/lib/date/date.ts",
-        "line": 114
-      }
+      "notes": "A timezone abbreviation (UTC, EST, etc)."
     },
     {
       "name": "ISO8601DayString",
@@ -354,11 +278,7 @@
       "guards": [
         "isISO8601DayString"
       ],
-      "notes": "A full date string Formatted as ISO8601 with 4 digits for the year.\n\nYear, Month, Day\n\nI.E. 1921-06-23\n\nNOTE: Negative years and years with more than 4 digits are not supported/expected. Support can be added later, but will require adding a more complex regex, and improved parsing in",
-      "sourceLocation": {
-        "file": "src/lib/date/date.ts",
-        "line": 180
-      }
+      "notes": "A full date string Formatted as ISO8601 with 4 digits for the year.\n\nYear, Month, Day\n\nI.E. 1921-06-23\n\nNOTE: Negative years and years with more than 4 digits are not supported/expected. Support can be added later, but will require adding a more complex regex, and improved parsing in"
     },
     {
       "name": "MonthDaySlashDate",
@@ -374,11 +294,7 @@
       "guards": [
         "isMonthDaySlashDate"
       ],
-      "notes": "Date that is represented by slashes. Is considered in the Month/Day/Year format.",
-      "sourceLocation": {
-        "file": "src/lib/date/date.ts",
-        "line": 258
-      }
+      "notes": "Date that is represented by slashes. Is considered in the Month/Day/Year format."
     },
     {
       "name": "UnixDateTimeMillisecondsNumber",
@@ -391,11 +307,7 @@
         "time",
         "numeric"
       ],
-      "notes": "Time in milliseconds since the epoch.\n\nReturned by Date.getTime().",
-      "sourceLocation": {
-        "file": "src/lib/date/date.ts",
-        "line": 310
-      }
+      "notes": "Time in milliseconds since the epoch.\n\nReturned by Date.getTime()."
     },
     {
       "name": "Milliseconds",
@@ -409,11 +321,7 @@
         "duration",
         "numeric"
       ],
-      "notes": "Number of milliseconds.",
-      "sourceLocation": {
-        "file": "src/lib/date/date.ts",
-        "line": 358
-      }
+      "notes": "Number of milliseconds."
     },
     {
       "name": "Seconds",
@@ -427,11 +335,7 @@
         "duration",
         "numeric"
       ],
-      "notes": "Number of seconds.",
-      "sourceLocation": {
-        "file": "src/lib/date/date.ts",
-        "line": 388
-      }
+      "notes": "Number of seconds."
     },
     {
       "name": "Minutes",
@@ -445,11 +349,7 @@
         "duration",
         "numeric"
       ],
-      "notes": "Number of minutes.",
-      "sourceLocation": {
-        "file": "src/lib/date/date.ts",
-        "line": 398
-      }
+      "notes": "Number of minutes."
     },
     {
       "name": "Hours",
@@ -463,11 +363,7 @@
         "duration",
         "numeric"
       ],
-      "notes": "Number of hours.",
-      "sourceLocation": {
-        "file": "src/lib/date/date.ts",
-        "line": 408
-      }
+      "notes": "Number of hours."
     },
     {
       "name": "Days",
@@ -481,11 +377,7 @@
         "duration",
         "numeric"
       ],
-      "notes": "Number of days.",
-      "sourceLocation": {
-        "file": "src/lib/date/date.ts",
-        "line": 418
-      }
+      "notes": "Number of days."
     },
     {
       "name": "DayOfMonth",
@@ -498,11 +390,7 @@
         "date",
         "numeric"
       ],
-      "notes": "Day of the month, 1-31",
-      "sourceLocation": {
-        "file": "src/lib/date/date.ts",
-        "line": 487
-      }
+      "notes": "Day of the month, 1-31"
     },
     {
       "name": "MonthOfYear",
@@ -515,11 +403,7 @@
         "date",
         "numeric"
       ],
-      "notes": "Month of the year, 1-12.\n\nNOTE: The month from Date.getMonth() is from 0-11. Use monthOfYearFromDate() to get the MonthOfYear value.",
-      "sourceLocation": {
-        "file": "src/lib/date/date.ts",
-        "line": 498
-      }
+      "notes": "Month of the year, 1-12.\n\nNOTE: The month from Date.getMonth() is from 0-11. Use monthOfYearFromDate() to get the MonthOfYear value."
     },
     {
       "name": "DateMonth",
@@ -532,11 +416,7 @@
         "date",
         "numeric"
       ],
-      "notes": "Javascript Date month number. 0-11.",
-      "sourceLocation": {
-        "file": "src/lib/date/date.ts",
-        "line": 507
-      }
+      "notes": "Javascript Date month number. 0-11."
     },
     {
       "name": "YearNumber",
@@ -549,11 +429,7 @@
         "date",
         "numeric"
       ],
-      "notes": "Year number. I.E. 2022",
-      "sourceLocation": {
-        "file": "src/lib/date/date.ts",
-        "line": 560
-      }
+      "notes": "Year number. I.E. 2022"
     },
     {
       "name": "UnixDateTimeSecondsNumber",
@@ -566,11 +442,7 @@
         "time",
         "numeric"
       ],
-      "notes": "This value is in seconds since the Epoch.\n\nUse UnixDateTimeMillisecondsNumber instead if you need milliseconds.",
-      "sourceLocation": {
-        "file": "src/lib/date/date.unix.ts",
-        "line": 13
-      }
+      "notes": "This value is in seconds since the Epoch.\n\nUse UnixDateTimeMillisecondsNumber instead if you need milliseconds."
     },
     {
       "name": "FractionalHour",
@@ -583,11 +455,7 @@
         "date",
         "numeric"
       ],
-      "notes": "A number that represents hours and rounded to the nearest minute.\n\nIt has only three decimal places max.\n\nFractional hours are safe to add together.\n\nFor example:\n\n- 10 minutes: 0.16\n- 15 minutes : 0.25",
-      "sourceLocation": {
-        "file": "src/lib/date/hour.ts",
-        "line": 21
-      }
+      "notes": "A number that represents hours and rounded to the nearest minute.\n\nIt has only three decimal places max.\n\nFractional hours are safe to add together.\n\nFor example:\n\n- 10 minutes: 0.16\n- 15 minutes : 0.25"
     },
     {
       "name": "MinuteOfDay",
@@ -603,11 +471,7 @@
       "guards": [
         "isMinuteOfDay"
       ],
-      "notes": "The minute of the day.\n\nNumber from 0-1439.",
-      "sourceLocation": {
-        "file": "src/lib/date/hour.ts",
-        "line": 98
-      }
+      "notes": "The minute of the day.\n\nNumber from 0-1439."
     },
     {
       "name": "EncryptedString",
@@ -620,11 +484,7 @@
         "string",
         "dereekb-util:encryption"
       ],
-      "notes": "Branded type representing a string that has been encrypted.\n\nUse this type to distinguish encrypted ciphertext from plain strings at the type level.\nThe actual encryption algorithm is determined by the {@link StringEncryptionProvider}.",
-      "sourceLocation": {
-        "file": "src/lib/encryption/encryption.object.ts",
-        "line": 14
-      }
+      "notes": "Branded type representing a string that has been encrypted.\n\nUse this type to distinguish encrypted ciphertext from plain strings at the type level.\nThe actual encryption algorithm is determined by the {@link StringEncryptionProvider}."
     },
     {
       "name": "StringErrorCode",
@@ -637,11 +497,7 @@
         "identifier",
         "string"
       ],
-      "notes": "A unique identifier for a specific error.",
-      "sourceLocation": {
-        "file": "src/lib/error/error.ts",
-        "line": 17
-      }
+      "notes": "A unique identifier for a specific error."
     },
     {
       "name": "FileSize",
@@ -654,11 +510,7 @@
         "measurement",
         "numeric"
       ],
-      "notes": "File size in bytes.",
-      "sourceLocation": {
-        "file": "src/lib/file/file.ts",
-        "line": 8
-      }
+      "notes": "File size in bytes."
     },
     {
       "name": "XMLSVG",
@@ -671,11 +523,7 @@
         "string",
         "dereekb-util:xml"
       ],
-      "notes": "String value containing an XML SVG string.",
-      "sourceLocation": {
-        "file": "src/lib/file/xml.ts",
-        "line": 8
-      }
+      "notes": "String value containing an XML SVG string."
     },
     {
       "name": "ModelKey",
@@ -691,11 +539,7 @@
       "guards": [
         "isModelKey"
       ],
-      "notes": "A string model key",
-      "sourceLocation": {
-        "file": "src/lib/model/model.ts",
-        "line": 14
-      }
+      "notes": "A string model key"
     },
     {
       "name": "ModelId",
@@ -708,11 +552,7 @@
         "identifier",
         "string"
       ],
-      "notes": "A string model identifier (typically the document/record ID segment, not the full path).",
-      "sourceLocation": {
-        "file": "src/lib/model/model.ts",
-        "line": 23
-      }
+      "notes": "A string model identifier (typically the document/record ID segment, not the full path)."
     },
     {
       "name": "ModelTypeString",
@@ -725,11 +565,7 @@
         "identifier",
         "string"
       ],
-      "notes": "Arbitrary model type.",
-      "sourceLocation": {
-        "file": "src/lib/model/model.ts",
-        "line": 32
-      }
+      "notes": "Arbitrary model type."
     },
     {
       "name": "TypedModelKey",
@@ -742,11 +578,7 @@
         "identifier",
         "string"
       ],
-      "notes": "String model key from which the model's type can be inferred from.",
-      "sourceLocation": {
-        "file": "src/lib/model/model.ts",
-        "line": 41
-      }
+      "notes": "String model key from which the model's type can be inferred from."
     },
     {
       "name": "ModelKeyTypePairString",
@@ -759,11 +591,7 @@
         "identifier",
         "string"
       ],
-      "notes": "An encoded ModelKeyTypePair.",
-      "sourceLocation": {
-        "file": "src/lib/model/model.ts",
-        "line": 86
-      }
+      "notes": "An encoded ModelKeyTypePair."
     },
     {
       "name": "BitwiseEncodedSetIndex",
@@ -776,11 +604,7 @@
         "numeric",
         "dereekb-util:encoding"
       ],
-      "notes": "Enum or number value from 0 to 31 that denotes a specific item via index of the bit to measure.",
-      "sourceLocation": {
-        "file": "src/lib/number/bitwise.dencoder.ts",
-        "line": 19
-      }
+      "notes": "Enum or number value from 0 to 31 that denotes a specific item via index of the bit to measure."
     },
     {
       "name": "BitwiseEncodedSet",
@@ -793,11 +617,7 @@
         "numeric",
         "dereekb-util:encoding"
       ],
-      "notes": "Set of values that are encoded into a single number.\n\nThe number can include up to 32 unique boolean values.",
-      "sourceLocation": {
-        "file": "src/lib/number/bitwise.dencoder.ts",
-        "line": 30
-      }
+      "notes": "Set of values that are encoded into a single number.\n\nThe number can include up to 32 unique boolean values."
     },
     {
       "name": "WholeDollarAmount",
@@ -810,11 +630,7 @@
         "currency",
         "numeric"
       ],
-      "notes": "Whole dollar amounts, before the ','.",
-      "sourceLocation": {
-        "file": "src/lib/number/dollar.ts",
-        "line": 11
-      }
+      "notes": "Whole dollar amounts, before the ','."
     },
     {
       "name": "DollarAmount",
@@ -827,11 +643,7 @@
         "currency",
         "numeric"
       ],
-      "notes": "Dollar amount number.",
-      "sourceLocation": {
-        "file": "src/lib/number/dollar.ts",
-        "line": 20
-      }
+      "notes": "Dollar amount number."
     },
     {
       "name": "DollarAmountPerHour",
@@ -844,11 +656,7 @@
         "currency",
         "numeric"
       ],
-      "notes": "Dollars amount number per hour.",
-      "sourceLocation": {
-        "file": "src/lib/number/dollar.ts",
-        "line": 29
-      }
+      "notes": "Dollars amount number per hour."
     },
     {
       "name": "DollarAmountPerDay",
@@ -861,11 +669,7 @@
         "currency",
         "numeric"
       ],
-      "notes": "Dollars amount number per day.",
-      "sourceLocation": {
-        "file": "src/lib/number/dollar.ts",
-        "line": 38
-      }
+      "notes": "Dollars amount number per day."
     },
     {
       "name": "CentsAmount",
@@ -878,11 +682,7 @@
         "currency",
         "numeric"
       ],
-      "notes": "Amount in whole cents.",
-      "sourceLocation": {
-        "file": "src/lib/number/dollar.ts",
-        "line": 47
-      }
+      "notes": "Amount in whole cents."
     },
     {
       "name": "DollarAmountUnit",
@@ -895,11 +695,7 @@
         "currency",
         "string"
       ],
-      "notes": "Unit to affix to a dollar amount string.",
-      "sourceLocation": {
-        "file": "src/lib/number/dollar.ts",
-        "line": 61
-      }
+      "notes": "Unit to affix to a dollar amount string."
     },
     {
       "name": "DollarAmountString",
@@ -915,11 +711,7 @@
       "guards": [
         "isDollarAmountString"
       ],
-      "notes": "String representing a dollar amount.\n\nIs formatted as a number with two decimal places. No unit is affixed.",
-      "sourceLocation": {
-        "file": "src/lib/number/dollar.ts",
-        "line": 72
-      }
+      "notes": "String representing a dollar amount.\n\nIs formatted as a number with two decimal places. No unit is affixed."
     },
     {
       "name": "Radix36EncodedNumber",
@@ -937,11 +729,7 @@
           "code": "const encoded: Radix36EncodedNumber = 'z'; // represents 35\nconst largeEncoded: Radix36EncodedNumber = '2s'; // represents 100"
         }
       ],
-      "notes": "A number encoded as a radix-36 string using digits 0-9 and letters a-z.\n\nRadix-36 encoding produces compact string representations of numbers,\nuseful for URL-safe identifiers and short codes.",
-      "sourceLocation": {
-        "file": "src/lib/number/encoded.ts",
-        "line": 17
-      }
+      "notes": "A number encoded as a radix-36 string using digits 0-9 and letters a-z.\n\nRadix-36 encoding produces compact string representations of numbers,\nuseful for URL-safe identifiers and short codes."
     },
     {
       "name": "HexString",
@@ -954,11 +742,7 @@
         "string",
         "dereekb-util:encoding"
       ],
-      "notes": "A string containing only hexadecimal characters (0-9, a-f or A-F).",
-      "sourceLocation": {
-        "file": "src/lib/number/encoded.ts",
-        "line": 67
-      }
+      "notes": "A string containing only hexadecimal characters (0-9, a-f or A-F)."
     },
     {
       "name": "Count",
@@ -975,11 +759,7 @@
           "code": "const totalUsers: Count = 42;"
         }
       ],
-      "notes": "A non-negative integer representing a count of items.",
-      "sourceLocation": {
-        "file": "src/lib/number/number.ts",
-        "line": 16
-      }
+      "notes": "A non-negative integer representing a count of items."
     },
     {
       "name": "NumberString",
@@ -992,11 +772,7 @@
         "numeric",
         "string"
       ],
-      "notes": "A string represented within a number.",
-      "sourceLocation": {
-        "file": "src/lib/number/number.ts",
-        "line": 25
-      }
+      "notes": "A string represented within a number."
     },
     {
       "name": "PercentNumber",
@@ -1009,11 +785,7 @@
         "percent",
         "numeric"
       ],
-      "notes": "Number that represents a percent.\n\n e.g. PercentNumber of 5 = 0.05 = 5%",
-      "sourceLocation": {
-        "file": "src/lib/number/number.ts",
-        "line": 36
-      }
+      "notes": "Number that represents a percent.\n\n e.g. PercentNumber of 5 = 0.05 = 5%"
     },
     {
       "name": "PercentDecimal",
@@ -1026,11 +798,7 @@
         "percent",
         "numeric"
       ],
-      "notes": "A percent decimal value.\n\ne.g. PercentDecimal of 0.05 = 5%",
-      "sourceLocation": {
-        "file": "src/lib/number/number.ts",
-        "line": 47
-      }
+      "notes": "A percent decimal value.\n\ne.g. PercentDecimal of 0.05 = 5%"
     },
     {
       "name": "PayRate",
@@ -1043,11 +811,7 @@
         "currency",
         "numeric"
       ],
-      "notes": "Rate per hour the worker should be paid.",
-      "sourceLocation": {
-        "file": "src/lib/number/pay.ts",
-        "line": 8
-      }
+      "notes": "Rate per hour the worker should be paid."
     },
     {
       "name": "PayAmount",
@@ -1060,11 +824,7 @@
         "currency",
         "numeric"
       ],
-      "notes": "The total pay amount that should be paid.",
-      "sourceLocation": {
-        "file": "src/lib/number/pay.ts",
-        "line": 17
-      }
+      "notes": "The total pay amount that should be paid."
     },
     {
       "name": "NumberPrecision",
@@ -1077,11 +837,7 @@
         "numeric",
         "measurement"
       ],
-      "notes": "The number of decimal places ot use.",
-      "sourceLocation": {
-        "file": "src/lib/number/round.ts",
-        "line": 49
-      }
+      "notes": "The number of decimal places ot use."
     },
     {
       "name": "StepNumber",
@@ -1093,11 +849,7 @@
       "topics": [
         "numeric"
       ],
-      "notes": "Number used to increase or decrease by the \"step\" value. When used in rounding the steps are aligned at a StepOrigin.",
-      "sourceLocation": {
-        "file": "src/lib/number/round.ts",
-        "line": 168
-      }
+      "notes": "Number used to increase or decrease by the \"step\" value. When used in rounding the steps are aligned at a StepOrigin."
     },
     {
       "name": "StepOrigin",
@@ -1109,11 +861,7 @@
       "topics": [
         "numeric"
       ],
-      "notes": "Origin value for StepNumbers that is used as an offset for input. Is usually 0.",
-      "sourceLocation": {
-        "file": "src/lib/number/round.ts",
-        "line": 176
-      }
+      "notes": "Origin value for StepNumbers that is used as an offset for input. Is usually 0."
     },
     {
       "name": "ObjectKey",
@@ -1126,11 +874,7 @@
         "identifier",
         "string"
       ],
-      "notes": "String key of an object.",
-      "sourceLocation": {
-        "file": "src/lib/object/object.ts",
-        "line": 23
-      }
+      "notes": "String key of an object."
     },
     {
       "name": "PageNumber",
@@ -1144,11 +888,7 @@
         "reference",
         "dereekb-util:pagination"
       ],
-      "notes": "Numeric page identifier.",
-      "sourceLocation": {
-        "file": "src/lib/page/page.ts",
-        "line": 26
-      }
+      "notes": "Numeric page identifier."
     },
     {
       "name": "SlashPathTypedFileExtension",
@@ -1161,11 +901,7 @@
         "string",
         "dereekb-util:path"
       ],
-      "notes": "The file extension of a SlashPathTypedFile.\n\ne.g. 'png' in 'image.png'",
-      "sourceLocation": {
-        "file": "src/lib/path/path.ts",
-        "line": 60
-      }
+      "notes": "The file extension of a SlashPathTypedFile.\n\ne.g. 'png' in 'image.png'"
     },
     {
       "name": "SlashPathUntypedFile",
@@ -1178,11 +914,7 @@
         "string",
         "dereekb-util:path"
       ],
-      "notes": "A SlashPath file name without a file type identifier (e.g. 'image', and not 'image.png')",
-      "sourceLocation": {
-        "file": "src/lib/path/path.ts",
-        "line": 76
-      }
+      "notes": "A SlashPath file name without a file type identifier (e.g. 'image', and not 'image.png')"
     },
     {
       "name": "PerformTasksInParallelTaskUniqueKey",
@@ -1196,11 +928,7 @@
         "string",
         "dereekb-util:concurrency"
       ],
-      "notes": "Used as a key to identify the \"group\" that a task belongs to to prevent other concurrent tasks from that group from running in parallel when parallel execution is desired.",
-      "sourceLocation": {
-        "file": "src/lib/promise/promise.ts",
-        "line": 257
-      }
+      "notes": "Used as a key to identify the \"group\" that a task belongs to to prevent other concurrent tasks from that group from running in parallel when parallel execution is desired."
     },
     {
       "name": "RelationString",
@@ -1214,11 +942,7 @@
         "string",
         "dereekb-util:relation"
       ],
-      "notes": "A string-based relation identifier.",
-      "sourceLocation": {
-        "file": "src/lib/relation/relation.ts",
-        "line": 54
-      }
+      "notes": "A string-based relation identifier."
     },
     {
       "name": "RelationModelType",
@@ -1232,11 +956,7 @@
         "string",
         "dereekb-util:relation"
       ],
-      "notes": "A string identifying the type/category of a relation model.",
-      "sourceLocation": {
-        "file": "src/lib/relation/relation.ts",
-        "line": 69
-      }
+      "notes": "A string identifying the type/category of a relation model."
     },
     {
       "name": "StoredDataString",
@@ -1249,11 +969,7 @@
         "string",
         "reference"
       ],
-      "notes": "String representation of data that is stored.",
-      "sourceLocation": {
-        "file": "src/lib/storage/storage.ts",
-        "line": 10
-      }
+      "notes": "String representation of data that is stored."
     },
     {
       "name": "StoredDataStorageKey",
@@ -1267,11 +983,7 @@
         "string",
         "reference"
       ],
-      "notes": "Key used for accessing stored data.",
-      "sourceLocation": {
-        "file": "src/lib/storage/storage.ts",
-        "line": 19
-      }
+      "notes": "Key used for accessing stored data."
     },
     {
       "name": "NumberStringDencoderNumber",
@@ -1284,11 +996,7 @@
         "numeric",
         "dereekb-util:encoding"
       ],
-      "notes": "An encodable number. This is typically a positive integer value.",
-      "sourceLocation": {
-        "file": "src/lib/string/dencoder.ts",
-        "line": 224
-      }
+      "notes": "An encodable number. This is typically a positive integer value."
     },
     {
       "name": "NumberStringDencoderString",
@@ -1301,11 +1009,7 @@
         "string",
         "dereekb-util:encoding"
       ],
-      "notes": "A number-encoded string. Little-Endian. Should Decode to the same value each time.",
-      "sourceLocation": {
-        "file": "src/lib/string/dencoder.ts",
-        "line": 233
-      }
+      "notes": "A number-encoded string. Little-Endian. Should Decode to the same value each time."
     },
     {
       "name": "NumberStringDencoderDigits",
@@ -1318,11 +1022,7 @@
         "string",
         "dereekb-util:encoding"
       ],
-      "notes": "Digits used when encoding/decoding a value.\n\nThe number of digits/characters must be a factor of 2. I.E. 8, 16, 32, 64",
-      "sourceLocation": {
-        "file": "src/lib/string/dencoder.ts",
-        "line": 244
-      }
+      "notes": "Digits used when encoding/decoding a value.\n\nThe number of digits/characters must be a factor of 2. I.E. 8, 16, 32, 64"
     },
     {
       "name": "CssClass",
@@ -1335,11 +1035,7 @@
         "string",
         "dereekb-util:css"
       ],
-      "notes": "Represents a single CSS Class",
-      "sourceLocation": {
-        "file": "src/lib/string/html.ts",
-        "line": 21
-      }
+      "notes": "Represents a single CSS Class"
     },
     {
       "name": "CssTokenName",
@@ -1357,11 +1053,7 @@
           "code": "const name: CssTokenName = 'dbx-primary-color';"
         }
       ],
-      "notes": "The name portion of a CSS token, without the leading `--` prefix.",
-      "sourceLocation": {
-        "file": "src/lib/string/html.ts",
-        "line": 35
-      }
+      "notes": "The name portion of a CSS token, without the leading `--` prefix."
     },
     {
       "name": "CssStyle",
@@ -1374,11 +1066,7 @@
         "string",
         "dereekb-util:css"
       ],
-      "notes": "Represents a single CSS Style",
-      "sourceLocation": {
-        "file": "src/lib/string/html.ts",
-        "line": 95
-      }
+      "notes": "Represents a single CSS Style"
     },
     {
       "name": "SpaceSeparatedCssClasses",
@@ -1391,11 +1079,7 @@
         "string",
         "dereekb-util:css"
       ],
-      "notes": "Represents one or more CssClasses that are space separated.",
-      "sourceLocation": {
-        "file": "src/lib/string/html.ts",
-        "line": 104
-      }
+      "notes": "Represents one or more CssClasses that are space separated."
     },
     {
       "name": "SpaceSeparatedCssStyles",
@@ -1408,11 +1092,7 @@
         "string",
         "dereekb-util:css"
       ],
-      "notes": "Represents one or more CssStyles that are space separated.",
-      "sourceLocation": {
-        "file": "src/lib/string/html.ts",
-        "line": 118
-      }
+      "notes": "Represents one or more CssStyles that are space separated."
     },
     {
       "name": "JSONEncodedString",
@@ -1425,11 +1105,7 @@
         "string",
         "dereekb-util:encoding"
       ],
-      "notes": "A json encoded string.",
-      "sourceLocation": {
-        "file": "src/lib/string/json.ts",
-        "line": 8
-      }
+      "notes": "A json encoded string."
     },
     {
       "name": "MimeTypeWithoutParameters",
@@ -1442,11 +1118,7 @@
         "string",
         "dereekb-util:mime"
       ],
-      "notes": "A simple mime type string with just the type/subtype and no parameters.\n\nI.E. \"application/json\"",
-      "sourceLocation": {
-        "file": "src/lib/string/mimetype.ts",
-        "line": 14
-      }
+      "notes": "A simple mime type string with just the type/subtype and no parameters.\n\nI.E. \"application/json\""
     },
     {
       "name": "MimeTypeWithSubtypeWildcardWithoutParameters",
@@ -1459,11 +1131,7 @@
         "string",
         "dereekb-util:mime"
       ],
-      "notes": "A mime type with a wildcard subtype. Has a star as the subtype.\n\nI.E. \"application/*\"",
-      "sourceLocation": {
-        "file": "src/lib/string/mimetype.ts",
-        "line": 30
-      }
+      "notes": "A mime type with a wildcard subtype. Has a star as the subtype.\n\nI.E. \"application/*\""
     },
     {
       "name": "ContentTypeMimeType",
@@ -1476,11 +1144,7 @@
         "string",
         "dereekb-util:mime"
       ],
-      "notes": "A mime type string that may contain additional parameters.\n\nI.E. \"text/plain\", \"application/json; charset=utf-8\"",
-      "sourceLocation": {
-        "file": "src/lib/string/mimetype.ts",
-        "line": 41
-      }
+      "notes": "A mime type string that may contain additional parameters.\n\nI.E. \"text/plain\", \"application/json; charset=utf-8\""
     },
     {
       "name": "PasswordString",
@@ -1493,11 +1157,7 @@
         "string",
         "dereekb-util:secret"
       ],
-      "notes": "A password string",
-      "sourceLocation": {
-        "file": "src/lib/string/password.ts",
-        "line": 8
-      }
+      "notes": "A password string"
     },
     {
       "name": "CharacterPrefix",
@@ -1510,11 +1170,7 @@
         "string",
         "dereekb-util:prefix"
       ],
-      "notes": "A character or string that is added to the start of a string.\n\nExample: '-' in \"-class\"",
-      "sourceLocation": {
-        "file": "src/lib/string/prefix.ts",
-        "line": 12
-      }
+      "notes": "A character or string that is added to the start of a string.\n\nExample: '-' in \"-class\""
     },
     {
       "name": "CharacterSuffix",
@@ -1527,11 +1183,7 @@
         "string",
         "dereekb-util:prefix"
       ],
-      "notes": "A character or string that is added to the end of a string.\n\nExample: '-' in \"class-\"",
-      "sourceLocation": {
-        "file": "src/lib/string/prefix.ts",
-        "line": 23
-      }
+      "notes": "A character or string that is added to the end of a string.\n\nExample: '-' in \"class-\""
     },
     {
       "name": "CharacterPrefixSuffixCleanString",
@@ -1544,11 +1196,7 @@
         "string",
         "dereekb-util:prefix"
       ],
-      "notes": "A string that does not have a CharacterPrefix or CharacterSuffix.",
-      "sourceLocation": {
-        "file": "src/lib/string/prefix.ts",
-        "line": 32
-      }
+      "notes": "A string that does not have a CharacterPrefix or CharacterSuffix."
     },
     {
       "name": "SplitStringTreeNodeString",
@@ -1561,11 +1209,7 @@
         "string",
         "dereekb-util:tree"
       ],
-      "notes": "A string value representing a node in a split string tree.",
-      "sourceLocation": {
-        "file": "src/lib/string/tree.ts",
-        "line": 13
-      }
+      "notes": "A string value representing a node in a split string tree."
     },
     {
       "name": "WebsiteProtocol",
@@ -1578,11 +1222,7 @@
         "url",
         "string"
       ],
-      "notes": "Connection protocol\n\nI.E. http, https, etc.",
-      "sourceLocation": {
-        "file": "src/lib/string/url.ts",
-        "line": 22
-      }
+      "notes": "Connection protocol\n\nI.E. http, https, etc."
     },
     {
       "name": "WebsiteDomain",
@@ -1595,11 +1235,7 @@
         "url",
         "string"
       ],
-      "notes": "A website domain.\n\nExamples:\n- dereekb.com\n- components.dereekb.com",
-      "sourceLocation": {
-        "file": "src/lib/string/url.ts",
-        "line": 59
-      }
+      "notes": "A website domain.\n\nExamples:\n- dereekb.com\n- components.dereekb.com"
     },
     {
       "name": "WebsiteTopLevelDomain",
@@ -1612,11 +1248,7 @@
         "url",
         "string"
       ],
-      "notes": "The top-level domain (tld).\n\nExamples:\n- com\n- net",
-      "sourceLocation": {
-        "file": "src/lib/string/url.ts",
-        "line": 97
-      }
+      "notes": "The top-level domain (tld).\n\nExamples:\n- com\n- net"
     },
     {
       "name": "PortNumber",
@@ -1629,11 +1261,7 @@
         "numeric",
         "url"
       ],
-      "notes": "A connection port number.\n\nExample:\n- 443\n- 8080",
-      "sourceLocation": {
-        "file": "src/lib/string/url.ts",
-        "line": 133
-      }
+      "notes": "A connection port number.\n\nExample:\n- 443\n- 8080"
     },
     {
       "name": "WebsiteUrl",
@@ -1649,11 +1277,7 @@
       "guards": [
         "isWebsiteUrl"
       ],
-      "notes": "A website url. Is at minimum a domain.\n\nExamples:\n- dereekb.com\n- https://components.dereekb.com\n- https://components.dereekb.com/\n- https://components.dereekb.com/doc/home?\n- https://components.dereekb.com/doc/home?test=true&test2=true",
-      "sourceLocation": {
-        "file": "src/lib/string/url.ts",
-        "line": 213
-      }
+      "notes": "A website url. Is at minimum a domain.\n\nExamples:\n- dereekb.com\n- https://components.dereekb.com\n- https://components.dereekb.com/\n- https://components.dereekb.com/doc/home?\n- https://components.dereekb.com/doc/home?test=true&test2=true"
     },
     {
       "name": "WebsiteUrlWithPrefix",
@@ -1669,11 +1293,7 @@
       "guards": [
         "isWebsiteUrlWithPrefix"
       ],
-      "notes": "A website url that starts with the proper http/https prefix.",
-      "sourceLocation": {
-        "file": "src/lib/string/url.ts",
-        "line": 320
-      }
+      "notes": "A website url that starts with the proper http/https prefix."
     },
     {
       "name": "StandardInternetAccessibleWebsiteUrl",
@@ -1689,11 +1309,7 @@
       "guards": [
         "isStandardInternetAccessibleWebsiteUrl"
       ],
-      "notes": "A \"standard\" internet accessible website url with a tld (.com/.net/etc) and optionally has the http/https protocol, but no other protocol.\n\nExamples:\n- dereekb.com\n- dereekb.com:8080\n- components.dereekb.com/\n- components.dereekb.com/doc/home\n- http://dereekb.com\n- https://components.dereekb.com/\n- https://components.dereekb.com/doc/home\n\nNon-examples:\n- localhost:8080       // not internet-accessible\n- test://dereekb.com   // non-http/https protocol",
-      "sourceLocation": {
-        "file": "src/lib/string/url.ts",
-        "line": 353
-      }
+      "notes": "A \"standard\" internet accessible website url with a tld (.com/.net/etc) and optionally has the http/https protocol, but no other protocol.\n\nExamples:\n- dereekb.com\n- dereekb.com:8080\n- components.dereekb.com/\n- components.dereekb.com/doc/home\n- http://dereekb.com\n- https://components.dereekb.com/\n- https://components.dereekb.com/doc/home\n\nNon-examples:\n- localhost:8080       // not internet-accessible\n- test://dereekb.com   // non-http/https protocol"
     },
     {
       "name": "WebsiteDomainAndPath",
@@ -1706,11 +1322,7 @@
         "url",
         "string"
       ],
-      "notes": "A website's domain and path combined, without the BaseWebsiteUrl\n\nExamples:\n- dereekb.com\n- components.dereekb.com/\n- components.dereekb.com/doc/home",
-      "sourceLocation": {
-        "file": "src/lib/string/url.ts",
-        "line": 378
-      }
+      "notes": "A website's domain and path combined, without the BaseWebsiteUrl\n\nExamples:\n- dereekb.com\n- components.dereekb.com/\n- components.dereekb.com/doc/home"
     },
     {
       "name": "CityString",
@@ -1724,11 +1336,7 @@
         "string",
         "dereekb-util:address"
       ],
-      "notes": "City name string (e.g. \"San Antonio\").",
-      "sourceLocation": {
-        "file": "src/lib/value/address.ts",
-        "line": 12
-      }
+      "notes": "City name string (e.g. \"San Antonio\")."
     },
     {
       "name": "StateString",
@@ -1742,11 +1350,7 @@
         "string",
         "dereekb-util:address"
       ],
-      "notes": "Full state name string (e.g. \"Texas\").",
-      "sourceLocation": {
-        "file": "src/lib/value/address.ts",
-        "line": 22
-      }
+      "notes": "Full state name string (e.g. \"Texas\")."
     },
     {
       "name": "StateCodeString",
@@ -1760,11 +1364,7 @@
         "string",
         "dereekb-util:address"
       ],
-      "notes": "Two-letter US state code (e.g. \"TX\").",
-      "sourceLocation": {
-        "file": "src/lib/value/address.ts",
-        "line": 32
-      }
+      "notes": "Two-letter US state code (e.g. \"TX\")."
     },
     {
       "name": "CountryString",
@@ -1778,11 +1378,7 @@
         "string",
         "dereekb-util:address"
       ],
-      "notes": "Full country name string (e.g. \"United States\").",
-      "sourceLocation": {
-        "file": "src/lib/value/address.ts",
-        "line": 42
-      }
+      "notes": "Full country name string (e.g. \"United States\")."
     },
     {
       "name": "CountryCodeString",
@@ -1796,11 +1392,7 @@
         "string",
         "dereekb-util:address"
       ],
-      "notes": "Country code string (e.g. \"US\").",
-      "sourceLocation": {
-        "file": "src/lib/value/address.ts",
-        "line": 52
-      }
+      "notes": "Country code string (e.g. \"US\")."
     },
     {
       "name": "AddressLineString",
@@ -1814,11 +1406,7 @@
         "string",
         "dereekb-util:address"
       ],
-      "notes": "A single line in a street address.",
-      "sourceLocation": {
-        "file": "src/lib/value/address.ts",
-        "line": 62
-      }
+      "notes": "A single line in a street address."
     },
     {
       "name": "ZipCodeString",
@@ -1832,11 +1420,7 @@
         "string",
         "dereekb-util:address"
       ],
-      "notes": "Postal/zip code string.",
-      "sourceLocation": {
-        "file": "src/lib/value/address.ts",
-        "line": 72
-      }
+      "notes": "Postal/zip code string."
     },
     {
       "name": "CronExpression",
@@ -1849,11 +1433,7 @@
         "string",
         "dereekb-util:cron"
       ],
-      "notes": "A cron schedule expression string",
-      "sourceLocation": {
-        "file": "src/lib/value/cron.ts",
-        "line": 11
-      }
+      "notes": "A cron schedule expression string"
     },
     {
       "name": "IndexNumber",
@@ -1866,11 +1446,7 @@
         "numeric",
         "reference"
       ],
-      "notes": "An integer that denotes which index an item is at.\n\nIs typically non-negative only.",
-      "sourceLocation": {
-        "file": "src/lib/value/indexed.ts",
-        "line": 26
-      }
+      "notes": "An integer that denotes which index an item is at.\n\nIs typically non-negative only."
     },
     {
       "name": "ModifierKey",
@@ -1883,11 +1459,7 @@
         "string",
         "identifier"
       ],
-      "notes": "String key that uniquely identifies a modifier within a {@link ModifierMap}.",
-      "sourceLocation": {
-        "file": "src/lib/value/modifier.ts",
-        "line": 11
-      }
+      "notes": "String key that uniquely identifies a modifier within a {@link ModifierMap}."
     },
     {
       "name": "Pixels",
@@ -1900,11 +1472,7 @@
         "measurement",
         "numeric"
       ],
-      "notes": "Pixel count.",
-      "sourceLocation": {
-        "file": "src/lib/value/pixel.ts",
-        "line": 8
-      }
+      "notes": "Pixel count."
     },
     {
       "name": "PixelsString",
@@ -1917,11 +1485,7 @@
         "measurement",
         "string"
       ],
-      "notes": "Pixel count as a string with a \"px\" suffix (e.g. \"100px\").",
-      "sourceLocation": {
-        "file": "src/lib/value/pixel.ts",
-        "line": 17
-      }
+      "notes": "Pixel count as a string with a \"px\" suffix (e.g. \"100px\")."
     },
     {
       "name": "Latitude",
@@ -1934,11 +1498,7 @@
         "geo",
         "numeric"
       ],
-      "notes": "Latitude value in degrees, ranging from -90 to 90.",
-      "sourceLocation": {
-        "file": "src/lib/value/point.ts",
-        "line": 16
-      }
+      "notes": "Latitude value in degrees, ranging from -90 to 90."
     },
     {
       "name": "Longitude",
@@ -1951,11 +1511,7 @@
         "geo",
         "numeric"
       ],
-      "notes": "Longitude value in degrees, ranging from -180 to 180.",
-      "sourceLocation": {
-        "file": "src/lib/value/point.ts",
-        "line": 25
-      }
+      "notes": "Longitude value in degrees, ranging from -180 to 180."
     },
     {
       "name": "LatLngPoint",
@@ -1970,11 +1526,7 @@
       "guards": [
         "isLatLngPoint"
       ],
-      "notes": "A geographic point represented by latitude and longitude.",
-      "sourceLocation": {
-        "file": "src/lib/value/point.ts",
-        "line": 63
-      }
+      "notes": "A geographic point represented by latitude and longitude."
     },
     {
       "name": "ZoomLevel",
@@ -1987,11 +1539,7 @@
         "measurement",
         "numeric"
       ],
-      "notes": "Camera zoom level.",
-      "sourceLocation": {
-        "file": "src/lib/value/zoom.ts",
-        "line": 8
-      }
+      "notes": "Camera zoom level."
     }
   ]
 }

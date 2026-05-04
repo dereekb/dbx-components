@@ -29,8 +29,9 @@ const ACTION_STATE_TRANSITIONS_TO_TAG = 'dbxActionStateTransitionsTo';
 
 // MARK: Public types
 /**
- * One action entry extracted from a source file. `module`, `sourcePath`, and
- * `sourceLocation.file` are recomputed by the build phase.
+ * One action entry extracted from a source file. `module` is supplied by the
+ * build phase. `filePath` and `line` are kept here for in-process warnings
+ * and never persisted to the manifest.
  */
 export type ExtractedActionEntry = ExtractedActionDirective | ExtractedActionStore | ExtractedActionState;
 

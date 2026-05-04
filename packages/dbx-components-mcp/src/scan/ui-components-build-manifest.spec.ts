@@ -77,7 +77,6 @@ export class DbxSectionComponent {
     expect(outcome.manifest.entries.length).toBe(1);
     expect(outcome.manifest.entries[0].slug).toBe('section');
     expect(outcome.manifest.entries[0].relatedSlugs).toEqual(['subsection']);
-    expect(outcome.manifest.entries[0].sourcePath).toBe('lib/section.ts'.replace('lib/', '') + '');
     expect(outcome.outPath).toBe('/proj/manifests/dereekb-x.ui-components.mcp.generated.json');
     expect(outcome.scannedFileCount).toBe(1);
     expect(outcome.extractWarnings).toEqual([]);

@@ -15,7 +15,7 @@
  * touching the real filesystem.
  */
 
-import { relative, resolve } from 'node:path';
+import { resolve } from 'node:path';
 import { type } from 'arktype';
 import { Project } from 'ts-morph';
 import { UiComponentManifest, type UiComponentEntry } from '../manifest/ui-components-schema.js';
@@ -97,7 +97,7 @@ export async function buildUiComponentsManifest(input: BuildUiManifestInput): Pr
   const extractResult = extractUiEntries({ project });
   const moduleName = scanSection.module ?? packageName;
   const sourceLabel = scanSection.source ?? packageName;
-  const entries = extractResult.entries.map((entry) => assembleEntry({ entry, moduleName, projectRoot }));
+  const entries = extractResult.entries.map((entry) => assembleEntry({ entry, moduleName }));
 
   const manifest = {
     version: 1 as const,
@@ -163,13 +163,10 @@ async function loadScanConfig(configPath: string, readFile: BuildUiManifestReadF
 interface AssembleEntryInput {
   readonly entry: ExtractedUiEntry;
   readonly moduleName: string;
-  readonly projectRoot: string;
 }
 
 function assembleEntry(input: AssembleEntryInput): UiComponentEntry {
-  const { entry, moduleName, projectRoot } = input;
-  const projectRelative = relative(projectRoot, entry.filePath).replaceAll('\\', '/');
-  const sourcePath = projectRelative.replace(/^src\//, '');
+  const { entry, moduleName } = input;
 
   const out: UiComponentEntry = {
     slug: entry.slug,
@@ -184,10 +181,8 @@ function assembleEntry(input: AssembleEntryInput): UiComponentEntry {
     ...(entry.contentProjection === undefined ? {} : { contentProjection: entry.contentProjection }),
     ...(entry.relatedSlugs && entry.relatedSlugs.length > 0 ? { relatedSlugs: [...entry.relatedSlugs] } : {}),
     ...(entry.skillRefs && entry.skillRefs.length > 0 ? { skillRefs: [...entry.skillRefs] } : {}),
-    sourcePath,
     ...(entry.example === undefined ? {} : { example: entry.example }),
     ...(entry.minimalExample === undefined ? {} : { minimalExample: entry.minimalExample }),
-    sourceLocation: { file: projectRelative, line: entry.line },
     ...(entry.deprecated === undefined ? {} : { deprecated: entry.deprecated }),
     ...(entry.since === undefined ? {} : { since: entry.since })
   };

@@ -14,7 +14,6 @@ const FIXTURE_ENTRIES: readonly FilterEntryInfo[] = [
     outputs: [],
     relatedSlugs: ['connect-source', 'source-connector', 'map-source'],
     skillRefs: ['dbx__ref__dbx-component-patterns'],
-    sourcePath: 'lib/filter/filter.source.directive.ts',
     example: '<div dbxFilterSource>\n  <my-filter-form></my-filter-form>\n</div>'
   },
   {
@@ -28,7 +27,6 @@ const FIXTURE_ENTRIES: readonly FilterEntryInfo[] = [
     outputs: [],
     relatedSlugs: ['map-source', 'map-source-connector'],
     skillRefs: ['dbx__ref__dbx-component-patterns'],
-    sourcePath: 'lib/filter/filter.map.directive.ts',
     example: '<div dbxFilterMap><div [dbxFilterMapSource]="\'a\'"></div></div>'
   },
   {
@@ -42,7 +40,6 @@ const FIXTURE_ENTRIES: readonly FilterEntryInfo[] = [
     outputs: [],
     relatedSlugs: ['map', 'map-source-connector'],
     skillRefs: ['dbx__ref__dbx-component-patterns'],
-    sourcePath: 'lib/filter/filter.map.source.directive.ts',
     example: '<div dbxFilterMap><div [dbxFilterMapSource]="\'k\'"></div></div>'
   },
   {
@@ -56,7 +53,6 @@ const FIXTURE_ENTRIES: readonly FilterEntryInfo[] = [
     outputs: [],
     relatedSlugs: ['source'],
     skillRefs: ['dbx__ref__dbx-component-patterns'],
-    sourcePath: 'lib/filter/filter.preset.ts',
     example: "const preset: ClickableFilterPreset<F> = { preset: 'a', title: 'A', presetValue: { preset: 'a' } };"
   }
 ];

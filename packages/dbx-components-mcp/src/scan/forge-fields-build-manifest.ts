@@ -15,7 +15,7 @@
  * touching the real filesystem.
  */
 
-import { relative, resolve } from 'node:path';
+import { resolve } from 'node:path';
 import { type } from 'arktype';
 import { Project } from 'ts-morph';
 import { ForgeFieldManifest, type ForgeFieldEntry } from '../manifest/forge-fields-schema.js';
@@ -97,7 +97,7 @@ export async function buildForgeFieldsManifest(input: BuildForgeFieldsManifestIn
   const extractResult = extractForgeFieldEntries({ project });
   const moduleName = scanSection.module ?? packageName;
   const sourceLabel = scanSection.source ?? packageName;
-  const entries = extractResult.entries.map((entry) => assembleEntry({ entry, projectRoot }));
+  const entries = extractResult.entries.map((entry) => assembleEntry({ entry }));
 
   const manifest = {
     version: 1 as const,
@@ -162,13 +162,10 @@ async function loadScanConfig(configPath: string, readFile: BuildForgeFieldsRead
 
 interface AssembleEntryInput {
   readonly entry: ExtractedForgeFieldEntry;
-  readonly projectRoot: string;
 }
 
 function assembleEntry(input: AssembleEntryInput): ForgeFieldEntry {
-  const { entry, projectRoot } = input;
-  const projectRelative = relative(projectRoot, entry.filePath).replaceAll('\\', '/');
-  const sourcePath = projectRelative.replace(/^src\/lib\/forge\//, '').replace(/^src\//, '');
+  const { entry } = input;
 
   const out: ForgeFieldEntry = {
     slug: entry.slug,
@@ -177,7 +174,6 @@ function assembleEntry(input: AssembleEntryInput): ForgeFieldEntry {
     produces: entry.produces,
     arrayOutput: entry.arrayOutput,
     description: entry.description,
-    sourcePath,
     example: entry.example,
     properties: entry.properties.map((p) => ({ ...p })),
     ...(entry.wrapperPattern === undefined ? {} : { wrapperPattern: entry.wrapperPattern }),
@@ -187,7 +183,6 @@ function assembleEntry(input: AssembleEntryInput): ForgeFieldEntry {
     ...(entry.composesFromSlugs && entry.composesFromSlugs.length > 0 ? { composesFromSlugs: [...entry.composesFromSlugs] } : {}),
     ...(entry.returns === undefined ? {} : { returns: entry.returns }),
     ...(entry.configInterface === undefined ? {} : { configInterface: entry.configInterface }),
-    sourceLocation: { file: projectRelative, line: entry.line },
     ...(entry.deprecated === undefined ? {} : { deprecated: entry.deprecated }),
     ...(entry.since === undefined ? {} : { since: entry.since })
   };

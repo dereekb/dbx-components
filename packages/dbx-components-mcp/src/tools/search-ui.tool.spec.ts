@@ -15,8 +15,7 @@ const FIXTURE_ENTRIES: readonly UiComponentEntry[] = [
     inputs: [],
     outputs: [],
     relatedSlugs: ['subsection'],
-    skillRefs: [],
-    sourcePath: 'lib/layout/section/section.component.ts'
+    skillRefs: []
   },
   {
     slug: 'subsection',
@@ -29,8 +28,7 @@ const FIXTURE_ENTRIES: readonly UiComponentEntry[] = [
     inputs: [],
     outputs: [],
     relatedSlugs: ['section'],
-    skillRefs: [],
-    sourcePath: 'lib/layout/section/subsection.component.ts'
+    skillRefs: []
   },
   {
     slug: 'two-column',
@@ -43,8 +41,7 @@ const FIXTURE_ENTRIES: readonly UiComponentEntry[] = [
     inputs: [],
     outputs: [],
     relatedSlugs: [],
-    skillRefs: [],
-    sourcePath: 'lib/layout/column/two/two.column.component.ts'
+    skillRefs: []
   },
   {
     slug: 'button',
@@ -57,8 +54,7 @@ const FIXTURE_ENTRIES: readonly UiComponentEntry[] = [
     inputs: [],
     outputs: [],
     relatedSlugs: [],
-    skillRefs: [],
-    sourcePath: 'lib/button/button.component.ts'
+    skillRefs: []
   },
   {
     slug: 'list',
@@ -71,8 +67,7 @@ const FIXTURE_ENTRIES: readonly UiComponentEntry[] = [
     inputs: [],
     outputs: [],
     relatedSlugs: [],
-    skillRefs: [],
-    sourcePath: 'lib/layout/list/list.component.ts'
+    skillRefs: []
   },
   {
     slug: 'list-view',
@@ -85,8 +80,7 @@ const FIXTURE_ENTRIES: readonly UiComponentEntry[] = [
     inputs: [],
     outputs: [],
     relatedSlugs: [],
-    skillRefs: [],
-    sourcePath: 'lib/layout/list/list.view.value.component.ts'
+    skillRefs: []
   },
   {
     slug: 'list-empty-content',
@@ -99,8 +93,7 @@ const FIXTURE_ENTRIES: readonly UiComponentEntry[] = [
     inputs: [],
     outputs: [],
     relatedSlugs: ['list'],
-    skillRefs: [],
-    sourcePath: 'lib/layout/list/list.content.empty.component.ts'
+    skillRefs: []
   },
   {
     slug: 'loading',
@@ -113,8 +106,7 @@ const FIXTURE_ENTRIES: readonly UiComponentEntry[] = [
     inputs: [],
     outputs: [],
     relatedSlugs: ['basic-loading', 'loading-progress'],
-    skillRefs: [],
-    sourcePath: 'lib/loading/loading.component.ts'
+    skillRefs: []
   },
   {
     slug: 'basic-loading',
@@ -127,8 +119,7 @@ const FIXTURE_ENTRIES: readonly UiComponentEntry[] = [
     inputs: [],
     outputs: [],
     relatedSlugs: ['loading'],
-    skillRefs: [],
-    sourcePath: 'lib/loading/basic-loading.component.ts'
+    skillRefs: []
   },
   {
     slug: 'loading-progress',
@@ -141,8 +132,7 @@ const FIXTURE_ENTRIES: readonly UiComponentEntry[] = [
     inputs: [],
     outputs: [],
     relatedSlugs: ['loading'],
-    skillRefs: [],
-    sourcePath: 'lib/loading/loading-progress.component.ts'
+    skillRefs: []
   }
 ];
 

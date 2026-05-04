@@ -18,11 +18,7 @@
         "reference",
         "dereekb-date:cell"
       ],
-      "notes": "Index from 0 of which day this block represents.\n\nIt is easiest to think of DateCellIndexes as days on a calendar. An index of 0 means the entire first day for that timezone.\n\nIt is not the time from the startsAt time to the endsAt time for a period.",
-      "sourceLocation": {
-        "file": "src/lib/date/date.cell.ts",
-        "line": 21
-      }
+      "notes": "Index from 0 of which day this block represents.\n\nIt is easiest to think of DateCellIndexes as days on a calendar. An index of 0 means the entire first day for that timezone.\n\nIt is not the time from the startsAt time to the endsAt time for a period."
     },
     {
       "name": "YearMonthDayCode",
@@ -35,11 +31,7 @@
         "date",
         "numeric"
       ],
-      "notes": "Encodes a calendar date as a single YYYYMMDD integer for efficient date-day comparisons and grouping.\n\nThe encoding uses `year * 10000 + month * 100 + day`, so January 1st 2022 becomes `20220101`.\nThis allows simple numeric comparisons to determine chronological order between dates.",
-      "sourceLocation": {
-        "file": "src/lib/date/date.day.ts",
-        "line": 16
-      }
+      "notes": "Encodes a calendar date as a single YYYYMMDD integer for efficient date-day comparisons and grouping.\n\nThe encoding uses `year * 10000 + month * 100 + day`, so January 1st 2022 becomes `20220101`.\nThis allows simple numeric comparisons to determine chronological order between dates."
     },
     {
       "name": "YearWeekCode",
@@ -52,11 +44,7 @@
         "date",
         "numeric"
       ],
-      "notes": "A Week/Year number combination used to refer to a specific Week on a specific Year.\n\n202201 is January 2022",
-      "sourceLocation": {
-        "file": "src/lib/date/date.week.ts",
-        "line": 16
-      }
+      "notes": "A Week/Year number combination used to refer to a specific Week on a specific Year.\n\n202201 is January 2022"
     },
     {
       "name": "YearWeekCodeString",
@@ -69,11 +57,7 @@
         "date",
         "string"
       ],
-      "notes": "String-version of a YearWeekCode. Usually used as a",
-      "sourceLocation": {
-        "file": "src/lib/date/date.week.ts",
-        "line": 25
-      }
+      "notes": "String-version of a YearWeekCode. Usually used as a"
     },
     {
       "name": "YearWeekCodeIndex",
@@ -86,11 +70,7 @@
         "date",
         "numeric"
       ],
-      "notes": "The week in the year. Starts from 1.",
-      "sourceLocation": {
-        "file": "src/lib/date/date.week.ts",
-        "line": 41
-      }
+      "notes": "The week in the year. Starts from 1."
     },
     {
       "name": "RRuleLineString",
@@ -103,11 +83,7 @@
         "string",
         "dereekb-date:rrule"
       ],
-      "notes": "Denotes a single RRule rules string.",
-      "sourceLocation": {
-        "file": "src/lib/rrule/date.rrule.parse.ts",
-        "line": 13
-      }
+      "notes": "Denotes a single RRule rules string."
     },
     {
       "name": "RRulePropertyType",
@@ -120,11 +96,7 @@
         "string",
         "dereekb-date:rrule"
       ],
-      "notes": "RRule property name. i.e. DTSTART, RRULE, etc.",
-      "sourceLocation": {
-        "file": "src/lib/rrule/date.rrule.parse.ts",
-        "line": 22
-      }
+      "notes": "RRule property name. i.e. DTSTART, RRULE, etc."
     },
     {
       "name": "RRuleRawParamSetString",
@@ -137,11 +109,7 @@
         "string",
         "dereekb-date:rrule"
       ],
-      "notes": "Set of RRuleParams, separated by a \";\".\n\nThe first value in this set is the Type of RRule.",
-      "sourceLocation": {
-        "file": "src/lib/rrule/date.rrule.parse.ts",
-        "line": 33
-      }
+      "notes": "Set of RRuleParams, separated by a \";\".\n\nThe first value in this set is the Type of RRule."
     },
     {
       "name": "RRuleRawParamString",
@@ -154,11 +122,7 @@
         "string",
         "dereekb-date:rrule"
       ],
-      "notes": "Single Param string. Formatted as <ParamName>=<ParamValue>",
-      "sourceLocation": {
-        "file": "src/lib/rrule/date.rrule.parse.ts",
-        "line": 42
-      }
+      "notes": "Single Param string. Formatted as <ParamName>=<ParamValue>"
     },
     {
       "name": "RRuleRawValueString",
@@ -171,11 +135,7 @@
         "string",
         "dereekb-date:rrule"
       ],
-      "notes": "A single raw value from an RRule value set.",
-      "sourceLocation": {
-        "file": "src/lib/rrule/date.rrule.parse.ts",
-        "line": 56
-      }
+      "notes": "A single raw value from an RRule value set."
     },
     {
       "name": "RRuleLines",
@@ -188,11 +148,7 @@
         "string",
         "dereekb-date:rrule"
       ],
-      "notes": "RFC string for an RRuleStringLineSet.",
-      "sourceLocation": {
-        "file": "src/lib/rrule/date.rrule.parse.ts",
-        "line": 95
-      }
+      "notes": "RFC string for an RRuleStringLineSet."
     },
     {
       "name": "RFC5545DateString",
@@ -206,11 +162,7 @@
         "string",
         "dereekb-date:rrule"
       ],
-      "notes": "Date formatted like \"20210611\".\n\nhttps://datatracker.ietf.org/doc/html/rfc5545#section-3.3.4",
-      "sourceLocation": {
-        "file": "src/lib/rrule/date.rrule.parse.ts",
-        "line": 107
-      }
+      "notes": "Date formatted like \"20210611\".\n\nhttps://datatracker.ietf.org/doc/html/rfc5545#section-3.3.4"
     },
     {
       "name": "RFC5545DateTimeString",
@@ -224,11 +176,7 @@
         "string",
         "dereekb-date:rrule"
       ],
-      "notes": "Date formatted like \"20210611T110000\" or \"20210611T110000Z\".\n\nhttps://datatracker.ietf.org/doc/html/rfc5545#section-3.3.5",
-      "sourceLocation": {
-        "file": "src/lib/rrule/date.rrule.parse.ts",
-        "line": 119
-      }
+      "notes": "Date formatted like \"20210611T110000\" or \"20210611T110000Z\".\n\nhttps://datatracker.ietf.org/doc/html/rfc5545#section-3.3.5"
     }
   ]
 }

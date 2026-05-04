@@ -18,11 +18,7 @@
         "string",
         "dereekb-firebase:functions"
       ],
-      "notes": "String key used to identify a function group in the app-level functions map.",
-      "sourceLocation": {
-        "file": "src/lib/client/function/function.factory.ts",
-        "line": 77
-      }
+      "notes": "String key used to identify a function group in the app-level functions map."
     },
     {
       "name": "FirebaseFunctionKey",
@@ -36,11 +32,7 @@
         "string",
         "dereekb-firebase:functions"
       ],
-      "notes": "Key that corresponds with a function on the server.",
-      "sourceLocation": {
-        "file": "src/lib/client/function/function.ts",
-        "line": 9
-      }
+      "notes": "Key that corresponds with a function on the server."
     },
     {
       "name": "ModelFirebaseCrudFunctionSpecifier",
@@ -54,11 +46,7 @@
         "string",
         "dereekb-firebase:functions"
       ],
-      "notes": "String identifier that routes a CRUD request to a specific sub-handler within a model's\nCRUD function. For example, a model's `update` might have specifiers like `'status'` or `'config'`\nto target different update behaviors.",
-      "sourceLocation": {
-        "file": "src/lib/client/function/model.function.factory.ts",
-        "line": 22
-      }
+      "notes": "String identifier that routes a CRUD request to a specific sub-handler within a model's\nCRUD function. For example, a model's `update` might have specifiers like `'status'` or `'config'`\nto target different update behaviors."
     },
     {
       "name": "FirebaseAuthUserId",
@@ -72,11 +60,7 @@
         "string",
         "dereekb-firebase:auth"
       ],
-      "notes": "Unique identifier for a Firebase Authentication user (the `uid` from Firebase Auth).",
-      "sourceLocation": {
-        "file": "src/lib/common/auth/auth.ts",
-        "line": 25
-      }
+      "notes": "Unique identifier for a Firebase Authentication user (the `uid` from Firebase Auth)."
     },
     {
       "name": "FirebaseAuthIdToken",
@@ -89,11 +73,7 @@
         "string",
         "dereekb-firebase:auth"
       ],
-      "notes": "Raw encoded JWT for Firebase Auth.\n\nCorresponds with IdToken type in Firebase Auth.",
-      "sourceLocation": {
-        "file": "src/lib/common/auth/auth.ts",
-        "line": 43
-      }
+      "notes": "Raw encoded JWT for Firebase Auth.\n\nCorresponds with IdToken type in Firebase Auth."
     },
     {
       "name": "FirebaseAuthOwnershipKey",
@@ -107,11 +87,7 @@
         "string",
         "dereekb-firebase:auth"
       ],
-      "notes": "A string key used to test for ownership of a particular set of objects.\n\nFor instance, a database model (or its parent) may have an ownership key associated with it that is compared with the user's current claims.",
-      "sourceLocation": {
-        "file": "src/lib/common/auth/auth.ts",
-        "line": 91
-      }
+      "notes": "A string key used to test for ownership of a particular set of objects.\n\nFor instance, a database model (or its parent) may have an ownership key associated with it that is compared with the user's current claims."
     },
     {
       "name": "DevelopmentFirebaseFunctionSpecifier",
@@ -125,11 +101,7 @@
         "string",
         "dereekb-firebase:functions"
       ],
-      "notes": "Identifies a specific development function endpoint to route requests to.\n\nUsed in dev/test environments to invoke specific server-side functions by name.",
-      "sourceLocation": {
-        "file": "src/lib/common/development/function.ts",
-        "line": 12
-      }
+      "notes": "Identifies a specific development function endpoint to route requests to.\n\nUsed in dev/test environments to invoke specific server-side functions by name."
     },
     {
       "name": "StorageBucketId",
@@ -143,11 +115,7 @@
         "string",
         "dereekb-firebase:storage"
       ],
-      "notes": "Storage bucket identifier for Firebase Cloud Storage.\n\nShould contain no slashes — just the bucket name (e.g., `\"my-app.appspot.com\"`).",
-      "sourceLocation": {
-        "file": "src/lib/common/storage/storage.ts",
-        "line": 13
-      }
+      "notes": "Storage bucket identifier for Firebase Cloud Storage.\n\nShould contain no slashes — just the bucket name (e.g., `\"my-app.appspot.com\"`)."
     },
     {
       "name": "StorageDownloadUrl",
@@ -161,11 +129,7 @@
         "string",
         "dereekb-firebase:storage"
       ],
-      "notes": "The public storage url link.",
-      "sourceLocation": {
-        "file": "src/lib/common/storage/types.ts",
-        "line": 46
-      }
+      "notes": "The public storage url link."
     },
     {
       "name": "StorageSignedDownloadUrl",
@@ -179,11 +143,7 @@
         "string",
         "dereekb-firebase:storage"
       ],
-      "notes": "A signed download link.",
-      "sourceLocation": {
-        "file": "src/lib/common/storage/types.ts",
-        "line": 56
-      }
+      "notes": "A signed download link."
     },
     {
       "name": "StorageRawDataString",
@@ -196,11 +156,7 @@
         "string",
         "dereekb-firebase:storage"
       ],
-      "notes": "Example:\n'Hello! \\\\ud83d\\\\ude0a';",
-      "sourceLocation": {
-        "file": "src/lib/common/storage/types.ts",
-        "line": 106
-      }
+      "notes": "Example:\n'Hello! \\\\ud83d\\\\ude0a';"
     },
     {
       "name": "StorageBase64DataString",
@@ -214,11 +170,7 @@
         "dereekb-firebase:storage",
         "dereekb-firebase:encoding"
       ],
-      "notes": "Example:\n'5b6p5Y+344GX44G+44GX44Gf77yB44GK44KB44Gn44Go44GG77yB';",
-      "sourceLocation": {
-        "file": "src/lib/common/storage/types.ts",
-        "line": 126
-      }
+      "notes": "Example:\n'5b6p5Y+344GX44G+44GX44Gf77yB44GK44KB44Gn44Go44GG77yB';"
     },
     {
       "name": "StorageBase64UrlDataString",
@@ -232,11 +184,7 @@
         "dereekb-firebase:storage",
         "dereekb-firebase:encoding"
       ],
-      "notes": "Example:\n'5b6p5Y-344GX44G-44GX44Gf77yB44GK44KB44Gn44Go44GG77yB';",
-      "sourceLocation": {
-        "file": "src/lib/common/storage/types.ts",
-        "line": 145
-      }
+      "notes": "Example:\n'5b6p5Y-344GX44G-44GX44Gf77yB44GK44KB44Gn44Go44GG77yB';"
     },
     {
       "name": "StorageDataUrlString",
@@ -250,11 +198,7 @@
         "string",
         "dereekb-firebase:storage"
       ],
-      "notes": "Example:\n'data:text/plain;base64,5b6p5Y+344GX44G+44GX44Gf77yB44GK44KB44Gn44Go44GG77yB'",
-      "sourceLocation": {
-        "file": "src/lib/common/storage/types.ts",
-        "line": 164
-      }
+      "notes": "Example:\n'data:text/plain;base64,5b6p5Y+344GX44G+44GX44Gf77yB44GK44KB44Gn44Go44GG77yB'"
     },
     {
       "name": "NotificationTemplateType",
@@ -268,11 +212,7 @@
         "string",
         "dereekb-firebase:notification"
       ],
-      "notes": "Template type identifier of the notification.\n\nProvides default information for the notification.\n\nTypes are generally intended to be handled case-insensitively by notification services.\n\nIdeally type values are shorter to reduce database size impact.",
-      "sourceLocation": {
-        "file": "src/lib/model/notification/notification.id.ts",
-        "line": 183
-      }
+      "notes": "Template type identifier of the notification.\n\nProvides default information for the notification.\n\nTypes are generally intended to be handled case-insensitively by notification services.\n\nIdeally type values are shorter to reduce database size impact."
     },
     {
       "name": "NotificationTaskType",
@@ -286,11 +226,7 @@
         "string",
         "dereekb-firebase:notification"
       ],
-      "notes": "Task type identifier of the notification, which is used to pass this task to the appropriate handler.\n\nIdeally type values are shorter to reduce database size impact.",
-      "sourceLocation": {
-        "file": "src/lib/model/notification/notification.id.ts",
-        "line": 195
-      }
+      "notes": "Task type identifier of the notification, which is used to pass this task to the appropriate handler.\n\nIdeally type values are shorter to reduce database size impact."
     },
     {
       "name": "NotificationMessageEntityKey",
@@ -304,11 +240,7 @@
         "string",
         "dereekb-firebase:notification"
       ],
-      "notes": "Arbitrary key used by the sending configuration service for choosing a pre-configured entity.\n\nTypically used for customizing the \"from\" or \"replyTo\" addresses while maintaining a separation of concerns.",
-      "sourceLocation": {
-        "file": "src/lib/model/notification/notification.message.ts",
-        "line": 38
-      }
+      "notes": "Arbitrary key used by the sending configuration service for choosing a pre-configured entity.\n\nTypically used for customizing the \"from\" or \"replyTo\" addresses while maintaining a separation of concerns."
     },
     {
       "name": "NotificationSendMessageTemplateName",
@@ -322,11 +254,7 @@
         "string",
         "dereekb-firebase:notification"
       ],
-      "notes": "Arbitrary template name/key that is used to configure which template to use by the sending service.",
-      "sourceLocation": {
-        "file": "src/lib/model/notification/notification.message.ts",
-        "line": 48
-      }
+      "notes": "Arbitrary template name/key that is used to configure which template to use by the sending service."
     },
     {
       "name": "NotificationTaskSubtaskTarget",
@@ -339,11 +267,7 @@
         "string",
         "dereekb-firebase:notification"
       ],
-      "notes": "Discriminator string that routes the subtask to the correct processing configuration.",
-      "sourceLocation": {
-        "file": "src/lib/model/notification/notification.task.subtask.ts",
-        "line": 24
-      }
+      "notes": "Discriminator string that routes the subtask to the correct processing configuration."
     },
     {
       "name": "NotificationTaskCheckpointString",
@@ -357,11 +281,7 @@
         "string",
         "dereekb-firebase:notification"
       ],
-      "notes": "Arbitrary unique string that denotes checkpoint progress for a multi-step task.",
-      "sourceLocation": {
-        "file": "src/lib/model/notification/notification.ts",
-        "line": 661
-      }
+      "notes": "Arbitrary unique string that denotes checkpoint progress for a multi-step task."
     },
     {
       "name": "OidcEntryClientId",
@@ -375,11 +295,7 @@
         "string",
         "dereekb-firebase:oidc"
       ],
-      "notes": "Unique client identifier for an OIDC client registration.",
-      "sourceLocation": {
-        "file": "src/lib/model/oidcmodel/oidcmodel.id.ts",
-        "line": 26
-      }
+      "notes": "Unique client identifier for an OIDC client registration."
     },
     {
       "name": "OidcInteractionUid",
@@ -393,11 +309,7 @@
         "string",
         "dereekb-firebase:oidc"
       ],
-      "notes": "Unique identifier for an oidc-provider interaction session, not to be confused with a Firebase UID/Auth User Identifier.\n\nGenerated by the provider when user interaction is needed (login/consent).\nUsed to look up the interaction session via cookies and to build\nbackend interaction endpoint URLs (e.g., `/interaction/${uid}/login`).",
-      "sourceLocation": {
-        "file": "src/lib/model/oidcmodel/oidcmodel.interaction.ts",
-        "line": 15
-      }
+      "notes": "Unique identifier for an oidc-provider interaction session, not to be confused with a Firebase UID/Auth User Identifier.\n\nGenerated by the provider when user interaction is needed (login/consent).\nUsed to look up the interaction session via cookies and to build\nbackend interaction endpoint URLs (e.g., `/interaction/${uid}/login`)."
     },
     {
       "name": "OidcScope",
@@ -415,11 +327,7 @@
           "code": "type MyScopes = 'openid' | 'profile' | 'email';"
         }
       ],
-      "notes": "Base type for OIDC scope string unions.\n\nApplications define their own scope union extending this type to get\ncompile-time validation of scope names throughout the delegate and config.",
-      "sourceLocation": {
-        "file": "src/lib/model/oidcmodel/oidcmodel.interaction.ts",
-        "line": 32
-      }
+      "notes": "Base type for OIDC scope string unions.\n\nApplications define their own scope union extending this type to get\ncompile-time validation of scope names throughout the delegate and config."
     },
     {
       "name": "OidcRedirectUri",
@@ -433,11 +341,7 @@
         "string",
         "dereekb-firebase:oidc"
       ],
-      "notes": "A redirect URI registered to an OIDC client.\n\nMust be a valid absolute URL (e.g. `https://myapp.example.com/callback`).",
-      "sourceLocation": {
-        "file": "src/lib/model/oidcmodel/oidcmodel.interaction.ts",
-        "line": 49
-      }
+      "notes": "A redirect URI registered to an OIDC client.\n\nMust be a valid absolute URL (e.g. `https://myapp.example.com/callback`)."
     },
     {
       "name": "StorageFilePurpose",
@@ -451,11 +355,7 @@
         "string",
         "dereekb-firebase:storage-file"
       ],
-      "notes": "Arbitrary string that can be used to describe the file's purpose.\n\nIt should be unique between different file types.\n\nThe purpose is generally used while querying for StorageFiles that require processing, but can also be\nset on files that do not get processed.\n\nCan be used for querying.",
-      "sourceLocation": {
-        "file": "src/lib/model/storagefile/storagefile.id.ts",
-        "line": 40
-      }
+      "notes": "Arbitrary string that can be used to describe the file's purpose.\n\nIt should be unique between different file types.\n\nThe purpose is generally used while querying for StorageFiles that require processing, but can also be\nset on files that do not get processed.\n\nCan be used for querying."
     },
     {
       "name": "StorageFilePurposeSubgroup",
@@ -469,11 +369,7 @@
         "string",
         "dereekb-firebase:storage-file"
       ],
-      "notes": "Used as an arbitrary discriminator for a StorageFile in relation to the StorageFilePurpose.\n\nThis is useful for being able to query StorageFiles that have a specific purpose and purpose subgroup.\n\nExample use case: Documents with the same StorageFilePurpose/processing, but should only have a single StorageFile per subgroup.",
-      "sourceLocation": {
-        "file": "src/lib/model/storagefile/storagefile.id.ts",
-        "line": 54
-      }
+      "notes": "Used as an arbitrary discriminator for a StorageFile in relation to the StorageFilePurpose.\n\nThis is useful for being able to query StorageFiles that have a specific purpose and purpose subgroup.\n\nExample use case: Documents with the same StorageFilePurpose/processing, but should only have a single StorageFile per subgroup."
     },
     {
       "name": "UploadedFileTypeDeterminationLevel",
@@ -486,11 +382,7 @@
         "numeric",
         "dereekb-firebase:storage-file"
       ],
-      "notes": "Confidence level of a file type determination. Higher values indicate higher confidence.\n\nWhen multiple determiners match, the one with the highest level wins.\n\nHigher values indicate higher confidence.\n\nFor example, a match by a file name would potentially have a higher confidence than a match by folder name\nin the case where we have two determiners:\n- One looking for 'avatar.png' exactly\n- One looking for the folder 'photos' exactly\n\nIn this case, the folder match should return a lower determination level than the file name match, so that\nit is processed properly.\n\nIn the ideal case there generally shouldn't be two determiners that could potentially match the same file.",
-      "sourceLocation": {
-        "file": "src/lib/model/storagefile/storagefile.upload.determiner.ts",
-        "line": 43
-      }
+      "notes": "Confidence level of a file type determination. Higher values indicate higher confidence.\n\nWhen multiple determiners match, the one with the highest level wins.\n\nHigher values indicate higher confidence.\n\nFor example, a match by a file name would potentially have a higher confidence than a match by folder name\nin the case where we have two determiners:\n- One looking for 'avatar.png' exactly\n- One looking for the folder 'photos' exactly\n\nIn this case, the folder match should return a lower determination level than the file name match, so that\nit is processed properly.\n\nIn the ideal case there generally shouldn't be two determiners that could potentially match the same file."
     },
     {
       "name": "UploadedFileTypeIdentifier",
@@ -504,11 +396,7 @@
         "string",
         "dereekb-firebase:storage-file"
       ],
-      "notes": "StorageFile uploaded-file type identifier.\n\nUsed as a descriminator for choosing the appropriate upload processor.\n\nThe upload type is generally determined by one of a few ways:\n- file name: A specific file name (e.g. 'avatar.png' or 'photos/avatar.png')\n- folder name: A specific folder name (e.g. 'photos' in 'photos/12345.png')\n- metadata: specific metadata value in the uploaded file's custom metadata\n- data: specific data in the uploaded file",
-      "sourceLocation": {
-        "file": "src/lib/model/storagefile/storagefile.upload.ts",
-        "line": 99
-      }
+      "notes": "StorageFile uploaded-file type identifier.\n\nUsed as a descriminator for choosing the appropriate upload processor.\n\nThe upload type is generally determined by one of a few ways:\n- file name: A specific file name (e.g. 'avatar.png' or 'photos/avatar.png')\n- folder name: A specific folder name (e.g. 'photos' in 'photos/12345.png')\n- metadata: specific metadata value in the uploaded file's custom metadata\n- data: specific data in the uploaded file"
     },
     {
       "name": "SystemStateTypeIdentifier",
@@ -522,11 +410,7 @@
         "string",
         "dereekb-firebase:system-state"
       ],
-      "notes": "Used to identify a SystemStateId.",
-      "sourceLocation": {
-        "file": "src/lib/model/system/system.ts",
-        "line": 54
-      }
+      "notes": "Used to identify a SystemStateId."
     },
     {
       "name": "SingleItemFirestoreCollectionDocumentIdentifier",
@@ -540,11 +424,7 @@
         "string",
         "dereekb-firebase:firestore"
       ],
-      "notes": "Document ID used for the single document in a single-item Firestore collection.",
-      "sourceLocation": {
-        "file": "src/lib/common/firestore/accessor/document.ts",
-        "line": 683
-      }
+      "notes": "Document ID used for the single document in a single-item Firestore collection."
     },
     {
       "name": "FirestoreCollectionName",
@@ -563,11 +443,7 @@
           "code": "'u', 'ps', 'or'"
         }
       ],
-      "notes": "An all lowercase name that references a collection. Is usually the lowercase version of the FirestoreModelType.\n\nThis is the part of the path that identifies what the collection is. Collection names are used in\nFirestore paths and should follow Firestore naming conventions (lowercase, no spaces, no special characters, since \"_\" is reserved/used for TwoWayFlatFirestoreModelKey).\n\nEach collection name in the app should be unique, as usage of CollectionGroups would cause collections\nwith the same name to be returned regardless of their location in the document hierarchy.",
-      "sourceLocation": {
-        "file": "src/lib/common/firestore/collection/collection.ts",
-        "line": 51
-      }
+      "notes": "An all lowercase name that references a collection. Is usually the lowercase version of the FirestoreModelType.\n\nThis is the part of the path that identifies what the collection is. Collection names are used in\nFirestore paths and should follow Firestore naming conventions (lowercase, no spaces, no special characters, since \"_\" is reserved/used for TwoWayFlatFirestoreModelKey).\n\nEach collection name in the app should be unique, as usage of CollectionGroups would cause collections\nwith the same name to be returned regardless of their location in the document hierarchy."
     },
     {
       "name": "FirestoreModelId",
@@ -584,11 +460,7 @@
       "guards": [
         "isFirestoreModelId"
       ],
-      "notes": "The model's id within a collection.\n\nDifferent from the FirestoreModelKey, which is the full path in the databse.\n\nExample:\n\n12345",
-      "sourceLocation": {
-        "file": "src/lib/common/firestore/collection/collection.ts",
-        "line": 317
-      }
+      "notes": "The model's id within a collection.\n\nDifferent from the FirestoreModelKey, which is the full path in the databse.\n\nExample:\n\n12345"
     },
     {
       "name": "FirestoreModelCollectionTypeArrayName",
@@ -602,11 +474,7 @@
         "string",
         "dereekb-firebase:firestore"
       ],
-      "notes": "String that is composed of the FirestoreCollectionNames derived from an input FirestoreModelKey and joined together via a separator.\n\nIs equivalent to a FirestoreCollectionType if the FIRESTORE_COLLECTION_NAME_SEPARATOR is used as the separator.",
-      "sourceLocation": {
-        "file": "src/lib/common/firestore/collection/collection.ts",
-        "line": 630
-      }
+      "notes": "String that is composed of the FirestoreCollectionNames derived from an input FirestoreModelKey and joined together via a separator.\n\nIs equivalent to a FirestoreCollectionType if the FIRESTORE_COLLECTION_NAME_SEPARATOR is used as the separator."
     },
     {
       "name": "FirestoreDriverIdentifier",
@@ -620,11 +488,7 @@
         "string",
         "dereekb-firebase:firestore"
       ],
-      "notes": "Optional human-readable identifier for the Firestore driver (e.g., 'firebase-admin', 'firebase-web', 'testing').",
-      "sourceLocation": {
-        "file": "src/lib/common/firestore/driver/driver.ts",
-        "line": 12
-      }
+      "notes": "Optional human-readable identifier for the Firestore driver (e.g., 'firebase-admin', 'firebase-web', 'testing')."
     },
     {
       "name": "FirestoreQueryConstraintType",
@@ -638,11 +502,7 @@
         "string",
         "dereekb-firebase:firestore"
       ],
-      "notes": "Type identifier for a Firestore query constraint.\n\nUsed to uniquely identify different types of query constraints, such as\nwhere, limit, orderBy, etc.",
-      "sourceLocation": {
-        "file": "src/lib/common/firestore/query/constraint.ts",
-        "line": 15
-      }
+      "notes": "Type identifier for a Firestore query constraint.\n\nUsed to uniquely identify different types of query constraints, such as\nwhere, limit, orderBy, etc."
     },
     {
       "name": "StorageListFilesPageToken",
@@ -656,11 +516,7 @@
         "string",
         "dereekb-firebase:storage"
       ],
-      "notes": "String used as a cursor for iterating pages of file results.",
-      "sourceLocation": {
-        "file": "src/lib/common/storage/driver/accessor.ts",
-        "line": 161
-      }
+      "notes": "String used as a cursor for iterating pages of file results."
     },
     {
       "name": "StorageListFileResultNextPageToken",
@@ -674,11 +530,7 @@
         "string",
         "dereekb-firebase:storage"
       ],
-      "notes": "Token returned with a list-files result for resuming pagination on the next call.",
-      "sourceLocation": {
-        "file": "src/lib/common/storage/driver/accessor.ts",
-        "line": 219
-      }
+      "notes": "Token returned with a list-files result for resuming pagination on the next call."
     },
     {
       "name": "FirebaseStorageDriverIdentifier",
@@ -692,11 +544,7 @@
         "string",
         "dereekb-firebase:storage"
       ],
-      "notes": "Unique identifier string for a storage driver implementation.",
-      "sourceLocation": {
-        "file": "src/lib/common/storage/driver/driver.ts",
-        "line": 11
-      }
+      "notes": "Unique identifier string for a storage driver implementation."
     }
   ]
 }

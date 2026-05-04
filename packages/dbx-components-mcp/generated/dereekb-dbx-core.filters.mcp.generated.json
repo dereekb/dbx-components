@@ -15,18 +15,13 @@
       "inputs": [],
       "outputs": [],
       "example": "<div dbxFilterSourceConnector>\n  <my-filter-form dbxFilterSource dbxFilterConnectSource></my-filter-form>\n</div>",
-      "sourcePath": "lib/filter/filter.connect.source.directive.ts",
       "relatedSlugs": [
         "source",
         "source-connector"
       ],
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
-      ],
-      "sourceLocation": {
-        "file": "src/lib/filter/filter.connect.source.directive.ts",
-        "line": 19
-      }
+      ]
     },
     {
       "kind": "directive",
@@ -38,18 +33,13 @@
       "inputs": [],
       "outputs": [],
       "example": "<div dbxFilterSourceConnector>\n  <my-filter-form dbxFilterSource dbxFilterConnectSource></my-filter-form>\n  <my-list></my-list>\n</div>",
-      "sourcePath": "lib/filter/filter.connector.directive.ts",
       "relatedSlugs": [
         "source",
         "connect-source"
       ],
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
-      ],
-      "sourceLocation": {
-        "file": "src/lib/filter/filter.connector.directive.ts",
-        "line": 21
-      }
+      ]
     },
     {
       "kind": "directive",
@@ -67,18 +57,13 @@
       ],
       "outputs": [],
       "example": "<div dbxFilterMap>\n  <div [dbxFilterMapSourceConnector]=\"'profileList'\">\n    <my-list></my-list>\n  </div>\n</div>",
-      "sourcePath": "lib/filter/filter.map.connector.directive.ts",
       "relatedSlugs": [
         "map",
         "map-source"
       ],
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
-      ],
-      "sourceLocation": {
-        "file": "src/lib/filter/filter.map.connector.directive.ts",
-        "line": 25
-      }
+      ]
     },
     {
       "kind": "directive",
@@ -90,18 +75,13 @@
       "inputs": [],
       "outputs": [],
       "example": "<div dbxFilterMap>\n  <div [dbxFilterMapSource]=\"'listA'\">...</div>\n  <div [dbxFilterMapSource]=\"'listB'\">...</div>\n</div>",
-      "sourcePath": "lib/filter/filter.map.directive.ts",
       "relatedSlugs": [
         "map-source",
         "map-source-connector"
       ],
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
-      ],
-      "sourceLocation": {
-        "file": "src/lib/filter/filter.map.directive.ts",
-        "line": 21
-      }
+      ]
     },
     {
       "kind": "directive",
@@ -119,18 +99,13 @@
       ],
       "outputs": [],
       "example": "<div dbxFilterMap>\n  <div [dbxFilterMapSource]=\"'profileList'\">\n    <my-filtered-list></my-filtered-list>\n  </div>\n</div>",
-      "sourcePath": "lib/filter/filter.map.source.directive.ts",
       "relatedSlugs": [
         "map",
         "map-source-connector"
       ],
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
-      ],
-      "sourceLocation": {
-        "file": "src/lib/filter/filter.map.source.directive.ts",
-        "line": 40
-      }
+      ]
     },
     {
       "kind": "pattern",
@@ -139,17 +114,12 @@
       "module": "@dereekb/dbx-core",
       "description": "Pattern for declaring a preset filter chip — combines an anchor display (title, icon, disabled) with a preset string identifier and a `presetValue` getter. A `null` or empty preset value resets the filter.",
       "example": "const activePreset: ClickableFilterPreset<ProfileFilter> = {\n  preset: 'active',\n  title: 'Active',\n  icon: 'check',\n  presetValue: { status: 'active', preset: 'active' }\n};",
-      "sourcePath": "lib/filter/filter.preset.ts",
       "relatedSlugs": [
         "source"
       ],
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
-      ],
-      "sourceLocation": {
-        "file": "src/lib/filter/filter.preset.ts",
-        "line": 26
-      }
+      ]
     },
     {
       "kind": "directive",
@@ -161,7 +131,6 @@
       "inputs": [],
       "outputs": [],
       "example": "<div dbxFilterSource>\n  <my-filter-form></my-filter-form>\n</div>",
-      "sourcePath": "lib/filter/filter.source.directive.ts",
       "relatedSlugs": [
         "connect-source",
         "source-connector",
@@ -169,11 +138,7 @@
       ],
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
-      ],
-      "sourceLocation": {
-        "file": "src/lib/filter/filter.source.directive.ts",
-        "line": 19
-      }
+      ]
     }
   ]
 }

@@ -42,7 +42,7 @@ function formatFull(field: FormFieldInfo): string {
 function formatHeader(field: FormFieldInfo): string {
   const arrayOptional = field.arrayOutput === 'optional' ? ' · array optional' : '';
   const array = field.arrayOutput === 'yes' ? ' · array output' : arrayOptional;
-  return [`# ${field.factoryName}`, '', `- **slug:** \`${field.slug}\``, `- **tier:** \`${field.tier}\``, `- **produces:** \`${field.produces}\`${array}`, `- **source:** \`packages/dbx-form/src/lib/form/${field.sourcePath}\``].join('\n');
+  return [`# ${field.factoryName}`, '', `- **slug:** \`${field.slug}\``, `- **tier:** \`${field.tier}\``, `- **produces:** \`${field.produces}\`${array}`].join('\n');
 }
 
 function formatTierBits(field: FormFieldInfo): string {

@@ -52,7 +52,6 @@ export interface FilterEntryInfo {
   readonly outputs: readonly FilterEntryInputInfo[];
   readonly relatedSlugs: readonly string[];
   readonly skillRefs: readonly string[];
-  readonly sourcePath: string;
   readonly example: string;
 }
 
@@ -196,7 +195,6 @@ export function toFilterEntryInfo(entry: FilterEntry): FilterEntryInfo {
       outputs: entry.outputs.map((o) => ({ name: o.name, type: o.type, description: o.description })),
       relatedSlugs: entry.relatedSlugs ?? [],
       skillRefs: entry.skillRefs ?? [],
-      sourcePath: entry.sourcePath,
       example: entry.example
     };
   } else {
@@ -211,7 +209,6 @@ export function toFilterEntryInfo(entry: FilterEntry): FilterEntryInfo {
       outputs: [],
       relatedSlugs: entry.relatedSlugs ?? [],
       skillRefs: entry.skillRefs ?? [],
-      sourcePath: entry.sourcePath,
       example: entry.example
     };
   }

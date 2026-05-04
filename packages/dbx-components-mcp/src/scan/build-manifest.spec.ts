@@ -135,8 +135,6 @@ describe('buildManifest — successful builds', () => {
     expect(entry.kind).toBe('semantic-type');
     expect(entry.baseType).toBe('string');
     expect(entry.topics).toEqual(['email', 'contact']);
-    expect(entry.sourceLocation?.file).toBe('src/value/email.ts');
-    expect(entry.sourceLocation?.line).toBeGreaterThan(0);
   });
 
   it('returns a manifest with no entries when no source file is tagged', async () => {

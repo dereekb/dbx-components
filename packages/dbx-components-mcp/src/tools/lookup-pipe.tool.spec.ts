@@ -16,7 +16,6 @@ const FIXTURE_ENTRIES: readonly PipeEntryInfo[] = [
     args: [{ name: 'defaultIfNull', type: 'Maybe<string>', description: 'Fallback when input is null.', required: false }],
     relatedSlugs: [],
     skillRefs: ['dbx-value-pipes'],
-    sourcePath: 'lib/pipe/value/dollar.pipe.ts',
     example: '<span>{{ amount | dollarAmount }}</span>'
   },
   {
@@ -35,7 +34,6 @@ const FIXTURE_ENTRIES: readonly PipeEntryInfo[] = [
     ],
     relatedSlugs: [],
     skillRefs: ['dbx-value-pipes'],
-    sourcePath: 'lib/pipe/value/cuttext.pipe.ts',
     example: '<span>{{ text | cutText:5 }}</span>'
   },
   {
@@ -51,7 +49,6 @@ const FIXTURE_ENTRIES: readonly PipeEntryInfo[] = [
     args: [],
     relatedSlugs: ['get-value-once'],
     skillRefs: ['dbx-value-pipes'],
-    sourcePath: 'lib/pipe/value/getvalue.pipe.ts',
     example: '<span>{{ getter | getValue }}</span>'
   },
   {
@@ -67,7 +64,6 @@ const FIXTURE_ENTRIES: readonly PipeEntryInfo[] = [
     args: [],
     relatedSlugs: [],
     skillRefs: [],
-    sourcePath: 'lib/pipe/async/asobservable.pipe.ts',
     example: '<span>{{ value | asObservable | async }}</span>'
   },
   {
@@ -83,7 +79,6 @@ const FIXTURE_ENTRIES: readonly PipeEntryInfo[] = [
     args: [],
     relatedSlugs: [],
     skillRefs: [],
-    sourcePath: 'lib/pipe/date/datedistance.pipe.ts',
     example: '<span>{{ d | dateDistance }}</span>'
   },
   {
@@ -99,7 +94,6 @@ const FIXTURE_ENTRIES: readonly PipeEntryInfo[] = [
     args: [],
     relatedSlugs: [],
     skillRefs: [],
-    sourcePath: 'lib/pipe/date/datetimerange.pipe.ts',
     example: '<span>{{ range | dateTimeRange }}</span>'
   }
 ];

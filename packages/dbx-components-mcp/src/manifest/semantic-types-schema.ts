@@ -47,8 +47,7 @@ export const SemanticTypeEntry = type({
   'examples?': type({ 'caption?': 'string', code: 'string' }).array(),
   'notes?': 'string',
   'deprecated?': 'boolean | string',
-  'since?': 'string',
-  'sourceLocation?': type({ file: 'string', line: 'number' })
+  'since?': 'string'
 });
 
 /**

@@ -167,7 +167,7 @@ function formatFull(entry: UiComponentEntry): string {
 }
 
 function formatHeader(entry: UiComponentEntry): string {
-  const lines: string[] = [`# ${entry.className}`, '', `- **slug:** \`${entry.slug}\``, `- **kind:** \`${entry.kind}\``, `- **category:** \`${entry.category}\``, `- **selector:** \`${entry.selector}\``, `- **module:** \`${entry.module}\``, `- **source:** \`${entry.sourcePath}\``];
+  const lines: string[] = [`# ${entry.className}`, '', `- **slug:** \`${entry.slug}\``, `- **kind:** \`${entry.kind}\``, `- **category:** \`${entry.category}\``, `- **selector:** \`${entry.selector}\``, `- **module:** \`${entry.module}\``];
   return lines.join('\n');
 }
 

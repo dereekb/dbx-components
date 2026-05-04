@@ -35,8 +35,9 @@ const UI_INPUT_REQUIRED_TAG = 'dbxWebInputRequired';
 // MARK: Public types
 /**
  * One UI entry extracted from a source file. Mirrors {@link UiComponentEntry}
- * minus `module` (derived from the package being scanned in build-manifest)
- * and `sourcePath` (recomputed against the project root in build-manifest).
+ * minus `module` (derived from the package being scanned in build-manifest).
+ * `filePath` and `line` are kept here for in-process warning reporting but
+ * never persisted to the manifest — downstream consumers can't resolve them.
  */
 export interface ExtractedUiEntry {
   readonly slug: string;

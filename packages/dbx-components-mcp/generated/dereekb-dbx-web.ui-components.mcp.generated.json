@@ -37,13 +37,8 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/action/action.confirm.directive.ts",
       "example": "<button [dbxAction]=\"deleteAction\" [dbxActionConfirm]=\"{ header: 'Delete account?', confirmText: 'Delete' }\">Delete</button>",
-      "minimalExample": "<div [dbxActionConfirm]=\"cfg\"></div>",
-      "sourceLocation": {
-        "file": "src/lib/action/action.confirm.directive.ts",
-        "line": 39
-      }
+      "minimalExample": "<div [dbxActionConfirm]=\"cfg\"></div>"
     },
     {
       "slug": "action-key-trigger",
@@ -70,13 +65,8 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/action/key.trigger.directive.ts",
       "example": "<form [dbxAction]=\"saveAction\" [dbxActionKeyTrigger]=\"'cmd+s'\">...</form>",
-      "minimalExample": "<div [dbxActionKeyTrigger]=\"'enter'\"></div>",
-      "sourceLocation": {
-        "file": "src/lib/action/key.trigger.directive.ts",
-        "line": 25
-      }
+      "minimalExample": "<div [dbxActionKeyTrigger]=\"'enter'\"></div>"
     },
     {
       "slug": "button",
@@ -216,13 +206,8 @@
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "sourcePath": "lib/button/button.component.ts",
       "example": "<dbx-button [text]=\"'Save'\" raised [dbxAction]=\"saveAction\">\n</dbx-button>",
-      "minimalExample": "<dbx-button text=\"Save\" raised [dbxAction]=\"saveAction\"></dbx-button>",
-      "sourceLocation": {
-        "file": "src/lib/button/button.component.ts",
-        "line": 45
-      }
+      "minimalExample": "<dbx-button text=\"Save\" raised [dbxAction]=\"saveAction\"></dbx-button>"
     },
     {
       "slug": "button-spacer",
@@ -242,13 +227,8 @@
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "sourcePath": "lib/button/button.spacer.directive.ts",
       "example": "<dbx-bar>\n  <dbx-button text=\"Save\" raised></dbx-button>\n  <dbx-button-spacer></dbx-button-spacer>\n  <dbx-button text=\"Cancel\"></dbx-button>\n</dbx-bar>",
-      "minimalExample": "<dbx-button-spacer></dbx-button-spacer>",
-      "sourceLocation": {
-        "file": "src/lib/button/button.spacer.directive.ts",
-        "line": 24
-      }
+      "minimalExample": "<dbx-button-spacer></dbx-button-spacer>"
     },
     {
       "slug": "error",
@@ -288,13 +268,8 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/error/error.component.ts",
       "example": "<dbx-error [error]=\"error$ | async\"></dbx-error>",
-      "minimalExample": "<dbx-error [error]=\"error\"></dbx-error>",
-      "sourceLocation": {
-        "file": "src/lib/error/error.component.ts",
-        "line": 52
-      }
+      "minimalExample": "<dbx-error [error]=\"error\"></dbx-error>"
     },
     {
       "slug": "action-snackbar-error",
@@ -320,13 +295,8 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/error/error.snackbar.action.directive.ts",
       "example": "<button [dbxAction]=\"saveAction\" dbxActionSnackbarError>Save</button>",
-      "minimalExample": "<div [dbxActionSnackbarError]></div>",
-      "sourceLocation": {
-        "file": "src/lib/error/error.snackbar.action.directive.ts",
-        "line": 28
-      }
+      "minimalExample": "<div [dbxActionSnackbarError]></div>"
     },
     {
       "slug": "error-snackbar",
@@ -344,13 +314,8 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/error/error.snackbar.component.ts",
       "example": "// Triggered via DbxErrorSnackbarService.showError(error)",
-      "minimalExample": "<dbx-error-snackbar></dbx-error-snackbar>",
-      "sourceLocation": {
-        "file": "src/lib/error/error.snackbar.component.ts",
-        "line": 51
-      }
+      "minimalExample": "<dbx-error-snackbar></dbx-error-snackbar>"
     },
     {
       "slug": "error-view",
@@ -395,13 +360,8 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/error/error.view.component.ts",
       "example": "<dbx-error-view [error]=\"error\">\n  <dbx-button text=\"Retry\" [dbxAction]=\"retryAction\"></dbx-button>\n</dbx-error-view>",
-      "minimalExample": "<dbx-error-view [error]=\"error\"></dbx-error-view>",
-      "sourceLocation": {
-        "file": "src/lib/error/error.view.component.ts",
-        "line": 39
-      }
+      "minimalExample": "<dbx-error-view [error]=\"error\"></dbx-error-view>"
     },
     {
       "slug": "basic-loading",
@@ -473,13 +433,8 @@
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "sourcePath": "lib/loading/basic-loading.component.ts",
       "example": "<dbx-basic-loading [loading]=\"true\" color=\"accent\" text=\"Loading data...\">\n  <p>Content appears here when loading is false.</p>\n</dbx-basic-loading>",
-      "minimalExample": "<dbx-basic-loading [loading]=\"true\"><p>Content</p></dbx-basic-loading>",
-      "sourceLocation": {
-        "file": "src/lib/loading/basic-loading.component.ts",
-        "line": 45
-      }
+      "minimalExample": "<dbx-basic-loading [loading]=\"true\"><p>Content</p></dbx-basic-loading>"
     },
     {
       "slug": "loading-progress",
@@ -544,13 +499,8 @@
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "sourcePath": "lib/loading/loading-progress.component.ts",
       "example": "<dbx-loading-progress mode=\"bar\"></dbx-loading-progress>",
-      "minimalExample": "<dbx-loading-progress></dbx-loading-progress>",
-      "sourceLocation": {
-        "file": "src/lib/loading/loading-progress.component.ts",
-        "line": 35
-      }
+      "minimalExample": "<dbx-loading-progress></dbx-loading-progress>"
     },
     {
       "slug": "action-loading-context",
@@ -569,13 +519,8 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/loading/loading.action.directive.ts",
       "example": "<dbx-loading [state]=\"ctx.state$ | async\">\n  <button [dbxAction]=\"saveAction\" dbxActionLoadingContext>Save</button>\n</dbx-loading>",
-      "minimalExample": "<button [dbxActionLoadingContext]></button>",
-      "sourceLocation": {
-        "file": "src/lib/loading/loading.action.directive.ts",
-        "line": 27
-      }
+      "minimalExample": "<button [dbxActionLoadingContext]></button>"
     },
     {
       "slug": "loading",
@@ -659,13 +604,8 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/loading/loading.component.ts",
       "example": "<dbx-loading [state]=\"state$ | async\" text=\"Loading items...\">\n  <dbx-list [state$]=\"state$\" [config]=\"listConfig\"></dbx-list>\n</dbx-loading>",
-      "minimalExample": "<dbx-loading [state]=\"state$ | async\">Body</dbx-loading>",
-      "sourceLocation": {
-        "file": "src/lib/loading/loading.component.ts",
-        "line": 44
-      }
+      "minimalExample": "<dbx-loading [state]=\"state$ | async\">Body</dbx-loading>"
     },
     {
       "slug": "resized",
@@ -689,13 +629,8 @@
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "sourcePath": "lib/screen/resize.directive.ts",
       "example": "<div (dbxResized)=\"onResized($event)\" class=\"resizable-panel\"></div>",
-      "minimalExample": "<div (dbxResized)=\"handle($event)\"></div>",
-      "sourceLocation": {
-        "file": "src/lib/screen/resize.directive.ts",
-        "line": 23
-      }
+      "minimalExample": "<div (dbxResized)=\"handle($event)\"></div>"
     },
     {
       "slug": "action-snackbar",
@@ -735,13 +670,8 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/action/snackbar/action.snackbar.directive.ts",
       "example": "<button [dbxAction]=\"saveAction\" [dbxActionSnackbar]=\"snackbarFn\">Save</button>",
-      "minimalExample": "<div [dbxActionSnackbar]=\"fn\"></div>",
-      "sourceLocation": {
-        "file": "src/lib/action/snackbar/action.snackbar.directive.ts",
-        "line": 28
-      }
+      "minimalExample": "<div [dbxActionSnackbar]=\"fn\"></div>"
     },
     {
       "slug": "action-transition-safety",
@@ -766,13 +696,8 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/action/transition/transition.safety.directive.ts",
       "example": "<form [dbxAction]=\"formAction\" dbxActionTransitionSafety>...</form>",
-      "minimalExample": "<form [dbxActionTransitionSafety]></form>",
-      "sourceLocation": {
-        "file": "src/lib/action/transition/transition.safety.directive.ts",
-        "line": 39
-      }
+      "minimalExample": "<form [dbxActionTransitionSafety]></form>"
     },
     {
       "slug": "icon-button",
@@ -791,13 +716,8 @@
       "skillRefs": [
         "dbx__migration__migrate-dbx-icon-button"
       ],
-      "sourcePath": "lib/button/icon/icon.button.component.ts",
       "example": "<dbx-icon-button icon=\"delete\" color=\"warn\" [dbxAction]=\"deleteAction\"></dbx-icon-button>",
-      "minimalExample": "<dbx-icon-button icon=\"add\"></dbx-icon-button>",
-      "sourceLocation": {
-        "file": "src/lib/button/icon/icon.button.component.ts",
-        "line": 25
-      }
+      "minimalExample": "<dbx-icon-button icon=\"add\"></dbx-icon-button>"
     },
     {
       "slug": "progress-bar-button",
@@ -854,13 +774,8 @@
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "sourcePath": "lib/button/progress/bar.button.component.ts",
       "example": "<dbx-progress-bar-button [config]=\"cfg\" (btnClick)=\"onClick()\"></dbx-progress-bar-button>",
-      "minimalExample": "<dbx-progress-bar-button [config]=\"cfg\"></dbx-progress-bar-button>",
-      "sourceLocation": {
-        "file": "src/lib/button/progress/bar.button.component.ts",
-        "line": 30
-      }
+      "minimalExample": "<dbx-progress-bar-button [config]=\"cfg\"></dbx-progress-bar-button>"
     },
     {
       "slug": "progress-spinner-button",
@@ -917,13 +832,8 @@
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "sourcePath": "lib/button/progress/spinner.button.component.ts",
       "example": "<dbx-progress-spinner-button [config]=\"cfg\" (btnClick)=\"onClick()\"></dbx-progress-spinner-button>",
-      "minimalExample": "<dbx-progress-spinner-button [config]=\"cfg\"></dbx-progress-spinner-button>",
-      "sourceLocation": {
-        "file": "src/lib/button/progress/spinner.button.component.ts",
-        "line": 30
-      }
+      "minimalExample": "<dbx-progress-spinner-button [config]=\"cfg\"></dbx-progress-spinner-button>"
     },
     {
       "slug": "page-title-info",
@@ -945,13 +855,8 @@
       "skillRefs": [
         "dbx__ref__dbx-app-structure"
       ],
-      "sourcePath": "lib/extension/title/title.directive.ts",
       "example": "<div [dbxWebPageTitleInfo]=\"appTitleConfigSignal()\">\n  <ui-view>\n    <div [dbxWebPageTitleInfo]=\"pageTitleConfigSignal()\">\n      <!-- leaf -->\n    </div>\n  </ui-view>\n</div>",
-      "minimalExample": "<div [dbxWebPageTitleInfo]=\"{ title: 'Docs' }\"></div>",
-      "sourceLocation": {
-        "file": "src/lib/extension/title/title.directive.ts",
-        "line": 38
-      }
+      "minimalExample": "<div [dbxWebPageTitleInfo]=\"{ title: 'Docs' }\"></div>"
     },
     {
       "slug": "dialog-content",
@@ -979,13 +884,8 @@
       "skillRefs": [
         "dbx__ref__dbx-app-structure"
       ],
-      "sourcePath": "lib/interaction/dialog/dialog.content.directive.ts",
       "example": "<dbx-dialog-content>\n  <h2>Confirm</h2>\n  <p>Are you sure?</p>\n</dbx-dialog-content>",
-      "minimalExample": "<div dbxDialogContent>Body</div>",
-      "sourceLocation": {
-        "file": "src/lib/interaction/dialog/dialog.content.directive.ts",
-        "line": 31
-      }
+      "minimalExample": "<div dbxDialogContent>Body</div>"
     },
     {
       "slug": "popover",
@@ -1005,13 +905,8 @@
       "skillRefs": [
         "dbx__ref__dbx-app-structure"
       ],
-      "sourcePath": "lib/interaction/popover/popover.component.ts",
       "example": "// In a service: this.popoverService.open({ content: MyContentComponent, origin })",
-      "minimalExample": "<dbx-popover></dbx-popover>",
-      "sourceLocation": {
-        "file": "src/lib/interaction/popover/popover.component.ts",
-        "line": 89
-      }
+      "minimalExample": "<dbx-popover></dbx-popover>"
     },
     {
       "slug": "popup",
@@ -1029,13 +924,8 @@
       "skillRefs": [
         "dbx__ref__dbx-app-structure"
       ],
-      "sourcePath": "lib/interaction/popup/popup.component.ts",
       "example": "// In a service: this.popupService.open({ content: MyContentComponent })",
-      "minimalExample": "<dbx-popup></dbx-popup>",
-      "sourceLocation": {
-        "file": "src/lib/interaction/popup/popup.component.ts",
-        "line": 63
-      }
+      "minimalExample": "<dbx-popup></dbx-popup>"
     },
     {
       "slug": "prompt",
@@ -1068,13 +958,8 @@
       "skillRefs": [
         "dbx__ref__dbx-app-structure"
       ],
-      "sourcePath": "lib/interaction/prompt/prompt.component.ts",
       "example": "<dbx-prompt header=\"Delete account\" prompt=\"This cannot be undone.\">\n  <button mat-button (click)=\"cancel()\">Cancel</button>\n  <button mat-flat-button color=\"warn\" (click)=\"confirm()\">Delete</button>\n</dbx-prompt>",
-      "minimalExample": "<dbx-prompt header=\"Confirm\"></dbx-prompt>",
-      "sourceLocation": {
-        "file": "src/lib/interaction/prompt/prompt.component.ts",
-        "line": 25
-      }
+      "minimalExample": "<dbx-prompt header=\"Confirm\"></dbx-prompt>"
     },
     {
       "slug": "prompt-confirm",
@@ -1113,13 +998,8 @@
       "skillRefs": [
         "dbx__ref__dbx-app-structure"
       ],
-      "sourcePath": "lib/interaction/prompt/prompt.confirm.component.ts",
       "example": "<dbx-prompt-confirm [config]=\"{ header: 'Delete?', confirmText: 'Delete', cancelText: 'Cancel' }\"></dbx-prompt-confirm>",
-      "minimalExample": "<dbx-prompt-confirm [config]=\"cfg\"></dbx-prompt-confirm>",
-      "sourceLocation": {
-        "file": "src/lib/interaction/prompt/prompt.confirm.component.ts",
-        "line": 34
-      }
+      "minimalExample": "<dbx-prompt-confirm [config]=\"cfg\"></dbx-prompt-confirm>"
     },
     {
       "slug": "bar",
@@ -1146,13 +1026,8 @@
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "sourcePath": "lib/layout/bar/bar.directive.ts",
       "example": "<dbx-bar>\n  <dbx-button text=\"Save\" raised color=\"primary\"></dbx-button>\n  <dbx-button-spacer></dbx-button-spacer>\n  <dbx-button text=\"Cancel\" stroked></dbx-button>\n</dbx-bar>",
-      "minimalExample": "<dbx-bar><button>A</button><button>B</button></dbx-bar>",
-      "sourceLocation": {
-        "file": "src/lib/layout/bar/bar.directive.ts",
-        "line": 27
-      }
+      "minimalExample": "<dbx-bar><button>A</button><button>B</button></dbx-bar>"
     },
     {
       "slug": "bar-header",
@@ -1191,13 +1066,8 @@
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "sourcePath": "lib/layout/bar/bar.header.component.ts",
       "example": "<dbx-bar-header header=\"Members\" icon=\"group\">\n  <button mat-icon-button><mat-icon>add</mat-icon></button>\n</dbx-bar-header>",
-      "minimalExample": "<dbx-bar-header header=\"Title\"></dbx-bar-header>",
-      "sourceLocation": {
-        "file": "src/lib/layout/bar/bar.header.component.ts",
-        "line": 26
-      }
+      "minimalExample": "<dbx-bar-header header=\"Title\"></dbx-bar-header>"
     },
     {
       "slug": "pagebar",
@@ -1225,13 +1095,8 @@
         "dbx__ref__dbx-ui-building-blocks",
         "dbx__ref__dbx-app-structure"
       ],
-      "sourcePath": "lib/layout/bar/pagebar.component.ts",
       "example": "<dbx-pagebar>\n  <h2>Settings</h2>\n  <span class=\"spacer\"></span>\n  <button mat-stroked-button>Save</button>\n</dbx-pagebar>",
-      "minimalExample": "<dbx-pagebar>Title</dbx-pagebar>",
-      "sourceLocation": {
-        "file": "src/lib/layout/bar/pagebar.component.ts",
-        "line": 28
-      }
+      "minimalExample": "<dbx-pagebar>Title</dbx-pagebar>"
     },
     {
       "slug": "card-box",
@@ -1264,13 +1129,8 @@
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "sourcePath": "lib/layout/card/card.box.component.ts",
       "example": "<dbx-card-box [header]=\"'Settings'\" [icon]=\"'settings'\">\n  <button sectionHeader mat-icon-button><mat-icon>edit</mat-icon></button>\n  <p>Card body content goes here.</p>\n</dbx-card-box>",
-      "minimalExample": "<dbx-card-box header=\"Title\"><p>Body</p></dbx-card-box>",
-      "sourceLocation": {
-        "file": "src/lib/layout/card/card.box.component.ts",
-        "line": 26
-      }
+      "minimalExample": "<dbx-card-box header=\"Title\"><p>Body</p></dbx-card-box>"
     },
     {
       "slug": "card-box-container",
@@ -1288,13 +1148,8 @@
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "sourcePath": "lib/layout/card/card.box.container.directive.ts",
       "example": "<dbx-card-box-container>\n  <dbx-card-box header=\"One\"></dbx-card-box>\n  <dbx-card-box header=\"Two\"></dbx-card-box>\n</dbx-card-box-container>",
-      "minimalExample": "<div dbxCardBoxContainer><dbx-card-box></dbx-card-box></div>",
-      "sourceLocation": {
-        "file": "src/lib/layout/card/card.box.container.directive.ts",
-        "line": 25
-      }
+      "minimalExample": "<div dbxCardBoxContainer><dbx-card-box></dbx-card-box></div>"
     },
     {
       "slug": "content-box",
@@ -1329,13 +1184,8 @@
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "sourcePath": "lib/layout/content/content.box.directive.ts",
       "example": "<dbx-content-box>\n  <p>Summary content</p>\n</dbx-content-box>",
-      "minimalExample": "<div dbxContentBox>Body</div>",
-      "sourceLocation": {
-        "file": "src/lib/layout/content/content.box.directive.ts",
-        "line": 23
-      }
+      "minimalExample": "<div dbxContentBox>Body</div>"
     },
     {
       "slug": "content-container",
@@ -1377,13 +1227,8 @@
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "sourcePath": "lib/layout/content/content.container.directive.ts",
       "example": "<dbx-content-container grow=\"full\" padding=\"normal\">\n  <p>Page body</p>\n</dbx-content-container>",
-      "minimalExample": "<div dbxContentContainer>Body</div>",
-      "sourceLocation": {
-        "file": "src/lib/layout/content/content.container.directive.ts",
-        "line": 33
-      }
+      "minimalExample": "<div dbxContentContainer>Body</div>"
     },
     {
       "slug": "content",
@@ -1403,13 +1248,8 @@
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "sourcePath": "lib/layout/content/content.directive.ts",
       "example": "<div dbxContent>\n  <p>Standard content body</p>\n</div>",
-      "minimalExample": "<dbx-content>Body</dbx-content>",
-      "sourceLocation": {
-        "file": "src/lib/layout/content/content.directive.ts",
-        "line": 22
-      }
+      "minimalExample": "<dbx-content>Body</dbx-content>"
     },
     {
       "slug": "content-elevate",
@@ -1436,13 +1276,8 @@
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "sourcePath": "lib/layout/content/content.elevate.directive.ts",
       "example": "<div dbxContentElevate>Highlighted block</div>",
-      "minimalExample": "<dbx-content-elevate>Body</dbx-content-elevate>",
-      "sourceLocation": {
-        "file": "src/lib/layout/content/content.elevate.directive.ts",
-        "line": 21
-      }
+      "minimalExample": "<dbx-content-elevate>Body</dbx-content-elevate>"
     },
     {
       "slug": "content-page",
@@ -1461,13 +1296,8 @@
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "sourcePath": "lib/layout/content/content.page.directive.ts",
       "example": "<div dbxContentPage>\n  <dbx-section-page header=\"Dashboard\"><p>...</p></dbx-section-page>\n</div>",
-      "minimalExample": "<dbx-content-page>Page</dbx-content-page>",
-      "sourceLocation": {
-        "file": "src/lib/layout/content/content.page.directive.ts",
-        "line": 23
-      }
+      "minimalExample": "<dbx-content-page>Page</dbx-content-page>"
     },
     {
       "slug": "content-pit",
@@ -1500,13 +1330,8 @@
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "sourcePath": "lib/layout/content/content.pit.directive.ts",
       "example": "<div dbxContentPit>Inset block</div>",
-      "minimalExample": "<dbx-content-pit>Body</dbx-content-pit>",
-      "sourceLocation": {
-        "file": "src/lib/layout/content/content.pit.directive.ts",
-        "line": 38
-      }
+      "minimalExample": "<dbx-content-pit>Body</dbx-content-pit>"
     },
     {
       "slug": "flex-group",
@@ -1554,13 +1379,8 @@
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "sourcePath": "lib/layout/flex/flex.group.directive.ts",
       "example": "<div dbxFlexGroup breakpoint=\"sm\">\n  <div dbxFlexSize=\"2\">Wide</div>\n  <div dbxFlexSize=\"1\">Narrow</div>\n</div>",
-      "minimalExample": "<div dbxFlexGroup><div dbxFlexSize=\"1\">A</div></div>",
-      "sourceLocation": {
-        "file": "src/lib/layout/flex/flex.group.directive.ts",
-        "line": 33
-      }
+      "minimalExample": "<div dbxFlexGroup><div dbxFlexSize=\"1\">A</div></div>"
     },
     {
       "slug": "flex-size",
@@ -1585,13 +1405,8 @@
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "sourcePath": "lib/layout/flex/flex.size.directive.ts",
       "example": "<div dbxFlexGroup>\n  <div dbxFlexSize=\"2\">Twice as wide</div>\n  <div dbxFlexSize=\"1\">Narrow</div>\n</div>",
-      "minimalExample": "<div dbxFlexSize=\"1\"></div>",
-      "sourceLocation": {
-        "file": "src/lib/layout/flex/flex.size.directive.ts",
-        "line": 25
-      }
+      "minimalExample": "<div dbxFlexSize=\"1\"></div>"
     },
     {
       "slug": "list",
@@ -1662,13 +1477,8 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/layout/list/list.component.ts",
       "example": "<dbx-list [state$]=\"items$\" [config]=\"listConfig\" (contentScrolled)=\"onScroll($event)\"></dbx-list>",
-      "minimalExample": "<dbx-list [state$]=\"items$\" [config]=\"listConfig\"></dbx-list>",
-      "sourceLocation": {
-        "file": "src/lib/layout/list/list.component.ts",
-        "line": 138
-      }
+      "minimalExample": "<dbx-list [state$]=\"items$\" [config]=\"listConfig\"></dbx-list>"
     },
     {
       "slug": "list-empty-content",
@@ -1687,13 +1497,8 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/layout/list/list.content.empty.component.ts",
       "example": "<dbx-list [state$]=\"items$\" [config]=\"listConfig\">\n  <dbx-list-empty-content>\n    <p>No items yet — add one to get started.</p>\n  </dbx-list-empty-content>\n</dbx-list>",
-      "minimalExample": "<dbx-list-empty-content>Empty</dbx-list-empty-content>",
-      "sourceLocation": {
-        "file": "src/lib/layout/list/list.content.empty.component.ts",
-        "line": 24
-      }
+      "minimalExample": "<dbx-list-empty-content>Empty</dbx-list-empty-content>"
     },
     {
       "slug": "list-view",
@@ -1721,13 +1526,8 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/layout/list/list.view.value.component.ts",
       "example": "<dbx-list-view [config]=\"rowConfig\"></dbx-list-view>",
-      "minimalExample": "<dbx-list-view [config]=\"rowConfig\"></dbx-list-view>",
-      "sourceLocation": {
-        "file": "src/lib/layout/list/list.view.value.component.ts",
-        "line": 194
-      }
+      "minimalExample": "<dbx-list-view [config]=\"rowConfig\"></dbx-list-view>"
     },
     {
       "slug": "selection-list-view",
@@ -1753,13 +1553,8 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/layout/list/list.view.value.selection.component.ts",
       "example": "<dbx-selection-list-view [config]=\"rowConfig\" selectionMode=\"multi\"></dbx-selection-list-view>",
-      "minimalExample": "<dbx-selection-list-view [config]=\"rowConfig\"></dbx-selection-list-view>",
-      "sourceLocation": {
-        "file": "src/lib/layout/list/list.view.value.selection.component.ts",
-        "line": 104
-      }
+      "minimalExample": "<dbx-selection-list-view [config]=\"rowConfig\"></dbx-selection-list-view>"
     },
     {
       "slug": "section",
@@ -1838,13 +1633,8 @@
         "dbx__ref__dbx-ui-building-blocks",
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/layout/section/section.component.ts",
       "example": "<dbx-section header=\"My Section\" icon=\"info\" hint=\"Additional context\">\n  <p>Section body content here.</p>\n</dbx-section>\n\n<dbx-section header=\"Elevated Section\" [elevate]=\"true\">\n  <button sectionHeader>Custom Header Action</button>\n  <p>Body content with elevated card styling.</p>\n</dbx-section>",
-      "minimalExample": "<dbx-section header=\"My Section\"><p>Body</p></dbx-section>",
-      "sourceLocation": {
-        "file": "src/lib/layout/section/section.component.ts",
-        "line": 29
-      }
+      "minimalExample": "<dbx-section header=\"My Section\"><p>Body</p></dbx-section>"
     },
     {
       "slug": "section-header",
@@ -1913,13 +1703,8 @@
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "sourcePath": "lib/layout/section/section.header.component.ts",
       "example": "<div class=\"dbx-section-header\" header=\"Custom Layout\" [h]=\"2\" icon=\"info\"></div>",
-      "minimalExample": "<dbx-section-header header=\"My Header\"></dbx-section-header>",
-      "sourceLocation": {
-        "file": "src/lib/layout/section/section.header.component.ts",
-        "line": 26
-      }
+      "minimalExample": "<dbx-section-header header=\"My Header\"></dbx-section-header>"
     },
     {
       "slug": "intro-action-section",
@@ -1965,13 +1750,8 @@
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "sourcePath": "lib/layout/section/section.intro.component.ts",
       "example": "<dbx-intro-action-section\n  hint=\"Welcome! Click below to get started.\"\n  action=\"Get Started\"\n  [showIntro]=\"!hasOnboarded\"\n  (showAction)=\"markOnboarded()\">\n  <p>Main content shown after the action.</p>\n</dbx-intro-action-section>",
-      "minimalExample": "<dbx-intro-action-section hint=\"Welcome\" action=\"Start\"><p>Body</p></dbx-intro-action-section>",
-      "sourceLocation": {
-        "file": "src/lib/layout/section/section.intro.component.ts",
-        "line": 29
-      }
+      "minimalExample": "<dbx-intro-action-section hint=\"Welcome\" action=\"Start\"><p>Body</p></dbx-intro-action-section>"
     },
     {
       "slug": "section-page",
@@ -2048,13 +1828,8 @@
         "dbx__ref__dbx-ui-building-blocks",
         "dbx__ref__dbx-app-structure"
       ],
-      "sourcePath": "lib/layout/section/section.page.component.ts",
       "example": "<dbx-section-page header=\"Dashboard\" icon=\"dashboard\" scroll=\"body\">\n  <p>Top-level page content.</p>\n</dbx-section-page>",
-      "minimalExample": "<dbx-section-page header=\"Page\"><p>Body</p></dbx-section-page>",
-      "sourceLocation": {
-        "file": "src/lib/layout/section/section.page.component.ts",
-        "line": 34
-      }
+      "minimalExample": "<dbx-section-page header=\"Page\"><p>Body</p></dbx-section-page>"
     },
     {
       "slug": "subsection",
@@ -2130,13 +1905,8 @@
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "sourcePath": "lib/layout/section/subsection.component.ts",
       "example": "<dbx-section header=\"Settings\">\n  <dbx-subsection header=\"Notifications\" icon=\"notifications\">\n    <p>Subsection body.</p>\n  </dbx-subsection>\n</dbx-section>",
-      "minimalExample": "<dbx-subsection header=\"Details\"><p>Body</p></dbx-subsection>",
-      "sourceLocation": {
-        "file": "src/lib/layout/section/subsection.component.ts",
-        "line": 27
-      }
+      "minimalExample": "<dbx-subsection header=\"Details\"><p>Body</p></dbx-subsection>"
     },
     {
       "slug": "spacer",
@@ -2155,13 +1925,8 @@
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "sourcePath": "lib/layout/style/spacer.directive.ts",
       "example": "<dbx-bar>\n  <span>Title</span>\n  <dbx-spacer></dbx-spacer>\n  <button mat-button>Action</button>\n</dbx-bar>",
-      "minimalExample": "<dbx-spacer></dbx-spacer>",
-      "sourceLocation": {
-        "file": "src/lib/layout/style/spacer.directive.ts",
-        "line": 24
-      }
+      "minimalExample": "<dbx-spacer></dbx-spacer>"
     },
     {
       "slug": "click-to-copy-text",
@@ -2230,13 +1995,8 @@
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "sourcePath": "lib/layout/text/copy.text.component.ts",
       "example": "<dbx-click-to-copy-text [text]=\"userId\"></dbx-click-to-copy-text>",
-      "minimalExample": "<dbx-click-to-copy-text [text]=\"value\"></dbx-click-to-copy-text>",
-      "sourceLocation": {
-        "file": "src/lib/layout/text/copy.text.component.ts",
-        "line": 26
-      }
+      "minimalExample": "<dbx-click-to-copy-text [text]=\"value\"></dbx-click-to-copy-text>"
     },
     {
       "slug": "detail-block",
@@ -2282,13 +2042,8 @@
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "sourcePath": "lib/layout/text/detail.block.component.ts",
       "example": "<dbx-detail-block header=\"Email\" icon=\"mail\">\n  <p>{{ user.email }}</p>\n</dbx-detail-block>",
-      "minimalExample": "<dbx-detail-block header=\"Label\">Body</dbx-detail-block>",
-      "sourceLocation": {
-        "file": "src/lib/layout/text/detail.block.component.ts",
-        "line": 26
-      }
+      "minimalExample": "<dbx-detail-block header=\"Label\">Body</dbx-detail-block>"
     },
     {
       "slug": "label-block",
@@ -2314,13 +2069,8 @@
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "sourcePath": "lib/layout/text/label.block.component.ts",
       "example": "<dbx-label-block header=\"Status\"><span>Active</span></dbx-label-block>",
-      "minimalExample": "<dbx-label-block header=\"Label\">Body</dbx-label-block>",
-      "sourceLocation": {
-        "file": "src/lib/layout/text/label.block.component.ts",
-        "line": 21
-      }
+      "minimalExample": "<dbx-label-block header=\"Label\">Body</dbx-label-block>"
     },
     {
       "slug": "chip",
@@ -2369,13 +2119,8 @@
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "sourcePath": "lib/layout/text/text.chip.directive.ts",
       "example": "<dbx-chip text=\"Active\" icon=\"check\" color=\"primary\"></dbx-chip>",
-      "minimalExample": "<dbx-chip text=\"Tag\"></dbx-chip>",
-      "sourceLocation": {
-        "file": "src/lib/layout/text/text.chip.directive.ts",
-        "line": 55
-      }
+      "minimalExample": "<dbx-chip text=\"Tag\"></dbx-chip>"
     },
     {
       "slug": "chip-list",
@@ -2406,13 +2151,8 @@
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "sourcePath": "lib/layout/text/text.chip.list.component.ts",
       "example": "<dbx-chip-list>\n  <dbx-chip text=\"Tag1\"></dbx-chip>\n  <dbx-chip text=\"Tag2\"></dbx-chip>\n</dbx-chip-list>",
-      "minimalExample": "<dbx-chip-list></dbx-chip-list>",
-      "sourceLocation": {
-        "file": "src/lib/layout/text/text.chip.list.component.ts",
-        "line": 27
-      }
+      "minimalExample": "<dbx-chip-list></dbx-chip-list>"
     },
     {
       "slug": "two-column",
@@ -2454,13 +2194,8 @@
         "dbx__ref__dbx-ui-building-blocks",
         "dbx__ref__dbx-app-structure"
       ],
-      "sourcePath": "lib/layout/column/two/two.column.component.ts",
       "example": "<dbx-two-column [inSectionPage]=\"true\">\n  <dbx-list left [state$]=\"state$\" [config]=\"listConfig\" />\n  <dbx-two-column-right right header=\"Detail\">\n    <p>Selected item detail.</p>\n  </dbx-two-column-right>\n</dbx-two-column>",
-      "minimalExample": "<dbx-two-column>\n<div left>Sidebar</div>\n<div right>Main</div>\n</dbx-two-column>",
-      "sourceLocation": {
-        "file": "src/lib/layout/column/two/two.column.component.ts",
-        "line": 53
-      }
+      "minimalExample": "<dbx-two-column>\n<div left>Sidebar</div>\n<div right>Main</div>\n</dbx-two-column>"
     },
     {
       "slug": "two-column-right",
@@ -2513,13 +2248,8 @@
         "dbx__ref__dbx-ui-building-blocks",
         "dbx__ref__dbx-app-structure"
       ],
-      "sourcePath": "lib/layout/column/two/two.column.right.component.ts",
       "example": "<dbx-two-column-right header=\"Item Detail\">\n  <button nav mat-icon-button><mat-icon>delete</mat-icon></button>\n  <p>Body content</p>\n</dbx-two-column-right>",
-      "minimalExample": "<dbx-two-column-right>Body</dbx-two-column-right>",
-      "sourceLocation": {
-        "file": "src/lib/layout/column/two/two.column.right.component.ts",
-        "line": 35
-      }
+      "minimalExample": "<dbx-two-column-right>Body</dbx-two-column-right>"
     },
     {
       "slug": "list-accordion-view",
@@ -2545,13 +2275,8 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/layout/list/accordion/list.accordion.view.component.ts",
       "example": "<dbx-list-accordion-view [config]=\"rowConfig\"></dbx-list-accordion-view>",
-      "minimalExample": "<dbx-list-accordion-view [config]=\"rowConfig\"></dbx-list-accordion-view>",
-      "sourceLocation": {
-        "file": "src/lib/layout/list/accordion/list.accordion.view.component.ts",
-        "line": 228
-      }
+      "minimalExample": "<dbx-list-accordion-view [config]=\"rowConfig\"></dbx-list-accordion-view>"
     },
     {
       "slug": "list-grid-view",
@@ -2577,13 +2302,8 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/layout/list/grid/list.grid.view.component.ts",
       "example": "<dbx-list-grid-view [config]=\"cellConfig\" dbxListGridSize=\"md\"></dbx-list-grid-view>",
-      "minimalExample": "<dbx-list-grid-view [config]=\"cellConfig\"></dbx-list-grid-view>",
-      "sourceLocation": {
-        "file": "src/lib/layout/list/grid/list.grid.view.component.ts",
-        "line": 182
-      }
+      "minimalExample": "<dbx-list-grid-view [config]=\"cellConfig\"></dbx-list-grid-view>"
     },
     {
       "slug": "list-title-group-header",
@@ -2602,13 +2322,8 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/layout/list/group/list.view.value.group.title.header.component.ts",
       "example": "<dbx-list-view [config]=\"rowConfig\" dbxListTitleGroup></dbx-list-view>",
-      "minimalExample": "<dbx-list-title-group-header></dbx-list-title-group-header>",
-      "sourceLocation": {
-        "file": "src/lib/layout/list/group/list.view.value.group.title.header.component.ts",
-        "line": 38
-      }
+      "minimalExample": "<dbx-list-title-group-header></dbx-list-title-group-header>"
     },
     {
       "slug": "anchor",
@@ -2636,13 +2351,8 @@
       "skillRefs": [
         "dbx__ref__dbx-app-structure"
       ],
-      "sourcePath": "lib/router/layout/anchor/anchor.component.ts",
       "example": "<dbx-anchor [anchor]=\"{ ref: 'app.home' }\">\n  <button mat-button>Home</button>\n</dbx-anchor>",
-      "minimalExample": "<dbx-anchor [anchor]=\"{ url: '/' }\">Home</dbx-anchor>",
-      "sourceLocation": {
-        "file": "src/lib/router/layout/anchor/anchor.component.ts",
-        "line": 32
-      }
+      "minimalExample": "<dbx-anchor [anchor]=\"{ url: '/' }\">Home</dbx-anchor>"
     },
     {
       "slug": "anchor-list",
@@ -2668,13 +2378,8 @@
       "skillRefs": [
         "dbx__ref__dbx-app-structure"
       ],
-      "sourcePath": "lib/router/layout/anchorlist/anchorlist.component.ts",
       "example": "<dbx-anchor-list [anchors]=\"navAnchors\"></dbx-anchor-list>",
-      "minimalExample": "<dbx-anchor-list [anchors]=\"anchors\"></dbx-anchor-list>",
-      "sourceLocation": {
-        "file": "src/lib/router/layout/anchorlist/anchorlist.component.ts",
-        "line": 36
-      }
+      "minimalExample": "<dbx-anchor-list [anchors]=\"anchors\"></dbx-anchor-list>"
     },
     {
       "slug": "navbar",
@@ -2762,13 +2467,8 @@
       "skillRefs": [
         "dbx__ref__dbx-app-structure"
       ],
-      "sourcePath": "lib/router/layout/navbar/navbar.component.ts",
       "example": "<dbx-navbar [anchors]=\"topNav\"></dbx-navbar>",
-      "minimalExample": "<dbx-navbar [anchors]=\"anchors\"></dbx-navbar>",
-      "sourceLocation": {
-        "file": "src/lib/router/layout/navbar/navbar.component.ts",
-        "line": 58
-      }
+      "minimalExample": "<dbx-navbar [anchors]=\"anchors\"></dbx-navbar>"
     },
     {
       "slug": "sidenav",
@@ -2823,13 +2523,8 @@
       "skillRefs": [
         "dbx__ref__dbx-app-structure"
       ],
-      "sourcePath": "lib/router/layout/sidenav/sidenav.component.ts",
       "example": "<dbx-sidenav [anchors]=\"sidenavAnchors\"></dbx-sidenav>",
-      "minimalExample": "<dbx-sidenav [anchors]=\"anchors\"></dbx-sidenav>",
-      "sourceLocation": {
-        "file": "src/lib/router/layout/sidenav/sidenav.component.ts",
-        "line": 45
-      }
+      "minimalExample": "<dbx-sidenav [anchors]=\"anchors\"></dbx-sidenav>"
     },
     {
       "slug": "sidenav-page",
@@ -2869,13 +2564,8 @@
       "skillRefs": [
         "dbx__ref__dbx-app-structure"
       ],
-      "sourcePath": "lib/router/layout/sidenav/sidenav.page.component.ts",
       "example": "<dbx-sidenav-page>\n  <ui-view></ui-view>\n</dbx-sidenav-page>",
-      "minimalExample": "<dbx-sidenav-page>Content</dbx-sidenav-page>",
-      "sourceLocation": {
-        "file": "src/lib/router/layout/sidenav/sidenav.page.component.ts",
-        "line": 31
-      }
+      "minimalExample": "<dbx-sidenav-page>Content</dbx-sidenav-page>"
     }
   ]
 }

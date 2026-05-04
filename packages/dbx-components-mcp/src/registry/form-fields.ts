@@ -99,10 +99,6 @@ interface FormEntryBase {
    */
   readonly description: string;
   /**
-   * Path within `packages/dbx-form/src/lib/form/` where the export is defined.
-   */
-  readonly sourcePath: string;
-  /**
    * Full copy-paste-ready usage example.
    */
   readonly example: string;
@@ -239,7 +235,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     arrayOutput: 'no',
     configInterface: 'DbxForgeTextFieldConfig',
     description: 'Single-line text input. Supports text/email/password input types, autocomplete attribute, regex pattern validation, and idempotent string transforms (trim, case changes, etc.).',
-    sourcePath: 'field/value/text/text.field.ts',
     config: {
       inputType: { name: 'inputType', type: "'text' | 'password' | 'email'", description: 'HTML input type. Email adds an email validator automatically.', required: false, default: 'text' },
       pattern: { name: 'pattern', type: 'string | RegExp', description: 'Regex validation pattern. RegExp values are converted to their `.source` string.', required: false },
@@ -259,7 +254,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     arrayOutput: 'no',
     configInterface: 'DbxForgeTextAreaFieldConfig',
     description: 'Multi-line textarea input. Supports row count, autocomplete attribute, pattern validation (RegExp → string conversion), and default value.',
-    sourcePath: 'field/value/text/textarea.field.ts',
     config: {
       rows: { name: 'rows', type: 'number', description: 'Number of visible text rows.', required: false, default: 3 },
       defaultValue: { name: 'defaultValue', type: 'string', description: 'Initial value when `value` is not supplied. Defaults to empty string.', required: false, default: '' },
@@ -278,7 +272,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     arrayOutput: 'no',
     configInterface: 'DbxForgeNameFieldConfig',
     description: 'Pre-configured text field for capturing a full name with sensible min/max length defaults.',
-    sourcePath: 'field/value/text/text.additional.field.ts',
     config: {
       minLength: { name: 'minLength', type: 'number', description: 'Minimum character length.', required: false },
       maxLength: { name: 'maxLength', type: 'number', description: 'Maximum character length.', required: false }
@@ -296,7 +289,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     arrayOutput: 'no',
     configInterface: 'DbxForgeEmailFieldConfig',
     description: 'Text field pre-configured with email input type and email validator. Prefer this over configuring `dbxForgeTextField` with `inputType: "email"` directly.',
-    sourcePath: 'field/value/text/text.additional.field.ts',
     config: {
       autocomplete: { name: 'autocomplete', type: 'string | false', description: 'HTML autocomplete attribute; pass false to disable browser autofill.', required: false }
     },
@@ -313,7 +305,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     arrayOutput: 'no',
     configInterface: 'DbxForgeCityFieldConfig',
     description: 'City name input enforcing `ADDRESS_CITY_MAX_LENGTH`. Typically used inside the address composite set.',
-    sourcePath: 'field/value/text/text.additional.field.ts',
     config: NO_EXTRA_CONFIG,
     example: `dbxForgeCityField({ required: true })`,
     minimalExample: `dbxForgeCityField({})`
@@ -328,7 +319,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     arrayOutput: 'no',
     configInterface: 'DbxForgeStateFieldConfig',
     description: 'US state input. When `asCode: true`, validates two-letter codes and auto-uppercases input via an idempotent transform.',
-    sourcePath: 'field/value/text/text.additional.field.ts',
     config: {
       asCode: { name: 'asCode', type: 'boolean', description: 'Enforce 2-letter state code pattern and auto-uppercase input.', required: false }
     },
@@ -345,7 +335,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     arrayOutput: 'no',
     configInterface: 'DbxForgeCountryFieldConfig',
     description: 'Country name input enforcing `ADDRESS_COUNTRY_MAX_LENGTH`. Typically used inside the address composite set.',
-    sourcePath: 'field/value/text/text.additional.field.ts',
     config: NO_EXTRA_CONFIG,
     example: `dbxForgeCountryField({ required: true })`,
     minimalExample: `dbxForgeCountryField({})`
@@ -360,7 +349,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     arrayOutput: 'no',
     configInterface: 'DbxForgeZipCodeFieldConfig',
     description: 'US zip code input with pattern validation and max-length enforcement.',
-    sourcePath: 'field/value/text/text.additional.field.ts',
     config: NO_EXTRA_CONFIG,
     example: `dbxForgeZipCodeField({ required: true })`,
     minimalExample: `dbxForgeZipCodeField({})`
@@ -375,7 +363,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     arrayOutput: 'no',
     configInterface: 'DbxForgeLatLngTextFieldConfig',
     description: 'Latitude/longitude coordinate input with decimal-degree pattern validation.',
-    sourcePath: 'field/value/text/text.additional.field.ts',
     config: NO_EXTRA_CONFIG,
     example: `dbxForgeLatLngTextField({ key: 'coords', label: 'Coordinates' })`,
     minimalExample: `dbxForgeLatLngTextField({ key: 'coords' })`
@@ -390,7 +377,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     arrayOutput: 'no',
     configInterface: 'DbxForgeAddressLineFieldConfig',
     description: 'Street address line input. The `line` prop controls which line (1 or 2) — it affects key and label generation.',
-    sourcePath: 'field/value/text/text.address.field.ts',
     config: {
       line: { name: 'line', type: '0 | 1 | 2', description: 'Address line number; affects key and label generation.', required: false, default: 1 }
     },
@@ -409,7 +395,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     arrayOutput: 'no',
     configInterface: 'DbxForgeNumberFieldConfig',
     description: 'Numeric input (HTML `type="number"`). Supports min/max/step constraints, optional step enforcement (divisibility validator), and idempotent number transforms.',
-    sourcePath: 'field/value/number/number.field.ts',
     config: {
       min: { name: 'min', type: 'number', description: 'Minimum allowed value.', required: false },
       max: { name: 'max', type: 'number', description: 'Maximum allowed value.', required: false },
@@ -430,7 +415,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     arrayOutput: 'no',
     configInterface: 'DbxForgeNumberSliderFieldConfig',
     description: 'Material slider wrapped in a form-field container. Supports thumb label, tick interval, and step-derived tick spacing.',
-    sourcePath: 'field/value/number/slider.field.ts',
     config: {
       thumbLabel: { name: 'thumbLabel', type: 'boolean', description: 'Show the thumb label while sliding.', required: false, default: true },
       tickInterval: { name: 'tickInterval', type: 'number | false', description: 'Tick interval; `false` disables ticks.', required: false },
@@ -451,7 +435,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     arrayOutput: 'no',
     configInterface: 'DbxForgeToggleFieldConfig',
     description: 'Material slide toggle. Renders inside the shared form-field wrapper by default so it visually matches surrounding outlined form fields and uses the standard error/hint subscript chrome; pass `styledBox: false` to opt out.',
-    sourcePath: 'field/value/boolean/boolean.field.ts',
     config: {
       styledBox: { name: 'styledBox', type: 'boolean', description: 'When true (default), renders the toggle inside the shared Material-style form-field wrapper for visual parity with outlined form fields.', required: false, default: true }
     },
@@ -468,7 +451,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     arrayOutput: 'no',
     configInterface: 'DbxForgeCheckboxFieldConfig',
     description: 'Material checkbox. Shares the styled-outline-box opt-out with toggle.',
-    sourcePath: 'field/value/boolean/boolean.field.ts',
     config: {
       styledBox: { name: 'styledBox', type: 'boolean', description: 'When true (default), wraps the checkbox in `.dbx-forge-styled-box`.', required: false, default: true }
     },
@@ -487,7 +469,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     arrayOutput: 'no',
     configInterface: 'DbxForgePhoneFieldConfig',
     description: 'International phone number input backed by ngx-mat-input-tel. Supports preferred-country lists, search, and optional extension input.',
-    sourcePath: 'field/value/phone/phone.field.ts',
     config: {
       preferredCountries: { name: 'preferredCountries', type: 'string[]', description: 'ISO country codes pinned to the top of the selector.', required: false },
       onlyCountries: { name: 'onlyCountries', type: 'string[]', description: 'Restrict dropdown to specific ISO country codes.', required: false },
@@ -507,7 +488,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     arrayOutput: 'no',
     configInterface: 'DbxForgeTimeDurationFieldConfig',
     description: 'Duration input with popover picker. Output shape varies by `valueMode` — number (ms/s/…), string, or structured object.',
-    sourcePath: 'field/value/duration/duration.field.ts',
     config: {
       outputUnit: { name: 'outputUnit', type: 'TimeUnit', description: 'Unit of the output value (ms, s, m, h, d).', required: false, default: 'ms' },
       valueMode: { name: 'valueMode', type: 'TimeDurationFieldValueMode', description: 'Output shape (number, string, object).', required: false, default: 'number' },
@@ -529,7 +509,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     arrayOutput: 'no',
     configInterface: 'DbxForgeDateFieldConfig',
     description: 'Material datepicker (date-only, no time). For time-of-day picking use the `date-time` field; for ranges use `date-range-row` or `date-time-range-row`.',
-    sourcePath: 'field/value/date/date.field.ts',
     config: NO_EXTRA_CONFIG,
     example: `dbxForgeDateField({ key: 'startDate', label: 'Start Date', required: true })`,
     minimalExample: `dbxForgeDateField({ key: 'when', label: 'When' })`
@@ -544,7 +523,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     arrayOutput: 'no',
     configInterface: 'DbxForgeDateTimeFieldConfig',
     description: 'Combined date-time picker with timezone, value mode (DATE_STRING / TIMESTAMP / Date), and time mode (REQUIRED / OPTIONAL / NONE). Powers `date-range-row` and `date-time-range-row`.',
-    sourcePath: 'field/value/date/datetime.field.ts',
     config: {
       timezone: { name: 'timezone', type: 'string', description: 'Timezone for conversion (e.g. "America/New_York").', required: false },
       valueMode: { name: 'valueMode', type: 'DbxDateTimeValueMode', description: 'Output format (DATE_STRING, TIMESTAMP, Date).', required: false },
@@ -563,7 +541,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     arrayOutput: 'no',
     configInterface: 'DbxForgeFixedDateRangeFieldConfig',
     description: 'Inline calendar-style date-range picker with fixed range length (e.g. "7 days from start"). Wrapped in a Material form-field container with a custom selection strategy.',
-    sourcePath: 'field/value/date/fixeddaterange.field.ts',
     config: {
       dateRangeInput: { name: 'dateRangeInput', type: 'DateRangeInputConfig', description: 'Range input type and distance configuration.', required: false },
       pickerConfig: { name: 'pickerConfig', type: 'PickerConfig', description: 'Calendar picker limits, presets, and behavior.', required: false }
@@ -584,7 +561,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     configInterface: 'DbxForgePickableChipFieldConfig<T, M, H>',
     generic: '<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>',
     description: 'Selection field rendering selected values as Material chips. Defaults to multi-select; flip to single-select via the underlying props.',
-    sourcePath: 'field/selection/pickable/pickable-chip.field.ts',
     config: {
       loadValues: { name: 'loadValues (props)', type: 'Observable<T[]> | () => Observable<T[]>', description: 'Function/observable producing the list of selectable values.', required: true },
       displayForValue: { name: 'displayForValue (props)', type: '(values: T[]) => Observable<DisplayValue[]>', description: 'Display renderer for selected values.', required: true },
@@ -604,7 +580,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     configInterface: 'DbxForgePickableListFieldConfig<T, M, H>',
     generic: '<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>',
     description: 'Scrollable-list variant of `pickable-chip` — same API, different presentation. Prefer this when the option set is large.',
-    sourcePath: 'field/selection/pickable/pickable-list.field.ts',
     config: {
       loadValues: { name: 'loadValues (props)', type: 'Observable<T[]> | () => Observable<T[]>', description: 'Function/observable producing the list of selectable values.', required: true },
       displayForValue: { name: 'displayForValue (props)', type: '(values: T[]) => Observable<DisplayValue[]>', description: 'Display renderer for selected values.', required: true }
@@ -623,7 +598,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     configInterface: 'DbxForgeSearchableTextFieldConfig<T, M, H>',
     generic: '<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>',
     description: 'Single-value autocomplete field with search-as-you-type. Optionally allows free-form typed strings as values.',
-    sourcePath: 'field/selection/searchable/searchable-text.field.ts',
     config: {
       search: { name: 'search (props)', type: '(text: string) => Observable<T[]>', description: 'Async search function.', required: true },
       displayForValue: { name: 'displayForValue (props)', type: '(values: T[]) => Observable<DisplayValue[]>', description: 'Display renderer.', required: true },
@@ -643,7 +617,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     configInterface: 'DbxForgeSearchableChipFieldConfig<T, M, H>',
     generic: '<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>',
     description: 'Multi-value autocomplete with chips. Defaults to multi-select; supports free-form text entry when `allowStringValues` is set.',
-    sourcePath: 'field/selection/searchable/searchable-chip.field.ts',
     config: {
       search: { name: 'search (props)', type: '(text: string) => Observable<T[]>', description: 'Async search function.', required: true },
       displayForValue: { name: 'displayForValue (props)', type: '(values: T[]) => Observable<DisplayValue[]>', description: 'Display renderer.', required: true },
@@ -662,7 +635,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     arrayOutput: 'optional',
     configInterface: 'DbxForgeSearchableStringChipFieldConfig<M>',
     description: 'String-value specialization of `searchable-chip`. `allowStringValues` is forced true — use for free-form tag entry.',
-    sourcePath: 'field/selection/searchable/searchable-chip.field.ts',
     config: {
       search: { name: 'search (props)', type: '(text: string) => Observable<string[]>', description: 'Async search function.', required: true },
       displayForValue: { name: 'displayForValue (props)', type: '(values: string[]) => Observable<DisplayValue[]>', description: 'Display renderer.', required: true }
@@ -681,7 +653,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     configInterface: 'DbxForgeListSelectionFieldConfig<T, C, K>',
     generic: '<T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey>',
     description: 'Multi-select backed by a lazy-loadable custom list component. Use when you need complete control over item layout and pagination.',
-    sourcePath: 'field/selection/list/list.field.ts',
     config: {
       listComponentClass: { name: 'listComponentClass (props)', type: 'Observable<Type<C>>', description: 'Custom list component class (can be lazy-loaded).', required: true },
       readKey: { name: 'readKey (props)', type: '(item: T) => K', description: 'Extract the identifier from each item.', required: true },
@@ -702,7 +673,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     configInterface: 'DbxForgeValueSelectionFieldConfig<T>',
     generic: '<T = unknown>',
     description: 'Single-select dropdown over a static or async value list. Simpler than `source-select` when metadata lookup is unnecessary.',
-    sourcePath: 'field/selection/list/list.field.ts',
     config: {
       options: { name: 'options (props)', type: 'MatSelectOption<T>[] | Observable<MatSelectOption<T>[]>', description: 'Options to render in the dropdown.', required: true }
     },
@@ -720,7 +690,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     configInterface: 'DbxForgeSourceSelectFieldConfig<T, M>',
     generic: '<T extends PrimativeKey = PrimativeKey, M = unknown>',
     description: 'Selection field that stores just the value key (`T`) but resolves full metadata (`M`) async for display. Use for reference fields where the form should store only the id.',
-    sourcePath: 'field/selection/sourceselect/sourceselect.field.ts',
     config: {
       valueReader: { name: 'valueReader (props)', type: '(meta: M) => T', description: 'Extract the value identifier from metadata.', required: true },
       metaLoader: { name: 'metaLoader (props)', type: '(values: T[]) => Observable<M[]>', description: 'Async function that loads metadata for selected values.', required: true },
@@ -741,7 +710,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     configInterface: 'DbxForgeChecklistFieldConfig<T>',
     generic: '<T = unknown>',
     description: 'Multi-checkbox group. Use for small static option sets where every option is visible at once.',
-    sourcePath: 'field/checklist/checklist.field.ts',
     config: {
       options: { name: 'options (props)', type: '(MatSelectOption | MatOptGroup)[]', description: 'Array of checkbox options or option groups.', required: true }
     },
@@ -760,7 +728,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     arrayOutput: 'no',
     configInterface: 'DbxForgeTextEditorFieldConfig',
     description: 'Rich HTML text editor (ngx-editor). Output is the serialized HTML string.',
-    sourcePath: 'field/texteditor/texteditor.field.ts',
     config: {
       minLength: { name: 'minLength', type: 'number', description: 'Minimum HTML content length.', required: false },
       maxLength: { name: 'maxLength', type: 'number', description: 'Maximum HTML content length.', required: false }
@@ -779,7 +746,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     configInterface: 'DbxForgeComponentFieldConfig<T>',
     generic: '<T = unknown>',
     description: 'Escape hatch — injects any Angular component as the field renderer via DbxInjection. Use when no existing form field fits.',
-    sourcePath: 'field/component/component.field.ts',
     config: {
       props: { name: 'props', type: 'DbxForgeComponentFieldProps<T>', description: 'Component injection config (component class + data).', required: true }
     },
@@ -798,7 +764,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     arrayOutput: 'no',
     configInterface: 'DbxForgeTextPasswordFieldConfig',
     description: 'Password input (HTML `type="password"`) with secure autocomplete defaults.',
-    sourcePath: 'template/login.ts',
     config: {
       autocomplete: { name: 'autocomplete', type: 'string', description: 'HTML autocomplete attribute.', required: false, default: 'current-password' }
     },
@@ -815,7 +780,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     arrayOutput: 'no',
     configInterface: 'DbxForgeTextPasswordFieldConfig',
     description: 'Companion to `password-field` for sign-up flows. Defaults `autocomplete` to `new-password`. Pair with `password-with-verify-fields` for cross-field equality validation.',
-    sourcePath: 'template/login.ts',
     config: {
       autocomplete: { name: 'autocomplete', type: 'string', description: 'HTML autocomplete attribute.', required: false, default: 'new-password' }
     },
@@ -832,7 +796,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     arrayOutput: 'no',
     configInterface: 'DbxForgeUsernameLoginFieldUsernameConfigInput',
     description: 'Username field for login forms. Accepts `"email"` or `"username"` as shorthand presets, or a full config object.',
-    sourcePath: 'template/login.ts',
     config: {
       username: { name: 'username', type: "'email' | 'username' | DbxForgeUsernameLoginFieldUsernameConfig", description: 'Preset or custom config controlling email-vs-username behavior.', required: true }
     },
@@ -853,7 +816,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     arrayOutput: 'no',
     configInterface: 'DbxForgeDateRangeRowConfig',
     description: 'Two-column row of start/end date-time fields configured for date-only picking. Use when you need a paired start/end date range laid out horizontally.',
-    sourcePath: 'field/value/date/daterange.field.ts',
     composesFromSlugs: ['date-time', 'row'],
     config: {
       required: { name: 'required', type: 'boolean', description: 'Whether both fields are required.', required: false, default: false },
@@ -873,7 +835,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     arrayOutput: 'no',
     configInterface: 'DbxForgeDateTimeRangeRowConfig',
     description: 'Two-column row of time-only pickers for selecting a time range within a single day.',
-    sourcePath: 'field/value/date/datetimerange.field.ts',
     composesFromSlugs: ['date-time', 'row'],
     config: {
       required: { name: 'required', type: 'boolean', description: 'Whether both time fields are required.', required: false },
@@ -892,7 +853,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     arrayOutput: 'no',
     configInterface: 'DbxForgeAddressFieldsConfig',
     description: 'Flat array of address fields (line(s), city, state, zip, optional country) with a sensible flex layout. Drop directly into a parent `fields: []`.',
-    sourcePath: 'field/value/text/text.address.field.ts',
     composesFromSlugs: ['address-line', 'city', 'state', 'zip-code', 'country'],
     config: {
       required: { name: 'required', type: 'boolean', description: 'Whether every field is required.', required: false, default: true },
@@ -911,7 +871,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     arrayOutput: 'no',
     configInterface: 'DbxForgeAddressGroupConfig',
     description: "Wraps `address-fields` in a `GroupField` so the address is stored as a nested object under one key. Prefer this when the rest of the form doesn't want address fields flattened.",
-    sourcePath: 'field/value/text/text.address.field.ts',
     composesFromSlugs: ['address-fields', 'group'],
     config: {
       key: { name: 'key', type: 'string', description: 'Group key for the nested address object.', required: false, default: 'address' }
@@ -928,7 +887,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     arrayOutput: 'yes',
     configInterface: 'DbxForgeAddressListFieldConfig',
     description: 'Repeatable array of addresses built on top of `array-field` + `address-group`. Keeps the `Field` suffix because it returns a single composite field whose value is an array of addresses.',
-    sourcePath: 'field/value/text/text.address.field.ts',
     composesFromSlugs: ['address-group', 'array-field'],
     config: {
       maxAddresses: { name: 'maxAddresses', type: 'number', description: 'Maximum number of addresses allowed.', required: false, default: 6 }
@@ -945,7 +903,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     arrayOutput: 'no',
     configInterface: 'DbxForgeToggleWrapperConfig',
     description: 'Wraps content fields in a Material slide toggle — the toggle state controls conditional visibility of the inner fields.',
-    sourcePath: 'field/wrapper/wrapper.ts',
     composesFromSlugs: ['toggle', 'group'],
     config: {
       fields: { name: 'fields', type: 'FieldDef[]', description: 'Fields to reveal when the toggle is on.', required: true },
@@ -964,7 +921,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     arrayOutput: 'no',
     configInterface: 'DbxForgeExpandWrapperConfig',
     description: 'Wraps content fields behind a button or text "expand" control. Use for optional sections like "Show advanced options".',
-    sourcePath: 'field/wrapper/wrapper.ts',
     composesFromSlugs: ['group'],
     config: {
       fields: { name: 'fields', type: 'FieldDef[]', description: 'Fields to show when expanded.', required: true },
@@ -984,7 +940,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     arrayOutput: 'no',
     configInterface: 'DbxForgeFlexLayoutConfig',
     description: 'Responsive flex group — children lay out horizontally at wide breakpoints and stack at narrow ones. Per-field `size` overrides the default column weight.',
-    sourcePath: 'field/wrapper/flex/flex.wrapper.ts',
     composesFromSlugs: ['group'],
     config: {
       fields: { name: 'fields', type: '(FieldDef | { field: FieldDef; size: DbxFlexSize })[]', description: 'Fields or field+size pairs. Can also be passed directly as the sole argument.', required: false },
@@ -1003,7 +958,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     arrayOutput: 'no',
     configInterface: 'DbxForgeTextPasswordWithVerifyFieldConfig',
     description: 'Password + verify-password pair with cross-field equality validation wired up. Drop-in for sign-up flows.',
-    sourcePath: 'template/login.ts',
     composesFromSlugs: ['password-field', 'verify-password-field'],
     config: {
       password: { name: 'password', type: 'DbxForgeTextPasswordFieldConfig', description: 'Override config for the primary password field.', required: false },
@@ -1021,7 +975,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     arrayOutput: 'no',
     configInterface: 'DbxForgeUsernameLoginFieldsConfig',
     description: 'Complete login/signup field set: username, password, and optional verify-password. Drop into the top-level `fields: []`.',
-    sourcePath: 'template/login.ts',
     composesFromSlugs: ['username-login-field', 'password-field', 'verify-password-field'],
     config: {
       username: { name: 'username', type: 'DbxForgeUsernameLoginFieldUsernameConfigInput', description: 'Username preset or full config.', required: true },
@@ -1044,7 +997,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     returns: 'RowField',
     configInterface: 'DbxForgeRowConfig',
     description: 'Flex row that lays child fields out in columns. Child fields typically carry a `col` property (1–12) for grid placement.',
-    sourcePath: 'field/wrapper/wrapper.ts',
     config: {
       fields: { name: 'fields', type: 'RowAllowedChildren[]', description: 'Child fields to render as row columns.', required: true }
     },
@@ -1060,7 +1012,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     returns: 'GroupField',
     configInterface: 'DbxForgeGroupConfig',
     description: "Group container nesting child fields so their values roll up into one object under the group's key.",
-    sourcePath: 'field/wrapper/wrapper.ts',
     config: {
       fields: { name: 'fields', type: 'GroupAllowedChildren[]', description: 'Child field definitions.', required: true }
     },
@@ -1076,7 +1027,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     returns: 'ArrayField',
     configInterface: 'DbxForgeArrayFieldConfig',
     description: 'Repeatable array wrapper with add/remove/drag-to-reorder controls. Template fields are cloned per item. Internally built with `dbxForgeFieldFunction` but categorized as a primitive because composites wrap it.',
-    sourcePath: 'field/wrapper/array-field/array-field.ts',
     config: {
       template: { name: 'template', type: "ContainerField['fields']", description: 'Template fields rendered per array item.', required: true },
       props: { name: 'props', type: 'DbxForgeArrayFieldWrapperProps', description: 'Label, hint, add/remove text.', required: false }
@@ -1093,7 +1043,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     returns: 'WrapperConfig',
     configInterface: 'DbxForgeSectionWrapper',
     description: "Section wrapper config — attach via a field's `wrappers: []` array for a semantic section with header and optional card elevation.",
-    sourcePath: 'field/wrapper/section/section.wrapper.ts',
     config: {
       headerConfig: { name: 'headerConfig', type: 'DbxSectionHeaderConfig', description: 'Header text and heading level.', required: true },
       elevate: { name: 'elevate', type: 'boolean', description: 'Apply elevated card styling.', required: false }
@@ -1110,7 +1059,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     returns: 'WrapperConfig',
     configInterface: 'DbxForgeSectionWrapper',
     description: 'Subsection variant of `section-wrapper` — defaults to heading level 4 and `subsection: true`.',
-    sourcePath: 'field/wrapper/section/section.wrapper.ts',
     config: {
       headerConfig: { name: 'headerConfig', type: 'DbxSectionHeaderConfig', description: 'Subsection header configuration.', required: true }
     },
@@ -1126,7 +1074,6 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     returns: 'WrapperConfig',
     configInterface: 'DbxForgeStyleWrapper',
     description: 'Style wrapper config — applies dynamic CSS classes (`ngClass`) and/or inline styles (`ngStyle`) to any field via its `wrappers: []`.',
-    sourcePath: 'field/wrapper/style/style.wrapper.ts',
     config: {
       classGetter: { name: 'classGetter', type: 'MaybeObservableOrValue<string>', description: 'Static or observable CSS class names.', required: false },
       styleGetter: { name: 'styleGetter', type: 'MaybeObservableOrValue<DbxForgeStyleObject>', description: 'Static or observable inline styles.', required: false }

@@ -43,8 +43,7 @@ describe('loadUiComponentManifests', () => {
               module: '@dereekb/dbx-web',
               description: 'Section.',
               inputs: [],
-              outputs: [],
-              sourcePath: 'lib/section.ts'
+              outputs: []
             }
           ]
         })
@@ -99,8 +98,7 @@ describe('loadUiComponentManifests', () => {
       module: '@dereekb/dbx-web',
       description: '',
       inputs: [],
-      outputs: [],
-      sourcePath: 'lib/section.ts'
+      outputs: []
     };
     const map = new Map<string, string>();
     map.set('/m/a.json', JSON.stringify(manifest({ source: 'a', module: '@dereekb/dbx-web', entries: [baseEntry] })));

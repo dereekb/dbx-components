@@ -41,8 +41,8 @@ const FORM_FIELD_TEMPLATE_TAG = 'dbxFormFieldTemplate';
 // MARK: Public types
 /**
  * One forge entry extracted from a source file. Mirrors {@link ForgeFieldEntry}
- * minus the manifest-level fields populated by the build phase
- * (sourcePath/sourceLocation come from path resolution, not the AST).
+ * for the persisted fields. `filePath` and `line` are kept for in-process
+ * warnings and never persisted to the manifest.
  */
 export interface ExtractedForgeFieldEntry {
   readonly slug: string;
