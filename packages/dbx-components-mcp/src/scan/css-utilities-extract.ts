@@ -79,8 +79,7 @@
  * No PostCSS dependency.
  */
 
-import type { CssUtilityRoleValue, CssUtilityScopeValue } from '../manifest/css-utilities-schema.js';
-import { CSS_UTILITY_ROLES, CSS_UTILITY_SCOPES } from '../manifest/css-utilities-schema.js';
+import { type CssUtilityRoleValue, type CssUtilityScopeValue , CSS_UTILITY_ROLES, CSS_UTILITY_SCOPES } from '../manifest/css-utilities-schema.js';
 
 // MARK: Public types
 /**
@@ -394,7 +393,7 @@ function pickCanonicalSelector(raw: string): PickedSelector | null {
   let picked: PickedSelector | null = null;
   if (parts.length > 0) {
     const split = parts.map(splitHostAndChain);
-    if (!split.some((s) => s === null)) {
+    if (!split.includes(null)) {
       const valid = split as readonly PickedSelector[];
       // Prefer a `.dbx-*` host when available; otherwise the first part.
       let chosen: PickedSelector = valid[0];
