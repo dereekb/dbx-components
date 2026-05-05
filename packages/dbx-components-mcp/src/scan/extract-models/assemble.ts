@@ -88,6 +88,7 @@ export function assembleFile(input: AssembleFileInput): AssembledFile {
 
     const entry: FirebaseModel = {
       name: modelName,
+      ...(iface.description ? { description: iface.description } : {}),
       identityConst: id.identityConst,
       modelType: id.modelType,
       collectionPrefix,
@@ -121,7 +122,7 @@ export function assembleFile(input: AssembleFileInput): AssembledFile {
 
 interface BuildFieldsInput {
   readonly converter: ExtractedConverter;
-  readonly inheritedProps: ReadonlyMap<string, { readonly name: string; readonly tsType: string; readonly optional: boolean; readonly description: string | undefined; readonly longName: string | undefined }>;
+  readonly inheritedProps: ReadonlyMap<string, { readonly name: string; readonly tsType: string; readonly optional: boolean; readonly description: string | undefined; readonly longName: string | undefined; readonly syncFlag: string | undefined }>;
   readonly enumNames: ReadonlySet<string>;
 }
 
@@ -141,7 +142,8 @@ function buildFields(input: BuildFieldsInput): readonly FirebaseField[] {
       ...(prop?.tsType ? { tsType: prop.tsType } : {}),
       optional,
       ...(prop?.description ? { description: prop.description } : {}),
-      ...(enumRef ? { enumRef } : {})
+      ...(enumRef ? { enumRef } : {}),
+      ...(prop?.syncFlag ? { syncFlag: prop.syncFlag } : {})
     };
     out.push(field);
   }

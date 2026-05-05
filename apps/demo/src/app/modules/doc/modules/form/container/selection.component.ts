@@ -144,7 +144,7 @@ const EMBEDDED_SCHOOLS_FILTER_FUNCTION = searchStringFilterFunction<ExampleSearc
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormSelectionComponent implements OnInit {
-  private _searchStrings = completeOnDestroy(new BehaviorSubject<TestStringSearchFunction>((search) => ['A', 'B', 'C', 'D'].map((x) => `${search} ${x}`.trim())));
+  private readonly _searchStrings = completeOnDestroy(new BehaviorSubject<TestStringSearchFunction>((search) => ['A', 'B', 'C', 'D'].map((x) => `${search} ${x}`.trim())));
   readonly searchFn$ = this._searchStrings.asObservable();
 
   readonly valueSelectionFields: FormlyFieldConfig[] = [
@@ -705,7 +705,7 @@ export class DocFormSelectionComponent implements OnInit {
 
   readonly numberToLoadPerUpdate = 10;
 
-  private _values = completeOnDestroy(new BehaviorSubject<(DocValue & IndexRef)[]>([]));
+  private readonly _values = completeOnDestroy(new BehaviorSubject<(DocValue & IndexRef)[]>([]));
 
   readonly initialListSelectionValues$ = of({
     dbxlist: [1, 2, 4, 8, 16, 32, 64, 128, 256]

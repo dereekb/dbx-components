@@ -88,6 +88,7 @@ const STORE_SHAPE_LABEL: Readonly<Record<FirebaseModelStoreShape, string>> = {
 export function formatFirebaseModelEntry(model: FirebaseModel, depth: LookupDepth, options?: FormatFirebaseModelEntryOptions): string {
   const identityLine = model.parentIdentityConst ? `\`${model.identityConst}\` — subcollection of \`${model.parentIdentityConst}\`` : `\`${model.identityConst}\` — root collection`;
   const shape = firebaseModelStoreShape(model);
+  const shapeLabel = model.collectionKind ? `\`${STORE_SHAPE_LABEL[shape]}\` · collectionKind \`${model.collectionKind}\`` : `\`${STORE_SHAPE_LABEL[shape]}\``;
 
   const filter = options?.fields;
   const filtered = filter !== undefined ? applyFieldsFilter(model, filter) : undefined;
@@ -95,7 +96,11 @@ export function formatFirebaseModelEntry(model: FirebaseModel, depth: LookupDept
   const totalFields = model.fields.length;
   const fieldsHeader = filtered ? `## Fields (${fieldsToRender.length} of ${totalFields})` : `## Fields (${totalFields})`;
 
-  const lines: string[] = [`# ${model.name}`, '', `**Package:** \`${model.sourcePackage}\``, `**Identity:** ${identityLine}`, `**Collection:** \`${model.modelType}\` · prefix \`${model.collectionPrefix}\``, `**Store shape:** \`${STORE_SHAPE_LABEL[shape]}\` (see \`dbx_model_lookup topic="shapes"\` for the full taxonomy)`, `**Source:** \`${model.sourceFile}\``, '', fieldsHeader, ''];
+  const lines: string[] = [`# ${model.name}`, ''];
+  if (model.description) {
+    lines.push(model.description, '');
+  }
+  lines.push(`**Package:** \`${model.sourcePackage}\``, `**Identity:** ${identityLine}`, `**Collection:** \`${model.modelType}\` · prefix \`${model.collectionPrefix}\``, `**Store shape:** ${shapeLabel} (see \`dbx_model_lookup topic="shapes"\` for the full taxonomy)`, `**Source:** \`${model.sourceFile}\``, '', fieldsHeader, '');
 
   if (filtered) {
     lines.push(`_Showing ${fieldsToRender.length} of ${totalFields} fields (filtered by \`fields\`)._`, '');
@@ -104,6 +109,8 @@ export function formatFirebaseModelEntry(model: FirebaseModel, depth: LookupDept
   appendFieldsTable(lines, fieldsToRender, depth);
 
   if (depth === 'full') {
+    appendCrossModelReferences(lines, model, fieldsToRender);
+    appendSyncFlagsSection(lines, fieldsToRender);
     const enumsToRender = filtered ? prunedEnumsForFields(model, fieldsToRender) : model.enums;
     appendEnumsSection(lines, enumsToRender);
   }
@@ -135,6 +142,81 @@ function appendFieldsTable(lines: string[], fields: readonly FirebaseField[], de
 
 function describeField(field: FirebaseField): string {
   return (field.description ?? '–').replaceAll('|', String.raw`\|`).replaceAll('\n', ' ');
+}
+
+/**
+ * Field-tsType suffixes that signal a cross-model reference. The capture group preceding the
+ * suffix is treated as the referenced model name (e.g. `WorkerKey` → `Worker`). Generic primary-
+ * key types like `FirestoreModelKey` / `FirestoreModelId` are filtered out separately because
+ * they're too broad to act as cross-model pointers.
+ */
+const CROSS_REF_SUFFIX_RE = /^([A-Z][A-Za-z0-9]*?)(ModelKey|ModelIdRef|Key|KeyRef|Id|IdRef)$/;
+const CROSS_REF_GENERIC_TYPES: ReadonlySet<string> = new Set(['FirestoreModelKey', 'FirestoreModelId', 'FirestoreModelIdRef', 'FirestoreModelKeyRef']);
+
+interface CrossModelReference {
+  readonly fieldName: string;
+  readonly typeName: string;
+  readonly referencedModelName: string;
+  readonly array: boolean;
+}
+
+function unwrapTsType(raw: string): { readonly inner: string; readonly array: boolean } {
+  let result = raw.trim();
+  let array = false;
+  // Strip a single Maybe<…> wrapper.
+  const maybeMatch = /^Maybe<\s*(.+)\s*>$/.exec(result);
+  if (maybeMatch) {
+    result = maybeMatch[1].trim();
+  }
+  // Strip readonly prefix and trailing [] from arrays. ReadonlyArray<T> is also handled.
+  const readonlyArrayMatch = /^ReadonlyArray<\s*(.+)\s*>$/.exec(result);
+  if (readonlyArrayMatch) {
+    result = readonlyArrayMatch[1].trim();
+    array = true;
+  } else {
+    const arrayMatch = /^(?:readonly\s+)?(.+?)(\s*\[\s*\])$/.exec(result);
+    if (arrayMatch) {
+      result = arrayMatch[1].trim();
+      array = true;
+    }
+  }
+  return { inner: result, array };
+}
+
+function detectCrossModelReferences(model: FirebaseModel, fields: readonly FirebaseField[]): readonly CrossModelReference[] {
+  const out: CrossModelReference[] = [];
+  for (const field of fields) {
+    if (!field.tsType) continue;
+    const { inner, array } = unwrapTsType(field.tsType);
+    if (CROSS_REF_GENERIC_TYPES.has(inner)) continue;
+    const m = CROSS_REF_SUFFIX_RE.exec(inner);
+    if (!m) continue;
+    const referencedModelName = m[1];
+    // Skip self-references — a model's own primary-key types aren't cross-refs.
+    if (referencedModelName === model.name) continue;
+    out.push({ fieldName: field.name, typeName: inner, referencedModelName, array });
+  }
+  return out;
+}
+
+function appendCrossModelReferences(lines: string[], model: FirebaseModel, fields: readonly FirebaseField[]): void {
+  const refs = detectCrossModelReferences(model, fields);
+  if (refs.length === 0) return;
+  lines.push('', '## Cross-model references', '', '| Field | Type | References |', '|-------|------|------------|');
+  for (const ref of refs) {
+    const typeDisplay = ref.array ? `\`${ref.typeName}[]\`` : `\`${ref.typeName}\``;
+    lines.push(`| \`${ref.fieldName}\` | ${typeDisplay} | **${ref.referencedModelName}** |`);
+  }
+}
+
+function appendSyncFlagsSection(lines: string[], fields: readonly FirebaseField[]): void {
+  const flagged = fields.filter((f) => f.syncFlag !== undefined && f.syncFlag.length > 0);
+  if (flagged.length === 0) return;
+  lines.push('', '## Sync flags', '', '| Field | Synchronizes |', '|-------|--------------|');
+  for (const field of flagged) {
+    const desc = (field.syncFlag ?? '').replaceAll('|', String.raw`\|`).replaceAll('\n', ' ');
+    lines.push(`| \`${field.name}\` | ${desc} |`);
+  }
 }
 
 function appendEnumsSection(lines: string[], enums: readonly FirebaseModel['enums'][number][]): void {

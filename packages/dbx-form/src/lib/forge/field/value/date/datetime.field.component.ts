@@ -718,7 +718,12 @@ export class DbxForgeDateTimeFieldComponent {
 
       const currentDateCtrl = this.dateCtrl.value;
       if (!currentDateCtrl || !isSameDateDay(currentDateCtrl, date)) {
-        this.dateCtrl.setValue(date, { emitEvent: false });
+        // Emit valueChanges (default) so currentDate$ — and therefore date$/dateValue$/_rawDateTimeDate$
+        // — see the inbound date. Without this emission, rawDateTime$.combineLatest is starved on the
+        // date side and a user-typed time edit can never propagate back to the form value.
+        // The outbound pipeline's `filter(!dbxDateTimeIsSameDateTimeFieldValue(x, currentValue))`
+        // prevents the resulting _updateTime tick from causing a feedback write.
+        this.dateCtrl.setValue(date);
       }
 
       // Do not overwrite time control while user is actively editing it
@@ -730,18 +735,22 @@ export class DbxForgeDateTimeFieldComponent {
       }
     });
 
-    // Main output subscription: timeOutput$ → field value
-    this._sub.subscription = this.valueInSystemTimezone$
+    // Main output subscription: timeOutput$ → field value.
+    // The filter must compare in storage form against the raw fieldValue. Comparing against
+    // valueInSystemTimezone$ (display-shifted) is wrong: with a non-zero system↔target tz shift,
+    // a freshly picked time can have the same timestamp as the previous valueInSystemTimezone$
+    // and be incorrectly dropped (e.g. CDT system + UTC field tz: pick 12pm → pick 5pm collides).
+    this._sub.subscription = this.fieldValue$
       .pipe(
         combineLatestWith(this.timezoneInstance$.pipe(map((tz) => dbxDateTimeOutputValueFactory(this.valueMode(), tz)))),
         throttleTime(TIME_OUTPUT_THROTTLE_TIME, undefined, { leading: false, trailing: true }),
-        switchMap(([currentValue, valueFactory]) => {
+        switchMap(([currentRawValue, valueFactory]) => {
           return this.timeOutput$.pipe(
             throttleTime(TIME_OUTPUT_THROTTLE_TIME * 2, undefined, { leading: false, trailing: true }),
             skipAllInitialMaybe(),
             distinctUntilChanged(isSameDateHoursAndMinutes),
             map((x) => valueFactory(x)),
-            filter((x) => !dbxDateTimeIsSameDateTimeFieldValue(x, currentValue))
+            filter((x) => !dbxDateTimeIsSameDateTimeFieldValue(x as Maybe<Date | string | number>, currentRawValue as Maybe<Date | string | number>))
           );
         })
       )

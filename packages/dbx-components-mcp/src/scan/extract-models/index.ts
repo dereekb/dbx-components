@@ -158,14 +158,18 @@ async function walk(input: WalkInput): Promise<void> {
       if (currentDir === rootDir && reserved.has(entry.name)) continue;
       await walk({ currentDir: full, rootDir, reserved, out });
     } else if (entry.isFile()) {
-      if (!entry.name.endsWith('.ts')) continue;
-      if (entry.name.endsWith('.spec.ts') || entry.name.endsWith('.test.ts') || entry.name.endsWith('.id.ts')) continue;
-      try {
-        const stats = await stat(full);
-        if (stats.isFile()) out.push(full);
-      } catch {
-        // skip unreadable file
-      }
+      await collectIfSourceFile(entry.name, full, out);
     }
+  }
+}
+
+async function collectIfSourceFile(name: string, full: string, out: string[]): Promise<void> {
+  if (!name.endsWith('.ts')) return;
+  if (name.endsWith('.spec.ts') || name.endsWith('.test.ts') || name.endsWith('.id.ts')) return;
+  try {
+    const stats = await stat(full);
+    if (stats.isFile()) out.push(full);
+  } catch {
+    // skip unreadable file
   }
 }

@@ -100,10 +100,8 @@ function formatScannedExample(entry: DbxDocsUiExampleEntry, depth: UiExampleDept
     if (entry.info.length > 0) {
       lines.push('## Description', '', entry.info, '');
     }
-  } else {
-    if (entry.hint !== undefined) {
-      lines.push(entry.hint, '');
-    }
+  } else if (entry.hint !== undefined) {
+    lines.push(entry.hint, '');
   }
 
   lines.push('## Host snippet', '', '```html', entry.snippet, '```', '');
@@ -141,14 +139,24 @@ function formatScannedExample(entry: DbxDocsUiExampleEntry, depth: UiExampleDept
 }
 
 function formatUseHeading(use: DbxDocsUiExampleUseEntry): string {
-  const role = use.role !== undefined ? `${use.role} — ` : '';
-  const selector = use.selector !== undefined ? ` \`${use.selector}\`` : use.pipeName !== undefined ? ` (\`| ${use.pipeName}\`)` : '';
+  const role = use.role === undefined ? '' : `${use.role} — `;
+  let selector = '';
+  if (use.selector !== undefined) {
+    selector = ` \`${use.selector}\``;
+  } else if (use.pipeName !== undefined) {
+    selector = ` (\`| ${use.pipeName}\`)`;
+  }
   return `${role}${use.className} (\`${use.kind}\`)${selector}`;
 }
 
 function formatUseSummaryLine(use: DbxDocsUiExampleUseEntry): string {
-  const role = use.role !== undefined ? `**${use.role}** ` : '';
-  const selector = use.selector !== undefined ? ` — selector \`${use.selector}\`` : use.pipeName !== undefined ? ` — pipe \`${use.pipeName}\`` : '';
+  const role = use.role === undefined ? '' : `**${use.role}** `;
+  let selector = '';
+  if (use.selector !== undefined) {
+    selector = ` — selector \`${use.selector}\``;
+  } else if (use.pipeName !== undefined) {
+    selector = ` — pipe \`${use.pipeName}\``;
+  }
   return `${role}\`${use.className}\` (${use.kind})${selector}`;
 }
 
@@ -156,9 +164,7 @@ function formatUseSummaryLine(use: DbxDocsUiExampleUseEntry): string {
 function formatCatalog(scannedEntries: readonly DbxDocsUiExampleEntry[]): string {
   const lines: string[] = [];
   const appSourcedSuffix = scannedEntries.length > 0 ? `, ${scannedEntries.length} app-sourced` : '';
-  lines.push(`# UI example patterns (${UI_PATTERNS.length} curated${appSourcedSuffix})`, '', 'Call `dbx_ui_examples pattern="<slug>"` for a full example.', '');
-
-  lines.push('## Curated', '');
+  lines.push(`# UI example patterns (${UI_PATTERNS.length} curated${appSourcedSuffix})`, '', 'Call `dbx_ui_examples pattern="<slug>"` for a full example.', '', '## Curated', '');
   for (const pattern of UI_PATTERNS) {
     const usesText = pattern.usesUiSlugs.map(code).join(', ');
     lines.push(`### ${pattern.name}`, '', `- **slug:** \`${pattern.slug}\``, `- **origin:** \`curated\``, `- **summary:** ${pattern.summary}`, `- **uses:** ${usesText}`, '');
@@ -233,11 +239,11 @@ export function createUiExamplesTool(input: CreateUiExamplesToolInput = {}): Dbx
       text = formatCatalog(scannedEntries);
     } else {
       const curated = getUiExamplePattern(args.pattern);
-      if (curated !== undefined) {
-        text = formatPattern(curated, args.depth);
-      } else {
+      if (curated === undefined) {
         const scanned = examplesRegistry.findBySlug(args.pattern.trim());
-        text = scanned !== undefined ? formatScannedExample(scanned, args.depth) : formatNotFound(args.pattern, scannedEntries);
+        text = scanned === undefined ? formatNotFound(args.pattern, scannedEntries) : formatScannedExample(scanned, args.depth);
+      } else {
+        text = formatPattern(curated, args.depth);
       }
     }
 

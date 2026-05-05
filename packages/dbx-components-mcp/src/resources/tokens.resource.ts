@@ -144,16 +144,16 @@ export function registerTokensResource(server: McpServer, options: RegisterToken
       }
       if (entry !== undefined) {
         text = JSON.stringify(entry, null, 2);
-      } else if (cssVariable !== undefined) {
-        text = `Token '${cssVariable}' not found.`;
-      } else {
+      } else if (cssVariable === undefined) {
         text = 'No cssVariable provided.';
+      } else {
+        text = `Token '${cssVariable}' not found.`;
       }
       return {
         contents: [
           {
             uri: uri.href,
-            mimeType: entry !== undefined ? 'application/json' : 'text/plain',
+            mimeType: entry === undefined ? 'text/plain' : 'application/json',
             text
           }
         ]

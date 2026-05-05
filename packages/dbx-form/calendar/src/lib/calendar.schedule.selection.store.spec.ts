@@ -351,24 +351,24 @@ describe('setFilter + setMinMaxDateRange selection bug reproduction', () => {
   });
 });
 
+function getSelectedIndexesFromState(state: CalendarScheduleSelectionState): Set<number> {
+  const value = state.currentSelectionValue;
+  if (!value) return new Set();
+  return new Set(expandDateCellScheduleRange({ dateCellScheduleRange: value.dateScheduleRange }).map((x) => x.i));
+}
+
+function expectStateAnchoredIndexes(state: CalendarScheduleSelectionState, indexes: Set<number>) {
+  for (const i of indexes) {
+    const date = addDays(state.start, i);
+    expect(state.indexFactory(date)).toBe(i);
+    expect(state.isEnabledFilterDay(date)).toBe(true);
+  }
+}
+
 describe('selector coordinate contract (state-anchored indexes)', () => {
   // The contract: every emitted index from the expansion of currentSelectionValue.dateScheduleRange
   // is anchored at state.start (== filter.start when a filter is set, today otherwise) and matches
   // state.indexFactory(date).
-
-  function getSelectedIndexesFromState(state: CalendarScheduleSelectionState): Set<number> {
-    const value = state.currentSelectionValue;
-    if (!value) return new Set();
-    return new Set(expandDateCellScheduleRange({ dateCellScheduleRange: value.dateScheduleRange }).map((x) => x.i));
-  }
-
-  function expectStateAnchoredIndexes(state: CalendarScheduleSelectionState, indexes: Set<number>) {
-    for (const i of indexes) {
-      const date = addDays(state.start, i);
-      expect(state.indexFactory(date)).toBe(i);
-      expect(state.isEnabledFilterDay(date)).toBe(true);
-    }
-  }
 
   function expectRoundTripStable(state: CalendarScheduleSelectionState) {
     const value = state.currentSelectionValue;
@@ -440,22 +440,25 @@ describe('selector coordinate contract (state-anchored indexes)', () => {
       return state;
     }
 
-    describe('case 2: filter only, no minMaxDateRange', () => {
-      function buildState() {
-        let state = buildBaseState();
-        state = updateStateWithChangedDates(state, { selectAll: 'all' });
-        return state;
+    function buildSelectAllState(minMax?: { readonly start: Date; readonly end: Date }) {
+      let state = buildBaseState();
+      if (minMax) {
+        state = updateStateWithMinMaxDateRange(state, minMax);
       }
+      state = updateStateWithChangedDates(state, { selectAll: 'all' });
+      return state;
+    }
 
+    describe('case 2: filter only, no minMaxDateRange', () => {
       it('every emitted index is state-anchored (state.indexFactory(addDays(state.start, i)) === i)', () => {
-        const state = buildState();
+        const state = buildSelectAllState();
         const indexes = getSelectedIndexesFromState(state);
         expect(indexes.size).toBeGreaterThan(0);
         expectStateAnchoredIndexes(state, indexes);
       });
 
       it('round-trip stability', () => {
-        const state = buildState();
+        const state = buildSelectAllState();
         expectRoundTripStable(state);
       });
     });
@@ -463,13 +466,7 @@ describe('selector coordinate contract (state-anchored indexes)', () => {
     describe('case 3: filter + minMaxDateRange.start = filter.start + 15 (5/1 Fri)', () => {
       const minStart = new Date('2026-05-01T05:00:00.000Z');
       const minEnd = new Date('2026-05-29T04:59:59.999Z');
-
-      function buildState() {
-        let state = buildBaseState();
-        state = updateStateWithMinMaxDateRange(state, { start: minStart, end: minEnd });
-        state = updateStateWithChangedDates(state, { selectAll: 'all' });
-        return state;
-      }
+      const buildState = () => buildSelectAllState({ start: minStart, end: minEnd });
 
       it('output is filter-anchored at 4/16 with prefix [0..14] excluded', () => {
         const state = buildState();
@@ -514,13 +511,7 @@ describe('selector coordinate contract (state-anchored indexes)', () => {
     describe('case 4: filter + minMaxDateRange.start = filter.start + 18 (5/4 Mon)', () => {
       const minStart = new Date('2026-05-04T05:00:00.000Z');
       const minEnd = new Date('2026-05-29T04:59:59.999Z');
-
-      function buildState() {
-        let state = buildBaseState();
-        state = updateStateWithMinMaxDateRange(state, { start: minStart, end: minEnd });
-        state = updateStateWithChangedDates(state, { selectAll: 'all' });
-        return state;
-      }
+      const buildState = () => buildSelectAllState({ start: minStart, end: minEnd });
 
       it('toggling state-index 36 → selectionValueSelectedIndexes$ stays state-anchored', () => {
         let state = buildState();

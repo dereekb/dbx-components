@@ -4,17 +4,17 @@ import { takeFront } from '@dereekb/util';
 import { type Observable, switchMap, of, delay, startWith, BehaviorSubject } from 'rxjs';
 import { type DocValue, makeDocValues } from '../component/item.list';
 import { DbxPopoverService, DbxSectionPageComponent, DbxTwoColumnComponent, DbxTwoColumnContextDirective, DbxTwoColumnFullLeftDirective, DbxTwoBlockComponent, DbxTwoColumnColumnHeadDirective, DbxListEmptyContentComponent, DbxTwoColumnRightComponent, DbxSpacerDirective } from '@dereekb/dbx-web';
-import { DbxFormSearchFormComponent, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
+import { DbxFormSearchFormComponent } from '@dereekb/dbx-form';
 import { MatButton } from '@angular/material/button';
 import { DocSelectionItemListComponent } from '../component/item.list.selection.component';
 import { DocLayoutSectionPageTwoPopoverComponent } from '../component/section.page.two.popover.component';
-import { DocLayoutSectionPageTwoSearchComponent, type DocLayoutSectionPageTwoSearchValue } from '../component/sectionpagetwo.picker.component';
+import { type DocLayoutSectionPageTwoSearchValue } from '../component/sectionpagetwo.picker.component';
 import { completeOnDestroy } from '@dereekb/dbx-core';
 
 @Component({
   templateUrl: './section.page.two.component.html',
   standalone: true,
-  imports: [DbxSectionPageComponent, DbxTwoColumnComponent, DbxFormSearchFormComponent, DbxSpacerDirective, DbxFormValueChangeDirective, DocLayoutSectionPageTwoSearchComponent, DbxTwoColumnContextDirective, DbxTwoColumnFullLeftDirective, DbxTwoBlockComponent, DbxTwoColumnColumnHeadDirective, DbxListEmptyContentComponent, MatButton, DbxTwoColumnRightComponent, DocSelectionItemListComponent],
+  imports: [DbxSectionPageComponent, DbxTwoColumnComponent, DbxFormSearchFormComponent, DbxSpacerDirective, DbxTwoColumnContextDirective, DbxTwoColumnFullLeftDirective, DbxTwoBlockComponent, DbxTwoColumnColumnHeadDirective, DbxListEmptyContentComponent, MatButton, DbxTwoColumnRightComponent, DocSelectionItemListComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocLayoutSectionPageTwoComponent implements OnInit {
@@ -24,7 +24,7 @@ export class DocLayoutSectionPageTwoComponent implements OnInit {
   readonly popoverOrigin = viewChild.required('popoverOrigin', { read: ElementRef });
 
   readonly numberToLoadPerUpdate = 50;
-  private _values = completeOnDestroy(new BehaviorSubject<DocValue[]>([]));
+  private readonly _values = completeOnDestroy(new BehaviorSubject<DocValue[]>([]));
 
   showRight = true;
 

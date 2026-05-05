@@ -46,7 +46,9 @@ const CLUSTER_TO_SOURCE = {
   'storagefile-m-validate-folder': 'dbx_storagefile_m_validate_folder',
   'notification-m-validate-app': 'dbx_notification_m_validate_app',
   'notification-m-validate-folder': 'dbx_notification_m_validate_folder',
-  'system-m-validate-folder': 'dbx_system_m_validate_folder'
+  'system-m-validate-folder': 'dbx_system_m_validate_folder',
+  'dbx-asset-validate-app': 'dbx_asset_validate_app',
+  'dbx-asset-validate-folder': 'dbx_asset_validate_folder'
 };
 
 const REQUIRED_TAGS = ['dbxRuleSeverity', 'dbxRuleApplies', 'dbxRuleNotApplies', 'dbxRuleFix'];
@@ -249,7 +251,9 @@ function relPath(p) {
   return relative(WORKSPACE_ROOT, p).split('\\').join('/');
 }
 
-main().catch((err) => {
+try {
+  await main();
+} catch (err) {
   console.error(err);
   process.exit(1);
-});
+}

@@ -98,24 +98,7 @@ export async function loadCssUtilityRegistry(input: LoadCssUtilityRegistryInput)
   const bundledSources: CssUtilityManifestSource[] = bundledManifestPaths().map((path) => ({ origin: 'bundled', path }));
 
   const configResult = await findAndLoadConfig({ cwd, readFile });
-  const externalSources: CssUtilityManifestSource[] = [];
-  if (configResult.config !== null && configResult.configPath !== null) {
-    const baseDir = dirname(configResult.configPath);
-    const cluster = configResult.config.cssUtilities;
-    const declaredSources = cluster?.sources ?? [];
-    for (const source of declaredSources) {
-      const absolute = isAbsolute(source) ? source : resolve(baseDir, source);
-      externalSources.push({ origin: 'external', path: absolute });
-    }
-    const declaredScans = cluster?.scan ?? [];
-    for (const scan of declaredScans) {
-      const out = scan.out;
-      if (typeof out === 'string' && out.length > 0) {
-        const absolute = isAbsolute(out) ? out : resolve(baseDir, out);
-        externalSources.push({ origin: 'external', path: absolute });
-      }
-    }
-  }
+  const externalSources = collectExternalCssUtilitySources(configResult);
 
   let registry: CssUtilityRegistry = EMPTY_CSS_UTILITY_REGISTRY;
   let loaderWarnings: readonly CssUtilityLoaderWarning[] = [];
@@ -135,6 +118,27 @@ export async function loadCssUtilityRegistry(input: LoadCssUtilityRegistryInput)
     externalSourceCount: externalSources.length
   };
   return result;
+}
+
+type LoadConfigResult = Awaited<ReturnType<typeof findAndLoadConfig>>;
+
+function collectExternalCssUtilitySources(configResult: LoadConfigResult): CssUtilityManifestSource[] {
+  const externalSources: CssUtilityManifestSource[] = [];
+  if (configResult.config === null || configResult.configPath === null) return externalSources;
+  const baseDir = dirname(configResult.configPath);
+  const cluster = configResult.config.cssUtilities;
+  for (const source of cluster?.sources ?? []) {
+    const absolute = isAbsolute(source) ? source : resolve(baseDir, source);
+    externalSources.push({ origin: 'external', path: absolute });
+  }
+  for (const scan of cluster?.scan ?? []) {
+    const out = scan.out;
+    if (typeof out === 'string' && out.length > 0) {
+      const absolute = isAbsolute(out) ? out : resolve(baseDir, out);
+      externalSources.push({ origin: 'external', path: absolute });
+    }
+  }
+  return externalSources;
 }
 
 /**

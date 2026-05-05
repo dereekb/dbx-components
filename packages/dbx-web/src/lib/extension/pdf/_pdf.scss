@@ -94,4 +94,6 @@
 }
 
 @mixin theme($theme-config) {
+  // No theme-driven styles yet; mixin is kept so the extension theme barrel can
+  // include @include pdf.theme($theme-config); without conditional checks.
 }

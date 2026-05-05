@@ -83,19 +83,19 @@ export class DocExtensionMapboxComponent implements OnInit {
   readonly mapboxLayoutChild = viewChild(DbxMapboxLayoutComponent);
   readonly drawerIsOpenSignal = computed(() => this.mapboxLayoutChild()?.isOpenAndHasContentSignal() ?? false);
 
-  private _side = completeOnDestroy(new BehaviorSubject<Maybe<DbxMapboxLayoutSide>>(undefined));
+  private readonly _side = completeOnDestroy(new BehaviorSubject<Maybe<DbxMapboxLayoutSide>>(undefined));
   readonly side$ = this._side.asObservable();
   readonly sideSignal = toSignal(this.side$, { initialValue: undefined });
 
-  private _open = completeOnDestroy(new BehaviorSubject<Maybe<boolean>>(undefined));
+  private readonly _open = completeOnDestroy(new BehaviorSubject<Maybe<boolean>>(undefined));
   readonly open$ = this._open.asObservable();
   readonly openSignal = toSignal(this.open$, { initialValue: undefined });
 
-  private _color = completeOnDestroy(new BehaviorSubject<Maybe<DbxThemeColor>>(undefined));
+  private readonly _color = completeOnDestroy(new BehaviorSubject<Maybe<DbxThemeColor>>(undefined));
   readonly color$: Observable<Maybe<DbxThemeColor>> = this._color.asObservable();
   readonly colorSignal = toSignal(this.color$, { initialValue: undefined });
 
-  private _showMarkers = completeOnDestroy(new BehaviorSubject<boolean>(true));
+  private readonly _showMarkers = completeOnDestroy(new BehaviorSubject<boolean>(true));
   readonly showMarkers$ = this._showMarkers.asObservable();
   readonly showMarkersSignal = toSignal(this.showMarkers$, { initialValue: true });
 
@@ -298,7 +298,7 @@ export class DocExtensionMapboxComponent implements OnInit {
     style: randomBoolean(20) ? this.mapboxMarkerPlainDotStyle : this.mapboxMarkerDotStyle
   });
 
-  private _addedMarkersData = completeOnDestroy(new BehaviorSubject<LatLngTuple[]>([]));
+  private readonly _addedMarkersData = completeOnDestroy(new BehaviorSubject<LatLngTuple[]>([]));
   readonly addedMapboxMarkersData$ = this._addedMarkersData.asObservable();
   readonly addedMapboxMarkersDataSignal = toSignal(this.addedMapboxMarkersData$, { initialValue: [] as LatLngTuple[] });
 

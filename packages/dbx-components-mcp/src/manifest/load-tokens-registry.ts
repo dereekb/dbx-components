@@ -100,24 +100,7 @@ export async function loadTokenRegistry(input: LoadTokenRegistryInput): Promise<
   const bundledSources: TokenManifestSource[] = bundledManifestPaths().map((path) => ({ origin: 'bundled', path }));
 
   const configResult = await findAndLoadConfig({ cwd, readFile });
-  const externalSources: TokenManifestSource[] = [];
-  if (configResult.config !== null && configResult.configPath !== null) {
-    const baseDir = dirname(configResult.configPath);
-    const tokensCluster = configResult.config.tokens;
-    const declaredSources = tokensCluster?.sources ?? [];
-    for (const source of declaredSources) {
-      const absolute = isAbsolute(source) ? source : resolve(baseDir, source);
-      externalSources.push({ origin: 'external', path: absolute });
-    }
-    const declaredScans = tokensCluster?.scan ?? [];
-    for (const scan of declaredScans) {
-      const out = scan.out;
-      if (typeof out === 'string' && out.length > 0) {
-        const absolute = isAbsolute(out) ? out : resolve(baseDir, out);
-        externalSources.push({ origin: 'external', path: absolute });
-      }
-    }
-  }
+  const externalSources = collectExternalTokenSources(configResult);
 
   let registry: TokenRegistry = EMPTY_TOKEN_REGISTRY;
   let loaderWarnings: readonly TokenLoaderWarning[] = [];
@@ -137,6 +120,27 @@ export async function loadTokenRegistry(input: LoadTokenRegistryInput): Promise<
     externalSourceCount: externalSources.length
   };
   return result;
+}
+
+type LoadConfigResult = Awaited<ReturnType<typeof findAndLoadConfig>>;
+
+function collectExternalTokenSources(configResult: LoadConfigResult): TokenManifestSource[] {
+  const externalSources: TokenManifestSource[] = [];
+  if (configResult.config === null || configResult.configPath === null) return externalSources;
+  const baseDir = dirname(configResult.configPath);
+  const tokensCluster = configResult.config.tokens;
+  for (const source of tokensCluster?.sources ?? []) {
+    const absolute = isAbsolute(source) ? source : resolve(baseDir, source);
+    externalSources.push({ origin: 'external', path: absolute });
+  }
+  for (const scan of tokensCluster?.scan ?? []) {
+    const out = scan.out;
+    if (typeof out === 'string' && out.length > 0) {
+      const absolute = isAbsolute(out) ? out : resolve(baseDir, out);
+      externalSources.push({ origin: 'external', path: absolute });
+    }
+  }
+  return externalSources;
 }
 
 /**

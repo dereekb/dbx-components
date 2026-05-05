@@ -58,8 +58,24 @@ const SOURCE_RANK: Record<string, number> = { 'mat-sys': 4, mdc: 3, 'dbx-web': 2
  * @returns the top scored matches plus a confidence flag
  */
 export function resolveToken(registry: TokenRegistry, input: ResolveTokenInput): ResolveTokenResult {
-  let candidates: readonly TokenEntry[] = registry.all;
+  const candidates = filterCandidates(registry.all, input);
+  const scored = new Map<string, number>();
 
+  scoreByIntent(scored, candidates, input);
+  scoreByValue(scored, candidates, input);
+  scoreByComponentOnly(scored, candidates, input);
+  scoreByCategoryOnly(scored, candidates, input);
+
+  const matches = collectScoredMatches(registry, scored);
+  matches.sort(compareScoredMatches);
+
+  const truncated = matches.slice(0, MAX_MATCHES);
+  const confident = truncated.length > 0 && truncated[0].score >= CONFIDENT_THRESHOLD;
+  return { matches: truncated, confident, category: input.category };
+}
+
+function filterCandidates(all: readonly TokenEntry[], input: ResolveTokenInput): readonly TokenEntry[] {
+  let candidates: readonly TokenEntry[] = all;
   if (input.category !== undefined && input.category !== 'list') {
     candidates = candidates.filter((c) => c.source === input.category);
   }
@@ -69,64 +85,76 @@ export function resolveToken(registry: TokenRegistry, input: ResolveTokenInput):
   if (input.component !== undefined) {
     candidates = candidates.filter((c) => c.componentScope === input.component);
   }
+  return candidates;
+}
 
-  const scored = new Map<string, number>();
-  function add(entry: TokenEntry, score: number): void {
-    if (score <= 0) return;
-    const key = `${entry.source}::${entry.cssVariable}`;
-    const previous = scored.get(key);
-    if (previous === undefined || previous < score) {
-      scored.set(key, score);
-    }
+function addScore(scored: Map<string, number>, entry: TokenEntry, score: number): void {
+  if (score <= 0) return;
+  const key = `${entry.source}::${entry.cssVariable}`;
+  const previous = scored.get(key);
+  if (previous === undefined || previous < score) {
+    scored.set(key, score);
   }
+}
 
-  if (input.intent !== undefined && input.intent.trim().length > 0) {
-    const expanded = expandIntentQuery(input.intent);
-    for (const entry of candidates) {
-      const score = scoreIntent(entry, expanded);
-      if (score > 0) add(entry, score);
-    }
+function scoreByIntent(scored: Map<string, number>, candidates: readonly TokenEntry[], input: ResolveTokenInput): void {
+  if (input.intent === undefined || input.intent.trim().length === 0) return;
+  const expanded = expandIntentQuery(input.intent);
+  for (const entry of candidates) {
+    const score = scoreIntent(entry, expanded);
+    if (score > 0) addScore(scored, entry, score);
   }
+}
 
-  if (input.value !== undefined && input.value.trim().length > 0) {
-    const trimmed = input.value.trim();
-    const parsedColor = parseColor(trimmed);
-    const parsedLength = parseLength(trimmed);
-    const parsedShadow = parseShadow(trimmed);
-    const legacyHint = isLegacyHintColor(parsedColor);
-    for (const entry of candidates) {
-      let score = 0;
-      if (parsedColor !== null && (entry.role === 'color' || entry.role === 'text-color' || entry.role === 'surface' || entry.role === 'shadow')) {
-        score = Math.max(score, scoreColor(entry, parsedColor));
-      }
-      if (parsedLength !== null && (entry.role === 'spacing' || entry.role === 'radius' || entry.role === 'size')) {
-        score = Math.max(score, scoreLength(entry, parsedLength));
-      }
-      if (parsedShadow !== null && (entry.role === 'elevation' || entry.role === 'shadow')) {
-        score = Math.max(score, scoreShadow(entry, trimmed, parsedShadow));
-      }
-      if (legacyHint && entry.cssVariable === '--mat-sys-on-surface-variant') {
-        score = Math.max(score, 9);
-      }
-      if (score === 0) {
-        score = scoreValueLiteral(entry, trimmed);
-      }
-      if (score > 0) add(entry, score);
-    }
+function scoreByValue(scored: Map<string, number>, candidates: readonly TokenEntry[], input: ResolveTokenInput): void {
+  if (input.value === undefined || input.value.trim().length === 0) return;
+  const trimmed = input.value.trim();
+  const parsedColor = parseColor(trimmed);
+  const parsedLength = parseLength(trimmed);
+  const parsedShadow = parseShadow(trimmed);
+  const legacyHint = isLegacyHintColor(parsedColor);
+  for (const entry of candidates) {
+    const score = computeValueScoreForEntry({ entry, trimmed, parsedColor, parsedLength, parsedShadow, legacyHint });
+    if (score > 0) addScore(scored, entry, score);
   }
+}
 
-  if (input.component !== undefined && input.intent === undefined && input.value === undefined) {
-    for (const entry of candidates) {
-      add(entry, 5);
-    }
+function computeValueScoreForEntry(input: { entry: TokenEntry; trimmed: string; parsedColor: RgbColor | null; parsedLength: ParsedLength | null; parsedShadow: ShadowLayer[] | null; legacyHint: boolean }): number {
+  const { entry, trimmed, parsedColor, parsedLength, parsedShadow, legacyHint } = input;
+  let score = 0;
+  if (parsedColor !== null && (entry.role === 'color' || entry.role === 'text-color' || entry.role === 'surface' || entry.role === 'shadow')) {
+    score = Math.max(score, scoreColor(entry, parsedColor));
   }
-
-  if (input.category !== undefined && scored.size === 0 && input.intent === undefined && input.value === undefined) {
-    for (const entry of candidates) {
-      add(entry, 1);
-    }
+  if (parsedLength !== null && (entry.role === 'spacing' || entry.role === 'radius' || entry.role === 'size')) {
+    score = Math.max(score, scoreLength(entry, parsedLength));
   }
+  if (parsedShadow !== null && (entry.role === 'elevation' || entry.role === 'shadow')) {
+    score = Math.max(score, scoreShadow(entry, trimmed, parsedShadow));
+  }
+  if (legacyHint && entry.cssVariable === '--mat-sys-on-surface-variant') {
+    score = Math.max(score, 9);
+  }
+  if (score === 0) {
+    score = scoreValueLiteral(entry, trimmed);
+  }
+  return score;
+}
 
+function scoreByComponentOnly(scored: Map<string, number>, candidates: readonly TokenEntry[], input: ResolveTokenInput): void {
+  if (input.component === undefined || input.intent !== undefined || input.value !== undefined) return;
+  for (const entry of candidates) {
+    addScore(scored, entry, 5);
+  }
+}
+
+function scoreByCategoryOnly(scored: Map<string, number>, candidates: readonly TokenEntry[], input: ResolveTokenInput): void {
+  if (input.category === undefined || scored.size > 0 || input.intent !== undefined || input.value !== undefined) return;
+  for (const entry of candidates) {
+    addScore(scored, entry, 1);
+  }
+}
+
+function collectScoredMatches(registry: TokenRegistry, scored: Map<string, number>): ScoredTokenMatch[] {
   const matches: ScoredTokenMatch[] = [];
   for (const [key, score] of scored) {
     const [source, cssVariable] = splitKey(key);
@@ -135,16 +163,14 @@ export function resolveToken(registry: TokenRegistry, input: ResolveTokenInput):
       matches.push({ entry, score });
     }
   }
-  matches.sort((a, b) => {
-    if (b.score !== a.score) return b.score - a.score;
-    const rankDiff = (SOURCE_RANK[b.entry.source] ?? 0) - (SOURCE_RANK[a.entry.source] ?? 0);
-    if (rankDiff !== 0) return rankDiff;
-    return a.entry.cssVariable.localeCompare(b.entry.cssVariable);
-  });
+  return matches;
+}
 
-  const truncated = matches.slice(0, MAX_MATCHES);
-  const confident = truncated.length > 0 && truncated[0].score >= CONFIDENT_THRESHOLD;
-  return { matches: truncated, confident, category: input.category };
+function compareScoredMatches(a: ScoredTokenMatch, b: ScoredTokenMatch): number {
+  if (b.score !== a.score) return b.score - a.score;
+  const rankDiff = (SOURCE_RANK[b.entry.source] ?? 0) - (SOURCE_RANK[a.entry.source] ?? 0);
+  if (rankDiff !== 0) return rankDiff;
+  return a.entry.cssVariable.localeCompare(b.entry.cssVariable);
 }
 
 // MARK: Intent scoring
@@ -171,8 +197,7 @@ function scoreIntent(entry: TokenEntry, expanded: readonly string[]): number {
 type RgbColor = { r: number; g: number; b: number; a: number };
 type OkLabColor = { L: number; a: number; b: number; alpha: number };
 
-const RGB_RE = /rgba?\(\s*([0-9.]+)\s*,?\s*([0-9.]+)\s*,?\s*([0-9.]+)(?:[\s,/]+([0-9.]+%?))?\s*\)/i;
-const RGB_NEW_RE = /rgba?\(\s*([0-9.]+)\s+([0-9.]+)\s+([0-9.]+)(?:\s*\/\s*([0-9.]+%?))?\s*\)/i;
+const RGB_RE = /rgba?\(\s*([0-9.]+)[\s,]+([0-9.]+)[\s,]+([0-9.]+)(?:[\s,/]+([0-9.]+%?))?\s*\)/i;
 const HEX_RE = /^#([0-9a-f]{3,8})$/i;
 
 /**
@@ -187,26 +212,15 @@ export function parseColor(raw: string): RgbColor | null {
   if (trimmed === 'transparent') return { r: 0, g: 0, b: 0, a: 0 };
   if (trimmed.toLowerCase() === 'white') return { r: 255, g: 255, b: 255, a: 1 };
   if (trimmed.toLowerCase() === 'black') return { r: 0, g: 0, b: 0, a: 1 };
-  let match = RGB_RE.exec(trimmed);
+  const rgbMatch = RGB_RE.exec(trimmed);
   let result: RgbColor | null = null;
-  if (match !== null) {
+  if (rgbMatch !== null) {
     result = {
-      r: clamp(Number.parseFloat(match[1]), 0, 255),
-      g: clamp(Number.parseFloat(match[2]), 0, 255),
-      b: clamp(Number.parseFloat(match[3]), 0, 255),
-      a: parseAlpha(match[4])
+      r: clamp(Number.parseFloat(rgbMatch[1]), 0, 255),
+      g: clamp(Number.parseFloat(rgbMatch[2]), 0, 255),
+      b: clamp(Number.parseFloat(rgbMatch[3]), 0, 255),
+      a: parseAlpha(rgbMatch[4])
     };
-  }
-  if (result === null) {
-    match = RGB_NEW_RE.exec(trimmed);
-    if (match !== null) {
-      result = {
-        r: clamp(Number.parseFloat(match[1]), 0, 255),
-        g: clamp(Number.parseFloat(match[2]), 0, 255),
-        b: clamp(Number.parseFloat(match[3]), 0, 255),
-        a: parseAlpha(match[4])
-      };
-    }
   }
   if (result === null) {
     const hexMatch = HEX_RE.exec(trimmed);
@@ -441,21 +455,25 @@ function parseShadowLayer(raw: string): ShadowLayer | null {
 function scoreShadow(entry: TokenEntry, raw: string, target: ShadowLayer[]): number {
   let best = 0;
   for (const value of [entry.defaults.light, entry.defaults.dark].filter((v): v is string => v !== undefined)) {
-    const parsed = parseShadow(value);
-    if (parsed !== null) {
-      let layerHits = 0;
-      for (const t of target) {
-        const found = parsed.find((p) => Math.abs(p.offsetX - t.offsetX) <= 1 && Math.abs(p.offsetY - t.offsetY) <= 1 && Math.abs(p.blur - t.blur) <= 2);
-        if (found !== undefined) layerHits += 1;
-      }
-      let score = 0;
-      if (layerHits === target.length) score = 9;
-      else if (layerHits > 0) score = 5;
-      if (score > best) best = score;
-    }
+    const parsedScore = scoreShadowValue(value, target);
+    if (parsedScore > best) best = parsedScore;
     if (value === raw) best = Math.max(best, 11);
   }
   return best;
+}
+
+function scoreShadowValue(value: string, target: ShadowLayer[]): number {
+  const parsed = parseShadow(value);
+  if (parsed === null) return 0;
+  let layerHits = 0;
+  for (const t of target) {
+    const found = parsed.find((p) => Math.abs(p.offsetX - t.offsetX) <= 1 && Math.abs(p.offsetY - t.offsetY) <= 1 && Math.abs(p.blur - t.blur) <= 2);
+    if (found !== undefined) layerHits += 1;
+  }
+  let score = 0;
+  if (layerHits === target.length) score = 9;
+  else if (layerHits > 0) score = 5;
+  return score;
 }
 
 // MARK: Literal fallback

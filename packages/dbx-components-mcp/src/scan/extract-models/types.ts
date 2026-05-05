@@ -20,7 +20,8 @@ export interface ExtractedIdentity {
 
 /**
  * One field declared on an interface body. Captures the JSDoc
- * description plus the explicit `@dbxModelVariable` long-name tag.
+ * description plus the explicit `@dbxModelVariable` long-name tag and
+ * the optional `@dbxModelVariableSyncFlag` sync-description tag.
  */
 export interface ExtractedInterfaceProp {
   readonly name: string;
@@ -28,6 +29,7 @@ export interface ExtractedInterfaceProp {
   readonly optional: boolean;
   readonly description: string | undefined;
   readonly longName: string | undefined;
+  readonly syncFlag: string | undefined;
 }
 
 /**

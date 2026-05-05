@@ -452,7 +452,14 @@ export function getImplementsSpecifierRemovalRange(match: OnDestroyImplementsMat
   if (allImplements.length === 1) {
     const implementsKeyword = sourceCode.getTokenBefore(clauseSpecifier, { filter: (token: AstNode) => token.type === 'Keyword' && token.value === 'implements' });
     const tokenBeforeImplements = implementsKeyword ? sourceCode.getTokenBefore(implementsKeyword) : null;
-    const startPos = tokenBeforeImplements ? tokenBeforeImplements.range[1] : implementsKeyword ? implementsKeyword.range[0] : clauseSpecifier.range[0];
+    let startPos: number;
+    if (tokenBeforeImplements) {
+      startPos = tokenBeforeImplements.range[1];
+    } else if (implementsKeyword) {
+      startPos = implementsKeyword.range[0];
+    } else {
+      startPos = clauseSpecifier.range[0];
+    }
     result = [startPos, clauseSpecifier.range[1]];
   } else if (index === 0) {
     result = [clauseSpecifier.range[0], allImplements[1].range[0]];

@@ -81,16 +81,16 @@ export function registerCssUtilityResource(server: McpServer, options: RegisterC
       let text: string;
       if (entry !== undefined) {
         text = JSON.stringify(entry, null, 2);
-      } else if (slug !== undefined) {
-        text = `Utility '${slug}' not found.`;
-      } else {
+      } else if (slug === undefined) {
         text = 'No slug provided.';
+      } else {
+        text = `Utility '${slug}' not found.`;
       }
       return {
         contents: [
           {
             uri: uri.href,
-            mimeType: entry !== undefined ? 'application/json' : 'text/plain',
+            mimeType: entry === undefined ? 'text/plain' : 'application/json',
             text
           }
         ]
@@ -151,7 +151,7 @@ export function registerCssUtilityResource(server: McpServer, options: RegisterC
         contents: [
           {
             uri: uri.href,
-            mimeType: source !== undefined ? 'application/json' : 'text/plain',
+            mimeType: source === undefined ? 'text/plain' : 'application/json',
             text
           }
         ]
@@ -181,7 +181,7 @@ export function registerCssUtilityResource(server: McpServer, options: RegisterC
         contents: [
           {
             uri: uri.href,
-            mimeType: slug !== undefined ? 'application/json' : 'text/plain',
+            mimeType: slug === undefined ? 'text/plain' : 'application/json',
             text
           }
         ]

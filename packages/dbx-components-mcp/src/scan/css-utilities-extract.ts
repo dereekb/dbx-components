@@ -79,7 +79,7 @@
  * No PostCSS dependency.
  */
 
-import { type CssUtilityRoleValue, type CssUtilityScopeValue , CSS_UTILITY_ROLES, CSS_UTILITY_SCOPES } from '../manifest/css-utilities-schema.js';
+import { type CssUtilityRoleValue, type CssUtilityScopeValue, CSS_UTILITY_ROLES, CSS_UTILITY_SCOPES } from '../manifest/css-utilities-schema.js';
 
 // MARK: Public types
 /**
@@ -280,7 +280,7 @@ export function extractCssUtilityEntries(input: ExtractCssUtilityEntriesInput): 
           continue;
         }
         const selectorText = canonicalSelector.host;
-        const selectorContext = canonicalSelector.fullChain !== canonicalSelector.host ? canonicalSelector.fullChain : undefined;
+        const selectorContext = canonicalSelector.fullChain === canonicalSelector.host ? undefined : canonicalSelector.fullChain;
 
         const ruleBody = readRuleBody(lines, ruleStart.line);
         const declarations = parseDeclarations(ruleBody);
@@ -388,7 +388,7 @@ interface PickedSelector {
 function pickCanonicalSelector(raw: string): PickedSelector | null {
   const parts = raw
     .split(',')
-    .map((s) => s.replace(/\s+/g, ' ').trim())
+    .map((s) => s.replaceAll(/\s+/g, ' ').trim())
     .filter((s) => s.length > 0);
   let picked: PickedSelector | null = null;
   if (parts.length > 0) {
@@ -438,15 +438,13 @@ function findNextRuleStart(lines: readonly string[], from: number): RuleStart | 
         // Non-blank, non-comment, non-selector, non-rule line — annotation is orphan.
         bail = true;
       }
+    } else if (line.includes('{')) {
+      const endLine = findRuleEnd(lines, cursor);
+      result = { line: selectorStart, endLine };
+    } else if (trimmed.length === 0 || trimmed.startsWith('//') || trimmed.endsWith(',') || /^\.[A-Za-z_]/.test(trimmed)) {
+      cursor += 1;
     } else {
-      if (line.includes('{')) {
-        const endLine = findRuleEnd(lines, cursor);
-        result = { line: selectorStart, endLine };
-      } else if (trimmed.length === 0 || trimmed.startsWith('//') || trimmed.endsWith(',') || /^\.[A-Za-z_]/.test(trimmed)) {
-        cursor += 1;
-      } else {
-        bail = true;
-      }
+      bail = true;
     }
   }
   return result;

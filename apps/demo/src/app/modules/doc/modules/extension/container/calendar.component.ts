@@ -64,7 +64,7 @@ export class DocExtensionCalendarComponent implements OnInit {
 
   readonly pageTitleInfo: DbxWebPageTitleInfoConfig = { title: 'Calendar', description: 'dbx-calendar component examples' };
 
-  private _timezone = completeOnDestroy(new BehaviorSubject<Maybe<TimezoneString>>(undefined));
+  private readonly _timezone = completeOnDestroy(new BehaviorSubject<Maybe<TimezoneString>>(undefined));
 
   readonly timezone$ = this._timezone.asObservable();
 

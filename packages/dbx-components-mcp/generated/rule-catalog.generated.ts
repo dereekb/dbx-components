@@ -5,6 +5,190 @@ import type { RuleEntry } from '../src/tools/rule-catalog/types.js';
 
 export const RULE_CATALOG: readonly RuleEntry[] = [
   {
+    code: 'DBX_ASSET_AGGREGATOR_MISSING_MEMBER',
+    source: 'dbx_asset_validate_app',
+    severity: 'error',
+    title: 'The aggregator array references an identifier that is not a declared',
+    whatItFlags: 'The aggregator array references an identifier that is not a declared\n`AssetPathRef` constant in the file (and is not a trust-listed external).',
+    whenItApplies: 'Every aggregator member that does not match a local export.',
+    whenItDoesNotApply: 'Identifiers imported from a trust-listed `@dereekb/*` module.',
+    canonicalFix: 'Either declare the missing `export const <NAME> = ...` or remove the entry from the aggregator.'
+  },
+  {
+    code: 'DBX_ASSET_APP_DIR_NOT_FOUND',
+    source: 'dbx_asset_validate_app',
+    severity: 'error',
+    title: 'The Angular app root does not exist or is not a directory',
+    whatItFlags: 'The Angular app root does not exist or is not a directory.',
+    whenItApplies: 'When `apiDir` does not resolve to an existing directory.',
+    whenItDoesNotApply: "Backends that don't host an Angular front-end — the asset validator targets the Angular wiring.",
+    canonicalFix: 'Pass an `apiDir` that points at the Angular app (e.g. `apps/demo`), not the API app.',
+    seeAlso: [
+      {
+        kind: 'tool',
+        target: 'dbx_asset_validate_folder'
+      }
+    ]
+  },
+  {
+    code: 'DBX_ASSET_BARREL_MISSING',
+    source: 'dbx_asset_validate_app',
+    severity: 'warning',
+    title: "The component's barrel `src/lib/index.ts` does not re-export `./assets`",
+    whatItFlags: "The component's barrel `src/lib/index.ts` does not re-export `./assets`.",
+    whenItApplies: 'Components whose `src/lib/assets.ts` exists but is not re-exported through the package barrel.',
+    whenItDoesNotApply: 'Components that intentionally hide their asset refs from downstream consumers.',
+    canonicalFix: "Add `export * from './assets';` to `<componentDir>/src/lib/index.ts`."
+  },
+  {
+    code: 'DBX_ASSET_BUILDER_UNKNOWN',
+    source: 'dbx_asset_validate_app',
+    severity: 'error',
+    title: 'An exported asset constant uses a builder callee that is not one of the',
+    whatItFlags: 'An exported asset constant uses a builder callee that is not one of the\nfour known `@dereekb/rxjs` builders.',
+    whenItApplies: 'Every `export const X = <callee>(...)` whose callee is not `localAsset` / `remoteAsset` / `assetFolder` / `remoteAssetBaseUrl` and not a trusted external.',
+    whenItDoesNotApply: 'Builders re-exported from a trust-listed `@dereekb/*` module — those go through the trust list.',
+    canonicalFix: "Use one of `localAsset`, `remoteAsset`, `assetFolder('foo').asset('bar')`, or `remoteAssetBaseUrl('https://...').asset('x')` from `@dereekb/rxjs`."
+  },
+  {
+    code: 'DBX_ASSET_COMPONENT_DIR_NOT_FOUND',
+    source: 'dbx_asset_validate_app',
+    severity: 'error',
+    title: 'The component package root does not exist or is not a directory',
+    whatItFlags: 'The component package root does not exist or is not a directory.',
+    whenItApplies: 'When `componentDir` does not resolve to an existing directory.',
+    whenItDoesNotApply: "Components that intentionally don't ship asset refs — pass `--skip asset` to `dbx_app_validate` instead.",
+    canonicalFix: 'Pass a `componentDir` that points at a real `-firebase` component package (e.g. `components/demo-firebase`).',
+    seeAlso: [
+      {
+        kind: 'tool',
+        target: 'dbx_asset_validate_folder'
+      }
+    ]
+  },
+  {
+    code: 'DBX_ASSET_DUPLICATE_PATH',
+    source: 'dbx_asset_validate_app',
+    severity: 'warning',
+    title: 'Two exported `AssetPathRef` constants resolve to the same path or URL',
+    whatItFlags: 'Two exported `AssetPathRef` constants resolve to the same path or URL.',
+    whenItApplies: 'When more than one constant produces the same `path` (local) or `url` (remote).',
+    whenItDoesNotApply: 'Constants intentionally aliased — but this defeats discriminating refs by symbol, so almost always a copy-paste.',
+    canonicalFix: 'Choose distinct paths/URLs or fold the duplicates into a single export.'
+  },
+  {
+    code: 'DBX_ASSET_FILE_MISSING',
+    source: 'dbx_asset_validate_app',
+    severity: 'error',
+    title: 'The component does not contain a `src/lib/assets.ts` file',
+    whatItFlags: 'The component does not contain a `src/lib/assets.ts` file.',
+    whenItApplies: 'Every `-firebase` component package that should expose an `AssetPathRef` catalog.',
+    whenItDoesNotApply: "Components that intentionally don't ship local asset refs.",
+    canonicalFix: 'Add `<componentDir>/src/lib/assets.ts` exporting `AssetPathRef` constants and an `AssetPathRef[]` aggregator.'
+  },
+  {
+    code: 'DBX_ASSET_LOCAL_FILE_MISSING',
+    source: 'dbx_asset_validate_app',
+    severity: 'error',
+    title: 'A local asset constant resolves to a path that does not exist under',
+    whatItFlags: 'A local asset constant resolves to a path that does not exist under\n`<appDir>/src/assets/`.',
+    whenItApplies: "Every `localAsset(path)` / `assetFolder('folder').asset('file')` reference whose joined path has no matching file under the Angular app's `src/assets/` directory.",
+    whenItDoesNotApply: 'Custom `localBaseUrl` configurations passed to `provideDbxAssetLoader` — only the default `/assets/` base is checked.',
+    canonicalFix: 'Place the file at `<appDir>/src/assets/<path>` so Angular CLI copies it to the build output.'
+  },
+  {
+    code: 'DBX_ASSET_NO_AGGREGATOR',
+    source: 'dbx_asset_validate_app',
+    severity: 'warning',
+    title: '`assets.ts` declares no exported `AssetPathRef[]` aggregator constant',
+    whatItFlags: '`assets.ts` declares no exported `AssetPathRef[]` aggregator constant.',
+    whenItApplies: 'Components whose `assets.ts` file exists and parses but has no `: AssetPathRef[]`-annotated export.',
+    whenItDoesNotApply: 'Components that only need a single ref and intentionally omit the aggregator (rare — most apps want a discoverable list).',
+    canonicalFix: 'Add `export const <PROJECT>_ASSETS: AssetPathRef[] = [...];` listing every exported ref.'
+  },
+  {
+    code: 'DBX_ASSET_PROVIDER_IMPORT_MISSING',
+    source: 'dbx_asset_validate_app',
+    severity: 'warning',
+    title: '`provideDbxAssetLoader` is invoked but not imported from `@dereekb/dbx-core`',
+    whatItFlags: '`provideDbxAssetLoader` is invoked but not imported from `@dereekb/dbx-core`.',
+    whenItApplies: 'When the call site exists but the import statement does not name `provideDbxAssetLoader` from `@dereekb/dbx-core`.',
+    whenItDoesNotApply: 'Re-exports from a workspace-local barrel that proxies `@dereekb/dbx-core` — but those defeat tree-shaking and are discouraged.',
+    canonicalFix: 'Import `provideDbxAssetLoader` directly from `@dereekb/dbx-core`.'
+  },
+  {
+    code: 'DBX_ASSET_PROVIDER_MISSING',
+    source: 'dbx_asset_validate_app',
+    severity: 'error',
+    title: 'The Angular app config does not call `provideDbxAssetLoader(`',
+    whatItFlags: 'The Angular app config does not call `provideDbxAssetLoader(`.',
+    whenItApplies: 'Every Angular app whose `src/root.app.config.ts` should register the asset loader provider.',
+    whenItDoesNotApply: 'Apps that wire the loader from a non-standard config file — extend the scanner if so.',
+    canonicalFix: 'Add `provideDbxAssetLoader()` (from `@dereekb/dbx-core`) to the providers array in `<appDir>/src/root.app.config.ts`.'
+  },
+  {
+    code: 'DBX_ASSET_REMOTE_INVALID_URL',
+    source: 'dbx_asset_validate_app',
+    severity: 'error',
+    title: 'A `remoteAsset(...)` or `remoteAssetBaseUrl(...)` argument is not an',
+    whatItFlags: 'A `remoteAsset(...)` or `remoteAssetBaseUrl(...)` argument is not an\nabsolute http/https URL.',
+    whenItApplies: 'Every remote-builder argument that is a string literal but lacks an `http://` or `https://` prefix.',
+    whenItDoesNotApply: 'Arguments built from variables, template strings, or environment values — those cannot be statically validated.',
+    canonicalFix: "Use a literal absolute URL (e.g. `'https://cdn.example.com/data.json'`)."
+  },
+  {
+    code: 'DBX_ASSET_FOLDER_BARREL_MISSING',
+    source: 'dbx_asset_validate_folder',
+    severity: 'warning',
+    title: "The component's barrel `src/lib/index.ts` does not re-export `./assets`",
+    whatItFlags: "The component's barrel `src/lib/index.ts` does not re-export `./assets`.",
+    whenItApplies: "Components whose `src/lib/assets.ts` exists but isn't re-exported through the package barrel.",
+    whenItDoesNotApply: 'Components that intentionally hide their asset refs from downstream consumers.',
+    canonicalFix: "Add `export * from './assets';` to `<componentDir>/src/lib/index.ts`."
+  },
+  {
+    code: 'DBX_ASSET_FOLDER_COMPONENT_DIR_NOT_FOUND',
+    source: 'dbx_asset_validate_folder',
+    severity: 'error',
+    title: 'The component package root does not exist or is not a directory',
+    whatItFlags: 'The component package root does not exist or is not a directory.',
+    whenItApplies: 'When `componentDir` does not resolve to an existing directory.',
+    whenItDoesNotApply: "Validating an app that doesn't ship its own component package.",
+    canonicalFix: 'Pass a `componentDir` that points at a real `-firebase` component package.',
+    seeAlso: [
+      {
+        kind: 'tool',
+        target: 'dbx_asset_validate_app'
+      }
+    ]
+  },
+  {
+    code: 'DBX_ASSET_FOLDER_FILE_MISSING',
+    source: 'dbx_asset_validate_folder',
+    severity: 'error',
+    title: 'The component does not contain a `src/lib/assets.ts` file',
+    whatItFlags: 'The component does not contain a `src/lib/assets.ts` file.',
+    whenItApplies: 'Every `-firebase` component package that should expose an `AssetPathRef` catalog.',
+    whenItDoesNotApply: "Components that intentionally don't ship asset refs.",
+    canonicalFix: 'Add `<componentDir>/src/lib/assets.ts` exporting `AssetPathRef` constants.'
+  },
+  {
+    code: 'DBX_ASSET_FOLDER_NO_EXPORTS',
+    source: 'dbx_asset_validate_folder',
+    severity: 'warning',
+    title: '`assets.ts` exports neither an `AssetPathRef` constant nor an',
+    whatItFlags: '`assets.ts` exports neither an `AssetPathRef` constant nor an\n`AssetPathRef[]` aggregator.',
+    whenItApplies: 'Components whose `assets.ts` parses but exports no asset refs.',
+    whenItDoesNotApply: 'Empty placeholders awaiting first-use scaffolding.',
+    canonicalFix: 'Use `dbx_asset_scaffold` to add a first ref and aggregator.',
+    seeAlso: [
+      {
+        kind: 'tool',
+        target: 'dbx_asset_scaffold'
+      }
+    ]
+  },
+  {
     code: 'archetype-inconsistent',
     source: 'dbx_model_fixture_validate_app',
     severity: 'error',

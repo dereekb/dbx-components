@@ -288,7 +288,14 @@ async function buildEntryFromClass(input: BuildEntryFromClassInput): Promise<Bui
   const warnings: DbxDocsUiExamplesExtractWarning[] = [];
 
   for (const tagName of REQUIRED_TAGS) {
-    const value = tagName === SLUG_TAG ? tags.slug : tagName === CATEGORY_TAG ? tags.category : tags.summary;
+    let value: string | undefined;
+    if (tagName === SLUG_TAG) {
+      value = tags.slug;
+    } else if (tagName === CATEGORY_TAG) {
+      value = tags.category;
+    } else {
+      value = tags.summary;
+    }
     if (value === undefined || value.length === 0) {
       warnings.push({ kind: 'missing-required-tag', className, tag: tagName, filePath, line });
     }
@@ -440,8 +447,8 @@ interface MatchedElement {
 }
 
 function matchSingleElement(text: string, tagName: string): MatchedElement | undefined {
-  const escaped = tagName.replace(/[-]/g, '\\-');
-  const regex = new RegExp(`<${escaped}(\\s[^>]*)?>([\\s\\S]*?)</${escaped}>`);
+  const escaped = tagName.replaceAll('-', String.raw`\-`);
+  const regex = new RegExp(String.raw`<${escaped}(\s[^>]*)?>([\s\S]*?)</${escaped}>`);
   const match = regex.exec(text);
   if (match === null) {
     return undefined;
@@ -458,7 +465,7 @@ function extractInnerText(text: string, tagName: string): string | undefined {
 }
 
 function extractAttr(openTag: string, attrName: string): string | undefined {
-  const regex = new RegExp(`\\s${attrName}=("([^"]*)"|'([^']*)')`);
+  const regex = new RegExp(String.raw`\s${attrName}=("([^"]*)"|'([^']*)')`);
   const match = regex.exec(openTag);
   if (match === null) {
     return undefined;
@@ -638,7 +645,9 @@ interface AngularClassInspection {
   readonly template?: string;
 }
 
-function inspectAngularClass(decl: ClassDeclaration, sourcePath: string): AngularClassInspection {
+function inspectAngularClass(decl: ClassDeclaration, _sourcePath: string): AngularClassInspection {
+  // _sourcePath kept for API symmetry — useful for future enhancements like
+  // resolving cross-file inheritance.
   for (const decorator of decl.getDecorators()) {
     const name = decorator.getName();
     if (name === 'Component') {
@@ -684,9 +693,6 @@ function inspectAngularClass(decl: ClassDeclaration, sourcePath: string): Angula
     }
   }
   return { kind: 'class' };
-  // sourcePath kept for API symmetry — useful for future enhancements like
-  // resolving cross-file inheritance.
-  void sourcePath;
 }
 
 // MARK: Arktype runtime guard

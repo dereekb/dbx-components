@@ -134,28 +134,7 @@ export function createTokenRegistryFromEntries(input: { readonly entries: readon
         matches = [];
       } else {
         const candidates = role === undefined ? all : (byRoleImmutable.get(role) ?? []);
-        matches = [];
-        for (const entry of candidates) {
-          let best = 0;
-          for (const intent of entry.intents) {
-            const lower = intent.toLowerCase();
-            let score = 0;
-            if (lower === trimmed) {
-              score = 10;
-            } else if (lower.includes(trimmed)) {
-              score = 5;
-            } else if (trimmed.includes(lower) && lower.length > 0) {
-              score = 3;
-            }
-            if (score > best) {
-              best = score;
-            }
-          }
-          if (best > 0) {
-            matches.push({ entry, score: best });
-          }
-        }
-        matches.sort((a, b) => b.score - a.score);
+        matches = scoreEntriesByIntent(candidates, trimmed);
       }
       return matches;
     },
@@ -166,18 +145,7 @@ export function createTokenRegistryFromEntries(input: { readonly entries: readon
         matches = [];
       } else {
         const candidates = role === undefined ? all : (byRoleImmutable.get(role) ?? []);
-        matches = [];
-        for (const entry of candidates) {
-          let score = 0;
-          if (entry.defaults.light !== undefined && entry.defaults.light === trimmed) score = 10;
-          if (entry.defaults.dark !== undefined && entry.defaults.dark === trimmed && score < 10) score = 9;
-          if (score === 0 && entry.defaults.light?.includes(trimmed)) score = 4;
-          if (score === 0 && entry.defaults.dark?.includes(trimmed)) score = 3;
-          if (score > 0) {
-            matches.push({ entry, score });
-          }
-        }
-        matches.sort((a, b) => b.score - a.score);
+        matches = scoreEntriesByValue(candidates, trimmed);
       }
       return matches;
     },
@@ -196,6 +164,56 @@ export function createTokenRegistryFromEntries(input: { readonly entries: readon
 export const EMPTY_TOKEN_REGISTRY: TokenRegistry = createTokenRegistryFromEntries({ entries: [], loadedSources: [] });
 
 // MARK: Internals
+function scoreEntriesByIntent(candidates: readonly TokenEntry[], trimmed: string): ScoredTokenMatch[] {
+  const matches: ScoredTokenMatch[] = [];
+  for (const entry of candidates) {
+    const best = bestIntentScore(entry.intents, trimmed);
+    if (best > 0) {
+      matches.push({ entry, score: best });
+    }
+  }
+  matches.sort((a, b) => b.score - a.score);
+  return matches;
+}
+
+function bestIntentScore(intents: readonly string[], trimmed: string): number {
+  let best = 0;
+  for (const intent of intents) {
+    const lower = intent.toLowerCase();
+    let score = 0;
+    if (lower === trimmed) {
+      score = 10;
+    } else if (lower.includes(trimmed)) {
+      score = 5;
+    } else if (trimmed.includes(lower) && lower.length > 0) {
+      score = 3;
+    }
+    if (score > best) best = score;
+  }
+  return best;
+}
+
+function scoreEntriesByValue(candidates: readonly TokenEntry[], trimmed: string): ScoredTokenMatch[] {
+  const matches: ScoredTokenMatch[] = [];
+  for (const entry of candidates) {
+    const score = scoreEntryByValue(entry, trimmed);
+    if (score > 0) {
+      matches.push({ entry, score });
+    }
+  }
+  matches.sort((a, b) => b.score - a.score);
+  return matches;
+}
+
+function scoreEntryByValue(entry: TokenEntry, trimmed: string): number {
+  let score = 0;
+  if (entry.defaults.light !== undefined && entry.defaults.light === trimmed) score = 10;
+  if (entry.defaults.dark !== undefined && entry.defaults.dark === trimmed && score < 10) score = 9;
+  if (score === 0 && entry.defaults.light?.includes(trimmed)) score = 4;
+  if (score === 0 && entry.defaults.dark?.includes(trimmed)) score = 3;
+  return score;
+}
+
 function pushInto(map: Map<string, TokenEntry[]>, key: string, entry: TokenEntry): void {
   const existing = map.get(key);
   if (existing === undefined) {

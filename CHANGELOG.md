@@ -1,3 +1,19 @@
+## [13.10.9](https://github.com/dereekb/dbx-components/compare/v13.10.8-dev...v13.10.9) (2026-05-05)
+
+
+### Bug Fixes
+
+- **dbx-form:** datetime preset reverts under tz shift ([9b8dfecc](https://github.com/dereekb/dbx-components/commit/9b8dfecc48070b15a7a99a6899a846801c70f0fe))
+
+
+### Code Refactoring
+
+- added dbx-asset mcp tools ([dd0e199d](https://github.com/dereekb/dbx-components/commit/dd0e199dc924eb0c506134d85558726f0b5163ab))
+- added detectPdfEncryption to @dereekb/nestjs ([7e2a5e98](https://github.com/dereekb/dbx-components/commit/7e2a5e98284752ba90cddb0242f2e8296ac9641e))
+- enriched firebase-lookup model output ([efccc35f](https://github.com/dereekb/dbx-components/commit/efccc35fd7ffb5fead6184dd257120aa69881a5b))
+- resolve sonarqube issues ([c10ae11f](https://github.com/dereekb/dbx-components/commit/c10ae11fd71b6f5407762bc971e5d503ce562052))
+- sonarqube fixes ([08bf595b](https://github.com/dereekb/dbx-components/commit/08bf595b4f938d3657f37d11776f7ff15eebdf0e)), closes [Array#push](https://github.com/dereekb/Array/issues/push)
+
 ## [13.10.8](https://github.com/dereekb/dbx-components/compare/v13.10.7-dev...v13.10.8) (2026-05-05)
 
 
