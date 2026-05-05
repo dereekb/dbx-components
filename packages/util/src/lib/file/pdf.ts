@@ -51,6 +51,9 @@ export function bufferHasValidPdfMarkings(buffer: Pick<Buffer<ArrayBuffer>, 'las
  * Like {@link bufferHasValidPdfMarkings}, this is a lightweight heuristic — it detects
  * the vast majority of encrypted PDFs but does not fully parse the PDF structure.
  *
+ * Note: this returns true for both fully-encrypted PDFs and write-protected-only PDFs.
+ * Use `detectPdfEncryption` from `@dereekb/nestjs` when that distinction matters.
+ *
  * @example
  * ```ts
  * const pdfBytes = await readFile('protected.pdf');

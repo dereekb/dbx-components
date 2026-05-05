@@ -2,6 +2,10 @@ import { bufferHasValidPdfMarkings, isPdfPasswordProtected } from './pdf';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
+const TEST_ASSETS_DIR = resolve(__dirname, '../../../../../apps/demo-api/src/test/assets');
+const FULLY_ENCRYPTED_PDF = resolve(TEST_ASSETS_DIR, 'encryptedpdf.pdf');
+const WRITE_PROTECTED_R6_PDF = resolve(TEST_ASSETS_DIR, 'passwordprotectedwrite.pdf');
+
 describe('bufferHasValidPdfMarkings', () => {
   it('should return true for a buffer with valid PDF markers', () => {
     const content = '%PDF-1.4 some content %%EOF';
@@ -34,10 +38,13 @@ describe('bufferHasValidPdfMarkings', () => {
 });
 
 describe('isPdfPasswordProtected', () => {
-  const encryptedPdfPath = resolve(__dirname, '../../../../../apps/demo-api/src/test/assets/encryptedpdf.pdf');
+  it('should return true for a fully-encrypted PDF', () => {
+    const buffer = readFileSync(FULLY_ENCRYPTED_PDF);
+    expect(isPdfPasswordProtected(buffer)).toBe(true);
+  });
 
-  it('should return true for a password-protected PDF', () => {
-    const buffer = readFileSync(encryptedPdfPath);
+  it('should return true for a write-protected PDF (R=6)', () => {
+    const buffer = readFileSync(WRITE_PROTECTED_R6_PDF);
     expect(isPdfPasswordProtected(buffer)).toBe(true);
   });
 
