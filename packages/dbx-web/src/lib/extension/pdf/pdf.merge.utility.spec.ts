@@ -35,7 +35,7 @@ describe('classifyPdfMergeFile()', () => {
 describe('buildPdfMergeEntry()', () => {
   it('builds a validating entry for a supported file', () => {
     let counter = 0;
-    const entry = buildPdfMergeEntry(makeFile('a.pdf', 'application/pdf'), () => `id-${++counter}`);
+    const entry = buildPdfMergeEntry(makeFile('a.pdf', 'application/pdf'), { idFactory: () => `id-${++counter}` });
     expect(entry).not.toBeNull();
     expect(entry!.id).toBe('id-1');
     expect(entry!.kind).toBe('pdf');

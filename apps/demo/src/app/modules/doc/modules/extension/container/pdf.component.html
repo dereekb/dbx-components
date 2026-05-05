@@ -3,12 +3,19 @@
     <!-- Examples -->
     <doc-feature-example header="dbx-pdf-merge-editor" hint="Add files via drag-drop or the file picker, reorder by dragging the handle, then click Preview to merge and view the resulting PDF. Downstream consumers can subscribe to the store's mergeOutput$ for the merged blob.">
       <p>Drop PDFs (application/pdf) and/or images (PNG/JPEG) into the upload area. Drag the handle on each row to reorder. Pages are appended in list order; image entries become a single page sized to the image.</p>
-      <dbx-content-border>
-        <dbx-pdf-merge-editor [showPreviewButton]="true" [showDownloadButton]="true"></dbx-pdf-merge-editor>
-      </dbx-content-border>
-      @if (lastBlobSizeSignal(); as size) {
-        <p class="dbx-hint">Last merged blob size: {{ size }} bytes</p>
-      }
+      <doc-pdf-merge-editor-default-example></doc-pdf-merge-editor-default-example>
+    </doc-feature-example>
+    <doc-feature-example header="dbx-pdf-merge-editor with named slots" hint="Hide the default uploader and bottom file list, then project named slot uploaders and a dbxPdfMergeEditorFileUploadValidator directive. The merge output stays gated until every required slot is satisfied.">
+      <p>
+        Each slot owns its own upload area and inline file display, and is tagged with a `slotId`. The validator directive aggregates each slot's readiness — Preview/Download stay disabled until every
+        <em>required</em>
+        slot has a ready file. Optional slots (here, Insurance Card) only block when they contain an invalid file. State-aware icons projected through the slot's header use the `dbxPdfMergeEditorFileUploadHasState` directive.
+      </p>
+      <doc-pdf-merge-editor-slots-example></doc-pdf-merge-editor-slots-example>
+    </doc-feature-example>
+    <doc-feature-example header="dbx-pdf-merge-editor with max 3 files upload slot" hint="A single slot configured with multiple=true and maxFiles=3. The uploader hides automatically once three files are dropped; remove one to add a different file.">
+      <p>Slot capacity defaults to `1` for single-file slots and to `maxFiles` when set. Once the slot reaches capacity its `dbx-file-upload` is hidden — the user must remove an existing entry before adding more.</p>
+      <doc-pdf-merge-editor-max-files-example></doc-pdf-merge-editor-max-files-example>
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

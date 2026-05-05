@@ -33,6 +33,34 @@
     margin-right: 8px;
   }
 
+  // Slot upload
+  .dbx-pdf-merge-editor-file-upload {
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  .dbx-pdf-merge-editor-file-upload-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 0;
+  }
+
+  .dbx-pdf-merge-editor-file-upload-header:not(:empty) {
+    margin-bottom: 6px;
+  }
+
+  .dbx-pdf-merge-editor-file-upload-label {
+    font-weight: 500;
+  }
+
+  .dbx-pdf-merge-editor-file-upload-entries {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 6px;
+  }
+
   .dbx-pdf-preview {
     display: block;
     width: 100%;
