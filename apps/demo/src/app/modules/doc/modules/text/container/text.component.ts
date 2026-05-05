@@ -1,6 +1,30 @@
 import { type ClickableAnchor } from '@dereekb/dbx-core';
-import { type TextChip, type DbxChipDisplay, DbxContentContainerDirective, DbxContentPitDirective, DbxLinkifyComponent, type DbxLinkifyConfig, DbxLinkifyService, DbxTextChipsComponent, DbxChipDirective, DbxChipListComponent, DbxColorDirective, DbxButtonSpacerDirective, DbxLabelBlockComponent, DbxUnitedStatesAddressComponent, DbxDetailBlockComponent, DbxStepBlockComponent, DbxAnchorComponent, type NumberWithLimit, DbxNumberWithLimitComponent, DbxClickToCopyTextDirective } from '@dereekb/dbx-web';
+import {
+  type TextChip,
+  type DbxChipDisplay,
+  DbxContentContainerDirective,
+  DbxContentPitDirective,
+  DbxLinkifyComponent,
+  type DbxLinkifyConfig,
+  DbxLinkifyService,
+  DbxTextChipsComponent,
+  DbxChipDirective,
+  DbxChipListComponent,
+  DbxColorDirective,
+  DbxButtonSpacerDirective,
+  DbxLabelBlockComponent,
+  DbxUnitedStatesAddressComponent,
+  DbxDetailBlockComponent,
+  DbxStepBlockComponent,
+  DbxAnchorComponent,
+  type NumberWithLimit,
+  DbxNumberWithLimitComponent,
+  DbxClickToCopyTextDirective,
+  DbxIconTileDirective,
+  DbxIconTileComponent
+} from '@dereekb/dbx-web';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { MatIconModule } from '@angular/material/icon';
 import { type UnitedStatesAddressWithContact, dollarAmountString, unitedStatesAddressString } from '@dereekb/util';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
@@ -10,7 +34,29 @@ import { LOREM } from '../../shared';
 @Component({
   templateUrl: './text.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxContentPitDirective, DbxLinkifyComponent, DbxTextChipsComponent, DbxChipDirective, DbxChipListComponent, DbxColorDirective, DbxButtonSpacerDirective, DbxLabelBlockComponent, DbxNumberWithLimitComponent, DbxUnitedStatesAddressComponent, DbxDetailBlockComponent, DbxStepBlockComponent, DbxAnchorComponent, DbxClickToCopyTextDirective, DbxClickToCopyTextComponent],
+  imports: [
+    DbxContentContainerDirective,
+    DocFeatureLayoutComponent,
+    DocFeatureExampleComponent,
+    DbxContentPitDirective,
+    DbxLinkifyComponent,
+    DbxTextChipsComponent,
+    DbxChipDirective,
+    DbxChipListComponent,
+    DbxColorDirective,
+    DbxButtonSpacerDirective,
+    DbxLabelBlockComponent,
+    DbxNumberWithLimitComponent,
+    DbxUnitedStatesAddressComponent,
+    DbxDetailBlockComponent,
+    DbxStepBlockComponent,
+    DbxAnchorComponent,
+    DbxClickToCopyTextDirective,
+    DbxClickToCopyTextComponent,
+    DbxIconTileDirective,
+    DbxIconTileComponent,
+    MatIconModule
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocTextTextComponent {

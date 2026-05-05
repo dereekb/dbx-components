@@ -14,7 +14,7 @@ import { PROGRESS_ITEM_VALUES, type ProgressItemValue } from '../component/progr
  * @dbxDocsUiExampleSlug list-progress-with-button
  * @dbxDocsUiExampleCategory list
  * @dbxDocsUiExampleSummary Two-line list with template-painted icon tile, progress bar, and trailing button.
- * @dbxDocsUiExampleRelated dbx-list, dbx-list-two-line-item, dbx-icon-tile, dbx-color
+ * @dbxDocsUiExampleRelated dbx-list, dbx-list-two-line-item, icon-tile, dbx-color
  * @dbxDocsUiExampleUses {@link DocProgressItemListComponent} list
  * @dbxDocsUiExampleUses {@link DocProgressItemListViewComponent} view
  * @dbxDocsUiExampleUses {@link DocProgressItemListViewItemComponent} item
@@ -37,8 +37,10 @@ import { PROGRESS_ITEM_VALUES, type ProgressItemValue } from '../component/progr
         </p>
         <p>
           The leading element uses the reusable
-          <code>.dbx-icon-tile</code>
-          utility — a rounded, padded container that pairs with
+          <code>&lt;dbx-icon-tile&gt;</code>
+          component — a rounded, padded container that takes an
+          <code>[icon]</code>
+          input and pairs with
           <code>[dbxColor]</code>
           +
           <code>[dbxColorTone]</code>

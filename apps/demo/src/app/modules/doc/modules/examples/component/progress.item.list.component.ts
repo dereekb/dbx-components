@@ -1,9 +1,8 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { of } from 'rxjs';
-import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressBar } from '@angular/material/progress-bar';
-import { AbstractDbxSelectionListWrapperDirective, AbstractDbxSelectionListViewDirective, AbstractDbxValueListViewItemComponent, type DbxSelectionValueListViewConfig, provideDbxListView, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule, DbxSelectionValueListViewComponentImportsModule, DbxColorDirective } from '@dereekb/dbx-web';
+import { AbstractDbxSelectionListWrapperDirective, AbstractDbxSelectionListViewDirective, AbstractDbxValueListViewItemComponent, type DbxSelectionValueListViewConfig, provideDbxListView, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule, DbxSelectionValueListViewComponentImportsModule, DbxColorDirective, DbxIconTileComponent } from '@dereekb/dbx-web';
 import { type ProgressItemValue, type ProgressItemValueWithSelection } from './progress.item.list';
 
 /**
@@ -15,8 +14,9 @@ import { type ProgressItemValue, type ProgressItemValueWithSelection } from './p
  * - `.dbx-list-two-line-item-with-icon` — flags the template-supplied leading
  *   icon so the parent list view skips its built-in icon slot (the mapped
  *   item also drops its `icon` field to belt-and-suspenders this).
- * - `.dbx-icon-tile` — reusable rounded/padded icon container, paired with
- *   `[dbxColor]` + `[dbxColorTone]` for a tonal background.
+ * - `<dbx-icon-tile>` — reusable rounded/padded icon container, paired with
+ *   `[dbxColor]` + `[dbxColorTone]` for a tonal background. `class="item-icon"`
+ *   keeps the list row's leading-slot margins applied.
  * - `.dbx-list-item-padded-thick` — roomier row padding (`--dbx-padding-3`).
  * - `.dbx-list-item-card` — tinted, rounded surface around the row. Defaults
  *   to `--mat-sys-surface-container` + `--mat-sys-corner-large` (16px); both
@@ -67,33 +67,19 @@ export class DocProgressItemListViewComponent extends AbstractDbxSelectionListVi
 @Component({
   selector: 'doc-progress-item-list-view-item',
   template: `
-    <div class="dbx-list-item-padded-thick dbx-list-item-card dbx-list-two-line-item dbx-list-two-line-item-with-icon doc-progress-item">
-      <div class="item-icon dbx-icon-tile" [dbxColor]="'primary'" [dbxColorTone]="18">
-        <mat-icon>{{ icon }}</mat-icon>
-      </div>
+    <div class="dbx-mb2 dbx-list-item-padded-thick dbx-list-item-card dbx-list-two-line-item dbx-list-two-line-item-with-icon doc-progress-item">
+      <dbx-icon-tile class="item-icon" [icon]="icon" [dbxColor]="'primary'" [dbxColorTone]="18"></dbx-icon-tile>
       <div class="item-left">
-        <span class="doc-progress-item-title">{{ title }}</span>
-        <span class="item-details">{{ progress }} of {{ total }} complete</span>
-        <mat-progress-bar class="doc-progress-item-bar" mode="determinate" [value]="progressPercent"></mat-progress-bar>
+        <span class="dbx-bold dbx-pb1">{{ title }}</span>
+        <span class="item-details dbx-pb2">{{ progress }} of {{ total }} complete</span>
+        <mat-progress-bar mode="determinate" [value]="progressPercent"></mat-progress-bar>
       </div>
       <div class="item-right">
         <button mat-flat-button>View requirements</button>
       </div>
     </div>
   `,
-  styles: [
-    `
-      .doc-progress-item-title {
-        font-size: 1em;
-        font-weight: 600;
-      }
-
-      .doc-progress-item-bar {
-        margin-top: 6px;
-      }
-    `
-  ],
-  imports: [MatIconModule, MatButtonModule, MatProgressBar, DbxColorDirective],
+  imports: [MatButtonModule, MatProgressBar, DbxColorDirective, DbxIconTileComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

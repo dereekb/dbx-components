@@ -76,6 +76,11 @@ $list-item-padded-min-height: 42px;
     }
   }
 
+  .dbx-list-view .dbx-list-card-items-list {
+    // TODO: Apply the "card" style from .dbx-list-item-card to mat-mdc-list-item mdc-list-item, etc.
+    // also needs a bottom margin or padding outside of the hover effects.
+  }
+
   .dbx-list-view-no-meta-padding {
     .mdc-list-item--with-trailing-meta.mdc-list-item {
       padding-left: 4px;
@@ -134,19 +139,9 @@ $list-item-padded-min-height: 42px;
     border-radius: var(--dbx-list-item-card-border-radius, var(--mat-sys-corner-large, calc(var(--mat-chip-container-shape-radius) * 2)));
   }
 
-  // Reusable rounded, padded icon container. Composable with any leading-icon
-  // slot and works with `[dbxColor]` for tinted backgrounds. Decoupled from
-  // the list layout — usable wherever a leading icon tile is wanted.
-  .dbx-icon-tile {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 12px;
-    padding: 8px;
-  }
-
   // When the tile is the leading icon in a two-line list item, override the
-  // default `.item-icon` flat spacing with tile-appropriate margins.
+  // default `.item-icon` flat spacing with tile-appropriate margins. The
+  // base `.dbx-icon-tile` rule lives in `_text.scss` next to its component.
   .dbx-list-two-line-item .item-icon.dbx-icon-tile {
     padding: 8px;
     margin: 0 12px 0 4px;

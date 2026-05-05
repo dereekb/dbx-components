@@ -14,8 +14,9 @@ import { type TwoLineItemValue, type TwoLineItemValueWithSelection } from './two
  * item), so the item template only fills `.item-left` and `.item-right`. To
  * paint a custom icon from the template instead — e.g. in grid/accordion
  * views, or when you want a coloured tile — add
- * `.dbx-list-two-line-item-with-icon` to the row and use the reusable
- * `.dbx-icon-tile` utility (see the customized progress-item demo).
+ * `.dbx-list-two-line-item-with-icon` to the row and drop a
+ * `<dbx-icon-tile class="item-icon" [icon]="…" [dbxColor]="…">` inside
+ * (see the customized progress-item demo).
  */
 @Component({
   selector: 'doc-two-line-item-list',

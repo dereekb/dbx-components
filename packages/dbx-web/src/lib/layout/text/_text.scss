@@ -12,7 +12,7 @@ $dbx-detail-block-bottom-padding: 12px;
 $dbx-detail-block-content-offset: 30px;
 $click-to-copy-icon-size: 18px;
 $dbx-detail-block-big-header-icon-size: 18px;
-
+$dbx-icon-tile-default-icon-size: 24px;
 $dbx-step-block-badge-size: 32px;
 $dbx-step-block-gap: 16px;
 $dbx-step-block-padding: 16px;
@@ -145,22 +145,57 @@ $dbx-step-block-badge-font-weight: 600;
     align-items: center;
   }
 
-  .dbx-step-block-badge {
-    width: var(--dbx-step-block-badge-size, #{$dbx-step-block-badge-size});
-    height: var(--dbx-step-block-badge-size, #{$dbx-step-block-badge-size});
-    min-width: var(--dbx-step-block-badge-size, #{$dbx-step-block-badge-size});
-    border-radius: var(--dbx-step-block-badge-shape, 50%);
+  // Reusable rounded, padded icon container. Composable with any leading-icon
+  // slot and works with `[dbxColor]` for tinted backgrounds. Decoupled from
+  // the list layout — usable wherever a leading icon tile is wanted.
+  // Also exposed via the `<dbx-icon-tile>` component (DbxIconTileComponent)
+  // and the `[dbxIconTile]` directive (DbxIconTileDirective). All sizing,
+  // padding, radius, font, and inner icon size are exposed as CSS variables
+  // so consumer surfaces (e.g. `.dbx-step-block-badge`) can compose by
+  // setting variables instead of rewriting rules. Host-level vars (width /
+  // height / min-width / font-size / font-weight) have no fallback so an
+  // unset variable produces an invalid declaration the browser ignores —
+  // the tile then falls back to natural (auto / inherited) sizing. The
+  // inner `.mat-icon` falls back to Material's own 24px default so
+  // overriding our selector doesn't shrink the glyph.
+  .dbx-icon-tile {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: var(--dbx-step-block-badge-font-size, #{$dbx-step-block-badge-font-size});
-    font-weight: var(--dbx-step-block-badge-font-weight, #{$dbx-step-block-badge-font-weight});
+    border-radius: var(--dbx-icon-tile-border-radius, 12px);
+    padding: var(--dbx-icon-tile-padding, 8px);
+    width: var(--dbx-icon-tile-width);
+    height: var(--dbx-icon-tile-height);
+    min-width: var(--dbx-icon-tile-min-width);
+    font-size: var(--dbx-icon-tile-font-size);
+    font-weight: var(--dbx-icon-tile-font-weight);
 
     .mat-icon {
-      width: var(--dbx-step-block-badge-icon-size, #{$dbx-step-block-badge-icon-size});
-      height: var(--dbx-step-block-badge-icon-size, #{$dbx-step-block-badge-icon-size});
-      font-size: var(--dbx-step-block-badge-icon-size, #{$dbx-step-block-badge-icon-size});
+      width: var(--dbx-icon-tile-icon-size, $dbx-icon-tile-default-icon-size);
+      height: var(--dbx-icon-tile-icon-size, $dbx-icon-tile-default-icon-size);
+      font-size: var(--dbx-icon-tile-icon-size, $dbx-icon-tile-default-icon-size);
     }
+  }
+
+  // Round modifier — turns the rounded-square tile into a circle. Pair
+  // with explicit width/height (or square content) to keep it true round.
+  .dbx-icon-tile-round {
+    border-radius: 50%;
+  }
+
+  // Composes `.dbx-icon-tile` — the badge is a fixed-size circle (or
+  // square via `--dbx-step-block-badge-shape`) sized through the tile's
+  // CSS variables. Padding is reset to 0 because the badge sizes by
+  // explicit width/height, not by content + padding.
+  .dbx-step-block-badge {
+    --dbx-icon-tile-padding: 0;
+    --dbx-icon-tile-border-radius: var(--dbx-step-block-badge-shape, 50%);
+    --dbx-icon-tile-width: var(--dbx-step-block-badge-size, #{$dbx-step-block-badge-size});
+    --dbx-icon-tile-height: var(--dbx-step-block-badge-size, #{$dbx-step-block-badge-size});
+    --dbx-icon-tile-min-width: var(--dbx-step-block-badge-size, #{$dbx-step-block-badge-size});
+    --dbx-icon-tile-font-size: var(--dbx-step-block-badge-font-size, #{$dbx-step-block-badge-font-size});
+    --dbx-icon-tile-font-weight: var(--dbx-step-block-badge-font-weight, #{$dbx-step-block-badge-font-weight});
+    --dbx-icon-tile-icon-size: var(--dbx-step-block-badge-icon-size, #{$dbx-step-block-badge-icon-size});
   }
 
   .dbx-step-block-content {
