@@ -38,6 +38,7 @@ const { runPipesScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/sr
 const { runActionsScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/actions-cli.ts`);
 const { runFiltersScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/filters-cli.ts`);
 const { runDbxDocsUiExamplesScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/dbx-docs-ui-examples-cli.ts`);
+const { runCssUtilitiesScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/css-utilities-cli.ts`);
 
 /**
  * Bundled manifests stamp a fixed `generatedAt` so the produced JSON is
@@ -71,7 +72,8 @@ const CLUSTER_DISPATCH = {
   pipes: { run: runPipesScanCli, sectionKey: 'pipes', label: 'pipes' },
   actions: { run: runActionsScanCli, sectionKey: 'actions', label: 'actions' },
   filters: { run: runFiltersScanCli, sectionKey: 'filters', label: 'filters' },
-  dbxDocsUiExamples: { run: runDbxDocsUiExamplesScanCli, sectionKey: 'dbxDocsUiExamples', label: 'dbx-docs-ui-examples' }
+  dbxDocsUiExamples: { run: runDbxDocsUiExamplesScanCli, sectionKey: 'dbxDocsUiExamples', label: 'dbx-docs-ui-examples' },
+  cssUtilities: { run: runCssUtilitiesScanCli, sectionKey: 'cssUtilities', label: 'css-utilities' }
 };
 
 const results = [];

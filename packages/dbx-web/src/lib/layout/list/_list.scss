@@ -76,6 +76,9 @@ $list-item-padded-min-height: 42px;
     }
   }
 
+  /// @dbx-utility list-view-no-meta-padding
+  /// @intent strip the leading + trailing padding around `mdc-list-item--with-trailing-meta` rows so meta-only items hug their container
+  /// @role spacing
   .dbx-list-view-no-meta-padding {
     .mdc-list-item--with-trailing-meta.mdc-list-item {
       padding-left: 4px;
@@ -96,6 +99,9 @@ $list-item-padded-min-height: 42px;
     }
   }
 
+  /// @dbx-utility list-sticky-headers
+  /// @intent pin `.dbx-list-view-group-header` rows to the top of the list while scrolling
+  /// @role state
   .dbx-list-sticky-headers {
     .dbx-list-view-group .dbx-list-view-group-header,
     .dbx-list-view-group.dbx-list-view-group-header {
@@ -111,11 +117,19 @@ $list-item-padded-min-height: 42px;
     }
   }
 
+  /// @dbx-utility list-item-padded
+  /// @intent baseline padded list-row spacing — guarantees `min-height` plus a tight 2px/6px padding pair
+  /// @role spacing
+  /// @see-also dbx-list-item-padded-thick, dbx-list-item-p0
   .dbx-list-item-padded {
     min-height: $list-item-padded-min-height;
     padding: 2px 6px;
   }
 
+  /// @dbx-utility list-item-padded-thick
+  /// @intent thicker padded list-row spacing — same `min-height` as `.dbx-list-item-padded` with the workspace `theming.$padding-3` token
+  /// @role spacing
+  /// @see-also dbx-list-item-padded
   .dbx-list-item-padded-thick {
     min-height: $list-item-padded-min-height;
     padding: theming.$padding-3;
@@ -136,6 +150,9 @@ $list-item-padded-min-height: 42px;
   //     the host theme doesn't emit the M3 shape tokens.
   // Spacing between cards is exposed as `--dbx-list-card-items-list-gap`
   // (default `8px`).
+  /// @dbx-utility list-card-items-list
+  /// @intent render each list row as a tinted, rounded card surface with a configurable inter-card gap
+  /// @role layout
   .dbx-list-card-items-list {
     --dbx-list-card-items-list-gap: 8px;
 
@@ -169,6 +186,10 @@ $list-item-padded-min-height: 42px;
     margin: 0 12px 0 4px;
   }
 
+  /// @dbx-utility list-two-line-item
+  /// @intent two-line list-row layout — flex row with a left column (title + details) and an optional right slot, paired with nested `.item-icon` / `.item-left` / `.item-right` / `.item-title` / `.item-details` / `.item-details-footnote` helpers
+  /// @role layout
+  /// @see-also dbx-list-item-padded
   .dbx-list-two-line-item {
     // item broken into a left and right, and up to two rows on the left with 1 row on the right.
     display: flex;
@@ -210,6 +231,9 @@ $list-item-padded-min-height: 42px;
     }
   }
 
+  /// @dbx-utility list-no-hover-effects
+  /// @intent disable hover cursor + state-layer opacity on list items inside a `.dbx-list`
+  /// @role state
   .dbx-list-no-hover-effects .dbx-list > .dbx-list-content .dbx-list-view .mat-mdc-list-item {
     cursor: unset;
 
@@ -218,6 +242,10 @@ $list-item-padded-min-height: 42px;
     }
   }
 
+  /// @dbx-utility list-no-item-padding
+  /// @intent zero the inner `.mat-mdc-list-item-content` padding on every nav-list row in a `.dbx-list`
+  /// @role spacing
+  /// @see-also dbx-list-item-p0
   .dbx-list-no-item-padding .dbx-list > .dbx-list-content .dbx-list-view > .mat-mdc-nav-list .dbx-list-view-item.mat-mdc-list-item > .mat-mdc-list-item-content {
     padding: 0;
   }
@@ -229,6 +257,10 @@ $list-item-padded-min-height: 42px;
   // padding would otherwise double up. Complements the container-scope
   // `.dbx-list-no-item-padding`, which zeros the inner
   // `.mat-mdc-list-item-content` padding for all items in the list.
+  /// @dbx-utility list-item-p0
+  /// @intent zero all padding on the host `.mat-mdc-list-item` — per-item complement to `.dbx-list-no-item-padding` for templates that supply their own padding/leading element
+  /// @role spacing
+  /// @see-also dbx-list-no-item-padding
   .dbx-list-item-p0 .mat-mdc-list-item.mdc-list-item {
     padding: 0;
   }

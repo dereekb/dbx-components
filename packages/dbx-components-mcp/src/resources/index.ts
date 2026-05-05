@@ -10,6 +10,7 @@
  *   dbx://ui/components[/{slug} | /category/{category} | /kind/{kind}]
  *   dbx://pipe/entries[/{slug} | /category/{category}]
  *   dbx://filter/entries[/{slug} | /kind/{kind}]
+ *   dbx://css-utility/entries[/{slug} | /role/{role} | /source/{source}]
  *
  * Resource-less clusters (route, storagefile_m, notification_m, system_m,
  * artifact) don't expose data endpoints because their output is computed from
@@ -23,6 +24,7 @@ import type { ForgeFieldRegistry } from '../registry/forge-fields.js';
 import type { PipeRegistry } from '../registry/pipes-runtime.js';
 import type { SemanticTypeRegistry } from '../registry/semantic-types.js';
 import type { TokenRegistry } from '../registry/tokens-runtime.js';
+import type { CssUtilityRegistry } from '../registry/css-utilities-runtime.js';
 import type { UiComponentRegistry } from '../registry/ui-components-runtime.js';
 import { registerFormFieldsResource } from './form-fields.resource.js';
 import { registerFirebaseModelsResource } from './firebase-models.resource.js';
@@ -32,6 +34,7 @@ import { registerPipesResource } from './pipes.resource.js';
 import { registerFiltersResource } from './filters.resource.js';
 import { registerSemanticTypesResource } from './semantic-types.resource.js';
 import { registerTokensResource } from './tokens.resource.js';
+import { registerCssUtilityResource } from './css-utility.resource.js';
 
 /**
  * Options consumed by {@link registerResources}. Mirrors {@link RegisterToolsOptions}
@@ -47,6 +50,7 @@ export interface RegisterResourcesOptions {
   readonly actionRegistry?: ActionRegistry;
   readonly filterRegistry?: FilterRegistry;
   readonly tokenRegistry?: TokenRegistry;
+  readonly cssUtilityRegistry?: CssUtilityRegistry;
 }
 
 /**
@@ -79,5 +83,8 @@ export function registerResources(server: McpServer, options: RegisterResourcesO
   }
   if (options.tokenRegistry !== undefined) {
     registerTokensResource(server, { registry: options.tokenRegistry });
+  }
+  if (options.cssUtilityRegistry !== undefined) {
+    registerCssUtilityResource(server, { registry: options.cssUtilityRegistry });
   }
 }

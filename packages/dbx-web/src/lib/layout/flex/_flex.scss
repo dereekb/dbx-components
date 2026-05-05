@@ -6,6 +6,10 @@ $dbx-flex-group-columns-count: 6;
 
 // MARK: Mixin
 @mixin core() {
+  /// @dbx-utility flex-bar
+  /// @intent horizontal action bar — flex row that scrolls horizontally before wrapping
+  /// @role flex
+  /// @see-also dbx-flex-center, dbx-flex-fill
   .dbx-flex-bar {
     display: flex;
     align-items: center;
@@ -23,21 +27,38 @@ $dbx-flex-group-columns-count: 6;
     --mat-fab-small-touch-target-size: 40px;
   }
 
+  /// @dbx-utility flex-center
+  /// @intent center children both axes via flex
+  /// @role flex
+  /// @see-also dbx-flex-bar, dbx-flex-column
   .dbx-flex-center {
     display: flex;
     align-items: center;
     justify-content: center;
   }
 
+  /// @dbx-utility flex-column
+  /// @intent vertical flex stack — children laid out top-to-bottom
+  /// @role flex
+  /// @see-also dbx-flex-bar
   .dbx-flex-column {
     display: flex;
     flex-direction: column;
   }
 
+  /// @dbx-utility flex-fill
+  /// @intent fill remaining space inside a flex container
+  /// @role flex
+  /// @see-also dbx-flex-fill-0
+  /// @anti-use Use dbx-flex-fill-0 when the fill child must also truncate or otherwise shrink below its intrinsic width.
   .dbx-flex-fill {
     flex: 1;
   }
 
+  /// @dbx-utility flex-fill-0
+  /// @intent fill remaining flex space and allow the child to truncate (`min-width: 0` overrides the default flex-item `min-width: auto`)
+  /// @role flex
+  /// @see-also dbx-flex-fill, dbx-text-truncate
   // `min-width: 0` lets the flex item shrink below its content's intrinsic
   // width — required for child truncation (e.g. `.dbx-text-truncate`) to
   // actually clip inside the fill region.
@@ -46,6 +67,10 @@ $dbx-flex-group-columns-count: 6;
     min-width: 0;
   }
 
+  /// @dbx-utility flex-group
+  /// @intent responsive flex grid — children opt into widths via .dbx-flex-1 ... .dbx-flex-6
+  /// @role flex
+  /// @see-also dbx-flex-bar
   .dbx-flex-group {
     display: flex;
     flex-wrap: wrap;

@@ -115,5 +115,17 @@
         "out": "packages/dbx-components-mcp/generated/dereekb-demo.dbx-docs-ui-examples.mcp.generated.json"
       }
     ]
+  },
+  "cssUtilities": {
+    "scan": [
+      {
+        "project": "packages/dbx-web",
+        "source": "@dereekb/dbx-web",
+        "module": "@dereekb/dbx-web",
+        "include": ["src/lib/**/*.scss"],
+        "exclude": ["src/lib/extension/**", "**/_variables.scss", "**/_root-variables.scss"],
+        "out": "packages/dbx-components-mcp/generated/dereekb-dbx-web.css-utilities.mcp.generated.json"
+      }
+    ]
   }
 }

@@ -61,6 +61,7 @@
  * | dbx_artifact_scaffold               | Generation    | "Give me the body for a new <artifact>."               |
  * | dbx_artifact_file_convention        | Reference     | "Where do I put a new <artifact>?"                     |
  * | dbx_css_token_lookup                | Documentation | "What's the canonical CSS token for X?" (intent/value/role)|
+ * | dbx_css_class_lookup                | Documentation | "Is there already a dbx-web utility class for these declarations / this intent?" |
  * | dbx_ui_smell_check                  | Verification  | "Did my new component re-implement an existing primitive?" |
  * | dbx_explain_rule                    | Reference     | "Explain validation rule X — when does it apply?"      |
  * | dbx_app_validate                    | Verification  | "Validate the whole app (component + API) end-to-end." |
@@ -123,6 +124,7 @@ import { mcpConfigTool } from './mcp-config.tool.js';
 import { createSemanticTypeLookupTool } from './lookup-semantic-type.tool.js';
 import { createSemanticTypeSearchTool } from './search-semantic-type.tool.js';
 import { createCssTokenLookupTool } from './css-token-lookup.tool.js';
+import { createCssClassLookupTool } from './css-class-lookup.tool.js';
 import { createUiSmellCheckTool } from './ui-smell-check.tool.js';
 import type { ActionRegistry } from '../registry/actions-runtime.js';
 import type { FilterRegistry } from '../registry/filters-runtime.js';
@@ -130,6 +132,7 @@ import type { ForgeFieldRegistry } from '../registry/forge-fields.js';
 import type { PipeRegistry } from '../registry/pipes-runtime.js';
 import type { SemanticTypeRegistry } from '../registry/semantic-types.js';
 import type { TokenRegistry } from '../registry/tokens-runtime.js';
+import type { CssUtilityRegistry } from '../registry/css-utilities-runtime.js';
 import type { UiComponentRegistry } from '../registry/ui-components-runtime.js';
 import type { DbxDocsUiExamplesRegistry } from '../registry/dbx-docs-ui-examples-runtime.js';
 import { toolError, type DbxTool } from './types.js';
@@ -221,6 +224,11 @@ export interface RegisterToolsOptions {
    */
   readonly tokenRegistry?: TokenRegistry;
   /**
+   * Optional css-utility registry. Required for `dbx_css_class_lookup`;
+   * when omitted that tool is skipped.
+   */
+  readonly cssUtilityRegistry?: CssUtilityRegistry;
+  /**
    * Working directory used by `dbx_ui_smell_check` to resolve
    * `dbx-mcp.config.json` for project convention overrides.
    */
@@ -277,6 +285,9 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions =
     if (options.uiComponentRegistry !== undefined) {
       tools.push(createUiSmellCheckTool({ tokenRegistry: options.tokenRegistry, uiComponentRegistry: options.uiComponentRegistry, cwd: options.cwd }));
     }
+  }
+  if (options.cssUtilityRegistry !== undefined) {
+    tools.push(createCssClassLookupTool({ registry: options.cssUtilityRegistry }));
   }
 
   underlyingServer.setRequestHandler(ListToolsRequestSchema, async () => {

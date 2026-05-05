@@ -103,6 +103,9 @@ $dbx-border-opacity-default: 20%;
     padding: 0 2px; // Override padding
   }
 
+  /// @dbx-utility content-container
+  /// @intent centered, padded content container with width-class and padding-class modifiers
+  /// @role layout
   .dbx-content-container {
     margin: auto;
     padding: 0 $content-container-padding;
