@@ -16,6 +16,12 @@ import { DBX_FORGE_TEST_PROVIDERS } from '../../../form/forge.component.spec';
 import { DbxForgeAsyncConfigFormComponent } from '../../../form';
 import { SELF_DEPENDENCY_TOKEN } from '../../field';
 
+async function settleForgeFixture(fixture: ComponentFixture<DbxForgeAsyncConfigFormComponent>): Promise<void> {
+  fixture.detectChanges();
+  await waitForMs(0);
+  await fixture.whenStable();
+}
+
 // Shared key set for DbxForgeTextFieldConfig (DbxForgeAddressLineFieldConfig extends Partial<DbxForgeTextFieldConfig>).
 type DbxForgeTextFieldConfigKeys =
   // From DbxForgeFieldFunctionDef<DbxForgeStringInputFieldDef>
@@ -433,11 +439,7 @@ describe('dbxForgeAddressGroup() scenarios', () => {
     TestBed.resetTestingModule();
   });
 
-  async function settle(): Promise<void> {
-    fixture.detectChanges();
-    await waitForMs(0);
-    await fixture.whenStable();
-  }
+  const settle = () => settleForgeFixture(fixture);
 
   describe('nested stateField idempotentTransform', () => {
     // Regression: the dbxForgeStateField's idempotent transform sits inside the
@@ -492,11 +494,7 @@ describe('dbxForgeAddressListField() scenarios', () => {
     TestBed.resetTestingModule();
   });
 
-  async function settle(): Promise<void> {
-    fixture.detectChanges();
-    await waitForMs(0);
-    await fixture.whenStable();
-  }
+  const settle = () => settleForgeFixture(fixture);
 
   describe('per-item stateField idempotentTransform', () => {
     // Deepest nesting we ship: array > itemContainer > container(flex) > input(state).

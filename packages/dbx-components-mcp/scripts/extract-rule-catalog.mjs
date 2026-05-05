@@ -249,7 +249,9 @@ function relPath(p) {
   return relative(WORKSPACE_ROOT, p).split('\\').join('/');
 }
 
-main().catch((err) => {
+try {
+  await main();
+} catch (err) {
   console.error(err);
   process.exit(1);
-});
+}

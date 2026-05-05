@@ -144,7 +144,7 @@ export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionCo
     }
 
     if (error != null) {
-      return Promise.reject(error instanceof Error ? error : new Error(String(error)));
+      throw error instanceof Error ? error : new Error(String(error));
     }
 
     return result as O;

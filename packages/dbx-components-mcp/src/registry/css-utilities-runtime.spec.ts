@@ -196,14 +196,14 @@ describe('createCssUtilityRegistryFromEntries — parent grouping', () => {
   it('findByIntent re-includes children when includeChildren is true', () => {
     const registry = createCssUtilityRegistryFromEntries({ entries: PARENT_ENTRIES, loadedSources: ['@dereekb/dbx-web'] });
     const matches = registry.findByIntent('two-line list', { includeChildren: true });
-    const slugs = matches.map((m) => m.entry.slug).sort();
+    const slugs = matches.map((m) => m.entry.slug).sort((a, b) => a.localeCompare(b));
     expect(slugs).toEqual(['list-two-line-item', 'list-two-line-item-icon', 'list-two-line-item-title']);
   });
 
   it("findByIntent scoped to parent returns only that parent's children", () => {
     const registry = createCssUtilityRegistryFromEntries({ entries: PARENT_ENTRIES, loadedSources: ['@dereekb/dbx-web'] });
     const matches = registry.findByIntent('list', { parent: 'list-two-line-item' });
-    expect(matches.map((m) => m.entry.slug).sort()).toEqual(['list-two-line-item-icon', 'list-two-line-item-title']);
+    expect(matches.map((m) => m.entry.slug).sort((a, b) => a.localeCompare(b))).toEqual(['list-two-line-item-icon', 'list-two-line-item-title']);
   });
 
   it('searchByDeclarations excludes children by default', () => {

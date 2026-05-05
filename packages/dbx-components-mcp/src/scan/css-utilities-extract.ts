@@ -79,7 +79,7 @@
  * No PostCSS dependency.
  */
 
-import { type CssUtilityRoleValue, type CssUtilityScopeValue , CSS_UTILITY_ROLES, CSS_UTILITY_SCOPES } from '../manifest/css-utilities-schema.js';
+import { type CssUtilityRoleValue, type CssUtilityScopeValue, CSS_UTILITY_ROLES, CSS_UTILITY_SCOPES } from '../manifest/css-utilities-schema.js';
 
 // MARK: Public types
 /**
@@ -438,15 +438,13 @@ function findNextRuleStart(lines: readonly string[], from: number): RuleStart | 
         // Non-blank, non-comment, non-selector, non-rule line — annotation is orphan.
         bail = true;
       }
+    } else if (line.includes('{')) {
+      const endLine = findRuleEnd(lines, cursor);
+      result = { line: selectorStart, endLine };
+    } else if (trimmed.length === 0 || trimmed.startsWith('//') || trimmed.endsWith(',') || /^\.[A-Za-z_]/.test(trimmed)) {
+      cursor += 1;
     } else {
-      if (line.includes('{')) {
-        const endLine = findRuleEnd(lines, cursor);
-        result = { line: selectorStart, endLine };
-      } else if (trimmed.length === 0 || trimmed.startsWith('//') || trimmed.endsWith(',') || /^\.[A-Za-z_]/.test(trimmed)) {
-        cursor += 1;
-      } else {
-        bail = true;
-      }
+      bail = true;
     }
   }
   return result;

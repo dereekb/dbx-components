@@ -60,7 +60,7 @@ export class DocFormDateValueComponent {
     arrivalTime: addHours(startOfDay(new Date()), 9) // initial value for the HelloSubs repro field — required for the bug to manifest
   });
 
-  private _timezone = completeOnDestroy(new BehaviorSubject<Maybe<TimezoneString>>(undefined));
+  private readonly _timezone = completeOnDestroy(new BehaviorSubject<Maybe<TimezoneString>>(undefined));
 
   readonly timezone$ = this._timezone.asObservable();
 
@@ -674,7 +674,7 @@ export class DocFormDateValueComponent {
     })
   ];
 
-  private _newDateValue = completeOnDestroy(new BehaviorSubject<Maybe<Date>>(undefined));
+  private readonly _newDateValue = completeOnDestroy(new BehaviorSubject<Maybe<Date>>(undefined));
   private baseDate$ = of(new Date()).pipe(delay(100));
 
   onAsyncDateValueChange(value: Maybe<{ date: Maybe<Date> }>): void {

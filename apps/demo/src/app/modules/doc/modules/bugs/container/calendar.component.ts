@@ -103,7 +103,7 @@ export class DocBugsCalendarComponent {
   readonly selectionValueSelectedIndexes$ = this.dbxCalendarScheduleSelectionStore.selectionValueSelectedIndexes$.pipe(map((x) => Array.from(x).sort((a, b) => a - b)));
   readonly selectionValueSelectedIndexesSignal = toSignal(this.selectionValueSelectedIndexes$, { initialValue: undefined });
 
-  readonly selectionValueSelectedDates$ = this.dbxCalendarScheduleSelectionStore.selectionValueSelectedDates$.pipe(map((x) => Array.from(x).sort()));
+  readonly selectionValueSelectedDates$ = this.dbxCalendarScheduleSelectionStore.selectionValueSelectedDates$.pipe(map((x) => Array.from(x).sort((a, b) => a.localeCompare(b))));
   readonly selectionValueSelectedDatesSignal = toSignal(this.selectionValueSelectedDates$, { initialValue: undefined });
 
   readonly toggledIndexes$ = this.dbxCalendarScheduleSelectionStore.state$.pipe(map((x) => Array.from(x.toggledIndexes).sort((a, b) => a - b)));
