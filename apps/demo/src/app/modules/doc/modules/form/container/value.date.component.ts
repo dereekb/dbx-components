@@ -27,10 +27,10 @@ import {
   DbxFormSourceDirective,
   DbxFormValueChangeDirective
 } from '@dereekb/dbx-form';
-import { addDays, addHours, addMinutes, addMonths, endOfDay, endOfMonth, startOfDay, startOfMonth } from 'date-fns';
+import { addDays, addHours, addMinutes, addMonths, differenceInHours, endOfDay, endOfMonth, startOfDay, startOfMonth } from 'date-fns';
 import { type Maybe, type TimezoneString } from '@dereekb/util';
-import { BehaviorSubject, type Observable, delay, interval, map, of } from 'rxjs';
-import { DateRangeType, DateCellScheduleDayCode, type DateCellScheduleEncodedWeek, dateRange, dateTimezoneUtcNormal, toJsDate, roundDownToMinute, isSameDate, findMaxDate, findMinDate } from '@dereekb/date';
+import { BehaviorSubject, type Observable, combineLatest, delay, interval, map, of } from 'rxjs';
+import { DateRangeType, DateCellScheduleDayCode, type DateCellScheduleEncodedWeek, dateRange, dateTimezoneUtcNormal, toJsDate, roundDownToMinute, isSameDate, isSameDateDay, findMaxDate, findMinDate } from '@dereekb/date';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
@@ -56,12 +56,42 @@ export class DocFormDateValueComponent {
     minuteOfDay: 720,
     changingConfiguration: new Date(),
     dateOnlyWithLockedTimezone: dateTimezoneUtcNormal({ timezone: 'Asia/Tokyo' }).systemDateToTargetDate(startOfDay(new Date())),
-    timeOnlyWithLockedTimezone: dateTimezoneUtcNormal({ timezone: 'America/New_York' }).systemDateToTargetDate(startOfDay(new Date()))
+    timeOnlyWithLockedTimezone: dateTimezoneUtcNormal({ timezone: 'America/New_York' }).systemDateToTargetDate(startOfDay(new Date())),
+    arrivalTime: addHours(startOfDay(new Date()), 9) // initial value for the HelloSubs repro field — required for the bug to manifest
   });
 
   private _timezone = completeOnDestroy(new BehaviorSubject<Maybe<TimezoneString>>(undefined));
 
   readonly timezone$ = this._timezone.asObservable();
+
+  // HelloSubs jobWorkerTimesheetTimeField() repro fixtures (jobworkertimesheet.day.editor.component.ts arrivalTimeFormConfig).
+  // Uses static `of(...)` observables for isHourlyRate$ and dayTimeRangeForSystem$.
+  readonly isHourlyRate$: Observable<boolean> = of(false);
+  readonly dayTimeRangeForSystem$: Observable<{ start: Date; end: Date }> = of({
+    start: addHours(startOfDay(new Date()), 9),
+    end: addHours(startOfDay(new Date()), 17)
+  });
+  readonly startsAtTimeForSystem$: Observable<Date> = this.dayTimeRangeForSystem$.pipe(map((x) => x.start));
+  readonly arrivalTimePickerConfig$: Observable<DbxDateTimePickerConfiguration> = combineLatest([this.isHourlyRate$, this.dayTimeRangeForSystem$]).pipe(
+    map(([isHourlyRate, timeRange]) => {
+      const limits = {
+        min: isHourlyRate ? addHours(timeRange.start, -8) : timeRange.start,
+        max: addHours(timeRange.start, 8)
+      };
+
+      const minIsSameDay = isSameDateDay(limits.min, timeRange.start);
+
+      if (!minIsSameDay) {
+        const startOfStartDay = startOfDay(timeRange.start);
+        if (differenceInHours(startOfStartDay, timeRange.start) >= 4) {
+          limits.min = startOfStartDay;
+        }
+      }
+
+      const config: DbxDateTimePickerConfiguration = { limits };
+      return config;
+    })
+  );
 
   readonly timezoneSelectionFieldConfig: FormConfig = {
     fields: [dbxForgeTimezoneStringField() as any]
@@ -268,6 +298,23 @@ export class DocFormDateValueComponent {
             };
             return of(config);
           }
+        }
+      }),
+      // Repro of HelloSubs jobWorkerTimesheetTimeField()/arrivalTimeFormConfig from
+      // hellosubs-components/.../jobworkertimesheet.day.editor.component.ts.
+      // Used to verify time-change events fire on this configuration.
+      dbxForgeDateTimeField({
+        required: true,
+        key: 'arrivalTime',
+        label: 'Check-In Time (HelloSubs repro)',
+        description: 'Repro of HelloSubs arrivalTimeFormConfig — alwaysShowDateInput false, REQUIRED time, system-timezone timeDate, async pickerConfig built from isHourlyRate$ + dayTimeRangeForSystem$.',
+        props: {
+          showClearButton: false,
+          timeDate: this.startsAtTimeForSystem$,
+          timeMode: DbxDateTimeFieldTimeMode.REQUIRED,
+          timezone: this.timezone$,
+          pickerConfig: this.arrivalTimePickerConfig$,
+          alwaysShowDateInput: false
         }
       })
     ]

@@ -435,6 +435,165 @@ describe('DbxForgeDateTimeFieldComponent', () => {
       expect(comp!.showTimeInput()).toBe(true);
       fixture.destroy();
     });
+
+    it('should propagate two consecutive setTime() picks (preset-revert repro, full settle)', async () => {
+      // Regression test for "pick 12:00PM then 5:00PM and the form value reverts to 12:00PM"
+      // observed in the demo's HelloSubs repro field. After the first setTime() write completes,
+      // the second setTime() must still propagate to form value.
+      const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+      const host = fixture.componentInstance;
+      const initialDate = addHours(startOfDay(new Date()), 8); // 8:00 AM today
+
+      host.config = createConfig({ key: 'date', required: true });
+      host.formValue.set({ date: initialDate });
+      await settle(fixture);
+
+      const comp = getDateTimeComponent(fixture);
+      expect(comp).toBeDefined();
+
+      // First pick: 12:00 PM
+      comp!.setTime('12:00PM');
+      await settle(fixture);
+      const afterFirst = host.formValue().date as Date;
+      expect(afterFirst).toBeDefined();
+      expect(afterFirst.getHours()).toBe(12);
+
+      // Second pick: 5:00 PM — this must propagate, not revert
+      comp!.setTime('5:00PM');
+      await settle(fixture);
+      const afterSecond = host.formValue().date as Date;
+      expect(afterSecond).toBeDefined();
+      expect(afterSecond.getHours()).toBe(17);
+      expect(afterSecond.getMinutes()).toBe(0);
+      fixture.destroy();
+    });
+
+    it('should propagate two rapid setTime() picks (no full settle between picks)', async () => {
+      // Tighter timing repro that mimics a user clicking two presets in quick succession.
+      // The first write may still be in flight when the second pick happens.
+      const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+      const host = fixture.componentInstance;
+      const initialDate = addHours(startOfDay(new Date()), 8);
+
+      host.config = createConfig({ key: 'date', required: true });
+      host.formValue.set({ date: initialDate });
+      await settle(fixture);
+
+      const comp = getDateTimeComponent(fixture);
+      expect(comp).toBeDefined();
+
+      comp!.setTime('12:00PM');
+      // Only a short pause — first pick may not have written back yet.
+      await delay(80);
+      fixture.detectChanges();
+      comp!.setTime('5:00PM');
+      await settle(fixture);
+      await settle(fixture);
+
+      const after = host.formValue().date as Date;
+      expect(after).toBeDefined();
+      expect(after.getHours()).toBe(17);
+      expect(after.getMinutes()).toBe(0);
+      fixture.destroy();
+    });
+
+    it('should propagate two consecutive picks when field timezone differs from system tz (preset-revert repro)', async () => {
+      // Mirrors the demo's HelloSubs repro field. The bug is in the outbound `filter` on the
+      // _setFieldValue subscription: it captures `currentValue = valueInSystemTimezone$` (display
+      // form, shifted by system tz offset for the field's target tz), and compares against
+      // `valueFactory(timeOutput$)` (storage form). With a non-zero shift, picks differing by
+      // exactly the shift collide on timestamp under `isSameDateHoursAndMinutes`, and the
+      // second pick is incorrectly dropped.
+      //
+      // We compute the system→UTC shift at runtime so the test reproduces in any non-UTC tz.
+      const offsetMinutes = -new Date().getTimezoneOffset(); // east-positive
+      const systemToUtcShiftHours = -offsetMinutes / 60; // for CDT (-5): +5
+      if (systemToUtcShiftHours === 0) {
+        // System runs in UTC: timezone='UTC' produces no shift, so the bug cannot manifest here.
+        return;
+      }
+
+      const baseHour = systemToUtcShiftHours > 0 ? 9 : 18;
+      const secondHour = (((baseHour + systemToUtcShiftHours) % 24) + 24) % 24;
+
+      const formatHour = (h: number): string => {
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const display = h % 12 === 0 ? 12 : h % 12;
+        return `${display}:00${ampm}`;
+      };
+
+      const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+      const host = fixture.componentInstance;
+
+      const startDate = addHours(startOfDay(new Date()), 9); // system-local 9 AM today
+      const dayTimeRange$ = of({ start: startDate, end: addHours(startDate, 8) });
+      const pickerConfig$ = dayTimeRange$.pipe(map(({ start, end }) => ({ limits: { min: start, max: end } })));
+      const timeDate$ = of(startDate);
+
+      host.config = createConfig({
+        key: 'arrivalTime',
+        required: true,
+        timezone: 'UTC',
+        timeMode: DbxDateTimeFieldTimeMode.REQUIRED,
+        showClearButton: false,
+        timeDate: timeDate$,
+        pickerConfig: pickerConfig$,
+        alwaysShowDateInput: false
+      });
+      host.formValue.set({ arrivalTime: startDate });
+      await settle(fixture);
+
+      const comp = getDateTimeComponent(fixture);
+      expect(comp).toBeDefined();
+
+      comp!.setTime(formatHour(baseHour));
+      await settle(fixture);
+      const afterFirst = host.formValue().arrivalTime as Date;
+      expect(afterFirst).toBeDefined();
+      expect(afterFirst.getUTCHours()).toBe(baseHour);
+
+      comp!.setTime(formatHour(secondHour));
+      await settle(fixture);
+      const afterSecond = host.formValue().arrivalTime as Date;
+      expect(afterSecond).toBeDefined();
+      expect(afterSecond.getUTCHours()).toBe(secondHour);
+      fixture.destroy();
+    });
+
+    it('should propagate time-only edits to form value when initial dateTime arrives via form source', async () => {
+      // Regression test for the HelloSubs jobworkertimesheet arrival-time bug.
+      // The initial dateTime enters the field through inbound sync (state.value.set), which
+      // writes to dateCtrl with `emitEvent: false`. The internal pipeline reads the date
+      // through `currentDate$`/`date$`, both gated on `valueChanges`, so the date side of
+      // `rawDateTime$` never emits and time-only edits cannot propagate back to the form.
+      const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+      const host = fixture.componentInstance;
+      const initialDate = addHours(startOfDay(new Date()), 8); // 8:00 AM system-local today
+
+      host.config = createConfig({ key: 'date', required: true });
+      host.formValue.set({ date: initialDate });
+      await settle(fixture);
+
+      const comp = getDateTimeComponent(fixture);
+      expect(comp).toBeDefined();
+      // Inbound sync should have populated the date control
+      expect(comp!.dateCtrl.value).toBeDefined();
+
+      // Simulate the user typing a different time. FormsModule calls timeCtrl.setValue()
+      // which fires valueChanges; the component's internal subscription on valueChanges
+      // pushes _updateTime.next(). That is the only signal the user emits — no setTime()
+      // / no explicit _updateTime.next() bypass.
+      comp!.timeCtrl.setValue('9:30AM');
+      await settle(fixture);
+
+      const after = host.formValue().date as Maybe<Date>;
+      expect(after).toBeDefined();
+      expect(after instanceof Date).toBe(true);
+      // Time portion must have advanced from 8:00 → 9:30 in the system timezone.
+      expect((after as Date).getHours()).toBe(9);
+      expect((after as Date).getMinutes()).toBe(30);
+      fixture.destroy();
+    });
   });
 
   describe('date with string value', () => {
