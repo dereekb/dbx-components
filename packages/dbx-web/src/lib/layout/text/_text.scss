@@ -362,6 +362,85 @@ $dbx-step-block-badge-font-weight: 600;
     font-size: var(--mat-sys-body-small-size);
   }
 
+  // MARK: M3 type-role utilities
+  // Apply the full Material 3 `font` shorthand (size + weight + line-height +
+  // tracking + family) for a single type role. Compose with .dbx-uppercase /
+  // .dbx-tracked-wide for eyebrow-style chrome.
+  .dbx-text-display-large {
+    font: var(--mat-sys-display-large);
+  }
+
+  .dbx-text-display-medium {
+    font: var(--mat-sys-display-medium);
+  }
+
+  .dbx-text-display-small {
+    font: var(--mat-sys-display-small);
+  }
+
+  .dbx-text-headline-large {
+    font: var(--mat-sys-headline-large);
+  }
+
+  .dbx-text-headline-medium {
+    font: var(--mat-sys-headline-medium);
+  }
+
+  .dbx-text-headline-small {
+    font: var(--mat-sys-headline-small);
+  }
+
+  .dbx-text-title-large {
+    font: var(--mat-sys-title-large);
+  }
+
+  .dbx-text-title-medium {
+    font: var(--mat-sys-title-medium);
+  }
+
+  .dbx-text-title-small {
+    font: var(--mat-sys-title-small);
+  }
+
+  .dbx-text-body-large {
+    font: var(--mat-sys-body-large);
+  }
+
+  .dbx-text-body-medium {
+    font: var(--mat-sys-body-medium);
+  }
+
+  .dbx-text-body-small {
+    font: var(--mat-sys-body-small);
+  }
+
+  .dbx-text-label-large {
+    font: var(--mat-sys-label-large);
+  }
+
+  .dbx-text-label-medium {
+    font: var(--mat-sys-label-medium);
+  }
+
+  .dbx-text-label-small {
+    font: var(--mat-sys-label-small);
+  }
+
+  // MARK: Text transforms
+  .dbx-uppercase {
+    text-transform: uppercase;
+  }
+
+  .dbx-lowercase {
+    text-transform: lowercase;
+  }
+
+  // Eyebrow-style letter-spacing — pairs with .dbx-text-label-medium /
+  // .dbx-uppercase to render the M3 "overline" pattern (e.g. card eyebrows).
+  .dbx-tracked-wide {
+    letter-spacing: 0.08em;
+  }
+
   .dbx-click-to-copy-text-icon.mat-icon {
     width: $click-to-copy-icon-size;
     height: $click-to-copy-icon-size;

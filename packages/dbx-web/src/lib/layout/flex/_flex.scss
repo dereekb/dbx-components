@@ -34,6 +34,10 @@ $dbx-flex-group-columns-count: 6;
     flex-direction: column;
   }
 
+  .dbx-flex-fill {
+    flex: 1;
+  }
+
   .dbx-flex-group {
     display: flex;
     flex-wrap: wrap;

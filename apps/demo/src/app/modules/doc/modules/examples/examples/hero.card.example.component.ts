@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressBar } from '@angular/material/progress-bar';
 import { DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent } from '@dereekb/dbx-web/docs';
+import { FlexLayoutModule } from '@ngbracket/ngx-layout';
 
 /**
  * Page-top "hero" card pattern that surfaces a single primary call-to-action
@@ -18,7 +19,10 @@ import { DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExam
  * - card text                          → `--mat-sys-inverse-on-surface`
  *
  * Layout uses dbx spacing utilities (`.dbx-p4`, `.dbx-mb3`, `.dbx-pb1`,
- * `.dbx-spacer`, `.dbx-bold`) instead of bespoke margin / padding values.
+ * `.dbx-spacer`, `.dbx-bold`) instead of bespoke margin / padding values, and
+ * the M3 type-role utilities (`.dbx-text-label-medium`,
+ * `.dbx-text-headline-large`) plus `.dbx-uppercase` / `.dbx-tracked-wide` for
+ * the eyebrow and trailing-percent typography — no inline `font:` declarations.
  *
  * @dbxDocsUiExample
  * @dbxDocsUiExampleSlug card-hero-onboarding-progress
@@ -31,7 +35,7 @@ import { DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExam
   selector: 'doc-hero-card-example',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent, MatCardModule, MatButtonModule, MatIconModule, MatProgressBar],
+  imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent, MatCardModule, MatButtonModule, MatIconModule, MatProgressBar, FlexLayoutModule],
   template: `
     <dbx-docs-ui-example header="Hero Card (Onboarding Progress)" hint="Top-of-page hero on an inverse surface with eyebrow, headline, progress, action, and trailing percent.">
       <dbx-docs-ui-example-info>
@@ -61,14 +65,24 @@ import { DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExam
           <code>margin</code>
           /
           <code>padding</code>
-          values.
+          values. Typography composes the M3 type-role utilities
+          <code>.dbx-text-label-medium</code>
+          (eyebrow) and
+          <code>.dbx-text-headline-large</code>
+          (trailing percent) with
+          <code>.dbx-uppercase</code>
+          /
+          <code>.dbx-tracked-wide</code>
+          for the eyebrow's overline treatment, so no inline
+          <code>font:</code>
+          declarations are needed.
         </p>
       </dbx-docs-ui-example-info>
       <dbx-docs-ui-example-content>
-        <mat-card appearance="filled" class="doc-hero-card">
-          <mat-card-content class="dbx-p4 doc-hero-card-content">
-            <div class="doc-hero-card-main">
-              <div class="doc-hero-eyebrow dbx-bold dbx-pb1">YOUR ONBOARDING PROGRESS</div>
+        <mat-card appearance="filled">
+          <mat-card-content class="dbx-p4 doc-hero-card-content" fxLayout="row" fxLayoutAlign="start" fxLayoutGap="var(--dbx-padding-3)">
+            <div class="dbx-flex-fill doc-hero-card-main">
+              <div class="dbx-text-label-medium dbx-uppercase dbx-tracked-wide dbx-bold dbx-pb1">YOUR ONBOARDING PROGRESS</div>
               <h3 class="dbx-bold dbx-mb1">{{ remaining }} requirements to go</h3>
               <p class="dbx-mb3">
                 <span class="dbx-bold">{{ completed }} of {{ total }}</span>
@@ -80,46 +94,12 @@ import { DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExam
                 <mat-icon iconPositionEnd>arrow_forward</mat-icon>
               </button>
             </div>
-            <div class="doc-hero-percent dbx-bold" aria-hidden="true">{{ progressPercent }}%</div>
+            <div class="dbx-text-headline-large dbx-bold" aria-hidden="true">{{ progressPercent }}%</div>
           </mat-card-content>
         </mat-card>
       </dbx-docs-ui-example-content>
     </dbx-docs-ui-example>
-  `,
-  styles: [
-    `
-      .doc-hero-card {
-        --mat-card-filled-container-color: var(--mat-sys-inverse-surface);
-        color: var(--mat-sys-inverse-on-surface);
-      }
-
-      .doc-hero-card-content {
-        display: flex;
-        align-items: flex-start;
-        gap: var(--dbx-padding-3);
-      }
-
-      .doc-hero-card-main {
-        flex: 1;
-        min-width: 0;
-      }
-
-      .doc-hero-eyebrow {
-        font: var(--mat-sys-label-medium);
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-      }
-
-      .doc-hero-action {
-        --mdc-outlined-button-label-text-color: var(--mat-sys-inverse-on-surface);
-        --mdc-outlined-button-outline-color: color-mix(in srgb, var(--mat-sys-inverse-on-surface) 40%, transparent);
-      }
-
-      .doc-hero-percent {
-        font: var(--mat-sys-headline-large);
-      }
-    `
-  ]
+  `
 })
 export class DocHeroCardExampleComponent {
   readonly completed = 3;
