@@ -16,6 +16,11 @@ $dbx-dialog-content-close-right-offset: $dbx-dialog-content-close-edge-padding;
     color: var(--mat-sys-on-surface);
   }
 
+  /// @dbx-utility dialog-content
+  /// @intent dialog body — `<dbx-dialog-content>` host that wraps mat-dialog content with the standard 18px inset; compose with `.dbx-dialog-content-with-header` to reserve room for a sticky header, `.dbx-dialog-content-100` to fill the dialog height, or `.dbx-p0` to strip the inset
+  /// @role layout
+  /// @component DbxDialogContentComponent
+  /// @scope component-class
   .dbx-dialog-content {
     display: block;
     padding: $mat-dialog-container-padding;

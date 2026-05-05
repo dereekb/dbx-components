@@ -63,6 +63,10 @@ $header-left-reserved-space-small-screen: 120px;
     }
   }
 
+  /// @dbx-utility section-header-padded
+  /// @intent zero the host padding and add a 4px horizontal inset to the inner `.dbx-section-header` — useful when a parent already provides outer padding
+  /// @role spacing
+  /// @see-also section
   .dbx-section-header-padded {
     padding: 0 !important;
 

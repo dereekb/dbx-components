@@ -10,6 +10,10 @@ $big-button-height: 46px; // 33% bigger
 // MARK: Mixin
 @mixin core() {
   // increases the height of the mat-mdc-button
+  /// @dbx-utility button-big
+  /// @intent enlarge the inner `mat-mdc-button` height to 46px (33% taller than default)
+  /// @role layout
+  /// @see-also button-wide
   .dbx-button-big,
   .dbx-button-large {
     .mdc-button.mat-mdc-button {
@@ -19,6 +23,9 @@ $big-button-height: 46px; // 33% bigger
 
   // Neutral hover/pressed/focus state layer instead of the primary-colored default.
   // Apply to buttons with custom background colors where the primary tint looks wrong.
+  /// @dbx-utility button-neutral-interaction-color
+  /// @intent neutralize Material's hover/pressed/focus/ripple state layer to `--mat-sys-on-surface` — use on buttons with a custom background where the primary-tinted state-layer would clash
+  /// @role state
   .dbx-button-neutral-interaction-color {
     .mdc-button,
     &.mdc-button {
@@ -41,6 +48,10 @@ $big-button-height: 46px; // 33% bigger
     }
   }
 
+  /// @dbx-utility button-wide
+  /// @intent stretch the inner `.dbx-button` to a 120px minimum width (still capped by parent)
+  /// @role layout
+  /// @see-also button-grow
   .dbx-button-wide {
     .dbx-button {
       min-width: 120px;
@@ -48,6 +59,10 @@ $big-button-height: 46px; // 33% bigger
     }
   }
 
+  /// @dbx-utility button-wrap-group
+  /// @intent group of buttons that wrap onto multiple rows — adds 6px right + bottom spacing between `<dbx-button>` / `<dbx-anchor>` / `<button>` / `<dbx-icon-button>` siblings
+  /// @role layout
+  /// @see-also button-column, dbx-flex-bar
   .dbx-button-wrap-group {
     > dbx-button,
     > dbx-anchor {
@@ -84,6 +99,10 @@ $big-button-height: 46px; // 33% bigger
     }
   }
 
+  /// @dbx-utility grow-button
+  /// @intent stretch the `<dbx-button>` (and its inner `.dbx-button`) to the full width of its parent
+  /// @role layout
+  /// @see-also button-wide, dbx-w100
   .dbx-grow-button {
     width: 100%;
 
@@ -92,6 +111,10 @@ $big-button-height: 46px; // 33% bigger
     }
   }
 
+  /// @dbx-utility button-spacer
+  /// @intent right-padding spacer between buttons or beside a button — 6px right padding (use `<dbx-button-spacer>` to insert one inline)
+  /// @role spacing
+  /// @see-also chip-spacer, icon-spacer
   .dbx-button-spacer {
     padding-right: $button-spacer-width;
   }
@@ -100,6 +123,10 @@ $big-button-height: 46px; // 33% bigger
     margin-right: $button-spacer-width;
   }
 
+  /// @dbx-utility button-column
+  /// @intent vertical button stack — flex column with 6px bottom spacing between children, left-aligned by default (compose with `.dbx-button-column-center` to center)
+  /// @role flex
+  /// @see-also button-wrap-group, dbx-flex-column
   .dbx-button-column {
     display: flex;
     flex-direction: column;

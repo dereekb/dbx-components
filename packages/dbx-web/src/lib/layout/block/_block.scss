@@ -10,6 +10,10 @@ $two-block-top-height-var: --dbx-two-block-top-height;
     height: 100%;
   }
 
+  /// @dbx-utility two-block-content
+  /// @intent two-block stack content area — fixed-height region whose `.dbx-two-block-bottom` child fills the remaining height after a 50px (default) `.dbx-two-block-top`. Override the top height via `--dbx-two-block-top-height`.
+  /// @role layout
+  /// @see-also two-column
   .dbx-two-block-content {
     height: 100%;
     #{$two-block-top-height-var}: $two-block-top-height-init-height;

@@ -6,6 +6,11 @@ $error-message-button-margin: 12px;
 
 // MARK: Mixin
 @mixin core() {
+  /// @dbx-utility error
+  /// @intent error row — `<dbx-error>` body that lays out an icon + message in a centered flex row with an 8px top inset
+  /// @role layout
+  /// @component DbxErrorComponent
+  /// @scope component-class
   .dbx-error {
     padding-top: $error-padding;
     display: flex;

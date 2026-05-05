@@ -5,6 +5,12 @@ $icon-to-avatar-size-ratio: 0.65;
 
 // MARK: Mixin
 @mixin core() {
+  /// @dbx-utility avatar-view
+  /// @intent fixed-size avatar surface — `<dbx-avatar-view>` body that shows a square 64px avatar (configurable via `--dbx-avatar-size`) and scales the inner `mat-icon` to 65% of that size
+  /// @role layout
+  /// @component DbxAvatarViewComponent
+  /// @scope component-class
+  /// @see-also avatar-small, avatar-large, avatar-view-circle, avatar-view-square
   .dbx-avatar-view {
     position: relative;
     display: inline-flex;
@@ -25,6 +31,11 @@ $icon-to-avatar-size-ratio: 0.65;
     display: none;
   }
 
+  /// @dbx-utility avatar-small
+  /// @intent small avatar wrapper — overrides the inner `.dbx-avatar-view` size to 32px (configurable via `--dbx-avatar-small-size`)
+  /// @role layout
+  /// @parent avatar-view
+  /// @see-also avatar-view, avatar-large
   .dbx-avatar-small .dbx-avatar-view {
     width: var(#{theming.$dbx-avatar-small-size-var}, 32px);
     height: var(#{theming.$dbx-avatar-small-size-var}, 32px);
@@ -36,6 +47,11 @@ $icon-to-avatar-size-ratio: 0.65;
     }
   }
 
+  /// @dbx-utility avatar-large
+  /// @intent large avatar wrapper — overrides the inner `.dbx-avatar-view` size to 128px (configurable via `--dbx-avatar-large-size`)
+  /// @role layout
+  /// @parent avatar-view
+  /// @see-also avatar-view, avatar-small
   .dbx-avatar-large .dbx-avatar-view {
     width: var(#{theming.$dbx-avatar-large-size-var}, 128px);
     height: var(#{theming.$dbx-avatar-large-size-var}, 128px);
@@ -62,10 +78,20 @@ $icon-to-avatar-size-ratio: 0.65;
     height: 100%;
   }
 
+  /// @dbx-utility avatar-view-circle
+  /// @intent circle modifier for `.dbx-avatar-view` — `border-radius: 50%`
+  /// @role layout
+  /// @parent avatar-view
+  /// @see-also avatar-view, avatar-view-square
   .dbx-avatar-view-circle {
     border-radius: 50%;
   }
 
+  /// @dbx-utility avatar-view-square
+  /// @intent rounded-square modifier for `.dbx-avatar-view` — uses `--mat-sys-corner-medium` (override via `--dbx-avatar-square-container-shape`)
+  /// @role layout
+  /// @parent avatar-view
+  /// @see-also avatar-view, avatar-view-circle
   .dbx-avatar-view-square {
     border-radius: var(--dbx-avatar-square-container-shape, var(--mat-sys-corner-medium));
   }

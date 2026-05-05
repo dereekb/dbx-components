@@ -12,6 +12,10 @@ $dbx-popup-controls-height: 33px;
     }
   }
 
+  /// @dbx-utility prompt-box
+  /// @intent centered prompt panel — auto-margined max-width box with a 40px inset (compose with `.elevate` to lift it with elevation 2)
+  /// @role layout
+  /// @see-also content-box, content-elevate
   .dbx-prompt-box {
     margin: auto;
     padding: 40px;

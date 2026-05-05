@@ -3,6 +3,10 @@
 
 // Sections
 @mixin core() {
+  /// @dbx-utility spacer
+  /// @intent flex spacer — fills remaining space in a flex container to push siblings apart
+  /// @role flex
+  /// @see-also dbx-flex-fill, dbx-button-spacer
   .dbx-spacer,
   .spacer {
     flex: 1 1 auto;
@@ -13,14 +17,24 @@
     pointer-events: none;
   }
 
+  /// @dbx-utility no-margin
+  /// @intent strip margin (forced) — `margin: 0 !important`
+  /// @role spacing
   .no-margin {
     margin: 0 !important;
   }
 
+  /// @dbx-utility no-padding
+  /// @intent strip padding (forced) — `padding: 0 !important`
+  /// @role spacing
+  /// @see-also dbx-list-item-p0
   .no-padding {
     padding: 0 !important;
   }
 
+  /// @dbx-utility hide
+  /// @intent hide element (forced) — `display: none !important`
+  /// @role state
   .dbx-hide {
     display: none !important;
   }
@@ -63,40 +77,72 @@
     }
   }
 
+  /// @dbx-utility h100
+  /// @intent fill height — `height: 100%`
+  /// @role layout
+  /// @see-also dbx-w100
   .dbx-h100 {
     height: 100%;
   }
 
+  /// @dbx-utility block
+  /// @intent set display: block
+  /// @role layout
+  /// @see-also dbx-iblock, dbx-flex
   .d-block,
   .dbx-block {
     display: block;
   }
 
+  /// @dbx-utility iblock
+  /// @intent set display: inline-block
+  /// @role layout
+  /// @see-also dbx-block, dbx-iflex
   .d-iblock,
   .dbx-iblock {
     display: inline-block;
   }
 
+  /// @dbx-utility inline
+  /// @intent set display: inline
+  /// @role layout
+  /// @see-also dbx-iblock
   .d-inline,
   .dbx-inline {
     display: inline;
   }
 
+  /// @dbx-utility flex
+  /// @intent set display: flex (no other flex defaults)
+  /// @role flex
+  /// @see-also dbx-flex-bar, dbx-flex-center, dbx-flex-column, dbx-iflex
   .d-flex,
   .dbx-flex {
     display: flex;
   }
 
+  /// @dbx-utility iflex
+  /// @intent set display: inline-flex
+  /// @role flex
+  /// @see-also dbx-flex, dbx-fiflex
   .d-iflex,
   .dbx-iflex {
     display: inline-flex;
   }
 
+  /// @dbx-utility w100
+  /// @intent fill width — `width: 100%`
+  /// @role layout
+  /// @see-also dbx-h100
   .dbx-w100 {
     width: 100%;
   }
 
   // force
+  /// @dbx-utility fiflex
+  /// @intent set display: inline-flex (forced) — wins over inherited `display`
+  /// @role flex
+  /// @see-also dbx-iflex
   .d-fiflex,
   .dbx-fiflex {
     display: inline-flex !important;
@@ -116,6 +162,9 @@
 
   // tonal mode: use the vibrant theme color as text instead of the contrast color.
   // Applied via CSS class (not [style.color]) to avoid conflicting with [ngStyle] on buttons.
+  /// @dbx-utility color-tonal
+  /// @intent paint text with the vibrant `--dbx-bg-color` (tonal mode) instead of the contrast color — pair with `[dbxColor]` + `[dbxColorTone]` for the muted background variant
+  /// @role state
   .dbx-color-tonal {
     color: var(#{theming.$dbx-bg-color-var});
   }

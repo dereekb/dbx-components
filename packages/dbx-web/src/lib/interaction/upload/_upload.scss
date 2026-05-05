@@ -22,10 +22,18 @@
     align-items: center;
   }
 
+  /// @dbx-utility file-upload-area-rounded
+  /// @intent circle modifier for `.dbx-file-upload-area` — `border-radius: 50%`
+  /// @role layout
+  /// @see-also file-upload-area-square
   .dbx-file-upload-area-rounded {
     border-radius: 50%;
   }
 
+  /// @dbx-utility file-upload-area-square
+  /// @intent rounded-square modifier for `.dbx-file-upload-area` — uses `--mat-sys-corner-medium` (override via `--dbx-file-upload-square-container-shape`)
+  /// @role layout
+  /// @see-also file-upload-area-rounded
   .dbx-file-upload-area-square {
     border-radius: var(--dbx-file-upload-square-container-shape, var(--mat-sys-corner-medium));
   }

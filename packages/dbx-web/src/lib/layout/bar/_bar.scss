@@ -19,6 +19,10 @@ $bar-fixed-height: 40px;
     max-height: $content-navbar-height;
   }
 
+  /// @dbx-utility bar
+  /// @intent compact horizontal bar — centered flex row with body-small typography (used for status/info strips)
+  /// @role layout
+  /// @see-also dbx-bar-background, dbx-bar-fixed-height, dbx-flex-bar
   .dbx-bar {
     box-sizing: border-box;
     padding: $bar-vertical-padding;
@@ -32,11 +36,19 @@ $bar-fixed-height: 40px;
     color: var(--mat-sys-on-surface);
   }
 
+  /// @dbx-utility bar-background
+  /// @intent paint a `.dbx-bar` with the `--mat-sys-surface-container` background
+  /// @role layout
+  /// @see-also dbx-bar
   .dbx-bar-background {
     background: var(--mat-sys-surface-container);
     color: var(--mat-sys-on-surface);
   }
 
+  /// @dbx-utility bar-fixed-height
+  /// @intent pin a `.dbx-bar` to a fixed 40px height with overflow clipped
+  /// @role layout
+  /// @see-also dbx-bar
   .dbx-bar-fixed-height {
     height: $bar-fixed-height;
     overflow: hidden;
@@ -46,21 +58,36 @@ $bar-fixed-height: 40px;
   // Color classes applied by DbxPagebarComponent based on the color input.
   // Uses Material toolbar CSS tokens for background and text color.
   // Background uses color-mix with surface-container for consistent dark-mode contrast.
+  /// @dbx-utility bar-primary
+  /// @intent paint a `mat-toolbar`/`.dbx-pagebar` with the `--dbx-primary-color` palette via Material's toolbar tokens
+  /// @role layout
+  /// @see-also dbx-bar-accent, dbx-bar-warn
   .dbx-bar-primary {
     --mat-toolbar-container-background-color: var(--dbx-primary-color);
     --mat-toolbar-container-text-color: var(--dbx-primary-color-contrast);
   }
 
+  /// @dbx-utility bar-accent
+  /// @intent paint a `mat-toolbar`/`.dbx-pagebar` with the `--dbx-accent-color` palette via Material's toolbar tokens
+  /// @role layout
+  /// @see-also dbx-bar-primary, dbx-bar-warn
   .dbx-bar-accent {
     --mat-toolbar-container-background-color: var(--dbx-accent-color);
     --mat-toolbar-container-text-color: var(--dbx-accent-color-contrast);
   }
 
+  /// @dbx-utility bar-warn
+  /// @intent paint a `mat-toolbar`/`.dbx-pagebar` with the `--dbx-warn-color` palette via Material's toolbar tokens
+  /// @role layout
+  /// @see-also dbx-bar-primary, dbx-bar-accent
   .dbx-bar-warn {
     --mat-toolbar-container-background-color: var(--dbx-warn-color);
     --mat-toolbar-container-text-color: var(--dbx-warn-color-contrast);
   }
 
+  /// @dbx-utility pagebar-hide
+  /// @intent hide the direct-child `.dbx-pagebar` and reset the `--dbx-pagebar-height` layout token to `0px` so child sidenav heights recalculate (nested sidenav pagebars are restored)
+  /// @role state
   .dbx-pagebar-hide {
     // Reset pagebar height for layout calculations (page height = app height - navbar height)
     #{$pagebar-height-var}: 0px;

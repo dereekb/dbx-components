@@ -24,15 +24,27 @@ $dbx-content-pit-floating-button-margin: 8px;
 $dbx-border-opacity-default: 20%;
 
 @mixin core() {
+  /// @dbx-utility content-border
+  /// @intent dashed-border content frame — pads the inner content and draws a 3px dashed border via `--dbx-border-color` / `--dbx-border-opacity`
+  /// @role layout
+  /// @see-also dbx-content-elevate, dbx-content-pit
   .dbx-content-border {
     padding: $content-border-inner-padding;
   }
 
+  /// @dbx-utility content-elevate
+  /// @intent padded content surface lifted with elevation 2 — combines inner padding with a Material elevation shadow
+  /// @role layout
+  /// @see-also dbx-content-border, dbx-content-pit
   .dbx-content-elevate {
     padding: $content-border-inner-padding;
     @include theming.elevation(2);
   }
 
+  /// @dbx-utility content-box
+  /// @intent centered box — auto-margined max-width content surface with a `padding-4` inset and `2vh` bottom margin (compose with `.dbx-content-box-wide` to remove the max-width)
+  /// @role layout
+  /// @see-also dbx-content-container, dbx-prompt-box
   .dbx-content-box {
     margin: auto;
     padding: $box-padding;
@@ -44,10 +56,19 @@ $dbx-border-opacity-default: 20%;
     }
   }
 
+  /// @dbx-utility content-pit
+  /// @intent recessed surface pit — `--mat-sys-surface-container` background with a `padding-4` inset, used to visually nest content (e.g. logs, JSON, quoted blocks)
+  /// @role layout
+  /// @see-also dbx-content-pit-rounded, dbx-content-pit-scrollable, dbx-content-border, dbx-content-elevate
   .dbx-content-pit {
     padding: $pit-padding;
   }
 
+  /// @dbx-utility content-pit-rounded
+  /// @intent rounded modifier for `.dbx-content-pit` — applies the `theming.$dbx-content-pit-rounded-border-radius` corner radius
+  /// @role layout
+  /// @parent content-pit
+  /// @see-also dbx-content-pit
   .dbx-content-pit-rounded {
     border-radius: theming.$dbx-content-pit-rounded-border-radius;
   }
@@ -56,6 +77,11 @@ $dbx-border-opacity-default: 20%;
     opacity: 0.66; // increase opacity slightly to make it easier to read against background
   }
 
+  /// @dbx-utility content-pit-scrollable
+  /// @intent scrollable modifier for `.dbx-content-pit` — caps height at `theming.$dbx-content-pit-scrollable-max-height` and forces `overflow-y: scroll` for long inner content
+  /// @role layout
+  /// @parent content-pit
+  /// @see-also dbx-content-pit
   .dbx-content-pit-scrollable {
     max-height: theming.$dbx-content-pit-scrollable-max-height;
     max-width: 100%;

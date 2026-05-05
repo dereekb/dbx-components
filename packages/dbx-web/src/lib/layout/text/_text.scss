@@ -31,6 +31,10 @@ $dbx-step-block-badge-font-weight: 600;
     font-size: 0.8em;
   }
 
+  /// @dbx-utility label-padded
+  /// @intent padded label — adds 6px bottom padding under a label header
+  /// @role spacing
+  /// @see-also label-block
   .dbx-label-padded {
     padding-bottom: $dbx-label-padded-padding;
   }
@@ -63,12 +67,21 @@ $dbx-step-block-badge-font-weight: 600;
     white-space: pre-wrap;
   }
 
+  /// @dbx-utility iframe
+  /// @intent fill-parent iframe with no border — `height: 100%; width: 100%; border: none`
+  /// @role layout
   .dbx-iframe {
     height: 100%;
     width: 100%;
     border: none;
   }
 
+  /// @dbx-utility label-block
+  /// @intent block-level label wrapper — `<dbx-label-block>` body that emits a header line with 3px vertical padding
+  /// @role layout
+  /// @component DbxLabelBlockComponent
+  /// @scope component-class
+  /// @see-also detail-block, label-padded
   .dbx-label-block {
     display: block;
     padding: 3px 0;
@@ -109,6 +122,12 @@ $dbx-step-block-badge-font-weight: 600;
     }
   }
 
+  /// @dbx-utility detail-block
+  /// @intent labeled detail surface — `<dbx-detail-block>` body that places an icon + header above offset content (`.dbx-detail-block-header` + `.dbx-detail-block-content`). Compose with `.dbx-detail-block-big-header` for a larger title and `.dbx-detail-block-header-align` to wrap the header content (e.g. when an aligned `[header]` slot is supplied).
+  /// @role layout
+  /// @component DbxDetailBlockComponent
+  /// @scope component-class
+  /// @see-also label-block, step-block
   .dbx-detail-block {
     display: block;
 
@@ -142,6 +161,12 @@ $dbx-step-block-badge-font-weight: 600;
     }
   }
 
+  /// @dbx-utility step-block
+  /// @intent step row — `<dbx-step-block>` body that lays out a numbered/iconic badge alongside content with a configurable `--dbx-step-block-gap` and `--dbx-step-block-padding`
+  /// @role layout
+  /// @component DbxStepBlockComponent
+  /// @scope component-class
+  /// @see-also step-block-badge, detail-block
   .dbx-step-block {
     display: flex;
     flex-direction: row;
@@ -262,15 +287,29 @@ $dbx-step-block-badge-font-weight: 600;
     @include theming.limit-text();
   }
 
+  /// @dbx-utility icon-spacer
+  /// @intent right-margin spacer beside an icon — 6px right margin to separate a leading `mat-icon` from text
+  /// @role spacing
+  /// @see-also chip-spacer, button-spacer
   .dbx-icon-spacer {
     margin-right: $icon-spacing;
   }
 
+  /// @dbx-utility form-description
+  /// @intent helper-text styling for a form field description — 75% font size with the standard `mat-form-field` top spacing
+  /// @role text
+  /// @see-also dbx-hint, dbx-label
   .dbx-form-description {
     font-size: 75%;
     margin-top: 0.6666666667em;
   }
 
+  /// @dbx-utility chip
+  /// @intent chip label — `<dbx-chip>` body that lays out a 14px/500 inline chip; compose with `.dbx-chip-small`, `.dbx-chip-block`, or `.dbx-chip-small-text` for size variants
+  /// @role layout
+  /// @component DbxChipDirective
+  /// @scope component-class
+  /// @see-also chip-spacer, chip-margin
   .dbx-chip {
     font-size: 14px;
     font-weight: 500;
@@ -279,6 +318,10 @@ $dbx-step-block-badge-font-weight: 600;
     white-space: nowrap;
   }
 
+  /// @dbx-utility chip-spacer
+  /// @intent right-margin spacer between adjacent chips — 2px right margin
+  /// @role spacing
+  /// @see-also chip-margin, icon-spacer
   .dbx-chip-spacer {
     margin-right: $chip-spacing;
   }
@@ -312,6 +355,10 @@ $dbx-step-block-badge-font-weight: 600;
     border-radius: 0;
   }
 
+  /// @dbx-utility chip-margin
+  /// @intent uniform 4px margin around a chip — use when chips wrap onto multiple rows
+  /// @role spacing
+  /// @see-also chip-spacer
   .dbx-chip-margin {
     margin: 4px;
   }
@@ -320,11 +367,17 @@ $dbx-step-block-badge-font-weight: 600;
     margin-left: $icon-spacing;
   }
 
+  /// @dbx-utility us-address
+  /// @intent pre-wrapped, line-tightened US-address text — paint the styling on a `<p>` rendered from `unitedStatesAddressString()` (or use the `<dbx-us-address>` component)
+  /// @role text
   .dbx-us-address {
     white-space: pre-wrap !important;
     line-height: 1.4;
   }
 
+  /// @dbx-utility modelkey
+  /// @intent allow line breaks inside long opaque keys/IDs — `line-break: anywhere`
+  /// @role text
   .dbx-modelkey {
     line-break: anywhere;
   }
@@ -361,6 +414,10 @@ $dbx-step-block-badge-font-weight: 600;
     opacity: $faint-opacity;
   }
 
+  /// @dbx-utility label
+  /// @intent muted form-field label text — 54% opacity (matches `mat-hint`); pair with `<dbx-label-block>` for the standard label-over-content layout
+  /// @role text
+  /// @see-also label-block, dbx-hint, dbx-form-description
   .dbx-label,
   .dbx-sublabel,
   .dbx-chip-sublabel,
