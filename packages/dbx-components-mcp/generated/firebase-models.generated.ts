@@ -71,6 +71,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     ],
     enums: [],
     detectionHints: ['m', 'r', 'w'],
+    description: 'Root notification container for a model. The document ID is the two-way flat key of the model it represents (see {@link notificationBoxIdForModel} in `notification.id.ts`).',
     modelGroup: 'Notification',
     collectionKind: 'root'
   },
@@ -149,6 +150,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     ],
     enums: [],
     detectionHints: ['m', 'n', 'lat', 'rat'],
+    description: 'Aggregated notification feed for a specific model. Holds embedded {@link NotificationItem} entries that summarize recent notifications, similar to an activity feed.',
     modelGroup: 'Notification',
     collectionKind: 'root'
   },
@@ -217,6 +219,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     ],
     enums: [],
     detectionHints: ['b', 'x', 'dc', 'gc', 'bc', 'ns'],
+    description: 'A global notification user profile that tracks notification preferences and box subscriptions.',
     modelGroup: 'Notification',
     collectionKind: 'root'
   },
@@ -295,6 +298,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     ],
     enums: [],
     detectionHints: ['type', 'payload', 'grantId', 'userCode', 'consumed', 'expiresAt'],
+    description: 'oidc-provider adapter entry stored in Firestore.',
     modelGroup: 'OidcModel',
     collectionKind: 'root'
   },
@@ -554,6 +558,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
       }
     ],
     detectionHints: ['bucketId', 'pathString', 'n', 'ct', 'fs', 'ps', 'pn', 'pat', 'pcat', 'uby', 'p', 'pg', 'sdat', 'g', 'gs'],
+    description: 'A StorageFile Firestore document that references a file in Google Cloud Storage.',
     modelGroup: 'StorageFile',
     collectionKind: 'root'
   },
@@ -648,6 +653,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     ],
     enums: [],
     detectionHints: ['f', 'z', 'zsf', 'zat', 're', 'c'],
+    description: 'A group of {@link StorageFile}s aggregated around a related model or common identifier.',
     modelGroup: 'StorageFile',
     collectionKind: 'root'
   },
@@ -670,6 +676,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     ],
     enums: [],
     detectionHints: ['data'],
+    description: 'A singleton Firestore document storing the current state of a system subcomponent.',
     modelGroup: 'SystemState',
     collectionKind: 'root'
   },
@@ -951,6 +958,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
       }
     ],
     detectionHints: ['st', 'rf', 'ts', 'es', 'ps', 'ns', 'n', 'r', 'ois', 'ots', 'sat', 'a', 'at', 'tsr', 'esr', 'tpr', 'ut'],
+    description: 'Individual notification document, stored as a subcollection of {@link NotificationBox}.',
     parentIdentityConst: 'notificationBoxIdentity',
     modelGroup: 'Notification',
     collectionKind: 'sub-collection'
@@ -982,6 +990,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     ],
     enums: [],
     detectionHints: ['w', 'n'],
+    description: 'Weekly archive of delivered notification items within a {@link NotificationBox}.',
     parentIdentityConst: 'notificationBoxIdentity',
     modelGroup: 'Notification',
     collectionKind: 'sub-collection'

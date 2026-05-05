@@ -79,6 +79,17 @@ export interface FirebaseField {
    * Name of an enum declared in this file referenced by `tsType` / converter.
    */
   readonly enumRef?: string;
+  /**
+   * Sync-flag annotation sourced from the `@dbxModelVariableSyncFlag` JSDoc tag on the field.
+   *
+   * The tag's text describes what the flag synchronizes when the field is set
+   * (e.g. `'Sync the Worker record to its Zoho Recruit candidate.'`). Used to
+   * generate the cross-model "Sync flags" section in `dbx_model_lookup` output
+   * for fields like `zs`, `rs`, `*ss`, etc. — denormalization triggers that
+   * `tsType` alone can't reveal. Absent when the field has no
+   * `@dbxModelVariableSyncFlag` tag.
+   */
+  readonly syncFlag?: string;
 }
 
 /**
@@ -98,6 +109,12 @@ export interface FirebaseModel {
    * Interface / class name (e.g. `'StorageFile'`, `'NotificationBox'`).
    */
   readonly name: string;
+  /**
+   * First JSDoc paragraph from the model's `@dbxModel` interface declaration. Captures the
+   * business-purpose narrative ("A Worker represents a substitute teacher…") so consumers
+   * don't have to open the source file. Absent when the interface has no leading JSDoc.
+   */
+  readonly description?: string;
   /**
    * Identity constant name (e.g. `'storageFileIdentity'`).
    */

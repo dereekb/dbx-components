@@ -45,7 +45,8 @@ function buildInterface(decl: InterfaceDeclaration): ExtractedInterface {
       tsType,
       optional: isOptional,
       description: readDescription(propJsDocs),
-      longName: propTags.dbxModelVariable
+      longName: propTags.dbxModelVariable,
+      syncFlag: propTags.dbxModelVariableSyncFlag
     });
   }
   return {
@@ -75,21 +76,29 @@ function readInterfaceTags(jsDocs: readonly JSDoc[]): InterfaceTags {
 
 interface PropertyTags {
   readonly dbxModelVariable: string | undefined;
+  readonly dbxModelVariableSyncFlag: string | undefined;
 }
 
 function readPropertyTags(jsDocs: readonly JSDoc[]): PropertyTags {
   let dbxModelVariable: string | undefined;
+  let dbxModelVariableSyncFlag: string | undefined;
   for (const jsDoc of jsDocs) {
     for (const tag of jsDoc.getTags()) {
-      if (tag.getTagName() === 'dbxModelVariable') {
+      const tagName = tag.getTagName();
+      if (tagName === 'dbxModelVariable') {
         const text = tag.getCommentText()?.trim();
         if (text !== undefined && text.length > 0 && dbxModelVariable === undefined) {
           dbxModelVariable = text;
         }
+      } else if (tagName === 'dbxModelVariableSyncFlag') {
+        const text = tag.getCommentText()?.trim();
+        if (text !== undefined && text.length > 0 && dbxModelVariableSyncFlag === undefined) {
+          dbxModelVariableSyncFlag = text;
+        }
       }
     }
   }
-  return { dbxModelVariable };
+  return { dbxModelVariable, dbxModelVariableSyncFlag };
 }
 
 /**

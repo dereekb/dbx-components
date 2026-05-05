@@ -150,6 +150,7 @@ function extractFromFile(file, content) {
       field.optional = optional;
       if (prop?.description) field.description = prop.description;
       if (enumRef) field.enumRef = enumRef;
+      if (prop?.syncFlag) field.syncFlag = prop.syncFlag;
       return field;
     });
 
@@ -170,6 +171,7 @@ function extractFromFile(file, content) {
       enums: relevantEnums,
       detectionHints
     };
+    if (iface.description) entry.description = iface.description;
     if (id.parentIdentityConst) entry.parentIdentityConst = id.parentIdentityConst;
     const groupName = groupByModelName.get(modelName);
     if (groupName) entry.modelGroup = groupName;
@@ -308,7 +310,8 @@ function parseInterfaceBody(body) {
       tsType,
       optional: isOptional,
       description: jsdoc.description,
-      longName: jsdoc.tags.dbxModelVariable
+      longName: jsdoc.tags.dbxModelVariable,
+      syncFlag: jsdoc.tags.dbxModelVariableSyncFlag
     });
   }
   return out;
@@ -586,6 +589,12 @@ function parseJsdocBlock(body) {
       tags.dbxModelGroup = value.length > 0 ? value : true;
     } else if (tag === 'dbxModelVariable') {
       tags.dbxModelVariable = value || '';
+    } else if (tag === 'dbxModelVariableSyncFlag') {
+      // Captures the rest-of-line text describing what this flag synchronizes.
+      // Multi-line continuations are dropped to match the existing first-paragraph contract.
+      if (value.length > 0) {
+        tags.dbxModelVariableSyncFlag = value;
+      }
     }
   }
   return { description: description && description.length > 0 ? description : undefined, tags };
