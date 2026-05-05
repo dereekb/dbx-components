@@ -74,7 +74,7 @@ import { DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExam
                 <span class="dbx-bold">{{ completed }} of {{ total }}</span>
                 requirements completed
               </p>
-              <mat-progress-bar mode="determinate" [value]="progressPercent" class="doc-hero-progress dbx-mb3"></mat-progress-bar>
+              <mat-progress-bar mode="determinate" [value]="progressPercent" class="dbx-mb3"></mat-progress-bar>
               <button mat-stroked-button class="doc-hero-action">
                 View all requirements
                 <mat-icon iconPositionEnd>arrow_forward</mat-icon>
@@ -108,10 +108,6 @@ import { DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExam
         font: var(--mat-sys-label-medium);
         letter-spacing: 0.08em;
         text-transform: uppercase;
-      }
-
-      .doc-hero-progress {
-        --mdc-linear-progress-track-color: color-mix(in srgb, var(--mat-sys-inverse-on-surface) 25%, transparent);
       }
 
       .doc-hero-action {
