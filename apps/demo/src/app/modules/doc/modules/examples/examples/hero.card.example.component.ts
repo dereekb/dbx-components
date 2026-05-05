@@ -19,8 +19,8 @@ import { FlexLayoutModule } from '@ngbracket/ngx-layout';
  * - card text                          → `--mat-sys-inverse-on-surface`
  *
  * Layout uses dbx spacing utilities (`.dbx-p4`, `.dbx-mb3`, `.dbx-pb1`,
- * `.dbx-spacer`, `.dbx-bold`) instead of bespoke margin / padding values, and
- * the M3 type-role utilities (`.dbx-text-label-medium`,
+ * `.dbx-spacer`) instead of bespoke margin / padding values, and the M3
+ * type-role utilities (`.dbx-text-label-medium`, `.dbx-text-title-large`,
  * `.dbx-text-headline-large`) plus `.dbx-uppercase` / `.dbx-tracked-wide` for
  * the eyebrow and trailing-percent typography — no inline `font:` declarations.
  *
@@ -59,15 +59,15 @@ import { FlexLayoutModule } from '@ngbracket/ngx-layout';
           <code>.dbx-pb1</code>
           /
           <code>.dbx-mb1</code>
-          for vertical rhythm, and
-          <code>.dbx-bold</code>
-          for emphasised labels — instead of bespoke
+          for vertical rhythm — instead of bespoke
           <code>margin</code>
           /
           <code>padding</code>
           values. Typography composes the M3 type-role utilities
           <code>.dbx-text-label-medium</code>
-          (eyebrow) and
+          (eyebrow),
+          <code>.dbx-text-title-large</code>
+          (headline), and
           <code>.dbx-text-headline-large</code>
           (trailing percent) with
           <code>.dbx-uppercase</code>
@@ -75,17 +75,19 @@ import { FlexLayoutModule } from '@ngbracket/ngx-layout';
           <code>.dbx-tracked-wide</code>
           for the eyebrow's overline treatment, so no inline
           <code>font:</code>
-          declarations are needed.
+          declarations are needed. Inline emphasis uses semantic
+          <code>&lt;strong&gt;</code>
+          rather than a bespoke weight class.
         </p>
       </dbx-docs-ui-example-info>
       <dbx-docs-ui-example-content>
         <mat-card appearance="filled">
           <mat-card-content class="dbx-p4 doc-hero-card-content" fxLayout="row" fxLayoutAlign="start" fxLayoutGap="var(--dbx-padding-3)">
             <div class="dbx-flex-fill doc-hero-card-main">
-              <div class="dbx-text-label-medium dbx-uppercase dbx-tracked-wide dbx-bold dbx-pb1">YOUR ONBOARDING PROGRESS</div>
-              <h3 class="dbx-bold dbx-mb1">{{ remaining }} requirements to go</h3>
+              <div class="dbx-text-label-medium dbx-uppercase dbx-tracked-wide dbx-pb1">YOUR ONBOARDING PROGRESS</div>
+              <h3 class="dbx-text-title-large dbx-mb1">{{ remaining }} requirements to go</h3>
               <p class="dbx-mb3">
-                <span class="dbx-bold">{{ completed }} of {{ total }}</span>
+                <strong>{{ completed }} of {{ total }}</strong>
                 requirements completed
               </p>
               <mat-progress-bar mode="determinate" [value]="progressPercent" class="dbx-mb3"></mat-progress-bar>
@@ -94,7 +96,7 @@ import { FlexLayoutModule } from '@ngbracket/ngx-layout';
                 <mat-icon iconPositionEnd>arrow_forward</mat-icon>
               </button>
             </div>
-            <div class="dbx-text-headline-large dbx-bold" aria-hidden="true">{{ progressPercent }}%</div>
+            <div class="dbx-text-headline-large" aria-hidden="true">{{ progressPercent }}%</div>
           </mat-card-content>
         </mat-card>
       </dbx-docs-ui-example-content>
