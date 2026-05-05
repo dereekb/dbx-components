@@ -4,6 +4,11 @@
 
 // MARK: Mixin
 @mixin core() {
+  /// @dbx-utility action-snackbar
+  /// @intent action-snackbar layout — flex row used by the `<dbx-action-snackbar>` host so the message and trailing button sit on one line
+  /// @role layout
+  /// @component DbxActionSnackbarComponent
+  /// @scope component-class
   .dbx-action-snackbar {
     display: flex;
     align-items: center;

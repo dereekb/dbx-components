@@ -17,7 +17,6 @@ const DERIVATIVE_FIXTURE: FormFieldInfo = {
   configInterface: 'DbxForgeFixtureDerivativeConfig',
   derivedFromSlug: 'text',
   description: 'Test derivative wrapping the text field with presets baked in.',
-  sourcePath: 'fixtures/fixture-derivative.ts',
   config: {},
   example: `dbxForgeFixtureDerivative({ key: 'fixture' })`,
   minimalExample: `dbxForgeFixtureDerivative({ key: 'fixture' })`
@@ -32,7 +31,6 @@ const TEMPLATE_FIXTURE: FormFieldInfo = {
   configInterface: 'DbxForgeFixtureTemplateConfig',
   returnsSlugs: ['fixture-a', 'fixture-b'],
   description: 'Test template returning two related fields.',
-  sourcePath: 'fixtures/fixture-template.ts',
   config: {},
   example: `dbxForgeFixtureTemplate({})`,
   minimalExample: `dbxForgeFixtureTemplate({})`

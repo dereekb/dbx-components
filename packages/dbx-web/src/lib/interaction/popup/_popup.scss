@@ -11,6 +11,11 @@ $dbx-popup-border-radius: 4px;
 
 // MARK: Mixin
 @mixin core() {
+  /// @dbx-utility popup-content
+  /// @intent popup body — `<dbx-popup-content>` host that caps the inner content at `app-height` and clips overflow; pair with `.dbx-popup-content-container` for the inner scroll region and `.dbx-popup-controls` for the header strip
+  /// @role layout
+  /// @component DbxPopupContentComponent
+  /// @scope component-class
   .dbx-popup-content {
     box-sizing: border-box;
     overflow: hidden;

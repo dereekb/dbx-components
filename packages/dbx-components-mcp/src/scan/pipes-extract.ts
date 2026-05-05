@@ -28,8 +28,8 @@ const PIPE_OUTPUT_TYPE_TAG = 'dbxPipeOutputType';
 // MARK: Public types
 /**
  * One pipe entry extracted from a source file. Mirrors {@link PipeEntry}
- * minus `module` (derived from the package being scanned in build-manifest)
- * and `sourcePath` (recomputed against the project root in build-manifest).
+ * minus `module` (derived from the package being scanned in build-manifest).
+ * `filePath` and `line` are kept for in-process warnings and never persisted.
  */
 export interface ExtractedPipeEntry {
   readonly slug: string;

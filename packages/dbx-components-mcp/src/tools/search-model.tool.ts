@@ -76,7 +76,16 @@ const DBX_MODEL_SEARCH_TOOL: Tool = {
 };
 
 // MARK: Scoring
-function scoreTokenMatch(value: string, token: string, exact: number, starts: number, includes: number): number {
+interface ScoreTokenMatchInput {
+  readonly value: string;
+  readonly token: string;
+  readonly exact: number;
+  readonly starts: number;
+  readonly includes: number;
+}
+
+function scoreTokenMatch(input: ScoreTokenMatchInput): number {
+  const { value, token, exact, starts, includes } = input;
   let score = 0;
   if (value === token) score = exact;
   else if (starts > 0 && value.startsWith(token)) score = starts;
@@ -117,10 +126,10 @@ function scoreFirebaseModelAgainstToken(model: FirebaseModel, token: string): nu
   const prefix = model.collectionPrefix.toLowerCase();
 
   let score = 0;
-  score += scoreTokenMatch(name, token, 20, 14, 8);
-  score += scoreTokenMatch(identity, token, 12, 0, 6);
-  score += scoreTokenMatch(modelType, token, 10, 0, 4);
-  score += scoreTokenMatch(prefix, token, 10, 0, 0);
+  score += scoreTokenMatch({ value: name, token, exact: 20, starts: 14, includes: 8 });
+  score += scoreTokenMatch({ value: identity, token, exact: 12, starts: 0, includes: 6 });
+  score += scoreTokenMatch({ value: modelType, token, exact: 10, starts: 0, includes: 4 });
+  score += scoreTokenMatch({ value: prefix, token, exact: 10, starts: 0, includes: 0 });
   score += scoreFirebaseModelFieldsAgainstToken(model, token);
   score += scoreFirebaseModelEnumsAgainstToken(model, token);
   return score;

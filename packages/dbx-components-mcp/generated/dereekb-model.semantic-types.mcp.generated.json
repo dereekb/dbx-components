@@ -17,11 +17,7 @@
         "string",
         "dereekb-model:website-link"
       ],
-      "notes": "MIME type string for a file link (e.g., \"image/png\", \"application/pdf\").",
-      "sourceLocation": {
-        "file": "src/lib/data/website/link.file.ts",
-        "line": 28
-      }
+      "notes": "MIME type string for a file link (e.g., \"image/png\", \"application/pdf\")."
     },
     {
       "name": "WebsiteFileLinkName",
@@ -34,11 +30,7 @@
         "string",
         "dereekb-model:website-link"
       ],
-      "notes": "Display name for a file link. Has no pattern restriction.",
-      "sourceLocation": {
-        "file": "src/lib/data/website/link.file.ts",
-        "line": 47
-      }
+      "notes": "Display name for a file link. Has no pattern restriction."
     },
     {
       "name": "WebsiteFileLinkData",
@@ -51,11 +43,7 @@
         "string",
         "dereekb-model:website-link"
       ],
-      "notes": "The data payload of a file link, typically a URL pointing to the file.",
-      "sourceLocation": {
-        "file": "src/lib/data/website/link.file.ts",
-        "line": 61
-      }
+      "notes": "The data payload of a file link, typically a URL pointing to the file."
     },
     {
       "name": "WebsiteLinkEncodedData",
@@ -68,11 +56,7 @@
         "string",
         "dereekb-model:website-link"
       ],
-      "notes": "Pipe-separated or raw string encoding of website link data.",
-      "sourceLocation": {
-        "file": "src/lib/data/website/link.ts",
-        "line": 48
-      }
+      "notes": "Pipe-separated or raw string encoding of website link data."
     },
     {
       "name": "FacebookProfileId",
@@ -86,11 +70,7 @@
         "string",
         "dereekb-model:social"
       ],
-      "notes": "Facebook profile identifier.",
-      "sourceLocation": {
-        "file": "src/lib/data/website/link.website.ts",
-        "line": 153
-      }
+      "notes": "Facebook profile identifier."
     },
     {
       "name": "InstagramProfileId",
@@ -104,11 +84,7 @@
         "string",
         "dereekb-model:social"
       ],
-      "notes": "Instagram profile identifier.",
-      "sourceLocation": {
-        "file": "src/lib/data/website/link.website.ts",
-        "line": 210
-      }
+      "notes": "Instagram profile identifier."
     },
     {
       "name": "TwitterProfileId",
@@ -122,11 +98,7 @@
         "string",
         "dereekb-model:social"
       ],
-      "notes": "Twitter/X profile identifier.",
-      "sourceLocation": {
-        "file": "src/lib/data/website/link.website.ts",
-        "line": 256
-      }
+      "notes": "Twitter/X profile identifier."
     },
     {
       "name": "TikTokProfileId",
@@ -140,11 +112,7 @@
         "string",
         "dereekb-model:social"
       ],
-      "notes": "TikTok profile identifier.",
-      "sourceLocation": {
-        "file": "src/lib/data/website/link.website.ts",
-        "line": 306
-      }
+      "notes": "TikTok profile identifier."
     },
     {
       "name": "SnapchatProfileId",
@@ -158,11 +126,7 @@
         "string",
         "dereekb-model:social"
       ],
-      "notes": "Snapchat profile identifier.",
-      "sourceLocation": {
-        "file": "src/lib/data/website/link.website.ts",
-        "line": 355
-      }
+      "notes": "Snapchat profile identifier."
     },
     {
       "name": "YouTubeProfileId",
@@ -176,11 +140,7 @@
         "string",
         "dereekb-model:social"
       ],
-      "notes": "YouTube profile identifier.",
-      "sourceLocation": {
-        "file": "src/lib/data/website/link.website.ts",
-        "line": 414
-      }
+      "notes": "YouTube profile identifier."
     },
     {
       "name": "PayPalProfileId",
@@ -194,11 +154,7 @@
         "string",
         "dereekb-model:social"
       ],
-      "notes": "PayPal profile identifier.",
-      "sourceLocation": {
-        "file": "src/lib/data/website/link.website.ts",
-        "line": 473
-      }
+      "notes": "PayPal profile identifier."
     },
     {
       "name": "CashappProfileId",
@@ -212,11 +168,7 @@
         "string",
         "dereekb-model:social"
       ],
-      "notes": "Cash App profile identifier.",
-      "sourceLocation": {
-        "file": "src/lib/data/website/link.website.ts",
-        "line": 524
-      }
+      "notes": "Cash App profile identifier."
     },
     {
       "name": "VenmoProfileId",
@@ -230,11 +182,7 @@
         "string",
         "dereekb-model:social"
       ],
-      "notes": "Venmo profile identifier.",
-      "sourceLocation": {
-        "file": "src/lib/data/website/link.website.ts",
-        "line": 573
-      }
+      "notes": "Venmo profile identifier."
     },
     {
       "name": "SpotifyProfileId",
@@ -248,11 +196,7 @@
         "string",
         "dereekb-model:social"
       ],
-      "notes": "Spotify profile identifier.",
-      "sourceLocation": {
-        "file": "src/lib/data/website/link.website.ts",
-        "line": 632
-      }
+      "notes": "Spotify profile identifier."
     },
     {
       "name": "GrantedRole",
@@ -266,11 +210,7 @@
         "string",
         "dereekb-model:auth"
       ],
-      "notes": "A granted role for a model.",
-      "sourceLocation": {
-        "file": "src/lib/service/permission/role.ts",
-        "line": 11
-      }
+      "notes": "A granted role for a model."
     },
     {
       "name": "SyncEntityId",
@@ -284,11 +224,7 @@
         "string",
         "dereekb-model:sync"
       ],
-      "notes": "A unique identifier for an entity on a specific server.",
-      "sourceLocation": {
-        "file": "src/lib/service/sync/sync.entity.ts",
-        "line": 12
-      }
+      "notes": "A unique identifier for an entity on a specific server."
     },
     {
       "name": "SyncEntityCommonType",
@@ -302,11 +238,7 @@
         "string",
         "dereekb-model:sync"
       ],
-      "notes": "A common type for an entity that is shared/used between all systems for an entity that should be synchronized.",
-      "sourceLocation": {
-        "file": "src/lib/service/sync/sync.entity.ts",
-        "line": 22
-      }
+      "notes": "A common type for an entity that is shared/used between all systems for an entity that should be synchronized."
     },
     {
       "name": "SyncEntityCommonId",
@@ -320,11 +252,7 @@
         "string",
         "dereekb-model:sync"
       ],
-      "notes": "A common identifier for an entity that is shared/used between all systems for an entity that should be synchronized.\n\nThis identifier should be used for retrieving a similar entity from any server.",
-      "sourceLocation": {
-        "file": "src/lib/service/sync/sync.entity.ts",
-        "line": 34
-      }
+      "notes": "A common identifier for an entity that is shared/used between all systems for an entity that should be synchronized.\n\nThis identifier should be used for retrieving a similar entity from any server."
     },
     {
       "name": "SyncSourceName",
@@ -337,11 +265,7 @@
         "string",
         "dereekb-model:sync"
       ],
-      "notes": "English name for a SyncSource.\n\nIs not used as a key.",
-      "sourceLocation": {
-        "file": "src/lib/service/sync/sync.source.ts",
-        "line": 10
-      }
+      "notes": "English name for a SyncSource.\n\nIs not used as a key."
     },
     {
       "name": "SyncSourceId",
@@ -355,11 +279,7 @@
         "string",
         "dereekb-model:sync"
       ],
-      "notes": "A unique identifier for a SyncSource.",
-      "sourceLocation": {
-        "file": "src/lib/service/sync/sync.source.ts",
-        "line": 20
-      }
+      "notes": "A unique identifier for a SyncSource."
     }
   ]
 }

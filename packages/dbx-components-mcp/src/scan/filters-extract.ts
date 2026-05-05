@@ -27,8 +27,9 @@ const FILTER_SKILL_REFS_TAG = 'dbxFilterSkillRefs';
 
 // MARK: Public types
 /**
- * One directive entry extracted from a source file. `module`, `sourcePath`,
- * and `sourceLocation.file` are recomputed by the build phase.
+ * One directive entry extracted from a source file. `module` is supplied by
+ * the build phase. `filePath` and `line` are kept for in-process warnings
+ * and never persisted.
  */
 export interface ExtractedFilterDirective {
   readonly kind: 'directive';

@@ -20,7 +20,7 @@ const INDENT = '  ';
  */
 export function formatTreeAsMarkdown(tree: SpecFileTree, view: SpecTreeView = 'all', filters: SpecTreeFilters = {}): string {
   const lines: string[] = [];
-  appendHeader(lines, tree, view, filters);
+  appendHeader({ lines, tree, view, filters });
   if (view === 'helpers') {
     appendHelpersSection(lines, tree.helpers);
     return lines.join('\n');
@@ -64,10 +64,21 @@ export function formatSearchAsMarkdown(tree: SpecFileTree, result: SpecSearchRes
   return lines.join('\n');
 }
 
-function appendHeader(lines: string[], tree: SpecFileTree, view: SpecTreeView, filters: SpecTreeFilters): void {
+interface AppendHeaderInput {
+  readonly lines: string[];
+  readonly tree: SpecFileTree;
+  readonly view: SpecTreeView;
+  readonly filters: SpecTreeFilters;
+}
+
+function appendHeader(input: AppendHeaderInput): void {
+  const { lines, tree, view, filters } = input;
   lines.push(`# Spec tree — ${tree.specPath}`, '', `Detected workspace prefix: \`${tree.prefix ?? '(none)'}\` (source: ${tree.prefixSource})`, `Counts: ${tree.describeCount} describes, ${tree.itCount} its, ${tree.fixtureCallsCount} fixture calls, ${tree.helpers.length} helper-describes`);
   if (view !== 'helpers' && view !== 'its' && (filters.filterByModel || filters.filterByDescribePath)) {
-    lines.push(`Active filters: ${[filters.filterByModel ? `model=\`${filters.filterByModel}\`` : '', filters.filterByDescribePath ? `describePath=\`${filters.filterByDescribePath}\`` : ''].filter(Boolean).join(', ')}`);
+    const modelFilter = filters.filterByModel ? `model=\`${filters.filterByModel}\`` : '';
+    const describeFilter = filters.filterByDescribePath ? `describePath=\`${filters.filterByDescribePath}\`` : '';
+    const activeFilters = [modelFilter, describeFilter].filter(Boolean).join(', ');
+    lines.push(`Active filters: ${activeFilters}`);
   }
 }
 
@@ -111,7 +122,7 @@ function appendItIndex(lines: string[], tree: SpecFileTree): void {
   lines.push('');
   for (const { describePath, node } of its) {
     const path = describePath.length > 0 ? `${describePath.join(' > ')} > ` : '';
-    const title = node.title !== undefined ? (node.titleIsTemplate ? `\`${node.title}\` _(template)_` : `\`${node.title}\``) : '_(no title)_';
+    const title = describeOrItTitle(node);
     const callee = node.callee !== undefined ? ` _(via \`${node.callee}\`)_` : '';
     lines.push(`- ${path}${title}${callee} [L${node.line}]`);
   }
@@ -121,10 +132,12 @@ function appendHit(lines: string[], hit: SpecSearchHit): void {
   const label = hitLabel(hit);
   const extras: string[] = [];
   if (hit.describePath.length > 0) {
-    extras.push(`${INDENT}describes: ${hit.describePath.map((s) => `\`${s}\``).join(' > ')}`);
+    const describes = hit.describePath.map((s) => `\`${s}\``).join(' > ');
+    extras.push(`${INDENT}describes: ${describes}`);
   }
   if (hit.fixtureChain.length > 0) {
-    extras.push(`${INDENT}fixtures: ${hit.fixtureChain.map((s) => `\`${s}\``).join(' > ')}`);
+    const fixtures = hit.fixtureChain.map((s) => `\`${s}\``).join(' > ');
+    extras.push(`${INDENT}fixtures: ${fixtures}`);
   }
   lines.push(`- ${label} [L${hit.line}–${hit.endLine}]`, ...extras);
 }
@@ -156,12 +169,18 @@ function appendNode(lines: string[], node: SpecNode, depth: number): void {
   }
 }
 
+function describeOrItTitle(node: SpecNode & { readonly kind: 'describe' | 'it' }): string {
+  if (node.title === undefined) return '_(no title)_';
+  if (node.titleIsTemplate) return `\`${node.title}\` _(template)_`;
+  return `\`${node.title}\``;
+}
+
 function nodeLabel(node: SpecNode): string {
   switch (node.kind) {
     case 'describe':
-      return `**${node.callee ?? 'describe'}** ${node.title === undefined ? '_(no title)_' : node.titleIsTemplate ? `\`${node.title}\` _(template)_` : `\`${node.title}\``}`;
+      return `**${node.callee ?? 'describe'}** ${describeOrItTitle(node)}`;
     case 'it':
-      return `**${node.callee ?? 'it'}** ${node.title === undefined ? '_(no title)_' : node.titleIsTemplate ? `\`${node.title}\` _(template)_` : `\`${node.title}\``}`;
+      return `**${node.callee ?? 'it'}** ${describeOrItTitle(node)}`;
     case 'hook':
       return `**${node.title ?? 'hook'}**`;
     case 'fixture': {
@@ -199,8 +218,14 @@ function nodeLabel(node: SpecNode): string {
  * @param filters - the optional model / describe-path filters
  * @returns a new root node with the view + filters applied
  */
+function applyViewToRoot(root: SpecNode, view: SpecTreeView): SpecNode {
+  if (view === 'describes') return collapseTo(root, ['describe', 'it', 'hook', 'helperCall']);
+  if (view === 'fixtures') return collapseTo(root, ['fixture']);
+  return root;
+}
+
 function applyFilters(root: SpecNode, view: SpecTreeView, filters: SpecTreeFilters): SpecNode {
-  let next = view === 'describes' ? collapseTo(root, ['describe', 'it', 'hook', 'helperCall']) : view === 'fixtures' ? collapseTo(root, ['fixture']) : root;
+  let next = applyViewToRoot(root, view);
   if (filters.filterByModel !== undefined && filters.filterByModel !== '') {
     next = pruneByModel(next, filters.filterByModel.toLowerCase()) ?? { ...next, children: [] };
   }
@@ -239,12 +264,20 @@ function pruneByModel(node: SpecNode, model: string): SpecNode | undefined {
 function pruneByDescribePath(node: SpecNode, path: readonly string[]): SpecNode | undefined {
   if (path.length === 0) return node;
   const matched: SpecNode[] = [];
-  collectDescribesMatching(node, path, [], matched);
+  collectDescribesMatching({ node, target: path, stack: [], out: matched });
   if (matched.length === 0) return undefined;
   return { ...node, children: matched };
 }
 
-function collectDescribesMatching(node: SpecNode, target: readonly string[], stack: string[], out: SpecNode[]): void {
+interface CollectDescribesMatchingInput {
+  readonly node: SpecNode;
+  readonly target: readonly string[];
+  readonly stack: string[];
+  readonly out: SpecNode[];
+}
+
+function collectDescribesMatching(input: CollectDescribesMatchingInput): void {
+  const { node, target, stack, out } = input;
   if (node.kind === 'describe' && node.title !== undefined) {
     stack.push(node.title.toLowerCase());
     if (pathStartsWith(stack, target)) {
@@ -253,7 +286,7 @@ function collectDescribesMatching(node: SpecNode, target: readonly string[], sta
       return;
     }
   }
-  for (const child of node.children) collectDescribesMatching(child, target, stack, out);
+  for (const child of node.children) collectDescribesMatching({ node: child, target, stack, out });
   if (node.kind === 'describe' && node.title !== undefined) stack.pop();
 }
 

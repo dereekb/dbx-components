@@ -1,3 +1,38 @@
+## [13.10.8](https://github.com/dereekb/dbx-components/compare/v13.10.7-dev...v13.10.8) (2026-05-05)
+
+
+### Build System
+
+- **dbx-components-mcp:** lint fix ([19f0b1cd](https://github.com/dereekb/dbx-components/commit/19f0b1cd2144a3c35613ecc71423397e72bc3b6a))
+- lint fix ([65c35953](https://github.com/dereekb/dbx-components/commit/65c3595368d8ea77dadea8048ef3127c1ca4cda9))
+- lint fix + mcp regeneration ([acb112fa](https://github.com/dereekb/dbx-components/commit/acb112fa7902aa3e7c0b94638519e3a5745da8c1))
+- peer dep sync + mcp regeneration ([e5ded0f7](https://github.com/dereekb/dbx-components/commit/e5ded0f7ab86565f6975a2f7faaf7096c581c73b))
+
+
+### Code Refactoring
+
+- added dbx-icon-tile component and directive ([0fe5845d](https://github.com/dereekb/dbx-components/commit/0fe5845db2cf434a9bd6abe8373467330e121f82))
+- added M3 type-role text utilities ([7c528985](https://github.com/dereekb/dbx-components/commit/7c528985cbd6d99eb80d771a24204cf285dd87ab))
+- annotated reusable css utilities pass 2 ([4fb83581](https://github.com/dereekb/dbx-components/commit/4fb83581deea29474d4c974d0dbdad1c331ed0d4))
+- bump ng-forge version ([da7e4e70](https://github.com/dereekb/dbx-components/commit/da7e4e7060f960ab37ce45b1f360875fd09376b9))
+- bump nx version, angular version ([913815fa](https://github.com/dereekb/dbx-components/commit/913815faaeb054396f1e019829b7604c8bedd7d9))
+- dbx-components-mcp css-utility cluster ([cc32399e](https://github.com/dereekb/dbx-components/commit/cc32399e6a99a7b052b507507c558bf26da9396a))
+- **dbx-components-mcp:** added dbxDocsUiExamples cluster ([1aff5b89](https://github.com/dereekb/dbx-components/commit/1aff5b892096171e4cd07c31fe04fc3d3790e7fe))
+- **dbx-components-mcp:** drop sourcePath/sourceLocation ([d2d2d501](https://github.com/dereekb/dbx-components/commit/d2d2d501984f1ba5ba41ad5aa9fab2e003d9ebd0))
+- **dbx-components-mcp:** improve ui-smell-check output ([b21f1dcb](https://github.com/dereekb/dbx-components/commit/b21f1dcbecb6da30c705700de682f45c23926b91))
+- **dbx-components-mcp:** sonar issue cleanup ([cc865449](https://github.com/dereekb/dbx-components/commit/cc86544987184145fc5a8004006140b00f1a066d)), closes [Array#push](https://github.com/dereekb/Array/issues/push)
+- dbx-pdf-merge-editor slot uploaders + validator ([45287d42](https://github.com/dereekb/dbx-components/commit/45287d42830a0ace6437c270b74cb690c866f063))
+- list-card-items-list paints mat-mdc-list-item directly ([7e7576fb](https://github.com/dereekb/dbx-components/commit/7e7576fb7fa9ed27180c9f509484b90db16e0420))
+- marked packages sideEffects-free ([11651c19](https://github.com/dereekb/dbx-components/commit/11651c1990bd81fea06ba39d39086f43104899f2))
+- replaced .dbx-bold with M3 type-role utilities ([05437e02](https://github.com/dereekb/dbx-components/commit/05437e02a4da352ce0c243c56f188b26c5811b88))
+- update ng-forge version ([80516aba](https://github.com/dereekb/dbx-components/commit/80516abac47c971adc5904622984bec18ee7dca5))
+- updated _pdf.scss ([5b852401](https://github.com/dereekb/dbx-components/commit/5b852401d0d0e48d7186518c20960f6cc07576f0))
+
+
+### Demo
+
+- added card example page ([7c0a4c16](https://github.com/dereekb/dbx-components/commit/7c0a4c164c9e338f3f383f5ee1510f67ddbe9395))
+
 ## [13.10.7](https://github.com/dereekb/dbx-components/compare/v13.10.6-dev...v13.10.7) (2026-05-04)
 
 

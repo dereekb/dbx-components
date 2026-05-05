@@ -15,7 +15,7 @@
  * the real filesystem.
  */
 
-import { relative, resolve } from 'node:path';
+import { resolve } from 'node:path';
 import { type } from 'arktype';
 import { Project } from 'ts-morph';
 import { PipeManifest, type PipeEntry } from '../manifest/pipes-schema.js';
@@ -97,7 +97,7 @@ export async function buildPipesManifest(input: BuildPipesManifestInput): Promis
   const extractResult = extractPipeEntries({ project });
   const moduleName = scanSection.module ?? packageName;
   const sourceLabel = scanSection.source ?? packageName;
-  const entries = extractResult.entries.map((entry) => assembleEntry({ entry, projectRoot, moduleName }));
+  const entries = extractResult.entries.map((entry) => assembleEntry({ entry, moduleName }));
 
   const manifest = {
     version: 1 as const,
@@ -162,14 +162,11 @@ async function loadScanConfig(configPath: string, readFile: BuildPipesReadFile):
 
 interface AssembleEntryInput {
   readonly entry: ExtractedPipeEntry;
-  readonly projectRoot: string;
   readonly moduleName: string;
 }
 
 function assembleEntry(input: AssembleEntryInput): PipeEntry {
-  const { entry, projectRoot, moduleName } = input;
-  const projectRelative = relative(projectRoot, entry.filePath).replaceAll('\\', '/');
-  const sourcePath = projectRelative.replace(/^src\//, '');
+  const { entry, moduleName } = input;
 
   const out: PipeEntry = {
     slug: entry.slug,
@@ -183,10 +180,8 @@ function assembleEntry(input: AssembleEntryInput): PipeEntry {
     description: entry.description,
     args: entry.args.map((a) => ({ ...a })),
     example: entry.example,
-    sourcePath,
     ...(entry.relatedSlugs && entry.relatedSlugs.length > 0 ? { relatedSlugs: [...entry.relatedSlugs] } : {}),
     ...(entry.skillRefs && entry.skillRefs.length > 0 ? { skillRefs: [...entry.skillRefs] } : {}),
-    sourceLocation: { file: projectRelative, line: entry.line },
     ...(entry.deprecated !== undefined ? { deprecated: entry.deprecated } : {}),
     ...(entry.since !== undefined ? { since: entry.since } : {})
   };

@@ -1,5 +1,6 @@
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { loadCssUtilityManifests } from './css-utilities-loader.js';
 import { loadSemanticTypeManifests } from './loader.js';
 import { loadTokenManifests } from './tokens-loader.js';
 
@@ -18,6 +19,10 @@ const BUNDLED_TOKEN_PATHS = {
   dbxWeb: resolve(MANIFESTS_DIR, 'dereekb-dbx-web.tokens.mcp.generated.json'),
   matSys: resolve(MANIFESTS_DIR, 'angular-material-m3.tokens.mcp.generated.json'),
   mdc: resolve(MANIFESTS_DIR, 'angular-material-mdc.tokens.mcp.generated.json')
+} as const;
+
+const BUNDLED_CSS_UTILITY_PATHS = {
+  dbxWeb: resolve(MANIFESTS_DIR, 'dereekb-dbx-web.css-utilities.mcp.generated.json')
 } as const;
 
 describe('bundled @dereekb/* manifests', () => {
@@ -52,5 +57,14 @@ describe('bundled @dereekb/* manifests', () => {
     expect(result.loadedSources).toEqual(['dereekb-dbx-web', 'angular-material-m3', 'angular-material-mdc']);
     expect(result.warnings).toEqual([]);
     expect(result.entries.size).toBeGreaterThan(50);
+  });
+
+  it('loads bundled css-utility manifest cleanly through loadCssUtilityManifests', async () => {
+    const result = await loadCssUtilityManifests({
+      sources: [{ origin: 'bundled', path: BUNDLED_CSS_UTILITY_PATHS.dbxWeb }]
+    });
+    expect(result.loadedSources).toEqual(['@dereekb/dbx-web']);
+    expect(result.warnings).toEqual([]);
+    expect(result.entries.size).toBeGreaterThanOrEqual(10);
   });
 });

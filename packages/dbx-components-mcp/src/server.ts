@@ -14,14 +14,18 @@ import { loadForgeFieldRegistry, type LoadForgeFieldRegistryResult } from './man
 import { loadPipeRegistry, type LoadPipeRegistryResult } from './manifest/load-pipes-registry.js';
 import { loadSemanticTypeRegistry, type LoadSemanticTypeRegistryResult } from './manifest/load-registry.js';
 import { loadTokenRegistry, type LoadTokenRegistryResult } from './manifest/load-tokens-registry.js';
+import { loadCssUtilityRegistry, type LoadCssUtilityRegistryResult } from './manifest/load-css-utilities-registry.js';
 import { loadUiComponentRegistry, type LoadUiComponentRegistryResult } from './manifest/load-ui-components-registry.js';
+import { loadDbxDocsUiExamplesRegistry, type LoadDbxDocsUiExamplesRegistryResult } from './manifest/load-dbx-docs-ui-examples-registry.js';
 import type { ActionRegistry } from './registry/actions-runtime.js';
 import type { FilterRegistry } from './registry/filters-runtime.js';
 import type { ForgeFieldRegistry } from './registry/forge-fields.js';
 import type { PipeRegistry } from './registry/pipes-runtime.js';
 import type { SemanticTypeRegistry } from './registry/semantic-types.js';
 import type { TokenRegistry } from './registry/tokens-runtime.js';
+import type { CssUtilityRegistry } from './registry/css-utilities-runtime.js';
 import type { UiComponentRegistry } from './registry/ui-components-runtime.js';
+import type { DbxDocsUiExamplesRegistry } from './registry/dbx-docs-ui-examples-runtime.js';
 import { FIREBASE_MODELS } from './registry/firebase-models.js';
 import type { FixtureModelRegistry } from './tools/model-fixture-shared/index.js';
 import { registerResources } from './resources/index.js';
@@ -67,9 +71,11 @@ Resource URIs are namespaced by domain:
 - dbx://pipe/entries[/{slug}|/category/{category}]
 - dbx://filter/entries[/{slug}|/kind/{kind}]
 - dbx://token/entries[/{cssVariable}|/source/{source}|/role/{role}]
+- dbx://css-utility/entries[/{slug}|/role/{role}|/source/{source}]
 
 UI styling reverse/forward lookup:
 - dbx_css_token_lookup — forward: intent/value/role/component → recommended \`var(--…)\` + utility class + dbx-web primitive.
+- dbx_css_class_lookup — forward + reverse: name/intent/declarations → canonical dbx-web utility class (e.g. \`.dbx-flex-fill-0\`) with file:line + match diff. **Run this before authoring new SCSS rules** so existing utilities are reused instead of re-implemented.
 - dbx_ui_smell_check   — reverse: paste component HTML/SCSS, get smells + canonical fix. **Run this after writing component SCSS** so hardcoded paddings/radii/shadows/colors get caught before they ship.
 
 Fall back to dbx-components prose skills only for content this server doesn't carry: Firestore security rules, multi-file orchestration walkthroughs, model design phase, naming/tier checklists, and decision/why content beyond catalog lookup.`;
@@ -85,18 +91,22 @@ export interface CreateServerOptions {
   readonly cwd?: string;
   readonly semanticTypeRegistry?: SemanticTypeRegistry;
   readonly uiComponentRegistry?: UiComponentRegistry;
+  readonly dbxDocsUiExamplesRegistry?: DbxDocsUiExamplesRegistry;
   readonly forgeFieldRegistry?: ForgeFieldRegistry;
   readonly pipeRegistry?: PipeRegistry;
   readonly actionRegistry?: ActionRegistry;
   readonly filterRegistry?: FilterRegistry;
   readonly tokenRegistry?: TokenRegistry;
+  readonly cssUtilityRegistry?: CssUtilityRegistry;
   readonly onLoaderResult?: (result: LoadSemanticTypeRegistryResult) => void;
   readonly onUiLoaderResult?: (result: LoadUiComponentRegistryResult) => void;
+  readonly onDbxDocsUiExamplesLoaderResult?: (result: LoadDbxDocsUiExamplesRegistryResult) => void;
   readonly onForgeLoaderResult?: (result: LoadForgeFieldRegistryResult) => void;
   readonly onPipeLoaderResult?: (result: LoadPipeRegistryResult) => void;
   readonly onActionLoaderResult?: (result: LoadActionRegistryResult) => void;
   readonly onFilterLoaderResult?: (result: LoadFilterRegistryResult) => void;
   readonly onTokenLoaderResult?: (result: LoadTokenRegistryResult) => void;
+  readonly onCssUtilityLoaderResult?: (result: LoadCssUtilityRegistryResult) => void;
   readonly onDownstreamHints?: (hints: readonly DownstreamHint[]) => void;
 }
 
@@ -180,6 +190,24 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
       const message = error instanceof Error ? error.message : String(error);
       process.stderr.write(`[dbx-components-mcp] ui-components registry unavailable: ${message}\n`);
       uiRegistry = undefined;
+    }
+  }
+
+  let dbxDocsUiExamplesRegistry: DbxDocsUiExamplesRegistry | undefined = options.dbxDocsUiExamplesRegistry;
+  if (dbxDocsUiExamplesRegistry === undefined) {
+    const cwd = options.cwd ?? process.cwd();
+    try {
+      const examplesLoaderResult = await loadDbxDocsUiExamplesRegistry({ cwd });
+      if (options.onDbxDocsUiExamplesLoaderResult === undefined) {
+        reportDbxDocsUiExamplesLoaderResult(examplesLoaderResult);
+      } else {
+        options.onDbxDocsUiExamplesLoaderResult(examplesLoaderResult);
+      }
+      dbxDocsUiExamplesRegistry = examplesLoaderResult.registry;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      process.stderr.write(`[dbx-components-mcp] dbx-docs-ui-examples registry unavailable: ${message}\n`);
+      dbxDocsUiExamplesRegistry = undefined;
     }
   }
 
@@ -277,14 +305,32 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
     }
   }
 
+  let cssUtilityRegistry: CssUtilityRegistry | undefined = options.cssUtilityRegistry;
+  if (cssUtilityRegistry === undefined) {
+    const cwd = options.cwd ?? process.cwd();
+    try {
+      const cssUtilityLoaderResult = await loadCssUtilityRegistry({ cwd });
+      if (options.onCssUtilityLoaderResult === undefined) {
+        reportCssUtilityLoaderResult(cssUtilityLoaderResult);
+      } else {
+        options.onCssUtilityLoaderResult(cssUtilityLoaderResult);
+      }
+      cssUtilityRegistry = cssUtilityLoaderResult.registry;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      process.stderr.write(`[dbx-components-mcp] css-utilities registry unavailable: ${message}\n`);
+      cssUtilityRegistry = undefined;
+    }
+  }
+
   const fixtureModelRegistry: FixtureModelRegistry = {
     entries: FIREBASE_MODELS.map((m) => ({ name: m.name, modelType: m.modelType, collectionPrefix: m.collectionPrefix }))
   };
 
   await emitDownstreamHints({ cwd: options.cwd ?? process.cwd(), externalCounts, onDownstreamHints: options.onDownstreamHints });
 
-  registerResources(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, uiComponentRegistry: uiRegistry, actionRegistry, filterRegistry, tokenRegistry });
-  registerTools(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, uiComponentRegistry: uiRegistry, actionRegistry, filterRegistry, tokenRegistry, fixtureModelRegistry, modelValidateRuleOptions, cwd: options.cwd ?? process.cwd() });
+  registerResources(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, uiComponentRegistry: uiRegistry, actionRegistry, filterRegistry, tokenRegistry, cssUtilityRegistry });
+  registerTools(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, uiComponentRegistry: uiRegistry, dbxDocsUiExamplesRegistry, actionRegistry, filterRegistry, tokenRegistry, cssUtilityRegistry, fixtureModelRegistry, modelValidateRuleOptions, cwd: options.cwd ?? process.cwd() });
 
   return server;
 }
@@ -356,6 +402,25 @@ function reportUiLoaderResult(result: LoadUiComponentRegistryResult): void {
   }
   for (const warning of loaderWarnings) {
     process.stderr.write(`[dbx-components-mcp] ui-loader-warning: ${warning.kind}\n`);
+  }
+}
+
+/**
+ * Default observer used when {@link CreateServerOptions.onDbxDocsUiExamplesLoaderResult}
+ * is not supplied. Mirrors the other loader-result reporters for the
+ * dbx-docs-ui-examples registry.
+ *
+ * @param result - the loader output to summarise
+ */
+function reportDbxDocsUiExamplesLoaderResult(result: LoadDbxDocsUiExamplesRegistryResult): void {
+  const { registry, configPath, configWarnings, loaderWarnings, externalSourceCount } = result;
+  const summary = [`[dbx-components-mcp] dbx-docs-ui-examples registry loaded`, `  sources: ${registry.loadedSources.join(', ') || '(none)'}`, `  external: ${externalSourceCount}`, `  config: ${configPath ?? '(none)'}`, `  entries: ${registry.all.length}`, `  warnings: ${configWarnings.length + loaderWarnings.length}`].join('\n');
+  process.stderr.write(`${summary}\n`);
+  for (const warning of configWarnings) {
+    process.stderr.write(`[dbx-components-mcp] dbx-docs-ui-examples-config-warning: ${warning.kind} ${warning.path}\n`);
+  }
+  for (const warning of loaderWarnings) {
+    process.stderr.write(`[dbx-components-mcp] dbx-docs-ui-examples-loader-warning: ${warning.kind}\n`);
   }
 }
 
@@ -451,6 +516,25 @@ function reportTokenLoaderResult(result: LoadTokenRegistryResult): void {
   }
   for (const warning of loaderWarnings) {
     process.stderr.write(`[dbx-components-mcp] tokens-loader-warning: ${warning.kind}\n`);
+  }
+}
+
+/**
+ * Default observer used when {@link CreateServerOptions.onCssUtilityLoaderResult}
+ * is not supplied. Mirrors the other loader-result reporters for the
+ * css-utility-class registry.
+ *
+ * @param result - the loader output to summarise
+ */
+function reportCssUtilityLoaderResult(result: LoadCssUtilityRegistryResult): void {
+  const { registry, configPath, configWarnings, loaderWarnings, externalSourceCount } = result;
+  const summary = [`[dbx-components-mcp] css-utilities registry loaded`, `  sources: ${registry.loadedSources.join(', ') || '(none)'}`, `  external: ${externalSourceCount}`, `  config: ${configPath ?? '(none)'}`, `  entries: ${registry.all.length}`, `  warnings: ${configWarnings.length + loaderWarnings.length}`].join('\n');
+  process.stderr.write(`${summary}\n`);
+  for (const warning of configWarnings) {
+    process.stderr.write(`[dbx-components-mcp] css-utilities-config-warning: ${warning.kind} ${warning.path}\n`);
+  }
+  for (const warning of loaderWarnings) {
+    process.stderr.write(`[dbx-components-mcp] css-utilities-loader-warning: ${warning.kind}\n`);
   }
 }
 

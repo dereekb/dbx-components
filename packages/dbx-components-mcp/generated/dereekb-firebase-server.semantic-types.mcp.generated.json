@@ -17,11 +17,7 @@
         "string",
         "dereekb-firebase-server:test"
       ],
-      "notes": "An encoded JWT string representing a Firebase custom token created for testing.",
-      "sourceLocation": {
-        "file": "test/src/lib/firebase/firebase.admin.auth.ts",
-        "line": 445
-      }
+      "notes": "An encoded JWT string representing a Firebase custom token created for testing."
     },
     {
       "name": "FirebaseAdminTestEnvironmentHost",
@@ -39,11 +35,7 @@
           "code": "const host: FirebaseAdminTestEnvironmentHost = 'localhost:8080';"
         }
       ],
-      "notes": "A `host:port` string used to connect to a Firebase emulator.",
-      "sourceLocation": {
-        "file": "test/src/lib/firebase/firebase.ts",
-        "line": 15
-      }
+      "notes": "A `host:port` string used to connect to a Firebase emulator."
     },
     {
       "name": "McpToolResponseSummary",
@@ -56,11 +48,7 @@
         "string",
         "dereekb-firebase-server:mcp"
       ],
-      "notes": "A natural language summary of an MCP tool operation result.",
-      "sourceLocation": {
-        "file": "src/lib/nest/model/api.details.ts",
-        "line": 25
-      }
+      "notes": "A natural language summary of an MCP tool operation result."
     }
   ]
 }

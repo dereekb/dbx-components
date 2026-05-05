@@ -54,6 +54,13 @@ export const defaultGlobber: ScanGlobber = async (input) => {
  */
 export type LoadPackageNameResult = { readonly kind: 'ok'; readonly packageName: string } | { readonly kind: 'fail'; readonly outcome: { readonly kind: 'no-package'; readonly packagePath: string } | { readonly kind: 'invalid-package'; readonly packagePath: string; readonly error: string } };
 
+/**
+ * Reads `package.json` at the supplied path and returns its `name` field, normalising file/parse errors into a discriminated outcome compatible with `*-build-manifest.ts` callers.
+ *
+ * @param packagePath - Absolute path to `package.json`.
+ * @param readFile - File-reader injected by the scan runtime.
+ * @returns Either the parsed package name or a discriminated failure outcome.
+ */
 export async function loadPackageName(packagePath: string, readFile: ScanReadFile): Promise<LoadPackageNameResult> {
   let raw: string | null = null;
   try {

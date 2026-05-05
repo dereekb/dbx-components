@@ -40,13 +40,13 @@ function formatPdfMergeEntrySize(size: number): string {
       <button mat-icon-button type="button" cdkDragHandle class="dbx-pdf-merge-entry-handle" aria-label="Drag to reorder">
         <mat-icon>drag_indicator</mat-icon>
       </button>
-      <mat-icon class="dbx-pdf-merge-entry-icon" [class.dbx-pdf-merge-entry-icon-error]="isErrorSignal()">{{ iconSignal() }}</mat-icon>
-      <div class="dbx-pdf-merge-entry-info">
-        <div class="dbx-pdf-merge-entry-name" [title]="entry().name">{{ entry().name }}</div>
+      <mat-icon class="dbx-pdf-merge-entry-icon" [class.dbx-warn]="isErrorSignal()">{{ iconSignal() }}</mat-icon>
+      <div class="dbx-pdf-merge-entry-info dbx-flex-fill-0">
+        <div class="dbx-pdf-merge-entry-name dbx-text-truncate" [title]="entry().name">{{ entry().name }}</div>
         <div class="dbx-pdf-merge-entry-meta dbx-hint dbx-small">
           <span>{{ sizeSignal() }}</span>
           @if (statusLabelSignal(); as label) {
-            <span class="dbx-pdf-merge-entry-status">{{ label }}</span>
+            <span class="dbx-pdf-merge-entry-status" [class.dbx-warn]="isErrorSignal()">{{ label }}</span>
           }
         </div>
       </div>
@@ -59,7 +59,7 @@ function formatPdfMergeEntrySize(size: number): string {
     </div>
   `,
   host: {
-    class: 'dbx-pdf-merge-entry',
+    class: 'dbx-pdf-merge-entry d-block',
     '[class.dbx-pdf-merge-entry--error]': 'isErrorSignal()',
     '[class.dbx-pdf-merge-entry--validating]': 'isValidatingSignal()'
   },

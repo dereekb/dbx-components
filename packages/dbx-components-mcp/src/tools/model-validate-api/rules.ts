@@ -353,12 +353,21 @@ function isLineBetween(line: number, lowExclusive: number, highExclusive: number
   return line > lowExclusive && line < highExclusive;
 }
 
-function collectParamsDeclsBetween(file: ExtractedFile, lowExclusive: number, highExclusive: number, ignoreDeclName: string): readonly string[] {
-  return file.paramsDecls.filter((d) => d.name !== ignoreDeclName && isLineBetween(d.line, lowExclusive, highExclusive)).map((d) => d.name);
+interface CollectBetweenInput {
+  readonly file: ExtractedFile;
+  readonly lowExclusive: number;
+  readonly highExclusive: number;
+  readonly ignoreName: string;
 }
 
-function collectParamsValidatorsBetween(file: ExtractedFile, lowExclusive: number, highExclusive: number, ignoreValidatorName: string): readonly string[] {
-  return file.paramsValidators.filter((v) => v.name !== ignoreValidatorName && isLineBetween(v.line, lowExclusive, highExclusive)).map((v) => v.name);
+function collectParamsDeclsBetween(input: CollectBetweenInput): readonly string[] {
+  const { file, lowExclusive, highExclusive, ignoreName } = input;
+  return file.paramsDecls.filter((d) => d.name !== ignoreName && isLineBetween(d.line, lowExclusive, highExclusive)).map((d) => d.name);
+}
+
+function collectParamsValidatorsBetween(input: CollectBetweenInput): readonly string[] {
+  const { file, lowExclusive, highExclusive, ignoreName } = input;
+  return file.paramsValidators.filter((v) => v.name !== ignoreName && isLineBetween(v.line, lowExclusive, highExclusive)).map((v) => v.name);
 }
 
 function collectResultDeclsBetween(file: ExtractedFile, lowExclusive: number, highExclusive: number): readonly string[] {
@@ -367,7 +376,7 @@ function collectResultDeclsBetween(file: ExtractedFile, lowExclusive: number, hi
 
 function findStatementsBetween(options: FindStatementsBetweenOptions): readonly string[] {
   const { file, lowExclusive, highExclusive, ignoreDeclName, ignoreValidatorName } = options;
-  return [...collectParamsDeclsBetween(file, lowExclusive, highExclusive, ignoreDeclName), ...collectParamsValidatorsBetween(file, lowExclusive, highExclusive, ignoreValidatorName), ...collectResultDeclsBetween(file, lowExclusive, highExclusive)];
+  return [...collectParamsDeclsBetween({ file, lowExclusive, highExclusive, ignoreName: ignoreDeclName }), ...collectParamsValidatorsBetween({ file, lowExclusive, highExclusive, ignoreName: ignoreValidatorName }), ...collectResultDeclsBetween(file, lowExclusive, highExclusive)];
 }
 
 function validatorBaseName(name: string): string | undefined {

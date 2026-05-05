@@ -164,18 +164,12 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
   const newEntry = reExtraction.entries.find((e) => e.fixtureClassName === rendered.fixtureClassName);
 
   const lines: string[] = [];
-  lines.push(`# Scaffolded \`${rendered.fixtureClassName}\``);
-  lines.push('');
-  lines.push(`File: \`${extraction.fixturePath}\``);
-  lines.push(`Archetype: \`${parsed.archetype}\``);
-  lines.push('');
-  lines.push('## Inserted');
+  lines.push(`# Scaffolded \`${rendered.fixtureClassName}\``, '', `File: \`${extraction.fixturePath}\``, `Archetype: \`${parsed.archetype}\``, '', '## Inserted');
   for (const ins of rendered.inserted) {
     lines.push(`- ${ins.kind}: \`${ins.name}\``);
   }
   if (newEntry) {
-    lines.push('', `Fixture lines: ${newEntry.fixtureLine}-${newEntry.fixtureEndLine}`);
-    lines.push(`Instance lines: ${newEntry.instanceLine}-${newEntry.instanceEndLine}`);
+    lines.push('', `Fixture lines: ${newEntry.fixtureLine}-${newEntry.fixtureEndLine}`, `Instance lines: ${newEntry.instanceLine}-${newEntry.instanceEndLine}`);
   }
   lines.push('', '## Follow-up TODOs');
   for (const todo of rendered.todos) {

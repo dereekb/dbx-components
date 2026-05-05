@@ -8,8 +8,8 @@
  *     compact section that callers can render inline or aggregate over a
  *     collision group.
  *   - `full` — brief plus examples, guards, factories, related, notes,
- *     deprecated, since, sourceLocation. Emits a section per available
- *     field so callers can see everything the manifest carries.
+ *     deprecated, since. Emits a section per available field so callers can
+ *     see everything the manifest carries.
  *
  * Search results always render in brief form, sorted alphabetically by
  * name (the registry already sorts; the formatter just keeps order).
@@ -92,9 +92,6 @@ function formatFull(entry: SemanticTypeEntry): string {
   }
   if (entry.notes !== undefined && entry.notes.length > 0) {
     sections.push(`### Notes\n\n${entry.notes}`);
-  }
-  if (entry.sourceLocation !== undefined) {
-    sections.push(`### Source\n\n\`${entry.sourceLocation.file}:${entry.sourceLocation.line}\``);
   }
   return sections.join('\n\n');
 }

@@ -773,7 +773,10 @@
       "description": "Display large — hero/display headings. Sub-tokens: -size, -weight, -line-height, -tracking, -font.",
       "defaults": {
         "light": "400 57px / 64px Roboto"
-      }
+      },
+      "utilityClasses": [
+        ".dbx-text-display-large"
+      ]
     },
     {
       "cssVariable": "--mat-sys-display-medium",
@@ -786,7 +789,10 @@
       "description": "Display medium — large heroes. Sub-tokens: -size, -weight, -line-height, -tracking, -font.",
       "defaults": {
         "light": "400 45px / 52px Roboto"
-      }
+      },
+      "utilityClasses": [
+        ".dbx-text-display-medium"
+      ]
     },
     {
       "cssVariable": "--mat-sys-display-small",
@@ -799,7 +805,10 @@
       "description": "Display small — page titles for split-screen layouts. Sub-tokens: -size, -weight, -line-height, -tracking, -font.",
       "defaults": {
         "light": "400 36px / 44px Roboto"
-      }
+      },
+      "utilityClasses": [
+        ".dbx-text-display-small"
+      ]
     },
     {
       "cssVariable": "--mat-sys-headline-large",
@@ -813,7 +822,10 @@
       "description": "Headline large — h1 equivalents. Sub-tokens: -size, -weight, -line-height, -tracking, -font.",
       "defaults": {
         "light": "400 32px / 40px Roboto"
-      }
+      },
+      "utilityClasses": [
+        ".dbx-text-headline-large"
+      ]
     },
     {
       "cssVariable": "--mat-sys-headline-medium",
@@ -827,7 +839,10 @@
       "description": "Headline medium — h2 equivalents. Sub-tokens: -size, -weight, -line-height, -tracking, -font.",
       "defaults": {
         "light": "400 28px / 36px Roboto"
-      }
+      },
+      "utilityClasses": [
+        ".dbx-text-headline-medium"
+      ]
     },
     {
       "cssVariable": "--mat-sys-headline-small",
@@ -841,7 +856,10 @@
       "description": "Headline small — h3 equivalents. Sub-tokens: -size, -weight, -line-height, -tracking, -font.",
       "defaults": {
         "light": "400 24px / 32px Roboto"
-      }
+      },
+      "utilityClasses": [
+        ".dbx-text-headline-small"
+      ]
     },
     {
       "cssVariable": "--mat-sys-title-large",
@@ -855,7 +873,10 @@
       "description": "Title large — section headers. Sub-tokens: -size, -weight, -line-height, -tracking, -font.",
       "defaults": {
         "light": "500 22px / 28px Roboto"
-      }
+      },
+      "utilityClasses": [
+        ".dbx-text-title-large"
+      ]
     },
     {
       "cssVariable": "--mat-sys-title-medium",
@@ -869,7 +890,10 @@
       "description": "Title medium — card headers. Sub-tokens: -size, -weight, -line-height, -tracking, -font.",
       "defaults": {
         "light": "500 16px / 24px Roboto"
-      }
+      },
+      "utilityClasses": [
+        ".dbx-text-title-medium"
+      ]
     },
     {
       "cssVariable": "--mat-sys-title-small",
@@ -883,7 +907,10 @@
       "description": "Title small — compact headings. Sub-tokens: -size, -weight, -line-height, -tracking, -font.",
       "defaults": {
         "light": "500 14px / 20px Roboto"
-      }
+      },
+      "utilityClasses": [
+        ".dbx-text-title-small"
+      ]
     },
     {
       "cssVariable": "--mat-sys-body-large",
@@ -896,7 +923,10 @@
       "description": "Body large — primary reading text. Sub-tokens: -size, -weight, -line-height, -tracking, -font.",
       "defaults": {
         "light": "400 16px / 24px Roboto"
-      }
+      },
+      "utilityClasses": [
+        ".dbx-text-body-large"
+      ]
     },
     {
       "cssVariable": "--mat-sys-body-medium",
@@ -910,7 +940,10 @@
       "description": "Body medium — default body text. Sub-tokens: -size, -weight, -line-height, -tracking, -font.",
       "defaults": {
         "light": "400 14px / 20px Roboto"
-      }
+      },
+      "utilityClasses": [
+        ".dbx-text-body-medium"
+      ]
     },
     {
       "cssVariable": "--mat-sys-body-small",
@@ -924,7 +957,10 @@
       "description": "Body small — supporting copy. Sub-tokens: -size, -weight, -line-height, -tracking, -font.",
       "defaults": {
         "light": "400 12px / 16px Roboto"
-      }
+      },
+      "utilityClasses": [
+        ".dbx-text-body-small"
+      ]
     },
     {
       "cssVariable": "--mat-sys-label-large",
@@ -938,7 +974,10 @@
       "description": "Label large — button labels. Sub-tokens: -size, -weight, -line-height, -tracking, -font.",
       "defaults": {
         "light": "500 14px / 20px Roboto"
-      }
+      },
+      "utilityClasses": [
+        ".dbx-text-label-large"
+      ]
     },
     {
       "cssVariable": "--mat-sys-label-medium",
@@ -951,7 +990,10 @@
       "description": "Label medium — supporting labels. Sub-tokens: -size, -weight, -line-height, -tracking, -font.",
       "defaults": {
         "light": "500 12px / 16px Roboto"
-      }
+      },
+      "utilityClasses": [
+        ".dbx-text-label-medium"
+      ]
     },
     {
       "cssVariable": "--mat-sys-label-small",
@@ -965,7 +1007,10 @@
       "description": "Label small — tiniest labels. Sub-tokens: -size, -weight, -line-height, -tracking, -font.",
       "defaults": {
         "light": "500 11px / 16px Roboto"
-      }
+      },
+      "utilityClasses": [
+        ".dbx-text-label-small"
+      ]
     },
     {
       "cssVariable": "--mat-sys-easing-standard",

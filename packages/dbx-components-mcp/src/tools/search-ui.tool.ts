@@ -16,6 +16,8 @@ import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
 import { UI_COMPONENT_CATEGORIES, type UiComponentCategoryValue, type UiComponentEntry } from '../manifest/ui-components-schema.js';
 import type { UiComponentRegistry } from '../registry/ui-components-runtime.js';
+import { type DbxDocsUiExamplesRegistry, EMPTY_DBX_DOCS_UI_EXAMPLES_REGISTRY } from '../registry/dbx-docs-ui-examples-runtime.js';
+import { type DbxDocsUiExampleEntry } from '../manifest/dbx-docs-ui-examples-schema.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 
 const DEFAULT_LIMIT = 10;
@@ -242,9 +244,17 @@ interface FormatSearchResultsOptions {
   readonly category: UiComponentCategoryValue | undefined;
 }
 
+/**
+ * Options for appending the "Related examples" section after primary hits.
+ */
+interface FormatRelatedExamplesOptions {
+  readonly hits: readonly UiSearchHit[];
+  readonly examplesRegistry: DbxDocsUiExamplesRegistry;
+}
+
 // MARK: Formatting
-function formatSearchResults(options: FormatSearchResultsOptions): string {
-  const { query, tokens, hits, category } = options;
+function formatSearchResults(options: FormatSearchResultsOptions & FormatRelatedExamplesOptions): string {
+  const { query, tokens, hits, category, examplesRegistry } = options;
   const tokenDisplay = tokens.join(', ');
   const scopeLabel = category ? ` · category=\`${category}\`` : '';
   let result: string;
@@ -255,8 +265,36 @@ function formatSearchResults(options: FormatSearchResultsOptions): string {
     for (const hit of hits) {
       lines.push(`## \`${hit.entry.slug}\` · ${hit.entry.category} · score ${hit.score}`, '', `- **class:** \`${hit.entry.className}\``, `- **kind:** \`${hit.entry.kind}\``, `- **selector:** \`${hit.entry.selector}\``, `- **matched:** \`${hit.matchedTokens.join(', ')}\``, '', hit.entry.description, '', `→ \`dbx_ui_lookup topic="${hit.entry.slug}"\` for full docs.`, '');
     }
+    const relatedExamples = collectRelatedExamples(hits, examplesRegistry);
+    if (relatedExamples.length > 0) {
+      lines.push('## Related examples', '');
+      for (const example of relatedExamples) {
+        const matchedSlugs = (example.relatedSlugs ?? []).filter((slug) => hits.some((h) => h.entry.slug === slug));
+        const matchedText = matchedSlugs.map((s) => '`' + s + '`').join(', ');
+        const relatedSuffix = matchedText.length > 0 ? ` _(related to ${matchedText})_` : '';
+        lines.push(`- \`${example.slug}\` (${example.appRef}) — ${example.summary}${relatedSuffix}`);
+      }
+      lines.push('', `→ Call \`dbx_ui_examples pattern="<slug>" depth="full"\` for the full source of any example.`);
+    }
     result = lines.join('\n').trimEnd();
   }
+  return result;
+}
+
+function collectRelatedExamples(hits: readonly UiSearchHit[], examplesRegistry: DbxDocsUiExamplesRegistry): readonly DbxDocsUiExampleEntry[] {
+  const seen = new Set<string>();
+  const result: DbxDocsUiExampleEntry[] = [];
+  for (const hit of hits) {
+    for (const example of examplesRegistry.findRelatedTo(hit.entry.slug)) {
+      const key = `${example.module}::${example.slug}`;
+      if (seen.has(key)) {
+        continue;
+      }
+      seen.add(key);
+      result.push(example);
+    }
+  }
+  result.sort((a, b) => a.slug.localeCompare(b.slug));
   return result;
 }
 
@@ -271,6 +309,13 @@ export interface CreateSearchUiToolInput {
    * plus any external manifests declared in `dbx-mcp.config.json`.
    */
   readonly registry: UiComponentRegistry;
+  /**
+   * Optional app-sourced examples registry. When supplied, the search output
+   * appends a "Related examples" section listing app-sourced examples whose
+   * `relatedSlugs` overlap any returned component slug. When omitted (or
+   * empty), the search output is unchanged.
+   */
+  readonly examplesRegistry?: DbxDocsUiExamplesRegistry;
 }
 
 /**
@@ -282,7 +327,7 @@ export interface CreateSearchUiToolInput {
  * @returns a {@link DbxTool} ready to register with the dispatcher
  */
 export function createSearchUiTool(input: CreateSearchUiToolInput): DbxTool {
-  const { registry } = input;
+  const { registry, examplesRegistry = EMPTY_DBX_DOCS_UI_EXAMPLES_REGISTRY } = input;
   const run = (rawArgs: unknown): ToolResult => {
     let args: ParsedSearchUiArgs;
     try {
@@ -294,7 +339,7 @@ export function createSearchUiTool(input: CreateSearchUiToolInput): DbxTool {
     const tokens = tokenize(args.query);
     const corpus = args.category ? registry.findByCategory(args.category) : registry.all;
     const hits = searchRegistry(corpus, tokens, args.limit);
-    const text = formatSearchResults({ query: args.query, tokens, hits, category: args.category });
+    const text = formatSearchResults({ query: args.query, tokens, hits, category: args.category, examplesRegistry });
     const result: ToolResult = { content: [{ type: 'text', text }] };
     return result;
   };

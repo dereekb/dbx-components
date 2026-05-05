@@ -1,4 +1,5 @@
 import { JPEG_MIME_TYPE, PDF_MIME_TYPE, PNG_MIME_TYPE, type FileSize, type Maybe, type MimeTypeWithoutParameters } from '@dereekb/util';
+import { type Observable } from 'rxjs';
 
 /**
  * Identifies which kind of source file a {@link PdfMergeEntry} represents.
@@ -71,6 +72,29 @@ export interface PdfMergeEntry extends Pick<PdfMergeEntryValidationResult, 'erro
    * The validation promise.
    */
   readonly validation: Promise<PdfMergeEntryValidationResult>;
+  /**
+   * Optional slot identifier. Set when the entry was added through a {@link DbxPdfMergeEditorFileUploadComponent} slot, used by the store to filter entries per slot and clean them up when the slot component is destroyed. Entries added through the editor's default upload area have no slot id.
+   */
+  readonly slotId?: Maybe<string>;
+}
+
+/**
+ * Validation delegate registered on the {@link DbxPdfMergeEditorStore}. Receives the live {@link PdfMergeEntry} stream and returns a stream of `boolean` values controlling whether the store may emit a merge result. Emitting `false` causes {@link DbxPdfMergeEditorStore.currentMergeOutput$} to emit `undefined` and prevents {@link DbxPdfMergeEditorStore.mergeOutput$} from emitting.
+ */
+export type DbxPdfMergeEditorValidator = (entries$: Observable<PdfMergeEntry[]>) => Observable<boolean>;
+
+/**
+ * Minimal interface that a slot upload component exposes to {@link DbxPdfMergeEditorFileUploadValidatorDirective}. Implemented by {@link DbxPdfMergeEditorFileUploadComponent}.
+ */
+export interface DbxPdfMergeEditorFileUploadValidatorSlot {
+  /**
+   * Identifies the slot. Used by the validator directive only for diagnostics — the directive aggregates by reference, not by id.
+   */
+  readonly slotId: () => string;
+  /**
+   * Stream that emits `true` while this slot is satisfied (per its own config and the validator's required/optional rules) and `false` otherwise.
+   */
+  readonly isValid$: Observable<boolean>;
 }
 
 /**

@@ -63,10 +63,8 @@ export const FilterDirectiveEntry = type({
   inputs: FilterInputEntry.array(),
   outputs: FilterInputEntry.array(),
   example: 'string',
-  sourcePath: 'string',
   'relatedSlugs?': 'string[]',
   'skillRefs?': 'string[]',
-  'sourceLocation?': type({ file: 'string', line: 'number' }),
   'deprecated?': 'boolean | string',
   'since?': 'string'
 });
@@ -89,10 +87,8 @@ export const FilterPatternEntry = type({
   module: 'string',
   description: 'string',
   example: 'string',
-  sourcePath: 'string',
   'relatedSlugs?': 'string[]',
   'skillRefs?': 'string[]',
-  'sourceLocation?': type({ file: 'string', line: 'number' }),
   'deprecated?': 'boolean | string',
   'since?': 'string'
 });

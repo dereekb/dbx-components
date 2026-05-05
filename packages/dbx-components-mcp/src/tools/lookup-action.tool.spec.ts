@@ -11,7 +11,6 @@ const FIXTURE_ENTRIES: readonly ActionEntryInfo[] = [
     module: '@dereekb/dbx-core',
     description: 'Root of the action context.',
     skillRefs: ['dbx__ref__dbx-component-patterns'],
-    sourcePath: 'packages/dbx-core/src/lib/action/directive/context/action.directive.ts',
     inputs: [],
     outputs: [],
     producesContext: true,
@@ -27,7 +26,6 @@ const FIXTURE_ENTRIES: readonly ActionEntryInfo[] = [
     module: '@dereekb/dbx-core',
     description: 'Wires a `Work<T, O>` function as the action handler.',
     skillRefs: ['dbx__ref__dbx-component-patterns'],
-    sourcePath: 'packages/dbx-core/src/lib/action/directive/state/action.handler.directive.ts',
     inputs: [
       {
         alias: 'dbxActionHandler',
@@ -51,7 +49,6 @@ const FIXTURE_ENTRIES: readonly ActionEntryInfo[] = [
     module: '@dereekb/dbx-core',
     description: 'Auto-fires the action whenever it becomes modified.',
     skillRefs: ['dbx__ref__dbx-component-patterns'],
-    sourcePath: 'packages/dbx-core/src/lib/action/directive/auto/action.autotrigger.directive.ts',
     inputs: [],
     outputs: [],
     producesContext: false,
@@ -66,7 +63,6 @@ const FIXTURE_ENTRIES: readonly ActionEntryInfo[] = [
     module: '@dereekb/dbx-core',
     description: 'NgRx ComponentStore that drives an action lifecycle.',
     skillRefs: ['dbx__ref__dbx-component-patterns'],
-    sourcePath: 'packages/dbx-core/src/lib/action/action.store.ts',
     methods: [{ name: 'trigger', signature: 'trigger(): void', description: 'Transitions IDLE → TRIGGERED.' }],
     observables: [{ name: 'actionState$', type: 'Observable<DbxActionState>', description: 'Current state.' }],
     disabledKeyDefaults: ['dbx_action_disabled'],
@@ -81,7 +77,6 @@ const FIXTURE_ENTRIES: readonly ActionEntryInfo[] = [
     module: '@dereekb/dbx-core',
     description: 'Default state.',
     skillRefs: ['dbx__ref__dbx-component-patterns'],
-    sourcePath: 'packages/dbx-core/src/lib/action/action.ts',
     transitionsFrom: ['RESOLVED', 'REJECTED', 'DISABLED'],
     transitionsTo: ['TRIGGERED', 'DISABLED'],
     example: 'DbxActionState.IDLE'
@@ -95,7 +90,6 @@ const FIXTURE_ENTRIES: readonly ActionEntryInfo[] = [
     module: '@dereekb/dbx-core',
     description: 'Handler is in flight.',
     skillRefs: ['dbx__ref__dbx-component-patterns'],
-    sourcePath: 'packages/dbx-core/src/lib/action/action.ts',
     transitionsFrom: ['VALUE_READY'],
     transitionsTo: ['RESOLVED', 'REJECTED'],
     example: 'DbxActionState.WORKING'
@@ -109,7 +103,6 @@ const FIXTURE_ENTRIES: readonly ActionEntryInfo[] = [
     module: '@dereekb/dbx-core',
     description: 'Handler succeeded.',
     skillRefs: ['dbx__ref__dbx-component-patterns'],
-    sourcePath: 'packages/dbx-core/src/lib/action/action.ts',
     transitionsFrom: ['WORKING'],
     transitionsTo: ['IDLE', 'DISABLED'],
     example: 'DbxActionState.RESOLVED'

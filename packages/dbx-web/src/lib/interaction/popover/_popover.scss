@@ -7,6 +7,11 @@ $dbx-popover-header-height: 48px;
 
 // MARK: Mixin
 @mixin core() {
+  /// @dbx-utility popover-container
+  /// @intent popover surface — `<dbx-popover>` host that paints the `--mat-sys-surface` background with the `--mat-sys-corner-medium` border-radius
+  /// @role layout
+  /// @component DbxPopoverComponent
+  /// @scope component-class
   .dbx-popover-container {
     background: var(--mat-sys-surface);
     border-radius: var(--mat-sys-corner-medium, 12px);

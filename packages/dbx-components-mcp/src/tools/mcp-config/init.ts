@@ -86,6 +86,12 @@ const CLUSTER_FILENAME_SEGMENT: Record<DownstreamCluster, string> = {
   filters: 'filters'
 };
 
+function changeReason(before: string | null, after: string): InitFileChange['reason'] {
+  if (before === null) return 'new';
+  if (after === before) return 'unchanged';
+  return 'updated';
+}
+
 function clusterFilenameSegment(cluster: DownstreamCluster): string {
   return CLUSTER_FILENAME_SEGMENT[cluster];
 }
@@ -233,7 +239,7 @@ async function planPackageScanConfig(input: { snapshot: WorkspaceSnapshot; packa
     relativePath: workspaceRel(snapshot.workspaceRoot, scanConfigPath),
     before,
     after,
-    reason: before === null ? 'new' : after === before ? 'unchanged' : 'updated'
+    reason: changeReason(before, after)
   };
   return { change, sourcesToRegister };
 }
@@ -270,7 +276,7 @@ async function planRootConfig(input: { snapshot: WorkspaceSnapshot; sourcesToReg
     relativePath: workspaceRel(snapshot.workspaceRoot, configPath),
     before,
     after,
-    reason: before === null ? 'new' : after === before ? 'unchanged' : 'updated'
+    reason: changeReason(before, after)
   };
 }
 

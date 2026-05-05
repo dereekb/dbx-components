@@ -42,8 +42,7 @@ describe('SemanticTypeEntry schema', () => {
       examples: [{ caption: 'simple', code: "const e: EmailAddress = 'a@b.com';" }, { code: "const e: EmailAddress = 'x@y.io';" }],
       notes: 'RFC-5321 compliant.',
       deprecated: false,
-      since: '13.9.0',
-      sourceLocation: { file: 'packages/util/src/lib/contact/email.ts', line: 6 }
+      since: '13.9.0'
     };
     const parsed = SemanticTypeEntry(full);
     expect(parsed instanceof type.errors).toBe(false);
@@ -67,11 +66,6 @@ describe('SemanticTypeEntry schema', () => {
 
   it('rejects an entry with an unknown baseType', () => {
     const parsed = SemanticTypeEntry({ ...minimalEntry, baseType: 'tuple' });
-    expect(parsed instanceof type.errors).toBe(true);
-  });
-
-  it('rejects an entry with a malformed sourceLocation', () => {
-    const parsed = SemanticTypeEntry({ ...minimalEntry, sourceLocation: { file: 'a.ts' } });
     expect(parsed instanceof type.errors).toBe(true);
   });
 

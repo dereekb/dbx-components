@@ -120,14 +120,12 @@ export const ActionDirectiveEntry = type({
   module: 'string',
   description: 'string',
   skillRefs: 'string[]',
-  sourcePath: 'string',
   inputs: ActionInputEntry.array(),
   outputs: ActionOutputEntry.array(),
   producesContext: 'boolean',
   consumesContext: 'boolean',
   stateInteraction: '("IDLE" | "DISABLED" | "TRIGGERED" | "VALUE_READY" | "WORKING" | "RESOLVED" | "REJECTED")[]',
   example: 'string',
-  'sourceLocation?': type({ file: 'string', line: 'number' }),
   'deprecated?': 'boolean | string',
   'since?': 'string'
 });
@@ -149,12 +147,10 @@ export const ActionStoreEntry = type({
   module: 'string',
   description: 'string',
   skillRefs: 'string[]',
-  sourcePath: 'string',
   methods: ActionStoreMethodEntry.array(),
   observables: ActionStoreObservableEntry.array(),
   disabledKeyDefaults: 'string[]',
   example: 'string',
-  'sourceLocation?': type({ file: 'string', line: 'number' }),
   'deprecated?': 'boolean | string',
   'since?': 'string'
 });
@@ -178,11 +174,9 @@ export const ActionStateEntry = type({
   module: 'string',
   description: 'string',
   skillRefs: 'string[]',
-  sourcePath: 'string',
   transitionsFrom: '("IDLE" | "DISABLED" | "TRIGGERED" | "VALUE_READY" | "WORKING" | "RESOLVED" | "REJECTED")[]',
   transitionsTo: '("IDLE" | "DISABLED" | "TRIGGERED" | "VALUE_READY" | "WORKING" | "RESOLVED" | "REJECTED")[]',
   example: 'string',
-  'sourceLocation?': type({ file: 'string', line: 'number' }),
   'deprecated?': 'boolean | string',
   'since?': 'string'
 });

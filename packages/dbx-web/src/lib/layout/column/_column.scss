@@ -8,6 +8,9 @@ $two-columns-right-padding-size: 6px;
 
 // MARK: Mixin
 @mixin core() {
+  /// @dbx-utility two-column
+  /// @intent two-column page layout — fixed-width left column with elevated right content area
+  /// @role layout
   .dbx-two-column {
     height: 100%;
     max-width: 100%;

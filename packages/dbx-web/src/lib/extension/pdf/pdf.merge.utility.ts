@@ -1,5 +1,5 @@
 import { PDFDocument } from '@cantoo/pdf-lib';
-import { JPEG_MIME_TYPE, JPEG_MIME_TYPES, mimeTypeForFileExtension, PDF_ENCRYPT_MARKER, PDF_EOF_MARKER, PDF_HEADER, PDF_MIME_TYPE, PNG_MIME_TYPE, sequentialIncrementingNumberStringModelIdFactory, slashPathDetails, type Building, type MimeTypeWithoutParameters, type ModelIdFactory } from '@dereekb/util';
+import { JPEG_MIME_TYPE, JPEG_MIME_TYPES, mimeTypeForFileExtension, PDF_ENCRYPT_MARKER, PDF_EOF_MARKER, PDF_HEADER, PDF_MIME_TYPE, PNG_MIME_TYPE, sequentialIncrementingNumberStringModelIdFactory, slashPathDetails, type Building, type Maybe, type MimeTypeWithoutParameters, type ModelIdFactory } from '@dereekb/util';
 import { PDF_MERGE_RESULT_MIME_TYPE, type PdfMergeEntry, type PdfMergeEntryKind, type PdfMergeEntryValidationResult } from './pdf.merge';
 
 const TEXT_DECODER = new TextDecoder('latin1');
@@ -52,14 +52,30 @@ function resolvePdfMergeMimeType(file: File, kind: PdfMergeEntryKind): MimeTypeW
 const DEFAULT_ENTRY_ID_FACTORY: ModelIdFactory = sequentialIncrementingNumberStringModelIdFactory();
 
 /**
+ * Optional input for {@link buildPdfMergeEntry}.
+ */
+export interface BuildPdfMergeEntryConfig {
+  /**
+   * Optional slot identifier to attach to the entry. Used by the store to attribute the entry to a {@link DbxPdfMergeEditorFileUploadComponent} slot.
+   */
+  readonly slotId?: Maybe<string>;
+  /**
+   * Optional id factory override (used by tests for deterministic ids).
+   */
+  readonly idFactory?: ModelIdFactory;
+}
+
+/**
  * Builds a {@link PdfMergeEntry} from a user-provided file, classifying its kind and assigning a fresh id. Returns `null` for unsupported file types so the caller can drop them.
  *
  * @param file - File the user added.
- * @param idFactory - Optional id factory override (used by tests for deterministic ids).
+ * @param config - Optional config for slot attribution and id factory override.
  * @returns The new entry with `validating` status, or `null` when the file is not a supported PDF/PNG/JPEG.
  */
-export function buildPdfMergeEntry(file: File, idFactory: ModelIdFactory = DEFAULT_ENTRY_ID_FACTORY): PdfMergeEntry | null {
+export function buildPdfMergeEntry(file: File, config?: Maybe<BuildPdfMergeEntryConfig>): PdfMergeEntry | null {
   const kind = classifyPdfMergeFile(file);
+  const idFactory = config?.idFactory ?? DEFAULT_ENTRY_ID_FACTORY;
+  const slotId = config?.slotId;
   let entry: PdfMergeEntry | null;
 
   if (kind == null) {
@@ -72,7 +88,8 @@ export function buildPdfMergeEntry(file: File, idFactory: ModelIdFactory = DEFAU
       mimeType: resolvePdfMergeMimeType(file, kind),
       size: file.size,
       kind,
-      status: 'validating' as const
+      status: 'validating' as const,
+      slotId
     };
 
     (nextEntry as Building<PdfMergeEntry>).validation = validatePdfMergeEntry(nextEntry);

@@ -46,8 +46,7 @@ function formatSingle(match: ScoredTokenMatch, input: ResolveTokenInput, otherMa
   if (entry.scssVariable !== undefined) {
     lines.push(`**SCSS:** \`${entry.scssVariable}\``);
   }
-  lines.push('');
-  lines.push(entry.description);
+  lines.push('', entry.description);
 
   if (entry.defaults.light !== undefined || entry.defaults.dark !== undefined) {
     lines.push('', '## Default value');
@@ -95,8 +94,7 @@ function formatHeaderLine(entry: TokenEntry): string {
 function formatAmbiguous(input: ResolveTokenInput, matches: readonly ScoredTokenMatch[]): string {
   const lines: string[] = [`# Top candidates`, '', `Multiple tokens look relevant for the supplied query (${describeQuery(input)}). The candidates are sorted by confidence:`, ''];
   for (const match of matches) {
-    lines.push(`## \`${match.entry.cssVariable}\` · score ${match.score}`);
-    lines.push('', `${match.entry.description}`, '');
+    lines.push(`## \`${match.entry.cssVariable}\` · score ${match.score}`, '', `${match.entry.description}`, '');
     if (match.entry.defaults.light !== undefined) {
       lines.push(`- light default: \`${match.entry.defaults.light}\``);
     }
@@ -118,8 +116,7 @@ function formatBrowse(registry: TokenRegistry, category: string | undefined, mat
   if (list.length === 0) {
     lines.push('_No tokens matched._');
   } else {
-    lines.push('| CSS variable | Role | Source | Description |');
-    lines.push('| --- | --- | --- | --- |');
+    lines.push('| CSS variable | Role | Source | Description |', '| --- | --- | --- | --- |');
     for (const entry of list) {
       const desc = entry.description.replaceAll('|', String.raw`\|`).split('\n')[0];
       lines.push(`| \`${entry.cssVariable}\` | ${entry.role} | ${entry.source} | ${desc} |`);

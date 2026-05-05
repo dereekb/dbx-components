@@ -63,7 +63,6 @@ export interface PipeEntryInfo {
   readonly args: readonly PipeEntryArgInfo[];
   readonly relatedSlugs: readonly string[];
   readonly skillRefs: readonly string[];
-  readonly sourcePath: string;
   readonly example: string;
 }
 
@@ -202,7 +201,6 @@ export function toPipeEntryInfo(entry: PipeEntry): PipeEntryInfo {
     args: entry.args.map((a) => ({ name: a.name, type: a.type, description: a.description, required: a.required })),
     relatedSlugs: entry.relatedSlugs ?? [],
     skillRefs: entry.skillRefs ?? [],
-    sourcePath: entry.sourcePath,
     example: entry.example
   };
   return result;

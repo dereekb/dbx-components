@@ -20,7 +20,6 @@ const FIXTURE_ENTRIES: readonly UiComponentEntry[] = [
     contentProjection: '<ng-content></ng-content>',
     relatedSlugs: ['subsection'],
     skillRefs: ['dbx__ref__dbx-ui-building-blocks'],
-    sourcePath: 'lib/layout/section/section.component.ts',
     example: '<dbx-section header="Account"><p>Body</p></dbx-section>',
     minimalExample: '<dbx-section header="Title"></dbx-section>'
   },
@@ -36,7 +35,6 @@ const FIXTURE_ENTRIES: readonly UiComponentEntry[] = [
     outputs: [],
     relatedSlugs: ['section'],
     skillRefs: ['dbx__ref__dbx-ui-building-blocks'],
-    sourcePath: 'lib/layout/section/subsection.component.ts',
     example: '<dbx-subsection header="Detail"></dbx-subsection>',
     minimalExample: '<dbx-subsection></dbx-subsection>'
   },
@@ -52,7 +50,6 @@ const FIXTURE_ENTRIES: readonly UiComponentEntry[] = [
     outputs: [],
     relatedSlugs: [],
     skillRefs: [],
-    sourcePath: 'lib/layout/content/content.directive.ts',
     example: '<div dbxContent>Body</div>',
     minimalExample: '<dbx-content>Body</dbx-content>'
   },
@@ -68,7 +65,6 @@ const FIXTURE_ENTRIES: readonly UiComponentEntry[] = [
     outputs: [{ name: 'btnClick', emits: 'MouseEvent', description: 'Click event.' }],
     relatedSlugs: [],
     skillRefs: [],
-    sourcePath: 'lib/button/button.component.ts',
     example: '<dbx-button text="Save"></dbx-button>',
     minimalExample: '<dbx-button></dbx-button>'
   }

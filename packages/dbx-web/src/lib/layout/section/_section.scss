@@ -14,6 +14,9 @@ $header-left-reserved-space-small-screen: 120px;
 // MARK: Mixin
 @mixin core() {
   // MARK: Section
+  /// @dbx-utility section
+  /// @intent rounded section container — exposes --dbx-section-container-shape for shape overrides
+  /// @role layout
   .dbx-section {
     border-radius: var(--dbx-section-container-shape, var(--mat-sys-corner-medium));
   }
@@ -60,6 +63,10 @@ $header-left-reserved-space-small-screen: 120px;
     }
   }
 
+  /// @dbx-utility section-header-padded
+  /// @intent zero the host padding and add a 4px horizontal inset to the inner `.dbx-section-header` — useful when a parent already provides outer padding
+  /// @role spacing
+  /// @see-also section
   .dbx-section-header-padded {
     padding: 0 !important;
 

@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
-import { MatIconModule } from '@angular/material/icon';
 import { type DbxThemeColor } from '../style/style';
 import { DbxColorDirective } from '../style/style.color.directive';
+import { DbxIconTileComponent } from './icon-tile.component';
 
 /**
  * Configuration object for {@link DbxStepBlockComponent}.
@@ -61,14 +61,12 @@ export interface DbxStepBlockComponentConfig {
 @Component({
   selector: 'dbx-step-block',
   template: `
-    <div class="dbx-step-block-badge" [dbxColor]="colorSignal()">
-      @if (iconSignal()) {
-        <mat-icon>{{ iconSignal() }}</mat-icon>
-      } @else {
+    <dbx-icon-tile class="dbx-step-block-badge" [icon]="iconSignal()" [dbxColor]="colorSignal()">
+      @if (!iconSignal()) {
         {{ stepSignal() }}
       }
-    </div>
-    <div class="dbx-step-block-content">
+    </dbx-icon-tile>
+    <div class="dbx-step-block-content dbx-flex-fill-0">
       @if (headerSignal()) {
         <div class="dbx-step-block-header">
           <span class="dbx-step-block-header-label">{{ headerSignal() }}</span>
@@ -85,7 +83,7 @@ export interface DbxStepBlockComponentConfig {
     class: 'dbx-step-block d-block',
     '[class.dbx-step-block-center]': 'centerSignal()'
   },
-  imports: [MatIconModule, DbxColorDirective],
+  imports: [DbxIconTileComponent, DbxColorDirective],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })

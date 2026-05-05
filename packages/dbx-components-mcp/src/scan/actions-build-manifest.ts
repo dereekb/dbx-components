@@ -7,7 +7,7 @@
  * {@link extractActionEntries}, and assembling the manifest envelope.
  */
 
-import { relative, resolve } from 'node:path';
+import { resolve } from 'node:path';
 import { type } from 'arktype';
 import { Project } from 'ts-morph';
 import { ActionManifest, type ActionDirectiveEntry, type ActionEntry, type ActionStateEntry, type ActionStoreEntry } from '../manifest/actions-schema.js';
@@ -39,6 +39,12 @@ const DEFAULT_READ_FILE: BuildActionsReadFile = defaultReadFile;
 const DEFAULT_GLOBBER: BuildActionsGlobber = defaultGlobber;
 
 // MARK: Entry point
+/**
+ * Loads the project's actions scan config, scans the configured files, extracts every action directive/store/state, and builds a validated {@link ActionManifest}.
+ *
+ * @param input - Build options including the project root, generator metadata, and optional file/glob/clock overrides.
+ * @returns A discriminated outcome describing success or the specific failure that occurred.
+ */
 export async function buildActionsManifest(input: BuildActionsManifestInput): Promise<BuildActionsManifestOutcome> {
   const { projectRoot, generator, readFile = DEFAULT_READ_FILE, globber = DEFAULT_GLOBBER, now = () => new Date() } = input;
 
@@ -65,7 +71,7 @@ export async function buildActionsManifest(input: BuildActionsManifestInput): Pr
   const extractResult = extractActionEntries({ project });
   const moduleName = scanSection.module ?? packageName;
   const sourceLabel = scanSection.source ?? packageName;
-  const entries: ActionEntry[] = extractResult.entries.map((entry) => assembleEntry({ entry, projectRoot, moduleName }));
+  const entries: ActionEntry[] = extractResult.entries.map((entry) => assembleEntry({ entry, moduleName }));
 
   const manifest = {
     version: 1 as const,
@@ -130,31 +136,28 @@ async function loadScanConfig(configPath: string, readFile: BuildActionsReadFile
 
 interface AssembleEntryInput {
   readonly entry: ExtractedActionEntry;
-  readonly projectRoot: string;
   readonly moduleName: string;
 }
 
 function assembleEntry(input: AssembleEntryInput): ActionEntry {
-  const { entry, projectRoot, moduleName } = input;
-  const projectRelative = relative(projectRoot, entry.filePath).replaceAll('\\', '/');
-  const sourcePath = projectRelative.replace(/^src\//, '');
+  const { entry, moduleName } = input;
   let result: ActionEntry;
   switch (entry.role) {
     case 'directive':
-      result = assembleDirective({ entry, moduleName, sourcePath, projectRelative });
+      result = assembleDirective({ entry, moduleName });
       break;
     case 'store':
-      result = assembleStore({ entry, moduleName, sourcePath, projectRelative });
+      result = assembleStore({ entry, moduleName });
       break;
     case 'state':
-      result = assembleState({ entry, moduleName, sourcePath, projectRelative });
+      result = assembleState({ entry, moduleName });
       break;
   }
   return result;
 }
 
-function assembleDirective(input: { readonly entry: ExtractedActionDirective; readonly moduleName: string; readonly sourcePath: string; readonly projectRelative: string }): ActionDirectiveEntry {
-  const { entry, moduleName, sourcePath, projectRelative } = input;
+function assembleDirective(input: { readonly entry: ExtractedActionDirective; readonly moduleName: string }): ActionDirectiveEntry {
+  const { entry, moduleName } = input;
   return {
     role: 'directive',
     slug: entry.slug,
@@ -163,19 +166,17 @@ function assembleDirective(input: { readonly entry: ExtractedActionDirective; re
     module: moduleName,
     description: entry.description,
     skillRefs: [...entry.skillRefs],
-    sourcePath,
     inputs: entry.inputs.map((i) => ({ ...i })),
     outputs: entry.outputs.map((o) => ({ ...o })),
     producesContext: entry.producesContext,
     consumesContext: entry.consumesContext,
     stateInteraction: [...entry.stateInteraction],
-    example: entry.example,
-    sourceLocation: { file: projectRelative, line: entry.line }
+    example: entry.example
   };
 }
 
-function assembleStore(input: { readonly entry: ExtractedActionStore; readonly moduleName: string; readonly sourcePath: string; readonly projectRelative: string }): ActionStoreEntry {
-  const { entry, moduleName, sourcePath, projectRelative } = input;
+function assembleStore(input: { readonly entry: ExtractedActionStore; readonly moduleName: string }): ActionStoreEntry {
+  const { entry, moduleName } = input;
   return {
     role: 'store',
     slug: entry.slug,
@@ -183,17 +184,15 @@ function assembleStore(input: { readonly entry: ExtractedActionStore; readonly m
     module: moduleName,
     description: entry.description,
     skillRefs: [...entry.skillRefs],
-    sourcePath,
     methods: entry.methods.map((m) => ({ ...m })),
     observables: entry.observables.map((o) => ({ ...o })),
     disabledKeyDefaults: [...entry.disabledKeyDefaults],
-    example: entry.example,
-    sourceLocation: { file: projectRelative, line: entry.line }
+    example: entry.example
   };
 }
 
-function assembleState(input: { readonly entry: ExtractedActionState; readonly moduleName: string; readonly sourcePath: string; readonly projectRelative: string }): ActionStateEntry {
-  const { entry, moduleName, sourcePath, projectRelative } = input;
+function assembleState(input: { readonly entry: ExtractedActionState; readonly moduleName: string }): ActionStateEntry {
+  const { entry, moduleName } = input;
   return {
     role: 'state',
     slug: entry.slug,
@@ -203,14 +202,18 @@ function assembleState(input: { readonly entry: ExtractedActionState; readonly m
     module: moduleName,
     description: entry.description,
     skillRefs: [...entry.skillRefs],
-    sourcePath,
     transitionsFrom: [...entry.transitionsFrom],
     transitionsTo: [...entry.transitionsTo],
-    example: entry.example,
-    sourceLocation: { file: projectRelative, line: entry.line }
+    example: entry.example
   };
 }
 
+/**
+ * Serializes a validated action manifest as pretty-printed JSON terminated with a newline.
+ *
+ * @param manifest - The validated action manifest to serialize.
+ * @returns A JSON string suitable for writing to disk.
+ */
 export function serializeActionManifest(manifest: ActionManifest): string {
   return `${JSON.stringify(manifest, null, 2)}\n`;
 }

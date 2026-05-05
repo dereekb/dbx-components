@@ -24,16 +24,24 @@ import type { ExtractedInterface, ExtractedInterfaceProp } from './types.js';
 export function collectInheritedProps(iface: ExtractedInterface, interfaceByName: ReadonlyMap<string, ExtractedInterface>): ReadonlyMap<string, ExtractedInterfaceProp> {
   const out = new Map<string, ExtractedInterfaceProp>();
   const visited = new Set<string>();
-  walk(iface, interfaceByName, visited, out);
+  walk({ current: iface, interfaceByName, visited, out });
   return out;
 }
 
-function walk(current: ExtractedInterface, interfaceByName: ReadonlyMap<string, ExtractedInterface>, visited: Set<string>, out: Map<string, ExtractedInterfaceProp>): void {
+interface WalkInput {
+  readonly current: ExtractedInterface;
+  readonly interfaceByName: ReadonlyMap<string, ExtractedInterface>;
+  readonly visited: Set<string>;
+  readonly out: Map<string, ExtractedInterfaceProp>;
+}
+
+function walk(input: WalkInput): void {
+  const { current, interfaceByName, visited, out } = input;
   if (visited.has(current.name)) return;
   visited.add(current.name);
   for (const parentName of current.extendsNames) {
     const parent = interfaceByName.get(parentName);
-    if (parent) walk(parent, interfaceByName, visited, out);
+    if (parent) walk({ current: parent, interfaceByName, visited, out });
   }
   for (const p of current.props) out.set(p.name, p);
 }

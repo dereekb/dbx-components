@@ -14,7 +14,6 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/action/action.store.ts",
       "methods": [
         {
           "name": "afterDistinctBoolean",
@@ -53,11 +52,7 @@
         "dbx_action_disabled",
         "dbx_action_enforce_modified"
       ],
-      "example": "",
-      "sourceLocation": {
-        "file": "src/lib/action/action.store.ts",
-        "line": 254
-      }
+      "example": ""
     },
     {
       "role": "state",
@@ -70,7 +65,6 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/action/action.ts",
       "transitionsFrom": [
         "RESOLVED",
         "REJECTED",
@@ -80,11 +74,7 @@
         "TRIGGERED",
         "DISABLED"
       ],
-      "example": "DbxActionState.IDLE",
-      "sourceLocation": {
-        "file": "src/lib/action/action.ts",
-        "line": 62
-      }
+      "example": "DbxActionState.IDLE"
     },
     {
       "role": "state",
@@ -97,7 +87,6 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/action/action.ts",
       "transitionsFrom": [
         "IDLE",
         "RESOLVED",
@@ -106,11 +95,7 @@
       "transitionsTo": [
         "IDLE"
       ],
-      "example": "DbxActionState.DISABLED",
-      "sourceLocation": {
-        "file": "src/lib/action/action.ts",
-        "line": 69
-      }
+      "example": "DbxActionState.DISABLED"
     },
     {
       "role": "state",
@@ -123,18 +108,13 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/action/action.ts",
       "transitionsFrom": [
         "IDLE"
       ],
       "transitionsTo": [
         "VALUE_READY"
       ],
-      "example": "DbxActionState.TRIGGERED",
-      "sourceLocation": {
-        "file": "src/lib/action/action.ts",
-        "line": 76
-      }
+      "example": "DbxActionState.TRIGGERED"
     },
     {
       "role": "state",
@@ -147,18 +127,13 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/action/action.ts",
       "transitionsFrom": [
         "TRIGGERED"
       ],
       "transitionsTo": [
         "WORKING"
       ],
-      "example": "DbxActionState.VALUE_READY",
-      "sourceLocation": {
-        "file": "src/lib/action/action.ts",
-        "line": 85
-      }
+      "example": "DbxActionState.VALUE_READY"
     },
     {
       "role": "state",
@@ -171,7 +146,6 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/action/action.ts",
       "transitionsFrom": [
         "VALUE_READY"
       ],
@@ -179,11 +153,7 @@
         "RESOLVED",
         "REJECTED"
       ],
-      "example": "DbxActionState.WORKING",
-      "sourceLocation": {
-        "file": "src/lib/action/action.ts",
-        "line": 92
-      }
+      "example": "DbxActionState.WORKING"
     },
     {
       "role": "state",
@@ -196,7 +166,6 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/action/action.ts",
       "transitionsFrom": [
         "WORKING"
       ],
@@ -204,11 +173,7 @@
         "IDLE",
         "DISABLED"
       ],
-      "example": "DbxActionState.REJECTED",
-      "sourceLocation": {
-        "file": "src/lib/action/action.ts",
-        "line": 101
-      }
+      "example": "DbxActionState.REJECTED"
     },
     {
       "role": "state",
@@ -221,7 +186,6 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/action/action.ts",
       "transitionsFrom": [
         "WORKING"
       ],
@@ -229,11 +193,7 @@
         "IDLE",
         "DISABLED"
       ],
-      "example": "DbxActionState.RESOLVED",
-      "sourceLocation": {
-        "file": "src/lib/action/action.ts",
-        "line": 108
-      }
+      "example": "DbxActionState.RESOLVED"
     },
     {
       "role": "directive",
@@ -245,7 +205,6 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/action/directive/auto/action.automodify.directive.ts",
       "inputs": [
         {
           "alias": "dbxActionAutoModify",
@@ -262,11 +221,7 @@
       "stateInteraction": [
         "IDLE"
       ],
-      "example": "<div dbxAction>\n  <ng-container dbxActionAutoModify></ng-container>\n  <ng-container dbxActionAutoTrigger></ng-container>\n</div>",
-      "sourceLocation": {
-        "file": "src/lib/action/directive/auto/action.automodify.directive.ts",
-        "line": 35
-      }
+      "example": "<div dbxAction>\n  <ng-container dbxActionAutoModify></ng-container>\n  <ng-container dbxActionAutoTrigger></ng-container>\n</div>"
     },
     {
       "role": "directive",
@@ -278,7 +233,6 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/action/directive/auto/action.autotrigger.directive.ts",
       "inputs": [
         {
           "alias": "triggerDebounce",
@@ -351,11 +305,7 @@
         "IDLE",
         "TRIGGERED"
       ],
-      "example": "<div dbxAction>\n  <ng-container dbxActionAutoTrigger></ng-container>\n  <!-- form or value source here -->\n</div>",
-      "sourceLocation": {
-        "file": "src/lib/action/directive/auto/action.autotrigger.directive.ts",
-        "line": 55
-      }
+      "example": "<div dbxAction>\n  <ng-container dbxActionAutoTrigger></ng-container>\n  <!-- form or value source here -->\n</div>"
     },
     {
       "role": "directive",
@@ -367,7 +317,6 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/action/directive/context/action.directive.ts",
       "inputs": [],
       "outputs": [],
       "producesContext": true,
@@ -375,11 +324,7 @@
       "stateInteraction": [
         "IDLE"
       ],
-      "example": "<div dbxAction>\n  <button (click)=\"action.trigger()\">Submit</button>\n  <div *dbxActionHasSuccess>Success!</div>\n  <div *dbxActionWorking>Loading...</div>\n</div>",
-      "sourceLocation": {
-        "file": "src/lib/action/directive/context/action.directive.ts",
-        "line": 48
-      }
+      "example": "<div dbxAction>\n  <button (click)=\"action.trigger()\">Submit</button>\n  <div *dbxActionHasSuccess>Success!</div>\n  <div *dbxActionWorking>Loading...</div>\n</div>"
     },
     {
       "role": "directive",
@@ -391,7 +336,6 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/action/directive/context/action.source.directive.ts",
       "inputs": [
         {
           "alias": "dbxActionSource",
@@ -405,11 +349,7 @@
       "producesContext": false,
       "consumesContext": false,
       "stateInteraction": [],
-      "example": "<!-- Forward a programmatic action source to template directives -->\n<div [dbxActionSource]=\"myActionSource\">\n  <div dbxAction>\n    <button (click)=\"action.trigger()\">Submit</button>\n  </div>\n</div>",
-      "sourceLocation": {
-        "file": "src/lib/action/directive/context/action.source.directive.ts",
-        "line": 33
-      }
+      "example": "<!-- Forward a programmatic action source to template directives -->\n<div [dbxActionSource]=\"myActionSource\">\n  <div dbxAction>\n    <button (click)=\"action.trigger()\">Submit</button>\n  </div>\n</div>"
     },
     {
       "role": "directive",
@@ -421,7 +361,6 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/action/directive/debug/action.logger.directive.ts",
       "inputs": [],
       "outputs": [],
       "producesContext": false,
@@ -435,11 +374,7 @@
         "REJECTED",
         "DISABLED"
       ],
-      "example": "<div dbxAction>\n  <ng-container dbxActionLogger></ng-container>\n  <!-- other action directives -->\n</div>",
-      "sourceLocation": {
-        "file": "src/lib/action/directive/debug/action.logger.directive.ts",
-        "line": 24
-      }
+      "example": "<div dbxAction>\n  <ng-container dbxActionLogger></ng-container>\n  <!-- other action directives -->\n</div>"
     },
     {
       "role": "directive",
@@ -451,17 +386,12 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/action/directive/map/action.map.directive.ts",
       "inputs": [],
       "outputs": [],
       "producesContext": false,
       "consumesContext": false,
       "stateInteraction": [],
-      "example": "<div dbxActionContextMap>\n  <div dbxAction [dbxActionMapSource]=\"'save'\">...</div>\n  <div dbxAction [dbxActionMapSource]=\"'delete'\">...</div>\n  <div [dbxActionFromMap]=\"'save'\">\n    <!-- consumes the 'save' action context -->\n  </div>\n</div>",
-      "sourceLocation": {
-        "file": "src/lib/action/directive/map/action.map.directive.ts",
-        "line": 32
-      }
+      "example": "<div dbxActionContextMap>\n  <div dbxAction [dbxActionMapSource]=\"'save'\">...</div>\n  <div dbxAction [dbxActionMapSource]=\"'delete'\">...</div>\n  <div [dbxActionFromMap]=\"'save'\">\n    <!-- consumes the 'save' action context -->\n  </div>\n</div>"
     },
     {
       "role": "directive",
@@ -473,7 +403,6 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/action/directive/state/action.disabled.directive.ts",
       "inputs": [
         {
           "alias": "dbxActionDisabled",
@@ -490,11 +419,7 @@
       "stateInteraction": [
         "DISABLED"
       ],
-      "example": "<div dbxAction>\n  <ng-container [dbxActionDisabled]=\"isFormInvalid\"></ng-container>\n  <button (click)=\"action.trigger()\">Submit</button>\n</div>",
-      "sourceLocation": {
-        "file": "src/lib/action/directive/state/action.disabled.directive.ts",
-        "line": 40
-      }
+      "example": "<div dbxAction>\n  <ng-container [dbxActionDisabled]=\"isFormInvalid\"></ng-container>\n  <button (click)=\"action.trigger()\">Submit</button>\n</div>"
     },
     {
       "role": "directive",
@@ -506,7 +431,6 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/action/directive/state/action.disableonsuccess.directive.ts",
       "inputs": [
         {
           "alias": "dbxActionDisabledOnSuccess",
@@ -524,11 +448,7 @@
         "RESOLVED",
         "DISABLED"
       ],
-      "example": "<div dbxAction>\n  <ng-container dbxActionDisabledOnSuccess></ng-container>\n  <button (click)=\"action.trigger()\">Confirm</button>\n</div>",
-      "sourceLocation": {
-        "file": "src/lib/action/directive/state/action.disableonsuccess.directive.ts",
-        "line": 43
-      }
+      "example": "<div dbxAction>\n  <ng-container dbxActionDisabledOnSuccess></ng-container>\n  <button (click)=\"action.trigger()\">Confirm</button>\n</div>"
     },
     {
       "role": "directive",
@@ -540,7 +460,6 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/action/directive/state/action.enforce.modified.directive.ts",
       "inputs": [
         {
           "alias": "dbxActionEnforceModified",
@@ -558,11 +477,7 @@
         "IDLE",
         "DISABLED"
       ],
-      "example": "<div dbxAction>\n  <ng-container dbxActionEnforceModified></ng-container>\n  <button (click)=\"action.trigger()\">Save</button>\n</div>",
-      "sourceLocation": {
-        "file": "src/lib/action/directive/state/action.enforce.modified.directive.ts",
-        "line": 41
-      }
+      "example": "<div dbxAction>\n  <ng-container dbxActionEnforceModified></ng-container>\n  <button (click)=\"action.trigger()\">Save</button>\n</div>"
     },
     {
       "role": "directive",
@@ -574,7 +489,6 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/action/directive/state/action.error.handler.directive.ts",
       "inputs": [
         {
           "alias": "dbxActionErrorHandler",
@@ -590,11 +504,7 @@
       "stateInteraction": [
         "REJECTED"
       ],
-      "example": "<div dbxAction>\n  <ng-container [dbxActionErrorHandler]=\"onError\"></ng-container>\n  <button (click)=\"action.trigger()\">Submit</button>\n</div>",
-      "sourceLocation": {
-        "file": "src/lib/action/directive/state/action.error.handler.directive.ts",
-        "line": 41
-      }
+      "example": "<div dbxAction>\n  <ng-container [dbxActionErrorHandler]=\"onError\"></ng-container>\n  <button (click)=\"action.trigger()\">Submit</button>\n</div>"
     },
     {
       "role": "directive",
@@ -607,7 +517,6 @@
         "dbx__ref__dbx-component-patterns",
         "dbx__guide__action-analytics"
       ],
-      "sourcePath": "lib/action/directive/state/action.handler.directive.ts",
       "inputs": [
         {
           "alias": "dbxActionHandler",
@@ -626,11 +535,7 @@
         "RESOLVED",
         "REJECTED"
       ],
-      "example": "<div dbxAction>\n  <ng-container [dbxActionHandler]=\"handleSave\"></ng-container>\n  <button (click)=\"action.trigger()\">Save</button>\n</div>",
-      "sourceLocation": {
-        "file": "src/lib/action/directive/state/action.handler.directive.ts",
-        "line": 57
-      }
+      "example": "<div dbxAction>\n  <ng-container [dbxActionHandler]=\"handleSave\"></ng-container>\n  <button (click)=\"action.trigger()\">Save</button>\n</div>"
     },
     {
       "role": "directive",
@@ -642,7 +547,6 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/action/directive/state/action.handler.directive.ts",
       "inputs": [
         {
           "alias": "dbxActionHandlerValue",
@@ -660,11 +564,7 @@
         "WORKING",
         "RESOLVED"
       ],
-      "example": "<div dbxAction>\n  <ng-container [dbxActionHandlerValue]=\"computeResult\"></ng-container>\n  <button (click)=\"action.trigger()\">Compute</button>\n</div>",
-      "sourceLocation": {
-        "file": "src/lib/action/directive/state/action.handler.directive.ts",
-        "line": 94
-      }
+      "example": "<div dbxAction>\n  <ng-container [dbxActionHandlerValue]=\"computeResult\"></ng-container>\n  <button (click)=\"action.trigger()\">Compute</button>\n</div>"
     },
     {
       "role": "directive",
@@ -676,7 +576,6 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/action/directive/state/action.value.directive.ts",
       "inputs": [
         {
           "alias": "dbxActionValue",
@@ -694,11 +593,7 @@
         "TRIGGERED",
         "VALUE_READY"
       ],
-      "example": "<div dbxAction>\n  <ng-container [dbxActionValue]=\"myValue\"></ng-container>\n  <button (click)=\"action.trigger()\">Submit</button>\n</div>",
-      "sourceLocation": {
-        "file": "src/lib/action/directive/state/action.value.directive.ts",
-        "line": 48
-      }
+      "example": "<div dbxAction>\n  <ng-container [dbxActionValue]=\"myValue\"></ng-container>\n  <button (click)=\"action.trigger()\">Submit</button>\n</div>"
     },
     {
       "role": "directive",
@@ -710,7 +605,6 @@
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
       ],
-      "sourcePath": "lib/action/directive/state/action.value.trigger.directive.ts",
       "inputs": [
         {
           "alias": "dbxActionValueGetter",
@@ -741,11 +635,7 @@
         "TRIGGERED",
         "VALUE_READY"
       ],
-      "example": "<div dbxAction>\n  <ng-container [dbxActionValueGetter]=\"getFormValue\"></ng-container>\n  <button (click)=\"action.trigger()\">Submit</button>\n</div>",
-      "sourceLocation": {
-        "file": "src/lib/action/directive/state/action.value.trigger.directive.ts",
-        "line": 99
-      }
+      "example": "<div dbxAction>\n  <ng-container [dbxActionValueGetter]=\"getFormValue\"></ng-container>\n  <button (click)=\"action.trigger()\">Submit</button>\n</div>"
     }
   ]
 }

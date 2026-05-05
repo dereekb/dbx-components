@@ -13,6 +13,12 @@ import type { DeclaredEntry } from './types.js';
 const API_SUFFIX = '.api.ts';
 const COMPONENT_LIB_SUBPATH = 'src/lib';
 
+/**
+ * Walks the firebase-component package's `src/lib` tree, reads every `<model>.api.ts` file, and emits one {@link DeclaredEntry} per CRUD leaf.
+ *
+ * @param componentAbs - Absolute path of the firebase-component package directory.
+ * @returns The CRUD declarations discovered in the component, or an empty array when the lib root is missing.
+ */
 export async function extractDeclaredEntries(componentAbs: string): Promise<readonly DeclaredEntry[]> {
   const root = join(componentAbs, COMPONENT_LIB_SUBPATH);
   const files: string[] = [];

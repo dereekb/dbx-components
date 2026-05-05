@@ -172,8 +172,10 @@ interface ParsedModuleWiring {
  * the `@Module({...})` decorator argument so neither `imports` nor
  * `controllers` can leak into the answer.
  *
- * @param input - module text + class name to look for
- * @returns the parsed wiring result
+ * @param input - Module text plus the class name to look for.
+ * @param input.text - Raw NestJS module file contents.
+ * @param input.className - The action class name being searched for.
+ * @returns The parsed wiring result indicating whether the class is provided/exported.
  */
 function inspectModuleText(input: { readonly text: string; readonly className: string }): ParsedModuleWiring {
   const project = new Project({ useInMemoryFileSystem: true });
@@ -245,7 +247,11 @@ async function readCommonBarrelExports(apiAbs: string): Promise<ReadonlySet<stri
  * classes follow the dbx-components convention of one getter per
  * server-action class.
  *
- * @param input - the working map plus the fixture file path / text / shared ts-morph project
+ * @param input - The working map plus the fixture file path/text/shared ts-morph project.
+ * @param input.fixtureCoverageMap - The mutable coverage map to populate, keyed by server-action class name.
+ * @param input.fixturePath - Path of the fixture source file (used as the in-memory project key).
+ * @param input.fixtureText - Raw fixture source.
+ * @param input.project - Shared ts-morph project used for in-memory parsing.
  */
 function populateFixtureCoverageMap(input: { readonly fixtureCoverageMap: Map<string, ServerActionFixtureCoverage>; readonly fixturePath: string; readonly fixtureText: string; readonly project: Project }): void {
   const { fixtureCoverageMap, fixturePath, fixtureText, project } = input;

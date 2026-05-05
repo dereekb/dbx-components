@@ -7,10 +7,16 @@ $linear-line-height: 4px;
 
 // MARK: Mixin
 @mixin core() {
+  /// @dbx-utility loading-linear-done-padding
+  /// @intent reserve the 4px height of a linear progress bar after it finishes — top-padding placeholder so siblings don't shift when the bar is hidden
+  /// @role spacing
   .dbx-loading-linear-done-padding {
     padding-top: $linear-line-height;
   }
 
+  /// @dbx-utility loading-progress-hint
+  /// @intent 4px top padding for the hint message below a `<dbx-loading-progress>` indicator
+  /// @role spacing
   .dbx-loading-progress-hint {
     padding-top: 4px;
   }

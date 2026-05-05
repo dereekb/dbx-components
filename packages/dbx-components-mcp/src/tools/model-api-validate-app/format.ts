@@ -4,6 +4,12 @@
 
 import type { ReconciledEntry, ValidateReport } from './types.js';
 
+/**
+ * Renders the API validation report as a markdown document with per-model sections, status tables, and an issue list.
+ *
+ * @param report - The validation report to render.
+ * @returns A markdown document.
+ */
 export function formatValidationAsMarkdown(report: ValidateReport): string {
   const lines: string[] = [`# Model API validation — ${report.apiDir}`, '', `Component: \`${report.componentDir}\``, `Handler map: \`${report.handlerMapPath}\``];
   if (report.modelFilter) {
@@ -28,7 +34,9 @@ export function formatValidationAsMarkdown(report: ValidateReport): string {
   if (report.issues.length > 0) {
     lines.push('## Issues', '');
     for (const issue of report.issues) {
-      lines.push(`- **${issue.code}** \`${issue.model}${issue.verb ? `.${issue.verb}` : ''}${issue.specifier ? `.${issue.specifier}` : ''}\` — ${issue.message}`);
+      const verbSuffix = issue.verb ? `.${issue.verb}` : '';
+      const specifierSuffix = issue.specifier ? `.${issue.specifier}` : '';
+      lines.push(`- **${issue.code}** \`${issue.model}${verbSuffix}${specifierSuffix}\` — ${issue.message}`);
     }
     lines.push('');
   }
@@ -36,14 +44,23 @@ export function formatValidationAsMarkdown(report: ValidateReport): string {
   return lines.join('\n');
 }
 
+/**
+ * Renders the API validation report as a flat JSON payload.
+ *
+ * @param report - The validation report to render.
+ * @returns Pretty-printed JSON string for the report.
+ */
 export function formatValidationAsJson(report: ValidateReport): string {
   return JSON.stringify(report, null, 2);
 }
 
 function formatHandlerMapStatus(report: ValidateReport): string {
   switch (report.handlerMapStatus.kind) {
-    case 'ok':
-      return `Verbs found: ${report.handlerMapStatus.verbsFound.length === 0 ? '_(none)_' : report.handlerMapStatus.verbsFound.map((v) => `\`${v}\``).join(', ')}`;
+    case 'ok': {
+      if (report.handlerMapStatus.verbsFound.length === 0) return 'Verbs found: _(none)_';
+      const verbs = report.handlerMapStatus.verbsFound.map((v) => `\`${v}\``).join(', ');
+      return `Verbs found: ${verbs}`;
+    }
     case 'missing':
       return `_Handler map not found at \`${report.handlerMapStatus.path}\` — every declared call will be flagged as MISSING HANDLER._`;
     case 'error':
@@ -51,11 +68,17 @@ function formatHandlerMapStatus(report: ValidateReport): string {
   }
 }
 
+function entryStatus(entry: ReconciledEntry): string {
+  if (entry.declared && entry.handler) return 'matched';
+  if (entry.declared) return 'MISSING HANDLER';
+  return 'ORPHAN HANDLER';
+}
+
 function formatEntryRow(entry: ReconciledEntry): string {
   const verb = `\`${entry.verb}\``;
   const specifier = entry.specifier === undefined ? '—' : `\`${entry.specifier}\``;
   const declared = entry.declared ? `\`${entry.declared.paramsTypeName ?? '?'}\` (\`${entry.declared.sourceFile}:${entry.declared.line}\`)` : '—';
   const handler = entry.handler ? `\`${entry.handler.handlerName}\`` : '—';
-  const status = entry.declared && entry.handler ? 'matched' : entry.declared ? 'MISSING HANDLER' : 'ORPHAN HANDLER';
+  const status = entryStatus(entry);
   return `| ${verb} | ${specifier} | ${declared} | ${handler} | ${status} |`;
 }

@@ -117,7 +117,6 @@ export const ForgeFieldEntry = type({
   produces: 'string',
   arrayOutput: '"yes" | "no" | "optional"',
   description: 'string',
-  sourcePath: 'string',
   example: 'string',
   properties: ForgeFieldPropertyEntry.array(),
   // field-factory-only
@@ -134,7 +133,6 @@ export const ForgeFieldEntry = type({
   // field-factory + field-derivative + composite-builder + template-builder required, primitive optional
   'configInterface?': 'string',
   // common optional
-  'sourceLocation?': type({ file: 'string', line: 'number' }),
   'deprecated?': 'boolean | string',
   'since?': 'string'
 });

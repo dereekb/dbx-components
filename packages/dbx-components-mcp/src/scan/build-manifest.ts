@@ -184,8 +184,7 @@ function assembleEntry(input: AssembleEntryInput): SemanticTypeEntry {
     ...(entry.examples.length > 0 ? { examples: entry.examples.map((e) => ({ ...e })) } : {}),
     ...(entry.notes === undefined ? {} : { notes: entry.notes }),
     ...(entry.deprecated === undefined ? {} : { deprecated: entry.deprecated }),
-    ...(entry.since === undefined ? {} : { since: entry.since }),
-    sourceLocation: { file: projectRelative, line: entry.line }
+    ...(entry.since === undefined ? {} : { since: entry.since })
   };
   return out;
 }

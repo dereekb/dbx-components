@@ -12,7 +12,7 @@ $dbx-detail-block-bottom-padding: 12px;
 $dbx-detail-block-content-offset: 30px;
 $click-to-copy-icon-size: 18px;
 $dbx-detail-block-big-header-icon-size: 18px;
-
+$dbx-icon-tile-default-icon-size: 24px;
 $dbx-step-block-badge-size: 32px;
 $dbx-step-block-gap: 16px;
 $dbx-step-block-padding: 16px;
@@ -23,20 +23,33 @@ $dbx-step-block-badge-font-weight: 600;
 
 // MARK: Mixin
 @mixin core() {
+  /// @dbx-utility small
+  /// @intent reduced font-size text — 0.8em of inherited size
+  /// @role text
   .dbx-small,
   .dbx-clear-hint {
     font-size: 0.8em;
   }
 
+  /// @dbx-utility label-padded
+  /// @intent padded label — adds 6px bottom padding under a label header
+  /// @role spacing
+  /// @see-also label-block
   .dbx-label-padded {
     padding-bottom: $dbx-label-padded-padding;
   }
 
+  /// @dbx-utility text-center
+  /// @intent horizontally centered text
+  /// @role text
   .text-center,
   .dbx-text-center {
     text-align: center;
   }
 
+  /// @dbx-utility u
+  /// @intent underlined text decoration
+  /// @role text
   .dbx-u {
     text-decoration: underline;
   }
@@ -54,12 +67,21 @@ $dbx-step-block-badge-font-weight: 600;
     white-space: pre-wrap;
   }
 
+  /// @dbx-utility iframe
+  /// @intent fill-parent iframe with no border — `height: 100%; width: 100%; border: none`
+  /// @role layout
   .dbx-iframe {
     height: 100%;
     width: 100%;
     border: none;
   }
 
+  /// @dbx-utility label-block
+  /// @intent block-level label wrapper — `<dbx-label-block>` body that emits a header line with 3px vertical padding
+  /// @role layout
+  /// @component DbxLabelBlockComponent
+  /// @scope component-class
+  /// @see-also detail-block, label-padded
   .dbx-label-block {
     display: block;
     padding: 3px 0;
@@ -100,6 +122,12 @@ $dbx-step-block-badge-font-weight: 600;
     }
   }
 
+  /// @dbx-utility detail-block
+  /// @intent labeled detail surface — `<dbx-detail-block>` body that places an icon + header above offset content (`.dbx-detail-block-header` + `.dbx-detail-block-content`). Compose with `.dbx-detail-block-big-header` for a larger title and `.dbx-detail-block-header-align` to wrap the header content (e.g. when an aligned `[header]` slot is supplied).
+  /// @role layout
+  /// @component DbxDetailBlockComponent
+  /// @scope component-class
+  /// @see-also label-block, step-block
   .dbx-detail-block {
     display: block;
 
@@ -133,6 +161,12 @@ $dbx-step-block-badge-font-weight: 600;
     }
   }
 
+  /// @dbx-utility step-block
+  /// @intent step row — `<dbx-step-block>` body that lays out a numbered/iconic badge alongside content with a configurable `--dbx-step-block-gap` and `--dbx-step-block-padding`
+  /// @role layout
+  /// @component DbxStepBlockComponent
+  /// @scope component-class
+  /// @see-also step-block-badge, detail-block
   .dbx-step-block {
     display: flex;
     flex-direction: row;
@@ -145,27 +179,73 @@ $dbx-step-block-badge-font-weight: 600;
     align-items: center;
   }
 
-  .dbx-step-block-badge {
-    width: var(--dbx-step-block-badge-size, #{$dbx-step-block-badge-size});
-    height: var(--dbx-step-block-badge-size, #{$dbx-step-block-badge-size});
-    min-width: var(--dbx-step-block-badge-size, #{$dbx-step-block-badge-size});
-    border-radius: var(--dbx-step-block-badge-shape, 50%);
+  // Reusable rounded, padded icon container. Composable with any leading-icon
+  // slot and works with `[dbxColor]` for tinted backgrounds. Decoupled from
+  // the list layout — usable wherever a leading icon tile is wanted.
+  // Also exposed via the `<dbx-icon-tile>` component (DbxIconTileComponent)
+  // and the `[dbxIconTile]` directive (DbxIconTileDirective). All sizing,
+  // padding, radius, font, and inner icon size are exposed as CSS variables
+  // so consumer surfaces (e.g. `.dbx-step-block-badge`) can compose by
+  // setting variables instead of rewriting rules. Host-level vars (width /
+  // height / min-width / font-size / font-weight) have no fallback so an
+  // unset variable produces an invalid declaration the browser ignores —
+  // the tile then falls back to natural (auto / inherited) sizing. The
+  // inner `.mat-icon` falls back to Material's own 24px default so
+  // overriding our selector doesn't shrink the glyph.
+  /// @dbx-utility icon-tile
+  /// @intent rounded, padded icon container — the visible body of `<dbx-icon-tile>` / `[dbxIconTile]`. Customize via the `--dbx-icon-tile-*` CSS variables.
+  /// @role layout
+  /// @component DbxIconTileComponent
+  /// @scope component-class
+  .dbx-icon-tile {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: var(--dbx-step-block-badge-font-size, #{$dbx-step-block-badge-font-size});
-    font-weight: var(--dbx-step-block-badge-font-weight, #{$dbx-step-block-badge-font-weight});
+    border-radius: var(--dbx-icon-tile-border-radius, 12px);
+    padding: var(--dbx-icon-tile-padding, 8px);
+    width: var(--dbx-icon-tile-width);
+    height: var(--dbx-icon-tile-height);
+    min-width: var(--dbx-icon-tile-min-width);
+    font-size: var(--dbx-icon-tile-font-size);
+    font-weight: var(--dbx-icon-tile-font-weight);
 
     .mat-icon {
-      width: var(--dbx-step-block-badge-icon-size, #{$dbx-step-block-badge-icon-size});
-      height: var(--dbx-step-block-badge-icon-size, #{$dbx-step-block-badge-icon-size});
-      font-size: var(--dbx-step-block-badge-icon-size, #{$dbx-step-block-badge-icon-size});
+      width: var(--dbx-icon-tile-icon-size, $dbx-icon-tile-default-icon-size);
+      height: var(--dbx-icon-tile-icon-size, $dbx-icon-tile-default-icon-size);
+      font-size: var(--dbx-icon-tile-icon-size, $dbx-icon-tile-default-icon-size);
     }
   }
 
-  .dbx-step-block-content {
-    flex: 1;
-    min-width: 0;
+  // Round modifier — turns the rounded-square tile into a circle. Pair
+  // with explicit width/height (or square content) to keep it true round.
+  /// @dbx-utility icon-tile-round
+  /// @intent round modifier — turns `.dbx-icon-tile` into a circle (pair with explicit width/height to keep it true round)
+  /// @role layout
+  /// @parent icon-tile
+  /// @see-also icon-tile
+  .dbx-icon-tile-round {
+    border-radius: 50%;
+  }
+
+  // Composes `.dbx-icon-tile` — the badge is a fixed-size circle (or
+  // square via `--dbx-step-block-badge-shape`) sized through the tile's
+  // CSS variables. Padding is reset to 0 because the badge sizes by
+  // explicit width/height, not by content + padding.
+  /// @dbx-utility step-block-badge
+  /// @intent fixed-size badge inside `<dbx-step-block>` — composes `.dbx-icon-tile` and exposes the `--dbx-step-block-badge-*` CSS variables for shape, size, font-size, font-weight, and inner icon size.
+  /// @role layout
+  /// @component DbxStepBlockComponent
+  /// @scope component-class
+  /// @see-also icon-tile
+  .dbx-step-block-badge {
+    --dbx-icon-tile-padding: 0;
+    --dbx-icon-tile-border-radius: var(--dbx-step-block-badge-shape, 50%);
+    --dbx-icon-tile-width: var(--dbx-step-block-badge-size, #{$dbx-step-block-badge-size});
+    --dbx-icon-tile-height: var(--dbx-step-block-badge-size, #{$dbx-step-block-badge-size});
+    --dbx-icon-tile-min-width: var(--dbx-step-block-badge-size, #{$dbx-step-block-badge-size});
+    --dbx-icon-tile-font-size: var(--dbx-step-block-badge-font-size, #{$dbx-step-block-badge-font-size});
+    --dbx-icon-tile-font-weight: var(--dbx-step-block-badge-font-weight, #{$dbx-step-block-badge-font-weight});
+    --dbx-icon-tile-icon-size: var(--dbx-step-block-badge-icon-size, #{$dbx-step-block-badge-icon-size});
   }
 
   .dbx-step-block-header {
@@ -184,21 +264,52 @@ $dbx-step-block-badge-font-weight: 600;
     opacity: var(--dbx-step-block-hint-opacity, #{$hint-opacity});
   }
 
+  /// @dbx-utility text-no-overflow
+  /// @intent opt out of single-line truncation — wrap content and show overflow
+  /// @role text
+  /// @see-also dbx-text-truncate
   .dbx-text-no-overflow {
     white-space: pre-wrap !important;
     overflow: visible !important;
     text-overflow: unset !important;
   }
 
+  /// @dbx-utility text-truncate
+  /// @intent single-line truncation with ellipsis on any block-level element
+  /// @role text
+  /// @see-also dbx-flex-fill-0
+  /// @anti-use Inside a flex item, pair with .dbx-flex-fill-0 — a default flex item won't shrink below its content's intrinsic width.
+  // Single-line truncation with ellipsis. Composable on any block-level
+  // element. The flex-child variant requires `min-width: 0` on the
+  // truncating element (the default `min-width: auto` prevents a flex item
+  // from shrinking below its content width).
+  .dbx-text-truncate {
+    @include theming.limit-text();
+  }
+
+  /// @dbx-utility icon-spacer
+  /// @intent right-margin spacer beside an icon — 6px right margin to separate a leading `mat-icon` from text
+  /// @role spacing
+  /// @see-also chip-spacer, button-spacer
   .dbx-icon-spacer {
     margin-right: $icon-spacing;
   }
 
+  /// @dbx-utility form-description
+  /// @intent helper-text styling for a form field description — 75% font size with the standard `mat-form-field` top spacing
+  /// @role text
+  /// @see-also dbx-hint, dbx-label
   .dbx-form-description {
     font-size: 75%;
     margin-top: 0.6666666667em;
   }
 
+  /// @dbx-utility chip
+  /// @intent chip label — `<dbx-chip>` body that lays out a 14px/500 inline chip; compose with `.dbx-chip-small`, `.dbx-chip-block`, or `.dbx-chip-small-text` for size variants
+  /// @role layout
+  /// @component DbxChipDirective
+  /// @scope component-class
+  /// @see-also chip-spacer, chip-margin
   .dbx-chip {
     font-size: 14px;
     font-weight: 500;
@@ -207,6 +318,10 @@ $dbx-step-block-badge-font-weight: 600;
     white-space: nowrap;
   }
 
+  /// @dbx-utility chip-spacer
+  /// @intent right-margin spacer between adjacent chips — 2px right margin
+  /// @role spacing
+  /// @see-also chip-margin, icon-spacer
   .dbx-chip-spacer {
     margin-right: $chip-spacing;
   }
@@ -240,6 +355,10 @@ $dbx-step-block-badge-font-weight: 600;
     border-radius: 0;
   }
 
+  /// @dbx-utility chip-margin
+  /// @intent uniform 4px margin around a chip — use when chips wrap onto multiple rows
+  /// @role spacing
+  /// @see-also chip-spacer
   .dbx-chip-margin {
     margin: 4px;
   }
@@ -248,11 +367,17 @@ $dbx-step-block-badge-font-weight: 600;
     margin-left: $icon-spacing;
   }
 
+  /// @dbx-utility us-address
+  /// @intent pre-wrapped, line-tightened US-address text — paint the styling on a `<p>` rendered from `unitedStatesAddressString()` (or use the `<dbx-us-address>` component)
+  /// @role text
   .dbx-us-address {
     white-space: pre-wrap !important;
     line-height: 1.4;
   }
 
+  /// @dbx-utility modelkey
+  /// @intent allow line breaks inside long opaque keys/IDs — `line-break: anywhere`
+  /// @role text
   .dbx-modelkey {
     line-break: anywhere;
   }
@@ -272,15 +397,27 @@ $dbx-step-block-badge-font-weight: 600;
     --mat-chip-with-icon-icon-color: #{theming.$dbx-color};
   }
 
+  /// @dbx-utility hint
+  /// @intent muted hint text — 80% opacity (mirrors mat-form-field hint emphasis)
+  /// @role text
+  /// @see-also dbx-faint, dbx-note
   .dbx-hint,
   .dbx-clear-hint {
     opacity: $hint-opacity;
   }
 
+  /// @dbx-utility faint
+  /// @intent very faint text — 54% opacity (matches mat-hint baseline)
+  /// @role text
+  /// @see-also dbx-hint, dbx-note
   .dbx-faint {
     opacity: $faint-opacity;
   }
 
+  /// @dbx-utility label
+  /// @intent muted form-field label text — 54% opacity (matches `mat-hint`); pair with `<dbx-label-block>` for the standard label-over-content layout
+  /// @role text
+  /// @see-also label-block, dbx-hint, dbx-form-description
   .dbx-label,
   .dbx-sublabel,
   .dbx-chip-sublabel,
@@ -288,10 +425,17 @@ $dbx-step-block-badge-font-weight: 600;
     opacity: $mat-hint-opacity;
   }
 
+  /// @dbx-utility note
+  /// @intent secondary note text — 70% opacity (between hint and faint)
+  /// @role text
+  /// @see-also dbx-hint, dbx-faint
   .dbx-note {
     opacity: $note-opacity;
   }
 
+  /// @dbx-utility outlined-text
+  /// @intent on-surface-variant text with a thin surface-tinted outline for legibility over imagery
+  /// @role text
   .dbx-outlined-text {
     color: var(--mat-sys-on-surface-variant);
     text-shadow:
@@ -301,6 +445,9 @@ $dbx-step-block-badge-font-weight: 600;
       1px 1px 0 color-mix(in srgb, var(--mat-sys-surface) 40%, transparent);
   }
 
+  /// @dbx-utility nowrap
+  /// @intent prevent whitespace wrapping (white-space: nowrap)
+  /// @role text
   .dbx-nowrap {
     white-space: nowrap;
   }
@@ -325,6 +472,143 @@ $dbx-step-block-badge-font-weight: 600;
   .dbx-sublabel,
   .dbx-chip-sublabel {
     font-size: var(--mat-sys-body-small-size);
+  }
+
+  // MARK: M3 type-role utilities
+  // Apply the full Material 3 `font` shorthand (size + weight + line-height +
+  // tracking + family) for a single type role. Compose with .dbx-uppercase /
+  // .dbx-tracked-wide for eyebrow-style chrome.
+  /// @dbx-utility text-display-large
+  /// @intent Material 3 display-large type role — largest hero/expressive headline
+  /// @role text
+  .dbx-text-display-large {
+    font: var(--mat-sys-display-large);
+  }
+
+  /// @dbx-utility text-display-medium
+  /// @intent Material 3 display-medium type role — secondary hero headline
+  /// @role text
+  .dbx-text-display-medium {
+    font: var(--mat-sys-display-medium);
+  }
+
+  /// @dbx-utility text-display-small
+  /// @intent Material 3 display-small type role — compact hero headline
+  /// @role text
+  .dbx-text-display-small {
+    font: var(--mat-sys-display-small);
+  }
+
+  /// @dbx-utility text-headline-large
+  /// @intent Material 3 headline-large type role — primary section heading
+  /// @role text
+  .dbx-text-headline-large {
+    font: var(--mat-sys-headline-large);
+  }
+
+  /// @dbx-utility text-headline-medium
+  /// @intent Material 3 headline-medium type role — secondary section heading
+  /// @role text
+  .dbx-text-headline-medium {
+    font: var(--mat-sys-headline-medium);
+  }
+
+  /// @dbx-utility text-headline-small
+  /// @intent Material 3 headline-small type role — tertiary section heading
+  /// @role text
+  .dbx-text-headline-small {
+    font: var(--mat-sys-headline-small);
+  }
+
+  /// @dbx-utility text-title-large
+  /// @intent Material 3 title-large type role — prominent UI title
+  /// @role text
+  .dbx-text-title-large {
+    font: var(--mat-sys-title-large);
+  }
+
+  /// @dbx-utility text-title-medium
+  /// @intent Material 3 title-medium type role — standard UI title
+  /// @role text
+  .dbx-text-title-medium {
+    font: var(--mat-sys-title-medium);
+  }
+
+  /// @dbx-utility text-title-small
+  /// @intent Material 3 title-small type role — small UI title
+  /// @role text
+  .dbx-text-title-small {
+    font: var(--mat-sys-title-small);
+  }
+
+  /// @dbx-utility text-body-large
+  /// @intent Material 3 body-large type role — long-form body text
+  /// @role text
+  .dbx-text-body-large {
+    font: var(--mat-sys-body-large);
+  }
+
+  /// @dbx-utility text-body-medium
+  /// @intent Material 3 body-medium type role — default body text
+  /// @role text
+  .dbx-text-body-medium {
+    font: var(--mat-sys-body-medium);
+  }
+
+  /// @dbx-utility text-body-small
+  /// @intent Material 3 body-small type role — supporting body text (captions, hints)
+  /// @role text
+  .dbx-text-body-small {
+    font: var(--mat-sys-body-small);
+  }
+
+  /// @dbx-utility text-label-large
+  /// @intent Material 3 label-large type role — button and tab text
+  /// @role text
+  .dbx-text-label-large {
+    font: var(--mat-sys-label-large);
+  }
+
+  /// @dbx-utility text-label-medium
+  /// @intent Material 3 label-medium type role — small label text (eyebrows, chips)
+  /// @role text
+  /// @see-also dbx-uppercase, dbx-tracked-wide
+  .dbx-text-label-medium {
+    font: var(--mat-sys-label-medium);
+  }
+
+  /// @dbx-utility text-label-small
+  /// @intent Material 3 label-small type role — smallest label text
+  /// @role text
+  .dbx-text-label-small {
+    font: var(--mat-sys-label-small);
+  }
+
+  // MARK: Text transforms
+  /// @dbx-utility uppercase
+  /// @intent uppercase text transform
+  /// @role text
+  /// @see-also dbx-lowercase, dbx-tracked-wide
+  .dbx-uppercase {
+    text-transform: uppercase;
+  }
+
+  /// @dbx-utility lowercase
+  /// @intent lowercase text transform
+  /// @role text
+  /// @see-also dbx-uppercase
+  .dbx-lowercase {
+    text-transform: lowercase;
+  }
+
+  // Eyebrow-style letter-spacing — pairs with .dbx-text-label-medium /
+  // .dbx-uppercase to render the M3 "overline" pattern (e.g. card eyebrows).
+  /// @dbx-utility tracked-wide
+  /// @intent eyebrow letter-spacing (0.08em) — pair with dbx-text-label-medium + dbx-uppercase for the M3 overline pattern
+  /// @role text
+  /// @see-also dbx-uppercase, dbx-text-label-medium
+  .dbx-tracked-wide {
+    letter-spacing: 0.08em;
   }
 
   .dbx-click-to-copy-text-icon.mat-icon {

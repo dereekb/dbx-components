@@ -15,6 +15,7 @@ import packageJson from '../package.json' with { type: 'json' };
 import { runForgeFieldsScanCli } from '../src/scan/forge-fields-cli.js';
 import { runScanCli } from '../src/scan/cli.js';
 import { runUiComponentsScanCli } from '../src/scan/ui-components-cli.js';
+import { runCssUtilitiesScanCli } from '../src/scan/css-utilities-cli.js';
 import { runStdioServer } from '../src/server.js';
 
 const TOP_LEVEL_USAGE = [
@@ -23,6 +24,7 @@ const TOP_LEVEL_USAGE = [
   '  dbx-components-mcp scan-semantic-types --project <dir> Generate a SemanticTypeManifest',
   '  dbx-components-mcp scan-ui-components  --project <dir> Generate a UiComponentManifest',
   '  dbx-components-mcp scan-forge-fields   --project <dir> Generate a ForgeFieldManifest',
+  '  dbx-components-mcp scan-css-utilities  --project <dir> Generate a CssUtilityManifest',
   '  dbx-components-mcp --help                              Show this message',
   '',
   'Run `dbx-components-mcp <subcommand> --help` for scanner-specific options.'
@@ -54,6 +56,13 @@ async function main(): Promise<number> {
     exitCode = result.exitCode;
   } else if (argv[0] === 'scan-forge-fields') {
     const result = await runForgeFieldsScanCli({
+      argv: argv.slice(1),
+      cwd: process.cwd(),
+      generator: `@dereekb/dbx-components-mcp@${packageJson.version}`
+    });
+    exitCode = result.exitCode;
+  } else if (argv[0] === 'scan-css-utilities') {
+    const result = await runCssUtilitiesScanCli({
       argv: argv.slice(1),
       cwd: process.cwd(),
       generator: `@dereekb/dbx-components-mcp@${packageJson.version}`

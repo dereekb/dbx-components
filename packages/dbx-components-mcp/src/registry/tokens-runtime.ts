@@ -133,7 +133,7 @@ export function createTokenRegistryFromEntries(input: { readonly entries: readon
       if (trimmed.length === 0) {
         matches = [];
       } else {
-        const candidates = role !== undefined ? (byRoleImmutable.get(role) ?? []) : all;
+        const candidates = role === undefined ? all : (byRoleImmutable.get(role) ?? []);
         matches = [];
         for (const entry of candidates) {
           let best = 0;
@@ -165,14 +165,14 @@ export function createTokenRegistryFromEntries(input: { readonly entries: readon
       if (trimmed.length === 0) {
         matches = [];
       } else {
-        const candidates = role !== undefined ? (byRoleImmutable.get(role) ?? []) : all;
+        const candidates = role === undefined ? all : (byRoleImmutable.get(role) ?? []);
         matches = [];
         for (const entry of candidates) {
           let score = 0;
           if (entry.defaults.light !== undefined && entry.defaults.light === trimmed) score = 10;
           if (entry.defaults.dark !== undefined && entry.defaults.dark === trimmed && score < 10) score = 9;
-          if (score === 0 && entry.defaults.light !== undefined && entry.defaults.light.includes(trimmed)) score = 4;
-          if (score === 0 && entry.defaults.dark !== undefined && entry.defaults.dark.includes(trimmed)) score = 3;
+          if (score === 0 && entry.defaults.light?.includes(trimmed)) score = 4;
+          if (score === 0 && entry.defaults.dark?.includes(trimmed)) score = 3;
           if (score > 0) {
             matches.push({ entry, score });
           }

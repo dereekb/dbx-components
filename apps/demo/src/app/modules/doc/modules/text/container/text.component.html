@@ -247,6 +247,122 @@
     <doc-feature-example header=".text-left">
       <p class="text-left">Text left aligned.</p>
     </doc-feature-example>
+    <h4>Icon Tile</h4>
+    <doc-feature-example header="dbx-icon-tile" hint="Rounded, padded leading-icon tile. Use <dbx-icon-tile [icon]='...' [dbxColor]='...'> for the component form (primary), or .dbx-icon-tile / [dbxIconTile] to apply the same tile styling to an existing element. The tile sets layout only — pair with [dbxColor] (optionally [dbxColorTone]) for a tonal or full-color background.">
+      <p>Component form. Takes an [icon] input and renders the mat-icon for you. Drop [dbxColor] directly on the tag.</p>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap">
+        <dbx-icon-tile [icon]="'check'" [dbxColor]="'primary'"></dbx-icon-tile>
+        <dbx-icon-tile [icon]="'favorite'" [dbxColor]="'accent'"></dbx-icon-tile>
+        <dbx-icon-tile [icon]="'warning'" [dbxColor]="'warn'"></dbx-icon-tile>
+        <dbx-icon-tile [icon]="'verified'" [dbxColor]="'success'"></dbx-icon-tile>
+        <dbx-icon-tile [icon]="'info'" [dbxColor]="'notice'"></dbx-icon-tile>
+        <dbx-icon-tile [icon]="'folder'" [dbxColor]="'grey'"></dbx-icon-tile>
+      </div>
+      <p>Set [round]="true" (or apply the .dbx-icon-tile-round class) to render a circle instead of a 12px-rounded square.</p>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap">
+        <dbx-icon-tile [icon]="'check'" [round]="true" [dbxColor]="'primary'"></dbx-icon-tile>
+        <dbx-icon-tile [icon]="'favorite'" [round]="true" [dbxColor]="'accent'"></dbx-icon-tile>
+        <dbx-icon-tile [icon]="'verified'" [round]="true" [dbxColor]="'success'"></dbx-icon-tile>
+        <dbx-icon-tile [icon]="'check'" [round]="true" [dbxColor]="'primary'" [dbxColorTone]="18"></dbx-icon-tile>
+        <dbx-icon-tile [icon]="'favorite'" [round]="true" [dbxColor]="'accent'" [dbxColorTone]="18"></dbx-icon-tile>
+        <dbx-icon-tile [icon]="'verified'" [round]="true" [dbxColor]="'success'" [dbxColorTone]="18"></dbx-icon-tile>
+      </div>
+      <p>Pair with [dbxColorTone] for the tonal/muted variant typical of list rows.</p>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap">
+        <dbx-icon-tile [icon]="'check'" [dbxColor]="'primary'" [dbxColorTone]="18"></dbx-icon-tile>
+        <dbx-icon-tile [icon]="'favorite'" [dbxColor]="'accent'" [dbxColorTone]="18"></dbx-icon-tile>
+        <dbx-icon-tile [icon]="'warning'" [dbxColor]="'warn'" [dbxColorTone]="18"></dbx-icon-tile>
+        <dbx-icon-tile [icon]="'verified'" [dbxColor]="'success'" [dbxColorTone]="18"></dbx-icon-tile>
+        <dbx-icon-tile [icon]="'info'" [dbxColor]="'notice'" [dbxColorTone]="18"></dbx-icon-tile>
+        <dbx-icon-tile [icon]="'folder'" [dbxColor]="'grey'" [dbxColorTone]="18"></dbx-icon-tile>
+      </div>
+      <p>Inline alongside text — the tile is decoupled from list layout and works in any leading-icon slot.</p>
+      <div style="display: flex; align-items: center; gap: 12px">
+        <dbx-icon-tile [icon]="'notifications'" [dbxColor]="'primary'" [dbxColorTone]="18"></dbx-icon-tile>
+        <div>
+          <div class="dbx-text-title-medium">Inline label</div>
+          <div class="dbx-hint">Use the tile wherever a leading icon needs a tonal surface.</div>
+        </div>
+      </div>
+      <p>Omit [icon] to project custom content (drop in a glyph or letter).</p>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center">
+        <dbx-icon-tile [dbxColor]="'primary'" [dbxColorTone]="18">
+          <strong>A</strong>
+        </dbx-icon-tile>
+        <dbx-icon-tile [dbxColor]="'accent'" [dbxColorTone]="18">
+          <mat-icon>star</mat-icon>
+        </dbx-icon-tile>
+      </div>
+      <h4>Style tokens</h4>
+      <p>
+        Sizing, padding, border-radius, font, and the inner mat-icon size are all configurable via CSS custom properties on the host:
+        <code>--dbx-icon-tile-width</code>
+        ,
+        <code>--dbx-icon-tile-height</code>
+        ,
+        <code>--dbx-icon-tile-min-width</code>
+        ,
+        <code>--dbx-icon-tile-padding</code>
+        ,
+        <code>--dbx-icon-tile-border-radius</code>
+        ,
+        <code>--dbx-icon-tile-font-size</code>
+        ,
+        <code>--dbx-icon-tile-font-weight</code>
+        ,
+        <code>--dbx-icon-tile-icon-size</code>
+        . Default tile (no overrides) on the left for comparison.
+      </p>
+      <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center">
+        <dbx-icon-tile [icon]="'check'" [dbxColor]="'primary'" [dbxColorTone]="18"></dbx-icon-tile>
+        <dbx-icon-tile [icon]="'check'" [dbxColor]="'primary'" [dbxColorTone]="18" style="--dbx-icon-tile-width: 48px; --dbx-icon-tile-height: 48px; --dbx-icon-tile-icon-size: 28px"></dbx-icon-tile>
+        <dbx-icon-tile [icon]="'check'" [dbxColor]="'primary'" [dbxColorTone]="18" style="--dbx-icon-tile-width: 64px; --dbx-icon-tile-height: 64px; --dbx-icon-tile-icon-size: 36px; --dbx-icon-tile-border-radius: 4px"></dbx-icon-tile>
+        <dbx-icon-tile [icon]="'check'" [dbxColor]="'primary'" [dbxColorTone]="18" style="--dbx-icon-tile-width: 80px; --dbx-icon-tile-height: 80px; --dbx-icon-tile-icon-size: 48px; --dbx-icon-tile-border-radius: 50%"></dbx-icon-tile>
+      </div>
+      <p>Tokens compose with custom projected content too — drive both the tile size and the inner font-size from the same surface.</p>
+      <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center">
+        <dbx-icon-tile [dbxColor]="'accent'" [dbxColorTone]="18" style="--dbx-icon-tile-width: 56px; --dbx-icon-tile-height: 56px; --dbx-icon-tile-font-size: 22px; --dbx-icon-tile-font-weight: 600; --dbx-icon-tile-border-radius: 50%">
+          <span>AB</span>
+        </dbx-icon-tile>
+        <dbx-icon-tile [dbxColor]="'success'" [dbxColorTone]="18" style="--dbx-icon-tile-width: 56px; --dbx-icon-tile-height: 56px; --dbx-icon-tile-font-size: 22px; --dbx-icon-tile-font-weight: 600; --dbx-icon-tile-border-radius: 50%">
+          <span>1</span>
+        </dbx-icon-tile>
+        <dbx-icon-tile [dbxColor]="'warn'" [dbxColorTone]="18" style="--dbx-icon-tile-width: 56px; --dbx-icon-tile-height: 56px; --dbx-icon-tile-font-size: 22px; --dbx-icon-tile-font-weight: 600; --dbx-icon-tile-border-radius: 12px">
+          <span>!</span>
+        </dbx-icon-tile>
+      </div>
+      <p>
+        The same tokens drive composing surfaces.
+        <code>.dbx-step-block-badge</code>
+        is built by setting these variables — see the Step Block section above.
+      </p>
+      <h4>Host-class form: .dbx-icon-tile / [dbxIconTile]</h4>
+      <p>Applies the same tile styling to an existing element. Use when a slot (e.g. a list row's .item-icon div) needs the tile presentation without a wrapping &lt;dbx-icon-tile&gt;, or when the host already has another component on it. Without a color, the tile has no background of its own — the dashed outline below traces the box so its shape (12px radius, 8px padding) is visible.</p>
+      <div style="display: flex; gap: 16px; align-items: center">
+        <div class="dbx-icon-tile" style="outline: 1px dashed var(--mat-sys-outline)">
+          <mat-icon>star</mat-icon>
+        </div>
+        <span class="dbx-hint">.dbx-icon-tile (CSS class)</span>
+      </div>
+      <div style="display: flex; gap: 16px; align-items: center; margin-top: 8px">
+        <div dbxIconTile style="outline: 1px dashed var(--mat-sys-outline)">
+          <mat-icon>star</mat-icon>
+        </div>
+        <span class="dbx-hint">[dbxIconTile] (directive — applies the same class)</span>
+      </div>
+      <p>Stack with [dbxColor] + [dbxColorTone] just like the component.</p>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap">
+        <div dbxIconTile [dbxColor]="'primary'" [dbxColorTone]="18">
+          <mat-icon>check</mat-icon>
+        </div>
+        <div dbxIconTile [dbxColor]="'accent'">
+          <mat-icon>favorite</mat-icon>
+        </div>
+        <div dbxIconTile [dbxColor]="'success'">
+          <mat-icon>verified</mat-icon>
+        </div>
+      </div>
+    </doc-feature-example>
     <h4>Color Classes (css classes)</h4>
     <doc-feature-example header=".dbx-primary, .dbx-primary-bg">
       <p class="dbx-primary">{{ lorem }}</p>

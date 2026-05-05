@@ -171,7 +171,6 @@ export function toFormFieldInfo(entry: ForgeFieldEntry): FormFieldInfo {
         configInterface: entry.configInterface ?? '',
         ...(entry.generic === undefined ? {} : { generic: entry.generic }),
         description: entry.description,
-        sourcePath: entry.sourcePath,
         config,
         example: entry.example,
         minimalExample: entry.example
@@ -190,7 +189,6 @@ export function toFormFieldInfo(entry: ForgeFieldEntry): FormFieldInfo {
         ...(entry.generic === undefined ? {} : { generic: entry.generic }),
         derivedFromSlug: entry.composesFromSlugs?.[0] ?? '',
         description: entry.description,
-        sourcePath: entry.sourcePath,
         config,
         example: entry.example,
         minimalExample: entry.example
@@ -209,7 +207,6 @@ export function toFormFieldInfo(entry: ForgeFieldEntry): FormFieldInfo {
         configInterface: entry.configInterface ?? '',
         composesFromSlugs: entry.composesFromSlugs ?? [],
         description: entry.description,
-        sourcePath: entry.sourcePath,
         config,
         example: entry.example,
         minimalExample: entry.example
@@ -227,7 +224,6 @@ export function toFormFieldInfo(entry: ForgeFieldEntry): FormFieldInfo {
         configInterface: entry.configInterface ?? '',
         returnsSlugs: entry.composesFromSlugs ?? [],
         description: entry.description,
-        sourcePath: entry.sourcePath,
         config,
         example: entry.example,
         minimalExample: entry.example
@@ -245,7 +241,6 @@ export function toFormFieldInfo(entry: ForgeFieldEntry): FormFieldInfo {
         returns: entry.returns ?? entry.produces,
         ...(entry.configInterface === undefined ? {} : { configInterface: entry.configInterface }),
         description: entry.description,
-        sourcePath: entry.sourcePath,
         config,
         example: entry.example,
         minimalExample: entry.example

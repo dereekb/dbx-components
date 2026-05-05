@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
 import { first } from 'rxjs';
 import { type Maybe } from '@dereekb/util';
+import { cleanSubscription } from '@dereekb/dbx-core';
 import { type DbxButtonDisplayStylePair } from '../../button/button';
 import { DbxButtonComponent } from '../../button/button.component';
 import { DbxFileUploadComponent } from '../../interaction/upload/upload.component';
@@ -35,7 +36,7 @@ const DEFAULT_DOWNLOAD_BUTTON: DbxButtonDisplayStylePair = {
   selector: 'dbx-pdf-merge-editor',
   templateUrl: './pdf.merge.editor.component.html',
   host: {
-    class: 'dbx-pdf-merge-editor'
+    class: 'dbx-pdf-merge-editor d-block'
   },
   imports: [DbxButtonComponent, DbxFileUploadComponent, DbxDownloadBlobButtonComponent, DbxPdfMergeListComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -44,7 +45,10 @@ const DEFAULT_DOWNLOAD_BUTTON: DbxButtonDisplayStylePair = {
 export class DbxPdfMergeEditorComponent {
   readonly store = inject(DbxPdfMergeEditorStore);
   private readonly _matDialog = inject(MatDialog);
-  private readonly _destroyRef = inject(DestroyRef);
+  /**
+   * Single-slot subscription tracker for the deferred Preview path. Replacing the slot cancels any earlier in-flight wait so rapid clicks (or repeated programmatic calls) cannot stack pending dialogs.
+   */
+  private readonly _pendingPreview = cleanSubscription();
 
   readonly accept = input<FileArrayAcceptMatchConfig['accept']>(PDF_MERGE_DEFAULT_ACCEPT as FileArrayAcceptMatchConfig['accept']);
   readonly multiple = input<boolean>(true);
@@ -52,11 +56,28 @@ export class DbxPdfMergeEditorComponent {
   readonly showDownloadButton = input<boolean>(false);
   readonly showPreviewButton = input<boolean>(true);
   readonly downloadButton = input<Maybe<DbxButtonDisplayStylePair>>(DEFAULT_DOWNLOAD_BUTTON);
+  /**
+   * When `false`, hides the default "Add files" upload area. Use when projecting one or more {@link DbxPdfMergeEditorFileUploadComponent} slots through `<ng-content>` instead of relying on the unscoped uploader.
+   */
+  readonly showAddFiles = input<boolean>(true);
+  /**
+   * When `false`, hides the shared {@link DbxPdfMergeListComponent} below the slot content. Useful when each slot displays its owned files inline and you don't want a duplicate unified list.
+   */
+  readonly showFileList = input<boolean>(true);
 
   readonly entriesChanged = output<readonly PdfMergeEntry[]>();
 
   readonly hasReadyEntriesSignal = toSignal(this.store.hasReadyEntries$, { initialValue: false });
   readonly entryCountSignal = toSignal(this.store.entryCount$, { initialValue: 0 });
+  /**
+   * Mirrors {@link DbxPdfMergeEditorStore.isValid$}. Defaults to `true` when no validator delegate is registered, so the Preview/Download buttons are gated only by the registered validator's output (if any).
+   */
+  readonly isValidSignal = toSignal(this.store.isValid$, { initialValue: true });
+
+  /**
+   * Computed gate for the Preview and Download affordances. Disabled while no entry is `ready` or while the registered validator delegate reports invalid.
+   */
+  readonly canMergeSignal = computed(() => this.hasReadyEntriesSignal() && this.isValidSignal());
 
   /**
    * Latest merged blob (or `undefined` while validation/merge is in flight or no entries are ready). Sourced from {@link DbxPdfMergeEditorStore.currentMergeOutput$} so the download button always reflects the current merge without needing the user to click Preview first.
@@ -75,7 +96,7 @@ export class DbxPdfMergeEditorComponent {
 
   onFiles(event: DbxFileUploadFilesChangedEvent): void {
     if (event.matchResult.accepted.length > 0) {
-      this.store.addFiles(event.matchResult.accepted);
+      this.store.addFiles({ files: event.matchResult.accepted });
     }
   }
 
@@ -84,12 +105,20 @@ export class DbxPdfMergeEditorComponent {
   }
 
   onPreview(): void {
+    if (!this.canMergeSignal()) {
+      return;
+    }
+
     const blob = this.mergeBlobSignal();
 
     if (blob != null) {
+      this._pendingPreview.subscription = null;
       this.openPreviewDialog(blob);
     } else {
-      this.store.mergeOutput$.pipe(first(), takeUntilDestroyed(this._destroyRef)).subscribe((merged) => this.openPreviewDialog(merged));
+      this._pendingPreview.subscription = this.store.mergeOutput$.pipe(first()).subscribe((merged) => {
+        this._pendingPreview.subscription = null;
+        this.openPreviewDialog(merged);
+      });
     }
   }
 

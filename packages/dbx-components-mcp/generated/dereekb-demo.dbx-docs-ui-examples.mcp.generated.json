@@ -1,0 +1,222 @@
+{
+  "version": 1,
+  "source": "@dereekb/demo",
+  "module": "apps/demo",
+  "generatedAt": "1970-01-01T00:00:00.000Z",
+  "generator": "@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs",
+  "entries": [
+    {
+      "slug": "card-hero-onboarding-progress",
+      "category": "card",
+      "summary": "Top-of-page hero card on an inverse surface — eyebrow, headline, progress bar, secondary CTA, and trailing percent.",
+      "header": "Hero Card (Onboarding Progress)",
+      "className": "DocHeroCardExampleComponent",
+      "selector": "doc-hero-card-example",
+      "module": "apps/demo",
+      "appRef": "apps/demo",
+      "hint": "Top-of-page hero on an inverse surface with eyebrow, headline, progress, action, and trailing percent.",
+      "relatedSlugs": [
+        "mat-card",
+        "dbx-card-box",
+        "dbx-content-pit"
+      ],
+      "info": "<p>\n  A \"hero\" card is a high-emphasis module placed at the top of a page that summarises the user's most important task. This example uses Angular Material's\n  <code>&lt;mat-card appearance=\"filled\"&gt;</code>\n  and only re-points the M3\n  <code>--mat-card-filled-container-color</code>\n  token to\n  <code>--mat-sys-inverse-surface</code>\n  (with text painted from\n  <code>--mat-sys-inverse-on-surface</code>\n  ) so the card flips correctly between light/dark themes without any hard-coded colours.\n</p>\n<p>\n  Layout uses standard dbx utility classes —\n  <code>.dbx-p4</code>\n  for the card body inset,\n  <code>.dbx-mb3</code>\n  /\n  <code>.dbx-pb1</code>\n  /\n  <code>.dbx-mb1</code>\n  for vertical rhythm — instead of bespoke\n  <code>margin</code>\n  /\n  <code>padding</code>\n  values. Typography composes the M3 type-role utilities\n  <code>.dbx-text-label-medium</code>\n  (eyebrow),\n  <code>.dbx-text-title-large</code>\n  (headline), and\n  <code>.dbx-text-headline-large</code>\n  (trailing percent) with\n  <code>.dbx-uppercase</code>\n  /\n  <code>.dbx-tracked-wide</code>\n  for the eyebrow's overline treatment, so no inline\n  <code>font:</code>\n  declarations are needed. Inline emphasis uses semantic\n  <code>&lt;strong&gt;</code>\n  rather than a bespoke weight class.\n</p>",
+      "snippet": "<mat-card appearance=\"filled\">\n  <mat-card-content class=\"dbx-p4 doc-hero-card-content\" fxLayout=\"row\" fxLayoutAlign=\"start\" fxLayoutGap=\"var(--dbx-padding-3)\">\n    <div class=\"dbx-flex-fill doc-hero-card-main\">\n      <div class=\"dbx-text-label-medium dbx-uppercase dbx-tracked-wide dbx-pb1\">YOUR ONBOARDING PROGRESS</div>\n      <h3 class=\"dbx-text-title-large dbx-mb1\">{{ remaining }} requirements to go</h3>\n      <p class=\"dbx-mb3\">\n        <strong>{{ completed }} of {{ total }}</strong>\n        requirements completed\n      </p>\n      <mat-progress-bar mode=\"determinate\" [value]=\"progressPercent\" class=\"dbx-mb3\"></mat-progress-bar>\n      <button mat-stroked-button class=\"doc-hero-action\">\n        View all requirements\n        <mat-icon iconPositionEnd>arrow_forward</mat-icon>\n      </button>\n    </div>\n    <div class=\"dbx-text-headline-large\" aria-hidden=\"true\">{{ progressPercent }}%</div>\n  </mat-card-content>\n</mat-card>",
+      "uses": []
+    },
+    {
+      "slug": "list-anchor-button",
+      "category": "list",
+      "summary": "Two-line list whose trailing button wraps a per-item ClickableAnchor via dbx-anchor.",
+      "header": ".dbx-list-two-line-item Anchor-Button List",
+      "className": "DocListAnchorButtonExampleComponent",
+      "selector": "doc-list-anchor-button-example",
+      "module": "apps/demo",
+      "appRef": "apps/demo",
+      "hint": "Two-line row whose trailing button wraps a per-item ClickableAnchor via dbx-anchor.",
+      "relatedSlugs": [
+        "dbx-list",
+        "dbx-list-two-line-item",
+        "dbx-anchor",
+        "icon-tile",
+        "dbx-color"
+      ],
+      "info": "<p>\n  Each item carries its own\n  <code>anchor: ClickableAnchor</code>\n  field. The item template wraps the trailing\n  <code>&lt;button mat-flat-button&gt;</code>\n  in\n  <code>&lt;dbx-anchor [anchor]=\"anchor\"&gt;</code>\n  so clicking the button fires whatever the data dictates — an\n  <code>onClick</code>\n  callback, a router\n  <code>ref</code>\n  , or an external\n  <code>url</code>\n  .\n</p>\n<p>\n  Because\n  <code>mapValuesToItemValues</code>\n  drops\n  <code>anchor</code>\n  off the row item, the row's hosting (mat-list-item) doesn't pick it up — only the trailing button is interactive. Use this when each item already knows where it routes and you want the action visually scoped to a button.\n</p>\n<p>\n  For the alternative — a whole-row click target supplied by the host rather than embedded in data — see\n  <code>list-anchor-row-modifier</code>\n  .\n</p>\n<p>\n  Last clicked:\n  <code>{{ clickedKey() ?? '(none)' }}</code>\n</p>",
+      "snippet": "<doc-anchor-button-item-list [state]=\"state$\"></doc-anchor-button-item-list>",
+      "uses": [
+        {
+          "kind": "component",
+          "className": "DocAnchorButtonItemListComponent",
+          "role": "list",
+          "selector": "doc-anchor-button-item-list",
+          "classSource": "@Component({\n  selector: 'doc-anchor-button-item-list',\n  template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,\n  imports: [DbxListWrapperComponentImportsModule],\n  host: {\n    class: 'dbx-list-no-hover-effects dbx-list-card-items-list'\n  },\n  changeDetection: ChangeDetectionStrategy.OnPush,\n  standalone: true\n})\nexport class DocAnchorButtonItemListComponent extends AbstractDbxSelectionListWrapperDirective<AnchorButtonItemValue> {\n  constructor() {\n    super({\n      componentClass: DocAnchorButtonItemListViewComponent,\n      defaultSelectionMode: 'view'\n    });\n  }\n}"
+        },
+        {
+          "kind": "component",
+          "className": "DocAnchorButtonItemListViewComponent",
+          "role": "view",
+          "selector": "doc-anchor-button-item-list-view",
+          "classSource": "@Component({\n  selector: 'doc-anchor-button-item-list-view',\n  template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,\n  imports: [DbxSelectionValueListViewComponentImportsModule],\n  providers: provideDbxListView(DocAnchorButtonItemListViewComponent),\n  host: {\n    class: 'dbx-list-item-p0'\n  },\n  changeDetection: ChangeDetectionStrategy.OnPush,\n  standalone: true\n})\nexport class DocAnchorButtonItemListViewComponent extends AbstractDbxSelectionListViewDirective<AnchorButtonItemValue> {\n  // Drop `icon` (template paints its own tile) and `anchor` (button owns it; row stays non-clickable).\n  readonly config: DbxSelectionValueListViewConfig<AnchorButtonItemValueWithSelection> = {\n    componentClass: DocAnchorButtonItemListViewItemComponent,\n    mapValuesToItemValues: (values) => of(values.map((value) => ({ ...value, itemValue: value, icon: undefined, anchor: undefined })))\n  };\n}"
+        },
+        {
+          "kind": "component",
+          "className": "DocAnchorButtonItemListViewItemComponent",
+          "role": "item",
+          "selector": "doc-anchor-button-item-list-view-item",
+          "classSource": "@Component({\n  selector: 'doc-anchor-button-item-list-view-item',\n  template: `\n    <div class=\"dbx-list-item-padded-thick dbx-list-two-line-item dbx-list-two-line-item-with-icon\">\n      <dbx-icon-tile class=\"item-icon\" [icon]=\"icon\" [dbxColor]=\"'primary'\" [dbxColorTone]=\"18\"></dbx-icon-tile>\n      <div class=\"item-left\">\n        <span class=\"dbx-text-title-medium dbx-pb1\">{{ title }}</span>\n        <span class=\"item-details dbx-pb2\">{{ progress }} of {{ total }} complete</span>\n        <mat-progress-bar mode=\"determinate\" [value]=\"progressPercent\"></mat-progress-bar>\n      </div>\n      <div class=\"item-right\">\n        <dbx-anchor [anchor]=\"anchor\">\n          <button mat-flat-button>{{ buttonText }}</button>\n        </dbx-anchor>\n      </div>\n    </div>\n  `,\n  imports: [MatButtonModule, MatProgressBar, DbxColorDirective, DbxIconTileComponent, DbxAnchorComponent],\n  changeDetection: ChangeDetectionStrategy.OnPush,\n  standalone: true\n})\nexport class DocAnchorButtonItemListViewItemComponent extends AbstractDbxValueListViewItemComponent<AnchorButtonItemValue> {\n  get icon(): string {\n    return this.itemValue.icon;\n  }\n\n  get title(): string {\n    return this.itemValue.title;\n  }\n\n  get progress(): number {\n    return this.itemValue.progress;\n  }\n\n  get total(): number {\n    return this.itemValue.total;\n  }\n\n  get buttonText(): string {\n    return this.itemValue.buttonText;\n  }\n\n  get anchor(): ClickableAnchor {\n    return this.itemValue.anchor;\n  }\n\n  get progressPercent(): number {\n    return this.total > 0 ? Math.min(100, Math.round((this.progress / this.total) * 100)) : 0;\n  }\n}"
+        },
+        {
+          "kind": "interface",
+          "className": "AnchorButtonItemValue",
+          "role": "data",
+          "classSource": "export interface AnchorButtonItemValue {\n  readonly key: string;\n  readonly title: string;\n  readonly icon: string;\n  readonly progress: number;\n  readonly total: number;\n  readonly buttonText: string;\n  readonly anchor: ClickableAnchor;\n}"
+        }
+      ]
+    },
+    {
+      "slug": "list-anchor-row-modifier",
+      "category": "list",
+      "summary": "Two-line list where dbxListItemAnchorModifier makes the entire row a click target — data has no anchor field.",
+      "header": ".dbx-list-two-line-item Anchor-Row List With Modifier",
+      "className": "DocListAnchorRowModifierExampleComponent",
+      "selector": "doc-list-anchor-row-modifier-example",
+      "module": "apps/demo",
+      "appRef": "apps/demo",
+      "hint": "Whole-row click target wired by dbxListItemAnchorModifier — the data has no anchor field of its own.",
+      "relatedSlugs": [
+        "dbx-list",
+        "dbx-list-two-line-item",
+        "dbxListItemAnchorModifier",
+        "dbxListItemModifier",
+        "icon-tile",
+        "dbx-color"
+      ],
+      "info": "<p>\n  The list values don't carry an\n  <code>anchor</code>\n  field. Instead, the host attaches\n  <code>dbxListItemModifier [dbxListItemAnchorModifier]=\"makeClickAnchor\"</code>\n  on the wrapper. The modifier runs the host's\n  <code>AnchorForValueFunction</code>\n  for each item, sets the resulting\n  <code>ClickableAnchor</code>\n  on the\n  <code>DbxValueListItem</code>\n  , and the list's row hosting wires it as a row click — the\n  <em>entire row</em>\n  becomes the click target without the data needing to know anything about routing.\n</p>\n<p>\n  Pick this pattern when the routing target is computed from the value's identity (e.g. a router\n  <code>ref</code>\n  built from\n  <code>itemValue.key</code>\n  ) and you want the row itself to be the action surface — no trailing button needed; a chevron is plenty of affordance.\n</p>\n<p>\n  Last clicked:\n  <code>{{ clickedKey() ?? '(none)' }}</code>\n</p>",
+      "snippet": "<doc-anchor-row-item-list [state]=\"state$\" dbxListItemModifier [dbxListItemAnchorModifier]=\"makeClickAnchor\"></doc-anchor-row-item-list>",
+      "uses": [
+        {
+          "kind": "component",
+          "className": "DocAnchorRowItemListComponent",
+          "role": "list",
+          "selector": "doc-anchor-row-item-list",
+          "classSource": "@Component({\n  selector: 'doc-anchor-row-item-list',\n  template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,\n  imports: [DbxListWrapperComponentImportsModule],\n  changeDetection: ChangeDetectionStrategy.OnPush,\n  host: {\n    class: 'dbx-list-card-items-list'\n  },\n  standalone: true\n})\nexport class DocAnchorRowItemListComponent extends AbstractDbxSelectionListWrapperDirective<AnchorRowItemValue> {\n  constructor() {\n    super({\n      componentClass: DocAnchorRowItemListViewComponent,\n      defaultSelectionMode: 'view'\n    });\n  }\n}"
+        },
+        {
+          "kind": "component",
+          "className": "DocAnchorRowItemListViewComponent",
+          "role": "view",
+          "selector": "doc-anchor-row-item-list-view",
+          "classSource": "@Component({\n  selector: 'doc-anchor-row-item-list-view',\n  template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,\n  imports: [DbxSelectionValueListViewComponentImportsModule],\n  providers: provideDbxListView(DocAnchorRowItemListViewComponent),\n  host: {\n    class: 'dbx-list-item-p0'\n  },\n  changeDetection: ChangeDetectionStrategy.OnPush,\n  standalone: true\n})\nexport class DocAnchorRowItemListViewComponent extends AbstractDbxSelectionListViewDirective<AnchorRowItemValue> {\n  readonly config: DbxSelectionValueListViewConfig<AnchorRowItemValueWithSelection> = {\n    componentClass: DocAnchorRowItemListViewItemComponent,\n    mapValuesToItemValues: (values) => of(values.map((value) => ({ ...value, itemValue: value, icon: undefined })))\n  };\n}"
+        },
+        {
+          "kind": "component",
+          "className": "DocAnchorRowItemListViewItemComponent",
+          "role": "item",
+          "selector": "doc-anchor-row-item-list-view-item",
+          "classSource": "@Component({\n  selector: 'doc-anchor-row-item-list-view-item',\n  template: `\n    <div class=\"dbx-list-item-padded-thick dbx-list-two-line-item dbx-list-two-line-item-with-icon\">\n      <dbx-icon-tile class=\"item-icon\" [icon]=\"icon\" [dbxColor]=\"'primary'\" [dbxColorTone]=\"18\"></dbx-icon-tile>\n      <div class=\"item-left\">\n        <span class=\"dbx-text-title-medium dbx-pb1\">{{ title }}</span>\n        <span class=\"item-details dbx-pb2\">{{ progress }} of {{ total }} complete</span>\n        <mat-progress-bar mode=\"determinate\" [value]=\"progressPercent\"></mat-progress-bar>\n      </div>\n      <div class=\"item-right\">\n        <mat-icon>chevron_right</mat-icon>\n      </div>\n    </div>\n  `,\n  imports: [MatIconModule, MatProgressBar, DbxColorDirective, DbxIconTileComponent],\n  changeDetection: ChangeDetectionStrategy.OnPush,\n  standalone: true\n})\nexport class DocAnchorRowItemListViewItemComponent extends AbstractDbxValueListViewItemComponent<AnchorRowItemValue> {\n  get icon(): string {\n    return this.itemValue.icon;\n  }\n\n  get title(): string {\n    return this.itemValue.title;\n  }\n\n  get progress(): number {\n    return this.itemValue.progress;\n  }\n\n  get total(): number {\n    return this.itemValue.total;\n  }\n\n  get progressPercent(): number {\n    return this.total > 0 ? Math.min(100, Math.round((this.progress / this.total) * 100)) : 0;\n  }\n}"
+        },
+        {
+          "kind": "interface",
+          "className": "AnchorRowItemValue",
+          "role": "data",
+          "classSource": "export interface AnchorRowItemValue {\n  readonly key: string;\n  readonly title: string;\n  readonly icon: string;\n  readonly progress: number;\n  readonly total: number;\n}"
+        }
+      ]
+    },
+    {
+      "slug": "list-progress-with-button",
+      "category": "list",
+      "summary": "Two-line list with template-painted icon tile, progress bar, and trailing button.",
+      "header": ".dbx-list-two-line-item Customized List With Button",
+      "className": "DocListProgressExampleComponent",
+      "selector": "doc-list-progress-example",
+      "module": "apps/demo",
+      "appRef": "apps/demo",
+      "hint": "Two-line row with a template-painted icon tile, full-width progress bar, and trailing action button.",
+      "relatedSlugs": [
+        "dbx-list",
+        "dbx-list-two-line-item",
+        "icon-tile",
+        "dbx-color"
+      ],
+      "info": "<p>\n  This variant demonstrates a heavier, custom item where the template paints the leading icon itself instead of relying on the parent list view. Add the\n  <code>.dbx-list-two-line-item-with-icon</code>\n  modifier so the parent skips its own icon, then drop the mapped item's\n  <code>icon</code>\n  field to suppress the built-in slot.\n</p>\n<p>\n  The leading element uses the reusable\n  <code>&lt;dbx-icon-tile&gt;</code>\n  component — a rounded, padded container that takes an\n  <code>[icon]</code>\n  input and pairs with\n  <code>[dbxColor]</code>\n  +\n  <code>[dbxColorTone]</code>\n  for a tonal background. Inside\n  <code>.item-left</code>\n  the template stacks a title, an\n  <code>X of Y complete</code>\n  details line, and a\n  <code>&lt;mat-progress-bar&gt;</code>\n  that spans the full width up to the trailing column;\n  <code>.item-right</code>\n  holds a flat action button.\n</p>\n<p>\n  Supporting utilities used here:\n  <code>.dbx-list-item-padded-thick</code>\n  for a roomier row,\n  <code>.dbx-list-card-items-list</code>\n  on the wrapper for the tinted/rounded card surface — applied to the actual\n  <code>.mat-mdc-list-item</code>\n  so hover/focus state-layers stay within the visible card boundary (defaults flow through\n  <code>--mat-sys-surface-container</code>\n  +\n  <code>--mat-sys-corner-large</code>\n  ; overridable via\n  <code>--dbx-list-item-card-background</code>\n  /\n  <code>--dbx-list-item-card-border-radius</code>\n  , with inter-card spacing exposed as\n  <code>--dbx-list-card-items-list-gap</code>\n  ),\n  <code>.dbx-list-item-p0</code>\n  on the view item host to drop Material's default list-item padding (so the icon tile can own its leading inset), and\n  <code>.dbx-list-no-hover-effects</code>\n  on the wrapper to disable the hover state-layer and pointer cursor for non-clickable rows.\n</p>",
+      "snippet": "<doc-progress-item-list [state]=\"state$\"></doc-progress-item-list>",
+      "uses": [
+        {
+          "kind": "component",
+          "className": "DocProgressItemListComponent",
+          "role": "list",
+          "selector": "doc-progress-item-list",
+          "classSource": "@Component({\n  selector: 'doc-progress-item-list',\n  template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,\n  imports: [DbxListWrapperComponentImportsModule],\n  host: {\n    class: 'dbx-list-no-hover-effects dbx-list-card-items-list'\n  },\n  changeDetection: ChangeDetectionStrategy.OnPush,\n  standalone: true\n})\nexport class DocProgressItemListComponent extends AbstractDbxSelectionListWrapperDirective<ProgressItemValue> {\n  constructor() {\n    super({\n      componentClass: DocProgressItemListViewComponent,\n      defaultSelectionMode: 'view'\n    });\n  }\n}"
+        },
+        {
+          "kind": "component",
+          "className": "DocProgressItemListViewComponent",
+          "role": "view",
+          "selector": "doc-progress-item-list-view",
+          "classSource": "@Component({\n  selector: 'doc-progress-item-list-view',\n  template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,\n  imports: [DbxSelectionValueListViewComponentImportsModule],\n  providers: provideDbxListView(DocProgressItemListViewComponent),\n  host: {\n    class: 'dbx-list-item-p0'\n  },\n  changeDetection: ChangeDetectionStrategy.OnPush,\n  standalone: true\n})\nexport class DocProgressItemListViewComponent extends AbstractDbxSelectionListViewDirective<ProgressItemValue> {\n  readonly config: DbxSelectionValueListViewConfig<ProgressItemValueWithSelection> = {\n    componentClass: DocProgressItemListViewItemComponent,\n    mapValuesToItemValues: (values) => of(values.map((value) => ({ ...value, itemValue: value, icon: undefined })))\n  };\n}"
+        },
+        {
+          "kind": "component",
+          "className": "DocProgressItemListViewItemComponent",
+          "role": "item",
+          "selector": "doc-progress-item-list-view-item",
+          "classSource": "@Component({\n  selector: 'doc-progress-item-list-view-item',\n  template: `\n    <div class=\"dbx-list-item-padded-thick dbx-list-two-line-item dbx-list-two-line-item-with-icon doc-progress-item\">\n      <dbx-icon-tile class=\"item-icon\" [icon]=\"icon\" [dbxColor]=\"'primary'\" [dbxColorTone]=\"18\"></dbx-icon-tile>\n      <div class=\"item-left\">\n        <span class=\"dbx-text-title-medium dbx-pb1\">{{ title }}</span>\n        <span class=\"item-details dbx-pb2\">{{ progress }} of {{ total }} complete</span>\n        <mat-progress-bar mode=\"determinate\" [value]=\"progressPercent\"></mat-progress-bar>\n      </div>\n      <div class=\"item-right\">\n        <button mat-flat-button>View requirements</button>\n      </div>\n    </div>\n  `,\n  imports: [MatButtonModule, MatProgressBar, DbxColorDirective, DbxIconTileComponent],\n  changeDetection: ChangeDetectionStrategy.OnPush,\n  standalone: true\n})\nexport class DocProgressItemListViewItemComponent extends AbstractDbxValueListViewItemComponent<ProgressItemValue> {\n  get icon(): string {\n    return this.itemValue.icon;\n  }\n\n  get title(): string {\n    return this.itemValue.title;\n  }\n\n  get progress(): number {\n    return this.itemValue.progress;\n  }\n\n  get total(): number {\n    return this.itemValue.total;\n  }\n\n  get progressPercent(): number {\n    return this.total > 0 ? Math.min(100, Math.round((this.progress / this.total) * 100)) : 0;\n  }\n}"
+        },
+        {
+          "kind": "interface",
+          "className": "ProgressItemValue",
+          "role": "data",
+          "classSource": "export interface ProgressItemValue {\n  readonly key: string;\n  readonly title: string;\n  readonly progress: number;\n  readonly total: number;\n  readonly icon: string;\n}"
+        }
+      ]
+    },
+    {
+      "slug": "list-standard-two-line",
+      "category": "list",
+      "summary": "Two-line list with parent-rendered leading icon and trailing status chip.",
+      "header": ".dbx-list-two-line-item Standard List With Chip",
+      "className": "DocListStandardExampleComponent",
+      "selector": "doc-list-standard-example",
+      "module": "apps/demo",
+      "appRef": "apps/demo",
+      "hint": "Two-line row with parent-rendered leading icon, title/details/footnote, and a trailing status chip.",
+      "relatedSlugs": [
+        "dbx-list",
+        "dbx-list-two-line-item",
+        "dbx-chip"
+      ],
+      "info": "<p>\n  The\n  <code>.dbx-list-two-line-item</code>\n  wrapper organizes a row into\n  <code>.item-left</code>\n  (column with\n  <code>.item-title</code>\n  ,\n  <code>.item-details</code>\n  , and\n  <code>.item-details-footnote</code>\n  ) and\n  <code>.item-right</code>\n  (trailing content). Pair with\n  <code>.dbx-list-item-padded</code>\n  for the standard list-row padding and min-height.\n</p>\n<p>\n  This example uses the default selection-list rendering: the parent list view paints the leading icon (it reads\n  <code>icon</code>\n  off each mapped item), so the item template only fills\n  <code>.item-left</code>\n  with the title/details/footnote and\n  <code>.item-right</code>\n  with a\n  <code>&lt;dbx-chip&gt;</code>\n  for the status badge.\n</p>",
+      "snippet": "<doc-two-line-item-list [state]=\"state$\"></doc-two-line-item-list>",
+      "uses": [
+        {
+          "kind": "component",
+          "className": "DocTwoLineItemListComponent",
+          "role": "list",
+          "selector": "doc-two-line-item-list",
+          "classSource": "@Component({\n  selector: 'doc-two-line-item-list',\n  template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,\n  imports: [DbxListWrapperComponentImportsModule],\n  changeDetection: ChangeDetectionStrategy.OnPush,\n  standalone: true\n})\nexport class DocTwoLineItemListComponent extends AbstractDbxSelectionListWrapperDirective<TwoLineItemValue> {\n  constructor() {\n    super({\n      componentClass: DocTwoLineItemListViewComponent,\n      defaultSelectionMode: 'view'\n    });\n  }\n}"
+        },
+        {
+          "kind": "component",
+          "className": "DocTwoLineItemListViewComponent",
+          "role": "view",
+          "selector": "doc-two-line-item-list-view",
+          "classSource": "@Component({\n  selector: 'doc-two-line-item-list-view',\n  template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,\n  imports: [DbxSelectionValueListViewComponentImportsModule],\n  providers: provideDbxListView(DocTwoLineItemListViewComponent),\n  changeDetection: ChangeDetectionStrategy.OnPush,\n  standalone: true\n})\nexport class DocTwoLineItemListViewComponent extends AbstractDbxSelectionListViewDirective<TwoLineItemValue> {\n  readonly config: DbxSelectionValueListViewConfig<TwoLineItemValueWithSelection> = {\n    componentClass: DocTwoLineItemListViewItemComponent,\n    mapValuesToItemValues: (values) => of(values.map((value) => ({ ...value, itemValue: value, icon: value.icon })))\n  };\n}"
+        },
+        {
+          "kind": "component",
+          "className": "DocTwoLineItemListViewItemComponent",
+          "role": "item",
+          "selector": "doc-two-line-item-list-view-item",
+          "classSource": "@Component({\n  selector: 'doc-two-line-item-list-view-item',\n  template: `\n    <div class=\"dbx-list-item-padded dbx-list-two-line-item\">\n      <div class=\"item-left\">\n        <span class=\"item-title\">{{ title }}</span>\n        @if (details) {\n          <span class=\"item-details\">{{ details }}</span>\n        }\n        @if (footnote) {\n          <span class=\"item-details-footnote\">{{ footnote }}</span>\n        }\n      </div>\n      <dbx-spacer></dbx-spacer>\n      <div class=\"item-right\">\n        @if (status) {\n          <dbx-chip [small]=\"true\" [color]=\"statusColor\">{{ status }}</dbx-chip>\n        }\n      </div>\n    </div>\n  `,\n  imports: [DbxSpacerDirective, DbxChipDirective],\n  changeDetection: ChangeDetectionStrategy.OnPush,\n  standalone: true\n})\nexport class DocTwoLineItemListViewItemComponent extends AbstractDbxValueListViewItemComponent<TwoLineItemValue> {\n  get title(): string {\n    return this.itemValue.title;\n  }\n\n  get details(): Maybe<string> {\n    return this.itemValue.details;\n  }\n\n  get footnote(): Maybe<string> {\n    return this.itemValue.footnote;\n  }\n\n  get status(): Maybe<TwoLineItemValue['status']> {\n    return this.itemValue.status;\n  }\n\n  get statusColor(): TwoLineItemStatusColor {\n    return this.status ? STATUS_COLOR[this.status] : 'grey';\n  }\n}"
+        },
+        {
+          "kind": "interface",
+          "className": "TwoLineItemValue",
+          "role": "data",
+          "classSource": "export interface TwoLineItemValue {\n  readonly key: string;\n  readonly icon?: Maybe<string>;\n  readonly title: string;\n  readonly details?: Maybe<string>;\n  readonly footnote?: Maybe<string>;\n  readonly status?: Maybe<'active' | 'pending' | 'archived'>;\n}"
+        }
+      ]
+    }
+  ]
+}

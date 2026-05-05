@@ -57,21 +57,6 @@ export const TokenDefaults = type({
  */
 export type TokenDefaults = typeof TokenDefaults.infer;
 
-// MARK: Source location
-/**
- * Optional source-file location an entry was extracted from. Surfaced in
- * deep-detail tool output so callers can jump to the underlying SCSS.
- */
-export const TokenSourceLocation = type({
-  file: 'string',
-  line: 'number'
-});
-
-/**
- * Static type inferred from {@link TokenSourceLocation}.
- */
-export type TokenSourceLocation = typeof TokenSourceLocation.infer;
-
 // MARK: Entry
 /**
  * One token entry in a manifest. Captures everything `dbx_css_token_lookup` and
@@ -93,8 +78,7 @@ export const TokenEntry = type({
   'utilityClasses?': 'string[]',
   'componentScope?': 'string',
   'recommendedPrimitive?': 'string',
-  'seeAlso?': 'string[]',
-  'sourceLocation?': TokenSourceLocation
+  'seeAlso?': 'string[]'
 });
 
 /**

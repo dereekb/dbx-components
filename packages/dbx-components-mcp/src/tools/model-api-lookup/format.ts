@@ -4,6 +4,12 @@
 
 import type { ApiLookupEntry, ApiLookupField, ApiLookupReport } from './types.js';
 
+/**
+ * Renders the model-API lookup report as a markdown document with one section per matched entry plus action/factory cross-references.
+ *
+ * @param report - The API lookup report to render.
+ * @returns A markdown document.
+ */
 export function formatLookupAsMarkdown(report: ApiLookupReport): string {
   const heading = report.groupName ? `${report.groupName} (\`${report.modelFilter}\`)` : report.modelFilter;
   const lines: string[] = [`# Model API lookup — ${heading}`, '', `Component: \`${report.componentDir}\``];
@@ -14,7 +20,8 @@ export function formatLookupAsMarkdown(report: ApiLookupReport): string {
     lines.push(`Source: \`${report.sourceFile}\``);
   }
   if (report.modelKeys.length > 0) {
-    lines.push(`Models: ${report.modelKeys.map((m) => `\`${m}\``).join(', ')}`);
+    const modelLabels = report.modelKeys.map((m) => `\`${m}\``).join(', ');
+    lines.push(`Models: ${modelLabels}`);
   }
   lines.push('', `Action lookup: ${formatActionLookupStatus(report)}`, '');
 
@@ -29,6 +36,12 @@ export function formatLookupAsMarkdown(report: ApiLookupReport): string {
   return lines.join('\n');
 }
 
+/**
+ * Renders the model-API lookup report as a flat JSON payload.
+ *
+ * @param report - The API lookup report to render.
+ * @returns Pretty-printed JSON string for the report.
+ */
 export function formatLookupAsJson(report: ApiLookupReport): string {
   return JSON.stringify(report, null, 2);
 }
@@ -47,7 +60,9 @@ function formatActionLookupStatus(report: ApiLookupReport): string {
 function formatEntry(entry: ApiLookupEntry): string {
   const wireKey = formatWireKey(entry);
   const heading = entry.specifier !== undefined ? `${entry.model}.${entry.verb}.${entry.specifier}` : `${entry.model}.${entry.verb}`;
-  const lines: string[] = [`## ${heading}`, '', `- Wire key: \`${wireKey}\``, `- Params: ${entry.paramsTypeName ? `\`${entry.paramsTypeName}\`` : '_unresolved_'}`, `- Result: ${entry.resultTypeName ? `\`${entry.resultTypeName}\`` : '`void`'}`, `- Source: \`${entry.sourceFile}:${entry.line}\``, ''];
+  const paramsLabel = entry.paramsTypeName ? `\`${entry.paramsTypeName}\`` : '_unresolved_';
+  const resultLabel = entry.resultTypeName ? `\`${entry.resultTypeName}\`` : '`void`';
+  const lines: string[] = [`## ${heading}`, '', `- Wire key: \`${wireKey}\``, `- Params: ${paramsLabel}`, `- Result: ${resultLabel}`, `- Source: \`${entry.sourceFile}:${entry.line}\``, ''];
 
   if (entry.paramsJsDoc || entry.paramsFields.length > 0) {
     lines.push('### Params');

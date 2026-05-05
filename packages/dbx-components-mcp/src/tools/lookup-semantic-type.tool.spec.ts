@@ -27,8 +27,7 @@ describe('createSemanticTypeLookupTool', () => {
         entries: [
           entryFixture({
             examples: [{ caption: 'Direct assignment', code: "const e: EmailAddress = 'foo@bar.com';" }],
-            guards: ['isEmailAddress'],
-            sourceLocation: { file: 'src/lib/contact/email.ts', line: 6 }
+            guards: ['isEmailAddress']
           })
         ],
         loadedSources: ['@dereekb/util']
@@ -41,7 +40,6 @@ describe('createSemanticTypeLookupTool', () => {
     expect(text).toContain('### Guards');
     expect(text).toContain('isEmailAddress');
     expect(text).toContain('### Examples');
-    expect(text).toContain('### Source');
   });
 
   it('returns brief shape when depth=brief', async () => {
@@ -49,8 +47,7 @@ describe('createSemanticTypeLookupTool', () => {
       registry: createSemanticTypeRegistryFromEntries({
         entries: [
           entryFixture({
-            guards: ['isEmailAddress'],
-            sourceLocation: { file: 'src/lib/contact/email.ts', line: 6 }
+            guards: ['isEmailAddress']
           })
         ],
         loadedSources: ['@dereekb/util']
@@ -61,7 +58,6 @@ describe('createSemanticTypeLookupTool', () => {
     const text = getText(result);
     expect(text).toContain('## `EmailAddress`');
     expect(text).not.toContain('### Guards');
-    expect(text).not.toContain('### Source');
   });
 
   it('renders cross-package collisions as a multi-entry block', async () => {

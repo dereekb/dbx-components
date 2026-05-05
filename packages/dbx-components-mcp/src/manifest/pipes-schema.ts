@@ -79,10 +79,8 @@ export const PipeEntry = type({
   description: 'string',
   args: PipeArgEntry.array(),
   example: 'string',
-  sourcePath: 'string',
   'relatedSlugs?': 'string[]',
   'skillRefs?': 'string[]',
-  'sourceLocation?': type({ file: 'string', line: 'number' }),
   'deprecated?': 'boolean | string',
   'since?': 'string'
 });

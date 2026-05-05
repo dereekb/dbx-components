@@ -41,8 +41,8 @@ const FORM_FIELD_TEMPLATE_TAG = 'dbxFormFieldTemplate';
 // MARK: Public types
 /**
  * One forge entry extracted from a source file. Mirrors {@link ForgeFieldEntry}
- * minus the manifest-level fields populated by the build phase
- * (sourcePath/sourceLocation come from path resolution, not the AST).
+ * for the persisted fields. `filePath` and `line` are kept for in-process
+ * warnings and never persisted to the manifest.
  */
 export interface ExtractedForgeFieldEntry {
   readonly slug: string;
@@ -955,6 +955,9 @@ function defaultConfigInterfaceName(factoryName: string): string {
  * picks it up automatically. Factories whose Props interface uses a different
  * name (e.g. `DbxForgeDateTimeFieldComponentProps`) should use the explicit
  * `@dbxFormPropsInterface` JSDoc tag instead.
+ *
+ * @param factoryName - The factory function name to derive the Props interface from.
+ * @returns The conventional Props interface name (`<FactoryNameCapitalized>Props`).
  */
 function defaultPropsInterfaceName(factoryName: string): string {
   return `${capitalize(factoryName)}Props`;

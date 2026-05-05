@@ -15,7 +15,7 @@
  * the real filesystem.
  */
 
-import { relative, resolve } from 'node:path';
+import { resolve } from 'node:path';
 import { type } from 'arktype';
 import { Project } from 'ts-morph';
 import { FilterManifest, type FilterEntry } from '../manifest/filters-schema.js';
@@ -97,7 +97,7 @@ export async function buildFiltersManifest(input: BuildFiltersManifestInput): Pr
   const extractResult = extractFilterEntries({ project });
   const moduleName = scanSection.module ?? packageName;
   const sourceLabel = scanSection.source ?? packageName;
-  const entries = extractResult.entries.map((entry) => assembleEntry({ entry, projectRoot, moduleName }));
+  const entries = extractResult.entries.map((entry) => assembleEntry({ entry, moduleName }));
 
   const manifest = {
     version: 1 as const,
@@ -162,14 +162,11 @@ async function loadScanConfig(configPath: string, readFile: BuildFiltersReadFile
 
 interface AssembleEntryInput {
   readonly entry: ExtractedFilterEntry;
-  readonly projectRoot: string;
   readonly moduleName: string;
 }
 
 function assembleEntry(input: AssembleEntryInput): FilterEntry {
-  const { entry, projectRoot, moduleName } = input;
-  const projectRelative = relative(projectRoot, entry.filePath).replaceAll('\\', '/');
-  const sourcePath = projectRelative.replace(/^src\//, '');
+  const { entry, moduleName } = input;
 
   let out: FilterEntry;
   if (entry.kind === 'directive') {
@@ -183,10 +180,8 @@ function assembleEntry(input: AssembleEntryInput): FilterEntry {
       inputs: entry.inputs.map((i) => ({ ...i })),
       outputs: entry.outputs.map((o) => ({ ...o })),
       example: entry.example,
-      sourcePath,
       ...(entry.relatedSlugs && entry.relatedSlugs.length > 0 ? { relatedSlugs: [...entry.relatedSlugs] } : {}),
       ...(entry.skillRefs && entry.skillRefs.length > 0 ? { skillRefs: [...entry.skillRefs] } : {}),
-      sourceLocation: { file: projectRelative, line: entry.line },
       ...(entry.deprecated !== undefined ? { deprecated: entry.deprecated } : {}),
       ...(entry.since !== undefined ? { since: entry.since } : {})
     };
@@ -198,10 +193,8 @@ function assembleEntry(input: AssembleEntryInput): FilterEntry {
       module: moduleName,
       description: entry.description,
       example: entry.example,
-      sourcePath,
       ...(entry.relatedSlugs && entry.relatedSlugs.length > 0 ? { relatedSlugs: [...entry.relatedSlugs] } : {}),
       ...(entry.skillRefs && entry.skillRefs.length > 0 ? { skillRefs: [...entry.skillRefs] } : {}),
-      sourceLocation: { file: projectRelative, line: entry.line },
       ...(entry.deprecated !== undefined ? { deprecated: entry.deprecated } : {}),
       ...(entry.since !== undefined ? { since: entry.since } : {})
     };

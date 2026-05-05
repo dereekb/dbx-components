@@ -57,8 +57,7 @@ export function formatDecode(context: DecodeContext): string {
   if (extraKey) lines.push(`**Document key:** \`${extraKey}\``);
   lines.push('');
 
-  lines.push(`## Fields (${decodedFields.length})`, '', '| Field | Description | Value | Type / Converter |', '|-------|-------------|-------|------------------|', ...decodedFields.map(formatFieldRow));
-  lines.push('');
+  lines.push(`## Fields (${decodedFields.length})`, '', '| Field | Description | Value | Type / Converter |', '|-------|-------------|-------|------------------|', ...decodedFields.map(formatFieldRow), '');
 
   if (unknownKeys.length > 0) {
     lines.push('## Unknown keys on document', '', 'These keys appear in the input but are not declared on the model. They may be legacy fields, fields from a newer model version not yet in the registry, or indicate the wrong model was matched.', '');

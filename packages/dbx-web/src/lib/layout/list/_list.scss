@@ -76,6 +76,9 @@ $list-item-padded-min-height: 42px;
     }
   }
 
+  /// @dbx-utility list-view-no-meta-padding
+  /// @intent strip the leading + trailing padding around `mdc-list-item--with-trailing-meta` rows so meta-only items hug their container
+  /// @role spacing
   .dbx-list-view-no-meta-padding {
     .mdc-list-item--with-trailing-meta.mdc-list-item {
       padding-left: 4px;
@@ -96,6 +99,9 @@ $list-item-padded-min-height: 42px;
     }
   }
 
+  /// @dbx-utility list-sticky-headers
+  /// @intent pin `.dbx-list-view-group-header` rows to the top of the list while scrolling
+  /// @role state
   .dbx-list-sticky-headers {
     .dbx-list-view-group .dbx-list-view-group-header,
     .dbx-list-view-group.dbx-list-view-group-header {
@@ -111,11 +117,79 @@ $list-item-padded-min-height: 42px;
     }
   }
 
+  /// @dbx-utility list-item-padded
+  /// @intent baseline padded list-row spacing — guarantees `min-height` plus a tight 2px/6px padding pair
+  /// @role spacing
+  /// @see-also dbx-list-item-padded-thick, dbx-list-item-p0
   .dbx-list-item-padded {
     min-height: $list-item-padded-min-height;
     padding: 2px 6px;
   }
 
+  /// @dbx-utility list-item-padded-thick
+  /// @intent thicker padded list-row spacing — same `min-height` as `.dbx-list-item-padded` with the workspace `theming.$padding-3` token
+  /// @role spacing
+  /// @see-also dbx-list-item-padded
+  .dbx-list-item-padded-thick {
+    min-height: $list-item-padded-min-height;
+    padding: theming.$padding-3;
+  }
+
+  // Card-style list — each row becomes a tinted, rounded surface that lives
+  // on the actual `.mat-mdc-list-item`, not on a nested template `<div>`.
+  // Apply this modifier as the host class on the list wrapper component so
+  // the visible card boundary, the hover/focus state-layer, and the click
+  // ripple all line up with one another — the inner item template is then
+  // free to focus on content layout.
+  //
+  // Defaults flow through Material system tokens; both are overridable per
+  // instance via CSS custom properties:
+  //   --dbx-list-item-card-background     → `--mat-sys-surface-container`
+  //   --dbx-list-item-card-border-radius  → `--mat-sys-corner-large`,
+  //     falling back to `calc(--mat-chip-container-shape-radius * 2)` when
+  //     the host theme doesn't emit the M3 shape tokens.
+  // Spacing between cards is exposed as `--dbx-list-card-items-list-gap`
+  // (default `8px`).
+  /// @dbx-utility list-card-items-list
+  /// @intent render each list row as a tinted, rounded card surface with a configurable inter-card gap
+  /// @role layout
+  .dbx-list-card-items-list {
+    --dbx-list-card-items-list-gap: 8px;
+
+    .dbx-list-view-item.mat-mdc-list-item {
+      --mat-list-list-item-container-color: var(--dbx-list-item-card-background, var(--mat-sys-surface-container));
+      --mat-list-list-item-container-shape: var(--dbx-list-item-card-border-radius, var(--mat-sys-corner-large, calc(var(--mat-chip-container-shape-radius) * 2)));
+      // Override Angular Material's `.mat-mdc-nav-list .mat-mdc-list-item`
+      // rule, which pins `border-radius` (and the focus-indicator radius) to
+      // `var(--mat-list-active-indicator-shape, …)` and would otherwise win
+      // out — leaving the card almost square. Redeclaring both here applies
+      // our card shape directly without relying solely on the token.
+      border-radius: var(--mat-list-list-item-container-shape);
+      --mat-focus-indicator-border-radius: var(--mat-list-list-item-container-shape);
+      margin-bottom: var(--dbx-list-card-items-list-gap);
+    }
+
+    // Strip the trailing card's bottom gap. The nav-list path wraps each
+    // item in a `<dbx-anchor>`; the selection-list path renders
+    // `<mat-list-option>` siblings directly under `<mat-selection-list>`.
+    dbx-anchor:last-of-type .dbx-list-view-item.mat-mdc-list-item,
+    .dbx-list-view-item.mat-mdc-list-option:last-of-type {
+      margin-bottom: 0;
+    }
+  }
+
+  // When the tile is the leading icon in a two-line list item, override the
+  // default `.item-icon` flat spacing with tile-appropriate margins. The
+  // base `.dbx-icon-tile` rule lives in `_text.scss` next to its component.
+  .dbx-list-two-line-item .item-icon.dbx-icon-tile {
+    padding: 8px;
+    margin: 0 12px 0 4px;
+  }
+
+  /// @dbx-utility list-two-line-item
+  /// @intent two-line list-row layout — flex row with a left column (title + details) and an optional right slot, paired with nested `.item-icon` / `.item-left` / `.item-right` / `.item-title` / `.item-details` / `.item-details-footnote` helpers
+  /// @role layout
+  /// @see-also dbx-list-item-padded
   .dbx-list-two-line-item {
     // item broken into a left and right, and up to two rows on the left with 1 row on the right.
     display: flex;
@@ -130,11 +204,14 @@ $list-item-padded-min-height: 42px;
     .item-left {
       display: flex;
       flex-direction: column;
+      flex: 1 1 auto;
+      min-width: 0;
     }
 
     .item-right {
       display: flex;
       align-items: center;
+      margin-left: 16px;
     }
 
     .item-title {
@@ -154,6 +231,9 @@ $list-item-padded-min-height: 42px;
     }
   }
 
+  /// @dbx-utility list-no-hover-effects
+  /// @intent disable hover cursor + state-layer opacity on list items inside a `.dbx-list`
+  /// @role state
   .dbx-list-no-hover-effects .dbx-list > .dbx-list-content .dbx-list-view .mat-mdc-list-item {
     cursor: unset;
 
@@ -162,7 +242,26 @@ $list-item-padded-min-height: 42px;
     }
   }
 
+  /// @dbx-utility list-no-item-padding
+  /// @intent zero the inner `.mat-mdc-list-item-content` padding on every nav-list row in a `.dbx-list`
+  /// @role spacing
+  /// @see-also dbx-list-item-p0
   .dbx-list-no-item-padding .dbx-list > .dbx-list-content .dbx-list-view > .mat-mdc-nav-list .dbx-list-view-item.mat-mdc-list-item > .mat-mdc-list-item-content {
+    padding: 0;
+  }
+
+  // Zeros all padding on the underlying Material list item. Per-item utility
+  // (apply as host class on the value-list view) for templates that supply
+  // their own padding/leading element — e.g. a `.dbx-icon-tile` in a
+  // `.dbx-list-two-line-item-with-icon` — where Material's default item
+  // padding would otherwise double up. Complements the container-scope
+  // `.dbx-list-no-item-padding`, which zeros the inner
+  // `.mat-mdc-list-item-content` padding for all items in the list.
+  /// @dbx-utility list-item-p0
+  /// @intent zero all padding on the host `.mat-mdc-list-item` — per-item complement to `.dbx-list-no-item-padding` for templates that supply their own padding/leading element
+  /// @role spacing
+  /// @see-also dbx-list-no-item-padding
+  .dbx-list-item-p0 .mat-mdc-list-item.mdc-list-item {
     padding: 0;
   }
 

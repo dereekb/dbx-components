@@ -6,6 +6,10 @@ function okInspection(name: string, files: readonly string[]): FolderInspection 
   return { name, path: `packages/foo/src/lib/model/${name}`, status: 'ok', files };
 }
 
+function okInspectionWithSources(name: string, files: readonly string[], sources: readonly { filename: string; text: string }[]): FolderInspection {
+  return { name, path: `packages/foo/src/lib/model/${name}`, status: 'ok', files, sources };
+}
+
 function expectCodes(codes: readonly ViolationCode[], expected: readonly ViolationCode[]): void {
   for (const c of expected) {
     expect(codes, `expected code ${c} in ${JSON.stringify(codes)}`).toContain(c);
@@ -217,10 +221,6 @@ export function profileCollectionReference(context: FirestoreContext): Collectio
 export type ProfileFirestoreCollection = FirestoreCollection<Profile, ProfileDocument>;
 export function profileFirestoreCollection(firestoreContext: FirestoreContext): ProfileFirestoreCollection { return firestoreContext.firestoreCollection({ modelIdentity: profileIdentity, converter: profileConverter, collection: profileCollectionReference(firestoreContext), makeDocument: (a, b) => new ProfileDocument(a, b), firestoreContext }); }
 `;
-
-    function okInspectionWithSources(name: string, files: readonly string[], sources: readonly { filename: string; text: string }[]): FolderInspection {
-      return { name, path: `packages/foo/src/lib/model/${name}`, status: 'ok', files, sources };
-    }
 
     it('passes through with no errors when sources are properly tagged', () => {
       const result = validateModelFolders([okInspectionWithSources('profile', CANONICAL_FILES, [{ filename: 'profile.ts', text: TAGGED_PROFILE_TEXT }])]);

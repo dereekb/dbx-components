@@ -38,7 +38,7 @@ export function searchSpecTree(tree: SpecFileTree, query: SpecSearchQuery): Spec
   const describeStack: string[] = [];
   const fixtureStack: string[] = [];
   const visit = (node: SpecNode): void => {
-    matchNode(node, query, describeStack, fixtureStack, hits);
+    matchNode({ node, query, describeStack, fixtureStack, hits });
     let pushedDescribe = false;
     let pushedFixture = false;
     if (node.kind === 'describe' && node.title !== undefined) {
@@ -62,7 +62,16 @@ export function searchSpecTree(tree: SpecFileTree, query: SpecSearchQuery): Spec
   return result;
 }
 
-function matchNode(node: SpecNode, query: SpecSearchQuery, describeStack: readonly string[], fixtureStack: readonly string[], hits: SpecSearchHit[]): void {
+interface MatchNodeInput {
+  readonly node: SpecNode;
+  readonly query: SpecSearchQuery;
+  readonly describeStack: readonly string[];
+  readonly fixtureStack: readonly string[];
+  readonly hits: SpecSearchHit[];
+}
+
+function matchNode(input: MatchNodeInput): void {
+  const { node, query, describeStack, fixtureStack, hits } = input;
   let matched = false;
   switch (query.mode) {
     case 'model':

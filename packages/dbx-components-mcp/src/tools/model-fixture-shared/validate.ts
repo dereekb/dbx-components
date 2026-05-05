@@ -123,7 +123,9 @@ function pushForwardingDiagnostics(entry: FixtureEntry, out: FixtureDiagnostic[]
 }
 
 // MARK: generics
-function pushGenericAlignmentDiagnostics(entry: FixtureEntry, out: FixtureDiagnostic[], options: { readonly skipFactoryComparison: boolean } = { skipFactoryComparison: false }): void {
+const DEFAULT_PUSH_GENERIC_ALIGNMENT_OPTIONS: { readonly skipFactoryComparison: boolean } = { skipFactoryComparison: false };
+
+function pushGenericAlignmentDiagnostics(entry: FixtureEntry, out: FixtureDiagnostic[], options: { readonly skipFactoryComparison: boolean } = DEFAULT_PUSH_GENERIC_ALIGNMENT_OPTIONS): void {
   const fixGenerics = entry.fixtureExtendsGenerics;
   const instGenerics = entry.instanceExtendsGenerics;
   const factoryGenerics = entry.factory?.genericArgs ?? [];

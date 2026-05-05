@@ -175,6 +175,9 @@ type ParsedScanArgs = { readonly kind: 'parsed'; readonly project: string | unde
 /**
  * Parses the shared scan CLI argv vocabulary (`--project`, `--check`,
  * `--out`, `--help`).
+ *
+ * @param argv - Argument tokens, excluding the node binary and script paths.
+ * @returns Either the parsed flag bag or a `parse-error` describing the first malformed token.
  */
 export function parseScanArgs(argv: readonly string[]): ParsedScanArgs {
   let project: string | undefined;

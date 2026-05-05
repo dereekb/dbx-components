@@ -61,6 +61,7 @@
  * | dbx_artifact_scaffold               | Generation    | "Give me the body for a new <artifact>."               |
  * | dbx_artifact_file_convention        | Reference     | "Where do I put a new <artifact>?"                     |
  * | dbx_css_token_lookup                | Documentation | "What's the canonical CSS token for X?" (intent/value/role)|
+ * | dbx_css_class_lookup                | Documentation | "Is there already a dbx-web utility class for these declarations / this intent?" |
  * | dbx_ui_smell_check                  | Verification  | "Did my new component re-implement an existing primitive?" |
  * | dbx_explain_rule                    | Reference     | "Explain validation rule X — when does it apply?"      |
  * | dbx_app_validate                    | Verification  | "Validate the whole app (component + API) end-to-end." |
@@ -77,7 +78,7 @@ import { formExamplesTool } from './form-examples.tool.js';
 import { createFormScaffoldTool } from './form-scaffold.tool.js';
 import { createLookupUiTool } from './lookup-ui.tool.js';
 import { createSearchUiTool } from './search-ui.tool.js';
-import { uiExamplesTool } from './ui-examples.tool.js';
+import { createUiExamplesTool } from './ui-examples.tool.js';
 import { lookupModelTool } from './lookup-model.tool.js';
 import { searchModelTool } from './search-model.tool.js';
 import { modelDecodeTool } from './model-decode.tool.js';
@@ -123,6 +124,7 @@ import { mcpConfigTool } from './mcp-config.tool.js';
 import { createSemanticTypeLookupTool } from './lookup-semantic-type.tool.js';
 import { createSemanticTypeSearchTool } from './search-semantic-type.tool.js';
 import { createCssTokenLookupTool } from './css-token-lookup.tool.js';
+import { createCssClassLookupTool } from './css-class-lookup.tool.js';
 import { createUiSmellCheckTool } from './ui-smell-check.tool.js';
 import type { ActionRegistry } from '../registry/actions-runtime.js';
 import type { FilterRegistry } from '../registry/filters-runtime.js';
@@ -130,7 +132,9 @@ import type { ForgeFieldRegistry } from '../registry/forge-fields.js';
 import type { PipeRegistry } from '../registry/pipes-runtime.js';
 import type { SemanticTypeRegistry } from '../registry/semantic-types.js';
 import type { TokenRegistry } from '../registry/tokens-runtime.js';
+import type { CssUtilityRegistry } from '../registry/css-utilities-runtime.js';
 import type { UiComponentRegistry } from '../registry/ui-components-runtime.js';
+import type { DbxDocsUiExamplesRegistry } from '../registry/dbx-docs-ui-examples-runtime.js';
 import { toolError, type DbxTool } from './types.js';
 
 /**
@@ -144,8 +148,6 @@ import { toolError, type DbxTool } from './types.js';
 export const DBX_TOOLS: readonly DbxTool[] = [
   // form
   formExamplesTool,
-  // ui
-  uiExamplesTool,
   // model
   lookupModelTool,
   searchModelTool,
@@ -207,6 +209,13 @@ export interface RegisterToolsOptions {
   readonly forgeFieldRegistry?: ForgeFieldRegistry;
   readonly pipeRegistry?: PipeRegistry;
   readonly uiComponentRegistry?: UiComponentRegistry;
+  /**
+   * Optional app-sourced UI examples registry. When supplied (or empty),
+   * `dbx_ui_examples` is wired to merge curated `UI_PATTERNS` with scanned
+   * entries; `dbx_ui_search` is wired to surface a "Related examples"
+   * section when component hits overlap an example's `relatedSlugs`.
+   */
+  readonly dbxDocsUiExamplesRegistry?: DbxDocsUiExamplesRegistry;
   readonly actionRegistry?: ActionRegistry;
   readonly filterRegistry?: FilterRegistry;
   /**
@@ -214,6 +223,11 @@ export interface RegisterToolsOptions {
    * `dbx_ui_smell_check`; when omitted those tools are skipped.
    */
   readonly tokenRegistry?: TokenRegistry;
+  /**
+   * Optional css-utility registry. Required for `dbx_css_class_lookup`;
+   * when omitted that tool is skipped.
+   */
+  readonly cssUtilityRegistry?: CssUtilityRegistry;
   /**
    * Working directory used by `dbx_ui_smell_check` to resolve
    * `dbx-mcp.config.json` for project convention overrides.
@@ -247,8 +261,7 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions =
   const underlyingServer = server.server;
 
   const tools: DbxTool[] = [...DBX_TOOLS];
-  tools.push(createModelValidateTool({ ruleOptions: options.modelValidateRuleOptions }));
-  tools.push(createModelFixtureValidateAppTool({ getRegistry: () => options.fixtureModelRegistry }));
+  tools.push(createUiExamplesTool({ examplesRegistry: options.dbxDocsUiExamplesRegistry }), createModelValidateTool({ ruleOptions: options.modelValidateRuleOptions }), createModelFixtureValidateAppTool({ getRegistry: () => options.fixtureModelRegistry }));
   if (options.forgeFieldRegistry !== undefined) {
     tools.push(createLookupFormTool({ registry: options.forgeFieldRegistry }), createSearchFormTool({ registry: options.forgeFieldRegistry }), createFormScaffoldTool({ registry: options.forgeFieldRegistry }));
   }
@@ -259,7 +272,7 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions =
     tools.push(createLookupPipeTool({ registry: options.pipeRegistry }));
   }
   if (options.uiComponentRegistry !== undefined) {
-    tools.push(createLookupUiTool({ registry: options.uiComponentRegistry }), createSearchUiTool({ registry: options.uiComponentRegistry }));
+    tools.push(createLookupUiTool({ registry: options.uiComponentRegistry }), createSearchUiTool({ registry: options.uiComponentRegistry, examplesRegistry: options.dbxDocsUiExamplesRegistry }));
   }
   if (options.actionRegistry !== undefined) {
     tools.push(createLookupActionTool({ registry: options.actionRegistry }));
@@ -272,6 +285,9 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions =
     if (options.uiComponentRegistry !== undefined) {
       tools.push(createUiSmellCheckTool({ tokenRegistry: options.tokenRegistry, uiComponentRegistry: options.uiComponentRegistry, cwd: options.cwd }));
     }
+  }
+  if (options.cssUtilityRegistry !== undefined) {
+    tools.push(createCssClassLookupTool({ registry: options.cssUtilityRegistry }));
   }
 
   underlyingServer.setRequestHandler(ListToolsRequestSchema, async () => {

@@ -12,17 +12,12 @@
       "produces": "string",
       "arrayOutput": "no",
       "description": "Password input (HTML `type=\"password\"`) with secure autocomplete defaults.\n\nDefaults to the key `'password'` and label `'Password'` unless overridden.",
-      "sourcePath": "template/login.ts",
       "example": "dbxForgeTextPasswordField({ key: 'password', required: true })",
       "properties": [],
       "composesFromSlugs": [
         "text"
       ],
-      "configInterface": "DbxForgeTextPasswordFieldConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/template/login.ts",
-        "line": 54
-      }
+      "configInterface": "DbxForgeTextPasswordFieldConfig"
     },
     {
       "slug": "verify-password-field",
@@ -31,17 +26,12 @@
       "produces": "string",
       "arrayOutput": "no",
       "description": "Companion to `password-field` for sign-up flows. Defaults `autocomplete` to `new-password`. Pair with `password-with-verify-fields` for cross-field equality validation.\n\nDefaults to the key `'verifyPassword'` and label `'Verify Password'` unless overridden.",
-      "sourcePath": "template/login.ts",
       "example": "dbxForgeTextVerifyPasswordField({ key: 'verifyPassword' })",
       "properties": [],
       "composesFromSlugs": [
         "password-field"
       ],
-      "configInterface": "DbxForgeTextPasswordFieldConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/template/login.ts",
-        "line": 85
-      }
+      "configInterface": "DbxForgeTextPasswordFieldConfig"
     },
     {
       "slug": "password-with-verify-fields",
@@ -50,7 +40,6 @@
       "produces": "FieldDef[]",
       "arrayOutput": "no",
       "description": "Password + verify-password pair with cross-field equality validation wired up. Drop-in for sign-up flows.\n\nThe verify password field uses an expression-based custom validator that compares the\nverify field value against the primary password field's value via `formValue`.",
-      "sourcePath": "template/login.ts",
       "example": "dbxForgeTextPasswordWithVerifyField({ password: { required: true } })",
       "properties": [
         {
@@ -70,11 +59,7 @@
         "password-field",
         "verify-password-field"
       ],
-      "configInterface": "DbxForgeTextPasswordWithVerifyFieldConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/template/login.ts",
-        "line": 131
-      }
+      "configInterface": "DbxForgeTextPasswordWithVerifyFieldConfig"
     },
     {
       "slug": "username-password-login-fields",
@@ -83,7 +68,6 @@
       "produces": "FieldDef[]",
       "arrayOutput": "no",
       "description": "Complete login/signup field set: username, password, and optional verify-password. Drop into the top-level `fields: []`.\n\nWhen `verifyPassword` is provided, a second password field is added with a custom\nvalidator that ensures both password values match.",
-      "sourcePath": "template/login.ts",
       "example": "dbxForgeUsernamePasswordLoginFields({ username: 'email', verifyPassword: true })",
       "properties": [
         {
@@ -110,11 +94,7 @@
         "password-field",
         "verify-password-field"
       ],
-      "configInterface": "DbxForgeUsernameLoginFieldsConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/template/login.ts",
-        "line": 229
-      }
+      "configInterface": "DbxForgeUsernameLoginFieldsConfig"
     },
     {
       "slug": "username-login-field",
@@ -123,7 +103,6 @@
       "produces": "string",
       "arrayOutput": "no",
       "description": "Username field for login forms. Accepts `\"email\"` or `\"username\"` as shorthand presets, or a full config object.\n\nSupports email or plain text input based on the provided configuration.",
-      "sourcePath": "template/login.ts",
       "example": "dbxForgeUsernameLoginField({ username: 'email' })",
       "properties": [
         {
@@ -142,11 +121,7 @@
       "composesFromSlugs": [
         "text"
       ],
-      "configInterface": "DbxForgeUsernameLoginFieldUsernameConfigInput",
-      "sourceLocation": {
-        "file": "src/lib/forge/template/login.ts",
-        "line": 270
-      }
+      "configInterface": "DbxForgeUsernameLoginFieldUsernameConfigInput"
     },
     {
       "slug": "checklist",
@@ -155,17 +130,12 @@
       "produces": "T[]",
       "arrayOutput": "yes",
       "description": "Multi-checkbox group. Use for small static option sets where every option is visible at once.",
-      "sourcePath": "field/checklist/checklist.field.ts",
       "example": "dbxForgeChecklistField<string>({ key: 'flags', props: { options: [{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }] } })",
       "properties": [],
       "wrapperPattern": "unwrapped",
       "ngFormType": "multi-checkbox",
       "generic": "<T = unknown>",
-      "configInterface": "DbxForgeChecklistFieldConfig<T>",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/checklist/checklist.field.ts",
-        "line": 41
-      }
+      "configInterface": "DbxForgeChecklistFieldConfig<T>"
     },
     {
       "slug": "component-field",
@@ -174,7 +144,6 @@
       "produces": "T",
       "arrayOutput": "no",
       "description": "Escape hatch — injects any Angular component as the field renderer via DbxInjection. Use when no existing form field fits.\n\nUses {@link DbxInjectionComponent} to dynamically inject any Angular component\ninto the form. Generates a unique key when none is provided so that ng-forge's\nfield reconciliation treats each config change as a new field instance.",
-      "sourcePath": "field/component/component.field.ts",
       "example": "dbxForgeComponentField<MyValue>({ key: 'custom', props: { component: MyCustomComp } })",
       "properties": [
         {
@@ -205,11 +174,7 @@
       "wrapperPattern": "unwrapped",
       "ngFormType": "component",
       "generic": "<T = unknown>",
-      "configInterface": "DbxForgeComponentFieldConfig<T>",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/component/component.field.ts",
-        "line": 71
-      }
+      "configInterface": "DbxForgeComponentFieldConfig<T>"
     },
     {
       "slug": "value-selection",
@@ -218,7 +183,6 @@
       "produces": "T",
       "arrayOutput": "no",
       "description": "Single-select dropdown over a static or async value list. Simpler than `source-select` when metadata lookup is unnecessary.\n\nThe component uses `<mat-form-field>` with `[formField]` for native ng-forge value binding,\nproper Material rendering, and built-in logic (hidden/disabled/readonly) support.\n\nSupports static arrays, Observable option sources, and `ValueSelectionOptionClear` entries.",
-      "sourcePath": "field/selection/selection.field.ts",
       "example": "dbxForgeValueSelectionField<string>({ key: 'status', props: { options: [{ value: 'active', label: 'Active' }] } })",
       "properties": [
         {
@@ -243,11 +207,7 @@
       "wrapperPattern": "material-form-field-wrapped",
       "ngFormType": "dbx-value-selection",
       "generic": "<T = unknown>",
-      "configInterface": "DbxForgeValueSelectionFieldConfig<T>",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/selection/selection.field.ts",
-        "line": 56
-      }
+      "configInterface": "DbxForgeValueSelectionFieldConfig<T>"
     },
     {
       "slug": "text-editor",
@@ -256,7 +216,6 @@
       "produces": "string",
       "arrayOutput": "no",
       "description": "Rich HTML text editor (ngx-editor). Output is the serialized HTML string.\n\nUses ngx-editor under the hood, outputting HTML format.\nThe field defaults to an empty string.",
-      "sourcePath": "field/texteditor/texteditor.field.ts",
       "example": "dbxForgeTextEditorField({ key: 'content', label: 'Body', maxLength: 10000 })",
       "properties": [
         {
@@ -280,11 +239,7 @@
       ],
       "wrapperPattern": "unwrapped",
       "ngFormType": "texteditor",
-      "configInterface": "DbxForgeTextEditorFieldConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/texteditor/texteditor.field.ts",
-        "line": 34
-      }
+      "configInterface": "DbxForgeTextEditorFieldConfig"
     },
     {
       "slug": "row",
@@ -293,7 +248,6 @@
       "produces": "RowField",
       "arrayOutput": "no",
       "description": "Flex row that lays child fields out in columns. Child fields typically carry a `col` property (1–12) for grid placement.\n\nUses the `@ng-forge/dynamic-forms` `RowField` type with a 12-column grid system.\nEach child field can specify a `col` value (1-12) for responsive sizing.",
-      "sourcePath": "field/wrapper/wrapper.ts",
       "example": "dbxForgeRow({ fields: [ { ...dbxForgeTextField({ key: 'first' }), col: 6 }, { ...dbxForgeTextField({ key: 'last' }), col: 6 } ] })",
       "properties": [
         {
@@ -304,11 +258,7 @@
         }
       ],
       "returns": "RowField",
-      "configInterface": "DbxForgeRowConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/wrapper/wrapper.ts",
-        "line": 58
-      }
+      "configInterface": "DbxForgeRowConfig"
     },
     {
       "slug": "group",
@@ -317,15 +267,10 @@
       "produces": "GroupField",
       "arrayOutput": "no",
       "description": "Creates a plain ng-forge `group` field. A group produces a nested object in\nthe form value under its `key`, so the key is semantically significant and\nmust be chosen deliberately.\n\nFor visual-only grouping (conditional visibility, layout wrappers, shared\nCSS class) that should NOT introduce a nested object in the form value, use\n{@link dbxForgeContainer} instead — that is what ng-forge's `container`\nfield type is for.\n\nFor sections with headers, use the section wrapper type instead.",
-      "sourcePath": "field/wrapper/wrapper.ts",
       "example": "// Groups the address sub-fields under an `address` property in the form value.\nconst group = dbxForgeGroup({\n  key: 'address',\n  fields: [\n    dbxForgeTextField({ key: 'city', label: 'City' }),\n    dbxForgeTextField({ key: 'state', label: 'State' })\n  ]\n});\n\n// Resulting form value shape:\n// { address: { city: '...', state: '...' } }",
       "properties": [],
       "returns": "GroupField",
-      "configInterface": "DbxForgeGroupConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/wrapper/wrapper.ts",
-        "line": 125
-      }
+      "configInterface": "DbxForgeGroupConfig"
     },
     {
       "slug": "toggle-wrapper",
@@ -334,7 +279,6 @@
       "produces": "ContainerField",
       "arrayOutput": "no",
       "description": "Wraps content fields in a Material slide toggle — the toggle state controls conditional visibility of the inner fields.\n\nUses ng-forge's built-in `toggle` field type (MatSlideToggle) and\n`FieldValueCondition` for conditional visibility. The toggle boolean value\nIS part of the form model. The hidden content is wrapped in a `container`\n(not a `group`), so the wrapped fields sit at the same level as the toggle\nin the form value — they are NOT nested under an extra object.\n\nStructure produced:\n```\nContainer (outer, with flex wrapper)\n  ├── toggle field (type: 'toggle', boolean value)\n  └── Container (content, hidden when toggle === false)\n```\n\nThis is the forge equivalent of the formly `formlyToggleWrapper`.",
-      "sourcePath": "field/wrapper/wrapper.ts",
       "example": "const toggle = dbxForgeToggleWrapper({\n  key: 'showAdvanced',\n  label: 'Show advanced options',\n  fields: [\n    dbxForgeTextField({ key: 'advanced1', label: 'Option 1' }),\n    dbxForgeTextField({ key: 'advanced2', label: 'Option 2' })\n  ]\n});\n\n// Resulting form value (flat — no nesting under the container):\n// { showAdvanced: true, advanced1: '...', advanced2: '...' }",
       "properties": [
         {
@@ -379,11 +323,7 @@
         "toggle",
         "group"
       ],
-      "configInterface": "DbxForgeToggleWrapperConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/wrapper/wrapper.ts",
-        "line": 291
-      }
+      "configInterface": "DbxForgeToggleWrapperConfig"
     },
     {
       "slug": "expand-wrapper",
@@ -392,7 +332,6 @@
       "produces": "ContainerField",
       "arrayOutput": "no",
       "description": "Wraps content fields behind a button or text \"expand\" control. Use for optional sections like \"Show advanced options\".\n\nUses a custom `dbx-forge-expand` field type for the expand trigger and\n`FieldValueCondition` for conditional visibility on the content. The\nexpand boolean value IS part of the form model. The hidden content is\nwrapped in a `container` (not a `group`), so the wrapped fields sit at the\nsame level as the expand control in the form value — they are NOT nested\nunder an extra object.\n\nStructure produced:\n```\nContainer (outer, with flex wrapper)\n  ├── expand field (type: 'dbx-forge-expand', boolean value)\n  └── Container (content, hidden when expand field === false)\n```\n\nThis is the forge equivalent of the formly `formlyExpandWrapper`.",
-      "sourcePath": "field/wrapper/wrapper.ts",
       "example": "const expand = dbxForgeExpandWrapper({\n  key: 'showMore',\n  label: 'Show more options',\n  buttonType: 'button',\n  fields: [\n    dbxForgeTextField({ key: 'extra1', label: 'Extra 1' }),\n    dbxForgeTextField({ key: 'extra2', label: 'Extra 2' })\n  ]\n});\n\n// Resulting form value (flat — no nesting under the container):\n// { showMore: true, extra1: '...', extra2: '...' }",
       "properties": [
         {
@@ -442,11 +381,7 @@
       "composesFromSlugs": [
         "group"
       ],
-      "configInterface": "DbxForgeExpandWrapperConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/wrapper/wrapper.ts",
-        "line": 415
-      }
+      "configInterface": "DbxForgeExpandWrapperConfig"
     },
     {
       "slug": "list-selection",
@@ -455,7 +390,6 @@
       "produces": "K[]",
       "arrayOutput": "yes",
       "description": "Multi-select backed by a lazy-loadable custom list component. Use when you need complete control over item layout and pagination.",
-      "sourcePath": "field/selection/list/list.field.ts",
       "example": "dbxForgeListSelectionField<Item, MyListComponent, string>({ key: 'items', props: { listComponentClass, readKey: (i) => i.id, state$ } })",
       "properties": [
         {
@@ -492,11 +426,7 @@
       "wrapperPattern": "material-form-field-wrapped",
       "ngFormType": "dbx-list-selection",
       "generic": "<T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey>",
-      "configInterface": "DbxForgeListSelectionFieldConfig<T, C, K>",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/selection/list/list.field.ts",
-        "line": 83
-      }
+      "configInterface": "DbxForgeListSelectionFieldConfig<T, C, K>"
     },
     {
       "slug": "pickable-chip",
@@ -505,7 +435,6 @@
       "produces": "T | T[]",
       "arrayOutput": "optional",
       "description": "Selection field rendering selected values as Material chips. Defaults to multi-select; flip to single-select via the underlying props.",
-      "sourcePath": "field/selection/pickable/pickable-chip.field.ts",
       "example": "dbxForgePickableChipField<Tag>({ key: 'tags', label: 'Tags', props: { loadValues: () => loadTags$, displayForValue: displayTag } })",
       "properties": [
         {
@@ -608,11 +537,7 @@
       "wrapperPattern": "material-form-field-wrapped",
       "ngFormType": "dbx-pickable-chip",
       "generic": "<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>",
-      "configInterface": "DbxForgePickableChipFieldConfig<T, M, H>",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/selection/pickable/pickable-chip.field.ts",
-        "line": 37
-      }
+      "configInterface": "DbxForgePickableChipFieldConfig<T, M, H>"
     },
     {
       "slug": "pickable-list",
@@ -621,7 +546,6 @@
       "produces": "T | T[]",
       "arrayOutput": "optional",
       "description": "Scrollable-list variant of `pickable-chip` — same API, different presentation. Prefer this when the option set is large.",
-      "sourcePath": "field/selection/pickable/pickable-list.field.ts",
       "example": "dbxForgePickableListField<Item>({ key: 'items', props: { loadValues, displayForValue } })",
       "properties": [
         {
@@ -724,11 +648,7 @@
       "wrapperPattern": "material-form-field-wrapped",
       "ngFormType": "dbx-pickable-list",
       "generic": "<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>",
-      "configInterface": "DbxForgePickableListFieldConfig<T, M, H>",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/selection/pickable/pickable-list.field.ts",
-        "line": 37
-      }
+      "configInterface": "DbxForgePickableListFieldConfig<T, M, H>"
     },
     {
       "slug": "searchable-string-chip",
@@ -737,7 +657,6 @@
       "produces": "string | string[]",
       "arrayOutput": "optional",
       "description": "String-value specialization of `searchable-chip`. `allowStringValues` is forced true — use for free-form tag entry.\n\nAlways sets `allowStringValues: true` on the inner field props so pressing Enter\n(or typing a separator key) commits the typed value as a chip.",
-      "sourcePath": "field/selection/searchable/searchable-chip.field.ts",
       "example": "dbxForgeSearchableStringChipField({ key: 'tags', props: { search, displayForValue } })",
       "properties": [
         {
@@ -749,11 +668,7 @@
       ],
       "wrapperPattern": "material-form-field-wrapped",
       "ngFormType": "dbx-searchable-chip",
-      "configInterface": "DbxForgeSearchableStringChipFieldConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/selection/searchable/searchable-chip.field.ts",
-        "line": 102
-      }
+      "configInterface": "DbxForgeSearchableStringChipFieldConfig"
     },
     {
       "slug": "searchable-chip",
@@ -762,7 +677,6 @@
       "produces": "T | T[]",
       "arrayOutput": "optional",
       "description": "Multi-value autocomplete with chips. Defaults to multi-select; supports free-form text entry when `allowStringValues` is set.",
-      "sourcePath": "field/selection/searchable/searchable-chip.field.ts",
       "example": "dbxForgeSearchableChipField<Tag>({ key: 'tags', props: { search, displayForValue } })",
       "properties": [
         {
@@ -871,11 +785,7 @@
       "wrapperPattern": "material-form-field-wrapped",
       "ngFormType": "dbx-searchable-chip",
       "generic": "<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>",
-      "configInterface": "DbxForgeSearchableChipFieldConfig<T, M, H>",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/selection/searchable/searchable-chip.field.ts",
-        "line": 60
-      }
+      "configInterface": "DbxForgeSearchableChipFieldConfig<T, M, H>"
     },
     {
       "slug": "searchable-text",
@@ -884,7 +794,6 @@
       "produces": "T",
       "arrayOutput": "no",
       "description": "Single-value autocomplete field with search-as-you-type. Optionally allows free-form typed strings as values.",
-      "sourcePath": "field/selection/searchable/searchable-text.field.ts",
       "example": "dbxForgeSearchableTextField<User>({ key: 'user', props: { search, displayForValue } })",
       "properties": [
         {
@@ -981,11 +890,7 @@
       "wrapperPattern": "material-form-field-wrapped",
       "ngFormType": "dbx-searchable-text",
       "generic": "<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>",
-      "configInterface": "DbxForgeSearchableTextFieldConfig<T, M, H>",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/selection/searchable/searchable-text.field.ts",
-        "line": 78
-      }
+      "configInterface": "DbxForgeSearchableTextFieldConfig<T, M, H>"
     },
     {
       "slug": "source-select",
@@ -994,7 +899,6 @@
       "produces": "T | T[]",
       "arrayOutput": "optional",
       "description": "Selection field that stores just the value key (`T`) but resolves full metadata (`M`) async for display. Use for reference fields where the form should store only the id.\n\nThe component uses `<mat-form-field>` with `[formField]` for native ng-forge value binding,\nproper Material rendering, and built-in logic (hidden/disabled/readonly) support.",
-      "sourcePath": "field/selection/sourceselect/sourceselect.field.ts",
       "example": "dbxForgeSourceSelectField<string, User>({ key: 'userId', props: { valueReader: (u) => u.id, metaLoader, displayForValue } })",
       "properties": [
         {
@@ -1067,11 +971,7 @@
       "wrapperPattern": "unwrapped",
       "ngFormType": "dbx-source-select",
       "generic": "<T extends PrimativeKey = PrimativeKey, M = unknown>",
-      "configInterface": "DbxForgeSourceSelectFieldConfig<T, M>",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/selection/sourceselect/sourceselect.field.ts",
-        "line": 73
-      }
+      "configInterface": "DbxForgeSourceSelectFieldConfig<T, M>"
     },
     {
       "slug": "array-field",
@@ -1080,7 +980,6 @@
       "produces": "ArrayField",
       "arrayOutput": "yes",
       "description": "Repeatable array wrapper with add/remove/drag-to-reorder controls. Template fields are cloned per item. Internally built with `dbxForgeFieldFunction` but categorized as a primitive because composites wrap it.\n\nWraps the array with {@link DbxForgeArrayFieldWrapperComponent} for label/hint,\nand wraps each template item in a ContainerField with\n{@link DbxForgeArrayFieldElementWrapperComponent} for per-item drag handle,\nlabel, and remove button.",
-      "sourcePath": "field/value/array/array.field.ts",
       "example": "dbxForgeArrayField({ key: 'tags', template: [dbxForgeTextField({ key: 'value' })] })",
       "properties": [
         {
@@ -1103,11 +1002,7 @@
         }
       ],
       "returns": "ArrayField",
-      "configInterface": "DbxForgeArrayFieldConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/value/array/array.field.ts",
-        "line": 56
-      }
+      "configInterface": "DbxForgeArrayFieldConfig"
     },
     {
       "slug": "toggle",
@@ -1116,7 +1011,6 @@
       "produces": "boolean",
       "arrayOutput": "no",
       "description": "Material slide toggle. Renders inside the shared form-field wrapper by default so\nit visually matches surrounding outlined form fields and uses the standard error\nsubscript chrome; pass `styledBox: false` to opt out.",
-      "sourcePath": "field/value/boolean/boolean.field.ts",
       "example": "dbxForgeToggleField({ key: 'active', label: 'Active', value: true })",
       "properties": [
         {
@@ -1140,11 +1034,7 @@
       ],
       "wrapperPattern": "material-form-field-wrapped",
       "ngFormType": "toggle",
-      "configInterface": "DbxForgeToggleFieldConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/value/boolean/boolean.field.ts",
-        "line": 66
-      }
+      "configInterface": "DbxForgeToggleFieldConfig"
     },
     {
       "slug": "checkbox",
@@ -1153,7 +1043,6 @@
       "produces": "boolean",
       "arrayOutput": "no",
       "description": "Material checkbox. Shares the form-field-wrapper opt-out with toggle.",
-      "sourcePath": "field/value/boolean/boolean.field.ts",
       "example": "dbxForgeCheckboxField({ key: 'agree', label: 'I agree to the terms' })",
       "properties": [
         {
@@ -1177,11 +1066,7 @@
       ],
       "wrapperPattern": "material-form-field-wrapped",
       "ngFormType": "checkbox",
-      "configInterface": "DbxForgeCheckboxFieldConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/value/boolean/boolean.field.ts",
-        "line": 133
-      }
+      "configInterface": "DbxForgeCheckboxFieldConfig"
     },
     {
       "slug": "date",
@@ -1190,16 +1075,11 @@
       "produces": "Date",
       "arrayOutput": "no",
       "description": "Material datepicker (date-only, no time). For time-of-day picking use the `date-time` field; for ranges use `date-range-row` or `date-time-range-row`.\n\nUses the native ng-forge MatDatepickerField.",
-      "sourcePath": "field/value/date/date.field.ts",
       "example": "dbxForgeDateField({ key: 'startDate', label: 'Start Date', required: true })",
       "properties": [],
       "wrapperPattern": "unwrapped",
       "ngFormType": "datepicker",
-      "configInterface": "DbxForgeDateFieldConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/value/date/date.field.ts",
-        "line": 32
-      }
+      "configInterface": "DbxForgeDateFieldConfig"
     },
     {
       "slug": "date-range-row",
@@ -1208,7 +1088,6 @@
       "produces": "RowField",
       "arrayOutput": "no",
       "description": "Two-column row of start/end date-time fields configured for date-only picking. Use when you need a paired start/end date range laid out horizontally.\n\nComposite builder that creates a pair of date pickers for selecting a date range (start and end dates)\narranged in a flex row. The pickers are synchronized so the start date stays before the end date.\n\nThis is the forge equivalent of formly's `formlyDateRangeField()`.",
-      "sourcePath": "field/value/date/daterange.field.ts",
       "example": "dbxForgeDateRangeRow({ required: true, start: { key: 'from', label: 'From' }, end: { key: 'to', label: 'To' } })",
       "properties": [
         {
@@ -1241,11 +1120,7 @@
         "date-time",
         "row"
       ],
-      "configInterface": "DbxForgeDateRangeRowConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/value/date/daterange.field.ts",
-        "line": 60
-      }
+      "configInterface": "DbxForgeDateRangeRowConfig"
     },
     {
       "slug": "date-time",
@@ -1254,7 +1129,6 @@
       "produces": "DateTimeValue",
       "arrayOutput": "no",
       "description": "Combined date-time picker with timezone, value mode (DATE_STRING / TIMESTAMP / Date), and time mode (REQUIRED / OPTIONAL / NONE). Powers `date-range-row` and `date-time-range-row`.\n\nFull parity with formly `dateTimeField()` — supports timezone, valueMode, timeMode,\npickerConfig, presets, and all other features via the `props` slot.",
-      "sourcePath": "field/value/date/datetime.field.ts",
       "example": "dbxForgeDateTimeField({ key: 'when', label: 'When', timezone: 'America/New_York' })",
       "properties": [
         {
@@ -1422,11 +1296,7 @@
       ],
       "wrapperPattern": "unwrapped",
       "ngFormType": "datetime",
-      "configInterface": "DbxForgeDateTimeFieldConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/value/date/datetime.field.ts",
-        "line": 72
-      }
+      "configInterface": "DbxForgeDateTimeFieldConfig"
     },
     {
       "slug": "date-time-range-row",
@@ -1435,7 +1305,6 @@
       "produces": "RowField",
       "arrayOutput": "no",
       "description": "Two-column row of time-only pickers for selecting a time range within a single day.\n\nThis is the forge equivalent of formly's `formlyDateTimeRangeField()`.",
-      "sourcePath": "field/value/date/datetimerange.field.ts",
       "example": "dbxForgeDateTimeRangeRow({ start: { label: 'From' }, end: { label: 'Until' } })",
       "properties": [
         {
@@ -1468,11 +1337,7 @@
         "date-time",
         "row"
       ],
-      "configInterface": "DbxForgeDateTimeRangeRowConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/value/date/datetimerange.field.ts",
-        "line": 56
-      }
+      "configInterface": "DbxForgeDateTimeRangeRowConfig"
     },
     {
       "slug": "fixed-date-range",
@@ -1481,7 +1346,6 @@
       "produces": "DbxForgeFixedDateRangeValue",
       "arrayOutput": "no",
       "description": "Inline calendar-style date-range picker with fixed range length (e.g. \"7 days from start\"). Wrapped in a Material form-field container with a custom selection strategy.\n\nUses an inline `<mat-calendar>` with a custom selection strategy, matching the formly\n`fixedDateRangeField()` behavior. Supports multiple selection modes, timezone conversion,\ndate range input configuration, and optional text inputs.",
-      "sourcePath": "field/value/date/fixeddaterange.field.ts",
       "example": "dbxForgeFixedDateRangeField({ key: 'range', label: 'Date Range' })",
       "properties": [
         {
@@ -1553,11 +1417,7 @@
       ],
       "wrapperPattern": "material-form-field-wrapped",
       "ngFormType": "fixeddaterange",
-      "configInterface": "DbxForgeFixedDateRangeFieldConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/value/date/fixeddaterange.field.ts",
-        "line": 51
-      }
+      "configInterface": "DbxForgeFixedDateRangeFieldConfig"
     },
     {
       "slug": "time-duration",
@@ -1566,7 +1426,6 @@
       "produces": "TimeDurationValue",
       "arrayOutput": "no",
       "description": "Duration input with popover picker. Output shape varies by `valueMode` — number (ms/s/…), string, or structured object.\n\nUses a custom ng-forge ValueFieldComponent that provides a text input\naccepting duration strings (e.g. \"2h30m\") and a popover picker.",
-      "sourcePath": "field/value/duration/duration.field.ts",
       "example": "dbxForgeTimeDurationField({ key: 'duration', label: 'Duration', outputUnit: 'm' })",
       "properties": [
         {
@@ -1602,11 +1461,7 @@
       ],
       "wrapperPattern": "unwrapped",
       "ngFormType": "timeduration",
-      "configInterface": "DbxForgeTimeDurationFieldConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/value/duration/duration.field.ts",
-        "line": 75
-      }
+      "configInterface": "DbxForgeTimeDurationFieldConfig"
     },
     {
       "slug": "dollar-amount",
@@ -1615,7 +1470,6 @@
       "produces": "number",
       "arrayOutput": "no",
       "description": "Forge number field pre-configured for dollar amount input with cent-level precision. Pre-sets `transform.precision` to `DOLLAR_AMOUNT_PRECISION` so values round to whole cents.",
-      "sourcePath": "field/value/number/number.field.ts",
       "example": "const field = dbxForgeDollarAmountField({ key: 'price', label: 'Price', min: 0, required: true });",
       "properties": [
         {
@@ -1658,11 +1512,7 @@
       "composesFromSlugs": [
         "number"
       ],
-      "configInterface": "DbxForgeDollarAmountFieldConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/value/number/number.field.ts",
-        "line": 144
-      }
+      "configInterface": "DbxForgeDollarAmountFieldConfig"
     },
     {
       "slug": "number",
@@ -1671,7 +1521,6 @@
       "produces": "number",
       "arrayOutput": "no",
       "description": "Numeric input (HTML `type=\"number\"`). Supports min/max/step constraints, optional step enforcement (divisibility validator), and idempotent number transforms.\n\nWhen `step` is provided, sets the HTML `step` attribute on the input via `meta`.\nWhen both `step` and `enforceStep` are set, adds a custom divisibility validator.",
-      "sourcePath": "field/value/number/number.field.ts",
       "example": "dbxForgeNumberField({ key: 'quantity', label: 'Quantity', min: 1, max: 100, step: 1, enforceStep: true })",
       "properties": [
         {
@@ -1713,11 +1562,7 @@
       ],
       "wrapperPattern": "unwrapped",
       "ngFormType": "input",
-      "configInterface": "DbxForgeNumberFieldConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/value/number/number.field.ts",
-        "line": 72
-      }
+      "configInterface": "DbxForgeNumberFieldConfig"
     },
     {
       "slug": "number-slider",
@@ -1726,7 +1571,6 @@
       "produces": "number",
       "arrayOutput": "no",
       "description": "Material slider wrapped in a form-field container. Supports thumb label, tick interval, and step-derived tick spacing.\n\nThe wrapper provides the Material outlined form-field appearance (notched outline with\nfloating label, hint/error subscript). The inner slider uses the ng-forge built-in\n`slider` type.",
-      "sourcePath": "field/value/number/slider.field.ts",
       "example": "dbxForgeNumberSliderField({ key: 'rating', label: 'Rating', min: 0, max: 10, step: 1 })",
       "properties": [
         {
@@ -1744,11 +1588,7 @@
       ],
       "wrapperPattern": "material-form-field-wrapped",
       "ngFormType": "slider",
-      "configInterface": "DbxForgeNumberSliderFieldConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/value/number/slider.field.ts",
-        "line": 46
-      }
+      "configInterface": "DbxForgeNumberSliderFieldConfig"
     },
     {
       "slug": "phone",
@@ -1757,7 +1597,6 @@
       "produces": "string",
       "arrayOutput": "no",
       "description": "International phone number input backed by ngx-mat-input-tel. Supports preferred-country lists, search, and optional extension input.\n\nUses the custom 'phone' field type which renders the ngx-mat-input-tel component\nbridged to Signal Forms.",
-      "sourcePath": "field/value/phone/phone.field.ts",
       "example": "dbxForgePhoneField({ key: 'phone', label: 'Phone', preferredCountries: ['US', 'CA'] })",
       "properties": [
         {
@@ -1835,11 +1674,7 @@
       ],
       "wrapperPattern": "unwrapped",
       "ngFormType": "phone",
-      "configInterface": "DbxForgePhoneFieldConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/value/phone/phone.field.ts",
-        "line": 78
-      }
+      "configInterface": "DbxForgePhoneFieldConfig"
     },
     {
       "slug": "name",
@@ -1848,17 +1683,12 @@
       "produces": "string",
       "arrayOutput": "no",
       "description": "Pre-configured text field for capturing a full name with sensible min/max length defaults.",
-      "sourcePath": "field/value/text/text.additional.field.ts",
       "example": "dbxForgeNameField({ key: 'fullName', label: 'Full Name', required: true })",
       "properties": [],
       "composesFromSlugs": [
         "text"
       ],
-      "configInterface": "DbxForgeNameFieldConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/value/text/text.additional.field.ts",
-        "line": 24
-      }
+      "configInterface": "DbxForgeNameFieldConfig"
     },
     {
       "slug": "email",
@@ -1867,7 +1697,6 @@
       "produces": "string",
       "arrayOutput": "no",
       "description": "Text field pre-configured with email input type and email validator. Prefer this over configuring `dbxForgeTextField` with `inputType: \"email\"` directly.\n\nUses the `'email'` input type for built-in browser validation.",
-      "sourcePath": "field/value/text/text.additional.field.ts",
       "example": "dbxForgeEmailField({ key: 'email', label: 'Email', required: true })",
       "properties": [
         {
@@ -1916,11 +1745,7 @@
       "composesFromSlugs": [
         "text"
       ],
-      "configInterface": "DbxForgeEmailFieldConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/value/text/text.additional.field.ts",
-        "line": 74
-      }
+      "configInterface": "DbxForgeEmailFieldConfig"
     },
     {
       "slug": "city",
@@ -1929,7 +1754,6 @@
       "produces": "string",
       "arrayOutput": "no",
       "description": "City name input enforcing `ADDRESS_CITY_MAX_LENGTH`. Typically used inside the address composite set.",
-      "sourcePath": "field/value/text/text.additional.field.ts",
       "example": "dbxForgeCityField({ required: true })",
       "properties": [
         {
@@ -1954,11 +1778,7 @@
       "composesFromSlugs": [
         "text"
       ],
-      "configInterface": "DbxForgeCityFieldConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/value/text/text.additional.field.ts",
-        "line": 112
-      }
+      "configInterface": "DbxForgeCityFieldConfig"
     },
     {
       "slug": "state",
@@ -1967,7 +1787,6 @@
       "produces": "string",
       "arrayOutput": "no",
       "description": "US state input. When `asCode: true`, validates two-letter codes and auto-uppercases input via an idempotent transform.",
-      "sourcePath": "field/value/text/text.additional.field.ts",
       "example": "dbxForgeStateField({ asCode: true, required: true })",
       "properties": [
         {
@@ -1980,11 +1799,7 @@
       "composesFromSlugs": [
         "text"
       ],
-      "configInterface": "DbxForgeStateFieldConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/value/text/text.additional.field.ts",
-        "line": 153
-      }
+      "configInterface": "DbxForgeStateFieldConfig"
     },
     {
       "slug": "country",
@@ -1993,7 +1808,6 @@
       "produces": "string",
       "arrayOutput": "no",
       "description": "Country name input enforcing `ADDRESS_COUNTRY_MAX_LENGTH`. Typically used inside the address composite set.",
-      "sourcePath": "field/value/text/text.additional.field.ts",
       "example": "dbxForgeCountryField({ required: true })",
       "properties": [
         {
@@ -2018,11 +1832,7 @@
       "composesFromSlugs": [
         "text"
       ],
-      "configInterface": "DbxForgeCountryFieldConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/value/text/text.additional.field.ts",
-        "line": 195
-      }
+      "configInterface": "DbxForgeCountryFieldConfig"
     },
     {
       "slug": "zip-code",
@@ -2031,7 +1841,6 @@
       "produces": "string",
       "arrayOutput": "no",
       "description": "US zip code input with pattern validation and max-length enforcement.",
-      "sourcePath": "field/value/text/text.additional.field.ts",
       "example": "dbxForgeZipCodeField({ required: true })",
       "properties": [
         {
@@ -2056,11 +1865,7 @@
       "composesFromSlugs": [
         "text"
       ],
-      "configInterface": "DbxForgeZipCodeFieldConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/value/text/text.additional.field.ts",
-        "line": 231
-      }
+      "configInterface": "DbxForgeZipCodeFieldConfig"
     },
     {
       "slug": "lat-lng",
@@ -2069,17 +1874,12 @@
       "produces": "string",
       "arrayOutput": "no",
       "description": "Latitude/longitude coordinate input with decimal-degree pattern validation.",
-      "sourcePath": "field/value/text/text.additional.field.ts",
       "example": "dbxForgeLatLngTextField({ key: 'coords', label: 'Coordinates' })",
       "properties": [],
       "composesFromSlugs": [
         "text"
       ],
-      "configInterface": "DbxForgeLatLngTextFieldConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/value/text/text.additional.field.ts",
-        "line": 268
-      }
+      "configInterface": "DbxForgeLatLngTextFieldConfig"
     },
     {
       "slug": "address-line",
@@ -2088,7 +1888,6 @@
       "produces": "string",
       "arrayOutput": "no",
       "description": "Street address line input. The `line` prop controls which line (1 or 2) — it affects key and label generation.",
-      "sourcePath": "field/value/text/text.address.field.ts",
       "example": "dbxForgeAddressLineField({ line: 2 })",
       "properties": [
         {
@@ -2101,11 +1900,7 @@
       "composesFromSlugs": [
         "text"
       ],
-      "configInterface": "DbxForgeAddressLineFieldConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/value/text/text.address.field.ts",
-        "line": 69
-      }
+      "configInterface": "DbxForgeAddressLineFieldConfig"
     },
     {
       "slug": "address-fields",
@@ -2114,7 +1909,6 @@
       "produces": "FieldDef[]",
       "arrayOutput": "no",
       "description": "Flat array of address fields (line(s), city, state, zip, optional country) with a sensible flex layout. Drop directly into a parent `fields: []`.",
-      "sourcePath": "field/value/text/text.address.field.ts",
       "example": "dbxForgeAddressFields({ required: true, includeCountry: false })",
       "properties": [
         {
@@ -2179,11 +1973,7 @@
         "zip-code",
         "country"
       ],
-      "configInterface": "DbxForgeAddressFieldsConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/value/text/text.address.field.ts",
-        "line": 102
-      }
+      "configInterface": "DbxForgeAddressFieldsConfig"
     },
     {
       "slug": "address-group",
@@ -2192,7 +1982,6 @@
       "produces": "GroupField",
       "arrayOutput": "no",
       "description": "Wraps `address-fields` in a `GroupField` so the address is stored as a nested object under one key. Prefer this when the rest of the form doesn't want address fields flattened.",
-      "sourcePath": "field/value/text/text.address.field.ts",
       "example": "dbxForgeAddressGroup({ key: 'billingAddress' })",
       "properties": [
         {
@@ -2261,11 +2050,7 @@
         "address-fields",
         "group"
       ],
-      "configInterface": "DbxForgeAddressGroupConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/value/text/text.address.field.ts",
-        "line": 153
-      }
+      "configInterface": "DbxForgeAddressGroupConfig"
     },
     {
       "slug": "address-list",
@@ -2274,7 +2059,6 @@
       "produces": "ArrayField",
       "arrayOutput": "yes",
       "description": "Repeatable array of addresses built on top of `array-field` + `address-group`. Keeps the `Field` suffix because it returns a single composite field whose value is an array of addresses.",
-      "sourcePath": "field/value/text/text.address.field.ts",
       "example": "dbxForgeAddressListField({ maxAddresses: 3 })",
       "properties": [
         {
@@ -2349,11 +2133,7 @@
         "address-group",
         "array-field"
       ],
-      "configInterface": "DbxForgeAddressListFieldConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/value/text/text.address.field.ts",
-        "line": 193
-      }
+      "configInterface": "DbxForgeAddressListFieldConfig"
     },
     {
       "slug": "text",
@@ -2362,7 +2142,6 @@
       "produces": "string",
       "arrayOutput": "no",
       "description": "Single-line text input. Supports text/email/password input types, autocomplete attribute, regex pattern validation, and idempotent string transforms (trim, case changes, etc.).",
-      "sourcePath": "field/value/text/text.field.ts",
       "example": "const emailField = dbxForgeTextField({\n  key: 'email',\n  label: 'Email',\n  required: true,\n  inputType: 'email',\n  props: { placeholder: 'user@example.com' }\n});",
       "properties": [
         {
@@ -2386,11 +2165,7 @@
       ],
       "wrapperPattern": "unwrapped",
       "ngFormType": "input",
-      "configInterface": "DbxForgeTextFieldConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/value/text/text.field.ts",
-        "line": 79
-      }
+      "configInterface": "DbxForgeTextFieldConfig"
     },
     {
       "slug": "text-area",
@@ -2399,7 +2174,6 @@
       "produces": "string",
       "arrayOutput": "no",
       "description": "Multi-line textarea input. Supports row count, autocomplete attribute, pattern validation (RegExp → string conversion), and default value.",
-      "sourcePath": "field/value/text/textarea.field.ts",
       "example": "const bioField = dbxForgeTextAreaField({\n  key: 'bio',\n  label: 'Biography',\n  rows: 5,\n  maxLength: 500\n});",
       "properties": [
         {
@@ -2423,11 +2197,7 @@
       ],
       "wrapperPattern": "unwrapped",
       "ngFormType": "textarea",
-      "configInterface": "DbxForgeTextAreaFieldConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/value/text/textarea.field.ts",
-        "line": 47
-      }
+      "configInterface": "DbxForgeTextAreaFieldConfig"
     },
     {
       "slug": "flex-layout",
@@ -2436,7 +2206,6 @@
       "produces": "GroupField",
       "arrayOutput": "no",
       "description": "Creates a responsive flex layout container that arranges child fields horizontally\nwith configurable sizing, breakpoints, and responsive behavior.\n\nEach child field gets a `dbx-flex-N` CSS class applied (merged with any existing className).\nThe container hosts the `dbx-forge-flex` wrapper, which renders the `dbxFlexGroup`\ndirective for responsive breakpoint handling.\n\nA `container` is used (not a `group`) because flex layout is purely visual —\nthe wrapped fields should remain at the same level in the form value, not be\nnested under an extra object.\n\nThis is the forge equivalent of {@link formlyFlexLayoutWrapper}.",
-      "sourcePath": "field/wrapper/flex/flex.wrapper.ts",
       "example": "// Simple: all fields get default size (2)\ndbxForgeFlexLayout({ fields: [dbxForgeCityField({}), dbxForgeStateField({}), dbxForgeZipCodeField({})] })\n\n// Resulting form value shape (flat — no wrapper property):\n// { city: '...', state: '...', zip: '...' }\n\n// With per-field sizing and breakpoint\ndbxForgeFlexLayout({\n  breakpoint: 'small',\n  size: 1,\n  fields: [\n    { field: dbxForgeCityField({}), size: 4 },\n    dbxForgeStateField({}),\n    dbxForgeZipCodeField({})\n  ]\n})\n\n// Full config\ndbxForgeFlexLayout({ breakpoint: 'large', breakToColumn: true, relative: true, size: 1, fields: [...] })",
       "properties": [
         {
@@ -2456,11 +2225,7 @@
       "composesFromSlugs": [
         "group"
       ],
-      "configInterface": "DbxForgeFlexLayoutConfig",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/wrapper/flex/flex.wrapper.ts",
-        "line": 131
-      }
+      "configInterface": "DbxForgeFlexLayoutConfig"
     },
     {
       "slug": "section-wrapper",
@@ -2469,7 +2234,6 @@
       "produces": "WrapperConfig",
       "arrayOutput": "no",
       "description": "Section wrapper config — attach via a field's `wrappers: []` array for a semantic section with header and optional card elevation.",
-      "sourcePath": "field/wrapper/section/section.wrapper.ts",
       "example": "dbxForgeSectionWrapper({ headerConfig: { text: 'Contact Details' } })",
       "properties": [
         {
@@ -2498,11 +2262,7 @@
         }
       ],
       "returns": "WrapperConfig",
-      "configInterface": "DbxForgeSectionWrapper",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/wrapper/section/section.wrapper.ts",
-        "line": 62
-      }
+      "configInterface": "DbxForgeSectionWrapper"
     },
     {
       "slug": "subsection-wrapper",
@@ -2511,7 +2271,6 @@
       "produces": "WrapperConfig",
       "arrayOutput": "no",
       "description": "Subsection variant of `section-wrapper` — defaults to heading level 4 and `subsection: true`.",
-      "sourcePath": "field/wrapper/section/section.wrapper.ts",
       "example": "dbxForgeSubsectionWrapper({ headerConfig: { text: 'Options' } })",
       "properties": [
         {
@@ -2540,11 +2299,7 @@
         }
       ],
       "returns": "WrapperConfig",
-      "configInterface": "DbxForgeSectionWrapper",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/wrapper/section/section.wrapper.ts",
-        "line": 85
-      }
+      "configInterface": "DbxForgeSectionWrapper"
     },
     {
       "slug": "style-wrapper",
@@ -2553,7 +2308,6 @@
       "produces": "WrapperConfig",
       "arrayOutput": "no",
       "description": "Style wrapper config — applies dynamic CSS classes (`ngClass`) and/or inline styles (`ngStyle`) to any field via its `wrappers: []`.",
-      "sourcePath": "field/wrapper/style/style.wrapper.ts",
       "example": "dbxForgeStyleWrapper({ classGetter: 'highlighted' })",
       "properties": [
         {
@@ -2576,11 +2330,7 @@
         }
       ],
       "returns": "WrapperConfig",
-      "configInterface": "DbxForgeStyleWrapper",
-      "sourceLocation": {
-        "file": "src/lib/forge/field/wrapper/style/style.wrapper.ts",
-        "line": 63
-      }
+      "configInterface": "DbxForgeStyleWrapper"
     }
   ]
 }
