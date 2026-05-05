@@ -58,8 +58,10 @@ import { PROGRESS_ITEM_VALUES, type ProgressItemValue } from '../component/progr
           Supporting utilities used here:
           <code>.dbx-list-item-padded-thick</code>
           for a roomier row,
-          <code>.dbx-list-item-card</code>
-          for the tinted/rounded surface (defaults to
+          <code>.dbx-list-card-items-list</code>
+          on the wrapper for the tinted/rounded card surface — applied to the actual
+          <code>.mat-mdc-list-item</code>
+          so hover/focus state-layers stay within the visible card boundary (defaults flow through
           <code>--mat-sys-surface-container</code>
           +
           <code>--mat-sys-corner-large</code>
@@ -67,6 +69,8 @@ import { PROGRESS_ITEM_VALUES, type ProgressItemValue } from '../component/progr
           <code>--dbx-list-item-card-background</code>
           /
           <code>--dbx-list-item-card-border-radius</code>
+          , with inter-card spacing exposed as
+          <code>--dbx-list-card-items-list-gap</code>
           ),
           <code>.dbx-list-item-p0</code>
           on the view item host to drop Material's default list-item padding (so the icon tile can own its leading inset), and

@@ -1409,71 +1409,6 @@
       "minimalExample": "<div dbxFlexSize=\"1\"></div>"
     },
     {
-      "slug": "icon-tile",
-      "category": "layout",
-      "kind": "component",
-      "selector": "dbx-icon-tile",
-      "className": "DbxIconTileComponent",
-      "module": "@dereekb/dbx-web",
-      "description": "Rounded, padded leading-icon tile. Renders a `<mat-icon>` from the\n`icon` input centered inside a flex tile, or projects custom content\nwhen `icon` is not supplied. Apply `[dbxColor]` (optionally with\n`[dbxColorTone]`) directly on the host to give the tile a tonal or\nfull-color background — the tile itself sets layout only.\n\nSet `[round]=\"true\"` to apply the `dbx-icon-tile-round` modifier and\nrender a circle instead of the default 12px-rounded square.\n\nEquivalent to writing `<div dbxIconTile [dbxColor]=\"'…'\"><mat-icon>…</mat-icon></div>`,\nbut with the icon name as a single input. Backed by the same\n`dbx-icon-tile` host class as {@link DbxIconTileDirective}, so the CSS\nutility, the directive form, and this component all share styling.",
-      "inputs": [
-        {
-          "name": "icon",
-          "type": "Maybe<string>",
-          "description": "",
-          "required": false
-        },
-        {
-          "name": "round",
-          "type": "boolean",
-          "description": "",
-          "required": false,
-          "default": "false"
-        }
-      ],
-      "outputs": [],
-      "contentProjection": "Optional fallback content rendered when `icon` is not supplied (e.g. a custom icon component).",
-      "relatedSlugs": [
-        "icon-tile-host",
-        "dbx-color",
-        "list-two-line-item"
-      ],
-      "skillRefs": [
-        "dbx__ref__dbx-ui-building-blocks"
-      ],
-      "example": "<dbx-icon-tile [icon]=\"'check'\" [dbxColor]=\"'primary'\" [dbxColorTone]=\"18\"></dbx-icon-tile>\n\n<dbx-icon-tile [icon]=\"'star'\" [round]=\"true\" [dbxColor]=\"'accent'\"></dbx-icon-tile>\n\n<dbx-icon-tile [dbxColor]=\"'accent'\">\n  <my-custom-glyph></my-custom-glyph>\n</dbx-icon-tile>",
-      "minimalExample": "<dbx-icon-tile [icon]=\"'verified'\" [dbxColor]=\"'success'\"></dbx-icon-tile>"
-    },
-    {
-      "slug": "icon-tile-host",
-      "category": "layout",
-      "kind": "directive",
-      "selector": "[dbxIconTile]",
-      "className": "DbxIconTileDirective",
-      "module": "@dereekb/dbx-web",
-      "description": "Host-class form of the icon tile — applies the `dbx-icon-tile` utility\n(flex-centered, 12px rounded, 8px padded) to an existing element. Use\nthis when an existing slot (e.g. a list row's `.item-icon` div) needs\nthe tile presentation without introducing a wrapping component, or\nwhen stacking with another component that already owns the host (so a\n`<dbx-icon-tile>` child element isn't possible).\n\nPair with `[dbxColor]` (optionally `[dbxColorTone]`) on the same host\nfor a tonal/full-color background. The host has no background of its\nown — only layout. For the convenient component form that renders the\n`<mat-icon>` for you, use {@link DbxIconTileComponent} (`<dbx-icon-tile>`).",
-      "inputs": [
-        {
-          "name": "dbxIconTileRound",
-          "type": "boolean",
-          "description": "When `true`, applies the `dbx-icon-tile-round` modifier to render the\ntile as a circle instead of a 12px-rounded square.",
-          "required": false,
-          "default": "false"
-        }
-      ],
-      "outputs": [],
-      "relatedSlugs": [
-        "icon-tile",
-        "dbx-color",
-        "list-two-line-item"
-      ],
-      "skillRefs": [
-        "dbx__ref__dbx-ui-building-blocks"
-      ],
-      "example": "<div class=\"dbx-list-two-line-item dbx-list-two-line-item-with-icon\">\n  <div class=\"item-icon\" dbxIconTile [dbxColor]=\"'primary'\" [dbxColorTone]=\"18\">\n    <mat-icon>check_circle</mat-icon>\n  </div>\n  <div class=\"item-left\">\n    <span class=\"item-title\">Title</span>\n    <span class=\"item-details\">Details</span>\n  </div>\n</div>",
-      "minimalExample": "<div dbxIconTile [dbxColor]=\"'primary'\" [dbxColorTone]=\"18\">\n<mat-icon>star</mat-icon>\n</div>"
-    },
-    {
       "slug": "list",
       "category": "list",
       "kind": "component",
@@ -2109,6 +2044,71 @@
       ],
       "example": "<dbx-detail-block header=\"Email\" icon=\"mail\">\n  <p>{{ user.email }}</p>\n</dbx-detail-block>",
       "minimalExample": "<dbx-detail-block header=\"Label\">Body</dbx-detail-block>"
+    },
+    {
+      "slug": "icon-tile",
+      "category": "layout",
+      "kind": "component",
+      "selector": "dbx-icon-tile",
+      "className": "DbxIconTileComponent",
+      "module": "@dereekb/dbx-web",
+      "description": "Rounded, padded leading-icon tile. Renders a `<mat-icon>` from the\n`icon` input centered inside a flex tile, or projects custom content\nwhen `icon` is not supplied. Apply `[dbxColor]` (optionally with\n`[dbxColorTone]`) directly on the host to give the tile a tonal or\nfull-color background — the tile itself sets layout only.\n\nSet `[round]=\"true\"` to apply the `dbx-icon-tile-round` modifier and\nrender a circle instead of the default 12px-rounded square.\n\nEquivalent to writing `<div dbxIconTile [dbxColor]=\"'…'\"><mat-icon>…</mat-icon></div>`,\nbut with the icon name as a single input. Backed by the same\n`dbx-icon-tile` host class as {@link DbxIconTileDirective}, so the CSS\nutility, the directive form, and this component all share styling.\n\nSizing, padding, border radius, font, and inner `.mat-icon` size are\nall configurable via CSS custom properties on the host:\n`--dbx-icon-tile-width`, `--dbx-icon-tile-height`,\n`--dbx-icon-tile-min-width`, `--dbx-icon-tile-padding`,\n`--dbx-icon-tile-border-radius`, `--dbx-icon-tile-font-size`,\n`--dbx-icon-tile-font-weight`, `--dbx-icon-tile-icon-size`.",
+      "inputs": [
+        {
+          "name": "icon",
+          "type": "Maybe<string>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "round",
+          "type": "boolean",
+          "description": "",
+          "required": false,
+          "default": "false"
+        }
+      ],
+      "outputs": [],
+      "contentProjection": "Optional fallback content rendered when `icon` is not supplied (e.g. a custom icon component).",
+      "relatedSlugs": [
+        "icon-tile-host",
+        "dbx-color",
+        "list-two-line-item"
+      ],
+      "skillRefs": [
+        "dbx__ref__dbx-ui-building-blocks"
+      ],
+      "example": "<dbx-icon-tile [icon]=\"'check'\" [dbxColor]=\"'primary'\" [dbxColorTone]=\"18\"></dbx-icon-tile>\n\n<dbx-icon-tile [icon]=\"'star'\" [round]=\"true\" [dbxColor]=\"'accent'\"></dbx-icon-tile>\n\n<dbx-icon-tile [dbxColor]=\"'accent'\">\n  <my-custom-glyph></my-custom-glyph>\n</dbx-icon-tile>",
+      "minimalExample": "<dbx-icon-tile [icon]=\"'verified'\" [dbxColor]=\"'success'\"></dbx-icon-tile>"
+    },
+    {
+      "slug": "icon-tile-host",
+      "category": "layout",
+      "kind": "directive",
+      "selector": "[dbxIconTile]",
+      "className": "DbxIconTileDirective",
+      "module": "@dereekb/dbx-web",
+      "description": "Host-class form of the icon tile — applies the `dbx-icon-tile` utility\n(flex-centered, 12px rounded, 8px padded) to an existing element. Use\nthis when an existing slot (e.g. a list row's `.item-icon` div) needs\nthe tile presentation without introducing a wrapping component, or\nwhen stacking with another component that already owns the host (so a\n`<dbx-icon-tile>` child element isn't possible).\n\nPair with `[dbxColor]` (optionally `[dbxColorTone]`) on the same host\nfor a tonal/full-color background. The host has no background of its\nown — only layout. For the convenient component form that renders the\n`<mat-icon>` for you, use {@link DbxIconTileComponent} (`<dbx-icon-tile>`).\n\nSizing, padding, border radius, font, and inner `.mat-icon` size are\nall configurable via CSS custom properties on the host:\n`--dbx-icon-tile-width`, `--dbx-icon-tile-height`,\n`--dbx-icon-tile-min-width`, `--dbx-icon-tile-padding`,\n`--dbx-icon-tile-border-radius`, `--dbx-icon-tile-font-size`,\n`--dbx-icon-tile-font-weight`, `--dbx-icon-tile-icon-size`.",
+      "inputs": [
+        {
+          "name": "dbxIconTileRound",
+          "type": "boolean",
+          "description": "When `true`, applies the `dbx-icon-tile-round` modifier to render the\ntile as a circle instead of a 12px-rounded square.",
+          "required": false,
+          "default": "false"
+        }
+      ],
+      "outputs": [],
+      "relatedSlugs": [
+        "icon-tile",
+        "dbx-color",
+        "list-two-line-item"
+      ],
+      "skillRefs": [
+        "dbx__ref__dbx-ui-building-blocks"
+      ],
+      "example": "<div class=\"dbx-list-two-line-item dbx-list-two-line-item-with-icon\">\n  <div class=\"item-icon\" dbxIconTile [dbxColor]=\"'primary'\" [dbxColorTone]=\"18\">\n    <mat-icon>check_circle</mat-icon>\n  </div>\n  <div class=\"item-left\">\n    <span class=\"item-title\">Title</span>\n    <span class=\"item-details\">Details</span>\n  </div>\n</div>",
+      "minimalExample": "<div dbxIconTile [dbxColor]=\"'primary'\" [dbxColorTone]=\"18\">\n<mat-icon>star</mat-icon>\n</div>"
     },
     {
       "slug": "label-block",

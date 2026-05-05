@@ -18,10 +18,12 @@ import { type ProgressItemValue, type ProgressItemValueWithSelection } from './p
  *   `[dbxColor]` + `[dbxColorTone]` for a tonal background. `class="item-icon"`
  *   keeps the list row's leading-slot margins applied.
  * - `.dbx-list-item-padded-thick` — roomier row padding (`--dbx-padding-3`).
- * - `.dbx-list-item-card` — tinted, rounded surface around the row. Defaults
- *   to `--mat-sys-surface-container` + `--mat-sys-corner-large` (16px); both
- *   are overridable via `--dbx-list-item-card-background` /
- *   `--dbx-list-item-card-border-radius`.
+ * - `.dbx-list-card-items-list` — host class on the wrapper that paints each
+ *   `.mat-mdc-list-item` as a tinted, rounded card. Defaults flow through
+ *   `--mat-sys-surface-container` + `--mat-sys-corner-large` (16px); both
+ *   are overridable per-instance via `--dbx-list-item-card-background` /
+ *   `--dbx-list-item-card-border-radius`, with the inter-card spacing
+ *   exposed as `--dbx-list-card-items-list-gap` (default 8px).
  * - `.dbx-list-item-p0` — host class on the value-list view that zeroes
  *   Material's default list-item padding so the tile owns the leading inset.
  * - `.dbx-list-no-hover-effects` — host class on the wrapper that disables
@@ -32,7 +34,7 @@ import { type ProgressItemValue, type ProgressItemValueWithSelection } from './p
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxListWrapperComponentImportsModule],
   host: {
-    class: 'dbx-list-no-hover-effects'
+    class: 'dbx-list-no-hover-effects dbx-list-card-items-list'
   },
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
@@ -67,7 +69,7 @@ export class DocProgressItemListViewComponent extends AbstractDbxSelectionListVi
 @Component({
   selector: 'doc-progress-item-list-view-item',
   template: `
-    <div class="dbx-mb2 dbx-list-item-padded-thick dbx-list-item-card dbx-list-two-line-item dbx-list-two-line-item-with-icon doc-progress-item">
+    <div class="dbx-list-item-padded-thick dbx-list-two-line-item dbx-list-two-line-item-with-icon doc-progress-item">
       <dbx-icon-tile class="item-icon" [icon]="icon" [dbxColor]="'primary'" [dbxColorTone]="18"></dbx-icon-tile>
       <div class="item-left">
         <span class="dbx-bold dbx-pb1">{{ title }}</span>

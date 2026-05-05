@@ -76,11 +76,6 @@ $list-item-padded-min-height: 42px;
     }
   }
 
-  .dbx-list-view .dbx-list-card-items-list {
-    // TODO: Apply the "card" style from .dbx-list-item-card to mat-mdc-list-item mdc-list-item, etc.
-    // also needs a bottom margin or padding outside of the hover effects.
-  }
-
   .dbx-list-view-no-meta-padding {
     .mdc-list-item--with-trailing-meta.mdc-list-item {
       padding-left: 4px;
@@ -126,17 +121,44 @@ $list-item-padded-min-height: 42px;
     padding: theming.$padding-3;
   }
 
-  // Card-like treatment for a list-item row — tinted surface with a rounded
-  // outline. Two CSS custom properties expose the background and corner
-  // radius so consumers can override per-instance without rewriting the
-  // rule. Defaults flow through Material system tokens:
+  // Card-style list — each row becomes a tinted, rounded surface that lives
+  // on the actual `.mat-mdc-list-item`, not on a nested template `<div>`.
+  // Apply this modifier as the host class on the list wrapper component so
+  // the visible card boundary, the hover/focus state-layer, and the click
+  // ripple all line up with one another — the inner item template is then
+  // free to focus on content layout.
+  //
+  // Defaults flow through Material system tokens; both are overridable per
+  // instance via CSS custom properties:
   //   --dbx-list-item-card-background     → `--mat-sys-surface-container`
   //   --dbx-list-item-card-border-radius  → `--mat-sys-corner-large`,
   //     falling back to `calc(--mat-chip-container-shape-radius * 2)` when
   //     the host theme doesn't emit the M3 shape tokens.
-  .dbx-list-item-card {
-    background: var(--dbx-list-item-card-background, var(--mat-sys-surface-container));
-    border-radius: var(--dbx-list-item-card-border-radius, var(--mat-sys-corner-large, calc(var(--mat-chip-container-shape-radius) * 2)));
+  // Spacing between cards is exposed as `--dbx-list-card-items-list-gap`
+  // (default `8px`).
+  .dbx-list-card-items-list {
+    --dbx-list-card-items-list-gap: 8px;
+
+    .dbx-list-view-item.mat-mdc-list-item {
+      --mat-list-list-item-container-color: var(--dbx-list-item-card-background, var(--mat-sys-surface-container));
+      --mat-list-list-item-container-shape: var(--dbx-list-item-card-border-radius, var(--mat-sys-corner-large, calc(var(--mat-chip-container-shape-radius) * 2)));
+      // Override Angular Material's `.mat-mdc-nav-list .mat-mdc-list-item`
+      // rule, which pins `border-radius` (and the focus-indicator radius) to
+      // `var(--mat-list-active-indicator-shape, …)` and would otherwise win
+      // out — leaving the card almost square. Redeclaring both here applies
+      // our card shape directly without relying solely on the token.
+      border-radius: var(--mat-list-list-item-container-shape);
+      --mat-focus-indicator-border-radius: var(--mat-list-list-item-container-shape);
+      margin-bottom: var(--dbx-list-card-items-list-gap);
+    }
+
+    // Strip the trailing card's bottom gap. The nav-list path wraps each
+    // item in a `<dbx-anchor>`; the selection-list path renders
+    // `<mat-list-option>` siblings directly under `<mat-selection-list>`.
+    dbx-anchor:last-of-type .dbx-list-view-item.mat-mdc-list-item,
+    .dbx-list-view-item.mat-mdc-list-option:last-of-type {
+      margin-bottom: 0;
+    }
   }
 
   // When the tile is the leading icon in a two-line list item, override the
