@@ -49,6 +49,10 @@
  * | dbx_notification_m_list_app         | Discovery     | "What notifications does this app configure?"          |
  * | dbx_notification_m_validate_folder  | Verification  | "Does this notification folder follow the convention?" |
  * | dbx_system_m_validate_folder        | Verification  | "Is this system folder set up correctly?"              |
+ * | dbx_asset_validate_app              | Verification  | "Are AssetPathRef constants wired through provideDbxAssetLoader and on disk?" |
+ * | dbx_asset_list_app                  | Discovery     | "What AssetPathRef constants does this component declare?"                   |
+ * | dbx_asset_validate_folder           | Verification  | "Does this component's assets.ts follow the convention?"                     |
+ * | dbx_asset_scaffold                  | Generation    | "Scaffold a new AssetPathRef constant for kind X."                           |
  * | dbx_action_lookup                   | Documentation | "Tell me about action directive / state X"             |
  * | dbx_action_examples                 | Working code  | "Show me how to wire an action like X"                 |
  * | dbx_action_scaffold                 | Generation    | "Scaffold the action stack for use case X"             |
@@ -105,6 +109,10 @@ import { notificationMValidateAppTool } from './notification-m-validate-app.tool
 import { notificationMListAppTool } from './notification-m-list-app.tool.js';
 import { notificationMValidateFolderTool } from './notification-m-validate-folder.tool.js';
 import { systemMValidateFolderTool } from './system-m-validate-folder.tool.js';
+import { dbxAssetValidateAppTool } from './dbx-asset-validate-app.tool.js';
+import { dbxAssetListAppTool } from './dbx-asset-list-app.tool.js';
+import { dbxAssetValidateFolderTool } from './dbx-asset-validate-folder.tool.js';
+import { dbxAssetScaffoldTool } from './dbx-asset-scaffold.tool.js';
 import { createLookupActionTool } from './lookup-action.tool.js';
 import { actionExamplesTool } from './action-examples.tool.js';
 import { actionScaffoldTool } from './action-scaffold.tool.js';
@@ -141,9 +149,11 @@ import { toolError, type DbxTool } from './types.js';
  * Every registered tool in order of presentation in `tools/list`.
  *
  * Order clusters tools by domain so callers see related entries together:
- * form → ui → model → storagefile_m → notification_m → system_m → action →
- * route → filter → pipe → artifact. The `_m` clusters are model extensions
- * that walk an app's source tree to verify end-to-end model wiring.
+ * form → ui → model → storagefile_m → notification_m → system_m → asset →
+ * action → route → filter → pipe → artifact. The `_m` clusters are model
+ * extensions that walk an app's source tree to verify end-to-end model
+ * wiring; the `asset` cluster walks the component + Angular app pair to
+ * verify `AssetPathRef` wiring.
  */
 export const DBX_TOOLS: readonly DbxTool[] = [
   // form
@@ -174,6 +184,11 @@ export const DBX_TOOLS: readonly DbxTool[] = [
   notificationMValidateFolderTool,
   // system_m (model extension)
   systemMValidateFolderTool,
+  // asset (component + app extension)
+  dbxAssetValidateAppTool,
+  dbxAssetListAppTool,
+  dbxAssetValidateFolderTool,
+  dbxAssetScaffoldTool,
   // action
   actionExamplesTool,
   actionScaffoldTool,

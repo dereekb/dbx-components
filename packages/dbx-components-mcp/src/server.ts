@@ -58,9 +58,11 @@ Tool clusters (each exposes lookup, search, examples, and/or scaffold/validate):
 - pipe         — Angular value-pipe catalog
 - semantic_type — semantic type aliases (string/number aliases) lookup and search
 - artifact     — body templates for storagefile-purpose, notification-template, notification-task; file-convention reporting
+- asset        — \`AssetPathRef\` constants in a \`-firebase\` component + \`provideDbxAssetLoader()\` wiring in the Angular app; list/scaffold/validate
 
 Model-extension validators (walk a downstream app to verify wiring):
 - storagefile_m, notification_m, system_m — *_validate_app, *_list_app, *_validate_folder
+- asset — *_validate_app, *_list_app, *_validate_folder, *_scaffold (component-side \`assets.ts\` + Angular front-end wiring)
 - model_fixture — list/lookup/validate/scaffold/forward an app's \`src/test/fixture.ts\` (TestContextFixture/Instance triplets)
 
 Resource URIs are namespaced by domain:
