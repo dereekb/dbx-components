@@ -11,6 +11,12 @@ export const DOC_EXAMPLES_ROUTES: DocExamplesRoute[] = [
     title: 'List',
     detail: 'list workflow examples',
     ref: 'doc.examples.list'
+  },
+  {
+    icon: 'credit_card',
+    title: 'Card',
+    detail: 'card layout examples',
+    ref: 'doc.examples.card'
   }
 ];
 

@@ -2,6 +2,7 @@ import { type Ng2StateDeclaration } from '@uirouter/angular';
 import { DocExamplesLayoutComponent } from './container/layout.component';
 import { DocExamplesHomeComponent } from './container/home.component';
 import { DocExamplesListComponent } from './container/list.component';
+import { DocExamplesCardComponent } from './container/card.component';
 
 export const layoutState: Ng2StateDeclaration = {
   url: '/examples',
@@ -22,9 +23,16 @@ export const listState: Ng2StateDeclaration = {
   component: DocExamplesListComponent
 };
 
+export const cardState: Ng2StateDeclaration = {
+  url: '/card',
+  name: 'doc.examples.card',
+  component: DocExamplesCardComponent
+};
+
 export const STATES: Ng2StateDeclaration[] = [
   //
   layoutState,
   homeState,
-  listState
+  listState,
+  cardState
 ];
