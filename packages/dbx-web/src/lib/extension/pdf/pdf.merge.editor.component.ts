@@ -36,7 +36,7 @@ const DEFAULT_DOWNLOAD_BUTTON: DbxButtonDisplayStylePair = {
   selector: 'dbx-pdf-merge-editor',
   templateUrl: './pdf.merge.editor.component.html',
   host: {
-    class: 'dbx-pdf-merge-editor'
+    class: 'dbx-pdf-merge-editor d-block'
   },
   imports: [DbxButtonComponent, DbxFileUploadComponent, DbxDownloadBlobButtonComponent, DbxPdfMergeListComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,

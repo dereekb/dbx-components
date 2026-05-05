@@ -66,7 +66,7 @@ export interface DbxStepBlockComponentConfig {
         {{ stepSignal() }}
       }
     </dbx-icon-tile>
-    <div class="dbx-step-block-content">
+    <div class="dbx-step-block-content dbx-flex-fill-0">
       @if (headerSignal()) {
         <div class="dbx-step-block-header">
           <span class="dbx-step-block-header-label">{{ headerSignal() }}</span>

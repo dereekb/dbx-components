@@ -3,21 +3,6 @@
 
 // MARK: Mixin
 @mixin core() {
-  .dbx-pdf-merge-editor {
-    display: block;
-  }
-
-  .dbx-pdf-merge-editor-upload {
-    display: block;
-    margin-bottom: 12px;
-  }
-
-  .dbx-pdf-merge-editor-error {
-    margin: 8px 0;
-    padding: 8px 12px;
-    border-radius: var(--mat-sys-corner-small);
-  }
-
   .dbx-pdf-merge-editor-actions {
     display: flex;
     align-items: center;
@@ -25,20 +10,7 @@
     margin-top: 12px;
   }
 
-  .dbx-pdf-merge-editor-spacer {
-    flex: 1;
-  }
-
-  .dbx-pdf-merge-editor-count {
-    margin-right: 8px;
-  }
-
   // Slot upload
-  .dbx-pdf-merge-editor-file-upload {
-    display: block;
-    margin-bottom: 12px;
-  }
-
   .dbx-pdf-merge-editor-file-upload-header {
     display: flex;
     align-items: center;
@@ -61,25 +33,11 @@
     margin-top: 6px;
   }
 
-  .dbx-pdf-preview {
-    display: block;
-    width: 100%;
-    height: 100%;
-  }
-
   .dbx-pdf-preview-frame {
-    display: block;
-    width: 100%;
-    height: 100%;
     min-height: 480px;
   }
 
   // List
-  .dbx-pdf-merge-list-empty {
-    padding: 16px;
-    text-align: center;
-  }
-
   .dbx-pdf-merge-list-items {
     display: flex;
     flex-direction: column;
@@ -87,10 +45,6 @@
   }
 
   // Entry
-  .dbx-pdf-merge-entry {
-    display: block;
-  }
-
   .dbx-pdf-merge-entry-row {
     display: flex;
     align-items: center;
@@ -123,36 +77,14 @@
     cursor: grabbing;
   }
 
-  .dbx-pdf-merge-entry-icon {
+  .dbx-pdf-merge-entry-icon,
+  .dbx-pdf-merge-entry-remove {
     flex-shrink: 0;
-  }
-
-  .dbx-pdf-merge-entry-icon-error {
-    color: var(--mat-sys-error);
-  }
-
-  .dbx-pdf-merge-entry-info {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .dbx-pdf-merge-entry-name {
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
   }
 
   .dbx-pdf-merge-entry-meta {
     display: flex;
     gap: 8px;
-  }
-
-  .dbx-pdf-merge-entry--error .dbx-pdf-merge-entry-status {
-    color: var(--mat-sys-error);
-  }
-
-  .dbx-pdf-merge-entry-remove {
-    flex-shrink: 0;
   }
 
   // CDK animations

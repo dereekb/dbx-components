@@ -104,7 +104,7 @@ const DEFAULT_REQUIRED = true;
     }
   `,
   host: {
-    class: 'dbx-pdf-merge-editor-file-upload',
+    class: 'dbx-pdf-merge-editor-file-upload d-block dbx-mb3',
     '[class.dbx-pdf-merge-editor-file-upload--invalid]': 'stateSignal() === "invalid"',
     '[class.dbx-pdf-merge-editor-file-upload--valid]': 'stateSignal() === "valid"',
     '[class.dbx-pdf-merge-editor-file-upload--no-file]': 'stateSignal() === "no_file"'

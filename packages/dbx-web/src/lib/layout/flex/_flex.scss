@@ -38,6 +38,14 @@ $dbx-flex-group-columns-count: 6;
     flex: 1;
   }
 
+  // `min-width: 0` lets the flex item shrink below its content's intrinsic
+  // width — required for child truncation (e.g. `.dbx-text-truncate`) to
+  // actually clip inside the fill region.
+  .dbx-flex-fill-0 {
+    flex: 1;
+    min-width: 0;
+  }
+
   .dbx-flex-group {
     display: flex;
     flex-wrap: wrap;

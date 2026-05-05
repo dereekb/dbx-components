@@ -198,11 +198,6 @@ $dbx-step-block-badge-font-weight: 600;
     --dbx-icon-tile-icon-size: var(--dbx-step-block-badge-icon-size, #{$dbx-step-block-badge-icon-size});
   }
 
-  .dbx-step-block-content {
-    flex: 1;
-    min-width: 0;
-  }
-
   .dbx-step-block-header {
     display: flex;
     align-items: center;
@@ -223,6 +218,14 @@ $dbx-step-block-badge-font-weight: 600;
     white-space: pre-wrap !important;
     overflow: visible !important;
     text-overflow: unset !important;
+  }
+
+  // Single-line truncation with ellipsis. Composable on any block-level
+  // element. The flex-child variant requires `min-width: 0` on the
+  // truncating element (the default `min-width: auto` prevents a flex item
+  // from shrinking below its content width).
+  .dbx-text-truncate {
+    @include theming.limit-text();
   }
 
   .dbx-icon-spacer {

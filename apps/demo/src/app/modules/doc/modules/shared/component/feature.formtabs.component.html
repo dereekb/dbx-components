@@ -3,7 +3,7 @@
     <dbx-spacer />
     <mat-slide-toggle [checked]="disabled()" (change)="setDisabled($event.checked)">Disable Fields</mat-slide-toggle>
   </div>
-  <div class="doc-feature-form-tabs-column formly-column">
+  <div class="doc-feature-form-tabs-column formly-column dbx-flex-fill-0">
     <div class="doc-feature-form-tabs-header">
       <span>ngx-formly</span>
       @if (formlyFn()) {
@@ -14,7 +14,7 @@
       <ng-content select="[formly]"></ng-content>
     </div>
   </div>
-  <div class="doc-feature-form-tabs-column forge-column">
+  <div class="doc-feature-form-tabs-column forge-column dbx-flex-fill-0">
     <div class="doc-feature-form-tabs-header">
       <span>ng-forge</span>
       @if (forgeFn()) {

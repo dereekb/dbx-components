@@ -12,7 +12,7 @@ import { DbxPdfMergeEntryComponent } from './pdf.merge.entry.component';
   template: `
     @if (entries$ | async; as entries) {
       @if (entries.length === 0) {
-        <div class="dbx-pdf-merge-list-empty dbx-hint">No files added yet.</div>
+        <div class="dbx-list-empty-content dbx-hint dbx-p4">No files added yet.</div>
       } @else {
         <div class="dbx-pdf-merge-list-items" cdkDropList (cdkDropListDropped)="onDrop($event)">
           @for (entry of entries; track entry.id) {

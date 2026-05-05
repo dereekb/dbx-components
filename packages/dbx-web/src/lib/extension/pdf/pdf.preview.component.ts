@@ -14,10 +14,10 @@ import { PDF_MERGE_RESULT_MIME_TYPE } from './pdf.merge';
 @Component({
   selector: 'dbx-pdf-preview',
   template: `
-    <dbx-embed class="dbx-pdf-preview-frame" [blob]="blob()" [srcUrl]="srcUrl()" [type]="'application/pdf'"></dbx-embed>
+    <dbx-embed class="dbx-pdf-preview-frame d-block dbx-w100 dbx-h100" [blob]="blob()" [srcUrl]="srcUrl()" [type]="'application/pdf'"></dbx-embed>
   `,
   host: {
-    class: 'dbx-pdf-preview'
+    class: 'dbx-pdf-preview d-block dbx-w100 dbx-h100'
   },
   imports: [DbxEmbedComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,

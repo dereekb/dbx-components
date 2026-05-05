@@ -1,5 +1,5 @@
 @if (showAddFiles()) {
-  <div class="dbx-pdf-merge-editor-upload">
+  <div class="dbx-pdf-merge-editor-upload d-block dbx-mb3">
     <dbx-file-upload [accept]="accept()" [multiple]="multiple()" (filesChanged)="onFiles($event)" [hint]="'Drop PDFs or images here, or click to browse'" [text]="'Add files'" icon="upload_file"></dbx-file-upload>
   </div>
 }
@@ -8,8 +8,8 @@
   <dbx-pdf-merge-list></dbx-pdf-merge-list>
 }
 <div class="dbx-pdf-merge-editor-actions">
-  <span class="dbx-pdf-merge-editor-count dbx-hint dbx-small">{{ entryCountSignal() }} file(s)</span>
-  <span class="dbx-pdf-merge-editor-spacer"></span>
+  <span class="dbx-hint dbx-small">{{ entryCountSignal() }} file(s)</span>
+  <span class="dbx-spacer"></span>
   <dbx-button text="Clear" icon="delete" [disabled]="entryCountSignal() === 0" (buttonClick)="onClear()"></dbx-button>
   @if (showPreviewButton()) {
     <dbx-button text="Preview" icon="picture_as_pdf" [disabled]="!canMergeSignal()" (buttonClick)="onPreview()"></dbx-button>

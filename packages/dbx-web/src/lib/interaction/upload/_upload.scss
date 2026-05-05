@@ -2,6 +2,10 @@
 
 // Sections
 @mixin core() {
+  .dbx-file-upload-area {
+    position: relative;
+  }
+
   .dbx-file-upload-area-content {
     display: flex;
     flex-direction: column;
@@ -31,12 +35,13 @@
   }
 
   .dbx-file-upload-area-content-hint {
-    position: relative;
-    top: -24px;
+    position: absolute;
+    bottom: 8px;
     left: 0;
     right: 0;
     text-align: center;
     user-select: none;
+    pointer-events: none;
   }
 
   .dbx-file-upload-area-content {
