@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-web",
-  "version": "13.10.7",
+  "version": "13.10.8",
   "sideEffects": [
     "*.scss",
     "*.css"
@@ -13,12 +13,12 @@
     "@angular/material": "^21.2.9",
     "@angular/platform-browser": "21.2.11",
     "@cantoo/pdf-lib": "^2.6.5",
-    "@dereekb/browser": "13.10.7",
-    "@dereekb/date": "13.10.7",
-    "@dereekb/dbx-core": "13.10.7",
-    "@dereekb/rxjs": "13.10.7",
-    "@dereekb/util": "13.10.7",
-    "@dereekb/vitest": "13.10.7",
+    "@dereekb/browser": "13.10.8",
+    "@dereekb/date": "13.10.8",
+    "@dereekb/dbx-core": "13.10.8",
+    "@dereekb/rxjs": "13.10.8",
+    "@dereekb/util": "13.10.8",
+    "@dereekb/vitest": "13.10.8",
     "@ngbracket/ngx-layout": "^21.0.0",
     "@ngrx/component-store": "^21.1.0",
     "@ngrx/effects": "^21.1.0",

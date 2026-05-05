@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/analytics",
-  "version": "13.10.7",
+  "version": "13.10.8",
   "exports": {
     "./nestjs": {
       "module": "./nestjs/index.esm.js",
@@ -10,9 +10,9 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/nestjs": "13.10.7",
-    "@dereekb/rxjs": "13.10.7",
-    "@dereekb/util": "13.10.7",
+    "@dereekb/nestjs": "13.10.8",
+    "@dereekb/rxjs": "13.10.8",
+    "@dereekb/util": "13.10.8",
     "@nestjs/common": "^11.1.19",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.1.19",
