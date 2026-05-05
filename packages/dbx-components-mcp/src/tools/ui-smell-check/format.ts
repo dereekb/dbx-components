@@ -48,10 +48,10 @@ export function formatSmellResult(input: { readonly html: string; readonly scss:
 
   if (matches.length === 0) {
     const goodSignals = formatGoodSignals(input.html, input.scss);
-    if (goodSignals !== null) {
-      sections.push('', 'No smells detected.', '', goodSignals, '', 'For a token recommendation, call `dbx_css_token_lookup` with an `intent` or `value`.');
-    } else {
+    if (goodSignals === null) {
       sections.push('', 'No smells detected against the v1 catalog. If you still want a token recommendation, call `dbx_css_token_lookup` with an `intent` or `value`.');
+    } else {
+      sections.push('', 'No smells detected.', '', goodSignals, '', 'For a token recommendation, call `dbx_css_token_lookup` with an `intent` or `value`.');
     }
     appendSummaryFooter(sections, result);
   } else {

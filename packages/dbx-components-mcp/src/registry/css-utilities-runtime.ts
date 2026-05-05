@@ -122,8 +122,8 @@ function normalizeValue(raw: string): string {
   return raw
     .trim()
     .toLowerCase()
-    .replace(/\s+/g, ' ')
-    .replace(/\s*,\s*/g, ',');
+    .replaceAll(/\s+/g, ' ')
+    .replaceAll(/\s*,\s*/g, ',');
 }
 
 /**
@@ -136,7 +136,7 @@ function normalizeValue(raw: string): string {
  */
 export function parseDeclarations(raw: string): ReadonlyMap<string, string> {
   const result = new Map<string, string>();
-  const stripped = raw.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+  const stripped = raw.replaceAll(/\/\*[\s\S]*?\*\//g, '').replaceAll(/\/\/.*$/gm, '');
   const segments = stripped.split(';');
   for (const segment of segments) {
     const trimmed = segment.trim();
@@ -284,20 +284,7 @@ export function createCssUtilityRegistryFromEntries(input: { readonly entries: r
         matches = [];
       } else {
         const candidates = pickCandidatePool({ all, byRole: byRoleImmutable, byParent: byParentImmutable, role, parent });
-        matches = [];
-        for (const entry of candidates) {
-          if (!shouldIncludeEntry({ entry, parent, includeChildren })) continue;
-          if (entry.intent === undefined) continue;
-          const lower = entry.intent.toLowerCase();
-          let score = 0;
-          if (lower === trimmed) score = 10;
-          else if (lower.includes(trimmed)) score = 5;
-          else if (trimmed.includes(lower)) score = 3;
-          if (score > 0) {
-            matches.push({ entry, score, matchedProperties: [], extraEntryProperties: [], missingInputProperties: [] });
-          }
-        }
-        matches.sort((a, b) => b.score - a.score || a.entry.slug.localeCompare(b.entry.slug));
+        matches = scoreCandidatesByIntent(candidates, { trimmed, parent, includeChildren });
       }
       return matches;
     },
@@ -308,29 +295,57 @@ export function createCssUtilityRegistryFromEntries(input: { readonly entries: r
       if (inputMap.size === 0) {
         matches = [];
       } else {
-        const scored: ScoredCssUtilityMatch[] = [];
-        for (const idx of declarationIndex) {
-          if (role !== undefined && (idx.entry.role ?? 'misc') !== role) continue;
-          if (parent !== undefined && idx.entry.parent !== parent) continue;
-          if (!shouldIncludeEntry({ entry: idx.entry, parent, includeChildren })) continue;
-          const result = scoreAgainstEntry(inputMap, idx.map);
-          if (result.score >= minScore) {
-            scored.push({
-              entry: idx.entry,
-              score: result.score,
-              matchedProperties: result.matched,
-              extraEntryProperties: result.extraEntry,
-              missingInputProperties: result.missingInput
-            });
-          }
-        }
-        scored.sort((a, b) => b.score - a.score || a.entry.slug.localeCompare(b.entry.slug));
-        matches = scored.slice(0, limit);
+        matches = scoreEntriesByDeclarations(declarationIndex, inputMap, { role, parent, includeChildren, minScore }).slice(0, limit);
       }
       return matches;
     }
   };
   return registry;
+}
+
+function scoreCandidatesByIntent(candidates: readonly CssUtilityEntry[], opts: { readonly trimmed: string; readonly parent: string | undefined; readonly includeChildren: boolean }): ScoredCssUtilityMatch[] {
+  const { trimmed, parent, includeChildren } = opts;
+  const matches: ScoredCssUtilityMatch[] = [];
+  for (const entry of candidates) {
+    if (!shouldIncludeEntry({ entry, parent, includeChildren })) continue;
+    if (entry.intent === undefined) continue;
+    const score = computeIntentScore(entry.intent.toLowerCase(), trimmed);
+    if (score > 0) {
+      matches.push({ entry, score, matchedProperties: [], extraEntryProperties: [], missingInputProperties: [] });
+    }
+  }
+  matches.sort((a, b) => b.score - a.score || a.entry.slug.localeCompare(b.entry.slug));
+  return matches;
+}
+
+function computeIntentScore(lower: string, trimmed: string): number {
+  let score = 0;
+  if (lower === trimmed) score = 10;
+  else if (lower.includes(trimmed)) score = 5;
+  else if (trimmed.includes(lower)) score = 3;
+  return score;
+}
+
+function scoreEntriesByDeclarations(declarationIndex: readonly EntryDeclarationIndex[], inputMap: ReadonlyMap<string, string>, opts: { readonly role: string | undefined; readonly parent: string | undefined; readonly includeChildren: boolean; readonly minScore: number }): ScoredCssUtilityMatch[] {
+  const { role, parent, includeChildren, minScore } = opts;
+  const scored: ScoredCssUtilityMatch[] = [];
+  for (const idx of declarationIndex) {
+    if (role !== undefined && (idx.entry.role ?? 'misc') !== role) continue;
+    if (parent !== undefined && idx.entry.parent !== parent) continue;
+    if (!shouldIncludeEntry({ entry: idx.entry, parent, includeChildren })) continue;
+    const result = scoreAgainstEntry(inputMap, idx.map);
+    if (result.score >= minScore) {
+      scored.push({
+        entry: idx.entry,
+        score: result.score,
+        matchedProperties: result.matched,
+        extraEntryProperties: result.extraEntry,
+        missingInputProperties: result.missingInput
+      });
+    }
+  }
+  scored.sort((a, b) => b.score - a.score || a.entry.slug.localeCompare(b.entry.slug));
+  return scored;
 }
 
 interface PickCandidatePoolInput {
@@ -354,10 +369,10 @@ function pickCandidatePool(input: PickCandidatePoolInput): readonly CssUtilityEn
   let pool: readonly CssUtilityEntry[];
   if (parent !== undefined) {
     pool = byParent.get(parent) ?? [];
-  } else if (role !== undefined) {
-    pool = byRole.get(role) ?? [];
-  } else {
+  } else if (role === undefined) {
     pool = all;
+  } else {
+    pool = byRole.get(role) ?? [];
   }
   return pool;
 }

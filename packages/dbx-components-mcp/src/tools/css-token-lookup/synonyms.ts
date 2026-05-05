@@ -51,21 +51,25 @@ export function expandIntentQuery(query: string): readonly string[] {
   if (trimmed.length === 0) {
     result = [];
   } else {
-    const set = new Set<string>([trimmed]);
-    const direct = INTENT_SYNONYMS.get(trimmed);
-    if (direct !== undefined) {
-      for (const value of direct) {
-        set.add(value.toLowerCase());
-      }
-    }
-    for (const [key, synonyms] of INTENT_SYNONYMS) {
-      if (trimmed.includes(key)) {
-        for (const value of synonyms) {
-          set.add(value.toLowerCase());
-        }
-      }
-    }
-    result = [...set];
+    result = [...collectSynonyms(trimmed)];
   }
   return result;
+}
+
+function collectSynonyms(trimmed: string): Set<string> {
+  const set = new Set<string>([trimmed]);
+  addAllLowercased(set, INTENT_SYNONYMS.get(trimmed));
+  for (const [key, synonyms] of INTENT_SYNONYMS) {
+    if (trimmed.includes(key)) {
+      addAllLowercased(set, synonyms);
+    }
+  }
+  return set;
+}
+
+function addAllLowercased(set: Set<string>, values: readonly string[] | undefined): void {
+  if (values === undefined) return;
+  for (const value of values) {
+    set.add(value.toLowerCase());
+  }
 }

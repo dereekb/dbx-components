@@ -209,18 +209,17 @@ function renderByParent(registry: CssUtilityRegistry, args: ParsedArgs): string 
   let text: string;
   if (children.length === 0) {
     const lines: string[] = [`# No children registered under \`${parent}\``, ''];
-    if (parentEntry !== undefined) {
-      lines.push(`The parent utility \`${parentEntry.selector}\` exists but has no annotated children. Mark related helpers with \`/// @parent ${parent}\` to group them.`);
-    } else {
+    if (parentEntry === undefined) {
       lines.push(`No utility class is registered under that slug, and no children reference it. Check the slug spelling, or list the catalog with \`category="list"\`.`);
+    } else {
+      lines.push(`The parent utility \`${parentEntry.selector}\` exists but has no annotated children. Mark related helpers with \`/// @parent ${parent}\` to group them.`);
     }
     text = lines.join('\n');
   } else {
     const lines: string[] = [`# Children of \`${parent}\` (${children.length})`, ''];
     if (parentEntry !== undefined) {
       const intent = parentEntry.intent === undefined ? '' : ` — ${parentEntry.intent}`;
-      lines.push(`Parent: \`${parentEntry.selector}\`${intent}`);
-      lines.push('');
+      lines.push(`Parent: \`${parentEntry.selector}\`${intent}`, '');
     }
     for (const child of children) {
       const role = child.role ?? 'misc';
@@ -236,10 +235,10 @@ function renderBrowse(registry: CssUtilityRegistry, args: ParsedArgs): string {
   let candidates: readonly CssUtilityEntry[];
   if (args.category !== undefined && args.category !== 'list') {
     candidates = registry.bySource.get(args.category) ?? [];
-  } else if (args.role !== undefined) {
-    candidates = registry.byRole.get(args.role) ?? [];
-  } else {
+  } else if (args.role === undefined) {
     candidates = registry.all;
+  } else {
+    candidates = registry.byRole.get(args.role) ?? [];
   }
 
   const includeChildren = args.includeChildren === true;
@@ -292,13 +291,36 @@ interface RenderEntryInput {
 function renderEntry(input: RenderEntryInput): string {
   const { entry, scored, otherMatches = [], registry } = input;
   const lines: string[] = [`# \`${entry.selector}\``];
+  appendEntryHeader(lines, entry);
+  appendEntryBasicMetadata(lines, entry);
+  appendEntryDeclarations(lines, entry);
+  appendEntryTokensSection(lines, { tokens: entry.tokensRead, heading: '## Tokens read', intro: 'Override these CSS variables to customize the rule:' });
+  appendEntryTokensSection(lines, { tokens: entry.tokensSet, heading: '## Tokens set', intro: 'These CSS variables are declared by this rule and cascade to descendants:' });
+  appendEntryMatchDiff(lines, scored);
+  if (entry.antiUse !== undefined) {
+    lines.push('', "## Don't use when", '', entry.antiUse);
+  }
+  if (entry.seeAlso !== undefined && entry.seeAlso.length > 0) {
+    const list = entry.seeAlso.map((s) => `\`${s}\``).join(', ');
+    lines.push('', '## See also', '', list);
+  }
+  appendEntryChildren(lines, entry, registry);
+  if (entry.since !== undefined) {
+    lines.push('', `*Since: ${entry.since}*`);
+  }
+  appendEntryOtherMatches(lines, otherMatches);
+  return lines.join('\n');
+}
+
+function appendEntryHeader(lines: string[], entry: CssUtilityEntry): void {
   const headerBits: string[] = [];
   if (entry.role !== undefined) headerBits.push(`role: ${entry.role}`);
   if (entry.scope !== undefined) headerBits.push(`scope: ${entry.scope}`);
-  headerBits.push(`source: ${entry.source}`);
-  headerBits.push(`${entry.file}:${entry.line}`);
-  lines.push(`*${headerBits.join(' · ')}*`);
-  lines.push('');
+  headerBits.push(`source: ${entry.source}`, `${entry.file}:${entry.line}`);
+  lines.push(`*${headerBits.join(' · ')}*`, '');
+}
+
+function appendEntryBasicMetadata(lines: string[], entry: CssUtilityEntry): void {
   if (entry.intent !== undefined) {
     lines.push(`**Intent:** ${entry.intent}`);
   }
@@ -314,82 +336,62 @@ function renderEntry(input: RenderEntryInput): string {
   if (entry.selectorContext !== undefined) {
     lines.push(`**Use inside:** \`${entry.selectorContext}\``);
   }
+}
 
-  lines.push('', '## Declarations', '');
-  lines.push('```css');
+function appendEntryDeclarations(lines: string[], entry: CssUtilityEntry): void {
   // Render the full compound chain when present so consumers can see the
   // exact rule head; flat utilities just show the host selector.
   const ruleHead = entry.selectorContext ?? entry.selector;
-  lines.push(`${ruleHead} {`);
+  lines.push('', '## Declarations', '', '```css', `${ruleHead} {`);
   for (const decl of entry.declarations) {
     lines.push(`  ${decl.property}: ${decl.value};`);
   }
-  lines.push('}');
-  lines.push('```');
+  lines.push('}', '```');
+}
 
-  if (entry.tokensRead !== undefined && entry.tokensRead.length > 0) {
-    lines.push('', '## Tokens read', '', 'Override these CSS variables to customize the rule:', '');
-    for (const token of entry.tokensRead) {
-      lines.push(`- \`${token}\``);
-    }
+function appendEntryTokensSection(lines: string[], input: { tokens: readonly string[] | undefined; heading: string; intro: string }): void {
+  const { tokens, heading, intro } = input;
+  if (tokens === undefined || tokens.length === 0) return;
+  lines.push('', heading, '', intro, '');
+  for (const token of tokens) {
+    lines.push(`- \`${token}\``);
   }
+}
 
-  if (entry.tokensSet !== undefined && entry.tokensSet.length > 0) {
-    lines.push('', '## Tokens set', '', 'These CSS variables are declared by this rule and cascade to descendants:', '');
-    for (const token of entry.tokensSet) {
-      lines.push(`- \`${token}\``);
-    }
+function appendEntryMatchDiff(lines: string[], scored: ScoredCssUtilityMatch | undefined): void {
+  if (scored === undefined) return;
+  const score = (scored.score * 100).toFixed(0);
+  lines.push('', '## Match diff', '', `Match score: ${score}%`);
+  if (scored.matchedProperties.length > 0) {
+    lines.push(`- matched: ${formatPropList(scored.matchedProperties)}`);
   }
-
-  if (scored !== undefined) {
-    lines.push('', '## Match diff', '');
-    const score = (scored.score * 100).toFixed(0);
-    lines.push(`Match score: ${score}%`);
-    if (scored.matchedProperties.length > 0) {
-      lines.push(`- matched: ${formatPropList(scored.matchedProperties)}`);
-    }
-    if (scored.extraEntryProperties.length > 0) {
-      lines.push(`- extra on entry: ${formatPropList(scored.extraEntryProperties)}`);
-    }
-    if (scored.missingInputProperties.length > 0) {
-      lines.push(`- missing from input: ${formatPropList(scored.missingInputProperties)}`);
-    }
+  if (scored.extraEntryProperties.length > 0) {
+    lines.push(`- extra on entry: ${formatPropList(scored.extraEntryProperties)}`);
   }
-
-  if (entry.antiUse !== undefined) {
-    lines.push('', "## Don't use when", '', entry.antiUse);
+  if (scored.missingInputProperties.length > 0) {
+    lines.push(`- missing from input: ${formatPropList(scored.missingInputProperties)}`);
   }
+}
 
-  if (entry.seeAlso !== undefined && entry.seeAlso.length > 0) {
-    const list = entry.seeAlso.map((s) => `\`${s}\``).join(', ');
-    lines.push('', '## See also', '', list);
+function appendEntryChildren(lines: string[], entry: CssUtilityEntry, registry: CssUtilityRegistry | undefined): void {
+  if (registry === undefined) return;
+  const children = registry.findChildrenOf(entry.slug);
+  if (children.length === 0) return;
+  lines.push('', `## Children (${children.length})`, '');
+  for (const child of children) {
+    const role = child.role ?? 'misc';
+    const intent = child.intent === undefined ? '' : ` — ${child.intent}`;
+    lines.push(`- \`${child.selector}\` (${role})${intent}`);
   }
+}
 
-  if (registry !== undefined) {
-    const children = registry.findChildrenOf(entry.slug);
-    if (children.length > 0) {
-      lines.push('', `## Children (${children.length})`, '');
-      for (const child of children) {
-        const role = child.role ?? 'misc';
-        const intent = child.intent === undefined ? '' : ` — ${child.intent}`;
-        lines.push(`- \`${child.selector}\` (${role})${intent}`);
-      }
-    }
+function appendEntryOtherMatches(lines: string[], otherMatches: readonly ScoredCssUtilityMatch[]): void {
+  if (otherMatches.length === 0) return;
+  lines.push('', '## Other candidates', '');
+  for (const other of otherMatches) {
+    const score = (other.score * 100).toFixed(0);
+    lines.push(`- \`${other.entry.selector}\` (${score}%)`);
   }
-
-  if (entry.since !== undefined) {
-    lines.push('', `*Since: ${entry.since}*`);
-  }
-
-  if (otherMatches.length > 0) {
-    lines.push('', '## Other candidates', '');
-    for (const other of otherMatches) {
-      const score = (other.score * 100).toFixed(0);
-      lines.push(`- \`${other.entry.selector}\` (${score}%)`);
-    }
-  }
-
-  return lines.join('\n');
 }
 
 function formatPropList(props: readonly string[]): string {

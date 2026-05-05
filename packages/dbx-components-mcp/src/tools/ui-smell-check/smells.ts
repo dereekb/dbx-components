@@ -212,7 +212,7 @@ function findCardSurface(scss: string): CardSurfaceHit | null {
   let blockStart = -1;
   let blockHeaderStart = -1;
   let lastBoundary = 0;
-  for (let i = 0; i < scss.length; i += 1) {
+  for (let i = 0; i < scss.length && result === null; i += 1) {
     const ch = scss[i];
     if (ch === '{') {
       if (depth === 0) {
@@ -223,21 +223,28 @@ function findCardSurface(scss: string): CardSurfaceHit | null {
     } else if (ch === '}') {
       depth -= 1;
       if (depth === 0 && blockStart >= 0) {
-        const block = scss.slice(blockStart, i);
-        if (looksLikeCardSurface(block)) {
-          const selector = scss.slice(blockHeaderStart, blockStart - 1).trim();
-          const snippet = trimCardSurfaceSnippet(selector, block);
-          result = { index: blockHeaderStart, length: i - blockHeaderStart, snippet, bodyStart: blockStart, bodyEnd: i };
-          break;
+        const hit = tryMatchCardSurface({ scss, blockHeaderStart, blockStart, blockEnd: i });
+        if (hit === null) {
+          blockStart = -1;
+          lastBoundary = i + 1;
+        } else {
+          result = hit;
         }
-        blockStart = -1;
-        lastBoundary = i + 1;
       }
     } else if (depth === 0 && (ch === ';' || ch === '}')) {
       lastBoundary = i + 1;
     }
   }
   return result;
+}
+
+function tryMatchCardSurface(input: { scss: string; blockHeaderStart: number; blockStart: number; blockEnd: number }): CardSurfaceHit | null {
+  const { scss, blockHeaderStart, blockStart, blockEnd } = input;
+  const block = scss.slice(blockStart, blockEnd);
+  if (!looksLikeCardSurface(block)) return null;
+  const selector = scss.slice(blockHeaderStart, blockStart - 1).trim();
+  const snippet = trimCardSurfaceSnippet(selector, block);
+  return { index: blockHeaderStart, length: blockEnd - blockHeaderStart, snippet, bodyStart: blockStart, bodyEnd: blockEnd };
 }
 
 function looksLikeCardSurface(block: string): boolean {
@@ -287,7 +294,7 @@ function topLevelLines(block: string): readonly string[] {
  * @returns A trimmed snippet containing the selector and a few representative declarations.
  */
 function trimCardSurfaceSnippet(selector: string, block: string): string {
-  const interesting = /^\s*(padding(?:-(?:top|right|bottom|left))?|margin(?:-(?:top|right|bottom|left))?|background(?:-color)?|border-radius|box-shadow)\s*:/i;
+  const interesting = /^\s*(?:(?:padding|margin)(?:-(?:top|right|bottom|left))?|background(?:-color)?|border-radius|box-shadow)\s*:/i;
   const topLevel = topLevelLines(block);
   const kept: string[] = [];
   for (const line of topLevel) {
@@ -378,15 +385,15 @@ const hardcodedRadius: SmellDetector = (input) => {
       exact = input.tokenRegistry.findByCssVariable('--mat-sys-corner-full');
     }
     const matchKind = matchKindForRadius(exact, raw);
-    const fix = exact !== undefined ? `Replace \`border-radius: ${raw}\` with \`border-radius: var(${exact.cssVariable})\` ${matchKind}` : `Hardcoded radius \`${raw}\` doesn't match any design-system corner token. Either wrap it in a project-local SCSS variable or align it with one of \`--mat-sys-corner-extra-small\` (4px), \`-small\` (8px), \`-medium\` (12px), \`-large\` (16px), \`-extra-large\` (28px), or \`-full\` (pill / circle).`;
+    const fix = exact === undefined ? `Hardcoded radius \`${raw}\` doesn't match any design-system corner token. Either wrap it in a project-local SCSS variable or align it with one of \`--mat-sys-corner-extra-small\` (4px), \`-small\` (8px), \`-medium\` (12px), \`-large\` (16px), \`-extra-large\` (28px), or \`-full\` (pill / circle).` : `Replace \`border-radius: ${raw}\` with \`border-radius: var(${exact.cssVariable})\` ${matchKind}`;
     matches.push({
       id: 'hardcoded-radius',
       severity: 'warn',
       title: 'Hardcoded border-radius',
       snippet: captureSnippet(input.scss, match.index, match[0].length),
       fix,
-      seeAlsoSlugs: exact?.recommendedPrimitive !== undefined ? [exact.recommendedPrimitive] : [],
-      seeAlsoTokens: exact !== undefined ? [exact.cssVariable] : [],
+      seeAlsoSlugs: exact?.recommendedPrimitive === undefined ? [] : [exact.recommendedPrimitive],
+      seeAlsoTokens: exact === undefined ? [] : [exact.cssVariable],
       source: 'scss',
       index: match.index,
       length: match[0].length,
@@ -414,7 +421,7 @@ const hardcodedShadow: SmellDetector = (input) => {
     const raw = match[1].trim();
     if (raw.startsWith('var(') || raw === 'none') continue;
     const exact = findExactRoleToken(input.tokenRegistry, raw, 'elevation');
-    const fix = exact !== undefined ? `Replace this hardcoded shadow with \`box-shadow: var(${exact.cssVariable})\` or use \`<dbx-content-box [elevate]="true">\` to apply the elevation through the wrapper component.` : 'Hardcoded `box-shadow:` declarations should map to one of the `--mat-sys-level0..5` elevation tokens, or wrap the surface in `<dbx-content-box [elevate]="true">` so the shadow comes from the design system.';
+    const fix = exact === undefined ? 'Hardcoded `box-shadow:` declarations should map to one of the `--mat-sys-level0..5` elevation tokens, or wrap the surface in `<dbx-content-box [elevate]="true">` so the shadow comes from the design system.' : `Replace this hardcoded shadow with \`box-shadow: var(${exact.cssVariable})\` or use \`<dbx-content-box [elevate]="true">\` to apply the elevation through the wrapper component.`;
     matches.push({
       id: 'hardcoded-shadow',
       severity: 'warn',
@@ -422,7 +429,7 @@ const hardcodedShadow: SmellDetector = (input) => {
       snippet: captureSnippet(input.scss, match.index, match[0].length),
       fix,
       seeAlsoSlugs: ['content-box', 'content-elevate'],
-      seeAlsoTokens: exact !== undefined ? [exact.cssVariable] : ['--mat-sys-level1'],
+      seeAlsoTokens: exact === undefined ? ['--mat-sys-level1'] : [exact.cssVariable],
       source: 'scss',
       index: match.index,
       length: match[0].length,
@@ -434,7 +441,7 @@ const hardcodedShadow: SmellDetector = (input) => {
   return matches;
 };
 
-const HARDCODED_HINT_COLOR_RE = /color\s*:\s*(rgba?\(\s*0\s*,\s*0\s*,\s*0\s*[,/\s]\s*0\.[5-7]\d?\s*\)|rgba?\(\s*255\s*,\s*255\s*,\s*255\s*[,/\s]\s*0\.[6-8]\d?\s*\))/gi;
+const HARDCODED_HINT_COLOR_RE = /color\s*:\s*(rgba?\(\s*(0|255)\s*,\s*\2\s*,\s*\2\s*[,/\s]\s*0\.[5-8]\d?\s*\))/gi;
 
 /**
  * Flags low-emphasis text colors written as raw `rgba(0,0,0,0.6)` etc. and
@@ -487,7 +494,7 @@ const hardcodedPadding: SmellDetector = (input) => {
     const exact = findExactRoleToken(input.tokenRegistry, raw, 'spacing');
     if (exact !== undefined) {
       const utility = exact.utilityClasses?.[0];
-      const fix = ['Replace `' + match[0].trim() + '` with `var(' + exact.cssVariable + ')`' + (utility !== undefined ? ` (or use the \`${utility}\` utility class on the host element)` : '') + '.'].join('\n');
+      const fix = ['Replace `' + match[0].trim() + '` with `var(' + exact.cssVariable + ')`' + (utility === undefined ? '' : ` (or use the \`${utility}\` utility class on the host element)`) + '.'].join('\n');
       matches.push({
         id: 'hardcoded-padding',
         severity: 'warn',
@@ -677,7 +684,7 @@ const mdcTokenOverride: SmellDetector = (input) => {
     seen.add(tokenName);
     const tokenEntry = input.tokenRegistry.findByCssVariable(tokenName);
     const componentScope = tokenEntry?.componentScope;
-    const fix = componentScope !== undefined ? `Don't override \`${tokenName}\` directly. Set \`color="primary|accent|warn"\` on the host \`<${componentScope}>\` (or wrap in a thin styled component) so the token resolution flows through Material's theme.` : `Don't override \`${tokenName}\` directly. Material component tokens should be set via the host component's \`color\` attribute or by a parent theme — direct overrides break dark mode and theme switching.`;
+    const fix = componentScope === undefined ? `Don't override \`${tokenName}\` directly. Material component tokens should be set via the host component's \`color\` attribute or by a parent theme — direct overrides break dark mode and theme switching.` : `Don't override \`${tokenName}\` directly. Set \`color="primary|accent|warn"\` on the host \`<${componentScope}>\` (or wrap in a thin styled component) so the token resolution flows through Material's theme.`;
     matches.push({
       id: 'mdc-token-override-instead-of-wrapper',
       severity: 'warn',
@@ -775,6 +782,22 @@ const emptyRuleset: SmellDetector = (input) => {
 
 const SCSS_USE_AS_RE = /@use\s+['"][^'"]+['"]\s+as\s+([\w-]+)\s*;/g;
 
+function isNamespaceUsed(scss: string, ns: string): boolean {
+  const usagePattern = new RegExp(String.raw`(?:^|[^\w-])${ns}\.`, 'g');
+  let used = false;
+  for (const usageMatch of scss.matchAll(usagePattern)) {
+    if (usageMatch.index === undefined) continue;
+    const lineStart = scss.lastIndexOf('\n', usageMatch.index) + 1;
+    const lineEndRaw = scss.indexOf('\n', usageMatch.index);
+    const lineEnd = lineEndRaw === -1 ? scss.length : lineEndRaw;
+    const line = scss.slice(lineStart, lineEnd);
+    if (/^\s*@use\b/.test(line)) continue;
+    used = true;
+    break;
+  }
+  return used;
+}
+
 /**
  * Flags `@use 'pkg' as ns;` declarations whose namespace is never referenced
  * (`ns.something`) elsewhere in the file. Skips `as *` (wildcard) imports —
@@ -788,19 +811,7 @@ const unusedScssUse: SmellDetector = (input) => {
   for (const match of input.scss.matchAll(SCSS_USE_AS_RE)) {
     if (match.index === undefined) continue;
     const ns = match[1];
-    const usagePattern = new RegExp(String.raw`(?:^|[^\w-])${ns}\.`, 'g');
-    let used = false;
-    for (const usageMatch of input.scss.matchAll(usagePattern)) {
-      if (usageMatch.index === undefined) continue;
-      const lineStart = input.scss.lastIndexOf('\n', usageMatch.index) + 1;
-      const lineEndRaw = input.scss.indexOf('\n', usageMatch.index);
-      const lineEnd = lineEndRaw === -1 ? input.scss.length : lineEndRaw;
-      const line = input.scss.slice(lineStart, lineEnd);
-      if (/^\s*@use\b/.test(line)) continue;
-      used = true;
-      break;
-    }
-    if (!used) {
+    if (!isNamespaceUsed(input.scss, ns)) {
       matches.push({
         id: 'unused-scss-use',
         severity: 'info',

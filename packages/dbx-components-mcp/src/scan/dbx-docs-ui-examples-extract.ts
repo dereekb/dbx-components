@@ -447,8 +447,8 @@ interface MatchedElement {
 }
 
 function matchSingleElement(text: string, tagName: string): MatchedElement | undefined {
-  const escaped = tagName.replace(/-/g, '\\-');
-  const regex = new RegExp(`<${escaped}(\\s[^>]*)?>([\\s\\S]*?)</${escaped}>`);
+  const escaped = tagName.replaceAll('-', String.raw`\-`);
+  const regex = new RegExp(String.raw`<${escaped}(\s[^>]*)?>([\s\S]*?)</${escaped}>`);
   const match = regex.exec(text);
   if (match === null) {
     return undefined;
@@ -465,7 +465,7 @@ function extractInnerText(text: string, tagName: string): string | undefined {
 }
 
 function extractAttr(openTag: string, attrName: string): string | undefined {
-  const regex = new RegExp(`\\s${attrName}=("([^"]*)"|'([^']*)')`);
+  const regex = new RegExp(String.raw`\s${attrName}=("([^"]*)"|'([^']*)')`);
   const match = regex.exec(openTag);
   if (match === null) {
     return undefined;

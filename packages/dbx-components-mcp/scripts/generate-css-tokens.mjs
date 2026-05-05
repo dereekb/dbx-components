@@ -167,7 +167,7 @@ function extractDbxWebTokens({ variablesPath, rootVariablesPath, configPath }) {
       role,
       intents,
       description,
-      defaults: lightValue !== undefined ? { light: lightValue } : {}
+      defaults: lightValue === undefined ? {} : { light: lightValue }
     };
     if (doc.antiUseNotes !== undefined) entry.antiUseNotes = doc.antiUseNotes;
     if (doc.utilityClasses !== undefined && doc.utilityClasses.length > 0) entry.utilityClasses = doc.utilityClasses;
@@ -381,7 +381,7 @@ function parseScssTokens(filePath) {
       role,
       intents,
       description,
-      defaults: doc.light !== undefined ? { light: doc.light, ...(doc.dark !== undefined ? { dark: doc.dark } : {}) } : {}
+      defaults: doc.light === undefined ? {} : { light: doc.light, ...(doc.dark === undefined ? {} : { dark: doc.dark }) }
     };
     if (doc.antiUseNotes !== undefined) entry.antiUseNotes = doc.antiUseNotes;
     if (doc.utilityClasses !== undefined && doc.utilityClasses.length > 0) entry.utilityClasses = doc.utilityClasses;

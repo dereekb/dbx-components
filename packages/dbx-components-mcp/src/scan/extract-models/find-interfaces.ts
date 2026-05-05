@@ -82,6 +82,7 @@ interface PropertyTags {
 function readPropertyTags(jsDocs: readonly JSDoc[]): PropertyTags {
   let dbxModelVariable: string | undefined;
   let dbxModelVariableSyncFlag: string | undefined;
+
   for (const jsDoc of jsDocs) {
     for (const tag of jsDoc.getTags()) {
       const tagName = tag.getTagName();
@@ -98,6 +99,7 @@ function readPropertyTags(jsDocs: readonly JSDoc[]): PropertyTags {
       }
     }
   }
+
   return { dbxModelVariable, dbxModelVariableSyncFlag };
 }
 

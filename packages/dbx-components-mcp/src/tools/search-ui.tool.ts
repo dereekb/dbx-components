@@ -265,20 +265,23 @@ function formatSearchResults(options: FormatSearchResultsOptions & FormatRelated
     for (const hit of hits) {
       lines.push(`## \`${hit.entry.slug}\` · ${hit.entry.category} · score ${hit.score}`, '', `- **class:** \`${hit.entry.className}\``, `- **kind:** \`${hit.entry.kind}\``, `- **selector:** \`${hit.entry.selector}\``, `- **matched:** \`${hit.matchedTokens.join(', ')}\``, '', hit.entry.description, '', `→ \`dbx_ui_lookup topic="${hit.entry.slug}"\` for full docs.`, '');
     }
-    const relatedExamples = collectRelatedExamples(hits, examplesRegistry);
-    if (relatedExamples.length > 0) {
-      lines.push('## Related examples', '');
-      for (const example of relatedExamples) {
-        const matchedSlugs = (example.relatedSlugs ?? []).filter((slug) => hits.some((h) => h.entry.slug === slug));
-        const matchedText = matchedSlugs.map((s) => '`' + s + '`').join(', ');
-        const relatedSuffix = matchedText.length > 0 ? ` _(related to ${matchedText})_` : '';
-        lines.push(`- \`${example.slug}\` (${example.appRef}) — ${example.summary}${relatedSuffix}`);
-      }
-      lines.push('', `→ Call \`dbx_ui_examples pattern="<slug>" depth="full"\` for the full source of any example.`);
-    }
+    appendRelatedExamples(lines, hits, examplesRegistry);
     result = lines.join('\n').trimEnd();
   }
   return result;
+}
+
+function appendRelatedExamples(lines: string[], hits: readonly UiSearchHit[], examplesRegistry: DbxDocsUiExamplesRegistry): void {
+  const relatedExamples = collectRelatedExamples(hits, examplesRegistry);
+  if (relatedExamples.length === 0) return;
+  lines.push('## Related examples', '');
+  for (const example of relatedExamples) {
+    const matchedSlugs = (example.relatedSlugs ?? []).filter((slug) => hits.some((h) => h.entry.slug === slug));
+    const matchedText = matchedSlugs.map((s) => '`' + s + '`').join(', ');
+    const relatedSuffix = matchedText.length > 0 ? ` _(related to ${matchedText})_` : '';
+    lines.push(`- \`${example.slug}\` (${example.appRef}) — ${example.summary}${relatedSuffix}`);
+  }
+  lines.push('', `→ Call \`dbx_ui_examples pattern="<slug>" depth="full"\` for the full source of any example.`);
 }
 
 function collectRelatedExamples(hits: readonly UiSearchHit[], examplesRegistry: DbxDocsUiExamplesRegistry): readonly DbxDocsUiExampleEntry[] {

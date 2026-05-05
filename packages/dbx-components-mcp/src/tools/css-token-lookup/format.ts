@@ -25,10 +25,10 @@ export function formatCssTokenLookup(registry: TokenRegistry, input: ResolveToke
   if ((input.category !== undefined && input.category !== 'list') || (input.intent === undefined && input.value === undefined && input.component === undefined && input.role === undefined)) {
     if (input.category !== undefined) {
       text = formatBrowse(registry, input.category, result.matches);
-    } else if (input.role !== undefined) {
-      text = formatBrowse(registry, undefined, result.matches);
-    } else {
+    } else if (input.role === undefined) {
       text = formatNoQuery();
+    } else {
+      text = formatBrowse(registry, undefined, result.matches);
     }
   } else if (result.matches.length === 0) {
     text = formatNoMatch(input);
@@ -47,42 +47,42 @@ function formatSingle(match: ScoredTokenMatch, input: ResolveTokenInput, otherMa
     lines.push(`**SCSS:** \`${entry.scssVariable}\``);
   }
   lines.push('', entry.description);
-
-  if (entry.defaults.light !== undefined || entry.defaults.dark !== undefined) {
-    lines.push('', '## Default value');
-    if (entry.defaults.light !== undefined) {
-      lines.push(`- light: \`${entry.defaults.light}\``);
-    }
-    if (entry.defaults.dark !== undefined) {
-      lines.push(`- dark: \`${entry.defaults.dark}\``);
-    }
-  }
-
+  appendDefaults(lines, entry);
   if (entry.antiUseNotes !== undefined && entry.antiUseNotes.length > 0) {
     lines.push('', "## Don't use this when", '', entry.antiUseNotes);
   }
-
   if (entry.utilityClasses !== undefined && entry.utilityClasses.length > 0) {
     const classes = entry.utilityClasses.map((c) => `\`${c}\``).join(', ');
     lines.push('', `## Utility classes`, '', classes);
   }
-
   if (entry.recommendedPrimitive !== undefined) {
     lines.push('', '## Recommended primitive', '', `Reach for \`${entry.recommendedPrimitive}\` when you'd otherwise hand-roll this token. See \`dbx_ui_lookup topic="${entry.recommendedPrimitive}"\`.`);
   }
-
   if (entry.seeAlso !== undefined && entry.seeAlso.length > 0) {
     const seeAlso = entry.seeAlso.map((s) => `\`${s}\``).join(', ');
     lines.push('', '## See also', '', seeAlso);
   }
-
-  if (otherMatches.length > 0) {
-    lines.push('', '## Other candidates', '');
-    for (const candidate of otherMatches) {
-      lines.push(`- \`${candidate.entry.cssVariable}\` · ${candidate.entry.role} · score ${candidate.score}`);
-    }
-  }
+  appendOtherCandidates(lines, otherMatches);
   return lines.join('\n');
+}
+
+function appendDefaults(lines: string[], entry: TokenEntry): void {
+  if (entry.defaults.light === undefined && entry.defaults.dark === undefined) return;
+  lines.push('', '## Default value');
+  if (entry.defaults.light !== undefined) {
+    lines.push(`- light: \`${entry.defaults.light}\``);
+  }
+  if (entry.defaults.dark !== undefined) {
+    lines.push(`- dark: \`${entry.defaults.dark}\``);
+  }
+}
+
+function appendOtherCandidates(lines: string[], otherMatches: readonly ScoredTokenMatch[]): void {
+  if (otherMatches.length === 0) return;
+  lines.push('', '## Other candidates', '');
+  for (const candidate of otherMatches) {
+    lines.push(`- \`${candidate.entry.cssVariable}\` · ${candidate.entry.role} · score ${candidate.score}`);
+  }
 }
 
 function formatHeaderLine(entry: TokenEntry): string {
@@ -111,7 +111,7 @@ function formatAmbiguous(input: ResolveTokenInput, matches: readonly ScoredToken
 
 function formatBrowse(registry: TokenRegistry, category: string | undefined, matches: readonly ScoredTokenMatch[]): string {
   const list = matches.length > 0 ? matches.map((m) => m.entry) : registry.all;
-  const title = category !== undefined ? `# Tokens · category \`${category}\`` : `# Tokens`;
+  const title = category === undefined ? `# Tokens` : `# Tokens · category \`${category}\``;
   const lines: string[] = [title, ''];
   if (list.length === 0) {
     lines.push('_No tokens matched._');

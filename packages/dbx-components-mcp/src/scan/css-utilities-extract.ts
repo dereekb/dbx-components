@@ -280,7 +280,7 @@ export function extractCssUtilityEntries(input: ExtractCssUtilityEntriesInput): 
           continue;
         }
         const selectorText = canonicalSelector.host;
-        const selectorContext = canonicalSelector.fullChain !== canonicalSelector.host ? canonicalSelector.fullChain : undefined;
+        const selectorContext = canonicalSelector.fullChain === canonicalSelector.host ? undefined : canonicalSelector.fullChain;
 
         const ruleBody = readRuleBody(lines, ruleStart.line);
         const declarations = parseDeclarations(ruleBody);
@@ -388,7 +388,7 @@ interface PickedSelector {
 function pickCanonicalSelector(raw: string): PickedSelector | null {
   const parts = raw
     .split(',')
-    .map((s) => s.replace(/\s+/g, ' ').trim())
+    .map((s) => s.replaceAll(/\s+/g, ' ').trim())
     .filter((s) => s.length > 0);
   let picked: PickedSelector | null = null;
   if (parts.length > 0) {

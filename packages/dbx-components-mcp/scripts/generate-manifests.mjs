@@ -89,13 +89,13 @@ for (const [clusterKey, dispatch] of Object.entries(CLUSTER_DISPATCH)) {
     // from `<projectRoot>/dbx-mcp.scan.json`. semantic-types is flat at
     // the JSON root; every other cluster nests under its section key.
     const sectionPayload = {
-      ...(entry.source !== undefined ? { source: entry.source } : {}),
-      ...(entry.topicNamespace !== undefined ? { topicNamespace: entry.topicNamespace } : {}),
-      ...(entry.module !== undefined ? { module: entry.module } : {}),
-      ...(entry.include !== undefined ? { include: entry.include } : {}),
-      ...(entry.exclude !== undefined ? { exclude: entry.exclude } : {}),
+      ...(entry.source === undefined ? {} : { source: entry.source }),
+      ...(entry.topicNamespace === undefined ? {} : { topicNamespace: entry.topicNamespace }),
+      ...(entry.module === undefined ? {} : { module: entry.module }),
+      ...(entry.include === undefined ? {} : { include: entry.include }),
+      ...(entry.exclude === undefined ? {} : { exclude: entry.exclude }),
       out: outRel,
-      ...(entry.declaredTopics !== undefined ? { declaredTopics: entry.declaredTopics } : {})
+      ...(entry.declaredTopics === undefined ? {} : { declaredTopics: entry.declaredTopics })
     };
     const inlineConfig = dispatch.sectionKey === null ? { version: 1, ...sectionPayload } : { version: 1, [dispatch.sectionKey]: sectionPayload };
     const inlineConfigJson = JSON.stringify(inlineConfig);
