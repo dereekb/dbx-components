@@ -4,8 +4,10 @@ import { type AsyncKeyedValueCache, type AsyncValueCache } from './cache';
  * Composes multiple {@link AsyncValueCache} instances into a single read-from-first-write-to-all cache.
  *
  * - {@link AsyncValueCache.load} returns the first non-null/undefined value from the input caches in order.
- * - {@link AsyncValueCache.update} writes the value to every input cache (sequentially, in order).
- * - {@link AsyncValueCache.clear} clears every input cache (sequentially, in order).
+ * - {@link AsyncValueCache.update} writes the value to every input cache, propagating from the
+ *   lowest-precedence (slowest, source-of-truth) tier up to the highest-precedence (fastest) tier
+ *   so a failed write to the backing store is not masked by a successful write to memory.
+ * - {@link AsyncValueCache.clear} clears every input cache in the same lower-to-higher order.
  *
  * Useful for memory-then-disk layering or for combining a fast tier with a slow source-of-truth tier.
  */
@@ -25,13 +27,13 @@ export function mergeAsyncValueCaches<T>(caches: ReadonlyArray<AsyncValueCache<T
       return result;
     },
     update: async (value) => {
-      for (const cache of caches) {
-        await cache.update(value);
+      for (let i = caches.length - 1; i >= 0; i -= 1) {
+        await caches[i].update(value);
       }
     },
     clear: async () => {
-      for (const cache of caches) {
-        await cache.clear();
+      for (let i = caches.length - 1; i >= 0; i -= 1) {
+        await caches[i].clear();
       }
     }
   };
@@ -48,7 +50,9 @@ export function mergeAsyncValueCaches<T>(caches: ReadonlyArray<AsyncValueCache<T
 export function mergeAsyncKeyedValueCaches<T>(caches: ReadonlyArray<AsyncKeyedValueCache<T>>): AsyncKeyedValueCache<T> {
   return {
     load: async () => {
-      const merged: Record<string, T> = {};
+      // Use a null-prototype object so a key like "__proto__" loaded from any cache cannot
+      // mutate the prototype chain via Object.assign.
+      const merged = Object.create(null) as Record<string, T>;
 
       for (let i = caches.length - 1; i >= 0; i -= 1) {
         const entries = await caches[i].load();
@@ -71,18 +75,18 @@ export function mergeAsyncKeyedValueCaches<T>(caches: ReadonlyArray<AsyncKeyedVa
       return result;
     },
     set: async (key, value) => {
-      for (const cache of caches) {
-        await cache.set(key, value);
+      for (let i = caches.length - 1; i >= 0; i -= 1) {
+        await caches[i].set(key, value);
       }
     },
     remove: async (key) => {
-      for (const cache of caches) {
-        await cache.remove(key);
+      for (let i = caches.length - 1; i >= 0; i -= 1) {
+        await caches[i].remove(key);
       }
     },
     clear: async () => {
-      for (const cache of caches) {
-        await cache.clear();
+      for (let i = caches.length - 1; i >= 0; i -= 1) {
+        await caches[i].clear();
       }
     }
   };

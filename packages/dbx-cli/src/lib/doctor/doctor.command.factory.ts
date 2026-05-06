@@ -1,7 +1,7 @@
 import type { Argv, CommandModule } from 'yargs';
 import { type Maybe } from '@dereekb/util';
 import { type CliConfig, loadCliConfig } from '../config/cli.config';
-import { type CliEnvConfig, applyEnvVarOverrides } from '../config/env';
+import { type CliEnvConfig, type CliEnvDefault, applyEnvVarOverrides, findCliEnvDefault, mergeCliEnvWithDefault } from '../config/env';
 import { buildCliPaths } from '../config/paths';
 import { createCliTokenCacheStore, isTokenExpired } from '../config/token.cache';
 import { discoverOidcMetadata, refreshAccessToken } from '../auth/oidc.client';
@@ -109,6 +109,11 @@ export interface CreateDoctorCommandInput {
    * Additional checks to append after the default check list.
    */
   readonly checks?: DoctorCheck[];
+  /**
+   * Built-in env presets. Resolved by env name and merged underneath the user's stored config so
+   * doctor can run against an env that only stores overrides on top of a registered default.
+   */
+  readonly defaultEnvs?: readonly CliEnvDefault[];
 }
 
 /**
@@ -120,6 +125,7 @@ export interface CreateDoctorCommandInput {
 export function createDoctorCommand(input: CreateDoctorCommandInput): CommandModule {
   const cliName = input.cliName;
   const checks: DoctorCheck[] = [...defaultDoctorChecks(), ...(input.checks ?? [])];
+  const defaultEnvs = input.defaultEnvs;
 
   return {
     command: 'doctor',
@@ -130,7 +136,10 @@ export function createDoctorCommand(input: CreateDoctorCommandInput): CommandMod
         const paths = buildCliPaths({ cliName });
         const config = await loadCliConfig({ configFilePath: paths.configFilePath });
         const envName = (argv.env as string | undefined) ?? process.env[`${cliName.replaceAll('-', '_').toUpperCase()}_ENV`] ?? config?.activeEnv;
-        const env = applyEnvVarOverrides({ cliName, env: envName ? config?.envs?.[envName] : undefined });
+        const stored = envName ? config?.envs?.[envName] : undefined;
+        const defaultEnv = envName ? findCliEnvDefault({ name: envName, defaults: defaultEnvs })?.env : undefined;
+        const merged = mergeCliEnvWithDefault({ env: stored, defaultEnv });
+        const env = applyEnvVarOverrides({ cliName, env: merged });
 
         const checkInput: DoctorCheckInput = { cliName, envName, env, config };
         const results: DoctorCheckResult[] = [];

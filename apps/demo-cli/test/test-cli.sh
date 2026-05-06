@@ -21,7 +21,20 @@ CLI="node $ROOT_DIR/dist/apps/demo-cli/index.js"
 TEST_HOME=$(mktemp -d)
 TEST_CONFIG_DIR="$TEST_HOME/.demo-cli"
 mkdir -p "$TEST_CONFIG_DIR"
+OLD_HOME="$HOME"
 export HOME="$TEST_HOME"
+
+# Restore HOME and clean up the temp dir on exit so this script does not leak temp folders
+# (e.g., when CI re-runs it). Guarded against an empty TEST_HOME so we never `rm -rf` "/".
+cleanup() {
+  if [[ -n "$TEST_HOME" && -d "$TEST_HOME" ]]; then
+    rm -rf "$TEST_HOME"
+  fi
+  if [[ -n "$OLD_HOME" ]]; then
+    export HOME="$OLD_HOME"
+  fi
+}
+trap cleanup EXIT
 
 PASS=0
 FAIL=0

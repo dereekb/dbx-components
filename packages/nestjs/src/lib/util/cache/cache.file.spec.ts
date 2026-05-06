@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { mkdtempSync, rmSync, statSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createJsonFileAsyncKeyedValueCache, createJsonFileAsyncValueCache, createMemoizedJsonFileAsyncKeyedValueCache, createMemoizedJsonFileAsyncValueCache } from './cache.file';
@@ -62,6 +62,7 @@ describe('createJsonFileAsyncValueCache', () => {
     }
     const cache = createJsonFileAsyncValueCache<Token>({
       filePath,
+      replacer: (token) => ({ value: token.value, expiresAt: token.expiresAt.toISOString() }),
       reviver: (raw) => {
         const v = raw as { value: string; expiresAt: string };
         return { value: v.value, expiresAt: new Date(v.expiresAt) };
@@ -70,6 +71,11 @@ describe('createJsonFileAsyncValueCache', () => {
 
     const expiresAt = new Date('2030-01-01T00:00:00.000Z');
     await cache.update({ value: 'token', expiresAt });
+
+    // Replacer should have serialized expiresAt as an ISO string on disk.
+    const onDisk = JSON.parse(readFileSync(filePath, 'utf-8')) as { value: string; expiresAt: string };
+    expect(typeof onDisk.expiresAt).toBe('string');
+    expect(onDisk.expiresAt).toBe(expiresAt.toISOString());
 
     const loaded = await cache.load();
     expect(loaded?.expiresAt).toBeInstanceOf(Date);

@@ -1,9 +1,18 @@
 import { createInterface } from 'node:readline';
+import { CliError } from './output';
 
 export interface PromptInput {
   readonly question: string;
   readonly mask?: boolean;
 }
+
+/**
+ * Error code thrown by {@link promptLine} when the user cancels a masked prompt with Ctrl-C.
+ *
+ * Callers that want to catch and handle cancellation should match on this code; otherwise the
+ * standard wrapCommandHandler / outputError envelope reports `code: 'PROMPT_CANCELLED'`.
+ */
+export const PROMPT_CANCELLED_ERROR_CODE = 'PROMPT_CANCELLED';
 
 const KEY_ETX = ''; // Ctrl-C
 const KEY_EOT = ''; // Ctrl-D
@@ -15,6 +24,9 @@ const KEY_DEL = ''; // DEL
  *
  * Used by `auth setup` to prompt for client secrets and by `auth login` to prompt for the
  * pasted redirect URL.
+ *
+ * Rejects with a {@link CliError} (`code: 'PROMPT_CANCELLED'`) when the user presses Ctrl-C
+ * during a masked prompt, instead of forcibly terminating the process.
  */
 export function promptLine(input: PromptInput): Promise<string> {
   if (!input.mask) {
@@ -28,7 +40,7 @@ export function promptLine(input: PromptInput): Promise<string> {
     });
   }
 
-  return new Promise<string>((resolve) => {
+  return new Promise<string>((resolve, reject) => {
     const stdout = process.stdout;
     stdout.write(input.question);
 
@@ -47,9 +59,12 @@ export function promptLine(input: PromptInput): Promise<string> {
         }
 
         if (char === KEY_ETX) {
+          stdout.write('\n');
+          process.stdin.removeListener('data', onData);
           process.stdin.setRawMode?.(false);
           process.stdin.pause();
-          process.exit(130);
+          reject(new CliError({ message: 'Prompt cancelled.', code: PROMPT_CANCELLED_ERROR_CODE }));
+          return;
         }
 
         if (char === KEY_BS || char === KEY_DEL) {

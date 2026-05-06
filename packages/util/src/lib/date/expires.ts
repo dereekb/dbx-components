@@ -138,8 +138,12 @@ export function expirationDetails<T extends Expires = Expires>(input: Expiration
   function getExpirationDateForNow(now: Date): Maybe<Date> {
     let expirationDate: Maybe<Date> = null;
 
-    if (expires?.expiresAt != null) {
-      expirationDate = expires.expiresAt;
+    // `expires` (when supplied) wins exclusively over the top-level fields per the documented
+    // contract. If the supplied object has no `expiresAt`, the result is "no expiration" — we do
+    // NOT fall through to top-level expiresAt/expiresIn, otherwise an Expires-typed value with a
+    // null expiresAt would silently inherit unrelated top-level overrides.
+    if (expires != null) {
+      expirationDate = expires.expiresAt ?? null;
     } else if (expiresAt != null) {
       expirationDate = expiresAt;
     } else if (expiresIn != null) {

@@ -193,9 +193,20 @@ export function createEnvCommand(input: CreateEnvCommandInput): CommandModule {
         const next: CliConfig = { ...config, envs: nextEnvs, activeEnv: nextActive };
 
         await saveCliConfig({ configFilePath: paths.configFilePath, configDir: paths.configDir, config: next });
-        await tokens.remove(argv.name);
 
-        outputResult({ removed: argv.name, activeEnv: nextActive });
+        // Token deletion is best-effort: the env was already removed from the config so a
+        // failure here would otherwise leave the command non-retryable (next run sees no env).
+        // Surface the failure in the JSON envelope rather than logging to stderr, so it stays
+        // in-band with the structured output the rest of the CLI emits.
+        let tokenRemovalWarning: string | undefined;
+
+        try {
+          await tokens.remove(argv.name);
+        } catch (e) {
+          tokenRemovalWarning = `Failed to delete cached tokens for "${argv.name}": ${e instanceof Error ? e.message : String(e)}`;
+        }
+
+        outputResult({ removed: argv.name, activeEnv: nextActive, ...(tokenRemovalWarning ? { tokenRemovalWarning } : {}) });
       } catch (e) {
         outputError(e);
         process.exit(1);

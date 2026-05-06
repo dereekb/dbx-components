@@ -342,4 +342,19 @@ describe('isExpired()', () => {
     const inputNow = addMilliseconds(expiresAt, 1);
     expect(isExpired({ expiresAt, now: inputNow })).toBe(true);
   });
+
+  it('should prefer expires over a top-level expiresAt when both are present', () => {
+    const past = new Date(Date.now() - 60_000);
+    const future = new Date(Date.now() + 60_000);
+    // expires says expired, top-level expiresAt says not expired — expires must win.
+    expect(isExpired({ expires: { expiresAt: past }, expiresAt: future })).toBe(true);
+    // And the other way: expires says not expired, top-level says expired — expires must win.
+    expect(isExpired({ expires: { expiresAt: future }, expiresAt: past })).toBe(false);
+  });
+
+  it('should treat a present expires with no expiresAt as expired regardless of top-level fallback', () => {
+    const future = new Date(Date.now() + 60_000);
+    // With expires supplied (but expiresAt null), the top-level future date must NOT rescue it.
+    expect(isExpired({ expires: { expiresAt: null }, expiresAt: future })).toBe(true);
+  });
 });

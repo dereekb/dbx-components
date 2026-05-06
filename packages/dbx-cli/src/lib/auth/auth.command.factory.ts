@@ -353,11 +353,18 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
           });
         }
 
+        if (!isCliEnvConfigComplete(env)) {
+          throw new CliError({
+            message: `Env "${envName}" is missing OIDC fields. Run \`${cliName} auth setup --env ${envName}\` first.`,
+            code: 'AUTH_ENV_INCOMPLETE'
+          });
+        }
+
         const meta = await discoverOidcMetadata({ issuer: env.oidcIssuer, fallbackBaseUrl: env.apiBaseUrl });
         const refreshed = await refreshAccessToken({
           tokenEndpoint: meta.token_endpoint,
-          clientId: env.clientId!,
-          clientSecret: env.clientSecret!,
+          clientId: env.clientId,
+          clientSecret: env.clientSecret,
           refreshToken: entry.refreshToken
         });
 

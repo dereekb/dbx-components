@@ -14,9 +14,22 @@ export function createFileTokenCache(filePath: string): ZohoAccessTokenCache {
       if (raw == null || typeof raw !== 'object') {
         return undefined;
       }
-      const value = raw as ZohoAccessToken & { expiresAt?: unknown };
-      const expiresAt = value.expiresAt != null && !(value.expiresAt instanceof Date) ? new Date(value.expiresAt as string | number) : (value.expiresAt as Date | undefined);
-      return { ...(value as ZohoAccessToken), expiresAt: expiresAt as Date };
+      const value = raw as Partial<ZohoAccessToken> & { expiresAt?: unknown };
+
+      // Validate the required ZohoAccessToken shape so a corrupt or partial file is treated
+      // as a cache miss rather than re-emitted as a malformed token.
+      if (typeof value.accessToken !== 'string' || typeof value.scope !== 'string' || typeof value.apiDomain !== 'string' || typeof value.expiresIn !== 'number') {
+        return undefined;
+      }
+
+      const rawExpiresAt = value.expiresAt;
+      const expiresAt = rawExpiresAt instanceof Date ? rawExpiresAt : rawExpiresAt != null ? new Date(rawExpiresAt as string | number) : undefined;
+
+      if (expiresAt == null || Number.isNaN(expiresAt.getTime())) {
+        return undefined;
+      }
+
+      return { ...(value as ZohoAccessToken), expiresAt };
     }
   });
 

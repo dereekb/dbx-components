@@ -31,13 +31,12 @@ export class OidcProviderController {
    * Convenience redirect from the API issuer path back to the frontend app's
    * OAuth login page. Lets a user who lands on the API host get bounced to the
    * client-side login UI. Any incoming query string is forwarded so flow params
-   * (e.g., `uid`, `state`) survive the redirect.
+   * (e.g., `uid`, `state`) survive the redirect, merged with any params already
+   * baked into `appLoginUrl`.
    */
   @Get('login/client')
   redirectToClientLogin(@Req() req: Request, @Res() res: Response): void {
-    const queryIndex = req.originalUrl.indexOf('?');
-    const search = queryIndex >= 0 ? req.originalUrl.slice(queryIndex) : '';
-    res.redirect(`${this.oidcProviderConfigService.appLoginUrl}${search}`);
+    res.redirect(mergeQueryParamsFromOriginalUrl({ baseUrl: this.oidcProviderConfigService.appLoginUrl, originalUrl: req.originalUrl }));
   }
 
   @All('{*path}')
@@ -48,4 +47,32 @@ export class OidcProviderController {
     req.url = req.originalUrl.replace('/oidc', '');
     return callback(req, res);
   }
+}
+
+interface MergeQueryParamsFromOriginalUrlInput {
+  readonly baseUrl: string;
+  readonly originalUrl: string;
+}
+
+/**
+ * Merges any query string present on `originalUrl` into `baseUrl`, preserving any params already
+ * baked into `baseUrl`. Bare-string concatenation would produce malformed URLs (`?foo=1?bar=2`)
+ * when `baseUrl` already contains a `?`.
+ */
+function mergeQueryParamsFromOriginalUrl(input: MergeQueryParamsFromOriginalUrlInput): string {
+  const queryIndex = input.originalUrl.indexOf('?');
+
+  if (queryIndex < 0) {
+    return input.baseUrl;
+  }
+
+  const incomingSearch = input.originalUrl.slice(queryIndex + 1);
+
+  if (incomingSearch.length === 0) {
+    return input.baseUrl;
+  }
+
+  const baseQueryIndex = input.baseUrl.indexOf('?');
+  const separator = baseQueryIndex < 0 ? '?' : '&';
+  return `${input.baseUrl}${separator}${incomingSearch}`;
 }

@@ -49,5 +49,16 @@ describe('OidcProviderController', () => {
 
       expect(res.redirect).toHaveBeenCalledWith(`${appLoginUrl}?uid=abc123&state=xyz`);
     });
+
+    it('should merge with an existing query string on appLoginUrl using & instead of a second ?', () => {
+      const appLoginUrlWithQuery = 'https://app.example.com/oauth/interaction/login?source=api';
+      const controllerWithQueryUrl = new OidcProviderController(createMockOidcService(), createMockConfigService(appLoginUrlWithQuery));
+      const req = createMockRequest('/oidc/login/client?uid=abc123&state=xyz');
+      const res = createMockResponse();
+
+      controllerWithQueryUrl.redirectToClientLogin(req, res);
+
+      expect(res.redirect).toHaveBeenCalledWith(`${appLoginUrlWithQuery}&uid=abc123&state=xyz`);
+    });
   });
 });

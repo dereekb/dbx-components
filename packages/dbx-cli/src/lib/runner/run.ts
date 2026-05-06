@@ -56,7 +56,7 @@ export interface CreateCliInput {
 export function createCli(input: CreateCliInput): Argv {
   const cliName = input.cliName;
   const defaultEnvs = input.defaultEnvs;
-  const builtInConfigCommands: CommandModule[] = [createAuthCommand({ cliName, defaultEnvs }), createEnvCommand({ cliName, defaultEnvs }), createDoctorCommand({ cliName, checks: input.doctorChecks }), createOutputCommand({ cliName })];
+  const builtInConfigCommands: CommandModule[] = [createAuthCommand({ cliName, defaultEnvs }), createEnvCommand({ cliName, defaultEnvs }), createDoctorCommand({ cliName, checks: input.doctorChecks, defaultEnvs }), createOutputCommand({ cliName })];
   const allConfigCommands = [...builtInConfigCommands, ...(input.configCommands ?? [])];
   const builtInApiCommands: CommandModule[] = input.disableCallPassthrough ? [] : [callPassthroughCommand];
   const allApiCommands = [...builtInApiCommands, ...(input.apiCommands ?? [])];

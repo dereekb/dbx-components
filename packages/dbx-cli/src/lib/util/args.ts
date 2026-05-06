@@ -18,7 +18,19 @@ export interface OutputOptions {
 }
 
 export function withOutput<T>(yargs: Argv<T>): Argv<T & OutputOptions> {
-  return yargs.option('dump-dir', { type: 'string', describe: 'Directory to save full responses as JSON files (overrides config)' }).option('pick', { type: 'string', describe: 'Comma-separated top-level fields to include in output (overrides config)' }).option('pick-all', { type: 'boolean', describe: 'Ignore any configured pick filters and return full response data' }) as unknown as Argv<T & OutputOptions>;
+  return yargs
+    .option('dump-dir', {
+      type: 'string',
+      describe: 'Directory to save full responses as JSON files (overrides config)'
+    })
+    .option('pick', {
+      type: 'string',
+      describe: 'Comma-separated top-level fields to include in output (overrides config)'
+    })
+    .option('pick-all', {
+      type: 'boolean',
+      describe: 'Ignore any configured pick filters and return full response data'
+    }) as unknown as Argv<T & OutputOptions>;
 }
 
 /**
