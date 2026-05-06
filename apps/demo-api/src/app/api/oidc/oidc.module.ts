@@ -12,7 +12,13 @@ export const DEMO_OIDC_PROVIDER_CONFIG: OidcProviderConfig<DemoOidcScope> = {
     openid: ['sub'],
     profile: ['name', 'picture'],
     email: ['email', 'email_verified'],
-    demo: ['sub', 'o', 'a', 'fr']
+    demo: ['sub', 'o', 'a', 'fr'],
+    // model.* scopes confer authorization for callModel CRUD operations and add no extra ID-token claims.
+    'model.create': [],
+    'model.read': [],
+    'model.update': [],
+    'model.delete': [],
+    'model.query': []
   },
   responseTypes: ['code'],
   grantTypes: ['authorization_code', 'refresh_token']
