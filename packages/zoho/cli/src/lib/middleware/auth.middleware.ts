@@ -1,3 +1,4 @@
+import { createContextSlot } from '@dereekb/dbx-cli';
 import type { MiddlewareFunction } from 'yargs';
 import { loadCliConfig, configuredProducts } from '../config/cli.config';
 import { createCliContext, type ZohoCliContext } from '../context/cli.context';
@@ -10,7 +11,9 @@ import type { ZohoRecruitApi, ZohoCrmApi, ZohoDeskApi } from '@dereekb/zoho/nest
  * Stored here instead of on argv to avoid triggering yargs strict-mode
  * "Unknown argument" errors.
  */
-let _currentCliContext: ZohoCliContext | undefined;
+const _cliContextSlot = createContextSlot<ZohoCliContext>({
+  notInitializedMessage: 'CLI context not initialized. This is a bug.'
+});
 
 export function createAuthMiddleware(skipCommands: ReadonlySet<string>): MiddlewareFunction {
   return async (argv: any) => {
@@ -35,7 +38,7 @@ export function createAuthMiddleware(skipCommands: ReadonlySet<string>): Middlew
         process.exit(4);
       }
 
-      _currentCliContext = createCliContext(config);
+      _cliContextSlot.set(createCliContext(config));
     } catch (e) {
       outputError(e);
       process.exit(4);
@@ -44,11 +47,7 @@ export function createAuthMiddleware(skipCommands: ReadonlySet<string>): Middlew
 }
 
 export function getCliContext(_argv?: any): ZohoCliContext {
-  if (!_currentCliContext) {
-    throw new Error('CLI context not initialized. This is a bug.');
-  }
-
-  return _currentCliContext;
+  return _cliContextSlot.require();
 }
 
 export function getRecruitApi(argv: any): ZohoRecruitApi {

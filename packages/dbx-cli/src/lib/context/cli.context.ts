@@ -1,7 +1,7 @@
 import type { OnCallTypedModelParams } from '@dereekb/firebase';
-import { type Maybe } from '@dereekb/util';
 import { type CliEnvConfig } from '../config/env';
 import { callModelOverHttp } from '../api/call-model.client';
+import { createContextSlot } from '../util/context.slot';
 
 /**
  * The CLI context attached to argv by the auth middleware.
@@ -22,26 +22,18 @@ export interface CliContext {
  *
  * Stored here instead of on argv so that yargs strict-mode does not flag it as an unknown argument.
  */
-let _currentCliContext: Maybe<CliContext>;
+const _cliContextSlot = createContextSlot<CliContext>({
+  notInitializedMessage: 'CLI context not initialized — auth middleware must run before this command.'
+});
 
-export function setCliContext(context: Maybe<CliContext>): void {
-  _currentCliContext = context;
-}
+export const setCliContext = _cliContextSlot.set;
 
-export function getCliContext(): Maybe<CliContext> {
-  return _currentCliContext;
-}
+export const getCliContext = _cliContextSlot.get;
 
 /**
  * Returns the current {@link CliContext} or throws — for use in command handlers that require auth.
  */
-export function requireCliContext(): CliContext {
-  if (!_currentCliContext) {
-    throw new Error('CLI context not initialized — auth middleware must run before this command.');
-  }
-
-  return _currentCliContext;
-}
+export const requireCliContext = _cliContextSlot.require;
 
 export interface CreateCliContextInput {
   readonly cliName: string;

@@ -1,5 +1,5 @@
 import type { Argv, CommandModule } from 'yargs';
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, noop } from '@dereekb/util';
 import { type CliConfig, loadCliConfig, maskSecret, mergeCliConfig } from '../config/cli.config';
 import { type CliEnvConfig, type CliEnvDefault, applyEnvVarOverrides, findCliEnvDefault, isCliEnvConfigComplete, mergeCliEnvWithDefault } from '../config/env';
 import { type CliPaths, buildCliPaths } from '../config/paths';
@@ -8,7 +8,6 @@ import { discoverOidcMetadata, exchangeAuthorizationCode, fetchUserInfo, refresh
 import { buildAuthorizationUrl, generateOAuthState, generatePkceMaterial, parsePastedRedirect } from './oidc.flow';
 import { CliError, outputError, outputResult } from '../util/output';
 import { promptLine } from '../util/interactive';
-import { noop } from '../util/noop';
 import { withEnv } from '../util/args';
 
 export interface CreateAuthCommandInput {

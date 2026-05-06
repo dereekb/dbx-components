@@ -1,5 +1,6 @@
 import { type Maybe } from '@dereekb/util';
-import { readFile, writeFile, rm, mkdirSync } from 'node:fs';
+import { type CliCommandOutputConfig, type CliOutputConfig, mergeOutputConfig as dbxMergeOutputConfig, readJsonFile, removeFile, resolveOutputConfig as dbxResolveOutputConfig, maskSecret as dbxMaskSecret } from '@dereekb/dbx-cli';
+import { writeFile, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 
@@ -25,22 +26,15 @@ export interface ZohoCliProductConfig extends Partial<ZohoCliCredentials> {
 }
 
 /**
- * Output settings that can be applied per-command.
+ * Per-command output settings (alias of dbx-cli's {@link CliCommandOutputConfig}).
  */
-export interface ZohoCliCommandOutputConfig {
-  readonly dumpDir?: string;
-  readonly pick?: string;
-}
+export type ZohoCliCommandOutputConfig = CliCommandOutputConfig;
 
 /**
- * Output configuration with global defaults and optional per-command overrides.
- *
- * Command keys use dot-separated paths matching the yargs command hierarchy
- * (e.g. `desk.tickets.list`, `recruit.list`, `crm.get`).
+ * Output configuration with global defaults and optional per-command overrides
+ * (alias of dbx-cli's {@link CliOutputConfig}).
  */
-export interface ZohoCliOutputConfig extends ZohoCliCommandOutputConfig {
-  readonly commands?: Record<string, ZohoCliCommandOutputConfig>;
-}
+export type ZohoCliOutputConfig = CliOutputConfig;
 
 /**
  * Full CLI config file structure.
@@ -102,7 +96,7 @@ function envVar(key: string, servicePrefix?: string): Maybe<string> {
  */
 export async function loadCliConfig(): Promise<Maybe<ZohoCliConfig>> {
   const filePath = getConfigFilePath();
-  const fileConfig = await readConfigFile<ZohoCliConfig>(filePath);
+  const fileConfig = await readJsonFile<ZohoCliConfig>(filePath);
 
   // Check shared env vars
   const envClientId = envVar('ACCOUNTS_CLIENT_ID');
@@ -210,51 +204,25 @@ export async function mergeCliConfig(updates: Partial<ZohoCliConfig>): Promise<Z
     recruit: updates.recruit !== undefined ? { ...existing?.recruit, ...updates.recruit } : existing?.recruit,
     crm: updates.crm !== undefined ? { ...existing?.crm, ...updates.crm } : existing?.crm,
     desk: updates.desk !== undefined ? { ...existing?.desk, ...updates.desk } : existing?.desk,
-    output: updates.output !== undefined ? mergeOutputConfig(existing?.output, updates.output) : existing?.output
+    output: updates.output !== undefined ? dbxMergeOutputConfig(existing?.output, updates.output) : existing?.output
   };
 
   await saveCliConfig(merged);
   return merged;
 }
 
-function mergeOutputConfig(existing: Maybe<ZohoCliOutputConfig>, updates: ZohoCliOutputConfig): ZohoCliOutputConfig {
-  return {
-    dumpDir: 'dumpDir' in updates ? updates.dumpDir : existing?.dumpDir,
-    pick: 'pick' in updates ? updates.pick : existing?.pick,
-    commands: mergeOutputCommandsConfig(existing?.commands, updates)
-  };
-}
-
-function mergeOutputCommandsConfig(existing: ZohoCliOutputConfig['commands'], updates: ZohoCliOutputConfig): ZohoCliOutputConfig['commands'] {
-  if (!('commands' in updates)) {
-    return existing;
-  }
-
-  return updates.commands ? { ...existing, ...updates.commands } : undefined;
-}
-
 /**
  * Resolves output settings for a given command path.
  *
- * Resolution order (highest priority first):
- * 1. CLI flags (dumpDir, pick from argv)
- * 2. Per-command config (output.commands["desk.tickets.list"])
- * 3. Global output config (output.dumpDir, output.pick)
+ * Re-export of dbx-cli's {@link dbxResolveOutputConfig} so existing zoho-cli consumers keep the
+ * same module surface. New code can import from `@dereekb/dbx-cli` directly.
  */
-export function resolveOutputConfig(outputConfig: Maybe<ZohoCliOutputConfig>, commandPath: string[], cliFlags: { dumpDir?: string; pick?: string }): { dumpDir?: string; pick?: string } {
-  const commandKey = commandPath.join('.');
-  const commandConfig = commandKey ? outputConfig?.commands?.[commandKey] : undefined;
-
-  return {
-    dumpDir: cliFlags.dumpDir ?? commandConfig?.dumpDir ?? outputConfig?.dumpDir,
-    pick: cliFlags.pick ?? commandConfig?.pick ?? outputConfig?.pick
-  };
-}
+export const resolveOutputConfig = dbxResolveOutputConfig;
 
 /**
  * Clears all output config (dumpDir, pick, per-command overrides).
  *
- * Uses explicit `undefined` values so `mergeOutputConfig` detects the keys
+ * Uses explicit `undefined` values so {@link dbxMergeOutputConfig} detects the keys
  * via `'key' in updates` and overwrites rather than falling back to existing values.
  * `JSON.stringify` then strips the undefined properties from the saved config file.
  */
@@ -288,32 +256,8 @@ export function configuredProducts(config: ZohoCliConfig): ZohoCliProduct[] {
   });
 }
 
-function readConfigFile<T>(filePath: string): Promise<Maybe<T>> {
-  return new Promise<Maybe<T>>((resolve) => {
-    readFile(filePath, { encoding: 'utf-8' }, (err, data) => {
-      if (err) {
-        resolve(undefined);
-        return;
-      }
-      try {
-        resolve(JSON.parse(data));
-      } catch {
-        resolve(undefined);
-      }
-    });
-  });
-}
-
-function removeFile(filePath: string): Promise<void> {
-  return new Promise<void>((resolve) => {
-    rm(filePath, () => resolve());
-  });
-}
-
-export function maskSecret(value: string): string {
-  if (value.length <= 4) {
-    return '***';
-  }
-
-  return value.substring(0, 4) + '***';
-}
+/**
+ * Re-export of dbx-cli's secret-masking helper. Auth/show commands import via this module so the
+ * masking pattern stays consistent across CLIs.
+ */
+export const maskSecret = dbxMaskSecret;

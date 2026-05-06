@@ -1,6 +1,6 @@
 import type { CommandModule, Argv } from 'yargs';
 import { getRecruitApi } from '../middleware/auth.middleware';
-import { noop } from '../util/noop';
+import { noop } from '@dereekb/util';
 import { outputResult, outputError } from '../util/output';
 import { withPagination, withModule, withRecordId, withFields, withSort } from '../util/args';
 import { runPaginatedList, zohoPagePaginationAdapter } from '../util/pagination';

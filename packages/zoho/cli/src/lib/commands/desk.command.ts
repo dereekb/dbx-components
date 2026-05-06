@@ -1,5 +1,5 @@
 import type { CommandModule, Argv } from 'yargs';
-import { noop } from '../util/noop';
+import { noop } from '@dereekb/util';
 import { deskTicketsCommand } from './desk/desk.tickets.command';
 import { deskDepartmentsCommand } from './desk/desk.departments.command';
 import { deskContactsCommand } from './desk/desk.contacts.command';

@@ -1,4 +1,4 @@
-import { createOutputMiddleware } from '@dereekb/dbx-cli';
+import { createOutputCommand, createOutputMiddleware } from '@dereekb/dbx-cli';
 import yargs, { type CommandModule } from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { authCommand } from './lib/commands/auth.command';
@@ -7,12 +7,18 @@ import { recruitCommand } from './lib/commands/recruit.command';
 import { crmCommand } from './lib/commands/crm.command';
 import { deskCommand } from './lib/commands/desk.command';
 import { requestCommand } from './lib/commands/request.command';
-import { outputCommand } from './lib/commands/output.command';
 import { createAuthMiddleware } from './lib/middleware/auth.middleware';
-import { loadCliConfig, mergeCliConfig } from './lib/config/cli.config';
+import { clearOutputConfig, loadCliConfig, mergeCliConfig } from './lib/config/cli.config';
 // Importing this module registers the Zoho secret-redaction pattern + Zoho-aware error mapper
 // with @dereekb/dbx-cli. The named import keeps the side effects scoped to this entry point.
 import { outputError } from './lib/util/output';
+
+const outputCommand = createOutputCommand({
+  cliName: 'zoho-cli',
+  loadOutputConfig: async () => (await loadCliConfig())?.output,
+  mergeOutputConfig: (update) => mergeCliConfig({ output: update }),
+  clearOutputConfig
+});
 
 // MARK: Command Groups
 /**

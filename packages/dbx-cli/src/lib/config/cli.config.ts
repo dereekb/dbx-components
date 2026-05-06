@@ -115,7 +115,14 @@ export async function mergeCliConfig(input: MergeCliConfigInput): Promise<CliCon
   return merged;
 }
 
-function mergeOutputConfig(existing: Maybe<CliOutputConfig>, updates: CliOutputConfig): CliOutputConfig {
+/**
+ * Merges a partial {@link CliOutputConfig} update on top of an existing config slice.
+ *
+ * Exported so downstream CLIs that nest the output config under a different config tree (e.g.
+ * zoho-cli's `shared/recruit/crm/desk/output` shape) can reuse the same merge semantics for the
+ * output sub-tree without forking the implementation.
+ */
+export function mergeOutputConfig(existing: Maybe<CliOutputConfig>, updates: CliOutputConfig): CliOutputConfig {
   return {
     dumpDir: 'dumpDir' in updates ? updates.dumpDir : existing?.dumpDir,
     pick: 'pick' in updates ? updates.pick : existing?.pick,

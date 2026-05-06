@@ -1,11 +1,10 @@
 import type { Argv, CommandModule } from 'yargs';
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, noop } from '@dereekb/util';
 import { type CliConfig, loadCliConfig, mergeCliConfig, maskSecret, saveCliConfig } from '../config/cli.config';
 import { type CliEnvConfig, type CliEnvDefault, findCliEnvDefault, mergeCliEnvWithDefault } from '../config/env';
 import { buildCliPaths } from '../config/paths';
 import { createCliTokenCacheStore } from '../config/token.cache';
 import { CliError, outputError, outputResult } from '../util/output';
-import { noop } from '../util/noop';
 
 export interface CreateEnvCommandInput {
   readonly cliName: string;

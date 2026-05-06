@@ -7,6 +7,7 @@ import { createDoctorCommand, type DoctorCheck } from '../doctor/doctor.command.
 import { createEnvCommand } from '../env/env.command.factory';
 import { createAuthMiddleware } from '../middleware/auth.middleware';
 import { createOutputMiddleware } from '../middleware/output.middleware';
+import { createOutputCommand } from '../output/output.command.factory';
 import { outputError } from '../util/output';
 
 export interface CreateCliInput {
@@ -55,7 +56,7 @@ export interface CreateCliInput {
 export function createCli(input: CreateCliInput): Argv {
   const cliName = input.cliName;
   const defaultEnvs = input.defaultEnvs;
-  const builtInConfigCommands: CommandModule[] = [createAuthCommand({ cliName, defaultEnvs }), createEnvCommand({ cliName, defaultEnvs }), createDoctorCommand({ cliName, checks: input.doctorChecks })];
+  const builtInConfigCommands: CommandModule[] = [createAuthCommand({ cliName, defaultEnvs }), createEnvCommand({ cliName, defaultEnvs }), createDoctorCommand({ cliName, checks: input.doctorChecks }), createOutputCommand({ cliName })];
   const allConfigCommands = [...builtInConfigCommands, ...(input.configCommands ?? [])];
   const builtInApiCommands: CommandModule[] = input.disableCallPassthrough ? [] : [callPassthroughCommand];
   const allApiCommands = [...builtInApiCommands, ...(input.apiCommands ?? [])];

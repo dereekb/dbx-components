@@ -1,6 +1,6 @@
 import type { CommandModule, Argv } from 'yargs';
 import { loadCliConfig, mergeCliConfig, clearCliConfig, maskSecret, configuredProducts, ZOHO_CLI_PRODUCTS, type ZohoCliConfig, type ZohoCliProduct, type ZohoCliCredentials, type ZohoCliProductConfig } from '../config/cli.config';
-import { noop } from '../util/noop';
+import { noop } from '@dereekb/util';
 import { createCliContext } from '../context/cli.context';
 import { outputResult, outputError } from '../util/output';
 

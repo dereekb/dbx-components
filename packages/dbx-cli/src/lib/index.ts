@@ -5,5 +5,6 @@ export * from './context';
 export * from './doctor';
 export * from './env';
 export * from './middleware';
+export * from './output';
 export * from './runner';
 export * from './util';
