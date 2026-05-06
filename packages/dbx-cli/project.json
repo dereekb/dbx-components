@@ -4,7 +4,7 @@
   "sourceRoot": "packages/dbx-cli/src",
   "projectType": "library",
   "tags": ["publishable"],
-  "implicitDependencies": ["util", "firebase", "date", "model", "rxjs", "util-fetch"],
+  "implicitDependencies": ["util", "firebase", "date", "model", "rxjs", "util-fetch", "nestjs"],
   "targets": {
     "build": {
       "executor": "nx:run-commands",

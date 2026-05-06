@@ -1,0 +1,219 @@
+import { type AsyncKeyedValueCache, type AsyncValueCache, type Maybe, memoizeAsyncKeyedValueCache, memoizeAsyncValueCache } from '@dereekb/util';
+import { mkdirSync, readFile, rm, writeFile } from 'node:fs';
+import { dirname } from 'node:path';
+
+/**
+ * Default file mode used by the JSON-file caches when none is provided.
+ *
+ * 0o600 restricts the file to read/write for the owning user only — appropriate for
+ * secrets like cached access/refresh tokens.
+ */
+export const DEFAULT_JSON_FILE_CACHE_MODE = 0o600;
+
+/**
+ * Reads JSON from disk, resolving `undefined` if the file is missing or malformed.
+ */
+export function readJsonFile<T>(filePath: string): Promise<Maybe<T>> {
+  return new Promise<Maybe<T>>((resolve) => {
+    readFile(filePath, { encoding: 'utf-8' }, (err, data) => {
+      if (err) {
+        resolve(undefined);
+        return;
+      }
+      try {
+        resolve(JSON.parse(data) as T);
+      } catch {
+        resolve(undefined);
+      }
+    });
+  });
+}
+
+export interface WriteJsonFileInput {
+  readonly filePath: string;
+  readonly dirPath: string;
+  readonly data: unknown;
+  readonly mode?: number;
+}
+
+/**
+ * Writes a value to disk as JSON. Creates the parent directory if it does not exist.
+ */
+export function writeJsonFile(input: WriteJsonFileInput): Promise<void> {
+  mkdirSync(input.dirPath, { recursive: true });
+
+  return new Promise<void>((resolve, reject) => {
+    writeFile(input.filePath, JSON.stringify(input.data, null, 2), { mode: input.mode }, (err) => {
+      if (err) reject(err);
+      else resolve();
+    });
+  });
+}
+
+/**
+ * Removes the file at the given path. Resolves regardless of whether the file existed.
+ */
+export function removeFile(filePath: string): Promise<void> {
+  return new Promise<void>((resolve) => {
+    rm(filePath, () => resolve());
+  });
+}
+
+/**
+ * Input for {@link createJsonFileAsyncValueCache} and {@link createMemoizedJsonFileAsyncValueCache}.
+ */
+export interface CreateJsonFileAsyncValueCacheInput<T> {
+  /**
+   * Absolute path to the JSON file that backs the cache.
+   */
+  readonly filePath: string;
+  /**
+   * File mode applied on write. Defaults to {@link DEFAULT_JSON_FILE_CACHE_MODE} (0o600).
+   */
+  readonly mode?: Maybe<number>;
+  /**
+   * Optional transform applied to the raw JSON-parsed payload before it is returned from `load()`.
+   *
+   * Use this to revive types that don't roundtrip through JSON — e.g. a `Date` field stored as an ISO string.
+   */
+  readonly reviver?: Maybe<(raw: unknown) => Maybe<T>>;
+  /**
+   * Optional transform applied to the value before it is stringified to JSON on `update()`.
+   */
+  readonly replacer?: Maybe<(value: T) => unknown>;
+}
+
+/**
+ * Creates an {@link AsyncValueCache} backed by a single JSON file on disk.
+ *
+ * Reads always touch disk; wrap with {@link memoizeAsyncValueCache} (or use
+ * {@link createMemoizedJsonFileAsyncValueCache}) to add per-process memoization.
+ *
+ * Multi-process invalidation is not provided. Two processes writing to the same file
+ * will last-writer-wins; once memoized, a long-running process will not observe writes
+ * from another process.
+ */
+export function createJsonFileAsyncValueCache<T>(input: CreateJsonFileAsyncValueCacheInput<T>): AsyncValueCache<T> {
+  const { filePath, mode, reviver, replacer } = input;
+  const fileMode = mode ?? DEFAULT_JSON_FILE_CACHE_MODE;
+
+  return {
+    load: async () => {
+      const raw = await readJsonFile<unknown>(filePath);
+      if (raw == null) {
+        return undefined;
+      }
+      return reviver != null ? reviver(raw) : (raw as T);
+    },
+    update: async (value) => {
+      const data = replacer != null ? replacer(value) : value;
+      await writeJsonFile({
+        filePath,
+        dirPath: dirname(filePath),
+        data,
+        mode: fileMode
+      });
+    },
+    clear: async () => {
+      await removeFile(filePath);
+    }
+  };
+}
+
+/**
+ * Convenience wrapper around {@link createJsonFileAsyncValueCache} composed with
+ * {@link memoizeAsyncValueCache}.
+ */
+export function createMemoizedJsonFileAsyncValueCache<T>(input: CreateJsonFileAsyncValueCacheInput<T>): AsyncValueCache<T> {
+  return memoizeAsyncValueCache(createJsonFileAsyncValueCache(input));
+}
+
+/**
+ * Input for {@link createJsonFileAsyncKeyedValueCache} and {@link createMemoizedJsonFileAsyncKeyedValueCache}.
+ */
+export interface CreateJsonFileAsyncKeyedValueCacheInput<T> {
+  /**
+   * Absolute path to the JSON file that backs the cache. The file holds the entire `Record<string, T>`.
+   */
+  readonly filePath: string;
+  /**
+   * File mode applied on write. Defaults to {@link DEFAULT_JSON_FILE_CACHE_MODE} (0o600).
+   */
+  readonly mode?: Maybe<number>;
+  /**
+   * Optional transform applied to each entry after it is JSON-parsed on `load()`/`get()`.
+   */
+  readonly reviver?: Maybe<(raw: unknown) => Maybe<T>>;
+  /**
+   * Optional transform applied to each entry before it is stringified on `set()`.
+   */
+  readonly replacer?: Maybe<(value: T) => unknown>;
+}
+
+/**
+ * Creates an {@link AsyncKeyedValueCache} backed by a single JSON file holding a `Record<string, T>`.
+ *
+ * Reads/writes always touch disk; wrap with {@link memoizeAsyncKeyedValueCache} (or use
+ * {@link createMemoizedJsonFileAsyncKeyedValueCache}) to add per-process memoization of the
+ * entire record.
+ *
+ * Multi-process invalidation is not provided; see {@link createJsonFileAsyncValueCache} for caveats.
+ */
+export function createJsonFileAsyncKeyedValueCache<T>(input: CreateJsonFileAsyncKeyedValueCacheInput<T>): AsyncKeyedValueCache<T> {
+  const { filePath, mode, reviver, replacer } = input;
+  const fileMode = mode ?? DEFAULT_JSON_FILE_CACHE_MODE;
+
+  async function readEntries(): Promise<Record<string, T>> {
+    const raw = await readJsonFile<Record<string, unknown>>(filePath);
+    if (raw == null) {
+      return {};
+    }
+    if (reviver == null) {
+      return raw as Record<string, T>;
+    }
+    const result: Record<string, T> = {};
+    for (const key of Object.keys(raw)) {
+      const revived = reviver(raw[key]);
+      if (revived != null) {
+        result[key] = revived;
+      }
+    }
+    return result;
+  }
+
+  async function writeEntries(entries: Record<string, T>): Promise<void> {
+    const data = replacer != null ? Object.fromEntries(Object.entries(entries).map(([key, value]) => [key, replacer(value)])) : entries;
+    await writeJsonFile({
+      filePath,
+      dirPath: dirname(filePath),
+      data,
+      mode: fileMode
+    });
+  }
+
+  return {
+    load: readEntries,
+    get: async (key) => (await readEntries())[key],
+    set: async (key, value) => {
+      const current = await readEntries();
+      await writeEntries({ ...current, [key]: value });
+    },
+    remove: async (key) => {
+      const current = await readEntries();
+      const next = { ...current };
+      delete next[key];
+      await writeEntries(next);
+    },
+    clear: async () => {
+      await removeFile(filePath);
+    }
+  };
+}
+
+/**
+ * Convenience wrapper around {@link createJsonFileAsyncKeyedValueCache} composed with
+ * {@link memoizeAsyncKeyedValueCache}.
+ */
+export function createMemoizedJsonFileAsyncKeyedValueCache<T>(input: CreateJsonFileAsyncKeyedValueCacheInput<T>): AsyncKeyedValueCache<T> {
+  return memoizeAsyncKeyedValueCache(createJsonFileAsyncKeyedValueCache(input));
+}
