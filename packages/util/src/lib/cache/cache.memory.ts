@@ -33,7 +33,7 @@ export function inMemoryAsyncKeyedValueCache<T>(initialEntries?: Maybe<Record<st
 
   return {
     load: async () => Object.assign(Object.create(null) as Record<string, T>, entries),
-    get: async (key) => (Object.prototype.hasOwnProperty.call(entries, key) ? entries[key] : undefined),
+    get: async (key) => (Object.hasOwn(entries, key) ? entries[key] : undefined),
     set: async (key, value) => {
       const next = Object.assign(Object.create(null) as Record<string, T>, entries);
       next[key] = value;

@@ -23,7 +23,14 @@ export function createFileTokenCache(filePath: string): ZohoAccessTokenCache {
       }
 
       const rawExpiresAt = value.expiresAt;
-      const expiresAt = rawExpiresAt instanceof Date ? rawExpiresAt : rawExpiresAt != null ? new Date(rawExpiresAt as string | number) : undefined;
+      let expiresAt: Date | undefined;
+      if (rawExpiresAt instanceof Date) {
+        expiresAt = rawExpiresAt;
+      } else if (rawExpiresAt == null) {
+        expiresAt = undefined;
+      } else {
+        expiresAt = new Date(rawExpiresAt as string | number);
+      }
 
       if (expiresAt == null || Number.isNaN(expiresAt.getTime())) {
         return undefined;

@@ -1,6 +1,5 @@
 import { type Maybe } from '@dereekb/util';
-import { readFile } from 'node:fs';
-import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { readJsonFile, writeJsonFile } from '@dereekb/nestjs';
 import { type CliEnvConfig } from './env';
 
 /**
@@ -28,43 +27,6 @@ export interface CliConfig {
   readonly activeEnv?: string;
   readonly envs?: Record<string, CliEnvConfig>;
   readonly output?: CliOutputConfig;
-}
-
-/**
- * Reads JSON from disk, resolving `undefined` if the file is missing or malformed.
- */
-export function readJsonFile<T>(filePath: string): Promise<Maybe<T>> {
-  return new Promise<Maybe<T>>((resolve) => {
-    readFile(filePath, { encoding: 'utf-8' }, (err, data) => {
-      if (err) {
-        resolve(undefined);
-        return;
-      }
-      try {
-        resolve(JSON.parse(data) as T);
-      } catch {
-        resolve(undefined);
-      }
-    });
-  });
-}
-
-export interface WriteJsonFileInput {
-  readonly filePath: string;
-  readonly dirPath: string;
-  readonly data: unknown;
-  readonly mode?: number;
-}
-
-export async function writeJsonFile(input: WriteJsonFileInput): Promise<void> {
-  await mkdir(input.dirPath, { recursive: true });
-  await writeFile(input.filePath, JSON.stringify(input.data, null, 2), { mode: input.mode });
-}
-
-export function removeFile(filePath: string): Promise<void> {
-  // Forward errors to the caller — silently swallowing them masks real failures
-  // (permission denied, busy file handles) and makes the command appear to have succeeded.
-  return rm(filePath, { force: true });
 }
 
 export interface LoadCliConfigInput {

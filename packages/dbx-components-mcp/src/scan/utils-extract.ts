@@ -350,10 +350,10 @@ function resolveEntryKind(input: ResolveKindInput): ResolveKindResult {
   let result: ResolveKindResult;
   if (kindOverride === undefined || kindOverride.length === 0) {
     result = { ok: true, kind: defaultKind };
-  } else if (!VALID_KIND_OVERRIDES.has(kindOverride)) {
-    result = { ok: false, warning: { kind: 'unsupported-kind-override', name, override: kindOverride, filePath, line } };
-  } else {
+  } else if (VALID_KIND_OVERRIDES.has(kindOverride)) {
     result = { ok: true, kind: kindOverride as UtilKindValue };
+  } else {
+    result = { ok: false, warning: { kind: 'unsupported-kind-override', name, override: kindOverride, filePath, line } };
   }
   return result;
 }

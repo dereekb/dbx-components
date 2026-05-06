@@ -1,6 +1,6 @@
 import { type AsyncKeyedValueCache, type AsyncValueCache, type Maybe, memoizeAsyncKeyedValueCache, memoizeAsyncValueCache } from '@dereekb/util';
-import { chmod, mkdirSync, readFile, rm, writeFile } from 'node:fs';
 import { dirname } from 'node:path';
+import { readJsonFile, removeFile, writeJsonFile } from '../file/file.json';
 
 /**
  * Default file mode used by the JSON-file caches when none is provided.
@@ -9,71 +9,6 @@ import { dirname } from 'node:path';
  * secrets like cached access/refresh tokens.
  */
 export const DEFAULT_JSON_FILE_CACHE_MODE = 0o600;
-
-/**
- * Reads JSON from disk, resolving `undefined` if the file is missing or malformed.
- */
-export function readJsonFile<T>(filePath: string): Promise<Maybe<T>> {
-  return new Promise<Maybe<T>>((resolve) => {
-    readFile(filePath, { encoding: 'utf-8' }, (err, data) => {
-      if (err) {
-        resolve(undefined);
-        return;
-      }
-      try {
-        resolve(JSON.parse(data) as T);
-      } catch {
-        resolve(undefined);
-      }
-    });
-  });
-}
-
-export interface WriteJsonFileInput {
-  readonly filePath: string;
-  readonly dirPath: string;
-  readonly data: unknown;
-  readonly mode?: number;
-}
-
-/**
- * Writes a value to disk as JSON. Creates the parent directory if it does not exist.
- *
- * The `mode` option is enforced via an explicit `chmod` after the write — `writeFile`'s `mode`
- * parameter is ignored when the file already exists, which would otherwise leave a
- * pre-existing file at its original (potentially world-readable) permissions.
- */
-export function writeJsonFile(input: WriteJsonFileInput): Promise<void> {
-  mkdirSync(input.dirPath, { recursive: true });
-
-  return new Promise<void>((resolve, reject) => {
-    writeFile(input.filePath, JSON.stringify(input.data, null, 2), { mode: input.mode }, (err) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-
-      if (input.mode == null) {
-        resolve();
-        return;
-      }
-
-      chmod(input.filePath, input.mode, (chmodErr) => {
-        if (chmodErr) reject(chmodErr);
-        else resolve();
-      });
-    });
-  });
-}
-
-/**
- * Removes the file at the given path. Resolves regardless of whether the file existed.
- */
-export function removeFile(filePath: string): Promise<void> {
-  return new Promise<void>((resolve) => {
-    rm(filePath, () => resolve());
-  });
-}
 
 /**
  * Input for {@link createJsonFileAsyncValueCache} and {@link createMemoizedJsonFileAsyncValueCache}.

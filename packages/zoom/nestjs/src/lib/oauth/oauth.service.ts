@@ -251,10 +251,10 @@ export function fileZoomOAuthAccessTokenCacheService(filename: string = DEFAULT_
   // consistent with disk. Direct writeJsonFile / removeFile would otherwise leave the memo
   // holding a stale token that no future read could refresh.
   async function writeTokenFile(content: ZoomOAuthAccessTokenCacheFileContent): Promise<void> {
-    if (content.token != null) {
-      await cache.update(content.token);
-    } else {
+    if (content.token == null) {
       await cache.clear();
+    } else {
+      await cache.update(content.token);
     }
   }
 

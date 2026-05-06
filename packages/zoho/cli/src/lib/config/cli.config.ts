@@ -1,5 +1,6 @@
 import { type Maybe } from '@dereekb/util';
-import { type CliCommandOutputConfig, type CliOutputConfig, mergeOutputConfig as dbxMergeOutputConfig, readJsonFile, removeFile } from '@dereekb/dbx-cli';
+import { type CliCommandOutputConfig, type CliOutputConfig, mergeOutputConfig as dbxMergeOutputConfig } from '@dereekb/dbx-cli';
+import { readJsonFile, removeFile } from '@dereekb/nestjs';
 import { writeFile, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';

@@ -30,19 +30,17 @@ export function memoizeAsyncValueCache<T>(inner: AsyncValueCache<T>): AsyncValue
       // Cache the in-flight promise so concurrent callers share the same load instead of
       // each firing an independent inner.load(). Cleared on settle so a failed load
       // doesn't permanently poison the memo.
-      if (inFlight == null) {
-        inFlight = inner.load().then(
-          (value) => {
-            loaded = { value };
-            inFlight = undefined;
-            return value;
-          },
-          (error) => {
-            inFlight = undefined;
-            throw error;
-          }
-        );
-      }
+      inFlight ??= inner.load().then(
+        (value) => {
+          loaded = { value };
+          inFlight = undefined;
+          return value;
+        },
+        (error) => {
+          inFlight = undefined;
+          throw error;
+        }
+      );
 
       return inFlight;
     },
@@ -87,19 +85,17 @@ export function memoizeAsyncKeyedValueCache<T>(inner: AsyncKeyedValueCache<T>): 
       return Promise.resolve(loaded.entries);
     }
 
-    if (inFlight == null) {
-      inFlight = inner.load().then(
-        (entries) => {
-          loaded = { entries };
-          inFlight = undefined;
-          return entries;
-        },
-        (error) => {
-          inFlight = undefined;
-          throw error;
-        }
-      );
-    }
+    inFlight ??= inner.load().then(
+      (entries) => {
+        loaded = { entries };
+        inFlight = undefined;
+        return entries;
+      },
+      (error) => {
+        inFlight = undefined;
+        throw error;
+      }
+    );
 
     return inFlight;
   }
