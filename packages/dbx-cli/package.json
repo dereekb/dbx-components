@@ -1,0 +1,13 @@
+{
+  "name": "@dereekb/dbx-cli",
+  "version": "13.10.9",
+  "sideEffects": false,
+  "peerDependencies": {
+    "@dereekb/firebase": "13.10.9",
+    "@dereekb/util": "13.10.9",
+    "yargs": "^18.0.0"
+  },
+  "devDependencies": {
+    "@types/yargs": "^17.0.35"
+  }
+}

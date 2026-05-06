@@ -9,9 +9,17 @@
   "targets": {
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/dist/apps/demo"],
+      "outputs": ["{workspaceRoot}/dist/apps/demo", "{workspaceRoot}/dist/apps/demo/cli"],
       "options": {
-        "command": "npx nx run demo:build-base",
+        "commands": [
+          {
+            "command": "npx nx run demo:build-base"
+          },
+          {
+            "command": "npx nx run demo-cli:build-base"
+          }
+        ],
+        "parallel": false,
         "color": true
       }
     },

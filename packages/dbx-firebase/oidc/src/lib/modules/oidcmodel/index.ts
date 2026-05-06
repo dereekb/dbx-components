@@ -10,4 +10,3 @@ export * from './store/oidcentry.collection.store';
 export * from './store/oidcentry.collection.store.directive';
 export * from './store/oidcentry.document.store';
 export * from './store/oidcentry.document.store.directive';
-export * from './util/pkce';

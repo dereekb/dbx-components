@@ -2,14 +2,13 @@ import { ChangeDetectionStrategy, Component, inject, input, signal, computed } f
 import { CommonModule } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, generatePkceCodeVerifier, generatePkceCodeChallenge } from '@dereekb/util';
 import { DbxDetailBlockComponent, DbxClickToCopyTextComponent, DbxContentPitDirective, DbxButtonComponent } from '@dereekb/dbx-web';
 import { DbxFormSourceDirective, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
 import { type OidcEntryOAuthClientPayloadData, type OidcScopeDetails } from '@dereekb/firebase';
 import { OidcEntryDocumentStore } from '../store/oidcentry.document.store';
 import { DbxFirebaseOidcEntryClientTestForgeFormComponent, type DbxFirebaseOidcModelClientTestFormValue } from '../component/oidcentry.client.test.forge.form.component';
 import { type OidcEntryClientTestFormFieldsConfig } from '../component/oidcentry.forge.form';
-import { generatePkceCodeVerifier, generatePkceCodeChallenge } from '../util/pkce';
 import { DbxFirebaseOidcConfigService } from '../../../service/oidc.configuration.service';
 
 /**

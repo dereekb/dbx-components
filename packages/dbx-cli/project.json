@@ -1,0 +1,77 @@
+{
+  "name": "dbx-cli",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/dbx-cli/src",
+  "projectType": "library",
+  "tags": ["publishable"],
+  "implicitDependencies": ["util", "firebase", "date", "model", "rxjs", "util-fetch"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/packages/dbx-cli"],
+      "options": {
+        "commands": [
+          {
+            "command": "npx nx run dbx-cli:build-base"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "build-base": {
+      "executor": "@nx/rollup:rollup",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "importPath": "@dereekb/dbx-cli",
+        "outputPath": "dist/packages/dbx-cli",
+        "main": "packages/dbx-cli/src/index.ts",
+        "tsConfig": "packages/dbx-cli/tsconfig.lib.json",
+        "compiler": "swc",
+        "project": "packages/dbx-cli/package.json",
+        "format": ["esm", "cjs"],
+        "rollupConfig": ["rollup.visualizer.config.ts"],
+        "generateExportsField": true,
+        "external": "all",
+        "assets": [
+          {
+            "glob": "LICENSE",
+            "input": ".",
+            "output": "."
+          }
+        ]
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "sourceMap": false,
+          "extractLicenses": true
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "run-tests": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "description": "run dbx-cli tests",
+            "command": "npx nx test dbx-cli"
+          }
+        ],
+        "color": true,
+        "parallel": false
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "{projectRoot}/../../coverage/packages/dbx-cli"
+      }
+    }
+  }
+}

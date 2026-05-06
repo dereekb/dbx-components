@@ -1,0 +1,57 @@
+{
+  "name": "demo-cli",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/demo/cli/src",
+  "projectType": "library",
+  "tags": [],
+  "implicitDependencies": ["dbx-cli", "util", "firebase", "date", "model", "rxjs"],
+  "targets": {
+    "build-base": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": "dist/apps/demo/cli",
+        "main": "apps/demo/cli/src/index.ts",
+        "tsConfig": "apps/demo/cli/tsconfig.lib.json",
+        "format": ["esm"],
+        "platform": "node",
+        "target": "node20",
+        "bundle": true,
+        "thirdParty": false,
+        "skipTypeCheck": true,
+        "declaration": false,
+        "external": ["class-validator", "class-transformer"],
+        "esbuildOptions": {
+          "banner": {
+            "js": "#!/usr/bin/env node\nimport { createRequire as __createRequire } from 'node:module';\nconst require = __createRequire(import.meta.url);"
+          }
+        },
+        "assets": [
+          {
+            "glob": "LICENSE",
+            "input": ".",
+            "output": "."
+          }
+        ]
+      },
+      "configurations": {
+        "production": {
+          "minify": true,
+          "sourcemap": false
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "{projectRoot}/../../../coverage/apps/demo/cli"
+      }
+    }
+  }
+}
