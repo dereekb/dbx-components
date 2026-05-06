@@ -123,13 +123,21 @@ export type LoadScanSectionResult<TSection> = { readonly kind: 'ok'; readonly se
 export async function loadScanSection<TSection>(input: { readonly configPath: string; readonly readFile: ScanReadFile; readonly parseSection: (parsed: unknown) => { readonly ok: true; readonly section: TSection } | { readonly ok: false; readonly error: string } }): Promise<LoadScanSectionResult<TSection>> {
   const { configPath, readFile, parseSection } = input;
   let raw: string | null = null;
+  let readError: string | null = null;
   try {
     raw = await readFile(configPath);
-  } catch {
-    raw = null;
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException | null)?.code;
+    if (code === 'ENOENT') {
+      raw = null;
+    } else {
+      readError = err instanceof Error ? err.message : String(err);
+    }
   }
   let result: LoadScanSectionResult<TSection>;
-  if (raw === null) {
+  if (readError !== null) {
+    result = { kind: 'fail', outcome: { kind: 'invalid-scan-config', configPath, error: `failed to read config: ${readError}` } };
+  } else if (raw === null) {
     result = { kind: 'fail', outcome: { kind: 'no-config', configPath } };
   } else {
     let parsed: unknown;

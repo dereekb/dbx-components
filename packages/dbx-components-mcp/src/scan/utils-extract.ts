@@ -118,10 +118,10 @@ export function extractUtilEntries(input: ExtractUtilEntriesInput): ExtractUtilE
         const previous = slugProvenance.get(built.entry.slug);
         if (previous === undefined) {
           slugProvenance.set(built.entry.slug, { name: built.entry.name, filePath, line: built.entry.line });
+          entries.push(built.entry);
         } else {
           warnings.push({ kind: 'duplicate-slug', name: built.entry.name, slug: built.entry.slug, previousName: previous.name, filePath, line: built.entry.line });
         }
-        entries.push(built.entry);
       }
       for (const warning of built.warnings) {
         warnings.push(warning);
@@ -136,7 +136,13 @@ export function extractUtilEntries(input: ExtractUtilEntriesInput): ExtractUtilE
 type TaggedCandidate = { readonly kind: 'function'; readonly decl: FunctionDeclaration; readonly jsDocs: readonly JSDoc[] } | { readonly kind: 'class'; readonly decl: ClassDeclaration; readonly jsDocs: readonly JSDoc[] } | { readonly kind: 'variable'; readonly statement: VariableStatement; readonly decl: VariableDeclaration; readonly jsDocs: readonly JSDoc[] };
 
 function collectTaggedExports(sourceFile: SourceFile): readonly TaggedCandidate[] {
-  return [...collectTaggedFunctions(sourceFile), ...collectTaggedClasses(sourceFile), ...collectTaggedVariables(sourceFile)];
+  const combined: TaggedCandidate[] = [...collectTaggedFunctions(sourceFile), ...collectTaggedClasses(sourceFile), ...collectTaggedVariables(sourceFile)];
+  combined.sort((a, b) => candidateSourceStart(a) - candidateSourceStart(b));
+  return combined;
+}
+
+function candidateSourceStart(candidate: TaggedCandidate): number {
+  return candidate.kind === 'variable' ? candidate.statement.getStart() : candidate.decl.getStart();
 }
 
 function collectTaggedFunctions(sourceFile: SourceFile): readonly TaggedCandidate[] {

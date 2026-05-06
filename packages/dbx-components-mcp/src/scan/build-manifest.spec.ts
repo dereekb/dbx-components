@@ -23,7 +23,9 @@ function makeReader(files: Record<string, string>): BuildManifestReadFile {
   return async (path) => {
     const content = files[path];
     if (content === undefined) {
-      throw new Error(`fixture: no entry for path ${path}`);
+      const err = new Error(`fixture: no entry for path ${path}`) as NodeJS.ErrnoException;
+      err.code = 'ENOENT';
+      throw err;
     }
     return content;
   };
