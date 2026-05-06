@@ -20,6 +20,7 @@ function maskEnv(env: CliEnvConfig): Record<string, unknown> {
   return {
     apiBaseUrl: env.apiBaseUrl,
     oidcIssuer: env.oidcIssuer,
+    appClientUrl: env.appClientUrl,
     clientId: env.clientId ? maskSecret(env.clientId) : undefined,
     clientSecret: env.clientSecret ? maskSecret(env.clientSecret) : undefined,
     redirectUri: env.redirectUri,
@@ -108,12 +109,13 @@ export function createEnvCommand(input: CreateEnvCommandInput): CommandModule {
   const addCommand: CommandModule = {
     command: 'add <name>',
     describe: 'Create a new env (defaults are merged in if a matching default is registered; then run `auth setup --env <name>`)',
-    builder: (yargs: Argv) => yargs.positional('name', { type: 'string', demandOption: true }).option('api-base-url', { type: 'string' }).option('oidc-issuer', { type: 'string' }).option('redirect-uri', { type: 'string' }).option('set-active', { type: 'boolean', default: false }),
+    builder: (yargs: Argv) => yargs.positional('name', { type: 'string', demandOption: true }).option('api-base-url', { type: 'string' }).option('oidc-issuer', { type: 'string' }).option('app-client-url', { type: 'string' }).option('redirect-uri', { type: 'string' }).option('set-active', { type: 'boolean', default: false }),
     handler: async (argv: any) => {
       try {
         const stored: CliEnvConfig = {
           apiBaseUrl: argv.apiBaseUrl ?? '',
           oidcIssuer: argv.oidcIssuer ?? '',
+          appClientUrl: argv.appClientUrl,
           redirectUri: argv.redirectUri
         };
 

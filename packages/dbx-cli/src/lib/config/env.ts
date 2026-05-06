@@ -56,6 +56,7 @@ export function mergeCliEnvWithDefault(input: MergeCliEnvWithDefaultInput): Mayb
     result = {
       apiBaseUrl: nonEmpty(e?.apiBaseUrl) ?? nonEmpty(d?.apiBaseUrl) ?? '',
       oidcIssuer: nonEmpty(e?.oidcIssuer) ?? nonEmpty(d?.oidcIssuer) ?? '',
+      appClientUrl: nonEmpty(e?.appClientUrl) ?? nonEmpty(d?.appClientUrl),
       clientId: nonEmpty(e?.clientId) ?? nonEmpty(d?.clientId),
       clientSecret: nonEmpty(e?.clientSecret) ?? nonEmpty(d?.clientSecret),
       redirectUri: nonEmpty(e?.redirectUri) ?? nonEmpty(d?.redirectUri),
@@ -94,6 +95,15 @@ export interface CliEnvConfig {
    */
   readonly oidcIssuer: string;
   /**
+   * Optional base URL for the app's client (frontend). When set, the CLI rebases the discovered
+   * `authorization_endpoint` onto this origin so the user is sent to the frontend (which proxies
+   * `/oidc/**` to the backend) instead of being sent directly to the API.
+   *
+   * Useful in local development where the API runs on a separate port from the frontend
+   * dev server. In production, leave this unset when the API and frontend share an origin.
+   */
+  readonly appClientUrl?: string;
+  /**
    * The OAuth client ID registered with the target app.
    */
   readonly clientId?: string;
@@ -104,7 +114,7 @@ export interface CliEnvConfig {
   /**
    * The redirect URI registered with the OAuth client. The CLI does not bind a server — it parses
    * the URL the user pastes back, so this can be any value the OIDC provider accepts as a
-   * registered redirect URI (e.g. `urn:ietf:wg:oauth:2.0:oob` or a placeholder URL).
+   * registered redirect URI (e.g. `http://127.0.0.1:0/callback` or another loopback/placeholder URL).
    */
   readonly redirectUri?: string;
   /**
@@ -137,6 +147,7 @@ export function resolveActiveEnvName(input: ResolveActiveEnvInput): Maybe<string
  * The conventional env vars for a CLI named `demo-cli` are:
  *   - `DEMO_CLI_API_BASE_URL`
  *   - `DEMO_CLI_OIDC_ISSUER`
+ *   - `DEMO_CLI_APP_CLIENT_URL`
  *   - `DEMO_CLI_CLIENT_ID`
  *   - `DEMO_CLI_CLIENT_SECRET`
  *   - `DEMO_CLI_REDIRECT_URI`
@@ -151,12 +162,13 @@ export function applyEnvVarOverrides(input: EnvVarOverrideInput): Maybe<CliEnvCo
   const prefix = input.cliName.replaceAll('-', '_').toUpperCase();
   const apiBaseUrl = process.env[`${prefix}_API_BASE_URL`];
   const oidcIssuer = process.env[`${prefix}_OIDC_ISSUER`];
+  const appClientUrl = process.env[`${prefix}_APP_CLIENT_URL`];
   const clientId = process.env[`${prefix}_CLIENT_ID`];
   const clientSecret = process.env[`${prefix}_CLIENT_SECRET`];
   const redirectUri = process.env[`${prefix}_REDIRECT_URI`];
   const scopes = process.env[`${prefix}_SCOPES`];
 
-  const hasOverrides = apiBaseUrl || oidcIssuer || clientId || clientSecret || redirectUri || scopes;
+  const hasOverrides = apiBaseUrl || oidcIssuer || appClientUrl || clientId || clientSecret || redirectUri || scopes;
 
   if (!input.env && !hasOverrides) {
     return undefined;
@@ -165,6 +177,7 @@ export function applyEnvVarOverrides(input: EnvVarOverrideInput): Maybe<CliEnvCo
   const result: CliEnvConfig = {
     apiBaseUrl: apiBaseUrl ?? input.env?.apiBaseUrl ?? '',
     oidcIssuer: oidcIssuer ?? input.env?.oidcIssuer ?? '',
+    appClientUrl: appClientUrl ?? input.env?.appClientUrl,
     clientId: clientId ?? input.env?.clientId,
     clientSecret: clientSecret ?? input.env?.clientSecret,
     redirectUri: redirectUri ?? input.env?.redirectUri,

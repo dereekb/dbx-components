@@ -24,7 +24,7 @@ describe('resolveActiveEnvName', () => {
 });
 
 describe('applyEnvVarOverrides', () => {
-  const KEYS = ['MY_CLI_API_BASE_URL', 'MY_CLI_OIDC_ISSUER', 'MY_CLI_CLIENT_ID', 'MY_CLI_CLIENT_SECRET', 'MY_CLI_REDIRECT_URI', 'MY_CLI_SCOPES'];
+  const KEYS = ['MY_CLI_API_BASE_URL', 'MY_CLI_OIDC_ISSUER', 'MY_CLI_APP_CLIENT_URL', 'MY_CLI_CLIENT_ID', 'MY_CLI_CLIENT_SECRET', 'MY_CLI_REDIRECT_URI', 'MY_CLI_SCOPES'];
 
   beforeEach(() => {
     KEYS.forEach((k) => delete process.env[k]);
@@ -47,6 +47,15 @@ describe('applyEnvVarOverrides', () => {
     expect(result?.clientId).toBe('override-id');
     expect(result?.apiBaseUrl).toBe('a');
     expect(result?.clientSecret).toBe('s');
+  });
+
+  it('applies APP_CLIENT_URL override', () => {
+    process.env['MY_CLI_APP_CLIENT_URL'] = 'http://override-client';
+    const result = applyEnvVarOverrides({
+      cliName: 'my-cli',
+      env: { apiBaseUrl: 'a', oidcIssuer: 'o', appClientUrl: 'http://stored-client', clientId: 'i', clientSecret: 's', redirectUri: 'r' }
+    });
+    expect(result?.appClientUrl).toBe('http://override-client');
   });
 });
 
@@ -97,11 +106,26 @@ describe('mergeCliEnvWithDefault', () => {
     expect(mergeCliEnvWithDefault({ defaultEnv })).toEqual({
       apiBaseUrl: 'http://default',
       oidcIssuer: 'http://default/oidc',
+      appClientUrl: undefined,
       clientId: undefined,
       clientSecret: undefined,
       redirectUri: 'urn:default',
       scopes: undefined
     });
+  });
+
+  it('merges appClientUrl from default and stored env', () => {
+    const merged = mergeCliEnvWithDefault({
+      defaultEnv: { ...defaultEnv, appClientUrl: 'http://default-client' },
+      env: { apiBaseUrl: 'http://user', oidcIssuer: 'http://user/oidc' }
+    });
+    expect(merged?.appClientUrl).toBe('http://default-client');
+
+    const overridden = mergeCliEnvWithDefault({
+      defaultEnv: { ...defaultEnv, appClientUrl: 'http://default-client' },
+      env: { apiBaseUrl: 'http://user', oidcIssuer: 'http://user/oidc', appClientUrl: 'http://user-client' }
+    });
+    expect(overridden?.appClientUrl).toBe('http://user-client');
   });
 
   it('user-set fields shadow defaults', () => {

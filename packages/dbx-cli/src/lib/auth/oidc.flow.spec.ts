@@ -30,6 +30,75 @@ describe('buildAuthorizationUrl', () => {
     expect(parsed.searchParams.get('code_challenge')).toBe('chal');
     expect(parsed.searchParams.get('code_challenge_method')).toBe('S256');
   });
+
+  it('rebases the authorization endpoint origin onto appClientUrl when set', () => {
+    const url = buildAuthorizationUrl({
+      authorizationEndpoint: 'http://localhost:9902/dereekb-components/us-central1/api/oidc/auth',
+      appClientUrl: 'http://localhost:9010',
+      clientId: 'cid',
+      redirectUri: 'urn:ietf:wg:oauth:2.0:oob',
+      state: 'xyz',
+      codeChallenge: 'chal'
+    });
+    const parsed = new URL(url);
+    expect(parsed.origin).toBe('http://localhost:9010');
+    expect(parsed.pathname).toBe('/dereekb-components/us-central1/api/oidc/auth');
+  });
+
+  it('leaves the authorization endpoint untouched when neither appClientUrl nor apiBaseUrl is set', () => {
+    const url = buildAuthorizationUrl({
+      authorizationEndpoint: 'https://example.com/oidc/auth',
+      clientId: 'cid',
+      redirectUri: 'urn:ietf:wg:oauth:2.0:oob',
+      state: 'xyz',
+      codeChallenge: 'chal'
+    });
+    const parsed = new URL(url);
+    expect(parsed.origin + parsed.pathname).toBe('https://example.com/oidc/auth');
+  });
+
+  it('targets <apiBaseUrl>/oidc/login/client when appClientUrl is missing and apiBaseUrl is set', () => {
+    const url = buildAuthorizationUrl({
+      authorizationEndpoint: 'http://localhost:9902/dereekb-components/us-central1/api/oidc/auth',
+      apiBaseUrl: 'http://localhost:9902/dereekb-components/us-central1/api',
+      clientId: 'cid',
+      redirectUri: 'urn:ietf:wg:oauth:2.0:oob',
+      state: 'xyz',
+      codeChallenge: 'chal'
+    });
+    const parsed = new URL(url);
+    expect(parsed.origin + parsed.pathname).toBe('http://localhost:9902/dereekb-components/us-central1/api/oidc/login/client');
+    expect(parsed.searchParams.get('client_id')).toBe('cid');
+    expect(parsed.searchParams.get('state')).toBe('xyz');
+  });
+
+  it('strips trailing slashes from apiBaseUrl when building the login/client URL', () => {
+    const url = buildAuthorizationUrl({
+      authorizationEndpoint: 'https://example.com/oidc/auth',
+      apiBaseUrl: 'https://example.com/api/',
+      clientId: 'cid',
+      redirectUri: 'urn:ietf:wg:oauth:2.0:oob',
+      state: 'xyz',
+      codeChallenge: 'chal'
+    });
+    const parsed = new URL(url);
+    expect(parsed.origin + parsed.pathname).toBe('https://example.com/api/oidc/login/client');
+  });
+
+  it('prefers appClientUrl over apiBaseUrl when both are set', () => {
+    const url = buildAuthorizationUrl({
+      authorizationEndpoint: 'http://localhost:9902/dereekb-components/us-central1/api/oidc/auth',
+      apiBaseUrl: 'http://localhost:9902/dereekb-components/us-central1/api',
+      appClientUrl: 'http://localhost:9010',
+      clientId: 'cid',
+      redirectUri: 'urn:ietf:wg:oauth:2.0:oob',
+      state: 'xyz',
+      codeChallenge: 'chal'
+    });
+    const parsed = new URL(url);
+    expect(parsed.origin).toBe('http://localhost:9010');
+    expect(parsed.pathname).toBe('/dereekb-components/us-central1/api/oidc/auth');
+  });
 });
 
 describe('parsePastedRedirect', () => {

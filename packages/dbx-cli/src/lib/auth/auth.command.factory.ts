@@ -69,6 +69,7 @@ function maskEnv(env: CliEnvConfig): Record<string, unknown> {
   return {
     apiBaseUrl: env.apiBaseUrl,
     oidcIssuer: env.oidcIssuer,
+    appClientUrl: env.appClientUrl,
     clientId: env.clientId ? maskSecret(env.clientId) : undefined,
     clientSecret: env.clientSecret ? maskSecret(env.clientSecret) : undefined,
     redirectUri: env.redirectUri,
@@ -91,6 +92,7 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
       withEnv(yargs)
         .option('api-base-url', { type: 'string', describe: 'API base URL (e.g. http://localhost:9902/.../api)' })
         .option('oidc-issuer', { type: 'string', describe: 'OIDC issuer URL (e.g. <api-base-url>/oidc)' })
+        .option('app-client-url', { type: 'string', describe: 'Frontend client base URL to rebase the auth URL onto (e.g. http://localhost:9010)' })
         .option('client-id', { type: 'string', describe: 'OAuth client ID registered with the target app' })
         .option('client-secret', { type: 'string', describe: 'OAuth client secret' })
         .option('redirect-uri', { type: 'string', describe: 'OAuth redirect URI registered with the OAuth client' })
@@ -117,16 +119,17 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
 
         const apiBaseUrl = await resolve(argv.apiBaseUrl as string | undefined, existing?.apiBaseUrl, `API base URL [${existing?.apiBaseUrl ?? ''}]: `);
         const oidcIssuer = await resolve(argv.oidcIssuer as string | undefined, existing?.oidcIssuer, `OIDC issuer [${existing?.oidcIssuer ?? ''}]: `);
+        const appClientUrl = (argv.appClientUrl as string | undefined) ?? existing?.appClientUrl;
         const clientId = await resolve(argv.clientId as string | undefined, existing?.clientId, 'Client ID: ');
         const clientSecret = await resolve(argv.clientSecret as string | undefined, existing?.clientSecret, 'Client secret: ', { mask: true });
-        const redirectUri = (await resolve(argv.redirectUri as string | undefined, existing?.redirectUri, `Redirect URI [${existing?.redirectUri ?? 'urn:ietf:wg:oauth:2.0:oob'}]: `)) ?? 'urn:ietf:wg:oauth:2.0:oob';
+        const redirectUri = (await resolve(argv.redirectUri as string | undefined, existing?.redirectUri, `Redirect URI [${existing?.redirectUri ?? 'http://127.0.0.1:0/callback'}]: `)) ?? 'http://127.0.0.1:0/callback';
         const scopes = (argv.scopes as string | undefined) ?? existing?.scopes;
 
         if (!apiBaseUrl || !oidcIssuer || !clientId || !clientSecret) {
           throw new CliError({ message: 'apiBaseUrl, oidcIssuer, clientId, and clientSecret are all required.', code: 'AUTH_SETUP_INCOMPLETE' });
         }
 
-        const nextEnv: CliEnvConfig = { apiBaseUrl, oidcIssuer, clientId, clientSecret, redirectUri, ...(scopes ? { scopes } : {}) };
+        const nextEnv: CliEnvConfig = { apiBaseUrl, oidcIssuer, clientId, clientSecret, redirectUri, ...(appClientUrl ? { appClientUrl } : {}), ...(scopes ? { scopes } : {}) };
 
         const merged = await mergeCliConfig({
           configFilePath: paths.configFilePath,
@@ -172,6 +175,8 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
 
         const url = buildAuthorizationUrl({
           authorizationEndpoint: meta.authorization_endpoint,
+          apiBaseUrl: env.apiBaseUrl,
+          appClientUrl: env.appClientUrl,
           clientId: env.clientId,
           redirectUri: env.redirectUri,
           scopes: env.scopes,

@@ -1,6 +1,7 @@
-import { All, Controller, Inject, Req, Res } from '@nestjs/common';
+import { All, Controller, Get, Inject, Req, Res } from '@nestjs/common';
 import { type Request, type Response } from 'express';
 import { OidcService } from '../service/oidc.service';
+import { OidcProviderConfigService } from '../service/oidc.config.service';
 
 // MARK: Provider Controller
 /**
@@ -17,8 +18,26 @@ import { OidcService } from '../service/oidc.service';
 export class OidcProviderController {
   private _callback: Promise<(req: Request, res: Response) => void>;
 
-  constructor(@Inject(OidcService) private readonly oidcService: OidcService) {
+  constructor(
+    @Inject(OidcService) private readonly oidcService: OidcService,
+    @Inject(OidcProviderConfigService) private readonly oidcProviderConfigService: OidcProviderConfigService
+  ) {
     this._callback = this.oidcService.getProvider().then((p) => p.callback());
+  }
+
+  /**
+   * GET /oidc/login/client
+   *
+   * Convenience redirect from the API issuer path back to the frontend app's
+   * OAuth login page. Lets a user who lands on the API host get bounced to the
+   * client-side login UI. Any incoming query string is forwarded so flow params
+   * (e.g., `uid`, `state`) survive the redirect.
+   */
+  @Get('login/client')
+  redirectToClientLogin(@Req() req: Request, @Res() res: Response): void {
+    const queryIndex = req.originalUrl.indexOf('?');
+    const search = queryIndex >= 0 ? req.originalUrl.slice(queryIndex) : '';
+    res.redirect(`${this.oidcProviderConfigService.appLoginUrl}${search}`);
   }
 
   @All('{*path}')

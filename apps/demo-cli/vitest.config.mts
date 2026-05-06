@@ -1,4 +1,4 @@
-import { createVitestConfig } from '../../../vitest.preset.config.mjs';
+import { createVitestConfig } from '../../vitest.preset.config.mjs';
 
 export default createVitestConfig({
   type: 'node',

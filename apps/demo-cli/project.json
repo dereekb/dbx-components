@@ -1,19 +1,19 @@
 {
   "name": "demo-cli",
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "apps/demo/cli/src",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/demo-cli/src",
   "projectType": "library",
   "tags": [],
   "implicitDependencies": ["dbx-cli", "util", "firebase", "date", "model", "rxjs"],
   "targets": {
-    "build-base": {
+    "build": {
       "executor": "@nx/esbuild:esbuild",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
-        "outputPath": "dist/apps/demo/cli",
-        "main": "apps/demo/cli/src/index.ts",
-        "tsConfig": "apps/demo/cli/tsconfig.lib.json",
+        "outputPath": "dist/apps/demo-cli",
+        "main": "apps/demo-cli/src/index.ts",
+        "tsConfig": "apps/demo-cli/tsconfig.lib.json",
         "format": ["esm"],
         "platform": "node",
         "target": "node20",
@@ -50,7 +50,7 @@
       "executor": "@nx/vitest:test",
       "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "reportsDirectory": "{projectRoot}/../../../coverage/apps/demo/cli"
+        "reportsDirectory": "{projectRoot}/../../coverage/apps/demo-cli"
       }
     }
   }

@@ -3,7 +3,7 @@
 # Modeled after packages/zoho/cli/test/test-cli.sh.
 #
 # Usage:
-#   bash apps/demo/cli/test/test-cli.sh
+#   bash apps/demo-cli/test/test-cli.sh
 #
 # Optional environment variables (gate the auth/call phases when set):
 #   DEMO_CLI_E2E_API_BASE_URL  - API base URL (e.g. http://localhost:9902/.../api)
@@ -15,8 +15,8 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd "$SCRIPT_DIR/../../../.." && pwd)"
-CLI="node $ROOT_DIR/dist/apps/demo/cli/index.js"
+ROOT_DIR="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+CLI="node $ROOT_DIR/dist/apps/demo-cli/index.js"
 
 TEST_HOME=$(mktemp -d)
 TEST_CONFIG_DIR="$TEST_HOME/.demo-cli"
@@ -59,10 +59,10 @@ echo ""
 
 # Phase 1: Build verification
 echo "Phase 1: Build verification"
-check "CLI binary exists" test -f "$ROOT_DIR/dist/apps/demo/cli/index.js"
-chmod +x "$ROOT_DIR/dist/apps/demo/cli/index.js" || true
-check "CLI is executable" test -x "$ROOT_DIR/dist/apps/demo/cli/index.js"
-if head -1 "$ROOT_DIR/dist/apps/demo/cli/index.js" | grep -q "^#!/usr/bin/env node"; then
+check "CLI binary exists" test -f "$ROOT_DIR/dist/apps/demo-cli/index.js"
+chmod +x "$ROOT_DIR/dist/apps/demo-cli/index.js" || true
+check "CLI is executable" test -x "$ROOT_DIR/dist/apps/demo-cli/index.js"
+if head -1 "$ROOT_DIR/dist/apps/demo-cli/index.js" | grep -q "^#!/usr/bin/env node"; then
   echo "  PASS: Shebang line present"; PASS=$((PASS + 1))
 else
   echo "  FAIL: Shebang line present"; FAIL=$((FAIL + 1))

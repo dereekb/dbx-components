@@ -1,9 +1,25 @@
-import { generatePkceCodeChallenge, generatePkceCodeVerifier } from '@dereekb/util';
+import { generatePkceCodeChallenge, generatePkceCodeVerifier, type Maybe } from '@dereekb/util';
 import { CliError } from '../util/output';
 import { DEFAULT_CLI_OIDC_SCOPES } from '../config/env';
 
 export interface BuildAuthorizationUrlInput {
   readonly authorizationEndpoint: string;
+  /**
+   * Optional API base URL. When set and `appClientUrl` is not provided, the CLI sends the user
+   * to `<apiBaseUrl>/oidc/login/client?<params>` instead of the raw authorization endpoint. The
+   * API redirects to the configured app login URL with the OAuth query string preserved, so the
+   * CLI does not need to know the client origin directly.
+   */
+  readonly apiBaseUrl?: Maybe<string>;
+  /**
+   * Optional client (frontend) origin to rebase the authorization endpoint onto.
+   *
+   * When set, the path + search of `authorizationEndpoint` are kept and the origin is replaced
+   * with this URL. Useful when the frontend dev server proxies `/oidc/**` to the API and the
+   * user-facing URL should target the app, not the API directly. Takes precedence over
+   * `apiBaseUrl` when both are provided.
+   */
+  readonly appClientUrl?: Maybe<string>;
   readonly clientId: string;
   readonly redirectUri: string;
   readonly scopes?: string;
@@ -22,7 +38,45 @@ export function buildAuthorizationUrl(input: BuildAuthorizationUrlInput): string
     state: input.state
   });
 
-  return `${input.authorizationEndpoint}?${params.toString()}`;
+  let endpoint: string;
+
+  if (input.appClientUrl) {
+    endpoint = rebaseUrlOrigin({ url: input.authorizationEndpoint, originUrl: input.appClientUrl });
+  } else if (input.apiBaseUrl) {
+    endpoint = `${input.apiBaseUrl.replace(/\/+$/, '')}/oidc/login/client`;
+  } else {
+    endpoint = input.authorizationEndpoint;
+  }
+
+  return `${endpoint}?${params.toString()}`;
+}
+
+interface RebaseUrlOriginInput {
+  readonly url: string;
+  readonly originUrl?: Maybe<string>;
+}
+
+/**
+ * Returns `url` with its origin replaced by the origin of `originUrl`. The path and search of
+ * `url` are preserved. When `originUrl` is empty/missing or either URL fails to parse, returns
+ * `url` unchanged.
+ */
+function rebaseUrlOrigin(input: RebaseUrlOriginInput): string {
+  let result: string = input.url;
+
+  if (input.originUrl) {
+    try {
+      const parsedUrl = new URL(input.url);
+      const parsedOrigin = new URL(input.originUrl);
+      parsedUrl.protocol = parsedOrigin.protocol;
+      parsedUrl.host = parsedOrigin.host;
+      result = parsedUrl.toString();
+    } catch {
+      // Fall through with the original url unchanged
+    }
+  }
+
+  return result;
 }
 
 export interface PkceMaterial {
