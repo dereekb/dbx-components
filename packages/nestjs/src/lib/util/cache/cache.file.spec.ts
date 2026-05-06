@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { mkdtempSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { createJsonFileAsyncKeyedValueCache, createJsonFileAsyncValueCache, createMemoizedJsonFileAsyncKeyedValueCache, createMemoizedJsonFileAsyncValueCache } from './file.cache';
+import { createJsonFileAsyncKeyedValueCache, createJsonFileAsyncValueCache, createMemoizedJsonFileAsyncKeyedValueCache, createMemoizedJsonFileAsyncValueCache } from './cache.file';
 
 describe('createJsonFileAsyncValueCache', () => {
   let dir: string;
