@@ -43,6 +43,26 @@ export function calcomRefreshTokenCacheKey(refreshToken: string): string {
 }
 
 // MARK: Merge
+function buildCalcomReadAdapter(cache: CalcomAccessTokenCache): AsyncValueCache<CalcomAccessToken> {
+  return {
+    load: async () => {
+      const value = await cache.loadCachedToken().catch(() => undefined);
+      return value != null && !isExpired(value) ? value : undefined;
+    },
+    update: (token) => cache.updateCachedToken(token),
+    clear: async () => {
+      // CalcomAccessTokenCache does not expose a clear method.
+    }
+  };
+}
+
+function updateCalcomCacheCapturingError(cache: CalcomAccessTokenCache, accessToken: CalcomAccessToken): Promise<null | readonly [CalcomAccessTokenCache, unknown]> {
+  return cache
+    .updateCachedToken(accessToken)
+    .then(() => null)
+    .catch((e: unknown) => [cache, e] as const);
+}
+
 export type LogMergeCalcomOAuthAccessTokenCacheServiceErrorFunction = (failedUpdates: (readonly [CalcomAccessTokenCache, unknown])[]) => void;
 
 /**
@@ -82,30 +102,13 @@ export function mergeCalcomOAuthAccessTokenCacheServices(inputServicesToMerge: C
   }
 
   function mergeCachesForService(accessCachesForServices: CalcomAccessTokenCache[]): CalcomAccessTokenCache {
-    const readAdapters: AsyncValueCache<CalcomAccessToken>[] = accessCachesForServices.map((cache) => ({
-      load: async () => {
-        const value = await cache.loadCachedToken().catch(() => undefined);
-        return value != null && !isExpired(value) ? value : undefined;
-      },
-      update: (token) => cache.updateCachedToken(token),
-      clear: async () => {
-        // CalcomAccessTokenCache does not expose a clear method.
-      }
-    }));
-
+    const readAdapters: AsyncValueCache<CalcomAccessToken>[] = accessCachesForServices.map(buildCalcomReadAdapter);
     const merged = mergeAsyncValueCaches(readAdapters);
 
     return {
       loadCachedToken: () => merged.load(),
       updateCachedToken: async (accessToken) => {
-        const settled = await Promise.allSettled(
-          accessCachesForServices.map((cache) =>
-            cache
-              .updateCachedToken(accessToken)
-              .then(() => null)
-              .catch((e: unknown) => [cache, e] as const)
-          )
-        );
+        const settled = await Promise.allSettled(accessCachesForServices.map((cache) => updateCalcomCacheCapturingError(cache, accessToken)));
 
         if (logErrorFunction != null) {
           const failedUpdates = filterMaybeArrayValues(settled.map((y) => (y as PromiseFulfilledResult<unknown>).value)) as (readonly [CalcomAccessTokenCache, unknown])[];
@@ -150,14 +153,14 @@ function calcomAccessTokenCacheFromAsyncValueCache(cache: AsyncValueCache<Calcom
     loadCachedToken: async () => {
       const token = await cache.load();
       if (logAccessToConsole) {
-        console.log('retrieving access token from memory: ', { token });
+        console.log('retrieving access token from memory: ', { hit: token != null, expiresAt: token?.expiresAt });
       }
       return token;
     },
     updateCachedToken: async (accessToken) => {
       await cache.update(accessToken);
       if (logAccessToConsole) {
-        console.log('updating access token in memory: ', { accessToken });
+        console.log('updating access token in memory: ', { expiresAt: accessToken?.expiresAt });
       }
     }
   };
@@ -277,6 +280,7 @@ export function fileCalcomOAuthAccessTokenCacheService(cacheDir: string = DEFAUL
           await cache.update(accessToken);
         } catch (e) {
           console.error(`Failed updating token file for ${fileKey}: `, e);
+          throw e;
         }
       }
     };

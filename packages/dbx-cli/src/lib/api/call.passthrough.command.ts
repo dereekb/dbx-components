@@ -34,7 +34,7 @@ export const callPassthroughCommand: CommandModule = {
       const params: OnCallTypedModelParams = {
         modelType: argv.model,
         call: argv.verb,
-        ...(argv.specifier != null ? { specifier: argv.specifier } : {}),
+        ...(argv.specifier == null ? {} : { specifier: argv.specifier }),
         data
       };
 

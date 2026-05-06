@@ -1,5 +1,4 @@
 import type { OnCallTypedModelParams } from '@dereekb/firebase';
-import { CALL_MODEL_APP_FUNCTION_KEY } from '@dereekb/firebase';
 import { CliError } from '../util/output';
 
 export const CALL_MODEL_API_PATH = `/model/call`;
@@ -58,7 +57,9 @@ export async function callModelOverHttp<T = unknown, R = unknown>(input: CallMod
   }
 
   if (!res.ok) {
-    const message = typeof body === 'object' && body && 'message' in body ? String((body as { message?: unknown }).message ?? text) : text || `${res.status} ${res.statusText}`;
+    const bodyMessage = typeof body === 'object' && body && 'message' in body ? (body as { message?: unknown }).message : undefined;
+    const messageString = typeof bodyMessage === 'string' ? bodyMessage : undefined;
+    const message = messageString ?? (text || `${res.status} ${res.statusText}`);
     throw new CliError({
       message: `callModel ${input.params.modelType}/${input.params.call ?? 'unknown'} failed: ${message}`,
       code: codeForStatus(res.status),
@@ -83,4 +84,4 @@ function trimSlash(url: string): string {
   return url.endsWith('/') ? url.slice(0, -1) : url;
 }
 
-export { CALL_MODEL_APP_FUNCTION_KEY };
+export { CALL_MODEL_APP_FUNCTION_KEY } from '@dereekb/firebase';

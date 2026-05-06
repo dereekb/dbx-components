@@ -68,36 +68,43 @@ function formatParamsTable(params: readonly { readonly name: string; readonly ty
   return lines.join('\n');
 }
 
+function appendDeprecationNotice(lines: string[], entry: UtilEntryInfo): void {
+  if (entry.deprecated === false || entry.deprecated === '') {
+    return;
+  }
+  const deprecationNote = typeof entry.deprecated === 'string' && entry.deprecated.length > 0 ? entry.deprecated : 'This utility is deprecated.';
+  lines.push(`> ⚠️ Deprecated: ${deprecationNote}`, '');
+}
+
+function appendFullEntrySections(lines: string[], entry: UtilEntryInfo): void {
+  if (entry.params.length > 0) {
+    lines.push('## Params', '', formatParamsTable(entry.params), '');
+  }
+  if (entry.returns.length > 0) {
+    lines.push(`**Returns:** \`${entry.returns}\``, '');
+  }
+  if (entry.example.length > 0) {
+    lines.push('## Example', '', '```ts', entry.example, '```', '');
+  }
+  if (entry.tags.length > 0) {
+    lines.push(`Tags: ${entry.tags.map((t) => code(t)).join(', ')}`, '');
+  }
+  if (entry.relatedSlugs.length > 0) {
+    lines.push(`→ Related: ${entry.relatedSlugs.map((s) => code(s)).join(', ')}`);
+  }
+  if (entry.skillRefs.length > 0) {
+    lines.push(`→ Skills: ${entry.skillRefs.map((s) => code(s)).join(', ')}`);
+  }
+}
+
 function formatEntry(entry: UtilEntryInfo, depth: LookupDepth): string {
   const heading = `# ${entry.name}`;
   const lines: string[] = [heading, '', entry.description, '', bullet('slug', `\`${entry.slug}\``), bullet('kind', `\`${entry.kind}\``), bullet('category', `\`${entry.category}\``), bullet('module', `\`${entry.module}\``), bullet('subpath', `\`${entry.subpath}\``), bullet('signature', `\`${entry.signature}\``), ''];
 
-  if (entry.deprecated !== false && entry.deprecated !== '') {
-    const deprecationNote = typeof entry.deprecated === 'string' && entry.deprecated.length > 0 ? entry.deprecated : 'This utility is deprecated.';
-    lines.push(`> ⚠️ Deprecated: ${deprecationNote}`, '');
-  }
+  appendDeprecationNotice(lines, entry);
 
   if (depth === 'full') {
-    if (entry.params.length > 0) {
-      lines.push('## Params', '', formatParamsTable(entry.params), '');
-    }
-    if (entry.returns.length > 0) {
-      lines.push(`**Returns:** \`${entry.returns}\``, '');
-    }
-    if (entry.example.length > 0) {
-      lines.push('## Example', '', '```ts', entry.example, '```', '');
-    }
-    if (entry.tags.length > 0) {
-      lines.push(`Tags: ${entry.tags.map((t) => code(t)).join(', ')}`, '');
-    }
-    if (entry.relatedSlugs.length > 0) {
-      const relatedText = entry.relatedSlugs.map((s) => code(s)).join(', ');
-      lines.push(`→ Related: ${relatedText}`);
-    }
-    if (entry.skillRefs.length > 0) {
-      const skillsText = entry.skillRefs.map((s) => code(s)).join(', ');
-      lines.push(`→ Skills: ${skillsText}`);
-    }
+    appendFullEntrySections(lines, entry);
   } else {
     lines.push(`→ Call \`dbx_util_lookup topic="${entry.slug}" depth="full"\` for the full signature, params, and example.`);
   }
@@ -112,7 +119,7 @@ function formatCatalog(entries: readonly UtilEntryInfo[]): string {
   const lines: string[] = ['# Utility catalog', '', `${entries.length} entries.`, ''];
   const sorted = [...entries].sort((a, b) => {
     const byCategory = a.category.localeCompare(b.category);
-    return byCategory !== 0 ? byCategory : a.slug.localeCompare(b.slug);
+    return byCategory === 0 ? a.slug.localeCompare(b.slug) : byCategory;
   });
   let lastCategory: string | undefined;
   for (const entry of sorted) {

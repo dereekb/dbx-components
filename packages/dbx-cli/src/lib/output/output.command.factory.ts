@@ -3,7 +3,8 @@ import type { Argv, CommandModule } from 'yargs';
 import { type CliCommandOutputConfig, type CliConfig, type CliOutputConfig, loadCliConfig, mergeCliConfig } from '../config/cli.config';
 import { buildCliPaths } from '../config/paths';
 import { type LoadOutputConfigFn } from '../middleware/output.middleware';
-import { CliError, outputError, outputResult } from '../util/output';
+import { CliError, outputResult } from '../util/output';
+import { wrapCommandHandler } from '../util/handler';
 
 /**
  * Persists a partial output config update (global + per-command overrides). Implementations are
@@ -96,81 +97,66 @@ export function createOutputCommand(input: CreateOutputCommandInput): CommandMod
 
         return true;
       }),
-    handler: async (argv: any) => {
-      try {
-        const commandKey: string | undefined = argv.command;
-        const dumpDir: string | undefined = argv.setDumpDir;
-        const pick: string | undefined = argv.setPick;
+    handler: wrapCommandHandler(async (argv: any) => {
+      const commandKey: string | undefined = argv.command;
+      const dumpDir: string | undefined = argv.setDumpDir;
+      const pick: string | undefined = argv.setPick;
 
-        let outputUpdate: CliOutputConfig;
+      let outputUpdate: CliOutputConfig;
 
-        if (commandKey) {
-          const commandConfig: CliCommandOutputConfig = {
-            ...(dumpDir !== undefined ? { dumpDir } : {}),
-            ...(pick !== undefined ? { pick } : {})
-          };
+      if (commandKey) {
+        const commandConfig: CliCommandOutputConfig = {
+          ...(dumpDir === undefined ? {} : { dumpDir }),
+          ...(pick === undefined ? {} : { pick })
+        };
 
-          outputUpdate = { commands: { [commandKey]: commandConfig } };
-        } else {
-          outputUpdate = {
-            ...(dumpDir !== undefined ? { dumpDir } : {}),
-            ...(pick !== undefined ? { pick } : {})
-          };
-        }
-
-        await callbacks.mergeOutputConfig(outputUpdate);
-        const next = await callbacks.loadOutputConfig();
-        outputResult({ saved: true, output: next ?? {} });
-      } catch (e) {
-        outputError(e);
-        process.exit(1);
+        outputUpdate = { commands: { [commandKey]: commandConfig } };
+      } else {
+        outputUpdate = {
+          ...(dumpDir === undefined ? {} : { dumpDir }),
+          ...(pick === undefined ? {} : { pick })
+        };
       }
-    }
+
+      await callbacks.mergeOutputConfig(outputUpdate);
+      const next = await callbacks.loadOutputConfig();
+      outputResult({ saved: true, output: next ?? {} });
+    })
   };
 
   const showCommand: CommandModule = {
     command: 'show',
     describe: 'Show current output configuration',
     builder: (yargs: Argv) => yargs,
-    handler: async () => {
-      try {
-        const output = await callbacks.loadOutputConfig();
-        outputResult({ output: output ?? {} });
-      } catch (e) {
-        outputError(e);
-        process.exit(1);
-      }
-    }
+    handler: wrapCommandHandler(async () => {
+      const output = await callbacks.loadOutputConfig();
+      outputResult({ output: output ?? {} });
+    })
   };
 
   const clearCommand: CommandModule = {
     command: 'clear',
     describe: 'Clear output configuration (global or per-command)',
     builder: (yargs: Argv) => yargs.option('command', { alias: 'c', type: 'string', describe: 'Command path to clear (omit to clear all output config)' }),
-    handler: async (argv: any) => {
-      try {
-        const commandKey: string | undefined = argv.command;
+    handler: wrapCommandHandler(async (argv: any) => {
+      const commandKey: string | undefined = argv.command;
 
-        if (commandKey) {
-          const existing = await callbacks.loadOutputConfig();
+      if (commandKey) {
+        const existing = await callbacks.loadOutputConfig();
 
-          if (!existing?.commands?.[commandKey]) {
-            throw new CliError({ message: `No per-command output config for "${commandKey}".`, code: 'OUTPUT_COMMAND_NOT_FOUND' });
-          }
-
-          const nextCommands = { ...existing.commands };
-          delete nextCommands[commandKey];
-          await callbacks.mergeOutputConfig({ ...existing, commands: nextCommands });
-          outputResult({ cleared: true, command: commandKey });
-        } else {
-          await callbacks.clearOutputConfig();
-          outputResult({ cleared: true });
+        if (!existing?.commands?.[commandKey]) {
+          throw new CliError({ message: `No per-command output config for "${commandKey}".`, code: 'OUTPUT_COMMAND_NOT_FOUND' });
         }
-      } catch (e) {
-        outputError(e);
-        process.exit(1);
+
+        const nextCommands = { ...existing.commands };
+        delete nextCommands[commandKey];
+        await callbacks.mergeOutputConfig({ ...existing, commands: nextCommands });
+        outputResult({ cleared: true, command: commandKey });
+      } else {
+        await callbacks.clearOutputConfig();
+        outputResult({ cleared: true });
       }
-    }
+    })
   };
 
   return {

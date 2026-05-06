@@ -112,10 +112,10 @@ export function extractUtilEntries(input: ExtractUtilEntriesInput): ExtractUtilE
       const built = buildEntry({ candidate, filePath });
       if (built.kind === 'ok') {
         const previous = slugProvenance.get(built.entry.slug);
-        if (previous !== undefined) {
-          warnings.push({ kind: 'duplicate-slug', name: built.entry.name, slug: built.entry.slug, previousName: previous.name, filePath, line: built.entry.line });
-        } else {
+        if (previous === undefined) {
           slugProvenance.set(built.entry.slug, { name: built.entry.name, filePath, line: built.entry.line });
+        } else {
+          warnings.push({ kind: 'duplicate-slug', name: built.entry.name, slug: built.entry.slug, previousName: previous.name, filePath, line: built.entry.line });
         }
         entries.push(built.entry);
       }
@@ -132,6 +132,10 @@ export function extractUtilEntries(input: ExtractUtilEntriesInput): ExtractUtilE
 type TaggedCandidate = { readonly kind: 'function'; readonly decl: FunctionDeclaration; readonly jsDocs: readonly JSDoc[] } | { readonly kind: 'class'; readonly decl: ClassDeclaration; readonly jsDocs: readonly JSDoc[] } | { readonly kind: 'variable'; readonly statement: VariableStatement; readonly decl: VariableDeclaration; readonly jsDocs: readonly JSDoc[] };
 
 function collectTaggedExports(sourceFile: SourceFile): readonly TaggedCandidate[] {
+  return [...collectTaggedFunctions(sourceFile), ...collectTaggedClasses(sourceFile), ...collectTaggedVariables(sourceFile)];
+}
+
+function collectTaggedFunctions(sourceFile: SourceFile): readonly TaggedCandidate[] {
   const out: TaggedCandidate[] = [];
   for (const decl of sourceFile.getFunctions()) {
     if (!decl.isExported()) {
@@ -142,6 +146,11 @@ function collectTaggedExports(sourceFile: SourceFile): readonly TaggedCandidate[
       out.push({ kind: 'function', decl, jsDocs });
     }
   }
+  return out;
+}
+
+function collectTaggedClasses(sourceFile: SourceFile): readonly TaggedCandidate[] {
+  const out: TaggedCandidate[] = [];
   for (const decl of sourceFile.getClasses()) {
     if (!decl.isExported()) {
       continue;
@@ -151,6 +160,11 @@ function collectTaggedExports(sourceFile: SourceFile): readonly TaggedCandidate[
       out.push({ kind: 'class', decl, jsDocs });
     }
   }
+  return out;
+}
+
+function collectTaggedVariables(sourceFile: SourceFile): readonly TaggedCandidate[] {
+  const out: TaggedCandidate[] = [];
   for (const statement of sourceFile.getVariableStatements()) {
     if (!statement.isExported()) {
       continue;
@@ -321,6 +335,29 @@ interface BuildEntryInput {
 
 type BuildEntryResult = { readonly kind: 'ok'; readonly entry: ExtractedUtilEntry; readonly warnings: readonly UtilExtractWarning[] } | { readonly kind: 'skipped'; readonly warnings: readonly UtilExtractWarning[] };
 
+type ResolveKindResult = { readonly ok: true; readonly kind: UtilKindValue } | { readonly ok: false; readonly warning: UtilExtractWarning };
+
+interface ResolveKindInput {
+  readonly name: string;
+  readonly kindOverride: string | undefined;
+  readonly defaultKind: UtilKindValue;
+  readonly filePath: string;
+  readonly line: number;
+}
+
+function resolveEntryKind(input: ResolveKindInput): ResolveKindResult {
+  const { name, kindOverride, defaultKind, filePath, line } = input;
+  let result: ResolveKindResult;
+  if (kindOverride === undefined || kindOverride.length === 0) {
+    result = { ok: true, kind: defaultKind };
+  } else if (!VALID_KIND_OVERRIDES.has(kindOverride)) {
+    result = { ok: false, warning: { kind: 'unsupported-kind-override', name, override: kindOverride, filePath, line } };
+  } else {
+    result = { ok: true, kind: kindOverride as UtilKindValue };
+  }
+  return result;
+}
+
 function buildEntry(input: BuildEntryInput): BuildEntryResult {
   const { candidate, filePath } = input;
   const warnings: UtilExtractWarning[] = [];
@@ -332,17 +369,12 @@ function buildEntry(input: BuildEntryInput): BuildEntryResult {
   }
 
   const tags = readJsDocTags(candidate.jsDocs);
-
-  let kind: UtilKindValue;
-  if (tags.kindOverride !== undefined && tags.kindOverride.length > 0) {
-    if (!VALID_KIND_OVERRIDES.has(tags.kindOverride)) {
-      warnings.push({ kind: 'unsupported-kind-override', name: meta.name, override: tags.kindOverride, filePath, line: meta.line });
-      return { kind: 'skipped', warnings };
-    }
-    kind = tags.kindOverride as UtilKindValue;
-  } else {
-    kind = meta.defaultKind;
+  const kindResult = resolveEntryKind({ name: meta.name, kindOverride: tags.kindOverride, defaultKind: meta.defaultKind, filePath, line: meta.line });
+  if (!kindResult.ok) {
+    warnings.push(kindResult.warning);
+    return { kind: 'skipped', warnings };
   }
+  const kind = kindResult.kind;
 
   const slug = tags.slug && tags.slug.length > 0 ? tags.slug : toKebabCase(meta.name);
   const category = tags.category && tags.category.length > 0 ? tags.category : deriveCategoryFromPath(filePath);
@@ -365,8 +397,8 @@ function buildEntry(input: BuildEntryInput): BuildEntryResult {
     ...(tags.relatedSlugs.length > 0 ? { relatedSlugs: tags.relatedSlugs } : {}),
     ...(tags.skillRefs.length > 0 ? { skillRefs: tags.skillRefs } : {}),
     example,
-    ...(tags.deprecated !== undefined ? { deprecated: tags.deprecated } : {}),
-    ...(tags.since !== undefined ? { since: tags.since } : {}),
+    ...(tags.deprecated === undefined ? {} : { deprecated: tags.deprecated }),
+    ...(tags.since === undefined ? {} : { since: tags.since }),
     filePath,
     line: meta.line
   };
@@ -433,7 +465,7 @@ function collectParams(candidate: TaggedCandidate, descriptions: ReadonlyMap<str
     params = candidate.decl.getParameters();
   } else if (candidate.kind === 'class') {
     const ctor = candidate.decl.getConstructors()[0];
-    params = ctor !== undefined ? ctor.getParameters() : [];
+    params = ctor === undefined ? [] : ctor.getParameters();
   } else {
     const initializer = candidate.decl.getInitializer();
     if (initializer !== undefined && (Node.isArrowFunction(initializer) || Node.isFunctionExpression(initializer))) {
@@ -488,10 +520,10 @@ export function toKebabCase(name: string): string {
     return '';
   }
   const withSeparators = name
-    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1-$2')
-    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
-    .replace(/_+/g, '-')
-    .replace(/\s+/g, '-');
+    .replaceAll(/([A-Z]+)([A-Z][a-z])/g, '$1-$2')
+    .replaceAll(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .replaceAll(/_+/g, '-')
+    .replaceAll(/\s+/g, '-');
   return withSeparators.toLowerCase();
 }
 
@@ -561,7 +593,7 @@ function buildTagSet(input: BuildTagSetInput): readonly string[] {
   if (explicit.length === 0) {
     const summaryTokens = summary
       .toLowerCase()
-      .replace(/[^a-z0-9\s]+/g, ' ')
+      .replaceAll(/[^a-z0-9\s]+/g, ' ')
       .split(/\s+/)
       .filter((t) => t.length > 2 && !STOPWORDS.has(t));
     let added = 0;

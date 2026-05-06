@@ -81,8 +81,8 @@ export function createOutputMiddleware(input: CreateOutputMiddlewareInput): Midd
     if (hasSetFlags && topCommand && !input.skipCommands.has(topCommand)) {
       const commandKey = commandPath.join('.');
       const commandConfig: CliCommandOutputConfig = {
-        ...(setDumpDir !== undefined ? { dumpDir: setDumpDir } : {}),
-        ...(setPick !== undefined ? { pick: setPick } : {})
+        ...(setDumpDir === undefined ? {} : { dumpDir: setDumpDir }),
+        ...(setPick === undefined ? {} : { pick: setPick })
       };
 
       await saveCommandOutputConfig(commandKey, commandConfig);

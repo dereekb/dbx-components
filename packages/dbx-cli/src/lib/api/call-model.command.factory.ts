@@ -54,7 +54,7 @@ export function createCallModelCommand<TParams = unknown, TResult = unknown>(spe
         const params: OnCallTypedModelParams<TParams> = {
           modelType: spec.model,
           call: spec.verb,
-          ...(spec.specifier != null ? { specifier: spec.specifier } : {}),
+          ...(spec.specifier == null ? {} : { specifier: spec.specifier }),
           data
         };
 

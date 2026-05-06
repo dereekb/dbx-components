@@ -62,6 +62,54 @@ const DBX_UTIL_SEARCH_TOOL: Tool = {
   }
 };
 
+function scoreNameMatch(name: string, token: string): number {
+  let score = 0;
+  if (name === token) {
+    score = 10;
+  } else if (name.startsWith(token)) {
+    score = 7;
+  } else if (name.includes(token)) {
+    score = 5;
+  }
+  return score;
+}
+
+function scoreSlugMatch(slug: string, token: string): number {
+  let score = 0;
+  if (slug === token) {
+    score = 9;
+  } else if (slug.startsWith(token)) {
+    score = 6;
+  } else if (slug.includes(token)) {
+    score = 4;
+  }
+  return score;
+}
+
+function scoreTagsMatch(tags: readonly string[], token: string): number {
+  let best = 0;
+  for (const tag of tags) {
+    const tagLower = tag.toLowerCase();
+    if (tagLower === token) {
+      best = Math.max(best, 8);
+    } else if (tagLower.includes(token)) {
+      best = Math.max(best, 4);
+    }
+  }
+  return best;
+}
+
+function scoreParamsMatch(params: readonly { readonly name: string }[], token: string): number {
+  let score = 0;
+  for (const param of params) {
+    if (param.name.toLowerCase().includes(token)) {
+      score = 1;
+      break;
+    }
+  }
+  return score;
+}
+
 /**
  * Scores a single utility entry against a single token. Weights are
  * deliberately spaced so stacked hits can't fabricate a higher score
@@ -77,32 +125,7 @@ function scoreUtilAgainstToken(entry: UtilEntryInfo, token: string): number {
   const category = entry.category.toLowerCase();
   const description = entry.description.toLowerCase();
 
-  let score = 0;
-  if (name === token) {
-    score += 10;
-  } else if (name.startsWith(token)) {
-    score += 7;
-  } else if (name.includes(token)) {
-    score += 5;
-  }
-  if (slug === token) {
-    score += 9;
-  } else if (slug.startsWith(token)) {
-    score += 6;
-  } else if (slug.includes(token)) {
-    score += 4;
-  }
-
-  let bestTagScore = 0;
-  for (const tag of entry.tags) {
-    const tagLower = tag.toLowerCase();
-    if (tagLower === token) {
-      bestTagScore = Math.max(bestTagScore, 8);
-    } else if (tagLower.includes(token)) {
-      bestTagScore = Math.max(bestTagScore, 4);
-    }
-  }
-  score += bestTagScore;
+  let score = scoreNameMatch(name, token) + scoreSlugMatch(slug, token) + scoreTagsMatch(entry.tags, token);
 
   if (category === token) {
     score += 3;
@@ -111,12 +134,7 @@ function scoreUtilAgainstToken(entry: UtilEntryInfo, token: string): number {
     score += 2;
   }
   if (score === 0) {
-    for (const param of entry.params) {
-      if (param.name.toLowerCase().includes(token)) {
-        score += 1;
-        break;
-      }
-    }
+    score += scoreParamsMatch(entry.params, token);
   }
   return score;
 }

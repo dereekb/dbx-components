@@ -1,5 +1,5 @@
 import { type Maybe } from '@dereekb/util';
-import { type CliCommandOutputConfig, type CliOutputConfig, mergeOutputConfig as dbxMergeOutputConfig, readJsonFile, removeFile, resolveOutputConfig as dbxResolveOutputConfig, maskSecret as dbxMaskSecret } from '@dereekb/dbx-cli';
+import { type CliCommandOutputConfig, type CliOutputConfig, mergeOutputConfig as dbxMergeOutputConfig, readJsonFile, removeFile } from '@dereekb/dbx-cli';
 import { writeFile, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
@@ -204,7 +204,7 @@ export async function mergeCliConfig(updates: Partial<ZohoCliConfig>): Promise<Z
     recruit: updates.recruit !== undefined ? { ...existing?.recruit, ...updates.recruit } : existing?.recruit,
     crm: updates.crm !== undefined ? { ...existing?.crm, ...updates.crm } : existing?.crm,
     desk: updates.desk !== undefined ? { ...existing?.desk, ...updates.desk } : existing?.desk,
-    output: updates.output !== undefined ? dbxMergeOutputConfig(existing?.output, updates.output) : existing?.output
+    output: updates.output === undefined ? existing?.output : dbxMergeOutputConfig(existing?.output, updates.output)
   };
 
   await saveCliConfig(merged);
@@ -212,12 +212,10 @@ export async function mergeCliConfig(updates: Partial<ZohoCliConfig>): Promise<Z
 }
 
 /**
- * Resolves output settings for a given command path.
- *
- * Re-export of dbx-cli's {@link dbxResolveOutputConfig} so existing zoho-cli consumers keep the
- * same module surface. New code can import from `@dereekb/dbx-cli` directly.
+ * Re-export of dbx-cli's `resolveOutputConfig` so existing zoho-cli consumers keep the same
+ * module surface. New code can import from `@dereekb/dbx-cli` directly.
  */
-export const resolveOutputConfig = dbxResolveOutputConfig;
+export { resolveOutputConfig } from '@dereekb/dbx-cli';
 
 /**
  * Clears all output config (dumpDir, pick, per-command overrides).
@@ -260,4 +258,4 @@ export function configuredProducts(config: ZohoCliConfig): ZohoCliProduct[] {
  * Re-export of dbx-cli's secret-masking helper. Auth/show commands import via this module so the
  * masking pattern stays consistent across CLIs.
  */
-export const maskSecret = dbxMaskSecret;
+export { maskSecret } from '@dereekb/dbx-cli';

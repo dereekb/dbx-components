@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { type ZohoAccessToken, type ZohoAccessTokenCache, type ZohoServiceAccessTokenKey } from '@dereekb/zoho';
 import { type AsyncValueCache, type Maybe, filterMaybeArrayValues, inMemoryAsyncKeyedValueCache, isExpired, memoizeAsyncKeyedValueCache, mergeAsyncValueCaches } from '@dereekb/util';
-import { createJsonFileAsyncKeyedValueCache, readJsonFile, removeFile, writeJsonFile } from '@dereekb/nestjs';
-import { dirname } from 'node:path';
+import { createJsonFileAsyncKeyedValueCache, readJsonFile } from '@dereekb/nestjs';
 
 export type ZohoAccountsAccessTokenCacheRecord = Record<ZohoServiceAccessTokenKey, Maybe<ZohoAccessToken>>;
 
@@ -17,6 +16,24 @@ export abstract class ZohoAccountsAccessTokenCacheService {
    * @param service
    */
   abstract loadZohoAccessTokenCache(service: ZohoServiceAccessTokenKey): ZohoAccessTokenCache;
+}
+
+function buildZohoReadAdapter(cache: ZohoAccessTokenCache): AsyncValueCache<ZohoAccessToken> {
+  return {
+    load: async () => {
+      const value = await cache.loadCachedToken().catch(() => undefined);
+      return value != null && !isExpired(value) ? value : undefined;
+    },
+    update: (token) => cache.updateCachedToken(token),
+    clear: () => cache.clearCachedToken()
+  };
+}
+
+function updateZohoCacheCapturingError(cache: ZohoAccessTokenCache, accessToken: ZohoAccessToken): Promise<null | readonly [ZohoAccessTokenCache, unknown]> {
+  return cache
+    .updateCachedToken(accessToken)
+    .then(() => null)
+    .catch((e) => [cache, e] as const);
 }
 
 export type LogMergeZohoAccountsAccessTokenCacheServiceErrorFunction = (failedUpdates: (readonly [ZohoAccessTokenCache, unknown])[]) => void;
@@ -62,28 +79,13 @@ export function mergeZohoAccountsAccessTokenCacheServices(inputServicesToMerge: 
     const accessCachesForService = services.map((x) => x.loadZohoAccessTokenCache(service));
 
     // Per-cache adapters with expiry filtering so reads fall through to the next tier when a cache holds an expired token.
-    const readAdapters: AsyncValueCache<ZohoAccessToken>[] = accessCachesForService.map((cache) => ({
-      load: async () => {
-        const value = await cache.loadCachedToken().catch(() => undefined);
-        return value != null && !isExpired(value) ? value : undefined;
-      },
-      update: (token) => cache.updateCachedToken(token),
-      clear: () => cache.clearCachedToken()
-    }));
-
+    const readAdapters: AsyncValueCache<ZohoAccessToken>[] = accessCachesForService.map(buildZohoReadAdapter);
     const merged = mergeAsyncValueCaches(readAdapters);
 
     return {
       loadCachedToken: () => merged.load(),
       updateCachedToken: async (accessToken) => {
-        const settled = await Promise.allSettled(
-          accessCachesForService.map((cache) =>
-            cache
-              .updateCachedToken(accessToken)
-              .then(() => null)
-              .catch((e) => [cache, e] as const)
-          )
-        );
+        const settled = await Promise.allSettled(accessCachesForService.map((cache) => updateZohoCacheCapturingError(cache, accessToken)));
 
         if (logErrorFunction != null) {
           const failedUpdates = filterMaybeArrayValues(settled.map((y) => (y as PromiseFulfilledResult<unknown>).value)) as (readonly [ZohoAccessTokenCache, unknown])[];
@@ -133,7 +135,7 @@ export function memoryZohoAccountsAccessTokenCacheService(existingCache?: ZohoAc
         const token = await cache.get(service);
 
         if (logAccessToConsole) {
-          console.log('retrieving access token from memory: ', { token, service });
+          console.log('retrieving access token from memory: ', { service, hit: token != null, expiresAt: token?.expiresAt });
         }
 
         return token;
@@ -142,7 +144,7 @@ export function memoryZohoAccountsAccessTokenCacheService(existingCache?: ZohoAc
         await cache.set(service, accessToken);
 
         if (logAccessToConsole) {
-          console.log('updating access token in memory: ', { accessToken, service });
+          console.log('updating access token in memory: ', { service, expiresAt: accessToken?.expiresAt });
         }
       },
       clearCachedToken: async () => {
@@ -238,16 +240,22 @@ export function fileZohoAccountsAccessTokenCacheService(filename: string = DEFAU
     return result;
   }
 
+  // Route the file-mutation helpers through the same `cache` instance used by
+  // loadZohoAccessTokenCache so the memoized in-memory layer (when useMemoryCache=true) stays
+  // consistent with disk. Direct writeJsonFile / removeFile would otherwise leave the memo
+  // holding stale entries that no future read could refresh.
   async function writeTokenFile(tokens: ZohoAccountsAccessTokenCacheRecord): Promise<void> {
-    await writeJsonFile({
-      filePath: filename,
-      dirPath: dirname(filename),
-      data: tokens
-    });
+    await cache.clear();
+
+    for (const [key, value] of Object.entries(tokens)) {
+      if (value != null) {
+        await cache.set(key, value);
+      }
+    }
   }
 
   async function deleteTokenFile(): Promise<void> {
-    await removeFile(filename);
+    await cache.clear();
   }
 
   return {

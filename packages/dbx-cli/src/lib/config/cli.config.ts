@@ -1,5 +1,6 @@
 import { type Maybe } from '@dereekb/util';
-import { mkdirSync, readFile, rm, writeFile } from 'node:fs';
+import { readFile } from 'node:fs';
+import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { type CliEnvConfig } from './env';
 
 /**
@@ -55,21 +56,15 @@ export interface WriteJsonFileInput {
   readonly mode?: number;
 }
 
-export function writeJsonFile(input: WriteJsonFileInput): Promise<void> {
-  mkdirSync(input.dirPath, { recursive: true });
-
-  return new Promise<void>((resolve, reject) => {
-    writeFile(input.filePath, JSON.stringify(input.data, null, 2), { mode: input.mode }, (err) => {
-      if (err) reject(err);
-      else resolve();
-    });
-  });
+export async function writeJsonFile(input: WriteJsonFileInput): Promise<void> {
+  await mkdir(input.dirPath, { recursive: true });
+  await writeFile(input.filePath, JSON.stringify(input.data, null, 2), { mode: input.mode });
 }
 
 export function removeFile(filePath: string): Promise<void> {
-  return new Promise<void>((resolve) => {
-    rm(filePath, () => resolve());
-  });
+  // Forward errors to the caller — silently swallowing them masks real failures
+  // (permission denied, busy file handles) and makes the command appear to have succeeded.
+  return rm(filePath, { force: true });
 }
 
 export interface LoadCliConfigInput {
@@ -108,7 +103,7 @@ export async function mergeCliConfig(input: MergeCliConfigInput): Promise<CliCon
   const merged: CliConfig = {
     activeEnv: input.updates.activeEnv ?? existing.activeEnv,
     envs: input.updates.envs ? { ...existing.envs, ...input.updates.envs } : existing.envs,
-    output: input.updates.output !== undefined ? mergeOutputConfig(existing.output, input.updates.output) : existing.output
+    output: input.updates.output === undefined ? existing.output : mergeOutputConfig(existing.output, input.updates.output)
   };
 
   await saveCliConfig({ configFilePath: input.configFilePath, configDir: input.configDir, config: merged });

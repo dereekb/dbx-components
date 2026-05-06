@@ -24,23 +24,28 @@ export function inMemoryAsyncValueCache<T>(initialValue?: Maybe<T>): AsyncValueC
  * Creates an in-memory {@link AsyncKeyedValueCache} backed by a closure-scoped record.
  *
  * Useful as the inner of {@link memoizeAsyncKeyedValueCache} and as a stand-in for tests.
+ *
+ * Backed by a null-prototype object so inherited properties (`toString`, `hasOwnProperty`, etc.)
+ * are never returned from `get` and `__proto__` keys cannot mutate the prototype chain.
  */
 export function inMemoryAsyncKeyedValueCache<T>(initialEntries?: Maybe<Record<string, T>>): AsyncKeyedValueCache<T> {
-  let entries: Record<string, T> = { ...(initialEntries ?? {}) };
+  let entries: Record<string, T> = Object.assign(Object.create(null) as Record<string, T>, initialEntries ?? {});
 
   return {
-    load: async () => ({ ...entries }),
-    get: async (key) => entries[key],
+    load: async () => Object.assign(Object.create(null) as Record<string, T>, entries),
+    get: async (key) => (Object.prototype.hasOwnProperty.call(entries, key) ? entries[key] : undefined),
     set: async (key, value) => {
-      entries = { ...entries, [key]: value };
+      const next = Object.assign(Object.create(null) as Record<string, T>, entries);
+      next[key] = value;
+      entries = next;
     },
     remove: async (key) => {
-      const next = { ...entries };
+      const next = Object.assign(Object.create(null) as Record<string, T>, entries);
       delete next[key];
       entries = next;
     },
     clear: async () => {
-      entries = {};
+      entries = Object.create(null) as Record<string, T>;
     }
   };
 }

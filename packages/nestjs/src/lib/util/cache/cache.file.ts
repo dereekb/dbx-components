@@ -1,5 +1,5 @@
 import { type AsyncKeyedValueCache, type AsyncValueCache, type Maybe, memoizeAsyncKeyedValueCache, memoizeAsyncValueCache } from '@dereekb/util';
-import { mkdirSync, readFile, rm, writeFile } from 'node:fs';
+import { chmod, mkdirSync, readFile, rm, writeFile } from 'node:fs';
 import { dirname } from 'node:path';
 
 /**
@@ -38,14 +38,30 @@ export interface WriteJsonFileInput {
 
 /**
  * Writes a value to disk as JSON. Creates the parent directory if it does not exist.
+ *
+ * The `mode` option is enforced via an explicit `chmod` after the write — `writeFile`'s `mode`
+ * parameter is ignored when the file already exists, which would otherwise leave a
+ * pre-existing file at its original (potentially world-readable) permissions.
  */
 export function writeJsonFile(input: WriteJsonFileInput): Promise<void> {
   mkdirSync(input.dirPath, { recursive: true });
 
   return new Promise<void>((resolve, reject) => {
     writeFile(input.filePath, JSON.stringify(input.data, null, 2), { mode: input.mode }, (err) => {
-      if (err) reject(err);
-      else resolve();
+      if (err) {
+        reject(err);
+        return;
+      }
+
+      if (input.mode == null) {
+        resolve();
+        return;
+      }
+
+      chmod(input.filePath, input.mode, (chmodErr) => {
+        if (chmodErr) reject(chmodErr);
+        else resolve();
+      });
     });
   });
 }
@@ -103,10 +119,10 @@ export function createJsonFileAsyncValueCache<T>(input: CreateJsonFileAsyncValue
       if (raw == null) {
         return undefined;
       }
-      return reviver != null ? reviver(raw) : (raw as T);
+      return reviver == null ? (raw as T) : reviver(raw);
     },
     update: async (value) => {
-      const data = replacer != null ? replacer(value) : value;
+      const data = replacer == null ? value : replacer(value);
       await writeJsonFile({
         filePath,
         dirPath: dirname(filePath),
@@ -182,7 +198,7 @@ export function createJsonFileAsyncKeyedValueCache<T>(input: CreateJsonFileAsync
   }
 
   async function writeEntries(entries: Record<string, T>): Promise<void> {
-    const data = replacer != null ? Object.fromEntries(Object.entries(entries).map(([key, value]) => [key, replacer(value)])) : entries;
+    const data = replacer == null ? entries : Object.fromEntries(Object.entries(entries).map(([key, value]) => [key, replacer(value)]));
     await writeJsonFile({
       filePath,
       dirPath: dirname(filePath),
@@ -191,22 +207,36 @@ export function createJsonFileAsyncKeyedValueCache<T>(input: CreateJsonFileAsync
     });
   }
 
+  // Serialize set/remove through a per-instance promise chain. Without this, two concurrent
+  // mutations would race on the read-modify-write of the entire record file and the second
+  // writer's snapshot of the entries would clobber the first.
+  let mutationQueue: Promise<unknown> = Promise.resolve();
+
+  function enqueueMutation<T>(fn: () => Promise<T>): Promise<T> {
+    const next = mutationQueue.then(fn, fn);
+    mutationQueue = next.catch(() => undefined);
+    return next;
+  }
+
   return {
     load: readEntries,
     get: async (key) => (await readEntries())[key],
-    set: async (key, value) => {
-      const current = await readEntries();
-      await writeEntries({ ...current, [key]: value });
-    },
-    remove: async (key) => {
-      const current = await readEntries();
-      const next = { ...current };
-      delete next[key];
-      await writeEntries(next);
-    },
-    clear: async () => {
-      await removeFile(filePath);
-    }
+    set: (key, value) =>
+      enqueueMutation(async () => {
+        const current = await readEntries();
+        await writeEntries({ ...current, [key]: value });
+      }),
+    remove: (key) =>
+      enqueueMutation(async () => {
+        const current = await readEntries();
+        const next = { ...current };
+        delete next[key];
+        await writeEntries(next);
+      }),
+    clear: () =>
+      enqueueMutation(async () => {
+        await removeFile(filePath);
+      })
   };
 }
 

@@ -28,7 +28,7 @@ export interface BuildAuthorizationUrlInput {
 }
 
 export function buildAuthorizationUrl(input: BuildAuthorizationUrlInput): string {
-  const params = new URLSearchParams({
+  const authParams: Record<string, string> = {
     response_type: 'code',
     client_id: input.clientId,
     redirect_uri: input.redirectUri,
@@ -36,7 +36,7 @@ export function buildAuthorizationUrl(input: BuildAuthorizationUrlInput): string
     code_challenge: input.codeChallenge,
     code_challenge_method: 'S256',
     state: input.state
-  });
+  };
 
   let endpoint: string;
 
@@ -48,7 +48,15 @@ export function buildAuthorizationUrl(input: BuildAuthorizationUrlInput): string
     endpoint = input.authorizationEndpoint;
   }
 
-  return `${endpoint}?${params.toString()}`;
+  // Merge into the existing query string (preserving any params already on the endpoint) so
+  // a pre-baked endpoint like `/login/client?source=cli` survives unchanged.
+  const url = new URL(endpoint);
+
+  for (const [key, value] of Object.entries(authParams)) {
+    url.searchParams.set(key, value);
+  }
+
+  return url.toString();
 }
 
 interface RebaseUrlOriginInput {
@@ -109,6 +117,43 @@ export interface ParsedRedirect {
   readonly state?: string;
 }
 
+function parseRedirectUrlOrThrow(trimmed: string): URL {
+  let url: URL;
+  try {
+    // Native URL doesn't parse all urn: schemes — handle the urn:ietf paste case explicitly
+    url = trimmed.startsWith('urn:') ? new URL(`https://placeholder.invalid?${trimmed.split('?').slice(1).join('?')}`) : new URL(trimmed);
+  } catch {
+    throw new CliError({ message: 'Could not parse redirect URL', code: 'AUTH_REDIRECT_PARSE_FAILED' });
+  }
+  return url;
+}
+
+function throwForUrlMissingCode(url: URL): never {
+  const errorParam = url.searchParams.get('error');
+  if (errorParam) {
+    const errorDescription = url.searchParams.get('error_description');
+    const descriptionSuffix = errorDescription ? ` (${errorDescription})` : '';
+    throw new CliError({
+      message: `Authorization server returned an error: ${errorParam}${descriptionSuffix}`,
+      code: 'AUTH_PROVIDER_ERROR'
+    });
+  }
+  throw new CliError({ message: 'No `code` parameter found in the pasted URL.', code: 'AUTH_NO_CODE' });
+}
+
+function parseUrlRedirect(trimmed: string, expectedState: string | undefined): ParsedRedirect {
+  const url = parseRedirectUrlOrThrow(trimmed);
+  const code = url.searchParams.get('code');
+  if (!code) {
+    throwForUrlMissingCode(url);
+  }
+  const state = url.searchParams.get('state') ?? undefined;
+  if (expectedState && state !== expectedState) {
+    throw new CliError({ message: 'OAuth state mismatch — possible CSRF or stale flow.', code: 'AUTH_STATE_MISMATCH' });
+  }
+  return { code, state };
+}
+
 /**
  * Parses an authorization code out of a pasted redirect URL or a bare code string.
  *
@@ -122,37 +167,7 @@ export function parsePastedRedirect(input: ParsePastedRedirectInput): ParsedRedi
   }
 
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('urn:')) {
-    let url: URL;
-
-    try {
-      // Native URL doesn't parse all urn: schemes — handle the urn:ietf paste case explicitly
-      url = trimmed.startsWith('urn:') ? new URL(`https://placeholder.invalid?${trimmed.split('?').slice(1).join('?')}`) : new URL(trimmed);
-    } catch {
-      throw new CliError({ message: `Could not parse redirect URL: ${trimmed}`, code: 'AUTH_REDIRECT_PARSE_FAILED' });
-    }
-
-    const code = url.searchParams.get('code');
-
-    if (!code) {
-      const errorParam = url.searchParams.get('error');
-
-      if (errorParam) {
-        throw new CliError({
-          message: `Authorization server returned an error: ${errorParam}${url.searchParams.get('error_description') ? ` (${url.searchParams.get('error_description')})` : ''}`,
-          code: 'AUTH_PROVIDER_ERROR'
-        });
-      }
-
-      throw new CliError({ message: 'No `code` parameter found in the pasted URL.', code: 'AUTH_NO_CODE' });
-    }
-
-    const state = url.searchParams.get('state') ?? undefined;
-
-    if (input.expectedState && state !== input.expectedState) {
-      throw new CliError({ message: 'OAuth state mismatch — possible CSRF or stale flow.', code: 'AUTH_STATE_MISMATCH' });
-    }
-
-    return { code, state };
+    return parseUrlRedirect(trimmed, input.expectedState);
   }
 
   return { code: trimmed };
