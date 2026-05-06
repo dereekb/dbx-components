@@ -65,4 +65,23 @@ describe('extractModels (rich ts-morph extractor)', () => {
     expect(guestbookGroup?.containerName).toBe('GuestbookFirestoreCollections');
     expect(guestbookGroup?.modelNames).toEqual(['Guestbook', 'GuestbookEntry']);
   });
+
+  it('flags demo GuestbookEntry as user-keyed and user-related', async () => {
+    const result = await extractModels({
+      rootDir: DEMO_MODEL_ROOT,
+      sourcePackage: 'demo-firebase',
+      workspaceRoot: WORKSPACE_ROOT,
+      skipReservedFolders: RESERVED_NAMES
+    });
+    const byName = new Map(result.models.map((m) => [m.name, m]));
+
+    const guestbookEntry = byName.get('GuestbookEntry');
+    expect(guestbookEntry, 'GuestbookEntry missing').toBeDefined();
+    expect(guestbookEntry?.userKeyedById).toBe(true);
+    expect(guestbookEntry?.hasUserUidField).toBe(true);
+
+    const guestbook = byName.get('Guestbook');
+    expect(guestbook?.userKeyedById ?? false).toBe(false);
+    expect(guestbook?.hasUserUidField ?? false).toBe(false);
+  });
 });

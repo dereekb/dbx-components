@@ -70,7 +70,7 @@ Model-extension validators (walk a downstream app to verify wiring):
 
 Resource URIs are namespaced by domain:
 - dbx://form/fields[/{slug}|/produces/{produces}|/tier/{tier}|/array-output/{arrayOutput}]
-- dbx://model/firebase[/{name}|/prefix/{prefix}|/subcollections/{parent}]
+- dbx://model/firebase[/{name}|/prefix/{prefix}|/subcollections/{parent}|/user-keyed-by-id|/user-related]
 - dbx://action/entries[/{slug}|/role/{role}]
 - dbx://ui/components[/{slug}|/category/{category}|/kind/{kind}]
 - dbx://pipe/entries[/{slug}|/category/{category}]

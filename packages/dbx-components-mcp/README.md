@@ -37,6 +37,8 @@ URIs are namespaced by domain (`dbx://<domain>/...`). Validators, scaffolders, a
 | `dbx://model/firebase/{name}`                        | Single Firebase model                                  |
 | `dbx://model/firebase/prefix/{prefix}`               | Firebase model by collection prefix                    |
 | `dbx://model/firebase/subcollections/{parent}`       | Subcollection models nested under a parent identity    |
+| `dbx://model/firebase/user-keyed-by-id`              | Models whose doc id IS the Firebase Auth uid (`UserRelatedById`) |
+| `dbx://model/firebase/user-related`                  | Models with an explicit `uid` field (`UserRelated`)    |
 | `dbx://action/entries`                               | Action entries catalog (directives, store, states)     |
 | `dbx://action/entries/{slug}`                        | Single action entry                                    |
 | `dbx://action/entries/role/{role}`                   | Action entries by role                                 |

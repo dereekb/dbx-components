@@ -98,6 +98,31 @@ export function getFirebaseSubcollectionsOf(parentIdentityConst: string): readon
 }
 
 /**
+ * Returns every model whose Firestore document id IS a Firebase Auth user uid
+ * — i.e. the interface (or one of its same-file ancestors) extends
+ * `UserRelatedById`. Useful for enumerating the per-user document set when
+ * reasoning about ownership and permissions.
+ *
+ * @returns each user-keyed model in registry order
+ */
+export function getFirebaseUserKeyedByIdModels(): readonly FirebaseModel[] {
+  return FIREBASE_MODELS.filter((m) => m.userKeyedById === true);
+}
+
+/**
+ * Returns every model that carries an explicit `uid` field referencing a
+ * Firebase Auth user — i.e. the interface (or one of its same-file
+ * ancestors) extends `UserRelated`. Independent of
+ * {@link getFirebaseUserKeyedByIdModels}: a model can appear in either,
+ * both, or neither list.
+ *
+ * @returns each user-related model in registry order
+ */
+export function getFirebaseUserRelatedModels(): readonly FirebaseModel[] {
+  return FIREBASE_MODELS.filter((m) => m.hasUserUidField === true);
+}
+
+/**
  * Returns the catalog of distinct collection prefixes in the registry.
  *
  * @returns the unique set of collection prefixes, sorted alphabetically

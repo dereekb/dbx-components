@@ -36,6 +36,12 @@ const UPSTREAM_PACKAGE_NAME = '@dereekb/firebase';
 /** Common short field names that appear on many models and are poor detection signals. */
 const COMMON_FIELDS = new Set(['cat', 'o', 'u', 's', 'fi', 'uid', 'mat', 'd']);
 
+/** Marker-interface name for documents whose Firestore id IS a Firebase Auth user uid. */
+const USER_KEYED_BY_ID_MARKER = 'UserRelatedById';
+
+/** Marker-interface name for documents that carry an explicit `uid` field. */
+const USER_RELATED_MARKER = 'UserRelated';
+
 /** Shape of an identifier acceptable as a `@dbxModelVariable` long name. */
 const LONG_NAME_RE = /^[a-z][a-zA-Z0-9]*$/;
 
@@ -179,6 +185,9 @@ function extractFromFile(file, content) {
     const collectionKind = collectionFactoryCalls.get(factoryFnName);
     if (collectionKind) entry.collectionKind = collectionKind;
     else console.warn(`[extract-firebase-models] ${relativePath}: ${modelName} could not detect collectionKind from factory \`${factoryFnName}\``);
+    const extendedNames = collectExtendedNames(iface, interfaceByName);
+    if (extendedNames.has(USER_KEYED_BY_ID_MARKER)) entry.userKeyedById = true;
+    if (extendedNames.has(USER_RELATED_MARKER)) entry.hasUserUidField = true;
     models.push(entry);
   }
 
@@ -210,6 +219,30 @@ function collectInheritedProps(iface, interfaceByName) {
     for (const p of current.props) out.set(p.name, p);
   };
   walk(iface);
+  return out;
+}
+
+/**
+ * Collects every interface name reachable from `iface` via `extends`, walking
+ * through same-file ancestors. Names whose declarations live in other files
+ * (e.g. `UserRelatedById`, `UserRelated` from `@dereekb/firebase`'s `user.ts`)
+ * are still recorded — they appear in some descendant's `extendsNames` list,
+ * which is what we need for marker-name detection.
+ */
+function collectExtendedNames(iface, interfaceByName) {
+  const out = new Set();
+  const visited = new Set();
+  const stack = [iface];
+  while (stack.length > 0) {
+    const current = stack.pop();
+    if (!current || visited.has(current.name)) continue;
+    visited.add(current.name);
+    for (const parentName of current.extendsNames) {
+      out.add(parentName);
+      const parent = interfaceByName.get(parentName);
+      if (parent) stack.push(parent);
+    }
+  }
   return out;
 }
 
