@@ -9,6 +9,7 @@
 
 import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { UtilRegistry } from '../registry/utils-runtime.js';
+import { buildSlugDetailResponse, pickFirstVariable } from './_resource-helpers.js';
 
 const UTILS_URI = 'dbx://util/entries';
 const UTIL_TEMPLATE = 'dbx://util/entries/{slug}';
@@ -23,16 +24,6 @@ const UTILS_BY_TAG_TEMPLATE = 'dbx://util/entries/tag/{tag}';
  */
 export interface RegisterUtilsResourceOptions {
   readonly registry: UtilRegistry;
-}
-
-function pickFirst(value: string | string[] | undefined): string | undefined {
-  let result: string | undefined;
-  if (Array.isArray(value)) {
-    result = value[0];
-  } else if (typeof value === 'string') {
-    result = value;
-  }
-  return result;
 }
 
 /**
@@ -92,30 +83,14 @@ export function registerUtilsResource(server: McpServer, options: RegisterUtilsR
       description: 'Full metadata for a single utility entry by slug.',
       mimeType: 'application/json'
     },
-    async (uri, variables) => {
-      const slug = pickFirst(variables.slug);
-      const entry = slug ? registry.findBySlug(slug) : undefined;
-
-      let text: string;
-      if (slug && entry) {
-        text = JSON.stringify(entry, null, 2);
-      } else if (slug) {
-        const available = registry.all.map((e) => e.slug).join(', ');
-        text = `Util '${slug}' not found. Available slugs: ${available}`;
-      } else {
-        text = 'No slug provided.';
-      }
-
-      return {
-        contents: [
-          {
-            uri: uri.href,
-            mimeType: entry ? 'application/json' : 'text/plain',
-            text
-          }
-        ]
-      };
-    }
+    async (uri, variables) =>
+      buildSlugDetailResponse({
+        uri,
+        rawSlug: variables.slug,
+        resolveEntry: (slug) => registry.findBySlug(slug),
+        listAvailableSlugs: () => registry.all.map((e) => e.slug),
+        label: 'Util'
+      })
   );
 
   server.registerResource(
@@ -127,7 +102,7 @@ export function registerUtilsResource(server: McpServer, options: RegisterUtilsR
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const category = pickFirst(variables.category);
+      const category = pickFirstVariable(variables.category);
       let text: string;
       let valid = false;
       if (category && registry.categories.includes(category)) {
@@ -158,7 +133,7 @@ export function registerUtilsResource(server: McpServer, options: RegisterUtilsR
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const module = pickFirst(variables.module);
+      const module = pickFirstVariable(variables.module);
       let text: string;
       let valid = false;
       if (module && registry.modules.includes(module)) {
@@ -189,7 +164,7 @@ export function registerUtilsResource(server: McpServer, options: RegisterUtilsR
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const tag = pickFirst(variables.tag);
+      const tag = pickFirstVariable(variables.tag);
       let text: string;
       let valid = false;
       if (tag && tag.length > 0) {

@@ -17,11 +17,10 @@
 
 import { relative, resolve } from 'node:path';
 import { type } from 'arktype';
-import { Project } from 'ts-morph';
 import { UtilManifest, type UtilEntry } from '../manifest/utils-schema.js';
 import { extractUtilEntries, type ExtractedUtilEntry, type UtilExtractWarning } from './utils-extract.js';
-import { DEFAULT_UTILS_SCAN_OUT_PATH, UTILS_SCAN_CONFIG_FILENAME, UtilsScanConfig, type UtilsScanSection } from './utils-scan-config-schema.js';
-import { defaultGlobber, defaultReadFile, loadPackageName, type ScanGlobber, type ScanReadFile } from './scan-io.js';
+import { DEFAULT_UTILS_SCAN_OUT_PATH, UTILS_SCAN_CONFIG_FILENAME, UtilsScanConfig } from './utils-scan-config-schema.js';
+import { buildScanProject, defaultGlobber, defaultReadFile, loadPackageName, loadScanSection, type ScanGlobber, type ScanReadFile } from './scan-io.js';
 
 // MARK: Public types
 export type BuildUtilsReadFile = ScanReadFile;
@@ -69,7 +68,17 @@ export async function buildUtilsManifest(input: BuildUtilsManifestInput): Promis
   const configPath = resolve(projectRoot, UTILS_SCAN_CONFIG_FILENAME);
   const packagePath = resolve(projectRoot, 'package.json');
 
-  const configOutcome = await loadScanConfig(configPath, readFile);
+  const configOutcome = await loadScanSection({
+    configPath,
+    readFile,
+    parseSection: (parsed) => {
+      const validated = UtilsScanConfig(parsed);
+      if (validated instanceof type.errors) {
+        return { ok: false, error: validated.summary };
+      }
+      return { ok: true, section: validated.utils };
+    }
+  });
   if (configOutcome.kind !== 'ok') {
     return configOutcome.outcome;
   }
@@ -87,12 +96,7 @@ export async function buildUtilsManifest(input: BuildUtilsManifestInput): Promis
     exclude: scanSection.exclude ?? []
   });
 
-  const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });
-  for (const relPath of filePaths) {
-    const absolute = resolve(projectRoot, relPath);
-    const text = await readFile(absolute);
-    project.createSourceFile(absolute, text, { overwrite: true });
-  }
+  const project = await buildScanProject({ projectRoot, filePaths, readFile });
 
   const extractResult = extractUtilEntries({ project, projectRoot });
   const moduleName = scanSection.module ?? packageName;
@@ -126,40 +130,6 @@ export async function buildUtilsManifest(input: BuildUtilsManifestInput): Promis
 }
 
 // MARK: Helpers
-type LoadScanConfigResult = { readonly kind: 'ok'; readonly section: UtilsScanSection } | { readonly kind: 'fail'; readonly outcome: Extract<BuildUtilsManifestOutcome, { kind: 'no-config' | 'invalid-scan-config' }> };
-
-async function loadScanConfig(configPath: string, readFile: BuildUtilsReadFile): Promise<LoadScanConfigResult> {
-  let raw: string | null = null;
-  try {
-    raw = await readFile(configPath);
-  } catch {
-    raw = null;
-  }
-  let result: LoadScanConfigResult;
-  if (raw === null) {
-    result = { kind: 'fail', outcome: { kind: 'no-config', configPath } };
-  } else {
-    let parsed: unknown;
-    let parseError: string | null = null;
-    try {
-      parsed = JSON.parse(raw);
-    } catch (err) {
-      parseError = err instanceof Error ? err.message : String(err);
-    }
-    if (parseError === null) {
-      const validated = UtilsScanConfig(parsed);
-      if (validated instanceof type.errors) {
-        result = { kind: 'fail', outcome: { kind: 'invalid-scan-config', configPath, error: validated.summary } };
-      } else {
-        result = { kind: 'ok', section: validated.utils };
-      }
-    } else {
-      result = { kind: 'fail', outcome: { kind: 'invalid-scan-config', configPath, error: parseError } };
-    }
-  }
-  return result;
-}
-
 interface AssembleEntryInput {
   readonly entry: ExtractedUtilEntry;
   readonly moduleName: string;

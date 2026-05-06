@@ -17,11 +17,10 @@
 
 import { resolve } from 'node:path';
 import { type } from 'arktype';
-import { Project } from 'ts-morph';
 import { PipeManifest, type PipeEntry } from '../manifest/pipes-schema.js';
 import { extractPipeEntries, type ExtractedPipeEntry, type PipeExtractWarning } from './pipes-extract.js';
-import { DEFAULT_PIPES_SCAN_OUT_PATH, PIPES_SCAN_CONFIG_FILENAME, PipesScanConfig, type PipesScanSection } from './pipes-scan-config-schema.js';
-import { defaultGlobber, defaultReadFile, loadPackageName, type ScanGlobber, type ScanReadFile } from './scan-io.js';
+import { DEFAULT_PIPES_SCAN_OUT_PATH, PIPES_SCAN_CONFIG_FILENAME, PipesScanConfig } from './pipes-scan-config-schema.js';
+import { buildScanProject, defaultGlobber, defaultReadFile, loadPackageName, loadScanSection, type ScanGlobber, type ScanReadFile } from './scan-io.js';
 
 // MARK: Public types
 export type BuildPipesReadFile = ScanReadFile;
@@ -69,7 +68,17 @@ export async function buildPipesManifest(input: BuildPipesManifestInput): Promis
   const configPath = resolve(projectRoot, PIPES_SCAN_CONFIG_FILENAME);
   const packagePath = resolve(projectRoot, 'package.json');
 
-  const configOutcome = await loadScanConfig(configPath, readFile);
+  const configOutcome = await loadScanSection({
+    configPath,
+    readFile,
+    parseSection: (parsed) => {
+      const validated = PipesScanConfig(parsed);
+      if (validated instanceof type.errors) {
+        return { ok: false, error: validated.summary };
+      }
+      return { ok: true, section: validated.pipes };
+    }
+  });
   if (configOutcome.kind !== 'ok') {
     return configOutcome.outcome;
   }
@@ -87,12 +96,7 @@ export async function buildPipesManifest(input: BuildPipesManifestInput): Promis
     exclude: scanSection.exclude ?? []
   });
 
-  const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });
-  for (const relPath of filePaths) {
-    const absolute = resolve(projectRoot, relPath);
-    const text = await readFile(absolute);
-    project.createSourceFile(absolute, text, { overwrite: true });
-  }
+  const project = await buildScanProject({ projectRoot, filePaths, readFile });
 
   const extractResult = extractPipeEntries({ project });
   const moduleName = scanSection.module ?? packageName;
@@ -126,40 +130,6 @@ export async function buildPipesManifest(input: BuildPipesManifestInput): Promis
 }
 
 // MARK: Helpers
-type LoadScanConfigResult = { readonly kind: 'ok'; readonly section: PipesScanSection } | { readonly kind: 'fail'; readonly outcome: Extract<BuildPipesManifestOutcome, { kind: 'no-config' | 'invalid-scan-config' }> };
-
-async function loadScanConfig(configPath: string, readFile: BuildPipesReadFile): Promise<LoadScanConfigResult> {
-  let raw: string | null = null;
-  try {
-    raw = await readFile(configPath);
-  } catch {
-    raw = null;
-  }
-  let result: LoadScanConfigResult;
-  if (raw === null) {
-    result = { kind: 'fail', outcome: { kind: 'no-config', configPath } };
-  } else {
-    let parsed: unknown;
-    let parseError: string | null = null;
-    try {
-      parsed = JSON.parse(raw);
-    } catch (err) {
-      parseError = err instanceof Error ? err.message : String(err);
-    }
-    if (parseError === null) {
-      const validated = PipesScanConfig(parsed);
-      if (validated instanceof type.errors) {
-        result = { kind: 'fail', outcome: { kind: 'invalid-scan-config', configPath, error: validated.summary } };
-      } else {
-        result = { kind: 'ok', section: validated.pipes };
-      }
-    } else {
-      result = { kind: 'fail', outcome: { kind: 'invalid-scan-config', configPath, error: parseError } };
-    }
-  }
-  return result;
-}
-
 interface AssembleEntryInput {
   readonly entry: ExtractedPipeEntry;
   readonly moduleName: string;

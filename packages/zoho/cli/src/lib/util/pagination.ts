@@ -1,4 +1,4 @@
-import { type PaginatedResponse, type PaginationAdapter } from '@dereekb/dbx-cli';
+import { outputResult, type PaginatedResponse, type PaginationAdapter, runPaginatedList } from '@dereekb/dbx-cli';
 
 export { type PaginatedResponse, type PaginationAdapter, type RunPaginatedListOutcome, type RunPaginatedListParams, type StreamingDump, openStreamingDump, runPaginatedList } from '@dereekb/dbx-cli';
 
@@ -75,3 +75,48 @@ export const zohoDeskPaginationAdapter: PaginationAdapter<any, ZohoPaginatedResp
     return count >= limit;
   }
 };
+
+/**
+ * Input to {@link runZohoPaginatedList}.
+ *
+ * `argv` is intentionally typed as `any` to match the per-command
+ * `handler: async (argv: any)` convention every Zoho CLI command file uses.
+ * The runner only reads the four pagination/dump flags off it and forwards
+ * them to {@link runPaginatedList}, which validates them.
+ */
+export interface RunZohoPaginatedListInput<TInput, TResponse extends ZohoPaginatedResponse> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  readonly argv: any;
+  readonly initialInput: TInput;
+  readonly fetchPage: (input: TInput) => Promise<TResponse>;
+}
+
+/**
+ * Convenience runner for Zoho CRM/Recruit list-style commands.
+ *
+ * Wires {@link runPaginatedList} with {@link zohoPagePaginationAdapter} and,
+ * when the call resolves to a single-page response, prints the standard
+ * `data` + `{page, per_page, more_records}` meta envelope every command in
+ * those CLIs uses. Multi-page invocations are streamed/printed by
+ * `runPaginatedList` itself so this helper is a no-op in that branch.
+ *
+ * @param input - argv (the yargs-typed handler argv), the per-command
+ *   `initialInput` payload, and the fetcher that issues the underlying API
+ *   call
+ */
+export async function runZohoPaginatedList<TInput, TResponse extends ZohoPaginatedResponse>(input: RunZohoPaginatedListInput<TInput, TResponse>): Promise<void> {
+  const { argv, initialInput, fetchPage } = input;
+  const outcome = await runPaginatedList({
+    initialInput,
+    fetchPage,
+    adapter: zohoPagePaginationAdapter,
+    multiplePages: argv.multiplePages,
+    multiplePagesOutput: argv.multiplePagesOutput,
+    dumpOutput: argv.dumpOutput,
+    dumpMerge: argv.dumpMerge
+  });
+  if (outcome.handled === false) {
+    const result = outcome.result;
+    outputResult(result.data, { page: result.info?.page, per_page: result.info?.per_page, more_records: result.info?.more_records });
+  }
+}

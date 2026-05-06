@@ -9,11 +9,10 @@
 
 import { resolve } from 'node:path';
 import { type } from 'arktype';
-import { Project } from 'ts-morph';
 import { ActionManifest, type ActionDirectiveEntry, type ActionEntry, type ActionStateEntry, type ActionStoreEntry } from '../manifest/actions-schema.js';
 import { extractActionEntries, type ExtractedActionDirective, type ExtractedActionEntry, type ExtractedActionState, type ExtractedActionStore, type ActionExtractWarning } from './actions-extract.js';
-import { ACTIONS_SCAN_CONFIG_FILENAME, ActionsScanConfig, DEFAULT_ACTIONS_SCAN_OUT_PATH, type ActionsScanSection } from './actions-scan-config-schema.js';
-import { defaultGlobber, defaultReadFile, loadPackageName, type ScanGlobber, type ScanReadFile } from './scan-io.js';
+import { ACTIONS_SCAN_CONFIG_FILENAME, ActionsScanConfig, DEFAULT_ACTIONS_SCAN_OUT_PATH } from './actions-scan-config-schema.js';
+import { buildScanProject, defaultGlobber, defaultReadFile, loadPackageName, loadScanSection, type ScanGlobber, type ScanReadFile } from './scan-io.js';
 
 // MARK: Public types
 export type BuildActionsReadFile = ScanReadFile;
@@ -51,7 +50,17 @@ export async function buildActionsManifest(input: BuildActionsManifestInput): Pr
   const configPath = resolve(projectRoot, ACTIONS_SCAN_CONFIG_FILENAME);
   const packagePath = resolve(projectRoot, 'package.json');
 
-  const configOutcome = await loadScanConfig(configPath, readFile);
+  const configOutcome = await loadScanSection({
+    configPath,
+    readFile,
+    parseSection: (parsed) => {
+      const validated = ActionsScanConfig(parsed);
+      if (validated instanceof type.errors) {
+        return { ok: false, error: validated.summary };
+      }
+      return { ok: true, section: validated.actions };
+    }
+  });
   if (configOutcome.kind !== 'ok') return configOutcome.outcome;
   const scanSection = configOutcome.section;
 
@@ -61,12 +70,7 @@ export async function buildActionsManifest(input: BuildActionsManifestInput): Pr
 
   const filePaths = await globber({ projectRoot, include: scanSection.include, exclude: scanSection.exclude ?? [] });
 
-  const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });
-  for (const relPath of filePaths) {
-    const absolute = resolve(projectRoot, relPath);
-    const text = await readFile(absolute);
-    project.createSourceFile(absolute, text, { overwrite: true });
-  }
+  const project = await buildScanProject({ projectRoot, filePaths, readFile });
 
   const extractResult = extractActionEntries({ project });
   const moduleName = scanSection.module ?? packageName;
@@ -100,40 +104,6 @@ export async function buildActionsManifest(input: BuildActionsManifestInput): Pr
 }
 
 // MARK: Helpers
-type LoadScanConfigResult = { readonly kind: 'ok'; readonly section: ActionsScanSection } | { readonly kind: 'fail'; readonly outcome: Extract<BuildActionsManifestOutcome, { kind: 'no-config' | 'invalid-scan-config' }> };
-
-async function loadScanConfig(configPath: string, readFile: BuildActionsReadFile): Promise<LoadScanConfigResult> {
-  let raw: string | null = null;
-  try {
-    raw = await readFile(configPath);
-  } catch {
-    raw = null;
-  }
-  let result: LoadScanConfigResult;
-  if (raw === null) {
-    result = { kind: 'fail', outcome: { kind: 'no-config', configPath } };
-  } else {
-    let parsed: unknown;
-    let parseError: string | null = null;
-    try {
-      parsed = JSON.parse(raw);
-    } catch (err) {
-      parseError = err instanceof Error ? err.message : String(err);
-    }
-    if (parseError === null) {
-      const validated = ActionsScanConfig(parsed);
-      if (validated instanceof type.errors) {
-        result = { kind: 'fail', outcome: { kind: 'invalid-scan-config', configPath, error: validated.summary } };
-      } else {
-        result = { kind: 'ok', section: validated.actions };
-      }
-    } else {
-      result = { kind: 'fail', outcome: { kind: 'invalid-scan-config', configPath, error: parseError } };
-    }
-  }
-  return result;
-}
-
 interface AssembleEntryInput {
   readonly entry: ExtractedActionEntry;
   readonly moduleName: string;
