@@ -6,6 +6,7 @@
     "zoho-cli": "index.js"
   },
   "peerDependencies": {
+    "@dereekb/dbx-cli": "13.10.9",
     "@dereekb/nestjs": "13.10.9",
     "@dereekb/rxjs": "13.10.9",
     "@dereekb/util": "13.10.9",

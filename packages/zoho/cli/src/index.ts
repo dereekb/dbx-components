@@ -1,3 +1,4 @@
+import { createOutputMiddleware } from '@dereekb/dbx-cli';
 import yargs, { type CommandModule } from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { authCommand } from './lib/commands/auth.command';
@@ -8,8 +9,10 @@ import { deskCommand } from './lib/commands/desk.command';
 import { requestCommand } from './lib/commands/request.command';
 import { outputCommand } from './lib/commands/output.command';
 import { createAuthMiddleware } from './lib/middleware/auth.middleware';
-import { outputError, configureOutputOptions } from './lib/util/output';
-import { loadCliConfig, mergeCliConfig, resolveOutputConfig } from './lib/config/cli.config';
+import { loadCliConfig, mergeCliConfig } from './lib/config/cli.config';
+// Importing this module registers the Zoho secret-redaction pattern + Zoho-aware error mapper
+// with @dereekb/dbx-cli. The named import keeps the side effects scoped to this entry point.
+import { outputError } from './lib/util/output';
 
 // MARK: Command Groups
 /**
@@ -34,45 +37,14 @@ function commandName(cmd: CommandModule): string {
 
 const configCommandNames = new Set(configCommands.map(commandName));
 
-function createOutputMiddleware() {
-  return async (argv: any) => {
-    const commandPath: string[] = argv._ ? (argv._ as string[]).map(String) : [];
-    const topCommand = commandPath[0];
-
-    // Save --set-dump-dir / --set-pick to per-command config when used on API commands
-    const setDumpDir: string | undefined = argv.setDumpDir;
-    const setPick: string | undefined = argv.setPick;
-    const hasSetFlags = setDumpDir !== undefined || setPick !== undefined;
-
-    if (hasSetFlags && topCommand && !configCommandNames.has(topCommand)) {
-      const commandKey = commandPath.join('.');
-      const commandConfig = {
-        ...(setDumpDir !== undefined ? { dumpDir: setDumpDir } : {}),
-        ...(setPick !== undefined ? { pick: setPick } : {})
-      };
-
-      await mergeCliConfig({ output: { commands: { [commandKey]: commandConfig } } });
-    }
-
-    // Resolve output options: --pick-all > CLI flags > set flags > per-command config > global config
-    // Skip pick/dump resolution for non-API commands (output, auth, doctor) — their
-    // own JSON output should never be filtered by saved pick fields.
-    const isApiCommand = topCommand && !configCommandNames.has(topCommand);
-    const config = await loadCliConfig();
-    const resolved = isApiCommand
-      ? resolveOutputConfig(config?.output, commandPath, {
-          dumpDir: argv.dumpDir ?? setDumpDir,
-          pick: argv.pick ?? setPick
-        })
-      : { dumpDir: undefined, pick: undefined };
-
-    configureOutputOptions({
-      dumpDir: resolved.dumpDir,
-      pick: argv.pickAll ? undefined : resolved.pick,
-      commandPath
-    });
-  };
-}
+const outputMiddleware = createOutputMiddleware({
+  cliName: 'zoho-cli',
+  skipCommands: configCommandNames,
+  loadOutputConfig: async () => (await loadCliConfig())?.output,
+  saveCommandOutputConfig: async (commandKey, commandConfig) => {
+    await mergeCliConfig({ output: { commands: { [commandKey]: commandConfig } } });
+  }
+});
 
 async function main() {
   try {
@@ -111,7 +83,7 @@ async function main() {
         global: true,
         describe: 'Ignore any configured pick filters and return full response data'
       })
-      .middleware([createAuthMiddleware(configCommandNames), createOutputMiddleware()], true)
+      .middleware([createAuthMiddleware(configCommandNames), outputMiddleware], true)
       .command(configCommands)
       .command(apiCommands)
       .demandCommand(1, 'Please specify a command. Use --help for available commands.')

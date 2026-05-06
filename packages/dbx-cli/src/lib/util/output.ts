@@ -41,8 +41,17 @@ export type CliSecretPattern = RegExp;
  */
 export const DEFAULT_CLI_SECRET_PATTERNS: CliSecretPattern[] = [/Bearer\s+\S+/gi, /access_token[=:]\s*\S+/gi, /refresh_token[=:]\s*\S+/gi, /client_secret[=:]\s*\S+/gi, /id_token[=:]\s*\S+/gi];
 
+/**
+ * Optional mapper for converting consumer-specific exception types into a {@link CliErrorOutput} envelope.
+ *
+ * When set via {@link configureCliErrorMapper}, {@link buildErrorOutput} consults the mapper before falling
+ * back to the built-in `CliError` / `Error` / unknown branches. Returning `undefined` defers to the defaults.
+ */
+export type CliErrorMapper = (error: unknown) => Maybe<CliErrorOutput>;
+
 let _outputOptions: CliOutputOptions = {};
 let _secretPatterns: CliSecretPattern[] = [...DEFAULT_CLI_SECRET_PATTERNS];
+let _errorMapper: Maybe<CliErrorMapper>;
 
 /**
  * Configures output options from parsed CLI arguments.
@@ -65,6 +74,17 @@ export function getOutputOptions(): CliOutputOptions {
  */
 export function configureCliSecretPatterns(patterns: CliSecretPattern[]): void {
   _secretPatterns = patterns;
+}
+
+/**
+ * Registers a {@link CliErrorMapper} that {@link buildErrorOutput} consults before falling back
+ * to the built-in `CliError` / `Error` / unknown handling. Pass `undefined` to clear.
+ *
+ * Use to plug provider-specific exception types (e.g. Zoho's `ZohoInvalidTokenError`) into the
+ * standard error envelope without duplicating the rest of the formatting / secret-redaction pipeline.
+ */
+export function configureCliErrorMapper(mapper?: CliErrorMapper): void {
+  _errorMapper = mapper;
 }
 
 export function sanitizeString(value: string): string {
@@ -170,6 +190,14 @@ export class CliError extends Error {
 }
 
 export function buildErrorOutput(error: unknown): CliErrorOutput {
+  if (_errorMapper) {
+    const mapped = _errorMapper(error);
+
+    if (mapped) {
+      return mapped;
+    }
+  }
+
   if (error instanceof CliError) {
     return { ok: false, error: sanitizeString(error.message), code: error.code, ...(error.suggestion ? { suggestion: error.suggestion } : {}) };
   }
