@@ -13,8 +13,12 @@
  * export name, the parent folder of the source file, the export name +
  * first JSDoc paragraph tokens, etc.
  *
- * The extractor is intentionally syntactic — no type checker calls — so
- * it runs cheaply on in-memory fixtures.
+ * The extractor prefers syntactic nodes (`getReturnTypeNode()`,
+ * `getTypeNode()`) and only falls back to type-checker inference
+ * (`getReturnType()`, `getType()`) when an explicit type annotation is
+ * absent. The syntactic-first path keeps the common case cheap on
+ * in-memory fixtures while still surfacing inferred types when authors
+ * elide them.
  */
 
 import { Node, type ClassDeclaration, type FunctionDeclaration, type JSDoc, type ParameterDeclaration, type Project, type SourceFile, type VariableDeclaration, type VariableStatement } from 'ts-morph';

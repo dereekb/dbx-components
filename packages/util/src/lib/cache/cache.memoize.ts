@@ -20,6 +20,9 @@ import { type AsyncKeyedValueCache, type AsyncValueCache } from './cache';
 export function memoizeAsyncValueCache<T>(inner: AsyncValueCache<T>): AsyncValueCache<T> {
   let loaded: Maybe<{ value: Maybe<T> }>;
   let inFlight: Maybe<Promise<Maybe<T>>>;
+  // Bumped on every write/clear so a slow inner.load() resolved after a concurrent
+  // update()/clear() can detect that its result is stale and skip clobbering newer state.
+  let generation = 0;
 
   return {
     load: () => {
@@ -27,24 +30,34 @@ export function memoizeAsyncValueCache<T>(inner: AsyncValueCache<T>): AsyncValue
         return Promise.resolve(loaded.value);
       }
 
-      // Cache the in-flight promise so concurrent callers share the same load instead of
-      // each firing an independent inner.load(). Cleared on settle so a failed load
-      // doesn't permanently poison the memo.
-      inFlight ??= inner.load().then(
-        (value) => {
-          loaded = { value };
-          inFlight = undefined;
-          return value;
-        },
-        (error) => {
-          inFlight = undefined;
-          throw error;
-        }
-      );
+      if (inFlight == null) {
+        // Cache the in-flight promise so concurrent callers share the same load instead
+        // of each firing an independent inner.load(). Cleared on settle so a failed load
+        // doesn't permanently poison the memo. The captured generation lets a slow
+        // resolve detect a concurrent update()/clear() and skip clobbering newer state.
+        const startGen = generation;
+        inFlight = inner.load().then(
+          (value) => {
+            if (generation === startGen) {
+              loaded = { value };
+              inFlight = undefined;
+            }
+            return value;
+          },
+          (error) => {
+            if (generation === startGen) {
+              inFlight = undefined;
+            }
+            throw error;
+          }
+        );
+      }
 
       return inFlight;
     },
     update: async (next) => {
+      generation += 1;
+      inFlight = undefined;
       // Write through to the inner first; only mutate the memoized snapshot once the inner
       // call succeeds, so a thrown inner.update doesn't leave the memo with a value that
       // never made it to the backing store.
@@ -52,6 +65,8 @@ export function memoizeAsyncValueCache<T>(inner: AsyncValueCache<T>): AsyncValue
       loaded = { value: next };
     },
     clear: async () => {
+      generation += 1;
+      inFlight = undefined;
       await inner.clear();
       loaded = { value: undefined };
     }
@@ -79,23 +94,33 @@ export function memoizeAsyncValueCache<T>(inner: AsyncValueCache<T>): AsyncValue
 export function memoizeAsyncKeyedValueCache<T>(inner: AsyncKeyedValueCache<T>): AsyncKeyedValueCache<T> {
   let loaded: Maybe<{ entries: Record<string, T> }>;
   let inFlight: Maybe<Promise<Record<string, T>>>;
+  // Bumped on every write/clear so a slow inner.load() resolved after a concurrent
+  // set()/remove()/clear() can detect that its result is stale and skip clobbering newer state.
+  let generation = 0;
 
   function ensureLoaded(): Promise<Record<string, T>> {
     if (loaded != null) {
       return Promise.resolve(loaded.entries);
     }
 
-    inFlight ??= inner.load().then(
-      (entries) => {
-        loaded = { entries };
-        inFlight = undefined;
-        return entries;
-      },
-      (error) => {
-        inFlight = undefined;
-        throw error;
-      }
-    );
+    if (inFlight == null) {
+      const startGen = generation;
+      inFlight = inner.load().then(
+        (entries) => {
+          if (generation === startGen) {
+            loaded = { entries };
+            inFlight = undefined;
+          }
+          return entries;
+        },
+        (error) => {
+          if (generation === startGen) {
+            inFlight = undefined;
+          }
+          throw error;
+        }
+      );
+    }
 
     return inFlight;
   }
@@ -105,6 +130,8 @@ export function memoizeAsyncKeyedValueCache<T>(inner: AsyncKeyedValueCache<T>): 
     get: async (key) => (await ensureLoaded())[key],
     set: async (key, value) => {
       const current = await ensureLoaded();
+      generation += 1;
+      inFlight = undefined;
       // Write through to the inner first so a failed inner.set doesn't leave the memo with
       // an entry that never made it to the backing store.
       await inner.set(key, value);
@@ -112,12 +139,16 @@ export function memoizeAsyncKeyedValueCache<T>(inner: AsyncKeyedValueCache<T>): 
     },
     remove: async (key) => {
       const current = await ensureLoaded();
+      generation += 1;
+      inFlight = undefined;
       await inner.remove(key);
       const next = { ...current };
       delete next[key];
       loaded = { entries: next };
     },
     clear: async () => {
+      generation += 1;
+      inFlight = undefined;
       await inner.clear();
       loaded = { entries: {} };
     }

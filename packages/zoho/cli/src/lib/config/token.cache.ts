@@ -17,8 +17,10 @@ export function createFileTokenCache(filePath: string): ZohoAccessTokenCache {
       const value = raw as Partial<ZohoAccessToken> & { expiresAt?: unknown };
 
       // Validate the required ZohoAccessToken shape so a corrupt or partial file is treated
-      // as a cache miss rather than re-emitted as a malformed token.
-      if (typeof value.accessToken !== 'string' || typeof value.scope !== 'string' || typeof value.apiDomain !== 'string' || typeof value.expiresIn !== 'number') {
+      // as a cache miss rather than re-emitted as a malformed token. expiresIn must be a
+      // finite positive number — NaN, ±Infinity, and zero/negative durations are nonsense
+      // for a TTL and should fail validation.
+      if (typeof value.accessToken !== 'string' || typeof value.scope !== 'string' || typeof value.apiDomain !== 'string' || typeof value.expiresIn !== 'number' || !Number.isFinite(value.expiresIn) || value.expiresIn <= 0) {
         return undefined;
       }
 

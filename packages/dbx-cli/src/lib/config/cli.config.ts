@@ -92,7 +92,15 @@ function mergeOutputCommandsConfig(existing: CliOutputConfig['commands'], update
     return existing;
   }
 
-  return updates.commands ? { ...existing, ...updates.commands } : undefined;
+  if (!updates.commands) {
+    return undefined;
+  }
+
+  const merged: Record<string, CliCommandOutputConfig> = { ...existing };
+  for (const key of Object.keys(updates.commands)) {
+    merged[key] = { ...existing?.[key], ...updates.commands[key] };
+  }
+  return merged;
 }
 
 export interface ResolveOutputConfigInput {

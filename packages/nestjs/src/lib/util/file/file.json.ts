@@ -3,13 +3,19 @@ import { chmod, mkdirSync, readFile, writeFile } from 'node:fs';
 import { rm } from 'node:fs/promises';
 
 /**
- * Reads JSON from disk, resolving `undefined` if the file is missing or malformed.
+ * Reads JSON from disk, resolving `undefined` when the file is missing (ENOENT) or its
+ * contents fail to parse as JSON. Other I/O errors (permission denied, busy handles) are
+ * forwarded to the caller — silently swallowing them masks real failures.
  */
 export function readJsonFile<T>(filePath: string): Promise<Maybe<T>> {
-  return new Promise<Maybe<T>>((resolve) => {
+  return new Promise<Maybe<T>>((resolve, reject) => {
     readFile(filePath, { encoding: 'utf-8' }, (err, data) => {
       if (err) {
-        resolve(undefined);
+        if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+          resolve(undefined);
+        } else {
+          reject(err);
+        }
         return;
       }
       try {
