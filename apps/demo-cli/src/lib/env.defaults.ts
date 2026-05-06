@@ -1,13 +1,13 @@
 import type { CliEnvDefault } from '@dereekb/dbx-cli';
 
-const DEMO_LOCAL_API_BASE_URL = 'http://localhost:9902/dereekb-components/us-central1/api';
-const DEMO_PROD_API_BASE_URL = 'https://components.dereekb.com/api';
-
-const DEMO_LOCAL_OIDC_ISSUER = `${DEMO_LOCAL_API_BASE_URL}/oidc`;
-const DEMO_PROD_OIDC_ISSUER = `${DEMO_PROD_API_BASE_URL}/oidc`;
-
 const DEMO_LOCAL_APP_CLIENT_URL = 'http://localhost:9010';
 const DEMO_PROD_APP_CLIENT_URL = 'https://components.dereekb.com';
+
+const DEMO_LOCAL_API_BASE_URL = `${DEMO_LOCAL_APP_CLIENT_URL}/api`;
+const DEMO_PROD_API_BASE_URL = `${DEMO_PROD_APP_CLIENT_URL}/api`;
+
+const DEMO_LOCAL_OIDC_ISSUER = `${DEMO_LOCAL_APP_CLIENT_URL}/oidc`;
+const DEMO_PROD_OIDC_ISSUER = `${DEMO_PROD_APP_CLIENT_URL}/oidc`;
 
 const DEMO_DEFAULT_REDIRECT_URI = 'http://127.0.0.1:0/callback';
 

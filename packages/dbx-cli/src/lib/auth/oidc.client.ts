@@ -33,25 +33,43 @@ export interface OidcTokenResponse {
 export interface DiscoverOidcMetadataInput {
   readonly issuer: string;
   /**
-   * Fallback URL to try when `<issuer>/.well-known/openid-configuration` returns non-2xx.
+   * Optional sibling base URL to try after the issuer-prefixed and origin-rooted paths.
    *
-   * Used when the issuer is mounted under a sub-path that does not serve the discovery doc
-   * directly — e.g. demo's API root serves `/.well-known/openid-configuration` but the issuer
-   * URL is `<api-base-url>/oidc`. We try the issuer-prefixed path first per RFC 8414, then fall back.
+   * Useful when the discovery doc is served at `<api-base-url>/.well-known/openid-configuration`
+   * — e.g. when the issuer is reached via a different host than the API and the origin-rooted
+   * candidate would target the wrong host.
    */
   readonly fallbackBaseUrl?: string;
 }
 
 /**
- * Fetches the OIDC discovery document for the given issuer, with a fallback to a sibling
- * `<fallbackBaseUrl>/.well-known/openid-configuration` URL when the issuer-prefixed path
- * is not served.
+ * Fetches the OIDC discovery document for the given issuer, trying these candidates in order:
+ *
+ *   1. `<issuer>/.well-known/openid-configuration` (OpenID Connect Discovery 1.0).
+ *   2. `<issuer-origin>/.well-known/openid-configuration` (host-rooted; matches projects that
+ *      mount the discovery controller at the API/dev-server root rather than under the issuer
+ *      sub-path — e.g. demo's `OidcWellKnownController`).
+ *   3. `<fallbackBaseUrl>/.well-known/openid-configuration` when supplied and not already covered.
  */
 export async function discoverOidcMetadata(input: DiscoverOidcMetadataInput): Promise<OidcDiscoveryMetadata> {
   const candidates = [`${trimSlash(input.issuer)}/.well-known/openid-configuration`];
 
+  try {
+    const originCandidate = `${new URL(input.issuer).origin}/.well-known/openid-configuration`;
+
+    if (!candidates.includes(originCandidate)) {
+      candidates.push(originCandidate);
+    }
+  } catch {
+    // Issuer URL didn't parse — skip the origin-rooted candidate and let the explicit fallback handle it.
+  }
+
   if (input.fallbackBaseUrl) {
-    candidates.push(`${trimSlash(input.fallbackBaseUrl)}/.well-known/openid-configuration`);
+    const fallbackCandidate = `${trimSlash(input.fallbackBaseUrl)}/.well-known/openid-configuration`;
+
+    if (!candidates.includes(fallbackCandidate)) {
+      candidates.push(fallbackCandidate);
+    }
   }
 
   let lastError: Maybe<Error>;
