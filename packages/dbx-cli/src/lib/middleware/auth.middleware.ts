@@ -1,6 +1,6 @@
 import type { MiddlewareFunction } from 'yargs';
 import { type CliConfig, loadCliConfig } from '../config/cli.config';
-import { applyEnvVarOverrides, isCliEnvConfigComplete } from '../config/env';
+import { type CliEnvDefault, applyEnvVarOverrides, findCliEnvDefault, isCliEnvConfigComplete, mergeCliEnvWithDefault } from '../config/env';
 import { buildCliPaths } from '../config/paths';
 import { type CliTokenEntry, createCliTokenCacheStore, isTokenExpired } from '../config/token.cache';
 import { discoverOidcMetadata, refreshAccessToken } from '../auth/oidc.client';
@@ -15,6 +15,10 @@ export interface CreateAuthMiddlewareInput {
    * Conventionally: `auth`, `env`, `doctor`, plus any other config/utility commands.
    */
   readonly skipCommands: ReadonlySet<string>;
+  /**
+   * Built-in env presets. Merged underneath the user's stored env when the env name matches.
+   */
+  readonly defaultEnvs?: readonly CliEnvDefault[];
 }
 
 /**
@@ -47,7 +51,9 @@ export function createAuthMiddleware(input: CreateAuthMiddlewareInput): Middlewa
         });
       }
 
-      const env = applyEnvVarOverrides({ cliName: input.cliName, env: config?.envs?.[envName] });
+      const defaultEnv = findCliEnvDefault({ name: envName, defaults: input.defaultEnvs })?.env;
+      const merged = mergeCliEnvWithDefault({ env: config?.envs?.[envName], defaultEnv });
+      const env = applyEnvVarOverrides({ cliName: input.cliName, env: merged });
 
       if (!isCliEnvConfigComplete(env)) {
         throw new CliError({

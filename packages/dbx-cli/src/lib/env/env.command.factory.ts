@@ -1,6 +1,7 @@
 import type { Argv, CommandModule } from 'yargs';
+import { type Maybe } from '@dereekb/util';
 import { type CliConfig, loadCliConfig, mergeCliConfig, maskSecret, saveCliConfig } from '../config/cli.config';
-import { type CliEnvConfig } from '../config/env';
+import { type CliEnvConfig, type CliEnvDefault, findCliEnvDefault, mergeCliEnvWithDefault } from '../config/env';
 import { buildCliPaths } from '../config/paths';
 import { createCliTokenCacheStore } from '../config/token.cache';
 import { CliError, outputError, outputResult } from '../util/output';
@@ -8,6 +9,11 @@ import { noop } from '../util/noop';
 
 export interface CreateEnvCommandInput {
   readonly cliName: string;
+  /**
+   * Built-in env presets. Resolved by env name and merged underneath the user's stored config so
+   * `env list` / `env show` / `env add` reflect the effective config.
+   */
+  readonly defaultEnvs?: readonly CliEnvDefault[];
 }
 
 function maskEnv(env: CliEnvConfig): Record<string, unknown> {
@@ -21,9 +27,33 @@ function maskEnv(env: CliEnvConfig): Record<string, unknown> {
   };
 }
 
+interface ResolveEnvWithDefaultInput {
+  readonly name: string;
+  readonly storedEnv?: CliEnvConfig;
+  readonly defaultEnvs?: readonly CliEnvDefault[];
+}
+
+interface ResolvedEnvWithDefault {
+  readonly env: CliEnvConfig;
+  readonly defaultName?: string;
+}
+
+function resolveEnvWithDefault(input: ResolveEnvWithDefaultInput): Maybe<ResolvedEnvWithDefault> {
+  const def = findCliEnvDefault({ name: input.name, defaults: input.defaultEnvs });
+  const env = mergeCliEnvWithDefault({ env: input.storedEnv, defaultEnv: def?.env });
+  let result: Maybe<ResolvedEnvWithDefault>;
+
+  if (env) {
+    result = { env, defaultName: def?.names[0] };
+  }
+
+  return result;
+}
+
 export function createEnvCommand(input: CreateEnvCommandInput): CommandModule {
   const paths = buildCliPaths({ cliName: input.cliName });
   const tokens = createCliTokenCacheStore({ tokenCachePath: paths.tokenCachePath });
+  const defaultEnvs = input.defaultEnvs;
 
   const listCommand: CommandModule = {
     command: 'list',
@@ -36,7 +66,11 @@ export function createEnvCommand(input: CreateEnvCommandInput): CommandModule {
 
         outputResult({
           activeEnv: config.activeEnv,
-          envs: Object.entries(envs).map(([name, env]) => ({ name, active: name === config.activeEnv, ...maskEnv(env) }))
+          envs: Object.entries(envs).map(([name, env]) => {
+            const resolved = resolveEnvWithDefault({ name, storedEnv: env, defaultEnvs });
+            return { name, active: name === config.activeEnv, ...(resolved?.defaultName ? { default: resolved.defaultName } : {}), ...maskEnv(resolved?.env ?? env) };
+          }),
+          defaults: defaultEnvs?.map((d) => ({ names: d.names, ...maskEnv({ apiBaseUrl: '', oidcIssuer: '', ...d.env }) }))
         });
       } catch (e) {
         outputError(e);
@@ -73,11 +107,11 @@ export function createEnvCommand(input: CreateEnvCommandInput): CommandModule {
 
   const addCommand: CommandModule = {
     command: 'add <name>',
-    describe: 'Create a new empty env (then run `auth setup --env <name>`)',
+    describe: 'Create a new env (defaults are merged in if a matching default is registered; then run `auth setup --env <name>`)',
     builder: (yargs: Argv) => yargs.positional('name', { type: 'string', demandOption: true }).option('api-base-url', { type: 'string' }).option('oidc-issuer', { type: 'string' }).option('redirect-uri', { type: 'string' }).option('set-active', { type: 'boolean', default: false }),
     handler: async (argv: any) => {
       try {
-        const env: CliEnvConfig = {
+        const stored: CliEnvConfig = {
           apiBaseUrl: argv.apiBaseUrl ?? '',
           oidcIssuer: argv.oidcIssuer ?? '',
           redirectUri: argv.redirectUri
@@ -87,12 +121,19 @@ export function createEnvCommand(input: CreateEnvCommandInput): CommandModule {
           configFilePath: paths.configFilePath,
           configDir: paths.configDir,
           updates: {
-            envs: { [argv.name]: env },
+            envs: { [argv.name]: stored },
             ...(argv.setActive ? { activeEnv: argv.name } : {})
           }
         });
 
-        outputResult({ added: argv.name, activeEnv: merged.activeEnv, env: maskEnv(env) });
+        const resolved = resolveEnvWithDefault({ name: argv.name, storedEnv: stored, defaultEnvs });
+
+        outputResult({
+          added: argv.name,
+          activeEnv: merged.activeEnv,
+          ...(resolved?.defaultName ? { default: resolved.defaultName } : {}),
+          env: maskEnv(resolved?.env ?? stored)
+        });
       } catch (e) {
         outputError(e);
         process.exit(1);
@@ -113,13 +154,19 @@ export function createEnvCommand(input: CreateEnvCommandInput): CommandModule {
           throw new CliError({ message: 'No active env. Pass <name> or run `env use <name>`.', code: 'NO_ACTIVE_ENV' });
         }
 
-        const env = config.envs?.[name];
+        const stored = config.envs?.[name];
+        const resolved = resolveEnvWithDefault({ name, storedEnv: stored, defaultEnvs });
 
-        if (!env) {
+        if (!resolved) {
           throw new CliError({ message: `Env "${name}" is not configured.`, code: 'ENV_NOT_FOUND' });
         }
 
-        outputResult({ name, active: name === config.activeEnv, ...maskEnv(env) });
+        outputResult({
+          name,
+          active: name === config.activeEnv,
+          ...(resolved.defaultName ? { default: resolved.defaultName } : {}),
+          ...maskEnv(resolved.env)
+        });
       } catch (e) {
         outputError(e);
         process.exit(1);

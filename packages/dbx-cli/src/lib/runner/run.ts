@@ -2,6 +2,7 @@ import yargs, { type Argv, type CommandModule } from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { createAuthCommand } from '../auth/auth.command.factory';
 import { callPassthroughCommand } from '../api/call.passthrough.command';
+import { type CliEnvDefault } from '../config/env';
 import { createDoctorCommand, type DoctorCheck } from '../doctor/doctor.command.factory';
 import { createEnvCommand } from '../env/env.command.factory';
 import { createAuthMiddleware } from '../middleware/auth.middleware';
@@ -27,6 +28,12 @@ export interface CreateCliInput {
    */
   readonly doctorChecks?: DoctorCheck[];
   /**
+   * Built-in env presets shipped with the CLI. When the user runs commands against an env name
+   * that matches one of {@link CliEnvDefault.names}, the default values are merged underneath the
+   * stored config so users don't need to supply `apiBaseUrl`/`oidcIssuer` themselves.
+   */
+  readonly defaultEnvs?: readonly CliEnvDefault[];
+  /**
    * Argv to parse. Defaults to `hideBin(process.argv)`.
    */
   readonly argv?: string[];
@@ -47,7 +54,8 @@ export interface CreateCliInput {
  */
 export function createCli(input: CreateCliInput): Argv {
   const cliName = input.cliName;
-  const builtInConfigCommands: CommandModule[] = [createAuthCommand({ cliName }), createEnvCommand({ cliName }), createDoctorCommand({ cliName, checks: input.doctorChecks })];
+  const defaultEnvs = input.defaultEnvs;
+  const builtInConfigCommands: CommandModule[] = [createAuthCommand({ cliName, defaultEnvs }), createEnvCommand({ cliName, defaultEnvs }), createDoctorCommand({ cliName, checks: input.doctorChecks })];
   const allConfigCommands = [...builtInConfigCommands, ...(input.configCommands ?? [])];
   const builtInApiCommands: CommandModule[] = input.disableCallPassthrough ? [] : [callPassthroughCommand];
   const allApiCommands = [...builtInApiCommands, ...(input.apiCommands ?? [])];
@@ -64,7 +72,7 @@ export function createCli(input: CreateCliInput): Argv {
     .option('set-dump-dir', { type: 'string', global: true, describe: 'Save dump-dir for this command and apply now' })
     .option('set-pick', { type: 'string', global: true, describe: 'Save pick for this command and apply now' })
     .option('pick-all', { type: 'boolean', global: true, describe: 'Ignore configured pick filters' })
-    .middleware([createAuthMiddleware({ cliName, skipCommands: skipCommandNames }), createOutputMiddleware({ cliName, skipCommands: skipCommandNames })], true)
+    .middleware([createAuthMiddleware({ cliName, skipCommands: skipCommandNames, defaultEnvs }), createOutputMiddleware({ cliName, skipCommands: skipCommandNames })], true)
     .command(allConfigCommands)
     .command(allApiCommands)
     .demandCommand(1, 'Please specify a command. Use --help for available commands.')

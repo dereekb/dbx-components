@@ -6,6 +6,71 @@ import { type Maybe } from '@dereekb/util';
 export const DEFAULT_CLI_OIDC_SCOPES = 'openid profile email';
 
 /**
+ * A built-in env config preset shipped with a CLI app.
+ *
+ * Each preset is addressable by one or more {@link names} (so e.g. `dev` and `local` can resolve
+ * to the same default). Values from the user's persisted env shadow these defaults; missing fields
+ * fall back to the default.
+ */
+export interface CliEnvDefault {
+  /**
+   * Names this default config is addressable by. Each name must be unique across the registered
+   * defaults — an env name resolves to at most one default.
+   */
+  readonly names: readonly string[];
+  /**
+   * The default config values. Any field can be omitted; the user's stored env (and env-var
+   * overrides) shadow these values at resolution time.
+   */
+  readonly env: Partial<CliEnvConfig>;
+}
+
+/**
+ * Returns the {@link CliEnvDefault} whose `names` includes the given env name, or `undefined`.
+ */
+export interface FindCliEnvDefaultInput {
+  readonly name: string;
+  readonly defaults?: readonly CliEnvDefault[];
+}
+
+export function findCliEnvDefault(input: FindCliEnvDefaultInput): Maybe<CliEnvDefault> {
+  return input.defaults?.find((d) => d.names.includes(input.name));
+}
+
+/**
+ * Merges a stored env on top of a default env. User-set fields take precedence; empty strings are
+ * treated as "not set" so that an `env add <name>` call that didn't pass `--api-base-url` still
+ * picks up the default.
+ */
+export interface MergeCliEnvWithDefaultInput {
+  readonly env?: Maybe<CliEnvConfig>;
+  readonly defaultEnv?: Maybe<Partial<CliEnvConfig>>;
+}
+
+export function mergeCliEnvWithDefault(input: MergeCliEnvWithDefaultInput): Maybe<CliEnvConfig> {
+  const e = input.env;
+  const d = input.defaultEnv;
+  let result: Maybe<CliEnvConfig>;
+
+  if (e || d) {
+    result = {
+      apiBaseUrl: nonEmpty(e?.apiBaseUrl) ?? nonEmpty(d?.apiBaseUrl) ?? '',
+      oidcIssuer: nonEmpty(e?.oidcIssuer) ?? nonEmpty(d?.oidcIssuer) ?? '',
+      clientId: nonEmpty(e?.clientId) ?? nonEmpty(d?.clientId),
+      clientSecret: nonEmpty(e?.clientSecret) ?? nonEmpty(d?.clientSecret),
+      redirectUri: nonEmpty(e?.redirectUri) ?? nonEmpty(d?.redirectUri),
+      scopes: nonEmpty(e?.scopes) ?? nonEmpty(d?.scopes)
+    };
+  }
+
+  return result;
+}
+
+function nonEmpty(value: Maybe<string>): string | undefined {
+  return value != null && value.length > 0 ? value : undefined;
+}
+
+/**
  * Environment-targeting config for a CLI invocation.
  *
  * Each env (e.g. `local`, `staging`, `prod`) holds the API base URL plus the OIDC client

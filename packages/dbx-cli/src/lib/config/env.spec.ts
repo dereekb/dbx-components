@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, beforeEach } from 'vitest';
-import { applyEnvVarOverrides, isCliEnvConfigComplete, resolveActiveEnvName } from './env';
+import { applyEnvVarOverrides, findCliEnvDefault, isCliEnvConfigComplete, mergeCliEnvWithDefault, resolveActiveEnvName, type CliEnvDefault } from './env';
 
 describe('resolveActiveEnvName', () => {
   const ENV_VAR = '__TEST_RESOLVE_ACTIVE_ENV_VAR__';
@@ -55,5 +55,81 @@ describe('isCliEnvConfigComplete', () => {
     expect(isCliEnvConfigComplete({ apiBaseUrl: 'a', oidcIssuer: 'o', clientId: 'i', clientSecret: 's', redirectUri: 'r' })).toBe(true);
     expect(isCliEnvConfigComplete({ apiBaseUrl: 'a', oidcIssuer: 'o', clientId: 'i', clientSecret: 's' })).toBe(false);
     expect(isCliEnvConfigComplete(undefined)).toBe(false);
+  });
+});
+
+describe('findCliEnvDefault', () => {
+  const defaults: CliEnvDefault[] = [
+    { names: ['local', 'dev'], env: { apiBaseUrl: 'http://local' } },
+    { names: ['prod', 'production'], env: { apiBaseUrl: 'https://prod' } }
+  ];
+
+  it('matches by primary name', () => {
+    expect(findCliEnvDefault({ name: 'local', defaults })?.env.apiBaseUrl).toBe('http://local');
+  });
+
+  it('matches by alias', () => {
+    expect(findCliEnvDefault({ name: 'dev', defaults })?.env.apiBaseUrl).toBe('http://local');
+    expect(findCliEnvDefault({ name: 'production', defaults })?.env.apiBaseUrl).toBe('https://prod');
+  });
+
+  it('returns undefined for unknown names', () => {
+    expect(findCliEnvDefault({ name: 'staging', defaults })).toBeUndefined();
+  });
+
+  it('returns undefined when no defaults are registered', () => {
+    expect(findCliEnvDefault({ name: 'local' })).toBeUndefined();
+  });
+});
+
+describe('mergeCliEnvWithDefault', () => {
+  const defaultEnv = {
+    apiBaseUrl: 'http://default',
+    oidcIssuer: 'http://default/oidc',
+    redirectUri: 'urn:default'
+  } as const;
+
+  it('returns undefined when both sides are empty', () => {
+    expect(mergeCliEnvWithDefault({})).toBeUndefined();
+  });
+
+  it('returns the default when no stored env is provided', () => {
+    expect(mergeCliEnvWithDefault({ defaultEnv })).toEqual({
+      apiBaseUrl: 'http://default',
+      oidcIssuer: 'http://default/oidc',
+      clientId: undefined,
+      clientSecret: undefined,
+      redirectUri: 'urn:default',
+      scopes: undefined
+    });
+  });
+
+  it('user-set fields shadow defaults', () => {
+    const merged = mergeCliEnvWithDefault({
+      defaultEnv,
+      env: { apiBaseUrl: 'http://user', oidcIssuer: '', redirectUri: 'urn:user' }
+    });
+    expect(merged?.apiBaseUrl).toBe('http://user');
+    expect(merged?.redirectUri).toBe('urn:user');
+    expect(merged?.oidcIssuer).toBe('http://default/oidc');
+  });
+
+  it('treats empty strings on the stored env as missing', () => {
+    const merged = mergeCliEnvWithDefault({
+      defaultEnv,
+      env: { apiBaseUrl: '', oidcIssuer: '' }
+    });
+    expect(merged?.apiBaseUrl).toBe('http://default');
+    expect(merged?.oidcIssuer).toBe('http://default/oidc');
+    expect(merged?.redirectUri).toBe('urn:default');
+  });
+
+  it('preserves stored client credentials over default', () => {
+    const merged = mergeCliEnvWithDefault({
+      defaultEnv: { ...defaultEnv, clientId: 'def-id', clientSecret: 'def-secret' },
+      env: { apiBaseUrl: 'http://user', oidcIssuer: 'http://user/oidc', clientId: 'user-id' }
+    });
+    expect(merged?.clientId).toBe('user-id');
+    expect(merged?.clientSecret).toBe('def-secret');
   });
 });

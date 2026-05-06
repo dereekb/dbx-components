@@ -1,7 +1,7 @@
 import type { Argv, CommandModule } from 'yargs';
 import { type Maybe } from '@dereekb/util';
 import { type CliConfig, loadCliConfig, maskSecret, mergeCliConfig } from '../config/cli.config';
-import { type CliEnvConfig, applyEnvVarOverrides, isCliEnvConfigComplete } from '../config/env';
+import { type CliEnvConfig, type CliEnvDefault, applyEnvVarOverrides, findCliEnvDefault, isCliEnvConfigComplete, mergeCliEnvWithDefault } from '../config/env';
 import { type CliPaths, buildCliPaths } from '../config/paths';
 import { type CliTokenEntry, createCliTokenCacheStore, isTokenExpired } from '../config/token.cache';
 import { discoverOidcMetadata, exchangeAuthorizationCode, fetchUserInfo, refreshAccessToken, revokeToken } from './oidc.client';
@@ -19,6 +19,10 @@ export interface CreateAuthCommandInput {
    * Conventionally `<CLINAME>_ENV` (e.g. `DEMO_CLI_ENV`).
    */
   readonly envVarName?: string;
+  /**
+   * Built-in env presets. Merged underneath the user's stored env when the env name matches.
+   */
+  readonly defaultEnvs?: readonly CliEnvDefault[];
 }
 
 interface ResolveEnvInput {
@@ -26,6 +30,7 @@ interface ResolveEnvInput {
   readonly cliName: string;
   readonly envVarName: string;
   readonly flagEnv: Maybe<string>;
+  readonly defaultEnvs?: readonly CliEnvDefault[];
 }
 
 interface ResolvedEnv {
@@ -46,7 +51,9 @@ async function resolveEnvOrThrow(input: ResolveEnvInput): Promise<ResolvedEnv> {
   }
 
   const stored = config.envs?.[envName];
-  const env = applyEnvVarOverrides({ cliName: input.cliName, env: stored });
+  const defaultEnv = findCliEnvDefault({ name: envName, defaults: input.defaultEnvs })?.env;
+  const merged = mergeCliEnvWithDefault({ env: stored, defaultEnv });
+  const env = applyEnvVarOverrides({ cliName: input.cliName, env: merged });
 
   if (!env) {
     throw new CliError({
@@ -74,6 +81,7 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
   const envVarName = input.envVarName ?? `${cliName.replaceAll('-', '_').toUpperCase()}_ENV`;
   const paths = buildCliPaths({ cliName });
   const tokens = createCliTokenCacheStore({ tokenCachePath: paths.tokenCachePath });
+  const defaultEnvs = input.defaultEnvs;
 
   // MARK: setup
   const setupCommand: CommandModule = {
@@ -96,7 +104,9 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
           throw new CliError({ message: 'Provide --env <name> on first setup.', code: 'NO_ACTIVE_ENV' });
         }
 
-        const existing = (await loadCliConfig({ configFilePath: paths.configFilePath }))?.envs?.[envName];
+        const stored = (await loadCliConfig({ configFilePath: paths.configFilePath }))?.envs?.[envName];
+        const defaultEnv = findCliEnvDefault({ name: envName, defaults: defaultEnvs })?.env;
+        const existing = mergeCliEnvWithDefault({ env: stored, defaultEnv });
 
         async function resolve(argvValue: string | undefined, existingValue: string | undefined, prompt: string, options?: { mask?: boolean }): Promise<string | undefined> {
           if (argvValue) return argvValue;
@@ -147,7 +157,7 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
     builder: (yargs: Argv) => withEnv(yargs).option('open', { type: 'boolean', default: false, describe: 'Print the auth URL only (does not auto-open a browser)' }).option('code', { type: 'string', describe: 'Skip the prompt and pass the redirect URL or bare code directly' }),
     handler: async (argv: any) => {
       try {
-        const { envName, env } = await resolveEnvOrThrow({ paths, cliName, envVarName, flagEnv: argv.env });
+        const { envName, env } = await resolveEnvOrThrow({ paths, cliName, envVarName, flagEnv: argv.env, defaultEnvs });
 
         if (!isCliEnvConfigComplete(env)) {
           throw new CliError({
@@ -220,7 +230,7 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
     builder: (yargs: Argv) => withEnv(yargs).option('revoke', { type: 'boolean', default: false, describe: 'Call the OIDC revocation endpoint before clearing local tokens' }),
     handler: async (argv: any) => {
       try {
-        const { envName, env } = await resolveEnvOrThrow({ paths, cliName, envVarName, flagEnv: argv.env });
+        const { envName, env } = await resolveEnvOrThrow({ paths, cliName, envVarName, flagEnv: argv.env, defaultEnvs });
         const entry = await tokens.get(envName);
 
         if (argv.revoke && entry?.refreshToken && env.clientId && env.clientSecret) {
@@ -257,7 +267,7 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
     builder: (yargs: Argv) => withEnv(yargs),
     handler: async (argv: any) => {
       try {
-        const { envName, env } = await resolveEnvOrThrow({ paths, cliName, envVarName, flagEnv: argv.env });
+        const { envName, env } = await resolveEnvOrThrow({ paths, cliName, envVarName, flagEnv: argv.env, defaultEnvs });
         const entry = await tokens.get(envName);
 
         if (!entry) {
@@ -298,7 +308,7 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
     builder: (yargs: Argv) => withEnv(yargs),
     handler: async (argv: any) => {
       try {
-        const { envName, env } = await resolveEnvOrThrow({ paths, cliName, envVarName, flagEnv: argv.env });
+        const { envName, env } = await resolveEnvOrThrow({ paths, cliName, envVarName, flagEnv: argv.env, defaultEnvs });
         const entry = await tokens.get(envName);
 
         outputResult({
@@ -329,7 +339,7 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
     builder: (yargs: Argv) => withEnv(yargs),
     handler: async (argv: any) => {
       try {
-        const { envName, env } = await resolveEnvOrThrow({ paths, cliName, envVarName, flagEnv: argv.env });
+        const { envName, env } = await resolveEnvOrThrow({ paths, cliName, envVarName, flagEnv: argv.env, defaultEnvs });
         const entry = await tokens.get(envName);
 
         if (!entry?.refreshToken) {
