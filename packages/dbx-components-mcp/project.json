@@ -36,6 +36,10 @@
         "{projectRoot}/generated/dereekb-dbx-core.pipes.mcp.generated.json",
         "{projectRoot}/generated/dereekb-dbx-core.actions.mcp.generated.json",
         "{projectRoot}/generated/dereekb-dbx-core.filters.mcp.generated.json",
+        "{projectRoot}/generated/dereekb-util.utils.mcp.generated.json",
+        "{projectRoot}/generated/dereekb-date.utils.mcp.generated.json",
+        "{projectRoot}/generated/dereekb-rxjs.utils.mcp.generated.json",
+        "{projectRoot}/generated/dereekb-model.utils.mcp.generated.json",
         "{projectRoot}/generated/dereekb-demo.dbx-docs-ui-examples.mcp.generated.json"
       ],
       "inputs": [
@@ -54,6 +58,7 @@
         "{workspaceRoot}/packages/dbx-core/src/lib/pipe/**/*.ts",
         "{workspaceRoot}/packages/dbx-core/src/lib/action/**/*.ts",
         "{workspaceRoot}/packages/dbx-core/src/lib/filter/**/*.ts",
+        "{workspaceRoot}/packages/rxjs/src/**/*.ts",
         "{workspaceRoot}/apps/demo/src/app/modules/doc/modules/examples/**/*.ts"
       ],
       "options": {

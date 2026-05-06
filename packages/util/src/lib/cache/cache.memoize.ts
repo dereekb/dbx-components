@@ -11,6 +11,11 @@ import { type AsyncKeyedValueCache, type AsyncValueCache } from './cache';
  *
  * Note: the memoized value is per-process. Long-running processes will not observe writes
  * made by other processes to the inner backing once the memo is populated.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory cache
+ * @dbxUtilTags memoize, memo, cache, async, single-load, async-value
+ * @dbxUtilRelated memoize-async-keyed-value-cache
  */
 export function memoizeAsyncValueCache<T>(inner: AsyncValueCache<T>): AsyncValueCache<T> {
   let loaded: Maybe<{ value: Maybe<T> }>;
@@ -45,6 +50,11 @@ export function memoizeAsyncValueCache<T>(inner: AsyncValueCache<T>): AsyncValue
  *
  * Note: the memoized record is per-process. Long-running processes will not observe writes
  * made by other processes to the inner backing once the memo is populated.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory cache
+ * @dbxUtilTags memoize, memo, cache, async, keyed, record
+ * @dbxUtilRelated memoize-async-value-cache
  */
 export function memoizeAsyncKeyedValueCache<T>(inner: AsyncKeyedValueCache<T>): AsyncKeyedValueCache<T> {
   let loaded: Maybe<{ entries: Record<string, T> }>;

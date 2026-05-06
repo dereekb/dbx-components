@@ -62,6 +62,8 @@
  * | dbx_filter_lookup                   | Documentation | "Tell me about filter directive / preset X"            |
  * | dbx_filter_scaffold                 | Generation    | "Scaffold a filter source + presets for model X"       |
  * | dbx_pipe_lookup                     | Documentation | "Tell me about Angular pipe X"                         |
+ * | dbx_util_lookup                     | Documentation | "Tell me about utility function/class X"               |
+ * | dbx_util_search                     | Discovery     | "Find utility functions matching keywords (intent)"    |
  * | dbx_artifact_scaffold               | Generation    | "Give me the body for a new <artifact>."               |
  * | dbx_artifact_file_convention        | Reference     | "Where do I put a new <artifact>?"                     |
  * | dbx_css_token_lookup                | Documentation | "What's the canonical CSS token for X?" (intent/value/role)|
@@ -122,6 +124,8 @@ import { routeSearchTool } from './route-search.tool.js';
 import { createLookupFilterTool } from './lookup-filter.tool.js';
 import { filterScaffoldTool } from './filter-scaffold.tool.js';
 import { createLookupPipeTool } from './lookup-pipe.tool.js';
+import { createLookupUtilTool } from './lookup-util.tool.js';
+import { createSearchUtilTool } from './search-util.tool.js';
 import { artifactScaffoldTool } from './artifact-scaffold.tool.js';
 import { artifactFileConventionTool } from './artifact-file-convention.tool.js';
 import { explainRuleTool } from './explain-rule.tool.js';
@@ -138,6 +142,7 @@ import type { ActionRegistry } from '../registry/actions-runtime.js';
 import type { FilterRegistry } from '../registry/filters-runtime.js';
 import type { ForgeFieldRegistry } from '../registry/forge-fields.js';
 import type { PipeRegistry } from '../registry/pipes-runtime.js';
+import type { UtilRegistry } from '../registry/utils-runtime.js';
 import type { SemanticTypeRegistry } from '../registry/semantic-types.js';
 import type { TokenRegistry } from '../registry/tokens-runtime.js';
 import type { CssUtilityRegistry } from '../registry/css-utilities-runtime.js';
@@ -223,6 +228,7 @@ export interface RegisterToolsOptions {
   readonly semanticTypeRegistry?: SemanticTypeRegistry;
   readonly forgeFieldRegistry?: ForgeFieldRegistry;
   readonly pipeRegistry?: PipeRegistry;
+  readonly utilRegistry?: UtilRegistry;
   readonly uiComponentRegistry?: UiComponentRegistry;
   /**
    * Optional app-sourced UI examples registry. When supplied (or empty),
@@ -285,6 +291,9 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions =
   }
   if (options.pipeRegistry !== undefined) {
     tools.push(createLookupPipeTool({ registry: options.pipeRegistry }));
+  }
+  if (options.utilRegistry !== undefined) {
+    tools.push(createLookupUtilTool({ registry: options.utilRegistry }), createSearchUtilTool({ registry: options.utilRegistry }));
   }
   if (options.uiComponentRegistry !== undefined) {
     tools.push(createLookupUiTool({ registry: options.uiComponentRegistry }), createSearchUiTool({ registry: options.uiComponentRegistry, examplesRegistry: options.dbxDocsUiExamplesRegistry }));

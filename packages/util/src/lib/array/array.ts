@@ -16,6 +16,11 @@ export type ArrayOrValue<T> = T | T[];
 /**
  * Converts the input value to an array containing itself, or returns itself if it is a non-empty array. Returns undefined if the input is nullish or results in an empty array.
  *
+ * @dbxUtil
+ * @dbxUtilCategory array
+ * @dbxUtilTags array, non-empty, convert, ensure, normalize
+ * @dbxUtilRelated convert-maybe-to-array, convert-to-array
+ *
  * @param arrayOrValue - single value or array to convert
  * @returns an array with at least one element, or undefined if the result would be empty
  */
@@ -64,6 +69,11 @@ export function convertToArray<T>(arrayOrValue: ArrayOrValue<T>): T[] {
 /**
  * Returns the first value from the array, or the value itself if not an array.
  *
+ * @dbxUtil
+ * @dbxUtilCategory array
+ * @dbxUtilTags array, first, head, get, value
+ * @dbxUtilRelated last-value, value-at-index, first-and-last-value
+ *
  * @param input - single value or array to retrieve from
  * @returns the first element of the array, or the input value itself
  */
@@ -73,6 +83,11 @@ export function firstValue<T>(input: ArrayOrValue<T>): T {
 
 /**
  * Returns the last value from the array, or the value itself if not an array.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory array
+ * @dbxUtilTags array, last, tail, get, value
+ * @dbxUtilRelated first-value, value-at-index, first-and-last-value
  *
  * @param input - single value or array to retrieve from
  * @returns the last element of the array, or the input value itself
@@ -166,6 +181,11 @@ export function pushElementOntoArray<T>(target: T[], element: T, times: number):
 
 /**
  * Merges all input arrays into a single new array. Nullish entries are ignored.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory array
+ * @dbxUtilTags array, merge, concat, flatten, combine
+ * @dbxUtilRelated merge-arrays-into-array
  *
  * @param arrays - arrays to merge; nullish entries are skipped
  * @returns a new array containing all elements from the provided arrays

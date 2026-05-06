@@ -1,0 +1,534 @@
+{
+  "version": 1,
+  "source": "@dereekb/util",
+  "module": "@dereekb/util",
+  "generatedAt": "1970-01-01T00:00:00.000Z",
+  "generator": "@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs",
+  "entries": [
+    {
+      "slug": "convert-maybe-to-non-empty-array",
+      "name": "convertMaybeToNonEmptyArray",
+      "kind": "function",
+      "category": "array",
+      "module": "@dereekb/util",
+      "subpath": "array/array",
+      "signature": "convertMaybeToNonEmptyArray(arrayOrValue: Maybe<ArrayOrValue<T>>): Maybe<T[]>",
+      "description": "Converts the input value to an array containing itself, or returns itself if it is a non-empty array. Returns undefined if the input is nullish or results in an empty array.",
+      "params": [
+        {
+          "name": "arrayOrValue",
+          "type": "Maybe<ArrayOrValue<T>>",
+          "description": "- single value or array to convert",
+          "optional": false
+        }
+      ],
+      "returns": "an array with at least one element, or undefined if the result would be empty",
+      "tags": [
+        "array",
+        "non-empty",
+        "convert",
+        "ensure",
+        "normalize",
+        "maybe",
+        "to",
+        "non",
+        "empty",
+        "convertmaybetononemptyarray"
+      ],
+      "relatedSlugs": [
+        "convert-maybe-to-array",
+        "convert-to-array"
+      ]
+    },
+    {
+      "slug": "first-value",
+      "name": "firstValue",
+      "kind": "function",
+      "category": "array",
+      "module": "@dereekb/util",
+      "subpath": "array/array",
+      "signature": "firstValue(input: ArrayOrValue<T>): T",
+      "description": "Returns the first value from the array, or the value itself if not an array.",
+      "params": [
+        {
+          "name": "input",
+          "type": "ArrayOrValue<T>",
+          "description": "- single value or array to retrieve from",
+          "optional": false
+        }
+      ],
+      "returns": "the first element of the array, or the input value itself",
+      "tags": [
+        "array",
+        "first",
+        "head",
+        "get",
+        "value",
+        "firstvalue"
+      ],
+      "relatedSlugs": [
+        "last-value",
+        "value-at-index",
+        "first-and-last-value"
+      ]
+    },
+    {
+      "slug": "last-value",
+      "name": "lastValue",
+      "kind": "function",
+      "category": "array",
+      "module": "@dereekb/util",
+      "subpath": "array/array",
+      "signature": "lastValue(input: ArrayOrValue<T>): T",
+      "description": "Returns the last value from the array, or the value itself if not an array.",
+      "params": [
+        {
+          "name": "input",
+          "type": "ArrayOrValue<T>",
+          "description": "- single value or array to retrieve from",
+          "optional": false
+        }
+      ],
+      "returns": "the last element of the array, or the input value itself",
+      "tags": [
+        "array",
+        "last",
+        "tail",
+        "get",
+        "value",
+        "lastvalue"
+      ],
+      "relatedSlugs": [
+        "first-value",
+        "value-at-index",
+        "first-and-last-value"
+      ]
+    },
+    {
+      "slug": "merge-arrays",
+      "name": "mergeArrays",
+      "kind": "function",
+      "category": "array",
+      "module": "@dereekb/util",
+      "subpath": "array/array",
+      "signature": "mergeArrays(arrays: Maybe<T[]>[]): T[]",
+      "description": "Merges all input arrays into a single new array. Nullish entries are ignored.",
+      "params": [
+        {
+          "name": "arrays",
+          "type": "Maybe<T[]>[]",
+          "description": "- arrays to merge; nullish entries are skipped",
+          "optional": false
+        }
+      ],
+      "returns": "a new array containing all elements from the provided arrays",
+      "tags": [
+        "array",
+        "merge",
+        "concat",
+        "flatten",
+        "combine",
+        "arrays",
+        "mergearrays"
+      ],
+      "relatedSlugs": [
+        "merge-arrays-into-array"
+      ]
+    },
+    {
+      "slug": "memoize-async-value-cache",
+      "name": "memoizeAsyncValueCache",
+      "kind": "function",
+      "category": "cache",
+      "module": "@dereekb/util",
+      "subpath": "cache/cache.memoize",
+      "signature": "memoizeAsyncValueCache(inner: AsyncValueCache<T>): AsyncValueCache<T>",
+      "description": "Wraps an inner {@link AsyncValueCache} with a single-load in-memory memoization layer.\n\nThe first {@link AsyncValueCache.load} call delegates to the inner cache and stores the\nresult; subsequent calls return the memoized value without touching the inner cache again.\n{@link AsyncValueCache.update} writes through to the inner cache and refreshes the memo.\n{@link AsyncValueCache.clear} clears both layers.\n\nNote: the memoized value is per-process. Long-running processes will not observe writes\nmade by other processes to the inner backing once the memo is populated.",
+      "params": [
+        {
+          "name": "inner",
+          "type": "AsyncValueCache<T>",
+          "description": "",
+          "optional": false
+        }
+      ],
+      "returns": "AsyncValueCache<T>",
+      "tags": [
+        "memoize",
+        "memo",
+        "cache",
+        "async",
+        "single-load",
+        "async-value",
+        "value",
+        "memoizeasyncvaluecache"
+      ],
+      "relatedSlugs": [
+        "memoize-async-keyed-value-cache"
+      ]
+    },
+    {
+      "slug": "memoize-async-keyed-value-cache",
+      "name": "memoizeAsyncKeyedValueCache",
+      "kind": "function",
+      "category": "cache",
+      "module": "@dereekb/util",
+      "subpath": "cache/cache.memoize",
+      "signature": "memoizeAsyncKeyedValueCache(inner: AsyncKeyedValueCache<T>): AsyncKeyedValueCache<T>",
+      "description": "Wraps an inner {@link AsyncKeyedValueCache} with a single-load in-memory memoization layer\nover the full record.\n\nThe first call to any read method ({@link AsyncKeyedValueCache.load} or {@link AsyncKeyedValueCache.get})\ndelegates to the inner cache and stores the loaded record; subsequent reads return entries\nfrom the memoized record without re-hitting the inner cache. Writes ({@link AsyncKeyedValueCache.set} /\n{@link AsyncKeyedValueCache.remove}) update the memoized record and write through to the inner cache.\n{@link AsyncKeyedValueCache.clear} clears both layers.\n\nNote: the memoized record is per-process. Long-running processes will not observe writes\nmade by other processes to the inner backing once the memo is populated.",
+      "params": [
+        {
+          "name": "inner",
+          "type": "AsyncKeyedValueCache<T>",
+          "description": "",
+          "optional": false
+        }
+      ],
+      "returns": "AsyncKeyedValueCache<T>",
+      "tags": [
+        "memoize",
+        "memo",
+        "cache",
+        "async",
+        "keyed",
+        "record",
+        "value",
+        "memoizeasynckeyedvaluecache"
+      ],
+      "relatedSlugs": [
+        "memoize-async-value-cache"
+      ]
+    },
+    {
+      "slug": "expiration-details",
+      "name": "expirationDetails",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/expires",
+      "signature": "expirationDetails(input: ExpirationDetailsInput<T>): ExpirationDetails<T>",
+      "description": "Returns an {@link ExpirationDetails} for the given input configuration.\n\nUse this when you need to ask whether something has expired or what its expiration date is. See {@link ExpirationDetailsInput} for how the expiration date is resolved (`expires` → `expiresAt` → `expiresFromDate + expiresIn`).\n\nCommon patterns:\n- **Direct expiration**: `expirationDetails({ expiresAt }).hasExpired()`\n- **Wrap an existing object**: `expirationDetails({ expires: token }).hasExpired()`\n- **TTL / throttle**: `expirationDetails({ expiresFromDate: lastRunAt, expiresIn: throttleMs })` — see {@link isThrottled}\n- **Pre-emptive refresh**: `expirationDetails({ expiresFromDate: expiresAt, expiresIn: -bufferMs })` — treat as expired `bufferMs` before the real expiration, e.g. to refresh a token before it actually dies",
+      "params": [
+        {
+          "name": "input",
+          "type": "ExpirationDetailsInput<T>",
+          "description": "- Configuration for calculating expiration",
+          "optional": false
+        }
+      ],
+      "returns": "An ExpirationDetails object that can determine expiration state",
+      "tags": [
+        "expiration",
+        "expires",
+        "expiry",
+        "ttl",
+        "throttle",
+        "refresh",
+        "time-to-live",
+        "date",
+        "details",
+        "expirationdetails"
+      ],
+      "relatedSlugs": [
+        "is-expired",
+        "is-throttled",
+        "calculate-expiration-date",
+        "is-under-threshold",
+        "check-atleast-one-not-expired",
+        "check-any-have-expired"
+      ]
+    },
+    {
+      "slug": "calculate-expiration-date",
+      "name": "calculateExpirationDate",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/expires",
+      "signature": "calculateExpirationDate(input: ExpirationDetailsInput<Expires>): Maybe<Date>",
+      "description": "Convenience function for calculating and returning the expiration date given the input.\nThis is a shorthand for expirationDetails(input).getExpirationDate().",
+      "params": [
+        {
+          "name": "input",
+          "type": "ExpirationDetailsInput<Expires>",
+          "description": "- Input configuration used to calculate the expiration date",
+          "optional": false
+        }
+      ],
+      "returns": "The calculated expiration date, or null if no expiration is defined",
+      "tags": [
+        "expiration",
+        "expires",
+        "expiry",
+        "ttl",
+        "calculate",
+        "date",
+        "calculateexpirationdate"
+      ],
+      "relatedSlugs": [
+        "expiration-details",
+        "is-expired"
+      ]
+    },
+    {
+      "slug": "is-expired",
+      "name": "isExpired",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/expires",
+      "signature": "isExpired(input: Maybe<ExpirationDetailsInput<T>>, now?: Maybe<Date>): boolean",
+      "description": "Convenience wrapper around {@link expirationDetails}().hasExpired() that treats null/undefined input or no expiration date as expired.",
+      "params": [
+        {
+          "name": "input",
+          "type": "Maybe<ExpirationDetailsInput<T>>",
+          "description": "- Expiration configuration. Null/undefined is treated as expired.",
+          "optional": false
+        },
+        {
+          "name": "now",
+          "type": "Maybe<Date>",
+          "description": "- Optional override for the current time. Defaults to the current time. Apply any buffer (e.g. for clock skew or pre-emptive refresh) by shifting this value forward.",
+          "optional": true
+        }
+      ],
+      "returns": "boolean",
+      "tags": [
+        "expiration",
+        "expires",
+        "expiry",
+        "expired",
+        "has-expired",
+        "is-expired",
+        "ttl",
+        "date",
+        "is",
+        "isexpired"
+      ],
+      "example": "isExpired(null); // true\nisExpired({ expiresAt: pastDate }); // true\nisExpired({ expiresAt: futureDate }); // false\nisExpired({ expiresAt: futureDate }, addMilliseconds(new Date(), 60_000)); // true (when within buffer)",
+      "relatedSlugs": [
+        "expiration-details",
+        "is-throttled",
+        "calculate-expiration-date"
+      ]
+    },
+    {
+      "slug": "is-under-threshold",
+      "name": "isUnderThreshold",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/expires",
+      "signature": "isUnderThreshold(threshold: Milliseconds, nextRunAt: Maybe<DateOrUnixDateTimeMillisecondsNumber>, now?: Maybe<Date>): boolean",
+      "description": "Returns true if the threshold has not passed since the next run time, compared to now.\n\nUsed in cases where a date that was calculated using the \"threshold\" value is given and we want to check if we are still within that threshold.\n\nExample:\n- Should send a notification at max every 2 days. The threshold is 2 days in milliseconds, and \"nextRunAt\" is the previously calculated date that was originally \"now\" + \"threshold\".",
+      "params": [
+        {
+          "name": "threshold",
+          "type": "Milliseconds",
+          "description": "The threshold time. Typically this is amount of time that was used to calculate the original \"nextRunAt\" time.",
+          "optional": false
+        },
+        {
+          "name": "nextRunAt",
+          "type": "Maybe<DateOrUnixDateTimeMillisecondsNumber>",
+          "description": "Time the next run will occur. If null/undefined, then this function will return false.",
+          "optional": false
+        },
+        {
+          "name": "now",
+          "type": "Maybe<Date>",
+          "description": "Optional override for the current time. Defaults to the current time.",
+          "optional": true
+        }
+      ],
+      "returns": "True if the threshold has not passed since the next run time, compared to now.",
+      "tags": [
+        "threshold",
+        "throttle",
+        "ttl",
+        "time-window",
+        "rate-limit",
+        "date",
+        "is",
+        "under",
+        "isunderthreshold"
+      ],
+      "relatedSlugs": [
+        "is-throttled",
+        "expiration-details"
+      ]
+    },
+    {
+      "slug": "is-throttled",
+      "name": "isThrottled",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/expires",
+      "signature": "isThrottled(throttleTime: Maybe<Milliseconds>, lastRunAt: Maybe<DateOrUnixDateTimeMillisecondsNumber>, now?: Maybe<Date>): boolean",
+      "description": "Convenience function for quickly calculating throttling given a throttle time and last run time.\n\nReturns true if the throttle time has not passed since the last run time, compared to now.\nThis is useful for rate limiting operations (e.g., \"only allow this action once every X milliseconds\").",
+      "params": [
+        {
+          "name": "throttleTime",
+          "type": "Maybe<Milliseconds>",
+          "description": "- Minimum time in milliseconds that must pass between operations",
+          "optional": false
+        },
+        {
+          "name": "lastRunAt",
+          "type": "Maybe<DateOrUnixDateTimeMillisecondsNumber>",
+          "description": "- Timestamp when the operation was last performed",
+          "optional": false
+        },
+        {
+          "name": "now",
+          "type": "Maybe<Date>",
+          "description": "- Optional override for the current time (defaults to the current time)",
+          "optional": true
+        }
+      ],
+      "returns": "True if the operation should be throttled (not enough time has passed), false otherwise",
+      "tags": [
+        "throttle",
+        "throttled",
+        "rate-limit",
+        "debounce",
+        "ttl",
+        "expiration",
+        "date",
+        "is",
+        "isthrottled"
+      ],
+      "relatedSlugs": [
+        "expiration-details",
+        "is-under-threshold",
+        "is-expired"
+      ]
+    },
+    {
+      "slug": "check-atleast-one-not-expired",
+      "name": "checkAtleastOneNotExpired",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/expires",
+      "signature": "checkAtleastOneNotExpired(details: ExpirationDetails<Expires>[]): boolean",
+      "description": "Returns true if at least one of the input ExpirationDetails has not expired.\nUseful for checking if any items in a collection are still valid.\n\nIf the list is empty, returns false.",
+      "params": [
+        {
+          "name": "details",
+          "type": "ExpirationDetails<Expires>[]",
+          "description": "- Collection of ExpirationDetails to check",
+          "optional": false
+        }
+      ],
+      "returns": "True if at least one item has not expired, false otherwise",
+      "tags": [
+        "expiration",
+        "valid",
+        "collection",
+        "any",
+        "date",
+        "check",
+        "atleast",
+        "one",
+        "not",
+        "expired",
+        "checkatleastonenotexpired"
+      ],
+      "relatedSlugs": [
+        "expiration-details",
+        "check-any-have-expired"
+      ]
+    },
+    {
+      "slug": "check-any-have-expired",
+      "name": "checkAnyHaveExpired",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/expires",
+      "signature": "checkAnyHaveExpired(details: ExpirationDetails<Expires>[], defaultIfEmpty?: boolean): boolean",
+      "description": "Returns true if any of the input ExpirationDetails have expired.\nUseful for checking if any items in a collection need to be refreshed or removed.\n\nIf the list is empty, returns the value specified by defaultIfEmpty.",
+      "params": [
+        {
+          "name": "details",
+          "type": "ExpirationDetails<Expires>[]",
+          "description": "- Collection of ExpirationDetails to check",
+          "optional": false
+        },
+        {
+          "name": "defaultIfEmpty",
+          "type": "boolean",
+          "description": "- Default value to return if the list is empty (defaults to true)",
+          "optional": true
+        }
+      ],
+      "returns": "True if any item has expired, or the defaultIfEmpty value for an empty list",
+      "tags": [
+        "expiration",
+        "refresh",
+        "collection",
+        "any",
+        "date",
+        "check",
+        "have",
+        "expired",
+        "checkanyhaveexpired"
+      ],
+      "relatedSlugs": [
+        "expiration-details",
+        "check-atleast-one-not-expired"
+      ]
+    },
+    {
+      "slug": "perform-async-tasks",
+      "name": "performAsyncTasks",
+      "kind": "function",
+      "category": "promise",
+      "module": "@dereekb/util",
+      "subpath": "promise/promise",
+      "signature": "performAsyncTasks(input: I[], taskFn: PerformAsyncTaskFn<I, O>, config?: PerformAsyncTasksConfig<I, K>): Promise<PerformAsyncTasksResult<I, O>>",
+      "description": "Performs async tasks for each input value with configurable retry and parallelism behavior.\nUseful for operations that may experience optimistic concurrency collisions.",
+      "params": [
+        {
+          "name": "input",
+          "type": "I[]",
+          "description": "- The array of input values to process.",
+          "optional": false
+        },
+        {
+          "name": "taskFn",
+          "type": "PerformAsyncTaskFn<I, O>",
+          "description": "- The async function to execute for each input.",
+          "optional": false
+        },
+        {
+          "name": "config",
+          "type": "PerformAsyncTasksConfig<I, K>",
+          "description": "- Configuration for retries, parallelism, and error handling.",
+          "optional": true
+        }
+      ],
+      "returns": "An aggregated result with succeeded/failed items and their outputs/errors.",
+      "tags": [
+        "async",
+        "promise",
+        "parallel",
+        "retry",
+        "task",
+        "batch",
+        "concurrency",
+        "throttle",
+        "perform",
+        "tasks",
+        "performasynctasks"
+      ],
+      "relatedSlugs": [
+        "perform-tasks-in-parallel",
+        "perform-async-task"
+      ]
+    }
+  ]
+}

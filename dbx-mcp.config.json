@@ -104,6 +104,42 @@
       }
     ]
   },
+  "utils": {
+    "scan": [
+      {
+        "project": "packages/util",
+        "source": "@dereekb/util",
+        "module": "@dereekb/util",
+        "include": ["src/lib/**/*.ts"],
+        "exclude": ["**/*.spec.ts", "**/*.test.ts"],
+        "out": "packages/dbx-components-mcp/generated/dereekb-util.utils.mcp.generated.json"
+      },
+      {
+        "project": "packages/date",
+        "source": "@dereekb/date",
+        "module": "@dereekb/date",
+        "include": ["src/lib/**/*.ts"],
+        "exclude": ["**/*.spec.ts", "**/*.test.ts"],
+        "out": "packages/dbx-components-mcp/generated/dereekb-date.utils.mcp.generated.json"
+      },
+      {
+        "project": "packages/rxjs",
+        "source": "@dereekb/rxjs",
+        "module": "@dereekb/rxjs",
+        "include": ["src/lib/**/*.ts"],
+        "exclude": ["**/*.spec.ts", "**/*.test.ts"],
+        "out": "packages/dbx-components-mcp/generated/dereekb-rxjs.utils.mcp.generated.json"
+      },
+      {
+        "project": "packages/model",
+        "source": "@dereekb/model",
+        "module": "@dereekb/model",
+        "include": ["src/lib/**/*.ts"],
+        "exclude": ["**/*.spec.ts", "**/*.test.ts"],
+        "out": "packages/dbx-components-mcp/generated/dereekb-model.utils.mcp.generated.json"
+      }
+    ]
+  },
   "dbxDocsUiExamples": {
     "scan": [
       {

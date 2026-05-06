@@ -137,6 +137,11 @@ export interface PerformAsyncTasksConfig<I = unknown, K extends PrimativeKey = P
  * Performs async tasks for each input value with configurable retry and parallelism behavior.
  * Useful for operations that may experience optimistic concurrency collisions.
  *
+ * @dbxUtil
+ * @dbxUtilCategory promise
+ * @dbxUtilTags async, promise, parallel, retry, task, batch, concurrency, throttle
+ * @dbxUtilRelated perform-tasks-in-parallel, perform-async-task
+ *
  * @param input - The array of input values to process.
  * @param taskFn - The async function to execute for each input.
  * @param config - Configuration for retries, parallelism, and error handling.
