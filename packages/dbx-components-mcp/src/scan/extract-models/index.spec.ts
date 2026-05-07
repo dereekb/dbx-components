@@ -73,6 +73,7 @@ describe('extractModels (rich ts-morph extractor)', () => {
       workspaceRoot: WORKSPACE_ROOT,
       skipReservedFolders: RESERVED_NAMES
     });
+    expect(result.errors, `errors: ${JSON.stringify(result.errors, null, 2)}`).toEqual([]);
     const byName = new Map(result.models.map((m) => [m.name, m]));
 
     const guestbookEntry = byName.get('GuestbookEntry');

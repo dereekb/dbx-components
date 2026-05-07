@@ -1,7 +1,7 @@
 import type { Argv, CommandModule } from 'yargs';
 import { type Maybe, noop } from '@dereekb/util';
 import { type CliConfig, loadCliConfig, maskSecret, mergeCliConfig } from '../config/cli.config';
-import { type CliEnvConfig, type CliEnvDefault, applyEnvVarOverrides, findCliEnvDefault, isCliEnvConfigComplete, mergeCliEnvWithDefault } from '../config/env';
+import { type CliEnvConfig, type CliEnvDefault, applyEnvVarOverrides, filterReadOnlyModelScopes, findCliEnvDefault, isCliEnvConfigComplete, mergeCliEnvWithDefault } from '../config/env';
 import { type CliPaths, buildCliPaths } from '../config/paths';
 import { type CliTokenEntry, createCliTokenCacheStore, isTokenExpired } from '../config/token.cache';
 import { discoverOidcMetadata, exchangeAuthorizationCode, fetchUserInfo, refreshAccessToken, revokeToken } from './oidc.client';
@@ -170,7 +170,7 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
   const loginCommand: CommandModule = {
     command: 'login',
     describe: 'Run OIDC PKCE flow and persist tokens for the active env',
-    builder: (yargs: Argv) => withEnv(yargs).option('open', { type: 'boolean', default: false, describe: 'Print the auth URL only (does not auto-open a browser)' }).option('code', { type: 'string', describe: 'Skip the prompt and pass the redirect URL or bare code directly' }),
+    builder: (yargs: Argv) => withEnv(yargs).option('open', { type: 'boolean', default: false, describe: 'Print the auth URL only (does not auto-open a browser)' }).option('code', { type: 'string', describe: 'Skip the prompt and pass the redirect URL or bare code directly' }).option('read-only-scopes', { type: 'boolean', default: false, describe: 'Drop model.create/model.update/model.delete from the requested scopes (keeps model.read and model.query)' }),
     handler: async (argv: any) => {
       try {
         const { envName, env } = await resolveEnvOrThrow({ paths, cliName, envVarName, flagEnv: argv.env, defaultEnvs });
@@ -185,6 +185,7 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
         const meta = await discoverOidcMetadata({ issuer: env.oidcIssuer, fallbackBaseUrl: env.apiBaseUrl });
         const { codeVerifier, codeChallenge } = await generatePkceMaterial();
         const state = generateOAuthState();
+        const requestedScopes = argv.readOnlyScopes ? filterReadOnlyModelScopes(env.scopes) : env.scopes;
 
         const url = buildAuthorizationUrl({
           authorizationEndpoint: meta.authorization_endpoint,
@@ -192,7 +193,7 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
           appClientUrl: env.appClientUrl,
           clientId: env.clientId,
           redirectUri: env.redirectUri,
-          scopes: env.scopes,
+          scopes: requestedScopes,
           state,
           codeChallenge
         });

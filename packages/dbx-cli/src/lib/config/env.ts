@@ -6,6 +6,33 @@ import { type Maybe } from '@dereekb/util';
 export const DEFAULT_CLI_OIDC_SCOPES = 'openid profile email';
 
 /**
+ * The `model.*` write scopes filtered out by {@link filterReadOnlyModelScopes}.
+ *
+ * Mirrors the write half of the dbx-components callModel CRUD scope set
+ * (`CALL_MODEL_OIDC_SCOPES` in `@dereekb/firebase-server/oidc`) — duplicated here so the
+ * CLI doesn't take a server-side dependency just to know the names.
+ */
+export const MODEL_WRITE_OIDC_SCOPES = ['model.create', 'model.update', 'model.delete'] as const;
+
+/**
+ * Returns the input scope string with the `model.create`, `model.update`, and `model.delete`
+ * scopes removed, preserving every other scope (including `model.read` and `model.query`).
+ *
+ * Drives the `auth login --read-only-scopes` flag: when a CLI's env defaults request the
+ * full callModel CRUD scope set, this trims the request down to read/query only.
+ *
+ * @param scopes - Space-separated scope list, or `undefined` to filter the default scopes.
+ * @returns The filtered space-separated scope list.
+ */
+export function filterReadOnlyModelScopes(scopes: Maybe<string>): string {
+  const writeScopes = new Set<string>(MODEL_WRITE_OIDC_SCOPES);
+  return (scopes ?? DEFAULT_CLI_OIDC_SCOPES)
+    .split(/\s+/)
+    .filter((s) => s.length > 0 && !writeScopes.has(s))
+    .join(' ');
+}
+
+/**
  * A built-in env config preset shipped with a CLI app.
  *
  * Each preset is addressable by one or more {@link names} (so e.g. `dev` and `local` can resolve

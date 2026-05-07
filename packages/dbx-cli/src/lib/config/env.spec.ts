@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, beforeEach } from 'vitest';
-import { applyEnvVarOverrides, findCliEnvDefault, isCliEnvConfigComplete, mergeCliEnvWithDefault, resolveActiveEnvName, type CliEnvDefault } from './env';
+import { applyEnvVarOverrides, DEFAULT_CLI_OIDC_SCOPES, filterReadOnlyModelScopes, findCliEnvDefault, isCliEnvConfigComplete, mergeCliEnvWithDefault, resolveActiveEnvName, type CliEnvDefault } from './env';
 
 describe('resolveActiveEnvName', () => {
   const ENV_VAR = '__TEST_RESOLVE_ACTIVE_ENV_VAR__';
@@ -155,5 +155,27 @@ describe('mergeCliEnvWithDefault', () => {
     });
     expect(merged?.clientId).toBe('user-id');
     expect(merged?.clientSecret).toBe('def-secret');
+  });
+});
+
+describe('filterReadOnlyModelScopes', () => {
+  it('removes model.create / model.update / model.delete and preserves the rest', () => {
+    expect(filterReadOnlyModelScopes('openid profile email demo model.create model.read model.update model.delete model.query')).toBe('openid profile email demo model.read model.query');
+  });
+
+  it('returns the default scopes filtered when input is undefined', () => {
+    expect(filterReadOnlyModelScopes(undefined)).toBe(DEFAULT_CLI_OIDC_SCOPES);
+  });
+
+  it('collapses internal whitespace', () => {
+    expect(filterReadOnlyModelScopes('openid   model.create  model.read')).toBe('openid model.read');
+  });
+
+  it('keeps model.read and model.query when those are the only model scopes', () => {
+    expect(filterReadOnlyModelScopes('openid model.read model.query')).toBe('openid model.read model.query');
+  });
+
+  it('returns an empty string when every scope is a write scope', () => {
+    expect(filterReadOnlyModelScopes('model.create model.update model.delete')).toBe('');
   });
 });
