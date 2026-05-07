@@ -13,7 +13,9 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import type { PackageRef } from './types';
 
-/** Inputs accepted by {@link resolveModuleToPackage}. */
+/**
+ * Inputs accepted by {@link resolveModuleToPackage}.
+ */
 export interface ResolveModuleInput {
   readonly workspaceRoot: string;
   readonly importingFile: string;

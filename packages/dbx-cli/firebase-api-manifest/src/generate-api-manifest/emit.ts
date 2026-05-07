@@ -11,7 +11,9 @@
 import { format, resolveConfig } from 'prettier';
 import type { CollectedEntry } from './types';
 
-/** Inputs for {@link renderManifest}. */
+/**
+ * Inputs for {@link renderManifest}.
+ */
 export interface RenderManifestInput {
   readonly outputFile: string;
   readonly entries: readonly CollectedEntry[];

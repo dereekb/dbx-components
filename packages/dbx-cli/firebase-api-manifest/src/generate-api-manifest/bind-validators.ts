@@ -25,7 +25,9 @@ export function deriveValidatorName(paramsTypeName: string): string {
   return paramsTypeName.charAt(0).toLowerCase() + paramsTypeName.slice(1) + 'Type';
 }
 
-/** Inputs for {@link isExportedFromPackage}. */
+/**
+ * Inputs for {@link isExportedFromPackage}.
+ */
 export interface IsExportedInput {
   readonly packageRoot: string;
   readonly identifier: string;

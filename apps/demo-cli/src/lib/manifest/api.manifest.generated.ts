@@ -1,4 +1,4 @@
-/* eslint-disable @nx/enforce-module-boundaries */
+ 
 // AUTO-GENERATED — DO NOT EDIT.
 // Run `pnpm nx run demo-cli:generate-api-manifest` to refresh.
 

@@ -85,7 +85,7 @@ export const zohoDeskPaginationAdapter: PaginationAdapter<any, ZohoPaginatedResp
  * them to {@link runPaginatedList}, which validates them.
  */
 export interface RunZohoPaginatedListInput<TInput, TResponse extends ZohoPaginatedResponse> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   readonly argv: any;
   readonly initialInput: TInput;
   readonly fetchPage: (input: TInput) => Promise<TResponse>;
