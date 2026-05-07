@@ -12,6 +12,12 @@
  *   dbx://util/entries[/{slug} | /category/{category} | /module/{module} | /tag/{tag}]
  *   dbx://filter/entries[/{slug} | /kind/{kind}]
  *   dbx://css-utility/entries[/{slug} | /role/{role} | /source/{source}]
+ *   dbx://auth/catalog
+ *   dbx://auth/claim/{key}
+ *   dbx://auth/role/{role}
+ *   dbx://auth/role/tag/{tag}
+ *   dbx://auth/scope/{scope}
+ *   dbx://auth/app/{app}
  *
  * Resource-less clusters (route, storagefile_m, notification_m, system_m,
  * artifact) don't expose data endpoints because their output is computed from
@@ -20,6 +26,7 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { ActionRegistry } from '../registry/actions-runtime.js';
+import type { AuthRegistry } from '../registry/auth-runtime.js';
 import type { FilterRegistry } from '../registry/filters-runtime.js';
 import type { ForgeFieldRegistry } from '../registry/forge-fields.js';
 import type { PipeRegistry } from '../registry/pipes-runtime.js';
@@ -38,6 +45,7 @@ import { registerFiltersResource } from './filters.resource.js';
 import { registerSemanticTypesResource } from './semantic-types.resource.js';
 import { registerTokensResource } from './tokens.resource.js';
 import { registerCssUtilityResource } from './css-utility.resource.js';
+import { registerAuthResource } from './auth.resource.js';
 
 /**
  * Options consumed by {@link registerResources}. Mirrors {@link RegisterToolsOptions}
@@ -55,6 +63,7 @@ export interface RegisterResourcesOptions {
   readonly filterRegistry?: FilterRegistry;
   readonly tokenRegistry?: TokenRegistry;
   readonly cssUtilityRegistry?: CssUtilityRegistry;
+  readonly authRegistry?: AuthRegistry;
 }
 
 /**
@@ -93,5 +102,8 @@ export function registerResources(server: McpServer, options: RegisterResourcesO
   }
   if (options.cssUtilityRegistry !== undefined) {
     registerCssUtilityResource(server, { registry: options.cssUtilityRegistry });
+  }
+  if (options.authRegistry !== undefined) {
+    registerAuthResource(server, { registry: options.authRegistry });
   }
 }

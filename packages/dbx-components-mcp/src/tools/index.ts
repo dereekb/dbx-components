@@ -74,6 +74,11 @@
  * | dbx_model_list_component            | Discovery     | "What downstream models live in this `-firebase` component?" |
  * | dbx_server_actions_list_app         | Discovery     | "What server-actions classes does this API expose, and are they wired?" |
  * | dbx_mcp_config                      | Setup         | "Status / validate / init / refresh the workspace dbx-mcp config." |
+ * | dbx_auth_claim_lookup               | Documentation | "Tell me about claim key / `*ApiAuthClaims` interface X." |
+ * | dbx_auth_scope_lookup               | Documentation | "Tell me about OIDC scope X — where is it enforced?"      |
+ * | dbx_auth_role_lookup                | Documentation | "Forward / tag / reverse role lookup."                    |
+ * | dbx_auth_token_explain              | Decoding      | "Decode this JWT and annotate every claim."               |
+ * | dbx_auth_list_app                   | Discovery     | "Enumerate one app's claims, scopes, and gates."         |
  */
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -138,7 +143,13 @@ import { createSemanticTypeSearchTool } from './search-semantic-type.tool.js';
 import { createCssTokenLookupTool } from './css-token-lookup.tool.js';
 import { createCssClassLookupTool } from './css-class-lookup.tool.js';
 import { createUiSmellCheckTool } from './ui-smell-check.tool.js';
+import { createAuthClaimLookupTool } from './auth-claim-lookup.tool.js';
+import { createAuthScopeLookupTool } from './auth-scope-lookup.tool.js';
+import { createAuthRoleLookupTool } from './auth-role-lookup.tool.js';
+import { createAuthTokenExplainTool } from './auth-token-explain.tool.js';
+import { createAuthListAppTool } from './auth-list-app.tool.js';
 import type { ActionRegistry } from '../registry/actions-runtime.js';
+import type { AuthRegistry } from '../registry/auth-runtime.js';
 import type { FilterRegistry } from '../registry/filters-runtime.js';
 import type { ForgeFieldRegistry } from '../registry/forge-fields.js';
 import type { PipeRegistry } from '../registry/pipes-runtime.js';
@@ -218,6 +229,15 @@ export const DBX_TOOLS: readonly DbxTool[] = [
 ];
 
 /**
+ * Auth-cluster tools registered when an {@link AuthRegistry} is supplied.
+ * Bundled separately from {@link DBX_TOOLS} because the registry is
+ * loaded asynchronously and tests exercise the cluster in isolation.
+ */
+export function createAuthClusterTools(registry: AuthRegistry): readonly DbxTool[] {
+  return [createAuthClaimLookupTool({ registry }), createAuthScopeLookupTool({ registry }), createAuthRoleLookupTool({ registry }), createAuthTokenExplainTool({ registry }), createAuthListAppTool({ registry })];
+}
+
+/**
  * Options consumed by {@link registerTools}. Registries are loaded
  * asynchronously at server startup, so registry-bound tools (semantic-types,
  * form fields) receive their registry via this options bag rather than from a
@@ -267,6 +287,12 @@ export interface RegisterToolsOptions {
    * block. When omitted, the validator runs with built-in defaults.
    */
   readonly modelValidateRuleOptions?: RuleOptions;
+  /**
+   * Optional auth catalog registry consumed by the `dbx_auth_*` tool
+   * cluster (claim/scope/role lookup, JWT explainer, app surface). When
+   * omitted those tools are skipped.
+   */
+  readonly authRegistry?: AuthRegistry;
 }
 
 /**
@@ -312,6 +338,9 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions =
   }
   if (options.cssUtilityRegistry !== undefined) {
     tools.push(createCssClassLookupTool({ registry: options.cssUtilityRegistry }));
+  }
+  if (options.authRegistry !== undefined) {
+    tools.push(...createAuthClusterTools(options.authRegistry));
   }
 
   underlyingServer.setRequestHandler(ListToolsRequestSchema, async () => {

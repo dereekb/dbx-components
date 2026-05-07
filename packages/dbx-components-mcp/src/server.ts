@@ -29,6 +29,8 @@ import type { CssUtilityRegistry } from './registry/css-utilities-runtime.js';
 import type { UiComponentRegistry } from './registry/ui-components-runtime.js';
 import type { DbxDocsUiExamplesRegistry } from './registry/dbx-docs-ui-examples-runtime.js';
 import { FIREBASE_MODELS } from './registry/firebase-models.js';
+import { createAuthRegistryFromEntries, type AuthRegistry } from './registry/auth-runtime.js';
+import { BUILTIN_AUTH_CLAIMS, BUILTIN_AUTH_ROLES, BUILTIN_AUTH_SCOPES, WORKSPACE_AUTH_APPS, WORKSPACE_AUTH_CLAIMS } from './registry/auth-builtin.js';
 import type { FixtureModelRegistry } from './tools/model-fixture-shared/index.js';
 import { registerResources } from './resources/index.js';
 import { registerTools } from './tools/index.js';
@@ -62,6 +64,7 @@ Tool clusters (each exposes lookup, search, examples, and/or scaffold/validate):
 - semantic_type — semantic type aliases (string/number aliases) lookup and search
 - artifact     — body templates for storagefile-purpose, notification-template, notification-task; file-convention reporting
 - asset        — \`AssetPathRef\` constants in a \`-firebase\` component + \`provideDbxAssetLoader()\` wiring in the Angular app; list/scaffold/validate
+- auth         — Firebase Auth claims/roles/OIDC scopes catalog: claim_lookup (key or \`*ApiAuthClaims\` interface), scope_lookup (\`model.read\`, …), role_lookup (forward / by-tag / reverse), token_explain (decode JWT or claims object), list_app (per-app surface)
 
 Model-extension validators (walk a downstream app to verify wiring):
 - storagefile_m, notification_m, system_m — *_validate_app, *_list_app, *_validate_folder
@@ -78,6 +81,7 @@ Resource URIs are namespaced by domain:
 - dbx://filter/entries[/{slug}|/kind/{kind}]
 - dbx://token/entries[/{cssVariable}|/source/{source}|/role/{role}]
 - dbx://css-utility/entries[/{slug}|/role/{role}|/source/{source}]
+- dbx://auth/{catalog | claim/{key} | role/{role} | role/tag/{tag} | scope/{scope} | app/{app}}
 
 UI styling reverse/forward lookup:
 - dbx_css_token_lookup — forward: intent/value/role/component → recommended \`var(--…)\` + utility class + dbx-web primitive.
@@ -105,6 +109,12 @@ export interface CreateServerOptions {
   readonly filterRegistry?: FilterRegistry;
   readonly tokenRegistry?: TokenRegistry;
   readonly cssUtilityRegistry?: CssUtilityRegistry;
+  /**
+   * Optional pre-built auth registry. When omitted the server constructs
+   * one from the bundled built-ins (`@dereekb/util` roles, `fr` claim,
+   * `model.*` scopes) plus the workspace-level demo entry.
+   */
+  readonly authRegistry?: AuthRegistry;
   readonly onLoaderResult?: (result: LoadSemanticTypeRegistryResult) => void;
   readonly onUiLoaderResult?: (result: LoadUiComponentRegistryResult) => void;
   readonly onDbxDocsUiExamplesLoaderResult?: (result: LoadDbxDocsUiExamplesRegistryResult) => void;
@@ -353,10 +363,20 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
     entries: FIREBASE_MODELS.map((m) => ({ name: m.name, modelType: m.modelType, collectionPrefix: m.collectionPrefix }))
   };
 
+  const authRegistry: AuthRegistry =
+    options.authRegistry ??
+    createAuthRegistryFromEntries({
+      roles: BUILTIN_AUTH_ROLES,
+      claims: [...BUILTIN_AUTH_CLAIMS, ...WORKSPACE_AUTH_CLAIMS],
+      scopes: BUILTIN_AUTH_SCOPES,
+      apps: WORKSPACE_AUTH_APPS,
+      loadedSources: ['builtin:@dereekb/util', 'builtin:@dereekb/firebase', 'builtin:@dereekb/firebase-server/oidc', 'workspace:demo-firebase']
+    });
+
   await emitDownstreamHints({ cwd: options.cwd ?? process.cwd(), externalCounts, onDownstreamHints: options.onDownstreamHints });
 
-  registerResources(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, utilRegistry, uiComponentRegistry: uiRegistry, actionRegistry, filterRegistry, tokenRegistry, cssUtilityRegistry });
-  registerTools(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, utilRegistry, uiComponentRegistry: uiRegistry, dbxDocsUiExamplesRegistry, actionRegistry, filterRegistry, tokenRegistry, cssUtilityRegistry, fixtureModelRegistry, modelValidateRuleOptions, cwd: options.cwd ?? process.cwd() });
+  registerResources(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, utilRegistry, uiComponentRegistry: uiRegistry, actionRegistry, filterRegistry, tokenRegistry, cssUtilityRegistry, authRegistry });
+  registerTools(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, utilRegistry, uiComponentRegistry: uiRegistry, dbxDocsUiExamplesRegistry, actionRegistry, filterRegistry, tokenRegistry, cssUtilityRegistry, fixtureModelRegistry, modelValidateRuleOptions, authRegistry, cwd: options.cwd ?? process.cwd() });
 
   return server;
 }

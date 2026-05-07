@@ -42,6 +42,11 @@ export type { UiComponentRegistry } from './ui-components-runtime.js';
 export { FILTER_KIND_ORDER, createFilterRegistry, createFilterRegistryFromEntries, EMPTY_FILTER_REGISTRY, toFilterEntryInfo } from './filters-runtime.js';
 export type { FilterRegistry, FilterEntryInfo, FilterEntryInputInfo, FilterKind } from './filters-runtime.js';
 
+// MARK: Auth
+export { createAuthRegistryFromEntries, EMPTY_AUTH_REGISTRY } from './auth-runtime.js';
+export type { AuthRegistry, AuthRoleInfo, AuthClaimInfo, AuthClaimRoleMappingInfo, AuthScopeInfo, AuthScopeEnforcementInfo, AuthAppInfo, AuthEntrySource, CreateAuthRegistryFromEntriesInput } from './auth-runtime.js';
+export { BUILTIN_AUTH_ROLES, BUILTIN_AUTH_CLAIMS, BUILTIN_AUTH_SCOPES, WORKSPACE_AUTH_CLAIMS, WORKSPACE_AUTH_APPS } from './auth-builtin.js';
+
 // MARK: Firebase Models
 import { FIREBASE_MODELS, FIREBASE_MODEL_GROUPS, type FirebaseModel, type FirebaseModelGroup } from './firebase-models.js';
 
