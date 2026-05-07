@@ -10,7 +10,6 @@ import { type INestApplication } from '@nestjs/common';
 
 export const DEMO_API_NEST_SERVER_CONFIG: NestServerInstanceConfig<DemoApiAppModule> = {
   moduleClass: DemoApiAppModule,
-  modules: [],
   configureWebhooks: true,
   globalApiRoutePrefix: {
     globalApiRoutePrefix: '/api',
