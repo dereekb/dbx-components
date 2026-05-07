@@ -151,7 +151,7 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
   stripInternalKeys = true;
 
   /**
-   * When true (default), keys whose values are empty (`null`, `undefined`, or `""`)
+   * When true (default), keys whose values are empty (`null`, `undefined`, `""`, or `NaN`)
    * are stripped from the form value before emission. This normalizes ng-forge output
    * to match ngx-formly behavior, where the model only includes keys that have been
    * explicitly set by the user.
@@ -251,7 +251,6 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
   private readonly _reset = new BehaviorSubject<Date>(new Date());
 
   private readonly _internalConfig$: Observable<Maybe<DbxForgeFinalizeFormConfigResult>> = this._config.pipe(
-    tapLog('internal config'),
     scan<Maybe<FormConfig>, Maybe<DbxForgeFinalizeFormConfigResult>, Maybe<DbxForgeFinalizeFormConfigResult>>((acc, config) => {
       let result: Maybe<DbxForgeFinalizeFormConfigResult>;
 
@@ -267,14 +266,12 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
 
       return result;
     }, undefined),
-    tapLog('internal config result'),
     shareReplay(1)
   );
 
   readonly config$: Observable<FormConfig> = this._internalConfig$.pipe(
     filterMaybe(),
     map(({ config }) => config),
-    tapLog('config'),
     shareReplay(1)
   );
 

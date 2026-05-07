@@ -28,8 +28,5 @@ export type DbxFirebaseOidcEntryClientTestFormComponentConfig = OidcEntryClientT
   standalone: true
 })
 export class DbxFirebaseOidcEntryClientTestForgeFormComponent extends AbstractConfigAsyncForgeFormDirective<DbxFirebaseOidcModelClientTestFormValue, DbxFirebaseOidcEntryClientTestFormComponentConfig> {
-  readonly formConfig$: Observable<Maybe<FormConfig>> = this.currentConfig$.pipe(
-    map((config) => (config ? oidcEntryClientTestForgeFormFields(config) : undefined)),
-    tapLog('config')
-  );
+  readonly formConfig$: Observable<Maybe<FormConfig>> = this.currentConfig$.pipe(map((config) => (config ? oidcEntryClientTestForgeFormFields(config) : undefined)));
 }

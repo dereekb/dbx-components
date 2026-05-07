@@ -41,7 +41,7 @@ export class DbxForgeFormComponent<T extends object = object> implements DbxForg
   readonly dynamicForm = viewChild(DynamicForm);
 
   readonly formValue = signal<T>({} as T, { equal: (a, b) => _forgeFormValueEqual(a, b, this._context) });
-  readonly configSignal = toSignal(this._context.config$.pipe(tapLog('forge.config')), { initialValue: undefined });
+  readonly configSignal = toSignal(this._context.config$, { initialValue: undefined });
 
   private readonly _changesCount = signal(0);
   private readonly _lastResetAt = signal(new Date());

@@ -139,12 +139,10 @@ export class DbxForgeValueSelectionFieldComponent<T = unknown> {
   readonly addClearOption$ = toObservable(this.addClearOptionSignal).pipe(distinctUntilChanged());
 
   readonly inputOptionsSignal = computed(() => this.props()?.options);
-  readonly inputOptions$ = toObservable(this.inputOptionsSignal).pipe(tapLog('yyy'), maybeValueFromObservableOrValue());
+  readonly inputOptions$ = toObservable(this.inputOptionsSignal).pipe(maybeValueFromObservableOrValue());
 
-  readonly resolvedOptions$ = combineLatest([this.inputOptions$, this.addClearOption$]).pipe(
-    tapLog('xxxx'),
-    map(([options, addClearOption]) => resolveForgeSelectionOptions(options ?? [], addClearOption ?? false))
-  );
+  readonly resolvedOptions$ = combineLatest([this.inputOptions$, this.addClearOption$]).pipe(map(([options, addClearOption]) => resolveForgeSelectionOptions(options ?? [], addClearOption ?? false)));
+
   readonly resolvedOptionsSignal = toSignal(this.resolvedOptions$);
 
   readonly multipleSignal = computed(() => this.props()?.multiple ?? false);
