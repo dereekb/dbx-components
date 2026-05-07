@@ -29,7 +29,6 @@ import { FlexLayoutModule } from '@ngbracket/ngx-layout';
  * @dbxDocsUiExampleCategory card
  * @dbxDocsUiExampleSummary Top-of-page hero card on an inverse surface — eyebrow, headline, progress bar, secondary CTA, and trailing percent.
  * @dbxDocsUiExampleRelated mat-card, dbx-card-box, dbx-content-pit
- * @dbxDocsUiExampleUses {@link DocHeroCardExampleComponent} example
  */
 @Component({
   selector: 'doc-hero-card-example',

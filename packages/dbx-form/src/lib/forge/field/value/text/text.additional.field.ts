@@ -5,6 +5,11 @@ import type { FieldAutocompleteAttributeOption } from '../../../../field/field.a
 
 // MARK: Name Field
 /**
+ * Configuration for a forge name input field.
+ */
+export type DbxForgeNameFieldConfig = Partial<DbxForgeTextFieldConfig>;
+
+/**
  * Pre-configured text field for capturing a full name with sensible min/max length defaults.
  *
  * @param config - Optional overrides; defaults to key `'name'`, label `'Name'`
@@ -21,7 +26,7 @@ import type { FieldAutocompleteAttributeOption } from '../../../../field/field.a
  * dbxForgeNameField({ key: 'fullName', label: 'Full Name', required: true })
  * ```
  */
-export function dbxForgeNameField(config: Partial<DbxForgeTextFieldConfig> = {}) {
+export function dbxForgeNameField(config: DbxForgeNameFieldConfig = {}) {
   const { key = 'name', label = 'Name', placeholder = 'John Doe', required = false, minLength, maxLength } = config;
 
   return dbxForgeTextField({
@@ -249,6 +254,11 @@ export function dbxForgeZipCodeField(config: DbxForgeZipCodeFieldConfig = {}) {
 export const DEFAULT_FORGE_LAT_LNG_TEXT_FIELD_PLACEHOLDER = '12.345,-67.8910';
 
 /**
+ * Configuration for a forge latitude/longitude text input field.
+ */
+export type DbxForgeLatLngTextFieldConfig = Partial<DbxForgeTextFieldConfig>;
+
+/**
  * Latitude/longitude coordinate input with decimal-degree pattern validation.
  *
  * @param config - Optional overrides; defaults to key `'latLng'`
@@ -265,7 +275,7 @@ export const DEFAULT_FORGE_LAT_LNG_TEXT_FIELD_PLACEHOLDER = '12.345,-67.8910';
  * dbxForgeLatLngTextField({ key: 'coords', label: 'Coordinates' })
  * ```
  */
-export function dbxForgeLatLngTextField(config: Partial<DbxForgeTextFieldConfig> = {}) {
+export function dbxForgeLatLngTextField(config: DbxForgeLatLngTextFieldConfig = {}) {
   const { key = 'latLng' } = config;
 
   return dbxForgeTextField({
