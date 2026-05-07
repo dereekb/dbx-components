@@ -25,6 +25,11 @@ export type HashDecodeMap<H extends string = string, V extends string = string> 
  * @param hashFn - A function that takes a string and returns its hashed representation.
  * @returns An array of decoded strings. Values that cannot be decoded are filtered out.
  *
+ * @dbxUtil
+ * @dbxUtilCategory hash
+ * @dbxUtilTags hash, decode, lookup, reverse, salt
+ * @dbxUtilRelated make-hash-decode-map, decode-hashed-values-with-decode-map
+ *
  * @example
  * ```ts
  * const hashed = [hashFn('apple'), hashFn('banana')];
@@ -40,6 +45,11 @@ export function decodeHashedValues(hashedValues: string[], decodeValues: string[
 /**
  * Creates a `HashDecodeMap` from a list of potential original string values and a hash function.
  * The map's keys are the hashed versions of the `decodeValues`, and the values are the original `decodeValues`.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory hash
+ * @dbxUtilTags hash, decode, map, lookup, reverse, factory
+ * @dbxUtilRelated decode-hashed-values, decode-hashed-values-with-decode-map
  *
  * @param decodeValues - An array of potential original string values.
  * @param hashFn - A function that takes a string and returns its hashed representation.

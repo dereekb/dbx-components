@@ -41,6 +41,11 @@ export interface Modifier<T> extends ModifierFunctionRef<T> {
  * @param modify - function that mutates the target value
  * @returns a new {@link Modifier} pairing the key with the modify function
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilTags modifier, mutate, transform, key, factory
+ * @dbxUtilRelated apply-modifiers, modifier-function
+ *
  * @example
  * ```ts
  * const uppercaseName = modifier<{ name: string }>('uppercase', (x) => { x.name = x.name.toUpperCase(); });

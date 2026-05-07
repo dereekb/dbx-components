@@ -19,6 +19,9 @@ export class MockItemCollectionFixtureInstance {
   }
 
   /**
+   * Backwards-compatible alias for {@link MockItemCollectionFixtureInstance.mockItemCollection}.
+   *
+   * @returns The root {@link MockItemFirestoreCollection} from the fixture's underlying {@link MockItemCollections}.
    * @deprecated Use mockItemCollection instead.
    */
   get firestoreCollection(): MockItemFirestoreCollection {
@@ -94,6 +97,9 @@ export interface MockItemCollectionFirebaseContextConfig {}
  *   it('should work', () => { ... });
  * }));
  * ```
+ *
+ * @param _config - Reserved for future setup/teardown configuration; currently unused.
+ * @returns A factory builder that wraps a parent {@link TestFirestoreContextFixture} with a {@link MockItemCollectionFixture} per test.
  */
 export function testWithMockItemCollectionFixture(_config?: MockItemCollectionFirebaseContextConfig): TestWrappedContextFactoryBuilder<MockItemCollectionFixture, TestFirestoreContextFixture> {
   return instanceWrapTestContextFactory({

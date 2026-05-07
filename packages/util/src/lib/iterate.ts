@@ -14,6 +14,11 @@ export type IteratePageFn<T> = (values: T[]) => void | Promise<void>;
  * @param values - Array of values to iterate over.
  * @param useFn - Callback invoked for each value.
  *
+ * @dbxUtil
+ * @dbxUtilCategory iterate
+ * @dbxUtilTags iterate, async, sequential, each, await, for-each
+ * @dbxUtilRelated perform-async-tasks
+ *
  * @example
  * ```ts
  * await iterate([1, 2, 3], async (value) => {

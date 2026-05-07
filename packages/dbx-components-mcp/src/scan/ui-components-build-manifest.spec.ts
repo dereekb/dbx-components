@@ -12,7 +12,9 @@ function fixture(options: FixtureOptions): { readonly readFile: BuildUiManifestR
   const readFile: BuildUiManifestReadFile = async (path) => {
     const value = map.get(path);
     if (value === undefined) {
-      throw new Error(`unknown path ${path}`);
+      const err = new Error(`unknown path ${path}`) as NodeJS.ErrnoException;
+      err.code = 'ENOENT';
+      throw err;
     }
     return value;
   };

@@ -100,7 +100,10 @@ export function formatFirebaseModelEntry(model: FirebaseModel, depth: LookupDept
   if (model.description) {
     lines.push(model.description, '');
   }
-  lines.push(`**Package:** \`${model.sourcePackage}\``, `**Identity:** ${identityLine}`, `**Collection:** \`${model.modelType}\` · prefix \`${model.collectionPrefix}\``, `**Store shape:** ${shapeLabel} (see \`dbx_model_lookup topic="shapes"\` for the full taxonomy)`, `**Source:** \`${model.sourceFile}\``, '', fieldsHeader, '');
+  lines.push(`**Package:** \`${model.sourcePackage}\``, `**Identity:** ${identityLine}`, `**Collection:** \`${model.modelType}\` · prefix \`${model.collectionPrefix}\``, `**Store shape:** ${shapeLabel} (see \`dbx_model_lookup topic="shapes"\` for the full taxonomy)`);
+  const keyingLabel = formatUserKeyingLabel(model);
+  if (keyingLabel) lines.push(`**User keying:** ${keyingLabel}`);
+  lines.push(`**Source:** \`${model.sourceFile}\``, '', fieldsHeader, '');
 
   if (filtered) {
     lines.push(`_Showing ${fieldsToRender.length} of ${totalFields} fields (filtered by \`fields\`)._`, '');
@@ -142,6 +145,27 @@ function appendFieldsTable(lines: string[], fields: readonly FirebaseField[], de
 
 function describeField(field: FirebaseField): string {
   return (field.description ?? '–').replaceAll('|', String.raw`\|`).replaceAll('\n', ' ');
+}
+
+/**
+ * Renders the inline "User keying" label for a model. Mirrors the source-of-
+ * truth marker types (`UserRelatedById`, `UserRelated`) on the model interface.
+ * Returns `undefined` when neither applies so the caller can skip the line
+ * entirely.
+ *
+ * @param model - the registry entry to inspect
+ * @returns the human-readable label, or `undefined` for non-user models
+ */
+function formatUserKeyingLabel(model: FirebaseModel): string | undefined {
+  let result: string | undefined;
+  if (model.userKeyedById && model.hasUserUidField) {
+    result = 'doc id is the Firebase Auth uid (`UserRelatedById`) · also carries an explicit `uid` field (`UserRelated`)';
+  } else if (model.userKeyedById) {
+    result = 'doc id is the Firebase Auth uid (`UserRelatedById`)';
+  } else if (model.hasUserUidField) {
+    result = 'carries an explicit `uid` field referencing the Firebase Auth user (`UserRelated`)';
+  }
+  return result;
 }
 
 /**

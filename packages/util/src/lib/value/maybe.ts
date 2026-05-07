@@ -5,6 +5,11 @@ import { type Maybe, type MaybeNot, type MaybeSo } from './maybe.type';
 /**
  * Type guard that returns `true` if the value is not `null` or `undefined`.
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilTags maybe, nullish, type-guard, defined, not-null, value
+ * @dbxUtilRelated is-maybe-so, is-maybe-not, has-value-or-not-empty
+ *
  * @param value - the value to check
  * @returns `true` if the value is not `null` or `undefined`
  */
@@ -21,6 +26,11 @@ export function hasNonNullValue<T = unknown>(value: Maybe<T>): value is MaybeSo<
  *
  * NaN has undefined behavior.
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilTags maybe, empty, type-guard, non-empty, value, has-value
+ * @dbxUtilRelated has-value-or-not-empty-object, has-non-null-value, is-not-null-or-empty-string
+ *
  * @param value - the value to check
  * @returns `true` if the value is non-nullish and not empty
  */
@@ -35,6 +45,11 @@ export function hasValueOrNotEmpty<T = unknown>(value: Maybe<T>): value is Maybe
  * This is stricter than {@link hasValueOrNotEmpty}, which considers `{}` as having a value.
  *
  * NaN has undefined behavior.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilTags maybe, empty, type-guard, object, non-empty, strict
+ * @dbxUtilRelated has-value-or-not-empty, has-non-null-value, object-has-no-keys
  *
  * @param value - the value to check
  * @returns `true` if the value is non-nullish, non-empty, and not an empty object
@@ -68,6 +83,11 @@ export function isStringOrTrue(value: Maybe<string | boolean>): boolean {
  *
  * Useful for filtering out both nullish values and empty strings in a single check.
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilTags maybe, string, empty, type-guard, nullish, non-empty
+ * @dbxUtilRelated has-value-or-not-empty, has-non-null-value
+ *
  * @param value - the value to check
  * @returns `true` if the value is not nullish and not an empty string
  */
@@ -77,6 +97,11 @@ export function isNotNullOrEmptyString<T>(value: Maybe<MaybeNot | '' | T>): valu
 
 /**
  * Type guard that returns `true` if the input is `null` or `undefined`.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilTags maybe, nullish, type-guard, null, undefined, missing
+ * @dbxUtilRelated is-maybe-so, has-non-null-value
  *
  * @param value - the value to check
  * @returns `true` if the value is `null` or `undefined`
@@ -89,6 +114,11 @@ export function isMaybeNot<T = unknown>(value: Maybe<T>): value is MaybeNot {
  * Type guard that returns `true` if the input is neither `null` nor `undefined`.
  *
  * Equivalent to {@link hasNonNullValue} but with the `MaybeSo` narrowing type.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilTags maybe, nullish, type-guard, defined, present, non-null
+ * @dbxUtilRelated is-maybe-not, has-non-null-value
  *
  * @param value - the value to check
  * @returns `true` if the value is neither `null` nor `undefined`
@@ -112,6 +142,11 @@ export function isMaybeNotOrTrue<T = unknown>(value: Maybe<T | true>): value is 
 /**
  * Returns `true` if the input is not `null`, `undefined`, or `false`.
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilTags maybe, boolean, defined, truthy, type-guard
+ * @dbxUtilRelated is-not-false, has-non-null-value
+ *
  * @param value - the value to check
  * @returns `true` if the value is not `null`, `undefined`, or `false`
  */
@@ -132,6 +167,11 @@ export function isNotFalse<T = unknown>(value: Maybe<T>): boolean {
 /**
  * Returns `true` if both inputs are non-nullish and strictly equal (`===`).
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilTags maybe, equal, equality, compare, non-null
+ * @dbxUtilRelated values-are-both-nullish-or-equivalent, has-non-null-value
+ *
  * @param a - first value
  * @param b - second value
  * @returns `true` if both values are non-nullish and strictly equal
@@ -144,6 +184,11 @@ export function isSameNonNullValue<T>(a: Maybe<T>, b: Maybe<T>): a is NonNullabl
  * Returns `true` if both inputs are nullish (using loose equality `==`) or are strictly the same value.
  *
  * This means `null` and `undefined` are considered equivalent to each other, but `false` and `null` are not.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilTags maybe, equal, equality, nullish, compare
+ * @dbxUtilRelated is-same-non-null-value
  *
  * @param a - first value
  * @param b - second value
@@ -159,6 +204,10 @@ export function valuesAreBothNullishOrEquivalent<T>(a: Maybe<T>, b: Maybe<T>): b
  * - If `b` is `undefined`, returns `a` (no update).
  * - If `b` is `null`, returns `null` (explicit clear).
  * - If `b` is defined, returns `b` (new value).
+ *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilTags maybe, update, merge, sentinel, patch, optional
  *
  * @param a - the current value
  * @param b - the update value

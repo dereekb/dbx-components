@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FIREBASE_MODELS, FIREBASE_MODEL_GROUPS, getFirebaseModel, getFirebaseModelByPrefix, getFirebaseModelGroup, getFirebaseModelGroups, getFirebaseModels, getFirebasePrefixCatalog, getFirebaseSubcollectionsOf } from './index.js';
+import { FIREBASE_MODELS, FIREBASE_MODEL_GROUPS, getFirebaseModel, getFirebaseModelByPrefix, getFirebaseModelGroup, getFirebaseModelGroups, getFirebaseModels, getFirebasePrefixCatalog, getFirebaseSubcollectionsOf, getFirebaseUserKeyedByIdModels, getFirebaseUserRelatedModels } from './index.js';
 
 const LONG_NAME_RE = /^[a-z][a-zA-Z0-9]*$/;
 
@@ -145,6 +145,40 @@ describe('firebase-models registry', () => {
       expect(group.modelNames.length, `${group.name} has no modelNames`).toBeGreaterThan(0);
       const matched = group.modelNames.filter((n) => knownModels.has(n));
       expect(matched.length, `${group.name} references no registered models (modelNames: ${group.modelNames.join(', ')})`).toBeGreaterThan(0);
+    }
+  });
+
+  it('flags NotificationUser as both UserRelatedById and UserRelated', () => {
+    const notificationUser = getFirebaseModel('NotificationUser');
+    expect(notificationUser, 'NotificationUser missing').toBeDefined();
+    expect(notificationUser?.userKeyedById).toBe(true);
+    expect(notificationUser?.hasUserUidField).toBe(true);
+  });
+
+  it('does not flag non-user-keyed root models', () => {
+    const storageFile = getFirebaseModel('StorageFile');
+    expect(storageFile?.userKeyedById ?? false).toBe(false);
+    expect(storageFile?.hasUserUidField ?? false).toBe(false);
+    const notificationBox = getFirebaseModel('NotificationBox');
+    expect(notificationBox?.userKeyedById ?? false).toBe(false);
+    expect(notificationBox?.hasUserUidField ?? false).toBe(false);
+  });
+
+  it('getFirebaseUserKeyedByIdModels returns NotificationUser', () => {
+    const userKeyed = getFirebaseUserKeyedByIdModels();
+    const names = userKeyed.map((m) => m.name);
+    expect(names).toContain('NotificationUser');
+    for (const model of userKeyed) {
+      expect(model.userKeyedById, `${model.name} should be userKeyedById`).toBe(true);
+    }
+  });
+
+  it('getFirebaseUserRelatedModels returns NotificationUser', () => {
+    const userRelated = getFirebaseUserRelatedModels();
+    const names = userRelated.map((m) => m.name);
+    expect(names).toContain('NotificationUser');
+    for (const model of userRelated) {
+      expect(model.hasUserUidField, `${model.name} should have hasUserUidField`).toBe(true);
     }
   });
 });

@@ -18,7 +18,7 @@ import { map } from 'rxjs';
   selector: 'dbx-firebase-oidc-entry-client-update',
   template: `
     <div dbxAction dbxActionEnforceModified [dbxActionHandler]="handleUpdateClient" dbxActionSnackbarError>
-      <dbx-firebase-oidc-client-forge-form dbxActionForm [dbxFormSource]="formTemplate$" [config]="formConfig"></dbx-firebase-oidc-client-forge-form>
+      <dbx-firebase-oidc-client-forge-form dbxActionForm [dbxFormSource]="formTemplate$" dbxFormSourceMode="always" [config]="formConfig"></dbx-firebase-oidc-client-forge-form>
       <dbx-button [raised]="true" dbxActionButton text="Save"></dbx-button>
     </div>
   `,

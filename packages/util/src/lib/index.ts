@@ -1,6 +1,7 @@
 export * from './array';
 export * from './assertion';
 export * from './auth';
+export * from './cache';
 export * from './contact';
 export * from './error';
 export * from './file';

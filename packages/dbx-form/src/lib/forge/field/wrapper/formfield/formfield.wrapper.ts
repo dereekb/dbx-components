@@ -69,8 +69,8 @@ export function configureDbxForgeFormFieldWrapper<C extends DbxForgeFieldFunctio
  * config entirely when no values remain — keeps the wrapper bare in the common case
  * (e.g. a checkbox/toggle with no label override).
  *
- * @param props - wrapper props applied to the inserted wrapper config
- * @returns a configurator that mutates the builder instance to add the wrapper
+ * @param inputProps - Wrapper props applied to the inserted wrapper config; undefined entries are stripped and the `props` block is omitted entirely when no values remain.
+ * @returns A configurator that mutates the builder instance to add the form-field wrapper with the resolved props.
  */
 export function configureDbxForgeFormFieldWrapperWith(inputProps?: Maybe<DbxForgeFormFieldWrapperProps>): <C extends DbxForgeFieldFunctionDef<any>>(instance: DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C>) => void {
   const props = stripObject(inputProps);

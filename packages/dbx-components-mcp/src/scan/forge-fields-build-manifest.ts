@@ -17,11 +17,10 @@
 
 import { resolve } from 'node:path';
 import { type } from 'arktype';
-import { Project } from 'ts-morph';
 import { ForgeFieldManifest, type ForgeFieldEntry } from '../manifest/forge-fields-schema.js';
 import { extractForgeFieldEntries, type ExtractedForgeFieldEntry, type ForgeExtractWarning } from './forge-fields-extract.js';
-import { DEFAULT_FORGE_FIELDS_SCAN_OUT_PATH, FORGE_FIELDS_SCAN_CONFIG_FILENAME, ForgeFieldsScanConfig, type ForgeFieldsScanSection } from './forge-fields-scan-config-schema.js';
-import { defaultGlobber, defaultReadFile, loadPackageName, type ScanGlobber, type ScanReadFile } from './scan-io.js';
+import { DEFAULT_FORGE_FIELDS_SCAN_OUT_PATH, FORGE_FIELDS_SCAN_CONFIG_FILENAME, ForgeFieldsScanConfig } from './forge-fields-scan-config-schema.js';
+import { buildScanProject, defaultGlobber, defaultReadFile, loadPackageName, loadScanSection, type ScanGlobber, type ScanReadFile } from './scan-io.js';
 
 // MARK: Public types
 export type BuildForgeFieldsReadFile = ScanReadFile;
@@ -69,7 +68,17 @@ export async function buildForgeFieldsManifest(input: BuildForgeFieldsManifestIn
   const configPath = resolve(projectRoot, FORGE_FIELDS_SCAN_CONFIG_FILENAME);
   const packagePath = resolve(projectRoot, 'package.json');
 
-  const configOutcome = await loadScanConfig(configPath, readFile);
+  const configOutcome = await loadScanSection({
+    configPath,
+    readFile,
+    parseSection: (parsed) => {
+      const validated = ForgeFieldsScanConfig(parsed);
+      if (validated instanceof type.errors) {
+        return { ok: false, error: validated.summary };
+      }
+      return { ok: true, section: validated.forgeFields };
+    }
+  });
   if (configOutcome.kind !== 'ok') {
     return configOutcome.outcome;
   }
@@ -87,12 +96,7 @@ export async function buildForgeFieldsManifest(input: BuildForgeFieldsManifestIn
     exclude: scanSection.exclude ?? []
   });
 
-  const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });
-  for (const relPath of filePaths) {
-    const absolute = resolve(projectRoot, relPath);
-    const text = await readFile(absolute);
-    project.createSourceFile(absolute, text, { overwrite: true });
-  }
+  const project = await buildScanProject({ projectRoot, filePaths, readFile });
 
   const extractResult = extractForgeFieldEntries({ project });
   const moduleName = scanSection.module ?? packageName;
@@ -126,40 +130,6 @@ export async function buildForgeFieldsManifest(input: BuildForgeFieldsManifestIn
 }
 
 // MARK: Helpers
-type LoadScanConfigResult = { readonly kind: 'ok'; readonly section: ForgeFieldsScanSection } | { readonly kind: 'fail'; readonly outcome: Extract<BuildForgeFieldsManifestOutcome, { kind: 'no-config' | 'invalid-scan-config' }> };
-
-async function loadScanConfig(configPath: string, readFile: BuildForgeFieldsReadFile): Promise<LoadScanConfigResult> {
-  let raw: string | null = null;
-  try {
-    raw = await readFile(configPath);
-  } catch {
-    raw = null;
-  }
-  let result: LoadScanConfigResult;
-  if (raw === null) {
-    result = { kind: 'fail', outcome: { kind: 'no-config', configPath } };
-  } else {
-    let parsed: unknown;
-    let parseError: string | null = null;
-    try {
-      parsed = JSON.parse(raw);
-    } catch (err) {
-      parseError = err instanceof Error ? err.message : String(err);
-    }
-    if (parseError === null) {
-      const validated = ForgeFieldsScanConfig(parsed);
-      if (validated instanceof type.errors) {
-        result = { kind: 'fail', outcome: { kind: 'invalid-scan-config', configPath, error: validated.summary } };
-      } else {
-        result = { kind: 'ok', section: validated.forgeFields };
-      }
-    } else {
-      result = { kind: 'fail', outcome: { kind: 'invalid-scan-config', configPath, error: parseError } };
-    }
-  }
-  return result;
-}
-
 interface AssembleEntryInput {
   readonly entry: ExtractedForgeFieldEntry;
 }

@@ -19,6 +19,11 @@ export interface LimitArrayConfig {
  * Limits the number of items in an array based on the provided configuration.
  * Items are taken from the front of the array by default, or from the end if configured.
  *
+ * @dbxUtil
+ * @dbxUtilCategory array
+ * @dbxUtilTags array, limit, slice, truncate, take, cap
+ * @dbxUtilRelated take-front, take-last
+ *
  * @param array - source array to limit
  * @param inputConfig - configuration controlling the limit count and direction
  * @param inputConfig.limit - maximum number of items to include in the result

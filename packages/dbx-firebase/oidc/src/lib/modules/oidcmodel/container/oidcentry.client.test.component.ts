@@ -2,14 +2,13 @@ import { ChangeDetectionStrategy, Component, inject, input, signal, computed } f
 import { CommonModule } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, generatePkceCodeVerifier, generatePkceCodeChallenge } from '@dereekb/util';
 import { DbxDetailBlockComponent, DbxClickToCopyTextComponent, DbxContentPitDirective, DbxButtonComponent } from '@dereekb/dbx-web';
 import { DbxFormSourceDirective, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
 import { type OidcEntryOAuthClientPayloadData, type OidcScopeDetails } from '@dereekb/firebase';
 import { OidcEntryDocumentStore } from '../store/oidcentry.document.store';
 import { DbxFirebaseOidcEntryClientTestForgeFormComponent, type DbxFirebaseOidcModelClientTestFormValue } from '../component/oidcentry.client.test.forge.form.component';
 import { type OidcEntryClientTestFormFieldsConfig } from '../component/oidcentry.forge.form';
-import { generatePkceCodeVerifier, generatePkceCodeChallenge } from '../util/pkce';
 import { DbxFirebaseOidcConfigService } from '../../../service/oidc.configuration.service';
 
 /**
@@ -70,25 +69,25 @@ export class DbxFirebaseOidcEntryClientTestComponent {
   readonly clientIdSignal = toSignal(this.oidcEntryDocumentStore.data$.pipe(map((data) => (data.payload as OidcEntryOAuthClientPayloadData)?.client_id)));
 
   // MARK: Form Config
-  readonly formConfig = computed<OidcEntryClientTestFormFieldsConfig | undefined>(() => {
-    const redirectUris = this.redirectUrisSignal();
+  readonly formConfig = computed<OidcEntryClientTestFormFieldsConfig>(() => {
+    const redirectUris = this.redirectUrisSignal() ?? [];
     const availableScopes = this.resolvedAvailableScopes();
 
-    if (redirectUris) {
-      return { redirectUris, availableScopes };
-    }
+    console.log('formConfig:', { redirectUris, availableScopes });
 
-    return undefined;
+    return { redirectUris, availableScopes };
   });
 
   readonly formTemplate$ = this.oidcEntryDocumentStore.data$.pipe(
     map((data) => {
       const payload = data.payload as OidcEntryOAuthClientPayloadData;
+
       const formValue: DbxFirebaseOidcModelClientTestFormValue = {
         client_id: payload?.client_id ?? '',
         redirect_uri: payload?.redirect_uris?.[0] ?? '',
         scopes: ['openid']
       };
+
       return formValue;
     })
   );

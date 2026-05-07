@@ -11,11 +11,22 @@ export interface ZohoCliContext {
 /**
  * Cache of ZohoAccountsApi instances keyed by credential identity.
  * When multiple products share the same clientId+refreshToken, they reuse the same accounts API.
+ *
+ * @param creds - Resolved product credentials whose identity is used to derive the cache key.
+ * @returns A `clientId:refreshToken` string used as the deduplication key for accounts-API caching.
  */
 function credentialKey(creds: ZohoCliResolvedProductCredentials): string {
   return `${creds.clientId}:${creds.refreshToken}`;
 }
 
+/**
+ * Constructs the per-invocation {@link ZohoCliContext} containing the Recruit, CRM, and Desk API clients that the user has credentials for.
+ *
+ * Shares a single token cache (memory + on-disk JSON) across all products and reuses one {@link ZohoAccountsApi} per unique `clientId:refreshToken` pair so token refreshes don't multiply across products.
+ *
+ * @param config - Loaded CLI configuration; products without resolvable credentials produce `undefined` API entries on the returned context.
+ * @returns A {@link ZohoCliContext} with `recruitApi`/`crmApi`/`deskApi` populated only for configured products.
+ */
 export function createCliContext(config: ZohoCliConfig): ZohoCliContext {
   const cacheService = mergeZohoAccountsAccessTokenCacheServices([memoryZohoAccountsAccessTokenCacheService(), fileZohoAccountsAccessTokenCacheService(getTokenCachePath())]);
 

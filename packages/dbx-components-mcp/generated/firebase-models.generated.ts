@@ -221,7 +221,9 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     detectionHints: ['b', 'x', 'dc', 'gc', 'bc', 'ns'],
     description: 'A global notification user profile that tracks notification preferences and box subscriptions.',
     modelGroup: 'Notification',
-    collectionKind: 'root'
+    collectionKind: 'root',
+    userKeyedById: true,
+    hasUserUidField: true
   },
   {
     name: 'OidcEntry',

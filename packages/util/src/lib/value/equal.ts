@@ -21,6 +21,12 @@ export type AreEqualContext<T = unknown> = (x: IterableOrValue<T>) => boolean;
  * @param fn - the equality comparator
  * @returns a function that checks whether a given value equals the captured reference
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags equal, equality, compare, context, factory
+ * @dbxUtilRelated are-equal-context, all-objects-are-equal
+ *
  * @example
  * ```ts
  * const isEqual = (a: number, b: number) => a === b;
@@ -45,6 +51,12 @@ export function isEqualContext<T>(contextValue: T, fn: EqualityComparatorFunctio
  * @param contextValue - the reference value to compare against
  * @param fn - the equality comparator
  * @returns a function that checks whether all input values equal the captured reference
+ *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags equal, equality, compare, context, iterable, all, factory
+ * @dbxUtilRelated is-equal-context, all-objects-are-equal
  *
  * @example
  * ```ts
@@ -80,6 +92,11 @@ export function areEqualContext<T>(contextValue: T, fn: EqualityComparatorFuncti
  * @param values - the values to compare
  * @param fn - the equality comparator
  * @returns `true` if all values are equal to each other, or if fewer than two values are provided
+ *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilTags equal, equality, compare, all, iterable, every
+ * @dbxUtilRelated is-equal-context, are-equal-context
  *
  * @example
  * ```ts

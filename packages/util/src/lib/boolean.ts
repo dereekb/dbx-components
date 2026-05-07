@@ -26,6 +26,11 @@ export type TrueOrFalseString = 'true' | 'false';
 /**
  * If a non-null boolean value is provided, returns the opposite.
  *
+ * @dbxUtil
+ * @dbxUtilCategory boolean
+ * @dbxUtilTags boolean, invert, negate, not, maybe, nullish
+ * @dbxUtilRelated reduce-booleans-with-and, reduce-booleans-with-or
+ *
  * @param x - the boolean value to invert, or a nullish value
  * @returns the inverted boolean, or the original nullish value if input was null/undefined
  */
@@ -47,6 +52,11 @@ export function invertMaybeBoolean(x: Maybe<boolean>): Maybe<boolean> {
  * @returns The result of ANDing all boolean values in the array.
  * @throws {TypeError} If the array is empty and no emptyArrayValue is provided.
  *
+ * @dbxUtil
+ * @dbxUtilCategory boolean
+ * @dbxUtilTags boolean, reduce, and, every, all, conjunction, aggregate
+ * @dbxUtilRelated reduce-booleans-with-or, reduce-booleans-with-and-fn
+ *
  * @example
  * ```ts
  * reduceBooleansWithAnd([true, true, true]);   // true
@@ -60,6 +70,11 @@ export function reduceBooleansWithAnd(array: boolean[], emptyArrayValue?: boolea
 
 /**
  * Reduces an array of booleans with the logical OR operation.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory boolean
+ * @dbxUtilTags boolean, reduce, or, some, any, disjunction, aggregate
+ * @dbxUtilRelated reduce-booleans-with-and, reduce-booleans-with-or-fn
  *
  * @param array - Array of boolean values to reduce.
  * @param emptyArrayValue - Value to return if the array is empty. If not provided and the array is empty, a TypeError will be thrown.
@@ -158,6 +173,12 @@ export interface BooleanFactoryConfig {
  * @param config - Configuration for the boolean factory, including the chance of returning true.
  * @returns A factory function (`BooleanFactory`) that generates random boolean values based on the configured chance.
  *
+ * @dbxUtil
+ * @dbxUtilCategory boolean
+ * @dbxUtilKind factory
+ * @dbxUtilTags boolean, factory, random, chance, probability, generate
+ * @dbxUtilRelated random-boolean
+ *
  * @example
  * ```ts
  * const alwaysTrue = booleanFactory({ chance: 100 });
@@ -179,6 +200,11 @@ export function booleanFactory(config: BooleanFactoryConfig): BooleanFactory {
 /**
  * Returns a random boolean based on the specified chance.
  *
+ * @dbxUtil
+ * @dbxUtilCategory boolean
+ * @dbxUtilTags boolean, random, chance, probability, coin-flip
+ * @dbxUtilRelated boolean-factory
+ *
  * @param chance - Number between 0.0 and 100.0 representing the percentage chance of returning true (default: 50, i.e., 50%).
  * @returns A random boolean value with the specified probability of being true.
  */
@@ -194,6 +220,11 @@ export function randomBoolean(chance: BooleanTrueChance = 50): boolean {
  * @param value - The string to convert to a boolean.
  * @param defaultValue - The default value to return if the string cannot be converted to a boolean (default: undefined).
  * @returns The boolean value corresponding to the string, or the default value if the string cannot be converted.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory boolean
+ * @dbxUtilTags boolean, string, parse, convert, true, false, yes, no
+ * @dbxUtilRelated true-or-false-string
  *
  * @example
  * ```ts
@@ -236,6 +267,11 @@ export function stringToBoolean(value: Maybe<string | boolean>, defaultValue?: M
 /**
  * Converts a boolean to its `'true'` or `'false'` string representation.
  * Returns null/undefined if the input is nullish.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory boolean
+ * @dbxUtilTags boolean, string, convert, serialize, format
+ * @dbxUtilRelated string-to-boolean
  *
  * @param value - The boolean value to convert.
  * @returns The string `'true'` or `'false'`, or the nullish input unchanged.

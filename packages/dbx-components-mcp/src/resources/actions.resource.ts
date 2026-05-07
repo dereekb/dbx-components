@@ -9,6 +9,7 @@
 
 import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ACTION_ROLE_ORDER, type ActionEntryRole, type ActionRegistry } from '../registry/actions-runtime.js';
+import { buildSlugDetailResponse } from './_resource-helpers.js';
 
 const ACTIONS_URI = 'dbx://action/entries';
 const ACTION_TEMPLATE = 'dbx://action/entries/{slug}';
@@ -83,31 +84,14 @@ export function registerActionsResource(server: McpServer, options: RegisterActi
       description: 'Full metadata for a single action entry by slug.',
       mimeType: 'application/json'
     },
-    async (uri, variables) => {
-      const rawSlug = variables.slug;
-      const slug = Array.isArray(rawSlug) ? rawSlug[0] : rawSlug;
-      const entry = slug ? registry.findBySlug(slug) : undefined;
-
-      let text: string;
-      if (slug && entry) {
-        text = JSON.stringify(entry, null, 2);
-      } else if (slug) {
-        const available = registry.all.map((e) => e.slug).join(', ');
-        text = `Action entry '${slug}' not found. Available slugs: ${available}`;
-      } else {
-        text = 'No slug provided.';
-      }
-
-      return {
-        contents: [
-          {
-            uri: uri.href,
-            mimeType: entry ? 'application/json' : 'text/plain',
-            text
-          }
-        ]
-      };
-    }
+    async (uri, variables) =>
+      buildSlugDetailResponse({
+        uri,
+        rawSlug: variables.slug,
+        resolveEntry: (slug) => registry.findBySlug(slug),
+        listAvailableSlugs: () => registry.all.map((e) => e.slug),
+        label: 'Action entry'
+      })
   );
 
   server.registerResource(

@@ -35,6 +35,11 @@ export function asIterable<T = unknown>(values: IterableOrValue<T>, treatStringA
  *
  * By default treats strings as a non-iterable value, using the string as a single value.
  *
+ * @dbxUtil
+ * @dbxUtilCategory iterable
+ * @dbxUtilTags iterable, array, convert, normalize, ensure
+ * @dbxUtilRelated iterable-to-set, iterable-to-map, as-iterable
+ *
  * @param values - The value or iterable to convert
  * @param treatStringAsIterable - Whether to treat strings as iterable (defaults to false)
  * @returns An array containing the value(s)
@@ -57,6 +62,11 @@ export function iterableToArray<T = unknown>(values: IterableOrValue<T>, treatSt
  * Converts an IterableOrValue to a Set.
  *
  * By default treats strings as a non-iterable value, using the string as a single value.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory iterable
+ * @dbxUtilTags iterable, set, convert, normalize, unique, dedupe
+ * @dbxUtilRelated iterable-to-array, iterable-to-map
  *
  * @param values - The value or iterable to convert
  * @param treatStringAsIterable - Whether to treat strings as iterable (defaults to false)
@@ -81,6 +91,11 @@ export function iterableToMap<T, K extends PrimativeKey = PrimativeKey>(values: 
  * Type guard that returns true if the input is an Iterable.
  * By default, strings are not treated as iterable.
  *
+ * @dbxUtil
+ * @dbxUtilCategory iterable
+ * @dbxUtilTags iterable, type-guard, check, symbol-iterator
+ * @dbxUtilRelated is-empty-iterable, as-iterable
+ *
  * @param values - The value to check
  * @param treatStringAsIterable - Whether to treat strings as iterable (defaults to false)
  * @returns True if the value is iterable
@@ -99,6 +114,11 @@ export function isIterable<T = unknown>(values: unknown, treatStringAsIterable =
 
 /**
  * Returns true if the iterable has no values.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory iterable
+ * @dbxUtilTags iterable, empty, check, length
+ * @dbxUtilRelated is-iterable, first-value-from-iterable
  *
  * @param values - The iterable to check
  * @returns True if the iterable is empty

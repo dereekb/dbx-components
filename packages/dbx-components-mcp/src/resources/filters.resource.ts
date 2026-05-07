@@ -9,6 +9,7 @@
 
 import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { FILTER_KIND_ORDER, type FilterKind, type FilterRegistry } from '../registry/filters-runtime.js';
+import { buildSlugDetailResponse } from './_resource-helpers.js';
 
 const FILTERS_URI = 'dbx://filter/entries';
 const FILTER_TEMPLATE = 'dbx://filter/entries/{slug}';
@@ -73,31 +74,14 @@ export function registerFiltersResource(server: McpServer, options: RegisterFilt
       description: 'Full metadata for a single filter entry by slug.',
       mimeType: 'application/json'
     },
-    async (uri, variables) => {
-      const rawSlug = variables.slug;
-      const slug = Array.isArray(rawSlug) ? rawSlug[0] : rawSlug;
-      const entry = slug ? registry.findBySlug(slug) : undefined;
-
-      let text: string;
-      if (slug && entry) {
-        text = JSON.stringify(entry, null, 2);
-      } else if (slug) {
-        const available = registry.all.map((e) => e.slug).join(', ');
-        text = `Filter '${slug}' not found. Available slugs: ${available}`;
-      } else {
-        text = 'No slug provided.';
-      }
-
-      return {
-        contents: [
-          {
-            uri: uri.href,
-            mimeType: entry ? 'application/json' : 'text/plain',
-            text
-          }
-        ]
-      };
-    }
+    async (uri, variables) =>
+      buildSlugDetailResponse({
+        uri,
+        rawSlug: variables.slug,
+        resolveEntry: (slug) => registry.findBySlug(slug),
+        listAvailableSlugs: () => registry.all.map((e) => e.slug),
+        label: 'Filter'
+      })
   );
 
   server.registerResource(

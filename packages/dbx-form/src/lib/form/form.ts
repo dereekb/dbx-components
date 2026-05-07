@@ -80,6 +80,8 @@ export abstract class DbxForm<T = unknown> {
    * value to feed user-supplied isValid/isModified functions even while the form is invalid.
    * Defaults to {@link getValue}; implementations that gate {@link getValue} on validity
    * should override this to bypass that gate.
+   *
+   * @returns An observable of the form's current value, even when validity gates would suppress {@link getValue}.
    */
   currentValue(): Observable<T> {
     return this.getValue();

@@ -17,10 +17,9 @@
 
 import { relative, resolve } from 'node:path';
 import { type } from 'arktype';
-import { Project } from 'ts-morph';
 import { SemanticTypeManifest, type SemanticTypeEntry } from '../manifest/semantic-types-schema.js';
 import { extractEntries, type ExtractedEntry } from './extract.js';
-import { defaultGlobber, defaultReadFile, loadPackageName, type ScanGlobber, type ScanReadFile } from './scan-io.js';
+import { buildScanProject, defaultGlobber, defaultReadFile, loadPackageName, loadScanSection, type ScanGlobber, type ScanReadFile } from './scan-io.js';
 import { DEFAULT_SCAN_OUT_PATH, SCAN_CONFIG_FILENAME, SemanticTypeScanConfig } from './scan-config-schema.js';
 
 // MARK: Public types
@@ -69,11 +68,21 @@ export async function buildManifest(input: BuildManifestInput): Promise<BuildMan
   const configPath = resolve(projectRoot, SCAN_CONFIG_FILENAME);
   const packagePath = resolve(projectRoot, 'package.json');
 
-  const configOutcome = await loadScanConfig(configPath, readFile);
+  const configOutcome = await loadScanSection({
+    configPath,
+    readFile,
+    parseSection: (parsed) => {
+      const validated = SemanticTypeScanConfig(parsed);
+      if (validated instanceof type.errors) {
+        return { ok: false, error: validated.summary };
+      }
+      return { ok: true, section: validated };
+    }
+  });
   if (configOutcome.kind !== 'ok') {
     return configOutcome.outcome;
   }
-  const scanConfig = configOutcome.config;
+  const scanConfig = configOutcome.section;
 
   const packageOutcome = await loadPackageName(packagePath, readFile);
   if (packageOutcome.kind !== 'ok') {
@@ -87,12 +96,7 @@ export async function buildManifest(input: BuildManifestInput): Promise<BuildMan
     exclude: scanConfig.exclude ?? []
   });
 
-  const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });
-  for (const relPath of filePaths) {
-    const absolute = resolve(projectRoot, relPath);
-    const text = await readFile(absolute);
-    project.createSourceFile(absolute, text, { overwrite: true });
-  }
+  const project = await buildScanProject({ projectRoot, filePaths, readFile });
 
   const extracted = extractEntries({ project });
   const entries = extracted.map((entry) => assembleEntry({ entry, packageName, projectRoot }));
@@ -124,40 +128,6 @@ export async function buildManifest(input: BuildManifestInput): Promise<BuildMan
 }
 
 // MARK: Helpers
-type LoadScanConfigResult = { readonly kind: 'ok'; readonly config: SemanticTypeScanConfig } | { readonly kind: 'fail'; readonly outcome: Extract<BuildManifestOutcome, { kind: 'no-config' | 'invalid-scan-config' }> };
-
-async function loadScanConfig(configPath: string, readFile: BuildManifestReadFile): Promise<LoadScanConfigResult> {
-  let raw: string | null = null;
-  try {
-    raw = await readFile(configPath);
-  } catch {
-    raw = null;
-  }
-  let result: LoadScanConfigResult;
-  if (raw === null) {
-    result = { kind: 'fail', outcome: { kind: 'no-config', configPath } };
-  } else {
-    let parsed: unknown;
-    let parseError: string | null = null;
-    try {
-      parsed = JSON.parse(raw);
-    } catch (err) {
-      parseError = err instanceof Error ? err.message : String(err);
-    }
-    if (parseError === null) {
-      const validated = SemanticTypeScanConfig(parsed);
-      if (validated instanceof type.errors) {
-        result = { kind: 'fail', outcome: { kind: 'invalid-scan-config', configPath, error: validated.summary } };
-      } else {
-        result = { kind: 'ok', config: validated };
-      }
-    } else {
-      result = { kind: 'fail', outcome: { kind: 'invalid-scan-config', configPath, error: parseError } };
-    }
-  }
-  return result;
-}
-
 interface AssembleEntryInput {
   readonly entry: ExtractedEntry;
   readonly packageName: string;

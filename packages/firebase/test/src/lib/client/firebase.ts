@@ -65,6 +65,11 @@ export interface RulesUnitTestTestFirestoreContext extends TestFirestoreContext 
  *
  * Combines the Firestore client drivers with the rules test environment and context
  * to produce a context suitable for client-side Firestore tests.
+ *
+ * @param drivers - Testing Firestore drivers used to back the context (typically with collection name fuzzing).
+ * @param rulesTestEnvironment - The shared `@firebase/rules-unit-testing` environment for the suite.
+ * @param rulesTestContext - The per-test rules context (authenticated or unauthenticated) used to obtain the Firestore instance.
+ * @returns A {@link RulesUnitTestTestFirestoreContext} that exposes the rules-test environment and context alongside the standard Firestore context.
  */
 export function makeRulesTestFirestoreContext(drivers: TestingFirestoreDrivers, rulesTestEnvironment: RulesTestEnvironment, rulesTestContext: RulesTestContext): TestFirestoreContext {
   const context: RulesUnitTestTestFirestoreContext = {
@@ -90,6 +95,11 @@ export interface RulesUnitTestTestFirebaseStorageContext extends TestFirebaseSto
  *
  * Combines the Storage client drivers with the rules test environment and context
  * to produce a context suitable for client-side Firebase Storage tests.
+ *
+ * @param drivers - Testing Firebase Storage drivers used to back the context (typically with a unique test bucket).
+ * @param rulesTestEnvironment - The shared `@firebase/rules-unit-testing` environment for the suite.
+ * @param rulesTestContext - The per-test rules context used to obtain the Storage instance.
+ * @returns A {@link RulesUnitTestTestFirebaseStorageContext} that exposes the rules-test environment and context alongside the standard Storage context.
  */
 export function makeRulesTestFirebaseStorageContext(drivers: TestingFirebaseStorageDrivers, rulesTestEnvironment: RulesTestEnvironment, rulesTestContext: RulesTestContext): TestFirebaseStorageContext {
   const context: RulesUnitTestTestFirebaseStorageContext = {
@@ -155,6 +165,9 @@ export class RulesUnitTestFirebaseTestingContextFixture extends TestFirebaseCont
  * preventing interference between parallel workers sharing the same Firebase Storage emulator. The Storage
  * emulator maintains rules globally (not per-project), so concurrent `setRules` calls from multiple workers
  * can momentarily leave the emulator in a transitional state that causes `storage/unauthorized` errors.
+ *
+ * @param inputConfig - Optional partial config; `testEnvironment` defaults to an empty object and `rulesContext` defaults to undefined (unauthenticated).
+ * @returns A function that, given a `buildTests` callback, registers Vitest hooks (`beforeAll`/`afterAll`/`beforeEach`/`afterEach`) and invokes the callback with a {@link RulesUnitTestFirebaseTestingContextFixture}.
  */
 export const firebaseRulesUnitTestBuilder: TestContextBuilderFunction<RulesUnitTestTestFirebaseInstance, RulesUnitTestFirebaseTestingContextFixture, RulesUnitTestingConfig> = (inputConfig?: Partial<RulesUnitTestingConfig>) => {
   const config: RulesUnitTestingConfig = {

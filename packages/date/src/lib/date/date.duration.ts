@@ -19,6 +19,11 @@ export interface DateDurationSpan {
  * @param span - the duration span to compute the end for
  * @returns the date when the span ends
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, duration, span, end, compute, time
+ * @dbxUtilRelated duration-span-to-date-range, duration-span-from-date-range
+ *
  * @example
  * ```ts
  * const span = { startsAt: new Date('2024-01-01T10:00:00Z'), duration: 60 };
@@ -32,6 +37,11 @@ export function dateDurationSpanEndDate(span: DateDurationSpan): Date {
 /**
  * Converts a {@link DateDurationSpan} to a {@link DateRange} with start and end dates.
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, duration, span, range, convert
+ * @dbxUtilRelated date-duration-span-end-date, duration-span-from-date-range
+ *
  * @param span - the duration span to convert
  * @returns a date range from startsAt to startsAt + duration
  */
@@ -44,6 +54,11 @@ export function durationSpanToDateRange(span: DateDurationSpan): DateRange {
 
 /**
  * Creates a {@link DateDurationSpan} from a {@link DateRange} by computing the duration in minutes between start and end.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, duration, span, range, convert, minutes
+ * @dbxUtilRelated duration-span-to-date-range, date-duration-span-end-date
  *
  * @param dateRange - the date range to convert
  * @returns a duration span with the range's start as startsAt

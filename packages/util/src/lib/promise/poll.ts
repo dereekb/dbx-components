@@ -26,6 +26,11 @@ export interface PollConfig {
 /**
  * Polls at a regular interval until a condition is met or the maximum number of attempts is reached.
  *
+ * @dbxUtil
+ * @dbxUtilCategory promise
+ * @dbxUtilTags promise, poll, wait, retry, condition, async, interval
+ * @dbxUtilRelated wait-for-ms, perform-task-loop
+ *
  * @param config - Polling configuration including check function, wait interval, and max attempts.
  * @param config.check - predicate function that returns true when the polling condition has been satisfied
  * @param config.wait - milliseconds to wait between polling iterations; defaults to 250

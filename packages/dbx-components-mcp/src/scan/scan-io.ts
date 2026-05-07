@@ -8,6 +8,8 @@
  */
 
 import { glob as fsGlob, readFile as nodeReadFile } from 'node:fs/promises';
+import { resolve as resolvePath } from 'node:path';
+import { Project } from 'ts-morph';
 
 // MARK: Types
 /**
@@ -91,6 +93,118 @@ export async function loadPackageName(packagePath: string, readFile: ScanReadFil
     }
   }
   return result;
+}
+
+// MARK: Scan-config loading
+/**
+ * Failure variants surfaced by {@link loadScanSection}. Every per-cluster
+ * `Build*ManifestOutcome` includes these same two variants so the shared
+ * loader can return a value the caller forwards directly.
+ */
+export type ScanConfigFailureOutcome = { readonly kind: 'no-config'; readonly configPath: string } | { readonly kind: 'invalid-scan-config'; readonly configPath: string; readonly error: string };
+
+/**
+ * Discriminated outcome from {@link loadScanSection}. On success carries the
+ * cluster's already-validated section; on failure carries an outcome the
+ * caller forwards as its own `Build*ManifestOutcome`.
+ */
+export type LoadScanSectionResult<TSection> = { readonly kind: 'ok'; readonly section: TSection } | { readonly kind: 'fail'; readonly outcome: ScanConfigFailureOutcome };
+
+/**
+ * Reads `dbx-mcp.scan.json` at {@link configPath}, parses it as JSON, and
+ * hands the parsed object to {@link parseSection} for cluster-specific
+ * arktype validation. Centralises the missing-file / bad-JSON / invalid-
+ * schema branches that every `*-build-manifest.ts` repeats verbatim.
+ *
+ * @param input - Config path, file reader, and the cluster-specific parse callback used to validate the section.
+ * @param input.configPath - Absolute path to the `dbx-mcp.scan.json` file to read.
+ * @param input.readFile - File-reader injected by the scan runtime; defaults to `node:fs/promises.readFile` in production callers.
+ * @param input.parseSection - Cluster-specific parser that validates the parsed JSON and extracts the relevant sub-section (typically wraps an arktype validator).
+ * @returns Either the validated section or a forwardable failure outcome (`no-config` or `invalid-scan-config`).
+ */
+export async function loadScanSection<TSection>(input: { readonly configPath: string; readonly readFile: ScanReadFile; readonly parseSection: (parsed: unknown) => { readonly ok: true; readonly section: TSection } | { readonly ok: false; readonly error: string } }): Promise<LoadScanSectionResult<TSection>> {
+  const { configPath, readFile, parseSection } = input;
+  const readResult = await readScanConfigRaw(configPath, readFile);
+  let result: LoadScanSectionResult<TSection>;
+  if (readResult.kind === 'error') {
+    result = { kind: 'fail', outcome: { kind: 'invalid-scan-config', configPath, error: `failed to read config: ${readResult.error}` } };
+  } else if (readResult.kind === 'enoent') {
+    result = { kind: 'fail', outcome: { kind: 'no-config', configPath } };
+  } else {
+    result = parseScanSectionFromRaw(readResult.raw, configPath, parseSection);
+  }
+  return result;
+}
+
+type ReadScanConfigRawResult = { readonly kind: 'ok'; readonly raw: string } | { readonly kind: 'enoent' } | { readonly kind: 'error'; readonly error: string };
+
+async function readScanConfigRaw(configPath: string, readFile: ScanReadFile): Promise<ReadScanConfigRawResult> {
+  let result: ReadScanConfigRawResult;
+  try {
+    const raw = await readFile(configPath);
+    result = { kind: 'ok', raw };
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException | null)?.code;
+    if (code === 'ENOENT') {
+      result = { kind: 'enoent' };
+    } else {
+      result = { kind: 'error', error: err instanceof Error ? err.message : String(err) };
+    }
+  }
+  return result;
+}
+
+function parseScanSectionFromRaw<TSection>(raw: string, configPath: string, parseSection: (parsed: unknown) => { readonly ok: true; readonly section: TSection } | { readonly ok: false; readonly error: string }): LoadScanSectionResult<TSection> {
+  const jsonResult = parseJsonString(raw);
+  let result: LoadScanSectionResult<TSection>;
+  if (jsonResult.ok) {
+    const sectionResult = parseSection(jsonResult.value);
+    if (sectionResult.ok) {
+      result = { kind: 'ok', section: sectionResult.section };
+    } else {
+      result = { kind: 'fail', outcome: { kind: 'invalid-scan-config', configPath, error: sectionResult.error } };
+    }
+  } else {
+    result = { kind: 'fail', outcome: { kind: 'invalid-scan-config', configPath, error: jsonResult.error } };
+  }
+  return result;
+}
+
+type ParseJsonStringResult = { readonly ok: true; readonly value: unknown } | { readonly ok: false; readonly error: string };
+
+function parseJsonString(raw: string): ParseJsonStringResult {
+  let result: ParseJsonStringResult;
+  try {
+    result = { ok: true, value: JSON.parse(raw) };
+  } catch (err) {
+    result = { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
+  return result;
+}
+
+// MARK: ts-morph project bootstrap
+/**
+ * Builds an in-memory ts-morph {@link Project} populated with the supplied
+ * relative file paths. Resolves every path against {@link projectRoot},
+ * reads it via {@link readFile}, and adds it to the project as a source
+ * file. Used by every `*-build-manifest.ts` orchestrator before handing
+ * the project to its cluster-specific extractor.
+ *
+ * @param input - Project root, relative file paths to load, and the file reader used to fetch each file's contents.
+ * @param input.projectRoot - Absolute path used as the base for resolving each entry in `filePaths`.
+ * @param input.filePaths - Relative file paths to add to the in-memory project, resolved against `projectRoot`.
+ * @param input.readFile - File-reader used to fetch each file's contents before adding it to the project.
+ * @returns The populated ts-morph project ready for entry extraction.
+ */
+export async function buildScanProject(input: { readonly projectRoot: string; readonly filePaths: readonly string[]; readonly readFile: ScanReadFile }): Promise<Project> {
+  const { projectRoot, filePaths, readFile } = input;
+  const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });
+  for (const relPath of filePaths) {
+    const absolute = resolvePath(projectRoot, relPath);
+    const text = await readFile(absolute);
+    project.createSourceFile(absolute, text, { overwrite: true });
+  }
+  return project;
 }
 
 // MARK: Glob helpers

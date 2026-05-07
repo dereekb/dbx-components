@@ -5,12 +5,19 @@
  * grow its own subpaths without colliding. Currently registered:
  *
  *   dbx://form/fields[/{slug} | /produces/{produces} | /tier/{tier} | /array-output/{arrayOutput}]
- *   dbx://model/firebase[/{name} | /prefix/{prefix} | /subcollections/{parent}]
+ *   dbx://model/firebase[/{name} | /prefix/{prefix} | /subcollections/{parent} | /user-keyed-by-id | /user-related]
  *   dbx://action/entries[/{slug} | /role/{role}]
  *   dbx://ui/components[/{slug} | /category/{category} | /kind/{kind}]
  *   dbx://pipe/entries[/{slug} | /category/{category}]
+ *   dbx://util/entries[/{slug} | /category/{category} | /module/{module} | /tag/{tag}]
  *   dbx://filter/entries[/{slug} | /kind/{kind}]
  *   dbx://css-utility/entries[/{slug} | /role/{role} | /source/{source}]
+ *   dbx://auth/catalog
+ *   dbx://auth/claim/{key}
+ *   dbx://auth/role/{role}
+ *   dbx://auth/role/tag/{tag}
+ *   dbx://auth/scope/{scope}
+ *   dbx://auth/app/{app}
  *
  * Resource-less clusters (route, storagefile_m, notification_m, system_m,
  * artifact) don't expose data endpoints because their output is computed from
@@ -19,9 +26,11 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { ActionRegistry } from '../registry/actions-runtime.js';
+import type { AuthRegistry } from '../registry/auth-runtime.js';
 import type { FilterRegistry } from '../registry/filters-runtime.js';
 import type { ForgeFieldRegistry } from '../registry/forge-fields.js';
 import type { PipeRegistry } from '../registry/pipes-runtime.js';
+import type { UtilRegistry } from '../registry/utils-runtime.js';
 import type { SemanticTypeRegistry } from '../registry/semantic-types.js';
 import type { TokenRegistry } from '../registry/tokens-runtime.js';
 import type { CssUtilityRegistry } from '../registry/css-utilities-runtime.js';
@@ -31,10 +40,12 @@ import { registerFirebaseModelsResource } from './firebase-models.resource.js';
 import { registerActionsResource } from './actions.resource.js';
 import { registerUiComponentsResource } from './ui-components.resource.js';
 import { registerPipesResource } from './pipes.resource.js';
+import { registerUtilsResource } from './utils.resource.js';
 import { registerFiltersResource } from './filters.resource.js';
 import { registerSemanticTypesResource } from './semantic-types.resource.js';
 import { registerTokensResource } from './tokens.resource.js';
 import { registerCssUtilityResource } from './css-utility.resource.js';
+import { registerAuthResource } from './auth.resource.js';
 
 /**
  * Options consumed by {@link registerResources}. Mirrors {@link RegisterToolsOptions}
@@ -46,11 +57,13 @@ export interface RegisterResourcesOptions {
   readonly semanticTypeRegistry?: SemanticTypeRegistry;
   readonly forgeFieldRegistry?: ForgeFieldRegistry;
   readonly pipeRegistry?: PipeRegistry;
+  readonly utilRegistry?: UtilRegistry;
   readonly uiComponentRegistry?: UiComponentRegistry;
   readonly actionRegistry?: ActionRegistry;
   readonly filterRegistry?: FilterRegistry;
   readonly tokenRegistry?: TokenRegistry;
   readonly cssUtilityRegistry?: CssUtilityRegistry;
+  readonly authRegistry?: AuthRegistry;
 }
 
 /**
@@ -75,6 +88,9 @@ export function registerResources(server: McpServer, options: RegisterResourcesO
   if (options.pipeRegistry !== undefined) {
     registerPipesResource(server, { registry: options.pipeRegistry });
   }
+  if (options.utilRegistry !== undefined) {
+    registerUtilsResource(server, { registry: options.utilRegistry });
+  }
   if (options.filterRegistry !== undefined) {
     registerFiltersResource(server, { registry: options.filterRegistry });
   }
@@ -86,5 +102,8 @@ export function registerResources(server: McpServer, options: RegisterResourcesO
   }
   if (options.cssUtilityRegistry !== undefined) {
     registerCssUtilityResource(server, { registry: options.cssUtilityRegistry });
+  }
+  if (options.authRegistry !== undefined) {
+    registerAuthResource(server, { registry: options.authRegistry });
   }
 }

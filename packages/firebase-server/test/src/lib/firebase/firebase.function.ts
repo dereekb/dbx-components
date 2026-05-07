@@ -193,6 +193,9 @@ export interface FirebaseAdminCloudFunctionWrapper {
  * callable requests, and blocking functions for use in integration tests. Each method delegates
  * to the underlying `FeaturesList.wrap()` with appropriate type coercion.
  *
+ * @param instance - The initialized `firebase-functions-test` features list whose `wrap()` is delegated to.
+ * @returns A wrapper object exposing typed `wrap*` helpers for gen 1, gen 2, callable, and blocking functions.
+ *
  * @example
  * ```ts
  * const testEnv = functionsTest();
@@ -253,6 +256,10 @@ export function firebaseAdminCloudFunctionWrapper(instance: FeaturesList): Fireb
  * The returned getter re-wraps on every invocation, so it always reflects the latest function
  * reference from the provided getter — useful when the function under test is re-created between tests.
  *
+ * @param wrapper - The cloud function wrapper providing gen 1 wrap support.
+ * @param getter - Lazy accessor for the gen 1 cloud function under test; re-evaluated on every getter call.
+ * @returns A getter that, when invoked, returns a freshly wrapped gen 1 cloud function ready for invocation in tests.
+ *
  * @example
  * ```ts
  * const getWrapped = wrapCloudFunctionV1ForTests(wrapper, () => myV1Function);
@@ -271,6 +278,10 @@ export function wrapCloudFunctionV1ForTests<I, T extends WrapCloudFunctionV1Inpu
  * Re-wraps on every invocation so it always reflects the latest function reference,
  * which is important when the function under test is re-created between test cases.
  *
+ * @param wrapper - The cloud function wrapper providing gen 2 wrap support.
+ * @param getter - Lazy accessor for the gen 2 cloud function under test; re-evaluated on every getter call.
+ * @returns A getter that, when invoked, returns a freshly wrapped gen 2 cloud function ready for invocation in tests.
+ *
  * @example
  * ```ts
  * const getWrapped = wrapCloudFunctionV2ForTests(wrapper, () => myV2CloudFunction);
@@ -288,6 +299,10 @@ export function wrapCloudFunctionV2ForTests<E extends CloudEvent<unknown>, T ext
  * This is the most general wrapper — use it when you do not need to distinguish between
  * function generations in your test setup.
  *
+ * @param wrapper - The cloud function wrapper providing the unified `wrapCloudFunction` accessor.
+ * @param getter - Lazy accessor for the cloud function under test (gen 1 or gen 2); re-evaluated on every getter call.
+ * @returns A getter that, when invoked, returns a freshly wrapped cloud function exposing the unified `WrappedCloudFunction` signature.
+ *
  * @example
  * ```ts
  * const getWrapped = wrapCloudFunctionTests(wrapper, () => myFunction);
@@ -303,6 +318,10 @@ export function wrapCloudFunctionTests<I extends object>(wrapper: FirebaseAdminC
  *
  * The wrapped callable accepts raw data and {@link CallableContextOptions} (e.g., auth context),
  * simulating an incoming HTTP callable request without needing a running server.
+ *
+ * @param wrapper - The cloud function wrapper providing the `wrapCallableRequest` accessor.
+ * @param getter - Lazy accessor for the {@link CallableHttpFunction} under test; re-evaluated on every getter call.
+ * @returns A getter that, when invoked, returns a freshly wrapped callable that accepts raw `data` and {@link CallableContextOptions}.
  *
  * @example
  * ```ts

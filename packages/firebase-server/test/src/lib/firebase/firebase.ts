@@ -42,6 +42,8 @@ export interface FirebaseAdminTestEnvironmentConfig {
  *
  * Useful for guarding against double-initialization or verifying that setup has completed
  * before creating test contexts.
+ *
+ * @returns `true` once {@link initFirebaseAdminTestEnvironment} has run successfully; otherwise `false`.
  */
 export function isAdminEnvironmentInitialized() {
   return adminEnvironmentInitialized;
@@ -52,6 +54,8 @@ export function isAdminEnvironmentInitialized() {
  *
  * The generated ID has the format `firebase-test-<epoch-millis>`, ensuring each test run
  * operates against an isolated project namespace in the emulators.
+ *
+ * @returns A new project ID string of the form `firebase-test-<epoch-millis>`.
  *
  * @example
  * ```ts
@@ -84,6 +88,8 @@ export function rollNewGCloudProjectEnvironmentVariable() {
  * Reads the current `GCLOUD_PROJECT` environment variable.
  *
  * This is the "active" project ID that the Firebase Admin SDK resolves at runtime.
+ *
+ * @returns The current value of `process.env.GCLOUD_PROJECT`, or `undefined` when unset.
  */
 export function getGCloudProjectId() {
   return process.env.GCLOUD_PROJECT;
@@ -95,6 +101,8 @@ export function getGCloudProjectId() {
  * This holds the canonical test project ID set during {@link rollNewGCloudProjectEnvironmentVariable},
  * and is used by {@link applyFirebaseGCloudTestProjectIdToFirebaseConfigEnv} as the source of truth
  * when re-applying the project ID after external libraries overwrite `FIREBASE_CONFIG`.
+ *
+ * @returns The current value of `process.env.GCLOUD_TEST_PROJECT`, or `undefined` when unset.
  */
 export function getGCloudTestProjectId() {
   return process.env.GCLOUD_TEST_PROJECT;
@@ -105,6 +113,9 @@ export function getGCloudTestProjectId() {
  *
  * This is done as some external testing libraries (firebase-functions-test) will overwrite but we want to enforce using our project id
  * so that each component can also
+ *
+ * @returns The test project ID that was re-applied to `FIREBASE_CONFIG`/`GCLOUD_PROJECT`.
+ * @throws Error when no test project ID is present in the environment (i.e., {@link initFirebaseAdminTestEnvironment} has not been called).
  */
 export function applyFirebaseGCloudTestProjectIdToFirebaseConfigEnv() {
   // firebase-functions-test overwrites this each time.
@@ -128,6 +139,8 @@ export function applyFirebaseGCloudTestProjectIdToFirebaseConfigEnv() {
 
 /**
  * Should be called before calling/using adminFirebaseTestBuilder(). This should only be called once.
+ *
+ * @param config - Emulator host configuration; each emulator entry must be either a host string or `null` (any `undefined` non-null value will throw).
  */
 export function initFirebaseAdminTestEnvironment(config: FirebaseAdminTestEnvironmentConfig) {
   function crashForEmulator(emulator: string) {

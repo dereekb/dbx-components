@@ -1,0 +1,10 @@
+{
+  "name": "@dereekb/dbx-cli-firebase-api-manifest",
+  "version": "13.10.9",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "prettier": "3.8.3",
+    "ts-morph": "^21.0.0"
+  }
+}

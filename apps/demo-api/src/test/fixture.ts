@@ -428,7 +428,7 @@ export const demoAuthorizedUserContextFactory = (params: DemoAuthorizedUserConte
     initUser: async (instance) => {
       const userRecord = await instance.loadUserRecord();
       const fn = instance.testContext.fnWrapper.wrapBlockingFunction(initUserOnCreate(instance.nestAppPromiseGetter));
-      await instance.callAuthBlockingFunction(fn, userRecord, 'google.firebase.auth.user.create');
+      await instance.callAuthBlockingFunction({ fn, userRecord, eventType: 'google.firebase.auth.user.create' });
     }
   });
 

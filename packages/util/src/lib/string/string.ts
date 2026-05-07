@@ -54,6 +54,11 @@ export const SPACE_JOINER = ' ';
 /**
  * Joins an array of strings into a single string. Trims and omits empty values.
  *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilTags string, join, concat, combine, separator, delimiter
+ * @dbxUtilRelated split-join-remainder, join-strings-instance, string-split-join-instance
+ *
  * @param input string or array of strings
  * @param joiner string to join the strings with. Defaults to a comma.
  * @param trim whether or not to trim the strings before joining. Defaults to false.
@@ -78,6 +83,11 @@ export function joinStrings(input: Maybe<ArrayOrValue<Maybe<string>>>, joiner: s
 /**
  * Splits a string like {@link String.prototype.split}, but joins overflow segments back together
  * instead of discarding them. Useful when you only want to split on the first N-1 occurrences.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilTags string, split, limit, separator, parts, segments
+ * @dbxUtilRelated join-strings, string-split-join-instance
  *
  * @param input - string to split
  * @param separator - delimiter to split on
@@ -264,6 +274,11 @@ export const SPACE_STRING_SPLIT_JOIN: StringSplitJoinInstance<SpaceSeparatedStri
 /**
  * Converts a string to its lowercase equivalent for case-insensitive comparison.
  *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilTags string, lowercase, case, normalize, compare
+ * @dbxUtilRelated capitalize-first-letter, lowercase-first-letter
+ *
  * @param input - string to convert to lowercase
  * @returns the lowercased string, or undefined if the input is undefined
  */
@@ -294,6 +309,11 @@ export function addPlusPrefixToNumber(value?: Maybe<number>, prefix = '+'): stri
 /**
  * Capitalizes the first letter of the input string.
  *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilTags string, capitalize, case, uppercase, first
+ * @dbxUtilRelated lowercase-first-letter, case-insensitive-string
+ *
  * @param value - string to capitalize
  * @returns the input string with its first character uppercased
  */
@@ -303,6 +323,11 @@ export function capitalizeFirstLetter(value: string): string {
 
 /**
  * Lowercases the first letter of the input string.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilTags string, lowercase, case, first, decapitalize
+ * @dbxUtilRelated capitalize-first-letter, case-insensitive-string
  *
  * @param value - string to modify
  * @returns the input string with its first character lowercased
@@ -320,6 +345,11 @@ export type FirstNameLastNameTuple = [string, string | undefined];
  * Splits the input string into a first name and last name tuple using a space as the delimiter.
  * If the name contains more than one space, the remainder is treated as the last name.
  *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilTags string, name, split, first, last, person, parse
+ * @dbxUtilRelated split-join-remainder
+ *
  * @param input - full name string to split
  * @returns a tuple of [firstName, lastName], where lastName includes all text after the first space
  */
@@ -329,6 +359,10 @@ export function splitJoinNameString(input: string): FirstNameLastNameTuple {
 
 /**
  * Creates a string that repeats the given string a specified number of times.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilTags string, repeat, build, generate, fill
  *
  * @param string - the string to repeat
  * @param reapeat - number of times to repeat the string
@@ -379,6 +413,11 @@ export type CutStringFunction = ((input: string) => string) & ((input: Maybe<str
 /**
  * Creates a {@link CutStringFunction} that truncates strings exceeding the configured maximum length.
  *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilKind factory
+ * @dbxUtilTags string, cut, truncate, ellipsis, max-length, factory, abbreviate
+ *
  * @param config - configuration controlling max length and end text behavior
  * @returns a reusable function that truncates input strings
  */
@@ -407,6 +446,11 @@ export function cutStringFunction(config: CutStringFunctionConfig): CutStringFun
 /**
  * Truncates a string to the given maximum length, appending end text (defaults to "...") if truncated.
  *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilTags string, cut, truncate, ellipsis, max-length, abbreviate, shorten
+ * @dbxUtilRelated cut-string-function
+ *
  * @param input - the string to truncate, or null/undefined
  * @param maxLength - maximum allowed length for the output string
  * @param endText - text to append when truncated; defaults to "..."
@@ -421,6 +465,11 @@ export function cutString(input: Maybe<string>, maxLength: number, endText?: May
  *
  * Newlines are preserved.
  *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilTags string, whitespace, flatten, collapse, normalize, trim
+ * @dbxUtilRelated simplify-whitespace
+ *
  * @param input - string to flatten
  * @returns the string with collapsed whitespace
  */
@@ -430,6 +479,11 @@ export function flattenWhitespace(input: string): string {
 
 /**
  * Reduces multiple consecutive newlines to a single newline and collapses multiple whitespace characters to a single space.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilTags string, whitespace, simplify, normalize, newline, trim
+ * @dbxUtilRelated flatten-whitespace
  *
  * @param input - string to simplify
  * @returns the string with simplified whitespace and newlines

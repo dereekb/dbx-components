@@ -9,6 +9,9 @@ import { where, type FirestoreQueryConstraint, type DocumentReference, allChildD
  * const constraint = mockItemWithValue('hello');
  * const results = await collection.query(constraint);
  * ```
+ *
+ * @param value - The exact `value` to match.
+ * @returns A `where('value', '==', value)` constraint typed for {@link MockItem}.
  */
 export function mockItemWithValue(value: string): FirestoreQueryConstraint {
   return where<MockItem>('value', '==', value);
@@ -16,6 +19,9 @@ export function mockItemWithValue(value: string): FirestoreQueryConstraint {
 
 /**
  * Creates a Firestore query constraint that filters {@link MockItem} documents by their `test` boolean field.
+ *
+ * @param test - The boolean value of the `test` field to match.
+ * @returns A `where('test', '==', test)` constraint.
  */
 export function mockItemWithTestValue(test: boolean): FirestoreQueryConstraint {
   return where('test', '==', test);
@@ -35,8 +41,8 @@ export function mockItemWithTestValue(test: boolean): FirestoreQueryConstraint {
  * From:
  * https://medium.com/firebase-developers/how-to-query-collections-in-firestore-under-a-certain-path-6a0d686cebd2
  *
- * @param parent
- * @returns
+ * @param mockItem - The parent {@link MockItem} document reference whose descendant documents the constraint should bound to.
+ * @returns An array of constraints (suitable for use on a collection group query) that restricts results to documents under the given parent path.
  */
 export function allChildMockItemSubItemDeepsWithinMockItem(mockItem: DocumentReference<MockItem>): FirestoreQueryConstraint[] {
   return allChildDocumentsUnderParent(mockItem);

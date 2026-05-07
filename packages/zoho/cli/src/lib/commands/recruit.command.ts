@@ -1,9 +1,9 @@
 import type { CommandModule, Argv } from 'yargs';
 import { getRecruitApi } from '../middleware/auth.middleware';
-import { noop } from '../util/noop';
+import { noop } from '@dereekb/util';
 import { outputResult, outputError } from '../util/output';
 import { withPagination, withModule, withRecordId, withFields, withSort } from '../util/args';
-import { runPaginatedList, zohoPagePaginationAdapter } from '../util/pagination';
+import { runZohoPaginatedList } from '../util/pagination';
 
 const recruitListCommand: CommandModule = {
   command: 'list',
@@ -20,19 +20,7 @@ const recruitListCommand: CommandModule = {
         sort_by: argv.sortBy,
         sort_order: argv.sortOrder
       };
-      const outcome = await runPaginatedList({
-        initialInput,
-        fetchPage: (input) => recruitApi.getRecords(input),
-        adapter: zohoPagePaginationAdapter,
-        multiplePages: argv.multiplePages,
-        multiplePagesOutput: argv.multiplePagesOutput,
-        dumpOutput: argv.dumpOutput,
-        dumpMerge: argv.dumpMerge
-      });
-      if (outcome.handled === false) {
-        const result = outcome.result;
-        outputResult(result.data, { page: result.info?.page, per_page: result.info?.per_page, more_records: result.info?.more_records });
-      }
+      await runZohoPaginatedList({ argv, initialInput, fetchPage: (input) => recruitApi.getRecords(input) });
     } catch (e) {
       outputError(e);
       process.exit(1);
@@ -72,19 +60,7 @@ const recruitSearchCommand: CommandModule = {
         page: argv.page,
         per_page: argv.perPage
       };
-      const outcome = await runPaginatedList({
-        initialInput,
-        fetchPage: (input) => recruitApi.searchRecords(input),
-        adapter: zohoPagePaginationAdapter,
-        multiplePages: argv.multiplePages,
-        multiplePagesOutput: argv.multiplePagesOutput,
-        dumpOutput: argv.dumpOutput,
-        dumpMerge: argv.dumpMerge
-      });
-      if (outcome.handled === false) {
-        const result = outcome.result;
-        outputResult(result.data, { page: result.info?.page, per_page: result.info?.per_page, more_records: result.info?.more_records });
-      }
+      await runZohoPaginatedList({ argv, initialInput, fetchPage: (input) => recruitApi.searchRecords(input) });
     } catch (e) {
       outputError(e);
       process.exit(1);
@@ -168,19 +144,7 @@ const recruitEmailsCommand: CommandModule = {
     try {
       const recruitApi = getRecruitApi(argv);
       const initialInput = { module: argv.module, id: argv.id, page: argv.page, per_page: argv.perPage };
-      const outcome = await runPaginatedList({
-        initialInput,
-        fetchPage: (input) => recruitApi.getEmailsForRecord(input),
-        adapter: zohoPagePaginationAdapter,
-        multiplePages: argv.multiplePages,
-        multiplePagesOutput: argv.multiplePagesOutput,
-        dumpOutput: argv.dumpOutput,
-        dumpMerge: argv.dumpMerge
-      });
-      if (outcome.handled === false) {
-        const result = outcome.result;
-        outputResult(result.data, { page: result.info?.page, per_page: result.info?.per_page, more_records: result.info?.more_records });
-      }
+      await runZohoPaginatedList({ argv, initialInput, fetchPage: (input) => recruitApi.getEmailsForRecord(input) });
     } catch (e) {
       outputError(e);
       process.exit(1);
@@ -196,19 +160,7 @@ const recruitAttachmentsCommand: CommandModule = {
     try {
       const recruitApi = getRecruitApi(argv);
       const initialInput = { module: argv.module, id: argv.id, page: argv.page, per_page: argv.perPage };
-      const outcome = await runPaginatedList({
-        initialInput,
-        fetchPage: (input) => recruitApi.getAttachmentsForRecord(input),
-        adapter: zohoPagePaginationAdapter,
-        multiplePages: argv.multiplePages,
-        multiplePagesOutput: argv.multiplePagesOutput,
-        dumpOutput: argv.dumpOutput,
-        dumpMerge: argv.dumpMerge
-      });
-      if (outcome.handled === false) {
-        const result = outcome.result;
-        outputResult(result.data, { page: result.info?.page, per_page: result.info?.per_page, more_records: result.info?.more_records });
-      }
+      await runZohoPaginatedList({ argv, initialInput, fetchPage: (input) => recruitApi.getAttachmentsForRecord(input) });
     } catch (e) {
       outputError(e);
       process.exit(1);

@@ -55,6 +55,12 @@ export type FormatDateRangeFunctionConfigInput = FormatDateFunction | FormatDate
  * @param inputConfig - format function or full configuration
  * @returns a reusable function that formats date ranges into strings
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilKind factory
+ * @dbxUtilTags date, format, range, string, time, factory
+ * @dbxUtilRelated format-date-range
+ *
  * @example
  * ```ts
  * import { formatDateRangeFunction, formatToTimeString } from '@dereekb/date';
@@ -94,6 +100,11 @@ export function formatDateRangeFunction(inputConfig: FormatDateRangeFunctionConf
  * @param inputConfig - format function or full configuration
  * @param separator - optional separator override when inputConfig is a function
  * @returns the formatted date range string
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, format, range, string, time
+ * @dbxUtilRelated format-date-range-function, format-to-time-range-string
  *
  * @example
  * ```ts
@@ -214,6 +225,11 @@ export const formatDateDistance: FormatDateRangeFunction = formatDateRangeDistan
  * @param inputConfig - optional distance formatting configuration
  * @returns the human-readable distance string
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, format, distance, range, human, duration, since, ago
+ * @dbxUtilRelated format-date-range-distance-function, format-date-distance
+ *
  * @example
  * ```ts
  * import { formatDateRangeDistance } from '@dereekb/date';
@@ -235,6 +251,11 @@ export function formatDateRangeDistance(range: DateRange, inputConfig: FormatDat
  *
  * Same day: `"12:00 AM - 4:00 PM"`
  * Different days: `"01/01/2001 12:00 AM - 01/02/2001 4:00 PM"`
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, format, time, range, string, day-aware
+ * @dbxUtilRelated format-to-day-time-range-string, format-date-range
  *
  * @example
  * ```ts

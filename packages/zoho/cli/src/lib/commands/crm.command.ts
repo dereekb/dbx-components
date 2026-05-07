@@ -1,9 +1,9 @@
 import type { CommandModule, Argv } from 'yargs';
 import { getCrmApi } from '../middleware/auth.middleware';
-import { noop } from '../util/noop';
+import { noop } from '@dereekb/util';
 import { outputResult, outputError } from '../util/output';
 import { withPagination, withModule, withRecordId, withFields, withSort } from '../util/args';
-import { runPaginatedList, zohoPagePaginationAdapter } from '../util/pagination';
+import { runZohoPaginatedList } from '../util/pagination';
 
 const crmListCommand: CommandModule = {
   command: 'list',
@@ -20,19 +20,7 @@ const crmListCommand: CommandModule = {
         sort_by: argv.sortBy,
         sort_order: argv.sortOrder
       };
-      const outcome = await runPaginatedList({
-        initialInput,
-        fetchPage: (input) => crmApi.getRecords(input),
-        adapter: zohoPagePaginationAdapter,
-        multiplePages: argv.multiplePages,
-        multiplePagesOutput: argv.multiplePagesOutput,
-        dumpOutput: argv.dumpOutput,
-        dumpMerge: argv.dumpMerge
-      });
-      if (outcome.handled === false) {
-        const result = outcome.result;
-        outputResult(result.data, { page: result.info?.page, per_page: result.info?.per_page, more_records: result.info?.more_records });
-      }
+      await runZohoPaginatedList({ argv, initialInput, fetchPage: (input) => crmApi.getRecords(input) });
     } catch (e) {
       outputError(e);
       process.exit(1);
@@ -72,19 +60,7 @@ const crmSearchCommand: CommandModule = {
         page: argv.page,
         per_page: argv.perPage
       };
-      const outcome = await runPaginatedList({
-        initialInput,
-        fetchPage: (input) => crmApi.searchRecords(input),
-        adapter: zohoPagePaginationAdapter,
-        multiplePages: argv.multiplePages,
-        multiplePagesOutput: argv.multiplePagesOutput,
-        dumpOutput: argv.dumpOutput,
-        dumpMerge: argv.dumpMerge
-      });
-      if (outcome.handled === false) {
-        const result = outcome.result;
-        outputResult(result.data, { page: result.info?.page, per_page: result.info?.per_page, more_records: result.info?.more_records });
-      }
+      await runZohoPaginatedList({ argv, initialInput, fetchPage: (input) => crmApi.searchRecords(input) });
     } catch (e) {
       outputError(e);
       process.exit(1);
@@ -168,19 +144,7 @@ const crmEmailsCommand: CommandModule = {
     try {
       const crmApi = getCrmApi(argv);
       const initialInput = { module: argv.module, id: argv.id, page: argv.page, per_page: argv.perPage };
-      const outcome = await runPaginatedList({
-        initialInput,
-        fetchPage: (input) => crmApi.getEmailsForRecord(input),
-        adapter: zohoPagePaginationAdapter,
-        multiplePages: argv.multiplePages,
-        multiplePagesOutput: argv.multiplePagesOutput,
-        dumpOutput: argv.dumpOutput,
-        dumpMerge: argv.dumpMerge
-      });
-      if (outcome.handled === false) {
-        const result = outcome.result;
-        outputResult(result.data, { page: result.info?.page, per_page: result.info?.per_page, more_records: result.info?.more_records });
-      }
+      await runZohoPaginatedList({ argv, initialInput, fetchPage: (input) => crmApi.getEmailsForRecord(input) });
     } catch (e) {
       outputError(e);
       process.exit(1);
@@ -196,19 +160,7 @@ const crmAttachmentsCommand: CommandModule = {
     try {
       const crmApi = getCrmApi(argv);
       const initialInput = { module: argv.module, id: argv.id, fields: argv.fields, page: argv.page, per_page: argv.perPage };
-      const outcome = await runPaginatedList({
-        initialInput,
-        fetchPage: (input) => crmApi.getAttachmentsForRecord(input),
-        adapter: zohoPagePaginationAdapter,
-        multiplePages: argv.multiplePages,
-        multiplePagesOutput: argv.multiplePagesOutput,
-        dumpOutput: argv.dumpOutput,
-        dumpMerge: argv.dumpMerge
-      });
-      if (outcome.handled === false) {
-        const result = outcome.result;
-        outputResult(result.data, { page: result.info?.page, per_page: result.info?.per_page, more_records: result.info?.more_records });
-      }
+      await runZohoPaginatedList({ argv, initialInput, fetchPage: (input) => crmApi.getAttachmentsForRecord(input) });
     } catch (e) {
       outputError(e);
       process.exit(1);

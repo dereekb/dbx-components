@@ -12,6 +12,11 @@ import { MAP_IDENTITY } from '../value/map';
  *
  * Recursively compares arrays, objects, Maps, Sets, primitives, and Dates.
  *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilTags object, equal, equality, deep, compare, recursive, pojo
+ * @dbxUtilRelated are-equal-pojo-values-using-pojo-filter, all-objects-are-equal
+ *
  * @param a - First value to compare
  * @param b - Second value to compare
  * @returns `true` if the values are deeply equal

@@ -59,6 +59,11 @@ export type StringOrGetter = GetterOrValue<string>;
 /**
  * Returns true if the input value is a non-class function (i.e., likely a Getter).
  *
+ * @dbxUtil
+ * @dbxUtilCategory getter
+ * @dbxUtilTags getter, type-guard, function, callable, check
+ * @dbxUtilRelated as-getter, get-value-from-getter
+ *
  * @param value - The value to check
  * @returns True if the value is a non-class function
  */
@@ -68,6 +73,11 @@ export function isGetter<T = unknown>(value: unknown): value is Getter<T> {
 
 /**
  * If the input is a function, it is executed and the result returned. Otherwise, the value itself is returned.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory getter
+ * @dbxUtilTags getter, resolve, value, factory, normalize
+ * @dbxUtilRelated as-getter, is-getter
  *
  * @param input - A value or a getter/factory function
  * @returns The resolved value
@@ -84,6 +94,11 @@ export function getValueFromGetter<T, A>(this: unknown, input: unknown, args?: A
 /**
  * Wraps the input as a Getter function. If it's already a function, returns it directly.
  *
+ * @dbxUtil
+ * @dbxUtilCategory getter
+ * @dbxUtilTags getter, factory, wrap, ensure, normalize
+ * @dbxUtilRelated get-value-from-getter, is-getter
+ *
  * @param input - A value or getter function
  * @returns A Getter function that returns the value
  */
@@ -98,6 +113,12 @@ export type ObjectCopyFactory<T> = Factory<T>;
 
 /**
  * Creates a factory that returns a shallow copy of the input value on each call.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory getter
+ * @dbxUtilKind factory
+ * @dbxUtilTags getter, factory, copy, clone, object
+ * @dbxUtilRelated as-object-copy-factory, copy-object
  *
  * @param value - The object to copy
  * @param copyFunction - Optional custom copy function (defaults to copyObject)

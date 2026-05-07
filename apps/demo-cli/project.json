@@ -1,0 +1,68 @@
+{
+  "name": "demo-cli",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/demo-cli/src",
+  "projectType": "library",
+  "tags": [],
+  "implicitDependencies": ["dbx-cli", "dbx-cli-firebase-api-manifest", "util", "firebase", "date", "model", "rxjs", "demo-firebase"],
+  "targets": {
+    "generate-api-manifest": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/src/lib/manifest/api.manifest.generated.ts"],
+      "dependsOn": [{ "projects": ["dbx-cli-firebase-api-manifest"], "target": "build" }],
+      "inputs": ["{workspaceRoot}/dist/packages/dbx-cli/firebase-api-manifest/main.js", "{workspaceRoot}/components/demo-firebase/src/lib/functions.ts", "{workspaceRoot}/components/demo-firebase/src/lib/**/*.api.ts", "{workspaceRoot}/packages/firebase/src/lib/model/**/*.api.ts"],
+      "options": {
+        "command": "node dist/packages/dbx-cli/firebase-api-manifest/main.js --project=demo-cli --functions-config=components/demo-firebase/src/lib/functions.ts --output=apps/demo-cli/src/lib/manifest/api.manifest.generated.ts",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "dependsOn": ["generate-api-manifest"],
+      "options": {
+        "outputPath": "dist/apps/demo-cli",
+        "main": "apps/demo-cli/src/index.ts",
+        "tsConfig": "apps/demo-cli/tsconfig.lib.json",
+        "format": ["esm"],
+        "platform": "node",
+        "target": "node20",
+        "bundle": true,
+        "thirdParty": false,
+        "skipTypeCheck": true,
+        "declaration": false,
+        "external": ["class-validator", "class-transformer"],
+        "esbuildOptions": {
+          "banner": {
+            "js": "#!/usr/bin/env node\nimport { createRequire as __createRequire } from 'node:module';\nconst require = __createRequire(import.meta.url);"
+          }
+        },
+        "assets": [
+          {
+            "glob": "LICENSE",
+            "input": ".",
+            "output": "."
+          }
+        ]
+      },
+      "configurations": {
+        "production": {
+          "minify": true,
+          "sourcemap": false
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "{projectRoot}/../../coverage/apps/demo-cli"
+      }
+    }
+  }
+}

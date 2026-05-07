@@ -30,6 +30,11 @@ export type EmptyObject = Record<string, never>;
 /**
  * Checks whether the object has no own enumerable keys.
  *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilTags object, empty, keys, check, type-guard
+ * @dbxUtilRelated object-has-key, object-has-keys, has-value-or-not-empty-object
+ *
  * @param obj - Object to check
  * @returns `true` if the object has zero keys
  */
@@ -39,6 +44,11 @@ export function objectHasNoKeys(obj: object): obj is EmptyObject {
 
 /**
  * Checks whether the object has the specified own property using `Object.prototype.hasOwnProperty`.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilTags object, key, has, own-property, check
+ * @dbxUtilRelated object-has-keys, object-has-no-keys
  *
  * @param obj - Object to check
  * @param key - Property key to test for
@@ -53,6 +63,11 @@ export function objectHasKey<T>(obj: T, key: string): boolean {
 
 /**
  * Checks whether the object has all or any of the specified keys, based on the mode.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilTags object, keys, has, check, all, any
+ * @dbxUtilRelated object-has-key, object-has-no-keys
  *
  * @param obj - Object to check
  * @param keys - Keys to test for
@@ -86,6 +101,10 @@ export function applyToMultipleFields<T extends object, X = unknown>(value: X, f
 /**
  * Converts a Map to a plain object by iterating entries and assigning key-value pairs.
  *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilTags object, map, convert, transform, dictionary
+ *
  * @param map - Map to convert
  * @returns A plain object with the same key-value pairs
  */
@@ -106,6 +125,11 @@ export type CopyObjectFunction<T> = (input: T) => T;
 
 /**
  * Creates a shallow copy of an object using the spread operator.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilTags object, copy, clone, shallow, spread
+ * @dbxUtilRelated copy-array
  *
  * @param input - Object to copy
  * @returns A new object with the same properties

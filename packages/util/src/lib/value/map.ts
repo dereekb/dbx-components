@@ -24,6 +24,12 @@ export type ReadValueFunction<I, O> = MapFunction<I, O>;
  * @param mapFunction - function to apply only when the input is defined
  * @returns a new function that short-circuits on null/undefined inputs
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags map, transform, maybe, nullish, factory, optional
+ * @dbxUtilRelated map-array-function, map-identity-function
+ *
  * @example
  * ```ts
  * const double = (x: number) => x * 2;
@@ -69,6 +75,12 @@ export type ApplyMapFunctionWithOptions<I, O, C> = (input: I, target?: Maybe<Par
 /**
  * Lifts a per-element MapFunction into one that operates on arrays, applying the mapping to each element.
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags map, transform, array, lift, factory
+ * @dbxUtilRelated map-maybe-function, chain-map-functions
+ *
  * @param mapFunction - per-element transformation
  * @returns a function that maps entire arrays
  */
@@ -81,6 +93,12 @@ export function mapArrayFunction<I, O>(mapFunction: MapFunction<I, O>): MapArray
  *
  * Used as a sentinel value so that {@link chainMapSameFunctions} and other combinators can detect
  * and skip no-op mappings for efficiency.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind const
+ * @dbxUtilTags map, identity, no-op, sentinel, pass-through, constant
+ * @dbxUtilRelated map-identity-function, is-map-identity-function
  *
  * @param input - the value to pass through unchanged
  * @returns the same input value, unmodified
@@ -176,6 +194,11 @@ export function mapFunctionOutput<O extends object, I = unknown>(output: O, inpu
  *
  * @param input - one or more optional same-type map functions to chain
  * @returns a single composed function that runs all provided functions in order
+ *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilTags map, chain, compose, pipeline, identity, transform
+ * @dbxUtilRelated chain-map-function, map-identity-function
  *
  * @example
  * ```ts

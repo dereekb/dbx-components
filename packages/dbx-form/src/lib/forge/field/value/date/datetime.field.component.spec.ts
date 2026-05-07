@@ -70,7 +70,8 @@ function delay(ms: number): Promise<void> {
  * Use this instead of `settle()` when the test checks a specific signal/value
  * that may propagate faster than SETTLE_TIME (or might need longer under CI load).
  */
-async function waitFor(fixture: ComponentFixture<TestForgeDateTimeHostComponent>, predicate: () => boolean, timeoutMs: number = 2000, intervalMs: number = 20): Promise<void> {
+async function waitFor(input: { fixture: ComponentFixture<TestForgeDateTimeHostComponent>; predicate: () => boolean; timeoutMs?: number; intervalMs?: number }): Promise<void> {
+  const { fixture, predicate, timeoutMs = 2000, intervalMs = 20 } = input;
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     fixture.detectChanges();
@@ -2372,9 +2373,12 @@ describe('dbxForgeDateRangeRow() integration', () => {
 
     // Use waitFor instead of settle — the timezone propagates via effect → subscription → signal,
     // which can be faster than SETTLE_TIME but may need retries under CI load.
-    await waitFor(fixture, () => {
-      const comps = getAllDateTimeComponents(fixture);
-      return comps.length === 2 && comps[0].resolvedTimezone() === 'America/Chicago' && comps[1].resolvedTimezone() === 'America/Chicago';
+    await waitFor({
+      fixture,
+      predicate: () => {
+        const comps = getAllDateTimeComponents(fixture);
+        return comps.length === 2 && comps[0].resolvedTimezone() === 'America/Chicago' && comps[1].resolvedTimezone() === 'America/Chicago';
+      }
     });
 
     const comps = getAllDateTimeComponents(fixture);

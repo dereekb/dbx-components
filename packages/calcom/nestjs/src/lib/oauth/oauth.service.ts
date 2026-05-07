@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { type CalcomAccessToken, type CalcomAccessTokenCache, type CalcomRefreshToken } from '@dereekb/calcom';
-import { type Maybe, type Configurable, filterMaybeArrayValues, tryWithPromiseFactoriesFunction, isPast } from '@dereekb/util';
+import { type AsyncValueCache, type Maybe, filterMaybeArrayValues, inMemoryAsyncKeyedValueCache, inMemoryAsyncValueCache, isExpired, mergeAsyncValueCaches } from '@dereekb/util';
+import { createMemoizedJsonFileAsyncValueCache } from '@dereekb/nestjs';
 import { createHash } from 'node:crypto';
-import { dirname, join } from 'node:path';
-import { readFile, writeFile, mkdirSync } from 'node:fs';
+import { join } from 'node:path';
 
 /**
  * Service used for retrieving CalcomAccessTokenCache for Cal.com services.
@@ -43,6 +43,26 @@ export function calcomRefreshTokenCacheKey(refreshToken: string): string {
 }
 
 // MARK: Merge
+function buildCalcomReadAdapter(cache: CalcomAccessTokenCache): AsyncValueCache<CalcomAccessToken> {
+  return {
+    load: async () => {
+      const value = await cache.loadCachedToken().catch(() => undefined);
+      return value != null && !isExpired(value) ? value : undefined;
+    },
+    update: (token) => cache.updateCachedToken(token),
+    clear: async () => {
+      // CalcomAccessTokenCache does not expose a clear method.
+    }
+  };
+}
+
+function updateCalcomCacheCapturingError(cache: CalcomAccessTokenCache, accessToken: CalcomAccessToken): Promise<null | readonly [CalcomAccessTokenCache, unknown]> {
+  return cache
+    .updateCachedToken(accessToken)
+    .then(() => null)
+    .catch((e: unknown) => [cache, e] as const);
+}
+
 export type LogMergeCalcomOAuthAccessTokenCacheServiceErrorFunction = (failedUpdates: (readonly [CalcomAccessTokenCache, unknown])[]) => void;
 
 /**
@@ -64,6 +84,11 @@ export function logMergeCalcomOAuthAccessTokenCacheServiceErrorFunction(failedUp
  * If one source fails retrieval, the next will be tried.
  * When updating a cached token, it will update the token across all services.
  *
+ * Read fall-through is delegated to {@link mergeAsyncValueCaches} after wrapping each
+ * underlying cache with an {@link isExpired}-aware filter, so an expired cached token
+ * never short-circuits the lookup. Updates run across all services in parallel via
+ * `Promise.allSettled`, mirroring the previous behavior, with optional error logging.
+ *
  * @param inputServicesToMerge Must include at least one service. Empty arrays will throw an error.
  * @param logError - optional error logging configuration; pass a function, true for default logging, or false to disable
  * @returns a merged CalcomOAuthAccessTokenCacheService that delegates across all input services
@@ -76,56 +101,25 @@ export function mergeCalcomOAuthAccessTokenCacheServices(inputServicesToMerge: C
     throw new Error('mergeCalcomOAuthAccessTokenCacheServices() input cannot be empty.');
   }
 
-  const loadCalcomAccessTokenCache = (accessCachesForServices: CalcomAccessTokenCache[]) => {
-    const loadCachedTokenFromFirstService = tryWithPromiseFactoriesFunction<void, CalcomAccessToken>({
-      promiseFactories: accessCachesForServices.map(
-        (x) => () =>
-          x
-            .loadCachedToken()
-            .catch(() => null)
-            .then((x: Maybe<CalcomAccessToken>) => {
-              let result: Maybe<CalcomAccessToken> = undefined;
+  function mergeCachesForService(accessCachesForServices: CalcomAccessTokenCache[]): CalcomAccessTokenCache {
+    const readAdapters: AsyncValueCache<CalcomAccessToken>[] = accessCachesForServices.map(buildCalcomReadAdapter);
+    const merged = mergeAsyncValueCaches(readAdapters);
 
-              if (x && !isPast(x.expiresAt)) {
-                result = x; // only return from cache if it is not expired
-              }
+    return {
+      loadCachedToken: () => merged.load(),
+      updateCachedToken: async (accessToken) => {
+        const settled = await Promise.allSettled(accessCachesForServices.map((cache) => updateCalcomCacheCapturingError(cache, accessToken)));
 
-              return result;
-            })
-      ),
-      successOnMaybe: false,
-      throwErrors: false
-    });
+        if (logErrorFunction != null) {
+          const failedUpdates = filterMaybeArrayValues(settled.map((y) => (y as PromiseFulfilledResult<unknown>).value)) as (readonly [CalcomAccessTokenCache, unknown])[];
 
-    const cacheForService: CalcomAccessTokenCache = {
-      loadCachedToken: function (): Promise<Maybe<CalcomAccessToken>> {
-        return loadCachedTokenFromFirstService();
-      },
-      updateCachedToken: async function (accessToken: CalcomAccessToken): Promise<void> {
-        return Promise.allSettled(
-          accessCachesForServices.map((x) =>
-            x
-              .updateCachedToken(accessToken)
-              .then(() => null)
-              .catch((e: unknown) => {
-                return [x, e] as const;
-              })
-          )
-        ).then((x) => {
-          // only find the failures if we're logging
-          if (logErrorFunction != null) {
-            const failedUpdates = filterMaybeArrayValues(x.map((y) => (y as PromiseFulfilledResult<any>).value)) as unknown as (readonly [CalcomAccessTokenCache, unknown])[];
-
-            if (failedUpdates.length) {
-              logErrorFunction(failedUpdates);
-            }
+          if (failedUpdates.length) {
+            logErrorFunction(failedUpdates);
           }
-        });
+        }
       }
     };
-
-    return cacheForService;
-  };
+  }
 
   const allServiceAccessTokenCaches = allServices.map((x) => x.loadCalcomAccessTokenCache());
   const allServicesWithCacheForRefreshToken = allServices.filter((x) => x.cacheForRefreshToken != null) as CalcomOAuthAccessTokenCacheServiceWithRefreshToken[];
@@ -134,12 +128,12 @@ export function mergeCalcomOAuthAccessTokenCacheServices(inputServicesToMerge: C
     allServicesWithCacheForRefreshToken.length > 0
       ? (refreshToken: CalcomRefreshToken): CalcomAccessTokenCache => {
           const allCaches = allServicesWithCacheForRefreshToken.map((x) => x.cacheForRefreshToken(refreshToken));
-          return loadCalcomAccessTokenCache(allCaches);
+          return mergeCachesForService(allCaches);
         }
       : undefined;
 
   const service: CalcomOAuthAccessTokenCacheService = {
-    loadCalcomAccessTokenCache: () => loadCalcomAccessTokenCache(allServiceAccessTokenCaches),
+    loadCalcomAccessTokenCache: () => mergeCachesForService(allServiceAccessTokenCaches),
     cacheForRefreshToken
   };
 
@@ -148,51 +142,58 @@ export function mergeCalcomOAuthAccessTokenCacheServices(inputServicesToMerge: C
 
 // MARK: Memory Access Token Cache
 /**
+ * Adapts an {@link AsyncValueCache} to a {@link CalcomAccessTokenCache}, optionally logging cache reads/writes to the console.
+ *
+ * @param cache - underlying single-value cache for the access token
+ * @param logAccessToConsole - when true, logs reads and writes to the console
+ * @returns the CalcomAccessTokenCache backed by the given async cache
+ */
+function calcomAccessTokenCacheFromAsyncValueCache(cache: AsyncValueCache<CalcomAccessToken>, logAccessToConsole: boolean | undefined): CalcomAccessTokenCache {
+  return {
+    loadCachedToken: async () => {
+      const token = await cache.load();
+      if (logAccessToConsole) {
+        console.log('retrieving access token from memory: ', { hit: token != null, expiresAt: token?.expiresAt });
+      }
+      return token;
+    },
+    updateCachedToken: async (accessToken) => {
+      await cache.update(accessToken);
+      if (logAccessToConsole) {
+        console.log('updating access token in memory: ', { expiresAt: accessToken?.expiresAt });
+      }
+    }
+  };
+}
+
+/**
  * Creates a CalcomOAuthAccessTokenCacheService that uses in-memory storage.
- * Per-user caches are stored in a Map keyed by the md5 hash of the refresh token.
+ *
+ * The server-level token is held in a single-slot {@link inMemoryAsyncValueCache};
+ * per-user tokens are held in an {@link inMemoryAsyncKeyedValueCache} keyed by the
+ * sha256-truncated refresh token hash.
  *
  * @param existingToken - optional pre-existing server-level access token to seed the cache
  * @param logAccessToConsole - when true, logs all cache reads and writes to console
- * @returns a CalcomOAuthAccessTokenCacheService backed by in-memory Maps
+ * @returns a CalcomOAuthAccessTokenCacheService backed by in-memory caches
  */
 export function memoryCalcomOAuthAccessTokenCacheService(existingToken?: Maybe<CalcomAccessToken>, logAccessToConsole?: boolean): CalcomOAuthAccessTokenCacheService {
-  let serverToken: Maybe<CalcomAccessToken> = existingToken;
-  const userTokens = new Map<string, Maybe<CalcomAccessToken>>();
+  const serverCache = inMemoryAsyncValueCache<CalcomAccessToken>(existingToken);
+  const userCache = inMemoryAsyncKeyedValueCache<CalcomAccessToken>();
 
-  function makeCache(getToken: () => Maybe<CalcomAccessToken>, setToken: (t: CalcomAccessToken) => void): CalcomAccessTokenCache {
+  function userCacheView(key: string): AsyncValueCache<CalcomAccessToken> {
     return {
-      loadCachedToken: async function (): Promise<Maybe<CalcomAccessToken>> {
-        const token = getToken();
-        if (logAccessToConsole) {
-          console.log('retrieving access token from memory: ', { token });
-        }
-
-        return token;
-      },
-      updateCachedToken: async function (accessToken: CalcomAccessToken): Promise<void> {
-        setToken(accessToken);
-        if (logAccessToConsole) {
-          console.log('updating access token in memory: ', { accessToken });
-        }
-      }
+      load: () => userCache.get(key),
+      update: (token) => userCache.set(key, token),
+      clear: () => userCache.remove(key)
     };
   }
 
   return {
-    loadCalcomAccessTokenCache: () =>
-      makeCache(
-        () => serverToken,
-        (t) => {
-          serverToken = t;
-        }
-      ),
+    loadCalcomAccessTokenCache: () => calcomAccessTokenCacheFromAsyncValueCache(serverCache, logAccessToConsole),
     cacheForRefreshToken: (refreshToken: CalcomRefreshToken) => {
       const key = calcomRefreshTokenCacheKey(refreshToken);
-
-      return makeCache(
-        () => userTokens.get(key),
-        (t) => userTokens.set(key, t)
-      );
+      return calcomAccessTokenCacheFromAsyncValueCache(userCacheView(key), logAccessToConsole);
     }
   };
 }
@@ -210,88 +211,76 @@ export interface FileSystemCalcomOAuthAccessTokenCacheService extends CalcomOAut
 }
 
 /**
+ * Reviver applied to the cached file payload on load so `expiresAt` is always a `Date`
+ * regardless of how it was serialized.
+ *
+ * @param raw - the raw JSON-parsed file payload
+ * @returns the revived CalcomAccessToken, or undefined when the payload is empty/invalid
+ */
+function reviveCalcomAccessTokenFile(raw: unknown): Maybe<CalcomAccessToken> {
+  if (raw == null || typeof raw !== 'object') {
+    return undefined;
+  }
+
+  const wrapper = raw as CalcomOAuthAccessTokenCacheFileContent;
+  const token = wrapper.token;
+
+  if (token == null) {
+    return undefined;
+  }
+
+  const rawExpiresAt = (token as CalcomAccessToken & { expiresAt?: unknown }).expiresAt;
+  const expiresAt = rawExpiresAt != null && !(rawExpiresAt instanceof Date) ? new Date(rawExpiresAt as string | number) : (rawExpiresAt as Date | undefined);
+
+  return { ...token, expiresAt: expiresAt as Date };
+}
+
+/**
  * Creates a CalcomOAuthAccessTokenCacheService that reads and writes access tokens
- * to the file system. Each user gets their own file, keyed by an md5 hash of their refresh token.
+ * to the file system. Each user gets their own file, keyed by an sha256 hash of their refresh token.
+ *
+ * Backed by {@link createMemoizedJsonFileAsyncValueCache} for each key, so reads after
+ * the first hit memory.
  *
  * File structure:
  * ```
  * <cacheDir>/
  *   server.json              — server-level token
- *   user-<md5hash>.json      — per-user tokens (hash of initial refresh token)
+ *   user-<sha256hash>.json   — per-user tokens (hash of initial refresh token)
  * ```
  *
  * @param cacheDir Directory to store token files. Defaults to `.tmp/calcom-tokens`.
  * @returns a CalcomOAuthAccessTokenCacheService backed by the file system
  */
 export function fileCalcomOAuthAccessTokenCacheService(cacheDir: string = DEFAULT_FILE_CALCOM_ACCESS_TOKEN_CACHE_DIR): FileSystemCalcomOAuthAccessTokenCacheService {
-  const memoryTokens = new Map<string, Maybe<CalcomOAuthAccessTokenCacheFileContent>>();
+  const cachesByKey = new Map<string, AsyncValueCache<CalcomAccessToken>>();
 
-  function filePathForKey(key: string): string {
-    return join(cacheDir, `${key}.json`);
-  }
+  function cacheForKey(fileKey: string): AsyncValueCache<CalcomAccessToken> {
+    let cache = cachesByKey.get(fileKey);
 
-  function readTokenFile(filePath: string): Promise<Maybe<CalcomOAuthAccessTokenCacheFileContent>> {
-    return new Promise<Maybe<CalcomOAuthAccessTokenCacheFileContent>>((resolve) => {
-      mkdirSync(dirname(filePath), { recursive: true });
-      readFile(filePath, {}, (err, data) => {
-        let result: Maybe<CalcomOAuthAccessTokenCacheFileContent> = undefined;
-
-        if (!err) {
-          try {
-            result = JSON.parse(data.toString());
-
-            if (result?.token) {
-              (result.token as Configurable<CalcomAccessToken>).expiresAt = new Date(result.token.expiresAt);
-            }
-          } catch (e) {
-            console.error(`Failed reading token file ${filePath}: `, e);
-          }
-        }
-
-        resolve(result);
+    if (cache == null) {
+      cache = createMemoizedJsonFileAsyncValueCache<CalcomAccessToken>({
+        filePath: join(cacheDir, `${fileKey}.json`),
+        reviver: reviveCalcomAccessTokenFile,
+        replacer: (token: CalcomAccessToken): CalcomOAuthAccessTokenCacheFileContent => ({ token })
       });
-    });
-  }
+      cachesByKey.set(fileKey, cache);
+    }
 
-  function writeTokenFile(filePath: string, content: CalcomOAuthAccessTokenCacheFileContent): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      mkdirSync(dirname(filePath), { recursive: true });
-      writeFile(filePath, JSON.stringify(content, null, 2), {}, (err) => {
-        if (!err) {
-          resolve();
-        } else {
-          reject(err);
-        }
-      });
-    });
+    return cache;
   }
 
   function makeCacheForKey(fileKey: string): CalcomAccessTokenCache {
-    const filePath = filePathForKey(fileKey);
+    const cache = cacheForKey(fileKey);
 
     return {
-      loadCachedToken: async function (): Promise<Maybe<CalcomAccessToken>> {
-        // Check memory first
-        const memoryEntry = memoryTokens.get(fileKey);
-
-        if (memoryEntry !== undefined) {
-          return memoryEntry?.token;
-        }
-
-        // Fall back to file
-        const fileContent = await readTokenFile(filePath);
-        memoryTokens.set(fileKey, fileContent ?? null);
-
-        return fileContent?.token;
-      },
-      updateCachedToken: async function (accessToken: CalcomAccessToken): Promise<void> {
-        const content: CalcomOAuthAccessTokenCacheFileContent = { token: accessToken };
-        memoryTokens.set(fileKey, content);
-
+      loadCachedToken: () => cache.load(),
+      updateCachedToken: async (accessToken) => {
         try {
-          await writeTokenFile(filePath, content);
+          await cache.update(accessToken);
         } catch (e) {
-          console.error(`Failed updating token file ${filePath}: `, e);
+          console.error(`Failed updating token file for ${fileKey}: `, e);
+          throw e;
         }
       }
     };

@@ -1,5 +1,5 @@
 import { addMilliseconds } from './date';
-import { checkAnyHaveExpired, checkAtleastOneNotExpired, isThrottled, expirationDetails, isUnderThreshold, calculateExpirationDate } from './expires';
+import { checkAnyHaveExpired, checkAtleastOneNotExpired, isThrottled, expirationDetails, isUnderThreshold, calculateExpirationDate, isExpired } from './expires';
 
 describe('expirationDetails()', () => {
   describe('hasExpired()', () => {
@@ -294,5 +294,67 @@ describe('checkAnyHaveExpired()', () => {
   it('should return false if all items have not expired', () => {
     const details = expirationDetails({ expiresIn: 1000 });
     expect(checkAnyHaveExpired([details])).toBe(false);
+  });
+});
+
+describe('isExpired()', () => {
+  it('should return true when input is null', () => {
+    expect(isExpired(null)).toBe(true);
+  });
+
+  it('should return true when input is undefined', () => {
+    expect(isExpired(undefined)).toBe(true);
+  });
+
+  it('should return true when expiresAt is null', () => {
+    expect(isExpired({ expiresAt: null })).toBe(true);
+  });
+
+  it('should return true for a Date in the past', () => {
+    const past = new Date(Date.now() - 1000);
+    expect(isExpired({ expiresAt: past })).toBe(true);
+  });
+
+  it('should return false for a Date in the future', () => {
+    const future = new Date(Date.now() + 60_000);
+    expect(isExpired({ expiresAt: future })).toBe(false);
+  });
+
+  it('should treat values within the buffer window as expired when now is shifted forward', () => {
+    const expiresAt = new Date(Date.now() + 30_000);
+    const nowWithBuffer = addMilliseconds(new Date(), 60_000);
+    expect(isExpired({ expiresAt }, nowWithBuffer)).toBe(true);
+  });
+
+  it('should respect a now override', () => {
+    const expiresAt = new Date(Date.now() + 60_000);
+    const now = addMilliseconds(expiresAt, 1);
+    expect(isExpired({ expiresAt }, now)).toBe(true);
+  });
+
+  it('should treat exact equality as expired', () => {
+    const now = new Date();
+    expect(isExpired({ expiresAt: now }, now)).toBe(true);
+  });
+
+  it('should defer to the input now when no override is given', () => {
+    const expiresAt = new Date(Date.now() + 60_000);
+    const inputNow = addMilliseconds(expiresAt, 1);
+    expect(isExpired({ expiresAt, now: inputNow })).toBe(true);
+  });
+
+  it('should prefer expires over a top-level expiresAt when both are present', () => {
+    const past = new Date(Date.now() - 60_000);
+    const future = new Date(Date.now() + 60_000);
+    // expires says expired, top-level expiresAt says not expired — expires must win.
+    expect(isExpired({ expires: { expiresAt: past }, expiresAt: future })).toBe(true);
+    // And the other way: expires says not expired, top-level says expired — expires must win.
+    expect(isExpired({ expires: { expiresAt: future }, expiresAt: past })).toBe(false);
+  });
+
+  it('should treat a present expires with no expiresAt as expired regardless of top-level fallback', () => {
+    const future = new Date(Date.now() + 60_000);
+    // With expires supplied (but expiresAt null), the top-level future date must NOT rescue it.
+    expect(isExpired({ expires: { expiresAt: null }, expiresAt: future })).toBe(true);
   });
 });

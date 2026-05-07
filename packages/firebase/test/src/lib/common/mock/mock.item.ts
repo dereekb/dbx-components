@@ -122,8 +122,8 @@ export const mockItemConverter = snapshotConverterFunctions<MockItem, MockItemDa
 /**
  * Used to build a mockItemCollection from a firestore instance with a converter setup.
  *
- * @param firestore
- * @returns
+ * @param context - The Firestore context to resolve the root collection against.
+ * @returns A typed {@link CollectionReference} for the root MockItem collection.
  */
 export function mockItemCollectionReference(context: FirestoreContext): CollectionReference<MockItem> {
   return context.collection(mockItemIdentity.collectionName);
@@ -142,6 +142,9 @@ export type MockItemFirestoreCollection = FirestoreCollection<MockItem, MockItem
  * const collection = mockItemFirestoreCollection(firestoreContext);
  * const doc = collection.documentAccessor().newDocument();
  * ```
+ *
+ * @param firestoreContext - The Firestore context (test or production) used to resolve the underlying collection reference.
+ * @returns A {@link MockItemFirestoreCollection} wired with the {@link mockItemConverter} and {@link mockItemIdentity}.
  */
 export function mockItemFirestoreCollection(firestoreContext: FirestoreContext): MockItemFirestoreCollection {
   return firestoreContext.firestoreCollection({
@@ -293,14 +296,11 @@ export const mockItemPrivateConverter = snapshotConverterFunctions({
 });
 
 /**
- * Used to build a mockItemCollection from a firestore instance with a converter setup.
- *
- * @param firestore
- * @returns
- */
-/**
  * Creates a factory that produces {@link CollectionReference} instances for {@link MockItemPrivate}
  * subcollections under a given {@link MockItemDocument} parent.
+ *
+ * @param context - The Firestore context used to resolve subcollections.
+ * @returns A function that, given a parent {@link MockItemDocument}, returns a typed {@link CollectionReference} for that parent's MockItemPrivate subcollection.
  */
 export function mockItemPrivateCollectionReferenceFactory(context: FirestoreContext): (parent: MockItemDocument) => CollectionReference<MockItemPrivate> {
   return (parent: MockItemDocument) => {
@@ -320,6 +320,9 @@ export type MockItemPrivateFirestoreCollectionFactory = (parent: MockItemDocumen
 
 /**
  * Creates a factory for producing {@link MockItemPrivateFirestoreCollection} instances bound to a parent {@link MockItemDocument}.
+ *
+ * @param firestoreContext - The Firestore context used to resolve the underlying subcollection.
+ * @returns A factory that, given a parent {@link MockItemDocument}, returns a single-item collection wired with {@link mockItemPrivateConverter}.
  */
 export function mockItemPrivateFirestoreCollection(firestoreContext: FirestoreContext): MockItemPrivateFirestoreCollectionFactory {
   const factory = mockItemPrivateCollectionReferenceFactory(firestoreContext);
@@ -338,6 +341,9 @@ export function mockItemPrivateFirestoreCollection(firestoreContext: FirestoreCo
 
 /**
  * Creates a {@link CollectionGroup} reference for querying all {@link MockItemPrivate} documents across parents.
+ *
+ * @param context - The Firestore context used to resolve the collection group.
+ * @returns A typed {@link CollectionGroup} reference for the MockItemPrivate collection name.
  */
 export function mockItemPrivateCollectionReference(context: FirestoreContext): CollectionGroup<MockItemPrivate> {
   return context.collectionGroup(mockItemPrivateIdentity.collectionName);
@@ -350,6 +356,9 @@ export type MockItemPrivateFirestoreCollectionGroup = FirestoreCollectionGroup<M
 
 /**
  * Creates a {@link MockItemPrivateFirestoreCollectionGroup} for cross-parent queries on {@link MockItemPrivate}.
+ *
+ * @param firestoreContext - The Firestore context used to resolve the underlying collection group reference.
+ * @returns A typed {@link MockItemPrivateFirestoreCollectionGroup} wired with the {@link mockItemPrivateConverter}.
  */
 export function mockItemPrivateFirestoreCollectionGroup(firestoreContext: FirestoreContext): MockItemPrivateFirestoreCollectionGroup {
   return firestoreContext.firestoreCollectionGroup({
@@ -417,10 +426,11 @@ export const mockItemUserConverter = snapshotConverterFunctions({
 });
 
 /**
- * Used to build a mockItemCollection from a firestore instance with a converter setup.
+ * Creates a factory that produces {@link CollectionReference} instances for {@link MockItemUser}
+ * subcollections under a given {@link MockItemDocument} parent.
  *
- * @param firestore
- * @returns
+ * @param context - The Firestore context used to resolve subcollections.
+ * @returns A function that, given a parent {@link MockItemDocument}, returns a typed {@link CollectionReference} for that parent's MockItemUser subcollection.
  */
 export function mockItemUserCollectionReferenceFactory(context: FirestoreContext): (parent: MockItemDocument) => CollectionReference<MockItemUser> {
   return (parent: MockItemDocument) => {
@@ -445,6 +455,9 @@ export type MockItemUserFirestoreCollectionFactory = (parent: MockItemDocument) 
 
 /**
  * Creates a factory for producing {@link MockItemUserFirestoreCollection} instances bound to a parent {@link MockItemDocument}.
+ *
+ * @param firestoreContext - The Firestore context used to resolve the underlying subcollection.
+ * @returns A factory that, given a parent {@link MockItemDocument}, returns a per-parent collection wired with {@link mockItemUserConverter} and {@link mockItemUserAccessorFactory}.
  */
 export function mockItemUserFirestoreCollection(firestoreContext: FirestoreContext): MockItemUserFirestoreCollectionFactory {
   const factory = mockItemUserCollectionReferenceFactory(firestoreContext);
@@ -464,6 +477,9 @@ export function mockItemUserFirestoreCollection(firestoreContext: FirestoreConte
 
 /**
  * Creates a {@link CollectionGroup} reference for querying all {@link MockItemUser} documents across parents.
+ *
+ * @param context - The Firestore context used to resolve the collection group.
+ * @returns A typed {@link CollectionGroup} reference for the MockItemUser collection name.
  */
 export function mockItemUserCollectionReference(context: FirestoreContext): CollectionGroup<MockItemUser> {
   return context.collectionGroup(mockItemUserCollectionName);
@@ -476,6 +492,9 @@ export type MockItemUserFirestoreCollectionGroup = FirestoreCollectionGroup<Mock
 
 /**
  * Creates a {@link MockItemUserFirestoreCollectionGroup} for cross-parent queries on {@link MockItemUser}.
+ *
+ * @param firestoreContext - The Firestore context used to resolve the underlying collection group reference.
+ * @returns A typed {@link MockItemUserFirestoreCollectionGroup} wired with the {@link mockItemUserConverter} and {@link mockItemUserAccessorFactory}.
  */
 export function mockItemUserFirestoreCollectionGroup(firestoreContext: FirestoreContext): MockItemUserFirestoreCollectionGroup {
   return firestoreContext.firestoreCollectionGroup({
@@ -539,6 +558,9 @@ export const mockItemSubItemConverter = snapshotConverterFunctions<MockItemSubIt
 /**
  * Creates a factory that produces {@link CollectionReference} instances for {@link MockItemSubItem}
  * subcollections under a given {@link MockItemDocument} parent.
+ *
+ * @param context - The Firestore context used to resolve subcollections.
+ * @returns A function that, given a parent {@link MockItemDocument}, returns a typed {@link CollectionReference} for that parent's MockItemSubItem subcollection.
  */
 export function mockItemSubItemCollectionReferenceFactory(context: FirestoreContext): (parent: MockItemDocument) => CollectionReference<MockItemSubItem> {
   return (parent: MockItemDocument) => {
@@ -558,6 +580,9 @@ export type MockItemSubItemFirestoreCollectionFactory = (parent: MockItemDocumen
 
 /**
  * Creates a factory for producing {@link MockItemSubItemFirestoreCollection} instances bound to a parent {@link MockItemDocument}.
+ *
+ * @param firestoreContext - The Firestore context used to resolve the underlying subcollection.
+ * @returns A factory that, given a parent {@link MockItemDocument}, returns a per-parent collection wired with {@link mockItemSubItemConverter}.
  */
 export function mockItemSubItemFirestoreCollection(firestoreContext: FirestoreContext): MockItemSubItemFirestoreCollectionFactory {
   const factory = mockItemSubItemCollectionReferenceFactory(firestoreContext);
@@ -576,6 +601,9 @@ export function mockItemSubItemFirestoreCollection(firestoreContext: FirestoreCo
 
 /**
  * Creates a {@link CollectionGroup} reference for querying all {@link MockItemSubItem} documents across parents.
+ *
+ * @param context - The Firestore context used to resolve the collection group.
+ * @returns A typed {@link CollectionGroup} reference for the MockItemSubItem collection name.
  */
 export function mockItemSubItemCollectionReference(context: FirestoreContext): CollectionGroup<MockItemSubItem> {
   return context.collectionGroup(mockItemSubItemIdentity.collectionName);
@@ -588,6 +616,9 @@ export type MockItemSubItemFirestoreCollectionGroup = FirestoreCollectionGroup<M
 
 /**
  * Creates a {@link MockItemSubItemFirestoreCollectionGroup} for cross-parent queries on {@link MockItemSubItem}.
+ *
+ * @param firestoreContext - The Firestore context used to resolve the underlying collection group reference.
+ * @returns A typed {@link MockItemSubItemFirestoreCollectionGroup} wired with the {@link mockItemSubItemConverter}.
  */
 export function mockItemSubItemFirestoreCollectionGroup(firestoreContext: FirestoreContext): MockItemSubItemFirestoreCollectionGroup {
   return firestoreContext.firestoreCollectionGroup({
@@ -650,6 +681,9 @@ export const mockItemSubItemDeepConverter = snapshotConverterFunctions<MockItemS
 /**
  * Creates a factory that produces {@link CollectionReference} instances for {@link MockItemSubItemDeep}
  * subcollections under a given {@link MockItemSubItemDocument} parent.
+ *
+ * @param context - The Firestore context used to resolve subcollections.
+ * @returns A function that, given a parent {@link MockItemSubItemDocument}, returns a typed {@link CollectionReference} for that parent's MockItemSubItemDeep subcollection.
  */
 export function mockItemSubItemDeepCollectionReferenceFactory(context: FirestoreContext): (parent: MockItemSubItemDocument) => CollectionReference<MockItemSubItemDeep> {
   return (parent: MockItemSubItemDocument) => {
@@ -669,6 +703,9 @@ export type MockItemSubItemDeepFirestoreCollectionFactory = (parent: MockItemSub
 
 /**
  * Creates a factory for producing {@link MockItemSubItemDeepFirestoreCollection} instances bound to a parent {@link MockItemSubItemDocument}.
+ *
+ * @param firestoreContext - The Firestore context used to resolve the underlying subcollection.
+ * @returns A factory that, given a parent {@link MockItemSubItemDocument}, returns a per-parent collection wired with {@link mockItemSubItemDeepConverter}.
  */
 export function mockItemSubItemDeepFirestoreCollection(firestoreContext: FirestoreContext): MockItemSubItemDeepFirestoreCollectionFactory {
   const factory = mockItemSubItemDeepCollectionReferenceFactory(firestoreContext);
@@ -687,6 +724,9 @@ export function mockItemSubItemDeepFirestoreCollection(firestoreContext: Firesto
 
 /**
  * Creates a {@link CollectionGroup} reference for querying all {@link MockItemSubItemDeep} documents across parents.
+ *
+ * @param context - The Firestore context used to resolve the collection group.
+ * @returns A typed {@link CollectionGroup} reference for the MockItemSubItemDeep collection name.
  */
 export function mockItemSubItemDeepCollectionReference(context: FirestoreContext): CollectionGroup<MockItemSubItemDeep> {
   return context.collectionGroup(mockItemSubItemDeepIdentity.collectionName);
@@ -699,6 +739,9 @@ export type MockItemSubItemDeepFirestoreCollectionGroup = FirestoreCollectionGro
 
 /**
  * Creates a {@link MockItemSubItemDeepFirestoreCollectionGroup} for cross-parent queries on {@link MockItemSubItemDeep}.
+ *
+ * @param firestoreContext - The Firestore context used to resolve the underlying collection group reference.
+ * @returns A typed {@link MockItemSubItemDeepFirestoreCollectionGroup} wired with the {@link mockItemSubItemDeepConverter}.
  */
 export function mockItemSubItemDeepFirestoreCollectionGroup(firestoreContext: FirestoreContext): MockItemSubItemDeepFirestoreCollectionGroup {
   return firestoreContext.firestoreCollectionGroup({

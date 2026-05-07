@@ -9,6 +9,7 @@
 import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { UI_COMPONENT_CATEGORIES, UI_COMPONENT_KINDS, type UiComponentCategoryValue, type UiComponentKindValue } from '../manifest/ui-components-schema.js';
 import type { UiComponentRegistry } from '../registry/ui-components-runtime.js';
+import { buildSlugDetailResponse } from './_resource-helpers.js';
 
 const UI_COMPONENTS_URI = 'dbx://ui/components';
 const UI_COMPONENT_TEMPLATE = 'dbx://ui/components/{slug}';
@@ -77,36 +78,17 @@ export function registerUiComponentsResource(server: McpServer, options: Registe
       description: 'Full metadata for a single UI entry by slug, class name, or selector.',
       mimeType: 'application/json'
     },
-    async (uri, variables) => {
-      const rawSlug = variables.slug;
-      const slug = Array.isArray(rawSlug) ? rawSlug[0] : rawSlug;
-
-      let entry;
-      if (slug) {
-        const slugHits = registry.findBySlug(slug);
-        entry = slugHits.length > 0 ? slugHits[0] : (registry.findByClassName(slug) ?? registry.findBySelector(slug));
-      }
-
-      let text: string;
-      if (slug && entry) {
-        text = JSON.stringify(entry, null, 2);
-      } else if (slug) {
-        const available = registry.all.map((c) => c.slug).join(', ');
-        text = `UI component '${slug}' not found. Available slugs: ${available}`;
-      } else {
-        text = 'No slug provided.';
-      }
-
-      return {
-        contents: [
-          {
-            uri: uri.href,
-            mimeType: entry ? 'application/json' : 'text/plain',
-            text
-          }
-        ]
-      };
-    }
+    async (uri, variables) =>
+      buildSlugDetailResponse({
+        uri,
+        rawSlug: variables.slug,
+        resolveEntry: (slug) => {
+          const slugHits = registry.findBySlug(slug);
+          return slugHits.length > 0 ? slugHits[0] : (registry.findByClassName(slug) ?? registry.findBySelector(slug));
+        },
+        listAvailableSlugs: () => registry.all.map((c) => c.slug),
+        label: 'UI component'
+      })
   );
 
   server.registerResource(
