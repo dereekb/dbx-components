@@ -2,7 +2,7 @@ import { Injectable, type OnDestroy, type Provider, type Signal, signal, compute
 import { BehaviorSubject, combineLatest, type Observable, shareReplay, switchMap, filter, map, scan } from 'rxjs';
 import { type DbxMutableForm, type DbxFormEvent, type DbxFormDisabledKey, DbxFormState, DEFAULT_FORM_DISABLED_KEY, provideDbxMutableForm } from '../../form/form';
 import { type BooleanStringKeyArray, BooleanStringKeyArrayUtility, type FilterFromPOJOFunction, type Maybe } from '@dereekb/util';
-import { LockSet, filterMaybe, tapLog } from '@dereekb/rxjs';
+import { LockSet, filterMaybe } from '@dereekb/rxjs';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
 import { type FieldTree } from '@angular/forms/signals';
 import { type DbxForgeFinalizeFormConfigResult, dbxForgeFinalizeFormConfig } from './forge.form';

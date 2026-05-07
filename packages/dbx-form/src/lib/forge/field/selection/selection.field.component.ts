@@ -7,7 +7,7 @@ import { DynamicTextPipe, type DynamicText, type FieldMeta, type ValidationMessa
 import { createResolvedErrorsSignal, setupMetaTracking, shouldShowErrors } from '@ng-forge/dynamic-forms/integration';
 import { MATERIAL_CONFIG, type MatSelectProps } from '@ng-forge/dynamic-forms-material';
 import { AsyncPipe } from '@angular/common';
-import { maybeValueFromObservableOrValue, tapLog, type ObservableOrValue } from '@dereekb/rxjs';
+import { maybeValueFromObservableOrValue, type ObservableOrValue } from '@dereekb/rxjs';
 import { combineLatest, distinctUntilChanged, map } from 'rxjs';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import type { ValueSelectionOption, ValueSelectionOptionClear } from '../../../field/field.selection';
