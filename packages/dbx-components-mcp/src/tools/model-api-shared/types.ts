@@ -8,6 +8,12 @@
 
 export type CrudVerb = 'create' | 'read' | 'update' | 'delete' | 'query' | 'standalone';
 
+export interface CrudEntryParamsField {
+  readonly name: string;
+  readonly typeText: string;
+  readonly description?: string;
+}
+
 export interface CrudEntry {
   /**
    * Top-level model key from `<Group>ModelCrudFunctionsConfig` (e.g. `profile`,
@@ -37,6 +43,19 @@ export interface CrudEntry {
    * Source line of the leaf property in the type literal.
    */
   readonly line: number;
+  /**
+   * JSDoc summary on the property signature in `<Group>ModelCrudFunctionsConfig` (or the key
+   * in `<Group>FunctionTypeMap`).
+   */
+  readonly description?: string;
+  /**
+   * JSDoc summary on the params interface itself (e.g. on `ResetProfilePasswordParams`).
+   */
+  readonly paramsTypeDescription?: string;
+  /**
+   * Per-field JSDocs read from the params interface's properties.
+   */
+  readonly paramsFields?: readonly CrudEntryParamsField[];
 }
 
 export interface CrudExtraction {

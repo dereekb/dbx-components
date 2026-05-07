@@ -13,8 +13,8 @@
  * tree and tuple/result information.
  */
 
-import { Node, Project, type SourceFile, type TypeNode } from 'ts-morph';
-import type { CrudEntry, CrudExtraction, CrudVerb } from './types.js';
+import { Node, Project, type JSDocableNode, type SourceFile, type TypeNode } from 'ts-morph';
+import type { CrudEntry, CrudEntryParamsField, CrudExtraction, CrudVerb } from './types.js';
 
 const SUPPORTED_VERBS: ReadonlySet<CrudVerb> = new Set(['create', 'read', 'update', 'delete', 'query']);
 
@@ -31,6 +31,7 @@ export interface ExtractCrudInput {
  * @param source - in-memory source name + text pair to extract
  * @returns the CRUD extraction with group name, model keys, and entries
  */
+// eslint-disable-next-line sonarjs/cognitive-complexity
 export function extractCrudEntries(source: ExtractCrudInput): CrudExtraction {
   const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });
   const sourceFile = project.createSourceFile(source.name, source.text, { overwrite: true });
@@ -40,6 +41,20 @@ export function extractCrudEntries(source: ExtractCrudInput): CrudExtraction {
 
   const crudConfigType = findCrudConfigType(sourceFile);
   const groupName = inferGroupName(sourceFile);
+  const paramsDocsCache = new Map<string, ParamsDocs>();
+  const resolveParamsDocs = (typeName: string | undefined): ParamsDocs | undefined => {
+    if (!typeName) {
+      return undefined;
+    }
+    if (paramsDocsCache.has(typeName)) {
+      return paramsDocsCache.get(typeName);
+    }
+    const docs = readParamsDocs(sourceFile, typeName);
+    if (docs) {
+      paramsDocsCache.set(typeName, docs);
+    }
+    return docs;
+  };
 
   if (crudConfigType) {
     const literal = crudConfigType.typeNode;
@@ -71,7 +86,7 @@ export function extractCrudEntries(source: ExtractCrudInput): CrudExtraction {
             if (!verbValueNode) {
               continue;
             }
-            collectVerbEntries({ modelName, verb, valueNode: verbValueNode, entries });
+            collectVerbEntries({ modelName, verb, valueNode: verbValueNode, entries, fallbackDescription: readJsDocSummary(verbMember), resolveParamsDocs });
           }
         }
       }
@@ -89,13 +104,17 @@ export function extractCrudEntries(source: ExtractCrudInput): CrudExtraction {
         const key = member.getName();
         const valueNode = member.getTypeNode();
         const tuple = valueNode ? readTupleParamsResult(valueNode) : undefined;
+        const paramsDocs = resolveParamsDocs(tuple?.params);
         entries.push({
           model: key,
           verb: 'standalone',
           specifier: undefined,
           paramsTypeName: tuple?.params,
           resultTypeName: tuple?.result,
-          line: member.getStartLineNumber()
+          line: member.getStartLineNumber(),
+          description: readJsDocSummary(member),
+          paramsTypeDescription: paramsDocs?.typeDescription,
+          paramsFields: paramsDocs?.fields
         });
       }
     }
@@ -173,10 +192,12 @@ interface CollectVerbEntriesInput {
   readonly verb: CrudVerb;
   readonly valueNode: TypeNode;
   readonly entries: CrudEntry[];
+  readonly fallbackDescription: string | undefined;
+  readonly resolveParamsDocs: (typeName: string | undefined) => ParamsDocs | undefined;
 }
 
 function collectVerbEntries(input: CollectVerbEntriesInput): void {
-  const { modelName, verb, valueNode, entries } = input;
+  const { modelName, verb, valueNode, entries, fallbackDescription, resolveParamsDocs } = input;
   if (Node.isTypeLiteral(valueNode)) {
     for (const specMember of valueNode.getMembers()) {
       if (!Node.isPropertySignature(specMember)) {
@@ -185,25 +206,33 @@ function collectVerbEntries(input: CollectVerbEntriesInput): void {
       const specifier = specMember.getName();
       const leafNode = specMember.getTypeNode();
       const leaf = leafNode ? (readTupleParamsResult(leafNode) ?? readBareParams(leafNode)) : undefined;
+      const paramsDocs = resolveParamsDocs(leaf?.params);
       entries.push({
         model: modelName,
         verb,
         specifier,
         paramsTypeName: leaf?.params,
         resultTypeName: leaf?.result,
-        line: specMember.getStartLineNumber()
+        line: specMember.getStartLineNumber(),
+        description: readJsDocSummary(specMember),
+        paramsTypeDescription: paramsDocs?.typeDescription,
+        paramsFields: paramsDocs?.fields
       });
     }
     return;
   }
   const leaf = readTupleParamsResult(valueNode) ?? readBareParams(valueNode);
+  const paramsDocs = resolveParamsDocs(leaf?.params);
   entries.push({
     model: modelName,
     verb,
     specifier: undefined,
     paramsTypeName: leaf?.params,
     resultTypeName: leaf?.result,
-    line: valueNode.getStartLineNumber()
+    line: valueNode.getStartLineNumber(),
+    description: fallbackDescription,
+    paramsTypeDescription: paramsDocs?.typeDescription,
+    paramsFields: paramsDocs?.fields
   });
 }
 
@@ -240,4 +269,45 @@ function typeNodeName(node: TypeNode): string | undefined {
   // Fall back to the raw text for primitive / inline types like `boolean`.
   const text = node.getText().trim();
   return text.length > 0 ? text : undefined;
+}
+
+interface ParamsDocs {
+  readonly typeDescription?: string;
+  readonly fields?: readonly CrudEntryParamsField[];
+}
+
+function readParamsDocs(sourceFile: SourceFile, typeName: string): ParamsDocs | undefined {
+  const interfaceDecl = sourceFile.getInterface(typeName);
+  if (interfaceDecl) {
+    const typeDescription = readJsDocSummary(interfaceDecl);
+    const fields: CrudEntryParamsField[] = [];
+    for (const property of interfaceDecl.getProperties()) {
+      const fieldName = property.getName();
+      const description = readJsDocSummary(property);
+      const typeNode = property.getTypeNode();
+      const typeText = typeNode?.getText().trim() ?? '';
+      const field: CrudEntryParamsField = description ? { name: fieldName, typeText, description } : { name: fieldName, typeText };
+      fields.push(field);
+    }
+    if (!typeDescription && fields.length === 0) {
+      return undefined;
+    }
+    return { typeDescription, fields: fields.length > 0 ? fields : undefined };
+  }
+  const typeAlias = sourceFile.getTypeAlias(typeName);
+  if (typeAlias) {
+    const typeDescription = readJsDocSummary(typeAlias);
+    return typeDescription ? { typeDescription } : undefined;
+  }
+  return undefined;
+}
+
+function readJsDocSummary(node: JSDocableNode): string | undefined {
+  const docs = node.getJsDocs();
+  if (docs.length === 0) {
+    return undefined;
+  }
+  const last = docs[docs.length - 1];
+  const description = last.getDescription().trim();
+  return description.length > 0 ? description : undefined;
 }

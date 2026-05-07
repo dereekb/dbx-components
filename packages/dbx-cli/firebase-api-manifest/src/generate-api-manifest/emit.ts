@@ -74,10 +74,22 @@ function renderEntry({ entry, validatorName }: CollectedEntry): string {
     validatorName ? `paramsValidator: ${validatorName}` : undefined,
     entry.resultTypeName ? `resultTypeName: ${JSON.stringify(entry.resultTypeName)}` : undefined,
     `groupName: ${JSON.stringify(entry.groupName)}`,
-    `sourceFile: ${JSON.stringify(entry.sourceFile)}`
+    `sourceFile: ${JSON.stringify(entry.sourceFile)}`,
+    entry.description ? `description: ${JSON.stringify(entry.description)}` : undefined,
+    entry.paramsTypeDescription ? `paramsTypeDescription: ${JSON.stringify(entry.paramsTypeDescription)}` : undefined,
+    entry.paramsFields && entry.paramsFields.length > 0 ? `paramsFields: ${renderParamsFields(entry.paramsFields)}` : undefined
   ];
 
   return `  { ${fields.filter((v): v is string => Boolean(v)).join(', ')} }`;
+}
+
+function renderParamsFields(fields: readonly { readonly name: string; readonly typeText: string; readonly description?: string }[]): string {
+  const items = fields.map((field) => {
+    const parts: string[] = [`name: ${JSON.stringify(field.name)}`, `typeText: ${JSON.stringify(field.typeText)}`];
+    if (field.description) parts.push(`description: ${JSON.stringify(field.description)}`);
+    return `{ ${parts.join(', ')} }`;
+  });
+  return `[${items.join(', ')}]`;
 }
 
 async function formatWithPrettier(source: string, outputFile: string): Promise<string> {

@@ -8,8 +8,8 @@
  * keep the two in lockstep when the .api.ts convention changes.
  */
 
-import { Node, Project, type TypeNode, type TypeAliasDeclaration, type SourceFile } from 'ts-morph';
-import type { CrudEntry, CrudExtraction } from './types';
+import { Node, Project, type JSDocableNode, type TypeNode, type TypeAliasDeclaration, type SourceFile } from 'ts-morph';
+import type { CrudEntry, CrudEntryParamsField, CrudExtraction } from './types';
 
 // 'query' is accepted today even though `<Group>ModelCrudFunctionsConfig` in @dereekb/firebase does not yet permit `query:` keys (deferred follow-up). Once query support lands upstream, every query entry flows through here with no change.
 const SUPPORTED_VERBS: ReadonlySet<string> = new Set(['create', 'read', 'update', 'delete', 'query']);
@@ -40,6 +40,14 @@ export function extractCrudEntries(source: ExtractCrudInput): CrudExtraction {
   const crudConfigType = findTypeAliasByEnding(sourceFile, 'ModelCrudFunctionsConfig');
   const groupName = inferGroupName(sourceFile);
   const functionsClassName = findFunctionsClassName(sourceFile);
+  const paramsDocsCache = new Map<string, ParamsDocs>();
+  const resolveParamsDocs = (typeName: string | undefined): ParamsDocs | undefined => {
+    if (!typeName) return undefined;
+    if (paramsDocsCache.has(typeName)) return paramsDocsCache.get(typeName);
+    const docs = readParamsDocs(sourceFile, typeName);
+    if (docs) paramsDocsCache.set(typeName, docs);
+    return docs;
+  };
 
   if (crudConfigType) {
     const literal = crudConfigType.getTypeNode();
@@ -58,7 +66,7 @@ export function extractCrudEntries(source: ExtractCrudInput): CrudExtraction {
             if (!SUPPORTED_VERBS.has(verb)) continue;
             const verbValueNode = verbMember.getTypeNode();
             if (!verbValueNode) continue;
-            collectVerbEntries({ modelName, verb, valueNode: verbValueNode, entries });
+            collectVerbEntries({ modelName, verb, valueNode: verbValueNode, entries, fallbackDescription: readJsDocSummary(verbMember), resolveParamsDocs });
           }
         }
       }
@@ -74,13 +82,17 @@ export function extractCrudEntries(source: ExtractCrudInput): CrudExtraction {
         const key = member.getName();
         const valueNode = member.getTypeNode();
         const tuple = valueNode ? readTupleParamsResult(valueNode) : undefined;
+        const paramsDocs = resolveParamsDocs(tuple?.params);
         entries.push({
           model: key,
           verb: 'standalone',
           specifier: undefined,
           paramsTypeName: tuple?.params,
           resultTypeName: tuple?.result,
-          line: member.getStartLineNumber()
+          line: member.getStartLineNumber(),
+          description: readJsDocSummary(member),
+          paramsTypeDescription: paramsDocs?.typeDescription,
+          paramsFields: paramsDocs?.fields
         });
       }
     }
@@ -136,35 +148,45 @@ interface CollectVerbInput {
   readonly verb: string;
   readonly valueNode: TypeNode;
   readonly entries: CrudEntry[];
+  readonly fallbackDescription: string | undefined;
+  readonly resolveParamsDocs: (typeName: string | undefined) => ParamsDocs | undefined;
 }
 
 function collectVerbEntries(input: CollectVerbInput): void {
-  const { modelName, verb, valueNode, entries } = input;
+  const { modelName, verb, valueNode, entries, fallbackDescription, resolveParamsDocs } = input;
   if (Node.isTypeLiteral(valueNode)) {
     for (const specMember of valueNode.getMembers()) {
       if (!Node.isPropertySignature(specMember)) continue;
       const specifier = specMember.getName();
       const leafNode = specMember.getTypeNode();
       const leaf = leafNode ? (readTupleParamsResult(leafNode) ?? readBareParams(leafNode)) : undefined;
+      const paramsDocs = resolveParamsDocs(leaf?.params);
       entries.push({
         model: modelName,
         verb,
         specifier,
         paramsTypeName: leaf?.params,
         resultTypeName: leaf?.result,
-        line: specMember.getStartLineNumber()
+        line: specMember.getStartLineNumber(),
+        description: readJsDocSummary(specMember),
+        paramsTypeDescription: paramsDocs?.typeDescription,
+        paramsFields: paramsDocs?.fields
       });
     }
     return;
   }
   const leaf = readTupleParamsResult(valueNode) ?? readBareParams(valueNode);
+  const paramsDocs = resolveParamsDocs(leaf?.params);
   entries.push({
     model: modelName,
     verb,
     specifier: undefined,
     paramsTypeName: leaf?.params,
     resultTypeName: leaf?.result,
-    line: valueNode.getStartLineNumber()
+    line: valueNode.getStartLineNumber(),
+    description: fallbackDescription,
+    paramsTypeDescription: paramsDocs?.typeDescription,
+    paramsFields: paramsDocs?.fields
   });
 }
 
@@ -194,4 +216,41 @@ function typeNodeName(node: TypeNode): string | undefined {
   }
   const text = node.getText().trim();
   return text.length > 0 ? text : undefined;
+}
+
+interface ParamsDocs {
+  readonly typeDescription?: string;
+  readonly fields?: readonly CrudEntryParamsField[];
+}
+
+function readParamsDocs(sourceFile: SourceFile, typeName: string): ParamsDocs | undefined {
+  const interfaceDecl = sourceFile.getInterface(typeName);
+  if (interfaceDecl) {
+    const typeDescription = readJsDocSummary(interfaceDecl);
+    const fields: CrudEntryParamsField[] = [];
+    for (const property of interfaceDecl.getProperties()) {
+      const fieldName = property.getName();
+      const description = readJsDocSummary(property);
+      const typeNode = property.getTypeNode();
+      const typeText = typeNode?.getText().trim() ?? '';
+      const field: CrudEntryParamsField = description ? { name: fieldName, typeText, description } : { name: fieldName, typeText };
+      fields.push(field);
+    }
+    if (!typeDescription && fields.length === 0) return undefined;
+    return { typeDescription, fields: fields.length > 0 ? fields : undefined };
+  }
+  const typeAlias = sourceFile.getTypeAlias(typeName);
+  if (typeAlias) {
+    const typeDescription = readJsDocSummary(typeAlias);
+    return typeDescription ? { typeDescription } : undefined;
+  }
+  return undefined;
+}
+
+function readJsDocSummary(node: JSDocableNode): string | undefined {
+  const docs = node.getJsDocs();
+  if (docs.length === 0) return undefined;
+  const last = docs[docs.length - 1];
+  const description = last.getDescription().trim();
+  return description.length > 0 ? description : undefined;
 }

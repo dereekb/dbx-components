@@ -18,6 +18,12 @@ export interface PackageRef {
   readonly packageRoot: string;
 }
 
+export interface CrudEntryParamsField {
+  readonly name: string;
+  readonly typeText: string;
+  readonly description?: string;
+}
+
 export interface CrudEntry {
   readonly model: string;
   readonly verb: string;
@@ -25,6 +31,21 @@ export interface CrudEntry {
   readonly paramsTypeName?: string;
   readonly resultTypeName?: string;
   readonly line: number;
+  /**
+   * JSDoc summary on the property signature in `<Group>ModelCrudFunctionsConfig` (or the key
+   * in `<Group>FunctionTypeMap`). Surfaces as the per-action `--help` description.
+   */
+  readonly description?: string;
+  /**
+   * JSDoc summary on the params interface itself (e.g. on `ResetProfilePasswordParams`).
+   * Surfaces in the help epilogue alongside the params type name.
+   */
+  readonly paramsTypeDescription?: string;
+  /**
+   * Per-field JSDocs read from the params interface's properties. Surfaces in the help
+   * epilogue when present.
+   */
+  readonly paramsFields?: readonly CrudEntryParamsField[];
 }
 
 export interface CrudExtraction {
