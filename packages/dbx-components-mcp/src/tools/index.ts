@@ -27,6 +27,7 @@
  * | dbx_ui_examples                     | Working code  | "Show me a settings-section / list-page layout"        |
  * | dbx_model_lookup                    | Documentation | "Tell me about Firebase model X"                       |
  * | dbx_model_search                    | Discovery     | "Find Firebase models matching keywords"               |
+ * | dbx_model_hierarchy                 | Discovery     | "Show the full Firestore model tree (parents/children)." |
  * | dbx_model_decode                    | Decoding      | "What does this Firestore doc mean?"                   |
  * | dbx_model_validate                  | Verification  | "Is this Firestore model file correct?"                |
  * | dbx_model_validate_api              | Verification  | "Is this model api file correct?"                      |
@@ -108,6 +109,7 @@ import { modelFixtureScaffoldTool } from './model-fixture-scaffold.tool.js';
 import { modelFixtureForwardTool } from './model-fixture-forward.tool.js';
 import { modelTestTreeTool } from './model-test-tree.tool.js';
 import { modelTestSearchTool } from './model-test-search.tool.js';
+import { modelHierarchyTool } from './model-hierarchy.tool.js';
 import type { FixtureModelRegistry } from './model-fixture-shared/index.js';
 import { storageFileMValidateAppTool } from './storagefile-m-validate-app.tool.js';
 import { storageFileMListAppTool } from './storagefile-m-list-app.tool.js';
@@ -177,6 +179,7 @@ export const DBX_TOOLS: readonly DbxTool[] = [
   // model
   lookupModelTool,
   searchModelTool,
+  modelHierarchyTool,
   modelDecodeTool,
   modelValidateApiTool,
   modelApiListAppTool,
