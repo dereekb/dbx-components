@@ -4,8 +4,8 @@
  * Walks the workspace looking for `claims.ts`-style downstream files
  * (those tagged with `@dbxAuthClaimsApp`), parses them via the auth
  * extractor, and merges the extracted entries with the bundled built-ins
- * (`@dereekb/util` roles, the `fr` upload claim from `@dereekb/firebase`,
- * the five `model.*` OIDC scopes from `@dereekb/firebase-server/oidc`).
+ * (`@dereekb/util` roles, the `fr` upload claim and the five `model.*` OIDC
+ * scopes from `@dereekb/firebase`).
  *
  * Discovery is intentionally cheap:
  *   - Glob `components/&#42;-{firebase,shared,web,core}/&#42;&#42;/auth/&#42;claims&#42;.ts`
@@ -199,7 +199,7 @@ function composeRegistry(input: ComposeRegistryInput): AuthRegistry {
     apps.push(toAuthAppInfo({ extracted: app, cwd, inheritedClaimsByInterface, allBuiltinScopes: builtinScopes }));
   }
 
-  const loadedSources = ['builtin:@dereekb/util', 'builtin:@dereekb/firebase', 'builtin:@dereekb/firebase-server/oidc', ...scannedRelFiles.map((rel) => `workspace:${rel}`)];
+  const loadedSources = ['builtin:@dereekb/util', 'builtin:@dereekb/firebase', ...scannedRelFiles.map((rel) => `workspace:${rel}`)];
 
   return createAuthRegistryFromEntries({
     roles: builtinRoles,

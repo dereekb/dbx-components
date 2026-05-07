@@ -1,3 +1,4 @@
+export * from './oidc';
 export * from './auth';
 export * from './auth.context';
 export * from './auth.error';

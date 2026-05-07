@@ -24,26 +24,13 @@
  */
 
 import { AUTH_ADMIN_ROLE, AUTH_ONBOARDED_ROLE, AUTH_TOS_SIGNED_ROLE, AUTH_USER_ROLE } from '@dereekb/util';
-import { STORAGE_FILE_UPLOAD_USER_ROLE } from '@dereekb/firebase';
+import { CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE, CALL_MODEL_OIDC_SCOPES, CALL_MODEL_OIDC_SCOPE_FOR_CALL_TYPE, CALL_MODEL_OIDC_SCOPE_PREFIX, STORAGE_FILE_UPLOAD_USER_ROLE } from '@dereekb/firebase';
 import type { AuthAppInfo, AuthClaimInfo, AuthRoleInfo, AuthScopeInfo } from './auth-runtime.js';
-
-// Inlined to avoid pulling `@dereekb/firebase-server/oidc` (heavy NestJS
-// peer deps) into the MCP runtime. Keep in sync with
-// `packages/firebase-server/oidc/src/lib/scope.ts`.
-const CALL_MODEL_OIDC_SCOPE_PREFIX = 'model.';
-const CALL_MODEL_OIDC_SCOPES = ['model.create', 'model.read', 'model.update', 'model.delete', 'model.query'] as const;
-const CALL_MODEL_OIDC_SCOPE_FOR_CALL_TYPE: Readonly<Record<'create' | 'read' | 'update' | 'delete' | 'query', (typeof CALL_MODEL_OIDC_SCOPES)[number]>> = {
-  create: 'model.create',
-  read: 'model.read',
-  update: 'model.update',
-  delete: 'model.delete',
-  query: 'model.query'
-};
-const CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE = 'CALL_MODEL_MISSING_OIDC_SCOPE';
 
 const UTIL_ROLE_PATH = 'packages/util/src/lib/auth/auth.role.ts';
 const STORAGE_CLAIM_PATH = 'packages/firebase/src/lib/model/storagefile/storagefile.upload.claims.ts';
-const OIDC_SCOPE_PATH = 'packages/firebase-server/oidc/src/lib/scope.ts';
+const OIDC_SCOPE_PATH = 'packages/firebase/src/lib/common/auth/oidc/oidc.ts';
+const OIDC_SCOPE_PRE_ASSERT_PATH = 'packages/firebase-server/oidc/src/lib/scope.ts';
 const DEMO_CLAIMS_PATH = 'components/demo-firebase/src/lib/auth/claims.ts';
 
 // MARK: Built-in roles
@@ -146,15 +133,15 @@ export const BUILTIN_AUTH_SCOPES: readonly AuthScopeInfo[] = CALL_MODEL_OIDC_SCO
     description: `Required OIDC scope for the \`callModel\` ${callType ?? 'CRUD'} verb.`,
     enforcedAt: [
       {
-        path: OIDC_SCOPE_PATH,
-        line: 76,
+        path: OIDC_SCOPE_PRE_ASSERT_PATH,
+        line: 21,
         description: '`oidcCallModelScopePreAssert` rejects requests that lack this scope.'
       }
     ],
     errorCode: CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE,
     source: 'system',
     sourcePath: OIDC_SCOPE_PATH,
-    sourceLine: 20,
+    sourceLine: 30,
     apps: []
   };
   return result;

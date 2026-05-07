@@ -1,7 +1,7 @@
-import { CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE, CALL_MODEL_OIDC_SCOPES, CALL_MODEL_OIDC_SCOPE_FOR_CALL_TYPE, callModelOidcScopeForCallType, oidcCallModelScopePreAssert } from './scope';
+import { oidcCallModelScopePreAssert } from './scope';
+import { CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE, CALL_MODEL_OIDC_SCOPES, CALL_MODEL_OIDC_SCOPE_FOR_CALL_TYPE, callModelOidcScopeForCallType, type KnownOnCallFunctionType, type OnCallTypedModelParams } from '@dereekb/firebase';
 import { getOidcScopesFromRequest } from './service/oidc.auth';
 import { type AssertModelCrudRequestFunctionContext } from '@dereekb/firebase-server';
-import { type OnCallTypedModelParams, type KnownOnCallFunctionType } from '@dereekb/firebase';
 
 const KNOWN_CALL_TYPES: ReadonlyArray<KnownOnCallFunctionType> = ['create', 'read', 'update', 'delete', 'query'];
 
