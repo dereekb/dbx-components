@@ -53,6 +53,11 @@ export type SortDescendingCompareFunction<T> = SortCompareFunction<T>;
 /**
  * Convenience function that reverses the order of the sorted values.
  *
+ * @dbxUtil
+ * @dbxUtilCategory sort
+ * @dbxUtilTags sort, reverse, compare, descending, ascending, order
+ * @dbxUtilRelated compare-fn-order, compare-with-mapped-values-function
+ *
  * @param compareFn - the comparison function whose order should be reversed
  * @returns a new comparison function with the opposite sort direction
  */
@@ -66,6 +71,11 @@ export function reverseCompareFn<T>(compareFn: SortCompareFunction<T>): SortComp
  * Convenience function that reverses the order of the sorted values if the order is specified descending.
  *
  * The input comparison function must be in ascending order.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory sort
+ * @dbxUtilTags sort, order, ascending, descending, compare, direction
+ * @dbxUtilRelated reverse-compare-fn, compare-with-mapped-values-function
  *
  * @param ascendingCompareFn - a comparison function that sorts in ascending order
  * @param order - the desired sort direction; defaults to 'asc'
@@ -82,6 +92,12 @@ export function compareFnOrder<T>(ascendingCompareFn: AscendingSortCompareFuncti
  * @param mapValue - Maps each value to the type used for comparison.
  * @param comparesFunction - Compares the mapped values.
  * @returns A sort comparison function for the original type.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory sort
+ * @dbxUtilKind factory
+ * @dbxUtilTags sort, compare, map, derive, factory, by, key
+ * @dbxUtilRelated reverse-compare-fn, compare-fn-order
  *
  * @example
  * ```ts

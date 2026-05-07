@@ -26,6 +26,12 @@ export type AsyncArrayInputFactory<I, O> = AsyncMapFunction<ArrayInputFactory<I,
 /**
  * Creates a new ArrayFactory that generates multiple values.
  *
+ * @dbxUtil
+ * @dbxUtilCategory array
+ * @dbxUtilKind factory
+ * @dbxUtilTags array, factory, generate, make, build, create
+ * @dbxUtilRelated array-input-factory, terminating-factory-from-array
+ *
  * @param factory - The factory function used to generate each item
  * @returns A function that takes a count parameter and returns an array of generated items
  */
@@ -35,6 +41,12 @@ export function arrayFactory<T>(factory: Factory<T> | FactoryWithIndex<T>): Arra
 
 /**
  * Creates an ArrayInputFactory that transforms input values into output values.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory array
+ * @dbxUtilKind factory
+ * @dbxUtilTags array, factory, transform, map, generate, build
+ * @dbxUtilRelated array-factory
  *
  * @param factory - The factory function used to transform each input value
  * @returns A function that takes an array of input values and returns an array of output values

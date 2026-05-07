@@ -14,6 +14,12 @@ export type RandomPickFactory<T> = (() => T) & {
 /**
  * Creates a {@link RandomPickFactory} from the input values.
  *
+ * @dbxUtil
+ * @dbxUtilCategory array
+ * @dbxUtilKind factory
+ * @dbxUtilTags array, random, pick, sample, choose, factory
+ * @dbxUtilRelated pick-one-randomly, random-array-index
+ *
  * @param values - array of values to randomly pick from
  * @returns a callable factory that returns a random value from the array on each invocation
  * @throws Error if the input array is empty
@@ -34,6 +40,11 @@ export function randomPickFactory<T>(values: T[]): RandomPickFactory<T> {
 /**
  * Returns a random index from the input array. Returns 0 if the array is empty.
  *
+ * @dbxUtil
+ * @dbxUtilCategory array
+ * @dbxUtilTags array, random, index, position
+ * @dbxUtilRelated pick-one-randomly, random-pick-factory
+ *
  * @param values - array to generate a random index for
  * @returns a random valid index within the array, or 0 if the array is empty
  */
@@ -43,6 +54,11 @@ export function randomArrayIndex<T>(values: T[]): IndexNumber {
 
 /**
  * Picks a single item randomly from the input array.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory array
+ * @dbxUtilTags array, random, pick, sample, choose
+ * @dbxUtilRelated random-pick-factory, random-array-index
  *
  * @param values - array to pick a random item from
  * @returns a randomly selected item from the array

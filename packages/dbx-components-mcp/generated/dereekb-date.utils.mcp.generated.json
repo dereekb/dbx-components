@@ -4,5 +4,861 @@
   "module": "@dereekb/date",
   "generatedAt": "1970-01-01T00:00:00.000Z",
   "generator": "@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs",
-  "entries": []
+  "entries": [
+    {
+      "slug": "date-duration-span-end-date",
+      "name": "dateDurationSpanEndDate",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.duration",
+      "signature": "dateDurationSpanEndDate(span: DateDurationSpan): Date",
+      "description": "Computes the end date for a duration span by adding the duration to the start time.",
+      "params": [
+        {
+          "name": "span",
+          "type": "DateDurationSpan",
+          "description": "- the duration span to compute the end for",
+          "optional": false
+        }
+      ],
+      "returns": "the date when the span ends",
+      "tags": [
+        "date",
+        "duration",
+        "span",
+        "end",
+        "compute",
+        "time",
+        "datedurationspanenddate"
+      ],
+      "example": "const span = { startsAt: new Date('2024-01-01T10:00:00Z'), duration: 60 };\ndateDurationSpanEndDate(span); // 2024-01-01T11:00:00Z",
+      "relatedSlugs": [
+        "duration-span-to-date-range",
+        "duration-span-from-date-range"
+      ]
+    },
+    {
+      "slug": "duration-span-to-date-range",
+      "name": "durationSpanToDateRange",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.duration",
+      "signature": "durationSpanToDateRange(span: DateDurationSpan): DateRange",
+      "description": "Converts a {@link DateDurationSpan} to a {@link DateRange} with start and end dates.",
+      "params": [
+        {
+          "name": "span",
+          "type": "DateDurationSpan",
+          "description": "- the duration span to convert",
+          "optional": false
+        }
+      ],
+      "returns": "a date range from startsAt to startsAt + duration",
+      "tags": [
+        "date",
+        "duration",
+        "span",
+        "range",
+        "convert",
+        "to",
+        "durationspantodaterange"
+      ],
+      "relatedSlugs": [
+        "date-duration-span-end-date",
+        "duration-span-from-date-range"
+      ]
+    },
+    {
+      "slug": "duration-span-from-date-range",
+      "name": "durationSpanFromDateRange",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.duration",
+      "signature": "durationSpanFromDateRange(dateRange: DateRange): DateDurationSpan",
+      "description": "Creates a {@link DateDurationSpan} from a {@link DateRange} by computing the duration in minutes between start and end.",
+      "params": [
+        {
+          "name": "dateRange",
+          "type": "DateRange",
+          "description": "- the date range to convert",
+          "optional": false
+        }
+      ],
+      "returns": "a duration span with the range's start as startsAt",
+      "tags": [
+        "date",
+        "duration",
+        "span",
+        "range",
+        "convert",
+        "minutes",
+        "from",
+        "durationspanfromdaterange"
+      ],
+      "relatedSlugs": [
+        "duration-span-to-date-range",
+        "date-duration-span-end-date"
+      ]
+    },
+    {
+      "slug": "format-date-range-function",
+      "name": "formatDateRangeFunction",
+      "kind": "factory",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.format",
+      "signature": "formatDateRangeFunction(inputConfig: FormatDateRangeFunctionConfigInput): FormatDateRangeFunction",
+      "description": "Creates a reusable {@link FormatDateRangeFunction} from the given config or format function.\n\nUseful when the same range formatting logic needs to be applied repeatedly with consistent settings.",
+      "params": [
+        {
+          "name": "inputConfig",
+          "type": "FormatDateRangeFunctionConfigInput",
+          "description": "- format function or full configuration",
+          "optional": false
+        }
+      ],
+      "returns": "a reusable function that formats date ranges into strings",
+      "tags": [
+        "date",
+        "format",
+        "range",
+        "string",
+        "time",
+        "factory",
+        "function",
+        "formatdaterangefunction"
+      ],
+      "example": "import { formatDateRangeFunction, formatToTimeString } from '@dereekb/date';\n\nconst formatRange = formatDateRangeFunction({\n  format: formatToTimeString,\n  separator: 'to',\n  simplifySameDate: true\n});\n\nconst result = formatRange({ start: new Date('2024-01-15T09:00:00'), end: new Date('2024-01-15T17:00:00') });\n// \"9:00 AM to 5:00 PM\"",
+      "relatedSlugs": [
+        "format-date-range"
+      ]
+    },
+    {
+      "slug": "format-date-range",
+      "name": "formatDateRange",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.format",
+      "signature": "formatDateRange(range: DateRange, inputConfig: FormatDateRangeFunctionConfigInput, separator?: string): string",
+      "description": "Convenience function that formats a date range in a single call without creating a reusable function.",
+      "params": [
+        {
+          "name": "range",
+          "type": "DateRange",
+          "description": "- date range to format",
+          "optional": false
+        },
+        {
+          "name": "inputConfig",
+          "type": "FormatDateRangeFunctionConfigInput",
+          "description": "- format function or full configuration",
+          "optional": false
+        },
+        {
+          "name": "separator",
+          "type": "string",
+          "description": "- optional separator override when inputConfig is a function",
+          "optional": true
+        }
+      ],
+      "returns": "the formatted date range string",
+      "tags": [
+        "date",
+        "format",
+        "range",
+        "string",
+        "time",
+        "formatdaterange"
+      ],
+      "example": "import { formatDateRange, formatToTimeString } from '@dereekb/date';\n\nconst result = formatDateRange(\n  { start: new Date('2024-01-15T09:00:00'), end: new Date('2024-01-15T17:00:00') },\n  formatToTimeString\n);\n// \"9:00 AM - 5:00 PM\"",
+      "relatedSlugs": [
+        "format-date-range-function",
+        "format-to-time-range-string"
+      ]
+    },
+    {
+      "slug": "format-date-range-distance",
+      "name": "formatDateRangeDistance",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.format",
+      "signature": "formatDateRangeDistance(range: DateRange, inputConfig?: FormatDateRangeDistanceFunctionConfig): string",
+      "description": "Convenience function that computes the human-readable distance for a date range in a single call.",
+      "params": [
+        {
+          "name": "range",
+          "type": "DateRange",
+          "description": "- date range to compute distance for",
+          "optional": false
+        },
+        {
+          "name": "inputConfig",
+          "type": "FormatDateRangeDistanceFunctionConfig",
+          "description": "- optional distance formatting configuration",
+          "optional": true
+        }
+      ],
+      "returns": "the human-readable distance string",
+      "tags": [
+        "date",
+        "format",
+        "distance",
+        "range",
+        "human",
+        "duration",
+        "since",
+        "ago",
+        "formatdaterangedistance"
+      ],
+      "example": "import { formatDateRangeDistance } from '@dereekb/date';\n\nconst result = formatDateRangeDistance(\n  { start: new Date('2024-01-15T09:00:00'), end: new Date('2024-01-17T09:00:00') },\n  { addSuffix: true }\n);\n// \"in 2 days\"",
+      "relatedSlugs": [
+        "format-date-range-distance-function",
+        "format-date-distance"
+      ]
+    },
+    {
+      "slug": "date-range-days-count",
+      "name": "dateRangeDaysCount",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.range",
+      "signature": "dateRangeDaysCount(dateRange: DateRange): number",
+      "description": "Counts the total number of calendar days spanned by the range, inclusive of both endpoints.\nAlways returns at least 1, even for same-day ranges.",
+      "params": [
+        {
+          "name": "dateRange",
+          "type": "DateRange",
+          "description": "- the date range to measure",
+          "optional": false
+        }
+      ],
+      "returns": "the number of days in the range, inclusive",
+      "tags": [
+        "date",
+        "range",
+        "days",
+        "count",
+        "duration",
+        "span",
+        "length",
+        "daterangedayscount"
+      ],
+      "example": "const range = { start: new Date('2024-01-01'), end: new Date('2024-01-03') };\ndateRangeDaysCount(range); // 3",
+      "relatedSlugs": [
+        "is-date-range",
+        "is-same-date-range"
+      ]
+    },
+    {
+      "slug": "is-date-range",
+      "name": "isDateRange",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.range",
+      "signature": "isDateRange(input: unknown): input is DateRange",
+      "description": "Type guard to check if a value is a valid {@link DateRange} with both start and end as Date objects.",
+      "params": [
+        {
+          "name": "input",
+          "type": "unknown",
+          "description": "- the value to check",
+          "optional": false
+        }
+      ],
+      "returns": "true if the value has valid Date `start` and `end` properties",
+      "tags": [
+        "date",
+        "range",
+        "type-guard",
+        "check",
+        "validate",
+        "is",
+        "isdaterange"
+      ],
+      "example": "isDateRange({ start: new Date(), end: new Date() }); // true\nisDateRange({ start: new Date() }); // false\nisDateRange('not-a-range'); // false",
+      "relatedSlugs": [
+        "is-date-range-start",
+        "date-range-days-count"
+      ]
+    },
+    {
+      "slug": "is-same-date-range",
+      "name": "isSameDateRange",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.range",
+      "signature": "isSameDateRange(a: Maybe<Partial<DateRange>>, b: Maybe<Partial<DateRange>>): boolean",
+      "description": "Compares two date ranges for exact millisecond equality on both start and end.\nReturns true if both are nullish.",
+      "params": [
+        {
+          "name": "a",
+          "type": "Maybe<Partial<DateRange>>",
+          "description": "- first date range to compare",
+          "optional": false
+        },
+        {
+          "name": "b",
+          "type": "Maybe<Partial<DateRange>>",
+          "description": "- second date range to compare",
+          "optional": false
+        }
+      ],
+      "returns": "true if both ranges are equal or both are nullish",
+      "tags": [
+        "date",
+        "range",
+        "equal",
+        "equality",
+        "same",
+        "compare",
+        "is",
+        "issamedaterange"
+      ],
+      "example": "const a = { start: new Date('2024-01-01'), end: new Date('2024-01-31') };\nconst b = { start: new Date('2024-01-01'), end: new Date('2024-01-31') };\nisSameDateRange(a, b); // true\nisSameDateRange(null, null); // true",
+      "relatedSlugs": [
+        "is-same-date-day-range",
+        "is-date-range"
+      ]
+    },
+    {
+      "slug": "is-date",
+      "name": "isDate",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date",
+      "signature": "isDate(input: unknown): input is Date",
+      "description": "Type guard that checks whether the input is a Date instance.",
+      "params": [
+        {
+          "name": "input",
+          "type": "unknown",
+          "description": "- value to check",
+          "optional": false
+        }
+      ],
+      "returns": "whether the input is a Date",
+      "tags": [
+        "date",
+        "type-guard",
+        "check",
+        "instance",
+        "is",
+        "isdate"
+      ],
+      "example": "isDate(new Date()); // true\nisDate('2020-01-01'); // false"
+    },
+    {
+      "slug": "ms-to-minutes",
+      "name": "msToMinutes",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date",
+      "signature": "msToMinutes(milliseconds: number): Minutes",
+      "description": "Converts milliseconds to minutes.",
+      "params": [
+        {
+          "name": "milliseconds",
+          "type": "number",
+          "description": "- duration in milliseconds",
+          "optional": false
+        }
+      ],
+      "returns": "equivalent duration in minutes",
+      "tags": [
+        "date",
+        "time",
+        "milliseconds",
+        "minutes",
+        "convert",
+        "duration",
+        "ms",
+        "to",
+        "mstominutes"
+      ],
+      "example": "msToMinutes(60000); // 1\nmsToMinutes(120000); // 2",
+      "relatedSlugs": [
+        "ms-to-seconds",
+        "hours-to-ms",
+        "minutes-to-ms"
+      ]
+    },
+    {
+      "slug": "ms-to-seconds",
+      "name": "msToSeconds",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date",
+      "signature": "msToSeconds(milliseconds: number): Seconds",
+      "description": "Converts milliseconds to seconds.",
+      "params": [
+        {
+          "name": "milliseconds",
+          "type": "number",
+          "description": "- duration in milliseconds",
+          "optional": false
+        }
+      ],
+      "returns": "equivalent duration in seconds",
+      "tags": [
+        "date",
+        "time",
+        "milliseconds",
+        "seconds",
+        "convert",
+        "duration",
+        "ms",
+        "to",
+        "mstoseconds"
+      ],
+      "example": "msToSeconds(1000); // 1\nmsToSeconds(2500); // 2.5",
+      "relatedSlugs": [
+        "ms-to-minutes",
+        "hours-to-ms",
+        "minutes-to-ms"
+      ]
+    },
+    {
+      "slug": "hours-to-ms",
+      "name": "hoursToMs",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date",
+      "signature": "hoursToMs(hours?: number): Minutes",
+      "description": "Converts hours to milliseconds.",
+      "params": [
+        {
+          "name": "hours",
+          "type": "number",
+          "description": "- number of hours (defaults to 1)",
+          "optional": true
+        }
+      ],
+      "returns": "equivalent duration in milliseconds",
+      "tags": [
+        "date",
+        "time",
+        "hours",
+        "milliseconds",
+        "convert",
+        "duration",
+        "to",
+        "ms",
+        "hourstoms"
+      ],
+      "example": "hoursToMs(1); // 3600000\nhoursToMs(2); // 7200000",
+      "relatedSlugs": [
+        "minutes-to-ms",
+        "ms-to-minutes"
+      ]
+    },
+    {
+      "slug": "minutes-to-ms",
+      "name": "minutesToMs",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date",
+      "signature": "minutesToMs(minutes?: number): Minutes",
+      "description": "Converts minutes to milliseconds.",
+      "params": [
+        {
+          "name": "minutes",
+          "type": "number",
+          "description": "- number of minutes (defaults to 1)",
+          "optional": true
+        }
+      ],
+      "returns": "equivalent duration in milliseconds",
+      "tags": [
+        "date",
+        "time",
+        "minutes",
+        "milliseconds",
+        "convert",
+        "duration",
+        "to",
+        "ms",
+        "minutestoms"
+      ],
+      "example": "minutesToMs(1); // 60000\nminutesToMs(5); // 300000",
+      "relatedSlugs": [
+        "hours-to-ms",
+        "ms-to-minutes"
+      ]
+    },
+    {
+      "slug": "days-to-minutes",
+      "name": "daysToMinutes",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date",
+      "signature": "daysToMinutes(days?: number): Minutes",
+      "description": "Converts days to minutes.",
+      "params": [
+        {
+          "name": "days",
+          "type": "number",
+          "description": "- number of days (defaults to 1)",
+          "optional": true
+        }
+      ],
+      "returns": "equivalent duration in minutes",
+      "tags": [
+        "date",
+        "time",
+        "days",
+        "minutes",
+        "convert",
+        "duration",
+        "to",
+        "daystominutes"
+      ],
+      "example": "daysToMinutes(1); // 1440\ndaysToMinutes(7); // 10080",
+      "relatedSlugs": [
+        "minutes-to-ms",
+        "hours-to-ms"
+      ]
+    },
+    {
+      "slug": "is-max-future-date",
+      "name": "isMaxFutureDate",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date",
+      "signature": "isMaxFutureDate(date: Date): boolean",
+      "description": "Checks whether the given date matches the {@link MAX_FUTURE_DATE} sentinel.",
+      "params": [
+        {
+          "name": "date",
+          "type": "Date",
+          "description": "- date to check",
+          "optional": false
+        }
+      ],
+      "returns": "whether the date is the max future sentinel",
+      "tags": [
+        "date",
+        "sentinel",
+        "max",
+        "future",
+        "expiration",
+        "check",
+        "is",
+        "ismaxfuturedate"
+      ],
+      "example": "isMaxFutureDate(MAX_FUTURE_DATE); // true\nisMaxFutureDate(new Date()); // false",
+      "relatedSlugs": [
+        "max-future-date"
+      ]
+    },
+    {
+      "slug": "latest-minute",
+      "name": "latestMinute",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date",
+      "signature": "latestMinute(time?: Date): Date",
+      "description": "Returns the start of the current minute for the given time, effectively truncating seconds and milliseconds.\n\nDefaults to the current time if no input is provided.",
+      "params": [
+        {
+          "name": "time",
+          "type": "Date",
+          "description": "- date to truncate (defaults to now)",
+          "optional": true
+        }
+      ],
+      "returns": "date rounded down to the start of the minute",
+      "tags": [
+        "date",
+        "minute",
+        "truncate",
+        "floor",
+        "time",
+        "start",
+        "latest",
+        "latestminute"
+      ],
+      "example": "const date = new Date('2024-01-01T12:30:45.123Z');\nconst result = latestMinute(date);\n// result === 2024-01-01T12:30:00.000Z"
+    },
+    {
+      "slug": "to-iso-date-string",
+      "name": "toISODateString",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date",
+      "signature": "toISODateString(input: DateOrDateString): ISO8601DateString",
+      "description": "Converts the input to an ISO 8601 date string.",
+      "params": [
+        {
+          "name": "input",
+          "type": "DateOrDateString",
+          "description": "- date or date string to convert",
+          "optional": false
+        }
+      ],
+      "returns": "the ISO 8601 string representation",
+      "tags": [
+        "date",
+        "iso",
+        "string",
+        "format",
+        "convert",
+        "serialize",
+        "to",
+        "toisodatestring"
+      ],
+      "example": "toISODateString(new Date('2024-01-01T00:00:00.000Z'));\n// '2024-01-01T00:00:00.000Z'",
+      "relatedSlugs": [
+        "to-js-date",
+        "parse-js-date-string",
+        "safe-to-js-date"
+      ]
+    },
+    {
+      "slug": "guess-current-timezone",
+      "name": "guessCurrentTimezone",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date",
+      "signature": "guessCurrentTimezone(): TimezoneString | undefined",
+      "description": "Guesses the current system's timezone using the Intl API.",
+      "params": [],
+      "returns": "the IANA timezone string (e.g. \"America/Chicago\"), or undefined if detection fails",
+      "tags": [
+        "date",
+        "timezone",
+        "tz",
+        "guess",
+        "current",
+        "intl",
+        "system",
+        "guesscurrenttimezone"
+      ],
+      "example": "const tz = guessCurrentTimezone();\n// tz === 'America/New_York' (or similar)",
+      "relatedSlugs": [
+        "require-current-timezone"
+      ]
+    },
+    {
+      "slug": "require-current-timezone",
+      "name": "requireCurrentTimezone",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date",
+      "signature": "requireCurrentTimezone(): TimezoneString",
+      "description": "Returns the current system's timezone, throwing if detection fails.\n\nConvenience wrapper around {@link guessCurrentTimezone} for contexts where a timezone is required.",
+      "params": [],
+      "returns": "the IANA timezone string",
+      "tags": [
+        "date",
+        "timezone",
+        "tz",
+        "require",
+        "current",
+        "intl",
+        "throw",
+        "requirecurrenttimezone"
+      ],
+      "example": "const tz = requireCurrentTimezone();\n// tz === 'America/New_York' (guaranteed non-undefined)",
+      "relatedSlugs": [
+        "guess-current-timezone"
+      ]
+    },
+    {
+      "slug": "safe-to-js-date",
+      "name": "safeToJsDate",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date",
+      "signature": "safeToJsDate(input: Maybe<DateOrDateString | UTCDateString>): Maybe<Date>",
+      "description": "Null-safe variant of {@link toJsDate} that returns undefined for null/undefined input.",
+      "params": [
+        {
+          "name": "input",
+          "type": "Maybe<DateOrDateString | UTCDateString>",
+          "description": "- date, date string, or null/undefined",
+          "optional": false
+        }
+      ],
+      "returns": "the parsed Date or undefined if input was nullish",
+      "tags": [
+        "date",
+        "parse",
+        "convert",
+        "safe",
+        "maybe",
+        "nullish",
+        "to",
+        "js",
+        "safetojsdate"
+      ],
+      "example": "safeToJsDate('2024-01-01T00:00:00.000Z'); // Date instance\nsafeToJsDate(undefined); // undefined",
+      "relatedSlugs": [
+        "to-js-date",
+        "parse-js-date-string"
+      ]
+    },
+    {
+      "slug": "to-js-date",
+      "name": "toJsDate",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date",
+      "signature": "toJsDate(input: DateOrDateString | UTCDateString | UnixDateTimeMillisecondsNumber): Date",
+      "description": "Converts the input to a JavaScript Date instance. Accepts Date objects, ISO 8601 strings, UTC date strings, and unix millisecond timestamps.",
+      "params": [
+        {
+          "name": "input",
+          "type": "DateOrDateString | UTCDateString | UnixDateTimeMillisecondsNumber",
+          "description": "- value to convert",
+          "optional": false
+        }
+      ],
+      "returns": "the parsed Date",
+      "tags": [
+        "date",
+        "parse",
+        "convert",
+        "iso",
+        "unix",
+        "milliseconds",
+        "string",
+        "to",
+        "js",
+        "tojsdate"
+      ],
+      "example": "toJsDate('2024-01-01T00:00:00.000Z'); // Date instance\ntoJsDate(new Date()); // same Date returned\ntoJsDate(1704067200000); // Date from unix ms",
+      "relatedSlugs": [
+        "safe-to-js-date",
+        "parse-js-date-string",
+        "to-iso-date-string"
+      ]
+    },
+    {
+      "slug": "parse-js-date-string",
+      "name": "parseJsDateString",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date",
+      "signature": "parseJsDateString(input: ISO8601DateString | UTCDateString | UnixDateTimeMillisecondsNumber): Maybe<Date>",
+      "description": "Parses a date string or unix milliseconds timestamp into a Date, returning undefined if the result is invalid.\n\nPrefers `parseISO` for ISO 8601 strings to avoid browser inconsistencies with `new Date()`.",
+      "params": [
+        {
+          "name": "input",
+          "type": "ISO8601DateString | UTCDateString | UnixDateTimeMillisecondsNumber",
+          "description": "- ISO 8601 string, UTC date string, or unix milliseconds",
+          "optional": false
+        }
+      ],
+      "returns": "the parsed Date, or undefined if invalid",
+      "tags": [
+        "date",
+        "parse",
+        "string",
+        "iso",
+        "unix",
+        "validate",
+        "js",
+        "parsejsdatestring"
+      ],
+      "example": "parseJsDateString('2020-04-30T00:00:00.000'); // Date instance\nparseJsDateString('Sat, 03 Feb 2001 04:05:06 GMT'); // Date instance\nparseJsDateString('not-a-date'); // undefined",
+      "relatedSlugs": [
+        "to-js-date",
+        "safe-to-js-date"
+      ]
+    },
+    {
+      "slug": "round-down-to-minute",
+      "name": "roundDownToMinute",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date",
+      "signature": "roundDownToMinute(date?: Date): Date",
+      "description": "Truncates seconds and milliseconds from the input date, effectively rounding down to the start of the minute.",
+      "params": [
+        {
+          "name": "date",
+          "type": "Date",
+          "description": "- date to round (defaults to now)",
+          "optional": true
+        }
+      ],
+      "returns": "the date with seconds and milliseconds set to zero",
+      "tags": [
+        "date",
+        "round",
+        "floor",
+        "minute",
+        "truncate",
+        "time",
+        "down",
+        "to",
+        "rounddowntominute"
+      ],
+      "example": "const date = new Date('2024-01-01T12:30:45.123Z');\nroundDownToMinute(date); // 2024-01-01T12:30:00.000Z",
+      "relatedSlugs": [
+        "round-down-to-hour",
+        "round-date-down-to",
+        "round-date-to"
+      ]
+    },
+    {
+      "slug": "round-down-to-hour",
+      "name": "roundDownToHour",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date",
+      "signature": "roundDownToHour(date?: Date): Date",
+      "description": "Truncates minutes, seconds, and milliseconds from the input date, effectively rounding down to the start of the hour.",
+      "params": [
+        {
+          "name": "date",
+          "type": "Date",
+          "description": "- date to round (defaults to now)",
+          "optional": true
+        }
+      ],
+      "returns": "the date with minutes, seconds, and milliseconds set to zero",
+      "tags": [
+        "date",
+        "round",
+        "floor",
+        "hour",
+        "truncate",
+        "time",
+        "down",
+        "to",
+        "rounddowntohour"
+      ],
+      "example": "const date = new Date('2024-01-01T12:30:45.123Z');\nroundDownToHour(date); // 2024-01-01T12:00:00.000Z",
+      "relatedSlugs": [
+        "round-down-to-minute",
+        "round-date-down-to",
+        "round-date-to"
+      ]
+    }
+  ]
 }

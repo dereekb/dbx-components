@@ -26,6 +26,11 @@ export type RunAsyncTasksForValuesConfig<T = unknown> = Omit<PerformAsyncTasksCo
 /**
  * Runs a single async task and returns the resulting value. Always configured to throw on failure.
  *
+ * @dbxUtil
+ * @dbxUtilCategory promise
+ * @dbxUtilTags promise, async, task, retry, run, value
+ * @dbxUtilRelated perform-async-task, run-async-tasks-for-values, perform-async-tasks
+ *
  * @param taskFn - The async task to execute.
  * @param config - Optional configuration for retries and retry behavior.
  * @returns The value produced by the task, or undefined if the task produced no value.
@@ -43,6 +48,11 @@ export async function runAsyncTaskForValue<O>(taskFn: () => Promise<O>, config?:
 /**
  * Runs an async task for each input value and returns an array of the resulting values.
  * Always configured to throw on failure.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory promise
+ * @dbxUtilTags promise, async, tasks, parallel, batch, retry, run, values
+ * @dbxUtilRelated perform-async-tasks, run-async-task-for-value
  *
  * @param input - The array of input values to process.
  * @param taskFn - The async task function to run for each input value.
@@ -190,6 +200,11 @@ export async function performAsyncTasks<I, O = unknown, K extends PrimativeKey =
 
 /**
  * Performs a single async task with configurable retry behavior and returns the result with success status.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory promise
+ * @dbxUtilTags promise, async, task, retry, run, success
+ * @dbxUtilRelated perform-async-tasks, run-async-task-for-value
  *
  * @param taskFn - The async task to execute.
  * @param config - Optional configuration for retries and error handling.

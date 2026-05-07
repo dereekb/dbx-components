@@ -5,6 +5,12 @@ import { type TreeNode } from './tree';
 
 /**
  * Decides how to visit a node during tree exploration.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory tree
+ * @dbxUtilKind const
+ * @dbxUtilTags tree, explore, visit, decision, enum, traversal, control
+ * @dbxUtilRelated explore-tree-function, flatten-tree-add-node-decision
  */
 export const ExploreTreeVisitNodeDecision = {
   /**
@@ -103,6 +109,12 @@ export type ExploreTreeFunction<N extends TreeNode<unknown, N>, V> = (trees: Arr
  * By default uses depth-first traversal, identity mapping, and visits all nodes. All options
  * can be overridden per-call.
  *
+ * @dbxUtil
+ * @dbxUtilCategory tree
+ * @dbxUtilKind factory
+ * @dbxUtilTags tree, explore, traverse, visit, factory, depth-first, breadth-first, walk
+ * @dbxUtilRelated depth-first-explore-tree-traversal-factory-function, breadth-first-explore-tree-traversal-factory-function, flatten-tree-to-array-function
+ *
  * @param config - Optional default configuration for mapping, filtering, and traversal strategy.
  * @returns A reusable function that explores trees with the configured behavior.
  *
@@ -152,6 +164,12 @@ export function exploreTreeFunction<N extends TreeNode<unknown, N>, V>(config?: 
  * Visits each node before its children (pre-order). This is the default traversal
  * strategy used by {@link exploreTreeFunction}.
  *
+ * @dbxUtil
+ * @dbxUtilCategory tree
+ * @dbxUtilKind factory
+ * @dbxUtilTags tree, traverse, depth-first, dfs, pre-order, factory, strategy
+ * @dbxUtilRelated breadth-first-explore-tree-traversal-factory-function, explore-tree-function
+ *
  * @returns A traversal factory that processes nodes in depth-first order.
  *
  * @example
@@ -184,6 +202,12 @@ export function depthFirstExploreTreeTraversalFactoryFunction<N extends TreeNode
  *
  * Visits nodes level by level, processing all nodes at depth N before moving to depth N+1.
  * Uses an internal queue to defer child processing until the current level is complete.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory tree
+ * @dbxUtilKind factory
+ * @dbxUtilTags tree, traverse, breadth-first, bfs, level-order, factory, strategy, queue
+ * @dbxUtilRelated depth-first-explore-tree-traversal-factory-function, explore-tree-function
  *
  * @returns A traversal factory that processes nodes in breadth-first order.
  *

@@ -15,6 +15,11 @@ export type AllOrNoneSelection = 'all' | 'none';
 /**
  * Converts an {@link IterableOrValue} into a Set. Strings are treated as single values rather than character iterables.
  *
+ * @dbxUtil
+ * @dbxUtilCategory set
+ * @dbxUtilTags set, convert, normalize, ensure, unique, dedupe
+ * @dbxUtilRelated add-to-set, iterable-to-set
+ *
  * @param values - The value or iterable to convert.
  * @returns A new Set containing all values.
  */
@@ -58,6 +63,11 @@ export function addToSetCopy<T>(set: Maybe<Set<T>>, values: Maybe<IterableOrValu
 /**
  * Adds one or more values to the given set in place.
  *
+ * @dbxUtil
+ * @dbxUtilCategory set
+ * @dbxUtilTags set, add, mutate, insert, in-place
+ * @dbxUtilRelated add-to-set-copy, remove-from-set, toggle-in-set
+ *
  * @param set - The set to add values to.
  * @param values - The value or iterable of values to add.
  */
@@ -78,6 +88,11 @@ export function toggleInSetCopy<T>(set: Set<T>, values: Maybe<IterableOrValue<T>
 
 /**
  * Toggles values in the set in place: adds if absent, removes if present.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory set
+ * @dbxUtilTags set, toggle, add, remove, mutate, in-place
+ * @dbxUtilRelated toggle-in-set-copy, add-to-set, remove-from-set
  *
  * @param set - The set to modify.
  * @param values - The values to toggle.

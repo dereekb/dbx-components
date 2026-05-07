@@ -22,6 +22,11 @@ export type DateOrUnixDateTimeSecondsNumber = Date | UnixDateTimeSecondsNumber;
 /**
  * Converts a Date object or unix timestamp number to a unix timestamp number.
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, unix, seconds, timestamp, convert, normalize
+ * @dbxUtilRelated unix-date-time-seconds-number-from-date, date-from-date-or-time-seconds-number
+ *
  * @param input - Date object or unix timestamp number to convert
  * @returns Unix timestamp number if input is valid, null/undefined if input is null/undefined
  */
@@ -42,6 +47,11 @@ export function unixDateTimeSecondsNumberFromDateOrTimeNumber(input: Maybe<DateO
 /**
  * Gets the current time as a unix timestamp number.
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, unix, seconds, timestamp, now, current, time
+ * @dbxUtilRelated unix-date-time-seconds-number-from-date
+ *
  * @returns Current time as unix timestamp number
  */
 export function unixDateTimeSecondsNumberForNow(): UnixDateTimeSecondsNumber {
@@ -50,6 +60,11 @@ export function unixDateTimeSecondsNumberForNow(): UnixDateTimeSecondsNumber {
 
 /**
  * Converts a Date object to a unix timestamp number.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, unix, seconds, timestamp, convert, epoch
+ * @dbxUtilRelated unix-date-time-seconds-number-to-date, unix-date-time-seconds-number-for-now
  *
  * @param date - Date object to convert
  * @returns Unix timestamp number if date is valid, null/undefined if date is null/undefined
@@ -85,6 +100,11 @@ export function dateFromDateOrTimeSecondsNumber(input: Maybe<DateOrUnixDateTimeS
 
 /**
  * Converts a unix timestamp number to a Date object.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, unix, seconds, timestamp, convert, parse
+ * @dbxUtilRelated unix-date-time-seconds-number-from-date, date-from-date-or-time-seconds-number
  *
  * @param dateTimeNumber - Unix timestamp number to convert
  * @returns Date object if timestamp is valid, null/undefined if timestamp is null/undefined

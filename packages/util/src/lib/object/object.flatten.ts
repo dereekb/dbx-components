@@ -26,6 +26,10 @@ export interface FlattenObjectConfig {
  * Empty nested objects are omitted from the result (they produce no keys).
  * Circular references are detected and treated as leaf values to avoid infinite recursion.
  *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilTags object, flatten, flat, nested, dot-notation, deep, traverse
+ *
  * @example
  * ```ts
  * flattenObject({ a: 1, b: { c: 2, d: { e: 3 } } });

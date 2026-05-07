@@ -6,6 +6,10 @@ export type PromiseOrValue<T> = Promise<T> | T;
 /**
  * Wraps the input in a resolved Promise if it is not already a Promise.
  *
+ * @dbxUtil
+ * @dbxUtilCategory promise
+ * @dbxUtilTags promise, async, normalize, resolve, ensure
+ *
  * @param input - A value or Promise to normalize into a Promise.
  * @returns A Promise that resolves to the input value.
  */

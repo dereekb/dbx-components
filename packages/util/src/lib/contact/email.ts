@@ -38,6 +38,11 @@ export type EmailParticipantString = string;
  * Converts an EmailParticipant object to a formatted string representation.
  * The format is: "name<email>" or "<email>" if no name is provided.
  *
+ * @dbxUtil
+ * @dbxUtilCategory contact
+ * @dbxUtilTags email, participant, convert, format, serialize, name
+ * @dbxUtilRelated convert-email-participant-string-to-participant, coerce-to-email-participants
+ *
  * @param participant - The email participant to convert
  * @returns A formatted string representation of the participant
  */
@@ -48,6 +53,11 @@ export function convertParticipantToEmailParticipantString(participant: EmailPar
 /**
  * Converts a formatted participant string into an EmailParticipant object.
  * Parses strings in the format "name<email>" or "<email>".
+ *
+ * @dbxUtil
+ * @dbxUtilCategory contact
+ * @dbxUtilTags email, participant, parse, deserialize, name, address
+ * @dbxUtilRelated convert-participant-to-email-participant-string, coerce-to-email-participants
  *
  * @param participantString - The string to parse
  * @returns An EmailParticipant object with the extracted name and email
@@ -65,6 +75,11 @@ export function convertEmailParticipantStringToParticipant(participantString: Em
 /**
  * Combines an array of EmailParticipants with an array of email addresses.
  * Email addresses that don't already exist in the participants array are converted to EmailParticipant objects.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory contact
+ * @dbxUtilTags email, participant, merge, combine, dedupe, coerce, normalize
+ * @dbxUtilRelated convert-participant-to-email-participant-string, convert-email-participant-string-to-participant
  *
  * @param options - Object containing participants and/or emails arrays
  * @param options.participants - Array of existing EmailParticipant objects

@@ -41,6 +41,11 @@ export function convertMaybeToNonEmptyArray<T>(arrayOrValue: Maybe<ArrayOrValue<
 /**
  * Converts the input value to an array containing itself, or returns itself if it is an array. Returns an empty array if the input is nullish.
  *
+ * @dbxUtil
+ * @dbxUtilCategory array
+ * @dbxUtilTags array, convert, ensure, normalize, maybe, nullish
+ * @dbxUtilRelated convert-maybe-to-non-empty-array, convert-to-array, as-array
+ *
  * @param arrayOrValue - single value, array, or nullish value to convert
  * @returns the input wrapped in an array, the input array itself, or an empty array if nullish
  */
@@ -59,6 +64,11 @@ export const asNonEmptyArray = convertMaybeToNonEmptyArray;
 
 /**
  * Converts the input value to an array containing itself, or returns itself if it is already an array.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory array
+ * @dbxUtilTags array, convert, ensure, wrap, normalize
+ * @dbxUtilRelated convert-maybe-to-array, convert-maybe-to-non-empty-array
  *
  * @param arrayOrValue - single value or array to convert
  * @returns the input array unchanged, or a new single-element array wrapping the input value
@@ -101,6 +111,11 @@ export function lastValue<T>(input: ArrayOrValue<T>): T {
  *
  * If the input is not an array, returns that value as both the first and last value.
  *
+ * @dbxUtil
+ * @dbxUtilCategory array
+ * @dbxUtilTags array, first, last, head, tail, tuple, endpoints
+ * @dbxUtilRelated first-value, last-value, value-at-index
+ *
  * @param input - single value or array to retrieve from
  * @returns a two-element tuple of the first and last values
  */
@@ -113,6 +128,11 @@ export function firstAndLastValue<T>(input: ArrayOrValue<T>): [T, T] {
 /**
  * Returns the value at the given index from an array, or the value itself if not an array.
  *
+ * @dbxUtil
+ * @dbxUtilCategory array
+ * @dbxUtilTags array, index, get, value, at
+ * @dbxUtilRelated first-value, last-value, first-and-last-value
+ *
  * @param input - single value or array to retrieve from
  * @param index - zero-based index of the element to retrieve
  * @returns the element at the specified index, or the input value itself if not an array
@@ -124,6 +144,11 @@ export function valueAtIndex<T>(input: ArrayOrValue<T>, index: number): T {
 /**
  * Concatenates the input arrays into a single array, filtering out nullish entries.
  *
+ * @dbxUtil
+ * @dbxUtilCategory array
+ * @dbxUtilTags array, concat, concatenate, combine, flatten, merge
+ * @dbxUtilRelated flatten-array, merge-arrays
+ *
  * @param arrays - arrays to concatenate; nullish entries are ignored
  * @returns a single flattened array containing all elements from the non-nullish input arrays
  */
@@ -133,6 +158,11 @@ export function concatArrays<T>(...arrays: Maybe<T[]>[]): T[] {
 
 /**
  * Flattens a two-dimensional array into a single-dimensional array. Any null/undefined entries in the outer dimension are filtered out.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory array
+ * @dbxUtilTags array, flatten, flat, nested, two-dimensional, concat
+ * @dbxUtilRelated concat-arrays, flatten-array-or-value-array, merge-arrays
  *
  * @param array - two-dimensional array to flatten, may contain nullish entries
  * @returns a single-dimensional array with all elements from the non-nullish inner arrays
@@ -155,6 +185,11 @@ export function flattenArrayOrValueArray<T>(array: ArrayOrValue<Maybe<T>>[]): T[
 
 /**
  * Creates a shallow copy of the input array. Returns an empty array if the input is nullish.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory array
+ * @dbxUtilTags array, copy, clone, shallow, duplicate
+ * @dbxUtilRelated convert-maybe-to-array
  *
  * @param input - array to copy, or nullish
  * @returns a new array with the same elements, or an empty array if input is nullish
@@ -246,6 +281,11 @@ export function pushArrayItemsIntoArray<T>(target: T[], array: T[]): T[] {
 /**
  * Copies/takes the elements from the front of the array up to the specified maximum.
  *
+ * @dbxUtil
+ * @dbxUtilCategory array
+ * @dbxUtilTags array, take, front, head, slice, limit
+ * @dbxUtilRelated take-last, split-front
+ *
  * @param values - source array to take from
  * @param maxToTake - maximum number of elements to take from the front
  * @returns a new array containing at most maxToTake elements from the front
@@ -275,6 +315,11 @@ export interface SplitFrontResult<T> {
 /**
  * Splits the array into two arrays, the first being the front of the array up to the maxToTake, and the second being the remaining values.
  *
+ * @dbxUtil
+ * @dbxUtilCategory array
+ * @dbxUtilTags array, split, partition, front, slice
+ * @dbxUtilRelated take-front, take-last
+ *
  * @param values The array to split.
  * @param maxToTake The maximum number of values to take from the front of the array.
  * @returns The front and remaining values.
@@ -289,6 +334,11 @@ export function splitFront<T>(values: T[], maxToTake: number): SplitFrontResult<
 
 /**
  * Copies/takes as many elements as possible from the end.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory array
+ * @dbxUtilTags array, take, last, tail, end, slice, limit
+ * @dbxUtilRelated take-front, split-front
  *
  * @param values Values to take from.
  * @param maxToTake Max number of values to take from the end of the input array.
@@ -335,6 +385,11 @@ export function forEachWithArray<T>(array: Maybe<ArrayOrValue<T>>, forEach: (val
 /**
  * Counts the total number of elements across all inner arrays of a nested array.
  *
+ * @dbxUtil
+ * @dbxUtilCategory array
+ * @dbxUtilTags array, count, nested, total, length, two-dimensional
+ * @dbxUtilRelated flatten-array
+ *
  * @param array - two-dimensional array whose elements are counted
  * @returns the total number of elements across all inner arrays
  */
@@ -344,6 +399,10 @@ export function countAllInNestedArray<T>(array: T[][]): number {
 
 /**
  * Creates a copy of the array with the items at the specified indexes removed.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory array
+ * @dbxUtilTags array, remove, exclude, indexes, filter, copy
  *
  * @param array - source array to copy from
  * @param removeIndexes - indexes of elements to exclude from the copy

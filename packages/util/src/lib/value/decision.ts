@@ -26,6 +26,12 @@ export type DecisionFunctionFactory<C, I> = FactoryWithRequiredInput<DecisionFun
  * @param decision - the constant boolean value to return
  * @returns a decision function that always returns the given boolean
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags decision, boolean, predicate, factory, constant
+ * @dbxUtilRelated as-decision-function, invert-decision
+ *
  * @example
  * ```ts
  * const alwaysTrue = decisionFunction(true);
@@ -62,6 +68,11 @@ export const invertDecision: <F extends DecisionFunction<any>>(fn: F, invert?: b
  * @param defaultIfUndefined - fallback boolean when the input is nullish (defaults to true)
  * @returns a {@link DecisionFunction} derived from the input
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilTags decision, normalize, boolean, default, coerce, predicate
+ * @dbxUtilRelated decision-function, invert-decision
+ *
  * @example
  * ```ts
  * const fn = asDecisionFunction(true);
@@ -85,6 +96,12 @@ export function asDecisionFunction<T = unknown>(valueOrFunction: Maybe<boolean |
  *
  * @param equalityValue - the value to compare against, or an existing decision function
  * @returns a decision function that checks strict equality with the given value
+ *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags decision, equal, equality, factory, predicate, compare
+ * @dbxUtilRelated decision-function, as-decision-function
  *
  * @example
  * ```ts

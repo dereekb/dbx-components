@@ -51,6 +51,11 @@ export type PercentDecimal = number;
  *
  * Returns 0 for null/undefined input.
  *
+ * @dbxUtil
+ * @dbxUtilCategory number
+ * @dbxUtilTags number, percent, decimal, convert, ratio
+ * @dbxUtilRelated percent-number-from-decimal
+ *
  * @param input - A percent number value (e.g., 5 means 5%)
  * @returns The decimal equivalent
  */
@@ -62,6 +67,11 @@ export function percentNumberToDecimal(input: Maybe<number>): number {
  * Converts a {@link PercentDecimal} (e.g., 0.05 for 5%) to its {@link PercentNumber} equivalent (e.g., 5).
  *
  * Returns 0 for null/undefined input.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory number
+ * @dbxUtilTags number, percent, decimal, convert, ratio
+ * @dbxUtilRelated percent-number-to-decimal
  *
  * @param input - A decimal percent value (e.g., 0.05 means 5%)
  * @returns The percent number equivalent
@@ -86,6 +96,10 @@ export type AsNumberInput = Maybe<NumberOrNumberString>;
  * Converts a number, string, or null/undefined value to a number.
  *
  * Strings are parsed via `Number()`. Null/undefined returns 0.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory number
+ * @dbxUtilTags number, parse, convert, coerce, string, normalize
  *
  * @param input - A number, number string, or null/undefined
  * @returns The numeric value, or 0 for null/undefined
@@ -113,6 +127,11 @@ export function asNumber(input: AsNumberInput): number {
  *
  * Treats null/undefined as 0.
  *
+ * @dbxUtil
+ * @dbxUtilCategory number
+ * @dbxUtilTags number, divisible, modulo, division, math, check
+ * @dbxUtilRelated nearest-divisible-values, is-even-number, is-odd-number
+ *
  * @param value - The number to check
  * @param divisor - The divisor to test against
  * @returns `true` if the remainder is zero
@@ -131,6 +150,11 @@ export interface NearestDivisibleValues {
 
 /**
  * Finds the nearest values that are evenly divisible by the divisor, both above (ceil) and below (floor) the input value.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory number
+ * @dbxUtilTags number, divisible, nearest, ceil, floor, round, snap, math
+ * @dbxUtilRelated is-number-divisible-by
  *
  * @param value - The value to find divisible neighbors for
  * @param divisor - The divisor to align to
@@ -152,6 +176,11 @@ export function nearestDivisibleValues(value: number, divisor: number): NearestD
 /**
  * Checks whether the input is an even number.
  *
+ * @dbxUtil
+ * @dbxUtilCategory number
+ * @dbxUtilTags number, even, parity, math, check
+ * @dbxUtilRelated is-odd-number, is-number-divisible-by
+ *
  * @param value - Number to test
  * @returns `true` if even
  */
@@ -161,6 +190,11 @@ export function isEvenNumber(value: number): boolean {
 
 /**
  * Checks whether the input is an odd number.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory number
+ * @dbxUtilTags number, odd, parity, math, check
+ * @dbxUtilRelated is-even-number, is-number-divisible-by
  *
  * @param value - Number to test
  * @returns `true` if odd
@@ -173,6 +207,10 @@ export function isOddNumber(value: number): boolean {
  * Computes the sum of all integers between two values, inclusive, using Gauss's formula.
  *
  * The `from` value is floored and the `to` value is ceiled before computation.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory number
+ * @dbxUtilTags number, sum, range, integers, math, gauss, total
  *
  * @param from - The starting value (floored to nearest integer)
  * @param to - The ending value (ceiled to nearest integer)
@@ -200,6 +238,11 @@ export const sortCompareNumberFunction: SortCompareFunction<number> = (a, b) => 
 /**
  * Finds the minimum and maximum values from an iterable of numbers.
  *
+ * @dbxUtil
+ * @dbxUtilCategory number
+ * @dbxUtilTags number, min, max, range, sort, bounds, extremes
+ * @dbxUtilRelated sort-compare-number-function
+ *
  * @param values - Iterable of numbers to examine
  * @returns Object with `min` and `max` values
  */
@@ -209,6 +252,10 @@ export function minAndMaxNumber(values: Iterable<number>): MinAndMaxFunctionResu
 
 /**
  * Computes the logarithm of `y` with base `x`.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory number
+ * @dbxUtilTags number, log, logarithm, math, base
  *
  * @param x - The base of the logarithm
  * @param y - The value to compute the logarithm of
