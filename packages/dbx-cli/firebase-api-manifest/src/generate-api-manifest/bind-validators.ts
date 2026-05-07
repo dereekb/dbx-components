@@ -34,20 +34,28 @@ export interface IsExportedInput {
 }
 
 /**
- * Confirms an identifier is exported from `packageRoot/src/index.ts` —
- * directly or via re-export chains.
+ * Confirms an identifier is exported from a package's barrel —
+ * directly or via re-export chains. Tries the source barrel
+ * (`packageRoot/src/index.ts`) first, then falls back to declaration
+ * barrels (`src/index.d.ts`, `index.d.ts`) so installed `@dereekb/*`
+ * packages in `node_modules` resolve the same way.
  *
  * @param input - Package root + identifier to look up.
  * @returns `true` when the identifier is reachable from the barrel.
  */
 export function isExportedFromPackage(input: IsExportedInput): boolean {
   const { packageRoot, identifier } = input;
-  const indexPath = join(packageRoot, 'src', 'index.ts');
-  if (!existsSync(indexPath)) return false;
+  const indexPath = locateBarrelEntry(packageRoot);
+  if (!indexPath) return false;
   return findIdentifierInBarrelChain(indexPath, identifier, new Set());
 }
 
-const EXPORT_DECL_PATTERNS: readonly RegExp[] = [/export\s+const\s+IDENT\b/, /export\s+function\s+IDENT\b/, /export\s*\{[^}]*\bIDENT\b[^}]*\}/];
+function locateBarrelEntry(packageRoot: string): string | undefined {
+  const candidates = [join(packageRoot, 'src', 'index.ts'), join(packageRoot, 'src', 'index.d.ts'), join(packageRoot, 'index.d.ts'), join(packageRoot, 'index.ts')];
+  return candidates.find((candidate) => existsSync(candidate));
+}
+
+const EXPORT_DECL_PATTERNS: readonly RegExp[] = [/export\s+(?:declare\s+)?const\s+IDENT\b/, /export\s+(?:declare\s+)?function\s+IDENT\b/, /export\s*\{[^}]*\bIDENT\b[^}]*\}/];
 
 function findIdentifierInBarrelChain(filePath: string, identifier: string, visited: Set<string>): boolean {
   if (visited.has(filePath)) return false;
@@ -90,7 +98,7 @@ function resolveReExport(fromDir: string, target: string): string | undefined {
   const candidate = isAbsolute(target) ? target : resolve(fromDir, target);
 
   let result: string | undefined;
-  for (const ext of ['.ts', '.mts', '/index.ts', '/index.mts']) {
+  for (const ext of ['.ts', '.mts', '.d.ts', '/index.ts', '/index.mts', '/index.d.ts']) {
     const probe = hasTsModuleExtension(candidate) ? candidate : candidate + ext;
     const resolved = resolveExistingTsPath(probe);
     if (resolved) {
@@ -110,8 +118,10 @@ function resolveExistingTsPath(probe: string): string | undefined {
   const stat = statSync(probe);
   if (stat.isFile()) return probe;
   if (!stat.isDirectory()) return undefined;
-  const indexed = join(probe, 'index.ts');
-  return existsSync(indexed) ? indexed : undefined;
+  const sourceIndex = join(probe, 'index.ts');
+  if (existsSync(sourceIndex)) return sourceIndex;
+  const declarationIndex = join(probe, 'index.d.ts');
+  return existsSync(declarationIndex) ? declarationIndex : undefined;
 }
 
 function escapeRegExp(value: string): string {
