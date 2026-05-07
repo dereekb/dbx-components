@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/firebase-server",
-  "version": "13.11.0",
+  "version": "13.11.1",
   "sideEffects": false,
   "exports": {
     "./test": {
@@ -37,15 +37,15 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "peerDependencies": {
-    "@dereekb/analytics": "13.11.0",
-    "@dereekb/date": "13.11.0",
-    "@dereekb/dbx-core": "13.11.0",
-    "@dereekb/firebase": "13.11.0",
-    "@dereekb/model": "13.11.0",
-    "@dereekb/nestjs": "13.11.0",
-    "@dereekb/rxjs": "13.11.0",
-    "@dereekb/util": "13.11.0",
-    "@dereekb/zoho": "13.11.0",
+    "@dereekb/analytics": "13.11.1",
+    "@dereekb/date": "13.11.1",
+    "@dereekb/dbx-core": "13.11.1",
+    "@dereekb/firebase": "13.11.1",
+    "@dereekb/model": "13.11.1",
+    "@dereekb/nestjs": "13.11.1",
+    "@dereekb/rxjs": "13.11.1",
+    "@dereekb/util": "13.11.1",
+    "@dereekb/zoho": "13.11.1",
     "@google-cloud/firestore": "^7.11.6",
     "@google-cloud/storage": "^7.19.0",
     "@nestjs/common": "^11.1.19",
