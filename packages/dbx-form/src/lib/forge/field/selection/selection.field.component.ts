@@ -7,7 +7,7 @@ import { DynamicTextPipe, type DynamicText, type FieldMeta, type ValidationMessa
 import { createResolvedErrorsSignal, setupMetaTracking, shouldShowErrors } from '@ng-forge/dynamic-forms/integration';
 import { MATERIAL_CONFIG, type MatSelectProps } from '@ng-forge/dynamic-forms-material';
 import { AsyncPipe } from '@angular/common';
-import { maybeValueFromObservableOrValue, tapLog, type ObservableOrValue } from '@dereekb/rxjs';
+import { maybeValueFromObservableOrValue, type ObservableOrValue } from '@dereekb/rxjs';
 import { combineLatest, distinctUntilChanged, map } from 'rxjs';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import type { ValueSelectionOption, ValueSelectionOptionClear } from '../../../field/field.selection';
@@ -139,12 +139,10 @@ export class DbxForgeValueSelectionFieldComponent<T = unknown> {
   readonly addClearOption$ = toObservable(this.addClearOptionSignal).pipe(distinctUntilChanged());
 
   readonly inputOptionsSignal = computed(() => this.props()?.options);
-  readonly inputOptions$ = toObservable(this.inputOptionsSignal).pipe(tapLog('yyy'), maybeValueFromObservableOrValue());
+  readonly inputOptions$ = toObservable(this.inputOptionsSignal).pipe(maybeValueFromObservableOrValue());
 
-  readonly resolvedOptions$ = combineLatest([this.inputOptions$, this.addClearOption$]).pipe(
-    tapLog('xxxx'),
-    map(([options, addClearOption]) => resolveForgeSelectionOptions(options ?? [], addClearOption ?? false))
-  );
+  readonly resolvedOptions$ = combineLatest([this.inputOptions$, this.addClearOption$]).pipe(map(([options, addClearOption]) => resolveForgeSelectionOptions(options ?? [], addClearOption ?? false)));
+
   readonly resolvedOptionsSignal = toSignal(this.resolvedOptions$);
 
   readonly multipleSignal = computed(() => this.props()?.multiple ?? false);

@@ -76,4 +76,20 @@ describe('lookupModelApi (demo-firebase + demo-api)', () => {
     expect(markdown).toContain('setProfileUsernameFactory');
     expect(markdown).toContain("sets a profile's username within a transaction");
   });
+
+  it('surfaces the per-call CRUD property JSDoc on each entry', async () => {
+    const report = await lookupModelApi({
+      componentAbs: COMPONENT_ABS,
+      componentDir: COMPONENT_DIR,
+      apiAbs: API_ABS,
+      apiDir: API_DIR,
+      modelFilter: 'Profile'
+    });
+
+    const updateUsername = report.entries.find((e) => e.verb === 'update' && e.specifier === 'username');
+    expect(updateUsername?.description).toMatch(/sets the current user's profile username/i);
+
+    const markdown = formatLookupAsMarkdown(report);
+    expect(markdown).toMatch(/## profile\.update\.username\n\nSets the current user's profile username\./);
+  });
 });

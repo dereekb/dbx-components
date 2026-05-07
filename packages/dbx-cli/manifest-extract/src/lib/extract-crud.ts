@@ -8,16 +8,24 @@
  * records suitable for tabular rendering.
  *
  * Distinct from the lighter `summarizeCrudConfigType()` in
- * `model-validate-api/extract.ts`: that helper only collects top-level keys
- * and bare-leaf params names; this walker preserves the full verb→specifier
- * tree and tuple/result information.
+ * `dbx-components-mcp`'s `model-validate-api/extract.ts`: that helper only
+ * collects top-level keys and bare-leaf params names; this walker preserves
+ * the full verb→specifier tree, tuple/result information, and JSDoc on both
+ * params and result interfaces.
+ *
+ * Canonical source for both the MCP server's `dbx_model_api_*` tools and the
+ * `dbx-cli-firebase-api-manifest` build CLI.
  */
 
-import { Node, Project, type SourceFile, type TypeNode } from 'ts-morph';
-import type { CrudEntry, CrudExtraction, CrudVerb } from './types.js';
+import { Node, Project, type JSDocableNode, type SourceFile, type TypeAliasDeclaration, type TypeNode } from 'ts-morph';
+import type { CrudEntry, CrudEntryDocField, CrudExtraction, CrudVerb } from './types';
 
+// 'query' is accepted today even though `<Group>ModelCrudFunctionsConfig` in @dereekb/firebase does not yet permit `query:` keys (deferred follow-up). Once query support lands upstream, every query entry flows through here with no change.
 const SUPPORTED_VERBS: ReadonlySet<CrudVerb> = new Set(['create', 'read', 'update', 'delete', 'query']);
 
+/**
+ * Inputs for {@link extractCrudEntries}.
+ */
 export interface ExtractCrudInput {
   readonly name: string;
   readonly text: string;
@@ -29,8 +37,10 @@ export interface ExtractCrudInput {
  * fewer entries rather than throwing.
  *
  * @param source - in-memory source name + text pair to extract
- * @returns the CRUD extraction with group name, model keys, and entries
+ * @returns the CRUD extraction with group name, model keys, entries, and
+ *   `*Functions` class name (when present).
  */
+// eslint-disable-next-line sonarjs/cognitive-complexity
 export function extractCrudEntries(source: ExtractCrudInput): CrudExtraction {
   const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });
   const sourceFile = project.createSourceFile(source.name, source.text, { overwrite: true });
@@ -38,12 +48,27 @@ export function extractCrudEntries(source: ExtractCrudInput): CrudExtraction {
   const entries: CrudEntry[] = [];
   const modelKeys: string[] = [];
 
-  const crudConfigType = findCrudConfigType(sourceFile);
+  const crudConfigType = findTypeAliasByEnding(sourceFile, 'ModelCrudFunctionsConfig');
   const groupName = inferGroupName(sourceFile);
+  const functionsClassName = findFunctionsClassName(sourceFile);
+  const typeDocsCache = new Map<string, TypeDocs>();
+  const resolveTypeDocs = (typeName: string | undefined): TypeDocs | undefined => {
+    if (!typeName) {
+      return undefined;
+    }
+    if (typeDocsCache.has(typeName)) {
+      return typeDocsCache.get(typeName);
+    }
+    const docs = readTypeDocs(sourceFile, typeName);
+    if (docs) {
+      typeDocsCache.set(typeName, docs);
+    }
+    return docs;
+  };
 
   if (crudConfigType) {
-    const literal = crudConfigType.typeNode;
-    if (Node.isTypeLiteral(literal)) {
+    const literal = crudConfigType.getTypeNode();
+    if (literal && Node.isTypeLiteral(literal)) {
       for (const member of literal.getMembers()) {
         if (!Node.isPropertySignature(member)) {
           continue;
@@ -71,17 +96,17 @@ export function extractCrudEntries(source: ExtractCrudInput): CrudExtraction {
             if (!verbValueNode) {
               continue;
             }
-            collectVerbEntries({ modelName, verb, valueNode: verbValueNode, entries });
+            collectVerbEntries({ modelName, verb, valueNode: verbValueNode, entries, fallbackDescription: readJsDocSummary(verbMember), resolveTypeDocs });
           }
         }
       }
     }
   }
 
-  const functionTypeMap = findFunctionTypeMap(sourceFile);
+  const functionTypeMap = findTypeAliasByEnding(sourceFile, 'FunctionTypeMap');
   if (functionTypeMap) {
-    const literal = functionTypeMap.typeNode;
-    if (Node.isTypeLiteral(literal)) {
+    const literal = functionTypeMap.getTypeNode();
+    if (literal && Node.isTypeLiteral(literal)) {
       for (const member of literal.getMembers()) {
         if (!Node.isPropertySignature(member)) {
           continue;
@@ -89,48 +114,45 @@ export function extractCrudEntries(source: ExtractCrudInput): CrudExtraction {
         const key = member.getName();
         const valueNode = member.getTypeNode();
         const tuple = valueNode ? readTupleParamsResult(valueNode) : undefined;
+        const paramsDocs = resolveTypeDocs(tuple?.params);
+        const resultDocs = resolveTypeDocs(tuple?.result);
         entries.push({
           model: key,
           verb: 'standalone',
           specifier: undefined,
           paramsTypeName: tuple?.params,
           resultTypeName: tuple?.result,
-          line: member.getStartLineNumber()
+          line: member.getStartLineNumber(),
+          description: readJsDocSummary(member),
+          paramsTypeDescription: paramsDocs?.typeDescription,
+          paramsFields: paramsDocs?.fields,
+          resultTypeDescription: resultDocs?.typeDescription,
+          resultFields: resultDocs?.fields
         });
       }
     }
   }
 
-  return { groupName, modelKeys, entries };
+  return { groupName, modelKeys, entries, functionsClassName };
 }
 
-interface CrudConfigTypeNode {
-  readonly typeNode: TypeNode;
-}
-
-function findCrudConfigType(sourceFile: SourceFile): CrudConfigTypeNode | undefined {
+function findTypeAliasByEnding(sourceFile: SourceFile, ending: string): TypeAliasDeclaration | undefined {
   for (const alias of sourceFile.getTypeAliases()) {
-    if (alias.getName().endsWith('ModelCrudFunctionsConfig')) {
-      const typeNode = alias.getTypeNode();
-      if (typeNode) {
-        return { typeNode };
-      }
+    if (alias.getName().endsWith(ending) && alias.getTypeNode()) {
+      return alias;
     }
   }
   return undefined;
 }
 
-interface FunctionTypeMapNode {
-  readonly typeNode: TypeNode;
-}
-
-function findFunctionTypeMap(sourceFile: SourceFile): FunctionTypeMapNode | undefined {
-  for (const alias of sourceFile.getTypeAliases()) {
-    if (alias.getName().endsWith('FunctionTypeMap')) {
-      const typeNode = alias.getTypeNode();
-      if (typeNode) {
-        return { typeNode };
-      }
+function findFunctionsClassName(sourceFile: SourceFile): string | undefined {
+  for (const cls of sourceFile.getClasses()) {
+    if (!cls.isAbstract()) {
+      continue;
+    }
+    const name = cls.getName();
+    if (name?.endsWith('Functions')) {
+      return name;
     }
   }
   return undefined;
@@ -173,10 +195,12 @@ interface CollectVerbEntriesInput {
   readonly verb: CrudVerb;
   readonly valueNode: TypeNode;
   readonly entries: CrudEntry[];
+  readonly fallbackDescription: string | undefined;
+  readonly resolveTypeDocs: (typeName: string | undefined) => TypeDocs | undefined;
 }
 
 function collectVerbEntries(input: CollectVerbEntriesInput): void {
-  const { modelName, verb, valueNode, entries } = input;
+  const { modelName, verb, valueNode, entries, fallbackDescription, resolveTypeDocs } = input;
   if (Node.isTypeLiteral(valueNode)) {
     for (const specMember of valueNode.getMembers()) {
       if (!Node.isPropertySignature(specMember)) {
@@ -185,25 +209,39 @@ function collectVerbEntries(input: CollectVerbEntriesInput): void {
       const specifier = specMember.getName();
       const leafNode = specMember.getTypeNode();
       const leaf = leafNode ? (readTupleParamsResult(leafNode) ?? readBareParams(leafNode)) : undefined;
+      const paramsDocs = resolveTypeDocs(leaf?.params);
+      const resultDocs = resolveTypeDocs(leaf?.result);
       entries.push({
         model: modelName,
         verb,
         specifier,
         paramsTypeName: leaf?.params,
         resultTypeName: leaf?.result,
-        line: specMember.getStartLineNumber()
+        line: specMember.getStartLineNumber(),
+        description: readJsDocSummary(specMember),
+        paramsTypeDescription: paramsDocs?.typeDescription,
+        paramsFields: paramsDocs?.fields,
+        resultTypeDescription: resultDocs?.typeDescription,
+        resultFields: resultDocs?.fields
       });
     }
     return;
   }
   const leaf = readTupleParamsResult(valueNode) ?? readBareParams(valueNode);
+  const paramsDocs = resolveTypeDocs(leaf?.params);
+  const resultDocs = resolveTypeDocs(leaf?.result);
   entries.push({
     model: modelName,
     verb,
     specifier: undefined,
     paramsTypeName: leaf?.params,
     resultTypeName: leaf?.result,
-    line: valueNode.getStartLineNumber()
+    line: valueNode.getStartLineNumber(),
+    description: fallbackDescription,
+    paramsTypeDescription: paramsDocs?.typeDescription,
+    paramsFields: paramsDocs?.fields,
+    resultTypeDescription: resultDocs?.typeDescription,
+    resultFields: resultDocs?.fields
   });
 }
 
@@ -240,4 +278,45 @@ function typeNodeName(node: TypeNode): string | undefined {
   // Fall back to the raw text for primitive / inline types like `boolean`.
   const text = node.getText().trim();
   return text.length > 0 ? text : undefined;
+}
+
+interface TypeDocs {
+  readonly typeDescription?: string;
+  readonly fields?: readonly CrudEntryDocField[];
+}
+
+function readTypeDocs(sourceFile: SourceFile, typeName: string): TypeDocs | undefined {
+  const interfaceDecl = sourceFile.getInterface(typeName);
+  if (interfaceDecl) {
+    const typeDescription = readJsDocSummary(interfaceDecl);
+    const fields: CrudEntryDocField[] = [];
+    for (const property of interfaceDecl.getProperties()) {
+      const fieldName = property.getName();
+      const description = readJsDocSummary(property);
+      const typeNode = property.getTypeNode();
+      const typeText = typeNode?.getText().trim() ?? '';
+      const field: CrudEntryDocField = description ? { name: fieldName, typeText, description } : { name: fieldName, typeText };
+      fields.push(field);
+    }
+    if (!typeDescription && fields.length === 0) {
+      return undefined;
+    }
+    return { typeDescription, fields: fields.length > 0 ? fields : undefined };
+  }
+  const typeAlias = sourceFile.getTypeAlias(typeName);
+  if (typeAlias) {
+    const typeDescription = readJsDocSummary(typeAlias);
+    return typeDescription ? { typeDescription } : undefined;
+  }
+  return undefined;
+}
+
+function readJsDocSummary(node: JSDocableNode): string | undefined {
+  const docs = node.getJsDocs();
+  if (docs.length === 0) {
+    return undefined;
+  }
+  const last = docs[docs.length - 1];
+  const description = last.getDescription().trim();
+  return description.length > 0 ? description : undefined;
 }

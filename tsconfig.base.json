@@ -28,6 +28,7 @@
       "@dereekb/date": ["packages/date/src/index.ts"],
       "@dereekb/dbx-analytics": ["packages/dbx-analytics/src/index.ts"],
       "@dereekb/dbx-cli": ["packages/dbx-cli/src/index.ts"],
+      "@dereekb/dbx-cli/manifest-extract": ["packages/dbx-cli/manifest-extract/src/index.ts"],
       "@dereekb/dbx-components-mcp": ["packages/dbx-components-mcp/src/index.ts"],
       "@dereekb/dbx-core": ["packages/dbx-core/src/index.ts"],
       "@dereekb/dbx-firebase": ["packages/dbx-firebase/src/index.ts"],

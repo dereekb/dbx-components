@@ -5,7 +5,17 @@
  * `CliApiVerb`) live in `packages/dbx-cli/src/lib/manifest/types.ts` and are
  * re-exported from `@dereekb/dbx-cli`. The generator emits TypeScript that
  * imports those runtime types — it does not reference them itself.
+ *
+ * The `<model>.api.ts` walker types (`CrudEntry`, `CrudExtraction`,
+ * `CrudEntryDocField`) live in the sibling `dbx-cli-manifest-extract` Nx
+ * project and are exposed at `@dereekb/dbx-cli/manifest-extract`. They are
+ * re-exported from this module so the rest of the manifest pipeline can keep
+ * importing them by their local name.
  */
+
+import type { CrudEntry, CrudExtraction } from '@dereekb/dbx-cli/manifest-extract';
+
+export type { CrudEntry, CrudEntryDocField, CrudExtraction } from '@dereekb/dbx-cli/manifest-extract';
 
 export interface FunctionsGroup {
   readonly groupKey: string;
@@ -16,22 +26,6 @@ export interface FunctionsGroup {
 export interface PackageRef {
   readonly packageName: string;
   readonly packageRoot: string;
-}
-
-export interface CrudEntry {
-  readonly model: string;
-  readonly verb: string;
-  readonly specifier?: string;
-  readonly paramsTypeName?: string;
-  readonly resultTypeName?: string;
-  readonly line: number;
-}
-
-export interface CrudExtraction {
-  readonly groupName: string | undefined;
-  readonly modelKeys: readonly string[];
-  readonly entries: readonly CrudEntry[];
-  readonly functionsClassName?: string;
 }
 
 export interface ApiFileMatch {

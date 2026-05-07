@@ -1,16 +1,17 @@
 /**
  * Walker for `dbx_model_api_lookup`. Resolves the right `<model>.api.ts`
  * source for a model filter, runs the shared CRUD walker, and enriches
- * each entry with:
- *   - Params interface JSDoc + per-field docs.
- *   - Result interface JSDoc + per-field docs (when applicable).
- *   - Action method / factory JSDoc, when an `apiDir` was provided.
+ * each entry with action method / factory JSDoc when an `apiDir` was provided.
+ *
+ * The params- and result-side JSDoc data is sourced directly from the shared
+ * walker's {@link CrudEntry} output — this module just maps the boundary
+ * (renaming `description` → `jsDoc` so the published `ApiLookupField` shape
+ * stays stable).
  */
 
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { join, relative, sep } from 'node:path';
-import { Project, type InterfaceDeclaration, type SourceFile } from 'ts-morph';
-import { extractCrudEntries } from '../model-api-shared/index.js';
+import { extractCrudEntries, type CrudEntry, type CrudEntryDocField } from '../model-api-shared/index.js';
 import type { ApiLookupEntry, ApiLookupField, ApiLookupReport, ActionLookupStatus } from './types.js';
 import { buildActionLookup } from './extract-actions.js';
 
@@ -56,10 +57,6 @@ export async function extractApiLookup(input: ExtractApiLookupInput): Promise<Ap
   const crudExtraction = extractCrudEntries({ name: matched.fileRel, text: matched.text });
   const filteredEntries = crudExtraction.entries.filter((entry) => entryMatchesFilter(entry.model, crudExtraction.groupName, input.modelFilter));
 
-  const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });
-  const sourceFile = project.createSourceFile(matched.fileRel, matched.text, { overwrite: true });
-  const interfaces = collectInterfacesByName(sourceFile);
-
   let actionLookup: Awaited<ReturnType<typeof buildActionLookup>> | undefined;
   let actionLookupStatus: ActionLookupStatus;
   if (input.apiAbs) {
@@ -73,22 +70,7 @@ export async function extractApiLookup(input: ExtractApiLookupInput): Promise<Ap
     actionLookupStatus = { kind: 'skipped', reason: 'apiDir not provided — action JSDoc skipped.' };
   }
 
-  const enriched: ApiLookupEntry[] = filteredEntries.map((entry) => {
-    const paramsInterface = entry.paramsTypeName ? interfaces.get(entry.paramsTypeName) : undefined;
-    const resultInterface = entry.resultTypeName ? interfaces.get(entry.resultTypeName) : undefined;
-    const action = actionLookup && entry.paramsTypeName ? actionLookup.methodsByParams.get(entry.paramsTypeName) : undefined;
-    const factory = actionLookup && entry.paramsTypeName ? actionLookup.factoriesByParams.get(entry.paramsTypeName) : undefined;
-    return {
-      ...entry,
-      sourceFile: matched.fileRel,
-      paramsJsDoc: paramsInterface ? readInterfaceJsDoc(paramsInterface) : undefined,
-      paramsFields: paramsInterface ? extractInterfaceFields(paramsInterface) : [],
-      resultJsDoc: resultInterface ? readInterfaceJsDoc(resultInterface) : undefined,
-      resultFields: resultInterface ? extractInterfaceFields(resultInterface) : [],
-      action,
-      factory
-    };
-  });
+  const enriched: ApiLookupEntry[] = filteredEntries.map((entry) => mapEntry(entry, matched.fileRel, actionLookup));
 
   return {
     componentDir: input.componentDir,
@@ -100,6 +82,32 @@ export async function extractApiLookup(input: ExtractApiLookupInput): Promise<Ap
     entries: enriched,
     actionLookupStatus
   };
+}
+
+function mapEntry(entry: CrudEntry, sourceFile: string, actionLookup: Awaited<ReturnType<typeof buildActionLookup>> | undefined): ApiLookupEntry {
+  const action = actionLookup && entry.paramsTypeName ? actionLookup.methodsByParams.get(entry.paramsTypeName) : undefined;
+  const factory = actionLookup && entry.paramsTypeName ? actionLookup.factoriesByParams.get(entry.paramsTypeName) : undefined;
+  return {
+    ...entry,
+    sourceFile,
+    paramsJsDoc: entry.paramsTypeDescription,
+    paramsFields: mapDocFields(entry.paramsFields),
+    resultJsDoc: entry.resultTypeDescription,
+    resultFields: mapDocFields(entry.resultFields),
+    action,
+    factory
+  };
+}
+
+function mapDocFields(fields: readonly CrudEntryDocField[] | undefined): readonly ApiLookupField[] {
+  if (!fields) {
+    return [];
+  }
+  return fields.map((field) => ({
+    name: field.name,
+    typeText: field.typeText,
+    jsDoc: field.description
+  }));
 }
 
 async function collectApiSources(componentAbs: string): Promise<readonly ApiSource[]> {
@@ -171,40 +179,4 @@ function entryMatchesFilter(model: string, groupName: string | undefined, filter
 
 function normalize(value: string): string {
   return value.replace(/Identity$/i, '').toLowerCase();
-}
-
-function collectInterfacesByName(sourceFile: SourceFile): ReadonlyMap<string, InterfaceDeclaration> {
-  const out = new Map<string, InterfaceDeclaration>();
-  for (const iface of sourceFile.getInterfaces()) {
-    out.set(iface.getName(), iface);
-  }
-  return out;
-}
-
-function readInterfaceJsDoc(iface: InterfaceDeclaration): string | undefined {
-  const docs = iface.getJsDocs();
-  if (docs.length === 0) return undefined;
-  const last = docs[docs.length - 1];
-  const description = last.getDescription().trim();
-  return description.length > 0 ? description : undefined;
-}
-
-function extractInterfaceFields(iface: InterfaceDeclaration): readonly ApiLookupField[] {
-  const fields: ApiLookupField[] = [];
-  for (const prop of iface.getProperties()) {
-    const typeNode = prop.getTypeNode();
-    const docs = prop.getJsDocs();
-    let jsDoc: string | undefined;
-    if (docs.length > 0) {
-      const last = docs[docs.length - 1];
-      const description = last.getDescription().trim();
-      jsDoc = description.length > 0 ? description : undefined;
-    }
-    fields.push({
-      name: prop.getName(),
-      typeText: typeNode ? typeNode.getText() : '',
-      jsDoc
-    });
-  }
-  return fields;
 }

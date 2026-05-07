@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { extractCrudEntries } from '../model-api-shared/index.js';
+import { extractCrudEntries } from './extract-crud';
 
 const PROFILE_SOURCE = `import { callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
 
@@ -57,6 +57,48 @@ export const guestbookModelCrudFunctionsConfig = {
 export const guestbookFunctionMap = callModelFirebaseFunctionMapFactory({}, guestbookModelCrudFunctionsConfig);
 `;
 
+const DOCS_SOURCE = `import { callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
+
+/**
+ * Params for downloading an archive.
+ */
+export interface DownloadProfileArchiveParams {
+  /**
+   * Profile id to archive.
+   */
+  readonly profileId: string;
+}
+
+/**
+ * Result returned to the caller after kicking off an archive download.
+ */
+export interface DownloadProfileArchiveResult {
+  /**
+   * Signed URL the caller can fetch the archive from.
+   */
+  readonly downloadUrl: string;
+  readonly expiresAt: number;
+}
+
+export type ProfileFunctionTypeMap = {};
+
+export type ProfileModelCrudFunctionsConfig = {
+  profile: {
+    read: {
+      downloadArchive: [DownloadProfileArchiveParams, DownloadProfileArchiveResult];
+    };
+  };
+};
+
+export abstract class ProfileFunctions {}
+
+export const profileModelCrudFunctionsConfig = {
+  profile: ['read:downloadArchive']
+};
+
+export const profileFunctionMap = callModelFirebaseFunctionMapFactory({}, profileModelCrudFunctionsConfig);
+`;
+
 describe('extractCrudEntries', () => {
   it('walks profile CRUD config and FunctionTypeMap', () => {
     const extraction = extractCrudEntries({ name: 'profile.api.ts', text: PROFILE_SOURCE });
@@ -112,5 +154,21 @@ describe('extractCrudEntries', () => {
 
     const entryUpdates = extraction.entries.filter((e) => e.model === 'guestbookEntry' && e.verb === 'update');
     expect(entryUpdates.map((e) => e.specifier).sort((a, b) => (a ?? '').localeCompare(b ?? ''))).toEqual(['insert', 'like']);
+  });
+
+  it('reads JSDoc on params and result interfaces and surfaces functionsClassName', () => {
+    const extraction = extractCrudEntries({ name: 'profile.api.ts', text: DOCS_SOURCE });
+    expect(extraction.functionsClassName).toBe('ProfileFunctions');
+
+    const downloadArchive = extraction.entries.find((e) => e.verb === 'read' && e.specifier === 'downloadArchive');
+    expect(downloadArchive).toBeDefined();
+    expect(downloadArchive?.paramsTypeDescription).toBe('Params for downloading an archive.');
+    expect(downloadArchive?.paramsFields).toEqual([{ name: 'profileId', typeText: 'string', description: 'Profile id to archive.' }]);
+
+    expect(downloadArchive?.resultTypeDescription).toBe('Result returned to the caller after kicking off an archive download.');
+    expect(downloadArchive?.resultFields).toEqual([
+      { name: 'downloadUrl', typeText: 'string', description: 'Signed URL the caller can fetch the archive from.' },
+      { name: 'expiresAt', typeText: 'number' }
+    ]);
   });
 });

@@ -9,6 +9,7 @@ import { provideDbxFormConfiguration } from '../../form.providers';
 import { DbxForgeFormComponent, _forgeFormValueEqual } from './forge.component';
 import { DbxForgeFormContext, provideDbxForgeFormContext, stripForgeInternalKeys, stripEmptyForgeValues } from './forge.context';
 import { dbxForgeTextField } from '../field/value/text/text.field';
+import { dbxForgeNumberField } from '../field/value/number/number.field';
 import { dbxForgeToggleWrapper } from '../field/wrapper/wrapper';
 import { DBX_FORGE_FORM_COMPONENT_TEMPLATE } from './forge.component.template';
 
@@ -554,6 +555,64 @@ describe('stripForgeInternalKeys()', () => {
   });
 });
 
+// MARK: stripEmptyValues integration with empty number fields
+describe('DbxForgeFormComponent stripEmptyValues with empty number fields', () => {
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [TestForgeFormHostComponent],
+      providers: DBX_FORGE_TEST_PROVIDERS
+    });
+  });
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
+  });
+
+  // Empty number inputs surface as NaN in ng-forge form values. With
+  // stripEmptyValues=true (default) the context's getValue() must not include
+  // NaN for keys whose inputs are blank.
+  it('should strip NaN from getValue() output for an empty number field', async () => {
+    const fixture = TestBed.createComponent(TestForgeFormHostComponent);
+    const context = fixture.componentInstance.context;
+    context.requireValid = false;
+    context.config = {
+      fields: [dbxForgeNumberField({ key: 'test', label: 'Number Field', min: 0, max: 100 }) as any, dbxForgeNumberField({ key: 'steptest', label: 'Number Field With Step', step: 5, excludeValueIfHidden: true, hidden: true }) as any]
+    };
+
+    await settle(fixture);
+
+    const result = await firstValueFrom(context.getValue().pipe(timeout(500), first()));
+
+    expect(result).toEqual({});
+    expect(Object.keys(result as object)).not.toContain('test');
+    expect(Object.keys(result as object)).not.toContain('steptest');
+    expect(Number.isNaN((result as any)?.test)).toBe(false);
+
+    fixture.destroy();
+  });
+
+  // updateValue() is the single chokepoint that strips internal/empty values
+  // before pushing into the rawValue subject. This covers the case where ng-forge
+  // emits NaN for an empty number field — the strip must remove the NaN.
+  it('should strip NaN from updateValue() before getValue() emits', async () => {
+    const fixture = TestBed.createComponent(TestForgeFormHostComponent);
+    const context = fixture.componentInstance.context as DbxForgeFormContext<any>;
+    context.requireValid = false;
+
+    await settle(fixture);
+
+    context.updateValue({ test: Number.NaN, steptest: Number.NaN, kept: 5 });
+
+    const result = await firstValueFrom(context.getValue().pipe(timeout(500), first()));
+
+    expect(result).toEqual({ kept: 5 });
+    expect(Number.isNaN((result as any)?.test)).toBe(false);
+    expect(Number.isNaN((result as any)?.steptest)).toBe(false);
+
+    fixture.destroy();
+  });
+});
+
 // MARK: stripEmptyForgeValues unit tests
 describe('stripEmptyForgeValues()', () => {
   it('should strip empty string values', () => {
@@ -599,6 +658,49 @@ describe('stripEmptyForgeValues()', () => {
   it('should preserve non-empty arrays', () => {
     const result = stripEmptyForgeValues({ items: [1, 2, 3] });
     expect(result).toEqual({ items: [1, 2, 3] });
+  });
+
+  it('should strip NaN from values inside an array of objects', () => {
+    const result = stripEmptyForgeValues({
+      items: [
+        { amount: Number.NaN, name: 'a' },
+        { amount: 5, name: 'b' }
+      ]
+    });
+    expect(result).toEqual({ items: [{ name: 'a' }, { amount: 5, name: 'b' }] });
+  });
+
+  it('should strip empty values from values inside an array of objects', () => {
+    const result = stripEmptyForgeValues({
+      items: [
+        { amount: null, name: '' },
+        { amount: 5, name: undefined }
+      ]
+    });
+    expect(result).toEqual({ items: [{}, { amount: 5 }] });
+  });
+
+  it('should preserve array length and index positions when cleaning array items', () => {
+    const result = stripEmptyForgeValues({ items: [{ a: Number.NaN }, { a: 1 }, { a: Number.NaN }] }) as { items: unknown[] };
+    expect(result.items).toHaveLength(3);
+    expect(result.items[0]).toEqual({});
+    expect(result.items[1]).toEqual({ a: 1 });
+    expect(result.items[2]).toEqual({});
+  });
+
+  it('should preserve primitive NaN inside arrays so indices stay stable', () => {
+    const result = stripEmptyForgeValues({ values: [1, Number.NaN, 3] }) as { values: unknown[] };
+    expect(result.values).toHaveLength(3);
+    expect(result.values[0]).toBe(1);
+    expect(Number.isNaN(result.values[1])).toBe(true);
+    expect(result.values[2]).toBe(3);
+  });
+
+  it('should recurse into nested arrays of arrays of objects', () => {
+    const result = stripEmptyForgeValues({
+      groups: [[{ amount: Number.NaN, label: 'x' }], [{ amount: 7 }]]
+    });
+    expect(result).toEqual({ groups: [[{ label: 'x' }], [{ amount: 7 }]] });
   });
 
   it('should recursively strip nested empty values', () => {

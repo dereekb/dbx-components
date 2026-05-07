@@ -9,7 +9,7 @@ export const DEFAULT_CLI_OIDC_SCOPES = 'openid profile email';
  * The `model.*` write scopes filtered out by {@link filterReadOnlyModelScopes}.
  *
  * Mirrors the write half of the dbx-components callModel CRUD scope set
- * (`CALL_MODEL_OIDC_SCOPES` in `@dereekb/firebase-server/oidc`) — duplicated here so the
+ * (`CALL_MODEL_OIDC_SCOPES` in `@dereekb/firebase`) — duplicated here so the
  * CLI doesn't take a server-side dependency just to know the names.
  */
 export const MODEL_WRITE_OIDC_SCOPES = ['model.create', 'model.update', 'model.delete'] as const;

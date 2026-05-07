@@ -64,3 +64,8 @@ export const ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHOD_OPTIONS: LabeledValue<OidcToken
   { label: 'Client Secret JWT', value: 'client_secret_jwt' },
   { label: 'Private Key JWT', value: PRIVATE_KEY_JWT_TOKEN_ENDPOINT_AUTH_METHOD }
 ];
+
+/**
+ * All available OIDC token endpoint auth methods for the demo app, suitable for use in auth method picker fields.
+ */
+export const ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHODS: OidcTokenEndpointAuthMethod[] = ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHOD_OPTIONS.map((x) => x.value);

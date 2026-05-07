@@ -9,6 +9,29 @@ const SKIPPED_VERBS: ReadonlySet<string> = new Set(['standalone']);
 
 const ALL_HELP_FLAG = '--all-help';
 
+const HELP_MODE_FLAG = '--help-mode';
+
+/**
+ * Controls which sections of an action's `--help` epilogue are rendered.
+ *
+ *  - `action` (just the action explainer): only the action description JSDoc.
+ *    Useful when you already know the params shape and want to remember what
+ *    the command does.
+ *  - `params` (just the params explainer): only the params interface
+ *    description, per-field descriptions, schema, result, and source. Useful
+ *    when you already know what the command does and need to remember the
+ *    input shape.
+ *  - `both` (default): both sections together.
+ */
+export type ManifestHelpMode = 'action' | 'params' | 'both';
+
+/**
+ * Default help mode when no override is supplied.
+ */
+export const DEFAULT_MANIFEST_HELP_MODE: ManifestHelpMode = 'both';
+
+const MANIFEST_HELP_MODES: ReadonlySet<ManifestHelpMode> = new Set<ManifestHelpMode>(['action', 'params', 'both']);
+
 /**
  * Format used for the `Params Schema` section of a manifest command's `--help`
  * epilogue.
@@ -48,6 +71,14 @@ export interface BuildManifestCommandsOptions {
    * {@link DEFAULT_MANIFEST_HELP_DATA_FORMAT}.
    */
   readonly dataHelpFormat?: ManifestHelpDataFormat;
+  /**
+   * Which sections of the help epilogue to render.
+   *
+   * When omitted, the configured argv is scanned for `--help-mode=<mode>` (or
+   * `--help-mode <mode>`). Falls back to {@link DEFAULT_MANIFEST_HELP_MODE}
+   * (`both`).
+   */
+  readonly helpMode?: ManifestHelpMode;
   /**
    * Whether to hide unrelated global options (like `--verbose`, `--dump-dir`,
    * `--pick`, …) from `--help` when the user passed `--data-help`. Defaults
@@ -116,11 +147,12 @@ export function buildManifestCommands(manifest: CliApiManifest, options?: BuildM
 
   const argv = options?.argv ?? process.argv;
   const dataHelpFormat = options?.dataHelpFormat ?? detectDataHelpFormat(argv);
+  const helpMode = options?.helpMode ?? detectHelpMode(argv);
   const focusHelp = (options?.focusHelpOnDataHelp ?? true) && hasDataHelpFlag(argv) && !hasAllHelpFlag(argv);
   const hideOnFocus = focusHelp ? (options?.hiddenWhenFocused ?? STANDARD_GLOBAL_OPTION_NAMES) : [];
   const modelCommandName = options?.modelCommandName ?? DEFAULT_MANIFEST_MODEL_COMMAND_NAME;
   const sortedModels = [...byModel.entries()].sort(([a], [b]) => a.localeCompare(b));
-  const context: BuilderContext = { dataHelpFormat, hideOnFocus };
+  const context: BuilderContext = { dataHelpFormat, helpMode, hideOnFocus };
 
   return [
     {
@@ -142,6 +174,7 @@ export function buildManifestCommands(manifest: CliApiManifest, options?: BuildM
 
 interface BuilderContext {
   readonly dataHelpFormat: ManifestHelpDataFormat;
+  readonly helpMode: ManifestHelpMode;
   readonly hideOnFocus: readonly string[];
 }
 
@@ -203,6 +236,42 @@ function parseDataHelpFormat(value: string): ManifestHelpDataFormat | undefined 
   return MANIFEST_HELP_DATA_FORMATS.has(value as ManifestHelpDataFormat) ? (value as ManifestHelpDataFormat) : undefined;
 }
 
+/**
+ * Inspects an argv array for `--help-mode=<mode>` or `--help-mode <mode>` and
+ * returns the requested {@link ManifestHelpMode}. Unrecognized values fall
+ * back to {@link DEFAULT_MANIFEST_HELP_MODE}.
+ *
+ * Implemented as a raw argv scan (rather than going through yargs) because the
+ * value is needed when each command's builder runs — which is before yargs
+ * parses argv.
+ *
+ * @param argv - argv to inspect (defaults to `process.argv`).
+ * @returns The detected mode, or {@link DEFAULT_MANIFEST_HELP_MODE}.
+ */
+export function detectHelpMode(argv: readonly string[] = process.argv): ManifestHelpMode {
+  let result: ManifestHelpMode = DEFAULT_MANIFEST_HELP_MODE;
+
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
+
+    if (arg.startsWith(`${HELP_MODE_FLAG}=`)) {
+      result = parseHelpMode(arg.slice(HELP_MODE_FLAG.length + 1)) ?? result;
+      break;
+    }
+
+    if (arg === HELP_MODE_FLAG && i + 1 < argv.length) {
+      result = parseHelpMode(argv[i + 1]) ?? result;
+      break;
+    }
+  }
+
+  return result;
+}
+
+function parseHelpMode(value: string): ManifestHelpMode | undefined {
+  return MANIFEST_HELP_MODES.has(value as ManifestHelpMode) ? (value as ManifestHelpMode) : undefined;
+}
+
 function buildModelCommand(model: string, entries: readonly CliApiManifestEntry[], context: BuilderContext): CommandModule {
   return {
     command: `${model} <action>`,
@@ -223,12 +292,13 @@ function buildModelCommand(model: string, entries: readonly CliApiManifestEntry[
 function buildEntryCommand(entry: CliApiManifestEntry, context: BuilderContext): CommandModule {
   const action = entry.specifier && entry.specifier !== '_' ? `${entry.verb}-${entry.specifier}` : entry.verb;
   const specPart = entry.specifier && entry.specifier !== '_' ? ' ' + entry.specifier : '';
-  const describe = entry.description ?? `${entry.verb}${specPart} on ${entry.model}`;
-  const epilogue = buildEntryEpilogue(entry, context.dataHelpFormat);
+  const fallbackDescribe = `${entry.verb}${specPart} on ${entry.model}`;
+  const describeOneLine = oneLineDescription(entry.description) ?? fallbackDescribe;
+  const epilogue = buildEntryEpilogue(entry, context);
 
   return {
     command: action,
-    describe,
+    describe: describeOneLine,
     builder: (yargs: Argv) => {
       const y = yargs.option('data', {
         type: 'string',
@@ -250,6 +320,12 @@ function buildEntryCommand(entry: CliApiManifestEntry, context: BuilderContext):
   };
 }
 
+function oneLineDescription(description: string | undefined): string | undefined {
+  if (!description) return undefined;
+  const firstLine = description.split('\n', 1)[0]?.trim();
+  return firstLine && firstLine.length > 0 ? firstLine : undefined;
+}
+
 function hideGlobalOptions(yargs: Argv, names: readonly string[]): void {
   for (const name of names) {
     yargs.hide(name);
@@ -257,42 +333,130 @@ function hideGlobalOptions(yargs: Argv, names: readonly string[]): void {
 }
 
 /**
- * Builds the help epilogue for a manifest-driven command. Surfaces the params
- * arktype validator (as JSON Schema and/or the arktype expression — see
- * {@link ManifestHelpDataFormat}) along with the params/result type names and
- * the source `.api.ts` path for traceability. Designed to give both humans
- * and LLM agents enough information from `--help` alone to construct a valid
- * `--data` payload.
+ * Builds the help epilogue for a manifest-driven command. Surfaces the action
+ * description JSDoc, the params interface description and per-field
+ * descriptions, the params arktype validator (as JSON Schema and/or arktype
+ * expression — see {@link ManifestHelpDataFormat}), and the source `.api.ts`
+ * path for traceability. Designed to give both humans and LLM agents enough
+ * information from `--help` alone to understand a command and construct a
+ * valid `--data` payload.
  *
  * @param entry - Manifest entry whose metadata becomes the help epilogue.
- * @param dataHelpFormat - Format used for the `Params Schema` section.
+ * @param context - Builder context controlling schema format and which sections
+ *   to render (see {@link ManifestHelpMode}).
  * @returns Multi-section epilogue string, or `undefined` when the entry has no
  *   metadata worth surfacing.
  */
-function buildEntryEpilogue(entry: CliApiManifestEntry, dataHelpFormat: ManifestHelpDataFormat): string | undefined {
+function buildEntryEpilogue(entry: CliApiManifestEntry, context: BuilderContext): string | undefined {
+  const { dataHelpFormat, helpMode } = context;
+  const showAction = helpMode === 'action' || helpMode === 'both';
+  const showParams = helpMode === 'params' || helpMode === 'both';
   const sections: string[] = [];
 
-  if (entry.paramsTypeName) {
-    sections.push(`Params: ${entry.paramsTypeName}`);
+  if (showAction) {
+    const actionSection = buildActionSection(entry);
+    if (actionSection) sections.push(actionSection);
   }
 
-  const schemaSections = renderParamsSchemaSections(entry, dataHelpFormat);
-  sections.push(...schemaSections);
+  let schemaSections: string[] = [];
 
-  if (entry.resultTypeName) {
-    sections.push(`Result: ${entry.resultTypeName}`);
+  if (showParams) {
+    const paramsSection = buildParamsSection(entry);
+    if (paramsSection) sections.push(paramsSection);
+
+    schemaSections = renderParamsSchemaSections(entry, dataHelpFormat);
+    sections.push(...schemaSections);
+
+    const resultSection = buildResultSection(entry);
+    if (resultSection) {
+      sections.push(resultSection);
+    } else if (entry.resultTypeName) {
+      sections.push(`Result: ${entry.resultTypeName}`);
+    }
   }
 
   if (entry.sourceFile) {
     sections.push(`Source: ${entry.sourceFile}`);
   }
 
-  if (schemaSections.length > 0 && dataHelpFormat !== 'both') {
+  if (showParams && schemaSections.length > 0 && dataHelpFormat !== 'both') {
     const other = dataHelpFormat === 'jsonschema' ? 'arktype' : 'jsonschema';
     sections.push(`(Pass --data-help=${other} or --data-help=both to switch the schema format above.)`);
   }
 
+  if (helpMode === 'both' && (entry.description || entry.paramsTypeDescription || (entry.paramsFields && entry.paramsFields.length > 0))) {
+    sections.push(`(Pass --help-mode=action or --help-mode=params to focus this help on a single section.)`);
+  }
+
   return sections.length > 0 ? sections.join('\n\n') : undefined;
+}
+
+function buildActionSection(entry: CliApiManifestEntry): string | undefined {
+  if (!entry.description) return undefined;
+  return `About:\n${indentLines(entry.description, '  ')}`;
+}
+
+function buildParamsSection(entry: CliApiManifestEntry): string | undefined {
+  if (!entry.paramsTypeName && !entry.paramsTypeDescription && !(entry.paramsFields && entry.paramsFields.length > 0)) {
+    return undefined;
+  }
+
+  const lines: string[] = [];
+  if (entry.paramsTypeName) {
+    lines.push(`Params: ${entry.paramsTypeName}`);
+  }
+  if (entry.paramsTypeDescription) {
+    lines.push(indentLines(entry.paramsTypeDescription, '  '));
+  }
+
+  if (entry.paramsFields && entry.paramsFields.length > 0) {
+    lines.push('');
+    lines.push('Fields:');
+    for (const field of entry.paramsFields) {
+      const header = `  - ${field.name}: ${field.typeText}`;
+      lines.push(header);
+      if (field.description) {
+        lines.push(indentLines(field.description, '      '));
+      }
+    }
+  }
+
+  return lines.join('\n');
+}
+
+function buildResultSection(entry: CliApiManifestEntry): string | undefined {
+  if (!entry.resultTypeDescription && !(entry.resultFields && entry.resultFields.length > 0)) {
+    return undefined;
+  }
+
+  const lines: string[] = [];
+  if (entry.resultTypeName) {
+    lines.push(`Result: ${entry.resultTypeName}`);
+  }
+  if (entry.resultTypeDescription) {
+    lines.push(indentLines(entry.resultTypeDescription, '  '));
+  }
+
+  if (entry.resultFields && entry.resultFields.length > 0) {
+    lines.push('');
+    lines.push('Fields:');
+    for (const field of entry.resultFields) {
+      const header = `  - ${field.name}: ${field.typeText}`;
+      lines.push(header);
+      if (field.description) {
+        lines.push(indentLines(field.description, '      '));
+      }
+    }
+  }
+
+  return lines.join('\n');
+}
+
+function indentLines(text: string, indent: string): string {
+  return text
+    .split('\n')
+    .map((line) => `${indent}${line}`)
+    .join('\n');
 }
 
 function renderParamsSchemaSections(entry: CliApiManifestEntry, dataHelpFormat: ManifestHelpDataFormat): string[] {

@@ -7,7 +7,6 @@ import { skip } from 'rxjs';
 import { DbxForgeFormContext } from './forge.context';
 import { DbxForgeDynamicFormSignalRef, DbxForgeFormContextService } from './forge.context.service';
 import { cleanSubscription } from '@dereekb/dbx-core';
-import { tapLog } from '@dereekb/rxjs';
 
 /**
  * Wraps ng-forge's DynamicForm and bridges it to the DbxForm system.
@@ -41,7 +40,7 @@ export class DbxForgeFormComponent<T extends object = object> implements DbxForg
   readonly dynamicForm = viewChild(DynamicForm);
 
   readonly formValue = signal<T>({} as T, { equal: (a, b) => _forgeFormValueEqual(a, b, this._context) });
-  readonly configSignal = toSignal(this._context.config$.pipe(tapLog('forge.config')), { initialValue: undefined });
+  readonly configSignal = toSignal(this._context.config$, { initialValue: undefined });
 
   private readonly _changesCount = signal(0);
   private readonly _lastResetAt = signal(new Date());

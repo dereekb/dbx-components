@@ -8,7 +8,7 @@
 
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { extractCrudEntries } from './extract-crud';
+import { extractCrudEntries } from '@dereekb/dbx-cli/manifest-extract';
 import type { ApiFileMatch } from './types';
 
 /**

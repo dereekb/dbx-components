@@ -35,6 +35,7 @@ const TOOL: Tool = {
     'Deep lookup for one model declared in a firebase-component package. Returns every CRUD / standalone entry under that model with rich metadata.',
     '',
     'For each entry the tool surfaces:',
+    '- Per-call summary read from the JSDoc on the property in `<Group>ModelCrudFunctionsConfig` / `<Group>FunctionTypeMap`.',
     '- Params + result type names, params/result interface JSDoc, per-field type and doc.',
     '- Action method on the matching `*ServerActions` abstract class (when `apiDir` is provided).',
     '- Action factory function (`<X>Factory`) with its richer JSDoc — usually the most semantic source.',

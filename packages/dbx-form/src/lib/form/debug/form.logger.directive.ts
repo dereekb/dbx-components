@@ -1,6 +1,7 @@
 import { Directive, inject } from '@angular/core';
 import { cleanSubscription } from '@dereekb/dbx-core';
 import { DbxForm } from '../form';
+import { combineLatest } from 'rxjs';
 
 /**
  * Debug directive that logs every form stream event to the console.
@@ -27,8 +28,8 @@ export class DbxFormLoggerDirective {
 
   constructor() {
     cleanSubscription(
-      this.form.stream$.subscribe((event) => {
-        console.log('dbxFormLogger - stream: ', event);
+      combineLatest([this.form.getValue(), this.form.stream$]).subscribe(([currentValue, event]) => {
+        console.log('dbxFormLogger - stream: ', { currentValue, event });
       })
     );
   }

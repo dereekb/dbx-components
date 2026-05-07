@@ -2,7 +2,7 @@ import { Injectable, type OnDestroy, type Provider, type Signal, signal, compute
 import { BehaviorSubject, combineLatest, type Observable, shareReplay, switchMap, filter, map, scan } from 'rxjs';
 import { type DbxMutableForm, type DbxFormEvent, type DbxFormDisabledKey, DbxFormState, DEFAULT_FORM_DISABLED_KEY, provideDbxMutableForm } from '../../form/form';
 import { type BooleanStringKeyArray, BooleanStringKeyArrayUtility, type FilterFromPOJOFunction, type Maybe } from '@dereekb/util';
-import { LockSet, filterMaybe, tapLog } from '@dereekb/rxjs';
+import { LockSet, filterMaybe } from '@dereekb/rxjs';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
 import { type FieldTree } from '@angular/forms/signals';
 import { type DbxForgeFinalizeFormConfigResult, dbxForgeFinalizeFormConfig } from './forge.form';
@@ -71,6 +71,11 @@ function isEmptyFormValue(val: unknown): boolean {
  * from a form value object. Also removes keys whose values become empty objects
  * `{}` after recursive stripping.
  *
+ * Arrays are recursed into so that empties inside nested objects are stripped,
+ * but array length and item indices are preserved — primitive empty values
+ * (e.g. `NaN`, `''`) inside an array stay in place, since shifting indices would
+ * change the semantics of chip/list-style array fields.
+ *
  * This normalizes ng-forge output to match ngx-formly behavior, where the model
  * only includes keys that have been explicitly set by the user.
  *
@@ -81,6 +86,9 @@ function isEmptyFormValue(val: unknown): boolean {
  *
  * stripEmptyForgeValues({ section: { a: "", b: "" } })
  * // → {}
+ *
+ * stripEmptyForgeValues({ items: [{ amount: NaN, name: 'a' }, { amount: 5 }] })
+ * // → { items: [{ name: 'a' }, { amount: 5 }] }
  * ```
  *
  * @param value - The form value object to clean
@@ -89,8 +97,10 @@ function isEmptyFormValue(val: unknown): boolean {
 export function stripEmptyForgeValues<T>(value: T): T {
   let result: T;
 
-  if (value == null || typeof value !== 'object' || Array.isArray(value)) {
+  if (value == null || typeof value !== 'object' || value instanceof Date) {
     result = value;
+  } else if (Array.isArray(value)) {
+    result = (value as unknown[]).map((item) => stripEmptyForgeValues(item)) as unknown as T;
   } else {
     const stripped: Record<string, unknown> = {};
 
@@ -99,9 +109,12 @@ export function stripEmptyForgeValues<T>(value: T): T {
         continue;
       }
 
-      if (typeof val === 'object' && !Array.isArray(val) && !(val instanceof Date)) {
+      if (typeof val === 'object' && !(val instanceof Date)) {
         const cleaned = stripEmptyForgeValues(val);
-        if (cleaned != null && Object.keys(cleaned as object).length > 0) {
+
+        if (Array.isArray(cleaned)) {
+          stripped[key] = cleaned;
+        } else if (cleaned != null && Object.keys(cleaned as object).length > 0) {
           stripped[key] = cleaned;
         }
       } else {
@@ -151,7 +164,7 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
   stripInternalKeys = true;
 
   /**
-   * When true (default), keys whose values are empty (`null`, `undefined`, or `""`)
+   * When true (default), keys whose values are empty (`null`, `undefined`, `""`, or `NaN`)
    * are stripped from the form value before emission. This normalizes ng-forge output
    * to match ngx-formly behavior, where the model only includes keys that have been
    * explicitly set by the user.
@@ -251,7 +264,6 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
   private readonly _reset = new BehaviorSubject<Date>(new Date());
 
   private readonly _internalConfig$: Observable<Maybe<DbxForgeFinalizeFormConfigResult>> = this._config.pipe(
-    tapLog('internal config'),
     scan<Maybe<FormConfig>, Maybe<DbxForgeFinalizeFormConfigResult>, Maybe<DbxForgeFinalizeFormConfigResult>>((acc, config) => {
       let result: Maybe<DbxForgeFinalizeFormConfigResult>;
 
@@ -267,14 +279,12 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
 
       return result;
     }, undefined),
-    tapLog('internal config result'),
     shareReplay(1)
   );
 
   readonly config$: Observable<FormConfig> = this._internalConfig$.pipe(
     filterMaybe(),
     map(({ config }) => config),
-    tapLog('config'),
     shareReplay(1)
   );
 
