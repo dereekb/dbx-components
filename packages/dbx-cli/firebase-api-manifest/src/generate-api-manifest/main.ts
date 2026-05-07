@@ -108,7 +108,13 @@ async function main(): Promise<void> {
 
     const match = apiFiles.find((f) => f.className === group.className);
     if (!match) {
-      console.warn(`[skip] ${group.groupKey}: no .api.ts under ${pkg.packageName} declares 'export abstract class ${group.className}'`);
+      console.warn(`[skip] ${group.groupKey}: no .api.{ts,d.ts} under ${pkg.packageName} declares 'export abstract class ${group.className}'`);
+      skippedGroups++;
+      continue;
+    }
+
+    if (match.extraction.entries.length === 0) {
+      console.warn(`[skip] ${group.groupKey}: ${group.className} is not a CRUD model group (no *ModelCrudFunctionsConfig in ${relPath(WORKSPACE_ROOT, match.filePath)})`);
       skippedGroups++;
       continue;
     }

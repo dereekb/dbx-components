@@ -1,3 +1,19 @@
+## [13.11.1](https://github.com/dereekb/dbx-components/compare/v13.11.0-dev...v13.11.1) (2026-05-07)
+
+
+### Build System
+
+- lint fix + mcp regeneration ([128e22e0](https://github.com/dereekb/dbx-components/commit/128e22e0d3d617f03a4ecd5f22fd0583fd17b1d4))
+
+
+### Code Refactoring
+
+- dbx-cli manifest commands under model parent ([df534037](https://github.com/dereekb/dbx-components/commit/df5340372ebb69e1b105496e36614cef13b6b2b0))
+- fixed extract manifest warnings ([b1ee475c](https://github.com/dereekb/dbx-components/commit/b1ee475ceb93ee9be1311a9eadee9e89d091a348))
+- node_modules fallback for firebase-api-manifest ([aafeeec1](https://github.com/dereekb/dbx-components/commit/aafeeec1da82b96e9f29402f11f4d9a470338f43))
+- ship firebase-api-manifest in @dereekb/dbx-cli ([61c0cdce](https://github.com/dereekb/dbx-components/commit/61c0cdce5674fbccc973f6a6763c6acd9f0dbd4a))
+- updated dbx-cli deploying ([21d5dc2d](https://github.com/dereekb/dbx-components/commit/21d5dc2d922ba02a6bf55c6b0f3f2d2878894cc6))
+
 # [13.11.0](https://github.com/dereekb/dbx-components/compare/v13.10.9-dev...v13.11.0) (2026-05-07)
 
 

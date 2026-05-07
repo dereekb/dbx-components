@@ -7,6 +7,13 @@
  * specifiers to their `src/index.ts` entry. Relative specifiers are resolved
  * against the importing file's directory and then walked back up to the
  * nearest `package.json` that owns them.
+ *
+ * For downstream apps that consume `@dereekb/*` packages from `node_modules`
+ * (no path-mapping in `tsconfig.base.json`), bare specifiers fall back to
+ * Node-style resolution: walk up from the importing file looking for
+ * `node_modules/<specifier>/package.json`. The installed package's
+ * distributed `.d.ts` mirror layout (`src/lib/**\/*.api.d.ts`) supplies the
+ * same metadata the source `*.api.ts` files do.
  */
 
 import { existsSync, readFileSync } from 'node:fs';
@@ -65,8 +72,40 @@ export function resolveModuleToPackage(input: ResolveModuleInput): PackageRef | 
 
   const paths = loadTsconfigPaths(workspaceRoot);
   const indexFile = paths.get(moduleSpecifier);
-  if (!indexFile) return undefined;
-  return locatePackageForPath(workspaceRoot, indexFile);
+  if (indexFile) return locatePackageForPath(workspaceRoot, indexFile);
+
+  return locatePackageInNodeModules({ workspaceRoot, importingFile, moduleSpecifier });
+}
+
+/**
+ * Walks up from the importing file looking for
+ * `node_modules/<moduleSpecifier>/package.json`. Mirrors the directory
+ * traversal Node's resolver uses, so apps that consume `@dereekb/*` packages
+ * via `node_modules` resolve the same way as those mapped through
+ * `tsconfig.base.json paths`.
+ *
+ * @param input - Workspace root + importing file + bare specifier.
+ * @returns The {@link PackageRef} of the installed package, or `undefined` when not found.
+ */
+export function locatePackageInNodeModules(input: ResolveModuleInput): PackageRef | undefined {
+  const { importingFile, moduleSpecifier } = input;
+  let current = dirname(importingFile);
+
+  while (current && current !== dirname(current)) {
+    const candidateRoot = join(current, 'node_modules', moduleSpecifier);
+    const pkgJson = join(candidateRoot, 'package.json');
+    if (existsSync(pkgJson)) {
+      try {
+        const pkg = JSON.parse(readFileSync(pkgJson, 'utf8')) as { name?: string };
+        if (pkg.name) return { packageName: pkg.name, packageRoot: candidateRoot };
+      } catch {
+        // ignore malformed package.json and keep walking
+      }
+    }
+    current = dirname(current);
+  }
+
+  return undefined;
 }
 
 /**
