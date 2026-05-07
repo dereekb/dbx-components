@@ -1,7 +1,7 @@
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { listAppModelApi } from './index.js';
+import { formatReportAsMarkdown, listAppModelApi } from './index.js';
 
 const COMPONENT_DIR = 'components/demo-firebase';
 const WORKSPACE_ROOT = resolve(fileURLToPath(import.meta.url), '../../../../../..');
@@ -31,5 +31,12 @@ describe('listAppModelApi (demo-firebase)', () => {
     expect(report.modelFilter).toBe('Profile');
     expect(report.entries.every((e) => e.sourceFile.includes('profile/'))).toBe(true);
     expect(report.entries.length).toBeGreaterThan(0);
+  });
+
+  it('renders each entry description below the markdown table', async () => {
+    const report = await listAppModelApi(COMPONENT_ABS, { componentDir: COMPONENT_DIR, modelFilter: 'Profile' });
+    const markdown = formatReportAsMarkdown(report);
+    expect(markdown).toContain('**profile.update.username**');
+    expect(markdown).toMatch(/> Sets the current user's profile username\./);
   });
 });

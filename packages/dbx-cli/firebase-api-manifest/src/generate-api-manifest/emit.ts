@@ -77,13 +77,15 @@ function renderEntry({ entry, validatorName }: CollectedEntry): string {
     `sourceFile: ${JSON.stringify(entry.sourceFile)}`,
     entry.description ? `description: ${JSON.stringify(entry.description)}` : undefined,
     entry.paramsTypeDescription ? `paramsTypeDescription: ${JSON.stringify(entry.paramsTypeDescription)}` : undefined,
-    entry.paramsFields && entry.paramsFields.length > 0 ? `paramsFields: ${renderParamsFields(entry.paramsFields)}` : undefined
+    entry.paramsFields && entry.paramsFields.length > 0 ? `paramsFields: ${renderDocFields(entry.paramsFields)}` : undefined,
+    entry.resultTypeDescription ? `resultTypeDescription: ${JSON.stringify(entry.resultTypeDescription)}` : undefined,
+    entry.resultFields && entry.resultFields.length > 0 ? `resultFields: ${renderDocFields(entry.resultFields)}` : undefined
   ];
 
   return `  { ${fields.filter((v): v is string => Boolean(v)).join(', ')} }`;
 }
 
-function renderParamsFields(fields: readonly { readonly name: string; readonly typeText: string; readonly description?: string }[]): string {
+function renderDocFields(fields: readonly { readonly name: string; readonly typeText: string; readonly description?: string }[]): string {
   const items = fields.map((field) => {
     const parts: string[] = [`name: ${JSON.stringify(field.name)}`, `typeText: ${JSON.stringify(field.typeText)}`];
     if (field.description) parts.push(`description: ${JSON.stringify(field.description)}`);

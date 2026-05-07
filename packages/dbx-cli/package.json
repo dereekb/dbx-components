@@ -8,6 +8,12 @@
   "exports": {
     "./firebase-api-manifest": {
       "default": "./firebase-api-manifest/main.js"
+    },
+    "./manifest-extract": {
+      "module": "./manifest-extract/index.esm.js",
+      "types": "./manifest-extract/index.d.ts",
+      "import": "./manifest-extract/index.cjs.mjs",
+      "default": "./manifest-extract/index.cjs.js"
     }
   },
   "peerDependencies": {

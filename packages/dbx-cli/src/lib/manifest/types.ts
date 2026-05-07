@@ -30,6 +30,15 @@ export interface CliApiManifestEntry {
    * Per-field params descriptions read from the params interface's property JSDocs.
    */
   readonly paramsFields?: readonly CliApiManifestField[];
+  /**
+   * Description from the result interface's own JSDoc (e.g. on `DownloadProfileArchiveResult`).
+   * Surfaces the same way `paramsTypeDescription` does, but for the response side.
+   */
+  readonly resultTypeDescription?: string;
+  /**
+   * Per-field result descriptions read from the result interface's property JSDocs.
+   */
+  readonly resultFields?: readonly CliApiManifestField[];
 }
 
 export type CliApiManifest = readonly CliApiManifestEntry[];

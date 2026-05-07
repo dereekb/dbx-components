@@ -71,6 +71,34 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     paramsFields: [
       { name: 'ignoreSendAtThrottle', typeText: 'Maybe<boolean>' },
       { name: 'throwErrorIfSent', typeText: 'Maybe<boolean>' }
+    ],
+    resultTypeDescription: 'Detailed result returned by the `sendNotification` function, describing the outcome of sending a single notification.',
+    resultFields: [
+      { name: 'notificationTemplateType', typeText: 'Maybe<NotificationTemplateType>' },
+      { name: 'isKnownTemplateType', typeText: 'Maybe<boolean>' },
+      { name: 'isNotificationTask', typeText: 'boolean' },
+      { name: 'isUniqueNotificationTask', typeText: 'boolean' },
+      { name: 'uniqueNotificationTaskConflict', typeText: 'boolean' },
+      { name: 'isConfiguredTemplateType', typeText: 'Maybe<boolean>' },
+      { name: 'throttled', typeText: 'boolean' },
+      { name: 'success', typeText: 'boolean' },
+      { name: 'notificationTaskCompletionType', typeText: 'Maybe<NotificationTaskServiceTaskHandlerCompletionType>' },
+      { name: 'notificationTaskPartsRunCount', typeText: 'Maybe<number>' },
+      { name: 'notificationTaskLoopingProtectionTriggered', typeText: 'Maybe<boolean>' },
+      { name: 'notificationMarkedDone', typeText: 'boolean' },
+      { name: 'createdBox', typeText: 'boolean' },
+      { name: 'notificationBoxNeedsInitialization', typeText: 'boolean' },
+      { name: 'deletedNotification', typeText: 'boolean' },
+      { name: 'exists', typeText: 'boolean' },
+      { name: 'boxExists', typeText: 'boolean' },
+      { name: 'tryRun', typeText: 'boolean' },
+      { name: 'sendEmailsResult', typeText: 'Maybe<NotificationSendEmailMessagesResult>' },
+      { name: 'sendTextsResult', typeText: 'Maybe<NotificationSendTextMessagesResult>' },
+      { name: 'sendNotificationSummaryResult', typeText: 'Maybe<NotificationSendNotificationSummaryMessagesResult>' },
+      { name: 'loadMessageFunctionFailure', typeText: 'boolean' },
+      { name: 'buildMessageFailure', typeText: 'boolean' },
+      { name: 'onSendAttemptedResult', typeText: 'Maybe<SendNotificationResultOnSendCompleteResult>' },
+      { name: 'onSendSuccessResult', typeText: 'Maybe<SendNotificationResultOnSendCompleteResult>' }
     ]
   },
   { model: 'notificationBox', verb: 'update', specifier: '_', paramsTypeName: 'UpdateNotificationBoxParams', paramsValidator: updateNotificationBoxParamsType, groupName: 'NotificationBox', sourceFile: 'packages/firebase/src/lib/model/notification/notification.api.ts', paramsTypeDescription: 'Used for updating the NotificationBox.' },
@@ -122,7 +150,7 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'bc', typeText: 'Maybe<UpdateNotificationUserNotificationBoxRecipientParams[]>' }
     ]
   },
-  { model: 'notificationUser', verb: 'update', specifier: 'resync', paramsTypeName: 'ResyncNotificationUserParams', paramsValidator: resyncNotificationUserParamsType, resultTypeName: 'ResyncNotificationUserResult', groupName: 'NotificationBox', sourceFile: 'packages/firebase/src/lib/model/notification/notification.api.ts' },
+  { model: 'notificationUser', verb: 'update', specifier: 'resync', paramsTypeName: 'ResyncNotificationUserParams', paramsValidator: resyncNotificationUserParamsType, resultTypeName: 'ResyncNotificationUserResult', groupName: 'NotificationBox', sourceFile: 'packages/firebase/src/lib/model/notification/notification.api.ts', resultFields: [{ name: 'notificationBoxesUpdated', typeText: 'number' }] },
   {
     model: 'oidcEntry',
     verb: 'create',
@@ -136,6 +164,11 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     paramsFields: [
       { name: 'token_endpoint_auth_method', typeText: 'OidcTokenEndpointAuthMethod' },
       { name: 'jwks_uri', typeText: 'WebsiteUrlWithPrefix', description: "URL where the client's public JSON Web Key Set can be fetched.\n\nUsed with `private_key_jwt` authentication so the provider can retrieve\nthe client's public keys to verify `client_assertion` JWTs.\nThe client manages key rotation at this URL independently." }
+    ],
+    resultTypeDescription: 'Result of creating a new OAuth client.\n\nIncludes the generated `client_secret` in plaintext — this is the only time\nit is returned to the caller.',
+    resultFields: [
+      { name: 'client_id', typeText: 'OidcEntryClientId' },
+      { name: 'client_secret', typeText: 'string', description: 'The generated client secret in plaintext. Only returned for auth methods that require a secret\n(e.g., `client_secret_basic`, `client_secret_post`). Undefined for `private_key_jwt`.' }
     ]
   },
   { model: 'oidcEntry', verb: 'delete', specifier: 'client', paramsTypeName: 'DeleteOidcClientParams', paramsValidator: deleteOidcClientParamsType, groupName: 'Oidc', sourceFile: 'packages/firebase/src/lib/model/oidcmodel/oidcmodel.api.ts', paramsTypeDescription: 'Parameters for revoking/deleting an OAuth client.' },
@@ -234,6 +267,12 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'maxFilesToInitialize', typeText: 'Maybe<number>' },
       { name: 'folderPath', typeText: 'Maybe<StorageSlashPath>' },
       { name: 'overrideUploadsFolderPath', typeText: 'Maybe<StorageSlashPath>' }
+    ],
+    resultTypeDescription: 'Result of batch upload initialization, reporting visit and success/failure counts.',
+    resultFields: [
+      { name: 'filesVisited', typeText: 'number' },
+      { name: 'initializationsSuccessCount', typeText: 'number' },
+      { name: 'initializationsFailureCount', typeText: 'number' }
     ]
   },
   {
@@ -261,7 +300,14 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     resultTypeName: 'DownloadStorageFileResult',
     groupName: 'StorageFile',
     sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.api.ts',
-    paramsTypeDescription: 'Parameters for generating a signed download URL for a single StorageFile.\n\nExtends {@link DownloadStorageFileOptions} with target model key.\nValidated with {@link downloadStorageFileParamsType}.'
+    paramsTypeDescription: 'Parameters for generating a signed download URL for a single StorageFile.\n\nExtends {@link DownloadStorageFileOptions} with target model key.\nValidated with {@link downloadStorageFileParamsType}.',
+    resultTypeDescription: 'Result of downloading a StorageFile.',
+    resultFields: [
+      { name: 'url', typeText: 'StorageFileSignedDownloadUrl' },
+      { name: 'fileName', typeText: 'Maybe<string>' },
+      { name: 'mimeType', typeText: 'Maybe<ContentTypeMimeType>' },
+      { name: 'expiresAt', typeText: 'Maybe<UnixDateTimeSecondsNumber>' }
+    ]
   },
   {
     model: 'storageFile',
@@ -276,6 +322,11 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     paramsFields: [
       { name: 'files', typeText: 'DownloadMultipleStorageFilesFileParams[]' },
       { name: 'throwOnFirstError', typeText: 'Maybe<boolean>', description: 'When true, throws on the first download failure instead of collecting it in the errors array.' }
+    ],
+    resultTypeDescription: 'Result of a batch StorageFile download.\n\nContains separate arrays for successful downloads and failures.\nIndividual download errors do not fail the entire batch.',
+    resultFields: [
+      { name: 'success', typeText: 'DownloadMultipleStorageFileSuccessItem[]' },
+      { name: 'errors', typeText: 'DownloadMultipleStorageFileErrorItem[]' }
     ]
   },
   { model: 'storageFile', verb: 'update', specifier: '_', paramsTypeName: 'UpdateStorageFileParams', paramsValidator: updateStorageFileParamsType, groupName: 'StorageFile', sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.api.ts', paramsFields: [{ name: 'sdat', typeText: 'Maybe<Date>' }] },
@@ -294,10 +345,53 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'checkRetryProcessing', typeText: 'Maybe<boolean>' },
       { name: 'forceRestartProcessing', typeText: 'Maybe<boolean>' },
       { name: 'processAgainIfSuccessful', typeText: 'Maybe<boolean>' }
+    ],
+    resultFields: [
+      { name: 'runImmediately', typeText: 'boolean' },
+      { name: 'expediteResult', typeText: 'Maybe<SendNotificationResult>' }
     ]
   },
-  { model: 'storageFile', verb: 'update', specifier: 'syncWithGroups', paramsTypeName: 'SyncStorageFileWithGroupsParams', paramsValidator: syncStorageFileWithGroupsParamsType, resultTypeName: 'SyncStorageFileWithGroupsResult', groupName: 'StorageFile', sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.api.ts', paramsFields: [{ name: 'force', typeText: 'Maybe<boolean>' }] },
+  {
+    model: 'storageFile',
+    verb: 'update',
+    specifier: 'syncWithGroups',
+    paramsTypeName: 'SyncStorageFileWithGroupsParams',
+    paramsValidator: syncStorageFileWithGroupsParamsType,
+    resultTypeName: 'SyncStorageFileWithGroupsResult',
+    groupName: 'StorageFile',
+    sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.api.ts',
+    paramsFields: [{ name: 'force', typeText: 'Maybe<boolean>' }],
+    resultFields: [
+      { name: 'storageFilesGroupsCreated', typeText: 'number' },
+      { name: 'storageFilesGroupsUpdated', typeText: 'number' }
+    ]
+  },
   { model: 'storageFileGroup', verb: 'update', specifier: '_', paramsTypeName: 'UpdateStorageFileGroupParams', paramsValidator: updateStorageFileGroupParamsType, groupName: 'StorageFile', sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.api.ts', paramsFields: [{ name: 'entries', typeText: 'Maybe<UpdateStorageFileGroupEntryParams[]>' }] },
-  { model: 'storageFileGroup', verb: 'update', specifier: 'regenerateContent', paramsTypeName: 'RegenerateStorageFileGroupContentParams', paramsValidator: regenerateStorageFileGroupContentParamsType, resultTypeName: 'RegenerateStorageFileGroupContentResult', groupName: 'StorageFile', sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.api.ts', paramsFields: [{ name: 'force', typeText: 'Maybe<boolean>' }] },
-  { model: 'systemState', verb: 'read', specifier: 'exampleread', paramsTypeName: 'ExampleReadParams', paramsValidator: exampleReadParamsType, resultTypeName: 'ExampleReadResponse', groupName: 'SystemState', sourceFile: 'components/demo-firebase/src/lib/model/system/system.api.ts', paramsFields: [{ name: 'message', typeText: 'string' }] }
+  {
+    model: 'storageFileGroup',
+    verb: 'update',
+    specifier: 'regenerateContent',
+    paramsTypeName: 'RegenerateStorageFileGroupContentParams',
+    paramsValidator: regenerateStorageFileGroupContentParamsType,
+    resultTypeName: 'RegenerateStorageFileGroupContentResult',
+    groupName: 'StorageFile',
+    sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.api.ts',
+    paramsFields: [{ name: 'force', typeText: 'Maybe<boolean>' }],
+    resultFields: [{ name: 'contentStorageFilesFlaggedForProcessing', typeText: 'number' }]
+  },
+  {
+    model: 'systemState',
+    verb: 'read',
+    specifier: 'exampleread',
+    paramsTypeName: 'ExampleReadParams',
+    paramsValidator: exampleReadParamsType,
+    resultTypeName: 'ExampleReadResponse',
+    groupName: 'SystemState',
+    sourceFile: 'components/demo-firebase/src/lib/model/system/system.api.ts',
+    paramsFields: [{ name: 'message', typeText: 'string' }],
+    resultFields: [
+      { name: 'read', typeText: 'boolean' },
+      { name: 'message', typeText: 'string' }
+    ]
+  }
 ];

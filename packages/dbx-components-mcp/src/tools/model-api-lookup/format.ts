@@ -62,7 +62,11 @@ function formatEntry(entry: ApiLookupEntry): string {
   const heading = entry.specifier !== undefined ? `${entry.model}.${entry.verb}.${entry.specifier}` : `${entry.model}.${entry.verb}`;
   const paramsLabel = entry.paramsTypeName ? `\`${entry.paramsTypeName}\`` : '_unresolved_';
   const resultLabel = entry.resultTypeName ? `\`${entry.resultTypeName}\`` : '`void`';
-  const lines: string[] = [`## ${heading}`, '', `- Wire key: \`${wireKey}\``, `- Params: ${paramsLabel}`, `- Result: ${resultLabel}`, `- Source: \`${entry.sourceFile}:${entry.line}\``, ''];
+  const lines: string[] = [`## ${heading}`, ''];
+  if (entry.description) {
+    lines.push(entry.description, '');
+  }
+  lines.push(`- Wire key: \`${wireKey}\``, `- Params: ${paramsLabel}`, `- Result: ${resultLabel}`, `- Source: \`${entry.sourceFile}:${entry.line}\``, '');
 
   if (entry.paramsJsDoc || entry.paramsFields.length > 0) {
     lines.push('### Params');

@@ -38,6 +38,12 @@ export function formatReportAsMarkdown(report: ApiListReport): string {
       lines.push(formatEntryRow(entry));
     }
     lines.push('');
+    const described = fileEntries.filter((entry) => entry.description !== undefined && entry.description.length > 0);
+    if (described.length > 0) {
+      for (const entry of described) {
+        lines.push(formatEntryDescription(entry), '');
+      }
+    }
   }
 
   return lines.join('\n');
@@ -70,4 +76,14 @@ function formatEntryRow(entry: ApiListEntry): string {
   const params = entry.paramsTypeName ? `\`${entry.paramsTypeName}\`` : '_unresolved_';
   const result = entry.resultTypeName ? `\`${entry.resultTypeName}\`` : '`void`';
   return `| \`${entry.model}\` | \`${entry.verb}\` | ${specifier} | ${params} | ${result} | ${entry.line} |`;
+}
+
+function formatEntryDescription(entry: ApiListEntry): string {
+  const heading = entry.specifier !== undefined ? `${entry.model}.${entry.verb}.${entry.specifier}` : `${entry.model}.${entry.verb}`;
+  const description = entry.description ?? '';
+  const quoted = description
+    .split('\n')
+    .map((line) => `> ${line}`)
+    .join('\n');
+  return `**${heading}**\n\n${quoted}`;
 }

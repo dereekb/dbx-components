@@ -43,6 +43,8 @@ const TOOL: Tool = {
     '- `result` — the result type name when the leaf is a `[Params, Result]` tuple, else `void`.',
     '- `line` — source line of the leaf in the `.api.ts` file.',
     '',
+    'When the maintainer added a JSDoc summary to a CRUD property (e.g. on `update.username:` inside `<Group>ModelCrudFunctionsConfig` or on a `<Group>FunctionTypeMap` key), the markdown view renders that description as a block-quote under the table. JSON output exposes the same string on `entry.description`.',
+    '',
     'Inputs:',
     '- `componentDir`: relative path to the firebase-component package (e.g. `components/demo-firebase`).',
     '- `model` (optional): bare model name, e.g. `Profile` — case-insensitive match against group / model keys.',

@@ -15,6 +15,7 @@
     "@angular/core": "21.2.11",
     "@angular/forms": "21.2.11",
     "@angular/material": "^21.2.9",
+    "@dereekb/dbx-cli": "13.11.1",
     "@dereekb/dbx-core": "13.11.1",
     "@dereekb/dbx-firebase": "13.11.1",
     "@dereekb/dbx-form": "13.11.1",

@@ -367,7 +367,10 @@ function buildEntryEpilogue(entry: CliApiManifestEntry, context: BuilderContext)
     schemaSections = renderParamsSchemaSections(entry, dataHelpFormat);
     sections.push(...schemaSections);
 
-    if (entry.resultTypeName) {
+    const resultSection = buildResultSection(entry);
+    if (resultSection) {
+      sections.push(resultSection);
+    } else if (entry.resultTypeName) {
       sections.push(`Result: ${entry.resultTypeName}`);
     }
   }
@@ -410,6 +413,34 @@ function buildParamsSection(entry: CliApiManifestEntry): string | undefined {
     lines.push('');
     lines.push('Fields:');
     for (const field of entry.paramsFields) {
+      const header = `  - ${field.name}: ${field.typeText}`;
+      lines.push(header);
+      if (field.description) {
+        lines.push(indentLines(field.description, '      '));
+      }
+    }
+  }
+
+  return lines.join('\n');
+}
+
+function buildResultSection(entry: CliApiManifestEntry): string | undefined {
+  if (!entry.resultTypeDescription && !(entry.resultFields && entry.resultFields.length > 0)) {
+    return undefined;
+  }
+
+  const lines: string[] = [];
+  if (entry.resultTypeName) {
+    lines.push(`Result: ${entry.resultTypeName}`);
+  }
+  if (entry.resultTypeDescription) {
+    lines.push(indentLines(entry.resultTypeDescription, '  '));
+  }
+
+  if (entry.resultFields && entry.resultFields.length > 0) {
+    lines.push('');
+    lines.push('Fields:');
+    for (const field of entry.resultFields) {
       const header = `  - ${field.name}: ${field.typeText}`;
       lines.push(header);
       if (field.description) {
