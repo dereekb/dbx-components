@@ -122,41 +122,60 @@ export type LoadScanSectionResult<TSection> = { readonly kind: 'ok'; readonly se
  */
 export async function loadScanSection<TSection>(input: { readonly configPath: string; readonly readFile: ScanReadFile; readonly parseSection: (parsed: unknown) => { readonly ok: true; readonly section: TSection } | { readonly ok: false; readonly error: string } }): Promise<LoadScanSectionResult<TSection>> {
   const { configPath, readFile, parseSection } = input;
-  let raw: string | null = null;
-  let readError: string | null = null;
+  const readResult = await readScanConfigRaw(configPath, readFile);
+  let result: LoadScanSectionResult<TSection>;
+  if (readResult.kind === 'error') {
+    result = { kind: 'fail', outcome: { kind: 'invalid-scan-config', configPath, error: `failed to read config: ${readResult.error}` } };
+  } else if (readResult.kind === 'enoent') {
+    result = { kind: 'fail', outcome: { kind: 'no-config', configPath } };
+  } else {
+    result = parseScanSectionFromRaw(readResult.raw, configPath, parseSection);
+  }
+  return result;
+}
+
+type ReadScanConfigRawResult = { readonly kind: 'ok'; readonly raw: string } | { readonly kind: 'enoent' } | { readonly kind: 'error'; readonly error: string };
+
+async function readScanConfigRaw(configPath: string, readFile: ScanReadFile): Promise<ReadScanConfigRawResult> {
+  let result: ReadScanConfigRawResult;
   try {
-    raw = await readFile(configPath);
+    const raw = await readFile(configPath);
+    result = { kind: 'ok', raw };
   } catch (err) {
     const code = (err as NodeJS.ErrnoException | null)?.code;
     if (code === 'ENOENT') {
-      raw = null;
+      result = { kind: 'enoent' };
     } else {
-      readError = err instanceof Error ? err.message : String(err);
+      result = { kind: 'error', error: err instanceof Error ? err.message : String(err) };
     }
   }
+  return result;
+}
+
+function parseScanSectionFromRaw<TSection>(raw: string, configPath: string, parseSection: (parsed: unknown) => { readonly ok: true; readonly section: TSection } | { readonly ok: false; readonly error: string }): LoadScanSectionResult<TSection> {
+  const jsonResult = parseJsonString(raw);
   let result: LoadScanSectionResult<TSection>;
-  if (readError !== null) {
-    result = { kind: 'fail', outcome: { kind: 'invalid-scan-config', configPath, error: `failed to read config: ${readError}` } };
-  } else if (raw === null) {
-    result = { kind: 'fail', outcome: { kind: 'no-config', configPath } };
-  } else {
-    let parsed: unknown;
-    let parseError: string | null = null;
-    try {
-      parsed = JSON.parse(raw);
-    } catch (err) {
-      parseError = err instanceof Error ? err.message : String(err);
-    }
-    if (parseError !== null) {
-      result = { kind: 'fail', outcome: { kind: 'invalid-scan-config', configPath, error: parseError } };
+  if (jsonResult.ok) {
+    const sectionResult = parseSection(jsonResult.value);
+    if (sectionResult.ok) {
+      result = { kind: 'ok', section: sectionResult.section };
     } else {
-      const sectionResult = parseSection(parsed);
-      if (sectionResult.ok) {
-        result = { kind: 'ok', section: sectionResult.section };
-      } else {
-        result = { kind: 'fail', outcome: { kind: 'invalid-scan-config', configPath, error: sectionResult.error } };
-      }
+      result = { kind: 'fail', outcome: { kind: 'invalid-scan-config', configPath, error: sectionResult.error } };
     }
+  } else {
+    result = { kind: 'fail', outcome: { kind: 'invalid-scan-config', configPath, error: jsonResult.error } };
+  }
+  return result;
+}
+
+type ParseJsonStringResult = { readonly ok: true; readonly value: unknown } | { readonly ok: false; readonly error: string };
+
+function parseJsonString(raw: string): ParseJsonStringResult {
+  let result: ParseJsonStringResult;
+  try {
+    result = { ok: true, value: JSON.parse(raw) };
+  } catch (err) {
+    result = { ok: false, error: err instanceof Error ? err.message : String(err) };
   }
   return result;
 }

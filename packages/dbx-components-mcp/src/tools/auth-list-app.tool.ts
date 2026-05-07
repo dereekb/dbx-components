@@ -88,53 +88,74 @@ function formatAppCatalog(apps: readonly AuthAppInfo[]): string {
 
 function formatApp(app: AuthAppInfo, ownClaims: readonly AuthClaimInfo[], registry: AuthRegistry): string {
   const lines: string[] = [`# App \`${app.app}\``, ''];
+  appendAppHeader(lines, app);
+  const allClaims = resolveAppClaims(app, ownClaims, registry);
+  appendAppClaimsSection(lines, allClaims);
+  appendAppScopesSection(lines, app, registry);
+  return lines.join('\n');
+}
+
+function appendAppHeader(lines: string[], app: AuthAppInfo): void {
   if (app.description !== undefined) lines.push(app.description, '');
   lines.push(bullet('claims interface', `\`${app.claimsInterfaceName}\``));
   if (app.serviceConstName !== undefined) lines.push(bullet('service const', `\`${app.serviceConstName}\``));
   lines.push(bullet('source', `\`${app.sourcePath}\``), '');
+}
 
-  // Resolve every claim listed on the app, including inherited ones (e.g. `fr`
-  // from StorageFileUploadUserClaims) — `ownClaims` only includes app-owned
-  // entries; the rest come from `registry.findClaim` with no scope.
+// Resolve every claim listed on the app, including inherited ones (e.g. `fr`
+// from StorageFileUploadUserClaims) — `ownClaims` only includes app-owned
+// entries; the rest come from `registry.findClaim` with no scope.
+function resolveAppClaims(app: AuthAppInfo, ownClaims: readonly AuthClaimInfo[], registry: AuthRegistry): readonly AuthClaimInfo[] {
   const allClaims: AuthClaimInfo[] = [];
   for (const key of app.claimKeys) {
     const owned = ownClaims.find((c) => c.key === key);
     const claim = owned ?? registry.findClaim(key);
     if (claim !== undefined) allClaims.push(claim);
   }
+  return allClaims;
+}
 
+function appendAppClaimsSection(lines: string[], allClaims: readonly AuthClaimInfo[]): void {
   lines.push('## Custom claims', '');
   if (allClaims.length === 0) {
     lines.push('_(none)_');
-  } else {
-    for (const claim of allClaims) {
-      const arrow = claim.mapping.inverse ? 'revokes' : 'grants';
-      const roles = claim.mapping.roles.map((r) => '`' + r + '`').join(', ') || '_(none)_';
-      const owner = claim.app ? '' : ' _(inherited)_';
-      const lineRef = claim.sourceLine !== undefined ? `:${claim.sourceLine}` : '';
-      lines.push(`- \`${claim.key}\`${owner} on \`${claim.interfaceName ?? '?'}\` — ${arrow} ${roles}`);
-      lines.push(`  ${claim.description} (\`${claim.sourcePath}${lineRef}\`)`);
-    }
+    return;
   }
+  for (const claim of allClaims) {
+    lines.push(...formatAppClaimEntry(claim));
+  }
+}
 
+function formatAppClaimEntry(claim: AuthClaimInfo): readonly string[] {
+  const arrow = claim.mapping.inverse ? 'revokes' : 'grants';
+  const roles = claim.mapping.roles.map((r) => '`' + r + '`').join(', ') || '_(none)_';
+  const owner = claim.app ? '' : ' _(inherited)_';
+  const lineRef = claim.sourceLine === undefined ? '' : `:${claim.sourceLine}`;
+  return [`- \`${claim.key}\`${owner} on \`${claim.interfaceName ?? '?'}\` — ${arrow} ${roles}`, `  ${claim.description} (\`${claim.sourcePath}${lineRef}\`)`];
+}
+
+function appendAppScopesSection(lines: string[], app: AuthAppInfo, registry: AuthRegistry): void {
   lines.push('', '## OIDC scopes', '');
   if (app.scopes.length === 0) {
     lines.push('_(none)_');
-  } else {
-    for (const scopeName of app.scopes) {
-      const scope = registry.findScope(scopeName);
-      if (scope !== undefined) {
-        lines.push(`- \`${scopeName}\` — ${scope.description}`);
-        for (const gate of scope.enforcedAt) {
-          const lineRef = gate.line !== undefined ? `:${gate.line}` : '';
-          lines.push(`  Enforced at \`${gate.path}${lineRef}\` — ${gate.description}`);
-        }
-      } else {
-        lines.push(`- \`${scopeName}\` — _(not catalogued)_`);
-      }
-    }
+    return;
   }
-  return lines.join('\n');
+  for (const scopeName of app.scopes) {
+    appendAppScopeEntry(lines, scopeName, registry);
+  }
+}
+
+function appendAppScopeEntry(lines: string[], scopeName: string, registry: AuthRegistry): void {
+  const scope = registry.findScope(scopeName);
+  if (scope === undefined) {
+    lines.push(`- \`${scopeName}\` — _(not catalogued)_`);
+    return;
+  }
+  lines.push(`- \`${scopeName}\` — ${scope.description}`);
+  for (const gate of scope.enforcedAt) {
+    const lineRef = gate.line === undefined ? '' : `:${gate.line}`;
+    lines.push(`  Enforced at \`${gate.path}${lineRef}\` — ${gate.description}`);
+  }
 }
 
 function formatNotFound(app: string, apps: readonly AuthAppInfo[]): string {

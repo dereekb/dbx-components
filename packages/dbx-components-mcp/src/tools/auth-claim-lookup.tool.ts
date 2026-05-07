@@ -149,7 +149,7 @@ function bullet(label: string, value: string): string {
 }
 
 function sourceLink(path: string, line: number | undefined): string {
-  return line !== undefined ? `\`${path}:${line}\`` : `\`${path}\``;
+  return line === undefined ? `\`${path}\`` : `\`${path}:${line}\``;
 }
 
 function code(value: string): string {

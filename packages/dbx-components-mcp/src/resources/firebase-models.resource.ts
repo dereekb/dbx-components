@@ -207,18 +207,18 @@ export function registerFirebaseModelsResource(server: McpServer): void {
       const root = Array.isArray(rawRoot) ? rawRoot[0] : rawRoot;
       let text: string;
       let mimeType = 'application/json';
-      if (!root) {
-        text = 'No root model supplied.';
-        mimeType = 'text/plain';
-      } else {
+      if (root) {
         const rootModel = getFirebaseModel(root) ?? getFirebaseModelByPrefix(root);
-        if (!rootModel) {
-          text = `Firebase model '${root}' not found.`;
-          mimeType = 'text/plain';
-        } else {
+        if (rootModel) {
           const hierarchy = buildModelHierarchy({ models: FIREBASE_MODELS, rootModel, format: 'both' });
           text = JSON.stringify({ root: rootModel.identityConst, ...hierarchy }, null, 2);
+        } else {
+          text = `Firebase model '${root}' not found.`;
+          mimeType = 'text/plain';
         }
+      } else {
+        text = 'No root model supplied.';
+        mimeType = 'text/plain';
       }
       return {
         contents: [

@@ -169,7 +169,7 @@ describe('extractAuthEntries', () => {
     });
 
     const result = extractAuthEntries({ project, knownRoles: KNOWN_ROLES });
-    const kinds = result.warnings.map((w) => w.kind).sort();
+    const kinds = result.warnings.map((w) => w.kind).sort((a, b) => a.localeCompare(b));
     expect(kinds).toContain('service-missing-slug');
     expect(kinds).toContain('claim-missing-mapping');
   });

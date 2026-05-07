@@ -257,11 +257,11 @@ function toFlatEntry(model: FirebaseModel, depth: number, parent: string | undef
 }
 
 function compareModels(a: FirebaseModel, b: FirebaseModel): number {
-  let result = 0;
-  if (a.sourcePackage !== b.sourcePackage) {
-    result = a.sourcePackage.localeCompare(b.sourcePackage);
-  } else {
+  let result: number;
+  if (a.sourcePackage === b.sourcePackage) {
     result = a.name.localeCompare(b.name);
+  } else {
+    result = a.sourcePackage.localeCompare(b.sourcePackage);
   }
   return result;
 }
@@ -316,47 +316,58 @@ export function renderModelHierarchy(result: HierarchyResult, output: HierarchyO
 }
 
 function renderMarkdown(result: HierarchyResult, context: RenderHierarchyContext | undefined): string {
-  const lines: string[] = ['# Firebase model hierarchy'];
+  const lines: string[] = ['# Firebase model hierarchy', '', buildHeaderBits(result.summary, context).join(' · ')];
+  appendTruncationNote(lines, result.summary);
+  appendTreeSection(lines, result.tree);
+  appendFlatSection(lines, result.flat);
+  return lines.join('\n').trimEnd();
+}
 
-  const headerBits: string[] = [];
-  headerBits.push(`${result.summary.rootCount} root${result.summary.rootCount === 1 ? '' : 's'}`);
-  headerBits.push(`${result.summary.totalModels} model${result.summary.totalModels === 1 ? '' : 's'}`);
-  headerBits.push(`max depth ${result.summary.maxDepthReached}`);
+function buildHeaderBits(summary: HierarchySummary, context: RenderHierarchyContext | undefined): string[] {
+  const headerBits: string[] = [`${summary.rootCount} root${summary.rootCount === 1 ? '' : 's'}`, `${summary.totalModels} model${summary.totalModels === 1 ? '' : 's'}`, `max depth ${summary.maxDepthReached}`];
   if (context?.scope && context.scope !== 'all') headerBits.push(`scope: ${context.scope}`);
   if (context?.rootModel) headerBits.push(`from \`${context.rootModel}\``);
   if (context?.maxDepth !== undefined) headerBits.push(`maxDepth=${context.maxDepth}`);
-  lines.push('', headerBits.join(' · '));
+  return headerBits;
+}
 
-  if (result.summary.truncatedAtDepth !== undefined) {
-    lines.push('', `_Truncated at depth ${result.summary.truncatedAtDepth} — re-run with a larger \`maxDepth\` for the full subtree._`);
+function appendTruncationNote(lines: string[], summary: HierarchySummary): void {
+  if (summary.truncatedAtDepth !== undefined) {
+    lines.push('', `_Truncated at depth ${summary.truncatedAtDepth} — re-run with a larger \`maxDepth\` for the full subtree._`);
   }
+}
 
-  if (result.tree) {
+function appendTreeSection(lines: string[], tree: readonly HierarchyNode[] | undefined): void {
+  if (tree) {
     lines.push('', '## Tree', '');
-    if (result.tree.length === 0) {
+    if (tree.length === 0) {
       lines.push('_No models matched._');
     } else {
-      for (const root of result.tree) {
+      for (const root of tree) {
         appendTreeNode(lines, root);
       }
     }
   }
+}
 
-  if (result.flat) {
-    lines.push('', `## Flat (${result.flat.length})`, '');
-    if (result.flat.length === 0) {
+function appendFlatSection(lines: string[], flat: readonly FlatHierarchyEntry[] | undefined): void {
+  if (flat) {
+    lines.push('', `## Flat (${flat.length})`, '');
+    if (flat.length === 0) {
       lines.push('_No models matched._');
     } else {
-      for (const entry of result.flat) {
-        const indent = TREE_INDENT.repeat(entry.depth);
-        const parent = entry.parent ? ` ← \`${entry.parent}\`` : '';
-        const group = entry.modelGroup ? ` _[${entry.modelGroup}]_` : '';
-        lines.push(`${indent}- **${entry.name}** \`${entry.collectionPrefix}\`${group}${parent}`);
+      for (const entry of flat) {
+        lines.push(formatFlatEntry(entry));
       }
     }
   }
+}
 
-  return lines.join('\n').trimEnd();
+function formatFlatEntry(entry: FlatHierarchyEntry): string {
+  const indent = TREE_INDENT.repeat(entry.depth);
+  const parent = entry.parent ? ` ← \`${entry.parent}\`` : '';
+  const group = entry.modelGroup ? ` _[${entry.modelGroup}]_` : '';
+  return `${indent}- **${entry.name}** \`${entry.collectionPrefix}\`${group}${parent}`;
 }
 
 const TREE_INDENT = '  ';

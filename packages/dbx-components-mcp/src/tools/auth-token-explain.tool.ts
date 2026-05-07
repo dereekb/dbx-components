@@ -63,7 +63,7 @@ export function createAuthTokenExplainTool(input: CreateAuthTokenExplainToolInpu
       } else if (token === undefined && claimsObj === undefined) {
         result = toolError('Pass either `token` (JWT) or `claims` (object).');
       } else {
-        const decoded = token !== undefined ? decodeJwt(token) : { header: undefined, payload: claimsObj as Record<string, unknown>, signature: undefined };
+        const decoded = token === undefined ? { header: undefined, payload: claimsObj as Record<string, unknown>, signature: undefined } : decodeJwt(token);
         if (decoded === null) {
           result = toolError('Could not decode JWT — expected 3 base64url segments separated by `.`.');
         } else {
@@ -101,7 +101,7 @@ function decodeJwtSegment(segment: string): Record<string, unknown> | null {
   let result: Record<string, unknown> | null = null;
   try {
     const padded = segment.padEnd(segment.length + ((4 - (segment.length % 4)) % 4), '=');
-    const base64 = padded.replace(/-/g, '+').replace(/_/g, '/');
+    const base64 = padded.replaceAll('-', '+').replaceAll('_', '/');
     const json = Buffer.from(base64, 'base64').toString('utf8');
     const parsed: unknown = JSON.parse(json);
     if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) {
@@ -125,10 +125,26 @@ interface FormatExplainInput {
 function formatExplain(input: FormatExplainInput): string {
   const { registry, app, expectedIssuer, header, payload, signaturePresent } = input;
   const lines: string[] = ['# Token explanation', ''];
+  appendHeaderSection(lines, header);
+  const { reservedClaims, customClaims } = partitionPayloadClaims(payload);
+  appendReservedClaims(lines, reservedClaims);
+  const warnings = collectExpiryWarnings(lines, payload);
+  appendIssuerWarning(warnings, payload, expectedIssuer);
+  const scopes = extractScopes(payload);
+  appendScopesSection(lines, scopes, registry);
+  appendCustomClaimsSection({ lines, customClaims, registry, app });
+  appendWarningsSection(lines, warnings);
+  appendSignatureNote(lines, signaturePresent);
+  return lines.join('\n');
+}
+
+function appendHeaderSection(lines: string[], header: Record<string, unknown> | undefined): void {
   if (header !== undefined) {
     lines.push('## Header', '', '```json', JSON.stringify(header, null, 2), '```', '');
   }
+}
 
+function partitionPayloadClaims(payload: Record<string, unknown>): { readonly reservedClaims: readonly { readonly key: string; readonly value: unknown }[]; readonly customClaims: readonly { readonly key: string; readonly value: unknown }[] } {
   const reservedClaims: { readonly key: string; readonly value: unknown }[] = [];
   const customClaims: { readonly key: string; readonly value: unknown }[] = [];
   for (const [key, value] of Object.entries(payload)) {
@@ -138,7 +154,10 @@ function formatExplain(input: FormatExplainInput): string {
       customClaims.push({ key, value });
     }
   }
+  return { reservedClaims, customClaims };
+}
 
+function appendReservedClaims(lines: string[], reservedClaims: readonly { readonly key: string; readonly value: unknown }[]): void {
   lines.push('## Reserved claims', '');
   if (reservedClaims.length === 0) {
     lines.push('_(none)_');
@@ -147,22 +166,30 @@ function formatExplain(input: FormatExplainInput): string {
       lines.push(`- \`${key}\` = \`${formatClaimValue(value)}\` — ${describeReserved(key)}`);
     }
   }
+}
 
+function collectExpiryWarnings(lines: string[], payload: Record<string, unknown>): string[] {
   const warnings: string[] = [];
   const expValue = payload['exp'];
   if (typeof expValue === 'number') {
     const expiresAt = new Date(expValue * 1000);
-    const now = Date.now();
-    if (expiresAt.getTime() < now) {
+    if (expiresAt.getTime() < Date.now()) {
       warnings.push(`Token is **expired** (exp = ${expiresAt.toISOString()}).`);
     } else {
       lines.push('', `Token expires at \`${expiresAt.toISOString()}\`.`);
     }
   }
+  return warnings;
+}
+
+function appendIssuerWarning(warnings: string[], payload: Record<string, unknown>, expectedIssuer: string | undefined): void {
   const issValue = payload['iss'];
   if (expectedIssuer !== undefined && typeof issValue === 'string' && issValue !== expectedIssuer) {
     warnings.push(`Issuer mismatch — expected \`${expectedIssuer}\`, got \`${issValue}\`.`);
   }
+}
+
+function extractScopes(payload: Record<string, unknown>): string[] {
   const scopeValue = payload['scope'];
   let scopes: string[] = [];
   if (typeof scopeValue === 'string') {
@@ -170,53 +197,67 @@ function formatExplain(input: FormatExplainInput): string {
   } else if (Array.isArray(scopeValue)) {
     scopes = scopeValue.filter((s): s is string => typeof s === 'string');
   }
+  return scopes;
+}
 
-  if (scopes.length > 0) {
-    lines.push('', '## OIDC scopes', '');
-    for (const scopeName of scopes) {
-      const entry = registry.findScope(scopeName);
-      if (entry !== undefined) {
-        lines.push(`- \`${scopeName}\` — ${entry.description}`);
-      } else {
-        lines.push(`- \`${scopeName}\` — _(not in catalog)_`);
-      }
+function appendScopesSection(lines: string[], scopes: readonly string[], registry: AuthRegistry): void {
+  if (scopes.length === 0) return;
+  lines.push('', '## OIDC scopes', '');
+  for (const scopeName of scopes) {
+    const entry = registry.findScope(scopeName);
+    if (entry === undefined) {
+      lines.push(`- \`${scopeName}\` — _(not in catalog)_`);
+    } else {
+      lines.push(`- \`${scopeName}\` — ${entry.description}`);
     }
   }
+}
 
+interface AppendCustomClaimsSectionInput {
+  readonly lines: string[];
+  readonly customClaims: readonly { readonly key: string; readonly value: unknown }[];
+  readonly registry: AuthRegistry;
+  readonly app: string | undefined;
+}
+
+function appendCustomClaimsSection(input: AppendCustomClaimsSectionInput): void {
+  const { lines, customClaims, registry, app } = input;
   lines.push('', '## Custom claims', '');
   if (customClaims.length === 0) {
     lines.push('_(none)_');
-  } else {
-    for (const { key, value } of customClaims) {
-      const entry = registry.findClaim(key, app);
-      if (entry !== undefined) {
-        lines.push(formatCustomClaim(key, value, entry));
-      } else {
-        lines.push(`- \`${key}\` = \`${formatClaimValue(value)}\` — _(not in catalog)_`);
-      }
+    return;
+  }
+  for (const { key, value } of customClaims) {
+    const entry = registry.findClaim(key, app);
+    if (entry === undefined) {
+      lines.push(`- \`${key}\` = \`${formatClaimValue(value)}\` — _(not in catalog)_`);
+    } else {
+      lines.push(formatCustomClaim(key, value, entry));
     }
   }
+}
 
-  if (warnings.length > 0) {
-    lines.push('', '## Warnings', '');
-    for (const warning of warnings) {
-      lines.push(`- :warning: ${warning}`);
-    }
+function appendWarningsSection(lines: string[], warnings: readonly string[]): void {
+  if (warnings.length === 0) return;
+  lines.push('', '## Warnings', '');
+  for (const warning of warnings) {
+    lines.push(`- :warning: ${warning}`);
   }
+}
 
-  if (!signaturePresent) {
-    lines.push('', '_Signature not verified — this tool only decodes._');
-  } else {
+function appendSignatureNote(lines: string[], signaturePresent: boolean): void {
+  if (signaturePresent) {
     lines.push('', '_Signature present but **not** verified — this tool only decodes._');
+  } else {
+    lines.push('', '_Signature not verified — this tool only decodes._');
   }
-  return lines.join('\n');
 }
 
 function formatCustomClaim(key: string, value: unknown, entry: AuthClaimInfo): string {
   const owner = entry.app ? ` (${entry.app})` : '';
   const arrow = entry.mapping.inverse ? 'revokes' : 'grants';
   const roles = entry.mapping.roles.map((r) => '`' + r + '`').join(', ') || '_(none)_';
-  const lineRef = entry.sourceLine !== undefined ? `:${entry.sourceLine}` : '';
+  const lineRef = entry.sourceLine === undefined ? '' : `:${entry.sourceLine}`;
   return `- \`${key}\` = \`${formatClaimValue(value)}\`${owner} → \`${entry.interfaceName ?? '?'}\` ${arrow} ${roles}\n  ${entry.description} (\`${entry.sourcePath}${lineRef}\`)`;
 }
 
@@ -229,7 +270,7 @@ function formatClaimValue(value: unknown): string {
   } else if (typeof value === 'object') {
     result = JSON.stringify(value);
   } else {
-    result = String(value);
+    result = String(value as number | boolean | bigint | symbol | undefined);
   }
   return result;
 }

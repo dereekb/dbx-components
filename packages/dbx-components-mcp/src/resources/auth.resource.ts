@@ -135,11 +135,11 @@ export function registerAuthResource(server: McpServer, options: RegisterAuthRes
     async (uri, variables) => {
       const tag = pickFirstVariable(variables.tag);
       let text: string;
-      if (!tag) {
-        text = 'No tag provided.';
-      } else {
+      if (tag) {
         const roles = registry.findRolesByTag(tag);
         text = JSON.stringify({ tag, roles }, null, 2);
+      } else {
+        text = 'No tag provided.';
       }
       return {
         contents: [

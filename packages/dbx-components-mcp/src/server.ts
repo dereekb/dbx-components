@@ -503,9 +503,21 @@ function formatAuthExtractWarning(warning: { readonly kind: string; readonly fil
   for (const [key, value] of Object.entries(warning)) {
     if (key === 'kind') continue;
     if (value === undefined) continue;
-    parts.push(`${key}=${String(value)}`);
+    parts.push(`${key}=${formatWarningValue(value)}`);
   }
   return parts.join(' ');
+}
+
+function formatWarningValue(value: unknown): string {
+  let result: string;
+  if (value === null) {
+    result = 'null';
+  } else if (typeof value === 'object') {
+    result = JSON.stringify(value);
+  } else {
+    result = String(value);
+  }
+  return result;
 }
 
 const HINT_CLUSTER_LABEL: Record<DownstreamCluster, string> = {

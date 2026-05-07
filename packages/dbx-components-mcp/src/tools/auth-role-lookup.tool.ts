@@ -77,11 +77,11 @@ export function createAuthRoleLookupTool(input: CreateAuthRoleLookupToolInput): 
           text = formatCatalog(registry.roles);
         } else {
           const role = registry.findRole(normalized);
-          if (role !== undefined) {
+          if (role === undefined) {
+            text = formatNotFound(normalized, registry.roles);
+          } else {
             const claims = registry.findClaimsForRole(role.role);
             text = formatRole(role, claims, depth);
-          } else {
-            text = formatNotFound(normalized, registry.roles);
           }
         }
       } else {
@@ -104,8 +104,7 @@ function formatCatalog(roles: readonly AuthRoleInfo[]): string {
   for (const role of roles) {
     const constName = role.constName ? ` (\`${role.constName}\`)` : '';
     const tags = role.tags.length > 0 ? ` — tags: ${role.tags.map((t) => '`' + t + '`').join(', ')}` : '';
-    lines.push(`- \`${role.role}\`${constName}${tags}`);
-    lines.push(`  ${role.description}`);
+    lines.push(`- \`${role.role}\`${constName}${tags}`, `  ${role.description}`);
   }
   return lines.join('\n').trimEnd();
 }
@@ -114,22 +113,25 @@ function formatRole(role: AuthRoleInfo, claims: readonly AuthClaimInfo[], depth:
   const lines: string[] = [`# Role \`${role.role}\``, '', role.description, '', bullet('source', `${role.source}`), bullet('path', sourceLink(role.sourcePath, role.sourceLine))];
   if (role.constName !== undefined) lines.push(bullet('const', `\`${role.constName}\``));
   if (role.tags.length > 0) lines.push(bullet('tags', role.tags.map((t) => '`' + t + '`').join(', ')));
-
   if (depth === 'full') {
-    lines.push('', '## Set / revoked by claims', '');
-    if (claims.length === 0) {
-      lines.push('_(no catalogued claims set this role)_');
-    } else {
-      for (const claim of claims) {
-        const arrow = claim.mapping.inverse ? 'revokes' : 'grants';
-        const owner = claim.app ? ` (${claim.app})` : '';
-        lines.push(`- \`${claim.key}\`${owner} on \`${claim.interfaceName ?? '?'}\` — ${arrow} the role at ${sourceLink(claim.sourcePath, claim.sourceLine)}.`);
-      }
-    }
+    appendFullClaimMappings(lines, claims);
   } else {
     lines.push('', `→ Call \`dbx_auth_role_lookup topic="${role.role}" depth="full"\` for the claim mapping.`);
   }
   return lines.join('\n');
+}
+
+function appendFullClaimMappings(lines: string[], claims: readonly AuthClaimInfo[]): void {
+  lines.push('', '## Set / revoked by claims', '');
+  if (claims.length === 0) {
+    lines.push('_(no catalogued claims set this role)_');
+    return;
+  }
+  for (const claim of claims) {
+    const arrow = claim.mapping.inverse ? 'revokes' : 'grants';
+    const owner = claim.app ? ` (${claim.app})` : '';
+    lines.push(`- \`${claim.key}\`${owner} on \`${claim.interfaceName ?? '?'}\` — ${arrow} the role at ${sourceLink(claim.sourcePath, claim.sourceLine)}.`);
+  }
 }
 
 function formatTagLookup(registry: AuthRegistry, tag: string, depth: 'brief' | 'full'): string {
@@ -148,47 +150,55 @@ function formatTagLookup(registry: AuthRegistry, tag: string, depth: 'brief' | '
 function formatReverseLookup(input: { readonly registry: AuthRegistry; readonly model?: string; readonly verb?: string }): string {
   const { registry, model, verb } = input;
   const lines: string[] = ['# Reverse lookup'];
-  lines.push('', bullet('model', model !== undefined ? `\`${model}\`` : '_(unspecified)_'), bullet('verb', verb !== undefined ? `\`${verb}\`` : '_(unspecified)_'), '');
-
-  let scopes: readonly AuthScopeInfo[] = [];
-  if (verb !== undefined) {
-    scopes = registry.scopes.filter((s) => s.callType === verb);
-  }
-  lines.push('## Required scopes');
-  if (scopes.length === 0) {
-    lines.push('_(no catalogued scopes match that verb)_');
-  } else {
-    for (const scope of scopes) {
-      lines.push(`- \`${scope.scope}\` — ${scope.description}`);
-      for (const gate of scope.enforcedAt) {
-        lines.push(`  Enforced at ${sourceLink(gate.path, gate.line)} — ${gate.description}`);
-      }
-    }
-  }
-
+  lines.push('', bullet('model', model === undefined ? '_(unspecified)_' : `\`${model}\``), bullet('verb', verb === undefined ? '_(unspecified)_' : `\`${verb}\``), '');
+  appendReverseScopesSection(lines, registry, verb);
   // For now the reverse role lookup is a heuristic: surface every
   // privileged role tagged for the verb. Apps wiring concrete model gates
   // can extend this once their per-model role tags are catalogued.
-  lines.push('', '## Likely roles', '');
-  const tagHits = verb !== undefined ? registry.findRolesByTag(verb) : [];
-  const privileged = registry.findRolesByTag('privileged');
-  const seen = new Set<string>();
-  const allHits: AuthRoleInfo[] = [];
-  for (const role of [...tagHits, ...privileged]) {
-    if (!seen.has(role.role)) {
-      seen.add(role.role);
-      allHits.push(role);
+  appendReverseLikelyRolesSection(lines, registry, verb);
+  return lines.join('\n');
+}
+
+function appendReverseScopesSection(lines: string[], registry: AuthRegistry, verb: string | undefined): void {
+  const scopes: readonly AuthScopeInfo[] = verb === undefined ? [] : registry.scopes.filter((s) => s.callType === verb);
+  lines.push('## Required scopes');
+  if (scopes.length === 0) {
+    lines.push('_(no catalogued scopes match that verb)_');
+    return;
+  }
+  for (const scope of scopes) {
+    lines.push(`- \`${scope.scope}\` — ${scope.description}`);
+    for (const gate of scope.enforcedAt) {
+      lines.push(`  Enforced at ${sourceLink(gate.path, gate.line)} — ${gate.description}`);
     }
   }
+}
+
+function appendReverseLikelyRolesSection(lines: string[], registry: AuthRegistry, verb: string | undefined): void {
+  lines.push('', '## Likely roles', '');
+  const tagHits = verb === undefined ? [] : registry.findRolesByTag(verb);
+  const privileged = registry.findRolesByTag('privileged');
+  const allHits = dedupeRoles([...tagHits, ...privileged]);
   if (allHits.length === 0) {
     lines.push('_(no roles tagged for that verb — apps wire model-specific roles separately)_');
-  } else {
-    for (const role of allHits) {
-      const tags = role.tags.length > 0 ? ` (${role.tags.map((t) => '`' + t + '`').join(', ')})` : '';
-      lines.push(`- \`${role.role}\`${tags} — ${role.description}`);
+    return;
+  }
+  for (const role of allHits) {
+    const tags = role.tags.length > 0 ? ` (${role.tags.map((t) => '`' + t + '`').join(', ')})` : '';
+    lines.push(`- \`${role.role}\`${tags} — ${role.description}`);
+  }
+}
+
+function dedupeRoles(roles: readonly AuthRoleInfo[]): readonly AuthRoleInfo[] {
+  const seen = new Set<string>();
+  const out: AuthRoleInfo[] = [];
+  for (const role of roles) {
+    if (!seen.has(role.role)) {
+      seen.add(role.role);
+      out.push(role);
     }
   }
-  return lines.join('\n');
+  return out;
 }
 
 function formatNotFound(topic: string, roles: readonly AuthRoleInfo[]): string {
@@ -209,5 +219,5 @@ function bullet(label: string, value: string): string {
 }
 
 function sourceLink(path: string, line: number | undefined): string {
-  return line !== undefined ? `\`${path}:${line}\`` : `\`${path}\``;
+  return line === undefined ? `\`${path}\`` : `\`${path}:${line}\``;
 }

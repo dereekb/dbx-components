@@ -47,7 +47,7 @@ export const CALL_MODEL_OIDC_SCOPE_FOR_CALL_TYPE: Readonly<Record<KnownOnCallFun
  * @returns The required scope, or `undefined` if `call` is not one of the known CRUD verbs.
  */
 export function callModelOidcScopeForCallType(call: Maybe<OnCallFunctionType>): Maybe<CallModelOidcScope> {
-  const result: Maybe<CallModelOidcScope> = call != null ? CALL_MODEL_OIDC_SCOPE_FOR_CALL_TYPE[call as KnownOnCallFunctionType] : undefined;
+  const result: Maybe<CallModelOidcScope> = call == null ? undefined : CALL_MODEL_OIDC_SCOPE_FOR_CALL_TYPE[call as KnownOnCallFunctionType];
   return result;
 }
 
@@ -76,7 +76,7 @@ export const CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE = 'CALL_MODEL_MISSING_OIDC
 export function oidcCallModelScopePreAssert(): AssertModelCrudRequestFunction<unknown, OnCallTypedModelParams> {
   const fn: AssertModelCrudRequestFunction<unknown, OnCallTypedModelParams> = (context) => {
     const requiredScope = callModelOidcScopeForCallType(context.call);
-    const scopes = requiredScope != null ? getOidcScopesFromRequest(context.request) : undefined;
+    const scopes = requiredScope == null ? undefined : getOidcScopesFromRequest(context.request);
     const isMissingScope = requiredScope != null && scopes != null && !scopes.has(requiredScope);
 
     if (isMissingScope) {

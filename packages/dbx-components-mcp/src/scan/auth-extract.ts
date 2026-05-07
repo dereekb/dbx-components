@@ -19,7 +19,7 @@
  * the identifier text so callers can still see them in registry output.
  */
 
-import { Node, type Expression, type InterfaceDeclaration, type JSDoc, type ObjectLiteralExpression, type PropertyAssignment, type PropertySignature, type Project, type TypeAliasDeclaration } from 'ts-morph';
+import { Node, type Expression, type InterfaceDeclaration, type JSDoc, type ObjectLiteralExpression, type PropertyAssignment, type PropertySignature, type Project, type TypeAliasDeclaration, type VariableStatement } from 'ts-morph';
 import type { AuthClaimRoleMappingInfo } from '../registry/auth-runtime.js';
 
 // MARK: Tag names
@@ -188,11 +188,11 @@ function readAppTag(input: ReadAppTagInput): TaggedAppDecl | undefined {
   const { decl, interfaceName, filePath, warnings } = input;
   const slug = readJsDocFirstTagValue(decl.getJsDocs(), AUTH_CLAIMS_APP_TAG);
   let result: TaggedAppDecl | undefined;
-  if (slug === 'has-marker-empty') {
+  if (slug.kind === 'empty') {
     warnings.push({ kind: 'app-missing-slug', interfaceName, filePath, line: decl.getStartLineNumber() });
-  } else if (typeof slug === 'string') {
+  } else if (slug.kind === 'value') {
     result = {
-      slug,
+      slug: slug.text,
       interfaceName,
       decl,
       filePath,
@@ -218,40 +218,51 @@ interface ParsedRoleMapping {
 function collectServiceMappings(project: Project, warnings: AuthExtractWarning[], appDecls: readonly TaggedAppDecl[]): ReadonlyMap<string, ServiceMapping> {
   const knownAppSlugs = new Set(appDecls.map((a) => a.slug.toLowerCase()));
   const out = new Map<string, ServiceMapping>();
-
   for (const sourceFile of project.getSourceFiles()) {
     const filePath = sourceFile.getFilePath();
     for (const stmt of sourceFile.getVariableStatements()) {
       if (!stmt.isExported()) continue;
-      const slug = readJsDocFirstTagValue(stmt.getJsDocs(), AUTH_CLAIMS_SERVICE_TAG);
-      if (slug === undefined) continue;
-      const decls = stmt.getDeclarations();
-      if (slug === 'has-marker-empty') {
-        for (const decl of decls) {
-          warnings.push({ kind: 'service-missing-slug', constName: decl.getName(), filePath, line: decl.getStartLineNumber() });
-        }
-        continue;
-      }
-      const slugLower = slug.toLowerCase();
-      if (!knownAppSlugs.has(slugLower)) {
-        for (const decl of decls) {
-          warnings.push({ kind: 'service-without-app', constName: decl.getName(), slug, filePath, line: decl.getStartLineNumber() });
-        }
-        continue;
-      }
-      for (const decl of decls) {
-        const constName = decl.getName();
-        const perKey = parseServiceInitializer(decl.getInitializer());
-        out.set(slugLower, {
-          constName,
-          perKey,
-          filePath,
-          line: decl.getStartLineNumber()
-        });
-      }
+      processServiceStatement({ stmt, filePath, knownAppSlugs, warnings, out });
     }
   }
   return out;
+}
+
+interface ProcessServiceStatementInput {
+  readonly stmt: VariableStatement;
+  readonly filePath: string;
+  readonly knownAppSlugs: ReadonlySet<string>;
+  readonly warnings: AuthExtractWarning[];
+  readonly out: Map<string, ServiceMapping>;
+}
+
+function processServiceStatement(input: ProcessServiceStatementInput): void {
+  const { stmt, filePath, knownAppSlugs, warnings, out } = input;
+  const slug = readJsDocFirstTagValue(stmt.getJsDocs(), AUTH_CLAIMS_SERVICE_TAG);
+  if (slug.kind === 'absent') return;
+  const decls = stmt.getDeclarations();
+  if (slug.kind === 'empty') {
+    for (const decl of decls) {
+      warnings.push({ kind: 'service-missing-slug', constName: decl.getName(), filePath, line: decl.getStartLineNumber() });
+    }
+    return;
+  }
+  const slugText = slug.text;
+  const slugLower = slugText.toLowerCase();
+  if (!knownAppSlugs.has(slugLower)) {
+    for (const decl of decls) {
+      warnings.push({ kind: 'service-without-app', constName: decl.getName(), slug: slugText, filePath, line: decl.getStartLineNumber() });
+    }
+    return;
+  }
+  for (const decl of decls) {
+    out.set(slugLower, {
+      constName: decl.getName(),
+      perKey: parseServiceInitializer(decl.getInitializer()),
+      filePath,
+      line: decl.getStartLineNumber()
+    });
+  }
 }
 
 function parseServiceInitializer(initializer: Expression | undefined): ReadonlyMap<string, ParsedRoleMapping> {
@@ -570,29 +581,32 @@ function collectInheritedInterfaceNamesFromTypeNode(typeNode: Node, sink: string
 }
 
 // MARK: JSDoc helpers
-type JsDocFirstTagValue = string | 'has-marker-empty' | undefined;
+type JsDocFirstTagValue = { readonly kind: 'value'; readonly text: string } | { readonly kind: 'empty' } | { readonly kind: 'absent' };
+
+const JSDOC_TAG_ABSENT: JsDocFirstTagValue = { kind: 'absent' };
+const JSDOC_TAG_EMPTY: JsDocFirstTagValue = { kind: 'empty' };
 
 /**
  * Reads the first occurrence of `@<tagName>` from the supplied JSDoc blocks.
  *
  * @param jsDocs - the JSDoc blocks attached to the declaration
  * @param tagName - the tag name to look for, without the leading `@`
- * @returns the trimmed comment text when the tag carries a value;
- *   `'has-marker-empty'` when the tag is present but empty (callers treat
- *   that as a warning condition); `undefined` when the tag is not present
- *   at all.
+ * @returns a discriminated value: `{ kind: 'value', text }` when the tag
+ *   carries a value, `{ kind: 'empty' }` when the tag is present but empty
+ *   (callers treat that as a warning condition), and `{ kind: 'absent' }`
+ *   when the tag is not present at all.
  */
 function readJsDocFirstTagValue(jsDocs: readonly JSDoc[], tagName: string): JsDocFirstTagValue {
-  let result: JsDocFirstTagValue;
+  let result: JsDocFirstTagValue = JSDOC_TAG_ABSENT;
   for (const jsDoc of jsDocs) {
     for (const tag of jsDoc.getTags()) {
       if (tag.getTagName() === tagName) {
         const text = tag.getCommentText()?.trim() ?? '';
-        result = text.length > 0 ? text : 'has-marker-empty';
+        result = text.length > 0 ? { kind: 'value', text } : JSDOC_TAG_EMPTY;
         break;
       }
     }
-    if (result !== undefined) break;
+    if (result.kind !== 'absent') break;
   }
   return result;
 }

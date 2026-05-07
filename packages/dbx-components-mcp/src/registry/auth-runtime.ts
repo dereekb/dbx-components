@@ -351,53 +351,10 @@ export function createAuthRegistryFromEntries(input: CreateAuthRegistryFromEntri
   const scopes = input.scopes ?? [];
   const apps = input.apps ?? [];
   const loadedSources = input.loadedSources ?? [];
-
-  const rolesByKey = new Map<string, AuthRoleInfo>();
-  const rolesByTag = new Map<string, AuthRoleInfo[]>();
-  for (const role of roles) {
-    const lowered = role.role.toLowerCase();
-    if (!rolesByKey.has(lowered)) {
-      rolesByKey.set(lowered, role);
-    }
-    if (role.constName !== undefined) {
-      const constLowered = role.constName.toLowerCase();
-      if (!rolesByKey.has(constLowered)) {
-        rolesByKey.set(constLowered, role);
-      }
-    }
-    for (const tag of role.tags) {
-      pushInto(rolesByTag, tag.toLowerCase(), role);
-    }
-  }
-
-  const claimsByApp = new Map<string, AuthClaimInfo[]>();
-  const claimsByInterface = new Map<string, AuthClaimInfo[]>();
-  const claimsByRole = new Map<string, AuthClaimInfo[]>();
-  for (const claim of claims) {
-    if (claim.app !== undefined) {
-      pushInto(claimsByApp, claim.app.toLowerCase(), claim);
-    }
-    if (claim.interfaceName !== undefined) {
-      pushInto(claimsByInterface, claim.interfaceName.toLowerCase(), claim);
-    }
-    for (const role of claim.mapping.roles) {
-      pushInto(claimsByRole, role.toLowerCase(), claim);
-    }
-  }
-
-  const scopesByName = new Map<string, AuthScopeInfo>();
-  for (const scope of scopes) {
-    if (!scopesByName.has(scope.scope)) {
-      scopesByName.set(scope.scope, scope);
-    }
-  }
-
-  const appsBySlug = new Map<string, AuthAppInfo>();
-  const appsByInterface = new Map<string, AuthAppInfo>();
-  for (const app of apps) {
-    appsBySlug.set(app.app.toLowerCase(), app);
-    appsByInterface.set(app.claimsInterfaceName.toLowerCase(), app);
-  }
+  const { rolesByKey, rolesByTag } = indexRoles(roles);
+  const { claimsByApp, claimsByInterface, claimsByRole } = indexClaims(claims);
+  const scopesByName = indexScopes(scopes);
+  const { appsBySlug, appsByInterface } = indexApps(apps);
 
   const registry: AuthRegistry = {
     roles,
@@ -413,17 +370,15 @@ export function createAuthRegistryFromEntries(input: CreateAuthRegistryFromEntri
     },
     findClaim(key, app) {
       let result: AuthClaimInfo | undefined;
-      if (app !== undefined) {
+      if (app === undefined) {
+        result = claims.find((c) => c.key === key);
+      } else {
         const inApp = claimsByApp.get(app.toLowerCase()) ?? [];
         result = inApp.find((c) => c.key === key);
-        if (result === undefined) {
-          // Fall back to library-level claims (no `app`) — apps inherit
-          // them via type intersections like
-          // `DemoApiAuthClaims = StorageFileUploadUserClaims & {…}`.
-          result = claims.find((c) => c.key === key && c.app === undefined);
-        }
-      } else {
-        result = claims.find((c) => c.key === key);
+        // Fall back to library-level claims (no `app`) — apps inherit
+        // them via type intersections like
+        // `DemoApiAuthClaims = StorageFileUploadUserClaims & {…}`.
+        result ??= claims.find((c) => c.key === key && c.app === undefined);
       }
       return result;
     },
@@ -464,4 +419,53 @@ function pushInto<K, V>(map: Map<K, V[]>, key: K, value: V): void {
   } else {
     existing.push(value);
   }
+}
+
+function indexRoles(roles: readonly AuthRoleInfo[]): { readonly rolesByKey: Map<string, AuthRoleInfo>; readonly rolesByTag: Map<string, AuthRoleInfo[]> } {
+  const rolesByKey = new Map<string, AuthRoleInfo>();
+  const rolesByTag = new Map<string, AuthRoleInfo[]>();
+  for (const role of roles) {
+    const lowered = role.role.toLowerCase();
+    if (!rolesByKey.has(lowered)) rolesByKey.set(lowered, role);
+    if (role.constName !== undefined) {
+      const constLowered = role.constName.toLowerCase();
+      if (!rolesByKey.has(constLowered)) rolesByKey.set(constLowered, role);
+    }
+    for (const tag of role.tags) {
+      pushInto(rolesByTag, tag.toLowerCase(), role);
+    }
+  }
+  return { rolesByKey, rolesByTag };
+}
+
+function indexClaims(claims: readonly AuthClaimInfo[]): { readonly claimsByApp: Map<string, AuthClaimInfo[]>; readonly claimsByInterface: Map<string, AuthClaimInfo[]>; readonly claimsByRole: Map<string, AuthClaimInfo[]> } {
+  const claimsByApp = new Map<string, AuthClaimInfo[]>();
+  const claimsByInterface = new Map<string, AuthClaimInfo[]>();
+  const claimsByRole = new Map<string, AuthClaimInfo[]>();
+  for (const claim of claims) {
+    if (claim.app !== undefined) pushInto(claimsByApp, claim.app.toLowerCase(), claim);
+    if (claim.interfaceName !== undefined) pushInto(claimsByInterface, claim.interfaceName.toLowerCase(), claim);
+    for (const role of claim.mapping.roles) {
+      pushInto(claimsByRole, role.toLowerCase(), claim);
+    }
+  }
+  return { claimsByApp, claimsByInterface, claimsByRole };
+}
+
+function indexScopes(scopes: readonly AuthScopeInfo[]): Map<string, AuthScopeInfo> {
+  const scopesByName = new Map<string, AuthScopeInfo>();
+  for (const scope of scopes) {
+    if (!scopesByName.has(scope.scope)) scopesByName.set(scope.scope, scope);
+  }
+  return scopesByName;
+}
+
+function indexApps(apps: readonly AuthAppInfo[]): { readonly appsBySlug: Map<string, AuthAppInfo>; readonly appsByInterface: Map<string, AuthAppInfo> } {
+  const appsBySlug = new Map<string, AuthAppInfo>();
+  const appsByInterface = new Map<string, AuthAppInfo>();
+  for (const app of apps) {
+    appsBySlug.set(app.app.toLowerCase(), app);
+    appsByInterface.set(app.claimsInterfaceName.toLowerCase(), app);
+  }
+  return { appsBySlug, appsByInterface };
 }

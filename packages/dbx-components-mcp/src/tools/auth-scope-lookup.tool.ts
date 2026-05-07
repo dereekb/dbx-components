@@ -52,10 +52,10 @@ export function createAuthScopeLookupTool(input: CreateAuthScopeLookupToolInput)
         result = { content: [{ type: 'text', text: formatCatalog(registry.scopes) }] };
       } else {
         const scope = registry.findScope(normalized);
-        if (scope !== undefined) {
-          result = { content: [{ type: 'text', text: formatScope(scope, depth) }] };
-        } else {
+        if (scope === undefined) {
           result = { content: [{ type: 'text', text: formatNotFound(normalized, registry.scopes) }] };
+        } else {
+          result = { content: [{ type: 'text', text: formatScope(scope, depth) }] };
         }
       }
       return result;
@@ -117,5 +117,5 @@ function bullet(label: string, value: string): string {
 }
 
 function sourceLink(path: string, line: number | undefined): string {
-  return line !== undefined ? `\`${path}:${line}\`` : `\`${path}\``;
+  return line === undefined ? `\`${path}\`` : `\`${path}:${line}\``;
 }
