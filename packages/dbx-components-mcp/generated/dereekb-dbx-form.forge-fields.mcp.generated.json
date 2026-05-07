@@ -1684,7 +1684,26 @@
       "arrayOutput": "no",
       "description": "Pre-configured text field for capturing a full name with sensible min/max length defaults.",
       "example": "dbxForgeNameField({ key: 'fullName', label: 'Full Name', required: true })",
-      "properties": [],
+      "properties": [
+        {
+          "name": "autocomplete",
+          "type": "FieldAutocompleteAttributeOption",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "inputType",
+          "type": "DbxForgeTextFieldInputType",
+          "description": "HTML input type. Defaults to `'text'`.",
+          "required": false
+        },
+        {
+          "name": "idempotentTransform",
+          "type": "TransformStringFunctionConfig",
+          "description": "An idempotent string transformation applied as a value parser (e.g., trim, uppercase).\n\nFor non-idempotent transformations, you should directly configure the `transform` property instead.",
+          "required": false
+        }
+      ],
       "composesFromSlugs": [
         "text"
       ],
@@ -1875,7 +1894,26 @@
       "arrayOutput": "no",
       "description": "Latitude/longitude coordinate input with decimal-degree pattern validation.",
       "example": "dbxForgeLatLngTextField({ key: 'coords', label: 'Coordinates' })",
-      "properties": [],
+      "properties": [
+        {
+          "name": "autocomplete",
+          "type": "FieldAutocompleteAttributeOption",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "inputType",
+          "type": "DbxForgeTextFieldInputType",
+          "description": "HTML input type. Defaults to `'text'`.",
+          "required": false
+        },
+        {
+          "name": "idempotentTransform",
+          "type": "TransformStringFunctionConfig",
+          "description": "An idempotent string transformation applied as a value parser (e.g., trim, uppercase).\n\nFor non-idempotent transformations, you should directly configure the `transform` property instead.",
+          "required": false
+        }
+      ],
       "composesFromSlugs": [
         "text"
       ],
