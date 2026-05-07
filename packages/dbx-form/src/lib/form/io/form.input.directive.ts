@@ -94,7 +94,7 @@ export function dbxFormSourceObservableFromStream<T>(streamObs: Observable<DbxFo
 /**
  * Modes that define when to copy data from the source to the form.
  *
- * - `'reset'`: Only copy data when the form is reset.
+ * - `'reset'`: Only copy data when the form is reset or is untouched.
  * - `'always'`: Always copy data when the data observable emits a value. Has a throttle of 20ms to prevent too many emissions. If emissions occur in a manner that appears to be a loop (more than 30 emissions in 1 second), then an error is thrown and warning printed to the console.
  * - `'every'`: Equal to always, but has no throttle or error message warning.
  */

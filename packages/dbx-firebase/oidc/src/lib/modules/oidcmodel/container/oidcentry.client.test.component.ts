@@ -69,25 +69,25 @@ export class DbxFirebaseOidcEntryClientTestComponent {
   readonly clientIdSignal = toSignal(this.oidcEntryDocumentStore.data$.pipe(map((data) => (data.payload as OidcEntryOAuthClientPayloadData)?.client_id)));
 
   // MARK: Form Config
-  readonly formConfig = computed<OidcEntryClientTestFormFieldsConfig | undefined>(() => {
-    const redirectUris = this.redirectUrisSignal();
+  readonly formConfig = computed<OidcEntryClientTestFormFieldsConfig>(() => {
+    const redirectUris = this.redirectUrisSignal() ?? [];
     const availableScopes = this.resolvedAvailableScopes();
 
-    if (redirectUris) {
-      return { redirectUris, availableScopes };
-    }
+    console.log('formConfig:', { redirectUris, availableScopes });
 
-    return undefined;
+    return { redirectUris, availableScopes };
   });
 
   readonly formTemplate$ = this.oidcEntryDocumentStore.data$.pipe(
     map((data) => {
       const payload = data.payload as OidcEntryOAuthClientPayloadData;
+
       const formValue: DbxFirebaseOidcModelClientTestFormValue = {
         client_id: payload?.client_id ?? '',
         redirect_uri: payload?.redirect_uris?.[0] ?? '',
         scopes: ['openid']
       };
+
       return formValue;
     })
   );

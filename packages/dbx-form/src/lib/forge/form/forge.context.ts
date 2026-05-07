@@ -2,7 +2,7 @@ import { Injectable, type OnDestroy, type Provider, type Signal, signal, compute
 import { BehaviorSubject, combineLatest, type Observable, shareReplay, switchMap, filter, map, scan } from 'rxjs';
 import { type DbxMutableForm, type DbxFormEvent, type DbxFormDisabledKey, DbxFormState, DEFAULT_FORM_DISABLED_KEY, provideDbxMutableForm } from '../../form/form';
 import { type BooleanStringKeyArray, BooleanStringKeyArrayUtility, type FilterFromPOJOFunction, type Maybe } from '@dereekb/util';
-import { LockSet, filterMaybe } from '@dereekb/rxjs';
+import { LockSet, filterMaybe, tapLog } from '@dereekb/rxjs';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
 import { type FieldTree } from '@angular/forms/signals';
 import { type DbxForgeFinalizeFormConfigResult, dbxForgeFinalizeFormConfig } from './forge.form';
@@ -251,6 +251,7 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
   private readonly _reset = new BehaviorSubject<Date>(new Date());
 
   private readonly _internalConfig$: Observable<Maybe<DbxForgeFinalizeFormConfigResult>> = this._config.pipe(
+    tapLog('internal config'),
     scan<Maybe<FormConfig>, Maybe<DbxForgeFinalizeFormConfigResult>, Maybe<DbxForgeFinalizeFormConfigResult>>((acc, config) => {
       let result: Maybe<DbxForgeFinalizeFormConfigResult>;
 
@@ -266,12 +267,14 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
 
       return result;
     }, undefined),
+    tapLog('internal config result'),
     shareReplay(1)
   );
 
   readonly config$: Observable<FormConfig> = this._internalConfig$.pipe(
     filterMaybe(),
     map(({ config }) => config),
+    tapLog('config'),
     shareReplay(1)
   );
 

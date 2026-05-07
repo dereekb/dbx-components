@@ -4,6 +4,7 @@ export * from './config';
 export * from './context';
 export * from './doctor';
 export * from './env';
+export * from './manifest';
 export * from './middleware';
 export * from './output';
 export * from './runner';

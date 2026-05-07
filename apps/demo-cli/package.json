@@ -10,6 +10,8 @@
     "@dereekb/dbx-cli": "13.10.9",
     "@dereekb/firebase": "13.10.9",
     "@dereekb/util": "13.10.9",
+    "arktype": "^2.2.0",
+    "demo-firebase": "*",
     "yargs": "^18.0.0"
   },
   "devDependencies": {

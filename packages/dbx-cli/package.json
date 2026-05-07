@@ -6,6 +6,7 @@
     "@dereekb/firebase": "13.10.9",
     "@dereekb/nestjs": "13.10.9",
     "@dereekb/util": "13.10.9",
+    "arktype": "^2.2.0",
     "yargs": "^18.0.0"
   },
   "devDependencies": {

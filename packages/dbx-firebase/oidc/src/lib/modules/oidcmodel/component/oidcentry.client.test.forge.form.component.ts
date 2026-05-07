@@ -4,6 +4,7 @@ import { oidcEntryClientTestForgeFormFields, type OidcEntryClientTestFormFieldsC
 import { type Maybe } from '@dereekb/util';
 import type { FormConfig } from '@ng-forge/dynamic-forms';
 import { map, type Observable } from 'rxjs';
+import { tapLog } from '@dereekb/rxjs';
 
 export interface DbxFirebaseOidcModelClientTestFormValue {
   client_id: string;
@@ -28,12 +29,7 @@ export type DbxFirebaseOidcEntryClientTestFormComponentConfig = OidcEntryClientT
 })
 export class DbxFirebaseOidcEntryClientTestForgeFormComponent extends AbstractConfigAsyncForgeFormDirective<DbxFirebaseOidcModelClientTestFormValue, DbxFirebaseOidcEntryClientTestFormComponentConfig> {
   readonly formConfig$: Observable<Maybe<FormConfig>> = this.currentConfig$.pipe(
-    map((config) => {
-      if (!config) {
-        return undefined;
-      }
-
-      return oidcEntryClientTestForgeFormFields(config);
-    })
+    map((config) => (config ? oidcEntryClientTestForgeFormFields(config) : undefined)),
+    tapLog('config')
   );
 }

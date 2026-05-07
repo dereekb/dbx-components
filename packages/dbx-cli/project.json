@@ -51,7 +51,10 @@
     },
     "lint": {
       "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"]
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["packages/dbx-cli/src/**/*.{ts,tsx}"]
+      }
     },
     "run-tests": {
       "executor": "nx:run-commands",
