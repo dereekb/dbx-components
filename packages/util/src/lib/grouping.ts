@@ -81,6 +81,11 @@ export type IndexedBatch<T> = T[] & Readonly<IndexRef>;
  * @param batchSize - Maximum number of items per batch.
  * @returns An array of {@link IndexedBatch} arrays.
  *
+ * @dbxUtil
+ * @dbxUtilCategory grouping
+ * @dbxUtilTags array, batch, chunk, split, group, partition, indexed
+ * @dbxUtilRelated batch-calc, item-count-for-batch-index
+ *
  * @example
  * ```ts
  * const result = batch(['a', 'b', 'c', 'd'], 2);
@@ -128,6 +133,11 @@ export interface BatchCalc extends BatchCount {
 
 /**
  * Calculates batch metrics (count, full batches, remainder) from a {@link BatchCount} configuration.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory grouping
+ * @dbxUtilTags batch, calculate, count, remainder, math
+ * @dbxUtilRelated batch, item-count-for-batch-index
  *
  * @param input - The total items and items-per-batch configuration.
  * @returns A {@link BatchCalc} with computed batch counts and remainder.
@@ -193,6 +203,11 @@ export function restoreOrderWithValues<T, K extends PrimativeKey = PrimativeKey>
  * @param params.chooseRetainedValue - function that selects which value to keep when duplicates share the same key; defaults to keeping the first
  * @param params.excludeNewItems - when true, values whose keys are not in `orderKeys` are omitted from the result; defaults to false
  * @returns The reordered values array.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory grouping
+ * @dbxUtilTags array, order, restore, sort, key, reorder, dedupe
+ * @dbxUtilRelated restore-order-with-values, group-values
  *
  * @example
  * ```ts
@@ -302,6 +317,11 @@ export function makeKeyPairs<T, K extends string | number = string | number>(val
 /**
  * Separates values into included and excluded groups based on a decision function.
  *
+ * @dbxUtil
+ * @dbxUtilCategory grouping
+ * @dbxUtilTags array, separate, partition, split, filter, group
+ * @dbxUtilRelated group-values, pair-group-values
+ *
  * @param values - Values to separate.
  * @param checkInclusion - Returns `true` for values that should be included.
  * @returns A {@link SeparateResult} with included and excluded arrays.
@@ -319,6 +339,11 @@ export function separateValues<T>(values: T[], checkInclusion: DecisionFunction<
 
 /**
  * Groups values by key into a plain object. Convenience wrapper around {@link makeValuesGroupMap} that returns a POJO instead of a Map.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory grouping
+ * @dbxUtilTags array, group, partition, key, by, object, dictionary
+ * @dbxUtilRelated make-values-group-map, separate-values, pair-group-values
  *
  * @param values - Values to group.
  * @param groupKeyFn - Extracts the grouping key from each value.
@@ -339,6 +364,11 @@ export function groupValues<T, K extends PrimativeKey = PrimativeKey>(values: Ma
  * @param values - Values to group.
  * @param groupKeyFn - Extracts the grouping key from each value.
  * @returns A Map from each key to its array of values.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory grouping
+ * @dbxUtilTags array, group, map, key, partition, by, dictionary
+ * @dbxUtilRelated group-values, separate-values, pair-group-values
  *
  * @example
  * ```ts

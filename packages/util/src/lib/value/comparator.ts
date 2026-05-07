@@ -17,6 +17,12 @@ export type EqualityComparatorFunction<T> = (a: T, b: T) => boolean;
  * @param compare - the comparator to wrap
  * @returns a new comparator that handles nullish values safely before delegating to the wrapped comparator
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags equal, equality, compare, comparator, maybe, safe, factory
+ * @dbxUtilRelated safe-compare-equality
+ *
  * @example
  * ```ts
  * const safeCompare = safeEqualityComparatorFunction((a: number, b: number) => a === b);
@@ -39,6 +45,11 @@ export function safeEqualityComparatorFunction<T>(compare: EqualityComparatorFun
  * @param b - second value to compare
  * @param compare - the equality comparator for non-nullish values
  * @returns `true` if the values are considered equal
+ *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilTags equal, equality, compare, maybe, safe
+ * @dbxUtilRelated safe-equality-comparator-function
  *
  * @example
  * ```ts

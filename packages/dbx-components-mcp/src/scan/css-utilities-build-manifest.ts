@@ -19,8 +19,8 @@ import { resolve } from 'node:path';
 import { type } from 'arktype';
 import { CssUtilityManifest, type CssUtilityEntry } from '../manifest/css-utilities-schema.js';
 import { extractCssUtilityEntries, type ExtractedCssUtilityEntry, type ExtractWarning } from './css-utilities-extract.js';
-import { DEFAULT_CSS_UTILITIES_SCAN_OUT_PATH, CSS_UTILITIES_SCAN_CONFIG_FILENAME, CssUtilitiesScanConfig, type CssUtilitiesScanSection } from './css-utilities-scan-config-schema.js';
-import { defaultGlobber, defaultReadFile, loadPackageName, type ScanGlobber, type ScanReadFile } from './scan-io.js';
+import { DEFAULT_CSS_UTILITIES_SCAN_OUT_PATH, CSS_UTILITIES_SCAN_CONFIG_FILENAME, CssUtilitiesScanConfig } from './css-utilities-scan-config-schema.js';
+import { defaultGlobber, defaultReadFile, loadPackageName, loadScanSection, type ScanGlobber, type ScanReadFile } from './scan-io.js';
 
 // MARK: Public types
 export type BuildCssUtilitiesReadFile = ScanReadFile;
@@ -66,7 +66,17 @@ export async function buildCssUtilitiesManifest(input: BuildCssUtilitiesManifest
   const configPath = resolve(projectRoot, CSS_UTILITIES_SCAN_CONFIG_FILENAME);
   const packagePath = resolve(projectRoot, 'package.json');
 
-  const configOutcome = await loadScanConfig(configPath, readFile);
+  const configOutcome = await loadScanSection({
+    configPath,
+    readFile,
+    parseSection: (parsed) => {
+      const validated = CssUtilitiesScanConfig(parsed);
+      if (validated instanceof type.errors) {
+        return { ok: false, error: validated.summary };
+      }
+      return { ok: true, section: validated.cssUtilities };
+    }
+  });
   if (configOutcome.kind !== 'ok') {
     return configOutcome.outcome;
   }
@@ -132,40 +142,6 @@ export async function buildCssUtilitiesManifest(input: BuildCssUtilitiesManifest
 }
 
 // MARK: Helpers
-type LoadScanConfigResult = { readonly kind: 'ok'; readonly section: CssUtilitiesScanSection } | { readonly kind: 'fail'; readonly outcome: Extract<BuildCssUtilitiesManifestOutcome, { kind: 'no-config' | 'invalid-scan-config' }> };
-
-async function loadScanConfig(configPath: string, readFile: BuildCssUtilitiesReadFile): Promise<LoadScanConfigResult> {
-  let raw: string | null = null;
-  try {
-    raw = await readFile(configPath);
-  } catch {
-    raw = null;
-  }
-  let result: LoadScanConfigResult;
-  if (raw === null) {
-    result = { kind: 'fail', outcome: { kind: 'no-config', configPath } };
-  } else {
-    let parsed: unknown;
-    let parseError: string | null = null;
-    try {
-      parsed = JSON.parse(raw);
-    } catch (err) {
-      parseError = err instanceof Error ? err.message : String(err);
-    }
-    if (parseError === null) {
-      const validated = CssUtilitiesScanConfig(parsed);
-      if (validated instanceof type.errors) {
-        result = { kind: 'fail', outcome: { kind: 'invalid-scan-config', configPath, error: validated.summary } };
-      } else {
-        result = { kind: 'ok', section: validated.cssUtilities };
-      }
-    } else {
-      result = { kind: 'fail', outcome: { kind: 'invalid-scan-config', configPath, error: parseError } };
-    }
-  }
-  return result;
-}
-
 interface AssembleEntryInput {
   readonly entry: ExtractedCssUtilityEntry;
   readonly sourceLabel: string;

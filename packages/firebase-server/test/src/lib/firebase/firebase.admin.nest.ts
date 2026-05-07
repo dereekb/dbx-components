@@ -314,6 +314,9 @@ export function firebaseAdminNestContextWithFixture<PI extends FirebaseAdminTest
  * {@link firebaseAdminTestContextFactory}. This is the simplest way to get a
  * fully configured Firebase Admin + NestJS test context.
  *
+ * @param config - NestJS module + provider configuration plus optional fixture/instance overrides.
+ * @returns A {@link FirebaseAdminNestTestContextFactory} that produces a configured fixture for each test suite.
+ *
  * @example
  * ```ts
  * const f = firebaseAdminNestContextFactory({

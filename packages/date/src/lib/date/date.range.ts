@@ -57,6 +57,11 @@ export interface DateRange extends DateRangeStart {
  * @param dateRange - the date range to measure
  * @returns the number of days in the range, inclusive
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, range, days, count, duration, span, length
+ * @dbxUtilRelated is-date-range, is-same-date-range
+ *
  * @example
  * ```ts
  * const range = { start: new Date('2024-01-01'), end: new Date('2024-01-03') };
@@ -72,6 +77,11 @@ export function dateRangeDaysCount(dateRange: DateRange): number {
  *
  * @param input - the value to check
  * @returns true if the value has valid Date `start` and `end` properties
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, range, type-guard, check, validate
+ * @dbxUtilRelated is-date-range-start, date-range-days-count
  *
  * @example
  * ```ts
@@ -91,6 +101,11 @@ export function isDateRange(input: unknown): input is DateRange {
  * @param a - first date range to compare
  * @param b - second date range to compare
  * @returns true if both ranges are equal or both are nullish
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, range, equal, equality, same, compare
+ * @dbxUtilRelated is-same-date-day-range, is-date-range
  *
  * @example
  * ```ts

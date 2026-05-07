@@ -8,14 +8,6 @@
   "implicitDependencies": ["!util-test"],
   "targets": {
     "build": {
-      "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/dist/apps/demo"],
-      "options": {
-        "command": "npx nx run demo:build-base",
-        "color": true
-      }
-    },
-    "build-base": {
       "executor": "@nx/angular:application",
       "outputs": ["{options.outputPath}"],
       "options": {
@@ -79,12 +71,12 @@
         "production": {
           "proxyConfig": "apps/demo/proxy.conf.prod.json",
           "port": 9010,
-          "buildTarget": "demo:build-base:production"
+          "buildTarget": "demo:build:production"
         },
         "development": {
           "proxyConfig": "apps/demo/proxy.conf.dev.json",
           "port": 9010,
-          "buildTarget": "demo:build-base:development"
+          "buildTarget": "demo:build:development"
         }
       },
       "defaultConfiguration": "development",

@@ -26,6 +26,7 @@ export interface MakeTestingFirebaseStorageAccessorDriverConfig {
  *
  * @param driver - The base storage accessor driver to wrap.
  * @param config - Optional configuration controlling test bucket behavior.
+ * @returns A driver with the same surface as `driver`, but with `getDefaultBucket` overridden to return a unique test bucket name when {@link MakeTestingFirebaseStorageAccessorDriverConfig.useTestDefaultBucket} requires it.
  */
 export function makeTestingFirebaseStorageAccesorDriver(driver: FirebaseStorageAccessorDriver, config?: MakeTestingFirebaseStorageAccessorDriverConfig): TestingFirebaseStorageAccessorDriver {
   const { useTestDefaultBucket } = config ?? {};
@@ -63,8 +64,9 @@ export interface TestingFirebaseStorageDrivers extends FirebaseStorageDrivers {
 /**
  * Extends the input drivers to generate new drivers for a testing environment.
  *
- * @param drivers
- * @returns
+ * @param drivers - The base Firebase Storage drivers to wrap.
+ * @param config - Optional config forwarded to {@link makeTestingFirebaseStorageAccesorDriver}; controls test-bucket override behavior.
+ * @returns A {@link TestingFirebaseStorageDrivers} marked with `storageDriverType: 'testing'` and a wrapped accessor driver.
  */
 export function makeTestingFirebaseStorageDrivers(drivers: FirebaseStorageDrivers, config?: MakeTestingFirebaseStorageAccessorDriverConfig): TestingFirebaseStorageDrivers {
   return {

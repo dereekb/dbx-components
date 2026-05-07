@@ -13,8 +13,22 @@ import { invertBooleanReturnFunction } from '../function/function.boolean';
 export type StripObjectFunction<T extends object> = (input: Maybe<T>, copy?: Maybe<boolean>) => T | undefined;
 
 /**
+ * Creates a reusable {@link StripObjectFunction} that filters values from an object and returns
+ * `undefined` when no keys remain after filtering.
  *
- * @param input
+ * Useful when an upstream consumer treats an "empty" object as a missing value (e.g. for skipping
+ * persistence or omitting a field from a request body).
+ *
+ * @param filter - Filter controlling which key/value pairs are removed from the input object.
+ * @param copy - When true (default), the returned function shallow-copies the input before filtering instead of mutating it.
+ * @returns A function that returns the stripped object, or `undefined` when filtering removed every key.
+ *
+ * @example
+ * ```ts
+ * const stripUndef = stripObjectFunction(KeyValueTypleValueFilter.UNDEFINED);
+ * stripUndef({ a: 1, b: undefined });  // { a: 1 }
+ * stripUndef({ a: undefined });        // undefined
+ * ```
  */
 export function stripObjectFunction<T extends object>(filter: FilterKeyValueTuplesInput<T>, copy: boolean = true): StripObjectFunction<T> {
   const filterFn = filterFromPOJOFunction<T>({ filter, copy });
@@ -31,6 +45,22 @@ export function stripObjectFunction<T extends object>(filter: FilterKeyValueTupl
   };
 }
 
+/**
+ * Removes `undefined` values from the input object and returns `undefined` when no keys remain.
+ *
+ * Convenience wrapper around {@link stripObjectFunction} pre-configured to filter out `undefined`.
+ *
+ * @param input - The object to strip; null/undefined inputs short-circuit and return `undefined`.
+ * @param copy - When true (default), shallow-copies the input before filtering instead of mutating it.
+ * @returns The stripped object, or `undefined` when input was missing or filtering removed every key.
+ *
+ * @example
+ * ```ts
+ * stripObject({ a: 1, b: undefined }); // { a: 1 }
+ * stripObject({ a: undefined });       // undefined
+ * stripObject(null);                   // undefined
+ * ```
+ */
 export function stripObject<T extends object>(input: Maybe<T>, copy?: boolean): T | undefined {
   return stripObjectFunction<T>(KeyValueTypleValueFilter.UNDEFINED, copy)(input);
 }

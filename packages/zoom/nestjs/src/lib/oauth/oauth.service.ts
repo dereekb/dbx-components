@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { type ZoomAccessToken, type ZoomAccessTokenCache } from '@dereekb/zoom';
-import { type Maybe, type Configurable, filterMaybeArrayValues, tryWithPromiseFactoriesFunction, isPast } from '@dereekb/util';
-import { dirname } from 'node:path';
-import { readFile, writeFile, rm, mkdirSync } from 'node:fs';
+import { type AsyncValueCache, type Maybe, filterMaybeArrayValues, inMemoryAsyncValueCache, isExpired, mergeAsyncValueCaches } from '@dereekb/util';
+import { createJsonFileAsyncValueCache, createMemoizedJsonFileAsyncValueCache, readJsonFile } from '@dereekb/nestjs';
 
 /**
  * Service used for retrieving ZoomAccessTokenCache for Zoom services.
@@ -26,6 +25,26 @@ export abstract class ZoomOAuthAccessTokenCacheService {
 export type ZoomOAuthAccessTokenCacheServiceWithRefreshToken = Required<ZoomOAuthAccessTokenCacheService>;
 
 // MARK: Merge
+function buildZoomReadAdapter(cache: ZoomAccessTokenCache): AsyncValueCache<ZoomAccessToken> {
+  return {
+    load: async () => {
+      const value = await cache.loadCachedToken().catch(() => undefined);
+      return value != null && !isExpired(value) ? value : undefined;
+    },
+    update: (token) => cache.updateCachedToken(token),
+    clear: async () => {
+      // ZoomAccessTokenCache does not expose a clear method.
+    }
+  };
+}
+
+function updateZoomCacheCapturingError(cache: ZoomAccessTokenCache, accessToken: ZoomAccessToken): Promise<null | readonly [ZoomAccessTokenCache, unknown]> {
+  return cache
+    .updateCachedToken(accessToken)
+    .then(() => null)
+    .catch((e) => [cache, e] as const);
+}
+
 export type LogMergeZoomOAuthAccessTokenCacheServiceErrorFunction = (failedUpdates: (readonly [ZoomAccessTokenCache, unknown])[]) => void;
 
 /**
@@ -47,6 +66,11 @@ export function logMergeZoomOAuthAccessTokenCacheServiceErrorFunction(failedUpda
  *
  * When updating a cached token, it will update the token across all services.
  *
+ * Read fall-through is delegated to {@link mergeAsyncValueCaches} after wrapping each
+ * underlying cache with an {@link isExpired}-aware filter, so an expired cached token
+ * never short-circuits the lookup. Updates run across all services in parallel via
+ * `Promise.allSettled`, mirroring the previous behavior, with optional error logging.
+ *
  * @param inputServicesToMerge Must include at least one service. Empty arrays will throw an error.
  * @param logError Optional error logging configuration. Pass a function, true for default logging, or false to disable.
  * @returns A merged ZoomOAuthAccessTokenCacheService
@@ -59,56 +83,26 @@ export function mergeZoomOAuthAccessTokenCacheServices(inputServicesToMerge: Zoo
     throw new Error('mergeZoomOAuthAccessTokenCacheServices() input cannot be empty.');
   }
 
-  const loadZoomAccessTokenCache = (accessCachesForServices: ZoomAccessTokenCache[]) => {
-    const loadCachedTokenFromFirstService = tryWithPromiseFactoriesFunction<void, ZoomAccessToken>({
-      promiseFactories: accessCachesForServices.map(
-        (x) => () =>
-          x
-            .loadCachedToken()
-            .catch(() => null)
-            .then((x) => {
-              let result: Maybe<ZoomAccessToken> = undefined;
+  function mergeCachesForService(accessCachesForServices: ZoomAccessTokenCache[]): ZoomAccessTokenCache {
+    // Per-cache adapters with expiry filtering so reads fall through to the next tier when a cache holds an expired token.
+    const readAdapters: AsyncValueCache<ZoomAccessToken>[] = accessCachesForServices.map(buildZoomReadAdapter);
+    const merged = mergeAsyncValueCaches(readAdapters);
 
-              if (x && !isPast(x.expiresAt)) {
-                result = x; // only return from cache if it is not expired
-              }
+    return {
+      loadCachedToken: () => merged.load(),
+      updateCachedToken: async (accessToken) => {
+        const settled = await Promise.allSettled(accessCachesForServices.map((cache) => updateZoomCacheCapturingError(cache, accessToken)));
 
-              return result;
-            })
-      ),
-      successOnMaybe: false,
-      throwErrors: false
-    });
+        if (logErrorFunction != null) {
+          const failedUpdates = filterMaybeArrayValues(settled.map((y) => (y as PromiseFulfilledResult<unknown>).value)) as (readonly [ZoomAccessTokenCache, unknown])[];
 
-    const cacheForService: ZoomAccessTokenCache = {
-      loadCachedToken: function (): Promise<Maybe<ZoomAccessToken>> {
-        return loadCachedTokenFromFirstService();
-      },
-      updateCachedToken: async function (accessToken: ZoomAccessToken): Promise<void> {
-        return Promise.allSettled(
-          accessCachesForServices.map((x) =>
-            x
-              .updateCachedToken(accessToken)
-              .then(() => null)
-              .catch((e) => {
-                return [x, e] as const;
-              })
-          )
-        ).then((x) => {
-          // only find the failures if we're logging
-          if (logErrorFunction) {
-            const failedUpdates = filterMaybeArrayValues(x.map((y) => (y as PromiseFulfilledResult<unknown>).value)) as unknown as (readonly [ZoomAccessTokenCache, unknown])[];
-
-            if (failedUpdates.length) {
-              logErrorFunction(failedUpdates);
-            }
+          if (failedUpdates.length) {
+            logErrorFunction(failedUpdates);
           }
-        });
+        }
       }
     };
-
-    return cacheForService;
-  };
+  }
 
   const allServiceAccessTokenCaches = allServices.map((service) => service.loadZoomAccessTokenCache());
   const allServicesWithCacheForRefreshToken = allServices.filter((service) => service.cacheForRefreshToken != null) as ZoomOAuthAccessTokenCacheServiceWithRefreshToken[];
@@ -117,12 +111,12 @@ export function mergeZoomOAuthAccessTokenCacheServices(inputServicesToMerge: Zoo
     allServicesWithCacheForRefreshToken.length > 0
       ? (refreshToken: string): ZoomAccessTokenCache => {
           const allCaches = allServicesWithCacheForRefreshToken.map((x) => x.cacheForRefreshToken(refreshToken));
-          return loadZoomAccessTokenCache(allCaches);
+          return mergeCachesForService(allCaches);
         }
       : undefined;
 
   const service: ZoomOAuthAccessTokenCacheService = {
-    loadZoomAccessTokenCache: () => loadZoomAccessTokenCache(allServiceAccessTokenCaches),
+    loadZoomAccessTokenCache: () => mergeCachesForService(allServiceAccessTokenCaches),
     cacheForRefreshToken
   };
 
@@ -133,30 +127,34 @@ export function mergeZoomOAuthAccessTokenCacheServices(inputServicesToMerge: Zoo
 /**
  * Creates a ZoomOAuthAccessTokenCacheService that uses in-memory storage.
  *
+ * Backed by {@link inMemoryAsyncValueCache} so all consumers share the same single token slot.
+ *
  * @param existingToken Optional initial token to seed the cache with
  * @param logAccessToConsole Whether to log token access to console
  * @returns A memory-backed ZoomOAuthAccessTokenCacheService
  */
 export function memoryZoomOAuthAccessTokenCacheService(existingToken?: Maybe<ZoomAccessToken>, logAccessToConsole?: boolean): ZoomOAuthAccessTokenCacheService {
-  let token: Maybe<ZoomAccessToken> = existingToken;
+  const cache = inMemoryAsyncValueCache<ZoomAccessToken>(existingToken);
 
   function loadZoomAccessTokenCache(): ZoomAccessTokenCache {
-    const accessTokenCache: ZoomAccessTokenCache = {
-      loadCachedToken: async function (): Promise<Maybe<ZoomAccessToken>> {
+    return {
+      loadCachedToken: async () => {
+        const token = await cache.load();
+
         if (logAccessToConsole) {
-          console.log('retrieving access token from memory: ', { token });
+          console.log('retrieving access token from memory: ', { hit: token != null, expiresAt: token?.expiresAt });
         }
+
         return token;
       },
-      updateCachedToken: async function (accessToken: ZoomAccessToken): Promise<void> {
-        token = accessToken;
+      updateCachedToken: async (accessToken) => {
+        await cache.update(accessToken);
+
         if (logAccessToConsole) {
-          console.log('updating access token in memory: ', { accessToken });
+          console.log('updating access token in memory: ', { expiresAt: accessToken?.expiresAt });
         }
       }
     };
-
-    return accessTokenCache;
   }
 
   return {
@@ -179,7 +177,35 @@ export type ZoomOAuthAccessTokenCacheFileContent = {
 };
 
 /**
+ * Reviver applied to the cached file payload on load so `expiresAt` is always a `Date`
+ * regardless of how it was serialized.
+ *
+ * @param raw - the raw JSON-parsed file payload
+ * @returns the revived ZoomAccessToken, or undefined when the payload is empty/invalid
+ */
+function reviveZoomAccessTokenFile(raw: unknown): Maybe<ZoomAccessToken> {
+  if (raw == null || typeof raw !== 'object') {
+    return undefined;
+  }
+
+  const wrapper = raw as ZoomOAuthAccessTokenCacheFileContent;
+  const token = wrapper.token;
+
+  if (token == null) {
+    return undefined;
+  }
+
+  const rawExpiresAt = (token as ZoomAccessToken & { expiresAt?: unknown }).expiresAt;
+  const expiresAt = rawExpiresAt != null && !(rawExpiresAt instanceof Date) ? new Date(rawExpiresAt as string | number) : (rawExpiresAt as Date | undefined);
+
+  return { ...token, expiresAt: expiresAt as Date };
+}
+
+/**
  * Creates a ZoomOAuthAccessTokenCacheService that reads and writes the access token to the file system.
+ *
+ * Composes {@link createMemoizedJsonFileAsyncValueCache} (for the on-disk slot, with optional
+ * per-process memoization) so reads after the first hit memory.
  *
  * Useful for testing.
  *
@@ -188,100 +214,52 @@ export type ZoomOAuthAccessTokenCacheFileContent = {
  * @returns A file-system-backed ZoomOAuthAccessTokenCacheService
  */
 export function fileZoomOAuthAccessTokenCacheService(filename: string = DEFAULT_FILE_ZOOM_ACCOUNTS_ACCESS_TOKEN_CACHE_SERVICE_PATH, useMemoryCache = true): FileSystemZoomOAuthAccessTokenCacheService {
-  let loadedToken: Maybe<ZoomOAuthAccessTokenCacheFileContent> = null;
+  const innerCacheInput = {
+    filePath: filename,
+    reviver: reviveZoomAccessTokenFile,
+    replacer: (token: ZoomAccessToken): ZoomOAuthAccessTokenCacheFileContent => ({ token })
+  };
 
-  async function loadTokenFile(): Promise<ZoomOAuthAccessTokenCacheFileContent> {
-    let token: Maybe<ZoomOAuthAccessTokenCacheFileContent> = undefined;
-
-    if (!loadedToken) {
-      token = (await readTokenFile()) ?? {};
-    } else {
-      token = loadedToken;
-    }
-
-    return token;
-  }
-
-  function readTokenFile(): Promise<Maybe<ZoomOAuthAccessTokenCacheFileContent>> {
-    return new Promise<Maybe<ZoomOAuthAccessTokenCacheFileContent>>((resolve) => {
-      mkdirSync(dirname(filename), { recursive: true }); // make the directory first
-      readFile(filename, {}, (x, data) => {
-        let result: Maybe<ZoomOAuthAccessTokenCacheFileContent> = undefined;
-
-        if (!x) {
-          try {
-            result = JSON.parse(data.toString());
-
-            if (result?.token) {
-              (result.token as Configurable<ZoomAccessToken>).expiresAt = new Date(result.token.expiresAt);
-            }
-          } catch (e) {
-            console.error('Failed reading token file: ', e);
-          }
-        }
-
-        resolve(result);
-      });
-    }).then((x) => {
-      // update loaded tokens
-      if (useMemoryCache) {
-        loadedToken = {
-          ...loadedToken,
-          ...x
-        };
-      }
-
-      return x;
-    });
-  }
-
-  async function writeTokenFile(tokens: ZoomOAuthAccessTokenCacheFileContent): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      writeFile(filename, JSON.stringify(tokens), {}, (x) => {
-        if (!x) {
-          resolve();
-        } else {
-          reject(x);
-        }
-      });
-    });
-  }
-
-  async function deleteTokenFile(): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      rm(filename, (x) => {
-        if (!x) {
-          resolve();
-        } else {
-          reject(x);
-        }
-      });
-    });
-  }
+  const cache: AsyncValueCache<ZoomAccessToken> = useMemoryCache ? createMemoizedJsonFileAsyncValueCache<ZoomAccessToken>(innerCacheInput) : createJsonFileAsyncValueCache<ZoomAccessToken>(innerCacheInput);
 
   function loadZoomAccessTokenCache(): ZoomAccessTokenCache {
-    const accessTokenCache: ZoomAccessTokenCache = {
-      loadCachedToken: async function (): Promise<Maybe<ZoomAccessToken>> {
-        const tokens = await loadTokenFile();
-        // console.log('retrieving access token from file: ', { token });
-        return tokens.token;
-      },
-      updateCachedToken: async function (accessToken: ZoomAccessToken): Promise<void> {
-        const tokenFile = await loadTokenFile();
-
-        (tokenFile as Configurable<ZoomOAuthAccessTokenCacheFileContent>).token = accessToken;
-
-        // console.log('updating access token in file: ', { accessToken });
-
+    return {
+      loadCachedToken: () => cache.load(),
+      updateCachedToken: async (accessToken) => {
         try {
-          await writeTokenFile(tokenFile);
+          await cache.update(accessToken);
         } catch (e) {
           console.error('Failed updating access token in file: ', e);
         }
       }
     };
+  }
 
-    return accessTokenCache;
+  async function readTokenFile(): Promise<Maybe<ZoomOAuthAccessTokenCacheFileContent>> {
+    const raw = await readJsonFile<ZoomOAuthAccessTokenCacheFileContent>(filename);
+
+    if (raw == null) {
+      return undefined;
+    }
+
+    const token = reviveZoomAccessTokenFile(raw);
+    return { token };
+  }
+
+  // Route the file-mutation helpers through the same `cache` instance used by
+  // loadZoomAccessTokenCache so the memoized in-memory layer (when useMemoryCache=true) stays
+  // consistent with disk. Direct writeJsonFile / removeFile would otherwise leave the memo
+  // holding a stale token that no future read could refresh.
+  async function writeTokenFile(content: ZoomOAuthAccessTokenCacheFileContent): Promise<void> {
+    if (content.token == null) {
+      await cache.clear();
+    } else {
+      await cache.update(content.token);
+    }
+  }
+
+  async function deleteTokenFile(): Promise<void> {
+    await cache.clear();
   }
 
   return {

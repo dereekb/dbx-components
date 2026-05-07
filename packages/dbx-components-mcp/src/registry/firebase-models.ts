@@ -170,6 +170,23 @@ export interface FirebaseModel {
    * locate a recognised call (e.g. exotic factory shapes).
    */
   readonly collectionKind?: FirestoreCollectionKind;
+  /**
+   * `true` when the model's interface (or one of its same-file ancestors)
+   * extends `UserRelatedById` from `@dereekb/firebase` — meaning the
+   * Firestore document's id IS a Firebase Auth user uid, so the doc is 1:1
+   * with a user. Surfaced through `dbx_model_lookup`, `dbx_model_search`,
+   * and the `dbx://model/firebase/user-keyed-by-id` resource so consumers
+   * can quickly enumerate the per-user document set.
+   */
+  readonly userKeyedById?: boolean;
+  /**
+   * `true` when the model's interface (or one of its same-file ancestors)
+   * extends `UserRelated` (alias of `FirebaseAuthUserIdRef`) from
+   * `@dereekb/firebase` — meaning the document carries an explicit `uid`
+   * field referencing the Firebase Auth user. Independent of
+   * {@link userKeyedById}: a model can have either, both, or neither.
+   */
+  readonly hasUserUidField?: boolean;
 }
 
 /**

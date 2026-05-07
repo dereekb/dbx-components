@@ -149,6 +149,7 @@ export class FirebaseAdminFunctionNestRootModule {}
  * @param config - NestJS module, provider, and fixture configuration.
  * @param f - The parent fixture that is already set up.
  * @param buildTests - Callback that receives the child fixture and registers test cases.
+ * @returns Whatever {@link firebaseAdminNestContextWithFixture} returns after registering the merged child fixture (typically `void`).
  */
 export function firebaseAdminFunctionNestContextWithFixture<PI extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance, PF extends TestContextFixture<PI> = TestContextFixture<PI>, I extends FirebaseAdminFunctionNestTestContextInstance<PI> = FirebaseAdminFunctionNestTestContextInstance<PI>, C extends FirebaseAdminFunctionNestTestContextFixture<PI, PF, I> = FirebaseAdminFunctionNestTestContextFixture<PI, PF, I>>(
   config: FirebaseAdminFunctionNestTestConfig<PI, PF, I, C>,
@@ -168,6 +169,9 @@ export function firebaseAdminFunctionNestContextWithFixture<PI extends FirebaseA
  * Convenience factory that layers a NestJS + Cloud Function test context on top of the
  * default {@link firebaseAdminFunctionTestContextFactory}. This is the simplest entry point
  * for tests that need both NestJS module access and Cloud Function wrapping.
+ *
+ * @param config - NestJS module + provider configuration plus optional fixture/instance overrides.
+ * @returns A {@link FirebaseAdminFunctionNestTestContextFactory} that produces a configured fixture for each test suite.
  *
  * @example
  * ```ts

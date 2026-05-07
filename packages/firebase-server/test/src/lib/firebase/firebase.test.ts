@@ -22,8 +22,8 @@ export class ExpectedHttpErrorWithSpecificServerErrorCode extends BaseError {
  * Throws a ExpectedErrorOfSpecificTypeError if the input is not a HttpsError.
  * Throws a ExpectedHttpErrorWithSpecificServerErrorCode if the input's server error data has a different error code.
  *
- * @param expectedType
- * @returns
+ * @param expectedCode - The server error code (from the {@link ServerError} carried in `HttpsError.details`) that the caught error must match.
+ * @returns An assertion function suitable for use with `ExpectFailAssertionFunction` that verifies both the error type and its server error code.
  */
 export function expectFailAssertHttpErrorServerErrorCode(expectedCode: string): ExpectFailAssertionFunction {
   return (error) => {

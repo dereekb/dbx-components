@@ -11,11 +11,10 @@
 
 import { resolve } from 'node:path';
 import { type } from 'arktype';
-import { Project } from 'ts-morph';
 import { DbxDocsUiExampleManifest, type DbxDocsUiExampleEntry } from '../manifest/dbx-docs-ui-examples-schema.js';
 import { extractDbxDocsUiExampleEntries, type ExtractedDbxDocsUiExampleEntry, type DbxDocsUiExamplesExtractWarning } from './dbx-docs-ui-examples-extract.js';
-import { DBX_DOCS_UI_EXAMPLES_SCAN_CONFIG_FILENAME, DEFAULT_DBX_DOCS_UI_EXAMPLES_SCAN_OUT_PATH, DbxDocsUiExamplesScanConfig, type DbxDocsUiExamplesScanSection } from './dbx-docs-ui-examples-scan-config-schema.js';
-import { defaultGlobber, defaultReadFile, loadPackageName, type ScanGlobber, type ScanReadFile } from './scan-io.js';
+import { DBX_DOCS_UI_EXAMPLES_SCAN_CONFIG_FILENAME, DEFAULT_DBX_DOCS_UI_EXAMPLES_SCAN_OUT_PATH, DbxDocsUiExamplesScanConfig } from './dbx-docs-ui-examples-scan-config-schema.js';
+import { buildScanProject, defaultGlobber, defaultReadFile, loadPackageName, loadScanSection, type ScanGlobber, type ScanReadFile } from './scan-io.js';
 
 // MARK: Public types
 export type BuildDbxDocsUiExamplesManifestReadFile = ScanReadFile;
@@ -59,7 +58,17 @@ export async function buildDbxDocsUiExamplesManifest(input: BuildDbxDocsUiExampl
   const configPath = resolve(projectRoot, DBX_DOCS_UI_EXAMPLES_SCAN_CONFIG_FILENAME);
   const packagePath = resolve(projectRoot, 'package.json');
 
-  const configOutcome = await loadScanConfig(configPath, readFile);
+  const configOutcome = await loadScanSection({
+    configPath,
+    readFile,
+    parseSection: (parsed) => {
+      const validated = DbxDocsUiExamplesScanConfig(parsed);
+      if (validated instanceof type.errors) {
+        return { ok: false, error: validated.summary };
+      }
+      return { ok: true, section: validated.dbxDocsUiExamples };
+    }
+  });
   if (configOutcome.kind !== 'ok') {
     return configOutcome.outcome;
   }
@@ -77,12 +86,7 @@ export async function buildDbxDocsUiExamplesManifest(input: BuildDbxDocsUiExampl
     exclude: scanSection.exclude ?? []
   });
 
-  const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });
-  for (const relPath of filePaths) {
-    const absolute = resolve(projectRoot, relPath);
-    const text = await readFile(absolute);
-    project.createSourceFile(absolute, text, { overwrite: true });
-  }
+  const project = await buildScanProject({ projectRoot, filePaths, readFile });
 
   const extractResult = await extractDbxDocsUiExampleEntries({ project, readFile });
   const moduleName = scanSection.module ?? packageName;
@@ -113,32 +117,6 @@ export async function buildDbxDocsUiExamplesManifest(input: BuildDbxDocsUiExampl
 }
 
 // MARK: Helpers
-type LoadScanConfigResult = { readonly kind: 'ok'; readonly section: DbxDocsUiExamplesScanSection } | { readonly kind: 'fail'; readonly outcome: Extract<BuildDbxDocsUiExamplesManifestOutcome, { kind: 'no-config' | 'invalid-scan-config' }> };
-
-async function loadScanConfig(configPath: string, readFile: BuildDbxDocsUiExamplesManifestReadFile): Promise<LoadScanConfigResult> {
-  let raw: string | null = null;
-  try {
-    raw = await readFile(configPath);
-  } catch {
-    raw = null;
-  }
-  if (raw === null) {
-    return { kind: 'fail', outcome: { kind: 'no-config', configPath } };
-  }
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(raw);
-  } catch (err) {
-    const error = err instanceof Error ? err.message : String(err);
-    return { kind: 'fail', outcome: { kind: 'invalid-scan-config', configPath, error } };
-  }
-  const validated = DbxDocsUiExamplesScanConfig(parsed);
-  if (validated instanceof type.errors) {
-    return { kind: 'fail', outcome: { kind: 'invalid-scan-config', configPath, error: validated.summary } };
-  }
-  return { kind: 'ok', section: validated.dbxDocsUiExamples };
-}
-
 interface AssembleEntryInput {
   readonly entry: ExtractedDbxDocsUiExampleEntry;
   readonly moduleName: string;

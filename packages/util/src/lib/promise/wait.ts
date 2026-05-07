@@ -2,6 +2,11 @@
  * Returns a Promise that resolves after the specified number of milliseconds.
  * Optionally resolves with the provided value.
  *
+ * @dbxUtil
+ * @dbxUtilCategory promise
+ * @dbxUtilTags promise, wait, sleep, delay, async, timeout
+ * @dbxUtilRelated perform-async-tasks, poll
+ *
  * @param ms - The number of milliseconds to wait before resolving.
  * @param value - An optional value to resolve the Promise with.
  * @returns A Promise that resolves after the specified delay.

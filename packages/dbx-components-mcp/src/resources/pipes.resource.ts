@@ -8,6 +8,7 @@
 
 import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { PIPE_CATEGORY_ORDER, type PipeCategory, type PipeRegistry } from '../registry/pipes-runtime.js';
+import { buildSlugDetailResponse } from './_resource-helpers.js';
 
 const PIPES_URI = 'dbx://pipe/entries';
 const PIPE_TEMPLATE = 'dbx://pipe/entries/{slug}';
@@ -75,31 +76,14 @@ export function registerPipesResource(server: McpServer, options: RegisterPipesR
       description: 'Full metadata for a single pipe by slug.',
       mimeType: 'application/json'
     },
-    async (uri, variables) => {
-      const rawSlug = variables.slug;
-      const slug = Array.isArray(rawSlug) ? rawSlug[0] : rawSlug;
-      const entry = slug ? registry.findBySlug(slug) : undefined;
-
-      let text: string;
-      if (slug && entry) {
-        text = JSON.stringify(entry, null, 2);
-      } else if (slug) {
-        const available = registry.all.map((e) => e.slug).join(', ');
-        text = `Pipe '${slug}' not found. Available slugs: ${available}`;
-      } else {
-        text = 'No slug provided.';
-      }
-
-      return {
-        contents: [
-          {
-            uri: uri.href,
-            mimeType: entry ? 'application/json' : 'text/plain',
-            text
-          }
-        ]
-      };
-    }
+    async (uri, variables) =>
+      buildSlugDetailResponse({
+        uri,
+        rawSlug: variables.slug,
+        resolveEntry: (slug) => registry.findBySlug(slug),
+        listAvailableSlugs: () => registry.all.map((e) => e.slug),
+        label: 'Pipe'
+      })
   );
 
   server.registerResource(

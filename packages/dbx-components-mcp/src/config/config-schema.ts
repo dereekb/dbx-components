@@ -101,6 +101,7 @@ export const DbxMcpConfig = type({
   'filters?': ClusterSection,
   'tokens?': ClusterSection,
   'cssUtilities?': ClusterSection,
+  'utils?': ClusterSection,
   'dbxDocsUiExamples?': ClusterSection,
   'uiSmellCheck?': {
     'projectConventions?': {

@@ -77,6 +77,12 @@ export function expandTreeFunction<T, N extends TreeNode<T, N>>(config: ExpandTr
  * and optionally, how to construct the nodes themselves (`makeNode`). If `makeNode` is not provided, a default node structure is used.
  * The returned function recursively builds a tree from a root value.
  *
+ * @dbxUtil
+ * @dbxUtilCategory tree
+ * @dbxUtilKind factory
+ * @dbxUtilTags tree, expand, build, recursive, factory, hierarchy, traverse, children
+ * @dbxUtilRelated expand-trees, expand-flatten-tree-function, explore-tree-function
+ *
  * @template T The type of the value being processed at each node.
  * @template N The type of the TreeNode to be created. Defaults to TreeNode<T, any> if not specified by ExpandTreeWithNodeBuilder.
  * @param config An ExpandTree<T> or ExpandTreeWithNodeBuilder<T, N> configuration object.
@@ -107,6 +113,11 @@ export function expandTreeFunction<T, N extends TreeNode<T, N> = TreeNode<T, any
 /**
  * Convenience function for expanding multiple root values into an array of trees.
  * Each value in the input array is treated as a root for a new tree.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory tree
+ * @dbxUtilTags tree, expand, multiple, roots, hierarchy, build, batch
+ * @dbxUtilRelated expand-tree-function, expand-flatten-tree-function
  *
  * @template T The type of the input values.
  * @template N The type of the TreeNode in the resulting trees. Must extend TreeNode<T, N>.

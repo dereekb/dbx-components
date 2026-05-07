@@ -10,6 +10,7 @@
 import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { FORM_TIER_ORDER, type FormTier, type FormArrayOutput } from '../registry/index.js';
 import type { ForgeFieldRegistry } from '../registry/forge-fields.js';
+import { buildSlugDetailResponse } from './_resource-helpers.js';
 
 const FORM_FIELDS_URI = 'dbx://form/fields';
 const FORM_FIELD_TEMPLATE = 'dbx://form/fields/{slug}';
@@ -79,31 +80,14 @@ export function registerFormFieldsResource(server: McpServer, config: RegisterFo
       description: 'Full metadata for a single form field factory by slug or factory name.',
       mimeType: 'application/json'
     },
-    async (uri, variables) => {
-      const slugValue = variables.slug;
-      const slug = Array.isArray(slugValue) ? slugValue[0] : slugValue;
-      const field = slug ? (registry.findBySlug(slug) ?? registry.findByFactoryName(slug)) : undefined;
-
-      let text: string;
-      if (slug && field) {
-        text = JSON.stringify(field, null, 2);
-      } else if (slug) {
-        const available = registry.all.map((f) => f.slug).join(', ');
-        text = `Form field '${slug}' not found. Available slugs: ${available}`;
-      } else {
-        text = 'No slug provided.';
-      }
-
-      return {
-        contents: [
-          {
-            uri: uri.href,
-            mimeType: field ? 'application/json' : 'text/plain',
-            text
-          }
-        ]
-      };
-    }
+    async (uri, variables) =>
+      buildSlugDetailResponse({
+        uri,
+        rawSlug: variables.slug,
+        resolveEntry: (slug) => registry.findBySlug(slug) ?? registry.findByFactoryName(slug),
+        listAvailableSlugs: () => registry.all.map((f) => f.slug),
+        label: 'Form field'
+      })
   );
 
   server.registerResource(

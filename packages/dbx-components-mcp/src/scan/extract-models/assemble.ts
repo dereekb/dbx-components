@@ -24,6 +24,19 @@ export const COMMON_FIELDS: ReadonlySet<string> = new Set(['cat', 'o', 'u', 's',
 const LONG_NAME_RE = /^[a-z][a-zA-Z0-9]*$/;
 
 /**
+ * Marker-interface name for documents whose Firestore id IS the user's
+ * Firebase Auth uid (sourced from `@dereekb/firebase` `user.ts`).
+ */
+export const USER_KEYED_BY_ID_MARKER = 'UserRelatedById';
+
+/**
+ * Marker-interface name for documents that carry an explicit `uid` field
+ * referencing a Firebase Auth user (sourced from `@dereekb/firebase`
+ * `user.ts`; alias of `FirebaseAuthUserIdRef`).
+ */
+export const USER_RELATED_MARKER = 'UserRelated';
+
+/**
  * Result of assembling one source file's models + groups.
  */
 export interface AssembledFile {
@@ -85,6 +98,9 @@ export function assembleFile(input: AssembleFileInput): AssembledFile {
     const factoryFnName = id.parentIdentityConst ? `${id.modelType}FirestoreCollectionFactory` : `${id.modelType}FirestoreCollection`;
     const collectionKind = input.factoryKinds.get(factoryFnName);
     const groupName = groupByModelName.get(modelName);
+    const extendedNames = collectExtendedNames(iface, interfaceByName);
+    const userKeyedById = extendedNames.has(USER_KEYED_BY_ID_MARKER);
+    const hasUserUidField = extendedNames.has(USER_RELATED_MARKER);
 
     const entry: FirebaseModel = {
       name: modelName,
@@ -103,7 +119,9 @@ export function assembleFile(input: AssembleFileInput): AssembledFile {
       })),
       detectionHints,
       ...(groupName ? { modelGroup: groupName } : {}),
-      ...(collectionKind ? { collectionKind } : {})
+      ...(collectionKind ? { collectionKind } : {}),
+      ...(userKeyedById ? { userKeyedById: true } : {}),
+      ...(hasUserUidField ? { hasUserUidField: true } : {})
     };
     models.push(entry);
   }
@@ -184,4 +202,33 @@ function findEnumInConverter(expr: string, enumNames: ReadonlySet<string>): stri
 
 function capitalize(s: string): string {
   return s.length > 0 ? s[0].toUpperCase() + s.slice(1) : s;
+}
+
+/**
+ * Collects every interface name reachable from `iface` via `extends`,
+ * walking through same-file ancestors. Names whose declarations live in
+ * other files (e.g. `UserRelatedById`, `UserRelated` from
+ * `@dereekb/firebase`'s `user.ts`) are still recorded — they appear in
+ * some descendant's `extendsNames` list, which is what we need for
+ * marker-name detection.
+ *
+ * @param iface - the interface to start from
+ * @param interfaceByName - lookup map of interfaces in the same file
+ * @returns the set of every transitively extended interface name
+ */
+function collectExtendedNames(iface: ExtractedInterface, interfaceByName: ReadonlyMap<string, ExtractedInterface>): ReadonlySet<string> {
+  const out = new Set<string>();
+  const visited = new Set<string>();
+  const stack: ExtractedInterface[] = [iface];
+  while (stack.length > 0) {
+    const current = stack.pop() as ExtractedInterface;
+    if (visited.has(current.name)) continue;
+    visited.add(current.name);
+    for (const parentName of current.extendsNames) {
+      out.add(parentName);
+      const parent = interfaceByName.get(parentName);
+      if (parent) stack.push(parent);
+    }
+  }
+  return out;
 }

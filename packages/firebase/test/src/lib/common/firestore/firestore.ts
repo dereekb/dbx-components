@@ -15,7 +15,8 @@ export interface TestingFirestoreAccessorDriver extends FirestoreAccessorDriver 
    *
    * This initialization step is useful for the client, where the rules file needs to be updated to reflect the collection names properly in order to ensure rules are correct.
    *
-   * @param collectionNames
+   * @param collectionNames - The original collection names to register fuzzed entries for.
+   * @returns The internal map of original collection names to fuzzed names (same reference as {@link TestingFirestoreAccessorDriver.getFuzzedCollectionsNameMap}).
    */
   initWithCollectionNames(collectionNames: string[]): Map<string, string>;
 }
@@ -35,6 +36,7 @@ export interface TestingFirestoreAccessorDriver extends FirestoreAccessorDriver 
  * ```
  *
  * @param driver - The base driver to wrap with fuzzing behavior.
+ * @returns A {@link TestingFirestoreAccessorDriver} with `collection`, `subcollection`, and `collectionGroup` rewired to use fuzzed paths, plus helpers to inspect the fuzz map.
  */
 export function makeTestingFirestoreAccesorDriver(driver: FirestoreAccessorDriver): TestingFirestoreAccessorDriver {
   let fuzzerKey = 0;
@@ -99,8 +101,8 @@ export interface TestingFirestoreDrivers extends FirestoreDrivers {
 /**
  * Extends the input drivers to generate new drivers for a testing environment.
  *
- * @param drivers
- * @returns
+ * @param drivers - The base Firestore drivers to wrap.
+ * @returns A {@link TestingFirestoreDrivers} marked with `firestoreDriverType: 'testing'` and a wrapped accessor driver from {@link makeTestingFirestoreAccesorDriver}.
  */
 export function makeTestingFirestoreDrivers(drivers: FirestoreDrivers): TestingFirestoreDrivers {
   return {

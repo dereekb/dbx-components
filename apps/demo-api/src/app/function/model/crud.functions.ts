@@ -3,6 +3,7 @@ import { createGuestbook } from '../guestbook/guestbook.create';
 import { profileUpdate, profileUpdateCreateTestNotification, profileUpdateResetPassword, profileUpdateUsername, profileUpdateOnboarding } from '../profile/profile.update';
 import { insertGuestbookEntry } from '../guestbook/guestbookentry.update';
 import { onCallCreateModel, onCallDeleteModel, onCallUpdateModel, onCallQueryModel, onCallSpecifierHandler, onCallReadModel, onCallModel, type OnCallModelMap } from '@dereekb/firebase-server';
+import { oidcCallModelScopePreAssert } from '@dereekb/firebase-server/oidc';
 import { type DemoOnCallCreateModelMap, type DemoOnCallDeleteModelMap, type DemoOnCallReadModelMap, type DemoOnCallUpdateModelMap, type DemoOnCallQueryModelMap, onCallWithDemoNestContext } from '../function.context';
 import { updateNotificationUser, resyncNotificationUser } from '../notification/notificationuser.update';
 import { updateNotificationBox, updateNotificationBoxRecipient } from '../notification/notificationbox.update';
@@ -121,7 +122,12 @@ export const demoCallModelMap: OnCallModelMap = {
  *
  * Used by the Model API and MCP controllers to dispatch requests
  * and introspect the handler metadata tree.
+ *
+ * Wires {@link oidcCallModelScopePreAssert} so that callers authenticated via
+ * an OIDC bearer token must hold the matching `model.<call>` scope.
  */
-export const demoCallModelFn = onCallModel(demoCallModelMap);
+export const demoCallModelFn = onCallModel(demoCallModelMap, {
+  preAssert: oidcCallModelScopePreAssert()
+});
 
 export const demoCallModel = onCallWithDemoNestContext(demoCallModelFn);

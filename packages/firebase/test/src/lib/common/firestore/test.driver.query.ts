@@ -41,6 +41,29 @@ import { arrayFactory, idBatchFactory, isEvenNumber, mapGetter, randomFromArrayF
 import { DateRangeType } from '@dereekb/date';
 
 /**
+ * Creates a gate that calls `done()` once both `setSeen()` and `setCompleted()` have been invoked.
+ *
+ * Used to coordinate streamed-emission and post-mutation callbacks in stream-update tests.
+ *
+ * @param done - The Vitest async-test completion callback to invoke once both sides of the gate have fired.
+ * @returns A two-method gate; the test calls `setSeen()` from the stream subscription and `setCompleted()` from the mutation continuation, and `done()` runs only after both have happened (in either order).
+ */
+function makeAwaitBothGate(done: () => void) {
+  let seen = false;
+  let completed = false;
+  return {
+    setSeen: () => {
+      seen = true;
+      if (completed) done();
+    },
+    setCompleted: () => {
+      completed = true;
+      if (seen) done();
+    }
+  };
+}
+
+/**
  * Describes query driver tests, using a MockItemCollectionFixture.
  *
  * @param f
@@ -684,23 +707,14 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
                 'should emit when the query results update (an item is added).',
                 callbackTest((done) => {
                   const itemsToAdd = 1;
-
-                  let addCompleted = false;
-                  let addSeen = false;
-
-                  function tryComplete() {
-                    if (addSeen && addCompleted) {
-                      done();
-                    }
-                  }
+                  const gate = makeAwaitBothGate(done);
 
                   sub.subscription = querySubItems()
                     .streamDocs()
                     .pipe(filter((x) => x.docs.length > allSubItems.length))
                     .subscribe((results) => {
-                      addSeen = true;
                       expect(results.docs.length).toBe(allSubItems.length + itemsToAdd);
-                      tryComplete();
+                      gate.setSeen();
                     });
 
                   // add one item
@@ -712,8 +726,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
                       };
                     }
                   }).then(() => {
-                    addCompleted = true;
-                    tryComplete();
+                    gate.setCompleted();
                   });
                 })
               );
@@ -722,23 +735,14 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
                 'should emit when the query results update (an item is removed).',
                 callbackTest((done) => {
                   const itemsToRemove = 1;
-
-                  let deleteCompleted = false;
-                  let deleteSeen = false;
-
-                  function tryComplete() {
-                    if (deleteSeen && deleteCompleted) {
-                      done();
-                    }
-                  }
+                  const gate = makeAwaitBothGate(done);
 
                   sub.subscription = querySubItems()
                     .streamDocs()
                     .pipe(filter((x) => x.docs.length < allSubItems.length))
                     .subscribe((results) => {
-                      deleteSeen = true;
                       expect(results.docs.length).toBe(allSubItems.length - itemsToRemove);
-                      tryComplete();
+                      gate.setSeen();
                     });
 
                   void allSubItems[0].accessor.exists().then((exists) => {
@@ -746,8 +750,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
 
                     // remove one item
                     return allSubItems[0].accessor.delete().then(() => {
-                      deleteCompleted = true;
-                      tryComplete();
+                      gate.setCompleted();
                     });
                   });
                 })
@@ -869,23 +872,14 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
           'should emit when the query results update (an item is added).',
           callbackTest((done) => {
             const itemsToAdd = 1;
-
-            let addCompleted = false;
-            let addSeen = false;
-
-            function tryComplete() {
-              if (addSeen && addCompleted) {
-                done();
-              }
-            }
+            const gate = makeAwaitBothGate(done);
 
             sub.subscription = queryDocument()
               .streamDocs()
               .pipe(filter((documents) => documents.length > items.length))
               .subscribe((documents) => {
-                addSeen = true;
                 expect(documents.length).toBe(items.length + itemsToAdd);
-                tryComplete();
+                gate.setSeen();
               });
 
             // add one item
@@ -899,8 +893,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
                   };
                 }
               }).then(() => {
-                addCompleted = true;
-                tryComplete();
+                gate.setCompleted();
               })
             );
           })
@@ -910,23 +903,14 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
           'should emit when the query results update (an item is removed).',
           callbackTest((done) => {
             const itemsToRemove = 1;
-
-            let deleteCompleted = false;
-            let deleteSeen = false;
-
-            function tryComplete() {
-              if (deleteSeen && deleteCompleted) {
-                done();
-              }
-            }
+            const gate = makeAwaitBothGate(done);
 
             sub.subscription = queryDocument()
               .streamDocs()
               .pipe(skip(1))
               .subscribe((documents) => {
-                deleteSeen = true;
                 expect(documents.length).toBe(items.length - itemsToRemove);
-                tryComplete();
+                gate.setSeen();
               });
 
             void waitForMs(10).then(() =>
@@ -935,8 +919,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
 
                 // remove one item
                 return items[0].accessor.delete().then(() => {
-                  deleteCompleted = true;
-                  tryComplete();
+                  gate.setCompleted();
                 });
               })
             );
@@ -959,21 +942,12 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
           'should emit when the query results update (an item is added).',
           callbackTest((done) => {
             const itemsToAdd = 1;
-
-            let addCompleted = false;
-            let addSeen = false;
-
-            function tryComplete() {
-              if (addSeen && addCompleted) {
-                done();
-              }
-            }
+            const gate = makeAwaitBothGate(done);
 
             sub.subscription = queryDocument()
               .streamDocSnapshotDataPairs()
               .pipe(filter((documents) => documents.length > items.length))
               .subscribe((documents) => {
-                addSeen = true;
                 expect(documents.length).toBe(items.length + itemsToAdd);
 
                 documents.forEach((x) => {
@@ -987,7 +961,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
                   expect(x.snapshot.id).toBe(x.document.id);
                 });
 
-                tryComplete();
+                gate.setSeen();
               });
 
             // add one item
@@ -1001,8 +975,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
                   };
                 }
               }).then(() => {
-                addCompleted = true;
-                tryComplete();
+                gate.setCompleted();
               })
             );
           })
@@ -1012,23 +985,14 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
           'should emit when the query results update (an item is removed).',
           callbackTest((done) => {
             const itemsToRemove = 1;
-
-            let deleteCompleted = false;
-            let deleteSeen = false;
-
-            function tryComplete() {
-              if (deleteSeen && deleteCompleted) {
-                done();
-              }
-            }
+            const gate = makeAwaitBothGate(done);
 
             sub.subscription = queryDocument()
               .streamDocs()
               .pipe(skip(1))
               .subscribe((documents) => {
-                deleteSeen = true;
                 expect(documents.length).toBe(items.length - itemsToRemove);
-                tryComplete();
+                gate.setSeen();
               });
 
             void waitForMs(10).then(() =>
@@ -1037,8 +1001,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
 
                 // remove one item
                 return items[0].accessor.delete().then(() => {
-                  deleteCompleted = true;
-                  tryComplete();
+                  gate.setCompleted();
                 });
               })
             );
@@ -1069,23 +1032,14 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
           'should emit when the query results update (an item is added).',
           callbackTest((done) => {
             const itemsToAdd = 1;
-
-            let addCompleted = false;
-            let addSeen = false;
-
-            function tryComplete() {
-              if (addSeen && addCompleted) {
-                done();
-              }
-            }
+            const gate = makeAwaitBothGate(done);
 
             sub.subscription = query()
               .streamDocs()
               .pipe(filter((x) => x.docs.length > items.length))
               .subscribe((results) => {
-                addSeen = true;
                 expect(results.docs.length).toBe(items.length + itemsToAdd);
-                tryComplete();
+                gate.setSeen();
               });
 
             // add one item
@@ -1099,8 +1053,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
                   };
                 }
               }).then(() => {
-                addCompleted = true;
-                tryComplete();
+                gate.setCompleted();
               })
             );
           })
@@ -1110,23 +1063,14 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
           'should emit when the query results update (an item is removed).',
           callbackTest((done) => {
             const itemsToRemove = 1;
-
-            let deleteCompleted = false;
-            let deleteSeen = false;
-
-            function tryComplete() {
-              if (deleteSeen && deleteCompleted) {
-                done();
-              }
-            }
+            const gate = makeAwaitBothGate(done);
 
             sub.subscription = query()
               .streamDocs()
               .pipe(skip(1))
               .subscribe((results) => {
-                deleteSeen = true;
                 expect(results.docs.length).toBe(items.length - itemsToRemove);
-                tryComplete();
+                gate.setSeen();
               });
 
             void waitForMs(10).then(() =>
@@ -1135,8 +1079,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
 
                 // remove one item
                 return items[0].accessor.delete().then(() => {
-                  deleteCompleted = true;
-                  tryComplete();
+                  gate.setCompleted();
                 });
               })
             );

@@ -119,7 +119,17 @@ export function oidcClientJwksUriForgeField(): ContainerField {
         key: 'jwks_uri',
         label: 'JWKS URI',
         hint: "URL where the client's public JSON Web Key Set can be fetched. Required for private_key_jwt authentication.",
-        required: true
+        logic: [
+          {
+            type: 'required',
+            condition: {
+              type: 'fieldValue',
+              fieldPath: 'token_endpoint_auth_method',
+              operator: 'equals',
+              value: PRIVATE_KEY_JWT_TOKEN_ENDPOINT_AUTH_METHOD
+            }
+          }
+        ]
       })
     ],
     logic: [

@@ -27,6 +27,7 @@
  * | dbx_ui_examples                     | Working code  | "Show me a settings-section / list-page layout"        |
  * | dbx_model_lookup                    | Documentation | "Tell me about Firebase model X"                       |
  * | dbx_model_search                    | Discovery     | "Find Firebase models matching keywords"               |
+ * | dbx_model_hierarchy                 | Discovery     | "Show the full Firestore model tree (parents/children)." |
  * | dbx_model_decode                    | Decoding      | "What does this Firestore doc mean?"                   |
  * | dbx_model_validate                  | Verification  | "Is this Firestore model file correct?"                |
  * | dbx_model_validate_api              | Verification  | "Is this model api file correct?"                      |
@@ -62,6 +63,8 @@
  * | dbx_filter_lookup                   | Documentation | "Tell me about filter directive / preset X"            |
  * | dbx_filter_scaffold                 | Generation    | "Scaffold a filter source + presets for model X"       |
  * | dbx_pipe_lookup                     | Documentation | "Tell me about Angular pipe X"                         |
+ * | dbx_util_lookup                     | Documentation | "Tell me about utility function/class X"               |
+ * | dbx_util_search                     | Discovery     | "Find utility functions matching keywords (intent)"    |
  * | dbx_artifact_scaffold               | Generation    | "Give me the body for a new <artifact>."               |
  * | dbx_artifact_file_convention        | Reference     | "Where do I put a new <artifact>?"                     |
  * | dbx_css_token_lookup                | Documentation | "What's the canonical CSS token for X?" (intent/value/role)|
@@ -72,6 +75,11 @@
  * | dbx_model_list_component            | Discovery     | "What downstream models live in this `-firebase` component?" |
  * | dbx_server_actions_list_app         | Discovery     | "What server-actions classes does this API expose, and are they wired?" |
  * | dbx_mcp_config                      | Setup         | "Status / validate / init / refresh the workspace dbx-mcp config." |
+ * | dbx_auth_claim_lookup               | Documentation | "Tell me about claim key / `*ApiAuthClaims` interface X." |
+ * | dbx_auth_scope_lookup               | Documentation | "Tell me about OIDC scope X — where is it enforced?"      |
+ * | dbx_auth_role_lookup                | Documentation | "Forward / tag / reverse role lookup."                    |
+ * | dbx_auth_token_explain              | Decoding      | "Decode this JWT and annotate every claim."               |
+ * | dbx_auth_list_app                   | Discovery     | "Enumerate one app's claims, scopes, and gates."         |
  */
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -101,6 +109,7 @@ import { modelFixtureScaffoldTool } from './model-fixture-scaffold.tool.js';
 import { modelFixtureForwardTool } from './model-fixture-forward.tool.js';
 import { modelTestTreeTool } from './model-test-tree.tool.js';
 import { modelTestSearchTool } from './model-test-search.tool.js';
+import { modelHierarchyTool } from './model-hierarchy.tool.js';
 import type { FixtureModelRegistry } from './model-fixture-shared/index.js';
 import { storageFileMValidateAppTool } from './storagefile-m-validate-app.tool.js';
 import { storageFileMListAppTool } from './storagefile-m-list-app.tool.js';
@@ -122,6 +131,8 @@ import { routeSearchTool } from './route-search.tool.js';
 import { createLookupFilterTool } from './lookup-filter.tool.js';
 import { filterScaffoldTool } from './filter-scaffold.tool.js';
 import { createLookupPipeTool } from './lookup-pipe.tool.js';
+import { createLookupUtilTool } from './lookup-util.tool.js';
+import { createSearchUtilTool } from './search-util.tool.js';
 import { artifactScaffoldTool } from './artifact-scaffold.tool.js';
 import { artifactFileConventionTool } from './artifact-file-convention.tool.js';
 import { explainRuleTool } from './explain-rule.tool.js';
@@ -134,10 +145,17 @@ import { createSemanticTypeSearchTool } from './search-semantic-type.tool.js';
 import { createCssTokenLookupTool } from './css-token-lookup.tool.js';
 import { createCssClassLookupTool } from './css-class-lookup.tool.js';
 import { createUiSmellCheckTool } from './ui-smell-check.tool.js';
+import { createAuthClaimLookupTool } from './auth-claim-lookup.tool.js';
+import { createAuthScopeLookupTool } from './auth-scope-lookup.tool.js';
+import { createAuthRoleLookupTool } from './auth-role-lookup.tool.js';
+import { createAuthTokenExplainTool } from './auth-token-explain.tool.js';
+import { createAuthListAppTool } from './auth-list-app.tool.js';
 import type { ActionRegistry } from '../registry/actions-runtime.js';
+import type { AuthRegistry } from '../registry/auth-runtime.js';
 import type { FilterRegistry } from '../registry/filters-runtime.js';
 import type { ForgeFieldRegistry } from '../registry/forge-fields.js';
 import type { PipeRegistry } from '../registry/pipes-runtime.js';
+import type { UtilRegistry } from '../registry/utils-runtime.js';
 import type { SemanticTypeRegistry } from '../registry/semantic-types.js';
 import type { TokenRegistry } from '../registry/tokens-runtime.js';
 import type { CssUtilityRegistry } from '../registry/css-utilities-runtime.js';
@@ -161,6 +179,7 @@ export const DBX_TOOLS: readonly DbxTool[] = [
   // model
   lookupModelTool,
   searchModelTool,
+  modelHierarchyTool,
   modelDecodeTool,
   modelValidateApiTool,
   modelApiListAppTool,
@@ -213,6 +232,18 @@ export const DBX_TOOLS: readonly DbxTool[] = [
 ];
 
 /**
+ * Auth-cluster tools registered when an {@link AuthRegistry} is supplied.
+ * Bundled separately from {@link DBX_TOOLS} because the registry is
+ * loaded asynchronously and tests exercise the cluster in isolation.
+ *
+ * @param registry - Pre-merged auth registry shared across the cluster's lookup tools.
+ * @returns The set of registry-bound auth tools (`auth_claim_lookup`, `auth_scope_lookup`, `auth_role_lookup`, `auth_token_explain`, `auth_list_app`).
+ */
+export function createAuthClusterTools(registry: AuthRegistry): readonly DbxTool[] {
+  return [createAuthClaimLookupTool({ registry }), createAuthScopeLookupTool({ registry }), createAuthRoleLookupTool({ registry }), createAuthTokenExplainTool({ registry }), createAuthListAppTool({ registry })];
+}
+
+/**
  * Options consumed by {@link registerTools}. Registries are loaded
  * asynchronously at server startup, so registry-bound tools (semantic-types,
  * form fields) receive their registry via this options bag rather than from a
@@ -223,6 +254,7 @@ export interface RegisterToolsOptions {
   readonly semanticTypeRegistry?: SemanticTypeRegistry;
   readonly forgeFieldRegistry?: ForgeFieldRegistry;
   readonly pipeRegistry?: PipeRegistry;
+  readonly utilRegistry?: UtilRegistry;
   readonly uiComponentRegistry?: UiComponentRegistry;
   /**
    * Optional app-sourced UI examples registry. When supplied (or empty),
@@ -261,6 +293,12 @@ export interface RegisterToolsOptions {
    * block. When omitted, the validator runs with built-in defaults.
    */
   readonly modelValidateRuleOptions?: RuleOptions;
+  /**
+   * Optional auth catalog registry consumed by the `dbx_auth_*` tool
+   * cluster (claim/scope/role lookup, JWT explainer, app surface). When
+   * omitted those tools are skipped.
+   */
+  readonly authRegistry?: AuthRegistry;
 }
 
 /**
@@ -286,6 +324,9 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions =
   if (options.pipeRegistry !== undefined) {
     tools.push(createLookupPipeTool({ registry: options.pipeRegistry }));
   }
+  if (options.utilRegistry !== undefined) {
+    tools.push(createLookupUtilTool({ registry: options.utilRegistry }), createSearchUtilTool({ registry: options.utilRegistry }));
+  }
   if (options.uiComponentRegistry !== undefined) {
     tools.push(createLookupUiTool({ registry: options.uiComponentRegistry }), createSearchUiTool({ registry: options.uiComponentRegistry, examplesRegistry: options.dbxDocsUiExamplesRegistry }));
   }
@@ -303,6 +344,9 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions =
   }
   if (options.cssUtilityRegistry !== undefined) {
     tools.push(createCssClassLookupTool({ registry: options.cssUtilityRegistry }));
+  }
+  if (options.authRegistry !== undefined) {
+    tools.push(...createAuthClusterTools(options.authRegistry));
   }
 
   underlyingServer.setRequestHandler(ListToolsRequestSchema, async () => {

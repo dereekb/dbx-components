@@ -119,6 +119,30 @@ function scoreFirebaseModelFieldsAgainstToken(model: FirebaseModel, token: strin
   return result;
 }
 
+/**
+ * Tokens that should boost models with `userKeyedById === true` — i.e.
+ * the document id is the Firebase Auth uid. Lowercase, hyphenless and
+ * hyphenated forms covered so callers don't have to remember the exact
+ * spelling.
+ */
+const USER_KEYED_BY_ID_TOKENS: ReadonlySet<string> = new Set(['user-keyed', 'userkeyed', 'user-keyed-by-id', 'userkeyedbyid', 'userrelatedbyid', 'user-related-by-id']);
+
+/**
+ * Tokens that should boost models with `hasUserUidField === true` — i.e.
+ * the document carries an explicit `uid` field referencing the user.
+ */
+const USER_RELATED_TOKENS: ReadonlySet<string> = new Set(['user-related', 'userrelated', 'user-uid', 'useruid']);
+
+function scoreFirebaseModelKeyingAgainstToken(model: FirebaseModel, token: string): number {
+  let result = 0;
+  if (model.userKeyedById === true && USER_KEYED_BY_ID_TOKENS.has(token)) {
+    result = 12;
+  } else if (model.hasUserUidField === true && USER_RELATED_TOKENS.has(token)) {
+    result = 10;
+  }
+  return result;
+}
+
 function scoreFirebaseModelAgainstToken(model: FirebaseModel, token: string): number {
   const name = model.name.toLowerCase();
   const identity = model.identityConst.toLowerCase();
@@ -132,6 +156,7 @@ function scoreFirebaseModelAgainstToken(model: FirebaseModel, token: string): nu
   score += scoreTokenMatch({ value: prefix, token, exact: 10, starts: 0, includes: 0 });
   score += scoreFirebaseModelFieldsAgainstToken(model, token);
   score += scoreFirebaseModelEnumsAgainstToken(model, token);
+  score += scoreFirebaseModelKeyingAgainstToken(model, token);
   return score;
 }
 

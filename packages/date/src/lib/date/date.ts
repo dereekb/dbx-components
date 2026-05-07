@@ -50,6 +50,10 @@ export type ReadISO8601DateStringUTCFullFunction<T> = MapFunction<T, ISO8601Date
  * @param input - value to check
  * @returns whether the input is a Date
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, type-guard, check, instance
+ *
  * @example
  * ```ts
  * isDate(new Date()); // true
@@ -65,6 +69,11 @@ export function isDate(input: unknown): input is Date {
  *
  * @param milliseconds - duration in milliseconds
  * @returns equivalent duration in minutes
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, time, milliseconds, minutes, convert, duration
+ * @dbxUtilRelated ms-to-seconds, hours-to-ms, minutes-to-ms
  *
  * @example
  * ```ts
@@ -82,6 +91,11 @@ export function msToMinutes(milliseconds: number): Minutes {
  * @param milliseconds - duration in milliseconds
  * @returns equivalent duration in seconds
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, time, milliseconds, seconds, convert, duration
+ * @dbxUtilRelated ms-to-minutes, hours-to-ms, minutes-to-ms
+ *
  * @example
  * ```ts
  * msToSeconds(1000); // 1
@@ -97,6 +111,11 @@ export function msToSeconds(milliseconds: number): Seconds {
  *
  * @param hours - number of hours (defaults to 1)
  * @returns equivalent duration in milliseconds
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, time, hours, milliseconds, convert, duration
+ * @dbxUtilRelated minutes-to-ms, ms-to-minutes
  *
  * @example
  * ```ts
@@ -114,6 +133,11 @@ export function hoursToMs(hours: number = 1): Minutes {
  * @param minutes - number of minutes (defaults to 1)
  * @returns equivalent duration in milliseconds
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, time, minutes, milliseconds, convert, duration
+ * @dbxUtilRelated hours-to-ms, ms-to-minutes
+ *
  * @example
  * ```ts
  * minutesToMs(1); // 60000
@@ -129,6 +153,11 @@ export function minutesToMs(minutes: number = 1): Minutes {
  *
  * @param days - number of days (defaults to 1)
  * @returns equivalent duration in minutes
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, time, days, minutes, convert, duration
+ * @dbxUtilRelated minutes-to-ms, hours-to-ms
  *
  * @example
  * ```ts
@@ -163,6 +192,11 @@ export function maxFutureDate(): Date {
  * @param date - date to check
  * @returns whether the date is the max future sentinel
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, sentinel, max, future, expiration, check
+ * @dbxUtilRelated max-future-date
+ *
  * @example
  * ```ts
  * isMaxFutureDate(MAX_FUTURE_DATE); // true
@@ -181,6 +215,10 @@ export function isMaxFutureDate(date: Date): boolean {
  * @param time - date to truncate (defaults to now)
  * @returns date rounded down to the start of the minute
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, minute, truncate, floor, time, start
+ *
  * @example
  * ```ts
  * const date = new Date('2024-01-01T12:30:45.123Z');
@@ -198,6 +236,11 @@ export function latestMinute(time = new Date()): Date {
  * @param input - date or date string to convert
  * @returns the ISO 8601 string representation
  * @throws {Error} When the input cannot be parsed as a valid date.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, iso, string, format, convert, serialize
+ * @dbxUtilRelated to-js-date, parse-js-date-string, safe-to-js-date
  *
  * @example
  * ```ts
@@ -220,6 +263,11 @@ export function toISODateString(input: DateOrDateString): ISO8601DateString {
  *
  * @returns the IANA timezone string (e.g. "America/Chicago"), or undefined if detection fails
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, timezone, tz, guess, current, intl, system
+ * @dbxUtilRelated require-current-timezone
+ *
  * @example
  * ```ts
  * const tz = guessCurrentTimezone();
@@ -237,6 +285,11 @@ export function guessCurrentTimezone(): TimezoneString | undefined {
  *
  * @returns the IANA timezone string
  * @throws {Error} When the timezone cannot be detected from the Intl API.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, timezone, tz, require, current, intl, throw
+ * @dbxUtilRelated guess-current-timezone
  *
  * @example
  * ```ts
@@ -260,6 +313,11 @@ export function requireCurrentTimezone(): TimezoneString {
  * @param input - date, date string, or null/undefined
  * @returns the parsed Date or undefined if input was nullish
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, parse, convert, safe, maybe, nullish
+ * @dbxUtilRelated to-js-date, parse-js-date-string
+ *
  * @example
  * ```ts
  * safeToJsDate('2024-01-01T00:00:00.000Z'); // Date instance
@@ -275,6 +333,11 @@ export function safeToJsDate(input: Maybe<DateOrDateString | UTCDateString>): Ma
  *
  * @param input - value to convert
  * @returns the parsed Date
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, parse, convert, iso, unix, milliseconds, string
+ * @dbxUtilRelated safe-to-js-date, parse-js-date-string, to-iso-date-string
  *
  * @example
  * ```ts
@@ -295,6 +358,11 @@ export function toJsDate(input: DateOrDateString | UTCDateString | UnixDateTimeM
  * @param input - ISO 8601 string, UTC date string, or unix milliseconds
  * @returns the parsed Date, or undefined if invalid
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, parse, string, iso, unix, validate
+ * @dbxUtilRelated to-js-date, safe-to-js-date
+ *
  * @example
  * ```ts
  * parseJsDateString('2020-04-30T00:00:00.000'); // Date instance
@@ -313,6 +381,11 @@ export function parseJsDateString(input: ISO8601DateString | UTCDateString | Uni
  * @param dates - array of dates that may contain null/undefined
  * @param defaultDate - fallback if no valid dates exist
  * @returns the earliest date, or the default if the array has no valid dates
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, min, earliest, oldest, before, compare, sort
+ * @dbxUtilRelated latest-date, is-before
  *
  * @example
  * ```ts
@@ -335,6 +408,11 @@ export function earliestDate(dates: Maybe<Date>[], defaultDate: Maybe<Date> = un
  * @param dates - array of dates that may contain null/undefined
  * @param defaultDate - fallback if no valid dates exist
  * @returns the latest date, or the default if the array has no valid dates
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, max, latest, newest, after, compare, sort
+ * @dbxUtilRelated earliest-date, is-after
  *
  * @example
  * ```ts
@@ -361,6 +439,11 @@ export function latestDate(dates: Maybe<Date>[], defaultDate: Maybe<Date> = unde
  * @param defaultValue - returned when either date is nullish
  * @returns whether `a` is after `b`, or the default
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, after, compare, gt, greater, maybe, safe
+ * @dbxUtilRelated is-before, is-same-date, latest-date
+ *
  * @example
  * ```ts
  * const jan = new Date('2024-01-01');
@@ -386,6 +469,11 @@ export function isAfter(a: Maybe<Date>, b: Maybe<Date>, defaultValue: Maybe<bool
  * @param defaultValue - returned when either date is nullish
  * @returns whether `a` is before `b`, or the default
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, before, compare, lt, less, maybe, safe
+ * @dbxUtilRelated is-after, is-same-date, earliest-date
+ *
  * @example
  * ```ts
  * const jan = new Date('2024-01-01');
@@ -410,6 +498,11 @@ export function isBefore(a: Maybe<Date>, b: Maybe<Date>, defaultValue: Maybe<boo
  * @param b - second date
  * @param defaultValue - returned when either date is nullish (defaults to `a == b` if not provided)
  * @returns whether the dates are exactly equal
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, equal, equality, same, compare, exact
+ * @dbxUtilRelated is-same-day, is-same-date-hours-and-minutes, is-after, is-before
  *
  * @example
  * ```ts
@@ -459,6 +552,11 @@ export function isSameDateHoursAndMinutes(a: Maybe<Date>, b: Maybe<Date>, defaul
  * @param b - second date
  * @param defaultValue - returned when either date is nullish
  * @returns whether both dates fall on the same calendar day
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, day, same, equal, calendar, compare
+ * @dbxUtilRelated is-same-date, is-same-date-hours-and-minutes
  *
  * @example
  * ```ts
@@ -564,6 +662,11 @@ export const copyHoursAndMinutesToToday = copyHoursAndMinutesToDate;
  * @param date - date to round (defaults to now)
  * @returns the date with seconds and milliseconds set to zero
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, round, floor, minute, truncate, time
+ * @dbxUtilRelated round-down-to-hour, round-date-down-to, round-date-to
+ *
  * @example
  * ```ts
  * const date = new Date('2024-01-01T12:30:45.123Z');
@@ -579,6 +682,11 @@ export function roundDownToMinute(date = new Date()): Date {
  *
  * @param date - date to round (defaults to now)
  * @returns the date with minutes, seconds, and milliseconds set to zero
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, round, floor, hour, truncate, time
+ * @dbxUtilRelated round-down-to-minute, round-date-down-to, round-date-to
  *
  * @example
  * ```ts
@@ -605,6 +713,11 @@ export function roundDateDownTo(date: Date, roundToUnit: DateHourMinuteOrSecond)
  * Rounds a date or unix timestamp to the nearest unit boundary using the specified rounding direction.
  *
  * Preserves the input type: Date inputs return Date, number inputs return number.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, round, floor, ceil, unit, hour, minute, second, truncate
+ * @dbxUtilRelated round-date-down-to, round-down-to-minute, round-down-to-hour
  *
  * @param date - date or unix millisecond timestamp to round
  * @param roundToUnit - time unit to round to ('hour', 'minute', or 'second')

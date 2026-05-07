@@ -55,6 +55,9 @@ export interface MockItemStorageFirebaseStorageContextConfig {}
  *   it('should upload', () => { ... });
  * }));
  * ```
+ *
+ * @param _config - Reserved for future setup/teardown configuration; currently unused.
+ * @returns A factory builder that wraps a parent {@link TestFirebaseStorageContextFixture} with a {@link MockItemStorageFixture} per test.
  */
 export function testWithMockItemStorageFixture(_config?: MockItemStorageFirebaseStorageContextConfig): TestWrappedContextFactoryBuilder<MockItemStorageFixture, TestFirebaseStorageContextFixture> {
   return instanceWrapTestContextFactory({

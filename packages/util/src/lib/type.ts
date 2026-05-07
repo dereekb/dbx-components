@@ -22,6 +22,11 @@ export type ObjectWithConstructor = {
  * Returns true if the input is a function-like value with a prototype and constructor (i.e., a class or named function declaration).
  * Returns false for arrow functions, class instances, plain objects, and primitives.
  *
+ * @dbxUtil
+ * @dbxUtilCategory type
+ * @dbxUtilTags type, type-guard, function, class, constructor, reflection
+ * @dbxUtilRelated is-class-like-type, get-function-type, is-non-class-function
+ *
  * @param obj - The value to check.
  * @returns Whether the value is a function with a constructor.
  */
@@ -32,6 +37,11 @@ export function isObjectWithConstructor(obj: any): obj is ObjectWithConstructor 
 /**
  * Returns true if the input is a class (requires `new` to instantiate). Distinguishes classes from regular functions
  * by checking that the prototype is non-writable.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory type
+ * @dbxUtilTags type, type-guard, class, reflection, instance
+ * @dbxUtilRelated is-object-with-constructor, get-function-type
  *
  * @param obj - The value to check.
  * @returns Whether the value is a class type.
@@ -46,6 +56,11 @@ export type FunctionType = 'function' | 'class' | 'arrow';
  * Determines the function type of the input value: `'class'`, `'function'`, or `'arrow'`.
  * Returns `null` if the input is not a function.
  *
+ * @dbxUtil
+ * @dbxUtilCategory type
+ * @dbxUtilTags type, function, class, arrow, reflection, kind, detect
+ * @dbxUtilRelated is-class-like-type, is-non-class-function, is-object-with-constructor
+ *
  * @param x - The value to inspect.
  * @returns The {@link FunctionType}, or `null` for non-functions.
  */
@@ -56,6 +71,11 @@ export function getFunctionType(x: unknown): Maybe<FunctionType> {
 
 /**
  * Returns true if the input is a function but not a class (i.e., a regular function or arrow function).
+ *
+ * @dbxUtil
+ * @dbxUtilCategory type
+ * @dbxUtilTags type, type-guard, function, arrow, reflection, callable
+ * @dbxUtilRelated is-class-like-type, get-function-type
  *
  * @param x - The value to check.
  * @returns Whether the value is a non-class function.

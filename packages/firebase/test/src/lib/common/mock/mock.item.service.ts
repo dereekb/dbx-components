@@ -64,6 +64,9 @@ export abstract class MockItemCollections {
  * Creates a concrete {@link MockItemCollections} instance with all collections bound to the given {@link FirestoreContext}.
  *
  * This is the primary way to instantiate the full set of mock collections for a test run.
+ *
+ * @param firestoreContext - The Firestore context (typically a {@link TestFirestoreContext}) that backs every collection.
+ * @returns A fully populated {@link MockItemCollections} with each mock collection, factory, and collection group wired to `firestoreContext`.
  */
 export function makeMockItemCollections(firestoreContext: FirestoreContext): MockItemCollections {
   return {

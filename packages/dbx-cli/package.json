@@ -1,0 +1,15 @@
+{
+  "name": "@dereekb/dbx-cli",
+  "version": "13.11.0",
+  "sideEffects": false,
+  "peerDependencies": {
+    "@dereekb/firebase": "13.11.0",
+    "@dereekb/nestjs": "13.11.0",
+    "@dereekb/util": "13.11.0",
+    "arktype": "^2.2.0",
+    "yargs": "^18.0.0"
+  },
+  "devDependencies": {
+    "@types/yargs": "^17.0.35"
+  }
+}

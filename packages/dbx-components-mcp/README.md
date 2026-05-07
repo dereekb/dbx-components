@@ -12,7 +12,7 @@ Clusters with the `_m` suffix are **model extensions** — tools that walk a dow
 |----------------|----------------------------------------------------------------------------------------------------------------------------------------|
 | form           | `dbx_form_lookup`, `dbx_form_search`, `dbx_form_examples`, `dbx_form_scaffold`                                                         |
 | ui             | `dbx_ui_lookup`, `dbx_ui_search`, `dbx_ui_examples`                                                                                    |
-| model          | `dbx_model_lookup`, `dbx_model_search`, `dbx_model_decode`, `dbx_model_validate`, `dbx_model_validate_api`, `dbx_model_validate_folder`, `dbx_model_store_scaffold` |
+| model          | `dbx_model_lookup`, `dbx_model_search`, `dbx_model_hierarchy`, `dbx_model_decode`, `dbx_model_validate`, `dbx_model_validate_api`, `dbx_model_validate_folder`, `dbx_model_store_scaffold` |
 | storagefile_m  | `dbx_storagefile_m_validate_app`, `dbx_storagefile_m_list_app`, `dbx_storagefile_m_validate_folder`                                    |
 | notification_m | `dbx_notification_m_validate_app`, `dbx_notification_m_list_app`, `dbx_notification_m_validate_folder`                                 |
 | system_m       | `dbx_system_m_validate_folder`                                                                                                         |
@@ -37,6 +37,10 @@ URIs are namespaced by domain (`dbx://<domain>/...`). Validators, scaffolders, a
 | `dbx://model/firebase/{name}`                        | Single Firebase model                                  |
 | `dbx://model/firebase/prefix/{prefix}`               | Firebase model by collection prefix                    |
 | `dbx://model/firebase/subcollections/{parent}`       | Subcollection models nested under a parent identity    |
+| `dbx://model/firebase/hierarchy`                     | Full upstream model forest (tree + flat)               |
+| `dbx://model/firebase/hierarchy/{root}`              | Subtree rooted at the supplied model                   |
+| `dbx://model/firebase/user-keyed-by-id`              | Models whose doc id IS the Firebase Auth uid (`UserRelatedById`) |
+| `dbx://model/firebase/user-related`                  | Models with an explicit `uid` field (`UserRelated`)    |
 | `dbx://action/entries`                               | Action entries catalog (directives, store, states)     |
 | `dbx://action/entries/{slug}`                        | Single action entry                                    |
 | `dbx://action/entries/role/{role}`                   | Action entries by role                                 |

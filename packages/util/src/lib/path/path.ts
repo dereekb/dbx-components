@@ -10,16 +10,50 @@ import { type Maybe } from '../value/maybe.type';
 import { indexRange, type IndexRangeInput } from '../value/indexed';
 import { splitJoinRemainder } from '../string/string';
 
+/**
+ * The forward-slash character used to separate parts of a slash path.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory path
+ * @dbxUtilKind const
+ * @dbxUtilTags path, slash, separator, constant, delimiter
+ * @dbxUtilRelated slash-path-file-type-separator, slash-path-parts
+ */
 export const SLASH_PATH_SEPARATOR = '/';
+
+/**
+ * The dot character used to separate the file extension from the file name within a slash path.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory path
+ * @dbxUtilKind const
+ * @dbxUtilTags path, slash, separator, dot, file-type, extension, constant
+ * @dbxUtilRelated slash-path-separator, slash-path-type, slash-path-details
+ */
 export const SLASH_PATH_FILE_TYPE_SEPARATOR = '.';
 
 export type SlashPathSeparatorString = typeof SLASH_PATH_SEPARATOR;
 export type SlashFileTypeSeparatorString = typeof SLASH_PATH_FILE_TYPE_SEPARATOR;
 
+/**
+ * The default set of characters that are considered illegal in a slash path.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory path
+ * @dbxUtilKind const
+ * @dbxUtilTags path, slash, illegal, characters, default, sanitize, validate
+ * @dbxUtilRelated default-slash-path-illegal-character-replacement, slash-path-validation-factory
+ */
 export const DEFAULT_SLASH_PATH_ILLEGAL_CHARACTERS = ['#', '[', ']', '*', '?'];
 
 /**
  * Default replacement character for illegal characters.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory path
+ * @dbxUtilKind const
+ * @dbxUtilTags path, slash, illegal, replacement, default, sanitize
+ * @dbxUtilRelated default-slash-path-illegal-characters, slash-path-validation-factory
  */
 export const DEFAULT_SLASH_PATH_ILLEGAL_CHARACTER_REPLACEMENT = '_';
 
@@ -114,6 +148,11 @@ export type SlashPathType = 'folder' | 'file' | 'typedfile' | 'invalid';
 /**
  * Determines the type of a slash path string.
  *
+ * @dbxUtil
+ * @dbxUtilCategory path
+ * @dbxUtilTags path, slash, type, classify, file, folder, typed, detect
+ * @dbxUtilRelated is-slash-path-file, is-slash-path-folder, is-slash-path-typed-file, is-valid-slash-path
+ *
  * @param input - The slash path to classify.
  * @returns The path type classification.
  */
@@ -149,6 +188,11 @@ export function slashPathType(input: SlashPath): SlashPathType {
 /**
  * Type guard that checks if the input is a file path (typed or untyped).
  *
+ * @dbxUtil
+ * @dbxUtilCategory path
+ * @dbxUtilTags path, slash, file, type-guard, predicate, check, is
+ * @dbxUtilRelated is-slash-path-typed-file, is-slash-path-folder, slash-path-type
+ *
  * @param input - The string to check.
  * @returns Whether the input is a file path.
  */
@@ -159,6 +203,11 @@ export function isSlashPathFile(input: string): input is SlashPathFile {
 
 /**
  * Type guard that checks if the input is a typed file path (contains a file extension).
+ *
+ * @dbxUtil
+ * @dbxUtilCategory path
+ * @dbxUtilTags path, slash, file, extension, type-guard, predicate, typed
+ * @dbxUtilRelated is-slash-path-file, is-slash-path-folder, slash-path-type
  *
  * @param input - The string to check.
  * @returns Whether the input is a typed file path.
@@ -171,6 +220,11 @@ export function isSlashPathTypedFile(input: string): input is SlashPathTypedFile
 /**
  * Type guard that checks if the input is a folder path (ends with a slash).
  *
+ * @dbxUtil
+ * @dbxUtilCategory path
+ * @dbxUtilTags path, slash, folder, directory, type-guard, predicate, trailing
+ * @dbxUtilRelated is-slash-path-file, is-valid-slash-path, slash-path-type
+ *
  * @param input - The string to check.
  * @returns Whether the input is a folder path.
  */
@@ -180,6 +234,11 @@ export function isSlashPathFolder(input: string): input is SlashPathFolder {
 
 /**
  * Type guard that checks if the input is a valid slash path (not 'invalid' type).
+ *
+ * @dbxUtil
+ * @dbxUtilCategory path
+ * @dbxUtilTags path, slash, valid, type-guard, predicate, check, validate
+ * @dbxUtilRelated slash-path-type, slash-path-validation-factory, slash-path-invalid-error
  *
  * @param input - The string to check.
  * @returns Whether the input is a valid slash path.
@@ -191,6 +250,11 @@ export function isValidSlashPath(input: string): input is SlashPath {
 /**
  * Returns the last part of the slash path.
  *
+ * @dbxUtil
+ * @dbxUtilCategory path
+ * @dbxUtilTags path, slash, name, last, basename, leaf, file, folder
+ * @dbxUtilRelated slash-path-parts, slash-path-details, isolate-slash-path
+ *
  * @param slashPath - The path to extract the name from.
  * @returns The last part of the path (file name or folder name).
  */
@@ -201,6 +265,11 @@ export function slashPathName(slashPath: SlashPath): SlashPathPart {
 
 /**
  * Returns each section of a SlashPath.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory path
+ * @dbxUtilTags path, slash, split, parts, segments, sections, components
+ * @dbxUtilRelated slash-path-name, slash-path-details, isolate-slash-path
  *
  * @param slashPath - The path to split.
  * @returns Array of non-empty path segments.
@@ -224,6 +293,12 @@ export type SlashPathStartTypeFactory = SlashPathFunction;
 
 /**
  * Creates a function that enforces the specified start type on a slash path.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory path
+ * @dbxUtilKind factory
+ * @dbxUtilTags path, slash, factory, start-type, relative, absolute, normalize
+ * @dbxUtilRelated to-relative-slash-path-start-type, to-absolute-slash-path-start-type, slash-path-factory
  *
  * @param type - The start type to enforce.
  * @returns A function that transforms paths to the specified start type.
@@ -255,6 +330,11 @@ export const ALL_SLASH_PATH_FILE_TYPE_SEPARATORS_REGEX = /\.+/g;
 
 /**
  * Converts a slash path to a relative path by removing all leading slashes.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory path
+ * @dbxUtilTags path, slash, relative, leading, strip, normalize, convert
+ * @dbxUtilRelated to-absolute-slash-path-start-type, slash-path-start-type-factory
  *
  * @param input - The slash path to convert.
  * @returns A relative path without leading slashes.
@@ -296,6 +376,12 @@ export interface SlashPathFolderFactoryConfig {
 
 /**
  * Creates a SlashPathFolderFactory.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory path
+ * @dbxUtilKind factory
+ * @dbxUtilTags path, slash, folder, factory, validate, normalize, trailing-slash
+ * @dbxUtilRelated slash-path-folder, slash-path-validation-factory, add-trailing-slash
  *
  * @param config Configuration options for the factory.
  * @returns A SlashPathFolderFactory.
@@ -362,6 +448,11 @@ export function slashPathFolderFactory(config: SlashPathFolderFactoryConfig = {}
  *
  * If the input is a file, the folder of the file is returned instead.
  *
+ * @dbxUtil
+ * @dbxUtilCategory path
+ * @dbxUtilTags path, slash, folder, convert, normalize, validate, directory
+ * @dbxUtilRelated slash-path-folder-factory, slash-path-details, add-trailing-slash
+ *
  * @param input - the string path to convert to a folder path
  * @param config - optional configuration controlling path type inference and invalid-path handling
  * @returns a valid slash path folder string with a trailing slash, or an empty string for relative root
@@ -372,6 +463,11 @@ export function slashPathFolder(input: string, config?: SlashPathFolderFactoryCo
 
 /**
  * Converts a slash path to an absolute path by ensuring exactly one leading slash.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory path
+ * @dbxUtilTags path, slash, absolute, leading, prefix, normalize, convert
+ * @dbxUtilRelated to-relative-slash-path-start-type, slash-path-start-type-factory, fix-multi-slashes-in-slash-path
  *
  * @param input - The slash path to convert.
  * @returns An absolute path starting with a single slash.
@@ -384,6 +480,11 @@ export function toAbsoluteSlashPathStartType(input: SlashPath): SlashPath {
 /**
  * Replaces consecutive double slashes with single slashes.
  *
+ * @dbxUtil
+ * @dbxUtilCategory path
+ * @dbxUtilTags path, slash, fix, collapse, double, normalize, dedupe
+ * @dbxUtilRelated merge-slash-paths, replace-multiple-file-paths-in-slash-path
+ *
  * @param input - The slash path to fix.
  * @returns The path with double slashes collapsed.
  */
@@ -393,6 +494,11 @@ export function fixMultiSlashesInSlashPath(input: SlashPath): SlashPath {
 
 /**
  * Replaces consecutive double slashes with single slashes. Alias for {@link fixMultiSlashesInSlashPath}.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory path
+ * @dbxUtilTags path, slash, alias, collapse, double, normalize
+ * @dbxUtilRelated fix-multi-slashes-in-slash-path, merge-slash-paths
  *
  * @param input - The slash path to fix.
  * @returns The path with double slashes collapsed.
@@ -404,6 +510,11 @@ export function replaceMultipleFilePathsInSlashPath(input: SlashPath): SlashPath
 /**
  * Removes all trailing slashes from a slash path.
  *
+ * @dbxUtil
+ * @dbxUtilCategory path
+ * @dbxUtilTags path, slash, trim, trailing, strip, remove, normalize
+ * @dbxUtilRelated add-trailing-slash, remove-trailing-file-type-separators
+ *
  * @param input - The slash path to trim.
  * @returns The path without trailing slashes.
  */
@@ -413,6 +524,11 @@ export function removeTrailingSlashes(input: SlashPath): SlashPath {
 
 /**
  * Removes all trailing dots from a slash path.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory path
+ * @dbxUtilTags path, slash, trim, trailing, dot, file-type, strip, normalize
+ * @dbxUtilRelated remove-trailing-slashes, replace-invalid-file-path-type-separators-in-slash-path
  *
  * @param input - The slash path to trim.
  * @returns The path without trailing dots.
@@ -424,6 +540,11 @@ export function removeTrailingFileTypeSeparators(input: SlashPath): SlashPath {
 /**
  * Adds a trailing slash to the input if it does not already have one.
  *
+ * @dbxUtil
+ * @dbxUtilCategory path
+ * @dbxUtilTags path, slash, trailing, append, folder, ensure, normalize
+ * @dbxUtilRelated remove-trailing-slashes, slash-path-folder, slash-path-folder-factory
+ *
  * @param input A slash path.
  * @returns A slash path folder.
  */
@@ -433,6 +554,11 @@ export function addTrailingSlash(input: SlashPath): SlashPathFolder {
 
 /**
  * Replaces all extra and invalidate FilePathTypeSeparator values from the SlashPath, returning a valid SlashPath.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory path
+ * @dbxUtilTags path, slash, dot, file-type, replace, sanitize, fix, validate
+ * @dbxUtilRelated replace-invalid-file-path-type-separators-in-slash-path-function, slash-path-validation-factory
  *
  * @param input
  * @param replaceWith
@@ -444,6 +570,12 @@ export function replaceInvalidFilePathTypeSeparatorsInSlashPath(input: SlashPath
 
 /**
  * Creates a function that replaces all extra and invalidate FilePathTypeSeparator values from the SlashPath, returning a valid SlashPath.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory path
+ * @dbxUtilKind factory
+ * @dbxUtilTags path, slash, dot, file-type, factory, replace, sanitize, validate
+ * @dbxUtilRelated replace-invalid-file-path-type-separators-in-slash-path, slash-path-validation-factory
  *
  * @param input
  * @param replaceWith
@@ -519,6 +651,12 @@ export interface SlashPathValidationFactoryConfig {
 /**
  * Creates a validation/fixup function for slash paths that replaces illegal characters and extra dots.
  *
+ * @dbxUtil
+ * @dbxUtilCategory path
+ * @dbxUtilKind factory
+ * @dbxUtilTags path, slash, validate, factory, sanitize, illegal, replace, fix
+ * @dbxUtilRelated is-valid-slash-path, replace-invalid-file-path-type-separators-in-slash-path-function, slash-path-factory, slash-path-invalid-error
+ *
  * @param config - Configuration for validation behavior.
  * @returns A function that validates and fixes a slash path.
  */
@@ -574,6 +712,12 @@ export interface SlashPathFactoryConfig {
 /**
  * Creates a factory function that merges path segments together with optional base path, start type enforcement, and validation.
  *
+ * @dbxUtil
+ * @dbxUtilCategory path
+ * @dbxUtilKind factory
+ * @dbxUtilTags path, slash, factory, merge, base, start-type, validate, normalize
+ * @dbxUtilRelated merge-slash-paths, slash-path-validation-factory, slash-path-start-type-factory
+ *
  * @param config - Configuration for path generation.
  * @returns A factory function that merges input paths into a single validated slash path.
  */
@@ -593,6 +737,11 @@ export function slashPathFactory(config?: SlashPathFactoryConfig): SlashPathFact
 /**
  * Merges an array of path segments into a single slash path, filtering nullish values and collapsing double slashes.
  *
+ * @dbxUtil
+ * @dbxUtilCategory path
+ * @dbxUtilTags path, slash, merge, join, concat, segments, normalize, dedupe
+ * @dbxUtilRelated slash-path-factory, fix-multi-slashes-in-slash-path, slash-path-parts
+ *
  * @param paths - Array of path segments to merge.
  * @returns The merged slash path.
  */
@@ -604,6 +753,11 @@ export function mergeSlashPaths(paths: Maybe<SlashPath>[]): SlashPath {
 /**
  * Creates an Error indicating that a slash path is invalid.
  *
+ * @dbxUtil
+ * @dbxUtilCategory path
+ * @dbxUtilTags path, slash, error, invalid, throw, validate
+ * @dbxUtilRelated is-valid-slash-path, slash-path-validation-factory
+ *
  * @returns A new Error with a descriptive message.
  */
 export function slashPathInvalidError() {
@@ -612,6 +766,11 @@ export function slashPathInvalidError() {
 
 /**
  * Splits the path and returns the items at the given ranges.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory path
+ * @dbxUtilTags path, slash, isolate, slice, range, segments, extract, sub-path
+ * @dbxUtilRelated isolate-slash-path-function, slash-path-parts, slash-path-details
  *
  * @param path - The path to isolate parts from.
  * @param range - Index range defining which path segments to extract.
@@ -648,6 +807,12 @@ export type IsolateSlashPathFunction = (path: SlashPath) => SlashPath;
 
 /**
  * Creates an IsolateSlashPathFunction.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory path
+ * @dbxUtilKind factory
+ * @dbxUtilTags path, slash, isolate, factory, slice, range, segments, sub-path
+ * @dbxUtilRelated isolate-slash-path, slash-path-parts, slash-path-details
  *
  * @param config - Configuration with range, optional start type, and file mode.
  * @returns A function that isolates path segments within the configured range.
@@ -739,6 +904,11 @@ export interface SlashPathDetails {
 
 /**
  * Returns the details of a path.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory path
+ * @dbxUtilTags path, slash, details, parse, decompose, file, folder, extension, parts
+ * @dbxUtilRelated slash-path-type, slash-path-parts, slash-path-folder, slash-path-name
  *
  * @param path The path to get details for.
  * @returns The details of the path.
@@ -842,6 +1012,11 @@ export type SlashPathPathMatcherPath = ArrayOrValue<SlashPathPathMatcherPart>;
 
 /**
  * Expands the input matcher path into decision functions.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory path
+ * @dbxUtilTags path, slash, matcher, expand, decision, predicate, wildcard, build
+ * @dbxUtilRelated slash-path-path-matcher, slash-path-sub-path-matcher, slash-path-path-matcher-config
  *
  * @param path - Matcher path parts to expand into decision functions.
  * @returns Array of decision functions for each path part.
@@ -955,6 +1130,11 @@ export type SlashPathPathMatcherConfigInput<N extends PrimativeValue = Primative
 /**
  * Creates a SlashPathPathMatcherConfig from the input.
  *
+ * @dbxUtil
+ * @dbxUtilCategory path
+ * @dbxUtilTags path, slash, matcher, config, normalize, coerce
+ * @dbxUtilRelated slash-path-path-matcher, slash-path-sub-path-matcher
+ *
  * @param input The configuration input.
  * @returns The configuration.
  */
@@ -981,6 +1161,12 @@ export function slashPathPathMatcherConfig<N extends PrimativeValue = PrimativeV
 
 /**
  * Creates a SlashPathPathMatcher.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory path
+ * @dbxUtilKind factory
+ * @dbxUtilTags path, slash, matcher, factory, predicate, wildcard, target, compare
+ * @dbxUtilRelated slash-path-sub-path-matcher, expand-slash-path-path-matcher-part-to-decision-functions, slash-path-path-matcher-config
  *
  * @param input - the matcher configuration, which may be a target path string, an array of path parts, or a full config object
  * @returns The matcher.
@@ -1109,6 +1295,12 @@ export type SlashPathSubPathMatcher = (path: SlashPath) => SlashPathSubPathMatch
 
 /**
  * Creates a SlashPathSubPathMatcher.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory path
+ * @dbxUtilKind factory
+ * @dbxUtilTags path, slash, matcher, sub-path, factory, base-path, prefix, predicate
+ * @dbxUtilRelated slash-path-path-matcher, expand-slash-path-path-matcher-part-to-decision-functions
  *
  * @param config The configuration for the matcher.
  * @returns The matcher.

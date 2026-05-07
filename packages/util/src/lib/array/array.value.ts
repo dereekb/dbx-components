@@ -34,6 +34,11 @@ export function filterMaybeArrayFunction<T>(filterFn: Parameters<Array<Maybe<T>>
 /**
  * Filters all maybe values from the input array. If a maybe value is input, returns an empty array.
  *
+ * @dbxUtil
+ * @dbxUtilCategory array
+ * @dbxUtilTags array, filter, maybe, nullish, non-null, defined, compact
+ * @dbxUtilRelated filter-empty-array-values, filter-maybe-array-function
+ *
  * @param values - Optional array of optional values to filter.
  * @returns An array containing only non-null and non-undefined values.
  */
@@ -41,6 +46,11 @@ export const filterMaybeArrayValues = filterMaybeArrayFunction(hasNonNullValue) 
 
 /**
  * Filters all empty and maybe values from the input array. If a maybe value is input, returns an empty array.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory array
+ * @dbxUtilTags array, filter, empty, maybe, nullish, non-empty, compact
+ * @dbxUtilRelated filter-maybe-array-values, filter-maybe-array-function
  *
  * @param values - Optional array of optional values to filter.
  * @returns An array containing only non-null, non-undefined, and non-empty values.

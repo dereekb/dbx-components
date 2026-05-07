@@ -1,50 +1,53 @@
 import { type ZohoAccessToken, type ZohoAccessTokenCache } from '@dereekb/zoho';
-import type { Maybe } from '@dereekb/util';
-import { readFile, writeFile, mkdirSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { createMemoizedJsonFileAsyncValueCache } from '@dereekb/nestjs';
 
+/**
+ * Creates a {@link ZohoAccessTokenCache} backed by a single JSON file with per-process memoization.
+ *
+ * Revives `expiresAt` to a `Date` after JSON parse so consumers receive a typed token regardless
+ * of how the value was serialized. A corrupt or partial cache file (missing required fields, non-finite `expiresIn`, or unparseable `expiresAt`) is treated as a cache miss rather than re-emitted.
+ *
+ * @param filePath - Absolute filesystem path of the JSON file used to persist the cached access token.
+ * @returns A {@link ZohoAccessTokenCache} adapter that delegates load/update/clear to the underlying memoized JSON file cache.
+ */
 export function createFileTokenCache(filePath: string): ZohoAccessTokenCache {
-  let memoryToken: Maybe<ZohoAccessToken>;
+  const inner = createMemoizedJsonFileAsyncValueCache<ZohoAccessToken>({
+    filePath,
+    reviver: (raw) => {
+      if (raw == null || typeof raw !== 'object') {
+        return undefined;
+      }
+      const value = raw as Partial<ZohoAccessToken> & { expiresAt?: unknown };
 
-  const cache: ZohoAccessTokenCache = {
-    loadCachedToken: async (): Promise<Maybe<ZohoAccessToken>> => {
-      if (memoryToken) {
-        return memoryToken;
+      // Validate the required ZohoAccessToken shape so a corrupt or partial file is treated
+      // as a cache miss rather than re-emitted as a malformed token. expiresIn must be a
+      // finite positive number — NaN, ±Infinity, and zero/negative durations are nonsense
+      // for a TTL and should fail validation.
+      if (typeof value.accessToken !== 'string' || typeof value.scope !== 'string' || typeof value.apiDomain !== 'string' || typeof value.expiresIn !== 'number' || !Number.isFinite(value.expiresIn) || value.expiresIn <= 0) {
+        return undefined;
       }
 
-      return new Promise<Maybe<ZohoAccessToken>>((resolve) => {
-        readFile(filePath, { encoding: 'utf-8' }, (err, data) => {
-          if (err) {
-            resolve(undefined);
-            return;
-          }
-          try {
-            const parsed = JSON.parse(data);
-            if (parsed?.expiresAt) {
-              parsed.expiresAt = new Date(parsed.expiresAt);
-            }
-            memoryToken = parsed;
-            resolve(parsed);
-          } catch {
-            resolve(undefined);
-          }
-        });
-      });
-    },
-    updateCachedToken: async (accessToken: ZohoAccessToken): Promise<void> => {
-      memoryToken = accessToken;
-      mkdirSync(dirname(filePath), { recursive: true });
-      return new Promise<void>((resolve, reject) => {
-        writeFile(filePath, JSON.stringify(accessToken), {}, (err) => {
-          if (err) reject(err);
-          else resolve();
-        });
-      });
-    },
-    clearCachedToken: async (): Promise<void> => {
-      memoryToken = undefined;
-    }
-  };
+      const rawExpiresAt = value.expiresAt;
+      let expiresAt: Date | undefined;
+      if (rawExpiresAt instanceof Date) {
+        expiresAt = rawExpiresAt;
+      } else if (rawExpiresAt == null) {
+        expiresAt = undefined;
+      } else {
+        expiresAt = new Date(rawExpiresAt as string | number);
+      }
 
-  return cache;
+      if (expiresAt == null || Number.isNaN(expiresAt.getTime())) {
+        return undefined;
+      }
+
+      return { ...(value as ZohoAccessToken), expiresAt };
+    }
+  });
+
+  return {
+    loadCachedToken: () => inner.load(),
+    updateCachedToken: (token) => inner.update(token),
+    clearCachedToken: () => inner.clear()
+  };
 }

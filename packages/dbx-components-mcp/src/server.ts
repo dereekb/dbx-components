@@ -12,6 +12,7 @@ import { loadActionRegistry, type LoadActionRegistryResult } from './manifest/lo
 import { loadFilterRegistry, type LoadFilterRegistryResult } from './manifest/load-filters-registry.js';
 import { loadForgeFieldRegistry, type LoadForgeFieldRegistryResult } from './manifest/load-forge-fields-registry.js';
 import { loadPipeRegistry, type LoadPipeRegistryResult } from './manifest/load-pipes-registry.js';
+import { loadUtilRegistry, type LoadUtilRegistryResult } from './manifest/load-utils-registry.js';
 import { loadSemanticTypeRegistry, type LoadSemanticTypeRegistryResult } from './manifest/load-registry.js';
 import { loadTokenRegistry, type LoadTokenRegistryResult } from './manifest/load-tokens-registry.js';
 import { loadCssUtilityRegistry, type LoadCssUtilityRegistryResult } from './manifest/load-css-utilities-registry.js';
@@ -21,12 +22,15 @@ import type { ActionRegistry } from './registry/actions-runtime.js';
 import type { FilterRegistry } from './registry/filters-runtime.js';
 import type { ForgeFieldRegistry } from './registry/forge-fields.js';
 import type { PipeRegistry } from './registry/pipes-runtime.js';
+import type { UtilRegistry } from './registry/utils-runtime.js';
 import type { SemanticTypeRegistry } from './registry/semantic-types.js';
 import type { TokenRegistry } from './registry/tokens-runtime.js';
 import type { CssUtilityRegistry } from './registry/css-utilities-runtime.js';
 import type { UiComponentRegistry } from './registry/ui-components-runtime.js';
 import type { DbxDocsUiExamplesRegistry } from './registry/dbx-docs-ui-examples-runtime.js';
 import { FIREBASE_MODELS } from './registry/firebase-models.js';
+import type { AuthRegistry } from './registry/auth-runtime.js';
+import { loadAuthRegistry, type LoadAuthRegistryResult } from './manifest/load-auth-registry.js';
 import type { FixtureModelRegistry } from './tools/model-fixture-shared/index.js';
 import { registerResources } from './resources/index.js';
 import { registerTools } from './tools/index.js';
@@ -56,9 +60,11 @@ Tool clusters (each exposes lookup, search, examples, and/or scaffold/validate):
 - route        — UIRouter state-tree extraction and lookup for an app
 - filter       — filter directive/preset catalog and scaffold
 - pipe         — Angular value-pipe catalog
+- util         — utility functions/classes/factories/constants opted in via @dbxUtil JSDoc tags (search by intent: "expiration", "throttle", "memoize")
 - semantic_type — semantic type aliases (string/number aliases) lookup and search
 - artifact     — body templates for storagefile-purpose, notification-template, notification-task; file-convention reporting
 - asset        — \`AssetPathRef\` constants in a \`-firebase\` component + \`provideDbxAssetLoader()\` wiring in the Angular app; list/scaffold/validate
+- auth         — Firebase Auth claims/roles/OIDC scopes catalog: claim_lookup (key or \`*ApiAuthClaims\` interface), scope_lookup (\`model.read\`, …), role_lookup (forward / by-tag / reverse), token_explain (decode JWT or claims object), list_app (per-app surface)
 
 Model-extension validators (walk a downstream app to verify wiring):
 - storagefile_m, notification_m, system_m — *_validate_app, *_list_app, *_validate_folder
@@ -67,13 +73,15 @@ Model-extension validators (walk a downstream app to verify wiring):
 
 Resource URIs are namespaced by domain:
 - dbx://form/fields[/{slug}|/produces/{produces}|/tier/{tier}|/array-output/{arrayOutput}]
-- dbx://model/firebase[/{name}|/prefix/{prefix}|/subcollections/{parent}]
+- dbx://model/firebase[/{name}|/prefix/{prefix}|/subcollections/{parent}|/user-keyed-by-id|/user-related]
 - dbx://action/entries[/{slug}|/role/{role}]
 - dbx://ui/components[/{slug}|/category/{category}|/kind/{kind}]
 - dbx://pipe/entries[/{slug}|/category/{category}]
+- dbx://util/entries[/{slug}|/category/{category}|/module/{module}|/tag/{tag}]
 - dbx://filter/entries[/{slug}|/kind/{kind}]
 - dbx://token/entries[/{cssVariable}|/source/{source}|/role/{role}]
 - dbx://css-utility/entries[/{slug}|/role/{role}|/source/{source}]
+- dbx://auth/{catalog | claim/{key} | role/{role} | role/tag/{tag} | scope/{scope} | app/{app}}
 
 UI styling reverse/forward lookup:
 - dbx_css_token_lookup — forward: intent/value/role/component → recommended \`var(--…)\` + utility class + dbx-web primitive.
@@ -96,15 +104,30 @@ export interface CreateServerOptions {
   readonly dbxDocsUiExamplesRegistry?: DbxDocsUiExamplesRegistry;
   readonly forgeFieldRegistry?: ForgeFieldRegistry;
   readonly pipeRegistry?: PipeRegistry;
+  readonly utilRegistry?: UtilRegistry;
   readonly actionRegistry?: ActionRegistry;
   readonly filterRegistry?: FilterRegistry;
   readonly tokenRegistry?: TokenRegistry;
   readonly cssUtilityRegistry?: CssUtilityRegistry;
+  /**
+   * Optional pre-built auth registry. When omitted the server scans the
+   * workspace for downstream `claims.ts` files tagged with
+   * `@dbxAuthClaimsApp`, runs the auth extractor, and merges the
+   * resulting entries with the bundled built-ins (`@dereekb/util` roles,
+   * `fr` claim, `model.*` scopes).
+   */
+  readonly authRegistry?: AuthRegistry;
+  /**
+   * Optional observer for the auth registry loader result. When omitted,
+   * the loader writes a one-line summary plus per-warning lines to stderr.
+   */
+  readonly onAuthLoaderResult?: (result: LoadAuthRegistryResult) => void;
   readonly onLoaderResult?: (result: LoadSemanticTypeRegistryResult) => void;
   readonly onUiLoaderResult?: (result: LoadUiComponentRegistryResult) => void;
   readonly onDbxDocsUiExamplesLoaderResult?: (result: LoadDbxDocsUiExamplesRegistryResult) => void;
   readonly onForgeLoaderResult?: (result: LoadForgeFieldRegistryResult) => void;
   readonly onPipeLoaderResult?: (result: LoadPipeRegistryResult) => void;
+  readonly onUtilLoaderResult?: (result: LoadUtilRegistryResult) => void;
   readonly onActionLoaderResult?: (result: LoadActionRegistryResult) => void;
   readonly onFilterLoaderResult?: (result: LoadFilterRegistryResult) => void;
   readonly onTokenLoaderResult?: (result: LoadTokenRegistryResult) => void;
@@ -169,7 +192,7 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
     const loaderResult = await loadSemanticTypeRegistry({ cwd });
     externalCounts.semanticTypes = loaderResult.externalSourceCount;
     if (options.onLoaderResult === undefined) {
-      reportLoaderResult(loaderResult);
+      reportRegistryLoaderResult('semantic-types', '', loaderResult);
     } else {
       options.onLoaderResult(loaderResult);
     }
@@ -183,7 +206,7 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
       const uiLoaderResult = await loadUiComponentRegistry({ cwd });
       externalCounts.uiComponents = uiLoaderResult.externalSourceCount;
       if (options.onUiLoaderResult === undefined) {
-        reportUiLoaderResult(uiLoaderResult);
+        reportRegistryLoaderResult('ui-components', 'ui-', uiLoaderResult);
       } else {
         options.onUiLoaderResult(uiLoaderResult);
       }
@@ -201,7 +224,7 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
     try {
       const examplesLoaderResult = await loadDbxDocsUiExamplesRegistry({ cwd });
       if (options.onDbxDocsUiExamplesLoaderResult === undefined) {
-        reportDbxDocsUiExamplesLoaderResult(examplesLoaderResult);
+        reportRegistryLoaderResult('dbx-docs-ui-examples', 'dbx-docs-ui-examples-', examplesLoaderResult);
       } else {
         options.onDbxDocsUiExamplesLoaderResult(examplesLoaderResult);
       }
@@ -220,7 +243,7 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
       const forgeLoaderResult = await loadForgeFieldRegistry({ cwd });
       externalCounts.forgeFields = forgeLoaderResult.externalSourceCount;
       if (options.onForgeLoaderResult === undefined) {
-        reportForgeLoaderResult(forgeLoaderResult);
+        reportRegistryLoaderResult('forge-fields', 'forge-', forgeLoaderResult);
       } else {
         options.onForgeLoaderResult(forgeLoaderResult);
       }
@@ -239,7 +262,7 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
       const pipeLoaderResult = await loadPipeRegistry({ cwd });
       externalCounts.pipes = pipeLoaderResult.externalSourceCount;
       if (options.onPipeLoaderResult === undefined) {
-        reportPipeLoaderResult(pipeLoaderResult);
+        reportRegistryLoaderResult('pipes', 'pipes-', pipeLoaderResult);
       } else {
         options.onPipeLoaderResult(pipeLoaderResult);
       }
@@ -251,6 +274,24 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
     }
   }
 
+  let utilRegistry: UtilRegistry | undefined = options.utilRegistry;
+  if (utilRegistry === undefined) {
+    const cwd = options.cwd ?? process.cwd();
+    try {
+      const utilLoaderResult = await loadUtilRegistry({ cwd });
+      if (options.onUtilLoaderResult === undefined) {
+        reportRegistryLoaderResult('utils', 'utils-', utilLoaderResult);
+      } else {
+        options.onUtilLoaderResult(utilLoaderResult);
+      }
+      utilRegistry = utilLoaderResult.registry;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      process.stderr.write(`[dbx-components-mcp] utils registry unavailable: ${message}\n`);
+      utilRegistry = undefined;
+    }
+  }
+
   let actionRegistry: ActionRegistry | undefined = options.actionRegistry;
   if (actionRegistry === undefined) {
     const cwd = options.cwd ?? process.cwd();
@@ -258,7 +299,7 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
       const actionLoaderResult = await loadActionRegistry({ cwd });
       externalCounts.actions = actionLoaderResult.externalSourceCount;
       if (options.onActionLoaderResult === undefined) {
-        reportActionLoaderResult(actionLoaderResult);
+        reportRegistryLoaderResult('actions', 'actions-', actionLoaderResult);
       } else {
         options.onActionLoaderResult(actionLoaderResult);
       }
@@ -277,7 +318,7 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
       const filterLoaderResult = await loadFilterRegistry({ cwd });
       externalCounts.filters = filterLoaderResult.externalSourceCount;
       if (options.onFilterLoaderResult === undefined) {
-        reportFilterLoaderResult(filterLoaderResult);
+        reportRegistryLoaderResult('filters', 'filters-', filterLoaderResult);
       } else {
         options.onFilterLoaderResult(filterLoaderResult);
       }
@@ -295,7 +336,7 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
     try {
       const tokenLoaderResult = await loadTokenRegistry({ cwd });
       if (options.onTokenLoaderResult === undefined) {
-        reportTokenLoaderResult(tokenLoaderResult);
+        reportRegistryLoaderResult('tokens', 'tokens-', tokenLoaderResult);
       } else {
         options.onTokenLoaderResult(tokenLoaderResult);
       }
@@ -313,7 +354,7 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
     try {
       const cssUtilityLoaderResult = await loadCssUtilityRegistry({ cwd });
       if (options.onCssUtilityLoaderResult === undefined) {
-        reportCssUtilityLoaderResult(cssUtilityLoaderResult);
+        reportRegistryLoaderResult('css-utilities', 'css-utilities-', cssUtilityLoaderResult);
       } else {
         options.onCssUtilityLoaderResult(cssUtilityLoaderResult);
       }
@@ -329,10 +370,12 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
     entries: FIREBASE_MODELS.map((m) => ({ name: m.name, modelType: m.modelType, collectionPrefix: m.collectionPrefix }))
   };
 
+  const authRegistry = await resolveAuthRegistry({ injected: options.authRegistry, cwd: options.cwd ?? process.cwd(), onAuthLoaderResult: options.onAuthLoaderResult });
+
   await emitDownstreamHints({ cwd: options.cwd ?? process.cwd(), externalCounts, onDownstreamHints: options.onDownstreamHints });
 
-  registerResources(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, uiComponentRegistry: uiRegistry, actionRegistry, filterRegistry, tokenRegistry, cssUtilityRegistry });
-  registerTools(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, uiComponentRegistry: uiRegistry, dbxDocsUiExamplesRegistry, actionRegistry, filterRegistry, tokenRegistry, cssUtilityRegistry, fixtureModelRegistry, modelValidateRuleOptions, cwd: options.cwd ?? process.cwd() });
+  registerResources(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, utilRegistry, uiComponentRegistry: uiRegistry, actionRegistry, filterRegistry, tokenRegistry, cssUtilityRegistry, authRegistry });
+  registerTools(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, utilRegistry, uiComponentRegistry: uiRegistry, dbxDocsUiExamplesRegistry, actionRegistry, filterRegistry, tokenRegistry, cssUtilityRegistry, fixtureModelRegistry, modelValidateRuleOptions, authRegistry, cwd: options.cwd ?? process.cwd() });
 
   return server;
 }
@@ -369,175 +412,114 @@ export async function runStdioServer(): Promise<void> {
 }
 
 /**
- * Default observer used when {@link CreateServerOptions.onLoaderResult} is
- * not supplied. Emits a single info line on stderr summarising which sources
+ * Minimum shape every `Load*RegistryResult` exposes that the default observer
+ * needs. Lets {@link reportRegistryLoaderResult} accept any per-cluster result
+ * structurally without a generic per-registry type parameter.
+ */
+interface RegistryLoaderResultLike {
+  readonly registry: { readonly loadedSources: readonly string[]; readonly all: readonly unknown[] };
+  readonly configPath: string | null;
+  readonly configWarnings: readonly { readonly kind: string; readonly path: string }[];
+  readonly loaderWarnings: readonly { readonly kind: string }[];
+  readonly externalSourceCount: number;
+}
+
+/**
+ * Default observer used when a per-cluster `on*LoaderResult` option is not
+ * supplied. Emits a single info line on stderr summarising which sources
  * loaded and how many warnings were collected, plus one line per warning so
  * operators can spot misconfiguration without paging through stdio frames.
  *
+ * @param label - registry display label (e.g. `semantic-types`, `ui-components`)
+ * @param warningPrefix - prefix prepended to `config-warning`/`loader-warning`
+ *   tags so operators can tell which loader emitted each line. Empty for the
+ *   semantic-types loader (historical baseline); short identifier (`ui-`,
+ *   `forge-`, …) for the others.
  * @param result - the loader output to summarise
  */
-function reportLoaderResult(result: LoadSemanticTypeRegistryResult): void {
+function reportRegistryLoaderResult(label: string, warningPrefix: string, result: RegistryLoaderResultLike): void {
   const { registry, configPath, configWarnings, loaderWarnings, externalSourceCount } = result;
-  const summary = [`[dbx-components-mcp] semantic-types registry loaded`, `  sources: ${registry.loadedSources.join(', ') || '(none)'}`, `  external: ${externalSourceCount}`, `  config: ${configPath ?? '(none)'}`, `  entries: ${registry.all.length}`, `  warnings: ${configWarnings.length + loaderWarnings.length}`].join('\n');
+  const summary = [`[dbx-components-mcp] ${label} registry loaded`, `  sources: ${registry.loadedSources.join(', ') || '(none)'}`, `  external: ${externalSourceCount}`, `  config: ${configPath ?? '(none)'}`, `  entries: ${registry.all.length}`, `  warnings: ${configWarnings.length + loaderWarnings.length}`].join('\n');
   process.stderr.write(`${summary}\n`);
   for (const warning of configWarnings) {
-    process.stderr.write(`[dbx-components-mcp] config-warning: ${warning.kind} ${warning.path}\n`);
+    process.stderr.write(`[dbx-components-mcp] ${warningPrefix}config-warning: ${warning.kind} ${warning.path}\n`);
   }
   for (const warning of loaderWarnings) {
-    process.stderr.write(`[dbx-components-mcp] loader-warning: ${warning.kind}\n`);
+    process.stderr.write(`[dbx-components-mcp] ${warningPrefix}loader-warning: ${warning.kind}\n`);
   }
 }
 
-/**
- * Default observer used when {@link CreateServerOptions.onUiLoaderResult} is
- * not supplied. Mirrors {@link reportLoaderResult} for the ui-components
- * registry so operators can see the same information for both pipelines.
- *
- * @param result - the loader output to summarise
- */
-function reportUiLoaderResult(result: LoadUiComponentRegistryResult): void {
-  const { registry, configPath, configWarnings, loaderWarnings, externalSourceCount } = result;
-  const summary = [`[dbx-components-mcp] ui-components registry loaded`, `  sources: ${registry.loadedSources.join(', ') || '(none)'}`, `  external: ${externalSourceCount}`, `  config: ${configPath ?? '(none)'}`, `  entries: ${registry.all.length}`, `  warnings: ${configWarnings.length + loaderWarnings.length}`].join('\n');
-  process.stderr.write(`${summary}\n`);
-  for (const warning of configWarnings) {
-    process.stderr.write(`[dbx-components-mcp] ui-config-warning: ${warning.kind} ${warning.path}\n`);
-  }
-  for (const warning of loaderWarnings) {
-    process.stderr.write(`[dbx-components-mcp] ui-loader-warning: ${warning.kind}\n`);
-  }
+interface ResolveAuthRegistryInput {
+  readonly injected: AuthRegistry | undefined;
+  readonly cwd: string;
+  readonly onAuthLoaderResult?: (result: LoadAuthRegistryResult) => void;
 }
 
 /**
- * Default observer used when {@link CreateServerOptions.onDbxDocsUiExamplesLoaderResult}
- * is not supplied. Mirrors the other loader-result reporters for the
- * dbx-docs-ui-examples registry.
+ * Resolves the auth registry the server should advertise. Returns the
+ * pre-built registry from `options.authRegistry` when present (test path);
+ * otherwise runs {@link loadAuthRegistry} against the workspace cwd and
+ * forwards the result to the supplied observer (or the default stderr
+ * reporter when none is provided).
  *
- * @param result - the loader output to summarise
+ * @param input - injected registry plus loader cwd / observer
+ * @returns the resolved auth registry
  */
-function reportDbxDocsUiExamplesLoaderResult(result: LoadDbxDocsUiExamplesRegistryResult): void {
-  const { registry, configPath, configWarnings, loaderWarnings, externalSourceCount } = result;
-  const summary = [`[dbx-components-mcp] dbx-docs-ui-examples registry loaded`, `  sources: ${registry.loadedSources.join(', ') || '(none)'}`, `  external: ${externalSourceCount}`, `  config: ${configPath ?? '(none)'}`, `  entries: ${registry.all.length}`, `  warnings: ${configWarnings.length + loaderWarnings.length}`].join('\n');
-  process.stderr.write(`${summary}\n`);
-  for (const warning of configWarnings) {
-    process.stderr.write(`[dbx-components-mcp] dbx-docs-ui-examples-config-warning: ${warning.kind} ${warning.path}\n`);
+async function resolveAuthRegistry(input: ResolveAuthRegistryInput): Promise<AuthRegistry> {
+  const { injected, cwd, onAuthLoaderResult } = input;
+  if (injected !== undefined) return injected;
+  const authLoaderResult = await loadAuthRegistry({ cwd });
+  if (onAuthLoaderResult === undefined) {
+    reportAuthLoaderResult(authLoaderResult);
+  } else {
+    onAuthLoaderResult(authLoaderResult);
   }
-  for (const warning of loaderWarnings) {
-    process.stderr.write(`[dbx-components-mcp] dbx-docs-ui-examples-loader-warning: ${warning.kind}\n`);
-  }
+  return authLoaderResult.registry;
 }
 
 /**
- * Default observer used when {@link CreateServerOptions.onForgeLoaderResult}
- * is not supplied. Mirrors {@link reportLoaderResult} for the forge-fields
- * registry so operators can see the same information for all three pipelines.
+ * Default observer for the auth loader. Mirrors {@link reportRegistryLoaderResult}
+ * but tailored to the auth result's shape (file warnings + extract warnings
+ * instead of config-warning / loader-warning lists). Emits one summary line plus
+ * one line per warning so operators can spot misconfigured downstream
+ * `claims.ts` files.
  *
- * @param result - the loader output to summarise
+ * @param result - the auth loader result to summarise
  */
-function reportForgeLoaderResult(result: LoadForgeFieldRegistryResult): void {
-  const { registry, configPath, configWarnings, loaderWarnings, externalSourceCount } = result;
-  const summary = [`[dbx-components-mcp] forge-fields registry loaded`, `  sources: ${registry.loadedSources.join(', ') || '(none)'}`, `  external: ${externalSourceCount}`, `  config: ${configPath ?? '(none)'}`, `  entries: ${registry.all.length}`, `  warnings: ${configWarnings.length + loaderWarnings.length}`].join('\n');
+function reportAuthLoaderResult(result: LoadAuthRegistryResult): void {
+  const { registry, scannedFiles, fileWarnings, extractWarnings, extractedAppCount, extractedClaimCount } = result;
+  const summary = [`[dbx-components-mcp] auth registry loaded`, `  sources: ${registry.loadedSources.join(', ') || '(none)'}`, `  scanned-files: ${scannedFiles.length}`, `  apps: ${registry.apps.length} (extracted: ${extractedAppCount})`, `  claims: ${registry.claims.length} (extracted: ${extractedClaimCount})`, `  warnings: ${fileWarnings.length + extractWarnings.length}`].join('\n');
   process.stderr.write(`${summary}\n`);
-  for (const warning of configWarnings) {
-    process.stderr.write(`[dbx-components-mcp] forge-config-warning: ${warning.kind} ${warning.path}\n`);
+  for (const warning of fileWarnings) {
+    process.stderr.write(`[dbx-components-mcp] auth-file-warning: ${warning.kind} ${warning.relPath} ${warning.error}\n`);
   }
-  for (const warning of loaderWarnings) {
-    process.stderr.write(`[dbx-components-mcp] forge-loader-warning: ${warning.kind}\n`);
+  for (const warning of extractWarnings) {
+    process.stderr.write(`[dbx-components-mcp] auth-extract-warning: ${warning.kind} ${formatAuthExtractWarning(warning)}\n`);
   }
 }
 
-/**
- * Default observer used when {@link CreateServerOptions.onPipeLoaderResult}
- * is not supplied. Mirrors {@link reportLoaderResult} for the pipes registry
- * so operators can see the same information for all four pipelines.
- *
- * @param result - the loader output to summarise
- */
-function reportPipeLoaderResult(result: LoadPipeRegistryResult): void {
-  const { registry, configPath, configWarnings, loaderWarnings, externalSourceCount } = result;
-  const summary = [`[dbx-components-mcp] pipes registry loaded`, `  sources: ${registry.loadedSources.join(', ') || '(none)'}`, `  external: ${externalSourceCount}`, `  config: ${configPath ?? '(none)'}`, `  entries: ${registry.all.length}`, `  warnings: ${configWarnings.length + loaderWarnings.length}`].join('\n');
-  process.stderr.write(`${summary}\n`);
-  for (const warning of configWarnings) {
-    process.stderr.write(`[dbx-components-mcp] pipes-config-warning: ${warning.kind} ${warning.path}\n`);
+function formatAuthExtractWarning(warning: { readonly kind: string; readonly filePath?: string; readonly line?: number } & Record<string, unknown>): string {
+  const parts: string[] = [];
+  for (const [key, value] of Object.entries(warning)) {
+    if (key === 'kind') continue;
+    if (value === undefined) continue;
+    parts.push(`${key}=${formatWarningValue(value)}`);
   }
-  for (const warning of loaderWarnings) {
-    process.stderr.write(`[dbx-components-mcp] pipes-loader-warning: ${warning.kind}\n`);
-  }
+  return parts.join(' ');
 }
 
-/**
- * Default observer used when {@link CreateServerOptions.onActionLoaderResult}
- * is not supplied. Mirrors {@link reportLoaderResult} for the actions registry
- * so operators can see the same information for all five pipelines.
- *
- * @param result - the loader output to summarise
- */
-function reportActionLoaderResult(result: LoadActionRegistryResult): void {
-  const { registry, configPath, configWarnings, loaderWarnings, externalSourceCount } = result;
-  const summary = [`[dbx-components-mcp] actions registry loaded`, `  sources: ${registry.loadedSources.join(', ') || '(none)'}`, `  external: ${externalSourceCount}`, `  config: ${configPath ?? '(none)'}`, `  entries: ${registry.all.length}`, `  warnings: ${configWarnings.length + loaderWarnings.length}`].join('\n');
-  process.stderr.write(`${summary}\n`);
-  for (const warning of configWarnings) {
-    process.stderr.write(`[dbx-components-mcp] actions-config-warning: ${warning.kind} ${warning.path}\n`);
+function formatWarningValue(value: unknown): string {
+  let result: string;
+  if (typeof value === 'string') {
+    result = value;
+  } else if (value === null) {
+    result = 'null';
+  } else if (typeof value === 'object') {
+    result = JSON.stringify(value);
+  } else {
+    result = String(value as number | boolean | bigint | symbol | undefined);
   }
-  for (const warning of loaderWarnings) {
-    process.stderr.write(`[dbx-components-mcp] actions-loader-warning: ${warning.kind}\n`);
-  }
-}
-
-/**
- * Default observer used when {@link CreateServerOptions.onFilterLoaderResult}
- * is not supplied. Mirrors {@link reportLoaderResult} for the filters registry
- * so operators can see the same information for all six pipelines.
- *
- * @param result - the loader output to summarise
- */
-function reportFilterLoaderResult(result: LoadFilterRegistryResult): void {
-  const { registry, configPath, configWarnings, loaderWarnings, externalSourceCount } = result;
-  const summary = [`[dbx-components-mcp] filters registry loaded`, `  sources: ${registry.loadedSources.join(', ') || '(none)'}`, `  external: ${externalSourceCount}`, `  config: ${configPath ?? '(none)'}`, `  entries: ${registry.all.length}`, `  warnings: ${configWarnings.length + loaderWarnings.length}`].join('\n');
-  process.stderr.write(`${summary}\n`);
-  for (const warning of configWarnings) {
-    process.stderr.write(`[dbx-components-mcp] filters-config-warning: ${warning.kind} ${warning.path}\n`);
-  }
-  for (const warning of loaderWarnings) {
-    process.stderr.write(`[dbx-components-mcp] filters-loader-warning: ${warning.kind}\n`);
-  }
-}
-
-/**
- * Default observer used when {@link CreateServerOptions.onTokenLoaderResult}
- * is not supplied. Mirrors the other loader-result reporters for the
- * design-token registry.
- *
- * @param result - the loader output to summarise
- */
-function reportTokenLoaderResult(result: LoadTokenRegistryResult): void {
-  const { registry, configPath, configWarnings, loaderWarnings, externalSourceCount } = result;
-  const summary = [`[dbx-components-mcp] tokens registry loaded`, `  sources: ${registry.loadedSources.join(', ') || '(none)'}`, `  external: ${externalSourceCount}`, `  config: ${configPath ?? '(none)'}`, `  entries: ${registry.all.length}`, `  warnings: ${configWarnings.length + loaderWarnings.length}`].join('\n');
-  process.stderr.write(`${summary}\n`);
-  for (const warning of configWarnings) {
-    process.stderr.write(`[dbx-components-mcp] tokens-config-warning: ${warning.kind} ${warning.path}\n`);
-  }
-  for (const warning of loaderWarnings) {
-    process.stderr.write(`[dbx-components-mcp] tokens-loader-warning: ${warning.kind}\n`);
-  }
-}
-
-/**
- * Default observer used when {@link CreateServerOptions.onCssUtilityLoaderResult}
- * is not supplied. Mirrors the other loader-result reporters for the
- * css-utility-class registry.
- *
- * @param result - the loader output to summarise
- */
-function reportCssUtilityLoaderResult(result: LoadCssUtilityRegistryResult): void {
-  const { registry, configPath, configWarnings, loaderWarnings, externalSourceCount } = result;
-  const summary = [`[dbx-components-mcp] css-utilities registry loaded`, `  sources: ${registry.loadedSources.join(', ') || '(none)'}`, `  external: ${externalSourceCount}`, `  config: ${configPath ?? '(none)'}`, `  entries: ${registry.all.length}`, `  warnings: ${configWarnings.length + loaderWarnings.length}`].join('\n');
-  process.stderr.write(`${summary}\n`);
-  for (const warning of configWarnings) {
-    process.stderr.write(`[dbx-components-mcp] css-utilities-config-warning: ${warning.kind} ${warning.path}\n`);
-  }
-  for (const warning of loaderWarnings) {
-    process.stderr.write(`[dbx-components-mcp] css-utilities-loader-warning: ${warning.kind}\n`);
-  }
+  return result;
 }
 
 const HINT_CLUSTER_LABEL: Record<DownstreamCluster, string> = {

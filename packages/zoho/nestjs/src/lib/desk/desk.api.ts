@@ -102,6 +102,8 @@ export class ZohoDeskApi {
   // MARK: Ticket Accessors
   /**
    * Configured pass-through for {@link zohoDeskGetTickets}.
+   *
+   * @returns a function that lists Desk tickets matching the supplied filter/pagination input
    */
   get getTickets() {
     return zohoDeskGetTickets(this.deskContext);
@@ -109,6 +111,8 @@ export class ZohoDeskApi {
 
   /**
    * Configured pass-through for {@link zohoDeskGetTicketById}.
+   *
+   * @returns a function that fetches a single Desk ticket by its identifier
    */
   get getTicketById() {
     return zohoDeskGetTicketById(this.deskContext);
@@ -116,6 +120,8 @@ export class ZohoDeskApi {
 
   /**
    * Configured pass-through for {@link zohoDeskSearchTickets}.
+   *
+   * @returns a function that runs a Desk ticket search with the provided criteria
    */
   get searchTickets() {
     return zohoDeskSearchTickets(this.deskContext);
@@ -123,6 +129,8 @@ export class ZohoDeskApi {
 
   /**
    * Configured pass-through for {@link zohoDeskGetTicketsForContact}.
+   *
+   * @returns a function that lists Desk tickets associated with the given contact id
    */
   get getTicketsForContact() {
     return zohoDeskGetTicketsForContact(this.deskContext);
@@ -130,6 +138,8 @@ export class ZohoDeskApi {
 
   /**
    * Configured pass-through for {@link zohoDeskGetTicketsForProduct}.
+   *
+   * @returns a function that lists Desk tickets associated with the given product id
    */
   get getTicketsForProduct() {
     return zohoDeskGetTicketsForProduct(this.deskContext);
@@ -137,6 +147,8 @@ export class ZohoDeskApi {
 
   /**
    * Configured pass-through for {@link zohoDeskGetTicketMetrics}.
+   *
+   * @returns a function that fetches aggregated metrics for the requested Desk tickets
    */
   get getTicketMetrics() {
     return zohoDeskGetTicketMetrics(this.deskContext);
@@ -144,6 +156,8 @@ export class ZohoDeskApi {
 
   /**
    * Configured pass-through for {@link zohoDeskGetAgentsTicketsCount}.
+   *
+   * @returns a function that returns ticket counts grouped by agent for the requested filter
    */
   get getAgentsTicketsCount() {
     return zohoDeskGetAgentsTicketsCount(this.deskContext);
@@ -151,6 +165,8 @@ export class ZohoDeskApi {
 
   /**
    * Configured pass-through for {@link zohoDeskGetTicketsPageFactory}.
+   *
+   * @returns a paged result factory for iterating over Desk ticket list responses
    */
   get getTicketsPageFactory() {
     return zohoDeskGetTicketsPageFactory(this.deskContext);
@@ -158,6 +174,8 @@ export class ZohoDeskApi {
 
   /**
    * Configured pass-through for {@link zohoDeskSearchTicketsPageFactory}.
+   *
+   * @returns a paged result factory for iterating over Desk ticket search responses
    */
   get searchTicketsPageFactory() {
     return zohoDeskSearchTicketsPageFactory(this.deskContext);
@@ -166,6 +184,8 @@ export class ZohoDeskApi {
   // MARK: Department Accessors
   /**
    * Configured pass-through for {@link zohoDeskGetDepartments}.
+   *
+   * @returns a function that lists Desk departments visible to the authenticated portal
    */
   get getDepartments() {
     return zohoDeskGetDepartments(this.deskContext);
@@ -173,6 +193,8 @@ export class ZohoDeskApi {
 
   /**
    * Configured pass-through for {@link zohoDeskGetDepartmentById}.
+   *
+   * @returns a function that fetches a single Desk department by its identifier
    */
   get getDepartmentById() {
     return zohoDeskGetDepartmentById(this.deskContext);
@@ -181,6 +203,8 @@ export class ZohoDeskApi {
   // MARK: Contact Accessors
   /**
    * Configured pass-through for {@link zohoDeskGetContacts}.
+   *
+   * @returns a function that lists Desk contacts matching the supplied filter/pagination input
    */
   get getContacts() {
     return zohoDeskGetContacts(this.deskContext);
@@ -188,6 +212,8 @@ export class ZohoDeskApi {
 
   /**
    * Configured pass-through for {@link zohoDeskGetContactById}.
+   *
+   * @returns a function that fetches a single Desk contact by its identifier
    */
   get getContactById() {
     return zohoDeskGetContactById(this.deskContext);
@@ -195,6 +221,8 @@ export class ZohoDeskApi {
 
   /**
    * Configured pass-through for {@link zohoDeskGetContactsByIds}.
+   *
+   * @returns a function that fetches multiple Desk contacts in a single request by their identifiers
    */
   get getContactsByIds() {
     return zohoDeskGetContactsByIds(this.deskContext);
@@ -202,6 +230,8 @@ export class ZohoDeskApi {
 
   /**
    * Configured pass-through for {@link zohoDeskGetContactsPageFactory}.
+   *
+   * @returns a paged result factory for iterating over Desk contact list responses
    */
   get getContactsPageFactory() {
     return zohoDeskGetContactsPageFactory(this.deskContext);
@@ -210,6 +240,8 @@ export class ZohoDeskApi {
   // MARK: Tag Accessors
   /**
    * Configured pass-through for {@link zohoDeskGetTicketTags}.
+   *
+   * @returns a function that lists the tags currently associated with a given Desk ticket
    */
   get getTicketTags() {
     return zohoDeskGetTicketTags(this.deskContext);
@@ -217,6 +249,8 @@ export class ZohoDeskApi {
 
   /**
    * Configured pass-through for {@link zohoDeskAssociateTicketTags}.
+   *
+   * @returns a function that associates one or more tags with a Desk ticket
    */
   get associateTicketTags() {
     return zohoDeskAssociateTicketTags(this.deskContext);
@@ -224,6 +258,8 @@ export class ZohoDeskApi {
 
   /**
    * Configured pass-through for {@link zohoDeskDissociateTicketTag}.
+   *
+   * @returns a function that removes a single tag association from a Desk ticket
    */
   get dissociateTicketTag() {
     return zohoDeskDissociateTicketTag(this.deskContext);
@@ -231,6 +267,8 @@ export class ZohoDeskApi {
 
   /**
    * Configured pass-through for {@link zohoDeskSearchTags}.
+   *
+   * @returns a function that searches the Desk tag catalog by the supplied criteria
    */
   get searchTags() {
     return zohoDeskSearchTags(this.deskContext);
@@ -238,6 +276,8 @@ export class ZohoDeskApi {
 
   /**
    * Configured pass-through for {@link zohoDeskGetAllTags}.
+   *
+   * @returns a function that lists every tag defined on the Desk portal
    */
   get getAllTags() {
     return zohoDeskGetAllTags(this.deskContext);
@@ -246,6 +286,8 @@ export class ZohoDeskApi {
   // MARK: Follower Accessors
   /**
    * Configured pass-through for {@link zohoDeskGetTicketFollowers}.
+   *
+   * @returns a function that lists the agents following a given Desk ticket
    */
   get getTicketFollowers() {
     return zohoDeskGetTicketFollowers(this.deskContext);
@@ -253,6 +295,8 @@ export class ZohoDeskApi {
 
   /**
    * Configured pass-through for {@link zohoDeskAddTicketFollowers}.
+   *
+   * @returns a function that adds one or more agents as followers of a Desk ticket
    */
   get addTicketFollowers() {
     return zohoDeskAddTicketFollowers(this.deskContext);
@@ -260,6 +304,8 @@ export class ZohoDeskApi {
 
   /**
    * Configured pass-through for {@link zohoDeskRemoveTicketFollowers}.
+   *
+   * @returns a function that removes one or more agents from a Desk ticket's follower list
    */
   get removeTicketFollowers() {
     return zohoDeskRemoveTicketFollowers(this.deskContext);
@@ -268,6 +314,8 @@ export class ZohoDeskApi {
   // MARK: Attachment Accessors
   /**
    * Configured pass-through for {@link zohoDeskGetTicketAttachments}.
+   *
+   * @returns a function that lists the file attachments on a given Desk ticket
    */
   get getTicketAttachments() {
     return zohoDeskGetTicketAttachments(this.deskContext);
@@ -275,6 +323,8 @@ export class ZohoDeskApi {
 
   /**
    * Configured pass-through for {@link zohoDeskDeleteTicketAttachment}.
+   *
+   * @returns a function that deletes a single attachment from a Desk ticket by attachment id
    */
   get deleteTicketAttachment() {
     return zohoDeskDeleteTicketAttachment(this.deskContext);
@@ -283,6 +333,8 @@ export class ZohoDeskApi {
   // MARK: Comment Accessors
   /**
    * Configured pass-through for {@link zohoDeskGetTicketComments}.
+   *
+   * @returns a function that lists the comments on a given Desk ticket
    */
   get getTicketComments() {
     return zohoDeskGetTicketComments(this.deskContext);
@@ -290,6 +342,8 @@ export class ZohoDeskApi {
 
   /**
    * Configured pass-through for {@link zohoDeskGetTicketCommentById}.
+   *
+   * @returns a function that fetches a single comment on a Desk ticket by comment id
    */
   get getTicketCommentById() {
     return zohoDeskGetTicketCommentById(this.deskContext);
@@ -297,6 +351,8 @@ export class ZohoDeskApi {
 
   /**
    * Configured pass-through for {@link zohoDeskCreateTicketComment}.
+   *
+   * @returns a function that creates a new comment on a Desk ticket from the supplied body
    */
   get createTicketComment() {
     return zohoDeskCreateTicketComment(this.deskContext);
@@ -304,6 +360,8 @@ export class ZohoDeskApi {
 
   /**
    * Configured pass-through for {@link zohoDeskDeleteTicketComment}.
+   *
+   * @returns a function that deletes a single comment from a Desk ticket by comment id
    */
   get deleteTicketComment() {
     return zohoDeskDeleteTicketComment(this.deskContext);
@@ -312,6 +370,8 @@ export class ZohoDeskApi {
   // MARK: Time Tracking Accessors
   /**
    * Configured pass-through for {@link zohoDeskGetTicketTimer}.
+   *
+   * @returns a function that fetches the current timer state for a Desk ticket
    */
   get getTicketTimer() {
     return zohoDeskGetTicketTimer(this.deskContext);
@@ -319,6 +379,8 @@ export class ZohoDeskApi {
 
   /**
    * Configured pass-through for {@link zohoDeskPerformTicketTimerAction}.
+   *
+   * @returns a function that performs a timer action (start/pause/stop) on a Desk ticket
    */
   get performTicketTimerAction() {
     return zohoDeskPerformTicketTimerAction(this.deskContext);
@@ -326,6 +388,8 @@ export class ZohoDeskApi {
 
   /**
    * Configured pass-through for {@link zohoDeskGetTicketTimeEntries}.
+   *
+   * @returns a function that lists the time entries logged against a Desk ticket
    */
   get getTicketTimeEntries() {
     return zohoDeskGetTicketTimeEntries(this.deskContext);
@@ -333,6 +397,8 @@ export class ZohoDeskApi {
 
   /**
    * Configured pass-through for {@link zohoDeskGetTicketTimeEntryById}.
+   *
+   * @returns a function that fetches a single time entry on a Desk ticket by entry id
    */
   get getTicketTimeEntryById() {
     return zohoDeskGetTicketTimeEntryById(this.deskContext);
@@ -340,6 +406,8 @@ export class ZohoDeskApi {
 
   /**
    * Configured pass-through for {@link zohoDeskGetTicketTimeEntrySummation}.
+   *
+   * @returns a function that fetches the aggregated time-entry totals for a Desk ticket
    */
   get getTicketTimeEntrySummation() {
     return zohoDeskGetTicketTimeEntrySummation(this.deskContext);
@@ -348,6 +416,8 @@ export class ZohoDeskApi {
   // MARK: Thread Accessors
   /**
    * Configured pass-through for {@link zohoDeskGetTicketThreads}.
+   *
+   * @returns a function that lists the conversation threads on a given Desk ticket
    */
   get getTicketThreads() {
     return zohoDeskGetTicketThreads(this.deskContext);
@@ -355,6 +425,8 @@ export class ZohoDeskApi {
 
   /**
    * Configured pass-through for {@link zohoDeskGetTicketThreadById}.
+   *
+   * @returns a function that fetches a single thread on a Desk ticket by thread id
    */
   get getTicketThreadById() {
     return zohoDeskGetTicketThreadById(this.deskContext);
@@ -362,6 +434,8 @@ export class ZohoDeskApi {
 
   /**
    * Configured pass-through for {@link zohoDeskGetTicketThreadsPageFactory}.
+   *
+   * @returns a paged result factory for iterating over Desk ticket thread responses
    */
   get getTicketThreadsPageFactory() {
     return zohoDeskGetTicketThreadsPageFactory(this.deskContext);
@@ -370,6 +444,8 @@ export class ZohoDeskApi {
   // MARK: Activity Accessors
   /**
    * Configured pass-through for {@link zohoDeskGetTicketActivities}.
+   *
+   * @returns a function that lists the activity log entries for a given Desk ticket
    */
   get getTicketActivities() {
     return zohoDeskGetTicketActivities(this.deskContext);
@@ -377,6 +453,8 @@ export class ZohoDeskApi {
 
   /**
    * Configured pass-through for {@link zohoDeskGetTicketActivitiesPageFactory}.
+   *
+   * @returns a paged result factory for iterating over Desk ticket activity responses
    */
   get getTicketActivitiesPageFactory() {
     return zohoDeskGetTicketActivitiesPageFactory(this.deskContext);
@@ -385,6 +463,8 @@ export class ZohoDeskApi {
   // MARK: Agent Accessors
   /**
    * Configured pass-through for {@link zohoDeskGetAgents}.
+   *
+   * @returns a function that lists Desk agents matching the supplied filter/pagination input
    */
   get getAgents() {
     return zohoDeskGetAgents(this.deskContext);
@@ -392,6 +472,8 @@ export class ZohoDeskApi {
 
   /**
    * Configured pass-through for {@link zohoDeskGetAgentById}.
+   *
+   * @returns a function that fetches a single Desk agent by agent id
    */
   get getAgentById() {
     return zohoDeskGetAgentById(this.deskContext);
@@ -399,6 +481,8 @@ export class ZohoDeskApi {
 
   /**
    * Configured pass-through for {@link zohoDeskGetAgentsByIds}.
+   *
+   * @returns a function that fetches multiple Desk agents in a single request by their identifiers
    */
   get getAgentsByIds() {
     return zohoDeskGetAgentsByIds(this.deskContext);
@@ -406,6 +490,8 @@ export class ZohoDeskApi {
 
   /**
    * Configured pass-through for {@link zohoDeskGetMyInfo}.
+   *
+   * @returns a function that fetches the profile information for the currently authenticated agent
    */
   get getMyInfo() {
     return zohoDeskGetMyInfo(this.deskContext);
@@ -413,6 +499,8 @@ export class ZohoDeskApi {
 
   /**
    * Configured pass-through for {@link zohoDeskGetAgentsPageFactory}.
+   *
+   * @returns a paged result factory for iterating over Desk agent list responses
    */
   get getAgentsPageFactory() {
     return zohoDeskGetAgentsPageFactory(this.deskContext);

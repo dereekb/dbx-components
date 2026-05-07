@@ -1,5 +1,7 @@
 import { type Maybe } from '@dereekb/util';
-import { readFile, writeFile, rm, mkdirSync } from 'node:fs';
+import { type CliCommandOutputConfig, type CliOutputConfig, mergeOutputConfig as dbxMergeOutputConfig } from '@dereekb/dbx-cli';
+import { readJsonFile, removeFile } from '@dereekb/nestjs';
+import { writeFile, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 
@@ -25,22 +27,15 @@ export interface ZohoCliProductConfig extends Partial<ZohoCliCredentials> {
 }
 
 /**
- * Output settings that can be applied per-command.
+ * Per-command output settings (alias of dbx-cli's {@link CliCommandOutputConfig}).
  */
-export interface ZohoCliCommandOutputConfig {
-  readonly dumpDir?: string;
-  readonly pick?: string;
-}
+export type ZohoCliCommandOutputConfig = CliCommandOutputConfig;
 
 /**
- * Output configuration with global defaults and optional per-command overrides.
- *
- * Command keys use dot-separated paths matching the yargs command hierarchy
- * (e.g. `desk.tickets.list`, `recruit.list`, `crm.get`).
+ * Output configuration with global defaults and optional per-command overrides
+ * (alias of dbx-cli's {@link CliOutputConfig}).
  */
-export interface ZohoCliOutputConfig extends ZohoCliCommandOutputConfig {
-  readonly commands?: Record<string, ZohoCliCommandOutputConfig>;
-}
+export type ZohoCliOutputConfig = CliOutputConfig;
 
 /**
  * Full CLI config file structure.
@@ -69,14 +64,29 @@ export interface ZohoCliResolvedProductCredentials extends ZohoCliCredentials {
   readonly orgId?: string;
 }
 
+/**
+ * Returns the absolute path to the per-user zoho-cli config directory under the user's home.
+ *
+ * @returns Absolute filesystem path of the `~/.zoho-cli` directory.
+ */
 export function getConfigDir(): string {
   return join(homedir(), '.zoho-cli');
 }
 
+/**
+ * Returns the absolute path to the persisted CLI config JSON file.
+ *
+ * @returns Absolute filesystem path of `~/.zoho-cli/config.json`.
+ */
 export function getConfigFilePath(): string {
   return join(getConfigDir(), 'config.json');
 }
 
+/**
+ * Returns the absolute path to the on-disk OAuth access-token cache used by the CLI.
+ *
+ * @returns Absolute filesystem path of `~/.zoho-cli/.tokens.json`.
+ */
 export function getTokenCachePath(): string {
   return join(getConfigDir(), '.tokens.json');
 }
@@ -84,6 +94,10 @@ export function getTokenCachePath(): string {
 /**
  * Reads a config value from environment variables using the NestJS convention:
  * service-specific first (ZOHO_{SERVICE}_{KEY}), then shared fallback (ZOHO_{KEY}).
+ *
+ * @param key - Suffix portion of the env var name following the `ZOHO_` (or `ZOHO_{SERVICE}_`) prefix.
+ * @param servicePrefix - Optional uppercased product prefix (e.g. `RECRUIT`, `CRM`, `DESK`); when provided, the service-specific variable is checked before the shared one.
+ * @returns The first matching env var value, or `undefined` when neither is set.
  */
 function envVar(key: string, servicePrefix?: string): Maybe<string> {
   if (servicePrefix) {
@@ -99,10 +113,12 @@ function envVar(key: string, servicePrefix?: string): Maybe<string> {
 
 /**
  * Loads the full CLI config, merging file config with environment variable overrides.
+ *
+ * @returns The merged {@link ZohoCliConfig}, or `undefined` when no config file exists and no shared OAuth env vars are present.
  */
 export async function loadCliConfig(): Promise<Maybe<ZohoCliConfig>> {
   const filePath = getConfigFilePath();
-  const fileConfig = await readConfigFile<ZohoCliConfig>(filePath);
+  const fileConfig = await readJsonFile<ZohoCliConfig>(filePath);
 
   // Check shared env vars
   const envClientId = envVar('ACCOUNTS_CLIENT_ID');
@@ -162,6 +178,10 @@ export async function loadCliConfig(): Promise<Maybe<ZohoCliConfig>> {
 /**
  * Resolves credentials for a specific product.
  * Uses product-specific credentials if available, otherwise falls back to shared.
+ *
+ * @param config - Loaded CLI configuration containing the shared block and any per-product overrides.
+ * @param product - Target Zoho product whose credentials should be resolved.
+ * @returns Fully populated {@link ZohoCliResolvedProductCredentials}, or `undefined` if any of `clientId`, `clientSecret`, or `refreshToken` cannot be sourced from product or shared config.
  */
 export function resolveProductCredentials(config: ZohoCliConfig, product: ZohoCliProduct): Maybe<ZohoCliResolvedProductCredentials> {
   const productConfig = config[product];
@@ -187,6 +207,10 @@ export function resolveProductCredentials(config: ZohoCliConfig, product: ZohoCl
 
 /**
  * Saves the full CLI config to disk.
+ *
+ * Creates the config directory recursively if missing, then writes the JSON-serialized config to {@link getConfigFilePath}.
+ *
+ * @param config - Complete config object to persist; written verbatim with 2-space indentation.
  */
 export async function saveCliConfig(config: ZohoCliConfig): Promise<void> {
   const filePath = getConfigFilePath();
@@ -202,6 +226,11 @@ export async function saveCliConfig(config: ZohoCliConfig): Promise<void> {
 
 /**
  * Merges new values into the existing config, preserving unmodified fields.
+ *
+ * Per-product blocks (`recruit`, `crm`, `desk`) are shallow-merged when provided; output config is deep-merged via dbx-cli's {@link dbxMergeOutputConfig} so explicit `undefined` keys in `updates.output` clear existing values.
+ *
+ * @param updates - Partial config patch; only keys present in this object are touched.
+ * @returns The fully merged config that was written to disk.
  */
 export async function mergeCliConfig(updates: Partial<ZohoCliConfig>): Promise<ZohoCliConfig> {
   const existing = await loadCliConfig();
@@ -210,51 +239,23 @@ export async function mergeCliConfig(updates: Partial<ZohoCliConfig>): Promise<Z
     recruit: updates.recruit !== undefined ? { ...existing?.recruit, ...updates.recruit } : existing?.recruit,
     crm: updates.crm !== undefined ? { ...existing?.crm, ...updates.crm } : existing?.crm,
     desk: updates.desk !== undefined ? { ...existing?.desk, ...updates.desk } : existing?.desk,
-    output: updates.output !== undefined ? mergeOutputConfig(existing?.output, updates.output) : existing?.output
+    output: updates.output === undefined ? existing?.output : dbxMergeOutputConfig(existing?.output, updates.output)
   };
 
   await saveCliConfig(merged);
   return merged;
 }
 
-function mergeOutputConfig(existing: Maybe<ZohoCliOutputConfig>, updates: ZohoCliOutputConfig): ZohoCliOutputConfig {
-  return {
-    dumpDir: 'dumpDir' in updates ? updates.dumpDir : existing?.dumpDir,
-    pick: 'pick' in updates ? updates.pick : existing?.pick,
-    commands: mergeOutputCommandsConfig(existing?.commands, updates)
-  };
-}
-
-function mergeOutputCommandsConfig(existing: ZohoCliOutputConfig['commands'], updates: ZohoCliOutputConfig): ZohoCliOutputConfig['commands'] {
-  if (!('commands' in updates)) {
-    return existing;
-  }
-
-  return updates.commands ? { ...existing, ...updates.commands } : undefined;
-}
-
 /**
- * Resolves output settings for a given command path.
- *
- * Resolution order (highest priority first):
- * 1. CLI flags (dumpDir, pick from argv)
- * 2. Per-command config (output.commands["desk.tickets.list"])
- * 3. Global output config (output.dumpDir, output.pick)
+ * Re-export of dbx-cli's `resolveOutputConfig` so existing zoho-cli consumers keep the same
+ * module surface. New code can import from `@dereekb/dbx-cli` directly.
  */
-export function resolveOutputConfig(outputConfig: Maybe<ZohoCliOutputConfig>, commandPath: string[], cliFlags: { dumpDir?: string; pick?: string }): { dumpDir?: string; pick?: string } {
-  const commandKey = commandPath.join('.');
-  const commandConfig = commandKey ? outputConfig?.commands?.[commandKey] : undefined;
-
-  return {
-    dumpDir: cliFlags.dumpDir ?? commandConfig?.dumpDir ?? outputConfig?.dumpDir,
-    pick: cliFlags.pick ?? commandConfig?.pick ?? outputConfig?.pick
-  };
-}
+export { resolveOutputConfig } from '@dereekb/dbx-cli';
 
 /**
  * Clears all output config (dumpDir, pick, per-command overrides).
  *
- * Uses explicit `undefined` values so `mergeOutputConfig` detects the keys
+ * Uses explicit `undefined` values so {@link dbxMergeOutputConfig} detects the keys
  * via `'key' in updates` and overwrites rather than falling back to existing values.
  * `JSON.stringify` then strips the undefined properties from the saved config file.
  */
@@ -262,6 +263,11 @@ export async function clearOutputConfig(): Promise<void> {
   await mergeCliConfig({ output: { dumpDir: undefined, pick: undefined, commands: undefined } });
 }
 
+/**
+ * Removes both the persisted CLI config file and the on-disk OAuth token cache.
+ *
+ * Used by `auth clear` to fully reset CLI authentication state on the local machine.
+ */
 export async function clearCliConfig(): Promise<void> {
   const configPath = getConfigFilePath();
   const tokenPath = getTokenCachePath();
@@ -271,6 +277,11 @@ export async function clearCliConfig(): Promise<void> {
 
 /**
  * Returns the list of products that have resolvable credentials.
+ *
+ * A product is considered configured when {@link resolveProductCredentials} returns a value; Desk additionally requires `orgId` to be present.
+ *
+ * @param config - Loaded CLI configuration to inspect.
+ * @returns Subset of {@link ZOHO_CLI_PRODUCTS} for which the CLI can construct an authenticated API client.
  */
 export function configuredProducts(config: ZohoCliConfig): ZohoCliProduct[] {
   return ZOHO_CLI_PRODUCTS.filter((p) => {
@@ -288,32 +299,8 @@ export function configuredProducts(config: ZohoCliConfig): ZohoCliProduct[] {
   });
 }
 
-function readConfigFile<T>(filePath: string): Promise<Maybe<T>> {
-  return new Promise<Maybe<T>>((resolve) => {
-    readFile(filePath, { encoding: 'utf-8' }, (err, data) => {
-      if (err) {
-        resolve(undefined);
-        return;
-      }
-      try {
-        resolve(JSON.parse(data));
-      } catch {
-        resolve(undefined);
-      }
-    });
-  });
-}
-
-function removeFile(filePath: string): Promise<void> {
-  return new Promise<void>((resolve) => {
-    rm(filePath, () => resolve());
-  });
-}
-
-export function maskSecret(value: string): string {
-  if (value.length <= 4) {
-    return '***';
-  }
-
-  return value.substring(0, 4) + '***';
-}
+/**
+ * Re-export of dbx-cli's secret-masking helper. Auth/show commands import via this module so the
+ * masking pattern stays consistent across CLIs.
+ */
+export { maskSecret } from '@dereekb/dbx-cli';

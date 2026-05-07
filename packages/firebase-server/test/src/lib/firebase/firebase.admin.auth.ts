@@ -123,6 +123,9 @@ export type CallEventFunctionEventContext = Partial<Omit<EventContext, 'auth'>>;
  * where non-JSON-safe values (e.g., `Date` instances, `undefined` fields) are stripped
  * or transformed. Used internally by {@link AuthorizedUserTestContextInstance.callWrappedFunction}
  * to ensure test params match real-world serialization behavior.
+ *
+ * @param object - Arbitrary value to round-trip through `JSON.stringify` then `JSON.parse`.
+ * @returns The input value after a JSON serialize/parse cycle, with any non-JSON-safe fields stripped.
  */
 function convertParamsToParsedJsonObjectAndBack<T = unknown>(object: T): T {
   const paramsAsJson = JSON.parse(JSON.stringify(object));
@@ -173,9 +176,10 @@ export class AuthorizedUserTestContextInstance<PI extends FirebaseAdminTestConte
   /**
    * Calls a wrapped function with the input params and the context from makeContextOptions().
    *
-   * @param fn
-   * @param params
-   * @param skipJsonConversion
+   * @param fn - Wrapped gen 2 callable request to invoke.
+   * @param params - Request payload to pass to the callable, simulating the JSON body of an HTTP call.
+   * @param skipJsonConversion - When `true`, skip the JSON serialize/parse round-trip applied to `params` (default `false`).
+   * @returns A promise resolving to the callable's return value.
    */
   callWrappedFunction<F extends WrappedCallableRequest<any, any>>(fn: F, params: WrappedCallableRequestParams<F>, skipJsonConversion?: boolean): Promise<WrappedCallableRequestOutput<F>> {
     // Parse to JSON then back to simulate sending JSON to the server, and the server parsing it as a POJO.
@@ -209,14 +213,19 @@ export class AuthorizedUserTestContextInstance<PI extends FirebaseAdminTestConte
   /**
    * Calls a wrapped gen 2 auth blocking function with the input params and context options from makeContextOptions().
    *
-   * @param fn
-   * @param userRecord
-   * @param eventType
-   * @param eventOverride
-   * @param skipJsonConversion
-   * @returns
+   * Synthesizes a minimal {@link AuthBlockingEvent} (filling in placeholder ip/user-agent/resource fields)
+   * from the supplied user record and event type, then dispatches it to the wrapped function.
+   *
+   * @param input - Options bag describing the blocking function invocation.
+   * @param input.fn - Wrapped gen 2 auth blocking function (e.g., from `beforeUserCreated`/`beforeUserSignedIn`) to invoke.
+   * @param input.userRecord - The Firebase Auth {@link UserRecord} that will be attached to the synthesized event's `data` field.
+   * @param input.eventType - Discriminator for the auth event being simulated (`google.firebase.auth.user.create` or `google.firebase.auth.user.delete`).
+   * @param input.eventOverride - Partial event fields used to override the default placeholder values (e.g., `ipAddress`, `userAgent`, `resource`).
+   * @param input.skipJsonConversion - When `true`, skip the JSON serialize/parse round-trip applied to the event payload (default `false`).
+   * @returns A promise that resolves once the blocking function has completed.
    */
-  callAuthBlockingFunction(fn: WrappedBlockingFunctionWithHandler<AuthBlockingEvent, void>, userRecord: UserRecord, eventType: 'google.firebase.auth.user.create' | 'google.firebase.auth.user.delete', eventOverride?: Partial<AuthBlockingEvent>, skipJsonConversion = false): Promise<void> {
+  callAuthBlockingFunction(input: { fn: WrappedBlockingFunctionWithHandler<AuthBlockingEvent, void>; userRecord: UserRecord; eventType: 'google.firebase.auth.user.create' | 'google.firebase.auth.user.delete'; eventOverride?: Partial<AuthBlockingEvent>; skipJsonConversion?: boolean }): Promise<void> {
+    const { fn, userRecord, eventType, eventOverride, skipJsonConversion = false } = input;
     const timestamp = new Date().toISOString();
 
     const event: AuthBlockingEvent = {
@@ -243,6 +252,7 @@ export class AuthorizedUserTestContextInstance<PI extends FirebaseAdminTestConte
    * @param skipJsonConversion
    * @returns
    */
+  // eslint-disable-next-line @typescript-eslint/max-params -- deprecated gen 1 signature kept for downstream compatibility
   callEventCloudFunction<F extends WrappedFunction<any>, O = unknown>(fn: F, params: CallCloudFunctionParams<F>, contextOptions?: CallEventFunctionEventContext, skipJsonConversion = false): Promise<O> {
     const parsedParams = params == null || skipJsonConversion ? params : convertParamsToParsedJsonObjectAndBack(params);
     return this.makeContextOptions().then((options) => (fn as WrappedFunction<unknown>)(parsedParams, contextOptions ? { ...contextOptions, ...options } : options));
@@ -293,6 +303,7 @@ export interface AuthorizedUserTestContextParams<PI extends FirebaseAdminTestCon
   /**
    * Custom make instance function. If not defined, a AuthorizedUserTestContextInstance will be generated.
    */
+  // eslint-disable-next-line @typescript-eslint/max-params -- public callback signature used widely by downstream test fixtures
   makeInstance?: (uid: FirebaseAuthUserId, testInstance: PI, params: C, userRecord: UserRecord) => PromiseOrValue<I>;
 
   /**
@@ -303,6 +314,9 @@ export interface AuthorizedUserTestContextParams<PI extends FirebaseAdminTestCon
 
 /**
  * Convenience function for using authorizedUserContextFactory directly and passing buildTests.
+ *
+ * @param config - Test context parameters (parent fixture, optional uid/template, custom factories) used to create the authorized user context.
+ * @param buildTests - Callback invoked with the built {@link AuthorizedUserTestContextFixture}; should register `it(...)`/`describe(...)` blocks against it.
  */
 export function authorizedUserContext<PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends TestContextFixture<PI> = TestContextFixture<PI>, I extends AuthorizedUserTestContextInstance<PI> = AuthorizedUserTestContextInstance<PI>, F extends AuthorizedUserTestContextFixture<PI, PF, I> = AuthorizedUserTestContextFixture<PI, PF, I>>(config: AuthorizedUserTestContextParams<PI, PF, I, F>, buildTests: (u: F) => void) {
   authorizedUserContextFactory(config)({ f: config.f }, buildTests);
@@ -350,6 +364,13 @@ export const AUTHORIZED_USER_RANDOM_PHONE_NUMBER_FACTORY = randomPhoneNumberFact
 
 /**
  * Creates a new Jest Context that has a random user for authorization for use in firebase server tests.
+ *
+ * The returned function, when called with runtime params and a `buildTests` callback, registers the
+ * `beforeEach`/`afterEach` lifecycle hooks that create the test user (with optional contact info,
+ * custom claims, and post-create initialization) and tear it down afterward.
+ *
+ * @param config - Factory configuration: optional uid generator, custom fixture/instance constructors, user-detail builder, and `initUser` hook.
+ * @returns A function that, given runtime params and a `buildTests` callback, wires the authorized-user fixture into the active test context.
  */
 export function authorizedUserContextFactory<PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends TestContextFixture<PI> = TestContextFixture<PI>, I extends AuthorizedUserTestContextInstance<PI> = AuthorizedUserTestContextInstance<PI>, F extends AuthorizedUserTestContextFixture<PI, PF, I> = AuthorizedUserTestContextFixture<PI, PF, I>, C extends AuthorizedUserTestContextFactoryParams<PI, PF> = AuthorizedUserTestContextFactoryParams<PI, PF>>(
   config: AuthorizedUserTestContextFactoryConfig<PI, PF, I, F>
@@ -516,6 +537,9 @@ export function createEncodedTestFirestoreTokenForUserRecord(auth: Auth, userRec
  * in the JWT payload. This function flattens those claims onto the top-level decoded token to match
  * the structure of a real `DecodedIdToken`, and injects `auth_time` from the `iat` field.
  *
+ * @param token - Encoded JWT string produced by {@link createEncodedTestFirestoreTokenForUserRecord}.
+ * @returns A {@link DecodedIdToken}-shaped object with custom claims hoisted to the top level and `claims` removed.
+ *
  * @see {@link createEncodedTestFirestoreTokenForUserRecord} for creating the encoded token
  */
 export function decodeEncodedCreateCustomTokenResult(token: TestEncodedFirestoreToken): DecodedIdToken {
@@ -537,6 +561,9 @@ export function decodeEncodedCreateCustomTokenResult(token: TestEncodedFirestore
  * Copies standard identity fields (email, email_verified, picture) and merges in any
  * custom claims already set on the user record. The resulting object is used as the
  * custom claims parameter for `Auth.createCustomToken()` in test token generation.
+ *
+ * @param userRecord - Firebase Auth user record whose identity fields and existing custom claims should be folded into the returned claims.
+ * @returns A plain claims object suitable for passing to `Auth.createCustomToken()` in tests.
  *
  * @see {@link createEncodedTestFirestoreTokenForUserRecord}
  */

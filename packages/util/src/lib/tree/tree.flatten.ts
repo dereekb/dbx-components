@@ -18,6 +18,12 @@ export type FlattenTreeFunction<N extends TreeNode<unknown>, V> = (trees: ArrayO
 
 /**
  * Decides how to add a node to the flattened array during flattening.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory tree
+ * @dbxUtilKind const
+ * @dbxUtilTags tree, flatten, decision, enum, traversal, control
+ * @dbxUtilRelated explore-tree-visit-node-decision, flatten-tree
  */
 export const FlattenTreeAddNodeDecision = {
   /**
@@ -54,6 +60,11 @@ export type FlattenTreeAddNodeDecisionFunction<N extends TreeNode<unknown>, V = 
 /**
  * Flattens a tree into an array containing all its nodes using depth-first traversal.
  *
+ * @dbxUtil
+ * @dbxUtilCategory tree
+ * @dbxUtilTags tree, flatten, traverse, depth-first, collect, nodes, array
+ * @dbxUtilRelated flatten-tree-to-array, flatten-tree-to-array-function, explore-tree-function
+ *
  * @param tree - The root node to flatten.
  * @param addNodeFn - Optional filter controlling which nodes and subtrees are included.
  * @returns An array of all nodes in the tree that pass the filter.
@@ -72,6 +83,11 @@ export function flattenTree<N extends TreeNode<unknown> = TreeNode<unknown>>(tre
  * Flattens a tree and appends the resulting nodes to an existing array.
  *
  * Useful for accumulating nodes from multiple trees into a single collection.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory tree
+ * @dbxUtilTags tree, flatten, append, accumulate, collect, mutate, array
+ * @dbxUtilRelated flatten-tree, flatten-tree-to-array-function
  *
  * @param tree - The root node to flatten.
  * @param array - The target array to push flattened nodes into.
@@ -136,6 +152,12 @@ export function flattenTreeToArrayFunction<N extends TreeNode<unknown, N>, V>(ma
  *
  * Creates a reusable function that traverses trees and collects either the nodes themselves
  * or mapped values into an array. Supports both a simple function signature and a config object.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory tree
+ * @dbxUtilKind factory
+ * @dbxUtilTags tree, flatten, factory, collect, map, traverse, reusable
+ * @dbxUtilRelated flatten-tree, flatten-tree-to-array, expand-flatten-tree-function
  *
  * @param mapNodeFnOrConfig - Optional mapping function or config object.
  * @param defaultAddNodeFn - Optional default filter for node inclusion.

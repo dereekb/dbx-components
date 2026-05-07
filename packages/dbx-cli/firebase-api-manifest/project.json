@@ -1,0 +1,42 @@
+{
+  "name": "dbx-cli-firebase-api-manifest",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/dbx-cli/firebase-api-manifest/src",
+  "projectType": "application",
+  "tags": [],
+  "implicitDependencies": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{workspaceRoot}/dist/packages/dbx-cli/firebase-api-manifest"],
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": "dist/packages/dbx-cli/firebase-api-manifest",
+        "main": "packages/dbx-cli/firebase-api-manifest/src/generate-api-manifest/main.ts",
+        "tsConfig": "packages/dbx-cli/firebase-api-manifest/tsconfig.tool.json",
+        "format": ["esm"],
+        "platform": "node",
+        "target": "node20",
+        "bundle": true,
+        "thirdParty": false,
+        "skipTypeCheck": false,
+        "declaration": false,
+        "esbuildOptions": {
+          "banner": {
+            "js": "#!/usr/bin/env node\nimport { createRequire as __createRequire } from 'node:module';\nconst require = __createRequire(import.meta.url);"
+          }
+        }
+      },
+      "configurations": {
+        "production": {
+          "minify": false,
+          "sourcemap": false
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    }
+  }
+}

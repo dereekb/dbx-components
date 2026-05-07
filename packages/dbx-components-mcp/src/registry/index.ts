@@ -42,6 +42,11 @@ export type { UiComponentRegistry } from './ui-components-runtime.js';
 export { FILTER_KIND_ORDER, createFilterRegistry, createFilterRegistryFromEntries, EMPTY_FILTER_REGISTRY, toFilterEntryInfo } from './filters-runtime.js';
 export type { FilterRegistry, FilterEntryInfo, FilterEntryInputInfo, FilterKind } from './filters-runtime.js';
 
+// MARK: Auth
+export { createAuthRegistryFromEntries, EMPTY_AUTH_REGISTRY } from './auth-runtime.js';
+export type { AuthRegistry, AuthRoleInfo, AuthClaimInfo, AuthClaimRoleMappingInfo, AuthScopeInfo, AuthScopeEnforcementInfo, AuthAppInfo, AuthEntrySource, CreateAuthRegistryFromEntriesInput } from './auth-runtime.js';
+export { BUILTIN_AUTH_ROLES, BUILTIN_AUTH_CLAIMS, BUILTIN_AUTH_SCOPES, WORKSPACE_AUTH_CLAIMS, WORKSPACE_AUTH_APPS } from './auth-builtin.js';
+
 // MARK: Firebase Models
 import { FIREBASE_MODELS, FIREBASE_MODEL_GROUPS, type FirebaseModel, type FirebaseModelGroup } from './firebase-models.js';
 
@@ -95,6 +100,31 @@ export function getFirebaseModelByPrefix(prefix: string): FirebaseModel | undefi
  */
 export function getFirebaseSubcollectionsOf(parentIdentityConst: string): readonly FirebaseModel[] {
   return FIREBASE_MODELS.filter((m) => m.parentIdentityConst === parentIdentityConst);
+}
+
+/**
+ * Returns every model whose Firestore document id IS a Firebase Auth user uid
+ * — i.e. the interface (or one of its same-file ancestors) extends
+ * `UserRelatedById`. Useful for enumerating the per-user document set when
+ * reasoning about ownership and permissions.
+ *
+ * @returns each user-keyed model in registry order
+ */
+export function getFirebaseUserKeyedByIdModels(): readonly FirebaseModel[] {
+  return FIREBASE_MODELS.filter((m) => m.userKeyedById === true);
+}
+
+/**
+ * Returns every model that carries an explicit `uid` field referencing a
+ * Firebase Auth user — i.e. the interface (or one of its same-file
+ * ancestors) extends `UserRelated`. Independent of
+ * {@link getFirebaseUserKeyedByIdModels}: a model can appear in either,
+ * both, or neither list.
+ *
+ * @returns each user-related model in registry order
+ */
+export function getFirebaseUserRelatedModels(): readonly FirebaseModel[] {
+  return FIREBASE_MODELS.filter((m) => m.hasUserUidField === true);
 }
 
 /**

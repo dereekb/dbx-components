@@ -36,6 +36,10 @@ export interface BuildConfig<T extends object> {
  * @param config.build - function that mutates the base object to populate it with desired values
  * @returns the fully constructed object of type T
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilTags build, builder, construct, mutate, configure, factory
+ *
  * @example
  * ```ts
  * interface User { name: string; age: number; }

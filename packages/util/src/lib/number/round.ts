@@ -11,6 +11,12 @@ export type RoundingFunction = MapFunction<number, number>;
 /**
  * Returns a rounding function for the specified rounding type.
  *
+ * @dbxUtil
+ * @dbxUtilCategory number
+ * @dbxUtilKind factory
+ * @dbxUtilTags number, round, floor, ceil, math, factory, rounding
+ * @dbxUtilRelated cut-value-to-precision-function, round-to-precision-function
+ *
  * @param type - The rounding strategy: 'floor', 'ceil', 'round', or 'none'
  * @returns The corresponding Math function, or an identity function for 'none'
  */
@@ -53,6 +59,11 @@ export type NumberPrecision = number;
  *
  * Accepts strings and null/undefined via {@link asNumber}.
  *
+ * @dbxUtil
+ * @dbxUtilCategory number
+ * @dbxUtilTags number, precision, decimal, truncate, cut, round
+ * @dbxUtilRelated cut-value-to-precision-function, cut-value-to-integer, round-to-precision
+ *
  * @param input - Number, number string, or null/undefined
  * @param precision - Number of decimal places to retain
  * @returns The truncated number value
@@ -68,6 +79,11 @@ export const CUT_VALUE_TO_ZERO_PRECISION = cutValueToPrecisionFunction(0);
 
 /**
  * Truncates a value to an integer by cutting to zero decimal precision.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory number
+ * @dbxUtilTags number, integer, truncate, floor, cut, parse
+ * @dbxUtilRelated cut-value-to-precision, as-number
  *
  * @param input - Number, number string, or null/undefined
  * @returns The truncated integer value

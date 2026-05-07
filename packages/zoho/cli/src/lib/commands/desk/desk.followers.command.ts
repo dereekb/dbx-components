@@ -1,6 +1,6 @@
 import type { CommandModule, Argv } from 'yargs';
 import { getDeskApi } from '../../middleware/auth.middleware';
-import { noop } from '../../util/noop';
+import { noop } from '@dereekb/util';
 import { outputResult, outputError } from '../../util/output';
 
 const followersListCommand: CommandModule = {
