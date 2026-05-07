@@ -1,3 +1,20 @@
+# [13.11.0](https://github.com/dereekb/dbx-components/compare/v13.10.9-dev...v13.11.0) (2026-05-07)
+
+
+### Build System
+
+- lint fix + mcp regeneration ([c49d3a28](https://github.com/dereekb/dbx-components/commit/c49d3a2808a2552d1e99e704959fcaa790a464d7))
+
+
+### Code Refactoring
+
+- update ng-forge version ([bb00372b](https://github.com/dereekb/dbx-components/commit/bb00372be990df3ef8dce1ba464acd2798ef0685))
+
+
+### Features
+
+- dbx-cli ([#48](https://github.com/dereekb/dbx-components/issues/48)) ([96a2d505](https://github.com/dereekb/dbx-components/commit/96a2d5057450fadf9562fd251e9496fe6d94234c)), closes [#48](https://github.com/dereekb/dbx-components/issues/48)
+
 ## [13.10.9](https://github.com/dereekb/dbx-components/compare/v13.10.8-dev...v13.10.9) (2026-05-05)
 
 
