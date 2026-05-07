@@ -1,7 +1,7 @@
 /**
  * Curated baseline auth entries shipped with dbx-components-mcp.
  *
- * The auth catalog has three layers:
+ * The auth catalog has two layers:
  *
  *   1. **Built-in (this file)** — `@dereekb/util` role consts, the
  *      `@dereekb/firebase` storage-upload claim, and the five `model.*`
@@ -9,16 +9,18 @@
  *      entries every dbx-components workspace inherits regardless of
  *      which apps it ships.
  *
- *   2. **Workspace built-ins (this file, demo)** — entries for apps that
- *      live in this workspace's `components/`. Listed here so the registry
- *      ships with a working dataset; downstream apps maintained outside
- *      this monorepo will replace these with their own entries via the
- *      planned scan-driven loader.
+ *   2. **Downstream-loaded** — entries extracted from a downstream
+ *      app's `claims.ts` file at server-startup time. The
+ *      {@link loadAuthRegistry} loader walks `components/*-firebase`
+ *      and `apps/*` for files tagged with `@dbxAuthClaimsApp`,
+ *      `@dbxAuthClaimsService`, `@dbxAuthClaim`, and `@dbxAuthRoleTag`,
+ *      then merges the extracted entries with the layer-1 built-ins.
  *
- *   3. **Downstream-loaded (TODO)** — entries extracted from a downstream
- *      app's `claims.ts` file at server-startup time. Tagged with
- *      `@dbxAuthClaim`, `@dbxAuthRoleTag`, `@dbxAuthClaimsApp`, and
- *      `@dbxAuthClaimsService` JSDoc tags so the extractor can locate them.
+ * The {@link WORKSPACE_AUTH_CLAIMS} / {@link WORKSPACE_AUTH_APPS}
+ * constants below mirror the workspace's demo claims module verbatim so
+ * tests can drive the auth tools without spinning up the loader. The
+ * production server bootstrap does NOT consume them — it goes through
+ * {@link loadAuthRegistry} to extract the same entries from disk.
  */
 
 import { AUTH_ADMIN_ROLE, AUTH_ONBOARDED_ROLE, AUTH_TOS_SIGNED_ROLE, AUTH_USER_ROLE } from '@dereekb/util';

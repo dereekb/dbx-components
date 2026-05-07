@@ -29,8 +29,8 @@ import type { CssUtilityRegistry } from './registry/css-utilities-runtime.js';
 import type { UiComponentRegistry } from './registry/ui-components-runtime.js';
 import type { DbxDocsUiExamplesRegistry } from './registry/dbx-docs-ui-examples-runtime.js';
 import { FIREBASE_MODELS } from './registry/firebase-models.js';
-import { createAuthRegistryFromEntries, type AuthRegistry } from './registry/auth-runtime.js';
-import { BUILTIN_AUTH_CLAIMS, BUILTIN_AUTH_ROLES, BUILTIN_AUTH_SCOPES, WORKSPACE_AUTH_APPS, WORKSPACE_AUTH_CLAIMS } from './registry/auth-builtin.js';
+import type { AuthRegistry } from './registry/auth-runtime.js';
+import { loadAuthRegistry, type LoadAuthRegistryResult } from './manifest/load-auth-registry.js';
 import type { FixtureModelRegistry } from './tools/model-fixture-shared/index.js';
 import { registerResources } from './resources/index.js';
 import { registerTools } from './tools/index.js';
@@ -110,11 +110,18 @@ export interface CreateServerOptions {
   readonly tokenRegistry?: TokenRegistry;
   readonly cssUtilityRegistry?: CssUtilityRegistry;
   /**
-   * Optional pre-built auth registry. When omitted the server constructs
-   * one from the bundled built-ins (`@dereekb/util` roles, `fr` claim,
-   * `model.*` scopes) plus the workspace-level demo entry.
+   * Optional pre-built auth registry. When omitted the server scans the
+   * workspace for downstream `claims.ts` files tagged with
+   * `@dbxAuthClaimsApp`, runs the auth extractor, and merges the
+   * resulting entries with the bundled built-ins (`@dereekb/util` roles,
+   * `fr` claim, `model.*` scopes).
    */
   readonly authRegistry?: AuthRegistry;
+  /**
+   * Optional observer for the auth registry loader result. When omitted,
+   * the loader writes a one-line summary plus per-warning lines to stderr.
+   */
+  readonly onAuthLoaderResult?: (result: LoadAuthRegistryResult) => void;
   readonly onLoaderResult?: (result: LoadSemanticTypeRegistryResult) => void;
   readonly onUiLoaderResult?: (result: LoadUiComponentRegistryResult) => void;
   readonly onDbxDocsUiExamplesLoaderResult?: (result: LoadDbxDocsUiExamplesRegistryResult) => void;
@@ -363,15 +370,7 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
     entries: FIREBASE_MODELS.map((m) => ({ name: m.name, modelType: m.modelType, collectionPrefix: m.collectionPrefix }))
   };
 
-  const authRegistry: AuthRegistry =
-    options.authRegistry ??
-    createAuthRegistryFromEntries({
-      roles: BUILTIN_AUTH_ROLES,
-      claims: [...BUILTIN_AUTH_CLAIMS, ...WORKSPACE_AUTH_CLAIMS],
-      scopes: BUILTIN_AUTH_SCOPES,
-      apps: WORKSPACE_AUTH_APPS,
-      loadedSources: ['builtin:@dereekb/util', 'builtin:@dereekb/firebase', 'builtin:@dereekb/firebase-server/oidc', 'workspace:demo-firebase']
-    });
+  const authRegistry = await resolveAuthRegistry({ injected: options.authRegistry, cwd: options.cwd ?? process.cwd(), onAuthLoaderResult: options.onAuthLoaderResult });
 
   await emitDownstreamHints({ cwd: options.cwd ?? process.cwd(), externalCounts, onDownstreamHints: options.onDownstreamHints });
 
@@ -448,6 +447,65 @@ function reportRegistryLoaderResult(label: string, warningPrefix: string, result
   for (const warning of loaderWarnings) {
     process.stderr.write(`[dbx-components-mcp] ${warningPrefix}loader-warning: ${warning.kind}\n`);
   }
+}
+
+interface ResolveAuthRegistryInput {
+  readonly injected: AuthRegistry | undefined;
+  readonly cwd: string;
+  readonly onAuthLoaderResult?: (result: LoadAuthRegistryResult) => void;
+}
+
+/**
+ * Resolves the auth registry the server should advertise. Returns the
+ * pre-built registry from `options.authRegistry` when present (test path);
+ * otherwise runs {@link loadAuthRegistry} against the workspace cwd and
+ * forwards the result to the supplied observer (or the default stderr
+ * reporter when none is provided).
+ *
+ * @param input - injected registry plus loader cwd / observer
+ * @returns the resolved auth registry
+ */
+async function resolveAuthRegistry(input: ResolveAuthRegistryInput): Promise<AuthRegistry> {
+  const { injected, cwd, onAuthLoaderResult } = input;
+  if (injected !== undefined) return injected;
+  const authLoaderResult = await loadAuthRegistry({ cwd });
+  if (onAuthLoaderResult === undefined) {
+    reportAuthLoaderResult(authLoaderResult);
+  } else {
+    onAuthLoaderResult(authLoaderResult);
+  }
+  return authLoaderResult.registry;
+}
+
+/**
+ * Default observer for the auth loader. Mirrors {@link reportRegistryLoaderResult}
+ * but tailored to the auth result's shape (file warnings + extract warnings
+ * instead of config-warning / loader-warning lists). Emits one summary line plus
+ * one line per warning so operators can spot misconfigured downstream
+ * `claims.ts` files.
+ *
+ * @param result - the auth loader result to summarise
+ */
+function reportAuthLoaderResult(result: LoadAuthRegistryResult): void {
+  const { registry, scannedFiles, fileWarnings, extractWarnings, extractedAppCount, extractedClaimCount } = result;
+  const summary = [`[dbx-components-mcp] auth registry loaded`, `  sources: ${registry.loadedSources.join(', ') || '(none)'}`, `  scanned-files: ${scannedFiles.length}`, `  apps: ${registry.apps.length} (extracted: ${extractedAppCount})`, `  claims: ${registry.claims.length} (extracted: ${extractedClaimCount})`, `  warnings: ${fileWarnings.length + extractWarnings.length}`].join('\n');
+  process.stderr.write(`${summary}\n`);
+  for (const warning of fileWarnings) {
+    process.stderr.write(`[dbx-components-mcp] auth-file-warning: ${warning.kind} ${warning.relPath} ${warning.error}\n`);
+  }
+  for (const warning of extractWarnings) {
+    process.stderr.write(`[dbx-components-mcp] auth-extract-warning: ${warning.kind} ${formatAuthExtractWarning(warning)}\n`);
+  }
+}
+
+function formatAuthExtractWarning(warning: { readonly kind: string; readonly filePath?: string; readonly line?: number } & Record<string, unknown>): string {
+  const parts: string[] = [];
+  for (const [key, value] of Object.entries(warning)) {
+    if (key === 'kind') continue;
+    if (value === undefined) continue;
+    parts.push(`${key}=${String(value)}`);
+  }
+  return parts.join(' ');
 }
 
 const HINT_CLUSTER_LABEL: Record<DownstreamCluster, string> = {
