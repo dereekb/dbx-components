@@ -71,6 +71,11 @@ function isEmptyFormValue(val: unknown): boolean {
  * from a form value object. Also removes keys whose values become empty objects
  * `{}` after recursive stripping.
  *
+ * Arrays are recursed into so that empties inside nested objects are stripped,
+ * but array length and item indices are preserved — primitive empty values
+ * (e.g. `NaN`, `''`) inside an array stay in place, since shifting indices would
+ * change the semantics of chip/list-style array fields.
+ *
  * This normalizes ng-forge output to match ngx-formly behavior, where the model
  * only includes keys that have been explicitly set by the user.
  *
@@ -81,6 +86,9 @@ function isEmptyFormValue(val: unknown): boolean {
  *
  * stripEmptyForgeValues({ section: { a: "", b: "" } })
  * // → {}
+ *
+ * stripEmptyForgeValues({ items: [{ amount: NaN, name: 'a' }, { amount: 5 }] })
+ * // → { items: [{ name: 'a' }, { amount: 5 }] }
  * ```
  *
  * @param value - The form value object to clean
@@ -89,8 +97,10 @@ function isEmptyFormValue(val: unknown): boolean {
 export function stripEmptyForgeValues<T>(value: T): T {
   let result: T;
 
-  if (value == null || typeof value !== 'object' || Array.isArray(value)) {
+  if (value == null || typeof value !== 'object' || value instanceof Date) {
     result = value;
+  } else if (Array.isArray(value)) {
+    result = (value as unknown[]).map((item) => stripEmptyForgeValues(item)) as unknown as T;
   } else {
     const stripped: Record<string, unknown> = {};
 
@@ -99,9 +109,12 @@ export function stripEmptyForgeValues<T>(value: T): T {
         continue;
       }
 
-      if (typeof val === 'object' && !Array.isArray(val) && !(val instanceof Date)) {
+      if (typeof val === 'object' && !(val instanceof Date)) {
         const cleaned = stripEmptyForgeValues(val);
-        if (cleaned != null && Object.keys(cleaned as object).length > 0) {
+
+        if (Array.isArray(cleaned)) {
+          stripped[key] = cleaned;
+        } else if (cleaned != null && Object.keys(cleaned as object).length > 0) {
           stripped[key] = cleaned;
         }
       } else {

@@ -660,6 +660,49 @@ describe('stripEmptyForgeValues()', () => {
     expect(result).toEqual({ items: [1, 2, 3] });
   });
 
+  it('should strip NaN from values inside an array of objects', () => {
+    const result = stripEmptyForgeValues({
+      items: [
+        { amount: Number.NaN, name: 'a' },
+        { amount: 5, name: 'b' }
+      ]
+    });
+    expect(result).toEqual({ items: [{ name: 'a' }, { amount: 5, name: 'b' }] });
+  });
+
+  it('should strip empty values from values inside an array of objects', () => {
+    const result = stripEmptyForgeValues({
+      items: [
+        { amount: null, name: '' },
+        { amount: 5, name: undefined }
+      ]
+    });
+    expect(result).toEqual({ items: [{}, { amount: 5 }] });
+  });
+
+  it('should preserve array length and index positions when cleaning array items', () => {
+    const result = stripEmptyForgeValues({ items: [{ a: Number.NaN }, { a: 1 }, { a: Number.NaN }] }) as { items: unknown[] };
+    expect(result.items).toHaveLength(3);
+    expect(result.items[0]).toEqual({});
+    expect(result.items[1]).toEqual({ a: 1 });
+    expect(result.items[2]).toEqual({});
+  });
+
+  it('should preserve primitive NaN inside arrays so indices stay stable', () => {
+    const result = stripEmptyForgeValues({ values: [1, Number.NaN, 3] }) as { values: unknown[] };
+    expect(result.values).toHaveLength(3);
+    expect(result.values[0]).toBe(1);
+    expect(Number.isNaN(result.values[1])).toBe(true);
+    expect(result.values[2]).toBe(3);
+  });
+
+  it('should recurse into nested arrays of arrays of objects', () => {
+    const result = stripEmptyForgeValues({
+      groups: [[{ amount: Number.NaN, label: 'x' }], [{ amount: 7 }]]
+    });
+    expect(result).toEqual({ groups: [[{ label: 'x' }], [{ amount: 7 }]] });
+  });
+
   it('should recursively strip nested empty values', () => {
     const result = stripEmptyForgeValues({ profile: { name: '', email: '' } });
     expect(result).toEqual({});
