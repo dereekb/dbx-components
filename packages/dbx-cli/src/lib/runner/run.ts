@@ -30,6 +30,9 @@ export interface CreateCliInput {
    * App-specific API commands appended after the built-in `call` passthrough.
    *
    * Commands listed here run after the auth middleware, so they have access to the {@link CliContext}.
+   *
+   * For manifest-driven typed model commands, pass the result of `buildManifestCommands(manifest)` —
+   * it returns a single parent `model <model>` command so the top-level `--help` stays focused.
    */
   readonly apiCommands?: CommandModule[];
   /**

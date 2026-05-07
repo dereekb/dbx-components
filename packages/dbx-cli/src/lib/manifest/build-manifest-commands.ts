@@ -63,20 +63,38 @@ export interface BuildManifestCommandsOptions {
    * {@link createCli}).
    */
   readonly hiddenWhenFocused?: readonly string[];
+  /**
+   * Name of the parent command that groups all per-model dispatch subcommands.
+   * Defaults to {@link DEFAULT_MANIFEST_MODEL_COMMAND_NAME} (`model`), so the
+   * full invocation reads `<cli> model <model> <action>`.
+   */
+  readonly modelCommandName?: string;
 }
+
+/**
+ * Default name of the parent command that groups all per-model manifest commands.
+ * Surfaces as `<cli> model <model> <action>` so the top-level `--help` stays focused
+ * on first-class commands instead of dumping every model.
+ */
+export const DEFAULT_MANIFEST_MODEL_COMMAND_NAME = 'model';
 
 /**
  * Builds yargs `CommandModule[]` from a generated {@link CliApiManifest}.
  *
- * Groups entries by `model`, emitting one parent command per model and one child action per entry
- * (named `<verb>` or `<verb>-<specifier>`). Each child accepts `--data <json>`, validates the
+ * Returns a single parent command (default name `model`) whose subcommands are the per-model
+ * dispatch commands. Each per-model subcommand has one child action per entry
+ * (named `<verb>` or `<verb>-<specifier>`). Each leaf accepts `--data <json>`, validates the
  * payload against the entry's bound arktype validator (when present), and dispatches via the
  * authenticated CLI context's `callModel` helper. Standalone entries are skipped because they
  * are not dispatched through the `/model/call` endpoint.
  *
+ * Wrapping under `model` keeps the top-level `--help` short — users invoke
+ * `<cli> model --help` to see the full list of available models.
+ *
  * @param manifest - The generated manifest array.
  * @param options - Optional overrides; see {@link BuildManifestCommandsOptions}.
- * @returns The yargs `CommandModule[]` ready to be passed to `runCli({ apiCommands })`.
+ * @returns The yargs `CommandModule[]` ready to be passed to `runCli({ apiCommands })`. Empty
+ *   when the manifest has no callable entries.
  */
 export function buildManifestCommands(manifest: CliApiManifest, options?: BuildManifestCommandsOptions): CommandModule[] {
   const callable = manifest.filter((e) => !SKIPPED_VERBS.has(e.verb));
@@ -92,17 +110,34 @@ export function buildManifestCommands(manifest: CliApiManifest, options?: BuildM
     }
   }
 
+  if (byModel.size === 0) {
+    return [];
+  }
+
   const argv = options?.argv ?? process.argv;
   const dataHelpFormat = options?.dataHelpFormat ?? detectDataHelpFormat(argv);
   const focusHelp = (options?.focusHelpOnDataHelp ?? true) && hasDataHelpFlag(argv) && !hasAllHelpFlag(argv);
   const hideOnFocus = focusHelp ? (options?.hiddenWhenFocused ?? STANDARD_GLOBAL_OPTION_NAMES) : [];
-  const commands: CommandModule[] = [];
+  const modelCommandName = options?.modelCommandName ?? DEFAULT_MANIFEST_MODEL_COMMAND_NAME;
+  const sortedModels = [...byModel.entries()].sort(([a], [b]) => a.localeCompare(b));
+  const context: BuilderContext = { dataHelpFormat, hideOnFocus };
 
-  for (const [model, entries] of [...byModel.entries()].sort(([a], [b]) => a.localeCompare(b))) {
-    commands.push(buildModelCommand(model, entries, { dataHelpFormat, hideOnFocus }));
-  }
+  return [
+    {
+      command: `${modelCommandName} <model>`,
+      describe: `Call typed model APIs (${byModel.size} model${byModel.size === 1 ? '' : 's'}). Use \`${modelCommandName} --help\` to list them.`,
+      builder: (yargs: Argv) => {
+        for (const [model, entries] of sortedModels) {
+          yargs.command(buildModelCommand(model, entries, context));
+        }
 
-  return commands;
+        hideGlobalOptions(yargs, hideOnFocus);
+
+        return yargs.demandCommand(1, 'Please specify a model.');
+      },
+      handler: () => undefined
+    }
+  ];
 }
 
 interface BuilderContext {

@@ -54,8 +54,27 @@ function helpFor(args: readonly string[], format?: ManifestHelpDataFormat): Prom
 }
 
 describe('buildManifestCommands', () => {
+  it('returns a single `model <model>` parent command that lists per-model subcommands under `model --help`', async () => {
+    const commands = buildManifestCommands(MANIFEST);
+
+    expect(commands).toHaveLength(1);
+    expect(commands[0].command).toBe('model <model>');
+
+    const rootHelp = await helpFor([]);
+    expect(rootHelp).toContain('demo-cli model <model>');
+    // The per-model entries should not leak to the top-level help.
+    expect(rootHelp).not.toContain('demo-cli guestbookEntry ');
+
+    const modelHelp = await helpFor(['model', '--help']);
+    expect(modelHelp).toContain('guestbookEntry <action>');
+  });
+
+  it('returns an empty command list when the manifest has no callable entries', () => {
+    expect(buildManifestCommands([])).toEqual([]);
+  });
+
   it('renders the params type name, JSON Schema, result type name, and source file in --help', async () => {
-    const help = await helpFor(['guestbookEntry', 'update-insert', '--help']);
+    const help = await helpFor(['model', 'guestbookEntry', 'update-insert', '--help']);
 
     expect(help).toContain('Params: InsertGuestbookEntryParams');
     expect(help).toContain('Params Schema (JSON Schema):');
@@ -64,7 +83,7 @@ describe('buildManifestCommands', () => {
   });
 
   it('emits a JSON Schema that captures required keys and field constraints', async () => {
-    const help = await helpFor(['guestbookEntry', 'update-insert', '--help']);
+    const help = await helpFor(['model', 'guestbookEntry', 'update-insert', '--help']);
     const match = /Params Schema \(JSON Schema\):\n(\{[\s\S]*?\n\})/.exec(help);
 
     expect(match).not.toBeNull();
@@ -79,7 +98,7 @@ describe('buildManifestCommands', () => {
   });
 
   it('prunes unjsonifiable `undefined` branches from clearable unions so `T | null | undefined` reads as `T | null`', async () => {
-    const help = await helpFor(['guestbookEntry', 'update-insert', '--help']);
+    const help = await helpFor(['model', 'guestbookEntry', 'update-insert', '--help']);
     const match = /Params Schema \(JSON Schema\):\n(\{[\s\S]*?\n\})/.exec(help);
     const schema = JSON.parse(match![1]) as {
       readonly properties: Record<string, { readonly anyOf?: readonly unknown[] }>;
@@ -90,7 +109,7 @@ describe('buildManifestCommands', () => {
   });
 
   it('renders the arktype expression instead of JSON Schema when dataHelpFormat=arktype', async () => {
-    const help = await helpFor(['guestbookEntry', 'update-insert', '--help'], 'arktype');
+    const help = await helpFor(['model', 'guestbookEntry', 'update-insert', '--help'], 'arktype');
 
     expect(help).toContain('Params Schema (arktype):');
     expect(help).not.toContain('Params Schema (JSON Schema):');
@@ -99,7 +118,7 @@ describe('buildManifestCommands', () => {
   });
 
   it('renders both schema formats when dataHelpFormat=both', async () => {
-    const help = await helpFor(['guestbookEntry', 'update-insert', '--help'], 'both');
+    const help = await helpFor(['model', 'guestbookEntry', 'update-insert', '--help'], 'both');
 
     expect(help).toContain('Params Schema (JSON Schema):');
     expect(help).toContain('Params Schema (arktype):');
@@ -108,13 +127,13 @@ describe('buildManifestCommands', () => {
   });
 
   it('hints at --data-help on JSON Schema (default) help to advertise the arktype form', async () => {
-    const help = await helpFor(['guestbookEntry', 'update-insert', '--help']);
+    const help = await helpFor(['model', 'guestbookEntry', 'update-insert', '--help']);
 
     expect(help).toContain('--data-help=arktype or --data-help=both');
   });
 
   it('shows the full standard global options block in --help when --data-help is not present', async () => {
-    const help = await helpFor(['guestbookEntry', 'update-insert', '--help']);
+    const help = await helpFor(['model', 'guestbookEntry', 'update-insert', '--help']);
 
     expect(help).toContain('--verbose');
     expect(help).toContain('--dump-dir');
@@ -123,7 +142,7 @@ describe('buildManifestCommands', () => {
   });
 
   it('hides unrelated global options from --help when --data-help is present', async () => {
-    const help = await helpFor(['guestbookEntry', 'update-insert', '--help', '--data-help=arktype']);
+    const help = await helpFor(['model', 'guestbookEntry', 'update-insert', '--help', '--data-help=arktype']);
 
     expect(help).not.toMatch(/^\s+(?:-v, )?--verbose\s/m);
     expect(help).not.toMatch(/^\s+--dump-dir\s/m);
@@ -138,7 +157,7 @@ describe('buildManifestCommands', () => {
   });
 
   it('keeps the full options table visible when --all-help is passed alongside --data-help', async () => {
-    const help = await helpFor(['guestbookEntry', 'update-insert', '--help', '--data-help=arktype', '--all-help']);
+    const help = await helpFor(['model', 'guestbookEntry', 'update-insert', '--help', '--data-help=arktype', '--all-help']);
 
     expect(help).toMatch(/^\s+(?:-v, )?--verbose\s/m);
     expect(help).toMatch(/^\s+--dump-dir\s/m);
