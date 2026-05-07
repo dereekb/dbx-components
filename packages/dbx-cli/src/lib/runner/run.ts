@@ -10,6 +10,14 @@ import { createOutputMiddleware } from '../middleware/output.middleware';
 import { createOutputCommand } from '../output/output.command.factory';
 import { outputError } from '../util/output';
 
+/**
+ * Names of the global options registered by {@link createCli} that are not
+ * specific to a single manifest command's payload. Manifest commands hide
+ * these from `--help` when the user passes `--data-help` so the help output
+ * focuses on the schema sections.
+ */
+export const STANDARD_GLOBAL_OPTION_NAMES: readonly string[] = ['verbose', 'env', 'dump-dir', 'pick', 'set-dump-dir', 'set-pick', 'pick-all'];
+
 export interface CreateCliInput {
   readonly cliName: string;
   /**
@@ -83,6 +91,8 @@ export function createCli(input: CreateCliInput): Argv {
     .option('set-dump-dir', { type: 'string', global: true, describe: 'Save dump-dir for this command and apply now' })
     .option('set-pick', { type: 'string', global: true, describe: 'Save pick for this command and apply now' })
     .option('pick-all', { type: 'boolean', global: true, describe: 'Ignore configured pick filters' })
+    .option('data-help', { type: 'string', choices: ['jsonschema', 'arktype', 'both'] as const, global: true, describe: 'Schema format shown in --help for manifest commands (default: jsonschema)' })
+    .option('all-help', { type: 'boolean', global: true, describe: 'Show the full options table in --help even when --data-help is in focus mode' })
     .middleware([createAuthMiddleware({ cliName, skipCommands: skipCommandNames, defaultEnvs }), createOutputMiddleware({ cliName, skipCommands: skipCommandNames })], true)
     .command(allConfigCommands)
     .command(allApiCommands)
