@@ -29,6 +29,10 @@ export interface RegisterAuthResourceOptions {
 /**
  * Registers the auth-cluster MCP resources (catalog, per-key/role/scope/app
  * details, role-by-tag filter) on the given server.
+ *
+ * @param server - The MCP server instance to register resource handlers on.
+ * @param options - Registration options carrying the resolved auth registry to query.
+ * @param options.registry - Pre-merged auth registry (built-in entries plus downstream overrides) supplied by the server bootstrap.
  */
 export function registerAuthResource(server: McpServer, options: RegisterAuthResourceOptions): void {
   const { registry } = options;

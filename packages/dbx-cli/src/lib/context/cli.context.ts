@@ -42,6 +42,19 @@ export interface CreateCliContextInput {
   readonly accessToken: string;
 }
 
+/**
+ * Builds a {@link CliContext} for the current invocation.
+ *
+ * Bundles the env config and access token alongside a `callModel` helper that POSTs to
+ * `<env.apiBaseUrl>/model/call` with the cached Bearer token.
+ *
+ * @param input - The context inputs.
+ * @param input.cliName - The CLI's binary name.
+ * @param input.envName - The active env name.
+ * @param input.env - The resolved {@link CliEnvConfig} for the active env.
+ * @param input.accessToken - The Bearer access token to include on outgoing API calls.
+ * @returns The constructed {@link CliContext}.
+ */
 export function createCliContext(input: CreateCliContextInput): CliContext {
   return {
     cliName: input.cliName,

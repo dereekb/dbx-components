@@ -40,6 +40,9 @@ export interface CallModelCommandSpec<TParams = unknown, TResult = unknown> {
  *
  * The handler reads the {@link CliContext} (built by the auth middleware), constructs the
  * {@link OnCallTypedModelParams} envelope, and executes via `context.callModel(...)`.
+ *
+ * @param spec - The command spec describing the yargs command surface plus how to map argv into the typed call params and the result.
+ * @returns A yargs `CommandModule` whose handler runs the spec against the active CLI context.
  */
 export function createCallModelCommand<TParams = unknown, TResult = unknown>(spec: CallModelCommandSpec<TParams, TResult>): CommandModule {
   return {

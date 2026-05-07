@@ -57,11 +57,19 @@ let _errorMapper: Maybe<CliErrorMapper>;
  * Configures output options from parsed CLI arguments.
  *
  * Call from middleware before any command handler runs.
+ *
+ * @param options - The resolved {@link CliOutputOptions} (dump dir, pick filter, command path).
  */
 export function configureOutputOptions(options: CliOutputOptions): void {
   _outputOptions = options;
 }
 
+/**
+ * Returns the current process-wide {@link CliOutputOptions} previously set via
+ * {@link configureOutputOptions}.
+ *
+ * @returns The active output options (empty object when never configured).
+ */
 export function getOutputOptions(): CliOutputOptions {
   return _outputOptions;
 }
@@ -71,6 +79,8 @@ export function getOutputOptions(): CliOutputOptions {
  *
  * Use to add provider-specific patterns. Pass `[...DEFAULT_CLI_SECRET_PATTERNS, ...extra]`
  * to keep the defaults.
+ *
+ * @param patterns - The new pattern list applied by {@link sanitizeString}.
  */
 export function configureCliSecretPatterns(patterns: CliSecretPattern[]): void {
   _secretPatterns = patterns;
@@ -82,11 +92,19 @@ export function configureCliSecretPatterns(patterns: CliSecretPattern[]): void {
  *
  * Use to plug provider-specific exception types (e.g. Zoho's `ZohoInvalidTokenError`) into the
  * standard error envelope without duplicating the rest of the formatting / secret-redaction pipeline.
+ *
+ * @param mapper - The mapper to install, or `undefined` to clear any previously registered mapper.
  */
 export function configureCliErrorMapper(mapper?: CliErrorMapper): void {
   _errorMapper = mapper;
 }
 
+/**
+ * Applies the configured secret-redaction patterns to a string, replacing each match with `[REDACTED]`.
+ *
+ * @param value - The input string (typically an error message) to sanitize.
+ * @returns The sanitized string with secret-shaped substrings replaced.
+ */
 export function sanitizeString(value: string): string {
   let result = value;
 
@@ -97,10 +115,25 @@ export function sanitizeString(value: string): string {
   return result;
 }
 
+/**
+ * Returns the current time as a filename-safe ISO-8601 stamp (`:` and `.` replaced with `-`).
+ *
+ * @returns The formatted timestamp string.
+ */
 export function dumpTimestamp(): string {
   return new Date().toISOString().replaceAll(/[:.]/g, '-');
 }
 
+/**
+ * Builds a dump-file absolute path inside the configured `dumpDir`.
+ *
+ * The filename combines the active command path (joined with `_`), the current
+ * {@link dumpTimestamp}, and the optional `suffix`. Returns `undefined` when no `dumpDir` is set.
+ *
+ * @param extension - File extension to append (`json` for full responses, `ndjson` for streaming dumps).
+ * @param suffix - Optional suffix appended to the filename before the extension.
+ * @returns The absolute file path, or `undefined` when `dumpDir` is not configured.
+ */
 export function buildDumpFilePath(extension: 'json' | 'ndjson', suffix?: string): Maybe<string> {
   const { dumpDir, commandPath } = _outputOptions;
 
@@ -129,6 +162,13 @@ function dumpResponse<T>(data: T, meta: Record<string, unknown> | undefined): vo
   writeFileSync(filePath, JSON.stringify(content, null, 2));
 }
 
+/**
+ * Reduces an object (or array of objects) to the named top-level fields.
+ *
+ * @param data - The value to filter; arrays are mapped element-wise, objects are reduced to the picked keys, primitives pass through unchanged.
+ * @param pick - Comma-separated list of field names to keep.
+ * @returns The filtered value (typed as the input).
+ */
 export function pickFields<T>(data: T, pick: string): T {
   const fields = pick.split(',').map((f) => f.trim());
 
@@ -159,6 +199,15 @@ function pickFromObject(obj: unknown, fields: string[]): unknown {
   return result;
 }
 
+/**
+ * Prints a successful command result as a `{ ok: true, data, meta? }` JSON envelope on stdout.
+ *
+ * Also writes a full unfiltered dump to disk when `dumpDir` is configured, then applies any
+ * configured `pick` filter to the stdout payload.
+ *
+ * @param data - The command result to emit.
+ * @param meta - Optional additional metadata to attach to the envelope.
+ */
 export function outputResult<T>(data: T, meta?: Record<string, unknown>): void {
   dumpResponse(data, meta);
 
@@ -167,6 +216,11 @@ export function outputResult<T>(data: T, meta?: Record<string, unknown>): void {
   console.log(JSON.stringify(output));
 }
 
+/**
+ * Prints a failed command result as a `{ ok: false, error, code, suggestion? }` JSON envelope on stdout.
+ *
+ * @param error - The thrown value to convert. Mapped via {@link buildErrorOutput} (which consults any registered {@link CliErrorMapper}).
+ */
 export function outputError(error: unknown): void {
   const output = buildErrorOutput(error);
   console.log(JSON.stringify(output));
@@ -189,6 +243,20 @@ export class CliError extends Error {
   }
 }
 
+/**
+ * Converts an arbitrary thrown value into a {@link CliErrorOutput} envelope.
+ *
+ * Order of resolution:
+ *   1. Any registered {@link CliErrorMapper} that returns a mapped envelope.
+ *   2. {@link CliError} instances (preserve `code` and optional `suggestion`).
+ *   3. Generic `Error` instances (`code: 'ERROR'`).
+ *   4. Unknown values (`code: 'UNKNOWN_ERROR'`, message stringified).
+ *
+ * Error messages are passed through {@link sanitizeString} so secret-shaped substrings are redacted.
+ *
+ * @param error - The thrown value to convert.
+ * @returns The structured {@link CliErrorOutput}.
+ */
 export function buildErrorOutput(error: unknown): CliErrorOutput {
   if (_errorMapper) {
     const mapped = _errorMapper(error);

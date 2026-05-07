@@ -41,6 +41,13 @@ interface CreateAuthClaimLookupToolInput {
   readonly registry: AuthRegistry;
 }
 
+/**
+ * Creates the `dbx_auth_claim_lookup` MCP tool bound to the supplied auth registry.
+ *
+ * @param input - Tool factory input.
+ * @param input.registry - Pre-merged auth registry consulted by the tool to resolve claim keys, interface names, and the catalog topic.
+ * @returns A {@link DbxTool} that resolves claim queries against the registry.
+ */
 export function createAuthClaimLookupTool(input: CreateAuthClaimLookupToolInput): DbxTool {
   const { registry } = input;
   const tool: DbxTool = {

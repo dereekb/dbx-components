@@ -148,11 +148,11 @@
         {
           "name": "inner",
           "type": "AsyncValueCache<T>",
-          "description": "",
+          "description": "- The backing cache to memoize. Reads are delegated once and cached; writes are forwarded through and refresh the memo.",
           "optional": false
         }
       ],
-      "returns": "AsyncValueCache<T>",
+      "returns": "An {@link AsyncValueCache } that proxies the inner cache with a single-load memoization layer.",
       "tags": [
         "memoize",
         "memo",
@@ -163,6 +163,7 @@
         "value",
         "memoizeasyncvaluecache"
       ],
+      "example": "const memo = memoizeAsyncValueCache(inMemoryAsyncValueCache<string>('initial'));\nawait memo.load();           // delegates to inner.load() once\nawait memo.load();           // returns memoized value without hitting inner\nawait memo.update('next');   // writes through to inner and refreshes memo",
       "relatedSlugs": [
         "memoize-async-keyed-value-cache"
       ]
@@ -180,11 +181,11 @@
         {
           "name": "inner",
           "type": "AsyncKeyedValueCache<T>",
-          "description": "",
+          "description": "- The backing keyed cache to memoize. The full record is loaded once and cached; writes are forwarded through and applied to the memo.",
           "optional": false
         }
       ],
-      "returns": "AsyncKeyedValueCache<T>",
+      "returns": "An {@link AsyncKeyedValueCache } that proxies the inner cache with a record-level memoization layer.",
       "tags": [
         "memoize",
         "memo",
@@ -195,6 +196,7 @@
         "value",
         "memoizeasynckeyedvaluecache"
       ],
+      "example": "const memo = memoizeAsyncKeyedValueCache(inMemoryAsyncKeyedValueCache<number>({ a: 1 }));\nawait memo.get('a');           // delegates to inner.load() once\nawait memo.get('a');           // returns memoized entry without hitting inner\nawait memo.set('b', 2);        // writes through to inner and updates memo",
       "relatedSlugs": [
         "memoize-async-value-cache"
       ]
@@ -293,7 +295,7 @@
           "optional": true
         }
       ],
-      "returns": "boolean",
+      "returns": "True when the input is null/undefined or its expiration date has passed; otherwise false.",
       "tags": [
         "expiration",
         "expires",

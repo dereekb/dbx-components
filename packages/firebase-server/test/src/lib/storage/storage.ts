@@ -28,6 +28,7 @@ export type GoogleCloudTestFirebaseStorageContext = TestFirebaseStorageContext;
  * @param drivers - Testing-aware storage driver set to attach to the context.
  * @param firebaseStorage - The `@google-cloud/storage` Storage instance (typically pointed at an emulator).
  * @param defaultBucketId - Optional default bucket name; when provided, storage operations that omit a bucket will use this.
+ * @returns A {@link TestFirebaseStorageContext} backed by the supplied storage client with `drivers` attached for test introspection.
  */
 export function makeGoogleFirebaseStorageContext(drivers: TestingFirebaseStorageDrivers, firebaseStorage: FirebaseStorage, defaultBucketId?: string): TestFirebaseStorageContext {
   const context = firebaseStorageContextFactory(drivers)(firebaseStorage, { defaultBucketId }) as GoogleCloudTestFirebaseStorageContext;

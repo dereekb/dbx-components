@@ -43,6 +43,13 @@ export interface CreateJsonFileAsyncValueCacheInput<T> {
  * Multi-process invalidation is not provided. Two processes writing to the same file
  * will last-writer-wins; once memoized, a long-running process will not observe writes
  * from another process.
+ *
+ * @param input - Configuration bag describing the backing file and optional JSON revive/replace hooks.
+ * @param input.filePath - Absolute path to the JSON file that backs the cache.
+ * @param input.mode - Optional file mode applied on write; defaults to {@link DEFAULT_JSON_FILE_CACHE_MODE} (0o600).
+ * @param input.reviver - Optional transform applied to the raw JSON-parsed payload before it is returned from `load()` (e.g. revive `Date` fields).
+ * @param input.replacer - Optional transform applied to the value before it is stringified to JSON on `update()`.
+ * @returns An {@link AsyncValueCache} that persists the value to the configured JSON file.
  */
 export function createJsonFileAsyncValueCache<T>(input: CreateJsonFileAsyncValueCacheInput<T>): AsyncValueCache<T> {
   const { filePath, mode, reviver, replacer } = input;
@@ -74,6 +81,9 @@ export function createJsonFileAsyncValueCache<T>(input: CreateJsonFileAsyncValue
 /**
  * Convenience wrapper around {@link createJsonFileAsyncValueCache} composed with
  * {@link memoizeAsyncValueCache}.
+ *
+ * @param input - Same configuration accepted by {@link createJsonFileAsyncValueCache}; see {@link CreateJsonFileAsyncValueCacheInput}.
+ * @returns An {@link AsyncValueCache} backed by the JSON file with a per-process single-load memoization layer in front.
  */
 export function createMemoizedJsonFileAsyncValueCache<T>(input: CreateJsonFileAsyncValueCacheInput<T>): AsyncValueCache<T> {
   return memoizeAsyncValueCache(createJsonFileAsyncValueCache(input));
@@ -109,6 +119,16 @@ export interface CreateJsonFileAsyncKeyedValueCacheInput<T> {
  * entire record.
  *
  * Multi-process invalidation is not provided; see {@link createJsonFileAsyncValueCache} for caveats.
+ *
+ * Concurrent `set`/`remove`/`clear` calls are serialized through a per-instance promise chain so
+ * the read-modify-write of the entire record file does not race within the same process.
+ *
+ * @param input - Configuration bag describing the backing file and optional per-entry revive/replace hooks.
+ * @param input.filePath - Absolute path to the JSON file that holds the entire `Record<string, T>`.
+ * @param input.mode - Optional file mode applied on write; defaults to {@link DEFAULT_JSON_FILE_CACHE_MODE} (0o600).
+ * @param input.reviver - Optional transform applied to each entry after it is JSON-parsed on `load()`/`get()`. Returning null/undefined drops the entry.
+ * @param input.replacer - Optional transform applied to each entry before it is stringified on `set()`.
+ * @returns An {@link AsyncKeyedValueCache} that persists all entries in the configured JSON file.
  */
 export function createJsonFileAsyncKeyedValueCache<T>(input: CreateJsonFileAsyncKeyedValueCacheInput<T>): AsyncKeyedValueCache<T> {
   const { filePath, mode, reviver, replacer } = input;
@@ -178,6 +198,9 @@ export function createJsonFileAsyncKeyedValueCache<T>(input: CreateJsonFileAsync
 /**
  * Convenience wrapper around {@link createJsonFileAsyncKeyedValueCache} composed with
  * {@link memoizeAsyncKeyedValueCache}.
+ *
+ * @param input - Same configuration accepted by {@link createJsonFileAsyncKeyedValueCache}; see {@link CreateJsonFileAsyncKeyedValueCacheInput}.
+ * @returns An {@link AsyncKeyedValueCache} backed by the JSON file with a per-process record-level memoization layer in front.
  */
 export function createMemoizedJsonFileAsyncKeyedValueCache<T>(input: CreateJsonFileAsyncKeyedValueCacheInput<T>): AsyncKeyedValueCache<T> {
   return memoizeAsyncKeyedValueCache(createJsonFileAsyncKeyedValueCache(input));

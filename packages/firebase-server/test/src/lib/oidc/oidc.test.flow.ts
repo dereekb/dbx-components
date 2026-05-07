@@ -42,6 +42,10 @@ export interface PerformFullOAuthFlowResult {
  *
  * The Auth emulator accepts unsigned JWTs (alg: "none") as long as the audience
  * matches the project ID the Admin SDK was initialized with.
+ *
+ * @param nestApp - Initialized NestJS application used to resolve {@link OidcAccountService} for the project ID.
+ * @param uid - Firebase user ID to embed in the token's `sub`/`user_id` claims.
+ * @returns An unsigned JWT (`alg: "none"`) string suitable for use against the Firebase Auth emulator.
  */
 async function createTestIdToken(nestApp: INestApplication, uid: string): Promise<string> {
   const accountService = nestApp.get(OidcAccountService);
@@ -66,6 +70,9 @@ async function createTestIdToken(nestApp: INestApplication, uid: string): Promis
 
 /**
  * Extracts the interaction UID from a redirect to the login/consent frontend URL.
+ *
+ * @param res - Supertest response whose `Location` header points at the login/consent frontend, with `?uid=...` carrying the interaction UID.
+ * @returns The `uid` query parameter from the redirect URL (the interaction identifier issued by `oidc-provider`).
  */
 function extractInteractionUid(res: request.Response): string {
   const location = res.headers['location'] as string;
@@ -78,6 +85,8 @@ function extractInteractionUid(res: request.Response): string {
  *
  * oidc-provider scopes cookies to specific paths, so supertest.agent()
  * won't forward them between /oidc/* and /interaction/* controllers.
+ *
+ * @returns A pair of helpers — `collectCookies(res)` to absorb `Set-Cookie` headers from a response, and `cookieHeader()` to produce a combined `Cookie` header string for subsequent requests.
  */
 function createCookieJar() {
   const cookieJar = new Map<string, string>();
@@ -106,6 +115,10 @@ function createCookieJar() {
 /**
  * Resolves the scopes string from config, or falls back to all registered scopes
  * from `OidcAccountService.allRegisteredScopes`.
+ *
+ * @param nestApp - Initialized NestJS application used to resolve {@link OidcAccountService} when no scopes override is given.
+ * @param config - Optional flow config; when `config.scopes` is set, it is returned verbatim.
+ * @returns The space-separated scope string to pass to the `/oidc/auth` endpoint.
  */
 async function resolveScopes(nestApp: INestApplication, config?: OAuthTestFlowConfig): Promise<string> {
   if (config?.scopes) {
@@ -118,11 +131,32 @@ async function resolveScopes(nestApp: INestApplication, config?: OAuthTestFlowCo
 
 // MARK: Flow
 /**
+ * Input for {@link performFullOAuthFlow}.
+ */
+export interface PerformFullOAuthFlowInput {
+  readonly server: ReturnType<INestApplication['getHttpServer']>;
+  readonly oidcClientService: OidcClientService;
+  readonly nestApp: INestApplication;
+  readonly uid: string;
+  readonly config?: OAuthTestFlowConfig;
+}
+
+/**
  * Performs the full OAuth authorization code flow with PKCE and returns tokens.
  *
  * Steps: create client → PKCE → auth redirect → login → consent → code exchange → token
+ *
+ * @param input - Bag of services and overrides needed to drive the flow end-to-end.
+ * @param input.server - HTTP server returned by `nestApp.getHttpServer()` against which all supertest requests are issued.
+ * @param input.oidcClientService - Service used to create the OAuth client whose credentials drive the flow.
+ * @param input.nestApp - Initialized NestJS application; used to resolve {@link OidcAccountService} for project-id-derived ID tokens and default scopes.
+ * @param input.uid - Firebase user ID for whom the test ID token is minted and the OAuth flow is authorized.
+ * @param input.config - Optional flow overrides (scopes, redirect URI, client name, token endpoint auth method).
+ * @returns The exchanged access token and ID token from the OIDC `/token` endpoint.
+ * @throws Error when the token exchange step fails (the response body and status are included in the message).
  */
-export async function performFullOAuthFlow(server: ReturnType<INestApplication['getHttpServer']>, oidcClientService: OidcClientService, nestApp: INestApplication, uid: string, config?: OAuthTestFlowConfig): Promise<PerformFullOAuthFlowResult> {
+export async function performFullOAuthFlow(input: PerformFullOAuthFlowInput): Promise<PerformFullOAuthFlowResult> {
+  const { server, oidcClientService, nestApp, uid, config } = input;
   const { collectCookies, cookieHeader } = createCookieJar();
 
   const redirectUri = config?.redirectUri ?? 'https://example.com/callback';
@@ -205,6 +239,11 @@ export async function performFullOAuthFlow(server: ReturnType<INestApplication['
  * rotates JWKS keys, and then performs the full OAuth flow.
  *
  * This avoids callers needing to import from `@dereekb/firebase-server/oidc` directly.
+ *
+ * @param nestApp - Initialized NestJS application from which {@link JwksService} and {@link OidcClientService} are resolved.
+ * @param uid - Firebase user ID for whom the OAuth flow is authorized.
+ * @param config - Optional flow overrides (scopes, redirect URI, client name, token endpoint auth method).
+ * @returns The exchanged access token and ID token from {@link performFullOAuthFlow}.
  */
 export async function setupAndPerformFullOAuthFlow(nestApp: INestApplication, uid: string, config?: OAuthTestFlowConfig): Promise<PerformFullOAuthFlowResult> {
   // Rotate JWKS keys so JWKS endpoints work
@@ -215,5 +254,5 @@ export async function setupAndPerformFullOAuthFlow(nestApp: INestApplication, ui
   const oidcClientService = nestApp.get(OidcClientService);
 
   const server = nestApp.getHttpServer();
-  return performFullOAuthFlow(server, oidcClientService, nestApp, uid, config);
+  return performFullOAuthFlow({ server, oidcClientService, nestApp, uid, config });
 }

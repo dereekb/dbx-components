@@ -55,6 +55,13 @@ interface CreateAuthRoleLookupToolInput {
   readonly registry: AuthRegistry;
 }
 
+/**
+ * Creates the `dbx_auth_role_lookup` MCP tool bound to the supplied auth registry.
+ *
+ * @param input - Tool factory input.
+ * @param input.registry - Pre-merged auth registry consulted to resolve role names, tags, and reverse model+verb queries.
+ * @returns A {@link DbxTool} that resolves role queries (by topic, by tag, or by `model`+`verb`) against the registry.
+ */
 export function createAuthRoleLookupTool(input: CreateAuthRoleLookupToolInput): DbxTool {
   const { registry } = input;
   const tool: DbxTool = {

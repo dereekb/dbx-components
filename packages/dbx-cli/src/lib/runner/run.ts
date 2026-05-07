@@ -52,6 +52,16 @@ export interface CreateCliInput {
  *
  * App CLIs become a thin `index.ts` that imports `createCli`, registers any app-specific commands,
  * and calls `.parse()`.
+ *
+ * @param input - Builder configuration.
+ * @param input.cliName - The CLI's binary name (used as `scriptName`, env-var prefix, and config dir).
+ * @param input.configCommands - App-specific config/utility commands appended after the built-ins; bypass auth.
+ * @param input.apiCommands - App-specific API commands appended after the built-in `call` passthrough; run after auth middleware.
+ * @param input.doctorChecks - Extra checks appended to the doctor's default check list.
+ * @param input.defaultEnvs - Built-in env presets shipped with the CLI.
+ * @param input.argv - Argv to parse. Defaults to `hideBin(process.argv)`.
+ * @param input.disableCallPassthrough - When `true`, omits the built-in `call` passthrough.
+ * @returns The configured yargs `Argv` ready to be `.parse()`-d.
  */
 export function createCli(input: CreateCliInput): Argv {
   const cliName = input.cliName;
@@ -88,6 +98,9 @@ export function createCli(input: CreateCliInput): Argv {
 /**
  * Convenience helper for app `index.ts` entrypoints — wraps `createCli().parse()` in a try/catch
  * that emits a structured error envelope and exits 1 on uncaught failures.
+ *
+ * @param input - The same builder configuration accepted by {@link createCli}.
+ * @returns Resolves once the parser has finished. Rejects only when `process.exit` is stubbed (e.g. in tests).
  */
 export async function runCli(input: CreateCliInput): Promise<void> {
   try {

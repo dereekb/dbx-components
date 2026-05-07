@@ -50,6 +50,17 @@ function resolveEnvWithDefault(input: ResolveEnvWithDefaultInput): Maybe<Resolve
   return result;
 }
 
+/**
+ * Factory for the built-in `env` command tree.
+ *
+ * Wires `list`, `use`, `add`, `show`, and `remove` subcommands that operate on the persisted env
+ * registry. Token-cache entries are removed when an env is deleted.
+ *
+ * @param input - Factory configuration.
+ * @param input.cliName - The CLI's binary name.
+ * @param input.defaultEnvs - Built-in env presets merged underneath the user's stored env when names match.
+ * @returns A yargs `CommandModule` exposing the full `env` subcommand surface.
+ */
 export function createEnvCommand(input: CreateEnvCommandInput): CommandModule {
   const paths = buildCliPaths({ cliName: input.cliName });
   const tokens = createCliTokenCacheStore({ tokenCachePath: paths.tokenCachePath });

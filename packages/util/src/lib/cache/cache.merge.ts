@@ -10,6 +10,19 @@ import { type AsyncKeyedValueCache, type AsyncValueCache } from './cache';
  * - {@link AsyncValueCache.clear} clears every input cache in the same lower-to-higher order.
  *
  * Useful for memory-then-disk layering or for combining a fast tier with a slow source-of-truth tier.
+ *
+ * @param caches - Ordered tiers from highest-precedence (fastest, e.g. memory) to lowest-precedence (source-of-truth, e.g. disk). Reads honor this order; writes propagate in reverse.
+ * @returns A single {@link AsyncValueCache} layered across the provided tiers.
+ *
+ * @example
+ * ```ts
+ * const layered = mergeAsyncValueCaches<string>([
+ *   inMemoryAsyncValueCache(),
+ *   diskBackedAsyncValueCache()
+ * ]);
+ * await layered.update('hello'); // writes to disk first, then memory
+ * await layered.load();          // returns from memory if present
+ * ```
  */
 export function mergeAsyncValueCaches<T>(caches: ReadonlyArray<AsyncValueCache<T>>): AsyncValueCache<T> {
   return {
@@ -46,6 +59,19 @@ export function mergeAsyncValueCaches<T>(caches: ReadonlyArray<AsyncValueCache<T
  * - {@link AsyncKeyedValueCache.load} returns a merged record where earlier caches' entries take precedence over later caches'.
  * - Writes ({@link AsyncKeyedValueCache.set} / {@link AsyncKeyedValueCache.remove}) propagate to every input cache.
  * - {@link AsyncKeyedValueCache.clear} clears every input cache.
+ *
+ * @param caches - Ordered tiers from highest-precedence (fastest, e.g. memory) to lowest-precedence (source-of-truth, e.g. disk). Reads honor this order; writes propagate in reverse.
+ * @returns A single {@link AsyncKeyedValueCache} layered across the provided tiers.
+ *
+ * @example
+ * ```ts
+ * const layered = mergeAsyncKeyedValueCaches<number>([
+ *   inMemoryAsyncKeyedValueCache(),
+ *   diskBackedAsyncKeyedValueCache()
+ * ]);
+ * await layered.set('a', 1);     // writes to disk first, then memory
+ * await layered.get('a');        // returns from memory if present
+ * ```
  */
 export function mergeAsyncKeyedValueCaches<T>(caches: ReadonlyArray<AsyncKeyedValueCache<T>>): AsyncKeyedValueCache<T> {
   return {

@@ -4,6 +4,12 @@ export interface EnvOptions {
   readonly env?: string;
 }
 
+/**
+ * Adds the standard `--env <name>` option used by every per-env command.
+ *
+ * @param yargs - The yargs builder to extend.
+ * @returns The same yargs builder with the `--env` option chained on.
+ */
 export function withEnv<T>(yargs: Argv<T>): Argv<T & EnvOptions> {
   return yargs.option('env', {
     type: 'string',
@@ -17,6 +23,12 @@ export interface OutputOptions {
   readonly pickAll?: boolean;
 }
 
+/**
+ * Adds the per-command output flag set: `--dump-dir`, `--pick`, and `--pick-all`.
+ *
+ * @param yargs - The yargs builder to extend.
+ * @returns The same yargs builder with the output options chained on.
+ */
 export function withOutput<T>(yargs: Argv<T>): Argv<T & OutputOptions> {
   return yargs
     .option('dump-dir', {
@@ -74,6 +86,9 @@ export interface MultiplePagesOptions {
  *
  * Compose from a CLI-specific page/offset builder (e.g. Zoho's `withPagination` adds
  * `--page` / `--per-page`, then chains this for the multi-page controls).
+ *
+ * @param yargs - The yargs builder to extend.
+ * @returns The same yargs builder with the multi-page options chained on.
  */
 export function withMultiplePages<T>(yargs: Argv<T>): Argv<T & MultiplePagesOptions> {
   return yargs
@@ -111,6 +126,9 @@ export interface CallModelArgs {
 
 /**
  * Adds the standard generic-call positional + flag set: `<model> <verb> [specifier]` plus `--data <json>`.
+ *
+ * @param yargs - The yargs builder to extend.
+ * @returns The same yargs builder with the model-call positionals and `--data` option chained on.
  */
 export function withCallModelArgs<T>(yargs: Argv<T>): Argv<T & CallModelArgs> {
   return yargs

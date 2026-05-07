@@ -30,6 +30,13 @@ export interface CallModelOverHttpResponse<R = unknown> {
  * error envelope downstream emit a sensible suggestion.
  *
  * The function name is referenced via {@link CALL_MODEL_APP_FUNCTION_KEY} for consistency with the demo's wiring.
+ *
+ * @param input - The call envelope describing the API target, access token, model params, and optional fetch override.
+ * @param input.apiBaseUrl - The API base URL (the `/model/call` path is appended automatically).
+ * @param input.accessToken - The Bearer access token sent in the `Authorization` header.
+ * @param input.params - The {@link OnCallTypedModelParams} payload posted as JSON.
+ * @param input.fetcher - Optional fetch implementation override (used by tests).
+ * @returns The parsed JSON response body cast to `R`.
  */
 export async function callModelOverHttp<T = unknown, R = unknown>(input: CallModelOverHttpInput<T>): Promise<R> {
   const fetcher = input.fetcher ?? fetch;

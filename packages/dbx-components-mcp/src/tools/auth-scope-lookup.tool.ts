@@ -36,6 +36,13 @@ interface CreateAuthScopeLookupToolInput {
   readonly registry: AuthRegistry;
 }
 
+/**
+ * Creates the `dbx_auth_scope_lookup` MCP tool bound to the supplied auth registry.
+ *
+ * @param input - Tool factory input.
+ * @param input.registry - Pre-merged auth registry consulted to resolve OIDC scope queries (by name, prefix, or catalog topic).
+ * @returns A {@link DbxTool} that resolves scope queries against the registry.
+ */
 export function createAuthScopeLookupTool(input: CreateAuthScopeLookupToolInput): DbxTool {
   const { registry } = input;
   const tool: DbxTool = {

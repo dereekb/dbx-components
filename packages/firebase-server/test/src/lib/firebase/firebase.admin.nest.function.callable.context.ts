@@ -80,6 +80,9 @@ export type CallableRequestTestMultipleFunction<T extends CallableRequestTestCon
 /**
  * Type guard that distinguishes a {@link CallableRequestTestSingleConfig} from a
  * {@link CallableRequestTestMultipleConfig} by checking for the presence of the `fn` property.
+ *
+ * @param config - Either a single-function or multiple-function callable test config to inspect.
+ * @returns `true` when `config` carries a single `fn` (single-config variant); `false` when it carries `fns` (map variant).
  */
 export function isCallableRequestTestSingleConfig<I, T extends CallableRequestTestConfigMapObject>(config: CallableRequestTestSingleConfig<I> | CallableRequestTestMultipleConfig<I, T>): config is CallableRequestTestSingleConfig<I> {
   return Boolean((config as CallableRequestTestSingleConfig<I>).fn);

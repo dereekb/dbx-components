@@ -42,8 +42,14 @@ export interface SlugDetailResponse {
  * via `resolveEntry`; on a hit serialises the entry as JSON; on a miss
  * surfaces the available slugs so clients can recover without re-listing.
  *
- * @param input - uri, raw variable value, lookup callbacks, error label
- * @returns the MCP response payload to return from the resource handler
+ * @param input - URI, raw variable value, lookup callbacks, and error label used to render the response.
+ * @param input.uri - The MCP resource URI being responded to; its `href` is echoed back in the content payload.
+ * @param input.uri.href - The resolved URI string echoed back to the client in the response content.
+ * @param input.rawSlug - Raw slug value extracted from the URI template (string, string[], or undefined).
+ * @param input.resolveEntry - Lookup callback that returns the matching entry for a given slug, or undefined.
+ * @param input.listAvailableSlugs - Callback that returns the available slugs surfaced in the not-found message.
+ * @param input.label - Human-readable noun for the resource type used in the not-found message (e.g. `'Action'`).
+ * @returns The MCP response payload to return from the resource handler.
  */
 export function buildSlugDetailResponse<TEntry>(input: { readonly uri: { readonly href: string }; readonly rawSlug: string | string[] | undefined; readonly resolveEntry: (slug: string) => TEntry | undefined; readonly listAvailableSlugs: () => readonly string[]; readonly label: string }): SlugDetailResponse {
   const { uri, rawSlug, resolveEntry, listAvailableSlugs, label } = input;

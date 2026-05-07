@@ -27,6 +27,8 @@ export type DoctorCheck = (input: DoctorCheckInput) => Promise<DoctorCheckResult
 
 /**
  * Built-in checks: config file present, active env resolved, OIDC discovery, token refresh, API reachability.
+ *
+ * @returns The default {@link DoctorCheck} list, in execution order.
  */
 export function defaultDoctorChecks(): DoctorCheck[] {
   return [
@@ -121,6 +123,12 @@ export interface CreateDoctorCommandInput {
  *
  * Runs all checks, prints a JSON summary, and exits 0 even when checks fail (the `ok` flag in the
  * envelope is what callers script against).
+ *
+ * @param input - Factory configuration.
+ * @param input.cliName - The CLI's binary name.
+ * @param input.checks - Additional checks to append after the default check list.
+ * @param input.defaultEnvs - Built-in env presets merged underneath the user's stored env when names match.
+ * @returns A yargs `CommandModule` exposing the `doctor` command.
  */
 export function createDoctorCommand(input: CreateDoctorCommandInput): CommandModule {
   const cliName = input.cliName;

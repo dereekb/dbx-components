@@ -189,6 +189,7 @@ export function calculateExpirationDate(input: ExpirationDetailsInput<Expires>):
  *
  * @param input - Expiration configuration. Null/undefined is treated as expired.
  * @param now - Optional override for the current time. Defaults to the current time. Apply any buffer (e.g. for clock skew or pre-emptive refresh) by shifting this value forward.
+ * @returns True when the input is null/undefined or its expiration date has passed; otherwise false.
  *
  * @example
  * isExpired(null); // true

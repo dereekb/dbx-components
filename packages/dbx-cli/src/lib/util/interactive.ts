@@ -27,6 +27,11 @@ const KEY_DEL = ''; // DEL
  *
  * Rejects with a {@link CliError} (`code: 'PROMPT_CANCELLED'`) when the user presses Ctrl-C
  * during a masked prompt, instead of forcibly terminating the process.
+ *
+ * @param input - The prompt inputs.
+ * @param input.question - The prompt text written to stdout (or stderr when masking).
+ * @param input.mask - When `true`, characters are echoed as `*` and Ctrl-C cancels the prompt.
+ * @returns The line entered by the user (without the trailing newline).
  */
 export function promptLine(input: PromptInput): Promise<string> {
   if (!input.mask) {

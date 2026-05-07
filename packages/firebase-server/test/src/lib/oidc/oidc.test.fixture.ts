@@ -65,6 +65,9 @@ export class OAuthAuthorizedSuperTestInstance {
   /**
    * Apply Bearer auth to a supertest request.
    *
+   * @param test - An existing supertest request (e.g., `request(server).get(...)`) that should be authorized with this instance's access token.
+   * @returns The same supertest request with an `Authorization: Bearer <accessToken>` header applied for chaining.
+   *
    * @example
    * ```typescript
    * await oauth.withAuth(request(oauth.server).get('/oidc/me')).expect(200);
@@ -77,6 +80,10 @@ export class OAuthAuthorizedSuperTestInstance {
 
   /**
    * Shorthand: create a supertest request with auth already applied.
+   *
+   * @param method - HTTP verb to use for the supertest request (`get`, `post`, `put`, `patch`, or `delete`).
+   * @param path - The URL path on the wrapped server to issue the request against.
+   * @returns A supertest request pointed at `path` and pre-authorized with this instance's `Bearer` access token.
    *
    * @example
    * ```typescript
@@ -105,6 +112,9 @@ export class OAuthAuthorizedSuperTestFixture extends AbstractTestContextFixture<
   /**
    * Apply Bearer auth to a supertest request.
    *
+   * @param test - An existing supertest request (e.g., `request(server).get(...)`) that should be authorized with the underlying instance's access token.
+   * @returns The same supertest request with an `Authorization: Bearer <accessToken>` header applied for chaining.
+   *
    * @example
    * ```typescript
    * await oauth.withAuth(request(oauth.server).get('/oidc/me')).expect(200);
@@ -116,6 +126,10 @@ export class OAuthAuthorizedSuperTestFixture extends AbstractTestContextFixture<
 
   /**
    * Shorthand: create a supertest request with auth already applied.
+   *
+   * @param method - HTTP verb to use for the supertest request (`get`, `post`, `put`, `patch`, or `delete`).
+   * @param path - The URL path on the wrapped server to issue the request against.
+   * @returns A supertest request pointed at `path` and pre-authorized with the underlying instance's `Bearer` access token.
    *
    * @example
    * ```typescript
@@ -142,6 +156,9 @@ const DEFAULT_OAUTH_TEST_TIMEOUT = 30_000;
  *
  * The returned factory function performs a full OAuth authorization code flow
  * and provides an authenticated supertest agent and helper methods.
+ *
+ * @param config - Optional flow overrides (scopes, redirect URI, client name, timeout) and custom fixture/instance constructors.
+ * @returns A function that, given parent fixtures and a `buildTests` callback, registers a `describe('(oauth)', ...)` block which performs the full OAuth flow and exposes the authenticated supertest fixture.
  *
  * @example
  * ```typescript

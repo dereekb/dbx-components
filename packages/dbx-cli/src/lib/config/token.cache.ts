@@ -38,6 +38,10 @@ export interface CreateCliTokenCacheStoreInput {
  *
  * Entries are written with mode 0o600. Reads are memoized per-process to avoid hitting disk
  * on every access.
+ *
+ * @param input - The cache store inputs.
+ * @param input.tokenCachePath - Absolute path to the JSON file backing the cache.
+ * @returns A {@link CliTokenCacheStore} keyed by env name.
  */
 export function createCliTokenCacheStore(input: CreateCliTokenCacheStoreInput): CliTokenCacheStore {
   return createMemoizedJsonFileAsyncKeyedValueCache<CliTokenEntry>({
@@ -49,6 +53,11 @@ export function createCliTokenCacheStore(input: CreateCliTokenCacheStoreInput): 
  * Returns true when the token entry's access token is at or near expiry.
  *
  * Defaults to a 60-second buffer to allow for clock skew and request latency.
+ *
+ * @param entry - The token cache entry to check (`null`/`undefined` is treated as expired).
+ * @param nowMs - The current time in unix epoch milliseconds. Defaults to `Date.now()`.
+ * @param bufferMs - Skew/latency buffer in milliseconds; the token is treated as expired this far ahead of `expiresAt`.
+ * @returns `true` when the token is at or within `bufferMs` of expiry, otherwise `false`.
  */
 export function isTokenExpired(entry: Maybe<CliTokenEntry>, nowMs: number = Date.now(), bufferMs: number = 60_000): boolean {
   return expirationDetails({ expiresFromDate: entry?.expiresAt, expiresIn: -bufferMs, now: new Date(nowMs) }).hasExpired();

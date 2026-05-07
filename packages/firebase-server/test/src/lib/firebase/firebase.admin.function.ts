@@ -176,6 +176,8 @@ export let DEFAULT_FIREBASE_ADMIN_FUNCTION_TEST_USE_FUNCTION_SINGLETON_CONTEXT =
  * Globally sets whether new {@link FirebaseAdminFunctionTestConfig} instances default to
  * singleton mode. Primarily used in global test setup files.
  *
+ * @param use - When `true`, new function-test configs reuse the firebase-functions-test singleton; when `false`, each suite gets its own instance.
+ *
  * @example
  * ```ts
  * // in jest globalSetup

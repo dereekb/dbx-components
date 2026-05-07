@@ -50,6 +50,11 @@ export interface DiscoverOidcMetadataInput {
  *      mount the discovery controller at the API/dev-server root rather than under the issuer
  *      sub-path — e.g. demo's `OidcWellKnownController`).
  *   3. `<fallbackBaseUrl>/.well-known/openid-configuration` when supplied and not already covered.
+ *
+ * @param input - The discovery request.
+ * @param input.issuer - The OIDC issuer URL whose `.well-known/openid-configuration` is fetched first.
+ * @param input.fallbackBaseUrl - Optional sibling base URL tried after the issuer-prefixed and origin-rooted candidates.
+ * @returns The parsed {@link OidcDiscoveryMetadata}. Throws a {@link CliError} (`OIDC_DISCOVERY_FAILED`) when every candidate fails.
  */
 export async function discoverOidcMetadata(input: DiscoverOidcMetadataInput): Promise<OidcDiscoveryMetadata> {
   const candidates = [`${trimSlash(input.issuer)}/.well-known/openid-configuration`];
@@ -108,6 +113,15 @@ export interface ExchangeAuthorizationCodeInput {
  * Exchanges an authorization code (from the redirect) for an access token + refresh token.
  *
  * Uses `client_secret_post` auth — the demo's oidc-provider config registers clients with that method.
+ *
+ * @param input - The token exchange parameters.
+ * @param input.tokenEndpoint - The OIDC token endpoint URL discovered from the issuer.
+ * @param input.clientId - The OAuth client ID.
+ * @param input.clientSecret - The OAuth client secret used for `client_secret_post` auth.
+ * @param input.redirectUri - The redirect URI registered with the OAuth client (must match the value used when requesting the code).
+ * @param input.code - The authorization code returned to the redirect URI.
+ * @param input.codeVerifier - The PKCE code verifier originally paired with the code challenge in the authorization request.
+ * @returns The parsed {@link OidcTokenResponse} with access/refresh tokens.
  */
 export async function exchangeAuthorizationCode(input: ExchangeAuthorizationCodeInput): Promise<OidcTokenResponse> {
   const params = new URLSearchParams({
@@ -129,6 +143,16 @@ export interface RefreshAccessTokenInput {
   readonly refreshToken: string;
 }
 
+/**
+ * Exchanges a refresh token for a new access token (and possibly a rotated refresh token).
+ *
+ * @param input - The refresh request.
+ * @param input.tokenEndpoint - The OIDC token endpoint URL discovered from the issuer.
+ * @param input.clientId - The OAuth client ID.
+ * @param input.clientSecret - The OAuth client secret used for `client_secret_post` auth.
+ * @param input.refreshToken - The cached refresh token to redeem.
+ * @returns The parsed {@link OidcTokenResponse} with the refreshed access token.
+ */
 export async function refreshAccessToken(input: RefreshAccessTokenInput): Promise<OidcTokenResponse> {
   const params = new URLSearchParams({
     grant_type: 'refresh_token',
@@ -148,6 +172,17 @@ export interface RevokeTokenInput {
   readonly tokenTypeHint?: 'access_token' | 'refresh_token';
 }
 
+/**
+ * Revokes an access or refresh token at the OIDC revocation endpoint.
+ *
+ * @param input - The revocation request.
+ * @param input.revocationEndpoint - The OIDC revocation endpoint URL.
+ * @param input.clientId - The OAuth client ID used for `client_secret_post` auth.
+ * @param input.clientSecret - The OAuth client secret used for `client_secret_post` auth.
+ * @param input.token - The access or refresh token to revoke.
+ * @param input.tokenTypeHint - Optional hint passed as `token_type_hint` (`access_token` or `refresh_token`).
+ * @returns Resolves when the server returns a non-error status. Throws a {@link CliError} (`TOKEN_REVOCATION_FAILED`) on error.
+ */
 export async function revokeToken(input: RevokeTokenInput): Promise<void> {
   const params = new URLSearchParams({
     client_id: input.clientId,
@@ -175,6 +210,14 @@ export interface FetchUserInfoInput {
   readonly accessToken: string;
 }
 
+/**
+ * Fetches the OIDC `userinfo` endpoint and returns the parsed claims object.
+ *
+ * @param input - The userinfo request.
+ * @param input.userinfoEndpoint - The OIDC userinfo endpoint URL discovered from the issuer.
+ * @param input.accessToken - The Bearer access token sent in the `Authorization` header.
+ * @returns The parsed userinfo claims. Throws a {@link CliError} (`USERINFO_FAILED`) on a non-OK response.
+ */
 export async function fetchUserInfo(input: FetchUserInfoInput): Promise<Record<string, unknown>> {
   const res = await fetch(input.userinfoEndpoint, {
     headers: { Authorization: `Bearer ${input.accessToken}`, Accept: 'application/json' }

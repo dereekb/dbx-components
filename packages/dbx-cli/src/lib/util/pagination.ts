@@ -62,6 +62,11 @@ interface WriteBothInput {
  *
  * When `--pick` is configured, a parallel `_pick` file is also written with the pick filter
  * applied to each record's `data` array. If no dump directory is configured, returns a no-op writer.
+ *
+ * @param params - Streaming dump configuration.
+ * @param params.dumpOutput - Per-page dump format (`raw`, `page_by_line`, or `data_by_line`).
+ * @param params.dumpMerge - Across-pages dump merge mode (`replace` truncates each iteration; `concat` appends).
+ * @returns The {@link StreamingDump} writer (a no-op when no `dumpDir` is configured).
  */
 export function openStreamingDump(params: OpenStreamingDumpParams): StreamingDump {
   const { dumpOutput, dumpMerge } = params;
@@ -265,6 +270,16 @@ function printPaginatedOutput<I, R extends PaginatedResponse>(input: PrintPagina
  * - When `multiplePages > 1` loops up to `multiplePages` times (or until end-of-data), streams each
  *   page to disk via {@link openStreamingDump}, prints a stdout response per `multiplePagesOutput`,
  *   and returns `{ handled: true }`.
+ *
+ * @param params - The pagination loop inputs.
+ * @param params.initialInput - The first-page input passed to `fetchPage`.
+ * @param params.fetchPage - Callback that fetches a single page from the underlying API.
+ * @param params.adapter - Adapter that hides the API's pagination scheme (next-input, count, meta, has-more).
+ * @param params.multiplePages - Maximum number of pages to fetch in this invocation (1 = single-page passthrough).
+ * @param params.multiplePagesOutput - Stdout shape when looping (`meta`, `pages`, or `merged_page`).
+ * @param params.dumpOutput - Per-page dump format passed to {@link openStreamingDump}.
+ * @param params.dumpMerge - Across-pages dump merge mode passed to {@link openStreamingDump}.
+ * @returns `{ handled: false, result }` for single-page mode, otherwise `{ handled: true }` after the loop prints its own response.
  */
 export async function runPaginatedList<I, R extends PaginatedResponse>(params: RunPaginatedListParams<I, R>): Promise<RunPaginatedListOutcome<R>> {
   const { initialInput, fetchPage, adapter, multiplePagesOutput, dumpOutput, dumpMerge } = params;

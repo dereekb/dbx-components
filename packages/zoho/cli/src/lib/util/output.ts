@@ -10,6 +10,9 @@ configureCliSecretPatterns([...DEFAULT_CLI_SECRET_PATTERNS, /1000\.\w{20,}/g]);
 /**
  * Maps Zoho exception types to a structured {@link CliErrorOutput} envelope. Falls through to
  * the dbx-cli default mapper for non-Zoho errors.
+ *
+ * @param error - The thrown value to translate; Zoho-typed errors are mapped to stable `code` strings (`TOKEN_EXPIRED`, `AUTH_ERROR`, `RATE_LIMITED`, `API_ERROR`) with user-facing remediation suggestions where applicable.
+ * @returns A structured CLI error output envelope safe to JSON-serialize for stdout.
  */
 export function buildErrorOutput(error: unknown): CliErrorOutput {
   if (error instanceof ZohoInvalidTokenError) {
@@ -40,6 +43,13 @@ configureCliErrorMapper((error) => {
   return undefined;
 });
 
+/**
+ * Prints a Zoho-aware error envelope as a single JSON line to stdout.
+ *
+ * Used as the CLI's terminal error sink so all command failures emit a parseable, sanitized result regardless of the underlying error type.
+ *
+ * @param error - The thrown value to serialize via {@link buildErrorOutput}.
+ */
 export function outputError(error: unknown): void {
   console.log(JSON.stringify(buildErrorOutput(error)));
 }

@@ -27,6 +27,12 @@ export interface CreateAuthMiddlewareInput {
  *
  * Skips auth for the configured top-level commands so `auth login`, `env list`, etc. don't require
  * a valid token.
+ *
+ * @param input - Middleware configuration.
+ * @param input.cliName - The CLI's binary name (used to derive the env-var prefix and config dir).
+ * @param input.skipCommands - Top-level command names that bypass authentication entirely.
+ * @param input.defaultEnvs - Built-in env presets merged underneath the user's stored env when names match.
+ * @returns A yargs middleware function suitable for `.middleware([..., true])`.
  */
 export function createAuthMiddleware(input: CreateAuthMiddlewareInput): MiddlewareFunction {
   const paths = buildCliPaths({ cliName: input.cliName });

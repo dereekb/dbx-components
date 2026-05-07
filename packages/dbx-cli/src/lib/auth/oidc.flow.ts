@@ -27,6 +27,24 @@ export interface BuildAuthorizationUrlInput {
   readonly codeChallenge: string;
 }
 
+/**
+ * Builds the authorization URL the user opens in a browser to start the PKCE flow.
+ *
+ * Resolves the user-facing endpoint by preferring `appClientUrl` (rebases the discovered
+ * authorization endpoint onto that origin) over `apiBaseUrl` (`/oidc/login/client` shortcut),
+ * and finally falls back to the discovered `authorizationEndpoint` itself.
+ *
+ * @param input - The authorization URL inputs.
+ * @param input.authorizationEndpoint - The authorization endpoint discovered from OIDC metadata.
+ * @param input.apiBaseUrl - Optional API base URL; when set without `appClientUrl`, the URL is built against `<apiBaseUrl>/oidc/login/client`.
+ * @param input.appClientUrl - Optional frontend origin to rebase the authorization endpoint onto. Takes precedence over `apiBaseUrl`.
+ * @param input.clientId - The OAuth client ID.
+ * @param input.redirectUri - The redirect URI registered with the OAuth client.
+ * @param input.scopes - Space-separated scope list. Defaults to {@link DEFAULT_CLI_OIDC_SCOPES}.
+ * @param input.state - The opaque OAuth state token used for CSRF protection.
+ * @param input.codeChallenge - The PKCE code challenge derived from the verifier.
+ * @returns The full authorization URL with all OAuth params merged in.
+ */
 export function buildAuthorizationUrl(input: BuildAuthorizationUrlInput): string {
   const authParams: Record<string, string> = {
     response_type: 'code',
@@ -68,6 +86,11 @@ interface RebaseUrlOriginInput {
  * Returns `url` with its origin replaced by the origin of `originUrl`. The path and search of
  * `url` are preserved. When `originUrl` is empty/missing or either URL fails to parse, returns
  * `url` unchanged.
+ *
+ * @param input - The rebase inputs.
+ * @param input.url - The URL whose path/search should be preserved.
+ * @param input.originUrl - The origin to rebase `url` onto.
+ * @returns The rebased URL string, or `input.url` unchanged when rebasing isn't possible.
  */
 function rebaseUrlOrigin(input: RebaseUrlOriginInput): string {
   let result: string = input.url;
@@ -92,6 +115,11 @@ export interface PkceMaterial {
   readonly codeChallenge: string;
 }
 
+/**
+ * Generates a fresh PKCE code verifier and the matching SHA-256 code challenge.
+ *
+ * @returns A {@link PkceMaterial} pair consisting of the random `codeVerifier` and its derived `codeChallenge`.
+ */
 export async function generatePkceMaterial(): Promise<PkceMaterial> {
   const codeVerifier = generatePkceCodeVerifier();
   const codeChallenge = await generatePkceCodeChallenge(codeVerifier);
@@ -100,6 +128,8 @@ export async function generatePkceMaterial(): Promise<PkceMaterial> {
 
 /**
  * Generates a random URL-safe state value for the OAuth state parameter.
+ *
+ * @returns A 32-character hex string derived from 16 random bytes.
  */
 export function generateOAuthState(): string {
   const bytes = new Uint8Array(16);
@@ -158,6 +188,11 @@ function parseUrlRedirect(trimmed: string, expectedState: string | undefined): P
  * Parses an authorization code out of a pasted redirect URL or a bare code string.
  *
  * Validates the `state` parameter when an expected value is provided.
+ *
+ * @param input - The parse inputs.
+ * @param input.pasted - The redirect URL or bare authorization code pasted by the user.
+ * @param input.expectedState - Optional state value to assert against `state` when present in the URL.
+ * @returns The {@link ParsedRedirect} containing `code` and (when present) `state`.
  */
 export function parsePastedRedirect(input: ParsePastedRedirectInput): ParsedRedirect {
   const trimmed = input.pasted.trim();

@@ -82,6 +82,13 @@ function resolveCallbacks(input: ResolveCallbacksInput): ResolvedCallbacks {
  * The `--set-dump-dir` / `--set-pick` flags on `output set` reuse the global flags registered by
  * {@link createCli}, so the same syntax `<cli> output set --command foo.bar --set-pick a,b` works
  * across CLIs.
+ *
+ * @param input - Factory configuration.
+ * @param input.cliName - The CLI's binary name (used to derive the default config path).
+ * @param input.loadOutputConfig - Optional override for reading the persisted output config.
+ * @param input.mergeOutputConfig - Optional override for persisting partial output-config updates.
+ * @param input.clearOutputConfig - Optional override for clearing the persisted output config entirely.
+ * @returns A yargs `CommandModule` exposing the full `output` subcommand surface.
  */
 export function createOutputCommand(input: CreateOutputCommandInput): CommandModule {
   const callbacks = resolveCallbacks(input);

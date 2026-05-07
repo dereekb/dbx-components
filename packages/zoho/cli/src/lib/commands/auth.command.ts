@@ -23,6 +23,12 @@ const ZOHO_SCOPES: Record<string, string[]> = {
 
 /**
  * Extracts the authorization code from a full redirect URL or returns the input as-is if it's already a code.
+ *
+ * Lets users paste either the raw `code` query value or the entire browser-redirected URL into `--code`.
+ *
+ * @param input - The user-supplied value (raw code, full `http(s)://...` URL, or `undefined`).
+ * @returns The extracted authorization code, or `undefined` when `input` itself is `undefined`.
+ * @throws {Error} When `input` is a URL that lacks a `code` query parameter, or when it starts with `http://`/`https://` but cannot be parsed as a URL.
  */
 function parseCodeFromInput(input: string | undefined): string | undefined {
   if (!input) {

@@ -33,6 +33,14 @@ export interface FindCliEnvDefaultInput {
   readonly defaults?: readonly CliEnvDefault[];
 }
 
+/**
+ * Returns the {@link CliEnvDefault} whose `names` includes the given env name, or `undefined`.
+ *
+ * @param input - The lookup inputs.
+ * @param input.name - The env name to look up.
+ * @param input.defaults - The list of registered defaults to search.
+ * @returns The matching {@link CliEnvDefault}, or `undefined` when no default registers `name`.
+ */
 export function findCliEnvDefault(input: FindCliEnvDefaultInput): Maybe<CliEnvDefault> {
   return input.defaults?.find((d) => d.names.includes(input.name));
 }
@@ -47,6 +55,14 @@ export interface MergeCliEnvWithDefaultInput {
   readonly defaultEnv?: Maybe<Partial<CliEnvConfig>>;
 }
 
+/**
+ * Merges a stored env on top of a default env, treating empty strings on either side as "not set".
+ *
+ * @param input - The merge inputs.
+ * @param input.env - The user's persisted env config (or `null`/`undefined`).
+ * @param input.defaultEnv - The matching {@link CliEnvDefault}'s partial env values, if any.
+ * @returns The merged {@link CliEnvConfig}, or `undefined` when both inputs are empty.
+ */
 export function mergeCliEnvWithDefault(input: MergeCliEnvWithDefaultInput): Maybe<CliEnvConfig> {
   const e = input.env;
   const d = input.defaultEnv;
@@ -137,6 +153,15 @@ export interface ResolveActiveEnvInput {
   readonly defaultEnv?: string;
 }
 
+/**
+ * Resolves the active env name from a flag, env var, or persisted default.
+ *
+ * @param input - The resolution inputs.
+ * @param input.flagEnv - The value passed via `--env` (highest priority).
+ * @param input.envVarName - The name of the `<CLINAME>_ENV` env var to consult.
+ * @param input.defaultEnv - The persisted `activeEnv` from the config (lowest priority).
+ * @returns The first non-empty value among the inputs, or `undefined` when none is set.
+ */
 export function resolveActiveEnvName(input: ResolveActiveEnvInput): Maybe<string> {
   return input.flagEnv ?? process.env[input.envVarName] ?? input.defaultEnv;
 }
@@ -158,6 +183,14 @@ export interface EnvVarOverrideInput {
   readonly env: Maybe<CliEnvConfig>;
 }
 
+/**
+ * Reads `<CLINAME_PREFIX>_*` env vars and overlays them on top of the stored env.
+ *
+ * @param input - The override inputs.
+ * @param input.cliName - The CLI name (used to derive the env-var prefix; e.g. `demo-cli` → `DEMO_CLI`).
+ * @param input.env - The base {@link CliEnvConfig} to overlay env-var values on top of.
+ * @returns The merged {@link CliEnvConfig}, or `undefined` when both the stored env and every override are empty.
+ */
 export function applyEnvVarOverrides(input: EnvVarOverrideInput): Maybe<CliEnvConfig> {
   const prefix = input.cliName.replaceAll('-', '_').toUpperCase();
   const apiBaseUrl = process.env[`${prefix}_API_BASE_URL`];
@@ -189,6 +222,9 @@ export function applyEnvVarOverrides(input: EnvVarOverrideInput): Maybe<CliEnvCo
 
 /**
  * Returns true when the env has the minimum fields needed to attempt an OAuth login or token refresh.
+ *
+ * @param env - The env config to check.
+ * @returns `true` when `apiBaseUrl`, `oidcIssuer`, `clientId`, `clientSecret`, and `redirectUri` are all present and non-empty.
  */
 export function isCliEnvConfigComplete(env: Maybe<CliEnvConfig>): env is Required<Pick<CliEnvConfig, 'apiBaseUrl' | 'oidcIssuer' | 'clientId' | 'clientSecret' | 'redirectUri'>> & CliEnvConfig {
   return Boolean(env?.apiBaseUrl && env?.oidcIssuer && env?.clientId && env?.clientSecret && env?.redirectUri);

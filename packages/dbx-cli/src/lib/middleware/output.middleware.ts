@@ -49,6 +49,13 @@ export interface CreateOutputMiddlewareInput {
  * Consumers with a non-default config-file shape (e.g. zoho-cli's per-product layout) inject
  * {@link CreateOutputMiddlewareInput.loadOutputConfig} and {@link CreateOutputMiddlewareInput.saveCommandOutputConfig}
  * so the middleware orchestrates resolve/save without owning the storage format.
+ *
+ * @param input - Middleware configuration.
+ * @param input.cliName - The CLI's binary name (used to derive the default config path).
+ * @param input.skipCommands - Top-level command names whose output is never filtered by saved pick/dump-dir.
+ * @param input.loadOutputConfig - Optional override for how the output config is read.
+ * @param input.saveCommandOutputConfig - Optional override for how a per-command output config is persisted.
+ * @returns A yargs middleware function suitable for `.middleware([..., true])`.
  */
 export function createOutputMiddleware(input: CreateOutputMiddlewareInput): MiddlewareFunction {
   const paths = buildCliPaths({ cliName: input.cliName });

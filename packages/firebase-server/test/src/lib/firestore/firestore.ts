@@ -28,6 +28,7 @@ export type GoogleCloudTestFirestoreContext = TestFirestoreContext;
  *
  * @param drivers - Testing-aware Firestore driver set to attach to the context.
  * @param firestore - The `@google-cloud/firestore` Firestore instance (typically pointed at an emulator).
+ * @returns A {@link TestFirestoreContext} backed by the supplied Firestore client with `drivers` attached for test introspection.
  */
 export function makeGoogleFirestoreContext(drivers: TestingFirestoreDrivers, firestore: Firestore): TestFirestoreContext {
   const context = firestoreContextFactory(drivers)(firestore) as GoogleCloudTestFirestoreContext;

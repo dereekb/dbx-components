@@ -35,6 +35,10 @@ export interface LoadCliConfigInput {
 
 /**
  * Loads the persisted CLI config from disk. Returns `undefined` when the file is missing.
+ *
+ * @param input - The load inputs.
+ * @param input.configFilePath - Absolute path to the JSON config file.
+ * @returns The parsed {@link CliConfig}, or `undefined` when the file does not exist.
  */
 export function loadCliConfig(input: LoadCliConfigInput): Promise<Maybe<CliConfig>> {
   return readJsonFile<CliConfig>(input.configFilePath);
@@ -45,6 +49,15 @@ export interface SaveCliConfigInput extends LoadCliConfigInput {
   readonly config: CliConfig;
 }
 
+/**
+ * Writes the full {@link CliConfig} to disk, creating the parent directory if needed.
+ *
+ * @param input - The save inputs.
+ * @param input.configFilePath - Absolute path to the JSON config file.
+ * @param input.configDir - Absolute path to the config directory (created if missing).
+ * @param input.config - The full config object to persist.
+ * @returns Resolves once the file has been written.
+ */
 export function saveCliConfig(input: SaveCliConfigInput): Promise<void> {
   return writeJsonFile({ filePath: input.configFilePath, dirPath: input.configDir, data: input.config });
 }
@@ -58,6 +71,12 @@ export interface MergeCliConfigInput extends Omit<SaveCliConfigInput, 'config'> 
  *
  * `envs` is shallow-merged so a partial env update preserves existing keys for other envs.
  * `output` is merged via {@link mergeOutputConfig}.
+ *
+ * @param input - The merge inputs.
+ * @param input.configFilePath - Absolute path to the JSON config file.
+ * @param input.configDir - Absolute path to the config directory (created if missing).
+ * @param input.updates - The partial {@link CliConfig} to merge on top of the existing on-disk config.
+ * @returns The merged {@link CliConfig} that was just written.
  */
 export async function mergeCliConfig(input: MergeCliConfigInput): Promise<CliConfig> {
   const existing = (await loadCliConfig({ configFilePath: input.configFilePath })) ?? {};
@@ -78,6 +97,10 @@ export async function mergeCliConfig(input: MergeCliConfigInput): Promise<CliCon
  * Exported so downstream CLIs that nest the output config under a different config tree (e.g.
  * zoho-cli's `shared/recruit/crm/desk/output` shape) can reuse the same merge semantics for the
  * output sub-tree without forking the implementation.
+ *
+ * @param existing - The existing output config slice (or `null`/`undefined` if none was stored).
+ * @param updates - The partial output config to merge on top.
+ * @returns The merged {@link CliOutputConfig}.
  */
 export function mergeOutputConfig(existing: Maybe<CliOutputConfig>, updates: CliOutputConfig): CliOutputConfig {
   return {
@@ -116,6 +139,12 @@ export interface ResolveOutputConfigInput {
  *   1. CLI flags (dumpDir, pick from argv)
  *   2. Per-command config (output.commands["call.profile.read"])
  *   3. Global output config (output.dumpDir, output.pick)
+ *
+ * @param input - The resolution inputs.
+ * @param input.outputConfig - The persisted {@link CliOutputConfig} (or `null`/`undefined`).
+ * @param input.commandPath - The yargs command-path segments (joined with `.` to look up per-command overrides).
+ * @param input.cliFlags - Per-invocation overrides parsed from argv.
+ * @returns The resolved `dumpDir` / `pick` pair to apply for this command.
  */
 export function resolveOutputConfig(input: ResolveOutputConfigInput): { dumpDir?: string; pick?: string } {
   const commandKey = input.commandPath.join('.');
@@ -129,6 +158,9 @@ export function resolveOutputConfig(input: ResolveOutputConfigInput): { dumpDir?
 
 /**
  * Masks a secret string by keeping the first 4 chars and replacing the rest with `***`.
+ *
+ * @param value - The string to mask. `null`/`undefined` are returned unchanged.
+ * @returns The masked string (`***` when the input is 4 chars or shorter), or the input unchanged when nullish.
  */
 export function maskSecret(value: Maybe<string>): Maybe<string> {
   if (value == null) {

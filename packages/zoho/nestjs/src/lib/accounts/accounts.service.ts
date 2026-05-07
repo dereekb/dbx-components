@@ -172,6 +172,9 @@ export const DEFAULT_FILE_ZOHO_ACCOUNTS_ACCESS_TOKEN_CACHE_SERVICE_PATH = '.tmp/
 /**
  * Reviver applied to each cached token entry on load so `expiresAt` is always a `Date`
  * regardless of how it was serialized.
+ *
+ * @param raw - the raw value loaded from storage; expected to be an object shaped like a ZohoAccessToken with a serialized `expiresAt`
+ * @returns the parsed ZohoAccessToken with `expiresAt` coerced to a Date, or undefined when the input is not an object
  */
 function reviveZohoAccessToken(raw: unknown): Maybe<ZohoAccessToken> {
   if (raw == null || typeof raw !== 'object') {

@@ -116,9 +116,11 @@ export type LoadScanSectionResult<TSection> = { readonly kind: 'ok'; readonly se
  * arktype validation. Centralises the missing-file / bad-JSON / invalid-
  * schema branches that every `*-build-manifest.ts` repeats verbatim.
  *
- * @param input - config path, file reader, and the cluster-specific parse
- *   callback (typically wraps an arktype validator + extracts a sub-field)
- * @returns either the validated section or a forwardable failure outcome
+ * @param input - Config path, file reader, and the cluster-specific parse callback used to validate the section.
+ * @param input.configPath - Absolute path to the `dbx-mcp.scan.json` file to read.
+ * @param input.readFile - File-reader injected by the scan runtime; defaults to `node:fs/promises.readFile` in production callers.
+ * @param input.parseSection - Cluster-specific parser that validates the parsed JSON and extracts the relevant sub-section (typically wraps an arktype validator).
+ * @returns Either the validated section or a forwardable failure outcome (`no-config` or `invalid-scan-config`).
  */
 export async function loadScanSection<TSection>(input: { readonly configPath: string; readonly readFile: ScanReadFile; readonly parseSection: (parsed: unknown) => { readonly ok: true; readonly section: TSection } | { readonly ok: false; readonly error: string } }): Promise<LoadScanSectionResult<TSection>> {
   const { configPath, readFile, parseSection } = input;
@@ -188,9 +190,11 @@ function parseJsonString(raw: string): ParseJsonStringResult {
  * file. Used by every `*-build-manifest.ts` orchestrator before handing
  * the project to its cluster-specific extractor.
  *
- * @param input - project root, relative file paths to load, and the file
- *   reader used to fetch each file's contents
- * @returns the populated ts-morph project ready for entry extraction
+ * @param input - Project root, relative file paths to load, and the file reader used to fetch each file's contents.
+ * @param input.projectRoot - Absolute path used as the base for resolving each entry in `filePaths`.
+ * @param input.filePaths - Relative file paths to add to the in-memory project, resolved against `projectRoot`.
+ * @param input.readFile - File-reader used to fetch each file's contents before adding it to the project.
+ * @returns The populated ts-morph project ready for entry extraction.
  */
 export async function buildScanProject(input: { readonly projectRoot: string; readonly filePaths: readonly string[]; readonly readFile: ScanReadFile }): Promise<Project> {
   const { projectRoot, filePaths, readFile } = input;

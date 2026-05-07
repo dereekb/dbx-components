@@ -33,6 +33,9 @@ export class OidcProviderController {
    * client-side login UI. Any incoming query string is forwarded so flow params
    * (e.g., `uid`, `state`) survive the redirect, merged with any params already
    * baked into `appLoginUrl`.
+   *
+   * @param req - Inbound Express request; only `originalUrl` is used so any incoming query string can be forwarded to the redirect target.
+   * @param res - Express response used to issue the 302 redirect to the configured `appLoginUrl`.
    */
   @Get('login/client')
   redirectToClientLogin(@Req() req: Request, @Res() res: Response): void {
@@ -58,6 +61,11 @@ interface MergeQueryParamsFromOriginalUrlInput {
  * Merges any query string present on `originalUrl` into `baseUrl`, preserving any params already
  * baked into `baseUrl`. Bare-string concatenation would produce malformed URLs (`?foo=1?bar=2`)
  * when `baseUrl` already contains a `?`.
+ *
+ * @param input - The base/original URL pair to merge.
+ * @param input.baseUrl - The destination URL whose query string should be augmented with any incoming params.
+ * @param input.originalUrl - The inbound request URL whose query string is appended onto `baseUrl`.
+ * @returns The base URL with the original URL's query string appended using the appropriate `?`/`&` separator.
  */
 function mergeQueryParamsFromOriginalUrl(input: MergeQueryParamsFromOriginalUrlInput): string {
   const queryIndex = input.originalUrl.indexOf('?');

@@ -75,6 +75,9 @@ export type CloudFunctionTestMultipleFunction<T extends CloudFunctionTestConfigM
 /**
  * Type guard that distinguishes a {@link CloudFunctionTestSingleConfig} from a
  * {@link CloudFunctionTestMultipleConfig} by checking for the presence of the `fn` property.
+ *
+ * @param config - Either a single-function or multiple-function cloud function test config to inspect.
+ * @returns `true` when `config` carries a single `fn` (single-config variant); `false` when it carries `fns` (map variant).
  */
 export function isCloudFunctionTestSingleConfig<I extends object, T extends CloudFunctionTestConfigMapObject>(config: CloudFunctionTestSingleConfig<I> | CloudFunctionTestMultipleConfig<I, T>): config is CloudFunctionTestSingleConfig<I> {
   return Boolean((config as CloudFunctionTestSingleConfig<I>).fn);

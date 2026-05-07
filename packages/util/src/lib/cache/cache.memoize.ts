@@ -16,6 +16,17 @@ import { type AsyncKeyedValueCache, type AsyncValueCache } from './cache';
  * @dbxUtilCategory cache
  * @dbxUtilTags memoize, memo, cache, async, single-load, async-value
  * @dbxUtilRelated memoize-async-keyed-value-cache
+ *
+ * @param inner - The backing cache to memoize. Reads are delegated once and cached; writes are forwarded through and refresh the memo.
+ * @returns An {@link AsyncValueCache} that proxies the inner cache with a single-load memoization layer.
+ *
+ * @example
+ * ```ts
+ * const memo = memoizeAsyncValueCache(inMemoryAsyncValueCache<string>('initial'));
+ * await memo.load();           // delegates to inner.load() once
+ * await memo.load();           // returns memoized value without hitting inner
+ * await memo.update('next');   // writes through to inner and refreshes memo
+ * ```
  */
 export function memoizeAsyncValueCache<T>(inner: AsyncValueCache<T>): AsyncValueCache<T> {
   let loaded: Maybe<{ value: Maybe<T> }>;
@@ -90,6 +101,17 @@ export function memoizeAsyncValueCache<T>(inner: AsyncValueCache<T>): AsyncValue
  * @dbxUtilCategory cache
  * @dbxUtilTags memoize, memo, cache, async, keyed, record
  * @dbxUtilRelated memoize-async-value-cache
+ *
+ * @param inner - The backing keyed cache to memoize. The full record is loaded once and cached; writes are forwarded through and applied to the memo.
+ * @returns An {@link AsyncKeyedValueCache} that proxies the inner cache with a record-level memoization layer.
+ *
+ * @example
+ * ```ts
+ * const memo = memoizeAsyncKeyedValueCache(inMemoryAsyncKeyedValueCache<number>({ a: 1 }));
+ * await memo.get('a');           // delegates to inner.load() once
+ * await memo.get('a');           // returns memoized entry without hitting inner
+ * await memo.set('b', 2);        // writes through to inner and updates memo
+ * ```
  */
 export function memoizeAsyncKeyedValueCache<T>(inner: AsyncKeyedValueCache<T>): AsyncKeyedValueCache<T> {
   let loaded: Maybe<{ entries: Record<string, T> }>;

@@ -36,6 +36,13 @@ interface CreateAuthListAppToolInput {
   readonly registry: AuthRegistry;
 }
 
+/**
+ * Creates the `dbx_auth_list_app` MCP tool bound to the supplied auth registry.
+ *
+ * @param input - Tool factory input.
+ * @param input.registry - Pre-merged auth registry consulted to resolve the requested app's claims, scopes, and gate summary.
+ * @returns A {@link DbxTool} that enumerates the auth surface of a single app or lists every catalogued app.
+ */
 export function createAuthListAppTool(input: CreateAuthListAppToolInput): DbxTool {
   const { registry } = input;
   const tool: DbxTool = {

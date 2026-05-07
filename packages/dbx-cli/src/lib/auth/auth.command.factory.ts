@@ -76,6 +76,19 @@ function maskEnv(env: CliEnvConfig): Record<string, unknown> {
   };
 }
 
+/**
+ * Factory for the built-in `auth` command tree.
+ *
+ * Wires `setup`, `login`, `logout`, `status`, `show`, and `check` subcommands that drive the OIDC
+ * PKCE flow against the active env, persist tokens via the per-CLI token cache, and print a
+ * structured envelope.
+ *
+ * @param input - Factory configuration.
+ * @param input.cliName - The CLI's binary name. Used for the per-user config dir, env-var prefix, and error messages.
+ * @param input.envVarName - Override for the env-name env var. Defaults to `<CLINAME>_ENV` (e.g. `DEMO_CLI_ENV`).
+ * @param input.defaultEnvs - Built-in env presets merged underneath the user's stored env when names match.
+ * @returns A yargs `CommandModule` exposing the full `auth` subcommand surface.
+ */
 export function createAuthCommand(input: CreateAuthCommandInput): CommandModule {
   const cliName = input.cliName;
   const envVarName = input.envVarName ?? `${cliName.replaceAll('-', '_').toUpperCase()}_ENV`;
@@ -109,19 +122,20 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
         const defaultEnv = findCliEnvDefault({ name: envName, defaults: defaultEnvs })?.env;
         const existing = mergeCliEnvWithDefault({ env: stored, defaultEnv });
 
-        async function resolve(argvValue: string | undefined, existingValue: string | undefined, prompt: string, options?: { mask?: boolean }): Promise<string | undefined> {
+        async function resolve(input: { argvValue: string | undefined; existingValue: string | undefined; prompt: string; mask?: boolean }): Promise<string | undefined> {
+          const { argvValue, existingValue, prompt, mask } = input;
           if (argvValue) return argvValue;
           if (existingValue) return existingValue;
-          const answer = (await promptLine({ question: prompt, mask: options?.mask })).trim();
+          const answer = (await promptLine({ question: prompt, mask })).trim();
           return answer.length > 0 ? answer : existingValue;
         }
 
-        const apiBaseUrl = await resolve(argv.apiBaseUrl as string | undefined, existing?.apiBaseUrl, `API base URL [${existing?.apiBaseUrl ?? ''}]: `);
-        const oidcIssuer = await resolve(argv.oidcIssuer as string | undefined, existing?.oidcIssuer, `OIDC issuer [${existing?.oidcIssuer ?? ''}]: `);
+        const apiBaseUrl = await resolve({ argvValue: argv.apiBaseUrl as string | undefined, existingValue: existing?.apiBaseUrl, prompt: `API base URL [${existing?.apiBaseUrl ?? ''}]: ` });
+        const oidcIssuer = await resolve({ argvValue: argv.oidcIssuer as string | undefined, existingValue: existing?.oidcIssuer, prompt: `OIDC issuer [${existing?.oidcIssuer ?? ''}]: ` });
         const appClientUrl = (argv.appClientUrl as string | undefined) ?? existing?.appClientUrl;
-        const clientId = await resolve(argv.clientId as string | undefined, existing?.clientId, 'Client ID: ');
-        const clientSecret = await resolve(argv.clientSecret as string | undefined, existing?.clientSecret, 'Client secret: ', { mask: true });
-        const redirectUri = (await resolve(argv.redirectUri as string | undefined, existing?.redirectUri, `Redirect URI [${existing?.redirectUri ?? 'http://127.0.0.1:0/callback'}]: `)) ?? 'http://127.0.0.1:0/callback';
+        const clientId = await resolve({ argvValue: argv.clientId as string | undefined, existingValue: existing?.clientId, prompt: 'Client ID: ' });
+        const clientSecret = await resolve({ argvValue: argv.clientSecret as string | undefined, existingValue: existing?.clientSecret, prompt: 'Client secret: ', mask: true });
+        const redirectUri = (await resolve({ argvValue: argv.redirectUri as string | undefined, existingValue: existing?.redirectUri, prompt: `Redirect URI [${existing?.redirectUri ?? 'http://127.0.0.1:0/callback'}]: ` })) ?? 'http://127.0.0.1:0/callback';
         const scopes = (argv.scopes as string | undefined) ?? existing?.scopes;
 
         if (!apiBaseUrl || !oidcIssuer || !clientId || !clientSecret) {

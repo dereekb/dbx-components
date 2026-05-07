@@ -5,7 +5,10 @@ import { createMemoizedJsonFileAsyncValueCache } from '@dereekb/nestjs';
  * Creates a {@link ZohoAccessTokenCache} backed by a single JSON file with per-process memoization.
  *
  * Revives `expiresAt` to a `Date` after JSON parse so consumers receive a typed token regardless
- * of how the value was serialized.
+ * of how the value was serialized. A corrupt or partial cache file (missing required fields, non-finite `expiresIn`, or unparseable `expiresAt`) is treated as a cache miss rather than re-emitted.
+ *
+ * @param filePath - Absolute filesystem path of the JSON file used to persist the cached access token.
+ * @returns A {@link ZohoAccessTokenCache} adapter that delegates load/update/clear to the underlying memoized JSON file cache.
  */
 export function createFileTokenCache(filePath: string): ZohoAccessTokenCache {
   const inner = createMemoizedJsonFileAsyncValueCache<ZohoAccessToken>({
