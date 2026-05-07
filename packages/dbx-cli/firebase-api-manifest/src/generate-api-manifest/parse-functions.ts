@@ -9,7 +9,7 @@
  */
 
 import { readFileSync } from 'node:fs';
-import { Node, Project, type SourceFile, type VariableDeclaration } from 'ts-morph';
+import { Node, Project, type ObjectLiteralElementLike, type ObjectLiteralExpression, type SourceFile, type VariableDeclaration } from 'ts-morph';
 import type { FunctionsGroup } from './types';
 
 /**
@@ -28,30 +28,39 @@ export function parseFunctionsConfig(functionsTsPath: string): FunctionsGroup[] 
   const result: FunctionsGroup[] = [];
 
   for (const variable of sourceFile.getVariableDeclarations()) {
-    if (!isFunctionsConfigVariable(variable)) continue;
-    const initializer = variable.getInitializer();
-    if (!initializer || !Node.isObjectLiteralExpression(initializer)) continue;
-
-    for (const property of initializer.getProperties()) {
-      if (!Node.isPropertyAssignment(property)) continue;
-      const groupKey = property.getName();
-      const valueExpr = property.getInitializer();
-      if (!valueExpr || !Node.isArrayLiteralExpression(valueExpr)) continue;
-
-      const elements = valueExpr.getElements();
-      if (elements.length === 0) continue;
-      const first = elements[0];
-      if (!Node.isIdentifier(first)) continue;
-
-      const className = first.getText();
-      const importedFromModule = importIdentToModule.get(className);
-      if (!importedFromModule) continue;
-
-      result.push({ groupKey, className, importedFromModule });
-    }
+    const initializer = readFunctionsConfigInitializer(variable);
+    if (initializer) collectGroupsFromConfig(initializer, importIdentToModule, result);
   }
 
   return result;
+}
+
+function readFunctionsConfigInitializer(variable: VariableDeclaration): ObjectLiteralExpression | undefined {
+  let result: ObjectLiteralExpression | undefined;
+  if (isFunctionsConfigVariable(variable)) {
+    const initializer = variable.getInitializer();
+    if (initializer && Node.isObjectLiteralExpression(initializer)) result = initializer;
+  }
+  return result;
+}
+
+function collectGroupsFromConfig(initializer: ObjectLiteralExpression, importIdentToModule: ReadonlyMap<string, string>, sink: FunctionsGroup[]): void {
+  for (const property of initializer.getProperties()) {
+    const group = readGroupFromProperty(property, importIdentToModule);
+    if (group) sink.push(group);
+  }
+}
+
+function readGroupFromProperty(property: ObjectLiteralElementLike, importIdentToModule: ReadonlyMap<string, string>): FunctionsGroup | undefined {
+  if (!Node.isPropertyAssignment(property)) return undefined;
+  const valueExpr = property.getInitializer();
+  if (!valueExpr || !Node.isArrayLiteralExpression(valueExpr)) return undefined;
+  const first = valueExpr.getElements()[0];
+  if (!first || !Node.isIdentifier(first)) return undefined;
+  const className = first.getText();
+  const importedFromModule = importIdentToModule.get(className);
+  if (!importedFromModule) return undefined;
+  return { groupKey: property.getName(), className, importedFromModule };
 }
 
 function isFunctionsConfigVariable(variable: VariableDeclaration): boolean {

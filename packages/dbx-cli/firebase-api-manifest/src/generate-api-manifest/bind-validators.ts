@@ -87,23 +87,33 @@ function resolveReExport(fromDir: string, target: string): string | undefined {
   if (!target.startsWith('.')) return undefined;
   const candidate = isAbsolute(target) ? target : resolve(fromDir, target);
 
+  let result: string | undefined;
   for (const ext of ['.ts', '.mts', '/index.ts', '/index.mts']) {
-    const probe = candidate.endsWith('.ts') || candidate.endsWith('.mts') ? candidate : candidate + ext;
-    if (existsSync(probe)) {
-      const stat = statSync(probe);
-      if (stat.isFile()) return probe;
-      if (stat.isDirectory()) {
-        const indexed = join(probe, 'index.ts');
-        if (existsSync(indexed)) return indexed;
-      }
+    const probe = hasTsModuleExtension(candidate) ? candidate : candidate + ext;
+    const resolved = resolveExistingTsPath(probe);
+    if (resolved) {
+      result = resolved;
+      break;
     }
   }
+  return result;
+}
 
-  return undefined;
+function hasTsModuleExtension(value: string): boolean {
+  return value.endsWith('.ts') || value.endsWith('.mts');
+}
+
+function resolveExistingTsPath(probe: string): string | undefined {
+  if (!existsSync(probe)) return undefined;
+  const stat = statSync(probe);
+  if (stat.isFile()) return probe;
+  if (!stat.isDirectory()) return undefined;
+  const indexed = join(probe, 'index.ts');
+  return existsSync(indexed) ? indexed : undefined;
 }
 
 function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return value.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 }
 
 /**

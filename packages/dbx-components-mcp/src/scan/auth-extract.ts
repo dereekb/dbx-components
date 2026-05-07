@@ -19,7 +19,7 @@
  * the identifier text so callers can still see them in registry output.
  */
 
-import { Node, type Expression, type InterfaceDeclaration, type JSDoc, type ObjectLiteralExpression, type PropertyAssignment, type PropertySignature, type Project, type TypeAliasDeclaration, type VariableStatement } from 'ts-morph';
+import { Node, type Expression, type InterfaceDeclaration, type JSDoc, type JSDocTag, type ObjectLiteralExpression, type PropertyAssignment, type PropertySignature, type Project, type TypeAliasDeclaration, type VariableStatement } from 'ts-morph';
 import type { AuthClaimRoleMappingInfo } from '../registry/auth-runtime.js';
 
 // MARK: Tag names
@@ -529,19 +529,31 @@ function readPropertyTagState(jsDocs: readonly JSDoc[]): PropertyTagState {
   for (const jsDoc of jsDocs) {
     const description = jsDoc.getDescription().trim();
     if (description.length > 0) summaries.push(description);
-    for (const tag of jsDoc.getTags()) {
-      const name = tag.getTagName();
-      const text = tag.getCommentText()?.trim() ?? '';
-      if (name === AUTH_CLAIM_MARKER) {
-        hasMarker = true;
-      } else if ((name === AUTH_ROLE_TAG_TAG || name === AUTH_ROLE_TAG) && text.length > 0) {
-        for (const piece of splitListTagText(text)) {
-          if (!tags.includes(piece)) tags.push(piece);
-        }
-      }
-    }
+    if (consumeMarkerAndRoles(jsDoc.getTags(), tags)) hasMarker = true;
   }
   return { hasMarker, summaries, tags };
+}
+
+function consumeMarkerAndRoles(jsDocTags: readonly JSDocTag[], roleSink: string[]): boolean {
+  let hasMarker = false;
+  for (const tag of jsDocTags) {
+    const name = tag.getTagName();
+    if (name === AUTH_CLAIM_MARKER) {
+      hasMarker = true;
+    } else {
+      collectRoleTagPieces(name, tag, roleSink);
+    }
+  }
+  return hasMarker;
+}
+
+function collectRoleTagPieces(name: string, tag: JSDocTag, sink: string[]): void {
+  if (name !== AUTH_ROLE_TAG_TAG && name !== AUTH_ROLE_TAG) return;
+  const text = tag.getCommentText()?.trim() ?? '';
+  if (text.length === 0) return;
+  for (const piece of splitListTagText(text)) {
+    if (!sink.includes(piece)) sink.push(piece);
+  }
 }
 
 function splitListTagText(text: string): readonly string[] {

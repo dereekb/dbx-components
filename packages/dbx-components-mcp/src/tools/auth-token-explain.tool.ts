@@ -141,7 +141,11 @@ function formatExplain(input: FormatExplainInput): string {
   appendScopesSection(lines, scopes, registry);
   appendCustomClaimsSection({ lines, customClaims, registry, app });
   appendWarningsSection(lines, warnings);
-  appendSignatureNote(lines, signaturePresent);
+  if (signaturePresent) {
+    appendSignaturePresentNote(lines);
+  } else {
+    appendSignatureMissingNote(lines);
+  }
   return lines.join('\n');
 }
 
@@ -252,12 +256,12 @@ function appendWarningsSection(lines: string[], warnings: readonly string[]): vo
   }
 }
 
-function appendSignatureNote(lines: string[], signaturePresent: boolean): void {
-  if (signaturePresent) {
-    lines.push('', '_Signature present but **not** verified — this tool only decodes._');
-  } else {
-    lines.push('', '_Signature not verified — this tool only decodes._');
-  }
+function appendSignaturePresentNote(lines: string[]): void {
+  lines.push('', '_Signature present but **not** verified — this tool only decodes._');
+}
+
+function appendSignatureMissingNote(lines: string[]): void {
+  lines.push('', '_Signature not verified — this tool only decodes._');
 }
 
 function formatCustomClaim(key: string, value: unknown, entry: AuthClaimInfo): string {

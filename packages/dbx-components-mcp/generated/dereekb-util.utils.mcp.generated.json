@@ -1950,6 +1950,223 @@
       ]
     },
     {
+      "slug": "read-domains-from-email-addresses",
+      "name": "readDomainsFromEmailAddresses",
+      "kind": "function",
+      "category": "contact",
+      "module": "@dereekb/util",
+      "subpath": "contact/domain",
+      "signature": "readDomainsFromEmailAddresses(addresses: EmailAddress[]): EmailAddressDomain[]",
+      "description": "Extracts unique domain names from a list of email addresses (case-insensitive).",
+      "params": [
+        {
+          "name": "addresses",
+          "type": "EmailAddress[]",
+          "description": "- Array of email addresses to extract domains from",
+          "optional": false
+        }
+      ],
+      "returns": "Array of unique lowercase domain strings",
+      "tags": [
+        "email",
+        "domain",
+        "extract",
+        "unique",
+        "dedupe",
+        "case-insensitive",
+        "contact",
+        "read",
+        "domains",
+        "from",
+        "addresses",
+        "readdomainsfromemailaddresses"
+      ],
+      "relatedSlugs": [
+        "read-domain-from-email-address",
+        "read-email-domain-from-url-or-email-address"
+      ]
+    },
+    {
+      "slug": "read-domain-from-email-address",
+      "name": "readDomainFromEmailAddress",
+      "kind": "function",
+      "category": "contact",
+      "module": "@dereekb/util",
+      "subpath": "contact/domain",
+      "signature": "readDomainFromEmailAddress(address: EmailAddress): EmailAddressDomain",
+      "description": "Extracts the domain portion from a single email address.",
+      "params": [
+        {
+          "name": "address",
+          "type": "EmailAddress",
+          "description": "- The email address to extract the domain from",
+          "optional": false
+        }
+      ],
+      "returns": "The lowercase domain string",
+      "tags": [
+        "email",
+        "domain",
+        "extract",
+        "parse",
+        "lowercase",
+        "contact",
+        "read",
+        "from",
+        "address",
+        "readdomainfromemailaddress"
+      ],
+      "relatedSlugs": [
+        "read-domains-from-email-addresses",
+        "read-email-domain-from-url-or-email-address"
+      ]
+    },
+    {
+      "slug": "read-email-domain-from-url-or-email-address",
+      "name": "readEmailDomainFromUrlOrEmailAddress",
+      "kind": "function",
+      "category": "contact",
+      "module": "@dereekb/util",
+      "subpath": "contact/domain",
+      "signature": "readEmailDomainFromUrlOrEmailAddress(urlLikeInput: string | EmailAddress | EmailAddressDomain): EmailAddressDomain",
+      "description": "Reads a domain from various input formats including URLs, email addresses, and raw domains.\n\nSupported formats:\n- A url: www.test.com\n- A url with the protocol (://): https://www.test.com\n- An email address: test@test.com\n- A domain: test.com\n\nThe \"www.\" prefix is stripped from URL-style inputs since emails typically don't use it.",
+      "params": [
+        {
+          "name": "urlLikeInput",
+          "type": "string | EmailAddress | EmailAddressDomain",
+          "description": "- A URL, email address, or domain string",
+          "optional": false
+        }
+      ],
+      "returns": "The extracted domain",
+      "tags": [
+        "email",
+        "domain",
+        "url",
+        "extract",
+        "normalize",
+        "parse",
+        "www",
+        "contact",
+        "read",
+        "from",
+        "or",
+        "address",
+        "reademaildomainfromurloremailaddress"
+      ],
+      "relatedSlugs": [
+        "read-domain-from-email-address",
+        "read-domains-from-email-addresses"
+      ]
+    },
+    {
+      "slug": "convert-participant-to-email-participant-string",
+      "name": "convertParticipantToEmailParticipantString",
+      "kind": "function",
+      "category": "contact",
+      "module": "@dereekb/util",
+      "subpath": "contact/email",
+      "signature": "convertParticipantToEmailParticipantString(participant: EmailParticipant): EmailParticipantString",
+      "description": "Converts an EmailParticipant object to a formatted string representation.\nThe format is: \"name<email>\" or \"<email>\" if no name is provided.",
+      "params": [
+        {
+          "name": "participant",
+          "type": "EmailParticipant",
+          "description": "- The email participant to convert",
+          "optional": false
+        }
+      ],
+      "returns": "A formatted string representation of the participant",
+      "tags": [
+        "email",
+        "participant",
+        "convert",
+        "format",
+        "serialize",
+        "name",
+        "contact",
+        "to",
+        "string",
+        "convertparticipanttoemailparticipantstring"
+      ],
+      "relatedSlugs": [
+        "convert-email-participant-string-to-participant",
+        "coerce-to-email-participants"
+      ]
+    },
+    {
+      "slug": "convert-email-participant-string-to-participant",
+      "name": "convertEmailParticipantStringToParticipant",
+      "kind": "function",
+      "category": "contact",
+      "module": "@dereekb/util",
+      "subpath": "contact/email",
+      "signature": "convertEmailParticipantStringToParticipant(participantString: EmailParticipantString): EmailParticipant",
+      "description": "Converts a formatted participant string into an EmailParticipant object.\nParses strings in the format \"name<email>\" or \"<email>\".",
+      "params": [
+        {
+          "name": "participantString",
+          "type": "EmailParticipantString",
+          "description": "- The string to parse",
+          "optional": false
+        }
+      ],
+      "returns": "An EmailParticipant object with the extracted name and email",
+      "tags": [
+        "email",
+        "participant",
+        "parse",
+        "deserialize",
+        "name",
+        "address",
+        "contact",
+        "convert",
+        "string",
+        "to",
+        "convertemailparticipantstringtoparticipant"
+      ],
+      "relatedSlugs": [
+        "convert-participant-to-email-participant-string",
+        "coerce-to-email-participants"
+      ]
+    },
+    {
+      "slug": "coerce-to-email-participants",
+      "name": "coerceToEmailParticipants",
+      "kind": "function",
+      "category": "contact",
+      "module": "@dereekb/util",
+      "subpath": "contact/email",
+      "signature": "coerceToEmailParticipants({ participants = [], emails = [] }: { participants?: EmailParticipant[]; emails?: EmailAddress[] }): EmailParticipant[]",
+      "description": "Combines an array of EmailParticipants with an array of email addresses.\nEmail addresses that don't already exist in the participants array are converted to EmailParticipant objects.",
+      "params": [
+        {
+          "name": "{ participants = [], emails = [] }",
+          "type": "{ participants?: EmailParticipant[]; emails?: EmailAddress[] }",
+          "description": "",
+          "optional": false
+        }
+      ],
+      "returns": "A combined array of EmailParticipant objects",
+      "tags": [
+        "email",
+        "participant",
+        "merge",
+        "combine",
+        "dedupe",
+        "coerce",
+        "normalize",
+        "contact",
+        "to",
+        "participants",
+        "coercetoemailparticipants"
+      ],
+      "relatedSlugs": [
+        "convert-participant-to-email-participant-string",
+        "convert-email-participant-string-to-participant"
+      ]
+    },
+    {
       "slug": "unix-date-time-seconds-number-from-date-or-time-number",
       "name": "unixDateTimeSecondsNumberFromDateOrTimeNumber",
       "kind": "function",
@@ -3457,6 +3674,1190 @@
       ]
     },
     {
+      "slug": "slash-path-separator",
+      "name": "SLASH_PATH_SEPARATOR",
+      "kind": "const",
+      "category": "path",
+      "module": "@dereekb/util",
+      "subpath": "path/path",
+      "signature": "const SLASH_PATH_SEPARATOR: \"/\"",
+      "description": "The forward-slash character used to separate parts of a slash path.",
+      "params": [],
+      "returns": "\"/\"",
+      "tags": [
+        "path",
+        "slash",
+        "separator",
+        "constant",
+        "delimiter",
+        "slash_path_separator"
+      ],
+      "relatedSlugs": [
+        "slash-path-file-type-separator",
+        "slash-path-parts"
+      ]
+    },
+    {
+      "slug": "slash-path-file-type-separator",
+      "name": "SLASH_PATH_FILE_TYPE_SEPARATOR",
+      "kind": "const",
+      "category": "path",
+      "module": "@dereekb/util",
+      "subpath": "path/path",
+      "signature": "const SLASH_PATH_FILE_TYPE_SEPARATOR: \".\"",
+      "description": "The dot character used to separate the file extension from the file name within a slash path.",
+      "params": [],
+      "returns": "\".\"",
+      "tags": [
+        "path",
+        "slash",
+        "separator",
+        "dot",
+        "file-type",
+        "extension",
+        "constant",
+        "file",
+        "type",
+        "slash_path_file_type_separator"
+      ],
+      "relatedSlugs": [
+        "slash-path-separator",
+        "slash-path-type",
+        "slash-path-details"
+      ]
+    },
+    {
+      "slug": "default-slash-path-illegal-characters",
+      "name": "DEFAULT_SLASH_PATH_ILLEGAL_CHARACTERS",
+      "kind": "const",
+      "category": "path",
+      "module": "@dereekb/util",
+      "subpath": "path/path",
+      "signature": "const DEFAULT_SLASH_PATH_ILLEGAL_CHARACTERS: string[]",
+      "description": "The default set of characters that are considered illegal in a slash path.",
+      "params": [],
+      "returns": "string[]",
+      "tags": [
+        "path",
+        "slash",
+        "illegal",
+        "characters",
+        "default",
+        "sanitize",
+        "validate",
+        "default_slash_path_illegal_characters"
+      ],
+      "relatedSlugs": [
+        "default-slash-path-illegal-character-replacement",
+        "slash-path-validation-factory"
+      ]
+    },
+    {
+      "slug": "default-slash-path-illegal-character-replacement",
+      "name": "DEFAULT_SLASH_PATH_ILLEGAL_CHARACTER_REPLACEMENT",
+      "kind": "const",
+      "category": "path",
+      "module": "@dereekb/util",
+      "subpath": "path/path",
+      "signature": "const DEFAULT_SLASH_PATH_ILLEGAL_CHARACTER_REPLACEMENT: \"_\"",
+      "description": "Default replacement character for illegal characters.",
+      "params": [],
+      "returns": "\"_\"",
+      "tags": [
+        "path",
+        "slash",
+        "illegal",
+        "replacement",
+        "default",
+        "sanitize",
+        "character",
+        "default_slash_path_illegal_character_replacement"
+      ],
+      "relatedSlugs": [
+        "default-slash-path-illegal-characters",
+        "slash-path-validation-factory"
+      ]
+    },
+    {
+      "slug": "slash-path-type",
+      "name": "slashPathType",
+      "kind": "function",
+      "category": "path",
+      "module": "@dereekb/util",
+      "subpath": "path/path",
+      "signature": "slashPathType(input: SlashPath): SlashPathType",
+      "description": "Determines the type of a slash path string.",
+      "params": [
+        {
+          "name": "input",
+          "type": "SlashPath",
+          "description": "- The slash path to classify.",
+          "optional": false
+        }
+      ],
+      "returns": "The path type classification.",
+      "tags": [
+        "path",
+        "slash",
+        "type",
+        "classify",
+        "file",
+        "folder",
+        "typed",
+        "detect",
+        "slashpathtype"
+      ],
+      "relatedSlugs": [
+        "is-slash-path-file",
+        "is-slash-path-folder",
+        "is-slash-path-typed-file",
+        "is-valid-slash-path"
+      ]
+    },
+    {
+      "slug": "is-slash-path-file",
+      "name": "isSlashPathFile",
+      "kind": "function",
+      "category": "path",
+      "module": "@dereekb/util",
+      "subpath": "path/path",
+      "signature": "isSlashPathFile(input: string): input is SlashPathFile",
+      "description": "Type guard that checks if the input is a file path (typed or untyped).",
+      "params": [
+        {
+          "name": "input",
+          "type": "string",
+          "description": "- The string to check.",
+          "optional": false
+        }
+      ],
+      "returns": "Whether the input is a file path.",
+      "tags": [
+        "path",
+        "slash",
+        "file",
+        "type-guard",
+        "predicate",
+        "check",
+        "is",
+        "isslashpathfile"
+      ],
+      "relatedSlugs": [
+        "is-slash-path-typed-file",
+        "is-slash-path-folder",
+        "slash-path-type"
+      ]
+    },
+    {
+      "slug": "is-slash-path-typed-file",
+      "name": "isSlashPathTypedFile",
+      "kind": "function",
+      "category": "path",
+      "module": "@dereekb/util",
+      "subpath": "path/path",
+      "signature": "isSlashPathTypedFile(input: string): input is SlashPathTypedFile",
+      "description": "Type guard that checks if the input is a typed file path (contains a file extension).",
+      "params": [
+        {
+          "name": "input",
+          "type": "string",
+          "description": "- The string to check.",
+          "optional": false
+        }
+      ],
+      "returns": "Whether the input is a typed file path.",
+      "tags": [
+        "path",
+        "slash",
+        "file",
+        "extension",
+        "type-guard",
+        "predicate",
+        "typed",
+        "is",
+        "isslashpathtypedfile"
+      ],
+      "relatedSlugs": [
+        "is-slash-path-file",
+        "is-slash-path-folder",
+        "slash-path-type"
+      ]
+    },
+    {
+      "slug": "is-slash-path-folder",
+      "name": "isSlashPathFolder",
+      "kind": "function",
+      "category": "path",
+      "module": "@dereekb/util",
+      "subpath": "path/path",
+      "signature": "isSlashPathFolder(input: string): input is SlashPathFolder",
+      "description": "Type guard that checks if the input is a folder path (ends with a slash).",
+      "params": [
+        {
+          "name": "input",
+          "type": "string",
+          "description": "- The string to check.",
+          "optional": false
+        }
+      ],
+      "returns": "Whether the input is a folder path.",
+      "tags": [
+        "path",
+        "slash",
+        "folder",
+        "directory",
+        "type-guard",
+        "predicate",
+        "trailing",
+        "is",
+        "isslashpathfolder"
+      ],
+      "relatedSlugs": [
+        "is-slash-path-file",
+        "is-valid-slash-path",
+        "slash-path-type"
+      ]
+    },
+    {
+      "slug": "is-valid-slash-path",
+      "name": "isValidSlashPath",
+      "kind": "function",
+      "category": "path",
+      "module": "@dereekb/util",
+      "subpath": "path/path",
+      "signature": "isValidSlashPath(input: string): input is SlashPath",
+      "description": "Type guard that checks if the input is a valid slash path (not 'invalid' type).",
+      "params": [
+        {
+          "name": "input",
+          "type": "string",
+          "description": "- The string to check.",
+          "optional": false
+        }
+      ],
+      "returns": "Whether the input is a valid slash path.",
+      "tags": [
+        "path",
+        "slash",
+        "valid",
+        "type-guard",
+        "predicate",
+        "check",
+        "validate",
+        "is",
+        "isvalidslashpath"
+      ],
+      "relatedSlugs": [
+        "slash-path-type",
+        "slash-path-validation-factory",
+        "slash-path-invalid-error"
+      ]
+    },
+    {
+      "slug": "slash-path-name",
+      "name": "slashPathName",
+      "kind": "function",
+      "category": "path",
+      "module": "@dereekb/util",
+      "subpath": "path/path",
+      "signature": "slashPathName(slashPath: SlashPath): SlashPathPart",
+      "description": "Returns the last part of the slash path.",
+      "params": [
+        {
+          "name": "slashPath",
+          "type": "SlashPath",
+          "description": "- The path to extract the name from.",
+          "optional": false
+        }
+      ],
+      "returns": "The last part of the path (file name or folder name).",
+      "tags": [
+        "path",
+        "slash",
+        "name",
+        "last",
+        "basename",
+        "leaf",
+        "file",
+        "folder",
+        "slashpathname"
+      ],
+      "relatedSlugs": [
+        "slash-path-parts",
+        "slash-path-details",
+        "isolate-slash-path"
+      ]
+    },
+    {
+      "slug": "slash-path-parts",
+      "name": "slashPathParts",
+      "kind": "function",
+      "category": "path",
+      "module": "@dereekb/util",
+      "subpath": "path/path",
+      "signature": "slashPathParts(slashPath: SlashPath): SlashPathPart[]",
+      "description": "Returns each section of a SlashPath.",
+      "params": [
+        {
+          "name": "slashPath",
+          "type": "SlashPath",
+          "description": "- The path to split.",
+          "optional": false
+        }
+      ],
+      "returns": "Array of non-empty path segments.",
+      "tags": [
+        "path",
+        "slash",
+        "split",
+        "parts",
+        "segments",
+        "sections",
+        "components",
+        "slashpathparts"
+      ],
+      "relatedSlugs": [
+        "slash-path-name",
+        "slash-path-details",
+        "isolate-slash-path"
+      ]
+    },
+    {
+      "slug": "slash-path-start-type-factory",
+      "name": "slashPathStartTypeFactory",
+      "kind": "factory",
+      "category": "path",
+      "module": "@dereekb/util",
+      "subpath": "path/path",
+      "signature": "slashPathStartTypeFactory(type: SlashPathStartType): SlashPathStartTypeFactory",
+      "description": "Creates a function that enforces the specified start type on a slash path.",
+      "params": [
+        {
+          "name": "type",
+          "type": "SlashPathStartType",
+          "description": "- The start type to enforce.",
+          "optional": false
+        }
+      ],
+      "returns": "A function that transforms paths to the specified start type.",
+      "tags": [
+        "path",
+        "slash",
+        "factory",
+        "start-type",
+        "relative",
+        "absolute",
+        "normalize",
+        "start",
+        "type",
+        "slashpathstarttypefactory"
+      ],
+      "relatedSlugs": [
+        "to-relative-slash-path-start-type",
+        "to-absolute-slash-path-start-type",
+        "slash-path-factory"
+      ]
+    },
+    {
+      "slug": "to-relative-slash-path-start-type",
+      "name": "toRelativeSlashPathStartType",
+      "kind": "function",
+      "category": "path",
+      "module": "@dereekb/util",
+      "subpath": "path/path",
+      "signature": "toRelativeSlashPathStartType(input: SlashPath): SlashPath",
+      "description": "Converts a slash path to a relative path by removing all leading slashes.",
+      "params": [
+        {
+          "name": "input",
+          "type": "SlashPath",
+          "description": "- The slash path to convert.",
+          "optional": false
+        }
+      ],
+      "returns": "A relative path without leading slashes.",
+      "tags": [
+        "path",
+        "slash",
+        "relative",
+        "leading",
+        "strip",
+        "normalize",
+        "convert",
+        "to",
+        "start",
+        "type",
+        "torelativeslashpathstarttype"
+      ],
+      "relatedSlugs": [
+        "to-absolute-slash-path-start-type",
+        "slash-path-start-type-factory"
+      ]
+    },
+    {
+      "slug": "slash-path-folder-factory",
+      "name": "slashPathFolderFactory",
+      "kind": "factory",
+      "category": "path",
+      "module": "@dereekb/util",
+      "subpath": "path/path",
+      "signature": "slashPathFolderFactory(config?: SlashPathFolderFactoryConfig): SlashPathFolderFactory",
+      "description": "Creates a SlashPathFolderFactory.",
+      "params": [
+        {
+          "name": "config",
+          "type": "SlashPathFolderFactoryConfig",
+          "description": "Configuration options for the factory.",
+          "optional": true
+        }
+      ],
+      "returns": "A SlashPathFolderFactory.",
+      "tags": [
+        "path",
+        "slash",
+        "folder",
+        "factory",
+        "validate",
+        "normalize",
+        "trailing-slash",
+        "slashpathfolderfactory"
+      ],
+      "relatedSlugs": [
+        "slash-path-folder",
+        "slash-path-validation-factory",
+        "add-trailing-slash"
+      ]
+    },
+    {
+      "slug": "slash-path-folder",
+      "name": "slashPathFolder",
+      "kind": "function",
+      "category": "path",
+      "module": "@dereekb/util",
+      "subpath": "path/path",
+      "signature": "slashPathFolder(input: string, config?: SlashPathFolderFactoryConfig): InferredSlashPathFolder",
+      "description": "Converts the input string to a valid slash path folder based on the configuration.\n\nIf the input is a file, the folder of the file is returned instead.",
+      "params": [
+        {
+          "name": "input",
+          "type": "string",
+          "description": "- the string path to convert to a folder path",
+          "optional": false
+        },
+        {
+          "name": "config",
+          "type": "SlashPathFolderFactoryConfig",
+          "description": "- optional configuration controlling path type inference and invalid-path handling",
+          "optional": true
+        }
+      ],
+      "returns": "a valid slash path folder string with a trailing slash, or an empty string for relative root",
+      "tags": [
+        "path",
+        "slash",
+        "folder",
+        "convert",
+        "normalize",
+        "validate",
+        "directory",
+        "slashpathfolder"
+      ],
+      "relatedSlugs": [
+        "slash-path-folder-factory",
+        "slash-path-details",
+        "add-trailing-slash"
+      ]
+    },
+    {
+      "slug": "to-absolute-slash-path-start-type",
+      "name": "toAbsoluteSlashPathStartType",
+      "kind": "function",
+      "category": "path",
+      "module": "@dereekb/util",
+      "subpath": "path/path",
+      "signature": "toAbsoluteSlashPathStartType(input: SlashPath): SlashPath",
+      "description": "Converts a slash path to an absolute path by ensuring exactly one leading slash.",
+      "params": [
+        {
+          "name": "input",
+          "type": "SlashPath",
+          "description": "- The slash path to convert.",
+          "optional": false
+        }
+      ],
+      "returns": "An absolute path starting with a single slash.",
+      "tags": [
+        "path",
+        "slash",
+        "absolute",
+        "leading",
+        "prefix",
+        "normalize",
+        "convert",
+        "to",
+        "start",
+        "type",
+        "toabsoluteslashpathstarttype"
+      ],
+      "relatedSlugs": [
+        "to-relative-slash-path-start-type",
+        "slash-path-start-type-factory",
+        "fix-multi-slashes-in-slash-path"
+      ]
+    },
+    {
+      "slug": "fix-multi-slashes-in-slash-path",
+      "name": "fixMultiSlashesInSlashPath",
+      "kind": "function",
+      "category": "path",
+      "module": "@dereekb/util",
+      "subpath": "path/path",
+      "signature": "fixMultiSlashesInSlashPath(input: SlashPath): SlashPath",
+      "description": "Replaces consecutive double slashes with single slashes.",
+      "params": [
+        {
+          "name": "input",
+          "type": "SlashPath",
+          "description": "- The slash path to fix.",
+          "optional": false
+        }
+      ],
+      "returns": "The path with double slashes collapsed.",
+      "tags": [
+        "path",
+        "slash",
+        "fix",
+        "collapse",
+        "double",
+        "normalize",
+        "dedupe",
+        "multi",
+        "slashes",
+        "in",
+        "fixmultislashesinslashpath"
+      ],
+      "relatedSlugs": [
+        "merge-slash-paths",
+        "replace-multiple-file-paths-in-slash-path"
+      ]
+    },
+    {
+      "slug": "replace-multiple-file-paths-in-slash-path",
+      "name": "replaceMultipleFilePathsInSlashPath",
+      "kind": "function",
+      "category": "path",
+      "module": "@dereekb/util",
+      "subpath": "path/path",
+      "signature": "replaceMultipleFilePathsInSlashPath(input: SlashPath): SlashPath",
+      "description": "Replaces consecutive double slashes with single slashes. Alias for {@link fixMultiSlashesInSlashPath}.",
+      "params": [
+        {
+          "name": "input",
+          "type": "SlashPath",
+          "description": "- The slash path to fix.",
+          "optional": false
+        }
+      ],
+      "returns": "The path with double slashes collapsed.",
+      "tags": [
+        "path",
+        "slash",
+        "alias",
+        "collapse",
+        "double",
+        "normalize",
+        "replace",
+        "multiple",
+        "file",
+        "paths",
+        "in",
+        "replacemultiplefilepathsinslashpath"
+      ],
+      "relatedSlugs": [
+        "fix-multi-slashes-in-slash-path",
+        "merge-slash-paths"
+      ]
+    },
+    {
+      "slug": "remove-trailing-slashes",
+      "name": "removeTrailingSlashes",
+      "kind": "function",
+      "category": "path",
+      "module": "@dereekb/util",
+      "subpath": "path/path",
+      "signature": "removeTrailingSlashes(input: SlashPath): SlashPath",
+      "description": "Removes all trailing slashes from a slash path.",
+      "params": [
+        {
+          "name": "input",
+          "type": "SlashPath",
+          "description": "- The slash path to trim.",
+          "optional": false
+        }
+      ],
+      "returns": "The path without trailing slashes.",
+      "tags": [
+        "path",
+        "slash",
+        "trim",
+        "trailing",
+        "strip",
+        "remove",
+        "normalize",
+        "slashes",
+        "removetrailingslashes"
+      ],
+      "relatedSlugs": [
+        "add-trailing-slash",
+        "remove-trailing-file-type-separators"
+      ]
+    },
+    {
+      "slug": "remove-trailing-file-type-separators",
+      "name": "removeTrailingFileTypeSeparators",
+      "kind": "function",
+      "category": "path",
+      "module": "@dereekb/util",
+      "subpath": "path/path",
+      "signature": "removeTrailingFileTypeSeparators(input: SlashPath): SlashPath",
+      "description": "Removes all trailing dots from a slash path.",
+      "params": [
+        {
+          "name": "input",
+          "type": "SlashPath",
+          "description": "- The slash path to trim.",
+          "optional": false
+        }
+      ],
+      "returns": "The path without trailing dots.",
+      "tags": [
+        "path",
+        "slash",
+        "trim",
+        "trailing",
+        "dot",
+        "file-type",
+        "strip",
+        "normalize",
+        "remove",
+        "file",
+        "type",
+        "separators",
+        "removetrailingfiletypeseparators"
+      ],
+      "relatedSlugs": [
+        "remove-trailing-slashes",
+        "replace-invalid-file-path-type-separators-in-slash-path"
+      ]
+    },
+    {
+      "slug": "add-trailing-slash",
+      "name": "addTrailingSlash",
+      "kind": "function",
+      "category": "path",
+      "module": "@dereekb/util",
+      "subpath": "path/path",
+      "signature": "addTrailingSlash(input: SlashPath): SlashPathFolder",
+      "description": "Adds a trailing slash to the input if it does not already have one.",
+      "params": [
+        {
+          "name": "input",
+          "type": "SlashPath",
+          "description": "A slash path.",
+          "optional": false
+        }
+      ],
+      "returns": "A slash path folder.",
+      "tags": [
+        "path",
+        "slash",
+        "trailing",
+        "append",
+        "folder",
+        "ensure",
+        "normalize",
+        "add",
+        "addtrailingslash"
+      ],
+      "relatedSlugs": [
+        "remove-trailing-slashes",
+        "slash-path-folder",
+        "slash-path-folder-factory"
+      ]
+    },
+    {
+      "slug": "replace-invalid-file-path-type-separators-in-slash-path",
+      "name": "replaceInvalidFilePathTypeSeparatorsInSlashPath",
+      "kind": "function",
+      "category": "path",
+      "module": "@dereekb/util",
+      "subpath": "path/path",
+      "signature": "replaceInvalidFilePathTypeSeparatorsInSlashPath(input: SlashPath, replaceWith?: string): SlashPath",
+      "description": "Replaces all extra and invalidate FilePathTypeSeparator values from the SlashPath, returning a valid SlashPath.",
+      "params": [
+        {
+          "name": "input",
+          "type": "SlashPath",
+          "description": "",
+          "optional": false
+        },
+        {
+          "name": "replaceWith",
+          "type": "string",
+          "description": "",
+          "optional": true
+        }
+      ],
+      "returns": "SlashPath",
+      "tags": [
+        "path",
+        "slash",
+        "dot",
+        "file-type",
+        "replace",
+        "sanitize",
+        "fix",
+        "validate",
+        "invalid",
+        "file",
+        "type",
+        "separators",
+        "in",
+        "replaceinvalidfilepathtypeseparatorsinslashpath"
+      ],
+      "relatedSlugs": [
+        "replace-invalid-file-path-type-separators-in-slash-path-function",
+        "slash-path-validation-factory"
+      ]
+    },
+    {
+      "slug": "replace-invalid-file-path-type-separators-in-slash-path-function",
+      "name": "replaceInvalidFilePathTypeSeparatorsInSlashPathFunction",
+      "kind": "factory",
+      "category": "path",
+      "module": "@dereekb/util",
+      "subpath": "path/path",
+      "signature": "replaceInvalidFilePathTypeSeparatorsInSlashPathFunction(replaceWith?: string): SlashPathFunction",
+      "description": "Creates a function that replaces all extra and invalidate FilePathTypeSeparator values from the SlashPath, returning a valid SlashPath.",
+      "params": [
+        {
+          "name": "replaceWith",
+          "type": "string",
+          "description": "",
+          "optional": true
+        }
+      ],
+      "returns": "SlashPathFunction",
+      "tags": [
+        "path",
+        "slash",
+        "dot",
+        "file-type",
+        "factory",
+        "replace",
+        "sanitize",
+        "validate",
+        "invalid",
+        "file",
+        "type",
+        "separators",
+        "in",
+        "function",
+        "replaceinvalidfilepathtypeseparatorsinslashpathfunction"
+      ],
+      "relatedSlugs": [
+        "replace-invalid-file-path-type-separators-in-slash-path",
+        "slash-path-validation-factory"
+      ]
+    },
+    {
+      "slug": "slash-path-validation-factory",
+      "name": "slashPathValidationFactory",
+      "kind": "factory",
+      "category": "path",
+      "module": "@dereekb/util",
+      "subpath": "path/path",
+      "signature": "slashPathValidationFactory(config?: SlashPathValidationFactoryConfig): SlashPathValidationFactory",
+      "description": "Creates a validation/fixup function for slash paths that replaces illegal characters and extra dots.",
+      "params": [
+        {
+          "name": "config",
+          "type": "SlashPathValidationFactoryConfig",
+          "description": "- Configuration for validation behavior.",
+          "optional": true
+        }
+      ],
+      "returns": "A function that validates and fixes a slash path.",
+      "tags": [
+        "path",
+        "slash",
+        "validate",
+        "factory",
+        "sanitize",
+        "illegal",
+        "replace",
+        "fix",
+        "validation",
+        "slashpathvalidationfactory"
+      ],
+      "relatedSlugs": [
+        "is-valid-slash-path",
+        "replace-invalid-file-path-type-separators-in-slash-path-function",
+        "slash-path-factory",
+        "slash-path-invalid-error"
+      ]
+    },
+    {
+      "slug": "slash-path-factory",
+      "name": "slashPathFactory",
+      "kind": "factory",
+      "category": "path",
+      "module": "@dereekb/util",
+      "subpath": "path/path",
+      "signature": "slashPathFactory(config?: SlashPathFactoryConfig): SlashPathFactory",
+      "description": "Creates a factory function that merges path segments together with optional base path, start type enforcement, and validation.",
+      "params": [
+        {
+          "name": "config",
+          "type": "SlashPathFactoryConfig",
+          "description": "- Configuration for path generation.",
+          "optional": true
+        }
+      ],
+      "returns": "A factory function that merges input paths into a single validated slash path.",
+      "tags": [
+        "path",
+        "slash",
+        "factory",
+        "merge",
+        "base",
+        "start-type",
+        "validate",
+        "normalize",
+        "slashpathfactory"
+      ],
+      "relatedSlugs": [
+        "merge-slash-paths",
+        "slash-path-validation-factory",
+        "slash-path-start-type-factory"
+      ]
+    },
+    {
+      "slug": "merge-slash-paths",
+      "name": "mergeSlashPaths",
+      "kind": "function",
+      "category": "path",
+      "module": "@dereekb/util",
+      "subpath": "path/path",
+      "signature": "mergeSlashPaths(paths: Maybe<SlashPath>[]): SlashPath",
+      "description": "Merges an array of path segments into a single slash path, filtering nullish values and collapsing double slashes.",
+      "params": [
+        {
+          "name": "paths",
+          "type": "Maybe<SlashPath>[]",
+          "description": "- Array of path segments to merge.",
+          "optional": false
+        }
+      ],
+      "returns": "The merged slash path.",
+      "tags": [
+        "path",
+        "slash",
+        "merge",
+        "join",
+        "concat",
+        "segments",
+        "normalize",
+        "dedupe",
+        "paths",
+        "mergeslashpaths"
+      ],
+      "relatedSlugs": [
+        "slash-path-factory",
+        "fix-multi-slashes-in-slash-path",
+        "slash-path-parts"
+      ]
+    },
+    {
+      "slug": "slash-path-invalid-error",
+      "name": "slashPathInvalidError",
+      "kind": "function",
+      "category": "path",
+      "module": "@dereekb/util",
+      "subpath": "path/path",
+      "signature": "slashPathInvalidError(): Error",
+      "description": "Creates an Error indicating that a slash path is invalid.",
+      "params": [],
+      "returns": "A new Error with a descriptive message.",
+      "tags": [
+        "path",
+        "slash",
+        "error",
+        "invalid",
+        "throw",
+        "validate",
+        "slashpathinvaliderror"
+      ],
+      "relatedSlugs": [
+        "is-valid-slash-path",
+        "slash-path-validation-factory"
+      ]
+    },
+    {
+      "slug": "isolate-slash-path",
+      "name": "isolateSlashPath",
+      "kind": "function",
+      "category": "path",
+      "module": "@dereekb/util",
+      "subpath": "path/path",
+      "signature": "isolateSlashPath(path: SlashPath, range: IndexRangeInput): SlashPath",
+      "description": "Splits the path and returns the items at the given ranges.",
+      "params": [
+        {
+          "name": "path",
+          "type": "SlashPath",
+          "description": "- The path to isolate parts from.",
+          "optional": false
+        },
+        {
+          "name": "range",
+          "type": "IndexRangeInput",
+          "description": "- Index range defining which path segments to extract.",
+          "optional": false
+        }
+      ],
+      "returns": "A new slash path containing only the segments within the range.",
+      "tags": [
+        "path",
+        "slash",
+        "isolate",
+        "slice",
+        "range",
+        "segments",
+        "extract",
+        "sub-path",
+        "isolateslashpath"
+      ],
+      "relatedSlugs": [
+        "isolate-slash-path-function",
+        "slash-path-parts",
+        "slash-path-details"
+      ]
+    },
+    {
+      "slug": "isolate-slash-path-function",
+      "name": "isolateSlashPathFunction",
+      "kind": "factory",
+      "category": "path",
+      "module": "@dereekb/util",
+      "subpath": "path/path",
+      "signature": "isolateSlashPathFunction(config: IsolateSlashPathFunctionConfig): IsolateSlashPathFunction",
+      "description": "Creates an IsolateSlashPathFunction.",
+      "params": [
+        {
+          "name": "config",
+          "type": "IsolateSlashPathFunctionConfig",
+          "description": "- Configuration with range, optional start type, and file mode.",
+          "optional": false
+        }
+      ],
+      "returns": "A function that isolates path segments within the configured range.",
+      "tags": [
+        "path",
+        "slash",
+        "isolate",
+        "factory",
+        "slice",
+        "range",
+        "segments",
+        "sub-path",
+        "function",
+        "isolateslashpathfunction"
+      ],
+      "relatedSlugs": [
+        "isolate-slash-path",
+        "slash-path-parts",
+        "slash-path-details"
+      ]
+    },
+    {
+      "slug": "slash-path-details",
+      "name": "slashPathDetails",
+      "kind": "function",
+      "category": "path",
+      "module": "@dereekb/util",
+      "subpath": "path/path",
+      "signature": "slashPathDetails(path: SlashPath): SlashPathDetails",
+      "description": "Returns the details of a path.",
+      "params": [
+        {
+          "name": "path",
+          "type": "SlashPath",
+          "description": "The path to get details for.",
+          "optional": false
+        }
+      ],
+      "returns": "The details of the path.",
+      "tags": [
+        "path",
+        "slash",
+        "details",
+        "parse",
+        "decompose",
+        "file",
+        "folder",
+        "extension",
+        "parts",
+        "slashpathdetails"
+      ],
+      "relatedSlugs": [
+        "slash-path-type",
+        "slash-path-parts",
+        "slash-path-folder",
+        "slash-path-name"
+      ]
+    },
+    {
+      "slug": "expand-slash-path-path-matcher-part-to-decision-functions",
+      "name": "expandSlashPathPathMatcherPartToDecisionFunctions",
+      "kind": "function",
+      "category": "path",
+      "module": "@dereekb/util",
+      "subpath": "path/path",
+      "signature": "expandSlashPathPathMatcherPartToDecisionFunctions(path: SlashPathPathMatcherPath): SlashPathPathMatcherFunction[]",
+      "description": "Expands the input matcher path into decision functions.",
+      "params": [
+        {
+          "name": "path",
+          "type": "SlashPathPathMatcherPath",
+          "description": "- Matcher path parts to expand into decision functions.",
+          "optional": false
+        }
+      ],
+      "returns": "Array of decision functions for each path part.",
+      "tags": [
+        "path",
+        "slash",
+        "matcher",
+        "expand",
+        "decision",
+        "predicate",
+        "wildcard",
+        "build",
+        "part",
+        "to",
+        "functions",
+        "expandslashpathpathmatcherparttodecisionfunctions"
+      ],
+      "relatedSlugs": [
+        "slash-path-path-matcher",
+        "slash-path-sub-path-matcher",
+        "slash-path-path-matcher-config"
+      ]
+    },
+    {
+      "slug": "slash-path-path-matcher-config",
+      "name": "slashPathPathMatcherConfig",
+      "kind": "function",
+      "category": "path",
+      "module": "@dereekb/util",
+      "subpath": "path/path",
+      "signature": "slashPathPathMatcherConfig(input: SlashPathPathMatcherConfigInput<N>): SlashPathPathMatcherConfig<N>",
+      "description": "Creates a SlashPathPathMatcherConfig from the input.",
+      "params": [
+        {
+          "name": "input",
+          "type": "SlashPathPathMatcherConfigInput<N>",
+          "description": "The configuration input.",
+          "optional": false
+        }
+      ],
+      "returns": "The configuration.",
+      "tags": [
+        "path",
+        "slash",
+        "matcher",
+        "config",
+        "normalize",
+        "coerce",
+        "slashpathpathmatcherconfig"
+      ],
+      "relatedSlugs": [
+        "slash-path-path-matcher",
+        "slash-path-sub-path-matcher"
+      ]
+    },
+    {
+      "slug": "slash-path-path-matcher",
+      "name": "slashPathPathMatcher",
+      "kind": "factory",
+      "category": "path",
+      "module": "@dereekb/util",
+      "subpath": "path/path",
+      "signature": "slashPathPathMatcher(input: SlashPathPathMatcherConfigInput<N>): SlashPathPathMatcher<N>",
+      "description": "Creates a SlashPathPathMatcher.",
+      "params": [
+        {
+          "name": "input",
+          "type": "SlashPathPathMatcherConfigInput<N>",
+          "description": "- the matcher configuration, which may be a target path string, an array of path parts, or a full config object",
+          "optional": false
+        }
+      ],
+      "returns": "The matcher.",
+      "tags": [
+        "path",
+        "slash",
+        "matcher",
+        "factory",
+        "predicate",
+        "wildcard",
+        "target",
+        "compare",
+        "slashpathpathmatcher"
+      ],
+      "relatedSlugs": [
+        "slash-path-sub-path-matcher",
+        "expand-slash-path-path-matcher-part-to-decision-functions",
+        "slash-path-path-matcher-config"
+      ]
+    },
+    {
+      "slug": "slash-path-sub-path-matcher",
+      "name": "slashPathSubPathMatcher",
+      "kind": "factory",
+      "category": "path",
+      "module": "@dereekb/util",
+      "subpath": "path/path",
+      "signature": "slashPathSubPathMatcher(config: SlashPathSubPathMatcherConfig): SlashPathSubPathMatcher",
+      "description": "Creates a SlashPathSubPathMatcher.",
+      "params": [
+        {
+          "name": "config",
+          "type": "SlashPathSubPathMatcherConfig",
+          "description": "The configuration for the matcher.",
+          "optional": false
+        }
+      ],
+      "returns": "The matcher.",
+      "tags": [
+        "path",
+        "slash",
+        "matcher",
+        "sub-path",
+        "factory",
+        "base-path",
+        "prefix",
+        "predicate",
+        "sub",
+        "slashpathsubpathmatcher"
+      ],
+      "relatedSlugs": [
+        "slash-path-path-matcher",
+        "expand-slash-path-path-matcher-part-to-decision-functions"
+      ]
+    },
+    {
       "slug": "is-promise",
       "name": "isPromise",
       "kind": "function",
@@ -4251,6 +5652,410 @@
       ],
       "relatedSlugs": [
         "flatten-whitespace"
+      ]
+    },
+    {
+      "slug": "expand-flatten-tree-function",
+      "name": "expandFlattenTreeFunction",
+      "kind": "factory",
+      "category": "tree",
+      "module": "@dereekb/util",
+      "subpath": "tree/tree.array",
+      "signature": "expandFlattenTreeFunction(expand: ExpandTreeFunction<T, N>, flatten: FlattenTreeFunction<N, V>): ExpandFlattenTreeFunction<T, V>",
+      "description": "Creates an ExpandFlattenTreeFunction by composing an expansion function and a flattening function.\n\nThis higher-order function takes a function to expand an array of values `T` into a list of trees (`N[]` where `N` is a TreeNode)\nand another function to flatten these trees into a single array of values `V`.",
+      "params": [
+        {
+          "name": "expand",
+          "type": "ExpandTreeFunction<T, N>",
+          "description": "An ExpandTreeFunction (values: T[]) => N[] that converts an array of T into an array of tree nodes N.",
+          "optional": false
+        },
+        {
+          "name": "flatten",
+          "type": "FlattenTreeFunction<N, V>",
+          "description": "A FlattenTreeFunction (tree: N, array?: V[]) => V[] that flattens a tree of N nodes into an array of V values.",
+          "optional": false
+        }
+      ],
+      "returns": "An ExpandFlattenTreeFunction (values: T[]) => V[] that performs the combined expansion and flattening.",
+      "tags": [
+        "tree",
+        "expand",
+        "flatten",
+        "compose",
+        "factory",
+        "transform",
+        "function",
+        "expandflattentreefunction"
+      ],
+      "relatedSlugs": [
+        "expand-tree-function",
+        "flatten-tree-to-array-function",
+        "expand-trees"
+      ]
+    },
+    {
+      "slug": "expand-tree-function",
+      "name": "expandTreeFunction",
+      "kind": "factory",
+      "category": "tree",
+      "module": "@dereekb/util",
+      "subpath": "tree/tree.expand",
+      "signature": "expandTreeFunction(config: ExpandTree<T> | ExpandTreeWithNodeBuilder<T, N>): ExpandTreeFunction<T, N>",
+      "description": "Implementation for expandTreeFunction. Creates a function that can expand a single value into a tree structure.\n\nThis factory function takes a configuration object that specifies how to retrieve children for any given value (`getChildren`)\nand optionally, how to construct the nodes themselves (`makeNode`). If `makeNode` is not provided, a default node structure is used.\nThe returned function recursively builds a tree from a root value.",
+      "params": [
+        {
+          "name": "config",
+          "type": "ExpandTree<T> | ExpandTreeWithNodeBuilder<T, N>",
+          "description": "An ExpandTree<T> or ExpandTreeWithNodeBuilder<T, N> configuration object.",
+          "optional": false
+        }
+      ],
+      "returns": "An ExpandTreeFunction<T, N> that takes a root value and returns its corresponding tree structure.",
+      "tags": [
+        "tree",
+        "expand",
+        "build",
+        "recursive",
+        "factory",
+        "hierarchy",
+        "traverse",
+        "children",
+        "function",
+        "expandtreefunction"
+      ],
+      "relatedSlugs": [
+        "expand-trees",
+        "expand-flatten-tree-function",
+        "explore-tree-function"
+      ]
+    },
+    {
+      "slug": "expand-trees",
+      "name": "expandTrees",
+      "kind": "function",
+      "category": "tree",
+      "module": "@dereekb/util",
+      "subpath": "tree/tree.expand",
+      "signature": "expandTrees(values: T[], expandFn: ExpandTreeFunction<T, N>): N[]",
+      "description": "Convenience function for expanding multiple root values into an array of trees.\nEach value in the input array is treated as a root for a new tree.",
+      "params": [
+        {
+          "name": "values",
+          "type": "T[]",
+          "description": "An array of root values of type T to expand.",
+          "optional": false
+        },
+        {
+          "name": "expandFn",
+          "type": "ExpandTreeFunction<T, N>",
+          "description": "An ExpandTreeFunction<T, N> used to expand each value into a tree.",
+          "optional": false
+        }
+      ],
+      "returns": "An array of N, where each N is the root node of an expanded tree.",
+      "tags": [
+        "tree",
+        "expand",
+        "multiple",
+        "roots",
+        "hierarchy",
+        "build",
+        "batch",
+        "trees",
+        "expandtrees"
+      ],
+      "relatedSlugs": [
+        "expand-tree-function",
+        "expand-flatten-tree-function"
+      ]
+    },
+    {
+      "slug": "explore-tree-visit-node-decision",
+      "name": "ExploreTreeVisitNodeDecision",
+      "kind": "const",
+      "category": "tree",
+      "module": "@dereekb/util",
+      "subpath": "tree/tree.explore",
+      "signature": "const ExploreTreeVisitNodeDecision: { readonly VISIT_ALL: 0; readonly VISIT_NODE_ONLY: 1; readonly VISIT_CHILDREN_ONLY: 2; readonly SKIP_ALL: 3; }",
+      "description": "Decides how to visit a node during tree exploration.",
+      "params": [],
+      "returns": "{ readonly VISIT_ALL: 0; readonly VISIT_NODE_ONLY: 1; readonly VISIT_CHILDREN_ONLY: 2; readonly SKIP_ALL: 3; }",
+      "tags": [
+        "tree",
+        "explore",
+        "visit",
+        "decision",
+        "enum",
+        "traversal",
+        "control",
+        "node",
+        "exploretreevisitnodedecision"
+      ],
+      "relatedSlugs": [
+        "explore-tree-function",
+        "flatten-tree-add-node-decision"
+      ]
+    },
+    {
+      "slug": "explore-tree-function",
+      "name": "exploreTreeFunction",
+      "kind": "factory",
+      "category": "tree",
+      "module": "@dereekb/util",
+      "subpath": "tree/tree.explore",
+      "signature": "exploreTreeFunction(config?: Maybe<ExploreTreeFunctionConfig<N, V>>): ExploreTreeFunction<N, V>",
+      "description": "Creates a reusable tree exploration function with configurable traversal, mapping, and filtering.\n\nThe returned function traverses one or more trees, applying a visit callback to each node.\nBy default uses depth-first traversal, identity mapping, and visits all nodes. All options\ncan be overridden per-call.",
+      "params": [
+        {
+          "name": "config",
+          "type": "Maybe<ExploreTreeFunctionConfig<N, V>>",
+          "description": "- Optional default configuration for mapping, filtering, and traversal strategy.",
+          "optional": true
+        }
+      ],
+      "returns": "A reusable function that explores trees with the configured behavior.",
+      "tags": [
+        "tree",
+        "explore",
+        "traverse",
+        "visit",
+        "factory",
+        "depth-first",
+        "breadth-first",
+        "walk",
+        "function",
+        "exploretreefunction"
+      ],
+      "example": "const exploreFn = exploreTreeFunction<TestNode, string>({\n  mapNodeFunction: (node) => node.value.id\n});\nconst visited: string[] = [];\n\nexploreFn(rootNode, (id) => {\n  visited.push(id);\n});",
+      "relatedSlugs": [
+        "depth-first-explore-tree-traversal-factory-function",
+        "breadth-first-explore-tree-traversal-factory-function",
+        "flatten-tree-to-array-function"
+      ]
+    },
+    {
+      "slug": "depth-first-explore-tree-traversal-factory-function",
+      "name": "depthFirstExploreTreeTraversalFactoryFunction",
+      "kind": "factory",
+      "category": "tree",
+      "module": "@dereekb/util",
+      "subpath": "tree/tree.explore",
+      "signature": "depthFirstExploreTreeTraversalFactoryFunction(): ExploreTreeTraversalFactoryFunction<N, V>",
+      "description": "Creates a depth-first traversal strategy for tree exploration.\n\nVisits each node before its children (pre-order). This is the default traversal\nstrategy used by {@link exploreTreeFunction}.",
+      "params": [],
+      "returns": "A traversal factory that processes nodes in depth-first order.",
+      "tags": [
+        "tree",
+        "traverse",
+        "depth-first",
+        "dfs",
+        "pre-order",
+        "factory",
+        "strategy",
+        "depth",
+        "first",
+        "explore",
+        "traversal",
+        "function",
+        "depthfirstexploretreetraversalfactoryfunction"
+      ],
+      "example": "const exploreFn = exploreTreeFunction<TestNode, TestNode>({\n  traverseFunctionFactory: depthFirstExploreTreeTraversalFactoryFunction()\n});\n// Visits: root -> child1 -> leaf1 -> leaf2 -> child2 -> leaf3",
+      "relatedSlugs": [
+        "breadth-first-explore-tree-traversal-factory-function",
+        "explore-tree-function"
+      ]
+    },
+    {
+      "slug": "breadth-first-explore-tree-traversal-factory-function",
+      "name": "breadthFirstExploreTreeTraversalFactoryFunction",
+      "kind": "factory",
+      "category": "tree",
+      "module": "@dereekb/util",
+      "subpath": "tree/tree.explore",
+      "signature": "breadthFirstExploreTreeTraversalFactoryFunction(): ExploreTreeTraversalFactoryFunction<N, V>",
+      "description": "Creates a breadth-first traversal strategy for tree exploration.\n\nVisits nodes level by level, processing all nodes at depth N before moving to depth N+1.\nUses an internal queue to defer child processing until the current level is complete.",
+      "params": [],
+      "returns": "A traversal factory that processes nodes in breadth-first order.",
+      "tags": [
+        "tree",
+        "traverse",
+        "breadth-first",
+        "bfs",
+        "level-order",
+        "factory",
+        "strategy",
+        "queue",
+        "breadth",
+        "first",
+        "explore",
+        "traversal",
+        "function",
+        "breadthfirstexploretreetraversalfactoryfunction"
+      ],
+      "example": "const exploreFn = exploreTreeFunction<TestNode, TestNode>({\n  traverseFunctionFactory: breadthFirstExploreTreeTraversalFactoryFunction()\n});\n// Visits: root -> child1, child2, child3 -> leaf1, leaf2, leaf3",
+      "relatedSlugs": [
+        "depth-first-explore-tree-traversal-factory-function",
+        "explore-tree-function"
+      ]
+    },
+    {
+      "slug": "flatten-tree-add-node-decision",
+      "name": "FlattenTreeAddNodeDecision",
+      "kind": "const",
+      "category": "tree",
+      "module": "@dereekb/util",
+      "subpath": "tree/tree.flatten",
+      "signature": "const FlattenTreeAddNodeDecision: { readonly ADD_ALL: 0; readonly ADD_NODE_ONLY: 1; readonly ADD_CHILDREN_ONLY: 2; readonly SKIP_ALL: 3; }",
+      "description": "Decides how to add a node to the flattened array during flattening.",
+      "params": [],
+      "returns": "{ readonly ADD_ALL: 0; readonly ADD_NODE_ONLY: 1; readonly ADD_CHILDREN_ONLY: 2; readonly SKIP_ALL: 3; }",
+      "tags": [
+        "tree",
+        "flatten",
+        "decision",
+        "enum",
+        "traversal",
+        "control",
+        "add",
+        "node",
+        "flattentreeaddnodedecision"
+      ],
+      "relatedSlugs": [
+        "explore-tree-visit-node-decision",
+        "flatten-tree"
+      ]
+    },
+    {
+      "slug": "flatten-tree",
+      "name": "flattenTree",
+      "kind": "function",
+      "category": "tree",
+      "module": "@dereekb/util",
+      "subpath": "tree/tree.flatten",
+      "signature": "flattenTree(tree: N, addNodeFn?: Maybe<FlattenTreeAddNodeDecisionFunction<N>>): N[]",
+      "description": "Flattens a tree into an array containing all its nodes using depth-first traversal.",
+      "params": [
+        {
+          "name": "tree",
+          "type": "N",
+          "description": "- The root node to flatten.",
+          "optional": false
+        },
+        {
+          "name": "addNodeFn",
+          "type": "Maybe<FlattenTreeAddNodeDecisionFunction<N>>",
+          "description": "- Optional filter controlling which nodes and subtrees are included.",
+          "optional": true
+        }
+      ],
+      "returns": "An array of all nodes in the tree that pass the filter.",
+      "tags": [
+        "tree",
+        "flatten",
+        "traverse",
+        "depth-first",
+        "collect",
+        "nodes",
+        "array",
+        "flattentree"
+      ],
+      "example": "const nodes = flattenTree(rootNode);\n// Returns [root, child1, leaf1, leaf2, child2, leaf3, child3]",
+      "relatedSlugs": [
+        "flatten-tree-to-array",
+        "flatten-tree-to-array-function",
+        "explore-tree-function"
+      ]
+    },
+    {
+      "slug": "flatten-tree-to-array",
+      "name": "flattenTreeToArray",
+      "kind": "function",
+      "category": "tree",
+      "module": "@dereekb/util",
+      "subpath": "tree/tree.flatten",
+      "signature": "flattenTreeToArray(tree: N, array: N[], addNodeFn?: Maybe<FlattenTreeAddNodeDecisionFunction<N>>): N[]",
+      "description": "Flattens a tree and appends the resulting nodes to an existing array.\n\nUseful for accumulating nodes from multiple trees into a single collection.",
+      "params": [
+        {
+          "name": "tree",
+          "type": "N",
+          "description": "- The root node to flatten.",
+          "optional": false
+        },
+        {
+          "name": "array",
+          "type": "N[]",
+          "description": "- The target array to push flattened nodes into.",
+          "optional": false
+        },
+        {
+          "name": "addNodeFn",
+          "type": "Maybe<FlattenTreeAddNodeDecisionFunction<N>>",
+          "description": "- Optional filter controlling which nodes and subtrees are included.",
+          "optional": true
+        }
+      ],
+      "returns": "The same array reference, now containing the appended nodes.",
+      "tags": [
+        "tree",
+        "flatten",
+        "append",
+        "accumulate",
+        "collect",
+        "mutate",
+        "array",
+        "to",
+        "flattentreetoarray"
+      ],
+      "example": "const existing: TreeNode[] = [someNode];\nflattenTreeToArray(rootNode, existing);\n// existing now contains [someNode, root, child1, ...]",
+      "relatedSlugs": [
+        "flatten-tree",
+        "flatten-tree-to-array-function"
+      ]
+    },
+    {
+      "slug": "flatten-tree-to-array-function",
+      "name": "flattenTreeToArrayFunction",
+      "kind": "factory",
+      "category": "tree",
+      "module": "@dereekb/util",
+      "subpath": "tree/tree.flatten",
+      "signature": "flattenTreeToArrayFunction(mapNodeFnOrConfig?: FlattenTreeToArrayFunctionConfig<N, V> | ((node: N) => V), defaultAddNodeFn?: Maybe<FlattenTreeAddNodeDecisionFunction<N, V>>): FlattenTreeFunction<N, V>",
+      "description": "Implementation for flattenTreeToArrayFunction.\n\nCreates a reusable function that traverses trees and collects either the nodes themselves\nor mapped values into an array. Supports both a simple function signature and a config object.",
+      "params": [
+        {
+          "name": "mapNodeFnOrConfig",
+          "type": "FlattenTreeToArrayFunctionConfig<N, V> | ((node: N) => V)",
+          "description": "- Optional mapping function or config object.",
+          "optional": true
+        },
+        {
+          "name": "defaultAddNodeFn",
+          "type": "Maybe<FlattenTreeAddNodeDecisionFunction<N, V>>",
+          "description": "- Optional default filter for node inclusion.",
+          "optional": true
+        }
+      ],
+      "returns": "A reusable flattening function.",
+      "tags": [
+        "tree",
+        "flatten",
+        "factory",
+        "collect",
+        "map",
+        "traverse",
+        "reusable",
+        "to",
+        "array",
+        "function",
+        "flattentreetoarrayfunction"
+      ],
+      "example": "const flattenIds = flattenTreeToArrayFunction<MyNode, string>(\n  (node) => node.value.id\n);\nconst ids = flattenIds(rootNode);\n// ['root', 'child1', 'leaf1', 'leaf2', 'child2', 'leaf3']",
+      "relatedSlugs": [
+        "flatten-tree",
+        "flatten-tree-to-array",
+        "expand-flatten-tree-function"
       ]
     },
     {

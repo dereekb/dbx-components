@@ -510,12 +510,14 @@ function formatAuthExtractWarning(warning: { readonly kind: string; readonly fil
 
 function formatWarningValue(value: unknown): string {
   let result: string;
-  if (value === null) {
+  if (typeof value === 'string') {
+    result = value;
+  } else if (value === null) {
     result = 'null';
   } else if (typeof value === 'object') {
     result = JSON.stringify(value);
   } else {
-    result = String(value);
+    result = String(value as number | boolean | bigint | symbol | undefined);
   }
   return result;
 }

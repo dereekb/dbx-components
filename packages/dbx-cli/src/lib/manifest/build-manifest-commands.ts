@@ -326,7 +326,8 @@ function renderJsonSchemaSection(entry: CliApiManifestEntry): string | undefined
     });
     // arktype's fallback returns boxed schema nodes (objects with a `toJSON()`
     // method that emits the bare JSON Schema value, e.g. `false`). Round-trip
-    // through JSON to collapse those to plain JSON values before pruning.
+    // through JSON to invoke those `toJSON()` callbacks before pruning;
+    // `structuredClone` would not call them.
     const normalized = JSON.parse(JSON.stringify(raw));
     const pruned = pruneFalseUnionBranches(normalized);
     result = `Params Schema (JSON Schema):\n${JSON.stringify(pruned, null, 2)}`;

@@ -116,5 +116,5 @@ export function isAbsolutePathLike(value: string): boolean {
 }
 
 function stripJsonComments(text: string): string {
-  return text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+  return text.replaceAll(/\/\*[\s\S]*?\*\//g, '').replaceAll(/^\s*\/\/.*$/gm, '');
 }

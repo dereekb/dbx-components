@@ -177,7 +177,7 @@ function resolveWorkspacePath(value: string): string {
 
 function deriveNamespace(projectName: string | undefined): string {
   // demo-cli -> DEMO_CLI_API_MANIFEST; absent -> CLI_API_MANIFEST
-  const base = (projectName ?? 'cli').replace(/[^a-zA-Z0-9]+/g, '_');
+  const base = (projectName ?? 'cli').replaceAll(/[^a-zA-Z0-9]+/g, '_');
   return `${base.toUpperCase()}_API_MANIFEST`;
 }
 
@@ -211,13 +211,13 @@ function parseFlags(argv: readonly string[]): Flags {
 }
 
 function printUsageAndExit(): void {
-  console.error(`generate-api-manifest
+  console.error(String.raw`generate-api-manifest
 
 Usage:
-  node dist/packages/dbx-cli/firebase-api-manifest/main.js \\
-    --project=<name> \\
-    --functions-config=<path-to-functions.ts> \\
-    --output=<path-to-manifest.generated.ts> \\
+  node dist/packages/dbx-cli/firebase-api-manifest/main.js \
+    --project=<name> \
+    --functions-config=<path-to-functions.ts> \
+    --output=<path-to-manifest.generated.ts> \
     [--only=model[,model]] [--strict]
 
 Required flags:
@@ -231,7 +231,9 @@ Optional:
   process.exit(1);
 }
 
-main().catch((e) => {
+try {
+  await main();
+} catch (e) {
   console.error(e);
   process.exit(1);
-});
+}

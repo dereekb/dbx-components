@@ -42,13 +42,13 @@ export async function renderManifest(input: RenderManifestInput): Promise<string
   const importLines = [...importsByPackage.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([pkg, names]) => {
-      const sortedNames = [...names].sort().join(', ');
+      const sortedNames = [...names].sort((a, b) => a.localeCompare(b)).join(', ');
       return `import { ${sortedNames} } from '${pkg}';`;
     });
 
   const entryLines = entries.map((e) => renderEntry(e));
 
-  const source = `/* eslint-disable */
+  const source = `/* eslint-disable @nx/enforce-module-boundaries */
 // AUTO-GENERATED — DO NOT EDIT.
 // Run \`pnpm nx run ${projectName}:generate-api-manifest\` to refresh.
 
