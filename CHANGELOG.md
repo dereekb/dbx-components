@@ -1,3 +1,23 @@
+## [13.11.2](https://github.com/dereekb/dbx-components/compare/v13.11.1-dev...v13.11.2) (2026-05-07)
+
+
+### Bug Fixes
+
+- **dbx-form:** forge stripEmptyValues now recurses into arrays ([1e771eee](https://github.com/dereekb/dbx-components/commit/1e771eee6d52cd853d7555c5147e35e82b51234f))
+
+
+### Build System
+
+- lint fix + mcp regeneration ([0ad6eec1](https://github.com/dereekb/dbx-components/commit/0ad6eec14dd945a718da976f70ea841e875dde29))
+
+
+### Code Refactoring
+
+- dedupe api.ts crud extractor ([fa1d5aa0](https://github.com/dereekb/dbx-components/commit/fa1d5aa06c488c1b9b8b963e71c11cfba792aa7d))
+- form fixes ([977e012b](https://github.com/dereekb/dbx-components/commit/977e012b471fa24b1fdcb0ea04331f71a61d174e))
+- moved callModel OIDC scopes to @dereekb/firebase ([11f50fa9](https://github.com/dereekb/dbx-components/commit/11f50fa9d12c21cb7b8d99da458e49da766281ea))
+- updated model cli manifest documentation ([518b6fdb](https://github.com/dereekb/dbx-components/commit/518b6fdbbd75310f2ed5575f2c4d7f6ca6314cc6))
+
 ## [13.11.1](https://github.com/dereekb/dbx-components/compare/v13.11.0-dev...v13.11.1) (2026-05-07)
 
 
