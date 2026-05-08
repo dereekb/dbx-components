@@ -75,7 +75,7 @@ export interface RenderedInsertion {
  * @param extraction - the current parse of `fixture.ts` (used only to
  *   detect import collisions and pick context fixture/instance names)
  * @param input - scaffold spec
- * @returns the rendered snippet plus a TODO checklist
+ * @returns the rendered snippet plus a placeholder checklist
  */
 export function renderFixtureScaffold(extraction: AppFixturesExtraction, input: RenderFixtureScaffoldInput): RenderedFixtureScaffold {
   const prefix = input.prefix;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createModelSnapshotFieldRegistryFromEntries, type ModelSnapshotFieldEntryInfo } from '../registry/model-snapshot-fields-runtime.js';
-import { searchEntries, tokenize, type QueryToken } from './_search/score.js';
+import { searchEntries, tokenize } from './_search/score.js';
 import { createSearchModelSnapshotFieldTool } from './search-model-snapshot-field.tool.js';
 import { resolveSnapshotFieldTopicAlias } from './snapshot-field-alias-resolver.js';
 
@@ -148,18 +148,14 @@ describe('searchEntries tokenMatchMode', () => {
     return entry.tag.includes(token) ? 5 : 0;
   }
 
-  function tokensFor(query: string): readonly QueryToken[] {
-    return tokenize(query);
-  }
-
   it('mode "all" (default) drops entries that do not match every token', () => {
-    const tokens = tokensFor('alpha beta');
+    const tokens = tokenize('alpha beta');
     const hits = searchEntries({ entries, tokens, scoreFn, tieBreaker: (e) => e.slug });
     expect(hits.map((h) => h.entry.slug)).toEqual(['ab']);
   });
 
   it('mode "any" accepts single-token matches and ranks full matches first', () => {
-    const tokens = tokensFor('alpha beta');
+    const tokens = tokenize('alpha beta');
     const hits = searchEntries({ entries, tokens, scoreFn, tieBreaker: (e) => e.slug, mode: 'any' });
     expect(hits.map((h) => h.entry.slug)).toEqual(['ab', 'a', 'b']);
     expect(hits[0].matchedTokens.length).toBe(2);
@@ -168,7 +164,7 @@ describe('searchEntries tokenMatchMode', () => {
   });
 
   it('mode "any" returns no hits when every token misses', () => {
-    const tokens = tokensFor('zzz qqq');
+    const tokens = tokenize('zzz qqq');
     const hits = searchEntries({ entries, tokens, scoreFn, tieBreaker: (e) => e.slug, mode: 'any' });
     expect(hits).toEqual([]);
   });

@@ -194,15 +194,15 @@ export function searchEntries<TEntry>(config: { readonly entries: readonly TEntr
     hits.sort((a, b) => {
       const byMatchCount = b.matchedTokens.length - a.matchedTokens.length;
       let cmp: number;
-      if (byMatchCount !== 0) {
-        cmp = byMatchCount;
-      } else {
+      if (byMatchCount === 0) {
         const byScore = b.score - a.score;
-        if (byScore !== 0) {
-          cmp = byScore;
-        } else {
+        if (byScore === 0) {
           cmp = tieBreaker(a.entry).localeCompare(tieBreaker(b.entry));
+        } else {
+          cmp = byScore;
         }
+      } else {
+        cmp = byMatchCount;
       }
       return cmp;
     });

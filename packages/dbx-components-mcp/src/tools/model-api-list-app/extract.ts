@@ -57,15 +57,15 @@ export async function extractApiList(input: ExtractApiListInput): Promise<Extrac
       modelKeys: extraction.modelKeys,
       counts
     });
-    if (input.modelFilter !== undefined) {
+    if (input.modelFilter === undefined) {
+      entries.push(...fileEntries);
+    } else {
       const wanted = normalize(input.modelFilter);
       for (const entry of fileEntries) {
         if (matchesModelFilter(entry.model, extraction.groupName, wanted)) {
           entries.push(entry);
         }
       }
-    } else {
-      entries.push(...fileEntries);
     }
   }
 

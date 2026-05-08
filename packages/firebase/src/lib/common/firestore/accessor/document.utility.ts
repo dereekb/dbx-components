@@ -996,6 +996,7 @@ export interface LimitedFirestoreDocumentAccessorSnapshotCache<T, D extends Fire
  * // Access the underlying accessor directly
  * const doc = cache.accessor.loadDocumentForKey('users/xyz');
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function limitedFirestoreDocumentAccessorSnapshotCache<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(accessor: LimitedFirestoreDocumentAccessor<T, D>): LimitedFirestoreDocumentAccessorSnapshotCache<T, D> {
   const cache = new Map<FirestoreModelKey, Promise<FirestoreDocumentSnapshotDataPair<D>>>();

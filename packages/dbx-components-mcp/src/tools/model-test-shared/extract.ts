@@ -378,9 +378,9 @@ function fixtureNode(input: FixtureNodeInput): SpecNode {
   const argsObject = args[0];
   const parentVars = Node.isObjectLiteralExpression(argsObject) ? readParentVars(argsObject) : [];
   const callback = findCallback(call);
-  const varName = callback !== undefined ? readCallbackVarName(callback) : undefined;
+  const varName = callback === undefined ? undefined : readCallbackVarName(callback);
   const model = stripFixturePrefix(calleeName, ctx.prefix);
-  const children = callback !== undefined ? walkCallbackBody(callback, ctx) : [];
+  const children = callback === undefined ? [] : walkCallbackBody(callback, ctx);
   const node: SpecNode = {
     kind: 'fixture',
     callee: calleeName,
@@ -405,7 +405,7 @@ interface HelperCallNodeInput {
 function helperCallNode(input: HelperCallNodeInput): SpecNode {
   const { call, calleeName, ctx, line, endLine } = input;
   const callback = findCallback(call);
-  const children = callback !== undefined ? walkCallbackBody(callback, ctx) : [];
+  const children = callback === undefined ? [] : walkCallbackBody(callback, ctx);
   const node: SpecNode = { kind: 'helperCall', callee: calleeName, line, endLine, children };
   return node;
 }

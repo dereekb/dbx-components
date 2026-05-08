@@ -83,7 +83,7 @@ export async function discoverDownstreamPackages(input: DiscoverDownstreamPackag
   const seen = new Set<string>();
   const out: DownstreamPackage[] = [];
 
-  const dirs = explicitDirs !== undefined ? normaliseExplicitDirs(explicitDirs) : await discoverConventionalDirs(workspaceRoot);
+  const dirs = explicitDirs === undefined ? await discoverConventionalDirs(workspaceRoot) : normaliseExplicitDirs(explicitDirs);
 
   for (const relDir of dirs) {
     if (seen.has(relDir)) continue;

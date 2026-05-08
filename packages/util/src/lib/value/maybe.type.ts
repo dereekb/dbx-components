@@ -1,4 +1,4 @@
-import { type NonNever } from 'ts-essentials';
+import { type OmitNeverProperties } from 'ts-essentials';
 
 /**
  * A null/undefined value.
@@ -23,6 +23,6 @@ export type MaybeSoStrict<T> = T extends Maybe<infer A> ? (A extends Maybe<infer
 /**
  * Turns all key values in an object into a Maybe value.
  */
-export type MaybeMap<T extends object> = NonNever<{
+export type MaybeMap<T extends object> = OmitNeverProperties<{
   [K in keyof T]: T[K] extends MaybeNot ? never : Maybe<T[K]>;
 }>;

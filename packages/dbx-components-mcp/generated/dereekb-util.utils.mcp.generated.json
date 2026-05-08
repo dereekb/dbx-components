@@ -1092,35 +1092,23 @@
       "category": "array",
       "module": "@dereekb/util",
       "subpath": "array/array.filter",
-      "signature": "makeBestFit(input: T[], filter: (value: T) => boolean, compare: AscendingSortCompareFunction<T>, updateNonBestFit: (value: T) => T): T[]",
+      "signature": "makeBestFit(input: T[], config: BestFitConfig<T>): T[]",
       "description": "Same as applyBestFit, but returns a new array, rather than modifying the existing array.",
       "params": [
         {
           "name": "input",
           "type": "T[]",
-          "description": "- The array to filter for the best fit",
+          "description": "- The array to filter for the best fit.",
           "optional": false
         },
         {
-          "name": "filter",
-          "type": "(value: T) => boolean",
-          "description": "- Function that determines which items are candidates for the best fit",
-          "optional": false
-        },
-        {
-          "name": "compare",
-          "type": "AscendingSortCompareFunction<T>",
-          "description": "- AscendingSortCompareFunction to compare two values to determine which is the best fit",
-          "optional": false
-        },
-        {
-          "name": "updateNonBestFit",
-          "type": "(value: T) => T",
-          "description": "- Function that transforms non-best-fit items",
+          "name": "config",
+          "type": "BestFitConfig<T>",
+          "description": "- The best-fit strategy ({@link BestFitConfig }).",
           "optional": false
         }
       ],
-      "returns": "A new array with only the best fit item and transformed non-best-fit items",
+      "returns": "A new array with only the best fit item and transformed non-best-fit items.",
       "tags": [
         "array",
         "best-fit",

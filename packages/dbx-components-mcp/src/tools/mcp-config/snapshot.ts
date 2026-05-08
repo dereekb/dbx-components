@@ -80,7 +80,7 @@ export interface BuildSnapshotInput {
 export async function buildSnapshot(input: BuildSnapshotInput): Promise<WorkspaceSnapshot> {
   const { workspaceRoot, explicitDirs } = input;
   const configResult = await findAndLoadConfig({ cwd: workspaceRoot });
-  const configBaseDir = configResult.configPath !== null ? dirname(configResult.configPath) : workspaceRoot;
+  const configBaseDir = configResult.configPath === null ? workspaceRoot : dirname(configResult.configPath);
   const registeredSources = await collectRegisteredSources(configResult.config, configBaseDir, workspaceRoot);
   const packages = await discoverDownstreamPackages({ workspaceRoot, explicitDirs });
 

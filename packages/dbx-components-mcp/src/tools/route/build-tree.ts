@@ -147,10 +147,10 @@ export function buildRouteTree(nodes: readonly RouteNode[], extractIssues: reado
       parent: undefined,
       children: []
     };
-    frozen.set(mut.data.name, placeholder as RouteTreeNode);
+    frozen.set(mut.data.name, placeholder);
     placeholder.parent = mut.parent ? freeze(mut.parent) : undefined;
     placeholder.children = mut.children.map(freeze);
-    return placeholder as RouteTreeNode;
+    return placeholder;
   };
 
   const frozenRoots = roots.map(freeze);

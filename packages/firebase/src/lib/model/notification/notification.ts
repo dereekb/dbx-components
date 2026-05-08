@@ -1084,8 +1084,8 @@ export const notificationLoggedEventDayPageIdentity = firestoreModelIdentity(not
  * items round-trip through the same field rules used everywhere else NotificationItems are persisted.
  */
 export const notificationLoggedEventDayItemConverter: PagedItemConverter<NotificationItem> = {
-  fromData: (data) => firestoreNotificationItem.mapFunctions.from(data as object) as NotificationItem,
-  toData: (item) => firestoreNotificationItem.mapFunctions.to(item) as object
+  fromData: (data) => firestoreNotificationItem.mapFunctions.from(data),
+  toData: (item) => firestoreNotificationItem.mapFunctions.to(item)
 };
 
 /**

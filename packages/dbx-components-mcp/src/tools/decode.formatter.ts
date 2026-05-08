@@ -55,9 +55,7 @@ export function formatDecode(context: DecodeContext): string {
   const identity = model.parentIdentityConst ? `subcollection of \`${model.parentIdentityConst}\`` : 'root collection';
   lines.push(`**Identity:** \`${model.identityConst}\` — ${identity}.`, `**Collection:** \`${model.modelType}\` (prefix \`${model.collectionPrefix}\`)`, `**Source:** \`${model.sourceFile}\``);
   if (extraKey) lines.push(`**Document key:** \`${extraKey}\``);
-  lines.push('');
-
-  lines.push(`## Fields (${decodedFields.length})`, '', '| Field | Description | Value | Type / Converter |', '|-------|-------------|-------|------------------|', ...decodedFields.map(formatFieldRow), '');
+  lines.push('', `## Fields (${decodedFields.length})`, '', '| Field | Description | Value | Type / Converter |', '|-------|-------------|-------|------------------|', ...decodedFields.map(formatFieldRow), '');
 
   if (unknownKeys.length > 0) {
     lines.push('## Unknown keys on document', '', 'These keys appear in the input but are not declared on the model. They may be legacy fields, fields from a newer model version not yet in the registry, or indicate the wrong model was matched.', '');
@@ -135,7 +133,7 @@ function formatValue(value: unknown): string {
   }
   if (value instanceof Date) return value.toISOString();
   if (typeof value === 'object') {
-    const keys = Object.keys(value as Record<string, unknown>);
+    const keys = Object.keys(value);
     if (keys.length === 0) return '{}';
     if (keys.length <= 4) return JSON.stringify(value);
     return `{Object(${keys.length} keys)}`;

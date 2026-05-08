@@ -29,6 +29,9 @@ type AstNode = any;
 
 /**
  * Returns the function's identifier name, or null if anonymous.
+ *
+ * @param node - The FunctionDeclaration AST node.
+ * @returns The function's identifier name, or `null` for anonymous functions.
  */
 function getFunctionName(node: AstNode): string | null {
   if (node.id?.type === 'Identifier') {
@@ -40,6 +43,9 @@ function getFunctionName(node: AstNode): string | null {
 
 /**
  * Builds the merged set of name patterns based on rule options.
+ *
+ * @param options - The resolved rule options.
+ * @returns The combined default + additional regex patterns, or an empty list when name-pattern matching is disabled.
  */
 function buildNamePatterns(options: UtilRequireNoSideEffectsRuleOptions): readonly RegExp[] {
   if (!options.checkNamePatterns) {

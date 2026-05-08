@@ -30,7 +30,7 @@ const CLUSTER_LABEL: Record<DownstreamCluster, string> = {
  * @returns markdown text consumed by the tool result
  */
 export function formatStatus(snapshot: WorkspaceSnapshot): string {
-  const configLabel = snapshot.configPath !== null ? `\`${snapshot.configPath}\`` : '_not present_';
+  const configLabel = snapshot.configPath === null ? '_not present_' : `\`${snapshot.configPath}\``;
   const lines: string[] = [`# dbx-mcp config status`, '', `- **Workspace:** \`${snapshot.workspaceRoot}\``, `- **Config file:** ${configLabel}`, `- **Downstream packages:** ${snapshot.packages.length}`, ''];
 
   if (snapshot.configWarnings.length > 0) {

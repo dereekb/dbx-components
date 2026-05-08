@@ -136,8 +136,8 @@ export function formatValidationAsMarkdown(result: FixtureValidationResult): str
   }
   lines.push('', '## Diagnostics');
   for (const d of result.diagnostics) {
-    const linePart = d.line !== undefined ? ` (line ${d.line})` : '';
-    const modelPart = d.model !== undefined ? ` [${d.model}]` : '';
+    const linePart = d.line === undefined ? '' : ` (line ${d.line})`;
+    const modelPart = d.model === undefined ? '' : ` [${d.model}]`;
     lines.push('', `- **${d.severity.toUpperCase()}** \`${d.code}\`${modelPart}${linePart}: ${d.message}`);
     if (d.remediation) {
       lines.push(`  - Fix: ${d.remediation.fix}`);
@@ -177,12 +177,14 @@ function appendForwardingTable(lines: string[], entry: FixtureEntry): void {
   for (const m of entry.instanceMethods) {
     const fixtureMethod = fixtureByName.get(m.name);
     let status: string;
-    if (!fixtureMethod) {
-      status = 'missing';
-    } else if (fixtureMethod.parameterText.replaceAll(/\s+/g, '') !== m.parameterText.replaceAll(/\s+/g, '')) {
-      status = 'forwarded — signature drifts';
+    if (fixtureMethod) {
+      if (fixtureMethod.parameterText.replaceAll(/\s+/g, '') === m.parameterText.replaceAll(/\s+/g, '')) {
+        status = 'forwarded';
+      } else {
+        status = 'forwarded — signature drifts';
+      }
     } else {
-      status = 'forwarded';
+      status = 'missing';
     }
     lines.push('| ' + [code(m.name), status].join(' | ') + ' |');
   }

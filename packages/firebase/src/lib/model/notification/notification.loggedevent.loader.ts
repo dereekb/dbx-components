@@ -127,7 +127,7 @@ export function notificationLoggedEventLoader(config: NotificationLoggedEventLoa
     const dayIds = dayIdsForRange(from, to);
     const itemsPerDay = await Promise.all(dayIds.map((dayId) => getItemsForDay(dayId)));
     const allItems = itemsPerDay.flat();
-    return type != null ? allItems.filter((item) => item.t === type) : allItems;
+    return type == null ? allItems : allItems.filter((item) => item.t === type);
   }
 
   async function forEachDayInRange(input: NotificationLoggedEventLoaderForEachDayInRangeInput): Promise<void> {
@@ -139,7 +139,7 @@ export function notificationLoggedEventLoader(config: NotificationLoggedEventLoa
       maxParallelTasks: maxParallelTasks ?? undefined,
       taskFactory: async (dayId) => {
         const items = await getItemsForDay(dayId);
-        const filtered = type != null ? items.filter((item) => item.t === type) : items;
+        const filtered = type == null ? items : items.filter((item) => item.t === type);
         await handler({ dayId, items: filtered });
       }
     });

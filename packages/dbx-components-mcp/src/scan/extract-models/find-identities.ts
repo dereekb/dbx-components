@@ -58,13 +58,13 @@ function parseIdentityCall(args: readonly Node[]): ParsedIdentityArgs | undefine
     }
   } else if (args.length === 2) {
     const first = stringLiteralValue(args[0]);
-    if (first !== undefined) {
-      result = { modelType: first, collectionPrefix: stringLiteralValue(args[1]), parentIdentityConst: undefined };
-    } else {
+    if (first === undefined) {
       const modelType = stringLiteralValue(args[1]);
       if (modelType !== undefined) {
         result = { modelType, collectionPrefix: undefined, parentIdentityConst: identifierName(args[0]) };
       }
+    } else {
+      result = { modelType: first, collectionPrefix: stringLiteralValue(args[1]), parentIdentityConst: undefined };
     }
   } else if (args.length >= 3) {
     const modelType = stringLiteralValue(args[1]);

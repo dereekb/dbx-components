@@ -123,7 +123,7 @@ function appendItIndex(lines: string[], tree: SpecFileTree): void {
   for (const { describePath, node } of its) {
     const path = describePath.length > 0 ? `${describePath.join(' > ')} > ` : '';
     const title = describeOrItTitle(node);
-    const callee = node.callee !== undefined ? ` _(via \`${node.callee}\`)_` : '';
+    const callee = node.callee === undefined ? '' : ` _(via \`${node.callee}\`)_`;
     lines.push(`- ${path}${title}${callee} [L${node.line}]`);
   }
 }
@@ -184,7 +184,7 @@ function nodeLabel(node: SpecNode): string {
     case 'hook':
       return `**${node.title ?? 'hook'}**`;
     case 'fixture': {
-      const var_ = node.varName !== undefined ? ` _(as \`${node.varName}\`)_` : '';
+      const var_ = node.varName === undefined ? '' : ` _(as \`${node.varName}\`)_`;
       const parents = node.parentVars && node.parentVars.length > 0 ? ` deps: \`${node.parentVars.join(', ')}\`` : '';
       return `**fixture** \`${node.callee ?? '?'}\` → \`${node.model ?? '?'}\`${var_}${parents}`;
     }

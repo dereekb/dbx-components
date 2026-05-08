@@ -10,17 +10,31 @@ import { type AscendingSortCompareFunction } from '../sort';
  * Filters the input values by distance while maintaining the original order of elements.
  * Values that are too close to each other (based on the minDistance parameter) will be filtered out.
  *
+ * Items whose extracted value is null are excluded from the result.
+ *
  * If order is irrelevant, use filterValuesByDistanceNoOrder() instead.
  *
- * @param _input - The array of values to filter
- * @param _minDistance - The minimum distance required between values
- * @param _getValue - Function that extracts a numeric value from each item for distance comparison
- * @returns A filtered array with only values that are at least minDistance apart
+ * @param input - The array of values to filter
+ * @param minDistance - The minimum distance required between values (inclusive)
+ * @param getValue - Function that extracts a numeric value from each item for distance comparison
+ * @returns A filtered array with only values that are at least minDistance apart, in their original input order
  */
-export function filterValuesByDistance<T>(_input: T[], _minDistance: number, _getValue: (value: T) => number | null): T[] {
-  // TODO(FUTURE): Implement if needed.
+export function filterValuesByDistance<T>(input: T[], minDistance: number, getValue: (value: T) => number | null): T[] {
+  // Tag each non-null value with its original index so we can restore order after the distance filter.
+  const tagged: [{ readonly item: T; readonly index: number }, number][] = [];
 
-  throw new Error('Incomplete implementation!');
+  for (let i = 0, n = input.length; i < n; i += 1) {
+    const item = input[i];
+    const value = getValue(item);
+
+    if (value != null) {
+      tagged.push([{ item, index: i }, value]);
+    }
+  }
+
+  const kept = _filterValuesByDistance(tagged, minDistance, (x) => x[0]);
+  kept.sort((a, b) => a.index - b.index);
+  return kept.map((x) => x.item);
 }
 
 /**
@@ -78,6 +92,24 @@ function _filterValuesByDistance<T, Y>(values: [T, number][], minDistance: numbe
 }
 
 /**
+ * Strategy used by {@link applyBestFit} and {@link makeBestFit} to pick the best-fit item and transform the rest.
+ */
+export interface BestFitConfig<T> {
+  /**
+   * Function that determines which items are candidates for the best fit.
+   */
+  readonly filter: (value: T) => boolean;
+  /**
+   * AscendingSortCompareFunction to compare two values to determine which is the best fit.
+   */
+  readonly compare: AscendingSortCompareFunction<T>;
+  /**
+   * Function that transforms non-best-fit items.
+   */
+  readonly updateNonBestFit: (value: T) => T;
+}
+
+/**
  * Same as applyBestFit, but returns a new array, rather than modifying the existing array.
  *
  * @dbxUtil
@@ -85,15 +117,13 @@ function _filterValuesByDistance<T, Y>(values: [T, number][], minDistance: numbe
  * @dbxUtilTags array, best-fit, filter, sort, immutable
  * @dbxUtilRelated apply-best-fit, find-best-index-set-pair
  *
- * @param input - The array to filter for the best fit
- * @param filter - Function that determines which items are candidates for the best fit
- * @param compare - AscendingSortCompareFunction to compare two values to determine which is the best fit
- * @param updateNonBestFit - Function that transforms non-best-fit items
- * @returns A new array with only the best fit item and transformed non-best-fit items
+ * @param input - The array to filter for the best fit.
+ * @param config - The best-fit strategy ({@link BestFitConfig}).
+ * @returns A new array with only the best fit item and transformed non-best-fit items.
  * @__NO_SIDE_EFFECTS__
  */
-export function makeBestFit<T>(input: T[], filter: (value: T) => boolean, compare: AscendingSortCompareFunction<T>, updateNonBestFit: (value: T) => T): T[] {
-  return applyBestFit<T>(copyArray(input), filter, compare, updateNonBestFit);
+export function makeBestFit<T>(input: T[], config: BestFitConfig<T>): T[] {
+  return applyBestFit<T>(copyArray(input), config);
 }
 
 /**
@@ -102,14 +132,17 @@ export function makeBestFit<T>(input: T[], filter: (value: T) => boolean, compar
  * For instance, if two items are selected but only one can be selected by design, this function can be used to
  * pick the best fit, and update the input array.
  *
- * @param input - The array to modify in-place
- * @param filter - Function that determines which items are candidates for the best fit
- * @param compare - AscendingSortCompareFunction to compare two values to determine which is the best fit
- * @param updateNonBestFit - Function that transforms non-best-fit items
- * @returns The modified input array with only the best fit item and transformed non-best-fit items
+ * @dbxUtil
+ * @dbxUtilCategory array
+ * @dbxUtilTags array, best-fit, filter, sort, mutable, in-place
+ * @dbxUtilRelated make-best-fit, find-best-index-set-pair
+ *
+ * @param input - The array to modify in-place.
+ * @param config - The best-fit strategy ({@link BestFitConfig}).
+ * @returns The modified input array with only the best fit item and transformed non-best-fit items.
  */
-// eslint-disable-next-line @typescript-eslint/max-params
-export function applyBestFit<T>(input: T[], filter: (value: T) => boolean, compare: AscendingSortCompareFunction<T>, updateNonBestFit: (value: T) => T): T[] {
+export function applyBestFit<T>(input: T[], config: BestFitConfig<T>): T[] {
+  const { filter, compare, updateNonBestFit } = config;
   const matchIndexSet = findToIndexSet(input, filter);
 
   if (matchIndexSet.length > 1) {

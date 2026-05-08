@@ -370,8 +370,7 @@ function aggregateExternalIdentifiers(models: readonly ModelUsage[]): readonly {
 function formatReportAsMarkdown(report: ListAppReport): string {
   const lines: string[] = [];
   const apiSuffix = report.apiDir === undefined ? '' : ` + \`${report.apiDir}\``;
-  lines.push(`# Snapshot fields used by \`${report.componentDir}\`${apiSuffix}`, '');
-  lines.push(`${report.modelCount} model${report.modelCount === 1 ? '' : 's'}, ${report.fieldCount} field${report.fieldCount === 1 ? '' : 's'} resolved.`, '');
+  lines.push(`# Snapshot fields used by \`${report.componentDir}\`${apiSuffix}`, '', `${report.modelCount} model${report.modelCount === 1 ? '' : 's'}, ${report.fieldCount} field${report.fieldCount === 1 ? '' : 's'} resolved.`, '');
 
   if (report.models.length === 0) {
     lines.push('_No `snapshotConverterFunctions` calls found._');
@@ -379,19 +378,22 @@ function formatReportAsMarkdown(report: ListAppReport): string {
   }
 
   for (const model of report.models) {
-    lines.push(`## \`${model.modelName}\``, `_${model.relPath}_`, '');
-    lines.push('| Field | Converter | Slug | Optional? |', '| --- | --- | --- | --- |');
+    lines.push(`## \`${model.modelName}\``, `_${model.relPath}_`, '', '| Field | Converter | Slug | Optional? |', '| --- | --- | --- | --- |');
     for (const field of model.fields) {
       const slugCell = field.slug === undefined ? '_external_' : `\`${field.slug}\``;
-      const optionalCell = field.optional === undefined ? '—' : field.optional ? 'yes' : 'no';
+      let optionalCell: string;
+      if (field.optional === undefined) {
+        optionalCell = '—';
+      } else {
+        optionalCell = field.optional ? 'yes' : 'no';
+      }
       lines.push(`| \`${field.fieldName}\` | \`${truncate(field.converter, 60)}\` | ${slugCell} | ${optionalCell} |`);
     }
     lines.push('');
   }
 
   if (report.factoryFrequency.length > 0) {
-    lines.push('## Snapshot field frequency', '');
-    lines.push('| Slug | Name | Count |', '| --- | --- | --- |');
+    lines.push('## Snapshot field frequency', '', '| Slug | Name | Count |', '| --- | --- | --- |');
     for (const row of report.factoryFrequency) {
       lines.push(`| \`${row.slug}\` | \`${row.name}\` | ${row.count} |`);
     }
@@ -399,9 +401,7 @@ function formatReportAsMarkdown(report: ListAppReport): string {
   }
 
   if (report.externalIdentifiers.length > 0) {
-    lines.push('## External identifiers (not in registry)', '');
-    lines.push('Tag these with `@dbxModelSnapshotField` (and re-run `nx run dbx-components-mcp:generate-manifests`) to surface them in the catalog.', '');
-    lines.push('| Identifier | Count |', '| --- | --- |');
+    lines.push('## External identifiers (not in registry)', '', 'Tag these with `@dbxModelSnapshotField` (and re-run `nx run dbx-components-mcp:generate-manifests`) to surface them in the catalog.', '', '| Identifier | Count |', '| --- | --- |');
     for (const row of report.externalIdentifiers) {
       lines.push(`| \`${row.identifier}\` | ${row.count} |`);
     }

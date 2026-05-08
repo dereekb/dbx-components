@@ -197,7 +197,8 @@ function scoreIntent(entry: TokenEntry, expanded: readonly string[]): number {
 type RgbColor = { r: number; g: number; b: number; a: number };
 type OkLabColor = { L: number; a: number; b: number; alpha: number };
 
-const RGB_RE = /rgba?\(\s*([0-9.]+)[\s,]+([0-9.]+)[\s,]+([0-9.]+)(?:[\s,/]+([0-9.]+%?))?\s*\)/i;
+const RGB_RE = /rgba?\(([^)]+)\)/i;
+const RGB_PARTS_RE = /[\s,/]+/;
 const HEX_RE = /^#([0-9a-f]{3,8})$/i;
 
 /**
@@ -215,12 +216,16 @@ export function parseColor(raw: string): RgbColor | null {
   const rgbMatch = RGB_RE.exec(trimmed);
   let result: RgbColor | null = null;
   if (rgbMatch !== null) {
-    result = {
-      r: clamp(Number.parseFloat(rgbMatch[1]), 0, 255),
-      g: clamp(Number.parseFloat(rgbMatch[2]), 0, 255),
-      b: clamp(Number.parseFloat(rgbMatch[3]), 0, 255),
-      a: parseAlpha(rgbMatch[4])
-    };
+    const parts = rgbMatch[1].trim().split(RGB_PARTS_RE);
+    const numeric = /^[0-9.]+$/;
+    if (parts.length >= 3 && numeric.test(parts[0]) && numeric.test(parts[1]) && numeric.test(parts[2])) {
+      result = {
+        r: clamp(Number.parseFloat(parts[0]), 0, 255),
+        g: clamp(Number.parseFloat(parts[1]), 0, 255),
+        b: clamp(Number.parseFloat(parts[2]), 0, 255),
+        a: parseAlpha(parts[3])
+      };
+    }
   }
   if (result === null) {
     const hexMatch = HEX_RE.exec(trimmed);

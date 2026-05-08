@@ -220,7 +220,12 @@ function handleFluentMemberCall(ctx: ExtractContext, site: DeclSite, callExpr: C
   if (!folder && !remoteBase) return;
 
   const sourceType: AssetSourceType = folder ? 'local' : 'remote';
-  const helper: AssetBuilderHelper = folder ? (memberName === 'asset' ? 'assetFolder.asset' : 'assetFolder.assets') : memberName === 'asset' ? 'remoteAssetBaseUrl.asset' : 'remoteAssetBaseUrl.assets';
+  let helper: AssetBuilderHelper;
+  if (folder) {
+    helper = memberName === 'asset' ? 'assetFolder.asset' : 'assetFolder.assets';
+  } else {
+    helper = memberName === 'asset' ? 'remoteAssetBaseUrl.asset' : 'remoteAssetBaseUrl.assets';
+  }
 
   const args = callExpr.getArguments();
   if (args.length === 0) return;

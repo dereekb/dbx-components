@@ -96,7 +96,8 @@ import {
   updateNotificationUserNotificationSendExclusions,
   setIdAndKeyFromKeyIdRefOnDocumentData,
   calculateNsForNotificationUserNotificationBoxRecipientConfigs,
-  applyExclusionsToNotificationUserNotificationBoxRecipientConfigs
+  applyExclusionsToNotificationUserNotificationBoxRecipientConfigs,
+  type NotificationLoggedEventDayDocument
 } from '@dereekb/firebase';
 import { assertSnapshotData, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
@@ -2257,38 +2258,36 @@ export function cleanupSentNotificationsFactory(context: NotificationServerActio
 export function cleanupOldNotificationLoggedEventDaysFactory(context: NotificationServerActionsContext) {
   const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationLoggedEventDayCollectionGroup, notificationLoggedEventDayPagedItemsCollectionFactory } = context;
 
+  async function deleteOldLoggedEventDay(dayDocument: NotificationLoggedEventDayDocument): Promise<{ pageDocsDeleted: number }> {
+    const pagesCollection = notificationLoggedEventDayPagedItemsCollectionFactory(dayDocument);
+    // List all page docs in the day's paged subcollection — both numbered pages and the `_index`.
+    const allPageDocs = await pagesCollection.queryDocument().getDocs();
+
+    return firestoreContext.runTransaction(async (transaction) => {
+      const pageTxAccessor = pagesCollection.documentAccessorForTransaction(transaction);
+      const dayTxAccessor = notificationLoggedEventDayCollectionGroup.documentAccessorForTransaction(transaction);
+
+      // Delete every page (numbered pages first; the `_index` is included in the same batch).
+      await Promise.all(allPageDocs.map((pageDoc) => pageTxAccessor.loadDocumentFrom(pageDoc).accessor.delete()));
+      // Delete the day wrapper itself last.
+      await dayTxAccessor.loadDocumentFrom(dayDocument).accessor.delete();
+
+      return { pageDocsDeleted: allPageDocs.length };
+    });
+  }
+
   return firebaseServerActionTransformFunctionFactory(cleanupOldNotificationLoggedEventDaysParamsType, async (params) => {
     return async () => {
       const now = new Date();
-      const oldDaysQuery = notificationLoggedEventDayCollectionGroup.queryDocument(notificationLoggedEventDaysOlderThanQuery(now, params.retentionDays));
+      const oldDaysQuery = notificationLoggedEventDayCollectionGroup.queryDocument(notificationLoggedEventDaysOlderThanQuery(params.retentionDays, now));
       const oldDayDocuments = await oldDaysQuery.getDocs();
 
       let daysDeleted = 0;
       let pagesDeleted = 0;
 
-      const deleteResults = await performAsyncTasks(
-        oldDayDocuments,
-        async (dayDocument) => {
-          const pagesCollection = notificationLoggedEventDayPagedItemsCollectionFactory(dayDocument);
-          // List all page docs in the day's paged subcollection — both numbered pages and the `_index`.
-          const allPageDocs = await pagesCollection.queryDocument().getDocs();
-
-          return firestoreContext.runTransaction(async (transaction) => {
-            const pageTxAccessor = pagesCollection.documentAccessorForTransaction(transaction);
-            const dayTxAccessor = notificationLoggedEventDayCollectionGroup.documentAccessorForTransaction(transaction);
-
-            // Delete every page (numbered pages first; the `_index` is included in the same batch).
-            await Promise.all(allPageDocs.map((pageDoc) => pageTxAccessor.loadDocumentFrom(pageDoc).accessor.delete()));
-            // Delete the day wrapper itself last.
-            await dayTxAccessor.loadDocumentFrom(dayDocument).accessor.delete();
-
-            return { pageDocsDeleted: allPageDocs.length };
-          });
-        },
-        {
-          maxParallelTasks: 10
-        }
-      );
+      const deleteResults = await performAsyncTasks(oldDayDocuments, deleteOldLoggedEventDay, {
+        maxParallelTasks: 10
+      });
 
       deleteResults.results.forEach((entry) => {
         daysDeleted += 1;

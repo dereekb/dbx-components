@@ -284,7 +284,7 @@ function buildEntryFromClass(input: BuildEntryFromClassInput): BuildEntryResult 
     warnings.push({ kind: 'unknown-kind', className, kindValue: kindRaw, filePath, line });
     return { kind: 'skipped', warnings };
   }
-  const kind = kindRaw as UiComponentEntry['kind'];
+  const kind = kindRaw as UiComponentEntry['kind']; // NOSONAR — VALID_KINDS.has() does not narrow `string` to the union
 
   const selector = decoratorInfo.selector ?? '';
 

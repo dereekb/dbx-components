@@ -18,6 +18,9 @@ export interface FunctionLeadingContext {
 
 /**
  * Returns true if the given comment text contains the @__NO_SIDE_EFFECTS__ marker.
+ *
+ * @param text - The comment body text (without the `/*` and `*\/` delimiters).
+ * @returns True when the marker substring is present.
  */
 export function commentContainsNoSideEffects(text: string): boolean {
   return text.includes(NO_SIDE_EFFECTS_TAG);
@@ -25,6 +28,10 @@ export function commentContainsNoSideEffects(text: string): boolean {
 
 /**
  * Returns the leading whitespace (column indent) of the line containing the given offset.
+ *
+ * @param sourceText - The full source text being inspected.
+ * @param offset - A character offset into `sourceText` indicating the line of interest.
+ * @returns The whitespace prefix (spaces/tabs) of that line.
  */
 export function getLineIndent(sourceText: string, offset: number): string {
   let lineStart = offset;
@@ -45,6 +52,9 @@ export function getLineIndent(sourceText: string, offset: number): string {
  * Returns the outermost statement node for a FunctionDeclaration — its `ExportNamedDeclaration`
  * or `ExportDefaultDeclaration` parent if exported, otherwise the declaration itself. This is the
  * node ESLint attaches leading comments to.
+ *
+ * @param node - The FunctionDeclaration AST node.
+ * @returns The statement node ESLint attaches leading comments to.
  */
 function getStatementAnchor(node: AstNode): AstNode {
   return node.parent && (node.parent.type === 'ExportNamedDeclaration' || node.parent.type === 'ExportDefaultDeclaration') ? node.parent : node;
@@ -52,6 +62,10 @@ function getStatementAnchor(node: AstNode): AstNode {
 
 /**
  * Returns true if the statement is an overload signature (TSDeclareFunction) sharing the given name.
+ *
+ * @param stmt - The statement node to check (may be an export wrapper).
+ * @param name - The function identifier name to match.
+ * @returns True when `stmt` is an overload signature for `name`.
  */
 function isOverloadSignature(stmt: AstNode, name: string): boolean {
   const inner = stmt.type === 'ExportNamedDeclaration' || stmt.type === 'ExportDefaultDeclaration' ? stmt.declaration : stmt;
@@ -76,6 +90,10 @@ function isOverloadSignature(stmt: AstNode, name: string): boolean {
  * \/\/ \@__NO_SIDE_EFFECTS__
  * export function foo(a: any) { ... }
  * ```
+ *
+ * @param sourceCode - The ESLint `SourceCode` object used to read leading comments.
+ * @param implNode - The implementation FunctionDeclaration node.
+ * @returns The leading JSDoc (if any) and any orphan side-effect annotation comments.
  */
 export function findFunctionLeadingContext(sourceCode: AstNode, implNode: AstNode): FunctionLeadingContext {
   if (implNode.id?.type !== 'Identifier') {

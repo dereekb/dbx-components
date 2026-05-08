@@ -303,7 +303,7 @@ export async function runSearchModel(rawArgs: unknown): Promise<ToolResult> {
           downstreamPackagesScanned: pool.downstreamPackages
         })
     },
-    args.limit !== undefined ? { query: args.query, limit: args.limit } : { query: args.query }
+    args.limit === undefined ? { query: args.query } : { query: args.query, limit: args.limit }
   );
 }
 

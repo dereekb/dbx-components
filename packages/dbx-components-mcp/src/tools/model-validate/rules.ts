@@ -465,8 +465,8 @@ function checkCollectionType(file: ExtractedFile, model: ExtractedModel, violati
   // model with a parent identity declared with a root collection type.
   const isAllowed = (k: FirestoreCollectionKind | undefined): boolean => k === undefined || allowedKinds.includes(k);
   if (!isAllowed(aliasKind) || !isAllowed(factoryKind)) {
-    const offender = !isAllowed(aliasKind) ? aliasKind : factoryKind;
-    const offenderSite = !isAllowed(aliasKind) ? 'type alias' : 'factory body';
+    const offender = isAllowed(aliasKind) ? factoryKind : aliasKind;
+    const offenderSite = isAllowed(aliasKind) ? 'factory body' : 'type alias';
     const variantLabel = model.variant === 'root' ? 'root (no parent identity)' : 'subcollection (parent identity declared)';
     const allowedList = allowedKinds.map((k) => `\`${k}\``).join(', ');
     pushViolation(violations, {

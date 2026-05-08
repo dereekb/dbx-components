@@ -11,7 +11,7 @@ import type { ServerActionsReport } from './types.js';
  * @returns the formatted markdown text
  */
 export function formatReportAsMarkdown(report: ServerActionsReport): string {
-  const fixtureStatusLine = report.fixtureStatus !== 'ok' ? `- **Fixture cross-reference:** error reading fixture file: ${report.fixtureStatus.message}` : `- **Fixture cross-reference:** ok`;
+  const fixtureStatusLine = report.fixtureStatus === 'ok' ? `- **Fixture cross-reference:** ok` : `- **Fixture cross-reference:** error reading fixture file: ${report.fixtureStatus.message}`;
   const lines: string[] = [`# Server actions in \`${report.apiDir}\``, '', `- **Classes found:** ${report.entries.length}`, fixtureStatusLine, ''];
   if (report.entries.length === 0) {
     lines.push(`No \`*ServerActions\` abstract classes found under \`${report.modelRoot}\`.`);

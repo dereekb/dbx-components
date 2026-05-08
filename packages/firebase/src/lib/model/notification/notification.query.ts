@@ -106,11 +106,11 @@ export function notificationsReadyForCleanupQuery(): FirestoreQueryConstraint[] 
  * `FieldPath.documentId()` with a bare day string (it requires a full path). The `d` field stores
  * the same ISO 8601 day string as the document ID and supports a plain inequality.
  *
- * @param now - reference time for the cutoff (defaults to current time)
  * @param retentionDays - number of days of history to retain; days strictly older than `now - retentionDays` match
+ * @param now - reference time for the cutoff (defaults to current time)
  * @returns array of Firestore query constraints filtering by the day string
  */
-export function notificationLoggedEventDaysOlderThanQuery(now: Date = new Date(), retentionDays: number): FirestoreQueryConstraint[] {
+export function notificationLoggedEventDaysOlderThanQuery(retentionDays: number, now: Date = new Date()): FirestoreQueryConstraint[] {
   const cutoff = toISO8601DayStringForUTC(addDays(now, -retentionDays));
   return [where<NotificationLoggedEventDay>('d', '<', cutoff)];
 }

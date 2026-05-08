@@ -152,8 +152,8 @@ function assembleEntry(input: AssembleEntryInput): FilterEntry {
       example: entry.example,
       ...(entry.relatedSlugs && entry.relatedSlugs.length > 0 ? { relatedSlugs: [...entry.relatedSlugs] } : {}),
       ...(entry.skillRefs && entry.skillRefs.length > 0 ? { skillRefs: [...entry.skillRefs] } : {}),
-      ...(entry.deprecated !== undefined ? { deprecated: entry.deprecated } : {}),
-      ...(entry.since !== undefined ? { since: entry.since } : {})
+      ...(entry.deprecated === undefined ? {} : { deprecated: entry.deprecated }),
+      ...(entry.since === undefined ? {} : { since: entry.since })
     };
   } else {
     out = {
@@ -165,8 +165,8 @@ function assembleEntry(input: AssembleEntryInput): FilterEntry {
       example: entry.example,
       ...(entry.relatedSlugs && entry.relatedSlugs.length > 0 ? { relatedSlugs: [...entry.relatedSlugs] } : {}),
       ...(entry.skillRefs && entry.skillRefs.length > 0 ? { skillRefs: [...entry.skillRefs] } : {}),
-      ...(entry.deprecated !== undefined ? { deprecated: entry.deprecated } : {}),
-      ...(entry.since !== undefined ? { since: entry.since } : {})
+      ...(entry.deprecated === undefined ? {} : { deprecated: entry.deprecated }),
+      ...(entry.since === undefined ? {} : { since: entry.since })
     };
   }
   return out;

@@ -541,7 +541,7 @@ function formatWarningValue(value: unknown): string {
   } else if (typeof value === 'object') {
     result = JSON.stringify(value);
   } else {
-    result = String(value as number | boolean | bigint | symbol | undefined);
+    result = String(value);
   }
   return result;
 }

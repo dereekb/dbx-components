@@ -77,6 +77,7 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'notificationTemplateType', typeText: 'Maybe<NotificationTemplateType>' },
       { name: 'isKnownTemplateType', typeText: 'Maybe<boolean>' },
       { name: 'isNotificationTask', typeText: 'boolean' },
+      { name: 'isLoggedEvent', typeText: 'boolean', description: 'True if the notification was a logged-event record (`st === LOGGED_EVENT`). Logged events bypass\nthe send pipeline entirely; the factory short-circuits and returns immediately when one is loaded.' },
       { name: 'isUniqueNotificationTask', typeText: 'boolean' },
       { name: 'uniqueNotificationTaskConflict', typeText: 'boolean' },
       { name: 'isConfiguredTemplateType', typeText: 'Maybe<boolean>' },
