@@ -134,7 +134,7 @@ describe('firebase-models registry', () => {
   it('getFirebaseModelGroup resolves by group name (case-insensitive)', () => {
     const group = getFirebaseModelGroup('Notification');
     expect(group?.containerName).toBe('NotificationFirestoreCollections');
-    expect(group?.modelNames).toEqual(['Notification', 'NotificationBox', 'NotificationSummary', 'NotificationUser', 'NotificationWeek']);
+    expect(group?.modelNames).toEqual(['Notification', 'NotificationBox', 'NotificationLoggedEventDay', 'NotificationLoggedEventDayPage', 'NotificationLoggedEventDayPagedItems', 'NotificationSummary', 'NotificationUser', 'NotificationWeek']);
     expect(getFirebaseModelGroup('notification')?.name).toBe('Notification');
     expect(getFirebaseModelGroup('not-a-group')).toBeUndefined();
   });

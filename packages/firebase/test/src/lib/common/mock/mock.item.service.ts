@@ -39,6 +39,7 @@ import {
   mockItemPagedFirestoreCollectionGroup,
   type MockItemPagedDocument,
   type MockItemPagedDocumentData,
+  type MockItemPagedFirestoreCollectionConfig,
   type MockItemPagedFirestoreCollectionFactory,
   type MockItemPagedFirestoreCollectionGroup,
   type MockItemPagedRoles
@@ -67,6 +68,13 @@ export abstract class MockItemCollections {
   abstract readonly mockItemSubItemDeepCollectionGroup: MockItemSubItemDeepFirestoreCollectionGroup;
   abstract readonly mockItemPagedCollectionFactory: MockItemPagedFirestoreCollectionFactory;
   abstract readonly mockItemPagedStaticCollectionFactory: MockItemPagedFirestoreCollectionFactory;
+  /**
+   * Builds a {@link MockItemPagedFirestoreCollectionFactory} with a caller-supplied
+   * configuration. Use this in tests that need to exercise non-default settings such as a
+   * smaller {@link MockItemPagedFirestoreCollectionConfig.maxItemsPerPage} or a custom
+   * distribution scheme without adding another pre-baked factory to {@link MockItemCollections}.
+   */
+  abstract readonly mockItemPagedCollectionFactoryWithConfig: (config: MockItemPagedFirestoreCollectionConfig) => MockItemPagedFirestoreCollectionFactory;
   abstract readonly mockItemPagedCollectionGroup: MockItemPagedFirestoreCollectionGroup;
   abstract readonly mockItemSystemStateCollection: SystemStateFirestoreCollection;
 }
@@ -92,6 +100,7 @@ export function makeMockItemCollections(firestoreContext: FirestoreContext): Moc
     mockItemSubItemDeepCollectionGroup: mockItemSubItemDeepFirestoreCollectionGroup(firestoreContext),
     mockItemPagedCollectionFactory: mockItemPagedFirestoreCollection(firestoreContext),
     mockItemPagedStaticCollectionFactory: mockItemPagedFirestoreCollection(firestoreContext, { distributionScheme: mockItemPagedAlphaDistributionScheme }),
+    mockItemPagedCollectionFactoryWithConfig: (config) => mockItemPagedFirestoreCollection(firestoreContext, config),
     mockItemPagedCollectionGroup: mockItemPagedFirestoreCollectionGroup(firestoreContext),
     mockItemSystemStateCollection: systemStateFirestoreCollection(firestoreContext, mockItemSystemStateStoredDataConverterMap)
   };

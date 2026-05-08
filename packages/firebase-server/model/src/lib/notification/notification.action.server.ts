@@ -2170,15 +2170,16 @@ export function cleanupSentNotificationsFactory(context: NotificationServerActio
 
                 // Reads must precede writes inside a Firestore transaction. Existing paged items
                 // read non-transactionally; the cleanup runs serially per box so concurrent writes
-                // are not a concern here.
+                // are not a concern here. writeAllItemsInTransaction() does its own transactional
+                // read of existing page IDs, so it must run before any other transactional write.
                 const [dayWrapper, existingItems] = await Promise.all([dayDocument.snapshotData(), pagedItems.loadAllItems()]);
+
+                const newItems = notificationDocumentsInSameDay.map((x) => (x.data as DocumentDataWithIdAndKey<Notification>).n);
+                await pagedItems.writeAllItemsInTransaction(transaction, [...existingItems, ...newItems]);
 
                 if (!dayWrapper) {
                   await dayDocument.create({ d: dayId });
                 }
-
-                const newItems = notificationDocumentsInSameDay.map((x) => (x.data as DocumentDataWithIdAndKey<Notification>).n);
-                await pagedItems.writeAllItemsInTransaction(transaction, [...existingItems, ...newItems]);
 
                 // delete the source notification docs in the same transaction
                 await Promise.all(notificationDocumentsInTransaction.map((x) => x.accessor.delete()));

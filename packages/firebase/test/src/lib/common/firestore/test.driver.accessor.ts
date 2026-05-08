@@ -620,6 +620,24 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
             });
           });
 
+          describe('writeAllItems() with custom maxItemsPerPage', () => {
+            it('writes one page per item when maxItemsPerPage is 1', async () => {
+              const collection = f.instance.collections.mockItemPagedCollectionFactoryWithConfig({ maxItemsPerPage: 1 })(itemDocument);
+              const items: MockItemPagedEntry[] = Array.from({ length: 10 }, (_, i) => ({ id: `${i}`, group: 'a', value: i }));
+
+              await collection.writeAllItems(items);
+
+              const index = await collection.loadIndex();
+              expect(index?.tc).toBe(items.length);
+              expect(index?.p).toEqual(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']);
+              expect(index?.pc).toEqual({ '0': 1, '1': 1, '2': 1, '3': 1, '4': 1, '5': 1, '6': 1, '7': 1, '8': 1, '9': 1 });
+
+              const reloaded = await collection.loadAllItems();
+              expect(reloaded).toHaveLength(items.length);
+              expect(reloaded.map((x) => x.id).sort()).toEqual(items.map((x) => x.id).sort());
+            });
+          });
+
           describe('writeAllItems() (static distribution)', () => {
             let collection: MockItemPagedFirestoreCollection;
 

@@ -6,6 +6,38 @@
   "generator": "@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs",
   "entries": [
     {
+      "slug": "invert-maybe-boolean",
+      "name": "invertMaybeBoolean",
+      "kind": "function",
+      "category": "boolean",
+      "module": "@dereekb/util",
+      "subpath": "boolean",
+      "signature": "invertMaybeBoolean(x: Maybe<boolean>): Maybe<boolean>",
+      "description": "If a non-null boolean value is provided, returns the opposite.",
+      "params": [
+        {
+          "name": "x",
+          "type": "Maybe<boolean>",
+          "description": "- the boolean value to invert, or a nullish value",
+          "optional": false
+        }
+      ],
+      "returns": "the inverted boolean, or the original nullish value if input was null/undefined",
+      "tags": [
+        "boolean",
+        "invert",
+        "negate",
+        "not",
+        "maybe",
+        "nullish",
+        "invertmaybeboolean"
+      ],
+      "relatedSlugs": [
+        "reduce-booleans-with-and",
+        "reduce-booleans-with-or"
+      ]
+    },
+    {
       "slug": "reduce-booleans-with-and",
       "name": "reduceBooleansWithAnd",
       "kind": "function",
@@ -148,6 +180,80 @@
       ],
       "relatedSlugs": [
         "boolean-factory"
+      ]
+    },
+    {
+      "slug": "string-to-boolean",
+      "name": "stringToBoolean",
+      "kind": "function",
+      "category": "boolean",
+      "module": "@dereekb/util",
+      "subpath": "boolean",
+      "signature": "stringToBoolean(value: Maybe<string | boolean>, defaultValue?: Maybe<boolean>): Maybe<boolean>",
+      "description": "Converts the input string to a boolean.\n\nCase-insensitive matches for yes/y/t/true and no/n/f/false.",
+      "params": [
+        {
+          "name": "value",
+          "type": "Maybe<string | boolean>",
+          "description": "- The string to convert to a boolean.",
+          "optional": false
+        },
+        {
+          "name": "defaultValue",
+          "type": "Maybe<boolean>",
+          "description": "- The default value to return if the string cannot be converted to a boolean (default: undefined).",
+          "optional": true
+        }
+      ],
+      "returns": "The boolean value corresponding to the string, or the default value if the string cannot be converted.",
+      "tags": [
+        "boolean",
+        "string",
+        "parse",
+        "convert",
+        "true",
+        "false",
+        "yes",
+        "no",
+        "to",
+        "stringtoboolean"
+      ],
+      "example": "stringToBoolean('yes');          // true\nstringToBoolean('FALSE');        // false\nstringToBoolean('maybe');        // undefined\nstringToBoolean('maybe', true);  // true (defaultValue)",
+      "relatedSlugs": [
+        "true-or-false-string"
+      ]
+    },
+    {
+      "slug": "true-or-false-string",
+      "name": "trueOrFalseString",
+      "kind": "function",
+      "category": "boolean",
+      "module": "@dereekb/util",
+      "subpath": "boolean",
+      "signature": "trueOrFalseString(value?: Maybe<boolean>): Maybe<TrueOrFalseString>",
+      "description": "Converts a boolean to its `'true'` or `'false'` string representation.\nReturns null/undefined if the input is nullish.",
+      "params": [
+        {
+          "name": "value",
+          "type": "Maybe<boolean>",
+          "description": "- The boolean value to convert.",
+          "optional": true
+        }
+      ],
+      "returns": "The string `'true'` or `'false'`, or the nullish input unchanged.",
+      "tags": [
+        "boolean",
+        "string",
+        "convert",
+        "serialize",
+        "format",
+        "true",
+        "or",
+        "false",
+        "trueorfalsestring"
+      ],
+      "relatedSlugs": [
+        "string-to-boolean"
       ]
     },
     {
@@ -349,6 +455,92 @@
       ]
     },
     {
+      "slug": "group-values",
+      "name": "groupValues",
+      "kind": "function",
+      "category": "grouping",
+      "module": "@dereekb/util",
+      "subpath": "grouping",
+      "signature": "groupValues(values: Maybe<T[]>, groupKeyFn: ReadKeyFunction<T, K>): GroupingResult<T>",
+      "description": "Groups values by key into a plain object. Convenience wrapper around {@link makeValuesGroupMap} that returns a POJO instead of a Map.",
+      "params": [
+        {
+          "name": "values",
+          "type": "Maybe<T[]>",
+          "description": "- Values to group.",
+          "optional": false
+        },
+        {
+          "name": "groupKeyFn",
+          "type": "ReadKeyFunction<T, K>",
+          "description": "- Extracts the grouping key from each value.",
+          "optional": false
+        }
+      ],
+      "returns": "A plain object mapping each key to its array of values.",
+      "tags": [
+        "array",
+        "group",
+        "partition",
+        "key",
+        "by",
+        "object",
+        "dictionary",
+        "grouping",
+        "values",
+        "groupvalues"
+      ],
+      "relatedSlugs": [
+        "make-values-group-map",
+        "separate-values",
+        "pair-group-values"
+      ]
+    },
+    {
+      "slug": "make-values-group-map",
+      "name": "makeValuesGroupMap",
+      "kind": "function",
+      "category": "grouping",
+      "module": "@dereekb/util",
+      "subpath": "grouping",
+      "signature": "makeValuesGroupMap(values: Maybe<T[]>, groupKeyFn: ReadKeyFunction<T, K>): Map<Maybe<K>, T[]>",
+      "description": "Groups values by key into a Map. Each key maps to the array of values that produced that key.",
+      "params": [
+        {
+          "name": "values",
+          "type": "Maybe<T[]>",
+          "description": "- Values to group.",
+          "optional": false
+        },
+        {
+          "name": "groupKeyFn",
+          "type": "ReadKeyFunction<T, K>",
+          "description": "- Extracts the grouping key from each value.",
+          "optional": false
+        }
+      ],
+      "returns": "A Map from each key to its array of values.",
+      "tags": [
+        "array",
+        "group",
+        "map",
+        "key",
+        "partition",
+        "by",
+        "dictionary",
+        "grouping",
+        "make",
+        "values",
+        "makevaluesgroupmap"
+      ],
+      "example": "const items = [{ type: 'a', v: 1 }, { type: 'b', v: 2 }, { type: 'a', v: 3 }];\nconst map = makeValuesGroupMap(items, (x) => x.type);\n// Map { 'a' => [{ type: 'a', v: 1 }, { type: 'a', v: 3 }], 'b' => [{ type: 'b', v: 2 }] }",
+      "relatedSlugs": [
+        "group-values",
+        "separate-values",
+        "pair-group-values"
+      ]
+    },
+    {
       "slug": "decode-hashed-values",
       "name": "decodeHashedValues",
       "kind": "function",
@@ -537,6 +729,39 @@
       "example": "const fn = readKeysSetFunction<string>((x) => x);\nfn(['a', 'b', 'a']); // Set { 'a', 'b' }",
       "relatedSlugs": [
         "read-keys-function"
+      ]
+    },
+    {
+      "slug": "reverse-compare-fn",
+      "name": "reverseCompareFn",
+      "kind": "function",
+      "category": "sort",
+      "module": "@dereekb/util",
+      "subpath": "sort",
+      "signature": "reverseCompareFn(compareFn: SortCompareFunction<T>): SortCompareFunction<T>",
+      "description": "Convenience function that reverses the order of the sorted values.",
+      "params": [
+        {
+          "name": "compareFn",
+          "type": "SortCompareFunction<T>",
+          "description": "- the comparison function whose order should be reversed",
+          "optional": false
+        }
+      ],
+      "returns": "a new comparison function with the opposite sort direction",
+      "tags": [
+        "sort",
+        "reverse",
+        "compare",
+        "descending",
+        "ascending",
+        "order",
+        "fn",
+        "reversecomparefn"
+      ],
+      "relatedSlugs": [
+        "compare-fn-order",
+        "compare-with-mapped-values-function"
       ]
     },
     {
@@ -1169,6 +1394,44 @@
       "relatedSlugs": [
         "ranged-indexed-values-array-accessor-factory",
         "indexed-values-array-accessor-factory"
+      ]
+    },
+    {
+      "slug": "limit-array",
+      "name": "limitArray",
+      "kind": "function",
+      "category": "array",
+      "module": "@dereekb/util",
+      "subpath": "array/array.limit",
+      "signature": "limitArray(array: Maybe<T[]>, inputConfig: Maybe<Partial<LimitArrayConfig>>): Maybe<T[]>",
+      "description": "Limits the number of items in an array based on the provided configuration.\nItems are taken from the front of the array by default, or from the end if configured.",
+      "params": [
+        {
+          "name": "array",
+          "type": "Maybe<T[]>",
+          "description": "- source array to limit",
+          "optional": false
+        },
+        {
+          "name": "inputConfig",
+          "type": "Maybe<Partial<LimitArrayConfig>>",
+          "description": "- configuration controlling the limit count and direction",
+          "optional": false
+        }
+      ],
+      "returns": "a new array with at most the configured number of items, or the original array if no limit is specified",
+      "tags": [
+        "array",
+        "limit",
+        "slice",
+        "truncate",
+        "take",
+        "cap",
+        "limitarray"
+      ],
+      "relatedSlugs": [
+        "take-front",
+        "take-last"
       ]
     },
     {
@@ -2228,6 +2491,41 @@
       ]
     },
     {
+      "slug": "allow-value-once-filter",
+      "name": "allowValueOnceFilter",
+      "kind": "factory",
+      "category": "array",
+      "module": "@dereekb/util",
+      "subpath": "array/array.unique",
+      "signature": "allowValueOnceFilter(inputReadKey?: ReadKeyFunction<T, K>): AllowValueOnceFilter<T, K>",
+      "description": "Creates a new {@link AllowValueOnceFilter} that permits each unique key only on its first encounter.",
+      "params": [
+        {
+          "name": "inputReadKey",
+          "type": "ReadKeyFunction<T, K>",
+          "description": "- Optional function to extract a key from each value. Defaults to identity.",
+          "optional": true
+        }
+      ],
+      "returns": "A stateful filter function that returns true only for the first occurrence of each key.",
+      "tags": [
+        "array",
+        "unique",
+        "filter",
+        "factory",
+        "stateful",
+        "once",
+        "dedupe",
+        "allow",
+        "value",
+        "allowvalueoncefilter"
+      ],
+      "relatedSlugs": [
+        "filter-unique-function",
+        "unique"
+      ]
+    },
+    {
       "slug": "filter-maybe-array-function",
       "name": "filterMaybeArrayFunction",
       "kind": "factory",
@@ -2794,6 +3092,41 @@
       ]
     },
     {
+      "slug": "unix-date-time-seconds-number-from-date",
+      "name": "unixDateTimeSecondsNumberFromDate",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date.unix",
+      "signature": "unixDateTimeSecondsNumberFromDate(date: Maybe<Date>): Maybe<UnixDateTimeSecondsNumber>",
+      "description": "Converts a Date object to a unix timestamp number.",
+      "params": [
+        {
+          "name": "date",
+          "type": "Maybe<Date>",
+          "description": "- Date object to convert",
+          "optional": false
+        }
+      ],
+      "returns": "Unix timestamp number if date is valid, null/undefined if date is null/undefined",
+      "tags": [
+        "date",
+        "unix",
+        "seconds",
+        "timestamp",
+        "convert",
+        "epoch",
+        "time",
+        "number",
+        "from",
+        "unixdatetimesecondsnumberfromdate"
+      ],
+      "relatedSlugs": [
+        "unix-date-time-seconds-number-to-date",
+        "unix-date-time-seconds-number-for-now"
+      ]
+    },
+    {
       "slug": "unix-date-time-seconds-number-to-date",
       "name": "unixDateTimeSecondsNumberToDate",
       "kind": "function",
@@ -3347,6 +3680,38 @@
       ]
     },
     {
+      "slug": "cached-getter",
+      "name": "cachedGetter",
+      "kind": "factory",
+      "category": "getter",
+      "module": "@dereekb/util",
+      "subpath": "getter/getter.cache",
+      "signature": "cachedGetter(factory: FactoryWithInput<T, A>): CachedFactoryWithInput<T, A>",
+      "description": "Creates a CachedGetter from the input factory function.\nThe value is retrieved once on first call and cached permanently.\nUse `reset()` to clear the cache and `init()` to reload.",
+      "params": [
+        {
+          "name": "factory",
+          "type": "FactoryWithInput<T, A>",
+          "description": "",
+          "optional": false
+        }
+      ],
+      "returns": "A CachedFactoryWithInput that caches the first result",
+      "tags": [
+        "getter",
+        "cache",
+        "memoize",
+        "lazy",
+        "factory",
+        "cached",
+        "cachedgetter"
+      ],
+      "relatedSlugs": [
+        "as-getter",
+        "make-getter"
+      ]
+    },
+    {
       "slug": "map-getter-factory",
       "name": "mapGetterFactory",
       "kind": "factory",
@@ -3405,6 +3770,51 @@
       "relatedSlugs": [
         "as-getter",
         "get-value-from-getter"
+      ]
+    },
+    {
+      "slug": "get-value-from-getter",
+      "name": "getValueFromGetter",
+      "kind": "function",
+      "category": "getter",
+      "module": "@dereekb/util",
+      "subpath": "getter/getter",
+      "signature": "getValueFromGetter(this: unknown, input: unknown, args?: A): T",
+      "description": "If the input is a function, it is executed and the result returned. Otherwise, the value itself is returned.",
+      "params": [
+        {
+          "name": "this",
+          "type": "unknown",
+          "description": "",
+          "optional": false
+        },
+        {
+          "name": "input",
+          "type": "unknown",
+          "description": "- A value or a getter/factory function",
+          "optional": false
+        },
+        {
+          "name": "args",
+          "type": "A",
+          "description": "",
+          "optional": true
+        }
+      ],
+      "returns": "The resolved value",
+      "tags": [
+        "getter",
+        "resolve",
+        "value",
+        "factory",
+        "normalize",
+        "get",
+        "from",
+        "getvaluefromgetter"
+      ],
+      "relatedSlugs": [
+        "as-getter",
+        "is-getter"
       ]
     },
     {
@@ -3583,6 +3993,45 @@
       "relatedSlugs": [
         "make-with-factory-input",
         "array-factory"
+      ]
+    },
+    {
+      "slug": "make-with-factory-input",
+      "name": "makeWithFactoryInput",
+      "kind": "function",
+      "category": "getter",
+      "module": "@dereekb/util",
+      "subpath": "getter/getter",
+      "signature": "makeWithFactoryInput(factory: FactoryWithRequiredInput<T, A>, input: A[]): T[]",
+      "description": "Maps an array of inputs through a factory function to produce an array of outputs.",
+      "params": [
+        {
+          "name": "factory",
+          "type": "FactoryWithRequiredInput<T, A>",
+          "description": "- The factory function to call with each input",
+          "optional": false
+        },
+        {
+          "name": "input",
+          "type": "A[]",
+          "description": "- The array of inputs to pass to the factory",
+          "optional": false
+        }
+      ],
+      "returns": "An array of produced values",
+      "tags": [
+        "getter",
+        "factory",
+        "map",
+        "array",
+        "transform",
+        "make",
+        "with",
+        "input",
+        "makewithfactoryinput"
+      ],
+      "relatedSlugs": [
+        "make-with-factory"
       ]
     },
     {
@@ -4214,6 +4663,44 @@
       "relatedSlugs": [
         "modify-model-map-functions",
         "model-field-map-function"
+      ]
+    },
+    {
+      "slug": "make-model-map",
+      "name": "makeModelMap",
+      "kind": "function",
+      "category": "model",
+      "module": "@dereekb/util",
+      "subpath": "model/model",
+      "signature": "makeModelMap(input: T[], read?: ReadModelKeyFunction<T>): Map<Maybe<ModelKey>, T>",
+      "description": "Creates a Map from model key to model, indexing each model by its key.\n\nIf multiple models share the same key, the last one wins.",
+      "params": [
+        {
+          "name": "input",
+          "type": "T[]",
+          "description": "- Array of models to index",
+          "optional": false
+        },
+        {
+          "name": "read",
+          "type": "ReadModelKeyFunction<T>",
+          "description": "- Function to extract the key from each model; defaults to reading the `id` property",
+          "optional": true
+        }
+      ],
+      "returns": "Map from model key to model",
+      "tags": [
+        "model",
+        "map",
+        "key",
+        "index",
+        "lookup",
+        "make",
+        "makemodelmap"
+      ],
+      "relatedSlugs": [
+        "make-multi-model-key-map",
+        "read-model-key"
       ]
     },
     {
@@ -6068,6 +6555,87 @@
       ]
     },
     {
+      "slug": "object-has-key",
+      "name": "objectHasKey",
+      "kind": "function",
+      "category": "object",
+      "module": "@dereekb/util",
+      "subpath": "object/object",
+      "signature": "objectHasKey(obj: T, key: string): boolean",
+      "description": "Checks whether the object has the specified own property using `Object.prototype.hasOwnProperty`.",
+      "params": [
+        {
+          "name": "obj",
+          "type": "T",
+          "description": "- Object to check",
+          "optional": false
+        },
+        {
+          "name": "key",
+          "type": "string",
+          "description": "- Property key to test for",
+          "optional": false
+        }
+      ],
+      "returns": "`true` if the object has the key as an own property",
+      "tags": [
+        "object",
+        "key",
+        "has",
+        "own-property",
+        "check",
+        "objecthaskey"
+      ],
+      "relatedSlugs": [
+        "object-has-keys",
+        "object-has-no-keys"
+      ]
+    },
+    {
+      "slug": "object-has-keys",
+      "name": "objectHasKeys",
+      "kind": "function",
+      "category": "object",
+      "module": "@dereekb/util",
+      "subpath": "object/object",
+      "signature": "objectHasKeys(obj: T, keys: ObjectKey[], mode?: SetIncludesMode): boolean",
+      "description": "Checks whether the object has all or any of the specified keys, based on the mode.",
+      "params": [
+        {
+          "name": "obj",
+          "type": "T",
+          "description": "- Object to check",
+          "optional": false
+        },
+        {
+          "name": "keys",
+          "type": "ObjectKey[]",
+          "description": "- Keys to test for",
+          "optional": false
+        },
+        {
+          "name": "mode",
+          "type": "SetIncludesMode",
+          "description": "- Whether to require 'all' keys or just 'any'; defaults to 'all'",
+          "optional": true
+        }
+      ],
+      "returns": "`true` if the keys match the mode criteria",
+      "tags": [
+        "object",
+        "keys",
+        "has",
+        "check",
+        "all",
+        "any",
+        "objecthaskeys"
+      ],
+      "relatedSlugs": [
+        "object-has-key",
+        "object-has-no-keys"
+      ]
+    },
+    {
       "slug": "map-to-object",
       "name": "mapToObject",
       "kind": "function",
@@ -7779,6 +8347,46 @@
       ]
     },
     {
+      "slug": "wait-for-ms",
+      "name": "waitForMs",
+      "kind": "function",
+      "category": "promise",
+      "module": "@dereekb/util",
+      "subpath": "promise/wait",
+      "signature": "waitForMs(ms: number, value?: T): Promise<T>",
+      "description": "Returns a Promise that resolves after the specified number of milliseconds.\nOptionally resolves with the provided value.",
+      "params": [
+        {
+          "name": "ms",
+          "type": "number",
+          "description": "- The number of milliseconds to wait before resolving.",
+          "optional": false
+        },
+        {
+          "name": "value",
+          "type": "T",
+          "description": "- An optional value to resolve the Promise with.",
+          "optional": true
+        }
+      ],
+      "returns": "A Promise that resolves after the specified delay.",
+      "tags": [
+        "promise",
+        "wait",
+        "sleep",
+        "delay",
+        "async",
+        "timeout",
+        "for",
+        "ms",
+        "waitforms"
+      ],
+      "relatedSlugs": [
+        "perform-async-tasks",
+        "poll"
+      ]
+    },
+    {
       "slug": "handler-set-function",
       "name": "handlerSetFunction",
       "kind": "factory",
@@ -7932,6 +8540,44 @@
       ]
     },
     {
+      "slug": "handler-factory",
+      "name": "handlerFactory",
+      "kind": "factory",
+      "category": "service",
+      "module": "@dereekb/util",
+      "subpath": "service/handler",
+      "signature": "handlerFactory(readKey: ReadKeyFunction<T, K>, options?: HandlerFactoryOptions<R>): HandlerFactory<T, K, R>",
+      "description": "Creates a {@link HandlerFactory} that produces key-based dispatch handlers.\nEach handler routes incoming values to registered handler functions based on a key extracted from the value.",
+      "params": [
+        {
+          "name": "readKey",
+          "type": "ReadKeyFunction<T, K>",
+          "description": "- Function to extract the dispatch key from an input value.",
+          "optional": false
+        },
+        {
+          "name": "options",
+          "type": "HandlerFactoryOptions<R>",
+          "description": "- Optional configuration for default and negative result values.",
+          "optional": true
+        }
+      ],
+      "returns": "A factory that creates new Handler instances.",
+      "tags": [
+        "service",
+        "handler",
+        "factory",
+        "dispatch",
+        "key",
+        "handlerfactory"
+      ],
+      "relatedSlugs": [
+        "make-handler",
+        "handler-set-function",
+        "handler-configurer-factory"
+      ]
+    },
+    {
       "slug": "make-handler",
       "name": "makeHandler",
       "kind": "factory",
@@ -7961,6 +8607,47 @@
       ],
       "relatedSlugs": [
         "handler-factory"
+      ]
+    },
+    {
+      "slug": "is-in-set-decision-function",
+      "name": "isInSetDecisionFunction",
+      "kind": "factory",
+      "category": "set",
+      "module": "@dereekb/util",
+      "subpath": "set/set.decision",
+      "signature": "isInSetDecisionFunction(set: Set<V>, inputReadValue?: (value: T) => V): IsInSetDecisionFunction<T, V>",
+      "description": "Creates an {@link IsInSetDecisionFunction} that checks whether a value (or a derived value) is in the given set.",
+      "params": [
+        {
+          "name": "set",
+          "type": "Set<V>",
+          "description": "- The set to check membership against.",
+          "optional": false
+        },
+        {
+          "name": "inputReadValue",
+          "type": "(value: T) => V",
+          "description": "",
+          "optional": true
+        }
+      ],
+      "returns": "A decision function that returns true for values found in the set.",
+      "tags": [
+        "set",
+        "decision",
+        "predicate",
+        "factory",
+        "membership",
+        "is",
+        "in",
+        "function",
+        "isinsetdecisionfunction"
+      ],
+      "relatedSlugs": [
+        "has-value-function",
+        "set-has-value-function",
+        "is-selected-decision-function-factory"
       ]
     },
     {
@@ -9210,6 +9897,52 @@
       ]
     },
     {
+      "slug": "join-strings",
+      "name": "joinStrings",
+      "kind": "function",
+      "category": "string",
+      "module": "@dereekb/util",
+      "subpath": "string/string",
+      "signature": "joinStrings(input: Maybe<ArrayOrValue<Maybe<string>>>, joiner?: string, trim?: boolean): Maybe<string>",
+      "description": "Joins an array of strings into a single string. Trims and omits empty values.",
+      "params": [
+        {
+          "name": "input",
+          "type": "Maybe<ArrayOrValue<Maybe<string>>>",
+          "description": "string or array of strings",
+          "optional": false
+        },
+        {
+          "name": "joiner",
+          "type": "string",
+          "description": "string to join the strings with. Defaults to a comma.",
+          "optional": true
+        },
+        {
+          "name": "trim",
+          "type": "boolean",
+          "description": "whether or not to trim the strings before joining. Defaults to false.",
+          "optional": true
+        }
+      ],
+      "returns": "joined string, or null/undefined if the input is null/undefined",
+      "tags": [
+        "string",
+        "join",
+        "concat",
+        "combine",
+        "separator",
+        "delimiter",
+        "strings",
+        "joinstrings"
+      ],
+      "relatedSlugs": [
+        "split-join-remainder",
+        "join-strings-instance",
+        "string-split-join-instance"
+      ]
+    },
+    {
       "slug": "split-join-remainder",
       "name": "splitJoinRemainder",
       "kind": "function",
@@ -9253,6 +9986,38 @@
       "relatedSlugs": [
         "join-strings",
         "string-split-join-instance"
+      ]
+    },
+    {
+      "slug": "case-insensitive-string",
+      "name": "caseInsensitiveString",
+      "kind": "function",
+      "category": "string",
+      "module": "@dereekb/util",
+      "subpath": "string/string",
+      "signature": "caseInsensitiveString(input: Maybe<string>): Maybe<string>",
+      "description": "Converts a string to its lowercase equivalent for case-insensitive comparison.",
+      "params": [
+        {
+          "name": "input",
+          "type": "Maybe<string>",
+          "description": "- string to convert to lowercase",
+          "optional": false
+        }
+      ],
+      "returns": "the lowercased string, or undefined if the input is undefined",
+      "tags": [
+        "string",
+        "lowercase",
+        "case",
+        "normalize",
+        "compare",
+        "insensitive",
+        "caseinsensitivestring"
+      ],
+      "relatedSlugs": [
+        "capitalize-first-letter",
+        "lowercase-first-letter"
       ]
     },
     {
@@ -9897,7 +10662,7 @@
       "module": "@dereekb/util",
       "subpath": "tree/tree.expand",
       "signature": "expandTreeFunction(config: ExpandTree<T> | ExpandTreeWithNodeBuilder<T, N>): ExpandTreeFunction<T, N>",
-      "description": "Implementation for expandTreeFunction. Creates a function that can expand a single value into a tree structure.\n\nThis factory function takes a configuration object that specifies how to retrieve children for any given value (`getChildren`)\nand optionally, how to construct the nodes themselves (`makeNode`). If `makeNode` is not provided, a default node structure is used.\nThe returned function recursively builds a tree from a root value.",
+      "description": "Creates an ExpandTreeFunction using a basic ExpandTree configuration.\nThe resulting nodes will be of type TreeNode<T>.\n\nCreates an ExpandTreeFunction using an ExpandTreeWithNodeBuilder configuration.\nThis allows for the creation of custom tree nodes of type N.\n\nImplementation for expandTreeFunction. Creates a function that can expand a single value into a tree structure.\n\nThis factory function takes a configuration object that specifies how to retrieve children for any given value (`getChildren`)\nand optionally, how to construct the nodes themselves (`makeNode`). If `makeNode` is not provided, a default node structure is used.\nThe returned function recursively builds a tree from a root value.",
       "params": [
         {
           "name": "config",
@@ -10217,7 +10982,7 @@
       "module": "@dereekb/util",
       "subpath": "tree/tree.flatten",
       "signature": "flattenTreeToArrayFunction(mapNodeFnOrConfig?: FlattenTreeToArrayFunctionConfig<N, V> | ((node: N) => V), defaultAddNodeFn?: Maybe<FlattenTreeAddNodeDecisionFunction<N, V>>): FlattenTreeFunction<N, V>",
-      "description": "Implementation for flattenTreeToArrayFunction.\n\nCreates a reusable function that traverses trees and collects either the nodes themselves\nor mapped values into an array. Supports both a simple function signature and a config object.",
+      "description": "Creates a FlattenTreeFunction that flattens tree nodes themselves into an array.\n\nCreates a FlattenTreeFunction that flattens tree nodes themselves into an array.\n\nCreates a FlattenTreeFunction that flattens tree nodes into an array of mapped values.\n\nImplementation for flattenTreeToArrayFunction.\n\nCreates a reusable function that traverses trees and collects either the nodes themselves\nor mapped values into an array. Supports both a simple function signature and a config object.",
       "params": [
         {
           "name": "mapNodeFnOrConfig",
@@ -10662,6 +11427,43 @@
       "relatedSlugs": [
         "decision-function",
         "invert-decision"
+      ]
+    },
+    {
+      "slug": "is-equal-to-value-decision-function",
+      "name": "isEqualToValueDecisionFunction",
+      "kind": "factory",
+      "category": "value",
+      "module": "@dereekb/util",
+      "subpath": "value/decision",
+      "signature": "isEqualToValueDecisionFunction(equalityValue: T | DecisionFunction<T>): DecisionFunction<T>",
+      "description": "Creates a {@link DecisionFunction} that checks strict equality against the given value.\n\nIf the input is already a function, it is returned as-is, allowing callers to pass either a\nconcrete value or a custom decision function interchangeably.",
+      "params": [
+        {
+          "name": "equalityValue",
+          "type": "T | DecisionFunction<T>",
+          "description": "- the value to compare against, or an existing decision function",
+          "optional": false
+        }
+      ],
+      "returns": "a decision function that checks strict equality with the given value",
+      "tags": [
+        "decision",
+        "equal",
+        "equality",
+        "factory",
+        "predicate",
+        "compare",
+        "value",
+        "is",
+        "to",
+        "function",
+        "isequaltovaluedecisionfunction"
+      ],
+      "example": "const isThree = isEqualToValueDecisionFunction(3);\nisThree(3); // true\nisThree(4); // false",
+      "relatedSlugs": [
+        "decision-function",
+        "as-decision-function"
       ]
     },
     {
@@ -11214,6 +12016,46 @@
       ]
     },
     {
+      "slug": "index-range-check-reader-function",
+      "name": "indexRangeCheckReaderFunction",
+      "kind": "factory",
+      "category": "value",
+      "module": "@dereekb/util",
+      "subpath": "value/indexed",
+      "signature": "indexRangeCheckReaderFunction(input: IndexRangeFunctionInput, read?: ReadIndexFunction<T>): IndexRefRangeCheckFunction<T>",
+      "description": "Creates an {@link IndexRefRangeCheckFunction} that reads an item's index and checks whether it falls\nwithin the specified range. For IndexRef types, the index is read from `i` automatically.\n\nCreates an {@link IndexRefRangeCheckFunction} that reads an item's index using a custom reader and checks whether it falls within the specified range.",
+      "params": [
+        {
+          "name": "input",
+          "type": "IndexRangeFunctionInput",
+          "description": "- the range or range config to check against",
+          "optional": false
+        },
+        {
+          "name": "read",
+          "type": "ReadIndexFunction<T>",
+          "description": "- custom function to extract the index from the item",
+          "optional": true
+        }
+      ],
+      "returns": "a function that checks whether an item's index is within the range",
+      "tags": [
+        "value",
+        "index",
+        "range",
+        "check",
+        "factory",
+        "predicate",
+        "reader",
+        "function",
+        "indexrangecheckreaderfunction"
+      ],
+      "relatedSlugs": [
+        "index-range-check-function",
+        "is-index-number-in-index-range-function"
+      ]
+    },
+    {
       "slug": "index-range-check-function",
       "name": "indexRangeCheckFunction",
       "kind": "factory",
@@ -11576,6 +12418,51 @@
       "example": "const fnChain = chainMapSameFunctions([\n  (x: string) => x,\n  (x: string) => x,\n]);\n\nconst result = fnChain('aaaab');\n// result === 'aaaab'",
       "relatedSlugs": [
         "chain-map-function",
+        "map-identity-function"
+      ]
+    },
+    {
+      "slug": "chain-map-function",
+      "name": "chainMapFunction",
+      "kind": "function",
+      "category": "value",
+      "module": "@dereekb/util",
+      "subpath": "value/map",
+      "signature": "chainMapFunction(a: MapFunction<I, O>, b: Maybe<MapFunction<O, B>>, apply?: boolean): MapFunction<I, O> | MapFunction<I, B>",
+      "description": "Creates a single function that pipes the output of `a` into `b`.\n\nIf `apply` is false, or `b` is null/undefined, returns `a` unchanged. This conditional chaining\nis useful when a second transform step is optional.",
+      "params": [
+        {
+          "name": "a",
+          "type": "MapFunction<I, O>",
+          "description": "- the first map function",
+          "optional": false
+        },
+        {
+          "name": "b",
+          "type": "Maybe<MapFunction<O, B>>",
+          "description": "- the optional second map function to chain after `a`",
+          "optional": false
+        },
+        {
+          "name": "apply",
+          "type": "boolean",
+          "description": "- when false, skips chaining and returns `a` directly",
+          "optional": true
+        }
+      ],
+      "returns": "a composed function piping `a` into `b`, or `a` alone if `b` is absent or `apply` is false",
+      "tags": [
+        "map",
+        "chain",
+        "compose",
+        "pipeline",
+        "transform",
+        "value",
+        "function",
+        "chainmapfunction"
+      ],
+      "relatedSlugs": [
+        "chain-map-same-functions",
         "map-identity-function"
       ]
     },

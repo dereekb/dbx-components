@@ -137,6 +137,14 @@
         "include": ["src/lib/**/*.ts"],
         "exclude": ["**/*.spec.ts", "**/*.test.ts"],
         "out": "packages/dbx-components-mcp/generated/dereekb-model.utils.mcp.generated.json"
+      },
+      {
+        "project": "packages/firebase",
+        "source": "@dereekb/firebase",
+        "module": "@dereekb/firebase",
+        "include": ["src/lib/**/*.ts"],
+        "exclude": ["**/*.spec.ts", "**/*.test.ts"],
+        "out": "packages/dbx-components-mcp/generated/dereekb-firebase.utils.mcp.generated.json"
       }
     ]
   },

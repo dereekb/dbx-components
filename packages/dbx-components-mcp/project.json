@@ -40,6 +40,7 @@
         "{projectRoot}/generated/dereekb-date.utils.mcp.generated.json",
         "{projectRoot}/generated/dereekb-rxjs.utils.mcp.generated.json",
         "{projectRoot}/generated/dereekb-model.utils.mcp.generated.json",
+        "{projectRoot}/generated/dereekb-firebase.utils.mcp.generated.json",
         "{projectRoot}/generated/dereekb-firebase.model-snapshot-fields.mcp.generated.json",
         "{projectRoot}/generated/dereekb-demo.dbx-docs-ui-examples.mcp.generated.json"
       ],

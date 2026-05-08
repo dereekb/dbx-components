@@ -679,6 +679,79 @@
       ]
     },
     {
+      "slug": "date-cell-timing-starts-at-date-factory",
+      "name": "dateCellTimingStartsAtDateFactory",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.cell.factory",
+      "signature": "dateCellTimingStartsAtDateFactory(input: T | DateCellTimingRelativeIndexFactory<T>): DateCellTimingStartsAtDateFactory<T>",
+      "description": "Creates a {@link DateCellTimingStartsAtDateFactory} that computes the concrete event start time\nfor any day index relative to the timing's schedule.\n\nThe returned date reflects the actual `startsAt` time-of-day offset to the correct calendar date\nfor the requested index, with proper timezone normalization.",
+      "params": [
+        {
+          "name": "input",
+          "type": "T | DateCellTimingRelativeIndexFactory<T>",
+          "description": "- A timing or an existing relative index factory.",
+          "optional": false
+        }
+      ],
+      "returns": "A factory that computes the concrete event start time for any day index.",
+      "tags": [
+        "date",
+        "cell",
+        "timing",
+        "starts-at",
+        "factory",
+        "day-index",
+        "event-time",
+        "calendar",
+        "starts",
+        "at",
+        "datecelltimingstartsatdatefactory"
+      ],
+      "example": "const timing = dateCellTiming({ startsAt, duration: 60 }, 5);\nconst startsAtFactory = dateCellTimingStartsAtDateFactory(timing);\n\n// Get the exact start time for day 3\nconst day3Start = startsAtFactory(3);\n// Returns a Date with the same time-of-day as startsAt but on day 3's calendar date\n\n// Also works with dates\nconst startForDate = startsAtFactory(someDate);",
+      "relatedSlugs": [
+        "date-cell-timing-start-date-factory",
+        "date-cell-timing-end-date-factory",
+        "date-cell-timing-date-factory"
+      ]
+    },
+    {
+      "slug": "date-cell-timing-end-date-factory",
+      "name": "dateCellTimingEndDateFactory",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.cell.factory",
+      "signature": "dateCellTimingEndDateFactory(input: T | DateCellTimingRelativeIndexFactory<T>): DateCellTimingEndDateFactory<T>",
+      "description": "Creates a {@link DateCellTimingEndDateFactory} that computes the end time\n(startsAt + duration) for any day index relative to the timing's schedule.",
+      "params": [
+        {
+          "name": "input",
+          "type": "T | DateCellTimingRelativeIndexFactory<T>",
+          "description": "- A timing or an existing relative index factory.",
+          "optional": false
+        }
+      ],
+      "returns": "A factory that computes the end time (startsAt + duration) for any day index.",
+      "tags": [
+        "date",
+        "cell",
+        "timing",
+        "end",
+        "factory",
+        "day-index",
+        "duration",
+        "event-time",
+        "datecelltimingenddatefactory"
+      ],
+      "example": "const timing = dateCellTiming({ startsAt, duration: 60 }, 5);\nconst endFactory = dateCellTimingEndDateFactory(timing);\n\n// Get the end time for day 2 (startsAt time + 60 minutes on day 2)\nconst day2End = endFactory(2);",
+      "relatedSlugs": [
+        "date-cell-timing-starts-at-date-factory",
+        "date-cell-timing-start-date-factory"
+      ]
+    },
+    {
       "slug": "get-relative-date-for-date-cell-timing",
       "name": "getRelativeDateForDateCellTiming",
       "kind": "function",
@@ -1007,6 +1080,52 @@
       "relatedSlugs": [
         "format-date-range-distance-function",
         "format-date-distance"
+      ]
+    },
+    {
+      "slug": "format-to-time-range-string",
+      "name": "formatToTimeRangeString",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.format",
+      "signature": "formatToTimeRangeString(startOrDateRange: DateRange | Date, end?: Maybe<Date>, onlyTimeRange?: boolean): string",
+      "description": "Formats a date range as a time-only range string when both dates are on the same day,\nor falls back to a full date+time range when they span multiple days.\n\nSame day: `\"12:00 AM - 4:00 PM\"`\nDifferent days: `\"01/01/2001 12:00 AM - 01/02/2001 4:00 PM\"`",
+      "params": [
+        {
+          "name": "startOrDateRange",
+          "type": "DateRange | Date",
+          "description": "- date range object or start date",
+          "optional": false
+        },
+        {
+          "name": "end",
+          "type": "Maybe<Date>",
+          "description": "- optional end date when a start date is provided",
+          "optional": true
+        },
+        {
+          "name": "onlyTimeRange",
+          "type": "boolean",
+          "description": "- whether to force time-only formatting regardless of date span",
+          "optional": true
+        }
+      ],
+      "returns": "the formatted time or date+time range string",
+      "tags": [
+        "date",
+        "format",
+        "time",
+        "range",
+        "string",
+        "day-aware",
+        "to",
+        "formattotimerangestring"
+      ],
+      "example": "import { formatToTimeRangeString } from '@dereekb/date';\n\n// Same day - time only\nformatToTimeRangeString({ start: new Date('2024-01-15T09:00:00'), end: new Date('2024-01-15T17:00:00') });\n// \"9:00 AM - 5:00 PM\"\n\n// Different days - includes date\nformatToTimeRangeString({ start: new Date('2024-01-15T09:00:00'), end: new Date('2024-01-16T17:00:00') });\n// \"01/15/2024 9:00 AM - 01/16/2024 5:00 PM\"",
+      "relatedSlugs": [
+        "format-to-day-time-range-string",
+        "format-date-range"
       ]
     },
     {
@@ -1577,6 +1696,276 @@
       ]
     },
     {
+      "slug": "earliest-date",
+      "name": "earliestDate",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date",
+      "signature": "earliestDate(dates: Maybe<Date>[], defaultDate?: Maybe<Date>): Maybe<Date>",
+      "description": "Returns the earliest (minimum) date from the input array, ignoring null/undefined entries.",
+      "params": [
+        {
+          "name": "dates",
+          "type": "Maybe<Date>[]",
+          "description": "- array of dates that may contain null/undefined",
+          "optional": false
+        },
+        {
+          "name": "defaultDate",
+          "type": "Maybe<Date>",
+          "description": "- fallback if no valid dates exist",
+          "optional": true
+        }
+      ],
+      "returns": "the earliest date, or the default if the array has no valid dates",
+      "tags": [
+        "date",
+        "min",
+        "earliest",
+        "oldest",
+        "before",
+        "compare",
+        "sort",
+        "earliestdate"
+      ],
+      "example": "const a = new Date('2024-01-01');\nconst b = new Date('2024-06-01');\nearliestDate([a, b]); // a\nearliestDate([null, undefined], new Date()); // falls back to default",
+      "relatedSlugs": [
+        "latest-date",
+        "is-before"
+      ]
+    },
+    {
+      "slug": "latest-date",
+      "name": "latestDate",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date",
+      "signature": "latestDate(dates: Maybe<Date>[], defaultDate?: Maybe<Date>): Maybe<Date>",
+      "description": "Returns the latest (maximum) date from the input array, ignoring null/undefined entries.",
+      "params": [
+        {
+          "name": "dates",
+          "type": "Maybe<Date>[]",
+          "description": "- array of dates that may contain null/undefined",
+          "optional": false
+        },
+        {
+          "name": "defaultDate",
+          "type": "Maybe<Date>",
+          "description": "- fallback if no valid dates exist",
+          "optional": true
+        }
+      ],
+      "returns": "the latest date, or the default if the array has no valid dates",
+      "tags": [
+        "date",
+        "max",
+        "latest",
+        "newest",
+        "after",
+        "compare",
+        "sort",
+        "latestdate"
+      ],
+      "example": "const a = new Date('2024-01-01');\nconst b = new Date('2024-06-01');\nlatestDate([a, b]); // b\nlatestDate([null], new Date()); // falls back to default",
+      "relatedSlugs": [
+        "earliest-date",
+        "is-after"
+      ]
+    },
+    {
+      "slug": "is-after",
+      "name": "isAfter",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date",
+      "signature": "isAfter(a: Maybe<Date>, b: Maybe<Date>, defaultValue?: Maybe<boolean>): Maybe<boolean>",
+      "description": "Null-safe date comparison that returns true when `a` is chronologically after `b`.\n\nIf either date is null/undefined, returns the default value instead.",
+      "params": [
+        {
+          "name": "a",
+          "type": "Maybe<Date>",
+          "description": "- first date",
+          "optional": false
+        },
+        {
+          "name": "b",
+          "type": "Maybe<Date>",
+          "description": "- second date to compare against",
+          "optional": false
+        },
+        {
+          "name": "defaultValue",
+          "type": "Maybe<boolean>",
+          "description": "- returned when either date is nullish",
+          "optional": true
+        }
+      ],
+      "returns": "whether `a` is after `b`, or the default",
+      "tags": [
+        "date",
+        "after",
+        "compare",
+        "gt",
+        "greater",
+        "maybe",
+        "safe",
+        "is",
+        "isafter"
+      ],
+      "example": "const jan = new Date('2024-01-01');\nconst feb = new Date('2024-02-01');\nisAfter(feb, jan); // true\nisAfter(null, jan); // undefined\nisAfter(null, jan, false); // false",
+      "relatedSlugs": [
+        "is-before",
+        "is-same-date",
+        "latest-date"
+      ]
+    },
+    {
+      "slug": "is-before",
+      "name": "isBefore",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date",
+      "signature": "isBefore(a: Maybe<Date>, b: Maybe<Date>, defaultValue?: Maybe<boolean>): Maybe<boolean>",
+      "description": "Null-safe date comparison that returns true when `a` is chronologically before `b`.\n\nIf either date is null/undefined, returns the default value instead.",
+      "params": [
+        {
+          "name": "a",
+          "type": "Maybe<Date>",
+          "description": "- first date",
+          "optional": false
+        },
+        {
+          "name": "b",
+          "type": "Maybe<Date>",
+          "description": "- second date to compare against",
+          "optional": false
+        },
+        {
+          "name": "defaultValue",
+          "type": "Maybe<boolean>",
+          "description": "- returned when either date is nullish",
+          "optional": true
+        }
+      ],
+      "returns": "whether `a` is before `b`, or the default",
+      "tags": [
+        "date",
+        "before",
+        "compare",
+        "lt",
+        "less",
+        "maybe",
+        "safe",
+        "is",
+        "isbefore"
+      ],
+      "example": "const jan = new Date('2024-01-01');\nconst feb = new Date('2024-02-01');\nisBefore(jan, feb); // true\nisBefore(null, feb); // undefined\nisBefore(null, feb, false); // false",
+      "relatedSlugs": [
+        "is-after",
+        "is-same-date",
+        "earliest-date"
+      ]
+    },
+    {
+      "slug": "is-same-date",
+      "name": "isSameDate",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date",
+      "signature": "isSameDate(a: Maybe<Date>, b: Maybe<Date>, defaultValue?: Maybe<boolean>): Maybe<boolean>",
+      "description": "Null-safe exact date equality check (millisecond precision).\n\nWhen both dates are null/undefined and no default is provided, returns true (treating two absent values as equal).",
+      "params": [
+        {
+          "name": "a",
+          "type": "Maybe<Date>",
+          "description": "- first date",
+          "optional": false
+        },
+        {
+          "name": "b",
+          "type": "Maybe<Date>",
+          "description": "- second date",
+          "optional": false
+        },
+        {
+          "name": "defaultValue",
+          "type": "Maybe<boolean>",
+          "description": "- returned when either date is nullish (defaults to `a == b` if not provided)",
+          "optional": true
+        }
+      ],
+      "returns": "whether the dates are exactly equal",
+      "tags": [
+        "date",
+        "equal",
+        "equality",
+        "same",
+        "compare",
+        "exact",
+        "is",
+        "issamedate"
+      ],
+      "example": "const d = new Date('2024-01-01T00:00:00.000Z');\nisSameDate(d, new Date(d.getTime())); // true\nisSameDate(null, null); // true\nisSameDate(null, d); // false",
+      "relatedSlugs": [
+        "is-same-day",
+        "is-same-date-hours-and-minutes",
+        "is-after",
+        "is-before"
+      ]
+    },
+    {
+      "slug": "is-same-date-day",
+      "name": "isSameDateDay",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date",
+      "signature": "isSameDateDay(a: Maybe<Date>, b: Maybe<Date>, defaultValue?: Maybe<boolean>): Maybe<boolean>",
+      "description": "Null-safe day-level date equality check (same year, month, and day, ignoring time).\n\nWhen both dates are null/undefined and no default is provided, returns true (treating two absent values as equal).",
+      "params": [
+        {
+          "name": "a",
+          "type": "Maybe<Date>",
+          "description": "- first date",
+          "optional": false
+        },
+        {
+          "name": "b",
+          "type": "Maybe<Date>",
+          "description": "- second date",
+          "optional": false
+        },
+        {
+          "name": "defaultValue",
+          "type": "Maybe<boolean>",
+          "description": "- returned when either date is nullish",
+          "optional": true
+        }
+      ],
+      "returns": "whether both dates fall on the same calendar day",
+      "tags": [
+        "date",
+        "day",
+        "same",
+        "equal",
+        "calendar",
+        "compare",
+        "is",
+        "issamedateday"
+      ],
+      "example": "const morning = new Date('2024-01-01T08:00:00.000Z');\nconst evening = new Date('2024-01-01T20:00:00.000Z');\nisSameDateDay(morning, evening); // true\nisSameDateDay(null, null); // true",
+      "relatedSlugs": [
+        "is-same-date",
+        "is-same-date-hours-and-minutes"
+      ]
+    },
+    {
       "slug": "round-down-to-minute",
       "name": "roundDownToMinute",
       "kind": "function",
@@ -1646,6 +2035,55 @@
         "round-down-to-minute",
         "round-date-down-to",
         "round-date-to"
+      ]
+    },
+    {
+      "slug": "round-date-to",
+      "name": "roundDateTo",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date",
+      "signature": "roundDateTo(date: DateOrUnixDateTimeMillisecondsNumber, roundToUnit: DateHourMinuteOrSecond, roundType?: FloorOrCeilRounding): DateOrUnixDateTimeMillisecondsNumber",
+      "description": "Rounds a date or unix timestamp to the nearest unit boundary using the specified rounding direction.\n\nPreserves the input type: Date inputs return Date, number inputs return number.",
+      "params": [
+        {
+          "name": "date",
+          "type": "DateOrUnixDateTimeMillisecondsNumber",
+          "description": "- date or unix millisecond timestamp to round",
+          "optional": false
+        },
+        {
+          "name": "roundToUnit",
+          "type": "DateHourMinuteOrSecond",
+          "description": "- time unit to round to ('hour', 'minute', or 'second')",
+          "optional": false
+        },
+        {
+          "name": "roundType",
+          "type": "FloorOrCeilRounding",
+          "description": "- rounding direction ('floor' or 'ceil', defaults to 'floor')",
+          "optional": true
+        }
+      ],
+      "returns": "the rounded value in the same type as the input",
+      "tags": [
+        "date",
+        "round",
+        "floor",
+        "ceil",
+        "unit",
+        "hour",
+        "minute",
+        "second",
+        "truncate",
+        "to",
+        "rounddateto"
+      ],
+      "relatedSlugs": [
+        "round-date-down-to",
+        "round-down-to-minute",
+        "round-down-to-hour"
       ]
     }
   ]
