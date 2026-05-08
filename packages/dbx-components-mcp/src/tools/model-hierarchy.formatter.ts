@@ -106,6 +106,7 @@ export interface BuildHierarchyInput {
  *
  * @param input - the assembled call config
  * @returns the hierarchy result honoring `format` and `maxDepth`
+ * @__NO_SIDE_EFFECTS__
  */
 export function buildModelHierarchy(input: BuildHierarchyInput): HierarchyResult {
   const format = input.format ?? 'tree';

@@ -34,6 +34,7 @@ export type AsyncArrayInputFactory<I, O> = AsyncMapFunction<ArrayInputFactory<I,
  *
  * @param factory - The factory function used to generate each item
  * @returns A function that takes a count parameter and returns an array of generated items
+ * @__NO_SIDE_EFFECTS__
  */
 export function arrayFactory<T>(factory: Factory<T> | FactoryWithIndex<T>): ArrayFactory<T> {
   return (count) => makeWithFactory(factory, count);
@@ -50,6 +51,7 @@ export function arrayFactory<T>(factory: Factory<T> | FactoryWithIndex<T>): Arra
  *
  * @param factory - The factory function used to transform each input value
  * @returns A function that takes an array of input values and returns an array of output values
+ * @__NO_SIDE_EFFECTS__
  */
 export function arrayInputFactory<O, I>(factory: FactoryWithRequiredInput<O, I>): ArrayInputFactory<I, O> {
   return (input: I[]) => makeWithFactoryInput<O, I>(factory, input);

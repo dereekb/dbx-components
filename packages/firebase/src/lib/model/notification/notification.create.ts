@@ -131,6 +131,7 @@ export interface CreateNotificationTemplateInput extends Partial<Omit<CreateNoti
  *
  * @param input - friendly input with readable field names
  * @returns the low-level template using Firestore field abbreviations
+ * @__NO_SIDE_EFFECTS__
  */
 export function createNotificationTemplate(input: CreateNotificationTemplateInput): CreateNotificationTemplate {
   const {
@@ -310,6 +311,7 @@ export interface CreateNotificationDocumentPairResult extends Pick<CreateNotific
  * @returns the document reference and notification data pair, with `notificationCreated` set to false
  * @throws {Error} When neither an accessor nor sufficient context is provided
  * @throws {Error} When `unique=true` but no target model is specified
+ * @__NO_SIDE_EFFECTS__
  */
 export function createNotificationDocumentPair(input: CreateNotificationDocumentPairInput): CreateNotificationDocumentPairResult {
   const { template, accessor: inputAccessor, transaction, context, now } = input;

@@ -79,8 +79,8 @@ export function getFunctionType(x: unknown): Maybe<FunctionType> {
  *
  * @param x - The value to check.
  * @returns Whether the value is a non-class function.
+ * @__NO_SIDE_EFFECTS__
  */
-// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 export function isNonClassFunction(x: unknown): x is Function {
   const type = getFunctionType(x);
   return type != null && type !== 'class';

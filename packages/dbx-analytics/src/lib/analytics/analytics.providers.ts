@@ -40,6 +40,7 @@ export interface ProvideDbxAnalyticsConfig {
  *   ]
  * };
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function provideDbxAnalyticsService(config: ProvideDbxAnalyticsConfig): EnvironmentProviders {
   const { dbxAnalyticsServiceConfigurationFactory } = config;

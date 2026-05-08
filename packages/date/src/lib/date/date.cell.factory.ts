@@ -89,6 +89,11 @@ export type DateCellRangeOfTimingFactory = (input?: Maybe<DateCellRangeOfTimingI
  * @param config - Configuration specifying the timing, range fit, and completion constraints.
  * @returns A factory function that produces a clamped {@link DateCellRangeWithRange} from optional start/end input.
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, cell, range, timing, factory, clamp, completed, index
+ * @dbxUtilRelated date-cell-range-of-timing, date-cell-timing-completed-time-range, date-cell-index-range
+ *
  * @example
  * ```ts
  * const timing = dateCellTiming({ startsAt, duration: 60 }, 5);
@@ -101,6 +106,7 @@ export type DateCellRangeOfTimingFactory = (input?: Maybe<DateCellRangeOfTimingI
  * // With no input, defaults to 0..now
  * const defaultRange = factory();
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function dateCellRangeOfTimingFactory(config: DateCallIndexRangeFromDatesFactoryConfig): DateCellRangeOfTimingFactory {
   const { timing, fitToTimingRange = true, limitToCompletedIndexes: onlyIncludeIfComplete = false, now: inputNowGetter } = config;
@@ -173,6 +179,11 @@ export function dateCellRangeOfTimingFactory(config: DateCallIndexRangeFromDates
  * @param config - A {@link DateCellTiming} or full factory configuration.
  * @param input - Optional start/end boundaries for the range.
  * @returns A clamped {@link DateCellRangeWithRange} derived from the timing and input.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, cell, range, timing, clamp, shorthand
+ * @dbxUtilRelated date-cell-range-of-timing-factory, date-cell-timing-completed-time-range
  */
 export function dateCellRangeOfTiming(config: DateCellTiming | DateCallIndexRangeFromDatesFactoryConfig, input?: Maybe<DateCellRangeOfTimingInput>): DateCellRangeWithRange {
   return dateCellRangeOfTimingFactory(isDateCellTiming(config) ? { timing: config } : config)(input);
@@ -192,6 +203,11 @@ export type DateCellTimingCompleteTimeRangeConfig = Pick<DateCallIndexRangeFromD
  * @param timing - The timing schedule to evaluate.
  * @param config - Optional configuration for the current time reference and range fitting.
  * @returns A {@link DateCellRangeWithRange} covering only the completed day indexes.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, cell, timing, completed, range, elapsed, index
+ * @dbxUtilRelated date-cell-timing-latest-completed-index, date-cell-range-of-timing-factory
  */
 export function dateCellTimingCompletedTimeRange(timing: DateCellTiming, config?: DateCellTimingCompleteTimeRangeConfig): DateCellRangeWithRange {
   return dateCellRangeOfTiming({
@@ -210,6 +226,11 @@ export function dateCellTimingCompletedTimeRange(timing: DateCellTiming, config?
  * @param timing - The timing schedule to evaluate.
  * @param now - Optional reference time; defaults to the current time.
  * @returns The zero-based index of the last fully completed day, or -1 if none.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, cell, timing, latest, completed, index, elapsed
+ * @dbxUtilRelated date-cell-timing-completed-time-range, date-cell-timing-end-index
  */
 export function dateCellTimingLatestCompletedIndex(timing: DateCellTiming, now?: Date): IndexNumber {
   return dateCellTimingCompletedTimeRange(timing, { now }).to;
@@ -228,6 +249,11 @@ export type DateCellIndexRange = IndexRange;
  *
  * @param range - The inclusive date cell range to convert.
  * @returns A {@link DateCellIndexRange} with exclusive `maxIndex`.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, cell, range, index-range, convert, inclusive, exclusive
+ * @dbxUtilRelated date-cell-index-range-to-date-cell-range, date-cell-index-range
  */
 export function dateCellRangeToDateCellIndexRange(range: DateCellRange): DateCellIndexRange {
   return { minIndex: range.i, maxIndex: (range.to ?? range.i) + 1 };
@@ -238,6 +264,11 @@ export function dateCellRangeToDateCellIndexRange(range: DateCellRange): DateCel
  *
  * @param range - The exclusive date cell index range to convert.
  * @returns A {@link DateCellRangeWithRange} with inclusive `to`.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, cell, range, index-range, convert, exclusive, inclusive
+ * @dbxUtilRelated date-cell-range-to-date-cell-index-range, date-cell-index-range
  */
 export function dateCellIndexRangeToDateCellRange(range: DateCellIndexRange): DateCellRangeWithRange {
   return { i: range.minIndex, to: range.maxIndex - 1 };
@@ -253,6 +284,11 @@ export function dateCellIndexRangeToDateCellRange(range: DateCellIndexRange): Da
  * @param limit - Optional range input to constrain the output.
  * @param fitToTimingRange - Whether to intersect the limit with the timing's own range. Defaults to true.
  * @returns A {@link DateCellIndexRange} representing the computed index bounds.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, cell, index-range, timing, bounds, limit, intersect
+ * @dbxUtilRelated date-cell-range-to-date-cell-index-range, date-cell-index-range-to-date-cell-range
  */
 export function dateCellIndexRange(timing: DateCellTiming, limit?: DateCellTimingRangeInput, fitToTimingRange = true): DateCellIndexRange {
   const indexFactory = dateCellTimingRelativeIndexFactory(timing);
@@ -286,6 +322,11 @@ export function dateCellIndexRange(timing: DateCellTiming, limit?: DateCellTimin
  *
  * @param collection - The date cell collection containing timing and blocks to expand.
  * @returns An array of {@link DateCellDurationSpan} values with concrete start times and durations.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, cell, collection, expand, duration-span, blocks
+ * @dbxUtilRelated expand-date-cell-timing, date-cell-timing-expansion-factory
  */
 export function expandDateCellCollection<B extends DateCell = DateCell>(collection: DateCellCollection<B>): DateCellDurationSpan<B>[] {
   return expandDateCellTiming(collection.timing, collection.blocks);
@@ -299,6 +340,11 @@ export function expandDateCellCollection<B extends DateCell = DateCell>(collecti
  * @param timing - The timing schedule providing start times and duration.
  * @param blocks - The date cell blocks to expand into duration spans.
  * @returns An array of {@link DateCellDurationSpan} values with concrete start times.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, cell, timing, expand, duration-span, blocks, shorthand
+ * @dbxUtilRelated expand-date-cell-collection, date-cell-timing-expansion-factory
  */
 export function expandDateCellTiming<B extends DateCell = DateCell>(timing: DateCellTiming, blocks: B[]): DateCellDurationSpan<B>[] {
   return dateCellTimingExpansionFactory<B>({ timing })(blocks);
@@ -364,6 +410,11 @@ export interface DateCellTimingExpansionFactoryConfig<B extends DateCell | DateC
  * @param config - Configuration specifying the timing, range limits, filters, and output caps.
  * @returns A factory function that expands date cell blocks into {@link DateCellDurationSpan} arrays.
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, cell, timing, expansion, factory, blocks, duration-span, filter
+ * @dbxUtilRelated expand-date-cell-collection, expand-date-cell-timing, date-cell-day-timing-info-factory
+ *
  * @example
  * ```ts
  * const timing = dateCellTiming({ startsAt, duration: 60 }, 5);
@@ -378,6 +429,7 @@ export interface DateCellTimingExpansionFactoryConfig<B extends DateCell | DateC
  * const expandedSpans = expand(rangeBlocks);
  * // Produces 3 spans, one for each index 0, 1, 2
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function dateCellTimingExpansionFactory<B extends DateCell | DateCellRange = DateCell>(config: DateCellTimingExpansionFactoryConfig): DateCellTimingExpansionFactory<B> {
   const { timing, rangeLimit, filter: inputFilter, durationSpanFilter: inputDurationSpanFilter, maxDateCellsToReturn = Number.MAX_SAFE_INTEGER, blocksEvaluationLimit = Number.MAX_SAFE_INTEGER } = config;
@@ -555,6 +607,12 @@ export type DateCellDayTimingInfoFactory = ((date: DateOrDateCellIndex, now?: Da
  *
  * @param config - Configuration providing the timing and optional range limit.
  * @returns A factory that computes {@link DateCellDayTimingInfo} for any date or day index.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, cell, day, timing, info, factory, progress, in-progress, complete
+ * @dbxUtilRelated date-cell-timing-relative-index-factory, date-cell-timing-expansion-factory, date-cell-timing-completed-time-range
+ * @__NO_SIDE_EFFECTS__
  */
 export function dateCellDayTimingInfoFactory(config: DateCellDayTimingInfoFactoryConfig): DateCellDayTimingInfoFactory {
   const { timing, rangeLimit } = config;
@@ -653,6 +711,12 @@ export type DateCellTimingRelativeIndexFactory<T extends DateCellTimingStartsAt 
  *
  * @param input - The value to check.
  * @returns True if the input is a {@link DateCellTimingRelativeIndexFactory}.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, cell, timing, relative-index, factory, type-guard, check
+ * @dbxUtilRelated date-cell-timing-relative-index-factory
+ * @__NO_SIDE_EFFECTS__
  */
 export function isDateCellTimingRelativeIndexFactory<T extends DateCellTimingStartsAt = DateCellTimingStartsAt>(input: unknown): input is DateCellTimingRelativeIndexFactory<T> {
   return typeof input === 'function' && '_timing' in input && '_normalInstance' in input;
@@ -687,6 +751,12 @@ export function isDateCellTimingRelativeIndexFactory<T extends DateCellTimingSta
  *
  * @param input - A timing configuration or an existing factory (returned as-is).
  * @returns A factory that converts dates, ISO8601 day strings, or indexes to zero-based day offsets.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, cell, timing, relative-index, factory, day-offset, iso8601, timezone
+ * @dbxUtilRelated is-date-cell-timing-relative-index-factory, get-relative-index-for-date-cell-timing, date-cell-timing-relative-index-array-factory
+ * @__NO_SIDE_EFFECTS__
  */
 export function dateCellTimingRelativeIndexFactory<T extends DateCellTimingStartsAt = DateCellTimingStartsAt>(input: T | DateCellTimingRelativeIndexFactory<T>): DateCellTimingRelativeIndexFactory<T> {
   if (isDateCellTimingRelativeIndexFactory(input)) {
@@ -743,6 +813,12 @@ export type DateCellTimingRelativeIndexArrayFactory<T extends DateCellTimingStar
  *
  * @param indexFactory - The relative index factory used for date-to-index conversion.
  * @returns A factory that flattens mixed date/range arrays into day index arrays.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, cell, timing, relative-index, array, factory, expand, range
+ * @dbxUtilRelated date-cell-timing-relative-index-factory, date-cell-index-range
+ * @__NO_SIDE_EFFECTS__
  */
 export function dateCellTimingRelativeIndexArrayFactory<T extends DateCellTimingStartsAt = DateCellTimingStartsAt>(indexFactory: DateCellTimingRelativeIndexFactory<T>): DateCellTimingRelativeIndexArrayFactory<T> {
   const factory = ((input: ArrayOrValue<DateOrDateRangeOrDateCellIndexOrDateCellRange>) => {
@@ -791,6 +867,11 @@ export function dateCellTimingRelativeIndexArrayFactory<T extends DateCellTiming
  * @param timing - The timing providing the start date and timezone context.
  * @param date - A date or index to convert; defaults to the current date/time.
  * @returns The zero-based day index relative to the timing's start.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, cell, timing, relative-index, day-offset, shorthand
+ * @dbxUtilRelated date-cell-timing-relative-index-factory, get-relative-date-for-date-cell-timing
  */
 export function getRelativeIndexForDateCellTiming(timing: DateCellTimingStartsAt, date: DateOrDateCellIndex = new Date()): DateCellIndex {
   return dateCellTimingRelativeIndexFactory(timing)(date);
@@ -831,6 +912,12 @@ export type DateCellTimingDateFactory<T extends DateCellTimingStartsAt = DateCel
  *
  * @param timing - The timing providing the start date and timezone context.
  * @returns A factory that maps day indexes to calendar dates preserving the current time-of-day.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, cell, timing, date, factory, day-index, calendar, time-of-day
+ * @dbxUtilRelated date-cell-timing-start-date-factory, date-cell-timing-starts-at-date-factory, get-relative-date-for-date-cell-timing
+ * @__NO_SIDE_EFFECTS__
  */
 export function dateCellTimingDateFactory<T extends DateCellTimingStartsAt = DateCellTimingStartsAt>(timing: T): DateCellTimingDateFactory<T> {
   const { start, normalInstance } = dateCellTimingStartPair(timing);
@@ -872,6 +959,11 @@ export function dateCellTimingDateFactory<T extends DateCellTimingStartsAt = Dat
  *
  * @param input - A timing or an existing relative index factory.
  * @returns The zero-based index of the last day in the schedule.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, cell, timing, end, index, last
+ * @dbxUtilRelated date-cell-timing-relative-index-factory, date-cell-timing-end-date-factory, date-cell-timing-latest-completed-index
  */
 export function dateCellTimingEndIndex(input: DateCellTiming | DateCellTimingRelativeIndexFactory<DateCellTiming>): IndexNumber {
   const factory = dateCellTimingRelativeIndexFactory(input);
@@ -906,6 +998,12 @@ export type DateCellTimingUseSystemAndIgnoreEnforcement = DateTimezoneConversion
  *
  * @param input - A timing or an existing relative index factory.
  * @returns A factory that maps day indexes to the start-of-day date in the timing's timezone.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, cell, timing, start-of-day, factory, day-index, calendar, timezone
+ * @dbxUtilRelated date-cell-timing-starts-at-date-factory, date-cell-timing-end-date-factory, date-cell-timing-date-factory
+ * @__NO_SIDE_EFFECTS__
  */
 export function dateCellTimingStartDateFactory<T extends DateCellTimingStartsAt = DateCellTimingStartsAt>(input: T | DateCellTimingRelativeIndexFactory<T>): DateCellTimingStartDateFactory<T> {
   const indexFactory = dateCellTimingRelativeIndexFactory<T>(input);
@@ -954,6 +1052,12 @@ export type DateCellTimingStartsAtDateFactory<T extends DateCellTimingStartsAt =
  *
  * @param input - A timing or an existing relative index factory.
  * @returns A factory that computes the concrete event start time for any day index.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, cell, timing, starts-at, factory, day-index, event-time, calendar
+ * @dbxUtilRelated date-cell-timing-start-date-factory, date-cell-timing-end-date-factory, date-cell-timing-date-factory
+ * @__NO_SIDE_EFFECTS__
  */
 export function dateCellTimingStartsAtDateFactory<T extends DateCellTimingStartsAt = DateCellTimingStartsAt>(input: T | DateCellTimingRelativeIndexFactory<T>): DateCellTimingStartsAtDateFactory<T>;
 export function dateCellTimingStartsAtDateFactory<T extends DateCellTimingStartsAt = DateCellTimingStartsAt>(input: T | DateCellTimingRelativeIndexFactory<T>): DateCellTimingStartsAtDateFactory<T> {
@@ -995,6 +1099,12 @@ export type DateCellTimingEndDateFactory<T extends DateCellTiming = DateCellTimi
  *
  * @param input - A timing or an existing relative index factory.
  * @returns A factory that computes the end time (startsAt + duration) for any day index.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, cell, timing, end, factory, day-index, duration, event-time
+ * @dbxUtilRelated date-cell-timing-starts-at-date-factory, date-cell-timing-start-date-factory
+ * @__NO_SIDE_EFFECTS__
  */
 export function dateCellTimingEndDateFactory<T extends DateCellTiming = DateCellTiming>(input: T | DateCellTimingRelativeIndexFactory<T>): DateCellTimingEndDateFactory<T>;
 export function dateCellTimingEndDateFactory<T extends DateCellTiming = DateCellTiming>(input: T | DateCellTimingRelativeIndexFactory<T>): DateCellTimingEndDateFactory<T> {
@@ -1016,6 +1126,11 @@ export function dateCellTimingEndDateFactory<T extends DateCellTiming = DateCell
  * @param timing - The timing providing the start date and timezone context.
  * @param input - A date or day index to convert.
  * @returns The calendar date corresponding to the input, preserving current time-of-day.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, cell, timing, relative-date, day-index, calendar, shorthand
+ * @dbxUtilRelated date-cell-timing-date-factory, get-relative-index-for-date-cell-timing
  */
 export function getRelativeDateForDateCellTiming(timing: DateCellTimingStartsAt, input: DateOrDateCellIndex): Date {
   return dateCellTimingDateFactory(timing)(input);
@@ -1091,6 +1206,11 @@ export interface UpdateDateCellTimingWithDateCellTimingEventInput {
  *
  * @param input - Configuration specifying the timing to update, the event source, and which aspects to replace.
  * @returns A new {@link FullDateCellTiming} with the requested aspects replaced.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, cell, timing, event, update, replace, modify, edit
+ * @dbxUtilRelated date-cell-timing-starts-at-date-factory, date-cell-timing-start-date-factory
  */
 export function updateDateCellTimingWithDateCellTimingEvent(input: UpdateDateCellTimingWithDateCellTimingEventInput): FullDateCellTiming {
   const { timing, event, replaceStartDay, replaceStartsAt, startDayDate: startDateDay, endOnEvent, replaceDuration } = input;
@@ -1209,6 +1329,12 @@ export interface IsDateWithinDateCellRangeConfig {
  *
  * @param config - Configuration specifying the reference range and optional timezone context.
  * @returns A predicate function that checks containment within the configured range.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, cell, range, contains, within, predicate, factory, check
+ * @dbxUtilRelated date-cell-timing-relative-index-factory, date-cell-index-range
+ * @__NO_SIDE_EFFECTS__
  */
 export function isDateWithinDateCellRangeFunction(config: IsDateWithinDateCellRangeConfig): IsDateWithinDateCellRangeFunction {
   const { startsAt: inputStartsAt, range: inputRange } = config;

@@ -344,6 +344,7 @@ export interface CreateAuthRegistryFromEntriesInput {
  *
  * @param input - the entry arrays plus the source labels to advertise
  * @returns a fully-indexed registry suitable for tools and resources
+ * @__NO_SIDE_EFFECTS__
  */
 export function createAuthRegistryFromEntries(input: CreateAuthRegistryFromEntriesInput = {}): AuthRegistry {
   const roles = input.roles ?? [];

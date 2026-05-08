@@ -51,6 +51,7 @@ export function randomDelay<T = unknown>(maxOrArgs: number | RandomNumberFactory
  * @param makeRandomDelay - factory that produces random delay values
  * @param scheduler - the scheduler to use for the delay (defaults to asyncScheduler)
  * @returns an operator that delays each emission
+ * @__NO_SIDE_EFFECTS__
  */
 export function randomDelayWithRandomFunction<T = unknown>(makeRandomDelay: RandomNumberFactory, scheduler: SchedulerLike = asyncScheduler): MonoTypeOperatorFunction<T> {
   return delayWhen(() => timer(makeRandomDelay(), scheduler));

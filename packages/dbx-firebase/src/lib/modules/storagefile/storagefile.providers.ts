@@ -8,6 +8,7 @@ import { DbxFirebaseStorageFileDownloadService } from './service/storagefile.dow
  *
  * @param storageAccessorFactory - The factory used to create prefixed storage accessors.
  * @returns A StorageAccessor scoped to the storage file download cache.
+ * @__NO_SIDE_EFFECTS__
  */
 export function defaultDbxFirebaseStorageFileDownloadStorageAccessorFactory(storageAccessorFactory: SimpleStorageAccessorFactory): StorageAccessor<DbxFirebaseStorageFileDownloadUserCache> {
   return storageAccessorFactory.createStorageAccessor<DbxFirebaseStorageFileDownloadUserCache>({
@@ -19,6 +20,7 @@ export function defaultDbxFirebaseStorageFileDownloadStorageAccessorFactory(stor
  * Creates EnvironmentProviders for the storage file download service and its dependencies.
  *
  * @returns EnvironmentProviders that register the storage file download storage accessor, storage, and service.
+ * @__NO_SIDE_EFFECTS__
  */
 export function provideDbxFirebaseStorageFileService(): EnvironmentProviders {
   const providers: (Provider | EnvironmentProviders)[] = [

@@ -39,6 +39,7 @@ export interface DbxDocsUiExamplesRegistry {
  *
  * @param loaded - The merged manifest loader output.
  * @returns A registry with slug, category, module, and related-slug indices.
+ * @__NO_SIDE_EFFECTS__
  */
 export function createDbxDocsUiExamplesRegistry(loaded: LoadDbxDocsUiExamplesManifestsResult): DbxDocsUiExamplesRegistry {
   const entries = Array.from(loaded.entries.values()).sort((a, b) => a.slug.localeCompare(b.slug));
@@ -52,6 +53,7 @@ export function createDbxDocsUiExamplesRegistry(loaded: LoadDbxDocsUiExamplesMan
  * @param input.entries - The example entries to index.
  * @param input.loadedSources - Labels of the manifest sources that contributed the entries.
  * @returns A registry with slug, category, module, and related-slug indices.
+ * @__NO_SIDE_EFFECTS__
  */
 export function createDbxDocsUiExamplesRegistryFromEntries(input: { readonly entries: readonly DbxDocsUiExampleEntry[]; readonly loadedSources: readonly string[] }): DbxDocsUiExamplesRegistry {
   const all = [...input.entries].sort((a, b) => a.slug.localeCompare(b.slug));

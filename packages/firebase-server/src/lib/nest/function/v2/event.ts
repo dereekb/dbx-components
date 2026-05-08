@@ -102,6 +102,7 @@ export type CloudEventHandlerWithNestContextFactory<N> = <E extends CloudEvent<a
  *
  * @param makeNestContext - Factory that creates the typed context from the NestJS application context.
  * @returns A factory for creating nest-context-aware event function handlers.
+ * @__NO_SIDE_EFFECTS__
  */
 export function cloudEventHandlerWithNestContextFactory<N>(makeNestContext: MakeNestContext<N>): CloudEventHandlerWithNestContextFactory<N> {
   return <E extends CloudEvent<any>, O = unknown>(fn: CloudEventHandlerWithNestContextBuilder<N, E, O>) => {

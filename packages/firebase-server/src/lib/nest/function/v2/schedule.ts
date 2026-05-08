@@ -19,6 +19,7 @@ export type OnScheduleConfigWithGlobalOptions = OnScheduleConfig & Omit<Schedule
  * @param nestApplication - The initialized NestJS application context.
  * @param scheduleContext - The optional Firebase scheduler event, absent when invoked via `_runNow()`.
  * @returns A request object ready for schedule function handlers.
+ * @__NO_SIDE_EFFECTS__
  */
 export function makeOnScheduleHandlerWithNestApplicationRequest(nestApplication: INestApplicationContext, scheduleContext?: scheduler.ScheduledEvent): OnScheduleWithNestApplicationRequest<scheduler.ScheduledEvent> {
   return {
@@ -59,6 +60,7 @@ export type OnScheduleHandlerWithNestApplicationFactory = (schedule: OnScheduleC
  *
  * @param baseScheduleConfig - Optional default schedule options merged into every function created by this factory.
  * @returns A factory for creating nest-application-aware scheduled functions.
+ * @__NO_SIDE_EFFECTS__
  */
 export function onScheduleHandlerWithNestApplicationFactory(baseScheduleConfig?: OnScheduleConfigWithGlobalOptions): OnScheduleHandlerWithNestApplicationFactory {
   return <I, O>(inputSchedule: OnScheduleConfigWithGlobalOptions, fn: OnScheduleWithNestApplication<scheduler.ScheduledEvent>) => {
@@ -100,6 +102,7 @@ export type OnScheduleHandlerWithNestContextFactory<N> = (schedule: OnScheduleCo
  * @param appFactory
  * @param makeNestContext
  * @returns
+ * @__NO_SIDE_EFFECTS__
  */
 export function onScheduleHandlerWithNestContextFactory<N>(appFactory: OnScheduleHandlerWithNestApplicationFactory, makeNestContext: MakeNestContext<N>): OnScheduleHandlerWithNestContextFactory<N> {
   return (schedule: OnScheduleConfigWithGlobalOptions, fn: OnScheduleWithNestContext<N, scheduler.ScheduledEvent>) => appFactory(schedule, (request: OnScheduleWithNestApplicationRequest<scheduler.ScheduledEvent>) => fn(setNestContextOnScheduleRequest(makeNestContext, request)));

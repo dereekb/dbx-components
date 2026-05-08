@@ -174,6 +174,7 @@ export interface CreateUiSmellCheckToolInput {
  *
  * @param input - the registries plus an optional cwd / readFile for config lookup
  * @returns a {@link DbxTool} ready to register with the dispatcher
+ * @__NO_SIDE_EFFECTS__
  */
 export function createUiSmellCheckTool(input: CreateUiSmellCheckToolInput): DbxTool {
   const { tokenRegistry, uiComponentRegistry, cwd, readFile } = input;

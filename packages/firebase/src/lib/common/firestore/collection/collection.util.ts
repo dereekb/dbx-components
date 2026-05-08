@@ -16,6 +16,7 @@ import { type FirestoreModelId } from './collection';
  * const id = firestoreModelIdFromEmail('user@example.com');
  * // id === 'userAAAexamplecom'
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreModelIdFromEmail(emailAddress: EmailAddress): FirestoreModelId {
   return emailAddress.replace('@', 'AAA').replaceAll(/[^a-zA-Z0-9]/g, '');

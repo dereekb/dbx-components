@@ -85,6 +85,7 @@ export interface CreateSemanticTypeLookupToolConfig {
  *
  * @param config - the registry the tool should resolve against
  * @returns a registered {@link DbxTool} ready to add to the dispatch table
+ * @__NO_SIDE_EFFECTS__
  */
 export function createSemanticTypeLookupTool(config: CreateSemanticTypeLookupToolConfig): DbxTool {
   const { registry } = config;

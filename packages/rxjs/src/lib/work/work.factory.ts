@@ -61,6 +61,7 @@ export interface WorkFactoryConfig<T, O> {
  * @param config.work - the work function to execute for each input value
  * @param config.delegate - delegate that receives lifecycle callbacks (start, success, reject)
  * @returns a factory function that creates WorkInstance for each input
+ * @__NO_SIDE_EFFECTS__
  */
 export function workFactory<T, O>({ work, delegate }: WorkFactoryConfig<T, O>): WorkFactory<T, O> {
   return (value: T) => {
@@ -99,6 +100,7 @@ export type WorkFactoryConfigFactory<T, O> = FactoryWithRequiredInput<WorkFactor
  *
  * @param configFactory - factory that produces work configuration from the input value
  * @returns a work factory with per-invocation configuration
+ * @__NO_SIDE_EFFECTS__
  */
 export function workFactoryForConfigFactory<T, O>(configFactory: WorkFactoryConfigFactory<T, O>): WorkFactory<T, O> {
   return (value) => {

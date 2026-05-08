@@ -220,6 +220,7 @@ export interface CreateUiExamplesToolInput {
  *
  * @param input - Optional app-sourced examples registry.
  * @returns A {@link DbxTool} that responds to `dbx_ui_examples` invocations.
+ * @__NO_SIDE_EFFECTS__
  */
 export function createUiExamplesTool(input: CreateUiExamplesToolInput = {}): DbxTool {
   const examplesRegistry = input.examplesRegistry ?? EMPTY_DBX_DOCS_UI_EXAMPLES_REGISTRY;

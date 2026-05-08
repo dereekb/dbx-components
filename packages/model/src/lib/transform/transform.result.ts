@@ -15,6 +15,7 @@ export type TransformAndValidateResultFactory<C = unknown> = <T extends object, 
  *
  * @param defaults - shared error handler defaults
  * @returns a factory that produces functions returning only the handler's result
+ * @__NO_SIDE_EFFECTS__
  */
 export function transformAndValidateResultFactory<C = unknown>(defaults: TransformAndValidateObjectFactoryDefaults<C>): TransformAndValidateResultFactory<C> {
   const factory = transformAndValidateObjectFactory(defaults);

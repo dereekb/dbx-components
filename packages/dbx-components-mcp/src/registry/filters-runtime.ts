@@ -100,6 +100,7 @@ export const FILTER_KIND_ORDER: readonly FilterKind[] = ['directive', 'pattern']
  *
  * @param loaded - the merged registry returned by `loadFilterManifests`
  * @returns a domain-friendly read API over the merged entries
+ * @__NO_SIDE_EFFECTS__
  */
 export function createFilterRegistry(loaded: LoadFilterManifestsResult): FilterRegistry {
   const entries = Array.from(loaded.entries.values()).map(toFilterEntryInfo);
@@ -115,6 +116,7 @@ export function createFilterRegistry(loaded: LoadFilterManifestsResult): FilterR
  * @param input.entries - the full entry list
  * @param input.loadedSources - source labels reported via `registry.loadedSources`
  * @returns a domain-friendly read API over the supplied entries
+ * @__NO_SIDE_EFFECTS__
  */
 export function createFilterRegistryFromEntries(input: { readonly entries: readonly FilterEntryInfo[]; readonly loadedSources: readonly string[] }): FilterRegistry {
   const all = [...input.entries];

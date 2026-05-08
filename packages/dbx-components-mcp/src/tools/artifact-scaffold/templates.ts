@@ -85,6 +85,7 @@ export interface TemplateContext {
  * @param input.componentDir - workspace path to the component package
  * @param input.apiDir - workspace path to the api package
  * @returns the resolved template context including app-stem-derived constants
+ * @__NO_SIDE_EFFECTS__
  */
 export function buildTemplateContext(input: { readonly tokens: NameTokens; readonly componentDir: string; readonly apiDir: string }): TemplateContext {
   const componentPackageName = basenameOf(input.componentDir) || 'firebase';

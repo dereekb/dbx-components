@@ -95,6 +95,7 @@ export interface DbxMakeActionSnackbarGeneratorEventConfiguration extends Omit<D
  *   error: { message: 'Failed', button: 'X' }
  * });
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function makeDbxActionSnackbarDisplayConfigGeneratorFunction(config: DbxMakeActionSnackbarGeneratorConfiguration): DbxActionSnackbarDisplayConfigGeneratorFunction {
   return <T = unknown, O = unknown>(input: DbxActionSnackbarGeneratorInput<T, O>) => {

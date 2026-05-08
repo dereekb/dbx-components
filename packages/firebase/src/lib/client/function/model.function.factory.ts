@@ -183,6 +183,7 @@ export type ModelFirebaseFunctionMapFactory<M extends FirebaseFunctionTypeMap, U
  * await fns.createNotification(data);
  * await fns.updateNotificationStatus(data);
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function callModelFirebaseFunctionMapFactory<M extends FirebaseFunctionTypeMap, U extends ModelFirebaseCrudFunctionTypeMap>(configMap: FirebaseFunctionTypeConfigMap<M>, crudConfigMap: ModelFirebaseCrudFunctionConfigMap<U, FirestoreModelIdentity>): ModelFirebaseFunctionMapFactory<M, U> {
   const functionFactory = firebaseFunctionMapFactory(configMap);

@@ -288,8 +288,15 @@ export type LatLngTupleFunctionConfig = LatLngPointFunctionConfig;
  * Creates a {@link LatLngTupleFunction} that converts various input formats into `[lat, lng]` tuples,
  * applying optional precision configuration.
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, lat-lng, tuple, factory, geographic, normalize
+ * @dbxUtilRelated lat-lng-point-function, lat-lng-string-function
+ *
  * @param config - optional configuration for precision and wrapping behavior
  * @returns a function that produces lat/lng tuples from flexible inputs
+ * @__NO_SIDE_EFFECTS__
  */
 export function latLngTupleFunction(config?: LatLngTupleFunctionConfig): LatLngTupleFunction {
   const fn = latLngPointFunction(config);
@@ -429,9 +436,16 @@ export type LatLngPointPrecisionFunction = (latLngPoint: LatLngPoint) => LatLngP
  * Creates a {@link LatLngPointPrecisionFunction} that rounds both lat and lng values
  * to the specified number of decimal places.
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, lat-lng, precision, round, factory, geographic
+ * @dbxUtilRelated lat-lng-point-function, cut-value-to-precision-function
+ *
  * @param precision - number of decimal places to retain
  * @param precisionRounding - optional rounding strategy (e.g., floor, ceil, round)
  * @returns a function that rounds points to the given precision
+ * @__NO_SIDE_EFFECTS__
  */
 export function latLngPointPrecisionFunction(precision: LatLngPrecision, precisionRounding?: RoundToPrecisionFunctionType): LatLngPointPrecisionFunction {
   const precisionFunction = cutValueToPrecisionFunction(precision, precisionRounding);
@@ -454,8 +468,15 @@ export type LatLngStringFunctionConfig = LatLngPointFunctionConfig;
  * Creates a {@link LatLngStringFunction} that converts various input formats into comma-separated lat/lng strings,
  * applying optional precision configuration.
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, lat-lng, string, factory, geographic, normalize
+ * @dbxUtilRelated lat-lng-point-function, lat-lng-tuple-function
+ *
  * @param config - optional configuration for precision and wrapping behavior
  * @returns a function that produces lat/lng strings from flexible inputs
+ * @__NO_SIDE_EFFECTS__
  */
 export function latLngStringFunction(config?: LatLngStringFunctionConfig): LatLngStringFunction {
   const fn = latLngPointFunction(config);
@@ -529,12 +550,19 @@ export function latLngPoint(lat: LatLngPointInput, lng?: Longitude): LatLngPoint
  * @returns a function that produces points from flexible inputs
  * @throws {Error} when the input cannot be parsed into a valid point
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, lat-lng, point, factory, geographic, normalize
+ * @dbxUtilRelated lat-lng-point, lat-lng-tuple-function, lat-lng-string-function, lat-lng-point-precision-function
+ *
  * @example
  * ```ts
  * const fn = latLngPointFunction({ precision: 3 });
  * const result = fn(30.59929, -96.38315);
  * // result.lat === 30.599, result.lng === -96.383
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function latLngPointFunction(config?: LatLngPointFunctionConfig): LatLngPointFunction {
   const { validate, wrap, default: defaultValue, precision = LAT_LONG_1MM_PRECISION, readLonLatTuples, precisionRounding } = config ?? {};
@@ -600,8 +628,15 @@ export type ValidLatLngPointFunction = (latLngPoint: LatLngPoint) => LatLngPoint
 /**
  * Creates a {@link ValidLatLngPointFunction} that returns the input point when valid, or a default point otherwise.
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, lat-lng, validate, fallback, factory, geographic
+ * @dbxUtilRelated valid-lat-lng-point, is-valid-lat-lng-point
+ *
  * @param defaultValue - factory for the fallback point; defaults to `defaultLatLngPoint`
  * @returns a validation function
+ * @__NO_SIDE_EFFECTS__
  */
 export function validLatLngPointFunction(defaultValue: Factory<LatLngPoint> = defaultLatLngPoint): ValidLatLngPointFunction {
   return (latLngPoint: LatLngPoint) => (isValidLatLngPoint(latLngPoint) ? latLngPoint : defaultValue());
@@ -656,8 +691,15 @@ export type LatLngDataPointFunction<T extends LatLngRef> = (data: T) => LatLngDa
 /**
  * Creates a {@link LatLngDataPointFunction} that wraps a {@link LatLngRef} object with its resolved point coordinates.
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, lat-lng, data-point, factory, geographic, ref
+ * @dbxUtilRelated lat-lng-point-function
+ *
  * @param config - optional configuration for precision and wrapping behavior
  * @returns a function that produces data points from lat/lng references
+ * @__NO_SIDE_EFFECTS__
  */
 export function latLngDataPointFunction<T extends LatLngRef>(config?: LatLngPointFunctionConfig): LatLngDataPointFunction<T> {
   const fn = latLngPointFunction(config);
@@ -698,8 +740,15 @@ export type RandomLatLngFactory = () => LatLngPoint;
  * Creates a {@link RandomLatLngFactory} that generates random points within the specified bounding box.
  * The bounding box corners are capped/wrapped to valid coordinate ranges.
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, lat-lng, random, factory, geographic, bounding-box
+ * @dbxUtilRelated random-lat-lng-from-center-factory, random-number-factory
+ *
  * @param config - optional bounding box and precision configuration
  * @returns a factory that produces random points within the bounds
+ * @__NO_SIDE_EFFECTS__
  */
 export function randomLatLngFactory(config?: RandomLatLngFactoryConfig): RandomLatLngFactory {
   const { sw, ne, precision } = { ...config, sw: { lat: MIN_LATITUDE_VALUE, lng: MIN_LONGITUDE_VALUE, ...config?.sw }, ne: { lat: MAX_LATITUDE_VALUE, lng: MAX_LONGITUDE_VALUE, ...config?.ne } };
@@ -735,8 +784,15 @@ export interface RandomLatLngFromCenterFactoryConfig extends Pick<RandomLatLngFa
  * Creates a {@link RandomLatLngFactory} that generates random points within a rectangle
  * centered on the given point, extending by `latDistance` and `lngDistance` in each direction.
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, lat-lng, random, factory, geographic, center
+ * @dbxUtilRelated random-lat-lng-factory, random-number-factory
+ *
  * @param config - center point, distances, and optional precision
  * @returns a factory that produces random points near the center
+ * @__NO_SIDE_EFFECTS__
  */
 export function randomLatLngFromCenterFactory(config: RandomLatLngFromCenterFactoryConfig): RandomLatLngFactory {
   const { center, latDistance, lngDistance, precision } = config;

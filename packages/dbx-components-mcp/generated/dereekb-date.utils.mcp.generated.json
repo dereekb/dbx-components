@@ -6,6 +6,794 @@
   "generator": "@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs",
   "entries": [
     {
+      "slug": "date-cell-range-of-timing-factory",
+      "name": "dateCellRangeOfTimingFactory",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.cell.factory",
+      "signature": "dateCellRangeOfTimingFactory(config: DateCallIndexRangeFromDatesFactoryConfig): DateCellRangeOfTimingFactory",
+      "description": "Creates a {@link DateCellRangeOfTimingFactory} that converts dates or indexes into a clamped\n{@link DateCellRangeWithRange} relative to the configured timing.\n\nWhen `fitToTimingRange` is true (default), the returned range is clamped to the timing's valid index bounds.\nWhen `limitToCompletedIndexes` is true, only indexes whose timing duration has fully elapsed are included,\nwith the max boundary lazily refreshed as time passes.",
+      "params": [
+        {
+          "name": "config",
+          "type": "DateCallIndexRangeFromDatesFactoryConfig",
+          "description": "- Configuration specifying the timing, range fit, and completion constraints.",
+          "optional": false
+        }
+      ],
+      "returns": "A factory function that produces a clamped {@link DateCellRangeWithRange } from optional start/end input.",
+      "tags": [
+        "date",
+        "cell",
+        "range",
+        "timing",
+        "factory",
+        "clamp",
+        "completed",
+        "index",
+        "of",
+        "datecellrangeoftimingfactory"
+      ],
+      "example": "const timing = dateCellTiming({ startsAt, duration: 60 }, 5);\nconst factory = dateCellRangeOfTimingFactory({ timing });\n\n// Clamp an arbitrary range to the timing's bounds (0..4)\nconst range = factory({ i: -10, to: 10 });\n// range.i === 0, range.to === 4\n\n// With no input, defaults to 0..now\nconst defaultRange = factory();",
+      "relatedSlugs": [
+        "date-cell-range-of-timing",
+        "date-cell-timing-completed-time-range",
+        "date-cell-index-range"
+      ]
+    },
+    {
+      "slug": "date-cell-range-of-timing",
+      "name": "dateCellRangeOfTiming",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.cell.factory",
+      "signature": "dateCellRangeOfTiming(config: DateCellTiming | DateCallIndexRangeFromDatesFactoryConfig, input?: Maybe<DateCellRangeOfTimingInput>): DateCellRangeWithRange",
+      "description": "Computes a {@link DateCellRangeWithRange} from a timing and optional start/end input.\n\nShorthand for creating a {@link dateCellRangeOfTimingFactory} and immediately invoking it.",
+      "params": [
+        {
+          "name": "config",
+          "type": "DateCellTiming | DateCallIndexRangeFromDatesFactoryConfig",
+          "description": "- A {@link DateCellTiming } or full factory configuration.",
+          "optional": false
+        },
+        {
+          "name": "input",
+          "type": "Maybe<DateCellRangeOfTimingInput>",
+          "description": "- Optional start/end boundaries for the range.",
+          "optional": true
+        }
+      ],
+      "returns": "A clamped {@link DateCellRangeWithRange } derived from the timing and input.",
+      "tags": [
+        "date",
+        "cell",
+        "range",
+        "timing",
+        "clamp",
+        "shorthand",
+        "of",
+        "datecellrangeoftiming"
+      ],
+      "relatedSlugs": [
+        "date-cell-range-of-timing-factory",
+        "date-cell-timing-completed-time-range"
+      ]
+    },
+    {
+      "slug": "date-cell-timing-completed-time-range",
+      "name": "dateCellTimingCompletedTimeRange",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.cell.factory",
+      "signature": "dateCellTimingCompletedTimeRange(timing: DateCellTiming, config?: DateCellTimingCompleteTimeRangeConfig): DateCellRangeWithRange",
+      "description": "Returns a {@link DateCellRangeWithRange} representing only the completed (fully elapsed) portion\nof the timing schedule. Useful for determining which days have already finished.\n\nBy default fitToTimingRange is true.",
+      "params": [
+        {
+          "name": "timing",
+          "type": "DateCellTiming",
+          "description": "- The timing schedule to evaluate.",
+          "optional": false
+        },
+        {
+          "name": "config",
+          "type": "DateCellTimingCompleteTimeRangeConfig",
+          "description": "- Optional configuration for the current time reference and range fitting.",
+          "optional": true
+        }
+      ],
+      "returns": "A {@link DateCellRangeWithRange } covering only the completed day indexes.",
+      "tags": [
+        "date",
+        "cell",
+        "timing",
+        "completed",
+        "range",
+        "elapsed",
+        "index",
+        "time",
+        "datecelltimingcompletedtimerange"
+      ],
+      "relatedSlugs": [
+        "date-cell-timing-latest-completed-index",
+        "date-cell-range-of-timing-factory"
+      ]
+    },
+    {
+      "slug": "date-cell-timing-latest-completed-index",
+      "name": "dateCellTimingLatestCompletedIndex",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.cell.factory",
+      "signature": "dateCellTimingLatestCompletedIndex(timing: DateCellTiming, now?: Date): IndexNumber",
+      "description": "Returns the latest completed day index for a {@link DateCellTiming}.\n\nReturns -1 if no days have been completed yet.",
+      "params": [
+        {
+          "name": "timing",
+          "type": "DateCellTiming",
+          "description": "- The timing schedule to evaluate.",
+          "optional": false
+        },
+        {
+          "name": "now",
+          "type": "Date",
+          "description": "- Optional reference time; defaults to the current time.",
+          "optional": true
+        }
+      ],
+      "returns": "The zero-based index of the last fully completed day, or -1 if none.",
+      "tags": [
+        "date",
+        "cell",
+        "timing",
+        "latest",
+        "completed",
+        "index",
+        "elapsed",
+        "datecelltiminglatestcompletedindex"
+      ],
+      "relatedSlugs": [
+        "date-cell-timing-completed-time-range",
+        "date-cell-timing-end-index"
+      ]
+    },
+    {
+      "slug": "date-cell-range-to-date-cell-index-range",
+      "name": "dateCellRangeToDateCellIndexRange",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.cell.factory",
+      "signature": "dateCellRangeToDateCellIndexRange(range: DateCellRange): DateCellIndexRange",
+      "description": "Converts a {@link DateCellRange} (inclusive `to`) to a {@link DateCellIndexRange} (exclusive `maxIndex`).",
+      "params": [
+        {
+          "name": "range",
+          "type": "DateCellRange",
+          "description": "- The inclusive date cell range to convert.",
+          "optional": false
+        }
+      ],
+      "returns": "A {@link DateCellIndexRange } with exclusive `maxIndex`.",
+      "tags": [
+        "date",
+        "cell",
+        "range",
+        "index-range",
+        "convert",
+        "inclusive",
+        "exclusive",
+        "to",
+        "index",
+        "datecellrangetodatecellindexrange"
+      ],
+      "relatedSlugs": [
+        "date-cell-index-range-to-date-cell-range",
+        "date-cell-index-range"
+      ]
+    },
+    {
+      "slug": "date-cell-index-range-to-date-cell-range",
+      "name": "dateCellIndexRangeToDateCellRange",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.cell.factory",
+      "signature": "dateCellIndexRangeToDateCellRange(range: DateCellIndexRange): DateCellRangeWithRange",
+      "description": "Converts a {@link DateCellIndexRange} (exclusive `maxIndex`) back to a {@link DateCellRangeWithRange} (inclusive `to`).",
+      "params": [
+        {
+          "name": "range",
+          "type": "DateCellIndexRange",
+          "description": "- The exclusive date cell index range to convert.",
+          "optional": false
+        }
+      ],
+      "returns": "A {@link DateCellRangeWithRange } with inclusive `to`.",
+      "tags": [
+        "date",
+        "cell",
+        "range",
+        "index-range",
+        "convert",
+        "exclusive",
+        "inclusive",
+        "index",
+        "to",
+        "datecellindexrangetodatecellrange"
+      ],
+      "relatedSlugs": [
+        "date-cell-range-to-date-cell-index-range",
+        "date-cell-index-range"
+      ]
+    },
+    {
+      "slug": "date-cell-index-range",
+      "name": "dateCellIndexRange",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.cell.factory",
+      "signature": "dateCellIndexRange(timing: DateCellTiming, limit?: DateCellTimingRangeInput, fitToTimingRange?: boolean): DateCellIndexRange",
+      "description": "Generates a {@link DateCellIndexRange} based on the input timing.\n\nAn arbitrary limit can also be applied. When `fitToTimingRange` is true (default),\nthe limit is intersected with the timing's own range; otherwise the limit is used as-is.",
+      "params": [
+        {
+          "name": "timing",
+          "type": "DateCellTiming",
+          "description": "- The timing schedule to derive the range from.",
+          "optional": false
+        },
+        {
+          "name": "limit",
+          "type": "DateCellTimingRangeInput",
+          "description": "- Optional range input to constrain the output.",
+          "optional": true
+        },
+        {
+          "name": "fitToTimingRange",
+          "type": "boolean",
+          "description": "- Whether to intersect the limit with the timing's own range. Defaults to true.",
+          "optional": true
+        }
+      ],
+      "returns": "A {@link DateCellIndexRange } representing the computed index bounds.",
+      "tags": [
+        "date",
+        "cell",
+        "index-range",
+        "timing",
+        "bounds",
+        "limit",
+        "intersect",
+        "index",
+        "range",
+        "datecellindexrange"
+      ],
+      "relatedSlugs": [
+        "date-cell-range-to-date-cell-index-range",
+        "date-cell-index-range-to-date-cell-range"
+      ]
+    },
+    {
+      "slug": "expand-date-cell-collection",
+      "name": "expandDateCellCollection",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.cell.factory",
+      "signature": "expandDateCellCollection(collection: DateCellCollection<B>): DateCellDurationSpan<B>[]",
+      "description": "Expands a {@link DateCellCollection} into an array of {@link DateCellDurationSpan} values\nby combining its timing and blocks.\n\nShorthand for calling {@link expandDateCellTiming} with `collection.timing` and `collection.blocks`.",
+      "params": [
+        {
+          "name": "collection",
+          "type": "DateCellCollection<B>",
+          "description": "- The date cell collection containing timing and blocks to expand.",
+          "optional": false
+        }
+      ],
+      "returns": "An array of {@link DateCellDurationSpan } values with concrete start times and durations.",
+      "tags": [
+        "date",
+        "cell",
+        "collection",
+        "expand",
+        "duration-span",
+        "blocks",
+        "expanddatecellcollection"
+      ],
+      "relatedSlugs": [
+        "expand-date-cell-timing",
+        "date-cell-timing-expansion-factory"
+      ]
+    },
+    {
+      "slug": "expand-date-cell-timing",
+      "name": "expandDateCellTiming",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.cell.factory",
+      "signature": "expandDateCellTiming(timing: DateCellTiming, blocks: B[]): DateCellDurationSpan<B>[]",
+      "description": "Expands the given blocks into {@link DateCellDurationSpan} values using the provided timing.\n\nShorthand for creating a {@link dateCellTimingExpansionFactory} and immediately invoking it.",
+      "params": [
+        {
+          "name": "timing",
+          "type": "DateCellTiming",
+          "description": "- The timing schedule providing start times and duration.",
+          "optional": false
+        },
+        {
+          "name": "blocks",
+          "type": "B[]",
+          "description": "- The date cell blocks to expand into duration spans.",
+          "optional": false
+        }
+      ],
+      "returns": "An array of {@link DateCellDurationSpan } values with concrete start times.",
+      "tags": [
+        "date",
+        "cell",
+        "timing",
+        "expand",
+        "duration-span",
+        "blocks",
+        "shorthand",
+        "expanddatecelltiming"
+      ],
+      "relatedSlugs": [
+        "expand-date-cell-collection",
+        "date-cell-timing-expansion-factory"
+      ]
+    },
+    {
+      "slug": "date-cell-timing-expansion-factory",
+      "name": "dateCellTimingExpansionFactory",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.cell.factory",
+      "signature": "dateCellTimingExpansionFactory(config: DateCellTimingExpansionFactoryConfig): DateCellTimingExpansionFactory<B>",
+      "description": "Creates a {@link DateCellTimingExpansionFactory} that expands date cell blocks into\n{@link DateCellDurationSpan} values with concrete start times and durations.\n\nBlocks with a range (`i` to `to`) are expanded into individual single-index entries.\nFiltering is applied both at the block level and at the computed duration span level,\nand evaluation can be capped for performance with large datasets.",
+      "params": [
+        {
+          "name": "config",
+          "type": "DateCellTimingExpansionFactoryConfig",
+          "description": "- Configuration specifying the timing, range limits, filters, and output caps.",
+          "optional": false
+        }
+      ],
+      "returns": "A factory function that expands date cell blocks into {@link DateCellDurationSpan } arrays.",
+      "tags": [
+        "date",
+        "cell",
+        "timing",
+        "expansion",
+        "factory",
+        "blocks",
+        "duration-span",
+        "filter",
+        "datecelltimingexpansionfactory"
+      ],
+      "example": "const timing = dateCellTiming({ startsAt, duration: 60 }, 5);\nconst expand = dateCellTimingExpansionFactory({ timing });\n\nconst blocks: DateCell[] = [{ i: 0 }, { i: 1 }, { i: 2 }];\nconst spans = expand(blocks);\n// Each span has { i, startsAt, duration } with the concrete start time for that day\n\n// With range blocks:\nconst rangeBlocks = [{ i: 0, to: 2 }];\nconst expandedSpans = expand(rangeBlocks);\n// Produces 3 spans, one for each index 0, 1, 2",
+      "relatedSlugs": [
+        "expand-date-cell-collection",
+        "expand-date-cell-timing",
+        "date-cell-day-timing-info-factory"
+      ]
+    },
+    {
+      "slug": "date-cell-day-timing-info-factory",
+      "name": "dateCellDayTimingInfoFactory",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.cell.factory",
+      "signature": "dateCellDayTimingInfoFactory(config: DateCellDayTimingInfoFactoryConfig): DateCellDayTimingInfoFactory",
+      "description": "Creates a {@link DateCellDayTimingInfoFactory} that computes detailed timing information\n(progress state, start/end times, range membership) for any given date or day index.\n\nThe factory handles timezone normalization internally and accounts for edge cases\nwhere a timing window spans midnight into the next day.",
+      "params": [
+        {
+          "name": "config",
+          "type": "DateCellDayTimingInfoFactoryConfig",
+          "description": "- Configuration providing the timing and optional range limit.",
+          "optional": false
+        }
+      ],
+      "returns": "A factory that computes {@link DateCellDayTimingInfo } for any date or day index.",
+      "tags": [
+        "date",
+        "cell",
+        "day",
+        "timing",
+        "info",
+        "factory",
+        "progress",
+        "in-progress",
+        "complete",
+        "datecelldaytiminginfofactory"
+      ],
+      "example": "const timing = dateCellTiming({ startsAt, duration: 60 }, 5);\nconst infoFactory = dateCellDayTimingInfoFactory({ timing });\n\n// Get info for day index 2\nconst info = infoFactory(2, new Date());\nconsole.log(info.isInProgress);    // whether day 2's window is currently active\nconsole.log(info.startsAtOnDay);   // concrete start time for day 2\nconsole.log(info.isInRange);       // whether index 2 is within the timing's range\n\n// Get info for a specific date\nconst dateInfo = infoFactory(someDate);\nconsole.log(dateInfo.dayIndex);    // which day index this date falls on",
+      "relatedSlugs": [
+        "date-cell-timing-relative-index-factory",
+        "date-cell-timing-expansion-factory",
+        "date-cell-timing-completed-time-range"
+      ]
+    },
+    {
+      "slug": "is-date-cell-timing-relative-index-factory",
+      "name": "isDateCellTimingRelativeIndexFactory",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.cell.factory",
+      "signature": "isDateCellTimingRelativeIndexFactory(input: unknown): input is DateCellTimingRelativeIndexFactory<T>",
+      "description": "Type guard that returns true if the input is a {@link DateCellTimingRelativeIndexFactory}.\n\nChecks for the presence of `_timing` and `_normalInstance` properties on a function.",
+      "params": [
+        {
+          "name": "input",
+          "type": "unknown",
+          "description": "- The value to check.",
+          "optional": false
+        }
+      ],
+      "returns": "True if the input is a {@link DateCellTimingRelativeIndexFactory }.",
+      "tags": [
+        "date",
+        "cell",
+        "timing",
+        "relative-index",
+        "factory",
+        "type-guard",
+        "check",
+        "is",
+        "relative",
+        "index",
+        "isdatecelltimingrelativeindexfactory"
+      ],
+      "relatedSlugs": [
+        "date-cell-timing-relative-index-factory"
+      ]
+    },
+    {
+      "slug": "date-cell-timing-relative-index-factory",
+      "name": "dateCellTimingRelativeIndexFactory",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.cell.factory",
+      "signature": "dateCellTimingRelativeIndexFactory(input: T | DateCellTimingRelativeIndexFactory<T>): DateCellTimingRelativeIndexFactory<T>",
+      "description": "Creates a {@link DateCellTimingRelativeIndexFactory} that converts dates, ISO8601 day strings,\nor indexes into a zero-based day index relative to the timing's start date.\n\nIf an existing factory is passed, it is returned as-is (idempotent). The factory normalizes\nall date inputs through UTC to handle timezone offsets correctly, computing the floor\nof the hour difference divided by 24 to determine the day offset.",
+      "params": [
+        {
+          "name": "input",
+          "type": "T | DateCellTimingRelativeIndexFactory<T>",
+          "description": "- A timing configuration or an existing factory (returned as-is).",
+          "optional": false
+        }
+      ],
+      "returns": "A factory that converts dates, ISO8601 day strings, or indexes to zero-based day offsets.",
+      "tags": [
+        "date",
+        "cell",
+        "timing",
+        "relative-index",
+        "factory",
+        "day-offset",
+        "iso8601",
+        "timezone",
+        "relative",
+        "index",
+        "datecelltimingrelativeindexfactory"
+      ],
+      "example": "const timing = dateCellTiming({ startsAt, duration: 60 }, 5);\nconst indexFactory = dateCellTimingRelativeIndexFactory(timing);\n\n// Numeric indexes pass through unchanged\nindexFactory(3); // 3\n\n// Dates are converted to their day offset from timing start\nindexFactory(addDays(startsAt, 2)); // 2\n\n// ISO8601 day strings are also supported\nindexFactory('2024-01-15'); // day offset from timing start\n\n// Access the underlying timing and normalizer\nindexFactory._timing;         // the original timing\nindexFactory._normalInstance;  // timezone normalizer",
+      "relatedSlugs": [
+        "is-date-cell-timing-relative-index-factory",
+        "get-relative-index-for-date-cell-timing",
+        "date-cell-timing-relative-index-array-factory"
+      ]
+    },
+    {
+      "slug": "date-cell-timing-relative-index-array-factory",
+      "name": "dateCellTimingRelativeIndexArrayFactory",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.cell.factory",
+      "signature": "dateCellTimingRelativeIndexArrayFactory(indexFactory: DateCellTimingRelativeIndexFactory<T>): DateCellTimingRelativeIndexArrayFactory<T>",
+      "description": "Creates a {@link DateCellTimingRelativeIndexArrayFactory} that converts mixed arrays of\ndates, date ranges, and cell ranges into a flat array of day indexes.\n\nDate ranges and cell ranges are expanded to include every index within the range.",
+      "params": [
+        {
+          "name": "indexFactory",
+          "type": "DateCellTimingRelativeIndexFactory<T>",
+          "description": "- The relative index factory used for date-to-index conversion.",
+          "optional": false
+        }
+      ],
+      "returns": "A factory that flattens mixed date/range arrays into day index arrays.",
+      "tags": [
+        "date",
+        "cell",
+        "timing",
+        "relative-index",
+        "array",
+        "factory",
+        "expand",
+        "range",
+        "relative",
+        "index",
+        "datecelltimingrelativeindexarrayfactory"
+      ],
+      "relatedSlugs": [
+        "date-cell-timing-relative-index-factory",
+        "date-cell-index-range"
+      ]
+    },
+    {
+      "slug": "get-relative-index-for-date-cell-timing",
+      "name": "getRelativeIndexForDateCellTiming",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.cell.factory",
+      "signature": "getRelativeIndexForDateCellTiming(timing: DateCellTimingStartsAt, date?: DateOrDateCellIndex): DateCellIndex",
+      "description": "Convenience function that returns the zero-based day index for a date (or index)\nrelative to the given timing's start.\n\nDefaults to the current date/time if no date is provided.",
+      "params": [
+        {
+          "name": "timing",
+          "type": "DateCellTimingStartsAt",
+          "description": "- The timing providing the start date and timezone context.",
+          "optional": false
+        },
+        {
+          "name": "date",
+          "type": "DateOrDateCellIndex",
+          "description": "- A date or index to convert; defaults to the current date/time.",
+          "optional": true
+        }
+      ],
+      "returns": "The zero-based day index relative to the timing's start.",
+      "tags": [
+        "date",
+        "cell",
+        "timing",
+        "relative-index",
+        "day-offset",
+        "shorthand",
+        "get",
+        "relative",
+        "index",
+        "for",
+        "getrelativeindexfordatecelltiming"
+      ],
+      "example": "const timing: DateCellTimingStartsAt = { startsAt, timezone: 'America/Denver' };\n\n// Get today's index relative to the timing\nconst todayIndex = getRelativeIndexForDateCellTiming(timing);\n\n// Get the index for a specific date\nconst index = getRelativeIndexForDateCellTiming(timing, someDate);",
+      "relatedSlugs": [
+        "date-cell-timing-relative-index-factory",
+        "get-relative-date-for-date-cell-timing"
+      ]
+    },
+    {
+      "slug": "date-cell-timing-date-factory",
+      "name": "dateCellTimingDateFactory",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.cell.factory",
+      "signature": "dateCellTimingDateFactory(timing: T): DateCellTimingDateFactory<T>",
+      "description": "Creates a {@link DateCellTimingDateFactory} that maps day indexes to calendar dates\nwhile preserving the current time-of-day.\n\nThis is useful when you need the actual Date for a given index (e.g., for display or\ndate arithmetic) but want to retain the hours/minutes of \"now\" rather than using\nthe timing's startsAt time.",
+      "params": [
+        {
+          "name": "timing",
+          "type": "T",
+          "description": "- The timing providing the start date and timezone context.",
+          "optional": false
+        }
+      ],
+      "returns": "A factory that maps day indexes to calendar dates preserving the current time-of-day.",
+      "tags": [
+        "date",
+        "cell",
+        "timing",
+        "factory",
+        "day-index",
+        "calendar",
+        "time-of-day",
+        "datecelltimingdatefactory"
+      ],
+      "example": "const timing = dateCellTiming({ startsAt, duration: 60 }, 5);\nconst dateFactory = dateCellTimingDateFactory(timing);\n\n// Pass through dates unchanged\ndateFactory(someDate); // returns someDate\n\n// Convert index 3 to a date with current time-of-day\nconst dateForDay3 = dateFactory(3);\n\n// Convert index 3 to a date with a specific reference time\nconst dateForDay3AtNoon = dateFactory(3, noonDate);",
+      "relatedSlugs": [
+        "date-cell-timing-start-date-factory",
+        "date-cell-timing-starts-at-date-factory",
+        "get-relative-date-for-date-cell-timing"
+      ]
+    },
+    {
+      "slug": "date-cell-timing-end-index",
+      "name": "dateCellTimingEndIndex",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.cell.factory",
+      "signature": "dateCellTimingEndIndex(input: DateCellTiming | DateCellTimingRelativeIndexFactory<DateCellTiming>): IndexNumber",
+      "description": "Returns the last (maximum) day index for a {@link DateCellTiming} schedule.\n\nThis is the index corresponding to the timing's `end` date, representing the final\nday in the schedule.",
+      "params": [
+        {
+          "name": "input",
+          "type": "DateCellTiming | DateCellTimingRelativeIndexFactory<DateCellTiming>",
+          "description": "- A timing or an existing relative index factory.",
+          "optional": false
+        }
+      ],
+      "returns": "The zero-based index of the last day in the schedule.",
+      "tags": [
+        "date",
+        "cell",
+        "timing",
+        "end",
+        "index",
+        "last",
+        "datecelltimingendindex"
+      ],
+      "example": "const timing = dateCellTiming({ startsAt, duration: 60 }, 5);\nconst lastIndex = dateCellTimingEndIndex(timing); // 4 (zero-based, 5 days)",
+      "relatedSlugs": [
+        "date-cell-timing-relative-index-factory",
+        "date-cell-timing-end-date-factory",
+        "date-cell-timing-latest-completed-index"
+      ]
+    },
+    {
+      "slug": "date-cell-timing-start-date-factory",
+      "name": "dateCellTimingStartDateFactory",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.cell.factory",
+      "signature": "dateCellTimingStartDateFactory(input: T | DateCellTimingRelativeIndexFactory<T>): DateCellTimingStartDateFactory<T>",
+      "description": "Creates a {@link DateCellTimingStartDateFactory} that computes the calendar start-of-day date\nfor any day index relative to the timing's start.\n\nThe returned date represents the beginning of the day in the timing's timezone context.",
+      "params": [
+        {
+          "name": "input",
+          "type": "T | DateCellTimingRelativeIndexFactory<T>",
+          "description": "- A timing or an existing relative index factory.",
+          "optional": false
+        }
+      ],
+      "returns": "A factory that maps day indexes to the start-of-day date in the timing's timezone.",
+      "tags": [
+        "date",
+        "cell",
+        "timing",
+        "start-of-day",
+        "factory",
+        "day-index",
+        "calendar",
+        "timezone",
+        "start",
+        "datecelltimingstartdatefactory"
+      ],
+      "relatedSlugs": [
+        "date-cell-timing-starts-at-date-factory",
+        "date-cell-timing-end-date-factory",
+        "date-cell-timing-date-factory"
+      ]
+    },
+    {
+      "slug": "get-relative-date-for-date-cell-timing",
+      "name": "getRelativeDateForDateCellTiming",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.cell.factory",
+      "signature": "getRelativeDateForDateCellTiming(timing: DateCellTimingStartsAt, input: DateOrDateCellIndex): Date",
+      "description": "Convenience function that returns the calendar date for a given day index or date\nrelative to the timing. Shorthand for creating a {@link dateCellTimingDateFactory} and invoking it.",
+      "params": [
+        {
+          "name": "timing",
+          "type": "DateCellTimingStartsAt",
+          "description": "- The timing providing the start date and timezone context.",
+          "optional": false
+        },
+        {
+          "name": "input",
+          "type": "DateOrDateCellIndex",
+          "description": "- A date or day index to convert.",
+          "optional": false
+        }
+      ],
+      "returns": "The calendar date corresponding to the input, preserving current time-of-day.",
+      "tags": [
+        "date",
+        "cell",
+        "timing",
+        "relative-date",
+        "day-index",
+        "calendar",
+        "shorthand",
+        "get",
+        "relative",
+        "for",
+        "getrelativedatefordatecelltiming"
+      ],
+      "relatedSlugs": [
+        "date-cell-timing-date-factory",
+        "get-relative-index-for-date-cell-timing"
+      ]
+    },
+    {
+      "slug": "update-date-cell-timing-with-date-cell-timing-event",
+      "name": "updateDateCellTimingWithDateCellTimingEvent",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.cell.factory",
+      "signature": "updateDateCellTimingWithDateCellTimingEvent(input: UpdateDateCellTimingWithDateCellTimingEventInput): FullDateCellTiming",
+      "description": "Produces a new {@link FullDateCellTiming} by selectively replacing parts of an existing timing\nwith values from a {@link DateCellTimingEvent}.\n\nThis is the primary mechanism for updating a timing schedule in response to user edits.\nThe `replaceStartDay`, `replaceStartsAt`, `endOnEvent`, and `replaceDuration` flags\nindependently control which aspects of the timing are modified, and can be combined.\n\nWhen both `replaceStartDay` and `replaceStartsAt` are true, the event's startsAt is used directly.\nWhen only `replaceStartDay` is true, the day changes but the time-of-day is preserved.\nWhen only `replaceStartsAt` is true, the time-of-day changes but the calendar date is preserved.",
+      "params": [
+        {
+          "name": "input",
+          "type": "UpdateDateCellTimingWithDateCellTimingEventInput",
+          "description": "- Configuration specifying the timing to update, the event source, and which aspects to replace.",
+          "optional": false
+        }
+      ],
+      "returns": "A new {@link FullDateCellTiming } with the requested aspects replaced.",
+      "tags": [
+        "date",
+        "cell",
+        "timing",
+        "event",
+        "update",
+        "replace",
+        "modify",
+        "edit",
+        "with",
+        "updatedatecelltimingwithdatecelltimingevent"
+      ],
+      "example": "const result = updateDateCellTimingWithDateCellTimingEvent({\n  timing: existingTiming,\n  event: { startsAt: newStartTime, duration: 90 },\n  replaceStartsAt: true,\n  replaceDuration: true\n});\n// result has the same start day and end day, but new time-of-day and 90-minute duration",
+      "relatedSlugs": [
+        "date-cell-timing-starts-at-date-factory",
+        "date-cell-timing-start-date-factory"
+      ]
+    },
+    {
+      "slug": "is-date-within-date-cell-range-function",
+      "name": "isDateWithinDateCellRangeFunction",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.cell.factory",
+      "signature": "isDateWithinDateCellRangeFunction(config: IsDateWithinDateCellRangeConfig): IsDateWithinDateCellRangeFunction",
+      "description": "Creates a predicate that checks whether a date, index, or range falls within\nthe configured reference range.\n\nConverts all date-based inputs to cell indexes using the configured (or inferred) timezone\nbefore performing the containment check.",
+      "params": [
+        {
+          "name": "config",
+          "type": "IsDateWithinDateCellRangeConfig",
+          "description": "- Configuration specifying the reference range and optional timezone context.",
+          "optional": false
+        }
+      ],
+      "returns": "A predicate function that checks containment within the configured range.",
+      "tags": [
+        "date",
+        "cell",
+        "range",
+        "contains",
+        "within",
+        "predicate",
+        "factory",
+        "check",
+        "is",
+        "function",
+        "isdatewithindatecellrangefunction"
+      ],
+      "example": "const isInRange = isDateWithinDateCellRangeFunction({\n  startsAt: timing,\n  range: { i: 2, to: 5 }\n});\n\nisInRange(3);        // true - index 3 is within [2, 5]\nisInRange(6);        // false - index 6 is outside [2, 5]\nisInRange(someDate); // converts date to index, then checks containment",
+      "relatedSlugs": [
+        "date-cell-timing-relative-index-factory",
+        "date-cell-index-range"
+      ]
+    },
+    {
       "slug": "date-duration-span-end-date",
       "name": "dateDurationSpanEndDate",
       "kind": "function",

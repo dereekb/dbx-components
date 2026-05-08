@@ -61,6 +61,7 @@ interface CreateAuthRoleLookupToolInput {
  * @param input - Tool factory input.
  * @param input.registry - Pre-merged auth registry consulted to resolve role names, tags, and reverse model+verb queries.
  * @returns A {@link DbxTool} that resolves role queries (by topic, by tag, or by `model`+`verb`) against the registry.
+ * @__NO_SIDE_EFFECTS__
  */
 export function createAuthRoleLookupTool(input: CreateAuthRoleLookupToolInput): DbxTool {
   const { registry } = input;

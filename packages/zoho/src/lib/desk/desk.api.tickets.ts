@@ -322,6 +322,7 @@ export type ZohoDeskGetTicketsPageFactory = (input: ZohoDeskGetTicketsInput, opt
  *
  * @param context - Authenticated Zoho Desk context
  * @returns Page factory for iterating over ticket results
+ * @__NO_SIDE_EFFECTS__
  */
 export function zohoDeskGetTicketsPageFactory(context: ZohoDeskContext): ZohoDeskGetTicketsPageFactory {
   return zohoDeskFetchPageFactory(zohoDeskGetTickets(context));
@@ -337,6 +338,7 @@ export type ZohoDeskSearchTicketsPageFactory = (input: ZohoDeskSearchTicketsInpu
  *
  * @param context - Authenticated Zoho Desk context
  * @returns Page factory for iterating over search results
+ * @__NO_SIDE_EFFECTS__
  */
 export function zohoDeskSearchTicketsPageFactory(context: ZohoDeskContext): ZohoDeskSearchTicketsPageFactory {
   return zohoDeskFetchPageFactory(zohoDeskSearchTickets(context));

@@ -166,6 +166,7 @@ export interface DbxForgeFieldFunctionConfig<C extends DbxForgeFieldFunctionDef<
  *   })
  * });
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function dbxForgeFieldFunction<C extends DbxForgeFieldFunctionDef<F>, F extends FieldDef<any> = ExtractDbxForgeFieldDef<C>>(config: DbxForgeFieldFunctionConfig<C>): DbxForgeFieldFunction<C, F> {
   const { type, buildFieldDef, buildProps } = config;

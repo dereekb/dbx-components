@@ -837,6 +837,7 @@ export const notificationConverter = snapshotConverterFunctions<Notification>({
  *
  * @param context - Firestore context to create subcollection references from
  * @returns a factory function that creates collection references for a given NotificationBox parent
+ * @__NO_SIDE_EFFECTS__
  */
 export function notificationCollectionReferenceFactory(context: FirestoreContext): (notificationBox: NotificationBoxDocument) => CollectionReference<Notification> {
   return (notificationBox: NotificationBoxDocument) => {
@@ -859,6 +860,7 @@ export type NotificationFirestoreCollectionFactory = (parent: NotificationBoxDoc
  *
  * @param firestoreContext - Firestore context to bind the collection factory to
  * @returns a factory that creates typed Firestore subcollections for Notification documents
+ * @__NO_SIDE_EFFECTS__
  */
 export function notificationFirestoreCollectionFactory(firestoreContext: FirestoreContext): NotificationFirestoreCollectionFactory {
   const factory = notificationCollectionReferenceFactory(firestoreContext);
@@ -967,6 +969,7 @@ export const notificationWeekConverter = snapshotConverterFunctions<Notification
  *
  * @param context - Firestore context to create subcollection references from
  * @returns a factory function that creates collection references for a given NotificationBox parent
+ * @__NO_SIDE_EFFECTS__
  */
 export function notificationWeekCollectionReferenceFactory(context: FirestoreContext): (notificationBox: NotificationBoxDocument) => CollectionReference<NotificationWeek> {
   return (notificationBox: NotificationBoxDocument) => {
@@ -989,6 +992,7 @@ export type NotificationWeekFirestoreCollectionFactory = (parent: NotificationBo
  *
  * @param firestoreContext - Firestore context to bind the collection factory to
  * @returns a factory that creates typed Firestore subcollections for NotificationWeek documents
+ * @__NO_SIDE_EFFECTS__
  */
 export function notificationWeekFirestoreCollectionFactory(firestoreContext: FirestoreContext): NotificationWeekFirestoreCollectionFactory {
   const factory = notificationWeekCollectionReferenceFactory(firestoreContext);

@@ -595,6 +595,7 @@ export class DateTimeMinuteInstance {
  * ```
  *
  * @returns A decision function that returns `true` for valid dates.
+ * @__NO_SIDE_EFFECTS__
  */
 export function dateTimeMinuteDecisionFunction(config: DateTimeMinuteConfig): DecisionFunction<Date> {
   const instance = new DateTimeMinuteInstance(config, null);
@@ -629,6 +630,7 @@ export function dateTimeMinuteDecisionFunction(config: DateTimeMinuteConfig): De
  * ```
  *
  * @returns A decision function that returns `true` for valid days.
+ * @__NO_SIDE_EFFECTS__
  */
 export function dateTimeMinuteWholeDayDecisionFunction(config: DateTimeMinuteConfig, startAndEndOfDayMustBeValid = false): DecisionFunction<Date> {
   const instance = new DateTimeMinuteInstance(config, null);

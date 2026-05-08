@@ -37,6 +37,7 @@ export type IterateStorageListFilesFactory = FetchPageFactory<IterateStorageList
  * ```ts
  * const factory = iterateStorageListFilesFactory({ maxResults: 100 });
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function iterateStorageListFilesFactory(config: IterateStorageListFilesFactoryConfig): IterateStorageListFilesFactory {
   const { maxResults: factoryDefaultMaxResults } = config;

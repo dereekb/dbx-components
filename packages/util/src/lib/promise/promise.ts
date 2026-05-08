@@ -304,8 +304,15 @@ export function performTasksInParallel<I, K extends PrimativeKey = PerformTasksI
  * Creates a reusable function that performs tasks in parallel with optional concurrency limits
  * and non-concurrent task key constraints.
  *
+ * @dbxUtil
+ * @dbxUtilCategory promise
+ * @dbxUtilKind factory
+ * @dbxUtilTags promise, parallel, factory, concurrency, async, tasks
+ * @dbxUtilRelated perform-tasks-in-parallel, perform-async-tasks-function
+ *
  * @param config - Configuration for task factory, parallelism limits, and concurrency keys.
  * @returns A function that accepts an array of inputs and returns a Promise resolving when all tasks complete.
+ * @__NO_SIDE_EFFECTS__
  */
 export function performTasksInParallelFunction<I, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey>(config: PerformTasksInParallelFunctionConfig<I, K>): PerformTasksInParallelFunction<I> {
   const { taskFactory, sequential, nonConcurrentTaskKeyFactory, maxParallelTasks: inputMaxParallelTasks, waitBetweenTasks: _waitBetweenTasks } = config;
@@ -410,8 +417,15 @@ export type PerformTaskFactoryTasksInParallelFunction<I> = (taskInputFactory: Pe
  * Creates a function that pulls task inputs from a factory and executes them in parallel
  * with configurable concurrency limits and non-concurrent key constraints.
  *
+ * @dbxUtil
+ * @dbxUtilCategory promise
+ * @dbxUtilKind factory
+ * @dbxUtilTags promise, parallel, factory, concurrency, async, pull-tasks
+ * @dbxUtilRelated perform-tasks-in-parallel-function
+ *
  * @param config - Configuration for the task factory, parallelism, and concurrency behavior.
  * @returns a function that accepts a task input factory and returns a Promise that resolves when all tasks complete
+ * @__NO_SIDE_EFFECTS__
  */
 export function performTasksFromFactoryInParallelFunction<I, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey>(config: PerformTasksFromFactoryInParallelFunctionConfig<I, K>): PerformTaskFactoryTasksInParallelFunction<I> {
   /**
@@ -626,7 +640,14 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
 /**
  * Creates a default non-concurrent task key factory that generates unique incrementing number strings.
  *
+ * @dbxUtil
+ * @dbxUtilCategory promise
+ * @dbxUtilKind factory
+ * @dbxUtilTags promise, parallel, key, factory, unique, incrementing
+ * @dbxUtilRelated perform-tasks-in-parallel-function, incrementing-number-factory
+ *
  * @returns A {@link StringFactory} that produces unique keys for identifying non-concurrent tasks.
+ * @__NO_SIDE_EFFECTS__
  */
 export function makeDefaultNonConcurrentTaskKeyFactory(): StringFactory<any> {
   return stringFactoryFromFactory(incrementingNumberFactory(), (x) => x.toString()) as unknown as StringFactory<any>;

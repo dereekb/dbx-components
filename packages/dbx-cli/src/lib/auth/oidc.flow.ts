@@ -44,6 +44,7 @@ export interface BuildAuthorizationUrlInput {
  * @param input.state - The opaque OAuth state token used for CSRF protection.
  * @param input.codeChallenge - The PKCE code challenge derived from the verifier.
  * @returns The full authorization URL with all OAuth params merged in.
+ * @__NO_SIDE_EFFECTS__
  */
 export function buildAuthorizationUrl(input: BuildAuthorizationUrlInput): string {
   const authParams: Record<string, string> = {

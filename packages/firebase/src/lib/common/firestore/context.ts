@@ -235,6 +235,7 @@ export type FirestoreContextFactory<F extends Firestore = Firestore> = (firestor
  * @template F - The Firestore implementation type
  * @param drivers - The Firestore drivers to use in created contexts
  * @returns A factory function that creates FirestoreContext instances
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreContextFactory<F extends Firestore = Firestore>(drivers: FirestoreDrivers): FirestoreContextFactory<F> {
   return (firestore: F, params?: FirestoreContextFactoryParams) => {

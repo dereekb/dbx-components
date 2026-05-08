@@ -61,6 +61,7 @@ export type ZohoRecruitFactory = (config: ZohoRecruitConfig) => ZohoRecruit;
  * // Use the recruit context for API calls:
  * const { recruitContext } = zohoRecruit;
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function zohoRecruitFactory(factoryConfig: ZohoRecruitFactoryConfig): ZohoRecruitFactory {
   const { accountsContext } = factoryConfig;

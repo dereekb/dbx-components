@@ -550,6 +550,7 @@ export function endItreateDaysInDateRangeEarly() {
  * const iterateEvery2Days = iterateDaysInDateRangeFunction((date) => addDays(date, 2));
  * const results = iterateEvery2Days(range, (date) => date.toISOString());
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function iterateDaysInDateRangeFunction(input: IterateDaysInDateRangeFunctionConfigInput): IterateDatesInDateRangeFunction {
   const config = typeof input === 'function' ? { getNextDate: input } : input;
@@ -640,6 +641,7 @@ export type ExpandDaysForDateRangeFunction = FactoryWithRequiredInput<Date[], Da
  * const days = expand({ start: new Date('2024-01-01'), end: new Date('2024-01-03') });
  * // [2024-01-01, 2024-01-02, 2024-01-03]
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function expandDaysForDateRangeFunction(config: ExpandDaysForDateRangeConfig = {}): ExpandDaysForDateRangeFunction {
   const { maxExpansionSize: inputMaxExpansionSize = DEFAULT_EXPAND_DAYS_FOR_DATE_RANGE_MAX_EXPANSION_SIZE } = config;
@@ -782,6 +784,7 @@ export function isDateInDateRange(date: Date, dateRange: Partial<DateRange>): bo
  * isInQ1(new Date('2024-02-15')); // true
  * isInQ1(new Date('2024-05-01')); // false
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function isDateInDateRangeFunction<T extends Partial<DateRange>>(dateRange: T): IsDateInDateRangeFunction<T> {
   let fn: Building<IsDateInDateRangeFunction<T>>;
@@ -857,6 +860,7 @@ export function isDateRangeInDateRange(compareDateRange: DateRange, dateRange: P
  * isInYear({ start: new Date('2024-03-01'), end: new Date('2024-06-30') }); // true
  * isInYear({ start: new Date('2023-12-01'), end: new Date('2024-06-30') }); // false
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function isDateRangeInDateRangeFunction<T extends Partial<DateRange> = DateRange>(dateRange: T): IsDateRangeInDateRangeFunction<T> {
   const isDateInDateRange = isDateInDateRangeFunction(dateRange);
@@ -908,6 +912,7 @@ export function dateRangeOverlapsDateRange(compareDateRange: DateRange, dateRang
  * overlapsQ1({ start: new Date('2024-03-15'), end: new Date('2024-04-15') }); // true
  * overlapsQ1({ start: new Date('2024-05-01'), end: new Date('2024-06-01') }); // false
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function dateRangeOverlapsDateRangeFunction<T extends DateRange = DateRange>(dateRange: T): DateRangeOverlapsDateRangeFunction<T> {
   const startTime = dateRange.start.getTime();
@@ -989,6 +994,7 @@ export type ClampDateFunction = ((date: Date) => Date) & DateRangeFunctionDateRa
  * clamp(new Date('2024-06-15')); // 2024-06-15 (unchanged)
  * clamp(new Date('2025-06-15')); // 2024-12-31
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function clampDateFunction(dateRange: Partial<DateRange>): ClampDateFunction {
   let fn: Building<ClampDateFunction>;
@@ -1073,6 +1079,7 @@ export type ClampDateRangeFunction = ((date: Partial<DateRange>, clampNullValues
  * const result = clamp({ start: new Date('2023-06-01'), end: new Date('2024-06-30') });
  * // { start: 2024-01-01, end: 2024-06-30 }
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function clampDateRangeFunction(dateRange: DateRange, defaultClampNullValues?: boolean): ClampDateRangeFunction;
 export function clampDateRangeFunction(dateRange: Partial<DateRange>, defaultClampNullValues?: boolean): ClampPartialDateRangeFunction;
@@ -1128,6 +1135,7 @@ export type TransformDateRangeDatesFunction = (dateRange: DateRange) => DateRang
  * const range = { start: new Date('2024-01-01T10:30:00'), end: new Date('2024-01-01T14:45:00') };
  * roundToHour(range); // { start: 2024-01-01T10:00:00, end: 2024-01-01T14:00:00 }
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function transformDateRangeDatesFunction(transform: MapFunction<Date, Date>): TransformDateRangeDatesFunction {
   return ({ start, end }: DateRange) => ({

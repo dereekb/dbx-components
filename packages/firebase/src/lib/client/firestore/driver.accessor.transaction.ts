@@ -92,6 +92,7 @@ export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDoc
  *   // ... modify and set
  * });
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function transactionAccessorFactory<T>(transaction: FirebaseFirestoreTransaction): FirestoreDocumentDataAccessorFactory<T> {
   return {

@@ -55,6 +55,7 @@ export class WriteBatchFirestoreDocumentDataAccessor<T> extends DefaultFirestore
  * await accessor.set(data);
  * await batch.commit();
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function writeBatchAccessorFactory<T>(writeBatch: FirebaseFirestoreWriteBatch): FirestoreDocumentDataAccessorFactory<T> {
   return {

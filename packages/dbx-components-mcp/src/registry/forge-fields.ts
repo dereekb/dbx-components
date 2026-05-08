@@ -64,6 +64,7 @@ export interface ForgeFieldRegistry {
  *
  * @param loaded - the merged registry returned by `loadForgeFieldManifests`
  * @returns a domain-friendly read API over the merged entries
+ * @__NO_SIDE_EFFECTS__
  */
 export function createForgeFieldRegistry(loaded: LoadForgeFieldManifestsResult): ForgeFieldRegistry {
   const entries = Array.from(loaded.entries.values()).map(toFormFieldInfo);
@@ -80,6 +81,7 @@ export function createForgeFieldRegistry(loaded: LoadForgeFieldManifestsResult):
  * @param input.entries - the full entry list
  * @param input.loadedSources - source labels reported via `registry.loadedSources`
  * @returns a domain-friendly read API over the supplied entries
+ * @__NO_SIDE_EFFECTS__
  */
 export function createForgeFieldRegistryFromEntries(input: { readonly entries: readonly FormFieldInfo[]; readonly loadedSources: readonly string[] }): ForgeFieldRegistry {
   const all = [...input.entries];

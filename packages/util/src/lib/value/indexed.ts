@@ -64,12 +64,19 @@ export type MaybeIndexRef<T extends IndexRef> = Omit<T, 'i'> & Partial<Pick<T, '
  *
  * @returns a compare function suitable for Array.sort()
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, index, sort, ascending, factory, ref
+ * @dbxUtilRelated sort-by-index-ascending-compare-function, sort-by-index-range-ascending-compare-function
+ *
  * @example
  * ```ts
  * const items = [{ i: 4 }, { i: 0 }, { i: 2 }];
  * items.sort(sortAscendingIndexNumberRefFunction());
  * // items[0].i === 0
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function sortAscendingIndexNumberRefFunction<T extends IndexRef>(): SortCompareFunction<T> {
   return (a, b) => a.i - b.i;
@@ -127,6 +134,12 @@ export type IndexDeltaGroupFunction<T> = (inputItems: T[], previousItems?: Maybe
  * @param readIndex - reads an item's index, returning null/undefined for unindexed items
  * @returns a function that groups items by their index state
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, index, delta, group, factory, classify
+ * @dbxUtilRelated separate-values, compute-next-free-index-function
+ *
  * @example
  * ```ts
  * const groupFn = indexDeltaGroupFunction<{ x: string; i?: number }>((x) => x.i);
@@ -135,6 +148,7 @@ export type IndexDeltaGroupFunction<T> = (inputItems: T[], previousItems?: Maybe
  * // result.newItems.length === 1     (item without an index)
  * // result.currentItems.length === 2 (items with indexes)
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function indexDeltaGroupFunction<T>(readIndex: ReadMaybeIndexFunction<T>): IndexDeltaGroupFunction<T> {
   return (inputItems: T[], previousItems?: Maybe<T[]>) => {
@@ -183,8 +197,15 @@ export function indexDeltaGroup<T>(readIndex: ReadMaybeIndexFunction<T>, inputIt
 /**
  * Creates a SortCompareFunction that sorts items in ascending order using a custom index reader.
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, index, sort, ascending, factory, compare
+ * @dbxUtilRelated sort-ascending-index-number-ref-function, sort-by-index-range-ascending-compare-function
+ *
  * @param readIndex - extracts the index number from each item
  * @returns a compare function suitable for Array.sort()
+ * @__NO_SIDE_EFFECTS__
  */
 export function sortByIndexAscendingCompareFunction<T>(readIndex: ReadIndexFunction<T>): SortCompareFunction<T> {
   return (a, b) => readIndex(a) - readIndex(b);
@@ -205,12 +226,19 @@ export type ComputeNextFreeIndexFunction<T> = (values: T[]) => IndexNumber;
  * @param nextIndex - optional custom function to compute the next index from the max item; defaults to max + 1
  * @returns a function that computes the next free index for a given array
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, index, free, next, factory, max
+ * @dbxUtilRelated compute-next-free-index-on-sorted-values-function, min-and-max-index-function
+ *
  * @example
  * ```ts
  * const fn = computeNextFreeIndexFunction<IndexRef>((x) => x.i);
  * const nextIndex = fn([{ i: 0 }, { i: 1 }, { i: 5 }]);
  * // nextIndex === 6
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function computeNextFreeIndexFunction<T>(readIndex: ReadIndexFunction<T>, nextIndex?: (value: T) => IndexNumber): ComputeNextFreeIndexFunction<T> {
   const findMinMax = minAndMaxIndexItemsFunction<T>(readIndex);
@@ -227,9 +255,16 @@ export function computeNextFreeIndexFunction<T>(readIndex: ReadIndexFunction<T>,
  * Creates a {@link ComputeNextFreeIndexFunction} optimized for pre-sorted input arrays.
  * Instead of scanning all items for the maximum, it reads only the last element.
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, index, free, next, sorted, factory, optimized
+ * @dbxUtilRelated compute-next-free-index-function
+ *
  * @param readIndex - extracts the index number from each item
  * @param nextIndex - optional custom function to compute the next index from the last item; defaults to last + 1
  * @returns a function that computes the next free index from sorted arrays
+ * @__NO_SIDE_EFFECTS__
  */
 export function computeNextFreeIndexOnSortedValuesFunction<T>(readIndex: ReadIndexFunction<T>, nextIndex?: (value: T) => IndexNumber): ComputeNextFreeIndexFunction<T> {
   const readNextIndex = nextIndex ?? ((x) => readIndex(x) + 1); //return the max index + 1 by default.
@@ -252,12 +287,19 @@ export type MinAndMaxIndexFunction<T> = ((values: Iterable<T>) => MinAndMaxFunct
  * @param readIndex - extracts the index number from each item
  * @returns a function returning the min/max indexes, or null for empty input
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, index, min, max, factory, range
+ * @dbxUtilRelated min-and-max-index, min-and-max-index-items-function
+ *
  * @example
  * ```ts
  * const fn = minAndMaxIndexFunction<IndexRef>((x) => x.i);
  * const result = fn([{ i: 3 }, { i: 0 }, { i: 5 }]);
  * // result?.min === 0, result?.max === 5
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function minAndMaxIndexFunction<T>(readIndex: ReadIndexFunction<T>): MinAndMaxIndexFunction<T> {
   const minAndMaxItems = minAndMaxIndexItemsFunction(readIndex);
@@ -291,8 +333,15 @@ export type MinAndMaxIndexItemsFunction<T> = MinAndMaxFunction<T> & {
  * Creates a {@link MinAndMaxIndexItemsFunction} that returns the actual items (not just index numbers)
  * with the minimum and maximum index values.
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, index, min, max, items, factory
+ * @dbxUtilRelated min-and-max-index-function, min-and-max-function
+ *
  * @param readIndex - extracts the index number from each item
  * @returns a function returning the min/max items, or null for empty input
+ * @__NO_SIDE_EFFECTS__
  */
 export function minAndMaxIndexItemsFunction<T>(readIndex: ReadIndexFunction<T>): MinAndMaxIndexItemsFunction<T> {
   const fn = minAndMaxFunction(readIndex) as Building<MinAndMaxIndexItemsFunction<T>>;
@@ -363,6 +412,14 @@ export type FindBestIndexMatchFunction<T> = <I extends IndexRef>(value: I) => T;
  * fn({ i: 6 });  // returns { i: 5 }
  * fn({ i: 11 }); // returns { i: 10 }
  * ```
+ *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, index, match, find, factory, lookup
+ * @dbxUtilRelated find-best-index-match, safe-find-best-index-match
+ *
+ * @__NO_SIDE_EFFECTS__
  */
 export function findBestIndexMatchFunction<T extends IndexRef>(items: Iterable<T>): FindBestIndexMatchFunction<T> {
   // reverse the order so we can return the first item that is less than or equal to the input i
@@ -436,8 +493,15 @@ export type ReadIndexRangeFunction<T> = FactoryWithRequiredInput<IndexRange, T>;
  * Creates a SortCompareFunction that sorts items by their IndexRange in ascending order.
  * Sorts by minIndex first, then by maxIndex for items with equal minIndex values.
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, index-range, sort, ascending, factory, compare
+ * @dbxUtilRelated sort-by-index-ascending-compare-function, index-range-reader-pair-factory
+ *
  * @param readIndexRange - extracts the IndexRange from each item
  * @returns a compare function suitable for Array.sort()
+ * @__NO_SIDE_EFFECTS__
  */
 export function sortByIndexRangeAscendingCompareFunction<T>(readIndexRange: ReadIndexRangeFunction<T>): SortCompareFunction<T> {
   return (a, b) => {
@@ -465,8 +529,15 @@ export type IndexRangeReaderPairFactory<T> = FactoryWithRequiredInput<IndexRange
 /**
  * Creates a new {@link IndexRangeReaderPairFactory} that pairs each value with its computed IndexRange.
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, index-range, pair, factory, reader
+ * @dbxUtilRelated sort-by-index-range-ascending-compare-function
+ *
  * @param reader - reads the IndexRange from the input value
  * @returns a factory that creates IndexRangeReaderPair instances
+ * @__NO_SIDE_EFFECTS__
  */
 export function indexRangeReaderPairFactory<T>(reader: ReadIndexRangeFunction<T>): IndexRangeReaderPairFactory<T> {
   return (value: T) => {
@@ -503,8 +574,15 @@ export type FitToIndexRangeFunction = (input: IndexNumber) => IndexNumber;
 /**
  * Creates a {@link FitToIndexRangeFunction} that clamps index numbers to the given range boundaries.
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, index, clamp, range, factory, fit
+ * @dbxUtilRelated wrap-index-range-function, bound-number-function
+ *
  * @param input - the range to clamp to
  * @returns a function that clamps any index to the range
+ * @__NO_SIDE_EFFECTS__
  */
 export function fitToIndexRangeFunction(input: IndexRange): FitToIndexRangeFunction {
   const { minIndex: min, maxIndex } = input;
@@ -525,12 +603,19 @@ export type WrapIndexNumberFunction = WrapNumberFunction;
  * @param fencePosts - whether to use fencepost semantics (maxIndex is exclusive); defaults to true
  * @returns a function that wraps any index into the range
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, index, wrap, range, factory, modular
+ * @dbxUtilRelated fit-to-index-range-function, wrap-number-function
+ *
  * @example
  * ```ts
  * const wrap = wrapIndexRangeFunction({ minIndex: 0, maxIndex: 6 });
  * wrap(6);  // 0 (wraps from positive side)
  * wrap(-1); // 5 (wraps from negative side)
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function wrapIndexRangeFunction(input: IndexRange, fencePosts: boolean = true): WrapIndexNumberFunction {
   const { minIndex: min, maxIndex } = input;
@@ -554,9 +639,16 @@ export function indexRangeCheckReaderFunction<T extends IndexRef>(input: IndexRa
 /**
  * Creates an {@link IndexRefRangeCheckFunction} that reads an item's index using a custom reader and checks whether it falls within the specified range.
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, index, range, check, factory, predicate
+ * @dbxUtilRelated index-range-check-function, is-index-number-in-index-range-function
+ *
  * @param input - the range or range config to check against
  * @param read - custom function to extract the index from the item
  * @returns a function that checks whether an item's index is within the range
+ * @__NO_SIDE_EFFECTS__
  */
 export function indexRangeCheckReaderFunction<T>(input: IndexRangeFunctionInput, read: ReadIndexFunction<T>): IndexRefRangeCheckFunction<T>;
 export function indexRangeCheckReaderFunction<T>(input: IndexRangeFunctionInput, read: ReadIndexFunction<T> = (x: T) => (x as unknown as IndexRef).i): IndexRefRangeCheckFunction<T> {
@@ -611,8 +703,15 @@ export function asIndexRangeCheckFunctionConfig(input: IndexRangeFunctionInput):
  * Creates an {@link IndexRangeCheckFunction} that tests whether an index number falls within the configured range.
  * The min is inclusive and the max is exclusive by default unless `inclusiveMaxIndex` is set.
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, index, range, check, factory, predicate
+ * @dbxUtilRelated index-range-check-reader-function, is-index-number-in-index-range-function
+ *
  * @param input - the range or range config to check against
  * @returns a predicate function for index numbers
+ * @__NO_SIDE_EFFECTS__
  */
 export function indexRangeCheckFunction(input: IndexRangeFunctionInput): IndexRangeCheckFunction {
   const { minIndex, maxIndex } = indexRangeCheckFunctionConfigToIndexRange(asIndexRangeCheckFunctionConfig(input));
@@ -640,8 +739,15 @@ export function isIndexNumberInIndexRange(index: IndexNumber, indexRange: IndexR
 /**
  * Creates an {@link IsIndexNumberInIndexRangeFunction} bound to the given range configuration.
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, index, range, check, factory, predicate
+ * @dbxUtilRelated is-index-number-in-index-range, index-range-check-function
+ *
  * @param input - the range or range config to bind
  * @returns a predicate that tests index numbers against the bound range
+ * @__NO_SIDE_EFFECTS__
  */
 export function isIndexNumberInIndexRangeFunction(input: IndexRangeFunctionInput): IsIndexNumberInIndexRangeFunction {
   const { minIndex, maxIndex } = indexRangeCheckFunctionConfigToIndexRange(asIndexRangeCheckFunctionConfig(input));
@@ -669,8 +775,15 @@ export function isIndexRangeInIndexRange(compareIndexRange: IndexRange, indexRan
 /**
  * Creates an {@link IsIndexRangeInIndexRangeFunction} bound to the given range configuration.
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, index-range, contains, decision, factory, predicate
+ * @dbxUtilRelated is-index-range-in-index-range, index-range-overlaps-index-range-function
+ *
  * @param input - the bounding range or range config to bind
  * @returns a predicate that tests whether index ranges are fully contained
+ * @__NO_SIDE_EFFECTS__
  */
 export function isIndexRangeInIndexRangeFunction(input: IndexRangeFunctionInput): IsIndexRangeInIndexRangeFunction {
   const { minIndex, maxIndex } = indexRangeCheckFunctionConfigToIndexRange(asIndexRangeCheckFunctionConfig(input));
@@ -698,8 +811,15 @@ export function indexRangeOverlapsIndexRange(compareIndexRange: IndexRange, inde
 /**
  * Creates an {@link IndexRangeOverlapsIndexRangeFunction} bound to the given range configuration.
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, index-range, overlap, decision, factory, predicate
+ * @dbxUtilRelated is-index-range-in-index-range-function, index-range-check-function
+ *
  * @param input - the reference range or range config to bind
  * @returns a predicate that tests for overlap with the bound range
+ * @__NO_SIDE_EFFECTS__
  */
 export function indexRangeOverlapsIndexRangeFunction(input: IndexRangeFunctionInput): IndexRangeOverlapsIndexRangeFunction {
   const { minIndex, maxIndex } = indexRangeCheckFunctionConfigToIndexRange(asIndexRangeCheckFunctionConfig(input));
@@ -756,8 +876,15 @@ export type StepsFromIndexFunction = ((startIndex: number, wrapAround?: boolean,
  * Creates a {@link StepsFromIndexFunction} that computes the next index after stepping from a start position.
  * Returns undefined when the result falls outside the range (unless wrapping or fitting is enabled).
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, index, step, range, factory, wrap, navigation
+ * @dbxUtilRelated wrap-index-range-function, fit-to-index-range-function
+ *
  * @param config - stepping behavior configuration
  * @returns a function that computes the stepped index
+ * @__NO_SIDE_EFFECTS__
  */
 export function stepsFromIndexFunction(config: StepsFromIndexFunctionConfig): StepsFromIndexFunction {
   const { range, fitToRange = false, fencePosts = true, wrapAround: defaultWrapAround = false, steps: defaultStep = 1 } = config;

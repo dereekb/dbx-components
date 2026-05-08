@@ -80,13 +80,18 @@ function _filterValuesByDistance<T, Y>(values: [T, number][], minDistance: numbe
 /**
  * Same as applyBestFit, but returns a new array, rather than modifying the existing array.
  *
+ * @dbxUtil
+ * @dbxUtilCategory array
+ * @dbxUtilTags array, best-fit, filter, sort, immutable
+ * @dbxUtilRelated apply-best-fit, find-best-index-set-pair
+ *
  * @param input - The array to filter for the best fit
  * @param filter - Function that determines which items are candidates for the best fit
  * @param compare - AscendingSortCompareFunction to compare two values to determine which is the best fit
  * @param updateNonBestFit - Function that transforms non-best-fit items
  * @returns A new array with only the best fit item and transformed non-best-fit items
+ * @__NO_SIDE_EFFECTS__
  */
-// eslint-disable-next-line @typescript-eslint/max-params
 export function makeBestFit<T>(input: T[], filter: (value: T) => boolean, compare: AscendingSortCompareFunction<T>, updateNonBestFit: (value: T) => T): T[] {
   return applyBestFit<T>(copyArray(input), filter, compare, updateNonBestFit);
 }
@@ -132,9 +137,16 @@ export type FilterAndMapFunction<I, O> = MapFunction<Iterable<I>, O[]>;
  * Creates a function that filters the input values and maps all matching values to a new value.
  * This is a higher-order function that combines filtering and mapping operations.
  *
+ * @dbxUtil
+ * @dbxUtilCategory array
+ * @dbxUtilKind factory
+ * @dbxUtilTags array, filter, map, transform, factory, iterable
+ * @dbxUtilRelated array-decision-function
+ *
  * @param decisionFunction - Function that determines which items to include in the result
  * @param mapFunction - Function that transforms each included item
  * @returns A function that takes an iterable of input values and returns an array of transformed values
+ * @__NO_SIDE_EFFECTS__
  */
 export function filterAndMapFunction<I, O>(decisionFunction: DecisionFunction<I>, mapFunction: MapFunction<I, O>): FilterAndMapFunction<I, O> {
   return (values: Iterable<I>) => {

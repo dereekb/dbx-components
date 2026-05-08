@@ -328,6 +328,7 @@ export interface CreateSearchUiToolInput {
  *
  * @param input - the registry the tool reads from
  * @returns a {@link DbxTool} ready to register with the dispatcher
+ * @__NO_SIDE_EFFECTS__
  */
 export function createSearchUiTool(input: CreateSearchUiToolInput): DbxTool {
   const { registry, examplesRegistry = EMPTY_DBX_DOCS_UI_EXAMPLES_REGISTRY } = input;

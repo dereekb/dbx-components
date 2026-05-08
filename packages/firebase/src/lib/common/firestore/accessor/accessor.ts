@@ -270,6 +270,7 @@ export type UpdateWithAccessorUpdateAndConverterFunction<T> = (data: Partial<T>,
  * @param accessor - The document accessor to use for updates
  * @param converter - The data converter to transform input data to Firestore format
  * @returns A function that updates the document with converted data
+ * @__NO_SIDE_EFFECTS__
  */
 export function updateWithAccessorUpdateAndConverterFunction<T>(accessor: FirestoreDocumentDataAccessor<T>, converter: FirestoreDataConverter<T>): UpdateWithAccessorUpdateAndConverterFunction<T> {
   return async (data: Partial<T>, params?: FirestoreDocumentUpdateParams) => {

@@ -56,6 +56,7 @@ export interface CreateOutputMiddlewareInput {
  * @param input.loadOutputConfig - Optional override for how the output config is read.
  * @param input.saveCommandOutputConfig - Optional override for how a per-command output config is persisted.
  * @returns A yargs middleware function suitable for `.middleware([..., true])`.
+ * @__NO_SIDE_EFFECTS__
  */
 export function createOutputMiddleware(input: CreateOutputMiddlewareInput): MiddlewareFunction {
   const paths = buildCliPaths({ cliName: input.cliName });

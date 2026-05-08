@@ -50,12 +50,19 @@ export interface SequentialIncrementingNumberStringModelIdFactoryConfig {
  * @returns A factory function that returns the next encoded string identifier on each call
  * @throws Error if `increaseBy` is 0
  *
+ * @dbxUtil
+ * @dbxUtilCategory model
+ * @dbxUtilKind factory
+ * @dbxUtilTags model, id, factory, sequential, incrementing, dencoder
+ * @dbxUtilRelated id-batch-factory, number-string-dencoder-function
+ *
  * @example
  * ```ts
  * const factory = sequentialIncrementingNumberStringModelIdFactory({ startAt: 0 });
  * const first = factory(); // encoded representation of 0
  * const second = factory(); // encoded representation of 1
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function sequentialIncrementingNumberStringModelIdFactory(config: SequentialIncrementingNumberStringModelIdFactoryConfig = {}): ModelIdFactory {
   const { transform: inputTranformFunction, dencoder: inputDencoder, currentIndex, startAt: inputStartAt, increaseBy: inputIncreaseBy } = config;

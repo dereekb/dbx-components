@@ -52,6 +52,7 @@ export interface FirebaseModelServiceConfig<C extends FirebaseModelServiceContex
  *   roleMapForModel: (output, context, model) => computeRoles(output, context)
  * });
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function firebaseModelService<C extends FirebaseModelServiceContext, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole>(config: FirebaseModelServiceConfig<C, T, D, R>): FirebaseModelService<C, T, D, R> {
   const permissionServiceDelegate = build<FirebasePermissionServiceInstanceDelegate<C, T, D, R>>({
@@ -83,6 +84,7 @@ export type FirebaseModelServiceFactory<C extends FirebaseModelServiceContext, T
  *
  * @param config - the service configuration
  * @returns a {@link FirebaseModelServiceFactory} that lazily creates and caches the service
+ * @__NO_SIDE_EFFECTS__
  */
 export function firebaseModelServiceFactory<C extends FirebaseModelServiceContext, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole>(config: FirebaseModelServiceConfig<C, T, D, R>): FirebaseModelServiceFactory<C, T, D, R> {
   return cachedGetter(() => firebaseModelService(config));
@@ -142,6 +144,7 @@ export type InModelContextFirebaseModelServiceUseFunction<C extends FirebasePerm
  *
  * @param factory - lazy getter for the underlying model service
  * @returns an {@link InContextFirebaseModelServiceFactory} that binds contexts to the service
+ * @__NO_SIDE_EFFECTS__
  */
 export function inContextFirebaseModelServiceFactory<C extends FirebaseModelServiceContext, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole>(factory: FirebaseModelServiceGetter<C, T, D, R>): InContextFirebaseModelServiceFactory<C, T, D, R> {
   return (context: C) => {
@@ -230,6 +233,7 @@ export type FirebaseModelsServiceTypes<S extends FirebaseModelsService<any, any>
  *
  * @param services - the map of model service getter factories
  * @returns a {@link FirebaseModelsService} that dispatches to the appropriate model service by type
+ * @__NO_SIDE_EFFECTS__
  */
 export function firebaseModelsService<X extends FirebaseModelsServiceFactory<C, I>, C extends FirebaseModelServiceContext, I extends FirestoreModelIdentity = FirestoreModelIdentity>(services: X): FirebaseModelsService<X, C> {
   const firebaseModelsServiceFunction: Building<FirebaseModelsService<X, C>> = <K extends keyof X>(type: K, context: C) => {
@@ -265,6 +269,7 @@ export type InContextFirebaseModelsServiceFactory<Y> = FirebaseModelsServiceType
  *
  * @param service - the multi-model service to wrap
  * @returns an {@link InContextFirebaseModelsServiceFactory} that binds a context to the service
+ * @__NO_SIDE_EFFECTS__
  */
 export function inContextFirebaseModelsServiceFactory<X extends FirebaseModelsServiceFactory<C, I>, C extends FirebaseModelServiceContext, I extends FirestoreModelIdentity = FirestoreModelIdentity>(service: FirebaseModelsService<X, C>): InContextFirebaseModelsServiceFactory<FirebaseModelsService<X, C>> {
   const newInContextFirebaseModelsServiceFactory: Building<InContextFirebaseModelsServiceFactory<FirebaseModelsService<X, C>>> = <K extends keyof X>(context: C) => {
@@ -308,6 +313,7 @@ export type UseFirebaseModelsServiceSelectionUseFunction<Y extends FirebaseModel
  * @param type - the model type to select
  * @param select - selection params including context and key
  * @returns the {@link FirebaseModelsServiceSelectionResult} bound to the specified model
+ * @__NO_SIDE_EFFECTS__
  */
 export function selectFromFirebaseModelsService<Y extends FirebaseModelsService<any, any>, T extends FirebaseModelsServiceTypes<Y>>(service: Y, type: T, select: FirebaseModelsServiceSelection<Y, T>): FirebaseModelsServiceSelectionResult<Y, T> {
   const key = readFirestoreModelKey(select.key, true);
@@ -323,6 +329,7 @@ export function selectFromFirebaseModelsService<Y extends FirebaseModelsService<
  * @param type - the model type to select
  * @param select - selection params including context, key, and optional role requirements
  * @returns a {@link UsePromiseFunction} for the resolved roles reader
+ * @__NO_SIDE_EFFECTS__
  */
 export function useFirebaseModelsService<Y extends FirebaseModelsService<any, any>, T extends FirebaseModelsServiceTypes<Y>>(service: Y, type: T, select: UseFirebaseModelsServiceSelection<Y, T>): UseFirebaseModelsServiceSelectionResult<Y, T> {
   const inContextModelService = selectFromFirebaseModelsService(service, type, select);
@@ -345,6 +352,7 @@ export function useFirebaseModelsService<Y extends FirebaseModelsService<any, an
  *
  * @param inContextFirebaseModelsService - context-bound multi-model service
  * @returns a map of collection type strings to their {@link FirestoreModelIdentity} objects
+ * @__NO_SIDE_EFFECTS__
  */
 export function buildFirebaseCollectionTypeModelTypeMap<Y extends FirebaseModelsService<any, any>>(inContextFirebaseModelsService: InContextFirebaseModelsService<Y>) {
   const allTypes = inContextFirebaseModelsService.allTypes();

@@ -88,6 +88,7 @@ function maskEnv(env: CliEnvConfig): Record<string, unknown> {
  * @param input.envVarName - Override for the env-name env var. Defaults to `<CLINAME>_ENV` (e.g. `DEMO_CLI_ENV`).
  * @param input.defaultEnvs - Built-in env presets merged underneath the user's stored env when names match.
  * @returns A yargs `CommandModule` exposing the full `auth` subcommand surface.
+ * @__NO_SIDE_EFFECTS__
  */
 export function createAuthCommand(input: CreateAuthCommandInput): CommandModule {
   const cliName = input.cliName;

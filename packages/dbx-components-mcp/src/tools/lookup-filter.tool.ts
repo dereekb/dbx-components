@@ -138,6 +138,7 @@ export interface CreateLookupFilterToolInput {
  *
  * @param input - the registry the tool reads from
  * @returns a {@link DbxTool} ready to register with the dispatcher
+ * @__NO_SIDE_EFFECTS__
  */
 export function createLookupFilterTool(input: CreateLookupFilterToolInput): DbxTool {
   const { registry } = input;

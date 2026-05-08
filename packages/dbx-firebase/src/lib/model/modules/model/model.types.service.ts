@@ -130,6 +130,7 @@ export type DbxFirebaseModelTypesServiceInstancePairForKeysFactory = (keys: Arra
  *
  * @param service - The model types service used to resolve type info and instances.
  * @returns A factory that accepts model keys and returns an Observable of instance pairs with display info and segue refs.
+ * @__NO_SIDE_EFFECTS__
  */
 export function dbxFirebaseModelTypesServiceInstancePairForKeysFactory(service: DbxFirebaseModelTypesService): DbxFirebaseModelTypesServiceInstancePairForKeysFactory {
   return (keys: ArrayOrValue<ObservableOrValue<FirestoreModelKey>>) => {

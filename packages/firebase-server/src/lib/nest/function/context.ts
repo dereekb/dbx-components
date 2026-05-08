@@ -162,6 +162,7 @@ export interface FirebaseServerActionsTransformFactoryOptions {
  *
  * @param options - Optional configuration for error logging behavior.
  * @returns A factory that creates type-safe transform functions from ArkType schemas.
+ * @__NO_SIDE_EFFECTS__
  */
 export function firebaseServerActionsTransformFactory(options?: FirebaseServerActionsTransformFactoryOptions): TransformAndValidateObjectFactory {
   const { logError } = options ?? {};

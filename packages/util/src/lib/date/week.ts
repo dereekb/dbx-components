@@ -227,8 +227,15 @@ export type DayOfWeekNameFunction = (dayOfWeek: DayOfWeek) => string;
 /**
  * Creates a function that returns the name for a given DayOfWeek.
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilKind factory
+ * @dbxUtilTags date, week, day-of-week, name, factory, format
+ * @dbxUtilRelated days-of-week-name-map
+ *
  * @param transform - Optional configuration for abbreviation and casing
  * @returns A function that maps DayOfWeek values to name strings
+ * @__NO_SIDE_EFFECTS__
  */
 export function daysOfWeekNameFunction(transform?: DayOfWeekNamesTransformConfig): DayOfWeekNameFunction {
   const map = daysOfWeekNameMap(transform);

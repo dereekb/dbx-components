@@ -584,6 +584,7 @@ export type ZohoRecruitSearchRecordsPageFactory = <T = ZohoRecruitRecord>(input:
  * const firstPage = await fetchPage.fetchNext();
  * const secondPage = await firstPage.fetchNext();
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function zohoRecruitSearchRecordsPageFactory(context: ZohoRecruitContext): ZohoRecruitSearchRecordsPageFactory {
   return zohoFetchPageFactory(zohoRecruitSearchRecords(context));
@@ -666,6 +667,7 @@ export type ZohoRecruitGetRelatedRecordsFunction<T = ZohoRecruitRecord> = (input
  * ```
  *
  * @see https://www.zoho.com/recruit/developer-guide/apiv2/get-related-records.html
+ * @__NO_SIDE_EFFECTS__
  */
 export function zohoRecruitGetRelatedRecordsFunctionFactory(context: ZohoRecruitContext): ZohoRecruitGetRelatedRecordsFunctionFactory {
   return <T = ZohoRecruitRecord>(config: ZohoRecruitGetRelatedRecordsFunctionConfig) => {
@@ -751,6 +753,7 @@ export type ZohoRecruitGetEmailsForRecordPageFactory = FetchPageFactory<ZohoRecr
  * ```
  *
  * @see https://www.zoho.com/recruit/developer-guide/apiv2/get-related-records.html
+ * @__NO_SIDE_EFFECTS__
  */
 export function zohoRecruitGetEmailsForRecordPageFactory(context: ZohoRecruitContext): ZohoRecruitGetEmailsForRecordPageFactory {
   return zohoFetchPageFactory(zohoRecruitGetEmailsForRecord(context));
@@ -839,6 +842,7 @@ export type ZohoRecruitGetAttachmentsForRecordPageFactory = FetchPageFactory<Zoh
  * ```
  *
  * @see https://www.zoho.com/recruit/developer-guide/apiv2/get-related-records.html
+ * @__NO_SIDE_EFFECTS__
  */
 export function zohoRecruitGetAttachmentsForRecordPageFactory(context: ZohoRecruitContext): ZohoRecruitGetAttachmentsForRecordPageFactory {
   return zohoFetchPageFactory(zohoRecruitGetAttachmentsForRecord(context));
@@ -1173,6 +1177,7 @@ export type ZohoRecruitExecuteRestApiFunctionFunction = (input: ZohoRecruitExecu
  *   apiUrl: 'production'
  * });
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function zohoRecruitExecuteRestApiFunction(context: ZohoRecruitContext): ZohoRecruitExecuteRestApiFunctionFunction {
   return (input: ZohoRecruitExecuteRestApiFunctionRequest): Promise<ZohoRecruitExecuteRestApiFunctionSuccessDetails> => {

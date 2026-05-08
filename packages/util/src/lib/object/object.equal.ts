@@ -212,8 +212,15 @@ export type ObjectFieldEqualityChecker<T extends object> = ((a: Partial<T>, b: P
  *
  * Fields can be specified as simple field names (using the default `===` comparator) or as config objects with custom comparators.
  *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilKind factory
+ * @dbxUtilTags object, equality, fields, comparator, factory
+ * @dbxUtilRelated object-keys-equality-comparator-function, object-key-equality-comparator-function
+ *
  * @param config - Configuration with the fields to compare and an optional default equality function
  * @returns A function that compares two objects and reports which fields are equal/unequal
+ * @__NO_SIDE_EFFECTS__
  */
 export function objectFieldEqualityChecker<T extends object>(config: ObjectFieldEqualityCheckerConfig<T>): ObjectFieldEqualityChecker<T> {
   const { fields, defaultEqualityFunction = (a, b) => a === b } = config;

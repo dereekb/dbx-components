@@ -13,8 +13,15 @@ export type KeyValueMapFactory<T, K extends PrimativeKey = PrimativeKey> = (valu
 /**
  * Creates a KeyValueMapFactory that maps values by their key using a ReadKeyFunction.
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags map, key, factory, lookup, index
+ * @dbxUtilRelated multi-key-value-map-factory, read-keys-to-map
+ *
  * @param read - Function that extracts a key from each value
  * @returns A factory that creates Maps from arrays of values
+ * @__NO_SIDE_EFFECTS__
  */
 export function keyValueMapFactory<T, K extends PrimativeKey = PrimativeKey>(read: ReadKeyFunction<T, K>): KeyValueMapFactory<T, K> {
   return (values: T[]) => {
@@ -47,8 +54,15 @@ export function readKeysToMap<T, K extends PrimativeKey = PrimativeKey>(values: 
  * Creates a KeyValueMapFactory that maps values by multiple keys using a ReadMultipleKeysFunction.
  * Each value can appear under multiple keys.
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags map, key, multi, factory, lookup, index
+ * @dbxUtilRelated key-value-map-factory, read-multiple-keys-to-map
+ *
  * @param read - Function that extracts multiple keys from each value
  * @returns A factory that creates Maps from arrays of values
+ * @__NO_SIDE_EFFECTS__
  */
 export function multiKeyValueMapFactory<T, K extends PrimativeKey = PrimativeKey>(read: ReadMultipleKeysFunction<T, K>): KeyValueMapFactory<T, K> {
   return (values: T[]) => {

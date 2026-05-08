@@ -34,6 +34,7 @@ export interface CliPathsConfig {
  * @param config.cliName - The CLI's binary name; the default config dir is `~/.<cliName>`.
  * @param config.configDirOverride - Optional override that replaces the default config directory verbatim (used by tests).
  * @returns The {@link CliPaths} pointing at `configDir`, the config file, and the token cache file.
+ * @__NO_SIDE_EFFECTS__
  */
 export function buildCliPaths(config: CliPathsConfig): CliPaths {
   const configDir = config.configDirOverride ?? join(homedir(), `.${config.cliName}`);

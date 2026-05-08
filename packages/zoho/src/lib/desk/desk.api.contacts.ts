@@ -133,6 +133,7 @@ export type ZohoDeskGetContactsPageFactory = (input: ZohoDeskGetContactsInput, o
  *
  * @param context - Authenticated Zoho Desk context
  * @returns Page factory for iterating over contact results
+ * @__NO_SIDE_EFFECTS__
  */
 export function zohoDeskGetContactsPageFactory(context: ZohoDeskContext): ZohoDeskGetContactsPageFactory {
   return zohoDeskFetchPageFactory(zohoDeskGetContacts(context));

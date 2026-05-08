@@ -592,6 +592,7 @@ export type ZohoCrmSearchRecordsPageFactory = <T = ZohoCrmRecord>(input: ZohoCrm
  * const firstPage = await fetchPage.fetchNext();
  * const secondPage = await firstPage.fetchNext();
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function zohoCrmSearchRecordsPageFactory(context: ZohoCrmContext): ZohoCrmSearchRecordsPageFactory {
   return zohoFetchPageFactory(zohoCrmSearchRecords(context));
@@ -660,6 +661,7 @@ export type ZohoCrmGetRelatedRecordsFunction<T = ZohoCrmRecord> = (input: ZohoCr
  * ```
  *
  * @see https://www.zoho.com/crm/developer-guide/apiv2/get-related-records.html
+ * @__NO_SIDE_EFFECTS__
  */
 export function zohoCrmGetRelatedRecordsFunctionFactory(context: ZohoCrmContext): ZohoCrmGetRelatedRecordsFunctionFactory {
   return <T = ZohoCrmRecord>(config: ZohoCrmGetRelatedRecordsFunctionConfig) => {
@@ -763,6 +765,7 @@ export type ZohoCrmGetEmailsForRecordPageFactory = FetchPageFactory<ZohoCrmGetEm
  * ```
  *
  * @see https://www.zoho.com/crm/developer/docs/api/v8/get-email-rel-list.html
+ * @__NO_SIDE_EFFECTS__
  */
 export function zohoCrmGetEmailsForRecordPageFactory(context: ZohoCrmContext): ZohoCrmGetEmailsForRecordPageFactory {
   return zohoFetchPageFactory(zohoCrmGetEmailsForRecord(context));
@@ -845,6 +848,7 @@ export type ZohoCrmGetAttachmentsForRecordPageFactory = FetchPageFactory<ZohoCrm
  * ```
  *
  * @see https://www.zoho.com/crm/developer-guide/apiv2/get-related-records.html
+ * @__NO_SIDE_EFFECTS__
  */
 export function zohoCrmGetAttachmentsForRecordPageFactory(context: ZohoCrmContext): ZohoCrmGetAttachmentsForRecordPageFactory {
   return zohoFetchPageFactory(zohoCrmGetAttachmentsForRecord(context));
@@ -1092,6 +1096,7 @@ export type ZohoCrmExecuteRestApiFunctionFunction = (input: ZohoCrmExecuteRestAp
  *   apiUrl: 'production'
  * });
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function zohoCrmExecuteRestApiFunction(context: ZohoCrmContext): ZohoCrmExecuteRestApiFunctionFunction {
   return (input: ZohoCrmExecuteRestApiFunctionRequest): Promise<ZohoCrmExecuteRestApiFunctionSuccessDetails> => {

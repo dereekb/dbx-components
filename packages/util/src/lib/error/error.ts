@@ -145,8 +145,15 @@ export type ErrorMessageContainsStringFunction = (input: Maybe<ErrorInput | stri
 /**
  * Creates a function that checks if an error's message contains the target string.
  *
+ * @dbxUtil
+ * @dbxUtilCategory error
+ * @dbxUtilKind factory
+ * @dbxUtilTags error, message, contains, factory, predicate, regex
+ * @dbxUtilRelated escape-string-for-regex
+ *
  * @param target - The string to search for
  * @returns A function that checks error messages for the target string
+ * @__NO_SIDE_EFFECTS__
  */
 export function errorMessageContainsStringFunction(target: string): ErrorMessageContainsStringFunction {
   const regex = new RegExp(escapeStringForRegex(target));

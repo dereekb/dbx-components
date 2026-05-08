@@ -43,6 +43,7 @@ export enum DbxDateTimeValueMode {
  * const parser = dbxDateTimeInputValueParseFactory(DbxDateTimeValueMode.DATE_STRING, timezoneInstance);
  * const date = parser('2024-01-15T10:00:00Z');
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function dbxDateTimeInputValueParseFactory(mode: DbxDateTimeValueMode, timezoneInstance: Maybe<DateTimezoneUtcNormalInstance>): (date: Maybe<Date | string | number>) => Maybe<Date> {
   let factory: (date: Maybe<Date | string | number>) => Maybe<Date>;
@@ -130,6 +131,7 @@ export function dbxDateTimeInputValueParseFactory(mode: DbxDateTimeValueMode, ti
  * const formatter = dbxDateTimeOutputValueFactory(DbxDateTimeValueMode.DAY_STRING, null);
  * const dayString = formatter(new Date()); // e.g., '2024-01-15'
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function dbxDateTimeOutputValueFactory(mode: DbxDateTimeValueMode, timezoneInstance: Maybe<DateTimezoneUtcNormalInstance>): (date: Maybe<Date>) => Maybe<Date | string | number> {
   let factory: (date: Maybe<Date>) => Maybe<Date | string | number>;

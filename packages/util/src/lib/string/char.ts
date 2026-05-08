@@ -79,9 +79,16 @@ export type ReplaceLastCharacterIfIsFunction = (input: string) => string;
  * Creates a function that replaces the last character of a string with the replacement string
  * if that character matches any of the specified values.
  *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilKind factory
+ * @dbxUtilTags string, replace, last, character, conditional, factory
+ * @dbxUtilRelated replace-last-character-if, replace-character-at-index-if
+ *
  * @param replacement - string to substitute for the last character
  * @param is - character(s) that trigger the replacement
  * @returns a function that conditionally replaces the last character
+ * @__NO_SIDE_EFFECTS__
  */
 export function replaceLastCharacterIfIsFunction(replacement: string, is: ArrayOrValue<string>): ReplaceLastCharacterIfIsFunction {
   const matches = new Set(is);

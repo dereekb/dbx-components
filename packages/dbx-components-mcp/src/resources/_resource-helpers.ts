@@ -50,6 +50,7 @@ export interface SlugDetailResponse {
  * @param input.listAvailableSlugs - Callback that returns the available slugs surfaced in the not-found message.
  * @param input.label - Human-readable noun for the resource type used in the not-found message (e.g. `'Action'`).
  * @returns The MCP response payload to return from the resource handler.
+ * @__NO_SIDE_EFFECTS__
  */
 export function buildSlugDetailResponse<TEntry>(input: { readonly uri: { readonly href: string }; readonly rawSlug: string | string[] | undefined; readonly resolveEntry: (slug: string) => TEntry | undefined; readonly listAvailableSlugs: () => readonly string[]; readonly label: string }): SlugDetailResponse {
   const { uri, rawSlug, resolveEntry, listAvailableSlugs, label } = input;

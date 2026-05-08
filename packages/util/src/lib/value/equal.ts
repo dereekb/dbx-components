@@ -35,6 +35,7 @@ export type AreEqualContext<T = unknown> = (x: IterableOrValue<T>) => boolean;
  * context(0);  // true
  * context(10); // false
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function isEqualContext<T>(contextValue: T, fn: EqualityComparatorFunction<T>): IsEqualContext<T> {
   return (value) => {
@@ -66,6 +67,7 @@ export function isEqualContext<T>(contextValue: T, fn: EqualityComparatorFunctio
  * context([0, 0, 0]); // true
  * context([0, 1, 2]); // false
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function areEqualContext<T>(contextValue: T, fn: EqualityComparatorFunction<T>): AreEqualContext<T> {
   const isEqual = isEqualContext(contextValue, fn);

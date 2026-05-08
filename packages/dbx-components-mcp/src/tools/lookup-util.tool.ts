@@ -169,6 +169,7 @@ export interface CreateLookupUtilToolInput {
  *
  * @param input - the registry the tool reads from
  * @returns a {@link DbxTool} ready to register with the dispatcher
+ * @__NO_SIDE_EFFECTS__
  */
 export function createLookupUtilTool(input: CreateLookupUtilToolInput): DbxTool {
   const { registry } = input;

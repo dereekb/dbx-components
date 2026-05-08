@@ -20,6 +20,7 @@ export interface DbxActionContextSourceReference<T = unknown, O = unknown> exten
  * @typeParam O - The output result type.
  * @param sourceInstance - The source instance to wrap.
  * @returns A destroyable reference to the source instance.
+ * @__NO_SIDE_EFFECTS__
  */
 export function makeDbxActionContextSourceReference<T, O>(sourceInstance: DbxActionContextStoreSourceInstance<T, O>): DbxActionContextSourceReference<T, O> {
   return {

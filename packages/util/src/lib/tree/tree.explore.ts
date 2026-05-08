@@ -129,6 +129,7 @@ export type ExploreTreeFunction<N extends TreeNode<unknown, N>, V> = (trees: Arr
  *   visited.push(id);
  * });
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function exploreTreeFunction<N extends TreeNode<unknown, N>, V>(config?: Maybe<ExploreTreeFunctionConfig<N, V>>): ExploreTreeFunction<N, V> {
   const defaultMapNodeFn: (node: N) => V = config?.mapNodeFunction ?? (MAP_IDENTITY as typeof defaultMapNodeFn);
@@ -179,6 +180,7 @@ export function exploreTreeFunction<N extends TreeNode<unknown, N>, V>(config?: 
  * });
  * // Visits: root -> child1 -> leaf1 -> leaf2 -> child2 -> leaf3
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function depthFirstExploreTreeTraversalFactoryFunction<N extends TreeNode<unknown, N>, V>(): ExploreTreeTraversalFactoryFunction<N, V> {
   return (visit: ExploreTreeVisitNodeFunction<N, V>, continueTraversal: (tree: N) => void) => {
@@ -218,6 +220,7 @@ export function depthFirstExploreTreeTraversalFactoryFunction<N extends TreeNode
  * });
  * // Visits: root -> child1, child2, child3 -> leaf1, leaf2, leaf3
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function breadthFirstExploreTreeTraversalFactoryFunction<N extends TreeNode<unknown, N>, V>(): ExploreTreeTraversalFactoryFunction<N, V> {
   return (visit: ExploreTreeVisitNodeFunction<N, V>, continueTraversal: (tree: N) => void) => {

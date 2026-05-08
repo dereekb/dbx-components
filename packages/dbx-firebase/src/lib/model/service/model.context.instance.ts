@@ -12,6 +12,7 @@ export type DbxFirebaseInContextFirebaseModelServiceInstanceFactory<S extends In
  *
  * @param context$ - Observable of the in-context Firebase models service.
  * @returns A factory function for creating model service instances by type and key.
+ * @__NO_SIDE_EFFECTS__
  */
 export function dbxFirebaseInContextFirebaseModelServiceInstanceFactory<S extends InContextFirebaseModelsService<any>, C extends FirebasePermissionErrorContext = FirebasePermissionErrorContext>(context$: Observable<S>): DbxFirebaseInContextFirebaseModelServiceInstanceFactory<S, C> {
   return <D extends FirestoreDocument<any>, R extends GrantedRole = GrantedRole>(type: S extends InContextFirebaseModelsService<infer Y> ? (Y extends FirebaseModelsService<infer X, infer C> ? keyof X : never) : never, keyObs: ObservableOrValue<ModelKey>) => {

@@ -20,6 +20,7 @@ export function isLocalhost(): boolean {
  * // On https://example.com:3000
  * const url = makeWindowPath('/api/users'); // "https://example.com:3000/api/users"
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function makeWindowPath(path: string): string {
   return `${getBaseWindowUrl()}${path}`;

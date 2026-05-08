@@ -57,6 +57,7 @@ export interface CalcomGetWebhooksResponse {
  * });
  * console.log(response.data.id);
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function createWebhook(context: CalcomContext): (input: CalcomCreateWebhookInput) => Promise<CalcomWebhookResponse> {
   return (input) =>

@@ -23,6 +23,7 @@ export type RandomPickFactory<T> = (() => T) & {
  * @param values - array of values to randomly pick from
  * @returns a callable factory that returns a random value from the array on each invocation
  * @throws Error if the input array is empty
+ * @__NO_SIDE_EFFECTS__
  */
 export function randomPickFactory<T>(values: T[]): RandomPickFactory<T> {
   if (values.length === 0) {

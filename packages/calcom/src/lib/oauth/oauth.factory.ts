@@ -29,6 +29,7 @@ export type CalcomOAuthFactory = (config: CalcomOAuthConfig) => CalcomOAuth;
  *
  * @param factoryConfig - configuration including optional fetch factory and error logging
  * @returns a factory function that accepts a CalcomOAuthConfig and produces a CalcomOAuth instance
+ * @__NO_SIDE_EFFECTS__
  */
 export function calcomOAuthFactory(factoryConfig: CalcomOAuthFactoryConfig): CalcomOAuthFactory {
   const fetchHandler = calcomRateLimitedFetchHandler();
@@ -181,6 +182,7 @@ export interface CalcomOAuthAccessTokenFactoryConfig {
  *
  * @param config - configuration including the token refresher, optional cache, and expiration buffer
  * @returns a CalcomAccessTokenFactory that returns a valid access token on each call
+ * @__NO_SIDE_EFFECTS__
  */
 export function calcomOAuthAccessTokenFactory(config: CalcomOAuthAccessTokenFactoryConfig): CalcomAccessTokenFactory {
   const { tokenRefresher, accessTokenCache, tokenExpirationBuffer: inputTokenExpirationBuffer } = config;

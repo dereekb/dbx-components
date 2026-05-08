@@ -109,6 +109,7 @@ export const PIPE_CATEGORY_ORDER: readonly PipeCategory[] = ['value', 'date', 'a
  *
  * @param loaded - the merged registry returned by `loadPipeManifests`
  * @returns a domain-friendly read API over the merged entries
+ * @__NO_SIDE_EFFECTS__
  */
 export function createPipeRegistry(loaded: LoadPipeManifestsResult): PipeRegistry {
   const entries = Array.from(loaded.entries.values()).map(toPipeEntryInfo);
@@ -124,6 +125,7 @@ export function createPipeRegistry(loaded: LoadPipeManifestsResult): PipeRegistr
  * @param input.entries - the full entry list
  * @param input.loadedSources - source labels reported via `registry.loadedSources`
  * @returns a domain-friendly read API over the supplied entries
+ * @__NO_SIDE_EFFECTS__
  */
 export function createPipeRegistryFromEntries(input: { readonly entries: readonly PipeEntryInfo[]; readonly loadedSources: readonly string[] }): PipeRegistry {
   const all = [...input.entries];

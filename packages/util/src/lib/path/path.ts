@@ -302,6 +302,7 @@ export type SlashPathStartTypeFactory = SlashPathFunction;
  *
  * @param type - The start type to enforce.
  * @returns A function that transforms paths to the specified start type.
+ * @__NO_SIDE_EFFECTS__
  */
 export function slashPathStartTypeFactory(type: SlashPathStartType): SlashPathStartTypeFactory {
   let fn: SlashPathStartTypeFactory;
@@ -385,6 +386,7 @@ export interface SlashPathFolderFactoryConfig {
  *
  * @param config Configuration options for the factory.
  * @returns A SlashPathFolderFactory.
+ * @__NO_SIDE_EFFECTS__
  */
 export function slashPathFolderFactory(config: SlashPathFolderFactoryConfig = {}): SlashPathFolderFactory {
   const { startType, validationConfig, invalidPathValue: inputInvalidPathValue, treatUntypedFilesAsFolders } = config;
@@ -580,6 +582,7 @@ export function replaceInvalidFilePathTypeSeparatorsInSlashPath(input: SlashPath
  * @param input
  * @param replaceWith
  * @returns
+ * @__NO_SIDE_EFFECTS__
  */
 export function replaceInvalidFilePathTypeSeparatorsInSlashPathFunction(replaceWith: string = DEFAULT_SLASH_PATH_ILLEGAL_CHARACTER_REPLACEMENT): SlashPathFunction {
   return (input: SlashPath) => {
@@ -659,6 +662,7 @@ export interface SlashPathValidationFactoryConfig {
  *
  * @param config - Configuration for validation behavior.
  * @returns A function that validates and fixes a slash path.
+ * @__NO_SIDE_EFFECTS__
  */
 export function slashPathValidationFactory(config?: SlashPathValidationFactoryConfig): SlashPathValidationFactory {
   const { illegalStrings = DEFAULT_SLASH_PATH_ILLEGAL_CHARACTERS, replaceIllegalCharacters: inputReplaceIllegalCharacters = true, replaceIllegalDots: inputReplaceIllegalDots = true, throwError } = config ?? {};
@@ -720,6 +724,7 @@ export interface SlashPathFactoryConfig {
  *
  * @param config - Configuration for path generation.
  * @returns A factory function that merges input paths into a single validated slash path.
+ * @__NO_SIDE_EFFECTS__
  */
 export function slashPathFactory(config?: SlashPathFactoryConfig): SlashPathFactory {
   const { startType: type = 'any', basePath: inputBasePaths, validate = true } = config ?? {};
@@ -816,6 +821,7 @@ export type IsolateSlashPathFunction = (path: SlashPath) => SlashPath;
  *
  * @param config - Configuration with range, optional start type, and file mode.
  * @returns A function that isolates path segments within the configured range.
+ * @__NO_SIDE_EFFECTS__
  */
 export function isolateSlashPathFunction(config: IsolateSlashPathFunctionConfig): IsolateSlashPathFunction {
   const { startType, asFile } = config;
@@ -1020,6 +1026,7 @@ export type SlashPathPathMatcherPath = ArrayOrValue<SlashPathPathMatcherPart>;
  *
  * @param path - Matcher path parts to expand into decision functions.
  * @returns Array of decision functions for each path part.
+ * @__NO_SIDE_EFFECTS__
  */
 export function expandSlashPathPathMatcherPartToDecisionFunctions(path: SlashPathPathMatcherPath): SlashPathPathMatcherFunction[] {
   const targetPathPartsInput = asArray(path);
@@ -1170,6 +1177,7 @@ export function slashPathPathMatcherConfig<N extends PrimativeValue = PrimativeV
  *
  * @param input - the matcher configuration, which may be a target path string, an array of path parts, or a full config object
  * @returns The matcher.
+ * @__NO_SIDE_EFFECTS__
  */
 export function slashPathPathMatcher<N extends PrimativeValue = PrimativeValue>(input: SlashPathPathMatcherConfigInput<N>): SlashPathPathMatcher<N> {
   const config = slashPathPathMatcherConfig(input);
@@ -1304,6 +1312,7 @@ export type SlashPathSubPathMatcher = (path: SlashPath) => SlashPathSubPathMatch
  *
  * @param config The configuration for the matcher.
  * @returns The matcher.
+ * @__NO_SIDE_EFFECTS__
  */
 export function slashPathSubPathMatcher(config: SlashPathSubPathMatcherConfig): SlashPathSubPathMatcher {
   const targetPathIndexMatchingDecisionFunctions = expandSlashPathPathMatcherPartToDecisionFunctions(config.basePath);

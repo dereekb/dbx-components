@@ -27,6 +27,7 @@ export type ZoomOAuthFactory = (config: ZoomOAuthConfig) => ZoomOAuth;
  *
  * @param factoryConfig Configuration for the OAuth factory
  * @returns A factory that creates configured ZoomOAuth instances
+ * @__NO_SIDE_EFFECTS__
  */
 export function zoomOAuthFactory(factoryConfig: ZoomOAuthFactoryConfig): ZoomOAuthFactory {
   const fetchHandler = zoomRateLimitedFetchHandler();
@@ -134,6 +135,7 @@ export interface ZoomOAuthZoomAccessTokenFactoryConfig {
  *
  * @param config
  * @returns
+ * @__NO_SIDE_EFFECTS__
  */
 export function zoomOAuthZoomAccessTokenFactory(config: ZoomOAuthZoomAccessTokenFactoryConfig): ZoomAccessTokenFactory {
   const { tokenRefresher, accessTokenCache, tokenExpirationBuffer: inputTokenExpirationBuffer } = config;

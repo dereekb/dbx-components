@@ -41,7 +41,7 @@ export interface NotificationBoxRecipientTemplateConfigArrayEntryParam extends N
   readonly remove?: Maybe<boolean>;
 }
 
-export const notificationBoxRecipientTemplateConfigArrayEntryParamType = type({
+export const notificationBoxRecipientTemplateConfigArrayEntryParamType = /* @__PURE__ */ type({
   type: 'string > 0',
   'sd?': clearable('boolean'),
   'se?': clearable('boolean'),
@@ -58,7 +58,7 @@ export interface CreateNotificationUserParams {
   readonly uid: FirebaseAuthUserId;
 }
 
-export const createNotificationUserParamsType = type({
+export const createNotificationUserParamsType = /* @__PURE__ */ type({
   uid: firestoreModelIdType
 }) as Type<CreateNotificationUserParams>;
 
@@ -75,7 +75,7 @@ export interface UpdateNotificationUserDefaultNotificationBoxRecipientConfigPara
   readonly f?: Maybe<NotificationBoxRecipientFlag>;
 }
 
-export const updateNotificationUserDefaultNotificationBoxRecipientConfigParamsType = type({
+export const updateNotificationUserDefaultNotificationBoxRecipientConfigParamsType = /* @__PURE__ */ type({
   'i?': clearable('number'),
   'e?': clearable('string.email'),
   't?': clearable(e164PhoneNumberType),
@@ -92,7 +92,7 @@ export interface UpdateNotificationBoxRecipientLikeParams {
   readonly configs?: Maybe<NotificationBoxRecipientTemplateConfigArrayEntryParam[]>;
 }
 
-export const updateNotificationBoxRecipientLikeParamsType = type({
+export const updateNotificationBoxRecipientLikeParamsType = /* @__PURE__ */ type({
   'e?': clearable('string.email'),
   't?': clearable(e164PhoneNumberType),
   's?': clearable('string'),
@@ -145,7 +145,7 @@ export interface ResyncNotificationUserResult {
 
 export interface ResyncAllNotificationUserParams {}
 
-export const resyncAllNotificationUserParamsType = type({}) as Type<ResyncAllNotificationUserParams>;
+export const resyncAllNotificationUserParamsType = /* @__PURE__ */ type({}) as Type<ResyncAllNotificationUserParams>;
 
 export interface ResyncAllNotificationUsersResult extends ResyncNotificationUserResult {
   readonly notificationUsersResynced: number;
@@ -158,7 +158,7 @@ export interface CreateNotificationSummaryParams {
   readonly model: FirestoreModelKey;
 }
 
-export const createNotificationSummaryParamsType = type({
+export const createNotificationSummaryParamsType = /* @__PURE__ */ type({
   model: firestoreModelKeyType
 }) as Type<CreateNotificationSummaryParams>;
 
@@ -186,7 +186,7 @@ export interface CreateNotificationBoxParams {
   readonly model: FirestoreModelKey;
 }
 
-export const createNotificationBoxParamsType = type({
+export const createNotificationBoxParamsType = /* @__PURE__ */ type({
   model: firestoreModelKeyType
 }) as Type<CreateNotificationBoxParams>;
 
@@ -203,7 +203,7 @@ export const initializeNotificationModelParamsType = targetModelParamsType.merge
 
 export interface InitializeAllApplicableNotificationBoxesParams {}
 
-export const initializeAllApplicableNotificationBoxesParamsType = type({}) as Type<InitializeAllApplicableNotificationBoxesParams>;
+export const initializeAllApplicableNotificationBoxesParamsType = /* @__PURE__ */ type({}) as Type<InitializeAllApplicableNotificationBoxesParams>;
 
 export interface InitializeAllApplicableNotificationBoxesResult {
   readonly notificationBoxesVisited: number;
@@ -214,7 +214,7 @@ export interface InitializeAllApplicableNotificationBoxesResult {
 
 export interface InitializeAllApplicableNotificationSummariesParams {}
 
-export const initializeAllApplicableNotificationSummariesParamsType = type({}) as Type<InitializeAllApplicableNotificationSummariesParams>;
+export const initializeAllApplicableNotificationSummariesParamsType = /* @__PURE__ */ type({}) as Type<InitializeAllApplicableNotificationSummariesParams>;
 
 export interface InitializeAllApplicableNotificationSummariesResult {
   readonly notificationSummariesVisited: number;
@@ -260,7 +260,7 @@ export interface NotificationRecipientParams {
   readonly p?: Maybe<E164PhoneNumber>;
 }
 
-export const notificationRecipientParamsType = type({
+export const notificationRecipientParamsType = /* @__PURE__ */ type({
   'uid?': clearable(firestoreModelIdType),
   'un?': clearable(`string >= ${NOTIFICATION_RECIPIENT_NAME_MIN_LENGTH} & string <= ${NOTIFICATION_RECIPIENT_NAME_MAX_LENGTH}`),
   'e?': clearable('string.email'),
@@ -344,7 +344,7 @@ export interface SendQueuedNotificationsParams {
   readonly sendNotificationLoopsTaskExcessThreshold?: Maybe<number>;
 }
 
-export const sendQueuedNotificationsParamsType = type({
+export const sendQueuedNotificationsParamsType = /* @__PURE__ */ type({
   'maxSendNotificationLoops?': clearable('number'),
   'maxParellelSendTasks?': clearable('number'),
   'sendNotificationLoopsTaskExcessThreshold?': clearable('number')
@@ -373,7 +373,7 @@ export interface SendQueuedNotificationsResult extends Omit<
  */
 export interface CleanupSentNotificationsParams {}
 
-export const cleanupSentNotificationsParamsType = type({}) as Type<CleanupSentNotificationsParams>;
+export const cleanupSentNotificationsParamsType = /* @__PURE__ */ type({}) as Type<CleanupSentNotificationsParams>;
 
 export interface CleanupSentNotificationsResult {
   readonly notificationBoxesUpdatesCount: number;

@@ -34,6 +34,7 @@ interface MutableTreeNode {
  * @param nodes - the flat route nodes extracted from sources
  * @param extractIssues - issues already discovered during extraction to forward
  * @returns the constructed tree alongside the merged issue list
+ * @__NO_SIDE_EFFECTS__
  */
 export function buildRouteTree(nodes: readonly RouteNode[], extractIssues: readonly RouteIssue[]): RouteTree {
   const issues: RouteIssue[] = [...extractIssues];

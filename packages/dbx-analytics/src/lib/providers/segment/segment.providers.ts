@@ -52,6 +52,7 @@ export interface ProvideDbxAnalyticsSegmentModuleConfig {
  *   ]
  * };
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function provideDbxAnalyticsSegmentApiService(config: ProvideDbxAnalyticsSegmentModuleConfig): EnvironmentProviders {
   const { preloadSegmentToken, dbxAnalyticsSegmentApiServiceConfigFactory } = config;

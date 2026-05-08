@@ -16,6 +16,7 @@ import { MemoryStorageObject } from './storage.object.memory';
  * const storage = defaultStorageObjectFactory();
  * storage.setItem('key', 'value');
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function defaultStorageObjectFactory(): FullStorageObject {
   let storageObject: FullStorageObject = new FullLocalStorageObject(localStorage);

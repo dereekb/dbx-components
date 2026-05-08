@@ -20,6 +20,7 @@ export const DEFAULT_VH100_VARIABLE_NAME: CssTokenName = 'vh100';
  * const refresh = refreshVh100Function('vh100');
  * refresh(); // sets --vh100 to e.g. "812px"
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function refreshVh100Function(cssTokenName: CssTokenName = DEFAULT_VH100_VARIABLE_NAME) {
   const cssProperty = `--${cssTokenName}`;

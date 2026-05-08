@@ -33,6 +33,7 @@ export type ExpandFlattenTreeFunction<T, V> = (values: T[]) => V[];
  * @param expand An ExpandTreeFunction (values: T[]) => N[] that converts an array of T into an array of tree nodes N.
  * @param flatten A FlattenTreeFunction (tree: N, array?: V[]) => V[] that flattens a tree of N nodes into an array of V values.
  * @returns An ExpandFlattenTreeFunction (values: T[]) => V[] that performs the combined expansion and flattening.
+ * @__NO_SIDE_EFFECTS__
  */
 export function expandFlattenTreeFunction<T, V, N extends TreeNode<T, N> = TreeNode<T, any>>(expand: ExpandTreeFunction<T, N>, flatten: FlattenTreeFunction<N, V>): ExpandFlattenTreeFunction<T, V> {
   return (values: T[]) => {

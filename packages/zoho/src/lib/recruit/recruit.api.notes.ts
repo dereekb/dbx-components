@@ -164,6 +164,7 @@ export type ZohoRecruitGetNotesForRecordPageFactory = FetchPageFactory<ZohoRecru
  *
  * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
  * @returns Page factory for iterating over record notes
+ * @__NO_SIDE_EFFECTS__
  */
 export function zohoRecruitGetNotesForRecordPageFactory(context: ZohoRecruitContext): ZohoRecruitGetNotesForRecordPageFactory {
   return zohoFetchPageFactory(zohoRecruitGetNotesForRecord(context));

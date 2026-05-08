@@ -47,8 +47,15 @@ export type CachedFactoryWithInput<T, A = unknown> = CachedGetter<T> &
  * The value is retrieved once on first call and cached permanently.
  * Use `reset()` to clear the cache and `init()` to reload.
  *
+ * @dbxUtil
+ * @dbxUtilCategory getter
+ * @dbxUtilKind factory
+ * @dbxUtilTags getter, cache, memoize, lazy, factory
+ * @dbxUtilRelated as-getter, make-getter
+ *
  * @param getter - the factory or getter function whose result will be cached
  * @returns A CachedFactoryWithInput that caches the first result
+ * @__NO_SIDE_EFFECTS__
  */
 export function cachedGetter<T>(getter: Getter<T>): CachedFactoryWithInput<T>;
 export function cachedGetter<T, A = unknown>(factory: FactoryWithInput<T, A>): CachedFactoryWithInput<T, A>;

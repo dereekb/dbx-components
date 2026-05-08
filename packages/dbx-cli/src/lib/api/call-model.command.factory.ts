@@ -43,6 +43,7 @@ export interface CallModelCommandSpec<TParams = unknown, TResult = unknown> {
  *
  * @param spec - The command spec describing the yargs command surface plus how to map argv into the typed call params and the result.
  * @returns A yargs `CommandModule` whose handler runs the spec against the active CLI context.
+ * @__NO_SIDE_EFFECTS__
  */
 export function createCallModelCommand<TParams = unknown, TResult = unknown>(spec: CallModelCommandSpec<TParams, TResult>): CommandModule {
   return {

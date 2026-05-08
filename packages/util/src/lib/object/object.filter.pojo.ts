@@ -23,12 +23,19 @@ export type StripObjectFunction<T extends object> = (input: Maybe<T>, copy?: May
  * @param copy - When true (default), the returned function shallow-copies the input before filtering instead of mutating it.
  * @returns A function that returns the stripped object, or `undefined` when filtering removed every key.
  *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilKind factory
+ * @dbxUtilTags object, strip, filter, factory, undefined, empty
+ * @dbxUtilRelated strip-object, filter-from-pojo-function
+ *
  * @example
  * ```ts
  * const stripUndef = stripObjectFunction(KeyValueTypleValueFilter.UNDEFINED);
  * stripUndef({ a: 1, b: undefined });  // { a: 1 }
  * stripUndef({ a: undefined });        // undefined
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function stripObjectFunction<T extends object>(filter: FilterKeyValueTuplesInput<T>, copy: boolean = true): StripObjectFunction<T> {
   const filterFn = filterFromPOJOFunction<T>({ filter, copy });
@@ -161,6 +168,14 @@ export interface OverrideInObjectFunctionFactoryConfig<T extends object> {
  * const result = overrideFn({ color: 'blue', size: 5 });
  * // result is { color: 'red', size: 10 } (a new copy)
  * ```
+ *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilKind factory
+ * @dbxUtilTags object, override, factory, merge, template, cached
+ * @dbxUtilRelated override-in-object, merge-objects-function, filter-from-pojo-function
+ *
+ * @__NO_SIDE_EFFECTS__
  */
 export function overrideInObjectFunctionFactory<T extends object>({ filter, copy, dynamic = false }: OverrideInObjectFunctionFactoryConfig<T>): OverrideInObjectFunctionFactory<T> {
   const filterToRelevantValuesObject = filter != null ? filterFromPOJOFunction({ filter, copy: false }) : defaultFilterFromPOJOFunctionNoCopy;
@@ -243,6 +258,14 @@ export type MergeObjectsFunction<T extends object> = (objects: Maybe<Partial<T>>
  * // With null filter to also exclude null values:
  * const mergeNoNulls = mergeObjectsFunction(KeyValueTypleValueFilter.NULL);
  * ```
+ *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilKind factory
+ * @dbxUtilTags object, merge, factory, filter
+ * @dbxUtilRelated merge-objects, override-in-object-function-factory
+ *
+ * @__NO_SIDE_EFFECTS__
  */
 export function mergeObjectsFunction<T extends object>(filter?: FilterKeyValueTuplesInput<T>): MergeObjectsFunction<T> {
   const overrideFn = overrideInObjectFunctionFactory({
@@ -411,6 +434,14 @@ export type GeneralFindPOJOKeysFunction = <T extends object>(obj: T) => (keyof T
  * findDefinedKeys({ a: 1, b: undefined, c: 'hello' });
  * // ['a', 'c']
  * ```
+ *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilKind factory
+ * @dbxUtilTags object, pojo, keys, find, factory, filter
+ * @dbxUtilRelated find-pojo-keys, count-pojo-keys-function, for-each-key-value-on-pojo-function
+ *
+ * @__NO_SIDE_EFFECTS__
  */
 export function findPOJOKeysFunction<T extends object>(filter: FilterKeyValueTuplesInput<T>): FindPOJOKeysFunction<T> {
   const findEachMatchingKeyOnTarget = forEachKeyValueOnPOJOFunction<T, FindPOJOKeysContext<T>>({
@@ -470,6 +501,14 @@ export type CountPOJOKeysFunction<T> = (obj: T) => number;
  * countDefined({ a: 1, b: undefined, c: 'test' });
  * // 2
  * ```
+ *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilKind factory
+ * @dbxUtilTags object, pojo, keys, count, factory, filter
+ * @dbxUtilRelated count-pojo-keys, find-pojo-keys-function
+ *
+ * @__NO_SIDE_EFFECTS__
  */
 export function countPOJOKeysFunction<T extends object>(filter: FilterKeyValueTuplesInput<T> = KeyValueTypleValueFilter.UNDEFINED): CountPOJOKeysFunction<T> {
   type CountPOJOKeysContext = { count: number };
@@ -568,6 +607,14 @@ export type GeneralFilterFromPOJOFunction<X = object> = <T extends X>(input: T) 
  * const result = filterNulls({ a: 1, b: null, c: undefined });
  * // result is { a: 1 }, original is unchanged
  * ```
+ *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilKind factory
+ * @dbxUtilTags object, pojo, filter, factory, remove, copy
+ * @dbxUtilRelated filter-from-pojo, strip-object-function, assign-values-to-pojo-function
+ *
+ * @__NO_SIDE_EFFECTS__
  */
 export function filterFromPOJOFunction<T extends object>({ copy = false, filter: inputFilter = { valueFilter: KeyValueTypleValueFilter.UNDEFINED } }: FilterFromPOJO<T> = {}): FilterFromPOJOFunction<T> {
   const filter = filterKeyValueTuplesInputToFilter<T>(inputFilter);
@@ -691,6 +738,14 @@ export type AssignValuesToPOJOFunctionInput<T extends object = object, K extends
  * // With NULL filter and no copy:
  * const assignNoNulls = assignValuesToPOJOFunction({ valueFilter: KeyValueTypleValueFilter.NULL, copy: false });
  * ```
+ *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilKind factory
+ * @dbxUtilTags object, pojo, assign, factory, filter, copy
+ * @dbxUtilRelated assign-values-to-pojo, filter-from-pojo-function
+ *
+ * @__NO_SIDE_EFFECTS__
  */
 export function assignValuesToPOJOFunction<T extends object, K extends keyof T = keyof T>(input: AssignValuesToPOJOFunctionInput<T, K> = KeyValueTypleValueFilter.UNDEFINED): AssignValuesToPOJOFunction<T> {
   const filter: FilterKeyValueTuplesInput<T> = input;
@@ -766,6 +821,14 @@ export type ValuesFromPOJOFunction<O = unknown, I extends object = object> = (ob
  * getNonNullValues({ a: 1, b: null, c: undefined });
  * // [1]
  * ```
+ *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilKind factory
+ * @dbxUtilTags object, pojo, values, factory, filter, extract
+ * @dbxUtilRelated values-from-pojo, find-pojo-keys-function
+ *
+ * @__NO_SIDE_EFFECTS__
  */
 export function valuesFromPOJOFunction<O = unknown, I extends object = object>(filter: FilterKeyValueTuplesInput<I> = KeyValueTypleValueFilter.UNDEFINED): ValuesFromPOJOFunction<O, I> {
   const addValuesFromObjectToContext = forEachKeyValueOnPOJOFunction<I, ValuesFromPOJOFunctionContext<O>>({
@@ -804,6 +867,14 @@ export function valuesFromPOJOFunction<O = unknown, I extends object = object>(f
  * omitAB({ a: 1, b: 2, c: 3 });
  * // { c: 3 }
  * ```
+ *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilKind factory
+ * @dbxUtilTags object, pojo, keys, filter, pick, omit, factory
+ * @dbxUtilRelated filter-tuples-on-pojo-function, filter-from-pojo-function
+ *
+ * @__NO_SIDE_EFFECTS__
  */
 export function filterKeysOnPOJOFunction<T extends object>(keysToFilter: Iterable<string>, invertFilter = false): FilterTuplesOnPOJOFunction<T> {
   const keysSet = new Set(keysToFilter);
@@ -837,6 +908,14 @@ export type FilterTuplesOnPOJOFunction<T extends object> = T extends Record<stri
  * keepStrings({ a: 'hello', b: 42, c: 'world' });
  * // { a: 'hello', c: 'world' }
  * ```
+ *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilKind factory
+ * @dbxUtilTags object, pojo, tuples, filter, predicate, factory
+ * @dbxUtilRelated filter-keys-on-pojo-function, filter-from-pojo-function
+ *
+ * @__NO_SIDE_EFFECTS__
  */
 export function filterTuplesOnPOJOFunction<T extends object>(filterTupleOnObject: FilterTuplesOnPOJOFilter<T>): FilterTuplesOnPOJOFunction<T> {
   return ((input: T) => {
@@ -918,6 +997,14 @@ export type ForEachKeyValueOnPOJOConfig<T extends object, C = unknown, K extends
  * logDefined({ a: 1, b: undefined, c: 'test' });
  * // logs: 'a' 1, 'c' 'test'
  * ```
+ *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilKind factory
+ * @dbxUtilTags object, pojo, for-each, iterate, factory, callback
+ * @dbxUtilRelated find-pojo-keys-function, count-pojo-keys-function, filter-key-value-tuples-function
+ *
+ * @__NO_SIDE_EFFECTS__
  */
 export function forEachKeyValueOnPOJOFunction<T extends object, C = unknown, K extends keyof T = keyof T>({ forEach, filter }: ForEachKeyValueOnPOJOConfig<T, C, K>): ForEachKeyValueOnPOJOFunction<T, C> {
   const filterKeyValues = filterKeyValueTuplesFunction<T, K>(filter);

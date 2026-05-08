@@ -81,6 +81,7 @@ export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumen
  * const accessor = factory.accessorFor(documentRef);
  * const snapshot = await accessor.get();
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function defaultFirestoreAccessorFactory<T>(): FirestoreDocumentDataAccessorFactory<T> {
   return {

@@ -107,6 +107,7 @@ export interface UtilRegistry {
  *
  * @param loaded - the merged registry returned by `loadUtilManifests`
  * @returns a domain-friendly read API over the merged entries
+ * @__NO_SIDE_EFFECTS__
  */
 export function createUtilRegistry(loaded: LoadUtilManifestsResult): UtilRegistry {
   const entries = Array.from(loaded.entries.values()).map(toUtilEntryInfo);
@@ -122,6 +123,7 @@ export function createUtilRegistry(loaded: LoadUtilManifestsResult): UtilRegistr
  * @param input.entries - the full entry list
  * @param input.loadedSources - source labels reported via `registry.loadedSources`
  * @returns a domain-friendly read API over the supplied entries
+ * @__NO_SIDE_EFFECTS__
  */
 export function createUtilRegistryFromEntries(input: { readonly entries: readonly UtilEntryInfo[]; readonly loadedSources: readonly string[] }): UtilRegistry {
   const all = [...input.entries];

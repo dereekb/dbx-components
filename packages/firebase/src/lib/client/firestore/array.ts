@@ -21,6 +21,7 @@ import { type UpdateData } from '../../common/firestore/types';
  * });
  * await updateDoc(docRef, updateData);
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreClientArrayUpdateToUpdateData<T extends object>(input: FirestoreAccessorArrayUpdate<T>): UpdateData<T> {
   const union = input.union;

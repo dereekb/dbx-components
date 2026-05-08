@@ -30,6 +30,7 @@ export type EqualityComparatorFunction<T> = (a: T, b: T) => boolean;
  * safeCompare(null, null);  // true
  * safeCompare(null, undefined); // false
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function safeEqualityComparatorFunction<T>(compare: EqualityComparatorFunction<T>): EqualityComparatorFunction<Maybe<T>> {
   return (a: Maybe<T>, b: Maybe<T>) => (a != null && b != null ? compare(a, b) : a === b);
@@ -89,9 +90,16 @@ export type CompareEqualityWithValueFromItemsFunction<I, V> = ((a: Maybe<I>, b: 
  * This is a convenience wrapper around {@link compareEqualityWithValueFromItemsFunctionFactory} that
  * accepts both the value reader and comparator in a single call.
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, comparator, equality, factory, read
+ * @dbxUtilRelated compare-equality-with-value-from-items-function-factory, safe-equality-comparator-function
+ *
  * @param readValues - extracts the comparable value from each item
  * @param equalityComparator - compares the extracted values for equality
  * @returns a function that compares two items by their extracted values
+ * @__NO_SIDE_EFFECTS__
  */
 export function compareEqualityWithValueFromItemsFunction<I, V>(readValues: ReadValueFunction<I, V>, equalityComparator: EqualityComparatorFunction<V>): CompareEqualityWithValueFromItemsFunction<I, V> {
   return compareEqualityWithValueFromItemsFunctionFactory(readValues)(equalityComparator);
@@ -121,6 +129,14 @@ export type CompareEqualityWithValueFromItemsFunctionFactory<I, V> = ((equalityC
  * fn(undefined, undefined); // true
  * fn(0, 1);           // false
  * ```
+ *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, comparator, equality, factory, read, reuse
+ * @dbxUtilRelated compare-equality-with-value-from-items-function, safe-equality-comparator-function
+ *
+ * @__NO_SIDE_EFFECTS__
  */
 export function compareEqualityWithValueFromItemsFunctionFactory<I, V>(readValues: ReadValueFunction<I, V>): CompareEqualityWithValueFromItemsFunctionFactory<I, V> {
   const fn = ((equalityComparator: (a: V, b: V) => boolean) => {

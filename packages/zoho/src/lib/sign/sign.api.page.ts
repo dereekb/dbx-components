@@ -116,6 +116,7 @@ export type ZohoSignFetchPageFetchFunction<I extends ZohoSignPageFilter, R exten
  *   const secondPage = await firstPage.fetchNext();
  * }
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function zohoSignFetchPageFactory<I extends ZohoSignPageFilter, R extends ZohoSignPageResult<any>>(fetch: ZohoSignFetchPageFetchFunction<I, R>, defaults?: Maybe<FetchPageFactoryConfigDefaults>) {
   return fetchPageFactory<I, R>({

@@ -47,8 +47,15 @@ export function transformNumberFunctionConfig<S extends number = number>(config?
  *
  * Chains the configured operations in order: custom transform, step rounding, precision cut, then bounds clamping.
  *
+ * @dbxUtil
+ * @dbxUtilCategory number
+ * @dbxUtilKind factory
+ * @dbxUtilTags number, transform, factory, round, precision, bounds, chain
+ * @dbxUtilRelated transform-string-function, round-number-to-step-function
+ *
  * @param config - Configuration with optional transform, roundToStep, precision, and bounds
  * @returns A single function that applies all configured transformations in sequence
+ * @__NO_SIDE_EFFECTS__
  */
 export function transformNumberFunction<N extends number = number>(config: TransformNumberFunctionConfig<N>): TransformNumberFunction<N> {
   const transformFunctions: Maybe<TransformNumberFunction<N>>[] = [config.transform];

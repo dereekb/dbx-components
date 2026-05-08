@@ -51,6 +51,7 @@ export type ListMeetingsForUserPageFactory = FetchPageFactory<ListMeetingsForUse
  *
  * @param context The Zoom API context
  * @returns A page factory for paginated meeting listing
+ * @__NO_SIDE_EFFECTS__
  */
 export function listMeetingsForUserPageFactory(context: ZoomContext): ListMeetingsForUserPageFactory {
   return zoomFetchPageFactory(listMeetingsForUser(context));
@@ -171,6 +172,7 @@ export type CreateMeetingForUserResponse = ZoomMeeting;
  *
  * @param context The Zoom API context
  * @returns A function that creates a meeting for a user
+ * @__NO_SIDE_EFFECTS__
  */
 export function createMeetingForUser(context: ZoomContext): (input: CreateMeetingForUserInput) => Promise<CreateMeetingForUserResponse> {
   return (input) => {
@@ -300,6 +302,7 @@ export type GetPastMeetingParticipantsPageFactory = FetchPageFactory<GetPastMeet
  *
  * @param context The Zoom API context
  * @returns A page factory for paginated participant listing
+ * @__NO_SIDE_EFFECTS__
  */
 export function getPastMeetingParticipantsPageFactory(context: ZoomContext): GetPastMeetingParticipantsPageFactory {
   return zoomFetchPageFactory(getPastMeetingParticipants(context));

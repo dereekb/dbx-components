@@ -42,6 +42,7 @@ export interface ProvideDbxFirebaseFunctionsConfig<T, M extends FirebaseFunction
  *
  * @param config Configuration for provideDbxFirebaseFunctions().
  * @returns EnvironmentProviders for the LazyFirebaseFunctions type.
+ * @__NO_SIDE_EFFECTS__
  */
 export function provideDbxFirebaseFunctions<T, M extends FirebaseFunctionsMap = FirebaseFunctionsMap>(config: ProvideDbxFirebaseFunctionsConfig<T, M>): EnvironmentProviders {
   const providers: Provider[] = [

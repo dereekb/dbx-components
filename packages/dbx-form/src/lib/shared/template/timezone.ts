@@ -14,6 +14,7 @@ export type TestStringSearchFunction = (text: string) => string[];
  * When the search string is empty, the system timezone is returned first, followed by all timezones.
  *
  * @returns A {@link SearchableValueFieldStringSearchFn} for searching timezone values.
+ * @__NO_SIDE_EFFECTS__
  */
 export function timezoneStringSearchFunction(): SearchableValueFieldStringSearchFn<string, TimezoneInfo> {
   const timezoneInfos = allTimezoneInfos();

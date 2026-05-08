@@ -171,6 +171,7 @@ export function flattenTreeToArrayFunction<N extends TreeNode<unknown, N>, V>(ma
  * const ids = flattenIds(rootNode);
  * // ['root', 'child1', 'leaf1', 'leaf2', 'child2', 'leaf3']
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function flattenTreeToArrayFunction<N extends TreeNode<unknown, N>, V>(mapNodeFnOrConfig?: FlattenTreeToArrayFunctionConfig<N, V> | ((node: N) => V), defaultAddNodeFn?: Maybe<FlattenTreeAddNodeDecisionFunction<N, V>>): FlattenTreeFunction<N, V> {
   const config: FlattenTreeToArrayFunctionConfig<N, V> = typeof mapNodeFnOrConfig === 'function' ? ({ mapNodeFunction: mapNodeFnOrConfig } as FlattenTreeToArrayFunctionConfig<N, V>) : (mapNodeFnOrConfig ?? {});

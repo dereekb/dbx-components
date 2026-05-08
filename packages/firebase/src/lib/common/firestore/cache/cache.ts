@@ -309,6 +309,7 @@ export interface FirestoreCollectionDocumentCache<T = unknown> {
  * docCache.set({ data: userData });
  * const entry = docCache.get();
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreCollectionDocumentCache<T>(collectionCache: FirestoreCollectionCache<T>, key: FirestoreModelKey): FirestoreCollectionDocumentCache<T> {
   return {

@@ -80,6 +80,7 @@ export type FirestoreIdBatchVerifierFactory<T, I extends PrimativeKey> = Factory
  * const verifier = factory(myCollection);
  * // verifier can now check batches of IDs for uniqueness
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreIdBatchVerifierFactory<T, I extends PrimativeKey>(config: FirestoreIdBatchVerifierFactoryConfig<T, I>): FirestoreIdBatchVerifierFactory<T, I> {
   const { readKeys } = config;

@@ -22,6 +22,7 @@ export type DateCellDayOfWeekFactory = MapFunction<DateCellIndex, DayOfWeek>;
  * dayFactory(1); // Day.TUESDAY
  * dayFactory(6); // Day.SUNDAY
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function dateCellDayOfWeekFactory(inputDayForIndexZero: DayOfWeek | Date): DateCellDayOfWeekFactory {
   const dayForIndexZero = typeof inputDayForIndexZero === 'number' ? inputDayForIndexZero : (inputDayForIndexZero.getDay() as DayOfWeek);
@@ -42,6 +43,7 @@ export interface DateCellIndexYearWeekCodeConfig {
  *
  * @param config - timing configuration to compute dates from indexes
  * @returns a function that returns the YearWeekCode for a given index or date
+ * @__NO_SIDE_EFFECTS__
  */
 export function dateCellIndexYearWeekCodeFactory(config: DateCellIndexYearWeekCodeConfig): DateCellIndexYearWeekCodeFactory {
   const { timing } = config;
@@ -69,6 +71,7 @@ export interface DateCellIndexYearWeekCodeGroupFactoryConfig<B> {
  *
  * @param config - reader and factory configuration
  * @returns a function that groups input items into YearWeekCode groups
+ * @__NO_SIDE_EFFECTS__
  */
 export function dateCellIndexYearWeekCodeGroupFactory<B>(config: DateCellIndexYearWeekCodeGroupFactoryConfig<B>): YearWeekCodeGroupFactory<B> {
   const { dateCellIndexReader, dateCellIndexYearWeekCodeFactory: inputDateCellIndexYearWeekCodeFactory } = config;

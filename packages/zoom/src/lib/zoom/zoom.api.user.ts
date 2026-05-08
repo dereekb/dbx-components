@@ -50,6 +50,7 @@ export type ListUsersPageFactory = FetchPageFactory<ListUsersInput, ListUsersRes
  *
  * @param context The Zoom API context
  * @returns A page factory for paginated user listing
+ * @__NO_SIDE_EFFECTS__
  */
 export function listUsersPageFactory(context: ZoomContext): ListUsersPageFactory {
   return zoomFetchPageFactory(listUsers(context));

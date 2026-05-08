@@ -54,6 +54,7 @@ export function decodeHashedValues(hashedValues: string[], decodeValues: string[
  * @param decodeValues - An array of potential original string values.
  * @param hashFn - A function that takes a string and returns its hashed representation.
  * @returns A {@link HashDecodeMap} for decoding hashed values.
+ * @__NO_SIDE_EFFECTS__
  */
 export function makeHashDecodeMap(decodeValues: string[], hashFn: (value: string) => string): HashDecodeMap {
   const keyValuePairs = decodeValues.map((x) => [hashFn(x), x] as [string, string]);

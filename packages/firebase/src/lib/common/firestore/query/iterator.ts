@@ -196,6 +196,7 @@ export const DEFAULT_FIRESTORE_ITEM_PAGE_ITERATOR_ITEMS_PER_PAGE = 50;
  *    with `reload()` and `stream()` capabilities
  *
  * @returns A delegate instance for use with {@link ItemPageIterator}
+ * @__NO_SIDE_EFFECTS__
  */
 export function makeFirestoreItemPageIteratorDelegate<T>(): FirestoreItemPageIteratorDelegate<T> {
   return {
@@ -353,6 +354,7 @@ export type FirestoreItemPageIterationFactoryFunction<T> = (filter?: FirestoreIt
  * const adminPaginator = usersPaginator({
  *   constraints: [where('role', '==', 'admin')]
  * });
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreItemPageIterationFactory<T>(baseConfig: FirestoreItemPageIterationBaseConfig<T>): FirestoreItemPageIterationFactoryFunction<T> {
   return (filter?: FirestoreItemPageIteratorFilter) => {
@@ -414,6 +416,7 @@ export const FIRESTORE_ITEM_PAGE_ITERATOR = new ItemPageIterator<FirestoreItemPa
  * // Load the next page when needed
  * const secondPage = await usersPagination.loadNextPage().toPromise();
  * console.log('Next 10 users:', secondPage);
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreItemPageIteration<T>(config: FirestoreItemPageIterationConfig<T>): FirestoreItemPageIterationInstance<T> {
   const snapshotIteration: InternalFirestoreItemPageIterationInstance<T> = FIRESTORE_ITEM_PAGE_ITERATOR.instance(config) as InternalFirestoreItemPageIterationInstance<T>;
@@ -455,6 +458,7 @@ export type FirestoreFixedItemPageIterationFactoryFunction<T> = (items: Document
  * @param baseConfig - Base pagination configuration (query reference, driver, page size)
  * @param documentAccessor - Accessor used to load document snapshots from the references
  * @returns A factory function that creates fixed-set pagination instances
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreFixedItemPageIterationFactory<T>(baseConfig: FirestoreItemPageIterationConfig<T>, documentAccessor: LimitedFirestoreDocumentAccessor<T>): FirestoreFixedItemPageIterationFactoryFunction<T> {
   return (items: DocumentReference<T>[], filter?: FirestoreItemPageIteratorFilter) => {
@@ -504,6 +508,7 @@ export interface FirestoreFixedItemPageIterationConfig<T> extends FirestoreItemP
  *
  * @param config - Configuration including the document references, accessor, and pagination settings
  * @returns A pagination instance that pages through the fixed reference set
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreFixedItemPageIteration<T>(config: FirestoreFixedItemPageIterationConfig<T>): FirestoreItemPageIterationInstance<T> {
   const { items, documentAccessor } = config;

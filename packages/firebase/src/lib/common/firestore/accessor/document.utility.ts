@@ -67,6 +67,7 @@ export interface MakeDocumentsParams<T, D extends FirestoreDocument<T> = Firesto
  * @param documentAccessor - Accessor providing the document factory and collection context
  * @param make - Configuration controlling count, factory, and initialization
  * @returns Promise resolving to all created document instances (length === `make.count`)
+ * @__NO_SIDE_EFFECTS__
  */
 export function makeDocuments<T, D extends FirestoreDocument<T>>(documentAccessor: FirestoreDocumentAccessor<T, D>, make: MakeDocumentsParams<T, D>): Promise<D[]> {
   const newDocumentFn = make.newDocument ?? (() => documentAccessor.newDocument());
@@ -405,6 +406,7 @@ export type FirestoreDocumentLoader<T, D extends FirestoreDocument<T>> = (refere
  *
  * @param accessorContext - Context that provides accessors for both default and transactional use
  * @returns A loader function that converts document references to document instances
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreDocumentLoader<T, D extends FirestoreDocument<T>>(accessorContext: LimitedFirestoreDocumentAccessorContextExtension<T, D>): FirestoreDocumentLoader<T, D> {
   return (references: DocumentReference<T>[], transaction?: Transaction) => {
@@ -440,6 +442,7 @@ export type FirestoreQueryDocumentSnapshotPairsLoader<T, D extends FirestoreDocu
  *
  * @param accessorContext - Context that provides accessors for both default and transactional use
  * @returns A loader function that converts snapshots to document-snapshot-data pairs
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreDocumentSnapshotPairsLoader<T, D extends FirestoreDocument<T>>(accessorContext: LimitedFirestoreDocumentAccessorContextExtension<T, D>): FirestoreDocumentSnapshotPairsLoader<T, D> & FirestoreQueryDocumentSnapshotPairsLoader<T, D> {
   return (snapshots: QueryDocumentSnapshot<T>[] | DocumentSnapshot<T>[], transaction?: Transaction) => {
@@ -473,6 +476,7 @@ export type FirestoreDocumentSnapshotPairsLoaderInstance<T, D extends FirestoreD
  *
  * @param accessor - The accessor to bind for document loading
  * @returns A reusable function that converts snapshots to pairs using the bound accessor
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreDocumentSnapshotPairsLoaderInstance<T, D extends FirestoreDocument<T>>(accessor: LimitedFirestoreDocumentAccessor<T, D>): FirestoreDocumentSnapshotPairsLoaderInstance<T, D> {
   const fn = ((snapshot: QueryDocumentSnapshot<T> | DocumentSnapshot<T>) => {
@@ -544,6 +548,7 @@ export type DocumentDataWithIdAndKeyFunction<T> = ((snapshot: QueryDocumentSnaps
  *
  * @param withId - Whether the returned function should inject `id` and `key` fields
  * @returns A snapshot-to-data extraction function
+ * @__NO_SIDE_EFFECTS__
  */
 export function documentDataFunction<T>(withId: true): DocumentDataWithIdAndKeyFunction<T>;
 export function documentDataFunction<T>(withId: false): DocumentDataFunction<T>;
@@ -654,6 +659,7 @@ export const useDocumentSnapshotData = wrapUseAsyncFunction(useDocumentSnapshot,
  *
  * @param document - The document to extract the ID from
  * @returns The document's ID (the last segment of its Firestore path)
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreModelIdFromDocument<T, D extends FirestoreDocument<T>>(document: D): FirestoreModelId {
   return document.id;
@@ -664,6 +670,7 @@ export function firestoreModelIdFromDocument<T, D extends FirestoreDocument<T>>(
  *
  * @param documents - Documents to extract IDs from
  * @returns Array of document IDs in the same order as the input
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreModelIdsFromDocuments<T, D extends FirestoreDocument<T>>(documents: D[]): FirestoreModelId[] {
   return documents.map(firestoreModelIdFromDocument);
@@ -676,6 +683,7 @@ export function firestoreModelIdsFromDocuments<T, D extends FirestoreDocument<T>
  *
  * @param document - The document to extract the key from
  * @returns The document's full Firestore path (e.g. `'users/abc123'`)
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreModelKeyFromDocument<T, D extends FirestoreDocument<T>>(document: D): FirestoreModelKey {
   return document.key;
@@ -686,6 +694,7 @@ export function firestoreModelKeyFromDocument<T, D extends FirestoreDocument<T>>
  *
  * @param documents - Documents to extract keys from
  * @returns Array of full Firestore paths in the same order as the input
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreModelKeysFromDocuments<T, D extends FirestoreDocument<T>>(documents: D[]): FirestoreModelKey[] {
   return documents.map(firestoreModelKeyFromDocument);

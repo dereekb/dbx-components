@@ -83,6 +83,7 @@ export interface CreateModelValidateToolOptions {
  *
  * @param options - optional rule overrides
  * @returns the registered MCP tool wrapper
+ * @__NO_SIDE_EFFECTS__
  */
 export function createModelValidateTool(options: CreateModelValidateToolOptions = {}): DbxTool {
   const { ruleOptions } = options;

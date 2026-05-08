@@ -32,6 +32,7 @@ export function assertFirestoreUpdateHasData(data: UpdateData<object>) {
  * Creates and throws an error for empty update data passed to a {@link FirestoreDocumentDataAccessor}'s `update()` method.
  *
  * @throws {Error} Always throws
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreUpdateWithNoDataError() {
   throw new Error('No data or an empty object was passed to update().');

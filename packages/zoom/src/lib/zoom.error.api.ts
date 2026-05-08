@@ -71,6 +71,7 @@ export type LogZoomServerErrorFunction = (error: FetchRequestFactoryError | Zoom
  *
  * @param zoomApiNamePrefix Prefix to use when logging. I.E. ZoomError, etc.
  * @returns
+ * @__NO_SIDE_EFFECTS__
  */
 export function logZoomServerErrorFunction(zoomApiNamePrefix: string): LogZoomServerErrorFunction {
   return (error: FetchRequestFactoryError | ZoomServerError | ZoomServerFetchResponseError) => {
@@ -101,6 +102,7 @@ export type ParseZoomFetchResponseErrorFunction = (responseError: FetchResponseE
  * @param parseZoomError Function to parse fetch response errors into typed Zoom errors
  * @param defaultLogError Default error logging function
  * @returns A factory that wraps ConfiguredFetch with error handling
+ * @__NO_SIDE_EFFECTS__
  */
 export function handleZoomErrorFetchFactory(parseZoomError: ParseZoomFetchResponseErrorFunction, defaultLogError: LogZoomServerErrorFunction): HandleZoomErrorFetchFactory {
   return (fetch: ConfiguredFetch, logError: LogZoomServerErrorFunction = defaultLogError) => {
@@ -268,6 +270,8 @@ export type SilenceZoomErrorWithCodesFunction<T> = (silence?: boolean) => (reaso
  * Used with catch() to silence Zoom errors with the specified codes.
  *
  * For example, when deleting a meeting that does not exist, the error code is 3001. This function can be used to silence that error.
+ *
+ * @__NO_SIDE_EFFECTS__
  */
 /**
  * Creates a function that silences Zoom errors with specific error codes.

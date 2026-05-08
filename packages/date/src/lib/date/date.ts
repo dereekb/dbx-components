@@ -819,6 +819,7 @@ export type ReduceDatesFunction = (inputDates: ArrayOrValue<Maybe<Date>>) => May
  * findMin([new Date('2024-01-01'), new Date('2024-06-01')]); // Jan 1
  * findMin([null, undefined]); // undefined
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function reduceDatesFunction(reduceDates: (dates: Date[]) => Maybe<Date>): ReduceDatesFunction {
   return (inputDates: ArrayOrValue<Maybe<Date>>) => {

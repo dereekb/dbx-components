@@ -585,6 +585,7 @@ export type UpdateDateCellTimingToTimezoneFunction = (<T extends DateCellTimingS
  *
  * @param timezone - the new IANA timezone to apply
  * @returns a function that updates timings to the new timezone
+ * @__NO_SIDE_EFFECTS__
  */
 export function updateDateCellTimingToTimezoneFunction(timezone: TimezoneString): UpdateDateCellTimingToTimezoneFunction {
   const fn = (<T extends DateCellTimingStartsAtEndRange>(timing: T) => {
@@ -653,6 +654,7 @@ export type ShiftDateCellTimingToTimezoneFunction = (<T extends DateCellTimingSt
  *
  * @param timezoneInput - the target timezone to shift into
  * @returns a function that shifts timings into the new timezone
+ * @__NO_SIDE_EFFECTS__
  */
 export function shiftDateCellTimingToTimezoneFunction(timezoneInput: DateCellTimingTimezoneInput): ShiftDateCellTimingToTimezoneFunction {
   const normalInstance = dateCellTimingTimezoneNormalInstance(timezoneInput);

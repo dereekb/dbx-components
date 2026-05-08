@@ -101,6 +101,7 @@ export type MakeFieldFilterFunction<R, F> = (input: MakeFieldFilterInput<R>) => 
  *
  * @param find - Filter specifying the target date and optional timezone hint.
  * @returns A raw date query representing the "occurring at" constraint.
+ * @__NO_SIDE_EFFECTS__
  */
 export function makeDateQueryForOccuringFilter(find: DateItemOccuringFilter & DateDayTimezoneHintFilter): RawDateQuery {
   const result: RawDateQuery = {};
@@ -132,6 +133,7 @@ export function makeDateQueryForOccuringFilter(find: DateItemOccuringFilter & Da
  *
  * @param find - Range filter with optional timezone and containment flag.
  * @returns A raw date query bounded by the resolved range.
+ * @__NO_SIDE_EFFECTS__
  */
 export function makeDateQueryForDateItemRangeFilter(find: DateItemRangeFilter): RawDateQuery {
   const result: RawDateQuery = {};
@@ -185,6 +187,7 @@ export function makeDateQueryForDateItemRangeFilter(find: DateItemRangeFilter): 
  *
  * @param find - Filter with optional starts/ends boundaries and timezone hint.
  * @returns A raw date query with the corresponding GTE/LTE bounds populated.
+ * @__NO_SIDE_EFFECTS__
  */
 export function makeDateQueryForDateStartsEndsFilter(find: DateItemQueryStartsEndsFilter & DateDayTimezoneHintFilter): RawDateQuery {
   const result: RawDateQuery = {};
@@ -225,6 +228,7 @@ export type DaysAndTimeFiltersFunction<F> = (dateQueryInstance: RawDateQuery) =>
  *
  * @param builder - Strategy for converting date bounds into backend-specific filters.
  * @returns A function that produces a {@link DaysAndTimeFilter} from a raw query.
+ * @__NO_SIDE_EFFECTS__
  */
 export function makeDaysAndTimeFiltersFunction<R, F>(builder: DateQueryBuilder<R, F>): DaysAndTimeFiltersFunction<F> {
   return (dateQueryInstance: RawDateQuery) => {

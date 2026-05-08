@@ -51,6 +51,7 @@ export type ZohoDeskFactory = (config: ZohoDeskConfig) => ZohoDesk;
  *
  * @param factoryConfig - Configuration providing account credentials and optional overrides
  * @returns A factory function that creates authenticated Zoho Desk clients
+ * @__NO_SIDE_EFFECTS__
  */
 export function zohoDeskFactory(factoryConfig: ZohoDeskFactoryConfig): ZohoDeskFactory {
   const { accountsContext } = factoryConfig;

@@ -24,6 +24,7 @@ export interface ProvideDbxStyleServiceConfig {
  *
  * @param config - configuration specifying the default style and its allowed suffixes
  * @returns environment providers for the DbxStyleService and its default config token
+ * @__NO_SIDE_EFFECTS__
  */
 export function provideDbxStyleService(config: ProvideDbxStyleServiceConfig): EnvironmentProviders {
   const { dbxStyleConfig } = config;

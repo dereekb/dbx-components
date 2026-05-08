@@ -19,6 +19,7 @@ export type RoundingFunction = MapFunction<number, number>;
  *
  * @param type - The rounding strategy: 'floor', 'ceil', 'round', or 'none'
  * @returns The corresponding Math function, or an identity function for 'none'
+ * @__NO_SIDE_EFFECTS__
  */
 export function roundingFunction(type: NumberRounding): RoundingFunction {
   let fn: RoundingFunction;
@@ -102,9 +103,16 @@ export type CutValueToPrecisionFunction = ((input: AsNumberInput) => number) & {
 /**
  * Creates a {@link CutValueToPrecisionFunction} that truncates values to the configured precision.
  *
+ * @dbxUtil
+ * @dbxUtilCategory number
+ * @dbxUtilKind factory
+ * @dbxUtilTags number, precision, cut, truncate, factory, round
+ * @dbxUtilRelated round-to-precision-function, cut-to-precision
+ *
  * @param precision - Number of decimal places to retain
  * @param roundingType - Rounding strategy; defaults to 'cut' (truncation)
  * @returns A function that accepts a number or string and returns the truncated number
+ * @__NO_SIDE_EFFECTS__
  */
 export function cutValueToPrecisionFunction(precision: NumberPrecision, roundingType: RoundToPrecisionFunctionType = 'cut'): CutValueToPrecisionFunction {
   const roundFn = roundToPrecisionFunction(precision, roundingType);
@@ -130,9 +138,16 @@ export type RoundToPrecisionFunctionType = NumberRounding | 'cut';
 /**
  * Creates a function that rounds numbers to the specified precision using a configurable rounding strategy.
  *
+ * @dbxUtil
+ * @dbxUtilCategory number
+ * @dbxUtilKind factory
+ * @dbxUtilTags number, round, precision, factory, decimals
+ * @dbxUtilRelated cut-value-to-precision-function, round-to-precision, cut-to-precision
+ *
  * @param precision - Number of decimal places
  * @param roundFn - Rounding strategy; defaults to 'round'. Use 'cut' for truncation.
  * @returns A function that rounds numbers to the configured precision
+ * @__NO_SIDE_EFFECTS__
  */
 export function roundToPrecisionFunction(precision: NumberPrecision, roundFn: RoundToPrecisionFunctionType = 'round'): RoundToPrecisionFunction {
   let result: RoundToPrecisionFunction;
@@ -236,9 +251,16 @@ export type RoundNumberToStepFunction = ((input: Maybe<number>) => number) & {
  *
  * Accepts either a step number (uses 'ceil' rounding) or a full config with step, rounding type, and origin.
  *
+ * @dbxUtil
+ * @dbxUtilCategory number
+ * @dbxUtilKind factory
+ * @dbxUtilTags number, round, step, factory, multiple, origin
+ * @dbxUtilRelated round-number-up-to-step, round-to-precision-function
+ *
  * @param input - Step size or full configuration
  * @returns A function that rounds input numbers to the nearest step
  * @throws Error if step is 0 or undefined
+ * @__NO_SIDE_EFFECTS__
  */
 export function roundNumberToStepFunction(input: RoundNumberToStepFunctionInput): RoundNumberToStepFunction {
   const config: RoundNumberToStepFunctionConfig = typeof input === 'number' ? { step: input, round: 'ceil' } : input;

@@ -10,8 +10,15 @@ export type SortByNumberFunction<T> = SortCompareFunction<T>;
 /**
  * Creates a {@link SortCompareFunction} that sorts values in ascending order by a numeric property.
  *
+ * @dbxUtil
+ * @dbxUtilCategory number
+ * @dbxUtilKind factory
+ * @dbxUtilTags number, sort, compare, ascending, factory
+ * @dbxUtilRelated sort-numbers-ascending-function, sort-by-string-function
+ *
  * @param readNumberFn - Function that extracts the numeric value from each item
  * @returns A sort comparator function for ascending numeric order
+ * @__NO_SIDE_EFFECTS__
  */
 export function sortByNumberFunction<T>(readNumberFn: ReadNumberFunction<T>): SortByNumberFunction<T> {
   return (a: T, b: T) => {

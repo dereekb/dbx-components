@@ -168,6 +168,7 @@ export interface CreateDbxFirebaseAppCheckParams {
  * ```ts
  * const appCheck = createDbxFirebaseAppCheck({ app, options });
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function createDbxFirebaseAppCheck(params: CreateDbxFirebaseAppCheckParams): AppCheck {
   const { app, options } = params;
@@ -214,6 +215,7 @@ export interface CreateDbxFirebaseFirestoreParams {
  * ```ts
  * const firestore = createDbxFirebaseFirestore({ app, options, emulators });
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function createDbxFirebaseFirestore(params: CreateDbxFirebaseFirestoreParams): Firestore {
   const { app, options, emulators } = params;
@@ -257,6 +259,7 @@ export interface CreateDbxFirebaseAuthParams {
  * ```ts
  * const auth = createDbxFirebaseAuth({ app, emulators });
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function createDbxFirebaseAuth(params: CreateDbxFirebaseAuthParams): Auth {
   const { app, emulators } = params;
@@ -288,6 +291,7 @@ export interface CreateDbxFirebaseStorageParams {
  * ```ts
  * const storage = createDbxFirebaseStorage({ app, emulators });
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function createDbxFirebaseStorage(params: CreateDbxFirebaseStorageParams): FirebaseStorage {
   const { app, emulators } = params;
@@ -320,6 +324,7 @@ export interface CreateDbxFirebaseFunctionsParams {
  * ```ts
  * const functions = createDbxFirebaseFunctions({ app, options, emulators });
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function createDbxFirebaseFunctions(params: CreateDbxFirebaseFunctionsParams): Functions {
   const { app, options, emulators } = params;

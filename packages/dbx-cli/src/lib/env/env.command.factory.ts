@@ -60,6 +60,7 @@ function resolveEnvWithDefault(input: ResolveEnvWithDefaultInput): Maybe<Resolve
  * @param input.cliName - The CLI's binary name.
  * @param input.defaultEnvs - Built-in env presets merged underneath the user's stored env when names match.
  * @returns A yargs `CommandModule` exposing the full `env` subcommand surface.
+ * @__NO_SIDE_EFFECTS__
  */
 export function createEnvCommand(input: CreateEnvCommandInput): CommandModule {
   const paths = buildCliPaths({ cliName: input.cliName });

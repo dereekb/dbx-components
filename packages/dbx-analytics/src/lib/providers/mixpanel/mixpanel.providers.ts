@@ -57,6 +57,7 @@ export interface ProvideDbxAnalyticsMixpanelModuleConfig {
  *   ]
  * };
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function provideDbxAnalyticsMixpanelApiService(config: ProvideDbxAnalyticsMixpanelModuleConfig): EnvironmentProviders {
   const { preloadMixpanelToken, dbxAnalyticsMixpanelApiServiceConfigFactory } = config;

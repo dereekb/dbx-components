@@ -46,6 +46,7 @@ export type DevelopmentFirebaseFunctionMapFactory<M extends DevelopmentFirebaseF
  * const devFns = factory(getFunctions());
  * await devFns.resetData();
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function developmentFirebaseFunctionMapFactory<M extends DevelopmentFirebaseFunctionTypeMap>(configMap: DevelopmentFirebaseFunctionConfigMap<M>): DevelopmentFirebaseFunctionMapFactory<M> {
   return (functionsInstance: Functions) => {

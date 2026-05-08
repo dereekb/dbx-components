@@ -159,6 +159,7 @@ export interface ActionRegistry {
  *
  * @param loaded - The result of loading action manifests.
  * @returns A fully-indexed {@link ActionRegistry}.
+ * @__NO_SIDE_EFFECTS__
  */
 export function createActionRegistry(loaded: LoadActionManifestsResult): ActionRegistry {
   const entries = Array.from(loaded.entries.values()).map(toActionEntryInfo);
@@ -172,6 +173,7 @@ export function createActionRegistry(loaded: LoadActionManifestsResult): ActionR
  * @param input.entries - Action entries already converted to runtime form.
  * @param input.loadedSources - Labels of the manifest sources that contributed the entries.
  * @returns A fully-indexed {@link ActionRegistry}.
+ * @__NO_SIDE_EFFECTS__
  */
 export function createActionRegistryFromEntries(input: { readonly entries: readonly ActionEntryInfo[]; readonly loadedSources: readonly string[] }): ActionRegistry {
   const all = [...input.entries];

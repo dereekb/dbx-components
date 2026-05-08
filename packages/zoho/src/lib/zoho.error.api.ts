@@ -175,6 +175,7 @@ export interface LogZohoServerErrorFunctionConfig {
  * @param zohoApiNamePrefix - Prefix to use when logging (e.g. 'ZohoRecruit', 'ZohoSign')
  * @param options - Optional configuration for controlling which error types are logged
  * @returns A function that logs Zoho server errors to the console
+ * @__NO_SIDE_EFFECTS__
  */
 export function logZohoServerErrorFunction(zohoApiNamePrefix: string, options?: LogZohoServerErrorFunctionConfig): LogZohoServerErrorFunction {
   const { logDataArrayErrors = false } = options ?? {};
@@ -208,6 +209,7 @@ export type ParseZohoFetchResponseErrorFunction = (responseError: FetchResponseE
  * @param parseZohoError - Function that parses a fetch response error into a Zoho-specific error
  * @param defaultLogError - Default error logging function used when no custom logger is provided
  * @returns Factory that wraps a ConfiguredFetch with Zoho error handling
+ * @__NO_SIDE_EFFECTS__
  */
 export function handleZohoErrorFetchFactory(parseZohoError: ParseZohoFetchResponseErrorFunction, defaultLogError: LogZohoServerErrorFunction): HandleZohoErrorFetchFactory {
   return (fetch: ConfiguredFetch, logError: LogZohoServerErrorFunction = defaultLogError, onError?: (error: ParsedZohoServerError) => void) => {
@@ -238,6 +240,7 @@ export type ParseZohoServerErrorResponseData = (zohoServerErrorResponseData: Zoh
  *
  * @param parseZohoServerErrorResponseData - Function that parses raw error response data into a structured error
  * @returns Interceptor function that detects and throws hidden errors in 200 responses
+ * @__NO_SIDE_EFFECTS__
  */
 export function interceptZohoErrorResponseFactory(parseZohoServerErrorResponseData: ParseZohoServerErrorResponseData): FetchJsonInterceptJsonResponseFunction {
   return (json: ZohoServerErrorResponseData | unknown, response: Response) => {

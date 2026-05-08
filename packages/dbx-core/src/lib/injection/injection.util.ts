@@ -49,6 +49,7 @@ export interface DbxInjectionComponentInjectorParams<T = unknown> {
  *   parentInjector: this._injector
  * });
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function createInjectorForInjectionComponentConfig<T>(params: DbxInjectionComponentInjectorParams<T>): Injector {
   const { config, parentInjector } = params;

@@ -139,6 +139,13 @@ export function removeModifiers<T>(modifiers: ArrayOrValue<Modifier<T>>, map: Ma
  * fn(obj);
  * // obj.x === 1
  * ```
+ *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilTags modifier, map, factory, compose
+ * @dbxUtilRelated maybe-modifier-map-to-function, modifier
+ *
+ * @__NO_SIDE_EFFECTS__
  */
 export function modifierMapToFunction<T>(map: Maybe<ModifierMap<T>>): ModifierFunction<T> {
   return maybeModifierMapToFunction(map) ?? NOOP_MODIFIER;
@@ -149,8 +156,14 @@ export function modifierMapToFunction<T>(map: Maybe<ModifierMap<T>>): ModifierFu
  *
  * Returns undefined if no map is provided, allowing callers to distinguish "no modifiers" from "empty modifiers".
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilTags modifier, map, factory, compose, optional
+ * @dbxUtilRelated modifier-map-to-function, modifier
+ *
  * @param map - the modifier map to convert
  * @returns a composed modifier function, or `undefined` if no map is provided
+ * @__NO_SIDE_EFFECTS__
  */
 export function maybeModifierMapToFunction<T>(map: Maybe<ModifierMap<T>>): Maybe<ModifierFunction<T>> {
   let fn: Maybe<ModifierFunction<T>>;

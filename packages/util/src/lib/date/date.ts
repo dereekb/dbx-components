@@ -543,8 +543,14 @@ export function monthOfYearFromDateMonth(dateMonth: DateMonth): MonthOfYear {
 /**
  * Converts a MonthOfYear (1-12) to a JavaScript Date month (0-11).
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, month, convert, javascript
+ * @dbxUtilRelated month-of-year-from-date-month
+ *
  * @param monthOfYear - Month of year (1-12)
  * @returns JavaScript Date month (0-11)
+ * @__NO_SIDE_EFFECTS__
  */
 export function makeDateMonthForMonthOfYear(monthOfYear: MonthOfYear): DateMonth {
   return monthOfYear - 1;

@@ -53,6 +53,7 @@ export interface FirebaseStorageContextFactoryConfig {
  * const storageContext = factory(firebaseStorage, { defaultBucketId: 'my-bucket' });
  * const file = storageContext.file('uploads/doc.pdf');
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function firebaseStorageContextFactory<F extends FirebaseStorage = FirebaseStorage>(drivers: FirebaseStorageDrivers): FirebaseStorageContextFactory<F> {
   return (firebaseStorage: F, config?: FirebaseStorageContextFactoryConfig) => {

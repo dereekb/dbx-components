@@ -20,7 +20,7 @@ export const DOWNLOAD_MULTIPLE_STORAGE_FILES_MAX_FILES = 50;
  */
 export interface CreateStorageFileParams {}
 
-export const createStorageFileParamsType = type({}) as Type<CreateStorageFileParams>;
+export const createStorageFileParamsType = /* @__PURE__ */ type({}) as Type<CreateStorageFileParams>;
 
 /**
  * Parameters for batch-initializing all files found in the uploads folder.
@@ -34,7 +34,7 @@ export interface InitializeAllStorageFilesFromUploadsParams {
   readonly overrideUploadsFolderPath?: Maybe<StorageSlashPath>;
 }
 
-export const initializeAllStorageFilesFromUploadsParamsType = type({
+export const initializeAllStorageFilesFromUploadsParamsType = /* @__PURE__ */ type({
   'maxFilesToInitialize?': clearable('number'),
   'folderPath?': clearable('string'),
   'overrideUploadsFolderPath?': clearable('string')
@@ -61,7 +61,7 @@ export interface InitializeStorageFileFromUploadParams extends Pick<StoragePath,
   readonly expediteProcessing?: Maybe<boolean>;
 }
 
-export const initializeStorageFileFromUploadParamsType = type({
+export const initializeStorageFileFromUploadParamsType = /* @__PURE__ */ type({
   'bucketId?': clearable('string'),
   pathString: 'string > 0',
   'expediteProcessing?': clearable('boolean')
@@ -97,7 +97,7 @@ export interface ProcessStorageFileResult {
  */
 export interface ProcessAllQueuedStorageFilesParams {}
 
-export const processAllQueuedStorageFilesParamsType = type({}) as Type<ProcessAllQueuedStorageFilesParams>;
+export const processAllQueuedStorageFilesParamsType = /* @__PURE__ */ type({}) as Type<ProcessAllQueuedStorageFilesParams>;
 
 export interface ProcessAllQueuedStorageFilesResult {
   readonly storageFilesVisited: number;
@@ -126,7 +126,7 @@ export const deleteStorageFileParamsType = targetModelParamsType.merge({
  */
 export interface DeleteAllQueuedStorageFilesParams {}
 
-export const deleteAllQueuedStorageFilesParamsType = type({}) as Type<DeleteAllQueuedStorageFilesParams>;
+export const deleteAllQueuedStorageFilesParamsType = /* @__PURE__ */ type({}) as Type<DeleteAllQueuedStorageFilesParams>;
 
 export interface DeleteAllQueuedStorageFilesResult {
   readonly storageFilesVisited: number;
@@ -234,7 +234,7 @@ export interface DownloadMultipleStorageFilesParams extends DownloadStorageFileO
   readonly throwOnFirstError?: Maybe<boolean>;
 }
 
-export const downloadMultipleStorageFilesParamsType = type({
+export const downloadMultipleStorageFilesParamsType = /* @__PURE__ */ type({
   files: downloadMultipleStorageFilesFileParamsType.array().atLeastLength(DOWNLOAD_MULTIPLE_STORAGE_FILES_MIN_FILES).atMostLength(DOWNLOAD_MULTIPLE_STORAGE_FILES_MAX_FILES),
   'expiresAt?': clearable(ARKTYPE_DATE_DTO_TYPE),
   'expiresIn?': clearable('number >= 0'),
@@ -267,7 +267,7 @@ export interface CreateStorageFileGroupParams {
   readonly storageFileId?: Maybe<StorageFileId>;
 }
 
-export const createStorageFileGroupParamsType = type({
+export const createStorageFileGroupParamsType = /* @__PURE__ */ type({
   'model?': clearable(firestoreModelKeyType),
   'storageFileId?': clearable(firestoreModelIdType)
 }) as Type<CreateStorageFileGroupParams>;
@@ -287,7 +287,7 @@ export interface SyncStorageFileWithGroupsResult {
 
 export interface SyncAllFlaggedStorageFilesWithGroupsParams {}
 
-export const syncAllFlaggedStorageFilesWithGroupsParamsType = type({}) as Type<SyncAllFlaggedStorageFilesWithGroupsParams>;
+export const syncAllFlaggedStorageFilesWithGroupsParamsType = /* @__PURE__ */ type({}) as Type<SyncAllFlaggedStorageFilesWithGroupsParams>;
 
 export interface SyncAllFlaggedStorageFilesWithGroupsResult {
   readonly storageFilesSynced: number;
@@ -300,7 +300,7 @@ export interface UpdateStorageFileGroupEntryParams {
   readonly n?: Maybe<string>;
 }
 
-export const updateStorageFileGroupEntryParamsType = type({
+export const updateStorageFileGroupEntryParamsType = /* @__PURE__ */ type({
   s: firestoreModelIdType,
   'n?': clearable('string > 0')
 }) as Type<UpdateStorageFileGroupEntryParams>;
@@ -327,7 +327,7 @@ export interface RegenerateStorageFileGroupContentResult {
 
 export interface RegenerateAllFlaggedStorageFileGroupsContentParams {}
 
-export const regenerateAllFlaggedStorageFileGroupsContentParamsType = type({}) as Type<RegenerateAllFlaggedStorageFileGroupsContentParams>;
+export const regenerateAllFlaggedStorageFileGroupsContentParamsType = /* @__PURE__ */ type({}) as Type<RegenerateAllFlaggedStorageFileGroupsContentParams>;
 
 export interface RegenerateAllFlaggedStorageFileGroupsContentResult {
   readonly storageFileGroupsUpdated: number;
@@ -347,7 +347,7 @@ export const initializeStorageFileModelParamsType = targetModelParamsType.merge(
 
 export interface InitializeAllApplicableStorageFileGroupsParams {}
 
-export const initializeAllApplicableStorageFileGroupsParamsType = type({}) as Type<InitializeAllApplicableStorageFileGroupsParams>;
+export const initializeAllApplicableStorageFileGroupsParamsType = /* @__PURE__ */ type({}) as Type<InitializeAllApplicableStorageFileGroupsParams>;
 
 export interface InitializeAllApplicableStorageFileGroupsResult {
   readonly storageFileGroupsVisited: number;

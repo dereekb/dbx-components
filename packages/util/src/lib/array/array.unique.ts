@@ -125,6 +125,7 @@ export function readKeysFromFilterUniqueFunctionAdditionalKeys<T, K extends Prim
  * @param readKey - Function to extract a unique key from each item.
  * @param additionalKeysInput - Optional keys or values to pre-seed as already seen, causing them to be excluded.
  * @returns A reusable filter function that removes duplicate items from arrays.
+ * @__NO_SIDE_EFFECTS__
  */
 export function filterUniqueFunction<T, K extends PrimativeKey = PrimativeKey>(readKey: ReadKeyFunction<T, K>, additionalKeysInput?: FilterUniqueFunctionAdditionalKeysInput<T, K>): FilterUniqueFunction<T, K> {
   const baseKeys: K[] = readKeysFromFilterUniqueFunctionAdditionalKeysInput(additionalKeysInput, readKey);
@@ -186,6 +187,7 @@ export type IsUniqueKeyedFunction<T> = DecisionFunction<T[]>;
  *
  * @param readKey - Function to extract a unique key from each item.
  * @returns A decision function that returns true if all items have distinct keys.
+ * @__NO_SIDE_EFFECTS__
  */
 export function isUniqueKeyedFunction<T, K extends PrimativeKey = PrimativeKey>(readKey: ReadKeyFunction<T, K>): IsUniqueKeyedFunction<T> {
   return (input) => {
@@ -236,6 +238,7 @@ export type AllowValueOnceFilter<T, K extends PrimativeKey = PrimativeKey> = Dec
  *
  * @param inputReadKey - Optional function to extract a key from each value. Defaults to identity.
  * @returns A stateful filter function that returns true only for the first occurrence of each key.
+ * @__NO_SIDE_EFFECTS__
  */
 export function allowValueOnceFilter<T extends PrimativeKey = PrimativeKey>(): AllowValueOnceFilter<T, T>;
 export function allowValueOnceFilter<T, K extends PrimativeKey = PrimativeKey>(readKey?: ReadKeyFunction<T, K>): AllowValueOnceFilter<T, K>;

@@ -194,6 +194,7 @@ export type CreateStorageFileDocumentPairFactory = <M extends StorageFileMetadat
  *   context: collections
  * });
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function createStorageFileDocumentPairFactory(config: CreateStorageFileDocumentPairFactoryConfig = {}): CreateStorageFileDocumentPairFactory {
   const { defaultCreationType: inputDefaultCreationType, defaultShouldBeProcessed: inputDefaultShouldBeProcessed, defaultPurposeSubgroup: inputDefaultPurposeSubgroup } = config;

@@ -18,6 +18,7 @@ export type SortByDateFunction<T> = SortCompareFunction<T>;
  * events.sort(sortByDateFunction((e) => e.at));
  * // events[0].at === '2024-01-01'
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function sortByDateFunction<T>(readDateFn: ReadDateFunction<T>): SortByDateFunction<T> {
   return (a: T, b: T) => {
@@ -44,6 +45,7 @@ export type SortByISO8601DateStringFunction<T> = SortCompareFunction<T>;
  * items.sort(sortByISO8601DateStringFunction((x) => x.d));
  * // items[0].d === '2024-01-01T00:00:00Z'
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function sortByISO8601DateStringFunction<T>(readDateFn: ReadISO8601DateStringUTCFullFunction<T>): SortByISO8601DateStringFunction<T> {
   return (a: T, b: T) => {

@@ -128,6 +128,7 @@ export interface MakeZohoRateLimitedFetchHandlerConfig extends ZohoRateLimitedFe
  *
  * @param config - Configuration including the service-specific header reader, rate limit, reset period, and 429 handling
  * @returns A rate-limited fetch handler with the underlying rate limiter accessible via `_rateLimiter`
+ * @__NO_SIDE_EFFECTS__
  */
 export function makeZohoRateLimitedFetchHandler(config: MakeZohoRateLimitedFetchHandlerConfig): ZohoRateLimitedFetchHandler {
   const { readRateLimitDetails } = config;

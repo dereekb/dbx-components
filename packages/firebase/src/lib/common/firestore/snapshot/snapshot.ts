@@ -32,6 +32,7 @@ import { type FirestoreModelData, type SnapshotConverterConfig, type SnapshotCon
  *
  * // Use with a collection reference
  * const usersCollection = firestore.collection('users').withConverter(userConverter);
+ * @__NO_SIDE_EFFECTS__
  */
 export function snapshotConverterFunctions<T extends object, O extends object = FirestoreModelData<T>>(config: SnapshotConverterConfig<T, O>): SnapshotConverterFunctions<T, O> {
   // Convert the provided configuration to field conversions format

@@ -16,6 +16,7 @@ import { type UpdateData, type FirestoreAccessorArrayUpdate } from '@dereekb/fir
  *   remove: { tags: ['old-tag'] }
  * });
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreServerArrayUpdateToUpdateData<T extends object>(input: FirestoreAccessorArrayUpdate<T>): UpdateData<T> {
   const union = input.union;

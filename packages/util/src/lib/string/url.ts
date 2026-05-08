@@ -449,8 +449,15 @@ export interface IsolateWebsitePathFunctionConfig {
 /**
  * Creates an {@link IsolateWebsitePathFunction} that extracts and transforms a path from a website URL based on the configuration.
  *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilKind factory
+ * @dbxUtilTags string, url, path, isolate, transform, factory, query
+ * @dbxUtilRelated website-path-from-website-url, website-path-and-query-pair, fix-extra-query-parameters
+ *
  * @param config - Configuration for path isolation, including base path removal, component range, query handling, and trailing slash behavior.
  * @returns A function that isolates the configured portion of a website path.
+ * @__NO_SIDE_EFFECTS__
  */
 export function isolateWebsitePathFunction(config: IsolateWebsitePathFunctionConfig = {}): IsolateWebsitePathFunction {
   const { removeQueryParameters, ignoredBasePath, isolatePathComponents, removeTrailingSlash } = config;

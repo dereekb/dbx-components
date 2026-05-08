@@ -47,6 +47,7 @@ interface CreateAuthClaimLookupToolInput {
  * @param input - Tool factory input.
  * @param input.registry - Pre-merged auth registry consulted by the tool to resolve claim keys, interface names, and the catalog topic.
  * @returns A {@link DbxTool} that resolves claim queries against the registry.
+ * @__NO_SIDE_EFFECTS__
  */
 export function createAuthClaimLookupTool(input: CreateAuthClaimLookupToolInput): DbxTool {
   const { registry } = input;

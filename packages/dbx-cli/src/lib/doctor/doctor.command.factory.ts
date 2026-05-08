@@ -129,6 +129,7 @@ export interface CreateDoctorCommandInput {
  * @param input.checks - Additional checks to append after the default check list.
  * @param input.defaultEnvs - Built-in env presets merged underneath the user's stored env when names match.
  * @returns A yargs `CommandModule` exposing the `doctor` command.
+ * @__NO_SIDE_EFFECTS__
  */
 export function createDoctorCommand(input: CreateDoctorCommandInput): CommandModule {
   const cliName = input.cliName;

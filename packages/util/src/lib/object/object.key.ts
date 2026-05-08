@@ -10,8 +10,15 @@ import { type EqualityComparatorFunction, safeEqualityComparatorFunction } from 
  * Returns `true` if both arrays have the same length and produce identical key sets.
  * Handles `null`/`undefined` inputs via {@link safeEqualityComparatorFunction}.
  *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilKind factory
+ * @dbxUtilTags object, key, equality, comparator, factory, array
+ * @dbxUtilRelated object-key-equality-comparator-function, safe-equality-comparator-function
+ *
  * @param readKey - Function to extract one or more keys from each object
  * @returns An equality comparator for arrays of keyed objects
+ * @__NO_SIDE_EFFECTS__
  */
 export function objectKeysEqualityComparatorFunction<T, K extends PrimativeKey = PrimativeKey>(readKey: ReadKeyFunction<T, K> | ReadMultipleKeysFunction<T, K>): EqualityComparatorFunction<Maybe<T[]>> {
   const readKeysSet = readKeysSetFunction(readKey);
@@ -41,8 +48,15 @@ export function objectKeysEqualityComparatorFunction<T, K extends PrimativeKey =
  *
  * Handles `null`/`undefined` inputs via {@link safeEqualityComparatorFunction}.
  *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilKind factory
+ * @dbxUtilTags object, key, equality, comparator, factory
+ * @dbxUtilRelated object-keys-equality-comparator-function, safe-equality-comparator-function
+ *
  * @param readKey - Function to extract the key from an object
  * @returns An equality comparator for keyed objects
+ * @__NO_SIDE_EFFECTS__
  */
 export function objectKeyEqualityComparatorFunction<T, K extends PrimativeKey = PrimativeKey>(readKey: ReadKeyFunction<T, K>): EqualityComparatorFunction<Maybe<T>> {
   return safeEqualityComparatorFunction((a, b) => readKey(a) === readKey(b));

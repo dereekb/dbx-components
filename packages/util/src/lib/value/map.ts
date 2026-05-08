@@ -39,6 +39,7 @@ export type ReadValueFunction<I, O> = MapFunction<I, O>;
  * maybeDouble(undefined); // undefined
  * maybeDouble(null);      // null
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function mapMaybeFunction<I, O>(mapFunction: MapFunction<I, O>): MapFunction<Maybe<I>, Maybe<O>> {
   return (input: Maybe<I>) => {
@@ -83,6 +84,7 @@ export type ApplyMapFunctionWithOptions<I, O, C> = (input: I, target?: Maybe<Par
  *
  * @param mapFunction - per-element transformation
  * @returns a function that maps entire arrays
+ * @__NO_SIDE_EFFECTS__
  */
 export function mapArrayFunction<I, O>(mapFunction: MapFunction<I, O>): MapArrayFunction<MapFunction<I, O>> {
   return (input: I[]) => input.map(mapFunction);
@@ -108,7 +110,13 @@ export const MAP_IDENTITY: <T>(input: T) => T = ((input: unknown) => input) as <
 /**
  * Returns the shared {@link MAP_IDENTITY} function cast to the requested type, useful for providing a typed no-op transformation.
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilTags map, identity, no-op, typed
+ * @dbxUtilRelated map-identity, is-map-identity-function
+ *
  * @returns the singleton identity function typed as `MapFunction<T, T>`
+ * @__NO_SIDE_EFFECTS__
  */
 export function mapIdentityFunction<T>(): MapFunction<T, T> {
   return MAP_IDENTITY as MapFunction<T, T>;
@@ -117,8 +125,14 @@ export function mapIdentityFunction<T>(): MapFunction<T, T> {
 /**
  * Checks whether the given function is the singleton {@link MAP_IDENTITY} reference.
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilTags map, identity, type-guard, sentinel
+ * @dbxUtilRelated map-identity, map-identity-function
+ *
  * @param fn - the function to check
  * @returns `true` if the function is the identity singleton
+ * @__NO_SIDE_EFFECTS__
  */
 export function isMapIdentityFunction(fn: unknown): fn is typeof MAP_IDENTITY {
   return fn === MAP_IDENTITY;
@@ -210,6 +224,8 @@ export function mapFunctionOutput<O extends object, I = unknown>(output: O, inpu
  * const result = fnChain('aaaab');
  * // result === 'aaaab'
  * ```
+ *
+ * @__NO_SIDE_EFFECTS__
  */
 export function chainMapSameFunctions<I>(input: ArrayOrValue<Maybe<MapSameFunction<I>>>): MapSameFunction<I> {
   const fns = filterMaybeArrayValues(asArray(input).filter((x) => !isMapIdentityFunction(x))); // remove all identify functions too
@@ -240,10 +256,16 @@ export function chainMapSameFunctions<I>(input: ArrayOrValue<Maybe<MapSameFuncti
  * If `apply` is false, or `b` is null/undefined, returns `a` unchanged. This conditional chaining
  * is useful when a second transform step is optional.
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilTags map, chain, compose, pipeline, transform
+ * @dbxUtilRelated chain-map-same-functions, map-identity-function
+ *
  * @param a - the first map function
  * @param b - the optional second map function to chain after `a`
  * @param apply - when false, skips chaining and returns `a` directly
  * @returns a composed function piping `a` into `b`, or `a` alone if `b` is absent or `apply` is false
+ * @__NO_SIDE_EFFECTS__
  */
 export function chainMapFunction<I>(a: MapSameFunction<I>, b: Maybe<MapSameFunction<I>>): MapSameFunction<I>;
 export function chainMapFunction<I>(a: MapSameFunction<I>, b: Maybe<MapSameFunction<I>>, apply?: boolean): MapSameFunction<I>;

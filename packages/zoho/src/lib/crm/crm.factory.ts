@@ -61,6 +61,7 @@ export type ZohoCrmFactory = (config: ZohoCrmConfig) => ZohoCrm;
  * // Use the CRM context for API calls:
  * const { crmContext } = zohoCrm;
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function zohoCrmFactory(factoryConfig: ZohoCrmFactoryConfig): ZohoCrmFactory {
   const { accountsContext } = factoryConfig;

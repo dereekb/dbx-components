@@ -69,6 +69,14 @@ export type MappedUseFunction<A, I> = <O = void>(input: Maybe<A>, use: UseValue<
  * const fallback = mappedUseFn(undefined, () => 'wrong', 'default');
  * // fallback === 'default'
  * ```
+ *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, use, map, factory, optional, fallback
+ * @dbxUtilRelated wrap-use-function, use-context-function
+ *
+ * @__NO_SIDE_EFFECTS__
  */
 export function mappedUseFunction<A, I>(map: MapFunction<A, Maybe<I>>): MappedUseFunction<A, I> {
   return wrapUseFunction<A, I, I>(useValue as MappedUseFunction<A, I>, map as unknown as MapFunction<I, Maybe<I>>);
@@ -78,9 +86,16 @@ export function mappedUseFunction<A, I>(map: MapFunction<A, Maybe<I>>): MappedUs
  * Wraps an existing {@link MappedUseFunction} with an additional mapping step, allowing further transformation
  * of the intermediate value before it reaches the consumer.
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, use, map, wrap, compose, factory
+ * @dbxUtilRelated mapped-use-function, use-value
+ *
  * @param mappedUseFn - the existing mapped use function to wrap
  * @param map - additional transformation applied to the intermediate value
  * @returns a new MappedUseFunction with the extra mapping layer
+ * @__NO_SIDE_EFFECTS__
  */
 export function wrapUseFunction<A, B, I>(mappedUseFn: MappedUseFunction<A, B>, map: MapFunction<B, Maybe<I>>): MappedUseFunction<A, I> {
   return (<O = void>(input: Maybe<A>, useFn: UseValue<I, O>, defaultValue?: Maybe<GetterOrValue<O>>) => {
@@ -98,9 +113,16 @@ export type UseContextFunction<I> = <O>(input: Maybe<I>) => Maybe<O>;
  * Creates a {@link UseContextFunction} by binding a consumer and optional default value, so callers
  * only need to supply the input.
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, use, context, factory, bind, default
+ * @dbxUtilRelated use-value, mapped-use-function
+ *
  * @param use - the consumer function to bind
  * @param defaultValue - fallback when input is null/undefined
  * @returns a single-argument function that applies the bound consumer
+ * @__NO_SIDE_EFFECTS__
  */
 export function useContextFunction<I, O>(use: UseValue<I, O>, defaultValue?: GetterOrValue<O>): UseContextFunction<I> {
   return ((input: Maybe<I>) => {
@@ -173,6 +195,14 @@ export type MappedUseAsyncFunction<A, I> = <O = void>(input: Maybe<A>, use: UseA
  * const result = await mappedUseAsyncFn(1, () => Promise.resolve('hello'));
  * // result === 'hello'
  * ```
+ *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, use, async, map, factory, promise
+ * @dbxUtilRelated wrap-use-async-function, mapped-use-function
+ *
+ * @__NO_SIDE_EFFECTS__
  */
 export function mappedUseAsyncFunction<A, I>(map: MapFunction<A, Maybe<PromiseOrValue<Maybe<I>>>>): MappedUseAsyncFunction<A, I> {
   return wrapUseAsyncFunction<A, I, I>(useAsync as MappedUseAsyncFunction<A, I>, map as unknown as MapFunction<I, Maybe<PromiseOrValue<Maybe<I>>>>);
@@ -182,9 +212,16 @@ export function mappedUseAsyncFunction<A, I>(map: MapFunction<A, Maybe<PromiseOr
  * Wraps an existing {@link MappedUseAsyncFunction} with an additional async-capable mapping step,
  * allowing further transformation of the intermediate value before it reaches the consumer.
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, use, async, map, wrap, compose, factory, promise
+ * @dbxUtilRelated mapped-use-async-function, wrap-use-function
+ *
  * @param mappedUsePromiseFn - the existing async mapped use function to wrap
  * @param map - additional transformation (sync or async) applied to the intermediate value
  * @returns a new MappedUseAsyncFunction with the extra mapping layer
+ * @__NO_SIDE_EFFECTS__
  */
 export function wrapUseAsyncFunction<A, B, I>(mappedUsePromiseFn: MappedUseAsyncFunction<A, B>, map: MapFunction<B, Maybe<PromiseOrValue<Maybe<I>>>>): MappedUseAsyncFunction<A, I> {
   return (<O = void>(input: Maybe<A>, useFn: UseAsync<I, O>, defaultValue?: Maybe<AsyncGetterOrValue<O>>) => {

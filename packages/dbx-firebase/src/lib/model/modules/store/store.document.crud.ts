@@ -28,6 +28,7 @@ export type DbxFirebaseDocumentStoreCreateFunction<I, O extends OnCallCreateMode
  * @param fn - The Firebase create function to wrap.
  * @param config - Optional config with an `onResult` callback.
  * @returns A function that executes the create and sets the resulting key on the store.
+ * @__NO_SIDE_EFFECTS__
  */
 export function firebaseDocumentStoreCreateFunction<I, O extends OnCallCreateModelResult = OnCallCreateModelResult>(store: DbxFirebaseDocumentStore<any, any>, fn: ModelFirebaseCreateFunction<I, O>, config?: FirebaseDocumentStoreFunctionConfig<I, O>): DbxFirebaseDocumentStoreCreateFunction<I, O> {
   return (params: I) =>
@@ -55,6 +56,7 @@ export type DbxFirebaseDocumentStoreCrudFunction<I, O = void> = (input: I) => Ob
  *
  * @param fn
  * @returns
+ * @__NO_SIDE_EFFECTS__
  */
 export function firebaseDocumentStoreCrudFunction<I, O = void>(fn: ModelFirebaseCrudFunction<I, O>): DbxFirebaseDocumentStoreCrudFunction<I, O> {
   return (params: I) => loadingStateFromObs(from(fn(params)).pipe(shareReplay(1)));
@@ -83,6 +85,7 @@ export type DbxFirebaseDocumentStoreFunction<I extends DbxFirebaseDocumentStoreF
  * @param store
  * @param fn
  * @returns
+ * @__NO_SIDE_EFFECTS__
  */
 export function firebaseDocumentStoreReadFunction<I extends DbxFirebaseDocumentStoreFunctionParams, O>(store: DbxFirebaseDocumentStore<any, any>, fn: ModelFirebaseReadFunction<I, O>): DbxFirebaseDocumentStoreFunction<I, O> {
   return firebaseDocumentStoreUpdateFunction(store, fn);
@@ -98,6 +101,7 @@ export function firebaseDocumentStoreReadFunction<I extends DbxFirebaseDocumentS
  * @param fn - The Firebase update function to wrap.
  * @param config - Optional config with an `onResult` callback.
  * @returns A function that executes the update with the store's key injected.
+ * @__NO_SIDE_EFFECTS__
  */
 export function firebaseDocumentStoreUpdateFunction<I extends DbxFirebaseDocumentStoreFunctionParams, O = void>(store: DbxFirebaseDocumentStore<any, any>, fn: ModelFirebaseUpdateFunction<I, O>, config?: FirebaseDocumentStoreFunctionConfig<DbxFirebaseDocumentStoreFunctionParamsInput<I>, O>): DbxFirebaseDocumentStoreFunction<I, O> {
   return (params: DbxFirebaseDocumentStoreFunctionParamsInput<I>) =>
@@ -127,6 +131,7 @@ export function firebaseDocumentStoreUpdateFunction<I extends DbxFirebaseDocumen
  * @param store
  * @param fn
  * @returns
+ * @__NO_SIDE_EFFECTS__
  */
 export function firebaseDocumentStoreDeleteFunction<I extends DbxFirebaseDocumentStoreFunctionParams, O = void>(store: DbxFirebaseDocumentStore<any, any>, fn: ModelFirebaseDeleteFunction<I, O>): DbxFirebaseDocumentStoreFunction<I, O> {
   return (params: DbxFirebaseDocumentStoreFunctionParamsInput<I>) =>

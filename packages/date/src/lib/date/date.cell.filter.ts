@@ -23,6 +23,7 @@ export type DateCellDurationSpanFilterFunction<B extends DateCell = DateCell> = 
  * const hasStarted = dateCellDurationSpanHasStartedFilterFunction(new Date());
  * const startedSpans = allSpans.filter(hasStarted);
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function dateCellDurationSpanHasStartedFilterFunction<B extends DateCell = DateCell>(now = new Date()): DateCellDurationSpanFilterFunction<B> {
   return (x) => !isAfter(x.startsAt, now); // startsAt <= now
@@ -41,6 +42,7 @@ export function dateCellDurationSpanHasStartedFilterFunction<B extends DateCell 
  * const hasNotStarted = dateCellDurationSpanHasNotStartedFilterFunction(new Date());
  * const futureSpans = allSpans.filter(hasNotStarted);
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function dateCellDurationSpanHasNotStartedFilterFunction<B extends DateCell = DateCell>(now = new Date()): DateCellDurationSpanFilterFunction<B> {
   return (x) => isAfter(x.startsAt, now); // startsAt > now
@@ -60,6 +62,7 @@ export function dateCellDurationSpanHasNotStartedFilterFunction<B extends DateCe
  * const hasEnded = dateCellDurationSpanHasEndedFilterFunction(new Date());
  * const completedSpans = allSpans.filter(hasEnded);
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function dateCellDurationSpanHasEndedFilterFunction<B extends DateCell = DateCell>(now = new Date()): DateCellDurationSpanFilterFunction<B> {
   return (x) => {
@@ -82,6 +85,7 @@ export function dateCellDurationSpanHasEndedFilterFunction<B extends DateCell = 
  * const hasNotEnded = dateCellDurationSpanHasNotEndedFilterFunction(new Date());
  * const activeOrFutureSpans = allSpans.filter(hasNotEnded);
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function dateCellDurationSpanHasNotEndedFilterFunction<B extends DateCell = DateCell>(now = new Date()): DateCellDurationSpanFilterFunction<B> {
   return (x) => {
@@ -113,6 +117,7 @@ export type ModifyDateCellsToFitRangeFunction = <B extends DateCell | DateCellRa
  * const fitToRange = modifyDateCellsToFitRangeFunction({ i: 5, to: 15 });
  * const fitted = fitToRange(dateCells); // cells clamped to [5, 15]
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function modifyDateCellsToFitRangeFunction(range: DateCellRange): ModifyDateCellsToFitRangeFunction {
   const { i, to } = dateCellRangeWithRange(range);

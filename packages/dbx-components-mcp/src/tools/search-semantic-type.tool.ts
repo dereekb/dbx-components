@@ -113,6 +113,7 @@ export interface CreateSemanticTypeSearchToolConfig {
  *
  * @param config - the registry to filter against
  * @returns a registered {@link DbxTool} ready to add to the dispatch table
+ * @__NO_SIDE_EFFECTS__
  */
 export function createSemanticTypeSearchTool(config: CreateSemanticTypeSearchToolConfig): DbxTool {
   const { registry } = config;

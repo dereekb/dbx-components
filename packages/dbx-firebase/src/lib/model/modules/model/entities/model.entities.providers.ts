@@ -21,6 +21,7 @@ export interface ProvideDbxFirebaseModelEntitiesWidgetServiceConfig {
  *
  * @param config Configuration
  * @returns EnvironmentProviders
+ * @__NO_SIDE_EFFECTS__
  */
 export function provideDbxFirebaseModelEntitiesWidgetService(config: ProvideDbxFirebaseModelEntitiesWidgetServiceConfig): EnvironmentProviders {
   const { dbxFirebaseModelEntitiesWidgetServiceConfigFactory } = config;

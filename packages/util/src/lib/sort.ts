@@ -108,6 +108,7 @@ export function compareFnOrder<T>(ascendingCompareFn: AscendingSortCompareFuncti
  * [{ name: 'Bob' }, { name: 'Alice' }].sort(byName);
  * // [{ name: 'Alice' }, { name: 'Bob' }]
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function compareWithMappedValuesFunction<T, V>(mapValue: MapFunction<T, V>, comparesFunction: SortCompareFunction<V>): SortCompareFunction<T> {
   return (a, b) => {
@@ -221,12 +222,19 @@ export type MinAndMaxFunction<T> = (values: Iterable<T>) => MinAndMaxFunctionRes
  * @param compareFn - Ascending sort comparison function used to determine min/max.
  * @returns A function that returns `{ min, max }` or `null` for empty iterables.
  *
+ * @dbxUtil
+ * @dbxUtilCategory sort
+ * @dbxUtilKind factory
+ * @dbxUtilTags sort, min, max, factory, iterable, compare
+ * @dbxUtilRelated min-and-max-index-items-function, sort-by-number-function
+ *
  * @example
  * ```ts
  * const fn = minAndMaxFunction<number>((a, b) => a - b);
  * fn([3, 1, 4, 1, 5]); // { min: 1, max: 5 }
  * fn([]);               // null
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function minAndMaxFunction<T>(compareFn: SortCompareFunction<T>): MinAndMaxFunction<T> {
   return (values: Iterable<T>) => {

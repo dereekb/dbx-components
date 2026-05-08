@@ -40,6 +40,7 @@ export interface IsSegueRefActiveFunctionConfig {
  * @returns A callable function that returns `true` when the route is active.
  *
  * @see {@link IsSegueRefActiveFunctionConfig}
+ * @__NO_SIDE_EFFECTS__
  */
 export function isSegueRefActiveFunction(config: IsSegueRefActiveFunctionConfig): IsSegueRefActiveFunction {
   const { dbxRouterService, segueRef, activeExactly = false } = config;

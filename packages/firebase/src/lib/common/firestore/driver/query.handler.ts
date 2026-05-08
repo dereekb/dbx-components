@@ -37,6 +37,7 @@ export interface MakeFirestoreQueryConstraintFunctionsDriver<B> extends Omit<Fir
  * @returns A fully configured constraint functions driver
  *
  * @throws {Error} When a query uses a constraint type not present in the handler map
+ * @__NO_SIDE_EFFECTS__
  */
 export function makeFirestoreQueryConstraintFunctionsDriver<B>(config: MakeFirestoreQueryConstraintFunctionsDriver<B>): FirestoreQueryConstraintFunctionsDriver {
   const { mapping, init, build, documentIdFieldPath } = config;

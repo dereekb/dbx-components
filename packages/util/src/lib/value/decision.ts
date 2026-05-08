@@ -37,6 +37,7 @@ export type DecisionFunctionFactory<C, I> = FactoryWithRequiredInput<DecisionFun
  * const alwaysTrue = decisionFunction(true);
  * alwaysTrue('anything'); // true
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function decisionFunction<I>(decision: boolean): DecisionFunction<I> {
   return () => decision;
@@ -81,6 +82,8 @@ export const invertDecision: <F extends DecisionFunction<any>>(fn: F, invert?: b
  * const fn2 = asDecisionFunction(undefined, false);
  * fn2('anything'); // false
  * ```
+ *
+ * @__NO_SIDE_EFFECTS__
  */
 export function asDecisionFunction<T = unknown>(valueOrFunction: Maybe<boolean | DecisionFunction<T>>, defaultIfUndefined = true): DecisionFunction<T> {
   const input = valueOrFunction ?? defaultIfUndefined;
@@ -109,6 +112,8 @@ export function asDecisionFunction<T = unknown>(valueOrFunction: Maybe<boolean |
  * isThree(3); // true
  * isThree(4); // false
  * ```
+ *
+ * @__NO_SIDE_EFFECTS__
  */
 export function isEqualToValueDecisionFunction<T>(equalityValue: T | DecisionFunction<T>): T extends DecisionFunction<T> ? T : DecisionFunction<T>;
 export function isEqualToValueDecisionFunction<T>(equalityValue: T | DecisionFunction<T>): DecisionFunction<T> {

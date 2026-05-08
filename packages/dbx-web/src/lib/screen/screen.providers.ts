@@ -20,6 +20,7 @@ export interface ProvideDbxScreenMediaServiceConfig {
  *   providers: [provideDbxScreenMediaService()]
  * });
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function provideDbxScreenMediaService(config: ProvideDbxScreenMediaServiceConfig = {}): EnvironmentProviders {
   const screenConfig = config.config ?? DEFAULT_SCREEN_MEDIA_SERVICE_CONFIG;

@@ -54,6 +54,7 @@ export type StorageListFilesResultFactory<S, R> = (input: StorageListFilesResult
  * const result = factory({ storage, folder, options: { maxResults: 50 } }, rawSdkResult);
  * const files = result.files();
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function storageListFilesResultFactory<S, R>(delegate: StorageListFilesResultFactoryDelegate<S, R>): StorageListFilesResultFactory<S, R> {
   return (input: StorageListFilesResultFactoryInput<S>, result: R) => {

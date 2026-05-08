@@ -50,6 +50,7 @@ export interface BuildInMemoryProjectInput {
  *
  * @param input - the prepared two-side inspection
  * @returns the populated project plus per-side source-file arrays
+ * @__NO_SIDE_EFFECTS__
  */
 export function buildInMemoryProject(input: BuildInMemoryProjectInput): InMemoryProject {
   const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });

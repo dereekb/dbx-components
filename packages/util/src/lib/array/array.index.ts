@@ -118,8 +118,15 @@ export type SliceIndexRangeFunction<T> = (input: T[]) => T[];
 /**
  * Creates a {@link SliceIndexRangeFunction} that slices the specified index range from any input array.
  *
+ * @dbxUtil
+ * @dbxUtilCategory array
+ * @dbxUtilKind factory
+ * @dbxUtilTags array, slice, index, range, factory
+ * @dbxUtilRelated index-range, find-to-index-set
+ *
  * @param inputRange - the index range configuration to use for slicing
  * @returns a function that slices the configured range from an input array
+ * @__NO_SIDE_EFFECTS__
  */
 export function sliceIndexRangeFunction<T>(inputRange: IndexRangeInput): SliceIndexRangeFunction<T> {
   const range = indexRange(inputRange);

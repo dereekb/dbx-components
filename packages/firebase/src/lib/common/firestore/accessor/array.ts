@@ -20,6 +20,7 @@ export type ArrayFieldUpdateWithAccessorFunction<T> = (data: FirestoreAccessorAr
  * @returns A function that applies array updates to the document
  *
  * @see https://firebase.google.com/docs/firestore/manage-data/add-data#update_elements_in_an_array
+ * @__NO_SIDE_EFFECTS__
  */
 export function arrayUpdateWithAccessorFunction<T>(accessor: FirestoreDocumentDataAccessor<T>): ArrayFieldUpdateWithAccessorFunction<T> {
   return async (data: FirestoreAccessorArrayUpdate<T>) => {

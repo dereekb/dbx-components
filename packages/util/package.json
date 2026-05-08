@@ -14,6 +14,12 @@
       "types": "./fetch/index.d.ts",
       "import": "./fetch/index.cjs.mjs",
       "default": "./fetch/index.cjs.js"
+    },
+    "./eslint": {
+      "module": "./eslint/index.esm.js",
+      "types": "./eslint/index.d.ts",
+      "import": "./eslint/index.cjs.mjs",
+      "default": "./eslint/index.cjs.js"
     }
   },
   "peerDependencies": {

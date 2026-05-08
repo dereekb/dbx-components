@@ -86,6 +86,7 @@ export interface FirebaseServerDevFunctions {
  *
  * export const { dev } = devFunctions;
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function firebaseServerDevFunctions<N extends AbstractFirebaseNestContext<any, any>, S extends NestApplicationScheduleConfiguredFunctionMap>(config: FirebaseServerDevFunctionsConfig<N, S>): FirebaseServerDevFunctions {
   const { enabled, secure, nest, developerFunctionsMap, onCallFactory, allScheduledFunctions, disableDevelopmentScheduleFunction } = config;

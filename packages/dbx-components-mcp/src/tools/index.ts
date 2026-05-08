@@ -238,6 +238,7 @@ export const DBX_TOOLS: readonly DbxTool[] = [
  *
  * @param registry - Pre-merged auth registry shared across the cluster's lookup tools.
  * @returns The set of registry-bound auth tools (`auth_claim_lookup`, `auth_scope_lookup`, `auth_role_lookup`, `auth_token_explain`, `auth_list_app`).
+ * @__NO_SIDE_EFFECTS__
  */
 export function createAuthClusterTools(registry: AuthRegistry): readonly DbxTool[] {
   return [createAuthClaimLookupTool({ registry }), createAuthScopeLookupTool({ registry }), createAuthRoleLookupTool({ registry }), createAuthTokenExplainTool({ registry }), createAuthListAppTool({ registry })];

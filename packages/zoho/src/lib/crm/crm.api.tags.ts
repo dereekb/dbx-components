@@ -172,6 +172,7 @@ export type ZohoCrmGetTagsForModulePageFactory = (input: ZohoCrmGetTagsRequest, 
  *
  * @param context - Authenticated Zoho CRM context for making API calls
  * @returns Page factory for paginating through tags in a module
+ * @__NO_SIDE_EFFECTS__
  */
 export function zohoCrmGetTagsForModulePageFactory(context: ZohoCrmContext): ZohoCrmGetTagsForModulePageFactory {
   return zohoFetchPageFactory(zohoCrmGetTagsForModule(context));

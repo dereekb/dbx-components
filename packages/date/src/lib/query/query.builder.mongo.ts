@@ -80,6 +80,7 @@ export interface MakeMongoDBLikeDateQueryBuilderConfig {
  *
  * @param config - Configuration specifying the document field names.
  * @returns A date query builder producing MongoDB-like filter objects.
+ * @__NO_SIDE_EFFECTS__
  */
 export function makeMongoDBLikeDateQueryBuilder(config: MakeMongoDBLikeDateQueryBuilderConfig): DateQueryBuilder<MongoDBLikeDateRangeFilter, MongoDBLikeDateQueryFilter> {
   const { fields } = config;

@@ -52,6 +52,7 @@ const RESERVED_JWT_CLAIMS = new Set(['iss', 'sub', 'aud', 'exp', 'iat', 'nbf', '
  * @param input - Tool factory input.
  * @param input.registry - Pre-merged auth registry consulted to translate raw JWT claims into catalogued meanings, role mappings, and per-app surface details.
  * @returns A {@link DbxTool} that decodes a JWT (or claims object) and explains each claim against the registry.
+ * @__NO_SIDE_EFFECTS__
  */
 export function createAuthTokenExplainTool(input: CreateAuthTokenExplainToolInput): DbxTool {
   const { registry } = input;

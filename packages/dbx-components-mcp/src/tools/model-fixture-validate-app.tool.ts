@@ -80,6 +80,7 @@ export interface CreateModelFixtureValidateAppToolConfig {
  *
  * @param config - registry configuration
  * @returns the registered {@link DbxTool}
+ * @__NO_SIDE_EFFECTS__
  */
 export function createModelFixtureValidateAppTool(config: CreateModelFixtureValidateAppToolConfig = {}): DbxTool {
   async function run(rawArgs: unknown): Promise<ToolResult> {

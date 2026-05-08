@@ -18,6 +18,7 @@ import { type UpdateData, type FirestoreAccessorIncrementUpdate } from '@dereekb
  *   likeCount: -1
  * });
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreServerIncrementUpdateToUpdateData<T extends object>(input: FirestoreAccessorIncrementUpdate<T>): UpdateData<T> {
   return mapObjectMap(input, (incrementValue) => {

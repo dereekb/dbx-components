@@ -182,6 +182,7 @@ export type InterceptAccessorFactoryFunction<T, D = DocumentData> = (input: Fire
  * @template D - The raw document data type in Firestore
  * @param wrap - Function to wrap each created accessor
  * @returns A function that transforms accessor factories to use the wrapper
+ * @__NO_SIDE_EFFECTS__
  */
 export function interceptAccessorFactoryFunction<T, D = DocumentData>(wrap: WrapFirestoreDocumentDataAccessorFunction<T, D>): InterceptAccessorFactoryFunction<T, D> {
   return (input: FirestoreDocumentDataAccessorFactory<T, D>) => ({

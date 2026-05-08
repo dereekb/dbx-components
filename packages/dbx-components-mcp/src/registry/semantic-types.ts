@@ -58,6 +58,7 @@ export interface SemanticTypeRegistry {
  *
  * @param loaded - the merged registry returned by `loadSemanticTypeManifests`
  * @returns a domain-friendly read API over the merged entries
+ * @__NO_SIDE_EFFECTS__
  */
 export function createSemanticTypeRegistry(loaded: LoadSemanticTypeManifestsResult): SemanticTypeRegistry {
   const entries = Array.from(loaded.entries.values()).sort((a, b) => a.name.localeCompare(b.name));
@@ -72,6 +73,7 @@ export function createSemanticTypeRegistry(loaded: LoadSemanticTypeManifestsResu
  * @param input.entries - the full entry list (will be sorted by name)
  * @param input.loadedSources - source labels reported via `registry.loadedSources`
  * @returns a domain-friendly read API over the supplied entries
+ * @__NO_SIDE_EFFECTS__
  */
 export function createSemanticTypeRegistryFromEntries(input: { readonly entries: readonly SemanticTypeEntry[]; readonly loadedSources: readonly string[] }): SemanticTypeRegistry {
   const all = [...input.entries].sort((a, b) => a.name.localeCompare(b.name));
