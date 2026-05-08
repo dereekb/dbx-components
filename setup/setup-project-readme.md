@@ -25,3 +25,11 @@ Read the `getting-started-checklist.md` file afterwards for the next steps.
 
 # Running Setup
 Run the `setup-project.sh` script.
+
+# Per-integration Setup Scripts
+After `setup-project.sh` completes, the new project contains a `scripts/` folder with optional integration setup scripts. Each script reads project naming + paths from `dbx.setup.json` (also written by `setup-project.sh`) so you don't have to re-enter them.
+
+Available today:
+- `node scripts/zoho/setup-zoho.mjs` — wires up Zoho Recruit / CRM / Sign NestJS modules and env vars. Use `--products=recruit,crm,sign --yes` to skip prompts.
+
+To add a new integration script, drop it under `setup/templates/scripts/<integration>/` in this repo, add a `curl` line to `setup-project.sh`, and have it import `../_lib/setup-config.mjs` for project metadata.

@@ -1,0 +1,8 @@
+import { Module } from '@nestjs/common';
+import { ZohoSignWebhookModule } from '@dereekb/zoho/nestjs';
+import { __APP_PASCAL__ZohoSignModule } from './zoho.module';
+
+@Module({
+  imports: [ZohoSignWebhookModule, __APP_PASCAL__ZohoSignModule]
+})
+export class __APP_PASCAL__ApiZohoSignWebhookModule {}

@@ -1,0 +1,13 @@
+import { Injectable } from '@nestjs/common';
+import { ZohoRecruitApi } from '@dereekb/zoho/nestjs';
+
+/**
+ * Domain-specific Zoho Recruit operations for __APP_PASCAL__.
+ *
+ * Use this service to wrap Recruit calls with project-specific logic
+ * (search criteria, record mapping, error handling, etc.).
+ */
+@Injectable()
+export class __APP_PASCAL__ZohoRecruitService {
+  constructor(readonly zohoRecruitApi: ZohoRecruitApi) {}
+}

@@ -1,0 +1,104 @@
+import { Module } from '@nestjs/common';
+import { firebaseZohoAccountsAccessTokenCacheService } from '@dereekb/firebase-server/zoho';
+import {
+  ZohoAccountsAccessTokenCacheService,
+  memoryZohoAccountsAccessTokenCacheService,
+  fileZohoAccountsAccessTokenCacheService,
+  mergeZohoAccountsAccessTokenCacheServices,
+//#if recruit
+  appZohoRecruitModuleMetadata,
+//#endif
+//#if crm
+  appZohoCrmModuleMetadata,
+//#endif
+//#if sign
+  appZohoSignModuleMetadata
+//#endif
+} from '@dereekb/zoho/nestjs';
+import { __APP_PASCAL__ApiFirestoreModule } from '../../common/firebase/firestore.module';
+import { __APP_PASCAL__FirestoreCollections } from '__FIREBASE_COMPONENTS__';
+import { __APP_PASCAL__ZohoService } from './zoho.service';
+//#if recruit
+import { __APP_PASCAL__ZohoRecruitService } from './zoho.recruit.service';
+//#endif
+//#if crm
+import { __APP_PASCAL__ZohoCrmService } from './zoho.crm.service';
+//#endif
+//#if sign
+import { __APP_PASCAL__ZohoSignService } from './zoho.sign.service';
+//#endif
+
+// MARK: Dependency Module — token cache (memory → file → Firestore)
+export const __APP_CAMEL__ZohoAccessTokenCacheFactory = (collections: __APP_PASCAL__FirestoreCollections) => {
+  const memoryCache = memoryZohoAccountsAccessTokenCacheService();
+  const fileCache = fileZohoAccountsAccessTokenCacheService();
+  const firebaseCache = firebaseZohoAccountsAccessTokenCacheService(collections.systemStateCollection);
+  return mergeZohoAccountsAccessTokenCacheServices([memoryCache, fileCache, firebaseCache]);
+};
+
+@Module({
+  imports: [__APP_PASCAL__ApiFirestoreModule],
+  providers: [
+    {
+      provide: ZohoAccountsAccessTokenCacheService,
+      useFactory: __APP_CAMEL__ZohoAccessTokenCacheFactory,
+      inject: [__APP_PASCAL__FirestoreCollections]
+    }
+  ],
+  exports: [ZohoAccountsAccessTokenCacheService]
+})
+export class __APP_PASCAL__ApiZohoDependencyModule {}
+
+//#if recruit
+// MARK: Recruit
+@Module(
+  appZohoRecruitModuleMetadata({
+    dependencyModule: __APP_PASCAL__ApiZohoDependencyModule,
+    providers: [__APP_PASCAL__ZohoRecruitService],
+    exports: [__APP_PASCAL__ZohoRecruitService]
+  })
+)
+export class __APP_PASCAL__ZohoRecruitModule {}
+//#endif
+
+//#if crm
+// MARK: CRM
+@Module(
+  appZohoCrmModuleMetadata({
+    dependencyModule: __APP_PASCAL__ApiZohoDependencyModule,
+    providers: [__APP_PASCAL__ZohoCrmService],
+    exports: [__APP_PASCAL__ZohoCrmService]
+  })
+)
+export class __APP_PASCAL__ZohoCrmModule {}
+//#endif
+
+//#if sign
+// MARK: Sign
+@Module(
+  appZohoSignModuleMetadata({
+    dependencyModule: __APP_PASCAL__ApiZohoDependencyModule,
+    providers: [__APP_PASCAL__ZohoSignService],
+    exports: [__APP_PASCAL__ZohoSignService]
+  })
+)
+export class __APP_PASCAL__ZohoSignModule {}
+//#endif
+
+// MARK: Aggregate
+@Module({
+  imports: [
+//#if recruit
+    __APP_PASCAL__ZohoRecruitModule,
+//#endif
+//#if crm
+    __APP_PASCAL__ZohoCrmModule,
+//#endif
+//#if sign
+    __APP_PASCAL__ZohoSignModule
+//#endif
+  ],
+  providers: [__APP_PASCAL__ZohoService],
+  exports: [__APP_PASCAL__ZohoService]
+})
+export class __APP_PASCAL__ApiZohoModule {}

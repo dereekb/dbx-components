@@ -977,6 +977,51 @@ mkdir -p $API_APP_FOLDER/src/environments
 download_api_ts_file "src/environments/environment.ts"
 download_api_ts_file "src/environments/environment.prod.ts"
 
+# === Per-integration setup scripts (read from dbx.setup.json at runtime) ===
+echo "Adding per-integration setup scripts..."
+mkdir -p scripts/_lib scripts/zoho/templates
+SCRIPTS_BASE="https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/scripts"
+curl -sSf "$SCRIPTS_BASE/_lib/setup-config.mjs" -o scripts/_lib/setup-config.mjs
+curl -sSf "$SCRIPTS_BASE/zoho/setup-zoho.mjs" -o scripts/zoho/setup-zoho.mjs
+for tmpl in zoho.module.ts.tmpl zoho.service.ts.tmpl zoho.recruit.service.ts.tmpl zoho.crm.service.ts.tmpl zoho.sign.service.ts.tmpl zoho.sign.webhook.module.ts.tmpl env.tmpl; do
+  curl -sSf "$SCRIPTS_BASE/zoho/templates/$tmpl" -o "scripts/zoho/templates/$tmpl"
+done
+
+# === dbx.setup.json — project manifest read by per-integration scripts ===
+echo "Writing dbx.setup.json..."
+cat > dbx.setup.json <<EOF
+{
+  "schema": 1,
+  "createdAt": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "sourceBranch": "$SOURCE_BRANCH",
+  "projectName": "$PROJECT_NAME",
+  "appCodePrefix": "$INPUT_CODE_PREFIX",
+  "firebase": {
+    "projectId": "$FIREBASE_PROJECT_ID",
+    "stagingProjectId": "$FIREBASE_STAGING_PROJECT_ID"
+  },
+  "apps": {
+    "angular": "$ANGULAR_APP_NAME",
+    "api": "$API_APP_NAME",
+    "e2e": "$E2E_APP_NAME"
+  },
+  "components": {
+    "angular": "$ANGULAR_COMPONENTS_NAME",
+    "firebase": "$FIREBASE_COMPONENTS_NAME"
+  },
+  "ports": {
+    "firebaseEmulatorBase": $FIREBASE_BASE_EMULATORS_PORT,
+    "angularApp": $ANGULAR_APP_PORT
+  },
+  "versions": {
+    "dbxComponents": "$DBX_COMPONENTS_VERSION",
+    "nx": "$NX_VERSION",
+    "angular": "$ANGULAR_VERSION",
+    "node": "$NODE_VERSION"
+  }
+}
+EOF
+
 git add --all
 git commit --no-verify -m "checkpoint: setup api"
 
