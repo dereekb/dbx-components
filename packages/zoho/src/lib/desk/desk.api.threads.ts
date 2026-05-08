@@ -97,6 +97,7 @@ export type ZohoDeskGetTicketThreadsPageFactory = (input: ZohoDeskGetTicketThrea
  *
  * @param context - Authenticated Zoho Desk context
  * @returns Page factory for iterating over thread results
+ * @__NO_SIDE_EFFECTS__
  */
 export function zohoDeskGetTicketThreadsPageFactory(context: ZohoDeskContext): ZohoDeskGetTicketThreadsPageFactory {
   return zohoDeskFetchPageFactory(zohoDeskGetTicketThreads(context));

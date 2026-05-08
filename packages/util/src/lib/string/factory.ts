@@ -15,9 +15,16 @@ export type ToStringFunction<T, K extends string = string> = FactoryWithRequired
 /**
  * Wraps an existing factory with a {@link ToStringFunction} to produce strings from the factory's output.
  *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilKind factory
+ * @dbxUtilTags string, factory, wrap, transform, to-string
+ * @dbxUtilRelated string-from-date-factory, string-from-time-factory
+ *
  * @param factory - the original value factory
  * @param toStringFunction - function to convert the factory's output to a string
  * @returns a new factory that produces string values
+ * @__NO_SIDE_EFFECTS__
  */
 export function stringFactoryFromFactory<T, K extends string = string>(factory: Factory<T>, toStringFunction: ToStringFunction<T, K>): StringFactory<K> {
   return () => toStringFunction(factory());
@@ -50,9 +57,16 @@ export interface StringFromDateConfig {
 
 /**
  * Creates a factory that returns a string based on the input date.
- 
+ *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilKind factory
+ * @dbxUtilTags string, date, factory, transform, slice
+ * @dbxUtilRelated string-from-time-factory, string-factory-from-factory, transform-string-function
+ *
  * @param config Configuration for the factory.
  * @returns A factory that returns a string based on the input date.
+ * @__NO_SIDE_EFFECTS__
  */
 export function stringFromDateFactory(config: StringFromDateConfig): StringFromDateFactory {
   const { takeFromEnd, transformStringConfig, dateToString } = config;
@@ -72,8 +86,15 @@ export function stringFromDateFactory(config: StringFromDateConfig): StringFromD
 /**
  * Creates a factory that returns a string based on the Unix timestamp of the input date.
  *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilKind factory
+ * @dbxUtilTags string, date, time, timestamp, factory, suffix
+ * @dbxUtilRelated string-from-date-factory
+ *
  * @param digitsFromEnd The number of digits to return from the end of the generated string. Defaults to 7.
  * @returns A StringFromDateFactory.
+ * @__NO_SIDE_EFFECTS__
  */
 export function stringFromTimeFactory(digitsFromEnd: number = 7): StringFromDateFactory {
   return stringFromDateFactory({

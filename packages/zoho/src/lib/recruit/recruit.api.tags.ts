@@ -142,6 +142,7 @@ export type ZohoRecruitGetTagsForModulePageFactory = (input: ZohoRecruitGetTagsR
  *
  * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
  * @returns Page factory for iterating over module tags
+ * @__NO_SIDE_EFFECTS__
  */
 export function zohoRecruitGetTagsForModulePageFactory(context: ZohoRecruitContext): ZohoRecruitGetTagsForModulePageFactory {
   return zohoFetchPageFactory(zohoRecruitGetTagsForModule(context));

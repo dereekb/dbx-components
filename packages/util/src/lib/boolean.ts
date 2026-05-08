@@ -187,6 +187,7 @@ export interface BooleanFactoryConfig {
  * const coinFlip = booleanFactory({ chance: 50 });
  * coinFlip(); // true or false with equal probability
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function booleanFactory(config: BooleanFactoryConfig): BooleanFactory {
   const { chance: inputChance } = config;

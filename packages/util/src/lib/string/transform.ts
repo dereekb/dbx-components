@@ -4,8 +4,14 @@ import { type Maybe } from '../value/maybe.type';
 /**
  * Trims leading and trailing whitespace from a string.
  *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilTags string, trim, whitespace, transform
+ * @dbxUtilRelated transform-string-function
+ *
  * @param input The string to trim.
  * @returns The trimmed string.
+ * @__NO_SIDE_EFFECTS__
  */
 export function stringTrimFunction(input: string): string {
   return input.trim();
@@ -14,8 +20,14 @@ export function stringTrimFunction(input: string): string {
 /**
  * Converts a string to uppercase.
  *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilTags string, uppercase, case, transform
+ * @dbxUtilRelated string-to-lowercase-function, transform-string-function
+ *
  * @param input The string to convert.
  * @returns The uppercase string.
+ * @__NO_SIDE_EFFECTS__
  */
 export function stringToUppercaseFunction(input: string): string {
   return input.toUpperCase();
@@ -24,8 +36,14 @@ export function stringToUppercaseFunction(input: string): string {
 /**
  * Converts a string to lowercase.
  *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilTags string, lowercase, case, transform
+ * @dbxUtilRelated string-to-uppercase-function, transform-string-function
+ *
  * @param input The string to convert.
  * @returns The lowercase string.
+ * @__NO_SIDE_EFFECTS__
  */
 export function stringToLowercaseFunction(input: string): string {
   return input.toLowerCase();
@@ -114,9 +132,16 @@ export function transformStringFunctionConfig<S extends string = string>(config?
  * 4. Lowercase conversion (if `config.toLowercase` is true and no `config.transform` or `config.toUppercase`).
  * If no transformations are specified, the identity function is returned.
  *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilKind factory
+ * @dbxUtilTags string, transform, trim, case, slice, factory
+ * @dbxUtilRelated string-trim-function, string-to-uppercase-function, string-to-lowercase-function, slice-string-function
+ *
  * @template S The specific string type, defaults to `string`.
  * @param config The `TransformStringFunctionConfig` detailing the transformations.
  * @returns A `TransformStringFunction` that applies the configured transformations.
+ * @__NO_SIDE_EFFECTS__
  */
 export function transformStringFunction<S extends string = string>(config: TransformStringFunctionConfig<S>): TransformStringFunction<S> {
   let baseTransform: Maybe<TransformStringFunction>;
@@ -172,8 +197,15 @@ export type AddPrefixFunction = (input: string) => string;
 /**
  * Creates a function that adds a configured prefix to the input string if it does not exist on that string.
  *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilKind factory
+ * @dbxUtilTags string, prefix, add, factory
+ * @dbxUtilRelated add-prefix, add-suffix-function
+ *
  * @param prefix The prefix to add.
  * @returns A function that adds the prefix to a string.
+ * @__NO_SIDE_EFFECTS__
  */
 export function addPrefixFunction(prefix: string): AddPrefixFunction {
   return (input: string) => {
@@ -199,8 +231,15 @@ export function addSuffix(suffix: string, input: string): string {
 /**
  * Creates a function that adds a configured suffix to the input string if it does not exist on that string.
  *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilKind factory
+ * @dbxUtilTags string, suffix, add, factory
+ * @dbxUtilRelated add-suffix, add-prefix-function
+ *
  * @param suffix The suffix to add.
  * @returns A function that adds the suffix to a string.
+ * @__NO_SIDE_EFFECTS__
  */
 export function addSuffixFunction(suffix: string): AddSuffixFunction {
   return (input: string) => {
@@ -216,9 +255,16 @@ export type PadStartFunction = TransformStringFunction;
 /**
  * Pads the start of a string to a minimum length.
  *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilKind factory
+ * @dbxUtilTags string, pad, start, factory, minimum-length
+ * @dbxUtilRelated transform-string-function
+ *
  * @param minLength The minimum length of the string.
  * @param padCharacter The character to use for padding.
  * @returns A function that pads the start of a string.
+ * @__NO_SIDE_EFFECTS__
  */
 export function padStartFunction(minLength: number, padCharacter: string): PadStartFunction {
   return (input: string) => input.padStart(minLength, padCharacter);
@@ -256,8 +302,15 @@ export interface SliceStringFunctionConfig {
 /**
  * Creates a function that slices and concats parts of a string based on the configuration.
  *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilKind factory
+ * @dbxUtilTags string, slice, take, factory, from-start, from-end
+ * @dbxUtilRelated transform-string-function
+ *
  * @param config The configuration for the slice function.
  * @returns A SliceStringFunction.
+ * @__NO_SIDE_EFFECTS__
  */
 export function sliceStringFunction(config: SliceStringFunctionConfig): SliceStringFunction {
   const { fromStart, fromEnd } = config;

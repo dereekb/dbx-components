@@ -27,7 +27,7 @@ describe('runModelHierarchy', () => {
     expect(Array.isArray(parsed.flat)).toBe(true);
     const nb = parsed.tree.find((n: { name: string }) => n.name === 'NotificationBox');
     expect(nb).toBeDefined();
-    expect(nb.children.map((c: { name: string }) => c.name).sort()).toEqual(['Notification', 'NotificationWeek']);
+    expect(nb.children.map((c: { name: string }) => c.name).sort()).toEqual(['Notification', 'NotificationLoggedEventDay', 'NotificationWeek']);
   });
 
   it('returns just the requested subtree when rootModel is supplied', async () => {
@@ -36,7 +36,7 @@ describe('runModelHierarchy', () => {
     expect(parsed.summary.rootCount).toBe(1);
     expect(parsed.tree).toHaveLength(1);
     expect(parsed.tree[0].name).toBe('NotificationBox');
-    expect(parsed.tree[0].children.map((c: { name: string }) => c.name).sort()).toEqual(['Notification', 'NotificationWeek']);
+    expect(parsed.tree[0].children.map((c: { name: string }) => c.name).sort()).toEqual(['Notification', 'NotificationLoggedEventDay', 'NotificationWeek']);
   });
 
   it('resolves rootModel by collection prefix', async () => {
@@ -62,7 +62,7 @@ describe('runModelHierarchy', () => {
     const result = await runModelHierarchy({ scope: 'upstream', rootModel: 'NotificationBox', format: 'flat', output: 'json' });
     const parsed = JSON.parse(textOf(result));
     expect(parsed.tree).toBeUndefined();
-    expect(parsed.flat).toHaveLength(3);
+    expect(parsed.flat).toHaveLength(4);
     expect(parsed.flat[0]).toMatchObject({ name: 'NotificationBox', depth: 0 });
     const child = parsed.flat.find((e: { name: string }) => e.name === 'Notification');
     expect(child).toMatchObject({ depth: 1, parent: 'notificationBoxIdentity' });

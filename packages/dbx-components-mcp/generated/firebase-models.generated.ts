@@ -872,6 +872,11 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
             name: 'TASK_NOTIFICATION',
             value: 3,
             description: 'A task notification. This is used with Task-type notifications.'
+          },
+          {
+            name: 'LOGGED_EVENT',
+            value: 4,
+            description: 'A write-only logged event notification. Persisted with `d=true` and `NO_TRY` channel states from creation, so the send loop never visits it. Cleanup archives the notification item into {@link NotificationLoggedEventDay} (a paged, day-keyed subcollection of {@link NotificationBox}) instead of {@link NotificationWeek}, then deletes the source.'
           }
         ],
         description: 'Controls how a {@link Notification} interacts with its parent {@link NotificationBox} during delivery.'
@@ -966,6 +971,30 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     collectionKind: 'sub-collection'
   },
   {
+    name: 'NotificationLoggedEventDay',
+    identityConst: 'notificationLoggedEventDayIdentity',
+    modelType: 'notificationLoggedEventDay',
+    collectionPrefix: 'nbnle',
+    sourcePackage: '@dereekb/firebase',
+    sourceFile: 'packages/firebase/src/lib/model/notification/notification.ts',
+    fields: [
+      {
+        name: 'd',
+        longName: 'day',
+        converter: 'firestoreString()',
+        tsType: 'string',
+        optional: false,
+        description: 'ISO 8601 day string identifying this day. Matches the document ID.'
+      }
+    ],
+    enums: [],
+    detectionHints: [],
+    description: "Day-keyed wrapper document for a single day's worth of archived logged-event notifications under a {@link NotificationBox}.",
+    parentIdentityConst: 'notificationBoxIdentity',
+    modelGroup: 'Notification',
+    collectionKind: 'sub-collection'
+  },
+  {
     name: 'NotificationWeek',
     identityConst: 'notificationWeekIdentity',
     modelType: 'notificationWeek',
@@ -1006,7 +1035,7 @@ export const FIREBASE_MODEL_GROUPS: readonly FirebaseModelGroup[] = [
     sourcePackage: '@dereekb/firebase',
     sourceFile: 'packages/firebase/src/lib/model/notification/notification.ts',
     description: 'Abstract class providing access to all notification-related Firestore collections.',
-    modelNames: ['Notification', 'NotificationBox', 'NotificationSummary', 'NotificationUser', 'NotificationWeek']
+    modelNames: ['Notification', 'NotificationBox', 'NotificationLoggedEventDay', 'NotificationLoggedEventDayPage', 'NotificationLoggedEventDayPagedItems', 'NotificationSummary', 'NotificationUser', 'NotificationWeek']
   },
   {
     name: 'OidcModel',

@@ -23,6 +23,7 @@ import { DbxUIRouterService } from './uirouter.router.service';
  *
  * @see {@link DbxUIRouterService}
  * @see {@link DbxCoreAngularRouterSegueModule} for the Angular Router alternative
+ * @__NO_SIDE_EFFECTS__
  */
 export function provideDbxUIRouterService(): EnvironmentProviders {
   const providers: Provider[] = [

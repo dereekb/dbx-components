@@ -29,6 +29,7 @@ export type IsModifiedFunction<T = unknown> = IsCheckFunction<T>;
  *
  * @param isEqualFunction - equality check function to invert
  * @returns a function that returns true when the value has been modified
+ * @__NO_SIDE_EFFECTS__
  */
 export function makeIsModifiedFunction<T>(isEqualFunction: IsEqualFunction<T>): IsModifiedFunction<T> {
   return (value) => isEqualFunction(value).pipe(map((x) => !x));
@@ -62,6 +63,7 @@ export interface MakeIsModifiedFunctionObservableConfig<T = unknown> {
  *
  * @param config - configuration with isModified, isEqual, and/or defaultFunction
  * @returns an observable of the resolved IsModifiedFunction
+ * @__NO_SIDE_EFFECTS__
  */
 export function makeIsModifiedFunctionObservable<T>(config: MakeIsModifiedFunctionObservableConfig<T>): Observable<IsModifiedFunction<T>> {
   const { isModified, isEqual, defaultFunction } = config;
@@ -76,6 +78,7 @@ export function makeIsModifiedFunctionObservable<T>(config: MakeIsModifiedFuncti
  * @param isCheckFunction - optional check function
  * @param defaultValueOnMaybe - default result for null/undefined values
  * @returns a function that evaluates each value against the check function and returns it or undefined
+ * @__NO_SIDE_EFFECTS__
  */
 export function makeReturnIfIsFunction<T>(isCheckFunction: Maybe<IsModifiedFunction<T>>, defaultValueOnMaybe?: boolean): (value: Maybe<T>) => Observable<Maybe<T>> {
   return (value) => returnIfIs(isCheckFunction, value, defaultValueOnMaybe);
@@ -99,6 +102,7 @@ export function returnIfIs<T>(isCheckFunction: Maybe<IsModifiedFunction<T>>, val
  * @param isCheckFunction - optional check function
  * @param defaultValueOnMaybe - default result for null/undefined values
  * @returns a function that evaluates each value against the check function and returns an observable boolean
+ * @__NO_SIDE_EFFECTS__
  */
 export function makeCheckIsFunction<T>(isCheckFunction: Maybe<IsModifiedFunction<T>>, defaultValueOnMaybe?: boolean): (value: Maybe<T>) => Observable<boolean> {
   return (value) => checkIs(isCheckFunction, value, defaultValueOnMaybe);

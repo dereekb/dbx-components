@@ -135,6 +135,7 @@ export interface AuthTransitionStateData {
  * @see {@link enableIsLoggedInHook} for a login-based usage.
  * @see {@link enableHasAuthRoleHook} for a role-based usage.
  * @see {@link enableHasAuthStateHook} for a state-based usage.
+ * @__NO_SIDE_EFFECTS__
  */
 export function makeAuthTransitionHook(config: AuthTransitionHookConfig): TransitionHookFn {
   const { defaultRedirectTarget, errorRedirectTarget = defaultRedirectTarget, timeoutTime = 1000 } = config;

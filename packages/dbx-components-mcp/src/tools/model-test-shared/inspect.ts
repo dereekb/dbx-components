@@ -38,7 +38,7 @@ export async function inspectSpecFile(config: { readonly specAbs: string; readon
     try {
       const fixtures = await inspectAppFixtures(apiAbs, apiRel);
       prefix = fixtures.prefix;
-      const lowerPrefix = prefix !== undefined ? prefix.charAt(0).toLowerCase() + prefix.slice(1) : '';
+      const lowerPrefix = prefix === undefined ? '' : prefix.charAt(0).toLowerCase() + prefix.slice(1);
       knownFixtureNames = fixtures.entries.map((entry) => `${lowerPrefix}${entry.model}Context`);
     } catch {
       // Fall through to import-based detection — apiDir is optional.

@@ -297,6 +297,7 @@ export type NotificationMessageFunction = NotificationMessageFunctionWithoutExtr
  *   { globalRecipients: [adminRecipient] }
  * );
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function notificationMessageFunction(fn: NotificationMessageFunctionWithoutExtras, extras?: NotificationMessageFunctionExtras): NotificationMessageFunction {
   if (extras) {
@@ -324,6 +325,7 @@ export function notificationMessageFunction(fn: NotificationMessageFunctionWitho
  * const msg = await msgFn(inputContext);
  * // msg.flag === NotificationMessageFlag.NO_CONTENT
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function noContentNotificationMessageFunctionFactory<D extends NotificationItemMetadata = {}>(): NotificationMessageFunctionFactory<D> {
   return async (_config: NotificationMessageFunctionFactoryConfig<D>) => {

@@ -79,7 +79,7 @@ function formatEntryRow(entry: ApiListEntry): string {
 }
 
 function formatEntryDescription(entry: ApiListEntry): string {
-  const heading = entry.specifier !== undefined ? `${entry.model}.${entry.verb}.${entry.specifier}` : `${entry.model}.${entry.verb}`;
+  const heading = entry.specifier === undefined ? `${entry.model}.${entry.verb}` : `${entry.model}.${entry.verb}.${entry.specifier}`;
   const description = entry.description ?? '';
   const quoted = description
     .split('\n')

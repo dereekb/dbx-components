@@ -16,6 +16,7 @@ import { type DestroyFunction } from '@dereekb/util';
  *
  * @param helpContextKeys - Observable or static array of help context keys to register with the service
  * @returns A destroy function that unregisters the help context keys when called
+ * @__NO_SIDE_EFFECTS__
  */
 export function registerHelpContextKeysWithDbxHelpContextService(helpContextKeys: ObservableOrValue<DbxHelpContextKey[]>): DestroyFunction {
   const helpContextService = inject(DbxHelpContextService);

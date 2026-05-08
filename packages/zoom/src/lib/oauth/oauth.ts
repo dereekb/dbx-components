@@ -80,6 +80,7 @@ export type ZoomAccessTokenStringFactory = () => Promise<ZoomAccessTokenString>;
  *
  * @param zoomAccessTokenFactory The factory to extract the token string from
  * @returns A factory that returns the access token string
+ * @__NO_SIDE_EFFECTS__
  */
 export function zoomAccessTokenStringFactory(zoomAccessTokenFactory: ZoomAccessTokenFactory): ZoomAccessTokenStringFactory {
   return async () => {

@@ -4,7 +4,7 @@
  * Appends a fully-shaped fixture triplet — Params type, Instance class,
  * Fixture class, factory function, and exported singleton — to the end of
  * the fixture file. The body of every customizable callback is left as a
- * `TODO` so the caller fills in the real logic.
+ * placeholder marker so the caller fills in the real logic.
  *
  * Refuses to mutate when any of the named entities already exist (idempotent
  * behaviour: the response identifies the conflicting entries and the file

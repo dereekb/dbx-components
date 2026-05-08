@@ -6,3 +6,4 @@ export * from './collection.group';
 export * from './collection.util';
 export * from './subcollection';
 export * from './subcollection.single';
+export * from './subcollection.paged';

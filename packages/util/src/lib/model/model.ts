@@ -201,9 +201,15 @@ export function removeModelsWithKey<T>(input: T[], key: Maybe<ModelKey>, read: R
  *
  * If multiple models share the same key, the last one wins.
  *
+ * @dbxUtil
+ * @dbxUtilCategory model
+ * @dbxUtilTags model, map, key, index, lookup
+ * @dbxUtilRelated make-multi-model-key-map, read-model-key
+ *
  * @param input - Array of models to index
  * @param read - Function to extract the key from each model; defaults to reading the `id` property
  * @returns Map from model key to model
+ * @__NO_SIDE_EFFECTS__
  */
 export function makeModelMap<T extends UniqueModel>(input: T[], read?: ReadModelKeyFunction<T>): Map<Maybe<ModelKey>, T>;
 export function makeModelMap<T>(input: T[], read: ReadModelKeyFunction<T>): Map<Maybe<ModelKey>, T>;
@@ -219,9 +225,15 @@ export function makeModelMap<T>(input: T[], read?: ReadModelKeyFunction<T>): Map
  *
  * If multiple models share the same relation key, the last one wins for that key.
  *
+ * @dbxUtil
+ * @dbxUtilCategory model
+ * @dbxUtilTags model, map, key, multi, relation, index, lookup
+ * @dbxUtilRelated make-model-map, read-model-key
+ *
  * @param input - Array of models to index
  * @param read - Function that returns an array of relation keys for each model
  * @returns Map from relation key to model
+ * @__NO_SIDE_EFFECTS__
  */
 export function makeMultiModelKeyMap<T>(input: T[], read: ReadRelationKeysFunction<T>): MultiModelKeyMap<T> {
   const map = new Map<string, T>();
@@ -416,9 +428,16 @@ export type ModelTypeDataPairFactory<T, M extends ModelTypeString = ModelTypeStr
  *
  * Falls back to the provided default type if the type reader returns a nullish value.
  *
+ * @dbxUtil
+ * @dbxUtilCategory model
+ * @dbxUtilKind factory
+ * @dbxUtilTags model, type, pair, factory, wrap
+ * @dbxUtilRelated read-model-key, encode-model-key-type-pair
+ *
  * @param typeReader - Function to extract the model type from input data
  * @param defaultType - Fallback type string when the reader returns nullish
  * @returns Factory function that produces ModelTypeDataPair values
+ * @__NO_SIDE_EFFECTS__
  */
 export function modelTypeDataPairFactory<T, M extends ModelTypeString = ModelTypeString>(typeReader: ReadModelTypeFunction<T, M>, defaultType = DEFAULT_UNKNOWN_MODEL_TYPE_STRING): ModelTypeDataPairFactory<T, M> {
   return (data: T) => {

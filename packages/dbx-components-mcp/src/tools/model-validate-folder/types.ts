@@ -126,6 +126,7 @@ export interface RequiredFile {
  *
  * @param name - the model folder's basename
  * @returns the required files in the order rules surface them
+ * @__NO_SIDE_EFFECTS__
  */
 export function buildRequiredFiles(name: string): readonly RequiredFile[] {
   return [

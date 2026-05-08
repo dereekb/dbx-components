@@ -55,6 +55,7 @@ export type OnCallTypeModelParamsFunction = <T>(modelTypeInput: FirestoreModelTy
  * const params = createParams('notification', { title: 'Hello' });
  * // params === { call: 'create', modelType: 'notification', data: { title: 'Hello' } }
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function onCallTypedModelParamsFunction(call?: Maybe<OnCallFunctionType>): OnCallTypeModelParamsFunction {
   return <T>(modelTypeInput: FirestoreModelType | FirestoreModelTypeRef, data: T, specifier?: string) => {

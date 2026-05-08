@@ -107,12 +107,11 @@ export class DbxNavbarComponent extends AbstractTransitionDirective {
         };
       });
 
-      return applyBestFit(
-        results,
-        (x) => x.selected,
-        (a, b) => this._dbxRouterService.comparePrecision(a.anchor, b.anchor),
-        (nonBestFit) => ({ ...nonBestFit, selected: false })
-      );
+      return applyBestFit(results, {
+        filter: (x) => x.selected,
+        compare: (a, b) => this._dbxRouterService.comparePrecision(a.anchor, b.anchor),
+        updateNonBestFit: (nonBestFit) => ({ ...nonBestFit, selected: false })
+      });
     }),
     shareReplay(1)
   );

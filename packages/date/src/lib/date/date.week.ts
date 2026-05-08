@@ -215,6 +215,7 @@ export function yearWeekCode(dateOrYear: Date | number, inputWeek?: YearWeekCode
  * factory(new Date('2024-04-15')); // 202416
  * factory(2024, 15);               // 202415
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function yearWeekCodeFactory(config?: YearWeekCodeConfig): YearWeekCodeFactory {
   const normal = yearWeekCodeDateTimezoneInstance(config?.timezone);
@@ -270,6 +271,7 @@ export function yearWeekCodeForDateRangeInTimezone(dateRange: DateRange, dateRan
  *
  * @param factory - the YearWeekCodeFactory to use (defaults to system timezone)
  * @returns a factory that accepts a DateRange and returns overlapping YearWeekCode values
+ * @__NO_SIDE_EFFECTS__
  */
 export function yearWeekCodeForDateRangeFactory(factory: YearWeekCodeFactory = yearWeekCodeFactory()): YearWeekCodeForDateRangeFactory {
   const { _normal } = factory;
@@ -315,6 +317,7 @@ export function yearWeekCodeForCalendarMonth(date: Date): YearWeekCode[] {
  *
  * @param factory - the YearWeekCodeFactory to use (defaults to system timezone)
  * @returns a factory that accepts a Date and returns YearWeekCode values for that month
+ * @__NO_SIDE_EFFECTS__
  */
 export function yearWeekCodeForCalendarMonthFactory(factory: YearWeekCodeFactory = yearWeekCodeFactory()): YearWeekCodeForCalendarMonthFactory {
   const { _normal } = factory;
@@ -348,6 +351,7 @@ export type YearWeekCodeDateConfig = Pick<YearWeekCodeConfig, 'timezone'>;
  * const toDate = yearWeekCodeDateFactory({ timezone: 'America/Chicago' });
  * const weekStart = toDate(202415); // Sunday of week 15, 2024
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function yearWeekCodeDateFactory(config?: YearWeekCodeDateConfig): YearWeekCodeDateFactory {
   const normal = yearWeekCodeDateTimezoneInstance(config?.timezone);
@@ -418,6 +422,7 @@ export interface YearWeekCodeGroupFactoryConfig<B> {
  * const groups = group([{ date: new Date('2024-04-15') }, { date: new Date('2024-04-16') }]);
  * // groups[0].week === 202416, groups[0].items has both items
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function yearWeekCodeGroupFactory<B>(config: YearWeekCodeGroupFactoryConfig<B>): YearWeekCodeGroupFactory<B> {
   const { yearWeekCodeFactory: factoryInput, yearWeekCodeReader: readerInput, dateReader } = config;

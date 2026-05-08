@@ -461,6 +461,7 @@ const notificationBoxRecipientTemplateConfigDencoder = bitwiseObjectDencoder<Not
  * using bitwise encoding for compact storage.
  *
  * @returns a Firestore field converter that encodes and decodes template config records using bitwise encoding
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreNotificationBoxRecipientTemplateConfigRecord() {
   return firestoreBitwiseObjectMap<NotificationBoxRecipientTemplateConfig, NotificationTemplateType>({

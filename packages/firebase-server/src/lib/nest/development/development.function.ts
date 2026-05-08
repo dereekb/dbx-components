@@ -59,6 +59,7 @@ export interface OnCallDevelopmentConfig<N> {
  *   resetData: resetDataFunction
  * });
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function onCallDevelopmentFunction<N>(map: OnCallDevelopmentFunctionMap<N>, config: OnCallDevelopmentConfig<N> = {}): OnCallWithNestContext<N, OnCallDevelopmentParams> {
   const { preAssert = () => undefined } = config;

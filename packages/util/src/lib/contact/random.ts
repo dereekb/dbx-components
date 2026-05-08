@@ -42,8 +42,15 @@ export type RandomEmailFactory = Factory<EmailAddress>;
 /**
  * Creates a factory that generates random email addresses using configurable prefixes, domains, and number generators.
  *
+ * @dbxUtil
+ * @dbxUtilCategory contact
+ * @dbxUtilKind factory
+ * @dbxUtilTags contact, email, random, factory, generate
+ * @dbxUtilRelated random-phone-number-factory, incrementing-number-factory
+ *
  * @param inputConfig - Optional configuration overrides
  * @returns A factory function that produces random email address strings
+ * @__NO_SIDE_EFFECTS__
  */
 export function randomEmailFactory(inputConfig?: RandomEmailFactoryConfig): RandomEmailFactory {
   const config = mergeObjects([DEFAULT_RANDOM_EMAIL_FACTORY_CONFIG, inputConfig], KeyValueTypleValueFilter.FALSY_AND_EMPTY);
@@ -93,8 +100,15 @@ export type RandomPhoneNumberFactory = Factory<E164PhoneNumber>;
 /**
  * Creates a factory that generates random E.164 phone numbers using configurable area codes and number generators.
  *
+ * @dbxUtil
+ * @dbxUtilCategory contact
+ * @dbxUtilKind factory
+ * @dbxUtilTags contact, phone, e164, random, factory, generate
+ * @dbxUtilRelated random-email-factory, random-number-factory
+ *
  * @param inputConfig - Optional configuration overrides
  * @returns A factory function that produces random E.164 phone number strings
+ * @__NO_SIDE_EFFECTS__
  */
 export function randomPhoneNumberFactory(inputConfig?: RandomPhoneNumberFactoryConfig): RandomPhoneNumberFactory {
   const config = mergeObjects([DEFAULT_RANDOM_PHONE_NUMBER_FACTORY_CONFIG, inputConfig], KeyValueTypleValueFilter.FALSY_AND_EMPTY);

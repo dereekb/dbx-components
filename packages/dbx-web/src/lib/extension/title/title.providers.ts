@@ -17,6 +17,7 @@ export interface ProvideDbxWebPageTitleServiceConfig extends DbxWebPageTitleServ
  * ```ts
  * provideDbxWebPageTitleService({ defaultTitle: 'MyApp' })
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function provideDbxWebPageTitleService(config?: ProvideDbxWebPageTitleServiceConfig): EnvironmentProviders {
   const providers: Provider[] = [DbxWebPageTitleService];

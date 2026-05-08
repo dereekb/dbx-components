@@ -64,6 +64,7 @@ export type DbxValueListItemDecisionFunction<T> = DecisionFunction<DbxValueListI
  *
  * @param decisionFunction
  * @returns
+ * @__NO_SIDE_EFFECTS__
  */
 export function dbxValueListItemDecisionFunction<T>(decisionFunction: DecisionFunction<T>): DbxValueListItemDecisionFunction<T> {
   return (item) => decisionFunction(item.itemValue);

@@ -44,6 +44,7 @@ export interface FirestoreQueryConstraint<T = unknown> {
  * @param type - The constraint type identifier (e.g., 'where', 'limit')
  * @param data - The constraint-specific configuration data
  * @returns A typed constraint object
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreQueryConstraint<T = unknown>(type: string, data: T): FirestoreQueryConstraint<T> {
   return {
@@ -69,6 +70,7 @@ export function firestoreQueryConstraint<T = unknown>(type: string, data: T): Fi
  * // Use the factory to create constraints
  * const nameConstraint = whereFactory({ field: 'name', op: '==', value: 'John' });
  * const ageConstraint = whereFactory({ field: 'age', op: '>', value: 21 });
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreQueryConstraintFactory(type: string): <T = unknown>(data: T) => FirestoreQueryConstraint<T> {
   return <T>(data: T) => firestoreQueryConstraint(type, data);

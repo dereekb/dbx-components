@@ -3,8 +3,76 @@ import { copyArray } from './array';
 
 describe('Array Filter Functions', () => {
   describe('filterValuesByDistance', () => {
-    it('should throw error since it is not implemented', () => {
-      expect(() => filterValuesByDistance([], 1, () => 0)).toThrow('Incomplete implementation!');
+    it('should return empty array when input is empty', () => {
+      const result = filterValuesByDistance([], 10, (x) => x);
+      expect(result).toEqual([]);
+    });
+
+    it('should return the single item when input has only one item', () => {
+      const result = filterValuesByDistance([5], 10, (x) => x);
+      expect(result).toEqual([5]);
+    });
+
+    it('should filter out items that are too close together while preserving original order', () => {
+      const input = [1, 5, 6, 20, 22, 40];
+      const result = filterValuesByDistance(input, 5, (x) => x);
+      expect(result).toEqual([1, 6, 20, 40]);
+    });
+
+    it('should preserve original input order even when values are unsorted', () => {
+      const input = [40, 1, 22, 5, 20, 6];
+      const result = filterValuesByDistance(input, 5, (x) => x);
+      // Same kept set as filterValuesByDistanceNoOrder ({1, 6, 20, 40}) but in original input order.
+      expect(result).toEqual([40, 1, 20, 6]);
+    });
+
+    it('should treat minDistance as inclusive (distance equal to minDistance is kept)', () => {
+      const input = [0, 5, 10];
+      const result = filterValuesByDistance(input, 5, (x) => x);
+      expect(result).toEqual([0, 5, 10]);
+    });
+
+    it('should filter out values with null from getValue while preserving original order of kept items', () => {
+      const input = [1, 6, null, 20, undefined];
+      const result = filterValuesByDistance(input, 5, (x) => x ?? null);
+      expect(result).toEqual([1, 6, 20]);
+    });
+
+    it('should not mutate the input array', () => {
+      const input = [40, 1, 22, 5, 20, 6];
+      const snapshot = [...input];
+      filterValuesByDistance(input, 5, (x) => x);
+      expect(input).toEqual(snapshot);
+    });
+
+    it('should handle objects with custom getValue function in original order', () => {
+      const input = [
+        { id: 1, value: 50 },
+        { id: 2, value: 10 },
+        { id: 3, value: 27 },
+        { id: 4, value: 25 },
+        { id: 5, value: 12 }
+      ];
+
+      const result = filterValuesByDistance(input, 5, (item) => item.value);
+      // Kept set by value-distance is {10, 25, 50}; in original input order that is ids 1, 4, 2.
+      expect(result).toEqual([
+        { id: 1, value: 50 },
+        { id: 2, value: 10 },
+        { id: 4, value: 25 }
+      ]);
+    });
+
+    it('should return empty array when every item maps to null', () => {
+      const result = filterValuesByDistance([1, 2, 3], 5, () => null);
+      expect(result).toEqual([]);
+    });
+
+    it('should handle negative values', () => {
+      const input = [-10, -8, 0, 3, 4];
+      const result = filterValuesByDistance(input, 5, (x) => x);
+      // Sorted: [-10, -8, 0, 3, 4]; greedy keeps -10, drops -8, keeps 0, drops 3, drops 4. Kept set {-10, 0}.
+      expect(result).toEqual([-10, 0]);
     });
   });
 
@@ -74,7 +142,7 @@ describe('Array Filter Functions', () => {
     const updateNonBestFit = (item: TestItem) => ({ ...item, selected: false });
 
     it('should create a new array with the best fit item and transform others', () => {
-      const result = makeBestFit(items, filter, compare, updateNonBestFit);
+      const result = makeBestFit(items, { filter, compare, updateNonBestFit });
 
       // Original array should not be modified
       expect(items).toEqual([
@@ -101,7 +169,7 @@ describe('Array Filter Functions', () => {
         { id: 4, selected: false }
       ];
 
-      const result = makeBestFit(singleSelectedItems, filter, compare, updateNonBestFit);
+      const result = makeBestFit(singleSelectedItems, { filter, compare, updateNonBestFit });
 
       expect(result).toEqual([
         { id: 1, selected: false },
@@ -112,7 +180,7 @@ describe('Array Filter Functions', () => {
     });
 
     it('should handle an empty array', () => {
-      const result = makeBestFit([], filter, compare, updateNonBestFit);
+      const result = makeBestFit<TestItem>([], { filter, compare, updateNonBestFit });
       expect(result).toEqual([]);
     });
 
@@ -122,7 +190,7 @@ describe('Array Filter Functions', () => {
         { id: 2, selected: false }
       ];
 
-      const result = makeBestFit(noMatchItems, filter, compare, updateNonBestFit);
+      const result = makeBestFit(noMatchItems, { filter, compare, updateNonBestFit });
       expect(result).toEqual(noMatchItems);
     });
   });
@@ -146,7 +214,7 @@ describe('Array Filter Functions', () => {
 
     it('should modify the input array to keep the best fit and transform others', () => {
       const inputCopy = copyArray(items);
-      const result = applyBestFit(inputCopy, filter, compare, updateNonBestFit);
+      const result = applyBestFit(inputCopy, { filter, compare, updateNonBestFit });
 
       // Result should be the same array instance as input
       expect(result).toBe(inputCopy);
@@ -167,7 +235,7 @@ describe('Array Filter Functions', () => {
         { id: 3, selected: false }
       ];
 
-      const result = applyBestFit(singleSelectedItems, filter, compare, updateNonBestFit);
+      const result = applyBestFit(singleSelectedItems, { filter, compare, updateNonBestFit });
 
       expect(result).toEqual([
         { id: 1, selected: false },
@@ -178,7 +246,7 @@ describe('Array Filter Functions', () => {
 
     it('should handle an empty array', () => {
       const emptyArray: TestItem[] = [];
-      const result = applyBestFit(emptyArray, filter, compare, updateNonBestFit);
+      const result = applyBestFit(emptyArray, { filter, compare, updateNonBestFit });
       expect(result).toEqual([]);
     });
   });

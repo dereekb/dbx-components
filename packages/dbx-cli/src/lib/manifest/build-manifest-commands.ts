@@ -126,6 +126,7 @@ export const DEFAULT_MANIFEST_MODEL_COMMAND_NAME = 'model';
  * @param options - Optional overrides; see {@link BuildManifestCommandsOptions}.
  * @returns The yargs `CommandModule[]` ready to be passed to `runCli({ apiCommands })`. Empty
  *   when the manifest has no callable entries.
+ * @__NO_SIDE_EFFECTS__
  */
 export function buildManifestCommands(manifest: CliApiManifest, options?: BuildManifestCommandsOptions): CommandModule[] {
   const callable = manifest.filter((e) => !SKIPPED_VERBS.has(e.verb));

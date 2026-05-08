@@ -59,6 +59,7 @@ export type SyncEntityCommonTypeIdPairFactory = (input: SyncEntityCommonTypeIdPa
  * factory('abc123');  // { commonType: 'user', commonId: 'abc123' }
  * factory({ commonType: 'user', commonId: 'abc123' });  // passed through as-is
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function syncEntityCommonTypeIdPairFactory(commonType: SyncEntityCommonType): SyncEntityCommonTypeIdPairFactory {
   return (input: SyncEntityCommonTypeIdPairFactoryInput) => {
@@ -128,6 +129,7 @@ export type SyncEntityFactory = FactoryWithRequiredInput<SyncEntity, SyncEntityC
  * const entity = factory({ commonType: 'user', commonId: 'abc123' });
  * // entity.id === 'abc123', entity.sourceInfo.id === 'api'
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function syncEntityFactory(config: SyncEntityFactoryConfig): SyncEntityFactory {
   const { idFactory: inputIdFactory, sourceInfo } = config;

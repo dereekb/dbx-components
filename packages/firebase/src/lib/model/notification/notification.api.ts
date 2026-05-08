@@ -41,7 +41,7 @@ export interface NotificationBoxRecipientTemplateConfigArrayEntryParam extends N
   readonly remove?: Maybe<boolean>;
 }
 
-export const notificationBoxRecipientTemplateConfigArrayEntryParamType = type({
+export const notificationBoxRecipientTemplateConfigArrayEntryParamType = /* @__PURE__ */ type({
   type: 'string > 0',
   'sd?': clearable('boolean'),
   'se?': clearable('boolean'),
@@ -58,7 +58,7 @@ export interface CreateNotificationUserParams {
   readonly uid: FirebaseAuthUserId;
 }
 
-export const createNotificationUserParamsType = type({
+export const createNotificationUserParamsType = /* @__PURE__ */ type({
   uid: firestoreModelIdType
 }) as Type<CreateNotificationUserParams>;
 
@@ -75,7 +75,7 @@ export interface UpdateNotificationUserDefaultNotificationBoxRecipientConfigPara
   readonly f?: Maybe<NotificationBoxRecipientFlag>;
 }
 
-export const updateNotificationUserDefaultNotificationBoxRecipientConfigParamsType = type({
+export const updateNotificationUserDefaultNotificationBoxRecipientConfigParamsType = /* @__PURE__ */ type({
   'i?': clearable('number'),
   'e?': clearable('string.email'),
   't?': clearable(e164PhoneNumberType),
@@ -92,7 +92,7 @@ export interface UpdateNotificationBoxRecipientLikeParams {
   readonly configs?: Maybe<NotificationBoxRecipientTemplateConfigArrayEntryParam[]>;
 }
 
-export const updateNotificationBoxRecipientLikeParamsType = type({
+export const updateNotificationBoxRecipientLikeParamsType = /* @__PURE__ */ type({
   'e?': clearable('string.email'),
   't?': clearable(e164PhoneNumberType),
   's?': clearable('string'),
@@ -145,7 +145,7 @@ export interface ResyncNotificationUserResult {
 
 export interface ResyncAllNotificationUserParams {}
 
-export const resyncAllNotificationUserParamsType = type({}) as Type<ResyncAllNotificationUserParams>;
+export const resyncAllNotificationUserParamsType = /* @__PURE__ */ type({}) as Type<ResyncAllNotificationUserParams>;
 
 export interface ResyncAllNotificationUsersResult extends ResyncNotificationUserResult {
   readonly notificationUsersResynced: number;
@@ -158,7 +158,7 @@ export interface CreateNotificationSummaryParams {
   readonly model: FirestoreModelKey;
 }
 
-export const createNotificationSummaryParamsType = type({
+export const createNotificationSummaryParamsType = /* @__PURE__ */ type({
   model: firestoreModelKeyType
 }) as Type<CreateNotificationSummaryParams>;
 
@@ -186,7 +186,7 @@ export interface CreateNotificationBoxParams {
   readonly model: FirestoreModelKey;
 }
 
-export const createNotificationBoxParamsType = type({
+export const createNotificationBoxParamsType = /* @__PURE__ */ type({
   model: firestoreModelKeyType
 }) as Type<CreateNotificationBoxParams>;
 
@@ -203,7 +203,7 @@ export const initializeNotificationModelParamsType = targetModelParamsType.merge
 
 export interface InitializeAllApplicableNotificationBoxesParams {}
 
-export const initializeAllApplicableNotificationBoxesParamsType = type({}) as Type<InitializeAllApplicableNotificationBoxesParams>;
+export const initializeAllApplicableNotificationBoxesParamsType = /* @__PURE__ */ type({}) as Type<InitializeAllApplicableNotificationBoxesParams>;
 
 export interface InitializeAllApplicableNotificationBoxesResult {
   readonly notificationBoxesVisited: number;
@@ -214,7 +214,7 @@ export interface InitializeAllApplicableNotificationBoxesResult {
 
 export interface InitializeAllApplicableNotificationSummariesParams {}
 
-export const initializeAllApplicableNotificationSummariesParamsType = type({}) as Type<InitializeAllApplicableNotificationSummariesParams>;
+export const initializeAllApplicableNotificationSummariesParamsType = /* @__PURE__ */ type({}) as Type<InitializeAllApplicableNotificationSummariesParams>;
 
 export interface InitializeAllApplicableNotificationSummariesResult {
   readonly notificationSummariesVisited: number;
@@ -260,7 +260,7 @@ export interface NotificationRecipientParams {
   readonly p?: Maybe<E164PhoneNumber>;
 }
 
-export const notificationRecipientParamsType = type({
+export const notificationRecipientParamsType = /* @__PURE__ */ type({
   'uid?': clearable(firestoreModelIdType),
   'un?': clearable(`string >= ${NOTIFICATION_RECIPIENT_NAME_MIN_LENGTH} & string <= ${NOTIFICATION_RECIPIENT_NAME_MAX_LENGTH}`),
   'e?': clearable('string.email'),
@@ -311,6 +311,11 @@ export interface SendNotificationResult {
   readonly notificationTemplateType: Maybe<NotificationTemplateType>;
   readonly isKnownTemplateType: Maybe<boolean>;
   readonly isNotificationTask: boolean;
+  /**
+   * True if the notification was a logged-event record (`st === LOGGED_EVENT`). Logged events bypass
+   * the send pipeline entirely; the factory short-circuits and returns immediately when one is loaded.
+   */
+  readonly isLoggedEvent: boolean;
   readonly isUniqueNotificationTask: boolean;
   readonly uniqueNotificationTaskConflict: boolean;
   readonly isConfiguredTemplateType: Maybe<boolean>;
@@ -344,7 +349,7 @@ export interface SendQueuedNotificationsParams {
   readonly sendNotificationLoopsTaskExcessThreshold?: Maybe<number>;
 }
 
-export const sendQueuedNotificationsParamsType = type({
+export const sendQueuedNotificationsParamsType = /* @__PURE__ */ type({
   'maxSendNotificationLoops?': clearable('number'),
   'maxParellelSendTasks?': clearable('number'),
   'sendNotificationLoopsTaskExcessThreshold?': clearable('number')
@@ -355,7 +360,7 @@ export const sendQueuedNotificationsParamsType = type({
  */
 export interface SendQueuedNotificationsResult extends Omit<
   SendNotificationResult,
-  'throttled' | 'isNotificationTask' | 'isUniqueNotificationTask' | 'notificationTaskCompletionType' | 'uniqueNotificationTaskConflict' | 'isConfiguredTemplateType' | 'isKnownTemplateType' | 'notificationTemplateType' | 'notificationMarkedDone' | 'deletedNotification' | 'createdBox' | 'success' | 'exists' | 'boxExists' | 'notificationBoxNeedsInitialization' | 'tryRun' | 'loadMessageFunctionFailure' | 'buildMessageFailure'
+  'throttled' | 'isNotificationTask' | 'isLoggedEvent' | 'isUniqueNotificationTask' | 'notificationTaskCompletionType' | 'uniqueNotificationTaskConflict' | 'isConfiguredTemplateType' | 'isKnownTemplateType' | 'notificationTemplateType' | 'notificationMarkedDone' | 'deletedNotification' | 'createdBox' | 'success' | 'exists' | 'boxExists' | 'notificationBoxNeedsInitialization' | 'tryRun' | 'loadMessageFunctionFailure' | 'buildMessageFailure'
 > {
   readonly excessLoopsDetected: boolean;
   readonly notificationLoopCount: number;
@@ -373,7 +378,7 @@ export interface SendQueuedNotificationsResult extends Omit<
  */
 export interface CleanupSentNotificationsParams {}
 
-export const cleanupSentNotificationsParamsType = type({}) as Type<CleanupSentNotificationsParams>;
+export const cleanupSentNotificationsParamsType = /* @__PURE__ */ type({}) as Type<CleanupSentNotificationsParams>;
 
 export interface CleanupSentNotificationsResult {
   readonly notificationBoxesUpdatesCount: number;
@@ -381,6 +386,39 @@ export interface CleanupSentNotificationsResult {
   readonly notificationsDeleted: number;
   readonly notificationWeeksCreated: number;
   readonly notificationWeeksUpdated: number;
+  /**
+   * Number of logged-event notifications archived to {@link NotificationLoggedEventDay} during cleanup.
+   */
+  readonly notificationLoggedEventsCleanedUp: number;
+}
+
+/**
+ * Parameters for the `cleanupOldNotificationLoggedEventDays` action.
+ */
+export interface CleanupOldNotificationLoggedEventDaysParams {
+  /**
+   * Number of days of logged-event history to retain. Day documents whose ISO day string ID is older
+   * than `now - retentionDays` are deleted along with their nested page subcollection.
+   */
+  readonly retentionDays: number;
+}
+
+export const cleanupOldNotificationLoggedEventDaysParamsType = /* @__PURE__ */ type({
+  retentionDays: 'number>0'
+}) as Type<CleanupOldNotificationLoggedEventDaysParams>;
+
+/**
+ * Aggregate result of the `cleanupOldNotificationLoggedEventDays` action.
+ */
+export interface CleanupOldNotificationLoggedEventDaysResult {
+  /**
+   * Number of {@link NotificationLoggedEventDay} wrapper documents deleted.
+   */
+  readonly daysDeleted: number;
+  /**
+   * Number of page documents (including the `_index` doc) deleted across all purged days.
+   */
+  readonly pagesDeleted: number;
 }
 
 // MARK: Functions
@@ -415,6 +453,8 @@ export type NotificationBoxModelCrudFunctionsConfig = {
     };
   };
   readonly notificationWeek: null;
+  readonly notificationLoggedEventDay: null;
+  readonly notificationLoggedEventDayPage: null;
 };
 
 export const notificationBoxModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<NotificationBoxModelCrudFunctionsConfig, NotificationTypes> = {

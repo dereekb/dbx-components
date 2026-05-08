@@ -42,6 +42,7 @@ export type RandomNumberFactoryInput = number | RandomNumberFactoryConfig;
  * @param maxOrArgs - Maximum value (exclusive) or full configuration object
  * @param roundingInput - Optional rounding mode override
  * @returns A factory function that produces random numbers within the range
+ * @__NO_SIDE_EFFECTS__
  */
 export function randomNumberFactory(maxOrArgs: RandomNumberFactoryInput, roundingInput?: RoundingInput): RandomNumberFactory {
   const config: RandomNumberFactoryConfig = typeof maxOrArgs === 'number' ? { min: 0, max: maxOrArgs } : maxOrArgs;

@@ -15,8 +15,15 @@ export type ForwardFunction<I extends (...args: any[]) => O, O = unknown> = I;
  *
  * Useful for late-binding or circular dependency resolution.
  *
+ * @dbxUtil
+ * @dbxUtilCategory function
+ * @dbxUtilKind factory
+ * @dbxUtilTags function, forward, late-binding, factory, lazy
+ * @dbxUtilRelated default-forward-function-factory
+ *
  * @param getter - A Getter that provides the target function
  * @returns A forwarding function with the same signature as the target
+ * @__NO_SIDE_EFFECTS__
  */
 export function forwardFunction<I extends (...args: any[]) => O, O = unknown>(getter: Getter<I>): ForwardFunction<I> {
   return ((...args: unknown[]) => {
@@ -34,8 +41,15 @@ export type DefaultForwardFunctionFactory<I extends (...args: any[]) => O, O = u
  * Creates a factory that produces forwarding functions which use the provided function
  * or fall back to the default function when not provided.
  *
+ * @dbxUtil
+ * @dbxUtilCategory function
+ * @dbxUtilKind factory
+ * @dbxUtilTags function, forward, factory, default, fallback
+ * @dbxUtilRelated forward-function
+ *
  * @param defaultFn - The default function to use as fallback
  * @returns A factory that wraps optional functions with a default fallback
+ * @__NO_SIDE_EFFECTS__
  */
 export function defaultForwardFunctionFactory<I extends (...args: any[]) => O, O = unknown>(defaultFn: I): DefaultForwardFunctionFactory<I, O> {
   return (fn: Maybe<I>) => forwardFunction(() => fn ?? defaultFn);

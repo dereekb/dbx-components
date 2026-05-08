@@ -29,6 +29,7 @@ export interface DbxFirebaseModelContextServiceInfoInstanceFactoryConfig<S exten
  *
  * @param config - Configuration providing the model service factory and entity map observable.
  * @returns A factory function that creates model info instances from observable model keys.
+ * @__NO_SIDE_EFFECTS__
  */
 export function dbxFirebaseModelContextServiceInfoInstanceFactory<S extends InContextFirebaseModelsService<any>, C extends FirebasePermissionErrorContext = FirebasePermissionErrorContext>(config: DbxFirebaseModelContextServiceInfoInstanceFactoryConfig<S, C>): DbxFirebaseModelContextServiceInfoInstanceFactory {
   const { modelService, entityMap$ } = config;

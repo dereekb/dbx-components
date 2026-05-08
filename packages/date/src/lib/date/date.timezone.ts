@@ -753,6 +753,7 @@ export type DateTimezoneUtcNormalFunctionInput = DateTimezoneUtcNormalInstanceIn
  * @param config - timezone input: an existing instance, timezone string, millisecond offset, or config object
  * @returns a DateTimezoneUtcNormalInstance for the given input
  * @throws Error if the input type is not recognized
+ * @__NO_SIDE_EFFECTS__
  */
 export function dateTimezoneUtcNormal(config: DateTimezoneUtcNormalFunctionInput): DateTimezoneUtcNormalInstance {
   let instance: DateTimezoneUtcNormalInstance;
@@ -933,6 +934,7 @@ export type TransformDateInTimezoneNormalFunction = ((date: Date, transform: Map
  * @param timezoneInput - timezone configuration for the conversion
  * @param transformType - defaults to `'systemDateToTargetDate'`
  * @returns a function that transforms dates within the specified timezone normalization
+ * @__NO_SIDE_EFFECTS__
  */
 export function transformDateInTimezoneNormalFunction(timezoneInput: DateTimezoneUtcNormalFunctionInput, transformType: DateTimezoneUtcNormalInstanceTransformType = 'systemDateToTargetDate'): TransformDateInTimezoneNormalFunction {
   const timezoneInstance = dateTimezoneUtcNormal(timezoneInput);
@@ -967,6 +969,7 @@ export type TransformDateRangeToTimezoneFunction = TransformDateRangeDatesFuncti
  * @param timezoneInput - timezone configuration for the conversion
  * @param transformType - defaults to `'systemDateToTargetDate'`
  * @returns a function that converts DateRange dates using the specified transform
+ * @__NO_SIDE_EFFECTS__
  */
 export function transformDateRangeToTimezoneFunction(timezoneInput: DateTimezoneUtcNormalFunctionInput, transformType: DateTimezoneUtcNormalInstanceTransformType = 'systemDateToTargetDate'): TransformDateRangeToTimezoneFunction {
   const timezoneInstance = dateTimezoneUtcNormal(timezoneInput);
@@ -993,6 +996,7 @@ export type TransformDateRangeInTimezoneNormalFunction = ((dateRange: DateRange,
  * @param timezoneInput - timezone configuration for the conversion
  * @param transformType - defaults to `'systemDateToTargetDate'`
  * @returns a function that transforms date ranges within the specified timezone normalization
+ * @__NO_SIDE_EFFECTS__
  */
 export function transformDateRangeInTimezoneNormalFunction(timezoneInput: DateTimezoneUtcNormalFunctionInput, transformType: DateTimezoneUtcNormalInstanceTransformType = 'systemDateToTargetDate'): TransformDateRangeInTimezoneNormalFunction {
   const timezoneInstance = dateTimezoneUtcNormal(timezoneInput);
@@ -1029,6 +1033,7 @@ export type StartOfDayInTimezoneDayStringFactory = (day: ISO8601DayString) => Da
  *
  * @param timezone - timezone configuration to bind the factory to
  * @returns a factory that converts ISO8601 day strings to start-of-day dates
+ * @__NO_SIDE_EFFECTS__
  */
 export function startOfDayInTimezoneDayStringFactory(timezone?: DateTimezoneUtcNormalFunctionInput): StartOfDayInTimezoneDayStringFactory {
   const timezoneInstance = dateTimezoneUtcNormal(timezone);
@@ -1130,6 +1135,7 @@ export type SetOnDateWithTimezoneNormalFunction = ((input: SetOnDateWithTimezone
  *
  * @param timezone - the timezone configuration to bind to
  * @returns a function that sets hours/minutes on dates in the given timezone
+ * @__NO_SIDE_EFFECTS__
  */
 export function setOnDateWithTimezoneNormalFunction(timezone: DateTimezoneUtcNormalFunctionInput): SetOnDateWithTimezoneNormalFunction {
   const timezoneInstance = dateTimezoneUtcNormal(timezone);

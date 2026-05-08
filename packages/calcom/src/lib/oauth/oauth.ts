@@ -74,6 +74,7 @@ export type CalcomAccessTokenStringFactory = () => Promise<CalcomAccessTokenStri
  *
  * @param calcomAccessTokenFactory - the factory that produces CalcomAccessToken objects
  * @returns a factory function that returns the access token string
+ * @__NO_SIDE_EFFECTS__
  */
 export function calcomAccessTokenStringFactory(calcomAccessTokenFactory: CalcomAccessTokenFactory): CalcomAccessTokenStringFactory {
   return async () => {

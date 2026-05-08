@@ -30,7 +30,12 @@ import {
   type SystemStateStoredDataConverterMap,
   type SystemStateStoredDataFieldConverterConfig,
   firestoreBitwiseObjectMap,
-  firestoreNumber
+  firestoreNumber,
+  type PagedItemConverter,
+  type PagedItemDistributionScheme,
+  type PagedItemFirestoreCollection,
+  type PagedItemPageData,
+  defaultPagedItemPageDataConverter
 } from '@dereekb/firebase';
 import { type GrantedReadRole } from '@dereekb/model';
 
@@ -41,7 +46,7 @@ import { type GrantedReadRole } from '@dereekb/model';
  * Each member corresponds to one of the mock Firestore models defined in this file.
  * Useful for generic constraints that need to accept any mock model identity.
  */
-export type MockItemTypes = typeof mockItemIdentity | typeof mockItemPrivateIdentity | typeof mockItemUserIdentity | typeof mockItemSubItemIdentity | typeof mockItemSubItemDeepIdentity;
+export type MockItemTypes = typeof mockItemIdentity | typeof mockItemPrivateIdentity | typeof mockItemUserIdentity | typeof mockItemSubItemIdentity | typeof mockItemSubItemDeepIdentity | typeof mockItemPagedIdentity;
 
 // MARK: Mock Item
 /**
@@ -749,6 +754,172 @@ export function mockItemSubItemDeepFirestoreCollectionGroup(firestoreContext: Fi
     converter: mockItemSubItemDeepConverter,
     queryLike: mockItemSubItemDeepCollectionReference(firestoreContext),
     makeDocument: (accessor, documentAccessor) => new MockItemSubItemDeepDocument(accessor, documentAccessor),
+    firestoreContext
+  });
+}
+
+// MARK: MockItemPaged
+/**
+ * {@link firestoreModelIdentity} for the MockItemPaged subcollection (`mockItemPaged` / `mip2`).
+ *
+ * Child of {@link mockItemIdentity}. Stores a logical {@link MockItemPagedEntry} array distributed
+ * across multiple page documents, plus an index document that summarizes the layout. See
+ * {@link PagedItemFirestoreCollection} for the underlying mechanism.
+ */
+export const mockItemPagedIdentity = firestoreModelIdentity(mockItemIdentity, 'mockItemPaged', 'mip2');
+
+/**
+ * Single entry stored inside a paged subcollection page.
+ *
+ * Items are grouped by {@link group} when using static distribution and treated as opaque
+ * payloads when using dynamic (count-based) paging.
+ */
+export interface MockItemPagedEntry {
+  readonly id: string;
+  readonly group: string;
+  readonly value: number;
+}
+
+/**
+ * Possible granted roles for {@link MockItemPagedEntry} pages.
+ */
+export type MockItemPagedRoles = GrantedReadRole | 'admin';
+
+/**
+ * Page-document model shape for {@link MockItemPagedEntry}. The paged collection stores entries
+ * inside this envelope (`i` = items, `c` = count). The standalone index document
+ * (`{@link DEFAULT_PAGED_ITEM_INDEX_DOCUMENT_ID}`) lives in the same collection but uses a
+ * different shape ({@link PagedItemIndexData}); from the model service's perspective only the
+ * page envelope is the canonical document.
+ */
+export type MockItemPagedDocumentData = PagedItemPageData<MockItemPagedEntry>;
+
+/**
+ * {@link AbstractFirestoreDocumentWithParent} implementation for a single page document inside a
+ * {@link MockItemPagedFirestoreCollection}. Used by the model service factory to address pages
+ * the same way other subcollection documents are addressed.
+ */
+export class MockItemPagedDocument extends AbstractFirestoreDocumentWithParent<MockItem, MockItemPagedDocumentData, MockItemPagedDocument, typeof mockItemPagedIdentity> {
+  get modelIdentity() {
+    return mockItemPagedIdentity;
+  }
+}
+
+/**
+ * Per-item converter for {@link MockItemPagedEntry} used by the paged accessor.
+ *
+ * The mock entry shape is already Firestore-safe, so the converter is an identity
+ * pass-through. Production usage may wrap a real converter (e.g. for date fields).
+ */
+export const mockItemPagedEntryConverter: PagedItemConverter<MockItemPagedEntry> = {
+  fromData: (data) => data as MockItemPagedEntry,
+  toData: (item) => item as unknown as object
+};
+
+/**
+ * Static distribution scheme for {@link MockItemPagedEntry} that buckets items by their
+ * {@link MockItemPagedEntry.group} field across three page IDs (`a`, `b`, `c`).
+ */
+export const mockItemPagedAlphaDistributionScheme: PagedItemDistributionScheme<MockItemPagedEntry> = {
+  pageIds: ['a', 'b', 'c'],
+  distribute: (entry) => entry.group
+};
+
+/**
+ * Default `maxItemsPerPage` used by the dynamic mock paged collection factory. Kept small to
+ * exercise multi-page boundary conditions in tests without writing many entries.
+ */
+export const MOCK_ITEM_PAGED_DEFAULT_MAX_ITEMS_PER_PAGE = 3;
+
+/**
+ * Typed {@link PagedItemFirestoreCollection} for {@link MockItemPagedEntry} items under a
+ * {@link MockItem} parent.
+ */
+export type MockItemPagedFirestoreCollection = PagedItemFirestoreCollection<MockItemPagedEntry, MockItem, MockItemPagedDocument, MockItemDocument>;
+
+/**
+ * Factory function type that creates a {@link MockItemPagedFirestoreCollection} for a given parent.
+ */
+export type MockItemPagedFirestoreCollectionFactory = (parent: MockItemDocument) => MockItemPagedFirestoreCollection;
+
+/**
+ * Configuration for {@link mockItemPagedFirestoreCollection}.
+ */
+export interface MockItemPagedFirestoreCollectionConfig {
+  /**
+   * When provided, the factory produces a statically-distributed paged collection using the
+   * given scheme. When omitted, the factory produces a dynamic (count-based) paged collection
+   * using {@link maxItemsPerPage}.
+   */
+  readonly distributionScheme?: PagedItemDistributionScheme<MockItemPagedEntry>;
+  /**
+   * Maximum items per page document in dynamic mode. Defaults to
+   * {@link MOCK_ITEM_PAGED_DEFAULT_MAX_ITEMS_PER_PAGE}.
+   */
+  readonly maxItemsPerPage?: number;
+}
+
+/**
+ * Creates a factory for producing {@link MockItemPagedFirestoreCollection} instances bound to a
+ * parent {@link MockItemDocument}.
+ *
+ * @param firestoreContext - The Firestore context used to resolve the underlying subcollection.
+ * @param config - Optional config selecting between dynamic (default) and static distribution.
+ * @returns A factory that, given a parent {@link MockItemDocument}, returns a paged subcollection
+ * wired with {@link mockItemPagedEntryConverter}.
+ */
+export function mockItemPagedFirestoreCollection(firestoreContext: FirestoreContext, config?: MockItemPagedFirestoreCollectionConfig): MockItemPagedFirestoreCollectionFactory {
+  const { distributionScheme, maxItemsPerPage = MOCK_ITEM_PAGED_DEFAULT_MAX_ITEMS_PER_PAGE } = config ?? {};
+
+  return (parent: MockItemDocument) => {
+    return firestoreContext.pagedItemFirestoreCollection<MockItemPagedEntry, MockItem, MockItemPagedDocument, MockItemDocument>({
+      modelIdentity: mockItemPagedIdentity,
+      collection: firestoreContext.subcollection(parent.documentRef, mockItemPagedIdentity.collectionName),
+      parent,
+      makeDocument: (a, d) => new MockItemPagedDocument(a, d),
+      firestoreContext,
+      maxItemsPerPage,
+      distributionScheme,
+      itemConverter: mockItemPagedEntryConverter
+    });
+  };
+}
+
+/**
+ * Creates a {@link CollectionGroup} reference for querying all {@link MockItemPagedDocumentData}
+ * page documents across parents.
+ *
+ * Note: the index document (`_index`) lives in the same Firestore collection but has a different
+ * shape ({@link PagedItemIndexData}); collection-group queries will surface both. Consumers
+ * should filter by document id when only pages are desired.
+ *
+ * @param context - The Firestore context used to resolve the collection group.
+ * @returns A typed {@link CollectionGroup} reference for the MockItemPaged collection name.
+ */
+export function mockItemPagedCollectionReference(context: FirestoreContext): CollectionGroup<MockItemPagedDocumentData> {
+  return context.collectionGroup(mockItemPagedIdentity.collectionName);
+}
+
+/**
+ * Typed {@link FirestoreCollectionGroup} for querying {@link MockItemPagedDocumentData} page
+ * documents across all parents. Used by the model service factory to address paged page
+ * documents in a parent-agnostic way.
+ */
+export type MockItemPagedFirestoreCollectionGroup = FirestoreCollectionGroup<MockItemPagedDocumentData, MockItemPagedDocument>;
+
+/**
+ * Creates a {@link MockItemPagedFirestoreCollectionGroup} for cross-parent access to paged
+ * page documents.
+ *
+ * @param firestoreContext - The Firestore context used to resolve the underlying collection group reference.
+ * @returns A typed {@link MockItemPagedFirestoreCollectionGroup}.
+ */
+export function mockItemPagedFirestoreCollectionGroup(firestoreContext: FirestoreContext): MockItemPagedFirestoreCollectionGroup {
+  return firestoreContext.firestoreCollectionGroup({
+    modelIdentity: mockItemPagedIdentity,
+    converter: defaultPagedItemPageDataConverter<MockItemPagedEntry>(),
+    queryLike: mockItemPagedCollectionReference(firestoreContext),
+    makeDocument: (accessor, documentAccessor) => new MockItemPagedDocument(accessor, documentAccessor),
     firestoreContext
   });
 }

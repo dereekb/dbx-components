@@ -54,6 +54,14 @@ export type ReadKeysFunction<T, K extends PrimativeKey = PrimativeKey> = MapFunc
  * const fn = readKeysFunction<string>((x) => x);
  * fn(['a', 'b', 'c']); // ['a', 'b', 'c']
  * ```
+ *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags key, read, factory, array, primitive
+ * @dbxUtilRelated read-keys-set-function
+ *
+ * @__NO_SIDE_EFFECTS__
  */
 export function readKeysFunction<T, K extends PrimativeKey = PrimativeKey>(readKey: ReadKeyFunction<T, K> | ReadMultipleKeysFunction<T, K>): ReadKeysFunction<T, K> {
   return (values: ArrayOrValue<T>) => {
@@ -104,6 +112,14 @@ export type ReadKeysSetFunction<T, K extends PrimativeKey = PrimativeKey> = MapF
  * const fn = readKeysSetFunction<string>((x) => x);
  * fn(['a', 'b', 'a']); // Set { 'a', 'b' }
  * ```
+ *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags key, read, set, factory, dedupe, primitive
+ * @dbxUtilRelated read-keys-function
+ *
+ * @__NO_SIDE_EFFECTS__
  */
 export function readKeysSetFunction<T, K extends PrimativeKey = PrimativeKey>(readKey: ReadKeyFunction<T, K> | ReadMultipleKeysFunction<T, K>): ReadKeysSetFunction<T, K> {
   return (values: ArrayOrValue<T>) => {

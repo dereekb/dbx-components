@@ -316,9 +316,16 @@ export function mapValuesToSet<I, O>(values: Iterable<I>, mapFn: MapFunction<I, 
 /**
  * Creates a {@link SetHasValueFunction} from an {@link IterableOrValue} by first converting it to a Set.
  *
+ * @dbxUtil
+ * @dbxUtilCategory set
+ * @dbxUtilKind factory
+ * @dbxUtilTags set, has, decision, factory, membership, exclude
+ * @dbxUtilRelated set-has-value-function, set-includes-function
+ *
  * @param iterable - The values to create a set from.
  * @param exclude - If true, the returned function returns true for values NOT in the set.
  * @returns A function that tests membership.
+ * @__NO_SIDE_EFFECTS__
  */
 export function hasValueFunction<T>(iterable: IterableOrValue<T>, exclude: boolean = false): SetHasValueFunction<T> {
   const set = asSet(iterable);
@@ -333,9 +340,16 @@ export type SetHasValueFunction<T> = (value: T) => boolean;
 /**
  * Creates a {@link SetHasValueFunction} for the given set. When `exclude` is true, returns the inverse (true for values not in the set).
  *
+ * @dbxUtil
+ * @dbxUtilCategory set
+ * @dbxUtilKind factory
+ * @dbxUtilTags set, has, decision, factory, membership, exclude
+ * @dbxUtilRelated has-value-function, set-includes-function
+ *
  * @param set - The set to check against.
  * @param exclude - If true, returns true for values NOT in the set.
  * @returns A function that tests membership.
+ * @__NO_SIDE_EFFECTS__
  */
 export function setHasValueFunction<T>(set: Set<T>, exclude: boolean): SetHasValueFunction<T> {
   let hasValueFunction: SetHasValueFunction<T>;
@@ -412,10 +426,17 @@ export type SetIncludesFunction<T> = (valuesToFind: IterableOrValue<T>) => boole
 /**
  * Creates a {@link SetIncludesFunction} that checks whether the set includes given values using the specified mode.
  *
+ * @dbxUtil
+ * @dbxUtilCategory set
+ * @dbxUtilKind factory
+ * @dbxUtilTags set, includes, decision, factory, all, any, mode
+ * @dbxUtilRelated has-value-function, set-has-value-function
+ *
  * @param valuesSet - The reference set.
  * @param mode - Whether to require 'all' values or 'any' value to be present. Defaults to 'all'.
  * @param emptyValuesToFindArrayResult - The result when the values to find are empty.
  * @returns A function that tests inclusion against the set.
+ * @__NO_SIDE_EFFECTS__
  */
 export function setIncludesFunction<T>(valuesSet: Set<T>, mode: SetIncludesMode = 'all', emptyValuesToFindArrayResult?: boolean): SetIncludesFunction<T> {
   let fn: (set: Set<T>, values: IterableOrValue<T>, emptyValuesToFindArrayResult?: boolean) => boolean;

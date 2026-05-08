@@ -17,6 +17,7 @@ export type TransformAndValidateFunctionResultFactory<C = unknown> = <T extends 
  *
  * @param defaults - shared error handler defaults
  * @returns a factory that produces functions returning {@link TransformAndValidateFunctionResult}
+ * @__NO_SIDE_EFFECTS__
  */
 export function transformAndValidateFunctionResultFactory<C = unknown>(defaults: TransformAndValidateObjectFactoryDefaults<C>): TransformAndValidateFunctionResultFactory<C> {
   return toTransformAndValidateFunctionResultFactory(transformAndValidateObjectFactory(defaults));
@@ -28,6 +29,7 @@ export function transformAndValidateFunctionResultFactory<C = unknown>(defaults:
  *
  * @param transformAndValidateObjectFactory - the base factory to wrap
  * @returns a factory that produces functions returning results with `params` attached
+ * @__NO_SIDE_EFFECTS__
  */
 export function toTransformAndValidateFunctionResultFactory<C = unknown>(transformAndValidateObjectFactory: TransformAndValidateObjectFactory<C>): TransformAndValidateFunctionResultFactory<C> {
   return <T extends object, O, I extends object = object>(schema: Type<T>, fn: (parsed: T) => Promise<O>, handleValidationError?: TransformAndValidateObjectHandleValidate<O>) => {

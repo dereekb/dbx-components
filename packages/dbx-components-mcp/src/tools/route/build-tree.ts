@@ -34,6 +34,7 @@ interface MutableTreeNode {
  * @param nodes - the flat route nodes extracted from sources
  * @param extractIssues - issues already discovered during extraction to forward
  * @returns the constructed tree alongside the merged issue list
+ * @__NO_SIDE_EFFECTS__
  */
 export function buildRouteTree(nodes: readonly RouteNode[], extractIssues: readonly RouteIssue[]): RouteTree {
   const issues: RouteIssue[] = [...extractIssues];
@@ -146,10 +147,10 @@ export function buildRouteTree(nodes: readonly RouteNode[], extractIssues: reado
       parent: undefined,
       children: []
     };
-    frozen.set(mut.data.name, placeholder as RouteTreeNode);
+    frozen.set(mut.data.name, placeholder);
     placeholder.parent = mut.parent ? freeze(mut.parent) : undefined;
     placeholder.children = mut.children.map(freeze);
-    return placeholder as RouteTreeNode;
+    return placeholder;
   };
 
   const frozenRoots = roots.map(freeze);

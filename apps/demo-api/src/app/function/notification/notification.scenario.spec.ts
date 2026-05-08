@@ -2,8 +2,8 @@ import { describeCallableRequestTest, expectFailAssertHttpErrorServerErrorCode }
 import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoGuestbookContext, demoGuestbookEntryContext, demoNotificationBoxContext, demoProfileContext } from '../../../test/fixture';
 import { demoCallModel } from '../model/crud.functions';
 import { assertSnapshotData } from '@dereekb/firebase-server';
-import { type Notification, type DocumentDataWithIdAndKey, onCallUpdateModelParams, NOTIFICATION_USER_INVALID_UID_FOR_CREATE_ERROR_CODE } from '@dereekb/firebase';
-import { GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, guestbookIdentity, type SubscribeToGuestbookNotificationsParams } from 'demo-firebase';
+import { type Notification, type DocumentDataWithIdAndKey, onCallUpdateModelParams, NOTIFICATION_USER_INVALID_UID_FOR_CREATE_ERROR_CODE, type CreateNotificationTemplate, NotificationSendType, NotificationSendState, createNotificationDocument, createNotificationLoggedEventTemplate, notificationLoggedEventDayId, notificationLoggedEventLoader, type NotificationItem, type NotificationLoggedEventLoaderDayResult, type NotificationTemplateType } from '@dereekb/firebase';
+import { EXAMPLE_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, exampleNotificationTemplate, guestbookIdentity, type SubscribeToGuestbookNotificationsParams } from 'demo-firebase';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 
 demoApiFunctionContextFactory((f) => {
@@ -113,6 +113,698 @@ demoApiFunctionContextFactory((f) => {
                   expect(notificationBox.s).toBeFalsy();
                   expect(notificationBox.fi).toBe(true);
                 });
+              });
+            });
+          });
+        });
+      });
+
+      describe('notification logged event', () => {
+        demoProfileContext({ f, u }, (p) => {
+          demoNotificationBoxContext({ f, for: p, createIfNeeded: true, initIfNeeded: true }, (nb) => {
+            interface CreateLoggedEventInput {
+              readonly at?: Date;
+              readonly data?: Record<string, unknown>;
+            }
+
+            async function createLoggedEventNotification(input: CreateLoggedEventInput = {}) {
+              const baseTemplate = exampleNotificationTemplate({
+                profileDocument: p.document
+              });
+
+              const template: CreateNotificationTemplate = {
+                ...baseTemplate,
+                st: NotificationSendType.LOGGED_EVENT,
+                sat: input.at,
+                n: {
+                  ...baseTemplate.n,
+                  d: input.data ?? { workerId: 'w_001', delta: 1 }
+                }
+              };
+
+              const result = await createNotificationDocument({
+                template,
+                accessor: f.demoFirestoreCollections.notificationCollectionFactory(nb.document).documentAccessor()
+              });
+
+              return result.notificationDocument;
+            }
+
+            async function loadAllLoggedEventDays() {
+              const dayCollection = f.demoFirestoreCollections.notificationLoggedEventDayCollectionFactory(nb.document);
+              return dayCollection.queryDocument().getDocs();
+            }
+
+            async function loadAllLoggedEventItemsForDay(dayId: string) {
+              const dayCollection = f.demoFirestoreCollections.notificationLoggedEventDayCollectionFactory(nb.document);
+              const dayDocument = dayCollection.documentAccessor().loadDocumentForId(dayId);
+              const pagedItems = f.demoFirestoreCollections.notificationLoggedEventDayPagedItemsCollectionFactory(dayDocument);
+              return pagedItems.loadAllItems();
+            }
+
+            function loggedEventDayPagedItems(dayId: string) {
+              const dayCollection = f.demoFirestoreCollections.notificationLoggedEventDayCollectionFactory(nb.document);
+              const dayDocument = dayCollection.documentAccessor().loadDocumentForId(dayId);
+              return f.demoFirestoreCollections.notificationLoggedEventDayPagedItemsCollectionFactory(dayDocument);
+            }
+
+            describe('createNotificationLoggedEventTemplate() helper', () => {
+              it('should produce a template that archives end-to-end through cleanup', async () => {
+                const eventData = { workerId: 'w_helper', kind: 'clockIn' };
+
+                // public helper API; mirrors how downstream code is expected to record domain events
+                const template = createNotificationLoggedEventTemplate({
+                  type: EXAMPLE_NOTIFICATION_TEMPLATE_TYPE,
+                  notificationModel: p.document,
+                  data: eventData
+                });
+
+                const { notificationDocument } = await createNotificationDocument({
+                  template,
+                  accessor: f.demoFirestoreCollections.notificationCollectionFactory(nb.document).documentAccessor()
+                });
+
+                const data = await assertSnapshotData(notificationDocument);
+                expect(data.st).toBe(NotificationSendType.LOGGED_EVENT);
+                expect(data.d).toBe(true);
+                expect(data.r).toEqual([]);
+                expect(data.ts).toBe(NotificationSendState.NO_TRY);
+                expect(data.es).toBe(NotificationSendState.NO_TRY);
+                expect(data.ps).toBe(NotificationSendState.NO_TRY);
+                expect(data.ns).toBe(NotificationSendState.NO_TRY);
+
+                const expectedDayId = notificationLoggedEventDayId(data.sat);
+
+                // logged events are invisible to the send loop
+                const sendQueuedNotifications = await f.notificationServerActions.sendQueuedNotifications({});
+                const sendResult = await sendQueuedNotifications();
+                expect(sendResult.notificationsVisited).toBe(0);
+
+                const cleanupSentNotifications = await f.notificationServerActions.cleanupSentNotifications({});
+                const cleanupResult = await cleanupSentNotifications();
+
+                expect(cleanupResult.notificationLoggedEventsCleanedUp).toBe(1);
+                expect(cleanupResult.notificationsDeleted).toBe(1);
+
+                const days = await loadAllLoggedEventDays();
+                expect(days.length).toBe(1);
+                expect(days[0].id).toBe(expectedDayId);
+
+                const items = await loadAllLoggedEventItemsForDay(expectedDayId);
+                expect(items.length).toBe(1);
+                expect(items[0].t).toBe(EXAMPLE_NOTIFICATION_TEMPLATE_TYPE);
+                expect(items[0].d).toEqual(eventData);
+              });
+
+              it('should throw when notificationModel is missing', () => {
+                expect(() =>
+                  createNotificationLoggedEventTemplate({
+                    type: EXAMPLE_NOTIFICATION_TEMPLATE_TYPE,
+                    notificationModel: undefined as never,
+                    data: { workerId: 'w_001' }
+                  })
+                ).toThrow('Must provide a notificationModel when creating a logged-event notification template.');
+              });
+            });
+
+            describe('single-transaction fan-out', () => {
+              it('should persist multiple logged events created from one Firestore transaction and archive them to the same day', async () => {
+                // simulate a domain action that emits N events in one logical operation — the production pattern from guestbook.action.server.ts:125
+                await f.demoFirestoreCollections.firestoreContext.runTransaction(async (transaction) => {
+                  const accessorInTransaction = f.demoFirestoreCollections.notificationCollectionFactory(nb.document).documentAccessorForTransaction(transaction);
+
+                  const templates = [
+                    createNotificationLoggedEventTemplate({
+                      type: EXAMPLE_NOTIFICATION_TEMPLATE_TYPE,
+                      notificationModel: p.document,
+                      data: { event: 'clockIn', workerId: 'w_001' }
+                    }),
+                    createNotificationLoggedEventTemplate({
+                      type: EXAMPLE_NOTIFICATION_TEMPLATE_TYPE,
+                      notificationModel: p.document,
+                      data: { event: 'taskStarted', workerId: 'w_001', taskId: 't_001' }
+                    }),
+                    createNotificationLoggedEventTemplate({
+                      type: EXAMPLE_NOTIFICATION_TEMPLATE_TYPE,
+                      notificationModel: p.document,
+                      data: { event: 'breakStarted', workerId: 'w_001' }
+                    })
+                  ];
+
+                  await Promise.all(
+                    templates.map((template) =>
+                      createNotificationDocument({
+                        template,
+                        transaction,
+                        accessor: accessorInTransaction
+                      })
+                    )
+                  );
+                });
+
+                // all three documents committed in one shot
+                const created = await nb.loadAllNotificationsForNotificationBox();
+                expect(created.length).toBe(3);
+
+                created.forEach((pair) => {
+                  const data = pair.data as Notification;
+                  expect(data.st).toBe(NotificationSendType.LOGGED_EVENT);
+                  expect(data.d).toBe(true);
+                });
+
+                const createdEvents = created.map((x) => ((x.data as Notification).n.d as { event: string }).event).sort();
+                expect(createdEvents).toEqual(['breakStarted', 'clockIn', 'taskStarted']);
+
+                // all three archive together — same sat ⇒ same day bucket
+                const cleanupSentNotifications = await f.notificationServerActions.cleanupSentNotifications({});
+                const cleanupResult = await cleanupSentNotifications();
+
+                expect(cleanupResult.notificationLoggedEventsCleanedUp).toBe(3);
+                expect(cleanupResult.notificationsDeleted).toBe(3);
+
+                const days = await loadAllLoggedEventDays();
+                expect(days.length).toBe(1);
+
+                const items = await loadAllLoggedEventItemsForDay(days[0].id);
+                expect(items.length).toBe(3);
+
+                const archivedEvents = items.map((x) => (x.d as { event: string }).event).sort();
+                expect(archivedEvents).toEqual(['breakStarted', 'clockIn', 'taskStarted']);
+              });
+            });
+
+            describe('page-level reads', () => {
+              it('should expose the populated page index and per-page items after archival', async () => {
+                const eventDataA = { tag: 'a', workerId: 'w_001' };
+                const eventDataB = { tag: 'b', workerId: 'w_002' };
+                const eventDataC = { tag: 'c', workerId: 'w_003' };
+
+                await createLoggedEventNotification({ data: eventDataA });
+                await createLoggedEventNotification({ data: eventDataB });
+                await createLoggedEventNotification({ data: eventDataC });
+
+                const cleanupSentNotifications = await f.notificationServerActions.cleanupSentNotifications({});
+                await cleanupSentNotifications();
+
+                const days = await loadAllLoggedEventDays();
+                expect(days.length).toBe(1);
+
+                const dayId = days[0].id;
+                const pagedItems = loggedEventDayPagedItems(dayId);
+
+                // index document reflects all archived items on a single page (default page size)
+                const index = await pagedItems.loadIndex();
+                expect(index).toBeDefined();
+                expect(index?.tc).toBe(3);
+                expect(index?.p).toEqual(['0']);
+                expect(index?.pc).toEqual({ '0': 3 });
+                expect(index?.u).toEqual(expect.any(Number));
+
+                // reading items for the discovered page IDs round-trips the same data as loadAllItems
+                const itemsForKnownPages = await pagedItems.loadItemsForPages(index?.p ?? []);
+                const allItems = await pagedItems.loadAllItems();
+                expect(itemsForKnownPages.length).toBe(3);
+                expect(itemsForKnownPages).toEqual(allItems);
+
+                const tags = itemsForKnownPages.map((x) => (x.d as { tag: string }).tag).sort();
+                expect(tags).toEqual(['a', 'b', 'c']);
+
+                // requesting unknown page IDs silently returns nothing (does not throw)
+                const itemsForMissingPage = await pagedItems.loadItemsForPages(['9999']);
+                expect(itemsForMissingPage).toEqual([]);
+              });
+
+              it('should return undefined index and empty items for a day that was never archived', async () => {
+                const neverWrittenDayId = notificationLoggedEventDayId(new Date('2000-01-01T00:00:00.000Z'));
+                const pagedItems = loggedEventDayPagedItems(neverWrittenDayId);
+
+                const index = await pagedItems.loadIndex();
+                expect(index).toBeUndefined();
+
+                const allItems = await pagedItems.loadAllItems();
+                expect(allItems).toEqual([]);
+
+                const itemsForPages = await pagedItems.loadItemsForPages(['0']);
+                expect(itemsForPages).toEqual([]);
+              });
+            });
+
+            describe('arbitrary event data round-trip', () => {
+              it('should preserve heterogeneous d payloads (flat / nested / arrays / null) through cleanup archival', async () => {
+                const flatPayload = { workerId: 'w_001', delta: 1 };
+                const nestedPayload = { kind: 'taskStarted', at: new Date('2025-04-15T12:00:00.000Z').toISOString() };
+                const complexPayload = { nested: { a: 1, b: 'two' }, items: [1, 2, 3], flag: true, optional: null };
+
+                await createLoggedEventNotification({ data: flatPayload });
+                await createLoggedEventNotification({ data: nestedPayload });
+                await createLoggedEventNotification({ data: complexPayload });
+
+                const cleanupSentNotifications = await f.notificationServerActions.cleanupSentNotifications({});
+                await cleanupSentNotifications();
+
+                const days = await loadAllLoggedEventDays();
+                expect(days.length).toBe(1);
+
+                const items = await loadAllLoggedEventItemsForDay(days[0].id);
+                expect(items.length).toBe(3);
+
+                // firestorePassThroughField() should round-trip every JSON-compatible payload as-is
+                const payloads = items.map((x) => x.d);
+                expect(payloads).toContainEqual(flatPayload);
+                expect(payloads).toContainEqual(nestedPayload);
+                expect(payloads).toContainEqual(complexPayload);
+              });
+            });
+
+            describe('multi-day archival', () => {
+              it('should split logged events into separate day wrappers based on each event sat', async () => {
+                const today = new Date();
+                const yesterday = new Date(today);
+                yesterday.setUTCDate(today.getUTCDate() - 1);
+                const lastWeek = new Date(today);
+                lastWeek.setUTCDate(today.getUTCDate() - 7);
+
+                await createLoggedEventNotification({ at: today, data: { tag: 'today-a' } });
+                await createLoggedEventNotification({ at: today, data: { tag: 'today-b' } });
+                await createLoggedEventNotification({ at: yesterday, data: { tag: 'yesterday' } });
+                await createLoggedEventNotification({ at: lastWeek, data: { tag: 'lastWeek' } });
+
+                const cleanupSentNotifications = await f.notificationServerActions.cleanupSentNotifications({});
+                const cleanupResult = await cleanupSentNotifications();
+
+                expect(cleanupResult.notificationLoggedEventsCleanedUp).toBe(4);
+                expect(cleanupResult.notificationsDeleted).toBe(4);
+                // logged events should never produce NotificationWeek archives
+                expect(cleanupResult.notificationWeeksCreated).toBe(0);
+                expect(cleanupResult.notificationWeeksUpdated).toBe(0);
+
+                const todayDayId = notificationLoggedEventDayId(today);
+                const yesterdayDayId = notificationLoggedEventDayId(yesterday);
+                const lastWeekDayId = notificationLoggedEventDayId(lastWeek);
+
+                const days = await loadAllLoggedEventDays();
+                expect(days.length).toBe(3);
+
+                const dayIds = days.map((x) => x.id).sort();
+                expect(dayIds).toEqual([todayDayId, yesterdayDayId, lastWeekDayId].sort());
+
+                const todayItems = await loadAllLoggedEventItemsForDay(todayDayId);
+                expect(todayItems.length).toBe(2);
+                const todayTags = todayItems.map((x) => (x.d as { tag: string }).tag).sort();
+                expect(todayTags).toEqual(['today-a', 'today-b']);
+
+                const yesterdayItems = await loadAllLoggedEventItemsForDay(yesterdayDayId);
+                expect(yesterdayItems.length).toBe(1);
+                expect((yesterdayItems[0].d as { tag: string }).tag).toBe('yesterday');
+
+                const lastWeekItems = await loadAllLoggedEventItemsForDay(lastWeekDayId);
+                expect(lastWeekItems.length).toBe(1);
+                expect((lastWeekItems[0].d as { tag: string }).tag).toBe('lastWeek');
+
+                // source notifications all consumed
+                const remaining = await nb.loadAllNotificationsForNotificationBox();
+                expect(remaining.length).toBe(0);
+              });
+            });
+
+            describe('retention boundary', () => {
+              it('should preserve days inside the retention window while purging older days', async () => {
+                const recent = new Date();
+                recent.setUTCDate(recent.getUTCDate() - 5);
+                const old = new Date();
+                old.setUTCDate(old.getUTCDate() - 100);
+
+                await createLoggedEventNotification({ at: recent, data: { tag: 'recent' } });
+                await createLoggedEventNotification({ at: old, data: { tag: 'old' } });
+
+                const cleanupSentNotifications = await f.notificationServerActions.cleanupSentNotifications({});
+                await cleanupSentNotifications();
+
+                const recentDayId = notificationLoggedEventDayId(recent);
+                const oldDayId = notificationLoggedEventDayId(old);
+
+                let days = await loadAllLoggedEventDays();
+                expect(days.length).toBe(2);
+
+                const cleanupOldDays = await f.notificationServerActions.cleanupOldNotificationLoggedEventDays({ retentionDays: 30 });
+                const result = await cleanupOldDays();
+
+                expect(result.daysDeleted).toBe(1);
+                expect(result.pagesDeleted).toBeGreaterThanOrEqual(1);
+
+                days = await loadAllLoggedEventDays();
+                expect(days.length).toBe(1);
+                expect(days[0].id).toBe(recentDayId);
+
+                // recent day's items remain intact
+                const recentItems = await loadAllLoggedEventItemsForDay(recentDayId);
+                expect(recentItems.length).toBe(1);
+                expect((recentItems[0].d as { tag: string }).tag).toBe('recent');
+
+                // old day's paged items are gone
+                const oldItems = await loadAllLoggedEventItemsForDay(oldDayId);
+                expect(oldItems.length).toBe(0);
+              });
+            });
+
+            describe('mixed cleanup with normal notifications', () => {
+              it('should route normal notifications to NotificationWeek and logged events to NotificationLoggedEventDay in the same cleanup pass', async () => {
+                // logged event is born d=true so it is immediately eligible for cleanup
+                await createLoggedEventNotification({ data: { tag: 'logged' } });
+
+                // normal notification — create then mark done so cleanup picks it up alongside the logged event
+                const normalTemplate: CreateNotificationTemplate = {
+                  ...exampleNotificationTemplate({ profileDocument: p.document }),
+                  st: NotificationSendType.SEND_IF_BOX_EXISTS
+                };
+                const normalCreate = await createNotificationDocument({
+                  template: normalTemplate,
+                  accessor: f.demoFirestoreCollections.notificationCollectionFactory(nb.document).documentAccessor()
+                });
+                await normalCreate.notificationDocument.update({ d: true });
+
+                const beforeCleanup = await nb.loadAllNotificationsForNotificationBox();
+                expect(beforeCleanup.length).toBe(2);
+
+                const cleanupSentNotifications = await f.notificationServerActions.cleanupSentNotifications({});
+                const cleanupResult = await cleanupSentNotifications();
+
+                // 2 source documents removed: 1 archived to week, 1 archived to day
+                expect(cleanupResult.notificationsDeleted).toBe(2);
+                expect(cleanupResult.notificationLoggedEventsCleanedUp).toBe(1);
+                expect(cleanupResult.notificationWeeksCreated).toBe(1);
+                expect(cleanupResult.notificationWeeksUpdated).toBe(0);
+
+                const remaining = await nb.loadAllNotificationsForNotificationBox();
+                expect(remaining.length).toBe(0);
+
+                // logged event landed in the day archive only
+                const days = await loadAllLoggedEventDays();
+                expect(days.length).toBe(1);
+                const dayItems = await loadAllLoggedEventItemsForDay(days[0].id);
+                expect(dayItems.length).toBe(1);
+                expect((dayItems[0].d as { tag: string }).tag).toBe('logged');
+
+                // normal notification landed in the week archive only
+                const weeks = await nb.loadAllNotificationWeeksForNotificationBox();
+                expect(weeks.length).toBe(1);
+                const weekData = weeks[0].data as DocumentDataWithIdAndKey<{ n: Notification['n'][] }>;
+                expect(weekData.n.length).toBe(1);
+                expect(weekData.n[0].t).toBe(EXAMPLE_NOTIFICATION_TEMPLATE_TYPE);
+              });
+            });
+
+            describe('notificationLoggedEventLoader()', () => {
+              const TYPE_A: NotificationTemplateType = EXAMPLE_NOTIFICATION_TEMPLATE_TYPE;
+              const TYPE_B: NotificationTemplateType = GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE;
+
+              interface TypedLoggedEventInput {
+                readonly at?: Date;
+                readonly data?: Record<string, unknown>;
+              }
+
+              async function createTypedLoggedEventNotification(type: NotificationTemplateType, input: TypedLoggedEventInput = {}) {
+                const template = createNotificationLoggedEventTemplate({
+                  type,
+                  notificationModel: p.document,
+                  data: input.data ?? { tag: 'x' },
+                  sat: input.at
+                });
+
+                return createNotificationDocument({
+                  template,
+                  accessor: f.demoFirestoreCollections.notificationCollectionFactory(nb.document).documentAccessor()
+                });
+              }
+
+              function makeLoader() {
+                return notificationLoggedEventLoader({
+                  notificationFirestoreCollections: f.demoFirestoreCollections,
+                  notificationBox: nb.document
+                });
+              }
+
+              it('should load and cache items for a single day with mixed types', async () => {
+                await createTypedLoggedEventNotification(TYPE_A, { data: { tag: 'a1' } });
+                await createTypedLoggedEventNotification(TYPE_A, { data: { tag: 'a2' } });
+                await createTypedLoggedEventNotification(TYPE_B, { data: { tag: 'b1' } });
+
+                const cleanupSentNotifications = await f.notificationServerActions.cleanupSentNotifications({});
+                await cleanupSentNotifications();
+
+                const days = await loadAllLoggedEventDays();
+                expect(days.length).toBe(1);
+                const dayId = days[0].id;
+
+                const loader = makeLoader();
+                const items = await loader.getItemsForDay(dayId);
+                expect(items.length).toBe(3);
+
+                const onlyA = await loader.getItemsForDayWithType(dayId, TYPE_A);
+                expect(onlyA.length).toBe(2);
+                expect(onlyA.every((x) => x.t === TYPE_A)).toBe(true);
+
+                const onlyB = await loader.getItemsForDayWithType(dayId, TYPE_B);
+                expect(onlyB.length).toBe(1);
+                expect(onlyB[0].t).toBe(TYPE_B);
+
+                // identical promise on repeat call — cache dedupes the read
+                expect(loader.getItemsForDay(dayId)).toBe(loader.getItemsForDay(dayId));
+
+                // day wrapper snapshot also caches
+                const dayPair = await loader.getDay(dayId);
+                expect(dayPair.data?.d).toBe(dayId);
+                expect(loader.getDay(dayId)).toBe(loader.getDay(dayId));
+              });
+
+              it('should load items across a sparse date range', async () => {
+                const today = new Date();
+                const yesterday = new Date(today);
+                yesterday.setUTCDate(today.getUTCDate() - 1);
+                const dayBefore = new Date(today);
+                dayBefore.setUTCDate(today.getUTCDate() - 2);
+
+                await createTypedLoggedEventNotification(TYPE_A, { at: today, data: { tag: 'today' } });
+                await createTypedLoggedEventNotification(TYPE_A, { at: dayBefore, data: { tag: 'dayBefore' } });
+
+                const cleanupSentNotifications = await f.notificationServerActions.cleanupSentNotifications({});
+                await cleanupSentNotifications();
+
+                const loader = makeLoader();
+                const items = await loader.getItemsForDayRange({ from: dayBefore, to: today });
+                expect(items.length).toBe(2);
+
+                const tags = items.map((x) => (x.d as { tag: string }).tag).sort();
+                expect(tags).toEqual(['dayBefore', 'today']);
+
+                // mid-range day with no archive returns empty without throwing
+                const yesterdayItems = await loader.getItemsForDay(notificationLoggedEventDayId(yesterday));
+                expect(yesterdayItems).toEqual([]);
+              });
+
+              it('should filter a date range by type', async () => {
+                const today = new Date();
+                const yesterday = new Date(today);
+                yesterday.setUTCDate(today.getUTCDate() - 1);
+
+                await createTypedLoggedEventNotification(TYPE_A, { at: today, data: { tag: 'today-a' } });
+                await createTypedLoggedEventNotification(TYPE_B, { at: today, data: { tag: 'today-b' } });
+                await createTypedLoggedEventNotification(TYPE_A, { at: yesterday, data: { tag: 'yesterday-a' } });
+
+                const cleanupSentNotifications = await f.notificationServerActions.cleanupSentNotifications({});
+                await cleanupSentNotifications();
+
+                const loader = makeLoader();
+                const onlyA = await loader.getItemsForDayRange({ from: yesterday, to: today, type: TYPE_A });
+                expect(onlyA.length).toBe(2);
+                expect(onlyA.every((x) => x.t === TYPE_A)).toBe(true);
+
+                const onlyB = await loader.getItemsForDayRange({ from: yesterday, to: today, type: TYPE_B });
+                expect(onlyB.length).toBe(1);
+                expect(onlyB[0].t).toBe(TYPE_B);
+              });
+
+              it('should iterate days in a range with bounded parallelism', async () => {
+                const dayCount = 5;
+                const baseDate = new Date();
+                const dates: Date[] = [];
+
+                for (let i = 0; i < dayCount; i += 1) {
+                  const date = new Date(baseDate);
+                  date.setUTCDate(baseDate.getUTCDate() - i);
+                  dates.push(date);
+                  await createTypedLoggedEventNotification(TYPE_A, { at: date, data: { tag: `day-${i}` } });
+                }
+
+                const cleanupSentNotifications = await f.notificationServerActions.cleanupSentNotifications({});
+                await cleanupSentNotifications();
+
+                const loader = makeLoader();
+                const seen: NotificationLoggedEventLoaderDayResult[] = [];
+
+                await loader.forEachDayInRange({
+                  from: dates[dates.length - 1],
+                  to: dates[0],
+                  maxParallelTasks: 2,
+                  handler: ({ dayId, items }) => {
+                    seen.push({ dayId, items });
+                  }
+                });
+
+                expect(seen.length).toBe(dayCount);
+
+                const visitedDayIds = seen.map((x) => x.dayId).sort();
+                const expectedDayIds = dates.map(notificationLoggedEventDayId).sort();
+                expect(visitedDayIds).toEqual(expectedDayIds);
+
+                seen.forEach((day) => {
+                  expect(day.items.length).toBe(1);
+                });
+              });
+
+              it('should reuse the cache across forEachDayInRange and getItemsForDay', async () => {
+                const today = new Date();
+                await createTypedLoggedEventNotification(TYPE_A, { at: today, data: { tag: 'shared' } });
+
+                const cleanupSentNotifications = await f.notificationServerActions.cleanupSentNotifications({});
+                await cleanupSentNotifications();
+
+                const loader = makeLoader();
+                let yieldedItems: NotificationItem[] | undefined;
+
+                await loader.forEachDayInRange({
+                  from: today,
+                  to: today,
+                  handler: ({ items }) => {
+                    yieldedItems = items;
+                  }
+                });
+
+                expect(yieldedItems).toBeDefined();
+
+                const todayDayId = notificationLoggedEventDayId(today);
+                const itemsAfter = await loader.getItemsForDay(todayDayId);
+                // both views resolve to the same cached array — no second Firestore read
+                expect(itemsAfter).toBe(yieldedItems);
+              });
+
+              it('should return empty items and an undefined-data day pair for a never-archived day', async () => {
+                const loader = makeLoader();
+                const dayId = notificationLoggedEventDayId(new Date('2000-01-01T00:00:00.000Z'));
+
+                const items = await loader.getItemsForDay(dayId);
+                expect(items).toEqual([]);
+
+                const dayPair = await loader.getDay(dayId);
+                expect(dayPair.data).toBeUndefined();
+              });
+
+              it('should apply the type filter inside forEachDayInRange', async () => {
+                const today = new Date();
+                const yesterday = new Date(today);
+                yesterday.setUTCDate(today.getUTCDate() - 1);
+
+                await createTypedLoggedEventNotification(TYPE_A, { at: today, data: { tag: 'today-a' } });
+                await createTypedLoggedEventNotification(TYPE_B, { at: today, data: { tag: 'today-b' } });
+                await createTypedLoggedEventNotification(TYPE_A, { at: yesterday, data: { tag: 'yesterday-a' } });
+
+                const cleanupSentNotifications = await f.notificationServerActions.cleanupSentNotifications({});
+                await cleanupSentNotifications();
+
+                const loader = makeLoader();
+                const seen: NotificationLoggedEventLoaderDayResult[] = [];
+
+                await loader.forEachDayInRange({
+                  from: yesterday,
+                  to: today,
+                  type: TYPE_A,
+                  handler: ({ dayId, items }) => {
+                    seen.push({ dayId, items });
+                  }
+                });
+
+                expect(seen.length).toBe(2);
+                const allItems = seen.flatMap((x) => x.items);
+                expect(allItems.length).toBe(2);
+                expect(allItems.every((x) => x.t === TYPE_A)).toBe(true);
+              });
+
+              it('should reject when the forEachDayInRange handler throws', async () => {
+                const today = new Date();
+                await createTypedLoggedEventNotification(TYPE_A, { at: today, data: { tag: 'today' } });
+
+                const cleanupSentNotifications = await f.notificationServerActions.cleanupSentNotifications({});
+                await cleanupSentNotifications();
+
+                const loader = makeLoader();
+
+                await expect(
+                  loader.forEachDayInRange({
+                    from: today,
+                    to: today,
+                    handler: () => {
+                      throw new Error('handler-boom');
+                    }
+                  })
+                ).rejects.toThrow('handler-boom');
+              });
+
+              it('should handle single-day and inverted date ranges', async () => {
+                const today = new Date();
+                await createTypedLoggedEventNotification(TYPE_A, { at: today, data: { tag: 'today' } });
+
+                const cleanupSentNotifications = await f.notificationServerActions.cleanupSentNotifications({});
+                await cleanupSentNotifications();
+
+                const loader = makeLoader();
+
+                // single-day range — start === end iterates exactly once
+                const sameDayItems = await loader.getItemsForDayRange({ from: today, to: today });
+                expect(sameDayItems.length).toBe(1);
+                expect((sameDayItems[0].d as { tag: string }).tag).toBe('today');
+
+                // inverted range (from > to) — expandDaysForDateRange returns no days, so no items
+                const tomorrow = new Date(today);
+                tomorrow.setUTCDate(today.getUTCDate() + 1);
+                const invertedItems = await loader.getItemsForDayRange({ from: tomorrow, to: today });
+                expect(invertedItems).toEqual([]);
+
+                let visited = 0;
+                await loader.forEachDayInRange({
+                  from: tomorrow,
+                  to: today,
+                  handler: () => {
+                    visited += 1;
+                  }
+                });
+                expect(visited).toBe(0);
+              });
+
+              it('should bucket events to the correct day across the UTC midnight boundary', async () => {
+                // events 2 ms apart but on opposite sides of UTC midnight should land on different days
+                const justBeforeMidnight = new Date('2026-04-08T23:59:59.999Z');
+                const justAfterMidnight = new Date('2026-04-09T00:00:00.001Z');
+
+                await createTypedLoggedEventNotification(TYPE_A, { at: justBeforeMidnight, data: { tag: 'before' } });
+                await createTypedLoggedEventNotification(TYPE_A, { at: justAfterMidnight, data: { tag: 'after' } });
+
+                const cleanupSentNotifications = await f.notificationServerActions.cleanupSentNotifications({});
+                await cleanupSentNotifications();
+
+                const beforeDayId = notificationLoggedEventDayId(justBeforeMidnight);
+                const afterDayId = notificationLoggedEventDayId(justAfterMidnight);
+                expect(beforeDayId).toBe('2026-04-08');
+                expect(afterDayId).toBe('2026-04-09');
+
+                const loader = makeLoader();
+
+                const beforeItems = await loader.getItemsForDay(beforeDayId);
+                expect(beforeItems.length).toBe(1);
+                expect((beforeItems[0].d as { tag: string }).tag).toBe('before');
+
+                const afterItems = await loader.getItemsForDay(afterDayId);
+                expect(afterItems.length).toBe(1);
+                expect((afterItems[0].d as { tag: string }).tag).toBe('after');
               });
             });
           });

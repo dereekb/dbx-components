@@ -220,6 +220,7 @@ export interface FirestoreCollectionQueryFactory<T, D extends FirestoreDocument<
  * const activeUsers = await userQueryFactory
  *   .queryDocument(where('status', '==', 'active'))
  *   .getDocs();
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreCollectionQueryFactory<T, D extends FirestoreDocument<T>>(queryFactory: FirestoreQueryFactory<T>, accessorContext: LimitedFirestoreDocumentAccessorContextExtension<T, D>): FirestoreCollectionQueryFactory<T, D> {
   // Create document loaders that convert Firestore snapshots to document models

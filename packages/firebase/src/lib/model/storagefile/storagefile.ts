@@ -124,6 +124,7 @@ export type StorageFileGroupCreateStorageFileKeyFactory<P extends StorageFileGro
  *
  * @param purpose The purpose of the StorageFileGroupCreatedStorageFileKey.
  * @returns A factory function that takes a StorageFileGroupId and returns a StorageFileGroupCreatedStorageFileKey.
+ * @__NO_SIDE_EFFECTS__
  */
 export function storageFileGroupCreateStorageFileKeyFactory<P extends StorageFileGroupRelatedStorageFilePurpose>(purpose: P): StorageFileGroupCreateStorageFileKeyFactory<P> {
   return (storageFileGroupId: StorageFileGroupId) => storageFileGroupCreatedStorageFileKey(purpose, storageFileGroupId);

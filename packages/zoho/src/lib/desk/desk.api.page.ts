@@ -77,6 +77,7 @@ export type ZohoDeskFetchPageFetchFunction<I extends ZohoDeskPageFilter, R exten
  *   const secondPage = await firstPage.fetchNext();
  * }
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function zohoDeskFetchPageFactory<I extends ZohoDeskPageFilter, R extends ZohoDeskPageResult<any>>(fetch: ZohoDeskFetchPageFetchFunction<I, R>, defaults?: Maybe<FetchPageFactoryConfigDefaults>) {
   return fetchPageFactory<I, R>({

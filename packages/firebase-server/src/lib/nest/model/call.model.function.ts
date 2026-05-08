@@ -219,6 +219,7 @@ export interface OnCallWithCallTypeModelConfig<N> {
  * @param config - Configuration including call type, crud type, and error factory.
  * @returns A callable function that dispatches to the correct model-type handler.
  * @internal Not intended for direct use outside the model CRUD module.
+ * @__NO_SIDE_EFFECTS__
  */
 export function _onCallWithCallTypeFunction<N>(map: OnCallWithCallTypeModelMap<N>, config: OnCallWithCallTypeModelConfig<N>): OnCallWithAuthAwareNestContext<N, OnCallTypedModelParams, unknown> & OnCallApiDetailsRef {
   const { callType, preAssert = () => undefined, throwOnUnknownModelType } = config;

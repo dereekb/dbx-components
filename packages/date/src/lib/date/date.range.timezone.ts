@@ -26,6 +26,7 @@ export type FitDateRangeToDayPeriodFunction = (<T extends DateRange>(dateRange: 
  * const fitted = fit(range);
  * // fitted spans from 10:00 to 14:00 on the same day (4 hours)
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function fitDateRangeToDayPeriodFunction(timezone: DateTimezoneUtcNormalFunctionInput): FitDateRangeToDayPeriodFunction {
   const transformFn = transformDateRangeInTimezoneNormalFunction(timezone, 'baseDateToTargetDate');

@@ -420,6 +420,7 @@ export type CutStringFunction = ((input: string) => string) & ((input: Maybe<str
  *
  * @param config - configuration controlling max length and end text behavior
  * @returns a reusable function that truncates input strings
+ * @__NO_SIDE_EFFECTS__
  */
 export function cutStringFunction(config: CutStringFunctionConfig): CutStringFunction {
   const { maxLength: inputMaxLength, maxLengthIncludesEndText, endText: inputEndText } = config;

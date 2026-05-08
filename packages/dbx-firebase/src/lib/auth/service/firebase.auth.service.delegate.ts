@@ -29,6 +29,7 @@ export interface AuthRolesObsWithClaimsServiceConfig<T extends AuthClaimsObject>
  *
  * @param config - Configuration specifying the claims service and optional auth user state inclusion.
  * @returns A function that, given a DbxFirebaseAuthService, returns an Observable of the decoded AuthRoleSet.
+ * @__NO_SIDE_EFFECTS__
  */
 export function authRolesObsWithClaimsService<T extends AuthClaimsObject>(config: AuthRolesObsWithClaimsServiceConfig<T>): (dbxFirebaseAuthService: DbxFirebaseAuthService) => Observable<AuthRoleSet> {
   const { addAuthUserStateToRoles: addAuthUserState, claimsService } = config;
@@ -53,6 +54,7 @@ export type DefaultDbxFirebaseAuthServiceDelegateWithClaimsServiceConfig<T exten
  *
  * @param config - Configuration with the claims service and optional auth state customization.
  * @returns A DbxFirebaseAuthServiceDelegate configured for claims-based auth.
+ * @__NO_SIDE_EFFECTS__
  */
 export function defaultDbxFirebaseAuthServiceDelegateWithClaimsService<T extends AuthClaimsObject>(config: DefaultDbxFirebaseAuthServiceDelegateWithClaimsServiceConfig<T>): DbxFirebaseAuthServiceDelegate {
   if (filterMaybeArrayValues([config.stateForLoggedInUser, config.stateForLoggedInUserToken, config.authUserStateObs]).length > 1) {

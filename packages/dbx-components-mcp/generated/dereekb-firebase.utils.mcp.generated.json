@@ -1,0 +1,1429 @@
+{
+  "version": 1,
+  "source": "@dereekb/firebase",
+  "module": "@dereekb/firebase",
+  "generatedAt": "1970-01-01T00:00:00.000Z",
+  "generator": "@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs",
+  "entries": [
+    {
+      "slug": "new-documents",
+      "name": "newDocuments",
+      "kind": "function",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "newDocuments(documentAccessor: FirestoreDocumentAccessor<T, D>, count: number): D[]",
+      "description": "Creates an array of new {@link FirestoreDocument} instances without persisting them to Firestore.\n\nEach document is allocated a unique auto-generated ID via {@link FirestoreDocumentAccessor.newDocument},\nbut no data is written to the database. Useful for preparing document references in bulk before\ndeciding what data to write.",
+      "params": [
+        {
+          "name": "documentAccessor",
+          "type": "FirestoreDocumentAccessor<T, D>",
+          "description": "- Accessor that provides the `newDocument()` factory method",
+          "optional": false
+        },
+        {
+          "name": "count",
+          "type": "number",
+          "description": "- Number of document instances to create",
+          "optional": false
+        }
+      ],
+      "returns": "Array of `count` new document instances, each with a unique auto-generated ID",
+      "tags": [
+        "firestore",
+        "document",
+        "accessor",
+        "new",
+        "allocate",
+        "bulk",
+        "documents",
+        "newdocuments"
+      ],
+      "relatedSlugs": [
+        "make-documents"
+      ]
+    },
+    {
+      "slug": "make-documents",
+      "name": "makeDocuments",
+      "kind": "function",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "makeDocuments(documentAccessor: FirestoreDocumentAccessor<T, D>, make: MakeDocumentsParams<T, D>): Promise<D[]>",
+      "description": "Creates and optionally persists multiple Firestore documents in sequence.\n\nUses {@link performMakeLoop} to iterate `count` times. For each iteration:\n1. A new document instance is created (via `make.newDocument` or the default factory)\n2. `make.init(i, document)` is awaited to produce initial data\n3. If init returns non-nullish data, `document.accessor.create(data)` persists it\n4. The document instance is collected regardless of whether it was persisted\n\nDocuments are created sequentially (not in parallel) to allow index-dependent logic.",
+      "params": [
+        {
+          "name": "documentAccessor",
+          "type": "FirestoreDocumentAccessor<T, D>",
+          "description": "- Accessor providing the document factory and collection context",
+          "optional": false
+        },
+        {
+          "name": "make",
+          "type": "MakeDocumentsParams<T, D>",
+          "description": "- Configuration controlling count, factory, and initialization",
+          "optional": false
+        }
+      ],
+      "returns": "Promise resolving to all created document instances (length === `make.count`)",
+      "tags": [
+        "firestore",
+        "document",
+        "accessor",
+        "make",
+        "create",
+        "persist",
+        "bulk",
+        "fixture",
+        "seed",
+        "documents",
+        "makedocuments"
+      ],
+      "relatedSlugs": [
+        "new-documents"
+      ]
+    },
+    {
+      "slug": "get-document-snapshots",
+      "name": "getDocumentSnapshots",
+      "kind": "function",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "getDocumentSnapshots(documents: D[]): Promise<DocumentSnapshot<FirestoreDocumentData<D>>[]>",
+      "description": "Fetches {@link DocumentSnapshot}s for multiple documents in parallel using {@link runAsyncTasksForValues}.\n\nEach document's `accessor.get()` is called concurrently. The returned array preserves\nthe same ordering as the input `documents` array.",
+      "params": [
+        {
+          "name": "documents",
+          "type": "D[]",
+          "description": "- Documents to fetch snapshots for",
+          "optional": false
+        }
+      ],
+      "returns": "Snapshots in the same order as the input array",
+      "tags": [
+        "firestore",
+        "snapshot",
+        "document",
+        "fetch",
+        "parallel",
+        "batch",
+        "read",
+        "get",
+        "snapshots",
+        "getdocumentsnapshots"
+      ],
+      "relatedSlugs": [
+        "get-document-snapshot-pair",
+        "get-document-snapshot-data-pair"
+      ]
+    },
+    {
+      "slug": "get-document-snapshot-pair",
+      "name": "getDocumentSnapshotPair",
+      "kind": "function",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "getDocumentSnapshotPair(document: D): Promise<FirestoreDocumentSnapshotPair<D>>",
+      "description": "Fetches the current snapshot of a single document and pairs it with the document instance.",
+      "params": [
+        {
+          "name": "document",
+          "type": "D",
+          "description": "- The document to fetch",
+          "optional": false
+        }
+      ],
+      "returns": "A pair containing the document and its snapshot",
+      "tags": [
+        "firestore",
+        "snapshot",
+        "pair",
+        "fetch",
+        "document",
+        "read",
+        "get",
+        "getdocumentsnapshotpair"
+      ],
+      "relatedSlugs": [
+        "get-document-snapshot-pairs",
+        "get-document-snapshot-data-pair"
+      ]
+    },
+    {
+      "slug": "get-document-snapshot-pairs",
+      "name": "getDocumentSnapshotPairs",
+      "kind": "function",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "getDocumentSnapshotPairs(documents: D[]): Promise<FirestoreDocumentSnapshotPair<D>[]>",
+      "description": "Fetches snapshots for multiple documents in parallel and pairs each with its document instance.",
+      "params": [
+        {
+          "name": "documents",
+          "type": "D[]",
+          "description": "- Documents to fetch",
+          "optional": false
+        }
+      ],
+      "returns": "Pairs in the same order as the input array",
+      "tags": [
+        "firestore",
+        "snapshot",
+        "pair",
+        "fetch",
+        "parallel",
+        "batch",
+        "document",
+        "get",
+        "pairs",
+        "getdocumentsnapshotpairs"
+      ],
+      "relatedSlugs": [
+        "get-document-snapshot-pair",
+        "get-document-snapshot-data-pairs"
+      ]
+    },
+    {
+      "slug": "get-document-snapshot-data-pair",
+      "name": "getDocumentSnapshotDataPair",
+      "kind": "function",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "getDocumentSnapshotDataPair(document: D): Promise<FirestoreDocumentSnapshotDataPair<D>>",
+      "description": "Fetches a document's snapshot, extracts its data with `id`/`key` fields, and returns all three as a triplet.",
+      "params": [
+        {
+          "name": "document",
+          "type": "D",
+          "description": "- The document to fetch",
+          "optional": false
+        }
+      ],
+      "returns": "A triplet of document, snapshot, and data (data may be `undefined` if the document doesn't exist)",
+      "tags": [
+        "firestore",
+        "snapshot",
+        "data",
+        "pair",
+        "fetch",
+        "document",
+        "read",
+        "idkey",
+        "get",
+        "getdocumentsnapshotdatapair"
+      ],
+      "relatedSlugs": [
+        "get-document-snapshot-data-pairs",
+        "get-document-snapshot-pair"
+      ]
+    },
+    {
+      "slug": "get-document-snapshot-data-pairs",
+      "name": "getDocumentSnapshotDataPairs",
+      "kind": "function",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "getDocumentSnapshotDataPairs(documents: D[]): Promise<FirestoreDocumentSnapshotDataPair<D>[]>",
+      "description": "Fetches snapshot-data triplets for multiple documents in parallel.\n\nProcesses up to 200 documents concurrently via {@link runAsyncTasksForValues}.\nThe returned array preserves the same ordering as the input.",
+      "params": [
+        {
+          "name": "documents",
+          "type": "D[]",
+          "description": "- Documents to fetch",
+          "optional": false
+        }
+      ],
+      "returns": "Triplets in the same order as the input array",
+      "tags": [
+        "firestore",
+        "snapshot",
+        "data",
+        "pair",
+        "fetch",
+        "parallel",
+        "batch",
+        "idkey",
+        "get",
+        "document",
+        "pairs",
+        "getdocumentsnapshotdatapairs"
+      ],
+      "relatedSlugs": [
+        "get-document-snapshot-data-pair",
+        "get-document-snapshot-data-pairs-with-data"
+      ]
+    },
+    {
+      "slug": "get-document-snapshot-data-pairs-with-data",
+      "name": "getDocumentSnapshotDataPairsWithData",
+      "kind": "function",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "getDocumentSnapshotDataPairsWithData(documents: D[]): Promise<FirestoreDocumentSnapshotDataPairWithData<D>[]>",
+      "description": "Fetches snapshot-data triplets for multiple documents and filters out those that don't exist in Firestore.\n\nConvenience wrapper around {@link getDocumentSnapshotDataPairs} that removes entries where `data` is nullish,\nreturning only {@link FirestoreDocumentSnapshotDataPairWithData} results.",
+      "params": [
+        {
+          "name": "documents",
+          "type": "D[]",
+          "description": "- Documents to fetch",
+          "optional": false
+        }
+      ],
+      "returns": "Triplets for documents that exist, in their original relative order",
+      "tags": [
+        "firestore",
+        "snapshot",
+        "data",
+        "pair",
+        "fetch",
+        "batch",
+        "exists",
+        "filter",
+        "idkey",
+        "get",
+        "document",
+        "pairs",
+        "with",
+        "getdocumentsnapshotdatapairswithdata"
+      ],
+      "relatedSlugs": [
+        "get-document-snapshot-data-pairs"
+      ]
+    },
+    {
+      "slug": "get-document-snapshot-data-tuples",
+      "name": "getDocumentSnapshotDataTuples",
+      "kind": "function",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "getDocumentSnapshotDataTuples(documents: D[]): Promise<FirestoreDocumentSnapshotDataTuple<D>[]>",
+      "description": "Fetches raw snapshot data tuples for multiple documents in parallel.\n\nUnlike {@link getDocumentSnapshotDataPairs}, this returns a lightweight `[document, data]` tuple\nand does not inject `id`/`key` fields onto the data. The `data` value is the raw result of\n`snapshot.data()` and may be `undefined` for non-existent documents.",
+      "params": [
+        {
+          "name": "documents",
+          "type": "D[]",
+          "description": "- Documents to fetch",
+          "optional": false
+        }
+      ],
+      "returns": "Tuples in the same order as the input array",
+      "tags": [
+        "firestore",
+        "snapshot",
+        "data",
+        "tuple",
+        "fetch",
+        "parallel",
+        "batch",
+        "get",
+        "document",
+        "tuples",
+        "getdocumentsnapshotdatatuples"
+      ],
+      "relatedSlugs": [
+        "get-document-snapshot-data-pairs"
+      ]
+    },
+    {
+      "slug": "get-document-snapshot-data",
+      "name": "getDocumentSnapshotData",
+      "kind": "function",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "getDocumentSnapshotData(document: D, withId?: boolean): Promise<Maybe<DocumentDataWithIdAndKey<FirestoreDocumentData<D>> | FirestoreDocumentData<D>>>",
+      "description": "Fetches the data from a single document's snapshot.\n\nBy default (`withId=true`), the returned data has `id` and `key` fields injected via\n{@link documentDataWithIdAndKey}. Pass `withId=false` to get the raw snapshot data instead.\n\nReturns `undefined` if the document does not exist.",
+      "params": [
+        {
+          "name": "document",
+          "type": "D",
+          "description": "- The document to fetch data for",
+          "optional": false
+        },
+        {
+          "name": "withId",
+          "type": "boolean",
+          "description": "- Whether to inject `id` and `key` fields onto the data (default: `true`)",
+          "optional": true
+        }
+      ],
+      "returns": "The document's data, or `undefined` if it doesn't exist",
+      "tags": [
+        "firestore",
+        "snapshot",
+        "data",
+        "fetch",
+        "document",
+        "read",
+        "withid",
+        "idkey",
+        "get",
+        "getdocumentsnapshotdata"
+      ],
+      "relatedSlugs": [
+        "get-document-snapshots-data",
+        "get-document-snapshot-data-pair"
+      ]
+    },
+    {
+      "slug": "get-document-snapshots-data",
+      "name": "getDocumentSnapshotsData",
+      "kind": "function",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "getDocumentSnapshotsData(documents: D[], withId?: boolean): Promise<DocumentDataWithIdAndKey<FirestoreDocumentData<D>>[] | FirestoreDocumentData<D>[]>",
+      "description": "Fetches data for multiple documents in parallel, filtering out non-existent documents.\n\nBy default (`withId=true`), each data object has `id` and `key` fields injected.\nDocuments that don't exist in Firestore are excluded from the results (the returned\narray may be shorter than the input).",
+      "params": [
+        {
+          "name": "documents",
+          "type": "D[]",
+          "description": "- Documents to fetch data for",
+          "optional": false
+        },
+        {
+          "name": "withId",
+          "type": "boolean",
+          "description": "- Whether to inject `id` and `key` fields onto each data object (default: `true`)",
+          "optional": true
+        }
+      ],
+      "returns": "Data objects for existing documents only",
+      "tags": [
+        "firestore",
+        "snapshot",
+        "data",
+        "fetch",
+        "parallel",
+        "batch",
+        "filter",
+        "withid",
+        "idkey",
+        "get",
+        "document",
+        "snapshots",
+        "getdocumentsnapshotsdata"
+      ],
+      "relatedSlugs": [
+        "get-document-snapshot-data",
+        "get-data-from-document-snapshots"
+      ]
+    },
+    {
+      "slug": "get-data-from-document-snapshots",
+      "name": "getDataFromDocumentSnapshots",
+      "kind": "function",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "getDataFromDocumentSnapshots(snapshots: DocumentSnapshot<T>[], withId?: boolean): DocumentDataWithIdAndKey<T>[] | T[]",
+      "description": "Extracts data from an array of {@link DocumentSnapshot}s, filtering out snapshots for non-existent documents.\n\nBy default (`withId=true`), each data object has `id` and `key` fields injected via {@link documentDataWithIdAndKey}.\nSnapshots where `data()` returns `undefined` are removed from the output via {@link filterMaybeArrayValues}.",
+      "params": [
+        {
+          "name": "snapshots",
+          "type": "DocumentSnapshot<T>[]",
+          "description": "- Snapshots to extract data from",
+          "optional": false
+        },
+        {
+          "name": "withId",
+          "type": "boolean",
+          "description": "- Whether to inject `id` and `key` fields onto each data object (default: `true`)",
+          "optional": true
+        }
+      ],
+      "returns": "Data objects for existing documents only (may be shorter than input)",
+      "tags": [
+        "firestore",
+        "snapshot",
+        "data",
+        "extract",
+        "filter",
+        "batch",
+        "withid",
+        "idkey",
+        "mapper",
+        "get",
+        "from",
+        "document",
+        "snapshots",
+        "getdatafromdocumentsnapshots"
+      ],
+      "relatedSlugs": [
+        "get-document-snapshots-data",
+        "document-data-function"
+      ]
+    },
+    {
+      "slug": "load-documents-for-snapshots",
+      "name": "loadDocumentsForSnapshots",
+      "kind": "function",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "loadDocumentsForSnapshots(accessor: LimitedFirestoreDocumentAccessor<T, D>, snapshots: QuerySnapshot<T>): D[]",
+      "description": "Creates {@link FirestoreDocument} instances for all documents in a {@link QuerySnapshot}.\n\nMaps each document in `snapshots.docs` to a loaded document via `accessor.loadDocument(ref)`.\nNo additional data fetching occurs; the documents are loaded from their existing references.",
+      "params": [
+        {
+          "name": "accessor",
+          "type": "LimitedFirestoreDocumentAccessor<T, D>",
+          "description": "- Accessor to load documents with",
+          "optional": false
+        },
+        {
+          "name": "snapshots",
+          "type": "QuerySnapshot<T>",
+          "description": "- Query snapshot containing the document references",
+          "optional": false
+        }
+      ],
+      "returns": "Document instances in the same order as the query results",
+      "tags": [
+        "firestore",
+        "document",
+        "loader",
+        "accessor",
+        "snapshot",
+        "query",
+        "querysnapshot",
+        "batch",
+        "load",
+        "documents",
+        "for",
+        "snapshots",
+        "loaddocumentsforsnapshots"
+      ],
+      "relatedSlugs": [
+        "load-documents-for-document-references",
+        "load-documents-for-keys"
+      ]
+    },
+    {
+      "slug": "load-documents-for-document-references-from-values",
+      "name": "loadDocumentsForDocumentReferencesFromValues",
+      "kind": "function",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "loadDocumentsForDocumentReferencesFromValues(accessor: LimitedFirestoreDocumentAccessor<T, D>, values: I[], getRef: (value: I) => DocumentReference<T>): D[]",
+      "description": "Extracts {@link DocumentReference}s from arbitrary values and loads them as {@link FirestoreDocument} instances.\n\nConvenience function that maps values through `getRef` then delegates to {@link loadDocumentsForDocumentReferences}.",
+      "params": [
+        {
+          "name": "accessor",
+          "type": "LimitedFirestoreDocumentAccessor<T, D>",
+          "description": "- Accessor to load documents with",
+          "optional": false
+        },
+        {
+          "name": "values",
+          "type": "I[]",
+          "description": "- Source values to extract references from",
+          "optional": false
+        },
+        {
+          "name": "getRef",
+          "type": "(value: I) => DocumentReference<T>",
+          "description": "- Extracts a document reference from each value",
+          "optional": false
+        }
+      ],
+      "returns": "Document instances in the same order as the input values",
+      "tags": [
+        "firestore",
+        "document",
+        "loader",
+        "accessor",
+        "reference",
+        "value",
+        "mapper",
+        "batch",
+        "load",
+        "documents",
+        "for",
+        "references",
+        "from",
+        "values",
+        "loaddocumentsfordocumentreferencesfromvalues"
+      ],
+      "relatedSlugs": [
+        "load-documents-for-document-references",
+        "load-documents-for-keys-from-values",
+        "load-documents-for-ids-from-values"
+      ]
+    },
+    {
+      "slug": "load-documents-for-document-references",
+      "name": "loadDocumentsForDocumentReferences",
+      "kind": "function",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "loadDocumentsForDocumentReferences(accessor: LimitedFirestoreDocumentAccessor<T, D>, refs: DocumentReference<T>[]): D[]",
+      "description": "Loads {@link FirestoreDocument} instances from an array of {@link DocumentReference}s.\n\nEach reference is passed to `accessor.loadDocument()` to create a document wrapper.\nNo network calls are made; this only creates in-memory document instances bound to the given references.",
+      "params": [
+        {
+          "name": "accessor",
+          "type": "LimitedFirestoreDocumentAccessor<T, D>",
+          "description": "- Accessor to load documents with",
+          "optional": false
+        },
+        {
+          "name": "refs",
+          "type": "DocumentReference<T>[]",
+          "description": "- Document references to load",
+          "optional": false
+        }
+      ],
+      "returns": "Document instances in the same order as the input references",
+      "tags": [
+        "firestore",
+        "document",
+        "loader",
+        "accessor",
+        "reference",
+        "batch",
+        "load",
+        "documents",
+        "for",
+        "references",
+        "loaddocumentsfordocumentreferences"
+      ],
+      "relatedSlugs": [
+        "load-documents-for-document-references-from-values",
+        "load-documents-for-keys",
+        "load-documents-for-snapshots"
+      ]
+    },
+    {
+      "slug": "load-documents-for-keys-from-values",
+      "name": "loadDocumentsForKeysFromValues",
+      "kind": "function",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "loadDocumentsForKeysFromValues(accessor: LimitedFirestoreDocumentAccessor<T, D>, values: I[], getKey: (value: I) => FirestoreModelKey): D[]",
+      "description": "Extracts {@link FirestoreModelKey}s from arbitrary values and loads them as {@link FirestoreDocument} instances.\n\nConvenience function that maps values through `getKey` then delegates to {@link loadDocumentsForKeys}.",
+      "params": [
+        {
+          "name": "accessor",
+          "type": "LimitedFirestoreDocumentAccessor<T, D>",
+          "description": "- Accessor to load documents with",
+          "optional": false
+        },
+        {
+          "name": "values",
+          "type": "I[]",
+          "description": "- Source values to extract keys from",
+          "optional": false
+        },
+        {
+          "name": "getKey",
+          "type": "(value: I) => FirestoreModelKey",
+          "description": "- Extracts a model key (full Firestore path) from each value",
+          "optional": false
+        }
+      ],
+      "returns": "Document instances in the same order as the input values",
+      "tags": [
+        "firestore",
+        "document",
+        "loader",
+        "accessor",
+        "key",
+        "path",
+        "value",
+        "mapper",
+        "batch",
+        "load",
+        "documents",
+        "for",
+        "keys",
+        "from",
+        "values",
+        "loaddocumentsforkeysfromvalues"
+      ],
+      "relatedSlugs": [
+        "load-documents-for-keys",
+        "load-documents-for-document-references-from-values",
+        "load-documents-for-ids-from-values"
+      ]
+    },
+    {
+      "slug": "load-documents-for-keys",
+      "name": "loadDocumentsForKeys",
+      "kind": "function",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "loadDocumentsForKeys(accessor: LimitedFirestoreDocumentAccessor<T, D>, keys: FirestoreModelKey[]): D[]",
+      "description": "Loads {@link FirestoreDocument} instances from an array of full Firestore document paths (keys).\n\nEach key is passed to `accessor.loadDocumentForKey()`. No network calls are made.",
+      "params": [
+        {
+          "name": "accessor",
+          "type": "LimitedFirestoreDocumentAccessor<T, D>",
+          "description": "- Accessor to load documents with",
+          "optional": false
+        },
+        {
+          "name": "keys",
+          "type": "FirestoreModelKey[]",
+          "description": "- Full Firestore document paths (e.g. `'users/abc123'`)",
+          "optional": false
+        }
+      ],
+      "returns": "Document instances in the same order as the input keys",
+      "tags": [
+        "firestore",
+        "document",
+        "loader",
+        "accessor",
+        "key",
+        "path",
+        "batch",
+        "load",
+        "documents",
+        "for",
+        "keys",
+        "loaddocumentsforkeys"
+      ],
+      "relatedSlugs": [
+        "load-documents-for-keys-from-values",
+        "load-documents-for-document-references",
+        "load-documents-for-ids"
+      ]
+    },
+    {
+      "slug": "load-documents-for-ids-from-values",
+      "name": "loadDocumentsForIdsFromValues",
+      "kind": "function",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "loadDocumentsForIdsFromValues(accessor: FirestoreDocumentAccessor<T, D>, values: I[], getId: (value: I) => FirestoreModelId): D[]",
+      "description": "Extracts {@link FirestoreModelId}s from arbitrary values and loads them as {@link FirestoreDocument} instances.\n\nConvenience function that maps values through `getId` then delegates to {@link loadDocumentsForIds}.\nRequires a full {@link FirestoreDocumentAccessor} (not limited) because loading by ID requires collection context.",
+      "params": [
+        {
+          "name": "accessor",
+          "type": "FirestoreDocumentAccessor<T, D>",
+          "description": "- Accessor to load documents with (must have collection context for ID resolution)",
+          "optional": false
+        },
+        {
+          "name": "values",
+          "type": "I[]",
+          "description": "- Source values to extract IDs from",
+          "optional": false
+        },
+        {
+          "name": "getId",
+          "type": "(value: I) => FirestoreModelId",
+          "description": "- Extracts a model ID from each value",
+          "optional": false
+        }
+      ],
+      "returns": "Document instances in the same order as the input values",
+      "tags": [
+        "firestore",
+        "document",
+        "loader",
+        "accessor",
+        "id",
+        "value",
+        "mapper",
+        "batch",
+        "collection",
+        "load",
+        "documents",
+        "for",
+        "ids",
+        "from",
+        "values",
+        "loaddocumentsforidsfromvalues"
+      ],
+      "relatedSlugs": [
+        "load-documents-for-ids",
+        "load-documents-for-keys-from-values",
+        "load-documents-for-document-references-from-values"
+      ]
+    },
+    {
+      "slug": "load-documents-for-ids",
+      "name": "loadDocumentsForIds",
+      "kind": "function",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "loadDocumentsForIds(accessor: FirestoreDocumentAccessor<T, D>, ids: FirestoreModelId[]): D[]",
+      "description": "Loads {@link FirestoreDocument} instances from an array of document IDs relative to the accessor's collection.\n\nEach ID is passed to `accessor.loadDocumentForId()`. Requires a full {@link FirestoreDocumentAccessor}\nbecause ID-based loading needs the collection reference to resolve the full path. No network calls are made.",
+      "params": [
+        {
+          "name": "accessor",
+          "type": "FirestoreDocumentAccessor<T, D>",
+          "description": "- Accessor to load documents with (must have collection context)",
+          "optional": false
+        },
+        {
+          "name": "ids",
+          "type": "FirestoreModelId[]",
+          "description": "- Document IDs within the accessor's collection",
+          "optional": false
+        }
+      ],
+      "returns": "Document instances in the same order as the input IDs",
+      "tags": [
+        "firestore",
+        "document",
+        "loader",
+        "accessor",
+        "id",
+        "batch",
+        "collection",
+        "load",
+        "documents",
+        "for",
+        "ids",
+        "loaddocumentsforids"
+      ],
+      "relatedSlugs": [
+        "load-documents-for-ids-from-values",
+        "load-documents-for-keys",
+        "load-documents-for-document-references"
+      ]
+    },
+    {
+      "slug": "firestore-document-loader",
+      "name": "firestoreDocumentLoader",
+      "kind": "factory",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "firestoreDocumentLoader(accessorContext: LimitedFirestoreDocumentAccessorContextExtension<T, D>): FirestoreDocumentLoader<T, D>",
+      "description": "Creates a {@link FirestoreDocumentLoader} from a {@link LimitedFirestoreDocumentAccessorContextExtension}.\n\nThe returned loader resolves the appropriate accessor based on whether a transaction is provided,\nthen delegates to {@link loadDocumentsForDocumentReferences}.",
+      "params": [
+        {
+          "name": "accessorContext",
+          "type": "LimitedFirestoreDocumentAccessorContextExtension<T, D>",
+          "description": "- Context that provides accessors for both default and transactional use",
+          "optional": false
+        }
+      ],
+      "returns": "A loader function that converts document references to document instances",
+      "tags": [
+        "firestore",
+        "document",
+        "loader",
+        "factory",
+        "transaction",
+        "accessor",
+        "context",
+        "firestoredocumentloader"
+      ],
+      "relatedSlugs": [
+        "firestore-document-snapshot-pairs-loader",
+        "load-documents-for-document-references"
+      ]
+    },
+    {
+      "slug": "firestore-document-snapshot-pairs-loader",
+      "name": "firestoreDocumentSnapshotPairsLoader",
+      "kind": "factory",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "firestoreDocumentSnapshotPairsLoader(accessorContext: LimitedFirestoreDocumentAccessorContextExtension<T, D>): FirestoreDocumentSnapshotPairsLoader<T, D> & FirestoreQueryDocumentSnapshotPairsLoader<T, D>",
+      "description": "Creates a {@link FirestoreDocumentSnapshotPairsLoader} from a {@link LimitedFirestoreDocumentAccessorContextExtension}.\n\nThe returned loader resolves the appropriate accessor based on whether a transaction is provided,\nthen maps each snapshot to a {@link FirestoreDocumentSnapshotDataPair} using {@link firestoreDocumentSnapshotPairsLoaderInstance}.\n\nAlso satisfies the {@link FirestoreQueryDocumentSnapshotPairsLoader} type since the implementation\nhandles both {@link DocumentSnapshot} and {@link QueryDocumentSnapshot} inputs.",
+      "params": [
+        {
+          "name": "accessorContext",
+          "type": "LimitedFirestoreDocumentAccessorContextExtension<T, D>",
+          "description": "- Context that provides accessors for both default and transactional use",
+          "optional": false
+        }
+      ],
+      "returns": "A loader function that converts snapshots to document-snapshot-data pairs",
+      "tags": [
+        "firestore",
+        "snapshot",
+        "pair",
+        "loader",
+        "factory",
+        "transaction",
+        "accessor",
+        "query",
+        "context",
+        "document",
+        "pairs",
+        "firestoredocumentsnapshotpairsloader"
+      ],
+      "relatedSlugs": [
+        "firestore-document-snapshot-pairs-loader-instance",
+        "firestore-query-document-snapshot-pairs-loader",
+        "firestore-document-loader"
+      ]
+    },
+    {
+      "slug": "firestore-document-snapshot-pairs-loader-instance",
+      "name": "firestoreDocumentSnapshotPairsLoaderInstance",
+      "kind": "factory",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "firestoreDocumentSnapshotPairsLoaderInstance(accessor: LimitedFirestoreDocumentAccessor<T, D>): FirestoreDocumentSnapshotPairsLoaderInstance<T, D>",
+      "description": "Creates a {@link FirestoreDocumentSnapshotPairsLoaderInstance} bound to a specific accessor.\n\nThe returned function converts a snapshot into a {@link FirestoreDocumentSnapshotDataPair} by:\n1. Extracting data with `id`/`key` fields via {@link documentDataWithIdAndKey}\n2. Loading the document from the snapshot's reference via `accessor.loadDocument()`\n3. Combining all three into a single pair object",
+      "params": [
+        {
+          "name": "accessor",
+          "type": "LimitedFirestoreDocumentAccessor<T, D>",
+          "description": "- The accessor to bind for document loading",
+          "optional": false
+        }
+      ],
+      "returns": "A reusable function that converts snapshots to pairs using the bound accessor",
+      "tags": [
+        "firestore",
+        "snapshot",
+        "pair",
+        "loader",
+        "factory",
+        "instance",
+        "accessor",
+        "idkey",
+        "document",
+        "pairs",
+        "firestoredocumentsnapshotpairsloaderinstance"
+      ],
+      "relatedSlugs": [
+        "firestore-document-snapshot-pairs-loader",
+        "document-data-with-id-and-key"
+      ]
+    },
+    {
+      "slug": "document-data",
+      "name": "documentData",
+      "kind": "function",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "documentData(snapshot: DocumentSnapshot<T>, withId?: boolean): Maybe<T> | Maybe<DocumentDataWithIdAndKey<T>>",
+      "description": "Extracts data from a {@link DocumentSnapshot}, optionally injecting `id` and `key` fields.\n\nWhen `withId` is `true` (default is `false`), delegates to {@link documentDataWithIdAndKey} to mutate\nthe data object with `id` (document ID) and `key` (full document path). When `false`, returns the\nraw result of `snapshot.data()`.\n\nFor {@link QueryDocumentSnapshot} inputs, the return value is guaranteed non-nullish.\nFor {@link DocumentSnapshot} inputs, may return `undefined` if the document doesn't exist.",
+      "params": [
+        {
+          "name": "snapshot",
+          "type": "DocumentSnapshot<T>",
+          "description": "- The snapshot to extract data from",
+          "optional": false
+        },
+        {
+          "name": "withId",
+          "type": "boolean",
+          "description": "- Whether to inject `id` and `key` fields (default: `false`)",
+          "optional": true
+        }
+      ],
+      "returns": "The snapshot data, or `undefined` for non-existent documents",
+      "tags": [
+        "firestore",
+        "snapshot",
+        "data",
+        "extract",
+        "withid",
+        "idkey",
+        "mapper",
+        "document",
+        "documentdata"
+      ],
+      "relatedSlugs": [
+        "document-data-with-id-and-key",
+        "document-data-function",
+        "get-document-snapshot-data"
+      ]
+    },
+    {
+      "slug": "document-data-function",
+      "name": "documentDataFunction",
+      "kind": "factory",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "documentDataFunction(withId: boolean): DocumentDataWithIdAndKeyFunction<T> | DocumentDataFunction<T>",
+      "description": "Returns a data extraction function based on whether `id`/`key` injection is desired.\n\nWhen `withId` is `true`, returns {@link documentDataWithIdAndKey} (a {@link DocumentDataWithIdAndKeyFunction}).\nWhen `false`, returns a simple `snapshot.data()` wrapper (a {@link DocumentDataFunction}).\n\nUseful for creating reusable mappers when processing arrays of snapshots.",
+      "params": [
+        {
+          "name": "withId",
+          "type": "boolean",
+          "description": "- Whether the returned function should inject `id` and `key` fields",
+          "optional": false
+        }
+      ],
+      "returns": "A snapshot-to-data extraction function",
+      "tags": [
+        "firestore",
+        "snapshot",
+        "data",
+        "factory",
+        "mapper",
+        "withid",
+        "idkey",
+        "extract",
+        "document",
+        "function",
+        "documentdatafunction"
+      ],
+      "relatedSlugs": [
+        "document-data",
+        "document-data-with-id-and-key",
+        "get-data-from-document-snapshots"
+      ]
+    },
+    {
+      "slug": "document-data-with-id-and-key",
+      "name": "documentDataWithIdAndKey",
+      "kind": "function",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "documentDataWithIdAndKey(snapshot: DocumentSnapshot<T>): Maybe<DocumentDataWithIdAndKey<T>>",
+      "description": "Extracts data from a {@link DocumentSnapshot} and mutates it to include `id` and `key` fields.\n\nThe `id` is set to `snapshot.id` (the document's ID within its collection) and `key` is set\nto `snapshot.ref.path` (the full Firestore document path). The mutation is performed in-place\non the data object returned by `snapshot.data()`.\n\nFor {@link QueryDocumentSnapshot} inputs, the return value is guaranteed non-nullish.\nReturns `undefined` if the document does not exist (i.e. `snapshot.data()` returns falsy).",
+      "params": [
+        {
+          "name": "snapshot",
+          "type": "DocumentSnapshot<T>",
+          "description": "- The snapshot to extract and augment data from",
+          "optional": false
+        }
+      ],
+      "returns": "The data object with `id` and `key` fields, or `undefined` if the document doesn't exist",
+      "tags": [
+        "firestore",
+        "snapshot",
+        "data",
+        "augment",
+        "idkey",
+        "id",
+        "key",
+        "mutate",
+        "extract",
+        "document",
+        "with",
+        "and",
+        "documentdatawithidandkey"
+      ],
+      "relatedSlugs": [
+        "document-data",
+        "set-id-and-key-from-snapshot-on-document-data",
+        "document-data-function"
+      ]
+    },
+    {
+      "slug": "set-id-and-key-from-snapshot-on-document-data",
+      "name": "setIdAndKeyFromSnapshotOnDocumentData",
+      "kind": "function",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "setIdAndKeyFromSnapshotOnDocumentData(data: T, snapshot: DocumentSnapshot<T>): DocumentDataWithIdAndKey<T>",
+      "description": "Mutates the input data object to include `id` and `key` fields from a {@link DocumentSnapshot}.\n\nSets `data.id` to `snapshot.id` and `data.key` to `snapshot.ref.path`. The data object\nis modified in-place and also returned for chaining convenience.",
+      "params": [
+        {
+          "name": "data",
+          "type": "T",
+          "description": "- The data object to augment (mutated in-place)",
+          "optional": false
+        },
+        {
+          "name": "snapshot",
+          "type": "DocumentSnapshot<T>",
+          "description": "- Source of the `id` and `key` values",
+          "optional": false
+        }
+      ],
+      "returns": "The same data object, now typed as {@link DocumentDataWithIdAndKey }",
+      "tags": [
+        "firestore",
+        "data",
+        "augment",
+        "mutate",
+        "idkey",
+        "id",
+        "key",
+        "snapshot",
+        "set",
+        "and",
+        "from",
+        "on",
+        "document",
+        "setidandkeyfromsnapshotondocumentdata"
+      ],
+      "relatedSlugs": [
+        "set-id-and-key-from-key-id-ref-on-document-data",
+        "document-data-with-id-and-key"
+      ]
+    },
+    {
+      "slug": "set-id-and-key-from-key-id-ref-on-document-data",
+      "name": "setIdAndKeyFromKeyIdRefOnDocumentData",
+      "kind": "function",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "setIdAndKeyFromKeyIdRefOnDocumentData(data: T, modelRef: FirestoreModelKeyRef & FirestoreModelIdRef): DocumentDataWithIdAndKey<T>",
+      "description": "Mutates the input data object to include `id` and `key` fields from a model reference.\n\nSimilar to {@link setIdAndKeyFromSnapshotOnDocumentData}, but sources the values from a\n{@link FirestoreModelKeyRef} & {@link FirestoreModelIdRef} instead of a snapshot.\nThe data object is modified in-place and also returned for chaining convenience.",
+      "params": [
+        {
+          "name": "data",
+          "type": "T",
+          "description": "- The data object to augment (mutated in-place)",
+          "optional": false
+        },
+        {
+          "name": "modelRef",
+          "type": "FirestoreModelKeyRef & FirestoreModelIdRef",
+          "description": "- Source of the `id` and `key` values",
+          "optional": false
+        }
+      ],
+      "returns": "The same data object, now typed as {@link DocumentDataWithIdAndKey }",
+      "tags": [
+        "firestore",
+        "data",
+        "augment",
+        "mutate",
+        "idkey",
+        "id",
+        "key",
+        "ref",
+        "modelref",
+        "set",
+        "and",
+        "from",
+        "on",
+        "document",
+        "setidandkeyfromkeyidrefondocumentdata"
+      ],
+      "relatedSlugs": [
+        "set-id-and-key-from-snapshot-on-document-data"
+      ]
+    },
+    {
+      "slug": "use-document-snapshot",
+      "name": "useDocumentSnapshot",
+      "kind": "function",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "useDocumentSnapshot(document: Maybe<D>, use: UseAsync<DocumentSnapshot<FirestoreDocumentData<D>>, O>, defaultValue?: Maybe<AsyncGetterOrValue<O>>): Promise<Maybe<O>>",
+      "description": "Fetches a document's snapshot and passes it to a `use` callback, following the {@link UseAsync} pattern.\n\nIf `document` is nullish, the `use` callback is not invoked and `defaultValue` is returned instead.\nIf `document` exists but the snapshot is nullish (shouldn't happen in practice), `defaultValue` is also used.",
+      "params": [
+        {
+          "name": "document",
+          "type": "Maybe<D>",
+          "description": "- The document to fetch, or nullish to skip",
+          "optional": false
+        },
+        {
+          "name": "use",
+          "type": "UseAsync<DocumentSnapshot<FirestoreDocumentData<D>>, O>",
+          "description": "- Callback that receives the fetched snapshot and returns a result",
+          "optional": false
+        },
+        {
+          "name": "defaultValue",
+          "type": "Maybe<AsyncGetterOrValue<O>>",
+          "description": "- Fallback value when `document` is nullish or the snapshot is unavailable",
+          "optional": true
+        }
+      ],
+      "returns": "The result of `use`, or the default value",
+      "tags": [
+        "firestore",
+        "snapshot",
+        "document",
+        "use",
+        "async",
+        "callback",
+        "default",
+        "optional",
+        "usedocumentsnapshot"
+      ],
+      "relatedSlugs": [
+        "use-document-snapshot-data",
+        "get-document-snapshot-pair"
+      ]
+    },
+    {
+      "slug": "use-document-snapshot-data",
+      "name": "useDocumentSnapshotData",
+      "kind": "function",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "useDocumentSnapshotData(): <D extends import(\"/Users/dereekb/development/git/dbcomponents/packages/firebase/src/lib/common/firestore/accessor/document\").FirestoreDocument<any, import(\"/Users/dereekb/development/git/dbcomponents/packages/firebase/src/lib/common/firestore/collection/collection\").FirestoreModelIdentity>, O = void>(document: Maybe<D>, use: UseAsync<import(\"/Users/dereekb/development/git/dbcomponents/packages/firebase/src/lib/common/firestore/accessor/document\").FirestoreDocumentData<D>, O>, defaultValue?: Maybe<AsyncGetterOrValue<O>>) => Promise<Maybe<O>>",
+      "description": "Fetches a document's snapshot data (via `snapshot.data()`) and passes it to a `use` callback.\n\nWraps {@link useDocumentSnapshot} with a mapping step that extracts raw data from the snapshot.\nIf the document doesn't exist (data is `undefined`), the `use` callback is not invoked\nand `defaultValue` is returned instead.",
+      "params": [],
+      "returns": "The result of `use`, or the default value",
+      "tags": [
+        "firestore",
+        "snapshot",
+        "data",
+        "document",
+        "use",
+        "async",
+        "callback",
+        "default",
+        "usedocumentsnapshotdata"
+      ],
+      "relatedSlugs": [
+        "use-document-snapshot",
+        "get-document-snapshot-data"
+      ]
+    },
+    {
+      "slug": "firestore-model-id-from-document",
+      "name": "firestoreModelIdFromDocument",
+      "kind": "function",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "firestoreModelIdFromDocument(document: D): FirestoreModelId",
+      "description": "Extracts the document ID ({@link FirestoreModelId}) from a {@link FirestoreDocument}.\n\nUseful as a mapper function, e.g. `documents.map(firestoreModelIdFromDocument)`.",
+      "params": [
+        {
+          "name": "document",
+          "type": "D",
+          "description": "- The document to extract the ID from",
+          "optional": false
+        }
+      ],
+      "returns": "The document's ID (the last segment of its Firestore path)",
+      "tags": [
+        "firestore",
+        "document",
+        "id",
+        "accessor",
+        "mapper",
+        "key",
+        "model",
+        "from",
+        "firestoremodelidfromdocument"
+      ],
+      "relatedSlugs": [
+        "firestore-model-ids-from-documents",
+        "firestore-model-key-from-document"
+      ]
+    },
+    {
+      "slug": "firestore-model-ids-from-documents",
+      "name": "firestoreModelIdsFromDocuments",
+      "kind": "function",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "firestoreModelIdsFromDocuments(documents: D[]): FirestoreModelId[]",
+      "description": "Extracts document IDs from an array of {@link FirestoreDocument}s.",
+      "params": [
+        {
+          "name": "documents",
+          "type": "D[]",
+          "description": "- Documents to extract IDs from",
+          "optional": false
+        }
+      ],
+      "returns": "Array of document IDs in the same order as the input",
+      "tags": [
+        "firestore",
+        "document",
+        "id",
+        "accessor",
+        "batch",
+        "mapper",
+        "model",
+        "ids",
+        "from",
+        "documents",
+        "firestoremodelidsfromdocuments"
+      ],
+      "relatedSlugs": [
+        "firestore-model-id-from-document",
+        "firestore-model-keys-from-documents"
+      ]
+    },
+    {
+      "slug": "firestore-model-key-from-document",
+      "name": "firestoreModelKeyFromDocument",
+      "kind": "function",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "firestoreModelKeyFromDocument(document: D): FirestoreModelKey",
+      "description": "Extracts the full Firestore path ({@link FirestoreModelKey}) from a {@link FirestoreDocument}.\n\nUseful as a mapper function, e.g. `documents.map(firestoreModelKeyFromDocument)`.",
+      "params": [
+        {
+          "name": "document",
+          "type": "D",
+          "description": "- The document to extract the key from",
+          "optional": false
+        }
+      ],
+      "returns": "The document's full Firestore path (e.g. `'users/abc123'`)",
+      "tags": [
+        "firestore",
+        "document",
+        "key",
+        "path",
+        "accessor",
+        "mapper",
+        "model",
+        "from",
+        "firestoremodelkeyfromdocument"
+      ],
+      "relatedSlugs": [
+        "firestore-model-keys-from-documents",
+        "firestore-model-id-from-document"
+      ]
+    },
+    {
+      "slug": "firestore-model-keys-from-documents",
+      "name": "firestoreModelKeysFromDocuments",
+      "kind": "function",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "firestoreModelKeysFromDocuments(documents: D[]): FirestoreModelKey[]",
+      "description": "Extracts full Firestore paths from an array of {@link FirestoreDocument}s.",
+      "params": [
+        {
+          "name": "documents",
+          "type": "D[]",
+          "description": "- Documents to extract keys from",
+          "optional": false
+        }
+      ],
+      "returns": "Array of full Firestore paths in the same order as the input",
+      "tags": [
+        "firestore",
+        "document",
+        "key",
+        "path",
+        "accessor",
+        "batch",
+        "mapper",
+        "model",
+        "keys",
+        "from",
+        "documents",
+        "firestoremodelkeysfromdocuments"
+      ],
+      "relatedSlugs": [
+        "firestore-model-key-from-document",
+        "firestore-model-ids-from-documents"
+      ]
+    },
+    {
+      "slug": "document-reference-from-document",
+      "name": "documentReferenceFromDocument",
+      "kind": "function",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "documentReferenceFromDocument(document: D): DocumentReference<T>",
+      "description": "Extracts the {@link DocumentReference} from a {@link FirestoreDocument}.\n\nUseful as a mapper function, e.g. `documents.map(documentReferenceFromDocument)`.",
+      "params": [
+        {
+          "name": "document",
+          "type": "D",
+          "description": "- The document to extract the reference from",
+          "optional": false
+        }
+      ],
+      "returns": "The underlying Firestore document reference",
+      "tags": [
+        "firestore",
+        "document",
+        "reference",
+        "accessor",
+        "mapper",
+        "from",
+        "documentreferencefromdocument"
+      ],
+      "relatedSlugs": [
+        "document-references-from-documents",
+        "firestore-model-key-from-document"
+      ]
+    },
+    {
+      "slug": "document-references-from-documents",
+      "name": "documentReferencesFromDocuments",
+      "kind": "function",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "documentReferencesFromDocuments(documents: D[]): DocumentReference<T>[]",
+      "description": "Extracts {@link DocumentReference}s from an array of {@link FirestoreDocument}s.",
+      "params": [
+        {
+          "name": "documents",
+          "type": "D[]",
+          "description": "- Documents to extract references from",
+          "optional": false
+        }
+      ],
+      "returns": "Array of document references in the same order as the input",
+      "tags": [
+        "firestore",
+        "document",
+        "reference",
+        "accessor",
+        "batch",
+        "mapper",
+        "references",
+        "from",
+        "documents",
+        "documentreferencesfromdocuments"
+      ],
+      "relatedSlugs": [
+        "document-reference-from-document",
+        "firestore-model-keys-from-documents"
+      ]
+    },
+    {
+      "slug": "limited-firestore-document-accessor-snapshot-cache",
+      "name": "limitedFirestoreDocumentAccessorSnapshotCache",
+      "kind": "factory",
+      "category": "firestore",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/accessor/document.utility",
+      "signature": "limitedFirestoreDocumentAccessorSnapshotCache(accessor: LimitedFirestoreDocumentAccessor<T, D>): LimitedFirestoreDocumentAccessorSnapshotCache<T, D>",
+      "description": "Creates a {@link LimitedFirestoreDocumentAccessorSnapshotCache} that wraps the given accessor\nwith an in-memory {@link Map} cache so that repeated loads for the same key return the cached\npromise instead of re-reading from Firestore.\n\nThe cache stores the promise itself (not the resolved value), which means concurrent requests\nfor the same key that arrive before the first read completes will also be deduplicated.\n\nThe cache lives for the lifetime of the returned object and is never invalidated, so this is\nbest suited for short-lived scopes (e.g. a single request or batch operation) where stale reads\nare acceptable.",
+      "params": [
+        {
+          "name": "accessor",
+          "type": "LimitedFirestoreDocumentAccessor<T, D>",
+          "description": "- The accessor to wrap with caching behavior",
+          "optional": false
+        }
+      ],
+      "returns": "A {@link LimitedFirestoreDocumentAccessorSnapshotCache } backed by the given accessor",
+      "tags": [
+        "firestore",
+        "cache",
+        "snapshot",
+        "accessor",
+        "deduplicate",
+        "memoize",
+        "reader",
+        "limited",
+        "document",
+        "limitedfirestoredocumentaccessorsnapshotcache"
+      ],
+      "example": "const cache = limitedFirestoreDocumentAccessorSnapshotCache(accessor);\n\n// First call reads from Firestore; second call returns cached result\nconst pair = await cache.getDocumentSnapshotDataPairForKey('users/abc123');\nconst samePair = await cache.getDocumentSnapshotDataPairForKey('users/abc123');\n\n// Batch fetch with automatic deduplication\nconst pairs = await cache.getDocumentSnapshotDataPairsWithDataForKeys(['users/abc', 'users/def']);\n\n// Access the underlying accessor directly\nconst doc = cache.accessor.loadDocumentForKey('users/xyz');"
+    }
+  ]
+}

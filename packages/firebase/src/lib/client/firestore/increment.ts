@@ -16,6 +16,7 @@ import { type FirestoreAccessorIncrementUpdate } from '../../common/firestore/ac
  * const updateData = firestoreClientIncrementUpdateToUpdateData<MyModel>({ viewCount: 1, likeCount: -1 });
  * await updateDoc(docRef, updateData);
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreClientIncrementUpdateToUpdateData<T extends object>(input: FirestoreAccessorIncrementUpdate<T>): UpdateData<T> {
   return mapObjectMap(input, (incrementValue) => {

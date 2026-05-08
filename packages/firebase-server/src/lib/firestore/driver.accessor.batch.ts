@@ -93,6 +93,7 @@ export class WriteBatchFirestoreDocumentDataAccessor<T> implements FirestoreDocu
  * await accessor.set({ name: 'Alice' });
  * await batch.commit();
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function writeBatchAccessorFactory<T>(writeBatch: GoogleCloudWriteBatch): FirestoreDocumentDataAccessorFactory<T> {
   return {

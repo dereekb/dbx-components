@@ -65,6 +65,7 @@ export type ZohoAccountsFactory = (config: ZohoAccountsConfig) => ZohoAccounts;
  *   accountsContext: zohoAccounts.accountsContext
  * });
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function zohoAccountsFactory(factoryConfig: ZohoAccountsFactoryConfig): ZohoAccountsFactory {
   const fetchHandler = zohoRateLimitedFetchHandler();
@@ -185,6 +186,7 @@ export interface ZohoAccountsZohoAccessTokenFactoryConfig {
  * @param config - Token refresh, caching, and expiration buffer configuration
  * @returns A token factory function with `resetAccessToken` for cache invalidation
  * @throws {ZohoAccountsAuthFailureError} If the token refresher fails
+ * @__NO_SIDE_EFFECTS__
  */
 export function zohoAccountsZohoAccessTokenFactory(config: ZohoAccountsZohoAccessTokenFactoryConfig): ZohoAccessTokenFactory {
   const { tokenRefresher, accessTokenCache, tokenExpirationBuffer: inputTokenExpirationBuffer } = config;

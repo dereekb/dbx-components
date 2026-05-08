@@ -111,6 +111,7 @@ export function onCallCreateModel<N>(map: OnCallCreateModelMap<N>, config: OnCal
  *
  * @param modelType - The unrecognized model type string.
  * @returns A bad-request error with {@link UNKNOWN_MODEL_TYPE_ERROR_CODE} code.
+ * @__NO_SIDE_EFFECTS__
  */
 export function createModelUnknownModelTypeError(modelType: FirestoreModelType) {
   return badRequestError(

@@ -205,6 +205,7 @@ const REEXPORT_PATTERN = /^\s*export\s+\*\s+from\s+['"]\.\/([^'"\n]+)['"]\s*;?\s
  *
  * @param config - the domain-specific labels, paths, and codes
  * @returns the bound {@link TwoSideFolderValidator}
+ * @__NO_SIDE_EFFECTS__
  */
 export function createTwoSideFolderValidator<TCode extends string>(config: TwoSideFolderValidatorConfig<TCode>): TwoSideFolderValidator<TCode> {
   async function inspect(input: InspectTwoSideFolderInput): Promise<TwoSideFolderInspection> {

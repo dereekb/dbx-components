@@ -5,7 +5,7 @@
  * send state evaluation, and recipient merging.
  */
 import { type ArrayOrValue, asArray, type Configurable, filterKeysOnPOJOFunction, type Maybe } from '@dereekb/util';
-import { type Notification, type NotificationBox, type NotificationBoxDocument, NotificationRecipientSendFlag, type NotificationSendFlags, NotificationSendState, type NotificationUser } from './notification';
+import { type Notification, type NotificationBox, type NotificationBoxDocument, NotificationRecipientSendFlag, type NotificationSendFlags, NotificationSendState, NotificationSendType, type NotificationUser } from './notification';
 import { type NotificationUserNotificationBoxRecipientConfig, type NotificationBoxRecipient, NotificationBoxRecipientFlag, type NotificationUserDefaultNotificationBoxRecipientConfig, type NotificationBoxRecipientTemplateConfigRecord } from './notification.config';
 import { type AppNotificationTemplateTypeInfoRecordService } from './notification.details';
 import { type FirebaseAuthUserId, type FirestoreDocumentAccessor, type FirestoreModelKey, inferKeyFromTwoWayFlatFirestoreModelKey } from '../../common';
@@ -310,17 +310,35 @@ export function allowedNotificationRecipients(flag?: Maybe<NotificationRecipient
   };
 }
 
+/**
+ * Returns true if the given notification is a logged-event record (`st === LOGGED_EVENT`).
+ *
+ * Logged-event notifications bypass the normal send pipeline entirely and are archived to the
+ * day-keyed {@link NotificationLoggedEventDay} collection during cleanup.
+ *
+ * @param notification - the notification to check
+ * @returns true if the notification has the LOGGED_EVENT send type
+ */
+export function isLoggedEventNotification(notification: Pick<Notification, 'st'>): boolean {
+  return notification.st === NotificationSendType.LOGGED_EVENT;
+}
+
 // MARK: NotificationWeek
 /**
  * Returns true if the notification should be archived to a {@link NotificationWeek} after delivery.
  *
  * Only notifications that can be sent to box recipients are archived (notifications restricted
- * to only explicit or only global recipients are not saved to the weekly archive).
+ * to only explicit or only global recipients are not saved to the weekly archive). Logged-event
+ * notifications are archived to {@link NotificationLoggedEventDay} instead and never to the weekly archive.
  *
  * @param notification - the notification to check
  * @returns true if the notification should be saved to the weekly archive after delivery
  */
 export function shouldSaveNotificationToNotificationWeek(notification: Notification): boolean {
+  if (isLoggedEventNotification(notification)) {
+    return false;
+  }
+
   return allowedNotificationRecipients(notification.rf).canSendToBoxRecipients;
 }
 

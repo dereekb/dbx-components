@@ -77,6 +77,7 @@ export interface SingleItemFirestoreCollection<T, PT, D extends FirestoreDocumen
  * @template PD - The document type for the parent document, defaults to FirestoreDocument<PT>
  * @param config - Configuration for the single document subcollection
  * @returns A subcollection instance with specialized accessors for the single document
+ * @__NO_SIDE_EFFECTS__
  */
 export function makeSingleItemFirestoreCollection<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>(config: SingleItemFirestoreCollectionConfig<T, PT, D, PD>): SingleItemFirestoreCollection<T, PT, D, PD> {
   return build<SingleItemFirestoreCollection<T, PT, D, PD>>({

@@ -291,8 +291,8 @@ function buildEntryFromClass(input: BuildEntryFromClassInput): BuildEntryResult 
     ...(tags.relatedSlugs.length > 0 ? { relatedSlugs: tags.relatedSlugs } : {}),
     ...(tags.skillRefs.length > 0 ? { skillRefs: tags.skillRefs } : {}),
     example,
-    ...(tags.deprecated !== undefined ? { deprecated: tags.deprecated } : {}),
-    ...(tags.since !== undefined ? { since: tags.since } : {}),
+    ...(tags.deprecated === undefined ? {} : { deprecated: tags.deprecated }),
+    ...(tags.since === undefined ? {} : { since: tags.since }),
     filePath,
     line
   };

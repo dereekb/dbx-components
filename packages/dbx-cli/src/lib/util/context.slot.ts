@@ -49,6 +49,7 @@ export interface CreateContextSlotInput {
  * @param input - Optional slot configuration.
  * @param input.notInitializedMessage - Custom error message thrown by `require()` when the slot is unset.
  * @returns A new {@link ContextSlot} for type `T`.
+ * @__NO_SIDE_EFFECTS__
  */
 export function createContextSlot<T>(input?: CreateContextSlotInput): ContextSlot<T> {
   let _value: Maybe<T>;

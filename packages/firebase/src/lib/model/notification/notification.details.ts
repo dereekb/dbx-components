@@ -228,6 +228,7 @@ export abstract class AppNotificationTemplateTypeInfoRecordService {
  * );
  * const types = service.getTemplateTypesForNotificationModel('project/abc123');
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function appNotificationTemplateTypeInfoRecordService(appNotificationTemplateTypeInfoRecord: NotificationTemplateTypeInfoRecord): AppNotificationTemplateTypeInfoRecordService {
   const allNotificationModelIdentityValuesSet = new Set<FirestoreModelIdentity>();

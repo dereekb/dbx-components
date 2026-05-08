@@ -102,6 +102,7 @@ export type FirestoreCollectionWithParentFactory<T, PT, D extends FirestoreDocum
  * @template PD - The document type for the parent document, defaults to FirestoreDocument<PT>
  * @param config - Configuration for the subcollection, including the parent document reference
  * @returns A subcollection instance linked to the specified parent document
+ * @__NO_SIDE_EFFECTS__
  */
 export function makeFirestoreCollectionWithParent<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>(config: FirestoreCollectionWithParentConfig<T, PT, D, PD>): FirestoreCollectionWithParent<T, PT, D, PD> {
   // Create a standard collection first

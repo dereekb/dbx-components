@@ -23,6 +23,7 @@ import { type WriteBatchFirestoreDocumentContextFactory } from '../../common/fir
  * const driver = firestoreClientAccessorDriver();
  * // Used internally by firebaseFirestoreClientDrivers()
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreClientAccessorDriver(): FirestoreAccessorDriver {
   return {

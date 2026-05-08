@@ -5,6 +5,8 @@ export * from './notification.api.util';
 export * from './notification.action';
 export * from './notification.config';
 export * from './notification.create';
+export * from './notification.create.loggedevent';
+export * from './notification.loggedevent.loader';
 export * from './notification.create.task';
 export * from './notification.details';
 export * from './notification.item';

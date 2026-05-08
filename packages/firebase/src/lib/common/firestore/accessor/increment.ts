@@ -21,6 +21,7 @@ export type IncrementUpdateWithAccessorFunction<T> = (data: FirestoreAccessorInc
  * @returns A function that applies increment updates to the document
  *
  * @see https://cloud.google.com/firestore/docs/samples/firestore-data-set-numeric-increment
+ * @__NO_SIDE_EFFECTS__
  */
 export function incrementUpdateWithAccessorFunction<T>(accessor: FirestoreDocumentDataAccessor<T>): IncrementUpdateWithAccessorFunction<T> {
   return async (data: FirestoreAccessorIncrementUpdate<T>) => {

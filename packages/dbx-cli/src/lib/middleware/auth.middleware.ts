@@ -33,6 +33,7 @@ export interface CreateAuthMiddlewareInput {
  * @param input.skipCommands - Top-level command names that bypass authentication entirely.
  * @param input.defaultEnvs - Built-in env presets merged underneath the user's stored env when names match.
  * @returns A yargs middleware function suitable for `.middleware([..., true])`.
+ * @__NO_SIDE_EFFECTS__
  */
 export function createAuthMiddleware(input: CreateAuthMiddlewareInput): MiddlewareFunction {
   const paths = buildCliPaths({ cliName: input.cliName });

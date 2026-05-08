@@ -118,8 +118,15 @@ export type DollarAmountStringWithUnitFunction<U extends DollarAmountUnit> = ((a
 /**
  * Creates a function that formats dollar amounts as strings with a unit prefix (e.g., "$12.50").
  *
+ * @dbxUtil
+ * @dbxUtilCategory number
+ * @dbxUtilKind factory
+ * @dbxUtilTags number, dollar, currency, format, factory, unit
+ * @dbxUtilRelated dollar-amount-string
+ *
  * @param unit - The unit prefix to prepend; defaults to "$"
  * @returns A function that formats dollar amounts with the configured unit
+ * @__NO_SIDE_EFFECTS__
  */
 export function dollarAmountStringWithUnitFunction<U extends DollarAmountUnit>(unit: U = '$' as U): DollarAmountStringWithUnitFunction<U> {
   const fn = (amount: DollarAmount) => `${unit}${dollarAmountString(amount)}`;

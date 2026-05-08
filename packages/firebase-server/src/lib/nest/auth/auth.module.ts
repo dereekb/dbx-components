@@ -55,6 +55,7 @@ export type ProvideFirebaseServerAuthService<T extends FirebaseServerAuthService
  *   useFactory: (auth) => new MyAuthService(auth)
  * });
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function provideFirebaseServerAuthService<T extends FirebaseServerAuthService>(provider: ProvideFirebaseServerAuthService<T>): [ProvideFirebaseServerAuthService<T>, Provider<T>] {
   return [

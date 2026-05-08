@@ -65,6 +65,9 @@
  * | dbx_pipe_lookup                     | Documentation | "Tell me about Angular pipe X"                         |
  * | dbx_util_lookup                     | Documentation | "Tell me about utility function/class X"               |
  * | dbx_util_search                     | Discovery     | "Find utility functions matching keywords (intent)"    |
+ * | dbx_model_snapshot_field_lookup     | Documentation | "Tell me about snapshot-field factory X (firestoreDate, …)" |
+ * | dbx_model_snapshot_field_search     | Discovery     | "Find snapshot-field factories by intent (date, encoded array, …)" |
+ * | dbx_model_snapshot_field_list_app   | Discovery     | "Which snapshot fields does this component+app use?"   |
  * | dbx_artifact_scaffold               | Generation    | "Give me the body for a new <artifact>."               |
  * | dbx_artifact_file_convention        | Reference     | "Where do I put a new <artifact>?"                     |
  * | dbx_css_token_lookup                | Documentation | "What's the canonical CSS token for X?" (intent/value/role)|
@@ -133,6 +136,9 @@ import { filterScaffoldTool } from './filter-scaffold.tool.js';
 import { createLookupPipeTool } from './lookup-pipe.tool.js';
 import { createLookupUtilTool } from './lookup-util.tool.js';
 import { createSearchUtilTool } from './search-util.tool.js';
+import { createLookupModelSnapshotFieldTool } from './lookup-model-snapshot-field.tool.js';
+import { createSearchModelSnapshotFieldTool } from './search-model-snapshot-field.tool.js';
+import { createListAppModelSnapshotFieldsTool } from './list-app-model-snapshot-fields.tool.js';
 import { artifactScaffoldTool } from './artifact-scaffold.tool.js';
 import { artifactFileConventionTool } from './artifact-file-convention.tool.js';
 import { explainRuleTool } from './explain-rule.tool.js';
@@ -156,6 +162,7 @@ import type { FilterRegistry } from '../registry/filters-runtime.js';
 import type { ForgeFieldRegistry } from '../registry/forge-fields.js';
 import type { PipeRegistry } from '../registry/pipes-runtime.js';
 import type { UtilRegistry } from '../registry/utils-runtime.js';
+import type { ModelSnapshotFieldRegistry } from '../registry/model-snapshot-fields-runtime.js';
 import type { SemanticTypeRegistry } from '../registry/semantic-types.js';
 import type { TokenRegistry } from '../registry/tokens-runtime.js';
 import type { CssUtilityRegistry } from '../registry/css-utilities-runtime.js';
@@ -238,6 +245,7 @@ export const DBX_TOOLS: readonly DbxTool[] = [
  *
  * @param registry - Pre-merged auth registry shared across the cluster's lookup tools.
  * @returns The set of registry-bound auth tools (`auth_claim_lookup`, `auth_scope_lookup`, `auth_role_lookup`, `auth_token_explain`, `auth_list_app`).
+ * @__NO_SIDE_EFFECTS__
  */
 export function createAuthClusterTools(registry: AuthRegistry): readonly DbxTool[] {
   return [createAuthClaimLookupTool({ registry }), createAuthScopeLookupTool({ registry }), createAuthRoleLookupTool({ registry }), createAuthTokenExplainTool({ registry }), createAuthListAppTool({ registry })];
@@ -255,6 +263,12 @@ export interface RegisterToolsOptions {
   readonly forgeFieldRegistry?: ForgeFieldRegistry;
   readonly pipeRegistry?: PipeRegistry;
   readonly utilRegistry?: UtilRegistry;
+  /**
+   * Optional model-snapshot-fields registry. Required for the
+   * `dbx_model_snapshot_field_*` cluster (lookup, search, list_app); when
+   * omitted those tools are skipped.
+   */
+  readonly modelSnapshotFieldRegistry?: ModelSnapshotFieldRegistry;
   readonly uiComponentRegistry?: UiComponentRegistry;
   /**
    * Optional app-sourced UI examples registry. When supplied (or empty),
@@ -326,6 +340,9 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions =
   }
   if (options.utilRegistry !== undefined) {
     tools.push(createLookupUtilTool({ registry: options.utilRegistry }), createSearchUtilTool({ registry: options.utilRegistry }));
+  }
+  if (options.modelSnapshotFieldRegistry !== undefined) {
+    tools.push(createLookupModelSnapshotFieldTool({ registry: options.modelSnapshotFieldRegistry }), createSearchModelSnapshotFieldTool({ registry: options.modelSnapshotFieldRegistry }), createListAppModelSnapshotFieldsTool({ registry: options.modelSnapshotFieldRegistry }));
   }
   if (options.uiComponentRegistry !== undefined) {
     tools.push(createLookupUiTool({ registry: options.uiComponentRegistry }), createSearchUiTool({ registry: options.uiComponentRegistry, examplesRegistry: options.dbxDocsUiExamplesRegistry }));

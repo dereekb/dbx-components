@@ -61,6 +61,7 @@ export type ZohoSignFactory = (config: ZohoSignConfig) => ZohoSign;
  * // Use the sign context for API calls:
  * const { signContext } = zohoSign;
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function zohoSignFactory(factoryConfig: ZohoSignFactoryConfig): ZohoSignFactory {
   const { accountsContext } = factoryConfig;

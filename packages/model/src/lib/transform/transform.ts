@@ -73,6 +73,7 @@ export type TransformAndValidateObjectFactory<C = unknown> = <T extends object, 
  *
  * @param defaults - default error handler
  * @returns a factory function that creates TransformAndValidateObjectFunction instances
+ * @__NO_SIDE_EFFECTS__
  */
 export function transformAndValidateObjectFactory<C = unknown>(defaults: TransformAndValidateObjectFactoryDefaults<C>): TransformAndValidateObjectFactory<C> {
   const { handleValidationError: defaultHandleValidationError } = defaults;

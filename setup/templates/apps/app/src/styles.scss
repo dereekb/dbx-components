@@ -4,7 +4,6 @@
 @use '@dereekb/dbx-firebase' as dbx-firebase;
 @use './style/style';
 
-@include mat.core();
 @include dbx.core();
 @include dbx-form.core();
 @include dbx-firebase.core();

@@ -41,6 +41,7 @@ export type UserUploadsFolderSlashPathFactory = FactoryWithRequiredInput<SlashPa
  * const path = factory('user123');
  * // path === '/uploads/u/user123'
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function userUploadsFolderSlashPathFactory(inputBasePath?: Maybe<string>): UserUploadsFolderSlashPathFactory {
   const basePath = toAbsoluteSlashPathStartType(inputBasePath ?? ALL_USER_UPLOADS_FOLDER_PATH);
@@ -74,6 +75,7 @@ export interface UserUploadsFolderStoragePathFactoryConfig {
  * const storagePath = factory('user123');
  * // storagePath === { pathString: '/uploads/u/user123', bucketId: 'my-bucket' }
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function userUploadsFolderStoragePathFactory({ bucketId, basePath: inputBasePath }: UserUploadsFolderStoragePathFactoryConfig): UserUploadsFolderStoragePathFactory {
   const userUploadsFolderSlashPath = userUploadsFolderSlashPathFactory(inputBasePath);

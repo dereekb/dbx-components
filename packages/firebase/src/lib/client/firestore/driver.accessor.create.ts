@@ -16,6 +16,7 @@ import { type WithFieldValue, type WriteResult } from '../../common/firestore/ty
  * const create = createWithAccessor(accessor);
  * await create({ name: 'New Item' }); // throws if document already exists
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function createWithAccessor<T>(accessor: FirestoreDocumentDataAccessor<T>): (data: WithFieldValue<T>) => Promise<void | WriteResult> {
   return (data: WithFieldValue<T>) => {

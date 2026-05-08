@@ -421,6 +421,7 @@ export interface LimitedFirestoreDocumentAccessorFactoryConfig<T, D extends Fire
  *
  * @param config - Configuration including converter, accessor factory, and document factory
  * @returns A factory function for creating LimitedFirestoreDocumentAccessor instances
+ * @__NO_SIDE_EFFECTS__
  */
 export function limitedFirestoreDocumentAccessorFactory<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(config: LimitedFirestoreDocumentAccessorFactoryConfig<T, D>): LimitedFirestoreDocumentAccessorFactoryFunction<T, D> {
   const { firestoreContext, firestoreAccessorDriver, makeDocument, accessorFactory: interceptAccessorFactory, converter: inputDefaultConverter, converterFactory: inputConverterFactory, modelIdentity, cache: inputCache } = config;
@@ -503,6 +504,7 @@ export interface FirestoreDocumentAccessorFactoryConfig<T, D extends FirestoreDo
  *
  * @param config - Configuration including the collection reference and document factory
  * @returns A factory function for creating FirestoreDocumentAccessor instances
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreDocumentAccessorFactory<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(config: FirestoreDocumentAccessorFactoryConfig<T, D>): FirestoreDocumentAccessorFactoryFunction<T, D> {
   const { firestoreAccessorDriver, collection } = config;
@@ -578,6 +580,7 @@ export interface FirestoreDocumentAccessorContextExtension<T, D extends Firestor
  * @param config.documentAccessor - The document accessor factory function
  * @param config.firestoreAccessorDriver - The firestore accessor driver used to create transaction and write batch contexts
  * @returns An extension object with document accessor factory methods for default, transaction, and write batch contexts
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreDocumentAccessorContextExtension<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>({ documentAccessor, firestoreAccessorDriver }: FirestoreDocumentAccessorContextExtensionConfig<T, D>): FirestoreDocumentAccessorContextExtension<T, D>;
 export function firestoreDocumentAccessorContextExtension<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>({ documentAccessor, firestoreAccessorDriver }: LimitedFirestoreDocumentAccessorContextExtensionConfig<T, D>): LimitedFirestoreDocumentAccessorContextExtension<T, D>;
@@ -645,6 +648,7 @@ export interface FirestoreSingleDocumentAccessorConfig<T, D extends FirestoreDoc
  *
  * @param config - Configuration specifying the single item identifier and the document accessor context extension
  * @returns A FirestoreSingleDocumentAccessor providing convenient access to the single document
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreSingleDocumentAccessor<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(config: FirestoreSingleDocumentAccessorConfig<T, D>): FirestoreSingleDocumentAccessor<T, D> {
   const { singleItemIdentifier, accessors } = config;

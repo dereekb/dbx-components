@@ -13,6 +13,7 @@ import { loadFilterRegistry, type LoadFilterRegistryResult } from './manifest/lo
 import { loadForgeFieldRegistry, type LoadForgeFieldRegistryResult } from './manifest/load-forge-fields-registry.js';
 import { loadPipeRegistry, type LoadPipeRegistryResult } from './manifest/load-pipes-registry.js';
 import { loadUtilRegistry, type LoadUtilRegistryResult } from './manifest/load-utils-registry.js';
+import { loadModelSnapshotFieldRegistry, type LoadModelSnapshotFieldRegistryResult } from './manifest/load-model-snapshot-fields-registry.js';
 import { loadSemanticTypeRegistry, type LoadSemanticTypeRegistryResult } from './manifest/load-registry.js';
 import { loadTokenRegistry, type LoadTokenRegistryResult } from './manifest/load-tokens-registry.js';
 import { loadCssUtilityRegistry, type LoadCssUtilityRegistryResult } from './manifest/load-css-utilities-registry.js';
@@ -23,6 +24,7 @@ import type { FilterRegistry } from './registry/filters-runtime.js';
 import type { ForgeFieldRegistry } from './registry/forge-fields.js';
 import type { PipeRegistry } from './registry/pipes-runtime.js';
 import type { UtilRegistry } from './registry/utils-runtime.js';
+import type { ModelSnapshotFieldRegistry } from './registry/model-snapshot-fields-runtime.js';
 import type { SemanticTypeRegistry } from './registry/semantic-types.js';
 import type { TokenRegistry } from './registry/tokens-runtime.js';
 import type { CssUtilityRegistry } from './registry/css-utilities-runtime.js';
@@ -61,6 +63,7 @@ Tool clusters (each exposes lookup, search, examples, and/or scaffold/validate):
 - filter       — filter directive/preset catalog and scaffold
 - pipe         — Angular value-pipe catalog
 - util         — utility functions/classes/factories/constants opted in via @dbxUtil JSDoc tags (search by intent: "expiration", "throttle", "memoize")
+- model_snapshot_field — Firestore snapshot-field factories + reusable consts (firestoreString, firestoreDate, firestoreObjectArray, …) tagged with @dbxModelSnapshotField; lookup/search by intent ("date", "encoded array"), plus list_app to see which fields a downstream component+app actually uses
 - semantic_type — semantic type aliases (string/number aliases) lookup and search
 - artifact     — body templates for storagefile-purpose, notification-template, notification-task; file-convention reporting
 - asset        — \`AssetPathRef\` constants in a \`-firebase\` component + \`provideDbxAssetLoader()\` wiring in the Angular app; list/scaffold/validate
@@ -78,6 +81,7 @@ Resource URIs are namespaced by domain:
 - dbx://ui/components[/{slug}|/category/{category}|/kind/{kind}]
 - dbx://pipe/entries[/{slug}|/category/{category}]
 - dbx://util/entries[/{slug}|/category/{category}|/module/{module}|/tag/{tag}]
+- dbx://model-snapshot-field/entries[/{slug}|/category/{category}|/module/{module}|/tag/{tag}]
 - dbx://filter/entries[/{slug}|/kind/{kind}]
 - dbx://token/entries[/{cssVariable}|/source/{source}|/role/{role}]
 - dbx://css-utility/entries[/{slug}|/role/{role}|/source/{source}]
@@ -105,6 +109,7 @@ export interface CreateServerOptions {
   readonly forgeFieldRegistry?: ForgeFieldRegistry;
   readonly pipeRegistry?: PipeRegistry;
   readonly utilRegistry?: UtilRegistry;
+  readonly modelSnapshotFieldRegistry?: ModelSnapshotFieldRegistry;
   readonly actionRegistry?: ActionRegistry;
   readonly filterRegistry?: FilterRegistry;
   readonly tokenRegistry?: TokenRegistry;
@@ -128,6 +133,7 @@ export interface CreateServerOptions {
   readonly onForgeLoaderResult?: (result: LoadForgeFieldRegistryResult) => void;
   readonly onPipeLoaderResult?: (result: LoadPipeRegistryResult) => void;
   readonly onUtilLoaderResult?: (result: LoadUtilRegistryResult) => void;
+  readonly onModelSnapshotFieldLoaderResult?: (result: LoadModelSnapshotFieldRegistryResult) => void;
   readonly onActionLoaderResult?: (result: LoadActionRegistryResult) => void;
   readonly onFilterLoaderResult?: (result: LoadFilterRegistryResult) => void;
   readonly onTokenLoaderResult?: (result: LoadTokenRegistryResult) => void;
@@ -292,6 +298,24 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
     }
   }
 
+  let modelSnapshotFieldRegistry: ModelSnapshotFieldRegistry | undefined = options.modelSnapshotFieldRegistry;
+  if (modelSnapshotFieldRegistry === undefined) {
+    const cwd = options.cwd ?? process.cwd();
+    try {
+      const result = await loadModelSnapshotFieldRegistry({ cwd });
+      if (options.onModelSnapshotFieldLoaderResult === undefined) {
+        reportRegistryLoaderResult('model-snapshot-fields', 'model-snapshot-fields-', result);
+      } else {
+        options.onModelSnapshotFieldLoaderResult(result);
+      }
+      modelSnapshotFieldRegistry = result.registry;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      process.stderr.write(`[dbx-components-mcp] model-snapshot-fields registry unavailable: ${message}\n`);
+      modelSnapshotFieldRegistry = undefined;
+    }
+  }
+
   let actionRegistry: ActionRegistry | undefined = options.actionRegistry;
   if (actionRegistry === undefined) {
     const cwd = options.cwd ?? process.cwd();
@@ -374,8 +398,8 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
 
   await emitDownstreamHints({ cwd: options.cwd ?? process.cwd(), externalCounts, onDownstreamHints: options.onDownstreamHints });
 
-  registerResources(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, utilRegistry, uiComponentRegistry: uiRegistry, actionRegistry, filterRegistry, tokenRegistry, cssUtilityRegistry, authRegistry });
-  registerTools(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, utilRegistry, uiComponentRegistry: uiRegistry, dbxDocsUiExamplesRegistry, actionRegistry, filterRegistry, tokenRegistry, cssUtilityRegistry, fixtureModelRegistry, modelValidateRuleOptions, authRegistry, cwd: options.cwd ?? process.cwd() });
+  registerResources(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, utilRegistry, modelSnapshotFieldRegistry, uiComponentRegistry: uiRegistry, actionRegistry, filterRegistry, tokenRegistry, cssUtilityRegistry, authRegistry });
+  registerTools(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, utilRegistry, modelSnapshotFieldRegistry, uiComponentRegistry: uiRegistry, dbxDocsUiExamplesRegistry, actionRegistry, filterRegistry, tokenRegistry, cssUtilityRegistry, fixtureModelRegistry, modelValidateRuleOptions, authRegistry, cwd: options.cwd ?? process.cwd() });
 
   return server;
 }
@@ -517,7 +541,7 @@ function formatWarningValue(value: unknown): string {
   } else if (typeof value === 'object') {
     result = JSON.stringify(value);
   } else {
-    result = String(value as number | boolean | bigint | symbol | undefined);
+    result = String(value);
   }
   return result;
 }

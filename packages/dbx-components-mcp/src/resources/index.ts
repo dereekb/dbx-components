@@ -10,6 +10,7 @@
  *   dbx://ui/components[/{slug} | /category/{category} | /kind/{kind}]
  *   dbx://pipe/entries[/{slug} | /category/{category}]
  *   dbx://util/entries[/{slug} | /category/{category} | /module/{module} | /tag/{tag}]
+ *   dbx://model-snapshot-field/entries[/{slug} | /category/{category} | /module/{module} | /tag/{tag}]
  *   dbx://filter/entries[/{slug} | /kind/{kind}]
  *   dbx://css-utility/entries[/{slug} | /role/{role} | /source/{source}]
  *   dbx://auth/catalog
@@ -31,6 +32,7 @@ import type { FilterRegistry } from '../registry/filters-runtime.js';
 import type { ForgeFieldRegistry } from '../registry/forge-fields.js';
 import type { PipeRegistry } from '../registry/pipes-runtime.js';
 import type { UtilRegistry } from '../registry/utils-runtime.js';
+import type { ModelSnapshotFieldRegistry } from '../registry/model-snapshot-fields-runtime.js';
 import type { SemanticTypeRegistry } from '../registry/semantic-types.js';
 import type { TokenRegistry } from '../registry/tokens-runtime.js';
 import type { CssUtilityRegistry } from '../registry/css-utilities-runtime.js';
@@ -41,6 +43,7 @@ import { registerActionsResource } from './actions.resource.js';
 import { registerUiComponentsResource } from './ui-components.resource.js';
 import { registerPipesResource } from './pipes.resource.js';
 import { registerUtilsResource } from './utils.resource.js';
+import { registerModelSnapshotFieldsResource } from './model-snapshot-fields.resource.js';
 import { registerFiltersResource } from './filters.resource.js';
 import { registerSemanticTypesResource } from './semantic-types.resource.js';
 import { registerTokensResource } from './tokens.resource.js';
@@ -58,6 +61,7 @@ export interface RegisterResourcesOptions {
   readonly forgeFieldRegistry?: ForgeFieldRegistry;
   readonly pipeRegistry?: PipeRegistry;
   readonly utilRegistry?: UtilRegistry;
+  readonly modelSnapshotFieldRegistry?: ModelSnapshotFieldRegistry;
   readonly uiComponentRegistry?: UiComponentRegistry;
   readonly actionRegistry?: ActionRegistry;
   readonly filterRegistry?: FilterRegistry;
@@ -90,6 +94,9 @@ export function registerResources(server: McpServer, options: RegisterResourcesO
   }
   if (options.utilRegistry !== undefined) {
     registerUtilsResource(server, { registry: options.utilRegistry });
+  }
+  if (options.modelSnapshotFieldRegistry !== undefined) {
+    registerModelSnapshotFieldsResource(server, { registry: options.modelSnapshotFieldRegistry });
   }
   if (options.filterRegistry !== undefined) {
     registerFiltersResource(server, { registry: options.filterRegistry });

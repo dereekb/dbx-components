@@ -6,8 +6,15 @@ export type ReadableStreamToStringFunction = (stream: NodeJS.ReadableStream) => 
 /**
  * Creates a function that reads a Node.js ReadableStream and converts its contents to a string using the specified encoding.
  *
+ * @dbxUtil
+ * @dbxUtilCategory nodejs
+ * @dbxUtilKind factory
+ * @dbxUtilTags nodejs, stream, readable, string, factory, encoding
+ * @dbxUtilRelated readable-stream-to-buffer, readable-stream-to-base64
+ *
  * @param encoding - The buffer encoding to use (e.g., 'utf-8', 'base64')
  * @returns A function that consumes a ReadableStream and resolves to its string content
+ * @__NO_SIDE_EFFECTS__
  */
 export function readableStreamToStringFunction(encoding: BufferEncoding): ReadableStreamToStringFunction {
   return (stream: NodeJS.ReadableStream) => {

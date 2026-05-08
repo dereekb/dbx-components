@@ -26,6 +26,7 @@ export type ArrayDecisionFunction<T> = (values: T[]) => boolean;
  * @param decision - Predicate used to test individual elements.
  * @param mode - Whether all or any elements must satisfy the predicate.
  * @returns A function that evaluates an array against the configured decision criteria.
+ * @__NO_SIDE_EFFECTS__
  */
 export function arrayDecisionFunction<T>(decision: ArrayFindDecisionFunction<T>, mode: SetIncludesMode): ArrayDecisionFunction<T> {
   const findFn: ArrayFindDecisionFunction<T> = mode === 'all' ? invertBooleanReturnFunction(decision) : decision;

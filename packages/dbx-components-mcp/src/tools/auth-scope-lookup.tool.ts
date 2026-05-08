@@ -42,6 +42,7 @@ interface CreateAuthScopeLookupToolInput {
  * @param input - Tool factory input.
  * @param input.registry - Pre-merged auth registry consulted to resolve OIDC scope queries (by name, prefix, or catalog topic).
  * @returns A {@link DbxTool} that resolves scope queries against the registry.
+ * @__NO_SIDE_EFFECTS__
  */
 export function createAuthScopeLookupTool(input: CreateAuthScopeLookupToolInput): DbxTool {
   const { registry } = input;

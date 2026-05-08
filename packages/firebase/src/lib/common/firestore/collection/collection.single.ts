@@ -50,6 +50,7 @@ export interface RootSingleItemFirestoreCollection<T, D extends FirestoreDocumen
  * @template D - The FirestoreDocument type, defaults to FirestoreDocument<T>
  * @param config - Configuration for the single document collection
  * @returns A RootSingleItemFirestoreCollection instance configured for the specified document
+ * @__NO_SIDE_EFFECTS__
  */
 export function makeRootSingleItemFirestoreCollection<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(config: RootSingleItemFirestoreCollectionConfig<T, D>): RootSingleItemFirestoreCollection<T, D> {
   return build<RootSingleItemFirestoreCollection<T, D>>({

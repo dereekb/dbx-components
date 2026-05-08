@@ -295,8 +295,7 @@ function toFinding(input: ToFindingInput): AggregatedFinding {
 
 function formatMarkdown(report: AggregatedReport): string {
   const lines: string[] = [];
-  lines.push(`# App validation: \`${report.componentDir}\` + \`${report.apiDir}\``, '');
-  lines.push(`- **Errors:** ${report.errorCount}`, `- **Warnings:** ${report.warningCount}`);
+  lines.push(`# App validation: \`${report.componentDir}\` + \`${report.apiDir}\``, '', `- **Errors:** ${report.errorCount}`, `- **Warnings:** ${report.warningCount}`);
   if (report.skipped.length > 0) {
     const skippedClusters = report.skipped.map((c) => `\`${c}\``).join(', ');
     lines.push(`- **Skipped clusters:** ${skippedClusters}`);
@@ -327,7 +326,7 @@ function formatMarkdown(report: AggregatedReport): string {
 
 function renderFinding(finding: AggregatedFinding): string[] {
   const out: string[] = [];
-  const lineSuffix = finding.line !== undefined ? `:${finding.line}` : '';
+  const lineSuffix = finding.line === undefined ? '' : `:${finding.line}`;
   const fileSuffix = finding.file ? ` — \`${finding.file}\`${lineSuffix}` : '';
   out.push(`- **\`${finding.code}\`** [${finding.cluster}]${fileSuffix}`, `  ${finding.message}`);
   if (finding.remediation) {

@@ -24,8 +24,15 @@ export type FilterFunction<T = unknown> = (value: T, index: number) => boolean;
  * The merged function returns true only if all individual filters pass (AND logic).
  * Null/undefined filters are ignored.
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags filter, merge, compose, factory, and
+ * @dbxUtilRelated invert-filter, invert-boolean-return-function
+ *
  * @param inputFilters - The filter functions to merge
  * @returns A single FilterFunction that applies all filters
+ * @__NO_SIDE_EFFECTS__
  */
 export function mergeFilterFunctions<T>(...inputFilters: Maybe<FilterFunction<T>>[]): FilterFunction<T> {
   const filters = filterMaybeArrayValues(inputFilters);

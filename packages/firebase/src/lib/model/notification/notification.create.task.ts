@@ -45,6 +45,7 @@ export interface CreateNotificationTaskTemplateInput extends Omit<CreateNotifica
  *   data: { reportType: 'monthly' }
  * });
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function createNotificationTaskTemplate(input: CreateNotificationTaskTemplateInput): CreateNotificationTaskTemplate {
   const notificationModel = input.notificationModel ?? DEFAULT_NOTIFICATION_TASK_NOTIFICATION_MODEL_KEY;

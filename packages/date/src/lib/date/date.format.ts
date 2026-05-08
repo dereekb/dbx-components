@@ -74,6 +74,7 @@ export type FormatDateRangeFunctionConfigInput = FormatDateFunction | FormatDate
  * const result = formatRange({ start: new Date('2024-01-15T09:00:00'), end: new Date('2024-01-15T17:00:00') });
  * // "9:00 AM to 5:00 PM"
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function formatDateRangeFunction(inputConfig: FormatDateRangeFunctionConfigInput): FormatDateRangeFunction {
   const config = typeof inputConfig === 'function' ? { format: inputConfig } : inputConfig;
@@ -169,6 +170,7 @@ export type FormatDateRangeDistanceFunctionConfig = {
  * const result = formatDist({ start: new Date('2024-01-15T09:00:00'), end: new Date('2024-01-15T17:00:00') });
  * // "8 hours"
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function formatDateRangeDistanceFunction(inputConfig: FormatDateRangeDistanceFunctionConfig): FormatDateRangeFunction {
   const { transform: inputTransform, formatSameDay, onlyTimeRange, timeRangeTimezone, strict = false } = inputConfig;

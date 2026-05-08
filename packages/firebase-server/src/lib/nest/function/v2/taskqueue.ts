@@ -24,6 +24,7 @@ export type TaskQueueFunctionHandlerWithNestContextFactory<N> = <I = unknown>(fn
  * @param appFactory
  * @param makeNestContext
  * @returns
+ * @__NO_SIDE_EFFECTS__
  */
 export function taskQueueFunctionHandlerWithNestContextFactory<N>(makeNestContext: MakeNestContext<N>): TaskQueueFunctionHandlerWithNestContextFactory<N> {
   return <I = unknown>(fn: TaskQueueFunctionHandlerWithNestContextBuilder<N, I>) => {

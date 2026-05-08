@@ -15,7 +15,7 @@ export interface TargetModelParams extends FirestoreModelKeyRef {
 /**
  * ArkType validator for {@link TargetModelParams} — requires a valid full model key.
  */
-export const targetModelParamsType = type({
+export const targetModelParamsType = /* @__PURE__ */ type({
   key: firestoreModelKeyType
 }) as Type<TargetModelParams>;
 
@@ -29,7 +29,7 @@ export interface InferredTargetModelParams extends Partial<FirestoreModelKeyRef>
 /**
  * ArkType validator for {@link InferredTargetModelParams}.
  */
-export const inferredTargetModelParamsType = type({
+export const inferredTargetModelParamsType = /* @__PURE__ */ type({
   'key?': clearable(firestoreModelKeyType)
 }) as Type<InferredTargetModelParams>;
 
@@ -45,7 +45,7 @@ export interface TargetModelIdParams extends FirestoreModelKeyRef {
 /**
  * ArkType validator for {@link TargetModelIdParams} — requires a valid document ID.
  */
-export const targetModelIdParamsType = type({
+export const targetModelIdParamsType = /* @__PURE__ */ type({
   key: firestoreModelIdType
 }) as Type<TargetModelIdParams>;
 
@@ -59,6 +59,6 @@ export interface InferredTargetModelIdParams extends Partial<FirestoreModelKeyRe
 /**
  * ArkType validator for {@link InferredTargetModelIdParams}.
  */
-export const inferredTargetModelIdParamsType = type({
+export const inferredTargetModelIdParamsType = /* @__PURE__ */ type({
   'key?': clearable(firestoreModelIdType)
 }) as Type<InferredTargetModelIdParams>;

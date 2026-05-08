@@ -77,6 +77,7 @@ export const ON_CALL_MODEL_ANALYTICS_SERVICE = 'ON_CALL_MODEL_ANALYTICS_SERVICE'
  * service is registered.
  *
  * @returns An {@link OnCallModelAnalyticsService} that discards all analytics events.
+ * @__NO_SIDE_EFFECTS__
  */
 export function noopOnCallModelAnalyticsService(): OnCallModelAnalyticsService {
   return { handleOnCallAnalyticsEvent: () => undefined };

@@ -73,6 +73,7 @@ export interface CreateCliInput {
  * @param input.argv - Argv to parse. Defaults to `hideBin(process.argv)`.
  * @param input.disableCallPassthrough - When `true`, omits the built-in `call` passthrough.
  * @returns The configured yargs `Argv` ready to be `.parse()`-d.
+ * @__NO_SIDE_EFFECTS__
  */
 export function createCli(input: CreateCliInput): Argv {
   const cliName = input.cliName;

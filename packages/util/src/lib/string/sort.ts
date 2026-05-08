@@ -9,8 +9,15 @@ export type SortByStringFunction<T> = SortCompareFunction<T>;
 /**
  * Creates a {@link SortByStringFunction} that sorts values in ascending alphabetical order using `localeCompare`.
  *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilKind factory
+ * @dbxUtilTags string, sort, compare, alphabetical, factory, locale
+ * @dbxUtilRelated sort-by-label-function
+ *
  * @param readStringFn - Function to extract a string from each value for comparison.
  * @returns A comparator function suitable for use with `Array.sort()`.
+ * @__NO_SIDE_EFFECTS__
  */
 export function sortByStringFunction<T>(readStringFn: ReadStringFunction<T>): SortByStringFunction<T> {
   return (a: T, b: T) => {

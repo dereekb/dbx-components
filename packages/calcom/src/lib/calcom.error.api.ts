@@ -54,6 +54,7 @@ export type LogCalcomServerErrorFunction = (error: FetchRequestFactoryError | Ca
  *
  * @param calcomApiNamePrefix Prefix to use when logging. I.E. CalcomError, etc.
  * @returns a LogCalcomServerErrorFunction that logs errors with the given prefix
+ * @__NO_SIDE_EFFECTS__
  */
 export function logCalcomServerErrorFunction(calcomApiNamePrefix: string): LogCalcomServerErrorFunction {
   return (error: FetchRequestFactoryError | CalcomServerError | CalcomServerFetchResponseError) => {
@@ -81,6 +82,7 @@ export type ParseCalcomFetchResponseErrorFunction = (responseError: FetchRespons
  * @param parseCalcomError - function to parse a FetchResponseError into a CalcomServerError
  * @param defaultLogError - default error logging function used when no override is provided
  * @returns a factory that wraps any ConfiguredFetch with Cal.com error handling
+ * @__NO_SIDE_EFFECTS__
  */
 export function handleCalcomErrorFetchFactory(parseCalcomError: ParseCalcomFetchResponseErrorFunction, defaultLogError: LogCalcomServerErrorFunction): HandleCalcomErrorFetchFactory {
   return (fetch: ConfiguredFetch, logError: LogCalcomServerErrorFunction = defaultLogError) => {

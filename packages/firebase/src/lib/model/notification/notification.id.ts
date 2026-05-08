@@ -12,7 +12,8 @@
  * to be stored in top-level collections while maintaining a bidirectional link to the
  * model they represent.
  */
-import { type FactoryWithRequiredInput } from '@dereekb/util';
+import { type FactoryWithRequiredInput, type ISO8601DayString } from '@dereekb/util';
+import { toISO8601DayStringForUTC } from '@dereekb/date';
 import { type FirestoreModelId, type FirestoreModelKey, type FlatFirestoreModelKey, twoWayFlatFirestoreModelKey, inferKeyFromTwoWayFlatFirestoreModelKey, type FirebaseAuthUserId, firestoreModelKey, type RootFirestoreModelIdentity, type FirestoreModelIdInput, firestoreModelId, type FirestoreCollectionName } from '../../common';
 
 /**
@@ -133,6 +134,33 @@ export type NotificationWeekId = FirestoreModelId;
  * Full Firestore model key path for a {@link NotificationWeek} document.
  */
 export type NotificationWeekKey = FirestoreModelKey;
+
+/**
+ * Document ID for a {@link NotificationLoggedEventDay} (an {@link ISO8601DayString} like `'2026-05-08'`).
+ */
+export type NotificationLoggedEventDayId = ISO8601DayString;
+
+/**
+ * Full Firestore model key path for a {@link NotificationLoggedEventDay} document.
+ */
+export type NotificationLoggedEventDayKey = FirestoreModelKey;
+
+/**
+ * Returns the {@link NotificationLoggedEventDayId} (an ISO 8601 day string in UTC)
+ * for the given date. Used as the document ID when archiving logged-event notifications.
+ *
+ * @example
+ * ```ts
+ * notificationLoggedEventDayId(new Date('2026-05-08T17:30:00Z'));
+ * // '2026-05-08'
+ * ```
+ *
+ * @param date - the date to derive the day ID from
+ * @returns the UTC ISO day string for that date
+ */
+export function notificationLoggedEventDayId(date: Date): NotificationLoggedEventDayId {
+  return toISO8601DayStringForUTC(date);
+}
 
 /**
  * Document ID for a {@link Notification}.

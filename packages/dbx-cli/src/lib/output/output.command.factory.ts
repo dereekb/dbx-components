@@ -89,6 +89,7 @@ function resolveCallbacks(input: ResolveCallbacksInput): ResolvedCallbacks {
  * @param input.mergeOutputConfig - Optional override for persisting partial output-config updates.
  * @param input.clearOutputConfig - Optional override for clearing the persisted output config entirely.
  * @returns A yargs `CommandModule` exposing the full `output` subcommand surface.
+ * @__NO_SIDE_EFFECTS__
  */
 export function createOutputCommand(input: CreateOutputCommandInput): CommandModule {
   const callbacks = resolveCallbacks(input);

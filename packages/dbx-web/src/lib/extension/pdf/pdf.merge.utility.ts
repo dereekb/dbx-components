@@ -71,6 +71,7 @@ export interface BuildPdfMergeEntryConfig {
  * @param file - File the user added.
  * @param config - Optional config for slot attribution and id factory override.
  * @returns The new entry with `validating` status, or `null` when the file is not a supported PDF/PNG/JPEG.
+ * @__NO_SIDE_EFFECTS__
  */
 export function buildPdfMergeEntry(file: File, config?: Maybe<BuildPdfMergeEntryConfig>): PdfMergeEntry | null {
   const kind = classifyPdfMergeFile(file);

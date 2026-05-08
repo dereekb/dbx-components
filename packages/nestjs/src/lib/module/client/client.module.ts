@@ -11,6 +11,7 @@ import { ClientAppService } from './client.service';
  *
  * @param configService - NestJS config service for reading environment variables
  * @returns a validated ClientAppServiceConfig
+ * @__NO_SIDE_EFFECTS__
  */
 export function clientAppConfigFactory(configService: ConfigService): ClientAppServiceConfig {
   const config: ClientAppServiceConfig = {

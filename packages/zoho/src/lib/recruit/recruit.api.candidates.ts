@@ -157,6 +157,7 @@ export function zohoRecruitSearchCandidateAssociatedJobOpeningRecords<T extends 
  *
  * @param context - Zoho Recruit API context providing fetch and authentication
  * @returns Page factory for iterating through associated job openings
+ * @__NO_SIDE_EFFECTS__
  */
 export function zohoRecruitSearchCandidateAssociatedJobOpeningRecordsPageFactory<T extends ZohoRecruitRecord>(context: ZohoRecruitContext) {
   return zohoFetchPageFactory(zohoRecruitSearchCandidateAssociatedJobOpeningRecords<T>(context));
@@ -190,6 +191,7 @@ export function zohoRecruitSearchJobOpeningAssociatedCandidateRecords<T extends 
  *
  * @param context - Zoho Recruit API context providing fetch and authentication
  * @returns Page factory for iterating through associated candidates
+ * @__NO_SIDE_EFFECTS__
  */
 export function zohoRecruitSearchJobOpeningAssociatedCandidateRecordsPageFactory<T extends ZohoRecruitRecord>(context: ZohoRecruitContext) {
   return zohoFetchPageFactory(zohoRecruitSearchJobOpeningAssociatedCandidateRecords<T>(context));

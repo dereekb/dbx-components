@@ -75,6 +75,7 @@ export function getEventTypes(context: CalcomContext): () => Promise<CalcomGetEv
  * });
  * console.log(response.data.id);
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function createEventType(context: CalcomContext): (input: CalcomCreateEventTypeInput) => Promise<CalcomEventTypeResponse> {
   return (input) =>

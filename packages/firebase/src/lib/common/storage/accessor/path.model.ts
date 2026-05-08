@@ -47,6 +47,7 @@ export type ModelStorageSlashPathFactory<T extends object = object> = (input: Re
  * const path = pathFactory(userDocument, 'profile.png');
  * // path === '/model/avatars/users/abc123/profile.png'
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function modelStorageSlashPathFactory<T extends object = object>(config?: ModelStorageSlashPathFactoryConfig): ModelStorageSlashPathFactory<T> {
   const { basePath } = config ?? {};

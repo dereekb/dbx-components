@@ -2,7 +2,7 @@
  * Scaffold renderer specs.
  *
  * Drives `renderFixtureScaffold()` for each archetype against the same parsed
- * extraction to confirm the snippet shape, generic count, and TODO list are
+ * extraction to confirm the snippet shape, generic count, and placeholder list are
  * archetype-correct. Pure text generation — no disk I/O.
  */
 

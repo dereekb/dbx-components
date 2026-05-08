@@ -19,6 +19,9 @@
           },
           {
             "command": "npx nx run util-fetch:build-base"
+          },
+          {
+            "command": "npx nx run util-eslint:build-base"
           }
         ],
         "parallel": false

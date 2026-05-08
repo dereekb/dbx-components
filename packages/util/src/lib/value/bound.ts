@@ -245,8 +245,15 @@ export type LatLngBoundTupleFunctionConfig = LatLngBoundFunctionConfig;
  * Creates a {@link LatLngBoundTupleFunction} that converts various bound inputs into a `[sw, ne]` tuple,
  * applying optional precision to the resulting points.
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, lat-lng, bound, tuple, factory, geographic
+ * @dbxUtilRelated lat-lng-bound-function, lat-lng-bound
+ *
  * @param config - optional configuration for point precision
  * @returns a function that produces bound tuples from flexible inputs
+ * @__NO_SIDE_EFFECTS__
  */
 export function latLngBoundTupleFunction(config?: LatLngBoundTupleFunctionConfig): LatLngBoundTupleFunction {
   const fn = latLngBoundFunction(config);
@@ -303,12 +310,19 @@ export interface LatLngBoundFunctionConfig {
  * @returns a function that produces bounds from flexible inputs
  * @throws {Error} when the input cannot be parsed into a valid bound
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, lat-lng, bound, factory, geographic, normalize
+ * @dbxUtilRelated lat-lng-bound, lat-lng-bound-tuple-function, lat-lng-point-function
+ *
  * @example
  * ```ts
  * const fn = latLngBoundFunction({ precision: 3 });
  * const result = fn([{ lat: 20, lng: 20 }, { lat: 30, lng: 30 }]);
  * // result.sw.lat === 20, result.ne.lat === 30
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function latLngBoundFunction(config?: LatLngBoundFunctionConfig): LatLngBoundFunction {
   const { pointFunction, precision } = config ?? {};
@@ -450,8 +464,15 @@ export type IsWithinLatLngBoundFunction = LatLngBoundCheckFunction & { readonly 
  * falls entirely within the specified bound. Points are checked directly; bounds require
  * both corners to be within.
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, lat-lng, bound, contains, decision, factory, geographic
+ * @dbxUtilRelated overlaps-lat-lng-bound-function, is-lat-lng-point-within-lat-lng-bound
+ *
  * @param bound - the reference bound to check containment against
  * @returns a function that returns `true` if the input is within the reference bound
+ * @__NO_SIDE_EFFECTS__
  */
 export function isWithinLatLngBoundFunction(bound: LatLngBound): IsWithinLatLngBoundFunction {
   const fn = ((boundOrPoint: LatLngBoundOrPoint) => {
@@ -530,8 +551,15 @@ export function latLngBoundOverlapsLatLngBound(a: LatLngBound, b: LatLngBound): 
  * overlaps the reference bound. Internally converts bounds to rectangles for overlap detection,
  * handling antimeridian wrapping.
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, lat-lng, bound, overlap, decision, factory, geographic
+ * @dbxUtilRelated is-within-lat-lng-bound-function, lat-lng-bound-overlaps-lat-lng-bound
+ *
  * @param bound - the reference bound to check overlap against
  * @returns a function that returns `true` if the input overlaps the reference bound
+ * @__NO_SIDE_EFFECTS__
  */
 export function overlapsLatLngBoundFunction(bound: LatLngBound): OverlapsLatLngBoundFunction {
   const a: Rectangle = boundToRectangle(bound);

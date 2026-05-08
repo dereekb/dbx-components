@@ -57,6 +57,7 @@ export interface FirestoreCollectionGroup<T, D extends FirestoreDocument<T> = Fi
  * @template D - The FirestoreDocument type that wraps the data
  * @param config - Configuration for the collection group
  * @returns A fully configured FirestoreCollectionGroup instance
+ * @__NO_SIDE_EFFECTS__
  */
 export function makeFirestoreCollectionGroup<T, D extends FirestoreDocument<T>>(config: FirestoreCollectionGroupConfig<T, D>): FirestoreCollectionGroup<T, D> {
   const { modelIdentity, queryLike, firestoreContext, firestoreAccessorDriver } = config;

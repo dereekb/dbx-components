@@ -55,6 +55,7 @@ export const FIRESTORE_CLIENT_QUERY_CONSTRAINT_HANDLER_MAPPING: FullFirestoreQue
  * Translates abstract query constraints into Google Cloud Firestore query builder calls.
  *
  * @returns A {@link FirestoreQueryConstraintFunctionsDriver} for the server SDK.
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreClientQueryConstraintFunctionsDriver(): FirestoreQueryConstraintFunctionsDriver {
   return makeFirestoreQueryConstraintFunctionsDriver<FirestoreServerQueryBuilder>({

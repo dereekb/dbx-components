@@ -31,6 +31,7 @@ export type MapFilterWithPresetFn<F extends FilterWithPreset> = (filter: F) => F
  * const result = resolve({ preset: 'active' });
  * // result === { active: true }
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function makeMapFilterWithPresetFn<F extends FilterWithPreset>(fn: MapFilterWithPresetFn<F>): MapFilterWithPresetFn<F> {
   return (filter: F) => {

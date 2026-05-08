@@ -74,6 +74,7 @@ export interface TokenRegistry {
  *
  * @param loaded - the merged registry returned by `loadTokenManifests`
  * @returns a domain-friendly read API over the merged entries
+ * @__NO_SIDE_EFFECTS__
  */
 export function createTokenRegistry(loaded: LoadTokenManifestsResult): TokenRegistry {
   const entries = Array.from(loaded.entries.values()).sort((a, b) => a.cssVariable.localeCompare(b.cssVariable));
@@ -89,6 +90,7 @@ export function createTokenRegistry(loaded: LoadTokenManifestsResult): TokenRegi
  * @param input.entries - the full entry list (will be sorted by cssVariable)
  * @param input.loadedSources - source labels reported via `registry.loadedSources`
  * @returns a domain-friendly read API over the supplied entries
+ * @__NO_SIDE_EFFECTS__
  */
 export function createTokenRegistryFromEntries(input: { readonly entries: readonly TokenEntry[]; readonly loadedSources: readonly string[] }): TokenRegistry {
   const all = [...input.entries].sort((a, b) => a.cssVariable.localeCompare(b.cssVariable));

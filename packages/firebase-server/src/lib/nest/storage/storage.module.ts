@@ -108,6 +108,7 @@ export type ProvideFirebaseServerStorageService<T extends FirebaseServerStorageS
  *
  * @param provider - The storage service provider configuration.
  * @returns An array of NestJS providers for the storage service.
+ * @__NO_SIDE_EFFECTS__
  */
 export function provideFirebaseServerStorageService<T extends FirebaseServerStorageService = FirebaseServerStorageService>(provider: ProvideFirebaseServerStorageService<T>): Provider<T>[] {
   const providers: Provider<T>[] = [

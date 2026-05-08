@@ -378,6 +378,7 @@ export type DetermineUserByFolderDeterminerWrapperFunction = (determiner: Upload
  * });
  * const withUser = addUser(myDeterminer);
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function determineUserByFolderWrapperFunction(config: DetermineUserByFolderWrapperFunctionConfig): DetermineUserByFolderDeterminerWrapperFunction {
   const { rootFolder, userFolderPrefix, requireUser = false, allowSubPaths = true } = config;
@@ -437,6 +438,7 @@ export function determineUserByFolderWrapperFunction(config: DetermineUserByFold
  * const addUser = determineUserByUserUploadsFolderWrapperFunction();
  * const withUser = addUser(myDeterminer);
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function determineUserByUserUploadsFolderWrapperFunction(config?: Omit<DetermineUserByFolderWrapperFunctionConfig, 'rootFolder' | 'userFolderPrefix'>): DetermineUserByFolderDeterminerWrapperFunction {
   return determineUserByFolderWrapperFunction({

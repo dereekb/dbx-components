@@ -247,9 +247,9 @@ async function planPackageScanConfig(input: { snapshot: WorkspaceSnapshot; packa
 async function planRootConfig(input: { snapshot: WorkspaceSnapshot; sourcesToRegister: readonly { readonly cluster: DownstreamCluster; readonly relPath: string }[]; readFile: InitReadFile }): Promise<InitFileChange | undefined> {
   const { snapshot, sourcesToRegister, readFile } = input;
   const configPath = snapshot.configPath ?? resolve(snapshot.workspaceRoot, 'dbx-mcp.config.json');
-  const before = snapshot.configPath !== null ? await tryRead(configPath, readFile) : null;
+  const before = snapshot.configPath === null ? null : await tryRead(configPath, readFile);
 
-  const baseConfig: MutableConfigShape = snapshot.config !== null ? cloneConfig(snapshot.config) : { version: 1 };
+  const baseConfig: MutableConfigShape = snapshot.config === null ? { version: 1 } : cloneConfig(snapshot.config);
   if (baseConfig.version !== 1) baseConfig.version = 1;
 
   let mutated = false;
@@ -297,7 +297,7 @@ function resolveScanOut(scanConfigPath: string, out: string): string {
 }
 
 function relativeFromConfig(snapshot: WorkspaceSnapshot, absolute: string): string {
-  const configDir = snapshot.configPath !== null ? dirname(snapshot.configPath) : snapshot.workspaceRoot;
+  const configDir = snapshot.configPath === null ? snapshot.workspaceRoot : dirname(snapshot.configPath);
   return relative(configDir, absolute).split('\\').join('/');
 }
 

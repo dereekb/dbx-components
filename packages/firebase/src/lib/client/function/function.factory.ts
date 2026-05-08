@@ -47,6 +47,7 @@ export type FirebaseFunctionMapFactory<M extends FirebaseFunctionTypeMap> = (fun
  * const functions = factory(getFunctions());
  * const result = await functions.createUser({ name: 'Alice' });
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function firebaseFunctionMapFactory<M extends FirebaseFunctionTypeMap>(configMap: FirebaseFunctionTypeConfigMap<M>): FirebaseFunctionMapFactory<M> {
   return (functionsInstance: Functions) => {
@@ -138,6 +139,7 @@ export type LazyFirebaseFunctions<M extends FirebaseFunctionsMap> = {
  * const lazyFns = factory(getFunctions());
  * const notifFns = lazyFns.notificationFunctions(); // initialized on first call
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function lazyFirebaseFunctionsFactory<M extends FirebaseFunctionsMap, C extends FirebaseFunctionsConfigMap<M> = FirebaseFunctionsConfigMap<M>>(configMap: C): LazyFirebaseFunctionsFactory<M> {
   return (functions: Functions) => {

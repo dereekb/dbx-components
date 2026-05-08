@@ -78,8 +78,15 @@ export type RangedIndexedValuesArrayAccessorFactory<T> = (values: T[]) => Ranged
  *
  * Each accessor maps an index to the value whose range contains that index, or undefined if no range matches.
  *
+ * @dbxUtil
+ * @dbxUtilCategory array
+ * @dbxUtilKind factory
+ * @dbxUtilTags array, indexed, range, accessor, factory, lookup
+ * @dbxUtilRelated indexed-values-array-accessor-factory, ranged-indexed-values-array-accessor-info-factory
+ *
  * @param readIndexRange - Function that reads the index range from each value.
  * @returns A factory that creates ranged accessors from arrays of values.
+ * @__NO_SIDE_EFFECTS__
  */
 export function rangedIndexedValuesArrayAccessorFactory<T>(readIndexRange: ReadIndexRangeFunction<T>): RangedIndexedValuesArrayAccessorFactory<T> {
   const readInfoFactory = rangedIndexedValuesArrayAccessorInfoFactory({
@@ -112,9 +119,16 @@ export type IndexedValuesArrayAccessorFactory<T> = (values: T[]) => IndexedValue
  * Each accessor maps an index to the matching value, falling back to the previous value, then the next value.
  * This guarantees a value is always returned.
  *
+ * @dbxUtil
+ * @dbxUtilCategory array
+ * @dbxUtilKind factory
+ * @dbxUtilTags array, indexed, range, accessor, factory, fallback
+ * @dbxUtilRelated ranged-indexed-values-array-accessor-factory, ranged-indexed-values-array-accessor-info-factory
+ *
  * @param readIndexRange - Function that reads the index range from each value.
  * @returns A factory that creates indexed accessors from arrays of values.
  * @throws Error if the provided values array is empty.
+ * @__NO_SIDE_EFFECTS__
  */
 export function indexedValuesArrayAccessorFactory<T>(readIndexRange: ReadIndexRangeFunction<T>): IndexedValuesArrayAccessorFactory<T> {
   const readInfoFactory = rangedIndexedValuesArrayAccessorInfoFactory({
@@ -181,8 +195,15 @@ export interface RangedIndexedValuesArrayInfoAccessorFactoryConfig<T> {
  * Each accessor sorts the values by their index ranges in ascending order, then for a given index
  * returns the matching value along with its previous and next neighbors.
  *
+ * @dbxUtil
+ * @dbxUtilCategory array
+ * @dbxUtilKind factory
+ * @dbxUtilTags array, indexed, range, accessor, info, factory, neighbors
+ * @dbxUtilRelated ranged-indexed-values-array-accessor-factory, indexed-values-array-accessor-factory
+ *
  * @param config - Configuration containing the index range reader function.
  * @returns A factory that creates ranged info accessors from arrays of values.
+ * @__NO_SIDE_EFFECTS__
  */
 export function rangedIndexedValuesArrayAccessorInfoFactory<T>(config: RangedIndexedValuesArrayInfoAccessorFactoryConfig<T>): RangedIndexedValuesArrayInfoAccessorFactory<T> {
   const pairFactory = indexRangeReaderPairFactory(config.readIndexRange);

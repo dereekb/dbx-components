@@ -81,6 +81,14 @@ export type FilterKeyValueTuplesFunction<T extends object = object, K extends ke
  * const tuples = getDefinedTuples({ a: 1, b: undefined, c: 'hello' });
  * // tuples: [['a', 1], ['c', 'hello']]
  * ```
+ *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilKind factory
+ * @dbxUtilTags object, tuples, filter, factory, key-value
+ * @dbxUtilRelated filter-key-value-tuple-function, for-each-key-value
+ *
+ * @__NO_SIDE_EFFECTS__
  */
 export function filterKeyValueTuplesFunction<T extends object = object, K extends keyof T = keyof T>(filter?: FilterKeyValueTuplesInput<T, K>): FilterKeyValueTuplesFunction<T, K> {
   let result: FilterKeyValueTuplesFunction<T, K>;
@@ -208,6 +216,14 @@ export type FilterKeyValueTupleFunction<T extends object = object, K extends key
  * isNotNull(['a', 1], 0);    // true
  * isNotNull(['b', null], 0); // false
  * ```
+ *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilKind factory
+ * @dbxUtilTags object, tuple, filter, predicate, factory, key-value
+ * @dbxUtilRelated filter-key-value-tuples-function
+ *
+ * @__NO_SIDE_EFFECTS__
  */
 export function filterKeyValueTupleFunction<T extends object = object, K extends keyof T = keyof T>(inputFilter: FilterKeyValueTuplesInput<T, K>): FilterKeyValueTupleFunction<T, K> {
   const filter = filterKeyValueTuplesInputToFilter(inputFilter);

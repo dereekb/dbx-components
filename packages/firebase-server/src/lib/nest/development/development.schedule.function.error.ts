@@ -10,6 +10,7 @@ export const NO_RUN_NAME_SPECIFIED_FOR_SCHEDULED_FUNCTION_DEVELOPMENT_FUNCTION_C
  * without specifying which scheduled function to execute.
  *
  * @returns A bad-request error indicating the missing run name.
+ * @__NO_SIDE_EFFECTS__
  */
 export function noRunNameSpecifiedForScheduledFunctionDevelopmentFunction() {
   return badRequestError({

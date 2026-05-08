@@ -216,6 +216,7 @@ export interface MakeFirestoreContextCacheConfig {
  *   createDelegate: () => inMemoryFirestoreCollectionCacheDelegate()
  * });
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function makeFirestoreContextCache(config: MakeFirestoreContextCacheConfig): FirestoreContextCache {
   const { defaultTtl: globalDefaultTtl, createDelegate, mapEvents$ } = config;
@@ -315,6 +316,7 @@ export function makeFirestoreContextCache(config: MakeFirestoreContextCacheConfi
  * const factory = inMemoryFirestoreContextCacheFactory();
  * const contextCache = factory({ defaultTtl: 60000 });
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function inMemoryFirestoreContextCacheFactory(): FirestoreContextCacheFactory {
   return (config?: FirestoreContextCacheFactoryConfig) => inMemoryFirestoreContextCache(config);
@@ -367,6 +369,7 @@ export function inMemoryFirestoreContextCache(config?: InMemoryFirestoreContextC
  * const contextCache = factory();
  * contextCache.events$.subscribe((event) => console.log(event));
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function readLoggingFirestoreContextCacheFactory(): FirestoreContextCacheFactory {
   return (config?: FirestoreContextCacheFactoryConfig) => readLoggingFirestoreContextCache(config);

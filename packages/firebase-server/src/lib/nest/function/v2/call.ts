@@ -38,6 +38,7 @@ export type OnCallHandlerWithNestApplicationFactory = <I = unknown, O = unknown>
  *
  * @param defaultOpts - Default {@link https.CallableOptions} applied to all functions created by this factory.
  * @returns A factory that creates nest-application-aware callable functions.
+ * @__NO_SIDE_EFFECTS__
  */
 export function onCallHandlerWithNestApplicationFactory(defaultOpts: https.CallableOptions = {}): OnCallHandlerWithNestApplicationFactory {
   return <I = unknown, O = unknown>(fn: OnCallWithNestApplication<I, O>, opts?: https.CallableOptions<I>) => {
@@ -78,6 +79,7 @@ export type OnCallHandlerWithNestContextFactory<C> = <I = unknown, O = unknown>(
  * @param appFactory - The base application-level callable factory.
  * @param makeNestContext - Factory that creates the typed context from the application context.
  * @returns A factory that creates typed-context-aware callable functions.
+ * @__NO_SIDE_EFFECTS__
  */
 export function onCallHandlerWithNestContextFactory<C>(appFactory: OnCallHandlerWithNestApplicationFactory, makeNestContext: MakeNestContext<C>): OnCallHandlerWithNestContextFactory<C> {
   return <I, O>(fn: OnCallWithNestContext<C, I, O>, opts?: https.CallableOptions<I>) => appFactory<I, O>((request) => fn(setNestContextOnRequest(makeNestContext, request)), opts);

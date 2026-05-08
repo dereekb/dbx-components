@@ -42,6 +42,7 @@ export interface CreateCliTokenCacheStoreInput {
  * @param input - The cache store inputs.
  * @param input.tokenCachePath - Absolute path to the JSON file backing the cache.
  * @returns A {@link CliTokenCacheStore} keyed by env name.
+ * @__NO_SIDE_EFFECTS__
  */
 export function createCliTokenCacheStore(input: CreateCliTokenCacheStoreInput): CliTokenCacheStore {
   return createMemoizedJsonFileAsyncKeyedValueCache<CliTokenEntry>({

@@ -18,7 +18,8 @@
  */
 
 import { attachRemediation } from '../rule-catalog/index.js';
-import type { AppAssetsInspection, ExtractedAppAssets, ExtractedAssetConstant, Violation, ViolationCode, ViolationSeverity } from './types.js';
+import type { AppAssetsInspection, ExtractedAppAssets, ExtractedAssetConstant, Violation, ViolationSeverity } from './types.js';
+export type { ViolationCode } from './types.js';
 
 const PROVIDE_FN = 'provideDbxAssetLoader';
 const PROVIDER_IMPORT_MODULE = '@dereekb/dbx-core';
@@ -143,7 +144,7 @@ function checkLocalFileExistence(inspection: AppAssetsInspection, extracted: Ext
   if (inspection.appStatus !== 'ok') return;
   for (const c of extracted.assetConstants) {
     if (c.sourceType !== 'local') continue;
-    const paths = c.resolved !== undefined ? [c.resolved] : c.resolvedPaths;
+    const paths = c.resolved === undefined ? c.resolvedPaths : [c.resolved];
     for (const path of paths) {
       const normalized = normalizeLocalPath(path);
       if (normalized === undefined) continue;
@@ -169,7 +170,7 @@ function normalizeLocalPath(path: string): string | undefined {
 function checkDuplicates(extracted: ExtractedAppAssets, violations: Violation[]): void {
   const seen = new Map<string, ExtractedAssetConstant>();
   for (const c of extracted.assetConstants) {
-    const values = c.resolved !== undefined ? [c.resolved] : c.resolvedPaths;
+    const values = c.resolved === undefined ? c.resolvedPaths : [c.resolved];
     for (const value of values) {
       const previous = seen.get(value);
       if (previous) {
@@ -230,5 +231,3 @@ function pushViolation(buffer: Violation[], violation: Omit<Violation, 'severity
   };
   buffer.push(filled);
 }
-
-export type { ViolationCode };

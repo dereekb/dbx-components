@@ -102,6 +102,7 @@ export type ZohoCrmGetNotesForRecordPageFactory = FetchPageFactory<ZohoCrmGetNot
  *
  * @param context - Authenticated Zoho CRM context for making API calls
  * @returns Page factory for paginating through notes for a record
+ * @__NO_SIDE_EFFECTS__
  */
 export function zohoCrmGetNotesForRecordPageFactory(context: ZohoCrmContext): ZohoCrmGetNotesForRecordPageFactory {
   return zohoFetchPageFactory(zohoCrmGetNotesForRecord(context));

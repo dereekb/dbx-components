@@ -241,6 +241,7 @@ export type DateCellRangeIncludedByRangeFunction = (range: DateCellOrDateCellInd
  *
  * @param inputRange - the range that must be fully included
  * @returns a function that returns true when its argument fully contains `inputRange`
+ * @__NO_SIDE_EFFECTS__
  */
 export function dateCellRangeIncludedByRangeFunction(inputRange: DateCellOrDateCellIndexOrDateCellRange): DateCellRangeIncludedByRangeFunction {
   const { i, to } = dateCellRangeWithRange(inputRange);
@@ -261,6 +262,7 @@ export type DateCellRangeOverlapsRangeFunction = (range: DateCellOrDateCellIndex
  *
  * @param inputRange - the range to test for overlap against
  * @returns a function that returns true when its argument overlaps with `inputRange`
+ * @__NO_SIDE_EFFECTS__
  */
 export function dateCellRangeOverlapsRangeFunction(inputRange: DateCellOrDateCellIndexOrDateCellRange): DateCellRangeOverlapsRangeFunction {
   const { i, to } = dateCellRangeWithRange(inputRange);
@@ -287,6 +289,7 @@ export function dateCellRangeOverlapsRange(rangeA: DateCellOrDateCellIndexOrDate
  * In many cases {@link sortAscendingIndexNumberRefFunction} may be preferential when `to` ordering is not needed.
  *
  * @returns a comparator function that sorts ranges by `i` then by `to`
+ * @__NO_SIDE_EFFECTS__
  */
 export function sortDateCellRangeAndSizeFunction<T extends DateCellRange>(): SortCompareFunction<T> {
   return (a, b) => a.i - b.i || (a.to ?? a.i) - (b.to ?? b.i);
@@ -436,6 +439,7 @@ export type IsDateCellWithinDateCellRangeFunction = (input: IsDateCellWithinDate
  *
  * @param inputRange - the bounding range to test containment against
  * @returns a function that returns true when its argument is fully contained within `inputRange`
+ * @__NO_SIDE_EFFECTS__
  */
 export function isDateCellWithinDateCellRangeFunction(inputRange: IsDateCellWithinDateCellRangeInput): IsDateCellWithinDateCellRangeFunction {
   const range = dateCellRangeWithRange(inputRange);
@@ -540,6 +544,7 @@ export type DateCellRangesFullyCoverDateCellRangeFunction = (range: DateCellRang
  *
  * @param ranges - the covering ranges to test against
  * @returns a function that returns true when any single grouped range fully covers the input range
+ * @__NO_SIDE_EFFECTS__
  */
 export function dateCellRangesFullyCoverDateCellRangeFunction(ranges: ArrayOrValue<DateCellRange>): DateCellRangesFullyCoverDateCellRangeFunction {
   const groupedRanges = Array.isArray(ranges) ? groupToDateCellRanges(ranges) : [dateCellRangeWithRange(ranges)];
@@ -862,6 +867,7 @@ type DateCellRangePriorityPair<B extends DateCellRange | UniqueDateCell> = {
  * const result = expand([{ i: 2, to: 5 }, { i: 8, to: 10 }]);
  * // result.blocks => [{ i: 2, to: 5 }, { i: 8, to: 10 }]
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function expandUniqueDateCellsFunction<B extends DateCellRange | UniqueDateCell>(config: ExpandUniqueDateCellsConfig<B>): ExpandUniqueDateCellsFunction<B> {
   const { startAtIndex = 0, endAtIndex, fillOption: fill, fillFactory: inputFillFactory, retainOnOverlap: inputRetainOnOverlap } = config;

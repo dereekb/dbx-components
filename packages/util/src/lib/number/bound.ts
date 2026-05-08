@@ -38,6 +38,7 @@ export type IsInNumberBoundFunction = (number: number) => boolean;
  * @param bounds - The min/max bounds to test against
  * @returns A function that returns `true` if the input number is within bounds
  * @throws Error if the bounds are invalid (min > max)
+ * @__NO_SIDE_EFFECTS__
  */
 export function isInNumberBoundFunction(bounds: NumberBound): IsInNumberBoundFunction {
   const { min, max } = bounds;
@@ -78,6 +79,7 @@ export type WrapNumberFunction<T extends number = number> = MapFunction<number, 
  *
  * @param wrapNumberFunctionConfig - Configuration with min, max, and optional fence post behavior
  * @returns A function that wraps input numbers into the bounded range
+ * @__NO_SIDE_EFFECTS__
  */
 export function wrapNumberFunction<T extends number = number>(wrapNumberFunctionConfig: WrapNumberFunctionConfig<T>): WrapNumberFunction<T> {
   const { min, max, fencePosts = false } = wrapNumberFunctionConfig;
@@ -125,6 +127,7 @@ export type BoundNumberFunction<T extends number = number> = MapFunction<number,
  *
  * @param boundNumberFunctionConfig - Configuration with min, max, and optional wrap behavior
  * @returns A function that bounds input numbers into the configured range
+ * @__NO_SIDE_EFFECTS__
  */
 export function boundNumberFunction<T extends number = number>(boundNumberFunctionConfig: BoundNumberFunctionConfig<T>): BoundNumberFunction<T> {
   const { min, max, wrap } = boundNumberFunctionConfig;

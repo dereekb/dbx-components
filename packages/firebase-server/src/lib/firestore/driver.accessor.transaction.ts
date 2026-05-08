@@ -97,6 +97,7 @@ export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDoc
  *   await accessor.update({ name: 'Updated' });
  * });
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function transactionAccessorFactory<T>(transaction: GoogleCloudTransaction): FirestoreDocumentDataAccessorFactory<T> {
   return {

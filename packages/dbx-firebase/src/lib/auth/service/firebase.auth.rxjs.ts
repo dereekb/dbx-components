@@ -9,6 +9,7 @@ import { type AuthUserStateObsFunction, type DbxFirebaseAuthService } from './fi
  *
  * @param stateForLoggedInUser Optional function that returns an observable for the user's state if they are logged in and not an anonymous user.
  * @returns
+ * @__NO_SIDE_EFFECTS__
  */
 export function authUserStateFromFirebaseAuthServiceFunction(stateForLoggedInUser: AuthUserStateObsFunction = () => of('user')): AuthUserStateObsFunction {
   return (dbxFirebaseAuthService: DbxFirebaseAuthService) => {
@@ -37,6 +38,7 @@ export type StateFromTokenFunction = (token: IdTokenResult) => ObservableOrValue
  * @param stateFromToken - Function that maps an IdTokenResult to an AuthUserState.
  * @param defaultState - The fallback state when no token is available. Defaults to 'user'.
  * @returns An AuthUserStateObsFunction that reads state from the ID token.
+ * @__NO_SIDE_EFFECTS__
  */
 export function stateFromTokenForLoggedInUserFunction(stateFromToken: StateFromTokenFunction, defaultState: AuthUserState = 'user'): AuthUserStateObsFunction {
   return (dbxFirebaseAuthService: DbxFirebaseAuthService) => {

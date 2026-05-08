@@ -38,6 +38,7 @@ export interface MakeScheduledFunctionDevelopmentFunctionConfig {
  *   [SCHEDULED_FUNCTION_DEV_FUNCTION_SPECIFIER]: scheduleDev
  * };
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function makeScheduledFunctionDevelopmentFunction(config: MakeScheduledFunctionDevelopmentFunctionConfig): OnCallDevelopmentFunction<unknown, ScheduledFunctionDevelopmentFirebaseFunctionParams, ScheduledFunctionDevelopmentFirebaseFunctionResult> {
   const { allScheduledFunctions } = config;

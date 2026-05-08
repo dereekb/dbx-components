@@ -59,6 +59,7 @@ export interface CreateFolderValidateToolConfig<TInspection extends { readonly p
  *
  * @param config - the domain-specific hooks and tool definition
  * @returns the registered {@link DbxTool}
+ * @__NO_SIDE_EFFECTS__
  */
 export function createFolderValidateTool<TInspection extends { readonly path: string }, TResult extends { readonly errorCount: number }>(config: CreateFolderValidateToolConfig<TInspection, TResult>): DbxTool {
   const { definition, inspectFolder, validate, format } = config;
@@ -154,6 +155,7 @@ export interface CreateSourceValidateToolConfig<TResult extends { readonly error
  *
  * @param config - the domain-specific hooks and tool definition
  * @returns the registered {@link DbxTool}
+ * @__NO_SIDE_EFFECTS__
  */
 export function createSourceValidateTool<TResult extends { readonly errorCount: number }>(config: CreateSourceValidateToolConfig<TResult>): DbxTool {
   const { definition, validate, format } = config;
@@ -290,6 +292,7 @@ function resolveTwoSideInput(parsed: { readonly componentDir: string; readonly a
  *
  * @param config - the domain-specific hooks and tool definition
  * @returns the registered {@link DbxTool}
+ * @__NO_SIDE_EFFECTS__
  */
 export function createTwoSideValidateTool<TResult extends { readonly errorCount: number }>(config: CreateTwoSideValidateToolConfig<TResult>): DbxTool {
   const { definition, inspectAndValidate, format } = config;
@@ -366,6 +369,7 @@ export interface CreateListAppToolConfig<TReport> {
  *
  * @param config - the domain-specific hooks and tool definition
  * @returns the registered {@link DbxTool}
+ * @__NO_SIDE_EFFECTS__
  */
 export function createListAppTool<TReport>(config: CreateListAppToolConfig<TReport>): DbxTool {
   const { definition, inspectAndList, formatMarkdown, formatJson } = config;

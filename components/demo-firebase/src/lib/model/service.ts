@@ -34,6 +34,19 @@ import {
   notificationWeekFirestoreCollectionGroup,
   type NotificationWeekFirestoreCollectionGroup,
   type NotificationWeekRoles,
+  type NotificationLoggedEventDay,
+  type NotificationLoggedEventDayDocument,
+  notificationLoggedEventDayFirestoreCollectionFactory,
+  type NotificationLoggedEventDayFirestoreCollectionFactory,
+  notificationLoggedEventDayFirestoreCollectionGroup,
+  type NotificationLoggedEventDayFirestoreCollectionGroup,
+  type NotificationLoggedEventDayRoles,
+  notificationLoggedEventDayPagedItemsCollectionFactory,
+  type NotificationLoggedEventDayPagedItemsFirestoreCollectionFactory,
+  type NotificationLoggedEventDayPageDocument,
+  type NotificationLoggedEventDayPageDocumentData,
+  notificationLoggedEventDayPageFirestoreCollectionGroup,
+  type NotificationLoggedEventDayPageFirestoreCollectionGroup,
   type SystemState,
   type SystemStateDocument,
   systemStateFirestoreCollection,
@@ -93,6 +106,10 @@ export abstract class DemoFirestoreCollections implements FirestoreContextRefere
   abstract readonly notificationCollectionGroup: NotificationFirestoreCollectionGroup;
   abstract readonly notificationWeekCollectionFactory: NotificationWeekFirestoreCollectionFactory;
   abstract readonly notificationWeekCollectionGroup: NotificationWeekFirestoreCollectionGroup;
+  abstract readonly notificationLoggedEventDayCollectionFactory: NotificationLoggedEventDayFirestoreCollectionFactory;
+  abstract readonly notificationLoggedEventDayCollectionGroup: NotificationLoggedEventDayFirestoreCollectionGroup;
+  abstract readonly notificationLoggedEventDayPagedItemsCollectionFactory: NotificationLoggedEventDayPagedItemsFirestoreCollectionFactory;
+  abstract readonly notificationLoggedEventDayPageCollectionGroup: NotificationLoggedEventDayPageFirestoreCollectionGroup;
   abstract readonly storageFileCollection: StorageFileFirestoreCollection;
   abstract readonly storageFileGroupCollection: StorageFileGroupFirestoreCollection;
   abstract readonly oidcEntryCollection: OidcEntryFirestoreCollection;
@@ -124,6 +141,10 @@ export function makeDemoFirestoreCollections(firestoreContext: FirestoreContext)
     notificationCollectionGroup: notificationFirestoreCollectionGroup(firestoreContext),
     notificationWeekCollectionFactory: notificationWeekFirestoreCollectionFactory(firestoreContext),
     notificationWeekCollectionGroup: notificationWeekFirestoreCollectionGroup(firestoreContext),
+    notificationLoggedEventDayCollectionFactory: notificationLoggedEventDayFirestoreCollectionFactory(firestoreContext),
+    notificationLoggedEventDayCollectionGroup: notificationLoggedEventDayFirestoreCollectionGroup(firestoreContext),
+    notificationLoggedEventDayPagedItemsCollectionFactory: notificationLoggedEventDayPagedItemsCollectionFactory(firestoreContext),
+    notificationLoggedEventDayPageCollectionGroup: notificationLoggedEventDayPageFirestoreCollectionGroup(firestoreContext),
     storageFileCollection: storageFileFirestoreCollection(firestoreContext),
     storageFileGroupCollection: storageFileGroupFirestoreCollection(firestoreContext),
     oidcEntryCollection: oidcEntryFirestoreCollection({ firestoreContext })
@@ -221,6 +242,20 @@ export const notificationWeekFirebaseModelServiceFactory = firebaseModelServiceF
   getFirestoreCollection: (c) => c.app.notificationWeekCollectionGroup
 });
 
+export const notificationLoggedEventDayFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, NotificationLoggedEventDay, NotificationLoggedEventDayDocument, NotificationLoggedEventDayRoles>({
+  roleMapForModel: function (output: FirebasePermissionServiceModel<NotificationLoggedEventDay, NotificationLoggedEventDayDocument>, context: DemoFirebaseContext, _model: NotificationLoggedEventDayDocument): PromiseOrValue<GrantedRoleMap<NotificationLoggedEventDayRoles>> {
+    return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only
+  },
+  getFirestoreCollection: (c) => c.app.notificationLoggedEventDayCollectionGroup
+});
+
+export const notificationLoggedEventDayPageFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, NotificationLoggedEventDayPageDocumentData, NotificationLoggedEventDayPageDocument, NotificationLoggedEventDayRoles>({
+  roleMapForModel: function (output: FirebasePermissionServiceModel<NotificationLoggedEventDayPageDocumentData, NotificationLoggedEventDayPageDocument>, context: DemoFirebaseContext, _model: NotificationLoggedEventDayPageDocument): PromiseOrValue<GrantedRoleMap<NotificationLoggedEventDayRoles>> {
+    return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only — pages are framework-internal
+  },
+  getFirestoreCollection: (c) => c.app.notificationLoggedEventDayPageCollectionGroup
+});
+
 export const storageFileFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, StorageFile, StorageFileDocument, StorageFileRoles>({
   roleMapForModel: function (output: FirebasePermissionServiceModel<StorageFile, StorageFileDocument>, context: DemoFirebaseContext, model: StorageFileDocument): PromiseOrValue<GrantedRoleMap<StorageFileRoles>> {
     const grantStorageFileRolesForUser = grantStorageFileRolesForUserAuthFunction({ output, context, model });
@@ -278,6 +313,8 @@ export const DEMO_FIREBASE_MODEL_SERVICE_FACTORIES = {
   notificationBox: notificationBoxFirebaseModelServiceFactory,
   notification: notificationFirebaseModelServiceFactory,
   notificationWeek: notificationWeekFirebaseModelServiceFactory,
+  notificationLoggedEventDay: notificationLoggedEventDayFirebaseModelServiceFactory,
+  notificationLoggedEventDayPage: notificationLoggedEventDayPageFirebaseModelServiceFactory,
   storageFile: storageFileFirebaseModelServiceFactory,
   storageFileGroup: storageFileGroupFirebaseModelServiceFactory,
   oidcEntry: oidcEntryFirebaseModelServiceFactory

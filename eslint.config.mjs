@@ -7,6 +7,7 @@ import sonarjsPlugin from 'eslint-plugin-sonarjs';
 import unicornPlugin from 'eslint-plugin-unicorn';
 import { nestjsEslintPlugin } from './dist/packages/nestjs/eslint/index.esm.js';
 import { dbxWebEslintPlugin } from './dist/packages/dbx-web/eslint/index.esm.js';
+import { utilEslintPlugin } from './dist/packages/util/eslint/index.esm.js';
 
 export default [
   importPlugin.flatConfigs.recommended,
@@ -101,6 +102,17 @@ export default [
       'dereekb-dbx-web/require-clean-subscription': 'error',
       'dereekb-dbx-web/require-complete-on-destroy': 'error',
       'dereekb-dbx-web/no-redundant-on-destroy': 'error'
+    }
+  },
+  {
+    files: ['**/*.ts'],
+    ignores: ['**/*.spec.ts', '**/*.test.ts', '**/*.d.ts'],
+    plugins: {
+      'dereekb-util': utilEslintPlugin
+    },
+    rules: {
+      'dereekb-util/require-no-side-effects': 'warn', // start at warn to surface any factories the annotation pass missed; promote to error after a clean lint sweep
+      'dereekb-util/prefer-no-side-effects-in-jsdoc': 'warn' // migrates existing `// @__NO_SIDE_EFFECTS__` line comments into adjacent JSDoc blocks via --fix
     }
   },
   {

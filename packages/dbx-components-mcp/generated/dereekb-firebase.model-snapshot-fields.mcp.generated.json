@@ -1,0 +1,915 @@
+{
+  "version": 1,
+  "source": "@dereekb/firebase",
+  "module": "@dereekb/firebase",
+  "generatedAt": "1970-01-01T00:00:00.000Z",
+  "generator": "@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs",
+  "entries": [
+    {
+      "slug": "firestore-field",
+      "name": "firestoreField",
+      "kind": "factory",
+      "category": "primitive",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/snapshot/snapshot.field",
+      "signature": "firestoreField(config: FirestoreFieldConfig<V, D>): FirestoreModelFieldMapFunctionsConfig<V, D>",
+      "description": "Creates a Firestore field mapping configuration.\n\nThis is the low-level building block that all other field converters (e.g., {@link firestoreString},\n{@link firestoreDate}) delegate to. It generates `from`/`to` mapping functions that handle defaults\nand conversions in both directions.\n\nUse the higher-level field converters for common types; use this directly only when you need a\ncustom conversion not covered by the built-in converters.",
+      "optional": false,
+      "params": [
+        {
+          "name": "config",
+          "type": "FirestoreFieldConfig<V, D>",
+          "description": "- Configuration for the Firestore field",
+          "optional": false
+        }
+      ],
+      "returns": "A configured mapping between model and Firestore data",
+      "tags": [
+        "base",
+        "custom",
+        "transform",
+        "default",
+        "factory",
+        "primitive",
+        "firestore",
+        "field",
+        "firestorefield"
+      ],
+      "example": "// Custom field that stores a Set<string> as a comma-separated string\nconst tagsField = firestoreField<Set<string>, string>({\n  default: () => new Set(),\n  fromData: (csv) => new Set(csv.split(',')),\n  toData: (set) => [...set].join(',')\n});",
+      "relatedSlugs": [
+        "optional-firestore-field"
+      ]
+    },
+    {
+      "slug": "firestore-passthrough-field",
+      "name": "FIRESTORE_PASSTHROUGH_FIELD",
+      "kind": "const",
+      "category": "primitive",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/snapshot/snapshot.field",
+      "signature": "const FIRESTORE_PASSTHROUGH_FIELD: ModelFieldMapFunctionsWithDefaultsConfig<V, Maybe<D>>",
+      "description": "A pre-built passthrough field mapping that stores and reads values unchanged.\n\nDefaults to `null` when the field is missing. Used internally by {@link firestorePassThroughField}\nand as a fallback for {@link optionalFirestoreField} when no config is provided.",
+      "optional": false,
+      "params": [],
+      "returns": "ModelFieldMapFunctionsWithDefaultsConfig<V, Maybe<D>>",
+      "tags": [
+        "passthrough",
+        "identity",
+        "raw",
+        "untransformed",
+        "builtin",
+        "primitive",
+        "firestore",
+        "field",
+        "firestore_passthrough_field"
+      ],
+      "example": "fields: {\n  raw: FIRESTORE_PASSTHROUGH_FIELD\n}"
+    },
+    {
+      "slug": "firestore-pass-through-field",
+      "name": "firestorePassThroughField",
+      "kind": "factory",
+      "category": "primitive",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/snapshot/snapshot.field",
+      "signature": "firestorePassThroughField(): ModelFieldMapFunctionsConfig<T, T>",
+      "description": "Creates a pass-through field mapping configuration that doesn't transform the data.\n\nThis is useful when the model field and Firestore field are the same type and\nno transformation is needed in either direction.",
+      "optional": false,
+      "params": [],
+      "returns": "A field mapping configuration that passes values through unchanged",
+      "tags": [
+        "passthrough",
+        "identity",
+        "raw",
+        "untransformed",
+        "factory",
+        "primitive",
+        "firestore",
+        "pass",
+        "through",
+        "field",
+        "firestorepassthroughfield"
+      ],
+      "example": "fields: {\n  payload: firestorePassThroughField<MyType>()\n}"
+    },
+    {
+      "slug": "firestore-string",
+      "name": "firestoreString",
+      "kind": "factory",
+      "category": "primitive",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/snapshot/snapshot.field",
+      "signature": "firestoreString(config?: FirestoreStringConfig<S>): ModelFieldMapFunctionsWithDefaultsConfig<V, Maybe<D>>",
+      "description": "Creates a field mapping configuration for Firestore string fields.\n\nDefaults to empty string `''` when the field is missing. Supports optional string\ntransformation (e.g., lowercase, trim) applied on both read and write.",
+      "optional": false,
+      "params": [
+        {
+          "name": "config",
+          "type": "FirestoreStringConfig<S>",
+          "description": "- Configuration for the string field",
+          "optional": true
+        }
+      ],
+      "returns": "A field mapping configuration for string values",
+      "tags": [
+        "string",
+        "text",
+        "transform",
+        "lowercase",
+        "factory",
+        "primitive",
+        "firestore",
+        "firestorestring"
+      ],
+      "example": "// Simple string field with default\nconst nameField = firestoreString({ default: 'unnamed' });\n\n// String field with lowercase transformation\nconst emailField = firestoreString({ transform: 'lowercase' });",
+      "relatedSlugs": [
+        "optional-firestore-string"
+      ]
+    },
+    {
+      "slug": "optional-firestore-string",
+      "name": "optionalFirestoreString",
+      "kind": "factory",
+      "category": "primitive",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/snapshot/snapshot.field",
+      "signature": "optionalFirestoreString(config?: OptionalFirestoreString<S>): ModelFieldMapFunctionsWithDefaultsConfig<V, Maybe<D>>",
+      "description": "Creates a field mapping configuration for optional Firestore string fields.",
+      "optional": true,
+      "params": [
+        {
+          "name": "config",
+          "type": "OptionalFirestoreString<S>",
+          "description": "- Configuration for the optional string field",
+          "optional": true
+        }
+      ],
+      "returns": "A field mapping configuration for optional string values",
+      "tags": [
+        "string",
+        "text",
+        "optional",
+        "transform",
+        "factory",
+        "primitive",
+        "firestore",
+        "optionalfirestorestring"
+      ],
+      "example": "fields: {\n  nickname: optionalFirestoreString()\n}",
+      "relatedSlugs": [
+        "firestore-string"
+      ]
+    },
+    {
+      "slug": "firestore-enum",
+      "name": "firestoreEnum",
+      "kind": "factory",
+      "category": "primitive",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/snapshot/snapshot.field",
+      "signature": "firestoreEnum(config: FirestoreEnumConfig<S>): FirestoreModelFieldMapFunctionsConfig<S, S>",
+      "description": "Creates a field mapping configuration for Firestore enum fields.",
+      "optional": false,
+      "params": [
+        {
+          "name": "config",
+          "type": "FirestoreEnumConfig<S>",
+          "description": "- Configuration for the enum field",
+          "optional": false
+        }
+      ],
+      "returns": "A field mapping configuration for enum values",
+      "tags": [
+        "enum",
+        "string",
+        "number",
+        "factory",
+        "primitive",
+        "firestore",
+        "firestoreenum"
+      ],
+      "example": "fields: {\n  status: firestoreEnum<UserStatus>({ default: UserStatus.Pending })\n}",
+      "relatedSlugs": [
+        "optional-firestore-enum"
+      ]
+    },
+    {
+      "slug": "optional-firestore-enum",
+      "name": "optionalFirestoreEnum",
+      "kind": "factory",
+      "category": "primitive",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/snapshot/snapshot.field",
+      "signature": "optionalFirestoreEnum(config?: OptionalFirestoreEnumConfig<S>): ModelFieldMapFunctionsWithDefaultsConfig<V, Maybe<D>>",
+      "description": "Creates a field mapping configuration for optional Firestore enum fields.",
+      "optional": true,
+      "params": [
+        {
+          "name": "config",
+          "type": "OptionalFirestoreEnumConfig<S>",
+          "description": "- Configuration for the optional enum field",
+          "optional": true
+        }
+      ],
+      "returns": "A field mapping configuration for optional enum values",
+      "tags": [
+        "enum",
+        "optional",
+        "string",
+        "number",
+        "factory",
+        "primitive",
+        "firestore",
+        "optionalfirestoreenum"
+      ],
+      "relatedSlugs": [
+        "firestore-enum"
+      ]
+    },
+    {
+      "slug": "firestore-uid",
+      "name": "firestoreUID",
+      "kind": "factory",
+      "category": "model-key",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/snapshot/snapshot.field",
+      "signature": "firestoreUID(): ModelFieldMapFunctionsWithDefaultsConfig<V, Maybe<D>>",
+      "description": "Creates a field mapping configuration for Firestore UID fields.",
+      "optional": false,
+      "params": [],
+      "returns": "A field mapping configuration for Firebase Auth user IDs",
+      "tags": [
+        "uid",
+        "user",
+        "owner",
+        "account",
+        "auth",
+        "string",
+        "factory",
+        "model-key",
+        "firestore",
+        "firestoreuid"
+      ],
+      "example": "fields: {\n  uid: firestoreUID()\n}",
+      "relatedSlugs": [
+        "optional-firestore-uid"
+      ]
+    },
+    {
+      "slug": "optional-firestore-uid",
+      "name": "optionalFirestoreUID",
+      "kind": "factory",
+      "category": "model-key",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/snapshot/snapshot.field",
+      "signature": "optionalFirestoreUID(): ModelFieldMapFunctionsWithDefaultsConfig<V, Maybe<D>>",
+      "description": "Creates a field mapping configuration for optional Firestore UID fields.",
+      "optional": true,
+      "params": [],
+      "returns": "A field mapping configuration for optional Firebase Auth user IDs",
+      "tags": [
+        "uid",
+        "user",
+        "owner",
+        "account",
+        "auth",
+        "optional",
+        "string",
+        "factory",
+        "model-key",
+        "firestore",
+        "optionalfirestoreuid"
+      ],
+      "relatedSlugs": [
+        "firestore-uid"
+      ]
+    },
+    {
+      "slug": "firestore-model-key-string",
+      "name": "firestoreModelKeyString",
+      "kind": "const",
+      "category": "model-key",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/snapshot/snapshot.field",
+      "signature": "const firestoreModelKeyString: ModelFieldMapFunctionsWithDefaultsConfig<V, Maybe<D>>",
+      "description": "Pre-built field mapping for Firestore model key strings. Defaults to empty string.",
+      "optional": false,
+      "params": [],
+      "returns": "ModelFieldMapFunctionsWithDefaultsConfig<V, Maybe<D>>",
+      "tags": [
+        "model",
+        "key",
+        "string",
+        "reference",
+        "ref",
+        "pointer",
+        "builtin",
+        "model-key",
+        "firestore",
+        "firestoremodelkeystring"
+      ],
+      "example": "fields: {\n  m: firestoreModelKeyString\n}"
+    },
+    {
+      "slug": "firestore-model-id-string",
+      "name": "firestoreModelIdString",
+      "kind": "const",
+      "category": "model-key",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/snapshot/snapshot.field",
+      "signature": "const firestoreModelIdString: ModelFieldMapFunctionsWithDefaultsConfig<V, Maybe<D>>",
+      "description": "Pre-built field mapping for Firestore model ID strings. Defaults to empty string.",
+      "optional": false,
+      "params": [],
+      "returns": "ModelFieldMapFunctionsWithDefaultsConfig<V, Maybe<D>>",
+      "tags": [
+        "model",
+        "id",
+        "string",
+        "reference",
+        "pointer",
+        "builtin",
+        "model-key",
+        "firestore",
+        "firestoremodelidstring"
+      ],
+      "example": "fields: {\n  id: firestoreModelIdString\n}"
+    },
+    {
+      "slug": "firestore-date",
+      "name": "firestoreDate",
+      "kind": "factory",
+      "category": "date",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/snapshot/snapshot.field",
+      "signature": "firestoreDate(config?: FirestoreDateFieldConfig): ModelFieldMapFunctionsWithDefaultsConfig<V, Maybe<D>>",
+      "description": "Creates a field mapping configuration for Firestore date fields.\n\nHandles conversion between JavaScript Date objects and ISO8601 strings stored in Firestore.\nDefaults to `new Date()` when the field is missing. Use `saveDefaultAsNow` to automatically\nstore the current timestamp when a new document is created.",
+      "optional": false,
+      "params": [
+        {
+          "name": "config",
+          "type": "FirestoreDateFieldConfig",
+          "description": "- Configuration for the date field",
+          "optional": true
+        }
+      ],
+      "returns": "A field mapping configuration for Date values",
+      "tags": [
+        "date",
+        "time",
+        "iso",
+        "timestamp",
+        "factory",
+        "firestore",
+        "firestoredate"
+      ],
+      "example": "// Date field that auto-saves current time on creation\nconst createdAtField = firestoreDate({ saveDefaultAsNow: true });\n\n// Date field with a fixed default\nconst startDateField = firestoreDate({ default: new Date('2020-01-01') });",
+      "relatedSlugs": [
+        "optional-firestore-date",
+        "firestore-date-number"
+      ]
+    },
+    {
+      "slug": "optional-firestore-date",
+      "name": "optionalFirestoreDate",
+      "kind": "factory",
+      "category": "date",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/snapshot/snapshot.field",
+      "signature": "optionalFirestoreDate(config?: OptionalFirestoreDateFieldConfig): ModelFieldMapFunctionsWithDefaultsConfig<V, Maybe<D>>",
+      "description": "Creates a field mapping configuration for optional Firestore date fields.\n\nHandles conversion between JavaScript Date objects and ISO8601 strings stored in Firestore.",
+      "optional": true,
+      "params": [
+        {
+          "name": "config",
+          "type": "OptionalFirestoreDateFieldConfig",
+          "description": "- Configuration for the optional date field",
+          "optional": true
+        }
+      ],
+      "returns": "A field mapping configuration for optional Date values",
+      "tags": [
+        "date",
+        "time",
+        "iso",
+        "optional",
+        "factory",
+        "firestore",
+        "optionalfirestoredate"
+      ],
+      "example": "fields: {\n  deletedAt: optionalFirestoreDate()\n}",
+      "relatedSlugs": [
+        "firestore-date"
+      ]
+    },
+    {
+      "slug": "firestore-date-number",
+      "name": "firestoreDateNumber",
+      "kind": "factory",
+      "category": "date",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/snapshot/snapshot.field",
+      "signature": "firestoreDateNumber(config: FirestoreDateNumberFieldConfig): ModelFieldMapFunctionsWithDefaultsConfig<V, Maybe<D>>",
+      "description": "Creates a field mapping configuration for Firestore date fields stored as numbers.\n\nHandles conversion between JavaScript Date objects and numeric representations\nusing the provided `fromDate`/`toDate` conversion functions.",
+      "optional": false,
+      "params": [
+        {
+          "name": "config",
+          "type": "FirestoreDateNumberFieldConfig",
+          "description": "- Configuration including custom Date-to-number conversion functions",
+          "optional": false
+        }
+      ],
+      "returns": "A field mapping configuration for Date values stored as numbers",
+      "tags": [
+        "date",
+        "number",
+        "timestamp",
+        "factory",
+        "firestore",
+        "firestoredatenumber"
+      ],
+      "relatedSlugs": [
+        "optional-firestore-date-number",
+        "firestore-unix-date-time-seconds-number"
+      ]
+    },
+    {
+      "slug": "optional-firestore-date-number",
+      "name": "optionalFirestoreDateNumber",
+      "kind": "factory",
+      "category": "date",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/snapshot/snapshot.field",
+      "signature": "optionalFirestoreDateNumber(config: OptionalFirestoreDateNumberFieldConfig): ModelFieldMapFunctionsWithDefaultsConfig<V, Maybe<D>>",
+      "description": "Creates a field mapping configuration for optional Firestore date field that is stored as a number.",
+      "optional": true,
+      "params": [
+        {
+          "name": "config",
+          "type": "OptionalFirestoreDateNumberFieldConfig",
+          "description": "- Configuration for the optional date field",
+          "optional": false
+        }
+      ],
+      "returns": "A field mapping configuration for optional Date values",
+      "tags": [
+        "date",
+        "number",
+        "timestamp",
+        "optional",
+        "factory",
+        "firestore",
+        "optionalfirestoredatenumber"
+      ],
+      "relatedSlugs": [
+        "firestore-date-number"
+      ]
+    },
+    {
+      "slug": "firestore-boolean",
+      "name": "firestoreBoolean",
+      "kind": "factory",
+      "category": "primitive",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/snapshot/snapshot.field",
+      "signature": "firestoreBoolean(config: FirestoreBooleanFieldConfig): ModelFieldMapFunctionsWithDefaultsConfig<V, Maybe<D>>",
+      "description": "Creates a field mapping configuration for Firestore boolean fields.",
+      "optional": false,
+      "params": [
+        {
+          "name": "config",
+          "type": "FirestoreBooleanFieldConfig",
+          "description": "- Configuration for the boolean field",
+          "optional": false
+        }
+      ],
+      "returns": "A field mapping configuration for boolean values",
+      "tags": [
+        "boolean",
+        "flag",
+        "factory",
+        "primitive",
+        "firestore",
+        "firestoreboolean"
+      ],
+      "example": "fields: {\n  active: firestoreBoolean({ default: true })\n}",
+      "relatedSlugs": [
+        "optional-firestore-boolean"
+      ]
+    },
+    {
+      "slug": "optional-firestore-boolean",
+      "name": "optionalFirestoreBoolean",
+      "kind": "factory",
+      "category": "primitive",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/snapshot/snapshot.field",
+      "signature": "optionalFirestoreBoolean(config?: OptionalFirestoreBooleanFieldConfig): ModelFieldMapFunctionsWithDefaultsConfig<V, Maybe<D>>",
+      "description": "Creates a field mapping configuration for optional Firestore boolean fields.",
+      "optional": true,
+      "params": [
+        {
+          "name": "config",
+          "type": "OptionalFirestoreBooleanFieldConfig",
+          "description": "- Configuration for the optional boolean field",
+          "optional": true
+        }
+      ],
+      "returns": "A field mapping configuration for optional boolean values",
+      "tags": [
+        "boolean",
+        "flag",
+        "optional",
+        "dontstore",
+        "factory",
+        "primitive",
+        "firestore",
+        "optionalfirestoreboolean"
+      ],
+      "example": "fields: {\n  ns: optionalFirestoreBoolean()\n}",
+      "relatedSlugs": [
+        "firestore-boolean"
+      ]
+    },
+    {
+      "slug": "firestore-number",
+      "name": "firestoreNumber",
+      "kind": "factory",
+      "category": "primitive",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/snapshot/snapshot.field",
+      "signature": "firestoreNumber(config: FirestoreNumberConfig<N>): ModelFieldMapFunctionsWithDefaultsConfig<V, Maybe<D>>",
+      "description": "Creates a field mapping configuration for Firestore number fields.",
+      "optional": false,
+      "params": [
+        {
+          "name": "config",
+          "type": "FirestoreNumberConfig<N>",
+          "description": "- Configuration for the number field",
+          "optional": false
+        }
+      ],
+      "returns": "A field mapping configuration for number values",
+      "tags": [
+        "number",
+        "integer",
+        "transform",
+        "factory",
+        "primitive",
+        "firestore",
+        "firestorenumber"
+      ],
+      "example": "fields: {\n  count: firestoreNumber({ default: 0 })\n}",
+      "relatedSlugs": [
+        "optional-firestore-number"
+      ]
+    },
+    {
+      "slug": "optional-firestore-number",
+      "name": "optionalFirestoreNumber",
+      "kind": "factory",
+      "category": "primitive",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/snapshot/snapshot.field",
+      "signature": "optionalFirestoreNumber(config?: OptionalFirestoreNumberFieldConfig<N>): ModelFieldMapFunctionsWithDefaultsConfig<V, Maybe<D>>",
+      "description": "Creates a field mapping configuration for optional Firestore number fields.",
+      "optional": true,
+      "params": [
+        {
+          "name": "config",
+          "type": "OptionalFirestoreNumberFieldConfig<N>",
+          "description": "- Configuration for the optional number field",
+          "optional": true
+        }
+      ],
+      "returns": "A field mapping configuration for optional number values",
+      "tags": [
+        "number",
+        "integer",
+        "optional",
+        "transform",
+        "factory",
+        "primitive",
+        "firestore",
+        "optionalfirestorenumber"
+      ],
+      "relatedSlugs": [
+        "firestore-number"
+      ]
+    },
+    {
+      "slug": "firestore-array",
+      "name": "firestoreArray",
+      "kind": "factory",
+      "category": "array",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/snapshot/snapshot.field",
+      "signature": "firestoreArray(config: FirestoreArrayFieldConfig<T>): ModelFieldMapFunctionsWithDefaultsConfig<V, Maybe<D>>",
+      "description": "Creates a field mapping configuration for Firestore array fields.\n\nDefaults to an empty array when the field is missing. Supports optional sorting\nvia `sortWith` which is applied on both read and write.",
+      "optional": false,
+      "params": [
+        {
+          "name": "config",
+          "type": "FirestoreArrayFieldConfig<T>",
+          "description": "- Configuration for the array field",
+          "optional": false
+        }
+      ],
+      "returns": "A field mapping configuration for array values",
+      "tags": [
+        "array",
+        "list",
+        "sort",
+        "factory",
+        "firestore",
+        "firestorearray"
+      ],
+      "example": "// Array of strings sorted alphabetically\nconst tagsField = firestoreArray<string>({\n  sortWith: (a, b) => a.localeCompare(b)\n});",
+      "relatedSlugs": [
+        "optional-firestore-array",
+        "firestore-unique-array"
+      ]
+    },
+    {
+      "slug": "optional-firestore-array",
+      "name": "optionalFirestoreArray",
+      "kind": "factory",
+      "category": "array",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/snapshot/snapshot.field",
+      "signature": "optionalFirestoreArray(config?: OptionalFirestoreArrayFieldConfig<T>): ModelFieldMapFunctionsWithDefaultsConfig<V, Maybe<D>>",
+      "description": "Creates a field mapping configuration for optional Firestore array fields.\n\nSupports unique filtering and conditional storage based on array content.",
+      "optional": true,
+      "params": [
+        {
+          "name": "config",
+          "type": "OptionalFirestoreArrayFieldConfig<T>",
+          "description": "- Configuration for the optional array field",
+          "optional": true
+        }
+      ],
+      "returns": "A field mapping configuration for optional array values",
+      "tags": [
+        "array",
+        "list",
+        "optional",
+        "unique",
+        "dontstore",
+        "factory",
+        "firestore",
+        "optionalfirestorearray"
+      ],
+      "example": "fields: {\n  tags: optionalFirestoreArray<string>({ filterUnique: true, dontStoreIfEmpty: true })\n}",
+      "relatedSlugs": [
+        "firestore-array"
+      ]
+    },
+    {
+      "slug": "firestore-enum-array",
+      "name": "firestoreEnumArray",
+      "kind": "factory",
+      "category": "array",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/snapshot/snapshot.field",
+      "signature": "firestoreEnumArray(config?: FirestoreEnumArrayFieldConfig<S>): ModelFieldMapFunctionsWithDefaultsConfig<V, Maybe<D>>",
+      "description": "Creates a field mapping configuration for Firestore array fields of unique enum values.",
+      "optional": false,
+      "params": [
+        {
+          "name": "config",
+          "type": "FirestoreEnumArrayFieldConfig<S>",
+          "description": "- Configuration for the enum array field",
+          "optional": true
+        }
+      ],
+      "returns": "A field mapping configuration for enum array values",
+      "tags": [
+        "array",
+        "enum",
+        "unique",
+        "flags",
+        "tags",
+        "factory",
+        "firestore",
+        "firestoreenumarray"
+      ]
+    },
+    {
+      "slug": "firestore-model-key-array-field",
+      "name": "firestoreModelKeyArrayField",
+      "kind": "const",
+      "category": "model-key",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/snapshot/snapshot.field",
+      "signature": "const firestoreModelKeyArrayField: ModelFieldMapFunctionsWithDefaultsConfig<V, Maybe<D>>",
+      "description": "Pre-built field mapping for arrays of unique Firestore model key strings.",
+      "optional": false,
+      "params": [],
+      "returns": "ModelFieldMapFunctionsWithDefaultsConfig<V, Maybe<D>>",
+      "tags": [
+        "model",
+        "key",
+        "array",
+        "unique",
+        "reference",
+        "ref",
+        "pointer",
+        "builtin",
+        "model-key",
+        "firestore",
+        "field",
+        "firestoremodelkeyarrayfield"
+      ],
+      "example": "fields: {\n  b: firestoreModelKeyArrayField\n}"
+    },
+    {
+      "slug": "firestore-model-id-array-field",
+      "name": "firestoreModelIdArrayField",
+      "kind": "const",
+      "category": "model-key",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/snapshot/snapshot.field",
+      "signature": "const firestoreModelIdArrayField: ModelFieldMapFunctionsWithDefaultsConfig<V, Maybe<D>>",
+      "description": "Pre-built field mapping for arrays of unique Firestore model ID strings.\nAlias for {@link firestoreModelKeyArrayField}.",
+      "optional": false,
+      "params": [],
+      "returns": "ModelFieldMapFunctionsWithDefaultsConfig<V, Maybe<D>>",
+      "tags": [
+        "model",
+        "id",
+        "array",
+        "unique",
+        "reference",
+        "pointer",
+        "builtin",
+        "model-key",
+        "firestore",
+        "field",
+        "firestoremodelidarrayfield"
+      ]
+    },
+    {
+      "slug": "firestore-map",
+      "name": "firestoreMap",
+      "kind": "factory",
+      "category": "map",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/snapshot/snapshot.field",
+      "signature": "firestoreMap(config?: FirestoreMapFieldConfig<T, K>): ModelFieldMapFunctionsWithDefaultsConfig<V, Maybe<D>>",
+      "description": "Creates a field mapping configuration for Firestore map-type (key-value object) fields.\n\nBy default, removes all null/undefined keys from the object before saving to Firestore.\nDefaults to an empty object `{}` when the field is missing.",
+      "optional": false,
+      "params": [
+        {
+          "name": "config",
+          "type": "FirestoreMapFieldConfig<T, K>",
+          "description": "- Configuration for the map field",
+          "optional": true
+        }
+      ],
+      "returns": "A field mapping configuration for map values",
+      "tags": [
+        "map",
+        "record",
+        "dictionary",
+        "dict",
+        "factory",
+        "firestore",
+        "firestoremap"
+      ],
+      "example": "// Map of user preferences\nconst prefsField = firestoreMap<string>({\n  mapFilter: KeyValueTypleValueFilter.EMPTY\n});"
+    },
+    {
+      "slug": "firestore-array-map",
+      "name": "firestoreArrayMap",
+      "kind": "factory",
+      "category": "map",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/snapshot/snapshot.field",
+      "signature": "firestoreArrayMap(config?: FirestoreArrayMapFieldConfig<T, K>): ModelFieldMapFunctionsWithDefaultsConfig<V, Maybe<D>>",
+      "description": "Creates a field mapping configuration for Firestore map fields where each value is an array.\n\nDefaults to filtering empty arrays and null/undefined elements from each array before saving.",
+      "optional": false,
+      "params": [
+        {
+          "name": "config",
+          "type": "FirestoreArrayMapFieldConfig<T, K>",
+          "description": "- Configuration for the array map field",
+          "optional": true
+        }
+      ],
+      "returns": "A field mapping configuration for map values with array entries",
+      "tags": [
+        "map",
+        "array",
+        "lookup",
+        "multi-value",
+        "factory",
+        "firestore",
+        "firestorearraymap"
+      ]
+    },
+    {
+      "slug": "firestore-object-array",
+      "name": "firestoreObjectArray",
+      "kind": "factory",
+      "category": "object",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/snapshot/snapshot.field",
+      "signature": "firestoreObjectArray(config: FirestoreObjectArrayFieldConfig<T, O>): ModelFieldMapFunctionsWithDefaultsConfig<V, Maybe<D>>",
+      "description": "Creates a field mapping configuration for Firestore arrays of complex objects.\n\nEach element in the array is converted using its own set of field converters (via `objectField`\nor `firestoreField`), enabling type-safe conversion of embedded document arrays.\nSupports optional unique filtering and sorting.\n\nOn write, null/undefined values are filtered from each object to match Firestore semantics.",
+      "optional": false,
+      "params": [
+        {
+          "name": "config",
+          "type": "FirestoreObjectArrayFieldConfig<T, O>",
+          "description": "- Configuration including element conversions and optional filtering/sorting",
+          "optional": false
+        }
+      ],
+      "returns": "A field mapping configuration for object array values",
+      "tags": [
+        "array",
+        "object",
+        "embedded",
+        "nested",
+        "structured",
+        "factory",
+        "firestore",
+        "firestoreobjectarray"
+      ],
+      "example": "// Array of embedded item objects\nconst itemsField = firestoreObjectArray<NotificationItem>({\n  objectField: notificationItemFields,\n  sortWith: sortAscendingIndexNumberRefFunction()\n});",
+      "relatedSlugs": [
+        "firestore-sub-object"
+      ]
+    },
+    {
+      "slug": "firestore-sub-object",
+      "name": "firestoreSubObject",
+      "kind": "factory",
+      "category": "object",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/snapshot/snapshot.field",
+      "signature": "firestoreSubObject(config: FirestoreSubObjectFieldConfig<T, O>): FirestoreSubObjectFieldMapFunctionsConfig<T, O>",
+      "description": "Creates a field mapping configuration for nested Firestore object fields.\n\nMaps a nested object using its own set of field converters, enabling recursive type-safe\nconversion of embedded documents. The `objectField` defines the conversion rules for\nthe nested object's fields using the same converter patterns.",
+      "optional": false,
+      "params": [
+        {
+          "name": "config",
+          "type": "FirestoreSubObjectFieldConfig<T, O>",
+          "description": "- Configuration including nested field conversions",
+          "optional": false
+        }
+      ],
+      "returns": "A field mapping configuration with both field config and map functions",
+      "tags": [
+        "object",
+        "nested",
+        "embedded",
+        "structured",
+        "factory",
+        "firestore",
+        "sub",
+        "firestoresubobject"
+      ],
+      "example": "// Nested address object with its own converters\nconst addressField = firestoreSubObject<Address>({\n  objectField: {\n    street: firestoreString(),\n    city: firestoreString(),\n    zip: firestoreString()\n  }\n});",
+      "relatedSlugs": [
+        "firestore-object-array"
+      ]
+    },
+    {
+      "slug": "firestore-lat-lng-string",
+      "name": "firestoreLatLngString",
+      "kind": "factory",
+      "category": "geo",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/snapshot/snapshot.field",
+      "signature": "firestoreLatLngString(config?: FirestoreLatLngStringConfig): ModelFieldMapFunctionsWithDefaultsConfig<V, Maybe<D>>",
+      "description": "Creates a field mapping configuration for Firestore latitude/longitude string fields.\n\nStores lat/lng as a single string rather than a lat/lng object or value pair. This is preferred\nbecause Firestore cannot efficiently sort/search lat and lng together, making indexing on separate\nfields useless. As a single string field, it integrates with the {@link LatLngStringRef} interface\nand can be mapped using `latLngDataPointFunction()`.\n\nApplies validation and optional precision rounding on both read and write.",
+      "optional": false,
+      "params": [
+        {
+          "name": "config",
+          "type": "FirestoreLatLngStringConfig",
+          "description": "- Optional precision and default value configuration",
+          "optional": true
+        }
+      ],
+      "returns": "A field mapping configuration for LatLngString values",
+      "tags": [
+        "geo",
+        "latlng",
+        "location",
+        "coordinates",
+        "coords",
+        "geolocation",
+        "factory",
+        "firestore",
+        "lat",
+        "lng",
+        "string",
+        "firestorelatlngstring"
+      ],
+      "example": "fields: {\n  loc: firestoreLatLngString()\n}"
+    }
+  ]
+}

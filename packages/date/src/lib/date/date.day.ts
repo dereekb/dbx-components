@@ -216,6 +216,7 @@ export function yearMonthDayCode(dateOrYear: Date | number, month?: MonthOfYear,
  *
  * @param config - Optional timezone configuration; defaults to system timezone
  * @returns a reusable factory function that converts dates to YearMonthDayCode values
+ * @__NO_SIDE_EFFECTS__
  */
 export function yearMonthDayCodeFactory(config?: YearMonthDayCodeConfig): YearMonthDayCodeFactory {
   const normal = yearMonthDayCodeDateTimezoneInstance(config?.timezone);
@@ -276,6 +277,7 @@ export function yearMonthDayCodesForDateRange(dateOrDateRange: DateOrDateRange):
  *
  * @param factory - YearMonthDayCodeFactory to use for encoding; defaults to system timezone
  * @returns a factory that produces arrays of YearMonthDayCode values for date ranges
+ * @__NO_SIDE_EFFECTS__
  */
 export function yearMonthDayCodesForDateRangeFactory(factory: YearMonthDayCodeFactory = yearMonthDayCodeFactory()): YearMonthDayCodesForDateRangeFactory {
   const { _normal } = factory;
@@ -321,6 +323,7 @@ export type YearMonthDayCodeDateConfig = Pick<YearMonthDayCodeConfig, 'timezone'
  *
  * @param config - Optional timezone configuration; defaults to system timezone
  * @returns a factory that decodes YearMonthDayCode values back into Dates
+ * @__NO_SIDE_EFFECTS__
  */
 export function yearMonthDayCodeDateFactory(config?: YearMonthDayCodeDateConfig): YearMonthDayCodeDateFactory {
   const normal = yearMonthDayCodeDateTimezoneInstance(config?.timezone);
@@ -389,6 +392,7 @@ export interface YearMonthDayCodeGroupFactoryConfig<B> {
  *
  * @param config - Grouping configuration including the date reader and optional timezone
  * @returns a factory that partitions items into day-based groups
+ * @__NO_SIDE_EFFECTS__
  */
 export function yearMonthDayCodeGroupFactory<B>(config: YearMonthDayCodeGroupFactoryConfig<B>): YearMonthDayCodeGroupFactory<B> {
   const { yearMonthDayCodeFactory: factoryInput, dateReader } = config;

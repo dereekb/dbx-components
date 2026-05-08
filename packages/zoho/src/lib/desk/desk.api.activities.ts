@@ -68,6 +68,7 @@ export type ZohoDeskGetTicketActivitiesPageFactory = (input: ZohoDeskGetTicketAc
  *
  * @param context - Authenticated Zoho Desk context
  * @returns Page factory for iterating over activity results
+ * @__NO_SIDE_EFFECTS__
  */
 export function zohoDeskGetTicketActivitiesPageFactory(context: ZohoDeskContext): ZohoDeskGetTicketActivitiesPageFactory {
   return zohoDeskFetchPageFactory(zohoDeskGetTicketActivities(context));

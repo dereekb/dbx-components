@@ -36,6 +36,7 @@ const { runUiComponentsScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).h
 const { runForgeFieldsScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/forge-fields-cli.ts`);
 const { runPipesScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/pipes-cli.ts`);
 const { runUtilsScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/utils-cli.ts`);
+const { runModelSnapshotFieldsScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/model-snapshot-fields-cli.ts`);
 const { runActionsScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/actions-cli.ts`);
 const { runFiltersScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/filters-cli.ts`);
 const { runDbxDocsUiExamplesScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/dbx-docs-ui-examples-cli.ts`);
@@ -72,6 +73,7 @@ const CLUSTER_DISPATCH = {
   forgeFields: { run: runForgeFieldsScanCli, sectionKey: 'forgeFields', label: 'forge-fields' },
   pipes: { run: runPipesScanCli, sectionKey: 'pipes', label: 'pipes' },
   utils: { run: runUtilsScanCli, sectionKey: 'utils', label: 'utils' },
+  modelSnapshotFields: { run: runModelSnapshotFieldsScanCli, sectionKey: 'modelSnapshotFields', label: 'model-snapshot-fields' },
   actions: { run: runActionsScanCli, sectionKey: 'actions', label: 'actions' },
   filters: { run: runFiltersScanCli, sectionKey: 'filters', label: 'filters' },
   dbxDocsUiExamples: { run: runDbxDocsUiExamplesScanCli, sectionKey: 'dbxDocsUiExamples', label: 'dbx-docs-ui-examples' },

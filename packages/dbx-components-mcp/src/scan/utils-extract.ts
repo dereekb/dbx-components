@@ -151,7 +151,12 @@ function collectTaggedFunctions(sourceFile: SourceFile): readonly TaggedCandidat
     if (!decl.isExported()) {
       continue;
     }
-    const jsDocs = findTaggedDocs(decl.getJsDocs());
+    // ts-morph's sourceFile.getFunctions() returns only the implementation for overloaded
+    // functions. Overload signatures are where authors typically put the JSDoc, so collect
+    // their docs too and merge with the implementation's. The implementation FunctionDeclaration
+    // remains the canonical decl used for params/return-type extraction.
+    const overloadDocs = decl.getOverloads().flatMap((overload) => overload.getJsDocs());
+    const jsDocs = findTaggedDocs([...overloadDocs, ...decl.getJsDocs()]);
     if (jsDocs.length > 0) {
       out.push({ kind: 'function', decl, jsDocs });
     }

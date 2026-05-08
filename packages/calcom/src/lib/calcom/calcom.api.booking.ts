@@ -71,6 +71,7 @@ export interface CalcomCancelBookingResponse {
  * });
  * console.log(response.data.uid);
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function createBooking(context: CalcomContext): (input: CalcomCreateBookingInput) => Promise<CalcomCreateBookingResponse> {
   return (input) => {

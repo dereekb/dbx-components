@@ -233,6 +233,7 @@ export interface CreateFormScaffoldToolConfig {
  *
  * @param config - the registry to resolve slugs / factory names against
  * @returns a registered {@link DbxTool} ready to add to the dispatch table
+ * @__NO_SIDE_EFFECTS__
  */
 export function createFormScaffoldTool(config: CreateFormScaffoldToolConfig): DbxTool {
   const { registry } = config;

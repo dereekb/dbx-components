@@ -47,6 +47,7 @@ export interface CopyToClipboardFunctionConfig {
  * const copy = copyToClipboardFunction(clipboard, { copyTimeoutSeconds: 10 });
  * const success = await copy('some text');
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function copyToClipboardFunction(clipboard: Clipboard, config?: CopyToClipboardFunctionConfig): CopyToClipboardFunction {
   const copyTimeoutSeconds = config?.copyTimeoutSeconds ?? 15;
@@ -98,6 +99,7 @@ export function copyToClipboardFunction(clipboard: Clipboard, config?: CopyToCli
  * const copy = injectCopyToClipboardFunction();
  * await copy('copied text');
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function injectCopyToClipboardFunction(config?: CopyToClipboardFunctionConfig) {
   return copyToClipboardFunction(inject(Clipboard), config);

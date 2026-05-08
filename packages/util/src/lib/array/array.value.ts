@@ -14,8 +14,15 @@ export type UniversalFilterMaybeArrayFunction = <T>(values: Maybe<Maybe<T>[]>) =
 /**
  * Creates a {@link FilterMaybeArrayFunction} that filters maybe values from an array using the provided filter function.
  *
+ * @dbxUtil
+ * @dbxUtilCategory array
+ * @dbxUtilKind factory
+ * @dbxUtilTags array, filter, maybe, factory, predicate
+ * @dbxUtilRelated filter-maybe-array-values
+ *
  * @param filterFn - Filter predicate used to determine which values to keep.
  * @returns A function that filters maybe values from an optional input array.
+ * @__NO_SIDE_EFFECTS__
  */
 export function filterMaybeArrayFunction<T>(filterFn: Parameters<Array<Maybe<T>>['filter']>[0]): FilterMaybeArrayFunction<T> {
   return ((values: Maybe<Maybe<T[]>>) => {

@@ -168,6 +168,7 @@ export interface FirestoreQueryConfig<T> extends FirestoreQueryDriverRef, QueryL
  * const adminUsers = activeUsers.filter(
  *   where('role', '==', 'admin')
  * ).getDocs();
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreQueryFactory<T>(config: FirestoreQueryConfig<T>): FirestoreQueryFactory<T> {
   const { queryLike, firestoreQueryDriver: driver } = config;

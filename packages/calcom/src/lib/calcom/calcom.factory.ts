@@ -34,6 +34,7 @@ export type CalcomFactory = (config: CalcomConfig) => Calcom;
  *
  * @param factoryConfig - configuration including OAuth context, rate limiter, and optional fetch/logging overrides
  * @returns a factory function that accepts a CalcomConfig and produces a Calcom instance
+ * @__NO_SIDE_EFFECTS__
  */
 export function calcomFactory(factoryConfig: CalcomFactoryConfig): CalcomFactory {
   const { oauthContext } = factoryConfig;

@@ -50,6 +50,7 @@ export interface CreateJsonFileAsyncValueCacheInput<T> {
  * @param input.reviver - Optional transform applied to the raw JSON-parsed payload before it is returned from `load()` (e.g. revive `Date` fields).
  * @param input.replacer - Optional transform applied to the value before it is stringified to JSON on `update()`.
  * @returns An {@link AsyncValueCache} that persists the value to the configured JSON file.
+ * @__NO_SIDE_EFFECTS__
  */
 export function createJsonFileAsyncValueCache<T>(input: CreateJsonFileAsyncValueCacheInput<T>): AsyncValueCache<T> {
   const { filePath, mode, reviver, replacer } = input;
@@ -84,6 +85,7 @@ export function createJsonFileAsyncValueCache<T>(input: CreateJsonFileAsyncValue
  *
  * @param input - Same configuration accepted by {@link createJsonFileAsyncValueCache}; see {@link CreateJsonFileAsyncValueCacheInput}.
  * @returns An {@link AsyncValueCache} backed by the JSON file with a per-process single-load memoization layer in front.
+ * @__NO_SIDE_EFFECTS__
  */
 export function createMemoizedJsonFileAsyncValueCache<T>(input: CreateJsonFileAsyncValueCacheInput<T>): AsyncValueCache<T> {
   return memoizeAsyncValueCache(createJsonFileAsyncValueCache(input));
@@ -129,6 +131,7 @@ export interface CreateJsonFileAsyncKeyedValueCacheInput<T> {
  * @param input.reviver - Optional transform applied to each entry after it is JSON-parsed on `load()`/`get()`. Returning null/undefined drops the entry.
  * @param input.replacer - Optional transform applied to each entry before it is stringified on `set()`.
  * @returns An {@link AsyncKeyedValueCache} that persists all entries in the configured JSON file.
+ * @__NO_SIDE_EFFECTS__
  */
 export function createJsonFileAsyncKeyedValueCache<T>(input: CreateJsonFileAsyncKeyedValueCacheInput<T>): AsyncKeyedValueCache<T> {
   const { filePath, mode, reviver, replacer } = input;
@@ -201,6 +204,7 @@ export function createJsonFileAsyncKeyedValueCache<T>(input: CreateJsonFileAsync
  *
  * @param input - Same configuration accepted by {@link createJsonFileAsyncKeyedValueCache}; see {@link CreateJsonFileAsyncKeyedValueCacheInput}.
  * @returns An {@link AsyncKeyedValueCache} backed by the JSON file with a per-process record-level memoization layer in front.
+ * @__NO_SIDE_EFFECTS__
  */
 export function createMemoizedJsonFileAsyncKeyedValueCache<T>(input: CreateJsonFileAsyncKeyedValueCacheInput<T>): AsyncKeyedValueCache<T> {
   return memoizeAsyncKeyedValueCache(createJsonFileAsyncKeyedValueCache(input));

@@ -54,6 +54,7 @@ export interface CreateCliContextInput {
  * @param input.env - The resolved {@link CliEnvConfig} for the active env.
  * @param input.accessToken - The Bearer access token to include on outgoing API calls.
  * @returns The constructed {@link CliContext}.
+ * @__NO_SIDE_EFFECTS__
  */
 export function createCliContext(input: CreateCliContextInput): CliContext {
   return {

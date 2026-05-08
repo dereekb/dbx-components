@@ -102,6 +102,7 @@ export interface StoragePathFactoryConfig extends StorageBucketIdRef {
  * const path = pathFactory('images/photo.png');
  * // path === { bucketId: 'my-bucket', pathString: 'images/photo.png' }
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function storagePathFactory(config: StoragePathFactoryConfig): StoragePathFactory {
   const { replaceBucket = false, bucketId } = config;

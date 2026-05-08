@@ -131,6 +131,7 @@ export class ModifyBeforeSetFirestoreDocumentDataAccessorWrapper<T extends objec
  *
  * @param fieldName - The field to copy the document ID into
  * @returns A modifier function that sets the field to the document's ID
+ * @__NO_SIDE_EFFECTS__
  */
 export function copyDocumentIdToFieldModifierFunction<T extends object>(fieldName: keyof T): ModifyBeforeSetModifierFunction<T> {
   return ({ data, documentRef }) => {
@@ -144,6 +145,7 @@ export function copyDocumentIdToFieldModifierFunction<T extends object>(fieldNam
  *
  * @param config - The ModifyBeforeSetConfig defining when and how to modify documents
  * @returns An InterceptAccessorFactoryFunction that wraps accessors with the modify-before-set behavior
+ * @__NO_SIDE_EFFECTS__
  */
 export function modifyBeforeSetInterceptAccessorFactoryFunction<T extends object, D = DocumentData>(config: ModifyBeforeSetConfig<T>): InterceptAccessorFactoryFunction<T, D> {
   return interceptAccessorFactoryFunction((accessor) => new ModifyBeforeSetFirestoreDocumentDataAccessorWrapper(accessor, config));
@@ -154,6 +156,7 @@ export function modifyBeforeSetInterceptAccessorFactoryFunction<T extends object
  * Creates a modifier that copies the document ID to the `uid` field for {@link UserRelated} models.
  *
  * @returns A ModifyBeforeSetModifierFunction that sets the `uid` field to the document's ID
+ * @__NO_SIDE_EFFECTS__
  */
 export function copyDocumentIdForUserRelatedModifierFunction<T extends UserRelated>(): ModifyBeforeSetModifierFunction<T> {
   return copyDocumentIdToFieldModifierFunction<T>('uid');
@@ -182,6 +185,7 @@ export const COPY_USER_RELATED_DATA_ACCESSOR_FACTORY_FUNCTION = cachedGetter(() 
  * document ID copy modifier to all accessors created by the factory.
  *
  * @returns A typed InterceptAccessorFactoryFunction with the UserRelated document ID copy modifier applied
+ * @__NO_SIDE_EFFECTS__
  */
 export function copyUserRelatedDataAccessorFactoryFunction<T extends UserRelated, D = DocumentData>(): InterceptAccessorFactoryFunction<T, D> {
   return COPY_USER_RELATED_DATA_ACCESSOR_FACTORY_FUNCTION() as unknown as InterceptAccessorFactoryFunction<T, D>;

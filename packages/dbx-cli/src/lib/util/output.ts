@@ -133,6 +133,7 @@ export function dumpTimestamp(): string {
  * @param extension - File extension to append (`json` for full responses, `ndjson` for streaming dumps).
  * @param suffix - Optional suffix appended to the filename before the extension.
  * @returns The absolute file path, or `undefined` when `dumpDir` is not configured.
+ * @__NO_SIDE_EFFECTS__
  */
 export function buildDumpFilePath(extension: 'json' | 'ndjson', suffix?: string): Maybe<string> {
   const { dumpDir, commandPath } = _outputOptions;
@@ -256,6 +257,7 @@ export class CliError extends Error {
  *
  * @param error - The thrown value to convert.
  * @returns The structured {@link CliErrorOutput}.
+ * @__NO_SIDE_EFFECTS__
  */
 export function buildErrorOutput(error: unknown): CliErrorOutput {
   if (_errorMapper) {

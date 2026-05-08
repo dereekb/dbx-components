@@ -72,6 +72,7 @@ export interface StoredFileReader {
  * const reader = factory(storageAccessorFile);
  * const bytes = await reader.loadFileBytes();
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function storedFileReaderFactory(): StoredFileReaderFactory {
   return (file: FirebaseStorageAccessorFile) => {

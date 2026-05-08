@@ -110,9 +110,16 @@ export interface HandlerFactoryOptions<R = HandleResult> {
  * Creates a {@link HandlerFactory} that produces key-based dispatch handlers.
  * Each handler routes incoming values to registered handler functions based on a key extracted from the value.
  *
+ * @dbxUtil
+ * @dbxUtilCategory service
+ * @dbxUtilKind factory
+ * @dbxUtilTags service, handler, factory, dispatch, key
+ * @dbxUtilRelated make-handler, handler-set-function, handler-configurer-factory
+ *
  * @param readKey - Function to extract the dispatch key from an input value.
  * @param options - Optional configuration for default and negative result values.
  * @returns A factory that creates new Handler instances.
+ * @__NO_SIDE_EFFECTS__
  */
 export function handlerFactory<T, K extends PrimativeKey = string>(readKey: ReadKeyFunction<T, K>): HandlerFactory<T, K, HandleResult>;
 export function handlerFactory<T, K extends PrimativeKey = string, R = HandleResult>(readKey: ReadKeyFunction<T, K>, options: HandlerFactoryOptions<R>): HandlerFactory<T, K, R>;
@@ -168,8 +175,15 @@ export function handlerFactory<T, K extends PrimativeKey = string, R = HandleRes
 /**
  * Convenience function that creates a new {@link Handler} from the given key reader using default options.
  *
+ * @dbxUtil
+ * @dbxUtilCategory service
+ * @dbxUtilKind factory
+ * @dbxUtilTags service, handler, factory, dispatch, key, convenience
+ * @dbxUtilRelated handler-factory
+ *
  * @param readKey - Function to extract the dispatch key from an input value.
  * @returns A new Handler instance.
+ * @__NO_SIDE_EFFECTS__
  */
 export function makeHandler<T, K extends PrimativeKey = string>(readKey: ReadKeyFunction<T, K>): Handler<T, K> {
   return handlerFactory(readKey)();

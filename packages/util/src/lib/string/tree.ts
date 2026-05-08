@@ -102,8 +102,15 @@ export type SplitStringTreeFactoryConfig<M = unknown> = AddToSplitStringTreeInpu
 /**
  * Creates a {@link SplitStringTreeFactory} that builds tree structures by splitting strings on the configured separator.
  *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilKind factory
+ * @dbxUtilTags string, tree, split, separator, factory, hierarchy
+ * @dbxUtilRelated add-to-split-string-tree, find-best-split-string-tree-match
+ *
  * @param config - Configuration specifying the separator and optional metadata merge strategy.
  * @returns A factory function that creates or extends split string trees.
+ * @__NO_SIDE_EFFECTS__
  */
 export function splitStringTreeFactory<M = unknown>(config: SplitStringTreeFactoryConfig<M>): SplitStringTreeFactory<M> {
   const { separator } = config;

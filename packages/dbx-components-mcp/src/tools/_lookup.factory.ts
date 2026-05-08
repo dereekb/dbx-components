@@ -241,6 +241,7 @@ function scoreEntry(fields: readonly FuzzyField[], q: string): number {
  *
  * @param config - the lookup tool configuration
  * @returns the assembled {@link DbxTool}
+ * @__NO_SIDE_EFFECTS__
  */
 export function createLookupTool<TEntry>(config: LookupToolConfig<TEntry>): DbxTool {
   return {

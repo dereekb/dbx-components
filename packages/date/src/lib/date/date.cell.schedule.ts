@@ -358,6 +358,7 @@ export type DateCellScheduleDayCodeConfig = Pick<YearWeekCodeConfig, 'timezone'>
  *
  * @param config - optional timezone configuration; defaults to system timezone if not provided
  * @returns a factory function that maps a Date to its DateCellScheduleDayCode
+ * @__NO_SIDE_EFFECTS__
  */
 export function dateCellScheduleDayCodeFactory(config?: DateCellScheduleDayCodeConfig): DateCellScheduleDayCodeFactory {
   const normal = yearWeekCodeDateTimezoneInstance(config?.timezone);
@@ -549,6 +550,7 @@ export type ChangeDateCellScheduleDateRangeToTimezoneFunction = ((dateRange: Dat
  *
  * @param timezoneInput - the target timezone to convert ranges into
  * @returns a conversion function with the internal normal instance exposed as `_normalInstance`
+ * @__NO_SIDE_EFFECTS__
  */
 export function changeDateCellScheduleDateRangeToTimezoneFunction(timezoneInput: DateCellTimingTimezoneInput): ChangeDateCellScheduleDateRangeToTimezoneFunction {
   const normalInstance = dateCellTimingTimezoneNormalInstance(timezoneInput);
@@ -1062,6 +1064,7 @@ export function dateCellScheduleDateCellTimingFilter<B extends DateCell = DateCe
  *
  * @param config - timing, schedule, and optional temporal/custom filters
  * @returns an expansion factory that converts DateCellRange arrays into filtered DateCellDurationSpan arrays
+ * @__NO_SIDE_EFFECTS__
  */
 export function expandDateCellScheduleFactory<B extends DateCell = DateCell>(config: DateCellScheduleDateCellTimingFilterConfig): DateCellTimingExpansionFactory<B> {
   const { invertSchedule = false, now, onlyBlocksThatHaveEnded, onlyBlocksThatHaveStarted, onlyBlocksNotYetEnded, onlyBlocksNotYetStarted, maxDateCellsToReturn, durationSpanFilter: inputDurationSpanFilter } = config;

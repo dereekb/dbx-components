@@ -50,6 +50,7 @@ export type LogicalDate = Date | LogicalDateStringCode;
  * const startOfToday = factory(new Date('2024-06-15T14:30:00Z'));
  * // startOfToday is 2024-06-15T00:00:00 in the system timezone
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function logicalDateStringCodeDateFactory(logicalDateStringCode: LogicalDateStringCode): FactoryWithInput<Date, Date> {
   let mapFn: MapFunction<Date, Date>;

@@ -102,6 +102,7 @@ export function dateTimeFieldCalc(): DateTimeFieldCalc {
  *
  * @param input - The datetime calculation input containing date, time, and mode information
  * @returns The combined Date value, or undefined if the input is cleared or incomplete
+ * @__NO_SIDE_EFFECTS__
  */
 export function buildCombinedDateTime(input: DateTimeCalcInput): Maybe<Date> {
   const { dateValue, timeString, isFullDay, fullDayInUTC, isTimeOnly, timeMode, timeDate, isCleared } = input;

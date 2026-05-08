@@ -13,6 +13,7 @@ export type DbxFirebaseCollectionStoreCreateFunction<I, O extends OnCallCreateMo
  * @param store
  * @param fn
  * @returns
+ * @__NO_SIDE_EFFECTS__
  */
 export function firebaseCollectionStoreCreateFunction<I, O extends OnCallCreateModelResult = OnCallCreateModelResult>(store: DbxFirebaseCollectionStore<any, any>, fn: ModelFirebaseCreateFunction<I, O>): DbxFirebaseCollectionStoreCreateFunction<I, O> {
   return (params: I) =>
@@ -37,6 +38,7 @@ export type DbxFirebaseCollectionStoreCrudFunction<I, O = void> = (input: I) => 
  *
  * @param fn
  * @returns
+ * @__NO_SIDE_EFFECTS__
  */
 export function firebaseCollectionStoreCrudFunction<I, O = void>(fn: ModelFirebaseCrudFunction<I, O>): DbxFirebaseCollectionStoreCrudFunction<I, O> {
   return (params: I) => loadingStateFromObs(from(fn(params)).pipe(shareReplay(1)));

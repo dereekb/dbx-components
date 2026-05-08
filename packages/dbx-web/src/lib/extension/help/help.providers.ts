@@ -22,6 +22,7 @@ export interface ProvideDbxHelpServicesConfig {
  *
  * @param config Optional configuration
  * @returns EnvironmentProviders
+ * @__NO_SIDE_EFFECTS__
  */
 export function provideDbxHelpServices(config?: ProvideDbxHelpServicesConfig): EnvironmentProviders {
   const providers: Provider[] = [DbxHelpWidgetService, DbxHelpContextService];

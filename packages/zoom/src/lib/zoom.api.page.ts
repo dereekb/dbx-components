@@ -91,6 +91,7 @@ export type ZoomFetchPageFetchFunction<I extends ZoomPageFilter, R extends ZoomP
  * @param fetch - function that fetches a single page of results from the Zoom API
  * @param defaults - optional default pagination configuration
  * @returns a configured FetchPageFactory that handles Zoom's cursor-based pagination using `next_page_token`
+ * @__NO_SIDE_EFFECTS__
  */
 export function zoomFetchPageFactory<I extends ZoomPageFilter, R extends ZoomPageResult<any>>(fetch: ZoomFetchPageFetchFunction<I, R>, defaults?: Maybe<FetchPageFactoryConfigDefaults>) {
   return fetchPageFactory<I, R>({

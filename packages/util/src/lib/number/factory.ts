@@ -22,6 +22,12 @@ export interface IncrementingNumberFactoryConfig {
  * @param config - Configuration with optional `startAt` (default 0) and `increaseBy` (default 1)
  * @returns A factory function that returns the next number in the sequence on each call
  *
+ * @dbxUtil
+ * @dbxUtilCategory number
+ * @dbxUtilKind factory
+ * @dbxUtilTags number, factory, increment, sequence, counter
+ * @dbxUtilRelated random-number-factory
+ *
  * @example
  * ```ts
  * const factory = incrementingNumberFactory({ startAt: 10, increaseBy: 5 });
@@ -29,6 +35,7 @@ export interface IncrementingNumberFactoryConfig {
  * factory(); // 15
  * factory(); // 20
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function incrementingNumberFactory(config: IncrementingNumberFactoryConfig = {}): NumberFactory {
   const { startAt: initial, increaseBy: inputIncreaseBy } = config;

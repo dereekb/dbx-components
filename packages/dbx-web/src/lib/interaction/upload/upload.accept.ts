@@ -107,6 +107,7 @@ export type FileArrayAcceptMatchFunction = (input: File[]) => FileArrayAcceptMat
  * const result = matchFn(fileList);
  * console.log(result.accepted, result.rejected);
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function fileArrayAcceptMatchFunction(config: FileArrayAcceptMatchConfig): FileArrayAcceptMatchFunction {
   const multiple = config.multiple ?? true;
@@ -151,6 +152,7 @@ export type FileAcceptFunction = DecisionFunction<FileAcceptFunctionInput>;
  * isAccepted({ name: 'photo.png', type: 'image/png' }); // true
  * isAccepted({ name: 'doc.txt', type: 'text/plain' }); // false
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function fileAcceptFunction(accept: FileAcceptString | FileAcceptFilterTypeStringArray): FileAcceptFunction {
   const acceptList = fileAcceptFilterTypeStringArray(accept);

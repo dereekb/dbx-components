@@ -67,6 +67,7 @@ export interface UiComponentRegistry {
  *
  * @param loaded - the merged registry returned by `loadUiComponentManifests`
  * @returns a domain-friendly read API over the merged entries
+ * @__NO_SIDE_EFFECTS__
  */
 export function createUiComponentRegistry(loaded: LoadUiComponentManifestsResult): UiComponentRegistry {
   const entries = Array.from(loaded.entries.values()).sort((a, b) => a.slug.localeCompare(b.slug));
@@ -81,6 +82,7 @@ export function createUiComponentRegistry(loaded: LoadUiComponentManifestsResult
  * @param input.entries - the full entry list (will be sorted by slug)
  * @param input.loadedSources - source labels reported via `registry.loadedSources`
  * @returns a domain-friendly read API over the supplied entries
+ * @__NO_SIDE_EFFECTS__
  */
 export function createUiComponentRegistryFromEntries(input: { readonly entries: readonly UiComponentEntry[]; readonly loadedSources: readonly string[] }): UiComponentRegistry {
   const all = [...input.entries].sort((a, b) => a.slug.localeCompare(b.slug));

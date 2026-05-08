@@ -152,9 +152,16 @@ export class TimerCancelledError extends BaseError {
 /**
  * Creates a new Timer from the input duration.
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilKind factory
+ * @dbxUtilTags date, time, timer, factory, duration
+ * @dbxUtilRelated timer
+ *
  * @param duration - The duration of the timer.
  * @param startImmediately - Whether the timer should start immediately. Defaults to true.
  * @returns The new Timer.
+ * @__NO_SIDE_EFFECTS__
  */
 export function makeTimer(duration: Milliseconds, startImmediately = true): Timer {
   const createdAt = new Date();

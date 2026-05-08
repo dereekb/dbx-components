@@ -142,6 +142,7 @@ export interface BasicSyncEntityCommonTypeSynchronizerConfig {
  * @throws {NoPrimarySyncSourceError} when no primary source is found
  * @throws {MultiplePrimarySyncSourceError} when more than one primary source is found
  * @throws {SynchronizationFailedError} when primary or secondary sync returns failed/error
+ * @__NO_SIDE_EFFECTS__
  */
 export function basicSyncEntityCommonTypeSynchronizerInstanceFactory(config: BasicSyncEntityCommonTypeSynchronizerConfig): BasicSyncEntityCommonTypeSynchronizer {
   const { commonType, sources, entitySourceContextLoader, dynamicSources = false } = config;

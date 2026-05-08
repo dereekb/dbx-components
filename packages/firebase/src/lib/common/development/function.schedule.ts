@@ -30,7 +30,7 @@ export interface ScheduledFunctionDevelopmentFirebaseFunctionParams {
 /**
  * ArkType validator for {@link ScheduledFunctionDevelopmentFirebaseFunctionParams}.
  */
-export const scheduledFunctionDevelopmentFirebaseFunctionParamsType = type({
+export const scheduledFunctionDevelopmentFirebaseFunctionParamsType = /* @__PURE__ */ type({
   type: "'list' | 'run'",
   'run?': clearable('string')
 }) as Type<ScheduledFunctionDevelopmentFirebaseFunctionParams>;

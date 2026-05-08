@@ -110,6 +110,7 @@ export type ZohoFetchPageFetchFunction<I extends ZohoPageFilter, R extends ZohoP
  *   const secondPage = await firstPage.fetchNext();
  * }
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function zohoFetchPageFactory<I extends ZohoPageFilter, R extends ZohoPageResult<any>>(fetch: ZohoFetchPageFetchFunction<I, R>, defaults?: Maybe<FetchPageFactoryConfigDefaults>) {
   return fetchPageFactory<I, R>({

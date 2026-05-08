@@ -120,6 +120,7 @@ export interface OnCallWithAuthAwareNestRequireAuthRef {
  *
  * @param fn
  * @param request
+ * @__NO_SIDE_EFFECTS__
  */
 export function assertRequestRequiresAuthForFunction(fn: OnCallWithAuthAwareNestRequireAuthRef, request: OnCallWithNestContextRequest<any, any>) {
   if (fn._requireAuth !== false) {

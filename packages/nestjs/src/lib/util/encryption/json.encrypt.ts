@@ -115,6 +115,7 @@ export interface AES256GCMEncryption {
  * @param source - The hex-encoded secret or getter for the AES-256 key.
  * @returns An `AES256GCMEncryption` instance.
  * @throws Error if the resolved key is not 64 hex characters.
+ * @__NO_SIDE_EFFECTS__
  */
 export function createAES256GCMEncryption(source: AES256GCMEncryptionSecretSource): AES256GCMEncryption {
   const getKey = resolveEncryptionKey(source);
@@ -218,6 +219,7 @@ export function decryptValue<T>(encoded: string, key: Buffer): T {
  * @param source - The hex-encoded secret or getter for the AES-256 key.
  * @returns A `StringEncryptionProvider` that encrypts/decrypts strings via AES-256-GCM.
  * @throws Error if the resolved key is not 64 hex characters.
+ * @__NO_SIDE_EFFECTS__
  */
 export function createAesStringEncryptionProvider(source: AES256GCMEncryptionSecretSource): StringEncryptionProvider {
   const encryption = createAES256GCMEncryption(source);

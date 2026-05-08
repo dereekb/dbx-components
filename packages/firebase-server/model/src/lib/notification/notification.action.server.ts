@@ -5,6 +5,9 @@ import {
   type AsyncNotificationUserUpdateAction,
   type CleanupSentNotificationsParams,
   cleanupSentNotificationsParamsType,
+  type CleanupOldNotificationLoggedEventDaysParams,
+  cleanupOldNotificationLoggedEventDaysParamsType,
+  type CleanupOldNotificationLoggedEventDaysResult,
   type CreateNotificationBoxParams,
   createNotificationBoxParamsType,
   type CreateNotificationSummaryParams,
@@ -67,6 +70,8 @@ import {
   type ResyncNotificationUserParams,
   resyncNotificationUserParamsType,
   loadDocumentsForIds,
+  notificationLoggedEventDayId,
+  notificationLoggedEventDaysOlderThanQuery,
   type NotificationBoxId,
   type AppNotificationTemplateTypeInfoRecordServiceRef,
   type NotificationTemplateTypeInfo,
@@ -91,11 +96,12 @@ import {
   updateNotificationUserNotificationSendExclusions,
   setIdAndKeyFromKeyIdRefOnDocumentData,
   calculateNsForNotificationUserNotificationBoxRecipientConfigs,
-  applyExclusionsToNotificationUserNotificationBoxRecipientConfigs
+  applyExclusionsToNotificationUserNotificationBoxRecipientConfigs,
+  type NotificationLoggedEventDayDocument
 } from '@dereekb/firebase';
 import { assertSnapshotData, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
-import { UNSET_INDEX_NUMBER, batch, computeNextFreeIndexOnSortedValuesFunction, filterMaybeArrayValues, makeValuesGroupMap, performAsyncTasks, readIndexNumber, type Maybe, makeModelMap, removeValuesAtIndexesFromArrayCopy, takeFront, areEqualPOJOValues, type EmailAddress, type E164PhoneNumber, asArray, separateValues, dateOrMillisecondsToDate, asPromise, filterOnlyUndefinedValues, iterablesAreSetEquivalent, mapIdentityFunction } from '@dereekb/util';
+import { UNSET_INDEX_NUMBER, batch, computeNextFreeIndexOnSortedValuesFunction, filterMaybeArrayValues, makeValuesGroupMap, performAsyncTasks, readIndexNumber, type Maybe, makeModelMap, removeValuesAtIndexesFromArrayCopy, takeFront, areEqualPOJOValues, type EmailAddress, type E164PhoneNumber, asArray, dateOrMillisecondsToDate, asPromise, filterOnlyUndefinedValues, iterablesAreSetEquivalent, mapIdentityFunction } from '@dereekb/util';
 import { type InjectionToken } from '@nestjs/common';
 import { addHours, addMinutes, addSeconds, hoursToMilliseconds, isFuture } from 'date-fns';
 import { type NotificationTemplateServiceInstance, type NotificationTemplateServiceRef } from './notification.config.service';
@@ -160,6 +166,7 @@ export abstract class NotificationServerActions {
   abstract sendNotification(params: SendNotificationParams): Promise<TransformAndValidateFunctionResult<SendNotificationParams, (notificationDocument: NotificationDocument) => Promise<SendNotificationResult>>>;
   abstract sendQueuedNotifications(params: SendQueuedNotificationsParams): Promise<TransformAndValidateFunctionResult<SendQueuedNotificationsParams, (sendQueuedNotificationsInput?: Maybe<SendQueuedNotificationsInput>) => Promise<SendQueuedNotificationsResult>>>;
   abstract cleanupSentNotifications(params: CleanupSentNotificationsParams): Promise<TransformAndValidateFunctionResult<CleanupSentNotificationsParams, () => Promise<CleanupSentNotificationsResult>>>;
+  abstract cleanupOldNotificationLoggedEventDays(params: CleanupOldNotificationLoggedEventDaysParams): Promise<TransformAndValidateFunctionResult<CleanupOldNotificationLoggedEventDaysParams, () => Promise<CleanupOldNotificationLoggedEventDaysResult>>>;
 }
 
 /**
@@ -189,7 +196,8 @@ export function notificationServerActions(context: NotificationServerActionsCont
     updateNotificationBoxRecipient: updateNotificationBoxRecipientFactory(context),
     sendNotification: sendNotificationFactory(context),
     sendQueuedNotifications: sendQueuedNotificationsFactory(context),
-    cleanupSentNotifications: cleanupSentNotificationsFactory(context)
+    cleanupSentNotifications: cleanupSentNotificationsFactory(context),
+    cleanupOldNotificationLoggedEventDays: cleanupOldNotificationLoggedEventDaysFactory(context)
   };
 }
 
@@ -1101,7 +1109,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
       // Load the notification document outside of any potential context (transaction, etc.)
       const notificationDocument = notificationCollectionGroup.documentAccessor().loadDocumentFrom(inputNotificationDocument);
 
-      const { nextSat, throttled, tryRun, isNotificationTask, notificationTaskHandler, notification, createdBox, notificationBoxNeedsInitialization, notificationBox, notificationBoxModelKey, deletedNotification, templateInstance, isConfiguredTemplateType, isKnownTemplateType, onlySendToExplicitlyEnabledRecipients, onlyTextExplicitlyEnabledRecipients } = await firestoreContext.runTransaction(async (transaction) => {
+      const { nextSat, throttled, tryRun, isNotificationTask, isLoggedEvent, notificationTaskHandler, notification, createdBox, notificationBoxNeedsInitialization, notificationBox, notificationBoxModelKey, deletedNotification, templateInstance, isConfiguredTemplateType, isKnownTemplateType, onlySendToExplicitlyEnabledRecipients, onlyTextExplicitlyEnabledRecipients } = await firestoreContext.runTransaction(async (transaction) => {
         const notificationBoxDocument = notificationBoxCollection.documentAccessorForTransaction(transaction).loadDocument(notificationDocument.parent);
         const notificationDocumentInTransaction = notificationCollectionGroup.documentAccessorForTransaction(transaction).loadDocumentFrom(notificationDocument);
 
@@ -1110,12 +1118,16 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
 
         const model = inferKeyFromTwoWayFlatFirestoreModelKey(notificationBoxDocument.id);
         const isNotificationTask = notification?.st === NotificationSendType.TASK_NOTIFICATION;
+        // Defensive short-circuit. Logged events are persisted with d=true and NO_TRY channel
+        // states from creation, so the send queue never returns them. This branch only triggers
+        // when sendNotification() is invoked directly on a logged-event document.
+        const isLoggedEvent = notification?.st === NotificationSendType.LOGGED_EVENT;
 
         let tryRun = true;
         let throttled = false;
         let nextSat: Maybe<Date>;
 
-        if (!notification) {
+        if (!notification || isLoggedEvent) {
           tryRun = false;
         } else if (!ignoreSendAtThrottle) {
           tryRun = !isFuture(notification.sat);
@@ -1235,6 +1247,10 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                 case NotificationSendType.TASK_NOTIFICATION:
                   // task notifications do not require a notification box; continue with current tryRun
                   break;
+                case NotificationSendType.LOGGED_EVENT:
+                  // unreachable in normal operation — logged events are short-circuited above. Kept
+                  // here so the enum exhaustiveness check stays satisfied.
+                  break;
               }
             }
 
@@ -1270,6 +1286,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
           nextSat,
           throttled,
           isNotificationTask,
+          isLoggedEvent,
           deletedNotification,
           createdBox,
           notificationBoxModelKey: model,
@@ -1305,7 +1322,13 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
 
       const notificationTemplateType: Maybe<NotificationTemplateType> = templateInstance?.type;
 
-      if (isNotificationTask) {
+      if (isLoggedEvent) {
+        // Logged events bypass the send pipeline entirely. The document is persisted with d=true
+        // and NO_TRY channel states from creation, so there's nothing to dispatch — just report
+        // success so the result lands in the cleanup pile rather than the failure pile.
+        success = true;
+        notificationMarkedDone = notification?.d === true;
+      } else if (isNotificationTask) {
         await handleNotificationTask();
       } else {
         await handleNormalNotification();
@@ -1821,6 +1844,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
               case NotificationSendType.INIT_BOX_AND_SEND:
               case NotificationSendType.SEND_WITHOUT_CREATING_BOX:
               case NotificationSendType.TASK_NOTIFICATION:
+              case NotificationSendType.LOGGED_EVENT:
                 // no additional handling needed for these send types when notification box is absent
                 break;
             }
@@ -1832,6 +1856,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
         notificationTemplateType,
         isKnownTemplateType,
         isNotificationTask,
+        isLoggedEvent,
         isUniqueNotificationTask,
         uniqueNotificationTaskConflict,
         isConfiguredTemplateType,
@@ -2013,7 +2038,7 @@ export function sendQueuedNotificationsFactory(context: NotificationServerAction
  * @returns a transform-and-validate function that cleans up sent notification documents and returns aggregate results
  */
 export function cleanupSentNotificationsFactory(context: NotificationServerActionsContext) {
-  const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationCollectionGroup, notificationBoxCollection, notificationWeekCollectionFactory } = context;
+  const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationCollectionGroup, notificationBoxCollection, notificationWeekCollectionFactory, notificationLoggedEventDayCollectionFactory, notificationLoggedEventDayPagedItemsCollectionFactory } = context;
 
   return firebaseServerActionTransformFunctionFactory(cleanupSentNotificationsParamsType, async () => {
     return async () => {
@@ -2022,6 +2047,7 @@ export function cleanupSentNotificationsFactory(context: NotificationServerActio
       const notificationTasksDeletedCount: number = 0;
       let notificationWeeksCreated: number = 0;
       let notificationWeeksUpdated: number = 0;
+      let notificationLoggedEventsCleanedUp: number = 0;
 
       // iterate through all Notification items that need to be cleaned up
 
@@ -2029,11 +2055,12 @@ export function cleanupSentNotificationsFactory(context: NotificationServerActio
         const cleanupSentNotificationsResults = await cleanupSentNotifications();
 
         cleanupSentNotificationsResults.results.forEach((x) => {
-          const { itemsDeleted, weeksCreated, weeksUpdated } = x[1];
+          const { itemsDeleted, weeksCreated, weeksUpdated, loggedEventsCleanedUp } = x[1];
 
           notificationsDeleted += itemsDeleted;
           notificationWeeksCreated += weeksCreated;
           notificationWeeksUpdated += weeksUpdated;
+          notificationLoggedEventsCleanedUp += loggedEventsCleanedUp;
         });
 
         const notificationBoxesUpdated = cleanupSentNotificationsResults.results.length;
@@ -2056,7 +2083,24 @@ export function cleanupSentNotificationsFactory(context: NotificationServerActio
 
             const allPairsWithDataAndMarkedDeleted = allPairs.filter((x) => x.data?.d);
 
-            const { included: taskPairsWithDataAndMarkedDeleted, excluded: normalPairsWithDataAndMarkedDeleted } = separateValues(allPairsWithDataAndMarkedDeleted, (x) => x.data?.st === NotificationSendType.TASK_NOTIFICATION);
+            // 3-way split: tasks → direct delete; logged events → archive to NotificationLoggedEventDay; rest → archive to NotificationWeek.
+            const taskPairsWithDataAndMarkedDeleted: FirestoreDocumentSnapshotDataPair<NotificationDocument>[] = [];
+            const loggedEventPairsWithDataAndMarkedDeleted: FirestoreDocumentSnapshotDataPair<NotificationDocument>[] = [];
+            const normalPairsWithDataAndMarkedDeleted: FirestoreDocumentSnapshotDataPair<NotificationDocument>[] = [];
+
+            for (const pair of allPairsWithDataAndMarkedDeleted) {
+              switch (pair.data?.st) {
+                case NotificationSendType.TASK_NOTIFICATION:
+                  taskPairsWithDataAndMarkedDeleted.push(pair);
+                  break;
+                case NotificationSendType.LOGGED_EVENT:
+                  loggedEventPairsWithDataAndMarkedDeleted.push(pair);
+                  break;
+                default:
+                  normalPairsWithDataAndMarkedDeleted.push(pair);
+                  break;
+              }
+            }
 
             const pairsGroupedByWeek = [...makeValuesGroupMap(normalPairsWithDataAndMarkedDeleted, (x) => yearWeekCode((x.data as Notification).sat)).entries()];
 
@@ -2064,6 +2108,15 @@ export function cleanupSentNotificationsFactory(context: NotificationServerActio
             const pairsGroupedByWeekInBatches = pairsGroupedByWeek.flatMap((x) => {
               const batches = batch(x[1], 40);
               return batches.map((batch) => [x[0], batch] as [number, FirestoreDocumentSnapshotDataPair<NotificationDocument>[]]);
+            });
+
+            // group logged events by ISO day string (derived from sat) for archival into NotificationLoggedEventDay.
+            const pairsGroupedByLoggedEventDay = [...makeValuesGroupMap(loggedEventPairsWithDataAndMarkedDeleted, (x) => notificationLoggedEventDayId((x.data as Notification).sat)).entries()];
+
+            // batch incase there are a lot of new logged events to move to a single day
+            const pairsGroupedByLoggedEventDayInBatches = pairsGroupedByLoggedEventDay.flatMap((x) => {
+              const batches = batch(x[1], 40);
+              return batches.map((batchEntries) => [x[0], batchEntries] as [string, FirestoreDocumentSnapshotDataPair<NotificationDocument>[]]);
             });
 
             const notificationBoxDocument = notificationBoxCollection.documentAccessor().loadDocument(notificationDocumentsInSameBox[0].parent);
@@ -2108,6 +2161,36 @@ export function cleanupSentNotificationsFactory(context: NotificationServerActio
               });
             });
 
+            // create/update the NotificationLoggedEventDay
+            const loggedEventDayResults = await performAsyncTasks(pairsGroupedByLoggedEventDayInBatches, async ([dayId, notificationDocumentsInSameDay]) => {
+              return firestoreContext.runTransaction(async (transaction) => {
+                const dayCollection = notificationLoggedEventDayCollectionFactory(notificationBoxDocument);
+                const dayDocument = dayCollection.documentAccessorForTransaction(transaction).loadDocumentForId(dayId);
+                const notificationDocumentsInTransaction = loadDocumentsForDocumentReferencesFromValues(notificationCollectionGroup.documentAccessorForTransaction(transaction), notificationDocumentsInSameDay, (x) => x.snapshot.ref);
+                const pagedItems = notificationLoggedEventDayPagedItemsCollectionFactory(dayDocument);
+
+                // Reads must precede writes inside a Firestore transaction. Existing paged items
+                // read non-transactionally; the cleanup runs serially per box so concurrent writes
+                // are not a concern here. writeAllItemsInTransaction() does its own transactional
+                // read of existing page IDs, so it must run before any other transactional write.
+                const [dayWrapper, existingItems] = await Promise.all([dayDocument.snapshotData(), pagedItems.loadAllItems()]);
+
+                const newItems = notificationDocumentsInSameDay.map((x) => (x.data as DocumentDataWithIdAndKey<Notification>).n);
+                await pagedItems.writeAllItemsInTransaction(transaction, [...existingItems, ...newItems]);
+
+                if (!dayWrapper) {
+                  await dayDocument.create({ d: dayId });
+                }
+
+                // delete the source notification docs in the same transaction
+                await Promise.all(notificationDocumentsInTransaction.map((x) => x.accessor.delete()));
+
+                return {
+                  itemsAppended: newItems.length
+                };
+              });
+            });
+
             // delete all the task notifications
             const writeBatch = firestoreContext.batch();
             const writeBatchAccessor = notificationCollectionGroup.documentAccessorForTransaction(writeBatch);
@@ -2117,6 +2200,7 @@ export function cleanupSentNotificationsFactory(context: NotificationServerActio
             let weeksCreated = 0;
             let weeksUpdated = 0;
             const tasksDeleted = taskPairsWithDataAndMarkedDeleted.length;
+            let loggedEventsCleanedUp = 0;
 
             notificationWeekResults.results.forEach((x) => {
               if (x[1].created) {
@@ -2126,11 +2210,16 @@ export function cleanupSentNotificationsFactory(context: NotificationServerActio
               }
             });
 
+            loggedEventDayResults.results.forEach((x) => {
+              loggedEventsCleanedUp += x[1].itemsAppended;
+            });
+
             return {
               weeksCreated,
               weeksUpdated,
               itemsDeleted: allPairsWithDataAndMarkedDeleted.length,
-              tasksDeleted
+              tasksDeleted,
+              loggedEventsCleanedUp
             };
           },
           {
@@ -2144,7 +2233,70 @@ export function cleanupSentNotificationsFactory(context: NotificationServerActio
         notificationTasksDeletedCount,
         notificationsDeleted,
         notificationWeeksCreated,
-        notificationWeeksUpdated
+        notificationWeeksUpdated,
+        notificationLoggedEventsCleanedUp
+      };
+
+      return result;
+    };
+  });
+}
+
+/**
+ * Factory for the `cleanupOldNotificationLoggedEventDays` action.
+ *
+ * Queries the {@link NotificationLoggedEventDayFirestoreCollectionGroup} for day documents whose
+ * ISO day string ID is older than `now - retentionDays`, then deletes each old day's wrapper doc
+ * and all of its nested page documents (the paged `_index` plus every page).
+ *
+ * For each old day, all docs in the day's paged subcollection are deleted before the wrapper doc
+ * itself, so a partial failure leaves the index pointing at zero pages rather than orphaned ones.
+ *
+ * @param context - the notification server actions context with paged-items collection access
+ * @returns a transform-and-validate function that purges old logged-event days and returns aggregate counts
+ */
+export function cleanupOldNotificationLoggedEventDaysFactory(context: NotificationServerActionsContext) {
+  const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationLoggedEventDayCollectionGroup, notificationLoggedEventDayPagedItemsCollectionFactory } = context;
+
+  async function deleteOldLoggedEventDay(dayDocument: NotificationLoggedEventDayDocument): Promise<{ pageDocsDeleted: number }> {
+    const pagesCollection = notificationLoggedEventDayPagedItemsCollectionFactory(dayDocument);
+    // List all page docs in the day's paged subcollection — both numbered pages and the `_index`.
+    const allPageDocs = await pagesCollection.queryDocument().getDocs();
+
+    return firestoreContext.runTransaction(async (transaction) => {
+      const pageTxAccessor = pagesCollection.documentAccessorForTransaction(transaction);
+      const dayTxAccessor = notificationLoggedEventDayCollectionGroup.documentAccessorForTransaction(transaction);
+
+      // Delete every page (numbered pages first; the `_index` is included in the same batch).
+      await Promise.all(allPageDocs.map((pageDoc) => pageTxAccessor.loadDocumentFrom(pageDoc).accessor.delete()));
+      // Delete the day wrapper itself last.
+      await dayTxAccessor.loadDocumentFrom(dayDocument).accessor.delete();
+
+      return { pageDocsDeleted: allPageDocs.length };
+    });
+  }
+
+  return firebaseServerActionTransformFunctionFactory(cleanupOldNotificationLoggedEventDaysParamsType, async (params) => {
+    return async () => {
+      const now = new Date();
+      const oldDaysQuery = notificationLoggedEventDayCollectionGroup.queryDocument(notificationLoggedEventDaysOlderThanQuery(params.retentionDays, now));
+      const oldDayDocuments = await oldDaysQuery.getDocs();
+
+      let daysDeleted = 0;
+      let pagesDeleted = 0;
+
+      const deleteResults = await performAsyncTasks(oldDayDocuments, deleteOldLoggedEventDay, {
+        maxParallelTasks: 10
+      });
+
+      deleteResults.results.forEach((entry) => {
+        daysDeleted += 1;
+        pagesDeleted += entry[1].pageDocsDeleted;
+      });
+
+      const result: CleanupOldNotificationLoggedEventDaysResult = {
+        daysDeleted,
+        pagesDeleted
       };
 
       return result;

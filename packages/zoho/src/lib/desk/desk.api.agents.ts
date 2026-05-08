@@ -142,6 +142,7 @@ export type ZohoDeskGetAgentsPageFactory = (input: ZohoDeskGetAgentsInput, optio
  *
  * @param context - Authenticated Zoho Desk context
  * @returns Page factory for iterating over agent results
+ * @__NO_SIDE_EFFECTS__
  */
 export function zohoDeskGetAgentsPageFactory(context: ZohoDeskContext): ZohoDeskGetAgentsPageFactory {
   return zohoDeskFetchPageFactory(zohoDeskGetAgents(context));

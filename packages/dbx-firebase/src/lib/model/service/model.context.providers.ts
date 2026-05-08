@@ -17,6 +17,7 @@ export interface ProvideDbxFirebaseModelContextServiceConfig<T extends DbxFireba
  *
  * @param config Configuration
  * @returns EnvironmentProviders
+ * @__NO_SIDE_EFFECTS__
  */
 export function provideDbxFirebaseModelContextService<T extends DbxFirebaseModelContextService>(config: ProvideDbxFirebaseModelContextServiceConfig<T>): EnvironmentProviders {
   const { dbxFirebaseModelContextServiceClass, dbxFirebaseModelContextServiceFactory } = config;

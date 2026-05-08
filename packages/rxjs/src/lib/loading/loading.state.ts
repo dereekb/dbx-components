@@ -730,6 +730,7 @@ export type MapLoadingStateValueMapFunction<O, I, L extends LoadingState<I> = Lo
  *
  * @param mapFn - function to transform the value and state into the output type
  * @returns a function that accepts a loading state and returns the mapped value or undefined
+ * @__NO_SIDE_EFFECTS__
  */
 export function mapLoadingStateValueFunction<O, I, L extends LoadingState<I> = LoadingState<I>>(mapFn: MapLoadingStateValueMapFunction<O, I, L>): MapLoadingStateValueFunction<O, I, L> {
   return (state: L) => {

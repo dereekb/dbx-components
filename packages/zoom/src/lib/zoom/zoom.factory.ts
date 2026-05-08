@@ -32,6 +32,7 @@ export type ZoomFactory = (config: ZoomConfig) => Zoom;
  *
  * @param factoryConfig Configuration including OAuth context, rate limiting, and fetch settings
  * @returns A factory function that creates a configured Zoom API instance
+ * @__NO_SIDE_EFFECTS__
  */
 export function zoomFactory(factoryConfig: ZoomFactoryConfig): ZoomFactory {
   const { oauthContext } = factoryConfig;

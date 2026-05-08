@@ -25,8 +25,9 @@ export function failSuccessfullyError(message?: string): ExpectedFailError {
 /**
  * Throws an {@link ExpectedFailError} to signal that a test reached the expected failure point.
  *
- * Used within {@link shouldFail} or {@link expectSuccessfulFail} to indicate that the expected
- * error path was taken successfully.
+ * Must be called inside {@link shouldFail} (typically via {@link itShouldFail}) or {@link expectSuccessfulFail},
+ * which catch `ExpectedFailError` and convert it into a passing test. Calling it inside a plain
+ * `it()` block causes the test to fail because the error propagates uncaught.
  *
  * @param message - optional error message
  */
@@ -118,11 +119,23 @@ export function expectFailAssertErrorType(expectedType: ClassType | ClassLikeTyp
 }
 
 /**
- * Function that expects any failure to be thrown, then throws an ExpectedFailError.
+ * Function that expects any failure to be thrown, then throws an {@link ExpectedFailError}.
+ *
+ * Intended to be used inside {@link itShouldFail} or {@link shouldFail}, which catch the
+ * `ExpectedFailError` and treat it as a passing test. When used inside a plain `it()` block
+ * the thrown `ExpectedFailError` propagates and fails the test even though `errorFn` rejected
+ * as expected — for that case use vitest's `await expect(...).rejects.toThrow(...)` instead.
  *
  * @param errorFn - function expected to throw an error (sync or async)
  * @param assertFailType - optional assertion to validate the type or content of the thrown error
- * @returns a promise that resolves when the expected failure is verified
+ * @returns a promise that rejects with {@link ExpectedFailError} when the expected failure is verified, or with {@link UnexpectedSuccessFailureError} when `errorFn` resolves successfully
+ *
+ * @example
+ * ```ts
+ * itShouldFail('when the user is not authorized', async () => {
+ *   await expectFail(() => callProtectedEndpoint(), expectFailAssertHttpErrorServerErrorCode(403));
+ * });
+ * ```
  */
 export function expectFail(errorFn: () => PromiseOrValue<any>, assertFailType?: ExpectFailAssertionFunction): Promise<void> {
   function handleError(e: unknown) {
@@ -159,7 +172,13 @@ export function expectFail(errorFn: () => PromiseOrValue<any>, assertFailType?: 
 }
 
 /**
- * Function that expects an ExpectedFailError to be thrown.
+ * Function that expects an {@link ExpectedFailError} to be thrown by `errorFn`.
+ *
+ * Lower-level building block used by {@link shouldFail}; most consumer tests should use
+ * {@link itShouldFail} + {@link expectFail} (or {@link failSuccessfully}) rather than calling
+ * this directly. If `errorFn` resolves without throwing, this calls `handleError` with an
+ * {@link UnexpectedSuccessFailureError}; if it throws something other than `ExpectedFailError`,
+ * `handleError` likewise rejects the surrounding test.
  *
  * @param errorFn - function expected to throw (sync or async); if it succeeds, the test fails
  * @param handleError - optional custom error handler; defaults to {@link EXPECT_ERROR_DEFAULT_HANDLER}

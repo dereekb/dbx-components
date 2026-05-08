@@ -64,7 +64,7 @@ export function formatSmellResult(input: { readonly html: string; readonly scss:
     if (tokenTable !== null) {
       sections.push('', '## Tokens to use', '', tokenTable);
     }
-    const infoDigest = formatInfoDigest(matches as readonly SmellMatchWithExtras[]);
+    const infoDigest = formatInfoDigest(matches);
     if (infoDigest !== null) {
       sections.push('', '## Informational notes', '', infoDigest);
     }

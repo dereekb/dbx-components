@@ -306,9 +306,15 @@ export function pairGroupValues<T, K extends PrimativeKey = PrimativeKey>(values
 /**
  * Creates an array of `[key, value]` tuples by extracting a key from each value.
  *
+ * @dbxUtil
+ * @dbxUtilCategory grouping
+ * @dbxUtilTags grouping, key, pairs, tuple, array
+ * @dbxUtilRelated group-values, make-values-group-map
+ *
  * @param values - Values to create key pairs from.
  * @param keyFn - Extracts the key from each value.
  * @returns An array of `[key, value]` tuples.
+ * @__NO_SIDE_EFFECTS__
  */
 export function makeKeyPairs<T, K extends string | number = string | number>(values: T[], keyFn: ReadKeyFunction<T, K>): [Maybe<K>, T][] {
   return values.map((x) => [keyFn(x), x]);
@@ -376,6 +382,8 @@ export function groupValues<T, K extends PrimativeKey = PrimativeKey>(values: Ma
  * const map = makeValuesGroupMap(items, (x) => x.type);
  * // Map { 'a' => [{ type: 'a', v: 1 }, { type: 'a', v: 3 }], 'b' => [{ type: 'b', v: 2 }] }
  * ```
+ *
+ * @__NO_SIDE_EFFECTS__
  */
 export function makeValuesGroupMap<T, K extends PrimativeKey = PrimativeKey>(values: T[], groupKeyFn: ReadKeyFunction<T, K>): Map<Maybe<K>, T[]>;
 export function makeValuesGroupMap<T, K extends PrimativeKey = PrimativeKey>(values: Maybe<T[]>, groupKeyFn: ReadKeyFunction<T, K>): Map<Maybe<K>, T[]>;

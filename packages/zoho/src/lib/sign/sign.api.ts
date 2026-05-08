@@ -154,6 +154,7 @@ export function zohoSignGetDocuments(context: ZohoSignContext): ZohoSignGetDocum
  * const firstPage = await fetchPage.fetchNext();
  * const secondPage = await firstPage.fetchNext();
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function zohoSignGetDocumentsPageFactory(context: ZohoSignContext) {
   const getDocuments = zohoSignGetDocuments(context);

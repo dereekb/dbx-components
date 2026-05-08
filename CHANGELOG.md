@@ -1,3 +1,21 @@
+## [13.11.3](https://github.com/dereekb/dbx-components/compare/v13.11.2-dev...v13.11.3) (2026-05-08)
+
+
+### Build System
+
+- lint fix + mcp regeneration ([c676b46e](https://github.com/dereekb/dbx-components/commit/c676b46e3517470f68cdb11cf35d90dbce865b54))
+
+
+### Code Refactoring
+
+- added @__NO_SIDE_EFFECTS__ to factories ([857ee869](https://github.com/dereekb/dbx-components/commit/857ee869782d59402b6998ce9cab5ff4a9f86448))
+- added NotificationLoggedEvent ([5b404553](https://github.com/dereekb/dbx-components/commit/5b4045536ab14cb33387c586f3b91d6debcc3ab4))
+- added paged-item firestore subcollection ([4f78829e](https://github.com/dereekb/dbx-components/commit/4f78829ef5605607661e906ad968197b6761bf6a))
+- model-snapshot-fields mcp tools ([a66d93ad](https://github.com/dereekb/dbx-components/commit/a66d93ad9cefccc82e7ac1a01374f79cdfffcf2c))
+- sonarqube refactoring ([537a68fb](https://github.com/dereekb/dbx-components/commit/537a68fb1173c8176fb06077ceafa4f9302ce5a1))
+- updated notification logged event tests ([eaa088cd](https://github.com/dereekb/dbx-components/commit/eaa088cd4f40e5c00a026fb99422627e9b326f58))
+- zoho setup script + dbx.setup.json manifest ([5cfa6862](https://github.com/dereekb/dbx-components/commit/5cfa6862d5848519f0c2d421c56965fefa43be2d))
+
 ## [13.11.2](https://github.com/dereekb/dbx-components/compare/v13.11.1-dev...v13.11.2) (2026-05-07)
 
 

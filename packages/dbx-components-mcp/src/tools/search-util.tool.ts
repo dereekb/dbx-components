@@ -193,6 +193,7 @@ export interface CreateSearchUtilToolConfig {
  *
  * @param config - the registry the tool should rank against
  * @returns a registered {@link DbxTool} ready to add to the dispatch table
+ * @__NO_SIDE_EFFECTS__
  */
 export function createSearchUtilTool(config: CreateSearchUtilToolConfig): DbxTool {
   const { registry } = config;

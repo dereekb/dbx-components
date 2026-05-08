@@ -50,6 +50,7 @@ export interface OptionalFirestoreEncryptedFieldConfig<T> {
  * @template T - The JSON-serializable value type.
  * @param config - Encryption field configuration.
  * @returns A field mapping configuration for encrypted values.
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreEncryptedField<T>(config: FirestoreEncryptedFieldConfig<T>): FirestoreModelFieldMapFunctionsConfig<T, string> {
   const { secret, default: defaultValue } = config;
@@ -82,6 +83,7 @@ export function firestoreEncryptedField<T>(config: FirestoreEncryptedFieldConfig
  * @template T - The JSON-serializable value type.
  * @param config - Encryption field configuration.
  * @returns A field mapping configuration for optional encrypted values.
+ * @__NO_SIDE_EFFECTS__
  */
 export function optionalFirestoreEncryptedField<T>(config: OptionalFirestoreEncryptedFieldConfig<T>): FirestoreModelFieldMapFunctionsConfig<Maybe<T>, Maybe<string>> {
   const { secret } = config;

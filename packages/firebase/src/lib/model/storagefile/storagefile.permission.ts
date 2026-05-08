@@ -49,6 +49,7 @@ export type GrantStorageFileRolesForUserAuthFunction = (input: GrantStorageFileR
  *   rolesForStorageFileOwnershipKey: (key) => ({ read: true })
  * });
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function grantStorageFileRolesForUserAuthFunction<T extends FirebaseModelContext>(config: GrantStorageFileRolesForUserAuthFunctionConfig<T>): GrantStorageFileRolesForUserAuthFunction {
   const { output, context } = config;

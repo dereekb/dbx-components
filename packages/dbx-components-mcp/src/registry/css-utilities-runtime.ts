@@ -212,6 +212,7 @@ function scoreAgainstEntry(input: ReadonlyMap<string, string>, entry: ReadonlyMa
  *
  * @param loaded - the merged registry returned by `loadCssUtilityManifests`
  * @returns a domain-friendly read API over the merged entries
+ * @__NO_SIDE_EFFECTS__
  */
 export function createCssUtilityRegistry(loaded: LoadCssUtilityManifestsResult): CssUtilityRegistry {
   const entries = Array.from(loaded.entries.values());
@@ -227,6 +228,7 @@ export function createCssUtilityRegistry(loaded: LoadCssUtilityManifestsResult):
  * @param input.entries - the full entry list (will be sorted by slug)
  * @param input.loadedSources - source labels reported via `registry.loadedSources`
  * @returns a domain-friendly read API over the supplied entries
+ * @__NO_SIDE_EFFECTS__
  */
 export function createCssUtilityRegistryFromEntries(input: { readonly entries: readonly CssUtilityEntry[]; readonly loadedSources: readonly string[] }): CssUtilityRegistry {
   const all = [...input.entries].sort((a, b) => a.slug.localeCompare(b.slug));

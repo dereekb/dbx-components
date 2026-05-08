@@ -59,7 +59,7 @@ function formatActionLookupStatus(report: ApiLookupReport): string {
 
 function formatEntry(entry: ApiLookupEntry): string {
   const wireKey = formatWireKey(entry);
-  const heading = entry.specifier !== undefined ? `${entry.model}.${entry.verb}.${entry.specifier}` : `${entry.model}.${entry.verb}`;
+  const heading = entry.specifier === undefined ? `${entry.model}.${entry.verb}` : `${entry.model}.${entry.verb}.${entry.specifier}`;
   const paramsLabel = entry.paramsTypeName ? `\`${entry.paramsTypeName}\`` : '_unresolved_';
   const resultLabel = entry.resultTypeName ? `\`${entry.resultTypeName}\`` : '`void`';
   const lines: string[] = [`## ${heading}`, ''];

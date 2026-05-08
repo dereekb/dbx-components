@@ -91,7 +91,7 @@ export function formatFirebaseModelEntry(model: FirebaseModel, depth: LookupDept
   const shapeLabel = model.collectionKind ? `\`${STORE_SHAPE_LABEL[shape]}\` · collectionKind \`${model.collectionKind}\`` : `\`${STORE_SHAPE_LABEL[shape]}\``;
 
   const filter = options?.fields;
-  const filtered = filter !== undefined ? applyFieldsFilter(model, filter) : undefined;
+  const filtered = filter === undefined ? undefined : applyFieldsFilter(model, filter);
   const fieldsToRender: readonly FirebaseField[] = filtered ? filtered.kept : model.fields;
   const totalFields = model.fields.length;
   const fieldsHeader = filtered ? `## Fields (${fieldsToRender.length} of ${totalFields})` : `## Fields (${totalFields})`;

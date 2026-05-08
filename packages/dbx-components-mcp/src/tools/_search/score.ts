@@ -2,13 +2,18 @@
  * Shared infrastructure for the `dbx_*_search` tool family. Form and model
  * search both:
  *
- *   - accept `query` (string, ANDed across whitespace-separated tokens) and
- *     `limit` (number, capped at a domain MAX_LIMIT)
+ *   - accept `query` (string, tokenized on whitespace) and `limit` (number,
+ *     capped at a domain MAX_LIMIT)
  *   - tokenize, dedupe, optionally alias-resolve
  *   - score every registry entry against every token
- *   - require AND semantics (every token must contribute > 0 to be a hit)
- *   - sort by descending score with a domain-specific stable tie-breaker
+ *   - sort hits by descending match-count, then descending score, then a
+ *     domain-specific stable tie-breaker
  *   - slice to the limit, then render
+ *
+ * Token-match policy is configurable via `tokenMatchMode` (default `'all'`,
+ * preserving legacy AND semantics — every token must contribute > 0). Tools
+ * that prefer best-effort partial matches (e.g. snapshot-field search) opt
+ * in to `'any'`, which accepts entries where at least one token contributes.
  *
  * Per-domain shape — the entry type, the scoring weights, the tie-breaker
  * key, the catalog rendering — varies enough to remain caller-supplied; the
@@ -114,7 +119,26 @@ export interface SearchHit<TEntry> {
   readonly matchedTokens: readonly string[];
 }
 
-function scoreEntryForTokens<TEntry>(entry: TEntry, tokens: readonly QueryToken[], scoreFn: (entry: TEntry, token: string) => number): SearchHit<TEntry> | undefined {
+/**
+ * Token-match policy for {@link searchEntries}.
+ *
+ *   - `'all'` (default): an entry is a hit only when every token contributes
+ *     > 0 (legacy AND semantics).
+ *   - `'any'`: an entry is a hit when at least one token contributes > 0.
+ *     Sort prepends descending match-count so full-token matches always rank
+ *     above partial-token matches regardless of raw score.
+ */
+export type TokenMatchMode = 'all' | 'any';
+
+interface ScoreEntryForTokensInput<TEntry> {
+  readonly entry: TEntry;
+  readonly tokens: readonly QueryToken[];
+  readonly scoreFn: (entry: TEntry, token: string) => number;
+  readonly mode: TokenMatchMode;
+}
+
+function scoreEntryForTokens<TEntry>(input: ScoreEntryForTokensInput<TEntry>): SearchHit<TEntry> | undefined {
+  const { entry, tokens, scoreFn, mode } = input;
   const matched: string[] = [];
   let total = 0;
   for (const token of tokens) {
@@ -126,18 +150,26 @@ function scoreEntryForTokens<TEntry>(entry: TEntry, tokens: readonly QueryToken[
       matched.push(token.display);
     }
   }
+  const minMatch = mode === 'any' ? 1 : tokens.length;
   let hit: SearchHit<TEntry> | undefined;
-  if (total > 0 && matched.length === tokens.length) {
+  if (total > 0 && matched.length >= minMatch) {
     hit = { entry, score: total, matchedTokens: matched };
   }
   return hit;
 }
 
 /**
- * Scores every entry against every token using AND semantics: an entry is a
- * hit only if every token contributes > 0. The score is summed; the
+ * Scores every entry against every token. The score is summed; the
  * matched-token display strings (`token` or `token → alias`) are accumulated
- * for the formatter.
+ * for the formatter. Token-match policy is controlled by `mode`:
+ *
+ *   - `'all'` (default): every token must contribute > 0.
+ *   - `'any'`: at least one token must contribute > 0.
+ *
+ * Hits sort by descending matched-token count first, then descending score,
+ * then the domain tie-breaker. The match-count primary key is a no-op in
+ * `'all'` mode (every hit has the same count) and ensures full-token matches
+ * outrank partial ones in `'any'` mode.
  *
  * @param config - the per-domain scoring configuration
  * @param config.entries - the registry entries to score
@@ -145,27 +177,32 @@ function scoreEntryForTokens<TEntry>(entry: TEntry, tokens: readonly QueryToken[
  * @param config.scoreFn - per-(entry, raw-token) scorer; called twice when an
  *   alias exists (once for raw, once for alias) and the larger score is taken
  * @param config.tieBreaker - extracts the lexicographic tie-breaker key
- * @returns hits in descending score order, ties broken by the `tieBreaker`
- *   value (string, lexicographic)
+ * @param config.mode - token-match policy; defaults to `'all'`
+ * @returns hits sorted by match-count, then score, then `tieBreaker`
  */
-export function searchEntries<TEntry>(config: { readonly entries: readonly TEntry[]; readonly tokens: readonly QueryToken[]; readonly scoreFn: (entry: TEntry, token: string) => number; readonly tieBreaker: (entry: TEntry) => string }): readonly SearchHit<TEntry>[] {
-  const { entries, tokens, scoreFn, tieBreaker } = config;
+export function searchEntries<TEntry>(config: { readonly entries: readonly TEntry[]; readonly tokens: readonly QueryToken[]; readonly scoreFn: (entry: TEntry, token: string) => number; readonly tieBreaker: (entry: TEntry) => string; readonly mode?: TokenMatchMode }): readonly SearchHit<TEntry>[] {
+  const { entries, tokens, scoreFn, tieBreaker, mode = 'all' } = config;
   let result: readonly SearchHit<TEntry>[] = [];
   if (tokens.length > 0) {
     const hits: SearchHit<TEntry>[] = [];
     for (const entry of entries) {
-      const hit = scoreEntryForTokens(entry, tokens, scoreFn);
+      const hit = scoreEntryForTokens({ entry, tokens, scoreFn, mode });
       if (hit !== undefined) {
         hits.push(hit);
       }
     }
     hits.sort((a, b) => {
-      const byScore = b.score - a.score;
+      const byMatchCount = b.matchedTokens.length - a.matchedTokens.length;
       let cmp: number;
-      if (byScore === 0) {
-        cmp = tieBreaker(a.entry).localeCompare(tieBreaker(b.entry));
+      if (byMatchCount === 0) {
+        const byScore = b.score - a.score;
+        if (byScore === 0) {
+          cmp = tieBreaker(a.entry).localeCompare(tieBreaker(b.entry));
+        } else {
+          cmp = byScore;
+        }
       } else {
-        cmp = byScore;
+        cmp = byMatchCount;
       }
       return cmp;
     });
@@ -195,6 +232,11 @@ export interface SearchToolConfig<TEntry> {
    */
   readonly tieBreaker: (entry: TEntry) => string;
   /**
+   * Token-match policy. Defaults to `'all'` (every token must contribute > 0).
+   * Set to `'any'` for best-effort partial-match search.
+   */
+  readonly tokenMatchMode?: TokenMatchMode;
+  /**
    * Renders the final report. Receives the raw query, the parsed tokens, and
    * the limited hit list (already trimmed to `args.limit`).
    */
@@ -219,7 +261,7 @@ export function runSearchTool<TEntry>(config: SearchToolConfig<TEntry>, rawArgs:
     return toolError(message);
   }
   const tokens = tokenize(args.query, config.aliasResolver);
-  const ranked = searchEntries<TEntry>({ entries: config.entries, tokens, scoreFn: config.scoreEntry, tieBreaker: config.tieBreaker });
+  const ranked = searchEntries<TEntry>({ entries: config.entries, tokens, scoreFn: config.scoreEntry, tieBreaker: config.tieBreaker, mode: config.tokenMatchMode });
   const hits = ranked.slice(0, args.limit);
   const text = config.formatResults({ query: args.query, tokens, hits });
   const result: ToolResult = { content: [{ type: 'text', text }] };

@@ -52,12 +52,19 @@ export type VectorResizeFunction = (input: Vector) => Vector;
  * @param minSize - the minimum dimensions to enforce
  * @returns a resize function that clamps each axis to the specified minimum
  *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, vector, resize, minimum, factory, clamp
+ * @dbxUtilRelated vector
+ *
  * @example
  * ```ts
  * const resize = vectorMinimumSizeResizeFunction({ x: 5 });
  * resize({ x: 3, y: 10 });
  * // { x: 5, y: 10 }
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function vectorMinimumSizeResizeFunction(minSize: Partial<Vector>): VectorResizeFunction {
   return (input: Vector) => {

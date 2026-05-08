@@ -60,6 +60,7 @@ export type CalendarDateFactory = (day: ISO8601DayString, days?: number) => Cale
  * // event.type === CalendarDateType.DAYS
  * // event.duration === daysToMinutes(3)
  * ```
+ * @__NO_SIDE_EFFECTS__
  */
 export function calendarDateFactory(config?: CalendarDateConfig): CalendarDateFactory {
   const normalConfig = config?.timezone === undefined ? { useSystemTimezone: true } : { timezone: config.timezone ? config.timezone : undefined };

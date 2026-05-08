@@ -119,6 +119,7 @@ export interface CreateCssClassLookupToolInput {
  *
  * @param input - the registry the tool reads from
  * @returns a {@link DbxTool} ready to register with the dispatcher
+ * @__NO_SIDE_EFFECTS__
  */
 export function createCssClassLookupTool(input: CreateCssClassLookupToolInput): DbxTool {
   const { registry } = input;

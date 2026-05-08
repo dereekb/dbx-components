@@ -34,8 +34,7 @@ export function formatReportAsMarkdown(report: AppAssetsReport): string {
 function formatAssetBlock(asset: AssetReportEntry): string {
   const heading = `### \`${asset.symbolName}\``;
   const rows: string[] = [heading];
-  rows.push(`- Source type: \`${asset.sourceType}\``);
-  rows.push(`- Builder: \`${asset.helper}\``);
+  rows.push(`- Source type: \`${asset.sourceType}\``, `- Builder: \`${asset.helper}\``);
   if (asset.resolved !== undefined) {
     rows.push(`- Resolved: \`${asset.resolved}\``);
   } else if (asset.resolvedPaths.length > 0) {

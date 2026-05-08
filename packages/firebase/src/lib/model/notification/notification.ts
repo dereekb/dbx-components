@@ -40,6 +40,7 @@ import {
   firestoreModelKeyString,
   firestoreNumber,
   firestoreObjectArray,
+  firestoreString,
   firestoreUID,
   optionalFirestoreBoolean,
   optionalFirestoreEnum,
@@ -47,7 +48,11 @@ import {
   optionalFirestoreDate,
   firestoreUniqueStringArray,
   type SavedToFirestoreIfFalse,
-  optionalFirestoreNumber
+  optionalFirestoreNumber,
+  type PagedItemConverter,
+  type PagedItemFirestoreCollection,
+  type PagedItemPageData,
+  defaultPagedItemPageDataConverter
 } from '../../common';
 import { type NotificationItem, firestoreNotificationItem } from './notification.item';
 
@@ -69,12 +74,16 @@ export abstract class NotificationFirestoreCollections {
   abstract readonly notificationCollectionGroup: NotificationFirestoreCollectionGroup;
   abstract readonly notificationWeekCollectionFactory: NotificationWeekFirestoreCollectionFactory;
   abstract readonly notificationWeekCollectionGroup: NotificationWeekFirestoreCollectionGroup;
+  abstract readonly notificationLoggedEventDayCollectionFactory: NotificationLoggedEventDayFirestoreCollectionFactory;
+  abstract readonly notificationLoggedEventDayCollectionGroup: NotificationLoggedEventDayFirestoreCollectionGroup;
+  abstract readonly notificationLoggedEventDayPagedItemsCollectionFactory: NotificationLoggedEventDayPagedItemsFirestoreCollectionFactory;
+  abstract readonly notificationLoggedEventDayPageCollectionGroup: NotificationLoggedEventDayPageFirestoreCollectionGroup;
 }
 
 /**
  * Union of all notification model identity types, used for type-safe identity discrimination.
  */
-export type NotificationTypes = typeof notificationUserIdentity | typeof notificationSummaryIdentity | typeof notificationBoxIdentity | typeof notificationIdentity | typeof notificationWeekIdentity;
+export type NotificationTypes = typeof notificationUserIdentity | typeof notificationSummaryIdentity | typeof notificationBoxIdentity | typeof notificationIdentity | typeof notificationWeekIdentity | typeof notificationLoggedEventDayIdentity | typeof notificationLoggedEventDayPageIdentity;
 
 /**
  * Notification-related model that is initialized asynchronously at a later time.
@@ -515,6 +524,8 @@ export const notificationIdentity = firestoreModelIdentity(notificationBoxIdenti
  *
  * Determines whether the box must exist, should be created on demand, or can be bypassed entirely.
  * Task-type notifications (`TASK_NOTIFICATION`) bypass the box system and run async workflows instead.
+ * Logged-event notifications (`LOGGED_EVENT`) are write-only records that bypass the send loop and
+ * are archived to {@link NotificationLoggedEventDay} during cleanup.
  */
 export enum NotificationSendType {
   /**
@@ -536,7 +547,15 @@ export enum NotificationSendType {
    *
    * This is used with Task-type notifications.
    */
-  TASK_NOTIFICATION = 3
+  TASK_NOTIFICATION = 3,
+  /**
+   * A write-only logged event notification.
+   *
+   * Persisted with `d=true` and `NO_TRY` channel states from creation, so the send loop never visits it.
+   * Cleanup archives the notification item into {@link NotificationLoggedEventDay} (a paged, day-keyed
+   * subcollection of {@link NotificationBox}) instead of {@link NotificationWeek}, then deletes the source.
+   */
+  LOGGED_EVENT = 4
 }
 
 /**
@@ -837,6 +856,7 @@ export const notificationConverter = snapshotConverterFunctions<Notification>({
  *
  * @param context - Firestore context to create subcollection references from
  * @returns a factory function that creates collection references for a given NotificationBox parent
+ * @__NO_SIDE_EFFECTS__
  */
 export function notificationCollectionReferenceFactory(context: FirestoreContext): (notificationBox: NotificationBoxDocument) => CollectionReference<Notification> {
   return (notificationBox: NotificationBoxDocument) => {
@@ -859,6 +879,7 @@ export type NotificationFirestoreCollectionFactory = (parent: NotificationBoxDoc
  *
  * @param firestoreContext - Firestore context to bind the collection factory to
  * @returns a factory that creates typed Firestore subcollections for Notification documents
+ * @__NO_SIDE_EFFECTS__
  */
 export function notificationFirestoreCollectionFactory(firestoreContext: FirestoreContext): NotificationFirestoreCollectionFactory {
   const factory = notificationCollectionReferenceFactory(firestoreContext);
@@ -967,6 +988,7 @@ export const notificationWeekConverter = snapshotConverterFunctions<Notification
  *
  * @param context - Firestore context to create subcollection references from
  * @returns a factory function that creates collection references for a given NotificationBox parent
+ * @__NO_SIDE_EFFECTS__
  */
 export function notificationWeekCollectionReferenceFactory(context: FirestoreContext): (notificationBox: NotificationBoxDocument) => CollectionReference<NotificationWeek> {
   return (notificationBox: NotificationBoxDocument) => {
@@ -989,6 +1011,7 @@ export type NotificationWeekFirestoreCollectionFactory = (parent: NotificationBo
  *
  * @param firestoreContext - Firestore context to bind the collection factory to
  * @returns a factory that creates typed Firestore subcollections for NotificationWeek documents
+ * @__NO_SIDE_EFFECTS__
  */
 export function notificationWeekFirestoreCollectionFactory(firestoreContext: FirestoreContext): NotificationWeekFirestoreCollectionFactory {
   const factory = notificationWeekCollectionReferenceFactory(firestoreContext);
@@ -1032,6 +1055,253 @@ export function notificationWeekFirestoreCollectionGroup(firestoreContext: Fires
     converter: notificationWeekConverter,
     queryLike: notificationWeekCollectionReference(firestoreContext),
     makeDocument: (accessor, documentAccessor) => new NotificationWeekDocument(accessor, documentAccessor),
+    firestoreContext
+  });
+}
+
+// MARK: Notification Logged Event Day Data
+/**
+ * Identity for {@link NotificationLoggedEventDay} wrapper documents. Subcollection of {@link NotificationBox}.
+ * Collection name: `'notificationLoggedEventDay'`, short code: `'nbnle'`.
+ *
+ * Each wrapper document is keyed by an ISO 8601 day string (e.g. `'2026-05-08'`) and exists primarily
+ * as the parent of a per-day paged items subcollection (see {@link notificationLoggedEventDayPageIdentity}).
+ */
+export const notificationLoggedEventDayIdentity = firestoreModelIdentity(notificationBoxIdentity, 'notificationLoggedEventDay', 'nbnle');
+
+/**
+ * Identity for the page documents inside a {@link NotificationLoggedEventDay}'s paged items subcollection.
+ * Collection name: `'notificationLoggedEventDayPage'`, short code: `'nbnlep'`.
+ *
+ * The framework manages page IDs (`'_index'`, `'0'`, `'1'`, ...) — consumers interact with the paged
+ * collection accessor and do not address page docs directly.
+ */
+export const notificationLoggedEventDayPageIdentity = firestoreModelIdentity(notificationLoggedEventDayIdentity, 'notificationLoggedEventDayPage', 'nbnlep');
+
+/**
+ * Per-item converter applied to {@link NotificationItem} entries when reading/writing logged-event
+ * day pages. Wraps the existing {@link firestoreNotificationItem} sub-object converter so individual
+ * items round-trip through the same field rules used everywhere else NotificationItems are persisted.
+ */
+export const notificationLoggedEventDayItemConverter: PagedItemConverter<NotificationItem> = {
+  fromData: (data) => firestoreNotificationItem.mapFunctions.from(data),
+  toData: (item) => firestoreNotificationItem.mapFunctions.to(item)
+};
+
+/**
+ * Day-keyed wrapper document for a single day's worth of archived logged-event notifications under a
+ * {@link NotificationBox}.
+ *
+ * The document ID is an ISO 8601 day string (e.g. `'2026-05-08'`). The wrapper itself stores only the
+ * day code redundantly in {@link d}; the actual {@link NotificationItem} entries live in the day's
+ * paged subcollection (see {@link notificationLoggedEventDayPagedItemsCollectionFactory}). The split
+ * keeps each day's archive bounded — no single document can exceed the 1MB Firestore cap because
+ * items are distributed across pages by {@link makePagedItemFirestoreCollection}.
+ *
+ * @dbxModel
+ */
+export interface NotificationLoggedEventDay {
+  /**
+   * ISO 8601 day string identifying this day. Matches the document ID.
+   *
+   * @dbxModelVariable day
+   */
+  readonly d: string;
+}
+
+export type NotificationLoggedEventDayRoles = GrantedReadRole;
+
+export class NotificationLoggedEventDayDocument extends AbstractFirestoreDocumentWithParent<NotificationBox, NotificationLoggedEventDay, NotificationLoggedEventDayDocument, typeof notificationLoggedEventDayIdentity> {
+  get modelIdentity() {
+    return notificationLoggedEventDayIdentity;
+  }
+}
+
+/**
+ * Firestore snapshot converter for {@link NotificationLoggedEventDay} wrapper documents.
+ */
+export const notificationLoggedEventDayConverter = snapshotConverterFunctions<NotificationLoggedEventDay>({
+  fields: {
+    d: firestoreString()
+  }
+});
+
+/**
+ * Creates a factory that produces {@link NotificationLoggedEventDay} subcollection references for a given {@link NotificationBoxDocument} parent.
+ *
+ * @param context - Firestore context to create subcollection references from
+ * @returns a factory function that creates collection references for a given NotificationBox parent
+ * @__NO_SIDE_EFFECTS__
+ */
+export function notificationLoggedEventDayCollectionReferenceFactory(context: FirestoreContext): (notificationBox: NotificationBoxDocument) => CollectionReference<NotificationLoggedEventDay> {
+  return (notificationBox: NotificationBoxDocument) => {
+    return context.subcollection(notificationBox.documentRef, notificationLoggedEventDayIdentity.collectionName);
+  };
+}
+
+/**
+ * Typed Firestore subcollection for {@link NotificationLoggedEventDay} wrapper documents under a {@link NotificationBox} parent.
+ */
+export type NotificationLoggedEventDayFirestoreCollection = FirestoreCollectionWithParent<NotificationLoggedEventDay, NotificationBox, NotificationLoggedEventDayDocument, NotificationBoxDocument>;
+
+/**
+ * Factory function that creates a {@link NotificationLoggedEventDayFirestoreCollection} for a given {@link NotificationBoxDocument} parent.
+ */
+export type NotificationLoggedEventDayFirestoreCollectionFactory = (parent: NotificationBoxDocument) => NotificationLoggedEventDayFirestoreCollection;
+
+/**
+ * Creates a {@link NotificationLoggedEventDayFirestoreCollectionFactory} bound to the given Firestore context.
+ *
+ * @param firestoreContext - Firestore context to bind the collection factory to
+ * @returns a factory that creates typed Firestore subcollections for NotificationLoggedEventDay wrapper documents
+ * @__NO_SIDE_EFFECTS__
+ */
+export function notificationLoggedEventDayFirestoreCollectionFactory(firestoreContext: FirestoreContext): NotificationLoggedEventDayFirestoreCollectionFactory {
+  const factory = notificationLoggedEventDayCollectionReferenceFactory(firestoreContext);
+
+  return (parent: NotificationBoxDocument) => {
+    return firestoreContext.firestoreCollectionWithParent({
+      modelIdentity: notificationLoggedEventDayIdentity,
+      converter: notificationLoggedEventDayConverter,
+      collection: factory(parent),
+      makeDocument: (accessor, documentAccessor) => new NotificationLoggedEventDayDocument(accessor, documentAccessor),
+      firestoreContext,
+      parent
+    });
+  };
+}
+
+/**
+ * Creates a collection group reference for querying all {@link NotificationLoggedEventDay} documents across all {@link NotificationBox} parents.
+ *
+ * @param context - Firestore context to create the collection group reference from
+ * @returns a typed collection group for querying NotificationLoggedEventDay documents across all parents
+ */
+export function notificationLoggedEventDayCollectionReference(context: FirestoreContext): CollectionGroup<NotificationLoggedEventDay> {
+  return context.collectionGroup(notificationLoggedEventDayIdentity.collectionName);
+}
+
+/**
+ * Typed collection group for querying {@link NotificationLoggedEventDay} documents across all parents.
+ */
+export type NotificationLoggedEventDayFirestoreCollectionGroup = FirestoreCollectionGroup<NotificationLoggedEventDay, NotificationLoggedEventDayDocument>;
+
+/**
+ * Creates a typed {@link NotificationLoggedEventDayFirestoreCollectionGroup} bound to the given Firestore context.
+ *
+ * @param firestoreContext - Firestore context to bind the collection group to
+ * @returns a typed Firestore collection group for querying NotificationLoggedEventDay documents across all parents
+ */
+export function notificationLoggedEventDayFirestoreCollectionGroup(firestoreContext: FirestoreContext): NotificationLoggedEventDayFirestoreCollectionGroup {
+  return firestoreContext.firestoreCollectionGroup({
+    modelIdentity: notificationLoggedEventDayIdentity,
+    converter: notificationLoggedEventDayConverter,
+    queryLike: notificationLoggedEventDayCollectionReference(firestoreContext),
+    makeDocument: (accessor, documentAccessor) => new NotificationLoggedEventDayDocument(accessor, documentAccessor),
+    firestoreContext
+  });
+}
+
+/**
+ * Page-document model shape for the inner paged collection. Each page stores a slice of
+ * {@link NotificationItem} entries in {@link PagedItemPageData.i}, plus a denormalized count.
+ */
+export type NotificationLoggedEventDayPageDocumentData = PagedItemPageData<NotificationItem>;
+
+/**
+ * {@link AbstractFirestoreDocumentWithParent} implementation for a single page document inside the
+ * {@link NotificationLoggedEventDayPagedItemsFirestoreCollection} of a {@link NotificationLoggedEventDayDocument}.
+ *
+ * Page docs are managed internally by the paged accessor — consumers do not address them directly.
+ */
+export class NotificationLoggedEventDayPageDocument extends AbstractFirestoreDocumentWithParent<NotificationLoggedEventDay, NotificationLoggedEventDayPageDocumentData, NotificationLoggedEventDayPageDocument, typeof notificationLoggedEventDayPageIdentity> {
+  get modelIdentity() {
+    return notificationLoggedEventDayPageIdentity;
+  }
+}
+
+/**
+ * Creates a factory that produces page subcollection references for a given {@link NotificationLoggedEventDayDocument} parent.
+ *
+ * @param context - Firestore context to create subcollection references from
+ * @returns a factory function that creates collection references for a given NotificationLoggedEventDayDocument parent
+ * @__NO_SIDE_EFFECTS__
+ */
+export function notificationLoggedEventDayPagedItemsCollectionReferenceFactory(context: FirestoreContext): (day: NotificationLoggedEventDayDocument) => CollectionReference<NotificationLoggedEventDayPageDocumentData> {
+  return (day: NotificationLoggedEventDayDocument) => {
+    return context.subcollection(day.documentRef, notificationLoggedEventDayPageIdentity.collectionName);
+  };
+}
+
+/**
+ * Typed paged Firestore subcollection of {@link NotificationItem} entries living under a {@link NotificationLoggedEventDayDocument}.
+ *
+ * Items are distributed across page documents by {@link makePagedItemFirestoreCollection} using the
+ * default count-based dynamic distribution scheme. Consumers should use the paged accessor methods
+ * (e.g. {@link FirestorePagedItemAccessor.loadAllItems}, {@link FirestorePagedItemAccessor.writeAllItemsInTransaction})
+ * rather than the inherited document accessor.
+ */
+export type NotificationLoggedEventDayPagedItemsFirestoreCollection = PagedItemFirestoreCollection<NotificationItem, NotificationLoggedEventDay, NotificationLoggedEventDayPageDocument, NotificationLoggedEventDayDocument>;
+
+/**
+ * Factory function that creates a {@link NotificationLoggedEventDayPagedItemsFirestoreCollection} for a given {@link NotificationLoggedEventDayDocument} parent.
+ */
+export type NotificationLoggedEventDayPagedItemsFirestoreCollectionFactory = (parent: NotificationLoggedEventDayDocument) => NotificationLoggedEventDayPagedItemsFirestoreCollection;
+
+/**
+ * Creates a {@link NotificationLoggedEventDayPagedItemsFirestoreCollectionFactory} bound to the given Firestore context.
+ *
+ * Uses the framework's default count-based dynamic page distribution; consumers do not need to provide
+ * a {@link PagedItemDistributionScheme}. The per-item converter delegates to {@link firestoreNotificationItem}.
+ *
+ * @param firestoreContext - Firestore context to bind the collection factory to
+ * @returns a factory that creates paged Firestore subcollections of NotificationItem for a given day
+ * @__NO_SIDE_EFFECTS__
+ */
+export function notificationLoggedEventDayPagedItemsCollectionFactory(firestoreContext: FirestoreContext): NotificationLoggedEventDayPagedItemsFirestoreCollectionFactory {
+  const factory = notificationLoggedEventDayPagedItemsCollectionReferenceFactory(firestoreContext);
+
+  return (parent: NotificationLoggedEventDayDocument) => {
+    return firestoreContext.pagedItemFirestoreCollection<NotificationItem, NotificationLoggedEventDay, NotificationLoggedEventDayPageDocument, NotificationLoggedEventDayDocument>({
+      modelIdentity: notificationLoggedEventDayPageIdentity,
+      collection: factory(parent),
+      makeDocument: (accessor, documentAccessor) => new NotificationLoggedEventDayPageDocument(accessor, documentAccessor),
+      firestoreContext,
+      parent,
+      itemConverter: notificationLoggedEventDayItemConverter
+    });
+  };
+}
+
+/**
+ * Creates a collection group reference for querying all logged-event page documents across every {@link NotificationLoggedEventDay} parent.
+ *
+ * @param context - Firestore context to create the collection group reference from
+ * @returns a typed collection group for querying logged-event page documents
+ */
+export function notificationLoggedEventDayPageCollectionReference(context: FirestoreContext): CollectionGroup<NotificationLoggedEventDayPageDocumentData> {
+  return context.collectionGroup(notificationLoggedEventDayPageIdentity.collectionName);
+}
+
+/**
+ * Typed collection group for querying logged-event page documents across all parents. Note that the
+ * `_index` doc co-resides with page docs and has a different shape; callers wanting only pages should
+ * filter by document ID where appropriate.
+ */
+export type NotificationLoggedEventDayPageFirestoreCollectionGroup = FirestoreCollectionGroup<NotificationLoggedEventDayPageDocumentData, NotificationLoggedEventDayPageDocument>;
+
+/**
+ * Creates a typed {@link NotificationLoggedEventDayPageFirestoreCollectionGroup} bound to the given Firestore context.
+ *
+ * @param firestoreContext - Firestore context to bind the collection group to
+ * @returns a typed Firestore collection group for querying logged-event page documents across all parents
+ */
+export function notificationLoggedEventDayPageFirestoreCollectionGroup(firestoreContext: FirestoreContext): NotificationLoggedEventDayPageFirestoreCollectionGroup {
+  return firestoreContext.firestoreCollectionGroup({
+    modelIdentity: notificationLoggedEventDayPageIdentity,
+    converter: defaultPagedItemPageDataConverter<NotificationItem>(),
+    queryLike: notificationLoggedEventDayPageCollectionReference(firestoreContext),
+    makeDocument: (accessor, documentAccessor) => new NotificationLoggedEventDayPageDocument(accessor, documentAccessor),
     firestoreContext
   });
 }

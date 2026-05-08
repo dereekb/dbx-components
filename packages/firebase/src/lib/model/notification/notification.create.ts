@@ -131,6 +131,7 @@ export interface CreateNotificationTemplateInput extends Partial<Omit<CreateNoti
  *
  * @param input - friendly input with readable field names
  * @returns the low-level template using Firestore field abbreviations
+ * @__NO_SIDE_EFFECTS__
  */
 export function createNotificationTemplate(input: CreateNotificationTemplateInput): CreateNotificationTemplate {
   const {
@@ -310,6 +311,7 @@ export interface CreateNotificationDocumentPairResult extends Pick<CreateNotific
  * @returns the document reference and notification data pair, with `notificationCreated` set to false
  * @throws {Error} When neither an accessor nor sufficient context is provided
  * @throws {Error} When `unique=true` but no target model is specified
+ * @__NO_SIDE_EFFECTS__
  */
 export function createNotificationDocumentPair(input: CreateNotificationDocumentPairInput): CreateNotificationDocumentPairResult {
   const { template, accessor: inputAccessor, transaction, context, now } = input;
@@ -335,6 +337,7 @@ export function createNotificationDocumentPair(input: CreateNotificationDocument
 
   let notificationDocument: NotificationDocument;
   const isNotificationTask = st === NotificationSendType.TASK_NOTIFICATION;
+  const isLoggedEvent = st === NotificationSendType.LOGGED_EVENT;
 
   if (isNotificationTask && inputUnique) {
     let uniqueId: NotificationTaskUniqueId;
@@ -406,6 +409,14 @@ export function createNotificationDocumentPair(input: CreateNotificationDocument
     notification.es = NotificationSendState.NONE;
     notification.ps = NotificationSendState.NONE;
     notification.ns = NotificationSendState.NONE;
+  } else if (isLoggedEvent) {
+    // logged events are persisted as write-only records: marked done immediately so the send loop never visits them.
+    notification.r = [];
+    notification.d = true;
+    notification.ts = NotificationSendState.NO_TRY;
+    notification.es = NotificationSendState.NO_TRY;
+    notification.ps = NotificationSendState.NO_TRY;
+    notification.ns = NotificationSendState.NO_TRY;
   }
 
   return {

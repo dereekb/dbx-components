@@ -20,7 +20,7 @@ export interface UpdateOidcClientFieldParams {
   readonly client_uri?: Maybe<WebsiteUrlWithPrefix>;
 }
 
-export const updateOidcClientFieldParamsType = type({
+export const updateOidcClientFieldParamsType = /* @__PURE__ */ type({
   client_name: 'string',
   redirect_uris: 'string[]',
   'logo_uri?': clearable('string'),
