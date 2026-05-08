@@ -200,6 +200,10 @@ export type FirestoreModelFieldMapFunctionsConfig<V, D> = ModelFieldMapFunctions
  * @param config - Configuration for the Firestore field
  * @returns A configured mapping between model and Firestore data
  *
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory primitive
+ * @dbxModelSnapshotFieldTags base, custom, transform, default, factory
+ * @dbxModelSnapshotFieldRelated optional-firestore-field
  * @example
  * ```ts
  * // Custom field that stores a Set<string> as a comma-separated string
@@ -235,6 +239,16 @@ export function firestoreField<V, D = unknown>(config: FirestoreFieldConfig<V, D
  *
  * Defaults to `null` when the field is missing. Used internally by {@link firestorePassThroughField}
  * and as a fallback for {@link optionalFirestoreField} when no config is provided.
+ *
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory primitive
+ * @dbxModelSnapshotFieldTags passthrough, identity, raw, untransformed, builtin
+ * @example
+ * ```ts
+ * fields: {
+ *   raw: FIRESTORE_PASSTHROUGH_FIELD
+ * }
+ * ```
  */
 export const FIRESTORE_PASSTHROUGH_FIELD = firestoreField<unknown, unknown>({
   default: null,
@@ -250,6 +264,15 @@ export const FIRESTORE_PASSTHROUGH_FIELD = firestoreField<unknown, unknown>({
  *
  * @template T - Type for both the model field and Firestore field
  * @returns A field mapping configuration that passes values through unchanged
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory primitive
+ * @dbxModelSnapshotFieldTags passthrough, identity, raw, untransformed, factory
+ * @example
+ * ```ts
+ * fields: {
+ *   payload: firestorePassThroughField<MyType>()
+ * }
+ * ```
  * @__NO_SIDE_EFFECTS__
  */
 export function firestorePassThroughField<T>(): ModelFieldMapFunctionsConfig<T, T> {
@@ -376,6 +399,11 @@ export interface OptionalFirestoreFieldConfigWithOneTypeTransform<T> extends Opt
  *   transformToData: toISODateString
  * });
  * ```
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory primitive
+ * @dbxModelSnapshotFieldOptional true
+ * @dbxModelSnapshotFieldTags base, optional, dontstore, transform, factory
+ * @dbxModelSnapshotFieldRelated firestore-field
  * @__NO_SIDE_EFFECTS__
  */
 export function optionalFirestoreField<V, D>(config?: OptionalFirestoreFieldConfigWithTwoTypeTransform<V, D>): FirestoreModelFieldMapFunctionsConfig<Maybe<V>, Maybe<D>>;
@@ -541,6 +569,10 @@ export const DEFAULT_FIRESTORE_STRING_FIELD_VALUE = '';
  * // String field with lowercase transformation
  * const emailField = firestoreString({ transform: 'lowercase' });
  * ```
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory primitive
+ * @dbxModelSnapshotFieldTags string, text, transform, lowercase, factory
+ * @dbxModelSnapshotFieldRelated optional-firestore-string
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreString<S extends string = string>(config?: FirestoreStringConfig<S>) {
@@ -568,6 +600,17 @@ export type OptionalFirestoreString<S extends string = string> = OptionalOneType
  * @template S - String type for the field (defaults to string)
  * @param config - Configuration for the optional string field
  * @returns A field mapping configuration for optional string values
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory primitive
+ * @dbxModelSnapshotFieldOptional true
+ * @dbxModelSnapshotFieldTags string, text, optional, transform, factory
+ * @dbxModelSnapshotFieldRelated firestore-string
+ * @example
+ * ```ts
+ * fields: {
+ *   nickname: optionalFirestoreString()
+ * }
+ * ```
  * @__NO_SIDE_EFFECTS__
  */
 export function optionalFirestoreString<S extends string = string>(config?: OptionalFirestoreString<S>) {
@@ -593,6 +636,16 @@ export type FirestoreEnumConfig<S extends string | number> = MapConfiguredFirest
  * @template S - Enum type (string or number)
  * @param config - Configuration for the enum field
  * @returns A field mapping configuration for enum values
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory primitive
+ * @dbxModelSnapshotFieldTags enum, string, number, factory
+ * @dbxModelSnapshotFieldRelated optional-firestore-enum
+ * @example
+ * ```ts
+ * fields: {
+ *   status: firestoreEnum<UserStatus>({ default: UserStatus.Pending })
+ * }
+ * ```
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreEnum<S extends string | number>(config: FirestoreEnumConfig<S>): FirestoreModelFieldMapFunctionsConfig<S, S> {
@@ -616,6 +669,11 @@ export type OptionalFirestoreEnumConfig<S extends string | number> = OptionalOne
  * @template S - Enum type (string or number)
  * @param config - Configuration for the optional enum field
  * @returns A field mapping configuration for optional enum values
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory primitive
+ * @dbxModelSnapshotFieldOptional true
+ * @dbxModelSnapshotFieldTags enum, optional, string, number, factory
+ * @dbxModelSnapshotFieldRelated firestore-enum
  * @__NO_SIDE_EFFECTS__
  */
 export function optionalFirestoreEnum<S extends string | number>(config?: OptionalFirestoreEnumConfig<S>) {
@@ -626,6 +684,16 @@ export function optionalFirestoreEnum<S extends string | number>(config?: Option
  * Creates a field mapping configuration for Firestore UID fields.
  *
  * @returns A field mapping configuration for Firebase Auth user IDs
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory model-key
+ * @dbxModelSnapshotFieldTags uid, user, owner, account, auth, string, factory
+ * @dbxModelSnapshotFieldRelated optional-firestore-uid
+ * @example
+ * ```ts
+ * fields: {
+ *   uid: firestoreUID()
+ * }
+ * ```
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreUID() {
@@ -638,6 +706,11 @@ export function firestoreUID() {
  * Creates a field mapping configuration for optional Firestore UID fields.
  *
  * @returns A field mapping configuration for optional Firebase Auth user IDs
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory model-key
+ * @dbxModelSnapshotFieldOptional true
+ * @dbxModelSnapshotFieldTags uid, user, owner, account, auth, optional, string, factory
+ * @dbxModelSnapshotFieldRelated firestore-uid
  * @__NO_SIDE_EFFECTS__
  */
 export function optionalFirestoreUID() {
@@ -646,11 +719,31 @@ export function optionalFirestoreUID() {
 
 /**
  * Pre-built field mapping for Firestore model key strings. Defaults to empty string.
+ *
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory model-key
+ * @dbxModelSnapshotFieldTags model, key, string, reference, ref, pointer, builtin
+ * @example
+ * ```ts
+ * fields: {
+ *   m: firestoreModelKeyString
+ * }
+ * ```
  */
 export const firestoreModelKeyString = firestoreString();
 
 /**
  * Pre-built field mapping for Firestore model ID strings. Defaults to empty string.
+ *
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory model-key
+ * @dbxModelSnapshotFieldTags model, id, string, reference, pointer, builtin
+ * @example
+ * ```ts
+ * fields: {
+ *   id: firestoreModelIdString
+ * }
+ * ```
  */
 export const firestoreModelIdString = firestoreString();
 
@@ -685,6 +778,10 @@ export type FirestoreDateFieldConfig = DefaultMapConfiguredFirestoreFieldConfig<
  * // Date field with a fixed default
  * const startDateField = firestoreDate({ default: new Date('2020-01-01') });
  * ```
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory date
+ * @dbxModelSnapshotFieldTags date, time, iso, timestamp, factory
+ * @dbxModelSnapshotFieldRelated optional-firestore-date, firestore-date-number
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreDate(config: FirestoreDateFieldConfig = {}) {
@@ -711,6 +808,17 @@ export type OptionalFirestoreDateFieldConfig = OptionalFirestoreFieldConfig<Date
  *
  * @param config - Configuration for the optional date field
  * @returns A field mapping configuration for optional Date values
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory date
+ * @dbxModelSnapshotFieldOptional true
+ * @dbxModelSnapshotFieldTags date, time, iso, optional, factory
+ * @dbxModelSnapshotFieldRelated firestore-date
+ * @example
+ * ```ts
+ * fields: {
+ *   deletedAt: optionalFirestoreDate()
+ * }
+ * ```
  * @__NO_SIDE_EFFECTS__
  */
 export function optionalFirestoreDate(config?: OptionalFirestoreDateFieldConfig) {
@@ -756,6 +864,10 @@ export type FirestoreDateNumberFieldConfig = DefaultMapConfiguredFirestoreFieldC
  *
  * @param config - Configuration including custom Date-to-number conversion functions
  * @returns A field mapping configuration for Date values stored as numbers
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory date
+ * @dbxModelSnapshotFieldTags date, number, timestamp, factory
+ * @dbxModelSnapshotFieldRelated optional-firestore-date-number, firestore-unix-date-time-seconds-number
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreDateNumber(config: FirestoreDateNumberFieldConfig) {
@@ -781,6 +893,11 @@ export type OptionalFirestoreDateNumberFieldConfig = OptionalFirestoreFieldConfi
  *
  * @param config - Configuration for the optional date field
  * @returns A field mapping configuration for optional Date values
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory date
+ * @dbxModelSnapshotFieldOptional true
+ * @dbxModelSnapshotFieldTags date, number, timestamp, optional, factory
+ * @dbxModelSnapshotFieldRelated firestore-date-number
  * @__NO_SIDE_EFFECTS__
  */
 export function optionalFirestoreDateNumber(config: OptionalFirestoreDateNumberFieldConfig) {
@@ -845,6 +962,16 @@ export type FirestoreBooleanFieldConfig = MapConfiguredFirestoreFieldConfigWithD
  *
  * @param config - Configuration for the boolean field
  * @returns A field mapping configuration for boolean values
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory primitive
+ * @dbxModelSnapshotFieldTags boolean, flag, factory
+ * @dbxModelSnapshotFieldRelated optional-firestore-boolean
+ * @example
+ * ```ts
+ * fields: {
+ *   active: firestoreBoolean({ default: true })
+ * }
+ * ```
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreBoolean(config: FirestoreBooleanFieldConfig) {
@@ -865,6 +992,17 @@ export type OptionalFirestoreBooleanFieldConfig = OptionalOneTypeFirestoreFieldC
  *
  * @param config - Configuration for the optional boolean field
  * @returns A field mapping configuration for optional boolean values
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory primitive
+ * @dbxModelSnapshotFieldOptional true
+ * @dbxModelSnapshotFieldTags boolean, flag, optional, dontstore, factory
+ * @dbxModelSnapshotFieldRelated firestore-boolean
+ * @example
+ * ```ts
+ * fields: {
+ *   ns: optionalFirestoreBoolean()
+ * }
+ * ```
  * @__NO_SIDE_EFFECTS__
  */
 export function optionalFirestoreBoolean(config?: OptionalFirestoreBooleanFieldConfig) {
@@ -893,6 +1031,16 @@ export interface FirestoreNumberConfig<N extends number = number> extends MapCon
  * @template N - Number type for the field (defaults to number)
  * @param config - Configuration for the number field
  * @returns A field mapping configuration for number values
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory primitive
+ * @dbxModelSnapshotFieldTags number, integer, transform, factory
+ * @dbxModelSnapshotFieldRelated optional-firestore-number
+ * @example
+ * ```ts
+ * fields: {
+ *   count: firestoreNumber({ default: 0 })
+ * }
+ * ```
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreNumber<N extends number = number>(config: FirestoreNumberConfig<N>) {
@@ -920,6 +1068,11 @@ export type OptionalFirestoreNumberFieldConfig<N extends number = number> = Opti
  * @template N - Number type for the field (defaults to number)
  * @param config - Configuration for the optional number field
  * @returns A field mapping configuration for optional number values
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory primitive
+ * @dbxModelSnapshotFieldOptional true
+ * @dbxModelSnapshotFieldTags number, integer, optional, transform, factory
+ * @dbxModelSnapshotFieldRelated firestore-number
  * @__NO_SIDE_EFFECTS__
  */
 export function optionalFirestoreNumber<N extends number = number>(config?: OptionalFirestoreNumberFieldConfig<N>) {
@@ -956,6 +1109,10 @@ export type FirestoreArrayFieldConfig<T> = DefaultMapConfiguredFirestoreFieldCon
  *   sortWith: (a, b) => a.localeCompare(b)
  * });
  * ```
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory array
+ * @dbxModelSnapshotFieldTags array, list, sort, factory
+ * @dbxModelSnapshotFieldRelated optional-firestore-array, firestore-unique-array
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreArray<T>(config: FirestoreArrayFieldConfig<T>) {
@@ -999,6 +1156,17 @@ export type OptionalFirestoreArrayFieldConfig<T> = Omit<OptionalFirestoreFieldCo
  * @template T - Type of elements in the array
  * @param config - Configuration for the optional array field
  * @returns A field mapping configuration for optional array values
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory array
+ * @dbxModelSnapshotFieldOptional true
+ * @dbxModelSnapshotFieldTags array, list, optional, unique, dontstore, factory
+ * @dbxModelSnapshotFieldRelated firestore-array
+ * @example
+ * ```ts
+ * fields: {
+ *   tags: optionalFirestoreArray<string>({ filterUnique: true, dontStoreIfEmpty: true })
+ * }
+ * ```
  * @__NO_SIDE_EFFECTS__
  */
 export function optionalFirestoreArray<T>(config?: OptionalFirestoreArrayFieldConfig<T>) {
@@ -1116,6 +1284,9 @@ export type FirestoreEnumArrayFieldConfig<S extends string | number> = Omit<Fire
  * @template S - Enum type (string or number)
  * @param config - Configuration for the enum array field
  * @returns A field mapping configuration for enum array values
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory array
+ * @dbxModelSnapshotFieldTags array, enum, unique, flags, tags, factory
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreEnumArray<S extends string | number>(config: FirestoreEnumArrayFieldConfig<S> = {}) {
@@ -1150,12 +1321,26 @@ export function firestoreUniqueStringArray<S extends string = string>(config?: F
 
 /**
  * Pre-built field mapping for arrays of unique Firestore model key strings.
+ *
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory model-key
+ * @dbxModelSnapshotFieldTags model, key, array, unique, reference, ref, pointer, builtin
+ * @example
+ * ```ts
+ * fields: {
+ *   b: firestoreModelKeyArrayField
+ * }
+ * ```
  */
 export const firestoreModelKeyArrayField = firestoreUniqueStringArray<FirestoreModelKey>({});
 
 /**
  * Pre-built field mapping for arrays of unique Firestore model ID strings.
  * Alias for {@link firestoreModelKeyArrayField}.
+ *
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory model-key
+ * @dbxModelSnapshotFieldTags model, id, array, unique, reference, pointer, builtin
  */
 export const firestoreModelIdArrayField = firestoreModelKeyArrayField;
 
@@ -1343,6 +1528,9 @@ export type FirestoreMapFieldConfig<T, K extends string = string> = DefaultMapCo
  *   mapFilter: KeyValueTypleValueFilter.EMPTY
  * });
  * ```
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory map
+ * @dbxModelSnapshotFieldTags map, record, dictionary, dict, factory
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreMap<T, K extends string = string>(config: FirestoreMapFieldConfig<T, K> = {}) {
@@ -1499,6 +1687,9 @@ export type FirestoreArrayMapFieldConfig<T, K extends string = string> = Firesto
  * @template K - Key type for the map (string)
  * @param config - Configuration for the array map field
  * @returns A field mapping configuration for map values with array entries
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory map
+ * @dbxModelSnapshotFieldTags map, array, lookup, multi-value, factory
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreArrayMap<T, K extends string = string>(config: FirestoreArrayMapFieldConfig<T, K> = {}) {
@@ -1599,6 +1790,10 @@ export function firestoreFieldConfigToModelMapFunctionsRef<T extends object, O e
  *   sortWith: sortAscendingIndexNumberRefFunction()
  * });
  * ```
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory object
+ * @dbxModelSnapshotFieldTags array, object, embedded, nested, structured, factory
+ * @dbxModelSnapshotFieldRelated firestore-sub-object
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreObjectArray<T extends object, O extends object = FirestoreModelData<T>>(config: FirestoreObjectArrayFieldConfig<T, O>) {
@@ -1682,6 +1877,10 @@ export type FirestoreSubObjectFieldMapFunctionsConfig<T extends object, O extend
  *   }
  * });
  * ```
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory object
+ * @dbxModelSnapshotFieldTags object, nested, embedded, structured, factory
+ * @dbxModelSnapshotFieldRelated firestore-object-array
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreSubObject<T extends object, O extends object = FirestoreModelData<T>>(config: FirestoreSubObjectFieldConfig<T, O>): FirestoreSubObjectFieldMapFunctionsConfig<T, O> {
@@ -1720,6 +1919,15 @@ export interface FirestoreLatLngStringConfig extends DefaultMapConfiguredFiresto
  *
  * @param config - Optional precision and default value configuration
  * @returns A field mapping configuration for LatLngString values
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory geo
+ * @dbxModelSnapshotFieldTags geo, latlng, location, coordinates, coords, geolocation, factory
+ * @example
+ * ```ts
+ * fields: {
+ *   loc: firestoreLatLngString()
+ * }
+ * ```
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreLatLngString(config?: FirestoreLatLngStringConfig) {

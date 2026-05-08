@@ -140,6 +140,18 @@
       }
     ]
   },
+  "modelSnapshotFields": {
+    "scan": [
+      {
+        "project": "packages/firebase",
+        "source": "@dereekb/firebase",
+        "module": "@dereekb/firebase",
+        "include": ["src/lib/common/firestore/snapshot/**/*.ts", "src/lib/model/**/*.ts"],
+        "exclude": ["**/*.spec.ts", "**/*.test.ts"],
+        "out": "packages/dbx-components-mcp/generated/dereekb-firebase.model-snapshot-fields.mcp.generated.json"
+      }
+    ]
+  },
   "dbxDocsUiExamples": {
     "scan": [
       {
