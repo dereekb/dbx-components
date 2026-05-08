@@ -311,6 +311,11 @@ export interface SendNotificationResult {
   readonly notificationTemplateType: Maybe<NotificationTemplateType>;
   readonly isKnownTemplateType: Maybe<boolean>;
   readonly isNotificationTask: boolean;
+  /**
+   * True if the notification was a logged-event record (`st === LOGGED_EVENT`). Logged events bypass
+   * the send pipeline entirely; the factory short-circuits and returns immediately when one is loaded.
+   */
+  readonly isLoggedEvent: boolean;
   readonly isUniqueNotificationTask: boolean;
   readonly uniqueNotificationTaskConflict: boolean;
   readonly isConfiguredTemplateType: Maybe<boolean>;
@@ -355,7 +360,7 @@ export const sendQueuedNotificationsParamsType = /* @__PURE__ */ type({
  */
 export interface SendQueuedNotificationsResult extends Omit<
   SendNotificationResult,
-  'throttled' | 'isNotificationTask' | 'isUniqueNotificationTask' | 'notificationTaskCompletionType' | 'uniqueNotificationTaskConflict' | 'isConfiguredTemplateType' | 'isKnownTemplateType' | 'notificationTemplateType' | 'notificationMarkedDone' | 'deletedNotification' | 'createdBox' | 'success' | 'exists' | 'boxExists' | 'notificationBoxNeedsInitialization' | 'tryRun' | 'loadMessageFunctionFailure' | 'buildMessageFailure'
+  'throttled' | 'isNotificationTask' | 'isLoggedEvent' | 'isUniqueNotificationTask' | 'notificationTaskCompletionType' | 'uniqueNotificationTaskConflict' | 'isConfiguredTemplateType' | 'isKnownTemplateType' | 'notificationTemplateType' | 'notificationMarkedDone' | 'deletedNotification' | 'createdBox' | 'success' | 'exists' | 'boxExists' | 'notificationBoxNeedsInitialization' | 'tryRun' | 'loadMessageFunctionFailure' | 'buildMessageFailure'
 > {
   readonly excessLoopsDetected: boolean;
   readonly notificationLoopCount: number;
@@ -381,6 +386,39 @@ export interface CleanupSentNotificationsResult {
   readonly notificationsDeleted: number;
   readonly notificationWeeksCreated: number;
   readonly notificationWeeksUpdated: number;
+  /**
+   * Number of logged-event notifications archived to {@link NotificationLoggedEventDay} during cleanup.
+   */
+  readonly notificationLoggedEventsCleanedUp: number;
+}
+
+/**
+ * Parameters for the `cleanupOldNotificationLoggedEventDays` action.
+ */
+export interface CleanupOldNotificationLoggedEventDaysParams {
+  /**
+   * Number of days of logged-event history to retain. Day documents whose ISO day string ID is older
+   * than `now - retentionDays` are deleted along with their nested page subcollection.
+   */
+  readonly retentionDays: number;
+}
+
+export const cleanupOldNotificationLoggedEventDaysParamsType = /* @__PURE__ */ type({
+  retentionDays: 'number>0'
+}) as Type<CleanupOldNotificationLoggedEventDaysParams>;
+
+/**
+ * Aggregate result of the `cleanupOldNotificationLoggedEventDays` action.
+ */
+export interface CleanupOldNotificationLoggedEventDaysResult {
+  /**
+   * Number of {@link NotificationLoggedEventDay} wrapper documents deleted.
+   */
+  readonly daysDeleted: number;
+  /**
+   * Number of page documents (including the `_index` doc) deleted across all purged days.
+   */
+  readonly pagesDeleted: number;
 }
 
 // MARK: Functions
@@ -415,6 +453,8 @@ export type NotificationBoxModelCrudFunctionsConfig = {
     };
   };
   readonly notificationWeek: null;
+  readonly notificationLoggedEventDay: null;
+  readonly notificationLoggedEventDayPage: null;
 };
 
 export const notificationBoxModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<NotificationBoxModelCrudFunctionsConfig, NotificationTypes> = {

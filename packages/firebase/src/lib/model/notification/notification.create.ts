@@ -337,6 +337,7 @@ export function createNotificationDocumentPair(input: CreateNotificationDocument
 
   let notificationDocument: NotificationDocument;
   const isNotificationTask = st === NotificationSendType.TASK_NOTIFICATION;
+  const isLoggedEvent = st === NotificationSendType.LOGGED_EVENT;
 
   if (isNotificationTask && inputUnique) {
     let uniqueId: NotificationTaskUniqueId;
@@ -408,6 +409,14 @@ export function createNotificationDocumentPair(input: CreateNotificationDocument
     notification.es = NotificationSendState.NONE;
     notification.ps = NotificationSendState.NONE;
     notification.ns = NotificationSendState.NONE;
+  } else if (isLoggedEvent) {
+    // logged events are persisted as write-only records: marked done immediately so the send loop never visits them.
+    notification.r = [];
+    notification.d = true;
+    notification.ts = NotificationSendState.NO_TRY;
+    notification.es = NotificationSendState.NO_TRY;
+    notification.ps = NotificationSendState.NO_TRY;
+    notification.ns = NotificationSendState.NO_TRY;
   }
 
   return {

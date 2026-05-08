@@ -30,7 +30,8 @@ import {
   createNotificationDocument,
   type CreateNotificationTemplate,
   NotificationBoxRecipientFlag,
-  NOTIFICATION_BOX_DOES_NOT_EXIST_ERROR_CODE
+  NOTIFICATION_BOX_DOES_NOT_EXIST_ERROR_CODE,
+  notificationLoggedEventDayId
 } from '@dereekb/firebase';
 import { demoNotificationTestFactory } from '../../common/model/notification/notification.factory';
 import { EXAMPLE_NOTIFICATION_TEMPLATE_ON_SEND_ATTEMPTED_RESULT, EXAMPLE_NOTIFICATION_TEMPLATE_ON_SEND_SUCCESS_RESULT, EXAMPLE_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, TEST_NOTIFICATIONS_TEMPLATE_TYPE, exampleNotificationTemplate, profileIdentity } from 'demo-firebase';
@@ -2026,6 +2027,178 @@ demoApiFunctionContextFactory((f) => {
 
             describe('notification box does not exist', () => {
               describeNotificationCreateAndSendTestsWithNotificationBox(false, false);
+            });
+          });
+
+          describe('Notification Logged Event', () => {
+            demoNotificationBoxContext({ f, for: p, createIfNeeded: true, initIfNeeded: true }, (nb) => {
+              const exampleData = { workerId: 'w_001', delta: 1 };
+
+              async function createLoggedEventNotification(at?: Date) {
+                const baseTemplate = exampleNotificationTemplate({
+                  profileDocument: p.document
+                });
+
+                const template: CreateNotificationTemplate = {
+                  ...baseTemplate,
+                  st: NotificationSendType.LOGGED_EVENT,
+                  sat: at,
+                  n: {
+                    ...baseTemplate.n,
+                    d: exampleData
+                  }
+                };
+
+                const result = await createNotificationDocument({
+                  template,
+                  accessor: f.demoFirestoreCollections.notificationCollectionFactory(nb.document).documentAccessor()
+                });
+
+                return result.notificationDocument;
+              }
+
+              async function loadAllLoggedEventDays() {
+                const dayCollection = f.demoFirestoreCollections.notificationLoggedEventDayCollectionFactory(nb.document);
+                const dayDocs = await dayCollection.queryDocument().getDocs();
+                return dayDocs;
+              }
+
+              async function loadAllLoggedEventItemsForDay(dayId: string) {
+                const dayCollection = f.demoFirestoreCollections.notificationLoggedEventDayCollectionFactory(nb.document);
+                const dayDocument = dayCollection.documentAccessor().loadDocumentForId(dayId);
+                const pagedItems = f.demoFirestoreCollections.notificationLoggedEventDayPagedItemsCollectionFactory(dayDocument);
+                return pagedItems.loadAllItems();
+              }
+
+              describe('createNotificationDocument()', () => {
+                it('should persist the document with d=true and NO_TRY channel states', async () => {
+                  const document = await createLoggedEventNotification();
+                  const data = await assertSnapshotData(document);
+
+                  expect(data.st).toBe(NotificationSendType.LOGGED_EVENT);
+                  expect(data.d).toBe(true);
+                  expect(data.ts).toBe(NotificationSendState.NO_TRY);
+                  expect(data.es).toBe(NotificationSendState.NO_TRY);
+                  expect(data.ps).toBe(NotificationSendState.NO_TRY);
+                  expect(data.ns).toBe(NotificationSendState.NO_TRY);
+                  expect(data.r).toEqual([]);
+                });
+              });
+
+              describe('sendQueuedNotifications()', () => {
+                it('should not visit logged event notifications', async () => {
+                  await createLoggedEventNotification();
+
+                  const sendQueuedNotifications = await f.notificationServerActions.sendQueuedNotifications({});
+                  const result = await sendQueuedNotifications();
+
+                  // logged events have d=true at creation, so the past-send-at-time query (which filters d==false) skips them entirely.
+                  expect(result.notificationsVisited).toBe(0);
+                  expect(result.notificationTasksVisited).toBe(0);
+                });
+              });
+
+              describe('sendNotificationFactory() defensive short-circuit', () => {
+                it('should return early without dispatching when invoked directly on a logged-event document', async () => {
+                  const document = await createLoggedEventNotification();
+
+                  const sendNotification = await f.notificationServerActions.sendNotification({ key: document.key });
+                  const result = await sendNotification(document);
+
+                  expect(result.isLoggedEvent).toBe(true);
+                  expect(result.success).toBe(true);
+                  expect(result.tryRun).toBe(false);
+                  expect(result.createdBox).toBe(false);
+                  expect(result.deletedNotification).toBe(false);
+                  expect(result.notificationMarkedDone).toBe(true);
+                  expect(result.sendEmailsResult).toBeUndefined();
+                  expect(result.sendTextsResult).toBeUndefined();
+                  expect(result.sendNotificationSummaryResult).toBeUndefined();
+
+                  // confirm the doc was not mutated
+                  const data = await assertSnapshotData(document);
+                  expect(data.d).toBe(true);
+                  expect(data.a).toBe(0);
+                });
+              });
+
+              describe('cleanupSentNotificationsFactory()', () => {
+                it('should archive logged events to NotificationLoggedEventDay and delete the source notifications', async () => {
+                  const document = await createLoggedEventNotification();
+                  const sourceData = await assertSnapshotData(document);
+                  const dayId = notificationLoggedEventDayId(sourceData.sat);
+
+                  const cleanupSentNotifications = await f.notificationServerActions.cleanupSentNotifications({});
+                  const result = await cleanupSentNotifications();
+
+                  expect(result.notificationLoggedEventsCleanedUp).toBe(1);
+                  expect(result.notificationsDeleted).toBe(1);
+                  // logged events do not contribute to NotificationWeek archives
+                  expect(result.notificationWeeksCreated).toBe(0);
+                  expect(result.notificationWeeksUpdated).toBe(0);
+
+                  // source notification was deleted
+                  const allRemaining = await nb.loadAllNotificationsForNotificationBox();
+                  expect(allRemaining.length).toBe(0);
+
+                  // day wrapper exists
+                  const days = await loadAllLoggedEventDays();
+                  expect(days.length).toBe(1);
+                  expect(days[0].id).toBe(dayId);
+
+                  // archived item is in the paged subcollection
+                  const items = await loadAllLoggedEventItemsForDay(dayId);
+                  expect(items.length).toBe(1);
+                  expect(items[0].t).toBe(sourceData.n.t);
+                });
+
+                it('should append to an existing day on a second cleanup pass', async () => {
+                  await createLoggedEventNotification();
+
+                  const cleanupSentNotifications = await f.notificationServerActions.cleanupSentNotifications({});
+                  await cleanupSentNotifications();
+
+                  // second logged event same day
+                  await createLoggedEventNotification();
+                  const result = await cleanupSentNotifications();
+
+                  expect(result.notificationLoggedEventsCleanedUp).toBe(1);
+
+                  const days = await loadAllLoggedEventDays();
+                  expect(days.length).toBe(1);
+
+                  const items = await loadAllLoggedEventItemsForDay(days[0].id);
+                  expect(items.length).toBe(2);
+                });
+              });
+
+              describe('cleanupOldNotificationLoggedEventDaysFactory()', () => {
+                it('should delete day documents older than the retention cutoff', async () => {
+                  const oldDate = new Date();
+                  oldDate.setUTCDate(oldDate.getUTCDate() - 100);
+                  await createLoggedEventNotification(oldDate);
+
+                  const cleanupSentNotifications = await f.notificationServerActions.cleanupSentNotifications({});
+                  await cleanupSentNotifications();
+
+                  let days = await loadAllLoggedEventDays();
+                  expect(days.length).toBe(1);
+                  const oldDayId = days[0].id;
+
+                  const cleanupOldDays = await f.notificationServerActions.cleanupOldNotificationLoggedEventDays({ retentionDays: 30 });
+                  const result = await cleanupOldDays();
+
+                  expect(result.daysDeleted).toBe(1);
+                  expect(result.pagesDeleted).toBeGreaterThanOrEqual(1);
+
+                  days = await loadAllLoggedEventDays();
+                  expect(days.length).toBe(0);
+
+                  // The day's paged items should also be gone
+                  const items = await loadAllLoggedEventItemsForDay(oldDayId);
+                  expect(items.length).toBe(0);
+                });
+              });
             });
           });
         });

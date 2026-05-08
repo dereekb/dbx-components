@@ -4,10 +4,11 @@
  * Firestore query constraint builders for notification model documents.
  * Used by the server-side action service to find documents that need processing.
  */
-import { type FirestoreQueryConstraint, where } from '../../common/firestore';
+import { type FirestoreQueryConstraint, where, whereDocumentId } from '../../common/firestore';
 import { type NotificationSummary, type Notification, type NotificationBox, type NotificationUser } from './notification';
-import { toISODateString } from '@dereekb/date';
+import { toISODateString, toISO8601DayStringForUTC } from '@dereekb/date';
 import { type NotificationBoxSendExclusion } from './notification.id';
+import { addDays } from 'date-fns';
 import { type ArrayOrValue } from '@dereekb/util';
 
 // MARK: NotificationUser
@@ -90,4 +91,22 @@ export function notificationsReadyForCleanupQuery(): FirestoreQueryConstraint[] 
     where<Notification>('d', '==', true)
     // orderByDocumentId('asc') // todo: consider using orderby to get notificationboxes sorted
   ];
+}
+
+// MARK: NotificationLoggedEventDay
+/**
+ * Query constraints for finding {@link NotificationLoggedEventDay} documents whose ISO day string
+ * document ID is older than `now - retentionDays`.
+ *
+ * Intended for use against the {@link NotificationLoggedEventDayFirestoreCollectionGroup} during
+ * scheduled retention cleanup. Documents older than the cutoff (and their nested page subcollection
+ * contents) should be deleted.
+ *
+ * @param now - reference time for the cutoff (defaults to current time)
+ * @param retentionDays - number of days of history to retain; days strictly older than `now - retentionDays` match
+ * @returns array of Firestore query constraints filtering by document ID
+ */
+export function notificationLoggedEventDaysOlderThanQuery(now: Date = new Date(), retentionDays: number): FirestoreQueryConstraint[] {
+  const cutoff = toISO8601DayStringForUTC(addDays(now, -retentionDays));
+  return [whereDocumentId('<', cutoff)];
 }
