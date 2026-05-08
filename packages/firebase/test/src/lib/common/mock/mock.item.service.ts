@@ -33,7 +33,15 @@ import {
   mockItemUserFirestoreCollectionGroup,
   type MockItemUserFirestoreCollectionGroup,
   type MockItemUserRoles,
-  mockItemSystemStateStoredDataConverterMap
+  mockItemSystemStateStoredDataConverterMap,
+  mockItemPagedFirestoreCollection,
+  mockItemPagedAlphaDistributionScheme,
+  mockItemPagedFirestoreCollectionGroup,
+  type MockItemPagedDocument,
+  type MockItemPagedDocumentData,
+  type MockItemPagedFirestoreCollectionFactory,
+  type MockItemPagedFirestoreCollectionGroup,
+  type MockItemPagedRoles
 } from './mock.item';
 import { type FirebaseAppModelContext, type FirebasePermissionServiceModel, firebaseModelServiceFactory, firebaseModelsService, type FirestoreContext, type SystemStateFirestoreCollection, systemStateFirestoreCollection, grantFullAccessIfAdmin, type SystemState, type SystemStateDocument, type SystemStateRoles, type SystemStateTypes } from '@dereekb/firebase';
 import { type GrantedRoleMap } from '@dereekb/model';
@@ -57,6 +65,9 @@ export abstract class MockItemCollections {
   abstract readonly mockItemSubItemCollectionGroup: MockItemSubItemFirestoreCollectionGroup;
   abstract readonly mockItemSubItemDeepCollectionFactory: MockItemSubItemDeepFirestoreCollectionFactory;
   abstract readonly mockItemSubItemDeepCollectionGroup: MockItemSubItemDeepFirestoreCollectionGroup;
+  abstract readonly mockItemPagedCollectionFactory: MockItemPagedFirestoreCollectionFactory;
+  abstract readonly mockItemPagedStaticCollectionFactory: MockItemPagedFirestoreCollectionFactory;
+  abstract readonly mockItemPagedCollectionGroup: MockItemPagedFirestoreCollectionGroup;
   abstract readonly mockItemSystemStateCollection: SystemStateFirestoreCollection;
 }
 
@@ -79,6 +90,9 @@ export function makeMockItemCollections(firestoreContext: FirestoreContext): Moc
     mockItemSubItemCollectionGroup: mockItemSubItemFirestoreCollectionGroup(firestoreContext),
     mockItemSubItemDeepCollectionFactory: mockItemSubItemDeepFirestoreCollection(firestoreContext),
     mockItemSubItemDeepCollectionGroup: mockItemSubItemDeepFirestoreCollectionGroup(firestoreContext),
+    mockItemPagedCollectionFactory: mockItemPagedFirestoreCollection(firestoreContext),
+    mockItemPagedStaticCollectionFactory: mockItemPagedFirestoreCollection(firestoreContext, { distributionScheme: mockItemPagedAlphaDistributionScheme }),
+    mockItemPagedCollectionGroup: mockItemPagedFirestoreCollectionGroup(firestoreContext),
     mockItemSystemStateCollection: systemStateFirestoreCollection(firestoreContext, mockItemSystemStateStoredDataConverterMap)
   };
 }
@@ -144,6 +158,21 @@ export const mockItemSubItemDeepFirebaseModelServiceFactory = firebaseModelServi
 });
 
 /**
+ * Model service factory for {@link MockItemPagedDocumentData} (paged page documents).
+ *
+ * Returns configurable roles from `context.rolesToReturn`, defaulting to `{ read: true }`. The
+ * page document is the framework envelope (`{ i, c }`); per-entry permissions are not modelled
+ * because entries live inside the page array, not as standalone documents.
+ */
+export const mockItemPagedFirebaseModelServiceFactory = firebaseModelServiceFactory<MockFirebaseContext, MockItemPagedDocumentData, MockItemPagedDocument, MockItemPagedRoles>({
+  roleMapForModel: function (output: FirebasePermissionServiceModel<MockItemPagedDocumentData, MockItemPagedDocument>, context: MockFirebaseContext, _model: MockItemPagedDocument): PromiseOrValue<GrantedRoleMap<MockItemPagedRoles>> {
+    const roles: GrantedRoleMap<MockItemPagedRoles> = context.rolesToReturn ?? { read: true };
+    return roles;
+  },
+  getFirestoreCollection: (c) => c.app.mockItemPagedCollectionGroup
+});
+
+/**
  * Model service factory for {@link SystemState}. Only grants access to system admins via {@link grantFullAccessIfAdmin}.
  */
 export const mockItemSystemStateFirebaseModelServiceFactory = firebaseModelServiceFactory<MockFirebaseContext, SystemState, SystemStateDocument, SystemStateRoles>({
@@ -189,7 +218,8 @@ export const MOCK_FIREBASE_MODEL_SERVICE_FACTORIES = {
   mockItemPrivate: mockItemPrivateFirebaseModelServiceFactory,
   mockItemUser: mockItemUserFirebaseModelServiceFactory,
   mockItemSub: mockItemSubItemFirebaseModelServiceFactory,
-  mockItemSubItemDeep: mockItemSubItemDeepFirebaseModelServiceFactory
+  mockItemSubItemDeep: mockItemSubItemDeepFirebaseModelServiceFactory,
+  mockItemPaged: mockItemPagedFirebaseModelServiceFactory
 };
 
 /**

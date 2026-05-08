@@ -14,7 +14,13 @@ import {
   makeFirestoreCollectionGroup,
   type RootSingleItemFirestoreCollectionConfig,
   makeRootSingleItemFirestoreCollection,
-  type RootSingleItemFirestoreCollection
+  type RootSingleItemFirestoreCollection,
+  type PagedItemFirestoreCollection,
+  type PagedItemFirestoreCollectionConfig,
+  type PagedItemDistributionScheme,
+  type PagedItemConverter,
+  type PagedItemPageData,
+  makePagedItemFirestoreCollection
 } from './collection';
 import { type FirestoreContextCache, type FirestoreContextCacheFactoryRef, type FirestoreContextCacheRef, noopFirestoreContextCache } from './cache/cache';
 import { type FirestoreDrivers } from './driver/driver';
@@ -130,6 +136,19 @@ export interface FirestoreContext<F extends Firestore = Firestore> extends RunTr
    * @returns A SingleItemFirestoreCollection instance for the specified document
    */
   singleItemFirestoreCollection<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>(config: FirestoreContextSingleItemFirestoreCollectionConfig<T, PT, D, PD>): SingleItemFirestoreCollection<T, PT, D, PD>;
+
+  /**
+   * Creates a PagedItemFirestoreCollection that distributes a logical T[] across
+   * multiple page documents under a parent.
+   *
+   * @template T - The item type stored across pages
+   * @template PT - The parent document data type
+   * @template D - The page document type
+   * @template PD - The parent FirestoreDocument implementation type
+   * @param config - Configuration for the paged collection
+   * @returns A PagedItemFirestoreCollection instance
+   */
+  pagedItemFirestoreCollection<T, PT, D extends FirestoreDocument<PagedItemPageData<T>> = FirestoreDocument<PagedItemPageData<T>>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>(config: FirestoreContextPagedItemFirestoreCollectionConfig<T, PT, D, PD>): PagedItemFirestoreCollection<T, PT, D, PD>;
 }
 
 /**
@@ -195,6 +214,30 @@ export interface FirestoreContextFirestoreCollectionWithParentConfig<T, PT, D ex
  * @template PD - The FirestoreDocument implementation type for the parent document
  */
 export interface FirestoreContextSingleItemFirestoreCollectionConfig<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>> extends FirestoreContextFirestoreCollectionWithParentConfig<T, PT, D, PD>, Partial<SingleItemFirestoreCollectionDocumentIdentifierRef> {}
+
+/**
+ * Configuration for creating a PagedItemFirestoreCollection through a FirestoreContext.
+ *
+ * Mirrors FirestoreContextSingleItemFirestoreCollectionConfig but for the paged
+ * variant. Page documents are typed against the {@link PagedItemPageData} envelope
+ * so the standard accessor returns the actual stored shape; per-entry conversion
+ * is performed by the paged accessor methods using {@link itemConverter}.
+ *
+ * The {@link converter} field is optional — when omitted the collection uses the
+ * default page-envelope converter built by `defaultPagedItemPageDataConverter`.
+ *
+ * @template T - The item type stored across pages
+ * @template PT - The parent document data type
+ * @template D - The page document type
+ * @template PD - The parent FirestoreDocument implementation type
+ */
+export interface FirestoreContextPagedItemFirestoreCollectionConfig<T, PT, D extends FirestoreDocument<PagedItemPageData<T>> = FirestoreDocument<PagedItemPageData<T>>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>> extends Omit<FirestoreContextFirestoreCollectionWithParentConfig<PagedItemPageData<T>, PT, D, PD>, 'converter'> {
+  readonly converter?: FirestoreContextFirestoreCollectionWithParentConfig<PagedItemPageData<T>, PT, D, PD>['converter'];
+  readonly indexDocumentId?: string;
+  readonly distributionScheme?: PagedItemDistributionScheme<T>;
+  readonly maxItemsPerPage?: number;
+  readonly itemConverter?: PagedItemConverter<T>;
+}
 
 /**
  * Optional parameters for {@link FirestoreContextFactory} that configure context-level
@@ -282,6 +325,10 @@ export function firestoreContextFactory<F extends Firestore = Firestore>(drivers
       singleItemFirestoreCollection<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>(inputConfig: FirestoreContextSingleItemFirestoreCollectionConfig<T, PT, D, PD>): SingleItemFirestoreCollection<T, PT, D, PD> {
         const config: SingleItemFirestoreCollectionConfig<T, PT, D, PD> = makeFirestoreCollectionConfig(inputConfig) as unknown as SingleItemFirestoreCollectionConfig<T, PT, D, PD>;
         return makeSingleItemFirestoreCollection(config);
+      },
+      pagedItemFirestoreCollection<T, PT, D extends FirestoreDocument<PagedItemPageData<T>> = FirestoreDocument<PagedItemPageData<T>>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>(inputConfig: FirestoreContextPagedItemFirestoreCollectionConfig<T, PT, D, PD>): PagedItemFirestoreCollection<T, PT, D, PD> {
+        const config: PagedItemFirestoreCollectionConfig<T, PT, D, PD> = makeFirestoreCollectionConfig(inputConfig as unknown as FirestoreContextFirestoreCollectionWithParentConfig<PagedItemPageData<T>, PT, D, PD>) as unknown as PagedItemFirestoreCollectionConfig<T, PT, D, PD>;
+        return makePagedItemFirestoreCollection<T, PT, D, PD>(config);
       }
     };
 

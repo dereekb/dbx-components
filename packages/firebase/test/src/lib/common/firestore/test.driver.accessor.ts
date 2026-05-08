@@ -2,7 +2,24 @@ import { itShouldFail, expectFail, callbackTest } from '@dereekb/util/test';
 import { firstValueFrom } from 'rxjs';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { type Transaction, type DocumentReference, type WriteBatch, type FirestoreDocumentAccessor, makeDocuments, type FirestoreDocumentDataAccessor, type FirestoreContext, type FirestoreDocument, type RunTransaction, type FirebaseAuthUserId, type DocumentSnapshot, type FirestoreDataConverter, getDocumentSnapshotPairs, useDocumentSnapshot, useDocumentSnapshotData, type AbstractFirestoreDocument } from '@dereekb/firebase';
-import { type MockItemCollectionFixture, type MockItemDocument, type MockItem, type MockItemPrivateDocument, type MockItemPrivateFirestoreCollection, type MockItemPrivate, type MockItemSubItem, type MockItemSubItemDocument, type MockItemSubItemFirestoreCollection, type MockItemSubItemFirestoreCollectionGroup, type MockItemUserFirestoreCollection, type MockItemUserDocument, mockItemConverter } from '../mock';
+import {
+  type MockItemCollectionFixture,
+  type MockItemDocument,
+  type MockItem,
+  type MockItemPrivateDocument,
+  type MockItemPrivateFirestoreCollection,
+  type MockItemPrivate,
+  type MockItemSubItem,
+  type MockItemSubItemDocument,
+  type MockItemSubItemFirestoreCollection,
+  type MockItemSubItemFirestoreCollectionGroup,
+  type MockItemUserFirestoreCollection,
+  type MockItemUserDocument,
+  mockItemConverter,
+  type MockItemPagedEntry,
+  type MockItemPagedFirestoreCollection,
+  MOCK_ITEM_PAGED_DEFAULT_MAX_ITEMS_PER_PAGE
+} from '../mock';
 import { type Getter } from '@dereekb/util';
 
 /**
@@ -450,6 +467,263 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
                   loadDocumentForWriteBatch: (writeBatch, ref) => mockItemSubItemFirestoreCollectionGroup.documentAccessorForWriteBatch(writeBatch).loadDocument(ref!)
                 }));
               });
+            });
+          });
+        });
+
+        describe('pagedItemFirestoreCollection (MockItemPaged)', () => {
+          describe('configuration', () => {
+            it('exposes indexDocumentId, distributionScheme, and isStaticDistribution flags', () => {
+              const dynamicCollection = f.instance.collections.mockItemPagedCollectionFactory(itemDocument);
+              expect(dynamicCollection.indexDocumentId).toBe('_index');
+              expect(dynamicCollection.isStaticDistribution).toBe(false);
+              expect(dynamicCollection.distributionScheme).toBeUndefined();
+
+              const staticCollection = f.instance.collections.mockItemPagedStaticCollectionFactory(itemDocument);
+              expect(staticCollection.indexDocumentId).toBe('_index');
+              expect(staticCollection.isStaticDistribution).toBe(true);
+              expect(staticCollection.distributionScheme).toBeDefined();
+            });
+          });
+
+          describe('on an empty collection', () => {
+            let collection: MockItemPagedFirestoreCollection;
+
+            beforeEach(() => {
+              collection = f.instance.collections.mockItemPagedCollectionFactory(itemDocument);
+            });
+
+            describe('loadIndex()', () => {
+              it('returns undefined when the index document has not been written yet', async () => {
+                const index = await collection.loadIndex();
+                expect(index).toBeUndefined();
+              });
+            });
+
+            describe('loadAllItems()', () => {
+              it('returns an empty array when the index document has not been written yet', async () => {
+                const items = await collection.loadAllItems();
+                expect(items).toEqual([]);
+              });
+            });
+
+            describe('loadItemsForPages()', () => {
+              it('returns an empty array when no pages exist', async () => {
+                const items = await collection.loadItemsForPages(['0', '1']);
+                expect(items).toEqual([]);
+              });
+
+              it('returns an empty array when called with no page ids', async () => {
+                const items = await collection.loadItemsForPages([]);
+                expect(items).toEqual([]);
+              });
+            });
+          });
+
+          describe('writeAllItems() (dynamic distribution)', () => {
+            let collection: MockItemPagedFirestoreCollection;
+
+            beforeEach(() => {
+              collection = f.instance.collections.mockItemPagedCollectionFactory(itemDocument);
+            });
+
+            it('splits items across pages by maxItemsPerPage and updates the index', async () => {
+              const items: MockItemPagedEntry[] = [
+                { id: '1', group: 'a', value: 1 },
+                { id: '2', group: 'a', value: 2 },
+                { id: '3', group: 'b', value: 3 },
+                { id: '4', group: 'b', value: 4 },
+                { id: '5', group: 'c', value: 5 }
+              ];
+
+              await collection.writeAllItems(items);
+
+              const index = await collection.loadIndex();
+              expect(index).toBeDefined();
+              expect(index?.tc).toBe(items.length);
+              expect(index?.p).toEqual(['0', '1']);
+              expect(index?.pc).toEqual({ '0': MOCK_ITEM_PAGED_DEFAULT_MAX_ITEMS_PER_PAGE, '1': items.length - MOCK_ITEM_PAGED_DEFAULT_MAX_ITEMS_PER_PAGE });
+              expect(index?.u).toBeGreaterThan(0);
+            });
+
+            it('round-trips items via loadAllItems()', async () => {
+              const items: MockItemPagedEntry[] = Array.from({ length: 7 }, (_, i) => ({ id: `${i}`, group: 'a', value: i }));
+
+              await collection.writeAllItems(items);
+
+              const loaded = await collection.loadAllItems();
+              expect(loaded).toHaveLength(items.length);
+              expect(loaded.map((x) => x.id).sort()).toEqual(items.map((x) => x.id).sort());
+            });
+
+            it('writes a single page when items fit within maxItemsPerPage', async () => {
+              const items: MockItemPagedEntry[] = [
+                { id: '1', group: 'a', value: 1 },
+                { id: '2', group: 'a', value: 2 }
+              ];
+
+              await collection.writeAllItems(items);
+
+              const index = await collection.loadIndex();
+              expect(index?.tc).toBe(2);
+              expect(index?.p).toEqual(['0']);
+              expect(index?.pc).toEqual({ '0': 2 });
+            });
+
+            it('writes only the index when given an empty items array', async () => {
+              await collection.writeAllItems([]);
+
+              const index = await collection.loadIndex();
+              expect(index).toBeDefined();
+              expect(index?.tc).toBe(0);
+              expect(index?.p).toEqual([]);
+              expect(index?.pc).toEqual({});
+            });
+
+            it('shrinks pages and deletes obsolete pages on a smaller rewrite', async () => {
+              const initialItems: MockItemPagedEntry[] = Array.from({ length: 9 }, (_, i) => ({ id: `${i}`, group: 'a', value: i }));
+              await collection.writeAllItems(initialItems);
+
+              const initialIndex = await collection.loadIndex();
+              expect(initialIndex?.p).toEqual(['0', '1', '2']);
+
+              const smallerItems: MockItemPagedEntry[] = initialItems.slice(0, 2);
+              await collection.writeAllItems(smallerItems);
+
+              const newIndex = await collection.loadIndex();
+              expect(newIndex?.tc).toBe(2);
+              expect(newIndex?.p).toEqual(['0']);
+              expect(newIndex?.pc).toEqual({ '0': 2 });
+
+              const reloaded = await collection.loadAllItems();
+              expect(reloaded).toHaveLength(2);
+
+              const removedPage = await collection.loadItemsForPages(['1']);
+              expect(removedPage).toEqual([]);
+            });
+
+            it('replaces previously written items on rewrite (no merge)', async () => {
+              const firstItems: MockItemPagedEntry[] = [
+                { id: 'A', group: 'a', value: 1 },
+                { id: 'B', group: 'a', value: 2 }
+              ];
+              await collection.writeAllItems(firstItems);
+
+              const replacementItems: MockItemPagedEntry[] = [
+                { id: 'C', group: 'a', value: 3 },
+                { id: 'D', group: 'a', value: 4 }
+              ];
+              await collection.writeAllItems(replacementItems);
+
+              const reloaded = await collection.loadAllItems();
+              expect(reloaded.map((x) => x.id).sort()).toEqual(['C', 'D']);
+            });
+          });
+
+          describe('writeAllItems() (static distribution)', () => {
+            let collection: MockItemPagedFirestoreCollection;
+
+            beforeEach(() => {
+              collection = f.instance.collections.mockItemPagedStaticCollectionFactory(itemDocument);
+            });
+
+            it('routes items to scheme-defined page ids', async () => {
+              const items: MockItemPagedEntry[] = [
+                { id: '1', group: 'a', value: 1 },
+                { id: '2', group: 'b', value: 2 },
+                { id: '3', group: 'b', value: 3 },
+                { id: '4', group: 'c', value: 4 }
+              ];
+
+              await collection.writeAllItems(items);
+
+              const index = await collection.loadIndex();
+              expect(index?.tc).toBe(items.length);
+              expect(index?.p).toEqual(['a', 'b', 'c']);
+              expect(index?.pc).toEqual({ a: 1, b: 2, c: 1 });
+            });
+
+            it('omits empty scheme pages from the index', async () => {
+              const items: MockItemPagedEntry[] = [
+                { id: '1', group: 'a', value: 1 },
+                { id: '2', group: 'c', value: 2 }
+              ];
+
+              await collection.writeAllItems(items);
+
+              const index = await collection.loadIndex();
+              expect(index?.p).toEqual(['a', 'c']);
+              expect(index?.pc).toEqual({ a: 1, c: 1 });
+            });
+
+            it('loadItemsForPages() returns only the requested static page', async () => {
+              const items: MockItemPagedEntry[] = [
+                { id: '1', group: 'a', value: 1 },
+                { id: '2', group: 'b', value: 2 },
+                { id: '3', group: 'b', value: 3 },
+                { id: '4', group: 'c', value: 4 }
+              ];
+
+              await collection.writeAllItems(items);
+
+              const aItems = await collection.loadItemsForPages(['a']);
+              expect(aItems).toHaveLength(1);
+              expect(aItems[0]?.id).toBe('1');
+
+              const bItems = await collection.loadItemsForPages(['b']);
+              expect(bItems).toHaveLength(2);
+              expect(bItems.map((x) => x.id).sort()).toEqual(['2', '3']);
+            });
+
+            it('loadItemsForPages() returns an empty array for an unwritten scheme page', async () => {
+              const items: MockItemPagedEntry[] = [{ id: '1', group: 'a', value: 1 }];
+              await collection.writeAllItems(items);
+
+              const missing = await collection.loadItemsForPages(['b']);
+              expect(missing).toEqual([]);
+            });
+
+            itShouldFail('when distribute() returns a page id outside the scheme', async () => {
+              await expectFail(() => collection.writeAllItems([{ id: '1', group: 'z', value: 1 }]));
+            });
+          });
+
+          describe('writeAllItemsInTransaction()', () => {
+            it('writes pages and updates the index inside a transaction', async () => {
+              const collection = f.instance.collections.mockItemPagedCollectionFactory(itemDocument);
+              const items: MockItemPagedEntry[] = Array.from({ length: 4 }, (_, i) => ({ id: `${i}`, group: 'a', value: i }));
+
+              await f.parent.firestoreContext.runTransaction(async (transaction) => {
+                await collection.writeAllItemsInTransaction(transaction, items);
+              });
+
+              const index = await collection.loadIndex();
+              expect(index?.tc).toBe(items.length);
+              expect(index?.p).toEqual(['0', '1']);
+
+              const reloaded = await collection.loadAllItems();
+              expect(reloaded).toHaveLength(items.length);
+            });
+
+            it('shrinks and deletes obsolete pages inside a transaction', async () => {
+              const collection = f.instance.collections.mockItemPagedCollectionFactory(itemDocument);
+              const initialItems: MockItemPagedEntry[] = Array.from({ length: 7 }, (_, i) => ({ id: `${i}`, group: 'a', value: i }));
+              await collection.writeAllItems(initialItems);
+
+              const initialIndex = await collection.loadIndex();
+              expect(initialIndex?.p).toEqual(['0', '1', '2']);
+
+              const smallerItems: MockItemPagedEntry[] = initialItems.slice(0, 2);
+              await f.parent.firestoreContext.runTransaction(async (transaction) => {
+                await collection.writeAllItemsInTransaction(transaction, smallerItems);
+              });
+
+              const newIndex = await collection.loadIndex();
+              expect(newIndex?.tc).toBe(2);
+              expect(newIndex?.p).toEqual(['0']);
+
+              const removedPage = await collection.loadItemsForPages(['1']);
+              expect(removedPage).toEqual([]);
             });
           });
         });

@@ -10,6 +10,7 @@ export * from './context.transaction';
 export * from './context';
 export * from './converter';
 export * from './document';
+export * from './document.paged';
 export * from './document.utility';
 export * from './document.rxjs';
 export * from './increment';
