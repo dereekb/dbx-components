@@ -1126,6 +1126,47 @@
       ]
     },
     {
+      "slug": "apply-best-fit",
+      "name": "applyBestFit",
+      "kind": "function",
+      "category": "array",
+      "module": "@dereekb/util",
+      "subpath": "array/array.filter",
+      "signature": "applyBestFit(input: T[], config: BestFitConfig<T>): T[]",
+      "description": "Used for updating an array so that a single element becomes the \"best fit\" in whatever context is provided.\n\nFor instance, if two items are selected but only one can be selected by design, this function can be used to\npick the best fit, and update the input array.",
+      "params": [
+        {
+          "name": "input",
+          "type": "T[]",
+          "description": "- The array to modify in-place.",
+          "optional": false
+        },
+        {
+          "name": "config",
+          "type": "BestFitConfig<T>",
+          "description": "- The best-fit strategy ({@link BestFitConfig }).",
+          "optional": false
+        }
+      ],
+      "returns": "The modified input array with only the best fit item and transformed non-best-fit items.",
+      "tags": [
+        "array",
+        "best-fit",
+        "filter",
+        "sort",
+        "mutable",
+        "in-place",
+        "apply",
+        "best",
+        "fit",
+        "applybestfit"
+      ],
+      "relatedSlugs": [
+        "make-best-fit",
+        "find-best-index-set-pair"
+      ]
+    },
+    {
       "slug": "filter-and-map-function",
       "name": "filterAndMapFunction",
       "kind": "factory",
