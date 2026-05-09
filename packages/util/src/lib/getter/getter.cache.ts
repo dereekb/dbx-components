@@ -59,6 +59,7 @@ export type CachedFactoryWithInput<T, A = unknown> = CachedGetter<T> &
  */
 export function cachedGetter<T>(getter: Getter<T>): CachedFactoryWithInput<T>;
 export function cachedGetter<T, A = unknown>(factory: FactoryWithInput<T, A>): CachedFactoryWithInput<T, A>;
+// @__NO_SIDE_EFFECTS__
 export function cachedGetter<T, A = unknown>(factory: FactoryWithInput<T, A>): CachedFactoryWithInput<T, A> {
   let loaded: Maybe<{ value: T }>;
 

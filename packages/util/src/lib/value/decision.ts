@@ -116,6 +116,7 @@ export function asDecisionFunction<T = unknown>(valueOrFunction: Maybe<boolean |
  * @__NO_SIDE_EFFECTS__
  */
 export function isEqualToValueDecisionFunction<T>(equalityValue: T | DecisionFunction<T>): T extends DecisionFunction<T> ? T : DecisionFunction<T>;
+// @__NO_SIDE_EFFECTS__
 export function isEqualToValueDecisionFunction<T>(equalityValue: T | DecisionFunction<T>): DecisionFunction<T> {
   let equalityValueCheckFunction: DecisionFunction<T>;
 

@@ -417,6 +417,7 @@ export function optionalFirestoreField<V, D>(config?: OptionalFirestoreFieldConf
  * @returns A field mapping configuration for optional values
  */
 export function optionalFirestoreField<T>(config?: OptionalFirestoreFieldConfigWithOneTypeTransform<T>): FirestoreModelFieldMapFunctionsConfig<Maybe<T>, Maybe<T>>;
+// @__NO_SIDE_EFFECTS__
 export function optionalFirestoreField<V, D = V>(config?: unknown): FirestoreModelFieldMapFunctionsConfig<Maybe<V>, Maybe<D>> {
   // NOTE: Typings for this function internally is weird due to the support for both the one and two type transforms.
 

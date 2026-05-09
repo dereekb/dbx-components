@@ -123,6 +123,7 @@ export interface HandlerFactoryOptions<R = HandleResult> {
  */
 export function handlerFactory<T, K extends PrimativeKey = string>(readKey: ReadKeyFunction<T, K>): HandlerFactory<T, K, HandleResult>;
 export function handlerFactory<T, K extends PrimativeKey = string, R = HandleResult>(readKey: ReadKeyFunction<T, K>, options: HandlerFactoryOptions<R>): HandlerFactory<T, K, R>;
+// @__NO_SIDE_EFFECTS__
 export function handlerFactory<T, K extends PrimativeKey = string, R = HandleResult>(readKey: ReadKeyFunction<T, K>, options?: HandlerFactoryOptions<R>): HandlerFactory<T, K, R> {
   const defaultResultValue = (options?.defaultResult ?? true) as R;
   const negativeResultValue = (options?.negativeResult ?? false) as R;

@@ -651,6 +651,7 @@ export function indexRangeCheckReaderFunction<T extends IndexRef>(input: IndexRa
  * @__NO_SIDE_EFFECTS__
  */
 export function indexRangeCheckReaderFunction<T>(input: IndexRangeFunctionInput, read: ReadIndexFunction<T>): IndexRefRangeCheckFunction<T>;
+// @__NO_SIDE_EFFECTS__
 export function indexRangeCheckReaderFunction<T>(input: IndexRangeFunctionInput, read: ReadIndexFunction<T> = (x: T) => (x as unknown as IndexRef).i): IndexRefRangeCheckFunction<T> {
   const rangeCheck = indexRangeCheckFunction(input);
   return (value: T) => rangeCheck(read(value));

@@ -208,6 +208,7 @@ export function makeWithFactory<T>(factory: Factory<T> | FactoryWithIndex<T>, co
  */
 export function makeWithFactoryInput<T, A>(factory: FactoryWithInput<T, A>, input: Maybe<A>[]): T[];
 export function makeWithFactoryInput<T, A>(factory: FactoryWithRequiredInput<T, A>, input: A[]): T[];
+// @__NO_SIDE_EFFECTS__
 export function makeWithFactoryInput<T, A>(factory: FactoryWithRequiredInput<T, A>, input: A[]): T[] {
   return input.map((x) => factory(x));
 }

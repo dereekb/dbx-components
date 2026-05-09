@@ -95,6 +95,22 @@ export function makeFoo() { return 1; }
 `);
       expect(errors).toHaveLength(1);
     });
+
+    it('flags overloaded function whose JSDoc has the tag but impl has no surviving annotation', () => {
+      const errors = lintCode(`
+/**
+ * Builds a Foo with overloads.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function makeFoo(a: number): number;
+export function makeFoo(a: string): string;
+export function makeFoo(a: any): any { return a; }
+`);
+      expect(errors).toHaveLength(1);
+      expect(errors[0].messageId).toBe('missingImplAnnotationOverloaded');
+      expect(errors[0].message).toContain('makeFoo');
+    });
   });
 
   describe('auto-fix', () => {
@@ -142,7 +158,7 @@ export function makeFoo() { return 1; }
       expect(/\* Builds a Foo\.[\r\n]+\s*\* @__NO_SIDE_EFFECTS__/.test(output)).toBe(true);
     });
 
-    it('handles overloaded functions — JSDoc on first overload, orphan above implementation', () => {
+    it('preserves the impl-leading line comment on overloaded functions and mirrors the tag into the JSDoc', () => {
       const input = `
 /**
  * Builds a Foo with overloads.
@@ -153,10 +169,80 @@ export function makeFoo(a: string): string;
 export function makeFoo(a: any): any { return a; }
 `;
       const output = fixCode(input);
-      expect(output).not.toContain('// @__NO_SIDE_EFFECTS__');
+      // The impl line comment is required for tree-shaking (TS erases overload-signature JSDoc) and must remain.
+      expect(output).toContain('// @__NO_SIDE_EFFECTS__');
+      // The JSDoc on the first overload should also carry the tag so consumers see it in tooltips.
       const jsdocBlock = output.slice(output.indexOf('/**'), output.indexOf('*/') + 2);
       expect(jsdocBlock).toContain('@__NO_SIDE_EFFECTS__');
       expect(jsdocBlock).toContain('Builds a Foo with overloads.');
+      // Sanity: only one line-comment occurrence (no duplicate orphans introduced).
+      expect((output.match(/\/\/ @__NO_SIDE_EFFECTS__/g) ?? []).length).toBe(1);
+    });
+
+    it('removes orphans between overloads but keeps the impl-leading line comment', () => {
+      const input = `
+/**
+ * Builds a Foo with overloads.
+ */
+export function makeFoo(a: number): number;
+// @__NO_SIDE_EFFECTS__
+export function makeFoo(a: string): string;
+// @__NO_SIDE_EFFECTS__
+export function makeFoo(a: any): any { return a; }
+`;
+      const output = fixCode(input);
+      // Exactly one line comment survives — the one above the impl. The between-overloads orphan is removed.
+      expect((output.match(/\/\/ @__NO_SIDE_EFFECTS__/g) ?? []).length).toBe(1);
+      const jsdocBlock = output.slice(output.indexOf('/**'), output.indexOf('*/') + 2);
+      expect(jsdocBlock).toContain('@__NO_SIDE_EFFECTS__');
+      // The remaining line comment must sit between the last overload and the impl.
+      const lastOverloadIdx = output.indexOf('export function makeFoo(a: string)');
+      const implIdx = output.indexOf('export function makeFoo(a: any)');
+      const lineCommentIdx = output.indexOf('// @__NO_SIDE_EFFECTS__');
+      expect(lineCommentIdx).toBeGreaterThan(lastOverloadIdx);
+      expect(lineCommentIdx).toBeLessThan(implIdx);
+    });
+
+    it('inserts impl-leading line comment when overloaded JSDoc has the tag but impl has no surviving annotation', () => {
+      const input = `
+/**
+ * Builds a Foo.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function makeFoo(a: number): number;
+export function makeFoo(a: string): string;
+export function makeFoo(a: any): any { return a; }
+`;
+      const output = fixCode(input);
+      // Line comment now sits between the last overload and the impl.
+      const lastOverloadIdx = output.indexOf('export function makeFoo(a: string)');
+      const implIdx = output.indexOf('export function makeFoo(a: any)');
+      const lineCommentIdx = output.indexOf('// @__NO_SIDE_EFFECTS__');
+      expect(lineCommentIdx).toBeGreaterThan(lastOverloadIdx);
+      expect(lineCommentIdx).toBeLessThan(implIdx);
+      // Original JSDoc tag still present — the rule does not duplicate it.
+      const jsdocBlock = output.slice(output.indexOf('/**'), output.indexOf('*/') + 2);
+      expect((jsdocBlock.match(/@__NO_SIDE_EFFECTS__/g) ?? []).length).toBe(1);
+    });
+
+    it('overloaded function in the desired final state (JSDoc tag + impl line comment) is left alone', () => {
+      const input = `
+/**
+ * Builds a Foo.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function makeFoo(a: number): number;
+export function makeFoo(a: string): string;
+// @__NO_SIDE_EFFECTS__
+export function makeFoo(a: any): any { return a; }
+`;
+      const errors = lintCode(input);
+      expect(errors).toHaveLength(0);
+      // Idempotent under --fix.
+      const output = fixCode(input);
+      expect(output).toBe(input);
     });
 
     it('idempotent — does not duplicate the tag if JSDoc already has it', () => {

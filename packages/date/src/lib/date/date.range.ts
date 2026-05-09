@@ -1083,6 +1083,7 @@ export type ClampDateRangeFunction = ((date: Partial<DateRange>, clampNullValues
  */
 export function clampDateRangeFunction(dateRange: DateRange, defaultClampNullValues?: boolean): ClampDateRangeFunction;
 export function clampDateRangeFunction(dateRange: Partial<DateRange>, defaultClampNullValues?: boolean): ClampPartialDateRangeFunction;
+// @__NO_SIDE_EFFECTS__
 export function clampDateRangeFunction(dateRange: Partial<DateRange>, defaultClampNullValues = false): ClampDateRangeFunction | ClampPartialDateRangeFunction {
   const clampDate = clampDateFunction(dateRange);
 

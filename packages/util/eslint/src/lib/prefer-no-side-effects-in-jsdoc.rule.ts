@@ -1,4 +1,4 @@
-import { findFunctionLeadingContext, getLineIndent, NO_SIDE_EFFECTS_TAG } from './comments';
+import { findFunctionLeadingContext, getLineIndent, getStatementAnchor, NO_SIDE_EFFECTS_TAG } from './comments';
 
 type AstNode = any;
 
@@ -15,6 +15,7 @@ export interface UtilPreferNoSideEffectsInJsdocRuleDefinition {
     };
     readonly messages: {
       readonly preferJsdocPlacement: string;
+      readonly missingImplAnnotationOverloaded: string;
     };
     readonly schema: readonly object[];
   };
@@ -32,6 +33,13 @@ export interface UtilPreferNoSideEffectsInJsdocRuleDefinition {
  * be tagged as a factory — it triggers purely on the presence of an existing
  * line-comment annotation alongside a JSDoc, so it can sweep all 688 historical
  * annotations through `eslint --fix`.
+ *
+ * Overloaded functions are a special case: TypeScript erases overload signatures
+ * during emit, so a JSDoc tag on the first overload doesn't reach the bundled JS.
+ * The `// @__NO_SIDE_EFFECTS__` line comment immediately above the implementation
+ * is the only annotation that survives compilation, so this rule preserves it
+ * (and treats line comments between overloads — but not directly above the impl —
+ * as ordinary orphans to migrate).
  */
 export const utilPreferNoSideEffectsInJsdocRule: UtilPreferNoSideEffectsInJsdocRuleDefinition = {
   meta: {
@@ -42,7 +50,8 @@ export const utilPreferNoSideEffectsInJsdocRule: UtilPreferNoSideEffectsInJsdocR
       recommended: true
     },
     messages: {
-      preferJsdocPlacement: 'Move the `@__NO_SIDE_EFFECTS__` annotation into the JSDoc block of "{{name}}" (as the last tag before the closing) instead of a separate line comment.'
+      preferJsdocPlacement: 'Move the `@__NO_SIDE_EFFECTS__` annotation into the JSDoc block of "{{name}}" (as the last tag before the closing) instead of a separate line comment.',
+      missingImplAnnotationOverloaded: '"{{name}}" carries `@__NO_SIDE_EFFECTS__` in its first-overload JSDoc but is overloaded — TypeScript erases overload signatures during emit, so the JSDoc tag is dropped from the bundled JavaScript. Add a `// @__NO_SIDE_EFFECTS__` line comment immediately above the implementation declaration.'
     },
     schema: []
   },
@@ -61,18 +70,36 @@ export const utilPreferNoSideEffectsInJsdocRule: UtilPreferNoSideEffectsInJsdocR
 
       const name: string = node.id.name;
 
-      // Walks the overload chain (if any) so we find the JSDoc on the first overload
-      // and any orphan annotations between overloads or above the implementation.
-      const { jsdoc, orphanLineComments } = findFunctionLeadingContext(sourceCode, node);
+      // Walks the overload chain (if any) so we find the JSDoc on the first overload,
+      // any orphan annotations between overloads, and the (preserved) impl-leading annotation.
+      const { jsdoc, orphanLineComments, implLineComment, hasOverloads, implHasSurvivingAnnotation } = findFunctionLeadingContext(sourceCode, node);
 
-      // Only flag when both signals are present: a JSDoc to absorb the tag, AND an orphan annotation.
-      if (!jsdoc || orphanLineComments.length === 0) {
+      if (!jsdoc) {
+        return;
+      }
+
+      // Three reasons to fire:
+      //   1. There's an annotation form (orphan OR overload-impl line comment) and the JSDoc
+      //      doesn't yet carry the tag — the JSDoc needs the tag added (for docs/tooling).
+      //   2. There are orphan annotations to consolidate, regardless of JSDoc tag state.
+      //   3. Function is overloaded, JSDoc carries the tag, but the implementation lacks any
+      //      surviving annotation — TS erases overload signatures during emit, so the JSDoc tag
+      //      on the first overload is dropped. We must add a `// @__NO_SIDE_EFFECTS__` directly
+      //      above the impl so the bundler still sees the hint.
+      // The impl line comment on overloaded functions is REQUIRED for tree-shaking and is never
+      // removed — it is only counted as a signal that the JSDoc should also carry the tag.
+      const hasAnyAnnotationSource = orphanLineComments.length > 0 || implLineComment !== null;
+      const needsJsdocTag = !jsdoc.hasNoSideEffects && hasAnyAnnotationSource;
+      const needsOrphanRemoval = orphanLineComments.length > 0;
+      const needsImplLineCommentForOverload = jsdoc.hasNoSideEffects && hasOverloads && !implHasSurvivingAnnotation;
+
+      if (!needsJsdocTag && !needsOrphanRemoval && !needsImplLineCommentForOverload) {
         return;
       }
 
       context.report({
         node: node.id,
-        messageId: 'preferJsdocPlacement',
+        messageId: needsImplLineCommentForOverload && !needsJsdocTag && !needsOrphanRemoval ? 'missingImplAnnotationOverloaded' : 'preferJsdocPlacement',
         data: { name },
         fix(fixer: AstNode) {
           const fixes: AstNode[] = [];
@@ -81,8 +108,8 @@ export const utilPreferNoSideEffectsInJsdocRule: UtilPreferNoSideEffectsInJsdocR
           const jsdocEnd = jsdoc.node.range[1];
           const jsdocIndent = getLineIndent(sourceText, jsdocStart);
 
-          // Insert into JSDoc only if the tag isn't already there (preserve idempotency).
-          if (!jsdoc.hasNoSideEffects) {
+          // Insert into JSDoc only if needed (preserve idempotency and skip when only orphans need removal).
+          if (needsJsdocTag) {
             if (!jsdocText.includes('\n')) {
               // Single-line JSDoc — expand to multi-line so the new tag has its own line.
               const bodyTrimmed = jsdocText.replace(/^\*\s*/, '').replace(/\s*$/, '');
@@ -98,6 +125,15 @@ export const utilPreferNoSideEffectsInJsdocRule: UtilPreferNoSideEffectsInJsdocR
               const insertion = `${jsdocIndent} * ${NO_SIDE_EFFECTS_TAG}\n`;
               fixes.push(fixer.insertTextBeforeRange([closingLineStart, closingLineStart], insertion));
             }
+          }
+
+          // Overloaded function with no surviving impl annotation — insert the bundler-required
+          // line comment directly above the implementation declaration.
+          if (needsImplLineCommentForOverload) {
+            const implAnchor = getStatementAnchor(node);
+            const implStart = implAnchor.range[0];
+            const indent = getLineIndent(sourceText, implStart);
+            fixes.push(fixer.insertTextBeforeRange([implStart, implStart], `// ${NO_SIDE_EFFECTS_TAG}\n${indent}`));
           }
 
           // Remove the orphan line/block comment annotations.

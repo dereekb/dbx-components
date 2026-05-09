@@ -387,6 +387,7 @@ export function groupValues<T, K extends PrimativeKey = PrimativeKey>(values: Ma
  */
 export function makeValuesGroupMap<T, K extends PrimativeKey = PrimativeKey>(values: T[], groupKeyFn: ReadKeyFunction<T, K>): Map<Maybe<K>, T[]>;
 export function makeValuesGroupMap<T, K extends PrimativeKey = PrimativeKey>(values: Maybe<T[]>, groupKeyFn: ReadKeyFunction<T, K>): Map<Maybe<K>, T[]>;
+// @__NO_SIDE_EFFECTS__
 export function makeValuesGroupMap<T, K extends PrimativeKey = PrimativeKey>(values: Maybe<T[]>, groupKeyFn: ReadKeyFunction<T, K>): Map<Maybe<K>, T[]> {
   const map = new Map<Maybe<K>, T[]>();
 

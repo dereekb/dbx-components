@@ -677,6 +677,7 @@ export type DocumentDataWithIdAndKeyFunction<T> = ((snapshot: QueryDocumentSnaps
 export function documentDataFunction<T>(withId: true): DocumentDataWithIdAndKeyFunction<T>;
 export function documentDataFunction<T>(withId: false): DocumentDataFunction<T>;
 export function documentDataFunction<T>(withId: boolean): DocumentDataWithIdAndKeyFunction<T> | DocumentDataFunction<T>;
+// @__NO_SIDE_EFFECTS__
 export function documentDataFunction<T>(withId: boolean): DocumentDataWithIdAndKeyFunction<T> | DocumentDataFunction<T> {
   return withId ? documentDataWithIdAndKey : (((snapshot) => snapshot.data()) as DocumentDataFunction<T>);
 }

@@ -213,6 +213,7 @@ export function removeModelsWithKey<T>(input: T[], key: Maybe<ModelKey>, read: R
  */
 export function makeModelMap<T extends UniqueModel>(input: T[], read?: ReadModelKeyFunction<T>): Map<Maybe<ModelKey>, T>;
 export function makeModelMap<T>(input: T[], read: ReadModelKeyFunction<T>): Map<Maybe<ModelKey>, T>;
+// @__NO_SIDE_EFFECTS__
 export function makeModelMap<T>(input: T[], read?: ReadModelKeyFunction<T>): Map<Maybe<ModelKey>, T> {
   const map = new Map<Maybe<ModelKey>, T>();
 
