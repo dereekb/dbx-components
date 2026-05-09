@@ -18,13 +18,23 @@ export interface UpdateOidcClientFieldParams {
   readonly redirect_uris: OidcRedirectUri[];
   readonly logo_uri?: Maybe<WebsiteUrlWithPrefix>;
   readonly client_uri?: Maybe<WebsiteUrlWithPrefix>;
+  /**
+   * Optional per-client maximum login duration (seconds).
+   *
+   * When set, caps any value the client requests via the `dbx_session_ttl` auth-URL param.
+   * The effective ceiling for that client is `min(this, OidcModuleConfig.maxRequestedLoginDuration)`.
+   *
+   * Set to `null` to clear an existing value.
+   */
+  readonly dbx_max_session_ttl?: Maybe<number>;
 }
 
 export const updateOidcClientFieldParamsType = /* @__PURE__ */ type({
   client_name: 'string',
   redirect_uris: 'string[]',
   'logo_uri?': clearable('string'),
-  'client_uri?': clearable('string')
+  'client_uri?': clearable('string'),
+  'dbx_max_session_ttl?': clearable('number')
 }) as Type<UpdateOidcClientFieldParams>;
 
 export const createOidcClientFieldParamsType = updateOidcClientFieldParamsType.merge(

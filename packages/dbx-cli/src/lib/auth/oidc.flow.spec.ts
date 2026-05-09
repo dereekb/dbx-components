@@ -121,6 +121,55 @@ describe('buildAuthorizationUrl', () => {
     expect(parsed.origin).toBe('http://localhost:9010');
     expect(parsed.pathname).toBe('/dereekb-components/us-central1/api/oidc/auth');
   });
+
+  it('omits dbx_session_ttl when requestedSessionTtlSeconds is not provided', () => {
+    const url = buildAuthorizationUrl({
+      authorizationEndpoint: 'https://example.com/oidc/auth',
+      clientId: 'cid',
+      redirectUri: OAUTH_OOB_REDIRECT_URI,
+      state: 'xyz',
+      codeChallenge: 'chal'
+    });
+    const parsed = new URL(url);
+    expect(parsed.searchParams.has('dbx_session_ttl')).toBe(false);
+  });
+
+  it('includes dbx_session_ttl as integer seconds when requestedSessionTtlSeconds is set', () => {
+    const url = buildAuthorizationUrl({
+      authorizationEndpoint: 'https://example.com/oidc/auth',
+      clientId: 'cid',
+      redirectUri: OAUTH_OOB_REDIRECT_URI,
+      state: 'xyz',
+      codeChallenge: 'chal',
+      requestedSessionTtlSeconds: 60 * 60 * 24 * 30
+    });
+    const parsed = new URL(url);
+    expect(parsed.searchParams.get('dbx_session_ttl')).toBe(String(60 * 60 * 24 * 30));
+  });
+
+  it('throws when requestedSessionTtlSeconds is not a positive integer', () => {
+    expect(() =>
+      buildAuthorizationUrl({
+        authorizationEndpoint: 'https://example.com/oidc/auth',
+        clientId: 'cid',
+        redirectUri: OAUTH_OOB_REDIRECT_URI,
+        state: 'xyz',
+        codeChallenge: 'chal',
+        requestedSessionTtlSeconds: -1
+      })
+    ).toThrow();
+
+    expect(() =>
+      buildAuthorizationUrl({
+        authorizationEndpoint: 'https://example.com/oidc/auth',
+        clientId: 'cid',
+        redirectUri: OAUTH_OOB_REDIRECT_URI,
+        state: 'xyz',
+        codeChallenge: 'chal',
+        requestedSessionTtlSeconds: 12.5
+      })
+    ).toThrow();
+  });
 });
 
 describe('parsePastedRedirect', () => {

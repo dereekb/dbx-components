@@ -17,6 +17,7 @@
     }
   },
   "peerDependencies": {
+    "@dereekb/date": "13.11.3",
     "@dereekb/firebase": "13.11.3",
     "@dereekb/nestjs": "13.11.3",
     "@dereekb/util": "13.11.3",

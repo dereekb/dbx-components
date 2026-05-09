@@ -17,6 +17,13 @@ export interface OidcEntryOAuthClientPayloadData {
   readonly logo_uri?: Maybe<string>;
   readonly client_uri?: Maybe<string>;
   readonly created_at?: string;
+  /**
+   * Optional per-client maximum login duration (seconds).
+   *
+   * Custom oidc-provider client metadata (registered via `extraClientMetadata`).
+   * Caps how long a client may request via the `dbx_session_ttl` auth-URL param.
+   */
+  readonly dbx_max_session_ttl?: Maybe<number>;
 }
 
 // MARK: Grant

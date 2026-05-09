@@ -55,6 +55,10 @@ export class OidcClientService {
       properties.jwks_uri = params.jwks_uri;
     }
 
+    if (params.dbx_max_session_ttl != null) {
+      (properties as ClientMetadata & { dbx_max_session_ttl?: number }).dbx_max_session_ttl = params.dbx_max_session_ttl;
+    }
+
     // Merge any pre-validated metadata (e.g., inline jwks for private_key_jwt in tests)
     if (validatedMetadata?.jwks) {
       properties.jwks = validatedMetadata.jwks;
@@ -120,6 +124,10 @@ export class OidcClientService {
 
     if (params.client_uri !== undefined) {
       updatedMetadata.client_uri = params.client_uri ?? undefined;
+    }
+
+    if (params.dbx_max_session_ttl !== undefined) {
+      updatedMetadata.dbx_max_session_ttl = params.dbx_max_session_ttl ?? undefined;
     }
 
     // Mirrors oidc-provider's lib/helpers/add_client.js: re-validates and persists.
