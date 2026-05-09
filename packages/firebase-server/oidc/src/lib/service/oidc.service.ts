@@ -263,6 +263,13 @@ export class OidcService {
       jwks: { keys: [signingKey] as any[] }
     });
 
+    // Trust upstream X-Forwarded-* headers when running behind a reverse proxy
+    // (e.g. Firebase Hosting → Cloud Run). Without this, oidc-provider builds
+    // the interaction `returnTo` URL off the Cloud Run host instead of the
+    // issuer's canonical host, so cookies set on the issuer host are not sent
+    // on resume → "authorization request has expired".
+    provider.proxy = config.trustProxy ?? true;
+
     if (config.suppressBodyParserWarning) {
       // TODO: Will re-apply to logging in testing. Need to resolve.
       // suppressOidcProviderBodyParserWarning();

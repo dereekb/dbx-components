@@ -120,6 +120,7 @@ export function oidcModuleConfigFactory(configService: ConfigService, envService
     appOAuthConsentUrlPart: DEFAULT_APP_OAUTH_CONSENT_PATH_PART,
     appOAuthInteractionPath: DEFAULT_APP_OAUTH_INTERACTION_PATH,
     tokenLifetimes: DEFAULT_OIDC_TOKEN_LIFETIMES,
+    trustProxy: true,
     jwksServiceConfig: {
       encryptionSecret
     },
@@ -157,7 +158,7 @@ export interface ProvideAppOidcModuleMetadataConfig extends Pick<ModuleMetadata,
   /**
    * Optional overrides to merge into the {@link OidcModuleConfig} produced by the factory.
    */
-  readonly config?: Partial<Pick<OidcModuleConfig, 'suppressBodyParserWarning' | 'renderError' | 'protectedPaths' | 'appOAuthInteractionPath' | 'appOAuthLoginUrlPart' | 'appOAuthConsentUrlPart' | 'tokenEndpointAuthMethods' | 'registrationEnabled'>>;
+  readonly config?: Partial<Pick<OidcModuleConfig, 'suppressBodyParserWarning' | 'renderError' | 'protectedPaths' | 'appOAuthInteractionPath' | 'appOAuthLoginUrlPart' | 'appOAuthConsentUrlPart' | 'tokenEndpointAuthMethods' | 'registrationEnabled' | 'trustProxy'>>;
 }
 
 /**

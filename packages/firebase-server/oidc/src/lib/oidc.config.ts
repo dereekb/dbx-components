@@ -182,6 +182,27 @@ export abstract class OidcModuleConfig {
   readonly registrationEnabled?: boolean;
 
   /**
+   * Whether the oidc-provider should trust upstream proxy headers
+   * (`X-Forwarded-Host`, `X-Forwarded-Proto`) when computing the request URL
+   * used to build resume/return URLs and discovery metadata absolute paths.
+   *
+   * Required when running behind a reverse proxy such as Firebase Hosting →
+   * Cloud Run / Cloud Functions, where the request `Host` header is the
+   * underlying Cloud Run host (e.g. `api-xxxxx-uc.a.run.app`) and not the
+   * canonical issuer host. Without this, the interaction `returnTo` URL is
+   * built off the Cloud Run host and the browser is redirected away from the
+   * issuer's domain after login — causing the interaction cookies (scoped to
+   * the canonical host) to be missing on the resume request and producing
+   * "authorization request has expired".
+   *
+   * Maps to `provider.proxy = <value>` on the underlying oidc-provider
+   * (which is the Koa `app.proxy` setting).
+   *
+   * Defaults to `true`.
+   */
+  readonly trustProxy?: boolean;
+
+  /**
    * Validates that all required fields are present on the config.
    *
    * Called by {@link oidcModuleConfigFactory} after building the config from environment variables.
