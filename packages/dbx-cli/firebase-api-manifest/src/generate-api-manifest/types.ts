@@ -13,7 +13,7 @@
  * importing them by their local name.
  */
 
-import type { CrudEntry, CrudExtraction } from '@dereekb/dbx-cli/manifest-extract';
+import type { CrudEntry, CrudExtraction, ModelExtraction } from '@dereekb/dbx-cli/manifest-extract';
 
 export type { CrudEntry, CrudEntryDocField, CrudExtraction } from '@dereekb/dbx-cli/manifest-extract';
 
@@ -38,4 +38,15 @@ export interface CollectedEntry {
   readonly entry: CrudEntry & { readonly groupName: string; readonly sourceFile: string };
   readonly packageName?: string;
   readonly validatorName?: string;
+}
+
+/**
+ * Per-source-file model extraction tagged with the package label and
+ * workspace-relative source path the orchestrator stamps on every produced
+ * manifest entry.
+ */
+export interface ModelExtractionSource {
+  readonly sourcePackage: string;
+  readonly sourceFile: string;
+  readonly extraction: ModelExtraction;
 }

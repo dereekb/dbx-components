@@ -7,6 +7,15 @@
   "implicitDependencies": [],
   "targets": {
     "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/packages/dbx-cli/firebase-api-manifest"],
+      "options": {
+        "command": "npx nx run dbx-cli-firebase-api-manifest:build-base",
+        "color": true
+      },
+      "dependsOn": ["^build"]
+    },
+    "build-base": {
       "executor": "@nx/esbuild:esbuild",
       "outputs": ["{workspaceRoot}/dist/packages/dbx-cli/firebase-api-manifest"],
       "defaultConfiguration": "production",

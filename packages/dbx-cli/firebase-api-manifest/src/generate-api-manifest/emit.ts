@@ -8,6 +8,7 @@
  * any consuming app gets it from the shared dbx-cli barrel.
  */
 
+import type { CliModelField, CliModelManifestEntry } from '@dereekb/dbx-cli';
 import { format, resolveConfig } from 'prettier';
 import type { CollectedEntry } from './types';
 
@@ -19,6 +20,16 @@ export interface RenderManifestInput {
   readonly entries: readonly CollectedEntry[];
   readonly projectName: string;
   readonly namespace: string;
+  /**
+   * When non-empty, the manifest TS file also exports a
+   * `<modelNamespace>: CliModelManifest` alongside the API manifest.
+   */
+  readonly modelEntries?: readonly CliModelManifestEntry[];
+  /**
+   * Identifier name for the emitted model manifest constant. Required when
+   * {@link modelEntries} is non-empty.
+   */
+  readonly modelNamespace?: string;
 }
 
 /**
@@ -31,7 +42,7 @@ export interface RenderManifestInput {
  * @returns Prettier-formatted TypeScript source.
  */
 export async function renderManifest(input: RenderManifestInput): Promise<string> {
-  const { outputFile, entries, projectName, namespace } = input;
+  const { outputFile, entries, projectName, namespace, modelEntries, modelNamespace } = input;
 
   const importsByPackage = new Map<string, Set<string>>();
   for (const entry of entries) {
@@ -49,17 +60,27 @@ export async function renderManifest(input: RenderManifestInput): Promise<string
     });
 
   const entryLines = entries.map((e) => renderEntry(e));
+  const emitModels = Boolean(modelEntries && modelEntries.length > 0 && modelNamespace);
+  const dbxCliTypeImports = emitModels ? `import { type CliApiManifest, type CliModelManifest } from '@dereekb/dbx-cli';` : `import { type CliApiManifest } from '@dereekb/dbx-cli';`;
+  const modelSection = emitModels
+    ? `
+
+export const ${modelNamespace}: CliModelManifest = [
+${(modelEntries ?? []).map((m) => renderModelEntry(m)).join(',\n')}
+];
+`
+    : '';
 
   const source = `/* eslint-disable @nx/enforce-module-boundaries */
 // AUTO-GENERATED — DO NOT EDIT.
 // Run \`pnpm nx run ${projectName}:generate-api-manifest\` to refresh.
 
 ${importLines.join('\n')}
-import { type CliApiManifest } from '@dereekb/dbx-cli';
+${dbxCliTypeImports}
 
 export const ${namespace}: CliApiManifest = [
 ${entryLines.join(',\n')}
-];
+];${modelSection}
 `;
 
   return formatWithPrettier(source, outputFile);
@@ -97,4 +118,42 @@ function renderDocFields(fields: readonly { readonly name: string; readonly type
 async function formatWithPrettier(source: string, outputFile: string): Promise<string> {
   const config = await resolveConfig(outputFile);
   return format(source, { ...config, filepath: outputFile });
+}
+
+function renderModelEntry(entry: CliModelManifestEntry): string {
+  const fields: (string | undefined)[] = [
+    `modelType: ${JSON.stringify(entry.modelType)}`,
+    `modelName: ${JSON.stringify(entry.modelName)}`,
+    entry.modelGroup ? `modelGroup: ${JSON.stringify(entry.modelGroup)}` : undefined,
+    `identityConst: ${JSON.stringify(entry.identityConst)}`,
+    `collectionPrefix: ${JSON.stringify(entry.collectionPrefix)}`,
+    entry.parentIdentityConst ? `parentIdentityConst: ${JSON.stringify(entry.parentIdentityConst)}` : undefined,
+    entry.description ? `description: ${JSON.stringify(entry.description)}` : undefined,
+    `sourcePackage: ${JSON.stringify(entry.sourcePackage)}`,
+    `sourceFile: ${JSON.stringify(entry.sourceFile)}`,
+    `fields: ${renderModelFields(entry.fields)}`
+  ];
+  return `  { ${fields.filter((v): v is string => Boolean(v)).join(', ')} }`;
+}
+
+function renderModelFields(fields: readonly CliModelField[]): string {
+  if (fields.length === 0) return '[]';
+  const items = fields.map((field) => renderModelField(field));
+  return `[${items.join(', ')}]`;
+}
+
+function renderModelField(field: CliModelField): string {
+  const parts: (string | undefined)[] = [
+    `name: ${JSON.stringify(field.name)}`,
+    `longName: ${JSON.stringify(field.longName)}`,
+    `converter: ${JSON.stringify(field.converter)}`,
+    field.tsType ? `tsType: ${JSON.stringify(field.tsType)}` : undefined,
+    `optional: ${field.optional ? 'true' : 'false'}`,
+    field.description ? `description: ${JSON.stringify(field.description)}` : undefined,
+    field.enumRef ? `enumRef: ${JSON.stringify(field.enumRef)}` : undefined,
+    field.syncFlag ? `syncFlag: ${JSON.stringify(field.syncFlag)}` : undefined,
+    field.nestedFields ? `nestedFields: ${renderModelFields(field.nestedFields)}` : undefined,
+    field.nestedFields ? `nestedIsArray: ${field.nestedIsArray ? 'true' : 'false'}` : undefined
+  ];
+  return `{ ${parts.filter((v): v is string => Boolean(v)).join(', ')} }`;
 }
