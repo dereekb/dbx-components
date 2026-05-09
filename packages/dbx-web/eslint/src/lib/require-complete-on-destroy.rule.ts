@@ -1,4 +1,4 @@
-import { type AstNode, COMPLETE_ON_DESTROY_HELPER, DEREEKB_DBX_CORE_MODULE, type ImportRegistry, RXJS_MODULE, SUBJECT_NAMES, createImportRegistry, ensureNamedImportFix, findAngularComponentDecorator, findNgOnDestroyMethod, getClassMemberName, isCalledIdentifier, isDeclareProperty, isImportedFrom, isStaticProperty, trackImportDeclaration } from './util';
+import { type AstNode, COMPLETE_ON_DESTROY_HELPER, DBX_COMPONENTS_DBX_CORE_MODULE, type ImportRegistry, RXJS_MODULE, SUBJECT_NAMES, createImportRegistry, ensureNamedImportFix, findAngularComponentDecorator, findNgOnDestroyMethod, getClassMemberName, isCalledIdentifier, isDeclareProperty, isImportedFrom, isStaticProperty, trackImportDeclaration } from './util';
 import { collectNgOnDestroyRemovalFixes } from './require-clean-subscription.rule';
 
 /**
@@ -184,7 +184,7 @@ function buildSubjectFix(input: BuildSubjectFixInput): AstNode[] {
   fixes.push(fixer.insertTextBefore(newExpr, `${COMPLETE_ON_DESTROY_HELPER}(`));
   fixes.push(fixer.insertTextAfter(newExpr, ')'));
 
-  const importFix = ensureNamedImportFix({ fixer, registry, importName: COMPLETE_ON_DESTROY_HELPER, fromSource: DEREEKB_DBX_CORE_MODULE });
+  const importFix = ensureNamedImportFix({ fixer, registry, importName: COMPLETE_ON_DESTROY_HELPER, fromSource: DBX_COMPONENTS_DBX_CORE_MODULE });
 
   if (importFix) {
     fixes.push(importFix);

@@ -3,7 +3,7 @@ import { onCallCreateModelResultWithDocs } from '@dereekb/firebase';
 import { withApiDetails } from '@dereekb/firebase-server';
 import { type DemoCreateModelFunction } from '../function.context';
 
-export const createGuestbook: DemoCreateModelFunction<CreateGuestbookParams> = withApiDetails({
+export const guestbookCreate: DemoCreateModelFunction<CreateGuestbookParams> = withApiDetails({
   inputType: createGuestbookParamsType,
   analytics: {
     onTriggered: (analytics) => {

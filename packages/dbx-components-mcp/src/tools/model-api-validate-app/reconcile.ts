@@ -5,6 +5,7 @@
 
 import type { DeclaredEntry, HandlerEntry, ModelSummary, ReconciledEntry, ValidateIssue } from './types.js';
 import type { CrudVerb } from '../model-api-shared/types.js';
+import { checkHandlerNaming } from './naming.js';
 
 export interface ReconcileInput {
   readonly declared: readonly DeclaredEntry[];
@@ -83,6 +84,11 @@ export function reconcile(input: ReconcileInput): ReconcileResult {
       message: `Handler \`${h.handlerName}\` is wired in the app's \`${h.verb}\` map (\`${h.sourceFile}:${h.line}\`) for \`${h.model}\`${specifierSuffix} but no firebase-component \`<model>.api.ts\` declares this CRUD entry.`,
       source: `${h.sourceFile}:${h.line}`
     });
+  }
+
+  for (const h of handlersFiltered) {
+    const namingIssue = checkHandlerNaming(h);
+    if (namingIssue) issues.push(namingIssue);
   }
 
   entries.sort(compareEntries);

@@ -3025,6 +3025,1073 @@
       ]
     },
     {
+      "slug": "iso-8601-date-string-regex",
+      "name": "ISO_8601_DATE_STRING_REGEX",
+      "kind": "const",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "const ISO_8601_DATE_STRING_REGEX: RegExp",
+      "description": "Regular expression for validating ISO8601 date strings.\n\nTODO(FUTURE): Need to improve to support negative years.",
+      "params": [],
+      "returns": "RegExp",
+      "tags": [
+        "date",
+        "iso8601",
+        "regex",
+        "string",
+        "validate",
+        "iso",
+        "8601",
+        "iso_8601_date_string_regex"
+      ],
+      "relatedSlugs": [
+        "is-iso8601-date-string",
+        "iso8601-day-string-regex"
+      ]
+    },
+    {
+      "slug": "is-iso8601-date-string",
+      "name": "isISO8601DateString",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "isISO8601DateString(input: string): input is ISO8601DateString",
+      "description": "Determines if a string is a valid ISO8601 date string.",
+      "params": [
+        {
+          "name": "input",
+          "type": "string",
+          "description": "- The string to test",
+          "optional": false
+        }
+      ],
+      "returns": "True if the input is a valid ISO8601 date string",
+      "tags": [
+        "date",
+        "iso8601",
+        "string",
+        "predicate",
+        "validate",
+        "is",
+        "isiso8601datestring"
+      ],
+      "relatedSlugs": [
+        "is-iso8601-day-string",
+        "is-utc-date-string",
+        "iso-8601-date-string-regex"
+      ]
+    },
+    {
+      "slug": "utc-date-string-regex",
+      "name": "UTC_DATE_STRING_REGEX",
+      "kind": "const",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "const UTC_DATE_STRING_REGEX: RegExp",
+      "description": "Match examples:\n\nSat, 03 Feb 2001 04:05:06 GMT\nTue, 14 Mar 2023 12:34:56 UTC\nWed, 25 May 2024 20:45:07 EST",
+      "params": [],
+      "returns": "RegExp",
+      "tags": [
+        "date",
+        "utc",
+        "regex",
+        "string",
+        "validate",
+        "utc_date_string_regex"
+      ],
+      "relatedSlugs": [
+        "is-utc-date-string"
+      ]
+    },
+    {
+      "slug": "is-utc-date-string",
+      "name": "isUTCDateString",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "isUTCDateString(input: string): boolean",
+      "description": "Determines if a string is a valid UTC date string.",
+      "params": [
+        {
+          "name": "input",
+          "type": "string",
+          "description": "- The string to test",
+          "optional": false
+        }
+      ],
+      "returns": "True if the input is a valid UTC date string",
+      "tags": [
+        "date",
+        "utc",
+        "string",
+        "predicate",
+        "validate",
+        "is",
+        "isutcdatestring"
+      ],
+      "relatedSlugs": [
+        "is-iso8601-date-string",
+        "utc-date-string-regex"
+      ]
+    },
+    {
+      "slug": "has-same-timezone",
+      "name": "hasSameTimezone",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "hasSameTimezone(a: Maybe<Partial<TimezoneStringRef>>, b: Maybe<Partial<TimezoneStringRef>>): boolean",
+      "description": "Returns true only if the inputs have the same timezone, or both do not have a timezone set.",
+      "params": [
+        {
+          "name": "a",
+          "type": "Maybe<Partial<TimezoneStringRef>>",
+          "description": "- First object that may contain a timezone reference",
+          "optional": false
+        },
+        {
+          "name": "b",
+          "type": "Maybe<Partial<TimezoneStringRef>>",
+          "description": "- Second object that may contain a timezone reference",
+          "optional": false
+        }
+      ],
+      "returns": "True if both objects have the same timezone or neither has a timezone set",
+      "tags": [
+        "date",
+        "timezone",
+        "compare",
+        "equal",
+        "predicate",
+        "has",
+        "same",
+        "hassametimezone"
+      ],
+      "relatedSlugs": [
+        "is-considered-utc-timezone-string"
+      ]
+    },
+    {
+      "slug": "utc-timezone-string",
+      "name": "UTC_TIMEZONE_STRING",
+      "kind": "const",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "const UTC_TIMEZONE_STRING: \"UTC\"",
+      "description": "Constant for the UTC timezone string, \"UTC\".",
+      "params": [],
+      "returns": "\"UTC\"",
+      "tags": [
+        "date",
+        "timezone",
+        "utc",
+        "string",
+        "constant",
+        "utc_timezone_string"
+      ],
+      "relatedSlugs": [
+        "is-considered-utc-timezone-string"
+      ]
+    },
+    {
+      "slug": "is-considered-utc-timezone-string",
+      "name": "isConsideredUtcTimezoneString",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "isConsideredUtcTimezoneString(timezone: Maybe<TimezoneString>): boolean",
+      "description": "Determines whether the input timezone string is considered UTC.\nReturns true for null, undefined, or the string 'UTC'.",
+      "params": [
+        {
+          "name": "timezone",
+          "type": "Maybe<TimezoneString>",
+          "description": "- The timezone string to check",
+          "optional": false
+        }
+      ],
+      "returns": "True if the timezone is considered UTC",
+      "tags": [
+        "date",
+        "timezone",
+        "utc",
+        "predicate",
+        "is",
+        "considered",
+        "string",
+        "isconsideredutctimezonestring"
+      ],
+      "relatedSlugs": [
+        "has-same-timezone",
+        "utc-timezone-string"
+      ]
+    },
+    {
+      "slug": "iso8601-day-string-regex",
+      "name": "ISO8601_DAY_STRING_REGEX",
+      "kind": "const",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "const ISO8601_DAY_STRING_REGEX: RegExp",
+      "description": "Regex for an ISO8601DayString.",
+      "params": [],
+      "returns": "RegExp",
+      "tags": [
+        "date",
+        "iso8601",
+        "day",
+        "regex",
+        "string",
+        "validate",
+        "iso8601_day_string_regex"
+      ],
+      "relatedSlugs": [
+        "is-iso8601-day-string",
+        "iso8601-day-string-start-regex"
+      ]
+    },
+    {
+      "slug": "iso8601-day-string-start-regex",
+      "name": "ISO8601_DAY_STRING_START_REGEX",
+      "kind": "const",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "const ISO8601_DAY_STRING_START_REGEX: RegExp",
+      "description": "Regex for a string that starts as an ISO8601DayString.",
+      "params": [],
+      "returns": "RegExp",
+      "tags": [
+        "date",
+        "iso8601",
+        "day",
+        "regex",
+        "prefix",
+        "string",
+        "start",
+        "iso8601_day_string_start_regex"
+      ],
+      "relatedSlugs": [
+        "is-iso8601-day-string-start",
+        "iso8601-day-string-regex"
+      ]
+    },
+    {
+      "slug": "start-of-day-for-utc-date-in-utc",
+      "name": "startOfDayForUTCDateInUTC",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "startOfDayForUTCDateInUTC(date: Date): Date",
+      "description": "Returns the start of the input date's UTC time in UTC.\n\nI.E. 2022-01-02T04:00:00.000Z in GMT-6 returns 2022-01-02",
+      "params": [
+        {
+          "name": "date",
+          "type": "Date",
+          "description": "- The date to get the start of day for",
+          "optional": false
+        }
+      ],
+      "returns": "A new Date set to midnight UTC of the input date's UTC day",
+      "tags": [
+        "date",
+        "utc",
+        "start-of-day",
+        "day",
+        "normalize",
+        "start",
+        "of",
+        "for",
+        "in",
+        "startofdayforutcdateinutc"
+      ],
+      "relatedSlugs": [
+        "start-of-day-for-system-date-in-utc",
+        "parse-iso8601-day-string-to-utc-date"
+      ]
+    },
+    {
+      "slug": "start-of-day-for-system-date-in-utc",
+      "name": "startOfDayForSystemDateInUTC",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "startOfDayForSystemDateInUTC(date: Date): Date",
+      "description": "Returns the start of the system's local date in UTC.\n\nI.E. 2022-01-02T04:00:00.000Z in GMT-6 (10PM Jan 1st CST) returns 2022-01-01",
+      "params": [
+        {
+          "name": "date",
+          "type": "Date",
+          "description": "- The date to get the start of local day for",
+          "optional": false
+        }
+      ],
+      "returns": "A new Date set to midnight UTC of the input date's local day",
+      "tags": [
+        "date",
+        "utc",
+        "start-of-day",
+        "system",
+        "local",
+        "start",
+        "of",
+        "day",
+        "for",
+        "in",
+        "startofdayforsystemdateinutc"
+      ],
+      "relatedSlugs": [
+        "start-of-day-for-utc-date-in-utc"
+      ]
+    },
+    {
+      "slug": "parse-iso8601-day-string-to-utc-date",
+      "name": "parseISO8601DayStringToUTCDate",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "parseISO8601DayStringToUTCDate(inputDateString: ISO8601DayString): Date",
+      "description": "Parses an ISO8601DayString (YYYY-MM-DD) to a UTC Date at midnight.",
+      "params": [
+        {
+          "name": "inputDateString",
+          "type": "ISO8601DayString",
+          "description": "- The ISO8601 day string to parse (e.g., '2022-01-15')",
+          "optional": false
+        }
+      ],
+      "returns": "A Date object set to midnight UTC on the specified day",
+      "tags": [
+        "date",
+        "iso8601",
+        "day",
+        "parse",
+        "utc",
+        "convert",
+        "string",
+        "to",
+        "parseiso8601daystringtoutcdate"
+      ],
+      "relatedSlugs": [
+        "is-iso8601-day-string",
+        "start-of-day-for-utc-date-in-utc"
+      ]
+    },
+    {
+      "slug": "is-iso8601-day-string",
+      "name": "isISO8601DayString",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "isISO8601DayString(input: string): input is ISO8601DayString",
+      "description": "Determines if a string is a valid ISO8601 day string (YYYY-MM-DD format).",
+      "params": [
+        {
+          "name": "input",
+          "type": "string",
+          "description": "- The string to test",
+          "optional": false
+        }
+      ],
+      "returns": "True if the input is a valid ISO8601 day string",
+      "tags": [
+        "date",
+        "iso8601",
+        "day",
+        "string",
+        "predicate",
+        "validate",
+        "is",
+        "isiso8601daystring"
+      ],
+      "relatedSlugs": [
+        "is-iso8601-day-string-start",
+        "parse-iso8601-day-string-to-utc-date",
+        "iso8601-day-string-regex"
+      ]
+    },
+    {
+      "slug": "is-iso8601-day-string-start",
+      "name": "isISO8601DayStringStart",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "isISO8601DayStringStart(input: string): input is ISO8601DayString",
+      "description": "Determines if a string starts with a valid ISO8601 day string pattern (YYYY-MM-DD).",
+      "params": [
+        {
+          "name": "input",
+          "type": "string",
+          "description": "- The string to test",
+          "optional": false
+        }
+      ],
+      "returns": "True if the input starts with a valid ISO8601 day string pattern",
+      "tags": [
+        "date",
+        "iso8601",
+        "day",
+        "string",
+        "predicate",
+        "prefix",
+        "is",
+        "start",
+        "isiso8601daystringstart"
+      ],
+      "relatedSlugs": [
+        "is-iso8601-day-string",
+        "iso8601-day-string-start-regex"
+      ]
+    },
+    {
+      "slug": "month-day-slash-date-string-regex",
+      "name": "MONTH_DAY_SLASH_DATE_STRING_REGEX",
+      "kind": "const",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "const MONTH_DAY_SLASH_DATE_STRING_REGEX: RegExp",
+      "description": "Regex for a MonthDaySlashDate.",
+      "params": [],
+      "returns": "RegExp",
+      "tags": [
+        "date",
+        "slash",
+        "month",
+        "day",
+        "regex",
+        "string",
+        "validate",
+        "month_day_slash_date_string_regex"
+      ],
+      "relatedSlugs": [
+        "is-month-day-slash-date"
+      ]
+    },
+    {
+      "slug": "is-month-day-slash-date",
+      "name": "isMonthDaySlashDate",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "isMonthDaySlashDate(input: string): input is MonthDaySlashDate",
+      "description": "Determines if a string is a valid Month/Day/Year slash date format.",
+      "params": [
+        {
+          "name": "input",
+          "type": "string",
+          "description": "- The string to test",
+          "optional": false
+        }
+      ],
+      "returns": "True if the input is a valid Month/Day/Year slash date",
+      "tags": [
+        "date",
+        "slash",
+        "month",
+        "day",
+        "string",
+        "predicate",
+        "validate",
+        "is",
+        "ismonthdayslashdate"
+      ],
+      "relatedSlugs": [
+        "month-day-slash-date-to-date-string",
+        "month-day-slash-date-string-regex"
+      ]
+    },
+    {
+      "slug": "month-day-slash-date-to-date-string",
+      "name": "monthDaySlashDateToDateString",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "monthDaySlashDateToDateString(slashDate: MonthDaySlashDate): ISO8601DayString",
+      "description": "Converts the input MonthDaySlashDate (MM/DD/YYYY) to an ISO8601DayString (YYYY-MM-DD).\nHandles single digit months and days by adding leading zeros.\nIf year is only 2 digits, prepends '20' to make a 4-digit year.",
+      "params": [
+        {
+          "name": "slashDate",
+          "type": "MonthDaySlashDate",
+          "description": "- The slash date string to convert (e.g., '1/1/20' or '11/15/2022')",
+          "optional": false
+        }
+      ],
+      "returns": "An ISO8601 formatted day string (YYYY-MM-DD)",
+      "tags": [
+        "date",
+        "slash",
+        "day",
+        "string",
+        "convert",
+        "parse",
+        "month",
+        "to",
+        "monthdayslashdatetodatestring"
+      ],
+      "relatedSlugs": [
+        "is-month-day-slash-date"
+      ]
+    },
+    {
+      "slug": "date-from-date-or-time-milliseconds-number",
+      "name": "dateFromDateOrTimeMillisecondsNumber",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "dateFromDateOrTimeMillisecondsNumber(input: Maybe<DateOrUnixDateTimeMillisecondsNumber>): Maybe<Date>",
+      "description": "Converts a Date object or unix timestamp (in milliseconds) to a Date object.",
+      "params": [
+        {
+          "name": "input",
+          "type": "Maybe<DateOrUnixDateTimeMillisecondsNumber>",
+          "description": "- Date object or unix timestamp (in milliseconds) to convert",
+          "optional": false
+        }
+      ],
+      "returns": "Date object if input is valid. Returns null/undefined if input is null/undefined",
+      "tags": [
+        "date",
+        "milliseconds",
+        "unix",
+        "convert",
+        "normalize",
+        "from",
+        "or",
+        "time",
+        "number",
+        "datefromdateortimemillisecondsnumber"
+      ],
+      "relatedSlugs": [
+        "unix-milliseconds-number-to-date",
+        "date-or-milliseconds-to-date"
+      ]
+    },
+    {
+      "slug": "unix-milliseconds-number-to-date",
+      "name": "unixMillisecondsNumberToDate",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "unixMillisecondsNumberToDate(dateTimeNumber: Maybe<UnixDateTimeMillisecondsNumber>): Maybe<Date>",
+      "description": "Converts a unix timestamp number to a Date object.",
+      "params": [
+        {
+          "name": "dateTimeNumber",
+          "type": "Maybe<UnixDateTimeMillisecondsNumber>",
+          "description": "- Unix timestamp number to convert",
+          "optional": false
+        }
+      ],
+      "returns": "Date object if timestamp is valid, null/undefined if timestamp is null/undefined",
+      "tags": [
+        "date",
+        "milliseconds",
+        "unix",
+        "convert",
+        "parse",
+        "number",
+        "to",
+        "unixmillisecondsnumbertodate"
+      ],
+      "relatedSlugs": [
+        "date-from-date-or-time-milliseconds-number",
+        "unix-date-time-seconds-number-to-date"
+      ]
+    },
+    {
+      "slug": "date-or-milliseconds-to-date",
+      "name": "dateOrMillisecondsToDate",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "dateOrMillisecondsToDate(dateOrMilliseconds: DateOrMilliseconds, now?: Maybe<Date>): Date",
+      "description": "Converts the input DateOrMilliseconds to a Date.\n\nIf the input is a Date, it is returned as is.\n\nIf the input is a number of milliseconds, it is added to the current date.",
+      "params": [
+        {
+          "name": "dateOrMilliseconds",
+          "type": "DateOrMilliseconds",
+          "description": "- The date or milliseconds to convert to a Date.",
+          "optional": false
+        },
+        {
+          "name": "now",
+          "type": "Maybe<Date>",
+          "description": "- The current date to use when adding milliseconds. Defaults to the current time.",
+          "optional": true
+        }
+      ],
+      "returns": "The Date representation of the input.",
+      "tags": [
+        "date",
+        "milliseconds",
+        "convert",
+        "normalize",
+        "offset",
+        "or",
+        "to",
+        "dateormillisecondstodate"
+      ],
+      "relatedSlugs": [
+        "add-milliseconds",
+        "date-from-date-or-time-milliseconds-number"
+      ]
+    },
+    {
+      "slug": "days-in-year",
+      "name": "DAYS_IN_YEAR",
+      "kind": "const",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "const DAYS_IN_YEAR: Days",
+      "description": "Number of days in a year (ignoring leap years, which are 366 days).",
+      "params": [],
+      "returns": "Days",
+      "tags": [
+        "date",
+        "day",
+        "year",
+        "duration",
+        "constant",
+        "days",
+        "in",
+        "days_in_year"
+      ],
+      "relatedSlugs": [
+        "days-in-week"
+      ]
+    },
+    {
+      "slug": "hours-in-day",
+      "name": "HOURS_IN_DAY",
+      "kind": "const",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "const HOURS_IN_DAY: Hours",
+      "description": "Number of hours in a day.",
+      "params": [],
+      "returns": "Hours",
+      "tags": [
+        "date",
+        "hour",
+        "day",
+        "duration",
+        "constant",
+        "hours",
+        "in",
+        "hours_in_day"
+      ],
+      "relatedSlugs": [
+        "minutes-in-day",
+        "ms-in-day"
+      ]
+    },
+    {
+      "slug": "seconds-in-minute",
+      "name": "SECONDS_IN_MINUTE",
+      "kind": "const",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "const SECONDS_IN_MINUTE: Seconds",
+      "description": "Number of seconds in a minute.",
+      "params": [],
+      "returns": "Seconds",
+      "tags": [
+        "date",
+        "second",
+        "minute",
+        "duration",
+        "constant",
+        "seconds",
+        "in",
+        "seconds_in_minute"
+      ],
+      "relatedSlugs": [
+        "seconds-in-hour",
+        "ms-in-second"
+      ]
+    },
+    {
+      "slug": "minutes-in-day",
+      "name": "MINUTES_IN_DAY",
+      "kind": "const",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "const MINUTES_IN_DAY: Minutes",
+      "description": "Number of minutes in a day.",
+      "params": [],
+      "returns": "Minutes",
+      "tags": [
+        "date",
+        "minute",
+        "day",
+        "duration",
+        "constant",
+        "minutes",
+        "in",
+        "minutes_in_day"
+      ],
+      "relatedSlugs": [
+        "hours-in-day",
+        "minutes-in-hour"
+      ]
+    },
+    {
+      "slug": "minutes-in-hour",
+      "name": "MINUTES_IN_HOUR",
+      "kind": "const",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "const MINUTES_IN_HOUR: Minutes",
+      "description": "Number of minutes in an hour.",
+      "params": [],
+      "returns": "Minutes",
+      "tags": [
+        "date",
+        "minute",
+        "hour",
+        "duration",
+        "constant",
+        "minutes",
+        "in",
+        "minutes_in_hour"
+      ],
+      "relatedSlugs": [
+        "minutes-in-day",
+        "seconds-in-minute"
+      ]
+    },
+    {
+      "slug": "seconds-in-hour",
+      "name": "SECONDS_IN_HOUR",
+      "kind": "const",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "const SECONDS_IN_HOUR: Minutes",
+      "description": "Number of seconds in an hour.",
+      "params": [],
+      "returns": "Minutes",
+      "tags": [
+        "date",
+        "second",
+        "hour",
+        "duration",
+        "constant",
+        "seconds",
+        "in",
+        "seconds_in_hour"
+      ],
+      "relatedSlugs": [
+        "seconds-in-minute",
+        "minutes-in-hour"
+      ]
+    },
+    {
+      "slug": "ms-in-second",
+      "name": "MS_IN_SECOND",
+      "kind": "const",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "const MS_IN_SECOND: Milliseconds",
+      "description": "Number of milliseconds in a second.",
+      "params": [],
+      "returns": "Milliseconds",
+      "tags": [
+        "date",
+        "milliseconds",
+        "second",
+        "duration",
+        "constant",
+        "ms",
+        "in",
+        "ms_in_second"
+      ],
+      "relatedSlugs": [
+        "ms-in-minute",
+        "seconds-in-minute"
+      ]
+    },
+    {
+      "slug": "ms-in-minute",
+      "name": "MS_IN_MINUTE",
+      "kind": "const",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "const MS_IN_MINUTE: Milliseconds",
+      "description": "Number of milliseconds in a minute.",
+      "params": [],
+      "returns": "Milliseconds",
+      "tags": [
+        "date",
+        "milliseconds",
+        "minute",
+        "duration",
+        "constant",
+        "ms",
+        "in",
+        "ms_in_minute"
+      ],
+      "relatedSlugs": [
+        "ms-in-second",
+        "ms-in-hour"
+      ]
+    },
+    {
+      "slug": "ms-in-hour",
+      "name": "MS_IN_HOUR",
+      "kind": "const",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "const MS_IN_HOUR: Milliseconds",
+      "description": "Number of milliseconds in an hour.",
+      "params": [],
+      "returns": "Milliseconds",
+      "tags": [
+        "date",
+        "milliseconds",
+        "hour",
+        "duration",
+        "constant",
+        "ms",
+        "in",
+        "ms_in_hour"
+      ],
+      "relatedSlugs": [
+        "ms-in-minute",
+        "ms-in-day"
+      ]
+    },
+    {
+      "slug": "ms-in-day",
+      "name": "MS_IN_DAY",
+      "kind": "const",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "const MS_IN_DAY: Milliseconds",
+      "description": "Number of milliseconds in a day.",
+      "params": [],
+      "returns": "Milliseconds",
+      "tags": [
+        "date",
+        "milliseconds",
+        "day",
+        "duration",
+        "constant",
+        "ms",
+        "in",
+        "ms_in_day"
+      ],
+      "relatedSlugs": [
+        "ms-in-hour",
+        "ms-in-week",
+        "hours-in-day"
+      ]
+    },
+    {
+      "slug": "seconds-in-day",
+      "name": "SECONDS_IN_DAY",
+      "kind": "const",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "const SECONDS_IN_DAY: Seconds",
+      "description": "Number of seconds in a day.",
+      "params": [],
+      "returns": "Seconds",
+      "tags": [
+        "date",
+        "seconds",
+        "day",
+        "duration",
+        "constant",
+        "in",
+        "seconds_in_day"
+      ],
+      "relatedSlugs": [
+        "seconds-in-hour",
+        "seconds-in-week"
+      ]
+    },
+    {
+      "slug": "days-in-week",
+      "name": "DAYS_IN_WEEK",
+      "kind": "const",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "const DAYS_IN_WEEK: Days",
+      "description": "Number of days in a week.",
+      "params": [],
+      "returns": "Days",
+      "tags": [
+        "date",
+        "day",
+        "week",
+        "duration",
+        "constant",
+        "days",
+        "in",
+        "days_in_week"
+      ],
+      "relatedSlugs": [
+        "ms-in-week",
+        "days-in-year"
+      ]
+    },
+    {
+      "slug": "ms-in-week",
+      "name": "MS_IN_WEEK",
+      "kind": "const",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "const MS_IN_WEEK: Milliseconds",
+      "description": "Number of milliseconds in a week.",
+      "params": [],
+      "returns": "Milliseconds",
+      "tags": [
+        "date",
+        "milliseconds",
+        "week",
+        "duration",
+        "constant",
+        "ms",
+        "in",
+        "ms_in_week"
+      ],
+      "relatedSlugs": [
+        "ms-in-day",
+        "days-in-week"
+      ]
+    },
+    {
+      "slug": "month-of-year-from-date",
+      "name": "monthOfYearFromDate",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "monthOfYearFromDate(date: Date): MonthOfYear",
+      "description": "Retrieves the MonthOfYear value (1-12) from the input Date in the current system timezone.\n\nConverts JavaScript's 0-based month (0-11) to a 1-based month (1-12).",
+      "params": [
+        {
+          "name": "date",
+          "type": "Date",
+          "description": "- The date to extract the month from",
+          "optional": false
+        }
+      ],
+      "returns": "The month of year as a number from 1-12",
+      "tags": [
+        "date",
+        "month",
+        "year",
+        "accessor",
+        "system",
+        "local",
+        "of",
+        "from",
+        "monthofyearfromdate"
+      ],
+      "relatedSlugs": [
+        "month-of-year-from-date-month",
+        "month-of-year-from-utc-date"
+      ]
+    },
+    {
+      "slug": "month-of-year-from-utc-date",
+      "name": "monthOfYearFromUTCDate",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "monthOfYearFromUTCDate(date: Date): MonthOfYear",
+      "description": "Retrieves the MonthOfYear value (1-12) from the input Date in the UTC timezone.\n\nConverts JavaScript's 0-based month (0-11) to a 1-based month (1-12).",
+      "params": [
+        {
+          "name": "date",
+          "type": "Date",
+          "description": "- The date to extract the month from",
+          "optional": false
+        }
+      ],
+      "returns": "The month of year as a number from 1-12",
+      "tags": [
+        "date",
+        "month",
+        "year",
+        "accessor",
+        "utc",
+        "of",
+        "from",
+        "monthofyearfromutcdate"
+      ],
+      "relatedSlugs": [
+        "month-of-year-from-date",
+        "month-of-year-from-date-month"
+      ]
+    },
+    {
+      "slug": "month-of-year-from-date-month",
+      "name": "monthOfYearFromDateMonth",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "monthOfYearFromDateMonth(dateMonth: DateMonth): MonthOfYear",
+      "description": "Converts a JavaScript Date month (0-11) to a MonthOfYear (1-12).",
+      "params": [
+        {
+          "name": "dateMonth",
+          "type": "DateMonth",
+          "description": "- JavaScript Date month (0-11)",
+          "optional": false
+        }
+      ],
+      "returns": "The month of year as a number from 1-12",
+      "tags": [
+        "date",
+        "month",
+        "year",
+        "convert",
+        "javascript",
+        "of",
+        "from",
+        "monthofyearfromdatemonth"
+      ],
+      "relatedSlugs": [
+        "make-date-month-for-month-of-year",
+        "month-of-year-from-date"
+      ]
+    },
+    {
       "slug": "make-date-month-for-month-of-year",
       "name": "makeDateMonthForMonthOfYear",
       "kind": "function",
@@ -3054,7 +4121,145 @@
         "makedatemonthformonthofyear"
       ],
       "relatedSlugs": [
-        "month-of-year-from-date-month"
+        "month-of-year-from-date-month",
+        "month-of-year-from-date"
+      ]
+    },
+    {
+      "slug": "is-date",
+      "name": "isDate",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "isDate(value: unknown): value is Date",
+      "description": "Returns true if the value is a Date object.\nUses both instanceof and Object.prototype.toString for reliable type checking.",
+      "params": [
+        {
+          "name": "value",
+          "type": "unknown",
+          "description": "- The value to check",
+          "optional": false
+        }
+      ],
+      "returns": "True if the value is a Date object",
+      "tags": [
+        "date",
+        "predicate",
+        "type-guard",
+        "validate",
+        "is",
+        "isdate"
+      ],
+      "relatedSlugs": [
+        "is-equal-date",
+        "is-past"
+      ]
+    },
+    {
+      "slug": "is-equal-date",
+      "name": "isEqualDate",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "isEqualDate(a: Date, b: Date): boolean",
+      "description": "Returns true if the two input dates represent the same point in time.\nCompares the timestamp values rather than the object references.",
+      "params": [
+        {
+          "name": "a",
+          "type": "Date",
+          "description": "- First date to compare",
+          "optional": false
+        },
+        {
+          "name": "b",
+          "type": "Date",
+          "description": "- Second date to compare",
+          "optional": false
+        }
+      ],
+      "returns": "True if the dates represent the same point in time",
+      "tags": [
+        "date",
+        "equal",
+        "compare",
+        "predicate",
+        "is",
+        "isequaldate"
+      ],
+      "relatedSlugs": [
+        "is-date",
+        "is-past"
+      ]
+    },
+    {
+      "slug": "is-past",
+      "name": "isPast",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "isPast(input: Date): boolean",
+      "description": "Returns true if the input date is in the past relative to the current time.",
+      "params": [
+        {
+          "name": "input",
+          "type": "Date",
+          "description": "- The date to check",
+          "optional": false
+        }
+      ],
+      "returns": "True if the date is in the past",
+      "tags": [
+        "date",
+        "past",
+        "compare",
+        "predicate",
+        "time",
+        "is",
+        "ispast"
+      ],
+      "relatedSlugs": [
+        "is-equal-date",
+        "is-date"
+      ]
+    },
+    {
+      "slug": "add-milliseconds",
+      "name": "addMilliseconds",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "addMilliseconds(input: Maybe<Date>, ms: Maybe<Milliseconds>): Maybe<Date>",
+      "description": "Adds milliseconds to the input date, returning a new Date object.\nIf no date is input, then returns the input unchanged.",
+      "params": [
+        {
+          "name": "input",
+          "type": "Maybe<Date>",
+          "description": "- The date to add milliseconds to",
+          "optional": false
+        },
+        {
+          "name": "ms",
+          "type": "Maybe<Milliseconds>",
+          "description": "- The number of milliseconds to add (defaults to 0 if null or undefined)",
+          "optional": false
+        }
+      ],
+      "returns": "A new Date with the added milliseconds, or the original input if not a Date",
+      "tags": [
+        "date",
+        "milliseconds",
+        "add",
+        "offset",
+        "time",
+        "addmilliseconds"
+      ],
+      "relatedSlugs": [
+        "date-or-milliseconds-to-date",
+        "ms-in-second"
       ]
     },
     {

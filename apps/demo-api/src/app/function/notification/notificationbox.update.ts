@@ -2,7 +2,7 @@ import { type UpdateNotificationBoxParams, type UpdateNotificationBoxRecipientPa
 import { withApiDetails } from '@dereekb/firebase-server';
 import { type DemoUpdateModelFunction } from '../function.context';
 
-export const updateNotificationBox: DemoUpdateModelFunction<UpdateNotificationBoxParams> = withApiDetails({
+export const notificationBoxUpdate: DemoUpdateModelFunction<UpdateNotificationBoxParams> = withApiDetails({
   inputType: updateNotificationBoxParamsType,
   fn: async (request) => {
     const { nest, auth: _auth, data } = request;
@@ -19,7 +19,7 @@ export const updateNotificationBox: DemoUpdateModelFunction<UpdateNotificationBo
   }
 });
 
-export const updateNotificationBoxRecipient: DemoUpdateModelFunction<UpdateNotificationBoxRecipientParams> = withApiDetails({
+export const notificationBoxRecipient: DemoUpdateModelFunction<UpdateNotificationBoxRecipientParams> = withApiDetails({
   inputType: updateNotificationBoxRecipientParamsType,
   fn: async (request) => {
     const { nest, auth: _auth, data } = request;

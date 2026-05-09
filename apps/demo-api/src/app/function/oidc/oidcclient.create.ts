@@ -3,7 +3,7 @@ import { type DemoCreateModelFunction } from '../function.context';
 import { isAdminInRequest } from '@dereekb/firebase-server';
 import { profileIdentity } from 'demo-firebase';
 
-export const createOidcClient: DemoCreateModelFunction<CreateOidcClientParams, CreateOidcClientResult> = async (request) => {
+export const oidcEntryCreateClient: DemoCreateModelFunction<CreateOidcClientParams, CreateOidcClientResult> = async (request) => {
   const { nest, data } = request;
   let key: FirebaseAuthOwnershipKey | undefined;
 

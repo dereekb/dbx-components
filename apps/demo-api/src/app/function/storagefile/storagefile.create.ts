@@ -13,7 +13,7 @@ export const storageFileCreate: DemoCreateModelFunction<CreateStorageFileParams>
   return onCallCreateModelResultWithDocs(result);
 };
 
-export const storageFileInitializeFromUpload: DemoCreateModelFunction<InitializeStorageFileFromUploadParams> = async (request) => {
+export const storageFileFromUpload: DemoCreateModelFunction<InitializeStorageFileFromUploadParams> = async (request) => {
   const { nest, data } = request;
 
   // anyone is allowed to initialize a storage file from an upload, as they may be the ones who uploaded it
@@ -25,7 +25,7 @@ export const storageFileInitializeFromUpload: DemoCreateModelFunction<Initialize
   return onCallCreateModelResultWithDocs(result);
 };
 
-export const storageFileInitializeAllFromUploads: DemoCreateModelFunction<InitializeAllStorageFilesFromUploadsParams, InitializeAllStorageFilesFromUploadsResult> = async (request) => {
+export const storageFileAllFromUpload: DemoCreateModelFunction<InitializeAllStorageFilesFromUploadsParams, InitializeAllStorageFilesFromUploadsResult> = async (request) => {
   const { nest, data } = request;
 
   assertIsAdminInRequest(request);

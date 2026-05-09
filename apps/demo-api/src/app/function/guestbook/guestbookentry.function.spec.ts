@@ -6,7 +6,7 @@ import { onCallUpdateModelParams } from '@dereekb/firebase';
 import { demoCallModel } from '../model/crud.functions';
 
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
-  describeCallableRequestTest('insertGuestbookEntry', { f, fn: demoCallModel }, (callGuestbookEntryWrappedFn) => {
+  describeCallableRequestTest('guestbookEntryInsert', { f, fn: demoCallModel }, (callGuestbookEntryWrappedFn) => {
     demoAuthorizedUserContext({ f }, (u) => {
       demoGuestbookContext({ f, published: true }, (g) => {
         describe('guestbook is active', () => {
@@ -27,7 +27,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
               signed
             };
 
-            await u.callWrappedFunction(callGuestbookEntryWrappedFn, onCallUpdateModelParams(guestbookEntryIdentity, params));
+            await u.callWrappedFunction(callGuestbookEntryWrappedFn, onCallUpdateModelParams(guestbookEntryIdentity, params, 'insert'));
 
             exists = await userGuestbookEntry.accessor.exists();
             expect(exists).toBe(true);
@@ -85,7 +85,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
                   published: true
                 };
 
-                await u.callWrappedFunction(callGuestbookEntryWrappedFn, onCallUpdateModelParams(guestbookEntryIdentity, params));
+                await u.callWrappedFunction(callGuestbookEntryWrappedFn, onCallUpdateModelParams(guestbookEntryIdentity, params, 'insert'));
 
                 exists = await userGuestbookEntry.accessor.exists();
                 expect(exists).toBe(true);

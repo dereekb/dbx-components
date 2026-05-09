@@ -14,7 +14,7 @@ export const ANGULAR_COMPONENT_DECORATORS: ReadonlySet<string> = new Set(['Compo
 /**
  * Module that holds the dbx-components RxJS extras (SubscriptionObject).
  */
-export const DEREEKB_RXJS_MODULE = '@dereekb/rxjs';
+export const DBX_COMPONENTS_RXJS_MODULE = '@dereekb/rxjs';
 
 /**
  * Module that holds Subject/BehaviorSubject/etc.
@@ -24,7 +24,7 @@ export const RXJS_MODULE = 'rxjs';
 /**
  * Module that holds the cleanup helpers (cleanSubscription, completeOnDestroy, clean).
  */
-export const DEREEKB_DBX_CORE_MODULE = '@dereekb/dbx-core';
+export const DBX_COMPONENTS_DBX_CORE_MODULE = '@dereekb/dbx-core';
 
 /**
  * Identifier name for the `SubscriptionObject` class.

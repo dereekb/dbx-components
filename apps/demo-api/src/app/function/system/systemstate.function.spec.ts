@@ -5,7 +5,7 @@ import { onCallReadModelParams, systemStateIdentity } from '@dereekb/firebase';
 import { demoCallModel } from '../model/crud.functions';
 
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
-  describeCallableRequestTest('systemStateExampleRead', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {
+  describeCallableRequestTest('systemStateExampleread', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {
     demoAuthorizedUserAdminContext({ f }, (u) => {
       it('should return the message', async () => {
         const message = 'test message';

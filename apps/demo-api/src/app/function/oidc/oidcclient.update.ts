@@ -1,7 +1,7 @@
 import { type RotateOidcClientSecretParams, type RotateOidcClientSecretResult, type UpdateOidcClientParams } from '@dereekb/firebase';
 import { type DemoUpdateModelFunction } from '../function.context';
 
-export const updateOidcClient: DemoUpdateModelFunction<UpdateOidcClientParams> = async (request) => {
+export const oidcEntryUpdateClient: DemoUpdateModelFunction<UpdateOidcClientParams> = async (request) => {
   const { nest, data } = request;
 
   const updateFn = await nest.oidcModelServerActions.updateOidcClient(data);
@@ -14,7 +14,7 @@ export const updateOidcClient: DemoUpdateModelFunction<UpdateOidcClientParams> =
 
   await updateFn(document);
 };
-export const rotateOidcClientSecret: DemoUpdateModelFunction<RotateOidcClientSecretParams, RotateOidcClientSecretResult> = async (request) => {
+export const oidcEntryRotateClientSecret: DemoUpdateModelFunction<RotateOidcClientSecretParams, RotateOidcClientSecretResult> = async (request) => {
   const { nest, data } = request;
 
   const rotateFn = await nest.oidcModelServerActions.rotateOidcClientSecret(data);

@@ -1,4 +1,4 @@
-import { ANGULAR_COMPONENT_DECORATORS, type AstNode, CLEAN_HELPER, CLEAN_SUBSCRIPTION_HELPER, DEREEKB_DBX_CORE_MODULE, DEREEKB_RXJS_MODULE, type ImportRegistry, SUBSCRIPTION_OBJECT_NAME, createImportRegistry, ensureNamedImportFix, findAngularComponentDecorator, findNgOnDestroyMethod, getClassMemberName, isCalledIdentifier, isDeclareProperty, isImportedFrom, isStaticProperty, isThisMemberAccess, trackImportDeclaration } from './util';
+import { ANGULAR_COMPONENT_DECORATORS, type AstNode, CLEAN_HELPER, CLEAN_SUBSCRIPTION_HELPER, DBX_COMPONENTS_DBX_CORE_MODULE, DBX_COMPONENTS_RXJS_MODULE, type ImportRegistry, SUBSCRIPTION_OBJECT_NAME, createImportRegistry, ensureNamedImportFix, findAngularComponentDecorator, findNgOnDestroyMethod, getClassMemberName, isCalledIdentifier, isDeclareProperty, isImportedFrom, isStaticProperty, isThisMemberAccess, trackImportDeclaration } from './util';
 
 /**
  * Identifier names accepted as the wrapper around a manual `new SubscriptionObject(...)`.
@@ -186,7 +186,7 @@ function isUnwrappedSubscriptionObjectNew(expression: AstNode, registry: ImportR
   if (!isCalledIdentifier(expression, ACCEPTED_WRAPPERS) && expression.type === 'NewExpression') {
     const callee = expression.callee;
 
-    if (callee?.type === 'Identifier' && callee.name === SUBSCRIPTION_OBJECT_NAME && isImportedFrom(registry, SUBSCRIPTION_OBJECT_NAME, DEREEKB_RXJS_MODULE)) {
+    if (callee?.type === 'Identifier' && callee.name === SUBSCRIPTION_OBJECT_NAME && isImportedFrom(registry, SUBSCRIPTION_OBJECT_NAME, DBX_COMPONENTS_RXJS_MODULE)) {
       result = true;
     }
   }
@@ -210,7 +210,7 @@ function buildSubscriptionObjectFix(input: BuildSubscriptionObjectFixInput): Ast
 
     collected.push(fixer.replaceTextRange([newExpr.range[0], calleeRange[1]], CLEAN_SUBSCRIPTION_HELPER));
 
-    const importFix = ensureNamedImportFix({ fixer, registry, importName: CLEAN_SUBSCRIPTION_HELPER, fromSource: DEREEKB_DBX_CORE_MODULE });
+    const importFix = ensureNamedImportFix({ fixer, registry, importName: CLEAN_SUBSCRIPTION_HELPER, fromSource: DBX_COMPONENTS_DBX_CORE_MODULE });
 
     if (importFix) {
       collected.push(importFix);

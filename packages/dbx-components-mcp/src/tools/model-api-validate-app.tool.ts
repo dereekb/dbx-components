@@ -10,6 +10,8 @@
  *     but no entry under the matching specifier in the app's verb-map.
  *   - `ORPHAN_HANDLER` — handler registered in the app's verb-map but no
  *     firebase-component `*.api.ts` declares this CRUD entry.
+ *   - `HANDLER_NAMING_MISMATCH` — handler name does not follow the
+ *     `<model><Verb>[<Specifier>]` convention from `ModelFirebaseFunctionMap`.
  *
  * Mirrors the `dbx_model_fixture_validate_app` / `dbx_storagefile_m_validate_app`
  * pattern: a single tool that walks two sources and reports drift.
@@ -43,6 +45,7 @@ const TOOL: Tool = {
     '- matched — declaration and handler agree.',
     '- `MISSING_HANDLER` — declared but the verb-map has no entry.',
     '- `ORPHAN_HANDLER` — handler is wired but no `*.api.ts` declares the entry.',
+    '- `HANDLER_NAMING_MISMATCH` — handler name does not match the canonical `<model><Verb>[<Specifier>]` form (e.g. `guestbookEntryUpdateInsert`, with `guestbookEntryInsert` accepted as the verb-omitted shorthand).',
     '',
     'Inputs:',
     '- `componentDir`: relative path to the firebase-component package (e.g. `components/demo-firebase`).',
