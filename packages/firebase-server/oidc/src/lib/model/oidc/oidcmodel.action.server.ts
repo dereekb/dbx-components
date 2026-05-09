@@ -169,7 +169,7 @@ export function deleteOidcTokenFactory(context: OidcModelServerActionsContext) {
     return async (document: OidcEntryDocument): Promise<void> => {
       const data = await document.snapshotData();
 
-      if (!data || data.type !== 'Grant') {
+      if (data?.type !== 'Grant') {
         throw new Error('Only Grant entries can be revoked through this endpoint.');
       }
 

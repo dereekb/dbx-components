@@ -1,5 +1,5 @@
 import type { Configuration } from 'oidc-provider';
-import { type WebsitePath, type SlashPath, MS_IN_DAY, Seconds, SECONDS_IN_DAY, SECONDS_IN_MINUTE } from '@dereekb/util';
+import { type WebsitePath, type SlashPath, type Seconds, SECONDS_IN_DAY, SECONDS_IN_MINUTE } from '@dereekb/util';
 import { type OidcScope, type OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
 import { type JwksServiceConfig } from './service/oidc.jwks.service';
 import { type JwksKeyConverterConfig } from './model';

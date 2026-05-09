@@ -19,9 +19,13 @@ const SRC_LIB_SUBPATH = 'src/lib';
 const DBX_COMPONENTS_BASE_SCOPE = '@dereekb/';
 
 export interface ApiSourceRoot {
-  /** Absolute directory to walk for `*.api.ts` files (typically `<pkg>/src/lib`). */
+  /**
+   * Absolute directory to walk for `*.api.ts` files (typically `<pkg>/src/lib`).
+   */
   readonly absDir: string;
-  /** Human-readable label identifying the contributing package (used for diagnostics). */
+  /**
+   * Human-readable label identifying the contributing package (used for diagnostics).
+   */
   readonly packageLabel: string;
 }
 

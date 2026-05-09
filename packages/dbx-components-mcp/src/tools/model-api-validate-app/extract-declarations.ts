@@ -18,9 +18,13 @@ import type { DeclaredEntry } from './types.js';
 const API_SUFFIX = '.api.ts';
 
 export interface DeclaredEntriesSourceRoot {
-  /** Absolute directory to walk for `*.api.ts` files. */
+  /**
+   * Absolute directory to walk for `*.api.ts` files.
+   */
   readonly absDir: string;
-  /** Absolute base path that emitted `sourceFile` strings should be relative to. */
+  /**
+   * Absolute base path that emitted `sourceFile` strings should be relative to.
+   */
   readonly relativeBase: string;
 }
 

@@ -41,16 +41,16 @@ describe('validateAppModelApi (demo-firebase + demo-api)', () => {
     });
 
     const upstreamCells: ReadonlyArray<{ readonly model: string; readonly verb: 'create' | 'read' | 'update' | 'delete' | 'query'; readonly specifier: string | undefined; readonly handlerName: string }> = [
-      { model: 'oidcEntry', verb: 'create', specifier: 'client', handlerName: 'createOidcClient' },
-      { model: 'oidcEntry', verb: 'update', specifier: 'client', handlerName: 'updateOidcClient' },
-      { model: 'oidcEntry', verb: 'update', specifier: 'rotateClientSecret', handlerName: 'rotateOidcClientSecret' },
-      { model: 'oidcEntry', verb: 'delete', specifier: 'client', handlerName: 'deleteOidcClient' },
+      { model: 'oidcEntry', verb: 'create', specifier: 'client', handlerName: 'oidcEntryCreateClient' },
+      { model: 'oidcEntry', verb: 'update', specifier: 'client', handlerName: 'oidcEntryUpdateClient' },
+      { model: 'oidcEntry', verb: 'update', specifier: 'rotateClientSecret', handlerName: 'oidcEntryRotateClientSecret' },
+      { model: 'oidcEntry', verb: 'delete', specifier: 'client', handlerName: 'oidcEntryDeleteClient' },
       { model: 'storageFile', verb: 'create', specifier: '_', handlerName: 'storageFileCreate' },
       { model: 'storageFile', verb: 'read', specifier: 'download', handlerName: 'storageFileDownload' },
       { model: 'storageFileGroup', verb: 'update', specifier: 'regenerateContent', handlerName: 'storageFileGroupRegenerateContent' },
       { model: 'notification', verb: 'update', specifier: 'send', handlerName: 'notificationSend' },
-      { model: 'notificationBox', verb: 'update', specifier: '_', handlerName: 'updateNotificationBox' },
-      { model: 'notificationUser', verb: 'update', specifier: 'resync', handlerName: 'resyncNotificationUser' }
+      { model: 'notificationBox', verb: 'update', specifier: '_', handlerName: 'notificationBoxUpdate' },
+      { model: 'notificationUser', verb: 'update', specifier: 'resync', handlerName: 'notificationUserResync' }
     ];
 
     for (const cell of upstreamCells) {
