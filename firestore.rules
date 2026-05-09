@@ -25,6 +25,11 @@ service cloud.firestore {
       return resource != null && resource.data != null && resource.data.o != null && request.auth != null && (resource.data.o == 'pr/' + request.auth.uid);
     }
 
+    function oidcEntryIsOwnedByAuthUserUid() {
+      // OidcEntry stores the Firebase UID in `uid` (extracted from the oidc-provider payload).
+      return resource != null && resource.data != null && resource.data.uid != null && request.auth != null && (resource.data.uid == request.auth.uid);
+    }
+
     // MARK: Rules
     match /pr/{profile} {
 
@@ -102,8 +107,14 @@ service cloud.firestore {
     // MARK: OIDC Adapter
     match /oidc_e/{entryId} {
       // Owners can read their own Client entries (type == 'Client' && o = 'pr/<uid>')
-      allow get: if userClaimsIsSysAdmin() || resourceIsOwnedByAuthOwnershipKey();
-      allow list: if userClaimsIsSysAdmin() || (resourceIsOwnedByAuthOwnershipKey() && resource.data.type == 'Client');
+      // and their own Grant entries (type == 'Grant' && uid = <auth.uid>) so they can
+      // see and revoke "apps with access to my account".
+      allow get: if userClaimsIsSysAdmin()
+        || resourceIsOwnedByAuthOwnershipKey()
+        || (oidcEntryIsOwnedByAuthUserUid() && resource.data.type == 'Grant');
+      allow list: if userClaimsIsSysAdmin()
+        || (resourceIsOwnedByAuthOwnershipKey() && resource.data.type == 'Client')
+        || (oidcEntryIsOwnedByAuthUserUid() && resource.data.type == 'Grant');
     }
 
   }

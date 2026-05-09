@@ -49,4 +49,10 @@ export class DemoAppRouterService {
       refParams: { id }
     };
   }
+
+  oidcGrantListRef(): SegueRef {
+    return {
+      ref: 'demo.app.oidc.grants'
+    };
+  }
 }

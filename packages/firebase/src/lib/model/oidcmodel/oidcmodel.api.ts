@@ -96,6 +96,19 @@ export type DeleteOidcClientParams = TargetModelParams;
 
 export const deleteOidcClientParamsType = targetModelParamsType;
 
+/**
+ * Parameters for revoking a user's own OIDC token entry.
+ *
+ * The target {@link OidcEntry} must be of type `Grant` and have its `uid`
+ * matching the authenticated user. Revoking a grant cascades through
+ * oidc-provider's grantable models (`AccessToken`, `RefreshToken`,
+ * `AuthorizationCode`, `DeviceCode`, `BackchannelAuthenticationRequest`),
+ * deleting all entries that share the grant id.
+ */
+export type DeleteOidcTokenParams = TargetModelParams;
+
+export const deleteOidcTokenParamsType = targetModelParamsType;
+
 // MARK: Functions
 /**
  * Custom (non-CRUD) function type map for OIDC.
@@ -120,12 +133,13 @@ export type OidcModelCrudFunctionsConfig = {
     };
     delete: {
       client: DeleteOidcClientParams;
+      token: DeleteOidcTokenParams;
     };
   };
 };
 
 export const oidcModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<OidcModelCrudFunctionsConfig, OidcModelTypes> = {
-  oidcEntry: ['create:client', 'update:client,rotateClientSecret', 'delete:client']
+  oidcEntry: ['create:client', 'update:client,rotateClientSecret', 'delete:client,token']
 };
 
 /**
@@ -144,6 +158,7 @@ export abstract class OidcModelFunctions implements ModelFirebaseFunctionMap<Oid
     };
     deleteOidcEntry: {
       client: ModelFirebaseDeleteFunction<DeleteOidcClientParams>;
+      token: ModelFirebaseDeleteFunction<DeleteOidcTokenParams>;
     };
   };
 }

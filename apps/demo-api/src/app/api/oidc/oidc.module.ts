@@ -113,6 +113,7 @@ const demoOidcRenderError: OidcRenderErrorFunction = (ctx, out) => {
   oidcModuleMetadata({
     dependencyModule: DemoApiOidcDependencyModule,
     config: {
+      trustProxy: false,
       suppressBodyParserWarning: true,
       renderError: demoOidcRenderError,
       protectedPaths: ['/api/model', '/mcp'],

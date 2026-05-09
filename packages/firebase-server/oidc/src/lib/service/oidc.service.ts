@@ -4,7 +4,7 @@ import { OidcModuleConfig } from '../oidc.config';
 import { JwksService } from './oidc.jwks.service';
 import { OidcAccountService } from './oidc.account.service';
 import { OidcServerFirestoreCollections } from '../model';
-import { createAdapterFactory } from './oidc.adapter.service';
+import { GRANTABLE_MODEL_NAMES, createAdapterFactory } from './oidc.adapter.service';
 import { OidcEncryptionService } from './oidc.encryption.service';
 import { OidcProviderConfigService } from './oidc.config.service';
 import { resolveEncryptionKey } from '@dereekb/nestjs';
@@ -99,6 +99,39 @@ export class OidcService {
         ...accountClaims
       }
     };
+  }
+
+  // MARK: Grant Revocation
+  /**
+   * Revokes a Grant entry and every grantable token entry that references it.
+   *
+   * Iterates through every grantable model (`AccessToken`, `AuthorizationCode`,
+   * `RefreshToken`, `DeviceCode`, `BackchannelAuthenticationRequest`) and calls
+   * the adapter's `revokeByGrantId` to delete all matching entries, then
+   * deletes the Grant adapter entry itself. After this resolves, any token
+   * referencing the grant is gone — `verifyAccessToken` returns `undefined`
+   * and a `grant_type=refresh_token` exchange fails with `invalid_grant`.
+   *
+   * @param grantId - the grant id (and Grant adapter entry id) to revoke
+   * @throws when the Grant entry does not exist
+   */
+  async revokeGrant(grantId: string): Promise<void> {
+    const provider = await this.getProvider();
+    const ProviderGrant = (provider as any).Grant;
+    const existing = await ProviderGrant.adapter.find(grantId);
+
+    if (!existing) {
+      throw new Error('Grant not found.');
+    }
+
+    await Promise.all(
+      GRANTABLE_MODEL_NAMES.map((modelName) => {
+        const Model = (provider as any)[modelName];
+        return Model?.adapter?.revokeByGrantId?.(grantId);
+      })
+    );
+
+    await ProviderGrant.adapter.destroy(grantId);
   }
 
   /**

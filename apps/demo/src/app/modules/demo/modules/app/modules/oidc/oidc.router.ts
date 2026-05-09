@@ -3,6 +3,7 @@ import { DemoAppOidcLayoutComponent } from './container/layout.component';
 import { DemoAppOidcClientListPageComponent } from './container/list.component';
 import { DemoAppOidcClientListPageRightComponent } from './container/list.right.component';
 import { DemoAppOidcClientCreatePageComponent } from './container/list.create.component';
+import { DemoAppOidcGrantListPageComponent } from './container/grants.component';
 
 export const oidcLayoutState: Ng2StateDeclaration = {
   url: '/oidc',
@@ -28,4 +29,10 @@ export const oidcClientDetailState: Ng2StateDeclaration = {
   component: DemoAppOidcClientListPageRightComponent
 };
 
-export const DEMO_APP_OIDC_STATES: Ng2StateDeclaration[] = [oidcLayoutState, oidcClientListState, oidcClientCreateState, oidcClientDetailState];
+export const oidcGrantListState: Ng2StateDeclaration = {
+  url: '/grants',
+  name: 'demo.app.oidc.grants',
+  component: DemoAppOidcGrantListPageComponent
+};
+
+export const DEMO_APP_OIDC_STATES: Ng2StateDeclaration[] = [oidcLayoutState, oidcClientListState, oidcClientCreateState, oidcClientDetailState, oidcGrantListState];

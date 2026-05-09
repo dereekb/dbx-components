@@ -18,3 +18,24 @@ export interface OidcEntryOAuthClientPayloadData {
   readonly client_uri?: Maybe<string>;
   readonly created_at?: string;
 }
+
+// MARK: Grant
+/**
+ * Subset of an oidc-provider Grant adapter payload that is safe to expose to the
+ * granting user when they manage their issued tokens.
+ *
+ * Mirrors the relevant fields of oidc-provider's `lib/models/grant.js` payload.
+ */
+export interface OidcEntryGrantPayloadData {
+  readonly accountId?: Maybe<string>;
+  readonly clientId?: Maybe<OidcEntryClientId>;
+  readonly exp?: Maybe<number>;
+  readonly iat?: Maybe<number>;
+  /**
+   * Space-delimited string of scopes that apply across all resources, e.g. `'openid email offline_access'`.
+   */
+  readonly openid?: Maybe<{
+    readonly scope?: Maybe<string>;
+    readonly claims?: Maybe<string[]>;
+  }>;
+}

@@ -5,6 +5,7 @@ import { DemoAppOidcLayoutComponent } from './container/layout.component';
 import { DemoAppOidcClientListPageComponent } from './container/list.component';
 import { DemoAppOidcClientListPageRightComponent } from './container/list.right.component';
 import { DemoAppOidcClientCreatePageComponent } from './container/list.create.component';
+import { DemoAppOidcGrantListPageComponent } from './container/grants.component';
 
 @NgModule({
   imports: [
@@ -15,7 +16,8 @@ import { DemoAppOidcClientCreatePageComponent } from './container/list.create.co
     DemoAppOidcLayoutComponent,
     DemoAppOidcClientListPageComponent,
     DemoAppOidcClientListPageRightComponent,
-    DemoAppOidcClientCreatePageComponent
+    DemoAppOidcClientCreatePageComponent,
+    DemoAppOidcGrantListPageComponent
   ]
 })
 export class DemoAppOidcModule {}

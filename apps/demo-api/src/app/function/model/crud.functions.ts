@@ -19,6 +19,7 @@ import { profileDownloadArchive } from '../profile/profile.read';
 import { createOidcClient } from '../oidc/oidcclient.create';
 import { updateOidcClient, rotateOidcClientSecret } from '../oidc/oidcclient.update';
 import { deleteOidcClient } from '../oidc/oidcclient.delete';
+import { oidcEntryDeleteToken } from '../oidc/oidcentry.delete';
 import { queryGuestbooks } from '../guestbook/guestbook.query';
 import { queryGuestbookEntries } from '../guestbook/guestbookentry.query';
 
@@ -98,7 +99,8 @@ export const demoUpdateModelMap: DemoOnCallUpdateModelMap = {
 // MARK: Delete
 export const demoDeleteModelMap: DemoOnCallDeleteModelMap = {
   oidcEntry: onCallSpecifierHandler({
-    client: deleteOidcClient
+    client: deleteOidcClient,
+    token: oidcEntryDeleteToken
   })
 };
 

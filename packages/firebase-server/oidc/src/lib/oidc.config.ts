@@ -198,9 +198,19 @@ export abstract class OidcModuleConfig {
    * Maps to `provider.proxy = <value>` on the underlying oidc-provider
    * (which is the Koa `app.proxy` setting).
    *
-   * Defaults to `true`.
+   * Defaults to `'prod_only'` if the environment is `production`, otherwise `false`.
    */
   readonly trustProxy?: boolean;
+
+  /**
+   * Whether to trust proxy headers in a non-production environment, such as the local environment.
+   *
+   * The dev environment typically does not require proxy headers, and setting
+   * `true` will result in errors.
+   *
+   * Defaults to `false`.
+   */
+  readonly trustProxyInNonProduction?: boolean;
 
   /**
    * Validates that all required fields are present on the config.
