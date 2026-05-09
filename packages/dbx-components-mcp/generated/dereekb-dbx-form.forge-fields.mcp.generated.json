@@ -421,6 +421,18 @@
           "type": "string",
           "description": "Hint text shown below the field.",
           "required": false
+        },
+        {
+          "name": "wrapped (props)",
+          "type": "boolean",
+          "description": "When `false`, render the list bare without the surrounding Material\nform-field wrapper (no notched outline, no notch label, no hint chrome\nbelow). The label/hint inputs become inert in that mode. Defaults to `true`.",
+          "required": false
+        },
+        {
+          "name": "maxHeight (props)",
+          "type": "DbxForgeListSelectionFieldMaxHeight",
+          "description": "Override the default 300px max-height cap on the rendered list.\n\n- `undefined` (default) — leave the existing CSS variable alone.\n- `'none'` — remove the cap entirely (the list grows to fit its content).\n- `number` — interpreted as pixels (`{value}px`).\n- `string` — passthrough (e.g. `'60vh'`, `'clamp(200px, 50vh, 600px)'`).",
+          "required": false
         }
       ],
       "wrapperPattern": "material-form-field-wrapped",

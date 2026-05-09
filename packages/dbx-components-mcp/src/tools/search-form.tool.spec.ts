@@ -63,4 +63,15 @@ describe('dbx_form_search', () => {
     const text = firstText(tool.run({ query: 'zzzz-nothing-here' }));
     expect(text).toMatch(/No form entries matched/);
   });
+
+  it('aliases dbx-list to list-selection so the dbx-list query lands on the right entry', () => {
+    const text = firstText(tool.run({ query: 'dbx-list' }));
+    expect(text).toMatch(/Tokens: `dbx-list → list-selection`/);
+    expect(text).toMatch(/## `list-selection`/);
+  });
+
+  it('scores by ngFormType so unaliased ng-forge type names surface their factory', () => {
+    const text = firstText(tool.run({ query: 'dbx-pickable-list' }));
+    expect(text).toMatch(/## `pickable-list`/);
+  });
 });

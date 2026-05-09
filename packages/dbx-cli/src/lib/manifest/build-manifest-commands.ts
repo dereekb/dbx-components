@@ -3,7 +3,8 @@ import { type OnCallTypedModelParams } from '@dereekb/firebase';
 import { requireCliContext } from '../context/cli.context';
 import { STANDARD_GLOBAL_OPTION_NAMES } from '../runner/run';
 import { CliError, outputError, outputResult } from '../util/output';
-import { type CliApiManifest, type CliApiManifestEntry } from './types';
+import { expandModelKeys } from '../api/expand-keys';
+import { type CliApiManifest, type CliApiManifestEntry, type CliModelManifest } from './types';
 
 const SKIPPED_VERBS: ReadonlySet<string> = new Set(['standalone']);
 
@@ -100,6 +101,17 @@ export interface BuildManifestCommandsOptions {
    * full invocation reads `<cli> model <model> <action>`.
    */
   readonly modelCommandName?: string;
+  /**
+   * Generated model manifest used to power the per-action `--expand-keys`
+   * flag. When supplied, a payload returned from the `/model/call` endpoint
+   * is rewritten to use the long-name form of each persisted field (recursing
+   * into nested object-array and sub-object converters captured in the
+   * manifest).
+   *
+   * Optional. When omitted the flag is not registered and result payloads are
+   * emitted with their original short keys.
+   */
+  readonly modelManifest?: CliModelManifest;
 }
 
 /**
@@ -153,7 +165,7 @@ export function buildManifestCommands(manifest: CliApiManifest, options?: BuildM
   const hideOnFocus = focusHelp ? (options?.hiddenWhenFocused ?? STANDARD_GLOBAL_OPTION_NAMES) : [];
   const modelCommandName = options?.modelCommandName ?? DEFAULT_MANIFEST_MODEL_COMMAND_NAME;
   const sortedModels = [...byModel.entries()].sort(([a], [b]) => a.localeCompare(b));
-  const context: BuilderContext = { dataHelpFormat, helpMode, hideOnFocus };
+  const context: BuilderContext = { dataHelpFormat, helpMode, hideOnFocus, modelManifest: options?.modelManifest };
 
   return [
     {
@@ -177,6 +189,7 @@ interface BuilderContext {
   readonly dataHelpFormat: ManifestHelpDataFormat;
   readonly helpMode: ManifestHelpMode;
   readonly hideOnFocus: readonly string[];
+  readonly modelManifest?: CliModelManifest;
 }
 
 /**
@@ -296,15 +309,24 @@ function buildEntryCommand(entry: CliApiManifestEntry, context: BuilderContext):
   const fallbackDescribe = `${entry.verb}${specPart} on ${entry.model}`;
   const describeOneLine = oneLineDescription(entry.description) ?? fallbackDescribe;
   const epilogue = buildEntryEpilogue(entry, context);
+  const expandKeysAvailable = Boolean(context.modelManifest);
 
   return {
     command: action,
     describe: describeOneLine,
     builder: (yargs: Argv) => {
-      const y = yargs.option('data', {
+      let y = yargs.option('data', {
         type: 'string',
         describe: 'JSON-encoded payload (defaults to {} when omitted)'
       });
+
+      if (expandKeysAvailable) {
+        y = y.option('expand-keys', {
+          type: 'boolean',
+          default: false,
+          describe: "Rewrite the response payload's persisted short keys to their long-name form using the generated model manifest."
+        });
+      }
 
       hideGlobalOptions(y, context.hideOnFocus);
 
@@ -312,7 +334,10 @@ function buildEntryCommand(entry: CliApiManifestEntry, context: BuilderContext):
     },
     handler: async (argv: any) => {
       try {
-        await callEntry(entry, typeof argv.data === 'string' ? argv.data : undefined);
+        await callEntry(entry, typeof argv.data === 'string' ? argv.data : undefined, {
+          expandKeys: expandKeysAvailable && argv.expandKeys === true,
+          modelManifest: context.modelManifest
+        });
       } catch (e) {
         outputError(e);
         process.exit(1);
@@ -587,7 +612,12 @@ function pruneFalseUnionBranches(value: unknown): unknown {
   return result;
 }
 
-async function callEntry(entry: CliApiManifestEntry, rawData: string | undefined): Promise<void> {
+interface CallEntryOptions {
+  readonly expandKeys: boolean;
+  readonly modelManifest?: CliModelManifest;
+}
+
+async function callEntry(entry: CliApiManifestEntry, rawData: string | undefined, options: CallEntryOptions): Promise<void> {
   const ctx = requireCliContext();
   const data = parseAndValidate(entry, rawData);
 
@@ -599,7 +629,8 @@ async function callEntry(entry: CliApiManifestEntry, rawData: string | undefined
   };
 
   const result = await ctx.callModel(params);
-  outputResult(result);
+  const finalResult = options.expandKeys && options.modelManifest ? expandModelKeys(entry.model, result, options.modelManifest) : result;
+  outputResult(finalResult);
 }
 
 function parseAndValidate(entry: CliApiManifestEntry, rawData: string | undefined): unknown {

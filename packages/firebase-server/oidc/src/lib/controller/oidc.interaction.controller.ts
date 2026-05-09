@@ -1,11 +1,19 @@
 import { Controller, Get, Post, Param, Req, Res, Inject, HttpException, HttpStatus, HttpCode, Body } from '@nestjs/common';
 import { type Request, type Response } from 'express';
 import { OidcProviderConfigService } from '../service';
-import { type OAuthInteractionConsentRequest, type OAuthInteractionLoginRequest, type OidcInteractionUid } from '@dereekb/firebase';
+import { type OAuthInteractionConsentRequest, type OAuthInteractionLoginRequest, type OidcInteractionUid, type OidcScope } from '@dereekb/firebase';
 import { OidcAccountService } from '../service/oidc.account.service';
 import { OidcInteractionService } from '../service/oidc.interaction.service';
 import { OidcService } from '../service/oidc.service';
 import { DBX_FIREBASE_SERVER_OIDC_SESSION_TTL_PARAM } from '../service/oidc.session-ttl';
+
+/**
+ * OIDC scopes that the server always grants on consent when they were
+ * requested, regardless of whether the frontend included them in
+ * `grantedOIDCScopes`. `openid` is required for any OIDC flow, so the
+ * UI shows it as non-deselectable and the server enforces it here.
+ */
+const ALWAYS_GRANTED_OIDC_SCOPES: readonly OidcScope[] = ['openid'];
 
 // MARK: Interaction Controller
 /**
@@ -134,17 +142,34 @@ export class OidcInteractionController {
 
       const grant = await this.oidcInteractionService.findOrCreateGrant(interaction.grantId, session?.accountId ?? '', clientId, expiresInSeconds);
 
-      if (prompt.details.missingOIDCScope) {
-        grant.addOIDCScope((prompt.details.missingOIDCScope as string[]).join(' '));
+      const missingOIDCScope = (prompt.details.missingOIDCScope as string[] | undefined) ?? [];
+
+      if (missingOIDCScope.length > 0) {
+        const effectiveOIDCScope = resolveEffectiveSubset(missingOIDCScope, body.grantedOIDCScopes, ALWAYS_GRANTED_OIDC_SCOPES);
+
+        if (effectiveOIDCScope.length > 0) {
+          grant.addOIDCScope(effectiveOIDCScope.join(' '));
+        }
       }
 
-      if (prompt.details.missingOIDCClaims) {
-        grant.addOIDCClaims(prompt.details.missingOIDCClaims as string[]);
+      const missingOIDCClaims = (prompt.details.missingOIDCClaims as string[] | undefined) ?? [];
+
+      if (missingOIDCClaims.length > 0) {
+        const effectiveOIDCClaims = resolveEffectiveSubset(missingOIDCClaims, body.grantedOIDCClaims);
+
+        if (effectiveOIDCClaims.length > 0) {
+          grant.addOIDCClaims(effectiveOIDCClaims);
+        }
       }
 
-      if (prompt.details.missingResourceScopes) {
-        for (const [indicator, scopes] of Object.entries(prompt.details.missingResourceScopes as Record<string, string[]>)) {
-          grant.addResourceScope(indicator, scopes.join(' '));
+      const missingResourceScopes = (prompt.details.missingResourceScopes as Record<string, string[]> | undefined) ?? {};
+
+      for (const [indicator, scopes] of Object.entries(missingResourceScopes)) {
+        const requestedSubset = body.grantedResourceScopes?.[indicator];
+        const effectiveResourceScopes = resolveEffectiveSubset(scopes, requestedSubset);
+
+        if (effectiveResourceScopes.length > 0) {
+          grant.addResourceScope(indicator, effectiveResourceScopes.join(' '));
         }
       }
 
@@ -159,7 +184,11 @@ export class OidcInteractionController {
       );
 
       res.json({ redirectTo });
-    } catch {
+    } catch (err) {
+      if (err instanceof HttpException) {
+        throw err;
+      }
+
       throw new HttpException('Consent interaction failed', HttpStatus.BAD_REQUEST);
     }
   }
@@ -180,4 +209,46 @@ export class OidcInteractionController {
       throw new HttpException('Invalid Firebase ID token', HttpStatus.UNAUTHORIZED);
     }
   }
+}
+
+/**
+ * Resolves the effective set to grant from a missing set, an optional
+ * caller-provided subset, and an optional list of always-granted entries.
+ *
+ * Throws `400 BAD_REQUEST` if the requested subset contains entries that
+ * are not in the missing set (no privilege escalation).
+ *
+ * - When `requestedSubset` is undefined → grants everything in `missing` (back-compat).
+ * - When `requestedSubset` is provided → grants exactly that subset.
+ * - Always-granted entries are union'd in (clamped to `missing`).
+ *
+ * @param missing - Entries the OIDC prompt indicated were missing for this consent.
+ * @param requestedSubset - Optional subset the caller wants to grant; must be a subset of `missing`.
+ * @param alwaysGranted - Entries that must be granted whenever they appear in `missing`, regardless of `requestedSubset`.
+ * @returns The effective set of entries to grant.
+ */
+function resolveEffectiveSubset(missing: readonly string[], requestedSubset: readonly string[] | undefined, alwaysGranted: readonly string[] = []): string[] {
+  const missingSet = new Set(missing);
+  let baseSelection: readonly string[];
+
+  if (requestedSubset === undefined) {
+    baseSelection = missing;
+  } else {
+    for (const value of requestedSubset) {
+      if (!missingSet.has(value)) {
+        throw new HttpException(`Granted value "${value}" is not in the requested set.`, HttpStatus.BAD_REQUEST);
+      }
+    }
+    baseSelection = requestedSubset;
+  }
+
+  const effectiveSet = new Set<string>(baseSelection);
+
+  for (const value of alwaysGranted) {
+    if (missingSet.has(value)) {
+      effectiveSet.add(value);
+    }
+  }
+
+  return Array.from(effectiveSet);
 }

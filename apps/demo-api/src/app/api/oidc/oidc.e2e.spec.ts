@@ -1142,6 +1142,219 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           });
         });
 
+        describe('partial consent (scope deselection)', () => {
+          /**
+           * Runs the auth code flow through to the consent submit, posts a
+           * caller-provided consent body, and returns the response so tests
+           * can inspect or continue the flow as needed.
+           */
+          // eslint-disable-next-line @typescript-eslint/max-params -- mirrors performAuthCodeFlow shape
+          async function performAuthCodeFlowToConsent(server: ReturnType<INestApplication['getHttpServer']>, clientId: string, consentBody: Record<string, unknown>, scope = 'openid email demo'): Promise<{ consentResponse: request.Response; cookieHeader: string; codeVerifier: string; idToken: string }> {
+            const cookieJar = new Map<string, string>();
+
+            function collectCookies(res: request.Response): void {
+              const setCookies = res.headers['set-cookie'];
+
+              if (setCookies) {
+                const items = Array.isArray(setCookies) ? setCookies : [setCookies];
+
+                for (const cookie of items) {
+                  const [nameValue] = cookie.split(';');
+                  const [name] = nameValue.split('=');
+                  cookieJar.set(name, nameValue);
+                }
+              }
+            }
+
+            function getCookieHeader(): string {
+              return [...cookieJar.values()].join('; ');
+            }
+
+            const codeVerifier = randomBytes(32).toString('base64url');
+            const codeChallenge = createHash('sha256').update(codeVerifier).digest('base64url');
+
+            const authRes = await request(server)
+              .get('/oidc/auth')
+              .query({
+                client_id: clientId,
+                redirect_uri: 'https://example.com/callback',
+                response_type: 'code',
+                scope,
+                code_challenge: codeChallenge,
+                code_challenge_method: 'S256',
+                state: 'test-state',
+                nonce: 'test-nonce'
+              })
+              .redirects(0);
+
+            expect(authRes.status).toBe(303);
+            collectCookies(authRes);
+            const loginUid = extractInteractionUid(authRes);
+
+            const idToken = await createTestIdToken(app, u.uid);
+            const loginRes = await request(server).post(`/interaction/${loginUid}/login`).set('Cookie', getCookieHeader()).send({ idToken });
+            expect(loginRes.status).toBe(200);
+
+            const resumeAfterLoginPath = new URL(loginRes.body.redirectTo).pathname + new URL(loginRes.body.redirectTo).search;
+            const consentRedirectRes = await request(server).get(resumeAfterLoginPath).set('Cookie', getCookieHeader()).redirects(0);
+            expect(consentRedirectRes.status).toBe(303);
+            collectCookies(consentRedirectRes);
+            const consentUid = extractInteractionUid(consentRedirectRes);
+
+            const consentResponse = await request(server)
+              .post(`/interaction/${consentUid}/consent`)
+              .set('Cookie', getCookieHeader())
+              .send({ idToken, ...consentBody });
+
+            collectCookies(consentResponse);
+
+            return { consentResponse, cookieHeader: getCookieHeader(), codeVerifier, idToken };
+          }
+
+          /**
+           * Continues from a successful consent response through the OAuth
+           * callback redirect to extract an authorization code.
+           */
+          async function exchangeConsentForAuthorizationCode(server: ReturnType<INestApplication['getHttpServer']>, consentResponse: request.Response, cookieHeader: string): Promise<string> {
+            expect(consentResponse.status).toBe(200);
+            expect(consentResponse.body.redirectTo).toBeDefined();
+
+            const resumeAfterConsentPath = new URL(consentResponse.body.redirectTo).pathname + new URL(consentResponse.body.redirectTo).search;
+            const callbackRedirectRes = await request(server).get(resumeAfterConsentPath).set('Cookie', cookieHeader).redirects(0);
+            expect(callbackRedirectRes.status).toBe(303);
+
+            const callbackUrl = new URL(callbackRedirectRes.headers['location']);
+            const authorizationCode = callbackUrl.searchParams.get('code')!;
+            expect(authorizationCode).toBeDefined();
+            return authorizationCode;
+          }
+
+          it('grants only the subset of scopes the user selected', async () => {
+            const server = app.getHttpServer();
+            const { client_id, client_secret } = await oidcClientService.createClient({
+              client_name: 'partial-consent-subset',
+              redirect_uris: ['https://example.com/callback'],
+              token_endpoint_auth_method: 'client_secret_post'
+            });
+
+            const { consentResponse, cookieHeader, codeVerifier } = await performAuthCodeFlowToConsent(server, client_id, { approved: true, grantedOIDCScopes: ['openid', 'email'] });
+
+            const authorizationCode = await exchangeConsentForAuthorizationCode(server, consentResponse, cookieHeader);
+
+            const tokenRes = await request(server).post('/oidc/token').set('Cookie', cookieHeader).type('form').send({
+              grant_type: 'authorization_code',
+              code: authorizationCode,
+              redirect_uri: 'https://example.com/callback',
+              client_id,
+              client_secret,
+              code_verifier: codeVerifier
+            });
+
+            expect(tokenRes.status).toBe(200);
+            const grantedScopes = (tokenRes.body.scope as string | undefined)?.split(' ') ?? [];
+            expect(grantedScopes).toContain('openid');
+            expect(grantedScopes).toContain('email');
+            expect(grantedScopes).not.toContain('demo');
+          });
+
+          it('rejects a granted scope that was not in the original request', async () => {
+            const server = app.getHttpServer();
+            const { client_id } = await oidcClientService.createClient({
+              client_name: 'partial-consent-extra-scope',
+              redirect_uris: ['https://example.com/callback'],
+              token_endpoint_auth_method: 'client_secret_post'
+            });
+
+            const { consentResponse } = await performAuthCodeFlowToConsent(server, client_id, { approved: true, grantedOIDCScopes: ['openid', 'email', 'unrequested-scope'] });
+
+            expect(consentResponse.status).toBe(400);
+          });
+
+          it('always grants `openid` even when the client omits it from grantedOIDCScopes', async () => {
+            const server = app.getHttpServer();
+            const { client_id, client_secret } = await oidcClientService.createClient({
+              client_name: 'partial-consent-implicit-openid',
+              redirect_uris: ['https://example.com/callback'],
+              token_endpoint_auth_method: 'client_secret_post'
+            });
+
+            const { consentResponse, cookieHeader, codeVerifier } = await performAuthCodeFlowToConsent(server, client_id, { approved: true, grantedOIDCScopes: ['email'] });
+
+            const authorizationCode = await exchangeConsentForAuthorizationCode(server, consentResponse, cookieHeader);
+
+            const tokenRes = await request(server).post('/oidc/token').set('Cookie', cookieHeader).type('form').send({
+              grant_type: 'authorization_code',
+              code: authorizationCode,
+              redirect_uri: 'https://example.com/callback',
+              client_id,
+              client_secret,
+              code_verifier: codeVerifier
+            });
+
+            expect(tokenRes.status).toBe(200);
+            const grantedScopes = (tokenRes.body.scope as string | undefined)?.split(' ') ?? [];
+            expect(grantedScopes).toContain('openid');
+            expect(grantedScopes).toContain('email');
+            expect(grantedScopes).not.toContain('demo');
+          });
+
+          it('still grants `openid` when grantedOIDCScopes is an empty array', async () => {
+            const server = app.getHttpServer();
+            const { client_id, client_secret } = await oidcClientService.createClient({
+              client_name: 'partial-consent-empty-array',
+              redirect_uris: ['https://example.com/callback'],
+              token_endpoint_auth_method: 'client_secret_post'
+            });
+
+            const { consentResponse, cookieHeader, codeVerifier } = await performAuthCodeFlowToConsent(server, client_id, { approved: true, grantedOIDCScopes: [] });
+
+            const authorizationCode = await exchangeConsentForAuthorizationCode(server, consentResponse, cookieHeader);
+
+            const tokenRes = await request(server).post('/oidc/token').set('Cookie', cookieHeader).type('form').send({
+              grant_type: 'authorization_code',
+              code: authorizationCode,
+              redirect_uri: 'https://example.com/callback',
+              client_id,
+              client_secret,
+              code_verifier: codeVerifier
+            });
+
+            expect(tokenRes.status).toBe(200);
+            const grantedScopes = (tokenRes.body.scope as string | undefined)?.split(' ') ?? [];
+            expect(grantedScopes).toContain('openid');
+            expect(grantedScopes).not.toContain('email');
+            expect(grantedScopes).not.toContain('demo');
+          });
+
+          it('preserves the existing all-or-nothing behavior when grantedOIDCScopes is omitted', async () => {
+            const server = app.getHttpServer();
+            const { client_id, client_secret } = await oidcClientService.createClient({
+              client_name: 'partial-consent-back-compat',
+              redirect_uris: ['https://example.com/callback'],
+              token_endpoint_auth_method: 'client_secret_post'
+            });
+
+            const { consentResponse, cookieHeader, codeVerifier } = await performAuthCodeFlowToConsent(server, client_id, { approved: true });
+
+            const authorizationCode = await exchangeConsentForAuthorizationCode(server, consentResponse, cookieHeader);
+
+            const tokenRes = await request(server).post('/oidc/token').set('Cookie', cookieHeader).type('form').send({
+              grant_type: 'authorization_code',
+              code: authorizationCode,
+              redirect_uri: 'https://example.com/callback',
+              client_id,
+              client_secret,
+              code_verifier: codeVerifier
+            });
+
+            expect(tokenRes.status).toBe(200);
+            const grantedScopes = (tokenRes.body.scope as string | undefined)?.split(' ') ?? [];
+            expect(grantedScopes).toContain('openid');
+            expect(grantedScopes).toContain('email');
+            expect(grantedScopes).toContain('demo');
+          });
+        });
+
         describe('scope handling at refresh', () => {
           it('rejects a refresh-token request that asks for an unconsented scope', async () => {
             const server = app.getHttpServer();

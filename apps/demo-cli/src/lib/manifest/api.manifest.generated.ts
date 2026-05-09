@@ -6,6 +6,7 @@ import {
   createOidcClientParamsType,
   createStorageFileParamsType,
   deleteOidcClientParamsType,
+  deleteOidcTokenParamsType,
   deleteStorageFileParamsType,
   downloadMultipleStorageFilesParamsType,
   downloadStorageFileParamsType,
@@ -26,7 +27,7 @@ import {
   updateStorageFileParamsType
 } from '@dereekb/firebase';
 import { createGuestbookParamsType, downloadProfileArchiveParamsType, exampleReadParamsType, finishOnboardingProfileParamsType, guestbookEntryParamsType, insertGuestbookEntryParamsType, likeGuestbookEntryParamsType, profileCreateTestNotificationParamsType, resetProfilePasswordParamsType, setProfileUsernameParamsType, subscribeToGuestbookNotificationsParamsType, updateProfileParamsType } from 'demo-firebase';
-import { type CliApiManifest } from '@dereekb/dbx-cli';
+import { type CliApiManifest, type CliModelManifest } from '@dereekb/dbx-cli';
 
 export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
   {
@@ -173,6 +174,16 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     ]
   },
   { model: 'oidcEntry', verb: 'delete', specifier: 'client', paramsTypeName: 'DeleteOidcClientParams', paramsValidator: deleteOidcClientParamsType, groupName: 'Oidc', sourceFile: 'packages/firebase/src/lib/model/oidcmodel/oidcmodel.api.ts', paramsTypeDescription: 'Parameters for revoking/deleting an OAuth client.' },
+  {
+    model: 'oidcEntry',
+    verb: 'delete',
+    specifier: 'token',
+    paramsTypeName: 'DeleteOidcTokenParams',
+    paramsValidator: deleteOidcTokenParamsType,
+    groupName: 'Oidc',
+    sourceFile: 'packages/firebase/src/lib/model/oidcmodel/oidcmodel.api.ts',
+    paramsTypeDescription: "Parameters for revoking a user's own OIDC token entry.\n\nThe target {@link OidcEntry} must be of type `Grant` and have its `uid`\nmatching the authenticated user. Revoking a grant cascades through\noidc-provider's grantable models (`AccessToken`, `RefreshToken`,\n`AuthorizationCode`, `DeviceCode`, `BackchannelAuthenticationRequest`),\ndeleting all entries that share the grant id."
+  },
   { model: 'oidcEntry', verb: 'update', specifier: 'client', paramsTypeName: 'UpdateOidcClientParams', paramsValidator: updateOidcClientParamsType, groupName: 'Oidc', sourceFile: 'packages/firebase/src/lib/model/oidcmodel/oidcmodel.api.ts', paramsTypeDescription: 'Parameters for updating an existing OAuth client.\n\nUses {@link UpdateOidcClientFieldParams} — `token_endpoint_auth_method` is immutable.' },
   { model: 'oidcEntry', verb: 'update', specifier: 'rotateClientSecret', paramsTypeName: 'RotateOidcClientSecretParams', paramsValidator: rotateOidcClientSecretParamsType, resultTypeName: 'RotateOidcClientSecretResult', groupName: 'Oidc', sourceFile: 'packages/firebase/src/lib/model/oidcmodel/oidcmodel.api.ts' },
   {
@@ -394,5 +405,353 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'read', typeText: 'boolean' },
       { name: 'message', typeText: 'string' }
     ]
+  }
+];
+
+export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
+  {
+    modelType: 'guestbook',
+    modelName: 'Guestbook',
+    modelGroup: 'Guestbook',
+    identityConst: 'guestbookIdentity',
+    collectionPrefix: 'gb',
+    description: 'A guestbook record that owns a list of {@link GuestbookEntry} signatures.',
+    sourcePackage: 'demo-firebase',
+    sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.ts',
+    fields: [
+      { name: 'published', longName: 'published', converter: 'firestoreBoolean({ default: false })', tsType: 'boolean', optional: false, description: 'Whether or not this guestbook should show up in the list.' },
+      { name: 'name', longName: 'name', converter: "firestoreString({ default: '' })", tsType: 'string', optional: false, description: 'Guestbook name.' },
+      { name: 'locked', longName: 'locked', converter: 'firestoreBoolean({ default: false })', tsType: 'boolean', optional: false, description: "Whether or not this guestbook and it's entries can still be edited." },
+      { name: 'lockedAt', longName: 'lockedAt', converter: 'optionalFirestoreDate()', tsType: 'Maybe<Date>', optional: true, description: 'Date the guestbook was locked at.' },
+      { name: 'cby', longName: 'createdBy', converter: 'optionalFirestoreString()', tsType: 'Maybe<ProfileId>', optional: true, description: 'User who created the guestbook.' }
+    ]
+  },
+  {
+    modelType: 'guestbookEntry',
+    modelName: 'GuestbookEntry',
+    modelGroup: 'Guestbook',
+    identityConst: 'guestbookEntryIdentity',
+    collectionPrefix: 'gbe',
+    parentIdentityConst: 'guestbookIdentity',
+    description: 'A signed entry in a {@link Guestbook}.',
+    sourcePackage: 'demo-firebase',
+    sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.ts',
+    fields: [
+      { name: 'uid', longName: 'uid', converter: 'firestoreUID()', optional: false },
+      { name: 'message', longName: 'message', converter: 'firestoreString()', tsType: 'string', optional: false, description: 'Guestbook message.' },
+      { name: 'signed', longName: 'signed', converter: 'firestoreString()', tsType: 'string', optional: false, description: 'Arbitrary string for signature.' },
+      { name: 'updatedAt', longName: 'updatedAt', converter: 'firestoreDate({ saveDefaultAsNow: true })', tsType: 'Date', optional: false, description: 'Date the entry was last updated at.' },
+      { name: 'createdAt', longName: 'createdAt', converter: 'firestoreDate({ saveDefaultAsNow: true })', tsType: 'Date', optional: false, description: 'Date the entry was originally created at.' },
+      { name: 'published', longName: 'published', converter: 'firestoreBoolean({ default: false, defaultBeforeSave: false })', tsType: 'boolean', optional: false, description: 'Whether or not the entry has been published. It can be unpublished at any time by the user.' },
+      { name: 'likes', longName: 'likes', converter: 'firestoreNumber({ default: 0 })', tsType: 'number', optional: false, description: 'The number of likes the entry has recieved from users.' }
+    ]
+  },
+  {
+    modelType: 'notification',
+    modelName: 'Notification',
+    identityConst: 'notificationIdentity',
+    collectionPrefix: 'nbn',
+    parentIdentityConst: 'notificationBoxIdentity',
+    description: 'Individual notification document, stored as a subcollection of {@link NotificationBox}.',
+    sourcePackage: '@dereekb/firebase',
+    sourceFile: 'packages/firebase/src/lib/model/notification/notification.ts',
+    fields: [
+      { name: 'cat', longName: 'createdAt', converter: 'firestoreDate({ saveDefaultAsNow: true })', tsType: 'Date', optional: false, description: 'Creation timestamp.' },
+      { name: 'st', longName: 'sendType', converter: 'firestoreEnum<NotificationSendType>({ default: NotificationSendType.SEND_IF_BOX_EXISTS })', tsType: 'NotificationSendType', optional: false, description: 'Send type controlling how this notification interacts with its parent NotificationBox.', enumRef: 'NotificationSendType' },
+      { name: 'rf', longName: 'recipientSendFlag', converter: 'optionalFirestoreEnum<NotificationRecipientSendFlag>()', tsType: 'Maybe<NotificationRecipientSendFlag>', optional: true, description: 'Recipient send flag controlling who receives this notification and whether it should be archived to {@link NotificationWeek} after delivery.', enumRef: 'NotificationRecipientSendFlag' },
+      { name: 'ts', longName: 'textSendState', converter: 'firestoreEnum<NotificationSendState>({ default: NotificationSendState.NONE })', tsType: 'NotificationSendState', optional: false, description: 'Text/SMS send state.', enumRef: 'NotificationSendState' },
+      { name: 'es', longName: 'emailSendState', converter: 'firestoreEnum<NotificationSendState>({ default: NotificationSendState.NONE })', tsType: 'NotificationSendState', optional: false, description: 'Email send state.', enumRef: 'NotificationSendState' },
+      { name: 'ps', longName: 'pushSendState', converter: 'firestoreEnum<NotificationSendState>({ default: NotificationSendState.NONE })', tsType: 'NotificationSendState', optional: false, description: 'Push notification send state.', enumRef: 'NotificationSendState' },
+      { name: 'ns', longName: 'summarySendState', converter: 'firestoreEnum<NotificationSendState>({ default: NotificationSendState.NONE })', tsType: 'NotificationSendState', optional: false, description: 'In-app notification summary send state (delivery to {@link NotificationSummary}).', enumRef: 'NotificationSendState' },
+      { name: 'n', longName: 'notificationItem', converter: 'firestoreNotificationItem', tsType: 'NotificationItem', optional: false, description: 'Embedded notification content (subject, message, template type, metadata).' },
+      {
+        name: 'r',
+        longName: 'recipients',
+        converter: 'firestoreObjectArray({ objectField: firestoreNotificationRecipientWithConfig })',
+        tsType: 'NotificationRecipientWithConfig[]',
+        optional: false,
+        description: 'Additional per-notification recipients with inline config overrides.',
+        nestedFields: [
+          { name: 'uid', longName: 'uid', converter: 'optionalFirestoreString()', tsType: 'Maybe<FirebaseAuthUserId>', optional: true, description: "Firebase auth UID. When set, contact info is resolved from the user's profile and push notification tokens." },
+          { name: 'n', longName: 'n', converter: 'optionalFirestoreString()', tsType: 'Maybe<string>', optional: true, description: "Display name override. Takes precedence over the user's profile name." },
+          { name: 'e', longName: 'e', converter: 'optionalFirestoreString()', tsType: 'Maybe<EmailAddress>', optional: true, description: "Email address override. Takes precedence over the user's profile email." },
+          { name: 't', longName: 't', converter: 'optionalFirestoreString()', tsType: 'Maybe<E164PhoneNumber>', optional: true, description: "Phone number override (E.164 format). Takes precedence over the user's profile phone." },
+          { name: 's', longName: 's', converter: 'optionalFirestoreString()', tsType: 'Maybe<NotificationSummaryId>', optional: true, description: 'Notification summary ID for in-app delivery. Automatically cleared when `uid` is set.' },
+          { name: 'sd', longName: 'sd', converter: 'optionalFirestoreBoolean()', tsType: 'Maybe<boolean>', optional: true, description: "Master toggle. When set, acts as the default for all channels that aren't individually configured." },
+          { name: 'se', longName: 'se', converter: 'optionalFirestoreBoolean()', tsType: 'Maybe<boolean>', optional: true, description: 'Email channel enabled/disabled.' },
+          { name: 'st', longName: 'st', converter: 'optionalFirestoreBoolean()', tsType: 'Maybe<boolean>', optional: true, description: 'Text/SMS channel enabled/disabled.' },
+          { name: 'sp', longName: 'sp', converter: 'optionalFirestoreBoolean()', tsType: 'Maybe<boolean>', optional: true, description: 'Push notification channel enabled/disabled.' },
+          { name: 'sn', longName: 'sn', converter: 'optionalFirestoreBoolean()', tsType: 'Maybe<boolean>', optional: true, description: 'In-app notification summary channel enabled/disabled.' }
+        ],
+        nestedIsArray: true
+      },
+      { name: 'ois', longName: 'optInSendOnly', converter: 'optionalFirestoreBoolean({ dontStoreIf: false })', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: 'Explicit opt-in send only. When true, only sends to users who have explicitly opted in for each channel.' },
+      { name: 'ots', longName: 'optInTextSend', converter: 'optionalFirestoreBoolean({ dontStoreIf: true })', tsType: 'Maybe<SavedToFirestoreIfFalse>', optional: true, description: "Opt-in text/SMS override. When false, sends text/SMS to all users even if they haven't explicitly opted in (still respects explicit opt-outs)." },
+      { name: 'sat', longName: 'sendAt', converter: 'firestoreDate()', tsType: 'Date', optional: false, description: 'Scheduled send time. The notification is guaranteed to be sent only after this time.' },
+      { name: 'a', longName: 'attempts', converter: 'firestoreNumber({ default: 0 })', tsType: 'number', optional: false, description: 'Total error attempt count. Incremented only when sending encounters an error (not on success).' },
+      { name: 'at', longName: 'taskAttempts', converter: 'optionalFirestoreNumber({ dontStoreIf: 0 })', tsType: 'Maybe<number>', optional: true, description: 'Current task attempt count for the active checkpoint. Incremented on delay or failure responses.' },
+      { name: 'd', longName: 'done', converter: 'firestoreBoolean({ default: false })', tsType: 'boolean', optional: false, description: 'Delivery complete flag. When true, content has been delivered and is ready to archive to {@link NotificationWeek}.' },
+      { name: 'tsr', longName: 'textRecipients', converter: 'firestoreUniqueStringArray()', tsType: 'E164PhoneNumber[]', optional: false, description: 'Phone numbers that have already received the text/SMS for this notification.' },
+      { name: 'esr', longName: 'emailRecipients', converter: 'firestoreUniqueStringArray()', tsType: 'EmailAddress[]', optional: false, description: 'Email addresses that have already received the email for this notification.' },
+      { name: 'tpr', longName: 'taskCheckpoints', converter: 'firestoreUniqueStringArray()', tsType: 'NotificationTaskCheckpointString[]', optional: false, description: 'Completed checkpoint strings for multi-step task notifications.' },
+      { name: 'ut', longName: 'uniqueTask', converter: 'optionalFirestoreBoolean({ dontStoreIf: false })', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: 'Unique task flag. Only used for task-type notifications.' }
+    ]
+  },
+  {
+    modelType: 'notificationBox',
+    modelName: 'NotificationBox',
+    identityConst: 'notificationBoxIdentity',
+    collectionPrefix: 'nb',
+    description: 'Root notification container for a model. The document ID is the two-way flat key of the model it represents (see {@link notificationBoxIdForModel} in `notification.id.ts`).',
+    sourcePackage: '@dereekb/firebase',
+    sourceFile: 'packages/firebase/src/lib/model/notification/notification.ts',
+    fields: [
+      { name: 'cat', longName: 'createdAt', converter: 'firestoreDate()', tsType: 'Date', optional: false, description: 'Creation date of this NotificationBox document.' },
+      { name: 'm', longName: 'modelKey', converter: 'firestoreModelKeyString', tsType: 'FirestoreModelKey', optional: false, description: "Model key of the model this box is assigned to (e.g., `'project/abc123'`)." },
+      { name: 'o', longName: 'ownerKey', converter: 'firestoreModelKeyString', tsType: 'FirestoreModelKey', optional: false, description: 'Owner model key. Set to a dummy value on creation and populated during server-side initialization.' },
+      {
+        name: 'r',
+        longName: 'recipients',
+        converter: 'firestoreObjectArray({ objectField: firestoreNotificationBoxRecipient })',
+        tsType: 'NotificationBoxRecipient[]',
+        optional: false,
+        description: 'Embedded recipient entries. Each entry represents a user who can receive notifications from this box.',
+        nestedFields: [
+          { name: 'i', longName: 'i', converter: 'firestoreNumber({ default: UNSET_INDEX_NUMBER })', optional: false },
+          { name: 'uid', longName: 'uid', converter: 'optionalFirestoreString()', tsType: 'Maybe<FirebaseAuthUserId>', optional: true, description: "Firebase auth UID. When set, contact info is resolved from the user's profile and push notification tokens." },
+          { name: 'n', longName: 'n', converter: 'optionalFirestoreString()', tsType: 'Maybe<string>', optional: true, description: "Display name override. Takes precedence over the user's profile name." },
+          { name: 't', longName: 't', converter: 'optionalFirestoreString()', tsType: 'Maybe<E164PhoneNumber>', optional: true, description: "Phone number override (E.164 format). Takes precedence over the user's profile phone." },
+          { name: 'e', longName: 'e', converter: 'optionalFirestoreString()', tsType: 'Maybe<EmailAddress>', optional: true, description: "Email address override. Takes precedence over the user's profile email." },
+          { name: 's', longName: 's', converter: 'optionalFirestoreString()', tsType: 'Maybe<NotificationSummaryId>', optional: true, description: 'Notification summary ID for in-app delivery. Automatically cleared when `uid` is set.' },
+          { name: 'f', longName: 'f', converter: 'optionalFirestoreEnum<NotificationBoxRecipientFlag>({ dontStoreIf: NotificationBoxRecipientFlag.ENABLED })', tsType: 'Maybe<NotificationBoxRecipientFlag>', optional: true, description: 'Opt-in/opt-out flag. Non-zero values prevent notification delivery to this recipient.' },
+          { name: 'c', longName: 'c', converter: 'firestoreNotificationBoxRecipientTemplateConfigRecord()', tsType: 'NotificationBoxRecipientTemplateConfigRecord', optional: false, description: 'Per-template channel configuration. Keys are {@link NotificationTemplateType} values.' },
+          { name: 'lk', longName: 'lk', converter: 'optionalFirestoreBoolean({ dontStoreValueIf: false })', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: "Locked flag. When true, the box cannot modify this recipient's config — only the user can update via their {@link NotificationUser}." },
+          { name: 'x', longName: 'x', converter: 'optionalFirestoreBoolean({ dontStoreValueIf: false })', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: "Excluded flag. Set when the recipient is excluded via a {@link NotificationBoxSendExclusion} on their {@link NotificationUser}. Can only be cleared by removing the exclusion from the user's exclusion list." }
+        ],
+        nestedIsArray: true
+      },
+      { name: 'w', longName: 'latestWeek', converter: 'firestoreNumber({ default: () => yearWeekCode(new Date()) })', tsType: 'YearWeekCode', optional: false, description: 'Year-week code of the latest {@link NotificationWeek} subcollection document.' },
+      { name: 's', longName: 'needsSync', converter: 'optionalFirestoreBoolean({ dontStoreIf: false })', tsType: 'Maybe<NeedsSyncBoolean>', optional: true, description: 'Whether this box needs server-side sync/initialization with its source model. Cleared when `fi` is set true (flagged invalid).' },
+      { name: 'fi', longName: 'flaggedInvalid', converter: 'optionalFirestoreBoolean({ dontStoreIf: false })', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: 'Flagged invalid — set when the box cannot be properly initialized (e.g., source model deleted).' }
+    ]
+  },
+  {
+    modelType: 'notificationLoggedEventDay',
+    modelName: 'NotificationLoggedEventDay',
+    identityConst: 'notificationLoggedEventDayIdentity',
+    collectionPrefix: 'nbnle',
+    parentIdentityConst: 'notificationBoxIdentity',
+    description: "Day-keyed wrapper document for a single day's worth of archived logged-event notifications under a {@link NotificationBox}.",
+    sourcePackage: '@dereekb/firebase',
+    sourceFile: 'packages/firebase/src/lib/model/notification/notification.ts',
+    fields: [{ name: 'd', longName: 'day', converter: 'firestoreString()', tsType: 'string', optional: false, description: 'ISO 8601 day string identifying this day. Matches the document ID.' }]
+  },
+  {
+    modelType: 'notificationSummary',
+    modelName: 'NotificationSummary',
+    identityConst: 'notificationSummaryIdentity',
+    collectionPrefix: 'ns',
+    description: 'Aggregated notification feed for a specific model. Holds embedded {@link NotificationItem} entries that summarize recent notifications, similar to an activity feed.',
+    sourcePackage: '@dereekb/firebase',
+    sourceFile: 'packages/firebase/src/lib/model/notification/notification.ts',
+    fields: [
+      { name: 'cat', longName: 'createdAt', converter: 'firestoreDate()', tsType: 'Date', optional: false, description: 'Creation date of this summary document.' },
+      { name: 'm', longName: 'modelKey', converter: 'firestoreModelKeyString', tsType: 'FirestoreModelKey', optional: false, description: "Model key of the model this summary represents (e.g., `'project/abc123'`)." },
+      { name: 'o', longName: 'ownerKey', converter: 'firestoreModelKeyString', tsType: 'FirestoreModelKey', optional: false, description: 'Owner model key. Set to a dummy value on creation and populated during server-side initialization.' },
+      {
+        name: 'n',
+        longName: 'notifications',
+        converter: 'firestoreObjectArray({ objectField: firestoreNotificationItem })',
+        tsType: 'NotificationItem[]',
+        optional: false,
+        description: 'Embedded notification items, sorted ascending by date (newest at end).',
+        nestedFields: [
+          { name: 'id', longName: 'id', converter: 'firestoreModelIdString', tsType: 'NotificationId', optional: false, description: 'Unique notification item identifier.' },
+          { name: 'cat', longName: 'cat', converter: 'firestoreDate()', tsType: 'Date', optional: false, description: 'Creation timestamp of this notification item.' },
+          { name: 'cb', longName: 'cb', converter: 'optionalFirestoreUID()', tsType: 'Maybe<FirebaseAuthUserId>', optional: true, description: 'UID of the user who triggered this notification, if applicable.' },
+          { name: 't', longName: 't', converter: 'firestoreString()', tsType: 'NotificationTemplateType | NotificationTaskType', optional: false, description: 'Template type (for standard notifications) or task type (for task notifications). Determines how the notification is rendered and which handler processes it.' },
+          { name: 'm', longName: 'm', converter: 'optionalFirestoreString()', tsType: 'Maybe<FirestoreModelKey>', optional: true, description: 'Model key of the target object this notification relates to.' },
+          { name: 's', longName: 's', converter: 'optionalFirestoreString()', tsType: 'Maybe<string>', optional: true, description: "Subject text override. Replaces the template's default subject when present." },
+          { name: 'g', longName: 'g', converter: 'optionalFirestoreString()', tsType: 'Maybe<string>', optional: true, description: "Message text override. Replaces the template's default message when present." },
+          { name: 'd', longName: 'd', converter: 'firestorePassThroughField()', tsType: 'Maybe<D>', optional: true, description: 'Arbitrary metadata payload. Stored directly in Firestore — keep values serializable and small.' },
+          { name: 'v', longName: 'v', converter: 'optionalFirestoreBoolean({ dontStoreIf: false })', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: 'Read/viewed flag. True if the recipient has seen this notification item.' }
+        ],
+        nestedIsArray: true
+      },
+      { name: 'lat', longName: 'lastNotificationAt', converter: 'optionalFirestoreDate()', tsType: 'Maybe<Date>', optional: true, description: 'Timestamp of the most recently added notification item.' },
+      { name: 'rat', longName: 'lastReadAt', converter: 'optionalFirestoreDate()', tsType: 'Maybe<Date>', optional: true, description: 'Timestamp of when the user last read this summary. Items with dates after this are considered unread.' },
+      { name: 's', longName: 'needsSync', converter: 'optionalFirestoreBoolean({ dontStoreIf: false })', tsType: 'Maybe<NeedsSyncBoolean>', optional: true, description: 'Whether this summary needs server-side sync/initialization with its source model.' },
+      { name: 'fi', longName: 'flaggedInvalid', converter: 'optionalFirestoreBoolean({ dontStoreIf: false })', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: 'True if this model has been flagged invalid.' }
+    ]
+  },
+  {
+    modelType: 'notificationUser',
+    modelName: 'NotificationUser',
+    identityConst: 'notificationUserIdentity',
+    collectionPrefix: 'nu',
+    description: 'A global notification user profile that tracks notification preferences and box subscriptions.',
+    sourcePackage: '@dereekb/firebase',
+    sourceFile: 'packages/firebase/src/lib/model/notification/notification.ts',
+    fields: [
+      { name: 'uid', longName: 'uid', converter: 'firestoreUID()', optional: false },
+      { name: 'b', longName: 'boxes', converter: 'firestoreModelIdArrayField', tsType: 'NotificationBoxId[]', optional: false, description: 'Notification box IDs this user is subscribed to. Managed by the server — not directly editable by clients.' },
+      { name: 'x', longName: 'boxExclusions', converter: 'firestoreModelIdArrayField', tsType: 'NotificationBoxSendExclusionList', optional: false, description: 'Box exclusion list. Entries cause the user to be excluded from receiving notifications from matching boxes.' },
+      { name: 'dc', longName: 'defaultConfig', converter: 'firestoreNotificationUserDefaultNotificationBoxRecipientConfig', tsType: 'NotificationUserDefaultNotificationBoxRecipientConfig', optional: false, description: "Direct/default config. Used when a recipient is added ad-hoc (by uid) to a notification that isn't associated with any of their subscribed boxes." },
+      { name: 'gc', longName: 'globalConfig', converter: 'firestoreNotificationUserDefaultNotificationBoxRecipientConfig', tsType: 'NotificationUserDefaultNotificationBoxRecipientConfig', optional: false, description: 'Global config override. Overrides all other configs (both per-box `bc` and direct/default `dc`) at send time.' },
+      {
+        name: 'bc',
+        longName: 'boxConfigs',
+        converter: 'firestoreObjectArray({ objectField: firestoreNotificationUserNotificationBoxRecipientConfig })',
+        tsType: 'NotificationUserNotificationBoxRecipientConfig[]',
+        optional: false,
+        description: "Per-box recipient configurations. Each entry corresponds to one of the user's subscribed notification boxes.",
+        nestedFields: [
+          { name: 'nb', longName: 'nb', converter: 'firestoreModelIdString', tsType: 'NotificationBoxId', optional: false, description: 'ID of the {@link NotificationBox} this config mirrors. The related model key can be inferred via {@link inferNotificationBoxRelatedModelKey}.' },
+          { name: 'rm', longName: 'rm', converter: 'optionalFirestoreBoolean({ dontStoreValueIf: false })', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: 'Self-removal flag. When set, the user has removed themselves from this box.' },
+          { name: 'ns', longName: 'ns', converter: 'optionalFirestoreBoolean({ dontStoreValueIf: false })', tsType: 'Maybe<NeedsSyncBoolean>', optional: true, description: 'Whether this config needs to be synced with the corresponding {@link NotificationBox} recipient entry.' },
+          { name: 'lk', longName: 'lk', converter: 'optionalFirestoreBoolean({ dontStoreValueIf: false })', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: "Locked flag. Prevents the box from modifying this user's recipient config." },
+          { name: 'bk', longName: 'bk', converter: 'optionalFirestoreBoolean({ dontStoreValueIf: false })', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: 'Blocked flag. Prevents the box from re-adding this user as a recipient.' },
+          { name: 'i', longName: 'i', converter: 'firestoreNumber({ default: UNSET_INDEX_NUMBER })', optional: false },
+          { name: 'x', longName: 'x', converter: 'optionalFirestoreBoolean({ dontStoreValueIf: false })', optional: true },
+          { name: 'n', longName: 'n', converter: 'optionalFirestoreString()', optional: true },
+          { name: 't', longName: 't', converter: 'optionalFirestoreString()', optional: true },
+          { name: 'e', longName: 'e', converter: 'optionalFirestoreString()', optional: true },
+          { name: 's', longName: 's', converter: 'optionalFirestoreString()', optional: true },
+          { name: 'f', longName: 'f', converter: 'optionalFirestoreEnum<NotificationBoxRecipientFlag>({ dontStoreIf: NotificationBoxRecipientFlag.ENABLED })', optional: true },
+          { name: 'c', longName: 'c', converter: 'firestoreNotificationBoxRecipientTemplateConfigRecord()', optional: false }
+        ],
+        nestedIsArray: true
+      },
+      { name: 'ns', longName: 'needsConfigSync', converter: 'optionalFirestoreBoolean()', tsType: 'Maybe<NeedsSyncBoolean>', optional: true, description: 'Whether one or more configs need to be synced to their corresponding NotificationBox recipients.' }
+    ]
+  },
+  {
+    modelType: 'notificationWeek',
+    modelName: 'NotificationWeek',
+    identityConst: 'notificationWeekIdentity',
+    collectionPrefix: 'nbnw',
+    parentIdentityConst: 'notificationBoxIdentity',
+    description: 'Weekly archive of delivered notification items within a {@link NotificationBox}.',
+    sourcePackage: '@dereekb/firebase',
+    sourceFile: 'packages/firebase/src/lib/model/notification/notification.ts',
+    fields: [
+      { name: 'w', longName: 'yearWeek', converter: 'firestoreNumber({ default: UNKNOWN_YEAR_WEEK_CODE })', tsType: 'YearWeekCode', optional: false, description: 'Year-week code identifying this week. Matches the document ID.' },
+      {
+        name: 'n',
+        longName: 'notifications',
+        converter: 'firestoreObjectArray({ objectField: firestoreNotificationItem })',
+        tsType: 'NotificationItem[]',
+        optional: false,
+        description: 'Archived notification items delivered during this week.',
+        nestedFields: [
+          { name: 'id', longName: 'id', converter: 'firestoreModelIdString', tsType: 'NotificationId', optional: false, description: 'Unique notification item identifier.' },
+          { name: 'cat', longName: 'cat', converter: 'firestoreDate()', tsType: 'Date', optional: false, description: 'Creation timestamp of this notification item.' },
+          { name: 'cb', longName: 'cb', converter: 'optionalFirestoreUID()', tsType: 'Maybe<FirebaseAuthUserId>', optional: true, description: 'UID of the user who triggered this notification, if applicable.' },
+          { name: 't', longName: 't', converter: 'firestoreString()', tsType: 'NotificationTemplateType | NotificationTaskType', optional: false, description: 'Template type (for standard notifications) or task type (for task notifications). Determines how the notification is rendered and which handler processes it.' },
+          { name: 'm', longName: 'm', converter: 'optionalFirestoreString()', tsType: 'Maybe<FirestoreModelKey>', optional: true, description: 'Model key of the target object this notification relates to.' },
+          { name: 's', longName: 's', converter: 'optionalFirestoreString()', tsType: 'Maybe<string>', optional: true, description: "Subject text override. Replaces the template's default subject when present." },
+          { name: 'g', longName: 'g', converter: 'optionalFirestoreString()', tsType: 'Maybe<string>', optional: true, description: "Message text override. Replaces the template's default message when present." },
+          { name: 'd', longName: 'd', converter: 'firestorePassThroughField()', tsType: 'Maybe<D>', optional: true, description: 'Arbitrary metadata payload. Stored directly in Firestore — keep values serializable and small.' },
+          { name: 'v', longName: 'v', converter: 'optionalFirestoreBoolean({ dontStoreIf: false })', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: 'Read/viewed flag. True if the recipient has seen this notification item.' }
+        ],
+        nestedIsArray: true
+      }
+    ]
+  },
+  {
+    modelType: 'oidcEntry',
+    modelName: 'OidcEntry',
+    identityConst: 'oidcEntryIdentity',
+    collectionPrefix: 'oidc_e',
+    description: 'oidc-provider adapter entry stored in Firestore.',
+    sourcePackage: '@dereekb/firebase',
+    sourceFile: 'packages/firebase/src/lib/model/oidcmodel/oidcmodel.ts',
+    fields: [
+      { name: 'type', longName: 'type', converter: "firestoreString<OidcEntryType>({ default: 'unknown' })", tsType: 'OidcEntryType', optional: false, description: "The oidc-provider model type (e.g., 'Session', 'AccessToken', 'Client')." },
+      { name: 'payload', longName: 'payload', converter: 'firestorePassThroughField()', tsType: 'JsonSerializableObject', optional: false, description: 'Serialized JSON of the full oidc-provider AdapterPayload.' },
+      { name: 'o', longName: 'ownerKey', converter: 'optionalFirestoreString()', tsType: 'Maybe<FirebaseAuthOwnershipKey>', optional: true, description: 'Ownership key for Firestore security rules.' },
+      { name: 'uid', longName: 'uid', converter: 'optionalFirestoreString()', tsType: 'Maybe<FirebaseAuthUserId>', optional: true, description: 'User identifier. Extracted from the payload for indexed queries.' },
+      { name: 'grantId', longName: 'grantId', converter: 'optionalFirestoreString()', tsType: 'Maybe<string>', optional: true, description: 'Grant identifier for revocation support. Extracted from the payload for indexed queries.' },
+      { name: 'clientId', longName: 'clientId', converter: 'optionalFirestoreString()', tsType: 'Maybe<string>', optional: true, description: 'OAuth client identifier. Extracted from the payload for indexed queries (e.g. listing or revoking every grant/token issued to a particular client).' },
+      { name: 'userCode', longName: 'userCode', converter: 'optionalFirestoreString()', tsType: 'Maybe<string>', optional: true, description: 'User code for device flow. Extracted from the payload for indexed queries.' },
+      { name: 'consumed', longName: 'consumedAt', converter: 'optionalFirestoreNumber()', tsType: 'Maybe<number>', optional: true, description: 'Epoch timestamp when this entry was consumed. Extracted from the payload for indexed queries.' },
+      { name: 'createdAt', longName: 'createdAt', converter: 'optionalFirestoreDate()', tsType: 'Maybe<Date>', optional: true, description: 'When this entry was created. Derived from `payload.iat` on grantable tokens (AccessToken, RefreshToken, AuthorizationCode, Grant, etc.) and from `payload.created_at` on Client entries.' },
+      { name: 'expiresAt', longName: 'expiresAt', converter: 'optionalFirestoreDate()', tsType: 'Maybe<Date>', optional: true, description: 'When this entry expires.' }
+    ]
+  },
+  {
+    modelType: 'storageFile',
+    modelName: 'StorageFile',
+    identityConst: 'storageFileIdentity',
+    collectionPrefix: 'sf',
+    description: 'A StorageFile Firestore document that references a file in Google Cloud Storage.',
+    sourcePackage: '@dereekb/firebase',
+    sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.ts',
+    fields: [
+      { name: 'bucketId', longName: 'bucketId', converter: 'firestoreString()', optional: false },
+      { name: 'pathString', longName: 'pathString', converter: 'firestoreString()', optional: false },
+      { name: 'n', longName: 'displayName', converter: 'optionalFirestoreString()', tsType: 'Maybe<StorageFileDisplayName>', optional: true, description: 'Arbitrary display name for the file.' },
+      { name: 'cat', longName: 'createdAt', converter: 'firestoreDate()', tsType: 'Date', optional: false, description: 'Created at date.' },
+      { name: 'ct', longName: 'creationType', converter: 'optionalFirestoreEnum<StorageFileCreationType>({ defaultReadValue: StorageFileCreationType.NONE, dontStoreDefaultReadValue: true })', tsType: 'Maybe<StorageFileCreationType>', optional: true, description: 'Type of creation.', enumRef: 'StorageFileCreationType' },
+      { name: 'fs', longName: 'fileState', converter: 'firestoreEnum<StorageFileState>({ default: StorageFileState.INIT })', tsType: 'StorageFileState', optional: false, description: 'State of the storage file.', enumRef: 'StorageFileState' },
+      { name: 'ps', longName: 'processingState', converter: 'firestoreEnum<StorageFileProcessingState>({ default: StorageFileProcessingState.INIT_OR_NONE })', tsType: 'StorageFileProcessingState', optional: false, description: 'Processing state of the storage file.', enumRef: 'StorageFileProcessingState' },
+      { name: 'pn', longName: 'processingNotificationKey', converter: 'optionalFirestoreString()', tsType: 'Maybe<NotificationKey>', optional: true, description: 'The NotificationTask key for this storage file.' },
+      { name: 'pat', longName: 'processingAt', converter: 'optionalFirestoreDate()', tsType: 'Maybe<Date>', optional: true, description: 'The date that state was last updated to PROCESSING.' },
+      { name: 'pcat', longName: 'processingCleanupAt', converter: 'optionalFirestoreDate()', tsType: 'Maybe<Date>', optional: true, description: 'The date that the cleanup step of the processing task was run, and the notification ended.' },
+      { name: 'u', longName: 'userId', converter: 'optionalFirestoreString()', tsType: 'Maybe<FirebaseAuthUserId>', optional: true, description: 'User this file is associated with, if applicable.' },
+      { name: 'uby', longName: 'uploadedBy', converter: 'optionalFirestoreString()', tsType: 'Maybe<FirebaseAuthUserId>', optional: true, description: 'User who uploaded this file, if applicable.' },
+      { name: 'o', longName: 'ownerKey', converter: 'optionalFirestoreString()', tsType: 'Maybe<FirebaseAuthOwnershipKey>', optional: true, description: 'Ownership key, if applicable.' },
+      { name: 'p', longName: 'purpose', converter: 'optionalFirestoreString()', tsType: 'Maybe<StorageFilePurpose>', optional: true, description: 'Purpose of the file, if applicable.' },
+      { name: 'pg', longName: 'purposeSubgroup', converter: 'optionalFirestoreString()', tsType: 'Maybe<StorageFilePurposeSubgroup>', optional: true, description: 'Subgroup of the purpose of the file, if applicable.' },
+      { name: 'd', longName: 'data', converter: 'firestorePassThroughField()', tsType: 'Maybe<M>', optional: true, description: 'Arbitrary metadata attached to the StorageFile.' },
+      { name: 'sdat', longName: 'scheduledDeleteAt', converter: 'optionalFirestoreDate()', tsType: 'Maybe<Date>', optional: true, description: 'Scheduled delete at date. The StorageFile cannot be deleted before this set time.' },
+      { name: 'g', longName: 'groupIds', converter: 'firestoreUniqueStringArray()', tsType: 'StorageFileGroupId[]', optional: false, description: 'StorageFileGroup id(s) that this StorageFile should be associated with.' },
+      { name: 'gs', longName: 'groupsNeedSync', converter: 'optionalFirestoreBoolean({ dontStoreIf: false })', tsType: 'Maybe<NeedsSyncBoolean>', optional: true, description: 'If true, this file should be re-synced with each StorageFileGroup that it references.' }
+    ]
+  },
+  {
+    modelType: 'storageFileGroup',
+    modelName: 'StorageFileGroup',
+    identityConst: 'storageFileGroupIdentity',
+    collectionPrefix: 'sfg',
+    description: 'A group of {@link StorageFile}s aggregated around a related model or common identifier.',
+    sourcePackage: '@dereekb/firebase',
+    sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.ts',
+    fields: [
+      {
+        name: 'f',
+        longName: 'files',
+        converter: 'firestoreObjectArray({ objectField: storageFileGroupEmbeddedFile })',
+        tsType: 'StorageFileGroupEmbeddedFile[]',
+        optional: false,
+        description: 'List of embedded files in this group currently.',
+        nestedFields: [
+          { name: 's', longName: 'storageFileId', converter: 'firestoreModelIdString', tsType: 'StorageFileId', optional: false, description: 'StorageFile id.' },
+          { name: 'n', longName: 'displayName', converter: 'optionalFirestoreString()', tsType: 'Maybe<StorageFileDisplayName>', optional: true, description: 'Overrides the display name for this file within the group when generating a composite file (zip, etc.).' },
+          { name: 'sat', longName: 'addedAt', converter: 'firestoreUnixDateTimeSecondsNumber({ saveDefaultAsNow: true })', tsType: 'Date', optional: false, description: 'The time number it was added to the group.' },
+          { name: 'zat', longName: 'zippedAt', converter: 'optionalFirestoreUnixDateTimeSecondsNumber()', tsType: 'Maybe<Date>', optional: true, description: "The first time the StorageFile's file was added to the zip, if applicable." }
+        ],
+        nestedIsArray: true
+      },
+      { name: 'cat', longName: 'createdAt', converter: 'firestoreDate()', tsType: 'Date', optional: false, description: 'Created at date.' },
+      { name: 'o', longName: 'ownerKey', converter: 'optionalFirestoreString()', tsType: 'Maybe<FirebaseAuthOwnershipKey>', optional: true, description: 'Ownership key, if applicable.' },
+      { name: 'z', longName: 'shouldZip', converter: 'optionalFirestoreBoolean({ dontStoreIf: false })', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: 'True if a zip file should be generated for this group.' },
+      { name: 'zsf', longName: 'zipStorageFileId', converter: 'optionalFirestoreString()', tsType: 'Maybe<StorageFileId>', optional: true, description: 'StorageFile that contains the zip file for this group.' },
+      { name: 'zat', longName: 'zippedAt', converter: 'optionalFirestoreDate()', tsType: 'Maybe<Date>', optional: true, description: 'The last date the zip file was regenerated for this group.' },
+      { name: 's', longName: 'needsSync', converter: 'optionalFirestoreBoolean({ dontStoreIf: false })', tsType: 'Maybe<NeedsSyncBoolean>', optional: true, description: "True if this model needs to be sync'd/initialized with the original model." },
+      { name: 'fi', longName: 'flaggedInvalid', converter: 'optionalFirestoreBoolean({ dontStoreIf: false })', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: 'True if this model has been flagged invalid.' },
+      { name: 're', longName: 'shouldRegenerate', converter: 'optionalFirestoreBoolean({ dontStoreIf: false })', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: 'True if this StorageFileGroup should flag regeneration of output StorageFiles/content.' },
+      { name: 'c', longName: 'shouldCleanup', converter: 'optionalFirestoreBoolean({ dontStoreIf: false })', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: 'True if this StorageFileGroup should clean up file references.' }
+    ]
+  },
+  {
+    modelType: 'systemState',
+    modelName: 'SystemState',
+    identityConst: 'systemStateIdentity',
+    collectionPrefix: 'sys',
+    description: 'A singleton Firestore document storing the current state of a system subcomponent.',
+    sourcePackage: '@dereekb/firebase',
+    sourceFile: 'packages/firebase/src/lib/model/system/system.ts',
+    fields: [{ name: 'data', longName: 'data', converter: 'firestorePassThroughField()', tsType: 'T', optional: false, description: 'Arbitrary persisted data for this system state singleton.' }]
   }
 ];

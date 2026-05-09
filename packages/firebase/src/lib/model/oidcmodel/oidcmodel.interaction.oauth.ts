@@ -66,6 +66,28 @@ export interface OAuthInteractionConsentRequest {
    * When `false`, the backend returns `access_denied` to the OAuth client.
    */
   readonly approved: boolean;
+  /**
+   * Optional subset of OIDC scopes to grant. Must be a subset of
+   * `prompt.details.missingOIDCScope`.
+   *
+   * `openid` is always added by the server when it was requested,
+   * regardless of whether it appears here. When omitted, every
+   * missing OIDC scope is granted (back-compat with the all-or-nothing flow).
+   */
+  readonly grantedOIDCScopes?: readonly OidcScope[];
+  /**
+   * Optional subset of OIDC claims to grant. Must be a subset of
+   * `prompt.details.missingOIDCClaims`. When omitted, every missing claim is granted.
+   */
+  readonly grantedOIDCClaims?: readonly string[];
+  /**
+   * Optional subset of resource scopes to grant per resource indicator.
+   * Each entry's array must be a subset of the corresponding entry in
+   * `prompt.details.missingResourceScopes`. When omitted, every missing
+   * resource scope is granted. When an indicator is omitted, that
+   * indicator's resource scopes are granted in full.
+   */
+  readonly grantedResourceScopes?: Readonly<Record<string, readonly string[]>>;
 }
 
 /**

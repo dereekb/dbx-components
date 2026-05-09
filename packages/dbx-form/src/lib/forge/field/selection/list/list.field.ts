@@ -16,6 +16,13 @@ export const FORGE_LIST_SELECTION_FIELD_TYPE = 'dbx-list-selection' as const;
 
 // MARK: Props
 /**
+ * Max-height value for the rendered list. Either a CSS length passthrough
+ * (`'60vh'`, `'400px'`, …), a number interpreted as pixels, or `'none'` to
+ * remove the cap entirely.
+ */
+export type DbxForgeListSelectionFieldMaxHeight = string | number | 'none';
+
+/**
  * Props interface for the forge list selection field.
  *
  * Passed via the `props` property on the forge field definition.
@@ -41,6 +48,21 @@ export interface DbxForgeListSelectionFieldProps<T = unknown, C extends Abstract
    * Hint text shown below the field.
    */
   readonly hint?: string;
+  /**
+   * When `false`, render the list bare without the surrounding Material
+   * form-field wrapper (no notched outline, no notch label, no hint chrome
+   * below). The label/hint inputs become inert in that mode. Defaults to `true`.
+   */
+  readonly wrapped?: boolean;
+  /**
+   * Override the default 300px max-height cap on the rendered list.
+   *
+   * - `undefined` (default) — leave the existing CSS variable alone.
+   * - `'none'` — remove the cap entirely (the list grows to fit its content).
+   * - `number` — interpreted as pixels (`{value}px`).
+   * - `string` — passthrough (e.g. `'60vh'`, `'clamp(200px, 50vh, 600px)'`).
+   */
+  readonly maxHeight?: DbxForgeListSelectionFieldMaxHeight;
 }
 
 // MARK: Field Def
@@ -84,7 +106,10 @@ export const dbxForgeListSelectionField = dbxForgeFieldFunction<DbxForgeListSele
   type: FORGE_LIST_SELECTION_FIELD_TYPE,
   buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder(),
   buildFieldDef: dbxForgeBuildFieldDef((x) => {
-    // configure form field wrapper
-    x.configure(configureDbxForgeFormFieldWrapper);
+    const props = x.getProps();
+
+    if (props?.wrapped !== false) {
+      x.configure(configureDbxForgeFormFieldWrapper);
+    }
   })
 }) as DbxForgeListSelectionFieldFunction;

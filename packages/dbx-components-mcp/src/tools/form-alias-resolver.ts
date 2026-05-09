@@ -55,6 +55,11 @@ const ALIASES: Record<string, string> = {
   dropdown: 'value-selection',
   select: 'value-selection',
   combobox: 'value-selection',
+  'dbx-list': 'list-selection',
+  dbxlist: 'list-selection',
+  'list-select': 'list-selection',
+  'list-selection-field': 'list-selection',
+  'dbx-list-selection': 'list-selection',
 
   // text variants (specialized)
   email: 'email',

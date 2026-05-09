@@ -1,14 +1,24 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal, type OnDestroy, type Signal, type Type } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, type OnDestroy, type Signal, type Type } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { dbxRouteParamReaderInstance, DbxRouterService, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
+import { type WorkUsingContext } from '@dereekb/rxjs';
+import { tap } from 'rxjs';
 import { DbxFirebaseOidcInteractionService } from '../../service/oidc.interaction.service';
 import { DbxFirebaseOidcConfigService, DEFAULT_OIDC_CLIENT_ID_PARAM_KEY, DEFAULT_OIDC_CLIENT_NAME_PARAM_KEY, DEFAULT_OIDC_CLIENT_URI_PARAM_KEY, DEFAULT_OIDC_INTERACTION_UID_PARAM_KEY, DEFAULT_OIDC_LOGO_URI_PARAM_KEY, DEFAULT_OIDC_SCOPES_PARAM_KEY } from '../../service/oidc.configuration.service';
-import { type OAuthInteractionLoginDetails } from '@dereekb/firebase';
+import { type OAuthInteractionConsentResponse, type OAuthInteractionLoginDetails, type OidcScope } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { DbxFirebaseOAuthConsentViewComponent, type OidcConsentStateCase } from '../components/oauth.consent.view.component';
 import { type AbstractDbxFirebaseOAuthConsentScopeViewComponent } from '../components/oauth.consent.scope.view.component';
 import { DbxFirebaseOAuthConsentScopeDefaultViewComponent } from '../components/oauth.consent.scope.default.view.component';
+import { type OAuthConsentScopesFormValue } from '../components/oauth.consent.scope.forms';
+
+/**
+ * OIDC scopes that cannot be deselected on the consent screen. `openid` is
+ * mandatory for any OIDC flow, so the UI shows it as always-granted and the
+ * server enforces it regardless of payload.
+ */
+const OAUTH_CONSENT_REQUIRED_SCOPES: readonly OidcScope[] = ['openid'];
 
 /**
  * Configuration for `DbxOAuthConsentComponent`.
@@ -26,11 +36,13 @@ export interface DbxOAuthConsentComponentConfig {
 /**
  * Container component for the OIDC OAuth consent screen.
  *
- * Manages all state: route param reading, Firebase Auth observation, consent submission,
- * and error handling. Delegates visual rendering to `DbxFirebaseOAuthConsentViewComponent`.
- *
  * Reads interaction UID and client details from route params (populated by
- * the server redirect), then assembles them into `OAuthInteractionLoginDetails`.
+ * the server redirect), assembles them into `OAuthInteractionLoginDetails`,
+ * and exposes Approve / Deny handlers that drive the view's nested
+ * `dbxAction` contexts.
+ *
+ * Submission progress and error states are owned by the action stores; this
+ * container is just routing-glue + handler factories.
  *
  * Supports ng-content projection — any content provided is passed through to
  * the view component for the `'no_user'` state (e.g. an app's login view).
@@ -40,7 +52,7 @@ export interface DbxOAuthConsentComponentConfig {
   standalone: true,
   imports: [DbxFirebaseOAuthConsentViewComponent],
   template: `
-    <dbx-firebase-oauth-consent-view [details]="resolvedDetails()" [consentStateCase]="consentStateCase()" [error]="errorMessage()" [scopeInjectionConfig]="scopeInjectionConfig()" (approveClick)="approve()" (denyClick)="deny()" (retryClick)="retry()">
+    <dbx-firebase-oauth-consent-view [details]="resolvedDetails()" [consentStateCase]="consentStateCase()" [scopeInjectionConfig]="scopeInjectionConfig()" [requiredScopes]="requiredScopes" [approveHandler]="handleApprove" [denyHandler]="handleDeny">
       <ng-content />
     </dbx-firebase-oauth-consent-view>
   `,
@@ -100,18 +112,13 @@ export class DbxOAuthConsentComponent implements OnDestroy {
     componentClass: this.config()?.consentScopeListViewClass ?? this.oidcConfigService.consentScopeListViewClass ?? DbxFirebaseOAuthConsentScopeDefaultViewComponent
   }));
 
-  readonly submitting = signal(false);
-  readonly errorMessage = signal<string | null>(null);
+  /**
+   * Scopes the user cannot deselect. Forwarded to the view, which shows
+   * them as a static "Always granted" hint above the selection list.
+   */
+  readonly requiredScopes: readonly OidcScope[] = OAUTH_CONSENT_REQUIRED_SCOPES;
 
   readonly consentStateCase = computed<OidcConsentStateCase>(() => {
-    if (this.submitting()) {
-      return 'submitting';
-    }
-
-    if (this.errorMessage()) {
-      return 'error';
-    }
-
     const isLoggedIn = this.isLoggedIn();
 
     if (isLoggedIn === undefined) {
@@ -134,45 +141,53 @@ export class DbxOAuthConsentComponent implements OnDestroy {
     this.scopesParamReader.destroy();
   }
 
-  approve(): void {
-    this._submitConsent(true);
-  }
-
-  deny(): void {
-    this._submitConsent(false);
-  }
-
-  retry(): void {
-    this.errorMessage.set(null);
-  }
-
-  private _submitConsent(approved: boolean): void {
-    if (this.consentStateCase() !== 'user') {
-      return;
-    }
-
+  /**
+   * Handles the Approve action. Pulls the form's selected scope array
+   * straight off the form value (it already matches the API field name
+   * `grantedOIDCScopes`) and forwards it through `submitConsent`. On a
+   * successful response, hard-navigates to the OIDC server's redirect URL.
+   */
+  readonly handleApprove: WorkUsingContext<OAuthConsentScopesFormValue, OAuthInteractionConsentResponse> = (formValue, context) => {
     const uid = this.resolvedInteractionUid();
 
     if (!uid) {
-      this.errorMessage.set('Missing interaction UID');
+      context.reject(new Error('Missing interaction UID'));
       return;
     }
 
-    this.submitting.set(true);
-    this.errorMessage.set(null);
+    const grantedOIDCScopes = formValue.grantedOIDCScopes;
 
-    this.interactionService.submitConsent(uid, approved).subscribe({
-      next: (response) => {
-        this.submitting.set(false);
+    context.startWorkingWithObservable(
+      this.interactionService.submitConsent(uid, true, { grantedOIDCScopes }).pipe(
+        tap((response) => {
+          if (response.redirectTo) {
+            window.location.href = response.redirectTo;
+          }
+        })
+      )
+    );
+  };
 
-        if (response.redirectTo) {
-          window.location.href = response.redirectTo;
-        }
-      },
-      error: () => {
-        this.submitting.set(false);
-        this.errorMessage.set('Failed to process consent. Please try again.');
-      }
-    });
-  }
+  /**
+   * Handles the Deny action. No payload is sent — the server returns
+   * `access_denied` to the OAuth client.
+   */
+  readonly handleDeny: WorkUsingContext<void, OAuthInteractionConsentResponse> = (_value, context) => {
+    const uid = this.resolvedInteractionUid();
+
+    if (!uid) {
+      context.reject(new Error('Missing interaction UID'));
+      return;
+    }
+
+    context.startWorkingWithObservable(
+      this.interactionService.submitConsent(uid, false).pipe(
+        tap((response) => {
+          if (response.redirectTo) {
+            window.location.href = response.redirectTo;
+          }
+        })
+      )
+    );
+  };
 }

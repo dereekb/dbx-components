@@ -58,6 +58,29 @@ export class DbxForgeListSelectionFieldComponent<T = unknown, C extends Abstract
 
   readonly hintSignal = computed(() => this.props()?.hint);
 
+  /**
+   * Resolves the configured `maxHeight` prop into a CSS length string for the
+   * `--dbx-forge-list-item-field-height` custom property. Returns `null` when
+   * the prop is absent so the existing 300px default in `_list.scss` wins.
+   */
+  readonly maxHeightCssVarSignal = computed<string | null>(() => {
+    const raw = this.props()?.maxHeight;
+
+    if (raw == null) {
+      return null;
+    }
+
+    if (raw === 'none') {
+      return 'none';
+    }
+
+    if (typeof raw === 'number') {
+      return `${raw}px`;
+    }
+
+    return raw;
+  });
+
   // Error handling
   readonly resolvedErrors = createResolvedErrorsSignal(this.field as any, this.validationMessages, this.defaultValidationMessages);
   readonly showErrors = shouldShowErrors(this.field as any);

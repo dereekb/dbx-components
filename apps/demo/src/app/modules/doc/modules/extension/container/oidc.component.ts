@@ -3,8 +3,9 @@ import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
-import { DbxFirebaseOAuthLoginViewComponent, DbxFirebaseOAuthConsentViewComponent, DbxFirebaseOAuthConsentScopeDefaultViewComponent } from '@dereekb/dbx-firebase/oidc';
-import { type OAuthInteractionLoginDetails } from '@dereekb/firebase';
+import { DbxFirebaseOAuthLoginViewComponent, DbxFirebaseOAuthConsentViewComponent, DbxFirebaseOAuthConsentScopeDefaultViewComponent, type OAuthConsentScopesFormValue } from '@dereekb/dbx-firebase/oidc';
+import { type OAuthInteractionConsentResponse, type OAuthInteractionLoginDetails } from '@dereekb/firebase';
+import { type WorkUsingContext } from '@dereekb/rxjs';
 import { DemoAuthLoginViewComponent } from '../../../../demo/modules/auth/container/login.view.component';
 
 /**
@@ -29,5 +30,13 @@ export class DocExtensionOidcComponent {
 
   readonly customScopeConfig: DbxInjectionComponentConfig = {
     componentClass: DbxFirebaseOAuthConsentScopeDefaultViewComponent
+  };
+
+  readonly noopApproveHandler: WorkUsingContext<OAuthConsentScopesFormValue, OAuthInteractionConsentResponse> = (_value, context) => {
+    context.reject(new Error('Demo: approve is disabled.'));
+  };
+
+  readonly noopDenyHandler: WorkUsingContext<void, OAuthInteractionConsentResponse> = (_value, context) => {
+    context.reject(new Error('Demo: deny is disabled.'));
   };
 }
