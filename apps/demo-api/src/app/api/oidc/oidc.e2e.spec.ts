@@ -424,6 +424,11 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
        */
       // eslint-disable-next-line @typescript-eslint/max-params -- positional args are clearer than a config object for this test helper
       async function performAuthCodeFlow(server: ReturnType<INestApplication['getHttpServer']>, clientId: string, scope: string = 'openid email demo', extraAuthParams: Record<string, string | number> = {}): Promise<{ authorizationCode: string; codeVerifier: string; cookieHeader: string }> {
+        // Per OIDC core spec, requesting `offline_access` only persists if the auth request also asks
+        // for `prompt=consent`; otherwise oidc-provider's check_scope middleware silently strips it.
+        // Mirror real-client behavior so refresh-token assertions are meaningful.
+        const requiresConsentPrompt = scope.split(' ').includes('offline_access');
+        const promptParams: Record<string, string | number> = requiresConsentPrompt && extraAuthParams['prompt'] === undefined ? { prompt: 'consent' } : {};
         const cookieJar = new Map<string, string>();
 
         function collectCookies(res: request.Response): void {
@@ -459,6 +464,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             code_challenge_method: 'S256',
             state: 'test-state',
             nonce: 'test-nonce',
+            ...promptParams,
             ...extraAuthParams
           })
           .redirects(0);

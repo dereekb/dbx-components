@@ -219,7 +219,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             published
           };
 
-          await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(guestbookEntryIdentity, params));
+          await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(guestbookEntryIdentity, params, 'insert'));
         }
 
         it('should query published entries for a guestbook', async () => {

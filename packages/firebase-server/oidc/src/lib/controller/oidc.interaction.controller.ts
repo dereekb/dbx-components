@@ -4,6 +4,8 @@ import { OidcProviderConfigService } from '../service';
 import { type OAuthInteractionConsentRequest, type OAuthInteractionLoginRequest, type OidcInteractionUid } from '@dereekb/firebase';
 import { OidcAccountService } from '../service/oidc.account.service';
 import { OidcInteractionService } from '../service/oidc.interaction.service';
+import { OidcService } from '../service/oidc.service';
+import { DBX_FIREBASE_SERVER_OIDC_SESSION_TTL_PARAM } from '../service/oidc.session-ttl';
 
 // MARK: Interaction Controller
 /**
@@ -18,10 +20,12 @@ import { OidcInteractionService } from '../service/oidc.interaction.service';
  */
 @Controller('interaction')
 export class OidcInteractionController {
+  // eslint-disable-next-line @typescript-eslint/max-params -- NestJS DI requires individual constructor parameters
   constructor(
     @Inject(OidcInteractionService) private readonly oidcInteractionService: OidcInteractionService,
     @Inject(OidcProviderConfigService) private readonly oidcProviderConfigService: OidcProviderConfigService,
-    @Inject(OidcAccountService) private readonly accountService: OidcAccountService
+    @Inject(OidcAccountService) private readonly accountService: OidcAccountService,
+    @Inject(OidcService) private readonly oidcService: OidcService
   ) {}
 
   /**
@@ -116,7 +120,19 @@ export class OidcInteractionController {
 
       const interaction = await this.oidcInteractionService.findInteractionByUid(uid);
       const { prompt, params, session } = interaction;
-      const grant = await this.oidcInteractionService.findOrCreateGrant(interaction.grantId, session?.accountId ?? '', params.client_id as string);
+      const clientId = params.client_id as string;
+
+      // Resolve the requested login duration up-front. The configured Grant TTL function (in
+      // OidcService.buildProviderConfiguration) only fires when oidc-provider's koa middleware
+      // drives `grant.save()`, so its `ctx.oidc.params` lookup of `dbx_session_ttl` returns
+      // undefined when the consent submit runs in this controller. We pre-set `expiresIn` on
+      // newly-created grants so they persist with the correct TTL.
+      const requestedRawTtl = (params as Record<string, unknown>)[DBX_FIREBASE_SERVER_OIDC_SESSION_TTL_PARAM];
+      const clientPayload = await this.oidcService.findClientPayload(clientId);
+      const clientMaxSessionTtl = clientPayload?.dbx_max_session_ttl ?? undefined;
+      const expiresInSeconds = this.oidcService.resolveLoginDurationForGrant(requestedRawTtl, { dbx_max_session_ttl: clientMaxSessionTtl });
+
+      const grant = await this.oidcInteractionService.findOrCreateGrant(interaction.grantId, session?.accountId ?? '', clientId, expiresInSeconds);
 
       if (prompt.details.missingOIDCScope) {
         grant.addOIDCScope((prompt.details.missingOIDCScope as string[]).join(' '));

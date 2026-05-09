@@ -69,16 +69,14 @@ export function resolveLoginDurationSeconds(input: ResolveLoginDurationInput): n
 
 // MARK: Param parsing
 /**
- * Reads {@link DBX_FIREBASE_SERVER_OIDC_SESSION_TTL_PARAM} from a KoaContextWithOIDC and parses it to a positive integer
- * number of seconds. Returns `undefined` when missing or invalid (so the caller falls back to a default).
+ * Parses a raw `dbx_session_ttl` value (string or number, from URL query / form / persisted interaction params)
+ * into a positive integer number of seconds. Returns `undefined` when missing or invalid so the caller falls
+ * back to a default.
  *
- * @param ctx - The OIDC Koa context, or undefined.
+ * @param raw - The raw value to parse.
  * @returns The parsed positive integer seconds, or `undefined` when absent/invalid.
  */
-export function readRequestedSessionTtlSeconds(ctx: KoaContextWithOIDC | undefined): number | undefined {
-  const params = ctx?.oidc?.params;
-  const raw = params != null ? (params as Record<string, unknown>)[DBX_FIREBASE_SERVER_OIDC_SESSION_TTL_PARAM] : undefined;
-
+export function parseRequestedSessionTtlSeconds(raw: unknown): number | undefined {
   let result: number | undefined;
 
   if (typeof raw === 'string' && raw.length > 0) {
@@ -92,6 +90,19 @@ export function readRequestedSessionTtlSeconds(ctx: KoaContextWithOIDC | undefin
   }
 
   return result;
+}
+
+/**
+ * Reads {@link DBX_FIREBASE_SERVER_OIDC_SESSION_TTL_PARAM} from a KoaContextWithOIDC and parses it to a positive integer
+ * number of seconds. Returns `undefined` when missing or invalid (so the caller falls back to a default).
+ *
+ * @param ctx - The OIDC Koa context, or undefined.
+ * @returns The parsed positive integer seconds, or `undefined` when absent/invalid.
+ */
+export function readRequestedSessionTtlSeconds(ctx: KoaContextWithOIDC | undefined): number | undefined {
+  const params = ctx?.oidc?.params;
+  const raw = params != null ? (params as Record<string, unknown>)[DBX_FIREBASE_SERVER_OIDC_SESSION_TTL_PARAM] : undefined;
+  return parseRequestedSessionTtlSeconds(raw);
 }
 
 // MARK: Grant remaining time

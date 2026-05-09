@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { errors as OidcProviderErrors, type default as Provider, type Interaction, type Configuration, type KoaContextWithOIDC } from 'oidc-provider';
 import { DEFAULT_MAX_REQUESTED_LOGIN_DURATION_SECONDS, DEFAULT_MIN_REQUESTED_LOGIN_DURATION_SECONDS, OidcModuleConfig } from '../oidc.config';
-import { DBX_FIREBASE_SERVER_OIDC_MAX_SESSION_TTL_CLIENT_METADATA, DBX_FIREBASE_SERVER_OIDC_SESSION_TTL_PARAM, readRemainingGrantSeconds, readRequestedSessionTtlSeconds, resolveLoginDurationSeconds } from './oidc.session-ttl';
+import { DBX_FIREBASE_SERVER_OIDC_MAX_SESSION_TTL_CLIENT_METADATA, DBX_FIREBASE_SERVER_OIDC_SESSION_TTL_PARAM, parseRequestedSessionTtlSeconds, readRemainingGrantSeconds, readRequestedSessionTtlSeconds, resolveLoginDurationSeconds } from './oidc.session-ttl';
 import { JwksService } from './oidc.jwks.service';
 import { OidcAccountService } from './oidc.account.service';
 import { OidcServerFirestoreCollections } from '../model';
@@ -41,6 +41,35 @@ export class OidcService {
    */
   getProvider(): Promise<Provider> {
     return this._getProvider();
+  }
+
+  // MARK: Login Duration
+  /**
+   * Resolves the login-duration TTL (seconds) for a Grant being created from a fresh consent submission.
+   *
+   * The Grant TTL configured on the oidc-provider only fires when oidc-provider's koa middleware drives
+   * `grant.save()` (so `AsyncLocalStorage` carries the request context). Our consent flow saves grants
+   * from a NestJS controller, so we resolve the TTL up-front and pre-set `grant.expiresIn` before saving.
+   *
+   * Mirrors the resolution used by the `Grant`/`Session` TTL functions in {@link buildProviderConfiguration}.
+   *
+   * @param requestedRawTtl - The raw `dbx_session_ttl` value from `interaction.params`, if any.
+   * @param clientPayload - The persisted client metadata, used to read the per-client `dbx_max_session_ttl` cap.
+   * @returns The resolved Grant TTL in seconds.
+   */
+  resolveLoginDurationForGrant(requestedRawTtl: unknown, clientPayload: { dbx_max_session_ttl?: number } | undefined): number {
+    const config = this.config;
+    const serverMaxSeconds = config.maxRequestedLoginDuration ?? DEFAULT_MAX_REQUESTED_LOGIN_DURATION_SECONDS;
+    const serverMinSeconds = config.minRequestedLoginDuration ?? DEFAULT_MIN_REQUESTED_LOGIN_DURATION_SECONDS;
+    const defaultSeconds = config.defaultRequestedLoginDuration ?? config.tokenLifetimes.grant;
+
+    return resolveLoginDurationSeconds({
+      requestedSeconds: parseRequestedSessionTtlSeconds(requestedRawTtl),
+      clientMaxSeconds: clientPayload?.dbx_max_session_ttl,
+      serverMaxSeconds,
+      serverMinSeconds,
+      defaultSeconds
+    });
   }
 
   // MARK: Token Verification
@@ -229,19 +258,13 @@ export class OidcService {
         AccessToken: config.tokenLifetimes.accessToken,
         IdToken: config.tokenLifetimes.idToken,
         AuthorizationCode: config.tokenLifetimes.authorizationCode,
-        RefreshToken: (ctx, _refreshToken, client) => {
-          // On initial issuance the AuthorizationCode is bound and ctx.oidc.params has the requested ttl.
-          // On rotation, fall back to min(remaining grant, configured refreshToken).
-          let result: number;
-
-          if (ctx?.oidc?.entities?.AuthorizationCode != null) {
-            result = resolveDurationFromCtx(ctx, client as { dbx_max_session_ttl?: number } | undefined, config.tokenLifetimes.refreshToken);
-          } else {
-            const remaining = readRemainingGrantSeconds(ctx);
-            result = Math.min(remaining ?? config.tokenLifetimes.refreshToken, config.tokenLifetimes.refreshToken);
-          }
-
-          return result;
+        RefreshToken: (ctx, _refreshToken, _client) => {
+          // The token endpoint's ctx.oidc.params holds the token-request body (code, code_verifier, …),
+          // not the original auth params — `dbx_session_ttl` is no longer reachable here. The Grant
+          // entity is bound on both initial issuance (authorization_code → token) and rotation
+          // (refresh_token → token), and its `exp` already encodes the resolved login duration.
+          const remaining = readRemainingGrantSeconds(ctx);
+          return Math.min(remaining ?? config.tokenLifetimes.refreshToken, config.tokenLifetimes.refreshToken);
         },
         Session: (ctx, _session) => resolveDurationFromCtx(ctx as KoaContextWithOIDC | undefined, undefined, config.tokenLifetimes.session),
         Grant: (ctx, _grant, client) => resolveDurationFromCtx(ctx as KoaContextWithOIDC | undefined, client as { dbx_max_session_ttl?: number } | undefined, config.tokenLifetimes.grant),
