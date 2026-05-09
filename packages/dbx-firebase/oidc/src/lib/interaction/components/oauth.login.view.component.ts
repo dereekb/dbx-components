@@ -4,8 +4,14 @@ import { type ErrorInput, type Maybe, readableError } from '@dereekb/util';
 
 /**
  * State cases for the OIDC login interaction flow.
+ *
+ * - `'unknown'` — Firebase auth state has not yet resolved. Render nothing/spinner to avoid flashing.
+ * - `'no_user'` — Auth resolved and there is no signed-in user. Project the login UI via ng-content.
+ * - `'user'` — Auth resolved and a user is signed in.
+ * - `'submitting'` — Submitting the ID token to the OIDC interaction endpoint.
+ * - `'error'` — Submission failed; allow retry.
  */
-export type OidcLoginStateCase = 'no_user' | 'user' | 'submitting' | 'error';
+export type OidcLoginStateCase = 'unknown' | 'no_user' | 'user' | 'submitting' | 'error';
 
 /**
  * Presentational component for the OIDC OAuth login interaction.
@@ -28,6 +34,9 @@ export type OidcLoginStateCase = 'no_user' | 'user' | 'submitting' | 'error';
   template: `
     <div class="dbx-firebase-oauth-login-view">
       @switch (loginStateCase()) {
+        @case ('unknown') {
+          <dbx-basic-loading [loading]="true"></dbx-basic-loading>
+        }
         @case ('no_user') {
           <ng-content></ng-content>
         }
