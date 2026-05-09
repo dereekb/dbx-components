@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "@dereekb/dbx-firebase",
+  "module": "@dereekb/dbx-firebase",
+  "generatedAt": "1970-01-01T00:00:00.000Z",
+  "generator": "@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs",
+  "entries": [
+    {
+      "slug": "firebase-collection-change",
+      "category": "action",
+      "kind": "directive",
+      "selector": "[dbxFirebaseCollectionChange]",
+      "className": "DbxFirebaseCollectionChangeDirective",
+      "module": "@dereekb/dbx-firebase",
+      "description": "Watches a sibling {@link DbxFirebaseCollectionStoreDirective}'s query inputs\n(constraints, collection mode, refs, etc.) and, when set to `'auto'`, calls\n`store.restart()` so the collection re-runs and pulls fresh results.\n\nUse this directive when a `DbxFirebaseCollectionStoreDirective` subclass has\nquery inputs that change at runtime — by default the store does not react to\nthose changes, so this directive bridges the gap by composing\n{@link dbxFirebaseCollectionChangeWatcher} with\n{@link dbxFirebaseCollectionChangeTriggerForWatcher}.\n\nModes (`DbxFirebaseCollectionChangeWatcherTriggerMode`):\n- `'auto'` — automatically `restart()` the store when the query changes.\n- `'off'` (default) — observe only; consumers may read `triggered$` / `event$` themselves.",
+      "inputs": [
+        {
+          "name": "dbxFirebaseCollectionChange",
+          "type": "DbxFirebaseCollectionChangeWatcherTriggerMode",
+          "description": "",
+          "required": false,
+          "default": "'off'"
+        }
+      ],
+      "outputs": [],
+      "relatedSlugs": [
+        "firebase-collection-store"
+      ],
+      "example": "<!-- dbxFirebaseItemCollection extends DbxFirebaseCollectionStoreDirective; -->\n<!-- when [constraints] changes, the store restarts and reloads. -->\n<my-items-list\n  dbxFirebaseItemCollection\n  [constraints]=\"currentConstraints()\"\n  [dbxFirebaseCollectionChange]=\"'auto'\">\n</my-items-list>",
+      "minimalExample": "<my-items-list dbxFirebaseItemCollection [dbxFirebaseCollectionChange]=\"'auto'\"></my-items-list>"
+    }
+  ]
+}

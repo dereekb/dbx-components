@@ -1,6 +1,24 @@
-import { type AsyncFirebaseFunctionCreateAction, type AsyncOidcEntryUpdateAction, type AsyncOidcEntryDeleteAction, type CreateOidcClientParams, createOidcClientParamsType, type CreateOidcClientResult, type UpdateOidcClientParams, updateOidcClientParamsType, type DeleteOidcClientParams, deleteOidcClientParamsType, type RotateOidcClientSecretParams, rotateOidcClientSecretParamsType, type RotateOidcClientSecretResult, type OidcEntryDocument } from '@dereekb/firebase';
+import {
+  type AsyncFirebaseFunctionCreateAction,
+  type AsyncOidcEntryUpdateAction,
+  type AsyncOidcEntryDeleteAction,
+  type CreateOidcClientParams,
+  createOidcClientParamsType,
+  type CreateOidcClientResult,
+  type UpdateOidcClientParams,
+  updateOidcClientParamsType,
+  type DeleteOidcClientParams,
+  deleteOidcClientParamsType,
+  type DeleteOidcTokenParams,
+  deleteOidcTokenParamsType,
+  type RotateOidcClientSecretParams,
+  rotateOidcClientSecretParamsType,
+  type RotateOidcClientSecretResult,
+  type OidcEntryDocument
+} from '@dereekb/firebase';
 import { type FirebaseServerActionsContext } from '@dereekb/firebase-server';
 import { type OidcClientService } from '../../service/oidc.client.service';
+import { type OidcService } from '../../service/oidc.service';
 
 // MARK: Context
 /**
@@ -11,6 +29,10 @@ export interface OidcModelServerActionsContext extends FirebaseServerActionsCont
    * Service for managing OIDC client adapter entries.
    */
   readonly oidcClientService: OidcClientService;
+  /**
+   * Core OIDC service used for grant revocation.
+   */
+  readonly oidcService: OidcService;
 }
 
 // MARK: Server Actions
@@ -24,6 +46,7 @@ export abstract class OidcModelServerActions {
   abstract updateOidcClient(params: UpdateOidcClientParams): AsyncOidcEntryUpdateAction<UpdateOidcClientParams>;
   abstract rotateOidcClientSecret(params: RotateOidcClientSecretParams): AsyncFirebaseFunctionCreateAction<RotateOidcClientSecretParams, RotateOidcClientSecretResult, OidcEntryDocument>;
   abstract deleteOidcClient(params: DeleteOidcClientParams): AsyncOidcEntryDeleteAction<DeleteOidcClientParams>;
+  abstract deleteOidcToken(params: DeleteOidcTokenParams): AsyncOidcEntryDeleteAction<DeleteOidcTokenParams>;
 }
 
 /**
@@ -44,7 +67,8 @@ export function oidcModelServerActions(context: OidcModelServerActionsContext): 
     createOidcClient: createOidcClientFactory(context),
     updateOidcClient: updateOidcClientFactory(context),
     rotateOidcClientSecret: rotateOidcClientSecretFactory(context),
-    deleteOidcClient: deleteOidcClientFactory(context)
+    deleteOidcClient: deleteOidcClientFactory(context),
+    deleteOidcToken: deleteOidcTokenFactory(context)
   };
 }
 
@@ -120,6 +144,36 @@ export function deleteOidcClientFactory(context: OidcModelServerActionsContext) 
   return firebaseServerActionTransformFunctionFactory(deleteOidcClientParamsType, async (_params) => {
     return async (document: OidcEntryDocument): Promise<void> => {
       await oidcClientService.deleteClient(document.id);
+    };
+  });
+}
+
+/**
+ * Factory for the `deleteOidcToken` action.
+ *
+ * Asserts the target {@link OidcEntryDocument} is of type `Grant`, then delegates to
+ * {@link OidcService.revokeGrant} so all grantable token entries (`AccessToken`,
+ * `RefreshToken`, `AuthorizationCode`, `DeviceCode`, `BackchannelAuthenticationRequest`)
+ * sharing the grant id are deleted along with the Grant entry itself.
+ *
+ * Per-user authorization (this user owns this Grant) is enforced upstream via the
+ * model permission service before this action runs.
+ *
+ * @param context - the OIDC model server actions context
+ * @returns a transform function factory for revoking OIDC grants
+ */
+export function deleteOidcTokenFactory(context: OidcModelServerActionsContext) {
+  const { oidcService, firebaseServerActionTransformFunctionFactory } = context;
+
+  return firebaseServerActionTransformFunctionFactory(deleteOidcTokenParamsType, async (_params) => {
+    return async (document: OidcEntryDocument): Promise<void> => {
+      const data = await document.snapshotData();
+
+      if (data?.type !== 'Grant') {
+        throw new Error('Only Grant entries can be revoked through this endpoint.');
+      }
+
+      await oidcService.revokeGrant(document.id);
     };
   });
 }

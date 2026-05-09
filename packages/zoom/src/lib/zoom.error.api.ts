@@ -281,6 +281,7 @@ export type SilenceZoomErrorWithCodesFunction<T> = (silence?: boolean) => (reaso
  */
 export function silenceZoomErrorWithCodesFunction<T>(codes: ArrayOrValue<ZoomServerErrorCode>): SilenceZoomErrorWithCodesFunction<void>;
 export function silenceZoomErrorWithCodesFunction<T>(codes: ArrayOrValue<ZoomServerErrorCode>, returnFn: (error: ZoomServerFetchResponseError) => T): SilenceZoomErrorWithCodesFunction<T>;
+// @__NO_SIDE_EFFECTS__
 export function silenceZoomErrorWithCodesFunction<T>(codes: ArrayOrValue<ZoomServerErrorCode>, returnFn?: (error: ZoomServerFetchResponseError) => T): SilenceZoomErrorWithCodesFunction<T> {
   const codesSet = new Set(asArray(codes));
 

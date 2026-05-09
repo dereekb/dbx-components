@@ -42,7 +42,7 @@ export class DbxFirebaseOAuthLoginComponent implements OnDestroy {
   readonly uidParamReader = dbxRouteParamReaderInstance<string>(this.dbxRouterService, DEFAULT_OIDC_INTERACTION_UID_PARAM_KEY);
 
   readonly interactionUid: Signal<Maybe<OidcInteractionUid>> = toSignal(this.uidParamReader.value$);
-  readonly isLoggedIn = toSignal(this.dbxFirebaseAuthService.isLoggedIn$, { initialValue: false });
+  readonly isLoggedIn: Signal<Maybe<boolean>> = toSignal(this.dbxFirebaseAuthService.isLoggedIn$);
 
   readonly submitting = signal(false);
   readonly errorMessage = signal<string | null>(null);
@@ -56,7 +56,13 @@ export class DbxFirebaseOAuthLoginComponent implements OnDestroy {
       return 'error';
     }
 
-    if (!this.isLoggedIn()) {
+    const isLoggedIn = this.isLoggedIn();
+
+    if (isLoggedIn === undefined) {
+      return 'unknown';
+    }
+
+    if (!isLoggedIn) {
       return 'no_user';
     }
 

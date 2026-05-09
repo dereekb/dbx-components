@@ -1060,6 +1060,7 @@ export type DateCellTimingStartsAtDateFactory<T extends DateCellTimingStartsAt =
  * @__NO_SIDE_EFFECTS__
  */
 export function dateCellTimingStartsAtDateFactory<T extends DateCellTimingStartsAt = DateCellTimingStartsAt>(input: T | DateCellTimingRelativeIndexFactory<T>): DateCellTimingStartsAtDateFactory<T>;
+// @__NO_SIDE_EFFECTS__
 export function dateCellTimingStartsAtDateFactory<T extends DateCellTimingStartsAt = DateCellTimingStartsAt>(input: T | DateCellTimingRelativeIndexFactory<T>): DateCellTimingStartsAtDateFactory<T> {
   const indexFactory = dateCellTimingRelativeIndexFactory<T>(input);
   const normalInstance = indexFactory._normalInstance;
@@ -1107,6 +1108,7 @@ export type DateCellTimingEndDateFactory<T extends DateCellTiming = DateCellTimi
  * @__NO_SIDE_EFFECTS__
  */
 export function dateCellTimingEndDateFactory<T extends DateCellTiming = DateCellTiming>(input: T | DateCellTimingRelativeIndexFactory<T>): DateCellTimingEndDateFactory<T>;
+// @__NO_SIDE_EFFECTS__
 export function dateCellTimingEndDateFactory<T extends DateCellTiming = DateCellTiming>(input: T | DateCellTimingRelativeIndexFactory<T>): DateCellTimingEndDateFactory<T> {
   const startsAtDateFactory = dateCellTimingStartsAtDateFactory(input);
   const { duration } = startsAtDateFactory._indexFactory._timing;

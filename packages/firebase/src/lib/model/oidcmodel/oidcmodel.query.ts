@@ -45,6 +45,17 @@ export function oidcEntriesByGrantIdQuery(type: OidcEntryType, grantId: string):
 }
 
 /**
+ * Query for OidcEntry documents with a specific type and clientId.
+ *
+ * @param type - the OIDC entry type to filter by
+ * @param clientId - the OAuth client ID to match
+ * @returns Firestore query constraints for the given type and clientId
+ */
+export function oidcEntriesByClientIdQuery(type: OidcEntryType, clientId: string): FirestoreQueryConstraint[] {
+  return [where<OidcEntry>('type', '==', type), where<OidcEntry>('clientId', '==', clientId)];
+}
+
+/**
  * Query for OidcEntry Client documents owned by a specific user.
  *
  * @param ownershipKey - the ownership key identifying the owner
@@ -52,4 +63,17 @@ export function oidcEntriesByGrantIdQuery(type: OidcEntryType, grantId: string):
  */
 export function oidcClientEntriesByOwnerQuery(ownershipKey: FirebaseAuthOwnershipKey): FirestoreQueryConstraint[] {
   return [where<OidcEntry>('type', '==', 'Client'), where<OidcEntry>('o', '==', ownershipKey)];
+}
+
+/**
+ * Query for OidcEntry Grant documents issued to a specific user.
+ *
+ * Used by the "apps with access to my account" UI to list every outstanding
+ * grant the signed-in user has authorized.
+ *
+ * @param uid - the Firebase user id the grants were issued to
+ * @returns Firestore query constraints for Grant entries matching the uid
+ */
+export function oidcGrantEntriesByUidQuery(uid: FirebaseAuthUserId): FirestoreQueryConstraint[] {
+  return oidcEntriesByUidQuery('Grant', uid);
 }

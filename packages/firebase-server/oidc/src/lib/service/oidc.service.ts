@@ -1,10 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { default as Provider, Interaction, Configuration } from 'oidc-provider';
-import { OidcModuleConfig } from '../oidc.config';
+import { errors as OidcProviderErrors, type default as Provider, type Interaction, type Configuration, type KoaContextWithOIDC } from 'oidc-provider';
+import { DEFAULT_MAX_REQUESTED_LOGIN_DURATION_SECONDS, DEFAULT_MIN_REQUESTED_LOGIN_DURATION_SECONDS, OidcModuleConfig } from '../oidc.config';
+import { DBX_FIREBASE_SERVER_OIDC_MAX_SESSION_TTL_CLIENT_METADATA, DBX_FIREBASE_SERVER_OIDC_SESSION_TTL_PARAM, parseRequestedSessionTtlSeconds, readRemainingGrantSeconds, readRequestedSessionTtlSeconds, resolveLoginDurationSeconds } from './oidc.session-ttl';
 import { JwksService } from './oidc.jwks.service';
 import { OidcAccountService } from './oidc.account.service';
 import { OidcServerFirestoreCollections } from '../model';
-import { createAdapterFactory } from './oidc.adapter.service';
+import { GRANTABLE_MODEL_NAMES, createAdapterFactory } from './oidc.adapter.service';
 import { OidcEncryptionService } from './oidc.encryption.service';
 import { OidcProviderConfigService } from './oidc.config.service';
 import { resolveEncryptionKey } from '@dereekb/nestjs';
@@ -40,6 +41,35 @@ export class OidcService {
    */
   getProvider(): Promise<Provider> {
     return this._getProvider();
+  }
+
+  // MARK: Login Duration
+  /**
+   * Resolves the login-duration TTL (seconds) for a Grant being created from a fresh consent submission.
+   *
+   * The Grant TTL configured on the oidc-provider only fires when oidc-provider's koa middleware drives
+   * `grant.save()` (so `AsyncLocalStorage` carries the request context). Our consent flow saves grants
+   * from a NestJS controller, so we resolve the TTL up-front and pre-set `grant.expiresIn` before saving.
+   *
+   * Mirrors the resolution used by the `Grant`/`Session` TTL functions in {@link buildProviderConfiguration}.
+   *
+   * @param requestedRawTtl - The raw `dbx_session_ttl` value from `interaction.params`, if any.
+   * @param clientPayload - The persisted client metadata, used to read the per-client `dbx_max_session_ttl` cap.
+   * @returns The resolved Grant TTL in seconds.
+   */
+  resolveLoginDurationForGrant(requestedRawTtl: unknown, clientPayload: { dbx_max_session_ttl?: number } | undefined): number {
+    const config = this.config;
+    const serverMaxSeconds = config.maxRequestedLoginDuration ?? DEFAULT_MAX_REQUESTED_LOGIN_DURATION_SECONDS;
+    const serverMinSeconds = config.minRequestedLoginDuration ?? DEFAULT_MIN_REQUESTED_LOGIN_DURATION_SECONDS;
+    const defaultSeconds = config.defaultRequestedLoginDuration ?? config.tokenLifetimes.grant;
+
+    return resolveLoginDurationSeconds({
+      requestedSeconds: parseRequestedSessionTtlSeconds(requestedRawTtl),
+      clientMaxSeconds: clientPayload?.dbx_max_session_ttl,
+      serverMaxSeconds,
+      serverMinSeconds,
+      defaultSeconds
+    });
   }
 
   // MARK: Token Verification
@@ -101,6 +131,39 @@ export class OidcService {
     };
   }
 
+  // MARK: Grant Revocation
+  /**
+   * Revokes a Grant entry and every grantable token entry that references it.
+   *
+   * Iterates through every grantable model (`AccessToken`, `AuthorizationCode`,
+   * `RefreshToken`, `DeviceCode`, `BackchannelAuthenticationRequest`) and calls
+   * the adapter's `revokeByGrantId` to delete all matching entries, then
+   * deletes the Grant adapter entry itself. After this resolves, any token
+   * referencing the grant is gone — `verifyAccessToken` returns `undefined`
+   * and a `grant_type=refresh_token` exchange fails with `invalid_grant`.
+   *
+   * @param grantId - the grant id (and Grant adapter entry id) to revoke
+   * @throws when the Grant entry does not exist
+   */
+  async revokeGrant(grantId: string): Promise<void> {
+    const provider = await this.getProvider();
+    const ProviderGrant = (provider as any).Grant;
+    const existing = await ProviderGrant.adapter.find(grantId);
+
+    if (!existing) {
+      throw new Error('Grant not found.');
+    }
+
+    await Promise.all(
+      GRANTABLE_MODEL_NAMES.map((modelName) => {
+        const Model = (provider as any)[modelName];
+        return Model?.adapter?.revokeByGrantId?.(grantId);
+      })
+    );
+
+    await ProviderGrant.adapter.destroy(grantId);
+  }
+
   /**
    * Finds a client payload by ID directly from the adapter store.
    *
@@ -124,7 +187,8 @@ export class OidcService {
         token_endpoint_auth_method: existing.token_endpoint_auth_method,
         logo_uri: existing.logo_uri,
         client_uri: existing.client_uri,
-        created_at: existing.created_at
+        created_at: existing.created_at,
+        dbx_max_session_ttl: existing.dbx_max_session_ttl
       };
     }
 
@@ -144,6 +208,18 @@ export class OidcService {
   buildProviderConfiguration(cookieKeys: string[]): Configuration {
     const config = this.config;
     const providerConfig = this.providerConfigService.providerConfig;
+    const serverMaxSeconds = config.maxRequestedLoginDuration ?? DEFAULT_MAX_REQUESTED_LOGIN_DURATION_SECONDS;
+    const serverMinSeconds = config.minRequestedLoginDuration ?? DEFAULT_MIN_REQUESTED_LOGIN_DURATION_SECONDS;
+    const overrideDefaultSeconds = config.defaultRequestedLoginDuration;
+
+    const resolveDurationFromCtx = (ctx: KoaContextWithOIDC | undefined, client: { dbx_max_session_ttl?: number } | undefined, perModelDefaultSeconds: number) =>
+      resolveLoginDurationSeconds({
+        requestedSeconds: readRequestedSessionTtlSeconds(ctx),
+        clientMaxSeconds: client?.dbx_max_session_ttl,
+        serverMaxSeconds,
+        serverMinSeconds,
+        defaultSeconds: overrideDefaultSeconds ?? perModelDefaultSeconds
+      });
 
     return {
       routes: { ...this.providerConfigService.routes },
@@ -157,13 +233,41 @@ export class OidcService {
         registration: { enabled: this.providerConfigService.oidcRegistrationRouteEnabled },
         registrationManagement: { enabled: this.providerConfigService.oidcRegistrationRouteEnabled }
       },
+      extraParams: [DBX_FIREBASE_SERVER_OIDC_SESSION_TTL_PARAM],
+      extraClientMetadata: {
+        properties: [DBX_FIREBASE_SERVER_OIDC_MAX_SESSION_TTL_CLIENT_METADATA],
+        validator: (_ctx, key, value) => {
+          if (key !== DBX_FIREBASE_SERVER_OIDC_MAX_SESSION_TTL_CLIENT_METADATA) {
+            return;
+          }
+
+          if (value === undefined || value === null) {
+            return;
+          }
+
+          if (typeof value !== 'number' || !Number.isInteger(value) || value <= 0) {
+            throw new OidcProviderErrors.InvalidClientMetadata(`${DBX_FIREBASE_SERVER_OIDC_MAX_SESSION_TTL_CLIENT_METADATA} must be a positive integer (seconds).`);
+          }
+
+          if (value > serverMaxSeconds) {
+            throw new OidcProviderErrors.InvalidClientMetadata(`${DBX_FIREBASE_SERVER_OIDC_MAX_SESSION_TTL_CLIENT_METADATA} cannot exceed the server max of ${serverMaxSeconds} seconds.`);
+          }
+        }
+      },
       ttl: {
         AccessToken: config.tokenLifetimes.accessToken,
         IdToken: config.tokenLifetimes.idToken,
         AuthorizationCode: config.tokenLifetimes.authorizationCode,
-        RefreshToken: config.tokenLifetimes.refreshToken,
-        Session: 14 * 24 * 60 * 60,
-        Grant: 14 * 24 * 60 * 60,
+        RefreshToken: (ctx, _refreshToken, _client) => {
+          // The token endpoint's ctx.oidc.params holds the token-request body (code, code_verifier, …),
+          // not the original auth params — `dbx_session_ttl` is no longer reachable here. The Grant
+          // entity is bound on both initial issuance (authorization_code → token) and rotation
+          // (refresh_token → token), and its `exp` already encodes the resolved login duration.
+          const remaining = readRemainingGrantSeconds(ctx);
+          return Math.min(remaining ?? config.tokenLifetimes.refreshToken, config.tokenLifetimes.refreshToken);
+        },
+        Session: (ctx, _session) => resolveDurationFromCtx(ctx as KoaContextWithOIDC | undefined, undefined, config.tokenLifetimes.session),
+        Grant: (ctx, _grant, client) => resolveDurationFromCtx(ctx as KoaContextWithOIDC | undefined, client as { dbx_max_session_ttl?: number } | undefined, config.tokenLifetimes.grant),
         Interaction: 60 * 60,
         DeviceCode: 10 * 60
       },
@@ -262,6 +366,13 @@ export class OidcService {
       findAccount: findAccount as any,
       jwks: { keys: [signingKey] as any[] }
     });
+
+    // Trust upstream X-Forwarded-* headers when running behind a reverse proxy
+    // (e.g. Firebase Hosting → Cloud Run). Without this, oidc-provider builds
+    // the interaction `returnTo` URL off the Cloud Run host instead of the
+    // issuer's canonical host, so cookies set on the issuer host are not sent
+    // on resume → "authorization request has expired".
+    provider.proxy = config.trustProxy ?? true;
 
     if (config.suppressBodyParserWarning) {
       // TODO: Will re-apply to logging in testing. Need to resolve.

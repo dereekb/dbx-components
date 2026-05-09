@@ -4,7 +4,7 @@
 
 import type { CrudVerb } from '../model-api-shared/types.js';
 
-export type ValidateIssueCode = 'MISSING_HANDLER' | 'ORPHAN_HANDLER' | 'MISSING_MODEL_KEY' | 'PARSE_ERROR';
+export type ValidateIssueCode = 'MISSING_HANDLER' | 'ORPHAN_HANDLER' | 'HANDLER_NAMING_MISMATCH' | 'MISSING_MODEL_KEY' | 'PARSE_ERROR';
 
 export interface ValidateIssue {
   readonly code: ValidateIssueCode;

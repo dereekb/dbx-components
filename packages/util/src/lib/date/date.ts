@@ -39,11 +39,22 @@ export type ISO8601DateString = string;
  * Regular expression for validating ISO8601 date strings.
  *
  * TODO(FUTURE): Need to improve to support negative years.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilKind const
+ * @dbxUtilTags date, iso8601, regex, string, validate
+ * @dbxUtilRelated is-iso8601-date-string, iso8601-day-string-regex
  */
 export const ISO_8601_DATE_STRING_REGEX = /(\d{4,})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(Z|[+-](\d{2}):(\d{2}))?/;
 
 /**
  * Determines if a string is a valid ISO8601 date string.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, iso8601, string, predicate, validate
+ * @dbxUtilRelated is-iso8601-day-string, is-utc-date-string, iso-8601-date-string-regex
  *
  * @param input - The string to test
  * @returns True if the input is a valid ISO8601 date string
@@ -69,11 +80,22 @@ export type UTCDateString = string;
  * Sat, 03 Feb 2001 04:05:06 GMT
  * Tue, 14 Mar 2023 12:34:56 UTC
  * Wed, 25 May 2024 20:45:07 EST
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilKind const
+ * @dbxUtilTags date, utc, regex, string, validate
+ * @dbxUtilRelated is-utc-date-string
  */
 export const UTC_DATE_STRING_REGEX = /^([a-zA-Z]{3}, \d{2} [a-zA-Z]{3} \d{4} \d{2}:\d{2}:\d{2} [A-Z]{3})$/;
 
 /**
  * Determines if a string is a valid UTC date string.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, utc, string, predicate, validate
+ * @dbxUtilRelated is-iso8601-date-string, utc-date-string-regex
  *
  * @param input - The string to test
  * @returns True if the input is a valid UTC date string
@@ -123,6 +145,11 @@ export interface TimezoneStringRef {
 /**
  * Returns true only if the inputs have the same timezone, or both do not have a timezone set.
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, timezone, compare, equal, predicate
+ * @dbxUtilRelated is-considered-utc-timezone-string
+ *
  * @param a - First object that may contain a timezone reference
  * @param b - Second object that may contain a timezone reference
  * @returns True if both objects have the same timezone or neither has a timezone set
@@ -135,6 +162,12 @@ export function hasSameTimezone(a: Maybe<Partial<TimezoneStringRef>>, b: Maybe<P
 
 /**
  * Constant for the UTC timezone string, "UTC".
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilKind const
+ * @dbxUtilTags date, timezone, utc, string, constant
+ * @dbxUtilRelated is-considered-utc-timezone-string
  */
 export const UTC_TIMEZONE_STRING = 'UTC';
 
@@ -146,6 +179,11 @@ export type UTCTimezoneAbbreviation = typeof UTC_TIMEZONE_STRING;
 /**
  * Determines whether the input timezone string is considered UTC.
  * Returns true for null, undefined, or the string 'UTC'.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, timezone, utc, predicate
+ * @dbxUtilRelated has-same-timezone, utc-timezone-string
  *
  * @param timezone - The timezone string to check
  * @returns True if the timezone is considered UTC
@@ -186,11 +224,23 @@ export type DateOrDayString = Date | ISO8601DayString;
 
 /**
  * Regex for an ISO8601DayString.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilKind const
+ * @dbxUtilTags date, iso8601, day, regex, string, validate
+ * @dbxUtilRelated is-iso8601-day-string, iso8601-day-string-start-regex
  */
 export const ISO8601_DAY_STRING_REGEX = /^\d{4,}-\d{2}-\d{2}$/;
 
 /**
  * Regex for a string that starts as an ISO8601DayString.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilKind const
+ * @dbxUtilTags date, iso8601, day, regex, prefix
+ * @dbxUtilRelated is-iso8601-day-string-start, iso8601-day-string-regex
  */
 export const ISO8601_DAY_STRING_START_REGEX = /^\d{4,}-\d{2}-\d{2}/;
 
@@ -198,6 +248,11 @@ export const ISO8601_DAY_STRING_START_REGEX = /^\d{4,}-\d{2}-\d{2}/;
  * Returns the start of the input date's UTC time in UTC.
  *
  * I.E. 2022-01-02T04:00:00.000Z in GMT-6 returns 2022-01-02
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, utc, start-of-day, day, normalize
+ * @dbxUtilRelated start-of-day-for-system-date-in-utc, parse-iso8601-day-string-to-utc-date
  *
  * @param date - The date to get the start of day for
  * @returns A new Date set to midnight UTC of the input date's UTC day
@@ -210,6 +265,11 @@ export function startOfDayForUTCDateInUTC(date: Date): Date {
  *
  * I.E. 2022-01-02T04:00:00.000Z in GMT-6 (10PM Jan 1st CST) returns 2022-01-01
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, utc, start-of-day, system, local
+ * @dbxUtilRelated start-of-day-for-utc-date-in-utc
+ *
  * @param date - The date to get the start of local day for
  * @returns A new Date set to midnight UTC of the input date's local day
  */
@@ -219,6 +279,11 @@ export function startOfDayForSystemDateInUTC(date: Date): Date {
 
 /**
  * Parses an ISO8601DayString (YYYY-MM-DD) to a UTC Date at midnight.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, iso8601, day, parse, utc, convert
+ * @dbxUtilRelated is-iso8601-day-string, start-of-day-for-utc-date-in-utc
  *
  * @param inputDateString - The ISO8601 day string to parse (e.g., '2022-01-15')
  * @returns A Date object set to midnight UTC on the specified day
@@ -231,6 +296,11 @@ export function parseISO8601DayStringToUTCDate(inputDateString: ISO8601DayString
 /**
  * Determines if a string is a valid ISO8601 day string (YYYY-MM-DD format).
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, iso8601, day, string, predicate, validate
+ * @dbxUtilRelated is-iso8601-day-string-start, parse-iso8601-day-string-to-utc-date, iso8601-day-string-regex
+ *
  * @param input - The string to test
  * @returns True if the input is a valid ISO8601 day string
  */
@@ -240,6 +310,11 @@ export function isISO8601DayString(input: string): input is ISO8601DayString {
 
 /**
  * Determines if a string starts with a valid ISO8601 day string pattern (YYYY-MM-DD).
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, iso8601, day, string, predicate, prefix
+ * @dbxUtilRelated is-iso8601-day-string, iso8601-day-string-start-regex
  *
  * @param input - The string to test
  * @returns True if the input starts with a valid ISO8601 day string pattern
@@ -259,11 +334,22 @@ export type MonthDaySlashDate = string; // 11/1/2020
 
 /**
  * Regex for a MonthDaySlashDate.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilKind const
+ * @dbxUtilTags date, slash, month, day, regex, string, validate
+ * @dbxUtilRelated is-month-day-slash-date
  */
 export const MONTH_DAY_SLASH_DATE_STRING_REGEX = /^\d{1,2}\/\d{1,2}\/\d+$/;
 
 /**
  * Determines if a string is a valid Month/Day/Year slash date format.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, slash, month, day, string, predicate, validate
+ * @dbxUtilRelated month-day-slash-date-to-date-string, month-day-slash-date-string-regex
  *
  * @param input - The string to test
  * @returns True if the input is a valid Month/Day/Year slash date
@@ -276,6 +362,11 @@ export function isMonthDaySlashDate(input: string): input is MonthDaySlashDate {
  * Converts the input MonthDaySlashDate (MM/DD/YYYY) to an ISO8601DayString (YYYY-MM-DD).
  * Handles single digit months and days by adding leading zeros.
  * If year is only 2 digits, prepends '20' to make a 4-digit year.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, slash, day, string, convert, parse
+ * @dbxUtilRelated is-month-day-slash-date
  *
  * @param slashDate - The slash date string to convert (e.g., '1/1/20' or '11/15/2022')
  * @returns An ISO8601 formatted day string (YYYY-MM-DD)
@@ -317,6 +408,11 @@ export type DateOrUnixDateTimeMillisecondsNumber = Date | UnixDateTimeMillisecon
 /**
  * Converts a Date object or unix timestamp (in milliseconds) to a Date object.
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, milliseconds, unix, convert, normalize
+ * @dbxUtilRelated unix-milliseconds-number-to-date, date-or-milliseconds-to-date
+ *
  * @param input - Date object or unix timestamp (in milliseconds) to convert
  * @returns Date object if input is valid. Returns null/undefined if input is null/undefined
  */
@@ -339,6 +435,11 @@ export function dateFromDateOrTimeMillisecondsNumber(input: Maybe<DateOrUnixDate
 
 /**
  * Converts a unix timestamp number to a Date object.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, milliseconds, unix, convert, parse
+ * @dbxUtilRelated date-from-date-or-time-milliseconds-number, unix-date-time-seconds-number-to-date
  *
  * @param dateTimeNumber - Unix timestamp number to convert
  * @returns Date object if timestamp is valid, null/undefined if timestamp is null/undefined
@@ -368,6 +469,11 @@ export type DateOrMilliseconds = Date | Milliseconds;
  * If the input is a Date, it is returned as is.
  *
  * If the input is a number of milliseconds, it is added to the current date.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, milliseconds, convert, normalize, offset
+ * @dbxUtilRelated add-milliseconds, date-from-date-or-time-milliseconds-number
  *
  * @param dateOrMilliseconds - The date or milliseconds to convert to a Date.
  * @param now - The current date to use when adding milliseconds. Defaults to the current time.
@@ -419,61 +525,144 @@ export type Days = number;
 
 /**
  * Number of days in a year (ignoring leap years, which are 366 days).
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilKind const
+ * @dbxUtilTags date, day, year, duration, constant
+ * @dbxUtilRelated days-in-week
  */
 export const DAYS_IN_YEAR: Days = 365;
 
 /**
  * Number of hours in a day.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilKind const
+ * @dbxUtilTags date, hour, day, duration, constant
+ * @dbxUtilRelated minutes-in-day, ms-in-day
  */
 export const HOURS_IN_DAY: Hours = 24;
 
 /**
  * Number of seconds in a minute.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilKind const
+ * @dbxUtilTags date, second, minute, duration, constant
+ * @dbxUtilRelated seconds-in-hour, ms-in-second
  */
 export const SECONDS_IN_MINUTE: Seconds = 60;
 
 /**
  * Number of minutes in a day.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilKind const
+ * @dbxUtilTags date, minute, day, duration, constant
+ * @dbxUtilRelated hours-in-day, minutes-in-hour
  */
 export const MINUTES_IN_DAY: Minutes = 1440;
 
 /**
  * Number of minutes in an hour.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilKind const
+ * @dbxUtilTags date, minute, hour, duration, constant
+ * @dbxUtilRelated minutes-in-day, seconds-in-minute
  */
 export const MINUTES_IN_HOUR: Minutes = 60;
 
 /**
  * Number of seconds in an hour.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilKind const
+ * @dbxUtilTags date, second, hour, duration, constant
+ * @dbxUtilRelated seconds-in-minute, minutes-in-hour
  */
 export const SECONDS_IN_HOUR: Minutes = MINUTES_IN_HOUR * SECONDS_IN_MINUTE;
 
 /**
  * Number of milliseconds in a second.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilKind const
+ * @dbxUtilTags date, milliseconds, second, duration, constant
+ * @dbxUtilRelated ms-in-minute, seconds-in-minute
  */
 export const MS_IN_SECOND: Milliseconds = 1000;
 
 /**
  * Number of milliseconds in a minute.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilKind const
+ * @dbxUtilTags date, milliseconds, minute, duration, constant
+ * @dbxUtilRelated ms-in-second, ms-in-hour
  */
 export const MS_IN_MINUTE: Milliseconds = MS_IN_SECOND * 60;
 
 /**
  * Number of milliseconds in an hour.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilKind const
+ * @dbxUtilTags date, milliseconds, hour, duration, constant
+ * @dbxUtilRelated ms-in-minute, ms-in-day
  */
 export const MS_IN_HOUR: Milliseconds = MS_IN_MINUTE * 60;
 
 /**
  * Number of milliseconds in a day.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilKind const
+ * @dbxUtilTags date, milliseconds, day, duration, constant
+ * @dbxUtilRelated ms-in-hour, ms-in-week, hours-in-day
  */
 export const MS_IN_DAY: Milliseconds = MS_IN_HOUR * HOURS_IN_DAY;
 
 /**
+ * Number of seconds in a day.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilKind const
+ * @dbxUtilTags date, seconds, day, duration, constant
+ * @dbxUtilRelated seconds-in-hour, seconds-in-week
+ */
+export const SECONDS_IN_DAY: Seconds = SECONDS_IN_HOUR * HOURS_IN_DAY;
+
+/**
  * Number of days in a week.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilKind const
+ * @dbxUtilTags date, day, week, duration, constant
+ * @dbxUtilRelated ms-in-week, days-in-year
  */
 export const DAYS_IN_WEEK: Days = 7;
 
 /**
  * Number of milliseconds in a week.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilKind const
+ * @dbxUtilTags date, milliseconds, week, duration, constant
+ * @dbxUtilRelated ms-in-day, days-in-week
  */
 export const MS_IN_WEEK: Milliseconds = MS_IN_DAY * DAYS_IN_WEEK;
 
@@ -511,6 +700,11 @@ export type DateMonth = number;
  *
  * Converts JavaScript's 0-based month (0-11) to a 1-based month (1-12).
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, month, year, accessor, system, local
+ * @dbxUtilRelated month-of-year-from-date-month, month-of-year-from-utc-date
+ *
  * @param date - The date to extract the month from
  * @returns The month of year as a number from 1-12
  */
@@ -523,6 +717,11 @@ export function monthOfYearFromDate(date: Date): MonthOfYear {
  *
  * Converts JavaScript's 0-based month (0-11) to a 1-based month (1-12).
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, month, year, accessor, utc
+ * @dbxUtilRelated month-of-year-from-date, month-of-year-from-date-month
+ *
  * @param date - The date to extract the month from
  * @returns The month of year as a number from 1-12
  */
@@ -532,6 +731,11 @@ export function monthOfYearFromUTCDate(date: Date): MonthOfYear {
 
 /**
  * Converts a JavaScript Date month (0-11) to a MonthOfYear (1-12).
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, month, year, convert, javascript
+ * @dbxUtilRelated make-date-month-for-month-of-year, month-of-year-from-date
  *
  * @param dateMonth - JavaScript Date month (0-11)
  * @returns The month of year as a number from 1-12
@@ -546,7 +750,7 @@ export function monthOfYearFromDateMonth(dateMonth: DateMonth): MonthOfYear {
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags date, month, convert, javascript
- * @dbxUtilRelated month-of-year-from-date-month
+ * @dbxUtilRelated month-of-year-from-date-month, month-of-year-from-date
  *
  * @param monthOfYear - Month of year (1-12)
  * @returns JavaScript Date month (0-11)
@@ -574,6 +778,11 @@ export type DateRelativeState = DateRelativeDirection | 'present';
  * Returns true if the value is a Date object.
  * Uses both instanceof and Object.prototype.toString for reliable type checking.
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, predicate, type-guard, validate
+ * @dbxUtilRelated is-equal-date, is-past
+ *
  * @param value - The value to check
  * @returns True if the value is a Date object
  */
@@ -584,6 +793,11 @@ export function isDate(value: unknown): value is Date {
 /**
  * Returns true if the two input dates represent the same point in time.
  * Compares the timestamp values rather than the object references.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, equal, compare, predicate
+ * @dbxUtilRelated is-date, is-past
  *
  * @param a - First date to compare
  * @param b - Second date to compare
@@ -596,6 +810,11 @@ export function isEqualDate(a: Date, b: Date): boolean {
 /**
  * Returns true if the input date is in the past relative to the current time.
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, past, compare, predicate, time
+ * @dbxUtilRelated is-equal-date, is-date
+ *
  * @param input - The date to check
  * @returns True if the date is in the past
  */
@@ -606,6 +825,11 @@ export function isPast(input: Date): boolean {
 /**
  * Adds milliseconds to the input date, returning a new Date object.
  * If no date is input, then returns the input unchanged.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, milliseconds, add, offset, time
+ * @dbxUtilRelated date-or-milliseconds-to-date, ms-in-second
  *
  * @param input - The date to add milliseconds to
  * @param ms - The number of milliseconds to add (defaults to 0 if null or undefined)

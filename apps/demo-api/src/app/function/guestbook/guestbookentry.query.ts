@@ -3,7 +3,7 @@ import { type OnCallQueryModelResult, type FirestoreQueryConstraint } from '@der
 import { executeOnCallQuery, resolveAdminOnlyValue, withApiDetails, type OnCallQueryModelRequest } from '@dereekb/firebase-server';
 import { type DemoQueryModelFunction, type DemoApiNestContext } from '../function.context';
 
-export const queryGuestbookEntries: DemoQueryModelFunction<QueryGuestbookEntriesParams, OnCallQueryModelResult<GuestbookEntry>> = withApiDetails({
+export const guestbookEntryQuery: DemoQueryModelFunction<QueryGuestbookEntriesParams, OnCallQueryModelResult<GuestbookEntry>> = withApiDetails({
   mcp: { description: 'Query guestbook entries for a specific guestbook with optional filtering by published status' },
   fn: async (request: OnCallQueryModelRequest<DemoApiNestContext, QueryGuestbookEntriesParams>) => {
     const { nest, data } = request;

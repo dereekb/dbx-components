@@ -7,7 +7,7 @@ import { OidcWellKnownController, OidcInteractionController, OidcProviderControl
 import { oidcEntryFirestoreCollection, type FirestoreContext } from '@dereekb/firebase';
 import { FIREBASE_FIRESTORE_CONTEXT_TOKEN, FirebaseServerFirestoreContextModule, FirebaseServerEnvService } from '@dereekb/firebase-server';
 import { type AES256GCMEncryptionSecret, isValidAES256GCMEncryptionSecret } from '@dereekb/nestjs';
-import { hasHttpPrefix } from '@dereekb/util';
+import { type Configurable, hasHttpPrefix } from '@dereekb/util';
 import { OidcAuthMiddlewareConfig } from './middleware/oauth-auth.module';
 import { OidcEncryptionService } from './service/oidc.encryption.service';
 import { OidcClientService } from './service/oidc.client.service';
@@ -120,6 +120,8 @@ export function oidcModuleConfigFactory(configService: ConfigService, envService
     appOAuthConsentUrlPart: DEFAULT_APP_OAUTH_CONSENT_PATH_PART,
     appOAuthInteractionPath: DEFAULT_APP_OAUTH_INTERACTION_PATH,
     tokenLifetimes: DEFAULT_OIDC_TOKEN_LIFETIMES,
+    trustProxy: envService.isProduction, // defaults to true in production
+    trustProxyInNonProduction: false,
     jwksServiceConfig: {
       encryptionSecret
     },
@@ -157,7 +159,7 @@ export interface ProvideAppOidcModuleMetadataConfig extends Pick<ModuleMetadata,
   /**
    * Optional overrides to merge into the {@link OidcModuleConfig} produced by the factory.
    */
-  readonly config?: Partial<Pick<OidcModuleConfig, 'suppressBodyParserWarning' | 'renderError' | 'protectedPaths' | 'appOAuthInteractionPath' | 'appOAuthLoginUrlPart' | 'appOAuthConsentUrlPart' | 'tokenEndpointAuthMethods' | 'registrationEnabled'>>;
+  readonly config?: Partial<Pick<OidcModuleConfig, 'suppressBodyParserWarning' | 'renderError' | 'protectedPaths' | 'appOAuthInteractionPath' | 'appOAuthLoginUrlPart' | 'appOAuthConsentUrlPart' | 'tokenEndpointAuthMethods' | 'registrationEnabled' | 'trustProxy' | 'trustProxyInNonProduction' | 'tokenLifetimes' | 'maxRequestedLoginDuration' | 'minRequestedLoginDuration' | 'defaultRequestedLoginDuration'>>;
 }
 
 /**
@@ -180,7 +182,7 @@ export function oidcModuleMetadata(metadataConfig: ProvideAppOidcModuleMetadataC
   return {
     imports: [ConfigModule, FirebaseServerFirestoreContextModule, ...dependencyModuleImport, ...(imports ?? [])],
     controllers: [OidcWellKnownController, OidcInteractionController, OidcProviderController],
-    exports: [OidcClientService, OidcModuleConfig, OidcAuthMiddlewareConfig, OidcServerFirestoreCollections, ...(exports ?? [])],
+    exports: [OidcClientService, OidcService, OidcModuleConfig, OidcAuthMiddlewareConfig, OidcServerFirestoreCollections, ...(exports ?? [])],
     providers: [
       {
         provide: OidcModuleConfig,
@@ -191,6 +193,10 @@ export function oidcModuleMetadata(metadataConfig: ProvideAppOidcModuleMetadataC
 
           if (config) {
             result = { ...moduleConfig, ...config };
+
+            if (config.trustProxyInNonProduction && !envService.isProduction) {
+              (result as Configurable<OidcModuleConfig>).trustProxy = true;
+            }
           }
 
           return result;

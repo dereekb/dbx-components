@@ -26,7 +26,7 @@ export const profileUpdateUsername: DemoUpdateModelFunction<SetProfileUsernamePa
   await setProfileUsername(profileDocument);
 };
 
-export const profileUpdateOnboarding: DemoUpdateModelFunction<FinishOnboardingProfileParams, boolean> = async (request) => {
+export const profileUpdateOnboard: DemoUpdateModelFunction<FinishOnboardingProfileParams, boolean> = async (request) => {
   const { nest, auth, data: _data } = request;
   const uid = auth.uid;
 

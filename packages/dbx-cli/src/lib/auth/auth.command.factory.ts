@@ -1,5 +1,6 @@
 import type { Argv, CommandModule } from 'yargs';
-import { type Maybe, noop } from '@dereekb/util';
+import { type Maybe, MS_IN_SECOND, noop } from '@dereekb/util';
+import { durationDataToMilliseconds, parseDurationString } from '@dereekb/date';
 import { type CliConfig, loadCliConfig, maskSecret, mergeCliConfig } from '../config/cli.config';
 import { type CliEnvConfig, type CliEnvDefault, applyEnvVarOverrides, filterReadOnlyModelScopes, findCliEnvDefault, isCliEnvConfigComplete, mergeCliEnvWithDefault } from '../config/env';
 import { type CliPaths, buildCliPaths } from '../config/paths';
@@ -171,7 +172,12 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
   const loginCommand: CommandModule = {
     command: 'login',
     describe: 'Run OIDC PKCE flow and persist tokens for the active env',
-    builder: (yargs: Argv) => withEnv(yargs).option('open', { type: 'boolean', default: false, describe: 'Print the auth URL only (does not auto-open a browser)' }).option('code', { type: 'string', describe: 'Skip the prompt and pass the redirect URL or bare code directly' }).option('read-only-scopes', { type: 'boolean', default: false, describe: 'Drop model.create/model.update/model.delete from the requested scopes (keeps model.read and model.query)' }),
+    builder: (yargs: Argv) =>
+      withEnv(yargs)
+        .option('open', { type: 'boolean', default: false, describe: 'Print the auth URL only (does not auto-open a browser)' })
+        .option('code', { type: 'string', describe: 'Skip the prompt and pass the redirect URL or bare code directly' })
+        .option('read-only-scopes', { type: 'boolean', default: false, describe: 'Drop model.create/model.update/model.delete from the requested scopes (keeps model.read and model.query)' })
+        .option('login-for', { type: 'string', describe: 'Requested login duration with a unit (e.g. 30d, 12h, 3600s). Mixed units are allowed (e.g. "1h30m", "2d 12h"). Subject to server/client caps. Applied to Session, Grant, and RefreshToken.' }),
     handler: async (argv: any) => {
       try {
         const { envName, env } = await resolveEnvOrThrow({ paths, cliName, envVarName, flagEnv: argv.env, defaultEnvs });
@@ -188,6 +194,21 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
         const state = generateOAuthState();
         const requestedScopes = argv.readOnlyScopes ? filterReadOnlyModelScopes(env.scopes) : env.scopes;
 
+        let requestedSessionTtlSeconds: number | undefined;
+
+        if (argv.loginFor) {
+          const ms = durationDataToMilliseconds(parseDurationString(argv.loginFor as string));
+
+          if (ms <= 0) {
+            throw new CliError({
+              message: `--login-for: invalid duration "${argv.loginFor}". Use formats like "30d", "12h", "3600s", or mixed units like "1h30m" or "2d 12h".`,
+              code: 'AUTH_LOGIN_FOR_INVALID'
+            });
+          }
+
+          requestedSessionTtlSeconds = Math.floor(ms / MS_IN_SECOND);
+        }
+
         const url = buildAuthorizationUrl({
           authorizationEndpoint: meta.authorization_endpoint,
           apiBaseUrl: env.apiBaseUrl,
@@ -196,7 +217,8 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
           redirectUri: env.redirectUri,
           scopes: requestedScopes,
           state,
-          codeChallenge
+          codeChallenge,
+          requestedSessionTtlSeconds
         });
 
         // The CLI never opens a browser itself — it prints the URL and reads the redirect back.

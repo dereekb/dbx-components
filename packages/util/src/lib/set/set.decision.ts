@@ -25,6 +25,7 @@ export type IsInSetDecisionFunction<T, V> = DecisionFunction<T> & {
  */
 export function isInSetDecisionFunction<T>(set: Set<T>): IsInSetDecisionFunction<T, T>;
 export function isInSetDecisionFunction<T, V>(set: Set<V>, readValue: (value: T) => V): IsInSetDecisionFunction<T, V>;
+// @__NO_SIDE_EFFECTS__
 export function isInSetDecisionFunction<T, V>(set: Set<V>, inputReadValue?: (value: T) => V): IsInSetDecisionFunction<T, V> {
   const readValue = inputReadValue ?? ((x) => x as unknown as V);
 

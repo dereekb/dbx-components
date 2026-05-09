@@ -5,6 +5,7 @@
 /tmp
 /out-tsc
 /.tmp
+/packages/**/dist/*
 
 # env
 # do not publish secrets

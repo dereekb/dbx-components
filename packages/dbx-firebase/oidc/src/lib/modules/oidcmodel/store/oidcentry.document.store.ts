@@ -44,4 +44,6 @@ export class OidcEntryDocumentStore extends AbstractDbxFirebaseDocumentStore<Oid
   });
 
   readonly deleteClient = firebaseDocumentStoreDeleteFunction(this, this.oidcModelFunctions.oidcEntry.deleteOidcEntry.client);
+
+  readonly deleteToken = firebaseDocumentStoreDeleteFunction(this, this.oidcModelFunctions.oidcEntry.deleteOidcEntry.token);
 }

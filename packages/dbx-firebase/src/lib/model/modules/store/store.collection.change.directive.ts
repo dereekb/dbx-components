@@ -8,7 +8,42 @@ import { dbxFirebaseCollectionChangeTriggerForWatcher } from '../../loader/colle
 import { clean } from '@dereekb/dbx-core';
 
 /**
- * Used to watch query doc changes and respond to them accordingly.
+ * Watches a sibling {@link DbxFirebaseCollectionStoreDirective}'s query inputs
+ * (constraints, collection mode, refs, etc.) and, when set to `'auto'`, calls
+ * `store.restart()` so the collection re-runs and pulls fresh results.
+ *
+ * Use this directive when a `DbxFirebaseCollectionStoreDirective` subclass has
+ * query inputs that change at runtime — by default the store does not react to
+ * those changes, so this directive bridges the gap by composing
+ * {@link dbxFirebaseCollectionChangeWatcher} with
+ * {@link dbxFirebaseCollectionChangeTriggerForWatcher}.
+ *
+ * Modes (`DbxFirebaseCollectionChangeWatcherTriggerMode`):
+ * - `'auto'` — automatically `restart()` the store when the query changes.
+ * - `'off'` (default) — observe only; consumers may read `triggered$` / `event$` themselves.
+ *
+ * @dbxWebComponent
+ * @dbxWebSlug firebase-collection-change
+ * @dbxWebCategory action
+ * @dbxWebKind directive
+ * @dbxWebRelated firebase-collection-store
+ * @dbxWebInputName dbxFirebaseCollectionChange
+ * @dbxWebInputType DbxFirebaseCollectionChangeWatcherTriggerMode
+ * @dbxWebInputRequired false
+ * @dbxWebMinimalExample ```html
+ * <my-items-list dbxFirebaseItemCollection [dbxFirebaseCollectionChange]="'auto'"></my-items-list>
+ * ```
+ *
+ * @example
+ * ```html
+ * <!-- dbxFirebaseItemCollection extends DbxFirebaseCollectionStoreDirective; -->
+ * <!-- when [constraints] changes, the store restarts and reloads. -->
+ * <my-items-list
+ *   dbxFirebaseItemCollection
+ *   [constraints]="currentConstraints()"
+ *   [dbxFirebaseCollectionChange]="'auto'">
+ * </my-items-list>
+ * ```
  */
 @Directive({
   selector: '[dbxFirebaseCollectionChange]',

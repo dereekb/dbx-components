@@ -2,9 +2,10 @@
  * Pure entry point for `dbx_model_api_validate_app`.
  */
 
-import { extractDeclaredEntries } from './extract-declarations.js';
+import { type DeclaredEntriesSourceRoot, extractDeclaredEntries } from './extract-declarations.js';
 import { extractHandlerEntries } from './extract-handlers.js';
 import { reconcile } from './reconcile.js';
+import { resolveApiSourceRoots } from './source-roots.js';
 import type { ValidateReport } from './types.js';
 
 export interface ValidateAppOptions {
@@ -16,14 +17,18 @@ export interface ValidateAppOptions {
 }
 
 /**
- * Reconciles declarations from the firebase-component package against the
- * handlers wired in the app's `crud.functions.ts`.
+ * Reconciles declarations from the firebase-component package (and any
+ * upstream `@dereekb/*` package it depends on) against the handlers wired
+ * in the app's `crud.functions.ts`.
  *
  * @param options - resolved paths and optional model filter
  * @returns the populated validation report
  */
 export async function validateAppModelApi(options: ValidateAppOptions): Promise<ValidateReport> {
-  const declared = await extractDeclaredEntries(options.componentAbs);
+  const { roots, workspaceRoot } = await resolveApiSourceRoots({ componentAbs: options.componentAbs, workspaceRoot: undefined });
+  const relativeBase = workspaceRoot ?? options.componentAbs;
+  const declaredRoots: DeclaredEntriesSourceRoot[] = roots.map((r) => ({ absDir: r.absDir, relativeBase }));
+  const declared = await extractDeclaredEntries(declaredRoots);
   const handlerExtraction = await extractHandlerEntries(options.apiAbs, options.apiDir);
   const reconciled = reconcile({ declared, handlers: handlerExtraction.entries, modelFilter: options.modelFilter });
 

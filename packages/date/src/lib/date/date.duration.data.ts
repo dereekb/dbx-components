@@ -19,6 +19,11 @@ export interface TimeDurationData {
 /**
  * Returns true if the input TimeDurationData has no meaningful values (all zero or undefined).
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, duration, empty, check, time, zero
+ * @dbxUtilRelated duration-data-to-milliseconds, milliseconds-to-duration-data
+ *
  * @param data - The duration data to check
  * @returns True if empty
  *
@@ -36,6 +41,11 @@ export function timeDurationDataIsEmpty(data: TimeDurationData): boolean {
 // MARK: Conversion
 /**
  * Converts a TimeDurationData to total milliseconds by summing all fields.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, duration, milliseconds, convert, sum, time, total
+ * @dbxUtilRelated milliseconds-to-duration-data, parse-duration-string-to-milliseconds, time-duration-data-is-empty
  *
  * @param data - The duration data to convert
  * @returns Total milliseconds
@@ -91,6 +101,11 @@ const UNIT_MS_VALUES: ReadonlyArray<{ readonly unit: TimeUnit; readonly ms: Mill
  *
  * Breaks down from largest to smallest unit, only using units in the provided list.
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, duration, milliseconds, decompose, convert, breakdown, units, time
+ * @dbxUtilRelated duration-data-to-milliseconds, parse-duration-string, format-duration-string
+ *
  * @param ms - The total milliseconds to decompose
  * @param units - Which units to decompose into (defaults to days, hours, minutes, seconds)
  * @returns A TimeDurationData with the decomposed values
@@ -121,6 +136,11 @@ export function millisecondsToDurationData(ms: Milliseconds, units?: readonly Ti
 /**
  * Reads a specific time unit value from a TimeDurationData object.
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, duration, get, read, value, unit, time, field
+ * @dbxUtilRelated set-duration-data-value, duration-data-to-milliseconds
+ *
  * @param data - The duration data
  * @param unit - The time unit to read
  * @returns The value for that unit, or 0 if not set
@@ -131,6 +151,11 @@ export function getDurationDataValue(data: TimeDurationData, unit: TimeUnit): nu
 
 /**
  * Returns a new TimeDurationData with the specified unit set to the given value.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, duration, set, update, value, unit, time, field, immutable
+ * @dbxUtilRelated get-duration-data-value, duration-data-to-milliseconds
  *
  * @param data - The original duration data
  * @param unit - The time unit to set
@@ -195,6 +220,11 @@ function normalizeUnitString(unitStr: string): TimeUnit {
  * If the string contains only a number with no unit, it is treated as the
  * smallest unit that would make sense (milliseconds by default).
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, duration, parse, string, time, human-readable, decode
+ * @dbxUtilRelated parse-duration-string-to-milliseconds, format-duration-string, format-duration-string-long, milliseconds-to-duration-data
+ *
  * @param input - The duration string to parse
  * @returns A TimeDurationData object with the parsed values
  *
@@ -241,6 +271,11 @@ export function parseDurationString(input: string): TimeDurationData {
 /**
  * Parses a duration string directly to milliseconds.
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, duration, parse, string, milliseconds, convert, decode
+ * @dbxUtilRelated parse-duration-string, duration-data-to-milliseconds, format-duration-string
+ *
  * @param input - The duration string to parse
  * @returns Total milliseconds
  *
@@ -270,6 +305,11 @@ const COMPACT_UNIT_LABELS: ReadonlyArray<{ readonly field: keyof TimeDurationDat
  * Formats a TimeDurationData to a compact string like "3d10h5m8s".
  *
  * Omits zero-value units. Returns "0s" if all fields are zero or empty.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, duration, format, string, compact, encode, time
+ * @dbxUtilRelated format-duration-string-long, parse-duration-string, duration-data-to-milliseconds
  *
  * @param data - The duration data to format
  * @returns A compact duration string
@@ -311,6 +351,11 @@ const LONG_UNIT_LABELS: ReadonlyArray<{ readonly field: keyof TimeDurationData; 
  * Formats a TimeDurationData to a long human-readable string.
  *
  * Omits zero-value units. Returns "0 seconds" if all fields are zero or empty.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, duration, format, string, long, human-readable, encode, time
+ * @dbxUtilRelated format-duration-string, parse-duration-string, duration-data-to-milliseconds
  *
  * @param data - The duration data to format
  * @returns A human-readable duration string

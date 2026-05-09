@@ -25,6 +25,13 @@ export interface BuildAuthorizationUrlInput {
   readonly scopes?: string;
   readonly state: string;
   readonly codeChallenge: string;
+  /**
+   * Optional requested login duration in seconds. When set, the URL includes the
+   * `dbx_session_ttl=<seconds>` query param so the OIDC server applies the requested
+   * lifetime to the issued Session, Grant, and RefreshToken (subject to per-client and
+   * server caps).
+   */
+  readonly requestedSessionTtlSeconds?: Maybe<number>;
 }
 
 /**
@@ -56,6 +63,17 @@ export function buildAuthorizationUrl(input: BuildAuthorizationUrlInput): string
     code_challenge_method: 'S256',
     state: input.state
   };
+
+  if (input.requestedSessionTtlSeconds != null) {
+    if (!Number.isInteger(input.requestedSessionTtlSeconds) || input.requestedSessionTtlSeconds <= 0) {
+      throw new CliError({
+        message: `requestedSessionTtlSeconds must be a positive integer (got ${input.requestedSessionTtlSeconds}).`,
+        code: 'AUTH_LOGIN_FOR_INVALID'
+      });
+    }
+
+    authParams.dbx_session_ttl = String(input.requestedSessionTtlSeconds);
+  }
 
   let endpoint: string;
 

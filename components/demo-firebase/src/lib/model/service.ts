@@ -287,9 +287,24 @@ export const oidcEntryFirebaseModelServiceFactory = firebaseModelServiceFactory<
   roleMapForModel: function (output: FirebasePermissionServiceModel<OidcEntry, OidcEntryDocument>, context: DemoFirebaseContext, _model: OidcEntryDocument): PromiseOrValue<GrantedRoleMap<OidcEntryRoles>> {
     return grantModelRolesIfAdmin(context, fullAccessRoleMap(), async () => {
       const data = output.data;
-      const ownerKey = context.auth ? firestoreModelKey(profileIdentity, context.auth.uid) : undefined;
-      const isOwner = ownerKey != null && data?.o === ownerKey;
-      return isOwner ? fullAccessRoleMap() : noAccessRoleMap();
+      const uid = context.auth?.uid;
+      const ownerKey = uid != null ? firestoreModelKey(profileIdentity, uid) : undefined;
+
+      // Client entries: full access for the owner (uses ownership key `o`).
+      const isClientOwner = ownerKey != null && data?.o === ownerKey;
+      if (isClientOwner) {
+        return fullAccessRoleMap();
+      }
+
+      // Grant entries: full access for the user the grant was issued to (uses `uid`).
+      // Other token types (AccessToken / RefreshToken / Session / ...) are intentionally
+      // not exposed at the model layer — they cascade through grant revocation instead.
+      const isGrantOwner = uid != null && data?.type === 'Grant' && data?.uid === uid;
+      if (isGrantOwner) {
+        return fullAccessRoleMap();
+      }
+
+      return noAccessRoleMap();
     });
   },
   getFirestoreCollection: (c) => c.app.oidcEntryCollection

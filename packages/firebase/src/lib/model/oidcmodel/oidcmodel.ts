@@ -94,6 +94,13 @@ export interface OidcEntry {
    */
   grantId?: Maybe<string>;
   /**
+   * OAuth client identifier. Extracted from the payload for indexed queries
+   * (e.g. listing or revoking every grant/token issued to a particular client).
+   *
+   * @dbxModelVariable clientId
+   */
+  clientId?: Maybe<string>;
+  /**
    * User code for device flow. Extracted from the payload for indexed queries.
    *
    * @dbxModelVariable userCode
@@ -105,6 +112,17 @@ export interface OidcEntry {
    * @dbxModelVariable consumedAt
    */
   consumed?: Maybe<number>;
+  /**
+   * When this entry was created. Derived from `payload.iat` on grantable
+   * tokens (AccessToken, RefreshToken, AuthorizationCode, Grant, etc.) and
+   * from `payload.created_at` on Client entries.
+   *
+   * Enables Firestore-level `orderBy` and date-range queries (e.g. "grants
+   * issued in the last 7 days") without parsing the payload.
+   *
+   * @dbxModelVariable createdAt
+   */
+  createdAt?: Maybe<Date>;
   /**
    * When this entry expires.
    *
@@ -135,8 +153,10 @@ export const oidcEntryConverter = snapshotConverterFunctions<OidcEntry>({
     o: optionalFirestoreString(),
     uid: optionalFirestoreString(),
     grantId: optionalFirestoreString(),
+    clientId: optionalFirestoreString(),
     userCode: optionalFirestoreString(),
     consumed: optionalFirestoreNumber(),
+    createdAt: optionalFirestoreDate(),
     expiresAt: optionalFirestoreDate()
   }
 });

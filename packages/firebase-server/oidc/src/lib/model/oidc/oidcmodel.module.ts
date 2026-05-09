@@ -1,19 +1,22 @@
 import { type ModuleMetadata } from '@nestjs/common';
 import { type OidcModelServerActionsContext, oidcModelServerActions, OidcModelServerActions } from './oidcmodel.action.server';
 import { OidcClientService } from '../../service/oidc.client.service';
+import { OidcService } from '../../service/oidc.service';
 import { firebaseServerActionsContext } from '@dereekb/firebase-server';
 
 // MARK: Provider Factories
 /**
- * Factory that creates an {@link OidcModelServerActions} instance from the injected {@link OidcClientService}.
+ * Factory that creates an {@link OidcModelServerActions} instance from the injected services.
  *
- * @param oidcClientService - the OIDC client service to wire into the server actions
+ * @param oidcClientService - the OIDC client service for client CRUD actions
+ * @param oidcService - the core OIDC service for grant revocation
  * @returns the configured OidcModelServerActions instance
  */
-export function oidcModelServerActionsFactory(oidcClientService: OidcClientService): OidcModelServerActions {
+export function oidcModelServerActionsFactory(oidcClientService: OidcClientService, oidcService: OidcService): OidcModelServerActions {
   const context: OidcModelServerActionsContext = {
     ...firebaseServerActionsContext(),
-    oidcClientService
+    oidcClientService,
+    oidcService
   };
 
   return oidcModelServerActions(context);
@@ -24,6 +27,7 @@ export interface ProvideAppOidcModelMetadataConfig {
   /**
    * The OidcModule that exports the required OIDC dependencies:
    * - {@link OidcClientService}
+   * - {@link OidcService}
    */
   readonly oidcModule: Required<ModuleMetadata>['imports']['0'];
 }
@@ -47,7 +51,7 @@ export function appOidcModelModuleMetadata(config: ProvideAppOidcModelMetadataCo
       {
         provide: OidcModelServerActions,
         useFactory: oidcModelServerActionsFactory,
-        inject: [OidcClientService]
+        inject: [OidcClientService, OidcService]
       }
     ]
   };

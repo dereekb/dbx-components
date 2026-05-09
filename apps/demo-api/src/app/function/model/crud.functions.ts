@@ -1,51 +1,56 @@
-import { systemStateExampleRead } from './../system/systemstate.read';
-import { createGuestbook } from '../guestbook/guestbook.create';
-import { profileUpdate, profileUpdateCreateTestNotification, profileUpdateResetPassword, profileUpdateUsername, profileUpdateOnboarding } from '../profile/profile.update';
-import { insertGuestbookEntry } from '../guestbook/guestbookentry.update';
+import { systemStateExampleread } from './../system/systemstate.read';
+import { guestbookCreate } from '../guestbook/guestbook.create';
+import { profileUpdate, profileUpdateCreateTestNotification, profileUpdateResetPassword, profileUpdateUsername, profileUpdateOnboard } from '../profile/profile.update';
+import { guestbookEntryInsert, guestbookEntryLike } from '../guestbook/guestbookentry.update';
+import { guestbookEntryDelete } from '../guestbook/guestbookentry.delete';
 import { onCallCreateModel, onCallDeleteModel, onCallUpdateModel, onCallQueryModel, onCallSpecifierHandler, onCallReadModel, onCallModel, type OnCallModelMap } from '@dereekb/firebase-server';
 import { oidcCallModelScopePreAssert } from '@dereekb/firebase-server/oidc';
 import { type DemoOnCallCreateModelMap, type DemoOnCallDeleteModelMap, type DemoOnCallReadModelMap, type DemoOnCallUpdateModelMap, type DemoOnCallQueryModelMap, onCallWithDemoNestContext } from '../function.context';
-import { updateNotificationUser, resyncNotificationUser } from '../notification/notificationuser.update';
-import { updateNotificationBox, updateNotificationBoxRecipient } from '../notification/notificationbox.update';
+import { notificationUserUpdate, notificationUserResync } from '../notification/notificationuser.update';
+import { notificationBoxUpdate, notificationBoxRecipient } from '../notification/notificationbox.update';
+import { notificationSummaryUpdate } from '../notification/notificationsummary.update';
 import { guestbookSubscribeToNotifications } from '../guestbook/guestbook.update';
 import { profileCreate } from '../profile/profile.create';
-import { createNotification } from '../notification/notification.create';
+import { profileDelete } from '../profile/profile.delete';
+import { notificationCreate } from '../notification/notification.create';
 import { notificationSend } from '../notification/notification.update';
 import { storageFileUpdate, storageFileProcess, storageFileSyncWithGroups } from '../storagefile/storagefile.update';
-import { storageFileCreate, storageFileInitializeFromUpload, storageFileInitializeAllFromUploads } from '../storagefile/storagefile.create';
+import { storageFileCreate, storageFileFromUpload, storageFileAllFromUpload } from '../storagefile/storagefile.create';
+import { storageFileDelete } from '../storagefile/storagefile.delete';
 import { storageFileDownload, storageFileDownloadMultiple } from '../storagefile/storagefile.read';
 import { storageFileGroupRegenerateContent, storageFileGroupUpdate } from '../storagefile/storagefilegroup.update';
 import { profileDownloadArchive } from '../profile/profile.read';
-import { createOidcClient } from '../oidc/oidcclient.create';
-import { updateOidcClient, rotateOidcClientSecret } from '../oidc/oidcclient.update';
-import { deleteOidcClient } from '../oidc/oidcclient.delete';
-import { queryGuestbooks } from '../guestbook/guestbook.query';
-import { queryGuestbookEntries } from '../guestbook/guestbookentry.query';
+import { oidcEntryCreateClient } from '../oidc/oidcclient.create';
+import { oidcEntryUpdateClient, oidcEntryRotateClientSecret } from '../oidc/oidcclient.update';
+import { oidcEntryDeleteClient } from '../oidc/oidcclient.delete';
+import { oidcEntryDeleteToken } from '../oidc/oidcentry.delete';
+import { guestbookQuery } from '../guestbook/guestbook.query';
+import { guestbookEntryQuery } from '../guestbook/guestbookentry.query';
 
 // MARK: Create
 export const demoCreateModelMap: DemoOnCallCreateModelMap = {
-  guestbook: createGuestbook,
+  guestbook: guestbookCreate,
   //
   // Without Auth Examples
   // These are just to show how to create functions that do not assert auth.
   profile: profileCreate,
   notification: onCallSpecifierHandler({
-    _: createNotification
+    _: notificationCreate
   }),
   storageFile: onCallSpecifierHandler({
     _: storageFileCreate,
-    fromUpload: storageFileInitializeFromUpload,
-    allFromUpload: storageFileInitializeAllFromUploads
+    fromUpload: storageFileFromUpload,
+    allFromUpload: storageFileAllFromUpload
   }),
   oidcEntry: onCallSpecifierHandler({
-    client: createOidcClient
+    client: oidcEntryCreateClient
   })
 };
 
 // MARK: Read
 export const demoReadModelMap: DemoOnCallReadModelMap = {
   systemState: onCallSpecifierHandler({
-    exampleread: systemStateExampleRead
+    exampleread: systemStateExampleread
   }),
   storageFile: onCallSpecifierHandler({
     download: storageFileDownload,
@@ -61,21 +66,27 @@ export const demoUpdateModelMap: DemoOnCallUpdateModelMap = {
   guestbook: onCallSpecifierHandler({
     subscribeToNotifications: guestbookSubscribeToNotifications
   }),
-  guestbookEntry: insertGuestbookEntry,
+  guestbookEntry: onCallSpecifierHandler({
+    insert: guestbookEntryInsert,
+    like: guestbookEntryLike
+  }),
   profile: onCallSpecifierHandler({
     _: profileUpdate,
     username: profileUpdateUsername,
-    onboard: profileUpdateOnboarding,
+    onboard: profileUpdateOnboard,
     createTestNotification: profileUpdateCreateTestNotification,
     resetPassword: profileUpdateResetPassword
   }),
   notificationUser: onCallSpecifierHandler({
-    _: updateNotificationUser,
-    resync: resyncNotificationUser
+    _: notificationUserUpdate,
+    resync: notificationUserResync
   }),
   notificationBox: onCallSpecifierHandler({
-    _: updateNotificationBox,
-    recipient: updateNotificationBoxRecipient
+    _: notificationBoxUpdate,
+    recipient: notificationBoxRecipient
+  }),
+  notificationSummary: onCallSpecifierHandler({
+    _: notificationSummaryUpdate
   }),
   notification: onCallSpecifierHandler({
     send: notificationSend
@@ -90,22 +101,28 @@ export const demoUpdateModelMap: DemoOnCallUpdateModelMap = {
     regenerateContent: storageFileGroupRegenerateContent
   }),
   oidcEntry: onCallSpecifierHandler({
-    client: updateOidcClient,
-    rotateClientSecret: rotateOidcClientSecret
+    client: oidcEntryUpdateClient,
+    rotateClientSecret: oidcEntryRotateClientSecret
   })
 };
 
 // MARK: Delete
 export const demoDeleteModelMap: DemoOnCallDeleteModelMap = {
+  guestbookEntry: guestbookEntryDelete,
+  profile: profileDelete,
+  storageFile: onCallSpecifierHandler({
+    _: storageFileDelete
+  }),
   oidcEntry: onCallSpecifierHandler({
-    client: deleteOidcClient
+    client: oidcEntryDeleteClient,
+    token: oidcEntryDeleteToken
   })
 };
 
 // MARK: Query
 export const demoQueryModelMap: DemoOnCallQueryModelMap = {
-  guestbook: queryGuestbooks,
-  guestbookEntry: queryGuestbookEntries
+  guestbook: guestbookQuery,
+  guestbookEntry: guestbookEntryQuery
 };
 
 // MARK: Call

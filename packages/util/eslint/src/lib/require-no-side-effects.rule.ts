@@ -1,4 +1,4 @@
-import { findFunctionLeadingContext, getLineIndent, NO_SIDE_EFFECTS_TAG } from './comments';
+import { findFunctionLeadingContext, getLineIndent, getStatementAnchor, NO_SIDE_EFFECTS_TAG } from './comments';
 
 /**
  * The JSDoc tag identifying a function as a factory in the @dereekb conventions.
@@ -70,6 +70,7 @@ export interface UtilRequireNoSideEffectsRuleDefinition {
     readonly messages: {
       readonly missingNoSideEffectsJsdoc: string;
       readonly missingJsdocForFactory: string;
+      readonly missingImplAnnotationOverloaded: string;
     };
     readonly schema: readonly object[];
   };
@@ -77,13 +78,25 @@ export interface UtilRequireNoSideEffectsRuleDefinition {
 }
 
 /**
- * ESLint rule requiring the side-effect-free annotation inside the JSDoc of every
- * factory function — that is, declarations carrying the dbxUtilKind factory JSDoc tag,
- * and optionally functions matching factory name patterns.
+ * ESLint rule requiring the side-effect-free annotation on every factory function — that is,
+ * declarations carrying the `@dbxUtilKind factory` JSDoc tag (and optionally functions matching
+ * factory name patterns). The rule guarantees the marker reaches the bundled JavaScript so
+ * esbuild/rollup can drop unused calls during tree-shaking.
  *
- * Auto-fix inserts the annotation as the last line of the JSDoc, removes any
- * redundant standalone-comment annotation between the JSDoc and the declaration,
- * and (when matched by name with no JSDoc) creates a minimal JSDoc carrying both tags.
+ * Behavior:
+ *
+ * - **Single-signature functions:** the JSDoc above the declaration is preserved during emit, so
+ *   the rule simply requires `@__NO_SIDE_EFFECTS__` inside that JSDoc.
+ *
+ * - **Overloaded functions:** TypeScript erases overload signatures during emit, so a JSDoc tag
+ *   placed only on the first overload is dropped from the bundled JS. The rule additionally requires
+ *   either (a) a `// @__NO_SIDE_EFFECTS__` line comment immediately above the implementation, or
+ *   (b) a JSDoc with the tag attached directly to the implementation. Auto-fix inserts the line
+ *   comment alongside the JSDoc tag so consumer-facing docs and the bundler annotation stay in sync.
+ *
+ * Auto-fix also removes any redundant standalone-comment annotations between the JSDoc and the
+ * declaration (other than the required impl-leading line comment on overloaded functions), and
+ * when no JSDoc is present, creates a minimal one carrying both tags.
  */
 export const utilRequireNoSideEffectsRule: UtilRequireNoSideEffectsRuleDefinition = {
   meta: {
@@ -95,7 +108,8 @@ export const utilRequireNoSideEffectsRule: UtilRequireNoSideEffectsRuleDefinitio
     },
     messages: {
       missingNoSideEffectsJsdoc: 'Factory function "{{name}}" is missing the `@__NO_SIDE_EFFECTS__` annotation in its JSDoc. Add it as the last tag inside the JSDoc block so esbuild can drop unused calls during tree-shaking.',
-      missingJsdocForFactory: 'Factory-named function "{{name}}" has no JSDoc block. Add a JSDoc block containing `@__NO_SIDE_EFFECTS__` so esbuild can drop unused calls during tree-shaking.'
+      missingJsdocForFactory: 'Factory-named function "{{name}}" has no JSDoc block. Add a JSDoc block containing `@__NO_SIDE_EFFECTS__` so esbuild can drop unused calls during tree-shaking.',
+      missingImplAnnotationOverloaded: 'Overloaded factory function "{{name}}" needs `@__NO_SIDE_EFFECTS__` directly on its implementation — TypeScript erases overload signatures during emit, so the JSDoc tag on the first overload is dropped from the bundled JavaScript. Add a `// @__NO_SIDE_EFFECTS__` line comment immediately above the implementation declaration.'
     },
     schema: [
       {
@@ -137,9 +151,9 @@ export const utilRequireNoSideEffectsRule: UtilRequireNoSideEffectsRuleDefinitio
         return;
       }
 
-      // Walks the overload chain (if any) so we read the JSDoc on the first overload
-      // and any orphan annotations placed between overloads or above the implementation.
-      const { jsdoc, orphanLineComments: redundantLineComments } = findFunctionLeadingContext(sourceCode, node);
+      // Walks the overload chain (if any) so we read the JSDoc on the first overload,
+      // any orphan annotations placed between overloads, and the (preserved) impl-leading annotation.
+      const { jsdoc, orphanLineComments: redundantLineComments, hasOverloads, implLineComment, implHasSurvivingAnnotation, chainStartStatement } = findFunctionLeadingContext(sourceCode, node);
 
       const taggedAsFactory = jsdoc?.text?.includes(FACTORY_JSDOC_TAG) === true;
       const matchedByName = !taggedAsFactory && namePatterns.length > 0 && nameMatchesFactoryPattern(name);
@@ -148,12 +162,26 @@ export const utilRequireNoSideEffectsRule: UtilRequireNoSideEffectsRuleDefinitio
         return;
       }
 
-      // Already annotated inside the JSDoc — passing.
-      if (jsdoc?.hasNoSideEffects) {
+      // The bundled implementation already carries the marker — passing. This covers:
+      //   - non-overloaded with the tag in the (only) JSDoc, AND
+      //   - overloaded with either a `// @__NO_SIDE_EFFECTS__` above the impl or its own tagged JSDoc.
+      if (implHasSurvivingAnnotation) {
         return;
       }
 
-      const messageId = jsdoc ? 'missingNoSideEffectsJsdoc' : 'missingJsdocForFactory';
+      // Choose the most specific message:
+      //   - overloaded + JSDoc with the tag on first overload but no impl annotation → impl-specific.
+      //   - has any JSDoc → JSDoc tag missing.
+      //   - no JSDoc → JSDoc must be created.
+      let messageId: 'missingImplAnnotationOverloaded' | 'missingNoSideEffectsJsdoc' | 'missingJsdocForFactory';
+
+      if (hasOverloads && jsdoc?.hasNoSideEffects) {
+        messageId = 'missingImplAnnotationOverloaded';
+      } else if (jsdoc) {
+        messageId = 'missingNoSideEffectsJsdoc';
+      } else {
+        messageId = 'missingJsdocForFactory';
+      }
 
       context.report({
         node: node.id,
@@ -162,7 +190,10 @@ export const utilRequireNoSideEffectsRule: UtilRequireNoSideEffectsRuleDefinitio
         fix(fixer: AstNode) {
           const fixes: AstNode[] = [];
 
-          if (jsdoc) {
+          // Add the JSDoc tag (or create the JSDoc) so consumer-facing docs reflect the marker.
+          // Skipped when the existing JSDoc already carries the tag — only the impl-line comment
+          // would be missing in that case (handled below).
+          if (jsdoc && !jsdoc.hasNoSideEffects) {
             const jsdocText = jsdoc.text; // text excludes /* and */
             const jsdocStart = jsdoc.node.range[0];
             const jsdocEnd = jsdoc.node.range[1];
@@ -188,15 +219,25 @@ export const utilRequireNoSideEffectsRule: UtilRequireNoSideEffectsRuleDefinitio
               const insertion = `${jsdocIndent} * ${NO_SIDE_EFFECTS_TAG}\n`;
               fixes.push(fixer.insertTextBeforeRange([closingLineStart, closingLineStart], insertion));
             }
-          } else {
-            // No JSDoc — create one above the function declaration with matching indent.
-            // Use the function's leading position. Account for `export` keyword: getCommentsBefore
-            // attaches to the declaration including its modifiers, so node.range[0] is correct.
-            const nodeStart = node.range[0];
+          } else if (!jsdoc) {
+            // No JSDoc anywhere — create one above the FIRST statement in the chain. For overloaded
+            // functions the canonical doc placement is on the first overload, not the implementation.
+            const nodeStart = chainStartStatement.range[0];
             const indent = getLineIndent(sourceText, nodeStart);
 
             const newJsdoc = `/**\n${indent} * @dbxUtilKind factory\n${indent} * ${NO_SIDE_EFFECTS_TAG}\n${indent} */\n${indent}`;
             fixes.push(fixer.insertTextBeforeRange([nodeStart, nodeStart], newJsdoc));
+          }
+
+          // Overloaded functions need a `// @__NO_SIDE_EFFECTS__` line comment directly above the
+          // implementation so the marker survives TypeScript's overload-signature erasure and reaches
+          // the bundled JavaScript. Skipped when one is already in place.
+          if (hasOverloads && !implLineComment) {
+            const implAnchor = getStatementAnchor(node);
+            const implStart = implAnchor.range[0];
+            const indent = getLineIndent(sourceText, implStart);
+
+            fixes.push(fixer.insertTextBeforeRange([implStart, implStart], `// ${NO_SIDE_EFFECTS_TAG}\n${indent}`));
           }
 
           // Remove any redundant adjacent annotation comments now that JSDoc carries the tag.

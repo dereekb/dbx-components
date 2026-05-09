@@ -53,6 +53,14 @@
         "include": ["src/lib/**/*.ts"],
         "exclude": ["**/*.spec.ts", "**/*.test.ts"],
         "out": "packages/dbx-components-mcp/generated/dereekb-dbx-web.ui-components.mcp.generated.json"
+      },
+      {
+        "project": "packages/dbx-firebase",
+        "source": "@dereekb/dbx-firebase",
+        "module": "@dereekb/dbx-firebase",
+        "include": ["src/lib/**/*.ts"],
+        "exclude": ["**/*.spec.ts", "**/*.test.ts"],
+        "out": "packages/dbx-components-mcp/generated/dereekb-dbx-firebase.ui-components.mcp.generated.json"
       }
     ]
   },

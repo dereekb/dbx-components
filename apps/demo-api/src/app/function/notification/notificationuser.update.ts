@@ -2,7 +2,7 @@ import { type ResyncNotificationUserParams, type ResyncNotificationUserResult, t
 import { withApiDetails } from '@dereekb/firebase-server';
 import { type DemoUpdateModelFunction } from '../function.context';
 
-export const updateNotificationUser: DemoUpdateModelFunction<UpdateNotificationUserParams> = withApiDetails({
+export const notificationUserUpdate: DemoUpdateModelFunction<UpdateNotificationUserParams> = withApiDetails({
   inputType: updateNotificationUserParamsType,
   fn: async (request) => {
     const { nest, auth: _auth, data } = request;
@@ -19,7 +19,7 @@ export const updateNotificationUser: DemoUpdateModelFunction<UpdateNotificationU
   }
 });
 
-export const resyncNotificationUser: DemoUpdateModelFunction<ResyncNotificationUserParams, ResyncNotificationUserResult> = withApiDetails({
+export const notificationUserResync: DemoUpdateModelFunction<ResyncNotificationUserParams, ResyncNotificationUserResult> = withApiDetails({
   inputType: resyncNotificationUserParamsType,
   fn: async (request) => {
     const { nest, auth: _auth, data } = request;

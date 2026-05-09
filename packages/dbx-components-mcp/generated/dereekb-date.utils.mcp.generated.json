@@ -867,6 +867,354 @@
       ]
     },
     {
+      "slug": "time-duration-data-is-empty",
+      "name": "timeDurationDataIsEmpty",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.duration.data",
+      "signature": "timeDurationDataIsEmpty(data: TimeDurationData): boolean",
+      "description": "Returns true if the input TimeDurationData has no meaningful values (all zero or undefined).",
+      "params": [
+        {
+          "name": "data",
+          "type": "TimeDurationData",
+          "description": "- The duration data to check",
+          "optional": false
+        }
+      ],
+      "returns": "True if empty",
+      "tags": [
+        "date",
+        "duration",
+        "empty",
+        "check",
+        "time",
+        "zero",
+        "data",
+        "is",
+        "timedurationdataisempty"
+      ],
+      "example": "timeDurationDataIsEmpty({}); // true\ntimeDurationDataIsEmpty({ hours: 0, minutes: 0 }); // true\ntimeDurationDataIsEmpty({ hours: 1 }); // false",
+      "relatedSlugs": [
+        "duration-data-to-milliseconds",
+        "milliseconds-to-duration-data"
+      ]
+    },
+    {
+      "slug": "duration-data-to-milliseconds",
+      "name": "durationDataToMilliseconds",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.duration.data",
+      "signature": "durationDataToMilliseconds(data: TimeDurationData): Milliseconds",
+      "description": "Converts a TimeDurationData to total milliseconds by summing all fields.",
+      "params": [
+        {
+          "name": "data",
+          "type": "TimeDurationData",
+          "description": "- The duration data to convert",
+          "optional": false
+        }
+      ],
+      "returns": "Total milliseconds",
+      "tags": [
+        "date",
+        "duration",
+        "milliseconds",
+        "convert",
+        "sum",
+        "time",
+        "total",
+        "data",
+        "to",
+        "durationdatatomilliseconds"
+      ],
+      "example": "durationDataToMilliseconds({ hours: 1, minutes: 30 }); // 5400000\ndurationDataToMilliseconds({ days: 1, hours: 2 }); // 93600000",
+      "relatedSlugs": [
+        "milliseconds-to-duration-data",
+        "parse-duration-string-to-milliseconds",
+        "time-duration-data-is-empty"
+      ]
+    },
+    {
+      "slug": "milliseconds-to-duration-data",
+      "name": "millisecondsToDurationData",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.duration.data",
+      "signature": "millisecondsToDurationData(ms: Milliseconds, units?: readonly TimeUnit[]): TimeDurationData",
+      "description": "Decomposes milliseconds into a TimeDurationData object using the specified units.\n\nBreaks down from largest to smallest unit, only using units in the provided list.",
+      "params": [
+        {
+          "name": "ms",
+          "type": "Milliseconds",
+          "description": "- The total milliseconds to decompose",
+          "optional": false
+        },
+        {
+          "name": "units",
+          "type": "readonly TimeUnit[]",
+          "description": "- Which units to decompose into (defaults to days, hours, minutes, seconds)",
+          "optional": true
+        }
+      ],
+      "returns": "A TimeDurationData with the decomposed values",
+      "tags": [
+        "date",
+        "duration",
+        "milliseconds",
+        "decompose",
+        "convert",
+        "breakdown",
+        "units",
+        "time",
+        "to",
+        "data",
+        "millisecondstodurationdata"
+      ],
+      "example": "millisecondsToDurationData(5400000); // { days: 0, hours: 1, minutes: 30, seconds: 0 }\nmillisecondsToDurationData(90000, ['min', 's']); // { minutes: 1, seconds: 30 }",
+      "relatedSlugs": [
+        "duration-data-to-milliseconds",
+        "parse-duration-string",
+        "format-duration-string"
+      ]
+    },
+    {
+      "slug": "get-duration-data-value",
+      "name": "getDurationDataValue",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.duration.data",
+      "signature": "getDurationDataValue(data: TimeDurationData, unit: TimeUnit): number",
+      "description": "Reads a specific time unit value from a TimeDurationData object.",
+      "params": [
+        {
+          "name": "data",
+          "type": "TimeDurationData",
+          "description": "- The duration data",
+          "optional": false
+        },
+        {
+          "name": "unit",
+          "type": "TimeUnit",
+          "description": "- The time unit to read",
+          "optional": false
+        }
+      ],
+      "returns": "The value for that unit, or 0 if not set",
+      "tags": [
+        "date",
+        "duration",
+        "get",
+        "read",
+        "value",
+        "unit",
+        "time",
+        "field",
+        "data",
+        "getdurationdatavalue"
+      ],
+      "relatedSlugs": [
+        "set-duration-data-value",
+        "duration-data-to-milliseconds"
+      ]
+    },
+    {
+      "slug": "set-duration-data-value",
+      "name": "setDurationDataValue",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.duration.data",
+      "signature": "setDurationDataValue(data: TimeDurationData, unit: TimeUnit, value: number): TimeDurationData",
+      "description": "Returns a new TimeDurationData with the specified unit set to the given value.",
+      "params": [
+        {
+          "name": "data",
+          "type": "TimeDurationData",
+          "description": "- The original duration data",
+          "optional": false
+        },
+        {
+          "name": "unit",
+          "type": "TimeUnit",
+          "description": "- The time unit to set",
+          "optional": false
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "description": "- The new value",
+          "optional": false
+        }
+      ],
+      "returns": "A new TimeDurationData with the updated value",
+      "tags": [
+        "date",
+        "duration",
+        "set",
+        "update",
+        "value",
+        "unit",
+        "time",
+        "field",
+        "immutable",
+        "data",
+        "setdurationdatavalue"
+      ],
+      "relatedSlugs": [
+        "get-duration-data-value",
+        "duration-data-to-milliseconds"
+      ]
+    },
+    {
+      "slug": "parse-duration-string",
+      "name": "parseDurationString",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.duration.data",
+      "signature": "parseDurationString(input: string): TimeDurationData",
+      "description": "Parses a human-readable duration string into a TimeDurationData object.\n\nSupports compact formats (\"3d10h5m8s\"), spaced formats (\"3d 10h 5m 8s\"),\nand long formats (\"3 days 10 hours 5 minutes 8 seconds\"). Mixed formats\nare also supported. If the same unit appears multiple times, values are summed.\n\nIf the string contains only a number with no unit, it is treated as the\nsmallest unit that would make sense (milliseconds by default).",
+      "params": [
+        {
+          "name": "input",
+          "type": "string",
+          "description": "- The duration string to parse",
+          "optional": false
+        }
+      ],
+      "returns": "A TimeDurationData object with the parsed values",
+      "tags": [
+        "date",
+        "duration",
+        "parse",
+        "string",
+        "time",
+        "human-readable",
+        "decode",
+        "parsedurationstring"
+      ],
+      "example": "parseDurationString('3d10h5m8s'); // { days: 3, hours: 10, minutes: 5, seconds: 8 }\nparseDurationString('2 hours 30 minutes'); // { hours: 2, minutes: 30 }\nparseDurationString('1w 2d'); // { weeks: 1, days: 2 }\nparseDurationString('500ms'); // { milliseconds: 500 }",
+      "relatedSlugs": [
+        "parse-duration-string-to-milliseconds",
+        "format-duration-string",
+        "format-duration-string-long",
+        "milliseconds-to-duration-data"
+      ]
+    },
+    {
+      "slug": "parse-duration-string-to-milliseconds",
+      "name": "parseDurationStringToMilliseconds",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.duration.data",
+      "signature": "parseDurationStringToMilliseconds(input: string): Milliseconds",
+      "description": "Parses a duration string directly to milliseconds.",
+      "params": [
+        {
+          "name": "input",
+          "type": "string",
+          "description": "- The duration string to parse",
+          "optional": false
+        }
+      ],
+      "returns": "Total milliseconds",
+      "tags": [
+        "date",
+        "duration",
+        "parse",
+        "string",
+        "milliseconds",
+        "convert",
+        "decode",
+        "to",
+        "parsedurationstringtomilliseconds"
+      ],
+      "example": "parseDurationStringToMilliseconds('1h30m'); // 5400000",
+      "relatedSlugs": [
+        "parse-duration-string",
+        "duration-data-to-milliseconds",
+        "format-duration-string"
+      ]
+    },
+    {
+      "slug": "format-duration-string",
+      "name": "formatDurationString",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.duration.data",
+      "signature": "formatDurationString(data: TimeDurationData): string",
+      "description": "Formats a TimeDurationData to a compact string like \"3d10h5m8s\".\n\nOmits zero-value units. Returns \"0s\" if all fields are zero or empty.",
+      "params": [
+        {
+          "name": "data",
+          "type": "TimeDurationData",
+          "description": "- The duration data to format",
+          "optional": false
+        }
+      ],
+      "returns": "A compact duration string",
+      "tags": [
+        "date",
+        "duration",
+        "format",
+        "string",
+        "compact",
+        "encode",
+        "time",
+        "formatdurationstring"
+      ],
+      "example": "formatDurationString({ days: 3, hours: 10, minutes: 5, seconds: 8 }); // \"3d10h5m8s\"\nformatDurationString({ hours: 2, minutes: 30 }); // \"2h30m\"\nformatDurationString({}); // \"0s\"",
+      "relatedSlugs": [
+        "format-duration-string-long",
+        "parse-duration-string",
+        "duration-data-to-milliseconds"
+      ]
+    },
+    {
+      "slug": "format-duration-string-long",
+      "name": "formatDurationStringLong",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.duration.data",
+      "signature": "formatDurationStringLong(data: TimeDurationData): string",
+      "description": "Formats a TimeDurationData to a long human-readable string.\n\nOmits zero-value units. Returns \"0 seconds\" if all fields are zero or empty.",
+      "params": [
+        {
+          "name": "data",
+          "type": "TimeDurationData",
+          "description": "- The duration data to format",
+          "optional": false
+        }
+      ],
+      "returns": "A human-readable duration string",
+      "tags": [
+        "date",
+        "duration",
+        "format",
+        "string",
+        "long",
+        "human-readable",
+        "encode",
+        "time",
+        "formatdurationstringlong"
+      ],
+      "example": "formatDurationStringLong({ days: 3, hours: 10 }); // \"3 days 10 hours\"\nformatDurationStringLong({ hours: 1, minutes: 1 }); // \"1 hour 1 minute\"",
+      "relatedSlugs": [
+        "format-duration-string",
+        "parse-duration-string",
+        "duration-data-to-milliseconds"
+      ]
+    },
+    {
       "slug": "date-duration-span-end-date",
       "name": "dateDurationSpanEndDate",
       "kind": "function",

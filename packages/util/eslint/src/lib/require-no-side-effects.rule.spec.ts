@@ -78,6 +78,20 @@ export function overloaded(x?: number): number { return x ?? 0; }
       expect(errors).toHaveLength(0);
     });
 
+    it('overloaded factory with JSDoc tag on first overload AND impl line comment passes', () => {
+      const errors = lintCode(`
+/**
+ * @dbxUtilKind factory
+ * @__NO_SIDE_EFFECTS__
+ */
+export function makeFoo(a: number): number;
+export function makeFoo(a: string): string;
+// @__NO_SIDE_EFFECTS__
+export function makeFoo(a: any): any { return a; }
+`);
+      expect(errors).toHaveLength(0);
+    });
+
     it('name-pattern match without checkNamePatterns option is ignored', () => {
       const errors = lintCode(`
 export function makeFooService() { return 1; }
@@ -106,6 +120,34 @@ export function makeFooFactory() { return 1; }
  */
 // @__NO_SIDE_EFFECTS__
 export function makeFooFactory() { return 1; }
+`);
+      expect(errors).toHaveLength(1);
+    });
+
+    it('flags overloaded factory with JSDoc tag on first overload but no impl-leading annotation', () => {
+      const errors = lintCode(`
+/**
+ * @dbxUtilKind factory
+ * @__NO_SIDE_EFFECTS__
+ */
+export function makeFoo(a: number): number;
+export function makeFoo(a: string): string;
+export function makeFoo(a: any): any { return a; }
+`);
+      expect(errors).toHaveLength(1);
+      expect(errors[0].message).toContain('makeFoo');
+      expect(errors[0].message).toContain('overload');
+      expect(errors[0].messageId).toBe('missingImplAnnotationOverloaded');
+    });
+
+    it('flags overloaded factory with no annotations anywhere', () => {
+      const errors = lintCode(`
+/**
+ * @dbxUtilKind factory
+ */
+export function makeFoo(a: number): number;
+export function makeFoo(a: string): string;
+export function makeFoo(a: any): any { return a; }
 `);
       expect(errors).toHaveLength(1);
     });
@@ -182,7 +224,7 @@ export function makeFooFactory() { return 1; }
       expect(output).toContain('@__NO_SIDE_EFFECTS__');
     });
 
-    it('handles overloaded factory functions — finds JSDoc on first overload', () => {
+    it('handles overloaded factory functions — adds JSDoc tag AND impl-leading line comment', () => {
       const input = `
 /**
  * @dbxUtilKind factory
@@ -192,8 +234,36 @@ export function makeFoo(a: string): string;
 export function makeFoo(a: any): any { return a; }
 `;
       const output = fixCode(input);
+      // JSDoc on first overload now carries the tag.
       const jsdocBlock = output.slice(output.indexOf('/**'), output.indexOf('*/') + 2);
       expect(jsdocBlock).toContain('@__NO_SIDE_EFFECTS__');
+      // The bundler-required line comment now sits directly above the implementation.
+      const lastOverloadIdx = output.indexOf('export function makeFoo(a: string)');
+      const implIdx = output.indexOf('export function makeFoo(a: any)');
+      const lineCommentIdx = output.indexOf('// @__NO_SIDE_EFFECTS__');
+      expect(lineCommentIdx).toBeGreaterThan(lastOverloadIdx);
+      expect(lineCommentIdx).toBeLessThan(implIdx);
+    });
+
+    it('adds only the impl-leading line comment when JSDoc on first overload already carries the tag', () => {
+      const input = `
+/**
+ * @dbxUtilKind factory
+ * @__NO_SIDE_EFFECTS__
+ */
+export function makeFoo(a: number): number;
+export function makeFoo(a: string): string;
+export function makeFoo(a: any): any { return a; }
+`;
+      const output = fixCode(input);
+      // JSDoc untouched (single occurrence of the tag inside it).
+      const jsdocBlock = output.slice(output.indexOf('/**'), output.indexOf('*/') + 2);
+      expect((jsdocBlock.match(/@__NO_SIDE_EFFECTS__/g) ?? []).length).toBe(1);
+      // Line comment inserted above the impl.
+      const implIdx = output.indexOf('export function makeFoo(a: any)');
+      const lineCommentIdx = output.indexOf('// @__NO_SIDE_EFFECTS__');
+      expect(lineCommentIdx).toBeGreaterThan(0);
+      expect(lineCommentIdx).toBeLessThan(implIdx);
     });
 
     it('preserves existing JSDoc text and indentation', () => {

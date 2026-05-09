@@ -106,12 +106,19 @@ export class OidcInteractionService {
   /**
    * Finds an existing grant by ID, or creates a new one.
    *
+   * For new grants, optionally pre-set `expiresIn` so {@link Grant#save} writes the requested TTL
+   * instead of falling through to the configured Grant TTL function (which cannot read the original
+   * `dbx_session_ttl` request param when save is driven from a NestJS controller — see
+   * {@link OidcService#resolveLoginDurationForGrant}).
+   *
    * @param grantId - the existing grant ID to look up, or undefined to create a new grant
    * @param accountId - the account ID for creating a new grant
    * @param clientId - the client ID for creating a new grant
+   * @param expiresInSeconds - optional TTL (seconds) to assign to a newly-created grant
    * @returns the found or newly created grant
    */
-  async findOrCreateGrant(grantId: string | undefined, accountId: string, clientId: string): Promise<Grant> {
+  // eslint-disable-next-line @typescript-eslint/max-params -- positional args mirror the existing call sites
+  async findOrCreateGrant(grantId: string | undefined, accountId: string, clientId: string, expiresInSeconds?: number): Promise<Grant> {
     const provider = await this.oidcService.getProvider();
     let grant: Grant;
 
@@ -124,7 +131,13 @@ export class OidcInteractionService {
 
       grant = found;
     } else {
-      grant = new provider.Grant({ accountId, clientId });
+      const grantInit: { accountId: string; clientId: string; expiresIn?: number } = { accountId, clientId };
+
+      if (expiresInSeconds != null) {
+        grantInit.expiresIn = expiresInSeconds;
+      }
+
+      grant = new provider.Grant(grantInit);
     }
 
     return grant;

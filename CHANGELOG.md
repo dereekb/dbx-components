@@ -1,3 +1,25 @@
+## [13.11.4](https://github.com/dereekb/dbx-components/compare/v13.11.3-dev...v13.11.4) (2026-05-09)
+
+
+### Bug Fixes
+
+- gate oidc consent submit on auth state ([bf48547b](https://github.com/dereekb/dbx-components/commit/bf48547b675b549eca851e62f163b6b73fbf65a7))
+
+
+### Build System
+
+- lint fix + mcp regeneration ([b731ffee](https://github.com/dereekb/dbx-components/commit/b731ffee570e5571fb130114bfc1845490367651))
+
+
+### Code Refactoring
+
+- @__NO_SIDE_EFFECTS__ on overloaded factory impls ([9ae015f2](https://github.com/dereekb/dbx-components/commit/9ae015f2e000d461df87dec609405ef35560d191))
+- added dbx-firebase-oidc-grant-list-container ([0723879c](https://github.com/dereekb/dbx-components/commit/0723879cb6d0367b40242586b832e90d161f19ef))
+- added oidc ttl options ([b676bff2](https://github.com/dereekb/dbx-components/commit/b676bff23abc7f07d28fe8799506e525c06f3587))
+- added trustProxy config to odic module ([e51ed2ad](https://github.com/dereekb/dbx-components/commit/e51ed2adba9ca83c79a91d6ecebeda4d479ea66d))
+- dbx-components-mcp improvements ([b75a0f6c](https://github.com/dereekb/dbx-components/commit/b75a0f6c3b85151936be535657291f48f6e48962))
+- test fixes ([4beda305](https://github.com/dereekb/dbx-components/commit/4beda3051aa88289a29361b284eef07248285d88))
+
 ## [13.11.3](https://github.com/dereekb/dbx-components/compare/v13.11.2-dev...v13.11.3) (2026-05-08)
 
 

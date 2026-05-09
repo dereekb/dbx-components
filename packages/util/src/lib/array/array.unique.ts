@@ -242,6 +242,7 @@ export type AllowValueOnceFilter<T, K extends PrimativeKey = PrimativeKey> = Dec
  */
 export function allowValueOnceFilter<T extends PrimativeKey = PrimativeKey>(): AllowValueOnceFilter<T, T>;
 export function allowValueOnceFilter<T, K extends PrimativeKey = PrimativeKey>(readKey?: ReadKeyFunction<T, K>): AllowValueOnceFilter<T, K>;
+// @__NO_SIDE_EFFECTS__
 export function allowValueOnceFilter<T, K extends PrimativeKey = PrimativeKey>(inputReadKey?: ReadKeyFunction<T, K>): AllowValueOnceFilter<T, K> {
   const visitedKeys = new Set<Maybe<K>>();
   const readKey = inputReadKey ?? (MAP_IDENTITY as ReadKeyFunction<T, K>);

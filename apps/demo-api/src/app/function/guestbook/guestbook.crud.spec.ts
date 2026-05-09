@@ -8,7 +8,7 @@ import { BAD_DOCUMENT_QUERY_CURSOR_ERROR_CODE } from '@dereekb/firebase';
 import { firebaseServerErrorInfo } from '@dereekb/firebase-server';
 
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
-  describeCallableRequestTest('createGuestbook', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {
+  describeCallableRequestTest('guestbookCreate', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {
     demoAuthorizedUserContext({ f }, (u) => {
       it('should create a guestbook.', async () => {
         const name = 'testName';
@@ -39,7 +39,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   });
 
   // MARK: Query Guestbooks
-  describeCallableRequestTest('queryGuestbooks', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {
+  describeCallableRequestTest('guestbookQuery', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {
     demoAuthorizedUserContext({ f }, (u) => {
       async function createGuestbook(name: string, published = true) {
         const params: CreateGuestbookParams = { name };
@@ -203,7 +203,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   });
 
   // MARK: Query Guestbook Entries
-  describeCallableRequestTest('queryGuestbookEntries', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {
+  describeCallableRequestTest('guestbookEntryQuery', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {
     demoAuthorizedUserContext({ f }, (u) => {
       demoGuestbookContext({ f, published: true }, (g) => {
         // Grant admin so useModel('guestbook', { roles: 'read' }) succeeds for parent access
@@ -219,7 +219,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             published
           };
 
-          await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(guestbookEntryIdentity, params));
+          await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(guestbookEntryIdentity, params, 'insert'));
         }
 
         it('should query published entries for a guestbook', async () => {

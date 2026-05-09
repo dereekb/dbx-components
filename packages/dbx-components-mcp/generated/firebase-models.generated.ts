@@ -274,6 +274,14 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
         description: 'Grant identifier for revocation support. Extracted from the payload for indexed queries.'
       },
       {
+        name: 'clientId',
+        longName: 'clientId',
+        converter: 'optionalFirestoreString()',
+        tsType: 'Maybe<string>',
+        optional: true,
+        description: 'OAuth client identifier. Extracted from the payload for indexed queries (e.g. listing or revoking every grant/token issued to a particular client).'
+      },
+      {
         name: 'userCode',
         longName: 'userCode',
         converter: 'optionalFirestoreString()',
@@ -290,6 +298,14 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
         description: 'Epoch timestamp when this entry was consumed. Extracted from the payload for indexed queries.'
       },
       {
+        name: 'createdAt',
+        longName: 'createdAt',
+        converter: 'optionalFirestoreDate()',
+        tsType: 'Maybe<Date>',
+        optional: true,
+        description: 'When this entry was created. Derived from `payload.iat` on grantable tokens (AccessToken, RefreshToken, AuthorizationCode, Grant, etc.) and from `payload.created_at` on Client entries.'
+      },
+      {
         name: 'expiresAt',
         longName: 'expiresAt',
         converter: 'optionalFirestoreDate()',
@@ -299,7 +315,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
       }
     ],
     enums: [],
-    detectionHints: ['type', 'payload', 'grantId', 'userCode', 'consumed', 'expiresAt'],
+    detectionHints: ['type', 'payload', 'grantId', 'clientId', 'userCode', 'consumed', 'createdAt', 'expiresAt'],
     description: 'oidc-provider adapter entry stored in Firestore.',
     modelGroup: 'OidcModel',
     collectionKind: 'root'

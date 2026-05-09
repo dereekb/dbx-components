@@ -8,7 +8,7 @@ import { expectFail, itShouldFail } from '@dereekb/util/test';
 demoApiFunctionContextFactory((f) => {
   describeCallableRequestTest('crud.functions', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {
     describe('onCall auth tests', () => {
-      itShouldFail('to call createGuestbook without auth', async () => {
+      itShouldFail('to call guestbookCreate without auth', async () => {
         const params = {};
 
         await expectFail(() => demoCallModelWrappedFn(onCallCreateModelParams(guestbookIdentity, params), {}), expectFailAssertHttpErrorServerErrorCode(DBX_FIREBASE_SERVER_NO_AUTH_ERROR_CODE));
@@ -23,7 +23,7 @@ demoApiFunctionContextFactory((f) => {
         expect(result.modelKeys).toBeDefined();
       });
 
-      it('should allow calling createNotification without auth', async () => {
+      it('should allow calling notificationCreate without auth', async () => {
         const params = {};
 
         const result = (await demoCallModelWrappedFn(onCallCreateModelParams(notificationIdentity, params), {})) as OnCallCreateModelResult;

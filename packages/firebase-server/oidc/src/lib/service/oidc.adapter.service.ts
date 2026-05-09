@@ -3,12 +3,17 @@ import { type OidcServerFirestoreCollections } from '../model';
 import { OIDC_ENTRY_CLIENT_TYPE, type OidcEntry, type OidcEntryId, type OidcEntryFirestoreCollection, oidcEntriesByUserCodeQuery, oidcEntriesByUidQuery, oidcEntriesByGrantIdQuery, type FirebaseAuthOwnershipKey } from '@dereekb/firebase';
 import { type Maybe, type UnixDateTimeSecondsNumber, unixDateTimeSecondsNumberForNow, unixDateTimeSecondsNumberToDate } from '@dereekb/util';
 import { type OidcEncryptionService } from './oidc.encryption.service';
+import { safeToJsDate } from '@dereekb/date';
 
 // MARK: Adapter
 /**
  * Model types that support grantId-based revocation.
  */
-const GRANTABLE_MODELS = new Set(['AccessToken', 'AuthorizationCode', 'RefreshToken', 'DeviceCode', 'BackchannelAuthenticationRequest']);
+export const GRANTABLE_MODEL_NAMES = ['AccessToken', 'AuthorizationCode', 'RefreshToken', 'DeviceCode', 'BackchannelAuthenticationRequest'] as const;
+
+export type GrantableModelName = (typeof GRANTABLE_MODEL_NAMES)[number];
+
+const GRANTABLE_MODELS: ReadonlySet<string> = new Set(GRANTABLE_MODEL_NAMES);
 
 /**
  * Creates an oidc-provider adapter constructor backed by Firestore via {@link OidcServerFirestoreCollections}.
@@ -40,14 +45,40 @@ export function createAdapterFactory(collections: OidcServerFirestoreCollections
       // The firestoreOwnerKey is passed through the payload metadata by OidcClientService.
       const o: Maybe<FirebaseAuthOwnershipKey> = this.name === OIDC_ENTRY_CLIENT_TYPE ? (payload.firestoreOwnerKey as string | undefined) : undefined;
 
+      // oidc-provider uses `accountId` as the user identifier on Grant, AccessToken,
+      // RefreshToken, etc. — `payload.uid` is only populated on Session/Interaction.
+      // Fall back to `accountId` so the indexed `uid` column works for all entry types.
+      const uid = (payload.uid as string | undefined) ?? (payload.accountId as string | undefined);
+
+      // oidc-provider stores the OAuth client id as `clientId` on every grantable
+      // model (Grant, AccessToken, RefreshToken, AuthorizationCode, DeviceCode, etc.).
+      // Client entries themselves use `client_id` in the payload, so we read both.
+      const clientId = (payload.clientId as string | undefined) ?? (payload.client_id as string | undefined);
+
+      // Derive a stable `createdAt` from the payload so it survives upserts
+      // (e.g. `consume`). Grant/AccessToken/RefreshToken/AuthorizationCode all
+      // inherit `iat` (epoch seconds) from BaseToken; Client entries use
+      // `created_at` (ISO string).
+      const iat = payload.iat as number | undefined;
+      const createdAtIso = payload.created_at as string | undefined;
+      let createdAt: Maybe<Date>;
+
+      if (typeof iat === 'number') {
+        createdAt = unixDateTimeSecondsNumberToDate(iat);
+      } else if (createdAtIso) {
+        createdAt = safeToJsDate(createdAtIso);
+      }
+
       const data: OidcEntry = {
         type: this.name,
         payload: encryptionService.encryptAdapterPayload(payload),
         o,
-        uid: payload.uid as string | undefined,
+        uid,
         grantId: payload.grantId as string | undefined,
+        clientId,
         userCode: payload.userCode as string | undefined,
         consumed: payload.consumed as number | undefined,
+        ...(createdAt ? { createdAt } : undefined),
         ...(expiresIn ? { expiresAt: unixDateTimeSecondsNumberToDate(unixDateTimeSecondsNumberForNow() + expiresIn) } : undefined)
       };
 

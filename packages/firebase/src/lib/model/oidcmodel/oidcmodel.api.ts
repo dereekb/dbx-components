@@ -18,13 +18,23 @@ export interface UpdateOidcClientFieldParams {
   readonly redirect_uris: OidcRedirectUri[];
   readonly logo_uri?: Maybe<WebsiteUrlWithPrefix>;
   readonly client_uri?: Maybe<WebsiteUrlWithPrefix>;
+  /**
+   * Optional per-client maximum login duration (seconds).
+   *
+   * When set, caps any value the client requests via the `dbx_session_ttl` auth-URL param.
+   * The effective ceiling for that client is `min(this, OidcModuleConfig.maxRequestedLoginDuration)`.
+   *
+   * Set to `null` to clear an existing value.
+   */
+  readonly dbx_max_session_ttl?: Maybe<number>;
 }
 
 export const updateOidcClientFieldParamsType = /* @__PURE__ */ type({
   client_name: 'string',
   redirect_uris: 'string[]',
   'logo_uri?': clearable('string'),
-  'client_uri?': clearable('string')
+  'client_uri?': clearable('string'),
+  'dbx_max_session_ttl?': clearable('number')
 }) as Type<UpdateOidcClientFieldParams>;
 
 export const createOidcClientFieldParamsType = updateOidcClientFieldParamsType.merge(
@@ -96,6 +106,19 @@ export type DeleteOidcClientParams = TargetModelParams;
 
 export const deleteOidcClientParamsType = targetModelParamsType;
 
+/**
+ * Parameters for revoking a user's own OIDC token entry.
+ *
+ * The target {@link OidcEntry} must be of type `Grant` and have its `uid`
+ * matching the authenticated user. Revoking a grant cascades through
+ * oidc-provider's grantable models (`AccessToken`, `RefreshToken`,
+ * `AuthorizationCode`, `DeviceCode`, `BackchannelAuthenticationRequest`),
+ * deleting all entries that share the grant id.
+ */
+export type DeleteOidcTokenParams = TargetModelParams;
+
+export const deleteOidcTokenParamsType = targetModelParamsType;
+
 // MARK: Functions
 /**
  * Custom (non-CRUD) function type map for OIDC.
@@ -120,12 +143,13 @@ export type OidcModelCrudFunctionsConfig = {
     };
     delete: {
       client: DeleteOidcClientParams;
+      token: DeleteOidcTokenParams;
     };
   };
 };
 
 export const oidcModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<OidcModelCrudFunctionsConfig, OidcModelTypes> = {
-  oidcEntry: ['create:client', 'update:client,rotateClientSecret', 'delete:client']
+  oidcEntry: ['create:client', 'update:client,rotateClientSecret', 'delete:client,token']
 };
 
 /**
@@ -144,6 +168,7 @@ export abstract class OidcModelFunctions implements ModelFirebaseFunctionMap<Oid
     };
     deleteOidcEntry: {
       client: ModelFirebaseDeleteFunction<DeleteOidcClientParams>;
+      token: ModelFirebaseDeleteFunction<DeleteOidcTokenParams>;
     };
   };
 }

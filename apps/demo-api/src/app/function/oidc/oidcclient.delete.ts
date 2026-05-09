@@ -1,7 +1,7 @@
 import { type DeleteOidcClientParams } from '@dereekb/firebase';
 import { type DemoDeleteModelFunction } from '../function.context';
 
-export const deleteOidcClient: DemoDeleteModelFunction<DeleteOidcClientParams> = async (request) => {
+export const oidcEntryDeleteClient: DemoDeleteModelFunction<DeleteOidcClientParams> = async (request) => {
   const { nest, data } = request;
 
   const deleteFn = await nest.oidcModelServerActions.deleteOidcClient(data);

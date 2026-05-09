@@ -5,6 +5,9 @@ import { SignJWT, exportJWK, generateKeyPair } from 'jose';
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext } from '../../../test/fixture';
 import { OidcModuleConfig, JwksServiceStorageConfig, type JwksService, type OidcService, type OidcClientService } from '@dereekb/firebase-server/oidc';
 import { unixDateTimeSecondsNumberForNow } from '@dereekb/util';
+import { callableRequestTest } from '@dereekb/firebase-server/test';
+import { type DeleteOidcTokenParams, firestoreModelKey, oidcEntriesByUidQuery, oidcEntryIdentity, onCallDeleteModelParams } from '@dereekb/firebase';
+import { demoCallModel } from '../../function/model/crud.functions';
 
 vi.setConfig({ hookTimeout: 30000, testTimeout: 30000 });
 
@@ -419,7 +422,13 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
        * Performs the full authorization code flow (auth → login → consent → code)
        * and returns the authorization code along with cookie state.
        */
-      async function performAuthCodeFlow(server: ReturnType<INestApplication['getHttpServer']>, clientId: string): Promise<{ authorizationCode: string; codeVerifier: string; cookieHeader: string }> {
+      // eslint-disable-next-line @typescript-eslint/max-params -- positional args are clearer than a config object for this test helper
+      async function performAuthCodeFlow(server: ReturnType<INestApplication['getHttpServer']>, clientId: string, scope: string = 'openid email demo', extraAuthParams: Record<string, string | number> = {}): Promise<{ authorizationCode: string; codeVerifier: string; cookieHeader: string }> {
+        // Per OIDC core spec, requesting `offline_access` only persists if the auth request also asks
+        // for `prompt=consent`; otherwise oidc-provider's check_scope middleware silently strips it.
+        // Mirror real-client behavior so refresh-token assertions are meaningful.
+        const requiresConsentPrompt = scope.split(' ').includes('offline_access');
+        const promptParams: Record<string, string | number> = requiresConsentPrompt && extraAuthParams['prompt'] === undefined ? { prompt: 'consent' } : {};
         const cookieJar = new Map<string, string>();
 
         function collectCookies(res: request.Response): void {
@@ -450,11 +459,13 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             client_id: clientId,
             redirect_uri: 'https://example.com/callback',
             response_type: 'code',
-            scope: 'openid email demo',
+            scope,
             code_challenge: codeChallenge,
             code_challenge_method: 'S256',
             state: 'test-state',
-            nonce: 'test-nonce'
+            nonce: 'test-nonce',
+            ...promptParams,
+            ...extraAuthParams
           })
           .redirects(0);
 
@@ -585,6 +596,222 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         // 6. Verify userinfo
         const userinfoRes = await request(server).get('/oidc/me').set('Authorization', `Bearer ${tokenRes.body.access_token}`).expect(200);
         expect(userinfoRes.body.sub).toBe(u.uid);
+      });
+
+      describe('custom dbx_session_ttl auth-URL param', () => {
+        const ONE_HOUR = 60 * 60;
+        const ONE_DAY = 24 * 60 * 60;
+        const SLACK_SECONDS = 30; // wall-clock slack
+
+        it('returns the configured-default refresh-token expiry when no dbx_session_ttl is provided', async () => {
+          const server = app.getHttpServer();
+          const { client_id, client_secret } = await oidcClientService.createClient({
+            client_name: 'ttl-default-test',
+            redirect_uris: ['https://example.com/callback'],
+            token_endpoint_auth_method: 'client_secret_post'
+          });
+
+          const { authorizationCode, codeVerifier, cookieHeader } = await performAuthCodeFlow(server, client_id, 'openid email demo offline_access');
+          const tokenRes = await request(server).post('/oidc/token').set('Cookie', cookieHeader).type('form').send({
+            grant_type: 'authorization_code',
+            code: authorizationCode,
+            redirect_uri: 'https://example.com/callback',
+            client_id,
+            client_secret,
+            code_verifier: codeVerifier
+          });
+
+          expect(tokenRes.status).toBe(200);
+          expect(tokenRes.body.refresh_token).toBeDefined();
+
+          // Default should be 30 days (post-change), well above the previous 14-day cap.
+          const refreshTokenDocs = await f.instance.demoFirestoreCollections.oidcEntryCollection.query(oidcEntriesByUidQuery('RefreshToken', u.uid)).getDocs();
+          expect(refreshTokenDocs.empty).toBe(false);
+        });
+
+        it('honors a requested dbx_session_ttl by issuing tokens with the requested lifetime', async () => {
+          const server = app.getHttpServer();
+          const { client_id, client_secret } = await oidcClientService.createClient({
+            client_name: 'ttl-honor-test',
+            redirect_uris: ['https://example.com/callback'],
+            token_endpoint_auth_method: 'client_secret_post'
+          });
+
+          const requested = 2 * ONE_DAY;
+          const { authorizationCode, codeVerifier, cookieHeader } = await performAuthCodeFlow(server, client_id, 'openid email demo offline_access', { dbx_session_ttl: requested });
+          const tokenRes = await request(server).post('/oidc/token').set('Cookie', cookieHeader).type('form').send({
+            grant_type: 'authorization_code',
+            code: authorizationCode,
+            redirect_uri: 'https://example.com/callback',
+            client_id,
+            client_secret,
+            code_verifier: codeVerifier
+          });
+
+          expect(tokenRes.status).toBe(200);
+          // Refresh-token lifetime is `min(requested, tokenLifetimes.refreshToken)` on initial issuance.
+          // tokenLifetimes.refreshToken default is 30d, requested is 2d → expect ~2d.
+          // The Grant TTL stored on disk reflects the requested duration.
+          const grantDocs = await f.instance.demoFirestoreCollections.oidcEntryCollection.query(oidcEntriesByUidQuery('Grant', u.uid)).getDocs();
+          expect(grantDocs.empty).toBe(false);
+
+          const grantPayload = grantDocs.docs[0].data().payload as { exp: number; iat: number };
+          const grantTtl = grantPayload.exp - grantPayload.iat;
+          expect(grantTtl).toBeGreaterThanOrEqual(requested - SLACK_SECONDS);
+          expect(grantTtl).toBeLessThanOrEqual(requested + SLACK_SECONDS);
+        });
+
+        it('clamps dbx_session_ttl down to the per-client maximum', async () => {
+          const server = app.getHttpServer();
+          const clientCap = 4 * ONE_DAY;
+          const { client_id, client_secret } = await oidcClientService.createClient({
+            client_name: 'ttl-client-cap-test',
+            redirect_uris: ['https://example.com/callback'],
+            token_endpoint_auth_method: 'client_secret_post',
+            dbx_max_session_ttl: clientCap
+          });
+
+          const { authorizationCode, codeVerifier, cookieHeader } = await performAuthCodeFlow(server, client_id, 'openid email demo offline_access', { dbx_session_ttl: 60 * ONE_DAY });
+          const tokenRes = await request(server).post('/oidc/token').set('Cookie', cookieHeader).type('form').send({
+            grant_type: 'authorization_code',
+            code: authorizationCode,
+            redirect_uri: 'https://example.com/callback',
+            client_id,
+            client_secret,
+            code_verifier: codeVerifier
+          });
+
+          expect(tokenRes.status).toBe(200);
+
+          const grantDocs = await f.instance.demoFirestoreCollections.oidcEntryCollection.query(oidcEntriesByUidQuery('Grant', u.uid)).getDocs();
+          const grantPayload = grantDocs.docs[0].data().payload as { exp: number; iat: number };
+          const grantTtl = grantPayload.exp - grantPayload.iat;
+          expect(grantTtl).toBeGreaterThanOrEqual(clientCap - SLACK_SECONDS);
+          expect(grantTtl).toBeLessThanOrEqual(clientCap + SLACK_SECONDS);
+        });
+
+        it('clamps a sub-floor dbx_session_ttl up to the server minimum (1 hour)', async () => {
+          const server = app.getHttpServer();
+          const { client_id, client_secret } = await oidcClientService.createClient({
+            client_name: 'ttl-floor-test',
+            redirect_uris: ['https://example.com/callback'],
+            token_endpoint_auth_method: 'client_secret_post'
+          });
+
+          const { authorizationCode, codeVerifier, cookieHeader } = await performAuthCodeFlow(server, client_id, 'openid email demo offline_access', { dbx_session_ttl: 60 });
+          const tokenRes = await request(server).post('/oidc/token').set('Cookie', cookieHeader).type('form').send({
+            grant_type: 'authorization_code',
+            code: authorizationCode,
+            redirect_uri: 'https://example.com/callback',
+            client_id,
+            client_secret,
+            code_verifier: codeVerifier
+          });
+
+          expect(tokenRes.status).toBe(200);
+
+          const grantDocs = await f.instance.demoFirestoreCollections.oidcEntryCollection.query(oidcEntriesByUidQuery('Grant', u.uid)).getDocs();
+          const grantPayload = grantDocs.docs[0].data().payload as { exp: number; iat: number };
+          const grantTtl = grantPayload.exp - grantPayload.iat;
+          expect(grantTtl).toBeGreaterThanOrEqual(ONE_HOUR - SLACK_SECONDS);
+          expect(grantTtl).toBeLessThanOrEqual(ONE_HOUR + SLACK_SECONDS);
+        });
+
+        it('rejects creating a client with dbx_max_session_ttl above the server max', async () => {
+          const aboveServerMax = 365 * ONE_DAY;
+          await expect(
+            oidcClientService.createClient({
+              client_name: 'ttl-too-high',
+              redirect_uris: ['https://example.com/callback'],
+              token_endpoint_auth_method: 'client_secret_post',
+              dbx_max_session_ttl: aboveServerMax
+            })
+          ).rejects.toThrow();
+        });
+      });
+
+      describe('grant revocation through callModel', () => {
+        callableRequestTest({ f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {
+          it('should revoke a Grant via callModel and stop the refresh token from being exchanged', async () => {
+            const server = app.getHttpServer();
+
+            // 1. Register a client (defaults to grant_types: ['authorization_code', 'refresh_token']).
+            const { client_id, client_secret } = await oidcClientService.createClient({
+              client_name: 'revoke-test',
+              redirect_uris: ['https://example.com/callback'],
+              token_endpoint_auth_method: 'client_secret_post'
+            });
+
+            // 2. Run the auth-code flow with offline_access so a refresh token is issued.
+            const { authorizationCode, codeVerifier, cookieHeader } = await performAuthCodeFlow(server, client_id, 'openid email demo offline_access');
+
+            const tokenRes = await request(server).post('/oidc/token').set('Cookie', cookieHeader).type('form').send({
+              grant_type: 'authorization_code',
+              code: authorizationCode,
+              redirect_uri: 'https://example.com/callback',
+              client_id,
+              client_secret,
+              code_verifier: codeVerifier
+            });
+
+            expect(tokenRes.status).toBe(200);
+            expect(tokenRes.body.access_token).toBeDefined();
+            expect(tokenRes.body.refresh_token).toBeDefined();
+
+            const originalAccessToken = tokenRes.body.access_token as string;
+            const refreshToken = tokenRes.body.refresh_token as string;
+
+            // Sanity: the access token verifies before revocation.
+            const beforeAuthData = await oidcService.verifyAccessToken(originalAccessToken);
+            expect(beforeAuthData?.uid).toBe(u.uid);
+
+            // 3. The refresh token can be exchanged for a new access token while the grant exists.
+            const firstRefreshRes = await request(server).post('/oidc/token').type('form').send({
+              grant_type: 'refresh_token',
+              refresh_token: refreshToken,
+              client_id,
+              client_secret
+            });
+
+            expect(firstRefreshRes.status).toBe(200);
+            expect(firstRefreshRes.body.access_token).toBeDefined();
+
+            // 4. Find the Grant entry issued to this user.
+            const oidcEntryCollection = f.instance.demoFirestoreCollections.oidcEntryCollection;
+            const grantDocs = await oidcEntryCollection.query(oidcEntriesByUidQuery('Grant', u.uid)).getDocs();
+
+            expect(grantDocs.empty).toBe(false);
+            const grantDoc = grantDocs.docs[0];
+            const grantId = grantDoc.id;
+            const grantKey = firestoreModelKey(oidcEntryIdentity, grantId);
+
+            // 5. Revoke through the callModel deleteOidcEntry → token specifier.
+            const revokeParams: DeleteOidcTokenParams = { key: grantKey };
+            await u.callWrappedFunction(demoCallModelWrappedFn, onCallDeleteModelParams(oidcEntryIdentity, revokeParams, 'token'));
+
+            // 6. Grant entry is gone, and the cascade deleted the RefreshToken row tied to it.
+            const grantStillExists = await oidcEntryCollection.documentAccessor().loadDocumentForId(grantId).accessor.exists();
+            expect(grantStillExists).toBe(false);
+
+            const refreshTokenDocs = await oidcEntryCollection.query(oidcEntriesByUidQuery('RefreshToken', u.uid)).getDocs();
+            expect(refreshTokenDocs.empty).toBe(true);
+
+            // 7. Trying to use the refresh token now fails with invalid_grant.
+            const secondRefreshRes = await request(server).post('/oidc/token').type('form').send({
+              grant_type: 'refresh_token',
+              refresh_token: refreshToken,
+              client_id,
+              client_secret
+            });
+
+            expect(secondRefreshRes.status).toBe(400);
+            expect(secondRefreshRes.body.error).toBe('invalid_grant');
+
+            // 8. The originally-issued access token can no longer be verified.
+            const afterAuthData = await oidcService.verifyAccessToken(originalAccessToken);
+            expect(afterAuthData).toBeUndefined();
+          });
+        });
       });
     });
   });
