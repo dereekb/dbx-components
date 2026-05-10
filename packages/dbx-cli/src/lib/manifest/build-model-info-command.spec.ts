@@ -118,6 +118,34 @@ describe('renderModelManifestList()', () => {
 });
 
 describe('renderModelManifestEntry()', () => {
+  it('omits the CONVERTER column when no field carries converter text', () => {
+    const text = renderModelManifestEntry({
+      modelType: 'p',
+      modelName: 'P',
+      identityConst: 'pIdentity',
+      collectionPrefix: 'p',
+      sourcePackage: 'demo',
+      sourceFile: 'p.ts',
+      fields: [{ name: 'fn', longName: 'firstName', tsType: 'string', optional: false }]
+    });
+    expect(text).not.toContain('CONVERTER');
+    expect(text).toContain('firstName');
+  });
+
+  it('keeps the CONVERTER column when at least one field carries converter text', () => {
+    const text = renderModelManifestEntry({
+      modelType: 'p',
+      modelName: 'P',
+      identityConst: 'pIdentity',
+      collectionPrefix: 'p',
+      sourcePackage: 'demo',
+      sourceFile: 'p.ts',
+      fields: [{ name: 'fn', longName: 'firstName', converter: 'firestoreString()', tsType: 'string', optional: false }]
+    });
+    expect(text).toContain('CONVERTER');
+    expect(text).toContain('firestoreString()');
+  });
+
   it('renders nested fields under their parent field', () => {
     const text = renderModelManifestEntry({
       modelType: 'p',

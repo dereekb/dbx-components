@@ -23,8 +23,12 @@ export interface CliModelField {
   /**
    * Verbatim converter expression text from the converter's `fields` literal
    * (e.g. `firestoreDate()`, `firestoreObjectArray({ objectField: foo })`).
+   *
+   * Opt-in. Only emitted when the manifest is generated with
+   * `--emit-model-converters`; downstream tooling (e.g. the dbx-components MCP)
+   * uses this text, while the CLI itself does not need it.
    */
-  readonly converter: string;
+  readonly converter?: string;
   /**
    * TypeScript type text from the interface property declaration, when the
    * field's interface property could be located (e.g. `Date`, `Maybe<NotificationUserState>`).
