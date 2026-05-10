@@ -98,7 +98,7 @@
         },
         {
           "name": "color",
-          "type": "Maybe<ThemePalette | DbxThemeColor>",
+          "type": "Maybe<ThemePalette | DbxColorInput>",
           "description": "",
           "required": false
         },
@@ -386,7 +386,7 @@
         },
         {
           "name": "color",
-          "type": "ThemePalette | DbxThemeColor",
+          "type": "ThemePalette | DbxColorInput",
           "description": "",
           "required": false,
           "default": "'primary'"
@@ -473,7 +473,7 @@
         },
         {
           "name": "color",
-          "type": "ThemePalette | DbxThemeColor",
+          "type": "ThemePalette | DbxColorInput",
           "description": "",
           "required": false,
           "default": "'primary'"
@@ -558,7 +558,7 @@
         },
         {
           "name": "color",
-          "type": "ThemePalette | DbxThemeColor",
+          "type": "ThemePalette | DbxColorInput",
           "description": "",
           "required": false,
           "default": "'primary'"
@@ -1012,7 +1012,7 @@
       "inputs": [
         {
           "name": "color",
-          "type": "Maybe<DbxBarColor>",
+          "type": "Maybe<DbxColorInput>",
           "description": "",
           "required": false
         }
@@ -1052,7 +1052,7 @@
         },
         {
           "name": "color",
-          "type": "Maybe<DbxBarColor>",
+          "type": "Maybe<DbxColorInput>",
           "description": "",
           "required": false
         }
@@ -2160,8 +2160,8 @@
         },
         {
           "name": "color",
-          "type": "Maybe<DbxThemeColor>",
-          "description": "Theme color applied to the chip background via {@link dbxColorBackground}.\n\nWhen {@link display} is also set, its color is used as a fallback.",
+          "type": "Maybe<DbxColorInput>",
+          "description": "Theme color or {@link DbxColorConfig} applied to the chip background via {@link dbxColorBackground}.\n\nWhen {@link display} is also set, its color is used as a fallback.",
           "required": false
         },
         {
@@ -2546,7 +2546,7 @@
       "inputs": [
         {
           "name": "color",
-          "type": "ThemePalette | DbxThemeColor",
+          "type": "ThemePalette | DbxColorInput",
           "description": "",
           "required": false,
           "default": "undefined"
