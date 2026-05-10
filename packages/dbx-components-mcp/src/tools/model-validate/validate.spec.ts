@@ -606,5 +606,34 @@ export function agentSummaryFirestoreCollection(firestoreContext: FirestoreConte
       const profileTagWarnings = result.violations.filter((v) => v.code === 'MODEL_FIELD_MISSING_VARIABLE_TAG' && v.model === 'Profile');
       expect(profileTagWarnings).toHaveLength(0);
     });
+
+    it('warns MODEL_FIELD_LONG_NAME_EQUALS_NAME when `@dbxModelVariable` value equals the field name', () => {
+      const text = HAPPY_SOURCE.replace('export interface Profile {\n  uid: string;\n  n: string;\n}', 'export interface Profile {\n  /** @dbxModelVariable uid */\n  uid: string;\n  /** @dbxModelVariable n */\n  n: string;\n}');
+      const result = validateFirebaseModelSources([{ name: 'x.ts', text }]);
+      const equalsWarnings = result.violations.filter((v) => v.code === 'MODEL_FIELD_LONG_NAME_EQUALS_NAME' && v.model === 'Profile');
+      expect(equalsWarnings.map((v) => v.severity)).toEqual(['warning', 'warning']);
+      expect(equalsWarnings.map((v) => v.message)).toEqual(expect.arrayContaining([expect.stringContaining('`uid`'), expect.stringContaining('`n`')]));
+    });
+
+    it('does not warn MODEL_FIELD_LONG_NAME_EQUALS_NAME when the long name differs from the field name', () => {
+      const text = HAPPY_SOURCE.replace('export interface Profile {\n  uid: string;\n  n: string;\n}', 'export interface Profile {\n  /** @dbxModelVariable userUid */\n  uid: string;\n  /** @dbxModelVariable name */\n  n: string;\n}');
+      const result = validateFirebaseModelSources([{ name: 'x.ts', text }]);
+      const equalsWarnings = result.violations.filter((v) => v.code === 'MODEL_FIELD_LONG_NAME_EQUALS_NAME');
+      expect(equalsWarnings).toHaveLength(0);
+    });
+
+    it('does not warn MODEL_FIELD_LONG_NAME_EQUALS_NAME when the field is in `ignoredFieldNames`', () => {
+      const text = HAPPY_SOURCE.replace('export interface Profile {\n  uid: string;\n  n: string;\n}', 'export interface Profile {\n  /** @dbxModelVariable uid */\n  uid: string;\n  /** @dbxModelVariable name */\n  n: string;\n}');
+      const result = validateFirebaseModelSources([{ name: 'x.ts', text }], { ignoredFieldNames: new Set(['uid']) });
+      const equalsWarnings = result.violations.filter((v) => v.code === 'MODEL_FIELD_LONG_NAME_EQUALS_NAME');
+      expect(equalsWarnings).toHaveLength(0);
+    });
+
+    it('does not warn MODEL_FIELD_LONG_NAME_EQUALS_NAME when the parent interface lacks `@dbxModel`', () => {
+      const text = HAPPY_SOURCE.replace('/**\n * @dbxModel\n */\nexport interface Profile {', 'export interface Profile {').replace('export interface Profile {\n  uid: string;\n  n: string;\n}', 'export interface Profile {\n  /** @dbxModelVariable uid */\n  uid: string;\n  /** @dbxModelVariable n */\n  n: string;\n}');
+      const result = validateFirebaseModelSources([{ name: 'x.ts', text }]);
+      const equalsWarnings = result.violations.filter((v) => v.code === 'MODEL_FIELD_LONG_NAME_EQUALS_NAME' && v.model === 'Profile');
+      expect(equalsWarnings).toHaveLength(0);
+    });
   });
 });

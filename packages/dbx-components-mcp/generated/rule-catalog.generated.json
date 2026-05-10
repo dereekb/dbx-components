@@ -474,6 +474,16 @@
     "canonicalFix": "Update the getter body to return the matching identity constant."
   },
   {
+    "code": "MODEL_FIELD_LONG_NAME_EQUALS_NAME",
+    "source": "dbx_model_validate",
+    "severity": "warning",
+    "title": "A persisted field's `@dbxModelVariable <longName>` tag value matches the field's short name verbatim, defeating the tag's purpose (the long name should be the field's unabbreviated camelCase variable name)",
+    "whatItFlags": "A persisted field's `@dbxModelVariable <longName>` tag value matches the field's short name verbatim, defeating the tag's purpose (the long name should be the field's unabbreviated camelCase variable name).",
+    "whenItApplies": "Every field on a `@dbxModel` interface where `@dbxModelVariable` is present and its value equals the field's name (e.g. field `h` tagged `@dbxModelVariable h`, field `ub` tagged `@dbxModelVariable ub`). The tag must always carry the unabbreviated form so the catalog and decoder surface a meaningful long name.",
+    "whenItDoesNotApply": "Fields whose name is already the unabbreviated camelCase form (e.g. `name`, `email`, `id`, `at`) — add those to `dbx-mcp.config.json` `modelValidate.ignoredFieldNames` to silence the warning workspace-wide.",
+    "canonicalFix": "Replace the tag value with the field's unabbreviated camelCase variable name (e.g. `@dbxModelVariable h` → `@dbxModelVariable hours`, `@dbxModelVariable ub` → `@dbxModelVariable usedBudget`). To exempt fields whose long name legitimately equals the short name, add them to `modelValidate.ignoredFieldNames`."
+  },
+  {
     "code": "MODEL_FIELD_MISSING_JSDOC",
     "source": "dbx_model_validate",
     "severity": "warning",
