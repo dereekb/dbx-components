@@ -1,21 +1,21 @@
 /**
  * Abstract token class representing the application's runtime environment configuration.
  *
- * Provided via DI using {@link provideDbxAppEnviroment} and accessed through {@link DbxAppEnviromentService}.
+ * Provided via DI using {@link provideDbxAppEnvironment} and accessed through {@link DbxAppEnvironmentService}.
  * Subclass or provide a concrete instance to define environment-specific flags.
  *
  * @example
  * ```typescript
- * const env: DbxAppEnviroment = {
+ * const env: DbxAppEnvironment = {
  *   production: false,
  *   testing: true,
  * };
  *
  * // In app config:
- * provideDbxAppEnviroment(env);
+ * provideDbxAppEnvironment(env);
  * ```
  */
-export abstract class DbxAppEnviroment {
+export abstract class DbxAppEnvironment {
   /**
    * Whether or not this is a production environment.
    */
@@ -32,4 +32,10 @@ export abstract class DbxAppEnviroment {
    * Generally "production" is true when this is true.
    */
   abstract staging?: boolean;
+  /**
+   * Whether or not this is a preview environment.
+   *
+   * Generally "production" is true when this is true.
+   */
+  abstract preview?: boolean;
 }

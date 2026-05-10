@@ -4,7 +4,7 @@ import { type ThemePalette } from '@angular/material/core';
 import { type ProgressBarMode } from '@angular/material/progress-bar';
 import { type LoadingContext, type LoadingContextEvent, type MaybeObservableOrValue, maybeValueFromObservableOrValue, switchMapMaybeLoadingContextStream } from '@dereekb/rxjs';
 import { type ErrorInput, type Maybe } from '@dereekb/util';
-import { type DbxThemeColor } from '../layout/style/style';
+import { type DbxColorInput } from '../layout/style/style';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DbxBasicLoadingComponent } from './basic-loading.component';
 import { type DbxLoadingIsLoadingOrProgress } from './loading';
@@ -68,7 +68,7 @@ export class DbxLoadingComponent {
   readonly show = input<Maybe<boolean>>();
   readonly text = input<Maybe<string>>();
   readonly mode = input<Maybe<ProgressBarMode>>();
-  readonly color = input<ThemePalette | DbxThemeColor>('primary');
+  readonly color = input<ThemePalette | DbxColorInput>('primary');
   readonly diameter = input<Maybe<number>>();
   readonly linear = input<Maybe<boolean>>();
   readonly loading = input<Maybe<DbxLoadingIsLoadingOrProgress>>();

@@ -1,9 +1,9 @@
 import { type EnvironmentProviders, makeEnvironmentProviders, type Provider } from '@angular/core';
-import { DbxAppEnviroment } from './environment';
-import { DbxAppEnviromentService } from './environment.service';
+import { DbxAppEnvironment } from './environment';
+import { DbxAppEnvironmentService } from './environment.service';
 
 /**
- * Registers {@link DbxAppEnviroment} and {@link DbxAppEnviromentService} as environment-level providers.
+ * Registers {@link DbxAppEnvironment} and {@link DbxAppEnvironmentService} as environment-level providers.
  *
  * @param environment - The concrete environment configuration to provide.
  * @returns The environment providers for the application environment.
@@ -13,18 +13,18 @@ import { DbxAppEnviromentService } from './environment.service';
  * // In app.config.ts:
  * export const appConfig: ApplicationConfig = {
  *   providers: [
- *     provideDbxAppEnviroment({ production: true, staging: false }),
+ *     provideDbxAppEnvironment({ production: true, staging: false }),
  *   ],
  * };
  * ```
  */
-export function provideDbxAppEnviroment(environment: DbxAppEnviroment): EnvironmentProviders {
+export function provideDbxAppEnvironment(environment: DbxAppEnvironment): EnvironmentProviders {
   const providers: Provider[] = [
     {
-      provide: DbxAppEnviroment,
+      provide: DbxAppEnvironment,
       useValue: environment
     },
-    DbxAppEnviromentService
+    DbxAppEnvironmentService
   ];
 
   return makeEnvironmentProviders(providers);

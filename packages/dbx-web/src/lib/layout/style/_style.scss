@@ -168,6 +168,26 @@
   .dbx-color-tonal {
     color: var(#{theming.$dbx-bg-color-var});
   }
+
+  /// @dbx-utility color-bg
+  /// @intent generic themed-background class — pair with `[dbxColor]="config"` to drive `--dbx-bg-color-current` / `--dbx-color-current` from arbitrary CSS color values
+  /// @role color
+  .dbx-color-bg {
+    @include dbx-color-bg-body();
+  }
+
+  /// @dbx-utility color-text
+  /// @intent generic themed-text class — pair with `[dbxTextColor]="config"` to drive `--dbx-color-current` from an arbitrary CSS color value
+  /// @role color
+  .dbx-color-text {
+    color: #{theming.$dbx-color};
+  }
+}
+
+@mixin dbx-color-bg-body($default-bg-tone: 100%) {
+  #{theming.$dbx-bg-tone-var}: $default-bg-tone;
+  background: color-mix(in srgb, #{theming.$dbx-bg-color} var(#{theming.$dbx-bg-tone-var}), transparent);
+  color: #{theming.$dbx-color};
 }
 
 @mixin define-dbx-color-class($name, $color, $contrast, $swap-bg: false) {
@@ -182,9 +202,7 @@
   .dbx-#{$name}-bg {
     #{theming.$dbx-color-var}: #{$bg-text};
     #{theming.$dbx-bg-color-var}: #{$bg-color};
-    #{theming.$dbx-bg-tone-var}: 100%;
-    background: color-mix(in srgb, #{theming.$dbx-bg-color} var(#{theming.$dbx-bg-tone-var}), transparent);
-    color: #{theming.$dbx-color};
+    @include dbx-color-bg-body();
   }
 }
 

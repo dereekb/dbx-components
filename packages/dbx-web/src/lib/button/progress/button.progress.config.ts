@@ -2,7 +2,7 @@ import { InjectionToken } from '@angular/core';
 import { type ThemePalette } from '@angular/material/core';
 import { type ProgressSpinnerMode } from '@angular/material/progress-spinner';
 import { type Maybe } from '@dereekb/util';
-import { type DbxThemeColor } from '../../layout/style/style';
+import { type DbxColorInput, type DbxThemeColor } from '../../layout/style/style';
 import { type DbxButtonType } from '../button';
 import { type DbxButtonEcho, type DbxButtonWorking } from '@dereekb/dbx-core';
 
@@ -25,8 +25,10 @@ export interface DbxProgressButtonConfig {
   readonly spinnerText?: Maybe<string>;
   /**
    * Theme color for the button itself.
+   *
+   * Forwarded to the button host's `[dbxColor]` directive.
    */
-  readonly buttonColor?: Maybe<ThemePalette | DbxThemeColor>;
+  readonly buttonColor?: Maybe<ThemePalette | DbxColorInput>;
   /**
    * Theme color for the progress spinner.
    */

@@ -420,7 +420,17 @@ export enum ModelValidateCode {
    * @dbxRuleNotApplies Fields on embedded sub-object interfaces (no `@dbxModel` parent) and fields the project deliberately leaves untagged (rare).
    * @dbxRuleFix Append `@dbxModelVariable <longName>` to the field's JSDoc block, where `<longName>` is the field's unabbreviated camelCase variable name.
    */
-  MODEL_FIELD_MISSING_VARIABLE_TAG = 'MODEL_FIELD_MISSING_VARIABLE_TAG'
+  MODEL_FIELD_MISSING_VARIABLE_TAG = 'MODEL_FIELD_MISSING_VARIABLE_TAG',
+
+  /**
+   * A persisted field's `@dbxModelVariable <longName>` tag value matches the field's short name verbatim, defeating the tag's purpose (the long name should be the field's unabbreviated camelCase variable name).
+   *
+   * @dbxRuleSeverity warning
+   * @dbxRuleApplies Every field on a `@dbxModel` interface where `@dbxModelVariable` is present and its value equals the field's name (e.g. field `h` tagged `@dbxModelVariable h`, field `ub` tagged `@dbxModelVariable ub`). The tag must always carry the unabbreviated form so the catalog and decoder surface a meaningful long name.
+   * @dbxRuleNotApplies Fields whose name is already the unabbreviated camelCase form (e.g. `name`, `email`, `id`, `at`) — add those to `dbx-mcp.config.json` `modelValidate.ignoredFieldNames` to silence the warning workspace-wide.
+   * @dbxRuleFix Replace the tag value with the field's unabbreviated camelCase variable name (e.g. `@dbxModelVariable h` → `@dbxModelVariable hours`, `@dbxModelVariable ub` → `@dbxModelVariable usedBudget`). To exempt fields whose long name legitimately equals the short name, add them to `modelValidate.ignoredFieldNames`.
+   */
+  MODEL_FIELD_LONG_NAME_EQUALS_NAME = 'MODEL_FIELD_LONG_NAME_EQUALS_NAME'
 }
 
 /**

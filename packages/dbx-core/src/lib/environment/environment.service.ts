@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { DbxAppEnviroment } from './environment';
+import { DbxAppEnvironment } from './environment';
 
 /**
- * Injectable service providing convenience accessors for the application's {@link DbxAppEnviroment}.
+ * Injectable service providing convenience accessors for the application's {@link DbxAppEnvironment}.
  *
  * Exposes computed properties for common environment checks (production, staging, testing)
  * and a typed getter for accessing custom environment properties.
@@ -11,7 +11,7 @@ import { DbxAppEnviroment } from './environment';
  * ```typescript
  * @Component({ ... })
  * export class MyComponent {
- *   private readonly envService = inject(DbxAppEnviromentService);
+ *   private readonly envService = inject(DbxAppEnvironmentService);
  *
  *   get showDebugPanel(): boolean {
  *     return !this.envService.isProduction;
@@ -20,8 +20,8 @@ import { DbxAppEnviroment } from './environment';
  * ```
  */
 @Injectable()
-export class DbxAppEnviromentService {
-  readonly environment = inject(DbxAppEnviroment);
+export class DbxAppEnvironmentService {
+  readonly environment = inject(DbxAppEnvironment);
 
   get isProduction() {
     return this.environment.production === true;
@@ -40,7 +40,7 @@ export class DbxAppEnviromentService {
    *
    * @returns The environment cast to the specified type.
    */
-  getEnvironment<T extends DbxAppEnviroment>(): T {
+  getEnvironment<T extends DbxAppEnvironment>(): T {
     return this.environment as T;
   }
 }

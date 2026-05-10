@@ -1,14 +1,14 @@
 {
   "name": "@dereekb/firebase-server/zoho",
-  "version": "13.11.5",
+  "version": "13.11.6",
   "peerDependencies": {
-    "@dereekb/analytics": "13.11.5",
-    "@dereekb/date": "13.11.5",
-    "@dereekb/model": "13.11.5",
-    "@dereekb/nestjs": "13.11.5",
-    "@dereekb/rxjs": "13.11.5",
-    "@dereekb/firebase": "13.11.5",
-    "@dereekb/util": "13.11.5",
-    "@dereekb/zoho": "13.11.5"
+    "@dereekb/analytics": "13.11.6",
+    "@dereekb/date": "13.11.6",
+    "@dereekb/model": "13.11.6",
+    "@dereekb/nestjs": "13.11.6",
+    "@dereekb/rxjs": "13.11.6",
+    "@dereekb/firebase": "13.11.6",
+    "@dereekb/util": "13.11.6",
+    "@dereekb/zoho": "13.11.6"
   }
 }

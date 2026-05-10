@@ -69,8 +69,10 @@ export interface RuleOptions {
    */
   readonly maxFieldNameLength?: number;
   /**
-   * Field names that should never trigger `MODEL_FIELD_NAME_TOO_LONG`,
-   * regardless of the configured limit. Globally scoped — matched by exact
+   * Field names that should never trigger field-level convention warnings —
+   * currently `MODEL_FIELD_NAME_TOO_LONG` (regardless of the configured
+   * limit) and `MODEL_FIELD_LONG_NAME_EQUALS_NAME` (when the short name is
+   * already the unabbreviated form). Globally scoped — matched by exact
    * name, no regex, no per-interface qualification.
    */
   readonly ignoredFieldNames?: ReadonlySet<string>;

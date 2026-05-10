@@ -15,6 +15,7 @@ import { ACTION_PATTERN_AUTO_TRIGGER_ON_MODIFY } from './actions/action.auto-tri
 import { ACTION_PATTERN_BUTTON_CONFIRM_DELETE } from './actions/action.button-confirm-delete.pattern.js';
 import { ACTION_PATTERN_DISABLED_BY_KEY } from './actions/action.disabled-by-key.pattern.js';
 import { ACTION_PATTERN_FORM_SUBMIT } from './actions/action.form-submit.pattern.js';
+import { ACTION_PATTERN_FORM_WITH_SECONDARY } from './actions/action.form-with-secondary.pattern.js';
 import { ACTION_PATTERN_PROVIDE_CONTEXT_UP } from './actions/action.provide-context-up.pattern.js';
 import { ACTION_PATTERN_VALUE_GETTER_ON_TRIGGER } from './actions/action.value-getter-on-trigger.pattern.js';
 
@@ -51,7 +52,7 @@ export interface ActionExamplePattern {
   readonly notes?: string;
 }
 
-export const ACTION_EXAMPLE_PATTERNS: readonly ActionExamplePattern[] = [ACTION_PATTERN_BUTTON_CONFIRM_DELETE, ACTION_PATTERN_FORM_SUBMIT, ACTION_PATTERN_AUTO_TRIGGER_ON_MODIFY, ACTION_PATTERN_DISABLED_BY_KEY, ACTION_PATTERN_VALUE_GETTER_ON_TRIGGER, ACTION_PATTERN_PROVIDE_CONTEXT_UP];
+export const ACTION_EXAMPLE_PATTERNS: readonly ActionExamplePattern[] = [ACTION_PATTERN_BUTTON_CONFIRM_DELETE, ACTION_PATTERN_FORM_SUBMIT, ACTION_PATTERN_FORM_WITH_SECONDARY, ACTION_PATTERN_AUTO_TRIGGER_ON_MODIFY, ACTION_PATTERN_DISABLED_BY_KEY, ACTION_PATTERN_VALUE_GETTER_ON_TRIGGER, ACTION_PATTERN_PROVIDE_CONTEXT_UP];
 
 /**
  * Looks up an action example pattern by its slug.

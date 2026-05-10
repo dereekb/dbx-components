@@ -63,11 +63,12 @@ function checkFieldNameLengths(file: ExtractedFile, violations: Violation[], opt
       });
     }
   }
-  checkFieldJsDocs(file, violations);
+  checkFieldJsDocs(file, violations, options);
 }
 
 // MARK: Field JSDoc + @dbxModelVariable convention (warning)
-function checkFieldJsDocs(file: ExtractedFile, violations: Violation[]): void {
+function checkFieldJsDocs(file: ExtractedFile, violations: Violation[], options?: RuleOptions): void {
+  const ignored = options?.ignoredFieldNames;
   for (const iface of file.dataInterfaces) {
     for (const field of iface.fields) {
       if (!field.jsDocFirstLine) {
@@ -85,6 +86,16 @@ function checkFieldJsDocs(file: ExtractedFile, violations: Violation[]): void {
           code: 'MODEL_FIELD_MISSING_VARIABLE_TAG',
           severity: 'warning',
           message: `Field \`${field.name}\` in interface \`${iface.name}\` is missing its \`@dbxModelVariable <name>\` JSDoc tag. The catalog uses the tag for the field's long name — the field's unabbreviated camelCase variable name (e.g. \`uid\` → \`userUid\`, \`n\` → \`name\`).`,
+          file: file.name,
+          line: field.line,
+          model: iface.name
+        });
+      }
+      if (iface.dbxModelTag && field.dbxModelVariableTag !== undefined && field.dbxModelVariableTag === field.name && !ignored?.has(field.name)) {
+        pushViolation(violations, {
+          code: 'MODEL_FIELD_LONG_NAME_EQUALS_NAME',
+          severity: 'warning',
+          message: `Field \`${field.name}\` in interface \`${iface.name}\` has \`@dbxModelVariable ${field.dbxModelVariableTag}\` matching its short name. The long name should be the field's unabbreviated camelCase variable name (e.g. \`h\` → \`hours\`, \`ub\` → \`usedBudget\`). If the short name is already the unabbreviated form, add \`${field.name}\` to \`modelValidate.ignoredFieldNames\` in \`dbx-mcp.config.json\`.`,
           file: file.name,
           line: field.line,
           model: iface.name

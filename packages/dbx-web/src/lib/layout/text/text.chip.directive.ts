@@ -1,6 +1,6 @@
 import { Directive, input, computed } from '@angular/core';
 import { type LabeledValue, type Maybe } from '@dereekb/util';
-import { type DbxColorTone, type DbxThemeColor, dbxColorBackground } from '../style/style';
+import { type DbxColorInput, type DbxColorTone, dbxColorBackground, isDbxColorConfig } from '../style/style';
 
 /**
  * Display configuration for a single colored chip.
@@ -13,9 +13,9 @@ export interface DbxChipDisplay extends LabeledValue<string> {
    */
   readonly key?: string;
   /**
-   * Theme color applied to the chip background.
+   * Theme color or {@link DbxColorConfig} applied to the chip background.
    */
-  readonly color?: Maybe<DbxThemeColor>;
+  readonly color?: Maybe<DbxColorInput>;
   /**
    * Whether to render the chip in small mode.
    */
@@ -59,7 +59,9 @@ export const DBX_CHIP_DEFAULT_TONE = 18;
     class: 'dbx-chip mat-standard-chip',
     '[class]': 'styleSignal()',
     '[class.dbx-color-tonal]': 'isTonalSignal()',
-    '[style.--dbx-color-bg-tone]': 'bgToneStyleSignal()'
+    '[style.--dbx-color-bg-tone]': 'bgToneStyleSignal()',
+    '[style.--dbx-bg-color-current]': 'bgColorStyleSignal()',
+    '[style.--dbx-color-current]': 'colorStyleSignal()'
   },
   standalone: true
 })
@@ -68,11 +70,11 @@ export class DbxChipDirective {
   readonly block = input<Maybe<boolean>>();
 
   /**
-   * Theme color applied to the chip background via {@link dbxColorBackground}.
+   * Theme color or {@link DbxColorConfig} applied to the chip background via {@link dbxColorBackground}.
    *
    * When {@link display} is also set, its color is used as a fallback.
    */
-  readonly color = input<Maybe<DbxThemeColor>>();
+  readonly color = input<Maybe<DbxColorInput>>();
   /**
    * Display configuration that provides color (and optionally label/value metadata).
    *
@@ -88,7 +90,22 @@ export class DbxChipDirective {
 
   readonly colorSignal = computed(() => this.color() ?? this.display()?.color);
 
-  readonly toneSignal = computed(() => this.tone() ?? this.display()?.tone ?? DBX_CHIP_DEFAULT_TONE);
+  private readonly _configSignal = computed(() => {
+    const value = this.colorSignal();
+    return isDbxColorConfig(value) ? value : undefined;
+  });
+
+  /**
+   * Inline `--dbx-bg-color-current` value applied when a {@link DbxColorConfig} is bound. Resolves to `null` for named-color strings so the named `.dbx-{color}-bg` class supplies the variable instead.
+   */
+  readonly bgColorStyleSignal = computed(() => this._configSignal()?.color ?? null);
+
+  /**
+   * Inline `--dbx-color-current` value applied when a {@link DbxColorConfig} is bound. Resolves to `null` for named-color strings.
+   */
+  readonly colorStyleSignal = computed(() => this._configSignal()?.contrast ?? null);
+
+  readonly toneSignal = computed(() => this.tone() ?? this.display()?.tone ?? this._configSignal()?.tone ?? DBX_CHIP_DEFAULT_TONE);
 
   readonly styleSignal = computed(() => {
     const display = this.display();

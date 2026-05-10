@@ -5,7 +5,7 @@ import { type DbxFirebaseLoginMode, type FirebaseLoginMethodType } from './login
 import { type DbxFirebaseAuthLoginProviderAssets, DbxFirebaseAuthLoginService } from './login.service';
 import { DbxFirebaseLoginContext } from './login.context';
 import { MatIconModule } from '@angular/material/icon';
-import { DbxActionModule, DbxButtonModule , type DbxActionConfirmConfig , type DbxThemeColor } from '@dereekb/dbx-web';
+import { DbxActionModule, DbxButtonModule, type DbxActionConfirmConfig, type DbxColorInput } from '@dereekb/dbx-web';
 import { type Maybe } from '@dereekb/util';
 import { DBX_INJECTION_COMPONENT_DATA } from '@dereekb/dbx-core';
 import { firebaseAuthErrorToReadableError, type FirebaseAuthError } from '@dereekb/firebase';
@@ -22,9 +22,9 @@ export interface DbxFirebaseLoginButtonConfig {
   buttonColor?: string;
   buttonTextColor?: string;
   /**
-   * Material theme color to apply (e.g., 'warn', 'primary').
+   * Material theme color or {@link DbxColorConfig} to apply to the underlying button (e.g., 'warn', 'primary').
    */
-  color?: DbxThemeColor;
+  color?: DbxColorInput;
   /**
    * Optional confirmation dialog config. When set, the action will prompt the user before executing.
    */

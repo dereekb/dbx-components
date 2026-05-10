@@ -6,6 +6,42 @@
   "generator": "@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs",
   "entries": [
     {
+      "slug": "action-form-with-secondary",
+      "category": "action",
+      "summary": "Form-driven primary action (dbxActionForm + Approve) plus a nested ng-container dbxAction with dbxActionValue for a void Deny / Cancel button.",
+      "header": "Form Action With Secondary Button",
+      "className": "DocActionFormWithSecondaryExampleComponent",
+      "selector": "doc-action-form-with-secondary-example",
+      "module": "apps/demo",
+      "appRef": "apps/demo",
+      "hint": "dbxActionForm + Approve, plus a nested dbxAction context for Deny.",
+      "relatedSlugs": [
+        "dbxActionForm",
+        "dbxActionValue",
+        "ng-container",
+        "dbxAction",
+        "dbxActionButton",
+        "dbxActionSnackbarError"
+      ],
+      "info": "<p>\n  The\n  <strong>outer</strong>\n  <code>[dbxAction]</code>\n  hosts the primary work. A child component carries the\n  <code>dbxActionForm</code>\n  directive so the form's value (and validity / modified state) drives the\n  <code>Approve</code>\n  button.\n</p>\n<p>\n  The\n  <strong>secondary</strong>\n  button (\n  <code>Deny</code>\n  ) lives inside a nested\n  <code>&lt;ng-container dbxAction&gt;</code>\n  . Angular DI looks up the nearest ancestor\n  <code>dbxAction</code>\n  for each\n  <code>dbxActionButton</code>\n  , so the inner button picks up the inner context, not the outer.\n  <code>dbxActionValue</code>\n  with no input supplies the empty payload that lets the button fire a void handler immediately.\n</p>\n<p>\n  Each context has its own\n  <code>dbxActionSnackbarError</code>\n  , so Approve / Deny feedback is independent.\n</p>",
+      "snippet": "<div dbxAction dbxActionSnackbarError [dbxActionHandler]=\"approveHandler\">\n  <doc-action-form-with-secondary-form dbxActionForm></doc-action-form-with-secondary-form>\n  <div class=\"dbx-pt3\">\n    <dbx-button dbxActionButton text=\"Approve\" [raised]=\"true\" color=\"primary\"></dbx-button>\n    <dbx-button-spacer></dbx-button-spacer>\n    <ng-container dbxAction dbxActionSnackbarError dbxActionValue [dbxActionHandler]=\"denyHandler\">\n      <dbx-button dbxActionButton text=\"Deny\" [flat]=\"true\" color=\"warn\"></dbx-button>\n    </ng-container>\n  </div>\n</div>\n@let decision = lastDecisionSignal();\n@if (decision) {\n  <div class=\"dbx-pt3\">\n    @if (decision.outcome === 'approved') {\n      <span>\n        Approved with reason:\n        <strong>{{ decision.value.reason }}</strong>\n      </span>\n    } @else {\n      <span>Denied.</span>\n    }\n  </div>\n}",
+      "uses": [
+        {
+          "kind": "component",
+          "className": "DocActionFormWithSecondaryFormComponent",
+          "role": "form",
+          "selector": "doc-action-form-with-secondary-form",
+          "classSource": "@Component({\n  template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,\n  selector: 'doc-action-form-with-secondary-form',\n  providers: dbxForgeFormComponentProviders(),\n  standalone: true,\n  imports: [DbxForgeFormComponentImportsModule],\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class DocActionFormWithSecondaryFormComponent extends AbstractSyncForgeFormDirective<DocActionFormWithSecondaryFormValue> {\n  readonly formConfig: FormConfig = {\n    fields: [\n      dbxForgeTextField({\n        key: 'reason',\n        label: 'Reason',\n        required: true,\n        description: 'The Approve handler receives this value via dbxActionForm. Type something to enable Approve.'\n      })\n    ]\n  } as FormConfig;\n}"
+        },
+        {
+          "kind": "interface",
+          "className": "DocActionFormWithSecondaryFormValue",
+          "role": "formValue",
+          "classSource": "export interface DocActionFormWithSecondaryFormValue {\n  reason: string;\n}"
+        }
+      ]
+    },
+    {
       "slug": "card-hero-onboarding-progress",
       "category": "card",
       "summary": "Top-of-page hero card on an inverse surface — eyebrow, headline, progress bar, secondary CTA, and trailing percent.",
@@ -217,6 +253,28 @@
           "classSource": "export interface TwoLineItemValue {\n  readonly key: string;\n  readonly icon?: Maybe<string>;\n  readonly title: string;\n  readonly details?: Maybe<string>;\n  readonly footnote?: Maybe<string>;\n  readonly status?: Maybe<'active' | 'pending' | 'archived'>;\n}"
         }
       ]
+    },
+    {
+      "slug": "layout-support-page",
+      "category": "layout",
+      "summary": "Static support landing page — outlined hero card with a dbx-button CTA and search input plus a responsive 3-column grid of topic mat-cards whose rows are dbx-anchor onClick handlers that pop a snackbar.",
+      "header": "Support Landing Page Layout",
+      "className": "DocSupportPageLayoutExampleComponent",
+      "selector": "doc-support-page-layout-example",
+      "module": "apps/demo",
+      "appRef": "apps/demo",
+      "hint": "Page header + hero CTA/search card + responsive 3-column grid of topic cards.",
+      "relatedSlugs": [
+        "mat-card",
+        "dbx-button",
+        "dbx-anchor",
+        "dbx-icon-tile",
+        "mat-form-field",
+        "mat-snack-bar"
+      ],
+      "info": "<p>\n  Composes a marketing-style support page out of Angular Material cards plus dbx-web's\n  <code>&lt;dbx-button&gt;</code>\n  ,\n  <code>&lt;dbx-anchor&gt;</code>\n  , and\n  <code>&lt;dbx-icon-tile&gt;</code>\n  : an outlined hero\n  <code>&lt;mat-card&gt;</code>\n  for the search/CTA row and a responsive grid of outlined topic\n  <code>&lt;mat-card&gt;</code>\n  boxes whose rows are individual\n  <code>&lt;dbx-anchor [anchor]&gt;</code>\n  click targets.\n</p>\n<p>\n  The topic grid uses Angular Flex Layout's CSS-Grid directives —\n  <code>gdColumns=\"repeat(auto-fit, minmax(320px, 1fr))\"</code>\n  +\n  <code>gdGap</code>\n  — so the cards auto-collapse 3 → 2 → 1 columns as the viewport narrows, with no breakpoint media queries or wrapping\n  <code>fxFlex</code>\n  shells needed. The hero CTA + search row uses\n  <code>fxLayout=\"row\"</code>\n  with\n  <code>fxLayout.lt-md=\"column\"</code>\n  so it stacks below the tablet breakpoint. The CTA itself composes the\n  <code>.dbx-grow-button</code>\n  +\n  <code>.dbx-button-big</code>\n  utilities (full-width, taller mat-button) instead of hand-rolled\n  <code>::ng-deep</code>\n  width / height overrides.\n</p>\n<p>\n  Topic-card avatars are\n  <code>&lt;dbx-icon-tile [round]&gt;</code>\n  with\n  <code>[dbxColor]=\"'primary'\"</code>\n  +\n  <code>[dbxColorTone]=\"18\"</code>\n  for the tonal swatch. Each card body is a plain\n  <code>&lt;ul&gt;</code>\n  /\n  <code>&lt;li&gt;</code>\n  so the browser's default disc marker supplies the bullet, and topic links use\n  <code>[dbxTextColor]=\"'primary'\"</code>\n  (the\n  <code>&lt;a&gt;</code>\n  inside\n  <code>dbx-anchor</code>\n  already inherits color and is text-decoration-none by default).\n</p>\n<p>\n  Each topic row supplies a\n  <code>ClickableAnchor</code>\n  with an\n  <code>onClick</code>\n  callback to\n  <code>dbx-anchor</code>\n  ; the callback opens a\n  <code>MatSnackBar</code>\n  with a \"Dismiss\" action so every link demonstrably triggers a button-bearing popup. Swap the\n  <code>onClick</code>\n  for a\n  <code>ref</code>\n  /\n  <code>url</code>\n  to route or open externally instead.\n</p>",
+      "snippet": "<div class=\"dbx-p4 doc-support-page\">\n  <h1 class=\"dbx-text-headline-large dbx-mb1\">Lorem Ipsum Support</h1>\n  <p class=\"dbx-text-body-large dbx-mb4\">Dolor sit amet — we're here to help you succeed!</p>\n\n  <mat-card appearance=\"outlined\" class=\"dbx-mb4\">\n    <mat-card-content>\n      <h3 class=\"dbx-text-title-medium dbx-mb3\">Need help? We're here.</h3>\n      <div fxLayout=\"row\" fxLayout.lt-md=\"column\" fxLayoutGap=\"var(--dbx-padding-3)\" fxLayoutAlign=\"start stretch\">\n        <dbx-button class=\"dbx-grow-button dbx-button-form-field-height\" fxFlex=\"1 1 50%\" flat icon=\"help_outline\" text=\"Chat with Support\" customButtonColor=\"var(--mat-sys-inverse-surface)\" customTextColor=\"var(--mat-sys-inverse-on-surface)\" (buttonClick)=\"onChatClick()\"></dbx-button>\n        <mat-form-field class=\"dbx-p0\" appearance=\"outline\" fxFlex=\"1 1 50%\" subscriptSizing=\"dynamic\">\n          <input matInput placeholder=\"Search for a topic or question…\" />\n        </mat-form-field>\n      </div>\n    </mat-card-content>\n  </mat-card>\n\n  <div gdColumns=\"repeat(auto-fit, minmax(320px, 1fr))\" gdGap=\"var(--dbx-padding-5)\">\n    @for (group of topics; track group.title) {\n      <mat-card appearance=\"outlined\">\n        <mat-card-content>\n          <div fxLayout=\"row\" fxLayoutAlign=\"start center\" fxLayoutGap=\"var(--dbx-padding-2)\" class=\"dbx-mb3\">\n            <dbx-icon-tile class=\"doc-support-topic-avatar\" [icon]=\"group.icon\" [round]=\"true\"></dbx-icon-tile>\n            <span class=\"dbx-text-title-medium\">{{ group.title }}</span>\n          </div>\n          <ul class=\"doc-support-topic-links\">\n            @for (link of group.links; track link.label) {\n              <li class=\"dbx-pb2\">\n                <dbx-anchor [dbxTextColor]=\"'primary'\" [anchor]=\"anchorFor(link)\">{{ link.label }}</dbx-anchor>\n              </li>\n            }\n          </ul>\n        </mat-card-content>\n      </mat-card>\n    }\n  </div>\n</div>",
+      "uses": []
     }
   ]
 }

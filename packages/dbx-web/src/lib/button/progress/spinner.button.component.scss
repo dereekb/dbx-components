@@ -1,8 +1,25 @@
 :host {
   button {
-    min-height: 36px;
+    // default to text-button container-height; per-variant overrides below read the matching mat token
+    min-height: var(--mat-button-text-container-height);
     height: unset; // allow height to expand
     outline: none;
+
+    &.mat-mdc-unelevated-button {
+      min-height: var(--mat-button-filled-container-height);
+    }
+
+    &.mat-mdc-raised-button {
+      min-height: var(--mat-button-protected-container-height);
+    }
+
+    &.mat-mdc-outlined-button {
+      min-height: var(--mat-button-outlined-container-height);
+    }
+
+    &.mat-mdc-tonal-button {
+      min-height: var(--mat-button-tonal-container-height);
+    }
 
     &.working {
       cursor: not-allowed;

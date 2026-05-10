@@ -33,6 +33,11 @@
  * apps that do not surface `model-info` should leave it disabled so the manifest
  * data — which can be sizeable — does not get bundled into the final CLI binary.
  *
+ * Per-field converter expression text is itself opt-in within the model manifest
+ * via `--emit-model-converters`. The CLI does not need it; downstream tooling
+ * such as the dbx-components MCP does. Defaults to off so the emitted manifest
+ * stays as small as possible.
+ *
  * Flags:
  *   --functions-config=<path>   (required) path to the app's functions.ts.
  *                                Absolute or workspace-relative.
@@ -48,6 +53,10 @@
  *                                Off by default to keep the generated file small
  *                                and avoid bundling model metadata into apps that
  *                                do not need the runtime `model-info` command.
+ *   --emit-model-converters     Opt in to emitting per-field `converter` expression
+ *                                text inside the model manifest. Off by default —
+ *                                useful for downstream tooling (dbx-components MCP)
+ *                                but unused by the CLI itself.
  *
  * Run from any cwd; workspace-relative paths resolve against `process.cwd()`
  * (Nx invokes with cwd: "{workspaceRoot}").
@@ -73,6 +82,7 @@ interface Flags {
   readonly output: string | undefined;
   readonly project: string | undefined;
   readonly emitModels: boolean;
+  readonly emitModelConverters: boolean;
 }
 
 const WORKSPACE_ROOT = process.cwd();
@@ -177,7 +187,7 @@ async function main(): Promise<void> {
   const filteredModelEntries = flags.only ? modelEntries.filter((m) => flags.only?.has(m.modelType)) : modelEntries;
 
   ensureOutputDir(outputDir);
-  const formatted = await renderManifest({ outputFile, entries: collected, projectName, namespace, modelEntries: filteredModelEntries, modelNamespace: deriveModelNamespace(flags.project) });
+  const formatted = await renderManifest({ outputFile, entries: collected, projectName, namespace, modelEntries: filteredModelEntries, modelNamespace: deriveModelNamespace(flags.project), emitConverters: flags.emitModelConverters });
 
   if (existsSync(outputFile) && readFileSync(outputFile, 'utf8') === formatted) {
     console.log(`[unchanged] ${relative(WORKSPACE_ROOT, outputFile)}`);
@@ -229,12 +239,15 @@ function parseFlags(argv: readonly string[]): Flags {
   let output: string | undefined;
   let project: string | undefined;
   let emitModels = false;
+  let emitModelConverters = false;
 
   for (const arg of argv) {
     if (arg === '--strict') {
       strict = true;
     } else if (arg === '--emit-models') {
       emitModels = true;
+    } else if (arg === '--emit-model-converters') {
+      emitModelConverters = true;
     } else if (arg.startsWith('--only=')) {
       const list = arg
         .slice('--only='.length)
@@ -251,7 +264,7 @@ function parseFlags(argv: readonly string[]): Flags {
     }
   }
 
-  return { only, strict, functionsConfig, output, project, emitModels };
+  return { only, strict, functionsConfig, output, project, emitModels, emitModelConverters };
 }
 
 function printUsageAndExit(): void {
@@ -274,7 +287,10 @@ Optional:
   --strict                   Fail when any validator binding is missing.
   --emit-models              Opt in to emitting <NAMESPACE>_MODEL_MANIFEST. Off by default —
                              pair with the runtime \`modelManifest\` option on \`runCli\` to
-                             enable the built-in \`model-info\` command.`);
+                             enable the built-in \`model-info\` command.
+  --emit-model-converters    Opt in to including each field's converter expression text inside
+                             the model manifest. Off by default — useful for downstream tooling
+                             (e.g. dbx-components MCP) but unused by the CLI.`);
   process.exit(1);
 }
 

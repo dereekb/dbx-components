@@ -30,6 +30,14 @@ export interface RenderManifestInput {
    * {@link modelEntries} is non-empty.
    */
   readonly modelNamespace?: string;
+  /**
+   * When `true`, each emitted model field includes its verbatim `converter`
+   * expression text. Off by default — the CLI does not use the converter
+   * string at runtime, but downstream tooling (e.g. the dbx-components MCP)
+   * does, so apps that surface that tooling opt in via
+   * `--emit-model-converters`.
+   */
+  readonly emitConverters?: boolean;
 }
 
 /**
@@ -42,7 +50,7 @@ export interface RenderManifestInput {
  * @returns Prettier-formatted TypeScript source.
  */
 export async function renderManifest(input: RenderManifestInput): Promise<string> {
-  const { outputFile, entries, projectName, namespace, modelEntries, modelNamespace } = input;
+  const { outputFile, entries, projectName, namespace, modelEntries, modelNamespace, emitConverters = false } = input;
 
   const importsByPackage = new Map<string, Set<string>>();
   for (const entry of entries) {
@@ -66,7 +74,7 @@ export async function renderManifest(input: RenderManifestInput): Promise<string
     ? `
 
 export const ${modelNamespace}: CliModelManifest = [
-${(modelEntries ?? []).map((m) => renderModelEntry(m)).join(',\n')}
+${(modelEntries ?? []).map((m) => renderModelEntry(m, emitConverters)).join(',\n')}
 ];
 `
     : '';
@@ -120,7 +128,7 @@ async function formatWithPrettier(source: string, outputFile: string): Promise<s
   return format(source, { ...config, filepath: outputFile });
 }
 
-function renderModelEntry(entry: CliModelManifestEntry): string {
+function renderModelEntry(entry: CliModelManifestEntry, emitConverters: boolean): string {
   const fields: (string | undefined)[] = [
     `modelType: ${JSON.stringify(entry.modelType)}`,
     `modelName: ${JSON.stringify(entry.modelName)}`,
@@ -131,28 +139,28 @@ function renderModelEntry(entry: CliModelManifestEntry): string {
     entry.description ? `description: ${JSON.stringify(entry.description)}` : undefined,
     `sourcePackage: ${JSON.stringify(entry.sourcePackage)}`,
     `sourceFile: ${JSON.stringify(entry.sourceFile)}`,
-    `fields: ${renderModelFields(entry.fields)}`
+    `fields: ${renderModelFields(entry.fields, emitConverters)}`
   ];
   return `  { ${fields.filter((v): v is string => Boolean(v)).join(', ')} }`;
 }
 
-function renderModelFields(fields: readonly CliModelField[]): string {
+function renderModelFields(fields: readonly CliModelField[], emitConverters: boolean): string {
   if (fields.length === 0) return '[]';
-  const items = fields.map((field) => renderModelField(field));
+  const items = fields.map((field) => renderModelField(field, emitConverters));
   return `[${items.join(', ')}]`;
 }
 
-function renderModelField(field: CliModelField): string {
+function renderModelField(field: CliModelField, emitConverters: boolean): string {
   const parts: (string | undefined)[] = [
     `name: ${JSON.stringify(field.name)}`,
     `longName: ${JSON.stringify(field.longName)}`,
-    `converter: ${JSON.stringify(field.converter)}`,
+    emitConverters && field.converter !== undefined ? `converter: ${JSON.stringify(field.converter)}` : undefined,
     field.tsType ? `tsType: ${JSON.stringify(field.tsType)}` : undefined,
     `optional: ${field.optional ? 'true' : 'false'}`,
     field.description ? `description: ${JSON.stringify(field.description)}` : undefined,
     field.enumRef ? `enumRef: ${JSON.stringify(field.enumRef)}` : undefined,
     field.syncFlag ? `syncFlag: ${JSON.stringify(field.syncFlag)}` : undefined,
-    field.nestedFields ? `nestedFields: ${renderModelFields(field.nestedFields)}` : undefined,
+    field.nestedFields ? `nestedFields: ${renderModelFields(field.nestedFields, emitConverters)}` : undefined,
     field.nestedFields ? `nestedIsArray: ${field.nestedIsArray ? 'true' : 'false'}` : undefined
   ];
   return `{ ${parts.filter((v): v is string => Boolean(v)).join(', ')} }`;

@@ -392,7 +392,7 @@
       "line": 17,
       "declarations": [],
       "role": "layout",
-      "intent": "enlarge the inner `mat-mdc-button` height to 46px (33% taller than default)",
+      "intent": "enlarge the inner `mat-mdc-button` height to 46px (33% taller than default) by setting Material's `--mat-button-*-container-height` tokens",
       "seeAlso": [
         "button-wide"
       ]
@@ -403,7 +403,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/button/_button.scss",
-      "line": 130,
+      "line": 144,
       "declarations": [
         {
           "property": "display",
@@ -426,12 +426,57 @@
       ]
     },
     {
+      "slug": "button-form-field-height",
+      "selector": ".dbx-button-form-field-height",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/button/_button.scss",
+      "line": 30,
+      "declarations": [
+        {
+          "property": "--mat-button-text-container-height",
+          "value": "var(--mat-form-field-container-height)"
+        },
+        {
+          "property": "--mat-button-filled-container-height",
+          "value": "var(--mat-form-field-container-height)"
+        },
+        {
+          "property": "--mat-button-protected-container-height",
+          "value": "var(--mat-form-field-container-height)"
+        },
+        {
+          "property": "--mat-button-outlined-container-height",
+          "value": "var(--mat-form-field-container-height)"
+        },
+        {
+          "property": "--mat-button-tonal-container-height",
+          "value": "var(--mat-form-field-container-height)"
+        }
+      ],
+      "role": "layout",
+      "intent": "match the inner `mat-mdc-button` height to `--mat-form-field-container-height` so a button aligns vertically with an adjacent form field",
+      "seeAlso": [
+        "button-big"
+      ],
+      "tokensRead": [
+        "--mat-form-field-container-height"
+      ],
+      "tokensSet": [
+        "--mat-button-filled-container-height",
+        "--mat-button-outlined-container-height",
+        "--mat-button-protected-container-height",
+        "--mat-button-text-container-height",
+        "--mat-button-tonal-container-height"
+      ]
+    },
+    {
       "slug": "button-neutral-interaction-color",
       "selector": ".dbx-button-neutral-interaction-color",
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/button/_button.scss",
-      "line": 29,
+      "line": 43,
       "declarations": [],
       "role": "state",
       "intent": "neutralize Material's hover/pressed/focus/ripple state layer to `--mat-sys-on-surface` — use on buttons with a custom background where the primary-tinted state-layer would clash",
@@ -445,7 +490,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/button/_button.scss",
-      "line": 118,
+      "line": 132,
       "declarations": [
         {
           "property": "padding-right",
@@ -465,7 +510,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/button/_button.scss",
-      "line": 55,
+      "line": 69,
       "declarations": [],
       "role": "layout",
       "intent": "stretch the inner `.dbx-button` to a 120px minimum width (still capped by parent)",
@@ -479,7 +524,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/button/_button.scss",
-      "line": 66,
+      "line": 80,
       "declarations": [],
       "role": "layout",
       "intent": "group of buttons that wrap onto multiple rows — adds 6px right + bottom spacing between `<dbx-button>` / `<dbx-anchor>` / `<button>` / `<dbx-icon-button>` siblings",
@@ -564,6 +609,26 @@
         "chip-margin",
         "icon-spacer"
       ]
+    },
+    {
+      "slug": "color-bg",
+      "selector": ".dbx-color-bg",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/style/_style.scss",
+      "line": 175,
+      "declarations": [],
+      "intent": "generic themed-background class — pair with `[dbxColor]=\"config\"` to drive `--dbx-bg-color-current` / `--dbx-color-current` from arbitrary CSS color values"
+    },
+    {
+      "slug": "color-text",
+      "selector": ".dbx-color-text",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/style/_style.scss",
+      "line": 182,
+      "declarations": [],
+      "intent": "generic themed-text class — pair with `[dbxTextColor]=\"config\"` to drive `--dbx-color-current` from an arbitrary CSS color value"
     },
     {
       "slug": "color-tonal",
@@ -1158,7 +1223,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/button/_button.scss",
-      "line": 106,
+      "line": 120,
       "declarations": [
         {
           "property": "width",

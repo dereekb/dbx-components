@@ -17,6 +17,18 @@ export const DOC_EXAMPLES_ROUTES: DocExamplesRoute[] = [
     title: 'Card',
     detail: 'card layout examples',
     ref: 'doc.examples.card'
+  },
+  {
+    icon: 'bolt',
+    title: 'Action',
+    detail: 'action pattern examples',
+    ref: 'doc.examples.action'
+  },
+  {
+    icon: 'dashboard',
+    title: 'Layout',
+    detail: 'page-level layout examples',
+    ref: 'doc.examples.layout'
   }
 ];
 

@@ -72,9 +72,13 @@ export function renderModelManifestFields(entry: CliModelManifestEntry): string 
 
 function renderFieldsTree(fields: readonly CliModelField[], indent: number): string {
   const out: string[] = [];
-  const rows: string[][] = [['NAME', 'LONG NAME', 'TYPE', 'OPTIONAL', 'CONVERTER']];
+  const includeConverter = fields.some((f) => f.converter !== undefined);
+  const header: string[] = includeConverter ? ['NAME', 'LONG NAME', 'TYPE', 'OPTIONAL', 'CONVERTER'] : ['NAME', 'LONG NAME', 'TYPE', 'OPTIONAL'];
+  const rows: string[][] = [header];
   for (const field of fields) {
-    rows.push([field.name, field.longName, field.tsType ?? '', field.optional ? 'yes' : 'no', truncate(field.converter, 60)]);
+    const row: string[] = [field.name, field.longName, field.tsType ?? '', field.optional ? 'yes' : 'no'];
+    if (includeConverter) row.push(field.converter ? truncate(field.converter, 60) : '');
+    rows.push(row);
   }
   out.push(indentLines(renderTable(rows), indent));
   for (const field of fields) {

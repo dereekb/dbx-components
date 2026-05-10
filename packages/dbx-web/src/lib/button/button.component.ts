@@ -3,7 +3,7 @@ import { type ThemePalette } from '@angular/material/core';
 import { provideDbxButton, AbstractDbxButtonDirective, hasNonTrivialChildNodes } from '@dereekb/dbx-core';
 import { type Configurable, isDefinedAndNotFalse, type Maybe } from '@dereekb/util';
 import { type DbxProgressButtonConfig } from './progress/button.progress.config';
-import { type DbxThemeColor } from '../layout/style/style';
+import { type DbxColorInput, type DbxThemeColor, isDbxColorConfig } from '../layout/style/style';
 import { DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent } from './progress';
 import { type ProgressSpinnerMode } from '@angular/material/progress-spinner';
 import { NgTemplateOutlet } from '@angular/common';
@@ -82,7 +82,7 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
   readonly type = input<Maybe<DbxButtonType>>();
   readonly buttonStyle = input<Maybe<DbxButtonStyle>>();
 
-  readonly color = input<Maybe<ThemePalette | DbxThemeColor>>();
+  readonly color = input<Maybe<ThemePalette | DbxColorInput>>();
   readonly spinnerColor = input<Maybe<ThemePalette | DbxThemeColor>>();
   readonly customButtonColor = input<Maybe<string>>();
   readonly customTextColor = input<Maybe<string>>();
@@ -144,7 +144,9 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
     const customSpinnerColor: Maybe<string> = customSpinnerColorValue ?? customTextColorValue;
 
     const buttonColor = this.color() ?? buttonStyle?.color;
-    const spinnerColor = this.spinnerColor() ?? buttonStyle?.spinnerColor ?? buttonColor;
+    // mat-spinner [color] only accepts ThemePalette/named colors, so coerce a DbxColorConfig or empty-string buttonColor away.
+    const buttonColorSpinnerFallback: Maybe<ThemePalette | DbxThemeColor> = !buttonColor || isDbxColorConfig(buttonColor) ? undefined : buttonColor;
+    const spinnerColor = this.spinnerColor() ?? buttonStyle?.spinnerColor ?? buttonColorSpinnerFallback;
 
     const disabledSignalValue = this.disabledSignal();
     const disabled = !this.isWorkingSignal() && disabledSignalValue; // Only disabled if we're not working, in order to show the animation.

@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
-import { type DbxThemeColor } from '../style/style';
+import { type DbxColorInput } from '../style/style';
 import { DbxColorDirective } from '../style/style.color.directive';
 import { DbxIconTileComponent } from './icon-tile.component';
 
@@ -25,7 +25,7 @@ export interface DbxStepBlockComponentConfig {
   readonly icon?: Maybe<string>;
   readonly header?: Maybe<string>;
   readonly hint?: Maybe<string>;
-  readonly color?: Maybe<DbxThemeColor>;
+  readonly color?: Maybe<DbxColorInput>;
   readonly center?: Maybe<boolean>;
 }
 
@@ -93,7 +93,7 @@ export class DbxStepBlockComponent {
   readonly icon = input<Maybe<string>>();
   readonly header = input<Maybe<string>>();
   readonly hint = input<Maybe<string>>();
-  readonly color = input<Maybe<DbxThemeColor>>();
+  readonly color = input<Maybe<DbxColorInput>>();
   readonly center = input<Maybe<boolean>>();
 
   readonly stepSignal = computed(() => this.step() ?? this.config()?.step ?? 1);

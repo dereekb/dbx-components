@@ -5,7 +5,7 @@ import { type ErrorInput, isDefinedAndNotFalse, type Maybe } from '@dereekb/util
 import { checkNgContentWrapperHasContent } from '@dereekb/dbx-core';
 import { type ProgressSpinnerMode } from '@angular/material/progress-spinner';
 import { DbxErrorComponent } from '../error/error.component';
-import { type DbxThemeColor } from '../layout/style/style';
+import { type DbxColorInput } from '../layout/style/style';
 import { DbxLoadingProgressComponent } from './loading-progress.component';
 import { NgTemplateOutlet } from '@angular/common';
 import { type DbxLoadingIsLoadingOrProgress, type DbxLoadingProgress } from './loading';
@@ -55,7 +55,7 @@ export class DbxBasicLoadingComponent {
 
   readonly diameter = input<Maybe<number>>();
   readonly mode = input<Maybe<ProgressBarMode | ProgressSpinnerMode>>();
-  readonly color = input<ThemePalette | DbxThemeColor>('primary');
+  readonly color = input<ThemePalette | DbxColorInput>('primary');
   readonly text = input<Maybe<string>>();
   readonly linear = input<Maybe<boolean>>(false);
 
