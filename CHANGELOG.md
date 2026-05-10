@@ -1,3 +1,24 @@
+## [13.11.6](https://github.com/dereekb/dbx-components/compare/v13.11.5-dev...v13.11.6) (2026-05-10)
+
+
+### Bug Fixes
+
+- peel utility wrappers in interface extends walk ([ab472e9c](https://github.com/dereekb/dbx-components/commit/ab472e9cd8f01b12465ed25e730c9f661ef16c0e))
+
+
+### Build System
+
+- lint fix + mcp regeneration ([b2a372f3](https://github.com/dereekb/dbx-components/commit/b2a372f34c964e97f53dc69588fdc77b09772521))
+
+
+### Code Refactoring
+
+- added preview to DbxAppEnvironment ([5761ddc7](https://github.com/dereekb/dbx-components/commit/5761ddc733d36706f6eddd031381020923ca6db4))
+- dbx-button height utilities + new docs examples ([63c69b86](https://github.com/dereekb/dbx-components/commit/63c69b8638e613722cba22a8202f41f41d1e14f4))
+- opt-in converter emission in model manifest ([98d15a3b](https://github.com/dereekb/dbx-components/commit/98d15a3b1fbed4410a46bd6cdae7e24f16db595a))
+- warn on @dbxModelVariable matching field name ([e8343cad](https://github.com/dereekb/dbx-components/commit/e8343cad72fb57f83e0916c4bccbed949359d716))
+- widen color pass-through inputs to DbxColorInput ([5ce9da02](https://github.com/dereekb/dbx-components/commit/5ce9da02c0c0a1646e2a1768cc7182f5b388f889))
+
 ## [13.11.5](https://github.com/dereekb/dbx-components/compare/v13.11.4...v13.11.5) (2026-05-10)
 
 
