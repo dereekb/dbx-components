@@ -28,6 +28,11 @@
  *      Skip the write if the file content is byte-identical (preserves mtime
  *      for incremental builds).
  *
+ * Model manifest emission is opt-in via `--emit-models`. The runtime `model-info`
+ * command (auto-wired by `runCli({ modelManifest })`) needs this manifest, but
+ * apps that do not surface `model-info` should leave it disabled so the manifest
+ * data — which can be sizeable — does not get bundled into the final CLI binary.
+ *
  * Flags:
  *   --functions-config=<path>   (required) path to the app's functions.ts.
  *                                Absolute or workspace-relative.
@@ -39,6 +44,10 @@
  *                                DEMO_CLI_API_MANIFEST).
  *   --only=<model[,model]>      Filter the emitted entries to those models.
  *   --strict                    Exit 1 if any validator is missing.
+ *   --emit-models               Opt in to emitting `<NAMESPACE>_MODEL_MANIFEST`.
+ *                                Off by default to keep the generated file small
+ *                                and avoid bundling model metadata into apps that
+ *                                do not need the runtime `model-info` command.
  *
  * Run from any cwd; workspace-relative paths resolve against `process.cwd()`
  * (Nx invokes with cwd: "{workspaceRoot}").
@@ -47,12 +56,15 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, relative, resolve } from 'node:path';
 
+import type { CliModelManifestEntry } from '@dereekb/dbx-cli';
 import { parseFunctionsConfig } from './parse-functions';
 import { resolveModuleToPackage, relPath } from './resolve-package';
 import { findApiFiles } from './find-api-files';
+import { findModelFiles } from './find-model-files';
+import { assembleModels } from './assemble-models';
 import { deriveValidatorName, isExportedFromPackage } from './bind-validators';
 import { renderManifest } from './emit';
-import type { CollectedEntry, PackageRef } from './types';
+import type { CollectedEntry, ModelExtractionSource, PackageRef } from './types';
 
 interface Flags {
   readonly only: ReadonlySet<string> | undefined;
@@ -60,6 +72,7 @@ interface Flags {
   readonly functionsConfig: string | undefined;
   readonly output: string | undefined;
   readonly project: string | undefined;
+  readonly emitModels: boolean;
 }
 
 const WORKSPACE_ROOT = process.cwd();
@@ -91,6 +104,8 @@ async function main(): Promise<void> {
   const packageCache = new Map<string, PackageRef>();
   const apiFilesCache = new Map<string, ReturnType<typeof findApiFiles>>();
   const collected: CollectedEntry[] = [];
+  const modelSources: ModelExtractionSource[] = [];
+  const modelPackagesScanned = new Set<string>();
   let missingValidators = 0;
   let skippedGroups = 0;
 
@@ -104,6 +119,16 @@ async function main(): Promise<void> {
 
     if (!packageCache.has(pkg.packageRoot)) packageCache.set(pkg.packageRoot, pkg);
     if (!apiFilesCache.has(pkg.packageRoot)) apiFilesCache.set(pkg.packageRoot, findApiFiles(pkg.packageRoot));
+    if (flags.emitModels && !modelPackagesScanned.has(pkg.packageRoot)) {
+      modelPackagesScanned.add(pkg.packageRoot);
+      for (const match of findModelFiles(pkg.packageRoot)) {
+        modelSources.push({
+          sourcePackage: pkg.packageName,
+          sourceFile: relPath(WORKSPACE_ROOT, match.filePath),
+          extraction: match.extraction
+        });
+      }
+    }
     const apiFiles = apiFilesCache.get(pkg.packageRoot) ?? [];
 
     const match = apiFiles.find((f) => f.className === group.className);
@@ -148,8 +173,11 @@ async function main(): Promise<void> {
 
   collected.sort(compareEntries);
 
+  const modelEntries: readonly CliModelManifestEntry[] = flags.emitModels ? assembleModels({ extractions: modelSources }) : [];
+  const filteredModelEntries = flags.only ? modelEntries.filter((m) => flags.only?.has(m.modelType)) : modelEntries;
+
   ensureOutputDir(outputDir);
-  const formatted = await renderManifest({ outputFile, entries: collected, projectName, namespace });
+  const formatted = await renderManifest({ outputFile, entries: collected, projectName, namespace, modelEntries: filteredModelEntries, modelNamespace: deriveModelNamespace(flags.project) });
 
   if (existsSync(outputFile) && readFileSync(outputFile, 'utf8') === formatted) {
     console.log(`[unchanged] ${relative(WORKSPACE_ROOT, outputFile)}`);
@@ -159,7 +187,8 @@ async function main(): Promise<void> {
   }
 
   const groupCount = packageCache.size === 0 ? 0 : new Set(collected.map((c) => c.entry.groupName)).size;
-  console.log(`Summary: ${groupCount} groups · ${collected.length} entries · ${collected.length - missingValidators} validators bound · ${missingValidators} missing · ${skippedGroups} skipped`);
+  const modelSummary = flags.emitModels ? ` · ${filteredModelEntries.length} models` : '';
+  console.log(`Summary: ${groupCount} groups · ${collected.length} entries · ${collected.length - missingValidators} validators bound · ${missingValidators} missing · ${skippedGroups} skipped${modelSummary}`);
 
   if (flags.strict && missingValidators > 0) {
     console.error(`[strict] ${missingValidators} validator(s) missing — failing build.`);
@@ -187,16 +216,25 @@ function deriveNamespace(projectName: string | undefined): string {
   return `${base.toUpperCase()}_API_MANIFEST`;
 }
 
+function deriveModelNamespace(projectName: string | undefined): string {
+  // demo-cli -> DEMO_CLI_MODEL_MANIFEST; absent -> CLI_MODEL_MANIFEST
+  const base = (projectName ?? 'cli').replaceAll(/[^a-zA-Z0-9]+/g, '_');
+  return `${base.toUpperCase()}_MODEL_MANIFEST`;
+}
+
 function parseFlags(argv: readonly string[]): Flags {
   let only: ReadonlySet<string> | undefined;
   let strict = false;
   let functionsConfig: string | undefined;
   let output: string | undefined;
   let project: string | undefined;
+  let emitModels = false;
 
   for (const arg of argv) {
     if (arg === '--strict') {
       strict = true;
+    } else if (arg === '--emit-models') {
+      emitModels = true;
     } else if (arg.startsWith('--only=')) {
       const list = arg
         .slice('--only='.length)
@@ -213,7 +251,7 @@ function parseFlags(argv: readonly string[]): Flags {
     }
   }
 
-  return { only, strict, functionsConfig, output, project };
+  return { only, strict, functionsConfig, output, project, emitModels };
 }
 
 function printUsageAndExit(): void {
@@ -233,7 +271,10 @@ Required flags:
 Optional:
   --project=<name>           Project name to show in the regenerate banner.
   --only=<csv>               Filter to listed model names.
-  --strict                   Fail when any validator binding is missing.`);
+  --strict                   Fail when any validator binding is missing.
+  --emit-models              Opt in to emitting <NAMESPACE>_MODEL_MANIFEST. Off by default —
+                             pair with the runtime \`modelManifest\` option on \`runCli\` to
+                             enable the built-in \`model-info\` command.`);
   process.exit(1);
 }
 

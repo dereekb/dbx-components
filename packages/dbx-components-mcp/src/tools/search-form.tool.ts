@@ -91,6 +91,19 @@ function scoreFieldAgainstToken(field: FormFieldInfo, token: string): number {
   if (tier === token) {
     score += 5;
   }
+  // Field-factory entries have an `ngFormType` (e.g. `dbx-list-selection`,
+  // `input`, `datepicker`). Score it so callers searching by the underlying
+  // ng-forge type land on the right factory without needing an alias.
+  if (field.tier === 'field-factory') {
+    const ngFormType = field.ngFormType.toLowerCase();
+    if (ngFormType === token) {
+      score += 15;
+    } else if (ngFormType.startsWith(token)) {
+      score += 10;
+    } else if (ngFormType.includes(token)) {
+      score += 6;
+    }
+  }
   for (const key of Object.keys(field.config)) {
     const keyLower = key.toLowerCase();
     if (keyLower === token) {

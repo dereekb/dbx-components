@@ -657,7 +657,9 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
       listComponentClass: { name: 'listComponentClass (props)', type: 'Observable<Type<C>>', description: 'Custom list component class (can be lazy-loaded).', required: true },
       readKey: { name: 'readKey (props)', type: '(item: T) => K', description: 'Extract the identifier from each item.', required: true },
       state$: { name: 'state$ (props)', type: 'Observable<ListLoadingState<T>>', description: 'Observable providing the items to select.', required: true },
-      loadMore: { name: 'loadMore (props)', type: '() => void', description: 'Trigger loading more items for pagination.', required: false }
+      loadMore: { name: 'loadMore (props)', type: '() => void', description: 'Trigger loading more items for pagination.', required: false },
+      wrapped: { name: 'wrapped (props)', type: 'boolean', description: 'When false, render the list bare without the Material form-field wrapper (no notched outline, no notch label, no hint chrome). Defaults to true.', required: false },
+      maxHeight: { name: 'maxHeight (props)', type: `string | number | 'none'`, description: `Override the default 300px max-height cap. 'none' removes the cap; numbers are pixels; strings are a CSS length passthrough. Drives the --dbx-forge-list-item-field-height custom property.`, required: false }
     },
     example: `dbxForgeListSelectionField<Item, MyListComponent, string>({ key: 'items', props: { listComponentClass, readKey: (i) => i.id, state$ } })`,
     minimalExample: `dbxForgeListSelectionField({ key: 'items', props: { listComponentClass: of(MyListComp), readKey: (i) => i.id, state$: NEVER } })`

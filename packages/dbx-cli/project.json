@@ -18,7 +18,7 @@
             "command": "npx nx run dbx-cli-manifest-extract:build-base"
           },
           {
-            "command": "npx nx run dbx-cli-firebase-api-manifest:build"
+            "command": "npx nx run dbx-cli-firebase-api-manifest:build-base"
           }
         ],
         "parallel": false

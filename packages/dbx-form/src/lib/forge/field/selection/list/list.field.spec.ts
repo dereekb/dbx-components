@@ -278,6 +278,34 @@ describe('dbxForgeListSelectionField()', () => {
     const field = dbxForgeListSelectionField({ ...minimalConfig(), validationMessages }) as any;
     expect(field.validationMessages).toEqual(validationMessages);
   });
+
+  // MARK: wrapped opt-out
+  it('should attach the form-field wrapper by default', () => {
+    const field = dbxForgeListSelectionField(minimalConfig()) as any;
+    const wrappers: Array<{ readonly type: string }> = field.wrappers ?? [];
+    expect(wrappers.some((w) => w.type === 'dbx-forge-form-field-wrapper')).toBe(true);
+  });
+
+  it('should keep the form-field wrapper when wrapped is true', () => {
+    const config = minimalConfig();
+    const field = dbxForgeListSelectionField({ ...config, props: { ...config.props!, wrapped: true } }) as any;
+    const wrappers: Array<{ readonly type: string }> = field.wrappers ?? [];
+    expect(wrappers.some((w) => w.type === 'dbx-forge-form-field-wrapper')).toBe(true);
+  });
+
+  it('should omit the form-field wrapper when wrapped is false', () => {
+    const config = minimalConfig();
+    const field = dbxForgeListSelectionField({ ...config, props: { ...config.props!, wrapped: false } }) as any;
+    const wrappers: Array<{ readonly type: string }> = field.wrappers ?? [];
+    expect(wrappers.some((w) => w.type === 'dbx-forge-form-field-wrapper')).toBe(false);
+  });
+
+  // MARK: maxHeight passthrough
+  it('should propagate maxHeight through field props', () => {
+    const config = minimalConfig();
+    const field = dbxForgeListSelectionField({ ...config, props: { ...config.props!, maxHeight: 'none' } }) as any;
+    expect(field.props?.maxHeight).toBe('none');
+  });
 });
 
 // ============================================================================

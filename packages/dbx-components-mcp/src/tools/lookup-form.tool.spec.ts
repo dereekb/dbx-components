@@ -83,6 +83,14 @@ describe('dbx_form_lookup', () => {
     expect(text).toMatch(/# dbxForgeDateField/);
   });
 
+  it('resolves the dbx-list alias to list-selection', () => {
+    expect(resolveTopicAlias('dbx-list')).toBe('list-selection');
+    expect(resolveTopicAlias('dbxlist')).toBe('list-selection');
+    expect(resolveTopicAlias('dbx-list-selection')).toBe('list-selection');
+    const text = firstText(tool.run({ topic: 'dbx-list' }));
+    expect(text).toMatch(/# dbxForgeListSelectionField/);
+  });
+
   it('resolves a produces value to a grouped list spanning tiers', () => {
     const text = firstText(tool.run({ topic: 'RowField' }));
     expect(text).toMatch(/# Form entries producing `RowField`/);

@@ -1,4 +1,4 @@
-<div class="dbx-forge-list-item-field" [class.dbx-forge-list-field-disabled]="isDisabled()" dbxListItemModifier [dbxListItemIsSelectedModifier]="isSelectedModifierFunctionSignal()" [attr.aria-invalid]="ariaInvalid()">
+<div class="dbx-forge-list-item-field" [class.dbx-forge-list-field-disabled]="isDisabled()" [style.--dbx-forge-list-item-field-height]="maxHeightCssVarSignal()" dbxListItemModifier [dbxListItemIsSelectedModifier]="isSelectedModifierFunctionSignal()" [attr.aria-invalid]="ariaInvalid()">
   <div class="dbx-forge-list-item-field-content">
     <dbx-injection [config]="configSignal()"></dbx-injection>
   </div>

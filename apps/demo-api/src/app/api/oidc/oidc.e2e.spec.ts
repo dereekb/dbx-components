@@ -1,8 +1,8 @@
 import request from 'supertest';
 import { createHash, randomBytes } from 'node:crypto';
 import { type INestApplication } from '@nestjs/common';
-import { SignJWT, exportJWK, generateKeyPair } from 'jose';
-import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext } from '../../../test/fixture';
+import { SignJWT, exportJWK, generateKeyPair, decodeJwt } from 'jose';
+import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext, demoAuthorizedUserAdminContext } from '../../../test/fixture';
 import { OidcModuleConfig, JwksServiceStorageConfig, type JwksService, type OidcService, type OidcClientService } from '@dereekb/firebase-server/oidc';
 import { unixDateTimeSecondsNumberForNow } from '@dereekb/util';
 import { callableRequestTest } from '@dereekb/firebase-server/test';
@@ -89,6 +89,21 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         expect(expectedUrl).toBeDefined();
         expect(res.body.jwks_uri).toBe(expectedUrl);
       });
+
+      it('should never advertise alg=none for id_token signing', async () => {
+        const res = await request(app.getHttpServer()).get('/.well-known/openid-configuration').expect(200);
+
+        expect(res.body.id_token_signing_alg_values_supported).toBeDefined();
+        expect(res.body.id_token_signing_alg_values_supported).toContain('RS256');
+        expect(res.body.id_token_signing_alg_values_supported).not.toContain('none');
+      });
+
+      it('should advertise only S256 for code_challenge_methods', async () => {
+        const res = await request(app.getHttpServer()).get('/.well-known/openid-configuration').expect(200);
+
+        expect(res.body.code_challenge_methods_supported).toEqual(['S256']);
+        expect(res.body.code_challenge_methods_supported).not.toContain('plain');
+      });
     });
 
     describe('GET /.well-known/jwks.json', () => {
@@ -150,6 +165,91 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
     describe('GET /oidc/me (userinfo)', () => {
       it('should return 401 without a bearer token', async () => {
         await request(app.getHttpServer()).get('/oidc/me').expect(401);
+      });
+
+      it('should reject an empty Bearer header', async () => {
+        const res = await request(app.getHttpServer()).get('/oidc/me').set('Authorization', 'Bearer ');
+
+        // 400 (malformed bearer) or 401 (no credentials) — both prevent issuing userinfo.
+        expect([400, 401]).toContain(res.status);
+      });
+
+      it('should reject a Basic auth header (Bearer required)', async () => {
+        const res = await request(app.getHttpServer())
+          .get('/oidc/me')
+          .set('Authorization', `Basic ${Buffer.from('user:pass').toString('base64')}`);
+
+        expect([400, 401]).toContain(res.status);
+      });
+
+      it('should return 401 with an alg=none JWT bearer token', async () => {
+        const now = unixDateTimeSecondsNumberForNow();
+        const header = Buffer.from(JSON.stringify({ alg: 'none', typ: 'JWT' })).toString('base64url');
+        const body = Buffer.from(JSON.stringify({ sub: 'attacker', iss: oidcModuleConfig.issuer, aud: oidcModuleConfig.issuer, scope: 'openid demo', iat: now, exp: now + 3600 })).toString('base64url');
+        const fakeToken = `${header}.${body}.`;
+
+        await request(app.getHttpServer()).get('/oidc/me').set('Authorization', `Bearer ${fakeToken}`).expect(401);
+      });
+
+      it('should return 401 with a JWT signed by an unrelated RSA key', async () => {
+        const { privateKey } = await generateKeyPair('RS256');
+        const fakeToken = await new SignJWT({ scope: 'openid demo' }).setProtectedHeader({ alg: 'RS256' }).setIssuer(oidcModuleConfig.issuer).setSubject('attacker').setAudience(oidcModuleConfig.issuer).setIssuedAt().setExpirationTime('1m').sign(privateKey);
+
+        await request(app.getHttpServer()).get('/oidc/me').set('Authorization', `Bearer ${fakeToken}`).expect(401);
+      });
+    });
+
+    describe('GET /oidc/login/client', () => {
+      it('redirects to a well-formed URL when extra query params are forwarded', async () => {
+        const res = await request(app.getHttpServer()).get('/oidc/login/client').query({ uid: 'abc-123', extra: 'a&b=c', percent: 'a%26b' }).redirects(0);
+
+        expect([301, 302, 303, 307, 308]).toContain(res.status);
+
+        const location = res.headers['location'] as string;
+        expect(location).toBeDefined();
+        // No CRLF that would allow header injection.
+        expect(location).not.toContain('\r');
+        expect(location).not.toContain('\n');
+        // At most a single `?` separator (further params use `&`).
+        const questionMarks = (location.match(/\?/g) ?? []).length;
+        expect(questionMarks).toBeLessThanOrEqual(1);
+
+        const target = new URL(location, 'http://localhost');
+        expect(target.searchParams.get('uid')).toBe('abc-123');
+      });
+    });
+
+    describe('Client storage encryption at rest', () => {
+      it('does not store client_secret as plaintext in Firestore', async () => {
+        const { client_id, client_secret } = await oidcClientService.createClient({
+          client_name: 'encryption-at-rest-test',
+          redirect_uris: ['https://example.com/callback'],
+          token_endpoint_auth_method: 'client_secret_post'
+        });
+
+        expect(client_secret).toBeDefined();
+        expect(typeof client_secret).toBe('string');
+        expect(client_secret!.length).toBeGreaterThan(0);
+
+        const oidcEntryCollection = f.instance.demoFirestoreCollections.oidcEntryCollection;
+        const clientDoc = await oidcEntryCollection.documentAccessor().loadDocumentForId(client_id).accessor.get();
+        const clientData = clientDoc.data();
+
+        expect(clientData).toBeDefined();
+        expect(clientData!.type).toBe('Client');
+
+        const storedPayload = clientData!.payload as Record<string, unknown>;
+        expect(storedPayload.client_id).toBe(client_id);
+        // selectiveFieldEncryptor strips the original plaintext key and stores the ciphertext
+        // under the `$<field>` prefixed key. So `client_secret` must be absent and
+        // `$client_secret` must hold the encrypted value.
+        expect(storedPayload).not.toHaveProperty('client_secret');
+        expect(storedPayload).toHaveProperty('$client_secret');
+
+        const encrypted = storedPayload['$client_secret'];
+        expect(typeof encrypted).toBe('string');
+        expect(encrypted).not.toBe(client_secret);
+        expect((encrypted as string).length).toBeGreaterThan(0);
       });
     });
 
@@ -810,6 +910,720 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             // 8. The originally-issued access token can no longer be verified.
             const afterAuthData = await oidcService.verifyAccessToken(originalAccessToken);
             expect(afterAuthData).toBeUndefined();
+          });
+        });
+      });
+
+      describe('security regressions', () => {
+        describe('redirect_uri exact-match enforcement', () => {
+          let registeredClientId: string;
+
+          beforeEach(async () => {
+            const created = await oidcClientService.createClient({
+              client_name: 'redirect-uri-test',
+              redirect_uris: ['https://example.com/callback'],
+              token_endpoint_auth_method: 'client_secret_post'
+            });
+
+            registeredClientId = created.client_id;
+          });
+
+          async function expectAuthRedirectUriRejected(redirectUri: string): Promise<void> {
+            const codeVerifier = randomBytes(32).toString('base64url');
+            const codeChallenge = createHash('sha256').update(codeVerifier).digest('base64url');
+            const res = await request(app.getHttpServer())
+              .get('/oidc/auth')
+              .query({
+                client_id: registeredClientId,
+                redirect_uri: redirectUri,
+                response_type: 'code',
+                scope: 'openid email demo',
+                code_challenge: codeChallenge,
+                code_challenge_method: 'S256',
+                state: 'test-state',
+                nonce: 'test-nonce'
+              })
+              .redirects(0);
+
+            // Per RFC 6749, when redirect_uri is invalid the provider MUST NOT redirect to it.
+            // oidc-provider returns 400 with an error page rather than amplifying the attack.
+            expect(res.status).toBe(400);
+            // Defensive: even if a redirect was emitted somehow, it must not point at the attacker URI.
+            const location = res.headers['location'] as string | undefined;
+
+            if (location) {
+              expect(location.startsWith(redirectUri)).toBe(false);
+            }
+          }
+
+          it('rejects suffix-extended redirect_uri', async () => {
+            await expectAuthRedirectUriRejected('https://example.com/callback/extra');
+          });
+
+          it('rejects host-suffix bypass redirect_uri', async () => {
+            await expectAuthRedirectUriRejected('https://example.com.evil.com/callback');
+          });
+
+          it('rejects redirect_uri with extra query string', async () => {
+            await expectAuthRedirectUriRejected('https://example.com/callback?attacker=1');
+          });
+        });
+
+        describe('PKCE enforcement', () => {
+          let pkceClientId: string;
+          let pkceClientSecret: string;
+
+          beforeEach(async () => {
+            const created = await oidcClientService.createClient({
+              client_name: 'pkce-test',
+              redirect_uris: ['https://example.com/callback'],
+              token_endpoint_auth_method: 'client_secret_post'
+            });
+
+            pkceClientId = created.client_id;
+            pkceClientSecret = created.client_secret!;
+          });
+
+          it('rejects /oidc/auth without code_challenge', async () => {
+            const res = await request(app.getHttpServer())
+              .get('/oidc/auth')
+              .query({
+                client_id: pkceClientId,
+                redirect_uri: 'https://example.com/callback',
+                response_type: 'code',
+                scope: 'openid email demo',
+                state: 'test-state',
+                nonce: 'test-nonce'
+              })
+              .redirects(0);
+
+            // oidc-provider redirects to the registered redirect_uri with `error=invalid_request`
+            // when PKCE is required. Some configs return 400 instead — accept both shapes.
+            if (res.status === 303 || res.status === 302) {
+              const location = new URL(res.headers['location']);
+              expect(location.searchParams.get('error')).toBe('invalid_request');
+            } else {
+              expect(res.status).toBe(400);
+            }
+          });
+
+          it('rejects /oidc/auth with code_challenge_method=plain', async () => {
+            const codeVerifier = randomBytes(32).toString('base64url');
+            const res = await request(app.getHttpServer())
+              .get('/oidc/auth')
+              .query({
+                client_id: pkceClientId,
+                redirect_uri: 'https://example.com/callback',
+                response_type: 'code',
+                scope: 'openid email demo',
+                code_challenge: codeVerifier,
+                code_challenge_method: 'plain',
+                state: 'test-state',
+                nonce: 'test-nonce'
+              })
+              .redirects(0);
+
+            if (res.status === 303 || res.status === 302) {
+              const location = new URL(res.headers['location']);
+              expect(location.searchParams.get('error')).toBe('invalid_request');
+            } else {
+              expect(res.status).toBe(400);
+            }
+          });
+
+          it('rejects /oidc/token exchange with a wrong code_verifier', async () => {
+            const server = app.getHttpServer();
+            const { authorizationCode, cookieHeader } = await performAuthCodeFlow(server, pkceClientId);
+
+            const wrongVerifier = randomBytes(32).toString('base64url');
+            const tokenRes = await request(server).post('/oidc/token').set('Cookie', cookieHeader).type('form').send({
+              grant_type: 'authorization_code',
+              code: authorizationCode,
+              redirect_uri: 'https://example.com/callback',
+              client_id: pkceClientId,
+              client_secret: pkceClientSecret,
+              code_verifier: wrongVerifier
+            });
+
+            expect(tokenRes.status).toBe(400);
+            expect(tokenRes.body.error).toBe('invalid_grant');
+          });
+
+          it('rejects /oidc/token exchange omitting code_verifier', async () => {
+            const server = app.getHttpServer();
+            const { authorizationCode, cookieHeader } = await performAuthCodeFlow(server, pkceClientId);
+
+            const tokenRes = await request(server).post('/oidc/token').set('Cookie', cookieHeader).type('form').send({
+              grant_type: 'authorization_code',
+              code: authorizationCode,
+              redirect_uri: 'https://example.com/callback',
+              client_id: pkceClientId,
+              client_secret: pkceClientSecret
+            });
+
+            expect(tokenRes.status).toBe(400);
+            expect(tokenRes.body.error).toBe('invalid_grant');
+          });
+        });
+
+        describe('authorization code reuse / replay', () => {
+          it('rejects re-redemption of an authorization code and revokes the issued tokens', async () => {
+            const server = app.getHttpServer();
+            const { client_id, client_secret } = await oidcClientService.createClient({
+              client_name: 'replay-test',
+              redirect_uris: ['https://example.com/callback'],
+              token_endpoint_auth_method: 'client_secret_post'
+            });
+
+            const { authorizationCode, codeVerifier, cookieHeader } = await performAuthCodeFlow(server, client_id);
+
+            // First exchange succeeds.
+            const firstRes = await request(server).post('/oidc/token').set('Cookie', cookieHeader).type('form').send({
+              grant_type: 'authorization_code',
+              code: authorizationCode,
+              redirect_uri: 'https://example.com/callback',
+              client_id,
+              client_secret,
+              code_verifier: codeVerifier
+            });
+
+            expect(firstRes.status).toBe(200);
+            expect(firstRes.body.access_token).toBeDefined();
+            const issuedAccessToken = firstRes.body.access_token as string;
+
+            // Second exchange with the same code is rejected as invalid_grant.
+            const secondRes = await request(server).post('/oidc/token').set('Cookie', cookieHeader).type('form').send({
+              grant_type: 'authorization_code',
+              code: authorizationCode,
+              redirect_uri: 'https://example.com/callback',
+              client_id,
+              client_secret,
+              code_verifier: codeVerifier
+            });
+
+            expect(secondRes.status).toBe(400);
+            expect(secondRes.body.error).toBe('invalid_grant');
+
+            // The originally-issued access token must no longer verify (oidc-provider revokes
+            // the entire grant on detected code reuse).
+            const replayedAuthData = await oidcService.verifyAccessToken(issuedAccessToken);
+            expect(replayedAuthData).toBeUndefined();
+          });
+        });
+
+        describe('cross-client code redemption', () => {
+          it('rejects exchange of clientA code presented with clientB credentials', async () => {
+            const server = app.getHttpServer();
+            const { client_id: clientIdA } = await oidcClientService.createClient({
+              client_name: 'cross-client-A',
+              redirect_uris: ['https://example.com/callback'],
+              token_endpoint_auth_method: 'client_secret_post'
+            });
+
+            const clientB = await oidcClientService.createClient({
+              client_name: 'cross-client-B',
+              redirect_uris: ['https://example.com/callback'],
+              token_endpoint_auth_method: 'client_secret_post'
+            });
+
+            const { authorizationCode, codeVerifier, cookieHeader } = await performAuthCodeFlow(server, clientIdA);
+
+            const tokenRes = await request(server).post('/oidc/token').set('Cookie', cookieHeader).type('form').send({
+              grant_type: 'authorization_code',
+              code: authorizationCode,
+              redirect_uri: 'https://example.com/callback',
+              client_id: clientB.client_id,
+              client_secret: clientB.client_secret,
+              code_verifier: codeVerifier
+            });
+
+            expect(tokenRes.status).toBe(400);
+            expect(['invalid_grant', 'invalid_client']).toContain(tokenRes.body.error);
+          });
+        });
+
+        describe('partial consent (scope deselection)', () => {
+          /**
+           * Runs the auth code flow through to the consent submit, posts a
+           * caller-provided consent body, and returns the response so tests
+           * can inspect or continue the flow as needed.
+           */
+          // eslint-disable-next-line @typescript-eslint/max-params -- mirrors performAuthCodeFlow shape
+          async function performAuthCodeFlowToConsent(server: ReturnType<INestApplication['getHttpServer']>, clientId: string, consentBody: Record<string, unknown>, scope = 'openid email demo'): Promise<{ consentResponse: request.Response; cookieHeader: string; codeVerifier: string; idToken: string }> {
+            const cookieJar = new Map<string, string>();
+
+            function collectCookies(res: request.Response): void {
+              const setCookies = res.headers['set-cookie'];
+
+              if (setCookies) {
+                const items = Array.isArray(setCookies) ? setCookies : [setCookies];
+
+                for (const cookie of items) {
+                  const [nameValue] = cookie.split(';');
+                  const [name] = nameValue.split('=');
+                  cookieJar.set(name, nameValue);
+                }
+              }
+            }
+
+            function getCookieHeader(): string {
+              return [...cookieJar.values()].join('; ');
+            }
+
+            const codeVerifier = randomBytes(32).toString('base64url');
+            const codeChallenge = createHash('sha256').update(codeVerifier).digest('base64url');
+
+            const authRes = await request(server)
+              .get('/oidc/auth')
+              .query({
+                client_id: clientId,
+                redirect_uri: 'https://example.com/callback',
+                response_type: 'code',
+                scope,
+                code_challenge: codeChallenge,
+                code_challenge_method: 'S256',
+                state: 'test-state',
+                nonce: 'test-nonce'
+              })
+              .redirects(0);
+
+            expect(authRes.status).toBe(303);
+            collectCookies(authRes);
+            const loginUid = extractInteractionUid(authRes);
+
+            const idToken = await createTestIdToken(app, u.uid);
+            const loginRes = await request(server).post(`/interaction/${loginUid}/login`).set('Cookie', getCookieHeader()).send({ idToken });
+            expect(loginRes.status).toBe(200);
+
+            const resumeAfterLoginPath = new URL(loginRes.body.redirectTo).pathname + new URL(loginRes.body.redirectTo).search;
+            const consentRedirectRes = await request(server).get(resumeAfterLoginPath).set('Cookie', getCookieHeader()).redirects(0);
+            expect(consentRedirectRes.status).toBe(303);
+            collectCookies(consentRedirectRes);
+            const consentUid = extractInteractionUid(consentRedirectRes);
+
+            const consentResponse = await request(server)
+              .post(`/interaction/${consentUid}/consent`)
+              .set('Cookie', getCookieHeader())
+              .send({ idToken, ...consentBody });
+
+            collectCookies(consentResponse);
+
+            return { consentResponse, cookieHeader: getCookieHeader(), codeVerifier, idToken };
+          }
+
+          /**
+           * Continues from a successful consent response through the OAuth
+           * callback redirect to extract an authorization code.
+           */
+          async function exchangeConsentForAuthorizationCode(server: ReturnType<INestApplication['getHttpServer']>, consentResponse: request.Response, cookieHeader: string): Promise<string> {
+            expect(consentResponse.status).toBe(200);
+            expect(consentResponse.body.redirectTo).toBeDefined();
+
+            const resumeAfterConsentPath = new URL(consentResponse.body.redirectTo).pathname + new URL(consentResponse.body.redirectTo).search;
+            const callbackRedirectRes = await request(server).get(resumeAfterConsentPath).set('Cookie', cookieHeader).redirects(0);
+            expect(callbackRedirectRes.status).toBe(303);
+
+            const callbackUrl = new URL(callbackRedirectRes.headers['location']);
+            const authorizationCode = callbackUrl.searchParams.get('code')!;
+            expect(authorizationCode).toBeDefined();
+            return authorizationCode;
+          }
+
+          it('grants only the subset of scopes the user selected', async () => {
+            const server = app.getHttpServer();
+            const { client_id, client_secret } = await oidcClientService.createClient({
+              client_name: 'partial-consent-subset',
+              redirect_uris: ['https://example.com/callback'],
+              token_endpoint_auth_method: 'client_secret_post'
+            });
+
+            const { consentResponse, cookieHeader, codeVerifier } = await performAuthCodeFlowToConsent(server, client_id, { approved: true, grantedOIDCScopes: ['openid', 'email'] });
+
+            const authorizationCode = await exchangeConsentForAuthorizationCode(server, consentResponse, cookieHeader);
+
+            const tokenRes = await request(server).post('/oidc/token').set('Cookie', cookieHeader).type('form').send({
+              grant_type: 'authorization_code',
+              code: authorizationCode,
+              redirect_uri: 'https://example.com/callback',
+              client_id,
+              client_secret,
+              code_verifier: codeVerifier
+            });
+
+            expect(tokenRes.status).toBe(200);
+            const grantedScopes = (tokenRes.body.scope as string | undefined)?.split(' ') ?? [];
+            expect(grantedScopes).toContain('openid');
+            expect(grantedScopes).toContain('email');
+            expect(grantedScopes).not.toContain('demo');
+          });
+
+          it('rejects a granted scope that was not in the original request', async () => {
+            const server = app.getHttpServer();
+            const { client_id } = await oidcClientService.createClient({
+              client_name: 'partial-consent-extra-scope',
+              redirect_uris: ['https://example.com/callback'],
+              token_endpoint_auth_method: 'client_secret_post'
+            });
+
+            const { consentResponse } = await performAuthCodeFlowToConsent(server, client_id, { approved: true, grantedOIDCScopes: ['openid', 'email', 'unrequested-scope'] });
+
+            expect(consentResponse.status).toBe(400);
+          });
+
+          it('always grants `openid` even when the client omits it from grantedOIDCScopes', async () => {
+            const server = app.getHttpServer();
+            const { client_id, client_secret } = await oidcClientService.createClient({
+              client_name: 'partial-consent-implicit-openid',
+              redirect_uris: ['https://example.com/callback'],
+              token_endpoint_auth_method: 'client_secret_post'
+            });
+
+            const { consentResponse, cookieHeader, codeVerifier } = await performAuthCodeFlowToConsent(server, client_id, { approved: true, grantedOIDCScopes: ['email'] });
+
+            const authorizationCode = await exchangeConsentForAuthorizationCode(server, consentResponse, cookieHeader);
+
+            const tokenRes = await request(server).post('/oidc/token').set('Cookie', cookieHeader).type('form').send({
+              grant_type: 'authorization_code',
+              code: authorizationCode,
+              redirect_uri: 'https://example.com/callback',
+              client_id,
+              client_secret,
+              code_verifier: codeVerifier
+            });
+
+            expect(tokenRes.status).toBe(200);
+            const grantedScopes = (tokenRes.body.scope as string | undefined)?.split(' ') ?? [];
+            expect(grantedScopes).toContain('openid');
+            expect(grantedScopes).toContain('email');
+            expect(grantedScopes).not.toContain('demo');
+          });
+
+          it('still grants `openid` when grantedOIDCScopes is an empty array', async () => {
+            const server = app.getHttpServer();
+            const { client_id, client_secret } = await oidcClientService.createClient({
+              client_name: 'partial-consent-empty-array',
+              redirect_uris: ['https://example.com/callback'],
+              token_endpoint_auth_method: 'client_secret_post'
+            });
+
+            const { consentResponse, cookieHeader, codeVerifier } = await performAuthCodeFlowToConsent(server, client_id, { approved: true, grantedOIDCScopes: [] });
+
+            const authorizationCode = await exchangeConsentForAuthorizationCode(server, consentResponse, cookieHeader);
+
+            const tokenRes = await request(server).post('/oidc/token').set('Cookie', cookieHeader).type('form').send({
+              grant_type: 'authorization_code',
+              code: authorizationCode,
+              redirect_uri: 'https://example.com/callback',
+              client_id,
+              client_secret,
+              code_verifier: codeVerifier
+            });
+
+            expect(tokenRes.status).toBe(200);
+            const grantedScopes = (tokenRes.body.scope as string | undefined)?.split(' ') ?? [];
+            expect(grantedScopes).toContain('openid');
+            expect(grantedScopes).not.toContain('email');
+            expect(grantedScopes).not.toContain('demo');
+          });
+
+          it('preserves the existing all-or-nothing behavior when grantedOIDCScopes is omitted', async () => {
+            const server = app.getHttpServer();
+            const { client_id, client_secret } = await oidcClientService.createClient({
+              client_name: 'partial-consent-back-compat',
+              redirect_uris: ['https://example.com/callback'],
+              token_endpoint_auth_method: 'client_secret_post'
+            });
+
+            const { consentResponse, cookieHeader, codeVerifier } = await performAuthCodeFlowToConsent(server, client_id, { approved: true });
+
+            const authorizationCode = await exchangeConsentForAuthorizationCode(server, consentResponse, cookieHeader);
+
+            const tokenRes = await request(server).post('/oidc/token').set('Cookie', cookieHeader).type('form').send({
+              grant_type: 'authorization_code',
+              code: authorizationCode,
+              redirect_uri: 'https://example.com/callback',
+              client_id,
+              client_secret,
+              code_verifier: codeVerifier
+            });
+
+            expect(tokenRes.status).toBe(200);
+            const grantedScopes = (tokenRes.body.scope as string | undefined)?.split(' ') ?? [];
+            expect(grantedScopes).toContain('openid');
+            expect(grantedScopes).toContain('email');
+            expect(grantedScopes).toContain('demo');
+          });
+        });
+
+        describe('scope handling at refresh', () => {
+          it('rejects a refresh-token request that asks for an unconsented scope', async () => {
+            const server = app.getHttpServer();
+            const { client_id, client_secret } = await oidcClientService.createClient({
+              client_name: 'scope-upgrade-test',
+              redirect_uris: ['https://example.com/callback'],
+              token_endpoint_auth_method: 'client_secret_post'
+            });
+
+            const { authorizationCode, codeVerifier, cookieHeader } = await performAuthCodeFlow(server, client_id, 'openid email offline_access');
+
+            const tokenRes = await request(server).post('/oidc/token').set('Cookie', cookieHeader).type('form').send({
+              grant_type: 'authorization_code',
+              code: authorizationCode,
+              redirect_uri: 'https://example.com/callback',
+              client_id,
+              client_secret,
+              code_verifier: codeVerifier
+            });
+
+            expect(tokenRes.status).toBe(200);
+            expect(tokenRes.body.refresh_token).toBeDefined();
+            expect(tokenRes.body.scope).not.toContain('demo');
+            const refreshToken = tokenRes.body.refresh_token as string;
+
+            // Try to upgrade scope at refresh — must NOT grant `demo` since it was not consented.
+            const refreshRes = await request(server).post('/oidc/token').type('form').send({
+              grant_type: 'refresh_token',
+              refresh_token: refreshToken,
+              client_id,
+              client_secret,
+              scope: 'openid email offline_access demo'
+            });
+
+            // Acceptable behaviors per OAuth/OIDC: reject with invalid_scope, OR succeed but
+            // strip `demo`. Both are safe; never grant unconsented scopes.
+            if (refreshRes.status === 200) {
+              const grantedScope = (refreshRes.body.scope as string | undefined) ?? '';
+              expect(grantedScope.split(' ')).not.toContain('demo');
+            } else {
+              expect(refreshRes.status).toBe(400);
+              expect(['invalid_scope', 'invalid_grant']).toContain(refreshRes.body.error);
+            }
+          });
+        });
+
+        describe('client_assertion (private_key_jwt) audience binding', () => {
+          async function setupPrivateKeyJwtClient(): Promise<{ clientId: string; kid: string; privateKey: CryptoKey }> {
+            const { publicKey, privateKey } = await generateKeyPair('RS256');
+            const publicJwk = await exportJWK(publicKey);
+            const kid = randomBytes(8).toString('hex');
+            publicJwk.kid = kid;
+            publicJwk.use = 'sig';
+
+            const created = await oidcClientService.createClient(
+              {
+                client_name: 'assertion-binding-test',
+                redirect_uris: ['https://example.com/callback'],
+                token_endpoint_auth_method: 'private_key_jwt'
+              },
+              { jwks: { keys: [publicJwk] } }
+            );
+
+            return { clientId: created.client_id, kid, privateKey };
+          }
+
+          it('rejects a client_assertion with a foreign audience', async () => {
+            const server = app.getHttpServer();
+            const { clientId, kid, privateKey } = await setupPrivateKeyJwtClient();
+            const { authorizationCode, codeVerifier, cookieHeader } = await performAuthCodeFlow(server, clientId);
+
+            const wrongAudienceAssertion = await new SignJWT({}).setProtectedHeader({ alg: 'RS256', kid }).setIssuer(clientId).setSubject(clientId).setAudience('https://attacker.example/oauth/token').setJti(randomBytes(16).toString('hex')).setIssuedAt().setExpirationTime('1m').sign(privateKey);
+
+            const tokenRes = await request(server).post('/oidc/token').set('Cookie', cookieHeader).type('form').send({
+              grant_type: 'authorization_code',
+              code: authorizationCode,
+              redirect_uri: 'https://example.com/callback',
+              client_id: clientId,
+              code_verifier: codeVerifier,
+              client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
+              client_assertion: wrongAudienceAssertion
+            });
+
+            // oidc-provider returns 401 invalid_client for a bad assertion (per RFC 6749 §5.2).
+            // Some configurations may return 400 — accept either provided no token is issued.
+            expect([400, 401]).toContain(tokenRes.status);
+            expect(['invalid_client', 'invalid_request']).toContain(tokenRes.body.error);
+            expect(tokenRes.body.access_token).toBeUndefined();
+          });
+
+          it('rejects a client_assertion where iss != sub', async () => {
+            const server = app.getHttpServer();
+            const { clientId, kid, privateKey } = await setupPrivateKeyJwtClient();
+            const { authorizationCode, codeVerifier, cookieHeader } = await performAuthCodeFlow(server, clientId);
+
+            const mismatchedAssertion = await new SignJWT({}).setProtectedHeader({ alg: 'RS256', kid }).setIssuer('https://attacker.example').setSubject(clientId).setAudience(oidcModuleConfig.issuer).setJti(randomBytes(16).toString('hex')).setIssuedAt().setExpirationTime('1m').sign(privateKey);
+
+            const tokenRes = await request(server).post('/oidc/token').set('Cookie', cookieHeader).type('form').send({
+              grant_type: 'authorization_code',
+              code: authorizationCode,
+              redirect_uri: 'https://example.com/callback',
+              client_id: clientId,
+              code_verifier: codeVerifier,
+              client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
+              client_assertion: mismatchedAssertion
+            });
+
+            expect([400, 401]).toContain(tokenRes.status);
+            expect(['invalid_client', 'invalid_request']).toContain(tokenRes.body.error);
+            expect(tokenRes.body.access_token).toBeUndefined();
+          });
+        });
+
+        describe('state and nonce binding', () => {
+          it('echoes the request state on the callback and binds the nonce into the id_token', async () => {
+            const server = app.getHttpServer();
+            const { client_id, client_secret } = await oidcClientService.createClient({
+              client_name: 'state-nonce-test',
+              redirect_uris: ['https://example.com/callback'],
+              token_endpoint_auth_method: 'client_secret_post'
+            });
+
+            const requestNonce = `nonce-${randomBytes(8).toString('hex')}`;
+            const { authorizationCode, codeVerifier, cookieHeader } = await performAuthCodeFlow(server, client_id, 'openid email demo', { state: 'state-nonce-state', nonce: requestNonce });
+
+            const tokenRes = await request(server).post('/oidc/token').set('Cookie', cookieHeader).type('form').send({
+              grant_type: 'authorization_code',
+              code: authorizationCode,
+              redirect_uri: 'https://example.com/callback',
+              client_id,
+              client_secret,
+              code_verifier: codeVerifier
+            });
+
+            expect(tokenRes.status).toBe(200);
+            expect(tokenRes.body.id_token).toBeDefined();
+
+            const idTokenClaims = decodeJwt(tokenRes.body.id_token as string);
+            expect(idTokenClaims.nonce).toBe(requestNonce);
+          });
+        });
+
+        describe('interaction identity binding', () => {
+          it('does not bind a Grant to the consent idToken when called before login completes', async () => {
+            const server = app.getHttpServer();
+            const { client_id } = await oidcClientService.createClient({
+              client_name: 'consent-before-login-test',
+              redirect_uris: ['https://example.com/callback'],
+              token_endpoint_auth_method: 'client_secret_post'
+            });
+
+            const codeVerifier = randomBytes(32).toString('base64url');
+            const codeChallenge = createHash('sha256').update(codeVerifier).digest('base64url');
+            const authRes = await request(server)
+              .get('/oidc/auth')
+              .query({
+                client_id,
+                redirect_uri: 'https://example.com/callback',
+                response_type: 'code',
+                scope: 'openid email demo',
+                code_challenge: codeChallenge,
+                code_challenge_method: 'S256',
+                state: 'test-state',
+                nonce: 'test-nonce'
+              })
+              .redirects(0);
+
+            expect(authRes.status).toBe(303);
+            const loginUid = extractInteractionUid(authRes);
+
+            // Submit consent on the login-prompt interaction WITHOUT completing login first.
+            // The interaction has no session, so the controller falls back to
+            // `session?.accountId ?? ''`. The security property that must hold:
+            // any Grant created here is NOT bound to the supplied idToken's uid — i.e. an
+            // attacker holding their own valid Firebase token cannot mint a Grant against
+            // their own account on a session they never established.
+            const idToken = await createTestIdToken(app, u.uid);
+            await request(server).post(`/interaction/${loginUid}/consent`).send({ idToken, approved: true });
+
+            // No Grant must be persisted under the requesting user's uid.
+            const grantsForRequester = await f.instance.demoFirestoreCollections.oidcEntryCollection.query(oidcEntriesByUidQuery('Grant', u.uid)).getDocs();
+            expect(grantsForRequester.empty).toBe(true);
+          });
+        });
+
+        demoAuthorizedUserAdminContext({ f }, (admin) => {
+          describe('cross-user consent identity binding', () => {
+            it('binds the issued grant to the LOGIN session accountId regardless of the consent idToken', async () => {
+              const server = app.getHttpServer();
+              const { client_id } = await oidcClientService.createClient({
+                client_name: 'cross-user-consent-test',
+                redirect_uris: ['https://example.com/callback'],
+                token_endpoint_auth_method: 'client_secret_post'
+              });
+
+              const cookieJar = new Map<string, string>();
+
+              function collectCookies(res: request.Response): void {
+                const setCookies = res.headers['set-cookie'];
+
+                if (setCookies) {
+                  const items = Array.isArray(setCookies) ? setCookies : [setCookies];
+
+                  for (const cookie of items) {
+                    const [nameValue] = cookie.split(';');
+                    const [name] = nameValue.split('=');
+                    cookieJar.set(name, nameValue);
+                  }
+                }
+              }
+
+              function getCookieHeader(): string {
+                return [...cookieJar.values()].join('; ');
+              }
+
+              const codeVerifier = randomBytes(32).toString('base64url');
+              const codeChallenge = createHash('sha256').update(codeVerifier).digest('base64url');
+              const authRes = await request(server)
+                .get('/oidc/auth')
+                .query({
+                  client_id,
+                  redirect_uri: 'https://example.com/callback',
+                  response_type: 'code',
+                  scope: 'openid email demo',
+                  code_challenge: codeChallenge,
+                  code_challenge_method: 'S256',
+                  state: 'test-state',
+                  nonce: 'test-nonce'
+                })
+                .redirects(0);
+
+              expect(authRes.status).toBe(303);
+              collectCookies(authRes);
+              const loginUid = extractInteractionUid(authRes);
+
+              // 1. User A logs in with their own idToken.
+              const userAIdToken = await createTestIdToken(app, u.uid);
+              const loginRes = await request(server).post(`/interaction/${loginUid}/login`).set('Cookie', getCookieHeader()).send({ idToken: userAIdToken });
+              expect(loginRes.status).toBe(200);
+
+              const resumeAfterLoginPath = new URL(loginRes.body.redirectTo).pathname + new URL(loginRes.body.redirectTo).search;
+              const consentRedirectRes = await request(server).get(resumeAfterLoginPath).set('Cookie', getCookieHeader()).redirects(0);
+              expect(consentRedirectRes.status).toBe(303);
+              collectCookies(consentRedirectRes);
+              const consentUid = extractInteractionUid(consentRedirectRes);
+
+              // 2. User B (admin, a different real user) submits consent. The current implementation
+              //    only verifies that the supplied idToken is valid Firebase auth, then writes the
+              //    grant against `session?.accountId` (which was set by user A's login). Document
+              //    this binding so any future regression — e.g. switching to using the consent
+              //    idToken's uid — is caught.
+              const userBIdToken = await createTestIdToken(app, admin.uid);
+              expect(admin.uid).not.toBe(u.uid);
+
+              const consentRes = await request(server).post(`/interaction/${consentUid}/consent`).set('Cookie', getCookieHeader()).send({ idToken: userBIdToken, approved: true });
+              expect(consentRes.status).toBe(200);
+              collectCookies(consentRes);
+
+              const resumeAfterConsentPath = new URL(consentRes.body.redirectTo).pathname + new URL(consentRes.body.redirectTo).search;
+              const callbackRes = await request(server).get(resumeAfterConsentPath).set('Cookie', getCookieHeader()).redirects(0);
+              expect(callbackRes.status).toBe(303);
+
+              // Grant must be bound to user A (login session accountId), not user B (consent idToken uid).
+              const grantsForUserA = await f.instance.demoFirestoreCollections.oidcEntryCollection.query(oidcEntriesByUidQuery('Grant', u.uid)).getDocs();
+              expect(grantsForUserA.empty).toBe(false);
+
+              const grantsForUserB = await f.instance.demoFirestoreCollections.oidcEntryCollection.query(oidcEntriesByUidQuery('Grant', admin.uid)).getDocs();
+              expect(grantsForUserB.empty).toBe(true);
+            });
           });
         });
       });

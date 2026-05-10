@@ -48,16 +48,25 @@ export class DbxFirebaseOidcInteractionService {
   /**
    * Submit consent decision to complete the consent interaction.
    *
-   * Automatically attaches the current user's Firebase ID token.
+   * Automatically attaches the current user's Firebase ID token. When `approved`
+   * is true, optional `grants` may be passed to grant only a subset of the
+   * requested scopes/claims/resource scopes; the server validates that any
+   * subset is contained in the corresponding `missing*` set on the prompt.
+   *
+   * When `approved` is false, `grants` is ignored (not sent).
    *
    * @param uid - The OIDC interaction UID identifying the current consent interaction.
    * @param approved - Whether the user approved or denied the consent request.
+   * @param grants - Optional subset of OIDC scopes / OIDC claims / resource scopes to grant.
    * @returns Observable that emits the redirect URL from the server response.
    */
-  submitConsent(uid: OidcInteractionUid, approved: boolean): Observable<OAuthInteractionConsentResponse> {
+  submitConsent(uid: OidcInteractionUid, approved: boolean, grants?: Pick<OAuthInteractionConsentRequest, 'grantedOIDCScopes' | 'grantedOIDCClaims' | 'grantedResourceScopes'>): Observable<OAuthInteractionConsentResponse> {
     return this._authService.idTokenString$.pipe(
       first(),
-      switchMap((idToken) => this.http.post<OAuthInteractionConsentResponse>(`${this.baseUrl}/${uid}/consent`, { idToken, approved } as OAuthInteractionConsentRequest))
+      switchMap((idToken) => {
+        const body: OAuthInteractionConsentRequest = approved && grants ? { idToken, approved, ...grants } : { idToken, approved };
+        return this.http.post<OAuthInteractionConsentResponse>(`${this.baseUrl}/${uid}/consent`, body);
+      })
     );
   }
 }
