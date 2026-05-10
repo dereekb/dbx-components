@@ -4,7 +4,7 @@ import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { DbxMapboxMapStore } from './mapbox.store';
 import { DbxMapboxService } from './mapbox.service';
 import { type Maybe } from '@dereekb/util';
-import { DbxColorDirective, DbxResizedDirective, type DbxThemeColor, type ResizedEvent } from '@dereekb/dbx-web';
+import { DbxColorDirective, type DbxColorInput, DbxResizedDirective, type ResizedEvent } from '@dereekb/dbx-web';
 import { MatDrawer, MatDrawerContainer, MatDrawerContent } from '@angular/material/sidenav';
 import { type MapboxEaseTo } from './mapbox';
 import { NgClass } from '@angular/common';
@@ -55,7 +55,7 @@ export class DbxMapboxLayoutComponent implements OnInit {
    * Forces the drawer to assume the drawer has content if true, or assume it has no content if false.
    */
   readonly forceHasDrawerContent = input<Maybe<boolean>>(undefined);
-  readonly drawerButtonColor = input<DbxThemeColor, Maybe<DbxThemeColor>>('default', { transform: (x) => x ?? 'default' });
+  readonly drawerButtonColor = input<DbxColorInput, Maybe<DbxColorInput>>('default', { transform: (x) => x ?? 'default' });
 
   readonly openDrawer = input<Maybe<boolean>>(undefined); // input open/close drawer config
   readonly isDrawerOpenSignal = signal<Maybe<boolean>>(undefined); // Signal to toggle the drawer

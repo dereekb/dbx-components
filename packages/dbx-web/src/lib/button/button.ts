@@ -1,7 +1,7 @@
 import { type ThemePalette } from '@angular/material/core';
 import { type ProgressSpinnerMode } from '@angular/material/progress-spinner';
 import type { Maybe } from '@dereekb/util';
-import type { DbxThemeColor } from '../layout';
+import type { DbxColorInput, DbxThemeColor } from '../layout';
 import { type DbxButtonDisplay } from '@dereekb/dbx-core';
 
 /**
@@ -23,9 +23,11 @@ export interface DbxButtonStyle {
    */
   readonly mode?: Maybe<ProgressSpinnerMode>;
   /**
-   * Material theme palette or custom theme color for the button.
+   * Material theme palette, theme color, or {@link DbxColorConfig} for the button.
+   *
+   * Forwarded to the button host's `[dbxColor]` directive.
    */
-  readonly color?: Maybe<ThemePalette | DbxThemeColor>;
+  readonly color?: Maybe<ThemePalette | DbxColorInput>;
   /**
    * Material theme palette or custom theme color for the loading spinner.
    */

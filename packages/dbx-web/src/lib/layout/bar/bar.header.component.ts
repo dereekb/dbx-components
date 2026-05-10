@@ -1,6 +1,6 @@
 import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
-import { type DbxBarColor } from './bar';
+import { type DbxColorInput } from '../style/style';
 import { MatIconModule } from '@angular/material/icon';
 import { DbxBarDirective } from './bar.directive';
 
@@ -46,5 +46,5 @@ import { DbxBarDirective } from './bar.directive';
 export class DbxBarHeaderComponent {
   readonly text = input<Maybe<string>>();
   readonly icon = input<Maybe<string>>();
-  readonly color = input<Maybe<DbxBarColor>>();
+  readonly color = input<Maybe<DbxColorInput>>();
 }

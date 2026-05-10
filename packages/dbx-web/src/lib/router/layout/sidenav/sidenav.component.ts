@@ -10,7 +10,7 @@ import { DbxAnchorListComponent } from '../anchorlist/anchorlist.component';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { combineLatest, distinctUntilChanged, map, type Observable, shareReplay } from 'rxjs';
 import { DbxColorDirective } from '../../../layout/style/style.color.directive';
-import { type DbxThemeColor } from '../../../layout/style/style';
+import { type DbxColorInput } from '../../../layout/style/style';
 import { type ThemePalette } from '@angular/material/core';
 
 /**
@@ -67,7 +67,7 @@ export class DbxSidenavComponent extends AbstractTransitionWatcherDirective impl
   private readonly _sidenavSub = cleanSubscription();
   private readonly _screenMediaService = inject(DbxScreenMediaService);
 
-  readonly color = input<ThemePalette | DbxThemeColor>(undefined);
+  readonly color = input<ThemePalette | DbxColorInput>(undefined);
   readonly position = input<DbxSidenavPosition>('start');
 
   /**

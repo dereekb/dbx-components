@@ -3,7 +3,7 @@ import { type ThemePalette } from '@angular/material/core';
 import { MatProgressBar, type ProgressBarMode } from '@angular/material/progress-bar';
 import { MatProgressSpinner, type ProgressSpinnerMode } from '@angular/material/progress-spinner';
 import { type Maybe } from '@dereekb/util';
-import { type DbxThemeColor } from '../layout/style/style';
+import { type DbxColorInput } from '../layout/style/style';
 import { NgClass } from '@angular/common';
 import { DbxColorDirective } from '../layout/style/style.color.directive';
 
@@ -63,7 +63,7 @@ export class DbxLoadingProgressComponent {
   readonly text = input<Maybe<string>>();
   readonly linear = input<Maybe<boolean>>();
   readonly mode = input<ProgressBarMode | ProgressSpinnerMode>('indeterminate');
-  readonly color = input<ThemePalette | DbxThemeColor>('primary');
+  readonly color = input<ThemePalette | DbxColorInput>('primary');
   readonly value = input<Maybe<number>>();
   readonly bufferValue = input<Maybe<number>>();
 
