@@ -9,16 +9,30 @@ $big-button-height: 46px; // 33% bigger
 
 // MARK: Mixin
 @mixin core() {
-  // increases the height of the mat-mdc-button
+  // increases the height of the mat-mdc-button via Material's container-height tokens
   /// @dbx-utility button-big
-  /// @intent enlarge the inner `mat-mdc-button` height to 46px (33% taller than default)
+  /// @intent enlarge the inner `mat-mdc-button` height to 46px (33% taller than default) by setting Material's `--mat-button-*-container-height` tokens
   /// @role layout
   /// @see-also button-wide
   .dbx-button-big,
   .dbx-button-large {
-    .mdc-button.mat-mdc-button {
-      height: $big-button-height;
-    }
+    --mat-button-text-container-height: #{$big-button-height};
+    --mat-button-filled-container-height: #{$big-button-height};
+    --mat-button-protected-container-height: #{$big-button-height};
+    --mat-button-outlined-container-height: #{$big-button-height};
+    --mat-button-tonal-container-height: #{$big-button-height};
+  }
+
+  /// @dbx-utility button-form-field-height
+  /// @intent match the inner `mat-mdc-button` height to `--mat-form-field-container-height` so a button aligns vertically with an adjacent form field
+  /// @role layout
+  /// @see-also button-big
+  .dbx-button-form-field-height {
+    --mat-button-text-container-height: var(--mat-form-field-container-height);
+    --mat-button-filled-container-height: var(--mat-form-field-container-height);
+    --mat-button-protected-container-height: var(--mat-form-field-container-height);
+    --mat-button-outlined-container-height: var(--mat-form-field-container-height);
+    --mat-button-tonal-container-height: var(--mat-form-field-container-height);
   }
 
   // Neutral hover/pressed/focus state layer instead of the primary-colored default.

@@ -196,6 +196,24 @@
       <dbx-button class="dbx-w100" icon="settings" color="primary" text="Test Button"></dbx-button>
       <dbx-button class="dbx-button-wide" [raised]="true" icon="settings" color="accent" text="Test Button"></dbx-button>
 
+      <h4>Height</h4>
+      <p class="dbx-hint dbx-small">Use .dbx-button-big or .dbx-button-large to enlarge the button (46px), or .dbx-button-form-field-height to match an adjacent mat-form-field's container height. These set Material's --mat-button-*-container-height tokens rather than overriding height directly.</p>
+      <div class="dbx-button-wrap-group">
+        <dbx-button class="dbx-button-big" [raised]="true" icon="settings" color="primary" text="Big Button"></dbx-button>
+        <dbx-button class="dbx-button-large" icon="settings" color="primary" text="Large Button"></dbx-button>
+        <dbx-button class="dbx-button-big" [tonal]="true" icon="settings" color="accent" text="Big Tonal"></dbx-button>
+        <dbx-button class="dbx-button-big" [stroked]="true" icon="settings" color="warn" text="Big Stroked"></dbx-button>
+      </div>
+
+      <p class="dbx-hint dbx-small">.dbx-button-form-field-height aligned beside a mat-form-field:</p>
+      <div class="dbx-flex-bar" style="gap: 6px">
+        <mat-form-field class="dbx-p0" appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Search</mat-label>
+          <input matInput placeholder="Type here" />
+        </mat-form-field>
+        <dbx-button class="dbx-button-form-field-height" [flat]="true" icon="search" color="primary" text="Search"></dbx-button>
+      </div>
+
       <h4>With Custom Content</h4>
       <dbx-button (buttonClick)="clickBar1()" icon="settings" customContent [working]="barButtonConfigWorkingState">
         <div style="width: 400px">

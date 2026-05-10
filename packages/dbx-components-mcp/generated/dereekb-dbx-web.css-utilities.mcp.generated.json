@@ -566,6 +566,26 @@
       ]
     },
     {
+      "slug": "color-bg",
+      "selector": ".dbx-color-bg",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/style/_style.scss",
+      "line": 175,
+      "declarations": [],
+      "intent": "generic themed-background class — pair with `[dbxColor]=\"config\"` to drive `--dbx-bg-color-current` / `--dbx-color-current` from arbitrary CSS color values"
+    },
+    {
+      "slug": "color-text",
+      "selector": ".dbx-color-text",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/style/_style.scss",
+      "line": 182,
+      "declarations": [],
+      "intent": "generic themed-text class — pair with `[dbxTextColor]=\"config\"` to drive `--dbx-color-current` from an arbitrary CSS color value"
+    },
+    {
       "slug": "color-tonal",
       "selector": ".dbx-color-tonal",
       "source": "@dereekb/dbx-web",

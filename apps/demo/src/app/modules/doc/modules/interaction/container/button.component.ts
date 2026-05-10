@@ -7,6 +7,8 @@ import { DocFeatureExampleComponent } from '../../shared/component/feature.examp
 import { MatIcon } from '@angular/material/icon';
 import { DocFeatureDerivedComponent } from '../../shared/component/feature.derived.component';
 import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { DEMO_WORKING_INCREASE_OBSERVABLE } from '../../shared/progress';
 
 const DEMO_SPINNER_TIME: Milliseconds = 3350;
@@ -14,7 +16,7 @@ const DEMO_SPINNER_TIME: Milliseconds = 3350;
 @Component({
   templateUrl: './button.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, MatButtonModule, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxButtonComponent, DbxButtonSpacerDirective, MatIcon, DocFeatureDerivedComponent, DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent, DbxContentPitDirective, DbxAnchorComponent],
+  imports: [DbxContentContainerDirective, MatButtonModule, MatFormFieldModule, MatInputModule, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxButtonComponent, DbxButtonSpacerDirective, MatIcon, DocFeatureDerivedComponent, DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent, DbxContentPitDirective, DbxAnchorComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocInteractionButtonComponent {

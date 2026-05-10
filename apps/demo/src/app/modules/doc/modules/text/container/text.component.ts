@@ -11,6 +11,8 @@ import {
   DbxChipDirective,
   DbxChipListComponent,
   DbxColorDirective,
+  DbxTextColorDirective,
+  type DbxColorConfig,
   DbxButtonSpacerDirective,
   DbxLabelBlockComponent,
   DbxUnitedStatesAddressComponent,
@@ -44,6 +46,7 @@ import { LOREM } from '../../shared';
     DbxChipDirective,
     DbxChipListComponent,
     DbxColorDirective,
+    DbxTextColorDirective,
     DbxButtonSpacerDirective,
     DbxLabelBlockComponent,
     DbxNumberWithLimitComponent,
@@ -188,4 +191,11 @@ export class DocTextTextComponent {
     formatNumber: dollarAmountString,
     suffix: 'USD'
   };
+
+  readonly customColorConfigHex: DbxColorConfig = { color: '#ff0066', contrast: 'white' };
+  readonly customColorConfigHexTonal: DbxColorConfig = { color: '#ff0066', contrast: 'white', tone: 18 };
+  readonly customColorConfigVar: DbxColorConfig = { color: 'var(--mat-sys-tertiary)', contrast: 'var(--mat-sys-on-tertiary)' };
+  readonly customColorConfigVarTonal: DbxColorConfig = { color: 'var(--mat-sys-tertiary)', contrast: 'var(--mat-sys-on-tertiary)', tone: 18 };
+  readonly customColorConfigMix: DbxColorConfig = { color: 'color-mix(in srgb, #ff7f50 70%, #ffd700)', contrast: 'black' };
+  readonly customTextColorConfig: DbxColorConfig = { color: '#0066ff' };
 }

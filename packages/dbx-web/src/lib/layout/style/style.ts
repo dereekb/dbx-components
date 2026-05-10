@@ -105,36 +105,108 @@ export const DBX_THEME_COLORS: DbxThemeColor[] = [...DBX_THEME_COLORS_MAIN, ...D
 export type DbxColorTone = number;
 
 /**
+ * Config object accepted by `[dbxColor]` / `[dbxTextColor]` when applying an arbitrary (non-themed) color.
+ *
+ * Any valid CSS color value is allowed: hex, `rgb()`, `hsl()`, `var(...)`, `color-mix(...)`, etc.
+ *
+ * @example
+ * ```html
+ * <div [dbxColor]="{ color: '#ff0066', contrast: 'white' }">Hex</div>
+ * <div [dbxColor]="{ color: 'var(--mat-sys-tertiary)', contrast: 'var(--mat-sys-on-tertiary)', tone: 18 }">Tonal</div>
+ * <span [dbxTextColor]="{ color: '#0066ff' }">Text only</span>
+ * ```
+ */
+export interface DbxColorConfig {
+  /**
+   * Background/vibrant color when used with `[dbxColor]`; foreground color when used with `[dbxTextColor]`.
+   */
+  readonly color: string;
+  /**
+   * Contrast/foreground color used by `[dbxColor]`. Ignored by `[dbxTextColor]`.
+   */
+  readonly contrast?: string;
+  /**
+   * Optional opacity (0-100). The standalone `[dbxColorTone]` input wins when set.
+   */
+  readonly tone?: DbxColorTone;
+  /**
+   * Optional explicit tonal-mode flag. Only consulted when the standalone `[dbxColorTone]` input is unset.
+   */
+  readonly tonal?: boolean;
+}
+
+/**
+ * Union accepted by `[dbxColor]` and `[dbxTextColor]` — either a named theme color or a config object with arbitrary CSS color values.
+ */
+export type DbxColorInput = DbxThemeColor | DbxColorConfig | '';
+
+/**
+ * Type guard: true when the value is a {@link DbxColorConfig} object (not a named-color string).
+ *
+ * @example
+ * ```ts
+ * isDbxColorConfig('primary'); // false
+ * isDbxColorConfig({ color: '#ff0066' }); // true
+ * isDbxColorConfig(undefined); // false
+ * ```
+ *
+ * @param value - the value to test
+ * @returns `true` when the value is a {@link DbxColorConfig}
+ */
+export function isDbxColorConfig(value: Maybe<DbxColorInput>): value is DbxColorConfig {
+  return typeof value === 'object' && value !== null && typeof (value as DbxColorConfig).color === 'string';
+}
+
+/**
+ * CSS class that applies the background `color-mix` rule using the host's inline `--dbx-bg-color-current` / `--dbx-color-current` values.
+ *
+ * Used by `[dbxColor]` when bound to a {@link DbxColorConfig}.
+ */
+export const DBX_COLOR_CUSTOM_BG_CSS_CLASS: CssClass = 'dbx-color-bg';
+
+/**
+ * CSS class that applies `color: var(--dbx-color-current)` only.
+ *
+ * Used by `[dbxTextColor]` when bound to a {@link DbxColorConfig}.
+ */
+export const DBX_COLOR_CUSTOM_TEXT_CSS_CLASS: CssClass = 'dbx-color-text';
+
+/**
  * Returns the CSS class name for a themed background color.
  *
  * @example
  * ```ts
  * dbxColorBackground('primary'); // 'dbx-primary-bg'
+ * dbxColorBackground({ color: '#ff0066' }); // 'dbx-color-bg'
  * dbxColorBackground(undefined); // 'dbx-default'
  * ```
  *
- * @param color - the theme color to convert, or nullish/empty for the default class
- * @returns the CSS class name for the themed background (e.g., `'dbx-primary-bg'` or `'dbx-default'`)
+ * @param color - the theme color, color config, or nullish/empty for the default class
+ * @returns the CSS class name for the themed background (e.g., `'dbx-primary-bg'`, `'dbx-color-bg'`, or `'dbx-default'`)
  */
-export function dbxColorBackground(color: Maybe<DbxThemeColor | ''>): CssClass {
-  let cssClass = 'dbx-default'; // default text color class (not -bg) to avoid setting --dbx-bg-color-current which interferes with button label color tokens
+export function dbxColorBackground(color: Maybe<DbxColorInput>): CssClass {
+  let cssClass: CssClass = 'dbx-default'; // default text color class (not -bg) to avoid setting --dbx-bg-color-current which interferes with button label color tokens
 
-  switch (color) {
-    case 'primary':
-    case 'secondary':
-    case 'tertiary':
-    case 'accent':
-    case 'warn':
-    case 'notice':
-    case 'ok':
-    case 'success':
-    case 'grey':
-    case 'disabled':
-    case 'default':
-      cssClass = `dbx-${color}-bg`;
-      break;
-    default:
-      break;
+  if (isDbxColorConfig(color)) {
+    cssClass = DBX_COLOR_CUSTOM_BG_CSS_CLASS;
+  } else {
+    switch (color) {
+      case 'primary':
+      case 'secondary':
+      case 'tertiary':
+      case 'accent':
+      case 'warn':
+      case 'notice':
+      case 'ok':
+      case 'success':
+      case 'grey':
+      case 'disabled':
+      case 'default':
+        cssClass = `dbx-${color}-bg`;
+        break;
+      default:
+        break;
+    }
   }
 
   return cssClass;

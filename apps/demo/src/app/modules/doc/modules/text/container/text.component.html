@@ -411,5 +411,23 @@
       <p dbxColor="grey" [dbxColorTone]="18">Grey tonal (18%)</p>
       <p dbxColor="primary" [dbxColorTone]="40">Primary tonal (40%)</p>
     </doc-feature-example>
+    <h4>Custom Colors (DbxColorConfig)</h4>
+    <doc-feature-example header="dbxColor with config" hint="Bind a DbxColorConfig object to apply arbitrary CSS color values (hex, rgb, hsl, var(...), color-mix(...)). The config supports color, contrast, tone, and tonal.">
+      <p [dbxColor]="customColorConfigHex">Hex color &#123; color: '#ff0066', contrast: 'white' &#125;</p>
+      <p [dbxColor]="customColorConfigHexTonal">Hex tonal &#123; color: '#ff0066', contrast: 'white', tone: 18 &#125;</p>
+      <p [dbxColor]="customColorConfigVar">CSS var passthrough &#123; color: 'var(--mat-sys-tertiary)', contrast: 'var(--mat-sys-on-tertiary)' &#125;</p>
+      <p [dbxColor]="customColorConfigVarTonal">CSS var tonal &#123; color: 'var(--mat-sys-tertiary)', contrast: 'var(--mat-sys-on-tertiary)', tone: 18 &#125;</p>
+      <p [dbxColor]="customColorConfigMix">color-mix() value &#123; color: 'color-mix(in srgb, #ff7f50 70%, #ffd700)', contrast: 'black' &#125;</p>
+    </doc-feature-example>
+    <doc-feature-example header="dbxColorTone overrides config.tone" hint="The standalone [dbxColorTone] input always wins over config.tone — useful when reusing a config but parameterising opacity per-element.">
+      <p [dbxColor]="customColorConfigHex" [dbxColorTone]="40">Same hex config, [dbxColorTone]="40" override</p>
+    </doc-feature-example>
+    <doc-feature-example header="dbxTextColor with config" hint="Same DbxColorConfig type — only the color field is used; contrast/tone are ignored.">
+      <p [dbxTextColor]="customTextColorConfig">Custom hex text color via config &#123; color: '#0066ff' &#125;</p>
+      <p>
+        Inline mat-icon:
+        <mat-icon [dbxTextColor]="customTextColorConfig">favorite</mat-icon>
+      </p>
+    </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

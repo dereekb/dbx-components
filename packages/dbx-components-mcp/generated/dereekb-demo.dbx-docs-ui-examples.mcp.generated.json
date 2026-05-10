@@ -6,6 +6,42 @@
   "generator": "@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs",
   "entries": [
     {
+      "slug": "action-form-with-secondary",
+      "category": "action",
+      "summary": "Form-driven primary action (dbxActionForm + Approve) plus a nested ng-container dbxAction with dbxActionValue for a void Deny / Cancel button.",
+      "header": "Form Action With Secondary Button",
+      "className": "DocActionFormWithSecondaryExampleComponent",
+      "selector": "doc-action-form-with-secondary-example",
+      "module": "apps/demo",
+      "appRef": "apps/demo",
+      "hint": "dbxActionForm + Approve, plus a nested dbxAction context for Deny.",
+      "relatedSlugs": [
+        "dbxActionForm",
+        "dbxActionValue",
+        "ng-container",
+        "dbxAction",
+        "dbxActionButton",
+        "dbxActionSnackbarError"
+      ],
+      "info": "<p>\n  The\n  <strong>outer</strong>\n  <code>[dbxAction]</code>\n  hosts the primary work. A child component carries the\n  <code>dbxActionForm</code>\n  directive so the form's value (and validity / modified state) drives the\n  <code>Approve</code>\n  button.\n</p>\n<p>\n  The\n  <strong>secondary</strong>\n  button (\n  <code>Deny</code>\n  ) lives inside a nested\n  <code>&lt;ng-container dbxAction&gt;</code>\n  . Angular DI looks up the nearest ancestor\n  <code>dbxAction</code>\n  for each\n  <code>dbxActionButton</code>\n  , so the inner button picks up the inner context, not the outer.\n  <code>dbxActionValue</code>\n  with no input supplies the empty payload that lets the button fire a void handler immediately.\n</p>\n<p>\n  Each context has its own\n  <code>dbxActionSnackbarError</code>\n  , so Approve / Deny feedback is independent.\n</p>",
+      "snippet": "<div dbxAction dbxActionSnackbarError [dbxActionHandler]=\"approveHandler\">\n  <doc-action-form-with-secondary-form dbxActionForm></doc-action-form-with-secondary-form>\n  <div class=\"dbx-pt3\">\n    <dbx-button dbxActionButton text=\"Approve\" [raised]=\"true\" color=\"primary\"></dbx-button>\n    <dbx-button-spacer></dbx-button-spacer>\n    <ng-container dbxAction dbxActionSnackbarError dbxActionValue [dbxActionHandler]=\"denyHandler\">\n      <dbx-button dbxActionButton text=\"Deny\" [flat]=\"true\" color=\"warn\"></dbx-button>\n    </ng-container>\n  </div>\n</div>",
+      "uses": [
+        {
+          "kind": "component",
+          "className": "DocActionFormWithSecondaryFormComponent",
+          "role": "form",
+          "selector": "doc-action-form-with-secondary-form",
+          "classSource": "@Component({\n  template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,\n  selector: 'doc-action-form-with-secondary-form',\n  providers: dbxForgeFormComponentProviders(),\n  standalone: true,\n  imports: [DbxForgeFormComponentImportsModule],\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class DocActionFormWithSecondaryFormComponent extends AbstractSyncForgeFormDirective<DocActionFormWithSecondaryFormValue> {\n  readonly formConfig: FormConfig = {\n    fields: [\n      dbxForgeTextField({\n        key: 'reason',\n        label: 'Reason',\n        required: true,\n        description: 'The Approve handler receives this value via dbxActionForm. Type something to enable Approve.'\n      })\n    ]\n  } as FormConfig;\n}"
+        },
+        {
+          "kind": "interface",
+          "className": "DocActionFormWithSecondaryFormValue",
+          "role": "formValue",
+          "classSource": "export interface DocActionFormWithSecondaryFormValue {\n  reason: string;\n}"
+        }
+      ]
+    },
+    {
       "slug": "card-hero-onboarding-progress",
       "category": "card",
       "summary": "Top-of-page hero card on an inverse surface — eyebrow, headline, progress bar, secondary CTA, and trailing percent.",
