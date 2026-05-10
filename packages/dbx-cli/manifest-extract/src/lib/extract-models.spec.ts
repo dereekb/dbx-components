@@ -124,4 +124,67 @@ describe('extractModelsFromSource()', () => {
     expect(empty.interfaces).toHaveLength(0);
     expect(empty.converters).toHaveLength(0);
   });
+
+  describe('extends-name peeling for utility-type wrappers', () => {
+    it('returns a bare extends identifier unchanged', () => {
+      const source = `
+        export interface Base { a: string; }
+        export interface Child extends Base {}
+      `;
+      const { interfaces } = extractModelsFromSource({ name: 'x.ts', text: source });
+      const child = interfaces.find((i) => i.name === 'Child');
+      expect(child?.extendsNames).toEqual(['Base']);
+    });
+
+    it('peels Partial<Base> to Base', () => {
+      const source = `
+        export interface Base { a: string; }
+        export interface Child extends Partial<Base> {}
+      `;
+      const { interfaces } = extractModelsFromSource({ name: 'x.ts', text: source });
+      const child = interfaces.find((i) => i.name === 'Child');
+      expect(child?.extendsNames).toEqual(['Base']);
+    });
+
+    it('peels nested Partial<MaybeMap<Omit<Base, "k">>> to Base', () => {
+      const source = `
+        export interface Base { a: string; b: string; }
+        export interface Child extends Partial<MaybeMap<Omit<Base, 'b'>>> {}
+      `;
+      const { interfaces } = extractModelsFromSource({ name: 'x.ts', text: source });
+      const child = interfaces.find((i) => i.name === 'Child');
+      expect(child?.extendsNames).toEqual(['Base']);
+    });
+
+    it('peels Partial<MaybeMap<Omit<Base,…>>>, Pick<Base,…> to two Base entries', () => {
+      const source = `
+        export interface Base { a: string; b: string; c: string; }
+        export interface Child extends
+          Partial<MaybeMap<Omit<Base, 'a' | 'b'>>>,
+          Pick<Base, 'a' | 'b'> {}
+      `;
+      const { interfaces } = extractModelsFromSource({ name: 'x.ts', text: source });
+      const child = interfaces.find((i) => i.name === 'Child');
+      expect(child?.extendsNames).toEqual(['Base', 'Base']);
+    });
+
+    it('leaves an unknown wrapper as the leftmost identifier', () => {
+      const source = `
+        export interface Base { a: string; }
+        export interface Child extends UnknownWrapper<Base> {}
+      `;
+      const { interfaces } = extractModelsFromSource({ name: 'x.ts', text: source });
+      const child = interfaces.find((i) => i.name === 'Child');
+      expect(child?.extendsNames).toEqual(['UnknownWrapper']);
+    });
+
+    it('falls back to the wrapper name when its type argument is not a type reference', () => {
+      const source = `
+        export interface Child extends Partial<{ a: string }> {}
+      `;
+      const { interfaces } = extractModelsFromSource({ name: 'x.ts', text: source });
+      const child = interfaces.find((i) => i.name === 'Child');
+      expect(child?.extendsNames).toEqual(['Partial']);
+    });
+  });
 });

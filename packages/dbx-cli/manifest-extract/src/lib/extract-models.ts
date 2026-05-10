@@ -13,8 +13,21 @@
  * `packages/dbx-cli/firebase-api-manifest/src/generate-api-manifest/`.
  */
 
-import { Node, type CallExpression, type InterfaceDeclaration, type JSDoc, type ObjectLiteralExpression, Project, type SourceFile } from 'ts-morph';
+import { Node, type CallExpression, type ExpressionWithTypeArguments, type InterfaceDeclaration, type JSDoc, type ObjectLiteralExpression, Project, type SourceFile, type TypeNode } from 'ts-morph';
 import type { ModelExtraction, ModelExtractionConverter, ModelExtractionConverterField, ModelExtractionEnum, ModelExtractionEnumValue, ModelExtractionGroup, ModelExtractionIdentity, ModelExtractionInterface, ModelExtractionInterfaceProp } from './types';
+
+/**
+ * TS utility/structural wrappers that don't change the field surface for
+ * inheritance walks — `Partial<T>`, `Required<T>`, `Readonly<T>`,
+ * `NonNullable<T>` preserve every property, and `Pick<T, K>` / `Omit<T, K>`
+ * leave the original `T` reachable for long-name resolution. `MaybeMap<T>` is
+ * the workspace's own pass-through that decorates each prop with `Maybe<…>`
+ * without renaming. `extends` walks need to see through these to find the
+ * concrete ancestor interface — `getExpression()` alone returns just the
+ * leftmost identifier (`Partial`, `Pick`, …) and silently drops the inner
+ * model, leaving every inherited `@dbxModelVariable` tag unreachable.
+ */
+const PASSTHROUGH_TYPE_WRAPPERS: ReadonlySet<string> = new Set(['Partial', 'Required', 'Readonly', 'NonNullable', 'MaybeMap', 'Pick', 'Omit']);
 
 const IDENTITY_FN = 'firestoreModelIdentity';
 const CONVERTER_FN_NAMES = ['snapshotConverterFunctions', 'firestoreSubObject', 'firestoreObjectArray'] as const;
@@ -115,7 +128,7 @@ function readInterfaces(sourceFile: SourceFile): readonly ModelExtractionInterfa
 function buildInterface(decl: InterfaceDeclaration): ModelExtractionInterface {
   const jsDocs = decl.getJsDocs();
   const hasDbxModelTag = jsDocsHaveTag(jsDocs, 'dbxModel');
-  const extendsNames = decl.getExtends().map((e) => e.getExpression().getText());
+  const extendsNames = decl.getExtends().map(resolveExtendsName);
   const props: ModelExtractionInterfaceProp[] = [];
   for (const prop of decl.getProperties()) {
     const propJsDocs = prop.getJsDocs();
@@ -139,6 +152,51 @@ function buildInterface(decl: InterfaceDeclaration): ModelExtractionInterface {
     extendsNames,
     props
   };
+}
+
+/**
+ * Resolves an `extends` clause to the concrete ancestor interface name,
+ * peeling any leading {@link PASSTHROUGH_TYPE_WRAPPERS}. Returns the leftmost
+ * identifier of the unwrapped expression so the inheritance walker can chain
+ * through utility-wrapped declarations like
+ * `extends Partial<MaybeMap<Omit<Base, '…'>>>`.
+ *
+ * @param expr - the `ExpressionWithTypeArguments` produced by `getExtends()`
+ * @returns the resolved interface name, or the original leftmost identifier when no inner reference is reachable
+ */
+function resolveExtendsName(expr: ExpressionWithTypeArguments): string {
+  const head = expr.getExpression().getText();
+  let result = head;
+  if (PASSTHROUGH_TYPE_WRAPPERS.has(head)) {
+    const typeArgs = expr.getTypeArguments();
+    if (typeArgs.length > 0) {
+      const peeled = peelTypeNode(typeArgs[0]);
+      if (peeled !== undefined) {
+        result = peeled;
+      }
+    }
+  }
+  return result;
+}
+
+function peelTypeNode(node: TypeNode): string | undefined {
+  let current: TypeNode = node;
+  while (Node.isParenthesizedTypeNode(current)) {
+    current = current.getTypeNode();
+  }
+  let result: string | undefined;
+  if (Node.isTypeReference(current)) {
+    const name = current.getTypeName().getText();
+    if (PASSTHROUGH_TYPE_WRAPPERS.has(name)) {
+      const inner = current.getTypeArguments();
+      if (inner.length > 0) {
+        result = peelTypeNode(inner[0]);
+      }
+    } else {
+      result = name;
+    }
+  }
+  return result;
 }
 
 function readConverters(sourceFile: SourceFile): readonly ModelExtractionConverter[] {
