@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { DemoSystemStateAccessor } from 'demo-components';
-import { DbxAppEnviromentService, DbxAppContextStateDirective } from '@dereekb/dbx-core';
+import { DbxAppEnvironmentService, DbxAppContextStateDirective } from '@dereekb/dbx-core';
 import { DbxContentPageDirective, DbxContentContainerDirective, DbxContentBoxDirective, DbxLinkComponent, DbxAnchorComponent } from '@dereekb/dbx-web';
 import { MatButton } from '@angular/material/button';
 
@@ -12,7 +12,7 @@ import { MatButton } from '@angular/material/button';
 })
 export class DemoHomeComponent {
   readonly _demoSystemStateAccessor: DemoSystemStateAccessor = inject(DemoSystemStateAccessor);
-  readonly env = inject(DbxAppEnviromentService);
+  readonly env = inject(DbxAppEnvironmentService);
 
   exampleSystemState$ = this._demoSystemStateAccessor.exampleSystemState$;
 }

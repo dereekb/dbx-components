@@ -4,10 +4,10 @@
 
 import { type DbxFirebaseEnvironmentOptions } from '@dereekb/dbx-firebase';
 import { type DbxMapboxEnvironmentOptions } from '@dereekb/dbx-web/mapbox';
-import { type DbxAppEnviroment } from '@dereekb/dbx-core';
+import { type DbxAppEnvironment } from '@dereekb/dbx-core';
 import firebaseInfo from '../../../../firebase.json';
 
-export interface DemoEnvironment extends DbxAppEnviroment {
+export interface DemoEnvironment extends DbxAppEnvironment {
   production: boolean;
   testing: boolean;
   analytics: {
