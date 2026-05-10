@@ -28,6 +28,11 @@
  *      Skip the write if the file content is byte-identical (preserves mtime
  *      for incremental builds).
  *
+ * Model manifest emission is opt-in via `--emit-models`. The runtime `model-info`
+ * command (auto-wired by `runCli({ modelManifest })`) needs this manifest, but
+ * apps that do not surface `model-info` should leave it disabled so the manifest
+ * data — which can be sizeable — does not get bundled into the final CLI binary.
+ *
  * Flags:
  *   --functions-config=<path>   (required) path to the app's functions.ts.
  *                                Absolute or workspace-relative.
@@ -39,6 +44,10 @@
  *                                DEMO_CLI_API_MANIFEST).
  *   --only=<model[,model]>      Filter the emitted entries to those models.
  *   --strict                    Exit 1 if any validator is missing.
+ *   --emit-models               Opt in to emitting `<NAMESPACE>_MODEL_MANIFEST`.
+ *                                Off by default to keep the generated file small
+ *                                and avoid bundling model metadata into apps that
+ *                                do not need the runtime `model-info` command.
  *
  * Run from any cwd; workspace-relative paths resolve against `process.cwd()`
  * (Nx invokes with cwd: "{workspaceRoot}").
@@ -219,13 +228,13 @@ function parseFlags(argv: readonly string[]): Flags {
   let functionsConfig: string | undefined;
   let output: string | undefined;
   let project: string | undefined;
-  let emitModels = true;
+  let emitModels = false;
 
   for (const arg of argv) {
     if (arg === '--strict') {
       strict = true;
-    } else if (arg === '--no-models') {
-      emitModels = false;
+    } else if (arg === '--emit-models') {
+      emitModels = true;
     } else if (arg.startsWith('--only=')) {
       const list = arg
         .slice('--only='.length)
@@ -263,7 +272,9 @@ Optional:
   --project=<name>           Project name to show in the regenerate banner.
   --only=<csv>               Filter to listed model names.
   --strict                   Fail when any validator binding is missing.
-  --no-models                Skip emitting <NAMESPACE>_MODEL_MANIFEST (API only).`);
+  --emit-models              Opt in to emitting <NAMESPACE>_MODEL_MANIFEST. Off by default —
+                             pair with the runtime \`modelManifest\` option on \`runCli\` to
+                             enable the built-in \`model-info\` command.`);
   process.exit(1);
 }
 

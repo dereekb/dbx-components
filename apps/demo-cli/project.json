@@ -12,7 +12,7 @@
       "dependsOn": [{ "projects": ["dbx-cli-firebase-api-manifest"], "target": "build" }],
       "inputs": ["{workspaceRoot}/dist/packages/dbx-cli/firebase-api-manifest/main.js", "{workspaceRoot}/components/demo-firebase/src/lib/functions.ts", "{workspaceRoot}/components/demo-firebase/src/lib/**/*.api.ts", "{workspaceRoot}/packages/firebase/src/lib/model/**/*.api.ts"],
       "options": {
-        "command": "node dist/packages/dbx-cli/firebase-api-manifest/main.js --project=demo-cli --functions-config=components/demo-firebase/src/lib/functions.ts --output=apps/demo-cli/src/lib/manifest/api.manifest.generated.ts",
+        "command": "node dist/packages/dbx-cli/firebase-api-manifest/main.js --project=demo-cli --functions-config=components/demo-firebase/src/lib/functions.ts --output=apps/demo-cli/src/lib/manifest/api.manifest.generated.ts --emit-models",
         "cwd": "{workspaceRoot}"
       }
     },

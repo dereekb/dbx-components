@@ -5,6 +5,8 @@ import { callPassthroughCommand } from '../api/call.passthrough.command';
 import { type CliEnvDefault } from '../config/env';
 import { createDoctorCommand, type DoctorCheck } from '../doctor/doctor.command.factory';
 import { createEnvCommand } from '../env/env.command.factory';
+import { buildModelInfoCommand } from '../manifest/build-model-info-command';
+import { type CliModelManifest } from '../manifest/types';
 import { createAuthMiddleware } from '../middleware/auth.middleware';
 import { createOutputMiddleware } from '../middleware/output.middleware';
 import { createOutputCommand } from '../output/output.command.factory';
@@ -53,6 +55,30 @@ export interface CreateCliInput {
    * Disable the built-in `call` passthrough — useful when an app prefers to expose only typed wrappers.
    */
   readonly disableCallPassthrough?: boolean;
+  /**
+   * Generated Firestore model manifest used to drive the built-in `model-info` command.
+   *
+   * Opt-in: when provided, a top-level `model-info [model]` command is auto-wired into the built-in
+   * config commands so users can browse the model catalog and per-model field documentation. When
+   * omitted, no `model-info` command is registered. Apps that pass the manifest but want to suppress
+   * the command can additionally set {@link disableModelInfo} to `true`.
+   *
+   * The manifest itself is also opt-in at build time. The `dbx-cli-firebase-api-manifest` generator
+   * only emits `<NAMESPACE>_MODEL_MANIFEST` when invoked with `--emit-models`, so apps that never
+   * enable this option won't bundle model metadata into their final binary.
+   *
+   * Note: this option only controls the `model-info` command. Manifest-driven typed model commands
+   * are still wired explicitly via {@link apiCommands} (see `buildManifestCommands`), and the
+   * `--expand-keys` flag still requires passing the manifest to `buildManifestCommands`.
+   */
+  readonly modelManifest?: CliModelManifest;
+  /**
+   * Disable the built-in `model-info` command even when {@link modelManifest} is provided.
+   *
+   * Useful when an app wants the manifest available for `--expand-keys` (via `buildManifestCommands`)
+   * but does not want to surface the `model-info` command itself.
+   */
+  readonly disableModelInfo?: boolean;
 }
 
 /**
@@ -72,6 +98,10 @@ export interface CreateCliInput {
  * @param input.defaultEnvs - Built-in env presets shipped with the CLI.
  * @param input.argv - Argv to parse. Defaults to `hideBin(process.argv)`.
  * @param input.disableCallPassthrough - When `true`, omits the built-in `call` passthrough.
+ * @param input.modelManifest - Optional Firestore model manifest. When provided, auto-wires the
+ *   built-in `model-info` command. Opt-in per app.
+ * @param input.disableModelInfo - When `true`, suppresses the auto-wired `model-info` command even
+ *   if {@link CreateCliInput.modelManifest} is provided.
  * @returns The configured yargs `Argv` ready to be `.parse()`-d.
  * @__NO_SIDE_EFFECTS__
  */
@@ -79,6 +109,11 @@ export function createCli(input: CreateCliInput): Argv {
   const cliName = input.cliName;
   const defaultEnvs = input.defaultEnvs;
   const builtInConfigCommands: CommandModule[] = [createAuthCommand({ cliName, defaultEnvs }), createEnvCommand({ cliName, defaultEnvs }), createDoctorCommand({ cliName, checks: input.doctorChecks, defaultEnvs }), createOutputCommand({ cliName })];
+
+  if (input.modelManifest && input.disableModelInfo !== true) {
+    builtInConfigCommands.push(buildModelInfoCommand(input.modelManifest));
+  }
+
   const allConfigCommands = [...builtInConfigCommands, ...(input.configCommands ?? [])];
   const builtInApiCommands: CommandModule[] = input.disableCallPassthrough ? [] : [callPassthroughCommand];
   const allApiCommands = [...builtInApiCommands, ...(input.apiCommands ?? [])];
