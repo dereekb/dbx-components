@@ -2,7 +2,7 @@ import type { Argv, CommandModule } from 'yargs';
 import { type Maybe, MS_IN_SECOND, noop } from '@dereekb/util';
 import { durationDataToMilliseconds, parseDurationString } from '@dereekb/date';
 import { type CliConfig, loadCliConfig, maskSecret, mergeCliConfig } from '../config/cli.config';
-import { type CliEnvConfig, type CliEnvDefault, applyEnvVarOverrides, filterReadOnlyModelScopes, findCliEnvDefault, isCliEnvConfigComplete, mergeCliEnvWithDefault } from '../config/env';
+import { type CliEnvConfig, type CliEnvDefault, DEFAULT_CLI_REDIRECT_URI, applyEnvVarOverrides, filterReadOnlyModelScopes, findCliEnvDefault, isCliEnvConfigComplete, mergeCliEnvWithDefault } from '../config/env';
 import { type CliPaths, buildCliPaths } from '../config/paths';
 import { type CliTokenEntry, createCliTokenCacheStore, isTokenExpired } from '../config/token.cache';
 import { discoverOidcMetadata, exchangeAuthorizationCode, fetchUserInfo, refreshAccessToken, revokeToken } from './oidc.client';
@@ -137,7 +137,7 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
         const appClientUrl = (argv.appClientUrl as string | undefined) ?? existing?.appClientUrl;
         const clientId = await resolve({ argvValue: argv.clientId as string | undefined, existingValue: existing?.clientId, prompt: 'Client ID: ' });
         const clientSecret = await resolve({ argvValue: argv.clientSecret as string | undefined, existingValue: existing?.clientSecret, prompt: 'Client secret: ', mask: true });
-        const redirectUri = (await resolve({ argvValue: argv.redirectUri as string | undefined, existingValue: existing?.redirectUri, prompt: `Redirect URI [${existing?.redirectUri ?? 'http://127.0.0.1:0/callback'}]: ` })) ?? 'http://127.0.0.1:0/callback';
+        const redirectUri = (await resolve({ argvValue: argv.redirectUri as string | undefined, existingValue: existing?.redirectUri, prompt: `Redirect URI [${existing?.redirectUri ?? DEFAULT_CLI_REDIRECT_URI}]: ` })) ?? DEFAULT_CLI_REDIRECT_URI;
         const scopes = (argv.scopes as string | undefined) ?? existing?.scopes;
 
         if (!apiBaseUrl || !oidcIssuer || !clientId || !clientSecret) {
