@@ -46,7 +46,7 @@ describe('buildAuthorizationUrl', () => {
     expect(parsed.pathname).toBe('/dereekb-components/us-central1/api/oidc/auth');
   });
 
-  it('leaves the authorization endpoint untouched when neither appClientUrl nor apiBaseUrl is set', () => {
+  it('leaves the authorization endpoint untouched when neither appClientUrl, oidcIssuer, nor apiBaseUrl is set', () => {
     const url = buildAuthorizationUrl({
       authorizationEndpoint: 'https://example.com/oidc/auth',
       clientId: 'cid',
@@ -56,6 +56,52 @@ describe('buildAuthorizationUrl', () => {
     });
     const parsed = new URL(url);
     expect(parsed.origin + parsed.pathname).toBe('https://example.com/oidc/auth');
+  });
+
+  it('targets <oidcIssuer>/login/client when appClientUrl is missing and oidcIssuer is set', () => {
+    // Models the cross-origin OIDC split: regular API lives at `${origin}/api/*` (NestJS global
+    // prefix) but OIDC routes are excluded and mounted at `${origin}/oidc/*`. apiBaseUrl would
+    // produce the wrong URL here (`${origin}/api/oidc/login/client`); oidcIssuer is correct.
+    const url = buildAuthorizationUrl({
+      authorizationEndpoint: 'https://api.example.com/oidc/auth',
+      oidcIssuer: 'https://api.example.com/oidc',
+      apiBaseUrl: 'https://api.example.com/api',
+      clientId: 'cid',
+      redirectUri: OAUTH_OOB_REDIRECT_URI,
+      state: 'xyz',
+      codeChallenge: 'chal'
+    });
+    const parsed = new URL(url);
+    expect(parsed.origin + parsed.pathname).toBe('https://api.example.com/oidc/login/client');
+    expect(parsed.searchParams.get('client_id')).toBe('cid');
+    expect(parsed.searchParams.get('state')).toBe('xyz');
+  });
+
+  it('strips trailing slashes from oidcIssuer when building the login/client URL', () => {
+    const url = buildAuthorizationUrl({
+      authorizationEndpoint: 'https://api.example.com/oidc/auth',
+      oidcIssuer: 'https://api.example.com/oidc/',
+      clientId: 'cid',
+      redirectUri: OAUTH_OOB_REDIRECT_URI,
+      state: 'xyz',
+      codeChallenge: 'chal'
+    });
+    const parsed = new URL(url);
+    expect(parsed.origin + parsed.pathname).toBe('https://api.example.com/oidc/login/client');
+  });
+
+  it('prefers oidcIssuer over apiBaseUrl when both are set (no appClientUrl)', () => {
+    const url = buildAuthorizationUrl({
+      authorizationEndpoint: 'https://api.example.com/oidc/auth',
+      oidcIssuer: 'https://api.example.com/oidc',
+      apiBaseUrl: 'https://api.example.com/api',
+      clientId: 'cid',
+      redirectUri: OAUTH_OOB_REDIRECT_URI,
+      state: 'xyz',
+      codeChallenge: 'chal'
+    });
+    const parsed = new URL(url);
+    expect(parsed.origin + parsed.pathname).toBe('https://api.example.com/oidc/login/client');
   });
 
   it('targets <apiBaseUrl>/oidc/login/client when appClientUrl is missing and apiBaseUrl is set', () => {
@@ -107,9 +153,10 @@ describe('buildAuthorizationUrl', () => {
     expect(parsed.searchParams.get('code_challenge_method')).toBe('S256');
   });
 
-  it('prefers appClientUrl over apiBaseUrl when both are set', () => {
+  it('prefers appClientUrl over oidcIssuer and apiBaseUrl when all three are set', () => {
     const url = buildAuthorizationUrl({
       authorizationEndpoint: 'http://localhost:9902/dereekb-components/us-central1/api/oidc/auth',
+      oidcIssuer: 'http://localhost:9902/dereekb-components/us-central1/api/oidc',
       apiBaseUrl: 'http://localhost:9902/dereekb-components/us-central1/api',
       appClientUrl: 'http://localhost:9010',
       clientId: 'cid',

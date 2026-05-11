@@ -5,10 +5,24 @@ import { DEFAULT_CLI_OIDC_SCOPES } from '../config/env';
 export interface BuildAuthorizationUrlInput {
   readonly authorizationEndpoint: string;
   /**
-   * Optional API base URL. When set and `appClientUrl` is not provided, the CLI sends the user
-   * to `<apiBaseUrl>/oidc/login/client?<params>` instead of the raw authorization endpoint. The
-   * API redirects to the configured app login URL with the OAuth query string preserved, so the
-   * CLI does not need to know the client origin directly.
+   * Optional OIDC issuer URL (e.g. `https://api.example.com/oidc`). When set and `appClientUrl`
+   * is not provided, the CLI sends the user to `<oidcIssuer>/login/client?<params>` instead of
+   * the raw authorization endpoint. The API redirects to the configured app login URL with the
+   * OAuth query string preserved, so the CLI does not need to know the client origin directly.
+   *
+   * Takes precedence over `apiBaseUrl` when both are set. Prefer this over `apiBaseUrl` for any
+   * deployment where the OIDC routes are not nested under the regular API prefix — for example,
+   * a NestJS server with `globalApiRoutePrefix: '/api'` that excludes `/oidc/**` exposes OIDC at
+   * `${origin}/oidc/*` (not `${origin}/api/oidc/*`), so `apiBaseUrl` would build the wrong URL.
+   */
+  readonly oidcIssuer?: Maybe<string>;
+  /**
+   * Optional API base URL. Legacy shortcut: when set and neither `appClientUrl` nor `oidcIssuer`
+   * is provided, the CLI sends the user to `<apiBaseUrl>/oidc/login/client?<params>`.
+   *
+   * Only correct when `apiBaseUrl` happens to be the OIDC origin (e.g. a Cloud Functions emulator
+   * mount where the function root and the OIDC mount share a prefix). Prefer `oidcIssuer` for new
+   * deployments; the OIDC issuer is the authoritative origin + path for OIDC routes.
    */
   readonly apiBaseUrl?: Maybe<string>;
   /**
@@ -16,8 +30,8 @@ export interface BuildAuthorizationUrlInput {
    *
    * When set, the path + search of `authorizationEndpoint` are kept and the origin is replaced
    * with this URL. Useful when the frontend dev server proxies `/oidc/**` to the API and the
-   * user-facing URL should target the app, not the API directly. Takes precedence over
-   * `apiBaseUrl` when both are provided.
+   * user-facing URL should target the app, not the API directly. Takes precedence over both
+   * `oidcIssuer` and `apiBaseUrl` when set.
    */
   readonly appClientUrl?: Maybe<string>;
   readonly clientId: string;
@@ -38,13 +52,15 @@ export interface BuildAuthorizationUrlInput {
  * Builds the authorization URL the user opens in a browser to start the PKCE flow.
  *
  * Resolves the user-facing endpoint by preferring `appClientUrl` (rebases the discovered
- * authorization endpoint onto that origin) over `apiBaseUrl` (`/oidc/login/client` shortcut),
- * and finally falls back to the discovered `authorizationEndpoint` itself.
+ * authorization endpoint onto that origin) over `oidcIssuer` (`<oidcIssuer>/login/client`
+ * shortcut), then `apiBaseUrl` (legacy `<apiBaseUrl>/oidc/login/client` shortcut), and
+ * finally falls back to the discovered `authorizationEndpoint` itself.
  *
  * @param input - The authorization URL inputs.
  * @param input.authorizationEndpoint - The authorization endpoint discovered from OIDC metadata.
- * @param input.apiBaseUrl - Optional API base URL; when set without `appClientUrl`, the URL is built against `<apiBaseUrl>/oidc/login/client`.
- * @param input.appClientUrl - Optional frontend origin to rebase the authorization endpoint onto. Takes precedence over `apiBaseUrl`.
+ * @param input.oidcIssuer - Optional OIDC issuer URL; when set without `appClientUrl`, the URL is built against `<oidcIssuer>/login/client`. Takes precedence over `apiBaseUrl`.
+ * @param input.apiBaseUrl - Optional legacy API base URL; when set without `appClientUrl` or `oidcIssuer`, the URL is built against `<apiBaseUrl>/oidc/login/client`.
+ * @param input.appClientUrl - Optional frontend origin to rebase the authorization endpoint onto. Takes precedence over both `oidcIssuer` and `apiBaseUrl`.
  * @param input.clientId - The OAuth client ID.
  * @param input.redirectUri - The redirect URI registered with the OAuth client.
  * @param input.scopes - Space-separated scope list. Defaults to {@link DEFAULT_CLI_OIDC_SCOPES}.
@@ -79,6 +95,8 @@ export function buildAuthorizationUrl(input: BuildAuthorizationUrlInput): string
 
   if (input.appClientUrl) {
     endpoint = rebaseUrlOrigin({ url: input.authorizationEndpoint, originUrl: input.appClientUrl });
+  } else if (input.oidcIssuer) {
+    endpoint = `${input.oidcIssuer.replace(/\/+$/, '')}/login/client`;
   } else if (input.apiBaseUrl) {
     endpoint = `${input.apiBaseUrl.replace(/\/+$/, '')}/oidc/login/client`;
   } else {

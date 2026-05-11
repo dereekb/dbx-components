@@ -211,6 +211,7 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
 
         const url = buildAuthorizationUrl({
           authorizationEndpoint: meta.authorization_endpoint,
+          oidcIssuer: env.oidcIssuer,
           apiBaseUrl: env.apiBaseUrl,
           appClientUrl: env.appClientUrl,
           clientId: env.clientId,
