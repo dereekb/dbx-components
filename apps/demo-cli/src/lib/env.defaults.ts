@@ -16,7 +16,7 @@ const DEMO_PROD_OIDC_ISSUER = `${DEMO_PROD_APP_CLIENT_URL}/oidc`;
  *
  * Keep in sync with `DEMO_OIDC_AVAILABLE_SCOPES` in `@dereekb/demo-firebase`.
  */
-export const DEMO_CLI_DEFAULT_SCOPES = 'openid profile email demo model.create model.read model.update model.delete model.query';
+export const DEMO_CLI_DEFAULT_SCOPES = 'openid profile email demo offline_access model.create model.read model.update model.delete model.query';
 
 export const DEMO_LOCAL_ENV_DEFAULT: CliEnvDefault = {
   names: ['local', 'dev'],

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { EMAIL_OIDC_SCOPE, OFFLINE_ACCESS_OIDC_SCOPE, OPENID_OIDC_SCOPE, PROFILE_OIDC_SCOPE } from '@dereekb/firebase';
 import { JwksServiceStorageConfig, type OidcAccountClaims, OidcAccountService, oidcModuleMetadata, type OidcAccountServiceDelegate, type OidcProviderConfig, type OidcRenderErrorFunction } from '@dereekb/firebase-server/oidc';
 import { DemoApiAuthModule } from '../../common/firebase/auth.module';
 import { DemoApiAuthService, DemoApiFirestoreModule, DemoApiStorageModule } from '../../common/firebase';
@@ -9,9 +10,11 @@ export type DemoOidcAccountServiceDelegate = OidcAccountServiceDelegate<DemoOidc
 
 export const DEMO_OIDC_PROVIDER_CONFIG: OidcProviderConfig<DemoOidcScope> = {
   claims: {
-    openid: ['sub'],
-    profile: ['name', 'picture'],
-    email: ['email', 'email_verified'],
+    [OPENID_OIDC_SCOPE]: ['sub'],
+    [PROFILE_OIDC_SCOPE]: ['name', 'picture'],
+    [EMAIL_OIDC_SCOPE]: ['email', 'email_verified'],
+    // offline_access grants a refresh token but adds no extra ID-token claims.
+    [OFFLINE_ACCESS_OIDC_SCOPE]: [],
     demo: ['sub', 'o', 'a', 'fr'],
     // model.* scopes confer authorization for callModel CRUD operations and add no extra ID-token claims.
     'model.create': [],
@@ -40,7 +43,7 @@ export function demoOidcAccountServiceFactory(demoApiAuthService: DemoApiAuthSer
       const user = await userContext.loadRecord();
       const claims: OidcAccountClaims = { sub: user.uid };
 
-      if (scopes.has('profile')) {
+      if (scopes.has(PROFILE_OIDC_SCOPE)) {
         if (user.displayName) {
           claims.name = user.displayName;
         }
@@ -50,7 +53,7 @@ export function demoOidcAccountServiceFactory(demoApiAuthService: DemoApiAuthSer
         }
       }
 
-      if (scopes.has('email') && user.email) {
+      if (scopes.has(EMAIL_OIDC_SCOPE) && user.email) {
         claims.email = user.email;
         claims.email_verified = user.emailVerified ?? false;
       }

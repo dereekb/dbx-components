@@ -75,15 +75,23 @@ export interface BuildAuthorizationUrlInput {
  * @__NO_SIDE_EFFECTS__
  */
 export function buildAuthorizationUrl(input: BuildAuthorizationUrlInput): string {
+  const resolvedScope = input.scopes ?? DEFAULT_CLI_OIDC_SCOPES;
   const authParams: Record<string, string> = {
     response_type: 'code',
     client_id: input.clientId,
     redirect_uri: input.redirectUri,
-    scope: input.scopes ?? DEFAULT_CLI_OIDC_SCOPES,
+    scope: resolvedScope,
     code_challenge: input.codeChallenge,
     code_challenge_method: 'S256',
     state: input.state
   };
+
+  // oidc-provider's check_scope middleware silently strips `offline_access` unless the
+  // auth request also includes `prompt=consent`. Auto-add it so refresh tokens are
+  // actually issued whenever the CLI requests offline access.
+  if (resolvedScope.split(/\s+/).includes('offline_access')) {
+    authParams.prompt = 'consent';
+  }
 
   if (input.requestedSessionTtlSeconds != null) {
     if (!Number.isInteger(input.requestedSessionTtlSeconds) || input.requestedSessionTtlSeconds <= 0) {

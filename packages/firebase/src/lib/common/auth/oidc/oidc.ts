@@ -73,3 +73,84 @@ export const CALL_MODEL_OIDC_SCOPE_DETAILS: readonly LabeledValueWithDescription
   { label: 'Delete models', value: 'model.delete', description: 'Delete model records via the callModel API' },
   { label: 'Query models', value: 'model.query', description: 'Query model records via the callModel API' }
 ];
+
+// MARK: Standard OIDC Scopes
+/**
+ * Standard OpenID Connect `openid` scope. Required on every OIDC auth request
+ * to flag it as an OIDC (vs. plain OAuth 2.0) flow.
+ */
+export const OPENID_OIDC_SCOPE = 'openid' as const;
+
+/**
+ * Standard OpenID Connect `profile` scope. Grants the basic profile claims
+ * (`name`, `picture`, etc.) in the ID token.
+ */
+export const PROFILE_OIDC_SCOPE = 'profile' as const;
+
+/**
+ * Standard OpenID Connect `email` scope. Grants `email` and `email_verified`
+ * claims in the ID token.
+ */
+export const EMAIL_OIDC_SCOPE = 'email' as const;
+
+/**
+ * Standard OpenID Connect `offline_access` scope.
+ *
+ * Requesting this scope tells the OIDC provider that the client wants a
+ * `refresh_token` alongside the access token. Per the OIDC core spec the
+ * authorization request must also include `prompt=consent` — the underlying
+ * `oidc-provider` library silently strips `offline_access` from the granted
+ * scopes when consent isn't explicitly requested. `@dereekb/dbx-cli`'s
+ * `buildAuthorizationUrl` adds `prompt=consent` automatically when this scope
+ * is present in the request.
+ */
+export const OFFLINE_ACCESS_OIDC_SCOPE = 'offline_access' as const;
+
+export type OpenidOidcScope = typeof OPENID_OIDC_SCOPE;
+export type ProfileOidcScope = typeof PROFILE_OIDC_SCOPE;
+export type EmailOidcScope = typeof EMAIL_OIDC_SCOPE;
+export type OfflineAccessOidcScope = typeof OFFLINE_ACCESS_OIDC_SCOPE;
+
+/**
+ * The four standard OpenID Connect scopes defined by the OIDC core spec
+ * (`openid`, `profile`, `email`, `offline_access`). Downstream apps typically
+ * union this with their own app-specific scopes (e.g., `demo`, `hellosubs`)
+ * and the {@link CallModelOidcScope} CRUD set.
+ */
+export type StandardOidcScope = OpenidOidcScope | ProfileOidcScope | EmailOidcScope | OfflineAccessOidcScope;
+
+/**
+ * The four standard OIDC scope strings, in canonical picker order.
+ */
+export const STANDARD_OIDC_SCOPES = [OPENID_OIDC_SCOPE, PROFILE_OIDC_SCOPE, EMAIL_OIDC_SCOPE, OFFLINE_ACCESS_OIDC_SCOPE] as const;
+
+export const OPENID_OIDC_SCOPE_DETAILS: LabeledValueWithDescription<OpenidOidcScope> = {
+  label: 'OpenID',
+  value: OPENID_OIDC_SCOPE,
+  description: 'Authenticate your identity using OpenID Connect'
+};
+
+export const PROFILE_OIDC_SCOPE_DETAILS: LabeledValueWithDescription<ProfileOidcScope> = {
+  label: 'Profile',
+  value: PROFILE_OIDC_SCOPE,
+  description: 'Access your basic profile information'
+};
+
+export const EMAIL_OIDC_SCOPE_DETAILS: LabeledValueWithDescription<EmailOidcScope> = {
+  label: 'Email',
+  value: EMAIL_OIDC_SCOPE,
+  description: 'Access your email address'
+};
+
+export const OFFLINE_ACCESS_OIDC_SCOPE_DETAILS: LabeledValueWithDescription<OfflineAccessOidcScope> = {
+  label: 'Offline access',
+  value: OFFLINE_ACCESS_OIDC_SCOPE,
+  description: 'Allow the app to refresh access tokens while you are not signed in'
+};
+
+/**
+ * Pre-built scope picker entries for the four standard OIDC scopes, in canonical
+ * picker order. Apps spread these into their `OidcScopeDetails[]` arrays so the
+ * standard scopes render consistently across consent screens and admin pickers.
+ */
+export const STANDARD_OIDC_SCOPE_DETAILS: readonly LabeledValueWithDescription<StandardOidcScope>[] = [OPENID_OIDC_SCOPE_DETAILS, PROFILE_OIDC_SCOPE_DETAILS, EMAIL_OIDC_SCOPE_DETAILS, OFFLINE_ACCESS_OIDC_SCOPE_DETAILS];

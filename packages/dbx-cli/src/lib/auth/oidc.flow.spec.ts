@@ -226,6 +226,32 @@ describe('buildAuthorizationUrl', () => {
       })
     ).toThrow();
   });
+
+  it('adds prompt=consent when offline_access is in the requested scopes', () => {
+    const url = buildAuthorizationUrl({
+      authorizationEndpoint: 'https://example.com/oidc/auth',
+      clientId: 'cid',
+      redirectUri: OAUTH_OOB_REDIRECT_URI,
+      scopes: 'openid demo offline_access',
+      state: 'xyz',
+      codeChallenge: 'chal'
+    });
+    const parsed = new URL(url);
+    expect(parsed.searchParams.get('prompt')).toBe('consent');
+  });
+
+  it('omits prompt when offline_access is not requested', () => {
+    const url = buildAuthorizationUrl({
+      authorizationEndpoint: 'https://example.com/oidc/auth',
+      clientId: 'cid',
+      redirectUri: OAUTH_OOB_REDIRECT_URI,
+      scopes: 'openid demo',
+      state: 'xyz',
+      codeChallenge: 'chal'
+    });
+    const parsed = new URL(url);
+    expect(parsed.searchParams.has('prompt')).toBe(false);
+  });
 });
 
 describe('parsePastedRedirect', () => {
