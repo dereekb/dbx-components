@@ -76,10 +76,18 @@ export class ModelApiCallModelDispatchService {
    * @returns The handler's return value.
    */
   async dispatch(params: OnCallTypedModelParams, auth: Maybe<FirebaseServerAuthData>, rawRequest: Request): Promise<unknown> {
-    // Build a synthetic CallableRequest that the dispatch chain expects
+    // Build a synthetic CallableRequest that the dispatch chain expects. Layer the
+    // OIDC-validated claim subset over the base token so standard JWT claims
+    // (`iat`, `auth_time`, `email`, …) survive — the callModel chain and any
+    // `authContextInfo` consumer downstream rely on them being present.
     const callableRequest = {
       data: params,
-      auth: auth ? { uid: auth.uid, token: (auth as any).oidcValidatedToken ?? {} } : undefined,
+      auth: auth
+        ? {
+            uid: auth.uid,
+            token: { ...((auth as any).token ?? {}), ...((auth as any).oidcValidatedToken ?? {}) }
+          }
+        : undefined,
       rawRequest: rawRequest as any,
       acceptsStreaming: false
     } as CallableRequest<OnCallTypedModelParams>;
