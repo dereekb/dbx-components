@@ -4,7 +4,7 @@ import { type CliConfig, loadCliConfig } from '../config/cli.config';
 import { type CliEnvConfig, type CliEnvDefault, applyEnvVarOverrides, findCliEnvDefault, mergeCliEnvWithDefault } from '../config/env';
 import { buildCliPaths } from '../config/paths';
 import { createCliTokenCacheStore, isTokenExpired } from '../config/token.cache';
-import { discoverOidcMetadata, refreshAccessToken } from '../auth/oidc.client';
+import { buildOidcDiscoveryCandidates, discoverOidcMetadata, refreshAccessToken } from '../auth/oidc.client';
 import { CALL_MODEL_API_PATH } from '../api/call-model.client';
 import { outputError, outputResult } from '../util/output';
 import { withEnv } from '../util/args';
@@ -39,11 +39,13 @@ export function defaultDoctorChecks(): DoctorCheck[] {
         return { name: 'oidc-issuer-set', ok: false, suggestion: 'Set `oidcIssuer` via `<cli> auth setup`.' };
       }
 
+      const candidates = buildOidcDiscoveryCandidates({ issuer: env.oidcIssuer, fallbackBaseUrl: env.apiBaseUrl });
+
       try {
         const meta = await discoverOidcMetadata({ issuer: env.oidcIssuer, fallbackBaseUrl: env.apiBaseUrl });
-        return { name: 'oidc-discovery-reachable', ok: true, detail: { authorization_endpoint: meta.authorization_endpoint, token_endpoint: meta.token_endpoint } };
+        return { name: 'oidc-discovery-reachable', ok: true, detail: { candidates, authorization_endpoint: meta.authorization_endpoint, token_endpoint: meta.token_endpoint } };
       } catch (e) {
-        return { name: 'oidc-discovery-reachable', ok: false, detail: { error: e instanceof Error ? e.message : String(e) }, suggestion: 'Verify the env oidcIssuer URL and that the API is running.' };
+        return { name: 'oidc-discovery-reachable', ok: false, detail: { candidates, error: e instanceof Error ? e.message : String(e) }, suggestion: 'Verify the env oidcIssuer URL and that the API is running.' };
       }
     },
     async ({ cliName, envName, env }) => {
@@ -72,7 +74,12 @@ export function defaultDoctorChecks(): DoctorCheck[] {
       const entry = await tokens.get(envName);
 
       if (!entry?.refreshToken) {
-        return { name: 'token-refresh-round-trip', ok: false, suggestion: `Run \`${cliName} auth login --env ${envName}\`.` };
+        return {
+          name: 'token-refresh-round-trip',
+          ok: false,
+          detail: { reason: 'no-refresh-token' },
+          suggestion: `No refresh token cached for env "${envName}". Run \`${cliName} auth login --env ${envName}\` — if the env's scopes omit \`offline_access\`, the OIDC provider may not issue one.`
+        };
       }
 
       try {
@@ -93,13 +100,14 @@ export function defaultDoctorChecks(): DoctorCheck[] {
         return { name: 'api-base-url-reachable', ok: false, suggestion: 'Set `apiBaseUrl` via `<cli> auth setup`.' };
       }
 
+      const url = `${env.apiBaseUrl.replace(/\/+$/, '')}${CALL_MODEL_API_PATH}`;
+
       try {
-        const url = `${env.apiBaseUrl.replace(/\/+$/, '')}${CALL_MODEL_API_PATH}`;
         // Probe with OPTIONS to avoid auth errors clouding reachability
         const res = await fetch(url, { method: 'OPTIONS' });
-        return { name: 'api-base-url-reachable', ok: res.status < 500, detail: { status: res.status } };
+        return { name: 'api-base-url-reachable', ok: res.status < 500, detail: { url, status: res.status } };
       } catch (e) {
-        return { name: 'api-base-url-reachable', ok: false, detail: { error: e instanceof Error ? e.message : String(e) }, suggestion: 'Verify the API is running at apiBaseUrl.' };
+        return { name: 'api-base-url-reachable', ok: false, detail: { url, error: e instanceof Error ? e.message : String(e) }, suggestion: 'Verify the API is running at apiBaseUrl.' };
       }
     }
   ];

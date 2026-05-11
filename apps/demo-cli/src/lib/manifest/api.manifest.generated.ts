@@ -608,13 +608,13 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
           { name: 'lk', longName: 'lk', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: "Locked flag. Prevents the box from modifying this user's recipient config." },
           { name: 'bk', longName: 'bk', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: 'Blocked flag. Prevents the box from re-adding this user as a recipient.' },
           { name: 'i', longName: 'i', optional: false },
-          { name: 'x', longName: 'x', optional: true },
-          { name: 'n', longName: 'n', optional: true },
-          { name: 't', longName: 't', optional: true },
-          { name: 'e', longName: 'e', optional: true },
-          { name: 's', longName: 's', optional: true },
-          { name: 'f', longName: 'f', optional: true },
-          { name: 'c', longName: 'c', optional: false }
+          { name: 'x', longName: 'x', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: "Excluded flag. Set when the recipient is excluded via a {@link NotificationBoxSendExclusion} on their {@link NotificationUser}. Can only be cleared by removing the exclusion from the user's exclusion list." },
+          { name: 'n', longName: 'n', tsType: 'Maybe<string>', optional: true, description: "Display name override. Takes precedence over the user's profile name." },
+          { name: 't', longName: 't', tsType: 'Maybe<E164PhoneNumber>', optional: true, description: "Phone number override (E.164 format). Takes precedence over the user's profile phone." },
+          { name: 'e', longName: 'e', tsType: 'Maybe<EmailAddress>', optional: true, description: "Email address override. Takes precedence over the user's profile email." },
+          { name: 's', longName: 's', tsType: 'Maybe<NotificationSummaryId>', optional: true, description: 'Notification summary ID for in-app delivery. Automatically cleared when `uid` is set.' },
+          { name: 'f', longName: 'f', tsType: 'Maybe<NotificationBoxRecipientFlag>', optional: true, description: 'Opt-in/opt-out flag. Non-zero values prevent notification delivery to this recipient.' },
+          { name: 'c', longName: 'c', tsType: 'NotificationBoxRecipientTemplateConfigRecord', optional: false, description: 'Per-template channel configuration. Keys are {@link NotificationTemplateType} values.' }
         ],
         nestedIsArray: true
       },
