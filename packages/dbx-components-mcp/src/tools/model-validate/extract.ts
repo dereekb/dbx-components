@@ -53,7 +53,8 @@ function findDataInterfaces(sourceFile: SourceFile, groupInterface: ExtractedGro
     }
     const fields = extractInterfaceFields(iface);
     const dbxModelTag = readDbxModelTag(iface.getJsDocs());
-    out.push({ name, line: iface.getStartLineNumber(), dbxModelTag, fields });
+    const dbxModelSubObjectTag = readDbxModelSubObjectTag(iface.getJsDocs());
+    out.push({ name, line: iface.getStartLineNumber(), dbxModelTag, dbxModelSubObjectTag, fields });
   }
   return out;
 }
@@ -145,6 +146,31 @@ function readDbxModelTag(jsDocs: readonly JSDoc[]): boolean {
   for (const jsDoc of jsDocs) {
     for (const tag of jsDoc.getTags()) {
       if (tag.getTagName() === 'dbxModel') {
+        result = true;
+      }
+    }
+  }
+  return result;
+}
+
+/**
+ * Reads the `@dbxModelSubObject` flag off a JSDoc block. Returns `true`
+ * when the tag is present (regardless of any inline argument); `false`
+ * otherwise.
+ *
+ * Marks an embedded sub-object interface (a type persisted via
+ * `firestoreSubObject<T>()` but lacking its own `firestoreModelIdentity`)
+ * as subject to the same per-field `@dbxModelVariable` long-name rules a
+ * `@dbxModel` interface receives.
+ *
+ * @param jsDocs - JSDoc blocks attached to the data interface declaration
+ * @returns `true` when `@dbxModelSubObject` is present, otherwise `false`
+ */
+function readDbxModelSubObjectTag(jsDocs: readonly JSDoc[]): boolean {
+  let result = false;
+  for (const jsDoc of jsDocs) {
+    for (const tag of jsDoc.getTags()) {
+      if (tag.getTagName() === 'dbxModelSubObject') {
         result = true;
       }
     }

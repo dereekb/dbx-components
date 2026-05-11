@@ -416,8 +416,8 @@ export enum ModelValidateCode {
    * A persisted field is missing its `@dbxModelVariable <name>` JSDoc tag.
    *
    * @dbxRuleSeverity warning
-   * @dbxRuleApplies Every field on a `@dbxModel` interface — the tag carries the human-readable long name the catalog and decoder use when surfacing the field to operators. The long name is the variable name the field would have unabbreviated, written in camelCase (e.g. `uid` → `userUid`, `n` → `name`, `crAt` → `createdAt`).
-   * @dbxRuleNotApplies Fields on embedded sub-object interfaces (no `@dbxModel` parent) and fields the project deliberately leaves untagged (rare).
+   * @dbxRuleApplies Every field on a `@dbxModel` interface or on a `@dbxModelSubObject`-tagged embedded sub-object interface — the tag carries the human-readable long name the catalog and decoder use when surfacing the field to operators. The long name is the variable name the field would have unabbreviated, written in camelCase (e.g. `uid` → `userUid`, `n` → `name`, `crAt` → `createdAt`).
+   * @dbxRuleNotApplies Fields on embedded sub-object interfaces that are not tagged with `@dbxModelSubObject` (the tag is opt-in) and fields the project deliberately leaves untagged (rare).
    * @dbxRuleFix Append `@dbxModelVariable <longName>` to the field's JSDoc block, where `<longName>` is the field's unabbreviated camelCase variable name.
    */
   MODEL_FIELD_MISSING_VARIABLE_TAG = 'MODEL_FIELD_MISSING_VARIABLE_TAG',
@@ -426,11 +426,21 @@ export enum ModelValidateCode {
    * A persisted field's `@dbxModelVariable <longName>` tag value matches the field's short name verbatim, defeating the tag's purpose (the long name should be the field's unabbreviated camelCase variable name).
    *
    * @dbxRuleSeverity warning
-   * @dbxRuleApplies Every field on a `@dbxModel` interface where `@dbxModelVariable` is present and its value equals the field's name (e.g. field `h` tagged `@dbxModelVariable h`, field `ub` tagged `@dbxModelVariable ub`). The tag must always carry the unabbreviated form so the catalog and decoder surface a meaningful long name.
+   * @dbxRuleApplies Every field on a `@dbxModel` interface or on a `@dbxModelSubObject`-tagged embedded sub-object interface where `@dbxModelVariable` is present and its value equals the field's name (e.g. field `h` tagged `@dbxModelVariable h`, field `ub` tagged `@dbxModelVariable ub`). The tag must always carry the unabbreviated form so the catalog and decoder surface a meaningful long name.
    * @dbxRuleNotApplies Fields whose name is already the unabbreviated camelCase form (e.g. `name`, `email`, `id`, `at`) — add those to `dbx-mcp.config.json` `modelValidate.ignoredFieldNames` to silence the warning workspace-wide.
    * @dbxRuleFix Replace the tag value with the field's unabbreviated camelCase variable name (e.g. `@dbxModelVariable h` → `@dbxModelVariable hours`, `@dbxModelVariable ub` → `@dbxModelVariable usedBudget`). To exempt fields whose long name legitimately equals the short name, add them to `modelValidate.ignoredFieldNames`.
    */
-  MODEL_FIELD_LONG_NAME_EQUALS_NAME = 'MODEL_FIELD_LONG_NAME_EQUALS_NAME'
+  MODEL_FIELD_LONG_NAME_EQUALS_NAME = 'MODEL_FIELD_LONG_NAME_EQUALS_NAME',
+
+  /**
+   * An interface declaration carries both `@dbxModel` and `@dbxModelSubObject` JSDoc tags. The two tags model mutually exclusive concepts — `@dbxModel` marks a top-level Firestore model registered in the catalog via `firestoreModelIdentity`, while `@dbxModelSubObject` marks an embedded sub-object interface persisted only as part of a parent model's converter — so an interface must carry at most one.
+   *
+   * @dbxRuleSeverity error
+   * @dbxRuleApplies Any interface JSDoc block where both `@dbxModel` and `@dbxModelSubObject` are present.
+   * @dbxRuleNotApplies Interfaces carrying only one of the two tags (or neither).
+   * @dbxRuleFix Remove whichever tag does not describe the interface. If the interface has a matching `firestoreModelIdentity` call, keep `@dbxModel`; if it is only embedded inside another model via `firestoreSubObject<T>()`, keep `@dbxModelSubObject`.
+   */
+  MODEL_SUBOBJECT_TAG_CONFLICT = 'MODEL_SUBOBJECT_TAG_CONFLICT'
 }
 
 /**

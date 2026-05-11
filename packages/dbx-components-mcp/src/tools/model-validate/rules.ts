@@ -38,6 +38,7 @@ export function runRules(file: ExtractedFile, options?: RuleOptions): readonly V
     checkDeclarationOrder(file, model, violations);
   }
   checkFieldNameLengths(file, violations, options);
+  checkSubObjectInterfaceTags(file, violations);
   return violations;
 }
 
@@ -81,7 +82,8 @@ function checkFieldJsDocs(file: ExtractedFile, violations: Violation[], options?
           model: iface.name
         });
       }
-      if (iface.dbxModelTag && field.dbxModelVariableTag === undefined) {
+      const fieldRulesApply = iface.dbxModelTag || iface.dbxModelSubObjectTag;
+      if (fieldRulesApply && field.dbxModelVariableTag === undefined) {
         pushViolation(violations, {
           code: 'MODEL_FIELD_MISSING_VARIABLE_TAG',
           severity: 'warning',
@@ -91,7 +93,7 @@ function checkFieldJsDocs(file: ExtractedFile, violations: Violation[], options?
           model: iface.name
         });
       }
-      if (iface.dbxModelTag && field.dbxModelVariableTag !== undefined && field.dbxModelVariableTag === field.name && !ignored?.has(field.name)) {
+      if (fieldRulesApply && field.dbxModelVariableTag !== undefined && field.dbxModelVariableTag === field.name && !ignored?.has(field.name)) {
         pushViolation(violations, {
           code: 'MODEL_FIELD_LONG_NAME_EQUALS_NAME',
           severity: 'warning',
@@ -101,6 +103,21 @@ function checkFieldJsDocs(file: ExtractedFile, violations: Violation[], options?
           model: iface.name
         });
       }
+    }
+  }
+}
+
+// MARK: Sub-object interface tag conflict (error)
+function checkSubObjectInterfaceTags(file: ExtractedFile, violations: Violation[]): void {
+  for (const iface of file.dataInterfaces) {
+    if (iface.dbxModelTag && iface.dbxModelSubObjectTag) {
+      pushViolation(violations, {
+        code: 'MODEL_SUBOBJECT_TAG_CONFLICT',
+        message: `Interface \`${iface.name}\` carries both \`@dbxModel\` and \`@dbxModelSubObject\`. Use only \`@dbxModel\` for top-level Firestore models; use \`@dbxModelSubObject\` only for embedded sub-objects without a \`firestoreModelIdentity\`.`,
+        file: file.name,
+        line: iface.line,
+        model: iface.name
+      });
     }
   }
 }

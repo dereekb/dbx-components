@@ -150,6 +150,14 @@ export interface ExtractedDataInterface {
    * the interface as a model variant for downstream traversal/referencing.
    */
   readonly dbxModelTag: boolean;
+  /**
+   * `true` when the interface declaration's JSDoc carries an
+   * `@dbxModelSubObject` tag. Embedded sub-object interfaces marked with
+   * this tag are subject to the same per-field `@dbxModelVariable`
+   * long-name rules as `@dbxModel` interfaces, even though they have no
+   * `firestoreModelIdentity`.
+   */
+  readonly dbxModelSubObjectTag: boolean;
   readonly fields: readonly ExtractedField[];
 }
 

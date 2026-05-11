@@ -636,4 +636,51 @@ export function agentSummaryFirestoreCollection(firestoreContext: FirestoreConte
       expect(equalsWarnings).toHaveLength(0);
     });
   });
+
+  // MARK: @dbxModelSubObject embedded sub-object interfaces
+  describe('@dbxModelSubObject', () => {
+    const SUB_OBJECT_UNTAGGED = `\n/**\n * Embedded sub-object — fields lack @dbxModelVariable on purpose.\n */\nexport interface ProfileEmbeddedSubItem {\n  a: string;\n  bb: string;\n}\n`;
+    const SUB_OBJECT_TAGGED = `\n/**\n * Embedded sub-object — fields lack @dbxModelVariable on purpose.\n *\n * @dbxModelSubObject\n */\nexport interface ProfileEmbeddedSubItem {\n  a: string;\n  bb: string;\n}\n`;
+
+    it('warns MODEL_FIELD_MISSING_VARIABLE_TAG on `@dbxModelSubObject` interface fields lacking `@dbxModelVariable`', () => {
+      const text = HAPPY_SOURCE + SUB_OBJECT_TAGGED;
+      const result = validateFirebaseModelSources([{ name: 'x.ts', text }]);
+      const subWarnings = result.violations.filter((v) => v.code === 'MODEL_FIELD_MISSING_VARIABLE_TAG' && v.model === 'ProfileEmbeddedSubItem');
+      expect(subWarnings.map((v) => v.severity)).toEqual(['warning', 'warning']);
+      expect(subWarnings.map((v) => v.message)).toEqual(expect.arrayContaining([expect.stringContaining('`a`'), expect.stringContaining('`bb`')]));
+    });
+
+    it('warns MODEL_FIELD_LONG_NAME_EQUALS_NAME on `@dbxModelSubObject` interface fields whose long name equals the short name', () => {
+      const text = HAPPY_SOURCE + SUB_OBJECT_TAGGED.replace('export interface ProfileEmbeddedSubItem {\n  a: string;\n  bb: string;\n}', 'export interface ProfileEmbeddedSubItem {\n  /** @dbxModelVariable a */\n  a: string;\n  /** @dbxModelVariable bb */\n  bb: string;\n}');
+      const result = validateFirebaseModelSources([{ name: 'x.ts', text }]);
+      const equalsWarnings = result.violations.filter((v) => v.code === 'MODEL_FIELD_LONG_NAME_EQUALS_NAME' && v.model === 'ProfileEmbeddedSubItem');
+      expect(equalsWarnings).toHaveLength(2);
+      expect(equalsWarnings.map((v) => v.severity)).toEqual(['warning', 'warning']);
+    });
+
+    it('stays silent on an untagged embedded sub-object interface (preserves current opt-in behavior)', () => {
+      const text = HAPPY_SOURCE + SUB_OBJECT_UNTAGGED;
+      const result = validateFirebaseModelSources([{ name: 'x.ts', text }]);
+      const subFieldWarnings = result.violations.filter((v) => (v.code === 'MODEL_FIELD_MISSING_VARIABLE_TAG' || v.code === 'MODEL_FIELD_LONG_NAME_EQUALS_NAME') && v.model === 'ProfileEmbeddedSubItem');
+      expect(subFieldWarnings).toHaveLength(0);
+    });
+
+    it('honors `ignoredFieldNames` for `@dbxModelSubObject` fields whose long name equals the short name', () => {
+      const text = HAPPY_SOURCE + SUB_OBJECT_TAGGED.replace('export interface ProfileEmbeddedSubItem {\n  a: string;\n  bb: string;\n}', 'export interface ProfileEmbeddedSubItem {\n  /** @dbxModelVariable a */\n  a: string;\n  /** @dbxModelVariable bb */\n  bb: string;\n}');
+      const result = validateFirebaseModelSources([{ name: 'x.ts', text }], { ignoredFieldNames: new Set(['a']) });
+      const equalsWarnings = result.violations.filter((v) => v.code === 'MODEL_FIELD_LONG_NAME_EQUALS_NAME' && v.model === 'ProfileEmbeddedSubItem');
+      expect(equalsWarnings).toHaveLength(1);
+      expect(equalsWarnings[0].message).toContain('`bb`');
+    });
+
+    it('flags MODEL_SUBOBJECT_TAG_CONFLICT (error) when both `@dbxModel` and `@dbxModelSubObject` are present on the same interface', () => {
+      const conflict = `\n/**\n * Conflict fixture — both tags present.\n *\n * @dbxModel\n * @dbxModelSubObject\n */\nexport interface ProfileEmbeddedSubItem {\n  a: string;\n}\n`;
+      const text = HAPPY_SOURCE + conflict;
+      const result = validateFirebaseModelSources([{ name: 'x.ts', text }]);
+      const conflicts = result.violations.filter((v) => v.code === 'MODEL_SUBOBJECT_TAG_CONFLICT' && v.model === 'ProfileEmbeddedSubItem');
+      expect(conflicts).toHaveLength(1);
+      expect(conflicts[0].severity).toBe('error');
+      expect(conflicts[0].message).toContain('ProfileEmbeddedSubItem');
+    });
+  });
 });

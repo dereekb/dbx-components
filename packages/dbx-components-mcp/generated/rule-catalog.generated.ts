@@ -484,7 +484,7 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     severity: 'warning',
     title: "A persisted field's `@dbxModelVariable <longName>` tag value matches the field's short name verbatim, defeating the tag's purpose (the long name should be the field's unabbreviated camelCase variable name)",
     whatItFlags: "A persisted field's `@dbxModelVariable <longName>` tag value matches the field's short name verbatim, defeating the tag's purpose (the long name should be the field's unabbreviated camelCase variable name).",
-    whenItApplies: "Every field on a `@dbxModel` interface where `@dbxModelVariable` is present and its value equals the field's name (e.g. field `h` tagged `@dbxModelVariable h`, field `ub` tagged `@dbxModelVariable ub`). The tag must always carry the unabbreviated form so the catalog and decoder surface a meaningful long name.",
+    whenItApplies: "Every field on a `@dbxModel` interface or on a `@dbxModelSubObject`-tagged embedded sub-object interface where `@dbxModelVariable` is present and its value equals the field's name (e.g. field `h` tagged `@dbxModelVariable h`, field `ub` tagged `@dbxModelVariable ub`). The tag must always carry the unabbreviated form so the catalog and decoder surface a meaningful long name.",
     whenItDoesNotApply: 'Fields whose name is already the unabbreviated camelCase form (e.g. `name`, `email`, `id`, `at`) — add those to `dbx-mcp.config.json` `modelValidate.ignoredFieldNames` to silence the warning workspace-wide.',
     canonicalFix: "Replace the tag value with the field's unabbreviated camelCase variable name (e.g. `@dbxModelVariable h` → `@dbxModelVariable hours`, `@dbxModelVariable ub` → `@dbxModelVariable usedBudget`). To exempt fields whose long name legitimately equals the short name, add them to `modelValidate.ignoredFieldNames`."
   },
@@ -504,8 +504,8 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     severity: 'warning',
     title: 'A persisted field is missing its `@dbxModelVariable <name>` JSDoc tag',
     whatItFlags: 'A persisted field is missing its `@dbxModelVariable <name>` JSDoc tag.',
-    whenItApplies: 'Every field on a `@dbxModel` interface — the tag carries the human-readable long name the catalog and decoder use when surfacing the field to operators. The long name is the variable name the field would have unabbreviated, written in camelCase (e.g. `uid` → `userUid`, `n` → `name`, `crAt` → `createdAt`).',
-    whenItDoesNotApply: 'Fields on embedded sub-object interfaces (no `@dbxModel` parent) and fields the project deliberately leaves untagged (rare).',
+    whenItApplies: 'Every field on a `@dbxModel` interface or on a `@dbxModelSubObject`-tagged embedded sub-object interface — the tag carries the human-readable long name the catalog and decoder use when surfacing the field to operators. The long name is the variable name the field would have unabbreviated, written in camelCase (e.g. `uid` → `userUid`, `n` → `name`, `crAt` → `createdAt`).',
+    whenItDoesNotApply: 'Fields on embedded sub-object interfaces that are not tagged with `@dbxModelSubObject` (the tag is opt-in) and fields the project deliberately leaves untagged (rare).',
     canonicalFix: "Append `@dbxModelVariable <longName>` to the field's JSDoc block, where `<longName>` is the field's unabbreviated camelCase variable name."
   },
   {
@@ -691,6 +691,16 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     whenItApplies: 'Every roles type alias.',
     whenItDoesNotApply: 'When intentionally module-private.',
     canonicalFix: 'Add `export` to the alias.'
+  },
+  {
+    code: 'MODEL_SUBOBJECT_TAG_CONFLICT',
+    source: 'dbx_model_validate',
+    severity: 'error',
+    title: "An interface declaration carries both `@dbxModel` and `@dbxModelSubObject` JSDoc tags. The two tags model mutually exclusive concepts — `@dbxModel` marks a top-level Firestore model registered in the catalog via `firestoreModelIdentity`, while `@dbxModelSubObject` marks an embedded sub-object interface persisted only as part of a parent model's converter — so an interface must carry at most one",
+    whatItFlags: "An interface declaration carries both `@dbxModel` and `@dbxModelSubObject` JSDoc tags. The two tags model mutually exclusive concepts — `@dbxModel` marks a top-level Firestore model registered in the catalog via `firestoreModelIdentity`, while `@dbxModelSubObject` marks an embedded sub-object interface persisted only as part of a parent model's converter — so an interface must carry at most one.",
+    whenItApplies: 'Any interface JSDoc block where both `@dbxModel` and `@dbxModelSubObject` are present.',
+    whenItDoesNotApply: 'Interfaces carrying only one of the two tags (or neither).',
+    canonicalFix: 'Remove whichever tag does not describe the interface. If the interface has a matching `firestoreModelIdentity` call, keep `@dbxModel`; if it is only embedded inside another model via `firestoreSubObject<T>()`, keep `@dbxModelSubObject`.'
   },
   {
     code: 'SUB_MISSING_COLLECTION_FACTORY_FN',
