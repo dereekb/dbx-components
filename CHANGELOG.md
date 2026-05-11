@@ -1,3 +1,21 @@
+## [13.11.7](https://github.com/dereekb/dbx-components/compare/v13.11.6-dev...v13.11.7) (2026-05-11)
+
+
+### Build System
+
+- lint fix + mcp regeneration ([6b340b3e](https://github.com/dereekb/dbx-components/commit/6b340b3e43b18ffacebdd9c4bf9a443a44196d3d))
+
+
+### Code Refactoring
+
+- added @dbxModelSubObject validator tag ([36e7309f](https://github.com/dereekb/dbx-components/commit/36e7309fe6c00c3b24b94e8af27e519e2a24f4ed))
+- added DEFAULT_CLI_REDIRECT_URL ([8099d536](https://github.com/dereekb/dbx-components/commit/8099d5368d8d2e086c2ec68badf52d30d1ea41fc))
+- added oidcApiOrigin to OIDC config ([687ffaa8](https://github.com/dereekb/dbx-components/commit/687ffaa8a3dd6feba4d048ea3d4e2f7b59a5b3a3))
+- dbx-components-mcp firestore sub model validation ([05035a63](https://github.com/dereekb/dbx-components/commit/05035a63b426bca6c104dae232eeca69192cf37c))
+- deprecated customButtonColor on dbx-button ([9caef732](https://github.com/dereekb/dbx-components/commit/9caef732b31b5777bf8d6a5a1a6278439e1904b4))
+- notification factory mcp validation fix ([116871bb](https://github.com/dereekb/dbx-components/commit/116871bb83a78d6938fbcc15bc2176fe674d2233))
+- updated oidc issue ([478e08be](https://github.com/dereekb/dbx-components/commit/478e08becb633f75f43bb7790d0cf8af63c37aca))
+
 ## [13.11.6](https://github.com/dereekb/dbx-components/compare/v13.11.5-dev...v13.11.6) (2026-05-10)
 
 
