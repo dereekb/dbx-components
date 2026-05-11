@@ -5,7 +5,7 @@
  */
 
 import { attachRemediation } from '../rule-catalog/index.js';
-import { validateFirebaseModelSources } from '../model-validate/index.js';
+import { validateFirebaseModelSources, type RuleOptions } from '../model-validate/index.js';
 import { buildRequiredFiles, RESERVED_MODEL_FOLDERS, type FolderInspection, type ReservedModelFolder, type Violation, type ViolationSeverity } from './types.js';
 
 /**
@@ -14,9 +14,12 @@ import { buildRequiredFiles, RESERVED_MODEL_FOLDERS, type FolderInspection, type
  * stat failure does not cascade into spurious downstream warnings.
  *
  * @param inspection - the prepared folder inspection
+ * @param options - optional per-call overrides forwarded to the per-file
+ *   content validator (field-name length limit, ignored field names,
+ *   ignored external sub-object parents)
  * @returns the violations the rules emit for that folder
  */
-export function runRules(inspection: FolderInspection): readonly Violation[] {
+export function runRules(inspection: FolderInspection, options?: RuleOptions): readonly Violation[] {
   const violations: Violation[] = [];
   if (inspection.status === 'not-found') {
     pushViolation(violations, {
@@ -49,18 +52,18 @@ export function runRules(inspection: FolderInspection): readonly Violation[] {
   }
   checkRequiredFiles(inspection, violations);
   checkStrayFiles(inspection, violations);
-  checkSourceContents(inspection, violations);
+  checkSourceContents(inspection, violations, options);
   return violations;
 }
 
 // MARK: Per-file content (delegates to model-validate)
-function checkSourceContents(inspection: FolderInspection, violations: Violation[]): void {
+function checkSourceContents(inspection: FolderInspection, violations: Violation[], options: RuleOptions | undefined): void {
   const sources = inspection.sources;
   if (!sources || sources.length === 0) {
     return;
   }
   const validatorSources = sources.map((s) => ({ name: s.filename, text: s.text }));
-  const result = validateFirebaseModelSources(validatorSources);
+  const result = validateFirebaseModelSources(validatorSources, options);
   for (const v of result.violations) {
     pushViolation(violations, {
       code: v.code,

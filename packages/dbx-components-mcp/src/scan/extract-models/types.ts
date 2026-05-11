@@ -34,12 +34,15 @@ export interface ExtractedInterfaceProp {
 
 /**
  * One `export interface` declaration. The `tags` flags drive model
- * detection (`@dbxModel`).
+ * detection (`@dbxModel`) and embedded-sub-object detection
+ * (`@dbxModelSubObject` — interfaces persisted as part of a parent
+ * model's converter via `firestoreSubObject<T>`, lacking their own
+ * `firestoreModelIdentity`).
  */
 export interface ExtractedInterface {
   readonly name: string;
   readonly description: string | undefined;
-  readonly tags: { readonly dbxModel: boolean };
+  readonly tags: { readonly dbxModel: boolean; readonly dbxModelSubObject: boolean };
   readonly extendsNames: readonly string[];
   readonly props: readonly ExtractedInterfaceProp[];
 }
@@ -87,3 +90,16 @@ export interface ExtractedModelGroup {
  * the {@link FirestoreCollectionKind} their body declares.
  */
 export type ExtractedFactoryKindMap = ReadonlyMap<string, FirestoreCollectionKind>;
+
+/**
+ * One `export const <name> = firestoreSubObject<T>(...)` /
+ * `firestoreObjectArray<T>(...)` / `firestoreMap<T>(...)` declaration. The
+ * registered `interfaceName` is the bare type-argument (`T`); the
+ * `factoryName` discriminates the call shape so the catalog can surface
+ * an `array` or `map` annotation when rendering the embedded sub-object.
+ */
+export interface ExtractedSubObjectConst {
+  readonly constName: string;
+  readonly interfaceName: string;
+  readonly factoryName: 'firestoreSubObject' | 'firestoreObjectArray' | 'firestoreMap';
+}

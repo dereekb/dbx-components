@@ -2,9 +2,12 @@ import yargs, { type Argv, type CommandModule } from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { createAuthCommand } from '../auth/auth.command.factory';
 import { callPassthroughCommand } from '../api/call.passthrough.command';
+import { getCommand } from '../api/get.command';
+import { getManyCommand } from '../api/get-many.command';
 import { type CliEnvDefault } from '../config/env';
 import { createDoctorCommand, type DoctorCheck } from '../doctor/doctor.command.factory';
 import { createEnvCommand } from '../env/env.command.factory';
+import { buildModelDecodeCommand } from '../manifest/build-model-decode-command';
 import { buildModelInfoCommand } from '../manifest/build-model-info-command';
 import { type CliModelManifest } from '../manifest/types';
 import { createAuthMiddleware } from '../middleware/auth.middleware';
@@ -56,18 +59,30 @@ export interface CreateCliInput {
    */
   readonly disableCallPassthrough?: boolean;
   /**
-   * Generated Firestore model manifest used to drive the built-in `model-info` command.
+   * Disable the built-in `get <key>` / `get-many <key...>` commands.
    *
-   * Opt-in: when provided, a top-level `model-info [model]` command is auto-wired into the built-in
-   * config commands so users can browse the model catalog and per-model field documentation. When
-   * omitted, no `model-info` command is registered. Apps that pass the manifest but want to suppress
-   * the command can additionally set {@link disableModelInfo} to `true`.
+   * These hit the generic model-access endpoints (`GET /model/<modelType>/get` and
+   * `POST /model/<modelType>/get`) which already exist on every {@link ModelApiController}.
+   * Inferred-model resolution (`get jws/abc` → `modelType: jobWorkerSchedule`) requires the
+   * generated {@link CreateCliInput.modelManifest} to be supplied; the explicit-model form
+   * (`get <model> <key>`) works without it.
+   */
+  readonly disableModelGet?: boolean;
+  /**
+   * Generated Firestore model manifest used to drive the built-in `model-info` and `model-decode`
+   * commands.
+   *
+   * Opt-in: when provided, top-level `model-info [model]` and `model-decode <key>` commands are
+   * auto-wired into the built-in config commands so users can browse the model catalog and turn
+   * raw Firestore keys (`sf/abc123`, `nb/abc/nbn/def`) into model + id info. When omitted, neither
+   * command is registered. Apps that pass the manifest but want to suppress one or both commands
+   * can set {@link disableModelInfo} and/or {@link disableModelDecode} to `true`.
    *
    * The manifest itself is also opt-in at build time. The `dbx-cli-firebase-api-manifest` generator
    * only emits `<NAMESPACE>_MODEL_MANIFEST` when invoked with `--emit-models`, so apps that never
    * enable this option won't bundle model metadata into their final binary.
    *
-   * Note: this option only controls the `model-info` command. Manifest-driven typed model commands
+   * Note: this option only controls the inspection commands. Manifest-driven typed model commands
    * are still wired explicitly via {@link apiCommands} (see `buildManifestCommands`), and the
    * `--expand-keys` flag still requires passing the manifest to `buildManifestCommands`.
    */
@@ -79,6 +94,13 @@ export interface CreateCliInput {
    * but does not want to surface the `model-info` command itself.
    */
   readonly disableModelInfo?: boolean;
+  /**
+   * Disable the built-in `model-decode` command even when {@link modelManifest} is provided.
+   *
+   * Useful when an app wants the manifest available for `--expand-keys` or `model-info` but does
+   * not want to surface the key-decode command itself.
+   */
+  readonly disableModelDecode?: boolean;
 }
 
 /**
@@ -114,8 +136,17 @@ export function createCli(input: CreateCliInput): Argv {
     builtInConfigCommands.push(buildModelInfoCommand(input.modelManifest));
   }
 
+  if (input.modelManifest && input.disableModelDecode !== true) {
+    builtInConfigCommands.push(buildModelDecodeCommand(input.modelManifest));
+  }
+
   const allConfigCommands = [...builtInConfigCommands, ...(input.configCommands ?? [])];
   const builtInApiCommands: CommandModule[] = input.disableCallPassthrough ? [] : [callPassthroughCommand];
+
+  if (input.disableModelGet !== true) {
+    builtInApiCommands.push(getCommand, getManyCommand);
+  }
+
   const allApiCommands = [...builtInApiCommands, ...(input.apiCommands ?? [])];
 
   const skipCommandNames = new Set(allConfigCommands.map((c) => commandName(c)));
@@ -132,7 +163,7 @@ export function createCli(input: CreateCliInput): Argv {
     .option('pick-all', { type: 'boolean', global: true, describe: 'Ignore configured pick filters' })
     .option('data-help', { type: 'string', choices: ['jsonschema', 'arktype', 'both'] as const, global: true, describe: 'Schema format shown in --help for manifest commands (default: jsonschema)' })
     .option('all-help', { type: 'boolean', global: true, describe: 'Show the full options table in --help even when --data-help is in focus mode' })
-    .middleware([createAuthMiddleware({ cliName, skipCommands: skipCommandNames, defaultEnvs }), createOutputMiddleware({ cliName, skipCommands: skipCommandNames })], true)
+    .middleware([createAuthMiddleware({ cliName, skipCommands: skipCommandNames, defaultEnvs, modelManifest: input.modelManifest }), createOutputMiddleware({ cliName, skipCommands: skipCommandNames })], true)
     .command(allConfigCommands)
     .command(allApiCommands)
     .demandCommand(1, 'Please specify a command. Use --help for available commands.')

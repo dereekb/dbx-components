@@ -43,7 +43,8 @@ export interface DiscoverOidcMetadataInput {
 }
 
 /**
- * Fetches the OIDC discovery document for the given issuer, trying these candidates in order:
+ * Builds the ordered list of `.well-known/openid-configuration` URLs the CLI probes when
+ * discovering OIDC metadata.
  *
  *   1. `<issuer>/.well-known/openid-configuration` (OpenID Connect Discovery 1.0).
  *   2. `<issuer-origin>/.well-known/openid-configuration` (host-rooted; matches projects that
@@ -51,12 +52,15 @@ export interface DiscoverOidcMetadataInput {
  *      sub-path — e.g. demo's `OidcWellKnownController`).
  *   3. `<fallbackBaseUrl>/.well-known/openid-configuration` when supplied and not already covered.
  *
+ * Exported so diagnostic surfaces (e.g. `doctor`) can show the exact URLs the discovery step
+ * tried — without re-implementing the candidate ordering.
+ *
  * @param input - The discovery request.
  * @param input.issuer - The OIDC issuer URL whose `.well-known/openid-configuration` is fetched first.
- * @param input.fallbackBaseUrl - Optional sibling base URL tried after the issuer-prefixed and origin-rooted candidates.
- * @returns The parsed {@link OidcDiscoveryMetadata}. Throws a {@link CliError} (`OIDC_DISCOVERY_FAILED`) when every candidate fails.
+ * @param input.fallbackBaseUrl - Optional sibling base URL appended after the issuer-prefixed and origin-rooted candidates.
+ * @returns The candidate URL list in probe order, de-duplicated.
  */
-export async function discoverOidcMetadata(input: DiscoverOidcMetadataInput): Promise<OidcDiscoveryMetadata> {
+export function buildOidcDiscoveryCandidates(input: DiscoverOidcMetadataInput): string[] {
   const candidates = [`${trimSlash(input.issuer)}/.well-known/openid-configuration`];
 
   try {
@@ -77,6 +81,20 @@ export async function discoverOidcMetadata(input: DiscoverOidcMetadataInput): Pr
     }
   }
 
+  return candidates;
+}
+
+/**
+ * Fetches the OIDC discovery document for the given issuer, trying the candidates returned by
+ * {@link buildOidcDiscoveryCandidates} in order.
+ *
+ * @param input - The discovery request.
+ * @param input.issuer - The OIDC issuer URL whose `.well-known/openid-configuration` is fetched first.
+ * @param input.fallbackBaseUrl - Optional sibling base URL tried after the issuer-prefixed and origin-rooted candidates.
+ * @returns The parsed {@link OidcDiscoveryMetadata}. Throws a {@link CliError} (`OIDC_DISCOVERY_FAILED`) when every candidate fails.
+ */
+export async function discoverOidcMetadata(input: DiscoverOidcMetadataInput): Promise<OidcDiscoveryMetadata> {
+  const candidates = buildOidcDiscoveryCandidates(input);
   let lastError: Maybe<Error>;
 
   for (const url of candidates) {
@@ -89,12 +107,12 @@ export async function discoverOidcMetadata(input: DiscoverOidcMetadataInput): Pr
 
       lastError = new Error(`OIDC discovery failed at ${url}: ${res.status} ${res.statusText}`);
     } catch (e) {
-      lastError = e instanceof Error ? e : new Error(String(e));
+      lastError = new Error(`OIDC discovery failed at ${url}: ${e instanceof Error ? e.message : String(e)}`);
     }
   }
 
   throw new CliError({
-    message: lastError?.message ?? 'OIDC discovery failed',
+    message: lastError?.message ?? `OIDC discovery failed for all candidates: ${candidates.join(', ')}`,
     code: 'OIDC_DISCOVERY_FAILED',
     suggestion: 'Verify the env oidcIssuer URL is reachable and serves /.well-known/openid-configuration.'
   });

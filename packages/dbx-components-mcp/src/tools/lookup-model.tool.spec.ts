@@ -116,9 +116,9 @@ describe('dbx_model_lookup', () => {
       const text = await firstText(runLookupModel({ topic: 'StorageFile', scope: 'upstream', fields: ['fs'] }));
       expect(text).toMatch(/## Fields \(1 of \d+\)/);
       expect(text).toMatch(/_Showing 1 of \d+ fields \(filtered by `fields`\)\._/);
-      expect(text).toMatch(/\| `fs` \|/);
-      expect(text).not.toMatch(/\| `name` \|/);
-      expect(text).not.toMatch(/\| `cat` \|/);
+      expect(text).toMatch(/\| `fs \(fileState\)` \|/);
+      expect(text).not.toMatch(/\| `name `/);
+      expect(text).not.toMatch(/\| `cat \(/);
       expect(text).toMatch(/### StorageFileState/);
       expect(text).not.toMatch(/### StorageFileCreationType/);
       expect(text).not.toMatch(/### StorageFileProcessingState/);
@@ -126,7 +126,7 @@ describe('dbx_model_lookup', () => {
 
     it('also matches by longName (case-insensitive)', async () => {
       const text = await firstText(runLookupModel({ topic: 'StorageFile', scope: 'upstream', fields: ['FILESTATE'] }));
-      expect(text).toMatch(/\| `fs` \|/);
+      expect(text).toMatch(/\| `fs \(fileState\)` \|/);
       expect(text).toMatch(/### StorageFileState/);
       expect(text).not.toMatch(/### StorageFileCreationType/);
     });
@@ -161,7 +161,7 @@ describe('dbx_model_lookup', () => {
       const text = await firstText(runLookupModel({ topic: 'StorageFile', scope: 'upstream', depth: 'brief', fields: ['fs'] }));
       expect(text).toMatch(/\| Field \| Description \|\n\|-------\|-------------\|/);
       expect(text).not.toMatch(/\| Field \| Description \| Type \| Converter \|/);
-      expect(text).toMatch(/\| `fs` \|/);
+      expect(text).toMatch(/\| `fs \(fileState\)` \|/);
       expect(text).not.toMatch(/## Enums/);
     });
 

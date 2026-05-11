@@ -73,6 +73,12 @@ describe('buildManifestCommands', () => {
     expect(buildManifestCommands([])).toEqual([]);
   });
 
+  it('appends a synthetic `get <key>` sub-command to every model so any model can be read by key', async () => {
+    const help = await helpFor(['model', 'guestbookEntry', '--help']);
+    expect(help).toContain('get <key>');
+    expect(help).toContain('Read a single guestbookEntry');
+  });
+
   it('renders the params type name, JSON Schema, result type name, and source file in --help', async () => {
     const help = await helpFor(['model', 'guestbookEntry', 'update-insert', '--help']);
 

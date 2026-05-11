@@ -118,18 +118,23 @@ function peelTypeNode(node: TypeNode): string | undefined {
 
 interface InterfaceTags {
   readonly dbxModel: boolean;
+  readonly dbxModelSubObject: boolean;
 }
 
 function readInterfaceTags(jsDocs: readonly JSDoc[]): InterfaceTags {
   let dbxModel = false;
+  let dbxModelSubObject = false;
   for (const jsDoc of jsDocs) {
     for (const tag of jsDoc.getTags()) {
-      if (tag.getTagName() === 'dbxModel') {
+      const tagName = tag.getTagName();
+      if (tagName === 'dbxModel') {
         dbxModel = true;
+      } else if (tagName === 'dbxModelSubObject') {
+        dbxModelSubObject = true;
       }
     }
   }
-  return { dbxModel };
+  return { dbxModel, dbxModelSubObject };
 }
 
 interface PropertyTags {

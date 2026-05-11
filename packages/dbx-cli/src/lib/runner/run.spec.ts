@@ -45,3 +45,20 @@ describe('createCli() model-info auto-wiring', () => {
     expect(help).not.toContain('model-info');
   });
 });
+
+describe('createCli() model-decode auto-wiring', () => {
+  it('registers the built-in model-decode command when modelManifest is provided', async () => {
+    const help = await getRootHelp({ cliName: 'demo-cli', modelManifest: MODEL_MANIFEST });
+    expect(help).toContain('model-decode');
+  });
+
+  it('does NOT register model-decode when modelManifest is omitted', async () => {
+    const help = await getRootHelp({ cliName: 'demo-cli' });
+    expect(help).not.toContain('model-decode');
+  });
+
+  it('does NOT register model-decode when disableModelDecode is true', async () => {
+    const help = await getRootHelp({ cliName: 'demo-cli', modelManifest: MODEL_MANIFEST, disableModelDecode: true });
+    expect(help).not.toContain('model-decode');
+  });
+});

@@ -263,5 +263,41 @@ export function profileFirestoreCollection(firestoreContext: FirestoreContext): 
       expect(result.errorCount).toBe(0);
       expect(result.warningCount).toBe(0);
     });
+
+    it('attributes sub-file @dbxModelSubObject violations to the sub-file (not the canonical model file)', () => {
+      const subFile = `/**\n * @dbxModelSubObject\n */\nexport interface ProfileEmbeddedItem {\n  a: string;\n}\n`;
+      const result = validateModelFolders([
+        okInspectionWithSources(
+          'profile',
+          [...CANONICAL_FILES, 'profile.embedded.ts'],
+          [
+            { filename: 'profile.ts', text: TAGGED_PROFILE_TEXT },
+            { filename: 'profile.embedded.ts', text: subFile }
+          ]
+        )
+      ]);
+      const subWarnings = result.violations.filter((v) => v.code === 'MODEL_FIELD_MISSING_VARIABLE_TAG' && v.file === 'profile.embedded.ts');
+      expect(subWarnings).toHaveLength(1);
+      expect(subWarnings[0].message).toContain('ProfileEmbeddedItem');
+    });
+
+    it('forwards `ignoredExternalParents` rule option into the per-file content validator', () => {
+      const subFile = `/**\n * @dbxModelSubObject\n */\nexport interface ProfileEmbeddedItem extends IndexRef {\n  /** @dbxModelVariable amount */\n  a: number;\n}\n`;
+      const result = validateModelFolders(
+        [
+          okInspectionWithSources(
+            'profile',
+            [...CANONICAL_FILES, 'profile.embedded.ts'],
+            [
+              { filename: 'profile.ts', text: TAGGED_PROFILE_TEXT },
+              { filename: 'profile.embedded.ts', text: subFile }
+            ]
+          )
+        ],
+        { ignoredExternalParents: new Set(['IndexRef']) }
+      );
+      const parentWarnings = result.violations.filter((v) => v.code === 'MODEL_SUBOBJECT_PARENT_NOT_TAGGED');
+      expect(parentWarnings).toHaveLength(0);
+    });
   });
 });

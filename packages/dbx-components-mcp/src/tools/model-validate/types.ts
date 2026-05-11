@@ -76,6 +76,16 @@ export interface RuleOptions {
    * name, no regex, no per-interface qualification.
    */
   readonly ignoredFieldNames?: ReadonlySet<string>;
+  /**
+   * Parent-interface names whose `MODEL_SUBOBJECT_PARENT_NOT_TAGGED`
+   * warning the validator should suppress when the parent is classified
+   * "external" (not declared in the validated source set). Useful for
+   * framework shapes like `IndexRef`, `DateCellRange`, `DateRange` whose
+   * fields are well-known plumbing and don't need surface long-names in
+   * the catalog. Match is exact, case-sensitive, on the parent interface
+   * name as written in the `extends` clause.
+   */
+  readonly ignoredExternalParents?: ReadonlySet<string>;
 }
 
 /**
@@ -229,6 +239,14 @@ export interface ExtractedDataInterface {
    * `firestoreModelIdentity`.
    */
   readonly dbxModelSubObjectTag: boolean;
+  /**
+   * Names of the interfaces this interface `extends`. Captured as bare
+   * identifiers as written in source (e.g. `WorkerPayStubCostItem`,
+   * `IndexRef`); cross-file resolution to a declared
+   * {@link ExtractedDataInterface} happens at the rules layer via the
+   * {@link CrossFileRuleContext}.
+   */
+  readonly extendsNames: readonly string[];
   readonly fields: readonly ExtractedField[];
 }
 

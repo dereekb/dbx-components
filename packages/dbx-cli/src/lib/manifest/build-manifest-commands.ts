@@ -295,11 +295,51 @@ function buildModelCommand(model: string, entries: readonly CliApiManifestEntry[
         yargs.command(buildEntryCommand(entry, context));
       }
 
+      yargs.command(buildPerModelGetCommand(model));
+
       hideGlobalOptions(yargs, context.hideOnFocus);
 
       return yargs.demandCommand(1, 'Please specify an action.');
     },
     handler: () => undefined
+  };
+}
+
+/**
+ * Synthetic per-model `get <key>` sub-command appended to every model's command tree.
+ *
+ * The parent `model <name>` already fixes the `modelType`, so this command just passes the bare
+ * `key` positional through to `context.getModel(modelType, key)`. Supports both the full
+ * `<prefix>/<id>` form and a bare doc id (when the user knows the modelType from the parent).
+ */
+function buildPerModelGetCommand(model: string): CommandModule {
+  return {
+    command: 'get <key>',
+    describe: `Read a single ${model} document by key.`,
+    builder: (yargs: Argv) =>
+      yargs.positional('key', {
+        type: 'string',
+        describe: `Firestore key for the ${model} document (full \`prefix/id\` or bare id).`
+      }),
+    handler: async (argv: any) => {
+      try {
+        const ctx = requireCliContext();
+        const key = typeof argv.key === 'string' ? argv.key.trim() : '';
+
+        if (key.length === 0) {
+          throw new CliError({
+            message: `get: missing required <key> positional for model '${model}'.`,
+            code: 'INVALID_ARGUMENT'
+          });
+        }
+
+        const result = await ctx.getModel(model, key);
+        outputResult(result);
+      } catch (e) {
+        outputError(e);
+        process.exit(1);
+      }
+    }
   };
 }
 

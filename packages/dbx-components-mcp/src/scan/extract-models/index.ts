@@ -19,15 +19,17 @@
 
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { basename, join, posix, relative, sep } from 'node:path';
-import { Project } from 'ts-morph';
+import { Project, type SourceFile } from 'ts-morph';
 import type { FirebaseModel, FirebaseModelGroup } from '../../registry/firebase-models.js';
-import { assembleFile } from './assemble.js';
+import { assembleFile, type SubObjectConstEntry } from './assemble.js';
 import { findConverters } from './find-converters.js';
 import { findEnums } from './find-enums.js';
 import { findIdentities } from './find-identities.js';
 import { findInterfaces } from './find-interfaces.js';
 import { findModelGroups } from './find-model-groups.js';
+import { findSubObjectConsts } from './find-sub-object-consts.js';
 import { findCollectionFactoryCalls } from './infer-collection-kind.js';
+import type { ExtractedInterface } from './types.js';
 
 /**
  * Outcome of one model-root scan. The `errors` array carries per-file
@@ -93,14 +95,49 @@ export async function extractModels(input: ExtractModelsInput): Promise<ExtractM
   const modelGroups: FirebaseModelGroup[] = [];
   const errors: { readonly sourceFile: string; readonly message: string }[] = [];
 
+  // Pre-pass: parse every file once and collect the cross-file
+  // sub-object index (factory consts + tagged interfaces) so the
+  // per-model assembly pass can resolve `firestoreSubObject<T>` chains
+  // declared in sibling sub-files (e.g. `worker.pay.ts` consumed by
+  // `worker.ts`).
+  const subObjectConstIndex = new Map<string, SubObjectConstEntry>();
+  const subObjectInterfaceIndex = new Map<string, ExtractedInterface>();
+  interface ParsedSourceFile {
+    readonly filePath: string;
+    readonly sourceFileRel: string;
+    readonly sf: SourceFile;
+    readonly hasModelMarker: boolean;
+  }
+  const parsedFiles: ParsedSourceFile[] = [];
   for (const filePath of files) {
     const sourceFileRel = relative(baseDir, filePath).split(sep).join(posix.sep);
     try {
       const text = await readFile(filePath, 'utf8');
-      if (!text.includes('firestoreModelIdentity(') && !text.includes('@dbxModelGroup')) {
+      const hasModelMarker = text.includes('firestoreModelIdentity(') || text.includes('@dbxModelGroup');
+      const hasSubObjectMarker = text.includes('@dbxModelSubObject') || text.includes('firestoreSubObject') || text.includes('firestoreObjectArray') || text.includes('firestoreMap');
+      if (!hasModelMarker && !hasSubObjectMarker) {
         continue;
       }
-      const sf = project.createSourceFile(`/scan/${basename(filePath)}-${models.length}-${modelGroups.length}.ts`, text, { overwrite: true });
+      const sf = project.createSourceFile(`/scan/${basename(filePath)}-${parsedFiles.length}.ts`, text, { overwrite: true });
+      parsedFiles.push({ filePath, sourceFileRel, sf, hasModelMarker });
+      for (const c of findSubObjectConsts(sf)) {
+        if (!subObjectConstIndex.has(c.constName)) {
+          subObjectConstIndex.set(c.constName, { interfaceName: c.interfaceName, factoryKind: c.factoryName === 'firestoreSubObject' ? 'object' : c.factoryName === 'firestoreObjectArray' ? 'array' : 'map' });
+        }
+      }
+      for (const iface of findInterfaces(sf)) {
+        if (iface.tags.dbxModelSubObject && !subObjectInterfaceIndex.has(iface.name)) {
+          subObjectInterfaceIndex.set(iface.name, iface);
+        }
+      }
+    } catch (error) {
+      errors.push({ sourceFile: sourceFileRel, message: error instanceof Error ? error.message : String(error) });
+    }
+  }
+
+  for (const { sourceFileRel, sf, hasModelMarker } of parsedFiles) {
+    if (!hasModelMarker) continue;
+    try {
       const assembled = assembleFile({
         sourcePackage,
         sourceFile: sourceFileRel,
@@ -109,7 +146,9 @@ export async function extractModels(input: ExtractModelsInput): Promise<ExtractM
         converters: findConverters(sf),
         enums: findEnums(sf),
         modelGroups: findModelGroups(sf),
-        factoryKinds: findCollectionFactoryCalls(sf)
+        factoryKinds: findCollectionFactoryCalls(sf),
+        subObjectConstIndex,
+        subObjectInterfaceIndex
       });
       for (const m of assembled.models) models.push(m);
       for (const g of assembled.modelGroups) modelGroups.push(g);

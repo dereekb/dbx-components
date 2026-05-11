@@ -24,6 +24,7 @@ import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type DbxTool } from './types.js';
 import { createFolderValidateTool } from './validate-tool.js';
 import { formatResult, inspectFolder, validateModelFolders } from './model-validate-folder/index.js';
+import type { RuleOptions } from './model-validate/index.js';
 
 // MARK: Tool definition
 const DBX_MODEL_VALIDATE_FOLDER_TOOL: Tool = {
@@ -57,9 +58,36 @@ const DBX_MODEL_VALIDATE_FOLDER_TOOL: Tool = {
   }
 };
 
-export const modelValidateFolderTool: DbxTool = createFolderValidateTool({
-  definition: DBX_MODEL_VALIDATE_FOLDER_TOOL,
-  inspectFolder,
-  validate: validateModelFolders,
-  format: formatResult
-});
+/**
+ * Optional inputs to {@link createModelValidateFolderTool}.
+ */
+export interface CreateModelValidateFolderToolOptions {
+  /**
+   * Rule overrides resolved from the workspace's `dbx-mcp.config.json`
+   * `modelValidate` block. When omitted, the validator falls back to the
+   * built-in defaults.
+   */
+  readonly ruleOptions?: RuleOptions;
+}
+
+/**
+ * Builds the `dbx_model_validate_folder` tool, optionally injecting rule
+ * overrides from the workspace config. The default-options instance is
+ * exported as {@link modelValidateFolderTool} below for callers that
+ * don't need config.
+ *
+ * @param options - optional rule overrides
+ * @returns the registered MCP tool wrapper
+ * @__NO_SIDE_EFFECTS__
+ */
+export function createModelValidateFolderTool(options: CreateModelValidateFolderToolOptions = {}): DbxTool {
+  const { ruleOptions } = options;
+  return createFolderValidateTool({
+    definition: DBX_MODEL_VALIDATE_FOLDER_TOOL,
+    inspectFolder,
+    validate: (inspections) => validateModelFolders(inspections, ruleOptions),
+    format: formatResult
+  });
+}
+
+export const modelValidateFolderTool: DbxTool = createModelValidateFolderTool();

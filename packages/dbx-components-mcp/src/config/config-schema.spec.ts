@@ -49,6 +49,22 @@ describe('DbxMcpConfig schema', () => {
     expect(parsed instanceof type.errors).toBe(true);
   });
 
+  it('accepts modelValidate.ignoredExternalParents as a string array', () => {
+    const parsed = DbxMcpConfig({
+      version: 1,
+      modelValidate: { ignoredExternalParents: ['IndexRef', 'DateCellRange', 'DateRange'] }
+    });
+    expect(parsed instanceof type.errors).toBe(false);
+  });
+
+  it('rejects modelValidate.ignoredExternalParents with non-string entries', () => {
+    const parsed = DbxMcpConfig({
+      version: 1,
+      modelValidate: { ignoredExternalParents: ['IndexRef', 42] }
+    });
+    expect(parsed instanceof type.errors).toBe(true);
+  });
+
   it('accepts a per-cluster scan[] entry — semantic-types shape', () => {
     const parsed = DbxMcpConfig({
       version: 1,
