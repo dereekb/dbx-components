@@ -25,6 +25,18 @@ export abstract class DbxFirebaseOidcConfig {
    */
   abstract readonly availableScopes: OidcScopeDetails[];
   /**
+   * Optional API origin (scheme + host, e.g. `https://api.example.com`) prepended to the OIDC
+   * authorization and interaction endpoint paths when set.
+   *
+   * Use this when the OIDC provider is hosted on a different origin than the frontend so that
+   * the authorization redirect and interaction POSTs target the issuer host directly (e.g. to
+   * avoid an intermediate hosting layer that strips cookies). Should not include a trailing
+   * slash and should not include the `/api` path segment — OIDC endpoints live at the root.
+   *
+   * Leave unset for single-origin deployments; the endpoint paths stay relative.
+   */
+  readonly oidcApiOrigin?: Maybe<string>;
+  /**
    * Path to the authorization endpoint. Defaults to '/oidc/auth'.
    */
   readonly oidcAuthorizationEndpointApiPath?: Maybe<string>;
@@ -73,11 +85,13 @@ export class DbxFirebaseOidcConfigService {
   }
 
   get oidcAuthorizationEndpointApiPath(): string {
-    return this.config.oidcAuthorizationEndpointApiPath ?? DEFAULT_OIDC_AUTHORIZATION_ENDPOINT_PATH;
+    const origin = this.config.oidcApiOrigin ?? '';
+    return `${origin}${this.config.oidcAuthorizationEndpointApiPath ?? DEFAULT_OIDC_AUTHORIZATION_ENDPOINT_PATH}`;
   }
 
   get oidcInteractionEndpointApiPath(): string {
-    return this.config.oidcInteractionEndpointApiPath ?? DEFAULT_OIDC_INTERACTION_ENDPOINT_PATH;
+    const origin = this.config.oidcApiOrigin ?? '';
+    return `${origin}${this.config.oidcInteractionEndpointApiPath ?? DEFAULT_OIDC_INTERACTION_ENDPOINT_PATH}`;
   }
 
   get tokenEndpointAuthMethods(): OidcTokenEndpointAuthMethod[] {
