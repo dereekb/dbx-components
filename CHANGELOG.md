@@ -1,3 +1,11 @@
+## [13.11.9](https://github.com/dereekb/dbx-components/compare/v13.11.8-dev...v13.11.9) (2026-05-11)
+
+
+### Bug Fixes
+
+- **firebase-server:** preserve JWT claims on OIDC model reads ([4872c20f](https://github.com/dereekb/dbx-components/commit/4872c20f594d92f2c1fe2e78a2607786bd858ac9))
+- **oidc:** tolerate already-granted scopes on re-consent ([7d2344d8](https://github.com/dereekb/dbx-components/commit/7d2344d84daa7a1afca4c01de64f6e70233f3910))
+
 ## [13.11.8](https://github.com/dereekb/dbx-components/compare/v13.11.7-dev...v13.11.8) (2026-05-11)
 
 
