@@ -5,33 +5,30 @@ import { DEFAULT_CLI_OIDC_SCOPES } from '../config/env';
 export interface BuildAuthorizationUrlInput {
   readonly authorizationEndpoint: string;
   /**
-   * Optional OIDC issuer URL (e.g. `https://api.example.com/oidc`). When set and `appClientUrl`
-   * is not provided, the CLI sends the user to `<oidcIssuer>/login/client?<params>` instead of
-   * the raw authorization endpoint. The API redirects to the configured app login URL with the
-   * OAuth query string preserved, so the CLI does not need to know the client origin directly.
-   *
-   * Takes precedence over `apiBaseUrl` when both are set. Prefer this over `apiBaseUrl` for any
-   * deployment where the OIDC routes are not nested under the regular API prefix — for example,
-   * a NestJS server with `globalApiRoutePrefix: '/api'` that excludes `/oidc/**` exposes OIDC at
-   * `${origin}/oidc/*` (not `${origin}/api/oidc/*`), so `apiBaseUrl` would build the wrong URL.
+   * Optional OIDC issuer URL (e.g. `https://api.example.com/oidc`). Used as a fallback rebase
+   * origin when `appClientUrl` is not provided — the origin of `oidcIssuer` is applied to the
+   * discovered `authorizationEndpoint`. In typical OIDC deployments the issuer and authorization
+   * endpoint share an origin, so this fallback is a no-op rebase that ends up at the discovered
+   * `/oidc/auth` URL. Use `appClientUrl` to send the user to a different origin (e.g. a frontend
+   * dev server that proxies `/oidc/**` back to the API).
    */
   readonly oidcIssuer?: Maybe<string>;
   /**
-   * Optional API base URL. Legacy shortcut: when set and neither `appClientUrl` nor `oidcIssuer`
-   * is provided, the CLI sends the user to `<apiBaseUrl>/oidc/login/client?<params>`.
-   *
-   * Only correct when `apiBaseUrl` happens to be the OIDC origin (e.g. a Cloud Functions emulator
-   * mount where the function root and the OIDC mount share a prefix). Prefer `oidcIssuer` for new
-   * deployments; the OIDC issuer is the authoritative origin + path for OIDC routes.
+   * Optional API base URL. Used as a fallback rebase origin when neither `appClientUrl` nor
+   * `oidcIssuer` is provided — only the origin is read, so prefix paths like `/api` are ignored.
+   * Prefer `oidcIssuer` for new deployments; `apiBaseUrl` is kept for backwards compatibility
+   * with envs that only declare an API base URL.
    */
   readonly apiBaseUrl?: Maybe<string>;
   /**
-   * Optional client (frontend) origin to rebase the authorization endpoint onto.
+   * Optional client origin to rebase the authorization endpoint onto.
    *
    * When set, the path + search of `authorizationEndpoint` are kept and the origin is replaced
-   * with this URL. Useful when the frontend dev server proxies `/oidc/**` to the API and the
-   * user-facing URL should target the app, not the API directly. Takes precedence over both
-   * `oidcIssuer` and `apiBaseUrl` when set.
+   * with this URL. Takes precedence over both `oidcIssuer` and `apiBaseUrl`. Recommended for any
+   * env where the user-facing URL should differ from the discovered authorization endpoint —
+   * e.g. a frontend dev server that proxies `/oidc/**` to the API on another port. When omitted,
+   * the URL is derived from `oidcIssuer`/`apiBaseUrl` origin (or used verbatim if neither is set),
+   * so the CLI always opens the actual authorization endpoint (typically `/oidc/auth`).
    */
   readonly appClientUrl?: Maybe<string>;
   readonly clientId: string;
@@ -51,16 +48,24 @@ export interface BuildAuthorizationUrlInput {
 /**
  * Builds the authorization URL the user opens in a browser to start the PKCE flow.
  *
- * Resolves the user-facing endpoint by preferring `appClientUrl` (rebases the discovered
- * authorization endpoint onto that origin) over `oidcIssuer` (`<oidcIssuer>/login/client`
- * shortcut), then `apiBaseUrl` (legacy `<apiBaseUrl>/oidc/login/client` shortcut), and
- * finally falls back to the discovered `authorizationEndpoint` itself.
+ * The user-facing endpoint is the discovered `authorizationEndpoint` (typically `/oidc/auth`)
+ * with its origin optionally rebased. The rebase origin is the first non-empty value among
+ * `appClientUrl` → `oidcIssuer` origin → `apiBaseUrl` origin. In a typical single-host
+ * deployment all three resolve to the same origin and the rebase is a no-op; in a split-host
+ * setup (frontend dev server proxying `/oidc/**` to the API) `appClientUrl` redirects the user
+ * through the frontend. When none of the three is provided, the discovered endpoint is used
+ * unchanged.
+ *
+ * Always lands at the actual authorization endpoint so oidc-provider can create an interaction
+ * and redirect to the app login page with a `uid`. (Earlier versions targeted a convenience
+ * `/oidc/login/client` redirect that forwarded query params to the app without creating an
+ * interaction — that branch is gone.)
  *
  * @param input - The authorization URL inputs.
  * @param input.authorizationEndpoint - The authorization endpoint discovered from OIDC metadata.
- * @param input.oidcIssuer - Optional OIDC issuer URL; when set without `appClientUrl`, the URL is built against `<oidcIssuer>/login/client`. Takes precedence over `apiBaseUrl`.
- * @param input.apiBaseUrl - Optional legacy API base URL; when set without `appClientUrl` or `oidcIssuer`, the URL is built against `<apiBaseUrl>/oidc/login/client`.
- * @param input.appClientUrl - Optional frontend origin to rebase the authorization endpoint onto. Takes precedence over both `oidcIssuer` and `apiBaseUrl`.
+ * @param input.appClientUrl - Optional client origin to rebase the authorization endpoint onto. Takes precedence over `oidcIssuer` and `apiBaseUrl`.
+ * @param input.oidcIssuer - Optional OIDC issuer URL; falls back to its origin as the rebase target when `appClientUrl` is missing.
+ * @param input.apiBaseUrl - Optional API base URL; falls back to its origin as the rebase target when neither `appClientUrl` nor `oidcIssuer` is set.
  * @param input.clientId - The OAuth client ID.
  * @param input.redirectUri - The redirect URI registered with the OAuth client.
  * @param input.scopes - Space-separated scope list. Defaults to {@link DEFAULT_CLI_OIDC_SCOPES}.
@@ -91,20 +96,15 @@ export function buildAuthorizationUrl(input: BuildAuthorizationUrlInput): string
     authParams.dbx_session_ttl = String(input.requestedSessionTtlSeconds);
   }
 
-  let endpoint: string;
-
-  if (input.appClientUrl) {
-    endpoint = rebaseUrlOrigin({ url: input.authorizationEndpoint, originUrl: input.appClientUrl });
-  } else if (input.oidcIssuer) {
-    endpoint = `${input.oidcIssuer.replace(/\/+$/, '')}/login/client`;
-  } else if (input.apiBaseUrl) {
-    endpoint = `${input.apiBaseUrl.replace(/\/+$/, '')}/oidc/login/client`;
-  } else {
-    endpoint = input.authorizationEndpoint;
-  }
+  const rebaseOrigin = resolveAuthorizationRebaseOrigin({
+    appClientUrl: input.appClientUrl,
+    oidcIssuer: input.oidcIssuer,
+    apiBaseUrl: input.apiBaseUrl
+  });
+  const endpoint = rebaseOrigin ? rebaseUrlOrigin({ url: input.authorizationEndpoint, originUrl: rebaseOrigin }) : input.authorizationEndpoint;
 
   // Merge into the existing query string (preserving any params already on the endpoint) so
-  // a pre-baked endpoint like `/login/client?source=cli` survives unchanged.
+  // a pre-baked endpoint like `/oidc/auth?source=cli` survives unchanged.
   const url = new URL(endpoint);
 
   for (const [key, value] of Object.entries(authParams)) {
@@ -112,6 +112,41 @@ export function buildAuthorizationUrl(input: BuildAuthorizationUrlInput): string
   }
 
   return url.toString();
+}
+
+interface ResolveAuthorizationRebaseOriginInput {
+  readonly appClientUrl?: Maybe<string>;
+  readonly oidcIssuer?: Maybe<string>;
+  readonly apiBaseUrl?: Maybe<string>;
+}
+
+/**
+ * Picks the origin used to rebase the discovered authorization endpoint, in priority order:
+ *   1. `appClientUrl` (verbatim — the explicit override)
+ *   2. `oidcIssuer` (parsed `origin`, e.g. `https://api.example.com/oidc` → `https://api.example.com`)
+ *   3. `apiBaseUrl` (parsed `origin`, e.g. `https://api.example.com/api` → `https://api.example.com`)
+ *
+ * Returns `undefined` when none is set or every candidate fails to parse; the caller should then
+ * use the discovered endpoint unchanged.
+ */
+function resolveAuthorizationRebaseOrigin(input: ResolveAuthorizationRebaseOriginInput): Maybe<string> {
+  let result: Maybe<string>;
+
+  if (input.appClientUrl) {
+    result = input.appClientUrl;
+  } else {
+    const fallbackSource = input.oidcIssuer ?? input.apiBaseUrl;
+
+    if (fallbackSource) {
+      try {
+        result = new URL(fallbackSource).origin;
+      } catch {
+        // Fall through with result undefined
+      }
+    }
+  }
+
+  return result;
 }
 
 interface RebaseUrlOriginInput {
