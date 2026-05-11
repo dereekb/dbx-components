@@ -67,8 +67,15 @@ export interface OAuthInteractionConsentRequest {
    */
   readonly approved: boolean;
   /**
-   * Optional subset of OIDC scopes to grant. Must be a subset of
-   * `prompt.details.missingOIDCScope`.
+   * Optional subset of OIDC scopes to grant. Each value must be in either
+   * `prompt.details.missingOIDCScope` or already encountered on the
+   * existing Grant (granted or rejected previously). Values not in
+   * either set return `400 BAD_REQUEST`.
+   *
+   * Already-encountered values are accepted as silent no-ops, which lets a
+   * `prompt=consent` re-display submit the full requested scope set from
+   * the auth URL without rejection when the user has previously authorized
+   * the client.
    *
    * `openid` is always added by the server when it was requested,
    * regardless of whether it appears here. When omitted, every
@@ -76,16 +83,19 @@ export interface OAuthInteractionConsentRequest {
    */
   readonly grantedOIDCScopes?: readonly OidcScope[];
   /**
-   * Optional subset of OIDC claims to grant. Must be a subset of
-   * `prompt.details.missingOIDCClaims`. When omitted, every missing claim is granted.
+   * Optional subset of OIDC claims to grant. Each value must be in either
+   * `prompt.details.missingOIDCClaims` or already encountered on the
+   * existing Grant. Values in neither return `400 BAD_REQUEST`.
+   * When omitted, every missing claim is granted.
    */
   readonly grantedOIDCClaims?: readonly string[];
   /**
    * Optional subset of resource scopes to grant per resource indicator.
-   * Each entry's array must be a subset of the corresponding entry in
-   * `prompt.details.missingResourceScopes`. When omitted, every missing
-   * resource scope is granted. When an indicator is omitted, that
-   * indicator's resource scopes are granted in full.
+   * Each entry's array values must be in either the corresponding entry in
+   * `prompt.details.missingResourceScopes` or already encountered on the
+   * existing Grant for that indicator. Values in neither return `400 BAD_REQUEST`.
+   * When omitted, every missing resource scope is granted. When an
+   * indicator is omitted, that indicator's resource scopes are granted in full.
    */
   readonly grantedResourceScopes?: Readonly<Record<string, readonly string[]>>;
 }
