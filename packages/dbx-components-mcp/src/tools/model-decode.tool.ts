@@ -1,17 +1,24 @@
 /**
  * `dbx_model_decode` tool.
  *
- * Takes a raw Firestore document (as JSON string or already-parsed object),
- * identifies the @dereekb/firebase model it matches, and explains every
- * abbreviated field — mapping enum integers back to their names and calling
- * out any foreign-key strings that reference other models.
+ * Two complementary modes:
  *
- * Model identification falls back through three strategies in order:
- *   1. explicit `model` hint (interface name, identity const, model type, or prefix);
- *   2. `key`, `_key`, or `id` field on the document that starts with a known
- *      collection prefix (`sf/abc123` → StorageFile);
- *   3. detection-hint scoring — whichever registered model has the most of
- *      its distinctive field names present on the document wins.
+ *  1. **Document mode** — pass a raw Firestore document (`data`) as a JSON
+ *     string or already-parsed object. Identifies the @dereekb/firebase model
+ *     it matches and explains every abbreviated field — mapping enum integers
+ *     back to their names and calling out foreign-key strings that reference
+ *     other models. Model identification falls back through three strategies:
+ *       1. explicit `model` hint (interface name, identity const, model type, or prefix);
+ *       2. `key`, `_key`, or `id` field on the document that starts with a known
+ *          collection prefix (`sf/abc123` → StorageFile);
+ *       3. detection-hint scoring — whichever registered model has the most of
+ *          its distinctive field names present on the document wins.
+ *
+ *  2. **Key mode** — pass just a Firestore key string (`key`) like
+ *     `"jwr/hkzQa9W6MpaP99RTlQJcImbWdZm2"`. Splits on `/`, looks each prefix
+ *     up via the model registry, and returns the leaf model + id plus any
+ *     ancestor chain for subcollection paths (e.g.
+ *     `"nb/abc/nbn/def"` → NotificationBoxNotification under NotificationBox).
  */
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
@@ -24,36 +31,43 @@ import { toolError, type DbxTool, type ToolResult } from './types.js';
 const DBX_MODEL_DECODE_TOOL: Tool = {
   name: 'dbx_model_decode',
   description: [
-    'Decode a raw @dereekb/firebase Firestore document — identify the model, expand abbreviated field names to their descriptions, decode enum integer values, and surface foreign-key relationships to other models.',
+    'Decode a @dereekb/firebase Firestore document or model key.',
     '',
-    'Pass `data` as either a JSON string (copied straight from the Firestore console) or an already-parsed object. Pass `model` to skip detection and target a specific model by interface name (`"StorageFile"`), identity constant (`"storageFileIdentity"`), `modelType` (`"storageFile"`), or collection prefix (`"sf"`).',
+    'Document mode — pass `data` as a JSON string (copied straight from the Firestore console) or an already-parsed object to identify the model, expand abbreviated field names, decode enum integer values, and surface foreign-key relationships. Optionally pass `model` to skip detection and target a specific model by interface name (`"StorageFile"`), identity constant (`"storageFileIdentity"`), `modelType` (`"storageFile"`), or collection prefix (`"sf"`).',
     '',
-    "Auto-detection uses the document's key field (if any), then falls back to scoring each registered model by how many of its distinctive fields are present."
+    'Key mode — pass just `key` (e.g. `"jwr/hkzQa9W6MpaP99RTlQJcImbWdZm2"`) to resolve the model identity and id from the collection prefix alone, no document required. Subcollection paths like `"nb/abc/nbn/def"` are walked end-to-end so the leaf model is reported alongside its parent chain.',
+    '',
+    'At least one of `data` or `key` is required.'
   ].join('\n'),
   inputSchema: {
     type: 'object',
     properties: {
       data: {
-        description: 'Raw Firestore document — JSON string or already-parsed object.',
+        description: 'Raw Firestore document — JSON string or already-parsed object. Required for document mode.',
         oneOf: [{ type: 'string' }, { type: 'object' }]
+      },
+      key: {
+        type: 'string',
+        description: 'Firestore model key (e.g. `"sf/abc123"` or subcollection path `"nb/abc/nbn/def"`). Used as the sole input in key mode, or as an extra detection hint when paired with `data`.'
       },
       model: {
         type: 'string',
         description: 'Optional model hint — interface name, identity const, model type, or collection prefix.'
       }
-    },
-    required: ['data']
+    }
   }
 };
 
 // MARK: Input validation
 const DecodeArgsType = type({
-  data: 'string | object',
+  'data?': 'string | object',
+  'key?': 'string',
   'model?': 'string'
 });
 
 interface ParsedDecodeArgs {
-  readonly data: unknown;
+  readonly data?: unknown;
+  readonly key?: string;
   readonly model?: string;
 }
 
@@ -64,6 +78,7 @@ function parseDecodeArgs(raw: unknown): ParsedDecodeArgs {
   }
   const result: ParsedDecodeArgs = {
     data: parsed.data,
+    key: parsed.key,
     model: parsed.model
   };
   return result;
@@ -155,6 +170,99 @@ function buildPrefixMap(): Map<string, string> {
   return out;
 }
 
+// MARK: Key-only decode
+interface DecodedSegment {
+  readonly prefix: string;
+  readonly id: string;
+  readonly model?: FirebaseModel;
+}
+
+interface DecodedKeyPath {
+  readonly leaf: DecodedSegment;
+  readonly ancestors: readonly DecodedSegment[];
+  readonly unresolvedPrefixes: readonly string[];
+}
+
+function decodeKeyPath(key: string, hint: string | undefined): DecodedKeyPath | { readonly error: string } {
+  const trimmed = key.trim();
+  if (trimmed.length === 0) {
+    return { error: 'Key is empty. Provide a Firestore key like `sf/abc123`.' };
+  }
+  const segments = trimmed.split('/').filter((s) => s.length > 0);
+  if (segments.length < 2 || segments.length % 2 !== 0) {
+    return {
+      error: `Invalid Firestore key '${trimmed}'. Expected an even number of segments (\`prefix/id\` pairs). Got ${segments.length} segment(s).`
+    };
+  }
+
+  const decoded: DecodedSegment[] = [];
+  const unresolved: string[] = [];
+  for (let i = 0; i < segments.length; i += 2) {
+    const prefix = segments[i];
+    const id = segments[i + 1];
+    const model = getFirebaseModelByPrefix(prefix);
+    if (!model) {
+      unresolved.push(prefix);
+    }
+    decoded.push({ prefix, id, model });
+  }
+
+  let leaf = decoded[decoded.length - 1];
+  if (!leaf.model && hint) {
+    const fromHint = getFirebaseModel(hint) ?? getFirebaseModelByPrefix(hint);
+    if (fromHint) {
+      leaf = { prefix: leaf.prefix, id: leaf.id, model: fromHint };
+    }
+  }
+  const ancestors = decoded.slice(0, -1);
+  return { leaf, ancestors, unresolvedPrefixes: unresolved };
+}
+
+function formatKeyDecode(input: DecodedKeyPath, rawKey: string): string {
+  const lines: string[] = [];
+  lines.push('_Model decoded from key prefix._', '');
+
+  const leaf = input.leaf;
+  if (leaf.model) {
+    lines.push(`**Leaf:** ${leaf.model.name}`);
+    lines.push(`- identityConst: \`${leaf.model.identityConst}\``);
+    lines.push(`- modelType: \`${leaf.model.modelType}\``);
+    lines.push(`- prefix: \`${leaf.prefix}\``);
+    lines.push(`- id: \`${leaf.id}\``);
+    if (leaf.model.modelGroup) {
+      lines.push(`- modelGroup: ${leaf.model.modelGroup}`);
+    }
+    if (leaf.model.parentIdentityConst) {
+      lines.push(`- parentIdentityConst: \`${leaf.model.parentIdentityConst}\``);
+    }
+    lines.push(`- source: \`${leaf.model.sourcePackage}\` (${leaf.model.sourceFile})`);
+  } else {
+    lines.push(`**Leaf:** _unknown_ — no model registered for prefix \`${leaf.prefix}\``);
+    lines.push(`- prefix: \`${leaf.prefix}\``);
+    lines.push(`- id: \`${leaf.id}\``);
+  }
+
+  if (input.ancestors.length > 0) {
+    lines.push('', '**Parent chain:**');
+    for (const ancestor of input.ancestors) {
+      if (ancestor.model) {
+        lines.push(`- ${ancestor.model.name} — prefix \`${ancestor.prefix}\`, id \`${ancestor.id}\``);
+      } else {
+        lines.push(`- _unknown_ — prefix \`${ancestor.prefix}\` (id \`${ancestor.id}\`)`);
+      }
+    }
+  }
+
+  if (input.unresolvedPrefixes.length > 0) {
+    const label = input.unresolvedPrefixes.length === 1 ? 'prefix' : 'prefixes';
+    const list = input.unresolvedPrefixes.map((p) => `\`${p}\``).join(', ');
+    lines.push('', `_Unresolved ${label}: ${list}. Run \`dbx_model_lookup\` to browse known models._`);
+  }
+
+  lines.push('', `_Key:_ \`${rawKey}\``);
+  return lines.join('\n');
+}
+
 // MARK: Handler
 /**
  * Executes a decode request against the firebase-models registry. Exported so
@@ -172,6 +280,21 @@ export function runModelDecode(rawArgs: unknown): ToolResult {
     return toolError(message);
   }
 
+  if (args.data === undefined && args.key === undefined) {
+    return toolError('Provide either `data` (a Firestore document) or `key` (a Firestore model key).');
+  }
+
+  // Key-only mode: no document provided, just a key string.
+  if (args.data === undefined && typeof args.key === 'string') {
+    const decoded = decodeKeyPath(args.key, args.model);
+    if ('error' in decoded) {
+      return toolError(decoded.error);
+    }
+    const text = formatKeyDecode(decoded, args.key);
+    const result: ToolResult = { content: [{ type: 'text', text }] };
+    return result;
+  }
+
   let document: Document;
   try {
     document = coerceToDocument(args.data);
@@ -180,16 +303,19 @@ export function runModelDecode(rawArgs: unknown): ToolResult {
     return toolError(message);
   }
 
-  const detection = detectModel(document.doc, document.extraKey, args.model);
+  // When the caller supplied `key` alongside `data`, use it as an extra detection
+  // hint — preferring the explicit argument over a `key`/`_key`/`id` field on the doc.
+  const extraKey = args.key ?? document.extraKey;
+  const detection = detectModel(document.doc, extraKey, args.model);
   if (!detection) {
-    const message = buildUnmatchedMessage(args.model, document);
+    const message = buildUnmatchedMessage(args.model, { ...document, extraKey });
     const result: ToolResult = { content: [{ type: 'text', text: message }] };
     return result;
   }
 
   const prefixes = buildPrefixMap();
   const header = buildDetectionHeader(detection);
-  const body = formatDecode({ model: detection.model, doc: document.doc, prefixes, extraKey: document.extraKey });
+  const body = formatDecode({ model: detection.model, doc: document.doc, prefixes, extraKey });
   const text = `${header}\n\n${body}`;
   const result: ToolResult = { content: [{ type: 'text', text }] };
   return result;

@@ -5,6 +5,7 @@ import { callPassthroughCommand } from '../api/call.passthrough.command';
 import { type CliEnvDefault } from '../config/env';
 import { createDoctorCommand, type DoctorCheck } from '../doctor/doctor.command.factory';
 import { createEnvCommand } from '../env/env.command.factory';
+import { buildModelDecodeCommand } from '../manifest/build-model-decode-command';
 import { buildModelInfoCommand } from '../manifest/build-model-info-command';
 import { type CliModelManifest } from '../manifest/types';
 import { createAuthMiddleware } from '../middleware/auth.middleware';
@@ -56,18 +57,20 @@ export interface CreateCliInput {
    */
   readonly disableCallPassthrough?: boolean;
   /**
-   * Generated Firestore model manifest used to drive the built-in `model-info` command.
+   * Generated Firestore model manifest used to drive the built-in `model-info` and `model-decode`
+   * commands.
    *
-   * Opt-in: when provided, a top-level `model-info [model]` command is auto-wired into the built-in
-   * config commands so users can browse the model catalog and per-model field documentation. When
-   * omitted, no `model-info` command is registered. Apps that pass the manifest but want to suppress
-   * the command can additionally set {@link disableModelInfo} to `true`.
+   * Opt-in: when provided, top-level `model-info [model]` and `model-decode <key>` commands are
+   * auto-wired into the built-in config commands so users can browse the model catalog and turn
+   * raw Firestore keys (`sf/abc123`, `nb/abc/nbn/def`) into model + id info. When omitted, neither
+   * command is registered. Apps that pass the manifest but want to suppress one or both commands
+   * can set {@link disableModelInfo} and/or {@link disableModelDecode} to `true`.
    *
    * The manifest itself is also opt-in at build time. The `dbx-cli-firebase-api-manifest` generator
    * only emits `<NAMESPACE>_MODEL_MANIFEST` when invoked with `--emit-models`, so apps that never
    * enable this option won't bundle model metadata into their final binary.
    *
-   * Note: this option only controls the `model-info` command. Manifest-driven typed model commands
+   * Note: this option only controls the inspection commands. Manifest-driven typed model commands
    * are still wired explicitly via {@link apiCommands} (see `buildManifestCommands`), and the
    * `--expand-keys` flag still requires passing the manifest to `buildManifestCommands`.
    */
@@ -79,6 +82,13 @@ export interface CreateCliInput {
    * but does not want to surface the `model-info` command itself.
    */
   readonly disableModelInfo?: boolean;
+  /**
+   * Disable the built-in `model-decode` command even when {@link modelManifest} is provided.
+   *
+   * Useful when an app wants the manifest available for `--expand-keys` or `model-info` but does
+   * not want to surface the key-decode command itself.
+   */
+  readonly disableModelDecode?: boolean;
 }
 
 /**
@@ -112,6 +122,10 @@ export function createCli(input: CreateCliInput): Argv {
 
   if (input.modelManifest && input.disableModelInfo !== true) {
     builtInConfigCommands.push(buildModelInfoCommand(input.modelManifest));
+  }
+
+  if (input.modelManifest && input.disableModelDecode !== true) {
+    builtInConfigCommands.push(buildModelDecodeCommand(input.modelManifest));
   }
 
   const allConfigCommands = [...builtInConfigCommands, ...(input.configCommands ?? [])];
