@@ -440,7 +440,18 @@ export enum ModelValidateCode {
    * @dbxRuleNotApplies Interfaces carrying only one of the two tags (or neither).
    * @dbxRuleFix Remove whichever tag does not describe the interface. If the interface has a matching `firestoreModelIdentity` call, keep `@dbxModel`; if it is only embedded inside another model via `firestoreSubObject<T>()`, keep `@dbxModelSubObject`.
    */
-  MODEL_SUBOBJECT_TAG_CONFLICT = 'MODEL_SUBOBJECT_TAG_CONFLICT'
+  MODEL_SUBOBJECT_TAG_CONFLICT = 'MODEL_SUBOBJECT_TAG_CONFLICT',
+
+  /**
+   * An interface is referenced as the first generic type-argument of a sub-object factory call (`firestoreSubObject<T>(...)`, `firestoreObjectArray<T>(...)`, or `firestoreMap<T>(...)`) but its declaration carries neither `@dbxModel` nor `@dbxModelSubObject`. The interface therefore opts out of the workspace's `@dbxModelVariable` long-name conventions even though its fields are persisted to Firestore.
+   *
+   * @dbxRuleSeverity warning
+   * @dbxRuleApplies Any interface declared in the validated source set that is the type-arg of at least one sub-object factory call and lacks both `@dbxModel` and `@dbxModelSubObject`. The warning is emitted once per interface (de-duplicated across all call sites) and anchored at the interface declaration line. Unresolved type-args — interfaces declared outside the validated source set, generic parameters, inline types — are silently skipped to avoid false positives.
+   * @dbxRuleNotApplies Interfaces already tagged with `@dbxModel` (top-level models) or `@dbxModelSubObject` (embedded sub-objects), and interfaces referenced only from outside the supplied source set (different package, etc.).
+   * @dbxRuleFix Add `@dbxModelSubObject` to the interface's JSDoc block so its fields are subject to `@dbxModelVariable` long-name checks. If the interface is actually a top-level Firestore model, declare a matching `firestoreModelIdentity` and tag it `@dbxModel` instead.
+   * @dbxRuleSeeAlso artifact:firestore-model
+   */
+  MODEL_SUBOBJECT_NOT_TAGGED = 'MODEL_SUBOBJECT_NOT_TAGGED'
 }
 
 /**
