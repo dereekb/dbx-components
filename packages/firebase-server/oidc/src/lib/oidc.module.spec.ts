@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { ConfigService } from '@nestjs/config';
+import { type ConfigService } from '@nestjs/config';
 import { type FirebaseServerEnvService } from '@dereekb/firebase-server';
 import { oidcModuleConfigFactory, OIDC_JWKS_ENCRYPTION_SECRET_ENV_KEY } from './oidc.module';
-import { OidcModuleConfig } from './oidc.config';
+import { type OidcModuleConfig } from './oidc.config';
 
 const TEST_ENCRYPTION_SECRET = `54686520717569636b2062726f776e20f09fa68a206a756d7073206f76657220`;
 
