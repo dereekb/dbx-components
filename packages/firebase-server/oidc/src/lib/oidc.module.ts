@@ -79,16 +79,62 @@ export const FIREBASE_SERVER_OIDC_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE: string[] = ['
 
 // MARK: Provider Factories
 /**
+ * Extracts the origin (protocol + host + port) from `envService.appApiUrl`, when it points at a
+ * different origin than `envService.appUrl`. Used to root the OIDC issuer at the API host when
+ * the frontend and the OIDC server live on different origins.
+ *
+ * Returns `undefined` if `appApiUrl` is missing, equal to `appUrl`, or shares its origin — the
+ * caller then falls back to `appUrl` (the single-origin default). The compare is on the parsed
+ * URL origin so a default `appApiUrl = "${appUrl}/api"` is treated as the same origin.
+ *
+ * @param envService - the Firebase server environment service.
+ * @returns The API origin (no trailing slash) when distinct from the frontend origin, otherwise `undefined`.
+ *
+ * @example
+ * ```typescript
+ * // appUrl = 'https://app.example.com', appApiUrl = 'https://app.example.com/api'
+ * // → undefined (same origin; fall back to appUrl)
+ *
+ * // appUrl = 'https://app.example.com', appApiUrl = 'https://api.example.com'
+ * // → 'https://api.example.com'
+ * ```
+ */
+function resolveOidcIssuerOriginFromEnv(envService: FirebaseServerEnvService): string | undefined {
+  const appUrl = envService.appUrl;
+  const appApiUrl = envService.appApiUrl;
+  let result: string | undefined;
+
+  if (appUrl && appApiUrl) {
+    try {
+      const appOrigin = new URL(appUrl).origin;
+      const apiOrigin = new URL(appApiUrl).origin;
+
+      if (apiOrigin !== appOrigin) {
+        result = apiOrigin;
+      }
+    } catch {
+      // appUrl / appApiUrl validity is enforced elsewhere; ignore parse errors here so the
+      // caller's appUrl-based fallback path still runs.
+    }
+  }
+
+  return result;
+}
+
+/**
  * Factory that builds {@link OidcModuleConfig} from environment variables and the app's {@link FirebaseServerEnvService}.
  *
- * Derives the issuer URL from `appUrl` + the optional `OIDC_ISSUER_PATH` env var (defaults to `/oidc`).
- * Reads the JWKS encryption secret from `OIDC_JWKS_ENCRYPTION_SECRET`; in test environments,
- * a deterministic fallback is used.
+ * Derives the issuer URL from `appUrl` (or, when set to a distinct origin, the origin of `appApiUrl`)
+ * plus {@link DEFAULT_OIDC_ISSUER_PATH} (defaults to `/oidc`). Reads the JWKS encryption secret from
+ * `OIDC_JWKS_ENCRYPTION_SECRET`; in test environments, a deterministic fallback is used.
+ *
+ * The issuer can also be overridden directly by passing `issuer` on the `config` block to
+ * {@link oidcModuleMetadata}; the override wins over the factory-derived value.
  *
  * @param configService - the NestJS ConfigService for reading environment variables
  * @param envService - the Firebase server environment service for app URL and env detection
  * @returns the constructed OidcModuleConfig
- * @throws {Error} When `appUrl` is missing, lacks an HTTP prefix, or the encryption secret is invalid.
+ * @throws {Error} When `appUrl` is missing, the resolved issuer lacks an HTTP prefix, or the encryption secret is invalid.
  */
 export function oidcModuleConfigFactory(configService: ConfigService, envService: FirebaseServerEnvService): OidcModuleConfig {
   const appUrl = envService.appUrl;
@@ -98,10 +144,18 @@ export function oidcModuleConfigFactory(configService: ConfigService, envService
   }
 
   const issuerPath = DEFAULT_OIDC_ISSUER_PATH;
-  const issuer = `${appUrl}${issuerPath}`;
+  // The issuer base is the origin where the OIDC server lives. When `appApiUrl` is set on
+  // a different origin from `appUrl` (e.g., the frontend lives on `https://app.example.com`
+  // while the OIDC server lives on `https://api.example.com`), use its origin so cookies
+  // emitted by oidc-provider are scoped to the API host. Otherwise fall back to `appUrl` —
+  // the common single-origin case where both the frontend and the OIDC server share a host.
+  // Consumers can still override the resolved issuer entirely via the `config.issuer` field
+  // on `oidcModuleMetadata({ config: { issuer: ... } })`.
+  const issuerBase = resolveOidcIssuerOriginFromEnv(envService) ?? appUrl;
+  const issuer = `${issuerBase}${issuerPath}`;
 
   if (!hasHttpPrefix(issuer)) {
-    throw new Error(`oidcModuleConfigFactory: appUrl must have an http(s) prefix. Received: ${appUrl}`);
+    throw new Error(`oidcModuleConfigFactory: issuer must have an http(s) prefix. Received: ${issuer}`);
   }
 
   let encryptionSecret: AES256GCMEncryptionSecret = configService.get<string>(OIDC_JWKS_ENCRYPTION_SECRET_ENV_KEY) ?? '';
@@ -158,8 +212,13 @@ export interface ProvideAppOidcModuleMetadataConfig extends Pick<ModuleMetadata,
   readonly dependencyModule: Required<ModuleMetadata>['imports']['0'];
   /**
    * Optional overrides to merge into the {@link OidcModuleConfig} produced by the factory.
+   *
+   * The `issuer` override is honored verbatim and takes precedence over the factory-derived issuer
+   * (which is normally built from `envService.appApiUrl` origin ?? `envService.appUrl`). Pass an
+   * explicit `issuer` when the consumer wants a canonical issuer URL that does not match either
+   * environment URL — e.g., when serving OIDC behind a non-`/oidc` path or under a vanity host.
    */
-  readonly config?: Partial<Pick<OidcModuleConfig, 'suppressBodyParserWarning' | 'renderError' | 'protectedPaths' | 'appOAuthInteractionPath' | 'appOAuthLoginUrlPart' | 'appOAuthConsentUrlPart' | 'tokenEndpointAuthMethods' | 'registrationEnabled' | 'trustProxy' | 'trustProxyInNonProduction' | 'tokenLifetimes' | 'maxRequestedLoginDuration' | 'minRequestedLoginDuration' | 'defaultRequestedLoginDuration'>>;
+  readonly config?: Partial<Pick<OidcModuleConfig, 'issuer' | 'suppressBodyParserWarning' | 'renderError' | 'protectedPaths' | 'appOAuthInteractionPath' | 'appOAuthLoginUrlPart' | 'appOAuthConsentUrlPart' | 'tokenEndpointAuthMethods' | 'registrationEnabled' | 'trustProxy' | 'trustProxyInNonProduction' | 'tokenLifetimes' | 'maxRequestedLoginDuration' | 'minRequestedLoginDuration' | 'defaultRequestedLoginDuration'>>;
 }
 
 /**
