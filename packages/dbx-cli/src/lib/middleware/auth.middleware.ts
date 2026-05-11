@@ -5,6 +5,7 @@ import { buildCliPaths } from '../config/paths';
 import { type CliTokenEntry, createCliTokenCacheStore, isTokenExpired } from '../config/token.cache';
 import { discoverOidcMetadata, refreshAccessToken } from '../auth/oidc.client';
 import { createCliContext, setCliContext } from '../context/cli.context';
+import { type CliModelManifest } from '../manifest/types';
 import { CliError, outputError } from '../util/output';
 
 export interface CreateAuthMiddlewareInput {
@@ -19,6 +20,11 @@ export interface CreateAuthMiddlewareInput {
    * Built-in env presets. Merged underneath the user's stored env when the env name matches.
    */
   readonly defaultEnvs?: readonly CliEnvDefault[];
+  /**
+   * Optional generated model manifest. When supplied, attached to the `CliContext` so commands
+   * can resolve `prefix/id` keys to a `modelType` via `decodeFirestoreModelKey`.
+   */
+  readonly modelManifest?: CliModelManifest;
 }
 
 /**
@@ -106,7 +112,7 @@ export function createAuthMiddleware(input: CreateAuthMiddlewareInput): Middlewa
         await tokens.set(envName, entry);
       }
 
-      setCliContext(createCliContext({ cliName: input.cliName, envName, env, accessToken: entry.accessToken }));
+      setCliContext(createCliContext({ cliName: input.cliName, envName, env, accessToken: entry.accessToken, modelManifest: input.modelManifest }));
     } catch (e) {
       outputError(e);
       process.exit(4);

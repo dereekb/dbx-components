@@ -3,6 +3,8 @@ import { CliError } from '../util/output';
 
 export const CALL_MODEL_API_PATH = `/model/call`;
 
+export const MAX_MODEL_ACCESS_MULTI_READ_KEYS = 50;
+
 export interface CallModelOverHttpInput<T = unknown> {
   /**
    * The API base URL — typically `<host>/<project>/us-central1/api` or `https://<domain>/api`.
@@ -75,6 +77,177 @@ export async function callModelOverHttp<T = unknown, R = unknown>(input: CallMod
   }
 
   return body as R;
+}
+
+export interface GetModelOverHttpInput {
+  /**
+   * The API base URL — typically `<host>/<project>/us-central1/api` or `https://<domain>/api`.
+   *
+   * The `/model/<modelType>/get` path is appended automatically.
+   */
+  readonly apiBaseUrl: string;
+  readonly accessToken: string;
+  readonly modelType: string;
+  readonly key: string;
+  /**
+   * Custom fetch implementation for tests.
+   */
+  readonly fetcher?: typeof fetch;
+}
+
+export interface GetModelOverHttpResult<T = unknown> {
+  readonly key: string;
+  readonly data: T;
+}
+
+/**
+ * GETs a single Firestore document by key via the typed model-access endpoint.
+ *
+ * Calls `<apiBaseUrl>/model/<modelType>/get?key=<encoded key>` with a Bearer access token and
+ * returns the parsed `{ key, data }` envelope. Non-2xx responses are mapped to a {@link CliError}
+ * with a stable code derived from the status — matching {@link callModelOverHttp}'s error shape.
+ *
+ * The backend route is implemented by `ModelApiController.getOne` (packages/firebase-server) and
+ * enforces `roles: 'read'` via `useModel(...)` so Firestore security rules still apply.
+ *
+ * @param input - The request envelope describing the API target, access token, model + key, and optional fetch override.
+ * @returns The parsed `{ key, data }` envelope.
+ */
+export async function getModelOverHttp<T = unknown>(input: GetModelOverHttpInput): Promise<GetModelOverHttpResult<T>> {
+  const fetcher = input.fetcher ?? fetch;
+  const url = `${trimSlash(input.apiBaseUrl)}/model/${encodeURIComponent(input.modelType)}/get?key=${encodeURIComponent(input.key)}`;
+
+  const res = await fetcher(url, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${input.accessToken}`
+    }
+  });
+
+  const { ok, body, fallbackMessage } = await readJsonResponse(res);
+
+  if (!ok) {
+    throw new CliError({
+      message: `get ${input.modelType}/${input.key} failed: ${extractMessage(body, fallbackMessage, res)}`,
+      code: codeForStatus(res.status),
+      suggestion: res.status === 401 || res.status === 403 ? 'Run `<cli> auth login` to refresh credentials.' : undefined
+    });
+  }
+
+  return body as GetModelOverHttpResult<T>;
+}
+
+export interface GetMultipleModelsOverHttpInput {
+  /**
+   * The API base URL — typically `<host>/<project>/us-central1/api` or `https://<domain>/api`.
+   *
+   * The `/model/<modelType>/get` path is appended automatically.
+   */
+  readonly apiBaseUrl: string;
+  readonly accessToken: string;
+  readonly modelType: string;
+  readonly keys: ReadonlyArray<string>;
+  /**
+   * Custom fetch implementation for tests.
+   */
+  readonly fetcher?: typeof fetch;
+}
+
+export interface GetMultipleModelsOverHttpResultEntry<T = unknown> {
+  readonly key: string;
+  readonly data: T;
+}
+
+export interface GetMultipleModelsOverHttpErrorEntry {
+  readonly key: string;
+  readonly error: string;
+  readonly code?: string;
+}
+
+export interface GetMultipleModelsOverHttpResult<T = unknown> {
+  readonly results: ReadonlyArray<GetMultipleModelsOverHttpResultEntry<T>>;
+  readonly errors: ReadonlyArray<GetMultipleModelsOverHttpErrorEntry>;
+}
+
+/**
+ * Batch-reads up to {@link MAX_MODEL_ACCESS_MULTI_READ_KEYS} Firestore documents in a single request.
+ *
+ * Calls `POST <apiBaseUrl>/model/<modelType>/get` with body `{ keys }` and returns the
+ * `{ results, errors }` envelope. The 50-key cap is enforced client-side so the error surfaces
+ * with a clear `INVALID_ARGUMENT` code before the request is made.
+ *
+ * Backend route: `ModelApiController.getMany` (packages/firebase-server). Same `'read'` role enforcement.
+ *
+ * @param input - The request envelope describing the API target, access token, model, keys, and optional fetch override.
+ * @returns The parsed `{ results, errors }` envelope.
+ */
+export async function getMultipleModelsOverHttp<T = unknown>(input: GetMultipleModelsOverHttpInput): Promise<GetMultipleModelsOverHttpResult<T>> {
+  if (input.keys.length === 0) {
+    throw new CliError({
+      message: 'get-many requires at least one key.',
+      code: 'INVALID_ARGUMENT'
+    });
+  }
+
+  if (input.keys.length > MAX_MODEL_ACCESS_MULTI_READ_KEYS) {
+    throw new CliError({
+      message: `get-many supports at most ${MAX_MODEL_ACCESS_MULTI_READ_KEYS} keys (got ${input.keys.length}).`,
+      code: 'INVALID_ARGUMENT'
+    });
+  }
+
+  const fetcher = input.fetcher ?? fetch;
+  const url = `${trimSlash(input.apiBaseUrl)}/model/${encodeURIComponent(input.modelType)}/get`;
+
+  const res = await fetcher(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      Authorization: `Bearer ${input.accessToken}`
+    },
+    body: JSON.stringify({ keys: input.keys })
+  });
+
+  const { ok, body, fallbackMessage } = await readJsonResponse(res);
+
+  if (!ok) {
+    throw new CliError({
+      message: `get-many ${input.modelType} failed: ${extractMessage(body, fallbackMessage, res)}`,
+      code: codeForStatus(res.status),
+      suggestion: res.status === 401 || res.status === 403 ? 'Run `<cli> auth login` to refresh credentials.' : undefined
+    });
+  }
+
+  return body as GetMultipleModelsOverHttpResult<T>;
+}
+
+interface ReadJsonResponse {
+  readonly ok: boolean;
+  readonly body: unknown;
+  readonly fallbackMessage: string;
+}
+
+async function readJsonResponse(res: Response): Promise<ReadJsonResponse> {
+  const text = await res.text();
+  let body: unknown;
+
+  if (text.length > 0) {
+    try {
+      body = JSON.parse(text);
+    } catch {
+      body = text;
+    }
+  }
+
+  return { ok: res.ok, body, fallbackMessage: text };
+}
+
+function extractMessage(body: unknown, fallback: string, res: Response): string {
+  const bodyMessage = typeof body === 'object' && body && 'message' in body ? (body as { message?: unknown }).message : undefined;
+  const messageString = typeof bodyMessage === 'string' ? bodyMessage : undefined;
+  return messageString ?? (fallback || `${res.status} ${res.statusText}`);
 }
 
 function codeForStatus(status: number): string {

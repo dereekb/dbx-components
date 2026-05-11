@@ -2,6 +2,8 @@ import yargs, { type Argv, type CommandModule } from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { createAuthCommand } from '../auth/auth.command.factory';
 import { callPassthroughCommand } from '../api/call.passthrough.command';
+import { getCommand } from '../api/get.command';
+import { getManyCommand } from '../api/get-many.command';
 import { type CliEnvDefault } from '../config/env';
 import { createDoctorCommand, type DoctorCheck } from '../doctor/doctor.command.factory';
 import { createEnvCommand } from '../env/env.command.factory';
@@ -56,6 +58,16 @@ export interface CreateCliInput {
    * Disable the built-in `call` passthrough — useful when an app prefers to expose only typed wrappers.
    */
   readonly disableCallPassthrough?: boolean;
+  /**
+   * Disable the built-in `get <key>` / `get-many <key...>` commands.
+   *
+   * These hit the generic model-access endpoints (`GET /model/<modelType>/get` and
+   * `POST /model/<modelType>/get`) which already exist on every {@link ModelApiController}.
+   * Inferred-model resolution (`get jws/abc` → `modelType: jobWorkerSchedule`) requires the
+   * generated {@link CreateCliInput.modelManifest} to be supplied; the explicit-model form
+   * (`get <model> <key>`) works without it.
+   */
+  readonly disableModelGet?: boolean;
   /**
    * Generated Firestore model manifest used to drive the built-in `model-info` and `model-decode`
    * commands.
@@ -130,6 +142,11 @@ export function createCli(input: CreateCliInput): Argv {
 
   const allConfigCommands = [...builtInConfigCommands, ...(input.configCommands ?? [])];
   const builtInApiCommands: CommandModule[] = input.disableCallPassthrough ? [] : [callPassthroughCommand];
+
+  if (input.disableModelGet !== true) {
+    builtInApiCommands.push(getCommand, getManyCommand);
+  }
+
   const allApiCommands = [...builtInApiCommands, ...(input.apiCommands ?? [])];
 
   const skipCommandNames = new Set(allConfigCommands.map((c) => commandName(c)));
@@ -146,7 +163,7 @@ export function createCli(input: CreateCliInput): Argv {
     .option('pick-all', { type: 'boolean', global: true, describe: 'Ignore configured pick filters' })
     .option('data-help', { type: 'string', choices: ['jsonschema', 'arktype', 'both'] as const, global: true, describe: 'Schema format shown in --help for manifest commands (default: jsonschema)' })
     .option('all-help', { type: 'boolean', global: true, describe: 'Show the full options table in --help even when --data-help is in focus mode' })
-    .middleware([createAuthMiddleware({ cliName, skipCommands: skipCommandNames, defaultEnvs }), createOutputMiddleware({ cliName, skipCommands: skipCommandNames })], true)
+    .middleware([createAuthMiddleware({ cliName, skipCommands: skipCommandNames, defaultEnvs, modelManifest: input.modelManifest }), createOutputMiddleware({ cliName, skipCommands: skipCommandNames })], true)
     .command(allConfigCommands)
     .command(allApiCommands)
     .demandCommand(1, 'Please specify a command. Use --help for available commands.')
