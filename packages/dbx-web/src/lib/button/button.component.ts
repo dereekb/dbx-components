@@ -84,6 +84,9 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
 
   readonly color = input<Maybe<ThemePalette | DbxColorInput>>();
   readonly spinnerColor = input<Maybe<ThemePalette | DbxThemeColor>>();
+  /**
+   * @deprecated Use {@link color} with a {@link DbxColorConfig}, e.g. `[color]="{ color: '#ff0066' }"`. The `[dbxColor]` directive applies the background through `.dbx-color-bg`.
+   */
   readonly customButtonColor = input<Maybe<string>>();
   readonly customTextColor = input<Maybe<string>>();
   readonly customSpinnerColor = input<Maybe<string>>();

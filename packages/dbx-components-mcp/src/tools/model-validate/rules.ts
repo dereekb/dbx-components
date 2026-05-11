@@ -8,7 +8,7 @@
  */
 
 import { attachRemediation } from '../rule-catalog/index.js';
-import { MAX_FIELD_NAME_LENGTH, ROOT_MODEL_ORDER, SUBCOLLECTION_MODEL_ORDER, type DeclarationKind, type ExtractedFile, type ExtractedModel, type FirestoreCollectionKind, type RuleOptions, type Violation, type ViolationSeverity } from './types.js';
+import { MAX_FIELD_NAME_LENGTH, ROOT_MODEL_ORDER, SUBCOLLECTION_MODEL_ORDER, type CrossFileRuleContext, type DeclarationKind, type ExtractedFile, type ExtractedModel, type FirestoreCollectionKind, type RuleOptions, type Violation, type ViolationSeverity } from './types.js';
 
 // MARK: Entry
 /**
@@ -16,16 +16,25 @@ import { MAX_FIELD_NAME_LENGTH, ROOT_MODEL_ORDER, SUBCOLLECTION_MODEL_ORDER, typ
  * the aggregated diagnostics. Rules short-circuit early when prerequisites
  * (like a missing identity) are absent.
  *
+ * Files without `firestoreModelIdentity` calls still run the cross-file
+ * sub-object factory rule when a {@link CrossFileRuleContext} is supplied —
+ * a sibling sub-file (e.g. `worker.pay.ts`) can declare and consume
+ * `firestoreSubObject<T>` without itself anchoring a model.
+ *
  * @param file - the extracted facts for one model source
  * @param options - optional rule overrides (field-name length limit, ignore list)
+ * @param context - optional cross-file context for rules needing access to interfaces declared in sibling files
  * @returns the violations the rules emit for that file
  */
-export function runRules(file: ExtractedFile, options?: RuleOptions): readonly Violation[] {
+export function runRules(file: ExtractedFile, options?: RuleOptions, context?: CrossFileRuleContext): readonly Violation[] {
   const violations: Violation[] = [];
   if (file.models.length === 0) {
     // Files without any firestoreModelIdentity calls are not subject to
-    // model-group rules — the validator assumes the caller passed in a
-    // non-model file by accident. Keep the pass silent.
+    // model-group rules. They CAN still participate in cross-file
+    // sub-object factory detection — a sibling `.pay.ts` may declare a
+    // sub-object interface and its `firestoreSubObject<T>` call without
+    // hosting any top-level model.
+    checkSubObjectFactoryCallSites(file, violations, context);
     return violations;
   }
   checkFileLevel(file, violations);
@@ -38,6 +47,8 @@ export function runRules(file: ExtractedFile, options?: RuleOptions): readonly V
     checkDeclarationOrder(file, model, violations);
   }
   checkFieldNameLengths(file, violations, options);
+  checkSubObjectInterfaceTags(file, violations);
+  checkSubObjectFactoryCallSites(file, violations, context);
   return violations;
 }
 
@@ -81,7 +92,8 @@ function checkFieldJsDocs(file: ExtractedFile, violations: Violation[], options?
           model: iface.name
         });
       }
-      if (iface.dbxModelTag && field.dbxModelVariableTag === undefined) {
+      const fieldRulesApply = iface.dbxModelTag || iface.dbxModelSubObjectTag;
+      if (fieldRulesApply && field.dbxModelVariableTag === undefined) {
         pushViolation(violations, {
           code: 'MODEL_FIELD_MISSING_VARIABLE_TAG',
           severity: 'warning',
@@ -91,7 +103,7 @@ function checkFieldJsDocs(file: ExtractedFile, violations: Violation[], options?
           model: iface.name
         });
       }
-      if (iface.dbxModelTag && field.dbxModelVariableTag !== undefined && field.dbxModelVariableTag === field.name && !ignored?.has(field.name)) {
+      if (fieldRulesApply && field.dbxModelVariableTag !== undefined && field.dbxModelVariableTag === field.name && !ignored?.has(field.name)) {
         pushViolation(violations, {
           code: 'MODEL_FIELD_LONG_NAME_EQUALS_NAME',
           severity: 'warning',
@@ -102,6 +114,75 @@ function checkFieldJsDocs(file: ExtractedFile, violations: Violation[], options?
         });
       }
     }
+  }
+}
+
+// MARK: Sub-object interface tag conflict (error)
+function checkSubObjectInterfaceTags(file: ExtractedFile, violations: Violation[]): void {
+  for (const iface of file.dataInterfaces) {
+    if (iface.dbxModelTag && iface.dbxModelSubObjectTag) {
+      pushViolation(violations, {
+        code: 'MODEL_SUBOBJECT_TAG_CONFLICT',
+        message: `Interface \`${iface.name}\` carries both \`@dbxModel\` and \`@dbxModelSubObject\`. Use only \`@dbxModel\` for top-level Firestore models; use \`@dbxModelSubObject\` only for embedded sub-objects without a \`firestoreModelIdentity\`.`,
+        file: file.name,
+        line: iface.line,
+        model: iface.name
+      });
+    }
+  }
+}
+
+// MARK: Untagged sub-object factory references (warning, cross-file)
+/**
+ * Walks each `firestoreSubObject<T> / firestoreObjectArray<T> /
+ * firestoreMap<T>` call captured in the file and emits
+ * `MODEL_SUBOBJECT_NOT_TAGGED` when the referenced interface `T` is
+ * declared in the validated source set but carries neither `@dbxModel`
+ * nor `@dbxModelSubObject`.
+ *
+ * Resolution is name-based via the supplied {@link CrossFileRuleContext}.
+ * Type-args that cannot be resolved (e.g. interfaces declared in another
+ * package, generic parameters, inline types) are silently skipped — the
+ * rule errs on the side of false negatives over false positives.
+ *
+ * Findings are de-duplicated by interface name across the entire
+ * validation run via `context.emittedSubObjectInterfaces`: a single
+ * untagged interface referenced from N call-sites produces one warning,
+ * anchored at the interface declaration site (not the call site) so the
+ * fix lands on the JSDoc block needing the new tag.
+ *
+ * @param file - the extracted facts for the source file being checked
+ * @param violations - the buffer the rule appends violations to
+ * @param context - cross-file index + dedup state shared across all files in the validation run; when absent the rule is a no-op
+ */
+function checkSubObjectFactoryCallSites(file: ExtractedFile, violations: Violation[], context: CrossFileRuleContext | undefined): void {
+  if (!context) {
+    return;
+  }
+  if (file.subObjectCalls.length === 0) {
+    return;
+  }
+  for (const call of file.subObjectCalls) {
+    const entry = context.interfacesByName.get(call.typeArgName);
+    if (!entry) {
+      continue;
+    }
+    const { iface, file: declFile } = entry;
+    if (iface.dbxModelTag || iface.dbxModelSubObjectTag) {
+      continue;
+    }
+    if (context.emittedSubObjectInterfaces.has(call.typeArgName)) {
+      continue;
+    }
+    context.emittedSubObjectInterfaces.add(call.typeArgName);
+    pushViolation(violations, {
+      code: 'MODEL_SUBOBJECT_NOT_TAGGED',
+      severity: 'warning',
+      message: `Interface \`${iface.name}\` is referenced by \`${call.factoryName}<${iface.name}>(...)\` at ${file.name}:${call.line} but carries neither \`@dbxModel\` nor \`@dbxModelSubObject\`. Tag the interface with \`@dbxModelSubObject\` so its persisted fields are subject to the same \`@dbxModelVariable\` long-name checks as a top-level model.`,
+      file: declFile,
+      line: iface.line,
+      model: iface.name
+    });
   }
 }
 

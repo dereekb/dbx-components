@@ -9,7 +9,7 @@
  */
 
 import { Node, Project, SyntaxKind, type ClassDeclaration, type GetAccessorDeclaration, type InterfaceDeclaration, type JSDoc, type SourceFile, type TypeAliasDeclaration } from 'ts-morph';
-import type { ExtractedDataInterface, ExtractedDecl, ExtractedDocumentClass, ExtractedField, ExtractedFile, ExtractedGroupInterface, ExtractedGroupTypes, ExtractedIdentity, ExtractedModel, FirestoreCollectionKind, ModelVariant, ValidatorSource } from './types.js';
+import { SUB_OBJECT_FACTORY_NAMES, type ExtractedDataInterface, type ExtractedDecl, type ExtractedDocumentClass, type ExtractedField, type ExtractedFile, type ExtractedGroupInterface, type ExtractedGroupTypes, type ExtractedIdentity, type ExtractedModel, type ExtractedSubObjectFactoryCall, type FirestoreCollectionKind, type ModelVariant, type SubObjectFactoryName, type ValidatorSource } from './types.js';
 
 // MARK: Entry
 /**
@@ -30,6 +30,7 @@ export function extractFile(source: ValidatorSource): ExtractedFile {
   const firstModelLine = identities.length > 0 ? Math.min(...identities.map((i) => i.line)) : undefined;
   const models = identities.map((identity) => extractModel(sourceFile, identity));
   const dataInterfaces = findDataInterfaces(sourceFile, groupInterface);
+  const subObjectCalls = findSubObjectFactoryCalls(sourceFile);
 
   const result: ExtractedFile = {
     name: source.name,
@@ -37,9 +38,75 @@ export function extractFile(source: ValidatorSource): ExtractedFile {
     groupTypes,
     firstModelLine,
     models,
-    dataInterfaces
+    dataInterfaces,
+    subObjectCalls
   };
   return result;
+}
+
+// MARK: Sub-object factory call discovery
+/**
+ * Walks every `CallExpression` in the source file and records calls
+ * whose expression identifier is one of {@link SUB_OBJECT_FACTORY_NAMES}
+ * (`firestoreSubObject`, `firestoreObjectArray`, `firestoreMap`). Only
+ * calls whose first generic type-argument is a bare type-reference
+ * identifier are captured — inline object types, generic parameters, and
+ * other shapes are skipped because they never resolve to a declared
+ * interface, so flagging them would only produce false positives.
+ *
+ * Cross-file resolution of the captured type-arg name happens at the
+ * rules layer via the validator's {@link CrossFileRuleContext}.
+ *
+ * @param sourceFile - the parsed model source file
+ * @returns each detected call site, in source order
+ */
+function findSubObjectFactoryCalls(sourceFile: SourceFile): readonly ExtractedSubObjectFactoryCall[] {
+  const out: ExtractedSubObjectFactoryCall[] = [];
+  const factorySet = new Set<string>(SUB_OBJECT_FACTORY_NAMES);
+  for (const call of sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)) {
+    const expr = call.getExpression();
+    if (!Node.isIdentifier(expr)) {
+      continue;
+    }
+    const factoryName = expr.getText();
+    if (!factorySet.has(factoryName)) {
+      continue;
+    }
+    const typeArgs = call.getTypeArguments();
+    if (typeArgs.length === 0) {
+      continue;
+    }
+    const typeArgName = readTypeReferenceIdentifier(typeArgs[0]);
+    if (!typeArgName) {
+      continue;
+    }
+    out.push({
+      factoryName: factoryName as SubObjectFactoryName,
+      typeArgName,
+      line: call.getStartLineNumber()
+    });
+  }
+  return out;
+}
+
+/**
+ * Returns the bare identifier text of a `TypeReferenceNode` whose name is
+ * a single `Identifier` (e.g. `WorkerPayStubItem`). Returns `undefined`
+ * for inline types, qualified names, or other type shapes that don't
+ * resolve to a single declared interface name.
+ *
+ * @param typeNode - the type node to inspect
+ * @returns the bare identifier text, or `undefined` when not a simple type reference
+ */
+function readTypeReferenceIdentifier(typeNode: Node): string | undefined {
+  if (!Node.isTypeReference(typeNode)) {
+    return undefined;
+  }
+  const nameNode = typeNode.getTypeName();
+  if (!Node.isIdentifier(nameNode)) {
+    return undefined;
+  }
+  return nameNode.getText();
 }
 
 // MARK: Data interfaces (for field-name warnings)
@@ -53,7 +120,8 @@ function findDataInterfaces(sourceFile: SourceFile, groupInterface: ExtractedGro
     }
     const fields = extractInterfaceFields(iface);
     const dbxModelTag = readDbxModelTag(iface.getJsDocs());
-    out.push({ name, line: iface.getStartLineNumber(), dbxModelTag, fields });
+    const dbxModelSubObjectTag = readDbxModelSubObjectTag(iface.getJsDocs());
+    out.push({ name, line: iface.getStartLineNumber(), dbxModelTag, dbxModelSubObjectTag, fields });
   }
   return out;
 }
@@ -145,6 +213,31 @@ function readDbxModelTag(jsDocs: readonly JSDoc[]): boolean {
   for (const jsDoc of jsDocs) {
     for (const tag of jsDoc.getTags()) {
       if (tag.getTagName() === 'dbxModel') {
+        result = true;
+      }
+    }
+  }
+  return result;
+}
+
+/**
+ * Reads the `@dbxModelSubObject` flag off a JSDoc block. Returns `true`
+ * when the tag is present (regardless of any inline argument); `false`
+ * otherwise.
+ *
+ * Marks an embedded sub-object interface (a type persisted via
+ * `firestoreSubObject<T>()` but lacking its own `firestoreModelIdentity`)
+ * as subject to the same per-field `@dbxModelVariable` long-name rules a
+ * `@dbxModel` interface receives.
+ *
+ * @param jsDocs - JSDoc blocks attached to the data interface declaration
+ * @returns `true` when `@dbxModelSubObject` is present, otherwise `false`
+ */
+function readDbxModelSubObjectTag(jsDocs: readonly JSDoc[]): boolean {
+  let result = false;
+  for (const jsDoc of jsDocs) {
+    for (const tag of jsDoc.getTags()) {
+      if (tag.getTagName() === 'dbxModelSubObject') {
         result = true;
       }
     }

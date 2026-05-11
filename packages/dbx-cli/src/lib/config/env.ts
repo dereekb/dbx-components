@@ -15,6 +15,13 @@ export const DEFAULT_CLI_OIDC_SCOPES = 'openid profile email';
 export const MODEL_WRITE_OIDC_SCOPES = ['model.create', 'model.update', 'model.delete'] as const;
 
 /**
+ * The default redirect URI used by the CLI.
+ *
+ * Opens up to nothing in the browser so the user can copy/paste the resulting token url back into the CLI.
+ */
+export const DEFAULT_CLI_REDIRECT_URI = 'http://127.0.0.1:0/callback';
+
+/**
  * Returns the input scope string with the `model.create`, `model.update`, and `model.delete`
  * scopes removed, preserving every other scope (including `model.read` and `model.query`).
  *
@@ -158,6 +165,8 @@ export interface CliEnvConfig {
    * The redirect URI registered with the OAuth client. The CLI does not bind a server — it parses
    * the URL the user pastes back, so this can be any value the OIDC provider accepts as a
    * registered redirect URI (e.g. `http://127.0.0.1:0/callback` or another loopback/placeholder URL).
+   *
+   * Defaults to {@link DEFAULT_CLI_REDIRECT_URI}.
    */
   readonly redirectUri?: string;
   /**

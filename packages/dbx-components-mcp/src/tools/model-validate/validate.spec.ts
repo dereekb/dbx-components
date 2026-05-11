@@ -636,4 +636,152 @@ export function agentSummaryFirestoreCollection(firestoreContext: FirestoreConte
       expect(equalsWarnings).toHaveLength(0);
     });
   });
+
+  // MARK: @dbxModelSubObject embedded sub-object interfaces
+  describe('@dbxModelSubObject', () => {
+    const SUB_OBJECT_UNTAGGED = `\n/**\n * Embedded sub-object — fields lack @dbxModelVariable on purpose.\n */\nexport interface ProfileEmbeddedSubItem {\n  a: string;\n  bb: string;\n}\n`;
+    const SUB_OBJECT_TAGGED = `\n/**\n * Embedded sub-object — fields lack @dbxModelVariable on purpose.\n *\n * @dbxModelSubObject\n */\nexport interface ProfileEmbeddedSubItem {\n  a: string;\n  bb: string;\n}\n`;
+
+    it('warns MODEL_FIELD_MISSING_VARIABLE_TAG on `@dbxModelSubObject` interface fields lacking `@dbxModelVariable`', () => {
+      const text = HAPPY_SOURCE + SUB_OBJECT_TAGGED;
+      const result = validateFirebaseModelSources([{ name: 'x.ts', text }]);
+      const subWarnings = result.violations.filter((v) => v.code === 'MODEL_FIELD_MISSING_VARIABLE_TAG' && v.model === 'ProfileEmbeddedSubItem');
+      expect(subWarnings.map((v) => v.severity)).toEqual(['warning', 'warning']);
+      expect(subWarnings.map((v) => v.message)).toEqual(expect.arrayContaining([expect.stringContaining('`a`'), expect.stringContaining('`bb`')]));
+    });
+
+    it('warns MODEL_FIELD_LONG_NAME_EQUALS_NAME on `@dbxModelSubObject` interface fields whose long name equals the short name', () => {
+      const text = HAPPY_SOURCE + SUB_OBJECT_TAGGED.replace('export interface ProfileEmbeddedSubItem {\n  a: string;\n  bb: string;\n}', 'export interface ProfileEmbeddedSubItem {\n  /** @dbxModelVariable a */\n  a: string;\n  /** @dbxModelVariable bb */\n  bb: string;\n}');
+      const result = validateFirebaseModelSources([{ name: 'x.ts', text }]);
+      const equalsWarnings = result.violations.filter((v) => v.code === 'MODEL_FIELD_LONG_NAME_EQUALS_NAME' && v.model === 'ProfileEmbeddedSubItem');
+      expect(equalsWarnings).toHaveLength(2);
+      expect(equalsWarnings.map((v) => v.severity)).toEqual(['warning', 'warning']);
+    });
+
+    it('stays silent on an untagged embedded sub-object interface (preserves current opt-in behavior)', () => {
+      const text = HAPPY_SOURCE + SUB_OBJECT_UNTAGGED;
+      const result = validateFirebaseModelSources([{ name: 'x.ts', text }]);
+      const subFieldWarnings = result.violations.filter((v) => (v.code === 'MODEL_FIELD_MISSING_VARIABLE_TAG' || v.code === 'MODEL_FIELD_LONG_NAME_EQUALS_NAME') && v.model === 'ProfileEmbeddedSubItem');
+      expect(subFieldWarnings).toHaveLength(0);
+    });
+
+    it('honors `ignoredFieldNames` for `@dbxModelSubObject` fields whose long name equals the short name', () => {
+      const text = HAPPY_SOURCE + SUB_OBJECT_TAGGED.replace('export interface ProfileEmbeddedSubItem {\n  a: string;\n  bb: string;\n}', 'export interface ProfileEmbeddedSubItem {\n  /** @dbxModelVariable a */\n  a: string;\n  /** @dbxModelVariable bb */\n  bb: string;\n}');
+      const result = validateFirebaseModelSources([{ name: 'x.ts', text }], { ignoredFieldNames: new Set(['a']) });
+      const equalsWarnings = result.violations.filter((v) => v.code === 'MODEL_FIELD_LONG_NAME_EQUALS_NAME' && v.model === 'ProfileEmbeddedSubItem');
+      expect(equalsWarnings).toHaveLength(1);
+      expect(equalsWarnings[0].message).toContain('`bb`');
+    });
+
+    it('flags MODEL_SUBOBJECT_TAG_CONFLICT (error) when both `@dbxModel` and `@dbxModelSubObject` are present on the same interface', () => {
+      const conflict = `\n/**\n * Conflict fixture — both tags present.\n *\n * @dbxModel\n * @dbxModelSubObject\n */\nexport interface ProfileEmbeddedSubItem {\n  a: string;\n}\n`;
+      const text = HAPPY_SOURCE + conflict;
+      const result = validateFirebaseModelSources([{ name: 'x.ts', text }]);
+      const conflicts = result.violations.filter((v) => v.code === 'MODEL_SUBOBJECT_TAG_CONFLICT' && v.model === 'ProfileEmbeddedSubItem');
+      expect(conflicts).toHaveLength(1);
+      expect(conflicts[0].severity).toBe('error');
+      expect(conflicts[0].message).toContain('ProfileEmbeddedSubItem');
+    });
+  });
+
+  // MARK: MODEL_SUBOBJECT_NOT_TAGGED — suggest @dbxModelSubObject on untagged sub-object interfaces
+  describe('MODEL_SUBOBJECT_NOT_TAGGED', () => {
+    const UNTAGGED_SUB_OBJECT_DECL = `\n/**\n * Embedded sub-object — declaration intentionally carries no tags.\n */\nexport interface ProfileEmbeddedSubItem {\n  a: string;\n  bb: string;\n}\n`;
+    const TAGGED_SUB_OBJECT_DECL = `\n/**\n * @dbxModelSubObject\n */\nexport interface ProfileEmbeddedSubItem {\n  /** @dbxModelVariable alpha */\n  a: string;\n  /** @dbxModelVariable bravo */\n  bb: string;\n}\n`;
+    const FIRESTORE_SUB_OBJECT_CALL = `\nexport const profileEmbeddedSubItem = firestoreSubObject<ProfileEmbeddedSubItem>({\n  objectField: {\n    fields: {}\n  }\n});\n`;
+    const FIRESTORE_OBJECT_ARRAY_CALL = `\nexport const profileEmbeddedSubItemArray = firestoreObjectArray<ProfileEmbeddedSubItem>({\n  objectField: profileEmbeddedSubItem\n});\n`;
+    const FIRESTORE_MAP_CALL = `\nexport const profileEmbeddedSubItemMap = firestoreMap<ProfileEmbeddedSubItem>({\n  objectField: profileEmbeddedSubItem\n});\n`;
+
+    it('warns MODEL_SUBOBJECT_NOT_TAGGED when an untagged interface is referenced by `firestoreSubObject<T>`', () => {
+      const text = HAPPY_SOURCE + UNTAGGED_SUB_OBJECT_DECL + FIRESTORE_SUB_OBJECT_CALL;
+      const result = validateFirebaseModelSources([{ name: 'x.ts', text }]);
+      const warnings = result.violations.filter((v) => v.code === 'MODEL_SUBOBJECT_NOT_TAGGED' && v.model === 'ProfileEmbeddedSubItem');
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0].severity).toBe('warning');
+      expect(warnings[0].message).toContain('firestoreSubObject<ProfileEmbeddedSubItem>');
+      expect(warnings[0].message).toContain('`@dbxModelSubObject`');
+    });
+
+    it('warns MODEL_SUBOBJECT_NOT_TAGGED when an untagged interface is referenced by `firestoreObjectArray<T>`', () => {
+      const text = HAPPY_SOURCE + UNTAGGED_SUB_OBJECT_DECL + FIRESTORE_OBJECT_ARRAY_CALL;
+      const result = validateFirebaseModelSources([{ name: 'x.ts', text }]);
+      const warnings = result.violations.filter((v) => v.code === 'MODEL_SUBOBJECT_NOT_TAGGED' && v.model === 'ProfileEmbeddedSubItem');
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0].message).toContain('firestoreObjectArray<ProfileEmbeddedSubItem>');
+    });
+
+    it('warns MODEL_SUBOBJECT_NOT_TAGGED when an untagged interface is referenced by `firestoreMap<T>`', () => {
+      const text = HAPPY_SOURCE + UNTAGGED_SUB_OBJECT_DECL + FIRESTORE_MAP_CALL;
+      const result = validateFirebaseModelSources([{ name: 'x.ts', text }]);
+      const warnings = result.violations.filter((v) => v.code === 'MODEL_SUBOBJECT_NOT_TAGGED' && v.model === 'ProfileEmbeddedSubItem');
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0].message).toContain('firestoreMap<ProfileEmbeddedSubItem>');
+    });
+
+    it('stays silent when the referenced interface is tagged `@dbxModelSubObject`', () => {
+      const text = HAPPY_SOURCE + TAGGED_SUB_OBJECT_DECL + FIRESTORE_SUB_OBJECT_CALL;
+      const result = validateFirebaseModelSources([{ name: 'x.ts', text }]);
+      const warnings = result.violations.filter((v) => v.code === 'MODEL_SUBOBJECT_NOT_TAGGED');
+      expect(warnings).toHaveLength(0);
+    });
+
+    it('stays silent when the referenced interface is tagged `@dbxModel`', () => {
+      // A top-level model used as a sub-object via converter composition — uncommon
+      // but valid. The @dbxModel tag already opts the interface into long-name checks.
+      const modelTaggedDecl = `\n/**\n * @dbxModel\n */\nexport interface ProfileEmbeddedSubItem {\n  /** @dbxModelVariable alpha */\n  a: string;\n  /** @dbxModelVariable bravo */\n  bb: string;\n}\n`;
+      const text = HAPPY_SOURCE + modelTaggedDecl + FIRESTORE_SUB_OBJECT_CALL;
+      const result = validateFirebaseModelSources([{ name: 'x.ts', text }]);
+      const warnings = result.violations.filter((v) => v.code === 'MODEL_SUBOBJECT_NOT_TAGGED');
+      expect(warnings).toHaveLength(0);
+    });
+
+    it('de-duplicates so a single untagged interface referenced from N call-sites emits one finding', () => {
+      const text = HAPPY_SOURCE + UNTAGGED_SUB_OBJECT_DECL + FIRESTORE_SUB_OBJECT_CALL + FIRESTORE_OBJECT_ARRAY_CALL + FIRESTORE_MAP_CALL;
+      const result = validateFirebaseModelSources([{ name: 'x.ts', text }]);
+      const warnings = result.violations.filter((v) => v.code === 'MODEL_SUBOBJECT_NOT_TAGGED' && v.model === 'ProfileEmbeddedSubItem');
+      expect(warnings).toHaveLength(1);
+    });
+
+    it('resolves cross-file references: call-site in file A, interface declared in file B', () => {
+      const fileA = HAPPY_SOURCE + FIRESTORE_SUB_OBJECT_CALL;
+      const fileB = `export interface ProfileEmbeddedSubItem { a: string; bb: string; }\n`;
+      const result = validateFirebaseModelSources([
+        { name: 'a.ts', text: fileA },
+        { name: 'b.ts', text: fileB }
+      ]);
+      const warnings = result.violations.filter((v) => v.code === 'MODEL_SUBOBJECT_NOT_TAGGED' && v.model === 'ProfileEmbeddedSubItem');
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0].file).toBe('b.ts');
+    });
+
+    it('does not emit when the type-arg cannot be resolved (interface declared outside the source set)', () => {
+      // No declaration of ExternalSubObject anywhere in the supplied sources.
+      const externalCall = `\nexport const externalSubObject = firestoreSubObject<ExternalSubObject>({\n  objectField: { fields: {} }\n});\n`;
+      const text = HAPPY_SOURCE + externalCall;
+      const result = validateFirebaseModelSources([{ name: 'x.ts', text }]);
+      const warnings = result.violations.filter((v) => v.code === 'MODEL_SUBOBJECT_NOT_TAGGED');
+      expect(warnings).toHaveLength(0);
+    });
+
+    it('does not emit when the type-arg is an inline type (not a TypeReference identifier)', () => {
+      const inlineCall = `\nexport const inlineSubObject = firestoreSubObject<{ a: string; bb: string }>({\n  objectField: { fields: {} }\n});\n`;
+      const text = HAPPY_SOURCE + inlineCall;
+      const result = validateFirebaseModelSources([{ name: 'x.ts', text }]);
+      const warnings = result.violations.filter((v) => v.code === 'MODEL_SUBOBJECT_NOT_TAGGED');
+      expect(warnings).toHaveLength(0);
+    });
+
+    it('flags untagged sub-objects in a file with no firestoreModelIdentity calls (sibling sub-file pattern)', () => {
+      // Mirrors the worker.pay.ts pattern in hellosubs: a sibling file with no
+      // top-level model but its own interface + firestoreSubObject<T> call.
+      const subFile = `import { firestoreSubObject } from '@dereekb/firebase';\n\nexport interface WorkerPaySubItem {\n  a: string;\n}\n\nexport const workerPaySubItem = firestoreSubObject<WorkerPaySubItem>({\n  objectField: { fields: {} }\n});\n`;
+      const result = validateFirebaseModelSources([
+        { name: 'worker.ts', text: HAPPY_SOURCE },
+        { name: 'worker.pay.ts', text: subFile }
+      ]);
+      const warnings = result.violations.filter((v) => v.code === 'MODEL_SUBOBJECT_NOT_TAGGED' && v.model === 'WorkerPaySubItem');
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0].file).toBe('worker.pay.ts');
+    });
+  });
 });

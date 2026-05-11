@@ -343,6 +343,258 @@ export function demoExampleHandledNotificationTaskHandler(context) {
   });
 });
 
+// MARK: factory-of-array tracer regression suite — exercises the
+// `collectHandlerBindingsFromValue` ArrayLiteralExpression branch added to
+// support handler factories that return `NotificationTaskServiceTaskHandlerConfig[]`.
+describe('validateAppNotifications — factory-of-array task handler tracing', () => {
+  const SECOND_TASK_TYPE_PATCH = `export const EXAMPLE_NOTIFICATION_TASK_TYPE: NotificationTaskType = 'E';
+export const SECOND_NOTIFICATION_TASK_TYPE: NotificationTaskType = 'S';
+
+export type SecondNotificationTaskCheckpoint = 'part_x';
+
+export interface SecondNotificationTaskData {
+  readonly id: string;
+}`;
+
+  function addSecondTaskType(component: InspectedFile[]): void {
+    replaceInFile({ files: component, relPath: 'src/lib/model/notification/notification.task.ts', from: "export const EXAMPLE_NOTIFICATION_TASK_TYPE: NotificationTaskType = 'E';", to: SECOND_TASK_TYPE_PATCH });
+    replaceInFile({ files: component, relPath: 'src/lib/model/notification/notification.task.ts', from: 'export const ALL_NOTIFICATION_TASK_TYPES: NotificationTaskType[] = [EXAMPLE_NOTIFICATION_TASK_TYPE];', to: 'export const ALL_NOTIFICATION_TASK_TYPES: NotificationTaskType[] = [EXAMPLE_NOTIFICATION_TASK_TYPE, SECOND_NOTIFICATION_TASK_TYPE];' });
+  }
+
+  function swapServiceHandlerForFactorySpread(api: InspectedFile[], options: { readonly factoryImport: string; readonly factoryCall: string; readonly spreadVar: string }): void {
+    const servicePath = 'src/app/common/model/notification/notification.task.service.ts';
+    replaceInFile({ files: api, relPath: servicePath, from: /const exampleNotificationTaskHandler: NotificationTaskServiceTaskHandlerConfig[\s\S]*?\};/, to: `const ${options.spreadVar} = ${options.factoryCall};` });
+    replaceInFile({ files: api, relPath: servicePath, from: "import { ALL_NOTIFICATION_TASK_TYPES, EXAMPLE_NOTIFICATION_TASK_TYPE, type ExampleNotificationTaskData, type ExampleNotificationTaskCheckpoint } from 'demo-firebase';", to: `import { ALL_NOTIFICATION_TASK_TYPES, EXAMPLE_NOTIFICATION_TASK_TYPE } from 'demo-firebase';\n${options.factoryImport}` });
+    replaceInFile({ files: api, relPath: servicePath, from: '[exampleNotificationTaskHandler]', to: `[...${options.spreadVar}]` });
+  }
+
+  it('resolves a single-handler factory that returns [singleHandler] (most common HelloSubs shape)', () => {
+    const HANDLER_FILE = `import { type NotificationTaskServiceTaskHandlerConfig } from '@dereekb/firebase-server/model';
+import { EXAMPLE_NOTIFICATION_TASK_TYPE, type ExampleNotificationTaskData, type ExampleNotificationTaskCheckpoint } from 'demo-firebase';
+
+export function demoExampleTaskHandlers(context): NotificationTaskServiceTaskHandlerConfig<any>[] {
+  const exampleHandler: NotificationTaskServiceTaskHandlerConfig<ExampleNotificationTaskData, ExampleNotificationTaskCheckpoint> = {
+    type: EXAMPLE_NOTIFICATION_TASK_TYPE,
+    flow: [{ checkpoint: 'part_a', fn: async () => null }]
+  };
+  return [exampleHandler];
+}
+`;
+    const result = runWith(({ api }) => {
+      swapServiceHandlerForFactorySpread(api, {
+        factoryImport: "import { demoExampleTaskHandlers } from './handlers/task.handler.example';",
+        factoryCall: 'demoExampleTaskHandlers(context)',
+        spreadVar: 'exampleHandlers'
+      });
+      api.push({ relPath: 'src/app/common/model/notification/handlers/task.handler.example.ts', text: HANDLER_FILE });
+    });
+    const codes = result.violations.map((v) => v.code);
+    expect(codes, JSON.stringify(result.violations, null, 2)).not.toContain('NOTIF_TASK_HANDLER_NAME_MISMATCH');
+    expect(codes).not.toContain('NOTIF_TASK_NOT_REGISTERED_IN_SERVICE');
+  });
+
+  it('resolves a multi-handler factory that returns [a, b] from the same closure', () => {
+    const HANDLER_FILE = `import { type NotificationTaskServiceTaskHandlerConfig } from '@dereekb/firebase-server/model';
+import { EXAMPLE_NOTIFICATION_TASK_TYPE, SECOND_NOTIFICATION_TASK_TYPE, type ExampleNotificationTaskData, type ExampleNotificationTaskCheckpoint, type SecondNotificationTaskData, type SecondNotificationTaskCheckpoint } from 'demo-firebase';
+
+export function demoMultiTaskHandlers(context): NotificationTaskServiceTaskHandlerConfig<any>[] {
+  const exampleHandler: NotificationTaskServiceTaskHandlerConfig<ExampleNotificationTaskData, ExampleNotificationTaskCheckpoint> = {
+    type: EXAMPLE_NOTIFICATION_TASK_TYPE,
+    flow: [{ checkpoint: 'part_a', fn: async () => null }]
+  };
+  const secondHandler: NotificationTaskServiceTaskHandlerConfig<SecondNotificationTaskData, SecondNotificationTaskCheckpoint> = {
+    type: SECOND_NOTIFICATION_TASK_TYPE,
+    flow: [{ checkpoint: 'part_x', fn: async () => null }]
+  };
+  return [exampleHandler, secondHandler];
+}
+`;
+    const result = runWith(({ component, api }) => {
+      addSecondTaskType(component);
+      swapServiceHandlerForFactorySpread(api, {
+        factoryImport: "import { demoMultiTaskHandlers } from './handlers/task.handler.multi';",
+        factoryCall: 'demoMultiTaskHandlers(context)',
+        spreadVar: 'multiHandlers'
+      });
+      api.push({ relPath: 'src/app/common/model/notification/handlers/task.handler.multi.ts', text: HANDLER_FILE });
+    });
+    const codes = result.violations.map((v) => v.code);
+    expect(codes, JSON.stringify(result.violations, null, 2)).not.toContain('NOTIF_TASK_HANDLER_NAME_MISMATCH');
+    expect(codes).not.toContain('NOTIF_TASK_NOT_REGISTERED_IN_SERVICE');
+  });
+
+  it('resolves a factory whose return array contains a nested factory call', () => {
+    const HANDLER_FILE = `import { type NotificationTaskServiceTaskHandlerConfig } from '@dereekb/firebase-server/model';
+import { EXAMPLE_NOTIFICATION_TASK_TYPE, SECOND_NOTIFICATION_TASK_TYPE, type ExampleNotificationTaskData, type ExampleNotificationTaskCheckpoint, type SecondNotificationTaskData, type SecondNotificationTaskCheckpoint } from 'demo-firebase';
+
+export function demoInnerSecondHandler(context) {
+  const innerHandler: NotificationTaskServiceTaskHandlerConfig<SecondNotificationTaskData, SecondNotificationTaskCheckpoint> = {
+    type: SECOND_NOTIFICATION_TASK_TYPE,
+    flow: [{ checkpoint: 'part_x', fn: async () => null }]
+  };
+  return innerHandler;
+}
+
+export function demoNestedTaskHandlers(context): NotificationTaskServiceTaskHandlerConfig<any>[] {
+  const localHandler: NotificationTaskServiceTaskHandlerConfig<ExampleNotificationTaskData, ExampleNotificationTaskCheckpoint> = {
+    type: EXAMPLE_NOTIFICATION_TASK_TYPE,
+    flow: [{ checkpoint: 'part_a', fn: async () => null }]
+  };
+  return [demoInnerSecondHandler(context), localHandler];
+}
+`;
+    const result = runWith(({ component, api }) => {
+      addSecondTaskType(component);
+      swapServiceHandlerForFactorySpread(api, {
+        factoryImport: "import { demoNestedTaskHandlers } from './handlers/task.handler.nested';",
+        factoryCall: 'demoNestedTaskHandlers(context)',
+        spreadVar: 'nestedHandlers'
+      });
+      api.push({ relPath: 'src/app/common/model/notification/handlers/task.handler.nested.ts', text: HANDLER_FILE });
+    });
+    const codes = result.violations.map((v) => v.code);
+    expect(codes, JSON.stringify(result.violations, null, 2)).not.toContain('NOTIF_TASK_HANDLER_NAME_MISMATCH');
+    expect(codes).not.toContain('NOTIF_TASK_NOT_REGISTERED_IN_SERVICE');
+  });
+
+  it('resolves a factory whose return array contains a spread of another factory', () => {
+    const HANDLER_FILE = `import { type NotificationTaskServiceTaskHandlerConfig } from '@dereekb/firebase-server/model';
+import { EXAMPLE_NOTIFICATION_TASK_TYPE, SECOND_NOTIFICATION_TASK_TYPE, type ExampleNotificationTaskData, type ExampleNotificationTaskCheckpoint, type SecondNotificationTaskData, type SecondNotificationTaskCheckpoint } from 'demo-firebase';
+
+export function demoSubSecondHandlers(context): NotificationTaskServiceTaskHandlerConfig<any>[] {
+  const subHandler: NotificationTaskServiceTaskHandlerConfig<SecondNotificationTaskData, SecondNotificationTaskCheckpoint> = {
+    type: SECOND_NOTIFICATION_TASK_TYPE,
+    flow: [{ checkpoint: 'part_x', fn: async () => null }]
+  };
+  return [subHandler];
+}
+
+export function demoSpreadTaskHandlers(context): NotificationTaskServiceTaskHandlerConfig<any>[] {
+  const localHandler: NotificationTaskServiceTaskHandlerConfig<ExampleNotificationTaskData, ExampleNotificationTaskCheckpoint> = {
+    type: EXAMPLE_NOTIFICATION_TASK_TYPE,
+    flow: [{ checkpoint: 'part_a', fn: async () => null }]
+  };
+  return [...demoSubSecondHandlers(context), localHandler];
+}
+`;
+    const result = runWith(({ component, api }) => {
+      addSecondTaskType(component);
+      swapServiceHandlerForFactorySpread(api, {
+        factoryImport: "import { demoSpreadTaskHandlers } from './handlers/task.handler.spread';",
+        factoryCall: 'demoSpreadTaskHandlers(context)',
+        spreadVar: 'spreadHandlers'
+      });
+      api.push({ relPath: 'src/app/common/model/notification/handlers/task.handler.spread.ts', text: HANDLER_FILE });
+    });
+    const codes = result.violations.map((v) => v.code);
+    expect(codes, JSON.stringify(result.violations, null, 2)).not.toContain('NOTIF_TASK_HANDLER_NAME_MISMATCH');
+    expect(codes).not.toContain('NOTIF_TASK_NOT_REGISTERED_IN_SERVICE');
+  });
+
+  it('still resolves a factory returning a single handler object (regression guard for the identifier path)', () => {
+    // Mirrors the legacy `return fooHandler` shape already covered above; kept here so the
+    // factory-of-array suite asserts the singular-return path stays green alongside the new
+    // array-return paths.
+    const HANDLER_FILE = `import { type NotificationTaskServiceTaskHandlerConfig } from '@dereekb/firebase-server/model';
+import { EXAMPLE_NOTIFICATION_TASK_TYPE, type ExampleNotificationTaskData, type ExampleNotificationTaskCheckpoint } from 'demo-firebase';
+
+export function demoSingleObjectTaskHandler(context) {
+  const exampleHandler: NotificationTaskServiceTaskHandlerConfig<ExampleNotificationTaskData, ExampleNotificationTaskCheckpoint> = {
+    type: EXAMPLE_NOTIFICATION_TASK_TYPE,
+    flow: [{ checkpoint: 'part_a', fn: async () => null }]
+  };
+  return exampleHandler;
+}
+`;
+    const result = runWith(({ api }) => {
+      replaceInFile({ files: api, relPath: 'src/app/common/model/notification/notification.task.service.ts', from: /const exampleNotificationTaskHandler: NotificationTaskServiceTaskHandlerConfig[\s\S]*?\};/, to: 'const exampleHandler = demoSingleObjectTaskHandler(context);' });
+      replaceInFile({
+        files: api,
+        relPath: 'src/app/common/model/notification/notification.task.service.ts',
+        from: "import { ALL_NOTIFICATION_TASK_TYPES, EXAMPLE_NOTIFICATION_TASK_TYPE, type ExampleNotificationTaskData, type ExampleNotificationTaskCheckpoint } from 'demo-firebase';",
+        to: "import { ALL_NOTIFICATION_TASK_TYPES, EXAMPLE_NOTIFICATION_TASK_TYPE } from 'demo-firebase';\nimport { demoSingleObjectTaskHandler } from './handlers/task.handler.single';"
+      });
+      replaceInFile({ files: api, relPath: 'src/app/common/model/notification/notification.task.service.ts', from: '[exampleNotificationTaskHandler]', to: '[exampleHandler]' });
+      api.push({ relPath: 'src/app/common/model/notification/handlers/task.handler.single.ts', text: HANDLER_FILE });
+    });
+    const codes = result.violations.map((v) => v.code);
+    expect(codes, JSON.stringify(result.violations, null, 2)).not.toContain('NOTIF_TASK_HANDLER_NAME_MISMATCH');
+    expect(codes).not.toContain('NOTIF_TASK_NOT_REGISTERED_IN_SERVICE');
+  });
+
+  it('resolves a factory that returns an intermediate typed-array variable (exact HelloSubs shape)', () => {
+    const HANDLER_FILE = `import { type NotificationTaskServiceTaskHandlerConfig } from '@dereekb/firebase-server/model';
+import { EXAMPLE_NOTIFICATION_TASK_TYPE, type ExampleNotificationTaskData, type ExampleNotificationTaskCheckpoint } from 'demo-firebase';
+
+export function demoIntermediateTaskHandlers(context): NotificationTaskServiceTaskHandlerConfig<any>[] {
+  const exampleHandler: NotificationTaskServiceTaskHandlerConfig<ExampleNotificationTaskData, ExampleNotificationTaskCheckpoint> = {
+    type: EXAMPLE_NOTIFICATION_TASK_TYPE,
+    flow: [{ checkpoint: 'part_a', fn: async () => null }]
+  };
+  const intermediate: NotificationTaskServiceTaskHandlerConfig<any>[] = [exampleHandler];
+  return intermediate;
+}
+`;
+    const result = runWith(({ api }) => {
+      swapServiceHandlerForFactorySpread(api, {
+        factoryImport: "import { demoIntermediateTaskHandlers } from './handlers/task.handler.intermediate';",
+        factoryCall: 'demoIntermediateTaskHandlers(context)',
+        spreadVar: 'intermediateHandlers'
+      });
+      api.push({ relPath: 'src/app/common/model/notification/handlers/task.handler.intermediate.ts', text: HANDLER_FILE });
+    });
+    const codes = result.violations.map((v) => v.code);
+    expect(codes, JSON.stringify(result.violations, null, 2)).not.toContain('NOTIF_TASK_HANDLER_NAME_MISMATCH');
+    expect(codes).not.toContain('NOTIF_TASK_NOT_REGISTERED_IN_SERVICE');
+  });
+
+  it('does not crash for a factory that returns []', () => {
+    const HANDLER_FILE = `import { type NotificationTaskServiceTaskHandlerConfig } from '@dereekb/firebase-server/model';
+
+export function demoEmptyTaskHandlers(context): NotificationTaskServiceTaskHandlerConfig<any>[] {
+  return [];
+}
+`;
+    const result = runWith(({ api }) => {
+      swapServiceHandlerForFactorySpread(api, {
+        factoryImport: "import { demoEmptyTaskHandlers } from './handlers/task.handler.empty';",
+        factoryCall: 'demoEmptyTaskHandlers(context)',
+        spreadVar: 'emptyHandlers'
+      });
+      api.push({ relPath: 'src/app/common/model/notification/handlers/task.handler.empty.ts', text: HANDLER_FILE });
+    });
+    const codes = result.violations.map((v) => v.code);
+    // Inline handler is gone and the factory yields no resolvable binding —
+    // the validator should report the declared task type as unregistered.
+    expectCodes(codes, ['NOTIF_TASK_NOT_REGISTERED_IN_SERVICE']);
+    expect(codes).not.toContain('NOTIF_TASK_HANDLER_NAME_MISMATCH');
+  });
+
+  it('does not resolve inline object literal elements inside a factory array return', () => {
+    // Out of scope for the tracer: inline objects in a return array aren't named, typed
+    // variable declarations, so `extractTaskHandlerEntries` won't record them and the
+    // tracer must not pretend they are reachable bindings.
+    const HANDLER_FILE = `import { type NotificationTaskServiceTaskHandlerConfig } from '@dereekb/firebase-server/model';
+import { EXAMPLE_NOTIFICATION_TASK_TYPE } from 'demo-firebase';
+
+export function demoInlineTaskHandlers(context): NotificationTaskServiceTaskHandlerConfig<any>[] {
+  return [{ type: EXAMPLE_NOTIFICATION_TASK_TYPE, flow: [{ checkpoint: 'part_a', fn: async () => null }] }];
+}
+`;
+    const result = runWith(({ api }) => {
+      swapServiceHandlerForFactorySpread(api, {
+        factoryImport: "import { demoInlineTaskHandlers } from './handlers/task.handler.inline';",
+        factoryCall: 'demoInlineTaskHandlers(context)',
+        spreadVar: 'inlineHandlers'
+      });
+      api.push({ relPath: 'src/app/common/model/notification/handlers/task.handler.inline.ts', text: HANDLER_FILE });
+    });
+    const codes = result.violations.map((v) => v.code);
+    expectCodes(codes, ['NOTIF_TASK_NOT_REGISTERED_IN_SERVICE']);
+    expect(codes).not.toContain('NOTIF_TASK_HANDLER_NAME_MISMATCH');
+  });
+});
+
 describe('validateAppNotifications — warnings', () => {
   it('warns NOTIF_TEMPLATE_TYPE_CODE_DUPLICATE when two template consts share a string value', () => {
     const result = runWith(({ component }) => {

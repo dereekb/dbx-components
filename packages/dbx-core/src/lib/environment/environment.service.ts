@@ -35,6 +35,10 @@ export class DbxAppEnvironmentService {
     return this.environment.testing ?? !this.environment.production;
   }
 
+  get isPreview() {
+    return this.environment.preview ?? false;
+  }
+
   /**
    * Returns the environment, typed as a specific type.
    *

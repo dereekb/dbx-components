@@ -795,9 +795,32 @@ function collectHandlerBindingsFromValue(options: CollectHandlerBindingsFromValu
     if (Node.isIdentifier(callee)) {
       return collectHandlerBindingsFromIdentifier({ name: callee.getText(), sf, index, trustedExternal, resolved, unresolved, visited });
     }
+    return false;
   }
   if (Node.isIdentifier(inner)) {
     return collectHandlerBindingsFromIdentifier({ name: inner.getText(), sf, index, trustedExternal, resolved, unresolved, visited });
+  }
+  // Walk array-literal returns (factory-of-array shape):
+  //   return [localHandler]
+  //   return [...subFactoryHandlers(ctx), localHandler]
+  //   return [innerFactory(), localHandler]
+  // Each element re-enters this helper so call/identifier/spread cases are
+  // handled uniformly. Inline object literals are intentionally ignored — the
+  // surrounding rule check requires a named, typed handler binding.
+  if (Node.isArrayLiteralExpression(inner)) {
+    let any = false;
+    for (const el of inner.getElements()) {
+      if (Node.isSpreadElement(el)) {
+        if (collectHandlerBindingsFromValue({ node: el.getExpression(), sf, index, trustedExternal, resolved, unresolved, visited })) {
+          any = true;
+        }
+        continue;
+      }
+      if (collectHandlerBindingsFromValue({ node: el, sf, index, trustedExternal, resolved, unresolved, visited })) {
+        any = true;
+      }
+    }
+    return any;
   }
   return false;
 }

@@ -133,6 +133,77 @@ export interface ExtractedFile {
   readonly firstModelLine: number | undefined;
   readonly models: readonly ExtractedModel[];
   readonly dataInterfaces: readonly ExtractedDataInterface[];
+  /**
+   * `firestoreSubObject<T>(...)` / `firestoreObjectArray<T>(...)` /
+   * `firestoreMap<T>(...)` call-sites discovered in the file, recorded by
+   * the factory name and the type-argument identifier. The cross-file rule
+   * `MODEL_SUBOBJECT_NOT_TAGGED` resolves the type-arg name against every
+   * interface declared in the validated source set and warns when the
+   * referenced interface carries neither `@dbxModel` nor
+   * `@dbxModelSubObject`.
+   */
+  readonly subObjectCalls: readonly ExtractedSubObjectFactoryCall[];
+}
+
+/**
+ * Canonical sub-object factory names whose `<T>` type-argument is
+ * subject to the `MODEL_SUBOBJECT_NOT_TAGGED` rule. Hardcoded to the
+ * `@dereekb/firebase` sub-object family; downstream-registered variants
+ * are out of scope (the rule short-circuits silently when it cannot
+ * resolve the type-arg in the supplied source set).
+ */
+export const SUB_OBJECT_FACTORY_NAMES = ['firestoreSubObject', 'firestoreObjectArray', 'firestoreMap'] as const;
+
+export type SubObjectFactoryName = (typeof SUB_OBJECT_FACTORY_NAMES)[number];
+
+/**
+ * One call site of `firestoreSubObject<T>(...)`,
+ * `firestoreObjectArray<T>(...)`, or `firestoreMap<T>(...)`. Only
+ * recorded when the type-arg is a bare type-reference identifier — inline
+ * object types, generic parameters, and other shapes are skipped because
+ * they never resolve to a declared interface.
+ */
+export interface ExtractedSubObjectFactoryCall {
+  readonly factoryName: SubObjectFactoryName;
+  /**
+   * The bare identifier text of the first generic type-argument (e.g.
+   * `WorkerPayStubItem`). Resolution against declared interfaces happens
+   * at the rules layer via the cross-file index.
+   */
+  readonly typeArgName: string;
+  readonly line: number;
+}
+
+/**
+ * Cross-file context threaded through {@link runRules} so a rule can
+ * resolve interface names referenced from one file against declarations
+ * in another file of the same validated source set.
+ *
+ * Both fields are read by the rule layer; `emittedSubObjectInterfaces` is
+ * mutated to de-duplicate `MODEL_SUBOBJECT_NOT_TAGGED` emissions across
+ * all files (an untagged sub-object referenced from N call-sites only
+ * warns once).
+ */
+export interface CrossFileRuleContext {
+  /**
+   * Index of every {@link ExtractedDataInterface} declared in the
+   * validated source set, keyed by interface name. Names are assumed
+   * unique within a model folder (the validator's scope); when two files
+   * declare interfaces sharing a name, the first one wins.
+   */
+  readonly interfacesByName: ReadonlyMap<string, CrossFileInterfaceEntry>;
+  /**
+   * Mutable set of interface names already emitted as
+   * `MODEL_SUBOBJECT_NOT_TAGGED` during this validation run. Shared
+   * across all files so a single untagged interface referenced from many
+   * call-sites only produces one finding.
+   */
+  readonly emittedSubObjectInterfaces: Set<string>;
+}
+
+export interface CrossFileInterfaceEntry {
+  readonly file: string;
+  readonly iface: ExtractedDataInterface;
 }
 
 /**
@@ -150,6 +221,14 @@ export interface ExtractedDataInterface {
    * the interface as a model variant for downstream traversal/referencing.
    */
   readonly dbxModelTag: boolean;
+  /**
+   * `true` when the interface declaration's JSDoc carries an
+   * `@dbxModelSubObject` tag. Embedded sub-object interfaces marked with
+   * this tag are subject to the same per-field `@dbxModelVariable`
+   * long-name rules as `@dbxModel` interfaces, even though they have no
+   * `firestoreModelIdentity`.
+   */
+  readonly dbxModelSubObjectTag: boolean;
   readonly fields: readonly ExtractedField[];
 }
 
