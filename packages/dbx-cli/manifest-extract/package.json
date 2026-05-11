@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-cli/manifest-extract",
-  "version": "13.11.7",
+  "version": "13.11.8",
   "sideEffects": false,
   "peerDependencies": {
     "ts-morph": "^21.0.0"

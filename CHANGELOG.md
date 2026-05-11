@@ -1,3 +1,20 @@
+## [13.11.8](https://github.com/dereekb/dbx-components/compare/v13.11.7-dev...v13.11.8) (2026-05-11)
+
+
+### Bug Fixes
+
+- **dbx-cli:** drop broken /oidc/login/client shortcut ([f32a3cd8](https://github.com/dereekb/dbx-components/commit/f32a3cd8048f720d962e2f983f78b9afd142a7f6))
+
+
+### Code Refactoring
+
+- **dbx-cli:** expose model get routes via CLI ([8837d030](https://github.com/dereekb/dbx-components/commit/8837d03097c76cd4f23d93a1c9a9fccea20b0ec6))
+- **dbx-cli:** use oidcIssuer for /login/client shortcut ([87ec076e](https://github.com/dereekb/dbx-components/commit/87ec076ecaa01dbee6823c72c84298998bf0d963))
+- **dbx-components-mcp:** subobject validation + catalog ([e9c8d634](https://github.com/dereekb/dbx-components/commit/e9c8d634f1760bbc0974e2be849b78886f188d92))
+- model-decode tool for firestore keys ([eba537eb](https://github.com/dereekb/dbx-components/commit/eba537ebebb408fc3a54c0d3191d67af00dcc216))
+- **oidc:** add standard OIDC scope constants ([89f57232](https://github.com/dereekb/dbx-components/commit/89f57232812d0d02e71e631bb554c362bd3a7ecf))
+- **oidc:** updated oidc discovery ([eeb3a214](https://github.com/dereekb/dbx-components/commit/eeb3a214f70d03d2cd4f7e18af48c1962453b9c3))
+
 ## [13.11.7](https://github.com/dereekb/dbx-components/compare/v13.11.6-dev...v13.11.7) (2026-05-11)
 
 
