@@ -412,15 +412,17 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
  * @param config - the parsed `dbx-mcp.config.json`, or `null` when missing
  * @returns the rule overrides, or `undefined` when none are configured
  */
-function resolveModelValidateRuleOptions(config: { readonly modelValidate?: { readonly maxFieldNameLength?: number; readonly ignoredFieldNames?: readonly string[] } } | null): RuleOptions | undefined {
+function resolveModelValidateRuleOptions(config: { readonly modelValidate?: { readonly maxFieldNameLength?: number; readonly ignoredFieldNames?: readonly string[]; readonly ignoredExternalParents?: readonly string[] } } | null): RuleOptions | undefined {
   const block = config?.modelValidate;
   if (block === undefined) {
     return undefined;
   }
   const ignoredFieldNames = block.ignoredFieldNames === undefined ? undefined : new Set(block.ignoredFieldNames);
+  const ignoredExternalParents = block.ignoredExternalParents === undefined ? undefined : new Set(block.ignoredExternalParents);
   const result: RuleOptions = {
     maxFieldNameLength: block.maxFieldNameLength,
-    ignoredFieldNames
+    ignoredFieldNames,
+    ignoredExternalParents
   };
   return result;
 }

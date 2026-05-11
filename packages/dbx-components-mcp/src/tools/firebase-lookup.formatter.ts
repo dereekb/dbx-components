@@ -6,7 +6,7 @@
  * every declared enum, and the source path for further reading.
  */
 
-import type { FirebaseField, FirebaseModel } from '../registry/firebase-models.js';
+import type { FirebaseField, FirebaseModel, FirebaseSubObject } from '../registry/firebase-models.js';
 
 export type LookupDepth = 'brief' | 'full';
 
@@ -35,14 +35,54 @@ function applyFieldsFilter(model: FirebaseModel, filter: readonly string[]): Fil
   for (const field of model.fields) {
     const nameLower = field.name.toLowerCase();
     const longNameLower = field.longName.toLowerCase();
-    if (filterSet.has(nameLower) || filterSet.has(longNameLower)) {
+    let keep = false;
+    if (filterSet.has(nameLower)) {
+      matched.add(nameLower);
+      keep = true;
+    }
+    if (filterSet.has(longNameLower)) {
+      matched.add(longNameLower);
+      keep = true;
+    }
+    if (field.subObject !== undefined && subObjectMatches(field.subObject, filterSet, matched)) {
+      keep = true;
+    }
+    if (keep) {
       kept.push(field);
-      if (filterSet.has(nameLower)) matched.add(nameLower);
-      if (filterSet.has(longNameLower)) matched.add(longNameLower);
     }
   }
   const unmatchedFilters = filter.filter((entry) => !matched.has(entry));
   return { kept, unmatchedFilters };
+}
+
+/**
+ * Recursively scans a sub-object's fields for any whose name or
+ * longName appears in the filter set. Mutates `matched` so the outer
+ * `applyFieldsFilter` can report unmatched-filter entries correctly.
+ *
+ * @param subObject - the sub-object structure to scan
+ * @param filterSet - lowercased filter entries the caller is looking for
+ * @param matched - mutable set of filter entries that have matched somewhere
+ * @returns `true` when the sub-object (or any nested sub-object) matches at least one filter entry
+ */
+function subObjectMatches(subObject: FirebaseSubObject, filterSet: ReadonlySet<string>, matched: Set<string>): boolean {
+  let any = false;
+  for (const field of subObject.fields) {
+    const nameLower = field.name.toLowerCase();
+    const longNameLower = field.longName.toLowerCase();
+    if (filterSet.has(nameLower)) {
+      matched.add(nameLower);
+      any = true;
+    }
+    if (filterSet.has(longNameLower)) {
+      matched.add(longNameLower);
+      any = true;
+    }
+    if (field.subObject !== undefined && subObjectMatches(field.subObject, filterSet, matched)) {
+      any = true;
+    }
+  }
+  return any;
 }
 
 /**
@@ -130,18 +170,88 @@ function appendFieldsTable(lines: string[], fields: readonly FirebaseField[], de
     lines.push('| Field | Description |', '|-------|-------------|');
     for (const field of fields) {
       const desc = describeField(field);
-      lines.push(`| \`${field.name}\` | ${desc} |`);
+      lines.push(`| \`${formatFieldLabel(field)}\` | ${desc} |`);
     }
   } else {
     lines.push('| Field | Description | Type | Converter |', '|-------|-------------|------|-----------|');
     for (const field of fields) {
       const desc = describeField(field);
       const ts = field.tsType ? `\`${field.tsType}\`` : '–';
-      const conv = `\`${field.converter}\``;
-      lines.push(`| \`${field.name}\` | ${desc} | ${ts} | ${conv} |`);
+      const conv = field.converter.length > 0 ? `\`${field.converter}\`` : '–';
+      lines.push(`| \`${formatFieldLabel(field)}\` | ${desc} | ${ts} | ${conv} |`);
     }
   }
+  appendSubObjectSections(lines, fields, depth);
 }
+
+/**
+ * Renders the field label shown in the catalog table. Includes the
+ * `@dbxModelVariable` long-name in parentheses when it differs from
+ * the short name — `bg (embeddedBillingGroups)` — so readers see both
+ * the persisted key and the human-readable expansion without leaving
+ * the table.
+ *
+ * @param field - the field to label
+ * @returns the label text (without the surrounding backticks)
+ */
+function formatFieldLabel(field: FirebaseField): string {
+  if (field.longName && field.longName !== field.name) {
+    return `${field.name} (${field.longName})`;
+  }
+  return field.name;
+}
+
+function appendSubObjectSections(lines: string[], fields: readonly FirebaseField[], depth: LookupDepth): void {
+  for (const field of fields) {
+    if (field.subObject === undefined) continue;
+    appendSubObjectSection({ lines, parentLabel: formatFieldLabel(field), subObject: field.subObject, depth, headingLevel: 3 });
+  }
+}
+
+interface AppendSubObjectSectionInput {
+  readonly lines: string[];
+  readonly parentLabel: string;
+  readonly subObject: FirebaseSubObject;
+  readonly depth: LookupDepth;
+  readonly headingLevel: number;
+}
+
+function appendSubObjectSection(input: AppendSubObjectSectionInput): void {
+  const { lines, parentLabel, subObject, depth, headingLevel } = input;
+  const heading = '#'.repeat(Math.min(Math.max(headingLevel, 2), 6));
+  const kindLabel = SUB_OBJECT_KIND_LABEL[subObject.factoryKind];
+  lines.push('', `${heading} Sub-object: \`${parentLabel}\` → \`${subObject.interfaceName}\` (${kindLabel})`, '');
+  if (depth === 'brief') {
+    lines.push('| Field | Description |', '|-------|-------------|');
+    for (const field of subObject.fields) {
+      const desc = describeField(field);
+      lines.push(`| \`${formatFieldLabel(field)}\` | ${desc} |`);
+    }
+  } else {
+    lines.push('| Field | Description | Type |', '|-------|-------------|------|');
+    for (const field of subObject.fields) {
+      const desc = describeField(field);
+      const ts = field.tsType ? `\`${field.tsType}\`` : '–';
+      lines.push(`| \`${formatFieldLabel(field)}\` | ${desc} | ${ts} |`);
+    }
+  }
+  for (const field of subObject.fields) {
+    if (field.subObject === undefined) continue;
+    appendSubObjectSection({
+      lines,
+      parentLabel: `${parentLabel}.${formatFieldLabel(field)}`,
+      subObject: field.subObject,
+      depth,
+      headingLevel: headingLevel + 1
+    });
+  }
+}
+
+const SUB_OBJECT_KIND_LABEL: Readonly<Record<FirebaseSubObject['factoryKind'], string>> = {
+  object: 'embedded object',
+  array: 'embedded array',
+  map: 'embedded map'
+};
 
 function describeField(field: FirebaseField): string {
   return (field.description ?? '–').replaceAll('|', String.raw`\|`).replaceAll('\n', ' ');

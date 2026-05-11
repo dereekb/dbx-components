@@ -28,35 +28,47 @@ import { MAX_FIELD_NAME_LENGTH, ROOT_MODEL_ORDER, SUBCOLLECTION_MODEL_ORDER, typ
  */
 export function runRules(file: ExtractedFile, options?: RuleOptions, context?: CrossFileRuleContext): readonly Violation[] {
   const violations: Violation[] = [];
-  if (file.models.length === 0) {
-    // Files without any firestoreModelIdentity calls are not subject to
-    // model-group rules. They CAN still participate in cross-file
-    // sub-object factory detection — a sibling `.pay.ts` may declare a
-    // sub-object interface and its `firestoreSubObject<T>` call without
-    // hosting any top-level model.
-    checkSubObjectFactoryCallSites(file, violations, context);
-    return violations;
-  }
-  checkFileLevel(file, violations);
-  for (const model of file.models) {
-    checkIdentity(file, model, violations);
-    checkCoreDeclarations(file, model, violations);
-    if (model.variant === 'subcollection') {
-      checkSubcollectionExtras(file, model, violations);
+  const hasModels = file.models.length > 0;
+  if (hasModels) {
+    checkFileLevel(file, violations);
+    for (const model of file.models) {
+      checkIdentity(file, model, violations);
+      checkCoreDeclarations(file, model, violations);
+      if (model.variant === 'subcollection') {
+        checkSubcollectionExtras(file, model, violations);
+      }
+      checkDeclarationOrder(file, model, violations);
     }
-    checkDeclarationOrder(file, model, violations);
   }
-  checkFieldNameLengths(file, violations, options);
+  // Field rules run in every file. In files with no top-level models
+  // (sibling sub-files like `worker.pay.ts`), the scope tightens to
+  // `@dbxModel` / `@dbxModelSubObject` interfaces so the validator stays
+  // silent on unrelated helper interfaces that just happen to live there.
+  checkFieldNameLengths(file, violations, options, { restrictToTaggedInterfaces: !hasModels });
   checkSubObjectInterfaceTags(file, violations);
   checkSubObjectFactoryCallSites(file, violations, context);
+  checkSubObjectParentNotTagged(file, violations, context, options);
   return violations;
 }
 
 // MARK: Field-name length (warning)
-function checkFieldNameLengths(file: ExtractedFile, violations: Violation[], options?: RuleOptions): void {
+interface FieldRuleScope {
+  /**
+   * When `true`, restricts the per-interface field rules to interfaces
+   * tagged with `@dbxModel` or `@dbxModelSubObject`. The validator passes
+   * `true` for sibling sub-files that don't host any top-level model so
+   * unrelated helper interfaces don't trigger warnings.
+   */
+  readonly restrictToTaggedInterfaces: boolean;
+}
+
+function checkFieldNameLengths(file: ExtractedFile, violations: Violation[], options: RuleOptions | undefined, scope: FieldRuleScope): void {
   const limit = options?.maxFieldNameLength ?? MAX_FIELD_NAME_LENGTH;
   const ignored = options?.ignoredFieldNames;
   for (const iface of file.dataInterfaces) {
+    if (scope.restrictToTaggedInterfaces && !(iface.dbxModelTag || iface.dbxModelSubObjectTag)) {
+      continue;
+    }
     for (const field of iface.fields) {
       if (ignored?.has(field.name)) {
         continue;
@@ -74,13 +86,16 @@ function checkFieldNameLengths(file: ExtractedFile, violations: Violation[], opt
       });
     }
   }
-  checkFieldJsDocs(file, violations, options);
+  checkFieldJsDocs(file, violations, options, scope);
 }
 
 // MARK: Field JSDoc + @dbxModelVariable convention (warning)
-function checkFieldJsDocs(file: ExtractedFile, violations: Violation[], options?: RuleOptions): void {
+function checkFieldJsDocs(file: ExtractedFile, violations: Violation[], options: RuleOptions | undefined, scope: FieldRuleScope): void {
   const ignored = options?.ignoredFieldNames;
   for (const iface of file.dataInterfaces) {
+    if (scope.restrictToTaggedInterfaces && !(iface.dbxModelTag || iface.dbxModelSubObjectTag)) {
+      continue;
+    }
     for (const field of iface.fields) {
       if (!field.jsDocFirstLine) {
         pushViolation(violations, {
@@ -183,6 +198,81 @@ function checkSubObjectFactoryCallSites(file: ExtractedFile, violations: Violati
       line: iface.line,
       model: iface.name
     });
+  }
+}
+
+// MARK: Sub-object parent-not-tagged (warning, cross-file)
+/**
+ * Walks every `@dbxModelSubObject` interface in the file and emits
+ * `MODEL_SUBOBJECT_PARENT_NOT_TAGGED` for each parent (named in the
+ * `extends` clause) that is not itself tagged with `@dbxModel` or
+ * `@dbxModelSubObject`.
+ *
+ * Resolution is name-based via the supplied {@link CrossFileRuleContext}:
+ * - A parent name found in `context.interfacesByName` is **in-package**
+ *   (declared in the validated source set).
+ * - A parent name not found there is **external** (declared outside the
+ *   set — different folder, different package, framework dependency).
+ *
+ * External parents listed in `options.ignoredExternalParents` are
+ * silently skipped — useful for well-known framework plumbing
+ * (`IndexRef`, `DateCellRange`, `DateRange`) whose fields don't need
+ * surface long-names in the catalog. The suppression never applies to
+ * in-package parents.
+ *
+ * Findings are de-duplicated per `(child, parent)` pair across the
+ * validation run via `context.emittedSubObjectInterfaces` so a single
+ * parent referenced via the same child only warns once.
+ *
+ * @param file - the extracted facts for the source file being checked
+ * @param violations - the buffer the rule appends violations to
+ * @param context - cross-file index + dedup state; when absent the rule is a no-op
+ * @param options - rule options carrying `ignoredExternalParents`
+ */
+function checkSubObjectParentNotTagged(file: ExtractedFile, violations: Violation[], context: CrossFileRuleContext | undefined, options: RuleOptions | undefined): void {
+  if (!context) {
+    return;
+  }
+  const ignoredExternal = options?.ignoredExternalParents;
+  for (const iface of file.dataInterfaces) {
+    if (!iface.dbxModelSubObjectTag) {
+      continue;
+    }
+    for (const parentName of iface.extendsNames) {
+      const dedupKey = `${iface.name}<-${parentName}`;
+      if (context.emittedSubObjectInterfaces.has(dedupKey)) {
+        continue;
+      }
+      const entry = context.interfacesByName.get(parentName);
+      if (entry) {
+        const parent = entry.iface;
+        if (parent.dbxModelTag || parent.dbxModelSubObjectTag) {
+          continue;
+        }
+        context.emittedSubObjectInterfaces.add(dedupKey);
+        pushViolation(violations, {
+          code: 'MODEL_SUBOBJECT_PARENT_NOT_TAGGED',
+          severity: 'warning',
+          message: `Interface \`${parentName}\` is extended by \`@dbxModelSubObject\` \`${iface.name}\`. \`${parentName}\` is declared in the same package (${entry.file}) and its fields are persisted via \`${iface.name}\`'s converter but are not validated. Fix (preferred): add \`@dbxModelSubObject\` to \`${parentName}\`'s JSDoc and tag each persisted field with \`@dbxModelVariable <longName>\`. Alternative: redeclare the inherited fields directly on \`${iface.name}\` with their own JSDoc + tag (useful when \`${parentName}\` is a shared shape that you do not want to commit to a single longName).`,
+          file: entry.file,
+          line: parent.line,
+          model: parentName
+        });
+      } else {
+        if (ignoredExternal?.has(parentName)) {
+          continue;
+        }
+        context.emittedSubObjectInterfaces.add(dedupKey);
+        pushViolation(violations, {
+          code: 'MODEL_SUBOBJECT_PARENT_NOT_TAGGED',
+          severity: 'warning',
+          message: `Interface \`${parentName}\` is extended by \`@dbxModelSubObject\` \`${iface.name}\`, but \`${parentName}\` is declared outside this package (unresolved in the validated source set). Its persisted fields cannot be tagged from here. Decide: (1) if the inherited fields need explicit longNames in this catalog, redeclare them on \`${iface.name}\` with a JSDoc block carrying \`@dbxModelVariable <longName>\` (the redeclaration is structurally compatible — TypeScript treats it as a field narrowing, not a new property); (2) if the inherited fields are framework plumbing (e.g. \`IndexRef.i\`, \`DateRange.start/end\`) and surface longNames are not needed, suppress this specific warning by adding \`${parentName}\` to \`modelValidate.ignoredExternalParents\` in \`dbx-mcp.config.json\`.`,
+          file: file.name,
+          line: iface.line,
+          model: iface.name
+        });
+      }
+    }
   }
 }
 

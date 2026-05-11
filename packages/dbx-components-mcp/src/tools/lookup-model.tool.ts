@@ -37,7 +37,7 @@ const DBX_MODEL_LOOKUP_TOOL: Tool = {
     'Optional inputs:',
     '  • `scope`: `"all"` (default), `"upstream"` (only `@dereekb/firebase`), or `"downstream"` (only component packages).',
     '  • `componentDirs`: explicit downstream package directories — overrides the default `components/*-firebase` discovery.',
-    '  • `fields`: when the topic resolves to a single model, restrict the rendered fields table to those whose persisted name (e.g. `"fs"`) or longName (e.g. `"fileState"`) appears in the list (case-insensitive). Enums prune to only those referenced by the kept fields. Ignored on catalog/shapes/not-found responses.'
+    '  • `fields`: when the topic resolves to a single model, restrict the rendered fields table to those whose persisted name (e.g. `"fs"`) or longName (e.g. `"fileState"`) appears in the list (case-insensitive). Filters also match against `@dbxModelSubObject` field names / longNames reachable through a parent field\'s `firestoreSubObject<T>` / `firestoreObjectArray<T>` / `firestoreMap<T>` converter — the parent field is kept whenever any of its nested sub-object fields match. Enums prune to only those referenced by the kept fields. Ignored on catalog/shapes/not-found responses.'
   ].join('\n'),
   inputSchema: {
     type: 'object',

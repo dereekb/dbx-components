@@ -5,6 +5,7 @@
  * layer supplies the file-system inspection on top of this.
  */
 
+import type { RuleOptions } from '../model-validate/index.js';
 import { aggregateFolderRules } from '../validate-format.js';
 import { runRules } from './rules.js';
 import type { FolderInspection, ValidationResult } from './types.js';
@@ -14,8 +15,11 @@ import type { FolderInspection, ValidationResult } from './types.js';
  * the violations and counts.
  *
  * @param inspections - the folder snapshots to validate
+ * @param options - optional per-call overrides forwarded to the per-file
+ *   content validator (field-name length limit, ignored field names,
+ *   ignored external sub-object parents)
  * @returns the aggregated validation outcome with counts and violations
  */
-export function validateModelFolders(inspections: readonly FolderInspection[]): ValidationResult {
-  return aggregateFolderRules({ inspections, runRules });
+export function validateModelFolders(inspections: readonly FolderInspection[], options?: RuleOptions): ValidationResult {
+  return aggregateFolderRules({ inspections, runRules: (inspection) => runRules(inspection, options) });
 }

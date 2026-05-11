@@ -784,4 +784,143 @@ export function agentSummaryFirestoreCollection(firestoreContext: FirestoreConte
       expect(warnings[0].file).toBe('worker.pay.ts');
     });
   });
+
+  // MARK: Sub-file (no top-level models) field-rule scan
+  describe('sub-file field rules', () => {
+    it('runs MODEL_FIELD_MISSING_VARIABLE_TAG on @dbxModelSubObject interfaces in a sub-file with no firestoreModelIdentity calls', () => {
+      const subFile = `/**\n * @dbxModelSubObject\n */\nexport interface WorkerPayStubItem {\n  a: string;\n  bb: string;\n}\n`;
+      const result = validateFirebaseModelSources([{ name: 'worker.pay.ts', text: subFile }]);
+      const warnings = result.violations.filter((v) => v.code === 'MODEL_FIELD_MISSING_VARIABLE_TAG' && v.model === 'WorkerPayStubItem');
+      expect(warnings).toHaveLength(2);
+      expect(warnings.map((v) => v.severity)).toEqual(['warning', 'warning']);
+    });
+
+    it('runs MODEL_FIELD_NAME_TOO_LONG on @dbxModelSubObject interfaces in a sub-file', () => {
+      const subFile = `/**\n * @dbxModelSubObject\n */\nexport interface WorkerPayStubItem {\n  /** @dbxModelVariable foo */\n  fooBarBaz: string;\n}\n`;
+      const result = validateFirebaseModelSources([{ name: 'worker.pay.ts', text: subFile }]);
+      const tooLong = result.violations.filter((v) => v.code === 'MODEL_FIELD_NAME_TOO_LONG' && v.model === 'WorkerPayStubItem');
+      expect(tooLong).toHaveLength(1);
+      expect(tooLong[0].message).toContain('`fooBarBaz`');
+    });
+
+    it('runs MODEL_FIELD_LONG_NAME_EQUALS_NAME on @dbxModelSubObject fields in a sub-file', () => {
+      const subFile = `/**\n * @dbxModelSubObject\n */\nexport interface WorkerPayStubItem {\n  /** @dbxModelVariable a */\n  a: string;\n}\n`;
+      const result = validateFirebaseModelSources([{ name: 'worker.pay.ts', text: subFile }]);
+      const equals = result.violations.filter((v) => v.code === 'MODEL_FIELD_LONG_NAME_EQUALS_NAME' && v.model === 'WorkerPayStubItem');
+      expect(equals).toHaveLength(1);
+    });
+
+    it('stays silent on untagged helper interfaces in a sub-file (scope tightens to tagged interfaces when no top-level model is present)', () => {
+      const subFile = `// Random helper types that shouldn't trigger field rules.\nexport interface SomeHelperType {\n  veryLongFieldNameHere: string;\n}\n`;
+      const result = validateFirebaseModelSources([{ name: 'worker.pay.ts', text: subFile }]);
+      const warnings = result.violations.filter((v) => v.model === 'SomeHelperType');
+      expect(warnings).toHaveLength(0);
+    });
+
+    it('does NOT emit FILE_MISSING_GROUP_INTERFACE / FILE_MISSING_GROUP_TYPES on a sub-file', () => {
+      const subFile = `/**\n * @dbxModelSubObject\n */\nexport interface WorkerPayStubItem {\n  a: string;\n}\n`;
+      const result = validateFirebaseModelSources([{ name: 'worker.pay.ts', text: subFile }]);
+      const fileLevel = result.violations.filter((v) => v.code === 'FILE_MISSING_GROUP_INTERFACE' || v.code === 'FILE_MISSING_GROUP_TYPES');
+      expect(fileLevel).toHaveLength(0);
+    });
+
+    it('reports filesChecked but not modelsChecked for a sub-file-only validation', () => {
+      const subFile = `/**\n * @dbxModelSubObject\n */\nexport interface WorkerPayStubItem {\n  /** @dbxModelVariable amount */\n  a: number;\n}\n`;
+      const result = validateFirebaseModelSources([{ name: 'worker.pay.ts', text: subFile }]);
+      expect(result.filesChecked).toBe(1);
+      expect(result.modelsChecked).toBe(0);
+    });
+  });
+
+  // MARK: MODEL_SUBOBJECT_PARENT_NOT_TAGGED
+  describe('MODEL_SUBOBJECT_PARENT_NOT_TAGGED', () => {
+    it('warns when @dbxModelSubObject extends an untagged in-package parent (same file)', () => {
+      const text = `/**\n * Parent interface — intentionally untagged.\n */\nexport interface WorkerPayStubCostItem {\n  hours: number;\n}\n\n/**\n * @dbxModelSubObject\n */\nexport interface WorkerPayStubItem extends WorkerPayStubCostItem {\n  /** @dbxModelVariable amount */\n  a: number;\n}\n`;
+      const result = validateFirebaseModelSources([{ name: 'worker.pay.ts', text }]);
+      const warnings = result.violations.filter((v) => v.code === 'MODEL_SUBOBJECT_PARENT_NOT_TAGGED');
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0].severity).toBe('warning');
+      expect(warnings[0].model).toBe('WorkerPayStubCostItem');
+      expect(warnings[0].file).toBe('worker.pay.ts');
+      expect(warnings[0].message).toContain('declared in the same package');
+      expect(warnings[0].message).toContain('Fix (preferred)');
+    });
+
+    it('warns when @dbxModelSubObject extends an untagged in-package parent declared in a sibling file', () => {
+      const childFile = `/**\n * @dbxModelSubObject\n */\nexport interface WorkerPayStubItem extends WorkerPayStubCostItem {\n  /** @dbxModelVariable amount */\n  a: number;\n}\n`;
+      const parentFile = `export interface WorkerPayStubCostItem {\n  hours: number;\n}\n`;
+      const result = validateFirebaseModelSources([
+        { name: 'worker.pay.ts', text: childFile },
+        { name: 'worker.cost.ts', text: parentFile }
+      ]);
+      const warnings = result.violations.filter((v) => v.code === 'MODEL_SUBOBJECT_PARENT_NOT_TAGGED');
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0].file).toBe('worker.cost.ts');
+      expect(warnings[0].model).toBe('WorkerPayStubCostItem');
+    });
+
+    it('warns with the external-parent template when the parent is not in the validated source set', () => {
+      const text = `/**\n * @dbxModelSubObject\n */\nexport interface WorkerPayStubItem extends IndexRef {\n  /** @dbxModelVariable amount */\n  a: number;\n}\n`;
+      const result = validateFirebaseModelSources([{ name: 'worker.pay.ts', text }]);
+      const warnings = result.violations.filter((v) => v.code === 'MODEL_SUBOBJECT_PARENT_NOT_TAGGED');
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0].model).toBe('WorkerPayStubItem');
+      expect(warnings[0].file).toBe('worker.pay.ts');
+      expect(warnings[0].message).toContain('declared outside this package');
+      expect(warnings[0].message).toContain('ignoredExternalParents');
+    });
+
+    it('stays silent when the in-package parent is itself tagged with @dbxModelSubObject', () => {
+      const text = `/**\n * @dbxModelSubObject\n */\nexport interface WorkerPayStubCostItem {\n  /** @dbxModelVariable hours */\n  h: number;\n}\n\n/**\n * @dbxModelSubObject\n */\nexport interface WorkerPayStubItem extends WorkerPayStubCostItem {\n  /** @dbxModelVariable amount */\n  a: number;\n}\n`;
+      const result = validateFirebaseModelSources([{ name: 'worker.pay.ts', text }]);
+      const warnings = result.violations.filter((v) => v.code === 'MODEL_SUBOBJECT_PARENT_NOT_TAGGED');
+      expect(warnings).toHaveLength(0);
+    });
+
+    it('stays silent when the in-package parent is tagged with @dbxModel (top-level model used as a sub-object base)', () => {
+      const text = `/**\n * @dbxModel\n */\nexport interface WorkerPayStubCostItem {\n  /** @dbxModelVariable hours */\n  h: number;\n}\n\n/**\n * @dbxModelSubObject\n */\nexport interface WorkerPayStubItem extends WorkerPayStubCostItem {\n  /** @dbxModelVariable amount */\n  a: number;\n}\n`;
+      const result = validateFirebaseModelSources([{ name: 'worker.pay.ts', text }]);
+      const warnings = result.violations.filter((v) => v.code === 'MODEL_SUBOBJECT_PARENT_NOT_TAGGED');
+      expect(warnings).toHaveLength(0);
+    });
+
+    it('suppresses external-parent warnings when the parent name is in ignoredExternalParents', () => {
+      const text = `/**\n * @dbxModelSubObject\n */\nexport interface WorkerPayStubItem extends IndexRef {\n  /** @dbxModelVariable amount */\n  a: number;\n}\n`;
+      const result = validateFirebaseModelSources([{ name: 'worker.pay.ts', text }], { ignoredExternalParents: new Set(['IndexRef']) });
+      const warnings = result.violations.filter((v) => v.code === 'MODEL_SUBOBJECT_PARENT_NOT_TAGGED');
+      expect(warnings).toHaveLength(0);
+    });
+
+    it('does NOT suppress in-package parent warnings when the parent name appears in ignoredExternalParents', () => {
+      const text = `export interface WorkerPayStubCostItem {\n  hours: number;\n}\n\n/**\n * @dbxModelSubObject\n */\nexport interface WorkerPayStubItem extends WorkerPayStubCostItem {\n  /** @dbxModelVariable amount */\n  a: number;\n}\n`;
+      const result = validateFirebaseModelSources([{ name: 'worker.pay.ts', text }], { ignoredExternalParents: new Set(['WorkerPayStubCostItem']) });
+      const warnings = result.violations.filter((v) => v.code === 'MODEL_SUBOBJECT_PARENT_NOT_TAGGED');
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0].message).toContain('declared in the same package');
+    });
+
+    it('emits one warning per (child, parent) pair (multiple parents → multiple warnings)', () => {
+      const text = `export interface ParentA {\n  hours: number;\n}\n\nexport interface ParentB {\n  rate: number;\n}\n\n/**\n * @dbxModelSubObject\n */\nexport interface ChildItem extends ParentA, ParentB {\n  /** @dbxModelVariable amount */\n  a: number;\n}\n`;
+      const result = validateFirebaseModelSources([{ name: 'worker.pay.ts', text }]);
+      const warnings = result.violations.filter((v) => v.code === 'MODEL_SUBOBJECT_PARENT_NOT_TAGGED');
+      expect(warnings).toHaveLength(2);
+      expect(warnings.map((v) => v.model).sort()).toEqual(['ParentA', 'ParentB']);
+    });
+
+    it('unwraps Partial<T> / Pick<T,K> / Omit<T,K> wrappers in extends clauses', () => {
+      const text = `export interface WorkerPayStubCostItem {\n  hours: number;\n}\n\n/**\n * @dbxModelSubObject\n */\nexport interface WorkerPayStubItem extends Partial<WorkerPayStubCostItem> {\n  /** @dbxModelVariable amount */\n  a: number;\n}\n`;
+      const result = validateFirebaseModelSources([{ name: 'worker.pay.ts', text }]);
+      const warnings = result.violations.filter((v) => v.code === 'MODEL_SUBOBJECT_PARENT_NOT_TAGGED');
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0].model).toBe('WorkerPayStubCostItem');
+      expect(warnings[0].message).toContain('declared in the same package');
+    });
+
+    it('does not run on interfaces without @dbxModelSubObject', () => {
+      const text = `export interface ParentA {\n  hours: number;\n}\n\nexport interface ChildItem extends ParentA {\n  amount: number;\n}\n`;
+      const result = validateFirebaseModelSources([{ name: 'worker.pay.ts', text }]);
+      const warnings = result.violations.filter((v) => v.code === 'MODEL_SUBOBJECT_PARENT_NOT_TAGGED');
+      expect(warnings).toHaveLength(0);
+    });
+  });
 });

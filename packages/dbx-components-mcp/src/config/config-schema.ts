@@ -91,7 +91,8 @@ export const DbxMcpConfig = type({
   version: '1',
   'modelValidate?': {
     'maxFieldNameLength?': 'number>=1',
-    'ignoredFieldNames?': 'string[]'
+    'ignoredFieldNames?': 'string[]',
+    'ignoredExternalParents?': 'string[]'
   },
   'semanticTypes?': ClusterSection,
   'uiComponents?': ClusterSection,

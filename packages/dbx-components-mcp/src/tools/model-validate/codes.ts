@@ -451,7 +451,18 @@ export enum ModelValidateCode {
    * @dbxRuleFix Add `@dbxModelSubObject` to the interface's JSDoc block so its fields are subject to `@dbxModelVariable` long-name checks. If the interface is actually a top-level Firestore model, declare a matching `firestoreModelIdentity` and tag it `@dbxModel` instead.
    * @dbxRuleSeeAlso artifact:firestore-model
    */
-  MODEL_SUBOBJECT_NOT_TAGGED = 'MODEL_SUBOBJECT_NOT_TAGGED'
+  MODEL_SUBOBJECT_NOT_TAGGED = 'MODEL_SUBOBJECT_NOT_TAGGED',
+
+  /**
+   * A `@dbxModelSubObject` interface extends a parent interface that is not itself tagged with `@dbxModel` or `@dbxModelSubObject`. The parent's persisted fields flow through the sub-object's converter but never reach the workspace's `@dbxModelVariable` long-name checks. Whether the agent acts depends on whether the parent is owned by this package, but the validator surfaces both classifications so the consuming agent (or developer) can make an informed call.
+   *
+   * @dbxRuleSeverity warning
+   * @dbxRuleApplies Every `@dbxModelSubObject` interface whose `extends` heritage names an untagged parent. The parent is classified `in-package` when its declaration is found in the validated source set, otherwise `external`. Anchored at the sub-object interface line so the caller sees both the child and the parent in one place.
+   * @dbxRuleNotApplies Parents already tagged with `@dbxModel` or `@dbxModelSubObject`; parents whose names appear in `modelValidate.ignoredExternalParents` (suppresses external-only warnings — in-package parents are never suppressed). Generic parameters, inline types, and TS utility wrappers (`Partial<T>`, `Pick<T, K>`, `Omit<T, K>`, `Readonly<T>`, `MaybeMap<T>`) are unwrapped to the underlying parent name before resolution.
+   * @dbxRuleFix In-package parent: add `@dbxModelSubObject` to the parent interface's JSDoc and tag each persisted field with `@dbxModelVariable <longName>`. Alternative: redeclare the inherited fields directly on the child with their own JSDoc + tag (useful when the parent is a shared shape that shouldn't commit to a single longName). External parent: redeclare the inherited fields on the child with `@dbxModelVariable <longName>` tags when surface long-names are needed, or add the parent name to `modelValidate.ignoredExternalParents` in `dbx-mcp.config.json` when the inherited fields are framework plumbing (e.g. `IndexRef.i`, `DateRange.start/end`).
+   * @dbxRuleSeeAlso artifact:firestore-model
+   */
+  MODEL_SUBOBJECT_PARENT_NOT_TAGGED = 'MODEL_SUBOBJECT_PARENT_NOT_TAGGED'
 }
 
 /**

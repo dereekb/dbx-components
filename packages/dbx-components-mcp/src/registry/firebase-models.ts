@@ -90,6 +90,47 @@ export interface FirebaseField {
    * `@dbxModelVariableSyncFlag` tag.
    */
   readonly syncFlag?: string;
+  /**
+   * Embedded sub-object structure when the field's converter resolves
+   * through a `firestoreSubObject<T>` / `firestoreObjectArray<T>` /
+   * `firestoreMap<T>` factory whose `T` carries the `@dbxModelSubObject`
+   * JSDoc tag. Populated by the rich extractor's cross-file walk so the
+   * catalog can render the nested field table and accept the sub-object's
+   * long names in `fields:[...]` filters. Absent when the field is a
+   * plain primitive or when the sub-object interface cannot be resolved
+   * from the validated model root (e.g. external-package shapes).
+   */
+  readonly subObject?: FirebaseSubObject;
+}
+
+/**
+ * Catalog metadata for an embedded sub-object interface persisted as
+ * part of a parent model's converter (`firestoreSubObject<T>`,
+ * `firestoreObjectArray<T>`, `firestoreMap<T>`). Attached to the parent
+ * field as {@link FirebaseField.subObject} when both the converter
+ * const and the underlying interface (tagged `@dbxModelSubObject`) are
+ * visible to the extractor.
+ */
+export interface FirebaseSubObject {
+  /**
+   * Interface name (the type-argument of the sub-object factory call —
+   * e.g. `WorkerPayStubItem`, `BillingGroupRegionEmbeddedBillingGroup`).
+   */
+  readonly interfaceName: string;
+  /**
+   * Factory shape: `'object'` for a single embedded record
+   * (`firestoreSubObject`), `'array'` for a list
+   * (`firestoreObjectArray`), `'map'` for a keyed map (`firestoreMap`).
+   * Drives the formatter's section label.
+   */
+  readonly factoryKind: 'object' | 'array' | 'map';
+  /**
+   * Sub-object's own persisted fields, in declaration order. Each field
+   * carries its `@dbxModelVariable` long-name and any nested
+   * `@dbxModelSubObject` chain so the catalog can render arbitrarily
+   * deep embedded structures.
+   */
+  readonly fields: readonly FirebaseField[];
 }
 
 /**

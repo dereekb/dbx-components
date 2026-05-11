@@ -103,7 +103,7 @@ import { modelValidateApiTool } from './model-validate-api.tool.js';
 import { modelApiListAppTool } from './model-api-list-app.tool.js';
 import { modelApiLookupTool } from './model-api-lookup.tool.js';
 import { modelApiValidateAppTool } from './model-api-validate-app.tool.js';
-import { modelValidateFolderTool } from './model-validate-folder.tool.js';
+import { createModelValidateFolderTool } from './model-validate-folder.tool.js';
 import { modelStoreScaffoldTool } from './model-store-scaffold.tool.js';
 import { modelFixtureListAppTool } from './model-fixture-list-app.tool.js';
 import { modelFixtureLookupTool } from './model-fixture-lookup.tool.js';
@@ -192,7 +192,6 @@ export const DBX_TOOLS: readonly DbxTool[] = [
   modelApiListAppTool,
   modelApiLookupTool,
   modelApiValidateAppTool,
-  modelValidateFolderTool,
   modelStoreScaffoldTool,
   modelFixtureListAppTool,
   modelFixtureLookupTool,
@@ -328,7 +327,7 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions =
   const underlyingServer = server.server;
 
   const tools: DbxTool[] = [...DBX_TOOLS];
-  tools.push(createUiExamplesTool({ examplesRegistry: options.dbxDocsUiExamplesRegistry }), createModelValidateTool({ ruleOptions: options.modelValidateRuleOptions }), createModelFixtureValidateAppTool({ getRegistry: () => options.fixtureModelRegistry }));
+  tools.push(createUiExamplesTool({ examplesRegistry: options.dbxDocsUiExamplesRegistry }), createModelValidateTool({ ruleOptions: options.modelValidateRuleOptions }), createModelValidateFolderTool({ ruleOptions: options.modelValidateRuleOptions }), createModelFixtureValidateAppTool({ getRegistry: () => options.fixtureModelRegistry }));
   if (options.forgeFieldRegistry !== undefined) {
     tools.push(createLookupFormTool({ registry: options.forgeFieldRegistry }), createSearchFormTool({ registry: options.forgeFieldRegistry }), createFormScaffoldTool({ registry: options.forgeFieldRegistry }));
   }

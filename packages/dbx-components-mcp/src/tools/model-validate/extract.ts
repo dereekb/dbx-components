@@ -121,9 +121,70 @@ function findDataInterfaces(sourceFile: SourceFile, groupInterface: ExtractedGro
     const fields = extractInterfaceFields(iface);
     const dbxModelTag = readDbxModelTag(iface.getJsDocs());
     const dbxModelSubObjectTag = readDbxModelSubObjectTag(iface.getJsDocs());
-    out.push({ name, line: iface.getStartLineNumber(), dbxModelTag, dbxModelSubObjectTag, fields });
+    const extendsNames = readExtendsNames(iface);
+    out.push({ name, line: iface.getStartLineNumber(), dbxModelTag, dbxModelSubObjectTag, extendsNames, fields });
   }
   return out;
+}
+
+/**
+ * Returns the bare identifier name of each interface listed in this
+ * interface's `extends` clause. Unwraps `Partial<T>`, `Required<T>`,
+ * `Readonly<T>`, `NonNullable<T>`, `Pick<T, K>`, `Omit<T, K>`, and the
+ * workspace-specific `MaybeMap<T>` to find the underlying parent name —
+ * those wrappers preserve every property and so are transparent for
+ * inheritance walks. Unresolvable wrappers fall through to the leftmost
+ * identifier.
+ *
+ * @param iface - the interface declaration to inspect
+ * @returns the parent identifier names in source order
+ */
+function readExtendsNames(iface: InterfaceDeclaration): readonly string[] {
+  const out: string[] = [];
+  for (const expr of iface.getExtends()) {
+    const head = expr.getExpression().getText();
+    let resolved = head;
+    if (PASSTHROUGH_TYPE_WRAPPERS.has(head)) {
+      const typeArgs = expr.getTypeArguments();
+      if (typeArgs.length > 0) {
+        const peeled = peelExtendsTypeNode(typeArgs[0]);
+        if (peeled !== undefined) {
+          resolved = peeled;
+        }
+      }
+    }
+    out.push(resolved);
+  }
+  return out;
+}
+
+/**
+ * TS utility wrappers transparent for inheritance walks — `Partial<T>`,
+ * `Required<T>`, `Readonly<T>`, `NonNullable<T>` preserve every property,
+ * and `Pick<T, K>` / `Omit<T, K>` leave the original `T` reachable for
+ * long-name resolution. `MaybeMap<T>` is the workspace's own pass-through.
+ * Mirrors `find-interfaces.ts` in the rich extractor so both stay in lock-step.
+ */
+const PASSTHROUGH_TYPE_WRAPPERS: ReadonlySet<string> = new Set(['Partial', 'Required', 'Readonly', 'NonNullable', 'MaybeMap', 'Pick', 'Omit']);
+
+function peelExtendsTypeNode(node: Node): string | undefined {
+  let current: Node = node;
+  while (Node.isParenthesizedTypeNode(current)) {
+    current = current.getTypeNode();
+  }
+  let result: string | undefined;
+  if (Node.isTypeReference(current)) {
+    const name = current.getTypeName().getText();
+    if (PASSTHROUGH_TYPE_WRAPPERS.has(name)) {
+      const inner = current.getTypeArguments();
+      if (inner.length > 0) {
+        result = peelExtendsTypeNode(inner[0]);
+      }
+    } else {
+      result = name;
+    }
+  }
+  return result;
 }
 
 function extractInterfaceFields(iface: InterfaceDeclaration): readonly ExtractedField[] {
