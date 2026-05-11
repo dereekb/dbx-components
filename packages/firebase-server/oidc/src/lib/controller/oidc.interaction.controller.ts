@@ -142,10 +142,17 @@ export class OidcInteractionController {
 
       const grant = await this.oidcInteractionService.findOrCreateGrant(interaction.grantId, session?.accountId ?? '', clientId, expiresInSeconds);
 
+      // Encountered = scopes/claims already granted (or rejected) on the existing Grant. oidc-provider
+      // excludes these from `missingOIDCScope` etc. when the consent prompt is re-shown via `prompt=consent`,
+      // but the consent UI sources its checkbox list from the auth URL's `scope=` param (the full request set)
+      // and re-submits them all. We accept already-encountered values as silent no-ops so a re-consent on a
+      // client the user has previously authorized doesn't fail validation.
+      const encounteredOIDCScopes = grant.getOIDCScopeEncountered().split(' ').filter(Boolean);
+
       const missingOIDCScope = (prompt.details.missingOIDCScope as string[] | undefined) ?? [];
 
       if (missingOIDCScope.length > 0) {
-        const { granted, rejected } = resolveEffectiveSubset(missingOIDCScope, body.grantedOIDCScopes, ALWAYS_GRANTED_OIDC_SCOPES);
+        const { granted, rejected } = resolveEffectiveSubset(missingOIDCScope, body.grantedOIDCScopes, ALWAYS_GRANTED_OIDC_SCOPES, encounteredOIDCScopes);
 
         if (granted.length > 0) {
           grant.addOIDCScope(granted.join(' '));
@@ -156,10 +163,12 @@ export class OidcInteractionController {
         }
       }
 
+      const encounteredOIDCClaims = grant.getOIDCClaimsEncountered();
+
       const missingOIDCClaims = (prompt.details.missingOIDCClaims as string[] | undefined) ?? [];
 
       if (missingOIDCClaims.length > 0) {
-        const { granted, rejected } = resolveEffectiveSubset(missingOIDCClaims, body.grantedOIDCClaims);
+        const { granted, rejected } = resolveEffectiveSubset(missingOIDCClaims, body.grantedOIDCClaims, [], encounteredOIDCClaims);
 
         if (granted.length > 0) {
           grant.addOIDCClaims(granted);
@@ -174,7 +183,8 @@ export class OidcInteractionController {
 
       for (const [indicator, scopes] of Object.entries(missingResourceScopes)) {
         const requestedSubset = body.grantedResourceScopes?.[indicator];
-        const { granted, rejected } = resolveEffectiveSubset(scopes, requestedSubset);
+        const encounteredResourceScopes = grant.getResourceScopeEncountered(indicator).split(' ').filter(Boolean);
+        const { granted, rejected } = resolveEffectiveSubset(scopes, requestedSubset, [], encounteredResourceScopes);
 
         if (granted.length > 0) {
           grant.addResourceScope(indicator, granted.join(' '));
@@ -225,35 +235,42 @@ export class OidcInteractionController {
 
 /**
  * Resolves the effective set to grant — and the complementary set to
- * reject — from a missing set, an optional caller-provided subset, and
- * an optional list of always-granted entries.
+ * reject — from a missing set, an optional caller-provided subset, an
+ * optional list of always-granted entries, and an optional list of
+ * already-encountered entries (granted or rejected on the existing Grant).
  *
- * Throws `400 BAD_REQUEST` if the requested subset contains entries that
- * are not in the missing set (no privilege escalation).
+ * Throws `400 BAD_REQUEST` if the requested subset contains an entry that
+ * is in neither the missing set nor the already-encountered set (no
+ * privilege escalation).
  *
  * - When `requestedSubset` is undefined → grants everything in `missing` (back-compat); rejects nothing.
- * - When `requestedSubset` is provided → grants exactly that subset; rejects every other missing entry so
- *   oidc-provider does not re-prompt for them.
+ * - When `requestedSubset` is provided → grants the intersection with `missing`; rejects every other missing
+ *   entry so oidc-provider does not re-prompt for them. Values in `alreadyEncountered` pass validation but
+ *   are not re-applied to the grant (no-op).
  * - Always-granted entries are union'd into `granted` (clamped to `missing`).
  *
  * @param missing - Entries the OIDC prompt indicated were missing for this consent.
- * @param requestedSubset - Optional subset the caller wants to grant; must be a subset of `missing`.
+ * @param requestedSubset - Optional subset the caller wants to grant; each value must be in `missing` or `alreadyEncountered`.
  * @param alwaysGranted - Entries that must be granted whenever they appear in `missing`, regardless of `requestedSubset`.
+ * @param alreadyEncountered - Entries the existing Grant has previously granted or rejected. Tolerated as no-ops on re-consent.
  * @returns `granted` to add to the grant and `rejected` to record on the grant.
  */
-function resolveEffectiveSubset(missing: readonly string[], requestedSubset: readonly string[] | undefined, alwaysGranted: readonly string[] = []): { granted: string[]; rejected: string[] } {
+export function resolveEffectiveSubset(missing: readonly string[], requestedSubset: readonly string[] | undefined, alwaysGranted: readonly string[] = [], alreadyEncountered: readonly string[] = []): { granted: string[]; rejected: string[] } {
   const missingSet = new Set(missing);
+  const encounteredSet = new Set(alreadyEncountered);
   let baseSelection: readonly string[];
 
   if (requestedSubset === undefined) {
     baseSelection = missing;
   } else {
     for (const value of requestedSubset) {
-      if (!missingSet.has(value)) {
+      if (!missingSet.has(value) && !encounteredSet.has(value)) {
         throw new HttpException(`Granted value "${value}" is not in the requested set.`, HttpStatus.BAD_REQUEST);
       }
     }
-    baseSelection = requestedSubset;
+    // Filter to `missing` only — already-encountered values pass validation but
+    // do not need to be re-applied (oidc-provider's Grant tracks them already).
+    baseSelection = requestedSubset.filter((value) => missingSet.has(value));
   }
 
   const grantedSet = new Set<string>(baseSelection);

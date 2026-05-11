@@ -1149,8 +1149,19 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
            * can inspect or continue the flow as needed.
            */
           // eslint-disable-next-line @typescript-eslint/max-params -- mirrors performAuthCodeFlow shape
-          async function performAuthCodeFlowToConsent(server: ReturnType<INestApplication['getHttpServer']>, clientId: string, consentBody: Record<string, unknown>, scope = 'openid email demo'): Promise<{ consentResponse: request.Response; cookieHeader: string; codeVerifier: string; idToken: string }> {
+          async function performAuthCodeFlowToConsent(server: ReturnType<INestApplication['getHttpServer']>, clientId: string, consentBody: Record<string, unknown>, scope = 'openid email demo', extraAuthParams: Record<string, string | number> = {}, initialCookieHeader = ''): Promise<{ consentResponse: request.Response; cookieHeader: string; codeVerifier: string; idToken: string }> {
             const cookieJar = new Map<string, string>();
+
+            // Pre-seed cookies so a follow-up flow can reuse the prior flow's session (carrying
+            // `session.grantIdFor(clientId)` to oidc-provider's loadExistingGrant).
+            if (initialCookieHeader) {
+              for (const cookie of initialCookieHeader.split('; ')) {
+                if (cookie) {
+                  const [name] = cookie.split('=');
+                  cookieJar.set(name, cookie);
+                }
+              }
+            }
 
             function collectCookies(res: request.Response): void {
               const setCookies = res.headers['set-cookie'];
@@ -1183,7 +1194,8 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
                 code_challenge: codeChallenge,
                 code_challenge_method: 'S256',
                 state: 'test-state',
-                nonce: 'test-nonce'
+                nonce: 'test-nonce',
+                ...extraAuthParams
               })
               .redirects(0);
 
@@ -1352,6 +1364,69 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             expect(grantedScopes).toContain('openid');
             expect(grantedScopes).toContain('email');
             expect(grantedScopes).toContain('demo');
+          });
+
+          it('tolerates already-granted scopes on a prompt=consent re-display', async () => {
+            // Regression: when a user has previously consented to a client and a new auth request uses
+            // `prompt=consent` (forcing the consent UI to re-display), oidc-provider's
+            // `prompt.details.missingOIDCScope` only contains scopes NOT yet on the existing Grant. The
+            // dbx-firebase consent UI, however, sources its checkbox list from the auth URL's `scope=`
+            // param and re-submits the full set. The server must silently no-op already-granted values
+            // instead of returning 400, or returning users get locked out of the consent flow.
+            const server = app.getHttpServer();
+            const { client_id, client_secret } = await oidcClientService.createClient({
+              client_name: 'partial-consent-prompt-consent-no-op',
+              redirect_uris: ['https://example.com/callback'],
+              token_endpoint_auth_method: 'client_secret_post'
+            });
+
+            // First flow: seed an existing Grant with all requested scopes.
+            const first = await performAuthCodeFlowToConsent(server, client_id, { approved: true, grantedOIDCScopes: ['openid', 'email', 'demo'] });
+            await exchangeConsentForAuthorizationCode(server, first.consentResponse, first.cookieHeader);
+
+            // Second flow with prompt=consent and the same scope set re-submitted on consent. The session
+            // cookie from the first flow is carried so oidc-provider's loadExistingGrant finds the prior
+            // Grant via `session.grantIdFor(clientId)`. Pre-fix this returned 400 "Granted value
+            // '<scope>' is not in the requested set." for every already-granted value (since
+            // missingOIDCScope was empty). Post-fix it should silently no-op.
+            const second = await performAuthCodeFlowToConsent(server, client_id, { approved: true, grantedOIDCScopes: ['openid', 'email', 'demo'] }, 'openid email demo', { prompt: 'consent' }, first.cookieHeader);
+
+            expect(second.consentResponse.status).toBe(200);
+            expect(second.consentResponse.body.redirectTo).toBeDefined();
+
+            const authorizationCode = await exchangeConsentForAuthorizationCode(server, second.consentResponse, second.cookieHeader);
+
+            const tokenRes = await request(server).post('/oidc/token').set('Cookie', second.cookieHeader).type('form').send({
+              grant_type: 'authorization_code',
+              code: authorizationCode,
+              redirect_uri: 'https://example.com/callback',
+              client_id,
+              client_secret,
+              code_verifier: second.codeVerifier
+            });
+
+            expect(tokenRes.status).toBe(200);
+            const grantedScopes = (tokenRes.body.scope as string | undefined)?.split(' ') ?? [];
+            expect(grantedScopes).toContain('openid');
+            expect(grantedScopes).toContain('email');
+            expect(grantedScopes).toContain('demo');
+          });
+
+          it('still rejects an unrequested scope on a prompt=consent re-display', async () => {
+            // The tolerance for already-granted scopes must not weaken the unrequested-scope check.
+            const server = app.getHttpServer();
+            const { client_id } = await oidcClientService.createClient({
+              client_name: 'partial-consent-prompt-consent-still-rejects-unrequested',
+              redirect_uris: ['https://example.com/callback'],
+              token_endpoint_auth_method: 'client_secret_post'
+            });
+
+            const first = await performAuthCodeFlowToConsent(server, client_id, { approved: true, grantedOIDCScopes: ['openid', 'email', 'demo'] });
+            await exchangeConsentForAuthorizationCode(server, first.consentResponse, first.cookieHeader);
+
+            const second = await performAuthCodeFlowToConsent(server, client_id, { approved: true, grantedOIDCScopes: ['openid', 'email', 'demo', 'unrequested-scope'] }, 'openid email demo', { prompt: 'consent' }, first.cookieHeader);
+
+            expect(second.consentResponse.status).toBe(400);
           });
         });
 

@@ -125,18 +125,23 @@ export class ModelApiGetService {
    * Builds an {@link AuthDataRef} compatible with `useModel()` from the HTTP request auth.
    *
    * Uses the same synthetic auth pattern as {@link ModelApiDispatchService.dispatch}.
+   * The OIDC-validated claim subset is layered over the base token so the synthetic
+   * `auth.token` keeps standard JWT claims (`iat`, `auth_time`, `email`, …) that
+   * downstream consumers like `authContextInfo` rely on.
    *
    * @param auth - The Firebase server auth data from the HTTP request, or undefined for unauthenticated requests.
    * @returns An object containing a synthetic {@link AuthData} for use with `useModel()`, or undefined auth.
    */
   private _makeAuthRef(auth: Maybe<FirebaseServerAuthData>): { auth?: AuthData } {
-    return {
-      auth: auth
-        ? ({
-            uid: auth.uid,
-            token: (auth as any).oidcValidatedToken ?? (auth as any).token ?? {}
-          } as AuthData)
-        : undefined
-    };
+    let synthetic: AuthData | undefined;
+    if (auth) {
+      const baseToken = (auth as any).token ?? {};
+      const oidcToken = (auth as any).oidcValidatedToken ?? {};
+      synthetic = {
+        uid: auth.uid,
+        token: { ...baseToken, ...oidcToken }
+      } as AuthData;
+    }
+    return { auth: synthetic };
   }
 }
