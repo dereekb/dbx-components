@@ -100,10 +100,12 @@ export class DbxFirebaseOAuthLoginComponent implements OnDestroy {
 
     this.interactionService.submitLogin(uid).subscribe({
       next: (response) => {
-        this.submitting.set(false);
-
         if (response.redirectTo) {
+          // Leave `submitting` true so the auto-submit effect cannot re-enter
+          // and fire another `submitLogin` POST while the browser navigates.
           window.location.href = response.redirectTo;
+        } else {
+          this.submitting.set(false);
         }
       },
       error: () => {
