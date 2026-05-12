@@ -207,5 +207,67 @@ describe('authRoleClaimsFactory()', () => {
         expect(objectHasKey(result, 'ignoredValue')).toBe(false);
       });
     });
+
+    describe('claimKeys and copyClaims', () => {
+      const claimsConfig = {
+        test: {
+          roles: 'n'
+        },
+        u: {
+          roles: AUTH_USER_ROLE,
+          value: 10
+        },
+        m: {
+          roles: ['a', 'b', 'c']
+        },
+        ignoredValue: null
+      };
+
+      const service = authRoleClaimsService<TestClaims>(claimsConfig);
+
+      describe('claimKeys', () => {
+        it('should expose every non-null claim key in declaration order.', () => {
+          expect(service.claimKeys).toEqual(['test', 'u', 'm']);
+        });
+
+        it('should not include keys that were ignored via null.', () => {
+          expect(service.claimKeys).not.toContain('ignoredValue');
+        });
+      });
+
+      describe('copyClaims', () => {
+        it('should copy only the registered claim keys from the source.', () => {
+          const source = { test: 'n', u: 10, m: 1, ignoredValue: true, extra: 'x' } as unknown as AuthClaimsObject;
+          const result = service.copyClaims(source as never);
+
+          expect(result).toEqual({ test: 'n', u: 10, m: 1 });
+          expect(objectHasKey(result, 'ignoredValue')).toBe(false);
+          expect(objectHasKey(result, 'extra')).toBe(false);
+        });
+
+        it('should omit registered keys whose source value is undefined.', () => {
+          const source = { u: 10 } as unknown as AuthClaimsObject;
+          const result = service.copyClaims(source as never);
+
+          expect(result).toEqual({ u: 10 });
+          expect(objectHasKey(result, 'test')).toBe(false);
+          expect(objectHasKey(result, 'm')).toBe(false);
+        });
+
+        it('should preserve null values so it can be used on a claims update.', () => {
+          const source = { test: null, u: 10, m: null } as unknown as AuthClaimsObject;
+          const result = service.copyClaims(source as never);
+
+          expect(result).toEqual({ test: null, u: 10, m: null });
+        });
+
+        it('should return an empty object when the source has no registered keys.', () => {
+          const source = { other: 'x' } as unknown as AuthClaimsObject;
+          const result = service.copyClaims(source as never);
+
+          expect(result).toEqual({});
+        });
+      });
+    });
   });
 });

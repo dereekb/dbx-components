@@ -4,7 +4,7 @@ import { JwksServiceStorageConfig, type OidcAccountClaims, OidcAccountService, o
 import { DemoApiAuthModule } from '../../common/firebase/auth.module';
 import { DemoApiAuthService, DemoApiFirestoreModule, DemoApiStorageModule } from '../../common/firebase';
 import { type FirebaseServerAuthUserContext, FirebaseServerStorageService } from '@dereekb/firebase-server';
-import { DEMO_APP_OAUTH_INTERACTION_PATH, DEMO_OIDC_TOKEN_ENDPOINT_AUTH_METHODS, type DemoApiAuthClaims, type DemoOidcScope } from 'demo-firebase';
+import { DEMO_APP_OAUTH_INTERACTION_PATH, DEMO_AUTH_CLAIMS_SERVICE, DEMO_OIDC_TOKEN_ENDPOINT_AUTH_METHODS, type DemoApiAuthClaims, type DemoOidcScope } from 'demo-firebase';
 
 export type DemoOidcAccountServiceDelegate = OidcAccountServiceDelegate<DemoOidcScope>;
 
@@ -15,7 +15,7 @@ export const DEMO_OIDC_PROVIDER_CONFIG: OidcProviderConfig<DemoOidcScope> = {
     [EMAIL_OIDC_SCOPE]: ['email', 'email_verified'],
     // offline_access grants a refresh token but adds no extra ID-token claims.
     [OFFLINE_ACCESS_OIDC_SCOPE]: [],
-    demo: ['sub', 'o', 'a', 'fr'],
+    demo: ['sub', ...DEMO_AUTH_CLAIMS_SERVICE.claimKeys],
     // model.* scopes confer authorization for callModel CRUD operations and add no extra ID-token claims.
     'model.create': [],
     'model.read': [],
@@ -60,9 +60,7 @@ export function demoOidcAccountServiceFactory(demoApiAuthService: DemoApiAuthSer
 
       if (scopes.has('demo')) {
         const authClaims = await userContext.loadClaims<DemoApiAuthClaims>();
-        claims.o = authClaims.o;
-        claims.a = authClaims.a;
-        claims.fr = authClaims.fr;
+        Object.assign(claims, DEMO_AUTH_CLAIMS_SERVICE.copyClaims(authClaims));
       }
 
       return claims;
