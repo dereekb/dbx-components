@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { type, type Type } from 'arktype';
 import yargs from 'yargs';
-import { buildManifestCommands, detectDataHelpFormat, type ManifestHelpDataFormat } from './build-manifest-commands';
-import { type CliApiManifest } from './types';
+import { buildManifestCommands, detectDataHelpFormat, resolvePerModelGetKey, type ManifestHelpDataFormat } from './build-manifest-commands';
+import { type CliApiManifest, type CliModelManifest } from './types';
 
 interface SampleParams {
   readonly guestbook: string;
@@ -29,7 +29,15 @@ const MANIFEST: CliApiManifest = [
   }
 ];
 
-function helpFor(args: readonly string[], format?: ManifestHelpDataFormat): Promise<string> {
+interface HelpForOptions {
+  readonly format?: ManifestHelpDataFormat;
+  readonly apiManifest?: CliApiManifest;
+  readonly modelManifest?: CliModelManifest;
+}
+
+function helpFor(args: readonly string[], formatOrOptions?: ManifestHelpDataFormat | HelpForOptions): Promise<string> {
+  const options: HelpForOptions = typeof formatOrOptions === 'string' ? { format: formatOrOptions } : (formatOrOptions ?? {});
+  const apiManifest = options.apiManifest ?? MANIFEST;
   const parser = yargs([...args])
     .scriptName('demo-cli')
     .option('verbose', { alias: 'v', type: 'boolean', default: false, global: true, describe: 'Verbose output' })
@@ -42,9 +50,10 @@ function helpFor(args: readonly string[], format?: ManifestHelpDataFormat): Prom
     .option('data-help', { type: 'string', global: true, describe: 'Data help' })
     .option('all-help', { type: 'boolean', global: true, describe: 'All help' })
     .command(
-      buildManifestCommands(MANIFEST, {
+      buildManifestCommands(apiManifest, {
         argv: args,
-        ...(format ? { dataHelpFormat: format } : {})
+        ...(options.format ? { dataHelpFormat: options.format } : {}),
+        ...(options.modelManifest ? { modelManifest: options.modelManifest } : {})
       })
     )
     .exitProcess(false)
@@ -171,6 +180,163 @@ describe('buildManifestCommands', () => {
     expect(help).toMatch(/^\s+--pick-all\s/m);
     // Schema section is still rendered in the requested format.
     expect(help).toContain('Params Schema (arktype):');
+  });
+});
+
+describe('buildManifestCommands per-model `get` help text', () => {
+  const API_MANIFEST: CliApiManifest = [
+    {
+      model: 'profile',
+      verb: 'update',
+      groupName: 'Profile',
+      sourceFile: 'components/demo-firebase/src/lib/model/profile/profile.api.ts'
+    },
+    {
+      model: 'guestbookEntry',
+      verb: 'update',
+      specifier: 'insert',
+      groupName: 'Guestbook',
+      sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts'
+    }
+  ];
+
+  const MODEL_MANIFEST_WITH_BOTH: CliModelManifest = [
+    {
+      modelType: 'profile',
+      modelName: 'Profile',
+      identityConst: 'profileIdentity',
+      collectionPrefix: 'p',
+      sourcePackage: 'demo-firebase',
+      sourceFile: 'profile.ts',
+      fields: []
+    },
+    {
+      modelType: 'guestbook',
+      modelName: 'Guestbook',
+      identityConst: 'guestbookIdentity',
+      collectionPrefix: 'gb',
+      sourcePackage: 'demo-firebase',
+      sourceFile: 'guestbook.ts',
+      fields: []
+    },
+    {
+      modelType: 'guestbookEntry',
+      modelName: 'GuestbookEntry',
+      identityConst: 'guestbookEntryIdentity',
+      collectionPrefix: 'gbe',
+      parentIdentityConst: 'guestbookIdentity',
+      sourcePackage: 'demo-firebase',
+      sourceFile: 'guestbook.ts',
+      fields: []
+    }
+  ];
+
+  function normalize(s: string): string {
+    return s.replace(/\s+/g, ' ').trim();
+  }
+
+  it('shows `get <id-or-key>` in usage for a root-level model when the model manifest is wired', async () => {
+    const help = await helpFor(['model', 'profile', '--help'], { apiManifest: API_MANIFEST, modelManifest: MODEL_MANIFEST_WITH_BOTH });
+    expect(help).toContain('get <id-or-key>');
+    expect(help).not.toContain('get <key>');
+    expect(normalize(help)).toContain('Read a single profile document by id or key.');
+  });
+
+  it('mentions the resolved `<prefix>/<id>` form in the positional help for root models', async () => {
+    const help = await helpFor(['model', 'profile', 'get', '--help'], { apiManifest: API_MANIFEST, modelManifest: MODEL_MANIFEST_WITH_BOTH });
+    const flat = normalize(help);
+    expect(flat).toContain('`p/<id>`');
+    expect(flat).toContain('full `prefix/id`');
+  });
+
+  it('keeps `get <key>` in usage for a subcollection model (guestbookEntry)', async () => {
+    const help = await helpFor(['model', 'guestbookEntry', '--help'], { apiManifest: API_MANIFEST, modelManifest: MODEL_MANIFEST_WITH_BOTH });
+    expect(help).toContain('get <key>');
+    expect(help).not.toContain('get <id-or-key>');
+    expect(normalize(help)).toContain('Read a single guestbookEntry document by key.');
+  });
+
+  it('says bare doc id is not supported in the positional help for a subcollection model', async () => {
+    const help = await helpFor(['model', 'guestbookEntry', 'get', '--help'], { apiManifest: API_MANIFEST, modelManifest: MODEL_MANIFEST_WITH_BOTH });
+    const flat = normalize(help);
+    expect(flat).toContain('bare doc id is not supported for this subcollection model');
+  });
+
+  it('falls back to `get <key>` when no model manifest is wired (root/sub indeterminate)', async () => {
+    const help = await helpFor(['model', 'profile', '--help'], { apiManifest: API_MANIFEST });
+    expect(help).toContain('get <key>');
+    expect(help).not.toContain('get <id-or-key>');
+  });
+});
+
+describe('resolvePerModelGetKey', () => {
+  const MODEL_MANIFEST: CliModelManifest = [
+    {
+      modelType: 'profile',
+      modelName: 'Profile',
+      identityConst: 'profileIdentity',
+      collectionPrefix: 'p',
+      sourcePackage: 'demo-firebase',
+      sourceFile: 'profile.ts',
+      fields: []
+    },
+    {
+      modelType: 'guestbook',
+      modelName: 'Guestbook',
+      identityConst: 'guestbookIdentity',
+      collectionPrefix: 'gb',
+      sourcePackage: 'demo-firebase',
+      sourceFile: 'guestbook.ts',
+      fields: []
+    },
+    {
+      modelType: 'guestbookEntry',
+      modelName: 'GuestbookEntry',
+      identityConst: 'guestbookEntryIdentity',
+      collectionPrefix: 'gbe',
+      parentIdentityConst: 'guestbookIdentity',
+      sourcePackage: 'demo-firebase',
+      sourceFile: 'guestbook.ts',
+      fields: []
+    }
+  ];
+
+  describe('top-level model (profile)', () => {
+    it('prepends the collection prefix for a bare doc id', () => {
+      expect(resolvePerModelGetKey('profile', 'abc123', MODEL_MANIFEST)).toBe('p/abc123');
+    });
+
+    it('passes a full prefix/id key through unchanged', () => {
+      expect(resolvePerModelGetKey('profile', 'p/abc123', MODEL_MANIFEST)).toBe('p/abc123');
+    });
+
+    it('resolves the bare id and the full prefix/id form to the same key', () => {
+      const fromId = resolvePerModelGetKey('profile', 'abc123', MODEL_MANIFEST);
+      const fromKey = resolvePerModelGetKey('profile', 'p/abc123', MODEL_MANIFEST);
+      expect(fromId).toBe(fromKey);
+      expect(fromId).toBe('p/abc123');
+    });
+  });
+
+  describe('subcollection model (guestbookEntry)', () => {
+    it('throws on a bare doc id and tells the caller what the full path should look like', () => {
+      expect(() => resolvePerModelGetKey('guestbookEntry', 'abc123', MODEL_MANIFEST)).toThrow(/subcollection/);
+      expect(() => resolvePerModelGetKey('guestbookEntry', 'abc123', MODEL_MANIFEST)).toThrow(/<parentPrefix>\/<parentId>\/gbe\/abc123/);
+    });
+
+    it('passes a full subcollection path through unchanged', () => {
+      expect(resolvePerModelGetKey('guestbookEntry', 'gb/book1/gbe/abc123', MODEL_MANIFEST)).toBe('gb/book1/gbe/abc123');
+    });
+  });
+
+  describe('fallbacks', () => {
+    it('passes the key through unchanged when the manifest is not wired', () => {
+      expect(resolvePerModelGetKey('profile', 'abc123', undefined)).toBe('abc123');
+    });
+
+    it('passes the key through unchanged when the model is not in the manifest', () => {
+      expect(resolvePerModelGetKey('unknown', 'abc123', MODEL_MANIFEST)).toBe('abc123');
+    });
   });
 });
 

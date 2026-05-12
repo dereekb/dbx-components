@@ -295,7 +295,7 @@ function buildModelCommand(model: string, entries: readonly CliApiManifestEntry[
         yargs.command(buildEntryCommand(entry, context));
       }
 
-      yargs.command(buildPerModelGetCommand(model));
+      yargs.command(buildPerModelGetCommand(model, context.modelManifest));
 
       hideGlobalOptions(yargs, context.hideOnFocus);
 
@@ -306,34 +306,100 @@ function buildModelCommand(model: string, entries: readonly CliApiManifestEntry[
 }
 
 /**
- * Synthetic per-model `get <key>` sub-command appended to every model's command tree.
+ * Resolves a per-model `get` positional into the full Firestore key the backend expects.
  *
- * The parent `model <name>` already fixes the `modelType`, so this command just passes the bare
- * `key` positional through to `context.getModel(modelType, key)`. Supports both the full
- * `<prefix>/<id>` form and a bare doc id (when the user knows the modelType from the parent).
+ * The backend's `ModelApiController.getOne` only accepts full `prefix/id` keys, so a bare doc id
+ * has to be expanded before the HTTP call. The expansion is only safe for top-level (root) models
+ * whose `collectionPrefix` is enough to address the document — subcollection models also need the
+ * parent prefix/id and cannot be reconstructed from a bare id alone.
+ *
+ * Rules:
+ * 1. Keys containing `/` are treated as full keys and passed through verbatim.
+ * 2. Bare ids on a top-level model resolve to `<collectionPrefix>/<id>` via the manifest.
+ * 3. Bare ids on a subcollection model throw — the parent path is required.
+ * 4. When the manifest is not wired, bare ids pass through unchanged (preserves the old behavior
+ *    so the CLI still works without `modelManifest` even though the backend will reject the call).
+ *
+ * @param model - The persisted model type (e.g. `profile`).
+ * @param key - The trimmed `<key>` positional from yargs — full `prefix/id` or bare doc id.
+ * @param manifest - The generated model manifest used to look up the model's `collectionPrefix`
+ *   and `parentIdentityConst`. When omitted, the key passes through unchanged.
+ * @returns The resolved Firestore model key ready for `context.getModel(model, key)`.
+ * @__NO_SIDE_EFFECTS__
  */
-function buildPerModelGetCommand(model: string): CommandModule {
+export function resolvePerModelGetKey(model: string, key: string, manifest: CliModelManifest | undefined): string {
+  let result = key;
+
+  if (!key.includes('/')) {
+    const entry = manifest?.find((e) => e.modelType === model);
+
+    if (entry) {
+      if (entry.parentIdentityConst) {
+        throw new CliError({
+          message: `get: model '${model}' is a subcollection — bare doc id '${key}' is ambiguous without the parent path. Provide a full key (e.g. '<parentPrefix>/<parentId>/${entry.collectionPrefix}/${key}').`,
+          code: 'INVALID_ARGUMENT'
+        });
+      }
+
+      result = `${entry.collectionPrefix}/${key}`;
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Synthetic per-model `get` sub-command appended to every model's command tree.
+ *
+ * The parent `model <name>` already fixes the `modelType`. The command shape varies by whether
+ * the model is root-level (no parent) or a subcollection — only root models can address documents
+ * by bare doc id, so subcollection models keep the `<key>` positional (full `prefix/id` required):
+ *
+ * - **Root model with a wired manifest entry** — `get <id-or-key>` accepts either a bare doc id
+ *   (expanded to `<collectionPrefix>/<id>` via {@link resolvePerModelGetKey}) or a full
+ *   `<prefix>/<id>` key.
+ * - **Subcollection model with a wired manifest entry** — `get <key>` requires the full
+ *   `<parentPrefix>/<parentId>/<childPrefix>/<childId>` path. Bare doc ids are rejected with a
+ *   clear error because the parent path cannot be reconstructed from the id alone.
+ * - **No wired model manifest** — falls back to `get <key>`; the key is forwarded verbatim and
+ *   the backend will reject anything that is not a full `prefix/id` key.
+ *
+ * @param model - The persisted model type owning this `get` subcommand.
+ * @param manifest - The generated model manifest used by {@link resolvePerModelGetKey} to expand
+ *   bare doc ids into full keys for top-level models and to pick the command shape.
+ * @returns The yargs `CommandModule` registered under the model's command tree.
+ */
+function buildPerModelGetCommand(model: string, manifest: CliModelManifest | undefined): CommandModule {
+  const entry = manifest?.find((e) => e.modelType === model);
+  const isRootModel = entry != null && !entry.parentIdentityConst;
+  const positionalName = isRootModel ? 'idOrKey' : 'key';
+  const placeholder = isRootModel ? '<id-or-key>' : '<key>';
+  const positionalDescribe = isRootModel ? `Firestore key for the ${model} document — bare doc id (resolved to \`${entry.collectionPrefix}/<id>\`) or full \`prefix/id\`.` : `Firestore key for the ${model} document (full \`prefix/id\` — bare doc id is not supported${entry ? ' for this subcollection model' : ''}).`;
+  const commandDescribe = isRootModel ? `Read a single ${model} document by id or key.` : `Read a single ${model} document by key.`;
+
   return {
-    command: 'get <key>',
-    describe: `Read a single ${model} document by key.`,
+    command: `get ${placeholder}`,
+    describe: commandDescribe,
     builder: (yargs: Argv) =>
-      yargs.positional('key', {
+      yargs.positional(positionalName, {
         type: 'string',
-        describe: `Firestore key for the ${model} document (full \`prefix/id\` or bare id).`
+        describe: positionalDescribe
       }),
     handler: async (argv: any) => {
       try {
         const ctx = requireCliContext();
-        const key = typeof argv.key === 'string' ? argv.key.trim() : '';
+        const raw = argv[positionalName];
+        const key = typeof raw === 'string' ? raw.trim() : '';
 
         if (key.length === 0) {
           throw new CliError({
-            message: `get: missing required <key> positional for model '${model}'.`,
+            message: `get: missing required ${placeholder} positional for model '${model}'.`,
             code: 'INVALID_ARGUMENT'
           });
         }
 
-        const result = await ctx.getModel(model, key);
+        const resolvedKey = resolvePerModelGetKey(model, key, manifest);
+        const result = await ctx.getModel(model, resolvedKey);
         outputResult(result);
       } catch (e) {
         outputError(e);

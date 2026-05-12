@@ -132,11 +132,35 @@ export type AuthRoleClaimsToRolesFunction<T extends AuthClaimsObject = AuthClaim
 export type AuthRoleRolesToClaimsFunction<T extends AuthClaimsObject = AuthClaimsObject> = (claims: AuthClaims<T> | AuthClaimsUpdate<T>) => AuthRoleSet;
 
 /**
+ * Picks the registered claim keys from a source claims object.
+ *
+ * Values that are `undefined` in the source are omitted from the result. `null` values
+ * are preserved so this also works with an {@link AuthClaimsUpdate} (where `null` means
+ * "explicitly clear"). Unknown keys on the source are ignored.
+ */
+export type AuthRoleClaimsCopyFunction<T extends AuthClaimsObject = AuthClaimsObject> = (source: AuthClaims<T> | AuthClaimsUpdate<T>) => AuthClaimsUpdate<T>;
+
+/**
  * Service used for converting claims to/from a roles set.
  */
 export interface AuthRoleClaimsService<T extends AuthClaimsObject> {
   readonly toClaims: AuthRoleClaimsToRolesFunction<T>;
   readonly toRoles: AuthRoleRolesToClaimsFunction<T>;
+  /**
+   * Claim keys registered with this service (in declaration order, excluding ignored/null entries).
+   *
+   * Useful for keeping a separate list of "allowed claims" — such as an OIDC scope's claim
+   * allow-list — in sync with the service's configuration.
+   */
+  readonly claimKeys: ReadonlyArray<keyof T & string>;
+  /**
+   * Returns a new object containing only the {@link claimKeys} present in the source.
+   *
+   * Intended for use when forwarding a subset of a user's auth claims to another system
+   * (e.g. building OIDC token claims from a Firebase Auth user record's custom claims),
+   * so the set of forwarded keys stays driven by the same registration that defines them.
+   */
+  readonly copyClaims: AuthRoleClaimsCopyFunction<T>;
   readonly defaultClaimValue: unknown;
   readonly defaultEmptyValue: unknown;
 }
@@ -268,9 +292,27 @@ export function authRoleClaimsService<T extends AuthClaimsObject>(config: AuthRo
     return roles;
   };
 
+  const claimKeys = tuples.map(([key]) => key) as ReadonlyArray<keyof T & string>;
+
+  const copyClaims: AuthRoleClaimsCopyFunction<T> = (source) => {
+    const result = {} as AuthClaimsUpdate<T>;
+
+    claimKeys.forEach((key) => {
+      const value = (source as AuthClaimsUpdate<T>)[key];
+
+      if (value !== undefined) {
+        result[key] = value;
+      }
+    });
+
+    return result;
+  };
+
   return {
     toClaims,
     toRoles,
+    claimKeys,
+    copyClaims,
     defaultClaimValue,
     defaultEmptyValue
   };
