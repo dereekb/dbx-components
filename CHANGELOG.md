@@ -1,3 +1,21 @@
+## [13.11.10](https://github.com/dereekb/dbx-components/compare/v13.11.9-dev...v13.11.10) (2026-05-12)
+
+
+### Bug Fixes
+
+- **oidc:** prevent duplicate OAuth login submissions ([19cc0375](https://github.com/dereekb/dbx-components/commit/19cc0375b66c76ac41453c984175a43ea3173b33))
+
+
+### Build System
+
+- lint fix + mcp regeneration ([a979a212](https://github.com/dereekb/dbx-components/commit/a979a212cedf616497d6af9b8e68b8c1b467ecac))
+
+
+### Code Refactoring
+
+- **dbx-cli:** per-model get accepts bare id for root models ([c6f83ed9](https://github.com/dereekb/dbx-components/commit/c6f83ed9a14b5105ec5cbdbed1f52921ba7d2d56))
+- **util:** added claimKeys and copyClaims to claims service ([2e909720](https://github.com/dereekb/dbx-components/commit/2e909720b92c95c4d2fdfe2c14cb2d4cda6b24c6))
+
 ## [13.11.9](https://github.com/dereekb/dbx-components/compare/v13.11.8-dev...v13.11.9) (2026-05-11)
 
 
