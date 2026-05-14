@@ -54,6 +54,8 @@
  * | dbx_asset_list_app                  | Discovery     | "What AssetPathRef constants does this component declare?"                   |
  * | dbx_asset_validate_folder           | Verification  | "Does this component's assets.ts follow the convention?"                     |
  * | dbx_asset_scaffold                  | Generation    | "Scaffold a new AssetPathRef constant for kind X."                           |
+ * | dbx_color_template_list_app         | Discovery     | "What DbxColorConfigTemplate entries does this app register?"                |
+ * | dbx_color_smell_check               | Verification  | "Are there duplicate inline DbxColorConfig literals that should be templates?" |
  * | dbx_action_lookup                   | Documentation | "Tell me about action directive / state X"             |
  * | dbx_action_examples                 | Working code  | "Show me how to wire an action like X"                 |
  * | dbx_action_scaffold                 | Generation    | "Scaffold the action stack for use case X"             |
@@ -125,6 +127,8 @@ import { dbxAssetValidateAppTool } from './dbx-asset-validate-app.tool.js';
 import { dbxAssetListAppTool } from './dbx-asset-list-app.tool.js';
 import { dbxAssetValidateFolderTool } from './dbx-asset-validate-folder.tool.js';
 import { dbxAssetScaffoldTool } from './dbx-asset-scaffold.tool.js';
+import { dbxColorTemplateListAppTool } from './dbx-color-template-list-app.tool.js';
+import { dbxColorSmellCheckTool } from './dbx-color-smell-check.tool.js';
 import { createLookupActionTool } from './lookup-action.tool.js';
 import { actionExamplesTool } from './action-examples.tool.js';
 import { actionScaffoldTool } from './action-scaffold.tool.js';
@@ -214,6 +218,9 @@ export const DBX_TOOLS: readonly DbxTool[] = [
   dbxAssetListAppTool,
   dbxAssetValidateFolderTool,
   dbxAssetScaffoldTool,
+  // color (Angular app extension)
+  dbxColorTemplateListAppTool,
+  dbxColorSmellCheckTool,
   // action
   actionExamplesTool,
   actionScaffoldTool,
