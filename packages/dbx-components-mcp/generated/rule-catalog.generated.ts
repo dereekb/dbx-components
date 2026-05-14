@@ -545,6 +545,40 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     canonicalFix: "Pass `(parentIdentity?, '<modelType>', '<prefix>')` as inline string literals."
   },
   {
+    code: 'MODEL_IDENTITY_COLLECTION_NAME_DUPLICATE',
+    source: 'dbx_model_validate',
+    severity: 'error',
+    title:
+      "Two `firestoreModelIdentity(...)` declarations share the same `collectionName` (the lowercase Firestore collection segment passed as the `collectionName` arg, surfaced in the manifest as `collectionPrefix`). Collection names must be globally unique across the merged model manifest — `@dereekb/firebase` upstream plus every discovered `*-firebase` component — because Firestore collection-group queries match by collection name regardless of where the collection sits in the document hierarchy, so two collections sharing a name silently bleed into each other's results",
+    whatItFlags:
+      "Two `firestoreModelIdentity(...)` declarations share the same `collectionName` (the lowercase Firestore collection segment passed as the `collectionName` arg, surfaced in the manifest as `collectionPrefix`). Collection names must be globally unique across the merged model manifest — `@dereekb/firebase` upstream plus every discovered `*-firebase` component — because Firestore collection-group queries match by collection name regardless of where the collection sits in the document hierarchy, so two collections sharing a name silently bleed into each other's results.",
+    whenItApplies: 'Every `firestoreModelIdentity(...)` declaration discovered by the manifest scan. Anchored at each duplicate occurrence after the first (the first-seen identity is treated as the incumbent). Applies regardless of root vs. subcollection variant — two subcollections under different parents that share a `collectionName` still collide because CollectionGroup queries do not respect parent paths.',
+    whenItDoesNotApply: 'Identities declared outside the merged manifest scan (e.g. packages the discovery layer does not pick up).',
+    canonicalFix: 'Rename one of the conflicting identities so the `collectionName` arg of `firestoreModelIdentity(modelName, collectionName)` is globally unique. Update every Firestore document path / collection-group query that referenced the renamed segment.',
+    seeAlso: [
+      {
+        kind: 'artifact',
+        target: 'firestore-model'
+      }
+    ]
+  },
+  {
+    code: 'MODEL_IDENTITY_MODEL_TYPE_DUPLICATE',
+    source: 'dbx_model_validate',
+    severity: 'error',
+    title: 'Two `firestoreModelIdentity(...)` declarations share the same `modelType` (the camelCase model identifier passed as the first string arg). Model types must be globally unique across the merged model manifest — `@dereekb/firebase` upstream plus every discovered `*-firebase` component — because the model registry, fixture lookup, and key-to-identity decoding all resolve by `modelType`, so a duplicate silently masks one of the two models',
+    whatItFlags: 'Two `firestoreModelIdentity(...)` declarations share the same `modelType` (the camelCase model identifier passed as the first string arg). Model types must be globally unique across the merged model manifest — `@dereekb/firebase` upstream plus every discovered `*-firebase` component — because the model registry, fixture lookup, and key-to-identity decoding all resolve by `modelType`, so a duplicate silently masks one of the two models.',
+    whenItApplies: 'Every `firestoreModelIdentity(...)` declaration discovered by the manifest scan. Anchored at each duplicate occurrence after the first (the first-seen identity is treated as the incumbent). Applies regardless of root vs. subcollection variant.',
+    whenItDoesNotApply: 'Identities declared outside the merged manifest scan.',
+    canonicalFix: 'Rename one of the conflicting identities so the `modelName` arg of `firestoreModelIdentity(modelName, collectionName)` is globally unique. Update every downstream reference to the renamed `modelType`.',
+    seeAlso: [
+      {
+        kind: 'artifact',
+        target: 'firestore-model'
+      }
+    ]
+  },
+  {
     code: 'MODEL_IDENTITY_NOT_EXPORTED',
     source: 'dbx_model_validate',
     severity: 'error',
