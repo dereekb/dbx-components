@@ -130,7 +130,7 @@ export interface UnreadNotificationItemsResult<D extends NotificationItemMetadat
  * ```
  */
 export function unreadNotificationItems<D extends NotificationItemMetadata = {}>(items: NotificationItem<D>[], considerReadIfCreatedBefore?: Maybe<Date>): UnreadNotificationItemsResult<D> {
-  const checkIsRead = considerReadIfCreatedBefore != null ? (x: NotificationItem<D>) => Boolean(x.v || !isAfter(x.cat, considerReadIfCreatedBefore)) : (x: NotificationItem<D>) => Boolean(x.v);
+  const checkIsRead = considerReadIfCreatedBefore == null ? (x: NotificationItem<D>) => Boolean(x.v) : (x: NotificationItem<D>) => Boolean(x.v || !isAfter(x.cat, considerReadIfCreatedBefore));
   const { included: read, excluded: unread } = separateValues<NotificationItem<D>>(items, checkIsRead);
 
   return {

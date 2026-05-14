@@ -658,6 +658,7 @@ function renderJsonSchemaSection(entry: CliApiManifestEntry): string | undefined
     // method that emits the bare JSON Schema value, e.g. `false`). Round-trip
     // through JSON to invoke those `toJSON()` callbacks before pruning;
     // `structuredClone` would not call them.
+    // NOSONAR (typescript:S7784): structuredClone bypasses toJSON()
     const normalized = JSON.parse(JSON.stringify(raw));
     const pruned = pruneFalseUnionBranches(normalized);
     result = `Params Schema (JSON Schema):\n${JSON.stringify(pruned, null, 2)}`;

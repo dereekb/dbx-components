@@ -161,7 +161,10 @@ export function buildNestServerRootModule(config: NestServerRootModuleConfig): N
     // Respect explicit overrides; only compute defaults when not already set on the config
     const isApiEnabled = config.envConfig.isApiEnabled ?? (appUrl != null && apiPrefix != null);
     const isWebhooksEnabled = config.envConfig.isWebhooksEnabled ?? (appUrl != null && Boolean(config.configureWebhooks));
-    const apiPrefixPath: Maybe<WebsitePath> = apiPrefix ? (apiPrefix.startsWith('/') ? (apiPrefix as WebsitePath) : (`/${apiPrefix}` as WebsitePath)) : undefined;
+    let apiPrefixPath: Maybe<WebsitePath>;
+    if (apiPrefix) {
+      apiPrefixPath = apiPrefix.startsWith('/') ? (apiPrefix as WebsitePath) : (`/${apiPrefix}` as WebsitePath);
+    }
     const appApiUrl = config.envConfig.appApiUrl ?? (isApiEnabled && appUrl && apiPrefixPath ? websiteUrlFromPaths(appUrl, apiPrefixPath) : undefined);
     const webhookPaths: WebsitePath[] = apiPrefixPath ? [apiPrefixPath, DEFAULT_BASE_WEBHOOK_PATH as WebsitePath] : [DEFAULT_BASE_WEBHOOK_PATH as WebsitePath];
     const appWebhookUrl = config.envConfig.appWebhookUrl ?? (isWebhooksEnabled && appUrl ? websiteUrlFromPaths(appUrl, webhookPaths) : undefined);

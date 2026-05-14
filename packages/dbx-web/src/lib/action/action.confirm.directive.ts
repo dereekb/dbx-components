@@ -57,10 +57,10 @@ export class DbxActionConfirmDirective<T = unknown, O = unknown> extends Abstrac
       sub: this.source.triggered$.subscribe(() => {
         const skip = this.dbxActionConfirmSkip();
 
-        if (!skip) {
-          this.showDialog();
-        } else {
+        if (skip) {
           this._handleDialogResult(true);
+        } else {
+          this.showDialog();
         }
       })
     });

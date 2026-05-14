@@ -104,8 +104,7 @@ function formatScannedExample(entry: DbxDocsUiExampleEntry, depth: UiExampleDept
 function appendScannedExampleHeader(lines: string[], entry: DbxDocsUiExampleEntry, depth: UiExampleDepth): void {
   const relatedText = (entry.relatedSlugs ?? []).map(code).join(', ');
   const relatedSuffix = relatedText.length > 0 ? ` · **related:** ${relatedText}` : '';
-  lines.push(`# ${entry.header}`, '', entry.summary, '', `**slug:** \`${entry.slug}\` · **origin:** \`${entry.appRef}\` · **category:** \`${entry.category}\` · **depth:** \`${depth}\`${relatedSuffix}`);
-  lines.push('');
+  lines.push(`# ${entry.header}`, '', entry.summary, '', `**slug:** \`${entry.slug}\` · **origin:** \`${entry.appRef}\` · **category:** \`${entry.category}\` · **depth:** \`${depth}\`${relatedSuffix}`, '');
 }
 
 function appendScannedExampleDescription(lines: string[], entry: DbxDocsUiExampleEntry, depth: UiExampleDepth): void {

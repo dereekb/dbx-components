@@ -18,11 +18,7 @@ function parseCliJson<T>(stdoutText: string): ParsedCliEnvelope<T> {
   const trimmed = stdoutText.trim();
   // outputResult / outputError emit a JSON envelope on its own console.log line — pick the last
   // JSON line so we tolerate any incidental logs preceding it.
-  const lastLine =
-    trimmed
-      .split('\n')
-      .filter((s) => s.trim().startsWith('{'))
-      .pop() ?? '{}';
+  const lastLine = trimmed.split('\n').findLast((s) => s.trim().startsWith('{')) ?? '{}';
   return JSON.parse(lastLine) as ParsedCliEnvelope<T>;
 }
 
@@ -69,7 +65,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
                         expect(envelope.ok).toBe(true);
                         expect(envelope.data?.guestbook).toBe(g.documentKey);
                         expect(envelope.data?.count).toBe(2);
-                        const messages = (envelope.data?.entries ?? []).map((e) => e.message).sort();
+                        const messages = (envelope.data?.entries ?? []).map((e) => e.message).sort((a, b) => a.localeCompare(b));
                         expect(messages).toEqual(['first', 'second']);
                       });
                     });

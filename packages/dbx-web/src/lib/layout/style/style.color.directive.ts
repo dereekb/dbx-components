@@ -102,6 +102,6 @@ export class DbxColorDirective {
    */
   readonly bgToneStyleSignal = computed(() => {
     const tone = this.effectiveToneSignal();
-    return tone != null ? `${tone}%` : null;
+    return tone == null ? null : `${tone}%`;
   });
 }

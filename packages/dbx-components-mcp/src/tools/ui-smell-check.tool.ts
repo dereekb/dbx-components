@@ -339,11 +339,11 @@ async function runBatch(input: RunBatchInput): Promise<ToolResult> {
     files.push(built.file);
   }
   let result: ToolResult;
-  if (earlyResult !== null) {
-    result = earlyResult;
-  } else {
+  if (earlyResult === null) {
     const text = formatBatchSmellResult(files, input.tokenRegistry);
     result = { content: [{ type: 'text', text }] };
+  } else {
+    result = earlyResult;
   }
   return result;
 }

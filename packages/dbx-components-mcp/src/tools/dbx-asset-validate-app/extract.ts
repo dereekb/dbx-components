@@ -251,7 +251,13 @@ function resolveFluentTarget(ctx: ExtractContext, callExpr: CallExpression): Flu
   if (!folder && !remoteBase) return undefined;
 
   const sourceType: AssetSourceType = folder ? 'local' : 'remote';
-  const helper: AssetBuilderHelper = folder ? (memberName === 'asset' ? 'assetFolder.asset' : 'assetFolder.assets') : memberName === 'asset' ? 'remoteAssetBaseUrl.asset' : 'remoteAssetBaseUrl.assets';
+  const isAsset = memberName === 'asset';
+  let helper: AssetBuilderHelper;
+  if (folder) {
+    helper = isAsset ? 'assetFolder.asset' : 'assetFolder.assets';
+  } else {
+    helper = isAsset ? 'remoteAssetBaseUrl.asset' : 'remoteAssetBaseUrl.assets';
+  }
 
   return { memberName, sourceType, helper, folder, remoteBase };
 }

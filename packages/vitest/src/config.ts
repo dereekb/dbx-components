@@ -54,7 +54,7 @@ export interface DbxComponentsVitestPresetConfigOptions {
   /**
    * Overrides the test configuration directly.
    */
-  readonly test?: Partial<Omit<VitestTestConfig, 'environment' | 'include' | 'exclude' | 'setupFiles' | 'reporters' | 'coverage' | 'name' | 'env' | 'coverage'>>;
+  readonly test?: Partial<Omit<VitestTestConfig, 'environment' | 'include' | 'exclude' | 'setupFiles' | 'reporters' | 'coverage' | 'name' | 'env'>>;
 
   /**
    * Optional function to configure the environment.

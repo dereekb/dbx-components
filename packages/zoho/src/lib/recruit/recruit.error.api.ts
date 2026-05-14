@@ -102,9 +102,8 @@ export function assertZohoRecruitRecordDataArrayResultHasContent<T>(moduleName?:
   return <R extends ZohoDataArrayResultRef<T>>(x: R) => {
     if (!x?.data?.length) {
       throw new ZohoRecruitRecordNoContentError(moduleName, recordId);
-    } else {
-      return x;
     }
+    return x;
   };
 }
 

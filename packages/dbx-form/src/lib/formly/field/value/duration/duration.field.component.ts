@@ -172,8 +172,8 @@ export class DbxTimeDurationFieldComponent extends FieldType<FieldTypeConfig<Tim
     };
 
     const { min, max } = this.props;
-    const minMs = min != null ? timeUnitToMilliseconds(min, this.outputUnit) : undefined;
-    const maxMs = max != null ? timeUnitToMilliseconds(max, this.outputUnit) : undefined;
+    const minMs = min == null ? undefined : timeUnitToMilliseconds(min, this.outputUnit);
+    const maxMs = max == null ? undefined : timeUnitToMilliseconds(max, this.outputUnit);
 
     DbxDurationPickerPopoverComponent.openPopover(this._popoverService, {
       origin,

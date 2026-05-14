@@ -690,7 +690,7 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
 
               const bItems = await collection.loadItemsForPages(['b']);
               expect(bItems).toHaveLength(2);
-              expect(bItems.map((x) => x.id).sort()).toEqual(['2', '3']);
+              expect(bItems.map((x) => x.id).sort((a, b) => a.localeCompare(b))).toEqual(['2', '3']);
             });
 
             it('loadItemsForPages() returns an empty array for an unwritten scheme page', async () => {

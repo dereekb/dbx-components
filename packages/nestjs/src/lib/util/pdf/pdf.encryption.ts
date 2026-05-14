@@ -613,7 +613,7 @@ function computeFileEncryptionKeyR2to4(info: PdfEncryptionInfo, password: Buffer
   md5.update(padded);
   md5.update(info.O);
   const pBytes = Buffer.alloc(4);
-  pBytes.writeInt32LE(info.P | 0, 0);
+  pBytes.writeInt32LE(Math.trunc(info.P), 0);
   md5.update(pBytes);
   md5.update(fileId);
   if (info.R >= 4 && !info.encryptMetadata) md5.update(Buffer.from([0xff, 0xff, 0xff, 0xff]));
@@ -673,6 +673,8 @@ function pdfAlgorithm2B(input: Buffer, password: Buffer, userKey: Buffer): Buffe
     const K1 = Buffer.alloc(part.length * 64);
     for (let i = 0; i < 64; i++) part.copy(K1, i * part.length);
 
+    // PDF 1.7 spec (Algorithm 2.B) requires AES-128-CBC with autoPadding disabled
+    // NOSONAR (typescript:S5542): cipher mode is dictated by the PDF standard
     const cipher = createCipheriv('aes-128-cbc', K.subarray(0, 16), K.subarray(16, 32));
     cipher.setAutoPadding(false);
     const E = Buffer.concat([cipher.update(K1), cipher.final()]);

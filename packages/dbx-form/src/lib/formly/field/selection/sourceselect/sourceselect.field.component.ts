@@ -313,9 +313,7 @@ export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = Primativ
     map(([options, filterText, currentValues]) => {
       let result: SourceSelectOptions<T, M>;
 
-      if (!filterText) {
-        result = options;
-      } else {
+      if (filterText) {
         const lowerFilter = filterText.toLowerCase();
         const selectedSet = new Set(currentValues);
         const matches = (dv: SourceSelectDisplayValue<T, M>) => selectedSet.has(dv.value) || dv.label.toLowerCase().includes(lowerFilter);
@@ -332,6 +330,8 @@ export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = Primativ
             })
             .filter((g: SourceSelectDisplayValueGroup<T, M>) => g.values.length > 0)
         };
+      } else {
+        result = options;
       }
 
       return result;
