@@ -63,60 +63,52 @@ function formatEntry(entry: ApiLookupEntry): string {
   const paramsLabel = entry.paramsTypeName ? `\`${entry.paramsTypeName}\`` : '_unresolved_';
   const resultLabel = entry.resultTypeName ? `\`${entry.resultTypeName}\`` : '`void`';
   const lines: string[] = [`## ${heading}`, ''];
-  if (entry.description) {
-    lines.push(entry.description, '');
-  }
+  if (entry.description) lines.push(entry.description, '');
   lines.push(`- Wire key: \`${wireKey}\``, `- Params: ${paramsLabel}`, `- Result: ${resultLabel}`, `- Source: \`${entry.sourceFile}:${entry.line}\``, '');
 
-  if (entry.paramsJsDoc || entry.paramsFields.length > 0) {
-    lines.push('### Params');
-    if (entry.paramsJsDoc) {
-      lines.push('', entry.paramsJsDoc);
-    }
-    if (entry.paramsFields.length > 0) {
-      lines.push('');
-      for (const field of entry.paramsFields) {
-        lines.push(formatField(field));
-      }
-    }
-    lines.push('');
-  }
-
-  if (entry.resultJsDoc || entry.resultFields.length > 0) {
-    lines.push('### Result');
-    if (entry.resultJsDoc) {
-      lines.push('', entry.resultJsDoc);
-    }
-    if (entry.resultFields.length > 0) {
-      lines.push('');
-      for (const field of entry.resultFields) {
-        lines.push(formatField(field));
-      }
-    }
-    lines.push('');
-  }
-
-  if (entry.action) {
-    lines.push('### Action method', '', `- \`${entry.action.className}.${entry.action.methodName}\` — \`${entry.action.sourceFile}:${entry.action.line}\``);
-    if (entry.action.jsDoc) {
-      lines.push('', entry.action.jsDoc);
-    }
-    lines.push('');
-  }
-
-  if (entry.factory) {
-    lines.push('### Action factory', '', `- \`${entry.factory.factoryName}\` — \`${entry.factory.sourceFile}:${entry.factory.line}\``);
-    if (entry.factory.jsDoc) {
-      lines.push('', entry.factory.jsDoc);
-    }
-    lines.push('');
-  }
+  appendFieldsSection({ lines, label: 'Params', jsDoc: entry.paramsJsDoc, fields: entry.paramsFields });
+  appendFieldsSection({ lines, label: 'Result', jsDoc: entry.resultJsDoc, fields: entry.resultFields });
+  appendActionMethodSection(lines, entry.action);
+  appendActionFactorySection(lines, entry.factory);
 
   if (!entry.action && !entry.factory && entry.paramsTypeName) {
     lines.push('_(no matching action method or factory resolved by params type)_', '');
   }
 
   return lines.join('\n').trimEnd();
+}
+
+interface AppendFieldsSectionInput {
+  readonly lines: string[];
+  readonly label: 'Params' | 'Result';
+  readonly jsDoc: string | undefined;
+  readonly fields: readonly ApiLookupField[];
+}
+
+function appendFieldsSection(input: AppendFieldsSectionInput): void {
+  const { lines, label, jsDoc, fields } = input;
+  if (!jsDoc && fields.length === 0) return;
+  lines.push(`### ${label}`);
+  if (jsDoc) lines.push('', jsDoc);
+  if (fields.length > 0) {
+    lines.push('');
+    for (const field of fields) lines.push(formatField(field));
+  }
+  lines.push('');
+}
+
+function appendActionMethodSection(lines: string[], action: ApiLookupEntry['action']): void {
+  if (!action) return;
+  lines.push('### Action method', '', `- \`${action.className}.${action.methodName}\` — \`${action.sourceFile}:${action.line}\``);
+  if (action.jsDoc) lines.push('', action.jsDoc);
+  lines.push('');
+}
+
+function appendActionFactorySection(lines: string[], factory: ApiLookupEntry['factory']): void {
+  if (!factory) return;
+  lines.push('### Action factory', '', `- \`${factory.factoryName}\` — \`${factory.sourceFile}:${factory.line}\``);
+  if (factory.jsDoc) lines.push('', factory.jsDoc);
+  lines.push('');
 }
 
 function formatWireKey(entry: ApiLookupEntry): string {

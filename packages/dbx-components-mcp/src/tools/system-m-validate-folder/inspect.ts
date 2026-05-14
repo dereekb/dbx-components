@@ -21,39 +21,53 @@ import type { FolderInspectionStatus, SystemFolderInspection } from './types.js'
  */
 export async function inspectFolder(path: string): Promise<SystemFolderInspection> {
   const name = basename(path);
-  let status: FolderInspectionStatus;
+  const probe = await probeFolderStatus(path);
+  const status: FolderInspectionStatus = probe.status;
   let files: readonly string[] = [];
   let systemSource: string | undefined;
-  try {
-    const stats = await stat(path);
-    if (stats.isDirectory()) {
-      status = 'ok';
-      const entries = await readdir(path, { withFileTypes: true });
-      const collected: string[] = [];
-      for (const entry of entries) {
-        if (!entry.isFile()) continue;
-        if (!entry.name.endsWith('.ts')) continue;
-        collected.push(entry.name);
-      }
-      files = collected;
-      if (collected.includes('system.ts')) {
-        try {
-          systemSource = await readFile(join(path, 'system.ts'), 'utf8');
-        } catch {
-          systemSource = undefined;
-        }
-      }
-    } else {
-      status = 'not-directory';
-    }
-  } catch (err) {
-    const code = (err as NodeJS.ErrnoException).code;
-    if (code === 'ENOENT' || code === 'ENOTDIR') {
-      status = 'not-found';
-    } else {
-      throw err;
+  if (probe.status === 'ok') {
+    const listed = await listTypeScriptFiles(path);
+    files = listed;
+    if (listed.includes('system.ts')) {
+      systemSource = await tryReadSystemSource(path);
     }
   }
   const result: SystemFolderInspection = { name, path, status, files, systemSource };
+  return result;
+}
+
+async function probeFolderStatus(path: string): Promise<{ readonly status: FolderInspectionStatus }> {
+  let status: FolderInspectionStatus;
+  try {
+    const stats = await stat(path);
+    status = stats.isDirectory() ? 'ok' : 'not-directory';
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code;
+    if (code !== 'ENOENT' && code !== 'ENOTDIR') {
+      throw err;
+    }
+    status = 'not-found';
+  }
+  return { status };
+}
+
+async function listTypeScriptFiles(path: string): Promise<string[]> {
+  const entries = await readdir(path, { withFileTypes: true });
+  const collected: string[] = [];
+  for (const entry of entries) {
+    if (entry.isFile() && entry.name.endsWith('.ts')) {
+      collected.push(entry.name);
+    }
+  }
+  return collected;
+}
+
+async function tryReadSystemSource(path: string): Promise<string | undefined> {
+  let result: string | undefined;
+  try {
+    result = await readFile(join(path, 'system.ts'), 'utf8');
+  } catch {
+    result = undefined;
+  }
   return result;
 }

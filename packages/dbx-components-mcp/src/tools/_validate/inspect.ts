@@ -108,27 +108,44 @@ export async function collectTsFiles(absFolder: string, rootDir: string): Promis
   const stack: string[] = [absFolder];
   while (stack.length > 0) {
     const current = stack.pop() as string;
-    let entries;
-    try {
-      entries = await readdir(current, { withFileTypes: true });
-    } catch {
-      continue;
-    }
-    for (const entry of entries) {
-      const full = join(current, entry.name);
-      if (entry.isDirectory()) {
-        stack.push(full);
-        continue;
-      }
-      if (!entry.isFile()) continue;
-      if (!entry.name.endsWith('.ts')) continue;
-      if (entry.name.endsWith('.spec.ts')) continue;
-      if (entry.name.endsWith('.d.ts')) continue;
-      const text = await readFile(full, 'utf8');
-      const rel = relative(rootDir, full).split(sep).join('/');
-      out.push({ relPath: rel, text });
-    }
+    await collectFromDirectory({ current, stack, out, rootDir });
   }
   out.sort((a, b) => a.relPath.localeCompare(b.relPath));
   return out;
+}
+
+interface CollectFromDirectoryInput {
+  readonly current: string;
+  readonly stack: string[];
+  readonly out: InspectedFile[];
+  readonly rootDir: string;
+}
+
+async function collectFromDirectory(input: CollectFromDirectoryInput): Promise<void> {
+  const { current, stack, out, rootDir } = input;
+  let entries;
+  try {
+    entries = await readdir(current, { withFileTypes: true });
+  } catch {
+    return;
+  }
+  for (const entry of entries) {
+    const full = join(current, entry.name);
+    if (entry.isDirectory()) {
+      stack.push(full);
+      continue;
+    }
+    if (!isCollectableTsFile(entry)) continue;
+    const text = await readFile(full, 'utf8');
+    const rel = relative(rootDir, full).split(sep).join('/');
+    out.push({ relPath: rel, text });
+  }
+}
+
+function isCollectableTsFile(entry: { isFile(): boolean; readonly name: string }): boolean {
+  if (!entry.isFile()) return false;
+  if (!entry.name.endsWith('.ts')) return false;
+  if (entry.name.endsWith('.spec.ts')) return false;
+  if (entry.name.endsWith('.d.ts')) return false;
+  return true;
 }

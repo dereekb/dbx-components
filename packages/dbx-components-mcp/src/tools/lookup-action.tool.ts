@@ -108,37 +108,21 @@ function resolveStateByMember(registry: ActionRegistry, raw: string): ActionStat
 function resolveTopic(registry: ActionRegistry, rawTopic: string): LookupActionMatch {
   const trimmed = rawTopic.trim();
   const lowered = trimmed.toLowerCase();
-  let result: LookupActionMatch;
 
   if (lowered === 'list' || lowered === 'catalog' || lowered === 'all') {
-    result = { kind: 'catalog' };
-  } else if (ACTION_ROLE_ORDER.includes(lowered as ActionEntryRole)) {
-    const role = lowered as ActionEntryRole;
-    result = { kind: 'group', title: ROLE_TITLES[role], entries: registry.findByRole(role) };
-  } else {
-    const slugHit = registry.findBySlug(trimmed) ?? registry.findBySlug(lowered);
-    if (slugHit) {
-      result = { kind: 'single', entry: slugHit };
-    } else {
-      const selectorHit = resolveDirectiveBySelector(registry, trimmed);
-      if (selectorHit) {
-        result = { kind: 'single', entry: selectorHit };
-      } else {
-        const classHit = registry.findByClassName(trimmed);
-        if (classHit) {
-          result = { kind: 'single', entry: classHit };
-        } else {
-          const stateHit = resolveStateByMember(registry, trimmed);
-          if (stateHit) {
-            result = { kind: 'single', entry: stateHit };
-          } else {
-            result = { kind: 'not-found', normalized: lowered, candidates: fuzzyCandidates(registry, lowered) };
-          }
-        }
-      }
-    }
+    return { kind: 'catalog' };
   }
-  return result;
+  if (ACTION_ROLE_ORDER.includes(lowered as ActionEntryRole)) {
+    const role = lowered as ActionEntryRole;
+    return { kind: 'group', title: ROLE_TITLES[role], entries: registry.findByRole(role) };
+  }
+  const singleHit = findSingleActionEntry(registry, trimmed, lowered);
+  if (singleHit) return { kind: 'single', entry: singleHit };
+  return { kind: 'not-found', normalized: lowered, candidates: fuzzyCandidates(registry, lowered) };
+}
+
+function findSingleActionEntry(registry: ActionRegistry, trimmed: string, lowered: string): ActionEntryInfo | undefined {
+  return registry.findBySlug(trimmed) ?? registry.findBySlug(lowered) ?? resolveDirectiveBySelector(registry, trimmed) ?? registry.findByClassName(trimmed) ?? resolveStateByMember(registry, trimmed);
 }
 
 function scoreActionEntryRole(entry: ActionEntryInfo, q: string): number {
@@ -223,31 +207,40 @@ function formatDirectiveEntry(entry: ActionDirectiveInfo, depth: 'brief' | 'full
   return lines.join('\n');
 }
 
+function appendStoreMethodsSection(lines: string[], methods: ActionStoreInfo['methods']): void {
+  if (methods.length === 0) return;
+  lines.push('## Methods', '', '| Method | Signature | Description |', '| --- | --- | --- |');
+  for (const method of methods) {
+    lines.push(`| \`${method.name}\` | \`${method.signature}\` | ${method.description} |`);
+  }
+  lines.push('');
+}
+
+function appendStoreObservablesSection(lines: string[], observables: ActionStoreInfo['observables']): void {
+  if (observables.length === 0) return;
+  lines.push('## Observables', '', '| Observable | Type | Description |', '| --- | --- | --- |');
+  for (const obs of observables) {
+    lines.push(`| \`${obs.name}\` | \`${obs.type}\` | ${obs.description} |`);
+  }
+  lines.push('');
+}
+
+function appendDisabledKeyConstantsSection(lines: string[], keys: ActionStoreInfo['disabledKeyDefaults']): void {
+  if (keys.length === 0) return;
+  lines.push('## Disabled-key constants', '');
+  for (const key of keys) {
+    lines.push(`- \`${key}\``);
+  }
+  lines.push('');
+}
+
 function formatStoreEntry(entry: ActionStoreInfo, depth: 'brief' | 'full'): string {
   const lines: string[] = [`# ${entry.className}`, '', entry.description, '', bullet('module', `\`${entry.module}\``), bullet('slug', `\`${entry.slug}\``), ''];
 
   if (depth === 'full') {
-    if (entry.methods.length > 0) {
-      lines.push('## Methods', '', '| Method | Signature | Description |', '| --- | --- | --- |');
-      for (const method of entry.methods) {
-        lines.push(`| \`${method.name}\` | \`${method.signature}\` | ${method.description} |`);
-      }
-      lines.push('');
-    }
-    if (entry.observables.length > 0) {
-      lines.push('## Observables', '', '| Observable | Type | Description |', '| --- | --- | --- |');
-      for (const obs of entry.observables) {
-        lines.push(`| \`${obs.name}\` | \`${obs.type}\` | ${obs.description} |`);
-      }
-      lines.push('');
-    }
-    if (entry.disabledKeyDefaults.length > 0) {
-      lines.push('## Disabled-key constants', '');
-      for (const key of entry.disabledKeyDefaults) {
-        lines.push(`- \`${key}\``);
-      }
-      lines.push('');
-    }
+    appendStoreMethodsSection(lines, entry.methods);
+    appendStoreObservablesSection(lines, entry.observables);
+    appendDisabledKeyConstantsSection(lines, entry.disabledKeyDefaults);
     lines.push('## Example', '', '```ts', entry.example, '```');
     if (entry.skillRefs.length > 0) {
       const skillsText = entry.skillRefs.map((s) => code(s)).join(', ');

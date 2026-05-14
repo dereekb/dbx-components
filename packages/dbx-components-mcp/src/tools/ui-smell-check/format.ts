@@ -171,36 +171,56 @@ function formatGoodSignals(html: string, scss: string): string | null {
   if (html.length > 0 || scss.length > 0) {
     const lines: string[] = [];
     if (html.length > 0) {
-      const elements = new Map<string, number>();
-      for (const match of html.matchAll(/<(dbx-[\w-]+)\b/g)) {
-        const tag = match[1].toLowerCase();
-        elements.set(tag, (elements.get(tag) ?? 0) + 1);
-      }
-      if (elements.size > 0) {
-        const summary = Array.from(elements.entries())
-          .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-          .map(([tag, n]) => `${tag} ×${n}`)
-          .join(', ');
-        lines.push(`- HTML uses: ${summary}`);
-      } else {
-        lines.push('- HTML uses: no `dbx-*` elements');
-      }
+      lines.push(formatHtmlGoodSignals(html));
     }
     if (scss.length > 0) {
-      let dbx = 0;
-      let matSys = 0;
-      for (const match of scss.matchAll(/var\(\s*(--[\w-]+)/g)) {
-        const name = match[1];
-        if (name.startsWith('--dbx-')) dbx += 1;
-        else if (name.startsWith('--mat-sys-')) matSys += 1;
-      }
-      lines.push(`- SCSS uses: ${dbx} \`--dbx-*\` reference${dbx === 1 ? '' : 's'}, ${matSys} \`--mat-sys-*\` reference${matSys === 1 ? '' : 's'}`);
+      lines.push(formatScssGoodSignals(scss));
     }
     if (lines.length > 0) {
       result = `Good signals:\n${lines.join('\n')}`;
     }
   }
   return result;
+}
+
+function formatHtmlGoodSignals(html: string): string {
+  const elements = countDbxElements(html);
+  let line: string;
+  if (elements.size > 0) {
+    const summary = Array.from(elements.entries())
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .map(([tag, n]) => `${tag} ×${n}`)
+      .join(', ');
+    line = `- HTML uses: ${summary}`;
+  } else {
+    line = '- HTML uses: no `dbx-*` elements';
+  }
+  return line;
+}
+
+function countDbxElements(html: string): ReadonlyMap<string, number> {
+  const elements = new Map<string, number>();
+  for (const match of html.matchAll(/<(dbx-[\w-]+)\b/g)) {
+    const tag = match[1].toLowerCase();
+    elements.set(tag, (elements.get(tag) ?? 0) + 1);
+  }
+  return elements;
+}
+
+function formatScssGoodSignals(scss: string): string {
+  const counts = countScssVarReferences(scss);
+  return `- SCSS uses: ${counts.dbx} \`--dbx-*\` reference${counts.dbx === 1 ? '' : 's'}, ${counts.matSys} \`--mat-sys-*\` reference${counts.matSys === 1 ? '' : 's'}`;
+}
+
+function countScssVarReferences(scss: string): { readonly dbx: number; readonly matSys: number } {
+  let dbx = 0;
+  let matSys = 0;
+  for (const match of scss.matchAll(/var\(\s*(--[\w-]+)/g)) {
+    const name = match[1];
+    if (name.startsWith('--dbx-')) dbx += 1;
+    else if (name.startsWith('--mat-sys-')) matSys += 1;
+  }
+  return { dbx, matSys };
 }
 
 /**

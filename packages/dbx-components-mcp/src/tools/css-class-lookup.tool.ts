@@ -233,6 +233,20 @@ function renderByParent(registry: CssUtilityRegistry, args: ParsedArgs): string 
 }
 
 function renderBrowse(registry: CssUtilityRegistry, args: ParsedArgs): string {
+  const candidates = pickBrowseCandidates(registry, args);
+  const includeChildren = args.includeChildren === true;
+  const visible = includeChildren ? candidates : candidates.filter((entry) => entry.parent === undefined);
+
+  let text: string;
+  if (visible.length === 0) {
+    text = renderEmptyBrowse(registry, candidates, includeChildren);
+  } else {
+    text = renderBrowseList(visible, includeChildren);
+  }
+  return text;
+}
+
+function pickBrowseCandidates(registry: CssUtilityRegistry, args: ParsedArgs): readonly CssUtilityEntry[] {
   let candidates: readonly CssUtilityEntry[];
   if (args.category !== undefined && args.category !== 'list') {
     candidates = registry.bySource.get(args.category) ?? [];
@@ -241,29 +255,33 @@ function renderBrowse(registry: CssUtilityRegistry, args: ParsedArgs): string {
   } else {
     candidates = registry.byRole.get(args.role) ?? [];
   }
+  return candidates;
+}
 
-  const includeChildren = args.includeChildren === true;
-  const visible = includeChildren ? candidates : candidates.filter((entry) => entry.parent === undefined);
-
+function renderEmptyBrowse(registry: CssUtilityRegistry, candidates: readonly CssUtilityEntry[], includeChildren: boolean): string {
   let text: string;
-  if (visible.length === 0) {
-    if (candidates.length > 0 && !includeChildren) {
-      text = `# No top-level utilities found\n\nThe filtered set has ${candidates.length} entr${candidates.length === 1 ? 'y' : 'ies'}, but every entry is a child utility. Pass \`includeChildren=true\` to surface them, or use \`parent="<slug>"\` to scope to a specific parent.`;
-    } else {
-      text = `# No utilities found\n\nThe registry has ${registry.all.length} entr${registry.all.length === 1 ? 'y' : 'ies'} across ${registry.loadedSources.length} source(s): ${registry.loadedSources.join(', ') || '(none)'}.`;
-    }
+  if (candidates.length > 0 && !includeChildren) {
+    text = `# No top-level utilities found\n\nThe filtered set has ${candidates.length} entr${candidates.length === 1 ? 'y' : 'ies'}, but every entry is a child utility. Pass \`includeChildren=true\` to surface them, or use \`parent="<slug>"\` to scope to a specific parent.`;
   } else {
-    const heading = includeChildren ? `# CSS utilities (${visible.length})` : `# CSS utilities (${visible.length} top-level)`;
-    const lines: string[] = [heading, ''];
-    for (const entry of visible) {
-      const role = entry.role ?? 'misc';
-      const intent = entry.intent === undefined ? '' : ` — ${entry.intent}`;
-      const parentTag = entry.parent === undefined ? '' : ` ↳ parent: \`${entry.parent}\``;
-      lines.push(`- \`${entry.selector}\` (${role})${intent}${parentTag}`);
-    }
-    text = lines.join('\n');
+    text = `# No utilities found\n\nThe registry has ${registry.all.length} entr${registry.all.length === 1 ? 'y' : 'ies'} across ${registry.loadedSources.length} source(s): ${registry.loadedSources.join(', ') || '(none)'}.`;
   }
   return text;
+}
+
+function renderBrowseList(visible: readonly CssUtilityEntry[], includeChildren: boolean): string {
+  const heading = includeChildren ? `# CSS utilities (${visible.length})` : `# CSS utilities (${visible.length} top-level)`;
+  const lines: string[] = [heading, ''];
+  for (const entry of visible) {
+    lines.push(formatBrowseEntryLine(entry));
+  }
+  return lines.join('\n');
+}
+
+function formatBrowseEntryLine(entry: CssUtilityEntry): string {
+  const role = entry.role ?? 'misc';
+  const intent = entry.intent === undefined ? '' : ` — ${entry.intent}`;
+  const parentTag = entry.parent === undefined ? '' : ` ↳ parent: \`${entry.parent}\``;
+  return `- \`${entry.selector}\` (${role})${intent}${parentTag}`;
 }
 
 function renderNoQuery(): string {

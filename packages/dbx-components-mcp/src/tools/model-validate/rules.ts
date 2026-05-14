@@ -44,11 +44,29 @@ export function runRules(file: ExtractedFile, options?: RuleOptions, context?: C
   // (sibling sub-files like `worker.pay.ts`), the scope tightens to
   // `@dbxModel` / `@dbxModelSubObject` interfaces so the validator stays
   // silent on unrelated helper interfaces that just happen to live there.
-  checkFieldNameLengths(file, violations, options, { restrictToTaggedInterfaces: !hasModels });
+  const fieldRuleInput: FieldRuleCheckInput = {
+    file,
+    violations,
+    options,
+    scope: { restrictToTaggedInterfaces: !hasModels }
+  };
+  checkFieldNameLengths(fieldRuleInput);
   checkSubObjectInterfaceTags(file, violations);
   checkSubObjectFactoryCallSites(file, violations, context);
-  checkSubObjectParentNotTagged(file, violations, context, options);
+  checkSubObjectParentNotTagged({ file, violations, context, options });
   return violations;
+}
+
+/**
+ * Shared input for the field-level rule checks. Bundles the per-file
+ * extraction, the violations buffer, the rule options, and the per-call
+ * scope so the underlying helpers stay under the max-params cap.
+ */
+interface FieldRuleCheckInput {
+  readonly file: ExtractedFile;
+  readonly violations: Violation[];
+  readonly options: RuleOptions | undefined;
+  readonly scope: FieldRuleScope;
 }
 
 // MARK: Field-name length (warning)
@@ -62,7 +80,8 @@ interface FieldRuleScope {
   readonly restrictToTaggedInterfaces: boolean;
 }
 
-function checkFieldNameLengths(file: ExtractedFile, violations: Violation[], options: RuleOptions | undefined, scope: FieldRuleScope): void {
+function checkFieldNameLengths(input: FieldRuleCheckInput): void {
+  const { file, violations, options, scope } = input;
   const limit = options?.maxFieldNameLength ?? MAX_FIELD_NAME_LENGTH;
   const ignored = options?.ignoredFieldNames;
   for (const iface of file.dataInterfaces) {
@@ -86,7 +105,7 @@ function checkFieldNameLengths(file: ExtractedFile, violations: Violation[], opt
       });
     }
   }
-  checkFieldJsDocs(file, violations, options, scope);
+  checkFieldJsDocs(input);
 }
 
 interface CheckFieldInput {
@@ -152,16 +171,17 @@ function checkFieldVariableTag(input: CheckFieldInput): void {
 }
 
 // MARK: Field JSDoc + @dbxModelVariable convention (warning)
-function checkFieldJsDocs(file: ExtractedFile, violations: Violation[], options: RuleOptions | undefined, scope: FieldRuleScope): void {
+function checkFieldJsDocs(input: FieldRuleCheckInput): void {
+  const { file, violations, options, scope } = input;
   const ignored = options?.ignoredFieldNames;
   for (const iface of file.dataInterfaces) {
     if (scope.restrictToTaggedInterfaces && !(iface.dbxModelTag || iface.dbxModelSubObjectTag)) {
       continue;
     }
     for (const field of iface.fields) {
-      const input: CheckFieldInput = { file, iface, field, ignored, violations };
-      checkFieldJsDocDescription(input);
-      checkFieldVariableTag(input);
+      const fieldInput: CheckFieldInput = { file, iface, field, ignored, violations };
+      checkFieldJsDocDescription(fieldInput);
+      checkFieldVariableTag(fieldInput);
     }
   }
 }
@@ -317,7 +337,15 @@ function emitExternalParent(input: CheckSubObjectParentInput): void {
   });
 }
 
-function checkSubObjectParentNotTagged(file: ExtractedFile, violations: Violation[], context: CrossFileRuleContext | undefined, options: RuleOptions | undefined): void {
+interface CheckSubObjectParentNotTaggedInput {
+  readonly file: ExtractedFile;
+  readonly violations: Violation[];
+  readonly context: CrossFileRuleContext | undefined;
+  readonly options: RuleOptions | undefined;
+}
+
+function checkSubObjectParentNotTagged(input: CheckSubObjectParentNotTaggedInput): void {
+  const { file, violations, context, options } = input;
   if (!context) return;
   const ignoredExternal = options?.ignoredExternalParents;
   for (const iface of file.dataInterfaces) {
@@ -325,12 +353,12 @@ function checkSubObjectParentNotTagged(file: ExtractedFile, violations: Violatio
     for (const parentName of iface.extendsNames) {
       const dedupKey = `${iface.name}<-${parentName}`;
       if (context.emittedSubObjectInterfaces.has(dedupKey)) continue;
-      const input: CheckSubObjectParentInput = { file, iface, parentName, dedupKey, context, violations, ignoredExternal };
+      const parentInput: CheckSubObjectParentInput = { file, iface, parentName, dedupKey, context, violations, ignoredExternal };
       const entry = context.interfacesByName.get(parentName);
       if (entry) {
-        emitInPackageParent(input, entry);
+        emitInPackageParent(parentInput, entry);
       } else {
-        emitExternalParent(input);
+        emitExternalParent(parentInput);
       }
     }
   }

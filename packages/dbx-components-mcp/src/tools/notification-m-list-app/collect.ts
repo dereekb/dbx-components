@@ -91,20 +91,59 @@ function buildTemplateSummaries(extracted: ExtractedAppNotifications): TemplateS
  * @returns one summary per task type-constant
  */
 function buildTaskSummaries(extracted: ExtractedAppNotifications): TaskSummary[] {
+  const indices = buildTaskIndices(extracted);
+  const tasks: TaskSummary[] = [];
+  for (const constant of extracted.taskTypeConstants) {
+    tasks.push(buildTaskSummary(constant, indices));
+  }
+  return tasks;
+}
+
+interface TaskIndices {
+  readonly aggregateMembers: ReadonlySet<string>;
+  readonly checkpointByStem: ReadonlyMap<string, readonly string[]>;
+  readonly dataInterfaceNames: ReadonlySet<string>;
+  readonly handlerByTaskType: ReadonlyMap<string, { readonly flowStepCount: number | undefined }>;
+  readonly validateNames: ReadonlySet<string>;
+}
+
+function buildTaskIndices(extracted: ExtractedAppNotifications): TaskIndices {
+  const result: TaskIndices = {
+    aggregateMembers: collectAggregateMembers(extracted),
+    checkpointByStem: buildCheckpointByStem(extracted),
+    dataInterfaceNames: new Set(extracted.taskDataInterfaces.map((i) => i.symbolName)),
+    handlerByTaskType: buildHandlerByTaskType(extracted),
+    validateNames: collectValidateNames(extracted)
+  };
+  return result;
+}
+
+function collectAggregateMembers(extracted: ExtractedAppNotifications): Set<string> {
   const aggregateMembers = new Set<string>();
   for (const agg of extracted.taskAllTypesAggregates) {
     for (const id of agg.taskTypeIdentifiers) aggregateMembers.add(id);
   }
+  return aggregateMembers;
+}
+
+function buildCheckpointByStem(extracted: ExtractedAppNotifications): Map<string, readonly string[]> {
   const checkpointByStem = new Map<string, readonly string[]>();
   for (const alias of extracted.taskCheckpointAliases) {
     const stem = alias.symbolName.endsWith('NotificationTaskCheckpoint') ? alias.symbolName.slice(0, -'NotificationTaskCheckpoint'.length) : alias.symbolName;
     checkpointByStem.set(stem, alias.checkpoints);
   }
-  const dataInterfaceNames = new Set(extracted.taskDataInterfaces.map((i) => i.symbolName));
+  return checkpointByStem;
+}
+
+function buildHandlerByTaskType(extracted: ExtractedAppNotifications): Map<string, { readonly flowStepCount: number | undefined }> {
   const handlerByTaskType = new Map<string, { readonly flowStepCount: number | undefined }>();
   for (const entry of extracted.taskHandlerEntries) {
     handlerByTaskType.set(entry.typeIdentifier, { flowStepCount: entry.flowStepCount });
   }
+  return handlerByTaskType;
+}
+
+function collectValidateNames(extracted: ExtractedAppNotifications): Set<string> {
   const validateNames = new Set<string>();
   for (const call of extracted.taskServiceCalls) {
     for (const id of call.validateIdentifiers) validateNames.add(id);
@@ -113,26 +152,26 @@ function buildTaskSummaries(extracted: ExtractedAppNotifications): TaskSummary[]
       if (agg) for (const id of agg.taskTypeIdentifiers) validateNames.add(id);
     }
   }
+  return validateNames;
+}
 
-  const tasks: TaskSummary[] = [];
-  for (const constant of extracted.taskTypeConstants) {
-    const stem = symbolStemForTask(constant.symbolName);
-    const dataInterfaceName = dataInterfaceNames.has(`${stem}NotificationTaskData`) ? `${stem}NotificationTaskData` : undefined;
-    const checkpoints = checkpointByStem.get(stem) ?? [];
-    const handler = handlerByTaskType.get(constant.symbolName);
-    tasks.push({
-      typeCode: constant.typeCode,
-      symbolName: constant.symbolName,
-      dataInterfaceName,
-      checkpoints,
-      inAllArray: aggregateMembers.has(constant.symbolName),
-      inValidateList: validateNames.has(constant.symbolName),
-      hasHandler: handler !== undefined,
-      handlerFlowStepCount: handler?.flowStepCount,
-      sourceFile: constant.sourceFile
-    });
-  }
-  return tasks;
+function buildTaskSummary(constant: ExtractedAppNotifications['taskTypeConstants'][number], indices: TaskIndices): TaskSummary {
+  const stem = symbolStemForTask(constant.symbolName);
+  const dataInterfaceName = indices.dataInterfaceNames.has(`${stem}NotificationTaskData`) ? `${stem}NotificationTaskData` : undefined;
+  const checkpoints = indices.checkpointByStem.get(stem) ?? [];
+  const handler = indices.handlerByTaskType.get(constant.symbolName);
+  const result: TaskSummary = {
+    typeCode: constant.typeCode,
+    symbolName: constant.symbolName,
+    dataInterfaceName,
+    checkpoints,
+    inAllArray: indices.aggregateMembers.has(constant.symbolName),
+    inValidateList: indices.validateNames.has(constant.symbolName),
+    hasHandler: handler !== undefined,
+    handlerFlowStepCount: handler?.flowStepCount,
+    sourceFile: constant.sourceFile
+  };
+  return result;
 }
 
 function symbolStemForTask(name: string): string {

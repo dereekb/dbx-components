@@ -176,27 +176,7 @@ function parseDecoratorInput(property: PropertyDeclaration): ParsedAngularInput 
   }
   const propertyName = property.getName();
   const decoratorArg = decorator.getCallExpression()?.getArguments()[0];
-  let alias: string | undefined;
-  let requiredFromDecorator: boolean | undefined;
-  if (decoratorArg !== undefined) {
-    if (Node.isStringLiteral(decoratorArg) || Node.isNoSubstitutionTemplateLiteral(decoratorArg)) {
-      alias = decoratorArg.getLiteralText();
-    } else if (Node.isObjectLiteralExpression(decoratorArg)) {
-      alias = readStringProperty(decoratorArg, 'alias');
-      const requiredProp = decoratorArg.getProperty('required');
-      if (requiredProp !== undefined && Node.isPropertyAssignment(requiredProp)) {
-        const init = requiredProp.getInitializer();
-        if (init !== undefined) {
-          const text = init.getText();
-          if (text === 'true') {
-            requiredFromDecorator = true;
-          } else if (text === 'false') {
-            requiredFromDecorator = false;
-          }
-        }
-      }
-    }
-  }
+  const { alias, requiredFromDecorator } = readInputDecoratorArg(decoratorArg);
   const required = requiredFromDecorator ?? !property.hasQuestionToken();
   const type = property.getTypeNode()?.getText() ?? 'unknown';
   const initializer = property.getInitializer();
@@ -209,6 +189,40 @@ function parseDecoratorInput(property: PropertyDeclaration): ParsedAngularInput 
     description: readPropertyDescription(property),
     ...(defaultValue === undefined ? {} : { defaultValue })
   };
+}
+
+interface InputDecoratorArgInfo {
+  readonly alias: string | undefined;
+  readonly requiredFromDecorator: boolean | undefined;
+}
+
+function readInputDecoratorArg(decoratorArg: Node | undefined): InputDecoratorArgInfo {
+  if (decoratorArg === undefined) return { alias: undefined, requiredFromDecorator: undefined };
+  if (Node.isStringLiteral(decoratorArg) || Node.isNoSubstitutionTemplateLiteral(decoratorArg)) {
+    return { alias: decoratorArg.getLiteralText(), requiredFromDecorator: undefined };
+  }
+  if (Node.isObjectLiteralExpression(decoratorArg)) {
+    return {
+      alias: readStringProperty(decoratorArg, 'alias'),
+      requiredFromDecorator: readRequiredProperty(decoratorArg)
+    };
+  }
+  return { alias: undefined, requiredFromDecorator: undefined };
+}
+
+function readRequiredProperty(obj: Parameters<typeof readStringProperty>[0]): boolean | undefined {
+  const requiredProp = obj.getProperty('required');
+  if (requiredProp === undefined || !Node.isPropertyAssignment(requiredProp)) return undefined;
+  const init = requiredProp.getInitializer();
+  if (init === undefined) return undefined;
+  const text = init.getText();
+  let result: boolean | undefined;
+  if (text === 'true') {
+    result = true;
+  } else if (text === 'false') {
+    result = false;
+  }
+  return result;
 }
 
 function parseSignalInput(property: PropertyDeclaration): ParsedAngularInput | undefined {

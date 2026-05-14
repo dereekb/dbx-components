@@ -151,6 +151,81 @@ interface ParsedAnnotation {
   readonly scope?: string;
 }
 
+interface MutableAnnotationState {
+  utilitySlug: string | null;
+  intent: string | undefined;
+  role: string | undefined;
+  seeAlsoCollected: string[];
+  antiUse: string | undefined;
+  since: string | undefined;
+  parent: string | undefined;
+  component: string | undefined;
+  scope: string | undefined;
+}
+
+function createEmptyAnnotationState(): MutableAnnotationState {
+  return {
+    utilitySlug: null,
+    intent: undefined,
+    role: undefined,
+    seeAlsoCollected: [],
+    antiUse: undefined,
+    since: undefined,
+    parent: undefined,
+    component: undefined,
+    scope: undefined
+  };
+}
+
+interface ConsumeValueTagInput {
+  readonly state: MutableAnnotationState;
+  readonly line: string;
+  readonly tag: string;
+  readonly apply: (state: MutableAnnotationState, value: string) => void;
+}
+
+function tryConsumeValueTag(input: ConsumeValueTagInput): boolean {
+  const { state, line, tag, apply } = input;
+  const prefix = `${tag} `;
+  let consumed = false;
+  if (line.startsWith(prefix)) {
+    apply(state, line.slice(prefix.length).trim());
+    consumed = true;
+  }
+  return consumed;
+}
+
+function applyAnnotationLine(state: MutableAnnotationState, line: string): void {
+  if (line.startsWith('@dbx-utility')) {
+    const value = line.slice('@dbx-utility'.length).trim();
+    state.utilitySlug = value.length > 0 ? value : '';
+    return;
+  }
+  if (tryConsumeValueTag({ state, line, tag: '@intent', apply: (s, v) => (s.intent = v) })) return;
+  if (tryConsumeValueTag({ state, line, tag: '@role', apply: (s, v) => (s.role = v) })) return;
+  if (
+    tryConsumeValueTag({
+      state,
+      line,
+      tag: '@see-also',
+      apply: (s, v) => {
+        for (const item of v.split(',')) {
+          const trimmed = item.trim();
+          if (trimmed.length > 0) s.seeAlsoCollected.push(trimmed);
+        }
+      }
+    })
+  )
+    return;
+  if (tryConsumeValueTag({ state, line, tag: '@anti-use', apply: (s, v) => (s.antiUse = v) })) return;
+  if (tryConsumeValueTag({ state, line, tag: '@since', apply: (s, v) => (s.since = v) })) return;
+  // Normalise an accidental leading `.` on @parent so `@parent dbx-foo`
+  // and `@parent .dbx-foo` produce the same slug.
+  if (tryConsumeValueTag({ state, line, tag: '@parent', apply: (s, v) => (s.parent = v.length > 0 ? v.replace(/^\./, '') : undefined) })) return;
+  if (tryConsumeValueTag({ state, line, tag: '@component', apply: (s, v) => (s.component = v.length > 0 ? v : undefined) })) return;
+  tryConsumeValueTag({ state, line, tag: '@scope', apply: (s, v) => (s.scope = v.length > 0 ? v : undefined) });
+}
+
 /**
  * Parses a buffer of `///` annotation lines (each already stripped of the
  * leading `/// `) into a structured shape. Lines without a recognised tag
@@ -161,63 +236,162 @@ interface ParsedAnnotation {
  *          `@dbx-utility` line appears
  */
 export function parseAnnotation(lines: readonly string[]): ParsedAnnotation {
-  let utilitySlug: string | null = null;
-  let intent: string | undefined;
-  let role: string | undefined;
-  const seeAlsoCollected: string[] = [];
-  let antiUse: string | undefined;
-  let since: string | undefined;
-  let parent: string | undefined;
-  let component: string | undefined;
-  let scope: string | undefined;
-
+  const state = createEmptyAnnotationState();
   for (const line of lines) {
-    if (line.startsWith('@dbx-utility')) {
-      const value = line.slice('@dbx-utility'.length).trim();
-      utilitySlug = value.length > 0 ? value : '';
-    } else if (line.startsWith('@intent ')) {
-      intent = line.slice('@intent '.length).trim();
-    } else if (line.startsWith('@role ')) {
-      role = line.slice('@role '.length).trim();
-    } else if (line.startsWith('@see-also ')) {
-      const value = line.slice('@see-also '.length).trim();
-      for (const item of value.split(',')) {
-        const trimmed = item.trim();
-        if (trimmed.length > 0) seeAlsoCollected.push(trimmed);
-      }
-    } else if (line.startsWith('@anti-use ')) {
-      antiUse = line.slice('@anti-use '.length).trim();
-    } else if (line.startsWith('@since ')) {
-      since = line.slice('@since '.length).trim();
-    } else if (line.startsWith('@parent ')) {
-      const value = line.slice('@parent '.length).trim();
-      // Normalise away an accidental leading `.` so consumers can write
-      // either `@parent dbx-foo` or `@parent .dbx-foo` and get the same slug.
-      parent = value.length > 0 ? value.replace(/^\./, '') : undefined;
-    } else if (line.startsWith('@component ')) {
-      const value = line.slice('@component '.length).trim();
-      component = value.length > 0 ? value : undefined;
-    } else if (line.startsWith('@scope ')) {
-      const value = line.slice('@scope '.length).trim();
-      scope = value.length > 0 ? value : undefined;
-    }
+    applyAnnotationLine(state, line);
   }
-
   const result: ParsedAnnotation = {
-    utilitySlug,
-    intent,
-    role,
-    seeAlso: seeAlsoCollected.length > 0 ? seeAlsoCollected : undefined,
-    antiUse,
-    since,
-    parent,
-    component,
-    scope
+    utilitySlug: state.utilitySlug,
+    intent: state.intent,
+    role: state.role,
+    seeAlso: state.seeAlsoCollected.length > 0 ? state.seeAlsoCollected : undefined,
+    antiUse: state.antiUse,
+    since: state.since,
+    parent: state.parent,
+    component: state.component,
+    scope: state.scope
   };
   return result;
 }
 
 // MARK: Extraction
+interface ExtractScanState {
+  annotationBuffer: string[];
+  annotationStartLine: number;
+  index: number;
+}
+
+interface SelectorHeader {
+  readonly selectorListText: string;
+}
+
+function readSelectorHeader(lines: readonly string[], startLine: number): SelectorHeader {
+  // Selector header may span multiple lines if commas split across newlines.
+  // Walk forward until we hit `{`.
+  let header = lines[startLine];
+  let headerEnd = startLine;
+  while (!header.includes('{') && headerEnd + 1 < lines.length) {
+    headerEnd += 1;
+    header += `\n${lines[headerEnd]}`;
+  }
+  return { selectorListText: header.slice(0, header.indexOf('{')).trim() };
+}
+
+interface BuildEntryInput {
+  readonly file: string;
+  readonly lines: readonly string[];
+  readonly annotation: ParsedAnnotation;
+  readonly ruleStart: RuleStart;
+}
+
+interface BuildEntryResult {
+  readonly entry?: ExtractedCssUtilityEntry;
+  readonly warnings: readonly ExtractWarning[];
+}
+
+function buildEntryFromAnnotatedRule(input: BuildEntryInput): BuildEntryResult {
+  const { file, lines, annotation, ruleStart } = input;
+  const warnings: ExtractWarning[] = [];
+  const { selectorListText } = readSelectorHeader(lines, ruleStart.line);
+  const canonicalSelector = pickCanonicalSelector(selectorListText);
+  if (canonicalSelector === null) {
+    warnings.push({ kind: 'unsupported-selector', file, line: ruleStart.line + 1, selector: selectorListText });
+    return { warnings };
+  }
+
+  const selectorText = canonicalSelector.host;
+  const selectorContext = canonicalSelector.fullChain === canonicalSelector.host ? undefined : canonicalSelector.fullChain;
+
+  const ruleBody = readRuleBody(lines, ruleStart.line);
+  const declarations = parseDeclarations(ruleBody);
+
+  // `annotation.utilitySlug` is non-null per the caller's guard, but may be
+  // empty when the curator wrote `/// @dbx-utility` without a slug — in that
+  // case default the slug to the host class minus the leading dot.
+  const annotationSlug = annotation.utilitySlug ?? '';
+  const slug = annotationSlug.length > 0 ? annotationSlug : selectorText.replace(/^\./, '');
+
+  const roleValue = resolveRole(annotation.role);
+  if (annotation.role !== undefined && roleValue === undefined) {
+    warnings.push({ kind: 'unknown-role', file, line: ruleStart.line + 1, slug, role: annotation.role });
+  }
+  const scopeValue = resolveScope(annotation.scope);
+  if (annotation.scope !== undefined && scopeValue === undefined) {
+    warnings.push({ kind: 'unknown-scope', file, line: ruleStart.line + 1, slug, scope: annotation.scope });
+  }
+  // Token reads scan the full rule body — including nested rules — so
+  // that `var()` references inside descendants (e.g. the inner
+  // `.mat-icon` block of `.dbx-icon-tile`) still surface as tokens
+  // consumers can override on the outer entry. Token writes only
+  // count direct outer-rule declarations.
+  const tokensRead = collectTokensReadFromBody(ruleBody);
+  const tokensSet = collectTokensSet(declarations);
+
+  const entry: ExtractedCssUtilityEntry = {
+    slug,
+    selector: selectorText,
+    file,
+    line: ruleStart.line + 1,
+    declarations,
+    role: roleValue,
+    intent: annotation.intent,
+    seeAlso: annotation.seeAlso,
+    antiUse: annotation.antiUse,
+    since: annotation.since,
+    parent: annotation.parent,
+    selectorContext,
+    component: annotation.component,
+    scope: scopeValue,
+    tokensRead: tokensRead.length > 0 ? tokensRead : undefined,
+    tokensSet: tokensSet.length > 0 ? tokensSet : undefined
+  };
+  return { entry, warnings };
+}
+
+interface StepInput {
+  readonly file: string;
+  readonly lines: readonly string[];
+  readonly state: ExtractScanState;
+}
+
+interface StepResult {
+  readonly entries: readonly ExtractedCssUtilityEntry[];
+  readonly warnings: readonly ExtractWarning[];
+  readonly nextIndex: number;
+  readonly clearBuffer: boolean;
+}
+
+function appendAnnotationLine(state: ExtractScanState, trimmed: string): void {
+  if (state.annotationBuffer.length === 0) {
+    state.annotationStartLine = state.index + 1;
+  }
+  state.annotationBuffer.push(trimmed.replace(/^\/{3}\s?/, ''));
+}
+
+function processAnnotatedSelector(input: StepInput): StepResult {
+  const { file, lines, state } = input;
+  const annotation = parseAnnotation(state.annotationBuffer);
+  if (annotation.utilitySlug === null) {
+    return { entries: [], warnings: [], nextIndex: state.index + 1, clearBuffer: true };
+  }
+  const ruleStart = findNextRuleStart(lines, state.index);
+  if (ruleStart === null) {
+    return {
+      entries: [],
+      warnings: [{ kind: 'orphan-annotation', file, line: state.annotationStartLine }],
+      nextIndex: state.index + 1,
+      clearBuffer: true
+    };
+  }
+  const built = buildEntryFromAnnotatedRule({ file, lines, annotation, ruleStart });
+  return {
+    entries: built.entry === undefined ? [] : [built.entry],
+    warnings: built.warnings,
+    nextIndex: ruleStart.endLine + 1,
+    clearBuffer: true
+  };
+}
+
 /**
  * Walks the supplied SCSS source and extracts every `/// @dbx-utility`
  * annotated rule. Only flat single-class selectors are supported in v1 —
@@ -230,106 +404,26 @@ export function parseAnnotation(lines: readonly string[]): ParsedAnnotation {
 export function extractCssUtilityEntries(input: ExtractCssUtilityEntriesInput): ExtractCssUtilityEntriesResult {
   const { file, source } = input;
   const lines = source.split(/\r?\n/);
-
   const entries: ExtractedCssUtilityEntry[] = [];
   const warnings: ExtractWarning[] = [];
+  const state: ExtractScanState = { annotationBuffer: [], annotationStartLine: 0, index: 0 };
 
-  let annotationBuffer: string[] = [];
-  let annotationStartLine = 0;
-
-  let index = 0;
-  while (index < lines.length) {
-    const rawLine = lines[index];
-    const trimmed = rawLine.trim();
-
+  while (state.index < lines.length) {
+    const trimmed = lines[state.index].trim();
     if (trimmed.startsWith('///')) {
-      if (annotationBuffer.length === 0) {
-        annotationStartLine = index + 1;
-      }
-      annotationBuffer.push(trimmed.replace(/^\/{3}\s?/, ''));
-      index += 1;
+      appendAnnotationLine(state, trimmed);
+      state.index += 1;
       continue;
     }
-
-    if (annotationBuffer.length > 0) {
-      const annotation = parseAnnotation(annotationBuffer);
-      if (annotation.utilitySlug !== null) {
-        const ruleStart = findNextRuleStart(lines, index);
-        if (ruleStart === null) {
-          warnings.push({ kind: 'orphan-annotation', file, line: annotationStartLine });
-          annotationBuffer = [];
-          index += 1;
-          continue;
-        }
-
-        const headerLines = lines.slice(ruleStart.line, ruleStart.line + 1);
-        // Selector header may span multiple lines if commas split across newlines.
-        // Walk forward until we hit `{`.
-        let header = headerLines[0];
-        let headerEnd = ruleStart.line;
-        while (!header.includes('{') && headerEnd + 1 < lines.length) {
-          headerEnd += 1;
-          header += `\n${lines[headerEnd]}`;
-        }
-        const selectorListText = header.slice(0, header.indexOf('{')).trim();
-        const canonicalSelector = pickCanonicalSelector(selectorListText);
-        if (canonicalSelector === null) {
-          warnings.push({ kind: 'unsupported-selector', file, line: ruleStart.line + 1, selector: selectorListText });
-          annotationBuffer = [];
-          index = ruleStart.endLine + 1;
-          continue;
-        }
-        const selectorText = canonicalSelector.host;
-        const selectorContext = canonicalSelector.fullChain === canonicalSelector.host ? undefined : canonicalSelector.fullChain;
-
-        const ruleBody = readRuleBody(lines, ruleStart.line);
-        const declarations = parseDeclarations(ruleBody);
-
-        const slug = annotation.utilitySlug.length > 0 ? annotation.utilitySlug : selectorText.replace(/^\./, '');
-        const roleValue = resolveRole(annotation.role);
-        if (annotation.role !== undefined && roleValue === undefined) {
-          warnings.push({ kind: 'unknown-role', file, line: ruleStart.line + 1, slug, role: annotation.role });
-        }
-        const scopeValue = resolveScope(annotation.scope);
-        if (annotation.scope !== undefined && scopeValue === undefined) {
-          warnings.push({ kind: 'unknown-scope', file, line: ruleStart.line + 1, slug, scope: annotation.scope });
-        }
-        // Token reads scan the full rule body — including nested rules — so
-        // that `var()` references inside descendants (e.g. the inner
-        // `.mat-icon` block of `.dbx-icon-tile`) still surface as tokens
-        // consumers can override on the outer entry. Token writes only
-        // count direct outer-rule declarations.
-        const tokensRead = collectTokensReadFromBody(ruleBody);
-        const tokensSet = collectTokensSet(declarations);
-
-        const entry: ExtractedCssUtilityEntry = {
-          slug,
-          selector: selectorText,
-          file,
-          line: ruleStart.line + 1,
-          declarations,
-          role: roleValue,
-          intent: annotation.intent,
-          seeAlso: annotation.seeAlso,
-          antiUse: annotation.antiUse,
-          since: annotation.since,
-          parent: annotation.parent,
-          selectorContext,
-          component: annotation.component,
-          scope: scopeValue,
-          tokensRead: tokensRead.length > 0 ? tokensRead : undefined,
-          tokensSet: tokensSet.length > 0 ? tokensSet : undefined
-        };
-        entries.push(entry);
-
-        annotationBuffer = [];
-        index = ruleStart.endLine + 1;
-        continue;
-      }
-      annotationBuffer = [];
+    if (state.annotationBuffer.length > 0) {
+      const step = processAnnotatedSelector({ file, lines, state });
+      for (const entry of step.entries) entries.push(entry);
+      for (const warning of step.warnings) warnings.push(warning);
+      if (step.clearBuffer) state.annotationBuffer = [];
+      state.index = step.nextIndex;
+      continue;
     }
-
-    index += 1;
+    state.index += 1;
   }
 
   return { entries, warnings };
@@ -490,77 +584,100 @@ function readRuleBody(lines: readonly string[], startLine: number): string {
   return [cleanedHead, middle, tail].filter((s) => s.length > 0).join('\n');
 }
 
+interface DeclScanState {
+  parenDepth: number;
+  buffer: string;
+  inLineComment: boolean;
+  inBlockComment: boolean;
+  index: number;
+}
+
+function advanceInLineComment(state: DeclScanState, char: string): void {
+  if (char === '\n') state.inLineComment = false;
+  state.index += 1;
+}
+
+function advanceInBlockComment(state: DeclScanState, char: string, next: string | undefined): void {
+  if (char === '*' && next === '/') {
+    state.inBlockComment = false;
+    state.index += 2;
+    return;
+  }
+  state.index += 1;
+}
+
+function tryEnterComment(state: DeclScanState, char: string, next: string | undefined): boolean {
+  let entered = false;
+  if (char === '/' && next === '/') {
+    state.inLineComment = true;
+    state.index += 2;
+    entered = true;
+  } else if (char === '/' && next === '*') {
+    state.inBlockComment = true;
+    state.index += 2;
+    entered = true;
+  }
+  return entered;
+}
+
+function skipNestedBlock(body: string, fromIndex: number): number {
+  let depth = 1;
+  let cursor = fromIndex;
+  while (cursor < body.length && depth > 0) {
+    const inner = body[cursor];
+    if (inner === '{') depth += 1;
+    else if (inner === '}') depth -= 1;
+    cursor += 1;
+  }
+  return cursor;
+}
+
 function parseDeclarations(body: string): readonly ExtractedCssDeclaration[] {
   const declarations: ExtractedCssDeclaration[] = [];
   // Walk the body character-by-character so we can ignore content inside
   // nested rules and balance parentheses for things like `calc(100% - 8px)`.
-  let depth = 0;
-  let parenDepth = 0;
-  let buffer = '';
-  let inLineComment = false;
-  let inBlockComment = false;
+  const state: DeclScanState = { parenDepth: 0, buffer: '', inLineComment: false, inBlockComment: false, index: 0 };
 
-  let index = 0;
-  while (index < body.length) {
-    const char = body[index];
-    const next = body[index + 1];
+  while (state.index < body.length) {
+    const char = body[state.index];
+    const next = body[state.index + 1];
 
-    if (inLineComment) {
-      if (char === '\n') inLineComment = false;
-      index += 1;
+    if (state.inLineComment) {
+      advanceInLineComment(state, char);
       continue;
     }
-    if (inBlockComment) {
-      if (char === '*' && next === '/') {
-        inBlockComment = false;
-        index += 2;
-        continue;
-      }
-      index += 1;
+    if (state.inBlockComment) {
+      advanceInBlockComment(state, char, next);
       continue;
     }
-    if (char === '/' && next === '/') {
-      inLineComment = true;
-      index += 2;
-      continue;
-    }
-    if (char === '/' && next === '*') {
-      inBlockComment = true;
-      index += 2;
+    if (tryEnterComment(state, char, next)) {
       continue;
     }
 
-    if (char === '(') parenDepth += 1;
-    else if (char === ')' && parenDepth > 0) parenDepth -= 1;
+    if (char === '(') state.parenDepth += 1;
+    else if (char === ')' && state.parenDepth > 0) state.parenDepth -= 1;
 
-    if (parenDepth === 0 && char === '{') {
+    if (state.parenDepth === 0 && char === '{') {
       // Entering a nested rule — skip until matching `}` at depth-0.
-      depth = 1;
-      index += 1;
-      while (index < body.length && depth > 0) {
-        const inner = body[index];
-        if (inner === '{') depth += 1;
-        else if (inner === '}') depth -= 1;
-        index += 1;
-      }
-      buffer = '';
+      state.index = skipNestedBlock(body, state.index + 1);
+      state.buffer = '';
       continue;
     }
 
-    if (parenDepth === 0 && char === ';') {
-      const decl = parseSingleDeclaration(buffer);
+    if (state.parenDepth === 0 && char === ';') {
+      const decl = parseSingleDeclaration(state.buffer);
       if (decl !== null) declarations.push(decl);
-      buffer = '';
-      index += 1;
+      state.buffer = '';
+      state.index += 1;
       continue;
     }
 
-    buffer += char;
-    index += 1;
+    state.buffer += char;
+    state.index += 1;
   }
 
   // Trailing declaration without semicolon
-  const trailing = parseSingleDeclaration(buffer);
+  const trailing = parseSingleDeclaration(state.buffer);
   if (trailing !== null) declarations.push(trailing);
 
   return declarations;

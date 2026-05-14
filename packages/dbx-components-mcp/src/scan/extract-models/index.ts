@@ -76,73 +76,102 @@ export interface ExtractModelsInput {
   readonly skipReservedFolders?: readonly string[];
 }
 
-/**
- * Scans the supplied model root and returns every detected model and
- * model-group entry. Per-file errors are aggregated rather than thrown so
- * a single malformed file never blocks the rest of the scan.
- *
- * @param input - the scan configuration
- * @returns the assembled models, groups, and per-file errors
- */
-export async function extractModels(input: ExtractModelsInput): Promise<ExtractModelsResult> {
-  const { rootDir, sourcePackage, workspaceRoot, skipReservedFolders } = input;
-  const reserved = new Set(skipReservedFolders ?? []);
-  const baseDir = workspaceRoot ?? join(rootDir, '..');
-  const files = await listTsFiles(rootDir, reserved);
-  const project = new Project({ useInMemoryFileSystem: true });
+interface ParsedSourceFile {
+  readonly filePath: string;
+  readonly sourceFileRel: string;
+  readonly sf: SourceFile;
+  readonly hasModelMarker: boolean;
+}
 
-  const models: FirebaseModel[] = [];
-  const modelGroups: FirebaseModelGroup[] = [];
-  const errors: { readonly sourceFile: string; readonly message: string }[] = [];
+interface ExtractError {
+  readonly sourceFile: string;
+  readonly message: string;
+}
 
-  // Pre-pass: parse every file once and collect the cross-file
-  // sub-object index (factory consts + tagged interfaces) so the
-  // per-model assembly pass can resolve `firestoreSubObject<T>` chains
-  // declared in sibling sub-files (e.g. `worker.pay.ts` consumed by
-  // `worker.ts`).
-  const subObjectConstIndex = new Map<string, SubObjectConstEntry>();
-  const subObjectInterfaceIndex = new Map<string, ExtractedInterface>();
-  interface ParsedSourceFile {
-    readonly filePath: string;
-    readonly sourceFileRel: string;
-    readonly sf: SourceFile;
-    readonly hasModelMarker: boolean;
+function resolveFactoryKind(factoryName: string): 'object' | 'array' | 'map' {
+  let kind: 'object' | 'array' | 'map';
+  if (factoryName === 'firestoreSubObject') {
+    kind = 'object';
+  } else if (factoryName === 'firestoreObjectArray') {
+    kind = 'array';
+  } else {
+    kind = 'map';
   }
+  return kind;
+}
+
+function indexSubObjectFactsFromFile(sf: SourceFile, subObjectConstIndex: Map<string, SubObjectConstEntry>, subObjectInterfaceIndex: Map<string, ExtractedInterface>): void {
+  for (const c of findSubObjectConsts(sf)) {
+    if (!subObjectConstIndex.has(c.constName)) {
+      subObjectConstIndex.set(c.constName, { interfaceName: c.interfaceName, factoryKind: resolveFactoryKind(c.factoryName) });
+    }
+  }
+  for (const iface of findInterfaces(sf)) {
+    if (iface.tags.dbxModelSubObject && !subObjectInterfaceIndex.has(iface.name)) {
+      subObjectInterfaceIndex.set(iface.name, iface);
+    }
+  }
+}
+
+function fileHasAnyMarker(text: string): { readonly hasModelMarker: boolean; readonly hasSubObjectMarker: boolean } {
+  const hasModelMarker = text.includes('firestoreModelIdentity(') || text.includes('@dbxModelGroup');
+  const hasSubObjectMarker = text.includes('@dbxModelSubObject') || text.includes('firestoreSubObject') || text.includes('firestoreObjectArray') || text.includes('firestoreMap');
+  return { hasModelMarker, hasSubObjectMarker };
+}
+
+interface ParseAndIndexInput {
+  readonly files: readonly string[];
+  readonly baseDir: string;
+  readonly project: Project;
+  readonly subObjectConstIndex: Map<string, SubObjectConstEntry>;
+  readonly subObjectInterfaceIndex: Map<string, ExtractedInterface>;
+}
+
+interface ParseAndIndexResult {
+  readonly parsedFiles: readonly ParsedSourceFile[];
+  readonly errors: readonly ExtractError[];
+}
+
+async function parseAndIndexFiles(input: ParseAndIndexInput): Promise<ParseAndIndexResult> {
+  const { files, baseDir, project, subObjectConstIndex, subObjectInterfaceIndex } = input;
   const parsedFiles: ParsedSourceFile[] = [];
+  const errors: ExtractError[] = [];
   for (const filePath of files) {
     const sourceFileRel = relative(baseDir, filePath).split(sep).join(posix.sep);
     try {
       const text = await readFile(filePath, 'utf8');
-      const hasModelMarker = text.includes('firestoreModelIdentity(') || text.includes('@dbxModelGroup');
-      const hasSubObjectMarker = text.includes('@dbxModelSubObject') || text.includes('firestoreSubObject') || text.includes('firestoreObjectArray') || text.includes('firestoreMap');
+      const { hasModelMarker, hasSubObjectMarker } = fileHasAnyMarker(text);
       if (!hasModelMarker && !hasSubObjectMarker) {
         continue;
       }
       const sf = project.createSourceFile(`/scan/${basename(filePath)}-${parsedFiles.length}.ts`, text, { overwrite: true });
       parsedFiles.push({ filePath, sourceFileRel, sf, hasModelMarker });
-      for (const c of findSubObjectConsts(sf)) {
-        if (!subObjectConstIndex.has(c.constName)) {
-          let factoryKind: 'object' | 'array' | 'map';
-          if (c.factoryName === 'firestoreSubObject') {
-            factoryKind = 'object';
-          } else if (c.factoryName === 'firestoreObjectArray') {
-            factoryKind = 'array';
-          } else {
-            factoryKind = 'map';
-          }
-          subObjectConstIndex.set(c.constName, { interfaceName: c.interfaceName, factoryKind });
-        }
-      }
-      for (const iface of findInterfaces(sf)) {
-        if (iface.tags.dbxModelSubObject && !subObjectInterfaceIndex.has(iface.name)) {
-          subObjectInterfaceIndex.set(iface.name, iface);
-        }
-      }
+      indexSubObjectFactsFromFile(sf, subObjectConstIndex, subObjectInterfaceIndex);
     } catch (error) {
       errors.push({ sourceFile: sourceFileRel, message: error instanceof Error ? error.message : String(error) });
     }
   }
+  return { parsedFiles, errors };
+}
 
+interface AssemblePassInput {
+  readonly parsedFiles: readonly ParsedSourceFile[];
+  readonly sourcePackage: string;
+  readonly subObjectConstIndex: Map<string, SubObjectConstEntry>;
+  readonly subObjectInterfaceIndex: Map<string, ExtractedInterface>;
+}
+
+interface AssemblePassResult {
+  readonly models: readonly FirebaseModel[];
+  readonly modelGroups: readonly FirebaseModelGroup[];
+  readonly errors: readonly ExtractError[];
+}
+
+function assembleAllParsedFiles(input: AssemblePassInput): AssemblePassResult {
+  const { parsedFiles, sourcePackage, subObjectConstIndex, subObjectInterfaceIndex } = input;
+  const models: FirebaseModel[] = [];
+  const modelGroups: FirebaseModelGroup[] = [];
+  const errors: ExtractError[] = [];
   for (const { sourceFileRel, sf, hasModelMarker } of parsedFiles) {
     if (!hasModelMarker) continue;
     try {
@@ -164,13 +193,48 @@ export async function extractModels(input: ExtractModelsInput): Promise<ExtractM
       errors.push({ sourceFile: sourceFileRel, message: error instanceof Error ? error.message : String(error) });
     }
   }
+  return { models, modelGroups, errors };
+}
 
+function sortModels(models: FirebaseModel[]): void {
   models.sort((a, b) => {
     const aRoot = a.parentIdentityConst ? 1 : 0;
     const bRoot = b.parentIdentityConst ? 1 : 0;
     if (aRoot !== bRoot) return aRoot - bRoot;
     return a.name.localeCompare(b.name);
   });
+}
+
+/**
+ * Scans the supplied model root and returns every detected model and
+ * model-group entry. Per-file errors are aggregated rather than thrown so
+ * a single malformed file never blocks the rest of the scan.
+ *
+ * @param input - the scan configuration
+ * @returns the assembled models, groups, and per-file errors
+ */
+export async function extractModels(input: ExtractModelsInput): Promise<ExtractModelsResult> {
+  const { rootDir, sourcePackage, workspaceRoot, skipReservedFolders } = input;
+  const reserved = new Set(skipReservedFolders ?? []);
+  const baseDir = workspaceRoot ?? join(rootDir, '..');
+  const files = await listTsFiles(rootDir, reserved);
+  const project = new Project({ useInMemoryFileSystem: true });
+
+  // Pre-pass: parse every file once and collect the cross-file
+  // sub-object index (factory consts + tagged interfaces) so the
+  // per-model assembly pass can resolve `firestoreSubObject<T>` chains
+  // declared in sibling sub-files (e.g. `worker.pay.ts` consumed by
+  // `worker.ts`).
+  const subObjectConstIndex = new Map<string, SubObjectConstEntry>();
+  const subObjectInterfaceIndex = new Map<string, ExtractedInterface>();
+  const parsePass = await parseAndIndexFiles({ files, baseDir, project, subObjectConstIndex, subObjectInterfaceIndex });
+  const assemblePass = assembleAllParsedFiles({ parsedFiles: parsePass.parsedFiles, sourcePackage, subObjectConstIndex, subObjectInterfaceIndex });
+
+  const models: FirebaseModel[] = [...assemblePass.models];
+  const modelGroups: FirebaseModelGroup[] = [...assemblePass.modelGroups];
+  const errors: ExtractError[] = [...parsePass.errors, ...assemblePass.errors];
+
+  sortModels(models);
   modelGroups.sort((a, b) => a.name.localeCompare(b.name));
 
   return { models, modelGroups, errors };

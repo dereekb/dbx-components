@@ -40,7 +40,26 @@ export function buildRouteTree(nodes: readonly RouteNode[], extractIssues: reado
   const issues: RouteIssue[] = [...extractIssues];
   const byName = new Map<string, MutableTreeNode>();
 
-  // (1) Insert nodes; report duplicates
+  insertNodes(nodes, byName, issues);
+  wireParentLinks(byName, issues);
+  detectCycles(byName, issues);
+  composeFullUrls(byName);
+  const roots = collectRoots(byName);
+  sortChildren(byName, roots);
+  const { frozen, frozenRoots } = freezeTree(roots);
+
+  const result: RouteTree = {
+    roots: frozenRoots,
+    byName: frozen,
+    issues,
+    filesChecked: 0,
+    nodeCount: byName.size
+  };
+  return result;
+}
+
+// (1) Insert nodes; report duplicates
+function insertNodes(nodes: readonly RouteNode[], byName: Map<string, MutableTreeNode>, issues: RouteIssue[]): void {
   for (const node of nodes) {
     if (byName.has(node.name)) {
       issues.push({
@@ -55,13 +74,13 @@ export function buildRouteTree(nodes: readonly RouteNode[], extractIssues: reado
     }
     byName.set(node.name, { data: node, fullUrl: undefined, parent: undefined, children: [] });
   }
+}
 
-  // (2) Wire parent links
+// (2) Wire parent links
+function wireParentLinks(byName: Map<string, MutableTreeNode>, issues: RouteIssue[]): void {
   for (const treeNode of byName.values()) {
     const parentName = resolveParentName(treeNode.data, byName);
-    if (!parentName) {
-      continue;
-    }
+    if (!parentName) continue;
     const parent = byName.get(parentName);
     if (!parent) {
       issues.push({
@@ -77,70 +96,83 @@ export function buildRouteTree(nodes: readonly RouteNode[], extractIssues: reado
     treeNode.parent = parent;
     parent.children.push(treeNode);
   }
+}
 
-  // (3) Detect cycles. A cycle is impossible via dot-prefix linkage but the
-  // explicit `parent` field can introduce one (`a.parent = 'b'`,
-  // `b.parent = 'a'`). Walk from each node and break the chain on revisits.
+// (3) Detect cycles. A cycle is impossible via dot-prefix linkage but the
+// explicit `parent` field can introduce one (`a.parent = 'b'`,
+// `b.parent = 'a'`). Walk from each node and break the chain on revisits.
+function detectCycles(byName: Map<string, MutableTreeNode>, issues: RouteIssue[]): void {
   for (const treeNode of byName.values()) {
-    if (!treeNode.parent) {
-      continue;
-    }
-    const seen = new Set<string>();
-    seen.add(treeNode.data.name);
-    let cursor: MutableTreeNode | undefined = treeNode.parent;
-    while (cursor) {
-      if (seen.has(cursor.data.name)) {
-        issues.push({
-          code: 'CYCLE_DETECTED',
-          severity: 'error',
-          message: `Cycle detected involving \`${treeNode.data.name}\` and \`${cursor.data.name}\`. Severing the parent link.`,
-          file: treeNode.data.file,
-          line: treeNode.data.line,
-          stateName: treeNode.data.name
-        });
-        // Detach from parent — sever the edge that would loop back.
-        if (treeNode.parent) {
-          const idx = treeNode.parent.children.indexOf(treeNode);
-          if (idx >= 0) {
-            treeNode.parent.children.splice(idx, 1);
-          }
-          treeNode.parent = undefined;
-        }
-        break;
-      }
-      seen.add(cursor.data.name);
-      cursor = cursor.parent;
-    }
+    if (!treeNode.parent) continue;
+    detectCycleFor(treeNode, issues);
   }
+}
 
-  // (4) Compose full URLs (parent walk; root url is not prefixed). UIRouter's
-  // own logic is more nuanced (some states overwrite their parent's URL with
-  // a leading `^`), but this gives a useful approximation for the common case.
+function detectCycleFor(treeNode: MutableTreeNode, issues: RouteIssue[]): void {
+  const seen = new Set<string>();
+  seen.add(treeNode.data.name);
+  let cursor: MutableTreeNode | undefined = treeNode.parent;
+  while (cursor) {
+    if (seen.has(cursor.data.name)) {
+      issues.push({
+        code: 'CYCLE_DETECTED',
+        severity: 'error',
+        message: `Cycle detected involving \`${treeNode.data.name}\` and \`${cursor.data.name}\`. Severing the parent link.`,
+        file: treeNode.data.file,
+        line: treeNode.data.line,
+        stateName: treeNode.data.name
+      });
+      detachFromParent(treeNode);
+      return;
+    }
+    seen.add(cursor.data.name);
+    cursor = cursor.parent;
+  }
+}
+
+function detachFromParent(treeNode: MutableTreeNode): void {
+  if (!treeNode.parent) return;
+  const idx = treeNode.parent.children.indexOf(treeNode);
+  if (idx >= 0) {
+    treeNode.parent.children.splice(idx, 1);
+  }
+  treeNode.parent = undefined;
+}
+
+// (4) Compose full URLs (parent walk; root url is not prefixed). UIRouter's
+// own logic is more nuanced (some states overwrite their parent's URL with
+// a leading `^`), but this gives a useful approximation for the common case.
+function composeFullUrls(byName: Map<string, MutableTreeNode>): void {
   for (const treeNode of byName.values()) {
     treeNode.fullUrl = composeFullUrl(treeNode);
   }
+}
 
-  // (5) Identify roots
+// (5) Identify roots
+function collectRoots(byName: Map<string, MutableTreeNode>): MutableTreeNode[] {
   const roots: MutableTreeNode[] = [];
   for (const treeNode of byName.values()) {
     if (!treeNode.parent) {
       roots.push(treeNode);
     }
   }
+  return roots;
+}
 
-  // (6) Sort children deterministically by name
+// (6) Sort children deterministically by name
+function sortChildren(byName: Map<string, MutableTreeNode>, roots: MutableTreeNode[]): void {
   for (const treeNode of byName.values()) {
     treeNode.children.sort(compareByName);
   }
   roots.sort(compareByName);
+}
 
-  // (7) Freeze: convert MutableTreeNode → RouteTreeNode (children: readonly).
+// (7) Freeze: convert MutableTreeNode → RouteTreeNode (children: readonly).
+function freezeTree(roots: readonly MutableTreeNode[]): { readonly frozen: Map<string, RouteTreeNode>; readonly frozenRoots: readonly RouteTreeNode[] } {
   const frozen = new Map<string, RouteTreeNode>();
   const freeze = (mut: MutableTreeNode): RouteTreeNode => {
     const existing = frozen.get(mut.data.name);
-    if (existing) {
-      return existing;
-    }
+    if (existing) return existing;
     const placeholder: { -readonly [K in keyof RouteTreeNode]: RouteTreeNode[K] } = {
       data: mut.data,
       fullUrl: mut.fullUrl,
@@ -152,17 +184,8 @@ export function buildRouteTree(nodes: readonly RouteNode[], extractIssues: reado
     placeholder.children = mut.children.map(freeze);
     return placeholder;
   };
-
   const frozenRoots = roots.map(freeze);
-
-  const result: RouteTree = {
-    roots: frozenRoots,
-    byName: frozen,
-    issues,
-    filesChecked: 0,
-    nodeCount: byName.size
-  };
-  return result;
+  return { frozen, frozenRoots };
 }
 
 function resolveParentName(node: RouteNode, byName: ReadonlyMap<string, MutableTreeNode>): string | undefined {

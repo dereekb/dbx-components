@@ -214,6 +214,8 @@ function requireString(value: string | undefined, label: string): string {
   return trimmed;
 }
 
+type ScaffoldArgsParsed = ReturnType<typeof ScaffoldArgsType> extends infer R ? Exclude<R, type.errors> : never;
+
 function parseArgs(raw: unknown): ParsedScaffoldArgs {
   const parsed = ScaffoldArgsType(raw);
   if (parsed instanceof type.errors) {
@@ -227,72 +229,116 @@ function parseArgs(raw: unknown): ParsedScaffoldArgs {
   const profile = SHAPE_PROFILES[shape];
 
   const modelCamel = camelCase(modelName);
-  const appPrefixCamel = camelCase(appPrefix);
-  const appPrefixPascal = pascalCase(appPrefix);
-
-  let collectionsClass: string | undefined;
-  if (profile.requiresCollectionsClass) {
-    collectionsClass = requireString(parsed.collections_class, 'collections_class');
-  } else if (parsed.collections_class !== undefined) {
-    const trimmed = parsed.collections_class.trim();
-    collectionsClass = trimmed.length > 0 ? trimmed : undefined;
-  }
-
+  const collectionsClass = resolveCollectionsClass(parsed, profile);
   const collectionAccessor = (parsed.collection_accessor ?? '').trim() || `${modelCamel}Collection`;
   const factoryAccessor = (parsed.factory_accessor ?? '').trim() || `${modelCamel}CollectionFactory`;
   const groupAccessor = (parsed.group_accessor ?? '').trim() || `${modelCamel}CollectionGroup`;
+  const parentModel = resolveParentModel(parsed, profile, shape);
+  const systemState = resolveSystemStateArgs(parsed, profile);
+  const functionsClass = resolveFunctionsClass(parsed);
+  const crudFunctions = resolveCrudFunctions(parsed, functionsClass);
+  const surfaces = resolveSurfaces(parsed, profile, shape);
 
-  let parentModel: ParsedParentModel | undefined;
-  if (profile.hasParent) {
-    if (parsed.parent_model === undefined) {
-      throw new Error(`Invalid arguments: parent_model is required for shape="${shape}".`);
-    }
-    const parentName = requireString(parsed.parent_model.name, 'parent_model.name');
-    const documentType = (parsed.parent_model.document_type ?? '').trim() || `${parentName}Document`;
-    parentModel = { name: parentName, documentType };
-  } else if (parsed.parent_model !== undefined) {
-    throw new Error(`Invalid arguments: parent_model is only valid for shape="sub-collection" or shape="singleton-sub".`);
+  return {
+    modelName,
+    modelCamel,
+    appPrefixCamel: camelCase(appPrefix),
+    appPrefixPascal: pascalCase(appPrefix),
+    firebasePackage,
+    shape,
+    profile,
+    collectionsClass,
+    collectionAccessor,
+    factoryAccessor,
+    groupAccessor,
+    parentModel,
+    systemStateTypeConst: systemState.systemStateTypeConst,
+    dataType: systemState.dataType,
+    functionsClass,
+    crudFunctions,
+    fileBaseName: (parsed.file_base_name ?? '').trim() || modelName.toLowerCase(),
+    surfaces
+  };
+}
+
+function resolveCollectionsClass(parsed: ScaffoldArgsParsed, profile: ShapeProfile): string | undefined {
+  if (profile.requiresCollectionsClass) {
+    return requireString(parsed.collections_class, 'collections_class');
   }
+  if (parsed.collections_class === undefined) return undefined;
+  const trimmed = parsed.collections_class.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
 
-  let systemStateTypeConst: string | undefined;
-  let dataType: string | undefined;
+function resolveParentModel(parsed: ScaffoldArgsParsed, profile: ShapeProfile, shape: StoreShape): ParsedParentModel | undefined {
+  if (!profile.hasParent) {
+    if (parsed.parent_model !== undefined) {
+      throw new Error(`Invalid arguments: parent_model is only valid for shape="sub-collection" or shape="singleton-sub".`);
+    }
+    return undefined;
+  }
+  if (parsed.parent_model === undefined) {
+    throw new Error(`Invalid arguments: parent_model is required for shape="${shape}".`);
+  }
+  const parentName = requireString(parsed.parent_model.name, 'parent_model.name');
+  const documentType = (parsed.parent_model.document_type ?? '').trim() || `${parentName}Document`;
+  return { name: parentName, documentType };
+}
+
+interface ResolvedSystemStateArgs {
+  readonly systemStateTypeConst?: string;
+  readonly dataType?: string;
+}
+
+function resolveSystemStateArgs(parsed: ScaffoldArgsParsed, profile: ShapeProfile): ResolvedSystemStateArgs {
   if (profile.requiresSystemStateTypeConst) {
-    systemStateTypeConst = requireString(parsed.system_state_type_const, 'system_state_type_const');
-    dataType = requireString(parsed.data_type, 'data_type');
-  } else {
-    if (parsed.system_state_type_const !== undefined) {
-      throw new Error(`Invalid arguments: system_state_type_const is only valid for shape="system-state".`);
-    }
-    if (parsed.data_type !== undefined) {
-      throw new Error(`Invalid arguments: data_type is only valid for shape="system-state".`);
-    }
+    return {
+      systemStateTypeConst: requireString(parsed.system_state_type_const, 'system_state_type_const'),
+      dataType: requireString(parsed.data_type, 'data_type')
+    };
   }
+  if (parsed.system_state_type_const !== undefined) {
+    throw new Error(`Invalid arguments: system_state_type_const is only valid for shape="system-state".`);
+  }
+  if (parsed.data_type !== undefined) {
+    throw new Error(`Invalid arguments: data_type is only valid for shape="system-state".`);
+  }
+  return {};
+}
 
-  const functionsClassRaw = parsed.functions_class === undefined ? '' : parsed.functions_class.trim();
-  const functionsClass = functionsClassRaw.length > 0 ? functionsClassRaw : undefined;
+function resolveFunctionsClass(parsed: ScaffoldArgsParsed): string | undefined {
+  const raw = parsed.functions_class === undefined ? '' : parsed.functions_class.trim();
+  return raw.length > 0 ? raw : undefined;
+}
 
-  const crudFunctions: ParsedCrudFunction[] = [];
+function resolveCrudFunctions(parsed: ScaffoldArgsParsed, functionsClass: string | undefined): readonly ParsedCrudFunction[] {
+  const crud: ParsedCrudFunction[] = [];
   if (parsed.crud_functions !== undefined) {
     if (functionsClass === undefined) {
       throw new Error('Invalid arguments: crud_functions requires functions_class.');
     }
     for (const cf of parsed.crud_functions) {
-      const name = requireString(cf.name, 'crud_functions[].name');
-      const path = requireString(cf.functions_path, 'crud_functions[].functions_path');
-      crudFunctions.push({ name, kind: cf.kind, functionsPath: path });
+      crud.push({
+        name: requireString(cf.name, 'crud_functions[].name'),
+        kind: cf.kind,
+        functionsPath: requireString(cf.functions_path, 'crud_functions[].functions_path')
+      });
     }
   }
   if (parsed.create_function !== undefined) {
     if (functionsClass === undefined) {
       throw new Error('Invalid arguments: create_function requires functions_class.');
     }
-    const name = requireString(parsed.create_function.name, 'create_function.name');
-    const path = requireString(parsed.create_function.functions_path, 'create_function.functions_path');
-    crudFunctions.push({ name, kind: 'create', functionsPath: path });
+    crud.push({
+      name: requireString(parsed.create_function.name, 'create_function.name'),
+      kind: 'create',
+      functionsPath: requireString(parsed.create_function.functions_path, 'create_function.functions_path')
+    });
   }
+  return crud;
+}
 
-  const fileBaseName = (parsed.file_base_name ?? '').trim() || modelName.toLowerCase();
-
+function resolveSurfaces(parsed: ScaffoldArgsParsed, profile: ShapeProfile, shape: StoreShape): readonly Surface[] {
   const surfacesInput = parsed.surfaces ?? profile.defaultSurfaces;
   const surfaceSet = new Set<Surface>(surfacesInput);
   if (surfaceSet.size === 0) {
@@ -303,29 +349,7 @@ function parseArgs(raw: unknown): ParsedScaffoldArgs {
       throw new Error(`Invalid arguments: shape="${shape}" does not support surface "${s}".`);
     }
   }
-  const surfaces: readonly Surface[] = (['document', 'collection'] as const).filter((s) => surfaceSet.has(s));
-
-  const result: ParsedScaffoldArgs = {
-    modelName,
-    modelCamel,
-    appPrefixCamel,
-    appPrefixPascal,
-    firebasePackage,
-    shape,
-    profile,
-    collectionsClass,
-    collectionAccessor,
-    factoryAccessor,
-    groupAccessor,
-    parentModel,
-    systemStateTypeConst,
-    dataType,
-    functionsClass,
-    crudFunctions,
-    fileBaseName,
-    surfaces
-  };
-  return result;
+  return (['document', 'collection'] as const).filter((s) => surfaceSet.has(s));
 }
 
 // MARK: Naming helpers
@@ -589,34 +613,33 @@ function collectionDirectiveBody(args: ParsedScaffoldArgs): FileBlock {
 }
 
 function buildBlocks(args: ParsedScaffoldArgs): readonly FileBlock[] {
-  const blocks: FileBlock[] = [];
-
   if (args.shape === 'system-state') {
-    blocks.push(systemStateAccessorBody(args));
-  } else {
-    for (const surface of args.surfaces) {
-      if (surface === 'document') {
-        if (args.shape === 'sub-collection' || args.shape === 'singleton-sub') {
-          blocks.push(subDocumentStoreBody(args));
-        } else {
-          blocks.push(rootDocumentStoreBody(args));
-        }
-        if (args.profile.emitsDirectives) {
-          blocks.push(documentDirectiveBody(args));
-        }
-      } else {
-        if (args.shape === 'sub-collection') {
-          blocks.push(subCollectionStoreBody(args));
-        } else {
-          blocks.push(rootCollectionStoreBody(args));
-        }
-        if (args.profile.emitsDirectives) {
-          blocks.push(collectionDirectiveBody(args));
-        }
-      }
-    }
+    return [systemStateAccessorBody(args)];
+  }
+  const blocks: FileBlock[] = [];
+  for (const surface of args.surfaces) {
+    pushSurfaceBlocks(blocks, args, surface);
   }
   return blocks;
+}
+
+function pushSurfaceBlocks(blocks: FileBlock[], args: ParsedScaffoldArgs, surface: Surface): void {
+  if (surface === 'document') {
+    blocks.push(buildDocumentBlock(args));
+    if (args.profile.emitsDirectives) blocks.push(documentDirectiveBody(args));
+    return;
+  }
+  blocks.push(buildCollectionBlock(args));
+  if (args.profile.emitsDirectives) blocks.push(collectionDirectiveBody(args));
+}
+
+function buildDocumentBlock(args: ParsedScaffoldArgs): FileBlock {
+  const isSub = args.shape === 'sub-collection' || args.shape === 'singleton-sub';
+  return isSub ? subDocumentStoreBody(args) : rootDocumentStoreBody(args);
+}
+
+function buildCollectionBlock(args: ParsedScaffoldArgs): FileBlock {
+  return args.shape === 'sub-collection' ? subCollectionStoreBody(args) : rootCollectionStoreBody(args);
 }
 
 // MARK: Output

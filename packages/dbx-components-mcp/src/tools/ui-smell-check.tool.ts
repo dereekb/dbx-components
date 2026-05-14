@@ -179,78 +179,139 @@ export interface CreateUiSmellCheckToolInput {
 export function createUiSmellCheckTool(input: CreateUiSmellCheckToolInput): DbxTool {
   const { tokenRegistry, uiComponentRegistry, cwd, readFile } = input;
   const run = async (rawArgs: unknown): Promise<ToolResult> => {
-    let conventionsFromConfig: ProjectConventions = {};
-    try {
-      const configResult = await findAndLoadConfig({ cwd: cwd ?? process.cwd(), readFile });
-      const block = (configResult.config as { uiSmellCheck?: { projectConventions?: ProjectConventions } } | null)?.uiSmellCheck?.projectConventions;
-      if (block !== undefined) {
-        conventionsFromConfig = block;
-      }
-    } catch {
-      conventionsFromConfig = {};
-    }
-
-    let args: ParsedArgs;
-    try {
-      args = parseArgs(rawArgs, conventionsFromConfig);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      return toolError(message);
-    }
+    const conventionsFromConfig = await loadConventionsFromConfig({ cwd, readFile });
+    const parsedOrError = tryParseArgs(rawArgs, conventionsFromConfig);
+    if (parsedOrError.kind === 'error') return parsedOrError.error;
+    const args = parsedOrError.args;
 
     const resolvedCwd = cwd ?? process.cwd();
     const reader = readFile ?? DEFAULT_READ_FILE;
 
     if (args.paths !== undefined && args.paths.length > 0) {
-      if (args.html.length > 0 || args.scss.length > 0 || args.htmlPath !== undefined || args.scssPath !== undefined) {
-        return toolError('dbx_ui_smell_check: `paths` is mutually exclusive with `html`/`scss`/`htmlPath`/`scssPath`.');
-      }
-      return runBatch({ paths: args.paths, conventions: args.conventions, cwd: resolvedCwd, reader, tokenRegistry, uiComponentRegistry });
+      return runPathsMode({ args, cwd: resolvedCwd, reader, tokenRegistry, uiComponentRegistry });
     }
-
-    if (args.html.length > 0 && args.htmlPath !== undefined) {
-      return toolError('dbx_ui_smell_check: provide either `html` or `htmlPath`, not both.');
-    }
-    if (args.scss.length > 0 && args.scssPath !== undefined) {
-      return toolError('dbx_ui_smell_check: provide either `scss` or `scssPath`, not both.');
-    }
-
-    let html = args.html;
-    let scss = args.scss;
-    if (args.htmlPath !== undefined) {
-      try {
-        html = await readPathInput(args.htmlPath, resolvedCwd, reader);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        return toolError(`dbx_ui_smell_check: failed to read htmlPath \`${args.htmlPath}\`: ${message}`);
-      }
-    }
-    if (args.scssPath !== undefined) {
-      try {
-        scss = await readPathInput(args.scssPath, resolvedCwd, reader);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        return toolError(`dbx_ui_smell_check: failed to read scssPath \`${args.scssPath}\`: ${message}`);
-      }
-    }
-
-    if (html.length === 0 && scss.length === 0) {
-      return toolError('dbx_ui_smell_check: provide at least one of `html`, `scss`, `htmlPath`, `scssPath`, or `paths`.');
-    }
-
-    const result = detectSmellsDetailed({
-      html,
-      scss,
-      conventions: args.conventions,
-      tokenRegistry,
-      uiComponentRegistry,
-      scssPath: args.scssPath,
-      htmlPath: args.htmlPath
-    });
-    const text = formatSmellResult({ html, scss, context: args.context }, result, tokenRegistry);
-    return { content: [{ type: 'text', text }] };
+    return runSingleMode({ args, cwd: resolvedCwd, reader, tokenRegistry, uiComponentRegistry });
   };
   return { definition: DBX_UI_SMELL_CHECK_TOOL, run };
+}
+
+async function loadConventionsFromConfig(input: { readonly cwd: string | undefined; readonly readFile: ConfigReadFile | undefined }): Promise<ProjectConventions> {
+  let result: ProjectConventions = {};
+  try {
+    const configResult = await findAndLoadConfig({ cwd: input.cwd ?? process.cwd(), readFile: input.readFile });
+    const block = (configResult.config as { uiSmellCheck?: { projectConventions?: ProjectConventions } } | null)?.uiSmellCheck?.projectConventions;
+    if (block !== undefined) {
+      result = block;
+    }
+  } catch {
+    result = {};
+  }
+  return result;
+}
+
+type ParseArgsOutcome = { readonly kind: 'ok'; readonly args: ParsedArgs } | { readonly kind: 'error'; readonly error: ToolResult };
+
+function tryParseArgs(rawArgs: unknown, defaults: ProjectConventions): ParseArgsOutcome {
+  let result: ParseArgsOutcome;
+  try {
+    const args = parseArgs(rawArgs, defaults);
+    result = { kind: 'ok', args };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    result = { kind: 'error', error: toolError(message) };
+  }
+  return result;
+}
+
+interface RunModeInput {
+  readonly args: ParsedArgs;
+  readonly cwd: string;
+  readonly reader: ConfigReadFile;
+  readonly tokenRegistry: TokenRegistry;
+  readonly uiComponentRegistry: UiComponentRegistry;
+}
+
+function runPathsMode(input: RunModeInput): Promise<ToolResult> {
+  const { args, cwd, reader, tokenRegistry, uiComponentRegistry } = input;
+  if (args.html.length > 0 || args.scss.length > 0 || args.htmlPath !== undefined || args.scssPath !== undefined) {
+    return Promise.resolve(toolError('dbx_ui_smell_check: `paths` is mutually exclusive with `html`/`scss`/`htmlPath`/`scssPath`.'));
+  }
+  return runBatch({ paths: args.paths ?? [], conventions: args.conventions, cwd, reader, tokenRegistry, uiComponentRegistry });
+}
+
+async function runSingleMode(input: RunModeInput): Promise<ToolResult> {
+  const { args, cwd, reader, tokenRegistry, uiComponentRegistry } = input;
+  const mutualExclusionError = checkSingleModeMutualExclusion(args);
+  if (mutualExclusionError !== null) return mutualExclusionError;
+
+  const loaded = await loadSingleModeInputs(args, cwd, reader);
+  if (loaded.kind === 'error') return loaded.error;
+  const { html, scss } = loaded;
+
+  if (html.length === 0 && scss.length === 0) {
+    return toolError('dbx_ui_smell_check: provide at least one of `html`, `scss`, `htmlPath`, `scssPath`, or `paths`.');
+  }
+
+  const result = detectSmellsDetailed({
+    html,
+    scss,
+    conventions: args.conventions,
+    tokenRegistry,
+    uiComponentRegistry,
+    scssPath: args.scssPath,
+    htmlPath: args.htmlPath
+  });
+  const text = formatSmellResult({ html, scss, context: args.context }, result, tokenRegistry);
+  return { content: [{ type: 'text', text }] };
+}
+
+function checkSingleModeMutualExclusion(args: ParsedArgs): ToolResult | null {
+  let result: ToolResult | null = null;
+  if (args.html.length > 0 && args.htmlPath !== undefined) {
+    result = toolError('dbx_ui_smell_check: provide either `html` or `htmlPath`, not both.');
+  } else if (args.scss.length > 0 && args.scssPath !== undefined) {
+    result = toolError('dbx_ui_smell_check: provide either `scss` or `scssPath`, not both.');
+  }
+  return result;
+}
+
+type LoadSingleInputs = { readonly kind: 'ok'; readonly html: string; readonly scss: string } | { readonly kind: 'error'; readonly error: ToolResult };
+
+async function loadSingleModeInputs(args: ParsedArgs, cwd: string, reader: ConfigReadFile): Promise<LoadSingleInputs> {
+  let html = args.html;
+  let scss = args.scss;
+  if (args.htmlPath !== undefined) {
+    const read = await tryReadPath({ path: args.htmlPath, cwd, reader, label: 'htmlPath' });
+    if (read.kind === 'error') return read;
+    html = read.text;
+  }
+  if (args.scssPath !== undefined) {
+    const read = await tryReadPath({ path: args.scssPath, cwd, reader, label: 'scssPath' });
+    if (read.kind === 'error') return read;
+    scss = read.text;
+  }
+  return { kind: 'ok', html, scss };
+}
+
+type ReadPathOutcome = { readonly kind: 'ok'; readonly text: string } | { readonly kind: 'error'; readonly error: ToolResult };
+
+interface TryReadPathInput {
+  readonly path: string;
+  readonly cwd: string;
+  readonly reader: ConfigReadFile;
+  readonly label: string;
+}
+
+async function tryReadPath(input: TryReadPathInput): Promise<ReadPathOutcome> {
+  let outcome: ReadPathOutcome;
+  try {
+    const text = await readPathInput(input.path, input.cwd, input.reader);
+    outcome = { kind: 'ok', text };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    outcome = { kind: 'error', error: toolError(`dbx_ui_smell_check: failed to read ${input.label} \`${input.path}\`: ${message}`) };
+  }
+  return outcome;
 }
 
 interface RunBatchInput {
@@ -268,36 +329,69 @@ async function runBatch(input: RunBatchInput): Promise<ToolResult> {
     return toolError('dbx_ui_smell_check: `paths` produced no recognizable files (need .html/.scss/.css).');
   }
   const files: SmellResultFile[] = [];
+  let earlyResult: ToolResult | null = null;
   for (const entry of paired) {
-    let html = '';
-    let scss = '';
-    if (entry.htmlPath !== undefined) {
-      try {
-        html = await readPathInput(entry.htmlPath, input.cwd, input.reader);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        return toolError(`dbx_ui_smell_check: failed to read \`${entry.htmlPath}\`: ${message}`);
-      }
+    const built = await buildBatchFileEntry(entry, input);
+    if (built.kind === 'error') {
+      earlyResult = built.error;
+      break;
     }
-    if (entry.scssPath !== undefined) {
-      try {
-        scss = await readPathInput(entry.scssPath, input.cwd, input.reader);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        return toolError(`dbx_ui_smell_check: failed to read \`${entry.scssPath}\`: ${message}`);
-      }
-    }
-    const result = detectSmellsDetailed({
-      html,
-      scss,
-      conventions: input.conventions,
-      tokenRegistry: input.tokenRegistry,
-      uiComponentRegistry: input.uiComponentRegistry,
-      scssPath: entry.scssPath,
-      htmlPath: entry.htmlPath
-    });
-    files.push({ label: entry.label, htmlPath: entry.htmlPath, scssPath: entry.scssPath, result, inputs: { html, scss } });
+    files.push(built.file);
   }
-  const text = formatBatchSmellResult(files, input.tokenRegistry);
-  return { content: [{ type: 'text', text }] };
+  let result: ToolResult;
+  if (earlyResult !== null) {
+    result = earlyResult;
+  } else {
+    const text = formatBatchSmellResult(files, input.tokenRegistry);
+    result = { content: [{ type: 'text', text }] };
+  }
+  return result;
+}
+
+type BatchEntryOutcome = { readonly kind: 'ok'; readonly file: SmellResultFile } | { readonly kind: 'error'; readonly error: ToolResult };
+
+async function buildBatchFileEntry(entry: PairedFile, input: RunBatchInput): Promise<BatchEntryOutcome> {
+  const loaded = await loadPairedFileSources(entry, input.cwd, input.reader);
+  if (loaded.kind === 'error') return loaded;
+  const { html, scss } = loaded;
+  const result = detectSmellsDetailed({
+    html,
+    scss,
+    conventions: input.conventions,
+    tokenRegistry: input.tokenRegistry,
+    uiComponentRegistry: input.uiComponentRegistry,
+    scssPath: entry.scssPath,
+    htmlPath: entry.htmlPath
+  });
+  return { kind: 'ok', file: { label: entry.label, htmlPath: entry.htmlPath, scssPath: entry.scssPath, result, inputs: { html, scss } } };
+}
+
+type LoadPairedFileSources = { readonly kind: 'ok'; readonly html: string; readonly scss: string } | { readonly kind: 'error'; readonly error: ToolResult };
+
+async function loadPairedFileSources(entry: PairedFile, cwd: string, reader: ConfigReadFile): Promise<LoadPairedFileSources> {
+  let html = '';
+  let scss = '';
+  if (entry.htmlPath !== undefined) {
+    const read = await tryReadBatchPath(entry.htmlPath, cwd, reader);
+    if (read.kind === 'error') return read;
+    html = read.text;
+  }
+  if (entry.scssPath !== undefined) {
+    const read = await tryReadBatchPath(entry.scssPath, cwd, reader);
+    if (read.kind === 'error') return read;
+    scss = read.text;
+  }
+  return { kind: 'ok', html, scss };
+}
+
+async function tryReadBatchPath(path: string, cwd: string, reader: ConfigReadFile): Promise<ReadPathOutcome> {
+  let outcome: ReadPathOutcome;
+  try {
+    const text = await readPathInput(path, cwd, reader);
+    outcome = { kind: 'ok', text };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    outcome = { kind: 'error', error: toolError(`dbx_ui_smell_check: failed to read \`${path}\`: ${message}`) };
+  }
+  return outcome;
 }

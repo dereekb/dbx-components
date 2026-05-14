@@ -19,7 +19,7 @@ import { resolve } from 'node:path';
 import { type } from 'arktype';
 import { FilterManifest, type FilterEntry } from '../manifest/filters-schema.js';
 import { extractFilterEntries, type ExtractedFilterEntry, type FilterExtractWarning } from './filters-extract.js';
-import { DEFAULT_FILTERS_SCAN_OUT_PATH, FILTERS_SCAN_CONFIG_FILENAME, FiltersScanConfig } from './filters-scan-config-schema.js';
+import { DEFAULT_FILTERS_SCAN_OUT_PATH, FILTERS_SCAN_CONFIG_FILENAME, FiltersScanConfig, type FiltersScanSection } from './filters-scan-config-schema.js';
 import { buildScanProject, defaultGlobber, defaultReadFile, loadPackageName, loadScanSection, type ScanGlobber, type ScanReadFile } from './scan-io.js';
 
 // MARK: Public types
@@ -71,13 +71,7 @@ export async function buildFiltersManifest(input: BuildFiltersManifestInput): Pr
   const configOutcome = await loadScanSection({
     configPath,
     readFile,
-    parseSection: (parsed) => {
-      const validated = FiltersScanConfig(parsed);
-      if (validated instanceof type.errors) {
-        return { ok: false, error: validated.summary };
-      }
-      return { ok: true, section: validated.filters };
-    }
+    parseSection: parseFiltersConfig
   });
   if (configOutcome.kind !== 'ok') {
     return configOutcome.outcome;
@@ -112,6 +106,27 @@ export async function buildFiltersManifest(input: BuildFiltersManifestInput): Pr
     entries
   };
 
+  return finalizeFiltersOutcome({ manifest, projectRoot, scanSection, filePaths, extractResult });
+}
+
+function parseFiltersConfig(parsed: unknown): { readonly ok: true; readonly section: FiltersScanSection } | { readonly ok: false; readonly error: string } {
+  const validated = FiltersScanConfig(parsed);
+  if (validated instanceof type.errors) {
+    return { ok: false, error: validated.summary };
+  }
+  return { ok: true, section: validated.filters };
+}
+
+interface FinalizeFiltersOutcomeInput {
+  readonly manifest: unknown;
+  readonly projectRoot: string;
+  readonly scanSection: FiltersScanSection;
+  readonly filePaths: readonly string[];
+  readonly extractResult: { readonly warnings: readonly FilterExtractWarning[] };
+}
+
+function finalizeFiltersOutcome(input: FinalizeFiltersOutcomeInput): BuildFiltersManifestOutcome {
+  const { manifest, projectRoot, scanSection, filePaths, extractResult } = input;
   const validated = FilterManifest(manifest);
   let outcome: BuildFiltersManifestOutcome;
   if (validated instanceof type.errors) {

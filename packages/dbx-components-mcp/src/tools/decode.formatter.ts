@@ -121,27 +121,33 @@ function escapeCell(text: string): string {
 function formatValue(value: unknown): string {
   if (value === undefined) return 'undefined';
   if (value === null) return 'null';
-  if (typeof value === 'string') {
-    const truncated = value.length > 120 ? `${value.slice(0, 117)}...` : value;
-    return `"${truncated}"`;
-  }
+  if (typeof value === 'string') return formatStringValue(value);
   if (typeof value === 'number' || typeof value === 'boolean') return String(value);
-  if (Array.isArray(value)) {
-    if (value.length === 0) return '[]';
-    if (value.length <= 3) return JSON.stringify(value);
-    return `[Array(${value.length})]`;
-  }
+  if (Array.isArray(value)) return formatArrayValue(value);
   if (value instanceof Date) return value.toISOString();
-  if (typeof value === 'object') {
-    const keys = Object.keys(value);
-    if (keys.length === 0) return '{}';
-    if (keys.length <= 4) return JSON.stringify(value);
-    return `{Object(${keys.length} keys)}`;
-  }
   if (typeof value === 'bigint') return `${value.toString()}n`;
   if (typeof value === 'symbol') return value.toString();
   if (typeof value === 'function') return `[Function]`;
+  if (typeof value === 'object') return formatObjectValue(value);
   return JSON.stringify(value);
+}
+
+function formatStringValue(value: string): string {
+  const truncated = value.length > 120 ? `${value.slice(0, 117)}...` : value;
+  return `"${truncated}"`;
+}
+
+function formatArrayValue(value: readonly unknown[]): string {
+  if (value.length === 0) return '[]';
+  if (value.length <= 3) return JSON.stringify(value);
+  return `[Array(${value.length})]`;
+}
+
+function formatObjectValue(value: object): string {
+  const keys = Object.keys(value);
+  if (keys.length === 0) return '{}';
+  if (keys.length <= 4) return JSON.stringify(value);
+  return `{Object(${keys.length} keys)}`;
 }
 
 function collectReferencedEnums(fields: readonly DecodedField[], enums: readonly FirebaseEnum[]): readonly FirebaseEnum[] {
@@ -164,19 +170,31 @@ function collectReferencedEnums(fields: readonly DecodedField[], enums: readonly
 export function detectRelationships(doc: Readonly<Record<string, unknown>>, prefixes: ReadonlyMap<string, string>): readonly DecodedRelationship[] {
   const out: DecodedRelationship[] = [];
   for (const [fieldName, value] of Object.entries(doc)) {
-    if (typeof value === 'string') {
-      const match = matchPrefix(value, prefixes);
-      if (match) out.push({ fieldName, value, targetPrefix: match.prefix, targetModel: match.model });
-    } else if (Array.isArray(value)) {
-      for (const item of value) {
-        if (typeof item === 'string') {
-          const match = matchPrefix(item, prefixes);
-          if (match) out.push({ fieldName, value: item, targetPrefix: match.prefix, targetModel: match.model });
-        }
-      }
-    }
+    collectFieldRelationships({ out, fieldName, value, prefixes });
   }
   return out;
+}
+
+interface CollectFieldRelationshipsInput {
+  readonly out: DecodedRelationship[];
+  readonly fieldName: string;
+  readonly value: unknown;
+  readonly prefixes: ReadonlyMap<string, string>;
+}
+
+function collectFieldRelationships(input: CollectFieldRelationshipsInput): void {
+  const { out, fieldName, value, prefixes } = input;
+  if (typeof value === 'string') {
+    const match = matchPrefix(value, prefixes);
+    if (match) out.push({ fieldName, value, targetPrefix: match.prefix, targetModel: match.model });
+    return;
+  }
+  if (!Array.isArray(value)) return;
+  for (const item of value) {
+    if (typeof item !== 'string') continue;
+    const match = matchPrefix(item, prefixes);
+    if (match) out.push({ fieldName, value: item, targetPrefix: match.prefix, targetModel: match.model });
+  }
 }
 
 function matchPrefix(value: string, prefixes: ReadonlyMap<string, string>): { readonly prefix: string; readonly model: string } | undefined {

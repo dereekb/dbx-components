@@ -281,57 +281,162 @@ interface BuildEntryFromClassInput {
 
 type BuildEntryResult = { readonly kind: 'ok'; readonly entry: ExtractedDbxDocsUiExampleEntry; readonly warnings: readonly DbxDocsUiExamplesExtractWarning[] } | { readonly kind: 'skipped'; readonly warnings: readonly DbxDocsUiExamplesExtractWarning[] };
 
-async function buildEntryFromClass(input: BuildEntryFromClassInput): Promise<BuildEntryResult> {
-  const { decl, tags, filePath, sourceFile, project, readFile, sourceFileCache } = input;
-  const className = decl.getName() ?? '<anonymous>';
-  const line = decl.getStartLineNumber();
-  const warnings: DbxDocsUiExamplesExtractWarning[] = [];
+interface RequiredTagValidationResult {
+  readonly warnings: readonly DbxDocsUiExamplesExtractWarning[];
+  readonly hasAll: boolean;
+}
 
+interface RequiredTagContext {
+  readonly tags: ParsedTags;
+  readonly className: string;
+  readonly filePath: string;
+  readonly line: number;
+}
+
+function readRequiredTagValue(tags: ParsedTags, tagName: string): string | undefined {
+  if (tagName === SLUG_TAG) return tags.slug;
+  if (tagName === CATEGORY_TAG) return tags.category;
+  return tags.summary;
+}
+
+function validateRequiredTags(context: RequiredTagContext): RequiredTagValidationResult {
+  const { tags, className, filePath, line } = context;
+  const warnings: DbxDocsUiExamplesExtractWarning[] = [];
   for (const tagName of REQUIRED_TAGS) {
-    let value: string | undefined;
-    if (tagName === SLUG_TAG) {
-      value = tags.slug;
-    } else if (tagName === CATEGORY_TAG) {
-      value = tags.category;
-    } else {
-      value = tags.summary;
-    }
+    const value = readRequiredTagValue(tags, tagName);
     if (value === undefined || value.length === 0) {
       warnings.push({ kind: 'missing-required-tag', className, tag: tagName, filePath, line });
     }
   }
-  if (tags.slug === undefined || tags.slug.length === 0 || tags.category === undefined || tags.category.length === 0 || tags.summary === undefined || tags.summary.length === 0) {
-    return { kind: 'skipped', warnings };
-  }
-  if (!VALID_CATEGORIES.has(tags.category)) {
-    warnings.push({ kind: 'unknown-category', className, category: tags.category, filePath, line });
-    return { kind: 'skipped', warnings };
-  }
-  const category = tags.category as DbxDocsUiExampleEntry['category'];
+  const hasAll = tags.slug !== undefined && tags.slug.length > 0 && tags.category !== undefined && tags.category.length > 0 && tags.summary !== undefined && tags.summary.length > 0;
+  return { warnings, hasAll };
+}
 
+interface ResolveTemplateInput {
+  readonly decl: ClassDeclaration;
+  readonly className: string;
+  readonly filePath: string;
+  readonly line: number;
+  readonly readFile: ScanReadFile;
+}
+
+type ResolveTemplateResult = { readonly kind: 'ok'; readonly template: string; readonly selector: string } | { readonly kind: 'skipped'; readonly warning: DbxDocsUiExamplesExtractWarning };
+
+async function resolveComponentTemplate(input: ResolveTemplateInput): Promise<ResolveTemplateResult> {
+  const { decl, className, filePath, line, readFile } = input;
   const decoratorInfo = readComponentDecorator(decl);
   if (decoratorInfo === undefined) {
-    warnings.push({ kind: 'missing-component-decorator', className, filePath, line });
-    return { kind: 'skipped', warnings };
+    return { kind: 'skipped', warning: { kind: 'missing-component-decorator', className, filePath, line } };
   }
   const selector = decoratorInfo.selector ?? '';
-
   let template: string | undefined = decoratorInfo.template;
   if (template === undefined && decoratorInfo.templateUrl !== undefined) {
     const templateAbs = resolve(dirname(filePath), decoratorInfo.templateUrl);
     try {
       template = await readFile(templateAbs);
     } catch {
-      warnings.push({ kind: 'template-url-unreadable', className, templatePath: templateAbs, filePath, line });
-      return { kind: 'skipped', warnings };
+      return { kind: 'skipped', warning: { kind: 'template-url-unreadable', className, templatePath: templateAbs, filePath, line } };
     }
   }
   if (template === undefined) {
-    warnings.push({ kind: 'missing-template', className, filePath, line });
+    return { kind: 'skipped', warning: { kind: 'missing-template', className, filePath, line } };
+  }
+  return { kind: 'ok', template, selector };
+}
+
+interface ResolveUsesInput {
+  readonly tagUses: readonly UsesTagInput[];
+  readonly className: string;
+  readonly sourceFile: SourceFile;
+  readonly filePath: string;
+  readonly line: number;
+  readonly project: Project;
+  readonly readFile: ScanReadFile;
+  readonly sourceFileCache: Map<string, SourceFile | null>;
+}
+
+interface ResolveUsesResult {
+  readonly usesEntries: readonly DbxDocsUiExampleUseEntry[];
+  readonly warnings: readonly DbxDocsUiExamplesExtractWarning[];
+}
+
+async function resolveAllUses(input: ResolveUsesInput): Promise<ResolveUsesResult> {
+  const { tagUses, className, sourceFile, filePath, line, project, readFile, sourceFileCache } = input;
+  const usesEntries: DbxDocsUiExampleUseEntry[] = [];
+  const warnings: DbxDocsUiExamplesExtractWarning[] = [];
+  for (const useTag of tagUses) {
+    const resolved = await resolveUseEntry({ tag: useTag, sourceFile, filePath, project, readFile, sourceFileCache });
+    if (resolved === undefined) {
+      warnings.push({ kind: 'uses-unresolved', className, identifier: useTag.identifier, filePath, line });
+      continue;
+    }
+    usesEntries.push(resolved);
+  }
+  return { usesEntries, warnings };
+}
+
+interface AssembleEntryInput {
+  readonly tags: ParsedTags;
+  readonly category: DbxDocsUiExampleEntry['category'];
+  readonly className: string;
+  readonly selector: string;
+  readonly parsedTemplate: ParsedExampleTemplate;
+  readonly usesEntries: readonly DbxDocsUiExampleUseEntry[];
+  readonly filePath: string;
+  readonly line: number;
+}
+
+function assembleEntry(input: AssembleEntryInput): ExtractedDbxDocsUiExampleEntry {
+  const { tags, category, className, selector, parsedTemplate, usesEntries, filePath, line } = input;
+  // `validateRequiredTags` guarantees slug/category/summary are non-empty before this is called.
+  const slug = tags.slug ?? '';
+  const summary = tags.summary ?? '';
+  return {
+    slug,
+    category,
+    summary,
+    header: parsedTemplate.header,
+    ...(parsedTemplate.hint === undefined ? {} : { hint: parsedTemplate.hint }),
+    className,
+    selector,
+    ...(tags.appRef === undefined ? {} : { appRef: tags.appRef }),
+    ...(tags.relatedSlugs.length > 0 ? { relatedSlugs: tags.relatedSlugs } : {}),
+    ...(tags.skillRefs.length > 0 ? { skillRefs: tags.skillRefs } : {}),
+    info: parsedTemplate.info ?? '',
+    snippet: parsedTemplate.snippet ?? '',
+    ...(parsedTemplate.imports === undefined ? {} : { imports: parsedTemplate.imports }),
+    ...(parsedTemplate.notes === undefined ? {} : { notes: parsedTemplate.notes }),
+    uses: usesEntries,
+    filePath,
+    line
+  };
+}
+
+async function buildEntryFromClass(input: BuildEntryFromClassInput): Promise<BuildEntryResult> {
+  const { decl, tags, filePath, sourceFile, project, readFile, sourceFileCache } = input;
+  const className = decl.getName() ?? '<anonymous>';
+  const line = decl.getStartLineNumber();
+  const warnings: DbxDocsUiExamplesExtractWarning[] = [];
+
+  const tagValidation = validateRequiredTags({ tags, className, filePath, line });
+  for (const w of tagValidation.warnings) warnings.push(w);
+  if (!tagValidation.hasAll) {
+    return { kind: 'skipped', warnings };
+  }
+  // The `hasAll` guard ensures these assertions hold.
+  const category = tags.category as DbxDocsUiExampleEntry['category'];
+  if (!VALID_CATEGORIES.has(category)) {
+    warnings.push({ kind: 'unknown-category', className, category, filePath, line });
     return { kind: 'skipped', warnings };
   }
 
-  const parsedTemplate = parseExampleTemplate(template);
+  const templateResult = await resolveComponentTemplate({ decl, className, filePath, line, readFile });
+  if (templateResult.kind === 'skipped') {
+    warnings.push(templateResult.warning);
+    return { kind: 'skipped', warnings };
+  }
+
+  const parsedTemplate = parseExampleTemplate(templateResult.template);
   if (parsedTemplate === undefined) {
     warnings.push({ kind: 'missing-example-root', className, filePath, line });
     return { kind: 'skipped', warnings };
@@ -341,35 +446,19 @@ async function buildEntryFromClass(input: BuildEntryFromClassInput): Promise<Bui
     return { kind: 'skipped', warnings };
   }
 
-  const usesEntries: DbxDocsUiExampleUseEntry[] = [];
-  for (const useTag of tags.uses) {
-    const resolved = await resolveUseEntry({ tag: useTag, sourceFile, filePath, project, readFile, sourceFileCache });
-    if (resolved === undefined) {
-      warnings.push({ kind: 'uses-unresolved', className, identifier: useTag.identifier, filePath, line });
-      continue;
-    }
-    usesEntries.push(resolved);
-  }
+  const usesResult = await resolveAllUses({ tagUses: tags.uses, className, sourceFile, filePath, line, project, readFile, sourceFileCache });
+  for (const w of usesResult.warnings) warnings.push(w);
 
-  const entry: ExtractedDbxDocsUiExampleEntry = {
-    slug: tags.slug,
+  const entry = assembleEntry({
+    tags,
     category,
-    summary: tags.summary,
-    header: parsedTemplate.header,
-    ...(parsedTemplate.hint === undefined ? {} : { hint: parsedTemplate.hint }),
     className,
-    selector,
-    ...(tags.appRef === undefined ? {} : { appRef: tags.appRef }),
-    ...(tags.relatedSlugs.length > 0 ? { relatedSlugs: tags.relatedSlugs } : {}),
-    ...(tags.skillRefs.length > 0 ? { skillRefs: tags.skillRefs } : {}),
-    info: parsedTemplate.info ?? '',
-    snippet: parsedTemplate.snippet,
-    ...(parsedTemplate.imports === undefined ? {} : { imports: parsedTemplate.imports }),
-    ...(parsedTemplate.notes === undefined ? {} : { notes: parsedTemplate.notes }),
-    uses: usesEntries,
+    selector: templateResult.selector,
+    parsedTemplate,
+    usesEntries: usesResult.usesEntries,
     filePath,
     line
-  };
+  });
   return { kind: 'ok', entry, warnings };
 }
 
@@ -645,54 +734,63 @@ interface AngularClassInspection {
   readonly template?: string;
 }
 
+function readDecoratorFirstArgStringProperty(decorator: Decorator, propertyName: string): string | undefined {
+  const callExpr = decorator.getCallExpression();
+  let value: string | undefined;
+  if (callExpr !== undefined && callExpr.getArguments().length > 0) {
+    const arg = callExpr.getArguments()[0];
+    if (Node.isObjectLiteralExpression(arg)) {
+      value = readStringProperty(arg, propertyName);
+    }
+  }
+  return value;
+}
+
+function inspectComponentDecorator(decorator: Decorator): AngularClassInspection {
+  const config = readDecoratorConfig(decorator);
+  // Best-effort: don't synchronously read the templateUrl here; the
+  // resolver only handles inline templates for `uses` entries to keep
+  // this function pure. Authors are encouraged to use inline templates
+  // in supporting components for fullest catalog output.
+  const template = config.template;
+  return {
+    kind: 'component',
+    ...(config.selector === undefined ? {} : { selector: config.selector }),
+    ...(template === undefined ? {} : { template })
+  };
+}
+
+function inspectDirectiveDecorator(decorator: Decorator): AngularClassInspection {
+  const selector = readDecoratorFirstArgStringProperty(decorator, 'selector');
+  return { kind: 'directive', ...(selector === undefined ? {} : { selector }) };
+}
+
+function inspectPipeDecorator(decorator: Decorator): AngularClassInspection {
+  const pipeName = readDecoratorFirstArgStringProperty(decorator, 'name');
+  return { kind: 'pipe', ...(pipeName === undefined ? {} : { pipeName }) };
+}
+
+function inspectKnownDecorator(decorator: Decorator): AngularClassInspection | undefined {
+  const name = decorator.getName();
+  if (name === 'Component') return inspectComponentDecorator(decorator);
+  if (name === 'Directive') return inspectDirectiveDecorator(decorator);
+  if (name === 'Pipe') return inspectPipeDecorator(decorator);
+  if (name === 'Injectable') return { kind: 'service' };
+  return undefined;
+}
+
 function inspectAngularClass(decl: ClassDeclaration, _sourcePath: string): AngularClassInspection {
   // _sourcePath kept for API symmetry — useful for future enhancements like
   // resolving cross-file inheritance.
+  let result: AngularClassInspection = { kind: 'class' };
   for (const decorator of decl.getDecorators()) {
-    const name = decorator.getName();
-    if (name === 'Component') {
-      const config = readDecoratorConfig(decorator);
-      let template: string | undefined = config.template;
-      if (template === undefined && config.templateUrl !== undefined) {
-        // Best-effort: don't synchronously read the templateUrl here; the
-        // resolver only handles inline templates for `uses` entries to keep
-        // this function pure. Authors are encouraged to use inline templates
-        // in supporting components for fullest catalog output.
-        template = undefined;
-      }
-      return {
-        kind: 'component',
-        ...(config.selector === undefined ? {} : { selector: config.selector }),
-        ...(template === undefined ? {} : { template })
-      };
-    }
-    if (name === 'Directive') {
-      const callExpr = decorator.getCallExpression();
-      let selector: string | undefined;
-      if (callExpr !== undefined && callExpr.getArguments().length > 0) {
-        const arg = callExpr.getArguments()[0];
-        if (Node.isObjectLiteralExpression(arg)) {
-          selector = readStringProperty(arg, 'selector');
-        }
-      }
-      return { kind: 'directive', ...(selector === undefined ? {} : { selector }) };
-    }
-    if (name === 'Pipe') {
-      const callExpr = decorator.getCallExpression();
-      let pipeName: string | undefined;
-      if (callExpr !== undefined && callExpr.getArguments().length > 0) {
-        const arg = callExpr.getArguments()[0];
-        if (Node.isObjectLiteralExpression(arg)) {
-          pipeName = readStringProperty(arg, 'name');
-        }
-      }
-      return { kind: 'pipe', ...(pipeName === undefined ? {} : { pipeName }) };
-    }
-    if (name === 'Injectable') {
-      return { kind: 'service' };
+    const inspected = inspectKnownDecorator(decorator);
+    if (inspected !== undefined) {
+      result = inspected;
+      break;
     }
   }
-  return { kind: 'class' };
+  return result;
 }
 
 // MARK: Arktype runtime guard

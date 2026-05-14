@@ -186,6 +186,36 @@ interface PackagePlanResult {
   readonly sourcesToRegister: readonly { readonly cluster: DownstreamCluster; readonly relPath: string }[];
 }
 
+interface UpsertClusterSectionInput {
+  readonly snapshot: WorkspaceSnapshot;
+  readonly scanConfigPath: string;
+  readonly slug: string;
+  readonly cluster: DownstreamCluster;
+  readonly next: ScanFileShape;
+  readonly sourcesToRegister: { cluster: DownstreamCluster; relPath: string }[];
+}
+
+function upsertClusterSection(input: UpsertClusterSectionInput): void {
+  const { snapshot, scanConfigPath, slug, cluster, next, sourcesToRegister } = input;
+  const existing = next[cluster];
+  const fallbackOut = defaultOutFor({ snapshot, scanConfigPath, slug, cluster });
+
+  if (existing === undefined || existing === null) {
+    next[cluster] = { include: [...DEFAULT_INCLUDE], exclude: [...DEFAULT_EXCLUDE], out: fallbackOut };
+    const absoluteOut = resolveScanOut(scanConfigPath, fallbackOut);
+    sourcesToRegister.push({ cluster, relPath: relativeFromConfig(snapshot, absoluteOut) });
+    return;
+  }
+
+  const section = (typeof existing === 'object' ? (existing as ScanSectionShape) : {}) ?? {};
+  const outValue = typeof section.out === 'string' && section.out.length > 0 ? section.out : fallbackOut;
+  const absoluteOut = resolveScanOut(scanConfigPath, outValue);
+  sourcesToRegister.push({ cluster, relPath: relativeFromConfig(snapshot, absoluteOut) });
+  if (typeof section.out !== 'string' || section.out.length === 0) {
+    next[cluster] = { ...section, include: section.include ?? [...DEFAULT_INCLUDE], exclude: section.exclude ?? [...DEFAULT_EXCLUDE], out: outValue };
+  }
+}
+
 async function planPackageScanConfig(input: { snapshot: WorkspaceSnapshot; packageSnapshot: PackageSnapshot; readFile: InitReadFile }): Promise<PackagePlanResult> {
   const { snapshot, packageSnapshot, readFile } = input;
   const { pkg } = packageSnapshot;
@@ -215,22 +245,7 @@ async function planPackageScanConfig(input: { snapshot: WorkspaceSnapshot; packa
   }
 
   for (const cluster of targetClusters) {
-    const existing = next[cluster];
-    if (existing !== undefined && existing !== null) {
-      // Preserve user-customized section verbatim.
-      const section = (typeof existing === 'object' && existing !== null ? (existing as ScanSectionShape) : {}) ?? {};
-      const outValue = typeof section.out === 'string' && section.out.length > 0 ? section.out : defaultOutFor({ snapshot, scanConfigPath, slug: pkg.slug, cluster });
-      const absoluteOut = resolveScanOut(scanConfigPath, outValue);
-      sourcesToRegister.push({ cluster, relPath: relativeFromConfig(snapshot, absoluteOut) });
-      if (typeof section.out !== 'string' || section.out.length === 0) {
-        next[cluster] = { ...section, include: section.include ?? [...DEFAULT_INCLUDE], exclude: section.exclude ?? [...DEFAULT_EXCLUDE], out: outValue };
-      }
-    } else {
-      const outValue = defaultOutFor({ snapshot, scanConfigPath, slug: pkg.slug, cluster });
-      next[cluster] = { include: [...DEFAULT_INCLUDE], exclude: [...DEFAULT_EXCLUDE], out: outValue };
-      const absoluteOut = resolveScanOut(scanConfigPath, outValue);
-      sourcesToRegister.push({ cluster, relPath: relativeFromConfig(snapshot, absoluteOut) });
-    }
+    upsertClusterSection({ snapshot, scanConfigPath, slug: pkg.slug, cluster, next, sourcesToRegister });
   }
 
   const after = serializeJson(next);

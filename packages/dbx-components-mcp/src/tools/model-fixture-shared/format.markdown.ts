@@ -136,24 +136,27 @@ export function formatValidationAsMarkdown(result: FixtureValidationResult): str
   }
   lines.push('', '## Diagnostics');
   for (const d of result.diagnostics) {
-    const linePart = d.line === undefined ? '' : ` (line ${d.line})`;
-    const modelPart = d.model === undefined ? '' : ` [${d.model}]`;
-    lines.push('', `- **${d.severity.toUpperCase()}** \`${d.code}\`${modelPart}${linePart}: ${d.message}`);
-    if (d.remediation) {
-      lines.push(`  - Fix: ${d.remediation.fix}`);
-      if (d.remediation.template) {
-        lines.push('  - Template:');
-        for (const tline of d.remediation.template.split('\n')) {
-          lines.push(`      ${tline}`);
-        }
-      }
-      if (d.remediation.seeAlso && d.remediation.seeAlso.length > 0) {
-        const refs = d.remediation.seeAlso.map((r) => `${r.kind}:\`${r.target}\``).join(', ');
-        lines.push(`  - See also: ${refs}`);
-      }
-    }
+    appendDiagnosticEntry(lines, d);
   }
   return lines.join('\n');
+}
+
+function appendDiagnosticEntry(lines: string[], d: FixtureValidationResult['diagnostics'][number]): void {
+  const linePart = d.line === undefined ? '' : ` (line ${d.line})`;
+  const modelPart = d.model === undefined ? '' : ` [${d.model}]`;
+  lines.push('', `- **${d.severity.toUpperCase()}** \`${d.code}\`${modelPart}${linePart}: ${d.message}`);
+  if (!d.remediation) return;
+  lines.push(`  - Fix: ${d.remediation.fix}`);
+  if (d.remediation.template) {
+    lines.push('  - Template:');
+    for (const tline of d.remediation.template.split('\n')) {
+      lines.push(`      ${tline}`);
+    }
+  }
+  if (d.remediation.seeAlso && d.remediation.seeAlso.length > 0) {
+    const refs = d.remediation.seeAlso.map((r) => `${r.kind}:\`${r.target}\``).join(', ');
+    lines.push(`  - See also: ${refs}`);
+  }
 }
 
 function appendMethodTable(lines: string[], methods: readonly FixtureMethod[]): void {

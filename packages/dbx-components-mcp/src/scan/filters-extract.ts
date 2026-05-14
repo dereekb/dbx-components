@@ -112,41 +112,48 @@ export function extractFilterEntries(input: ExtractFilterEntriesInput): ExtractF
 
   for (const sourceFile of project.getSourceFiles()) {
     const filePath = sourceFile.getFilePath();
+    const sink: FilterCollectSink = { entries, warnings, filePath };
     for (const decl of sourceFile.getClasses()) {
-      if (!decl.isExported()) {
-        continue;
-      }
-      const tags = readEntryTags(decl.getJsDocs());
-      if (!tags.hasMarker) {
-        continue;
-      }
-      const built = buildDirectiveEntry({ decl, tags, filePath });
-      if (built.kind === 'ok') {
-        entries.push(built.entry);
-      }
-      for (const w of built.warnings) {
-        warnings.push(w);
-      }
+      collectFilterClassEntry(decl, sink);
     }
     for (const decl of sourceFile.getInterfaces()) {
-      if (!decl.isExported()) {
-        continue;
-      }
-      const tags = readEntryTags(decl.getJsDocs());
-      if (!tags.hasMarker) {
-        continue;
-      }
-      const built = buildPatternEntry({ decl, tags, filePath });
-      if (built.kind === 'ok') {
-        entries.push(built.entry);
-      }
-      for (const w of built.warnings) {
-        warnings.push(w);
-      }
+      collectFilterInterfaceEntry(decl, sink);
     }
   }
 
   return { entries, warnings };
+}
+
+interface FilterCollectSink {
+  readonly entries: ExtractedFilterEntry[];
+  readonly warnings: FilterExtractWarning[];
+  readonly filePath: string;
+}
+
+function collectFilterClassEntry(decl: ClassDeclaration, sink: FilterCollectSink): void {
+  if (!decl.isExported()) return;
+  const tags = readEntryTags(decl.getJsDocs());
+  if (!tags.hasMarker) return;
+  const built = buildDirectiveEntry({ decl, tags, filePath: sink.filePath });
+  if (built.kind === 'ok') {
+    sink.entries.push(built.entry);
+  }
+  for (const w of built.warnings) {
+    sink.warnings.push(w);
+  }
+}
+
+function collectFilterInterfaceEntry(decl: InterfaceDeclaration, sink: FilterCollectSink): void {
+  if (!decl.isExported()) return;
+  const tags = readEntryTags(decl.getJsDocs());
+  if (!tags.hasMarker) return;
+  const built = buildPatternEntry({ decl, tags, filePath: sink.filePath });
+  if (built.kind === 'ok') {
+    sink.entries.push(built.entry);
+  }
+  for (const w of built.warnings) {
+    sink.warnings.push(w);
+  }
 }
 
 // MARK: JSDoc parsing
