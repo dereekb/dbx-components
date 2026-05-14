@@ -4,7 +4,7 @@ import { type CliEnvDefault, applyEnvVarOverrides, findCliEnvDefault, isCliEnvCo
 import { buildCliPaths } from '../config/paths';
 import { type CliTokenEntry, createCliTokenCacheStore, isTokenExpired } from '../config/token.cache';
 import { discoverOidcMetadata, refreshAccessToken } from '../auth/oidc.client';
-import { createCliContext, setCliContext } from '../context/cli.context';
+import { type CliContext, createCliContext, setCliContext } from '../context/cli.context';
 import { type CliModelManifest } from '../manifest/types';
 import { CliError, outputError } from '../util/output';
 
@@ -117,5 +117,22 @@ export function createAuthMiddleware(input: CreateAuthMiddlewareInput): Middlewa
       outputError(e);
       process.exit(4);
     }
+  };
+}
+
+/**
+ * Test-only middleware that skips OIDC discovery, disk token loading, and token refresh, attaching
+ * a pre-built {@link CliContext} directly via {@link setCliContext}.
+ *
+ * @internal Intended for use by `@dereekb/dbx-cli/test`. Not for production wiring.
+ *
+ * @param input - The pre-built context to attach on every invocation.
+ * @param input.cliContext - The {@link CliContext} that will be attached via {@link setCliContext}.
+ * @returns A yargs middleware function that always sets the provided context.
+ * @__NO_SIDE_EFFECTS__
+ */
+export function createPassthroughAuthMiddleware(input: { readonly cliContext: CliContext }): MiddlewareFunction {
+  return () => {
+    setCliContext(input.cliContext);
   };
 }

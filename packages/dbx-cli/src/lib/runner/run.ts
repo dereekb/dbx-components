@@ -1,16 +1,19 @@
-import yargs, { type Argv, type CommandModule } from 'yargs';
+import yargs, { type Argv, type CommandModule, type MiddlewareFunction } from 'yargs';
 import { hideBin } from 'yargs/helpers';
+import { type ActionCommandSpec } from '../action/action.command.factory';
+import { buildActionCommands } from '../action/build-action-commands';
 import { createAuthCommand } from '../auth/auth.command.factory';
 import { callPassthroughCommand } from '../api/call.passthrough.command';
 import { getCommand } from '../api/get.command';
 import { getManyCommand } from '../api/get-many.command';
 import { type CliEnvDefault } from '../config/env';
+import { type CliContext } from '../context/cli.context';
 import { createDoctorCommand, type DoctorCheck } from '../doctor/doctor.command.factory';
 import { createEnvCommand } from '../env/env.command.factory';
 import { buildModelDecodeCommand } from '../manifest/build-model-decode-command';
 import { buildModelInfoCommand } from '../manifest/build-model-info-command';
 import { type CliModelManifest } from '../manifest/types';
-import { createAuthMiddleware } from '../middleware/auth.middleware';
+import { createAuthMiddleware, createPassthroughAuthMiddleware } from '../middleware/auth.middleware';
 import { createOutputMiddleware } from '../middleware/output.middleware';
 import { createOutputCommand } from '../output/output.command.factory';
 import { outputError } from '../util/output';
@@ -40,6 +43,18 @@ export interface CreateCliInput {
    * it returns a single parent `model <model>` command so the top-level `--help` stays focused.
    */
   readonly apiCommands?: CommandModule[];
+  /**
+   * App-defined composite actions surfaced under `<cli> action <action>` (root) or
+   * `<cli> action <model> <action>` (model-scoped).
+   *
+   * Each action runs after the auth middleware so the handler receives the live
+   * {@link CliContext}. Use for high-leverage workflows that chain multiple
+   * `callModel` / `getModel` / `getMultipleModels` calls in-process so the caller
+   * does not pay one CLI round-trip per call.
+   *
+   * When omitted or empty, no `action` parent command is registered.
+   */
+  readonly actionCommands?: readonly ActionCommandSpec[];
   /**
    * Extra checks appended to the doctor's default check list.
    */
@@ -101,6 +116,17 @@ export interface CreateCliInput {
    * not want to surface the key-decode command itself.
    */
   readonly disableModelDecode?: boolean;
+  /**
+   * Test-only override that bypasses the auth middleware entirely and attaches the supplied
+   * {@link CliContext} on every command invocation.
+   *
+   * When set, the default auth middleware (OIDC discovery, disk token load, refresh, `process.exit`
+   * on failure) is replaced with a passthrough that just calls `setCliContext(testCliContext)`. The
+   * output middleware still runs.
+   *
+   * @internal Intended for use from `@dereekb/dbx-cli/test`. Not for production wiring.
+   */
+  readonly testCliContext?: CliContext;
 }
 
 /**
@@ -147,9 +173,11 @@ export function createCli(input: CreateCliInput): Argv {
     builtInApiCommands.push(getCommand, getManyCommand);
   }
 
-  const allApiCommands = [...builtInApiCommands, ...(input.apiCommands ?? [])];
+  const actionCommands = buildActionCommands(input.actionCommands ?? []);
+  const allApiCommands = [...builtInApiCommands, ...(input.apiCommands ?? []), ...actionCommands];
 
   const skipCommandNames = new Set(allConfigCommands.map((c) => commandName(c)));
+  const authMiddleware: MiddlewareFunction = input.testCliContext ? createPassthroughAuthMiddleware({ cliContext: input.testCliContext }) : createAuthMiddleware({ cliName, skipCommands: skipCommandNames, defaultEnvs, modelManifest: input.modelManifest });
 
   return yargs(input.argv ?? hideBin(process.argv))
     .scriptName(cliName)
@@ -163,7 +191,7 @@ export function createCli(input: CreateCliInput): Argv {
     .option('pick-all', { type: 'boolean', global: true, describe: 'Ignore configured pick filters' })
     .option('data-help', { type: 'string', choices: ['jsonschema', 'arktype', 'both'] as const, global: true, describe: 'Schema format shown in --help for manifest commands (default: jsonschema)' })
     .option('all-help', { type: 'boolean', global: true, describe: 'Show the full options table in --help even when --data-help is in focus mode' })
-    .middleware([createAuthMiddleware({ cliName, skipCommands: skipCommandNames, defaultEnvs, modelManifest: input.modelManifest }), createOutputMiddleware({ cliName, skipCommands: skipCommandNames })], true)
+    .middleware([authMiddleware, createOutputMiddleware({ cliName, skipCommands: skipCommandNames })], true)
     .command(allConfigCommands)
     .command(allApiCommands)
     .demandCommand(1, 'Please specify a command. Use --help for available commands.')

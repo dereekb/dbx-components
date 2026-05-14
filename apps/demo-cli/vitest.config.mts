@@ -1,10 +1,11 @@
 import { createVitestConfig } from '../../vitest.preset.config.mjs';
 
 export default createVitestConfig({
-  type: 'node',
+  type: 'firebase',
   pathFromRoot: __dirname,
   projectName: 'demo-cli',
+  requiresFirebaseEnvironment: true,
   test: {
-    testTimeout: 10000
+    testTimeout: 30000
   }
 });

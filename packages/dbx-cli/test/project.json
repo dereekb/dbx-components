@@ -1,0 +1,49 @@
+{
+  "name": "dbx-cli-test",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/dbx-cli/test/src",
+  "projectType": "library",
+  "targets": {
+    "build-base": {
+      "executor": "@nx/rollup:rollup",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "importPath": "@dereekb/dbx-cli/test",
+        "outputPath": "dist/packages/dbx-cli/test",
+        "tsConfig": "packages/dbx-cli/test/tsconfig.lib.json",
+        "project": "packages/dbx-cli/test/package.json",
+        "main": "packages/dbx-cli/test/src/index.ts",
+        "format": ["esm", "cjs"],
+        "generateExportsField": true,
+        "external": "all",
+        "assets": [],
+        "compiler": "swc"
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "sourceMap": false,
+          "extractLicenses": true
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "run-tests": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "{projectRoot}/../../../coverage/packages/dbx-cli/test"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx nx run-tests dbx-cli-test"
+      }
+    }
+  }
+}

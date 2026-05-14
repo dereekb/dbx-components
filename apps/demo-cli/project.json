@@ -58,10 +58,22 @@
       "outputs": ["{options.outputFile}"]
     },
     "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./exec-with-emulator.sh 'npx nx run-tests demo-cli'"
+      }
+    },
+    "run-tests": {
       "executor": "@nx/vitest:test",
       "outputs": ["{options.reportsDirectory}"],
       "options": {
         "reportsDirectory": "{projectRoot}/../../coverage/apps/demo-cli"
+      }
+    },
+    "watch": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./exec-with-emulator.sh 'npx nx run-tests demo-cli --watch'"
       }
     }
   }
