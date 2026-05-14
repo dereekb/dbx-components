@@ -1,5 +1,6 @@
-import { computed, Directive, input } from '@angular/core';
+import { computed, Directive, inject, input } from '@angular/core';
 import { type DbxColorConfig, type DbxColorInput, type DbxColorTone, dbxColorBackground, isDbxColorConfig } from './style';
+import { DbxColorService } from './style.color.service';
 import { type Maybe } from '@dereekb/util';
 
 /**
@@ -36,6 +37,8 @@ import { type Maybe } from '@dereekb/util';
   standalone: true
 })
 export class DbxColorDirective {
+  private readonly _colorService = inject(DbxColorService, { optional: true });
+
   readonly dbxColor = input<Maybe<DbxColorInput>>();
 
   /**
@@ -48,7 +51,7 @@ export class DbxColorDirective {
 
   private readonly _configSignal = computed<Maybe<DbxColorConfig>>(() => {
     const value = this.dbxColor();
-    return isDbxColorConfig(value) ? value : undefined;
+    return isDbxColorConfig(value) ? (this._colorService?.expandColorConfig(value) ?? value) : undefined;
   });
 
   /**

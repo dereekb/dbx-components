@@ -1,6 +1,7 @@
-import { Directive, input, computed } from '@angular/core';
+import { Directive, computed, inject, input } from '@angular/core';
 import { type LabeledValue, type Maybe } from '@dereekb/util';
-import { type DbxColorInput, type DbxColorTone, dbxColorBackground, isDbxColorConfig } from '../style/style';
+import { type DbxColorConfig, type DbxColorInput, type DbxColorTone, dbxColorBackground, isDbxColorConfig } from '../style/style';
+import { DbxColorService } from '../style/style.color.service';
 
 /**
  * Display configuration for a single colored chip.
@@ -66,6 +67,8 @@ export const DBX_CHIP_DEFAULT_TONE = 18;
   standalone: true
 })
 export class DbxChipDirective {
+  private readonly _colorService = inject(DbxColorService, { optional: true });
+
   readonly small = input<Maybe<boolean>>();
   readonly block = input<Maybe<boolean>>();
 
@@ -90,9 +93,9 @@ export class DbxChipDirective {
 
   readonly colorSignal = computed(() => this.color() ?? this.display()?.color);
 
-  private readonly _configSignal = computed(() => {
+  private readonly _configSignal = computed<Maybe<DbxColorConfig>>(() => {
     const value = this.colorSignal();
-    return isDbxColorConfig(value) ? value : undefined;
+    return isDbxColorConfig(value) ? (this._colorService?.expandColorConfig(value) ?? value) : undefined;
   });
 
   /**

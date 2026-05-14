@@ -105,22 +105,61 @@ export const DBX_THEME_COLORS: DbxThemeColor[] = [...DBX_THEME_COLORS_MAIN, ...D
 export type DbxColorTone = number;
 
 /**
+ * Identifier for a {@link DbxColorConfigTemplate} registered with the `DbxColorService`.
+ *
+ * Use a kebab-case string (e.g. `'brand-positive'`) to reference a template from a
+ * {@link DbxColorConfig} via {@link DbxColorConfig.template}.
+ */
+export type DbxColorConfigTemplateKey = string;
+
+/**
+ * Reusable, named {@link DbxColorConfig} preset registered with the `DbxColorService`.
+ *
+ * Templates are looked up by their {@link key} and merged beneath an input
+ * {@link DbxColorConfig} that references them via {@link DbxColorConfig.template}.
+ */
+export interface DbxColorConfigTemplate {
+  /**
+   * Unique key identifying this template.
+   */
+  readonly key: DbxColorConfigTemplateKey;
+  /**
+   * Template values applied when an input {@link DbxColorConfig} references this template.
+   */
+  readonly config: DbxColorConfig;
+}
+
+/**
  * Config object accepted by `[dbxColor]` / `[dbxTextColor]` when applying an arbitrary (non-themed) color.
  *
  * Any valid CSS color value is allowed: hex, `rgb()`, `hsl()`, `var(...)`, `color-mix(...)`, etc.
+ *
+ * A {@link template} can also be set to reference a registered {@link DbxColorConfigTemplate}
+ * via the `DbxColorService`; the template's fields are merged in as defaults, with the
+ * input config's fields taking precedence.
  *
  * @example
  * ```html
  * <div [dbxColor]="{ color: '#ff0066', contrast: 'white' }">Hex</div>
  * <div [dbxColor]="{ color: 'var(--mat-sys-tertiary)', contrast: 'var(--mat-sys-on-tertiary)', tone: 18 }">Tonal</div>
  * <span [dbxTextColor]="{ color: '#0066ff' }">Text only</span>
+ * <div [dbxColor]="{ template: 'brand-positive' }">Template</div>
+ * <div [dbxColor]="{ template: 'brand-positive', tone: 60 }">Template with override</div>
  * ```
  */
 export interface DbxColorConfig {
   /**
-   * Background/vibrant color when used with `[dbxColor]`; foreground color when used with `[dbxTextColor]`.
+   * Optional key of a {@link DbxColorConfigTemplate} registered with the `DbxColorService`.
+   *
+   * When set, the referenced template's fields are merged beneath this config (input fields win).
    */
-  readonly color: string;
+  readonly template?: Maybe<DbxColorConfigTemplateKey>;
+  /**
+   * Background/vibrant color when used with `[dbxColor]`; foreground color when used with `[dbxTextColor]`.
+   *
+   * Optional when a {@link template} is set that supplies the color.
+   */
+  readonly color?: string;
   /**
    * Contrast/foreground color used by `[dbxColor]`. Ignored by `[dbxTextColor]`.
    */
@@ -143,10 +182,14 @@ export type DbxColorInput = DbxThemeColor | DbxColorConfig | '';
 /**
  * Type guard: true when the value is a {@link DbxColorConfig} object (not a named-color string).
  *
+ * Any non-null object is treated as a config so template-only configs (i.e. `{ template: 'foo' }`)
+ * are detected before the service expands them.
+ *
  * @example
  * ```ts
  * isDbxColorConfig('primary'); // false
  * isDbxColorConfig({ color: '#ff0066' }); // true
+ * isDbxColorConfig({ template: 'brand-positive' }); // true
  * isDbxColorConfig(undefined); // false
  * ```
  *
@@ -154,7 +197,7 @@ export type DbxColorInput = DbxThemeColor | DbxColorConfig | '';
  * @returns `true` when the value is a {@link DbxColorConfig}
  */
 export function isDbxColorConfig(value: Maybe<DbxColorInput>): value is DbxColorConfig {
-  return typeof value === 'object' && value !== null && typeof value.color === 'string';
+  return typeof value === 'object' && value !== null;
 }
 
 /**

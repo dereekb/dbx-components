@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { type LabeledValue, type Maybe } from '@dereekb/util';
-import { type DbxColorInput, dbxColorBackground, isDbxColorConfig } from '../style/style';
+import { type DbxColorConfig, type DbxColorInput, dbxColorBackground, isDbxColorConfig } from '../style/style';
+import { DbxColorService } from '../style/style.color.service';
 
 /**
  * Configuration for a single chip displayed by {@link DbxTextChipsComponent}.
@@ -54,6 +55,8 @@ export interface TextChip extends LabeledValue<string> {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxTextChipsComponent {
+  private readonly _colorService = inject(DbxColorService, { optional: true });
+
   readonly defaultSelection = input<Maybe<boolean>>();
   readonly chips = input<Maybe<TextChip[]>>();
 
@@ -74,7 +77,7 @@ export class DbxTextChipsComponent {
    * @returns the background color CSS value, or null for named-color strings
    */
   chipBgColorStyle(chip: TextChip): Maybe<string> {
-    return isDbxColorConfig(chip.color) ? chip.color.color : null;
+    return this._expandedChipConfig(chip)?.color ?? null;
   }
 
   /**
@@ -84,6 +87,11 @@ export class DbxTextChipsComponent {
    * @returns the contrast color CSS value, or null for named-color strings
    */
   chipColorStyle(chip: TextChip): Maybe<string> {
-    return isDbxColorConfig(chip.color) ? (chip.color.contrast ?? null) : null;
+    return this._expandedChipConfig(chip)?.contrast ?? null;
+  }
+
+  private _expandedChipConfig(chip: TextChip): Maybe<DbxColorConfig> {
+    const value = chip.color;
+    return isDbxColorConfig(value) ? (this._colorService?.expandColorConfig(value) ?? value) : undefined;
   }
 }
