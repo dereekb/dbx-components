@@ -122,7 +122,15 @@ export async function extractModels(input: ExtractModelsInput): Promise<ExtractM
       parsedFiles.push({ filePath, sourceFileRel, sf, hasModelMarker });
       for (const c of findSubObjectConsts(sf)) {
         if (!subObjectConstIndex.has(c.constName)) {
-          subObjectConstIndex.set(c.constName, { interfaceName: c.interfaceName, factoryKind: c.factoryName === 'firestoreSubObject' ? 'object' : c.factoryName === 'firestoreObjectArray' ? 'array' : 'map' });
+          let factoryKind: 'object' | 'array' | 'map';
+          if (c.factoryName === 'firestoreSubObject') {
+            factoryKind = 'object';
+          } else if (c.factoryName === 'firestoreObjectArray') {
+            factoryKind = 'array';
+          } else {
+            factoryKind = 'map';
+          }
+          subObjectConstIndex.set(c.constName, { interfaceName: c.interfaceName, factoryKind });
         }
       }
       for (const iface of findInterfaces(sf)) {

@@ -184,224 +184,207 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
   server.server.registerCapabilities({ tools: {} });
 
   const externalCounts: Partial<Record<DownstreamCluster, number>> = {};
+  const cwd = options.cwd ?? process.cwd();
 
-  const cwdForConfig = options.cwd ?? process.cwd();
-  const configResult = await findAndLoadConfig({ cwd: cwdForConfig });
+  const configResult = await findAndLoadConfig({ cwd });
   for (const warning of configResult.warnings) {
     process.stderr.write(`[dbx-components-mcp] config-warning: ${warning.kind} ${warning.path}\n`);
   }
   const modelValidateRuleOptions = resolveModelValidateRuleOptions(configResult.config);
 
-  let registry: SemanticTypeRegistry | undefined = options.semanticTypeRegistry;
-  if (registry === undefined) {
-    const cwd = options.cwd ?? process.cwd();
-    const loaderResult = await loadSemanticTypeRegistry({ cwd });
-    externalCounts.semanticTypes = loaderResult.externalSourceCount;
-    if (options.onLoaderResult === undefined) {
-      reportRegistryLoaderResult('semantic-types', '', loaderResult);
-    } else {
-      options.onLoaderResult(loaderResult);
+  const registry = await resolveOptionalRegistry({
+    injected: options.semanticTypeRegistry,
+    cwd,
+    load: loadSemanticTypeRegistry,
+    extractRegistry: (r) => r.registry,
+    observer: options.onLoaderResult,
+    defaultReport: (r) => reportRegistryLoaderResult('semantic-types', '', r),
+    failureLabel: 'semantic-types',
+    catchErrors: false,
+    onSuccess: (r) => {
+      externalCounts.semanticTypes = r.externalSourceCount;
     }
-    registry = loaderResult.registry;
-  }
+  });
 
-  let uiRegistry: UiComponentRegistry | undefined = options.uiComponentRegistry;
-  if (uiRegistry === undefined) {
-    const cwd = options.cwd ?? process.cwd();
-    try {
-      const uiLoaderResult = await loadUiComponentRegistry({ cwd });
-      externalCounts.uiComponents = uiLoaderResult.externalSourceCount;
-      if (options.onUiLoaderResult === undefined) {
-        reportRegistryLoaderResult('ui-components', 'ui-', uiLoaderResult);
-      } else {
-        options.onUiLoaderResult(uiLoaderResult);
-      }
-      uiRegistry = uiLoaderResult.registry;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      process.stderr.write(`[dbx-components-mcp] ui-components registry unavailable: ${message}\n`);
-      uiRegistry = undefined;
+  const uiRegistry = await resolveOptionalRegistry({
+    injected: options.uiComponentRegistry,
+    cwd,
+    load: loadUiComponentRegistry,
+    extractRegistry: (r) => r.registry,
+    observer: options.onUiLoaderResult,
+    defaultReport: (r) => reportRegistryLoaderResult('ui-components', 'ui-', r),
+    failureLabel: 'ui-components',
+    catchErrors: true,
+    onSuccess: (r) => {
+      externalCounts.uiComponents = r.externalSourceCount;
     }
-  }
+  });
 
-  let dbxDocsUiExamplesRegistry: DbxDocsUiExamplesRegistry | undefined = options.dbxDocsUiExamplesRegistry;
-  if (dbxDocsUiExamplesRegistry === undefined) {
-    const cwd = options.cwd ?? process.cwd();
-    try {
-      const examplesLoaderResult = await loadDbxDocsUiExamplesRegistry({ cwd });
-      if (options.onDbxDocsUiExamplesLoaderResult === undefined) {
-        reportRegistryLoaderResult('dbx-docs-ui-examples', 'dbx-docs-ui-examples-', examplesLoaderResult);
-      } else {
-        options.onDbxDocsUiExamplesLoaderResult(examplesLoaderResult);
-      }
-      dbxDocsUiExamplesRegistry = examplesLoaderResult.registry;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      process.stderr.write(`[dbx-components-mcp] dbx-docs-ui-examples registry unavailable: ${message}\n`);
-      dbxDocsUiExamplesRegistry = undefined;
-    }
-  }
+  const dbxDocsUiExamplesRegistry = await resolveOptionalRegistry({
+    injected: options.dbxDocsUiExamplesRegistry,
+    cwd,
+    load: loadDbxDocsUiExamplesRegistry,
+    extractRegistry: (r) => r.registry,
+    observer: options.onDbxDocsUiExamplesLoaderResult,
+    defaultReport: (r) => reportRegistryLoaderResult('dbx-docs-ui-examples', 'dbx-docs-ui-examples-', r),
+    failureLabel: 'dbx-docs-ui-examples',
+    catchErrors: true
+  });
 
-  let forgeRegistry: ForgeFieldRegistry | undefined = options.forgeFieldRegistry;
-  if (forgeRegistry === undefined) {
-    const cwd = options.cwd ?? process.cwd();
-    try {
-      const forgeLoaderResult = await loadForgeFieldRegistry({ cwd });
-      externalCounts.forgeFields = forgeLoaderResult.externalSourceCount;
-      if (options.onForgeLoaderResult === undefined) {
-        reportRegistryLoaderResult('forge-fields', 'forge-', forgeLoaderResult);
-      } else {
-        options.onForgeLoaderResult(forgeLoaderResult);
-      }
-      forgeRegistry = forgeLoaderResult.registry;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      process.stderr.write(`[dbx-components-mcp] forge-fields registry unavailable: ${message}\n`);
-      forgeRegistry = undefined;
+  const forgeRegistry = await resolveOptionalRegistry({
+    injected: options.forgeFieldRegistry,
+    cwd,
+    load: loadForgeFieldRegistry,
+    extractRegistry: (r) => r.registry,
+    observer: options.onForgeLoaderResult,
+    defaultReport: (r) => reportRegistryLoaderResult('forge-fields', 'forge-', r),
+    failureLabel: 'forge-fields',
+    catchErrors: true,
+    onSuccess: (r) => {
+      externalCounts.forgeFields = r.externalSourceCount;
     }
-  }
+  });
 
-  let pipeRegistry: PipeRegistry | undefined = options.pipeRegistry;
-  if (pipeRegistry === undefined) {
-    const cwd = options.cwd ?? process.cwd();
-    try {
-      const pipeLoaderResult = await loadPipeRegistry({ cwd });
-      externalCounts.pipes = pipeLoaderResult.externalSourceCount;
-      if (options.onPipeLoaderResult === undefined) {
-        reportRegistryLoaderResult('pipes', 'pipes-', pipeLoaderResult);
-      } else {
-        options.onPipeLoaderResult(pipeLoaderResult);
-      }
-      pipeRegistry = pipeLoaderResult.registry;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      process.stderr.write(`[dbx-components-mcp] pipes registry unavailable: ${message}\n`);
-      pipeRegistry = undefined;
+  const pipeRegistry = await resolveOptionalRegistry({
+    injected: options.pipeRegistry,
+    cwd,
+    load: loadPipeRegistry,
+    extractRegistry: (r) => r.registry,
+    observer: options.onPipeLoaderResult,
+    defaultReport: (r) => reportRegistryLoaderResult('pipes', 'pipes-', r),
+    failureLabel: 'pipes',
+    catchErrors: true,
+    onSuccess: (r) => {
+      externalCounts.pipes = r.externalSourceCount;
     }
-  }
+  });
 
-  let utilRegistry: UtilRegistry | undefined = options.utilRegistry;
-  if (utilRegistry === undefined) {
-    const cwd = options.cwd ?? process.cwd();
-    try {
-      const utilLoaderResult = await loadUtilRegistry({ cwd });
-      if (options.onUtilLoaderResult === undefined) {
-        reportRegistryLoaderResult('utils', 'utils-', utilLoaderResult);
-      } else {
-        options.onUtilLoaderResult(utilLoaderResult);
-      }
-      utilRegistry = utilLoaderResult.registry;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      process.stderr.write(`[dbx-components-mcp] utils registry unavailable: ${message}\n`);
-      utilRegistry = undefined;
-    }
-  }
+  const utilRegistry = await resolveOptionalRegistry({
+    injected: options.utilRegistry,
+    cwd,
+    load: loadUtilRegistry,
+    extractRegistry: (r) => r.registry,
+    observer: options.onUtilLoaderResult,
+    defaultReport: (r) => reportRegistryLoaderResult('utils', 'utils-', r),
+    failureLabel: 'utils',
+    catchErrors: true
+  });
 
-  let modelSnapshotFieldRegistry: ModelSnapshotFieldRegistry | undefined = options.modelSnapshotFieldRegistry;
-  if (modelSnapshotFieldRegistry === undefined) {
-    const cwd = options.cwd ?? process.cwd();
-    try {
-      const result = await loadModelSnapshotFieldRegistry({ cwd });
-      if (options.onModelSnapshotFieldLoaderResult === undefined) {
-        reportRegistryLoaderResult('model-snapshot-fields', 'model-snapshot-fields-', result);
-      } else {
-        options.onModelSnapshotFieldLoaderResult(result);
-      }
-      modelSnapshotFieldRegistry = result.registry;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      process.stderr.write(`[dbx-components-mcp] model-snapshot-fields registry unavailable: ${message}\n`);
-      modelSnapshotFieldRegistry = undefined;
-    }
-  }
+  const modelSnapshotFieldRegistry = await resolveOptionalRegistry({
+    injected: options.modelSnapshotFieldRegistry,
+    cwd,
+    load: loadModelSnapshotFieldRegistry,
+    extractRegistry: (r) => r.registry,
+    observer: options.onModelSnapshotFieldLoaderResult,
+    defaultReport: (r) => reportRegistryLoaderResult('model-snapshot-fields', 'model-snapshot-fields-', r),
+    failureLabel: 'model-snapshot-fields',
+    catchErrors: true
+  });
 
-  let actionRegistry: ActionRegistry | undefined = options.actionRegistry;
-  if (actionRegistry === undefined) {
-    const cwd = options.cwd ?? process.cwd();
-    try {
-      const actionLoaderResult = await loadActionRegistry({ cwd });
-      externalCounts.actions = actionLoaderResult.externalSourceCount;
-      if (options.onActionLoaderResult === undefined) {
-        reportRegistryLoaderResult('actions', 'actions-', actionLoaderResult);
-      } else {
-        options.onActionLoaderResult(actionLoaderResult);
-      }
-      actionRegistry = actionLoaderResult.registry;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      process.stderr.write(`[dbx-components-mcp] actions registry unavailable: ${message}\n`);
-      actionRegistry = undefined;
+  const actionRegistry = await resolveOptionalRegistry({
+    injected: options.actionRegistry,
+    cwd,
+    load: loadActionRegistry,
+    extractRegistry: (r) => r.registry,
+    observer: options.onActionLoaderResult,
+    defaultReport: (r) => reportRegistryLoaderResult('actions', 'actions-', r),
+    failureLabel: 'actions',
+    catchErrors: true,
+    onSuccess: (r) => {
+      externalCounts.actions = r.externalSourceCount;
     }
-  }
+  });
 
-  let filterRegistry: FilterRegistry | undefined = options.filterRegistry;
-  if (filterRegistry === undefined) {
-    const cwd = options.cwd ?? process.cwd();
-    try {
-      const filterLoaderResult = await loadFilterRegistry({ cwd });
-      externalCounts.filters = filterLoaderResult.externalSourceCount;
-      if (options.onFilterLoaderResult === undefined) {
-        reportRegistryLoaderResult('filters', 'filters-', filterLoaderResult);
-      } else {
-        options.onFilterLoaderResult(filterLoaderResult);
-      }
-      filterRegistry = filterLoaderResult.registry;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      process.stderr.write(`[dbx-components-mcp] filters registry unavailable: ${message}\n`);
-      filterRegistry = undefined;
+  const filterRegistry = await resolveOptionalRegistry({
+    injected: options.filterRegistry,
+    cwd,
+    load: loadFilterRegistry,
+    extractRegistry: (r) => r.registry,
+    observer: options.onFilterLoaderResult,
+    defaultReport: (r) => reportRegistryLoaderResult('filters', 'filters-', r),
+    failureLabel: 'filters',
+    catchErrors: true,
+    onSuccess: (r) => {
+      externalCounts.filters = r.externalSourceCount;
     }
-  }
+  });
 
-  let tokenRegistry: TokenRegistry | undefined = options.tokenRegistry;
-  if (tokenRegistry === undefined) {
-    const cwd = options.cwd ?? process.cwd();
-    try {
-      const tokenLoaderResult = await loadTokenRegistry({ cwd });
-      if (options.onTokenLoaderResult === undefined) {
-        reportRegistryLoaderResult('tokens', 'tokens-', tokenLoaderResult);
-      } else {
-        options.onTokenLoaderResult(tokenLoaderResult);
-      }
-      tokenRegistry = tokenLoaderResult.registry;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      process.stderr.write(`[dbx-components-mcp] tokens registry unavailable: ${message}\n`);
-      tokenRegistry = undefined;
-    }
-  }
+  const tokenRegistry = await resolveOptionalRegistry({
+    injected: options.tokenRegistry,
+    cwd,
+    load: loadTokenRegistry,
+    extractRegistry: (r) => r.registry,
+    observer: options.onTokenLoaderResult,
+    defaultReport: (r) => reportRegistryLoaderResult('tokens', 'tokens-', r),
+    failureLabel: 'tokens',
+    catchErrors: true
+  });
 
-  let cssUtilityRegistry: CssUtilityRegistry | undefined = options.cssUtilityRegistry;
-  if (cssUtilityRegistry === undefined) {
-    const cwd = options.cwd ?? process.cwd();
-    try {
-      const cssUtilityLoaderResult = await loadCssUtilityRegistry({ cwd });
-      if (options.onCssUtilityLoaderResult === undefined) {
-        reportRegistryLoaderResult('css-utilities', 'css-utilities-', cssUtilityLoaderResult);
-      } else {
-        options.onCssUtilityLoaderResult(cssUtilityLoaderResult);
-      }
-      cssUtilityRegistry = cssUtilityLoaderResult.registry;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      process.stderr.write(`[dbx-components-mcp] css-utilities registry unavailable: ${message}\n`);
-      cssUtilityRegistry = undefined;
-    }
-  }
+  const cssUtilityRegistry = await resolveOptionalRegistry({
+    injected: options.cssUtilityRegistry,
+    cwd,
+    load: loadCssUtilityRegistry,
+    extractRegistry: (r) => r.registry,
+    observer: options.onCssUtilityLoaderResult,
+    defaultReport: (r) => reportRegistryLoaderResult('css-utilities', 'css-utilities-', r),
+    failureLabel: 'css-utilities',
+    catchErrors: true
+  });
 
   const fixtureModelRegistry: FixtureModelRegistry = {
     entries: FIREBASE_MODELS.map((m) => ({ name: m.name, modelType: m.modelType, collectionPrefix: m.collectionPrefix }))
   };
 
-  const authRegistry = await resolveAuthRegistry({ injected: options.authRegistry, cwd: options.cwd ?? process.cwd(), onAuthLoaderResult: options.onAuthLoaderResult });
+  const authRegistry = await resolveAuthRegistry({ injected: options.authRegistry, cwd, onAuthLoaderResult: options.onAuthLoaderResult });
 
-  await emitDownstreamHints({ cwd: options.cwd ?? process.cwd(), externalCounts, onDownstreamHints: options.onDownstreamHints });
+  await emitDownstreamHints({ cwd, externalCounts, onDownstreamHints: options.onDownstreamHints });
 
   registerResources(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, utilRegistry, modelSnapshotFieldRegistry, uiComponentRegistry: uiRegistry, actionRegistry, filterRegistry, tokenRegistry, cssUtilityRegistry, authRegistry });
-  registerTools(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, utilRegistry, modelSnapshotFieldRegistry, uiComponentRegistry: uiRegistry, dbxDocsUiExamplesRegistry, actionRegistry, filterRegistry, tokenRegistry, cssUtilityRegistry, fixtureModelRegistry, modelValidateRuleOptions, authRegistry, cwd: options.cwd ?? process.cwd() });
+  registerTools(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, utilRegistry, modelSnapshotFieldRegistry, uiComponentRegistry: uiRegistry, dbxDocsUiExamplesRegistry, actionRegistry, filterRegistry, tokenRegistry, cssUtilityRegistry, fixtureModelRegistry, modelValidateRuleOptions, authRegistry, cwd });
 
   return server;
+}
+
+interface ResolveOptionalRegistryArgs<TRegistry, TResult> {
+  readonly injected: TRegistry | undefined;
+  readonly cwd: string;
+  readonly load: (input: { cwd: string }) => Promise<TResult>;
+  readonly extractRegistry: (result: TResult) => TRegistry;
+  readonly observer: ((result: TResult) => void) | undefined;
+  readonly defaultReport: (result: TResult) => void;
+  readonly failureLabel: string;
+  readonly catchErrors: boolean;
+  readonly onSuccess?: (result: TResult) => void;
+}
+
+/**
+ * Resolves an optional per-cluster registry. Returns the injected value when
+ * provided; otherwise runs the loader, forwards the result to the supplied
+ * observer (or the default reporter), and returns the extracted registry.
+ * Catches and logs loader failures when `catchErrors` is set so non-critical
+ * registries don't abort server startup.
+ *
+ * @param args - injected registry / loader / observer plus failure policy
+ * @returns the resolved registry, or `undefined` when not injected and the
+ *   loader failed under `catchErrors: true`.
+ */
+async function resolveOptionalRegistry<TRegistry, TResult>(args: ResolveOptionalRegistryArgs<TRegistry, TResult>): Promise<TRegistry | undefined> {
+  if (args.injected !== undefined) return args.injected;
+  try {
+    const result = await args.load({ cwd: args.cwd });
+    if (args.observer === undefined) {
+      args.defaultReport(result);
+    } else {
+      args.observer(result);
+    }
+    args.onSuccess?.(result);
+    return args.extractRegistry(result);
+  } catch (error) {
+    if (!args.catchErrors) throw error;
+    const message = error instanceof Error ? error.message : String(error);
+    process.stderr.write(`[dbx-components-mcp] ${args.failureLabel} registry unavailable: ${message}\n`);
+    return undefined;
+  }
 }
 
 /**
@@ -538,12 +521,14 @@ function formatWarningValue(value: unknown): string {
   let result: string;
   if (typeof value === 'string') {
     result = value;
-  } else if (value === null) {
-    result = 'null';
+  } else if (value === null || value === undefined) {
+    result = String(value);
   } else if (typeof value === 'object') {
     result = JSON.stringify(value);
+  } else if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') {
+    result = value.toString();
   } else {
-    result = String(value);
+    result = JSON.stringify(value);
   }
   return result;
 }

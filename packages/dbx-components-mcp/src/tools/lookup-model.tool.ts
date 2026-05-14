@@ -221,6 +221,37 @@ const EMPTY_DOWNSTREAM_CATALOG: DownstreamCatalog = {
  * @param rawArgs - the unvalidated tool arguments from the MCP runtime
  * @returns the rendered match, or an error result when args fail validation
  */
+/**
+ * Renders one resolved lookup match to its markdown body (catalog, store
+ * shape taxonomy, single-entry detail, or not-found suggestion list).
+ *
+ * @param match - the resolved topic to render
+ * @param args - the parsed lookup arguments (scope, depth, fields)
+ * @param downstream - the resolved downstream catalog (may be empty)
+ * @returns the markdown body to surface to the caller
+ */
+function renderMatch(match: LookupModelMatch, args: ParsedLookupModelArgs, downstream: DownstreamCatalog): string {
+  switch (match.kind) {
+    case 'catalog':
+      return formatFirebaseModelCatalog(args.scope === 'downstream' ? [] : FIREBASE_MODELS, args.scope === 'upstream' ? [] : downstream.models);
+    case 'shapes':
+      return formatFirebaseStoreShapeTaxonomy();
+    case 'single':
+      return formatFirebaseModelEntry(match.model, args.depth, { fields: args.fields });
+    case 'not-found':
+      return formatNotFound(match.normalized, match.candidates);
+  }
+}
+
+/**
+ * Tool handler for `dbx_model_lookup`. Resolves the requested model topic
+ * against the upstream registry and the runtime downstream catalog and
+ * renders the matching catalog, store-shape taxonomy, single entry, or
+ * not-found suggestion list.
+ *
+ * @param rawArgs - the unvalidated tool arguments from the MCP runtime
+ * @returns the rendered match, or an error result when args fail validation
+ */
 export async function runLookupModel(rawArgs: unknown): Promise<ToolResult> {
   let args: ParsedLookupModelArgs;
   try {
@@ -242,22 +273,7 @@ export async function runLookupModel(rawArgs: unknown): Promise<ToolResult> {
 
   const downstream = args.scope === 'upstream' ? EMPTY_DOWNSTREAM_CATALOG : await getDownstreamCatalog({ workspaceRoot: cwd, componentDirs });
   const match = resolveTopic({ rawTopic: args.topic, scope: args.scope, downstream });
-  let text: string;
-  switch (match.kind) {
-    case 'catalog':
-      text = formatFirebaseModelCatalog(args.scope === 'downstream' ? [] : FIREBASE_MODELS, args.scope === 'upstream' ? [] : downstream.models);
-      break;
-    case 'shapes':
-      text = formatFirebaseStoreShapeTaxonomy();
-      break;
-    case 'single':
-      text = formatFirebaseModelEntry(match.model, args.depth, { fields: args.fields });
-      break;
-    case 'not-found':
-      text = formatNotFound(match.normalized, match.candidates);
-      break;
-  }
-
+  const text = renderMatch(match, args, downstream);
   const result: ToolResult = { content: [{ type: 'text', text }] };
   return result;
 }

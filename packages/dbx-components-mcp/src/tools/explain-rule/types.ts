@@ -15,15 +15,6 @@
  */
 
 /**
- * Stable rule code emitted by a validator (the same string the tool puts
- * in `violation.code`). Free-form so the catalog can absorb new
- * codes without coupling to every per-domain literal union — the
- * catalog still owns the runtime list, and the search facet uses
- * the literal text directly.
- */
-export type RuleCode = string;
-
-/**
  * Severity tier of the rule. Mirrors what validators emit so callers
  * can decide which findings to gate on.
  */
@@ -50,7 +41,7 @@ export interface RuleSeeAlso {
  * One rule entry in the catalog.
  */
 export interface RuleEntry {
-  readonly code: RuleCode;
+  readonly code: string;
   readonly source: RuleSource;
   readonly severity: RuleSeverity;
   readonly title: string;

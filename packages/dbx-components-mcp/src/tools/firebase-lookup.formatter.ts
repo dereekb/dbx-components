@@ -402,6 +402,46 @@ function prunedEnumsForFields(model: FirebaseModel, kept: readonly FirebaseField
  * @param downstream - downstream-only entries grouped per package (optional)
  * @returns the markdown body the tool emits as content
  */
+/**
+ * Renders the optional "Downstream models" section grouped by source
+ * package. Each package gets a `### \`pkg\`` heading and its models
+ * sorted alphabetically.
+ *
+ * @param downstream - downstream-only entries (already filtered for scope)
+ * @returns the markdown lines to splice into the catalog body
+ */
+function formatDownstreamSection(downstream: readonly FirebaseModel[]): readonly string[] {
+  const lines: string[] = ['', '## Downstream models', ''];
+  const byPackage = new Map<string, FirebaseModel[]>();
+  for (const model of downstream) {
+    const bucket = byPackage.get(model.sourcePackage) ?? [];
+    bucket.push(model);
+    byPackage.set(model.sourcePackage, bucket);
+  }
+  const packageNames = [...byPackage.keys()].sort((a, b) => a.localeCompare(b));
+  for (const pkg of packageNames) {
+    lines.push(`### \`${pkg}\``, '');
+    const bucket = byPackage.get(pkg) ?? [];
+    bucket.sort((a, b) => a.name.localeCompare(b.name));
+    for (const model of bucket) {
+      const parent = model.parentIdentityConst ? ` (under \`${model.parentIdentityConst}\`)` : '';
+      lines.push(`- \`${model.collectionPrefix}\` → **${model.name}**${parent} (${model.fields.length} fields)`);
+    }
+    lines.push('');
+  }
+  return lines;
+}
+
+/**
+ * Renders the upstream firebase-model catalog (one bullet per root, one
+ * per subcollection) and optionally a downstream-models section grouped
+ * by source package. Used as the response body of `dbx_model_lookup`
+ * when the caller asks for the full catalog rather than a single entry.
+ *
+ * @param models - the entries to list, typically the upstream registry
+ * @param downstream - downstream-only entries grouped per package (optional)
+ * @returns the markdown body the tool emits as content
+ */
 export function formatFirebaseModelCatalog(models: readonly FirebaseModel[], downstream?: readonly FirebaseModel[]): string {
   const roots = models.filter((m) => !m.parentIdentityConst);
   const subs = models.filter((m) => m.parentIdentityConst);
@@ -416,24 +456,7 @@ export function formatFirebaseModelCatalog(models: readonly FirebaseModel[], dow
     }
   }
   if (downstream && downstream.length > 0) {
-    lines.push('', '## Downstream models', '');
-    const byPackage = new Map<string, FirebaseModel[]>();
-    for (const model of downstream) {
-      const bucket = byPackage.get(model.sourcePackage) ?? [];
-      bucket.push(model);
-      byPackage.set(model.sourcePackage, bucket);
-    }
-    const packageNames = [...byPackage.keys()].sort((a, b) => a.localeCompare(b));
-    for (const pkg of packageNames) {
-      lines.push(`### \`${pkg}\``, '');
-      const bucket = byPackage.get(pkg) ?? [];
-      bucket.sort((a, b) => a.name.localeCompare(b.name));
-      for (const model of bucket) {
-        const parent = model.parentIdentityConst ? ` (under \`${model.parentIdentityConst}\`)` : '';
-        lines.push(`- \`${model.collectionPrefix}\` → **${model.name}**${parent} (${model.fields.length} fields)`);
-      }
-      lines.push('');
-    }
+    lines.push(...formatDownstreamSection(downstream));
   }
   lines.push('Use `dbx_model_lookup topic="<Name>"` or `dbx_model_lookup topic="<prefix>"` for full model details, or `dbx_model_decode` to decode a raw document.', 'See `dbx_model_lookup topic="shapes"` for the consumer-side store-shape taxonomy (root, sub-collection, singletons, system-state).');
   return lines.join('\n').trimEnd();

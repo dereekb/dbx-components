@@ -11,41 +11,57 @@ import type { ApiListEntry, ApiListFileSummary, ApiListReport } from './types.js
  * @param report - The extracted API list report.
  * @returns A markdown document summarizing the report.
  */
+/**
+ * Renders one file's section of the model-API list report: heading,
+ * model labels, counts, the per-entry table, and any non-empty entry
+ * descriptions.
+ *
+ * @param fileSummary - the file-level summary (group name + counts)
+ * @param fileEntries - the entries belonging to this file
+ * @returns the markdown lines for this file's section
+ */
+function formatFileSection(fileSummary: ApiListFileSummary, fileEntries: readonly ApiListEntry[]): readonly string[] {
+  const modelLabels = fileSummary.modelKeys.length === 0 ? '_(none)_' : fileSummary.modelKeys.map((m) => `\`${m}\``).join(', ');
+  const lines: string[] = [`## ${fileSummary.groupName ?? '(unknown group)'} — \`${fileSummary.sourceFile}\``, '', `Models: ${modelLabels}`, '', formatCounts(fileSummary), ''];
+  if (fileEntries.length === 0) {
+    lines.push('_(no entries)_', '');
+    return lines;
+  }
+  lines.push('| Model | Verb | Specifier | Params | Result | Line |', '| --- | --- | --- | --- | --- | --- |');
+  for (const entry of fileEntries) {
+    lines.push(formatEntryRow(entry));
+  }
+  lines.push('');
+  const described = fileEntries.filter((entry) => entry.description !== undefined && entry.description.length > 0);
+  for (const entry of described) {
+    lines.push(formatEntryDescription(entry), '');
+  }
+  return lines;
+}
+
+/**
+ * Renders the model-API list extraction as grouped markdown tables, one
+ * section per scanned `*.api.ts` file.
+ *
+ * @param report - The extracted API list report.
+ * @returns A markdown document summarizing the report.
+ */
 export function formatReportAsMarkdown(report: ApiListReport): string {
   const lines: string[] = [`# Model API calls — ${report.componentDir}`, ''];
   if (report.modelFilter !== undefined) {
     lines.push(`Filter: \`${report.modelFilter}\``, '');
   }
-
   if (report.files.length === 0) {
     lines.push('_No `<model>.api.ts` files with `callModelFirebaseFunctionMapFactory(...)` were found._', '');
     return lines.join('\n');
   }
-
   for (const fileSummary of report.files) {
     const fileEntries = report.entries.filter((entry) => entry.sourceFile === fileSummary.sourceFile);
     if (fileEntries.length === 0 && report.modelFilter !== undefined) {
       continue;
     }
-    const modelLabels = fileSummary.modelKeys.length === 0 ? '_(none)_' : fileSummary.modelKeys.map((m) => `\`${m}\``).join(', ');
-    lines.push(`## ${fileSummary.groupName ?? '(unknown group)'} — \`${fileSummary.sourceFile}\``, '', `Models: ${modelLabels}`, '', formatCounts(fileSummary), '');
-    if (fileEntries.length === 0) {
-      lines.push('_(no entries)_', '');
-      continue;
-    }
-    lines.push('| Model | Verb | Specifier | Params | Result | Line |', '| --- | --- | --- | --- | --- | --- |');
-    for (const entry of fileEntries) {
-      lines.push(formatEntryRow(entry));
-    }
-    lines.push('');
-    const described = fileEntries.filter((entry) => entry.description !== undefined && entry.description.length > 0);
-    if (described.length > 0) {
-      for (const entry of described) {
-        lines.push(formatEntryDescription(entry), '');
-      }
-    }
+    lines.push(...formatFileSection(fileSummary, fileEntries));
   }
-
   return lines.join('\n');
 }
 

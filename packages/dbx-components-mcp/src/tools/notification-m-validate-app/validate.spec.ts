@@ -346,8 +346,7 @@ export function demoExampleHandledNotificationTaskHandler(context) {
 // MARK: factory-of-array tracer regression suite — exercises the
 // `collectHandlerBindingsFromValue` ArrayLiteralExpression branch added to
 // support handler factories that return `NotificationTaskServiceTaskHandlerConfig[]`.
-describe('validateAppNotifications — factory-of-array task handler tracing', () => {
-  const SECOND_TASK_TYPE_PATCH = `export const EXAMPLE_NOTIFICATION_TASK_TYPE: NotificationTaskType = 'E';
+const SECOND_TASK_TYPE_PATCH = `export const EXAMPLE_NOTIFICATION_TASK_TYPE: NotificationTaskType = 'E';
 export const SECOND_NOTIFICATION_TASK_TYPE: NotificationTaskType = 'S';
 
 export type SecondNotificationTaskCheckpoint = 'part_x';
@@ -356,18 +355,19 @@ export interface SecondNotificationTaskData {
   readonly id: string;
 }`;
 
-  function addSecondTaskType(component: InspectedFile[]): void {
-    replaceInFile({ files: component, relPath: 'src/lib/model/notification/notification.task.ts', from: "export const EXAMPLE_NOTIFICATION_TASK_TYPE: NotificationTaskType = 'E';", to: SECOND_TASK_TYPE_PATCH });
-    replaceInFile({ files: component, relPath: 'src/lib/model/notification/notification.task.ts', from: 'export const ALL_NOTIFICATION_TASK_TYPES: NotificationTaskType[] = [EXAMPLE_NOTIFICATION_TASK_TYPE];', to: 'export const ALL_NOTIFICATION_TASK_TYPES: NotificationTaskType[] = [EXAMPLE_NOTIFICATION_TASK_TYPE, SECOND_NOTIFICATION_TASK_TYPE];' });
-  }
+function addSecondTaskType(component: InspectedFile[]): void {
+  replaceInFile({ files: component, relPath: 'src/lib/model/notification/notification.task.ts', from: "export const EXAMPLE_NOTIFICATION_TASK_TYPE: NotificationTaskType = 'E';", to: SECOND_TASK_TYPE_PATCH });
+  replaceInFile({ files: component, relPath: 'src/lib/model/notification/notification.task.ts', from: 'export const ALL_NOTIFICATION_TASK_TYPES: NotificationTaskType[] = [EXAMPLE_NOTIFICATION_TASK_TYPE];', to: 'export const ALL_NOTIFICATION_TASK_TYPES: NotificationTaskType[] = [EXAMPLE_NOTIFICATION_TASK_TYPE, SECOND_NOTIFICATION_TASK_TYPE];' });
+}
 
-  function swapServiceHandlerForFactorySpread(api: InspectedFile[], options: { readonly factoryImport: string; readonly factoryCall: string; readonly spreadVar: string }): void {
-    const servicePath = 'src/app/common/model/notification/notification.task.service.ts';
-    replaceInFile({ files: api, relPath: servicePath, from: /const exampleNotificationTaskHandler: NotificationTaskServiceTaskHandlerConfig[\s\S]*?\};/, to: `const ${options.spreadVar} = ${options.factoryCall};` });
-    replaceInFile({ files: api, relPath: servicePath, from: "import { ALL_NOTIFICATION_TASK_TYPES, EXAMPLE_NOTIFICATION_TASK_TYPE, type ExampleNotificationTaskData, type ExampleNotificationTaskCheckpoint } from 'demo-firebase';", to: `import { ALL_NOTIFICATION_TASK_TYPES, EXAMPLE_NOTIFICATION_TASK_TYPE } from 'demo-firebase';\n${options.factoryImport}` });
-    replaceInFile({ files: api, relPath: servicePath, from: '[exampleNotificationTaskHandler]', to: `[...${options.spreadVar}]` });
-  }
+function swapServiceHandlerForFactorySpread(api: InspectedFile[], options: { readonly factoryImport: string; readonly factoryCall: string; readonly spreadVar: string }): void {
+  const servicePath = 'src/app/common/model/notification/notification.task.service.ts';
+  replaceInFile({ files: api, relPath: servicePath, from: /const exampleNotificationTaskHandler: NotificationTaskServiceTaskHandlerConfig[\s\S]*?\};/, to: `const ${options.spreadVar} = ${options.factoryCall};` });
+  replaceInFile({ files: api, relPath: servicePath, from: "import { ALL_NOTIFICATION_TASK_TYPES, EXAMPLE_NOTIFICATION_TASK_TYPE, type ExampleNotificationTaskData, type ExampleNotificationTaskCheckpoint } from 'demo-firebase';", to: `import { ALL_NOTIFICATION_TASK_TYPES, EXAMPLE_NOTIFICATION_TASK_TYPE } from 'demo-firebase';\n${options.factoryImport}` });
+  replaceInFile({ files: api, relPath: servicePath, from: '[exampleNotificationTaskHandler]', to: `[...${options.spreadVar}]` });
+}
 
+describe('validateAppNotifications — factory-of-array task handler tracing', () => {
   it('resolves a single-handler factory that returns [singleHandler] (most common HelloSubs shape)', () => {
     const HANDLER_FILE = `import { type NotificationTaskServiceTaskHandlerConfig } from '@dereekb/firebase-server/model';
 import { EXAMPLE_NOTIFICATION_TASK_TYPE, type ExampleNotificationTaskData, type ExampleNotificationTaskCheckpoint } from 'demo-firebase';

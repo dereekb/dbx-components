@@ -49,7 +49,7 @@ describe('checkManifestIdentityDuplicates', () => {
   it('emits both codes when two identities collide on both attributes', () => {
     const models: FirebaseModel[] = [makeModel({ name: 'Profile', identityConst: 'profileIdentity', modelType: 'profile', collectionPrefix: 'pr' }), makeModel({ name: 'ProfileDuplicate', identityConst: 'profileDuplicateIdentity', modelType: 'profile', collectionPrefix: 'pr' })];
     const result = checkManifestIdentityDuplicates(models);
-    const codes = result.map((v) => v.code).sort();
+    const codes = result.map((v) => v.code).sort((a, b) => a.localeCompare(b));
     expect(codes).toEqual(['MODEL_IDENTITY_COLLECTION_NAME_DUPLICATE', 'MODEL_IDENTITY_MODEL_TYPE_DUPLICATE']);
   });
 

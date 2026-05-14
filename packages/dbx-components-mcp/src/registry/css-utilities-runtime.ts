@@ -160,49 +160,65 @@ interface ScoreResult {
   readonly missingInput: readonly string[];
 }
 
-function scoreAgainstEntry(input: ReadonlyMap<string, string>, entry: ReadonlyMap<string, string>): ScoreResult {
-  const matched: string[] = [];
-  const extraEntry: string[] = [];
-  const missingInput: string[] = [];
+interface PropTally {
+  readonly matched: string[];
+  readonly extraEntry: string[];
+  readonly missingInput: string[];
+  weightedIntersect: number;
+  weightedUnion: number;
+}
 
-  let weightedIntersect = 0;
-  let weightedUnion = 0;
+interface TallyPropInput {
+  readonly tally: PropTally;
+  readonly prop: string;
+  readonly inputValue: string | undefined;
+  readonly entryValue: string | undefined;
+}
 
-  const allProps = new Set<string>();
-  for (const p of input.keys()) allProps.add(p);
-  for (const p of entry.keys()) allProps.add(p);
-
-  for (const prop of allProps) {
-    const weight = STRUCTURAL_PROPERTIES.has(prop) ? 2 : 1;
-    const inputValue = input.get(prop);
-    const entryValue = entry.get(prop);
-    if (inputValue !== undefined && entryValue !== undefined) {
-      weightedUnion += weight;
-      if (inputValue === entryValue) {
-        weightedIntersect += weight;
-        matched.push(prop);
-      }
-      // Same property with different values: counts in union but not intersect.
-    } else if (inputValue !== undefined) {
-      weightedUnion += weight;
-      missingInput.push(prop);
-    } else if (entryValue !== undefined) {
-      weightedUnion += weight;
-      extraEntry.push(prop);
+/**
+ * Updates the running tally with one property's contribution to the
+ * intersect/union/matched/extra/missing buckets.
+ *
+ * @param input - tally to mutate plus the property + per-side values
+ */
+function tallyProp(input: TallyPropInput): void {
+  const { tally, prop, inputValue, entryValue } = input;
+  const weight = STRUCTURAL_PROPERTIES.has(prop) ? 2 : 1;
+  if (inputValue !== undefined && entryValue !== undefined) {
+    tally.weightedUnion += weight;
+    if (inputValue === entryValue) {
+      tally.weightedIntersect += weight;
+      tally.matched.push(prop);
     }
+    return;
   }
+  if (inputValue !== undefined) {
+    tally.weightedUnion += weight;
+    tally.missingInput.push(prop);
+    return;
+  }
+  if (entryValue !== undefined) {
+    tally.weightedUnion += weight;
+    tally.extraEntry.push(prop);
+  }
+}
 
-  matched.sort((a, b) => a.localeCompare(b));
-  extraEntry.sort((a, b) => a.localeCompare(b));
-  missingInput.sort((a, b) => a.localeCompare(b));
-
-  let score = weightedUnion === 0 ? 0 : weightedIntersect / weightedUnion;
+function scoreAgainstEntry(input: ReadonlyMap<string, string>, entry: ReadonlyMap<string, string>): ScoreResult {
+  const tally: PropTally = { matched: [], extraEntry: [], missingInput: [], weightedIntersect: 0, weightedUnion: 0 };
+  const allProps = new Set<string>([...input.keys(), ...entry.keys()]);
+  for (const prop of allProps) {
+    tallyProp({ tally, prop, inputValue: input.get(prop), entryValue: entry.get(prop) });
+  }
+  tally.matched.sort((a, b) => a.localeCompare(b));
+  tally.extraEntry.sort((a, b) => a.localeCompare(b));
+  tally.missingInput.sort((a, b) => a.localeCompare(b));
+  let score = tally.weightedUnion === 0 ? 0 : tally.weightedIntersect / tally.weightedUnion;
   // Penalise empty input vs non-empty entry (would otherwise score 0).
   // Boost when every entry property matches (entry is a strict subset of input).
-  if (matched.length === entry.size && entry.size > 0) {
+  if (tally.matched.length === entry.size && entry.size > 0) {
     score += 0.1;
   }
-  return { score, matched, extraEntry, missingInput };
+  return { score, matched: tally.matched, extraEntry: tally.extraEntry, missingInput: tally.missingInput };
 }
 
 // MARK: Construction

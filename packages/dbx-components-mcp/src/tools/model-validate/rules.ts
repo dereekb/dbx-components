@@ -8,7 +8,7 @@
  */
 
 import { attachRemediation } from '../rule-catalog/index.js';
-import { MAX_FIELD_NAME_LENGTH, ROOT_MODEL_ORDER, SUBCOLLECTION_MODEL_ORDER, type CrossFileRuleContext, type DeclarationKind, type ExtractedFile, type ExtractedModel, type FirestoreCollectionKind, type RuleOptions, type Violation, type ViolationSeverity } from './types.js';
+import { MAX_FIELD_NAME_LENGTH, ROOT_MODEL_ORDER, SUBCOLLECTION_MODEL_ORDER, type CrossFileInterfaceEntry, type CrossFileRuleContext, type DeclarationKind, type ExtractedFile, type ExtractedModel, type FirestoreCollectionKind, type RuleOptions, type Violation, type ViolationSeverity } from './types.js';
 
 // MARK: Entry
 /**
@@ -89,6 +89,68 @@ function checkFieldNameLengths(file: ExtractedFile, violations: Violation[], opt
   checkFieldJsDocs(file, violations, options, scope);
 }
 
+interface CheckFieldInput {
+  readonly file: ExtractedFile;
+  readonly iface: ExtractedFile['dataInterfaces'][number];
+  readonly field: ExtractedFile['dataInterfaces'][number]['fields'][number];
+  readonly ignored: ReadonlySet<string> | undefined;
+  readonly violations: Violation[];
+}
+
+/**
+ * Emits `MODEL_FIELD_MISSING_JSDOC` for fields whose first JSDoc line
+ * is empty. Acts on a single field via the shared {@link CheckFieldInput}.
+ *
+ * @param input - the field + violations buffer
+ */
+function checkFieldJsDocDescription(input: CheckFieldInput): void {
+  const { file, iface, field, violations } = input;
+  if (field.jsDocFirstLine) return;
+  pushViolation(violations, {
+    code: 'MODEL_FIELD_MISSING_JSDOC',
+    severity: 'warning',
+    message: `Field \`${field.name}\` in interface \`${iface.name}\` is missing a JSDoc description. Add a one-line description above the field declaration (and an \`@dbxModelVariable <longName>\` tag for the canonical long name).`,
+    file: file.name,
+    line: field.line,
+    model: iface.name
+  });
+}
+
+/**
+ * Emits `MODEL_FIELD_MISSING_VARIABLE_TAG` when a tagged interface's
+ * field is missing its `@dbxModelVariable` tag, and
+ * `MODEL_FIELD_LONG_NAME_EQUALS_NAME` when the tag value matches the
+ * field's short name.
+ *
+ * @param input - the field, ignored-name set, and violations buffer
+ */
+function checkFieldVariableTag(input: CheckFieldInput): void {
+  const { file, iface, field, ignored, violations } = input;
+  const fieldRulesApply = iface.dbxModelTag || iface.dbxModelSubObjectTag;
+  if (!fieldRulesApply) return;
+  if (field.dbxModelVariableTag === undefined) {
+    pushViolation(violations, {
+      code: 'MODEL_FIELD_MISSING_VARIABLE_TAG',
+      severity: 'warning',
+      message: `Field \`${field.name}\` in interface \`${iface.name}\` is missing its \`@dbxModelVariable <name>\` JSDoc tag. The catalog uses the tag for the field's long name — the field's unabbreviated camelCase variable name (e.g. \`uid\` → \`userUid\`, \`n\` → \`name\`).`,
+      file: file.name,
+      line: field.line,
+      model: iface.name
+    });
+    return;
+  }
+  if (field.dbxModelVariableTag === field.name && !ignored?.has(field.name)) {
+    pushViolation(violations, {
+      code: 'MODEL_FIELD_LONG_NAME_EQUALS_NAME',
+      severity: 'warning',
+      message: `Field \`${field.name}\` in interface \`${iface.name}\` has \`@dbxModelVariable ${field.dbxModelVariableTag}\` matching its short name. The long name should be the field's unabbreviated camelCase variable name (e.g. \`h\` → \`hours\`, \`ub\` → \`usedBudget\`). If the short name is already the unabbreviated form, add \`${field.name}\` to \`modelValidate.ignoredFieldNames\` in \`dbx-mcp.config.json\`.`,
+      file: file.name,
+      line: field.line,
+      model: iface.name
+    });
+  }
+}
+
 // MARK: Field JSDoc + @dbxModelVariable convention (warning)
 function checkFieldJsDocs(file: ExtractedFile, violations: Violation[], options: RuleOptions | undefined, scope: FieldRuleScope): void {
   const ignored = options?.ignoredFieldNames;
@@ -97,37 +159,9 @@ function checkFieldJsDocs(file: ExtractedFile, violations: Violation[], options:
       continue;
     }
     for (const field of iface.fields) {
-      if (!field.jsDocFirstLine) {
-        pushViolation(violations, {
-          code: 'MODEL_FIELD_MISSING_JSDOC',
-          severity: 'warning',
-          message: `Field \`${field.name}\` in interface \`${iface.name}\` is missing a JSDoc description. Add a one-line description above the field declaration (and an \`@dbxModelVariable <longName>\` tag for the canonical long name).`,
-          file: file.name,
-          line: field.line,
-          model: iface.name
-        });
-      }
-      const fieldRulesApply = iface.dbxModelTag || iface.dbxModelSubObjectTag;
-      if (fieldRulesApply && field.dbxModelVariableTag === undefined) {
-        pushViolation(violations, {
-          code: 'MODEL_FIELD_MISSING_VARIABLE_TAG',
-          severity: 'warning',
-          message: `Field \`${field.name}\` in interface \`${iface.name}\` is missing its \`@dbxModelVariable <name>\` JSDoc tag. The catalog uses the tag for the field's long name — the field's unabbreviated camelCase variable name (e.g. \`uid\` → \`userUid\`, \`n\` → \`name\`).`,
-          file: file.name,
-          line: field.line,
-          model: iface.name
-        });
-      }
-      if (fieldRulesApply && field.dbxModelVariableTag !== undefined && field.dbxModelVariableTag === field.name && !ignored?.has(field.name)) {
-        pushViolation(violations, {
-          code: 'MODEL_FIELD_LONG_NAME_EQUALS_NAME',
-          severity: 'warning',
-          message: `Field \`${field.name}\` in interface \`${iface.name}\` has \`@dbxModelVariable ${field.dbxModelVariableTag}\` matching its short name. The long name should be the field's unabbreviated camelCase variable name (e.g. \`h\` → \`hours\`, \`ub\` → \`usedBudget\`). If the short name is already the unabbreviated form, add \`${field.name}\` to \`modelValidate.ignoredFieldNames\` in \`dbx-mcp.config.json\`.`,
-          file: file.name,
-          line: field.line,
-          model: iface.name
-        });
-      }
+      const input: CheckFieldInput = { file, iface, field, ignored, violations };
+      checkFieldJsDocDescription(input);
+      checkFieldVariableTag(input);
     }
   }
 }
@@ -229,48 +263,74 @@ function checkSubObjectFactoryCallSites(file: ExtractedFile, violations: Violati
  * @param context - cross-file index + dedup state; when absent the rule is a no-op
  * @param options - rule options carrying `ignoredExternalParents`
  */
+interface CheckSubObjectParentInput {
+  readonly file: ExtractedFile;
+  readonly iface: ExtractedFile['dataInterfaces'][number];
+  readonly parentName: string;
+  readonly dedupKey: string;
+  readonly context: CrossFileRuleContext;
+  readonly violations: Violation[];
+  readonly ignoredExternal: ReadonlySet<string> | undefined;
+}
+
+/**
+ * Emits `MODEL_SUBOBJECT_PARENT_NOT_TAGGED` for a parent interface that
+ * lives in the validated source set but lacks the `@dbxModel` /
+ * `@dbxModelSubObject` JSDoc tag.
+ *
+ * @param input - the iface + parentName + dedup key + buffers
+ * @param entry - the resolved in-package parent interface entry
+ */
+function emitInPackageParent(input: CheckSubObjectParentInput, entry: CrossFileInterfaceEntry): void {
+  const { iface, parentName, dedupKey, context, violations } = input;
+  const parent = entry.iface;
+  if (parent.dbxModelTag || parent.dbxModelSubObjectTag) return;
+  context.emittedSubObjectInterfaces.add(dedupKey);
+  pushViolation(violations, {
+    code: 'MODEL_SUBOBJECT_PARENT_NOT_TAGGED',
+    severity: 'warning',
+    message: `Interface \`${parentName}\` is extended by \`@dbxModelSubObject\` \`${iface.name}\`. \`${parentName}\` is declared in the same package (${entry.file}) and its fields are persisted via \`${iface.name}\`'s converter but are not validated. Fix (preferred): add \`@dbxModelSubObject\` to \`${parentName}\`'s JSDoc and tag each persisted field with \`@dbxModelVariable <longName>\`. Alternative: redeclare the inherited fields directly on \`${iface.name}\` with their own JSDoc + tag (useful when \`${parentName}\` is a shared shape that you do not want to commit to a single longName).`,
+    file: entry.file,
+    line: parent.line,
+    model: parentName
+  });
+}
+
+/**
+ * Emits `MODEL_SUBOBJECT_PARENT_NOT_TAGGED` for a parent interface that
+ * lives outside the validated source set (and therefore can't be tagged
+ * from this package), respecting the `ignoredExternalParents` config.
+ *
+ * @param input - the iface + parentName + dedup key + buffers + ignored set
+ */
+function emitExternalParent(input: CheckSubObjectParentInput): void {
+  const { file, iface, parentName, dedupKey, context, violations, ignoredExternal } = input;
+  if (ignoredExternal?.has(parentName)) return;
+  context.emittedSubObjectInterfaces.add(dedupKey);
+  pushViolation(violations, {
+    code: 'MODEL_SUBOBJECT_PARENT_NOT_TAGGED',
+    severity: 'warning',
+    message: `Interface \`${parentName}\` is extended by \`@dbxModelSubObject\` \`${iface.name}\`, but \`${parentName}\` is declared outside this package (unresolved in the validated source set). Its persisted fields cannot be tagged from here. Decide: (1) if the inherited fields need explicit longNames in this catalog, redeclare them on \`${iface.name}\` with a JSDoc block carrying \`@dbxModelVariable <longName>\` (the redeclaration is structurally compatible — TypeScript treats it as a field narrowing, not a new property); (2) if the inherited fields are framework plumbing (e.g. \`IndexRef.i\`, \`DateRange.start/end\`) and surface longNames are not needed, suppress this specific warning by adding \`${parentName}\` to \`modelValidate.ignoredExternalParents\` in \`dbx-mcp.config.json\`.`,
+    file: file.name,
+    line: iface.line,
+    model: iface.name
+  });
+}
+
 function checkSubObjectParentNotTagged(file: ExtractedFile, violations: Violation[], context: CrossFileRuleContext | undefined, options: RuleOptions | undefined): void {
-  if (!context) {
-    return;
-  }
+  if (!context) return;
   const ignoredExternal = options?.ignoredExternalParents;
   for (const iface of file.dataInterfaces) {
-    if (!iface.dbxModelSubObjectTag) {
-      continue;
-    }
+    if (!iface.dbxModelSubObjectTag) continue;
     for (const parentName of iface.extendsNames) {
       const dedupKey = `${iface.name}<-${parentName}`;
-      if (context.emittedSubObjectInterfaces.has(dedupKey)) {
-        continue;
-      }
+      if (context.emittedSubObjectInterfaces.has(dedupKey)) continue;
+      const input: CheckSubObjectParentInput = { file, iface, parentName, dedupKey, context, violations, ignoredExternal };
       const entry = context.interfacesByName.get(parentName);
       if (entry) {
-        const parent = entry.iface;
-        if (parent.dbxModelTag || parent.dbxModelSubObjectTag) {
-          continue;
-        }
-        context.emittedSubObjectInterfaces.add(dedupKey);
-        pushViolation(violations, {
-          code: 'MODEL_SUBOBJECT_PARENT_NOT_TAGGED',
-          severity: 'warning',
-          message: `Interface \`${parentName}\` is extended by \`@dbxModelSubObject\` \`${iface.name}\`. \`${parentName}\` is declared in the same package (${entry.file}) and its fields are persisted via \`${iface.name}\`'s converter but are not validated. Fix (preferred): add \`@dbxModelSubObject\` to \`${parentName}\`'s JSDoc and tag each persisted field with \`@dbxModelVariable <longName>\`. Alternative: redeclare the inherited fields directly on \`${iface.name}\` with their own JSDoc + tag (useful when \`${parentName}\` is a shared shape that you do not want to commit to a single longName).`,
-          file: entry.file,
-          line: parent.line,
-          model: parentName
-        });
+        emitInPackageParent(input, entry);
       } else {
-        if (ignoredExternal?.has(parentName)) {
-          continue;
-        }
-        context.emittedSubObjectInterfaces.add(dedupKey);
-        pushViolation(violations, {
-          code: 'MODEL_SUBOBJECT_PARENT_NOT_TAGGED',
-          severity: 'warning',
-          message: `Interface \`${parentName}\` is extended by \`@dbxModelSubObject\` \`${iface.name}\`, but \`${parentName}\` is declared outside this package (unresolved in the validated source set). Its persisted fields cannot be tagged from here. Decide: (1) if the inherited fields need explicit longNames in this catalog, redeclare them on \`${iface.name}\` with a JSDoc block carrying \`@dbxModelVariable <longName>\` (the redeclaration is structurally compatible — TypeScript treats it as a field narrowing, not a new property); (2) if the inherited fields are framework plumbing (e.g. \`IndexRef.i\`, \`DateRange.start/end\`) and surface longNames are not needed, suppress this specific warning by adding \`${parentName}\` to \`modelValidate.ignoredExternalParents\` in \`dbx-mcp.config.json\`.`,
-          file: file.name,
-          line: iface.line,
-          model: iface.name
-        });
+        emitExternalParent(input);
       }
     }
   }

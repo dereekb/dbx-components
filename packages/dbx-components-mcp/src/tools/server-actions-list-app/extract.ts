@@ -5,7 +5,7 @@
  * sibling `*.module.ts`, common barrel, and fixture file.
  */
 
-import { readdir, readFile, stat } from 'node:fs/promises';
+import { readdir, readFile, stat, type Dirent } from 'node:fs/promises';
 import { dirname, join, relative, sep } from 'node:path';
 import { Node, Project, type ObjectLiteralExpression, type SourceFile } from 'ts-morph';
 import { inspectAppFixtures } from '../model-fixture-shared/index.js';
@@ -72,6 +72,21 @@ export async function extractServerActions(apiAbs: string, apiRel: string): Prom
   return { modelRoot, entries, fixtureStatus };
 }
 
+/**
+ * Reads a directory's `Dirent` entries; returns an empty list when the
+ * path is unreadable.
+ *
+ * @param path - absolute directory path
+ * @returns the directory entries or `[]` on failure
+ */
+async function readDirSafe(path: string): Promise<readonly Dirent[]> {
+  try {
+    return await readdir(path, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+}
+
 async function collectActionFiles(root: string): Promise<readonly string[]> {
   const out: string[] = [];
   const stack: string[] = [];
@@ -84,20 +99,14 @@ async function collectActionFiles(root: string): Promise<readonly string[]> {
   }
   while (stack.length > 0) {
     const current = stack.pop() as string;
-    let entries;
-    try {
-      entries = await readdir(current, { withFileTypes: true });
-    } catch {
-      continue;
-    }
+    const entries = await readDirSafe(current);
     for (const entry of entries) {
       const full = join(current, entry.name);
       if (entry.isDirectory()) {
         stack.push(full);
         continue;
       }
-      if (!entry.isFile()) continue;
-      if (entry.name.endsWith(ACTION_SERVER_SUFFIX) && !entry.name.endsWith('.spec.ts')) {
+      if (entry.isFile() && entry.name.endsWith(ACTION_SERVER_SUFFIX) && !entry.name.endsWith('.spec.ts')) {
         out.push(full);
       }
     }
@@ -195,21 +204,44 @@ function inspectModuleText(input: { readonly text: string; readonly className: s
   return { providedByModule, exportedByModule };
 }
 
+/**
+ * Tests a `{ provide: ClassName, ... }` provider literal for a `provide`
+ * identifier referencing `className`.
+ *
+ * @param element - the object literal from the providers/exports array
+ * @param className - the action class name being searched for
+ * @returns `true` when `provide` directly identifies the class
+ */
+function providerObjectMatchesClass(element: ObjectLiteralExpression, className: string): boolean {
+  const provideProp = element.getProperty('provide');
+  if (!provideProp || !Node.isPropertyAssignment(provideProp)) return false;
+  const provideInit = provideProp.getInitializer();
+  return Boolean(provideInit && Node.isIdentifier(provideInit) && provideInit.getText() === className);
+}
+
+/**
+ * Tests one providers/exports array element for a match against the
+ * action class — direct identifier or `{ provide: ClassName }` literal.
+ *
+ * @param element - the array element to inspect
+ * @param className - the action class name being searched for
+ * @returns `true` when the element references `className`
+ */
+function elementMatchesClass(element: Node, className: string): boolean {
+  if (Node.isIdentifier(element) && element.getText() === className) return true;
+  if (Node.isObjectLiteralExpression(element)) {
+    return providerObjectMatchesClass(element, className);
+  }
+  return false;
+}
+
 function moduleArrayContains(decoratorArg: ObjectLiteralExpression, propertyName: string, className: string): boolean {
   const property = decoratorArg.getProperty(propertyName);
   if (!property || !Node.isPropertyAssignment(property)) return false;
   const initializer = property.getInitializer();
   if (!initializer || !Node.isArrayLiteralExpression(initializer)) return false;
   for (const element of initializer.getElements()) {
-    if (Node.isIdentifier(element) && element.getText() === className) return true;
-    if (Node.isObjectLiteralExpression(element)) {
-      // `{ provide: ClassName, useFactory: ..., ... }` style
-      const provideProp = element.getProperty('provide');
-      if (provideProp && Node.isPropertyAssignment(provideProp)) {
-        const provideInit = provideProp.getInitializer();
-        if (provideInit && Node.isIdentifier(provideInit) && provideInit.getText() === className) return true;
-      }
-    }
+    if (elementMatchesClass(element, className)) return true;
   }
   return false;
 }

@@ -207,7 +207,7 @@ function decodeKeyPath(key: string, hint: string | undefined): DecodedKeyPath | 
     decoded.push({ prefix, id, model });
   }
 
-  let leaf = decoded[decoded.length - 1];
+  let leaf = decoded.at(-1) as DecodedSegment;
   if (!leaf.model && hint) {
     const fromHint = getFirebaseModel(hint) ?? getFirebaseModelByPrefix(hint);
     if (fromHint) {
@@ -218,48 +218,67 @@ function decodeKeyPath(key: string, hint: string | undefined): DecodedKeyPath | 
   return { leaf, ancestors, unresolvedPrefixes: unresolved };
 }
 
-function formatKeyDecode(input: DecodedKeyPath, rawKey: string): string {
-  const lines: string[] = [];
-  lines.push('_Model decoded from key prefix._', '');
-
-  const leaf = input.leaf;
+/**
+ * Renders the "Leaf" section markdown for the resolved (or unresolved)
+ * tail segment of a decoded key path.
+ *
+ * @param leaf - the resolved tail segment (model may be undefined)
+ * @returns the markdown lines describing the leaf
+ */
+function formatLeaf(leaf: DecodedSegment): readonly string[] {
+  const out: string[] = [];
   if (leaf.model) {
-    lines.push(`**Leaf:** ${leaf.model.name}`);
-    lines.push(`- identityConst: \`${leaf.model.identityConst}\``);
-    lines.push(`- modelType: \`${leaf.model.modelType}\``);
-    lines.push(`- prefix: \`${leaf.prefix}\``);
-    lines.push(`- id: \`${leaf.id}\``);
+    out.push(`**Leaf:** ${leaf.model.name}`, `- identityConst: \`${leaf.model.identityConst}\``, `- modelType: \`${leaf.model.modelType}\``, `- prefix: \`${leaf.prefix}\``, `- id: \`${leaf.id}\``);
     if (leaf.model.modelGroup) {
-      lines.push(`- modelGroup: ${leaf.model.modelGroup}`);
+      out.push(`- modelGroup: ${leaf.model.modelGroup}`);
     }
     if (leaf.model.parentIdentityConst) {
-      lines.push(`- parentIdentityConst: \`${leaf.model.parentIdentityConst}\``);
+      out.push(`- parentIdentityConst: \`${leaf.model.parentIdentityConst}\``);
     }
-    lines.push(`- source: \`${leaf.model.sourcePackage}\` (${leaf.model.sourceFile})`);
+    out.push(`- source: \`${leaf.model.sourcePackage}\` (${leaf.model.sourceFile})`);
   } else {
-    lines.push(`**Leaf:** _unknown_ — no model registered for prefix \`${leaf.prefix}\``);
-    lines.push(`- prefix: \`${leaf.prefix}\``);
-    lines.push(`- id: \`${leaf.id}\``);
+    out.push(`**Leaf:** _unknown_ — no model registered for prefix \`${leaf.prefix}\``, `- prefix: \`${leaf.prefix}\``, `- id: \`${leaf.id}\``);
   }
+  return out;
+}
 
-  if (input.ancestors.length > 0) {
-    lines.push('', '**Parent chain:**');
-    for (const ancestor of input.ancestors) {
-      if (ancestor.model) {
-        lines.push(`- ${ancestor.model.name} — prefix \`${ancestor.prefix}\`, id \`${ancestor.id}\``);
-      } else {
-        lines.push(`- _unknown_ — prefix \`${ancestor.prefix}\` (id \`${ancestor.id}\`)`);
-      }
+/**
+ * Renders the "Parent chain" section markdown — one bullet per ancestor.
+ * Returns an empty array when there are no ancestors so the caller can
+ * splice it unconditionally.
+ *
+ * @param ancestors - the resolved ancestor segments (root to penultimate)
+ * @returns the markdown lines, or `[]` when no ancestors are present
+ */
+function formatAncestors(ancestors: readonly DecodedSegment[]): readonly string[] {
+  if (ancestors.length === 0) return [];
+  const out: string[] = ['', '**Parent chain:**'];
+  for (const ancestor of ancestors) {
+    if (ancestor.model) {
+      out.push(`- ${ancestor.model.name} — prefix \`${ancestor.prefix}\`, id \`${ancestor.id}\``);
+    } else {
+      out.push(`- _unknown_ — prefix \`${ancestor.prefix}\` (id \`${ancestor.id}\`)`);
     }
   }
+  return out;
+}
 
-  if (input.unresolvedPrefixes.length > 0) {
-    const label = input.unresolvedPrefixes.length === 1 ? 'prefix' : 'prefixes';
-    const list = input.unresolvedPrefixes.map((p) => `\`${p}\``).join(', ');
-    lines.push('', `_Unresolved ${label}: ${list}. Run \`dbx_model_lookup\` to browse known models._`);
-  }
+/**
+ * Renders the unresolved-prefix footer when at least one segment's
+ * prefix wasn't registered in the catalog.
+ *
+ * @param unresolvedPrefixes - the prefixes that failed to resolve
+ * @returns the markdown lines, or `[]` when every prefix resolved
+ */
+function formatUnresolved(unresolvedPrefixes: readonly string[]): readonly string[] {
+  if (unresolvedPrefixes.length === 0) return [];
+  const label = unresolvedPrefixes.length === 1 ? 'prefix' : 'prefixes';
+  const list = unresolvedPrefixes.map((p) => `\`${p}\``).join(', ');
+  return ['', `_Unresolved ${label}: ${list}. Run \`dbx_model_lookup\` to browse known models._`];
+}
 
-  lines.push('', `_Key:_ \`${rawKey}\``);
+function formatKeyDecode(input: DecodedKeyPath, rawKey: string): string {
+  const lines = ['_Model decoded from key prefix._', '', ...formatLeaf(input.leaf), ...formatAncestors(input.ancestors), ...formatUnresolved(input.unresolvedPrefixes), '', `_Key:_ \`${rawKey}\``];
   return lines.join('\n');
 }
 

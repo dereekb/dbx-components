@@ -137,7 +137,7 @@ async function readComponentDereekbDeps(componentAbs: string): Promise<readonly 
   if (!isRecord(json)) return [];
   const out = new Set<string>();
   for (const field of ['dependencies', 'devDependencies', 'peerDependencies'] as const) {
-    const map = (json as Record<string, unknown>)[field];
+    const map = json[field];
     if (!isRecord(map)) continue;
     for (const name of Object.keys(map)) {
       if (name.startsWith(DBX_COMPONENTS_BASE_SCOPE)) out.add(name);
@@ -165,9 +165,9 @@ async function readTsconfigPaths(workspaceRoot: string): Promise<PackagePathsMap
     return undefined;
   }
   if (!isRecord(json)) return undefined;
-  const compilerOptions = (json as Record<string, unknown>).compilerOptions;
+  const compilerOptions = json.compilerOptions;
   if (!isRecord(compilerOptions)) return undefined;
-  const paths = (compilerOptions as Record<string, unknown>).paths;
+  const paths = compilerOptions.paths;
   if (!isRecord(paths)) return undefined;
   const entries = new Map<string, string>();
   for (const [alias, target] of Object.entries(paths)) {
@@ -249,7 +249,7 @@ function stripJsonComments(value: string): string {
       continue;
     }
     if (ch === '"' || ch === "'") {
-      inString = ch as '"' | "'";
+      inString = ch;
       out += ch;
       i += 1;
       continue;

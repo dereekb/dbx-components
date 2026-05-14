@@ -10,7 +10,7 @@
  * component-internal and upstream-package declarations.
  */
 
-import { readdir, readFile, stat } from 'node:fs/promises';
+import { readdir, readFile, stat, type Dirent } from 'node:fs/promises';
 import { join, relative, sep } from 'node:path';
 import { extractCrudEntries } from '../model-api-shared/index.js';
 import type { DeclaredEntry } from './types.js';
@@ -35,6 +35,45 @@ export interface DeclaredEntriesSourceRoot {
  *   directory with the absolute base used to compute relative source paths.
  * @returns The CRUD declarations discovered across all roots.
  */
+/**
+ * Reads one `<model>.api.ts` file and emits the CRUD declarations it
+ * contributes. Skips files without the
+ * `callModelFirebaseFunctionMapFactory` marker so unrelated `.api.ts`
+ * files aren't parsed.
+ *
+ * @param fileAbs - absolute path to the API source file
+ * @param root - source root used to compute the relative path string
+ * @returns the declared CRUD entries from this file (empty when none)
+ */
+async function extractDeclaredEntriesFromFile(fileAbs: string, root: DeclaredEntriesSourceRoot): Promise<readonly DeclaredEntry[]> {
+  const text = await readFile(fileAbs, 'utf8');
+  if (!text.includes('callModelFirebaseFunctionMapFactory')) return [];
+  const fileRel = relative(root.relativeBase, fileAbs).split(sep).join('/');
+  const extraction = extractCrudEntries({ name: fileRel, text });
+  const out: DeclaredEntry[] = [];
+  for (const entry of extraction.entries) {
+    if (entry.verb === 'standalone') continue;
+    out.push({
+      model: entry.model,
+      verb: entry.verb,
+      specifier: entry.specifier,
+      paramsTypeName: entry.paramsTypeName,
+      resultTypeName: entry.resultTypeName,
+      sourceFile: fileRel,
+      line: entry.line
+    });
+  }
+  return out;
+}
+
+/**
+ * Walks every supplied source root, reads each `<model>.api.ts` file,
+ * and emits one {@link DeclaredEntry} per CRUD leaf.
+ *
+ * @param roots - The source roots to walk; each pairs an absolute walk
+ *   directory with the absolute base used to compute relative source paths.
+ * @returns The CRUD declarations discovered across all roots.
+ */
 export async function extractDeclaredEntries(roots: readonly DeclaredEntriesSourceRoot[]): Promise<readonly DeclaredEntry[]> {
   const seen = new Set<string>();
   const out: DeclaredEntry[] = [];
@@ -43,25 +82,26 @@ export async function extractDeclaredEntries(roots: readonly DeclaredEntriesSour
     for (const fileAbs of files) {
       if (seen.has(fileAbs)) continue;
       seen.add(fileAbs);
-      const text = await readFile(fileAbs, 'utf8');
-      if (!text.includes('callModelFirebaseFunctionMapFactory')) continue;
-      const fileRel = relative(root.relativeBase, fileAbs).split(sep).join('/');
-      const extraction = extractCrudEntries({ name: fileRel, text });
-      for (const entry of extraction.entries) {
-        if (entry.verb === 'standalone') continue;
-        out.push({
-          model: entry.model,
-          verb: entry.verb,
-          specifier: entry.specifier,
-          paramsTypeName: entry.paramsTypeName,
-          resultTypeName: entry.resultTypeName,
-          sourceFile: fileRel,
-          line: entry.line
-        });
-      }
+      const fromFile = await extractDeclaredEntriesFromFile(fileAbs, root);
+      out.push(...fromFile);
     }
   }
   return out;
+}
+
+/**
+ * Reads a directory's `Dirent` entries; returns an empty list when the
+ * path is unreadable (e.g. permission denied, race-condition removal).
+ *
+ * @param path - absolute directory path
+ * @returns the directory entries or `[]` on failure
+ */
+async function readDirSafe(path: string): Promise<readonly Dirent[]> {
+  try {
+    return await readdir(path, { withFileTypes: true });
+  } catch {
+    return [];
+  }
 }
 
 async function collectApiFiles(rootAbs: string): Promise<readonly string[]> {
@@ -76,20 +116,14 @@ async function collectApiFiles(rootAbs: string): Promise<readonly string[]> {
   }
   while (stack.length > 0) {
     const current = stack.pop() as string;
-    let entries;
-    try {
-      entries = await readdir(current, { withFileTypes: true });
-    } catch {
-      continue;
-    }
+    const entries = await readDirSafe(current);
     for (const entry of entries) {
       const full = join(current, entry.name);
       if (entry.isDirectory()) {
         stack.push(full);
         continue;
       }
-      if (!entry.isFile()) continue;
-      if (entry.name.endsWith(API_SUFFIX) && !entry.name.endsWith('.spec.ts')) {
+      if (entry.isFile() && entry.name.endsWith(API_SUFFIX) && !entry.name.endsWith('.spec.ts')) {
         files.push(full);
       }
     }
