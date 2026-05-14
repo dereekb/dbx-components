@@ -87,9 +87,9 @@ export interface IterateDbxCliCallModelConfig<TParams, TItem, TRaw = OnCallQuery
    */
   readonly modelType: string;
   /**
-   * Call type. Defaults to `'query'`.
+   * Call type.
    */
-  readonly call?: OnCallFunctionType;
+  readonly call: OnCallFunctionType;
   /**
    * Optional specifier passed through to `OnCallTypedModelParams`.
    */
@@ -326,7 +326,7 @@ function _evaluateLoopExit(input: { readonly totalItemsLimit: Maybe<number>; rea
  * @returns The aggregate result.
  */
 export async function iterateDbxCliCallModel<TParams, TItem, TRaw = OnCallQueryModelResult<TItem>, TItemResult = void, TPageResult = void>(config: IterateDbxCliCallModelConfig<TParams, TItem, TRaw, TItemResult, TPageResult>): Promise<IterateDbxCliCallModelResult<TItem, TItemResult, TPageResult>> {
-  const { context, modelType, call = 'query', specifier, params, buildRequestData = _defaultBuildRequestData<TParams>, responseAdapter = _defaultResponseAdapter as unknown as IterateDbxCliCallModelResponseAdapter<TRaw, TItem>, limitPerPage, totalItemsLimit, maxPages, iterateItem, iteratePage, itemPerformTasksConfig, maxParallelPerPage, collectItems = true, collectItemResults = iterateItem != null, collectPageResults = iteratePage != null } = config;
+  const { context, modelType, call, specifier, params, buildRequestData = _defaultBuildRequestData<TParams>, responseAdapter = _defaultResponseAdapter as unknown as IterateDbxCliCallModelResponseAdapter<TRaw, TItem>, limitPerPage, totalItemsLimit, maxPages, iterateItem, iteratePage, itemPerformTasksConfig, maxParallelPerPage, collectItems = true, collectItemResults = iterateItem != null, collectPageResults = iteratePage != null } = config;
 
   const allItems: TItem[] = [];
   const allItemResults: TItemResult[] = [];

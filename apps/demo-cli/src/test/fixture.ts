@@ -6,6 +6,7 @@ import { buildTestCliContext, listenOnNestAppForTest, runCliCommand, type RunCli
 import { type OAuthAuthorizedSuperTestFixture } from '@dereekb/firebase-server/test';
 // eslint-disable-next-line @nx/enforce-module-boundaries -- demo-api fixture is intentionally shared with demo-cli specs; the import lives in src/test/ which is excluded from the production build.
 import { type DemoApiFunctionContextFixture } from 'demo-api/test';
+import { DEMO_CLI_ACTION_COMMANDS } from '../lib/actions';
 import { DEMO_CLI_DEFAULT_ENVS } from '../lib/env.defaults';
 import { DEMO_CLI_API_MANIFEST, DEMO_CLI_MODEL_MANIFEST } from '../lib/manifest/api.manifest.generated';
 
@@ -97,6 +98,7 @@ export function withDemoTestCli(params: WithDemoTestCliParams, buildTests: (ctx:
         defaultEnvs: DEMO_CLI_DEFAULT_ENVS,
         modelManifest: DEMO_CLI_MODEL_MANIFEST,
         apiCommands: buildManifestCommands(DEMO_CLI_API_MANIFEST, { modelManifest: DEMO_CLI_MODEL_MANIFEST }),
+        actionCommands: DEMO_CLI_ACTION_COMMANDS,
         testCliContext
       };
 

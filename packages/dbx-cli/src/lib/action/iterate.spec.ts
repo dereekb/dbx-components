@@ -74,6 +74,7 @@ describe('iterateDbxCliCallModel()', () => {
     const result = await iterateDbxCliCallModel<TestParams, TestItem>({
       context,
       modelType: 'thing',
+      call: 'query',
       params: {}
     });
 
@@ -97,6 +98,7 @@ describe('iterateDbxCliCallModel()', () => {
     const result = await iterateDbxCliCallModel<TestParams, TestItem>({
       context,
       modelType: 'thing',
+      call: 'query',
       params: {},
       totalItemsLimit: 7
     });
@@ -114,6 +116,7 @@ describe('iterateDbxCliCallModel()', () => {
     await iterateDbxCliCallModel<TestParams, TestItem>({
       context,
       modelType: 'thing',
+      call: 'query',
       params: {},
       limitPerPage: 50,
       totalItemsLimit: 3
@@ -131,6 +134,7 @@ describe('iterateDbxCliCallModel()', () => {
     const result = await iterateDbxCliCallModel<TestParams, TestItem>({
       context,
       modelType: 'thing',
+      call: 'query',
       params: {},
       maxPages: 1
     });
@@ -148,6 +152,7 @@ describe('iterateDbxCliCallModel()', () => {
     const result = await iterateDbxCliCallModel<TestParams, TestItem, OnCallQueryModelResult<TestItem>, { readonly squared: number; readonly key: string; readonly pageIndex: number; readonly itemIndex: number }>({
       context,
       modelType: 'thing',
+      call: 'query',
       params: {},
       maxParallelPerPage: 4,
       iterateItem: async ({ item, key, pageIndex, itemIndex }) => ({ squared: item.value * item.value, key, pageIndex, itemIndex })
@@ -168,6 +173,7 @@ describe('iterateDbxCliCallModel()', () => {
     const result = await iterateDbxCliCallModel<TestParams, TestItem, OnCallQueryModelResult<TestItem>, number>({
       context,
       modelType: 'thing',
+      call: 'query',
       params: {},
       itemPerformTasksConfig: { throwError: false },
       iterateItem: async ({ item }) => {
@@ -232,6 +238,7 @@ describe('iterateDbxCliCallModel()', () => {
     const result = await iterateDbxCliCallModel<TestParams, TestItem>({
       context,
       modelType: 'thing',
+      call: 'query',
       params: {}
     });
 
@@ -248,6 +255,7 @@ describe('iterateDbxCliCallModel()', () => {
     const result = await iterateDbxCliCallModel<TestParams, TestItem, OnCallQueryModelResult<TestItem>, number, { readonly pageIndex: number; readonly sum: number }>({
       context,
       modelType: 'thing',
+      call: 'query',
       params: {},
       iterateItem: async ({ item }) => item.value,
       iteratePage: async ({ pageIndex, pageItemResults }) => ({ pageIndex, sum: (pageItemResults ?? []).reduce((acc, x) => acc + x, 0) })

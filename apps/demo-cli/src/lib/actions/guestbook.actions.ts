@@ -47,6 +47,7 @@ export async function queryGuestbookEntriesForGuestbook(input: QueryGuestbookEnt
 
   const result = await iterateDbxCliCallModel<QueryGuestbookEntriesParams, GuestbookEntry>({
     context,
+    call: 'query',
     modelType: 'guestbookEntry',
     params: { guestbook, ...(published !== undefined ? { published } : {}) },
     totalItemsLimit: limit
@@ -117,6 +118,7 @@ export async function queryAllPublishedGuestbookEntries(input: QueryAllPublished
 
   const result = await iterateDbxCliCallModel<QueryGuestbooksParams, Guestbook, import('@dereekb/firebase').OnCallQueryModelResult<Guestbook>, QueryGuestbookEntriesForGuestbookOutput>({
     context,
+    call: 'query',
     modelType: 'guestbook',
     params: { published: true },
     totalItemsLimit: limit,
