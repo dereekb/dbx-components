@@ -235,8 +235,8 @@ export class DbxForgeTimeDurationFieldComponent {
     };
 
     const propsValue = this.props();
-    const minMs = propsValue?.min != null ? timeUnitToMilliseconds(propsValue.min, outputUnit) : undefined;
-    const maxMs = propsValue?.max != null ? timeUnitToMilliseconds(propsValue.max, outputUnit) : undefined;
+    const minMs = propsValue?.min == null ? undefined : timeUnitToMilliseconds(propsValue.min, outputUnit);
+    const maxMs = propsValue?.max == null ? undefined : timeUnitToMilliseconds(propsValue.max, outputUnit);
 
     DbxDurationPickerPopoverComponent.openPopover(this.popoverService, {
       origin,

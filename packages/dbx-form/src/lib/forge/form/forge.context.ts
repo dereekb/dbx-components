@@ -112,9 +112,7 @@ export function stripEmptyForgeValues<T>(value: T): T {
       if (typeof val === 'object' && !(val instanceof Date)) {
         const cleaned = stripEmptyForgeValues(val);
 
-        if (Array.isArray(cleaned)) {
-          stripped[key] = cleaned;
-        } else if (cleaned != null && Object.keys(cleaned as object).length > 0) {
+        if (Array.isArray(cleaned) || (cleaned != null && Object.keys(cleaned).length > 0)) {
           stripped[key] = cleaned;
         }
       } else {
@@ -268,10 +266,10 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
       let result: Maybe<DbxForgeFinalizeFormConfigResult>;
 
       if (config) {
-        if (acc?.input !== config) {
-          result = dbxForgeFinalizeFormConfig(config, this.dbxForgeGlobalDefaultsConfigService.getGlobalDefaults());
-        } else {
+        if (acc?.input === config) {
           result = acc;
+        } else {
+          result = dbxForgeFinalizeFormConfig(config, this.dbxForgeGlobalDefaultsConfigService.getGlobalDefaults());
         }
       } else {
         result = undefined;

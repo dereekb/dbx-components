@@ -99,7 +99,7 @@ export type ModelFirebaseCrudFunctionDeleteTypeConfig = {
 };
 
 export type ModelFirebaseCrudFunctionQueryTypeConfig = {
-  readonly query: unknown | ModelFirebaseCrudFunctionTypeSpecifierConfig;
+  readonly query: unknown;
 };
 
 /**

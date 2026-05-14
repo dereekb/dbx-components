@@ -11,9 +11,8 @@
  * document (`PagedItemIndexData`) have different shapes that can't be
  * expressed by a single document converter.
  */
-import { type Maybe, type Building } from '@dereekb/util';
+import { type Maybe, type Building, compareStringsNumeric } from '@dereekb/util';
 import { type CollectionReference, type DocumentReference, type Transaction } from '../types';
-import { type FirestoreContext } from '../context';
 import { type FirestoreAccessorDriver } from '../driver/accessor';
 import { type FirestoreDocumentContext } from './context';
 import { type FirestoreDocumentDataAccessor } from './accessor';
@@ -186,7 +185,7 @@ function distributeAndWritePages<T>(input: DistributeAndWritePagesInput<T>): Pro
 
   const newPageIds: string[] = [];
   const pageCounts: Record<string, number> = {};
-  const writePromises: Promise<void | unknown>[] = [];
+  const writePromises: Promise<unknown>[] = [];
 
   for (const [pageId, pageItems] of pageBuckets) {
     if (pageItems.length === 0) {
@@ -214,7 +213,7 @@ function distributeAndWritePages<T>(input: DistributeAndWritePagesInput<T>): Pro
     }
   }
 
-  newPageIds.sort();
+  newPageIds.sort(compareStringsNumeric);
 
   const indexData: PagedItemIndexData = {
     tc: items.length,
@@ -277,7 +276,7 @@ export function extendFirestoreCollectionWithPagedItemAccessor<X extends Firesto
   // internal envelope shapes that don't match the consumer's T converter. Operating on the
   // raw collection avoids losing fields when reading/writing.
   const collectionRef = (x as CollectionReferenceRef<unknown>).collection.withConverter(null) as unknown as CollectionReference<unknown>;
-  const firestoreContext = (x as unknown as FirestoreContextReference).firestoreContext as FirestoreContext;
+  const firestoreContext = (x as unknown as FirestoreContextReference).firestoreContext;
   const firestoreAccessorDriver = firestoreContext.drivers.firestoreAccessorDriver;
 
   const indexRef: DocumentReference<unknown> = firestoreAccessorDriver.doc<unknown>(collectionRef, indexDocumentId);

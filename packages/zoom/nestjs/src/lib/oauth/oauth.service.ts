@@ -196,7 +196,7 @@ function reviveZoomAccessTokenFile(raw: unknown): Maybe<ZoomAccessToken> {
   }
 
   const rawExpiresAt = (token as ZoomAccessToken & { expiresAt?: unknown }).expiresAt;
-  const expiresAt = rawExpiresAt != null && !(rawExpiresAt instanceof Date) ? new Date(rawExpiresAt as string | number) : (rawExpiresAt as Date | undefined);
+  const expiresAt = rawExpiresAt != null && !(rawExpiresAt instanceof Date) ? new Date(rawExpiresAt as string | number) : rawExpiresAt;
 
   return { ...token, expiresAt: expiresAt as Date };
 }

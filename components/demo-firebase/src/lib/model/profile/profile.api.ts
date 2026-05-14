@@ -1,4 +1,4 @@
-import { type DownloadStorageFileParams, downloadStorageFileParamsType, type DownloadStorageFileResult, type FirebaseFunctionMapFunction, type FirebaseFunctionTypeConfigMap, type InferredTargetModelParams, inferredTargetModelParamsType, type ModelFirebaseCrudFunction, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, type ModelFirebaseReadFunction, callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
+import { type DownloadStorageFileParams, type DownloadStorageFileResult, type FirebaseFunctionMapFunction, type FirebaseFunctionTypeConfigMap, type InferredTargetModelParams, inferredTargetModelParamsType, type ModelFirebaseCrudFunction, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, type ModelFirebaseReadFunction, callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
 import { type Type } from 'arktype';
 import { type Maybe } from '@dereekb/util';
 import { clearable } from '@dereekb/model';
@@ -70,7 +70,7 @@ export const updateProfileParamsType = inferredTargetModelParamsType.merge({
 
 export type FinishOnboardingProfileParams = InferredTargetModelParams;
 
-export const finishOnboardingProfileParamsType = inferredTargetModelParamsType;
+export { inferredTargetModelParamsType as finishOnboardingProfileParamsType } from '@dereekb/firebase';
 
 /**
  * Params for initiating or completing a password reset for the current user's profile.
@@ -101,7 +101,7 @@ export const resetProfilePasswordParamsType = inferredTargetModelParamsType.merg
 
 export type DownloadProfileArchiveParams = DownloadStorageFileParams;
 
-export const downloadProfileArchiveParamsType = downloadStorageFileParamsType;
+export { downloadStorageFileParamsType as downloadProfileArchiveParamsType } from '@dereekb/firebase';
 
 export type DownloadProfileArchiveResult = DownloadStorageFileResult;
 

@@ -154,7 +154,7 @@ export type DbxColorInput = DbxThemeColor | DbxColorConfig | '';
  * @returns `true` when the value is a {@link DbxColorConfig}
  */
 export function isDbxColorConfig(value: Maybe<DbxColorInput>): value is DbxColorConfig {
-  return typeof value === 'object' && value !== null && typeof (value as DbxColorConfig).color === 'string';
+  return typeof value === 'object' && value !== null && typeof value.color === 'string';
 }
 
 /**

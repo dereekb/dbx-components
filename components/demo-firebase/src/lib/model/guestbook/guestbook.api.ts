@@ -1,4 +1,4 @@
-import { type FirebaseFunctionTypeConfigMap, type ModelFirebaseCreateFunction, type ModelFirebaseCrudFunction, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, type AbstractSubscribeToNotificationBoxParams, abstractSubscribeToNotificationBoxParamsType, type TargetModelParams, targetModelParamsType, callModelFirebaseFunctionMapFactory, type OnCallQueryModelRequestParams } from '@dereekb/firebase';
+import { type FirebaseFunctionTypeConfigMap, type ModelFirebaseCreateFunction, type ModelFirebaseCrudFunction, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, type AbstractSubscribeToNotificationBoxParams, type TargetModelParams, callModelFirebaseFunctionMapFactory, type OnCallQueryModelRequestParams } from '@dereekb/firebase';
 import { type, type Type } from 'arktype';
 import { type GuestbookTypes } from './guestbook';
 import { type Maybe } from '@dereekb/util';
@@ -42,11 +42,11 @@ export const insertGuestbookEntryParamsType = guestbookEntryParamsType.merge({
 
 export type LikeGuestbookEntryParams = TargetModelParams;
 
-export const likeGuestbookEntryParamsType = targetModelParamsType;
+export { targetModelParamsType as likeGuestbookEntryParamsType } from '@dereekb/firebase';
 
 export type SubscribeToGuestbookNotificationsParams = AbstractSubscribeToNotificationBoxParams;
 
-export const subscribeToGuestbookNotificationsParamsType = abstractSubscribeToNotificationBoxParamsType;
+export { abstractSubscribeToNotificationBoxParamsType as subscribeToGuestbookNotificationsParamsType } from '@dereekb/firebase';
 
 // MARK: Query
 /**

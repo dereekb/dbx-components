@@ -183,7 +183,7 @@ export class DbxDetachService {
       overlayConfig
     };
 
-    this._entries.set(key, entry as DbxDetachEntryState);
+    this._entries.set(key, entry);
     this._entries$.next(this._entries);
 
     return new DbxDetachInstanceImpl(entry);

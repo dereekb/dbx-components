@@ -47,7 +47,7 @@ function toIsoStringFromUnixSeconds(value: Maybe<number>): Maybe<ISO8601DateStri
   if (typeof value === 'number' && Number.isFinite(value)) {
     const date = new Date(value * 1000);
     if (Number.isFinite(date.getTime())) {
-      result = date.toISOString() as ISO8601DateString;
+      result = date.toISOString();
     }
   }
   return result;

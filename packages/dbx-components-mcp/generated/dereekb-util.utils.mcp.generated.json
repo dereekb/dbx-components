@@ -11127,7 +11127,8 @@
         "sortbystringfunction"
       ],
       "relatedSlugs": [
-        "sort-by-label-function"
+        "sort-by-label-function",
+        "compare-strings"
       ]
     },
     {

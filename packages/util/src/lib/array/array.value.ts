@@ -25,7 +25,7 @@ export type UniversalFilterMaybeArrayFunction = <T>(values: Maybe<Maybe<T>[]>) =
  * @__NO_SIDE_EFFECTS__
  */
 export function filterMaybeArrayFunction<T>(filterFn: Parameters<Array<Maybe<T>>['filter']>[0]): FilterMaybeArrayFunction<T> {
-  return ((values: Maybe<Maybe<T[]>>) => {
+  return (values: Maybe<Maybe<T[]>>) => {
     let result: T[];
 
     if (values != null) {
@@ -35,7 +35,7 @@ export function filterMaybeArrayFunction<T>(filterFn: Parameters<Array<Maybe<T>>
     }
 
     return result;
-  }) as FilterMaybeArrayFunction<T>;
+  };
 }
 
 /**

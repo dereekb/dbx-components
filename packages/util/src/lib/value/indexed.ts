@@ -247,7 +247,7 @@ export function computeNextFreeIndexFunction<T>(readIndex: ReadIndexFunction<T>,
   return (values: T[]) => {
     const minMax = findMinMax(values);
     const max = minMax?.max;
-    return max != null ? readNextIndex(max) : 0;
+    return max == null ? 0 : readNextIndex(max);
   };
 }
 
@@ -270,7 +270,7 @@ export function computeNextFreeIndexOnSortedValuesFunction<T>(readIndex: ReadInd
   const readNextIndex = nextIndex ?? ((x) => readIndex(x) + 1); //return the max index + 1 by default.
   return (sortedValues: T[]) => {
     const lastValueInSorted = lastValue(sortedValues);
-    return lastValueInSorted != null ? readNextIndex(lastValueInSorted) : 0;
+    return lastValueInSorted == null ? 0 : readNextIndex(lastValueInSorted);
   };
 }
 
@@ -305,7 +305,7 @@ export function minAndMaxIndexFunction<T>(readIndex: ReadIndexFunction<T>): MinA
   const minAndMaxItems = minAndMaxIndexItemsFunction(readIndex);
   const fn = ((values: T[]) => {
     const result = minAndMaxItems(values);
-    return result != null ? { min: readIndex(result.min), max: readIndex(result.max) } : null;
+    return result == null ? null : { min: readIndex(result.min), max: readIndex(result.max) };
   }) as Building<MinAndMaxIndexFunction<T>>;
   fn._readIndex = readIndex;
   return fn as MinAndMaxIndexFunction<T>;

@@ -66,7 +66,7 @@ export class DbxColorDirective {
    */
   readonly effectiveToneSignal = computed<Maybe<DbxColorTone>>(() => {
     const inputTone = this.dbxColorTone();
-    return inputTone != null ? inputTone : this._configSignal()?.tone;
+    return inputTone ?? this._configSignal()?.tone;
   });
 
   /**
@@ -82,9 +82,7 @@ export class DbxColorDirective {
     const inputTone = this.dbxColorTone();
     let tonal = false;
 
-    if (inputTone != null) {
-      tonal = true;
-    } else {
+    if (inputTone == null) {
       const config = this._configSignal();
 
       if (config?.tonal != null) {
@@ -92,6 +90,8 @@ export class DbxColorDirective {
       } else if (config?.tone != null) {
         tonal = true;
       }
+    } else {
+      tonal = true;
     }
 
     return tonal;

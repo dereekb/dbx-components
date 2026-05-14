@@ -10,6 +10,7 @@
 
 import type { CliModelField, CliModelManifestEntry } from '@dereekb/dbx-cli';
 import { format, resolveConfig } from 'prettier';
+import { compareStrings } from '@dereekb/util';
 import type { CollectedEntry } from './types';
 
 /**
@@ -63,7 +64,7 @@ export async function renderManifest(input: RenderManifestInput): Promise<string
   const importLines = [...importsByPackage.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([pkg, names]) => {
-      const sortedNames = [...names].sort((a, b) => a.localeCompare(b)).join(', ');
+      const sortedNames = [...names].sort(compareStrings).join(', ');
       return `import { ${sortedNames} } from '${pkg}';`;
     });
 

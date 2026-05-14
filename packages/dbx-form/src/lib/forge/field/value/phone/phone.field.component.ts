@@ -8,7 +8,7 @@ import { DynamicTextPipe, type DynamicText, type FieldMeta, type ValidationMessa
 import { resolveValueFieldContext, buildValueFieldInputs, createResolvedErrorsSignal, shouldShowErrors, setupMetaTracking } from '@ng-forge/dynamic-forms/integration';
 import { MATERIAL_CONFIG } from '@ng-forge/dynamic-forms-material';
 import type { FieldTree } from '@angular/forms/signals';
-import { type Maybe, e164PhoneNumberExtensionPair, e164PhoneNumberFromE164PhoneNumberExtensionPair, type E164PhoneNumber, type E164PhoneNumberExtensionPair } from '@dereekb/util';
+import { type Maybe, e164PhoneNumberExtensionPair, e164PhoneNumberFromE164PhoneNumberExtensionPair, type E164PhoneNumber } from '@dereekb/util';
 import { isPhoneExtension } from '../../../../validator/phone';
 import { dbxForgeFieldDisabled } from '../../field.util';
 import { toggleDisableFormControl } from '../../../../form/form';
@@ -206,7 +206,7 @@ export class DbxForgePhoneFieldComponent {
       outputValue = e164PhoneNumberFromE164PhoneNumberExtensionPair({
         number: phone as E164PhoneNumber,
         extension: extension ?? undefined
-      } as E164PhoneNumberExtensionPair);
+      });
     } else {
       outputValue = phone ?? '';
     }

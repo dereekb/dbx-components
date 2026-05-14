@@ -288,7 +288,7 @@ export const oidcEntryFirebaseModelServiceFactory = firebaseModelServiceFactory<
     return grantModelRolesIfAdmin(context, fullAccessRoleMap(), async () => {
       const data = output.data;
       const uid = context.auth?.uid;
-      const ownerKey = uid != null ? firestoreModelKey(profileIdentity, uid) : undefined;
+      const ownerKey = uid == null ? undefined : firestoreModelKey(profileIdentity, uid);
 
       // Client entries: full access for the owner (uses ownership key `o`).
       const isClientOwner = ownerKey != null && data?.o === ownerKey;

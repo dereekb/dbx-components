@@ -3,9 +3,10 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { JsonPipe } from '@angular/common';
 import { combineLatestWith, delay, map, of, type Observable } from 'rxjs';
 import { DbxCalendarScheduleSelectionStore, DbxScheduleSelectionCalendarComponent, DbxScheduleSelectionCalendarDateRangeComponent, type DbxScheduleSelectionCalendarComponentConfig, type DbxScheduleSelectionCalendarBeforeMonthViewRenderModifyDayFunction, type CalendarScheduleSelectionMetadata } from '@dereekb/dbx-form/calendar';
-import { type DateCellIndex, type DateCellScheduleDateFilterConfig, type DateCellScheduleEncodedWeek } from '@dereekb/date';
+import { type DateCellScheduleDateFilterConfig, type DateCellScheduleEncodedWeek } from '@dereekb/date';
 import { DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { DbxContentContainerDirective, DbxContentBorderDirective, DbxContentPitDirective, DbxButtonComponent, DbxButtonSpacerDirective } from '@dereekb/dbx-web';
+import { compareStrings } from '@dereekb/util';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 
@@ -76,7 +77,7 @@ export class DocBugsCalendarComponent {
       return ((day) => {
         const meta = day.meta as CalendarScheduleSelectionMetadata | undefined;
         if (meta == null) return;
-        const stateIndex = meta.i as DateCellIndex;
+        const stateIndex = meta.i;
         // BUG: selectedIndexesFromStore is anchored to dateScheduleRange.start (the OUTPUT start).
         // meta.i is anchored to state.start (= filter.start). They don't match — pink ring lights up
         // on the WRONG cells when minMaxDateRange shifts the output anchor.
@@ -103,7 +104,7 @@ export class DocBugsCalendarComponent {
   readonly selectionValueSelectedIndexes$ = this.dbxCalendarScheduleSelectionStore.selectionValueSelectedIndexes$.pipe(map((x) => Array.from(x).sort((a, b) => a - b)));
   readonly selectionValueSelectedIndexesSignal = toSignal(this.selectionValueSelectedIndexes$, { initialValue: undefined });
 
-  readonly selectionValueSelectedDates$ = this.dbxCalendarScheduleSelectionStore.selectionValueSelectedDates$.pipe(map((x) => Array.from(x).sort((a, b) => a.localeCompare(b))));
+  readonly selectionValueSelectedDates$ = this.dbxCalendarScheduleSelectionStore.selectionValueSelectedDates$.pipe(map((x) => Array.from(x).sort(compareStrings)));
   readonly selectionValueSelectedDatesSignal = toSignal(this.selectionValueSelectedDates$, { initialValue: undefined });
 
   readonly toggledIndexes$ = this.dbxCalendarScheduleSelectionStore.state$.pipe(map((x) => Array.from(x.toggledIndexes).sort((a, b) => a - b)));

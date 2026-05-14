@@ -49,7 +49,7 @@ export async function queryGuestbookEntriesForGuestbook(input: QueryGuestbookEnt
     context,
     call: 'query',
     modelType: 'guestbookEntry',
-    params: { guestbook, ...(published !== undefined ? { published } : {}) },
+    params: { guestbook, ...(published === undefined ? {} : { published }) },
     totalItemsLimit: limit
   });
 

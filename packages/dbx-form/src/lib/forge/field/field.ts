@@ -278,7 +278,7 @@ export interface DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C extends 
   configure(fn: DbxForgeBuildFieldDefFunction<C, FV>): void;
 }
 
-interface _DbxForgeFieldLogicExtras {
+interface DbxForgeFieldLogicExtras {
   readonly dependsOn?: string[];
   readonly externalData?: DbxForgeFieldLogicExternalData;
 }
@@ -295,15 +295,15 @@ type DbxForgeFieldLogicWithFn<T> =
   // Branch 1: sync function derivation (has required functionName)
   T extends { type: 'derivation'; functionName: string }
     ? // Allow the original type with an optional fn alongside the required functionName
-        | (Omit<T, 'dependsOn'> & { fn?: DbxForgeFieldLogicFn } & _DbxForgeFieldLogicExtras)
+        | (Omit<T, 'dependsOn'> & { fn?: DbxForgeFieldLogicFn } & DbxForgeFieldLogicExtras)
         // Or: when fn is provided, make functionName optional (builder auto-generates a name)
-        | (Omit<T, 'functionName' | 'dependsOn'> & { functionName?: string; fn: DbxForgeFieldLogicFn } & _DbxForgeFieldLogicExtras)
+        | (Omit<T, 'functionName' | 'dependsOn'> & { functionName?: string; fn: DbxForgeFieldLogicFn } & DbxForgeFieldLogicExtras)
     : // Branch 2: async function derivation (has source: 'asyncFunction' + required asyncFunctionName)
       T extends { type: 'derivation'; source: 'asyncFunction'; asyncFunctionName: string }
       ? // Allow the original type with an optional async fn alongside the required asyncFunctionName
-          | (T & { fn?: DbxForgeFieldLogicAsyncFn } & _DbxForgeFieldLogicExtras)
+          | (T & { fn?: DbxForgeFieldLogicAsyncFn } & DbxForgeFieldLogicExtras)
           // Or: when fn is provided, make asyncFunctionName optional (builder auto-generates a name)
-          | (Omit<T, 'asyncFunctionName' | 'dependsOn'> & { asyncFunctionName?: string; fn: DbxForgeFieldLogicAsyncFn } & _DbxForgeFieldLogicExtras)
+          | (Omit<T, 'asyncFunctionName' | 'dependsOn'> & { asyncFunctionName?: string; fn: DbxForgeFieldLogicAsyncFn } & DbxForgeFieldLogicExtras)
       : // Branch 3: all other logic types (state, expression, value, http) — pass through unchanged
         T;
 
@@ -528,6 +528,10 @@ export interface DbxForgeBuildFieldDefConfig<C extends DbxForgeFieldFunctionDef<
  * });
  * ```
  */
+function getDefaultValidation(): DbxForgeFieldValidation {
+  return {};
+}
+
 export function dbxForgeBuildFieldDef<C extends DbxForgeFieldFunctionDef<any>, FV = any>(configureFunction: DbxForgeBuildFieldDefFunction<C, FV>, _config?: Maybe<DbxForgeBuildFieldDefConfig<C>>): DbxForgeFieldFunctionFieldDefBuilder<C, FV> {
   // TODO: Default ValidationMessages place, etc.
 
@@ -538,10 +542,6 @@ export function dbxForgeBuildFieldDef<C extends DbxForgeFieldFunctionDef<any>, F
 
     function getProps(): Building<C['props']> {
       return props;
-    }
-
-    function getDefaultValidation(): DbxForgeFieldValidation {
-      return {};
     }
 
     function injectDefaultValidation(): void {
@@ -847,7 +847,7 @@ function _finalizeLogicEntries<C extends DbxForgeFieldFunctionDef<any>, FV = any
   }
 
   function finalizeDerivationEntry(derivationEntry: LogicConfig & { type: 'derivation' }) {
-    if ('fn' in (derivationEntry as DbxForgeFieldLogicWithFn<typeof derivationEntry>)) {
+    if ('fn' in derivationEntry) {
       const { fn, functionName, source, asyncFunctionName } = derivationEntry as unknown as (DbxForgeFieldLogicFnFunctionRef | DbxForgeFieldLogicAsyncFnFunctionRef) & typeof derivationEntry;
 
       /**
@@ -909,10 +909,10 @@ function _finalizeLogicEntries<C extends DbxForgeFieldFunctionDef<any>, FV = any
      */
     let transformFn: DbxForgeFieldTransformFunction<Maybe<FV>, any>;
 
-    if (when !== 'always') {
-      transformFn = mapMaybeFunction(inputTransformFn as any);
-    } else {
+    if (when === 'always') {
       transformFn = inputTransformFn as DbxForgeFieldTransformFunction<Maybe<FV>, any>;
+    } else {
+      transformFn = mapMaybeFunction(inputTransformFn as any);
     }
 
     /**
@@ -1034,9 +1034,7 @@ function _finalizeValidators<C extends DbxForgeFieldFunctionDef<any>>(instance: 
     const finalizedValidators: ValidatorConfig[] = validators.map((entry) => {
       let result: ValidatorConfig;
 
-      if (!('fn' in entry)) {
-        result = entry as ValidatorConfig;
-      } else {
+      if ('fn' in entry) {
         const { fn, reusableDefinition: _reusableDefinition, ...rest } = entry as any;
         const functionName: string = rest.functionName ?? _generateValidatorFunctionName();
         hasOneOrMoreValidatorFunctions = true;
@@ -1054,6 +1052,8 @@ function _finalizeValidators<C extends DbxForgeFieldFunctionDef<any>>(instance: 
 
         // Return a clean ValidatorConfig without fn or reusableDefinition
         result = { ...rest, functionName } as ValidatorConfig;
+      } else {
+        result = entry as ValidatorConfig;
       }
 
       return result;

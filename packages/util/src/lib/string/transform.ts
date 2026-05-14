@@ -336,7 +336,7 @@ export function sliceStringFunction(config: SliceStringFunctionConfig): SliceStr
   } else if (fromEnd) {
     result = (input: string) => input.slice(-takeFromEnd);
   } else {
-    result = MAP_IDENTITY as SliceStringFunction;
+    result = MAP_IDENTITY;
   }
 
   return result;

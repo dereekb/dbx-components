@@ -223,7 +223,7 @@ export function createDbxFirebaseFirestore(params: CreateDbxFirebaseFirestorePar
   const firestoreSettings: FirestoreSettings = {};
 
   if (enableIndexedDbPersistence !== false) {
-    const tabManager = enableMultiTabIndexedDbPersistence !== false ? persistentMultipleTabManager() : persistentSingleTabManager(undefined);
+    const tabManager = enableMultiTabIndexedDbPersistence === false ? persistentSingleTabManager(undefined) : persistentMultipleTabManager();
 
     firestoreSettings.localCache = persistentLocalCache({
       tabManager,

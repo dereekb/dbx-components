@@ -94,7 +94,7 @@ export const updateOidcClientParamsType = targetModelParamsType.merge(updateOidc
 
 export type RotateOidcClientSecretParams = TargetModelParams;
 
-export const rotateOidcClientSecretParamsType = targetModelParamsType;
+export { targetModelParamsType as rotateOidcClientSecretParamsType } from '../../common/model/model/model.param';
 
 export type RotateOidcClientSecretResult = Pick<CreateOidcClientResult, 'client_id' | 'client_secret'>;
 
@@ -104,7 +104,7 @@ export type RotateOidcClientSecretResult = Pick<CreateOidcClientResult, 'client_
  */
 export type DeleteOidcClientParams = TargetModelParams;
 
-export const deleteOidcClientParamsType = targetModelParamsType;
+export { targetModelParamsType as deleteOidcClientParamsType } from '../../common/model/model/model.param';
 
 /**
  * Parameters for revoking a user's own OIDC token entry.
@@ -117,7 +117,7 @@ export const deleteOidcClientParamsType = targetModelParamsType;
  */
 export type DeleteOidcTokenParams = TargetModelParams;
 
-export const deleteOidcTokenParamsType = targetModelParamsType;
+export { targetModelParamsType as deleteOidcTokenParamsType } from '../../common/model/model/model.param';
 
 // MARK: Functions
 /**

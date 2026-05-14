@@ -110,12 +110,7 @@ export const utilPreferNoSideEffectsInJsdocRule: UtilPreferNoSideEffectsInJsdocR
 
           // Insert into JSDoc only if needed (preserve idempotency and skip when only orphans need removal).
           if (needsJsdocTag) {
-            if (!jsdocText.includes('\n')) {
-              // Single-line JSDoc — expand to multi-line so the new tag has its own line.
-              const bodyTrimmed = jsdocText.replace(/^\*\s*/, '').replace(/\s*$/, '');
-              const newBody = `/**\n${jsdocIndent} * ${bodyTrimmed}\n${jsdocIndent} * ${NO_SIDE_EFFECTS_TAG}\n${jsdocIndent} */`;
-              fixes.push(fixer.replaceTextRange([jsdocStart, jsdocEnd], newBody));
-            } else {
+            if (jsdocText.includes('\n')) {
               // Multi-line JSDoc — insert a new tag line immediately before the closing `*/` line.
               const closingMarkerStart = jsdocEnd - 2;
               let closingLineStart = closingMarkerStart;
@@ -124,6 +119,11 @@ export const utilPreferNoSideEffectsInJsdocRule: UtilPreferNoSideEffectsInJsdocR
               }
               const insertion = `${jsdocIndent} * ${NO_SIDE_EFFECTS_TAG}\n`;
               fixes.push(fixer.insertTextBeforeRange([closingLineStart, closingLineStart], insertion));
+            } else {
+              // Single-line JSDoc — expand to multi-line so the new tag has its own line.
+              const bodyTrimmed = jsdocText.replace(/^\*\s*/, '').replace(/\s*$/, '');
+              const newBody = `/**\n${jsdocIndent} * ${bodyTrimmed}\n${jsdocIndent} * ${NO_SIDE_EFFECTS_TAG}\n${jsdocIndent} */`;
+              fixes.push(fixer.replaceTextRange([jsdocStart, jsdocEnd], newBody));
             }
           }
 

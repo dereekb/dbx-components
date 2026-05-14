@@ -236,9 +236,9 @@ export async function mergeCliConfig(updates: Partial<ZohoCliConfig>): Promise<Z
   const existing = await loadCliConfig();
   const merged: ZohoCliConfig = {
     shared: { ...existing?.shared, ...updates.shared } as ZohoCliConfig['shared'],
-    recruit: updates.recruit !== undefined ? { ...existing?.recruit, ...updates.recruit } : existing?.recruit,
-    crm: updates.crm !== undefined ? { ...existing?.crm, ...updates.crm } : existing?.crm,
-    desk: updates.desk !== undefined ? { ...existing?.desk, ...updates.desk } : existing?.desk,
+    recruit: updates.recruit === undefined ? existing?.recruit : { ...existing?.recruit, ...updates.recruit },
+    crm: updates.crm === undefined ? existing?.crm : { ...existing?.crm, ...updates.crm },
+    desk: updates.desk === undefined ? existing?.desk : { ...existing?.desk, ...updates.desk },
     output: updates.output === undefined ? existing?.output : dbxMergeOutputConfig(existing?.output, updates.output)
   };
 

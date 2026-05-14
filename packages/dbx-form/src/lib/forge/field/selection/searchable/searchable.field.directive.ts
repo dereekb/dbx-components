@@ -76,13 +76,13 @@ export abstract class AbstractForgeSearchableFieldDirective<T = unknown, M = unk
       const searchFn = p?.search;
       let result: Observable<LoadingState<ConfiguredSearchableValueFieldDisplayValue<T, M>[]>>;
 
-      if (!searchFn) {
-        result = of(successResult([] as ConfiguredSearchableValueFieldDisplayValue<T, M>[]));
-      } else {
+      if (searchFn) {
         result = (text || searchOnEmptyText ? searchFn(text ?? '') : of([])).pipe(
           switchMap((x) => this._loadDisplayValuesForFieldValues(x)),
           startWithBeginLoading()
         );
+      } else {
+        result = of(successResult([] as ConfiguredSearchableValueFieldDisplayValue<T, M>[]));
       }
 
       return result;
@@ -166,10 +166,10 @@ export abstract class AbstractForgeSearchableFieldDirective<T = unknown, M = unk
             first(),
             map((displayResults) => {
               (displayResults as Configurable<SearchableValueFieldDisplayValue<T, M>>[]).forEach((x) => {
-                if (!x.display) {
-                  x.display = defaultDisplay;
-                } else {
+                if (x.display) {
                   x.display = mergeDbxInjectionComponentConfigs([defaultDisplay, x.display]);
+                } else {
+                  x.display = defaultDisplay;
                 }
 
                 if (!x.anchor && anchorForValue) {

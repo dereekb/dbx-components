@@ -101,7 +101,7 @@ export function parseRequestedSessionTtlSeconds(raw: unknown): number | undefine
  */
 export function readRequestedSessionTtlSeconds(ctx: KoaContextWithOIDC | undefined): number | undefined {
   const params = ctx?.oidc?.params;
-  const raw = params != null ? (params as Record<string, unknown>)[DBX_FIREBASE_SERVER_OIDC_SESSION_TTL_PARAM] : undefined;
+  const raw = params == null ? undefined : (params as Record<string, unknown>)[DBX_FIREBASE_SERVER_OIDC_SESSION_TTL_PARAM];
   return parseRequestedSessionTtlSeconds(raw);
 }
 

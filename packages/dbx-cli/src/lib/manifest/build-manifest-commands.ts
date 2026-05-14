@@ -543,8 +543,7 @@ function buildParamsSection(entry: CliApiManifestEntry): string | undefined {
   }
 
   if (entry.paramsFields && entry.paramsFields.length > 0) {
-    lines.push('');
-    lines.push('Fields:');
+    lines.push('', 'Fields:');
     for (const field of entry.paramsFields) {
       const header = `  - ${field.name}: ${field.typeText}`;
       lines.push(header);
@@ -571,8 +570,7 @@ function buildResultSection(entry: CliApiManifestEntry): string | undefined {
   }
 
   if (entry.resultFields && entry.resultFields.length > 0) {
-    lines.push('');
-    lines.push('Fields:');
+    lines.push('', 'Fields:');
     for (const field of entry.resultFields) {
       const header = `  - ${field.name}: ${field.typeText}`;
       lines.push(header);

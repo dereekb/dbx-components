@@ -231,10 +231,8 @@ export function filterPresets(input: FilterPresetsInput): DateTimePreset[] {
     result = [];
   } else if (isTimeOnly) {
     result = presets;
-  } else if (!selectedDate) {
-    result = [];
-  } else {
-    const isAllowedDate = config ? (x: Date | null) => (x != null ? dateTimeMinuteDecisionFunction(config)(x) : true) : () => true;
+  } else if (selectedDate) {
+    const isAllowedDate = config ? (x: Date | null) => (x == null ? true : dateTimeMinuteDecisionFunction(config)(x)) : () => true;
 
     result = presets.filter((preset) => {
       const value = preset.value();
@@ -251,6 +249,8 @@ export function filterPresets(input: FilterPresetsInput): DateTimePreset[] {
 
       return presetDate ? isAllowedDate(presetDate) : false;
     });
+  } else {
+    result = [];
   }
 
   return result;

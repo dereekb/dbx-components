@@ -127,6 +127,6 @@ export class DbxFirebaseOidcEntryGrantListViewItemComponent extends AbstractDbxV
   }
 
   private _payload(): Partial<OidcEntryGrantPayloadData> {
-    return (this.itemValue.payload as Partial<OidcEntryGrantPayloadData>) ?? {};
+    return this.itemValue.payload ?? {};
   }
 }

@@ -151,5 +151,5 @@ export function dbxForgeTextIsAvailableField(config: DbxForgeTextAvailableFieldC
       ],
       formValidationMessages: { [validatorName]: isNotAvailableErrorMessage }
     });
-  }) as DbxForgeField<MatInputField>;
+  });
 }

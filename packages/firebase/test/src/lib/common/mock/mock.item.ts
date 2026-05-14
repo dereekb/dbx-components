@@ -813,7 +813,7 @@ export class MockItemPagedDocument extends AbstractFirestoreDocumentWithParent<M
  */
 export const mockItemPagedEntryConverter: PagedItemConverter<MockItemPagedEntry> = {
   fromData: (data) => data as MockItemPagedEntry,
-  toData: (item) => item as unknown as object
+  toData: (item) => item
 };
 
 /**

@@ -293,7 +293,7 @@ export class DbxForgeSourceSelectFieldComponent<T extends PrimativeKey = Primati
     const fieldState = typeof fieldGetter === 'function' ? (fieldGetter as any)() : undefined;
     const fieldValue = fieldState?.value?.() as Maybe<T | T[]>;
     // ng-forge can seed the field with the empty-string primitive default; treat nullish/empty as unset.
-    const values = filterEmptyArrayValues(fieldValue != null ? convertMaybeToArray(fieldValue) : []);
+    const values = filterEmptyArrayValues(fieldValue == null ? [] : convertMaybeToArray(fieldValue));
     this._valuesSubject.next(values);
   });
 

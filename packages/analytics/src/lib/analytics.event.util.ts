@@ -67,7 +67,7 @@ export function asAnalyticsEventData(input: Maybe<Record<string, unknown>>, conf
 
       if (type === 'string' || type === 'boolean') {
         result[key] = value as string | boolean;
-      } else if (type === 'number' && Number.isFinite(value as number)) {
+      } else if (type === 'number' && Number.isFinite(value)) {
         result[key] = value as number;
       }
     }
