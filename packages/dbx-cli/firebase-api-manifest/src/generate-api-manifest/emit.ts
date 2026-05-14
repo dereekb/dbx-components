@@ -151,6 +151,7 @@ function renderModelFields(fields: readonly CliModelField[], emitConverters: boo
 }
 
 function renderModelField(field: CliModelField, emitConverters: boolean): string {
+  const nestedIsArrayLiteral = field.nestedIsArray ? 'true' : 'false';
   const parts: (string | undefined)[] = [
     `name: ${JSON.stringify(field.name)}`,
     `longName: ${JSON.stringify(field.longName)}`,
@@ -161,7 +162,7 @@ function renderModelField(field: CliModelField, emitConverters: boolean): string
     field.enumRef ? `enumRef: ${JSON.stringify(field.enumRef)}` : undefined,
     field.syncFlag ? `syncFlag: ${JSON.stringify(field.syncFlag)}` : undefined,
     field.nestedFields ? `nestedFields: ${renderModelFields(field.nestedFields, emitConverters)}` : undefined,
-    field.nestedFields ? `nestedIsArray: ${field.nestedIsArray ? 'true' : 'false'}` : undefined
+    field.nestedFields ? `nestedIsArray: ${nestedIsArrayLiteral}` : undefined
   ];
   return `{ ${parts.filter((v): v is string => Boolean(v)).join(', ')} }`;
 }

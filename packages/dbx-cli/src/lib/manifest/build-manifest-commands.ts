@@ -374,7 +374,8 @@ function buildPerModelGetCommand(model: string, manifest: CliModelManifest | und
   const isRootModel = entry != null && !entry.parentIdentityConst;
   const positionalName = isRootModel ? 'idOrKey' : 'key';
   const placeholder = isRootModel ? '<id-or-key>' : '<key>';
-  const positionalDescribe = isRootModel ? `Firestore key for the ${model} document — bare doc id (resolved to \`${entry.collectionPrefix}/<id>\`) or full \`prefix/id\`.` : `Firestore key for the ${model} document (full \`prefix/id\` — bare doc id is not supported${entry ? ' for this subcollection model' : ''}).`;
+  const subcollectionNote = entry ? ' for this subcollection model' : '';
+  const positionalDescribe = isRootModel ? `Firestore key for the ${model} document — bare doc id (resolved to \`${entry.collectionPrefix}/<id>\`) or full \`prefix/id\`.` : `Firestore key for the ${model} document (full \`prefix/id\` — bare doc id is not supported${subcollectionNote}).`;
   const commandDescribe = isRootModel ? `Read a single ${model} document by id or key.` : `Read a single ${model} document by key.`;
 
   return {

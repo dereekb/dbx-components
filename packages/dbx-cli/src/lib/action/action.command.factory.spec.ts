@@ -9,13 +9,23 @@ function buildStubContext(overrides?: Partial<CliContext>): CliContext {
   return {
     cliName: 'demo-cli',
     envName: 'dev',
-    env: { apiBaseUrl: 'http://localhost', oidcIssuer: 'http://localhost', clientId: 'cid' } as CliContext['env'],
+    env: { apiBaseUrl: 'http://localhost', oidcIssuer: 'http://localhost', clientId: 'cid' },
     accessToken: 'access-token',
-    callModel: vi.fn(async () => ({ ok: true })) as unknown as CliContext['callModel'],
-    getModel: vi.fn(async () => ({ result: null })) as unknown as CliContext['getModel'],
-    getMultipleModels: vi.fn(async () => ({ results: [] })) as unknown as CliContext['getMultipleModels'],
+    callModel: vi.fn(async () => ({ ok: true })) as CliContext['callModel'],
+    getModel: vi.fn(async () => ({ result: null })) as CliContext['getModel'],
+    getMultipleModels: vi.fn(async () => ({ results: [] })) as CliContext['getMultipleModels'],
     ...overrides
   };
+}
+
+async function runAction<TArgv, TResult>(spec: ActionCommandSpec<TArgv, TResult>, argv: readonly string[]): Promise<void> {
+  await yargs([...argv])
+    .command(createActionCommand(spec))
+    .exitProcess(false)
+    .fail((msg: string, err: Error | undefined) => {
+      throw err ?? new Error(msg);
+    })
+    .parseAsync();
 }
 
 describe('createActionCommand()', () => {
@@ -33,9 +43,9 @@ describe('createActionCommand()', () => {
     consoleSpy = vi.spyOn(console, 'log').mockImplementation((arg: any) => {
       stdout.push(String(arg));
     });
-    exitSpy = vi.spyOn(process, 'exit').mockImplementation(((code?: number) => {
+    exitSpy = vi.spyOn(process, 'exit').mockImplementation((code?: string | number | null): never => {
       throw new Error(`process.exit:${code ?? 0}`);
-    }) as never);
+    });
   });
 
   afterEach(() => {
@@ -44,16 +54,6 @@ describe('createActionCommand()', () => {
     exitSpy.mockRestore();
     setCliContext(undefined);
   });
-
-  async function runAction<TArgv, TResult>(spec: ActionCommandSpec<TArgv, TResult>, argv: readonly string[]): Promise<void> {
-    await yargs(argv as string[])
-      .command(createActionCommand(spec))
-      .exitProcess(false)
-      .fail((msg: string, err: Error | undefined) => {
-        throw err ?? new Error(msg);
-      })
-      .parseAsync();
-  }
 
   it('invokes the handler with the live CliContext and parsed argv', async () => {
     const context = buildStubContext();

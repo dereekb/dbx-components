@@ -84,30 +84,30 @@ export async function runCliCommand(input: CreateCliInput, args: readonly string
   const stdoutChunks: string[] = [];
   const stderrChunks: string[] = [];
 
-  const writeSpy = vi.spyOn(process.stdout, 'write').mockImplementation(((chunk: unknown) => {
+  const writeSpy = vi.spyOn(process.stdout, 'write').mockImplementation((chunk: unknown) => {
     stdoutChunks.push(toChunkString(chunk));
     return true;
-  }) as never);
-  const errSpy = vi.spyOn(process.stderr, 'write').mockImplementation(((chunk: unknown) => {
+  });
+  const errSpy = vi.spyOn(process.stderr, 'write').mockImplementation((chunk: unknown) => {
     stderrChunks.push(toChunkString(chunk));
     return true;
-  }) as never);
-  const logSpy = vi.spyOn(console, 'log').mockImplementation(((...parts: unknown[]) => {
+  });
+  const logSpy = vi.spyOn(console, 'log').mockImplementation((...parts: unknown[]) => {
     stdoutChunks.push(parts.map((p) => stringifyConsolePart(p)).join(' ') + '\n');
-  }) as never);
-  const errLogSpy = vi.spyOn(console, 'error').mockImplementation(((...parts: unknown[]) => {
+  });
+  const errLogSpy = vi.spyOn(console, 'error').mockImplementation((...parts: unknown[]) => {
     stderrChunks.push(parts.map((p) => stringifyConsolePart(p)).join(' ') + '\n');
-  }) as never);
+  });
 
   // Intercept process.exit so production handlers that exit (e.g. wrapCommandHandler on CliError)
   // do not actually kill the vitest worker. Throw a sentinel to abort the handler chain — the
   // catch below maps it back into a structured exitCode.
   let capturedExitCode: number | undefined;
   const exitSentinel = new Error('__cli_test_process_exit__');
-  const exitSpy = vi.spyOn(process, 'exit').mockImplementation(((code?: number) => {
-    capturedExitCode = code ?? 0;
+  const exitSpy = vi.spyOn(process, 'exit').mockImplementation((code?: string | number | null): never => {
+    capturedExitCode = typeof code === 'number' ? code : 0;
     throw exitSentinel;
-  }) as never);
+  });
 
   let capturedArgv: unknown;
   let capturedError: Error | undefined;

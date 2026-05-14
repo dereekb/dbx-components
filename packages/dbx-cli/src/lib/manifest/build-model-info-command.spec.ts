@@ -28,6 +28,17 @@ const MANIFEST: CliModelManifest = [
   }
 ];
 
+function runWith(argv: readonly string[]): void {
+  const cmd = buildModelInfoCommand(MANIFEST);
+  yargs([...argv])
+    .command(cmd)
+    .demandCommand(1)
+    .strict()
+    .fail(false)
+    .exitProcess(false)
+    .parseSync();
+}
+
 describe('buildModelInfoCommand()', () => {
   let stdout: string[] = [];
   let stdoutSpy: ReturnType<typeof vi.spyOn>;
@@ -43,9 +54,9 @@ describe('buildModelInfoCommand()', () => {
     consoleSpy = vi.spyOn(console, 'log').mockImplementation((arg: any) => {
       stdout.push(String(arg));
     });
-    exitSpy = vi.spyOn(process, 'exit').mockImplementation(((code?: number) => {
+    exitSpy = vi.spyOn(process, 'exit').mockImplementation((code?: string | number | null): never => {
       throw new Error(`process.exit:${code ?? 0}`);
-    }) as never);
+    });
   });
 
   afterEach(() => {
@@ -53,17 +64,6 @@ describe('buildModelInfoCommand()', () => {
     consoleSpy.mockRestore();
     exitSpy.mockRestore();
   });
-
-  function runWith(argv: readonly string[]): void {
-    const cmd = buildModelInfoCommand(MANIFEST);
-    yargs(argv as string[])
-      .command(cmd)
-      .demandCommand(1)
-      .strict()
-      .fail(false)
-      .exitProcess(false)
-      .parseSync();
-  }
 
   it('lists every model in the manifest when no positional is provided', () => {
     runWith(['model-info']);

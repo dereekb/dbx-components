@@ -207,7 +207,7 @@ function _defaultBuildRequestData<TParams>(params: TParams, state: IterateDbxCli
   return base as TParams;
 }
 
-interface _PageProcessingResult<TItem, TItemResult, TPageResult> {
+interface PageProcessingResult<TItem, TItemResult, TPageResult> {
   readonly items: ReadonlyArray<TItem>;
   readonly itemResults?: ReadonlyArray<TItemResult>;
   readonly pageResult?: TPageResult;
@@ -244,7 +244,7 @@ async function _processPage<TItem, TRaw, TItemResult, TPageResult>(input: {
   readonly iteratePage: Maybe<IterateDbxCliCallModelPageFn<TItem, TRaw, TItemResult, TPageResult>>;
   readonly itemPerformTasksConfig: Maybe<Partial<PerformAsyncTasksConfig<TItem>>>;
   readonly maxParallelPerPage: Maybe<number>;
-}): Promise<_PageProcessingResult<TItem, TItemResult, TPageResult>> {
+}): Promise<PageProcessingResult<TItem, TItemResult, TPageResult>> {
   const { context, raw, pageIndex, responseAdapter, iterateItem, iteratePage, itemPerformTasksConfig, maxParallelPerPage } = input;
 
   const items = responseAdapter.items(raw);
@@ -255,7 +255,7 @@ async function _processPage<TItem, TRaw, TItemResult, TPageResult>(input: {
   const itemResults = iterateItem ? await _runItemTasks({ context, items, keys, pageIndex, iterateItem, itemPerformTasksConfig, maxParallelPerPage }) : undefined;
   const pageResult = iteratePage ? await iteratePage({ context, page: raw, items, keys, pageIndex, pageItemResults: itemResults }) : undefined;
 
-  const output: _PageProcessingResult<TItem, TItemResult, TPageResult> = {
+  const output: PageProcessingResult<TItem, TItemResult, TPageResult> = {
     items,
     itemResults,
     pageResult,
@@ -264,6 +264,29 @@ async function _processPage<TItem, TRaw, TItemResult, TPageResult>(input: {
   };
 
   return output;
+}
+
+function _computeEffectiveLimit(totalItemsLimit: Maybe<number>, limitPerPage: Maybe<number>, totalItems: number): Maybe<number> {
+  const remainingBudget = totalItemsLimit == null ? undefined : totalItemsLimit - totalItems;
+
+  if (limitPerPage != null && remainingBudget != null) {
+    return Math.min(limitPerPage, remainingBudget);
+  }
+
+  return limitPerPage ?? remainingBudget;
+}
+
+function _evaluateLoopExit(input: { readonly totalItemsLimit: Maybe<number>; readonly maxPages: Maybe<number>; readonly totalItems: number; readonly pageIndex: number; readonly hasMore: boolean; readonly cursorDocumentKey: Maybe<string> }): { readonly stop: boolean; readonly hitLimit: boolean } {
+  const { totalItemsLimit, maxPages, totalItems, pageIndex, hasMore, cursorDocumentKey } = input;
+  const reachedItemsLimit = totalItemsLimit != null && totalItems >= totalItemsLimit;
+  const reachedPagesLimit = maxPages != null && pageIndex >= maxPages;
+
+  if (reachedItemsLimit || reachedPagesLimit) {
+    return { stop: true, hitLimit: true };
+  }
+
+  const exhausted = hasMore === false || cursorDocumentKey == null;
+  return { stop: exhausted, hitLimit: false };
 }
 
 /**
@@ -315,14 +338,16 @@ export async function iterateDbxCliCallModel<TParams, TItem, TRaw = OnCallQueryM
   let hitLimit = false;
   let keepGoing = true;
 
-  while (keepGoing) {
-    const remainingBudget = totalItemsLimit != null ? totalItemsLimit - totalItems : undefined;
-    const effectiveLimit = limitPerPage != null && remainingBudget != null ? Math.min(limitPerPage, remainingBudget) : (limitPerPage ?? remainingBudget);
+  const collectItemsForPage = collectItems;
+  const collectItemResultsForPage = iterateItem != null && collectItemResults;
+  const collectPageResultsForPage = iteratePage != null && collectPageResults;
 
+  while (keepGoing) {
+    const effectiveLimit = _computeEffectiveLimit(totalItemsLimit, limitPerPage, totalItems);
     const data = buildRequestData(params, { pageIndex, cursorDocumentKey, visitedItems: totalItems }, effectiveLimit);
     const raw = await context.callModel<TParams, TRaw>({ modelType, call, specifier, data });
 
-    const pageOutcome = await _processPage<TItem, TRaw, TItemResult, TPageResult>({
+    const pageOutcome: PageProcessingResult<TItem, TItemResult, TPageResult> = await _processPage({
       context,
       raw,
       pageIndex,
@@ -333,15 +358,15 @@ export async function iterateDbxCliCallModel<TParams, TItem, TRaw = OnCallQueryM
       maxParallelPerPage
     });
 
-    if (collectItems) {
+    if (collectItemsForPage) {
       allItems.push(...pageOutcome.items);
     }
 
-    if (iterateItem && collectItemResults && pageOutcome.itemResults) {
+    if (collectItemResultsForPage && pageOutcome.itemResults) {
       allItemResults.push(...pageOutcome.itemResults);
     }
 
-    if (iteratePage && collectPageResults && pageOutcome.pageResult !== undefined) {
+    if (collectPageResultsForPage && pageOutcome.pageResult !== undefined) {
       allPageResults.push(pageOutcome.pageResult);
     }
 
@@ -349,16 +374,9 @@ export async function iterateDbxCliCallModel<TParams, TItem, TRaw = OnCallQueryM
     cursorDocumentKey = pageOutcome.nextCursorDocumentKey;
     pageIndex += 1;
 
-    const exhausted = !pageOutcome.hasMore || cursorDocumentKey == null;
-    const reachedItemsLimit = totalItemsLimit != null && totalItems >= totalItemsLimit;
-    const reachedPagesLimit = maxPages != null && pageIndex >= maxPages;
-
-    if (reachedItemsLimit || reachedPagesLimit) {
-      hitLimit = true;
-      keepGoing = false;
-    } else if (exhausted) {
-      keepGoing = false;
-    }
+    const exit = _evaluateLoopExit({ totalItemsLimit, maxPages, totalItems, pageIndex, hasMore: pageOutcome.hasMore, cursorDocumentKey });
+    hitLimit = exit.hitLimit;
+    keepGoing = !exit.stop;
   }
 
   const result: IterateDbxCliCallModelResult<TItem, TItemResult, TPageResult> = {
@@ -366,9 +384,9 @@ export async function iterateDbxCliCallModel<TParams, TItem, TRaw = OnCallQueryM
     totalItems,
     hitLimit,
     lastCursorDocumentKey: cursorDocumentKey,
-    ...(collectItems ? { items: allItems } : {}),
-    ...(iterateItem && collectItemResults ? { itemResults: allItemResults } : {}),
-    ...(iteratePage && collectPageResults ? { pageResults: allPageResults } : {})
+    ...(collectItemsForPage ? { items: allItems } : {}),
+    ...(collectItemResultsForPage ? { itemResults: allItemResults } : {}),
+    ...(collectPageResultsForPage ? { pageResults: allPageResults } : {})
   };
 
   return result;

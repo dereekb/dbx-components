@@ -70,22 +70,34 @@ function buildGlobalRegistries(extractions: AssembleModelsInput['extractions']):
   const groupByModelName = new Map<string, string>();
 
   for (const { extraction } of extractions) {
-    for (const converter of extraction.converters) {
-      if (converter.converterConst && !converterRegistry.has(converter.converterConst)) {
-        converterRegistry.set(converter.converterConst, converter);
-      }
-    }
-    for (const iface of extraction.interfaces) {
-      if (!interfaceRegistry.has(iface.name)) interfaceRegistry.set(iface.name, iface);
-    }
-    for (const group of extraction.modelGroups) {
-      for (const modelName of group.modelNames) {
-        if (!groupByModelName.has(modelName)) groupByModelName.set(modelName, group.name);
-      }
-    }
+    registerConverters(extraction.converters, converterRegistry);
+    registerInterfaces(extraction.interfaces, interfaceRegistry);
+    registerModelGroups(extraction.modelGroups, groupByModelName);
   }
 
   return { converterRegistry, interfaceRegistry, groupByModelName };
+}
+
+function registerConverters(converters: ModelExtraction['converters'], registry: Map<string, ModelExtractionConverter>): void {
+  for (const converter of converters) {
+    if (converter.converterConst && !registry.has(converter.converterConst)) {
+      registry.set(converter.converterConst, converter);
+    }
+  }
+}
+
+function registerInterfaces(interfaces: ModelExtraction['interfaces'], registry: Map<string, ModelExtractionInterface>): void {
+  for (const iface of interfaces) {
+    if (!registry.has(iface.name)) registry.set(iface.name, iface);
+  }
+}
+
+function registerModelGroups(modelGroups: ModelExtraction['modelGroups'], registry: Map<string, string>): void {
+  for (const group of modelGroups) {
+    for (const modelName of group.modelNames) {
+      if (!registry.has(modelName)) registry.set(modelName, group.name);
+    }
+  }
 }
 
 function appendEntriesFromSource(source: AssembleModelsInput['extractions'][number], registries: GlobalRegistries, accumulator: AssemblyAccumulator): void {

@@ -165,6 +165,6 @@ function inferModelTypeFromKeys(keys: ReadonlyArray<string>, manifest: CliModelM
 }
 
 function manifestPrefixList(manifest: CliModelManifest): string {
-  const prefixes = manifest.map((e) => e.collectionPrefix).sort();
+  const prefixes = manifest.map((e) => e.collectionPrefix).sort((a, b) => a.localeCompare(b));
   return prefixes.join(', ');
 }

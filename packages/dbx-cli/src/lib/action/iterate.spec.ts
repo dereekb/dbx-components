@@ -31,7 +31,7 @@ function buildPages(pageCount: number, itemsPerPage: number): OnCallQueryModelRe
       results,
       keys,
       count: results.length,
-      cursorDocumentKey: isLast ? undefined : keys[keys.length - 1],
+      cursorDocumentKey: isLast ? undefined : keys.at(-1),
       hasMore: !isLast
     });
   }
@@ -57,11 +57,11 @@ function buildStubContext(callModel: ReturnType<typeof buildCallModelMock>['call
   return {
     cliName: 'demo-cli',
     envName: 'dev',
-    env: { apiBaseUrl: 'http://localhost', oidcIssuer: 'http://localhost', clientId: 'cid' } as CliContext['env'],
+    env: { apiBaseUrl: 'http://localhost', oidcIssuer: 'http://localhost', clientId: 'cid' },
     accessToken: 'access-token',
-    callModel: callModel as unknown as CliContext['callModel'],
-    getModel: vi.fn(async () => ({ result: null })) as unknown as CliContext['getModel'],
-    getMultipleModels: vi.fn(async () => ({ results: [] })) as unknown as CliContext['getMultipleModels']
+    callModel: callModel as CliContext['callModel'],
+    getModel: vi.fn(async () => ({ result: null })) as CliContext['getModel'],
+    getMultipleModels: vi.fn(async () => ({ results: [] })) as CliContext['getMultipleModels']
   };
 }
 
