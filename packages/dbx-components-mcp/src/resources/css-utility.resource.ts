@@ -103,7 +103,7 @@ export function registerCssUtilityResource(server: McpServer, options: RegisterC
     new ResourceTemplate(CSS_UTILITY_BY_ROLE_TEMPLATE, { list: undefined }),
     {
       title: 'CSS Utilities by Role',
-      description: 'Utilities filtered by role (layout, flex, text, spacing, state, interaction, misc).',
+      description: 'Utilities filtered by role (layout, flex, text, spacing, state, interaction, color, text-color, surface, size, radius, misc).',
       mimeType: 'application/json'
     },
     async (uri, variables) => {

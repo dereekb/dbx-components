@@ -37,7 +37,7 @@ const DBX_CSS_CLASS_LOOKUP_TOOL: Tool = {
     '  • `name` — exact selector or slug (`.dbx-flex-fill-0`, `dbx-flex-fill-0`);',
     '  • `declarations` — raw CSS to reverse-search ("display: flex; align-items: center; gap: 8px");',
     '  • `intent` — plain-English intent ("horizontal flex bar", "vertical stack with gap");',
-    '  • `role` — `layout` / `flex` / `text` / `spacing` / `state` / `interaction` / `misc`;',
+    '  • `role` — `layout` / `flex` / `text` / `spacing` / `state` / `interaction` / `color` / `text-color` / `surface` / `size` / `radius` / `misc`;',
     '  • `category` — `"list"` for the full catalog, or a source slug (`@dereekb/dbx-web`, `<app>`);',
     '  • `parent` — list / scope-search to children of a parent slug (e.g. `dbx-list-two-line-item`);',
     '  • `includeChildren` — set `true` to surface child utilities in browse / declarations / intent results (children are hidden by default).',
