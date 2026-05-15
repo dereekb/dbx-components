@@ -95,25 +95,42 @@ export function joinStrings(input: Maybe<ArrayOrValue<Maybe<string>>>, joiner: s
  * @returns array of string segments, with length at most equal to limit
  */
 export function splitJoinRemainder(input: string, separator: string, limit: number): string[] {
-  const split = input.split(separator);
-  const components: string[] = [];
+  let result: string[];
 
-  if (split.length > 1) {
-    const hasItemsToMerge = split.length > limit;
-    const stopIndex = hasItemsToMerge ? limit - 1 : split.length;
-
-    for (let i = 0; i < stopIndex; i += 1) {
-      components.push(split[i]);
+  switch (limit) {
+    case 1:
+      result = [input];
+      break;
+    case 2: {
+      const splitIndex = input.indexOf(separator);
+      result = splitIndex < 0 ? [input] : [input.slice(0, splitIndex), input.slice(splitIndex + separator.length)];
+      break;
     }
+    default: {
+      const split = input.split(separator);
+      const components: string[] = [];
 
-    if (hasItemsToMerge) {
-      components.push(split.slice(stopIndex).join(separator));
+      if (split.length > 1) {
+        const hasItemsToMerge = split.length > limit;
+        const stopIndex = hasItemsToMerge ? limit - 1 : split.length;
+
+        for (let i = 0; i < stopIndex; i += 1) {
+          components.push(split[i]);
+        }
+
+        if (hasItemsToMerge) {
+          components.push(split.slice(stopIndex).join(separator));
+        }
+      } else {
+        components.push(split[0]);
+      }
+
+      result = components;
+      break;
     }
-  } else {
-    components.push(split[0]);
   }
 
-  return components;
+  return result;
 }
 
 // MARK: JoinStringsInstance
