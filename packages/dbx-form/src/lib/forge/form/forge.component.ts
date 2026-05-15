@@ -106,19 +106,17 @@ export class DbxForgeFormComponent<T extends object = object> implements DbxForg
     untracked(() => {
       this._context.updateValue(value);
 
-      if (!this._formReady()) {
-        if (this._changesCount() === 0) {
-          this._changesCount.set(1);
-          this._isReset.set(true);
-          this._emitFormState();
-        }
-      } else {
+      if (this._formReady()) {
         const changesCount = this._changesCount() + 1;
         this._changesCount.set(changesCount);
 
         const isReset = changesCount <= 1;
         this._isReset.set(isReset);
 
+        this._emitFormState();
+      } else if (this._changesCount() === 0) {
+        this._changesCount.set(1);
+        this._isReset.set(true);
         this._emitFormState();
       }
     });
@@ -181,10 +179,18 @@ export class DbxForgeFormComponent<T extends object = object> implements DbxForg
     const changesCount = this._changesCount();
 
     const suppressComplete = this.isDisabled() && !this._context.emitValueWhenDisabled;
+    let status: DbxFormEvent['status'];
+    if (this.isDisabled()) {
+      status = 'DISABLED';
+    } else if (isValid) {
+      status = 'VALID';
+    } else {
+      status = 'INVALID';
+    }
 
     const state: DbxFormEvent = {
       isComplete: suppressComplete ? false : isValid,
-      status: this.isDisabled() ? 'DISABLED' : isValid ? 'VALID' : 'INVALID',
+      status,
       state: isReset ? DbxFormState.RESET : DbxFormState.USED,
       pristine: isReset,
       untouched: isReset,

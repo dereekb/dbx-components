@@ -53,6 +53,44 @@ const CLUSTER_TO_SOURCE = {
 
 const REQUIRED_TAGS = ['dbxRuleSeverity', 'dbxRuleApplies', 'dbxRuleNotApplies', 'dbxRuleFix'];
 
+function processCodeFile({ file, project, entries, errors }) {
+  const cluster = relative(TOOLS_ROOT, dirname(file)).split(/[\\/]/)[0];
+  const source = CLUSTER_TO_SOURCE[cluster];
+  if (!source) {
+    errors.push(`${relPath(file)}: cluster '${cluster}' is not registered in CLUSTER_TO_SOURCE — add it to the extractor.`);
+    return;
+  }
+  const sourceFile = project.addSourceFileAtPath(file);
+  const enumDecl = readSingleExportedEnum(file, sourceFile, errors);
+  if (!enumDecl) return;
+  for (const member of enumDecl.getMembers()) {
+    const result = buildEntry({ member, source, file });
+    if (result.kind === 'error') {
+      errors.push(...result.messages);
+      continue;
+    }
+    entries.push(result.entry);
+  }
+}
+
+function readSingleExportedEnum(file, sourceFile, errors) {
+  const enums = sourceFile.getEnums();
+  if (enums.length === 0) {
+    errors.push(`${relPath(file)}: expected one exported enum, found none.`);
+    return undefined;
+  }
+  if (enums.length > 1) {
+    errors.push(`${relPath(file)}: expected one exported enum, found ${enums.length}.`);
+    return undefined;
+  }
+  const enumDecl = enums[0];
+  if (!enumDecl.isExported()) {
+    errors.push(`${relPath(file)}: enum '${enumDecl.getName()}' must be exported.`);
+    return undefined;
+  }
+  return enumDecl;
+}
+
 async function main() {
   const codeFiles = findCodesFiles();
   if (codeFiles.length === 0) {
@@ -68,36 +106,7 @@ async function main() {
   const errors = [];
 
   for (const file of codeFiles) {
-    const cluster = relative(TOOLS_ROOT, dirname(file)).split(/[\\/]/)[0];
-    const source = CLUSTER_TO_SOURCE[cluster];
-    if (!source) {
-      errors.push(`${relPath(file)}: cluster '${cluster}' is not registered in CLUSTER_TO_SOURCE — add it to the extractor.`);
-      continue;
-    }
-    const sourceFile = project.addSourceFileAtPath(file);
-    const enums = sourceFile.getEnums();
-    if (enums.length === 0) {
-      errors.push(`${relPath(file)}: expected one exported enum, found none.`);
-      continue;
-    }
-    if (enums.length > 1) {
-      errors.push(`${relPath(file)}: expected one exported enum, found ${enums.length}.`);
-      continue;
-    }
-    const enumDecl = enums[0];
-    if (!enumDecl.isExported()) {
-      errors.push(`${relPath(file)}: enum '${enumDecl.getName()}' must be exported.`);
-      continue;
-    }
-
-    for (const member of enumDecl.getMembers()) {
-      const result = buildEntry({ member, source, file });
-      if (result.kind === 'error') {
-        errors.push(...result.messages);
-        continue;
-      }
-      entries.push(result.entry);
-    }
+    processCodeFile({ file, project, entries, errors });
   }
 
   if (errors.length > 0) {

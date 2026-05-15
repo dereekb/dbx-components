@@ -165,54 +165,62 @@ function checkExportedFlags(file: ExtractedFile, violations: Violation[]): void 
 
 // MARK: Type annotations on structural consts
 function checkTypeAnnotations(file: ExtractedFile, violations: Violation[]): void {
+  checkFunctionTypeConfigMapAnnotation(file, violations);
+  checkCrudConfigConstAnnotation(file, violations);
+  checkFunctionsClassAnnotation(file, violations);
+}
+
+function checkFunctionTypeConfigMapAnnotation(file: ExtractedFile, violations: Violation[]): void {
+  if (!file.functionTypeConfigMap || !file.functionTypeMap) return;
+  const expected = `FirebaseFunctionTypeConfigMap<${file.functionTypeMap.name}>`;
+  const actual = normalizeWhitespace(file.functionTypeConfigMap.typeAnnotation ?? '');
+  if (actual === normalizeWhitespace(expected)) return;
+  pushViolation(violations, {
+    code: 'TYPE_CONFIG_MAP_WRONG_GENERIC',
+    message: `\`${file.functionTypeConfigMap.name}\` must be typed \`${expected}\` (found \`${file.functionTypeConfigMap.typeAnnotation ?? '<none>'}\`).`,
+    file: file.name,
+    line: file.functionTypeConfigMap.line,
+    group: file.groupName
+  });
+}
+
+function checkCrudConfigConstAnnotation(file: ExtractedFile, violations: Violation[]): void {
   const group = file.groupName;
-  if (file.functionTypeConfigMap && file.functionTypeMap) {
-    const expected = `FirebaseFunctionTypeConfigMap<${file.functionTypeMap.name}>`;
-    const actual = normalizeWhitespace(file.functionTypeConfigMap.typeAnnotation ?? '');
-    if (actual !== normalizeWhitespace(expected)) {
-      pushViolation(violations, {
-        code: 'TYPE_CONFIG_MAP_WRONG_GENERIC',
-        message: `\`${file.functionTypeConfigMap.name}\` must be typed \`${expected}\` (found \`${file.functionTypeConfigMap.typeAnnotation ?? '<none>'}\`).`,
-        file: file.name,
-        line: file.functionTypeConfigMap.line,
-        group
-      });
-    }
+  if (!file.crudConfigConst || !file.crudConfigType || !group) return;
+  const expected = `ModelFirebaseCrudFunctionConfigMap<${file.crudConfigType.name}, ${group}Types>`;
+  const actual = normalizeWhitespace(file.crudConfigConst.typeAnnotation ?? '');
+  if (actual === normalizeWhitespace(expected)) return;
+  pushViolation(violations, {
+    code: 'CRUD_CONFIG_CONST_WRONG_GENERIC',
+    message: `\`${file.crudConfigConst.name}\` must be typed \`${expected}\` (found \`${file.crudConfigConst.typeAnnotation ?? '<none>'}\`).`,
+    file: file.name,
+    line: file.crudConfigConst.line,
+    group
+  });
+}
+
+function checkFunctionsClassAnnotation(file: ExtractedFile, violations: Violation[]): void {
+  if (!file.functionsClass || !file.functionTypeMap || !file.crudConfigType) return;
+  const group = file.groupName;
+  if (!file.functionsClass.isAbstract) {
+    pushViolation(violations, {
+      code: 'FUNCTIONS_CLASS_NOT_ABSTRACT',
+      message: `Class \`${file.functionsClass.name}\` must be declared \`abstract\`.`,
+      file: file.name,
+      line: file.functionsClass.line,
+      group
+    });
   }
-  if (file.crudConfigConst && file.crudConfigType && group) {
-    const expected = `ModelFirebaseCrudFunctionConfigMap<${file.crudConfigType.name}, ${group}Types>`;
-    const actual = normalizeWhitespace(file.crudConfigConst.typeAnnotation ?? '');
-    if (actual !== normalizeWhitespace(expected)) {
-      pushViolation(violations, {
-        code: 'CRUD_CONFIG_CONST_WRONG_GENERIC',
-        message: `\`${file.crudConfigConst.name}\` must be typed \`${expected}\` (found \`${file.crudConfigConst.typeAnnotation ?? '<none>'}\`).`,
-        file: file.name,
-        line: file.crudConfigConst.line,
-        group
-      });
-    }
-  }
-  if (file.functionsClass && file.functionTypeMap && file.crudConfigType) {
-    if (!file.functionsClass.isAbstract) {
-      pushViolation(violations, {
-        code: 'FUNCTIONS_CLASS_NOT_ABSTRACT',
-        message: `Class \`${file.functionsClass.name}\` must be declared \`abstract\`.`,
-        file: file.name,
-        line: file.functionsClass.line,
-        group
-      });
-    }
-    const expectedImpl = `ModelFirebaseFunctionMap<${file.functionTypeMap.name}, ${file.crudConfigType.name}>`;
-    const actualImpl = normalizeWhitespace(file.functionsClass.implementsText ?? '');
-    if (actualImpl !== normalizeWhitespace(expectedImpl)) {
-      pushViolation(violations, {
-        code: 'FUNCTIONS_CLASS_BAD_IMPLEMENTS',
-        message: `Class \`${file.functionsClass.name}\` must implement \`${expectedImpl}\` (found \`${file.functionsClass.implementsText ?? '<none>'}\`).`,
-        file: file.name,
-        line: file.functionsClass.line,
-        group
-      });
-    }
+  const expectedImpl = `ModelFirebaseFunctionMap<${file.functionTypeMap.name}, ${file.crudConfigType.name}>`;
+  const actualImpl = normalizeWhitespace(file.functionsClass.implementsText ?? '');
+  if (actualImpl !== normalizeWhitespace(expectedImpl)) {
+    pushViolation(violations, {
+      code: 'FUNCTIONS_CLASS_BAD_IMPLEMENTS',
+      message: `Class \`${file.functionsClass.name}\` must implement \`${expectedImpl}\` (found \`${file.functionsClass.implementsText ?? '<none>'}\`).`,
+      file: file.name,
+      line: file.functionsClass.line,
+      group
+    });
   }
 }
 

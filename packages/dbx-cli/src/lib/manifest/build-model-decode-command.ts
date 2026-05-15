@@ -147,7 +147,7 @@ export function decodeFirestoreModelKey(rawKey: string, manifest: CliModelManife
     decoded.push(toSegment(prefix, id, entry));
   }
 
-  const leaf = decoded[decoded.length - 1];
+  const leaf = decoded.at(-1) as DecodedKeySegment;
   const ancestors = decoded.slice(0, -1);
   return { key: trimmed, leaf, ancestors, unresolvedPrefixes: unresolved };
 }
@@ -179,43 +179,41 @@ function toSegment(prefix: string, id: string, entry: CliModelManifestEntry | un
  * @__NO_SIDE_EFFECTS__
  */
 export function renderDecodedKey(decoded: DecodedKey): string {
-  const lines: string[] = [];
-  const leaf = decoded.leaf;
-
-  if (leaf.modelName) {
-    lines.push(`Model: ${leaf.modelName}`);
-    if (leaf.identityConst) lines.push(`identityConst: ${leaf.identityConst}`);
-    if (leaf.modelType) lines.push(`modelType: ${leaf.modelType}`);
-    lines.push(`prefix: ${leaf.prefix}`);
-    lines.push(`id: ${leaf.id}`);
-    if (leaf.modelGroup) lines.push(`modelGroup: ${leaf.modelGroup}`);
-    if (leaf.parentIdentityConst) lines.push(`parentIdentityConst: ${leaf.parentIdentityConst}`);
-    if (leaf.sourcePackage) {
-      const sourceSuffix = leaf.sourceFile ? ` (${leaf.sourceFile})` : '';
-      lines.push(`source: ${leaf.sourcePackage}${sourceSuffix}`);
-    }
-  } else {
-    lines.push(`Model: <unknown — prefix '${leaf.prefix}' not in manifest>`);
-    lines.push(`prefix: ${leaf.prefix}`);
-    lines.push(`id: ${leaf.id}`);
-  }
+  const lines: string[] = [...renderLeafLines(decoded.leaf)];
 
   if (decoded.ancestors.length > 0) {
-    lines.push('');
-    lines.push('Parent chain:');
-    for (const ancestor of decoded.ancestors) {
-      if (ancestor.modelName) {
-        lines.push(`- ${ancestor.modelName} — prefix ${ancestor.prefix}, id ${ancestor.id}`);
-      } else {
-        lines.push(`- <unknown> — prefix ${ancestor.prefix}, id ${ancestor.id}`);
-      }
-    }
+    lines.push('', 'Parent chain:', ...decoded.ancestors.map(renderAncestorLine));
   }
 
   if (decoded.unresolvedPrefixes.length > 0) {
-    lines.push('');
-    lines.push(`Unresolved prefix${decoded.unresolvedPrefixes.length === 1 ? '' : 'es'}: ${decoded.unresolvedPrefixes.join(', ')}. Run \`model-info\` to list known models.`);
+    const suffix = decoded.unresolvedPrefixes.length === 1 ? '' : 'es';
+    lines.push('', `Unresolved prefix${suffix}: ${decoded.unresolvedPrefixes.join(', ')}. Run \`model-info\` to list known models.`);
   }
 
   return lines.join('\n') + '\n';
+}
+
+function renderLeafLines(leaf: DecodedKeySegment): string[] {
+  if (!leaf.modelName) {
+    return [`Model: <unknown — prefix '${leaf.prefix}' not in manifest>`, `prefix: ${leaf.prefix}`, `id: ${leaf.id}`];
+  }
+
+  const lines: string[] = [`Model: ${leaf.modelName}`];
+  if (leaf.identityConst) lines.push(`identityConst: ${leaf.identityConst}`);
+  if (leaf.modelType) lines.push(`modelType: ${leaf.modelType}`);
+  lines.push(`prefix: ${leaf.prefix}`, `id: ${leaf.id}`);
+  if (leaf.modelGroup) lines.push(`modelGroup: ${leaf.modelGroup}`);
+  if (leaf.parentIdentityConst) lines.push(`parentIdentityConst: ${leaf.parentIdentityConst}`);
+  if (leaf.sourcePackage) {
+    const sourceSuffix = leaf.sourceFile ? ` (${leaf.sourceFile})` : '';
+    lines.push(`source: ${leaf.sourcePackage}${sourceSuffix}`);
+  }
+  return lines;
+}
+
+function renderAncestorLine(ancestor: DecodedKeySegment): string {
+  if (ancestor.modelName) {
+    return `- ${ancestor.modelName} — prefix ${ancestor.prefix}, id ${ancestor.id}`;
+  }
+  return `- <unknown> — prefix ${ancestor.prefix}, id ${ancestor.id}`;
 }

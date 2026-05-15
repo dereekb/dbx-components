@@ -57,6 +57,50 @@ export const guestbookModelCrudFunctionsConfig = {
 export const guestbookFunctionMap = callModelFirebaseFunctionMapFactory({}, guestbookModelCrudFunctionsConfig);
 `;
 
+const QUERY_SOURCE = `import { callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
+
+/**
+ * Params for searching guestbooks.
+ */
+export interface QueryGuestbooksParams {
+  /**
+   * Optional name filter.
+   */
+  readonly name?: string;
+}
+
+/**
+ * Result returned from a guestbook query.
+ */
+export interface QueryGuestbooksResult {
+  /**
+   * Matched guestbook keys.
+   */
+  readonly keys: readonly string[];
+}
+
+export type GuestbookFunctionTypeMap = {};
+
+export type GuestbookModelCrudFunctionsConfig = {
+  guestbook: {
+    query: {
+      _: [QueryGuestbooksParams, QueryGuestbooksResult];
+      byName: [QueryGuestbooksParams, QueryGuestbooksResult];
+    };
+  };
+  guestbookEntry: {
+    query: QueryGuestbooksParams;
+  };
+};
+
+export const guestbookModelCrudFunctionsConfig = {
+  guestbook: ['query:_,byName'],
+  guestbookEntry: ['query']
+};
+
+export const guestbookFunctionMap = callModelFirebaseFunctionMapFactory({}, guestbookModelCrudFunctionsConfig);
+`;
+
 const DOCS_SOURCE = `import { callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
 
 /**
@@ -154,6 +198,29 @@ describe('extractCrudEntries', () => {
 
     const entryUpdates = extraction.entries.filter((e) => e.model === 'guestbookEntry' && e.verb === 'update');
     expect(entryUpdates.map((e) => e.specifier).sort((a, b) => (a ?? '').localeCompare(b ?? ''))).toEqual(['insert', 'like']);
+  });
+
+  it('walks query CRUD entries (nested specifiers, bare params, and JSDocs)', () => {
+    const extraction = extractCrudEntries({ name: 'guestbook.api.ts', text: QUERY_SOURCE });
+    expect(extraction.groupName).toBe('Guestbook');
+    expect(extraction.modelKeys).toEqual(['guestbook', 'guestbookEntry']);
+
+    const queryDefault = extraction.entries.find((e) => e.model === 'guestbook' && e.verb === 'query' && e.specifier === '_');
+    expect(queryDefault?.paramsTypeName).toBe('QueryGuestbooksParams');
+    expect(queryDefault?.resultTypeName).toBe('QueryGuestbooksResult');
+    expect(queryDefault?.paramsTypeDescription).toBe('Params for searching guestbooks.');
+    expect(queryDefault?.paramsFields).toEqual([{ name: 'name', typeText: 'string', description: 'Optional name filter.' }]);
+    expect(queryDefault?.resultTypeDescription).toBe('Result returned from a guestbook query.');
+    expect(queryDefault?.resultFields).toEqual([{ name: 'keys', typeText: 'readonly string[]', description: 'Matched guestbook keys.' }]);
+
+    const queryByName = extraction.entries.find((e) => e.model === 'guestbook' && e.verb === 'query' && e.specifier === 'byName');
+    expect(queryByName?.paramsTypeName).toBe('QueryGuestbooksParams');
+    expect(queryByName?.resultTypeName).toBe('QueryGuestbooksResult');
+
+    const entryQuery = extraction.entries.find((e) => e.model === 'guestbookEntry' && e.verb === 'query');
+    expect(entryQuery?.specifier).toBeUndefined();
+    expect(entryQuery?.paramsTypeName).toBe('QueryGuestbooksParams');
+    expect(entryQuery?.resultTypeName).toBeUndefined();
   });
 
   it('reads JSDoc on params and result interfaces and surfaces functionsClassName', () => {

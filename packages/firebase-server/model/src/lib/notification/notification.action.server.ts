@@ -771,10 +771,10 @@ export function updateNotificationBoxRecipientExclusionInTransactionFactory(cont
 
       const targetRecipient = notificationBox.r.find((x) => x.i === i);
 
-      if (!targetRecipient?.uid) {
-        throw notificationBoxExclusionTargetInvalidError();
-      } else {
+      if (targetRecipient?.uid) {
         targetUid = targetRecipient.uid;
+      } else {
+        throw notificationBoxExclusionTargetInvalidError();
       }
     }
 

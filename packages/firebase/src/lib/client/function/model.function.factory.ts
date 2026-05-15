@@ -7,7 +7,7 @@ import { type FirestoreModelIdentity, type FirestoreModelTypes } from '../../com
 import { type FirebaseFunctionTypeMap, type FirebaseFunctionMap, type FirebaseFunction } from './function';
 import { mapHttpsCallable } from './function.callable';
 import { type FirebaseFunctionTypeConfigMap, firebaseFunctionMapFactory } from './function.factory';
-import { type OnCallCreateModelResult, CALL_MODEL_APP_FUNCTION_KEY, onCallTypedModelParamsFunction } from '../../common/model/function';
+import { type OnCallCreateModelResult, type OnCallQueryModelRequestParams, type OnCallQueryModelResult, CALL_MODEL_APP_FUNCTION_KEY, onCallTypedModelParamsFunction } from '../../common/model/function';
 
 /**
  * String identifier that routes a CRUD request to a specific sub-handler within a model's
@@ -55,9 +55,16 @@ export type ModelFirebaseUpdateFunction<I, O = void> = ModelFirebaseCrudFunction
 export type ModelFirebaseDeleteFunction<I, O = void> = ModelFirebaseCrudFunction<I, O>;
 
 /**
+ * Query function for a model. Returns {@link OnCallQueryModelResult} (a paged, cursorable
+ * collection) by default. The input type defaults to {@link OnCallQueryModelRequestParams}
+ * (cursor + limit) but is typically extended with model-specific filter fields.
+ */
+export type ModelFirebaseQueryFunction<I extends OnCallQueryModelRequestParams = OnCallQueryModelRequestParams, O = OnCallQueryModelResult> = ModelFirebaseCrudFunction<I, O>;
+
+/**
  * Maps each model type (from a {@link FirestoreModelIdentity}) to its CRUD function type configuration.
  *
- * Each entry defines which CRUD operations (create, read, update, delete) are available for
+ * Each entry defines which CRUD operations (create, read, update, delete, query) are available for
  * that model type, along with optional specifiers for sub-operations.
  */
 export type ModelFirebaseCrudFunctionTypeMap<T extends FirestoreModelIdentity = FirestoreModelIdentity> = {
@@ -68,9 +75,9 @@ export type ModelFirebaseCrudFunctionTypeMap<T extends FirestoreModelIdentity = 
  * Entry for a single model type in a {@link ModelFirebaseCrudFunctionTypeMap}.
  *
  * Can be `null`/`undefined` (no CRUD functions for this model) or a partial record of
- * create/read/update/delete configurations, each optionally with specifiers.
+ * create/read/update/delete/query configurations, each optionally with specifiers.
  */
-export type ModelFirebaseCrudFunctionTypeMapEntry = MaybeNot | Partial<ModelFirebaseCrudFunctionCreateTypeConfig & ModelFirebaseCrudFunctionReadTypeConfig & ModelFirebaseCrudFunctionUpdateTypeConfig & ModelFirebaseCrudFunctionDeleteTypeConfig>;
+export type ModelFirebaseCrudFunctionTypeMapEntry = MaybeNot | Partial<ModelFirebaseCrudFunctionCreateTypeConfig & ModelFirebaseCrudFunctionReadTypeConfig & ModelFirebaseCrudFunctionUpdateTypeConfig & ModelFirebaseCrudFunctionDeleteTypeConfig & ModelFirebaseCrudFunctionQueryTypeConfig>;
 
 export type ModelFirebaseCrudFunctionTypeMapEntryWithReturnType<I = unknown, O = unknown> = [I, O];
 export type ModelFirebaseCrudFunctionTypeSpecifierConfig = Record<string | number, unknown | ModelFirebaseCrudFunctionTypeMapEntryWithReturnType>;
@@ -89,6 +96,10 @@ export type ModelFirebaseCrudFunctionUpdateTypeConfig = {
 
 export type ModelFirebaseCrudFunctionDeleteTypeConfig = {
   readonly delete: unknown | ModelFirebaseCrudFunctionTypeSpecifierConfig;
+};
+
+export type ModelFirebaseCrudFunctionQueryTypeConfig = {
+  readonly query: unknown;
 };
 
 /**
@@ -268,6 +279,7 @@ export function callModelFirebaseFunctionMapFactory<M extends FirebaseFunctionTy
           addCallFunctions('read', _callFn, modelType);
           addCallFunctions('update', _callFn, modelType);
           addCallFunctions('delete', _callFn, modelType);
+          addCallFunctions('query', _callFn, modelType);
 
           // tslint:disable-next-line
           (x as any)[modelType] = modelTypeCalls;

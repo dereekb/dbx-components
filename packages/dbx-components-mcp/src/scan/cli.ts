@@ -112,56 +112,77 @@ export async function runScanCli(input: RunScanCliInput): Promise<RunScanCliResu
 // MARK: argv parsing
 type ParsedArgs = { readonly kind: 'parsed'; readonly project: string | undefined; readonly check: boolean; readonly out: string | undefined; readonly help: boolean } | { readonly kind: 'parse-error'; readonly message: string };
 
-function parseArgs(argv: readonly string[]): ParsedArgs {
-  let project: string | undefined;
-  let out: string | undefined;
-  let check = false;
-  let help = false;
-  let error: string | undefined;
-  let index = 0;
+interface MutableParseState {
+  project: string | undefined;
+  out: string | undefined;
+  check: boolean;
+  help: boolean;
+  error: string | undefined;
+  index: number;
+}
 
-  while (index < argv.length && error === undefined) {
-    const token = argv[index];
-    if (token === '--help' || token === '-h') {
-      help = true;
-      index += 1;
-    } else if (token === '--check') {
-      check = true;
-      index += 1;
-    } else if (token === '--project') {
-      const value = argv[index + 1];
-      if (value === undefined || value.startsWith('--')) {
-        error = '--project requires a value';
-      } else {
-        project = value;
-        index += 2;
-      }
-    } else if (token.startsWith('--project=')) {
-      project = token.slice('--project='.length);
-      index += 1;
-    } else if (token === '--out') {
-      const value = argv[index + 1];
-      if (value === undefined || value.startsWith('--')) {
-        error = '--out requires a value';
-      } else {
-        out = value;
-        index += 2;
-      }
-    } else if (token.startsWith('--out=')) {
-      out = token.slice('--out='.length);
-      index += 1;
-    } else {
-      error = `Unknown argument: ${token}`;
-    }
+function parseArgs(argv: readonly string[]): ParsedArgs {
+  const state: MutableParseState = {
+    project: undefined,
+    out: undefined,
+    check: false,
+    help: false,
+    error: undefined,
+    index: 0
+  };
+
+  while (state.index < argv.length && state.error === undefined) {
+    consumeArgsToken(state, argv);
   }
 
   let result: ParsedArgs;
-  if (error === undefined) {
-    result = { kind: 'parsed', project, check, out, help };
+  if (state.error === undefined) {
+    result = { kind: 'parsed', project: state.project, check: state.check, out: state.out, help: state.help };
   } else {
-    result = { kind: 'parse-error', message: error };
+    result = { kind: 'parse-error', message: state.error };
   }
   return result;
+}
+
+function consumeArgsToken(state: MutableParseState, argv: readonly string[]): void {
+  const token = argv[state.index];
+  if (token === '--help' || token === '-h') {
+    state.help = true;
+    state.index += 1;
+  } else if (token === '--check') {
+    state.check = true;
+    state.index += 1;
+  } else if (token === '--project') {
+    consumeValueFlag({ state, argv, target: 'project', flagName: '--project' });
+  } else if (token.startsWith('--project=')) {
+    state.project = token.slice('--project='.length);
+    state.index += 1;
+  } else if (token === '--out') {
+    consumeValueFlag({ state, argv, target: 'out', flagName: '--out' });
+  } else if (token.startsWith('--out=')) {
+    state.out = token.slice('--out='.length);
+    state.index += 1;
+  } else {
+    state.error = `Unknown argument: ${token}`;
+  }
+}
+
+interface ConsumeValueFlagInput {
+  readonly state: MutableParseState;
+  readonly argv: readonly string[];
+  readonly target: 'project' | 'out';
+  readonly flagName: string;
+}
+
+function consumeValueFlag(input: ConsumeValueFlagInput): void {
+  const { state, argv, target, flagName } = input;
+  const value = argv[state.index + 1];
+  if (value === undefined || value.startsWith('--')) {
+    state.error = `${flagName} requires a value`;
+    return;
+  }
+  state[target] = value;
+  state.index += 2;
 }
 
 // MARK: Outcome handling

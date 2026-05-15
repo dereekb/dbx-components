@@ -1,5 +1,6 @@
-import { computed, Directive, input } from '@angular/core';
+import { computed, Directive, inject, input } from '@angular/core';
 import { type DbxColorConfig, type DbxColorInput, type DbxColorTone, dbxColorBackground, isDbxColorConfig } from './style';
+import { DbxColorService } from './style.color.service';
 import { type Maybe } from '@dereekb/util';
 
 /**
@@ -36,6 +37,8 @@ import { type Maybe } from '@dereekb/util';
   standalone: true
 })
 export class DbxColorDirective {
+  private readonly _colorService = inject(DbxColorService, { optional: true });
+
   readonly dbxColor = input<Maybe<DbxColorInput>>();
 
   /**
@@ -48,7 +51,7 @@ export class DbxColorDirective {
 
   private readonly _configSignal = computed<Maybe<DbxColorConfig>>(() => {
     const value = this.dbxColor();
-    return isDbxColorConfig(value) ? value : undefined;
+    return isDbxColorConfig(value) ? (this._colorService?.expandColorConfig(value) ?? value) : undefined;
   });
 
   /**
@@ -66,7 +69,7 @@ export class DbxColorDirective {
    */
   readonly effectiveToneSignal = computed<Maybe<DbxColorTone>>(() => {
     const inputTone = this.dbxColorTone();
-    return inputTone != null ? inputTone : this._configSignal()?.tone;
+    return inputTone ?? this._configSignal()?.tone;
   });
 
   /**
@@ -82,9 +85,7 @@ export class DbxColorDirective {
     const inputTone = this.dbxColorTone();
     let tonal = false;
 
-    if (inputTone != null) {
-      tonal = true;
-    } else {
+    if (inputTone == null) {
       const config = this._configSignal();
 
       if (config?.tonal != null) {
@@ -92,6 +93,8 @@ export class DbxColorDirective {
       } else if (config?.tone != null) {
         tonal = true;
       }
+    } else {
+      tonal = true;
     }
 
     return tonal;
@@ -102,6 +105,6 @@ export class DbxColorDirective {
    */
   readonly bgToneStyleSignal = computed(() => {
     const tone = this.effectiveToneSignal();
-    return tone != null ? `${tone}%` : null;
+    return tone == null ? null : `${tone}%`;
   });
 }

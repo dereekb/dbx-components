@@ -85,10 +85,16 @@ export function formatStatus(snapshot: WorkspaceSnapshot): string {
  * @param snapshot - the workspace snapshot to validate
  * @returns markdown text plus an `hasErrors` flag the tool maps to `isError`
  */
-export function formatValidate(snapshot: WorkspaceSnapshot): { readonly text: string; readonly hasErrors: boolean } {
+/**
+ * Walks the snapshot's config warnings, registered-source existence,
+ * and per-package candidate clusters to produce the validation buckets.
+ *
+ * @param snapshot - the workspace snapshot to inspect
+ * @returns split lists of error and warning labels (no markdown yet)
+ */
+function collectValidationFindings(snapshot: WorkspaceSnapshot): { readonly errors: string[]; readonly warnings: string[] } {
   const errors: string[] = [];
   const warnings: string[] = [];
-
   for (const w of snapshot.configWarnings) {
     errors.push(`**${w.kind}** \`${w.path}\` — ${w.error}`);
   }
@@ -102,23 +108,38 @@ export function formatValidate(snapshot: WorkspaceSnapshot): { readonly text: st
       }
     }
   }
+  return { errors, warnings };
+}
 
+/**
+ * Appends a `## <heading>` section listing each item as a bullet, plus a
+ * trailing blank line. No-ops when the list is empty.
+ *
+ * @param lines - the output buffer to append to
+ * @param heading - the markdown section heading (e.g. `Errors`)
+ * @param items - the bullet content; one bullet per item
+ */
+function appendFindings(lines: string[], heading: string, items: readonly string[]): void {
+  if (items.length === 0) return;
+  lines.push(`## ${heading}`, '');
+  for (const item of items) lines.push(`- ${item}`);
+  lines.push('');
+}
+
+/**
+ * `dbx_mcp_config op="validate"` renderer. Errors-only.
+ *
+ * @param snapshot - the workspace snapshot to validate
+ * @returns markdown text plus an `hasErrors` flag the tool maps to `isError`
+ */
+export function formatValidate(snapshot: WorkspaceSnapshot): { readonly text: string; readonly hasErrors: boolean } {
+  const { errors, warnings } = collectValidationFindings(snapshot);
   const lines: string[] = [`# dbx-mcp config validation`, '', `- **Workspace:** \`${snapshot.workspaceRoot}\``, `- **Errors:** ${errors.length}`, `- **Warnings:** ${warnings.length}`, ''];
-
-  if (errors.length > 0) {
-    lines.push(`## Errors`, '');
-    for (const e of errors) lines.push(`- ${e}`);
-    lines.push('');
-  }
-  if (warnings.length > 0) {
-    lines.push(`## Warnings`, '');
-    for (const w of warnings) lines.push(`- ${w}`);
-    lines.push('');
-  }
+  appendFindings(lines, 'Errors', errors);
+  appendFindings(lines, 'Warnings', warnings);
   if (errors.length === 0 && warnings.length === 0) {
     lines.push(`No issues detected.`, '');
   }
-
   return { text: lines.join('\n').trimEnd() + '\n', hasErrors: errors.length > 0 };
 }
 

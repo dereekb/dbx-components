@@ -374,7 +374,8 @@ function buildPerModelGetCommand(model: string, manifest: CliModelManifest | und
   const isRootModel = entry != null && !entry.parentIdentityConst;
   const positionalName = isRootModel ? 'idOrKey' : 'key';
   const placeholder = isRootModel ? '<id-or-key>' : '<key>';
-  const positionalDescribe = isRootModel ? `Firestore key for the ${model} document — bare doc id (resolved to \`${entry.collectionPrefix}/<id>\`) or full \`prefix/id\`.` : `Firestore key for the ${model} document (full \`prefix/id\` — bare doc id is not supported${entry ? ' for this subcollection model' : ''}).`;
+  const subcollectionNote = entry ? ' for this subcollection model' : '';
+  const positionalDescribe = isRootModel ? `Firestore key for the ${model} document — bare doc id (resolved to \`${entry.collectionPrefix}/<id>\`) or full \`prefix/id\`.` : `Firestore key for the ${model} document (full \`prefix/id\` — bare doc id is not supported${subcollectionNote}).`;
   const commandDescribe = isRootModel ? `Read a single ${model} document by id or key.` : `Read a single ${model} document by key.`;
 
   return {
@@ -542,8 +543,7 @@ function buildParamsSection(entry: CliApiManifestEntry): string | undefined {
   }
 
   if (entry.paramsFields && entry.paramsFields.length > 0) {
-    lines.push('');
-    lines.push('Fields:');
+    lines.push('', 'Fields:');
     for (const field of entry.paramsFields) {
       const header = `  - ${field.name}: ${field.typeText}`;
       lines.push(header);
@@ -570,8 +570,7 @@ function buildResultSection(entry: CliApiManifestEntry): string | undefined {
   }
 
   if (entry.resultFields && entry.resultFields.length > 0) {
-    lines.push('');
-    lines.push('Fields:');
+    lines.push('', 'Fields:');
     for (const field of entry.resultFields) {
       const header = `  - ${field.name}: ${field.typeText}`;
       lines.push(header);
@@ -659,6 +658,7 @@ function renderJsonSchemaSection(entry: CliApiManifestEntry): string | undefined
     // method that emits the bare JSON Schema value, e.g. `false`). Round-trip
     // through JSON to invoke those `toJSON()` callbacks before pruning;
     // `structuredClone` would not call them.
+    // NOSONAR (typescript:S7784): structuredClone bypasses toJSON()
     const normalized = JSON.parse(JSON.stringify(raw));
     const pruned = pruneFalseUnionBranches(normalized);
     result = `Params Schema (JSON Schema):\n${JSON.stringify(pruned, null, 2)}`;

@@ -879,7 +879,14 @@ export function dateCellScheduleDateFilter(config: DateCellScheduleDateFilterCon
   // intended calendar day from the system timezone as an ISO8601 day string, then use the index factory's
   // string path which correctly computes the day offset in UTC-normal space.
   const minAllowedIndex = minMaxDateRange?.start != null ? Math.max(indexFloor, _minMaxDateRangeDateOrIndexToIndex(minMaxDateRange.start)) : indexFloor;
-  const maxAllowedIndex = end != null ? _dateCellTimingRelativeIndexFactory(end) : minMaxDateRange?.end != null ? Math.max(indexFloor, _minMaxDateRangeDateOrIndexToIndex(minMaxDateRange.end)) : Number.MAX_SAFE_INTEGER;
+  let maxAllowedIndex: number;
+  if (end != null) {
+    maxAllowedIndex = _dateCellTimingRelativeIndexFactory(end);
+  } else if (minMaxDateRange?.end != null) {
+    maxAllowedIndex = Math.max(indexFloor, _minMaxDateRangeDateOrIndexToIndex(minMaxDateRange.end));
+  } else {
+    maxAllowedIndex = Number.MAX_SAFE_INTEGER;
+  }
 
   const includedIndexes = new Set(config.d);
   const excludedIndexes = new Set(config.ex);

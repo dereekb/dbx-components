@@ -230,7 +230,7 @@ function reviveCalcomAccessTokenFile(raw: unknown): Maybe<CalcomAccessToken> {
   }
 
   const rawExpiresAt = (token as CalcomAccessToken & { expiresAt?: unknown }).expiresAt;
-  const expiresAt = rawExpiresAt != null && !(rawExpiresAt instanceof Date) ? new Date(rawExpiresAt as string | number) : (rawExpiresAt as Date | undefined);
+  const expiresAt = rawExpiresAt != null && !(rawExpiresAt instanceof Date) ? new Date(rawExpiresAt as string | number) : rawExpiresAt;
 
   return { ...token, expiresAt: expiresAt as Date };
 }

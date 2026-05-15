@@ -161,7 +161,7 @@ export class DbxForgeMapboxLatLngFieldComponent {
   readonly latLngValueSignal = computed<LatLngPoint>(() => {
     const value = this.fieldValue();
     const fn = this.latLngPointFunctionSignal();
-    return value != null ? fn(value as string) : defaultLatLngPoint();
+    return value == null ? defaultLatLngPoint() : fn(value as string);
   });
 
   readonly latLng$: Observable<LatLngPoint> = toObservable(this.latLngValueSignal).pipe(distinctUntilChanged<LatLngPoint>(isSameLatLngPoint), shareReplay(1));
@@ -199,7 +199,7 @@ export class DbxForgeMapboxLatLngFieldComponent {
         return;
       }
 
-      const zoom = Math.min(p.zoom || 12, 18) as MapboxZoomLevel;
+      const zoom = Math.min(p.zoom || 12, 18);
       this._zoom.next(zoom);
 
       if (p.setCenterOnLocationSet !== false) {

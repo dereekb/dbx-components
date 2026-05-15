@@ -369,46 +369,67 @@ function aggregateExternalIdentifiers(models: readonly ModelUsage[]): readonly {
 // MARK: Formatting
 function formatReportAsMarkdown(report: ListAppReport): string {
   const lines: string[] = [];
-  const apiSuffix = report.apiDir === undefined ? '' : ` + \`${report.apiDir}\``;
-  lines.push(`# Snapshot fields used by \`${report.componentDir}\`${apiSuffix}`, '', `${report.modelCount} model${report.modelCount === 1 ? '' : 's'}, ${report.fieldCount} field${report.fieldCount === 1 ? '' : 's'} resolved.`, '');
-
+  appendMarkdownHeader(lines, report);
+  let result: string;
   if (report.models.length === 0) {
     lines.push('_No `snapshotConverterFunctions` calls found._');
-    return lines.join('\n').trimEnd();
+    result = lines.join('\n').trimEnd();
+  } else {
+    appendMarkdownModelTables(lines, report.models);
+    appendMarkdownFrequencyTable(lines, report.factoryFrequency);
+    appendMarkdownExternalIdentifiersTable(lines, report.externalIdentifiers);
+    result = lines.join('\n').trimEnd();
   }
+  return result;
+}
 
-  for (const model of report.models) {
+function appendMarkdownHeader(lines: string[], report: ListAppReport): void {
+  const apiSuffix = report.apiDir === undefined ? '' : ` + \`${report.apiDir}\``;
+  lines.push(`# Snapshot fields used by \`${report.componentDir}\`${apiSuffix}`, '', `${report.modelCount} model${report.modelCount === 1 ? '' : 's'}, ${report.fieldCount} field${report.fieldCount === 1 ? '' : 's'} resolved.`, '');
+}
+
+function appendMarkdownModelTables(lines: string[], models: readonly ModelUsage[]): void {
+  for (const model of models) {
     lines.push(`## \`${model.modelName}\``, `_${model.relPath}_`, '', '| Field | Converter | Slug | Optional? |', '| --- | --- | --- | --- |');
     for (const field of model.fields) {
-      const slugCell = field.slug === undefined ? '_external_' : `\`${field.slug}\``;
-      let optionalCell: string;
-      if (field.optional === undefined) {
-        optionalCell = '—';
-      } else {
-        optionalCell = field.optional ? 'yes' : 'no';
-      }
-      lines.push(`| \`${field.fieldName}\` | \`${truncate(field.converter, 60)}\` | ${slugCell} | ${optionalCell} |`);
+      lines.push(formatFieldRow(field));
     }
     lines.push('');
   }
+}
 
-  if (report.factoryFrequency.length > 0) {
-    lines.push('## Snapshot field frequency', '', '| Slug | Name | Count |', '| --- | --- | --- |');
-    for (const row of report.factoryFrequency) {
-      lines.push(`| \`${row.slug}\` | \`${row.name}\` | ${row.count} |`);
-    }
-    lines.push('');
+function formatFieldRow(field: FieldUsage): string {
+  const slugCell = field.slug === undefined ? '_external_' : `\`${field.slug}\``;
+  const optionalCell = formatOptionalCell(field.optional);
+  return `| \`${field.fieldName}\` | \`${truncate(field.converter, 60)}\` | ${slugCell} | ${optionalCell} |`;
+}
+
+function formatOptionalCell(optional: boolean | undefined): string {
+  let cell: string;
+  if (optional === undefined) {
+    cell = '—';
+  } else {
+    cell = optional ? 'yes' : 'no';
   }
+  return cell;
+}
 
-  if (report.externalIdentifiers.length > 0) {
-    lines.push('## External identifiers (not in registry)', '', 'Tag these with `@dbxModelSnapshotField` (and re-run `nx run dbx-components-mcp:generate-manifests`) to surface them in the catalog.', '', '| Identifier | Count |', '| --- | --- |');
-    for (const row of report.externalIdentifiers) {
-      lines.push(`| \`${row.identifier}\` | ${row.count} |`);
-    }
-    lines.push('');
+function appendMarkdownFrequencyTable(lines: string[], rows: readonly { readonly slug: string; readonly name: string; readonly count: number }[]): void {
+  if (rows.length === 0) return;
+  lines.push('## Snapshot field frequency', '', '| Slug | Name | Count |', '| --- | --- | --- |');
+  for (const row of rows) {
+    lines.push(`| \`${row.slug}\` | \`${row.name}\` | ${row.count} |`);
   }
+  lines.push('');
+}
 
-  return lines.join('\n').trimEnd();
+function appendMarkdownExternalIdentifiersTable(lines: string[], rows: readonly { readonly identifier: string; readonly count: number }[]): void {
+  if (rows.length === 0) return;
+  lines.push('## External identifiers (not in registry)', '', 'Tag these with `@dbxModelSnapshotField` (and re-run `nx run dbx-components-mcp:generate-manifests`) to surface them in the catalog.', '', '| Identifier | Count |', '| --- | --- |');
+  for (const row of rows) {
+    lines.push(`| \`${row.identifier}\` | ${row.count} |`);
+  }
+  lines.push('');
 }
 
 function formatReportAsJson(report: ListAppReport): string {

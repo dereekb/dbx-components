@@ -117,16 +117,34 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
   if ((parsed.archetype === 'sub-collection' || parsed.archetype === 'sub-collection-traversal') && !parsed.parentFixture) {
     return toolError(`Archetype \`${parsed.archetype}\` requires \`parentFixture\` (the bare parent model name).`);
   }
-  const paramsDependsOn = (parsed.paramsDependsOn ?? []).map((d) => {
-    const dependency: ScaffoldParamsDependency = {
-      field: d.field,
-      fixtureModel: d.fixtureModel,
-      optional: d.optional,
-      array: d.array
-    };
-    return dependency;
-  });
-  const rendered = renderFixtureScaffold(extraction, {
+
+  const rendered = renderFixtureScaffold(extraction, buildRenderOptions(parsed, prefix));
+
+  const conflicts = collectConflicts(extraction, rendered);
+  if (conflicts.length > 0) {
+    return toolError(['Refusing to scaffold — the following names already exist in `' + extraction.fixturePath + '`:', '', ...conflicts.map((c) => '- `' + c + '`'), '', 'Rename, delete, or pick a different model name and retry.'].join('\n'));
+  }
+
+  const absolutePath = join(apiAbs, FIXTURE_RELATIVE_PATH);
+  const writeResult = await appendScaffoldToFile({ absolutePath, snippet: rendered.snippet });
+  if (!writeResult.ok) return toolError(writeResult.message);
+
+  // Re-parse to compute final line numbers for the response.
+  const reExtraction = extractAppFixturesFromText({ text: writeResult.updated, fixturePath: extraction.fixturePath });
+  const newEntry = reExtraction.entries.find((e) => e.fixtureClassName === rendered.fixtureClassName);
+
+  const text = formatScaffoldResponse({ rendered, extraction, archetype: parsed.archetype, newEntry });
+  return { content: [{ type: 'text', text }] };
+}
+
+function buildRenderOptions(parsed: ReturnType<typeof ScaffoldArgsType> & object, prefix: string): Parameters<typeof renderFixtureScaffold>[1] {
+  const paramsDependsOn = (parsed.paramsDependsOn ?? []).map((d: ScaffoldParamsDependency) => ({
+    field: d.field,
+    fixtureModel: d.fixtureModel,
+    optional: d.optional,
+    array: d.array
+  }));
+  return {
     model: parsed.model,
     prefix,
     archetype: parsed.archetype,
@@ -137,46 +155,53 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
     collectionGenericArg: parsed.collectionGenericArg,
     modelDocumentTypeName: parsed.modelDocumentTypeName,
     factoryNamePrefix: parsed.factoryNamePrefix
-  });
+  };
+}
 
-  const conflicts = collectConflicts(extraction, rendered);
-  if (conflicts.length > 0) {
-    return toolError(['Refusing to scaffold — the following names already exist in `' + extraction.fixturePath + '`:', '', ...conflicts.map((c) => '- `' + c + '`'), '', 'Rename, delete, or pick a different model name and retry.'].join('\n'));
-  }
+interface AppendScaffoldResult {
+  readonly ok: true;
+  readonly updated: string;
+}
 
-  const absolutePath = join(apiAbs, FIXTURE_RELATIVE_PATH);
+interface AppendScaffoldErrorResult {
+  readonly ok: false;
+  readonly message: string;
+}
+
+async function appendScaffoldToFile(input: { absolutePath: string; snippet: string }): Promise<AppendScaffoldResult | AppendScaffoldErrorResult> {
   let original: string;
   try {
-    original = await readFile(absolutePath, 'utf8');
+    original = await readFile(input.absolutePath, 'utf8');
   } catch (err) {
-    return toolError(`Failed to read fixture file: ${err instanceof Error ? err.message : String(err)}`);
+    return { ok: false, message: `Failed to read fixture file: ${err instanceof Error ? err.message : String(err)}` };
   }
   const newline = original.endsWith('\n') ? '' : '\n';
-  const updated = `${original}${newline}\n${rendered.snippet}`;
+  const updated = `${original}${newline}\n${input.snippet}`;
   try {
-    await writeFile(absolutePath, updated, 'utf8');
+    await writeFile(input.absolutePath, updated, 'utf8');
   } catch (err) {
-    return toolError(`Failed to write fixture file: ${err instanceof Error ? err.message : String(err)}`);
+    return { ok: false, message: `Failed to write fixture file: ${err instanceof Error ? err.message : String(err)}` };
   }
+  return { ok: true, updated };
+}
 
-  // Re-parse to compute final line numbers for the response.
-  const reExtraction = extractAppFixturesFromText({ text: updated, fixturePath: extraction.fixturePath });
-  const newEntry = reExtraction.entries.find((e) => e.fixtureClassName === rendered.fixtureClassName);
+interface FormatScaffoldResponseInput {
+  readonly rendered: ReturnType<typeof renderFixtureScaffold>;
+  readonly extraction: { fixturePath: string };
+  readonly archetype: string;
+  readonly newEntry: { fixtureLine: number; fixtureEndLine: number; instanceLine: number; instanceEndLine: number } | undefined;
+}
 
-  const lines: string[] = [];
-  lines.push(`# Scaffolded \`${rendered.fixtureClassName}\``, '', `File: \`${extraction.fixturePath}\``, `Archetype: \`${parsed.archetype}\``, '', '## Inserted');
-  for (const ins of rendered.inserted) {
-    lines.push(`- ${ins.kind}: \`${ins.name}\``);
-  }
+function formatScaffoldResponse(input: FormatScaffoldResponseInput): string {
+  const { rendered, extraction, archetype, newEntry } = input;
+  const lines: string[] = [`# Scaffolded \`${rendered.fixtureClassName}\``, '', `File: \`${extraction.fixturePath}\``, `Archetype: \`${archetype}\``, '', '## Inserted'];
+  for (const ins of rendered.inserted) lines.push(`- ${ins.kind}: \`${ins.name}\``);
   if (newEntry) {
     lines.push('', `Fixture lines: ${newEntry.fixtureLine}-${newEntry.fixtureEndLine}`, `Instance lines: ${newEntry.instanceLine}-${newEntry.instanceEndLine}`);
   }
   lines.push('', '## Follow-up TODOs');
-  for (const todo of rendered.todos) {
-    lines.push(`- [ ] ${todo}`);
-  }
-  const result: ToolResult = { content: [{ type: 'text', text: lines.join('\n') }] };
-  return result;
+  for (const todo of rendered.todos) lines.push(`- [ ] ${todo}`);
+  return lines.join('\n');
 }
 
 function collectConflicts(extraction: ReturnType<typeof extractAppFixturesFromText>, rendered: ReturnType<typeof renderFixtureScaffold>): readonly string[] {

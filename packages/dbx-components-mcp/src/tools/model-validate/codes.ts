@@ -462,7 +462,29 @@ export enum ModelValidateCode {
    * @dbxRuleFix In-package parent: add `@dbxModelSubObject` to the parent interface's JSDoc and tag each persisted field with `@dbxModelVariable <longName>`. Alternative: redeclare the inherited fields directly on the child with their own JSDoc + tag (useful when the parent is a shared shape that shouldn't commit to a single longName). External parent: redeclare the inherited fields on the child with `@dbxModelVariable <longName>` tags when surface long-names are needed, or add the parent name to `modelValidate.ignoredExternalParents` in `dbx-mcp.config.json` when the inherited fields are framework plumbing (e.g. `IndexRef.i`, `DateRange.start/end`).
    * @dbxRuleSeeAlso artifact:firestore-model
    */
-  MODEL_SUBOBJECT_PARENT_NOT_TAGGED = 'MODEL_SUBOBJECT_PARENT_NOT_TAGGED'
+  MODEL_SUBOBJECT_PARENT_NOT_TAGGED = 'MODEL_SUBOBJECT_PARENT_NOT_TAGGED',
+
+  /**
+   * Two `firestoreModelIdentity(...)` declarations share the same `collectionName` (the lowercase Firestore collection segment passed as the `collectionName` arg, surfaced in the manifest as `collectionPrefix`). Collection names must be globally unique across the merged model manifest — `@dereekb/firebase` upstream plus every discovered `*-firebase` component — because Firestore collection-group queries match by collection name regardless of where the collection sits in the document hierarchy, so two collections sharing a name silently bleed into each other's results.
+   *
+   * @dbxRuleSeverity error
+   * @dbxRuleApplies Every `firestoreModelIdentity(...)` declaration discovered by the manifest scan. Anchored at each duplicate occurrence after the first (the first-seen identity is treated as the incumbent). Applies regardless of root vs. subcollection variant — two subcollections under different parents that share a `collectionName` still collide because CollectionGroup queries do not respect parent paths.
+   * @dbxRuleNotApplies Identities declared outside the merged manifest scan (e.g. packages the discovery layer does not pick up).
+   * @dbxRuleFix Rename one of the conflicting identities so the `collectionName` arg of `firestoreModelIdentity(modelName, collectionName)` is globally unique. Update every Firestore document path / collection-group query that referenced the renamed segment.
+   * @dbxRuleSeeAlso artifact:firestore-model
+   */
+  MODEL_IDENTITY_COLLECTION_NAME_DUPLICATE = 'MODEL_IDENTITY_COLLECTION_NAME_DUPLICATE',
+
+  /**
+   * Two `firestoreModelIdentity(...)` declarations share the same `modelType` (the camelCase model identifier passed as the first string arg). Model types must be globally unique across the merged model manifest — `@dereekb/firebase` upstream plus every discovered `*-firebase` component — because the model registry, fixture lookup, and key-to-identity decoding all resolve by `modelType`, so a duplicate silently masks one of the two models.
+   *
+   * @dbxRuleSeverity error
+   * @dbxRuleApplies Every `firestoreModelIdentity(...)` declaration discovered by the manifest scan. Anchored at each duplicate occurrence after the first (the first-seen identity is treated as the incumbent). Applies regardless of root vs. subcollection variant.
+   * @dbxRuleNotApplies Identities declared outside the merged manifest scan.
+   * @dbxRuleFix Rename one of the conflicting identities so the `modelName` arg of `firestoreModelIdentity(modelName, collectionName)` is globally unique. Update every downstream reference to the renamed `modelType`.
+   * @dbxRuleSeeAlso artifact:firestore-model
+   */
+  MODEL_IDENTITY_MODEL_TYPE_DUPLICATE = 'MODEL_IDENTITY_MODEL_TYPE_DUPLICATE'
 }
 
 /**

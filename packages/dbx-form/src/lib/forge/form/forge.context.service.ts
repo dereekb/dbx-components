@@ -115,10 +115,13 @@ export class DbxForgeFormContextService {
     const fieldPath = `${arrayKey}.${index}`;
     let result: EvaluationContext;
 
-    if (!scopedFormValue) {
+    if (scopedFormValue) {
       result = {
         fieldValue: itemValue,
-        formValue: rootFormValue,
+        formValue: scopedFormValue,
+        rootFormValue,
+        arrayIndex: index,
+        arrayPath: arrayKey,
         fieldPath,
         customFunctions: {},
         logger: this._logger
@@ -126,10 +129,7 @@ export class DbxForgeFormContextService {
     } else {
       result = {
         fieldValue: itemValue,
-        formValue: scopedFormValue,
-        rootFormValue,
-        arrayIndex: index,
-        arrayPath: arrayKey,
+        formValue: rootFormValue,
         fieldPath,
         customFunctions: {},
         logger: this._logger

@@ -78,7 +78,7 @@ export class DbxForgeSearchableChipFieldComponent<T = unknown, M = unknown, H ex
     const fieldGetter = this.field();
     const fieldState = typeof fieldGetter === 'function' ? (fieldGetter as any)() : undefined;
     const fieldValue = fieldState?.value?.() as Maybe<T | T[]>;
-    const values = fieldValue != null ? convertMaybeToArray(fieldValue as ArrayOrValue<T>).filter((v) => v != null && v !== '') : [];
+    const values = fieldValue == null ? [] : convertMaybeToArray(fieldValue as ArrayOrValue<T>).filter((v) => v != null && v !== '');
     this._valuesSubject.next(values);
   });
 
@@ -240,7 +240,7 @@ export class DbxForgeSearchableChipFieldComponent<T = unknown, M = unknown, H ex
     let newValue: T | T[] = values;
 
     if (!this._asArrayValue) {
-      newValue = values[0] as T;
+      newValue = values[0];
     }
 
     const fieldState = (fieldGetter as any)();

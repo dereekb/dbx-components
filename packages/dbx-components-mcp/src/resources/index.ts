@@ -11,6 +11,9 @@
  *   dbx://pipe/entries[/{slug} | /category/{category}]
  *   dbx://util/entries[/{slug} | /category/{category} | /module/{module} | /tag/{tag}]
  *   dbx://model-snapshot-field/entries[/{slug} | /category/{category} | /module/{module} | /tag/{tag}]
+ *   dbx://model-firebase-index/entries[/{slug} | /collection/{collection} | /model/{model} | /category/{category} | /module/{module} | /tag/{tag}]
+ *   dbx://model-firebase-index/schema
+ *   dbx://model-firebase-index/rules
  *   dbx://filter/entries[/{slug} | /kind/{kind}]
  *   dbx://css-utility/entries[/{slug} | /role/{role} | /source/{source}]
  *   dbx://auth/catalog
@@ -33,6 +36,7 @@ import type { ForgeFieldRegistry } from '../registry/forge-fields.js';
 import type { PipeRegistry } from '../registry/pipes-runtime.js';
 import type { UtilRegistry } from '../registry/utils-runtime.js';
 import type { ModelSnapshotFieldRegistry } from '../registry/model-snapshot-fields-runtime.js';
+import type { ModelFirebaseIndexRegistry } from '../registry/model-firebase-index-runtime.js';
 import type { SemanticTypeRegistry } from '../registry/semantic-types.js';
 import type { TokenRegistry } from '../registry/tokens-runtime.js';
 import type { CssUtilityRegistry } from '../registry/css-utilities-runtime.js';
@@ -44,6 +48,7 @@ import { registerUiComponentsResource } from './ui-components.resource.js';
 import { registerPipesResource } from './pipes.resource.js';
 import { registerUtilsResource } from './utils.resource.js';
 import { registerModelSnapshotFieldsResource } from './model-snapshot-fields.resource.js';
+import { registerModelFirebaseIndexResource } from './model-firebase-index.resource.js';
 import { registerFiltersResource } from './filters.resource.js';
 import { registerSemanticTypesResource } from './semantic-types.resource.js';
 import { registerTokensResource } from './tokens.resource.js';
@@ -62,6 +67,7 @@ export interface RegisterResourcesOptions {
   readonly pipeRegistry?: PipeRegistry;
   readonly utilRegistry?: UtilRegistry;
   readonly modelSnapshotFieldRegistry?: ModelSnapshotFieldRegistry;
+  readonly modelFirebaseIndexRegistry?: ModelFirebaseIndexRegistry;
   readonly uiComponentRegistry?: UiComponentRegistry;
   readonly actionRegistry?: ActionRegistry;
   readonly filterRegistry?: FilterRegistry;
@@ -97,6 +103,9 @@ export function registerResources(server: McpServer, options: RegisterResourcesO
   }
   if (options.modelSnapshotFieldRegistry !== undefined) {
     registerModelSnapshotFieldsResource(server, { registry: options.modelSnapshotFieldRegistry });
+  }
+  if (options.modelFirebaseIndexRegistry !== undefined) {
+    registerModelFirebaseIndexResource(server, { registry: options.modelFirebaseIndexRegistry });
   }
   if (options.filterRegistry !== undefined) {
     registerFiltersResource(server, { registry: options.filterRegistry });

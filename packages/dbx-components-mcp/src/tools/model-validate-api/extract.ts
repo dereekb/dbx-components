@@ -102,46 +102,42 @@ interface GroupCandidate {
 }
 
 function inferGroupName(parts: { readonly functionTypeMap: ExtractedTypeAlias | undefined; readonly functionTypeConfigMap: ExtractedVariable | undefined; readonly crudConfigType: ExtractedCrudConfigType | undefined; readonly crudConfigConst: ExtractedCrudConfigConst | undefined; readonly functionMap: ExtractedFunctionMap | undefined; readonly functionsClass: ExtractedFunctionsClass | undefined }): string | undefined {
+  const candidates = collectGroupCandidates(parts);
+  let result: string | undefined;
+  if (candidates.length > 0) {
+    result = pickMostCommonPascal(candidates);
+  }
+  return result;
+}
+
+function collectGroupCandidates(parts: { readonly functionTypeMap: ExtractedTypeAlias | undefined; readonly functionTypeConfigMap: ExtractedVariable | undefined; readonly crudConfigType: ExtractedCrudConfigType | undefined; readonly crudConfigConst: ExtractedCrudConfigConst | undefined; readonly functionMap: ExtractedFunctionMap | undefined; readonly functionsClass: ExtractedFunctionsClass | undefined }): readonly GroupCandidate[] {
   const candidates: GroupCandidate[] = [];
-  if (parts.functionTypeMap) {
-    const pascal = stripSuffix(parts.functionTypeMap.name, 'FunctionTypeMap');
-    if (pascal) {
-      candidates.push({ name: parts.functionTypeMap.name, pascal });
-    }
+  pushPascalCandidate(candidates, parts.functionTypeMap, 'FunctionTypeMap');
+  pushCamelCandidate(candidates, parts.functionTypeConfigMap, 'FunctionTypeConfigMap');
+  pushPascalCandidate(candidates, parts.crudConfigType, 'ModelCrudFunctionsConfig');
+  pushCamelCandidate(candidates, parts.crudConfigConst, 'ModelCrudFunctionsConfig');
+  pushCamelCandidate(candidates, parts.functionMap, 'FunctionMap');
+  pushPascalCandidate(candidates, parts.functionsClass, 'Functions');
+  return candidates;
+}
+
+function pushPascalCandidate(candidates: GroupCandidate[], part: { readonly name: string } | undefined, suffix: string): void {
+  if (!part) return;
+  const pascal = stripSuffix(part.name, suffix);
+  if (pascal) {
+    candidates.push({ name: part.name, pascal });
   }
-  if (parts.functionTypeConfigMap) {
-    const camel = stripSuffix(parts.functionTypeConfigMap.name, 'FunctionTypeConfigMap');
-    if (camel) {
-      candidates.push({ name: parts.functionTypeConfigMap.name, pascal: pascalCase(camel) });
-    }
+}
+
+function pushCamelCandidate(candidates: GroupCandidate[], part: { readonly name: string } | undefined, suffix: string): void {
+  if (!part) return;
+  const camel = stripSuffix(part.name, suffix);
+  if (camel) {
+    candidates.push({ name: part.name, pascal: pascalCase(camel) });
   }
-  if (parts.crudConfigType) {
-    const pascal = stripSuffix(parts.crudConfigType.name, 'ModelCrudFunctionsConfig');
-    if (pascal) {
-      candidates.push({ name: parts.crudConfigType.name, pascal });
-    }
-  }
-  if (parts.crudConfigConst) {
-    const camel = stripSuffix(parts.crudConfigConst.name, 'ModelCrudFunctionsConfig');
-    if (camel) {
-      candidates.push({ name: parts.crudConfigConst.name, pascal: pascalCase(camel) });
-    }
-  }
-  if (parts.functionMap) {
-    const camel = stripSuffix(parts.functionMap.name, 'FunctionMap');
-    if (camel) {
-      candidates.push({ name: parts.functionMap.name, pascal: pascalCase(camel) });
-    }
-  }
-  if (parts.functionsClass) {
-    const pascal = stripSuffix(parts.functionsClass.name, 'Functions');
-    if (pascal) {
-      candidates.push({ name: parts.functionsClass.name, pascal });
-    }
-  }
-  if (candidates.length === 0) {
-    return undefined;
-  }
+}
+
+function pickMostCommonPascal(candidates: readonly GroupCandidate[]): string | undefined {
   const counts = new Map<string, number>();
   for (const c of candidates) {
     counts.set(c.pascal, (counts.get(c.pascal) ?? 0) + 1);
@@ -258,29 +254,36 @@ interface CrudConfigTypeSummary {
 }
 
 function summarizeCrudConfigType(typeLiteral: TypeNode): CrudConfigTypeSummary {
-  if (!Node.isTypeLiteral(typeLiteral)) {
-    return { keys: [], nonNullKeys: [], bareLeafParamsNames: [] };
+  let result: CrudConfigTypeSummary;
+  if (Node.isTypeLiteral(typeLiteral)) {
+    const keys: string[] = [];
+    const nonNullKeys: string[] = [];
+    const bareLeafParamsNames: string[] = [];
+    for (const member of typeLiteral.getMembers()) {
+      collectCrudConfigMember(member, { keys, nonNullKeys, bareLeafParamsNames });
+    }
+    result = { keys, nonNullKeys, bareLeafParamsNames };
+  } else {
+    result = { keys: [], nonNullKeys: [], bareLeafParamsNames: [] };
   }
-  const keys: string[] = [];
-  const nonNullKeys: string[] = [];
-  const bareLeafParamsNames: string[] = [];
-  for (const member of typeLiteral.getMembers()) {
-    if (!Node.isPropertySignature(member)) {
-      continue;
-    }
-    const name = member.getName();
-    keys.push(name);
-    const valueNode = member.getTypeNode();
-    if (!valueNode) {
-      continue;
-    }
-    if (isNullLiteralType(valueNode)) {
-      continue;
-    }
-    nonNullKeys.push(name);
-    collectBareParamsLeaves(valueNode, bareLeafParamsNames);
-  }
-  return { keys, nonNullKeys, bareLeafParamsNames };
+  return result;
+}
+
+interface MutableCrudConfigSummary {
+  readonly keys: string[];
+  readonly nonNullKeys: string[];
+  readonly bareLeafParamsNames: string[];
+}
+
+function collectCrudConfigMember(member: Node, summary: MutableCrudConfigSummary): void {
+  if (!Node.isPropertySignature(member)) return;
+  const name = member.getName();
+  summary.keys.push(name);
+  const valueNode = member.getTypeNode();
+  if (!valueNode) return;
+  if (isNullLiteralType(valueNode)) return;
+  summary.nonNullKeys.push(name);
+  collectBareParamsLeaves(valueNode, summary.bareLeafParamsNames);
 }
 
 function isNullLiteralType(node: TypeNode): boolean {
@@ -320,34 +323,45 @@ function collectBareParamsLeaves(node: TypeNode, out: string[]): void {
 }
 
 function findCrudConfigConst(sourceFile: SourceFile): ExtractedCrudConfigConst | undefined {
+  let result: ExtractedCrudConfigConst | undefined;
   for (const stmt of sourceFile.getVariableStatements()) {
-    for (const decl of stmt.getDeclarations()) {
-      const name = decl.getName();
-      if (!name.endsWith('ModelCrudFunctionsConfig')) {
-        continue;
-      }
-      const typeNode = decl.getTypeNode();
-      const initializer = decl.getInitializer();
-      const runtimeKeys: string[] = [];
-      if (initializer && Node.isAsExpression(initializer)) {
-        const inner = initializer.getExpression();
-        if (Node.isObjectLiteralExpression(inner)) {
-          runtimeKeys.push(...collectObjectLiteralKeys(inner));
-        }
-      } else if (initializer && Node.isObjectLiteralExpression(initializer)) {
-        runtimeKeys.push(...collectObjectLiteralKeys(initializer));
-      }
-      const result: ExtractedCrudConfigConst = {
-        name,
-        exported: stmt.isExported(),
-        line: decl.getStartLineNumber(),
-        typeAnnotation: typeNode ? typeNode.getText() : undefined,
-        runtimeKeys
-      };
-      return result;
-    }
+    result = findCrudConfigConstInStatement(stmt);
+    if (result) break;
   }
-  return undefined;
+  return result;
+}
+
+function findCrudConfigConstInStatement(stmt: VariableStatement): ExtractedCrudConfigConst | undefined {
+  let result: ExtractedCrudConfigConst | undefined;
+  for (const decl of stmt.getDeclarations()) {
+    const name = decl.getName();
+    if (!name.endsWith('ModelCrudFunctionsConfig')) continue;
+    const typeNode = decl.getTypeNode();
+    const runtimeKeys = collectCrudConfigRuntimeKeys(decl.getInitializer());
+    result = {
+      name,
+      exported: stmt.isExported(),
+      line: decl.getStartLineNumber(),
+      typeAnnotation: typeNode ? typeNode.getText() : undefined,
+      runtimeKeys
+    };
+    break;
+  }
+  return result;
+}
+
+function collectCrudConfigRuntimeKeys(initializer: Node | undefined): readonly string[] {
+  const runtimeKeys: string[] = [];
+  if (!initializer) return runtimeKeys;
+  if (Node.isAsExpression(initializer)) {
+    const inner = initializer.getExpression();
+    if (Node.isObjectLiteralExpression(inner)) {
+      runtimeKeys.push(...collectObjectLiteralKeys(inner));
+    }
+  } else if (Node.isObjectLiteralExpression(initializer)) {
+    runtimeKeys.push(...collectObjectLiteralKeys(initializer));
+  }
+  return runtimeKeys;
 }
 
 function collectObjectLiteralKeys(obj: ObjectLiteralExpression): readonly string[] {
@@ -361,37 +375,47 @@ function collectObjectLiteralKeys(obj: ObjectLiteralExpression): readonly string
 }
 
 function findFunctionMap(sourceFile: SourceFile): ExtractedFunctionMap | undefined {
+  let result: ExtractedFunctionMap | undefined;
   for (const stmt of sourceFile.getVariableStatements()) {
-    for (const decl of stmt.getDeclarations()) {
-      const name = decl.getName();
-      if (!name.endsWith('FunctionMap')) {
-        continue;
+    result = findFunctionMapInStatement(stmt);
+    if (result) break;
+  }
+  return result;
+}
+
+function findFunctionMapInStatement(stmt: VariableStatement): ExtractedFunctionMap | undefined {
+  let result: ExtractedFunctionMap | undefined;
+  for (const decl of stmt.getDeclarations()) {
+    const name = decl.getName();
+    if (!name.endsWith('FunctionMap')) continue;
+    const factoryCall = readFactoryCall(decl.getInitializer());
+    const typeNode = decl.getTypeNode();
+    result = {
+      name,
+      exported: stmt.isExported(),
+      line: decl.getStartLineNumber(),
+      typeAnnotation: typeNode ? typeNode.getText() : undefined,
+      callsFactory: factoryCall.callsFactory,
+      factoryArgs: factoryCall.factoryArgs
+    };
+    break;
+  }
+  return result;
+}
+
+function readFactoryCall(initializer: Node | undefined): { readonly callsFactory: boolean; readonly factoryArgs: readonly string[] } {
+  let callsFactory = false;
+  const factoryArgs: string[] = [];
+  if (initializer && Node.isCallExpression(initializer)) {
+    const exprText = initializer.getExpression().getText();
+    if (exprText === 'callModelFirebaseFunctionMapFactory') {
+      callsFactory = true;
+      for (const arg of initializer.getArguments()) {
+        factoryArgs.push(arg.getText());
       }
-      const initializer = decl.getInitializer();
-      let callsFactory = false;
-      const factoryArgs: string[] = [];
-      if (initializer && Node.isCallExpression(initializer)) {
-        const exprText = initializer.getExpression().getText();
-        if (exprText === 'callModelFirebaseFunctionMapFactory') {
-          callsFactory = true;
-          for (const arg of initializer.getArguments()) {
-            factoryArgs.push(arg.getText());
-          }
-        }
-      }
-      const typeNode = decl.getTypeNode();
-      const result: ExtractedFunctionMap = {
-        name,
-        exported: stmt.isExported(),
-        line: decl.getStartLineNumber(),
-        typeAnnotation: typeNode ? typeNode.getText() : undefined,
-        callsFactory,
-        factoryArgs
-      };
-      return result;
     }
   }
-  return undefined;
+  return { callsFactory, factoryArgs };
 }
 
 function findFunctionsClass(sourceFile: SourceFile): ExtractedFunctionsClass | undefined {
@@ -513,32 +537,42 @@ function findParamsValidators(sourceFile: SourceFile): readonly ExtractedParamsV
 }
 
 function extractCastTargetName(node: Node | undefined): string | undefined {
-  if (!node) {
-    return undefined;
-  }
+  let result: string | undefined;
   let current: Node | undefined = node;
-  while (current && Node.isAsExpression(current)) {
-    const typeNode = current.getTypeNode();
-    if (!typeNode) {
-      break;
+  let done = false;
+  while (!done && current && Node.isAsExpression(current)) {
+    const outcome = readAsExpressionTarget(current);
+    if (outcome.kind === 'found') {
+      result = outcome.name;
+      done = true;
+    } else if (outcome.kind === 'stop') {
+      done = true;
+    } else {
+      current = current.getExpression();
     }
-    if (Node.isTypeReference(typeNode)) {
-      const refName = typeNode.getTypeName().getText();
-      if (refName === 'Type') {
-        const args = typeNode.getTypeArguments();
-        if (args.length === 1) {
-          const arg = args[0];
-          if (Node.isTypeReference(arg)) {
-            return arg.getTypeName().getText();
-          }
-          return arg.getText();
-        }
-        return undefined;
-      }
-    }
-    current = current.getExpression();
   }
-  return undefined;
+  return result;
+}
+
+type AsExpressionOutcome = { readonly kind: 'found'; readonly name: string | undefined } | { readonly kind: 'stop' } | { readonly kind: 'continue' };
+
+function readAsExpressionTarget(expr: Node): AsExpressionOutcome {
+  if (!Node.isAsExpression(expr)) return { kind: 'continue' };
+  const typeNode = expr.getTypeNode();
+  if (!typeNode) return { kind: 'stop' };
+  if (!Node.isTypeReference(typeNode)) return { kind: 'continue' };
+  const refName = typeNode.getTypeName().getText();
+  if (refName !== 'Type') return { kind: 'continue' };
+  const args = typeNode.getTypeArguments();
+  let result: AsExpressionOutcome;
+  if (args.length === 1) {
+    const arg = args[0];
+    const name = Node.isTypeReference(arg) ? arg.getTypeName().getText() : arg.getText();
+    result = { kind: 'found', name };
+  } else {
+    result = { kind: 'found', name: undefined };
+  }
+  return result;
 }
 
 /**
@@ -551,30 +585,38 @@ function extractCastTargetName(node: Node | undefined): string | undefined {
  */
 function extractValidatorProperties(initializer: Node): readonly ExtractedValidatorProperty[] {
   const obj = findArktypeObjectLiteral(initializer);
-  if (!obj) {
-    return [];
-  }
   const out: ExtractedValidatorProperty[] = [];
-  for (const prop of obj.getProperties()) {
-    if (!Node.isPropertyAssignment(prop)) {
-      continue;
-    }
-    const propAssignment = prop as PropertyAssignment;
-    const rawName = propAssignment.getName();
-    const stripped = rawName.replaceAll(/^['"`]|['"`]$/g, '');
-    const optional = stripped.endsWith('?');
-    const clean = optional ? stripped.slice(0, -1) : stripped;
-    const valueNode = propAssignment.getInitializer();
-    let hasClearable = false;
-    if (valueNode && Node.isCallExpression(valueNode)) {
-      const exprText = valueNode.getExpression().getText();
-      if (exprText === 'clearable') {
-        hasClearable = true;
+  if (obj) {
+    for (const prop of obj.getProperties()) {
+      const parsed = parseValidatorProperty(prop);
+      if (parsed) {
+        out.push(parsed);
       }
     }
-    out.push({ name: clean, optional, hasClearable, line: propAssignment.getStartLineNumber() });
   }
   return out;
+}
+
+function parseValidatorProperty(prop: Node): ExtractedValidatorProperty | undefined {
+  if (!Node.isPropertyAssignment(prop)) return undefined;
+  const propAssignment = prop as PropertyAssignment;
+  const rawName = propAssignment.getName();
+  const stripped = rawName.replaceAll(/^['"`]|['"`]$/g, '');
+  const optional = stripped.endsWith('?');
+  const clean = optional ? stripped.slice(0, -1) : stripped;
+  const hasClearable = isClearableCall(propAssignment.getInitializer());
+  return { name: clean, optional, hasClearable, line: propAssignment.getStartLineNumber() };
+}
+
+function isClearableCall(valueNode: Node | undefined): boolean {
+  let result = false;
+  if (valueNode && Node.isCallExpression(valueNode)) {
+    const exprText = valueNode.getExpression().getText();
+    if (exprText === 'clearable') {
+      result = true;
+    }
+  }
+  return result;
 }
 
 /**

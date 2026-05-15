@@ -41,20 +41,14 @@ export function renderModelManifestList(manifest: CliModelManifest): string {
  * @__NO_SIDE_EFFECTS__
  */
 export function renderModelManifestEntry(entry: CliModelManifestEntry): string {
-  const lines: string[] = [];
-  lines.push(`# ${entry.modelType}` + (entry.modelGroup ? ` · group ${entry.modelGroup}` : ''));
-  lines.push(`Identity: ${entry.identityConst}`);
-  lines.push(`Collection prefix: ${entry.collectionPrefix}`);
+  const groupSuffix = entry.modelGroup ? ` · group ${entry.modelGroup}` : '';
+  const lines: string[] = [`# ${entry.modelType}${groupSuffix}`, `Identity: ${entry.identityConst}`, `Collection prefix: ${entry.collectionPrefix}`];
   if (entry.parentIdentityConst) lines.push(`Parent identity: ${entry.parentIdentityConst}`);
-  lines.push(`Source package: ${entry.sourcePackage}`);
-  lines.push(`Source file: ${entry.sourceFile}`);
+  lines.push(`Source package: ${entry.sourcePackage}`, `Source file: ${entry.sourceFile}`);
   if (entry.description) {
-    lines.push('');
-    lines.push(entry.description);
+    lines.push('', entry.description);
   }
-  lines.push('');
-  lines.push(`Fields (${entry.fields.length}):`);
-  lines.push(renderFieldsTree(entry.fields, 0));
+  lines.push('', `Fields (${entry.fields.length}):`, renderFieldsTree(entry.fields, 0));
   return lines.join('\n') + '\n';
 }
 
@@ -71,24 +65,31 @@ export function renderModelManifestFields(entry: CliModelManifestEntry): string 
 }
 
 function renderFieldsTree(fields: readonly CliModelField[], indent: number): string {
-  const out: string[] = [];
   const includeConverter = fields.some((f) => f.converter !== undefined);
-  const header: string[] = includeConverter ? ['NAME', 'LONG NAME', 'TYPE', 'OPTIONAL', 'CONVERTER'] : ['NAME', 'LONG NAME', 'TYPE', 'OPTIONAL'];
-  const rows: string[][] = [header];
-  for (const field of fields) {
-    const row: string[] = [field.name, field.longName, field.tsType ?? '', field.optional ? 'yes' : 'no'];
-    if (includeConverter) row.push(field.converter ? truncate(field.converter, 60) : '');
-    rows.push(row);
+  const tableBlock = indentLines(renderTable(buildFieldsTableRows(fields, includeConverter)), indent);
+  const nestedBlocks = fields.flatMap((field) => renderNestedFieldBlock(field, indent));
+  return [tableBlock, ...nestedBlocks].join('\n');
+}
+
+function buildFieldsTableRows(fields: readonly CliModelField[], includeConverter: boolean): readonly string[][] {
+  const header = includeConverter ? ['NAME', 'LONG NAME', 'TYPE', 'OPTIONAL', 'CONVERTER'] : ['NAME', 'LONG NAME', 'TYPE', 'OPTIONAL'];
+  return [header, ...fields.map((field) => buildFieldRow(field, includeConverter))];
+}
+
+function buildFieldRow(field: CliModelField, includeConverter: boolean): string[] {
+  const row: string[] = [field.name, field.longName, field.tsType ?? '', field.optional ? 'yes' : 'no'];
+  if (includeConverter) {
+    row.push(field.converter ? truncate(field.converter, 60) : '');
   }
-  out.push(indentLines(renderTable(rows), indent));
-  for (const field of fields) {
-    if (field.nestedFields && field.nestedFields.length > 0) {
-      const label = field.nestedIsArray ? 'array element' : 'sub-object';
-      out.push(indentLines(`↳ ${field.name} (${label}, ${field.nestedFields.length} field${field.nestedFields.length === 1 ? '' : 's'})`, indent + 2));
-      out.push(renderFieldsTree(field.nestedFields, indent + 4));
-    }
-  }
-  return out.join('\n');
+  return row;
+}
+
+function renderNestedFieldBlock(field: CliModelField, indent: number): string[] {
+  const nested = field.nestedFields;
+  if (!nested || nested.length === 0) return [];
+  const label = field.nestedIsArray ? 'array element' : 'sub-object';
+  const plural = nested.length === 1 ? '' : 's';
+  return [indentLines(`↳ ${field.name} (${label}, ${nested.length} field${plural})`, indent + 2), renderFieldsTree(nested, indent + 4)];
 }
 
 function renderTable(rows: readonly (readonly string[])[]): string {

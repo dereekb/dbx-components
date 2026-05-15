@@ -24,8 +24,8 @@ export type ZohoRateLimitedTooManyRequestsLogFunction = (headers: ZohoRateLimitH
 export const DEFAULT_ZOHO_RATE_LIMITED_TOO_MANY_REQUESTS_LOG_FUNCTION = (details: ZohoRateLimitHeaderDetails | ZohoRateLimitResponseDetails) => {
   const limit = 'limit' in details ? details.limit : undefined;
   const resetAt = 'resetAt' in details ? details.resetAt : undefined;
-  const limitMessage = limit != null ? ' The limit is ' + String(limit) + ' requests per reset period.' : '';
-  const resetMessage = resetAt != null ? ' Will be reset at ' + String(resetAt) + '.' : '';
+  const limitMessage = limit == null ? '' : ' The limit is ' + String(limit) + ' requests per reset period.';
+  const resetMessage = resetAt == null ? '' : ' Will be reset at ' + String(resetAt) + '.';
   console.warn('zohoRateLimitedFetchHandler(): Too many requests made.' + limitMessage + resetMessage);
 };
 
@@ -132,7 +132,7 @@ export interface MakeZohoRateLimitedFetchHandlerConfig extends ZohoRateLimitedFe
  */
 export function makeZohoRateLimitedFetchHandler(config: MakeZohoRateLimitedFetchHandlerConfig): ZohoRateLimitedFetchHandler {
   const { readRateLimitDetails } = config;
-  const onTooManyRequests = config.onTooManyRequests !== false ? (config.onTooManyRequests ?? DEFAULT_ZOHO_RATE_LIMITED_TOO_MANY_REQUESTS_LOG_FUNCTION) : undefined;
+  const onTooManyRequests = config.onTooManyRequests === false ? undefined : (config.onTooManyRequests ?? DEFAULT_ZOHO_RATE_LIMITED_TOO_MANY_REQUESTS_LOG_FUNCTION);
   const defaultLimit = config.maxRateLimit ?? DEFAULT_ZOHO_API_RATE_LIMIT;
   const defaultResetPeriod = config.resetPeriod ?? DEFAULT_ZOHO_API_RATE_LIMIT_RESET_PERIOD;
 

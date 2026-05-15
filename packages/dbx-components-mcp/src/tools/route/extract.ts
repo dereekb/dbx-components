@@ -53,27 +53,8 @@ export function extractFile(source: RouteSource): ExtractFileResult {
   const objectLiteralsByName = collectStateConsts(sourceFile);
   const collected = new Map<string, RouteNode>();
 
-  // (1) every typed single-state const becomes a candidate
-  for (const [name, info] of objectLiteralsByName) {
-    if (!info.typedAsState) {
-      continue;
-    }
-    addNode({ file: source.name, literal: info.literal, fallbackConstName: name, into: collected, issues });
-  }
-
-  // (2) every array literal that participates in state registration
-  for (const arrayLit of findStateArrayLiterals(sourceFile)) {
-    for (const element of arrayLit.getElements()) {
-      if (Node.isObjectLiteralExpression(element)) {
-        addNode({ file: source.name, literal: element, fallbackConstName: undefined, into: collected, issues });
-      } else if (Node.isIdentifier(element)) {
-        const ref = objectLiteralsByName.get(element.getText());
-        if (ref) {
-          addNode({ file: source.name, literal: ref.literal, fallbackConstName: element.getText(), into: collected, issues });
-        }
-      }
-    }
-  }
+  collectTypedStateConsts({ source, objectLiteralsByName, collected, issues });
+  collectArrayLiteralStates({ source, sourceFile, objectLiteralsByName, collected, issues });
 
   const importedFromRelative = collectRelativeImports(sourceFile, source.name);
 
@@ -83,6 +64,62 @@ export function extractFile(source: RouteSource): ExtractFileResult {
     importedFromRelative
   };
   return result;
+}
+
+interface CollectTypedStateConstsInput {
+  readonly source: RouteSource;
+  readonly objectLiteralsByName: ReadonlyMap<string, StateConstInfo>;
+  readonly collected: Map<string, RouteNode>;
+  readonly issues: RouteIssue[];
+}
+
+// (1) every typed single-state const becomes a candidate
+function collectTypedStateConsts(input: CollectTypedStateConstsInput): void {
+  const { source, objectLiteralsByName, collected, issues } = input;
+  for (const [name, info] of objectLiteralsByName) {
+    if (!info.typedAsState) continue;
+    addNode({ file: source.name, literal: info.literal, fallbackConstName: name, into: collected, issues });
+  }
+}
+
+interface CollectArrayLiteralStatesInput {
+  readonly source: RouteSource;
+  readonly sourceFile: SourceFile;
+  readonly objectLiteralsByName: ReadonlyMap<string, StateConstInfo>;
+  readonly collected: Map<string, RouteNode>;
+  readonly issues: RouteIssue[];
+}
+
+// (2) every array literal that participates in state registration
+function collectArrayLiteralStates(input: CollectArrayLiteralStatesInput): void {
+  const { source, sourceFile, objectLiteralsByName, collected, issues } = input;
+  for (const arrayLit of findStateArrayLiterals(sourceFile)) {
+    for (const element of arrayLit.getElements()) {
+      collectArrayElement({ element, source, objectLiteralsByName, collected, issues });
+    }
+  }
+}
+
+interface CollectArrayElementInput {
+  readonly element: Node;
+  readonly source: RouteSource;
+  readonly objectLiteralsByName: ReadonlyMap<string, StateConstInfo>;
+  readonly collected: Map<string, RouteNode>;
+  readonly issues: RouteIssue[];
+}
+
+function collectArrayElement(input: CollectArrayElementInput): void {
+  const { element, source, objectLiteralsByName, collected, issues } = input;
+  if (Node.isObjectLiteralExpression(element)) {
+    addNode({ file: source.name, literal: element, fallbackConstName: undefined, into: collected, issues });
+    return;
+  }
+  if (Node.isIdentifier(element)) {
+    const ref = objectLiteralsByName.get(element.getText());
+    if (ref) {
+      addNode({ file: source.name, literal: ref.literal, fallbackConstName: element.getText(), into: collected, issues });
+    }
+  }
 }
 
 // MARK: State const map
@@ -110,8 +147,13 @@ function collectStateConsts(sourceFile: SourceFile): Map<string, StateConstInfo>
 // MARK: Array discovery
 function findStateArrayLiterals(sourceFile: SourceFile): readonly ArrayLiteralExpression[] {
   const arrays: ArrayLiteralExpression[] = [];
+  collectTopLevelStateArrays(sourceFile, arrays);
+  collectProvideStatesArrays(sourceFile, arrays);
+  return arrays;
+}
 
-  // 2a: top-level `const X: Ng2StateDeclaration[] = [...]` or `const X = [literalOrIdent, ...]`
+// 2a: top-level `const X: Ng2StateDeclaration[] = [...]` or `const X = [literalOrIdent, ...]`
+function collectTopLevelStateArrays(sourceFile: SourceFile, arrays: ArrayLiteralExpression[]): void {
   for (const stmt of sourceFile.getVariableStatements()) {
     for (const decl of stmt.getDeclarations()) {
       const initializer = decl.getInitializer();
@@ -120,38 +162,40 @@ function findStateArrayLiterals(sourceFile: SourceFile): readonly ArrayLiteralEx
       }
     }
   }
+}
 
-  // 2b: `provideStates({ states: [...] })` and `UIRouterModule.forChild({ states: [...] })`
+// 2b: `provideStates({ states: [...] })` and `UIRouterModule.forChild({ states: [...] })`
+function collectProvideStatesArrays(sourceFile: SourceFile, arrays: ArrayLiteralExpression[]): void {
   for (const call of sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)) {
-    const expr = call.getExpression();
-    const exprText = expr.getText();
-    const isProvide = exprText === 'provideStates';
-    const isForChild = exprText.endsWith('.forChild') || exprText.endsWith('.forRoot');
-    if (!isProvide && !isForChild) {
-      continue;
-    }
+    if (!isProvideStatesCall(call.getExpression().getText())) continue;
     for (const arg of call.getArguments()) {
-      if (!Node.isObjectLiteralExpression(arg)) {
-        continue;
-      }
-      const statesProp = arg.getProperty('states');
-      if (!statesProp || !Node.isPropertyAssignment(statesProp)) {
-        continue;
-      }
-      const initializer = statesProp.getInitializer();
-      if (initializer && Node.isArrayLiteralExpression(initializer)) {
-        arrays.push(initializer);
-      } else if (initializer && Node.isIdentifier(initializer)) {
-        // states: STATES — resolve to an array literal in the same file
-        const referenced = findArrayLiteralForIdentifier(sourceFile, initializer);
-        if (referenced) {
-          arrays.push(referenced);
-        }
-      }
+      if (!Node.isObjectLiteralExpression(arg)) continue;
+      collectStatesArrayFromObjectArg(arg, sourceFile, arrays);
     }
   }
+}
 
-  return arrays;
+function isProvideStatesCall(exprText: string): boolean {
+  if (exprText === 'provideStates') return true;
+  return exprText.endsWith('.forChild') || exprText.endsWith('.forRoot');
+}
+
+function collectStatesArrayFromObjectArg(arg: ObjectLiteralExpression, sourceFile: SourceFile, arrays: ArrayLiteralExpression[]): void {
+  const statesProp = arg.getProperty('states');
+  if (!statesProp || !Node.isPropertyAssignment(statesProp)) return;
+  const initializer = statesProp.getInitializer();
+  if (!initializer) return;
+  if (Node.isArrayLiteralExpression(initializer)) {
+    arrays.push(initializer);
+    return;
+  }
+  if (Node.isIdentifier(initializer)) {
+    // states: STATES — resolve to an array literal in the same file
+    const referenced = findArrayLiteralForIdentifier(sourceFile, initializer);
+    if (referenced) {
+      arrays.push(referenced);
+    }
+  }
 }
 
 function declarationIsStateArray(stmt: VariableStatement, name: string, literal: ArrayLiteralExpression): boolean {

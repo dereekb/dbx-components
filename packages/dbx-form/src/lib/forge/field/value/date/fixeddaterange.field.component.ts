@@ -296,7 +296,7 @@ export class DbxForgeFixedDateRangeFieldComponent {
 
   // MARK: Observable pipelines
   readonly config$: Observable<DbxFixedDateRangePickerConfiguration> = this._config.pipe(
-    map((x) => x ?? of({} as DbxFixedDateRangePickerConfiguration)),
+    map((x) => x ?? of({})),
     switchMap((x) => x),
     distinctUntilChanged(),
     shareReplay(1)
@@ -362,7 +362,7 @@ export class DbxForgeFixedDateRangeFieldComponent {
     map((x) => {
       if (x && Object.keys(x).length > 0) {
         const dateFilter = dateTimeMinuteWholeDayDecisionFunction(x, false);
-        return (d: Date | null) => (d != null ? dateFilter(d) : true);
+        return (d: Date | null) => (d == null ? true : dateFilter(d));
       }
       return () => true;
     }),
@@ -396,7 +396,11 @@ export class DbxForgeFixedDateRangeFieldComponent {
               let result: FixedDateRangeScan;
               let pickType: Maybe<FixedDateRangeScanType> = 'start';
 
-              if (nextDateRange?.start != null) {
+              if (nextDateRange?.start == null) {
+                result = {
+                  lastDateRange: nextDateRange
+                };
+              } else {
                 const { start: startOrNextDate, end } = nextDateRange;
                 const potentialBoundary = dateRange({ ...dateRangeInput, date: startOrNextDate } as DateRangeInput);
 
@@ -493,10 +497,6 @@ export class DbxForgeFixedDateRangeFieldComponent {
                     range
                   };
                 }
-              } else {
-                result = {
-                  lastDateRange: nextDateRange
-                };
               }
 
               if (result) {
@@ -569,7 +569,7 @@ export class DbxForgeFixedDateRangeFieldComponent {
 
       untracked(() => {
         // Picker config (provide default so pipeline can proceed without config)
-        this._config.next(p?.pickerConfig ? asObservableFromGetter(p.pickerConfig) : of({} as DbxFixedDateRangePickerConfiguration));
+        this._config.next(p?.pickerConfig ? asObservableFromGetter(p.pickerConfig) : of({}));
 
         // Date range input
         if (p?.dateRangeInput) {

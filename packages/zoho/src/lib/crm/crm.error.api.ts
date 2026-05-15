@@ -120,9 +120,8 @@ export function assertZohoCrmRecordDataArrayResultHasContent<T>(moduleName?: Zoh
   return <R extends ZohoDataArrayResultRef<T>>(x: R) => {
     if (!x?.data?.length) {
       throw new ZohoCrmRecordNoContentError(moduleName, recordId);
-    } else {
-      return x;
     }
+    return x;
   };
 }
 

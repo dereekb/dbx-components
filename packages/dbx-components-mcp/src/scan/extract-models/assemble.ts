@@ -93,66 +93,24 @@ export interface SubObjectConstEntry {
  * @returns the assembled models and groups for the file
  */
 export function assembleFile(input: AssembleFileInput): AssembledFile {
-  const interfaceByName = new Map<string, ExtractedInterface>();
-  for (const iface of input.interfaces) interfaceByName.set(iface.name, iface);
-  const converterByInterface = new Map<string, ExtractedConverter>();
-  for (const c of input.converters) converterByInterface.set(c.interfaceName, c);
+  const interfaceByName = buildInterfaceIndex(input.interfaces);
+  const converterByInterface = buildConverterIndex(input.converters);
   const enumNames = new Set(input.enums.map((e) => e.name));
-  const groupByModelName = new Map<string, string>();
-  for (const group of input.modelGroups) {
-    for (const modelName of group.modelNames) groupByModelName.set(modelName, group.name);
-  }
+  const groupByModelName = buildGroupByModelName(input.modelGroups);
 
   const models: FirebaseModel[] = [];
   for (const id of input.identities) {
-    const modelName = capitalize(id.modelType);
-    const iface = interfaceByName.get(modelName);
-    if (!iface?.tags.dbxModel) continue;
-    const converter = converterByInterface.get(modelName);
-    if (!converter) continue;
-    const collectionPrefix = id.collectionPrefix;
-    if (collectionPrefix === undefined) continue;
-
-    const inheritedProps = collectInheritedProps(iface, interfaceByName);
-    const fields = buildFields({
-      converter,
-      inheritedProps,
+    const built = buildModelEntry({
+      id,
+      interfaceByName,
+      converterByInterface,
       enumNames,
-      subObjectConstIndex: input.subObjectConstIndex,
-      subObjectInterfaceIndex: input.subObjectInterfaceIndex
+      groupByModelName,
+      input
     });
-    const referencedEnums = new Set(fields.flatMap((f) => (f.enumRef ? [f.enumRef] : [])));
-    const relevantEnums = input.enums.filter((e) => referencedEnums.has(e.name));
-    const detectionHints = fields.map((f) => f.name).filter((n) => !COMMON_FIELDS.has(n));
-    const factoryFnName = id.parentIdentityConst ? `${id.modelType}FirestoreCollectionFactory` : `${id.modelType}FirestoreCollection`;
-    const collectionKind = input.factoryKinds.get(factoryFnName);
-    const groupName = groupByModelName.get(modelName);
-    const extendedNames = collectExtendedNames(iface, interfaceByName);
-    const userKeyedById = extendedNames.has(USER_KEYED_BY_ID_MARKER);
-    const hasUserUidField = extendedNames.has(USER_RELATED_MARKER);
-
-    const entry: FirebaseModel = {
-      name: modelName,
-      ...(iface.description ? { description: iface.description } : {}),
-      identityConst: id.identityConst,
-      modelType: id.modelType,
-      collectionPrefix,
-      ...(id.parentIdentityConst ? { parentIdentityConst: id.parentIdentityConst } : {}),
-      sourcePackage: input.sourcePackage,
-      sourceFile: input.sourceFile,
-      fields,
-      enums: relevantEnums.map((e) => ({
-        name: e.name,
-        values: e.values.map((v) => (v.description ? { name: v.name, value: v.value, description: v.description } : { name: v.name, value: v.value })),
-        ...(e.description ? { description: e.description } : {})
-      })),
-      detectionHints,
-      ...(groupName ? { modelGroup: groupName } : {}),
-      ...(collectionKind ? { collectionKind } : {}),
-      ...(userKeyedById ? { userKeyedById: true } : {}),
-      ...(hasUserUidField ? { hasUserUidField: true } : {})
-    };
-    models.push(entry);
+    if (built) {
+      models.push(built);
+    }
   }
 
   const modelGroups: FirebaseModelGroup[] = input.modelGroups.map((g) => ({
@@ -165,6 +123,86 @@ export function assembleFile(input: AssembleFileInput): AssembledFile {
   }));
 
   return { models, modelGroups };
+}
+
+function buildInterfaceIndex(interfaces: readonly ExtractedInterface[]): Map<string, ExtractedInterface> {
+  const interfaceByName = new Map<string, ExtractedInterface>();
+  for (const iface of interfaces) interfaceByName.set(iface.name, iface);
+  return interfaceByName;
+}
+
+function buildConverterIndex(converters: readonly ExtractedConverter[]): Map<string, ExtractedConverter> {
+  const converterByInterface = new Map<string, ExtractedConverter>();
+  for (const c of converters) converterByInterface.set(c.interfaceName, c);
+  return converterByInterface;
+}
+
+function buildGroupByModelName(modelGroups: readonly ExtractedModelGroup[]): Map<string, string> {
+  const groupByModelName = new Map<string, string>();
+  for (const group of modelGroups) {
+    for (const modelName of group.modelNames) groupByModelName.set(modelName, group.name);
+  }
+  return groupByModelName;
+}
+
+interface BuildModelEntryInput {
+  readonly id: ExtractedIdentity;
+  readonly interfaceByName: ReadonlyMap<string, ExtractedInterface>;
+  readonly converterByInterface: ReadonlyMap<string, ExtractedConverter>;
+  readonly enumNames: ReadonlySet<string>;
+  readonly groupByModelName: ReadonlyMap<string, string>;
+  readonly input: AssembleFileInput;
+}
+
+function buildModelEntry(args: BuildModelEntryInput): FirebaseModel | undefined {
+  const { id, interfaceByName, converterByInterface, enumNames, groupByModelName, input } = args;
+  const modelName = capitalize(id.modelType);
+  const iface = interfaceByName.get(modelName);
+  if (!iface?.tags.dbxModel) return undefined;
+  const converter = converterByInterface.get(modelName);
+  if (!converter) return undefined;
+  const collectionPrefix = id.collectionPrefix;
+  if (collectionPrefix === undefined) return undefined;
+
+  const inheritedProps = collectInheritedProps(iface, interfaceByName);
+  const fields = buildFields({
+    converter,
+    inheritedProps,
+    enumNames,
+    subObjectConstIndex: input.subObjectConstIndex,
+    subObjectInterfaceIndex: input.subObjectInterfaceIndex
+  });
+  const referencedEnums = new Set(fields.flatMap((f) => (f.enumRef ? [f.enumRef] : [])));
+  const relevantEnums = input.enums.filter((e) => referencedEnums.has(e.name));
+  const detectionHints = fields.map((f) => f.name).filter((n) => !COMMON_FIELDS.has(n));
+  const factoryFnName = id.parentIdentityConst ? `${id.modelType}FirestoreCollectionFactory` : `${id.modelType}FirestoreCollection`;
+  const collectionKind = input.factoryKinds.get(factoryFnName);
+  const groupName = groupByModelName.get(modelName);
+  const extendedNames = collectExtendedNames(iface, interfaceByName);
+  const userKeyedById = extendedNames.has(USER_KEYED_BY_ID_MARKER);
+  const hasUserUidField = extendedNames.has(USER_RELATED_MARKER);
+
+  return {
+    name: modelName,
+    ...(iface.description ? { description: iface.description } : {}),
+    identityConst: id.identityConst,
+    modelType: id.modelType,
+    collectionPrefix,
+    ...(id.parentIdentityConst ? { parentIdentityConst: id.parentIdentityConst } : {}),
+    sourcePackage: input.sourcePackage,
+    sourceFile: input.sourceFile,
+    fields,
+    enums: relevantEnums.map((e) => ({
+      name: e.name,
+      values: e.values.map((v) => (v.description ? { name: v.name, value: v.value, description: v.description } : { name: v.name, value: v.value })),
+      ...(e.description ? { description: e.description } : {})
+    })),
+    detectionHints,
+    ...(groupName ? { modelGroup: groupName } : {}),
+    ...(collectionKind ? { collectionKind } : {}),
+    ...(userKeyedById ? { userKeyedById: true } : {}),
+    ...(hasUserUidField ? { hasUserUidField: true } : {})
+  };
 }
 
 interface BuildFieldsInput {

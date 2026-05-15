@@ -36,6 +36,17 @@ const MANIFEST: CliModelManifest = [
   }
 ];
 
+function runWith(argv: readonly string[]): void {
+  const cmd = buildModelDecodeCommand(MANIFEST);
+  yargs([...argv])
+    .command(cmd)
+    .demandCommand(1)
+    .strict()
+    .fail(false)
+    .exitProcess(false)
+    .parseSync();
+}
+
 describe('buildModelDecodeCommand()', () => {
   let stdout: string[] = [];
   let stdoutSpy: ReturnType<typeof vi.spyOn>;
@@ -51,9 +62,9 @@ describe('buildModelDecodeCommand()', () => {
     consoleSpy = vi.spyOn(console, 'log').mockImplementation((arg: any) => {
       stdout.push(String(arg));
     });
-    exitSpy = vi.spyOn(process, 'exit').mockImplementation(((code?: number) => {
+    exitSpy = vi.spyOn(process, 'exit').mockImplementation((code?: string | number | null): never => {
       throw new Error(`process.exit:${code ?? 0}`);
-    }) as never);
+    });
   });
 
   afterEach(() => {
@@ -61,17 +72,6 @@ describe('buildModelDecodeCommand()', () => {
     consoleSpy.mockRestore();
     exitSpy.mockRestore();
   });
-
-  function runWith(argv: readonly string[]): void {
-    const cmd = buildModelDecodeCommand(MANIFEST);
-    yargs(argv as string[])
-      .command(cmd)
-      .demandCommand(1)
-      .strict()
-      .fail(false)
-      .exitProcess(false)
-      .parseSync();
-  }
 
   it('decodes a top-level key into model + id', () => {
     runWith(['model-decode', 'p/abc123']);

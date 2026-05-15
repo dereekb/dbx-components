@@ -305,38 +305,7 @@ export const nestjsRequireInjectRule: NestjsRequireInjectRuleDefinition = {
           const paramDecoratorsOnNode = param.decorators;
           const hasValidDecorator = paramDecoratorsOnNode && paramDecoratorsOnNode.length > 0 && paramDecoratorsOnNode.some((d: AstNode) => paramDecorators.has(getDecoratorName(d)));
 
-          if (!hasValidDecorator) {
-            // Missing @Inject() entirely
-            const tokenName = getInjectTokenName(param);
-
-            context.report({
-              node: param,
-              messageId: 'missingInject',
-              data: {
-                name: getParamName(param),
-                classDecorator: classDecoratorName
-              },
-              fix: tokenName
-                ? (fixer: AstNode) => {
-                    const fixes = [];
-
-                    fixes.push(fixer.insertTextBefore(param, `@Inject(${tokenName}) `));
-
-                    if (!nestjsImports.has('Inject') && nestjsImportNode) {
-                      const lastSpecifier = nestjsImportNode.specifiers[nestjsImportNode.specifiers.length - 1];
-
-                      if (lastSpecifier) {
-                        fixes.push(fixer.insertTextAfter(lastSpecifier, ', Inject'));
-                      }
-
-                      nestjsImports.add('Inject');
-                    }
-
-                    return fixes;
-                  }
-                : undefined
-            });
-          } else {
+          if (hasValidDecorator) {
             // Has @Inject() — check if the injection token is a type-only import
             for (const decorator of paramDecoratorsOnNode) {
               const tokenName = getInjectTokenFromDecorator(decorator);
@@ -370,6 +339,37 @@ export const nestjsRequireInjectRule: NestjsRequireInjectRuleDefinition = {
                 }
               }
             }
+          } else {
+            // Missing @Inject() entirely
+            const tokenName = getInjectTokenName(param);
+
+            context.report({
+              node: param,
+              messageId: 'missingInject',
+              data: {
+                name: getParamName(param),
+                classDecorator: classDecoratorName
+              },
+              fix: tokenName
+                ? (fixer: AstNode) => {
+                    const fixes = [];
+
+                    fixes.push(fixer.insertTextBefore(param, `@Inject(${tokenName}) `));
+
+                    if (!nestjsImports.has('Inject') && nestjsImportNode) {
+                      const lastSpecifier = nestjsImportNode.specifiers[nestjsImportNode.specifiers.length - 1];
+
+                      if (lastSpecifier) {
+                        fixes.push(fixer.insertTextAfter(lastSpecifier, ', Inject'));
+                      }
+
+                      nestjsImports.add('Inject');
+                    }
+
+                    return fixes;
+                  }
+                : undefined
+            });
           }
         }
       }

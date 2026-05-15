@@ -135,7 +135,7 @@ export abstract class AbstractForgePickableItemFieldDirective<T = unknown, M = u
           map((x) =>
             mapLoadingStateResults(x, {
               mapValue: (loadedValues: Configurable<PickableDisplayValueWithHash<T, M, H>>[]) => {
-                loadedValues.forEach((v) => ((v as Configurable<PickableValueFieldDisplayValue<T, M>>).isUnknown = (v as PickableValueFieldDisplayValue<T, M>).isUnknown ?? true));
+                loadedValues.forEach((v) => (v.isUnknown = v.isUnknown ?? true));
                 return [...displayValues, ...(loadedValues as PickableDisplayValueWithHash<T, M, H>[])];
               }
             })

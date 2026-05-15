@@ -111,14 +111,14 @@ export class DbxPdfMergeEditorComponent {
 
     const blob = this.mergeBlobSignal();
 
-    if (blob != null) {
-      this._pendingPreview.subscription = null;
-      this.openPreviewDialog(blob);
-    } else {
+    if (blob == null) {
       this._pendingPreview.subscription = this.store.mergeOutput$.pipe(first()).subscribe((merged) => {
         this._pendingPreview.subscription = null;
         this.openPreviewDialog(merged);
       });
+    } else {
+      this._pendingPreview.subscription = null;
+      this.openPreviewDialog(blob);
     }
   }
 

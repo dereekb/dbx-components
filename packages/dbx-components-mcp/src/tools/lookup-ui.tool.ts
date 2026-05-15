@@ -94,11 +94,7 @@ function fuzzyCandidates(registry: UiComponentRegistry, query: string): readonly
   if (q.length > 0) {
     const scored: { readonly entry: UiComponentEntry; readonly score: number }[] = [];
     for (const entry of registry.all) {
-      const slugHit = entry.slug.toLowerCase().includes(q) ? 4 : 0;
-      const classHit = entry.className.toLowerCase().includes(q) ? 3 : 0;
-      const selectorHit = entry.selector.toLowerCase().includes(q) ? 2 : 0;
-      const descHit = entry.description.toLowerCase().includes(q) ? 1 : 0;
-      const score = slugHit + classHit + selectorHit + descHit;
+      const score = scoreFuzzyCandidate(entry, q);
       if (score > 0) {
         scored.push({ entry, score });
       }
@@ -107,6 +103,14 @@ function fuzzyCandidates(registry: UiComponentRegistry, query: string): readonly
     result = scored.slice(0, 5).map((s) => s.entry);
   }
   return result;
+}
+
+function scoreFuzzyCandidate(entry: UiComponentEntry, q: string): number {
+  const slugHit = entry.slug.toLowerCase().includes(q) ? 4 : 0;
+  const classHit = entry.className.toLowerCase().includes(q) ? 3 : 0;
+  const selectorHit = entry.selector.toLowerCase().includes(q) ? 2 : 0;
+  const descHit = entry.description.toLowerCase().includes(q) ? 1 : 0;
+  return slugHit + classHit + selectorHit + descHit;
 }
 
 function resolveSingle(registry: UiComponentRegistry, rawTopic: string): Maybe<UiComponentEntry> {
@@ -253,27 +257,33 @@ function formatGroup(entries: readonly UiComponentEntry[], title: string): strin
   if (entries.length === 0) {
     result = '_No UI components matched._';
   } else {
-    const byKind = new Map<string, UiComponentEntry[]>();
-    for (const entry of entries) {
-      const list = byKind.get(entry.kind) ?? [];
-      list.push(entry);
-      byKind.set(entry.kind, list);
-    }
+    const byKind = groupEntriesByKind(entries);
     const sections: string[] = [`# ${title}`, ''];
     for (const kind of UI_COMPONENT_KINDS) {
-      const list = byKind.get(kind);
-      if (!list || list.length === 0) {
-        continue;
-      }
-      sections.push(`## ${kind} (${list.length})`, '');
-      for (const entry of list) {
-        sections.push(`- **\`${entry.slug}\`** → \`${entry.className}\` (\`${entry.selector}\`) — ${entry.description}`);
-      }
-      sections.push('');
+      appendKindSection(sections, kind, byKind.get(kind));
     }
     result = sections.join('\n').trimEnd();
   }
   return result;
+}
+
+function groupEntriesByKind(entries: readonly UiComponentEntry[]): ReadonlyMap<string, UiComponentEntry[]> {
+  const byKind = new Map<string, UiComponentEntry[]>();
+  for (const entry of entries) {
+    const list = byKind.get(entry.kind) ?? [];
+    list.push(entry);
+    byKind.set(entry.kind, list);
+  }
+  return byKind;
+}
+
+function appendKindSection(sections: string[], kind: string, list: readonly UiComponentEntry[] | undefined): void {
+  if (!list || list.length === 0) return;
+  sections.push(`## ${kind} (${list.length})`, '');
+  for (const entry of list) {
+    sections.push(`- **\`${entry.slug}\`** → \`${entry.className}\` (\`${entry.selector}\`) — ${entry.description}`);
+  }
+  sections.push('');
 }
 
 function formatCatalog(registry: UiComponentRegistry): string {

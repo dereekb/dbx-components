@@ -277,12 +277,14 @@ function formatClaimValue(value: unknown): string {
   let result: string;
   if (typeof value === 'string') {
     result = value;
-  } else if (value === null) {
-    result = 'null';
+  } else if (value === null || value === undefined) {
+    result = String(value);
   } else if (typeof value === 'object') {
     result = JSON.stringify(value);
+  } else if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') {
+    result = value.toString();
   } else {
-    result = String(value);
+    result = JSON.stringify(value);
   }
   return result;
 }

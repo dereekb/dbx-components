@@ -272,7 +272,7 @@ demoApiFunctionContextFactory((f) => {
                   expect(data.d).toBe(true);
                 });
 
-                const createdEvents = created.map((x) => ((x.data as Notification).n.d as { event: string }).event).sort();
+                const createdEvents = created.map((x) => ((x.data as Notification).n.d as { event: string }).event).sort((a, b) => a.localeCompare(b));
                 expect(createdEvents).toEqual(['breakStarted', 'clockIn', 'taskStarted']);
 
                 // all three archive together — same sat ⇒ same day bucket
@@ -288,7 +288,7 @@ demoApiFunctionContextFactory((f) => {
                 const items = await loadAllLoggedEventItemsForDay(days[0].id);
                 expect(items.length).toBe(3);
 
-                const archivedEvents = items.map((x) => (x.d as { event: string }).event).sort();
+                const archivedEvents = items.map((x) => (x.d as { event: string }).event).sort((a, b) => a.localeCompare(b));
                 expect(archivedEvents).toEqual(['breakStarted', 'clockIn', 'taskStarted']);
               });
             });
@@ -326,7 +326,7 @@ demoApiFunctionContextFactory((f) => {
                 expect(itemsForKnownPages.length).toBe(3);
                 expect(itemsForKnownPages).toEqual(allItems);
 
-                const tags = itemsForKnownPages.map((x) => (x.d as { tag: string }).tag).sort();
+                const tags = itemsForKnownPages.map((x) => (x.d as { tag: string }).tag).sort((a, b) => a.localeCompare(b));
                 expect(tags).toEqual(['a', 'b', 'c']);
 
                 // requesting unknown page IDs silently returns nothing (does not throw)
@@ -405,12 +405,13 @@ demoApiFunctionContextFactory((f) => {
                 const days = await loadAllLoggedEventDays();
                 expect(days.length).toBe(3);
 
-                const dayIds = days.map((x) => x.id).sort();
-                expect(dayIds).toEqual([todayDayId, yesterdayDayId, lastWeekDayId].sort());
+                const sortByLocale = (a: string, b: string) => a.localeCompare(b);
+                const dayIds = days.map((x) => x.id).sort(sortByLocale);
+                expect(dayIds).toEqual([todayDayId, yesterdayDayId, lastWeekDayId].sort(sortByLocale));
 
                 const todayItems = await loadAllLoggedEventItemsForDay(todayDayId);
                 expect(todayItems.length).toBe(2);
-                const todayTags = todayItems.map((x) => (x.d as { tag: string }).tag).sort();
+                const todayTags = todayItems.map((x) => (x.d as { tag: string }).tag).sort((a, b) => a.localeCompare(b));
                 expect(todayTags).toEqual(['today-a', 'today-b']);
 
                 const yesterdayItems = await loadAllLoggedEventItemsForDay(yesterdayDayId);
@@ -594,7 +595,7 @@ demoApiFunctionContextFactory((f) => {
                 const items = await loader.getItemsForDayRange({ from: dayBefore, to: today });
                 expect(items.length).toBe(2);
 
-                const tags = items.map((x) => (x.d as { tag: string }).tag).sort();
+                const tags = items.map((x) => (x.d as { tag: string }).tag).sort((a, b) => a.localeCompare(b));
                 expect(tags).toEqual(['dayBefore', 'today']);
 
                 // mid-range day with no archive returns empty without throwing
@@ -643,7 +644,7 @@ demoApiFunctionContextFactory((f) => {
                 const seen: NotificationLoggedEventLoaderDayResult[] = [];
 
                 await loader.forEachDayInRange({
-                  from: dates[dates.length - 1],
+                  from: dates.at(-1)!,
                   to: dates[0],
                   maxParallelTasks: 2,
                   handler: ({ dayId, items }) => {
@@ -653,8 +654,8 @@ demoApiFunctionContextFactory((f) => {
 
                 expect(seen.length).toBe(dayCount);
 
-                const visitedDayIds = seen.map((x) => x.dayId).sort();
-                const expectedDayIds = dates.map(notificationLoggedEventDayId).sort();
+                const visitedDayIds = seen.map((x) => x.dayId).sort((a, b) => a.localeCompare(b));
+                const expectedDayIds = dates.map(notificationLoggedEventDayId).sort((a, b) => a.localeCompare(b));
                 expect(visitedDayIds).toEqual(expectedDayIds);
 
                 seen.forEach((day) => {

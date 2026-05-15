@@ -91,11 +91,23 @@ function formatPattern(pattern: UiExamplePattern, depth: UiExampleDepth): string
 
 // MARK: Formatting — scanned entries
 function formatScannedExample(entry: DbxDocsUiExampleEntry, depth: UiExampleDepth): string {
+  const lines: string[] = [];
+  appendScannedExampleHeader(lines, entry, depth);
+  appendScannedExampleDescription(lines, entry, depth);
+  appendScannedExampleSnippet(lines, entry, depth);
+  appendScannedExampleUses(lines, entry, depth);
+  appendScannedExampleNotes(lines, entry, depth);
+  appendScannedExampleFooter(lines, entry, depth);
+  return lines.join('\n').trimEnd();
+}
+
+function appendScannedExampleHeader(lines: string[], entry: DbxDocsUiExampleEntry, depth: UiExampleDepth): void {
   const relatedText = (entry.relatedSlugs ?? []).map(code).join(', ');
   const relatedSuffix = relatedText.length > 0 ? ` · **related:** ${relatedText}` : '';
-  const lines: string[] = [`# ${entry.header}`, '', entry.summary, '', `**slug:** \`${entry.slug}\` · **origin:** \`${entry.appRef}\` · **category:** \`${entry.category}\` · **depth:** \`${depth}\`${relatedSuffix}`];
-  lines.push('');
+  lines.push(`# ${entry.header}`, '', entry.summary, '', `**slug:** \`${entry.slug}\` · **origin:** \`${entry.appRef}\` · **category:** \`${entry.category}\` · **depth:** \`${depth}\`${relatedSuffix}`, '');
+}
 
+function appendScannedExampleDescription(lines: string[], entry: DbxDocsUiExampleEntry, depth: UiExampleDepth): void {
   if (depth === 'full') {
     if (entry.info.length > 0) {
       lines.push('## Description', '', entry.info, '');
@@ -103,39 +115,44 @@ function formatScannedExample(entry: DbxDocsUiExampleEntry, depth: UiExampleDept
   } else if (entry.hint !== undefined) {
     lines.push(entry.hint, '');
   }
+}
 
+function appendScannedExampleSnippet(lines: string[], entry: DbxDocsUiExampleEntry, depth: UiExampleDepth): void {
   lines.push('## Host snippet', '', '```html', entry.snippet, '```', '');
   if (entry.imports !== undefined && depth !== 'minimal') {
     lines.push('## Imports', '', '```ts', entry.imports, '```', '');
   }
+}
 
-  if (entry.uses.length > 0) {
-    if (depth === 'brief') {
-      lines.push('## Uses', '');
-      for (const use of entry.uses) {
-        lines.push(`- ${formatUseSummaryLine(use)}`);
-      }
-      lines.push('');
-    } else if (depth === 'full') {
-      lines.push('## Uses', '');
-      for (const use of entry.uses) {
-        lines.push(`### ${formatUseHeading(use)}`, '');
-        if (use.classSource.length > 0) {
-          lines.push('```ts', use.classSource, '```', '');
-        }
+function appendScannedExampleUses(lines: string[], entry: DbxDocsUiExampleEntry, depth: UiExampleDepth): void {
+  if (entry.uses.length === 0) return;
+  if (depth === 'brief') {
+    lines.push('## Uses', '');
+    for (const use of entry.uses) {
+      lines.push(`- ${formatUseSummaryLine(use)}`);
+    }
+    lines.push('');
+  } else if (depth === 'full') {
+    lines.push('## Uses', '');
+    for (const use of entry.uses) {
+      lines.push(`### ${formatUseHeading(use)}`, '');
+      if (use.classSource.length > 0) {
+        lines.push('```ts', use.classSource, '```', '');
       }
     }
   }
+}
 
+function appendScannedExampleNotes(lines: string[], entry: DbxDocsUiExampleEntry, depth: UiExampleDepth): void {
   if (depth === 'full' && entry.notes !== undefined && entry.notes.length > 0) {
     lines.push('## Notes', '', entry.notes);
   }
+}
 
+function appendScannedExampleFooter(lines: string[], entry: DbxDocsUiExampleEntry, depth: UiExampleDepth): void {
   if (depth !== 'full') {
     lines.push('', `→ Call \`dbx_ui_examples pattern="${entry.slug}" depth="full"\` for the complete component, every supporting class, and notes.`);
   }
-
-  return lines.join('\n').trimEnd();
 }
 
 function formatUseHeading(use: DbxDocsUiExampleUseEntry): string {

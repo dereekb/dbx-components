@@ -37,22 +37,24 @@ function keyOf(cell: CellKey): string {
  * @param input - Declared entries, handler entries, and an optional model filter.
  * @returns The reconciled entries, summaries, issues, and aggregate counts.
  */
-export function reconcile(input: ReconcileInput): ReconcileResult {
-  const wanted = input.modelFilter ? normalize(input.modelFilter) : undefined;
+interface ReconcileDeclaredInput {
+  readonly declared: readonly DeclaredEntry[];
+  readonly handlerMap: ReadonlyMap<string, HandlerEntry>;
+  readonly seenKeys: Set<string>;
+  readonly entries: ReconciledEntry[];
+  readonly issues: ValidateIssue[];
+}
 
-  const declaredFiltered = wanted ? input.declared.filter((d) => normalize(d.model) === wanted) : input.declared;
-  const handlersFiltered = wanted ? input.handlers.filter((h) => normalize(h.model) === wanted) : input.handlers;
-
-  const handlerMap = new Map<string, HandlerEntry>();
-  for (const h of handlersFiltered) {
-    handlerMap.set(keyOf(h), h);
-  }
-
-  const seenKeys = new Set<string>();
-  const entries: ReconciledEntry[] = [];
-  const issues: ValidateIssue[] = [];
-
-  for (const d of declaredFiltered) {
+/**
+ * Iterates declared CRUD entries, pairs each with its handler (if any),
+ * appends a {@link ReconciledEntry}, and emits `MISSING_HANDLER` issues
+ * for entries the app does not wire.
+ *
+ * @param input - declared entries, handler lookup, plus output buffers
+ */
+function reconcileDeclared(input: ReconcileDeclaredInput): void {
+  const { declared, handlerMap, seenKeys, entries, issues } = input;
+  for (const d of declared) {
     const key = keyOf(d);
     seenKeys.add(key);
     const handler = handlerMap.get(key);
@@ -69,8 +71,25 @@ export function reconcile(input: ReconcileInput): ReconcileResult {
       });
     }
   }
+}
 
-  for (const h of handlersFiltered) {
+interface FlagOrphanHandlersInput {
+  readonly handlers: readonly HandlerEntry[];
+  readonly seenKeys: Set<string>;
+  readonly entries: ReconciledEntry[];
+  readonly issues: ValidateIssue[];
+}
+
+/**
+ * Adds an `ORPHAN_HANDLER` issue for every handler whose verb/specifier
+ * cell was not consumed by a declaration. Appends a synthetic
+ * {@link ReconciledEntry} so the output table stays exhaustive.
+ *
+ * @param input - handlers to flag plus output buffers
+ */
+function flagOrphanHandlers(input: FlagOrphanHandlersInput): void {
+  const { handlers, seenKeys, entries, issues } = input;
+  for (const h of handlers) {
     const key = keyOf(h);
     if (seenKeys.has(key)) continue;
     seenKeys.add(key);
@@ -85,15 +104,35 @@ export function reconcile(input: ReconcileInput): ReconcileResult {
       source: `${h.sourceFile}:${h.line}`
     });
   }
+}
 
+/**
+ * Reconciles declared CRUD entries against discovered handlers, producing
+ * per-model summaries, per-cell statuses, and
+ * `MISSING_HANDLER` / `ORPHAN_HANDLER` issues.
+ *
+ * @param input - Declared entries, handler entries, and an optional model filter.
+ * @returns The reconciled entries, summaries, issues, and aggregate counts.
+ */
+export function reconcile(input: ReconcileInput): ReconcileResult {
+  const wanted = input.modelFilter ? normalize(input.modelFilter) : undefined;
+  const declaredFiltered = wanted ? input.declared.filter((d) => normalize(d.model) === wanted) : input.declared;
+  const handlersFiltered = wanted ? input.handlers.filter((h) => normalize(h.model) === wanted) : input.handlers;
+  const handlerMap = new Map<string, HandlerEntry>();
+  for (const h of handlersFiltered) {
+    handlerMap.set(keyOf(h), h);
+  }
+  const seenKeys = new Set<string>();
+  const entries: ReconciledEntry[] = [];
+  const issues: ValidateIssue[] = [];
+  reconcileDeclared({ declared: declaredFiltered, handlerMap, seenKeys, entries, issues });
+  flagOrphanHandlers({ handlers: handlersFiltered, seenKeys, entries, issues });
   for (const h of handlersFiltered) {
     const namingIssue = checkHandlerNaming(h);
     if (namingIssue) issues.push(namingIssue);
   }
-
   entries.sort(compareEntries);
   issues.sort((a, b) => a.model.localeCompare(b.model) || (a.verb ?? '').localeCompare(b.verb ?? '') || (a.specifier ?? '').localeCompare(b.specifier ?? ''));
-
   const summaries = buildSummaries(entries, issues);
   const errorCount = issues.length;
   const warningCount = 0;

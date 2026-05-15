@@ -1,5 +1,6 @@
-import { computed, Directive, input } from '@angular/core';
-import { type DbxColorInput, DBX_COLOR_CUSTOM_TEXT_CSS_CLASS, isDbxColorConfig } from './style';
+import { computed, Directive, inject, input } from '@angular/core';
+import { type DbxColorConfig, type DbxColorInput, DBX_COLOR_CUSTOM_TEXT_CSS_CLASS, isDbxColorConfig } from './style';
+import { DbxColorService } from './style.color.service';
 import { type Maybe } from '@dereekb/util';
 
 /**
@@ -25,7 +26,14 @@ import { type Maybe } from '@dereekb/util';
   standalone: true
 })
 export class DbxTextColorDirective {
+  private readonly _colorService = inject(DbxColorService, { optional: true });
+
   readonly dbxTextColor = input<Maybe<DbxColorInput>>();
+
+  private readonly _configSignal = computed<Maybe<DbxColorConfig>>(() => {
+    const value = this.dbxTextColor();
+    return isDbxColorConfig(value) ? (this._colorService?.expandColorConfig(value) ?? value) : undefined;
+  });
 
   readonly cssClassSignal = computed(() => {
     const value = this.dbxTextColor();
@@ -43,8 +51,5 @@ export class DbxTextColorDirective {
   /**
    * Inline `--dbx-color-current` value applied when a {@link DbxColorConfig} is bound. Resolves to `null` in string mode so the named `.dbx-{color}` class supplies the variable instead.
    */
-  readonly colorStyleSignal = computed(() => {
-    const value = this.dbxTextColor();
-    return isDbxColorConfig(value) ? value.color : null;
-  });
+  readonly colorStyleSignal = computed(() => this._configSignal()?.color ?? null);
 }

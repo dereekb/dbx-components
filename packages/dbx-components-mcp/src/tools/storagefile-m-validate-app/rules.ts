@@ -169,6 +169,16 @@ function flagUploadInitializerOrphans(extracted: ExtractedAppStorageFiles, viola
  * @param violations - the mutable violations buffer to append to
  */
 function flagUploadCoverageGaps(extracted: ExtractedAppStorageFiles, violations: Violation[]): void {
+  const reachableTypeIdentifiers = collectReachableTypeIdentifiers(extracted);
+  const entriesByType = groupInitializerEntriesByType(extracted);
+
+  for (const c of extracted.fileTypeIdentifierConstants) {
+    if (reachableTypeIdentifiers.has(c.symbolName)) continue;
+    flagUncoveredFileTypeIdentifier(c.symbolName, entriesByType.get(c.symbolName), violations);
+  }
+}
+
+function collectReachableTypeIdentifiers(extracted: ExtractedAppStorageFiles): Set<string> {
   const reachableBindings = new Set<string>();
   for (const call of extracted.uploadServiceCalls) {
     for (const name of call.resolvedInitializerBindings) reachableBindings.add(name);
@@ -179,38 +189,40 @@ function flagUploadCoverageGaps(extracted: ExtractedAppStorageFiles, violations:
       reachableTypeIdentifiers.add(entry.typeIdentifier);
     }
   }
+  return reachableTypeIdentifiers;
+}
 
-  const entriesByType = new Map<string, typeof extracted.uploadInitializerEntries>();
+function groupInitializerEntriesByType(extracted: ExtractedAppStorageFiles): Map<string, ExtractedUploadInitializerEntry[]> {
+  const entriesByType = new Map<string, ExtractedUploadInitializerEntry[]>();
   for (const entry of extracted.uploadInitializerEntries) {
     const list = entriesByType.get(entry.typeIdentifier);
     if (list) {
-      (list as ExtractedUploadInitializerEntry[]).push(entry);
+      list.push(entry);
     } else {
       entriesByType.set(entry.typeIdentifier, [entry]);
     }
   }
+  return entriesByType;
+}
 
-  for (const c of extracted.fileTypeIdentifierConstants) {
-    if (reachableTypeIdentifiers.has(c.symbolName)) continue;
-    const entries = entriesByType.get(c.symbolName);
-    if (entries && entries.length > 0) {
-      const entry = entries[0];
-      const bindingHint = entry.bindingName ? `\`${entry.bindingName}\`` : '<anonymous>';
-      pushViolation(violations, {
-        code: 'STORAGEFILE_UPLOAD_INITIALIZER_NAME_MISMATCH',
-        message: `Initializer ${bindingHint} in \`${entry.sourceFile}\` declares \`type: ${c.symbolName}\` but is not reachable from \`storageFileInitializeFromUploadService({ initializer })\` because no array element resolves to that binding name. The cross-file tracer matches by identifier name through function returns — when a factory function ships an initializer, its inner variable name must match the call-site binding name (and the array element/spread that references it).`,
-        side: 'api',
-        file: entry.sourceFile
-      });
-      continue;
-    }
+function flagUncoveredFileTypeIdentifier(symbolName: string, entries: readonly ExtractedUploadInitializerEntry[] | undefined, violations: Violation[]): void {
+  if (entries && entries.length > 0) {
+    const entry = entries[0];
+    const bindingHint = entry.bindingName ? `\`${entry.bindingName}\`` : '<anonymous>';
     pushViolation(violations, {
-      code: 'STORAGEFILE_PURPOSE_NOT_IN_UPLOAD_SERVICE',
-      message: `\`${c.symbolName}\` has no \`StorageFileInitializeFromUploadServiceInitializer\` reachable from any \`storageFileInitializeFromUploadService(...)\` call. Add an initializer with \`type: ${c.symbolName}\` and include it in the \`initializer\` array.`,
+      code: 'STORAGEFILE_UPLOAD_INITIALIZER_NAME_MISMATCH',
+      message: `Initializer ${bindingHint} in \`${entry.sourceFile}\` declares \`type: ${symbolName}\` but is not reachable from \`storageFileInitializeFromUploadService({ initializer })\` because no array element resolves to that binding name. The cross-file tracer matches by identifier name through function returns — when a factory function ships an initializer, its inner variable name must match the call-site binding name (and the array element/spread that references it).`,
       side: 'api',
-      file: undefined
+      file: entry.sourceFile
     });
+    return;
   }
+  pushViolation(violations, {
+    code: 'STORAGEFILE_PURPOSE_NOT_IN_UPLOAD_SERVICE',
+    message: `\`${symbolName}\` has no \`StorageFileInitializeFromUploadServiceInitializer\` reachable from any \`storageFileInitializeFromUploadService(...)\` call. Add an initializer with \`type: ${symbolName}\` and include it in the \`initializer\` array.`,
+    side: 'api',
+    file: undefined
+  });
 }
 
 /**
@@ -260,6 +272,20 @@ function checkProcessingHandler(extracted: ExtractedAppStorageFiles, violations:
     });
   }
 
+  const configsByPurpose = collectProcessingConfigsByPurpose(extracted, violations);
+  for (const [purposeName, subtaskNames] of purposesWithSubtasks) {
+    flagProcessingConfigCoverage({ purposeName, subtaskNames, configsByPurpose, violations });
+  }
+}
+
+interface FlagProcessingConfigCoverageOptions {
+  readonly purposeName: string;
+  readonly subtaskNames: readonly string[];
+  readonly configsByPurpose: ReadonlyMap<string, ExtractedAppStorageFiles['processingConfigs'][number]>;
+  readonly violations: Violation[];
+}
+
+function collectProcessingConfigsByPurpose(extracted: ExtractedAppStorageFiles, violations: Violation[]): Map<string, (typeof extracted.processingConfigs)[number]> {
   const purposeNames = new Set(extracted.purposeConstants.map((c) => c.symbolName));
   const configsByPurpose = new Map<string, (typeof extracted.processingConfigs)[number]>();
   for (const config of extracted.processingConfigs) {
@@ -274,38 +300,36 @@ function checkProcessingHandler(extracted: ExtractedAppStorageFiles, violations:
     }
     configsByPurpose.set(config.targetIdentifier, config);
   }
+  return configsByPurpose;
+}
 
-  for (const [purposeName, subtaskNames] of purposesWithSubtasks) {
-    const config = configsByPurpose.get(purposeName);
-    if (!config) {
+function flagProcessingConfigCoverage(options: FlagProcessingConfigCoverageOptions): void {
+  const { purposeName, subtaskNames, configsByPurpose, violations } = options;
+  const config = configsByPurpose.get(purposeName);
+  if (!config) {
+    pushViolation(violations, {
+      code: 'STORAGEFILE_PROCESSING_CONFIG_MISSING',
+      message: `Purpose \`${purposeName}\` declares processing subtasks but has no \`StorageFileProcessingPurposeSubtaskProcessorConfig\` whose \`target:\` references it. Add a config that lists every subtask in its \`flow:\` array.`,
+      side: 'api',
+      file: undefined
+    });
+    return;
+  }
+  const handledSubtasks = new Set(config.flowSubtaskIdentifiers);
+  for (const subtask of subtaskNames) {
+    if (!handledSubtasks.has(subtask)) {
       pushViolation(violations, {
-        code: 'STORAGEFILE_PROCESSING_CONFIG_MISSING',
-        message: `Purpose \`${purposeName}\` declares processing subtasks but has no \`StorageFileProcessingPurposeSubtaskProcessorConfig\` whose \`target:\` references it. Add a config that lists every subtask in its \`flow:\` array.`,
+        code: 'STORAGEFILE_PROCESSING_SUBTASK_NOT_HANDLED',
+        message: `Subtask \`${subtask}\` is declared for purpose \`${purposeName}\` but is not present as a \`subtask:\` entry in the matching processor config's \`flow:\` array. Add a flow step for it.`,
         side: 'api',
-        file: undefined
+        file: config.sourceFile
       });
-      continue;
-    }
-    const handledSubtasks = new Set(config.flowSubtaskIdentifiers);
-    for (const subtask of subtaskNames) {
-      if (!handledSubtasks.has(subtask)) {
-        pushViolation(violations, {
-          code: 'STORAGEFILE_PROCESSING_SUBTASK_NOT_HANDLED',
-          message: `Subtask \`${subtask}\` is declared for purpose \`${purposeName}\` but is not present as a \`subtask:\` entry in the matching processor config's \`flow:\` array. Add a flow step for it.`,
-          side: 'api',
-          file: config.sourceFile
-        });
-      }
     }
   }
 }
 
 function collectPurposesWithSubtasks(extracted: ExtractedAppStorageFiles): Map<string, readonly string[]> {
-  const aliasStems = new Set<string>();
-  for (const alias of extracted.processingSubtaskAliases) {
-    const stem = alias.symbolName.endsWith('ProcessingSubtask') ? alias.symbolName.slice(0, -'ProcessingSubtask'.length) : alias.symbolName;
-    aliasStems.add(camelOrPascalToScreamingSnake(stem));
-  }
+  const aliasStems = collectProcessingSubtaskAliasStems(extracted);
 
   // A purpose has subtasks if a `*_PROCESSING_SUBTASK`-typed constant's name
   // starts with `<PURPOSE_CONST_NAME>_`, AND an alias whose pascal-stem
@@ -315,24 +339,42 @@ function collectPurposesWithSubtasks(extracted: ExtractedAppStorageFiles): Map<s
   for (const purpose of extracted.purposeConstants) {
     const purposePrefix = removeSuffix(purpose.symbolName, PURPOSE_SUFFIX);
     if (!purposePrefix) continue;
-    const subtaskNames: string[] = [];
-    for (const c of extracted.processingSubtaskConstants) {
-      if (c.symbolName.startsWith(`${purpose.symbolName}_`)) {
-        subtaskNames.push(c.symbolName);
-      }
-    }
+    const subtaskNames = collectSubtaskNamesForPurpose(purpose.symbolName, extracted);
     if (subtaskNames.length === 0) continue;
-    let aliasMatch = false;
-    for (const stemScreaming of aliasStems) {
-      if (purposePrefix.startsWith(stemScreaming) || stemScreaming.startsWith(purposePrefix)) {
-        aliasMatch = true;
-        break;
-      }
-    }
-    if (!aliasMatch) continue;
+    if (!hasMatchingAliasStem(purposePrefix, aliasStems)) continue;
     result.set(purpose.symbolName, subtaskNames);
   }
   return result;
+}
+
+function collectProcessingSubtaskAliasStems(extracted: ExtractedAppStorageFiles): Set<string> {
+  const aliasStems = new Set<string>();
+  for (const alias of extracted.processingSubtaskAliases) {
+    const stem = alias.symbolName.endsWith('ProcessingSubtask') ? alias.symbolName.slice(0, -'ProcessingSubtask'.length) : alias.symbolName;
+    aliasStems.add(camelOrPascalToScreamingSnake(stem));
+  }
+  return aliasStems;
+}
+
+function collectSubtaskNamesForPurpose(purposeSymbolName: string, extracted: ExtractedAppStorageFiles): string[] {
+  const subtaskNames: string[] = [];
+  for (const c of extracted.processingSubtaskConstants) {
+    if (c.symbolName.startsWith(`${purposeSymbolName}_`)) {
+      subtaskNames.push(c.symbolName);
+    }
+  }
+  return subtaskNames;
+}
+
+function hasMatchingAliasStem(purposePrefix: string, aliasStems: ReadonlySet<string>): boolean {
+  let matched = false;
+  for (const stemScreaming of aliasStems) {
+    if (purposePrefix.startsWith(stemScreaming) || stemScreaming.startsWith(purposePrefix)) {
+      matched = true;
+      break;
+    }
+  }
+  return matched;
 }
 
 // MARK: Duplicates

@@ -142,10 +142,10 @@ export class DbxPdfMergeEditorFileUploadComponent implements OnInit, OnDestroy, 
 
     if (maxFiles != null) {
       capacity = maxFiles;
-    } else if (!multiple) {
-      capacity = 1;
-    } else {
+    } else if (multiple) {
       capacity = Number.POSITIVE_INFINITY;
+    } else {
+      capacity = 1;
     }
 
     return capacity;

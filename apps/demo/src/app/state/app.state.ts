@@ -33,4 +33,4 @@ export function logger(reducer: ActionReducer<State>): ActionReducer<State> {
  * the root meta-reducer. To add more meta-reducers, provide an array of meta-reducers
  * that will be composed to form the root meta-reducer.
  */
-export const META_REDUCERS: MetaReducer<State>[] = !environment.production ? [logger] : [];
+export const META_REDUCERS: MetaReducer<State>[] = environment.production ? [] : [logger];

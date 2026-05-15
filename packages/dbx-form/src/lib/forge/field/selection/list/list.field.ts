@@ -20,7 +20,7 @@ export const FORGE_LIST_SELECTION_FIELD_TYPE = 'dbx-list-selection' as const;
  * (`'60vh'`, `'400px'`, …), a number interpreted as pixels, or `'none'` to
  * remove the cap entirely.
  */
-export type DbxForgeListSelectionFieldMaxHeight = string | number | 'none';
+export type DbxForgeListSelectionFieldMaxHeight = string | number;
 
 /**
  * Props interface for the forge list selection field.

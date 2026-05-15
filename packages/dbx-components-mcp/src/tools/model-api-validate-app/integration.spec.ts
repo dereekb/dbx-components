@@ -65,7 +65,13 @@ describe('validateAppModelApi (demo-firebase + demo-api)', () => {
     //  demo-api but genuinely undeclared upstream, so it remains a real orphan.)
     const reconciledModels = new Set(['oidcEntry', 'storageFile', 'storageFileGroup', 'notificationBox', 'notificationUser']);
     const stillOrphan = report.issues.filter((i) => i.code === 'ORPHAN_HANDLER' && reconciledModels.has(i.model));
-    expect(stillOrphan, `unexpected upstream orphans: ${stillOrphan.map((i) => `${i.model}.${i.verb}${i.specifier ? `.${i.specifier}` : ''}`).join(', ')}`).toEqual([]);
+    const stillOrphanLabel = stillOrphan
+      .map((i) => {
+        const suffix = i.specifier ? `.${i.specifier}` : '';
+        return `${i.model}.${i.verb}${suffix}`;
+      })
+      .join(', ');
+    expect(stillOrphan, `unexpected upstream orphans: ${stillOrphanLabel}`).toEqual([]);
     const notificationSendOrphan = report.issues.find((i) => i.code === 'ORPHAN_HANDLER' && i.model === 'notification' && i.specifier === 'send');
     expect(notificationSendOrphan).toBeUndefined();
   });

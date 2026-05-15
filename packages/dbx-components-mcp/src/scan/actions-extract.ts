@@ -113,41 +113,48 @@ export function extractActionEntries(input: ExtractActionEntriesInput): ExtractA
 
   for (const sourceFile of project.getSourceFiles()) {
     const filePath = sourceFile.getFilePath();
+    const sink: ActionCollectSink = { entries, warnings, filePath };
     for (const decl of sourceFile.getClasses()) {
-      if (!decl.isExported()) {
-        continue;
-      }
-      const tags = readClassTags(decl.getJsDocs());
-      if (!tags.hasMarker) {
-        continue;
-      }
-      const built = buildClassEntry({ decl, tags, filePath });
-      if (built.kind === 'ok') {
-        entries.push(built.entry);
-      }
-      for (const w of built.warnings) {
-        warnings.push(w);
-      }
+      collectClassEntry(decl, sink);
     }
     for (const enumDecl of sourceFile.getEnums()) {
-      if (!enumDecl.isExported()) {
-        continue;
-      }
-      const enumTags = readJsDocs(enumDecl.getJsDocs());
-      if (!enumTags.markers.has(ACTION_STATE_ENUM_MARKER)) {
-        continue;
-      }
-      const stateBuilt = buildStateEntries({ decl: enumDecl, filePath });
-      for (const e of stateBuilt.entries) {
-        entries.push(e);
-      }
-      for (const w of stateBuilt.warnings) {
-        warnings.push(w);
-      }
+      collectEnumEntries(enumDecl, sink);
     }
   }
 
   return { entries, warnings };
+}
+
+interface ActionCollectSink {
+  readonly entries: ExtractedActionEntry[];
+  readonly warnings: ActionExtractWarning[];
+  readonly filePath: string;
+}
+
+function collectClassEntry(decl: ClassDeclaration, sink: ActionCollectSink): void {
+  if (!decl.isExported()) return;
+  const tags = readClassTags(decl.getJsDocs());
+  if (!tags.hasMarker) return;
+  const built = buildClassEntry({ decl, tags, filePath: sink.filePath });
+  if (built.kind === 'ok') {
+    sink.entries.push(built.entry);
+  }
+  for (const w of built.warnings) {
+    sink.warnings.push(w);
+  }
+}
+
+function collectEnumEntries(enumDecl: EnumDeclaration, sink: ActionCollectSink): void {
+  if (!enumDecl.isExported()) return;
+  const enumTags = readJsDocs(enumDecl.getJsDocs());
+  if (!enumTags.markers.has(ACTION_STATE_ENUM_MARKER)) return;
+  const stateBuilt = buildStateEntries({ decl: enumDecl, filePath: sink.filePath });
+  for (const e of stateBuilt.entries) {
+    sink.entries.push(e);
+  }
+  for (const w of stateBuilt.warnings) {
+    sink.warnings.push(w);
+  }
 }
 
 // MARK: JSDoc parsing
@@ -240,53 +247,85 @@ function buildClassEntry(input: { readonly decl: ClassDeclaration; readonly tags
 
   const example = tags.examples.length > 0 ? tags.examples[0] : '';
   const skillRefs = tags.skillRefs.length > 0 ? tags.skillRefs : ['dbx__ref__dbx-component-patterns'];
+  const common = { className, line, filePath, example, skillRefs };
 
+  let result: BuildResult<ExtractedActionDirective | ExtractedActionStore>;
   if (role === 'directive') {
-    const directiveInfo = readDirectiveDecorator(decl);
-    if (directiveInfo === undefined) {
-      warnings.push({ kind: 'missing-directive-decorator', className, filePath, line });
-      return { kind: 'skipped', warnings };
-    }
-    const stateInteraction: DbxActionStateValue[] = [];
-    for (const value of tags.stateInteraction) {
-      if (VALID_STATES.has(value)) {
-        stateInteraction.push(value as DbxActionStateValue);
-      } else {
-        warnings.push({ kind: 'unknown-state-value', className, stateValue: value, filePath, line });
-      }
-    }
-    const entry: ExtractedActionDirective = {
-      role: 'directive',
-      slug: tags.slug,
-      selector: directiveInfo.selector,
-      className,
-      description: tags.summary,
-      inputs: extractInputs(decl),
-      outputs: extractOutputs(decl),
-      producesContext: tags.producesContext,
-      consumesContext: tags.consumesContext,
-      stateInteraction,
-      skillRefs,
-      example,
-      filePath,
-      line
-    };
-    return { kind: 'ok', entry, warnings };
+    result = buildDirectiveEntry({ decl, tags, warnings, common });
+  } else {
+    result = buildStoreEntry({ decl, tags, warnings, common });
   }
+  return result;
+}
 
-  // store
+interface CommonActionEntryFields {
+  readonly className: string;
+  readonly line: number;
+  readonly filePath: string;
+  readonly example: string;
+  readonly skillRefs: readonly string[];
+}
+
+interface BuildSubEntryInput {
+  readonly decl: ClassDeclaration;
+  readonly tags: ClassTags;
+  readonly warnings: ActionExtractWarning[];
+  readonly common: CommonActionEntryFields;
+}
+
+function buildDirectiveEntry(input: BuildSubEntryInput): BuildResult<ExtractedActionDirective> {
+  const { decl, tags, warnings, common } = input;
+  const directiveInfo = readDirectiveDecorator(decl);
+  if (directiveInfo === undefined) {
+    warnings.push({ kind: 'missing-directive-decorator', className: common.className, filePath: common.filePath, line: common.line });
+    return { kind: 'skipped', warnings };
+  }
+  const stateInteraction = collectStateInteraction(tags.stateInteraction, common, warnings);
+  const entry: ExtractedActionDirective = {
+    role: 'directive',
+    slug: tags.slug as string,
+    selector: directiveInfo.selector,
+    className: common.className,
+    description: tags.summary,
+    inputs: extractInputs(decl),
+    outputs: extractOutputs(decl),
+    producesContext: tags.producesContext,
+    consumesContext: tags.consumesContext,
+    stateInteraction,
+    skillRefs: common.skillRefs,
+    example: common.example,
+    filePath: common.filePath,
+    line: common.line
+  };
+  return { kind: 'ok', entry, warnings };
+}
+
+function collectStateInteraction(tagValues: readonly string[], common: CommonActionEntryFields, warnings: ActionExtractWarning[]): DbxActionStateValue[] {
+  const stateInteraction: DbxActionStateValue[] = [];
+  for (const value of tagValues) {
+    if (VALID_STATES.has(value)) {
+      stateInteraction.push(value as DbxActionStateValue);
+    } else {
+      warnings.push({ kind: 'unknown-state-value', className: common.className, stateValue: value, filePath: common.filePath, line: common.line });
+    }
+  }
+  return stateInteraction;
+}
+
+function buildStoreEntry(input: BuildSubEntryInput): BuildResult<ExtractedActionStore> {
+  const { decl, tags, warnings, common } = input;
   const entry: ExtractedActionStore = {
     role: 'store',
-    slug: tags.slug,
-    className,
+    slug: tags.slug as string,
+    className: common.className,
     description: tags.summary,
     methods: extractStoreMethods(decl),
     observables: extractStoreObservables(decl),
     disabledKeyDefaults: tags.disabledKeyDefaults,
-    skillRefs,
-    example,
-    filePath,
-    line
+    skillRefs: common.skillRefs,
+    example: common.example,
+    filePath: common.filePath,
+    line: common.line
   };
   return { kind: 'ok', entry, warnings };
 }

@@ -64,59 +64,80 @@ const DBX_FORM_SEARCH_TOOL: Tool = {
  * @returns the additive score for this token/field pair (`0` when there's no hit)
  */
 function scoreFieldAgainstToken(field: FormFieldInfo, token: string): number {
-  const slug = field.slug.toLowerCase();
-  const factory = field.factoryName.toLowerCase();
-  const produces = field.produces.toLowerCase();
-  const tier = field.tier.toLowerCase();
-  const description = field.description.toLowerCase();
-
   let score = 0;
-  if (slug === token) {
-    score += 20;
-  } else if (slug.startsWith(token)) {
-    score += 14;
-  } else if (slug.includes(token)) {
-    score += 8;
-  }
-  if (factory === token || factory === `dbxforge${token}field`) {
-    score += 12;
-  } else if (factory.includes(token)) {
-    score += 6;
-  }
-  if (produces === token) {
-    score += 10;
-  } else if (produces.includes(token)) {
-    score += 4;
-  }
-  if (tier === token) {
-    score += 5;
-  }
+  score += scoreSlug(field.slug.toLowerCase(), token);
+  score += scoreFactory(field.factoryName.toLowerCase(), token);
+  score += scoreProduces(field.produces.toLowerCase(), token);
+  if (field.tier.toLowerCase() === token) score += 5;
   // Field-factory entries have an `ngFormType` (e.g. `dbx-list-selection`,
   // `input`, `datepicker`). Score it so callers searching by the underlying
   // ng-forge type land on the right factory without needing an alias.
   if (field.tier === 'field-factory') {
-    const ngFormType = field.ngFormType.toLowerCase();
-    if (ngFormType === token) {
-      score += 15;
-    } else if (ngFormType.startsWith(token)) {
-      score += 10;
-    } else if (ngFormType.includes(token)) {
-      score += 6;
-    }
+    score += scoreNgFormType(field.ngFormType.toLowerCase(), token);
   }
-  for (const key of Object.keys(field.config)) {
+  score += scoreConfigKeys(field.config, token);
+  if (score === 0 && field.description.toLowerCase().includes(token)) {
+    score += 1;
+  }
+  return score;
+}
+
+function scoreSlug(slug: string, token: string): number {
+  let score = 0;
+  if (slug === token) {
+    score = 20;
+  } else if (slug.startsWith(token)) {
+    score = 14;
+  } else if (slug.includes(token)) {
+    score = 8;
+  }
+  return score;
+}
+
+function scoreFactory(factory: string, token: string): number {
+  let score = 0;
+  if (factory === token || factory === `dbxforge${token}field`) {
+    score = 12;
+  } else if (factory.includes(token)) {
+    score = 6;
+  }
+  return score;
+}
+
+function scoreProduces(produces: string, token: string): number {
+  let score = 0;
+  if (produces === token) {
+    score = 10;
+  } else if (produces.includes(token)) {
+    score = 4;
+  }
+  return score;
+}
+
+function scoreNgFormType(ngFormType: string, token: string): number {
+  let score = 0;
+  if (ngFormType === token) {
+    score = 15;
+  } else if (ngFormType.startsWith(token)) {
+    score = 10;
+  } else if (ngFormType.includes(token)) {
+    score = 6;
+  }
+  return score;
+}
+
+function scoreConfigKeys(config: FormFieldInfo['config'], token: string): number {
+  let score = 0;
+  for (const key of Object.keys(config)) {
     const keyLower = key.toLowerCase();
     if (keyLower === token) {
-      score += 4;
+      score = 4;
       break;
     }
     if (keyLower.includes(token)) {
-      score += 2;
+      score = 2;
       break;
     }
-  }
-  if (score === 0 && description.includes(token)) {
-    score += 1;
   }
   return score;
 }

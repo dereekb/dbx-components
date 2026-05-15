@@ -31,6 +31,11 @@ import { type DbxForgeDateTimeSyncField } from './datetime.field';
 import { buildCombinedDateTime, applyTimeOffset, mergePickerConfig, filterPresets, computeErrorMessage, computeDateKeyboardStep, computeTimeKeyboardStep, navigateDate, type DateTimeCalcInput } from './datetime.calc';
 
 /**
+ * Raw incoming value accepted by the date-time parser before normalization.
+ */
+type DbxForgeDateTimeRawValue = Maybe<Date | string | number>;
+
+/**
  * Custom props for the forge date-time field.
  *
  * Full parity with formly `DbxDateTimeFieldProps`.
@@ -305,7 +310,7 @@ export class DbxForgeDateTimeFieldComponent {
     map(([raw, timezoneInstance]) => {
       if (raw == null) return undefined;
       const parser = dbxDateTimeInputValueParseFactory(this.valueMode(), timezoneInstance);
-      const result = parser(raw as Maybe<Date | string | number>);
+      const result = parser(raw as DbxForgeDateTimeRawValue);
       if (result instanceof Date && Number.isNaN(result.getTime())) return undefined;
       return result;
     }),
@@ -326,7 +331,7 @@ export class DbxForgeDateTimeFieldComponent {
   );
 
   // Time string from parsed value
-  readonly timeString$: Observable<ReadableTimeString | ''> = this.valueInSystemTimezone$.pipe(
+  readonly timeString$: Observable<ReadableTimeString> = this.valueInSystemTimezone$.pipe(
     map((x) => (x ? toLocalReadableTimeString(x) : '')),
     distinctUntilChanged(),
     shareReplay(1)
@@ -450,7 +455,7 @@ export class DbxForgeDateTimeFieldComponent {
     map((x) => {
       if (x) {
         const fn = dateTimeMinuteWholeDayDecisionFunction(x, false);
-        return (d: Date | null) => (d != null ? fn(d) : true);
+        return (d: Date | null) => (d == null ? true : fn(d));
       }
       return () => true;
     }),
@@ -578,7 +583,7 @@ export class DbxForgeDateTimeFieldComponent {
 
       if (raw != null) {
         const parser = dbxDateTimeInputValueParseFactory(this.valueMode(), this.timezoneInstance());
-        const date = parser(raw as Maybe<Date | string | number>);
+        const date = parser(raw as DbxForgeDateTimeRawValue);
 
         if (date && !(date instanceof Date && Number.isNaN(date.getTime()))) {
           result = startOfDay(date);
@@ -713,7 +718,7 @@ export class DbxForgeDateTimeFieldComponent {
       }
 
       const parser = dbxDateTimeInputValueParseFactory(this.valueMode(), this.timezoneInstance());
-      const date = parser(raw as Maybe<Date | string | number>);
+      const date = parser(raw as DbxForgeDateTimeRawValue);
       if (!date || (date instanceof Date && Number.isNaN(date.getTime()))) return;
 
       const currentDateCtrl = this.dateCtrl.value;
@@ -750,7 +755,7 @@ export class DbxForgeDateTimeFieldComponent {
             skipAllInitialMaybe(),
             distinctUntilChanged(isSameDateHoursAndMinutes),
             map((x) => valueFactory(x)),
-            filter((x) => !dbxDateTimeIsSameDateTimeFieldValue(x as Maybe<Date | string | number>, currentRawValue as Maybe<Date | string | number>))
+            filter((x) => !dbxDateTimeIsSameDateTimeFieldValue(x as DbxForgeDateTimeRawValue, currentRawValue as DbxForgeDateTimeRawValue))
           );
         })
       )

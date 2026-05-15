@@ -156,7 +156,7 @@ export class DbxForgeListSelectionFieldComponent<T = unknown, C extends Abstract
 
       const fieldState = typeof fieldGetter === 'function' ? (fieldGetter as any)() : undefined;
       const fieldValue = fieldState?.value?.() as Maybe<K[]>;
-      const values = fieldValue != null ? convertMaybeToArray(fieldValue) : [];
+      const values = fieldValue == null ? [] : convertMaybeToArray(fieldValue);
       this._valuesSubject.next(values);
     });
   }

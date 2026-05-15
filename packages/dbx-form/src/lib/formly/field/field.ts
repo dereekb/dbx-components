@@ -256,7 +256,7 @@ export function propsValueForFieldConfig<T extends FormlyFieldProps, O extends o
  *
  * @returns An attributes object that disables browser autofill
  */
-export const disableFormlyFieldAutofillAttributes = disableAutofillAttributes;
+export { disableAutofillAttributes as disableFormlyFieldAutofillAttributes } from '../../field';
 
 /**
  * Map of validation message keys to their message strings or functions.

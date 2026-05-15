@@ -192,9 +192,7 @@ export function findFunctionLeadingContext(sourceCode: AstNode, implNode: AstNod
           }
         }
         // Auto-fix target: the first JSDoc in the chain (where the function's docs conventionally live).
-        if (!firstJsdoc) {
-          firstJsdoc = { node: comment, text: comment.value, hasNoSideEffects: hasMarker };
-        }
+        firstJsdoc ??= { node: comment, text: comment.value, hasNoSideEffects: hasMarker };
       } else if (commentContainsNoSideEffects(comment.value)) {
         // Only the impl-leading annotation on an overloaded function is "required"; others are orphans.
         // When multiple line/block comments stack above the impl, keep the closest one (last in source

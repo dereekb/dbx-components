@@ -136,38 +136,7 @@ const authSetupCommand: CommandModule = {
             configuredProducts: configuredProducts(merged)
           });
         }
-      } else if (!code) {
-        // Step 1: Generate authorization URL and save client credentials
-        const scopeStrings = scopes.flatMap((p) => ZOHO_SCOPES[p] ?? []);
-
-        if (scopeStrings.length === 0) {
-          throw new Error(`No valid products specified. Choose from: ${Object.keys(ZOHO_SCOPES).join(', ')}`);
-        }
-
-        const authUrl = `${accountsUrl}/oauth/v2/auth?scope=${scopeStrings.join(',')}&client_id=${encodeURIComponent(clientId)}&response_type=code&access_type=offline&redirect_uri=${encodeURIComponent(redirectUri)}`;
-
-        // Save client credentials
-        await mergeCliConfig({
-          shared: {
-            clientId,
-            clientSecret,
-            refreshToken: existingConfig?.shared?.refreshToken ?? '',
-            region,
-            apiMode: argv.apiMode ?? existingConfig?.shared?.apiMode
-          },
-          desk: argv.orgId ? { orgId: argv.orgId } : undefined
-        });
-
-        outputResult({
-          step: 1,
-          instructions: 'Open the authorization URL in a browser. Authorize the application. Copy the "code" parameter from the redirect URL.',
-          authorizationUrl: authUrl,
-          redirectUri,
-          scopes: scopeStrings,
-          credentialsSaved: true,
-          nextStep: 'zoho-cli auth setup --code "PASTE_REDIRECT_URL_OR_AUTH_CODE"'
-        });
-      } else {
+      } else if (code) {
         // Step 2: Exchange code for refresh token
         const tokenUrl = `${accountsUrl}/oauth/v2/token`;
         const params = new URLSearchParams({
@@ -219,6 +188,37 @@ const authSetupCommand: CommandModule = {
           scope: body.scope,
           configSaved: true,
           configuredProducts: configuredProducts(merged)
+        });
+      } else {
+        // Step 1: Generate authorization URL and save client credentials
+        const scopeStrings = scopes.flatMap((p) => ZOHO_SCOPES[p] ?? []);
+
+        if (scopeStrings.length === 0) {
+          throw new Error(`No valid products specified. Choose from: ${Object.keys(ZOHO_SCOPES).join(', ')}`);
+        }
+
+        const authUrl = `${accountsUrl}/oauth/v2/auth?scope=${scopeStrings.join(',')}&client_id=${encodeURIComponent(clientId)}&response_type=code&access_type=offline&redirect_uri=${encodeURIComponent(redirectUri)}`;
+
+        // Save client credentials
+        await mergeCliConfig({
+          shared: {
+            clientId,
+            clientSecret,
+            refreshToken: existingConfig?.shared?.refreshToken ?? '',
+            region,
+            apiMode: argv.apiMode ?? existingConfig?.shared?.apiMode
+          },
+          desk: argv.orgId ? { orgId: argv.orgId } : undefined
+        });
+
+        outputResult({
+          step: 1,
+          instructions: 'Open the authorization URL in a browser. Authorize the application. Copy the "code" parameter from the redirect URL.',
+          authorizationUrl: authUrl,
+          redirectUri,
+          scopes: scopeStrings,
+          credentialsSaved: true,
+          nextStep: 'zoho-cli auth setup --code "PASTE_REDIRECT_URL_OR_AUTH_CODE"'
         });
       }
     } catch (e) {

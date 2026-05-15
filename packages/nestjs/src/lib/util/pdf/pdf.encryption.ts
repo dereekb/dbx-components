@@ -250,7 +250,7 @@ function decodePdfHexString(content: Buffer): Buffer {
   if (hex.length % 2 === 1) hex.push(0x30);
   const out = Buffer.alloc(hex.length / 2);
   for (let i = 0; i < out.length; i++) {
-    out[i] = parseInt(String.fromCharCode(hex[i * 2], hex[i * 2 + 1]), 16);
+    out[i] = Number.parseInt(String.fromCodePoint(hex[i * 2], hex[i * 2 + 1]), 16);
   }
   return out;
 }
@@ -284,9 +284,7 @@ function parsePdfDict(buffer: Buffer, dictStart: number): { entries: Map<string,
   while (i < buffer.length && !aborted && result === null) {
     if (buffer[i] === 0x3e && buffer[i + 1] === 0x3e) {
       result = { entries, end: i + 2 };
-    } else if (buffer[i] !== 0x2f /* / */) {
-      aborted = true;
-    } else {
+    } else if (buffer[i] === 0x2f /* / */) {
       const nameStart = i + 1;
       let nameEnd = nameStart;
       while (nameEnd < buffer.length && !isPdfWhitespaceOrDelimiter(buffer[nameEnd])) nameEnd++;
@@ -297,13 +295,15 @@ function parsePdfDict(buffer: Buffer, dictStart: number): { entries: Map<string,
         aborted = true;
       } else {
         const valueResult = readPdfValue(buffer, i);
-        if (!valueResult) {
-          aborted = true;
-        } else {
+        if (valueResult) {
           entries.set(name, valueResult.entry);
           i = skipPdfWhitespaceAndComments(buffer, valueResult.end);
+        } else {
+          aborted = true;
         }
       }
+    } else {
+      aborted = true;
     }
   }
 
@@ -488,7 +488,7 @@ function resolveIndirectEncryptionDictionary(buffer: Buffer, start: number): Buf
 
 function findIndirectObjectStart(buffer: Buffer, objNum: number, objGen: number): number {
   const text = buffer.toString('latin1');
-  const re = new RegExp(`(?:^|[\\r\\n\\s])${objNum}\\s+${objGen}\\s+obj\\b`);
+  const re = new RegExp(String.raw`(?:^|[\r\n\s])${objNum}\s+${objGen}\s+obj\b`);
   const match = re.exec(text);
   return match ? match.index + match[0].length : -1;
 }
@@ -613,7 +613,7 @@ function computeFileEncryptionKeyR2to4(info: PdfEncryptionInfo, password: Buffer
   md5.update(padded);
   md5.update(info.O);
   const pBytes = Buffer.alloc(4);
-  pBytes.writeInt32LE(info.P | 0, 0);
+  pBytes.writeInt32LE(Math.trunc(info.P), 0);
   md5.update(pBytes);
   md5.update(fileId);
   if (info.R >= 4 && !info.encryptMetadata) md5.update(Buffer.from([0xff, 0xff, 0xff, 0xff]));
@@ -666,13 +666,15 @@ function validateEmptyPasswordR6(info: PdfEncryptionInfo): boolean {
 function pdfAlgorithm2B(input: Buffer, password: Buffer, userKey: Buffer): Buffer {
   let K = createHash('sha256').update(input).digest();
   let round = 0;
-  let lastE: Buffer = Buffer.alloc(0);
+  let lastE: Buffer;
 
   while (true) {
     const part = Buffer.concat([password, K, userKey]);
     const K1 = Buffer.alloc(part.length * 64);
     for (let i = 0; i < 64; i++) part.copy(K1, i * part.length);
 
+    // PDF 1.7 spec (Algorithm 2.B) requires AES-128-CBC with autoPadding disabled
+    // NOSONAR (typescript:S5542): cipher mode is dictated by the PDF standard
     const cipher = createCipheriv('aes-128-cbc', K.subarray(0, 16), K.subarray(16, 32));
     cipher.setAutoPadding(false);
     const E = Buffer.concat([cipher.update(K1), cipher.final()]);

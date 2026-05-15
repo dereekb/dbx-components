@@ -136,7 +136,7 @@ export function asSegueRef<O = object>(input: Maybe<SegueRefOrSegueRefRouterLink
   if (type === 'string') {
     result = refStringToSegueRef(input as string);
   } else if (isSegueRef(input)) {
-    result = input as SegueRef<O>;
+    result = input;
   }
 
   return result;

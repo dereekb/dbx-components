@@ -192,6 +192,16 @@ function parseVarDecls(scss, cssToScss, scssToCss) {
   }
 }
 
+function applySassdocBlock(buffer, rawLine, cssToScss, result) {
+  const declMatch = /^\s*(\$[A-Za-z0-9_-]+)\s*:\s*(--[A-Za-z0-9_-]+)\s*;/.exec(rawLine);
+  if (declMatch !== null) {
+    const cssVar = declMatch[2];
+    if (cssToScss.has(cssVar)) {
+      result.set(cssVar, parseSassdocLines(buffer));
+    }
+  }
+}
+
 function parseSassdocBlocks(scss, cssToScss) {
   const result = new Map();
   const lines = scss.split(/\r?\n/);
@@ -203,19 +213,8 @@ function parseSassdocBlocks(scss, cssToScss) {
       continue;
     }
     if (buffer.length > 0) {
-      const declMatch = /^\s*(\$[A-Za-z0-9_-]+)\s*:\s*(--[A-Za-z0-9_-]+)\s*;/.exec(rawLine);
-      if (declMatch !== null) {
-        const cssVar = declMatch[2];
-        if (cssToScss.has(cssVar)) {
-          result.set(cssVar, parseSassdocLines(buffer));
-        }
-      } else if (line.length > 0) {
-        // non-blank, non-decl line — drop the buffer
-      }
-      // blank line or matched decl — reset
-      if (declMatch !== null || line.length === 0 || !line.startsWith('///')) {
-        buffer = [];
-      }
+      applySassdocBlock(buffer, rawLine, cssToScss, result);
+      buffer = [];
     }
   }
   return result;

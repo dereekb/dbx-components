@@ -207,44 +207,59 @@ function handleRemoteBaseBuilder(ctx: ExtractContext, site: DeclSite, arg: strin
 }
 
 function handleFluentMemberCall(ctx: ExtractContext, site: DeclSite, callExpr: CallExpression): void {
-  const callee = callExpr.getExpression();
-  if (!Node.isPropertyAccessExpression(callee)) return;
-  const identNode = callee.getExpression();
-  if (!Node.isIdentifier(identNode)) return;
-  const memberName = callee.getName();
-  if (memberName !== 'asset' && memberName !== 'assets') return;
-
-  const builderName = identNode.getText();
-  const folder = ctx.folderBuildersByName.get(builderName);
-  const remoteBase = ctx.remoteBaseBuildersByName.get(builderName);
-  if (!folder && !remoteBase) return;
-
-  const sourceType: AssetSourceType = folder ? 'local' : 'remote';
-  let helper: AssetBuilderHelper;
-  if (folder) {
-    helper = memberName === 'asset' ? 'assetFolder.asset' : 'assetFolder.assets';
-  } else {
-    helper = memberName === 'asset' ? 'remoteAssetBaseUrl.asset' : 'remoteAssetBaseUrl.assets';
-  }
-
+  const target = resolveFluentTarget(ctx, callExpr);
+  if (!target) return;
   const args = callExpr.getArguments();
   if (args.length === 0) return;
 
-  if (memberName === 'asset') {
+  if (target.memberName === 'asset') {
     const argText = readStringArgFromNode(args[0]);
-    const resolved = joinFluent({ sourceType, folder, remoteBase, child: argText });
+    const resolved = joinFluent({ sourceType: target.sourceType, folder: target.folder, remoteBase: target.remoteBase, child: argText });
     if (site.isExported) {
-      ctx.assetConstants.push({ symbolName: site.symbolName, sourceType, helper, resolved, resolvedPaths: [], sourceFile: site.rel, line: site.line });
+      ctx.assetConstants.push({ symbolName: site.symbolName, sourceType: target.sourceType, helper: target.helper, resolved, resolvedPaths: [], sourceFile: site.rel, line: site.line });
     }
     return;
   }
 
   const arrayInner = unwrapAsExpressions(args[0]);
   if (!arrayInner || !Node.isArrayLiteralExpression(arrayInner)) return;
-  const resolvedPaths = collectFluentArrayPaths({ elements: arrayInner.getElements(), sourceType, folder, remoteBase });
+  const resolvedPaths = collectFluentArrayPaths({ elements: arrayInner.getElements(), sourceType: target.sourceType, folder: target.folder, remoteBase: target.remoteBase });
   if (site.isExported) {
-    ctx.assetConstants.push({ symbolName: site.symbolName, sourceType, helper, resolved: undefined, resolvedPaths, sourceFile: site.rel, line: site.line });
+    ctx.assetConstants.push({ symbolName: site.symbolName, sourceType: target.sourceType, helper: target.helper, resolved: undefined, resolvedPaths, sourceFile: site.rel, line: site.line });
   }
+}
+
+interface FluentTarget {
+  readonly memberName: 'asset' | 'assets';
+  readonly sourceType: AssetSourceType;
+  readonly helper: AssetBuilderHelper;
+  readonly folder: ExtractedFolderBuilder | undefined;
+  readonly remoteBase: ExtractedRemoteBaseBuilder | undefined;
+}
+
+function resolveFluentTarget(ctx: ExtractContext, callExpr: CallExpression): FluentTarget | undefined {
+  const callee = callExpr.getExpression();
+  if (!Node.isPropertyAccessExpression(callee)) return undefined;
+  const identNode = callee.getExpression();
+  if (!Node.isIdentifier(identNode)) return undefined;
+  const memberName = callee.getName();
+  if (memberName !== 'asset' && memberName !== 'assets') return undefined;
+
+  const builderName = identNode.getText();
+  const folder = ctx.folderBuildersByName.get(builderName);
+  const remoteBase = ctx.remoteBaseBuildersByName.get(builderName);
+  if (!folder && !remoteBase) return undefined;
+
+  const sourceType: AssetSourceType = folder ? 'local' : 'remote';
+  const isAsset = memberName === 'asset';
+  let helper: AssetBuilderHelper;
+  if (folder) {
+    helper = isAsset ? 'assetFolder.asset' : 'assetFolder.assets';
+  } else {
+    helper = isAsset ? 'remoteAssetBaseUrl.asset' : 'remoteAssetBaseUrl.assets';
+  }
+
+  return { memberName, sourceType, helper, folder, remoteBase };
 }
 
 interface CollectFluentArrayPathsInput {

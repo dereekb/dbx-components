@@ -1,0 +1,1045 @@
+/**
+ * AST extraction for the `scan-model-firebase-indexes` generator.
+ *
+ * Walks every source file in the supplied ts-morph `Project` looking for
+ * top-level exported functions tagged with the `@dbxModelFirebaseIndex`
+ * JSDoc marker. For each match:
+ *
+ *   1. Reads JSDoc-tag metadata (model, scope, manual/skip flags, category,
+ *      tags, related slugs).
+ *   2. Resolves the target model's short collection name and nested flag
+ *      via {@link FirestoreModelIdentityResolver}.
+ *   3. Walks the function body collecting `where(...)`, `orderBy(...)`, and
+ *      known-helper calls (from {@link FIRESTORE_QUERY_HELPERS}) in source
+ *      order, expanding helpers into their base constraint sequences.
+ *   4. Emits one {@link ExtractedModelFirebaseIndexEntry} per factory.
+ *
+ * Conditional-branch enumeration is opt-in via `@dbxModelFirebaseIndexPath`.
+ * Each path tag declares one call pattern as a comma-separated list of
+ * field paths, and the extractor produces one constraint sequence per tag
+ * (filtered to the listed fields, preserving body source order). When no
+ * path tag is declared, the extractor falls back to a single 'all'
+ * sequence containing every constraint call in the body; if any of those
+ * calls sits inside an `if`/`switch`/ternary branch, a `missing-paths`
+ * warning surfaces the conditional fields so the author can declare the
+ * meaningful subsets.
+ *
+ * Mirrors `model-snapshot-fields-extract.ts` for tag parsing + entry
+ * assembly conventions.
+ */
+
+import { Node, SyntaxKind, type CallExpression, type FunctionDeclaration, type Identifier, type JSDoc, type ParameterDeclaration, type Project, type SourceFile } from 'ts-morph';
+import { type ConstraintSequence, type ConstraintSequenceEntry, type FirestoreQueryScope, type FirestoreWhereOperator, type ModelFirebaseIndexParamEntry , FIRESTORE_WHERE_OPERATORS } from '../manifest/model-firebase-index-schema.js';
+import { type FirestoreModelIdentityResolver, type ResolvedFirestoreModelIdentity } from './firestore-model-identity-resolver.js';
+import { expandFirestoreQueryHelper, getFirestoreQueryHelperDescriptor } from '../registry/firestore-query-helpers.js';
+import { splitListTagText, unwrapFenced } from './scan-extract-utils.js';
+
+// MARK: Tag names
+const INDEX_MARKER = 'dbxModelFirebaseIndex';
+const INDEX_MODEL_TAG = 'dbxModelFirebaseIndexModel';
+const INDEX_SCOPE_TAG = 'dbxModelFirebaseIndexScope';
+const INDEX_MANUAL_TAG = 'dbxModelFirebaseIndexManual';
+const INDEX_SKIP_TAG = 'dbxModelFirebaseIndexSkip';
+const INDEX_CATEGORY_TAG = 'dbxModelFirebaseIndexCategory';
+const INDEX_TAGS_TAG = 'dbxModelFirebaseIndexTags';
+const INDEX_RELATED_TAG = 'dbxModelFirebaseIndexRelated';
+const INDEX_SKILL_REFS_TAG = 'dbxModelFirebaseIndexSkillRefs';
+const INDEX_SLUG_TAG = 'dbxModelFirebaseIndexSlug';
+const INDEX_PATH_TAG = 'dbxModelFirebaseIndexPath';
+
+// MARK: Public types
+/**
+ * One firebase-index entry extracted from a source file. Mirrors
+ * {@link ModelFirebaseIndexEntry} minus `module` and `subpath` (derived in
+ * build-manifest from the package being scanned and the project root).
+ * `filePath` and `line` are kept for in-process warnings and never
+ * persisted to the manifest.
+ */
+export interface ExtractedModelFirebaseIndexEntry {
+  readonly slug: string;
+  readonly name: string;
+  readonly model: string;
+  readonly collection: string;
+  readonly isNested: boolean;
+  readonly scope: FirestoreQueryScope;
+  readonly manual: boolean;
+  readonly skip: boolean;
+  readonly category: string;
+  readonly signature: string;
+  readonly description: string;
+  readonly params: readonly ModelFirebaseIndexParamEntry[];
+  readonly returns: string;
+  readonly tags: readonly string[];
+  readonly relatedSlugs?: readonly string[];
+  readonly skillRefs?: readonly string[];
+  readonly example: string;
+  readonly constraintSequences: readonly ConstraintSequence[];
+  readonly deprecated?: boolean | string;
+  readonly since?: string;
+  readonly filePath: string;
+  readonly line: number;
+}
+
+/**
+ * Discriminated union of the non-fatal events the extractor emits when an
+ * entry can't be assembled cleanly.
+ */
+export type ModelFirebaseIndexExtractWarning =
+  | { readonly kind: 'missing-name'; readonly filePath: string; readonly line: number }
+  | { readonly kind: 'missing-model-tag'; readonly name: string; readonly filePath: string; readonly line: number }
+  | { readonly kind: 'unresolved-model'; readonly name: string; readonly model: string; readonly filePath: string; readonly line: number }
+  | { readonly kind: 'unsupported-scope'; readonly name: string; readonly scope: string; readonly filePath: string; readonly line: number }
+  | { readonly kind: 'duplicate-slug'; readonly name: string; readonly slug: string; readonly previousName: string; readonly filePath: string; readonly line: number }
+  | { readonly kind: 'unknown-helper'; readonly name: string; readonly helper: string; readonly filePath: string; readonly line: number }
+  | { readonly kind: 'unresolved-field'; readonly name: string; readonly callee: string; readonly filePath: string; readonly line: number }
+  | { readonly kind: 'missing-paths'; readonly name: string; readonly conditionalFields: readonly string[]; readonly filePath: string; readonly line: number }
+  | { readonly kind: 'unknown-path-field'; readonly name: string; readonly field: string; readonly filePath: string; readonly line: number }
+  | { readonly kind: 'unannotated-query-helper'; readonly name: string; readonly callee: string; readonly calleeFilePath: string; readonly calleeLine: number; readonly filePath: string; readonly line: number }
+  | { readonly kind: 'transitive-cycle'; readonly name: string; readonly callee: string; readonly filePath: string; readonly line: number }
+  | { readonly kind: 'unresolvable-transitive-callee'; readonly name: string; readonly callee: string; readonly filePath: string; readonly line: number };
+
+/**
+ * Input to {@link extractModelFirebaseIndexEntries}.
+ */
+export interface ExtractModelFirebaseIndexEntriesInput {
+  readonly project: Project;
+  readonly identityResolver: FirestoreModelIdentityResolver;
+  readonly projectRoot?: string;
+}
+
+/**
+ * Result of {@link extractModelFirebaseIndexEntries}.
+ */
+export interface ExtractModelFirebaseIndexEntriesResult {
+  readonly entries: readonly ExtractedModelFirebaseIndexEntry[];
+  readonly warnings: readonly ModelFirebaseIndexExtractWarning[];
+}
+
+const VALID_SCOPE_TAG_VALUES: ReadonlySet<string> = new Set(['COLLECTION', 'COLLECTION_GROUP']);
+const TRUE_TAG_VALUES: ReadonlySet<string> = new Set(['', 'true', 'yes']);
+const FALSE_TAG_VALUES: ReadonlySet<string> = new Set(['false', 'no']);
+const WHERE_OPERATOR_SET: ReadonlySet<string> = new Set(FIRESTORE_WHERE_OPERATORS);
+
+// MARK: Entry point
+/**
+ * Walks the supplied project and returns every export tagged with the
+ * `@dbxModelFirebaseIndex` JSDoc marker. Order is stable: source files in
+ * the order ts-morph reports them, declarations within a file in source
+ * order.
+ *
+ * @param input - the ts-morph project, identity resolver, and project root
+ * @returns the extracted entries plus any non-fatal warnings
+ */
+export function extractModelFirebaseIndexEntries(input: ExtractModelFirebaseIndexEntriesInput): ExtractModelFirebaseIndexEntriesResult {
+  const { project, identityResolver } = input;
+  const entries: ExtractedModelFirebaseIndexEntry[] = [];
+  const warnings: ModelFirebaseIndexExtractWarning[] = [];
+  const slugProvenance = new Map<string, { readonly name: string; readonly filePath: string; readonly line: number }>();
+
+  for (const sourceFile of project.getSourceFiles()) {
+    const filePath = sourceFile.getFilePath();
+    const candidates = collectTaggedFunctions(sourceFile);
+    for (const candidate of candidates) {
+      const built = buildEntry({ candidate, filePath, identityResolver });
+      if (built.kind === 'ok') {
+        const previous = slugProvenance.get(built.entry.slug);
+        if (previous === undefined) {
+          slugProvenance.set(built.entry.slug, { name: built.entry.name, filePath, line: built.entry.line });
+          entries.push(built.entry);
+        } else {
+          warnings.push({ kind: 'duplicate-slug', name: built.entry.name, slug: built.entry.slug, previousName: previous.name, filePath, line: built.entry.line });
+        }
+      }
+      for (const warning of built.warnings) {
+        warnings.push(warning);
+      }
+    }
+  }
+
+  return { entries, warnings };
+}
+
+// MARK: Candidate collection
+interface TaggedCandidate {
+  readonly decl: FunctionDeclaration;
+  readonly jsDocs: readonly JSDoc[];
+}
+
+function collectTaggedFunctions(sourceFile: SourceFile): readonly TaggedCandidate[] {
+  const out: TaggedCandidate[] = [];
+  for (const decl of sourceFile.getFunctions()) {
+    if (!decl.isExported()) {
+      continue;
+    }
+    const jsDocs = findTaggedDocs(decl.getJsDocs());
+    if (jsDocs.length > 0) {
+      out.push({ decl, jsDocs });
+    }
+  }
+  return out;
+}
+
+function findTaggedDocs(jsDocs: readonly JSDoc[]): readonly JSDoc[] {
+  let hasMarker = false;
+  for (const doc of jsDocs) {
+    for (const tag of doc.getTags()) {
+      if (tag.getTagName() === INDEX_MARKER) {
+        hasMarker = true;
+      }
+    }
+  }
+  return hasMarker ? jsDocs : [];
+}
+
+// MARK: JSDoc parsing
+interface ParsedIndexTags {
+  readonly summary: string;
+  readonly slug?: string;
+  readonly model?: string;
+  readonly scope?: string;
+  readonly manual: boolean;
+  readonly skip: boolean;
+  readonly category?: string;
+  readonly explicitTags: readonly string[];
+  readonly relatedSlugs: readonly string[];
+  readonly skillRefs: readonly string[];
+  readonly examples: readonly string[];
+  readonly paramDescriptions: ReadonlyMap<string, string>;
+  readonly returnsText?: string;
+  readonly deprecated?: boolean | string;
+  readonly since?: string;
+  /**
+   * One entry per `@dbxModelFirebaseIndexPath` tag occurrence. Each entry
+   * is the parsed list of field paths the author declared for that call
+   * pattern. Empty when no path tag is present.
+   */
+  readonly paths: readonly (readonly string[])[];
+}
+
+interface MutableTagState {
+  readonly summaries: string[];
+  slug: string | undefined;
+  model: string | undefined;
+  scope: string | undefined;
+  manual: boolean;
+  skip: boolean;
+  category: string | undefined;
+  readonly explicitTags: string[];
+  readonly relatedSlugs: string[];
+  readonly skillRefs: string[];
+  readonly examples: string[];
+  readonly paramDescriptions: Map<string, string>;
+  returnsText: string | undefined;
+  deprecated: boolean | string | undefined;
+  since: string | undefined;
+  readonly paths: string[][];
+}
+
+function readJsDocTags(jsDocs: readonly JSDoc[]): ParsedIndexTags {
+  const state: MutableTagState = {
+    summaries: [],
+    slug: undefined,
+    model: undefined,
+    scope: undefined,
+    manual: false,
+    skip: false,
+    category: undefined,
+    explicitTags: [],
+    relatedSlugs: [],
+    skillRefs: [],
+    examples: [],
+    paramDescriptions: new Map(),
+    returnsText: undefined,
+    deprecated: undefined,
+    since: undefined,
+    paths: []
+  };
+
+  for (const jsDoc of jsDocs) {
+    const description = jsDoc.getDescription().trim();
+    if (description.length > 0) {
+      state.summaries.push(description);
+    }
+    for (const tag of jsDoc.getTags()) {
+      const tagName = tag.getTagName();
+      const text = tag.getCommentText()?.trim() ?? '';
+      if (tagName === 'param') {
+        const paramName = (tag as unknown as { getName?: () => string }).getName?.() ?? extractParamName(tag.getText());
+        if (paramName !== undefined && paramName.length > 0) {
+          state.paramDescriptions.set(paramName, text);
+        }
+      } else {
+        applyTag(state, tagName, text);
+      }
+    }
+  }
+
+  return {
+    summary: state.summaries.join('\n\n'),
+    slug: state.slug,
+    model: state.model,
+    scope: state.scope,
+    manual: state.manual,
+    skip: state.skip,
+    category: state.category,
+    explicitTags: state.explicitTags,
+    relatedSlugs: state.relatedSlugs,
+    skillRefs: state.skillRefs,
+    examples: state.examples,
+    paramDescriptions: state.paramDescriptions,
+    returnsText: state.returnsText,
+    deprecated: state.deprecated,
+    since: state.since,
+    paths: state.paths.map((p) => [...p])
+  };
+}
+
+function applyTag(state: MutableTagState, name: string, text: string): void {
+  switch (name) {
+    case INDEX_MARKER:
+      break;
+    case INDEX_SLUG_TAG:
+      state.slug = text;
+      break;
+    case INDEX_MODEL_TAG:
+      state.model = text;
+      break;
+    case INDEX_SCOPE_TAG:
+      state.scope = text;
+      break;
+    case INDEX_MANUAL_TAG:
+      state.manual = parseBooleanTag(text) ?? true;
+      break;
+    case INDEX_SKIP_TAG:
+      state.skip = parseBooleanTag(text) ?? true;
+      break;
+    case INDEX_CATEGORY_TAG:
+      state.category = text;
+      break;
+    case INDEX_TAGS_TAG:
+      for (const tag of splitListTagText(text)) {
+        state.explicitTags.push(tag.toLowerCase());
+      }
+      break;
+    case INDEX_RELATED_TAG:
+      for (const slug of splitListTagText(text)) {
+        state.relatedSlugs.push(slug);
+      }
+      break;
+    case INDEX_SKILL_REFS_TAG:
+      for (const ref of splitListTagText(text)) {
+        state.skillRefs.push(ref);
+      }
+      break;
+    case INDEX_PATH_TAG: {
+      const fields = [...splitListTagText(text)];
+      if (fields.length > 0) {
+        state.paths.push(fields);
+      }
+      break;
+    }
+    case 'example':
+      state.examples.push(unwrapFenced(text));
+      break;
+    case 'returns':
+    case 'return':
+      state.returnsText = text;
+      break;
+    case 'deprecated':
+      state.deprecated = text.length > 0 ? text : true;
+      break;
+    case 'since':
+      if (text.length > 0) {
+        state.since = text;
+      }
+      break;
+    default:
+      break;
+  }
+}
+
+function parseBooleanTag(text: string): boolean | undefined {
+  const lowered = text.trim().toLowerCase();
+  let result: boolean | undefined;
+  if (TRUE_TAG_VALUES.has(lowered)) {
+    result = true;
+  } else if (FALSE_TAG_VALUES.has(lowered)) {
+    result = false;
+  }
+  return result;
+}
+
+function extractParamName(rawTag: string): string | undefined {
+  const match = /@param\s+(?:\{[^}]*\}\s+)?(\S+)/.exec(rawTag);
+  return match?.[1];
+}
+
+// MARK: Entry construction
+interface BuildEntryInput {
+  readonly candidate: TaggedCandidate;
+  readonly filePath: string;
+  readonly identityResolver: FirestoreModelIdentityResolver;
+}
+
+type BuildEntryResult = { readonly kind: 'ok'; readonly entry: ExtractedModelFirebaseIndexEntry; readonly warnings: readonly ModelFirebaseIndexExtractWarning[] } | { readonly kind: 'skipped'; readonly warnings: readonly ModelFirebaseIndexExtractWarning[] };
+
+function buildEntry(input: BuildEntryInput): BuildEntryResult {
+  const { candidate, filePath, identityResolver } = input;
+  const warnings: ModelFirebaseIndexExtractWarning[] = [];
+
+  const name = candidate.decl.getName();
+  const line = candidate.decl.getStartLineNumber();
+  if (name === undefined || name.length === 0) {
+    warnings.push({ kind: 'missing-name', filePath, line });
+    return { kind: 'skipped', warnings };
+  }
+
+  const tags = readJsDocTags(candidate.jsDocs);
+
+  if (tags.model === undefined || tags.model.length === 0) {
+    warnings.push({ kind: 'missing-model-tag', name, filePath, line });
+    return { kind: 'skipped', warnings };
+  }
+
+  const resolved = identityResolver.lookupByTypeName(tags.model);
+  if (resolved === undefined) {
+    warnings.push({ kind: 'unresolved-model', name, model: tags.model, filePath, line });
+    return { kind: 'skipped', warnings };
+  }
+
+  const scope = resolveScope({ tags, resolved, name, filePath, line, warnings });
+  if (scope === undefined) {
+    return { kind: 'skipped', warnings };
+  }
+
+  const slug = tags.slug && tags.slug.length > 0 ? tags.slug : toKebabCase(name);
+  const params = collectParams(candidate.decl, tags.paramDescriptions);
+  const returnType = candidate.decl.getReturnTypeNode()?.getText() ?? candidate.decl.getReturnType().getText();
+  const signature = `${name}(${params.map((p) => `${p.name}${p.optional ? '?' : ''}: ${p.type}`).join(', ')}): ${returnType.length > 0 ? returnType : 'unknown'}`;
+  const returns = tags.returnsText && tags.returnsText.length > 0 ? tags.returnsText : returnType;
+  const example = tags.examples.length > 0 ? tags.examples[0] : '';
+  const category = tags.category && tags.category.length > 0 ? tags.category : 'misc';
+  const tagSet = buildTagSet({ name, slug, summary: tags.summary, explicit: tags.explicitTags, category, model: tags.model });
+
+  const bodyResult = extractConstraintsFromBody({ decl: candidate.decl, factoryName: name, filePath });
+  for (const warning of bodyResult.warnings) {
+    warnings.push(warning);
+  }
+
+  const constraintSequences: readonly ConstraintSequence[] = tags.skip
+    ? []
+    : buildConstraintSequences({
+        bodyEntries: bodyResult.entries,
+        conditionalFields: bodyResult.conditionalFields,
+        paths: tags.paths,
+        factoryName: name,
+        filePath,
+        line,
+        warnings
+      });
+
+  const entry: ExtractedModelFirebaseIndexEntry = {
+    slug,
+    name,
+    model: tags.model,
+    collection: resolved.collection,
+    isNested: resolved.isNested,
+    scope,
+    manual: tags.manual,
+    skip: tags.skip,
+    category,
+    signature,
+    description: tags.summary,
+    params,
+    returns,
+    tags: tagSet,
+    ...(tags.relatedSlugs.length > 0 ? { relatedSlugs: tags.relatedSlugs } : {}),
+    ...(tags.skillRefs.length > 0 ? { skillRefs: tags.skillRefs } : {}),
+    example,
+    constraintSequences,
+    ...(tags.deprecated === undefined ? {} : { deprecated: tags.deprecated }),
+    ...(tags.since === undefined ? {} : { since: tags.since }),
+    filePath,
+    line
+  };
+
+  return { kind: 'ok', entry, warnings };
+}
+
+interface ResolveScopeInput {
+  readonly tags: ParsedIndexTags;
+  readonly resolved: ResolvedFirestoreModelIdentity;
+  readonly name: string;
+  readonly filePath: string;
+  readonly line: number;
+  readonly warnings: ModelFirebaseIndexExtractWarning[];
+}
+
+function resolveScope(input: ResolveScopeInput): FirestoreQueryScope | undefined {
+  const { tags, resolved, name, filePath, line, warnings } = input;
+  let result: FirestoreQueryScope | undefined;
+  if (tags.scope === undefined || tags.scope.length === 0) {
+    result = resolved.isNested ? 'COLLECTION_GROUP' : 'COLLECTION';
+  } else if (VALID_SCOPE_TAG_VALUES.has(tags.scope)) {
+    result = tags.scope as FirestoreQueryScope;
+  } else {
+    warnings.push({ kind: 'unsupported-scope', name, scope: tags.scope, filePath, line });
+    result = undefined;
+  }
+  return result;
+}
+
+function collectParams(decl: FunctionDeclaration, descriptions: ReadonlyMap<string, string>): readonly ModelFirebaseIndexParamEntry[] {
+  const params: readonly ParameterDeclaration[] = decl.getParameters();
+  const out: ModelFirebaseIndexParamEntry[] = [];
+  for (const param of params) {
+    const name = param.getName();
+    const typeNode = param.getTypeNode()?.getText();
+    const type = typeNode ?? param.getType().getText() ?? 'unknown';
+    const description = descriptions.get(name) ?? '';
+    const optional = param.isOptional() || param.hasInitializer();
+    out.push({ name, type, description, optional });
+  }
+  return out;
+}
+
+// MARK: Path-tag resolution
+interface BuildConstraintSequencesInput {
+  readonly bodyEntries: readonly ConstraintSequenceEntry[];
+  readonly conditionalFields: readonly string[];
+  readonly paths: readonly (readonly string[])[];
+  readonly factoryName: string;
+  readonly filePath: string;
+  readonly line: number;
+  readonly warnings: ModelFirebaseIndexExtractWarning[];
+}
+
+/**
+ * Selects the constraint sequences the analyzer should consider for a
+ * factory. When the JSDoc declares one or more
+ * `@dbxModelFirebaseIndexPath` tags, each tag becomes its own sequence
+ * containing only the listed fields (preserved in body source order). When
+ * no path tag is declared, falls back to the original single 'all'
+ * sequence — and surfaces a `missing-paths` warning if any constraint in
+ * the body sits inside an `if` branch (a strong signal the factory needs
+ * explicit path declarations).
+ *
+ * @param input - extracted body entries, JSDoc-declared paths, warning sink
+ * @returns the sequences to feed the analyzer
+ */
+function buildConstraintSequences(input: BuildConstraintSequencesInput): readonly ConstraintSequence[] {
+  const { bodyEntries, conditionalFields, paths, factoryName, filePath, line, warnings } = input;
+
+  if (paths.length === 0) {
+    if (conditionalFields.length > 0) {
+      warnings.push({ kind: 'missing-paths', name: factoryName, conditionalFields, filePath, line });
+    }
+    return [{ pathLabel: 'all', entries: [...bodyEntries] }];
+  }
+
+  // Build a quick lookup of body entries by fieldPath. A field can appear
+  // multiple times (e.g. `>=` then `<=` for a range), and helpers expand
+  // into multiple entries; the path tag selects ALL entries for each
+  // listed field, preserving body source order within a single field.
+  const entriesByField = new Map<string, ConstraintSequenceEntry[]>();
+  for (const entry of bodyEntries) {
+    const list = entriesByField.get(entry.fieldPath) ?? [];
+    list.push(entry);
+    entriesByField.set(entry.fieldPath, list);
+  }
+
+  const sequences: ConstraintSequence[] = [];
+  for (const path of paths) {
+    const selected: ConstraintSequenceEntry[] = [];
+    let matchedAnyField = false;
+    // Walk in PATH order so the declared order drives the resulting
+    // composite. Authors use this to match an already-deployed index whose
+    // field order differs from the body's source order.
+    for (const field of path) {
+      const entriesForField = entriesByField.get(field);
+      if (entriesForField === undefined) {
+        warnings.push({ kind: 'unknown-path-field', name: factoryName, field, filePath, line });
+        continue;
+      }
+      matchedAnyField = true;
+      for (const entry of entriesForField) {
+        selected.push(entry);
+      }
+    }
+    if (!matchedAnyField) {
+      // None of the declared fields matched the body — skip the empty
+      // sequence; the `unknown-path-field` warnings already explain why.
+      continue;
+    }
+    sequences.push({ pathLabel: path.join(','), entries: selected });
+  }
+
+  return sequences;
+}
+
+// MARK: Body walking
+interface ExtractConstraintsFromBodyInput {
+  readonly decl: FunctionDeclaration;
+  readonly factoryName: string;
+  readonly filePath: string;
+}
+
+interface ExtractConstraintsFromBodyResult {
+  readonly entries: readonly ConstraintSequenceEntry[];
+  /**
+   * Field paths whose constraint call appears inside an `if`/`else if` /
+   * ternary branch in the function body. Used by `buildConstraintSequences`
+   * to detect dynamic-filter factories that should declare
+   * `@dbxModelFirebaseIndexPath` tags.
+   */
+  readonly conditionalFields: readonly string[];
+  readonly warnings: readonly ModelFirebaseIndexExtractWarning[];
+}
+
+function extractConstraintsFromBody(input: ExtractConstraintsFromBodyInput): ExtractConstraintsFromBodyResult {
+  const { decl, factoryName, filePath } = input;
+  const entries: ConstraintSequenceEntry[] = [];
+  const conditionalFieldSet = new Set<string>();
+  const warnings: ModelFirebaseIndexExtractWarning[] = [];
+
+  const initialVisited = new Set<string>([buildDeclKey(decl)]);
+  walkBodyInto({
+    decl,
+    factoryName,
+    filePath,
+    visited: initialVisited,
+    warnings,
+    entries,
+    conditionalFieldSet,
+    forcedConditional: undefined
+  });
+
+  // Preserve source order in the result for stable downstream reports.
+  const conditionalFields: string[] = [];
+  const seenConditional = new Set<string>();
+  for (const entry of entries) {
+    if (conditionalFieldSet.has(entry.fieldPath) && !seenConditional.has(entry.fieldPath)) {
+      seenConditional.add(entry.fieldPath);
+      conditionalFields.push(entry.fieldPath);
+    }
+  }
+
+  return { entries, conditionalFields, warnings };
+}
+
+// MARK: Recursive body walker
+interface WalkBodyIntoInput {
+  readonly decl: FunctionDeclaration;
+  /**
+   * Outermost factory name — used for warning attribution.
+   */
+  readonly factoryName: string;
+  /**
+   * Outermost factory's file path — used for warning attribution.
+   */
+  readonly filePath: string;
+  /**
+   * Set of `${filePath}::${name}` keys already on the call stack.
+   */
+  readonly visited: ReadonlySet<string>;
+  readonly warnings: ModelFirebaseIndexExtractWarning[];
+  readonly entries: ConstraintSequenceEntry[];
+  readonly conditionalFieldSet: Set<string>;
+  /**
+   * When `undefined`, this is the outermost body — each call's conditional
+   * status is decided by {@link isWithinConditionalBranch}. When a boolean,
+   * this is a transitive recursion: every constraint added during this walk
+   * inherits this value as its conditional status, mirroring the outer
+   * call site's own branch (per the transitive-resolution spec).
+   */
+  readonly forcedConditional: boolean | undefined;
+}
+
+function walkBodyInto(input: WalkBodyIntoInput): void {
+  const { decl, factoryName, filePath, visited, warnings, entries, conditionalFieldSet, forcedConditional } = input;
+  const body = decl.getBody();
+  if (body === undefined) {
+    return;
+  }
+
+  const calls = body.getDescendantsOfKind(SyntaxKind.CallExpression);
+  calls.sort((a, b) => a.getStart() - b.getStart());
+
+  for (const call of calls) {
+    const expression = call.getExpression();
+    const isIdentifierCallee = Node.isIdentifier(expression);
+    const isPropertyCallee = Node.isPropertyAccessExpression(expression);
+    if (!isIdentifierCallee && !isPropertyCallee) {
+      continue;
+    }
+    const calleeName = isIdentifierCallee ? expression.getText() : (expression as { getName: () => string }).getName();
+    if (calleeName === undefined) {
+      continue;
+    }
+
+    const callConditional = forcedConditional ?? isWithinConditionalBranch(call, body);
+
+    if (calleeName === 'where') {
+      const parsed = parseWhereCall(call);
+      if (parsed === undefined) {
+        warnings.push({ kind: 'unresolved-field', name: factoryName, callee: 'where', filePath, line: call.getStartLineNumber() });
+        continue;
+      }
+      entries.push(parsed);
+      if (callConditional) {
+        conditionalFieldSet.add(parsed.fieldPath);
+      }
+      continue;
+    }
+
+    if (calleeName === 'orderBy') {
+      const parsed = parseOrderByCall(call);
+      if (parsed === undefined) {
+        warnings.push({ kind: 'unresolved-field', name: factoryName, callee: 'orderBy', filePath, line: call.getStartLineNumber() });
+        continue;
+      }
+      entries.push(parsed);
+      if (callConditional) {
+        conditionalFieldSet.add(parsed.fieldPath);
+      }
+      continue;
+    }
+
+    const descriptor = getFirestoreQueryHelperDescriptor(calleeName);
+    if (descriptor !== undefined) {
+      const fieldArg = call.getArguments()[descriptor.fieldArgIndex];
+      const fieldPath = fieldArg !== undefined ? readStringLiteral(fieldArg) : undefined;
+      if (fieldPath === undefined) {
+        warnings.push({ kind: 'unresolved-field', name: factoryName, callee: calleeName, filePath, line: call.getStartLineNumber() });
+        continue;
+      }
+      const direction = descriptor.directionArgIndex !== undefined ? readDirectionLiteral(call.getArguments()[descriptor.directionArgIndex]) : undefined;
+      for (const expanded of expandFirestoreQueryHelper({ descriptor, fieldPath, direction })) {
+        entries.push(expanded);
+      }
+      if (callConditional) {
+        conditionalFieldSet.add(fieldPath);
+      }
+      continue;
+    }
+
+    // Last-resort branch: an identifier callee that's not where/orderBy and
+    // not a registered helper. If it resolves to an exported FunctionDeclaration
+    // returning Firestore query constraints, inline its body's constraint
+    // entries at this position (transitive resolution).
+    if (isIdentifierCallee) {
+      tryTransitiveResolution({
+        call,
+        identifier: expression as Identifier,
+        calleeName,
+        callConditional,
+        factoryName,
+        filePath,
+        visited,
+        warnings,
+        entries,
+        conditionalFieldSet
+      });
+    }
+  }
+}
+
+// MARK: Transitive identifier resolution
+interface TryTransitiveResolutionInput {
+  readonly call: CallExpression;
+  readonly identifier: Identifier;
+  readonly calleeName: string;
+  readonly callConditional: boolean;
+  readonly factoryName: string;
+  readonly filePath: string;
+  readonly visited: ReadonlySet<string>;
+  readonly warnings: ModelFirebaseIndexExtractWarning[];
+  readonly entries: ConstraintSequenceEntry[];
+  readonly conditionalFieldSet: Set<string>;
+}
+
+function tryTransitiveResolution(input: TryTransitiveResolutionInput): void {
+  const { call, identifier, calleeName, callConditional, factoryName, filePath, visited, warnings, entries, conditionalFieldSet } = input;
+
+  const resolved = resolveCalleeDeclaration(identifier);
+  if (resolved === undefined) {
+    // Couldn't reach any declaration we can introspect. Stay silent — the
+    // identifier might be a local variable, a built-in, or anything else
+    // that has nothing to do with Firestore constraints.
+    return;
+  }
+
+  const returnType = readReturnTypeText(resolved.decl);
+  if (!isConstraintRelatedReturnType(returnType)) {
+    // The resolved callee isn't a query factory — silently ignore it.
+    return;
+  }
+
+  // Constraint-related callee without a reachable body (cross-package .d.ts).
+  if (!resolved.hasBody) {
+    warnings.push({ kind: 'unresolvable-transitive-callee', name: factoryName, callee: calleeName, filePath, line: call.getStartLineNumber() });
+    return;
+  }
+
+  const calleeKey = buildDeclKey(resolved.decl);
+  if (visited.has(calleeKey)) {
+    warnings.push({ kind: 'transitive-cycle', name: factoryName, callee: calleeName, filePath, line: call.getStartLineNumber() });
+    return;
+  }
+
+  // Whether the callee is tagged with @dbxModelFirebaseIndex. Unannotated
+  // constraint factories get a one-shot warning per call site, but we still
+  // splice their constraints — the warning is just a nudge to add the tag.
+  if (!isIndexTagged(resolved.decl)) {
+    const calleeFilePath = resolved.decl.getSourceFile().getFilePath();
+    const calleeLine = resolved.decl.getStartLineNumber();
+    warnings.push({ kind: 'unannotated-query-helper', name: factoryName, callee: calleeName, calleeFilePath, calleeLine, filePath, line: call.getStartLineNumber() });
+  }
+
+  const nextVisited = new Set([...visited, calleeKey]);
+  walkBodyInto({
+    decl: resolved.decl,
+    factoryName,
+    filePath,
+    visited: nextVisited,
+    warnings,
+    entries,
+    conditionalFieldSet,
+    forcedConditional: callConditional
+  });
+}
+
+interface ResolvedCallee {
+  readonly decl: FunctionDeclaration;
+  readonly hasBody: boolean;
+}
+
+/**
+ * Resolves an identifier-style call expression's callee to an exported
+ * {@link FunctionDeclaration}. Follows import-specifier aliases via the
+ * TypeScript symbol table. Returns `undefined` for arrow-function variables,
+ * methods, or unresolvable names.
+ *
+ * @param identifier - the call expression's bare-identifier callee
+ * @returns the resolved declaration and whether it has a body
+ */
+function resolveCalleeDeclaration(identifier: Identifier): ResolvedCallee | undefined {
+  const symbol = identifier.getSymbol();
+  if (symbol === undefined) {
+    return undefined;
+  }
+  const aliased = symbol.getAliasedSymbol();
+  const declarations = (aliased ?? symbol).getDeclarations();
+  let result: ResolvedCallee | undefined;
+  for (const d of declarations) {
+    if (Node.isFunctionDeclaration(d) && d.isExported()) {
+      result = { decl: d, hasBody: d.getBody() !== undefined };
+      break;
+    }
+  }
+  return result;
+}
+
+/**
+ * String-matches a function's return-type expression against the
+ * Firestore-constraint type vocabulary. Conservative on purpose: matches the
+ * literal substring `FirestoreQueryConstraint` (with or without `[]`,
+ * `<T>`, or `Maker` suffix) so generic instantiations and reasonable aliases
+ * are caught without compile-time type evaluation.
+ *
+ * @param returnType - the resolved return-type text
+ * @returns true when the type looks like a Firestore-query-constraint
+ *   return
+ */
+function isConstraintRelatedReturnType(returnType: string): boolean {
+  if (returnType.length === 0) {
+    return false;
+  }
+  // The token shows up as `FirestoreQueryConstraint`,
+  // `FirestoreQueryConstraint[]`, `FirestoreQueryConstraint<Foo>`, or
+  // `FirestoreQueryConstraintMaker`. Substring match catches all four.
+  return returnType.includes('FirestoreQueryConstraint');
+}
+
+function readReturnTypeText(decl: FunctionDeclaration): string {
+  const node = decl.getReturnTypeNode();
+  return node !== undefined ? node.getText() : decl.getReturnType().getText();
+}
+
+function isIndexTagged(decl: FunctionDeclaration): boolean {
+  let result = false;
+  for (const doc of decl.getJsDocs()) {
+    for (const tag of doc.getTags()) {
+      if (tag.getTagName() === INDEX_MARKER) {
+        result = true;
+        break;
+      }
+    }
+    if (result) {
+      break;
+    }
+  }
+  return result;
+}
+
+function buildDeclKey(decl: FunctionDeclaration): string {
+  const name = decl.getName() ?? '<anonymous>';
+  return `${decl.getSourceFile().getFilePath()}::${name}`;
+}
+
+/**
+ * Returns true when `call` lives inside an `IfStatement`, `ConditionalExpression`,
+ * or `SwitchStatement` that is itself nested inside `bodyNode`. Calls placed at
+ * the top level of the function body are treated as unconditional.
+ *
+ * @param call - the where/orderBy/helper call expression
+ * @param bodyNode - the outer function body block
+ * @returns whether `call` is inside a conditional branch within the body
+ */
+function isWithinConditionalBranch(call: CallExpression, bodyNode: Node): boolean {
+  let node: Node | undefined = call.getParent();
+  let result = false;
+  while (node !== undefined && node !== bodyNode) {
+    const kind = node.getKind();
+    if (kind === SyntaxKind.IfStatement || kind === SyntaxKind.ConditionalExpression || kind === SyntaxKind.SwitchStatement || kind === SyntaxKind.CaseClause) {
+      result = true;
+      break;
+    }
+    node = node.getParent();
+  }
+  return result;
+}
+
+function parseWhereCall(call: CallExpression): ConstraintSequenceEntry | undefined {
+  const args = call.getArguments();
+  if (args.length < 2) {
+    return undefined;
+  }
+  const fieldPath = readStringLiteral(args[0]);
+  if (fieldPath === undefined) {
+    return undefined;
+  }
+  // The operator may be a dynamic expression (e.g. `stateComparison ?? '=='`).
+  // Composite-index bucketing for equality, range, and array operators
+  // produces the same field order — only the operator's bucket changes.
+  // When the literal can't be resolved, fall back to '==' so the field
+  // still participates in the index. The default favours the common case
+  // (equality filters) and matches what Firestore deploys when authors
+  // use a parameterised operator.
+  const opLiteral = readStringLiteral(args[1]);
+  let operator: FirestoreWhereOperator = '==';
+  if (opLiteral !== undefined && WHERE_OPERATOR_SET.has(opLiteral)) {
+    operator = opLiteral as FirestoreWhereOperator;
+  }
+  return { kind: 'where', fieldPath, operator };
+}
+
+function parseOrderByCall(call: CallExpression): ConstraintSequenceEntry | undefined {
+  const args = call.getArguments();
+  if (args.length === 0) {
+    return undefined;
+  }
+  const fieldPath = readStringLiteral(args[0]);
+  if (fieldPath === undefined) {
+    return undefined;
+  }
+  const direction = readDirectionLiteral(args[1]) ?? 'asc';
+  return { kind: 'orderBy', fieldPath, direction };
+}
+
+function readStringLiteral(node: Node | undefined): string | undefined {
+  let result: string | undefined;
+  if (node !== undefined && (Node.isStringLiteral(node) || Node.isNoSubstitutionTemplateLiteral(node))) {
+    result = node.getLiteralText();
+  }
+  return result;
+}
+
+function readDirectionLiteral(node: Node | undefined): 'asc' | 'desc' | undefined {
+  const text = readStringLiteral(node);
+  let result: 'asc' | 'desc' | undefined;
+  if (text === 'asc' || text === 'desc') {
+    result = text;
+  }
+  return result;
+}
+
+// MARK: Defaults
+/**
+ * Converts an export name into its kebab-case slug form. Handles
+ * camelCase (`jobLocationWeeksDirty` → `job-location-weeks-dirty`) and
+ * SCREAMING_SNAKE_CASE; already-kebab inputs pass through unchanged.
+ *
+ * @param name - the export identifier
+ * @returns the kebab-case slug
+ */
+export function toKebabCase(name: string): string {
+  if (name.length === 0) {
+    return '';
+  }
+  const withSeparators = name
+    .replaceAll(/([A-Z]+)([A-Z][a-z])/g, '$1-$2')
+    .replaceAll(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .replaceAll(/_+/g, '-')
+    .replaceAll(/\s+/g, '-');
+  return withSeparators.toLowerCase();
+}
+
+const STOPWORDS: ReadonlySet<string> = new Set(['the', 'a', 'an', 'and', 'or', 'of', 'for', 'to', 'in', 'on', 'at', 'is', 'are', 'be', 'this', 'that', 'with', 'when', 'if', 'as', 'by', 'from', 'into', 'returns', 'return', 'query']);
+
+interface BuildTagSetInput {
+  readonly name: string;
+  readonly slug: string;
+  readonly summary: string;
+  readonly explicit: readonly string[];
+  readonly category: string;
+  readonly model: string;
+}
+
+function buildTagSet(input: BuildTagSetInput): readonly string[] {
+  const { name, slug, summary, explicit, category, model } = input;
+  const out: string[] = [];
+  const seen = new Set<string>();
+
+  function add(token: string): void {
+    const lower = token.toLowerCase();
+    if (lower.length === 0 || seen.has(lower)) {
+      return;
+    }
+    seen.add(lower);
+    out.push(lower);
+  }
+
+  for (const tag of explicit) {
+    add(tag);
+  }
+  add(category);
+  add(model);
+  for (const piece of slug.split('-')) {
+    add(piece);
+  }
+  add(name);
+  for (const piece of toKebabCase(model).split('-')) {
+    add(piece);
+  }
+
+  if (explicit.length === 0) {
+    const summaryTokens = summary
+      .toLowerCase()
+      .replaceAll(/[^a-z0-9\s]+/g, ' ')
+      .split(/\s+/)
+      .filter((t) => t.length > 2 && !STOPWORDS.has(t));
+    let added = 0;
+    for (const token of summaryTokens) {
+      if (added >= 8) {
+        break;
+      }
+      const before = out.length;
+      add(token);
+      if (out.length > before) {
+        added += 1;
+      }
+    }
+  }
+  return out;
+}

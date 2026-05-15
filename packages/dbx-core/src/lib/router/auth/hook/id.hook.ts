@@ -122,7 +122,7 @@ export function redirectForIdentifierParamHook(input: RedirectForIdentifierParam
             result = redirectToId.pipe(
               first(),
               map((targetId) => {
-                return targetId !== transitionTargetId ? $state.target(transition.targetState().state(), { ...params, [idParam]: targetId }, { location: true }) : true;
+                return targetId === transitionTargetId ? true : $state.target(transition.targetState().state(), { ...params, [idParam]: targetId }, { location: true });
               })
             );
           }

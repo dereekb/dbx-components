@@ -94,7 +94,7 @@ export function zohoDeskFetchPageFactory<I extends ZohoDeskPageFilter, R extends
       const previousFrom = input.from ?? 1;
       const nextFrom = previousFrom + limit;
 
-      return { ...input, from: nextFrom, limit } as Partial<I>;
+      return { ...input, from: nextFrom, limit };
     }
   });
 }

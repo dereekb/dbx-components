@@ -85,7 +85,7 @@ export class ModelApiCallModelDispatchService {
       auth: auth
         ? {
             uid: auth.uid,
-            token: { ...((auth as any).token ?? {}), ...((auth as any).oidcValidatedToken ?? {}) }
+            token: { ...(auth as any).token, ...(auth as any).oidcValidatedToken }
           }
         : undefined,
       rawRequest: rawRequest as any,

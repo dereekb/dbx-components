@@ -181,8 +181,7 @@ function buildSubjectFix(input: BuildSubjectFixInput): AstNode[] {
   const { fixer, newExpr, propName, ngOnDestroy, registry, sourceCode } = input;
   const fixes: AstNode[] = [];
 
-  fixes.push(fixer.insertTextBefore(newExpr, `${COMPLETE_ON_DESTROY_HELPER}(`));
-  fixes.push(fixer.insertTextAfter(newExpr, ')'));
+  fixes.push(fixer.insertTextBefore(newExpr, `${COMPLETE_ON_DESTROY_HELPER}(`), fixer.insertTextAfter(newExpr, ')'));
 
   const importFix = ensureNamedImportFix({ fixer, registry, importName: COMPLETE_ON_DESTROY_HELPER, fromSource: DBX_COMPONENTS_DBX_CORE_MODULE });
 

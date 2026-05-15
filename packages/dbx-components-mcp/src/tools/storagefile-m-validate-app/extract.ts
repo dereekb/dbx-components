@@ -260,40 +260,58 @@ interface CollectInitializerBindingsFromValueOptions extends InitializerBindingC
 }
 
 function collectInitializerBindingsFromValue(options: CollectInitializerBindingsFromValueOptions): boolean {
-  const { node, sf, index, resolved, unresolved, visited } = options;
-  const inner = unwrapAsExpressions(node);
-  if (!inner) return false;
-  if (Node.isArrayLiteralExpression(inner)) {
-    for (const el of inner.getElements()) {
-      if (Node.isSpreadElement(el)) {
-        const spreadInner = el.getExpression();
-        if (Node.isIdentifier(spreadInner)) {
-          collectInitializerBindingsFromIdentifier({ name: spreadInner.getText(), sf, index, resolved, unresolved, visited });
-        } else if (Node.isCallExpression(spreadInner)) {
-          const callee = spreadInner.getExpression();
-          if (Node.isIdentifier(callee)) {
-            collectInitializerBindingsFromIdentifier({ name: callee.getText(), sf, index, resolved, unresolved, visited });
-          }
-        }
-        continue;
-      }
-      const elementInner = unwrapAsExpressions(el);
-      if (elementInner && Node.isIdentifier(elementInner)) {
-        resolved.push(elementInner.getText());
-      }
+  const inner = unwrapAsExpressions(options.node);
+  let result = false;
+  if (inner) {
+    if (Node.isArrayLiteralExpression(inner)) {
+      result = collectInitializerBindingsFromArrayLiteral(inner, options);
+    } else if (Node.isCallExpression(inner)) {
+      result = collectInitializerBindingsFromCallExpression(inner, options);
+    } else if (Node.isIdentifier(inner)) {
+      result = collectInitializerBindingsFromIdentifier({ ...options, name: inner.getText() });
     }
-    return true;
   }
-  if (Node.isCallExpression(inner)) {
-    const callee = inner.getExpression();
+  return result;
+}
+
+function collectInitializerBindingsFromArrayLiteral(arr: ArrayLiteralExpression, options: CollectInitializerBindingsFromValueOptions): boolean {
+  const { resolved } = options;
+  for (const el of arr.getElements()) {
+    if (Node.isSpreadElement(el)) {
+      chaseInitializerSpreadIdentifier(el.getExpression(), options);
+      continue;
+    }
+    const elementInner = unwrapAsExpressions(el);
+    if (elementInner && Node.isIdentifier(elementInner)) {
+      resolved.push(elementInner.getText());
+    }
+  }
+  return true;
+}
+
+function chaseInitializerSpreadIdentifier(spreadInner: Node, options: InitializerBindingCollectorContext): void {
+  let name: string | undefined;
+  if (Node.isIdentifier(spreadInner)) {
+    name = spreadInner.getText();
+  } else if (Node.isCallExpression(spreadInner)) {
+    const callee = spreadInner.getExpression();
     if (Node.isIdentifier(callee)) {
-      return collectInitializerBindingsFromIdentifier({ name: callee.getText(), sf, index, resolved, unresolved, visited });
+      name = callee.getText();
     }
   }
-  if (Node.isIdentifier(inner)) {
-    return collectInitializerBindingsFromIdentifier({ name: inner.getText(), sf, index, resolved, unresolved, visited });
+  if (name !== undefined) {
+    collectInitializerBindingsFromIdentifier({ ...options, name });
   }
-  return false;
+}
+
+function collectInitializerBindingsFromCallExpression(call: Node, options: CollectInitializerBindingsFromValueOptions): boolean {
+  if (!Node.isCallExpression(call)) return false;
+  const callee = call.getExpression();
+  let result = false;
+  if (Node.isIdentifier(callee)) {
+    result = collectInitializerBindingsFromIdentifier({ ...options, name: callee.getText() });
+  }
+  return result;
 }
 
 /**
@@ -355,32 +373,41 @@ interface UploadInitializerArrayCollectorOptions {
  *   mutable bucket arrays to populate
  */
 function collectUploadInitializerArray(options: UploadInitializerArrayCollectorOptions): void {
-  const { initializerArr, sf, index, direct, spreads, resolved, unresolved } = options;
   const visited = new Set<string>();
-  for (const el of initializerArr.getElements()) {
-    if (Node.isSpreadElement(el)) {
-      const inner = el.getExpression();
-      if (Node.isIdentifier(inner)) {
-        const name = inner.getText();
-        spreads.push(name);
-        collectInitializerBindingsFromIdentifier({ name, sf, index, resolved, unresolved, visited });
-      } else if (Node.isCallExpression(inner)) {
-        const callee = inner.getExpression();
-        if (Node.isIdentifier(callee)) {
-          const name = callee.getText();
-          spreads.push(name);
-          collectInitializerBindingsFromIdentifier({ name, sf, index, resolved, unresolved, visited });
-        }
-      }
-      continue;
+  for (const el of options.initializerArr.getElements()) {
+    consumeUploadInitializerArrayElement(el, options, visited);
+  }
+}
+
+function consumeUploadInitializerArrayElement(el: Node, options: UploadInitializerArrayCollectorOptions, visited: Set<string>): void {
+  const { sf, index, direct, spreads, resolved, unresolved } = options;
+  if (Node.isSpreadElement(el)) {
+    const name = readUploadInitializerSpreadName(el.getExpression());
+    if (name !== undefined) {
+      spreads.push(name);
+      collectInitializerBindingsFromIdentifier({ name, sf, index, resolved, unresolved, visited });
     }
-    const inner = unwrapAsExpressions(el);
-    if (inner && Node.isIdentifier(inner)) {
-      const name = inner.getText();
-      direct.push(name);
-      resolved.push(name);
+    return;
+  }
+  const inner = unwrapAsExpressions(el);
+  if (inner && Node.isIdentifier(inner)) {
+    const name = inner.getText();
+    direct.push(name);
+    resolved.push(name);
+  }
+}
+
+function readUploadInitializerSpreadName(inner: Node): string | undefined {
+  let result: string | undefined;
+  if (Node.isIdentifier(inner)) {
+    result = inner.getText();
+  } else if (Node.isCallExpression(inner)) {
+    const callee = inner.getExpression();
+    if (Node.isIdentifier(callee)) {
+      result = callee.getText();
     }
   }
+  return result;
 }
 
 function extractUploadServiceCalls(sources: readonly SourceFile[], index: ApiFunctionIndex): readonly ExtractedUploadServiceCall[] {

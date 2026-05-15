@@ -20,7 +20,7 @@ import {
   type MockItemPagedFirestoreCollection,
   MOCK_ITEM_PAGED_DEFAULT_MAX_ITEMS_PER_PAGE
 } from '../mock';
-import { type Getter } from '@dereekb/util';
+import { type Getter, compareStrings } from '@dereekb/util';
 
 /**
  * Registers a shared test suite that validates {@link FirestoreAccessorDriver} behavior
@@ -553,7 +553,7 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
 
               const loaded = await collection.loadAllItems();
               expect(loaded).toHaveLength(items.length);
-              expect(loaded.map((x) => x.id).sort()).toEqual(items.map((x) => x.id).sort());
+              expect(loaded.map((x) => x.id).sort(compareStrings)).toEqual(items.map((x) => x.id).sort(compareStrings));
             });
 
             it('writes a single page when items fit within maxItemsPerPage', async () => {
@@ -616,7 +616,7 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
               await collection.writeAllItems(replacementItems);
 
               const reloaded = await collection.loadAllItems();
-              expect(reloaded.map((x) => x.id).sort()).toEqual(['C', 'D']);
+              expect(reloaded.map((x) => x.id).sort(compareStrings)).toEqual(['C', 'D']);
             });
           });
 
@@ -634,7 +634,7 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
 
               const reloaded = await collection.loadAllItems();
               expect(reloaded).toHaveLength(items.length);
-              expect(reloaded.map((x) => x.id).sort()).toEqual(items.map((x) => x.id).sort());
+              expect(reloaded.map((x) => x.id).sort(compareStrings)).toEqual(items.map((x) => x.id).sort(compareStrings));
             });
           });
 
@@ -690,7 +690,7 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
 
               const bItems = await collection.loadItemsForPages(['b']);
               expect(bItems).toHaveLength(2);
-              expect(bItems.map((x) => x.id).sort()).toEqual(['2', '3']);
+              expect(bItems.map((x) => x.id).sort((a, b) => a.localeCompare(b))).toEqual(['2', '3']);
             });
 
             it('loadItemsForPages() returns an empty array for an unwritten scheme page', async () => {

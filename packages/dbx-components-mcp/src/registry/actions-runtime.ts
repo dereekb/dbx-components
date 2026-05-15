@@ -166,6 +166,38 @@ export function createActionRegistry(loaded: LoadActionManifestsResult): ActionR
   return createActionRegistryFromEntries({ entries, loadedSources: loaded.loadedSources });
 }
 
+interface IndexActionEntryInput {
+  readonly entry: ActionEntryInfo;
+  readonly bySlug: Map<string, ActionEntryInfo>;
+  readonly byClassName: Map<string, ActionEntryInfo>;
+  readonly directiveBySelector: Map<string, ActionDirectiveInfo>;
+  readonly stateByValue: Map<DbxActionStateValue, ActionStateInfo>;
+  readonly byRole: Map<ActionEntryRole, ActionEntryInfo[]>;
+  readonly roleSet: Set<ActionEntryRole>;
+}
+
+function indexActionEntry(input: IndexActionEntryInput): void {
+  const { entry, bySlug, byClassName, directiveBySelector, stateByValue, byRole, roleSet } = input;
+  if (!bySlug.has(entry.slug)) bySlug.set(entry.slug, entry);
+  if (entry.role === 'directive' || entry.role === 'store') {
+    const classKey = entry.className.toLowerCase();
+    if (!byClassName.has(classKey)) byClassName.set(classKey, entry);
+  }
+  if (entry.role === 'directive') indexDirectiveSelectors(directiveBySelector, entry);
+  if (entry.role === 'state') stateByValue.set(entry.stateValue, entry);
+  pushInto(byRole, entry.role, entry);
+  roleSet.add(entry.role);
+}
+
+function indexDirectiveSelectors(directiveBySelector: Map<string, ActionDirectiveInfo>, entry: ActionDirectiveInfo): void {
+  for (const selector of entry.selector.split(',')) {
+    const trimmed = selector.trim();
+    if (trimmed.length > 0 && !directiveBySelector.has(trimmed)) {
+      directiveBySelector.set(trimmed, entry);
+    }
+  }
+}
+
 /**
  * Builds an {@link ActionRegistry} from a raw {@link ActionEntryInfo} array.
  *
@@ -186,28 +218,7 @@ export function createActionRegistryFromEntries(input: { readonly entries: reado
   const roleSet = new Set<ActionEntryRole>();
 
   for (const entry of all) {
-    if (!bySlug.has(entry.slug)) {
-      bySlug.set(entry.slug, entry);
-    }
-    if (entry.role === 'directive' || entry.role === 'store') {
-      const classKey = entry.className.toLowerCase();
-      if (!byClassName.has(classKey)) {
-        byClassName.set(classKey, entry);
-      }
-    }
-    if (entry.role === 'directive') {
-      for (const selector of entry.selector.split(',')) {
-        const trimmed = selector.trim();
-        if (trimmed.length > 0 && !directiveBySelector.has(trimmed)) {
-          directiveBySelector.set(trimmed, entry);
-        }
-      }
-    }
-    if (entry.role === 'state') {
-      stateByValue.set(entry.stateValue, entry);
-    }
-    pushInto(byRole, entry.role, entry);
-    roleSet.add(entry.role);
+    indexActionEntry({ entry, bySlug, byClassName, directiveBySelector, stateByValue, byRole, roleSet });
   }
 
   const roles = ACTION_ROLE_ORDER.filter((r) => roleSet.has(r));

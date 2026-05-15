@@ -388,14 +388,7 @@ function collectFactories(sourceFile: SourceFile, prefix: string | undefined): {
  *   (when the call resolved to a non-model factory), or `undefined`
  */
 function readContextFactory(decl: VariableDeclaration): { factory: FactoryCall; family: FrameworkNonModelFixtureFamily | undefined } | undefined {
-  const initializer = decl.getInitializer();
-  if (!initializer) return undefined;
-  let bodyExpr: Node | undefined;
-  if (Node.isArrowFunction(initializer) || Node.isFunctionExpression(initializer)) {
-    bodyExpr = readSingleReturnExpression(initializer);
-  } else {
-    bodyExpr = initializer;
-  }
+  const bodyExpr = readFactoryBodyExpression(decl);
   if (!bodyExpr || !Node.isCallExpression(bodyExpr)) return undefined;
   const callee = bodyExpr.getExpression();
   if (!Node.isIdentifier(callee)) return undefined;
@@ -406,41 +399,56 @@ function readContextFactory(decl: VariableDeclaration): { factory: FactoryCall; 
     if (family === undefined) return undefined;
   }
   const generics = bodyExpr.getTypeArguments().map((t) => t.getText());
-  const args = bodyExpr.getArguments();
-  let hasParamsGetCollection = false;
-  let hasCollectionForDocument = false;
-  let hasInitDocument = false;
-  let parentFixtureFieldFromGetCollection: string | undefined;
-  if (args.length > 0) {
-    const first = args[0];
-    if (Node.isObjectLiteralExpression(first)) {
-      const getCollection = first.getProperty('getCollection');
-      if (getCollection && Node.isPropertyAssignment(getCollection)) {
-        const fnInit = getCollection.getInitializer();
-        const arity = readArrowParameterCount(fnInit);
-        if (arity >= 2) {
-          hasParamsGetCollection = true;
-          parentFixtureFieldFromGetCollection = readParamsAccessFieldName(fnInit);
-        }
-      }
-      if (first.getProperty('collectionForDocument') !== undefined) {
-        hasCollectionForDocument = true;
-      }
-      if (first.getProperty('initDocument') !== undefined) {
-        hasInitDocument = true;
-      }
-    }
-  }
+  const argInfo = readFactoryArgInfo(bodyExpr.getArguments());
   const factory: FactoryCall = {
     factoryName: decl.getName(),
     genericArgs: generics,
-    hasParamsGetCollection,
-    hasCollectionForDocument,
-    hasInitDocument,
-    parentFixtureFieldFromGetCollection,
+    hasParamsGetCollection: argInfo.hasParamsGetCollection,
+    hasCollectionForDocument: argInfo.hasCollectionForDocument,
+    hasInitDocument: argInfo.hasInitDocument,
+    parentFixtureFieldFromGetCollection: argInfo.parentFixtureFieldFromGetCollection,
     line: decl.getStartLineNumber()
   };
   return { factory, family };
+}
+
+function readFactoryBodyExpression(decl: VariableDeclaration): Node | undefined {
+  const initializer = decl.getInitializer();
+  if (!initializer) return undefined;
+  if (Node.isArrowFunction(initializer) || Node.isFunctionExpression(initializer)) {
+    return readSingleReturnExpression(initializer);
+  }
+  return initializer;
+}
+
+interface FactoryArgInfo {
+  readonly hasParamsGetCollection: boolean;
+  readonly hasCollectionForDocument: boolean;
+  readonly hasInitDocument: boolean;
+  readonly parentFixtureFieldFromGetCollection: string | undefined;
+}
+
+function readFactoryArgInfo(args: readonly Node[]): FactoryArgInfo {
+  if (args.length === 0) return { hasParamsGetCollection: false, hasCollectionForDocument: false, hasInitDocument: false, parentFixtureFieldFromGetCollection: undefined };
+  const first = args[0];
+  if (!Node.isObjectLiteralExpression(first)) return { hasParamsGetCollection: false, hasCollectionForDocument: false, hasInitDocument: false, parentFixtureFieldFromGetCollection: undefined };
+  let hasParamsGetCollection = false;
+  let parentFixtureFieldFromGetCollection: string | undefined;
+  const getCollection = first.getProperty('getCollection');
+  if (getCollection && Node.isPropertyAssignment(getCollection)) {
+    const fnInit = getCollection.getInitializer();
+    const arity = readArrowParameterCount(fnInit);
+    if (arity >= 2) {
+      hasParamsGetCollection = true;
+      parentFixtureFieldFromGetCollection = readParamsAccessFieldName(fnInit);
+    }
+  }
+  return {
+    hasParamsGetCollection,
+    hasCollectionForDocument: first.getProperty('collectionForDocument') !== undefined,
+    hasInitDocument: first.getProperty('initDocument') !== undefined,
+    parentFixtureFieldFromGetCollection
+  };
 }
 
 /**

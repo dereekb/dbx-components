@@ -22,11 +22,16 @@ export interface ValidateAssetFolderOptions {
  * @param options - workspace directories used to relativise emitted paths
  * @returns the aggregated validation outcome with counts and violations
  */
-export function validateAssetFolder(inspection: AppAssetsInspection, options: ValidateAssetFolderOptions): ValidationResult {
+/**
+ * Returns the component-side asset folder violations: a missing
+ * component directory, a missing `assets.ts`, missing exports, or a
+ * barrel that doesn't re-export `./assets`.
+ *
+ * @param inspection - the prepared two-side inspection
+ * @returns the collected violations (severities filled in by the pusher)
+ */
+function collectComponentViolations(inspection: AppAssetsInspection): Violation[] {
   const violations: Violation[] = [];
-  let errorCount = 0;
-  let warningCount = 0;
-
   if (inspection.component.status === 'dir-not-found') {
     pushViolation(violations, {
       code: 'DBX_ASSET_FOLDER_COMPONENT_DIR_NOT_FOUND',
@@ -34,37 +39,52 @@ export function validateAssetFolder(inspection: AppAssetsInspection, options: Va
       side: 'component',
       file: undefined
     });
-  } else {
-    const extracted = extractAppAssets(inspection);
-    if (extracted.assetsFileExists) {
-      if (extracted.assetConstants.length === 0 && extracted.aggregatorExports.length === 0) {
-        pushViolation(violations, {
-          code: 'DBX_ASSET_FOLDER_NO_EXPORTS',
-          severity: 'warning',
-          message: `\`src/lib/assets.ts\` exports neither an \`AssetPathRef\` constant nor an \`AssetPathRef[]\` aggregator.`,
-          side: 'component',
-          file: 'src/lib/assets.ts'
-        });
-      }
-      if (!extracted.barrelReExportsAssets) {
-        pushViolation(violations, {
-          code: 'DBX_ASSET_FOLDER_BARREL_MISSING',
-          severity: 'warning',
-          message: `Component barrel \`src/lib/index.ts\` does not re-export \`./assets\`. Add \`export * from './assets';\` so downstream consumers see the refs.`,
-          side: 'component',
-          file: 'src/lib/index.ts'
-        });
-      }
-    } else {
-      pushViolation(violations, {
-        code: 'DBX_ASSET_FOLDER_FILE_MISSING',
-        message: `Component is missing \`src/lib/assets.ts\`. Add the file and export \`AssetPathRef\` constants.`,
-        side: 'component',
-        file: undefined
-      });
-    }
+    return violations;
   }
+  const extracted = extractAppAssets(inspection);
+  if (!extracted.assetsFileExists) {
+    pushViolation(violations, {
+      code: 'DBX_ASSET_FOLDER_FILE_MISSING',
+      message: `Component is missing \`src/lib/assets.ts\`. Add the file and export \`AssetPathRef\` constants.`,
+      side: 'component',
+      file: undefined
+    });
+    return violations;
+  }
+  if (extracted.assetConstants.length === 0 && extracted.aggregatorExports.length === 0) {
+    pushViolation(violations, {
+      code: 'DBX_ASSET_FOLDER_NO_EXPORTS',
+      severity: 'warning',
+      message: `\`src/lib/assets.ts\` exports neither an \`AssetPathRef\` constant nor an \`AssetPathRef[]\` aggregator.`,
+      side: 'component',
+      file: 'src/lib/assets.ts'
+    });
+  }
+  if (!extracted.barrelReExportsAssets) {
+    pushViolation(violations, {
+      code: 'DBX_ASSET_FOLDER_BARREL_MISSING',
+      severity: 'warning',
+      message: `Component barrel \`src/lib/index.ts\` does not re-export \`./assets\`. Add \`export * from './assets';\` so downstream consumers see the refs.`,
+      side: 'component',
+      file: 'src/lib/index.ts'
+    });
+  }
+  return violations;
+}
 
+/**
+ * Validates the component-side asset folder structure: `assets.ts`
+ * exists under `src/lib/`, exports at least one ref or aggregator, and
+ * the `src/lib/index.ts` barrel re-exports it.
+ *
+ * @param inspection - the prepared two-side inspection
+ * @param options - workspace directories used to relativise emitted paths
+ * @returns the aggregated validation outcome with counts and violations
+ */
+export function validateAssetFolder(inspection: AppAssetsInspection, options: ValidateAssetFolderOptions): ValidationResult {
+  const violations = collectComponentViolations(inspection);
+  let errorCount = 0;
+  let warningCount = 0;
   for (const v of violations) {
     if (v.severity === 'error') {
       errorCount += 1;
@@ -72,7 +92,6 @@ export function validateAssetFolder(inspection: AppAssetsInspection, options: Va
       warningCount += 1;
     }
   }
-
   const result: ValidationResult = {
     violations,
     errorCount,

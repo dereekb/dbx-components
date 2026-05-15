@@ -904,7 +904,7 @@ export function agentSummaryFirestoreCollection(firestoreContext: FirestoreConte
       const result = validateFirebaseModelSources([{ name: 'worker.pay.ts', text }]);
       const warnings = result.violations.filter((v) => v.code === 'MODEL_SUBOBJECT_PARENT_NOT_TAGGED');
       expect(warnings).toHaveLength(2);
-      expect(warnings.map((v) => v.model).sort()).toEqual(['ParentA', 'ParentB']);
+      expect(warnings.map((v) => v.model).sort((a, b) => a.localeCompare(b))).toEqual(['ParentA', 'ParentB']);
     });
 
     it('unwraps Partial<T> / Pick<T,K> / Omit<T,K> wrappers in extends clauses', () => {

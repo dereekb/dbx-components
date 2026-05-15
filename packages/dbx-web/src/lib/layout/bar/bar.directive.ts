@@ -1,6 +1,7 @@
-import { computed, Directive, input } from '@angular/core';
+import { computed, Directive, inject, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
-import { type DbxColorInput, dbxColorBackground, isDbxColorConfig } from '../style/style';
+import { type DbxColorConfig, type DbxColorInput, dbxColorBackground, isDbxColorConfig } from '../style/style';
+import { DbxColorService } from '../style/style.color.service';
 
 /**
  * Renders a horizontal bar with a themed background color, used to visually group or separate content.
@@ -34,6 +35,8 @@ import { type DbxColorInput, dbxColorBackground, isDbxColorConfig } from '../sty
   standalone: true
 })
 export class DbxBarDirective {
+  private readonly _colorService = inject(DbxColorService, { optional: true });
+
   readonly color = input<Maybe<DbxColorInput>>();
 
   readonly cssClassSignal = computed(() => {
@@ -41,9 +44,9 @@ export class DbxBarDirective {
     return color ? dbxColorBackground(color) : '';
   });
 
-  private readonly _configSignal = computed(() => {
+  private readonly _configSignal = computed<Maybe<DbxColorConfig>>(() => {
     const value = this.color();
-    return isDbxColorConfig(value) ? value : undefined;
+    return isDbxColorConfig(value) ? (this._colorService?.expandColorConfig(value) ?? value) : undefined;
   });
 
   /**

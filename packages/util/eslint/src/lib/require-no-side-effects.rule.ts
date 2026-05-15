@@ -203,11 +203,7 @@ export const utilRequireNoSideEffectsRule: UtilRequireNoSideEffectsRuleDefinitio
 
             // If the JSDoc is single-line (e.g. `/** @dbxUtilKind factory */`),
             // expand it to multi-line. Detect by absence of newline in the body.
-            if (!jsdocText.includes('\n')) {
-              const bodyTrimmed = jsdocText.replace(/^\*\s*/, '').replace(/\s*$/, '');
-              const newBody = `/**\n${jsdocIndent} * ${bodyTrimmed}\n${jsdocIndent} * ${NO_SIDE_EFFECTS_TAG}\n${jsdocIndent} */`;
-              fixes.push(fixer.replaceTextRange([jsdocStart, jsdocEnd], newBody));
-            } else {
+            if (jsdocText.includes('\n')) {
               // Multi-line JSDoc: insert a new line `${indent} * @__NO_SIDE_EFFECTS__\n`
               // immediately before the line containing the closing `*/`, so the closing line
               // and existing body lines remain untouched.
@@ -218,6 +214,10 @@ export const utilRequireNoSideEffectsRule: UtilRequireNoSideEffectsRuleDefinitio
               }
               const insertion = `${jsdocIndent} * ${NO_SIDE_EFFECTS_TAG}\n`;
               fixes.push(fixer.insertTextBeforeRange([closingLineStart, closingLineStart], insertion));
+            } else {
+              const bodyTrimmed = jsdocText.replace(/^\*\s*/, '').replace(/\s*$/, '');
+              const newBody = `/**\n${jsdocIndent} * ${bodyTrimmed}\n${jsdocIndent} * ${NO_SIDE_EFFECTS_TAG}\n${jsdocIndent} */`;
+              fixes.push(fixer.replaceTextRange([jsdocStart, jsdocEnd], newBody));
             }
           } else if (!jsdoc) {
             // No JSDoc anywhere — create one above the FIRST statement in the chain. For overloaded

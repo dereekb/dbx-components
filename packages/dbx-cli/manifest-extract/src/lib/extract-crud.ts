@@ -20,7 +20,6 @@
 import { Node, Project, type JSDocableNode, type SourceFile, type TypeAliasDeclaration, type TypeNode } from 'ts-morph';
 import type { CrudEntry, CrudEntryDocField, CrudExtraction, CrudVerb } from './types';
 
-// 'query' is accepted today even though `<Group>ModelCrudFunctionsConfig` in @dereekb/firebase does not yet permit `query:` keys (deferred follow-up). Once query support lands upstream, every query entry flows through here with no change.
 const SUPPORTED_VERBS: ReadonlySet<CrudVerb> = new Set(['create', 'read', 'update', 'delete', 'query']);
 
 /**

@@ -244,7 +244,7 @@ export class SimpleStorageAccessor<T> implements StorageAccessor<T> {
         return allStoredData
           .map((storedData) => {
             const readStoredData = this.readStoredData(storedData);
-            return !readStoredData.expired ? readStoredData.convertedData : null;
+            return readStoredData.expired ? null : readStoredData.convertedData;
           })
           .filter(hasNonNullValue);
       })

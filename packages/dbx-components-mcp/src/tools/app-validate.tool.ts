@@ -34,8 +34,11 @@ import { inspectAppFixtures, validateAppFixtures, type FixtureDiagnostic } from 
 import { RESERVED_MODEL_FOLDERS } from './model-validate-folder/types.js';
 import { inspectFolder as inspectModelFolder, validateModelFolders } from './model-validate-folder/index.js';
 import { inspectFolder as inspectSystemFolder, validateSystemFolders } from './system-m-validate-folder/index.js';
+import { checkManifestIdentityDuplicates } from './model-validate/manifest-rules.js';
+import { FIREBASE_MODELS } from '../registry/firebase-models.js';
+import { getDownstreamCatalog } from '../registry/downstream-models-runtime.js';
 
-const Cluster = "'storagefile_m' | 'notification_m' | 'model_folder' | 'system_m' | 'fixture'";
+const Cluster = "'storagefile_m' | 'notification_m' | 'model_folder' | 'system_m' | 'fixture' | 'manifest'";
 
 const AppValidateArgsType = type({
   componentDir: 'string',
@@ -44,14 +47,16 @@ const AppValidateArgsType = type({
   'skip?': `(${Cluster})[]`
 });
 
-type ClusterName = 'storagefile_m' | 'notification_m' | 'model_folder' | 'system_m' | 'fixture';
+type ClusterName = 'storagefile_m' | 'notification_m' | 'model_folder' | 'system_m' | 'fixture' | 'manifest';
 
 const TOOL: Tool = {
   name: 'dbx_app_validate',
   description: [
-    'Aggregate validator for a downstream `-firebase` component + API app pair. Runs every per-domain validator (`storagefile_m`, `notification_m`, model-folder, `system_m`, fixture) and returns one severity-grouped report.',
+    'Aggregate validator for a downstream `-firebase` component + API app pair. Runs every per-domain validator (`storagefile_m`, `notification_m`, model-folder, `system_m`, fixture, manifest) and returns one severity-grouped report.',
     '',
     'The `model_folder` cluster includes both folder-structure findings (canonical 5-file layout) and per-file content findings forwarded from `dbx_model_validate` — including the JSDoc-tag rules (`MODEL_IDENTITY_NOT_TAGGED`, `MODEL_GROUP_INTERFACE_MISSING_TAG`, `MODEL_INTERFACE_MISSING_TAG`) that flag downstream apps where `firestoreModelIdentity(...)` calls lack catalog tagging.',
+    '',
+    'The `manifest` cluster walks the merged model manifest (`@dereekb/firebase` upstream plus every discovered `*-firebase` component) and flags duplicate `firestoreModelIdentity` declarations: `MODEL_IDENTITY_COLLECTION_NAME_DUPLICATE` when two identities share their `collectionName` arg, and `MODEL_IDENTITY_MODEL_TYPE_DUPLICATE` when they share their `modelName` arg.',
     '',
     'Replaces the six-tool dance an agent runs to validate one app end-to-end. Each finding is tagged with its source cluster, code, file/line, and canonical-fix line (when the rule catalog has an entry).',
     '',
@@ -59,7 +64,7 @@ const TOOL: Tool = {
     '- `componentDir`: relative path to the `-firebase` component package (e.g. `components/demo-firebase`).',
     '- `apiDir`: relative path to the API app (e.g. `apps/demo-api`).',
     '- `format` (optional): `markdown` (default) or `json`.',
-    '- `skip` (optional): clusters to opt out of (`storagefile_m`, `notification_m`, `model_folder`, `system_m`, `fixture`).',
+    '- `skip` (optional): clusters to opt out of (`storagefile_m`, `notification_m`, `model_folder`, `system_m`, `fixture`, `manifest`).',
     '',
     'Use `dbx_explain_rule code="<code>"` to dig into any finding.'
   ].join('\n'),
@@ -71,7 +76,7 @@ const TOOL: Tool = {
       format: { type: 'string', enum: ['markdown', 'json'], description: 'Output format. Defaults to markdown.' },
       skip: {
         type: 'array',
-        items: { type: 'string', enum: ['storagefile_m', 'notification_m', 'model_folder', 'system_m', 'fixture'] },
+        items: { type: 'string', enum: ['storagefile_m', 'notification_m', 'model_folder', 'system_m', 'fixture', 'manifest'] },
         description: 'Clusters to opt out of.'
       }
     },
@@ -124,6 +129,7 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
   await runFixture({ apiAbs, apiRel: parsed.apiDir, skip, skipped, findings, clusterErrors });
   await runModelFolders({ componentAbs, componentRel: parsed.componentDir, skip, skipped, findings, clusterErrors });
   await runSystemFolder({ componentAbs, componentRel: parsed.componentDir, skip, skipped, findings, clusterErrors });
+  await runManifest({ workspaceRoot: cwd, skip, skipped, findings, clusterErrors });
 
   const errorCount = findings.filter((f) => f.severity === 'error').length;
   const warningCount = findings.length - errorCount;
@@ -246,6 +252,27 @@ async function runModelFolders(ctx: ComponentOnlyCtx): Promise<void> {
     }
   } catch (err) {
     ctx.clusterErrors.push({ cluster: 'model_folder', message: err instanceof Error ? err.message : String(err) });
+  }
+}
+
+interface ManifestCtx extends FanOutCtx {
+  readonly workspaceRoot: string;
+}
+
+async function runManifest(ctx: ManifestCtx): Promise<void> {
+  if (ctx.skip.has('manifest')) {
+    ctx.skipped.push('manifest');
+    return;
+  }
+  try {
+    const downstream = await getDownstreamCatalog({ workspaceRoot: ctx.workspaceRoot });
+    const merged = [...FIREBASE_MODELS, ...downstream.models];
+    const violations = checkManifestIdentityDuplicates(merged);
+    for (const v of violations) {
+      ctx.findings.push(toFinding({ cluster: 'manifest', code: v.code, severity: v.severity, message: v.message, file: v.file, line: v.line }));
+    }
+  } catch (err) {
+    ctx.clusterErrors.push({ cluster: 'manifest', message: err instanceof Error ? err.message : String(err) });
   }
 }
 

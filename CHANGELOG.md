@@ -1,3 +1,37 @@
+## [13.11.11](https://github.com/dereekb/dbx-components/compare/v13.11.10-dev...v13.11.11) (2026-05-15)
+
+
+### Bug Fixes
+
+- **dbx-components-mcp:** formatExtractWarning exhaustiveness ([f4d20613](https://github.com/dereekb/dbx-components/commit/f4d20613c5efc5ee26a2b84d4a75ed1076cde38e))
+
+
+### Build System
+
+- lint fix + mcp regeneration ([f14d2cac](https://github.com/dereekb/dbx-components/commit/f14d2cacecf4c6fccea001bae4c88906f688aaee))
+
+
+### Code Refactoring
+
+- added guestbook.actions.spec.ts ([f9e02c30](https://github.com/dereekb/dbx-components/commit/f9e02c30053ce9e4100b732276b3356ef9693ff9))
+- **dbx-cli:** add ActionCommandSpec + callModel iterator ([14d3c1f9](https://github.com/dereekb/dbx-components/commit/14d3c1f9aeff78fdf2f0183bfd4102a3aadd11b3))
+- **dbx-cli:** resolve sonarqube findings ([ff1c2e95](https://github.com/dereekb/dbx-components/commit/ff1c2e95c81e8e0c81d582cc0dd4a08bb0c258fa))
+- **dbx-components-mcp:** add color template tools ([ad5b1d18](https://github.com/dereekb/dbx-components/commit/ad5b1d182cb34db5d2c7154c010cad0cf5431bad))
+- **dbx-components-mcp:** add model-firebase-index cluster ([9897e006](https://github.com/dereekb/dbx-components/commit/9897e006c2ea27c9d0205673dbc3f7055ac964c5))
+- **dbx-components-mcp:** reduce cognitive complexity ([3a323bc6](https://github.com/dereekb/dbx-components/commit/3a323bc633652684b5fc07cdb41db5d1983b4e8a))
+- **dbx-components-mcp:** resolve sonarqube findings ([cfd3cbf8](https://github.com/dereekb/dbx-components/commit/cfd3cbf8612294fac6c2f7ad25fe46e2973caaa8))
+- **dbx-web:** add DbxColorService with color templates ([ee0f593e](https://github.com/dereekb/dbx-components/commit/ee0f593efa4ccb161794675ba23bce71978df7ac))
+- **firebase:** land query crud function support ([8801159c](https://github.com/dereekb/dbx-components/commit/8801159c6f18b359acc4458c82e8102a065d55a7))
+- **mcp:** add manifest identity duplicate validator ([b066a590](https://github.com/dereekb/dbx-components/commit/b066a59067cd18deb362638d749ec49743eb3534))
+- resolve sonarqube findings ([1ddc1191](https://github.com/dereekb/dbx-components/commit/1ddc119159e6d2bb5ea3a9fd42f4ff3a45df3d66))
+- resolve sonarqube findings ([700c8d43](https://github.com/dereekb/dbx-components/commit/700c8d4373ec135f1d92c432c4b45de90cc887f2))
+- updated build target to es2023 ([00c30887](https://github.com/dereekb/dbx-components/commit/00c30887ea53aae653b86965b1b246633873f8a5))
+
+
+### Tests
+
+- **dbx-cli:** added vitest CLI integration test scaffolding ([71bfdb98](https://github.com/dereekb/dbx-components/commit/71bfdb98be2f5a16a1f3b217d9d932fe9b8b1a9b))
+
 ## [13.11.10](https://github.com/dereekb/dbx-components/compare/v13.11.9-dev...v13.11.10) (2026-05-12)
 
 

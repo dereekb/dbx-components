@@ -474,64 +474,96 @@ function buildApiFunctionIndex(sources: readonly SourceFile[]): ApiFunctionIndex
 }
 
 function extractTemplateConfigsArrayFactory(sources: readonly SourceFile[], index: ApiFunctionIndex): ExtractedTemplateConfigsArrayFactory | undefined {
+  let result: ExtractedTemplateConfigsArrayFactory | undefined;
   for (const sf of sources) {
+    if (result) break;
     const rel = apiRelPath(sf);
-    for (const stmt of sf.getVariableStatements()) {
-      for (const decl of stmt.getDeclarations()) {
-        const name = decl.getName();
-        if (!name.endsWith(TEMPLATE_CONFIGS_ARRAY_FACTORY_SUFFIX)) continue;
-        const body = unwrapAsExpressions(decl.getInitializer());
-        if (!body) continue;
-        return buildFactorySummary(name, body, rel);
-      }
-    }
-    for (const fn of sf.getFunctions()) {
-      const name = fn.getName();
-      if (!name?.endsWith(TEMPLATE_CONFIGS_ARRAY_FACTORY_SUFFIX)) continue;
-      return buildFactorySummary(name, fn, rel);
+    result = findFactoryInVariableStatements(sf, rel, index);
+    if (result) break;
+    result = findFactoryInFunctions(sf, rel, index);
+  }
+  return result;
+}
+
+function findFactoryInVariableStatements(sf: SourceFile, rel: string, index: ApiFunctionIndex): ExtractedTemplateConfigsArrayFactory | undefined {
+  for (const stmt of sf.getVariableStatements()) {
+    for (const decl of stmt.getDeclarations()) {
+      const name = decl.getName();
+      if (!name.endsWith(TEMPLATE_CONFIGS_ARRAY_FACTORY_SUFFIX)) continue;
+      const body = unwrapAsExpressions(decl.getInitializer());
+      if (!body) continue;
+      return buildTemplateConfigsFactorySummary({ symbolName: name, fnNode: body, sourceFile: rel, index });
     }
   }
   return undefined;
+}
 
-  function buildFactorySummary(symbolName: string, fnNode: Node, sourceFile: string): ExtractedTemplateConfigsArrayFactory {
-    const directCalls: string[] = [];
-    const spreadCalls: string[] = [];
-    const unresolved: string[] = [];
-    const returnExpr = findReturnExpression(fnNode);
-    const arr = returnExpr ? asArrayLiteral(returnExpr) : undefined;
-    if (arr) {
-      for (const el of arr.getElements()) {
-        if (Node.isSpreadElement(el)) {
-          const inner = el.getExpression();
-          if (Node.isCallExpression(inner)) {
-            const callee = inner.getExpression();
-            if (Node.isIdentifier(callee)) {
-              const callName = callee.getText();
-              spreadCalls.push(callName);
-              if (!index.functionsByName.has(callName)) {
-                unresolved.push(callName);
-              }
-            }
-          }
-          continue;
-        }
-        const inner = unwrapAsExpressions(el);
-        if (inner && Node.isCallExpression(inner)) {
-          const callee = inner.getExpression();
-          if (Node.isIdentifier(callee)) {
-            directCalls.push(callee.getText());
-          }
-        }
-      }
+function findFactoryInFunctions(sf: SourceFile, rel: string, index: ApiFunctionIndex): ExtractedTemplateConfigsArrayFactory | undefined {
+  for (const fn of sf.getFunctions()) {
+    const name = fn.getName();
+    if (!name?.endsWith(TEMPLATE_CONFIGS_ARRAY_FACTORY_SUFFIX)) continue;
+    return buildTemplateConfigsFactorySummary({ symbolName: name, fnNode: fn, sourceFile: rel, index });
+  }
+  return undefined;
+}
+
+interface FactorySummaryBuckets {
+  readonly directCalls: string[];
+  readonly spreadCalls: string[];
+  readonly unresolved: string[];
+}
+
+interface BuildTemplateConfigsFactorySummaryOptions {
+  readonly symbolName: string;
+  readonly fnNode: Node;
+  readonly sourceFile: string;
+  readonly index: ApiFunctionIndex;
+}
+
+function buildTemplateConfigsFactorySummary(options: BuildTemplateConfigsFactorySummaryOptions): ExtractedTemplateConfigsArrayFactory {
+  const { symbolName, fnNode, sourceFile, index } = options;
+  const buckets: FactorySummaryBuckets = { directCalls: [], spreadCalls: [], unresolved: [] };
+  const returnExpr = findReturnExpression(fnNode);
+  const arr = returnExpr ? asArrayLiteral(returnExpr) : undefined;
+  if (arr) {
+    for (const el of arr.getElements()) {
+      collectFactoryArrayElement(el, buckets, index);
     }
-    const result: ExtractedTemplateConfigsArrayFactory = {
-      symbolName,
-      directFactoryCalls: directCalls,
-      spreadFactoryCalls: spreadCalls,
-      unresolvedSpreadIdentifiers: unresolved,
-      sourceFile
-    };
-    return result;
+  }
+  const result: ExtractedTemplateConfigsArrayFactory = {
+    symbolName,
+    directFactoryCalls: buckets.directCalls,
+    spreadFactoryCalls: buckets.spreadCalls,
+    unresolvedSpreadIdentifiers: buckets.unresolved,
+    sourceFile
+  };
+  return result;
+}
+
+function collectFactoryArrayElement(el: Node, buckets: FactorySummaryBuckets, index: ApiFunctionIndex): void {
+  if (Node.isSpreadElement(el)) {
+    recordFactorySpreadCall(el.getExpression(), buckets, index);
+    return;
+  }
+  recordFactoryDirectCall(unwrapAsExpressions(el), buckets);
+}
+
+function recordFactorySpreadCall(inner: Node, buckets: FactorySummaryBuckets, index: ApiFunctionIndex): void {
+  if (!Node.isCallExpression(inner)) return;
+  const callee = inner.getExpression();
+  if (!Node.isIdentifier(callee)) return;
+  const callName = callee.getText();
+  buckets.spreadCalls.push(callName);
+  if (!index.functionsByName.has(callName)) {
+    buckets.unresolved.push(callName);
+  }
+}
+
+function recordFactoryDirectCall(inner: Node | undefined, buckets: FactorySummaryBuckets): void {
+  if (!inner || !Node.isCallExpression(inner)) return;
+  const callee = inner.getExpression();
+  if (Node.isIdentifier(callee)) {
+    buckets.directCalls.push(callee.getText());
   }
 }
 
@@ -571,33 +603,63 @@ function collectFromArrayEntryFactory(name: string, out: ExtractedTemplateHandle
   const arr = asArrayLiteral(returnExpr);
   if (!arr) return;
   for (const el of arr.getElements()) {
-    if (Node.isSpreadElement(el)) {
-      const inner = el.getExpression();
-      if (Node.isCallExpression(inner)) {
-        const callee = inner.getExpression();
-        if (Node.isIdentifier(callee)) {
-          collectFromArrayEntryFactory(callee.getText(), out, index);
-        }
-      }
-      continue;
-    }
-    const inner = unwrapAsExpressions(el);
-    if (!inner) continue;
-    if (Node.isCallExpression(inner)) {
-      const callee = inner.getExpression();
-      if (Node.isIdentifier(callee)) {
-        collectFromSingleEntryFactory(callee.getText(), out, index);
-      }
-      continue;
-    }
-    const obj = asObjectLiteral(inner);
-    if (obj) {
-      const typeIdent = readIdentifierProperty(obj, 'type');
-      if (typeIdent) {
-        out.push({ typeIdentifier: typeIdent, factoryFunctionName: name, sourceFile: fn.relPath, line: obj.getStartLineNumber() });
-      }
-    }
+    consumeArrayEntryFactoryElement({ el, factoryName: name, relPath: fn.relPath, out, index });
   }
+}
+
+interface ConsumeArrayEntryFactoryElementOptions {
+  readonly el: Node;
+  readonly factoryName: string;
+  readonly relPath: string;
+  readonly out: ExtractedTemplateHandlerEntry[];
+  readonly index: ApiFunctionIndex;
+}
+
+function consumeArrayEntryFactoryElement(options: ConsumeArrayEntryFactoryElementOptions): void {
+  const { el, factoryName, relPath, out, index } = options;
+  if (Node.isSpreadElement(el)) {
+    chaseSpreadEntryFactoryCall(el.getExpression(), out, index);
+    return;
+  }
+  const inner = unwrapAsExpressions(el);
+  if (!inner) return;
+  if (Node.isCallExpression(inner)) {
+    chaseDirectSingleEntryFactoryCall(inner, out, index);
+    return;
+  }
+  recordInlineEntryFactoryObject({ inner, factoryName, relPath, out });
+}
+
+function chaseSpreadEntryFactoryCall(inner: Node, out: ExtractedTemplateHandlerEntry[], index: ApiFunctionIndex): void {
+  if (!Node.isCallExpression(inner)) return;
+  const callee = inner.getExpression();
+  if (Node.isIdentifier(callee)) {
+    collectFromArrayEntryFactory(callee.getText(), out, index);
+  }
+}
+
+function chaseDirectSingleEntryFactoryCall(inner: Node, out: ExtractedTemplateHandlerEntry[], index: ApiFunctionIndex): void {
+  if (!Node.isCallExpression(inner)) return;
+  const callee = inner.getExpression();
+  if (Node.isIdentifier(callee)) {
+    collectFromSingleEntryFactory(callee.getText(), out, index);
+  }
+}
+
+interface RecordInlineEntryFactoryObjectOptions {
+  readonly inner: Node;
+  readonly factoryName: string;
+  readonly relPath: string;
+  readonly out: ExtractedTemplateHandlerEntry[];
+}
+
+function recordInlineEntryFactoryObject(options: RecordInlineEntryFactoryObjectOptions): void {
+  const { inner, factoryName, relPath, out } = options;
+  const obj = asObjectLiteral(inner);
+  if (!obj) return;
+  const typeIdent = readIdentifierProperty(obj, 'type');
+  if (!typeIdent) return;
+  out.push({ typeIdentifier: typeIdent, factoryFunctionName: factoryName, sourceFile: relPath, line: obj.getStartLineNumber() });
 }
 
 // MARK: Task service calls
@@ -690,25 +752,39 @@ function collectHandlersArrayElements(options: CollectHandlersArrayElementsOptio
   const unresolvedSpreads: string[] = [];
   const resolvedBindings: string[] = [];
   const unresolvedBindings: string[] = [];
-  if (!handlersArr) return { handlerTypes, unresolvedSpreads, resolvedBindings, unresolvedBindings };
-  const visited = new Set<string>();
-  for (const el of handlersArr.getElements()) {
-    if (Node.isSpreadElement(el)) {
-      consumeHandlersSpreadElement({ inner: el.getExpression(), sf, index, trustedExternal, unresolvedSpreads, resolvedBindings, unresolvedBindings, visited });
-      continue;
-    }
-    const inner = unwrapAsExpressions(el);
-    if (!inner) continue;
-    if (Node.isIdentifier(inner)) {
-      collectHandlerBindingsFromIdentifier({ name: inner.getText(), sf, index, trustedExternal, resolved: resolvedBindings, unresolved: unresolvedBindings, visited });
-    } else if (Node.isCallExpression(inner)) {
-      const callee = inner.getExpression();
-      if (Node.isIdentifier(callee)) {
-        collectHandlerBindingsFromIdentifier({ name: callee.getText(), sf, index, trustedExternal, resolved: resolvedBindings, unresolved: unresolvedBindings, visited });
-      }
+  if (handlersArr) {
+    const visited = new Set<string>();
+    for (const el of handlersArr.getElements()) {
+      consumeHandlersArrayElement(el, { sf, index, trustedExternal, unresolvedSpreads, resolvedBindings, unresolvedBindings, visited });
     }
   }
   return { handlerTypes, unresolvedSpreads, resolvedBindings, unresolvedBindings };
+}
+
+function consumeHandlersArrayElement(el: Node, options: Omit<ConsumeHandlersSpreadElementOptions, 'inner'>): void {
+  if (Node.isSpreadElement(el)) {
+    consumeHandlersSpreadElement({ ...options, inner: el.getExpression() });
+    return;
+  }
+  const inner = unwrapAsExpressions(el);
+  if (!inner) return;
+  const identifierName = readHandlerEntryIdentifierName(inner);
+  if (identifierName === undefined) return;
+  const { sf, index, trustedExternal, resolvedBindings, unresolvedBindings, visited } = options;
+  collectHandlerBindingsFromIdentifier({ name: identifierName, sf, index, trustedExternal, resolved: resolvedBindings, unresolved: unresolvedBindings, visited });
+}
+
+function readHandlerEntryIdentifierName(inner: Node): string | undefined {
+  let result: string | undefined;
+  if (Node.isIdentifier(inner)) {
+    result = inner.getText();
+  } else if (Node.isCallExpression(inner)) {
+    const callee = inner.getExpression();
+    if (Node.isIdentifier(callee)) {
+      result = callee.getText();
+    }
+  }
+  return result;
 }
 
 interface ConsumeHandlersSpreadElementOptions {
@@ -732,20 +808,10 @@ interface ConsumeHandlersSpreadElementOptions {
  */
 function consumeHandlersSpreadElement(options: ConsumeHandlersSpreadElementOptions): void {
   const { inner, sf, index, trustedExternal, unresolvedSpreads, resolvedBindings, unresolvedBindings, visited } = options;
-  if (Node.isCallExpression(inner)) {
-    const callee = inner.getExpression();
-    if (Node.isIdentifier(callee)) {
-      const name = callee.getText();
-      unresolvedSpreads.push(name);
-      collectHandlerBindingsFromIdentifier({ name, sf, index, trustedExternal, resolved: resolvedBindings, unresolved: unresolvedBindings, visited });
-    }
-    return;
-  }
-  if (Node.isIdentifier(inner)) {
-    const name = inner.getText();
-    unresolvedSpreads.push(name);
-    collectHandlerBindingsFromIdentifier({ name, sf, index, trustedExternal, resolved: resolvedBindings, unresolved: unresolvedBindings, visited });
-  }
+  const name = readHandlerEntryIdentifierName(inner);
+  if (name === undefined) return;
+  unresolvedSpreads.push(name);
+  collectHandlerBindingsFromIdentifier({ name, sf, index, trustedExternal, resolved: resolvedBindings, unresolved: unresolvedBindings, visited });
 }
 
 /**
@@ -787,42 +853,47 @@ interface CollectHandlerBindingsFromValueOptions extends HandlerBindingCollector
 }
 
 function collectHandlerBindingsFromValue(options: CollectHandlerBindingsFromValueOptions): boolean {
-  const { node, sf, index, trustedExternal, resolved, unresolved, visited } = options;
-  const inner = unwrapAsExpressions(node);
-  if (!inner) return false;
-  if (Node.isCallExpression(inner)) {
-    const callee = inner.getExpression();
-    if (Node.isIdentifier(callee)) {
-      return collectHandlerBindingsFromIdentifier({ name: callee.getText(), sf, index, trustedExternal, resolved, unresolved, visited });
+  const inner = unwrapAsExpressions(options.node);
+  let result = false;
+  if (inner) {
+    if (Node.isCallExpression(inner)) {
+      result = collectHandlerBindingsFromCallExpression(inner, options);
+    } else if (Node.isIdentifier(inner)) {
+      result = collectHandlerBindingsFromIdentifier({ ...options, name: inner.getText() });
+    } else if (Node.isArrayLiteralExpression(inner)) {
+      result = collectHandlerBindingsFromArrayLiteral(inner, options);
     }
-    return false;
   }
-  if (Node.isIdentifier(inner)) {
-    return collectHandlerBindingsFromIdentifier({ name: inner.getText(), sf, index, trustedExternal, resolved, unresolved, visited });
+  return result;
+}
+
+function collectHandlerBindingsFromCallExpression(call: Node, options: CollectHandlerBindingsFromValueOptions): boolean {
+  if (!Node.isCallExpression(call)) return false;
+  const callee = call.getExpression();
+  let result = false;
+  if (Node.isIdentifier(callee)) {
+    result = collectHandlerBindingsFromIdentifier({ ...options, name: callee.getText() });
   }
-  // Walk array-literal returns (factory-of-array shape):
-  //   return [localHandler]
-  //   return [...subFactoryHandlers(ctx), localHandler]
-  //   return [innerFactory(), localHandler]
-  // Each element re-enters this helper so call/identifier/spread cases are
-  // handled uniformly. Inline object literals are intentionally ignored — the
-  // surrounding rule check requires a named, typed handler binding.
-  if (Node.isArrayLiteralExpression(inner)) {
-    let any = false;
-    for (const el of inner.getElements()) {
-      if (Node.isSpreadElement(el)) {
-        if (collectHandlerBindingsFromValue({ node: el.getExpression(), sf, index, trustedExternal, resolved, unresolved, visited })) {
-          any = true;
-        }
-        continue;
-      }
-      if (collectHandlerBindingsFromValue({ node: el, sf, index, trustedExternal, resolved, unresolved, visited })) {
-        any = true;
-      }
+  return result;
+}
+
+// Walk array-literal returns (factory-of-array shape):
+//   return [localHandler]
+//   return [...subFactoryHandlers(ctx), localHandler]
+//   return [innerFactory(), localHandler]
+// Each element re-enters this helper so call/identifier/spread cases are
+// handled uniformly. Inline object literals are intentionally ignored — the
+// surrounding rule check requires a named, typed handler binding.
+function collectHandlerBindingsFromArrayLiteral(arr: Node, options: CollectHandlerBindingsFromValueOptions): boolean {
+  if (!Node.isArrayLiteralExpression(arr)) return false;
+  let any = false;
+  for (const el of arr.getElements()) {
+    const child = Node.isSpreadElement(el) ? el.getExpression() : el;
+    if (collectHandlerBindingsFromValue({ ...options, node: child })) {
+      any = true;
     }
-    return any;
   }
-  return false;
+  return any;
 }
 
 /**
@@ -833,54 +904,62 @@ interface CollectHandlerBindingsFromIdentifierOptions extends HandlerBindingColl
 }
 
 function collectHandlerBindingsFromIdentifier(options: CollectHandlerBindingsFromIdentifierOptions): boolean {
-  const { name, sf, index, trustedExternal, resolved, unresolved, visited } = options;
-  let resolvedAny = false;
-
-  const localKey = `${sf.getFilePath()}::${name}`;
-  if (!visited.has(localKey)) {
-    visited.add(localKey);
-    const localDecl = findLocalVariable(sf, name);
-    if (localDecl) {
-      const typeNode = localDecl.getTypeNode();
-      const typeText = typeNode ? typeNode.getText() : undefined;
-      const isHandlerConfigTyped = typeText !== undefined && (typeText === NOTIF_TASK_SERVICE_HANDLER_CONFIG || typeText.startsWith(`${NOTIF_TASK_SERVICE_HANDLER_CONFIG}<`));
-      const declInit = unwrapAsExpressions(localDecl.getInitializer());
-      const isObjectLit = declInit !== undefined && Node.isObjectLiteralExpression(declInit);
-
-      if (isHandlerConfigTyped && isObjectLit) {
-        // Leaf reached — bind the variable name.
-        resolved.push(localDecl.getName());
-        resolvedAny = true;
-      } else if (declInit && collectHandlerBindingsFromValue({ node: declInit, sf, index, trustedExternal, resolved, unresolved, visited })) {
-        resolvedAny = true;
-      }
-    }
-  }
-
-  const fnKey = `fn::${name}`;
-  if (!visited.has(fnKey)) {
-    visited.add(fnKey);
-    const fnEntry = index.functionsByName.get(name);
-    if (fnEntry) {
-      const ret = findReturnExpression(fnEntry.node);
-      if (ret && collectHandlerBindingsFromValue({ node: ret, sf: fnEntry.sourceFile, index, trustedExternal, resolved, unresolved, visited })) {
-        resolvedAny = true;
-      }
-    }
-  }
+  const { name, trustedExternal, unresolved } = options;
+  const localResolved = tryResolveLocalHandlerBinding(options);
+  const fnResolved = tryResolveFunctionHandlerBinding(options);
+  const resolvedAny = localResolved || fnResolved;
 
   // Chain ends at an upstream-imported identifier — treat as resolved so
   // the rules pass does not warn for legitimate upstream factory calls
   // (e.g. `storageFileProcessingNotificationTaskHandler` from
   // `@dereekb/firebase-server/model`).
-  if (!resolvedAny && trustedExternal.has(name)) {
+  let result: boolean;
+  if (resolvedAny) {
+    result = true;
+  } else if (trustedExternal.has(name)) {
+    result = true;
+  } else {
+    unresolved.push(name);
+    result = false;
+  }
+  return result;
+}
+
+function tryResolveLocalHandlerBinding(options: CollectHandlerBindingsFromIdentifierOptions): boolean {
+  const { name, sf, visited, resolved } = options;
+  const localKey = `${sf.getFilePath()}::${name}`;
+  if (visited.has(localKey)) return false;
+  visited.add(localKey);
+  const localDecl = findLocalVariable(sf, name);
+  if (!localDecl) return false;
+  if (isHandlerConfigLeafDecl(localDecl)) {
+    resolved.push(localDecl.getName());
     return true;
   }
+  const declInit = unwrapAsExpressions(localDecl.getInitializer());
+  if (!declInit) return false;
+  return collectHandlerBindingsFromValue({ ...options, node: declInit });
+}
 
-  if (!resolvedAny) {
-    unresolved.push(name);
-  }
-  return resolvedAny;
+function isHandlerConfigLeafDecl(decl: VariableDeclaration): boolean {
+  const typeNode = decl.getTypeNode();
+  const typeText = typeNode ? typeNode.getText() : undefined;
+  const isHandlerConfigTyped = typeText !== undefined && (typeText === NOTIF_TASK_SERVICE_HANDLER_CONFIG || typeText.startsWith(`${NOTIF_TASK_SERVICE_HANDLER_CONFIG}<`));
+  if (!isHandlerConfigTyped) return false;
+  const declInit = unwrapAsExpressions(decl.getInitializer());
+  return declInit !== undefined && Node.isObjectLiteralExpression(declInit);
+}
+
+function tryResolveFunctionHandlerBinding(options: CollectHandlerBindingsFromIdentifierOptions): boolean {
+  const { name, index, visited } = options;
+  const fnKey = `fn::${name}`;
+  if (visited.has(fnKey)) return false;
+  visited.add(fnKey);
+  const fnEntry = index.functionsByName.get(name);
+  if (!fnEntry) return false;
+  const ret = findReturnExpression(fnEntry.node);
+  if (!ret) return false;
+  return collectHandlerBindingsFromValue({ ...options, node: ret, sf: fnEntry.sourceFile });
 }
 
 /**
@@ -913,48 +992,60 @@ function resolveArrayFromProperty(obj: ObjectLiteralExpression, name: string, sf
 function extractTaskHandlerEntries(sources: readonly SourceFile[]): readonly ExtractedTaskHandlerEntry[] {
   const out: ExtractedTaskHandlerEntry[] = [];
   const seenSymbols = new Set<string>();
-
-  const collectFromVariable = (decl: VariableDeclaration, sourceFile: string): void => {
-    const typeNode = decl.getTypeNode();
-    if (!typeNode) return;
-    const typeText = typeNode.getText();
-    if (!typeText.startsWith(`${NOTIF_TASK_SERVICE_HANDLER_CONFIG}<`) && typeText !== NOTIF_TASK_SERVICE_HANDLER_CONFIG) return;
-    const obj = asObjectLiteral(decl.getInitializer());
-    if (!obj) return;
-    const typeIdent = readIdentifierProperty(obj, 'type');
-    if (!typeIdent) return;
-    const flowInit = unwrapAsExpressions(getPropertyInitializer(obj, 'flow'));
-    let flowCount: number | undefined;
-    if (flowInit && Node.isArrayLiteralExpression(flowInit)) {
-      flowCount = flowInit.getElements().length;
-    }
-    let dataArg: string | undefined;
-    let checkpointArg: string | undefined;
-    if (Node.isTypeReference(typeNode)) {
-      const tArgs = typeNode.getTypeArguments();
-      if (tArgs.length >= 1) dataArg = tArgs[0].getText();
-      if (tArgs.length >= 2) checkpointArg = tArgs[1].getText();
-    }
-    const key = `${sourceFile}::${decl.getName()}`;
-    if (seenSymbols.has(key)) return;
-    seenSymbols.add(key);
-    out.push({
-      typeIdentifier: typeIdent,
-      bindingName: decl.getName(),
-      flowStepCount: flowCount,
-      dataTypeArgument: dataArg,
-      checkpointTypeArgument: checkpointArg,
-      sourceFile,
-      line: decl.getStartLineNumber()
-    });
-  };
-
   for (const sf of sources) {
     const rel = apiRelPath(sf);
     for (const decl of sf.getDescendantsOfKind(SyntaxKind.VariableDeclaration)) {
-      collectFromVariable(decl, rel);
+      const entry = tryReadTaskHandlerEntry(decl, rel, seenSymbols);
+      if (entry) {
+        out.push(entry);
+      }
     }
   }
-
   return out;
+}
+
+function tryReadTaskHandlerEntry(decl: VariableDeclaration, sourceFile: string, seenSymbols: Set<string>): ExtractedTaskHandlerEntry | undefined {
+  const typeNode = decl.getTypeNode();
+  if (!typeNode) return undefined;
+  const typeText = typeNode.getText();
+  if (!typeText.startsWith(`${NOTIF_TASK_SERVICE_HANDLER_CONFIG}<`) && typeText !== NOTIF_TASK_SERVICE_HANDLER_CONFIG) return undefined;
+  const obj = asObjectLiteral(decl.getInitializer());
+  if (!obj) return undefined;
+  const typeIdent = readIdentifierProperty(obj, 'type');
+  if (!typeIdent) return undefined;
+  const key = `${sourceFile}::${decl.getName()}`;
+  if (seenSymbols.has(key)) return undefined;
+  seenSymbols.add(key);
+  const flowCount = readFlowStepCount(obj);
+  const { dataArg, checkpointArg } = readHandlerTypeArguments(typeNode);
+  const entry: ExtractedTaskHandlerEntry = {
+    typeIdentifier: typeIdent,
+    bindingName: decl.getName(),
+    flowStepCount: flowCount,
+    dataTypeArgument: dataArg,
+    checkpointTypeArgument: checkpointArg,
+    sourceFile,
+    line: decl.getStartLineNumber()
+  };
+  return entry;
+}
+
+function readFlowStepCount(obj: ObjectLiteralExpression): number | undefined {
+  const flowInit = unwrapAsExpressions(getPropertyInitializer(obj, 'flow'));
+  let count: number | undefined;
+  if (flowInit && Node.isArrayLiteralExpression(flowInit)) {
+    count = flowInit.getElements().length;
+  }
+  return count;
+}
+
+function readHandlerTypeArguments(typeNode: Node): { readonly dataArg: string | undefined; readonly checkpointArg: string | undefined } {
+  let dataArg: string | undefined;
+  let checkpointArg: string | undefined;
+  if (Node.isTypeReference(typeNode)) {
+    const tArgs = typeNode.getTypeArguments();
+    if (tArgs.length >= 1) dataArg = tArgs[0].getText();
+    if (tArgs.length >= 2) checkpointArg = tArgs[1].getText();
+  }
+  return { dataArg, checkpointArg };
 }

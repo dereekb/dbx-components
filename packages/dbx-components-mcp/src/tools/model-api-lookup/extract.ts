@@ -10,6 +10,7 @@
  */
 
 import { readdir, readFile, stat } from 'node:fs/promises';
+import { type Dirent } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { extractCrudEntries, type CrudEntry, type CrudEntryDocField } from '../model-api-shared/index.js';
 import type { ApiLookupEntry, ApiLookupField, ApiLookupReport, ActionLookupStatus } from './types.js';
@@ -112,46 +113,50 @@ function mapDocFields(fields: readonly CrudEntryDocField[] | undefined): readonl
 
 async function collectApiSources(componentAbs: string): Promise<readonly ApiSource[]> {
   const root = join(componentAbs, COMPONENT_LIB_SUBPATH);
+  const files = await listApiFiles(root);
+  files.sort((a, b) => a.localeCompare(b));
+  const sources: ApiSource[] = [];
+  for (const fileAbs of files) {
+    const text = await readFile(fileAbs, 'utf8');
+    if (!text.includes('callModelFirebaseFunctionMapFactory')) continue;
+    const fileRel = relative(componentAbs, fileAbs).split(sep).join('/');
+    sources.push({ fileAbs, fileRel, text });
+  }
+  return sources;
+}
+
+async function listApiFiles(root: string): Promise<string[]> {
   const files: string[] = [];
-  const stack: string[] = [];
   try {
     const stats = await stat(root);
     if (!stats.isDirectory()) return [];
-    stack.push(root);
   } catch {
     return [];
   }
+  const stack: string[] = [root];
   while (stack.length > 0) {
     const current = stack.pop() as string;
-    let entries;
-    try {
-      entries = await readdir(current, { withFileTypes: true });
-    } catch {
-      continue;
-    }
+    const entries = await readDirEntries(current);
     for (const entry of entries) {
       const full = join(current, entry.name);
       if (entry.isDirectory()) {
         stack.push(full);
         continue;
       }
-      if (!entry.isFile()) continue;
-      if (entry.name.endsWith(API_SUFFIX) && !entry.name.endsWith('.spec.ts')) {
+      if (entry.isFile() && entry.name.endsWith(API_SUFFIX) && !entry.name.endsWith('.spec.ts')) {
         files.push(full);
       }
     }
   }
-  files.sort((a, b) => a.localeCompare(b));
-  const sources: ApiSource[] = [];
-  for (const fileAbs of files) {
-    const text = await readFile(fileAbs, 'utf8');
-    if (!text.includes('callModelFirebaseFunctionMapFactory')) {
-      continue;
-    }
-    const fileRel = relative(componentAbs, fileAbs).split(sep).join('/');
-    sources.push({ fileAbs, fileRel, text });
+  return files;
+}
+
+async function readDirEntries(dir: string): Promise<Dirent[]> {
+  try {
+    return await readdir(dir, { withFileTypes: true });
+  } catch {
+    return [];
   }
-  return sources;
 }
 
 function pickMatchingSource(sources: readonly ApiSource[], modelFilter: string): ApiSource | undefined {

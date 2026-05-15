@@ -31,6 +31,8 @@ $dbx-detach-border-radius: 4px;
     padding: $dbx-detach-controls-vertical-padding $dbx-detach-content-padding;
     border-bottom: 1px solid rgba(0, 0, 0, 0.15);
     box-sizing: border-box;
+    color: var(--mat-sys-on-surface);
+    background: var(--mat-sys-surface);
   }
 
   .dbx-detach-control-buttons {
@@ -41,11 +43,6 @@ $dbx-detach-border-radius: 4px;
     button.mdc-button.mat-mdc-button {
       min-height: 28px;
     }
-  }
-
-  .dbx-detach-controls {
-    color: var(--mat-sys-on-surface);
-    background: var(--mat-sys-surface);
   }
 
   .dbx-detach-controls-header {
@@ -64,4 +61,5 @@ $dbx-detach-border-radius: 4px;
 }
 
 @mixin theme($theme-config) {
+  // No theme-specific styles for the detach interaction at present.
 }

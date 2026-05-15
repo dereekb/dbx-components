@@ -11,9 +11,9 @@
 //
 // Supported products: recruit, crm, sign
 
-import { readFile, writeFile, mkdir, access } from 'node:fs/promises';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createInterface } from 'node:readline/promises';
 import { stdin, stdout } from 'node:process';
@@ -102,7 +102,6 @@ function applyConditionalBlocks(text, products) {
   const lines = text.split('\n');
   const out = [];
   let skipDepth = 0;
-  let activeBlock = null;
 
   for (const line of lines) {
     const ifMatch = line.match(/^\s*\/\/#if\s+(\w+)\s*$/);
@@ -113,14 +112,10 @@ function applyConditionalBlocks(text, products) {
 
       if (skipDepth > 0 || !products.includes(product)) {
         skipDepth += 1;
-      } else {
-        activeBlock = product;
       }
     } else if (endifMatch) {
       if (skipDepth > 0) {
         skipDepth -= 1;
-      } else {
-        activeBlock = null;
       }
     } else if (skipDepth === 0) {
       out.push(line);
@@ -236,8 +231,7 @@ async function main() {
     filesToWrite.push({ tmpl: 'zoho.crm.service.ts.tmpl', out: 'zoho.crm.service.ts' });
   }
   if (products.includes('sign')) {
-    filesToWrite.push({ tmpl: 'zoho.sign.service.ts.tmpl', out: 'zoho.sign.service.ts' });
-    filesToWrite.push({ tmpl: 'zoho.sign.webhook.module.ts.tmpl', out: 'zoho.sign.webhook.module.ts' });
+    filesToWrite.push({ tmpl: 'zoho.sign.service.ts.tmpl', out: 'zoho.sign.service.ts' }, { tmpl: 'zoho.sign.webhook.module.ts.tmpl', out: 'zoho.sign.webhook.module.ts' });
   }
 
   // Show plan
@@ -305,7 +299,9 @@ async function main() {
   console.log('  3. If you selected Sign, configure the webhook URL in your Zoho Sign console.');
 }
 
-main().catch((err) => {
+try {
+  await main();
+} catch (err) {
   console.error('\n[setup-zoho] Error:', err.message);
   process.exit(1);
-});
+}

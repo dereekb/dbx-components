@@ -1,3 +1,4 @@
+import { compareStrings } from '@dereekb/util';
 import { decodeFirestoreModelKey } from '../manifest/build-model-decode-command';
 import { type CliModelManifest } from '../manifest/types';
 import { CliError } from '../util/output';
@@ -165,6 +166,6 @@ function inferModelTypeFromKeys(keys: ReadonlyArray<string>, manifest: CliModelM
 }
 
 function manifestPrefixList(manifest: CliModelManifest): string {
-  const prefixes = manifest.map((e) => e.collectionPrefix).sort();
+  const prefixes = manifest.map((e) => e.collectionPrefix).sort(compareStrings);
   return prefixes.join(', ');
 }

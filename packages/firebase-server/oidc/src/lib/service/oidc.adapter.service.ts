@@ -145,7 +145,10 @@ export function createAdapterFactory(collections: OidcServerFirestoreCollections
      * @returns the decrypted adapter payload, or undefined if the entry has expired
      */
     private _toPayload(data: OidcEntry): AdapterPayload | undefined {
-      const expiresDate = data.expiresAt ? (data.expiresAt instanceof Date ? data.expiresAt : (data.expiresAt as { toDate(): Date }).toDate()) : undefined;
+      let expiresDate: Date | undefined;
+      if (data.expiresAt) {
+        expiresDate = data.expiresAt instanceof Date ? data.expiresAt : (data.expiresAt as { toDate(): Date }).toDate();
+      }
       const isExpired = expiresDate != null && expiresDate < new Date();
       return isExpired ? undefined : encryptionService.decryptAdapterPayload(data.payload);
     }

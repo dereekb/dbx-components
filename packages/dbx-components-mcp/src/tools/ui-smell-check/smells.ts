@@ -203,39 +203,55 @@ interface CardSurfaceHit {
   readonly bodyEnd: number;
 }
 
+interface CardSurfaceScanState {
+  depth: number;
+  blockStart: number;
+  blockHeaderStart: number;
+  lastBoundary: number;
+  result: CardSurfaceHit | null;
+}
+
 function findCardSurface(scss: string): CardSurfaceHit | null {
-  let result: CardSurfaceHit | null = null;
   // Walk SCSS rule blocks: anything between `{` and matching `}`. Then look
   // for the conjunction of `padding`, `background:` (white-ish), and a
   // `border-radius`.
-  let depth = 0;
-  let blockStart = -1;
-  let blockHeaderStart = -1;
-  let lastBoundary = 0;
-  for (let i = 0; i < scss.length && result === null; i += 1) {
-    const ch = scss[i];
-    if (ch === '{') {
-      if (depth === 0) {
-        blockStart = i + 1;
-        blockHeaderStart = lastBoundary;
-      }
-      depth += 1;
-    } else if (ch === '}') {
-      depth -= 1;
-      if (depth === 0 && blockStart >= 0) {
-        const hit = tryMatchCardSurface({ scss, blockHeaderStart, blockStart, blockEnd: i });
-        if (hit === null) {
-          blockStart = -1;
-          lastBoundary = i + 1;
-        } else {
-          result = hit;
-        }
-      }
-    } else if (depth === 0 && (ch === ';' || ch === '}')) {
-      lastBoundary = i + 1;
+  const state: CardSurfaceScanState = { depth: 0, blockStart: -1, blockHeaderStart: -1, lastBoundary: 0, result: null };
+  for (let i = 0; i < scss.length && state.result === null; i += 1) {
+    advanceCardSurfaceScan(state, scss, i);
+  }
+  return state.result;
+}
+
+function advanceCardSurfaceScan(state: CardSurfaceScanState, scss: string, i: number): void {
+  const ch = scss[i];
+  if (ch === '{') {
+    handleCardSurfaceOpenBrace(state, i);
+  } else if (ch === '}') {
+    handleCardSurfaceCloseBrace(state, scss, i);
+  } else if (state.depth === 0 && ch === ';') {
+    state.lastBoundary = i + 1;
+  }
+}
+
+function handleCardSurfaceOpenBrace(state: CardSurfaceScanState, i: number): void {
+  if (state.depth === 0) {
+    state.blockStart = i + 1;
+    state.blockHeaderStart = state.lastBoundary;
+  }
+  state.depth += 1;
+}
+
+function handleCardSurfaceCloseBrace(state: CardSurfaceScanState, scss: string, i: number): void {
+  state.depth -= 1;
+  if (state.depth === 0 && state.blockStart >= 0) {
+    const hit = tryMatchCardSurface({ scss, blockHeaderStart: state.blockHeaderStart, blockStart: state.blockStart, blockEnd: i });
+    if (hit === null) {
+      state.blockStart = -1;
+      state.lastBoundary = i + 1;
+    } else {
+      state.result = hit;
     }
   }
-  return result;
 }
 
 function tryMatchCardSurface(input: { scss: string; blockHeaderStart: number; blockStart: number; blockEnd: number }): CardSurfaceHit | null {
@@ -597,10 +613,20 @@ const CARD_LIKE_CHILD_RE = /(mat-card|dbx-card|dbx-content-box|dbx-content-pit|\
  * @returns The substring between the rule's matching braces, or `null` when no rule encloses the offset.
  */
 function findEnclosingRuleBody(scss: string, offset: number): string | null {
+  const openAt = findEnclosingOpenBrace(scss, offset);
+  let result: string | null = null;
+  if (openAt >= 0) {
+    const close = findMatchingCloseBrace(scss, openAt);
+    if (close > openAt) result = scss.slice(openAt + 1, close);
+  }
+  return result;
+}
+
+function findEnclosingOpenBrace(scss: string, offset: number): number {
   let depth = 0;
   let openAt = -1;
-  let result: string | null = null;
-  for (let i = 0; i <= offset && i < scss.length; i += 1) {
+  const limit = Math.min(offset + 1, scss.length);
+  for (let i = 0; i < limit; i += 1) {
     const ch = scss[i];
     if (ch === '{') {
       if (depth === 0) openAt = i;
@@ -610,23 +636,22 @@ function findEnclosingRuleBody(scss: string, offset: number): string | null {
       if (depth === 0) openAt = -1;
     }
   }
-  if (openAt >= 0) {
-    let d = 1;
-    let close = -1;
-    for (let i = openAt + 1; i < scss.length; i += 1) {
-      const ch = scss[i];
-      if (ch === '{') d += 1;
-      else if (ch === '}') {
-        d -= 1;
-        if (d === 0) {
-          close = i;
-          break;
-        }
-      }
+  return openAt;
+}
+
+function findMatchingCloseBrace(scss: string, openAt: number): number {
+  let depth = 1;
+  let close = -1;
+  for (let i = openAt + 1; i < scss.length && close < 0; i += 1) {
+    const ch = scss[i];
+    if (ch === '{') {
+      depth += 1;
+    } else if (ch === '}') {
+      depth -= 1;
+      if (depth === 0) close = i;
     }
-    if (close > openAt) result = scss.slice(openAt + 1, close);
   }
-  return result;
+  return close;
 }
 
 /**
@@ -1114,42 +1139,80 @@ function consolidate(matches: readonly SmellMatch[]): { readonly out: readonly S
  * @returns every surfaced smell match plus telemetry counters
  */
 export function detectSmellsDetailed(input: SmellInput): DetectSmellsResult {
+  const raw = runAllDetectors(input);
+  const cardRanges = collectCardSurfaceRanges(raw);
+  const scssIgnores = collectIgnoreEntries(input.scss);
+  const htmlIgnores = collectIgnoreEntries(input.html);
+  const filtered = applySuppressionFilters({ raw, cardRanges, scssIgnores, htmlIgnores });
+  const consolidated = consolidate(filtered.surviving);
+  return {
+    matches: consolidated.out,
+    suppressedByCascade: filtered.suppressedByCascade,
+    suppressedByDirective: filtered.suppressedByDirective,
+    duplicatesMerged: consolidated.merged
+  };
+}
+
+function runAllDetectors(input: SmellInput): readonly SmellMatch[] {
   const raw: SmellMatch[] = [];
   for (const smell of UI_SMELLS) {
     const found = smell.detect(input);
     for (const match of found) raw.push(match);
   }
+  return raw;
+}
 
-  const cardRanges: { start: number; end: number }[] = [];
+interface CardRange {
+  readonly start: number;
+  readonly end: number;
+}
+
+function collectCardSurfaceRanges(raw: readonly SmellMatch[]): readonly CardRange[] {
+  const ranges: CardRange[] = [];
   for (const match of raw) {
     if (match.id === 'card-surface-handrolled' && match.source === 'scss') {
-      cardRanges.push({ start: match.index, end: match.index + match.length });
+      ranges.push({ start: match.index, end: match.index + match.length });
     }
   }
-  const scssIgnores = collectIgnoreEntries(input.scss);
-  const htmlIgnores = collectIgnoreEntries(input.html);
+  return ranges;
+}
 
+interface SuppressionInput {
+  readonly raw: readonly SmellMatch[];
+  readonly cardRanges: readonly CardRange[];
+  readonly scssIgnores: readonly IgnoreEntry[];
+  readonly htmlIgnores: readonly IgnoreEntry[];
+}
+
+interface SuppressionResult {
+  readonly surviving: readonly SmellMatch[];
+  readonly suppressedByCascade: number;
+  readonly suppressedByDirective: number;
+}
+
+function applySuppressionFilters(input: SuppressionInput): SuppressionResult {
   let suppressedByCascade = 0;
   let suppressedByDirective = 0;
   const surviving: SmellMatch[] = [];
-  for (const match of raw) {
-    if (match.source === 'scss' && SMELLS_SUBSUMED_BY_CARD_SURFACE.has(match.id)) {
-      const inside = cardRanges.some((r) => match.index >= r.start && match.index < r.end);
-      if (inside) {
-        suppressedByCascade += 1;
-        continue;
-      }
+  for (const match of input.raw) {
+    if (isSuppressedByCardCascade(match, input.cardRanges)) {
+      suppressedByCascade += 1;
+      continue;
     }
-    const ignores = match.source === 'scss' ? scssIgnores : htmlIgnores;
+    const ignores = match.source === 'scss' ? input.scssIgnores : input.htmlIgnores;
     if (isIgnored(match, ignores)) {
       suppressedByDirective += 1;
       continue;
     }
     surviving.push(match);
   }
+  return { surviving, suppressedByCascade, suppressedByDirective };
+}
 
-  const consolidated = consolidate(surviving);
-  return { matches: consolidated.out, suppressedByCascade, suppressedByDirective, duplicatesMerged: consolidated.merged };
+function isSuppressedByCardCascade(match: SmellMatch, cardRanges: readonly CardRange[]): boolean {
+  if (match.source !== 'scss') return false;
+  if (!SMELLS_SUBSUMED_BY_CARD_SURFACE.has(match.id)) return false;
+  return cardRanges.some((r) => match.index >= r.start && match.index < r.end);
 }
 
 /**

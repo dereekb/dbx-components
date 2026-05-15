@@ -451,17 +451,23 @@ function detectBaseType(typeNode: TypeNode | undefined): SemanticTypeEntry['base
     } else if (Node.isLiteralTypeNode(typeNode)) {
       result = 'union-literal';
     } else {
-      const kind = typeNode.getKind();
-      if (kind === SyntaxKind.StringKeyword) {
-        result = 'string';
-      } else if (kind === SyntaxKind.NumberKeyword) {
-        result = 'number';
-      } else if (kind === SyntaxKind.BooleanKeyword) {
-        result = 'boolean';
-      } else if (Node.isTypeLiteral(typeNode)) {
-        result = 'object';
-      }
+      result = detectKeywordBaseType(typeNode);
     }
+  }
+  return result;
+}
+
+function detectKeywordBaseType(typeNode: TypeNode): SemanticTypeEntry['baseType'] {
+  const kind = typeNode.getKind();
+  let result: SemanticTypeEntry['baseType'] = 'other';
+  if (kind === SyntaxKind.StringKeyword) {
+    result = 'string';
+  } else if (kind === SyntaxKind.NumberKeyword) {
+    result = 'number';
+  } else if (kind === SyntaxKind.BooleanKeyword) {
+    result = 'boolean';
+  } else if (Node.isTypeLiteral(typeNode)) {
+    result = 'object';
   }
   return result;
 }

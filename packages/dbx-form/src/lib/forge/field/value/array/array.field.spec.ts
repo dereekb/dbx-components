@@ -494,7 +494,7 @@ describe('dbxForgeArrayFieldTemplateWithItemValues', () => {
         fields: [{ key: 'name', type: 'text', value: '' }]
       }
     ] as unknown as ArrayItemDefinitionTemplate;
-    const frozenBefore = JSON.parse(JSON.stringify(template));
+    const frozenBefore = structuredClone(template);
 
     dbxForgeArrayFieldTemplateWithItemValues(template, { name: 'new' });
 

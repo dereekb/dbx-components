@@ -35,61 +35,14 @@ export interface CollectOptions {
  * @returns the listing report
  */
 export function collectAppStorageFiles(extracted: ExtractedAppStorageFiles, options: CollectOptions): AppStorageFilesReport {
-  const fileTypeByPrefix = new Map<string, (typeof extracted.fileTypeIdentifierConstants)[number]>();
-  for (const c of extracted.fileTypeIdentifierConstants) {
-    const prefix = removeSuffix(c.symbolName, FILE_TYPE_IDENTIFIER_SUFFIX);
-    if (prefix) fileTypeByPrefix.set(prefix, c);
-  }
-
-  const reachableBindings = new Set<string>();
-  for (const call of extracted.uploadServiceCalls) {
-    for (const name of call.resolvedInitializerBindings) reachableBindings.add(name);
-  }
-  const initializerByType = new Map<string, (typeof extracted.uploadInitializerEntries)[number]>();
-  for (const entry of extracted.uploadInitializerEntries) {
-    if (entry.bindingName && reachableBindings.has(entry.bindingName)) {
-      initializerByType.set(entry.typeIdentifier, entry);
-    }
-  }
-
-  const processingByPurpose = new Map<string, (typeof extracted.processingConfigs)[number]>();
-  for (const config of extracted.processingConfigs) {
-    processingByPurpose.set(config.targetIdentifier, config);
-  }
-
+  const indices = buildStorageFileIndices(extracted);
   const purposes: StorageFilePurposeSummary[] = [];
   for (const purpose of extracted.purposeConstants) {
-    const prefix = removeSuffix(purpose.symbolName, PURPOSE_SUFFIX);
-    const fileType = prefix ? fileTypeByPrefix.get(prefix) : undefined;
-    const groupIdsFn = findGroupIdsFunction(prefix, extracted);
-    const subtasks: string[] = [];
-    for (const c of extracted.processingSubtaskConstants) {
-      if (c.symbolName.startsWith(`${purpose.symbolName}_`)) {
-        subtasks.push(c.symbolName);
-      }
-    }
-    const initializerEntry = fileType ? initializerByType.get(fileType.symbolName) : undefined;
-    const processingConfig = processingByPurpose.get(purpose.symbolName);
-    purposes.push({
-      purposeCode: purpose.purposeCode,
-      purposeSymbolName: purpose.symbolName,
-      fileTypeIdentifier: fileType?.typeCode,
-      fileTypeIdentifierCode: fileType?.symbolName,
-      fileGroupIdsFunctionName: groupIdsFn,
-      subtasks,
-      hasUploadInitializer: initializerEntry !== undefined,
-      uploadInitializerSourceFile: initializerEntry?.sourceFile,
-      hasProcessingConfig: processingConfig !== undefined,
-      processingConfigSourceFile: processingConfig?.sourceFile,
-      sourceFile: purpose.sourceFile
-    });
+    purposes.push(buildStorageFilePurposeSummary(purpose, extracted, indices));
   }
 
   const factoryName = extracted.uploadServiceCalls[0]?.enclosingFactoryName;
-  const wiredFactoryNames = new Set<string>();
-  for (const wiring of extracted.uploadServiceWirings) {
-    if (wiring.useFactoryIdentifier) wiredFactoryNames.add(wiring.useFactoryIdentifier);
-  }
+  const wiredFactoryNames = collectWiredFactoryNames(extracted);
 
   const result: AppStorageFilesReport = {
     componentDir: options.componentDir,
@@ -100,6 +53,93 @@ export function collectAppStorageFiles(extracted: ExtractedAppStorageFiles, opti
     purposes
   };
   return result;
+}
+
+interface StorageFileIndices {
+  readonly fileTypeByPrefix: ReadonlyMap<string, ExtractedAppStorageFiles['fileTypeIdentifierConstants'][number]>;
+  readonly initializerByType: ReadonlyMap<string, ExtractedAppStorageFiles['uploadInitializerEntries'][number]>;
+  readonly processingByPurpose: ReadonlyMap<string, ExtractedAppStorageFiles['processingConfigs'][number]>;
+}
+
+function buildStorageFileIndices(extracted: ExtractedAppStorageFiles): StorageFileIndices {
+  const result: StorageFileIndices = {
+    fileTypeByPrefix: buildFileTypeByPrefix(extracted),
+    initializerByType: buildInitializerByType(extracted),
+    processingByPurpose: buildProcessingByPurpose(extracted)
+  };
+  return result;
+}
+
+function buildFileTypeByPrefix(extracted: ExtractedAppStorageFiles): Map<string, ExtractedAppStorageFiles['fileTypeIdentifierConstants'][number]> {
+  const fileTypeByPrefix = new Map<string, ExtractedAppStorageFiles['fileTypeIdentifierConstants'][number]>();
+  for (const c of extracted.fileTypeIdentifierConstants) {
+    const prefix = removeSuffix(c.symbolName, FILE_TYPE_IDENTIFIER_SUFFIX);
+    if (prefix) fileTypeByPrefix.set(prefix, c);
+  }
+  return fileTypeByPrefix;
+}
+
+function buildInitializerByType(extracted: ExtractedAppStorageFiles): Map<string, ExtractedAppStorageFiles['uploadInitializerEntries'][number]> {
+  const reachableBindings = new Set<string>();
+  for (const call of extracted.uploadServiceCalls) {
+    for (const name of call.resolvedInitializerBindings) reachableBindings.add(name);
+  }
+  const initializerByType = new Map<string, ExtractedAppStorageFiles['uploadInitializerEntries'][number]>();
+  for (const entry of extracted.uploadInitializerEntries) {
+    if (entry.bindingName && reachableBindings.has(entry.bindingName)) {
+      initializerByType.set(entry.typeIdentifier, entry);
+    }
+  }
+  return initializerByType;
+}
+
+function buildProcessingByPurpose(extracted: ExtractedAppStorageFiles): Map<string, ExtractedAppStorageFiles['processingConfigs'][number]> {
+  const processingByPurpose = new Map<string, ExtractedAppStorageFiles['processingConfigs'][number]>();
+  for (const config of extracted.processingConfigs) {
+    processingByPurpose.set(config.targetIdentifier, config);
+  }
+  return processingByPurpose;
+}
+
+function collectWiredFactoryNames(extracted: ExtractedAppStorageFiles): Set<string> {
+  const wiredFactoryNames = new Set<string>();
+  for (const wiring of extracted.uploadServiceWirings) {
+    if (wiring.useFactoryIdentifier) wiredFactoryNames.add(wiring.useFactoryIdentifier);
+  }
+  return wiredFactoryNames;
+}
+
+function buildStorageFilePurposeSummary(purpose: ExtractedAppStorageFiles['purposeConstants'][number], extracted: ExtractedAppStorageFiles, indices: StorageFileIndices): StorageFilePurposeSummary {
+  const prefix = removeSuffix(purpose.symbolName, PURPOSE_SUFFIX);
+  const fileType = prefix ? indices.fileTypeByPrefix.get(prefix) : undefined;
+  const groupIdsFn = findGroupIdsFunction(prefix, extracted);
+  const subtasks = collectPurposeSubtasks(purpose.symbolName, extracted);
+  const initializerEntry = fileType ? indices.initializerByType.get(fileType.symbolName) : undefined;
+  const processingConfig = indices.processingByPurpose.get(purpose.symbolName);
+  const result: StorageFilePurposeSummary = {
+    purposeCode: purpose.purposeCode,
+    purposeSymbolName: purpose.symbolName,
+    fileTypeIdentifier: fileType?.typeCode,
+    fileTypeIdentifierCode: fileType?.symbolName,
+    fileGroupIdsFunctionName: groupIdsFn,
+    subtasks,
+    hasUploadInitializer: initializerEntry !== undefined,
+    uploadInitializerSourceFile: initializerEntry?.sourceFile,
+    hasProcessingConfig: processingConfig !== undefined,
+    processingConfigSourceFile: processingConfig?.sourceFile,
+    sourceFile: purpose.sourceFile
+  };
+  return result;
+}
+
+function collectPurposeSubtasks(purposeSymbolName: string, extracted: ExtractedAppStorageFiles): string[] {
+  const subtasks: string[] = [];
+  for (const c of extracted.processingSubtaskConstants) {
+    if (c.symbolName.startsWith(`${purposeSymbolName}_`)) {
+      subtasks.push(c.symbolName);
+    }
+  }
+  return subtasks;
 }
 
 function findGroupIdsFunction(purposePrefix: string | undefined, extracted: ExtractedAppStorageFiles): string | undefined {

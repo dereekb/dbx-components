@@ -183,7 +183,7 @@ function reviveZohoAccessToken(raw: unknown): Maybe<ZohoAccessToken> {
 
   const value = raw as ZohoAccessToken & { expiresAt?: unknown };
   const rawExpiresAt = value.expiresAt;
-  const expiresAt = rawExpiresAt != null && !(rawExpiresAt instanceof Date) ? new Date(rawExpiresAt as string | number) : (rawExpiresAt as Date | undefined);
+  const expiresAt = rawExpiresAt != null && !(rawExpiresAt instanceof Date) ? new Date(rawExpiresAt as string | number) : rawExpiresAt;
 
   return { ...(value as ZohoAccessToken), expiresAt: expiresAt as Date };
 }

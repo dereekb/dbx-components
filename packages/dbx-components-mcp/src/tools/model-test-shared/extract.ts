@@ -565,21 +565,31 @@ function collectHelpers(sourceFile: SourceFile): readonly HelperDescribe[] {
   for (const fn of sourceFile.getFunctions()) {
     const name = fn.getName();
     if (name === undefined) continue;
-    const usage = scanForDescribeOrIt(fn);
-    if (!usage.emitsDescribe && !usage.emitsIt) continue;
-    out.push({ name, line: fn.getStartLineNumber(), endLine: fn.getEndLineNumber(), emitsDescribe: usage.emitsDescribe, emitsIt: usage.emitsIt });
+    appendHelperIfUsesDescribeOrIt({ out, name, body: fn, startLine: fn.getStartLineNumber(), endLine: fn.getEndLineNumber() });
   }
   for (const v of sourceFile.getVariableStatements()) {
     for (const decl of v.getDeclarations()) {
       const init = decl.getInitializer();
       if (init === undefined) continue;
       if (!Node.isArrowFunction(init) && !Node.isFunctionExpression(init)) continue;
-      const usage = scanForDescribeOrIt(init);
-      if (!usage.emitsDescribe && !usage.emitsIt) continue;
-      out.push({ name: decl.getName(), line: decl.getStartLineNumber(), endLine: decl.getEndLineNumber(), emitsDescribe: usage.emitsDescribe, emitsIt: usage.emitsIt });
+      appendHelperIfUsesDescribeOrIt({ out, name: decl.getName(), body: init, startLine: decl.getStartLineNumber(), endLine: decl.getEndLineNumber() });
     }
   }
   return out;
+}
+
+interface AppendHelperInput {
+  readonly out: HelperDescribe[];
+  readonly name: string;
+  readonly body: Node;
+  readonly startLine: number;
+  readonly endLine: number;
+}
+
+function appendHelperIfUsesDescribeOrIt(input: AppendHelperInput): void {
+  const usage = scanForDescribeOrIt(input.body);
+  if (!usage.emitsDescribe && !usage.emitsIt) return;
+  input.out.push({ name: input.name, line: input.startLine, endLine: input.endLine, emitsDescribe: usage.emitsDescribe, emitsIt: usage.emitsIt });
 }
 
 interface DescribeOrItUsage {

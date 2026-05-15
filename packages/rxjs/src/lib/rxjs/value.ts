@@ -291,7 +291,7 @@ export function switchMapOnBoolean<T = unknown>(switchOnValue: boolean, obs: May
       return asObservableFromGetter(obs);
     }
 
-    return otherwise != null ? asObservableFromGetter(otherwise) : EMPTY;
+    return otherwise == null ? EMPTY : asObservableFromGetter(otherwise);
   });
 }
 

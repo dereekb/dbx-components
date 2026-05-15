@@ -171,24 +171,22 @@ function collectConverterMapKeys(decl: VariableDeclaration): readonly ExtractedC
   const out: ExtractedConverterMapKey[] = [];
   for (const prop of obj.getProperties()) {
     if (!Node.isPropertyAssignment(prop)) continue;
-    const nameNode = prop.getNameNode();
-    const line = prop.getStartLineNumber();
-    if (Node.isComputedPropertyName(nameNode)) {
-      const inner = nameNode.getExpression();
-      out.push({ raw: inner.getText(), kind: 'identifier', line });
-      continue;
-    }
-    if (Node.isStringLiteral(nameNode)) {
-      out.push({ raw: nameNode.getLiteralText(), kind: 'string', line });
-      continue;
-    }
-    if (Node.isIdentifier(nameNode)) {
-      out.push({ raw: nameNode.getText(), kind: 'string', line });
-      continue;
-    }
-    out.push({ raw: nameNode.getText(), kind: 'string', line });
+    out.push(buildConverterMapKey(prop));
   }
   return out;
+}
+
+function buildConverterMapKey(prop: Node): ExtractedConverterMapKey {
+  if (!Node.isPropertyAssignment(prop)) {
+    return { raw: prop.getText(), kind: 'string', line: prop.getStartLineNumber() };
+  }
+  const nameNode = prop.getNameNode();
+  const line = prop.getStartLineNumber();
+  if (Node.isComputedPropertyName(nameNode)) {
+    return { raw: nameNode.getExpression().getText(), kind: 'identifier', line };
+  }
+  const raw = Node.isStringLiteral(nameNode) ? nameNode.getLiteralText() : nameNode.getText();
+  return { raw, kind: 'string', line };
 }
 
 function unwrapObjectLiteral(node: Node): ObjectLiteralExpression | undefined {

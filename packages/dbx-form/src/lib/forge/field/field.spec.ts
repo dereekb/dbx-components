@@ -429,7 +429,7 @@ describe('configure parameter', () => {
     });
 
     it('should add async function derivation logic via addLogic()', () => {
-      const asyncFn = async () => Promise.resolve(100);
+      const asyncFn = async () => 100;
 
       const field = forgeTestField({ key: 'x' }, (x) => {
         x.addLogic({
@@ -447,7 +447,7 @@ describe('configure parameter', () => {
     });
 
     it('should add async function derivation with fn only (no asyncFunctionName) and auto-generate name', () => {
-      const asyncFn = async () => Promise.resolve('result');
+      const asyncFn = async () => 'result';
 
       const field = forgeTestField({ key: 'x' }, (x) => {
         x.addLogic({

@@ -13,7 +13,7 @@
  *    params type by stripping the `Type` suffix.
  */
 
-import { readdir, readFile, stat } from 'node:fs/promises';
+import { readdir, readFile, stat, type Dirent } from 'node:fs/promises';
 import { join, relative, sep } from 'node:path';
 import { Project, SyntaxKind, type SourceFile } from 'ts-morph';
 import type { ActionResolution, FactoryResolution } from './types.js';
@@ -53,34 +53,41 @@ export async function buildActionLookup(apiAbs: string): Promise<ActionLookupRes
   return { methodsByParams, factoriesByParams, filesScanned: files.length };
 }
 
+/**
+ * Reads a directory's `Dirent` entries; returns an empty list when the
+ * path is unreadable.
+ *
+ * @param path - absolute directory path
+ * @returns the directory entries or `[]` on failure
+ */
+async function readDirSafe(path: string): Promise<readonly Dirent[]> {
+  try {
+    return await readdir(path, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+}
+
 async function collectActionFiles(root: string): Promise<readonly string[]> {
   const out: string[] = [];
   const stack: string[] = [];
   try {
     const stats = await stat(root);
-    if (!stats.isDirectory()) {
-      return out;
-    }
+    if (!stats.isDirectory()) return out;
     stack.push(root);
   } catch {
     return out;
   }
   while (stack.length > 0) {
     const current = stack.pop() as string;
-    let entries;
-    try {
-      entries = await readdir(current, { withFileTypes: true });
-    } catch {
-      continue;
-    }
+    const entries = await readDirSafe(current);
     for (const entry of entries) {
       const full = join(current, entry.name);
       if (entry.isDirectory()) {
         stack.push(full);
         continue;
       }
-      if (!entry.isFile()) continue;
-      if (entry.name.endsWith(ACTION_SERVER_SUFFIX) && !entry.name.endsWith('.spec.ts')) {
+      if (entry.isFile() && entry.name.endsWith(ACTION_SERVER_SUFFIX) && !entry.name.endsWith('.spec.ts')) {
         out.push(full);
       }
     }

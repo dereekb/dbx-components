@@ -161,7 +161,7 @@ export class DbxOAuthConsentComponent implements OnDestroy {
       this.interactionService.submitConsent(uid, true, { grantedOIDCScopes }).pipe(
         tap((response) => {
           if (response.redirectTo) {
-            window.location.href = response.redirectTo;
+            globalThis.location.href = response.redirectTo;
           }
         })
       )
@@ -184,7 +184,7 @@ export class DbxOAuthConsentComponent implements OnDestroy {
       this.interactionService.submitConsent(uid, false).pipe(
         tap((response) => {
           if (response.redirectTo) {
-            window.location.href = response.redirectTo;
+            globalThis.location.href = response.redirectTo;
           }
         })
       )

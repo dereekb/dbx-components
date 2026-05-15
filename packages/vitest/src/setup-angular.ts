@@ -60,7 +60,7 @@ import ResizeObserver from 'resize-observer-polyfill';
 // https://stackoverflow.com/questions/39830580/jest-test-fails-typeerror-window-matchmedia-is-not-a-function
 let window: any;
 
-window ??= global;
+window ??= globalThis;
 
 if (window) {
   Object.defineProperty(window, 'matchMedia', {

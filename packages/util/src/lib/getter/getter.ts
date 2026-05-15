@@ -103,7 +103,7 @@ export function getValueFromGetter<T, A>(this: unknown, input: unknown, args?: A
  * @returns A Getter function that returns the value
  */
 export function asGetter<T>(input: GetterOrValue<T>): Getter<T> {
-  return isNonClassFunction(input) ? input : () => input as T;
+  return isNonClassFunction(input) ? input : () => input;
 }
 
 /**

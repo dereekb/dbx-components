@@ -146,31 +146,56 @@ const DEFAULT_WRITE_FILE: ScanCliBaseWriteFile = (path, data) => nodeWriteFile(p
 export async function runScanCliBase<TManifest extends ScanCliManifestLike, TWarning, TGlobber>(input: RunScanCliBaseInput<TGlobber>, config: ScanCliConfig<TManifest, TWarning, TGlobber>): Promise<RunScanCliResult> {
   const { argv, cwd, generator, readFile = DEFAULT_READ_FILE, writeFile = DEFAULT_WRITE_FILE, globber, now, log = console.log, errorLog = console.error } = input;
 
-  let result: RunScanCliResult;
   const args = parseScanArgs(argv);
+  const validation = validateParsedScanArgs({ args, config, log, errorLog });
+  if (validation.kind === 'done') {
+    return validation.result;
+  }
 
+  const projectRoot = resolve(cwd, validation.project);
+  const outcome = await config.buildManifest({ projectRoot, generator, readFile, globber, now });
+  return handleOutcome({ outcome, args: validation.args, projectArg: validation.project, readFile, writeFile, log, errorLog, config });
+}
+
+type ValidateParsedScanArgsResult = { readonly kind: 'done'; readonly result: RunScanCliResult } | { readonly kind: 'proceed'; readonly args: Extract<ParsedScanArgs, { kind: 'parsed' }>; readonly project: string };
+
+interface ValidateParsedScanArgsInput<TManifest extends ScanCliManifestLike, TWarning, TGlobber> {
+  readonly args: ParsedScanArgs;
+  readonly config: ScanCliConfig<TManifest, TWarning, TGlobber>;
+  readonly log: ScanCliBaseLogger;
+  readonly errorLog: ScanCliBaseLogger;
+}
+
+function validateParsedScanArgs<TManifest extends ScanCliManifestLike, TWarning, TGlobber>(input: ValidateParsedScanArgsInput<TManifest, TWarning, TGlobber>): ValidateParsedScanArgsResult {
+  const { args, config, log, errorLog } = input;
   if (args.kind === 'parse-error') {
     errorLog(`Error: ${args.message}`);
     errorLog(config.usage);
-    result = { exitCode: 2 };
-  } else if (args.help) {
+    return { kind: 'done', result: { exitCode: 2 } };
+  }
+  if (args.help) {
     log(config.usage);
-    result = { exitCode: 0 };
-  } else if (args.project === undefined) {
+    return { kind: 'done', result: { exitCode: 0 } };
+  }
+  if (args.project === undefined) {
     errorLog('Error: --project is required');
     errorLog(config.usage);
-    result = { exitCode: 2 };
-  } else {
-    const projectRoot = resolve(cwd, args.project);
-    const outcome = await config.buildManifest({ projectRoot, generator, readFile, globber, now });
-    result = await handleOutcome({ outcome, args, projectArg: args.project, readFile, writeFile, log, errorLog, config });
+    return { kind: 'done', result: { exitCode: 2 } };
   }
-
-  return result;
+  return { kind: 'proceed', args, project: args.project };
 }
 
 // MARK: argv parsing
 type ParsedScanArgs = { readonly kind: 'parsed'; readonly project: string | undefined; readonly check: boolean; readonly out: string | undefined; readonly help: boolean } | { readonly kind: 'parse-error'; readonly message: string };
+
+interface MutableParseState {
+  project: string | undefined;
+  out: string | undefined;
+  check: boolean;
+  help: boolean;
+  error: string | undefined;
+  index: number;
+}
 
 /**
  * Parses the shared scan CLI argv vocabulary (`--project`, `--check`,
@@ -180,55 +205,67 @@ type ParsedScanArgs = { readonly kind: 'parsed'; readonly project: string | unde
  * @returns Either the parsed flag bag or a `parse-error` describing the first malformed token.
  */
 export function parseScanArgs(argv: readonly string[]): ParsedScanArgs {
-  let project: string | undefined;
-  let out: string | undefined;
-  let check = false;
-  let help = false;
-  let error: string | undefined;
-  let index = 0;
+  const state: MutableParseState = {
+    project: undefined,
+    out: undefined,
+    check: false,
+    help: false,
+    error: undefined,
+    index: 0
+  };
 
-  while (index < argv.length && error === undefined) {
-    const token = argv[index];
-    if (token === '--help' || token === '-h') {
-      help = true;
-      index += 1;
-    } else if (token === '--check') {
-      check = true;
-      index += 1;
-    } else if (token === '--project') {
-      const value = argv[index + 1];
-      if (value === undefined || value.startsWith('--')) {
-        error = '--project requires a value';
-      } else {
-        project = value;
-        index += 2;
-      }
-    } else if (token.startsWith('--project=')) {
-      project = token.slice('--project='.length);
-      index += 1;
-    } else if (token === '--out') {
-      const value = argv[index + 1];
-      if (value === undefined || value.startsWith('--')) {
-        error = '--out requires a value';
-      } else {
-        out = value;
-        index += 2;
-      }
-    } else if (token.startsWith('--out=')) {
-      out = token.slice('--out='.length);
-      index += 1;
-    } else {
-      error = `Unknown argument: ${token}`;
-    }
+  while (state.index < argv.length && state.error === undefined) {
+    consumeScanToken(state, argv);
   }
 
   let result: ParsedScanArgs;
-  if (error === undefined) {
-    result = { kind: 'parsed', project, check, out, help };
+  if (state.error === undefined) {
+    result = { kind: 'parsed', project: state.project, check: state.check, out: state.out, help: state.help };
   } else {
-    result = { kind: 'parse-error', message: error };
+    result = { kind: 'parse-error', message: state.error };
   }
   return result;
+}
+
+function consumeScanToken(state: MutableParseState, argv: readonly string[]): void {
+  const token = argv[state.index];
+  if (token === '--help' || token === '-h') {
+    state.help = true;
+    state.index += 1;
+  } else if (token === '--check') {
+    state.check = true;
+    state.index += 1;
+  } else if (token === '--project') {
+    consumeValueFlag({ state, argv, target: 'project', flagName: '--project' });
+  } else if (token.startsWith('--project=')) {
+    state.project = token.slice('--project='.length);
+    state.index += 1;
+  } else if (token === '--out') {
+    consumeValueFlag({ state, argv, target: 'out', flagName: '--out' });
+  } else if (token.startsWith('--out=')) {
+    state.out = token.slice('--out='.length);
+    state.index += 1;
+  } else {
+    state.error = `Unknown argument: ${token}`;
+  }
+}
+
+interface ConsumeValueFlagInput {
+  readonly state: MutableParseState;
+  readonly argv: readonly string[];
+  readonly target: 'project' | 'out';
+  readonly flagName: string;
+}
+
+function consumeValueFlag(input: ConsumeValueFlagInput): void {
+  const { state, argv, target, flagName } = input;
+  const value = argv[state.index + 1];
+  if (value === undefined || value.startsWith('--')) {
+    state.error = `${flagName} requires a value`;
+    return;
+  }
+  state[target] = value;
+  state.index += 2;
 }
 
 // MARK: Outcome handling
@@ -244,55 +281,85 @@ interface HandleOutcomeInput<TManifest extends ScanCliManifestLike, TWarning, TG
 }
 
 async function handleOutcome<TManifest extends ScanCliManifestLike, TWarning, TGlobber>(input: HandleOutcomeInput<TManifest, TWarning, TGlobber>): Promise<RunScanCliResult> {
-  const { outcome, args, projectArg, readFile, writeFile, log, errorLog, config } = input;
-
+  const { outcome } = input;
   let result: RunScanCliResult;
   if (outcome.kind === 'success') {
-    const finalOutPath = args.out === undefined ? outcome.outPath : resolve(outcome.outPath, '..', args.out);
-    const serialized = config.serialize(outcome.manifest);
-    if (args.check) {
-      let existing: string | null = null;
-      try {
-        existing = await readFile(finalOutPath);
-      } catch {
-        existing = null;
-      }
-      if (existing === serialized) {
-        log(`Manifest fresh: ${finalOutPath} (${outcome.manifest.entries.length} entries, ${outcome.scannedFileCount} files scanned)`);
-        result = { exitCode: 0 };
-      } else {
-        errorLog(`Manifest is stale at ${finalOutPath}.`);
-        errorLog('Regenerate by running:');
-        errorLog(`  dbx-components-mcp ${config.subcommand} --project ${projectArg}`);
-        result = { exitCode: 1 };
-      }
-    } else {
-      await writeFile(finalOutPath, serialized);
-      log(`Wrote manifest: ${finalOutPath} (${outcome.manifest.entries.length} entries, ${outcome.scannedFileCount} files scanned)`);
-      for (const warning of outcome.extractWarnings) {
-        errorLog(`extract-warning: ${config.formatExtractWarning(warning)}`);
-      }
-      result = { exitCode: 0 };
-    }
-  } else if (outcome.kind === 'no-config') {
-    errorLog(`Error: no scan config at ${outcome.configPath}`);
-    errorLog(`Create a dbx-mcp.scan.json file in the project root ${config.configSectionHint}`);
-    result = { exitCode: 1 };
-  } else if (outcome.kind === 'invalid-scan-config') {
-    errorLog(`Error: invalid scan config at ${outcome.configPath}`);
-    errorLog(outcome.error);
-    result = { exitCode: 1 };
-  } else if (outcome.kind === 'no-package') {
-    errorLog(`Error: no package.json at ${outcome.packagePath}`);
-    result = { exitCode: 1 };
-  } else if (outcome.kind === 'invalid-package') {
-    errorLog(`Error: invalid package.json at ${outcome.packagePath}`);
-    errorLog(outcome.error);
-    result = { exitCode: 1 };
+    result = await handleSuccess({ ...input, outcome });
   } else {
-    errorLog('Error: generated manifest failed schema validation');
-    errorLog(outcome.error);
+    result = handleFailure(outcome, input.errorLog, input.config);
+  }
+  return result;
+}
+
+interface HandleSuccessInput<TManifest extends ScanCliManifestLike, TWarning, TGlobber> extends HandleOutcomeInput<TManifest, TWarning, TGlobber> {
+  readonly outcome: ScanCliBuildSuccess<TManifest, TWarning>;
+}
+
+async function handleSuccess<TManifest extends ScanCliManifestLike, TWarning, TGlobber>(input: HandleSuccessInput<TManifest, TWarning, TGlobber>): Promise<RunScanCliResult> {
+  const { outcome, args, projectArg, readFile, writeFile, log, errorLog, config } = input;
+  const finalOutPath = args.out === undefined ? outcome.outPath : resolve(outcome.outPath, '..', args.out);
+  const serialized = config.serialize(outcome.manifest);
+  let result: RunScanCliResult;
+  if (args.check) {
+    result = await runCheck({ finalOutPath, serialized, outcome, projectArg, readFile, log, errorLog, config });
+  } else {
+    await writeFile(finalOutPath, serialized);
+    log(`Wrote manifest: ${finalOutPath} (${outcome.manifest.entries.length} entries, ${outcome.scannedFileCount} files scanned)`);
+    for (const warning of outcome.extractWarnings) {
+      errorLog(`extract-warning: ${config.formatExtractWarning(warning)}`);
+    }
+    result = { exitCode: 0 };
+  }
+  return result;
+}
+
+interface RunCheckInput<TManifest extends ScanCliManifestLike, TWarning, TGlobber> {
+  readonly finalOutPath: string;
+  readonly serialized: string;
+  readonly outcome: ScanCliBuildSuccess<TManifest, TWarning>;
+  readonly projectArg: string;
+  readonly readFile: ScanCliBaseReadFile;
+  readonly log: ScanCliBaseLogger;
+  readonly errorLog: ScanCliBaseLogger;
+  readonly config: ScanCliConfig<TManifest, TWarning, TGlobber>;
+}
+
+async function runCheck<TManifest extends ScanCliManifestLike, TWarning, TGlobber>(input: RunCheckInput<TManifest, TWarning, TGlobber>): Promise<RunScanCliResult> {
+  const { finalOutPath, serialized, outcome, projectArg, readFile, log, errorLog, config } = input;
+  let existing: string | null;
+  try {
+    existing = await readFile(finalOutPath);
+  } catch {
+    existing = null;
+  }
+  let result: RunScanCliResult;
+  if (existing === serialized) {
+    log(`Manifest fresh: ${finalOutPath} (${outcome.manifest.entries.length} entries, ${outcome.scannedFileCount} files scanned)`);
+    result = { exitCode: 0 };
+  } else {
+    errorLog(`Manifest is stale at ${finalOutPath}.`);
+    errorLog('Regenerate by running:');
+    errorLog(`  dbx-components-mcp ${config.subcommand} --project ${projectArg}`);
     result = { exitCode: 1 };
   }
   return result;
+}
+
+function handleFailure<TManifest extends ScanCliManifestLike, TWarning, TGlobber>(outcome: ScanCliBuildFailure, errorLog: ScanCliBaseLogger, config: ScanCliConfig<TManifest, TWarning, TGlobber>): RunScanCliResult {
+  if (outcome.kind === 'no-config') {
+    errorLog(`Error: no scan config at ${outcome.configPath}`);
+    errorLog(`Create a dbx-mcp.scan.json file in the project root ${config.configSectionHint}`);
+  } else if (outcome.kind === 'invalid-scan-config') {
+    errorLog(`Error: invalid scan config at ${outcome.configPath}`);
+    errorLog(outcome.error);
+  } else if (outcome.kind === 'no-package') {
+    errorLog(`Error: no package.json at ${outcome.packagePath}`);
+  } else if (outcome.kind === 'invalid-package') {
+    errorLog(`Error: invalid package.json at ${outcome.packagePath}`);
+    errorLog(outcome.error);
+  } else {
+    errorLog('Error: generated manifest failed schema validation');
+    errorLog(outcome.error);
+  }
+  return { exitCode: 1 };
 }

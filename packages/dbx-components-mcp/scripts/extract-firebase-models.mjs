@@ -633,25 +633,36 @@ function parseJsdocBlock(body) {
   return { description: description && description.length > 0 ? description : undefined, tags };
 }
 
+function parseEnumValue(raw) {
+  if (raw === undefined) return undefined;
+  const trimmed = raw.trim();
+  if (trimmed.length === 0) return undefined;
+  const first = trimmed.charAt(0);
+  if (first === "'" || first === '"') {
+    return trimmed.slice(1, -1);
+  }
+  if (!/^-?\d+$/.test(trimmed)) return undefined;
+  return Number(trimmed);
+}
+
 function parseEnumBody(body) {
   const out = [];
-  // TODO(sonarqube:S5843): regex complexity 32 vs 20 — needs follow-up
-  const re = /(?:\/\*\*([\s\S]*?)\*\/\s*)?([A-Z][A-Z0-9_]*)\s*(?:=\s*(-?\d+|'[^']*'|"[^"]*"))?\s*,?/g;
+  const entryRe = /(?:\/\*\*([\s\S]*?)\*\/\s*)?([A-Z][A-Z0-9_]*)(\s*=\s*[^,\n]+)?\s*,?/g;
   let m;
   let autoValue = 0;
-  while ((m = re.exec(body)) !== null) {
+  while ((m = entryRe.exec(body)) !== null) {
     if (!m[2]) continue;
+    const valueExpr = m[3] ? m[3].replace(/^\s*=\s*/, '') : undefined;
+    const parsed = parseEnumValue(valueExpr);
     let value;
-    if (m[3]) {
-      if (m[3].startsWith("'") || m[3].startsWith('"')) {
-        value = m[3].slice(1, -1);
-      } else {
-        value = Number(m[3]);
-        autoValue = value + 1;
-      }
-    } else {
+    if (parsed === undefined) {
       value = autoValue;
       autoValue++;
+    } else if (typeof parsed === 'number') {
+      value = parsed;
+      autoValue = value + 1;
+    } else {
+      value = parsed;
     }
     const entry = { name: m[2], value };
     const desc = cleanJsdoc(m[1]);

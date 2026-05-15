@@ -183,6 +183,10 @@ describe('buildManifestCommands', () => {
   });
 });
 
+function normalize(s: string): string {
+  return s.replace(/\s+/g, ' ').trim();
+}
+
 describe('buildManifestCommands per-model `get` help text', () => {
   const API_MANIFEST: CliApiManifest = [
     {
@@ -230,10 +234,6 @@ describe('buildManifestCommands per-model `get` help text', () => {
       fields: []
     }
   ];
-
-  function normalize(s: string): string {
-    return s.replace(/\s+/g, ' ').trim();
-  }
 
   it('shows `get <id-or-key>` in usage for a root-level model when the model manifest is wired', async () => {
     const help = await helpFor(['model', 'profile', '--help'], { apiManifest: API_MANIFEST, modelManifest: MODEL_MANIFEST_WITH_BOTH });

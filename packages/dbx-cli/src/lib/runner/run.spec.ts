@@ -1,5 +1,7 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { createCli } from './run';
+import { getCliContext } from '../context/cli.context';
+import type { CliContext } from '../context/cli.context';
 import type { CliModelManifest } from '../manifest/types';
 
 const MODEL_MANIFEST: CliModelManifest = [
@@ -60,5 +62,51 @@ describe('createCli() model-decode auto-wiring', () => {
   it('does NOT register model-decode when disableModelDecode is true', async () => {
     const help = await getRootHelp({ cliName: 'demo-cli', modelManifest: MODEL_MANIFEST, disableModelDecode: true });
     expect(help).not.toContain('model-decode');
+  });
+});
+
+describe('createCli() testCliContext override', () => {
+  it('skips the auth middleware and attaches the supplied context for command handlers', async () => {
+    const handler = vi.fn(() => undefined);
+
+    const testCliContext: CliContext = {
+      cliName: 'demo-cli',
+      envName: 'test',
+      env: {
+        apiBaseUrl: 'http://127.0.0.1:0/api',
+        oidcIssuer: 'http://127.0.0.1:0/oidc',
+        appClientUrl: 'http://127.0.0.1:0',
+        clientId: 'test-client',
+        redirectUri: 'http://127.0.0.1:0/callback',
+        scopes: 'openid'
+      },
+      accessToken: 'test-token',
+      callModel: handler as never,
+      getModel: handler as never,
+      getMultipleModels: handler as never
+    };
+
+    const observed: CliContext[] = [];
+
+    await createCli({
+      cliName: 'demo-cli',
+      testCliContext,
+      apiCommands: [
+        {
+          command: 'probe',
+          describe: 'capture the live CliContext',
+          handler: () => {
+            const ctx = getCliContext();
+            if (ctx) observed.push(ctx);
+          }
+        }
+      ]
+    })
+      .exitProcess(false)
+      .parse(['probe']);
+
+    expect(observed).toHaveLength(1);
+    expect(observed[0].accessToken).toBe('test-token');
+    expect(observed[0].envName).toBe('test');
   });
 });
