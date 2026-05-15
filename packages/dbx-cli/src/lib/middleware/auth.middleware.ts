@@ -1,12 +1,12 @@
 import type { MiddlewareFunction } from 'yargs';
-import { type CliConfig, loadCliConfig } from '../config/cli.config';
-import { type CliEnvDefault, applyEnvVarOverrides, findCliEnvDefault, isCliEnvConfigComplete, mergeCliEnvWithDefault } from '../config/env';
+import { type CliEnvDefault } from '../config/env';
+import { resolveCliEnvOrThrow } from '../config/env.resolve';
 import { buildCliPaths } from '../config/paths';
 import { type CliTokenEntry, createCliTokenCacheStore, isTokenExpired } from '../config/token.cache';
 import { discoverOidcMetadata, refreshAccessToken } from '../auth/oidc.client';
 import { type CliContext, createCliContext, setCliContext } from '../context/cli.context';
 import { type CliModelManifest } from '../manifest/types';
-import { CliError, outputError } from '../util/output';
+import { CLI_EXIT_CODE_AUTH, CliError, outputError, setCliTimeoutMs, setCliVerbose } from '../util/output';
 
 export interface CreateAuthMiddlewareInput {
   readonly cliName: string;
@@ -44,9 +44,13 @@ export interface CreateAuthMiddlewareInput {
 export function createAuthMiddleware(input: CreateAuthMiddlewareInput): MiddlewareFunction {
   const paths = buildCliPaths({ cliName: input.cliName });
   const tokens = createCliTokenCacheStore({ tokenCachePath: paths.tokenCachePath });
-  const envVarName = `${input.cliName.replaceAll('-', '_').toUpperCase()}_ENV`;
 
   return async (argv: any) => {
+    // Configure verbose/timeout as early as possible so HTTP calls made from this very
+    // middleware (OIDC discovery + token refresh) honor the flags.
+    setCliVerbose(Boolean(argv.verbose));
+    setCliTimeoutMs(typeof argv.timeout === 'number' && argv.timeout > 0 ? argv.timeout * 1000 : undefined);
+
     const command = argv._?.[0];
 
     if (typeof command === 'string' && input.skipCommands.has(command)) {
@@ -54,26 +58,13 @@ export function createAuthMiddleware(input: CreateAuthMiddlewareInput): Middlewa
     }
 
     try {
-      const config: CliConfig | undefined = (await loadCliConfig({ configFilePath: paths.configFilePath })) ?? undefined;
-      const envName = (argv.env as string | undefined) ?? process.env[envVarName] ?? config?.activeEnv;
-
-      if (!envName) {
-        throw new CliError({
-          message: `No env selected. Run \`${input.cliName} env add <name>\` and \`${input.cliName} env use <name>\`, or pass \`--env <name>\`.`,
-          code: 'NO_ACTIVE_ENV'
-        });
-      }
-
-      const defaultEnv = findCliEnvDefault({ name: envName, defaults: input.defaultEnvs })?.env;
-      const merged = mergeCliEnvWithDefault({ env: config?.envs?.[envName], defaultEnv });
-      const env = applyEnvVarOverrides({ cliName: input.cliName, env: merged });
-
-      if (!isCliEnvConfigComplete(env)) {
-        throw new CliError({
-          message: `Env "${envName}" is missing fields. Run \`${input.cliName} auth setup --env ${envName}\`.`,
-          code: 'AUTH_ENV_INCOMPLETE'
-        });
-      }
+      const { envName, env } = await resolveCliEnvOrThrow({
+        cliName: input.cliName,
+        paths,
+        flagEnv: argv.env as string | undefined,
+        defaultEnvs: input.defaultEnvs,
+        requireComplete: true
+      });
 
       let entry: CliTokenEntry | undefined = (await tokens.get(envName)) ?? undefined;
 
@@ -115,7 +106,7 @@ export function createAuthMiddleware(input: CreateAuthMiddlewareInput): Middlewa
       setCliContext(createCliContext({ cliName: input.cliName, envName, env, accessToken: entry.accessToken, modelManifest: input.modelManifest }));
     } catch (e) {
       outputError(e);
-      process.exit(4);
+      process.exit(CLI_EXIT_CODE_AUTH);
     }
   };
 }

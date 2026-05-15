@@ -1,12 +1,14 @@
 import type { Argv, CommandModule } from 'yargs';
 import { type Maybe } from '@dereekb/util';
-import { type CliConfig, loadCliConfig } from '../config/cli.config';
-import { type CliEnvConfig, type CliEnvDefault, applyEnvVarOverrides, findCliEnvDefault, mergeCliEnvWithDefault } from '../config/env';
+import { type CliConfig } from '../config/cli.config';
+import { type CliEnvConfig, type CliEnvDefault } from '../config/env';
+import { resolveCliEnv } from '../config/env.resolve';
 import { buildCliPaths } from '../config/paths';
 import { createCliTokenCacheStore, isTokenExpired } from '../config/token.cache';
 import { buildOidcDiscoveryCandidates, discoverOidcMetadata, refreshAccessToken } from '../auth/oidc.client';
 import { CALL_MODEL_API_PATH } from '../api/call-model.client';
-import { outputError, outputResult } from '../util/output';
+import { outputResult, tracedFetch } from '../util/output';
+import { wrapCommandHandler } from '../util/handler';
 import { withEnv } from '../util/args';
 
 export interface DoctorCheckInput {
@@ -104,7 +106,7 @@ export function defaultDoctorChecks(): DoctorCheck[] {
 
       try {
         // Probe with OPTIONS to avoid auth errors clouding reachability
-        const res = await fetch(url, { method: 'OPTIONS' });
+        const res = await tracedFetch(undefined, url, { method: 'OPTIONS' });
         return { name: 'api-base-url-reachable', ok: res.status < 500, detail: { url, status: res.status } };
       } catch (e) {
         return { name: 'api-base-url-reachable', ok: false, detail: { url, error: e instanceof Error ? e.message : String(e) }, suggestion: 'Verify the API is running at apiBaseUrl.' };
@@ -144,37 +146,28 @@ export function createDoctorCommand(input: CreateDoctorCommandInput): CommandMod
   const checks: DoctorCheck[] = [...defaultDoctorChecks(), ...(input.checks ?? [])];
   const defaultEnvs = input.defaultEnvs;
 
+  const paths = buildCliPaths({ cliName });
+
   return {
     command: 'doctor',
     describe: 'Run diagnostic checks for the active env',
     builder: (yargs: Argv) => withEnv(yargs),
-    handler: async (argv: any) => {
-      try {
-        const paths = buildCliPaths({ cliName });
-        const config = await loadCliConfig({ configFilePath: paths.configFilePath });
-        const envName = (argv.env as string | undefined) ?? process.env[`${cliName.replaceAll('-', '_').toUpperCase()}_ENV`] ?? config?.activeEnv;
-        const stored = envName ? config?.envs?.[envName] : undefined;
-        const defaultEnv = envName ? findCliEnvDefault({ name: envName, defaults: defaultEnvs })?.env : undefined;
-        const merged = mergeCliEnvWithDefault({ env: stored, defaultEnv });
-        const env = applyEnvVarOverrides({ cliName, env: merged });
+    handler: wrapCommandHandler(async (argv: any) => {
+      const { config, envName, env } = await resolveCliEnv({ cliName, paths, flagEnv: argv.env, defaultEnvs });
 
-        const checkInput: DoctorCheckInput = { cliName, envName, env, config };
-        const results: DoctorCheckResult[] = [];
+      const checkInput: DoctorCheckInput = { cliName, envName, env, config };
+      const results: DoctorCheckResult[] = [];
 
-        for (const check of checks) {
-          try {
-            results.push(await check(checkInput));
-          } catch (e) {
-            results.push({ name: 'check-threw', ok: false, detail: { error: e instanceof Error ? e.message : String(e) } });
-          }
+      for (const check of checks) {
+        try {
+          results.push(await check(checkInput));
+        } catch (e) {
+          results.push({ name: 'check-threw', ok: false, detail: { error: e instanceof Error ? e.message : String(e) } });
         }
-
-        const allOk = results.every((r) => r.ok);
-        outputResult({ allOk, env: envName, checks: results });
-      } catch (e) {
-        outputError(e);
-        process.exit(1);
       }
-    }
+
+      const allOk = results.every((r) => r.ok);
+      outputResult({ allOk, env: envName, checks: results });
+    })
   };
 }

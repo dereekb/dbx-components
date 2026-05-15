@@ -1,6 +1,6 @@
 import type { OnCallTypedModelParams } from '@dereekb/firebase';
 import { type CliEnvConfig } from '../config/env';
-import { callModelOverHttp, getModelOverHttp, getMultipleModelsOverHttp, type GetModelOverHttpResult, type GetMultipleModelsOverHttpResult } from '../api/call-model.client';
+import { callModelOverHttp, getModelOverHttp, getMultipleModelsOverHttpChunked, type GetModelOverHttpResult, type GetMultipleModelsOverHttpResult } from '../api/call-model.client';
 import { type CliModelManifest } from '../manifest/types';
 import { createContextSlot } from '../util/context.slot';
 
@@ -11,7 +11,7 @@ import { createContextSlot } from '../util/context.slot';
  * `<env.apiBaseUrl>/model/*`:
  *  - {@link CliContext.callModel} → `POST /model/call` (typed model dispatch)
  *  - {@link CliContext.getModel} → `GET /model/<modelType>/get?key=<key>`
- *  - {@link CliContext.getMultipleModels} → `POST /model/<modelType>/get` with `{ keys }`
+ *  - {@link CliContext.getMultipleModels} → `POST /model/<modelType>/get` with `{ keys }`, automatically chunked into batches of 50
  *
  * When provided by the runner, {@link CliContext.modelManifest} carries the generated
  * `CliModelManifest` so commands can resolve `prefix/id` keys to a `modelType`.
@@ -95,7 +95,7 @@ export function createCliContext(input: CreateCliContextInput): CliContext {
         key
       }),
     getMultipleModels: <TResult = unknown>(modelType: string, keys: ReadonlyArray<string>) =>
-      getMultipleModelsOverHttp<TResult>({
+      getMultipleModelsOverHttpChunked<TResult>({
         apiBaseUrl,
         accessToken,
         modelType,

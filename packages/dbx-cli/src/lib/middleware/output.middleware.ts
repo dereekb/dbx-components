@@ -2,7 +2,7 @@ import { type Maybe } from '@dereekb/util';
 import type { MiddlewareFunction } from 'yargs';
 import { type CliCommandOutputConfig, type CliOutputConfig, loadCliConfig, mergeCliConfig, resolveOutputConfig } from '../config/cli.config';
 import { buildCliPaths } from '../config/paths';
-import { configureOutputOptions } from '../util/output';
+import { configureOutputOptions, setCliTimeoutMs, setCliVerbose } from '../util/output';
 
 /**
  * Returns the output config slice from wherever the consumer stores it.
@@ -79,6 +79,12 @@ export function createOutputMiddleware(input: CreateOutputMiddlewareInput): Midd
     });
 
   return async (argv: any) => {
+    // Mirror the verbose/timeout setup from the auth middleware so config commands
+    // (auth, env, doctor, output) — which bypass the auth middleware via skipCommands —
+    // still respect `--verbose` and `--timeout`.
+    setCliVerbose(Boolean(argv.verbose));
+    setCliTimeoutMs(typeof argv.timeout === 'number' && argv.timeout > 0 ? argv.timeout * 1000 : undefined);
+
     const commandPath: string[] = argv._ ? (argv._ as string[]).map(String) : [];
     const topCommand = commandPath[0];
 
@@ -109,7 +115,8 @@ export function createOutputMiddleware(input: CreateOutputMiddlewareInput): Midd
     configureOutputOptions({
       dumpDir: resolved.dumpDir,
       pick: argv.pickAll ? undefined : resolved.pick,
-      commandPath
+      commandPath,
+      pretty: Boolean(argv.pretty)
     });
   };
 }

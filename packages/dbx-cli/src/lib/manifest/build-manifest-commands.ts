@@ -2,7 +2,9 @@ import { type Argv, type CommandModule } from 'yargs';
 import { type OnCallTypedModelParams } from '@dereekb/firebase';
 import { requireCliContext } from '../context/cli.context';
 import { STANDARD_GLOBAL_OPTION_NAMES } from '../runner/run';
-import { CliError, outputError, outputResult } from '../util/output';
+import { CliError, outputResult } from '../util/output';
+import { wrapCommandHandler } from '../util/handler';
+import { isStdinSentinel, readAllStdin } from '../util/stdin';
 import { expandModelKeys } from '../api/expand-keys';
 import { type CliApiManifest, type CliApiManifestEntry, type CliModelManifest } from './types';
 
@@ -386,27 +388,22 @@ function buildPerModelGetCommand(model: string, manifest: CliModelManifest | und
         type: 'string',
         describe: positionalDescribe
       }),
-    handler: async (argv: any) => {
-      try {
-        const ctx = requireCliContext();
-        const raw = argv[positionalName];
-        const key = typeof raw === 'string' ? raw.trim() : '';
+    handler: wrapCommandHandler(async (argv: any) => {
+      const ctx = requireCliContext();
+      const raw = argv[positionalName];
+      const key = typeof raw === 'string' ? raw.trim() : '';
 
-        if (key.length === 0) {
-          throw new CliError({
-            message: `get: missing required ${placeholder} positional for model '${model}'.`,
-            code: 'INVALID_ARGUMENT'
-          });
-        }
-
-        const resolvedKey = resolvePerModelGetKey(model, key, manifest);
-        const result = await ctx.getModel(model, resolvedKey);
-        outputResult(result);
-      } catch (e) {
-        outputError(e);
-        process.exit(1);
+      if (key.length === 0) {
+        throw new CliError({
+          message: `get: missing required ${placeholder} positional for model '${model}'.`,
+          code: 'INVALID_ARGUMENT'
+        });
       }
-    }
+
+      const resolvedKey = resolvePerModelGetKey(model, key, manifest);
+      const result = await ctx.getModel(model, resolvedKey);
+      outputResult(result);
+    })
   };
 }
 
@@ -439,17 +436,14 @@ function buildEntryCommand(entry: CliApiManifestEntry, context: BuilderContext):
 
       return epilogue ? y.epilogue(epilogue) : y;
     },
-    handler: async (argv: any) => {
-      try {
-        await callEntry(entry, typeof argv.data === 'string' ? argv.data : undefined, {
-          expandKeys: expandKeysAvailable && argv.expandKeys === true,
-          modelManifest: context.modelManifest
-        });
-      } catch (e) {
-        outputError(e);
-        process.exit(1);
-      }
-    }
+    handler: wrapCommandHandler(async (argv: any) => {
+      const rawData = typeof argv.data === 'string' ? (isStdinSentinel(argv.data) ? (await readAllStdin()).trim() : argv.data) : undefined;
+
+      await callEntry(entry, rawData, {
+        expandKeys: expandKeysAvailable && argv.expandKeys === true,
+        modelManifest: context.modelManifest
+      });
+    })
   };
 }
 

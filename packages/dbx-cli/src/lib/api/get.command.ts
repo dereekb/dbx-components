@@ -1,6 +1,7 @@
 import type { Argv, CommandModule } from 'yargs';
 import { type CliContext, requireCliContext } from '../context/cli.context';
-import { outputError, outputResult } from '../util/output';
+import { outputResult } from '../util/output';
+import { wrapCommandHandler } from '../util/handler';
 import { parseGetArgs } from './get-args.helper';
 
 /**
@@ -26,19 +27,14 @@ export const getCommand: CommandModule = {
         type: 'string',
         describe: 'Document key when the first positional is a model name.'
       }),
-  handler: async (argv: any) => {
-    try {
-      const context: CliContext = requireCliContext();
-      const { modelType, key } = parseGetArgs({
-        modelOrKey: typeof argv.modelOrKey === 'string' ? argv.modelOrKey : undefined,
-        key: typeof argv.key === 'string' ? argv.key : undefined,
-        manifest: context.modelManifest
-      });
-      const result = await context.getModel(modelType, key);
-      outputResult(result);
-    } catch (e) {
-      outputError(e);
-      process.exit(1);
-    }
-  }
+  handler: wrapCommandHandler(async (argv: any) => {
+    const context: CliContext = requireCliContext();
+    const { modelType, key } = parseGetArgs({
+      modelOrKey: typeof argv.modelOrKey === 'string' ? argv.modelOrKey : undefined,
+      key: typeof argv.key === 'string' ? argv.key : undefined,
+      manifest: context.modelManifest
+    });
+    const result = await context.getModel(modelType, key);
+    outputResult(result);
+  })
 };

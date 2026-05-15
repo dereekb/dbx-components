@@ -26,7 +26,25 @@ export interface CliOutputOptions {
   readonly dumpDir?: string;
   readonly pick?: string;
   readonly commandPath?: string[];
+  /**
+   * When true, the stdout JSON envelope is rendered with 2-space indent instead of compact.
+   * Driven by the global `--pretty` flag.
+   */
+  readonly pretty?: boolean;
 }
+
+/**
+ * Standard exit code used when a CLI command handler throws.
+ *
+ * Used by {@link wrapCommandHandler} when no override is supplied.
+ */
+export const CLI_EXIT_CODE_HANDLER = 1;
+
+/**
+ * Exit code used when the auth middleware itself fails (no env, no token, expired refresh,
+ * etc.) — distinct from a handler error so scripts can disambiguate auth from logic failures.
+ */
+export const CLI_EXIT_CODE_AUTH = 4;
 
 /**
  * Patterns that indicate a string may contain a secret token or credential.
@@ -52,6 +70,8 @@ export type CliErrorMapper = (error: unknown) => Maybe<CliErrorOutput>;
 let _outputOptions: CliOutputOptions = {};
 let _secretPatterns: CliSecretPattern[] = [...DEFAULT_CLI_SECRET_PATTERNS];
 let _errorMapper: Maybe<CliErrorMapper>;
+let _verbose = false;
+let _timeoutMs: Maybe<number>;
 
 /**
  * Configures output options from parsed CLI arguments.
@@ -72,6 +92,102 @@ export function configureOutputOptions(options: CliOutputOptions): void {
  */
 export function getOutputOptions(): CliOutputOptions {
   return _outputOptions;
+}
+
+/**
+ * Toggles the process-wide verbose flag. The HTTP layer (`call-model.client.ts`,
+ * `oidc.client.ts`) checks {@link isCliVerbose} before each request and emits a
+ * `[<method> <url>]` trace line to stderr when enabled.
+ *
+ * @param value - Whether verbose tracing is on.
+ */
+export function setCliVerbose(value: boolean): void {
+  _verbose = value;
+}
+
+/**
+ * @returns Whether the verbose flag is currently enabled.
+ */
+export function isCliVerbose(): boolean {
+  return _verbose;
+}
+
+/**
+ * Writes a one-line stderr trace prefixed with `[verbose]` when the verbose
+ * flag is on. No-op otherwise. Kept off stdout so the JSON envelope on stdout
+ * stays parseable.
+ *
+ * @param message - The trace message.
+ */
+export function verboseLog(message: string): void {
+  if (_verbose) {
+    process.stderr.write(`[verbose] ${message}\n`);
+  }
+}
+
+/**
+ * Drop-in `fetch` replacement that wraps the request with the configured verbose-trace
+ * and `--timeout` behavior. Aborts via `AbortController` after the configured timeout.
+ *
+ * Translates an aborted request into a {@link CliError} with code `TIMEOUT`.
+ *
+ * @param fetcher - The underlying fetch impl (defaults to global `fetch`). Allows tests to inject.
+ * @param input - The first arg to fetch (URL or Request).
+ * @param init - The RequestInit. Any existing `signal` is preserved; we only attach our own when no signal was supplied.
+ * @returns The fetch Response.
+ */
+export async function tracedFetch(fetcher: typeof fetch | undefined, input: string | URL | Request, init?: RequestInit): Promise<Response> {
+  const fetchImpl = fetcher ?? fetch;
+  const timeoutMs = _timeoutMs;
+  const method = init?.method ?? 'GET';
+  const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+
+  verboseLog(`${method} ${url}`);
+
+  let controller: Maybe<AbortController>;
+  let timeoutHandle: Maybe<NodeJS.Timeout>;
+  let finalInit: RequestInit | undefined = init;
+
+  if (timeoutMs != null && init?.signal == null) {
+    const localController = new AbortController();
+    controller = localController;
+    timeoutHandle = setTimeout(() => localController.abort(), timeoutMs);
+    finalInit = { ...(init ?? {}), signal: localController.signal };
+  }
+
+  try {
+    return await fetchImpl(input, finalInit);
+  } catch (e) {
+    if (controller?.signal.aborted) {
+      throw new CliError({
+        message: `${method} ${url}: request aborted after ${timeoutMs}ms.`,
+        code: 'TIMEOUT'
+      });
+    }
+
+    throw e;
+  } finally {
+    if (timeoutHandle) clearTimeout(timeoutHandle);
+  }
+}
+
+/**
+ * Sets the process-wide HTTP timeout (in milliseconds) honored by the HTTP layer.
+ *
+ * Pass `undefined` to clear. The HTTP helpers thread this into an `AbortController`
+ * so individual `fetch` calls cancel after the configured duration.
+ *
+ * @param ms - Timeout in ms, or `undefined` to clear.
+ */
+export function setCliTimeoutMs(ms: Maybe<number>): void {
+  _timeoutMs = ms;
+}
+
+/**
+ * @returns The current process-wide HTTP timeout in ms, or `undefined` when unset.
+ */
+export function getCliTimeoutMs(): Maybe<number> {
+  return _timeoutMs;
 }
 
 /**
@@ -200,11 +316,16 @@ function pickFromObject(obj: unknown, fields: string[]): unknown {
   return result;
 }
 
+function stringifyEnvelope(value: unknown): string {
+  return _outputOptions.pretty ? JSON.stringify(value, null, 2) : JSON.stringify(value);
+}
+
 /**
  * Prints a successful command result as a `{ ok: true, data, meta? }` JSON envelope on stdout.
  *
  * Also writes a full unfiltered dump to disk when `dumpDir` is configured, then applies any
- * configured `pick` filter to the stdout payload.
+ * configured `pick` filter to the stdout payload. Honors the global `--pretty` flag for the
+ * stdout payload only (the dump-to-disk path is always pretty-printed).
  *
  * @param data - The command result to emit.
  * @param meta - Optional additional metadata to attach to the envelope.
@@ -214,17 +335,19 @@ export function outputResult<T>(data: T, meta?: Record<string, unknown>): void {
 
   const outputData = _outputOptions.pick ? pickFields(data, _outputOptions.pick) : data;
   const output: CliSuccessOutput<typeof outputData> = { ok: true, data: outputData, ...(meta ? { meta } : {}) };
-  console.log(JSON.stringify(output));
+  console.log(stringifyEnvelope(output));
 }
 
 /**
  * Prints a failed command result as a `{ ok: false, error, code, suggestion? }` JSON envelope on stdout.
  *
+ * Honors the global `--pretty` flag.
+ *
  * @param error - The thrown value to convert. Mapped via {@link buildErrorOutput} (which consults any registered {@link CliErrorMapper}).
  */
 export function outputError(error: unknown): void {
   const output = buildErrorOutput(error);
-  console.log(JSON.stringify(output));
+  console.log(stringifyEnvelope(output));
 }
 
 /**

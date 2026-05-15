@@ -3,6 +3,29 @@ import { readJsonFile, writeJsonFile } from '@dereekb/nestjs';
 import { type CliEnvConfig } from './env';
 
 /**
+ * Returns a copy of the env config with the OAuth client id and secret masked via
+ * {@link maskSecret}. The remaining URLs/scopes pass through untouched.
+ *
+ * Used by every command that surfaces an env to the user (`auth status`, `auth show`,
+ * `env list`, `env show`, …) so secrets never end up in the JSON envelope.
+ *
+ * @param env - The env config to mask.
+ * @returns A plain object suitable for the structured stdout envelope.
+ * @__NO_SIDE_EFFECTS__
+ */
+export function maskEnv(env: CliEnvConfig): Record<string, unknown> {
+  return {
+    apiBaseUrl: env.apiBaseUrl,
+    oidcIssuer: env.oidcIssuer,
+    appClientUrl: env.appClientUrl,
+    clientId: env.clientId ? maskSecret(env.clientId) : undefined,
+    clientSecret: env.clientSecret ? maskSecret(env.clientSecret) : undefined,
+    redirectUri: env.redirectUri,
+    scopes: env.scopes
+  };
+}
+
+/**
  * Output settings that can be applied per-command.
  */
 export interface CliCommandOutputConfig {

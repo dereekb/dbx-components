@@ -1,5 +1,5 @@
 import { type Maybe } from '@dereekb/util';
-import { CliError } from '../util/output';
+import { CliError, tracedFetch } from '../util/output';
 
 /**
  * The subset of fields we read from an OIDC discovery document.
@@ -99,7 +99,7 @@ export async function discoverOidcMetadata(input: DiscoverOidcMetadataInput): Pr
 
   for (const url of candidates) {
     try {
-      const res = await fetch(url, { headers: { Accept: 'application/json' } });
+      const res = await tracedFetch(undefined, url, { headers: { Accept: 'application/json' } });
 
       if (res.ok) {
         return (await res.json()) as OidcDiscoveryMetadata;
@@ -209,7 +209,7 @@ export async function revokeToken(input: RevokeTokenInput): Promise<void> {
     ...(input.tokenTypeHint ? { token_type_hint: input.tokenTypeHint } : {})
   });
 
-  const res = await fetch(input.revocationEndpoint, {
+  const res = await tracedFetch(undefined, input.revocationEndpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' },
     body: params.toString()
@@ -237,7 +237,7 @@ export interface FetchUserInfoInput {
  * @returns The parsed userinfo claims. Throws a {@link CliError} (`USERINFO_FAILED`) on a non-OK response.
  */
 export async function fetchUserInfo(input: FetchUserInfoInput): Promise<Record<string, unknown>> {
-  const res = await fetch(input.userinfoEndpoint, {
+  const res = await tracedFetch(undefined, input.userinfoEndpoint, {
     headers: { Authorization: `Bearer ${input.accessToken}`, Accept: 'application/json' }
   });
 
@@ -258,7 +258,7 @@ interface PostTokenEndpointInput {
 }
 
 async function postTokenEndpoint(input: PostTokenEndpointInput): Promise<OidcTokenResponse> {
-  const res = await fetch(input.tokenEndpoint, {
+  const res = await tracedFetch(undefined, input.tokenEndpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' },
     body: input.body.toString()
