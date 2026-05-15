@@ -24,11 +24,14 @@ const DISTRICT_JOBS_SPEC: ActionCommandSpec = {
 };
 
 function helpFor(specs: readonly ActionCommandSpec[], argv: readonly string[]): Promise<string> {
+  // Pin the wrap width so the rendered help is deterministic across terminal sizes —
+  // the default auto-detected width wraps `districts <region>` mid-name on narrow terminals.
   return yargs([...argv])
     .scriptName('demo-cli')
     .command(buildActionCommands(specs))
     .exitProcess(false)
     .fail(false)
+    .wrap(200)
     .getHelp();
 }
 

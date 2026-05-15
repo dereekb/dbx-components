@@ -1,10 +1,17 @@
-import { type StorageFileInitializeFromUploadService, type StorageFileInitializeFromUploadServiceConfig, type StorageFileInitializeFromUploadServiceInitializer, type StorageFileInitializeFromUploadServiceInitializerInput, type StorageFileInitializeFromUploadServiceInitializerResult, storageFileInitializeFromUploadService, storageFileInitializeFromUploadServiceInitializerResultPermanentFailure } from '@dereekb/firebase-server/model';
+import { compressImageBufferToTargetSize, type StorageFileInitializeFromUploadService, type StorageFileInitializeFromUploadServiceConfig, type StorageFileInitializeFromUploadServiceInitializer, type StorageFileInitializeFromUploadServiceInitializerInput, type StorageFileInitializeFromUploadServiceInitializerResult, storageFileInitializeFromUploadService, storageFileInitializeFromUploadServiceInitializerResultPermanentFailure } from '@dereekb/firebase-server/model';
 import { type DemoFirebaseServerActionsContext } from '../../firebase/action.context';
 import { makeUserAvatarFileStoragePath, USER_AVATAR_IMAGE_HEIGHT, USER_AVATAR_IMAGE_WIDTH, USER_AVATAR_PURPOSE, USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER, USER_AVATAR_UPLOADS_FILE_NAME, USER_TEST_FILE_PURPOSE, USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER, USER_TEST_FILE_UPLOADS_FOLDER_NAME, userAvatarFileGroupIds, userTestFileGroupIds, userTestFileStoragePath } from 'demo-firebase';
 import { ALL_USER_UPLOADS_FOLDER_PATH, createStorageFileDocumentPairFactory, determineByFilePath, determineUserByUserUploadsFolderWrapperFunction, type FirebaseAuthUserId, StorageFileCreationType } from '@dereekb/firebase';
 import { mimeTypeForImageFileExtension, type SlashPathPathMatcherPath } from '@dereekb/util';
 import sharp from 'sharp';
 import { makeUserLogFileUploadInitializer } from './handlers/upload.user.log';
+
+/**
+ * Soft target output size for the demo user avatar (≈500KB). The shared image
+ * compressor will iterate quality steps to land at or under this size after the
+ * square-crop is applied.
+ */
+const USER_AVATAR_TARGET_SIZE_BYTES = 500 * 1024;
 
 /**
  * Builds the StorageFileInitializeFromUploadService for the demo API.
@@ -81,20 +88,26 @@ export function demoStorageFileUploadServiceFactory(demoFirebaseServerActionsCon
       let newImageBytes: Buffer;
 
       try {
-        // create a new Sharp instance
-        const sharpInstance = sharp(fileBytes);
-
-        // resize the image and get the new bytes
-        newImageBytes = await sharpInstance
+        // crop to a square at the avatar dimensions, then let the shared compressor
+        // iterate quality to fit under the per-avatar target size.
+        const croppedBytes = await sharp(fileBytes)
           .resize({
             width: USER_AVATAR_IMAGE_WIDTH,
             height: USER_AVATAR_IMAGE_HEIGHT,
             fit: 'cover'
           })
           .jpeg({
-            quality: 80
+            quality: 90
           })
           .toBuffer();
+
+        const compressed = await compressImageBufferToTargetSize(croppedBytes, {
+          targetSizeBytes: USER_AVATAR_TARGET_SIZE_BYTES,
+          maxDimension: USER_AVATAR_IMAGE_WIDTH,
+          format: 'jpeg'
+        });
+
+        newImageBytes = compressed.buffer;
       } catch (e) {
         // if sharp fails to initialize, then the uploaded file is probably unsupported.
         return storageFileInitializeFromUploadServiceInitializerResultPermanentFailure(e);

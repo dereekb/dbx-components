@@ -1,6 +1,7 @@
 import type { Argv, CommandModule } from 'yargs';
 import { type CliContext, requireCliContext } from '../context/cli.context';
-import { outputError, outputResult } from '../util/output';
+import { outputResult } from '../util/output';
+import { wrapCommandHandler } from '../util/handler';
 
 /**
  * Specification for a composite action command surfaced under `<cli> action ...`.
@@ -85,15 +86,10 @@ export function createActionCommand<TArgv = any, TResult = unknown>(spec: Action
       const built = spec.builder ? spec.builder(yargs) : yargs;
       return spec.helpEpilogue ? built.epilogue(spec.helpEpilogue) : built;
     },
-    handler: async (argv: any) => {
-      try {
-        const context = requireCliContext();
-        const result = await spec.handler({ context, argv });
-        outputResult(spec.mapResult ? spec.mapResult(result) : result);
-      } catch (e) {
-        outputError(e);
-        process.exit(1);
-      }
-    }
+    handler: wrapCommandHandler(async (argv: any) => {
+      const context = requireCliContext();
+      const result = await spec.handler({ context, argv });
+      outputResult(spec.mapResult ? spec.mapResult(result) : result);
+    })
   };
 }

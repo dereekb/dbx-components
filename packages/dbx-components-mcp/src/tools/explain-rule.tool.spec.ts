@@ -2,10 +2,48 @@ import { describe, expect, it } from 'vitest';
 import { explainRuleTool } from './explain-rule.tool.js';
 
 describe('dbx_explain_rule', () => {
-  it('returns isError when code is missing', async () => {
+  it('lists the full catalog when code is omitted', async () => {
     const result = (await explainRuleTool.run({})) as { isError?: boolean; content: { text: string }[] };
+    expect(result.isError).toBeFalsy();
+    const text = result.content[0].text;
+    expect(text).toContain('# Rule catalog');
+    expect(text).toMatch(/\d+ entries/);
+    expect(text).toMatch(/^## `dbx_/m);
+  });
+
+  it('filters list mode by source', async () => {
+    const result = (await explainRuleTool.run({ source: 'dbx_model_validate_folder' })) as { isError?: boolean; content: { text: string }[] };
+    expect(result.isError).toBeFalsy();
+    const text = result.content[0].text;
+    expect(text).toContain('source=`dbx_model_validate_folder`');
+    expect(text).toContain('## `dbx_model_validate_folder`');
+    expect(text).not.toContain('## `dbx_storagefile_m_validate_app`');
+  });
+
+  it('filters list mode by severity', async () => {
+    const result = (await explainRuleTool.run({ severity: 'warning' })) as { isError?: boolean; content: { text: string }[] };
+    expect(result.isError).toBeFalsy();
+    const text = result.content[0].text;
+    expect(text).toContain('severity=`warning`');
+    expect(text).toMatch(/\(warning\) —/);
+    expect(text).not.toMatch(/\(error\) —/);
+  });
+
+  it('returns JSON in list mode when format=json', async () => {
+    const result = (await explainRuleTool.run({ source: 'dbx_model_validate_folder', format: 'json' })) as { isError?: boolean; content: { text: string }[] };
+    expect(result.isError).toBeFalsy();
+    const parsed = JSON.parse(result.content[0].text);
+    expect(Array.isArray(parsed.entries)).toBe(true);
+    expect(parsed.entries.length).toBeGreaterThan(0);
+    for (const entry of parsed.entries as { source: string }[]) {
+      expect(entry.source).toBe('dbx_model_validate_folder');
+    }
+  });
+
+  it('returns isError when filters match no rules', async () => {
+    const result = (await explainRuleTool.run({ source: 'dbx_bogus_source' })) as { isError?: boolean; content: { text: string }[] };
     expect(result.isError).toBe(true);
-    expect(result.content[0].text).toContain('Invalid arguments');
+    expect(result.content[0].text).toContain('No rules match');
   });
 
   it('renders a known code as markdown with all sections', async () => {

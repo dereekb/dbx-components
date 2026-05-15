@@ -56,7 +56,7 @@ import { type } from 'arktype';
  * heuristic score weighting inside the equivalency search engine. Roles are
  * intentionally coarse so the curation gate stays low-friction.
  */
-export const CSS_UTILITY_ROLES = ['layout', 'flex', 'text', 'spacing', 'state', 'interaction', 'misc'] as const;
+export const CSS_UTILITY_ROLES = ['layout', 'flex', 'text', 'spacing', 'state', 'interaction', 'color', 'text-color', 'surface', 'size', 'radius', 'misc'] as const;
 
 /**
  * Static type for the closed CSS-utility-role vocabulary.
@@ -115,7 +115,7 @@ export const CssUtilityEntry = type({
   file: 'string',
   line: 'number',
   declarations: CssUtilityDeclaration.array(),
-  'role?': '"layout" | "flex" | "text" | "spacing" | "state" | "interaction" | "misc"',
+  'role?': '"layout" | "flex" | "text" | "spacing" | "state" | "interaction" | "color" | "text-color" | "surface" | "size" | "radius" | "misc"',
   'intent?': 'string',
   'seeAlso?': 'string[]',
   'antiUse?': 'string',

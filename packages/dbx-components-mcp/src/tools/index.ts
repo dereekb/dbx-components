@@ -50,6 +50,7 @@
  * | dbx_notification_m_list_app         | Discovery     | "What notifications does this app configure?"          |
  * | dbx_notification_m_validate_folder  | Verification  | "Does this notification folder follow the convention?" |
  * | dbx_system_m_validate_folder        | Verification  | "Is this system folder set up correctly?"              |
+ * | dbx_system_m_list_app               | Discovery     | "What system states does this component declare? Which are fully wired?" |
  * | dbx_asset_validate_app              | Verification  | "Are AssetPathRef constants wired through provideDbxAssetLoader and on disk?" |
  * | dbx_asset_list_app                  | Discovery     | "What AssetPathRef constants does this component declare?"                   |
  * | dbx_asset_validate_folder           | Verification  | "Does this component's assets.ts follow the convention?"                     |
@@ -57,6 +58,7 @@
  * | dbx_color_template_list_app         | Discovery     | "What DbxColorConfigTemplate entries does this app register?"                |
  * | dbx_color_smell_check               | Verification  | "Are there duplicate inline DbxColorConfig literals that should be templates?" |
  * | dbx_action_lookup                   | Documentation | "Tell me about action directive / state X"             |
+ * | dbx_action_search                   | Discovery     | "Find action entries matching keywords"                |
  * | dbx_action_examples                 | Working code  | "Show me how to wire an action like X"                 |
  * | dbx_action_scaffold                 | Generation    | "Scaffold the action stack for use case X"             |
  * | dbx_route_tree                      | Discovery     | "What states does this app expose?"                    |
@@ -65,6 +67,7 @@
  * | dbx_filter_lookup                   | Documentation | "Tell me about filter directive / preset X"            |
  * | dbx_filter_scaffold                 | Generation    | "Scaffold a filter source + presets for model X"       |
  * | dbx_pipe_lookup                     | Documentation | "Tell me about Angular pipe X"                         |
+ * | dbx_pipe_search                     | Discovery     | "Find Angular pipes matching keywords"                 |
  * | dbx_util_lookup                     | Documentation | "Tell me about utility function/class X"               |
  * | dbx_util_search                     | Discovery     | "Find utility functions matching keywords (intent)"    |
  * | dbx_model_snapshot_field_lookup     | Documentation | "Tell me about snapshot-field factory X (firestoreDate, …)" |
@@ -127,6 +130,7 @@ import { notificationMValidateAppTool } from './notification-m-validate-app.tool
 import { notificationMListAppTool } from './notification-m-list-app.tool.js';
 import { notificationMValidateFolderTool } from './notification-m-validate-folder.tool.js';
 import { systemMValidateFolderTool } from './system-m-validate-folder.tool.js';
+import { systemMListAppTool } from './system-m-list-app.tool.js';
 import { dbxAssetValidateAppTool } from './dbx-asset-validate-app.tool.js';
 import { dbxAssetListAppTool } from './dbx-asset-list-app.tool.js';
 import { dbxAssetValidateFolderTool } from './dbx-asset-validate-folder.tool.js';
@@ -134,6 +138,7 @@ import { dbxAssetScaffoldTool } from './dbx-asset-scaffold.tool.js';
 import { dbxColorTemplateListAppTool } from './dbx-color-template-list-app.tool.js';
 import { dbxColorSmellCheckTool } from './dbx-color-smell-check.tool.js';
 import { createLookupActionTool } from './lookup-action.tool.js';
+import { createSearchActionTool } from './search-action.tool.js';
 import { actionExamplesTool } from './action-examples.tool.js';
 import { actionScaffoldTool } from './action-scaffold.tool.js';
 import { routeTreeTool } from './route-tree.tool.js';
@@ -142,6 +147,7 @@ import { routeSearchTool } from './route-search.tool.js';
 import { createLookupFilterTool } from './lookup-filter.tool.js';
 import { filterScaffoldTool } from './filter-scaffold.tool.js';
 import { createLookupPipeTool } from './lookup-pipe.tool.js';
+import { createSearchPipeTool } from './search-pipe.tool.js';
 import { createLookupUtilTool } from './lookup-util.tool.js';
 import { createSearchUtilTool } from './search-util.tool.js';
 import { createLookupModelSnapshotFieldTool } from './lookup-model-snapshot-field.tool.js';
@@ -222,6 +228,7 @@ export const DBX_TOOLS: readonly DbxTool[] = [
   notificationMValidateFolderTool,
   // system_m (model extension)
   systemMValidateFolderTool,
+  systemMListAppTool,
   // asset (component + app extension)
   dbxAssetValidateAppTool,
   dbxAssetListAppTool,
@@ -357,7 +364,7 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions =
     tools.push(createSemanticTypeLookupTool({ registry: options.semanticTypeRegistry }), createSemanticTypeSearchTool({ registry: options.semanticTypeRegistry }));
   }
   if (options.pipeRegistry !== undefined) {
-    tools.push(createLookupPipeTool({ registry: options.pipeRegistry }));
+    tools.push(createLookupPipeTool({ registry: options.pipeRegistry }), createSearchPipeTool({ registry: options.pipeRegistry }));
   }
   if (options.utilRegistry !== undefined) {
     tools.push(createLookupUtilTool({ registry: options.utilRegistry }), createSearchUtilTool({ registry: options.utilRegistry }));
@@ -372,7 +379,7 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions =
     tools.push(createLookupUiTool({ registry: options.uiComponentRegistry }), createSearchUiTool({ registry: options.uiComponentRegistry, examplesRegistry: options.dbxDocsUiExamplesRegistry }));
   }
   if (options.actionRegistry !== undefined) {
-    tools.push(createLookupActionTool({ registry: options.actionRegistry }));
+    tools.push(createLookupActionTool({ registry: options.actionRegistry }), createSearchActionTool({ registry: options.actionRegistry }));
   }
   if (options.filterRegistry !== undefined) {
     tools.push(createLookupFilterTool({ registry: options.filterRegistry }));

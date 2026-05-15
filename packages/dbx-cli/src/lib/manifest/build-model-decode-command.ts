@@ -1,6 +1,7 @@
 import type { Argv, CommandModule } from 'yargs';
 import { findCliModelManifestEntry } from '../api/expand-keys';
-import { CliError, outputError, outputResult } from '../util/output';
+import { CliError, outputResult } from '../util/output';
+import { wrapSyncCommandHandler } from '../util/handler';
 import type { CliModelManifest, CliModelManifestEntry } from './types';
 
 /**
@@ -79,14 +80,9 @@ export function buildModelDecodeCommand(manifest: CliModelManifest, options?: Bu
           describe: 'Emit a structured JSON envelope instead of the human-readable block.'
         });
     },
-    handler: (argv: any) => {
-      try {
-        runHandler(manifest, argv);
-      } catch (e) {
-        outputError(e);
-        process.exit(1);
-      }
-    }
+    handler: wrapSyncCommandHandler((argv: any) => {
+      runHandler(manifest, argv);
+    })
   };
 }
 

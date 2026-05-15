@@ -3,8 +3,9 @@
  */
 
 import type { CrudVerb } from '../model-api-shared/types.js';
+import type { ModelApiValidateAppCodeString } from './codes.js';
 
-export type ValidateIssueCode = 'MISSING_HANDLER' | 'ORPHAN_HANDLER' | 'HANDLER_NAMING_MISMATCH' | 'MISSING_MODEL_KEY' | 'PARSE_ERROR';
+export type ValidateIssueCode = ModelApiValidateAppCodeString;
 
 export interface ValidateIssue {
   readonly code: ValidateIssueCode;

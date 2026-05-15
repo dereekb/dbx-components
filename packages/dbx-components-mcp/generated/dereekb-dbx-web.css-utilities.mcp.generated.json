@@ -618,6 +618,7 @@
       "file": "src/lib/layout/style/_style.scss",
       "line": 175,
       "declarations": [],
+      "role": "color",
       "intent": "generic themed-background class — pair with `[dbxColor]=\"config\"` to drive `--dbx-bg-color-current` / `--dbx-color-current` from arbitrary CSS color values"
     },
     {
@@ -628,6 +629,7 @@
       "file": "src/lib/layout/style/_style.scss",
       "line": 182,
       "declarations": [],
+      "role": "color",
       "intent": "generic themed-text class — pair with `[dbxTextColor]=\"config\"` to drive `--dbx-color-current` from an arbitrary CSS color value"
     },
     {

@@ -1,5 +1,6 @@
 import type { Argv, CommandModule } from 'yargs';
-import { CliError, outputError, outputResult } from '../util/output';
+import { CliError, outputResult } from '../util/output';
+import { wrapSyncCommandHandler } from '../util/handler';
 import { renderModelManifestEntry, renderModelManifestFields, renderModelManifestList, resolveCliModel } from './model-info-utils';
 import type { CliModelManifest } from './types';
 
@@ -61,14 +62,9 @@ export function buildModelInfoCommand(manifest: CliModelManifest, options?: Buil
           describe: 'Print only the field table for the resolved model.'
         });
     },
-    handler: (argv: any) => {
-      try {
-        runHandler(manifest, argv);
-      } catch (e) {
-        outputError(e);
-        process.exit(1);
-      }
-    }
+    handler: wrapSyncCommandHandler((argv: any) => {
+      runHandler(manifest, argv);
+    })
   };
 }
 

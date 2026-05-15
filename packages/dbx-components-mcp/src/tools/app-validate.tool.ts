@@ -1,7 +1,7 @@
 /**
  * `dbx_app_validate` tool — aggregate validator.
  *
- * One-shot replacement for the six-tool dance an agent runs when
+ * One-shot replacement for the per-domain tool dance an agent runs when
  * validating a downstream `-firebase` component + API app pair. Fans
  * out to every domain's *pure* validate function:
  *
@@ -13,6 +13,11 @@
  *      that surface their own validators).
  *   5. `dbx_system_m_validate_folder` when `<componentDir>/src/lib/model/system`
  *      is present.
+ *   6. `dbx_model_api_validate_app`
+ *   7. `dbx_model_firebase_index_validate_app`
+ *   8. `dbx_asset_validate_app` — only when `webDir` is supplied
+ *      (the asset cluster targets the Angular front-end app, which is
+ *      a different package from the API app).
  *
  * Returns a severity-grouped report with each finding tagged by source
  * cluster, code, file/line, and (when the rule catalog has an entry) a
@@ -22,7 +27,7 @@
  */
 
 import { resolve, join } from 'node:path';
-import { readdir, stat } from 'node:fs/promises';
+import { readdir, readFile, stat } from 'node:fs/promises';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
 import { ensurePathInsideCwd } from './validate-input.js';
@@ -35,36 +40,51 @@ import { RESERVED_MODEL_FOLDERS } from './model-validate-folder/types.js';
 import { inspectFolder as inspectModelFolder, validateModelFolders } from './model-validate-folder/index.js';
 import { inspectFolder as inspectSystemFolder, validateSystemFolders } from './system-m-validate-folder/index.js';
 import { checkManifestIdentityDuplicates } from './model-validate/manifest-rules.js';
+import { inspectAppAssets, validateAppAssets } from './dbx-asset-validate-app/index.js';
+import { validateAppModelApi } from './model-api-validate-app/index.js';
 import { FIREBASE_MODELS } from '../registry/firebase-models.js';
 import { getDownstreamCatalog } from '../registry/downstream-models-runtime.js';
+import { buildModelFirebaseIndexManifest } from '../scan/model-firebase-index-build-manifest.js';
+import { createModelFirebaseIndexRegistryFromEntries, toModelFirebaseIndexEntryInfo } from '../registry/model-firebase-index-runtime.js';
+import { generateFirestoreIndexesJson, type FirestoreIndexesJson } from '../scan/firestore-indexes-generate.js';
 
-const Cluster = "'storagefile_m' | 'notification_m' | 'model_folder' | 'system_m' | 'fixture' | 'manifest'";
+const Cluster = "'storagefile_m' | 'notification_m' | 'model_folder' | 'system_m' | 'fixture' | 'manifest' | 'model_api' | 'firebase_index' | 'asset'";
 
 const AppValidateArgsType = type({
   componentDir: 'string',
   apiDir: 'string',
+  'webDir?': 'string',
+  'indexesFile?': 'string',
   'format?': "'markdown' | 'json'",
   'skip?': `(${Cluster})[]`
 });
 
-type ClusterName = 'storagefile_m' | 'notification_m' | 'model_folder' | 'system_m' | 'fixture' | 'manifest';
+type ClusterName = 'storagefile_m' | 'notification_m' | 'model_folder' | 'system_m' | 'fixture' | 'manifest' | 'model_api' | 'firebase_index' | 'asset';
 
 const TOOL: Tool = {
   name: 'dbx_app_validate',
   description: [
-    'Aggregate validator for a downstream `-firebase` component + API app pair. Runs every per-domain validator (`storagefile_m`, `notification_m`, model-folder, `system_m`, fixture, manifest) and returns one severity-grouped report.',
+    'Aggregate validator for a downstream `-firebase` component + API app pair. Runs every per-domain validator (`storagefile_m`, `notification_m`, model-folder, `system_m`, fixture, manifest, `model_api`, `firebase_index`, optional `asset`) and returns one severity-grouped report.',
     '',
     'The `model_folder` cluster includes both folder-structure findings (canonical 5-file layout) and per-file content findings forwarded from `dbx_model_validate` — including the JSDoc-tag rules (`MODEL_IDENTITY_NOT_TAGGED`, `MODEL_GROUP_INTERFACE_MISSING_TAG`, `MODEL_INTERFACE_MISSING_TAG`) that flag downstream apps where `firestoreModelIdentity(...)` calls lack catalog tagging.',
     '',
     'The `manifest` cluster walks the merged model manifest (`@dereekb/firebase` upstream plus every discovered `*-firebase` component) and flags duplicate `firestoreModelIdentity` declarations: `MODEL_IDENTITY_COLLECTION_NAME_DUPLICATE` when two identities share their `collectionName` arg, and `MODEL_IDENTITY_MODEL_TYPE_DUPLICATE` when they share their `modelName` arg.',
     '',
-    'Replaces the six-tool dance an agent runs to validate one app end-to-end. Each finding is tagged with its source cluster, code, file/line, and canonical-fix line (when the rule catalog has an entry).',
+    'The `model_api` cluster reconciles CRUD declarations from `<componentDir>/src/lib/**/*.api.ts` against the handler map wired in `<apiDir>/src/app/function/model/crud.functions.ts`, emitting `MISSING_HANDLER`, `ORPHAN_HANDLER`, and `HANDLER_NAMING_MISMATCH`.',
+    '',
+    "The `firebase_index` cluster diffs the component's `@dbxModelFirebaseIndex`-tagged factories against the committed `firestore.indexes.json`. `MODEL_FIREBASE_INDEX_COMPOSITE_ADDED` / `..._FIELD_OVERRIDE_ADDED` fire when JSON is missing required entries; the `*_REMOVED` codes warn on stale entries with no factory backing them.",
+    '',
+    'The `asset` cluster runs only when `webDir` is supplied — it points at the Angular front-end (e.g. `apps/demo`), which is a different package from the API app. Without `webDir` the cluster is skipped.',
+    '',
+    'Each finding is tagged with its source cluster, code, file/line, and canonical-fix line (when the rule catalog has an entry).',
     '',
     'Inputs:',
     '- `componentDir`: relative path to the `-firebase` component package (e.g. `components/demo-firebase`).',
     '- `apiDir`: relative path to the API app (e.g. `apps/demo-api`).',
+    '- `webDir` (optional): relative path to the Angular front-end app (e.g. `apps/demo`). Required for the `asset` cluster.',
+    '- `indexesFile` (optional): relative path to `firestore.indexes.json` for the `firebase_index` cluster. Defaults to `firestore.indexes.json` at the workspace root.',
     '- `format` (optional): `markdown` (default) or `json`.',
-    '- `skip` (optional): clusters to opt out of (`storagefile_m`, `notification_m`, `model_folder`, `system_m`, `fixture`, `manifest`).',
+    '- `skip` (optional): clusters to opt out of (`storagefile_m`, `notification_m`, `model_folder`, `system_m`, `fixture`, `manifest`, `model_api`, `firebase_index`, `asset`).',
     '',
     'Use `dbx_explain_rule code="<code>"` to dig into any finding.'
   ].join('\n'),
@@ -73,10 +93,12 @@ const TOOL: Tool = {
     properties: {
       componentDir: { type: 'string', description: 'Relative path to the component package.' },
       apiDir: { type: 'string', description: 'Relative path to the API app.' },
+      webDir: { type: 'string', description: 'Relative path to the Angular front-end app (required for the `asset` cluster).' },
+      indexesFile: { type: 'string', description: 'Relative path to `firestore.indexes.json` for the `firebase_index` cluster. Defaults to `firestore.indexes.json` at the workspace root.' },
       format: { type: 'string', enum: ['markdown', 'json'], description: 'Output format. Defaults to markdown.' },
       skip: {
         type: 'array',
-        items: { type: 'string', enum: ['storagefile_m', 'notification_m', 'model_folder', 'system_m', 'fixture', 'manifest'] },
+        items: { type: 'string', enum: ['storagefile_m', 'notification_m', 'model_folder', 'system_m', 'fixture', 'manifest', 'model_api', 'firebase_index', 'asset'] },
         description: 'Clusters to opt out of.'
       }
     },
@@ -116,8 +138,25 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
   } catch (err) {
     return toolError(err instanceof Error ? err.message : String(err));
   }
+  if (parsed.webDir !== undefined) {
+    try {
+      ensurePathInsideCwd(parsed.webDir, cwd);
+    } catch (err) {
+      return toolError(err instanceof Error ? err.message : String(err));
+    }
+  }
+  if (parsed.indexesFile !== undefined) {
+    try {
+      ensurePathInsideCwd(parsed.indexesFile, cwd);
+    } catch (err) {
+      return toolError(err instanceof Error ? err.message : String(err));
+    }
+  }
   const componentAbs = resolve(cwd, parsed.componentDir);
   const apiAbs = resolve(cwd, parsed.apiDir);
+  const webAbs = parsed.webDir === undefined ? undefined : resolve(cwd, parsed.webDir);
+  const indexesRel = parsed.indexesFile ?? 'firestore.indexes.json';
+  const indexesAbs = resolve(cwd, indexesRel);
   const skip = new Set<ClusterName>(parsed.skip ?? []);
 
   const findings: AggregatedFinding[] = [];
@@ -130,6 +169,9 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
   await runModelFolders({ componentAbs, componentRel: parsed.componentDir, skip, skipped, findings, clusterErrors });
   await runSystemFolder({ componentAbs, componentRel: parsed.componentDir, skip, skipped, findings, clusterErrors });
   await runManifest({ workspaceRoot: cwd, skip, skipped, findings, clusterErrors });
+  await runModelApi({ componentAbs, apiAbs, componentRel: parsed.componentDir, apiRel: parsed.apiDir, skip, skipped, findings, clusterErrors });
+  await runFirebaseIndex({ componentAbs, componentRel: parsed.componentDir, indexesAbs, indexesRel, skip, skipped, findings, clusterErrors });
+  await runAsset({ componentAbs, componentRel: parsed.componentDir, webAbs, webRel: parsed.webDir, skip, skipped, findings, clusterErrors });
 
   const errorCount = findings.filter((f) => f.severity === 'error').length;
   const warningCount = findings.length - errorCount;
@@ -304,6 +346,113 @@ async function runSystemFolder(ctx: ComponentOnlyCtx): Promise<void> {
   } catch (err) {
     ctx.clusterErrors.push({ cluster: 'system_m', message: err instanceof Error ? err.message : String(err) });
   }
+}
+
+async function runModelApi(ctx: ComponentApiCtx): Promise<void> {
+  if (ctx.skip.has('model_api')) {
+    ctx.skipped.push('model_api');
+    return;
+  }
+  try {
+    const report = await validateAppModelApi({ componentAbs: ctx.componentAbs, componentDir: ctx.componentRel, apiAbs: ctx.apiAbs, apiDir: ctx.apiRel });
+    for (const issue of report.issues) {
+      const { file, line } = splitSource(issue.source);
+      ctx.findings.push(toFinding({ cluster: 'model_api', code: issue.code, severity: 'error', message: issue.message, file, line }));
+    }
+  } catch (err) {
+    ctx.clusterErrors.push({ cluster: 'model_api', message: err instanceof Error ? err.message : String(err) });
+  }
+}
+
+interface FirebaseIndexCtx extends ComponentOnlyCtx {
+  readonly indexesAbs: string;
+  readonly indexesRel: string;
+}
+
+async function runFirebaseIndex(ctx: FirebaseIndexCtx): Promise<void> {
+  if (ctx.skip.has('firebase_index')) {
+    ctx.skipped.push('firebase_index');
+    return;
+  }
+  try {
+    const buildOutcome = await buildModelFirebaseIndexManifest({ projectRoot: ctx.componentAbs, generator: 'dbx_app_validate' });
+    if (buildOutcome.kind !== 'success') {
+      // No scan config / no firebase package — treat as not configured.
+      ctx.skipped.push('firebase_index');
+      return;
+    }
+    const existing = await readIndexesJson(ctx.indexesAbs);
+    const entries = buildOutcome.manifest.entries.map(toModelFirebaseIndexEntryInfo);
+    const registry = createModelFirebaseIndexRegistryFromEntries({ entries, loadedSources: [buildOutcome.manifest.source] });
+    const { diff } = generateFirestoreIndexesJson({ entries: registry.all, existingJson: existing });
+    for (const composite of diff.added) {
+      ctx.findings.push(toFinding({ cluster: 'firebase_index', code: 'MODEL_FIREBASE_INDEX_COMPOSITE_ADDED', severity: 'error', message: `Required composite missing from \`${ctx.indexesRel}\`: ${composite}`, file: ctx.indexesRel, line: undefined }));
+    }
+    for (const composite of diff.removed) {
+      ctx.findings.push(toFinding({ cluster: 'firebase_index', code: 'MODEL_FIREBASE_INDEX_COMPOSITE_REMOVED', severity: 'warning', message: `Stale composite in \`${ctx.indexesRel}\` (no factory requires it): ${composite}`, file: ctx.indexesRel, line: undefined }));
+    }
+    for (const fieldOverride of diff.fieldOverridesAdded) {
+      ctx.findings.push(toFinding({ cluster: 'firebase_index', code: 'MODEL_FIREBASE_INDEX_FIELD_OVERRIDE_ADDED', severity: 'error', message: `Required fieldOverride missing from \`${ctx.indexesRel}\`: ${fieldOverride}`, file: ctx.indexesRel, line: undefined }));
+    }
+    for (const fieldOverride of diff.fieldOverridesRemoved) {
+      ctx.findings.push(toFinding({ cluster: 'firebase_index', code: 'MODEL_FIREBASE_INDEX_FIELD_OVERRIDE_REMOVED', severity: 'warning', message: `Stale fieldOverride in \`${ctx.indexesRel}\` (no factory requires it): ${fieldOverride}`, file: ctx.indexesRel, line: undefined }));
+    }
+  } catch (err) {
+    ctx.clusterErrors.push({ cluster: 'firebase_index', message: err instanceof Error ? err.message : String(err) });
+  }
+}
+
+interface AssetCtx extends ComponentOnlyCtx {
+  readonly webAbs: string | undefined;
+  readonly webRel: string | undefined;
+}
+
+async function runAsset(ctx: AssetCtx): Promise<void> {
+  if (ctx.skip.has('asset')) {
+    ctx.skipped.push('asset');
+    return;
+  }
+  if (ctx.webAbs === undefined || ctx.webRel === undefined) {
+    ctx.skipped.push('asset');
+    return;
+  }
+  try {
+    const inspection = await inspectAppAssets(ctx.componentAbs, ctx.webAbs);
+    const result = validateAppAssets(inspection, { componentDir: ctx.componentRel, apiDir: ctx.webRel });
+    for (const v of result.violations) {
+      ctx.findings.push(toFinding({ cluster: 'asset', code: v.code, severity: v.severity, message: v.message, file: v.file, line: undefined }));
+    }
+  } catch (err) {
+    ctx.clusterErrors.push({ cluster: 'asset', message: err instanceof Error ? err.message : String(err) });
+  }
+}
+
+async function readIndexesJson(indexesAbs: string): Promise<FirestoreIndexesJson | undefined> {
+  let text: string;
+  try {
+    text = await readFile(indexesAbs, 'utf-8');
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code;
+    if (code === 'ENOENT') return undefined;
+    throw err;
+  }
+  const parsed: unknown = JSON.parse(text);
+  if (parsed === null || typeof parsed !== 'object') return undefined;
+  const raw = parsed as { indexes?: unknown; fieldOverrides?: unknown };
+  const indexes = Array.isArray(raw.indexes) ? (raw.indexes as FirestoreIndexesJson['indexes']) : [];
+  const fieldOverrides = Array.isArray(raw.fieldOverrides) ? (raw.fieldOverrides as FirestoreIndexesJson['fieldOverrides']) : [];
+  return { indexes, fieldOverrides };
+}
+
+function splitSource(source: string | undefined): { readonly file: string | undefined; readonly line: number | undefined } {
+  if (source === undefined || source.length === 0) return { file: undefined, line: undefined };
+  const idx = source.lastIndexOf(':');
+  if (idx <= 0) return { file: source, line: undefined };
+  const head = source.slice(0, idx);
+  const tail = source.slice(idx + 1);
+  const lineNumber = Number.parseInt(tail, 10);
+  if (Number.isNaN(lineNumber)) return { file: source, line: undefined };
+  return { file: head, line: lineNumber };
 }
 
 interface ToFindingInput {

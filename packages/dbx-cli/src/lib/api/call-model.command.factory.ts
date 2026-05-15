@@ -1,7 +1,8 @@
 import type { Argv, CommandModule } from 'yargs';
 import type { OnCallTypedModelParams } from '@dereekb/firebase';
-import { type CliContext, requireCliContext } from '../context/cli.context';
-import { outputError, outputResult } from '../util/output';
+import { requireCliContext } from '../context/cli.context';
+import { outputResult } from '../util/output';
+import { wrapCommandHandler } from '../util/handler';
 
 export interface CallModelCommandSpec<TParams = unknown, TResult = unknown> {
   /**
@@ -50,24 +51,19 @@ export function createCallModelCommand<TParams = unknown, TResult = unknown>(spe
     command: spec.command,
     describe: spec.describe,
     builder: (yargs: Argv) => (spec.builder ? spec.builder(yargs) : yargs),
-    handler: async (argv: any) => {
-      try {
-        const context = requireCliContext();
-        const data = spec.buildParams(argv);
+    handler: wrapCommandHandler(async (argv: any) => {
+      const context = requireCliContext();
+      const data = spec.buildParams(argv);
 
-        const params: OnCallTypedModelParams<TParams> = {
-          modelType: spec.model,
-          call: spec.verb,
-          ...(spec.specifier == null ? {} : { specifier: spec.specifier }),
-          data
-        };
+      const params: OnCallTypedModelParams<TParams> = {
+        modelType: spec.model,
+        call: spec.verb,
+        ...(spec.specifier == null ? {} : { specifier: spec.specifier }),
+        data
+      };
 
-        const result = await context.callModel<TParams, TResult>(params);
-        outputResult(spec.mapResult ? spec.mapResult(result) : result);
-      } catch (e) {
-        outputError(e);
-        process.exit(1);
-      }
-    }
+      const result = await context.callModel<TParams, TResult>(params);
+      outputResult(spec.mapResult ? spec.mapResult(result) : result);
+    })
   };
 }

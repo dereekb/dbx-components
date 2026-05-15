@@ -1,5 +1,5 @@
 import type { OnCallTypedModelParams } from '@dereekb/firebase';
-import { CliError } from '../util/output';
+import { CliError, tracedFetch } from '../util/output';
 
 export const CALL_MODEL_API_PATH = `/model/call`;
 
@@ -34,49 +34,17 @@ export interface CallModelOverHttpResponse<R = unknown> {
  * The function name is referenced via {@link CALL_MODEL_APP_FUNCTION_KEY} for consistency with the demo's wiring.
  *
  * @param input - The call envelope describing the API target, access token, model params, and optional fetch override.
- * @param input.apiBaseUrl - The API base URL (the `/model/call` path is appended automatically).
- * @param input.accessToken - The Bearer access token sent in the `Authorization` header.
- * @param input.params - The {@link OnCallTypedModelParams} payload posted as JSON.
- * @param input.fetcher - Optional fetch implementation override (used by tests).
  * @returns The parsed JSON response body cast to `R`.
  */
 export async function callModelOverHttp<T = unknown, R = unknown>(input: CallModelOverHttpInput<T>): Promise<R> {
-  const fetcher = input.fetcher ?? fetch;
-  const url = `${trimSlash(input.apiBaseUrl)}${CALL_MODEL_API_PATH}`;
-
-  const res = await fetcher(url, {
+  return requestJson<R>({
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-      Authorization: `Bearer ${input.accessToken}`
-    },
-    body: JSON.stringify(input.params)
+    url: `${trimSlash(input.apiBaseUrl)}${CALL_MODEL_API_PATH}`,
+    accessToken: input.accessToken,
+    jsonBody: input.params,
+    fetcher: input.fetcher,
+    errorPrefix: `callModel ${input.params.modelType}/${input.params.call ?? 'unknown'} failed`
   });
-
-  const text = await res.text();
-  let body: unknown;
-
-  if (text.length > 0) {
-    try {
-      body = JSON.parse(text);
-    } catch {
-      body = text;
-    }
-  }
-
-  if (!res.ok) {
-    const bodyMessage = typeof body === 'object' && body && 'message' in body ? (body as { message?: unknown }).message : undefined;
-    const messageString = typeof bodyMessage === 'string' ? bodyMessage : undefined;
-    const message = messageString ?? (text || `${res.status} ${res.statusText}`);
-    throw new CliError({
-      message: `callModel ${input.params.modelType}/${input.params.call ?? 'unknown'} failed: ${message}`,
-      code: codeForStatus(res.status),
-      suggestion: res.status === 401 || res.status === 403 ? 'Run `<cli> auth login` to refresh credentials.' : undefined
-    });
-  }
-
-  return body as R;
 }
 
 export interface GetModelOverHttpInput {
@@ -114,28 +82,13 @@ export interface GetModelOverHttpResult<T = unknown> {
  * @returns The parsed `{ key, data }` envelope.
  */
 export async function getModelOverHttp<T = unknown>(input: GetModelOverHttpInput): Promise<GetModelOverHttpResult<T>> {
-  const fetcher = input.fetcher ?? fetch;
-  const url = `${trimSlash(input.apiBaseUrl)}/model/${encodeURIComponent(input.modelType)}/get?key=${encodeURIComponent(input.key)}`;
-
-  const res = await fetcher(url, {
+  return requestJson<GetModelOverHttpResult<T>>({
     method: 'GET',
-    headers: {
-      Accept: 'application/json',
-      Authorization: `Bearer ${input.accessToken}`
-    }
+    url: `${trimSlash(input.apiBaseUrl)}/model/${encodeURIComponent(input.modelType)}/get?key=${encodeURIComponent(input.key)}`,
+    accessToken: input.accessToken,
+    fetcher: input.fetcher,
+    errorPrefix: `get ${input.modelType}/${input.key} failed`
   });
-
-  const { ok, body, fallbackMessage } = await readJsonResponse(res);
-
-  if (!ok) {
-    throw new CliError({
-      message: `get ${input.modelType}/${input.key} failed: ${extractMessage(body, fallbackMessage, res)}`,
-      code: codeForStatus(res.status),
-      suggestion: res.status === 401 || res.status === 403 ? 'Run `<cli> auth login` to refresh credentials.' : undefined
-    });
-  }
-
-  return body as GetModelOverHttpResult<T>;
 }
 
 export interface GetMultipleModelsOverHttpInput {
@@ -179,6 +132,8 @@ export interface GetMultipleModelsOverHttpResult<T = unknown> {
  *
  * Backend route: `ModelApiController.getMany` (packages/firebase-server). Same `'read'` role enforcement.
  *
+ * For >50 keys, use {@link getMultipleModelsOverHttpChunked} to auto-batch and merge.
+ *
  * @param input - The request envelope describing the API target, access token, model, keys, and optional fetch override.
  * @returns The parsed `{ results, errors }` envelope.
  */
@@ -192,35 +147,87 @@ export async function getMultipleModelsOverHttp<T = unknown>(input: GetMultipleM
 
   if (input.keys.length > MAX_MODEL_ACCESS_MULTI_READ_KEYS) {
     throw new CliError({
-      message: `get-many supports at most ${MAX_MODEL_ACCESS_MULTI_READ_KEYS} keys (got ${input.keys.length}).`,
+      message: `get-many supports at most ${MAX_MODEL_ACCESS_MULTI_READ_KEYS} keys (got ${input.keys.length}). Use getMultipleModelsOverHttpChunked to auto-batch.`,
       code: 'INVALID_ARGUMENT'
     });
   }
 
-  const fetcher = input.fetcher ?? fetch;
-  const url = `${trimSlash(input.apiBaseUrl)}/model/${encodeURIComponent(input.modelType)}/get`;
-
-  const res = await fetcher(url, {
+  return requestJson<GetMultipleModelsOverHttpResult<T>>({
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-      Authorization: `Bearer ${input.accessToken}`
-    },
-    body: JSON.stringify({ keys: input.keys })
+    url: `${trimSlash(input.apiBaseUrl)}/model/${encodeURIComponent(input.modelType)}/get`,
+    accessToken: input.accessToken,
+    jsonBody: { keys: input.keys },
+    fetcher: input.fetcher,
+    errorPrefix: `get-many ${input.modelType} failed`
   });
+}
 
+/**
+ * Batch-reads any number of keys by chunking into requests of {@link MAX_MODEL_ACCESS_MULTI_READ_KEYS}
+ * keys each and merging the `{ results, errors }` envelopes across batches.
+ *
+ * Chunks are sent sequentially so a single env doesn't see a burst of concurrent connections.
+ *
+ * @param input - Same shape as {@link GetMultipleModelsOverHttpInput} but without the 50-key cap.
+ * @returns The merged `{ results, errors }` envelope across all chunks.
+ */
+export async function getMultipleModelsOverHttpChunked<T = unknown>(input: GetMultipleModelsOverHttpInput): Promise<GetMultipleModelsOverHttpResult<T>> {
+  if (input.keys.length === 0) {
+    throw new CliError({
+      message: 'get-many requires at least one key.',
+      code: 'INVALID_ARGUMENT'
+    });
+  }
+
+  const chunks: string[][] = [];
+  for (let i = 0; i < input.keys.length; i += MAX_MODEL_ACCESS_MULTI_READ_KEYS) {
+    chunks.push(input.keys.slice(i, i + MAX_MODEL_ACCESS_MULTI_READ_KEYS));
+  }
+
+  const mergedResults: GetMultipleModelsOverHttpResultEntry<T>[] = [];
+  const mergedErrors: GetMultipleModelsOverHttpErrorEntry[] = [];
+
+  for (const chunk of chunks) {
+    const batch = await getMultipleModelsOverHttp<T>({ ...input, keys: chunk });
+    mergedResults.push(...batch.results);
+    mergedErrors.push(...batch.errors);
+  }
+
+  return { results: mergedResults, errors: mergedErrors };
+}
+
+interface RequestJsonInput {
+  readonly method: 'GET' | 'POST';
+  readonly url: string;
+  readonly accessToken: string;
+  readonly jsonBody?: unknown;
+  readonly fetcher?: typeof fetch;
+  readonly errorPrefix: string;
+}
+
+async function requestJson<R>(input: RequestJsonInput): Promise<R> {
+  const init: RequestInit = {
+    method: input.method,
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${input.accessToken}`,
+      ...(input.jsonBody !== undefined ? { 'Content-Type': 'application/json' } : {})
+    },
+    ...(input.jsonBody !== undefined ? { body: JSON.stringify(input.jsonBody) } : {})
+  };
+
+  const res = await tracedFetch(input.fetcher, input.url, init);
   const { ok, body, fallbackMessage } = await readJsonResponse(res);
 
   if (!ok) {
     throw new CliError({
-      message: `get-many ${input.modelType} failed: ${extractMessage(body, fallbackMessage, res)}`,
+      message: `${input.errorPrefix}: ${extractMessage(body, fallbackMessage, res)}`,
       code: codeForStatus(res.status),
       suggestion: res.status === 401 || res.status === 403 ? 'Run `<cli> auth login` to refresh credentials.' : undefined
     });
   }
 
-  return body as GetMultipleModelsOverHttpResult<T>;
+  return body as R;
 }
 
 interface ReadJsonResponse {

@@ -16,7 +16,7 @@ import { type CliModelManifest } from '../manifest/types';
 import { createAuthMiddleware, createPassthroughAuthMiddleware } from '../middleware/auth.middleware';
 import { createOutputMiddleware } from '../middleware/output.middleware';
 import { createOutputCommand } from '../output/output.command.factory';
-import { outputError } from '../util/output';
+import { CLI_EXIT_CODE_HANDLER, outputError } from '../util/output';
 
 /**
  * Names of the global options registered by {@link createCli} that are not
@@ -24,7 +24,7 @@ import { outputError } from '../util/output';
  * these from `--help` when the user passes `--data-help` so the help output
  * focuses on the schema sections.
  */
-export const STANDARD_GLOBAL_OPTION_NAMES: readonly string[] = ['verbose', 'env', 'dump-dir', 'pick', 'set-dump-dir', 'set-pick', 'pick-all'];
+export const STANDARD_GLOBAL_OPTION_NAMES: readonly string[] = ['verbose', 'env', 'dump-dir', 'pick', 'set-dump-dir', 'set-pick', 'pick-all', 'pretty', 'timeout'];
 
 export interface CreateCliInput {
   readonly cliName: string;
@@ -127,6 +127,22 @@ export interface CreateCliInput {
    * @internal Intended for use from `@dereekb/dbx-cli/test`. Not for production wiring.
    */
   readonly testCliContext?: CliContext;
+  /**
+   * Optional version string. When set, yargs registers `--version` / `-V` on the root parser
+   * returning this value. Defaults to omitted (no `--version` flag).
+   *
+   * Consumers typically pass their `package.json` version (read at build time, e.g. via a
+   * bundler `define` or a generated module).
+   */
+  readonly version?: string;
+  /**
+   * Optional shell-completion command name. When set, yargs registers
+   * `<cli> <completionCommandName>` (defaults to `completion`) that emits a bash/zsh script.
+   * Pass `false` to disable.
+   *
+   * @default 'completion'
+   */
+  readonly completionCommandName?: string | false;
 }
 
 /**
@@ -179,16 +195,18 @@ export function createCli(input: CreateCliInput): Argv {
   const skipCommandNames = new Set(allConfigCommands.map((c) => commandName(c)));
   const authMiddleware: MiddlewareFunction = input.testCliContext ? createPassthroughAuthMiddleware({ cliContext: input.testCliContext }) : createAuthMiddleware({ cliName, skipCommands: skipCommandNames, defaultEnvs, modelManifest: input.modelManifest });
 
-  return yargs(input.argv ?? hideBin(process.argv))
+  let parser = yargs(input.argv ?? hideBin(process.argv))
     .scriptName(cliName)
     .usage('$0 <command> [options]')
-    .option('verbose', { alias: 'v', type: 'boolean', default: false, global: true, describe: 'Verbose output' })
+    .option('verbose', { alias: 'v', type: 'boolean', default: false, global: true, describe: 'Emit stderr trace lines for HTTP calls' })
     .option('env', { type: 'string', global: true, describe: 'Named env to target (overrides activeEnv and *_ENV var)' })
     .option('dump-dir', { type: 'string', global: true, describe: 'Directory to save full responses as JSON files' })
     .option('pick', { type: 'string', global: true, describe: 'Comma-separated top-level fields to include in output' })
     .option('set-dump-dir', { type: 'string', global: true, describe: 'Save dump-dir for this command and apply now' })
     .option('set-pick', { type: 'string', global: true, describe: 'Save pick for this command and apply now' })
     .option('pick-all', { type: 'boolean', global: true, describe: 'Ignore configured pick filters' })
+    .option('pretty', { type: 'boolean', default: false, global: true, describe: 'Pretty-print the stdout JSON envelope (2-space indent)' })
+    .option('timeout', { type: 'number', global: true, describe: 'Per-HTTP-request timeout in seconds (aborts via AbortController)' })
     .option('data-help', { type: 'string', choices: ['jsonschema', 'arktype', 'both'] as const, global: true, describe: 'Schema format shown in --help for manifest commands (default: jsonschema)' })
     .option('all-help', { type: 'boolean', global: true, describe: 'Show the full options table in --help even when --data-help is in focus mode' })
     .middleware([authMiddleware, createOutputMiddleware({ cliName, skipCommands: skipCommandNames })], true)
@@ -199,8 +217,19 @@ export function createCli(input: CreateCliInput): Argv {
     .fail(false)
     .help()
     .alias('help', 'h')
-    .version(false)
     .wrap(Math.min(120, process.stdout.columns || 80));
+
+  if (input.version != null) {
+    parser = parser.version(input.version);
+  } else {
+    parser = parser.version(false);
+  }
+
+  if (input.completionCommandName !== false) {
+    parser = parser.completion(input.completionCommandName ?? 'completion', 'Emit a shell-completion script for this CLI');
+  }
+
+  return parser;
 }
 
 /**
@@ -215,7 +244,7 @@ export async function runCli(input: CreateCliInput): Promise<void> {
     await createCli(input).parse();
   } catch (e) {
     outputError(e);
-    process.exit(1);
+    process.exit(CLI_EXIT_CODE_HANDLER);
   }
 }
 

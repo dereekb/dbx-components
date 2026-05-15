@@ -13,8 +13,9 @@
  *   `<host-class minus leading dot>` when the value is omitted.
  * - `@intent <plain-english>` — short description used by intent search.
  * - `@role <role>` — one of `layout`, `flex`, `text`, `spacing`, `state`,
- *   `interaction`, `misc`. Drives role filters and structural-property
- *   weighting in the equivalency engine.
+ *   `interaction`, `color`, `text-color`, `surface`, `size`, `radius`,
+ *   `misc`. Drives role filters and structural-property weighting in the
+ *   equivalency engine.
  * - `@see-also <slug>[, <slug>, …]` — comma-separated related slugs.
  * - `@anti-use <plain-english>` — when NOT to use this utility.
  * - `@since <version>` — version tag.

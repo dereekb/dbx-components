@@ -1,3 +1,16 @@
+## [13.11.12](https://github.com/dereekb/dbx-components/compare/v13.11.11-dev...v13.11.12) (2026-05-15)
+
+
+### Code Refactoring
+
+- add image and pdf compression utilities ([c57ee824](https://github.com/dereekb/dbx-components/commit/c57ee824ac75d43827712e0d99a88561c94b02a1))
+- **dbx-cli:** handler helpers, env resolve, http tracing ([73284223](https://github.com/dereekb/dbx-components/commit/73284223963456f8eec6c721970d3296a0b52a83))
+- **dbx-cli:** wire test subpackage build ([b5e8fd03](https://github.com/dereekb/dbx-components/commit/b5e8fd03952f1ea4ef71b6891beda9b275db1bff))
+- **dbx-components-mcp:** expand css-utility role vocab ([3654f118](https://github.com/dereekb/dbx-components/commit/3654f11871f6c05296db873d9e21e2134880aca4))
+- **dbx-components-mcp:** rule catalog, search tools, list mode ([bf8d74c7](https://github.com/dereekb/dbx-components/commit/bf8d74c7e346dad8376368e73d7c482093bafe5b))
+- **dbx-components-mcp:** wire remaining scan-* bin subcommands ([d81a6f0a](https://github.com/dereekb/dbx-components/commit/d81a6f0ab231e32ecbb032a69328477746eae8cf))
+- **util:** fast-path splitJoinRemainder for limit 1 and 2 ([cacccd3d](https://github.com/dereekb/dbx-components/commit/cacccd3d9c49f152f7fa16bd4774def97f1f35bb))
+
 ## [13.11.11](https://github.com/dereekb/dbx-components/compare/v13.11.10-dev...v13.11.11) (2026-05-15)
 
 
