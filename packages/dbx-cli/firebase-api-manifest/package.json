@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-cli-firebase-api-manifest",
-  "version": "13.11.10",
+  "version": "13.11.11",
   "private": true,
   "type": "module",
   "devDependencies": {

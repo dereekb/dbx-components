@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-components-mcp",
-  "version": "13.11.10",
+  "version": "13.11.11",
   "type": "module",
   "bin": {
     "dbx-components-mcp": "dbx-components-mcp.js"
@@ -15,19 +15,19 @@
     "@angular/core": "21.2.11",
     "@angular/forms": "21.2.11",
     "@angular/material": "^21.2.9",
-    "@dereekb/dbx-cli": "13.11.10",
-    "@dereekb/dbx-core": "13.11.10",
-    "@dereekb/dbx-firebase": "13.11.10",
-    "@dereekb/dbx-form": "13.11.10",
-    "@dereekb/dbx-web": "13.11.10",
-    "@dereekb/firebase": "13.11.10",
-    "@dereekb/firebase-server": "13.11.10",
-    "@dereekb/rxjs": "13.11.10",
-    "@dereekb/util": "13.11.10",
+    "@dereekb/dbx-cli": "13.11.11",
+    "@dereekb/dbx-core": "13.11.11",
+    "@dereekb/dbx-firebase": "13.11.11",
+    "@dereekb/dbx-form": "13.11.11",
+    "@dereekb/dbx-web": "13.11.11",
+    "@dereekb/firebase": "13.11.11",
+    "@dereekb/firebase-server": "13.11.11",
+    "@dereekb/rxjs": "13.11.11",
+    "@dereekb/util": "13.11.11",
     "@uirouter/angular": "21.0.0",
     "rxjs": "^7.8.2"
   },
   "devDependencies": {
-    "@dereekb/model": "13.11.10"
+    "@dereekb/model": "13.11.11"
   }
 }
