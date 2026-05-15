@@ -60,10 +60,10 @@ Tool clusters (each exposes lookup, search, examples, and/or scaffold/validate):
 - form         — @dereekb/dbx-form field catalog (formly + forge), examples, scaffold new fields
 - ui           — @dereekb/dbx-web building blocks: layouts, sections, buttons, cards, examples
 - model        — Firestore model catalog (identity, converters, collection, subcollections), wiring validation, Angular store scaffold
-- action       — dbx-action directives, store, states, examples, scaffold
+- action       — dbx-action directives, store, states; lookup/search/examples/scaffold
 - route        — UIRouter state-tree extraction and lookup for an app
 - filter       — filter directive/preset catalog and scaffold
-- pipe         — Angular value-pipe catalog
+- pipe         — Angular value-pipe catalog; lookup/search
 - util         — utility functions/classes/factories/constants opted in via @dbxUtil JSDoc tags (search by intent: "expiration", "throttle", "memoize")
 - model_snapshot_field — Firestore snapshot-field factories + reusable consts (firestoreString, firestoreDate, firestoreObjectArray, …) tagged with @dbxModelSnapshotField; lookup/search by intent ("date", "encoded array"), plus list_app to see which fields a downstream component+app actually uses
 - semantic_type — semantic type aliases (string/number aliases) lookup and search

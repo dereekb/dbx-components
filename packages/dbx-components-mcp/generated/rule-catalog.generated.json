@@ -184,6 +184,52 @@
     ]
   },
   {
+    "code": "HANDLER_NAMING_MISMATCH",
+    "source": "dbx_model_api_validate_app",
+    "severity": "error",
+    "title": "A handler name does not follow the canonical",
+    "whatItFlags": "A handler name does not follow the canonical\n`<model><Verb>[<Specifier>]` form, so the verb-map cell and the\nhandler symbol drift apart.",
+    "whenItApplies": "Every wired handler whose identifier does not match either the full form (`guestbookEntryUpdateInsert`) or the verb-omitted shorthand (`guestbookEntryInsert`) for its cell.",
+    "whenItDoesNotApply": "Handlers intentionally aliased to satisfy backwards-compatibility on a public re-export — colocate the alias in the verb-map by name to keep the cell aligned.",
+    "canonicalFix": "Rename the handler (or its verb-map binding) to one of the accepted names so the model/verb/specifier triplet is recoverable from the identifier alone."
+  },
+  {
+    "code": "MISSING_HANDLER",
+    "source": "dbx_model_api_validate_app",
+    "severity": "error",
+    "title": "A CRUD entry is declared in the component's `<model>.api.ts` but the",
+    "whatItFlags": "A CRUD entry is declared in the component's `<model>.api.ts` but the\nAPI app's verb-map has no matching handler wired in.",
+    "whenItApplies": "Every declared `<model>.<verb>.<specifier>` cell that lacks a `<handlerName>:` entry under the corresponding verb in the app's `*FunctionMap`.",
+    "whenItDoesNotApply": "When the handler is intentionally not yet wired — declare the api entry inside a `// @ts-expect-error TODO` block, or remove the declaration until the handler lands.",
+    "canonicalFix": "Add a handler whose name follows `<model><Verb>[<Specifier>]` (e.g. `guestbookEntryUpdateInsert`) to the app's verb-map and assign it to the matching cell.",
+    "seeAlso": [
+      {
+        "kind": "tool",
+        "target": "dbx_model_api_list_app"
+      },
+      {
+        "kind": "tool",
+        "target": "dbx_model_api_lookup"
+      }
+    ]
+  },
+  {
+    "code": "ORPHAN_HANDLER",
+    "source": "dbx_model_api_validate_app",
+    "severity": "error",
+    "title": "A handler is wired in the API app's verb-map but no",
+    "whatItFlags": "A handler is wired in the API app's verb-map but no\n`<model>.api.ts` in any component declares this CRUD entry.",
+    "whenItApplies": "Every cell of the app's verb-map that is not declared by an upstream `*ModelCrudFunctionsConfig`.",
+    "whenItDoesNotApply": "Handlers exposed by an upstream `@dereekb/*` package whose api file lives outside the scanned component dirs.",
+    "canonicalFix": "Either remove the orphan handler entry, or add the missing CRUD declaration to the matching `<model>.api.ts` so the surface is documented.",
+    "seeAlso": [
+      {
+        "kind": "tool",
+        "target": "dbx_model_api_list_app"
+      }
+    ]
+  },
+  {
     "code": "archetype-inconsistent",
     "source": "dbx_model_fixture_validate_app",
     "severity": "error",

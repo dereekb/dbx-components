@@ -126,6 +126,7 @@ describe('groupColorSmells', () => {
     expect(md).toContain('# Color smell check');
     expect(md).toContain('Findings (2)');
     const parsed = JSON.parse(formatResultAsJson(result)) as { readonly findings: readonly { readonly signature: string }[] };
-    expect(parsed.findings.map((f) => f.signature).sort()).toEqual(['color=#1f9b59|contrast=white|tone=18|tonal=false', 'color=#ffffff|tone=50|tonal=false'].sort());
+    const byLocale = (a: string, b: string) => a.localeCompare(b);
+    expect(parsed.findings.map((f) => f.signature).sort(byLocale)).toEqual(['color=#1f9b59|contrast=white|tone=18|tonal=false', 'color=#ffffff|tone=50|tonal=false'].sort(byLocale));
   });
 });
