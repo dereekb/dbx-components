@@ -24,8 +24,7 @@
  * companion fieldOverrides).
  */
 
-import type { ConstraintSequence, ConstraintSequenceEntry, DerivedComposite, DerivedFieldOverride, DerivedFieldOverrideVariant, DerivedIndexField, FirestoreIndexOrder, FirestoreQueryScope, FirestoreWhereOperator } from '../manifest/model-firebase-index-schema.js';
-import { DEFAULT_FIRESTORE_INDEX_DENSITY } from '../manifest/model-firebase-index-schema.js';
+import { type ConstraintSequence, type ConstraintSequenceEntry, type DerivedComposite, type DerivedFieldOverride, type DerivedFieldOverrideVariant, type DerivedIndexField, type FirestoreIndexOrder, type FirestoreQueryScope, type FirestoreWhereOperator , DEFAULT_FIRESTORE_INDEX_DENSITY } from '../manifest/model-firebase-index-schema.js';
 import type { ExtractedModelFirebaseIndexEntry } from './model-firebase-index-extract.js';
 
 // MARK: Public types
@@ -159,12 +158,10 @@ function bucketConstraints(entries: readonly ConstraintSequenceEntry[]): Buckete
         seenRangeFields.add(entry.fieldPath);
         ranges.push(entry);
       }
-    } else if (ARRAY_OPERATORS.has(op)) {
-      if (!seenArrayFields.has(entry.fieldPath)) {
+    } else if (ARRAY_OPERATORS.has(op) && !seenArrayFields.has(entry.fieldPath)) {
         seenArrayFields.add(entry.fieldPath);
         arrays.push(entry);
       }
-    }
   }
 
   return {

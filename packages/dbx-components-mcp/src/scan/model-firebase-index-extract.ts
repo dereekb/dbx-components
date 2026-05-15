@@ -29,8 +29,7 @@
  */
 
 import { Node, SyntaxKind, type CallExpression, type FunctionDeclaration, type Identifier, type JSDoc, type ParameterDeclaration, type Project, type SourceFile } from 'ts-morph';
-import type { ConstraintSequence, ConstraintSequenceEntry, FirestoreQueryScope, FirestoreWhereOperator, ModelFirebaseIndexParamEntry } from '../manifest/model-firebase-index-schema.js';
-import { FIRESTORE_WHERE_OPERATORS } from '../manifest/model-firebase-index-schema.js';
+import { type ConstraintSequence, type ConstraintSequenceEntry, type FirestoreQueryScope, type FirestoreWhereOperator, type ModelFirebaseIndexParamEntry , FIRESTORE_WHERE_OPERATORS } from '../manifest/model-firebase-index-schema.js';
 import { type FirestoreModelIdentityResolver, type ResolvedFirestoreModelIdentity } from './firestore-model-identity-resolver.js';
 import { expandFirestoreQueryHelper, getFirestoreQueryHelperDescriptor } from '../registry/firestore-query-helpers.js';
 import { splitListTagText, unwrapFenced } from './scan-extract-utils.js';
@@ -631,11 +630,17 @@ function extractConstraintsFromBody(input: ExtractConstraintsFromBodyInput): Ext
 // MARK: Recursive body walker
 interface WalkBodyIntoInput {
   readonly decl: FunctionDeclaration;
-  /** Outermost factory name — used for warning attribution. */
+  /**
+   * Outermost factory name — used for warning attribution.
+   */
   readonly factoryName: string;
-  /** Outermost factory's file path — used for warning attribution. */
+  /**
+   * Outermost factory's file path — used for warning attribution.
+   */
   readonly filePath: string;
-  /** Set of `${filePath}::${name}` keys already on the call stack. */
+  /**
+   * Set of `${filePath}::${name}` keys already on the call stack.
+   */
   readonly visited: ReadonlySet<string>;
   readonly warnings: ModelFirebaseIndexExtractWarning[];
   readonly entries: ConstraintSequenceEntry[];

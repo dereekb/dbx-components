@@ -242,7 +242,7 @@ describe('extractModelFirebaseIndexEntries — flags + constraints', () => {
     const result = extractModelFirebaseIndexEntries({ project, identityResolver: buildIdentityResolverFromProject(project) });
     const warning = result.warnings.find((w) => w.kind === 'missing-paths');
     expect(warning).toBeDefined();
-    if (warning && warning.kind === 'missing-paths') {
+    if (warning?.kind === 'missing-paths') {
       expect(warning.conditionalFields).toEqual(['s', 'pr']);
     }
   });
@@ -305,7 +305,7 @@ describe('extractModelFirebaseIndexEntries — flags + constraints', () => {
     const result = extractModelFirebaseIndexEntries({ project, identityResolver: buildIdentityResolverFromProject(project) });
     const warning = result.warnings.find((w) => w.kind === 'unknown-path-field');
     expect(warning).toBeDefined();
-    if (warning && warning.kind === 'unknown-path-field') {
+    if (warning?.kind === 'unknown-path-field') {
       expect(warning.field).toBe('nope');
     }
   });
@@ -387,7 +387,7 @@ describe('extractModelFirebaseIndexEntries — flags + constraints', () => {
     const result = extractModelFirebaseIndexEntries({ project, identityResolver: buildIdentityResolverFromProject(project) });
     const warning = result.warnings.find((w) => w.kind === 'unannotated-query-helper');
     expect(warning).toBeDefined();
-    if (warning && warning.kind === 'unannotated-query-helper') {
+    if (warning?.kind === 'unannotated-query-helper') {
       expect(warning.callee).toBe('untaggedHelper');
       expect(warning.name).toBe('callerQuery');
     }
