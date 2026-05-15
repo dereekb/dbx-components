@@ -14,6 +14,7 @@ import { loadForgeFieldRegistry, type LoadForgeFieldRegistryResult } from './man
 import { loadPipeRegistry, type LoadPipeRegistryResult } from './manifest/load-pipes-registry.js';
 import { loadUtilRegistry, type LoadUtilRegistryResult } from './manifest/load-utils-registry.js';
 import { loadModelSnapshotFieldRegistry, type LoadModelSnapshotFieldRegistryResult } from './manifest/load-model-snapshot-fields-registry.js';
+import { loadModelFirebaseIndexRegistry, type LoadModelFirebaseIndexRegistryResult } from './manifest/load-model-firebase-index-registry.js';
 import { loadSemanticTypeRegistry, type LoadSemanticTypeRegistryResult } from './manifest/load-registry.js';
 import { loadTokenRegistry, type LoadTokenRegistryResult } from './manifest/load-tokens-registry.js';
 import { loadCssUtilityRegistry, type LoadCssUtilityRegistryResult } from './manifest/load-css-utilities-registry.js';
@@ -25,6 +26,7 @@ import type { ForgeFieldRegistry } from './registry/forge-fields.js';
 import type { PipeRegistry } from './registry/pipes-runtime.js';
 import type { UtilRegistry } from './registry/utils-runtime.js';
 import type { ModelSnapshotFieldRegistry } from './registry/model-snapshot-fields-runtime.js';
+import type { ModelFirebaseIndexRegistry } from './registry/model-firebase-index-runtime.js';
 import type { SemanticTypeRegistry } from './registry/semantic-types.js';
 import type { TokenRegistry } from './registry/tokens-runtime.js';
 import type { CssUtilityRegistry } from './registry/css-utilities-runtime.js';
@@ -111,6 +113,7 @@ export interface CreateServerOptions {
   readonly pipeRegistry?: PipeRegistry;
   readonly utilRegistry?: UtilRegistry;
   readonly modelSnapshotFieldRegistry?: ModelSnapshotFieldRegistry;
+  readonly modelFirebaseIndexRegistry?: ModelFirebaseIndexRegistry;
   readonly actionRegistry?: ActionRegistry;
   readonly filterRegistry?: FilterRegistry;
   readonly tokenRegistry?: TokenRegistry;
@@ -135,6 +138,7 @@ export interface CreateServerOptions {
   readonly onPipeLoaderResult?: (result: LoadPipeRegistryResult) => void;
   readonly onUtilLoaderResult?: (result: LoadUtilRegistryResult) => void;
   readonly onModelSnapshotFieldLoaderResult?: (result: LoadModelSnapshotFieldRegistryResult) => void;
+  readonly onModelFirebaseIndexLoaderResult?: (result: LoadModelFirebaseIndexRegistryResult) => void;
   readonly onActionLoaderResult?: (result: LoadActionRegistryResult) => void;
   readonly onFilterLoaderResult?: (result: LoadFilterRegistryResult) => void;
   readonly onTokenLoaderResult?: (result: LoadTokenRegistryResult) => void;
@@ -282,6 +286,17 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
     catchErrors: true
   });
 
+  const modelFirebaseIndexRegistry = await resolveOptionalRegistry({
+    injected: options.modelFirebaseIndexRegistry,
+    cwd,
+    load: loadModelFirebaseIndexRegistry,
+    extractRegistry: (r) => r.registry,
+    observer: options.onModelFirebaseIndexLoaderResult,
+    defaultReport: (r) => reportRegistryLoaderResult('model-firebase-index', 'model-firebase-index-', r),
+    failureLabel: 'model-firebase-index',
+    catchErrors: true
+  });
+
   const actionRegistry = await resolveOptionalRegistry({
     injected: options.actionRegistry,
     cwd,
@@ -340,8 +355,8 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
 
   await emitDownstreamHints({ cwd, externalCounts, onDownstreamHints: options.onDownstreamHints });
 
-  registerResources(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, utilRegistry, modelSnapshotFieldRegistry, uiComponentRegistry: uiRegistry, actionRegistry, filterRegistry, tokenRegistry, cssUtilityRegistry, authRegistry });
-  registerTools(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, utilRegistry, modelSnapshotFieldRegistry, uiComponentRegistry: uiRegistry, dbxDocsUiExamplesRegistry, actionRegistry, filterRegistry, tokenRegistry, cssUtilityRegistry, fixtureModelRegistry, modelValidateRuleOptions, authRegistry, cwd });
+  registerResources(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, utilRegistry, modelSnapshotFieldRegistry, modelFirebaseIndexRegistry, uiComponentRegistry: uiRegistry, actionRegistry, filterRegistry, tokenRegistry, cssUtilityRegistry, authRegistry });
+  registerTools(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, utilRegistry, modelSnapshotFieldRegistry, modelFirebaseIndexRegistry, uiComponentRegistry: uiRegistry, dbxDocsUiExamplesRegistry, actionRegistry, filterRegistry, tokenRegistry, cssUtilityRegistry, fixtureModelRegistry, modelValidateRuleOptions, authRegistry, cwd });
 
   return server;
 }

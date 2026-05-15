@@ -41,6 +41,7 @@ const { runActionsScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/
 const { runFiltersScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/filters-cli.ts`);
 const { runDbxDocsUiExamplesScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/dbx-docs-ui-examples-cli.ts`);
 const { runCssUtilitiesScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/css-utilities-cli.ts`);
+const { runModelFirebaseIndexScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/model-firebase-index-cli.ts`);
 
 /**
  * Bundled manifests stamp a fixed `generatedAt` so the produced JSON is
@@ -77,7 +78,8 @@ const CLUSTER_DISPATCH = {
   actions: { run: runActionsScanCli, sectionKey: 'actions', label: 'actions' },
   filters: { run: runFiltersScanCli, sectionKey: 'filters', label: 'filters' },
   dbxDocsUiExamples: { run: runDbxDocsUiExamplesScanCli, sectionKey: 'dbxDocsUiExamples', label: 'dbx-docs-ui-examples' },
-  cssUtilities: { run: runCssUtilitiesScanCli, sectionKey: 'cssUtilities', label: 'css-utilities' }
+  cssUtilities: { run: runCssUtilitiesScanCli, sectionKey: 'cssUtilities', label: 'css-utilities' },
+  modelFirebaseIndex: { run: runModelFirebaseIndexScanCli, sectionKey: 'modelFirebaseIndex', label: 'model-firebase-index' }
 };
 
 const results = [];

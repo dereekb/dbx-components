@@ -70,6 +70,10 @@
  * | dbx_model_snapshot_field_lookup     | Documentation | "Tell me about snapshot-field factory X (firestoreDate, …)" |
  * | dbx_model_snapshot_field_search     | Discovery     | "Find snapshot-field factories by intent (date, encoded array, …)" |
  * | dbx_model_snapshot_field_list_app   | Discovery     | "Which snapshot fields does this component+app use?"   |
+ * | dbx_model_firebase_index_lookup     | Documentation | "Tell me about query factory X — what indexes does it imply?" |
+ * | dbx_model_firebase_index_search     | Discovery     | "Find query factories matching keywords (dirty, sync, …)" |
+ * | dbx_model_firebase_index_list_app   | Discovery     | "What query factories does this component declare? Which are tagged?" |
+ * | dbx_model_firebase_index_validate_app | Verification | "Does this app's firestore.indexes.json match what its factories require?" |
  * | dbx_artifact_scaffold               | Generation    | "Give me the body for a new <artifact>."               |
  * | dbx_artifact_file_convention        | Reference     | "Where do I put a new <artifact>?"                     |
  * | dbx_css_token_lookup                | Documentation | "What's the canonical CSS token for X?" (intent/value/role)|
@@ -143,6 +147,10 @@ import { createSearchUtilTool } from './search-util.tool.js';
 import { createLookupModelSnapshotFieldTool } from './lookup-model-snapshot-field.tool.js';
 import { createSearchModelSnapshotFieldTool } from './search-model-snapshot-field.tool.js';
 import { createListAppModelSnapshotFieldsTool } from './list-app-model-snapshot-fields.tool.js';
+import { createLookupModelFirebaseIndexTool } from './lookup-model-firebase-index.tool.js';
+import { createSearchModelFirebaseIndexTool } from './search-model-firebase-index.tool.js';
+import { createListAppModelFirebaseIndexTool } from './list-app-model-firebase-index.tool.js';
+import { createValidateAppModelFirebaseIndexTool } from './validate-app-model-firebase-index.tool.js';
 import { artifactScaffoldTool } from './artifact-scaffold.tool.js';
 import { artifactFileConventionTool } from './artifact-file-convention.tool.js';
 import { explainRuleTool } from './explain-rule.tool.js';
@@ -167,6 +175,7 @@ import type { ForgeFieldRegistry } from '../registry/forge-fields.js';
 import type { PipeRegistry } from '../registry/pipes-runtime.js';
 import type { UtilRegistry } from '../registry/utils-runtime.js';
 import type { ModelSnapshotFieldRegistry } from '../registry/model-snapshot-fields-runtime.js';
+import type { ModelFirebaseIndexRegistry } from '../registry/model-firebase-index-runtime.js';
 import type { SemanticTypeRegistry } from '../registry/semantic-types.js';
 import type { TokenRegistry } from '../registry/tokens-runtime.js';
 import type { CssUtilityRegistry } from '../registry/css-utilities-runtime.js';
@@ -275,6 +284,12 @@ export interface RegisterToolsOptions {
    * omitted those tools are skipped.
    */
   readonly modelSnapshotFieldRegistry?: ModelSnapshotFieldRegistry;
+  /**
+   * Optional model-firebase-index registry. Required for the
+   * `dbx_model_firebase_index_*` cluster (currently: lookup); when
+   * omitted those tools are skipped.
+   */
+  readonly modelFirebaseIndexRegistry?: ModelFirebaseIndexRegistry;
   readonly uiComponentRegistry?: UiComponentRegistry;
   /**
    * Optional app-sourced UI examples registry. When supplied (or empty),
@@ -349,6 +364,9 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions =
   }
   if (options.modelSnapshotFieldRegistry !== undefined) {
     tools.push(createLookupModelSnapshotFieldTool({ registry: options.modelSnapshotFieldRegistry }), createSearchModelSnapshotFieldTool({ registry: options.modelSnapshotFieldRegistry }), createListAppModelSnapshotFieldsTool({ registry: options.modelSnapshotFieldRegistry }));
+  }
+  if (options.modelFirebaseIndexRegistry !== undefined) {
+    tools.push(createLookupModelFirebaseIndexTool({ registry: options.modelFirebaseIndexRegistry }), createSearchModelFirebaseIndexTool({ registry: options.modelFirebaseIndexRegistry }), createListAppModelFirebaseIndexTool(), createValidateAppModelFirebaseIndexTool());
   }
   if (options.uiComponentRegistry !== undefined) {
     tools.push(createLookupUiTool({ registry: options.uiComponentRegistry }), createSearchUiTool({ registry: options.uiComponentRegistry, examplesRegistry: options.dbxDocsUiExamplesRegistry }));
