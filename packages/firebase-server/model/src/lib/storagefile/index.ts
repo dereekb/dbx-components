@@ -1,3 +1,4 @@
+export * from './extension';
 export * from './storagefile.action.server';
 export * from './storagefile.action.server.init';
 export * from './storagefile.error';
